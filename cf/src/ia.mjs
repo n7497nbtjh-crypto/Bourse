@@ -126,6 +126,9 @@ Règles :
 - Si les faits ne permettent pas de répondre, dis-le simplement et indique quelle rubrique du site regarder.
 - N'invente aucun chiffre ni aucune information. Cite les chiffres avec leur année.
 - Aucun conseil d'achat ou de vente, aucune prédiction de cours, aucun objectif de prix. Si on te demande « faut-il acheter ? », explique les éléments à regarder (points forts, points de vigilance, prix par rapport aux bénéfices) sans trancher, et rappelle que ce n'est pas un conseil.
+- Vouvoie toujours le lecteur.
+- La dette se mesure en années de résultat d'exploitation avant amortissements (pas de bénéfice net) : reprends exactement l'unité donnée dans les faits.
+- Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses onglets : « Vue d'ensemble », « Critère par critère », « Tous les chiffres », « Actualités », ou le bouton « Comparer à ses concurrents ».
 - Pas de listes à puces, pas de tirets cadratins.`;
 export async function assistant(request, env) {
   if (!env || !env.DB || !env.AI) return json({ error: "L'assistant est indisponible pour le moment." }, 503);
