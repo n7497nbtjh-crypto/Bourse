@@ -5,7 +5,7 @@ export const SECTEURS = {
   conso: "Consommation", industrie: "Industrie", energie: "Énergie", sante: "Santé", tech: "Technologie",
   finance: "Banque et assurance", telecom: "Télécoms et médias", materiaux: "Matériaux", services: "Services aux collectivités", immo: "Immobilier",
 };
-export default [
+const FRANCE = [
   { id: "accor", domain: "accor.com", desc: "Hôtellerie dans le monde entier (Novotel, Ibis, Sofitel…).", name: "Accor", ticker: "AC", isin: "FR0000120404", sector: "conso" },
   { id: "air-liquide", domain: "airliquide.com", desc: "Gaz pour l'industrie et la santé : oxygène, azote, hydrogène.", name: "Air Liquide", ticker: "AI", isin: "FR0000120073", sector: "materiaux" },
   { id: "airbus", domain: "airbus.com", desc: "Avions de ligne, hélicoptères, défense et espace.", name: "Airbus", ticker: "AIR", isin: "NL0000235190", sector: "industrie" },
@@ -46,4 +46,68 @@ export default [
   { id: "unibail-rodamco-westfield", domain: "urw.com", desc: "Centres commerciaux (Westfield).", name: "Unibail-Rodamco-Westfield", ticker: "URW", isin: "FR0013326246", sector: "immo" },
   { id: "veolia", domain: "veolia.com", desc: "Gestion de l'eau, des déchets et de l'énergie.", name: "Veolia", ticker: "VIE", isin: "FR0000124141", sector: "services" },
   { id: "vinci", domain: "vinci.com", desc: "Construction et concessions (autoroutes, aéroports).", name: "Vinci", ticker: "DG", isin: "FR0000125486", sector: "industrie" },
-].map(c => ({ ...c, tv: "EURONEXT:" + c.ticker }));
+].map(c => ({ ...c, tv: "EURONEXT:" + c.ticker, region: "FR" }));
+
+// Autres pays : symbole TradingView explicite ; « sec » = code de l'action aux États-Unis (comptes lus à la SEC)
+export const AUTRES = [
+  { id: "asml", name: "ASML", ticker: "ASML", isin: "NL0010273215", tv: "EURONEXT:ASML", region: "EU", sector: "tech", domain: "asml.com", desc: "Machines qui fabriquent les puces électroniques (lithographie)." },
+  { id: "sap", name: "SAP", ticker: "SAP", isin: "DE0007164600", tv: "XETR:SAP", region: "EU", sector: "tech", domain: "sap.com", desc: "Logiciels de gestion pour les entreprises." },
+  { id: "siemens", name: "Siemens", ticker: "SIE", isin: "DE0007236101", tv: "XETR:SIE", region: "EU", sector: "industrie", domain: "siemens.com", desc: "Automatisation industrielle, infrastructures, trains." },
+  { id: "allianz", name: "Allianz", ticker: "ALV", isin: "DE0008404005", tv: "XETR:ALV", region: "EU", sector: "finance", domain: "allianz.com", desc: "Assurance et gestion d'épargne." },
+  { id: "deutsche-telekom", name: "Deutsche Telekom", ticker: "DTE", isin: "DE0005557508", tv: "XETR:DTE", region: "EU", sector: "telecom", domain: "telekom.com", desc: "Opérateur télécoms en Europe et aux États-Unis (T-Mobile)." },
+  { id: "mercedes-benz", name: "Mercedes-Benz", ticker: "MBG", isin: "DE0007100000", tv: "XETR:MBG", region: "EU", sector: "industrie", domain: "mercedes-benz.com", desc: "Voitures et utilitaires haut de gamme." },
+  { id: "bmw", name: "BMW", ticker: "BMW", isin: "DE0005190003", tv: "XETR:BMW", region: "EU", sector: "industrie", domain: "bmwgroup.com", desc: "Voitures (BMW, Mini) et motos." },
+  { id: "basf", name: "BASF", ticker: "BAS", isin: "DE000BASF111", tv: "XETR:BAS", region: "EU", sector: "materiaux", domain: "basf.com", desc: "Chimie." },
+  { id: "bayer", name: "Bayer", ticker: "BAYN", isin: "DE000BAY0017", tv: "XETR:BAYN", region: "EU", sector: "sante", domain: "bayer.com", desc: "Médicaments et produits pour l'agriculture." },
+  { id: "infineon", name: "Infineon", ticker: "IFX", isin: "DE0006231004", tv: "XETR:IFX", region: "EU", sector: "tech", domain: "infineon.com", desc: "Puces électroniques pour l'automobile et l'énergie." },
+  { id: "adidas", name: "Adidas", ticker: "ADS", isin: "DE000A1EWWW0", tv: "XETR:ADS", region: "EU", sector: "conso", domain: "adidas.com", desc: "Chaussures et vêtements de sport." },
+  { id: "munich-re", name: "Munich Re", ticker: "MUV2", isin: "DE0008430026", tv: "XETR:MUV2", region: "EU", sector: "finance", domain: "munichre.com", desc: "Réassurance : elle assure les assureurs." },
+  { id: "rheinmetall", name: "Rheinmetall", ticker: "RHM", isin: "DE0007030033", tv: "XETR:RHM", region: "EU", sector: "industrie", domain: "rheinmetall.com", desc: "Défense : véhicules blindés et munitions." },
+  { id: "iberdrola", name: "Iberdrola", ticker: "IBE", isin: "ES0144580Y14", tv: "BME:IBE", region: "EU", sector: "services", domain: "iberdrola.com", desc: "Électricité, en grande partie renouvelable." },
+  { id: "santander", name: "Banco Santander", ticker: "SAN", isin: "ES0113900J37", tv: "BME:SAN", region: "EU", sector: "finance", domain: "santander.com", desc: "Banque de détail en Europe et en Amérique." },
+  { id: "inditex", name: "Inditex", ticker: "ITX", isin: "ES0148396007", tv: "BME:ITX", region: "EU", sector: "conso", domain: "inditex.com", desc: "Vêtements (Zara, Massimo Dutti, Bershka)." },
+  { id: "enel", name: "Enel", ticker: "ENEL", isin: "IT0003128367", tv: "MIL:ENEL", region: "EU", sector: "services", domain: "enel.com", desc: "Production et distribution d'électricité." },
+  { id: "eni", name: "Eni", ticker: "ENI", isin: "IT0003132476", tv: "MIL:ENI", region: "EU", sector: "energie", domain: "eni.com", desc: "Pétrole et gaz." },
+  { id: "intesa-sanpaolo", name: "Intesa Sanpaolo", ticker: "ISP", isin: "IT0000072618", tv: "MIL:ISP", region: "EU", sector: "finance", domain: "intesasanpaolo.com", desc: "Banque." },
+  { id: "ferrari", name: "Ferrari", ticker: "RACE", isin: "NL0011585146", tv: "MIL:RACE", region: "EU", sector: "industrie", domain: "ferrari.com", desc: "Voitures de sport." },
+  { id: "stellantis", name: "Stellantis", ticker: "STLAP", isin: "NL00150001Q9", tv: "EURONEXT:STLAP", region: "EU", sector: "industrie", domain: "stellantis.com", desc: "Automobile (Peugeot, Fiat, Citroën, Jeep)." },
+  { id: "ing", name: "ING", ticker: "INGA", isin: "NL0011821202", tv: "EURONEXT:INGA", region: "EU", sector: "finance", domain: "ing.com", desc: "Banque." },
+  { id: "ahold-delhaize", name: "Ahold Delhaize", ticker: "AD", isin: "NL0011794037", tv: "EURONEXT:AD", region: "EU", sector: "conso", domain: "aholddelhaize.com", desc: "Supermarchés en Europe et aux États-Unis." },
+  { id: "adyen", name: "Adyen", ticker: "ADYEN", isin: "NL0012969182", tv: "EURONEXT:ADYEN", region: "EU", sector: "tech", domain: "adyen.com", desc: "Paiements en ligne pour les commerçants." },
+  { id: "ab-inbev", name: "AB InBev", ticker: "ABI", isin: "BE0974293251", tv: "EURONEXT:ABI", region: "EU", sector: "conso", domain: "ab-inbev.com", desc: "Bières (Budweiser, Stella Artois, Corona)." },
+  { id: "nokia", name: "Nokia", ticker: "NOKIA", isin: "FI0009000681", tv: "OMXHEX:NOKIA", region: "EU", sector: "tech", domain: "nokia.com", desc: "Équipements de réseaux télécoms." },
+  { id: "apple", name: "Apple", ticker: "AAPL", sec: "AAPL", tv: "NASDAQ:AAPL", region: "US", sector: "tech", domain: "apple.com", desc: "iPhone, Mac et services (App Store, iCloud)." },
+  { id: "microsoft", name: "Microsoft", ticker: "MSFT", sec: "MSFT", tv: "NASDAQ:MSFT", region: "US", sector: "tech", domain: "microsoft.com", desc: "Logiciels (Windows, Office) et cloud (Azure)." },
+  { id: "nvidia", name: "Nvidia", ticker: "NVDA", sec: "NVDA", tv: "NASDAQ:NVDA", region: "US", sector: "tech", domain: "nvidia.com", desc: "Puces graphiques et puces pour l'intelligence artificielle." },
+  { id: "amazon", name: "Amazon", ticker: "AMZN", sec: "AMZN", tv: "NASDAQ:AMZN", region: "US", sector: "conso", domain: "amazon.com", desc: "Commerce en ligne et cloud (AWS)." },
+  { id: "alphabet", name: "Alphabet (Google)", ticker: "GOOGL", sec: "GOOGL", tv: "NASDAQ:GOOGL", region: "US", sector: "telecom", domain: "abc.xyz", desc: "Google : recherche, publicité, YouTube, cloud." },
+  { id: "meta", name: "Meta", ticker: "META", sec: "META", tv: "NASDAQ:META", region: "US", sector: "telecom", domain: "meta.com", desc: "Facebook, Instagram, WhatsApp, financés par la publicité." },
+  { id: "tesla", name: "Tesla", ticker: "TSLA", sec: "TSLA", tv: "NASDAQ:TSLA", region: "US", sector: "industrie", domain: "tesla.com", desc: "Voitures électriques et batteries." },
+  { id: "jpmorgan", name: "JPMorgan Chase", ticker: "JPM", sec: "JPM", tv: "NYSE:JPM", region: "US", sector: "finance", domain: "jpmorganchase.com", desc: "Banque." },
+  { id: "visa", name: "Visa", ticker: "V", sec: "V", tv: "NYSE:V", region: "US", sector: "finance", domain: "visa.com", desc: "Réseau de paiement par carte." },
+  { id: "mastercard", name: "Mastercard", ticker: "MA", sec: "MA", tv: "NYSE:MA", region: "US", sector: "finance", domain: "mastercard.com", desc: "Réseau de paiement par carte." },
+  { id: "johnson-johnson", name: "Johnson & Johnson", ticker: "JNJ", sec: "JNJ", tv: "NYSE:JNJ", region: "US", sector: "sante", domain: "jnj.com", desc: "Médicaments et matériel médical." },
+  { id: "eli-lilly", name: "Eli Lilly", ticker: "LLY", sec: "LLY", tv: "NYSE:LLY", region: "US", sector: "sante", domain: "lilly.com", desc: "Médicaments (diabète, obésité, cancer)." },
+  { id: "procter-gamble", name: "Procter & Gamble", ticker: "PG", sec: "PG", tv: "NYSE:PG", region: "US", sector: "conso", domain: "pg.com", desc: "Produits d'hygiène et d'entretien (Pampers, Gillette, Ariel)." },
+  { id: "exxonmobil", name: "ExxonMobil", ticker: "XOM", sec: "XOM", tv: "NYSE:XOM", region: "US", sector: "energie", domain: "exxonmobil.com", desc: "Pétrole et gaz." },
+  { id: "coca-cola", name: "Coca-Cola", ticker: "KO", sec: "KO", tv: "NYSE:KO", region: "US", sector: "conso", domain: "coca-colacompany.com", desc: "Boissons." },
+  { id: "pepsico", name: "PepsiCo", ticker: "PEP", sec: "PEP", tv: "NASDAQ:PEP", region: "US", sector: "conso", domain: "pepsico.com", desc: "Boissons et snacks (Pepsi, Lay's)." },
+  { id: "costco", name: "Costco", ticker: "COST", sec: "COST", tv: "NASDAQ:COST", region: "US", sector: "conso", domain: "costco.com", desc: "Magasins-entrepôts sur abonnement." },
+  { id: "mcdonalds", name: "McDonald's", ticker: "MCD", sec: "MCD", tv: "NYSE:MCD", region: "US", sector: "conso", domain: "mcdonalds.com", desc: "Restauration rapide, surtout en franchise." },
+  { id: "nike", name: "Nike", ticker: "NKE", sec: "NKE", tv: "NYSE:NKE", region: "US", sector: "conso", domain: "nike.com", desc: "Chaussures et vêtements de sport." },
+  { id: "disney", name: "Disney", ticker: "DIS", sec: "DIS", tv: "NYSE:DIS", region: "US", sector: "telecom", domain: "thewaltdisneycompany.com", desc: "Films, parcs d'attractions et streaming." },
+  { id: "netflix", name: "Netflix", ticker: "NFLX", sec: "NFLX", tv: "NASDAQ:NFLX", region: "US", sector: "telecom", domain: "netflix.com", desc: "Streaming de films et séries." },
+  { id: "oracle", name: "Oracle", ticker: "ORCL", sec: "ORCL", tv: "NYSE:ORCL", region: "US", sector: "tech", domain: "oracle.com", desc: "Bases de données et cloud." },
+  { id: "amd", name: "AMD", ticker: "AMD", sec: "AMD", tv: "NASDAQ:AMD", region: "US", sector: "tech", domain: "amd.com", desc: "Processeurs et puces graphiques." },
+  { id: "intel", name: "Intel", ticker: "INTC", sec: "INTC", tv: "NASDAQ:INTC", region: "US", sector: "tech", domain: "intel.com", desc: "Processeurs." },
+  { id: "boeing", name: "Boeing", ticker: "BA", sec: "BA", tv: "NYSE:BA", region: "US", sector: "industrie", domain: "boeing.com", desc: "Avions de ligne et défense." },
+  { id: "caterpillar", name: "Caterpillar", ticker: "CAT", sec: "CAT", tv: "NYSE:CAT", region: "US", sector: "industrie", domain: "caterpillar.com", desc: "Engins de chantier et moteurs." },
+  { id: "pfizer", name: "Pfizer", ticker: "PFE", sec: "PFE", tv: "NYSE:PFE", region: "US", sector: "sante", domain: "pfizer.com", desc: "Médicaments et vaccins." },
+  { id: "chevron", name: "Chevron", ticker: "CVX", sec: "CVX", tv: "NYSE:CVX", region: "US", sector: "energie", domain: "chevron.com", desc: "Pétrole et gaz." },
+  { id: "salesforce", name: "Salesforce", ticker: "CRM", sec: "CRM", tv: "NYSE:CRM", region: "US", sector: "tech", domain: "salesforce.com", desc: "Logiciels en ligne de gestion de la relation client." },
+  { id: "adobe", name: "Adobe", ticker: "ADBE", sec: "ADBE", tv: "NASDAQ:ADBE", region: "US", sector: "tech", domain: "adobe.com", desc: "Logiciels de création (Photoshop) et de documents (PDF)." },
+];
+
+
+export default [...FRANCE, ...AUTRES];
+export const REGIONS = { FR: "France", EU: "Europe", US: "États-Unis" };

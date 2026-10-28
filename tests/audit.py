@@ -5,19 +5,14 @@ from playwright.sync_api import sync_playwright
 root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
-data = json.load(open(os.path.join(root, "data/demo.json")))
-pages = ["/", "/entreprises", "/actualites", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/passe", "/simulateurs/interets", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/une-fois", "/mentions-legales", "/page-inconnue"]
-FIX = os.path.abspath("tests/fixtures/site")
-pages += [f"/entreprise/{i}{t}" for i in ("exemple", "lvmh", "totalenergies", "bnp-paribas") for t in ("", "/comptes", "/actualite", "/agenda")]
+pages = ["/", "/entreprises", "/actualites", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue"]
+pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
                  {"date": "2026-10-27T17:45:00", "company": "LVMH MOET HENNESSY LOUIS VUITTON", "title": "Déclaration des transactions sur actions propres", "type": "Rachat d'actions", "url": ""}] * 4}
 def route(r):
     u = r.request.url
     if "/api/amf" in u: return r.fulfill(json=AMF)
     if "tradingview.com" in u: return r.fulfill(body="", content_type="text/javascript")
-    if "/data/societes" in u:
-        f = os.path.join(FIX, u.split("/data/", 1)[1].split("?")[0])
-        return r.fulfill(path=f) if os.path.isfile(f) else r.fulfill(status=404, body="")
     if "fonts.googleapis.com" in u:
         if not FONT: return r.fulfill(body="", content_type="text/css")
         css = "".join(f"@font-face{{font-family:'Instrument Serif';font-style:{s};font-weight:400;src:url(https://fonts.gstatic.com/{f}) format('woff2')}}" for s, f in [("normal", "instrument-serif-latin-400-normal.woff2"), ("italic", "instrument-serif-latin-400-italic.woff2")])
@@ -54,29 +49,32 @@ with sync_playwright() as pw:
             pg.goto("http://t.local" + path); pg.wait_for_timeout(450)
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p: probs[path] = p
-            if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/exemple", "/entreprise/exemple/comptes", "/lexique", "/actualites"):
+            if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/lvmh", "/entreprise/lvmh/comptes", "/simulateurs/frais", "/lexique", "/actualites"):
                 os.makedirs(shots, exist_ok=True)
                 pg.screenshot(path=f"{shots}/{name}{(path.replace('/', '_').replace('?', '_') if path != '/' else '_accueil')}.png", full_page=True)
         # Portefeuille : ajout d'une opération
         pg.goto("http://t.local/portefeuille"); pg.wait_for_timeout(300)
-        pg.fill("#op", "100"); pg.click("#oadd"); pg.wait_for_timeout(200)
+        pg.fill("#op", "100"); pg.wait_for_timeout(50)
+        if pg.input_value("#of") != "1.00": probs["/portefeuille (frais)"] = ["frais non calculés : " + pg.input_value("#of")]
+        pg.click("#oadd"); pg.wait_for_timeout(200)
         if "Aucune opération" in pg.inner_text("#pfbody"): probs["/portefeuille (ajout)"] = ["l'opération n'a pas été ajoutée"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["/portefeuille après ajout"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
-        pg.goto("http://t.local/entreprise/exemple/comptes"); pg.wait_for_timeout(300)
+        pg.goto("http://t.local/entreprise/lvmh/comptes"); pg.wait_for_timeout(300)
         pg.click(".def[data-def=marge]"); pg.wait_for_timeout(150)
         if not pg.evaluate("document.getElementById('pop').classList.contains('open')"): probs["définition"] = ["la bulle ne s'ouvre pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["chiffres + bulle"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_definition.png")
-        # Simulation : ajout de lignes
-        pg.goto("http://t.local/simulateurs/passe"); pg.wait_for_timeout(300)
-        pg.click("#addL"); pg.click("#addL"); pg.fill(".ln:nth-child(2) input", "30"); pg.fill(".ln:nth-child(3) input", "20"); pg.fill(".ln:nth-child(1) input", "50"); pg.wait_for_timeout(200)
+        # Fiche : calcul du PER avec un cours saisi
+        pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(400)
+        pg.fill("#pxin", "600"); pg.wait_for_timeout(100)
+        if "PER" not in pg.inner_text("#pxout"): probs["PER"] = ["le PER n'est pas calculé"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
-        if p: probs["/simulateurs/passe (3 lignes)"] = p
-        if shots and name == "ordi": pg.screenshot(path=f"{shots}/{name}_sim3.png", full_page=True)
+        if p: probs["fiche + PER"] = p
+        if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_fiche_per.png", full_page=True)
         ectx = [e for e in errs if "fonts" not in e and "404" not in e]
         print(f"== {name} : {len(pages)} pages, problèmes : {len(probs)}, erreurs JS : {len(ectx)}")
         for k, v in probs.items(): print("  ", k, v)

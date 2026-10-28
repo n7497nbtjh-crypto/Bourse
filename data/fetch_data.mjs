@@ -13,9 +13,10 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import U, { SECTEURS } from "./univers.mjs";
 import { extract, merge, toSeries } from "./esef.mjs";
+import { extractSec, cikMap, factsUrl } from "./sec.mjs";
 
 const OUT = new URL("../cf/site/data/", import.meta.url);
-const UA = "Repere/0.2 (site pedagogique" + (process.env.CONTACT ? "; " + process.env.CONTACT : "") + ")";
+const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse");
 const sleep = ms => process.env.NO_SLEEP ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
 
 export async function getJSON(fetchFn, url, accept = "application/json") {
@@ -78,7 +79,25 @@ export function candidates(doc) {
 }
 export const DIAGNOSTIC = {};
 
+let CIK = null;
+export async function collectSec(fetchFn, c) {
+  CIK = CIK || await cikMap(getJSON, fetchFn);
+  const cik = CIK[c.sec];
+  if (!cik) throw new Error("numéro SEC introuvable pour " + c.sec);
+  const doc = await getJSON(fetchFn, factsUrl(cik));
+  if (!doc) throw new Error("aucun compte à la SEC pour " + c.sec);
+  const s = toSeries(extractSec(doc));
+  if (!s.years.length) throw new Error("aucun exercice annuel lisible");
+  return {
+    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, region: c.region, domain: c.domain, desc: c.desc, cik, legalName: doc.entityName || c.name,
+    sector: c.sector, ...s,
+    sources: [{ periodEnd: s.years[s.years.length - 1] + "", report: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=10-K`, json: factsUrl(cik) }],
+    updated: new Date().toISOString().slice(0, 10),
+  };
+}
+
 export async function collectOne(fetchFn, c) {
+  if (c.sec) return collectSec(fetchFn, c);
   const id = c.lei ? { lei: c.lei, legalName: c.name } : await leiFromIsin(fetchFn, c.isin, c.legal || c.name);
   if (!id) throw new Error("LEI introuvable pour " + c.isin);
   const fl = await filingsFor(fetchFn, id.lei);
@@ -92,7 +111,7 @@ export async function collectOne(fetchFn, c) {
   }
   const s = toSeries(merge(reports));
   return {
-    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, domain: c.domain, desc: c.desc, lei: id.lei, legalName: id.legalName || c.name,
+    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id.lei, legalName: id.legalName || c.name,
     sector: c.sector, ...s,
     sources: fl.map(f => ({ periodEnd: f.period_end, report: f.report, json: f.json })),
     updated: new Date().toISOString().slice(0, 10),
@@ -103,9 +122,9 @@ export async function collectOne(fetchFn, c) {
 export function summary(c) {
   const L = c.years.length - 1, f = c.fin, at = (k, i = L) => f[k] && i >= 0 ? f[k][i] : null;
   return {
-    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, domain: c.domain, desc: c.desc, sector: c.sector, currency: c.currency,
-    year: c.years[L] ?? null, ca: at("ca"), caPrev: at("ca", L - 1), ebit: at("ebit"), net: at("net"), equity: at("equity"),
-    netDebt: at("netDebt"), ebitda: at("ebitda"), dps: at("dps") ?? at("dpsEst"), eps: at("eps"),
+    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, currency: c.currency,
+    year: c.years[L] ?? null, ca: at("ca"), caPrev: at("ca", L - 1), ebit: at("ebit"), net: at("net"), netPrev: at("net", L - 1), equity: at("equity"),
+    netDebt: at("netDebt"), ebitda: at("ebitda"), fcf: at("fcf"), divPaid: at("divPaid"), dps: at("dps") ?? at("dpsEst"), eps: at("eps"),
   };
 }
 
@@ -127,7 +146,7 @@ async function main() {
       errors.push(`${c.name} : ${e.message}`);
       console.log("ÉCHEC", c.name, e.message);
       if (prev[c.id]) list.push(prev[c.id]); // on garde la version précédente
-      else list.push({ id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, sector: c.sector, missing: true });
+      else list.push({ id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true });
     }
     await sleep(800);
   }

@@ -17,6 +17,7 @@
   --wrap:1240px; --gut:24px;
 }
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 html{-webkit-text-size-adjust:100%}
 body{margin:0;background:var(--page);color:var(--ink);font:14px/1.45 var(--sans);font-feature-settings:"tnum" 1;overflow-x:hidden}
 a{color:inherit;text-decoration:none}
@@ -378,6 +379,50 @@ details.more[open] summary{border-bottom:1px solid var(--rule)}
   .ph{padding:12px 14px}
   .kv td{padding:9px 14px}
 }
+.lv{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.lv-fort{background:#E3F2E9;color:#0F6B3E}.lv-moyen{background:#EEECE8;color:#5F5B55}.lv-vig{background:#FBEAD9;color:#9A4A0B}.lv-na,.lv-n{background:#EEF1F6;color:#3E5272}
+.sum{padding:12px 18px;border-bottom:1px solid var(--soft);font-weight:500}
+.lect{display:grid;grid-template-columns:1fr 1fr}
+.lect .li{padding:14px 18px;border-bottom:1px solid var(--soft);border-right:1px solid var(--soft)}
+.lect .li:nth-child(2n){border-right:0}
+.lect .lq{font-weight:600;font-size:14px}
+.lect .lvv{display:flex;align-items:center;gap:10px;margin:6px 0 4px;flex-wrap:wrap}
+.lect .lvv .num{font-size:20px;font-weight:600;letter-spacing:-.01em}
+.lect p{margin:4px 0 0;font-size:13.5px}
+.lect details{margin-top:6px;font-size:12.5px;color:var(--grey)}
+.lect summary{cursor:pointer;color:var(--link)}
+.pb .lect{grid-template-columns:1fr;margin:0 -16px}
+.pb .lect .li{border-right:0}
+.note2{padding:10px 18px;background:#FFF8E8;border-bottom:1px solid var(--soft);font-size:13.5px}
+.cross > div{padding:14px 18px;border-bottom:1px solid var(--soft)}
+.cross > div:last-child{border-bottom:0}
+.cross h3{font-size:14.5px}
+.cross p{margin:4px 0 0;font-size:13.5px;color:var(--grey)}
+.dots{display:inline-flex;gap:3px;align-items:center}
+.dots i,.dleg i{display:inline-block;width:8px;height:8px;border-radius:50%}
+.dots .f,.dleg .f{background:#1E8A52}.dots .m,.dleg .m{background:#C9C3B8}.dots .v,.dleg .v{background:#D9822B}
+.dleg{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:var(--grey);margin:-20px 0 22px}
+.dleg span{display:inline-flex;gap:6px;align-items:center}
+.ex p{margin:6px 0 0;font-size:15px}
+.ex p.muted{font-size:13.5px}
+.lead{font-size:15px;margin:0 0 14px;line-height:1.5}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{border:1px solid var(--rule);background:#fff;border-radius:999px;padding:6px 12px;cursor:pointer;font-size:13.5px}
+.chips button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+table.brk tr.sel td{background:#F4F7FB}
+.brkbar{display:flex;gap:18px;align-items:flex-end;flex-wrap:wrap;padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid var(--soft)}
+.fb{background:#FAF9F6;border:1px solid var(--soft);border-radius:12px;padding:12px 16px;margin-bottom:18px}
+.fb ul{margin:0;padding-left:18px}
+.fb li{margin:4px 0}
+#regTabs{border-bottom:1px solid var(--soft)}
+@media (max-width:760px){
+  .lect{grid-template-columns:1fr}
+  .lect .li{border-right:0;padding:12px 14px}
+  .pb .lect{margin:0 -12px}
+  .sum,.cross > div,.note2{padding-left:14px;padding-right:14px}
+  .dleg{margin:-6px 0 16px}
+  .brkbar{gap:10px}
+}
 </style>
 </head>
 <body>
@@ -416,7 +461,7 @@ details.more[open] summary{border-bottom:1px solid var(--rule)}
 <footer>
   <div class="wrap f">
     <div><p>Informations factuelles à but pédagogique. Aucun contenu du site n'est un conseil en investissement.</p>
-      <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours fournis par <a class="lnk" style="margin:0" href="https://fr.tradingview.com" target="_blank" rel="noopener nofollow">TradingView</a>.</p></div>
+      <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a> et <a class="lnk" style="margin:0" href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC (EDGAR)</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours fournis par <a class="lnk" style="margin:0" href="https://fr.tradingview.com" target="_blank" rel="noopener nofollow">TradingView</a>.</p></div>
     <div><a href="/lexique">Lexique</a><a href="/mentions-legales">Mentions légales</a></div>
   </div>
 </footer>
@@ -427,8 +472,8 @@ details.more[open] summary{border-bottom:1px solid var(--rule)}
 "use strict";
 const SITE = "Repère";
 const RATES = { pfu: 0.314, ps: 0.186, year: 2026 }; // taux en vigueur en 2026, à vérifier chaque année
-let R = null, D = null, AG = { events: [] }; // R : entreprises réelles ; D : séries fictives des simulateurs ; AG : agenda
-const RBY = {}, DBY = {}, FULL = {};
+let R = null, AG = { events: [] }; // R : entreprises ; AG : agenda
+const RBY = {}, FULL = {};
 const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -458,50 +503,154 @@ const lastDayOf = ym => { const [y, m] = ym.split("-").map(Number); return new D
 const median = a => { const s = a.filter(v => v != null && isFinite(v)).sort((x, y) => x - y); if (!s.length) return null; const k = Math.floor(s.length / 2); return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; };
 
 /* ---------- Indicateurs à partir des comptes ---------- */
-function ratios(s) { // s : résumé d'une entreprise (dernier exercice)
+const NOT_BANK = new Set(["visa", "mastercard"]); // classées en finance mais sans métier de prêteur
+const isBank = c => c.sector === "finance" && !NOT_BANK.has(c.id);
+const okn = x => x != null && isFinite(x);
+function ratios(s) { // s : chiffres du dernier exercice
   return {
-    g1: s.ca != null && s.caPrev ? s.ca / s.caPrev - 1 : null,
-    marge: s.ca && s.ebit != null ? s.ebit / s.ca : null,
-    nm: s.ca && s.net != null ? s.net / s.ca : null,
-    roe: s.equity && s.net != null && s.equity > 0 ? s.net / s.equity : null,
-    lev: s.ebitda && s.netDebt != null && s.ebitda > 0 ? s.netDebt / s.ebitda : null,
-    gear: s.equity && s.netDebt != null && s.equity > 0 ? s.netDebt / s.equity : null,
+    g1: okn(s.ca) && s.caPrev > 0 ? s.ca / s.caPrev - 1 : null,
+    marge: s.ca > 0 && okn(s.ebit) ? s.ebit / s.ca : null,
+    nm: s.ca > 0 && okn(s.net) ? s.net / s.ca : null,
+    ng: okn(s.net) && s.netPrev > 0 ? s.net / s.netPrev - 1 : null,
+    roe: s.equity > 0 && okn(s.net) ? s.net / s.equity : null,
+    lev: s.ebitda > 0 && okn(s.netDebt) ? s.netDebt / s.ebitda : null,
+    gear: s.equity > 0 && okn(s.netDebt) ? s.netDebt / s.equity : null,
+    conv: s.net > 0 && okn(s.fcf) ? s.fcf / s.net : null,
+    payout: okn(s.divPaid) && s.net > 0 ? s.divPaid / s.net : null,
   };
 }
+const MKEYS = ["g1", "marge", "nm", "roe", "lev", "gear", "conv", "payout"];
 let MED = {};
-function computeMedians() { // médiane des entreprises suivies, par secteur
+function computeMedians() { // médiane des entreprises suivies, par secteur (toutes régions)
   const by = {};
-  R.companies.filter(c => !c.missing).forEach(c => { (by[c.sector] = by[c.sector] || []).push(ratios(c)); });
-  MED = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, { n: l.length, ...Object.fromEntries(["g1", "marge", "nm", "roe", "lev", "gear"].map(m => [m, median(l.map(x => x[m]))])) }]));
+  R.companies.filter(c => !c.missing).forEach(c => { const r = ratios(c); if (isBank(c)) { r.lev = r.gear = r.conv = r.marge = null; } (by[c.sector] = by[c.sector] || []).push(r); });
+  MED = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, { n: l.length, ...Object.fromEntries(MKEYS.map(m => [m, median(l.map(x => x[m]))])) }]));
 }
-const secName = c => c.kind === "fonds" ? "Fonds indiciel" : c.kind === "action" ? "Exemple fictif" : (R.sectors[c.sector] || c.sector);
+const regName = c => (R.regions && R.regions[c.region]) || "";
+const secName = c => R.sectors[c.sector] || c.sector;
 const eventsOf = id => AG.events.filter(e => e.id === id).sort((a, b) => a.date.localeCompare(b.date));
 const upcoming = () => AG.events.filter(e => e.date >= TODAY && RBY[e.id]).sort((a, b) => a.date.localeCompare(b.date));
+
+/* ---------- Lecture : chaque chiffre traduit en phrase, avec un repère ---------- */
+// Trois niveaux, décrits par des seuils affichés. Ce sont des repères de lecture des comptes, pas un avis sur l'action.
+const LV = { fort: "Point fort", moyen: "Dans la moyenne", vig: "Point de vigilance", na: "Ne s'applique pas" };
+const RULES = {
+  croissance: "Plus de 5 % sur un an : point fort. De 0 à 5 % : dans la moyenne. En baisse : point de vigilance.",
+  marge: "Comparée aux entreprises du même secteur : nettement au-dessus, point fort ; nettement en dessous, point de vigilance. Sans comparaison possible : plus de 15 % point fort, moins de 7 % point de vigilance.",
+  net: "Bénéfice en hausse : point fort. En baisse de moins de 30 % : dans la moyenne. Perte, ou bénéfice divisé par plus de 1,4 : point de vigilance.",
+  roe: "Plus de 15 % : point fort. De 8 à 15 % : dans la moyenne. Moins de 8 % : point de vigilance.",
+  lev: "Moins de 1,5 an : point fort. De 1,5 à 3 ans : dans la moyenne. Plus de 3 ans : point de vigilance. Plus de trésorerie que de dettes : point fort.",
+  gear: "Moins de 50 % : point fort. De 50 à 100 % : dans la moyenne. Plus de 100 % : point de vigilance.",
+  fcf: "Plus de 80 € d'argent disponible pour 100 € de bénéfice : point fort. Positif mais moins : dans la moyenne. Négatif : point de vigilance.",
+  payout: "Moins de 60 % du bénéfice : point fort, il reste une marge si les bénéfices baissent. De 60 à 90 % : dans la moyenne. Plus de 90 % : point de vigilance.",
+  per: "Moins de 10 : bas. De 10 à 20 : la zone la plus courante. De 20 à 30 : élevé. Plus de 30 : très élevé. Ni bon ni mauvais en soi : tout dépend de la croissance attendue.",
+  rdt: "La plupart des grandes entreprises versent entre 1 et 5 % par an. Au-delà de 6 %, vérifiez que le dividende est couvert par le bénéfice.",
+};
+const e100 = v => F1.format(v * 100).replace(/,0$/, "") + " €";
+function figuresOf(c) { // chiffres du dernier exercice à partir d'une fiche complète
+  const L = c.years.length - 1, a = (k, i = L) => i >= 0 && c.fin[k] ? c.fin[k][i] : null;
+  const caF = a("ca", 0), ca = a("ca");
+  const ms = c.years.map((_, i) => a("ca", i) > 0 && a("ebit", i) != null ? a("ebit", i) / a("ca", i) : null);
+  const lastM = ms.slice(-3);
+  let margeTrend = null;
+  if (lastM.length === 3 && lastM.every(okn)) {
+    if (lastM[0] > lastM[1] && lastM[1] > lastM[2] && lastM[0] - lastM[2] > 0.02) margeTrend = "baisse";
+    if (lastM[0] < lastM[1] && lastM[1] < lastM[2] && lastM[2] - lastM[0] > 0.02) margeTrend = "hausse";
+  }
+  return { year: c.years[L], currency: c.currency, ca, caPrev: a("ca", L - 1), ebit: a("ebit"), net: a("net"), netPrev: a("net", L - 1), equity: a("equity"), netDebt: a("netDebt"), ebitda: a("ebitda"),
+    fcf: a("fcf"), cfo: a("cfo"), divPaid: a("divPaid"), eps: a("eps"), dps: a("dps") ?? a("dpsEst"), dpsEst: a("dps") == null && a("dpsEst") != null,
+    cagr: ca > 0 && caF > 0 && L >= 2 ? Math.pow(ca / caF, 1 / L) - 1 : null, span: L, first: c.years[0], margeTrend, marges: ms };
+}
+function lecture(co, f) {
+  const m = ratios(f), med = MED[co.sector] || {}, cur = f.currency || co.currency, bank = isBank(co), out = [];
+  const medOk = med.n >= 3;
+  const medTxt = (v, fm) => v != null && medOk ? ` Médiane des ${med.n} entreprises du secteur suivies ici : ${fm(v)}.` : "";
+  const B = v => big(v, cur);
+  if (m.g1 != null) out.push({ term: "croissance", q: bank ? "Les revenus progressent-ils ?" : "Les ventes progressent-elles ?", value: pct(m.g1), lv: m.g1 >= 0.05 ? "fort" : m.g1 >= 0 ? "moyen" : "vig",
+    text: `${bank ? "Les revenus sont passés" : "Les ventes sont passées"} de ${B(f.caPrev)} à ${B(f.ca)} en un an.${f.cagr != null ? ` Depuis ${f.first} : ${pct(f.cagr)} par an en moyenne.` : ""}` });
+  if (m.marge != null && !bank) {
+    const mm = medOk ? med.marge : null;
+    let lv = mm != null ? (m.marge >= mm + Math.max(0.03, Math.abs(mm) * 0.25) ? "fort" : m.marge <= mm - Math.max(0.03, Math.abs(mm) * 0.3) ? "vig" : "moyen") : (m.marge >= 0.15 ? "fort" : m.marge >= 0.07 ? "moyen" : "vig");
+    if (m.marge < 0) lv = "vig";
+    out.push({ term: "marge", q: "Combien reste-t-il sur 100 € vendus ?", value: pct(m.marge, 1, false), lv,
+      text: (m.marge >= 0 ? `Sur 100 € de ventes, il reste ${e100(m.marge)} une fois payés les salaires, les achats et les autres coûts de l'activité.` : `L'activité perd ${e100(-m.marge)} pour 100 € de ventes.`) + medTxt(mm, e100) });
+  }
+  if (f.net != null) {
+    let lv, t;
+    if (f.net < 0) { lv = "vig"; t = `Perte de ${B(-f.net)} sur l'exercice ${f.year}.`; }
+    else if (f.netPrev != null && f.netPrev < 0) { lv = "fort"; t = `Bénéfice de ${B(f.net)}, après une perte l'année précédente.`; }
+    else { lv = m.ng == null ? "moyen" : m.ng >= 0 ? "fort" : m.ng > -0.3 ? "moyen" : "vig"; t = `Bénéfice de ${B(f.net)} sur l'exercice ${f.year}${m.ng != null ? `, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, false)} sur un an` : ""}.`; }
+    if (m.nm != null && f.net > 0) t += ` Sur 100 € ${bank ? "de revenus" : "de ventes"}, ${e100(m.nm)} de bénéfice final.`;
+    out.push({ term: "net", q: "L'entreprise gagne-t-elle de l'argent ?", value: B(f.net), lv, text: t });
+  }
+  if (m.roe != null) out.push({ term: "roe", q: "L'argent des actionnaires rapporte-t-il ?", value: pct(m.roe, 1, false), lv: m.roe >= 0.15 ? "fort" : m.roe >= 0.08 ? "moyen" : "vig",
+    text: `Pour 100 € qui appartiennent aux actionnaires, l'entreprise a gagné ${e100(m.roe)} en un an.` + medTxt(med.roe, e100) });
+  else if (f.equity != null && f.equity <= 0) out.push({ term: "roe", q: "L'argent des actionnaires rapporte-t-il ?", value: "–", lv: "na", text: "Capitaux propres négatifs : ce ratio ne se calcule pas. Voir l'explication plus bas." });
+  if (bank) out.push({ term: "lev", q: "La dette est-elle sous contrôle ?", value: "–", lv: "na", text: "Pour une banque ou un assureur, emprunter et prêter est le métier lui-même : ce repère ne s'applique pas." });
+  else if (f.netDebt != null) {
+    if (f.netDebt < 0) out.push({ term: "dettenette", q: "La dette est-elle sous contrôle ?", value: "Pas de dette nette", lv: "fort", text: `L'entreprise a ${B(-f.netDebt)} de trésorerie de plus que ses dettes financières.` });
+    else if (m.lev != null) out.push({ term: "lev", q: "La dette est-elle sous contrôle ?", value: F1.format(m.lev) + " an" + (m.lev >= 2 ? "s" : ""), lv: m.lev <= 1.5 ? "fort" : m.lev <= 3 ? "moyen" : "vig",
+      text: `Sa dette nette de ${B(f.netDebt)} équivaut à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} de l'argent dégagé par son activité avant investissements (EBITDA).` });
+    else if (m.gear != null) out.push({ term: "gear", q: "La dette est-elle sous contrôle ?", value: pct(m.gear, 0, false), lv: m.gear <= 0.5 ? "fort" : m.gear <= 1 ? "moyen" : "vig",
+      text: `Sa dette nette de ${B(f.netDebt)} représente ${pct(m.gear, 0, false)} de ce qui appartient aux actionnaires.` });
+  }
+  if (!bank && f.fcf != null) out.push({ term: "fcf", q: "Les bénéfices se transforment-ils en argent ?", value: B(f.fcf), lv: f.fcf < 0 ? "vig" : m.conv != null && m.conv >= 0.8 ? "fort" : "moyen",
+    text: f.fcf >= 0 ? `Après avoir payé ses investissements (usines, machines, logiciels), il lui reste ${B(f.fcf)}${m.conv != null ? `, soit ${F0.format(m.conv * 100)} € pour 100 € de bénéfice` : ""}.` : `Ses investissements ont coûté plus que l'argent encaissé grâce à l'activité : il manque ${B(-f.fcf)} sur l'exercice.` });
+  if (f.divPaid != null) {
+    if (f.divPaid < 0.5) out.push({ term: "payout", q: "Le dividende est-il couvert ?", value: "Aucun", lv: "na", text: "Pas de dividende versé sur l'exercice : l'entreprise garde ses bénéfices pour investir ou racheter ses actions." });
+    else if (!(f.net > 0)) out.push({ term: "payout", q: "Le dividende est-il couvert ?", value: B(f.divPaid), lv: "vig", text: `${B(f.divPaid)} versés aux actionnaires alors que l'entreprise est en perte : le dividende est payé avec sa trésorerie ou sa dette.` });
+    else out.push({ term: "payout", q: "Le dividende est-il couvert ?", value: pct(m.payout, 0, false), lv: m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig",
+      text: `Sur 100 € de bénéfice, ${F0.format(m.payout * 100)} € ont été versés aux actionnaires${f.dps != null ? ` (${eur(f.dps, 2, cur)} par action${f.dpsEst ? ", estimé" : ""})` : ""}.` });
+  }
+  return out;
+}
+function croisements(co, f) { // ce qu'il faut regarder ensemble
+  const m = ratios(f), bank = isBank(co), out = [];
+  const hiDebt = !bank && ((m.lev != null && m.lev > 3) || (m.lev == null && m.gear != null && m.gear > 1));
+  if (m.roe >= 0.15 && hiDebt) out.push(["Bonne rentabilité, mais avec beaucoup de dette", "La rentabilité des capitaux propres est forte en partie parce que l'entreprise travaille avec de l'argent emprunté. Cela marche bien quand les bénéfices tiennent, moins quand ils baissent."]);
+  if (m.roe >= 0.15 && !hiDebt && !bank && f.netDebt != null) out.push(["Bonne rentabilité sans dette excessive", "Les bénéfices viennent de l'activité elle-même, pas d'un effet de la dette."]);
+  if (m.g1 >= 0.1 && f.fcf < 0) out.push(["Forte croissance, mais l'argent sort", "Les ventes montent vite, mais les investissements coûtent plus que ce que l'activité rapporte. La croissance est financée par la trésorerie, la dette ou de nouvelles actions."]);
+  if (m.g1 < 0 && m.ng > 0.05) out.push(["Bénéfice en hausse alors que les ventes baissent", "Cela peut venir d'économies, d'une baisse d'impôts ou d'un gain ponctuel (vente d'une activité). Le rapport annuel donne le détail."]);
+  if (m.g1 > 0.05 && m.ng != null && m.ng < -0.15) out.push(["Ventes en hausse, bénéfice en baisse", "L'entreprise vend plus mais gagne moins : coûts en hausse, prix sous pression ou charge exceptionnelle."]);
+  if (m.payout > 1 || (f.net <= 0 && f.divPaid > 0.5)) out.push(["Dividende plus élevé que le bénéfice", "L'entreprise verse plus qu'elle ne gagne. Cela ne peut pas durer sans hausse des bénéfices."]);
+  if (!bank && f.net > 0 && m.conv != null && m.conv >= 0 && m.conv < 0.5) out.push(["Bénéfice peu transformé en argent", `Pour 100 € de bénéfice, il ne reste que ${F0.format(m.conv * 100)} € une fois les investissements payés. Les investissements sont lourds, ou les clients paient tard.`]);
+  if (!bank && f.net < 0 && f.fcf > 0) out.push(["Perte comptable, mais de l'argent encaissé", "Le résultat est négatif, mais l'activité a quand même rapporté de l'argent. Souvent, une charge sans sortie d'argent (dépréciation d'une acquisition) pèse sur le résultat."]);
+  if (f.margeTrend === "baisse") out.push(["Marge en baisse trois ans de suite", `Elle est passée de ${pct(f.marges.at(-3), 1, false)} à ${pct(f.marges.at(-1), 1, false)}. L'entreprise garde moins sur chaque vente.`]);
+  if (f.margeTrend === "hausse") out.push(["Marge en hausse trois ans de suite", `Elle est passée de ${pct(f.marges.at(-3), 1, false)} à ${pct(f.marges.at(-1), 1, false)}. L'entreprise garde plus sur chaque vente.`]);
+  if (f.equity != null && f.equity <= 0) out.push(["Capitaux propres négatifs", "Les dettes dépassent la valeur comptable des actifs. Fréquent aux États-Unis chez des entreprises rentables qui rachètent beaucoup leurs actions ; plus préoccupant quand l'entreprise perd de l'argent."]);
+  if (["energie", "materiaux"].includes(co.sector)) out.push(["Secteur cyclique", "Les bénéfices suivent les prix du pétrole, du gaz ou des métaux. Une seule année dit peu : comparez plusieurs exercices dans l'onglet Comptes."]);
+  if (bank) out.push(["Banque ou assurance : d'autres repères", "La dette et l'argent disponible ne se lisent pas comme pour une entreprise industrielle. La rentabilité des capitaux propres et la régularité du bénéfice comptent davantage."]);
+  return out;
+}
+const lvTag = lv => `<span class="lv lv-${lv}">${LV[lv]}</span>`;
+function tally(items) { const t = { fort: 0, moyen: 0, vig: 0 }; items.forEach(i => { if (t[i.lv] != null) t[i.lv]++; }); return t; }
+function tallyTxt(t) { return [t.fort && `${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}`, t.moyen && `${t.moyen} dans la moyenne`, t.vig && `${t.vig} point${t.vig > 1 ? "s" : ""} de vigilance`].filter(Boolean).join(" · "); }
+const quick = c => c.missing ? null : tally(lecture(c, { ...c, cagr: null }));
 
 /* ---------- Définitions ---------- */
 const TERMS = {
   cours: { name: "Cours et performance", what: "L'évolution du prix de l'action.", calc: "Variation du cours sur la période.", read: "Avec les dividendes réinvestis, on voit ce qu'a réellement gagné un actionnaire qui a gardé ses titres.", limit: "Le passé ne dit rien de l'évolution future." },
   cap: { name: "Capitalisation", what: "La valeur totale de l'entreprise en Bourse.", calc: "Cours × nombre d'actions.", read: "Plus de 10 Md€ : grande capitalisation. De 1 à 10 Md€ : moyenne. Moins de 1 Md€ : petite.", limit: "Elle change chaque jour avec le cours." },
-  ca: { name: "Chiffre d'affaires", what: "Ce que l'entreprise vend en un an.", calc: "Total des ventes de l'exercice.", read: "Sa croissance montre si l'activité grandit ou recule.", limit: "Le rachat d'une autre entreprise gonfle la croissance sans que l'activité d'origine progresse. Les banques et assureurs ne publient pas de chiffre d'affaires au sens habituel." },
-  croissance: { name: "Croissance du chiffre d'affaires", what: "La variation des ventes d'une année sur l'autre.", calc: "(Chiffre d'affaires de l'année ÷ celui de l'année précédente) − 1.", read: "Une croissance régulière sur plusieurs années compte plus qu'une seule bonne année.", limit: "Les variations de change et les acquisitions la modifient." },
+  ca: { name: "Chiffre d'affaires", ex: "Une boulangerie qui vend 500 pains à 2 € a un chiffre d'affaires de 1 000 €, quels que soient ses coûts.", what: "Ce que l'entreprise vend en un an.", calc: "Total des ventes de l'exercice.", read: "Sa croissance montre si l'activité grandit ou recule.", limit: "Le rachat d'une autre entreprise gonfle la croissance sans que l'activité d'origine progresse. Les banques et assureurs ne publient pas de chiffre d'affaires au sens habituel." },
+  croissance: { name: "Croissance du chiffre d'affaires", ex: "Ventes de 110 M€ cette année contre 100 M€ l'an dernier : croissance de 10 %.", what: "La variation des ventes d'une année sur l'autre.", calc: "(Chiffre d'affaires de l'année ÷ celui de l'année précédente) − 1.", read: "Une croissance régulière sur plusieurs années compte plus qu'une seule bonne année.", limit: "Les variations de change et les acquisitions la modifient." },
   resexp: { name: "Résultat d'exploitation", what: "Ce que rapporte l'activité elle-même, avant les frais financiers et les impôts.", calc: "Chiffre d'affaires − coûts de l'activité.", read: "C'est la base de la marge d'exploitation.", limit: "Certaines entreprises le présentent sous un autre nom ou ne le publient pas sous la forme standard." },
-  marge: { name: "Marge d'exploitation", what: "Ce que l'activité rapporte sur 100 € vendus.", calc: "Résultat d'exploitation ÷ chiffre d'affaires.", read: "Se compare entre entreprises du même secteur.", limit: "Très différente d'un secteur à l'autre : 4 % peut être normal dans la distribution, faible dans le logiciel." },
-  net: { name: "Résultat net", what: "Le bénéfice final revenant aux actionnaires, après toutes les charges et les impôts.", calc: "Résultat d'exploitation − frais financiers − impôts ± éléments exceptionnels.", read: "Montre si l'entreprise gagne de l'argent.", limit: "Un élément exceptionnel (vente d'une filiale, dépréciation) peut le fausser une année." },
+  marge: { name: "Marge d'exploitation", ex: "Ventes de 1 000 €, coûts de l'activité de 850 € : il reste 150 €, soit une marge de 15 %.", what: "Ce que l'activité rapporte sur 100 € vendus.", calc: "Résultat d'exploitation ÷ chiffre d'affaires.", read: "Se compare entre entreprises du même secteur.", limit: "Très différente d'un secteur à l'autre : 4 % peut être normal dans la distribution, faible dans le logiciel." },
+  net: { name: "Résultat net", ex: "Sur 150 € de résultat d'exploitation, l'entreprise paie 20 € d'intérêts et 35 € d'impôts : résultat net de 95 €.", what: "Le bénéfice final revenant aux actionnaires, après toutes les charges et les impôts.", calc: "Résultat d'exploitation − frais financiers − impôts ± éléments exceptionnels.", read: "Montre si l'entreprise gagne de l'argent.", limit: "Un élément exceptionnel (vente d'une filiale, dépréciation) peut le fausser une année." },
   bnpa: { name: "BNPA", what: "Le bénéfice net par action.", calc: "Résultat net ÷ nombre moyen d'actions.", read: "C'est la base du calcul du PER.", limit: "Les rachats d'actions le font monter sans que le bénéfice total change." },
-  per: { name: "PER", what: "Combien d'années de bénéfices le prix de l'action représente.", calc: "Cours ÷ bénéfice net par action.", read: "La plupart des actions se situent entre 10 et 20. Une forte croissance attendue explique souvent un PER plus élevé.", limit: "Impossible à calculer quand l'entreprise perd de l'argent." },
+  per: { name: "PER", ex: "Une action à 60 € d'une entreprise qui gagne 4 € par action : PER de 15.", what: "Combien d'années de bénéfices le prix de l'action représente.", calc: "Cours ÷ bénéfice net par action.", read: "La plupart des actions se situent entre 10 et 20. Une forte croissance attendue explique souvent un PER plus élevé.", limit: "Impossible à calculer quand l'entreprise perd de l'argent." },
   dps: { name: "Dividende par action", what: "La somme versée à l'actionnaire pour chaque action détenue.", calc: "Montant voté en assemblée générale. Ici : dividende versé pendant l'exercice, tel que publié dans les comptes.", read: "Sa régularité sur plusieurs années compte autant que son montant.", limit: "L'entreprise peut le réduire ou le supprimer." },
-  rdt: { name: "Rendement du dividende", what: "Ce que l'action verse chaque année par rapport à son prix.", calc: "Dividende par action ÷ cours.", read: "Les entreprises matures versent en général plus que les entreprises en forte croissance.", limit: "Un rendement très élevé vient souvent d'un cours en forte baisse." },
-  payout: { name: "Taux de distribution", what: "La part du bénéfice versée en dividende.", calc: "Dividendes versés ÷ résultat net.", read: "Au-delà de 90 %, le dividende devient difficile à maintenir.", limit: "Une année de bénéfice exceptionnellement bas fait grimper le taux." },
+  rdt: { name: "Rendement du dividende", ex: "Une action à 50 € qui verse 2 € par an : rendement de 4 %.", what: "Ce que l'action verse chaque année par rapport à son prix.", calc: "Dividende par action ÷ cours.", read: "Les entreprises matures versent en général plus que les entreprises en forte croissance.", limit: "Un rendement très élevé vient souvent d'un cours en forte baisse." },
+  payout: { name: "Taux de distribution", ex: "Bénéfice de 100 M€, dividendes versés de 45 M€ : taux de distribution de 45 %.", what: "La part du bénéfice versée en dividende.", calc: "Dividendes versés ÷ résultat net.", read: "Au-delà de 90 %, le dividende devient difficile à maintenir.", limit: "Une année de bénéfice exceptionnellement bas fait grimper le taux." },
   ebitda: { name: "EBITDA", what: "Le résultat de l'activité avant amortissements : une mesure de l'argent généré par l'exploitation.", calc: "Résultat d'exploitation + dotations aux amortissements. Ici estimé à partir des comptes publiés.", read: "Sert surtout à mesurer la capacité à rembourser la dette.", limit: "Ne tient pas compte des investissements nécessaires pour faire tourner l'activité." },
   dette: { name: "Dette financière", what: "Les emprunts et obligations de l'entreprise.", calc: "Emprunts à long terme + emprunts à court terme, hors dettes de location.", read: "À rapporter à la taille de l'entreprise et à ce qu'elle génère.", limit: "Chaque entreprise présente sa dette un peu différemment." },
   tresorerie: { name: "Trésorerie", what: "L'argent disponible immédiatement.", calc: "Trésorerie et équivalents de trésorerie à la clôture.", read: "Permet de faire face aux dépenses sans emprunter.", limit: "Une photo à la date de clôture des comptes." },
-  dettenette: { name: "Dette nette", what: "Les dettes financières moins la trésorerie disponible.", calc: "Dette financière − trésorerie. Ici estimée à partir des comptes publiés.", read: "Négative : l'entreprise a plus de trésorerie que de dettes.", limit: "Peut différer de la dette nette annoncée par l'entreprise, qui inclut parfois d'autres éléments." },
-  lev: { name: "Dette nette ÷ EBITDA", what: "En combien d'années l'entreprise pourrait rembourser sa dette avec ce que génère son activité.", calc: "Dette nette ÷ EBITDA.", read: "Moins de 2 : situation solide. De 2 à 4 : maîtrisée. Plus de 4 : endettement élevé.", limit: "Ne s'applique pas aux banques et assureurs, dont la dette fait partie du métier." },
+  dettenette: { name: "Dette nette", ex: "Emprunts de 800 M€, trésorerie de 300 M€ : dette nette de 500 M€.", what: "Les dettes financières moins la trésorerie disponible.", calc: "Dette financière − trésorerie. Ici estimée à partir des comptes publiés.", read: "Négative : l'entreprise a plus de trésorerie que de dettes.", limit: "Peut différer de la dette nette annoncée par l'entreprise, qui inclut parfois d'autres éléments." },
+  lev: { name: "Dette nette ÷ EBITDA", ex: "Dette nette de 6 Md€, EBITDA de 3 Md€ : il faudrait 2 ans pour rembourser.", what: "En combien d'années l'entreprise pourrait rembourser sa dette avec ce que génère son activité.", calc: "Dette nette ÷ EBITDA.", read: "Moins de 2 : situation solide. De 2 à 4 : maîtrisée. Plus de 4 : endettement élevé.", limit: "Ne s'applique pas aux banques et assureurs, dont la dette fait partie du métier." },
   gear: { name: "Dette nette ÷ capitaux propres", what: "Le poids de la dette par rapport à ce qui appartient aux actionnaires.", calc: "Dette nette ÷ capitaux propres.", read: "Moins de 50 % : endettement modéré. Au-delà de 100 % : la dette dépasse les capitaux propres.", limit: "Ne s'applique pas aux banques et assureurs." },
   capitaux: { name: "Capitaux propres", what: "Ce qui appartient aux actionnaires dans le bilan.", calc: "Total des actifs − total des dettes, part du groupe.", read: "Sert au calcul de la rentabilité des capitaux propres.", limit: "Valeur comptable, souvent loin de la valeur en Bourse." },
-  roe: { name: "Rentabilité des capitaux propres (ROE)", what: "Ce que l'entreprise gagne avec l'argent de ses actionnaires.", calc: "Résultat net ÷ capitaux propres.", read: "Se compare au secteur.", limit: "Une dette importante le gonfle artificiellement." },
+  roe: { name: "Rentabilité des capitaux propres (ROE)", ex: "Capitaux propres de 1 000 M€, bénéfice de 150 M€ : rentabilité de 15 %.", what: "Ce que l'entreprise gagne avec l'argent de ses actionnaires.", calc: "Résultat net ÷ capitaux propres.", read: "Se compare au secteur.", limit: "Une dette importante le gonfle artificiellement." },
   cfo: { name: "Flux de trésorerie d'exploitation", what: "L'argent réellement encaissé grâce à l'activité.", calc: "Résultat corrigé des éléments sans effet sur la trésorerie et des variations du besoin en fonds de roulement.", read: "Proche du résultat net ou au-dessus : les bénéfices se transforment bien en argent.", limit: "Varie avec les délais de paiement des clients et des fournisseurs." },
-  fcf: { name: "Flux de trésorerie disponible", what: "L'argent réellement généré après les investissements.", calc: "Flux de trésorerie d'exploitation − investissements corporels et incorporels.", read: "Positif plusieurs années de suite : l'entreprise finance seule son développement et son dividende.", limit: "Un gros investissement ponctuel peut le rendre négatif une année." },
+  fcf: { name: "Flux de trésorerie disponible", ex: "L'activité rapporte 500 M€ d'argent, les nouvelles usines en coûtent 300 M€ : flux disponible de 200 M€.", what: "L'argent réellement généré après les investissements.", calc: "Flux de trésorerie d'exploitation − investissements corporels et incorporels.", read: "Positif plusieurs années de suite : l'entreprise finance seule son développement et son dividende.", limit: "Un gros investissement ponctuel peut le rendre négatif une année." },
 };
 const PTERMS = {
   gain: { name: "Gain ou perte", what: "Valeur finale − total versé, plus les dividendes encaissés.", read: "Le chiffre le plus concret : combien d'euros ont été gagnés ou perdus." },
@@ -640,7 +789,7 @@ function amfBlock(target, params, limit) {
     }
     const items = [...seen.values()].slice(0, limit);
     if (!items.length) { target.innerHTML = `<div class="empty">Aucune publication trouvée.</div>`; return; }
-    target.innerHTML = `<div class="feed">${items.map(i => { const c = R.companies.find(x => x.isin === i.isin); return `<div class="it"><div class="when">${whenParis(i.date)}</div><div>
+    target.innerHTML = `<div class="feed">${items.map(i => { const c = i.isin ? R.companies.find(x => x.isin === i.isin) : null; return `<div class="it"><div class="when">${whenParis(i.date)}</div><div>
       <div>${c ? `<a class="co" href="/entreprise/${c.id}">${esc(c.name)}</a>` : i.company ? `<span class="co">${esc(i.company)}</span>` : ""}${i.type ? `<span class="ty">${esc(i.type)}</span>` : ""}</div>
       ${i.url ? `<a class="ti" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : `<span class="ti">${esc(i.title)}</span>`}</div></div>`; }).join("")}</div>`;
   }).catch(() => { target.innerHTML = `<div class="empty">Le flux de l'AMF n'est pas disponible pour le moment.</div>`; });
@@ -653,64 +802,74 @@ function logo(c, size = 40) { // icône du site de l'entreprise ; initiales si e
 }
 function caLine(c) {
   if (c.missing) return `<span class="light">Comptes en cours de collecte</span>`;
-  if (c.ca != null) return `<span class="light">Chiffre d'affaires ${c.year}</span><b class="num">${big(c.ca, c.currency)}</b>`;
-  if (c.net != null) return `<span class="light">Résultat net ${c.year}</span><b class="num">${big(c.net, c.currency)}</b>`;
-  return `<span class="light">Exercice ${c.year ?? "–"}</span>`;
+  const t = quick(c);
+  return `<span class="light">${c.ca != null ? `Ventes ${c.year} : <b class="num" style="color:var(--ink)">${big(c.ca, c.currency)}</b>` : `Exercice ${c.year ?? "–"}`}</span>${t ? `<span class="dots" title="${esc(tallyTxt(t))}">${"<i class='f'></i>".repeat(t.fort)}${"<i class='m'></i>".repeat(t.moyen)}${"<i class='v'></i>".repeat(t.vig)}</span>` : ""}`;
 }
 function coCard(c) {
-  return `<a class="cocard" href="/entreprise/${c.id}"><div class="top">${logo(c, 44)}<div><div class="nm">${esc(c.name)}</div><div class="sec">${esc(secName(c))}</div></div></div>
+  return `<a class="cocard" href="/entreprise/${c.id}"><div class="top">${logo(c, 44)}<div><div class="nm">${esc(c.name)}</div><div class="sec">${esc(regName(c))} · ${esc(secName(c))}</div></div></div>
     <div class="d">${esc(c.desc || "")}</div><div class="f">${caLine(c)}</div></a>`;
 }
+const LEGEND = `<div class="dleg"><span><i class="f"></i>Point fort</span><span><i class="m"></i>Dans la moyenne</span><span><i class="v"></i>Point de vigilance</span></div>`;
 
 /* ---------- Accueil : un parcours pas à pas ---------- */
-const FEATURED = ["lvmh", "totalenergies", "loreal", "airbus", "sanofi", "hermes", "schneider-electric", "bnp-paribas"];
+const FEATURED = ["lvmh", "apple", "totalenergies", "asml", "airbus", "nvidia", "loreal", "sanofi"];
 function pageHome() {
   setTitle(""); setNav("home");
   const feat = FEATURED.map(id => RBY[id]).filter(Boolean);
+  const h = RBY.hermes, cf = RBY.carrefour, mh = h && h.ca ? h.ebit / h.ca : null, mc = cf && cf.ca ? cf.ebit / cf.ca : null;
   app.innerHTML = `
-    <section class="hero"><h1>Comprendre la Bourse, étape par étape</h1>
-      <p>Des chiffres expliqués simplement et des outils pour s'entraîner. Le site informe, il ne conseille pas : vous restez seul juge de vos décisions.</p></section>
+    <section class="hero"><h1>Comprendre une entreprise avant d'acheter son action</h1>
+      <p>Pour chaque entreprise : ce qu'elle fait, d'où vient son argent, et ce que disent ses comptes, en phrases simples et avec des repères. Le site explique, il ne conseille pas.</p></section>
+    ${mh != null && mc != null ? `<section class="panel ex"><div class="pb"><div class="cap">Exemple concret</div>
+      <p>Sur 100 € de ventes, <a class="lnk" href="/entreprise/hermes">Hermès</a> garde <b>${e100(mh)}</b> une fois ses coûts payés. <a class="lnk" href="/entreprise/carrefour">Carrefour</a> en garde <b>${e100(mc)}</b>.</p>
+      <p class="muted">Les deux chiffres sont normaux pour leur métier : le luxe vend cher des produits rares, la grande distribution vend beaucoup avec de petites marges. C'est pourquoi le site compare toujours une entreprise à son secteur.</p></div></section>` : ""}
     <div class="steps">
-      <a class="step" href="/lexique"><div class="n">Étape 1</div><h3>Les mots essentiels</h3><p>Dix notions pour lire n'importe quelle fiche.</p></a>
-      <a class="step" href="/entreprises"><div class="n">Étape 2</div><h3>Découvrir une entreprise</h3><p>Ce qu'elle fait, ce qu'elle gagne, ce qu'elle doit.</p></a>
-      <a class="step" href="/simulateurs"><div class="n">Étape 3</div><h3>Simuler avant d'investir</h3><p>Intérêts composés, frais, PEA ou compte-titres.</p></a>
-      <a class="step" href="/portefeuille"><div class="n">Étape 4</div><h3>Suivre ses placements</h3><p>Votre gain réel, frais et dividendes compris.</p></a>
+      <a class="step" href="/lexique"><div class="n">Étape 1</div><h3>Dix notions</h3><p>Chacune avec un exemple réel et ce qui est bon ou moins bon.</p></a>
+      <a class="step" href="/entreprises"><div class="n">Étape 2</div><h3>Lire une entreprise</h3><p>Ses points forts et ses points de vigilance, expliqués.</p></a>
+      <a class="step" href="/simulateurs"><div class="n">Étape 3</div><h3>Faire ses calculs</h3><p>Épargne, frais du courtier, PEA ou compte-titres.</p></a>
+      <a class="step" href="/portefeuille"><div class="n">Étape 4</div><h3>Suivre ses placements</h3><p>Avec les frais de votre courtier calculés automatiquement.</p></a>
     </div>
-    <div class="sect"><h2>Quelques grandes entreprises</h2><a href="/entreprises">Voir les ${R.companies.length} entreprises</a></div>
-    <div class="cards">${feat.map(coCard).join("")}</div>
-    <div class="duo">
+    <div class="sect"><h2>Quelques entreprises</h2><a href="/entreprises">Voir les ${R.companies.length} entreprises</a></div>
+    <div class="cards">${feat.map(coCard).join("")}</div>${LEGEND}
+    <div class="duo" style="margin-top:24px">
       <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Tout l'agenda</a></div>${agendaHTML(upcoming().slice(0, 4))}</section>
-      <section class="panel"><div class="ph"><h2>Dernières publications</h2><a href="/actualites">Toute l'actualité</a></div><div id="amf"></div></section>
+      <section class="panel"><div class="ph"><h2>Dernières publications en France</h2><a href="/actualites">Toute l'actualité</a></div><div id="amf"></div></section>
     </div>`;
   amfBlock($("#amf"), "&suivies=1", 4);
 }
 
 /* ---------- Liste des entreprises ---------- */
-let listState = { sector: "all", view: "cartes", sort: "name", dir: 1 };
+let listState = { region: "all", sector: "all", view: "cartes", sort: "name", dir: 1 };
 function pageEntreprises() {
   setTitle("Les entreprises"); setNav("ent");
   const sectors = [...new Set(R.companies.map(c => c.sector))].sort((a, b) => secName({ sector: a }).localeCompare(secName({ sector: b }), "fr"));
-  app.innerHTML = `<h1 class="pagetitle">Les entreprises</h1><p class="pagesub">Les grandes entreprises cotées à Paris. Choisissez-en une pour voir ce qu'elle fait, ses comptes et son actualité.</p>
-    <section class="panel"><div class="ph" style="padding-top:0;padding-bottom:0;border-bottom:0">
-      <div class="filters" id="secTabs" style="border:0;padding:0;flex:1"><button data-s="all">Toutes</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
+  const n = r => R.companies.filter(c => c.region === r).length;
+  app.innerHTML = `<h1 class="pagetitle">Les entreprises</h1><p class="pagesub">${R.companies.length} grandes entreprises de France, d'Europe et des États-Unis. Les points de couleur résument ce que disent leurs comptes.</p>
+    <section class="panel">
+      <div class="filters" id="regTabs"><button data-r="all">Toutes</button>${Object.entries(R.regions).map(([k, l]) => `<button data-r="${k}">${esc(l)} <span class="light">${n(k)}</span></button>`).join("")}</div>
+      <div class="ph" style="padding-top:0;padding-bottom:0;border-bottom:0">
+      <div class="filters" id="secTabs" style="border:0;padding:0;flex:1"><button data-s="all">Tous les secteurs</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
       <div class="viewsw d-only" id="vsw"><button data-v="cartes">Cartes</button><button data-v="tableau">Tableau</button></div></div></section>
-    <div id="elist"></div>`;
+    ${LEGEND}<div id="elist"></div>`;
   const render = () => {
+    $$("#regTabs button").forEach(b => b.classList.toggle("on", b.dataset.r === listState.region));
     $$("#secTabs button").forEach(b => b.classList.toggle("on", b.dataset.s === listState.sector));
     $$("#vsw button").forEach(b => b.classList.toggle("on", b.dataset.v === listState.view));
-    const list = R.companies.filter(c => listState.sector === "all" || c.sector === listState.sector);
+    const list = R.companies.filter(c => (listState.region === "all" || c.region === listState.region) && (listState.sector === "all" || c.sector === listState.sector));
+    if (!list.length) { $("#elist").innerHTML = `<section class="panel"><div class="empty">Aucune entreprise pour ce choix.</div></section>`; return; }
     const view = innerWidth <= 760 ? "cartes" : listState.view;
     if (view === "cartes") { $("#elist").innerHTML = `<div class="cards">${[...list].sort((a, b) => a.name.localeCompare(b.name, "fr")).map(coCard).join("")}</div>`; return; }
-    const k = listState.sort, dir = listState.dir, rows = list.map(c => ({ c, m: ratios(c) }));
-    const val = (r, k) => k === "ca" || k === "net" ? r.c[k] : r.m[k];
+    const k = listState.sort, dir = listState.dir, rows = list.map(c => ({ c, m: ratios(c), t: quick(c) }));
+    const val = (r, k) => k === "ca" || k === "net" ? r.c[k] : k === "vig" ? (r.t ? r.t.fort - r.t.vig : null) : r.m[k];
     rows.sort((a, b) => k === "name" ? dir * a.c.name.localeCompare(b.c.name, "fr") : dir * ((val(a, k) ?? -1e15) - (val(b, k) ?? -1e15)));
     const th = (key, label) => `<th class="sort" data-k="${key}">${label}${key === k ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`;
-    $("#elist").innerHTML = `<section class="panel"><div class="scroll-x"><table class="t click"><thead><tr>${th("name", "Entreprise")}${th("ca", "Chiffre d'affaires")}${th("g1", "Croissance")}${th("marge", "Marge d'exploitation")}${th("net", "Résultat net")}<th>Exercice</th></tr></thead><tbody>
-      ${rows.map(({ c, m }) => `<tr data-id="${c.id}"><td><div class="cell-co">${logo(c, 32)}<div><div class="nm">${esc(c.name)}</div><div class="sub">${esc(secName(c))}</div></div></div></td>
-      ${c.missing ? `<td colspan="5" class="light">Comptes en cours de collecte</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
-      <div class="src">Chiffres du dernier rapport annuel publié. Cliquez sur un en-tête pour trier, sur une ligne pour ouvrir la fiche.</div></section>`;
+    $("#elist").innerHTML = `<section class="panel"><div class="scroll-x"><table class="t click"><thead><tr>${th("name", "Entreprise")}${th("ca", "Ventes")}${th("g1", "Croissance")}${th("marge", "Marge")}${th("net", "Bénéfice")}${th("vig", "Repères")}<th>Exercice</th></tr></thead><tbody>
+      ${rows.map(({ c, m, t }) => `<tr data-id="${c.id}"><td><div class="cell-co">${logo(c, 32)}<div><div class="nm">${esc(c.name)}</div><div class="sub">${esc(regName(c))} · ${esc(secName(c))}</div></div></div></td>
+      ${c.missing ? `<td colspan="6" class="light">Comptes en cours de collecte</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td><span class="dots">${"<i class='f'></i>".repeat(t.fort)}${"<i class='m'></i>".repeat(t.moyen)}${"<i class='v'></i>".repeat(t.vig)}</span></td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
+      <div class="src">Chiffres du dernier rapport annuel publié, dans la devise de l'entreprise. Cliquez sur un en-tête pour trier, sur une ligne pour ouvrir la fiche.</div></section>`;
     $("#elist thead").onclick = e => { const t = e.target.closest("th.sort"); if (!t) return; if (listState.sort === t.dataset.k) listState.dir *= -1; else { listState.sort = t.dataset.k; listState.dir = t.dataset.k === "name" ? 1 : -1; } render(); };
   };
+  $("#regTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.region = b.dataset.r; render(); } };
   $("#secTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.sector = b.dataset.s; render(); } };
   $("#vsw").onclick = e => { const b = e.target.closest("button"); if (b) { listState.view = b.dataset.v; render(); } };
   render();
@@ -722,7 +881,7 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- Fiche entreprise ---------- */
-const CTABS = [["", "Synthèse"], ["comptes", "Comptes"], ["actualite", "Actualité"], ["agenda", "Agenda"]];
+const CTABS = [["", "En bref"], ["comptes", "Comptes"], ["actualite", "Actualité"], ["agenda", "Agenda"]];
 async function pageCompany(id, tab) {
   const s = RBY[id];
   if (!s) return pageNotFound();
@@ -730,10 +889,10 @@ async function pageCompany(id, tab) {
   tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
   setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
   app.innerHTML = `
-    <div class="crumbs"><a href="/entreprises">Entreprises</a> › ${esc(secName(s))}</div>
+    <div class="crumbs"><a href="/entreprises">Entreprises</a> › ${esc(regName(s))} › ${esc(secName(s))}</div>
     <div class="panel" style="margin-bottom:16px">
       <div class="qhead">
-        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)} · ISIN ${esc(s.isin)} · ${esc(secName(s))}</div></div></div>
+        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div></div></div>
         <div class="px tv" id="tvinfo"></div>
       </div>
       <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
@@ -745,72 +904,86 @@ async function pageCompany(id, tab) {
     try { c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); } catch (e) { c = null; }
   }
   if (location.pathname.split("/")[2] !== id) return; // l'utilisateur a changé de page entre-temps
-  ({ "": tabSynthese, comptes: tabComptes, actualite: tabActu, agenda: tabAgenda })[tab](s, c, $("#ctab"));
+  ({ "": tabBref, comptes: tabComptes, actualite: tabActu, agenda: tabAgenda })[tab](s, c, $("#ctab"));
 }
 const lastIdx = c => c.years.length - 1;
 const at = (c, k, i) => c.fin[k] ? c.fin[k][i] : null;
-function synthese(s, c) {
-  const L = lastIdx(c), y = c.years[L], cur = c.currency, med = MED[s.sector] || {};
-  const ca = at(c, "ca", L), ca0 = at(c, "ca", L - 1), ebit = at(c, "ebit", L), net = at(c, "net", L), net0 = at(c, "net", L - 1);
-  const m = ratios({ ca, caPrev: ca0, ebit, net, equity: at(c, "equity", L), netDebt: at(c, "netDebt", L), ebitda: at(c, "ebitda", L) });
-  const cmp = (v, r, tol) => r == null || v == null ? "" : Math.abs(v - r) <= tol ? ", proche de la" : v > r ? ", au-dessus de la" : ", en dessous de la";
-  const verb = (v, h, b) => v >= 0 ? h : b;
-  const first = c.years[0], caF = at(c, "ca", 0);
-  const cagr = ca && caF && L > 0 ? Math.pow(ca / caF, 1 / L) - 1 : null;
-  const rows = [];
-  if (ca != null) rows.push(["Activité", `${def("ca", "Chiffre d'affaires")} ${y} : ${big(ca, cur)}${m.g1 != null ? `, ${verb(m.g1, "en hausse", "en baisse")} de ${pct(Math.abs(m.g1), 1, false)} sur un an` : ""}.${cagr != null ? ` Depuis ${first}, ${verb(cagr, "croissance moyenne", "recul moyen")} de ${pct(Math.abs(cagr), 1, false)} par an.` : ""}`]);
-  if (m.marge != null || net != null) rows.push(["Rentabilité", `${m.marge != null ? `${def("marge", "Marge d'exploitation")} de ${pct(m.marge, 1, false)}${med.marge != null && med.n > 1 ? `${cmp(m.marge, med.marge, 0.01)} ${def("mediane", "médiane du secteur")} (${pct(med.marge, 1, false)})` : ""}. ` : ""}${net != null ? `${def("net", "Résultat net")} de ${big(net, cur)}${net0 ? `, ${verb(net / net0 - 1, "en hausse", "en baisse")} de ${pct(Math.abs(net / net0 - 1), 1, false)}` : ""}.` : ""}`]);
-  if (s.sector === "finance") rows.push(["Solidité", `Banque ou assurance : le ratio dette nette sur EBITDA ne s'applique pas.${m.roe != null ? ` ${def("roe", "Rentabilité des capitaux propres")} : ${pct(m.roe, 1, false)}.` : ""}`]);
-  else if (m.lev == null && m.gear != null) rows.push(["Solidité", `${def("dettenette", "Dette nette")} estimée à ${pct(m.gear, 0, false)} des ${def("capitaux", "capitaux propres")}${m.gear < 0 ? " : l'entreprise a plus de trésorerie que de dettes" : m.gear <= 0.5 ? ", un endettement modéré" : m.gear > 1 ? ", la dette dépasse les capitaux propres" : ""}.${at(c, "fcf", L) != null ? ` ${def("fcf", "Flux de trésorerie disponible")} : ${big(at(c, "fcf", L), cur)}.` : ""}`]);
-  else if (m.lev != null) rows.push(["Solidité", `${def("dettenette", "Dette nette")} estimée à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} d'${def("ebitda", "EBITDA")} (le seuil de 2 sert souvent de repère).${at(c, "fcf", L) != null ? ` ${def("fcf", "Flux de trésorerie disponible")} : ${big(at(c, "fcf", L), cur)}.` : ""}`]);
-  const dpsP = at(c, "dps", L), dps = dpsP ?? at(c, "dpsEst", L);
-  if (dps != null) rows.push(["Dividende", `${def("dps", "Dividende")} versé pendant l'exercice ${y} : ${dpsP == null ? "environ " : ""}${eur(dps, 2, cur)} par action.${at(c, "eps", L) ? ` ${def("bnpa", "BNPA")} : ${eur(at(c, "eps", L), 2, cur)}.` : ""}`]);
-  const ev = eventsOf(s.id).find(e => e.date >= TODAY);
-  if (ev) rows.push(["À suivre", `${esc(ev.label)} le ${dLabel(ev.date)}.`]);
-  return rows.length ? `<div class="syn"><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></div>` : `<div class="empty">Les chiffres standard de cette entreprise ne sont pas disponibles.</div>`;
+function ficheHTML(s) {
+  const f = s.fiche;
+  if (!f) return "";
+  return `<section class="panel"><div class="ph"><h2>Ce que fait ${esc(s.name)}</h2></div>
+    <div class="syn"><dl><dt>Son métier</dt><dd>${esc(f.fait)}</dd><dt>D'où vient l'argent</dt><dd>${esc(f.argent)}</dd><dt>Ce qui fait varier ses résultats</dt><dd>${esc(f.depend)}</dd></dl></div></section>`;
 }
-function tabSynthese(s, c, el) {
-  const kv = (k, v, sub) => `<tr><td>${k}${sub ? `<span class="s">${sub}</span>` : ""}</td><td class="num">${v}</td></tr>`;
-  let keyfig = `<div class="empty">Comptes en cours de collecte.</div>`;
-  if (c) {
-    const L = lastIdx(c), cur = c.currency, med = MED[s.sector] || {};
-    const m = ratios({ ca: at(c, "ca", L), caPrev: at(c, "ca", L - 1), ebit: at(c, "ebit", L), net: at(c, "net", L), equity: at(c, "equity", L), netDebt: at(c, "netDebt", L), ebitda: at(c, "ebitda", L) });
-    const mm = (v, f) => v != null && med.n > 1 ? `Médiane secteur : ${f(v)}` : "";
-    const rows = [
-      at(c, "ca", L) != null && kv(def("ca"), big(at(c, "ca", L), cur), m.g1 != null ? `${pct(m.g1)} sur un an` : ""),
-      m.marge != null && kv(def("marge"), pct(m.marge, 1, false), mm(med.marge, v => pct(v, 1, false))),
-      at(c, "net", L) != null && kv(def("net"), big(at(c, "net", L), cur), at(c, "eps", L) != null ? `BNPA : ${eur(at(c, "eps", L), 2, cur)}` : ""),
-      m.roe != null && kv(def("roe"), pct(m.roe, 1, false), mm(med.roe, v => pct(v, 1, false))),
-      s.sector !== "finance" && m.lev != null && kv(def("lev"), F1.format(m.lev), mm(med.lev, v => F1.format(v))),
-      s.sector !== "finance" && m.lev == null && m.gear != null && kv(def("gear"), pct(m.gear, 0, false), mm(med.gear, v => pct(v, 0, false))),
-      (at(c, "dps", L) ?? at(c, "dpsEst", L)) != null && kv(def("dps"), eur(at(c, "dps", L) ?? at(c, "dpsEst", L), 2, cur), at(c, "dps", L) == null ? "versé pendant l'exercice, estimé" : "versé pendant l'exercice"),
-    ].filter(Boolean);
-    keyfig = `<table class="kv">${rows.join("")}</table><div class="src">Exercice ${c.years[L]}. Cliquez sur un intitulé pour sa définition.</div>`;
-  }
+function lectureHTML(s, c) {
+  const f = figuresOf(c), items = lecture(s, f), cross = croisements(s, f), t = tally(items);
+  return `<section class="panel"><div class="ph"><h2>Ce que disent ses comptes</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
+      <div class="sum">${tallyTxt(t) || "Pas assez de chiffres pour une lecture."}</div>
+      <div class="lect">${items.map(i => `<div class="li"><div class="lq">${def(i.term, i.q)}</div><div class="lvv"><span class="num">${i.value}</span>${lvTag(i.lv)}</div><p>${i.text}</p>${RULES[i.term] ? `<details><summary>Comment ce repère est fixé</summary><p>${esc(RULES[i.term])}</p></details>` : ""}</div>`).join("")}</div>
+      <div class="src">Repères calculés à partir du dernier rapport annuel publié. Ils décrivent les comptes ; ils ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
+    ${cross.length ? `<section class="panel"><div class="ph"><h2>À lire ensemble</h2></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
+}
+function prixHTML(s, c) {
+  const f = figuresOf(c), cur = CUR[f.currency] || f.currency;
+  return `<section class="panel"><div class="ph"><h2>Le prix de l'action, comparé à ses bénéfices</h2></div><div class="pb">
+    <p class="muted" style="margin:0 0 10px">Recopiez le cours affiché en haut de la page. Le site calcule ce qu'il représente par rapport au bénéfice et au dividende de ${f.year}.</p>
+    <div class="field" style="max-width:240px"><label for="pxin">Cours de l'action (${esc(cur)})</label><input id="pxin" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ex. ${f.eps > 0 ? F0.format(f.eps * 15) : "100"}"></div>
+    <div id="pxout"></div></div>
+    <div class="src">${def("per", "PER")} et ${def("rdt", "rendement")} calculés avec les chiffres du dernier exercice publié, pas avec les prévisions des analystes.</div></section>`;
+}
+function prixRun(s, c) {
+  const f = figuresOf(c), m = ratios(f), inp = $("#pxin"), out = $("#pxout"), cur = f.currency;
+  const KEY = "repere.px." + s.id;
+  try { const x = localStorage.getItem(KEY); if (x) inp.value = x; } catch (e) { }
+  const run = () => {
+    const px = parseFloat(String(inp.value).replace(",", "."));
+    if (!(px > 0)) { out.innerHTML = ""; return; }
+    try { localStorage.setItem(KEY, String(px)); } catch (e) { }
+    const rows = [];
+    if (f.eps > 0) {
+      const per = px / f.eps, lv = per < 10 ? "Bas" : per <= 20 ? "Zone courante" : per <= 30 ? "Élevé" : "Très élevé";
+      rows.push(`<div class="li"><div class="lq">${def("per", "PER")}</div><div class="lvv"><span class="num">${F1.format(per)}</span><span class="lv lv-n">${lv}</span></div>
+        <p>À ${eur(px, 2, cur)}, l'action coûte ${F1.format(per)} fois le bénéfice par action de ${f.year} (${eur(f.eps, 2, cur)}). Au rythme actuel, il faudrait ${F0.format(per)} ans de bénéfices pour « rembourser » ce prix.</p>
+        <p class="muted">Un PER élevé veut dire que les acheteurs attendent une hausse des bénéfices. Un PER bas, qu'ils doutent de l'avenir ou que le secteur est peu recherché.</p></div>`);
+      if (per > 25 && m.g1 != null && m.g1 < 0.05) rows.push(`<div class="note2">Prix élevé alors que les ventes ont progressé de ${pct(m.g1)} : ce prix suppose que la croissance accélère.</div>`);
+      if (per < 10 && m.ng != null && m.ng < -0.1) rows.push(`<div class="note2">Prix bas, mais bénéfice en baisse de ${pct(Math.abs(m.ng), 0, false)} : le marché anticipe peut-être une nouvelle baisse.</div>`);
+    } else if (f.eps != null) rows.push(`<div class="li"><div class="lq">${def("per", "PER")}</div><p>L'entreprise a perdu de l'argent sur l'exercice : le PER ne se calcule pas.</p></div>`);
+    if (f.dps > 0) {
+      const y = f.dps / px;
+      rows.push(`<div class="li"><div class="lq">${def("rdt", "Rendement du dividende")}</div><div class="lvv"><span class="num">${pct(y, 1, false)}</span></div>
+        <p>Pour ${eur(1000, 0, cur)} d'actions, l'actionnaire aurait reçu environ ${eur(1000 * y, 0, cur)} de dividende sur l'exercice${f.dpsEst ? " (montant estimé)" : ""}, avant impôts.</p></div>`);
+      if (y > 0.06 && m.payout > 0.9) rows.push(`<div class="note2">Rendement élevé, mais l'entreprise verse déjà ${pct(m.payout, 0, false)} de son bénéfice : le dividende a peu de marge si les bénéfices baissent.</div>`);
+    }
+    out.innerHTML = `<div class="lect">${rows.join("")}</div>`;
+  };
+  inp.oninput = run; run();
+}
+function officielLink(s) {
+  if (s.region === "US") return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${encodeURIComponent(s.ticker)}&type=&dateb=&owner=include&count=40`;
+  return s.domain ? "https://www." + s.domain : "";
+}
+function tabBref(s, c, el) {
+  const fr = s.region === "FR";
   el.innerHTML = `
     <div class="cols">
       <div>
-        <section class="panel ess"><div class="ph"><h2>L'essentiel sur ${esc(s.name)}</h2>${c ? `<span class="light" style="font-size:12.5px">Exercice ${c.years[lastIdx(c)]}</span>` : ""}</div>
-          ${c ? synthese(s, c) : `<div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte.</div>`}
-          <div class="src">Établi automatiquement à partir du dernier ${def("esef", "rapport annuel")} publié. Il décrit, il ne recommande pas.</div></section>
+        ${ficheHTML(s)}
+        ${c ? lectureHTML(s, c) : `<section class="panel"><div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte. Ils apparaîtront après la prochaine mise à jour.</div></section>`}
+        ${c ? prixHTML(s, c) : ""}
         <section class="panel"><div class="ph"><h2>Cours de l'action</h2></div><div class="tv tv-chart" id="tvchart"></div></section>
-        <section class="panel"><div class="ph"><h2>Valorisation au cours actuel</h2></div>
-          <div class="defs"><span class="light">Définitions :</span>${def("per")}${def("rdt", "Rendement")}${def("cap")}</div>
-          <div class="tv tv-fin" id="tvfin"></div></section>
-        <section class="panel"><div class="ph"><h2>Dernières publications officielles</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div><div id="amf"></div></section>
       </div>
       <aside>
-        <section class="panel"><div class="ph"><h2>Chiffres clés</h2><a href="/entreprise/${s.id}/comptes">Détail</a></div>${keyfig}</section>
         <section class="panel"><div class="ph"><h2>Prochains événements</h2><a href="/entreprise/${s.id}/agenda">Agenda</a></div>${agendaHTML(eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3), false)}</section>
+        ${fr ? `<section class="panel"><div class="ph"><h2>Publications officielles</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div><div id="amf"></div></section>`
+             : `<section class="panel"><div class="ph"><h2>Publications officielles</h2></div><div class="pb">${s.region === "US" ? `Les sociétés américaines déposent leurs rapports à la SEC, le gendarme boursier américain.` : `Cette société publie ses communiqués auprès du régulateur de son pays et sur son site.`}${officielLink(s) ? ` <a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">${s.region === "US" ? "Voir ses dépôts à la SEC" : "Site de l'entreprise"}</a>` : ""}</div></section>`}
       </aside>
     </div>`;
   tv($("#tvchart"), "symbol-overview", { symbols: [[s.name, s.tv + "|12M"]], chartOnly: false, width: "100%", height: "100%", autosize: true, showVolume: false, hideDateRanges: false, scalePosition: "right", scaleMode: "Normal", fontFamily: "Inter, sans-serif", fontSize: "11", noTimeScale: false, valuesTracking: "1", changeMode: "price-and-percent", chartType: "area", lineColor: "#2B4C7E", topColor: "rgba(43,76,126,0.10)", bottomColor: "rgba(43,76,126,0)", lineWidth: 2, dateRanges: ["1m|1D", "3m|1D", "12m|1D", "60m|1W", "all|1M"] });
-  tv($("#tvfin"), "financials", { symbol: s.tv, displayMode: "compact", width: "100%", height: "100%", largeChartUrl: "" });
-  amfBlock($("#amf"), "&isin=" + s.isin, 5);
+  if (c) prixRun(s, c);
+  if (fr) amfBlock($("#amf"), "&isin=" + s.isin, 5);
 }
 function tabComptes(s, c, el) {
   if (!c) { el.innerHTML = `<section class="panel"><div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte.</div></section>`; return; }
-  const f = c.fin, Y = c.years, cur = c.currency, med = MED[s.sector] || {};
+  const f = c.fin, Y = c.years, cur = c.currency, med = MED[s.sector] || {}, bank = isBank(s);
   const has = k => f[k] && f[k].some(v => v != null);
   const r = (key, label, vals, fmt, ref = "") => `<tr><td class="l">${def(key, label)}</td>${vals.map(v => `<td class="num">${v == null || !isFinite(v) ? "–" : fmt(v)}</td>`).join("")}<td class="num ref d-only">${ref}</td></tr>`;
   const div = (a, b) => (a || []).map((v, i) => v != null && b && b[i] ? v / b[i] : null);
@@ -822,7 +995,7 @@ function tabComptes(s, c, el) {
     <section class="panel"><div class="ph"><h2>Comptes annuels</h2><span class="light" style="font-size:12.5px">${cur === "EUR" ? "En euros" : "En " + cur} · clôture au ${c.fyEnd ? c.fyEnd.split("-").reverse().join("/") : "–"}</span></div>
       <div class="scroll-x"><table class="t fin"><thead><tr><th class="l"></th>${Y.map(y => `<th>${y}</th>`).join("")}<th class="d-only">${def("mediane", "Médiane secteur")}</th></tr></thead><tbody>
         ${grp("Activité")}
-        ${has("ca") ? r("ca", s.sector === "finance" ? "Revenus (produit net bancaire)" : "Chiffre d'affaires", f.ca, money) : ""}
+        ${has("ca") ? r("ca", bank ? "Revenus (produit net bancaire)" : "Chiffre d'affaires", f.ca, money) : ""}
         ${has("ca") ? r("croissance", "Croissance", g, v => pct(v), mref(med.g1, v => pct(v))) : ""}
         ${grp("Rentabilité")}
         ${has("ebit") ? r("resexp", "Résultat d'exploitation", f.ebit, money) : ""}
@@ -836,21 +1009,23 @@ function tabComptes(s, c, el) {
         ${grp("Bilan et trésorerie")}
         ${has("equity") ? r("capitaux", "Capitaux propres", f.equity, money) : ""}
         ${has("cash") ? r("tresorerie", "Trésorerie", f.cash, money) : ""}
-        ${has("debt") && s.sector !== "finance" ? r("dette", "Dette financière", f.debt, money) : ""}
-        ${has("netDebt") && s.sector !== "finance" ? r("dettenette", "Dette nette (estimée)", f.netDebt, money) : ""}
-        ${has("ebitda") && s.sector !== "finance" ? r("ebitda", "EBITDA (estimé)", f.ebitda, money) : ""}
-        ${has("netDebt") && has("ebitda") && s.sector !== "finance" ? r("lev", "Dette nette ÷ EBITDA", div(f.netDebt, f.ebitda), v => F1.format(v), mref(med.lev, v => F1.format(v))) : ""}
-        ${has("netDebt") && has("equity") && s.sector !== "finance" ? r("gear", "Dette nette ÷ capitaux propres", div(f.netDebt, f.equity), v => pct(v, 0, false), mref(med.gear, v => pct(v, 0, false))) : ""}
+        ${has("debt") && !bank ? r("dette", "Dette financière", f.debt, money) : ""}
+        ${has("netDebt") && !bank ? r("dettenette", "Dette nette (estimée)", f.netDebt, money) : ""}
+        ${has("ebitda") && !bank ? r("ebitda", "EBITDA (estimé)", f.ebitda, money) : ""}
+        ${has("netDebt") && has("ebitda") && !bank ? r("lev", "Dette nette ÷ EBITDA", div(f.netDebt, f.ebitda), v => F1.format(v), mref(med.lev, v => F1.format(v))) : ""}
+        ${has("netDebt") && has("equity") && !bank ? r("gear", "Dette nette ÷ capitaux propres", div(f.netDebt, f.equity), v => pct(v, 0, false), mref(med.gear, v => pct(v, 0, false))) : ""}
         ${has("cfo") ? r("cfo", "Flux de trésorerie d'exploitation", f.cfo, money) : ""}
         ${has("fcf") ? r("fcf", "Flux de trésorerie disponible", f.fcf, money) : ""}
       </tbody></table></div>
-      <div class="src">Un tiret signifie que le chiffre n'est pas publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes, peut différer du chiffre annoncé par l'entreprise.${s.sector === "finance" ? " Banques et assurances : dette et EBITDA ne s'appliquent pas." : ""} Médiane calculée sur ${med.n || 0} entreprise${med.n > 1 ? "s" : ""} suivie${med.n > 1 ? "s" : ""} du secteur.</div></section>
+      <div class="src">Un tiret signifie que le chiffre n'est pas publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes, peut différer du chiffre annoncé par l'entreprise.${bank ? " Banques et assurances : dette et EBITDA ne s'appliquent pas." : ""} Médiane calculée sur ${med.n || 0} entreprise${med.n > 1 ? "s" : ""} suivie${med.n > 1 ? "s" : ""} du secteur.</div></section>
     <section class="panel"><div class="ph"><h2>Sources</h2></div>
       <table class="t"><thead><tr><th class="l">Exercice clos le</th><th class="l">Document</th></tr></thead><tbody>
-      ${c.sources.map(x => `<tr><td class="l wrap">${dLabel(x.periodEnd)}</td><td class="l wrap">${x.report ? `<a class="lnk" href="${esc(x.report)}" target="_blank" rel="noopener">Rapport financier annuel (ESEF)</a>` : "Rapport financier annuel (ESEF)"}</td></tr>`).join("")}</tbody></table>
-      <div class="src">Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org. Mis à jour le ${dLabel(c.updated)}.</div></section>`;
+      ${c.cik ? `<tr><td class="l wrap">Exercices ${c.years[0]} à ${c.years[lastIdx(c)]}</td><td class="l wrap"><a class="lnk" href="${esc(c.sources[0].report)}" target="_blank" rel="noopener">Rapports annuels 10-K déposés à la SEC</a></td></tr>`
+        : c.sources.map(x => `<tr><td class="l wrap">${dLabel(x.periodEnd)}</td><td class="l wrap">${x.report ? `<a class="lnk" href="${esc(x.report)}" target="_blank" rel="noopener">Rapport financier annuel (ESEF)</a>` : "Rapport financier annuel (ESEF)"}</td></tr>`).join("")}</tbody></table>
+      <div class="src">${c.cik ? "Comptes lus dans les données publiques de la SEC (EDGAR), au format XBRL." : `Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org.`} Mis à jour le ${dLabel(c.updated)}.</div></section>`;
 }
 function tabActu(s, c, el) {
+  if (s.region !== "FR") { el.innerHTML = `<section class="panel"><div class="ph"><h2>Publications officielles de ${esc(s.name)}</h2></div><div class="pb">Le flux de l'AMF ne couvre que les sociétés cotées en France. ${s.region === "US" ? "Les sociétés américaines déposent leurs rapports à la SEC." : "Cette société publie auprès du régulateur de son pays et sur son site."} ${officielLink(s) ? `<a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">${s.region === "US" ? "Voir ses dépôts à la SEC" : "Site de l'entreprise"}</a>` : ""}</div></section>`; return; }
   el.innerHTML = `<section class="panel"><div class="ph"><h2>${def("amf", "Publications officielles")} de ${esc(s.name)}</h2></div><div id="amf"></div>
     <div class="src">Source : AMF, info-financiere.gouv.fr.</div></section>`;
   amfBlock($("#amf"), "&isin=" + s.isin, 40);
@@ -892,15 +1067,29 @@ function pageAgenda() {
   render();
 }
 
-/* ---------- Lexique : l'essentiel d'abord ---------- */
-const ESSENTIEL = ["action", "fonds", "pea", "ca", "net", "marge", "per", "rdt", "dettenette", "cap"];
+/* ---------- Lexique : l'essentiel d'abord, avec des exemples réels ---------- */
+const ESSENTIEL = ["action", "pea", "ca", "croissance", "marge", "net", "lev", "fcf", "payout", "per"];
+const WITH = { // à lire avec
+  croissance: ["marge", "fcf"], marge: ["croissance", "net"], net: ["marge", "fcf"], roe: ["lev", "gear"], lev: ["roe", "fcf"], gear: ["roe", "lev"],
+  fcf: ["net", "croissance"], payout: ["fcf", "net"], per: ["croissance", "net"], rdt: ["payout", "per"], dettenette: ["lev", "gear"],
+};
+const EXM = { croissance: "g1", marge: "marge", net: "nm", roe: "roe", lev: "lev", gear: "gear", fcf: "conv", payout: "payout" };
+const EXFMT = { g1: v => pct(v), marge: v => pct(v, 1, false), nm: v => pct(v, 1, false) + " de marge nette", roe: v => pct(v, 1, false), lev: v => F1.format(v) + " an" + (v >= 2 ? "s" : ""), gear: v => pct(v, 0, false), conv: v => F0.format(v * 100) + " € pour 100 € de bénéfice", payout: v => pct(v, 0, false) };
+function examplesHTML(term) {
+  const k = EXM[term]; if (!k || !R) return "";
+  const list = R.companies.filter(c => !c.missing && !(isBank(c) && ["marge", "lev", "gear", "conv"].includes(k))).map(c => [c, ratios(c)[k]]).filter(([, v]) => okn(v) && (k !== "lev" || v >= 0)).sort((a, b) => b[1] - a[1]);
+  if (list.length < 5) return "";
+  const li = ([c, v]) => `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a> ${EXFMT[k](v)}`;
+  const mid = list[Math.floor(list.length / 2)];
+  return `<dt>Exemples réels</dt><dd>Les plus hauts : ${list.slice(0, 2).map(li).join(", ")}. Au milieu : ${li(mid)}. Les plus bas : ${list.slice(-2).reverse().map(li).join(", ")}.</dd>`;
+}
 function pageLexique() {
   setTitle("Lexique"); setNav("lex");
-  const dl = t => (t.calc || t.read || t.limit) ? `<dl>${t.calc ? `<dt>Calcul</dt><dd>${esc(t.calc)}</dd>` : ""}${t.read ? `<dt>Comment le lire</dt><dd>${esc(t.read)}</dd>` : ""}${t.limit ? `<dt>Limite</dt><dd>${esc(t.limit)}</dd>` : ""}</dl>` : "";
-  const term = (id, t, n) => `<div class="term" id="${id}">${n ? `<div class="tn">${n}</div>` : ""}<h3>${esc(t.name)}</h3><p>${esc(t.what)}</p>${dl(t)}</div>`;
+  const dl = (id, t) => `<dl>${t.calc ? `<dt>Calcul</dt><dd>${esc(t.calc)}</dd>` : ""}${t.ex ? `<dt>Exemple</dt><dd>${esc(t.ex)}</dd>` : ""}${RULES[id] ? `<dt>Bon ou moins bon ?</dt><dd>${esc(RULES[id])}</dd>` : t.read ? `<dt>Comment le lire</dt><dd>${esc(t.read)}</dd>` : ""}${examplesHTML(id)}${WITH[id] ? `<dt>À lire avec</dt><dd>${WITH[id].map(w => def(w)).join(", ")}</dd>` : ""}${t.limit ? `<dt>Limite</dt><dd>${esc(t.limit)}</dd>` : ""}</dl>`;
+  const term = (id, t, n) => `<div class="term" id="${id}">${n ? `<div class="tn">${n}</div>` : ""}<h3>${esc(t.name)}</h3><p>${esc(t.what)}</p>${dl(id, t)}</div>`;
   const rest = [["Les bases", BASES], ["Lire une entreprise", TERMS], ["Portefeuille et simulations", PTERMS]]
     .map(([g, o]) => [g, Object.entries(o).filter(([k]) => !ESSENTIEL.includes(k))]).filter(([, l]) => l.length);
-  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Commencez par les dix notions essentielles : elles suffisent pour lire une fiche d'entreprise. Le reste est là quand vous en aurez besoin.</p>
+  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Dix notions suffisent pour lire une fiche. Pour chacune : ce que c'est, un exemple réel, et à partir de quand c'est bon ou moins bon.</p>
     <section class="panel"><div class="ph"><h2>Les dix notions essentielles</h2><span class="light" style="font-size:12.5px">Dans l'ordre conseillé</span></div>
       <div class="essgrid">${ESSENTIEL.map((k, i) => term(k, ALL[k], i + 1)).join("")}</div></section>
     <h2 class="subh">Pour aller plus loin</h2>
@@ -908,171 +1097,108 @@ function pageLexique() {
   if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { const d = t.closest("details"); if (d) d.open = true; t.scrollIntoView(); } }
 }
 
-/* ---------- Simulateurs ---------- */
-const TOOLS = [["interets", "Intérêts composés"], ["frais", "Impact des frais"], ["pea-cto", "PEA ou compte-titres"], ["passe", "Portefeuille sur le passé"], ["une-fois", "En une fois ou chaque mois"]];
-const FICTIF = `<div class="notice">Ce simulateur utilise des séries de cours fictives : l'historique réel des cours n'est pas disponible gratuitement avec un droit de réutilisation. Les calculs sont exacts, les placements sont des exemples.</div>`;
-function assetOptions(sel) {
-  return `<optgroup label="Fonds fictifs">${D.funds.map(f => `<option value="${f.id}" ${f.id === sel ? "selected" : ""}>${esc(f.name)}</option>`).join("")}</optgroup>
-    <optgroup label="Actions fictives">${D.companies.map(c => `<option value="${c.id}" ${c.id === sel ? "selected" : ""}>${esc(c.name)}</option>`).join("")}</optgroup>`;
+/* ---------- Courtiers ---------- */
+let BROKERS = { list: [], sources: [] };
+const brokerBy = id => BROKERS.list.find(b => b.id === id) || BROKERS.list[0];
+function brokerFee(b, amount, perso) { // même calcul que data/courtiers.mjs
+  if (!b || !(amount > 0)) return 0;
+  if (b.custom) return Math.max(0, (perso?.fixe || 0) + amount * (perso?.pct || 0) / 100);
+  const p = b.grille.find(g => g[0] == null || amount <= g[0]) || b.grille[b.grille.length - 1];
+  return Math.round(Math.max(b.min || 0, p[1] + amount * p[2] / 100) * 100) / 100;
 }
+const brokerOptions = sel => BROKERS.list.map(b => `<option value="${b.id}" ${b.id === sel ? "selected" : ""}>${esc(b.name)}</option>`).join("");
+const brokerSrc = () => `Grilles relevées le ${dLabel(BROKERS.updated || TODAY)} (offre de base, actions françaises). Sources : ${BROKERS.sources.map(s => `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(", ")}. Vérifiez la grille sur le site du courtier : elle peut changer.`;
+
+/* ---------- Simulateurs ---------- */
+const TOOLS = [["epargne", "Mon épargne"], ["frais", "Les frais du courtier"], ["pea-cto", "PEA ou compte-titres"]];
 function pageSim(tool) {
-  tool = TOOLS.some(t => t[0] === tool) ? tool : "interets";
+  if (tool === "interets") tool = "epargne";
+  tool = TOOLS.some(t => t[0] === tool) ? tool : "epargne";
   setTitle("Simulateur : " + TOOLS.find(t => t[0] === tool)[1].toLowerCase()); setNav("sim");
-  app.innerHTML = `<h1 class="pagetitle">Simulateurs</h1><p class="pagesub">Les hypothèses de calcul sont affichées sous chaque résultat.</p>
-    ${tool === "passe" || tool === "une-fois" ? FICTIF : ""}
+  app.innerHTML = `<h1 class="pagetitle">Simulateurs</h1><p class="pagesub">Trois calculs simples. Les hypothèses sont affichées sous chaque résultat.</p>
     <section class="panel"><div class="filters">${TOOLS.map(([k, n]) => `<a href="/simulateurs/${k}" class="${k === tool ? "on" : ""}">${n}</a>`).join("")}</div><div class="sim" id="sim"></div></section>`;
-  ({ passe: simPasse, interets: simInterets, frais: simFrais, "pea-cto": simPeaCto, "une-fois": simUneFois })[tool]($("#sim"));
+  ({ epargne: simEpargne, frais: simFrais, "pea-cto": simPeaCto })[tool]($("#sim"));
 }
 const numIn = (id, label, val, hint = "", attrs = "") => `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="number" inputmode="decimal" value="${val}" ${attrs}>${hint ? `<div class="hint">${hint}</div>` : ""}</div>`;
 const v = id => { const x = parseFloat(String($("#" + id).value).replace(",", ".")); return isFinite(x) ? x : 0; };
 function figs(items) { return `<div class="figs">${items.map(([k, val, s, c]) => `<div><div class="k">${k}</div><div class="v num ${c || ""}">${val}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`).join("")}</div>`; }
-const PAST = `<p>Les performances passées ne préjugent pas des performances futures.</p>`;
-function yr(x) { return x ? `${pct(x[1])}<span class="h">en ${x[0]}</span>` : "–"; }
-function recTxt(dd) { if (dd.max >= 0) return "–"; if (dd.recovery == null) return "Pas encore revenu"; const y = Math.floor(dd.recovery / 12), m = dd.recovery % 12; return ((y ? y + " an" + (y > 1 ? "s" : "") + (m ? " " : "") : "") + (m ? m + " mois" : "")) || "Moins d'un mois"; }
-function repHTML(weights) { return `<div class="rep">${Object.entries(weights).sort((a, b) => b[1] - a[1]).map(([k, w]) => `<div class="r"><span>${esc(k)}</span><span class="bar_"><span style="width:${(w * 100).toFixed(1)}%"></span></span><span class="num" style="text-align:right">${pct(w, 0, false)}</span></div>`).join("")}</div>`; }
-
-function simPasse(root) {
-  const years = [...new Set(D.months.map(m => m.slice(0, 4)))].slice(0, -1);
-  root.innerHTML = `<div class="form">
-      <div class="field"><label>Placements et poids (%)</label><div class="lines" id="lines"></div><button class="linkbtn" id="addL" type="button">+ Ajouter une ligne</button><div class="wsum" id="wsum"></div></div>
-      <div class="row2"><div class="field"><label for="sy">Année de départ</label><select id="sy">${years.map(y => `<option ${y === String(+D.asOf.slice(0, 4) - 5) ? "selected" : ""}>${y}</option>`).join("")}</select></div>
-        <div class="field"><label for="sm">Mois</label><select id="sm">${MOISL.map((m, i) => `<option value="${String(i + 1).padStart(2, "0")}">${m}</option>`).join("")}</select></div></div>
-      <div class="row2">${numIn("ini", "Au départ (€)", 1000, "", 'min="0" step="100"')}${numIn("mon", "Chaque mois (€)", 100, "", 'min="0" step="10"')}</div>
-      <div class="row2"><div class="field"><label for="reb">Rééquilibrage</label><select id="reb"><option value="aucun">Aucun</option><option value="annuel">Chaque année</option></select></div>
-        <div class="field"><label for="div">Dividendes</label><select id="div"><option value="1">Réinvestis</option><option value="0">Encaissés</option></select></div></div>
-      <div class="row2">${numIn("fee", "Frais par ordre (€)", 1, "", 'min="0" step="0.5"')}<div class="field"><label for="bm">Comparer à</label><select id="bm">${D.funds.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}</select></div></div>
-    </div><div class="res" id="res"></div>`;
-  const lines = $("#lines");
-  const addLine = (id, w) => { const d = document.createElement("div"); d.className = "ln"; d.innerHTML = `<select aria-label="Placement">${assetOptions(id)}</select><input type="number" inputmode="decimal" aria-label="Poids en %" value="${w}" min="0" max="100"><button class="x" type="button" aria-label="Retirer">×</button>`; lines.appendChild(d); };
-  addLine("demo-monde", 100);
-  $("#addL").onclick = () => { if (lines.children.length < 10) { addLine(D.companies[lines.children.length % D.companies.length].id, 0); run(); } };
-  lines.onclick = e => { if (e.target.closest(".x") && lines.children.length > 1) { e.target.closest(".ln").remove(); run(); } };
-  root.oninput = root.onchange = () => run();
-  function run() {
-    const ls = $$(".ln", lines).map(l => ({ id: $("select", l).value, w: parseFloat($("input", l).value) || 0 }));
-    const tot = ls.reduce((a, l) => a + l.w, 0), ws = $("#wsum");
-    ws.textContent = `Total : ${F0.format(tot)} %` + (Math.abs(tot - 100) > 0.01 ? " — ramené à 100 % dans le calcul" : "");
-    ws.classList.toggle("bad", Math.abs(tot - 100) > 0.01);
-    const res = $("#res");
-    if (tot <= 0) { res.innerHTML = `<div class="empty">Indiquez au moins un poids.</div>`; return; }
-    const start = D.months.indexOf($("#sy").value + "-" + $("#sm").value);
-    if (start < 0 || start >= D.months.length - 2) { res.innerHTML = `<div class="empty">Choisissez une date plus ancienne.</div>`; return; }
-    const merged = {}; ls.forEach(l => merged[l.id] = (merged[l.id] || 0) + l.w);
-    const assets = Object.entries(merged).filter(([, w]) => w > 0).map(([id, w]) => ({ ...DBY[id], w: w / tot }));
-    const opts = { start, initial: v("ini"), monthly: v("mon"), rebalance: $("#reb").value, reinvest: $("#div").value === "1", fee: v("fee") };
-    if (opts.initial <= 0 && opts.monthly <= 0) { res.innerHTML = `<div class="empty">Indiquez un montant.</div>`; return; }
-    if (opts.initial <= 0) opts.initial = opts.monthly;
-    const r = Calc.backtest(D.months, assets, opts), bmF = DBY[$("#bm").value];
-    const b = Calc.backtest(D.months, [{ ...bmF, w: 1 }], { ...opts, rebalance: "aucun", reinvest: true });
-    const yrs = (D.months.length - 1 - start) / 12, regular = opts.monthly > 0, secW = {};
-    assets.forEach((a, j) => { const k = a.kind === "fonds" ? "Fonds" : "Actions"; secW[k] = (secW[k] || 0) + r.weightsEnd[j]; });
-    const bigLine = assets.map((a, j) => [a.name, r.weightsEnd[j]]).sort((x, y) => y[1] - x[1])[0];
-    res.innerHTML = figs([
-      ["Valeur finale", eur(r.final, 0), `pour ${eur(r.invested, 0)} versés`],
-      ["Gain ou perte", eur(r.gain, 0), pct(r.gain / r.invested, 1) + " du total versé", cls(r.gain)],
-      [regular ? "Rendement selon vos versements" : "Rendement annualisé", pct(regular ? r.tri : r.twr), "par an", cls(regular ? r.tri : r.twr)],
-      ["Perte maximale", pct(r.dd.max, 1), r.dd.max < 0 ? mLabel(r.labels[r.dd.peakI]) + " → " + mLabel(r.labels[r.dd.troughI]) : "", "down"],
-    ]) + `<div class="chart" id="bchart"></div><div class="legend"><span><i style="background:#141414"></i>Votre portefeuille</span><span><i style="background:#1C3D6E"></i>${esc(bmF.name)}</span><span><i style="background:#C9C3B8"></i>Total versé</span></div>
-      <table class="meas"><tr><th></th><th>Portefeuille</th><th>${esc(bmF.name)}</th></tr>
-        <tr><td>Valeur finale</td><td>${eur(r.final, 0)}</td><td>${eur(b.final, 0)}</td></tr>
-        ${regular ? `<tr><td>${def("tri", "Rendement selon vos versements")}</td><td>${pct(r.tri)}</td><td>${pct(b.tri)}</td></tr>` : ""}
-        <tr><td>${def("twr", "Rendement des placements")}</td><td>${pct(r.twr)}</td><td>${pct(b.twr)}</td></tr>
-        <tr><td>${def("vol")}</td><td>${pct(r.vol, 1, false)}</td><td>${pct(b.vol, 1, false)}</td></tr>
-        <tr><td>${def("dd")}</td><td>${pct(r.dd.max)}</td><td>${pct(b.dd.max)}</td></tr>
-        <tr><td>${def("rec")}</td><td>${recTxt(r.dd)}</td><td>${recTxt(b.dd)}</td></tr>
-        <tr><td>Meilleure année</td><td>${yr(r.best)}</td><td>${yr(b.best)}</td></tr>
-        <tr><td>Pire année</td><td>${yr(r.worst)}</td><td>${yr(b.worst)}</td></tr>
-        <tr><td>Dividendes perçus</td><td>${eur(r.divTotal, 0)}</td><td>Inclus dans le cours</td></tr>
-        <tr><td>${def("frais", "Frais de courtage")}<span class="h">${F0.format(r.orders)} ordres</span></td><td>${eur(r.fees, 0)}</td><td>${eur(b.fees, 0)}</td></tr></table>
-      <div style="margin-top:16px"><div class="cap">${def("rep", "Répartition à la fin")}</div>${repHTML(secW)}<p class="note" style="margin-top:6px">Plus grosse ligne : ${esc(bigLine[0])}, ${pct(bigLine[1], 0, false)} du portefeuille.</p></div>
-      <div class="note"><p>Période fictive de ${mLong(D.months[start])} à ${mLong(D.asOf)}, soit ${F1.format(yrs)} ans. Calcul mensuel, versements en fin de mois, dividendes versés en juin.</p>${PAST}</div>`;
-    let paid = opts.initial; const paidS = r.labels.map((_, i) => (i === 0 ? paid : (paid += opts.monthly)));
-    lineChart($("#bchart"), { labels: r.labels, series: [{ name: "Portefeuille", values: r.values, color: "#141414" }, { name: bmF.name, values: b.values, color: "#1C3D6E" }, { name: "Versé", values: paidS, color: "#C9C3B8", dash: true }], fmt: (x, axis) => axis ? F0.format(x) + " €" : eur(x, 0) });
-  }
-  run();
-}
 function yearLabels(n) { const y0 = +TODAY.slice(0, 4); return Array.from({ length: n + 1 }, (_, i) => String(y0 + i)); }
-function simInterets(root) {
-  root.innerHTML = `<div class="form">${numIn("ini", "Au départ (€)", 1000, "", 'min="0" step="100"')}${numIn("mon", "Chaque mois (€)", 100, "", 'min="0" step="10"')}${numIn("yrs", "Durée (années)", 20, "", 'min="1" max="50"')}${numIn("rate", "Rendement annuel supposé (%)", 5, "Hypothèse que vous choisissez. Aucun placement en actions ne la garantit.", 'step="0.5"')}</div><div class="res" id="res"></div>`;
+const chips = (id, list, cur) => `<div class="chips" id="${id}">${list.map(([v, l]) => `<button type="button" data-v="${v}" class="${String(v) === String(cur) ? "on" : ""}">${l}</button>`).join("")}</div>`;
+
+function simEpargne(root) {
+  root.innerHTML = `<div class="form">${numIn("mon", "Je place chaque mois (€)", 100, "", 'min="0" step="10"')}${numIn("ini", "J'ai déjà au départ (€)", 0, "", 'min="0" step="100"')}${numIn("yrs", "Pendant (années)", 20, "", 'min="1" max="50"')}
+    <div class="field"><label>Rendement moyen supposé, par an</label>${chips("rt", [[2, "2 %"], [4, "4 %"], [6, "6 %"], [8, "8 %"]], 4)}<div class="hint">Une hypothèse, pas une promesse. Les actions peuvent perdre 30 % une année et en gagner 30 % une autre.</div></div></div><div class="res" id="res"></div>`;
+  let rate = 4;
+  $("#rt").onclick = e => { const b = e.target.closest("button"); if (!b) return; rate = +b.dataset.v; $$("#rt button").forEach(x => x.classList.toggle("on", x === b)); run(); };
   const run = () => {
-    const yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), r = Calc.compound({ initial: v("ini"), monthly: v("mon"), years: yrs, rate: v("rate") / 100 }), inter = r.final - r.paid;
-    $("#res").innerHTML = figs([["Valeur finale", eur(r.final, 0), `après ${yrs} ans`], ["Total versé", eur(r.paid, 0), ""], ["Intérêts gagnés", eur(inter, 0), r.final ? pct(inter / r.final, 0, false) + " de la valeur finale" : ""], ["Multiplié par", F2.format(r.paid ? r.final / r.paid : 0), "par rapport au versé"]])
+    const yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), base = { initial: v("ini"), monthly: v("mon"), years: yrs, rate: rate / 100 };
+    const r = Calc.compound(base), inter = r.final - r.paid, late = yrs > 5 ? Calc.compound({ ...base, years: yrs - 5 }) : null;
+    $("#res").innerHTML = `<p class="lead">En plaçant ${eur(base.monthly, 0)} par mois${base.initial ? ` en plus de ${eur(base.initial, 0)} au départ` : ""} pendant ${yrs} ans, vous versez <b>${eur(r.paid, 0)}</b>. Avec ${rate} % par an, cela donnerait environ <b>${eur(r.final, 0)}</b>, dont ${eur(inter, 0)} de gains.</p>`
+      + figs([["Valeur à la fin", eur(r.final, 0), `après ${yrs} ans`], ["Vous avez versé", eur(r.paid, 0), ""], ["Gains", eur(inter, 0), r.final ? pct(inter / r.final, 0, false) + " de la valeur finale" : ""], ["Commencer 5 ans plus tard", late ? eur(late.final, 0) : "–", late ? `soit ${eur(r.final - late.final, 0)} de moins` : ""]])
       + `<div class="chart" id="c"></div><div class="legend"><span><i style="background:#141414"></i>Valeur</span><span><i style="background:#C9C3B8"></i>Total versé</span></div>
-      <div class="note"><p>Chaque année, les gains produisent à leur tour des gains : l'effet est faible au début et devient fort avec la durée.</p><p>Calcul avec un rendement constant. En réalité, le rendement des actions varie beaucoup d'une année à l'autre et peut être négatif.</p></div>`;
+      <div class="note"><p>Les gains de chaque année produisent à leur tour des gains : c'est l'effet des intérêts composés. Il est faible au début et devient fort avec la durée.</p><p>Calcul avec un rendement identique chaque année, avant frais et impôts.</p></div>`;
     lineChart($("#c"), { labels: yearLabels(yrs), series: [{ name: "Valeur", values: r.values, color: "#141414" }, { name: "Versé", values: r.paidS, color: "#C9C3B8", dash: true }], fmt: (x, axis) => axis ? F0.format(x) + " €" : eur(x, 0), area: true });
   };
   root.oninput = run; run();
 }
 function simFrais(root) {
-  root.innerHTML = `<div class="form">${numIn("ini", "Au départ (€)", 10000, "", 'min="0" step="100"')}${numIn("mon", "Chaque mois (€)", 100, "", 'min="0" step="10"')}${numIn("yrs", "Durée (années)", 25, "", 'min="1" max="50"')}${numIn("rate", "Rendement annuel avant frais (%)", 6, "Hypothèse que vous choisissez.", 'step="0.5"')}
-    <div class="row2">${numIn("f1", "Frais A (% par an)", 0.2, "", 'step="0.05" min="0"')}${numIn("f2", "Frais B (% par an)", 2, "", 'step="0.05" min="0"')}</div></div><div class="res" id="res"></div>`;
+  root.innerHTML = `<div class="form"><div class="field"><label for="bk">Mon courtier</label><select id="bk">${brokerOptions("trade-republic")}</select></div>
+    <div class="row2" id="persoF" hidden>${numIn("pfx", "Frais fixes (€)", 5, "", 'min="0" step="0.5"')}${numIn("ppc", "Pourcentage (%)", 0.5, "", 'min="0" step="0.05"')}</div>
+    ${numIn("amt", "Montant de chaque achat (€)", 200, "", 'min="1" step="50"')}${numIn("n", "Nombre d'achats par an", 12, "12 = un achat par mois.", 'min="1" max="250"')}${numIn("yrs", "Pendant (années)", 20, "", 'min="1" max="50"')}
+    ${numIn("ff", "Frais annuels du fonds (%)", 0.2, "Pour un fonds indiciel (ETF), souvent entre 0,1 et 0,5 %. Mettez 0 pour des actions.", 'min="0" step="0.05"')}</div><div class="res" id="res"></div>`;
   const run = () => {
-    const yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), base = { initial: v("ini"), monthly: v("mon"), years: yrs, rate: v("rate") / 100 };
-    const a = Calc.compound({ ...base, fee: v("f1") / 100 }), b = Calc.compound({ ...base, fee: v("f2") / 100 }), gap = a.final - b.final;
-    $("#res").innerHTML = figs([[`Avec ${F2.format(v("f1"))} % de frais`, eur(a.final, 0), ""], [`Avec ${F2.format(v("f2"))} % de frais`, eur(b.final, 0), ""], ["Écart", eur(Math.abs(gap), 0), a.final ? pct(Math.abs(gap) / a.final, 0, false) + " de la valeur la plus haute" : ""], ["Total versé", eur(a.paid, 0), `sur ${yrs} ans`]])
-      + `<div class="chart" id="c"></div><div class="legend"><span><i style="background:#141414"></i>Frais A</span><span><i style="background:#C0392B"></i>Frais B</span><span><i style="background:#C9C3B8"></i>Total versé</span></div>
-      <div class="note"><p>Les frais annuels sont prélevés chaque année sur tout le placement, gains compris.</p><p>Repère : un fonds indiciel coûte souvent entre 0,1 % et 0,5 % par an, un fonds géré activement 1,5 % à 2,5 %.</p></div>`;
-    lineChart($("#c"), { labels: yearLabels(yrs), series: [{ name: "Frais A", values: a.values, color: "#141414" }, { name: "Frais B", values: b.values, color: "#C0392B" }, { name: "Versé", values: a.paidS, color: "#C9C3B8", dash: true }], fmt: (x, axis) => axis ? F0.format(x) + " €" : eur(x, 0) });
+    const b = brokerBy($("#bk").value), perso = { fixe: v("pfx"), pct: v("ppc") };
+    $("#persoF").hidden = !b.custom;
+    const amt = Math.max(1, v("amt")), n = Math.max(1, Math.min(250, Math.round(v("n")))), yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), ff = v("ff") / 100;
+    const fee = brokerFee(b, amt, perso), feeY = fee * n, rate = 0.05;
+    const gross = Calc.compound({ initial: 0, monthly: amt * n / 12, years: yrs, rate }), net = Calc.compound({ initial: 0, monthly: Math.max(0, amt - fee) * n / 12, years: yrs, rate, fee: ff });
+    const cost = gross.final - net.final;
+    const all = BROKERS.list.filter(x => !x.custom).map(x => ({ x, f: brokerFee(x, amt) })).sort((a, c) => a.f - c.f);
+    $("#res").innerHTML = `<p class="lead">Avec ${esc(b.name)}, chaque achat de ${eur(amt, 0)} coûte <b>${eur(fee)}</b> : ${pct(fee / amt, 2, false)} de votre argent part en frais avant même d'être investi.${ff ? ` Le fonds prélève en plus ${pct(ff, 2, false)} par an sur tout ce qui est placé.` : ""}</p>`
+      + figs([["Frais par achat", eur(fee), pct(fee / amt, 2, false) + " du montant"], ["Frais de courtage par an", eur(feeY, 0), `${n} achat${n > 1 ? "s" : ""}`], ["Coût total des frais", eur(cost, 0), `sur ${yrs} ans, gains perdus compris`], ["Valeur finale", eur(net.final, 0), `au lieu de ${eur(gross.final, 0)} sans frais`]])
+      + `<div class="cap" style="margin-top:6px">Le même achat de ${eur(amt, 0)} chez chaque courtier</div>
+      <div class="scroll-x"><table class="t brk"><thead><tr><th class="l">Courtier</th><th>Frais</th><th>En %</th><th>Par an</th><th class="l">PEA</th></tr></thead><tbody>
+      ${all.map(({ x, f }) => `<tr class="${x.id === b.id ? "sel" : ""}"><td class="l wrap">${esc(x.name)}<span class="sub d-only" style="display:block">${esc(x.note)}</span></td><td class="num">${eur(f)}</td><td class="num">${pct(f / amt, 2, false)}</td><td class="num">${eur(f * n, 0)}</td><td class="l">${x.pea ? "Oui" : "Non"}</td></tr>`).join("")}</tbody></table></div>
+      <div class="note"><p>Un frais fixe pèse lourd sur les petits achats : 1 € représente 1 % d'un achat de 100 €, mais 0,1 % d'un achat de 1 000 €. Grouper ses achats réduit cette part.</p>
+        <p>Calcul avec 5 % de rendement par an avant frais. Les frais ne sont pas le seul critère : disponibilité du PEA, place de cotation, service client.</p><p>${brokerSrc()}</p></div>`;
   };
-  root.oninput = run; run();
+  root.oninput = root.onchange = run; run();
 }
 function simPeaCto(root) {
-  root.innerHTML = `<div class="form">${numIn("ini", "Au départ (€)", 5000, "", 'min="0" step="100"')}${numIn("mon", "Chaque mois (€)", 200, "", 'min="0" step="10"')}${numIn("yrs", "Durée avant retrait (années)", 15, "", 'min="1" max="50"')}
-    <div class="row2">${numIn("g", "Hausse du cours (% par an)", 4, "", 'step="0.5"')}${numIn("d", "Dividende (% par an)", 2.5, "", 'step="0.5" min="0"')}</div></div><div class="res" id="res"></div>`;
+  root.innerHTML = `<div class="form">${numIn("mon", "Je place chaque mois (€)", 200, "", 'min="0" step="10"')}${numIn("ini", "J'ai déjà au départ (€)", 0, "", 'min="0" step="100"')}${numIn("yrs", "Je retire tout dans (années)", 15, "", 'min="1" max="50"')}
+    <div class="row2">${numIn("g", "Hausse du cours (% par an)", 4, "", 'step="0.5"')}${numIn("d", "Dividendes (% par an)", 2.5, "", 'step="0.5" min="0"')}</div></div><div class="res" id="res"></div>`;
   const run = () => {
-    const yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), r = Calc.peaCto({ initial: v("ini"), monthly: v("mon"), years: yrs, growth: v("g") / 100, yieldD: v("d") / 100, rates: RATES }), over = r.paid > 150000;
-    $("#res").innerHTML = figs([["PEA, net d'impôts", eur(r.pea.net, 0), `impôts : ${eur(r.pea.tax, 0)}`], ["Compte-titres, net d'impôts", eur(r.cto.net, 0), `impôts : ${eur(r.cto.tax, 0)}`], ["Écart", eur(Math.abs(r.pea.net - r.cto.net), 0), "en faveur du " + (r.pea.net >= r.cto.net ? "PEA" : "compte-titres")], ["Total versé", eur(r.paid, 0), over ? "Au-delà du plafond du PEA" : `sur ${yrs} ans`]])
+    const yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), r = Calc.peaCto({ initial: v("ini"), monthly: v("mon"), years: yrs, growth: v("g") / 100, yieldD: v("d") / 100, rates: RATES }), over = r.paid > 150000, gap = r.pea.net - r.cto.net;
+    $("#res").innerHTML = `<p class="lead">Après ${yrs} ans, il vous resterait <b>${eur(r.pea.net, 0)}</b> avec un PEA et <b>${eur(r.cto.net, 0)}</b> avec un compte-titres, une fois les impôts payés : ${eur(Math.abs(gap), 0)} d'écart${yrs < 5 ? ". Avant 5 ans, le PEA perd son avantage fiscal" : ""}.</p>`
+      + figs([["PEA, après impôts", eur(r.pea.net, 0), `impôts : ${eur(r.pea.tax, 0)}`], ["Compte-titres, après impôts", eur(r.cto.net, 0), `impôts : ${eur(r.cto.tax, 0)}`], ["Écart", eur(Math.abs(gap), 0), "en faveur du " + (gap >= 0 ? "PEA" : "compte-titres")], ["Vous avez versé", eur(r.paid, 0), over ? "Au-delà du plafond du PEA" : `sur ${yrs} ans`]])
       + `<div class="chart" id="c"></div><div class="legend"><span><i style="background:#141414"></i>PEA (avant impôt de sortie)</span><span><i style="background:#1C3D6E"></i>Compte-titres</span></div>
       <table class="meas"><tr><th></th><th>PEA</th><th>Compte-titres</th></tr>
-        <tr><td>Valeur avant retrait</td><td>${eur(r.pea.gross, 0)}</td><td>${eur(r.cto.gross, 0)}</td></tr>
         <tr><td>Impôts sur les dividendes<span class="h">Payés chaque année sur le compte-titres</span></td><td>${eur(0, 0)}</td><td>${eur(r.cto.taxDiv, 0)}</td></tr>
         <tr><td>Impôts au retrait<span class="h">Sur la plus-value</span></td><td>${eur(r.pea.tax, 0)}</td><td>${eur(r.cto.tax - r.cto.taxDiv, 0)}</td></tr>
-        <tr><td>Taux appliqué au retrait</td><td>${pct(r.pea.rate, 1, false)}</td><td>${pct(RATES.pfu, 1, false)}</td></tr>
-        <tr><td>Montant net</td><td>${eur(r.pea.net, 0)}</td><td>${eur(r.cto.net, 0)}</td></tr></table>
-      <div class="note"><p>Taux ${RATES.year} : prélèvement forfaitaire de ${pct(RATES.pfu, 1, false)} (12,8 % d'impôt et ${pct(RATES.ps, 1, false)} de prélèvements sociaux). Sur un PEA de plus de 5 ans, seuls les prélèvements sociaux sont dus ; avant 5 ans, le taux de ${pct(RATES.pfu, 1, false)} s'applique.</p>
-        <p>Calcul simplifié : rendement constant, dividendes une fois par an, retrait total à la fin, sans option pour le barème progressif. Le PEA est limité aux actions européennes et à 150 000 € de versements.${over ? " Vos versements dépassent ce plafond." : ""}</p>
+        <tr><td>Taux appliqué au retrait</td><td>${pct(r.pea.rate, 1, false)}</td><td>${pct(RATES.pfu, 1, false)}</td></tr></table>
+      <div class="note"><p>Pourquoi l'écart ? Sur le compte-titres, les dividendes sont imposés chaque année et ne peuvent donc pas être réinvestis en entier. Sur un PEA de plus de 5 ans, seuls les prélèvements sociaux (${pct(RATES.ps, 1, false)}) sont dus au retrait, au lieu de ${pct(RATES.pfu, 1, false)}.</p>
+        <p>Taux ${RATES.year}. Calcul simplifié : rendement constant, retrait total à la fin, sans option pour le barème progressif. Le PEA est limité aux actions européennes et à 150 000 € de versements.${over ? " Vos versements dépassent ce plafond." : ""}</p>
         <p>Source des taux : <a class="lnk" href="https://placement.meilleurtaux.com/bourse/actualites/2026-fevrier/taux-prelevements-sociaux-applique-pea-passe-desormais-18-6.html" target="_blank" rel="noopener">Meilleurtaux, février 2026</a>.</p></div>`;
     lineChart($("#c"), { labels: yearLabels(yrs), series: [{ name: "PEA", values: r.pea.vals, color: "#141414" }, { name: "Compte-titres", values: r.cto.vals, color: "#1C3D6E" }], fmt: (x, axis) => axis ? F0.format(x) + " €" : eur(x, 0) });
   };
   root.oninput = run; run();
 }
-function simUneFois(root) {
-  const years = [...new Set(D.months.map(m => m.slice(0, 4)))].slice(0, -2);
-  root.innerHTML = `<div class="form"><div class="field"><label for="f">Placement</label><select id="f">${D.funds.map(f => `<option value="${f.id}">${esc(f.name)}</option>`).join("")}</select></div>
-      ${numIn("amt", "Montant à investir (€)", 12000, "", 'min="100" step="100"')}${numIn("spr", "Étalé sur (mois)", 12, "Par exemple 12 versements de 1 000 €.", 'min="2" max="36"')}
-      <div class="row2"><div class="field"><label for="sy">Année de départ</label><select id="sy">${years.map(y => `<option ${y === "2020" ? "selected" : ""}>${y}</option>`).join("")}</select></div>
-        <div class="field"><label for="sm">Mois</label><select id="sm">${MOISL.map((m, i) => `<option value="${String(i + 1).padStart(2, "0")}">${m}</option>`).join("")}</select></div></div>
-      ${numIn("hz", "Comparer après (années)", 3, "", 'min="1" max="10"')}</div><div class="res" id="res"></div>`;
-  const run = () => {
-    const f = DBY[$("#f").value], P = f.prices, N = P.length;
-    const amt = Math.max(100, v("amt")), spr = Math.max(2, Math.min(36, Math.round(v("spr")))), hz = Math.max(1, Math.min(10, Math.round(v("hz")))) * 12;
-    const s = D.months.indexOf($("#sy").value + "-" + $("#sm").value), res = $("#res"), end = Math.min(N - 1, s + hz);
-    if (s < 0 || end - s < spr) { res.innerHTML = `<div class="empty">Choisissez une date de départ plus ancienne.</div>`; return; }
-    const one = Calc.lumpVsDca(P, s, end, amt, spr);
-    let win = 0, tot = 0; for (let i = 0; i + hz < N; i++) { const x = Calc.lumpVsDca(P, i, i + hz, amt, spr); tot++; if (x.lump > x.dca) win++; }
-    const lab = D.months.slice(s, end + 1), lumpS = [], dcaS = []; let q = 0;
-    for (let i = s; i <= end; i++) { if (i - s < spr) q += amt / spr / P[i]; lumpS.push(amt / P[s] * P[i]); dcaS.push(q * P[i] + amt / spr * Math.max(0, spr - (i - s) - 1)); }
-    res.innerHTML = figs([["En une fois", eur(one.lump, 0), mLabel(D.months[s])], [`En ${spr} fois`, eur(one.dca, 0), `de ${mLabel(D.months[s])} à ${mLabel(D.months[s + spr - 1])}`], ["Écart", eur(Math.abs(one.lump - one.dca), 0), "en faveur de « " + (one.lump >= one.dca ? "en une fois" : `en ${spr} fois`) + " »"], ["Sur toutes les dates", tot ? pct(win / tot, 0, false) : "–", `« En une fois » a fini plus haut, à ${hz / 12} an${hz > 12 ? "s" : ""}`]])
-      + `<div class="chart" id="c"></div><div class="legend"><span><i style="background:#141414"></i>En une fois</span><span><i style="background:#1C3D6E"></i>En ${spr} fois (argent en attente compris)</span></div>
-      <div class="note"><p>« Sur toutes les dates » : le même calcul refait pour chacun des ${tot} mois de départ possibles de la série fictive. L'argent en attente est compté sans intérêt.</p>${PAST}</div>`;
-    lineChart($("#c"), { labels: lab, series: [{ name: "En une fois", values: lumpS, color: "#141414" }, { name: `En ${spr} fois`, values: dcaS, color: "#1C3D6E" }], fmt: (x, axis) => axis ? F0.format(x) + " €" : eur(x, 0) });
-  };
-  root.oninput = root.onchange = run; run();
-}
+function repHTML(weights) { return `<div class="rep">${Object.entries(weights).sort((a, b) => b[1] - a[1]).map(([k, w]) => `<div class="r"><span>${esc(k)}</span><span class="bar_"><span style="width:${(w * 100).toFixed(1)}%"></span></span><span class="num" style="text-align:right">${pct(w, 0, false)}</span></div>`).join("")}</div>`; }
 
-/* ---------- Portefeuille (opérations réelles saisies par l'utilisateur) ---------- */
+/* ---------- Portefeuille : opérations saisies, frais du courtier calculés ---------- */
 const PF_KEY = "repere.pf.v2";
-function pfLoad() { try { const p = JSON.parse(localStorage.getItem(PF_KEY)); return p && p.ops ? p : { ops: [], prix: {} }; } catch (e) { return { ops: [], prix: {} }; } }
+function pfLoad() { try { const p = JSON.parse(localStorage.getItem(PF_KEY)); return p && p.ops ? { broker: "trade-republic", perso: { fixe: 0, pct: 0 }, ...p } : null; } catch (e) { return null; } }
+const PF_EMPTY = () => ({ ops: [], prix: {}, broker: "trade-republic", perso: { fixe: 0, pct: 0 } });
 function pfSave(p) { try { localStorage.setItem(PF_KEY, JSON.stringify(p)); return true; } catch (e) { return false; } }
 let PF = null;
 const pfName = id => RBY[id] ? RBY[id].name : id.replace(/^autre:/, "");
 function pfCompute(ops, prix) {
-  const pos = {}; let divs = 0, fees = 0; const flows = [];
+  const pos = {}; let divs = 0, fees = 0, bought = 0; const flows = [];
   const t0 = ops.length ? new Date(ops.reduce((a, o) => o.date < a ? o.date : a, ops[0].date)) : null;
   const yrs = iso => (new Date(iso) - t0) / (365.25 * 864e5);
   [...ops].sort((a, b) => a.date.localeCompare(b.date)).forEach(o => {
     const p = pos[o.id] = pos[o.id] || { q: 0, cost: 0, last: o.px }, amt = o.q * o.px;
-    if (o.type === "achat") { p.cost += amt + o.fee; p.q += o.q; p.last = o.px; fees += o.fee; flows.push({ t: yrs(o.date), v: -(amt + o.fee) }); }
+    if (o.type === "achat") { p.cost += amt + o.fee; p.q += o.q; p.last = o.px; fees += o.fee; bought += amt; flows.push({ t: yrs(o.date), v: -(amt + o.fee) }); }
     else if (o.type === "vente") { const pru = p.q ? p.cost / p.q : 0, qq = Math.min(o.q, p.q); p.cost -= pru * qq; p.q -= qq; p.last = o.px; fees += o.fee; flows.push({ t: yrs(o.date), v: qq * o.px - o.fee }); }
     else if (o.type === "dividende") { divs += o.px; flows.push({ t: yrs(o.date), v: o.px }); }
   });
@@ -1081,44 +1207,72 @@ function pfCompute(ops, prix) {
   lines.forEach(l => l.w = value ? l.val / value : 0);
   const gain = value + flows.reduce((a, f) => a + f.v, 0);
   let tri = null; if (ops.length) { const T = yrs(TODAY); if (T > 0.08) tri = Calc.xirr([...flows, { t: T, v: value }]); }
-  return { lines, value, divs, fees, gain, tri };
+  return { lines, value, divs, fees, bought, gain, tri };
+}
+function pfFeedback(r) { // constats chiffrés, sans recommandation
+  const out = [];
+  if (!r.lines.length) return out;
+  const top = [...r.lines].sort((a, b) => b.w - a.w)[0];
+  out.push(`<b>${esc(pfName(top.id))}</b> pèse ${pct(top.w, 0, false)} du portefeuille : si son cours baisse de 20 %, le portefeuille baisse de ${pct(top.w * 0.2, 1, false)}.`);
+  const sec = new Set(r.lines.map(l => RBY[l.id] ? l.id && RBY[l.id].sector : "autre")), reg = new Set(r.lines.map(l => RBY[l.id] ? RBY[l.id].region : "autre"));
+  out.push(`${r.lines.length} ligne${r.lines.length > 1 ? "s" : ""}, ${sec.size} secteur${sec.size > 1 ? "s" : ""}, ${reg.size} zone${reg.size > 1 ? "s" : ""} géographique${reg.size > 1 ? "s" : ""}.${sec.size === 1 && r.lines.length > 1 ? " Toutes vos actions dépendent du même secteur." : ""}`);
+  if (r.bought > 0) out.push(`Frais de courtage payés : ${eur(r.fees)}, soit ${pct(r.fees / r.bought, 2, false)} des sommes investies.`);
+  const vig = r.lines.filter(l => RBY[l.id] && !RBY[l.id].missing).map(l => [l.id, tally(lecture(RBY[l.id], { ...RBY[l.id], cagr: null })).vig]).filter(([, n]) => n > 0);
+  if (vig.length) out.push(`Points de vigilance dans les comptes : ${vig.map(([id, n]) => `<a class="lnk" href="/entreprise/${id}">${esc(pfName(id))}</a> (${n})`).join(", ")}.`);
+  const unset = r.lines.filter(l => !l.set).length;
+  if (unset) out.push(`${unset} ligne${unset > 1 ? "s sont valorisées" : " est valorisée"} au dernier prix d'achat : indiquez le cours actuel dans le tableau des positions.`);
+  return out;
 }
 function pagePortefeuille() {
   setTitle("Portefeuille"); setNav("pf");
-  PF = pfLoad();
-  app.innerHTML = `<h1 class="pagetitle">Portefeuille</h1><p class="pagesub">Saisissez vos opérations pour suivre votre performance réelle : gain, rendement selon vos versements, répartition.</p>
-    <section class="panel"><div class="pb" id="pfbody"></div><div class="src">Vos opérations restent enregistrées dans ce navigateur uniquement. Indiquez le cours actuel de chaque ligne pour la valoriser : il figure sur la fiche de l'entreprise.</div></section>`;
+  PF = pfLoad() || PF_EMPTY();
+  app.innerHTML = `<h1 class="pagetitle">Portefeuille</h1><p class="pagesub">Notez vos achats : le site calcule les frais de votre courtier, votre gain réel et ce que dit votre portefeuille.</p>
+    <section class="panel"><div class="pb" id="pfbody"></div><div class="src">Vos opérations restent dans ce navigateur, rien n'est envoyé. ${brokerSrc()}</div></section>`;
   renderPf();
 }
 function renderPf() {
-  const ops = PF.ops, r = pfCompute(ops, PF.prix), body = $("#pfbody"), sectorW = {};
+  const ops = PF.ops, r = pfCompute(ops, PF.prix), body = $("#pfbody"), sectorW = {}, b = brokerBy(PF.broker);
   r.lines.forEach(l => { const k = RBY[l.id] ? secName(RBY[l.id]) : "Autres placements"; sectorW[k] = (sectorW[k] || 0) + l.w; });
-  const top = [...r.lines].sort((a, b) => b.w - a.w)[0];
-  body.innerHTML = `${ops.length ? figs([["Valeur actuelle", eur(r.value, 0), "selon les cours saisis"], ["Gain ou perte", eur(r.gain, 0), "dividendes et frais compris", cls(r.gain)], ["Rendement selon vos versements", r.tri == null ? "–" : pct(r.tri), r.tri == null ? "Calculé après un mois" : "par an (TRI)", cls(r.tri)], ["Dividendes reçus", eur(r.divs, 0), `frais payés : ${eur(r.fees, 0)}`]]) : ""}
+  const fb = pfFeedback(r);
+  const opt = list => list.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  body.innerHTML = `<div class="brkbar"><div class="field" style="margin:0;min-width:220px"><label for="pfb">Mon courtier</label><select id="pfb">${brokerOptions(PF.broker)}</select></div>
+      ${b.custom ? `<div class="row2" style="max-width:300px">${numIn("pfx", "Frais fixes (€)", PF.perso.fixe, "", 'min="0" step="0.5"')}${numIn("ppc", "Pourcentage (%)", PF.perso.pct, "", 'min="0" step="0.05"')}</div>` : `<p class="muted" style="margin:0;font-size:13px;max-width:520px">${esc(b.note)}</p>`}</div>
+    ${ops.length ? figs([["Valeur actuelle", eur(r.value, 0), "selon les cours indiqués"], ["Gain ou perte", eur(r.gain, 0), "dividendes et frais compris", cls(r.gain)], ["Rendement par an", r.tri == null ? "–" : pct(r.tri), r.tri == null ? "Calculé après un mois" : "selon vos dates de versement", cls(r.tri)], ["Frais payés", eur(r.fees), `dividendes reçus : ${eur(r.divs, 0)}`]]) : ""}
+    ${fb.length ? `<div class="fb"><div class="cap">Ce que dit votre portefeuille</div><ul>${fb.map(x => `<li>${x}</li>`).join("")}</ul></div>` : ""}
     <div class="two"><div><div class="cap">Ajouter une opération</div>
-        <div class="row2"><div class="field"><label for="ot">Type</label><select id="ot"><option value="achat">Achat</option><option value="vente">Vente</option><option value="dividende">Dividende reçu</option></select></div>
-          <div class="field"><label for="od">Date</label><input id="od" type="date" value="${TODAY}" max="${TODAY}"></div></div>
-        <div class="field"><label for="oi">Placement</label><select id="oi">${R.companies.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("")}<option value="autre">Autre placement (fonds, ETF…)</option></select></div>
+        <div class="field">${chips("ot", [["achat", "J'ai acheté"], ["vente", "J'ai vendu"], ["dividende", "J'ai reçu un dividende"]], "achat")}</div>
+        <div class="field"><label for="oi">Quoi</label><select id="oi"><optgroup label="France">${opt(R.companies.filter(c => c.region === "FR"))}</optgroup><optgroup label="Europe">${opt(R.companies.filter(c => c.region === "EU"))}</optgroup><optgroup label="États-Unis">${opt(R.companies.filter(c => c.region === "US"))}</optgroup><option value="autre">Autre placement (fonds, ETF…)</option></select></div>
         <div class="field" id="onameF" hidden><label for="oname">Nom du placement</label><input id="oname" type="text" placeholder="Ex. ETF MSCI World"></div>
-        <div class="row2">${numIn("oq", "Quantité", 10, "", 'min="0" step="1"')}${numIn("op", "Prix unitaire (€)", "", "", 'min="0" step="0.01"')}</div>
-        ${numIn("of", "Frais (€)", 1, "", 'min="0" step="0.5"')}<button class="btn" id="oadd" type="button">Ajouter</button><span class="muted" id="omsg" style="font-size:12.5px;margin-left:10px"></span></div>
-      <div><div class="cap">${def("rep", "Répartition")}</div>${r.lines.length ? repHTML(sectorW) + `<p class="note" style="margin-top:6px">Plus grosse ligne : ${esc(pfName(top.id))}, ${pct(top.w, 0, false)} du portefeuille.</p>` : `<p class="muted" style="margin:0">Ajoutez une première opération pour voir la répartition.</p>`}</div></div>
-    ${r.lines.length ? `<div style="margin-top:20px"><div class="cap">Positions</div><div class="scroll-x"><table class="t ops"><thead><tr><th>Placement</th><th>Quantité</th><th>Prix de revient</th><th>Cours actuel</th><th>Valeur</th><th>Plus ou moins-value</th></tr></thead>
-      <tbody>${r.lines.map(l => `<tr><td>${RBY[l.id] ? `<a class="lnk" href="/entreprise/${l.id}">${esc(pfName(l.id))}</a>` : esc(pfName(l.id))}</td><td>${F2.format(l.q).replace(",00", "")}</td><td>${eur(l.pru)}</td><td><input class="px" type="number" inputmode="decimal" step="0.01" min="0" data-px="${esc(l.id)}" value="${l.px}" aria-label="Cours actuel"></td><td>${eur(l.val, 0)}</td><td class="${cls(l.gain)}">${eur(l.gain, 0)}</td></tr>`).join("")}</tbody></table></div></div>` : ""}
-    <div style="margin-top:20px"><div class="cap">Opérations</div>${ops.length ? `<div class="scroll-x"><table class="t ops"><thead><tr><th>Date</th><th>Type</th><th>Placement</th><th>Quantité</th><th>Prix ou montant</th><th>Frais</th><th></th></tr></thead><tbody>
+        <div class="row2" id="oqp">${numIn("oq", "Combien de titres", 10, "", 'min="0" step="1"')}${numIn("op", "Prix d'un titre (€)", "", "", 'min="0" step="0.01"')}</div>
+        <div class="row2">${numIn("of", "Frais (€)", "", "Calculés d'après la grille de votre courtier. Modifiables.", 'min="0" step="0.01"')}<div class="field"><label for="od">Date</label><input id="od" type="date" value="${TODAY}" max="${TODAY}"></div></div>
+        <button class="btn" id="oadd" type="button">Ajouter</button><span class="muted" id="omsg" style="font-size:12.5px;margin-left:10px"></span></div>
+      <div><div class="cap">${def("rep", "Répartition par secteur")}</div>${r.lines.length ? repHTML(sectorW) : `<p class="muted" style="margin:0">Ajoutez un premier achat pour voir la répartition.</p>`}</div></div>
+    ${r.lines.length ? `<div style="margin-top:20px"><div class="cap">Positions</div><div class="scroll-x"><table class="t ops"><thead><tr><th>Placement</th><th>Titres</th><th>Prix de revient</th><th>Cours actuel</th><th>Valeur</th><th>Gain ou perte</th></tr></thead>
+      <tbody>${r.lines.map(l => `<tr><td>${RBY[l.id] ? `<a class="lnk" href="/entreprise/${l.id}">${esc(pfName(l.id))}</a>` : esc(pfName(l.id))}</td><td>${F2.format(l.q).replace(",00", "")}</td><td>${eur(l.pru)}</td><td><input class="px" type="number" inputmode="decimal" step="0.01" min="0" data-px="${esc(l.id)}" value="${l.px}" aria-label="Cours actuel"></td><td>${eur(l.val, 0)}</td><td class="${cls(l.gain)}">${eur(l.gain, 0)}</td></tr>`).join("")}</tbody></table></div><p class="note" style="margin-top:6px">Prix de revient : prix moyen payé par titre, frais compris.</p></div>` : ""}
+    <div style="margin-top:20px"><div class="cap">Opérations</div>${ops.length ? `<div class="scroll-x"><table class="t ops"><thead><tr><th>Date</th><th>Type</th><th>Placement</th><th>Titres</th><th>Prix ou montant</th><th>Frais</th><th></th></tr></thead><tbody>
       ${ops.map((o, i) => [o, i]).sort((a, b) => b[0].date.localeCompare(a[0].date)).map(([o, i]) => `<tr><td>${dShort(o.date)}</td><td>${o.type === "achat" ? "Achat" : o.type === "vente" ? "Vente" : "Dividende"}</td><td>${esc(pfName(o.id))}</td><td>${o.type === "dividende" ? "–" : F2.format(o.q).replace(",00", "")}</td><td>${eur(o.px)}</td><td>${o.type === "dividende" ? "–" : eur(o.fee)}</td><td><button class="del" data-i="${i}" aria-label="Supprimer">×</button></td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">Aucune opération pour l'instant.</div>`}</div>`;
-  const sync = () => { const t = $("#ot").value; $("#op").previousElementSibling.textContent = t === "dividende" ? "Montant reçu (€)" : "Prix unitaire (€)"; $("#oq").disabled = t === "dividende"; $("#onameF").hidden = $("#oi").value !== "autre"; };
-  $("#ot").onchange = $("#oi").onchange = sync;
+  let type = "achat", feeTouched = false;
+  const autoFee = () => { if (feeTouched || type === "dividende") return; const amt = v("oq") * v("op"); $("#of").value = amt > 0 ? brokerFee(brokerBy(PF.broker), amt, PF.perso).toFixed(2) : ""; };
+  const sync = () => {
+    $("#op").previousElementSibling.textContent = type === "dividende" ? "Montant reçu (€)" : "Prix d'un titre (€)";
+    $("#oq").closest(".field").hidden = type === "dividende"; $("#of").closest(".field").hidden = type === "dividende";
+    $("#onameF").hidden = $("#oi").value !== "autre"; autoFee();
+  };
+  $("#ot").onclick = e => { const x = e.target.closest("button"); if (!x) return; type = x.dataset.v; $$("#ot button").forEach(y => y.classList.toggle("on", y === x)); sync(); };
+  $("#oi").onchange = sync; $("#oq").oninput = $("#op").oninput = autoFee; $("#of").oninput = () => { feeTouched = true; };
+  $("#pfb").onchange = () => { PF.broker = $("#pfb").value; pfSave(PF); renderPf(); };
+  if ($("#pfx")) $("#pfx").onchange = $("#ppc").onchange = () => { PF.perso = { fixe: v("pfx"), pct: v("ppc") }; pfSave(PF); renderPf(); };
+  sync();
   $("#oadd").onclick = () => {
-    const t = $("#ot").value, date = $("#od").value || TODAY, msg = $("#omsg");
+    const date = $("#od").value || TODAY, msg = $("#omsg");
     let id = $("#oi").value;
     if (id === "autre") { const n = $("#oname").value.trim(); if (!n) { msg.textContent = "Indiquez le nom du placement."; return; } id = "autre:" + n.slice(0, 60); }
-    const q = t === "dividende" ? 0 : v("oq"), px = v("op"), fee = t === "dividende" ? 0 : v("of");
-    if (t !== "dividende" && (q <= 0 || px <= 0)) { msg.textContent = "Indiquez une quantité et un prix."; return; }
-    if (t === "dividende" && px <= 0) { msg.textContent = "Indiquez le montant reçu."; return; }
-    if (t === "vente") { const held = (pfCompute(PF.ops, PF.prix).lines.find(l => l.id === id) || { q: 0 }).q; if (q > held + 1e-9) { msg.textContent = `Vous détenez ${F2.format(held).replace(",00", "")} titres.`; return; } }
+    const q = type === "dividende" ? 0 : v("oq"), px = v("op"), fee = type === "dividende" ? 0 : v("of");
+    if (type !== "dividende" && (q <= 0 || px <= 0)) { msg.textContent = "Indiquez le nombre de titres et le prix."; return; }
+    if (type === "dividende" && px <= 0) { msg.textContent = "Indiquez le montant reçu."; return; }
+    if (type === "vente") { const held = (pfCompute(PF.ops, PF.prix).lines.find(l => l.id === id) || { q: 0 }).q; if (q > held + 1e-9) { msg.textContent = `Vous détenez ${F2.format(held).replace(",00", "")} titres.`; return; } }
     if (date > TODAY) { msg.textContent = "La date ne peut pas être dans le futur."; return; }
-    PF.ops.push({ type: t, id, date, q, px, fee });
+    PF.ops.push({ type, id, date, q, px, fee });
     if (!pfSave(PF)) msg.textContent = "Enregistrement impossible dans ce navigateur.";
     renderPf();
   };
@@ -1167,9 +1321,9 @@ $$("[data-search]").forEach(box => {
   const show = () => {
     const q = norm(inp.value.trim());
     if (!q || !R) { res.classList.remove("open"); return; }
-    const all = R.companies.filter(c => norm(c.name).includes(q) || norm(secName(c)).includes(q) || norm(c.ticker) === q || c.isin.toLowerCase() === q).slice(0, 8);
+    const all = R.companies.filter(c => norm(c.name).includes(q) || norm(secName(c)).includes(q) || norm(c.ticker) === q || (c.isin || "").toLowerCase() === q || norm(regName(c)).includes(q)).slice(0, 8);
     sel = -1;
-    res.innerHTML = all.length ? all.map(c => `<a href="/entreprise/${c.id}"><span>${esc(c.name)}</span><span class="light">${esc(c.ticker)} · ${esc(secName(c))}</span></a>`).join("") : `<div class="none">Aucun résultat</div>`;
+    res.innerHTML = all.length ? all.map(c => `<a href="/entreprise/${c.id}"><span>${esc(c.name)}</span><span class="light">${esc(c.ticker)} · ${esc(regName(c))}</span></a>`).join("") : `<div class="none">Aucun résultat</div>`;
     res.classList.add("open");
   };
   inp.addEventListener("input", show); inp.addEventListener("focus", show);
@@ -1197,12 +1351,13 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 
 /* ---------- Démarrage ---------- */
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/demo.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", [])]).then(([r, d, ag, uni]) => {
-  if (!r || !d) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
-  R = r; D = d; AG = ag || { events: [] };
-  const U = Object.fromEntries(uni.map(u => [u.id, u]));
-  R.companies.forEach(c => { if (U[c.id]) { c.domain = c.domain || U[c.id].domain; c.desc = c.desc || U[c.id].desc; } RBY[c.id] = c; });
-  [...D.companies, ...D.funds].forEach(c => DBY[c.id] = c);
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] })]).then(([r, ag, uni, br]) => {
+  if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
+  AG = ag || { events: [] }; BROKERS = br;
+  const S = Object.fromEntries((r.companies || []).map(c => [c.id, c]));
+  // La liste des entreprises suivies fait foi ; les comptes collectés s'y ajoutent
+  R = { ...r, regions: uni.regions, companies: uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u })) };
+  R.companies.forEach(c => { RBY[c.id] = c; });
   computeMedians();
   route();
 });
