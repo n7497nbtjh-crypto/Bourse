@@ -3,3 +3,4 @@ tests/fixtures/site/
 node_modules/
 .DS_Store
 cf/src/index.gen.mjs
+.claude/
