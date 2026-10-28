@@ -313,9 +313,9 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
 var FOURNISSEURS = [
   ["mistral", (env) => env.MISTRAL_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.mistral.ai/v1/chat/completions", env.MISTRAL_KEY, env.MISTRAL_MODEL || "mistral-small-latest", m, mt, te, js)],
   ["groq", (env) => env.GROQ_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.groq.com/openai/v1/chat/completions", env.GROQ_KEY, env.GROQ_MODEL || "openai/gpt-oss-20b", m, mt, te, js)],
-  ["workers-ai", (env) => env.AI, async (env, messages, max_tokens, temperature) => {
+  ["workers-ai", (env) => env.AI, async (env, messages, max_tokens, temperature, json4, qualite) => {
     let plafond = +env.IA_NEURONES_JOUR || 1e4;
-    for (let [model, cin, cout] of CF) {
+    for (let [model, cin, cout] of qualite ? [...CF].reverse() : CF) {
       let estime = (approxTokens(messages.map((x) => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
       if (await neuronesUtilises(env) + estime > plafond) {
         note(model + " plafond");
@@ -333,11 +333,11 @@ var FOURNISSEURS = [
     return null;
   }]
 ];
-async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json: json4 = !1 }) {
+async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json: json4 = !1, qualite = !0 }) {
   let messages = [{ role: "system", content: systeme }, { role: "user", content: utilisateur }];
   for (let [nom, actif, appel] of FOURNISSEURS) {
     if (!actif(env)) continue;
-    let t = await appel(env, messages, max_tokens, temperature, json4);
+    let t = await appel(env, messages, max_tokens, temperature, json4, qualite);
     if (t) return t;
   }
   return null;
@@ -665,7 +665,7 @@ async function assistant(request, env) {
   }
   let question = String(b.question || "").replace(/\s+/g, " ").trim().slice(0, 300);
   if (question.length < 5) return json3({ error: "Posez une question un peu plus pr\xE9cise." }, 400);
-  let faits = JSON.stringify(b.faits || {}).slice(0, 9e3), key = "assist:" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map((x) => x.toString(16).padStart(2, "0")).join(""), hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
+  let faits = JSON.stringify(b.faits || {}).slice(0, 9e3), key = "assist2:" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map((x) => x.toString(16).padStart(2, "0")).join(""), hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
   if (hit) return json3({ txt: hit.txt, cache: !0 });
   let q = await quota(request, env, "assistant");
   if (!q.ok) return quotaError(q, "questions \xE0 l'assistant");
@@ -1244,7 +1244,13 @@ bilan. Informations factuelles, sans conseil en investissement.`,
 }
 
 // cf/src/demande.mjs
-var IND = ["croissance", "marge", "marge_nette", "rentabilite", "dette", "per", "rendement", "distribution", "variation_1an", "capitalisation", "taille"], SYS2 = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
+var REPERES = `Rep\xE8res exacts \xE0 respecter :
+- ETF capitalisant : les dividendes re\xE7us sont r\xE9investis automatiquement dans le fonds (rien n'est vers\xE9 \xE0 l'\xE9pargnant). ETF distribuant : les dividendes sont vers\xE9s \xE0 l'\xE9pargnant.
+- PER (price earning ratio) : prix de l'action divis\xE9 par le b\xE9n\xE9fice par action, ou valeur en Bourse divis\xE9e par le b\xE9n\xE9fice annuel. Ne pas confondre avec le PER plan d'\xE9pargne retraite.
+- PEA : actions europ\xE9ennes et ETF \xE9ligibles, versements plafonn\xE9s \xE0 150 000 \u20AC, gains impos\xE9s \xE0 18,6 % de pr\xE9l\xE8vements sociaux apr\xE8s 5 ans (2026). Compte-titres : tout titre, sans plafond, gains impos\xE9s \xE0 31,4 % (flat tax 2026 : 12,8 % d'imp\xF4t + 18,6 % de pr\xE9l\xE8vements sociaux).
+- Rendement d'un dividende : dividende annuel divis\xE9 par le cours. Marge d'exploitation : r\xE9sultat d'exploitation divis\xE9 par le chiffre d'affaires.
+- M\xE9diane d'un secteur : la valeur du milieu, la moiti\xE9 des entreprises fait mieux, l'autre moins bien.
+- Un indice (CAC 40, S&P 500, MSCI World) est un panier d'entreprises ; un ETF permet d'acheter tout le panier en une fois.`, IND = ["croissance", "marge", "marge_nette", "rentabilite", "dette", "per", "rendement", "distribution", "variation_1an", "capitalisation", "taille"], SYS2 = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
 
 Actions possibles :
 1. Chercher des entreprises selon des crit\xE8res :
@@ -1256,7 +1262,9 @@ Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"
 3. Ouvrir la fiche d'une entreprise ou d'un ETF nomm\xE9 : {"action":"fiche","nom":"Apple"}
 4. Chercher des ETF : {"action":"etf","titre":"\u2026","categorie":null ou "actions-monde"|"actions-usa"|"actions-europe"|"actions-france"|"actions-emergents"|"actions-asie"|"dividendes"|"obligations"|"monetaire"|"theme"|"immobilier"|"matieres"|"facteurs","pea":null ou true}
 5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
-R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si on te demande \xAB quoi acheter \xBB, choisis une action "filtre" ou "etf" qui aide \xE0 explorer, et un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). R\xE9ponds uniquement avec le JSON.`, clean2 = (s) => String(s || "").replace(/\s+/g, " ").trim();
+R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si on te demande \xAB quoi acheter \xBB, choisis une action "filtre" ou "etf" qui aide \xE0 explorer, et un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). R\xE9ponds uniquement avec le JSON.
+${REPERES}`, SYS_EXPL = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas. Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REPERES}`, clean2 = (s) => String(s || "").replace(/\s+/g, " ").trim();
 function valide(a) {
   if (!a || typeof a != "object") return null;
   if (a.action === "filtre") {
@@ -1275,7 +1283,7 @@ async function demande(request, env) {
   }
   let q = clean2(b.question).slice(0, 300);
   if (q.length < 4) return json2({ error: "\xC9crivez une question un peu plus longue." }, 400);
-  let key = "demande:" + q.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôöùûüç ]/g, "");
+  let key = "demande2:" + q.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôöùûüç ]/g, "");
   if (env.DB)
     try {
       let hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
@@ -1284,7 +1292,11 @@ async function demande(request, env) {
     }
   let qq = await quota(request, env, "demande");
   if (!qq.ok) return quotaError(qq, "questions \xE0 l'IA");
-  let t = await rediger(env, { systeme: SYS2, utilisateur: q, max_tokens: 500, temperature: 0.1, json: !0 }), a = valide(jsonDe(t));
+  let t = await rediger(env, { systeme: SYS2, utilisateur: q, max_tokens: 500, temperature: 0.1, json: !0, qualite: !1 }), a = valide(jsonDe(t));
+  if (a && a.action === "repondre") {
+    let x = await rediger(env, { systeme: SYS_EXPL, utilisateur: q, max_tokens: 450, temperature: 0.2, qualite: !0 });
+    x && x.length > 40 && (a.texte = x.replace(/—/g, ",").trim().slice(0, 2e3));
+  }
   if (!a) return json2({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : \xAB entreprises fran\xE7aises peu endett\xE9es qui versent un dividende \xBB." : "L'IA est tr\xE8s demand\xE9e en ce moment : r\xE9essayez dans quelques instants.", diag: DIAG.slice(-3) }, t ? 422 : 503);
   if (env.DB)
     try {

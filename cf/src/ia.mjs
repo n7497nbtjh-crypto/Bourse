@@ -135,7 +135,7 @@ export async function assistant(request, env) {
   const question = String(b.question || "").replace(/\s+/g, " ").trim().slice(0, 300);
   if (question.length < 5) return json({ error: "Posez une question un peu plus précise." }, 400);
   const faits = JSON.stringify(b.faits || {}).slice(0, 9000);
-  const key = "assist:" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
+  const key = "assist2:" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
   const hit = await env.DB.prepare(`SELECT txt FROM resumes WHERE u = ?`).bind(key).first();
   if (hit) return json({ txt: hit.txt, cache: true });
   const q = await quota(request, env, "assistant"); if (!q.ok) return quotaError(q, "questions à l'assistant");

@@ -40,9 +40,9 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
 const FOURNISSEURS = [
   ["mistral", env => env.MISTRAL_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.mistral.ai/v1/chat/completions", env.MISTRAL_KEY, env.MISTRAL_MODEL || "mistral-small-latest", m, mt, te, js)],
   ["groq", env => env.GROQ_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.groq.com/openai/v1/chat/completions", env.GROQ_KEY, env.GROQ_MODEL || "openai/gpt-oss-20b", m, mt, te, js)],
-  ["workers-ai", env => env.AI, async (env, messages, max_tokens, temperature) => {
+  ["workers-ai", env => env.AI, async (env, messages, max_tokens, temperature, json, qualite) => {
     const plafond = +env.IA_NEURONES_JOUR || 10000;
-    for (const [model, cin, cout] of CF) {
+    for (const [model, cin, cout] of (qualite ? [...CF].reverse() : CF)) {
       const estime = (approxTokens(messages.map(x => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
       if ((await neuronesUtilises(env)) + estime > plafond) { note(model + " plafond"); continue; }
       try {
@@ -60,11 +60,12 @@ const FOURNISSEURS = [
 ];
 
 /** Rédige un texte. Ne lève jamais d'erreur : renvoie null si aucun service n'a pu répondre. */
-export async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json = false }) {
+// qualite : true pour les textes qui expliquent (modèle plus fiable d'abord) ; false pour classer une demande (modèle économe d'abord)
+export async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json = false, qualite = true }) {
   const messages = [{ role: "system", content: systeme }, { role: "user", content: utilisateur }];
   for (const [nom, actif, appel] of FOURNISSEURS) {
     if (!actif(env)) continue;
-    const t = await appel(env, messages, max_tokens, temperature, json);
+    const t = await appel(env, messages, max_tokens, temperature, json, qualite);
     if (t) return t;
   }
   return null;
