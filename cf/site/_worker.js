@@ -314,18 +314,6 @@ async function docText(env, u) {
   let md = await env.AI.toMarkdown([{ name: "doc.pdf", blob: new Blob([buf], { type: "application/pdf" }) }]);
   return String((md[0] || {}).data || "");
 }
-function focus(t) {
-  if (t.length < 3e4) return t;
-  let re = /management['’]s discussion and analysis/gi, m, best = -1;
-  for (; m = re.exec(t); ) {
-    let after = t.slice(m.index, m.index + 3e3);
-    if ((after.match(/%/g) || []).length >= 4 && /\$\s?\d/.test(after)) {
-      best = m.index;
-      break;
-    }
-  }
-  return best >= 0 ? t.slice(best) : t;
-}
 var SYS = `Tu es un journaliste financier p\xE9dagogue qui \xE9crit pour des personnes qui d\xE9butent en Bourse. Tu r\xE9sumes en fran\xE7ais un document officiel publi\xE9 par une entreprise cot\xE9e.
 R\xE8gles strictes :
 - Utilise uniquement les informations et les chiffres pr\xE9sents dans le document. N'invente rien. Si un chiffre n'y figure pas, ne le donne pas.
@@ -345,15 +333,15 @@ async function resume(request, env) {
   if (!HOSTS.test(url.hostname)) return json2({ error: "Source non prise en charge." }, 400);
   await init2(env.DB);
   let hit = await env.DB.prepare("SELECT txt, at FROM resumes WHERE u = ?").bind(u).first();
-  if (hit && !/ne (peux|peut) pas/i.test(hit.txt)) return json2({ txt: hit.txt, at: hit.at, cache: !0 });
+  if (hit) return json2({ txt: hit.txt, at: hit.at, cache: !0 });
   if (!await budget(env.DB)) return json2({ error: "Le quota de r\xE9sum\xE9s du jour est atteint. Ce document sera r\xE9sum\xE9 demain." }, 429);
   try {
-    let text = focus(await docText(env, u)).slice(0, 14e3);
+    let text = (await docText(env, u)).slice(0, 14e3);
     if (text.length < 300) return json2({ error: "Document trop court ou illisible." }, 422);
     let out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS }, { role: "user", content: `Document :
 
 ` + text }], max_tokens: 700, temperature: 0.2 }), txt = String(out.response || out.result && out.result.response || "").replace(/—/g, ",").trim();
-    if (txt.length < 200 || /ne (peux|peut) pas|pas d'informations exploitables/i.test(txt)) throw new Error("le document ne contient pas de chiffres lisibles");
+    if (txt.length < 80) throw new Error("r\xE9ponse vide");
     return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(u, txt, Date.now()).run(), json2({ txt, at: Date.now() });
   } catch (e) {
     return json2({ error: "R\xE9sum\xE9 impossible pour ce document : " + String(e.message || e).slice(0, 120) }, 502);
@@ -392,7 +380,7 @@ async function veille(request, env) {
       return json2({ error: "Bilan impossible pour le moment." }, 502);
     }
   }
-  let mailOn = (env.BREVO_KEY || env.RESEND_KEY) && env.MAIL_FROM && env.ADMIN_KEY;
+  let mailOn = env.RESEND_KEY && env.MAIL_FROM && env.ADMIN_KEY;
   if (path === "/api/veille/inscription" && request.method === "POST") {
     if (!mailOn) return json2({ error: "L'envoi par e-mail n'est pas encore ouvert. Le bilan reste disponible ici, \xE0 tout moment." }, 503);
     let b;
@@ -422,11 +410,6 @@ bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil.`)
   return json2({ error: "Introuvable." }, 404);
 }
 async function sendMail(env, to, subject, text) {
-  if (env.BREVO_KEY) {
-    let r2 = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text }) });
-    if (!r2.ok) throw new Error("envoi " + r2.status);
-    return;
-  }
   let r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: env.MAIL_FROM, to, subject, text }) });
   if (!r.ok) throw new Error("envoi " + r.status);
 }
