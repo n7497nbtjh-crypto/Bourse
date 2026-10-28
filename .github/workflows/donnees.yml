@@ -1,4 +1,5 @@
 # Collecte des comptes annuels et fabrication du site prêt à déposer sur Cloudflare.
+# Pas de _routes.json : Cloudflare le refuse en dépôt direct ; le Worker trie lui-même les requêtes.
 # Lancement à la main : onglet Actions > « Mise à jour des données » > Run workflow.
 # À la fin : ouvrir l'exécution, section Artifacts, télécharger « repere-site »,
 # puis glisser ce fichier dans Cloudflare Pages (comme pour Kartel Des Cartes).
