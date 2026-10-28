@@ -1,0 +1,10 @@
+import { dateFromTitle } from "../data/agenda_presse.mjs";
+let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log("ÉCHEC", m); } };
+const T = "2026-10-28";
+ok(dateFromTitle("Apple to Report Fourth Quarter Results on Thursday, January 28", T) === "2027-01-28", "anglais, année suivante");
+ok(dateFromTitle("Microsoft will release fiscal Q2 earnings on November 12, 2026", T) === "2026-11-12", "anglais, année donnée");
+ok(dateFromTitle("LVMH publiera ses résultats annuels le 27 janvier", T) === "2027-01-27", "français");
+ok(dateFromTitle("Danone présentera son chiffre d'affaires du 3e trimestre le jeudi 5 novembre", T) === "2026-11-05", "français avec jour");
+ok(dateFromTitle("Nvidia stock jumps after earnings", T) === null, "pas de date");
+ok(dateFromTitle("Apple reported results on October 3", T) === null, "date passée non retenue");
+console.log(fails ? fails + " échec(s)" : "agenda : tout est bon"); process.exit(fails ? 1 : 0);

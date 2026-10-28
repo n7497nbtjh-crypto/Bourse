@@ -7,6 +7,7 @@ import U, { SECTEURS } from "./index.gen.mjs";
 const INDEX = U.map(c => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })); // fiches non incluses
 import amf from "./amf.mjs";
 import communaute from "./communaute.mjs";
+import presse from "./presse.mjs";
 
 const SITE = "Repère";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -46,6 +47,7 @@ export default {
     const url = new URL(request.url);
     if (url.pathname === "/api/amf") return amf(request, U.filter(c => c.region === "FR").map(c => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
+    if (url.pathname === "/api/presse") return presse(request, U);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const info = meta(url.pathname);
     if (!info) {

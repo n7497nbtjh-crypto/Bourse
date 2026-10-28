@@ -151,14 +151,12 @@ async function collectActuSec(fetchFn, list) {
       const cik = c.cik || CIK[c.sec]; if (!cik) return;
       const sub = await getJSON(fetchFn, subsUrl(cik));
       recentFilings(sub, cik, 8).forEach(f => items.push({ id: c.id, ...f }));
-      estimatedAgenda(sub).forEach(e => events.push({ id: c.id, ...e }));
     } catch (e) { console.log("actu SEC", c.name, e.message); }
     await sleep(150);
   });
   items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
   writeFileSync(new URL("actu-sec.json", OUT), JSON.stringify({ updated: new Date().toISOString(), source: "SEC EDGAR", items: items.slice(0, 600) }));
-  writeFileSync(new URL("agenda-auto.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), events }));
-  console.log(items.length, "dépôts SEC,", events.length, "dates estimées");
+  console.log(items.length, "dépôts SEC");
 }
 
 // Exécute fn sur chaque élément, n à la fois

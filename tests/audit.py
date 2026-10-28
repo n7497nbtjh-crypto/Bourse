@@ -6,15 +6,19 @@ root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue"]
-pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh/communaute", "/entreprise/bnp-paribas/comprendre/roe"]
+pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh/communaute", "/entreprise/lvmh/actualite", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
                  {"date": "2026-10-27T17:45:00", "company": "LVMH MOET HENNESSY LOUIS VUITTON", "title": "Déclaration des transactions sur actions propres", "type": "Rachat d'actions", "url": ""}] * 4}
 def route(r):
     u = r.request.url
     if "/api/amf" in u: return r.fulfill(json=AMF)
+    if "/api/presse" in u:
+        return r.fulfill(json={"items": [{"title": "Le groupe publie des ventes en hausse au troisième trimestre", "url": "https://example.org/a", "site": "example.org", "date": "2026-10-27T15:00:00Z", "lang": "French"}] * 6})
+    if "/api/communaute/avis" in u:
+        return r.fulfill(json={"room": "lvmh", "confiant": 12, "neutre": 5, "prudent": 3})
     if "/api/communaute" in u:
-        msg = {"id": 1, "room": "lvmh", "pseudo": "Romain", "body": "La marge baisse depuis trois ans, c'est à suivre aux prochains résultats.", "kind": "idee", "created": 1761650000000, "likes": 2}
+        msg = {"id": 1, "room": "lvmh", "pseudo": "Romain", "body": "La marge de [[c:lvmh]] baisse depuis trois ans, je compare avec [[c:hermes]].", "kind": "idee", "created": 1761650000000, "likes": 2}
         if r.request.method == "POST": return r.fulfill(status=201, json={"ok": True, "item": msg})
         return r.fulfill(json={"items": [msg] * 3, "rooms": [{"room": "lvmh", "n": 3}, {"room": "general", "n": 1}]})
     if "tradingview.com" in u: return r.fulfill(body="", content_type="text/javascript")

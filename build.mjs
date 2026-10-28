@@ -4,7 +4,12 @@ import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 const ORIGIN = process.argv[2] || "https://repere.pages.dev";
 import { copyFileSync, existsSync, writeFileSync as wfs } from "node:fs";
-copyFileSync("data/agenda.json", "cf/site/data/agenda.json");
+{ // Agenda : dates officielles relevées sur les calendriers des entreprises (data/agenda.json et data/agenda/*.mjs)
+  const base = JSON.parse((await import("node:fs")).readFileSync("data/agenda.json", "utf8"));
+  let ev = [...base.events];
+  for (const f of ["france", "europe", "us"]) if (existsSync(`data/agenda/${f}.mjs`)) ev.push(...(await import(`./data/agenda/${f}.mjs`)).default);
+  const seen = new Set(); ev = ev.filter(e => e && e.id && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && !seen.has(e.id + e.date + e.type) && seen.add(e.id + e.date + e.type));
+  wfs("cf/site/data/agenda.json", JSON.stringify({ note: base.note, events: ev })); }
 if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "cf/site/data/segments-fr.json");
 { const R = {}; for (const f of ["france", "europe", "us"]) if (existsSync(`data/repartitions/${f}.mjs`)) Object.assign(R, (await import(`./data/repartitions/${f}.mjs`)).default); wfs("cf/site/data/repartitions.json", JSON.stringify(R)); }
 { const E = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; wfs("cf/site/data/etf.json", JSON.stringify({ updated: "2026-10-28", list: E })); }

@@ -54,14 +54,21 @@ var SCHEMA = [
   "CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, room TEXT NOT NULL, pseudo TEXT NOT NULL, body TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'avis', parent INTEGER, created INTEGER NOT NULL, who TEXT NOT NULL, likes INTEGER NOT NULL DEFAULT 0, reports INTEGER NOT NULL DEFAULT 0, hidden INTEGER NOT NULL DEFAULT 0)",
   "CREATE INDEX IF NOT EXISTS m_room ON messages (room, id)",
   "CREATE INDEX IF NOT EXISTS m_who ON messages (who, created)",
-  "CREATE TABLE IF NOT EXISTS votes (msg INTEGER NOT NULL, who TEXT NOT NULL, kind TEXT NOT NULL, PRIMARY KEY (msg, who, kind))"
-], ready = !1;
+  "CREATE TABLE IF NOT EXISTS votes (msg INTEGER NOT NULL, who TEXT NOT NULL, kind TEXT NOT NULL, PRIMARY KEY (msg, who, kind))",
+  "CREATE TABLE IF NOT EXISTS avis (room TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (room, who))"
+], ALTERS = ["ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''"], ready = !1;
 async function init(db) {
   if (!ready) {
     for (let q of SCHEMA) await db.prepare(q).run();
+    for (let q of ALTERS)
+      try {
+        await db.prepare(q).run();
+      } catch {
+      }
     ready = !0;
   }
 }
+var mentions = (body) => [...new Set([...String(body).matchAll(/\[\[([ce]):([a-z0-9-]{1,60})\]\]/g)].map((m) => (m[1] === "e" ? "etf-" : "") + m[2]))].slice(0, 5);
 var KINDS = ["idee", "question", "avis", "analyse"], json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 async function who(request) {
   let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", day = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + day + "|repere"));
@@ -76,8 +83,15 @@ async function communaute(request, env) {
   if (await init(db), request.method === "GET" && path === "/api/communaute") {
     let room = url.searchParams.get("room") || "general";
     if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
-    let before = parseInt(url.searchParams.get("before") || "0", 10) || 2 ** 52, r = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE room = ? AND hidden = 0 AND id < ? ORDER BY id DESC LIMIT 50").bind(room, before).all();
+    let before = parseInt(url.searchParams.get("before") || "0", 10) || 2 ** 52, r = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE (room = ? OR tags LIKE ?) AND hidden = 0 AND id < ? ORDER BY id DESC LIMIT 50").bind(room, `%,${room},%`, before).all();
     return json({ room, items: r.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/avis") {
+    let room = url.searchParams.get("room") || "";
+    if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
+    let r = await db.prepare("SELECT v, COUNT(*) AS n FROM avis WHERE room = ? AND at > ? GROUP BY v").bind(room, Date.now() - 30 * 864e5).all(), o = { confiant: 0, neutre: 0, prudent: 0 };
+    for (let x of r.results || []) o[x.v > 0 ? "confiant" : x.v < 0 ? "prudent" : "neutre"] = x.n;
+    return json({ room, ...o });
   }
   if (request.method === "GET" && path === "/api/communaute/recent") {
     let r = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes FROM messages WHERE hidden = 0 ORDER BY id DESC LIMIT 30").all(), t = await db.prepare("SELECT room, COUNT(*) AS n FROM messages WHERE hidden = 0 AND created > ? GROUP BY room ORDER BY n DESC LIMIT 10").bind(Date.now() - 7 * 864e5).all();
@@ -101,8 +115,12 @@ async function communaute(request, env) {
     if (b.website) return json({ ok: !0 });
     let recent = await db.prepare("SELECT COUNT(*) AS n FROM messages WHERE who = ? AND created > ?").bind(me, Date.now() - 10 * 6e4).first();
     if (recent && recent.n >= 5) return json({ error: "Trop de messages d'affil\xE9e : r\xE9essayez dans quelques minutes." }, 429);
-    let parent = Number.isInteger(b.parent) ? b.parent : null, now = Date.now(), r = await db.prepare("INSERT INTO messages (room, pseudo, body, kind, parent, created, who) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(room, pseudo, body, kind, parent, now, me).first();
+    let parent = Number.isInteger(b.parent) ? b.parent : null, now = Date.now(), tags = mentions(body), r = await db.prepare("INSERT INTO messages (room, pseudo, body, kind, parent, created, who, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(room, pseudo, body, kind, parent, now, me, tags.length ? "," + tags.join(",") + "," : "").first();
     return json({ ok: !0, item: { id: r.id, room, pseudo, body, kind, parent, created: now, likes: 0 } }, 201);
+  }
+  if (path === "/api/communaute/avis") {
+    let room = String(b.room || ""), v = Math.sign(parseInt(b.v, 10) || 0);
+    return !roomOk(room) || room === "general" ? json({ error: "Salon inconnu." }, 400) : (await db.prepare("INSERT INTO avis (room, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (room, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(room, me, v, Date.now()).run(), json({ ok: !0 }));
   }
   if (path === "/api/communaute/aime" || path === "/api/communaute/signaler") {
     let id = parseInt(b.id, 10);
@@ -111,6 +129,49 @@ async function communaute(request, env) {
     return ins.meta && ins.meta.changes === 0 ? json({ ok: !0, deja: !0 }) : (kind === "like" ? await db.prepare("UPDATE messages SET likes = likes + 1 WHERE id = ?").bind(id).run() : await db.prepare("UPDATE messages SET reports = reports + 1, hidden = CASE WHEN reports + 1 >= 3 THEN 1 ELSE hidden END WHERE id = ?").bind(id).run(), json({ ok: !0 }));
   }
   return path === "/api/communaute/masquer" ? !env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY ? json({ error: "Non autoris\xE9." }, 403) : (await db.prepare("UPDATE messages SET hidden = 1 WHERE id = ?").bind(parseInt(b.id, 10)).run(), json({ ok: !0 })) : json({ error: "Introuvable." }, 404);
+}
+
+// cf/src/presse.mjs
+var API2 = "https://api.gdeltproject.org/api/v2/doc/doc";
+var CONTEXTE = "(bourse OR action OR actions OR r\xE9sultats OR dividende OR chiffre OR stock OR shares OR earnings OR revenue OR results)", SUJETS = {
+  marches: { q: "theme:ECON_STOCKMARKET sourcelang:french", label: "March\xE9s, presse fran\xE7aise" },
+  monde: { q: "theme:ECON_STOCKMARKET sourcelang:english", label: "March\xE9s, presse internationale" }
+};
+function queryFor(name) {
+  return `"${String(name).replace(/\s*\(.*$/, "").replace(/["()]/g, "").trim()}" ${CONTEXTE} (sourcelang:french OR sourcelang:english)`;
+}
+var iso = (s) => /^\d{8}T\d{6}Z$/.test(s || "") ? `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}T${s.slice(9, 11)}:${s.slice(11, 13)}:${s.slice(13, 15)}Z` : s;
+function normalize2(j) {
+  let seen = /* @__PURE__ */ new Set(), out = [];
+  for (let a of j && j.articles || []) {
+    let t = String(a.title || "").trim();
+    if (!t || !a.url) continue;
+    let k = t.toLowerCase().slice(0, 80);
+    seen.has(k) || (seen.add(k), out.push({ title: t, url: a.url, site: a.domain || "", date: iso(a.seendate), lang: a.language || "", pays: a.sourcecountry || "" }));
+  }
+  return out;
+}
+async function presse(request, index) {
+  let u = new URL(request.url), id = (u.searchParams.get("id") || "").replace(/[^a-z0-9-]/g, "").slice(0, 60), sujet = SUJETS[u.searchParams.get("sujet")] ? u.searchParams.get("sujet") : null, c = id ? index.find((x) => x.id === id) : null;
+  if (!c && !sujet) return new Response(JSON.stringify({ error: "Sujet inconnu.", items: [] }), { status: 400, headers: { "content-type": "application/json; charset=utf-8" } });
+  let api = new URL(API2);
+  api.searchParams.set("query", c ? queryFor(c.name) : SUJETS[sujet].q), api.searchParams.set("mode", "artlist"), api.searchParams.set("format", "json"), api.searchParams.set("maxrecords", "40"), api.searchParams.set("sort", "datedesc"), api.searchParams.set("timespan", c ? "21d" : "2d");
+  let cache = typeof caches < "u" ? caches.default : null, key = new Request(api.toString());
+  if (cache) {
+    let hit = await cache.match(key);
+    if (hit) return hit;
+  }
+  let body, status = 200;
+  try {
+    let r = await fetch(api.toString(), { headers: { "user-agent": "Repere (site pedagogique)" }, cf: { cacheTtl: 1800 } });
+    if (!r.ok) throw new Error("GDELT " + r.status);
+    let txt = await r.text();
+    body = { source: "GDELT", items: normalize2(txt.trim().startsWith("{") ? JSON.parse(txt) : {}) };
+  } catch {
+    status = 502, body = { error: "La presse n'est pas disponible pour le moment.", items: [] };
+  }
+  let res = new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${status === 200 ? 1800 : 60}` } });
+  return cache && status === 200 && await cache.put(key, res.clone()), res;
 }
 
 // cf/src/worker.mjs
@@ -133,6 +194,7 @@ var worker_default = {
     let url = new URL(request.url);
     if (url.pathname === "/api/amf") return amf(request, index_gen_default.filter((c) => c.region === "FR").map((c) => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
+    if (url.pathname === "/api/presse") return presse(request, index_gen_default);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     let info = meta(url.pathname);
     if (!info) {

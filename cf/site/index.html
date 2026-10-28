@@ -480,7 +480,7 @@ nav.main{gap:18px}
 .dayh .nm{font-size:18px;font-weight:600}
 .dayc p{margin:10px 0 0;font-size:14px}
 .dayc .feu{padding:12px 0 4px;border:0}
-a.more{display:inline-block;color:var(--link);font-size:13px;font-weight:500;margin-top:8px;white-space:nowrap}
+a.more{display:inline-block;color:var(--link);font-size:13px;font-weight:500;margin-top:8px}
 a.more:hover{text-decoration:underline}
 .secgrid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-bottom:28px}
 .sectile{background:#fff;border:1px solid var(--rule);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:2px;font-size:13px}
@@ -492,7 +492,8 @@ a.more:hover{text-decoration:underline}
 .hbr{display:grid;grid-template-columns:minmax(0,190px) minmax(0,1fr) 112px;gap:10px;align-items:center;font-size:13.5px}
 .hbr.hl .hbl{font-weight:700}
 .hbr.hl .hbb span{background:var(--o)}
-.hbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hbl{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:8px}
+.hbl .lg{border-radius:6px}
 a.hbl:hover{text-decoration:underline}
 .hbb{height:12px;background:var(--soft);border-radius:99px;overflow:hidden}
 .hbb span{display:block;height:100%;background:var(--link);border-radius:99px}
@@ -548,6 +549,70 @@ svg.bars{width:100%;height:auto;display:block;max-height:240px}
   .ph{flex-wrap:wrap}
   .calc{flex-direction:column;gap:2px}
 }
+.bref-box .pb{padding:18px 20px}
+.bref-big{font-size:17px;line-height:1.55;margin:0 0 4px;font-weight:500;max-width:860px}
+.bref-box .feu{padding:12px 0 6px;border:0}
+.jump{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
+.jump a{border:1px solid var(--rule);border-radius:99px;padding:5px 12px;font-size:13px;color:var(--grey);background:#fff}
+.jump a:hover{border-color:var(--ink);color:var(--ink)}
+section[id]{scroll-margin-top:70px}
+.trois{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:16px 18px}
+.carte{background:#FAF9F6;border:1px solid var(--soft);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.carte .n{width:24px;height:24px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700}
+.carte h3{font-size:14.5px}
+.carte p{margin:0;font-size:14px;line-height:1.5}
+.carte a.more{margin-top:auto}
+.ident{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-top:1px solid var(--soft)}
+.ident > div{padding:10px 18px;border-bottom:1px solid var(--soft);display:flex;flex-direction:column;gap:1px;font-size:13.5px}
+.ident span{color:var(--light);font-size:12px}
+.qrows{display:flex;flex-direction:column}
+details.acc{border-bottom:1px solid var(--soft)}
+details.acc > summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:13px 18px;font-weight:500}
+details.acc > summary::-webkit-details-marker{display:none}
+details.acc > summary:hover{background:#FAF9F6}
+.chev{margin-left:auto;width:9px;height:9px;border-right:2px solid var(--light);border-bottom:2px solid var(--light);transform:rotate(45deg);transition:transform .15s;flex:none}
+details.acc[open] > summary .chev{transform:rotate(-135deg)}
+.accb{padding:0 18px 16px}
+.pb details.acc{border:1px solid var(--soft);border-radius:10px;margin-top:8px}
+.pb details.acc > summary{padding:10px 14px}
+.pb .accb{padding:0 14px 12px}
+.qrow summary .q{flex:1;min-width:0}
+.qrow summary .ans{display:flex;flex-direction:column;align-items:flex-end;gap:2px;margin-left:auto}
+.qrow summary .chev{margin-left:6px}
+.dot{width:12px;height:12px;border-radius:50%;flex:none;background:#C9D3E3}
+.dot-fort{background:var(--g)} .dot-moyen{background:var(--n)} .dot-vig{background:var(--o)}
+.vd{font-size:11.5px;font-weight:600}
+.vd-fort{color:#0F6B3E} .vd-moyen{color:var(--grey)} .vd-vig{color:#9A4A0B} .vd-na{color:#3E5272}
+.accb .lead{font-size:14.5px;margin:0 0 6px}
+.accb .rule{font-size:13.5px;color:var(--grey);margin:10px 0 4px}
+.accb .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.accb .links .def{border:0;color:var(--link);font-size:13px}
+.dfigs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0}
+.dfigs > div{border:1px solid var(--soft);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.dfigs span{font-size:12px;color:var(--grey)}
+.dfigs b{font-size:18px}
+.dfigs small{font-size:12px;color:var(--light)}
+.dfigs .lv{align-self:flex-start}
+ol.steps2{margin:0;padding-left:20px;font-size:14px;line-height:1.55}
+ol.steps2 li{margin:6px 0}
+.press{display:flex;flex-direction:column}
+.pa{display:flex;flex-direction:column;gap:2px;padding:9px 0;border-bottom:1px solid var(--soft)}
+.pa:last-child{border-bottom:0}
+.pa .pt{font-weight:500;font-size:14px}
+.pa:hover .pt{text-decoration:underline}
+.pa .pm{font-size:12px;color:var(--light)}
+.avl{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;margin-top:6px}
+.avl span{display:inline-flex;gap:5px;align-items:center}
+.avl i{width:9px;height:9px;border-radius:50%;display:inline-block}
+.feub.av{margin-top:0}
+a.mention{color:var(--link);font-weight:600;background:#EEF1F6;border-radius:6px;padding:0 4px}
+.mwrap{position:relative}
+.msug{position:absolute;left:0;right:0;top:100%;background:#fff;border:1px solid var(--rule);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.12);z-index:20;padding:4px;max-height:280px;overflow:auto}
+.msug button{display:flex;align-items:center;gap:10px;width:100%;border:0;background:none;padding:7px 8px;border-radius:8px;cursor:pointer;text-align:left}
+.msug button.on,.msug button:hover{background:var(--soft)}
+.msug small{margin-left:auto;color:var(--light)}
+.mshint{font-size:11.5px;color:var(--light);padding:4px 8px}
+@media (max-width:760px){.trois{grid-template-columns:1fr;padding:12px}.ident{grid-template-columns:1fr 1fr}.ident > div{padding:9px 12px}.dfigs{grid-template-columns:1fr 1fr}details.acc > summary{padding:12px 14px}.accb{padding:0 14px 14px}.bref-big{font-size:15.5px}.bref-box .pb{padding:14px}}
 </style>
 </head>
 <body>
@@ -989,19 +1054,6 @@ function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, ma
   }).catch(() => { list.innerHTML = `<div class="empty">${src === "US" ? "Les publications de la SEC ne sont pas disponibles pour le moment." : "Le flux de l'AMF n'est pas disponible pour le moment."}</div>`; });
 }
 function amfBlock(target, params, limit) { newsBlock(target, { params, max: limit, filters: false }); }
-function pageActus() {
-  setTitle("Actualité des entreprises"); setNav("news");
-  const q = new URLSearchParams(location.search), src = q.get("src") === "us" ? "us" : q.get("src") === "toutes" ? "toutes" : "fr";
-  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">Les annonces officielles des entreprises, classées et expliquées. Par défaut, les publications de routine (déclarations de rachat d'actions, nombre d'actions) sont masquées. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
-    <section class="panel"><div class="filters"><a href="/actualites" class="${src === "fr" ? "on" : ""}">France</a><a href="/actualites?src=us" class="${src === "us" ? "on" : ""}">États-Unis et sociétés suivies par la SEC</a><a href="/actualites?src=toutes" class="${src === "toutes" ? "on" : ""}">Toutes les sociétés françaises</a></div>
-    ${src === "toutes" ? `<div class="pb" style="border-bottom:1px solid var(--rule)"><div class="field" style="max-width:420px;margin:0"><input id="aq" type="search" placeholder="Filtrer par société" aria-label="Filtrer par société"></div></div>` : ""}
-    <div class="pb" id="nb"></div><div class="src">${src === "us" ? "Source : SEC, EDGAR. Liste mise à jour chaque jour." : "Source : AMF, info-financiere.gouv.fr, en direct. Licence Ouverte."}</div></section>`;
-  if (src === "toutes") {
-    let t = null; const run = () => newsBlock($("#nb"), { params: $("#aq").value.trim() ? "&q=" + encodeURIComponent($("#aq").value.trim()) : "" });
-    $("#aq").oninput = () => { clearTimeout(t); t = setTimeout(run, 400); }; run();
-  } else newsBlock($("#nb"), src === "us" ? { src: "US" } : { params: "&suivies=1" });
-}
-
 /* ---------- Logos et cartes d'entreprise ---------- */
 const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
 function logo(c, size = 40) { // icône du site de l'entreprise ; initiales si elle ne charge pas
@@ -1045,7 +1097,7 @@ function barsSVG({ labels, values, fmt, ref = null, refLabel = "", h = 200 }) {
 // Barres horizontales : une ligne par élément (classements, comparaisons, répartitions)
 function hbars(rows, fmt, { pctOfMax = true } = {}) {
   const max = Math.max(...rows.map(r => Math.abs(r.v)).filter(okn), 1e-9);
-  return `<div class="hb">${rows.map(r => `<div class="hbr${r.hl ? " hl" : ""}">${r.href ? `<a class="hbl" href="${r.href}">${esc(r.label)}</a>` : `<span class="hbl">${esc(r.label)}</span>`}<span class="hbb"><span style="width:${Math.max(1.5, Math.abs(r.v) / max * 100)}%;${r.c ? `background:${r.c}` : r.v < 0 ? "background:var(--o)" : ""}"></span></span><span class="hbv num">${esc(fmt(r.v))}</span></div>`).join("")}</div>`;
+  return `<div class="hb">${rows.map(r => `<div class="hbr${r.hl ? " hl" : ""}">${r.href ? `<a class="hbl" href="${r.href}">${r.lg || ""}${esc(r.label)}</a>` : `<span class="hbl">${r.lg || ""}${esc(r.label)}</span>`}<span class="hbb"><span style="width:${Math.max(1.5, Math.abs(r.v) / max * 100)}%;${r.c ? `background:${r.c}` : r.v < 0 ? "background:var(--o)" : ""}"></span></span><span class="hbv num">${esc(fmt(r.v))}</span></div>`).join("")}</div>`;
 }
 // Barre empilée à 100 % avec légende (répartition du chiffre d'affaires)
 function stack(parts, fmt) {
@@ -1208,11 +1260,13 @@ async function pageEtf(id) {
         <tr><td>Réplication<span class="s">${e.replication === "synthétique" ? "via un contrat d'échange" : "achète les titres"}</span></td><td>${esc(e.replication || "–")}</td></tr>
         ${e.encours ? `<tr><td>Encours</td><td class="num">${big(e.encours)}</td></tr>` : ""}<tr><td>Émetteur</td><td>${esc(e.issuer)}</td></tr></table>
         <div class="src">Frais et caractéristiques relevés sur les documents de l'émetteur. Vérifiez-les avant d'investir.</div></section>
-      <section class="panel"><div class="ph"><h2>Communauté</h2><a href="/communaute?salon=etf-${e.id}">Ouvrir</a></div><div class="pb" id="cmini"></div></section>
+      <section class="panel"><div class="ph"><h2>Avis des visiteurs</h2></div><div class="pb" id="eavis"></div></section>
+      <section class="panel"><div class="ph"><h2>Discussion</h2><a href="/communaute?salon=etf-${e.id}">Ouvrir</a></div><div class="pb" id="cmini"></div></section>
     </aside></div>`;
   tv($("#tvinfo"), "single-quote", { symbol: e.tv, width: "100%" });
   tvChart($("#tvchart"), e.tv, e.name);
   chatBlock($("#cmini"), "etf-" + e.id, { compact: true });
+  avisBlock($("#eavis"), "etf-" + e.id, e.name);
   const comp = $("#ecomp");
   if (!e.proxy) { comp.innerHTML = `<section class="panel"><div class="pb muted">La composition détaillée de cet ETF n'est pas disponible en données ouvertes.</div></section>`; return; }
   const p = await getJSON(`/data/etf/${e.proxy}.json`, null);
@@ -1227,36 +1281,102 @@ async function pageEtf(id) {
     <div class="note" style="margin:-8px 0 20px">Composition de l'indice ${esc(e.proxyIndex || e.index)} d'après le fonds américain ${esc(e.proxy)}, qui suit ${e.proxyIndex && e.proxyIndex !== e.index ? "un indice proche" : "le même indice"} (déclaration publique à la SEC, formulaire N-PORT). Celle de l'ETF européen peut différer légèrement.</div>`;
 }
 
-/* ---------- Communauté ---------- */
+/* ---------- Presse (GDELT) : articles récents, lien vers l'éditeur ---------- */
+const LANGF = { French: "FR", English: "EN" };
+function presseHTML(items, max) {
+  if (!items.length) return `<div class="muted" style="font-size:13.5px">Aucun article récent trouvé.</div>`;
+  return `<div class="press">${items.slice(0, max).map(a => `<a class="pa" href="${esc(a.url)}" target="_blank" rel="noopener nofollow"><span class="pt">${esc(a.title)}</span><span class="pm">${esc(a.site)}${LANGF[a.lang] ? ` · ${LANGF[a.lang]}` : ""} · ${a.date ? dShort(a.date) : ""}</span></a>`).join("")}</div>`;
+}
+function presseBlock(el, { id = null, sujet = null, max = 8 } = {}) {
+  if (!el) return;
+  el.innerHTML = `<div class="muted" style="font-size:13px">Chargement…</div>`;
+  fetch(`/api/presse?${id ? "id=" + encodeURIComponent(id) : "sujet=" + sujet}`).then(r => r.json()).then(j => {
+    el.innerHTML = j.error && !(j.items || []).length ? `<div class="muted" style="font-size:13.5px">${esc(j.error)}</div>` : presseHTML(j.items || [], max) + `<p class="note" style="margin-top:6px">Articles de presse repérés par GDELT. Le site ne les a pas vérifiés.</p>`;
+  }).catch(() => { el.innerHTML = `<div class="muted" style="font-size:13.5px">La presse n'est pas disponible pour le moment.</div>`; });
+}
+
+/* ---------- Avis des visiteurs sur une entreprise ou un ETF ---------- */
+function avisBlock(el, room, name, { compact = false } = {}) {
+  if (!el) return;
+  const KEY = "repere.avis." + room; let mine = null; try { mine = localStorage.getItem(KEY); } catch (e) { }
+  const draw = d => {
+    const tot = (d.confiant || 0) + (d.neutre || 0) + (d.prudent || 0);
+    const bar = tot ? `<div class="feub av"><span class="f" style="width:${d.confiant / tot * 100}%"></span><span class="m" style="width:${d.neutre / tot * 100}%"></span><span class="v" style="width:${d.prudent / tot * 100}%"></span></div>
+      <div class="avl"><span class="f"><i></i>${d.confiant} plutôt confiant${d.confiant > 1 ? "s" : ""}</span><span class="m"><i></i>${d.neutre} neutre${d.neutre > 1 ? "s" : ""}</span><span class="v"><i></i>${d.prudent} plutôt prudent${d.prudent > 1 ? "s" : ""}</span></div>` : `<p class="muted" style="margin:0 0 8px;font-size:13.5px">Pas encore d'avis ce mois-ci.</p>`;
+    el.innerHTML = `<p style="margin:0 0 10px">Et vous, comment voyez-vous ${esc(name)} ?</p>
+      <div class="chips avb">${[["1", "Plutôt confiant"], ["0", "Neutre"], ["-1", "Plutôt prudent"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${mine === v ? "on" : ""}">${l}</button>`).join("")}</div>
+      <div style="margin-top:12px">${bar}</div>
+      <p class="note">Avis des visiteurs sur 30 jours. Ce n'est pas un conseil et ce n'est pas représentatif.${compact ? ` <a class="lnk" href="${roomHref(room)}${room.startsWith("etf-") ? "" : ""}">Lire la discussion</a>` : ""}</p>`;
+    $(".avb", el).onclick = e => { const b = e.target.closest("button"); if (!b) return; mine = b.dataset.v; try { localStorage.setItem(KEY, mine); } catch (er) { }
+      fetch("/api/communaute/avis", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ room, v: +mine }) }).then(() => load()).catch(() => { }); };
+  };
+  const load = () => fetch(`/api/communaute/avis?room=${encodeURIComponent(room)}`).then(r => r.json()).then(d => d.error ? (el.innerHTML = `<div class="muted" style="font-size:13.5px">${esc(d.error)}</div>`) : draw(d)).catch(() => { el.innerHTML = `<div class="muted" style="font-size:13.5px">Indisponible pour le moment.</div>`; });
+  load();
+}
+
+/* ---------- Communauté : mentions cliquables d'entreprises et d'ETF ---------- */
 const PSEUDO_KEY = "repere.pseudo";
 const KINDL = { idee: "Idée", question: "Question", avis: "Avis", analyse: "Analyse" };
 const roomName = r => r === "general" ? "Discussion générale" : r.startsWith("etf-") ? (ETFBY[r.slice(4)] ? ETFBY[r.slice(4)].name : r) : (RBY[r] ? RBY[r].name : r);
 const roomHref = r => r === "general" ? "/communaute" : r.startsWith("etf-") ? `/etf/${r.slice(4)}` : `/entreprise/${r}/communaute`;
 const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "à l'instant" : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.round(m / 60)} h` : dLabel(new Date(t).toISOString()); };
+// [[c:lvmh]] -> lien vers la fiche ; [[e:id]] -> lien vers l'ETF
+const bodyHTML = b => esc(b).replace(/\[\[([ce]):([a-z0-9-]{1,60})\]\]/g, (m, t, id) => { const o = t === "c" ? RBY[id] : ETFBY[id]; return o ? `<a class="mention" href="${t === "c" ? "/entreprise/" : "/etf/"}${id}">${esc(o.name)}</a>` : esc(m); }).replace(/\n/g, "<br>");
 const msgHTML = (m, showRoom) => `<div class="msg" data-id="${m.id}"><div class="mh"><b>${esc(m.pseudo)}</b><span class="mk mk-${m.kind}">${KINDL[m.kind] || "Avis"}</span>${showRoom ? `<a class="lnk" href="${roomHref(m.room)}">${esc(roomName(m.room))}</a>` : ""}<span class="light">${ago(m.created)}</span></div>
-  <p>${esc(m.body).replace(/\n/g, "<br>")}</p><div class="ma"><button type="button" class="linkbtn" data-a="aime">♥ ${m.likes || 0}</button><button type="button" class="linkbtn light" data-a="signaler">Signaler</button></div></div>`;
+  <p>${bodyHTML(m.body)}</p><div class="ma"><button type="button" class="linkbtn" data-a="aime">♥ ${m.likes || 0}</button><button type="button" class="linkbtn light" data-a="signaler">Signaler</button></div></div>`;
+// Suggestions pendant la frappe : les derniers mots tapés sont comparés aux noms d'entreprises et d'ETF
+function mentionSuggest(ta, box, picked) {
+  const all = () => [...R.companies.map(c => ({ t: "c", id: c.id, name: c.name, sub: c.ticker, o: c })), ...ETF.list.map(e => ({ t: "e", id: e.id, name: e.name, sub: "ETF " + e.ticker, o: { name: e.issuer, domain: issuerDom(e) } }))];
+  let sel = 0, cur = [], frag = null;
+  const close = () => { box.hidden = true; cur = []; frag = null; };
+  const find = () => {
+    const pos = ta.selectionStart, before = ta.value.slice(0, pos), m = before.match(/(?:^|[\s(,.;:!?])((?:@)?[\p{L}\d&'’.-]+(?: [\p{L}\d&'’.-]+){0,2})$/u);
+    if (!m) return close();
+    const words = m[1].replace(/^@/, "").split(" ");
+    for (let k = words.length; k >= 1; k--) {
+      const f = words.slice(-k).join(" "), q = norm(f); if (q.length < 3 && !m[1].startsWith("@")) continue; if (!q) continue;
+      const res = all().filter(x => norm(x.name).startsWith(q) || norm(x.sub) === q).slice(0, 6);
+      if (res.length) { frag = { start: pos - f.length - (m[1].startsWith("@") && k === words.length ? 1 : 0), end: pos }; cur = res; sel = 0;
+        box.innerHTML = `<div class="mshint">Citer :</div>` + res.map((x, i) => `<button type="button" data-i="${i}" class="${i ? "" : "on"}">${logo(x.o, 22)}<span>${esc(x.name)}</span><small>${esc(x.sub)}</small></button>`).join(""); box.hidden = false; return; }
+    }
+    close();
+  };
+  const choose = i => { const x = cur[i]; if (!x || !frag) return; const label = "@" + x.name; picked.set(label, `[[${x.t}:${x.id}]]`);
+    ta.value = ta.value.slice(0, frag.start) + label + " " + ta.value.slice(frag.end); const p = frag.start + label.length + 1; ta.focus(); ta.setSelectionRange(p, p); close(); };
+  ta.addEventListener("input", find);
+  ta.addEventListener("keydown", e => {
+    if (box.hidden || !cur.length) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = (sel + (e.key === "ArrowDown" ? 1 : cur.length - 1)) % cur.length; $$("button", box).forEach((b, i) => b.classList.toggle("on", i === sel)); }
+    else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); choose(sel); }
+    else if (e.key === "Escape") close();
+  });
+  box.addEventListener("pointerdown", e => { const b = e.target.closest("button[data-i]"); if (b) { e.preventDefault(); choose(+b.dataset.i); } });
+  ta.addEventListener("blur", () => setTimeout(close, 150));
+}
 function chatBlock(el, room, { compact = false } = {}) {
   let pseudo = ""; try { pseudo = localStorage.getItem(PSEUDO_KEY) || ""; } catch (e) { }
   el.innerHTML = `<div class="chat${compact ? " compact" : ""}">
     <form class="cform" autocomplete="off"><div class="row2"><div class="field"><label>Pseudo</label><input name="pseudo" maxlength="30" value="${esc(pseudo)}" placeholder="Votre pseudo"></div>
-      <div class="field"><label>Type</label><select name="kind">${Object.entries(KINDL).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></div></div>
-      <div class="field"><textarea name="body" rows="${compact ? 2 : 3}" maxlength="1000" placeholder="Une idée, une question, une analyse sur ${esc(roomName(room))}…"></textarea></div>
+      <div class="field"><label>Type de message</label><select name="kind">${Object.entries(KINDL).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></div></div>
+      <div class="field mwrap"><textarea name="body" rows="${compact ? 2 : 3}" maxlength="1000" placeholder="Écrivez votre message. Tapez le nom d'une entreprise ou d'un ETF pour le citer : il deviendra cliquable."></textarea><div class="msug" hidden></div></div>
       <input name="website" class="hp" tabindex="-1" aria-hidden="true"><button class="btn" type="submit">Publier</button> <span class="muted cmsg" style="font-size:12.5px"></span></form>
     <div class="clist"><div class="empty">Chargement…</div></div>
-    <p class="note">Messages écrits par les visiteurs. Ce ne sont pas des conseils en investissement : faites vos propres vérifications. Pas de liens, pas d'informations personnelles. Un message signalé 3 fois est masqué.</p></div>`;
-  const list = $(".clist", el), form = $(".cform", el), msg = $(".cmsg", el);
+    <p class="note">Messages écrits par les visiteurs, sans vérification. Ce ne sont pas des conseils en investissement. Pas de liens, pas d'informations personnelles. Un message signalé 3 fois est masqué.</p></div>`;
+  const list = $(".clist", el), form = $(".cform", el), msg = $(".cmsg", el), picked = new Map();
+  mentionSuggest(form.body, $(".msug", el), picked);
   const load = () => fetch(`/api/communaute?room=${encodeURIComponent(room)}`).then(r => r.json()).then(j => {
     if (j.error) { list.innerHTML = `<div class="empty">${esc(j.error)}</div>`; return; }
-    list.innerHTML = j.items.length ? j.items.slice(0, compact ? 5 : 50).map(m => msgHTML(m)).join("") : `<div class="empty">Pas encore de message. Lancez la discussion.</div>`;
+    list.innerHTML = j.items.length ? j.items.slice(0, compact ? 5 : 50).map(m => msgHTML(m, m.room !== room)).join("") : `<div class="empty">Pas encore de message. Lancez la discussion.</div>`;
   }).catch(() => { list.innerHTML = `<div class="empty">L'espace communauté n'est pas disponible pour le moment.</div>`; });
   form.onsubmit = ev => {
     ev.preventDefault();
     const fd = Object.fromEntries(new FormData(form)); fd.room = room;
+    for (const [label, tok] of picked) fd.body = fd.body.split(label).join(tok); // les citations deviennent des liens
     try { localStorage.setItem(PSEUDO_KEY, fd.pseudo || ""); } catch (e) { }
     msg.textContent = "Envoi…";
     fetch("/api/communaute", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(fd) }).then(r => r.json()).then(j => {
       if (j.error) { msg.textContent = j.error; return; }
-      msg.textContent = "Publié."; form.body.value = ""; load();
+      msg.textContent = "Publié."; form.body.value = ""; picked.clear(); load();
     }).catch(() => { msg.textContent = "Envoi impossible pour le moment."; });
   };
   list.onclick = ev => {
@@ -1269,7 +1389,7 @@ function chatBlock(el, room, { compact = false } = {}) {
 function pageCommunaute() {
   setTitle("Communauté"); setNav("com");
   const room = new URLSearchParams(location.search).get("salon") || "general";
-  app.innerHTML = `<h1 class="pagetitle">Communauté</h1><p class="pagesub">Partagez une idée, posez une question, comparez vos analyses. Chaque entreprise et chaque ETF a aussi son propre salon, dans sa fiche.</p>
+  app.innerHTML = `<h1 class="pagetitle">Communauté</h1><p class="pagesub">Partagez une idée, posez une question, comparez vos analyses. Citez une entreprise ou un ETF en tapant son nom : il devient cliquable et votre message apparaît aussi sur sa fiche.</p>
     <div class="cols"><div><section class="panel"><div class="ph"><h2>${esc(roomName(room))}</h2>${room !== "general" ? `<a href="${roomHref(room)}">Voir la fiche</a>` : ""}</div><div class="pb" id="chat"></div></section></div>
     <aside><section class="panel"><div class="ph"><h2>Salons actifs cette semaine</h2></div><div id="rooms"><div class="empty">Chargement…</div></div></section>
       <section class="panel"><div class="ph"><h2>Derniers messages</h2></div><div class="pb" id="recent"></div></section></aside></div>`;
@@ -1278,6 +1398,40 @@ function pageCommunaute() {
     $("#rooms").innerHTML = (j.rooms || []).length ? `<div class="ag">${j.rooms.map(r => `<div class="it" style="grid-template-columns:1fr auto"><a class="co" href="/communaute?salon=${r.room}">${esc(roomName(r.room))}</a><span class="light">${r.n} message${r.n > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<div class="empty">Aucun salon actif.</div>`;
     $("#recent").innerHTML = (j.items || []).length ? j.items.slice(0, 8).map(m => msgHTML(m, true)).join("") : `<div class="muted">Aucun message pour l'instant.</div>`;
   }).catch(() => { $("#rooms").innerHTML = `<div class="empty">Indisponible pour le moment.</div>`; });
+}
+function tabCommu(s, c, el) {
+  el.innerHTML = `<div class="cols"><div><section class="panel"><div class="ph"><h2>Discussion sur ${esc(s.name)}</h2></div><div class="pb" id="chat"></div></section></div>
+    <aside><section class="panel"><div class="ph"><h2>Avis des visiteurs</h2></div><div class="pb" id="avisb"></div></section></aside></div>`;
+  chatBlock($("#chat"), s.id); avisBlock($("#avisb"), s.id, s.name);
+}
+function tabActu(s, c, el) {
+  const us = !!s.sec, fr = s.region === "FR", up = eventsOf(s.id).filter(e => e.date >= TODAY), past = eventsOf(s.id).filter(e => e.date < TODAY).reverse();
+  el.innerHTML = `<div class="cols"><div>
+      <section class="panel"><div class="ph"><h2>Dans la presse</h2><span class="light" style="font-size:12.5px">3 dernières semaines, France et monde</span></div><div class="pb" id="pres"></div></section>
+      <section class="panel"><div class="ph"><h2>Annonces officielles</h2></div><div class="pb" id="offi">${us || fr ? "" : `Cette société publie ses communiqués auprès du régulateur de son pays, sans flux ouvert. ${officielLink(s) ? `<a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">Site de l'entreprise</a>` : ""}`}</div>
+        ${us || fr ? `<div class="src">Source : ${us ? "SEC, EDGAR" : "AMF, info-financiere.gouv.fr"}.</div>` : ""}</section>
+    </div><aside>
+      <section class="panel"><div class="ph"><h2>À venir</h2></div>${up.length ? agendaHTML(up, false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant.</div>`}${up.find(e => e.source) ? `<div class="src">Sources : ${[...new Set(up.filter(e => e.source).map(e => e.source))].slice(0, 3).map(u => `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname.replace(/^www\./, ""))}</a>`).join(", ")}</div>` : ""}</section>
+      ${past.length ? `<section class="panel"><div class="ph"><h2>Passé</h2></div>${agendaHTML(past.slice(0, 6), false)}</section>` : ""}
+    </aside></div>`;
+  presseBlock($("#pres"), { id: s.id, max: 25 });
+  if (us) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false });
+  else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false });
+}
+function pageActus() {
+  setTitle("Actualité des entreprises"); setNav("news");
+  const q = new URLSearchParams(location.search), TABS = [["une", "À la une"], ["monde", "Monde"], ["fr", "Annonces France"], ["us", "Annonces États-Unis"], ["toutes", "Toutes les sociétés françaises"]];
+  const src = TABS.some(t => t[0] === q.get("src")) ? q.get("src") : "une";
+  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">La presse financière en France et dans le monde, et les annonces officielles des entreprises, classées et expliquées. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
+    <section class="panel"><div class="filters">${TABS.map(([k, l]) => `<a href="/actualites${k === "une" ? "" : "?src=" + k}" class="${src === k ? "on" : ""}">${l}</a>`).join("")}</div>
+    ${src === "toutes" ? `<div class="pb" style="border-bottom:1px solid var(--rule)"><div class="field" style="max-width:420px;margin:0"><input id="aq" type="search" placeholder="Filtrer par société" aria-label="Filtrer par société"></div></div>` : ""}
+    <div class="pb" id="nb"></div><div class="src">${src === "une" || src === "monde" ? "Articles repérés par GDELT dans la presse ; le site renvoie vers l'éditeur et ne vérifie pas leur contenu." : src === "us" ? "Source : SEC, EDGAR. Liste mise à jour chaque jour." : "Source : AMF, info-financiere.gouv.fr, en direct. Licence Ouverte."}</div></section>`;
+  if (src === "une") presseBlock($("#nb"), { sujet: "marches", max: 40 });
+  else if (src === "monde") presseBlock($("#nb"), { sujet: "monde", max: 40 });
+  else if (src === "toutes") {
+    let t = null; const run = () => newsBlock($("#nb"), { params: $("#aq").value.trim() ? "&q=" + encodeURIComponent($("#aq").value.trim()) : "" });
+    $("#aq").oninput = () => { clearTimeout(t); t = setTimeout(run, 400); }; run();
+  } else newsBlock($("#nb"), src === "us" ? { src: "US" } : { params: "&suivies=1" });
 }
 
 /* ---------- Graphique de cours : jour, semaine, mois, 3 mois, an, 5 ans, tout ---------- */
@@ -1303,10 +1457,25 @@ const RANKS = [
   ["payout", "Dividendes les mieux couverts", "Part du bénéfice versée, entre 20 et 60 %", c => { const p = ratios(c).payout; return p >= 0.2 && p <= 0.6 && c.net > 0 ? 1 - p : null; }, v => pct(1 - v, 0, false) + " versés", "dividende"],
 ];
 let rankState = { k: "marge", region: "all" };
+const ERANKS = [
+  ["monde", "Monde : les moins chers", e => e.categorie === "actions-monde"],
+  ["usa", "États-Unis : les moins chers", e => e.categorie === "actions-usa"],
+  ["europe", "Europe et France : les moins chers", e => e.categorie === "actions-europe" || e.categorie === "actions-france"],
+  ["pea", "Éligibles au PEA : les moins chers", e => e.pea],
+  ["gros", "Les plus gros fonds", e => e.encours > 0],
+];
+let erankK = "monde";
+function erankHTML() {
+  const [k, , fn] = ERANKS.find(r => r[0] === erankK);
+  const l = ETF.list.filter(fn);
+  const rows = k === "gros" ? l.sort((a, b) => b.encours - a.encours).slice(0, 10).map(e => ({ label: e.name, v: e.encours, href: `/etf/${e.id}`, lg: logo({ name: e.issuer, domain: issuerDom(e) }, 22) }))
+    : l.sort((a, b) => a.ter - b.ter).slice(0, 10).map(e => ({ label: e.name, v: e.ter / 100, href: `/etf/${e.id}`, lg: logo({ name: e.issuer, domain: issuerDom(e) }, 22) }));
+  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${k === "gros" ? "Encours : l'argent placé dans le fonds par l'ensemble des épargnants." : "Frais courants prélevés chaque année. Les plus bas en premier : une barre courte, c'est moins de frais."}</p>${rows.length ? hbars(rows, k === "gros" ? (v => big(v)) : (v => pct(v, 2, false) + " par an")) : `<div class="empty">Aucun ETF.</div>`}`;
+}
 function rankHTML() {
   const [, , sub, fn, fmt, ct] = RANKS.find(r => r[0] === rankState.k);
   const rows = R.companies.filter(c => !c.missing && (rankState.region === "all" || c.region === rankState.region) && (c.ca == null || caEur(c) > 500)).map(c => ({ c, v: fn(c) })).filter(x => okn(x.v)).sort((a, b) => b.v - a.v).slice(0, 10);
-  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}/comprendre/${ct}` })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
+  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}/comprendre/${ct}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
 }
 function dayPick() { const l = R.companies.filter(c => !c.missing && c.fiche && c.ca > 2000); if (!l.length) return null; const d = Math.floor(Date.now() / 864e5); return l[(d * 7919) % l.length]; }
 function pageHome() {
@@ -1327,6 +1496,9 @@ function pageHome() {
     <section class="panel"><div class="ph"><h2>Classements</h2><div class="chips" id="rreg">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === rankState.region ? "on" : ""}">${l}</button>`).join("")}</div></div>
       <div class="filters" id="rk">${RANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === rankState.k ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="rkb">${rankHTML()}</div>
       <div class="src">Calculé sur les derniers comptes annuels publiés (${F0.format(nOk)} entreprises). Cliquez sur une entreprise pour l'explication détaillée.</div></section>
+    <section class="panel"><div class="ph"><h2>Les ETF en classement</h2><a href="/etf">Tous les ETF</a></div>
+      <div class="filters" id="erk">${ERANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === erankK ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="erkb">${erankHTML()}</div>
+      <div class="src">Frais relevés sur les documents des émetteurs. Les frais ne sont pas le seul critère : indice suivi, PEA, taille du fonds.</div></section>
     <div class="sect"><h2>Les secteurs</h2><a href="/entreprises">Toutes les entreprises</a></div>
     <div class="secgrid">${secs.map(x => `<a class="sectile" href="/entreprises?secteur=${x.k}"><b>${esc(x.name)}</b><span>${x.n} entreprises</span>${x.m && x.m.marge != null ? `<span class="light">Marge médiane ${pct(x.m.marge, 1, false)}</span>` : ""}</a>`).join("")}</div>
     <div class="trio">
@@ -1344,6 +1516,7 @@ function pageHome() {
   tv($("#mkt"), "market-overview", { colorTheme: "light", dateRange: "12M", showChart: true, locale: "fr", width: "100%", height: "100%", largeChartUrl: "", isTransparent: true, showSymbolLogo: true, showFloatingTooltip: true, plotLineColorGrowing: "#1E8A52", plotLineColorFalling: "#E07B24", gridLineColor: "rgba(0,0,0,0)", scaleFontColor: "#8A857D", belowLineFillColorGrowing: "rgba(30,138,82,0.08)", belowLineFillColorFalling: "rgba(224,123,36,0.08)", symbolActiveColor: "rgba(43,76,126,0.08)",
     tabs: MARKETS.map(t => ({ title: t.title, symbols: t.symbols.map(([s, d]) => ({ s, d })), originalTitle: t.title })) });
   $("#rk").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.k = b.dataset.k; $$("#rk button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
+  $("#erk").onclick = e => { const b = e.target.closest("button"); if (!b) return; erankK = b.dataset.k; $$("#erk button").forEach(x => x.classList.toggle("on", x === b)); $("#erkb").innerHTML = erankHTML(); };
   $("#rreg").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.region = b.dataset.r; $$("#rreg button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
   amfBlock($("#amf"), "&suivies=1", 5);
   fetch("/api/communaute/recent").then(r => r.json()).then(j => { $("#crec").innerHTML = (j.items || []).length ? j.items.slice(0, 4).map(m => msgHTML(m, true)).join("") : `<p class="muted" style="margin:0">Pas encore de message. <a class="lnk" href="/communaute">Lancer la discussion</a>.</p>`; }).catch(() => { $("#crec").innerHTML = `<p class="muted" style="margin:0">Bientôt disponible.</p>`; });
@@ -1406,15 +1579,16 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- Fiche entreprise ---------- */
-const CTABS = [["", "En bref"], ["comprendre", "Comprendre"], ["comptes", "Comptes"], ["actualite", "Actualité"], ["communaute", "Communauté"], ["agenda", "Agenda"]];
+const CTABS = [["", "Vue d'ensemble"], ["comprendre", "Approfondir"], ["comptes", "Tous les chiffres"], ["actualite", "Actualités"], ["communaute", "Discussion"]];
 async function pageCompany(id, tab) {
   const s = RBY[id];
   if (!s) return pageNotFound();
   setNav("ent");
+  if (tab === "agenda") tab = "actualite";
   tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
   setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
   app.innerHTML = `
-    <div class="crumbs"><a href="/entreprises">Entreprises</a> › ${esc(regName(s))} › ${esc(secName(s))}</div>
+    <div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?region=${s.region}">${esc(regName(s))}</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a></div>
     <div class="panel" style="margin-bottom:16px">
       <div class="qhead">
         <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div></div></div>
@@ -1431,15 +1605,29 @@ async function pageCompany(id, tab) {
     try { c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); } catch (e) { c = null; }
   }
   if (location.pathname.split("/")[2] !== id) return; // l'utilisateur a changé de page entre-temps
-  ({ "": tabBref, comptes: tabComptes, actualite: tabActu, agenda: tabAgenda, communaute: tabCommu })[tab](s, c, $("#ctab"));
+  ({ "": tabBref, comptes: tabComptes, actualite: tabActu, communaute: tabCommu })[tab](s, c, $("#ctab"));
 }
 const lastIdx = c => c.years.length - 1;
 const at = (c, k, i) => c.fin[k] ? c.fin[k][i] : null;
-function ficheHTML(s) {
-  const f = s.fiche;
-  if (!f) return "";
-  return `<section class="panel"><div class="ph"><h2>Ce que fait ${esc(s.name)}</h2></div>
-    <div class="syn"><dl><dt>Son métier</dt><dd>${esc(f.fait)}</dd><dt>D'où vient l'argent</dt><dd>${esc(f.argent)}${REP[s.id] && (REP[s.id].activites || REP[s.id].zones) ? `<div class="ministk">${stack((REP[s.id].activites || REP[s.id].zones).map(([label, v]) => ({ label, v })))}</div>` : ""} ${ctLink(s, "argent", "Voir la répartition de ses ventes")}</dd><dt>Ce qui fait varier ses résultats</dt><dd>${esc(f.depend)} ${ctLink(s, "varier", "Voir son bénéfice année par année")}</dd></dl></div></section>`;
+const acc = (summary, body, open = false, cls = "") => `<details class="acc ${cls}"${open ? " open" : ""}><summary>${summary}<span class="chev" aria-hidden="true"></span></summary><div class="accb">${body}</div></details>`;
+
+/* Ce que fait l'entreprise : trois cartes, avec la répartition des ventes et des liens pour approfondir */
+function ficheHTML(s, c) {
+  const f = s.fiche, rep = REP[s.id], fg = c ? figuresOf(c) : null;
+  const peers = R.companies.filter(x => x.sector === s.sector && !x.missing && x.ca > 0).sort((a, b) => caEur(b) - caEur(a));
+  const rank = peers.findIndex(x => x.id === s.id) + 1;
+  const id = [
+    ["Pays", regName(s)], ["Secteur", secName(s)], ["Code en Bourse", `${s.ticker} · ${String(s.tv || "").split(":")[0]}`],
+    fg && fg.ca != null ? [isBank(s) ? "Revenus" : "Ventes", `${big(fg.ca, fg.currency)} <span class="light">en ${fg.year}</span>`] : null,
+    fg && fg.net != null ? ["Bénéfice", `${big(fg.net, fg.currency)}`] : null,
+    rank ? ["Taille", `${rank}<sup>${rank === 1 ? "re" : "e"}</sup> sur ${peers.length} de son secteur sur le site`] : null,
+  ].filter(Boolean);
+  return `<section class="panel" id="metier"><div class="ph"><h2>Ce que fait ${esc(s.name)}</h2></div>
+    ${f ? `<div class="trois">
+      <div class="carte"><div class="n">1</div><h3>Ce qu'elle vend</h3><p>${esc(f.fait)}</p></div>
+      <div class="carte"><div class="n">2</div><h3>Comment elle gagne de l'argent</h3><p>${esc(f.argent)}</p>${rep && (rep.activites || rep.zones) ? `<div class="ministk">${stack((rep.activites || rep.zones).map(([label, v]) => ({ label, v })))}</div>` : ""}${ctLink(s, "argent", "Approfondir")}</div>
+      <div class="carte"><div class="n">3</div><h3>Ce qui fait bouger ses résultats</h3><p>${esc(f.depend)}</p>${ctLink(s, "varier", "Approfondir")}</div></div>` : ""}
+    <div class="ident">${id.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div></section>`;
 }
 function enBref(s, f, items) { // une phrase qui résume, à partir des chiffres
   const cur = f.currency, m = ratios(f), bank = isBank(s), parts = [];
@@ -1457,28 +1645,62 @@ function feu(t) { // les trois couleurs, avec leur nombre et une barre de propor
   return `<div class="feu"><div class="feun"><span class="f"><i></i><b>${t.fort}</b> point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i><b>${t.moyen}</b> dans la moyenne</span><span class="v"><i></i><b>${t.vig}</b> point${t.vig > 1 ? "s" : ""} de vigilance</span></div>
     <div class="feub"><span class="f" style="width:${t.fort / n * 100}%"></span><span class="m" style="width:${t.moyen / n * 100}%"></span><span class="v" style="width:${t.vig / n * 100}%"></span></div></div>`;
 }
+const VERDICT = { fort: "Point fort", moyen: "Dans la moyenne", vig: "Point de vigilance", na: "Ne s'applique pas" };
+/* Ses comptes en questions : une ligne simple par question, le détail en dépliant « Approfondir » */
 function lectureHTML(s, c) {
-  const f = figuresOf(c), items = lecture(s, f), cross = croisements(s, f), t = tally(items), phrase = enBref(s, f, items), vue = getView();
-  const mini = i => { const k = TERM2CT[i.term], d = CT[k]; if (!d || !d.serie) return ""; return `<div class="mini">${barsSVG({ labels: c.years.map(String), values: d.serie(c), fmt: d.money ? (v => big(v, c.currency)) : d.fmt, h: 130 })}</div>`; };
-  const card = i => `<div class="li li-${i.lv}"><div class="lq">${def(i.term, i.q)}</div><div class="lvv"><span class="num">${i.value}</span>${lvTag(i.lv)}</div><p>${i.text}</p>${vue === "complete" ? mini(i) : ""}${TERM2CT[i.term] ? ctLink(s, TERM2CT[i.term]) : ""}</div>`;
-  const row = i => `<a class="lrow li-${i.lv}" href="/entreprise/${s.id}/comprendre/${TERM2CT[i.term] || "argent"}"><i></i><span class="q">${esc(i.q)}</span><span class="num">${i.value}</span><span class="go">→</span></a>`;
-  return `<section class="panel"><div class="ph"><h2>Ce que disent ses comptes</h2><div class="chips vsw" id="vue"><button type="button" data-v="simple" class="${vue === "simple" ? "on" : ""}">Vue simple</button><button type="button" data-v="complete" class="${vue === "complete" ? "on" : ""}">Vue complète</button></div></div>
-      ${phrase ? `<p class="bref">${phrase}</p>` : ""}
-      ${feu(t)}
-      ${vue === "simple" ? `<div class="lrows">${items.map(row).join("")}</div>` : `<div class="lect">${items.map(card).join("")}</div>`}
-      <div class="src">Exercice ${f.year}. Vert, gris, orange : repères calculés sur le dernier rapport annuel et comparés au secteur. Cliquez sur une ligne pour l'explication détaillée avec les chiffres de ${esc(s.name)}. Ces repères ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
-    ${cross.length ? `<section class="panel"><div class="ph"><h2>À lire ensemble</h2><span class="light d-only" style="font-size:12.5px">Ce que les chiffres disent quand on les combine</span></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
+  const f = figuresOf(c), items = lecture(s, f), cross = croisements(s, f);
+  const body = i => { const k = TERM2CT[i.term], d = CT[k];
+    return `<p class="lead">${i.text}</p>${k ? calcHTML(k, s, f) : ""}
+      ${d && d.serie ? `<div class="mini"><div class="cap">Sur ${c.years.length} ans</div>${barsSVG({ labels: c.years.map(String), values: d.serie(c), fmt: d.money ? (v => big(v, c.currency)) : d.fmt, h: 140 })}</div>` : ""}
+      ${RULES[i.term] ? `<p class="rule"><b>Pourquoi ${i.lv === "fort" ? "vert" : i.lv === "vig" ? "orange" : i.lv === "na" ? "pas de couleur" : "gris"} ?</b> ${esc(RULES[i.term])}</p>` : ""}
+      <div class="links">${k ? ctLink(s, k, "Comparer avec les autres entreprises du secteur") : ""} ${ALL[i.term] ? `<button type="button" class="def linkbtn" data-def="${i.term}">Définition</button>` : ""}</div>`; };
+  const row = i => acc(`<span class="dot dot-${i.lv}"></span><span class="q">${esc(i.q)}</span><span class="ans"><b class="num">${i.value}</b><span class="vd vd-${i.lv}">${VERDICT[i.lv]}</span></span>`, body(i), false, "qrow");
+  return `<section class="panel" id="comptes"><div class="ph"><h2>Ses comptes en ${items.length} questions</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
+      <div class="qrows">${items.map(row).join("")}</div>
+      <div class="src">Touchez une question pour le détail. Les couleurs comparent l'entreprise à des seuils simples et à son secteur. Elles ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
+    ${cross.length ? `<section class="panel"><div class="ph"><h2>À lire ensemble</h2></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
+}
+/* Le dividende, expliqué */
+function dividendeHTML(s, c) {
+  const f = figuresOf(c), cur = f.currency, m = ratios(f);
+  const vals = c.years.map((_, i) => at(c, "dps", i) ?? at(c, "dpsEst", i)); // publié, sinon estimé
+  const next = eventsOf(s.id).filter(e => e.date >= TODAY && e.type === "Dividende");
+  const us = s.region === "US" || s.region === "MONDE";
+  const how = `<ol class="steps2">
+      <li><b>Le montant est décidé</b> par le conseil d'administration, puis voté par les actionnaires en assemblée générale.${us ? " Aux États-Unis, le dividende est le plus souvent versé chaque trimestre." : " En France, il est le plus souvent versé une fois par an, parfois en plusieurs fois (acomptes)."}</li>
+      <li><b>Le jour du détachement</b>, il faut déjà posséder l'action (l'avoir achetée au plus tard la veille). Ce jour-là, le cours baisse en général à peu près du montant du dividende : l'argent sort de l'entreprise.</li>
+      <li><b>Le jour du paiement</b>, quelques jours plus tard, l'argent arrive sur le compte du courtier.</li>
+      <li><b>Les impôts :</b> sur un compte-titres, ${pct(RATES.pfu, 1, false)} sont prélevés (12,8 % d'impôt et ${pct(RATES.ps, 1, false)} de prélèvements sociaux). Dans un PEA, rien n'est prélevé tant que l'argent reste dans le PEA.${us ? " Pour une société étrangère, son pays prélève souvent une retenue à la source (15 % aux États-Unis avec le formulaire W-8BEN, que proposent la plupart des courtiers). Ces actions ne vont pas dans un PEA." : ""}</li></ol>`;
+  if (!(f.divPaid > 0.5) && !(f.dps > 0)) return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2></div><div class="pb">
+      <p class="lead" style="margin-top:0">${esc(s.name)} n'a pas versé de dividende sur l'exercice ${f.year}. Elle garde ses bénéfices pour investir, se désendetter ou racheter ses propres actions.</p>
+      ${acc("Comment fonctionne un dividende ?", how)}</div></section>`;
+  const first = vals.findIndex(okn), last = vals.length - 1;
+  const evo = first >= 0 && first < last && vals[first] > 0 && okn(vals[last]) ? vals[last] / vals[first] - 1 : null;
+  const cov = m.payout != null ? (m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig") : null;
+  return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant estimé à partir des comptes</span>` : ""}</div><div class="pb">
+    <p class="lead" style="margin-top:0">${f.dps > 0 ? `Pour chaque action détenue, ${esc(s.name)} a versé ${f.dpsEst ? "environ " : ""}<b>${eur(f.dps, 2, cur)}</b> pendant l'exercice ${f.year}.` : `${esc(s.name)} a versé ${big(f.divPaid, cur)} de dividendes pendant l'exercice ${f.year}.`}${m.payout != null ? ` Cela représente ${pct(m.payout, 0, false)} de son bénéfice.` : ""}</p>
+    <div class="dfigs">
+      ${f.dps > 0 ? `<div><span>Par action</span><b>${eur(f.dps, 2, cur)}</b></div>` : ""}
+      ${m.payout != null ? `<div><span>Part du bénéfice versée</span><b>${pct(m.payout, 0, false)}</b>${cov ? lvTag(cov) : ""}</div>` : ""}
+      ${evo != null ? `<div><span>Depuis ${c.years[first]}</span><b>${pct(evo)}</b></div>` : ""}
+      ${next.length ? `<div><span>Prochaine date</span><b>${dLabel(next[0].date)}</b><small>${esc(next[0].label)}</small></div>` : ""}</div>
+    ${vals.some(okn) ? `<div class="mini"><div class="cap">Dividende par action, année par année</div>${barsSVG({ labels: c.years.map(String), values: vals, fmt: v => eur(v, 2, cur), h: 150 })}</div>` : ""}
+    ${acc("Combien pour 1 000 € investis ?", `<p>Ça dépend du prix de l'action. Indiquez-le dans « Est-ce cher ? » plus bas : le site calcule le rendement et ce que rapporteraient 1 000 €.</p><p class="muted">Repère : la plupart des grandes entreprises versent chaque année entre 1 et 5 % du prix de l'action.</p>`)}
+    ${acc("Comment fonctionne un dividende ?", how)}
+    ${acc("Le dividende est-il solide ?", `<p>${m.payout == null ? "Impossible à dire sans bénéfice." : m.payout > 1 ? `Non : l'entreprise verse plus (${pct(m.payout, 0, false)}) que ce qu'elle gagne. Elle puise dans sa trésorerie ou s'endette.` : m.payout > 0.9 ? `Fragile : l'entreprise verse ${pct(m.payout, 0, false)} de son bénéfice. Si le bénéfice baisse, le dividende risque de baisser aussi.` : m.payout > 0.6 ? `Plutôt oui : ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une petite marge.` : `Oui : seulement ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une bonne marge si les bénéfices baissent.`}</p><p class="muted">Un dividende n'est jamais garanti : l'entreprise peut le réduire ou le supprimer.</p>${ctLink(s, "dividende", "Comparer avec les autres entreprises du secteur")}`)}
+  </div></section>`;
 }
 function prixHTML(s, c) {
   const f = figuresOf(c), cur = CUR[f.currency] || f.currency;
-  return `<section class="panel"><div class="ph"><h2>Le prix de l'action, comparé à ses bénéfices</h2></div><div class="pb">
-    <p class="muted" style="margin:0 0 10px">Recopiez le cours affiché en haut de la page. Le site calcule ce qu'il représente par rapport au bénéfice et au dividende de ${f.year}.</p>
+  return `<section class="panel" id="prix"><div class="ph"><h2>Est-ce cher ?</h2></div><div class="pb">
+    <p class="muted" style="margin:0 0 10px">Le prix d'une action ne dit rien seul : on le compare à ce que l'entreprise gagne. Recopiez le cours affiché en haut de la page.</p>
     <div class="field" style="max-width:240px"><label for="pxin">Cours de l'action (${esc(cur)})</label><input id="pxin" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ex. ${f.eps > 0 ? F0.format(f.eps * 15) : "100"}"></div>
     <div id="pxout"></div></div>
     <div class="src">${def("per", "PER")} et ${def("rdt", "rendement")} calculés avec les chiffres du dernier exercice publié, pas avec les prévisions des analystes.</div></section>`;
 }
 function prixRun(s, c) {
   const f = figuresOf(c), m = ratios(f), inp = $("#pxin"), out = $("#pxout"), cur = f.currency;
+  if (!inp) return;
   const KEY = "repere.px." + s.id;
   try { const x = localStorage.getItem(KEY); if (x) inp.value = x; } catch (e) { }
   const run = () => {
@@ -1505,28 +1727,35 @@ function prixRun(s, c) {
   inp.oninput = run; run();
 }
 function officielLink(s) {
-  if (s.region === "US") return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${encodeURIComponent(s.ticker)}&type=&dateb=&owner=include&count=40`;
+  if (s.region === "US" || s.sec) return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${encodeURIComponent(s.sec || s.ticker)}&type=&dateb=&owner=include&count=40`;
   return s.domain ? "https://www." + s.domain : "";
 }
 function tabBref(s, c, el) {
-  const fr = s.region === "FR";
+  const fr = s.region === "FR", f = c ? figuresOf(c) : null, items = f ? lecture(s, f) : [], phrase = f ? enBref(s, f, items) : "";
+  const up = eventsOf(s.id).filter(e => e.date >= TODAY);
   el.innerHTML = `
-    <div class="cols">
-      <div>
-        ${ficheHTML(s)}
-        ${c ? lectureHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
-        ${c ? prixHTML(s, c) : ""}
+    <section class="panel bref-box"><div class="pb">
+      ${phrase ? `<p class="bref-big">${phrase}</p>` : `<p class="bref-big">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p>`}
+      ${f ? feu(tally(items)) : ""}
+      <nav class="jump">${[["metier", "Ce qu'elle fait"], f && ["comptes", "Ses comptes"], f && ["dividende", "Dividende"], f && ["prix", "Est-ce cher ?"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
+    </div></section>
+    <div class="cols"><div>
+        ${ficheHTML(s, c)}
+        ${c ? lectureHTML(s, c) + dividendeHTML(s, c) + prixHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
       </div>
       <aside>
-        <section class="panel"><div class="ph"><h2>Prochains événements</h2><a href="/entreprise/${s.id}/agenda">Agenda</a></div>${agendaHTML(eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3), false)}</section>
-        ${fr || s.sec ? `<section class="panel"><div class="ph"><h2>Dernières annonces</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div><div id="amf"></div></section>`
-             : `<section class="panel"><div class="ph"><h2>Annonces officielles</h2></div><div class="pb">Cette société publie ses communiqués auprès du régulateur de son pays et sur son site.${officielLink(s) ? ` <a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">Site de l'entreprise</a>` : ""}</div></section>`}
+        <section class="panel" id="agenda"><div class="ph"><h2>Agenda</h2></div>${up.length ? agendaHTML(up.slice(0, 5), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant. Le site ajoute les dates dès qu'elles sont publiées par l'entreprise ou annoncées dans la presse.</div>`}</section>
+        <section class="panel" id="actus"><div class="ph"><h2>Actualités</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div>
+          ${fr || s.sec ? `<div class="pb"><div class="cap">Annonces officielles</div><div id="offi"></div></div>` : ""}
+          <div class="pb"><div class="cap">Dans la presse</div><div id="pres"></div></div></section>
+        <section class="panel" id="avis"><div class="ph"><h2>Avis des visiteurs</h2><a href="/entreprise/${s.id}/communaute">Discussion</a></div><div class="pb" id="avisb"></div></section>
       </aside>
     </div>`;
   if (c) prixRun(s, c);
-  const vb = $("#vue"); if (vb) vb.onclick = e => { const b = e.target.closest("button"); if (!b) return; setView(b.dataset.v); tabBref(s, c, el); };
-  if (s.sec) newsBlock($("#amf"), { src: "US", id: s.id, showCo: false, filters: false, max: 5 });
-  else if (fr) newsBlock($("#amf"), { params: "&isin=" + s.isin, showCo: false, filters: false, max: 5 });
+  if (s.sec) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false, filters: false, max: 3 });
+  else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false, filters: false, max: 3 });
+  presseBlock($("#pres"), { id: s.id, max: 5 });
+  avisBlock($("#avisb"), s.id, s.name, { compact: true });
 }
 function tabComptes(s, c, el) {
   if (!c) { el.innerHTML = `<section class="panel"><div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte.</div></section>`; return; }
@@ -1573,17 +1802,6 @@ function tabComptes(s, c, el) {
         : c.sources.map(x => `<tr><td class="l wrap">${dLabel(x.periodEnd)}</td><td class="l wrap">${x.report ? `<a class="lnk" href="${esc(x.report)}" target="_blank" rel="noopener">Rapport financier annuel (ESEF)</a>` : "Rapport financier annuel (ESEF)"}</td></tr>`).join("")}</tbody></table>
       <div class="src">${c.cik ? "Comptes lus dans les données publiques de la SEC (EDGAR), au format XBRL." : `Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org.`} Mis à jour le ${dLabel(c.updated)}.</div></section>`;
   $("#gsel").onclick = e => { const b = e.target.closest("button"); if (!b) return; const g = GR[+b.dataset.i]; $$("#gsel button").forEach(x => x.classList.toggle("on", x === b)); $("#gbox").innerHTML = barsSVG({ labels: Y.map(String), values: g[2], fmt: g[3] }); };
-}
-function tabCommu(s, c, el) {
-  el.innerHTML = `<section class="panel"><div class="ph"><h2>Discussion sur ${esc(s.name)}</h2></div><div class="pb" id="chat"></div></section>`;
-  chatBlock($("#chat"), s.id);
-}
-function tabActu(s, c, el) {
-  const us = !!s.sec, fr = s.region === "FR";
-  if (!us && !fr) { el.innerHTML = `<section class="panel"><div class="ph"><h2>Annonces officielles de ${esc(s.name)}</h2></div><div class="pb">Cette société publie ses communiqués auprès du régulateur de son pays, dont les annonces ne sont pas disponibles en données ouvertes. ${officielLink(s) ? `<a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">Site de l'entreprise</a>` : ""}</div></section>`; return; }
-  el.innerHTML = `<section class="panel"><div class="ph"><h2>Annonces officielles de ${esc(s.name)}</h2></div><div class="pb" id="nb"></div>
-    <div class="src">Source : ${us ? "SEC, EDGAR" : "AMF, info-financiere.gouv.fr"}.</div></section>`;
-  newsBlock($("#nb"), us ? { src: "US", id: s.id, showCo: false } : { params: "&isin=" + s.isin, showCo: false });
 }
 function tabAgenda(s, c, el) {
   const ev = eventsOf(s.id), up = ev.filter(e => e.date >= TODAY), past = ev.filter(e => e.date < TODAY).reverse();

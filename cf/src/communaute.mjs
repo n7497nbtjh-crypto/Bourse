@@ -9,9 +9,14 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS m_room ON messages (room, id)`,
   `CREATE INDEX IF NOT EXISTS m_who ON messages (who, created)`,
   `CREATE TABLE IF NOT EXISTS votes (msg INTEGER NOT NULL, who TEXT NOT NULL, kind TEXT NOT NULL, PRIMARY KEY (msg, who, kind))`,
+  `CREATE TABLE IF NOT EXISTS avis (room TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (room, who))`,
 ];
+// Colonnes ajoutées après coup : on tente de les créer, l'erreur « déjà présente » est ignorée
+const ALTERS = [`ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''`];
 let ready = false;
-async function init(db) { if (ready) return; for (const q of SCHEMA) await db.prepare(q).run(); ready = true; }
+async function init(db) { if (ready) return; for (const q of SCHEMA) await db.prepare(q).run(); for (const q of ALTERS) { try { await db.prepare(q).run(); } catch (e) { } } ready = true; }
+// Mentions dans un message : [[c:lvmh]] (entreprise) ou [[e:amundi-msci-world-pea]] (ETF)
+export const mentions = body => [...new Set([...String(body).matchAll(/\[\[([ce]):([a-z0-9-]{1,60})\]\]/g)].map(m => (m[1] === "e" ? "etf-" : "") + m[2]))].slice(0, 5);
 export function _reset() { ready = false; }
 
 const KINDS = ["idee", "question", "avis", "analyse"];
@@ -35,8 +40,17 @@ export default async function communaute(request, env) {
     const room = url.searchParams.get("room") || "general";
     if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
     const before = parseInt(url.searchParams.get("before") || "0", 10) || 2 ** 52;
-    const r = await db.prepare(`SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE room = ? AND hidden = 0 AND id < ? ORDER BY id DESC LIMIT 50`).bind(room, before).all();
+    // Les messages du salon, et ceux d'autres salons qui citent cette entreprise ou cet ETF
+    const r = await db.prepare(`SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE (room = ? OR tags LIKE ?) AND hidden = 0 AND id < ? ORDER BY id DESC LIMIT 50`).bind(room, `%,${room},%`, before).all();
     return json({ room, items: r.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/avis") {
+    const room = url.searchParams.get("room") || "";
+    if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
+    const r = await db.prepare(`SELECT v, COUNT(*) AS n FROM avis WHERE room = ? AND at > ? GROUP BY v`).bind(room, Date.now() - 30 * 864e5).all();
+    const o = { confiant: 0, neutre: 0, prudent: 0 };
+    for (const x of r.results || []) o[x.v > 0 ? "confiant" : x.v < 0 ? "prudent" : "neutre"] = x.n;
+    return json({ room, ...o });
   }
   if (request.method === "GET" && path === "/api/communaute/recent") { // derniers messages, tous salons
     const r = await db.prepare(`SELECT id, room, pseudo, body, kind, created, likes FROM messages WHERE hidden = 0 ORDER BY id DESC LIMIT 30`).all();
@@ -59,8 +73,15 @@ export default async function communaute(request, env) {
     if (recent && recent.n >= 5) return json({ error: "Trop de messages d'affilée : réessayez dans quelques minutes." }, 429);
     const parent = Number.isInteger(b.parent) ? b.parent : null;
     const now = Date.now();
-    const r = await db.prepare(`INSERT INTO messages (room, pseudo, body, kind, parent, created, who) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(room, pseudo, body, kind, parent, now, me).first();
+    const tags = mentions(body);
+    const r = await db.prepare(`INSERT INTO messages (room, pseudo, body, kind, parent, created, who, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(room, pseudo, body, kind, parent, now, me, tags.length ? "," + tags.join(",") + "," : "").first();
     return json({ ok: true, item: { id: r.id, room, pseudo, body, kind, parent, created: now, likes: 0 } }, 201);
+  }
+  if (path === "/api/communaute/avis") { // un avis par visiteur et par salon, modifiable
+    const room = String(b.room || ""), v = Math.sign(parseInt(b.v, 10) || 0);
+    if (!roomOk(room) || room === "general") return json({ error: "Salon inconnu." }, 400);
+    await db.prepare(`INSERT INTO avis (room, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (room, who) DO UPDATE SET v = excluded.v, at = excluded.at`).bind(room, me, v, Date.now()).run();
+    return json({ ok: true });
   }
   if (path === "/api/communaute/aime" || path === "/api/communaute/signaler") {
     const id = parseInt(b.id, 10); if (!id) return json({ error: "Message inconnu." }, 400);

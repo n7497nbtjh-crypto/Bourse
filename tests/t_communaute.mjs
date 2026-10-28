@@ -22,5 +22,11 @@ for (const ip of ["4.4.4.4", "5.5.5.5", "6.6.6.6"]) await call("POST", "/api/com
 [s] = await call("POST", "/api/communaute/masquer", { id: 2 }); ok(s === 403, "modération protégée");
 [s] = await call("POST", "/api/communaute/masquer", { id: 2 }, "1.1.1.1", { "x-admin-key": "k" }); ok(s === 200, "modération avec la clé");
 [s, j] = await call("GET", "/api/communaute/recent"); ok(j.items.length === 4 && j.rooms[0].room === "general", "fil récent " + JSON.stringify(j.rooms));
+[s, j] = await call("POST", "/api/communaute", { room: "general", pseudo: "Léa", body: "Je compare [[c:lvmh]] et [[e:amundi-msci-world-pea]] cette semaine." }, "7.7.7.7");
+ok(s === 201, "message avec mentions");
+[s, j] = await call("GET", "/api/communaute?room=lvmh"); ok(j.items.some(m => m.pseudo === "Léa"), "message cité dans le salon de l'entreprise");
+[s, j] = await call("GET", "/api/communaute?room=etf-amundi-msci-world-pea"); ok(j.items.length === 1, "message cité dans le salon de l'ETF");
+await call("POST", "/api/communaute/avis", { room: "lvmh", v: 1 }, "8.8.8.8"); await call("POST", "/api/communaute/avis", { room: "lvmh", v: -1 }, "8.8.8.8"); await call("POST", "/api/communaute/avis", { room: "lvmh", v: 1 }, "9.9.9.9");
+[s, j] = await call("GET", "/api/communaute/avis?room=lvmh"); ok(j.confiant === 1 && j.prudent === 1 && j.neutre === 0, "avis : un par visiteur, modifiable " + JSON.stringify(j));
 const r = await communaute(new Request("https://t.local/api/communaute"), {}); ok(r.status === 503, "sans base : message clair");
 console.log(fails ? fails + " échec(s)" : "communauté : tout est bon"); process.exit(fails ? 1 : 0);
