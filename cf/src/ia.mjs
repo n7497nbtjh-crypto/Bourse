@@ -111,7 +111,7 @@ export async function veille(request, env) {
     } catch (e) { return json({ error: "Bilan impossible pour le moment." }, 502); }
   }
   // Envoi par e-mail : désactivé tant que le service d'envoi n'est pas configuré
-  const mailOn = env.RESEND_KEY && env.MAIL_FROM && env.ADMIN_KEY;
+  const mailOn = (env.BREVO_KEY || env.RESEND_KEY) && env.MAIL_FROM && env.ADMIN_KEY;
   if (path === "/api/veille/inscription" && request.method === "POST") {
     if (!mailOn) return json({ error: "L'envoi par e-mail n'est pas encore ouvert. Le bilan reste disponible ici, à tout moment." }, 503);
     let b; try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible." }, 400); }
@@ -132,6 +132,10 @@ export async function veille(request, env) {
   return json({ error: "Introuvable." }, 404);
 }
 async function sendMail(env, to, subject, text) {
+  if (env.BREVO_KEY) { // Brevo : 300 e-mails par jour gratuits
+    const r = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text }) });
+    if (!r.ok) throw new Error("envoi " + r.status); return;
+  }
   const r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: env.MAIL_FROM, to, subject, text }) });
   if (!r.ok) throw new Error("envoi " + r.status);
 }

@@ -794,12 +794,21 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 .fc{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow);display:flex;flex-direction:column}
 .fct{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}.fct .favbtn{margin:0;padding:3px 10px}
 .fcp{display:flex;align-items:baseline;gap:10px;margin-top:12px}.fcp .p{font-family:var(--mono);font-size:22px;font-weight:600}
-.fcg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px}.fcg span{display:flex;flex-direction:column}.fcg small{font-size:11.5px;color:var(--light)}.fcg b{font-family:var(--mono);font-size:14px}
+.fcg{display:flex;flex-wrap:wrap;gap:6px 18px;margin-top:10px}.fcg > span{display:flex;flex-direction:column}.fcg small{font-size:11.5px;color:var(--light)}.fcg b{font-family:var(--mono);font-size:14px}
 .fcn{margin:12px 0 0;padding-top:10px;border-top:1px dashed var(--line);font-size:13px}
 .gf{display:grid;grid-template-columns:14px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)}.gf .dot{margin-top:5px}.gf p{margin:3px 0 0;font-size:13.5px;color:var(--grey);line-height:1.5}
 .chart2{max-width:720px}
 @media (max-width:760px){.mvs{grid-template-columns:1fr}}
 .hbb{height:8px}
+.nb3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:6px}
+.nb3 a{display:flex;flex-direction:column;gap:4px;padding:14px 16px;border:1px solid var(--line);border-radius:12px;background:#FBF9F4;color:inherit;text-decoration:none}
+.nb3 a:hover{border-color:var(--ink)}.nb3 b{font-family:var(--serif);font-size:17px}.nb3 span{font-size:13.5px;color:var(--grey);line-height:1.45}
+@media (max-width:760px){.nb3{grid-template-columns:1fr}}
+.prof .pa2{display:grid;grid-template-columns:132px 1fr;gap:12px;align-items:center;padding:6px 0}
+.prof .pt{display:flex;flex-direction:column}.prof .pt b{font-size:13.5px}.prof .pt small{font-size:11.5px;color:var(--grey)}
+.prof .pl{position:relative;height:6px;background:linear-gradient(90deg,#F6DED5,#EEE9DF 45%,#EEE9DF 55%,#D9EBDF);border-radius:99px}
+.prof .pm{position:absolute;left:50%;top:-4px;width:2px;height:14px;background:var(--light)}
+.prof .pd{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);transform:translateX(-50%)}
 </style>
 </head>
 <body>
@@ -1711,6 +1720,10 @@ async function pageHome() {
     <section class="hero2"><div><h1>Avant d'acheter une action, <em>lisez ses comptes.</em> On les a traduits.</h1>
       <p>${F0.format(n)} entreprises et ${ETF.list.length} ETF. Pour chacune : ce qu'elle fait, ses chiffres en clair, ses points forts et ses points de vigilance. Sans conseil, avec les sources.</p><p class="herolinks"><a href="/pea-cto">PEA ou compte-titres : par où commencer ?</a><a href="/comparer">Comparer des entreprises</a><a href="/favoris">Mes favoris</a></p></div>
       <div class="search big" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Chercher une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div></section>
+    <section class="panel newbie"><div class="pb"><p class="kick">Vous débutez ? Trois étapes, dans l'ordre</p><div class="nb3">
+      <a href="/debuter"><b>1. Comprendre les bases</b><span>Ce qu'est une action, un ETF, un indice, et ce que l'on risque. Six leçons de trois minutes, avec un quiz.</span></a>
+      <a href="/entreprise/lvmh"><b>2. Lire une vraie fiche</b><span>Exemple avec LVMH : ce qu'elle vend, ce qu'elle garde, ses points forts et ses points de vigilance, comparés à ses concurrentes.</span></a>
+      <a href="/pea-cto"><b>3. Choisir où investir</b><span>PEA, compte-titres ou assurance-vie : ce qu'on peut y mettre et ce qui reste après impôts.</span></a></div></div></section>
     <div class="homegrid">
       <section class="panel mktp"><div class="ph"><h2>Les grands indices aujourd'hui</h2><a href="/marches">Les marchés du jour</a></div><div class="pb">${indicesHTML()}</div></section>
       ${day ? `<section class="panel dayc"><div class="ph"><h2>L'entreprise du jour</h2></div><div class="pb">
@@ -2513,7 +2526,7 @@ function essentielHTML(s, c) {
   return `<section class="panel" id="essentiel"><div class="ess">
     <div class="ess-l"><p class="kick">L'essentiel · exercice ${f.year}</p><ul class="facts">${facts.map(([l, k, t]) => `<li><span class="lbl" style="padding-top:3px">${l}</span><span><b class="k">${k}</b> ${t}</span></li>`).join("")}</ul></div>
     <div class="ess-r"><p class="kick">Ce qu'elle fait</p><p style="margin:2px 0 12px;font-size:15px;line-height:1.5">${esc(s.fiche ? s.fiche.fait : s.desc || "")}</p>
-      ${feu(t)}<p class="muted" style="font-size:12.5px;margin:8px 0 0">Les couleurs comparent chaque chiffre à des seuils simples et à son secteur. Elles ne disent pas s'il faut acheter l'action.</p></div>
+      ${profilHTML(s) || feu(t)}</div>
   </div></section>`;
 }
 
@@ -3000,7 +3013,7 @@ function favCard(c) {
   return `<div class="fc"><div class="fct"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 40)}<span style="display:flex;flex-direction:column"><b class="nm">${esc(c.name)}</b><small class="light">${esc(secName(c))}</small></span></a>${favBtn("c:" + c.id).replace("☆ Ajouter aux favoris", "☆").replace("★ Dans vos favoris", "★ Suivie")}</div>
     <div class="fcp">${p ? `<span class="p">${pxFmt(p.p, p.cur)}</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % aujourd'hui" : ""}</span>` : `<span class="muted">Cours indisponible</span>`}</div>
     ${pos != null ? `<div class="range" style="margin:14px 0 4px"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>plus bas 1 an</span><span>plus haut 1 an</span></div>` : ""}
-    <div class="fcg">${y != null ? `<span><small>Sur 1 an</small><b class="${y >= 0 ? "up" : "down"}">${sgn(y, 0)}</b></span>` : ""}${v && v.pe ? `<span><small>PER</small><b>${F0.format(v.pe)}</b></span>` : ""}${v && v.yld ? `<span><small>Rendement</small><b>${pct(v.yld, 1, false)}</b></span>` : ""}${t ? `<span><small>Comptes</small>${pills(t)}</span>` : ""}</div>
+    <div class="fcg">${y != null ? `<span><small>Sur 1 an</small><b class="${y >= 0 ? "up" : "down"}">${sgn(y, 0)}</b></span>` : ""}${v && v.pe ? `<span><small>PER</small><b>${F0.format(v.pe)}</b></span>` : ""}${v && v.yld >= 0.001 ? `<span><small>Rendement</small><b>${pct(v.yld, 1, false)}</b></span>` : ""}${t ? `<span><small>Comptes</small>${pills(t)}</span>` : ""}</div>
     <p class="fcn">${nx ? `<b>${dLabel(nx.date)}</b> · ${esc(nx.label)}` : `<span class="light">Aucune date annoncée</span>`}</p></div>`;
 }
 function listeFaits(cos) { // les faits transmis à l'IA : rien d'autre que les données du site
@@ -3156,6 +3169,29 @@ async function radiographie(P) {
       $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Commentaire rédigé par une IA à partir de vos lignes. Ce n'est pas un conseil en investissement.</p></div>` : `<p class="muted">${esc(j.error || "Analyse indisponible.")}</p>`;
     } catch (e) { $("#pfiab").innerHTML = `<p class="muted">Analyse indisponible pour le moment.</p>`; }
   };
+}
+
+
+/* ---------- Profil en 5 axes : où se situe l'entreprise dans son secteur (sans verdict) ---------- */
+function rankIn(s, fn, higherBetter = true) { // position de 0 (dernière) à 1 (première) parmi les entreprises du secteur
+  const l = R.companies.filter(c => c.sector === s.sector && !c.missing && !(isBank(c) !== isBank(s))).map(c => ({ id: c.id, v: fn(c) })).filter(x => okn(x.v));
+  const me = l.find(x => x.id === s.id); if (!me || l.length < 5) return null;
+  const better = l.filter(x => higherBetter ? x.v > me.v : x.v < me.v).length;
+  return { p: 1 - better / (l.length - 1), n: l.length, rank: better + 1 };
+}
+function profilHTML(s) {
+  const bank = isBank(s), m = ratios(s);
+  const axes = [
+    ["Croissance", "Hausse des ventes sur un an", rankIn(s, c => ratios(c).g1)],
+    [bank ? "Rentabilité" : "Marge", bank ? "Bénéfice rapporté aux capitaux propres" : "Ce qui reste sur 100 de ventes", bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge)],
+    ["Solidité", bank ? "Régularité du bénéfice" : "Dette rapportée aux résultats (moins c'est mieux)", bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false)],
+    ["Dividende", "Part du bénéfice reversée (couverture)", m.payout != null && m.payout > 0 ? rankIn(s, c => { const p = ratios(c).payout; return p > 0 ? p : null; }, false) : null],
+    ["Prix", "PER : moins cher au regard du bénéfice", valo(s) && valo(s).pe ? rankIn(s, c => { const v = valo(c); return v && v.pe ? v.pe : null; }, false) : null],
+  ].filter(a => a[2]);
+  if (axes.length < 3) return "";
+  const word = p => p >= 0.75 ? "parmi les meilleures" : p >= 0.55 ? "au-dessus de la médiane" : p > 0.45 ? "dans la médiane" : p > 0.25 ? "sous la médiane" : "parmi les plus faibles";
+  return `<div class="prof"><p class="kick" style="margin-bottom:8px">Son profil dans le secteur ${esc(secName(s).toLowerCase())}</p>${axes.map(([t, d, r]) => `<div class="pa2" ${tipAttr({ h: t, r: [[d, `${r.rank}e sur ${r.n}`, ""]], n: "Le trait du milieu est la médiane du secteur." })} tabindex="0"><span class="pt"><b>${t}</b><small>${word(r.p)}</small></span><span class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${r.p >= 0.55 ? "var(--g)" : r.p > 0.45 ? "var(--n)" : "var(--o)"}"></i></span></div>`).join("")}
+    <p class="note" style="margin:6px 0 0">Chaque point place l'entreprise parmi les ${axes[0][2].n} entreprises du secteur suivies : à droite les mieux placées, au milieu la ${medBtn()}. Ce profil décrit les derniers comptes ; ce n'est pas une note d'achat.</p></div>`;
 }
 
 function route() {

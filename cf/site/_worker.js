@@ -392,7 +392,7 @@ async function veille(request, env) {
       return json2({ error: "Bilan impossible pour le moment." }, 502);
     }
   }
-  let mailOn = env.RESEND_KEY && env.MAIL_FROM && env.ADMIN_KEY;
+  let mailOn = (env.BREVO_KEY || env.RESEND_KEY) && env.MAIL_FROM && env.ADMIN_KEY;
   if (path === "/api/veille/inscription" && request.method === "POST") {
     if (!mailOn) return json2({ error: "L'envoi par e-mail n'est pas encore ouvert. Le bilan reste disponible ici, \xE0 tout moment." }, 503);
     let b;
@@ -422,6 +422,11 @@ bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil.`)
   return json2({ error: "Introuvable." }, 404);
 }
 async function sendMail(env, to, subject, text) {
+  if (env.BREVO_KEY) {
+    let r2 = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text }) });
+    if (!r2.ok) throw new Error("envoi " + r2.status);
+    return;
+  }
   let r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: env.MAIL_FROM, to, subject, text }) });
   if (!r.ok) throw new Error("envoi " + r.status);
 }
