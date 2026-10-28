@@ -6,7 +6,7 @@ const EURONEXT = { FR: ["EPA", "AMS", "EBR"], NL: ["AMS", "EPA", "EBR"], BE: ["E
 export function candidates(tv, isin = "") {
   const [ex, t] = String(tv || "").split(":"); if (!t) return [];
   const g = ex === "EURONEXT" ? (EURONEXT[isin.slice(0, 2)] || ["EPA", "AMS", "EBR"]) : (EX[ex] || [ex]);
-  const tick = ex === "LSE" ? t.replace(/\.$/, "") : ex === "HKEX" ? t.replace(/^0+/, "") : t;
+  const tick = (ex === "LSE" ? t.replace(/\.$/, "") : ex === "HKEX" ? t.replace(/^0+/, "") : t).replace(/_/g, "-"); // Google : NOVO-B et non NOVO_B
   return [...new Set(g.map(p => `${p}:${tick}`))].slice(0, 3);
 }
 export function gfCsv(companies, etfs, indices) {
