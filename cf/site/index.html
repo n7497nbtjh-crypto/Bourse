@@ -294,7 +294,7 @@ footer a:hover{color:var(--ink)}
   .pop{position:fixed;left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto;max-width:none}
 }
 /* ---------- Présentation plus douce (refonte du 28/10) ---------- */
-:root{--page:#F7F6F3;--rule:#ECE9E3;--soft:#F3F1ED;--link:#2B4C7E;--radius:14px}
+:root{--page:#F7F6F3;--rule:#ECE9E3;--soft:#F3F1ED;--radius:14px}
 .bar{background:#fff;color:var(--ink);border-bottom:1px solid var(--rule)}
 .logo span{color:var(--light)}
 .search input{background:#F3F1ED;color:var(--ink);border-radius:10px}
@@ -906,7 +906,7 @@ function retenirHTML(s, c) {
   if (!forts.length && !vig.length) return "";
   return `<section class="panel" id="retenir"><div class="ph"><h2>Ce qu'il faut retenir</h2></div><div class="ret">
     <div class="ret-f"><h3><i></i>Points forts</h3>${forts.length ? `<ul>${forts.map(x => `<li>${x}</li>`).join("")}</ul>` : `<p class="muted">Aucun point fort net dans les comptes.</p>`}</div>
-    <div class="ret-v"><h3><i></i>Points de vigilance</h3>${vig.length ? `<ul>${vig.map(x => `<li>${x}</li>`).join("")}</ul>` : `<p class="muted">Aucun point de vigilance dans les comptes.</p>`}</div></div>
+    <div class="ret-v"><h3><i></i>Points de vigilance</h3>${vig.length ? `<ul>${vig.map(x => `<li>${x}</li>`).join("")}</ul>` : `<p class="muted">Rien d'inquiétant dans les derniers comptes.${s.fiche && s.fiche.depend ? ` À suivre tout de même : ${esc(s.fiche.depend.charAt(0).toLowerCase() + s.fiche.depend.slice(1))}` : ""}</p>`}</div></div>
     <div class="src">Tiré du dernier rapport annuel. Un point de vigilance n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller.</div></section>`;
 }
 function croisements(co, f) { // ce qu'il faut regarder ensemble
@@ -1190,7 +1190,7 @@ function coCard(c) {
 const LEGEND = `<div class="dleg"><span class="f"><i></i>Points forts</span><span class="m"><i></i>Dans la moyenne</span><span class="v"><i></i>Points de vigilance</span><span class="light">Nombre de repères de chaque couleur dans les comptes de l'entreprise.</span></div>`;
 
 /* ---------- Petits graphiques (SVG et barres HTML) ---------- */
-const PAL = ["#2B4C7E", "#1E8A52", "#E07B24", "#7C3A8F", "#C2410C", "#0E7490", "#8A6D1E", "#B42318", "#5B4FC4", "#5F5B55"];
+const PAL = ["#111214", "#0E6B4A", "#D94F2B", "#8FB51E", "#C2410C", "#0E7490", "#8A6D1E", "#B42318", "#5B4FC4", "#5F5B55"];
 // Barres verticales par année, avec ligne de repère facultative (médiane du secteur)
 function barsSVG({ labels, values, fmt, ref = null, refLabel = "", h = 220 }) {
   // Les années de début sans chiffre (ex. la croissance de la première année) ne sont pas affichées
@@ -1206,7 +1206,7 @@ function barsSVG({ labels, values, fmt, ref = null, refLabel = "", h = 220 }) {
   if (ref != null) s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(ref)}" y2="${Y(ref)}" stroke="#141414" stroke-dasharray="5 4" opacity=".45"/>`;
   vals.forEach((v, i) => {
     if (v == null) { s += `<text x="${X(i)}" y="${Y(0) - 6}" text-anchor="middle" font-size="12" fill="#8A857D">non publié</text>`; }
-    else { const y0 = Y(Math.max(0, v)), y1 = Y(Math.min(0, v)); s += `<rect x="${X(i) - bw / 2}" y="${y0}" width="${bw}" height="${Math.max(1.5, y1 - y0)}" rx="4" fill="${v < 0 ? "#E07B24" : i === n - 1 ? "#2B4C7E" : "#9DB0CC"}"/><text x="${X(i)}" y="${v < 0 ? Math.min(H - pb - 2, y1 + 15) : Math.max(14, y0 - 7)}" text-anchor="middle" font-size="13" font-weight="600" fill="#141414">${esc(fmt(v))}</text>`; }
+    else { const y0 = Y(Math.max(0, v)), y1 = Y(Math.min(0, v)); s += `<rect x="${X(i) - bw / 2}" y="${y0}" width="${bw}" height="${Math.max(1.5, y1 - y0)}" rx="4" fill="${v < 0 ? "#D94F2B" : i === n - 1 ? "#111214" : "#CFC7B6"}"/><text x="${X(i)}" y="${v < 0 ? Math.min(H - pb - 2, y1 + 15) : Math.max(14, y0 - 7)}" text-anchor="middle" font-size="13" font-weight="600" fill="#141414">${esc(fmt(v))}</text>`; }
     s += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12.5" fill="#5F5B55">${esc(labels[i])}</text>`;
   });
   return `<svg class="bars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Graphique">${s}</svg>${ref != null ? `<div class="barleg"><i></i>${esc(refLabel)} : ${esc(fmt(ref))}</div>` : ""}`;
@@ -1567,9 +1567,9 @@ const MARKETS = [
   { title: "Taux et devises", symbols: [["FX:EURUSD", "Euro / dollar"], ["TVC:GOLD", "Or"], ["TVC:UKOIL", "Pétrole Brent"], ["TVC:DE10Y", "Taux allemand 10 ans"], ["TVC:FR10Y", "Taux français 10 ans"], ["TVC:US10Y", "Taux américain 10 ans"]] },
 ];
 const RANKS = [
-  ["marge", "Les plus rentables", "Ce qui reste sur 100 € de ventes", c => !isBank(c) ? ratios(c).marge : null, v => pct(v, 1, false), "marge"],
-  ["g1", "Ventes en plus forte hausse", "Sur un an", c => ratios(c).g1, v => pct(v), "croissance"],
-  ["roe", "Meilleure rentabilité des capitaux propres", "Pour 100 € des actionnaires", c => ratios(c).roe, v => pct(v, 1, false), "roe"],
+  ["marge", "Marge d'exploitation la plus élevée", "Part des ventes qui reste une fois payés salaires, achats et frais. Hors banques et foncières (leurs comptes incluent la variation de valeur des immeubles).", c => !isBank(c) && c.sector !== "immo" && ratios(c).marge < 1 ? ratios(c).marge : null, v => pct(v, 1, false), "marge"],
+  ["g1", "Ventes en plus forte hausse", "Hausse des ventes sur le dernier exercice", c => ratios(c).g1, v => pct(v), "croissance"],
+  ["roe", "Meilleure rentabilité des capitaux propres", "Bénéfice annuel pour 100 € appartenant aux actionnaires", c => ratios(c).roe, v => pct(v, 1, false), "roe"],
   ["cash", "Plus de trésorerie que de dettes", "Trésorerie nette rapportée aux ventes", c => !isBank(c) && c.netDebt < 0 && c.ca > 0 ? -c.netDebt / c.ca : null, v => pct(v, 0, false) + " des ventes", "dette"],
   ["payout", "Dividendes les mieux couverts", "Part du bénéfice versée, entre 20 et 60 %", c => { const p = ratios(c).payout; return p >= 0.2 && p <= 0.6 && c.net > 0 ? 1 - p : null; }, v => pct(1 - v, 0, false) + " versés", "dividende"],
 ];
@@ -1855,7 +1855,7 @@ function tabBref(s, c, el) {
     <section class="panel bref-box"><div class="pb">
       ${phrase ? `<p class="bref-big">${phrase}</p>` : `<p class="bref-big">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p>`}
       ${f ? feu(tally(items)) : ""}
-      <nav class="jump">${[f && ["retenir", "À retenir"], ["metier", "Ce qu'elle fait"], f && ["comptes", "Le bilan"], f && ["dividende", "Dividende"], f && ["prix", "Est-ce cher ?"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
+      <nav class="jump">${[f && ["retenir", "À retenir"], ["metier", "Ce qu'elle fait"], f && ["comptes", "Ses comptes"], f && ["dividende", "Dividende"], f && ["prix", "Prix de l'action"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
     </div></section>
     <div class="cols"><div>
         ${c ? retenirHTML(s, c) : ""}

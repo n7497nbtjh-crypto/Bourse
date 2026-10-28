@@ -24,7 +24,8 @@ def route(r):
     if "tradingview.com" in u: return r.fulfill(body="", content_type="text/javascript")
     if "fonts.googleapis.com" in u:
         if not FONT: return r.fulfill(body="", content_type="text/css")
-        css = "".join(f"@font-face{{font-family:'Instrument Serif';font-style:{s};font-weight:400;src:url(https://fonts.gstatic.com/{f}) format('woff2')}}" for s, f in [("normal", "instrument-serif-latin-400-normal.woff2"), ("italic", "instrument-serif-latin-400-italic.woff2")])
+        fams = [("Fraunces", "fraunces", w, "normal") for w in (700, 900)] + [("IBM Plex Sans", "ibm-plex-sans", w, "normal") for w in (400, 600)] + [("IBM Plex Mono", "ibm-plex-mono", w, "normal") for w in (400, 600)]
+        css = "".join(f"@font-face{{font-family:'{n}';font-style:{st};font-weight:{w};src:url(https://fonts.gstatic.com/{k}-latin-{w}-{st}.woff2) format('woff2')}}" for n, k, w, st in fams)
         return r.fulfill(body=css, content_type="text/css")
     if "fonts.gstatic.com" in u:
         f = os.path.join(FONT or "", u.rsplit("/", 1)[1]); return r.fulfill(path=f) if FONT and os.path.isfile(f) else r.fulfill(status=404, body="")
