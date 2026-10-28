@@ -29,11 +29,12 @@ export function normalize(rec) {
   const date = r.uin_dat_amf || pick(r, [k => /dat/.test(k)]);
   const company = pick(r, [k => /nom_soc|raison_sociale|denomination/.test(k), k => /societe.*nom|nom.*societe/.test(k), k => /(^|_)nom($|_)/.test(k)]);
   const title = pick(r, [k => /tit/.test(k), k => /libelle|objet|intitule/.test(k)]);
-  const type = r.subtype_of_information || pick(r, [k => /sous_type|subtype/.test(k), k => /type/.test(k) && !/mime|content/.test(k)]);
+  const type = r.sous_type_d_information || r.subtype_of_information || pick(r, [k => /sous_type|subtype/.test(k), k => /type/.test(k) && !/mime|content/.test(k)]);
   const url = pick(r, [(k, v) => /^https?:\/\//.test(v) && /\.pdf/i.test(v), (k, v) => /^https?:\/\//.test(v)]);
   return {
     id: r.uin_idt_uin || "",
-    date: String(date || "").slice(0, 19),
+    date: String(date || ""),
+    lang: r.informationdeposee_inf_lng_inf || "",
     isin: r.identificationsociete_iso_cd_isi || "",
     company, title: title || type || "Publication", type, url,
   };

@@ -85,7 +85,7 @@ main{padding:18px 0 48px;min-height:60vh}
 .tv .tradingview-widget-copyright a{color:var(--light)}
 .tv-chart{height:340px}
 .tv-chart .tradingview-widget-container,.tv-chart .tradingview-widget-container__widget{height:100%}
-.tv-fin{height:470px}
+.tv-fin{height:520px}
 .tv-quotes{height:430px}
 .tv-fin .tradingview-widget-container,.tv-quotes .tradingview-widget-container{height:100%}
 .tv-fin .tradingview-widget-container__widget,.tv-quotes .tradingview-widget-container__widget{height:calc(100% - 26px)}
@@ -362,6 +362,12 @@ const MOISL = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet",
 const mLabel = ym => { const [y, m] = ym.split("-"); return MOIS[+m - 1] + " " + y; };
 const mLong = ym => { const [y, m] = ym.split("-"); return MOISL[+m - 1] + " " + y; };
 const dLabel = iso => { const [y, m, d] = iso.slice(0, 10).split("-"); return (+d) + " " + MOISL[+m - 1] + " " + y; };
+const PARIS = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+function whenParis(iso) { // date et heure de Paris (l'AMF donne l'heure UTC)
+  const d = new Date(iso); if (!iso || isNaN(d)) return "";
+  const p = Object.fromEntries(PARIS.formatToParts(d).map(x => [x.type, x.value]));
+  return `<b>${p.day}/${p.month}/${p.year}</b>${p.hour}:${p.minute}`;
+}
 const dShort = iso => { const [y, m, d] = iso.slice(0, 10).split("-"); return `${d}/${m}/${y.slice(2)}`; };
 const lastDayOf = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m, 0).getDate(); };
 const median = a => { const s = a.filter(v => v != null && isFinite(v)).sort((x, y) => x - y); if (!s.length) return null; const k = Math.floor(s.length / 2); return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; };
@@ -537,10 +543,17 @@ function agendaHTML(list, showCo = true) {
 // Publications officielles (AMF), en direct
 function amfBlock(target, params, limit) {
   target.innerHTML = `<div class="empty">Chargement des publications de l'AMF…</div>`;
-  fetch(`/api/amf?limit=${limit}${params}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => {
-    const items = (j.items || []).filter(i => i.title);
+  fetch(`/api/amf?limit=${Math.min(50, limit * 2)}${params}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => {
+    // Même communiqué en français et en anglais : on garde la version française
+    const seen = new Map();
+    for (const i of (j.items || []).filter(i => i.title)) {
+      const k = (i.isin || i.company) + "|" + String(i.date).slice(0, 16);
+      const prev = seen.get(k);
+      if (!prev || (prev.lang === "Anglais" && i.lang !== "Anglais")) seen.set(k, i);
+    }
+    const items = [...seen.values()].slice(0, limit);
     if (!items.length) { target.innerHTML = `<div class="empty">Aucune publication trouvée.</div>`; return; }
-    target.innerHTML = `<div class="feed">${items.map(i => { const c = R.companies.find(x => x.isin === i.isin); return `<div class="it"><div class="when"><b>${i.date ? dShort(i.date) : ""}</b>${i.date && i.date.length > 11 ? i.date.slice(11, 16) : ""}</div><div>
+    target.innerHTML = `<div class="feed">${items.map(i => { const c = R.companies.find(x => x.isin === i.isin); return `<div class="it"><div class="when">${whenParis(i.date)}</div><div>
       <div>${c ? `<a class="co" href="/entreprise/${c.id}">${esc(c.name)}</a>` : i.company ? `<span class="co">${esc(i.company)}</span>` : ""}${i.type ? `<span class="ty">${esc(i.type)}</span>` : ""}</div>
       ${i.url ? `<a class="ti" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : `<span class="ti">${esc(i.title)}</span>`}</div></div>`; }).join("")}</div>`;
   }).catch(() => { target.innerHTML = `<div class="empty">Le flux de l'AMF n'est pas disponible pour le moment.</div>`; });
@@ -672,13 +685,13 @@ function tabSynthese(s, c, el) {
         <section class="panel"><div class="tv tv-chart" id="tvchart"></div></section>
         <section class="panel"><div class="ph"><h2>Synthèse</h2>${c ? `<span class="light" style="font-size:12.5px">Exercice ${c.years[lastIdx(c)]}</span>` : ""}</div>${c ? synthese(s, c) : `<div class="empty">Comptes en cours de collecte.</div>`}
           <div class="src">Établie automatiquement à partir du dernier ${def("esef", "rapport annuel")} publié. Elle décrit, elle ne recommande pas.</div></section>
+        <section class="panel"><div class="ph"><h2>Valorisation au cours actuel</h2></div>
+          <div class="defs"><span class="light">Définitions :</span>${def("per")}${def("rdt", "Rendement")}${def("cap")}</div>
+          <div class="tv tv-fin" id="tvfin"></div></section>
         <section class="panel"><div class="ph"><h2>Dernières publications officielles</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div><div id="amf"></div></section>
       </div>
       <aside>
         <section class="panel"><div class="ph"><h2>Chiffres clés</h2><a href="/entreprise/${s.id}/comptes">Détail</a></div>${keyfig}</section>
-        <section class="panel"><div class="ph"><h2>Valorisation</h2></div>
-          <div class="defs"><span class="light">Définitions :</span>${def("per")}${def("rdt", "Rendement")}${def("cap")}</div>
-          <div class="tv tv-fin" id="tvfin"></div></section>
         <section class="panel"><div class="ph"><h2>Prochains événements</h2><a href="/entreprise/${s.id}/agenda">Agenda</a></div>${agendaHTML(eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3), false)}</section>
       </aside>
     </div>`;
