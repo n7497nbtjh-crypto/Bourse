@@ -42,6 +42,13 @@ async function docText(env, u) {
   const md = await env.AI.toMarkdown([{ name: "doc.pdf", blob: new Blob([buf], { type: "application/pdf" }) }]);
   return String((md[0] || {}).data || "");
 }
+// Rapports longs (10-Q, 10-K) : on saute la couverture et le sommaire pour aller à l'analyse de la direction (MD&A)
+export function focus(t) {
+  if (t.length < 30000) return t;
+  const re = /management['’]s discussion and analysis/gi; let m, best = -1;
+  while ((m = re.exec(t))) { const after = t.slice(m.index, m.index + 3000); if ((after.match(/%/g) || []).length >= 4 && /\$\s?\d/.test(after)) { best = m.index; break; } }
+  return best >= 0 ? t.slice(best) : t;
+}
 const SYS = `Tu es un journaliste financier pédagogue qui écrit pour des personnes qui débutent en Bourse. Tu résumes en français un document officiel publié par une entreprise cotée.
 Règles strictes :
 - Utilise uniquement les informations et les chiffres présents dans le document. N'invente rien. Si un chiffre n'y figure pas, ne le donne pas.
@@ -57,14 +64,14 @@ export async function resume(request, env) {
   if (!HOSTS.test(url.hostname)) return json({ error: "Source non prise en charge." }, 400);
   await init(env.DB);
   const hit = await env.DB.prepare(`SELECT txt, at FROM resumes WHERE u = ?`).bind(u).first();
-  if (hit) return json({ txt: hit.txt, at: hit.at, cache: true });
+  if (hit && !/ne (peux|peut) pas/i.test(hit.txt)) return json({ txt: hit.txt, at: hit.at, cache: true });
   if (!(await budget(env.DB))) return json({ error: "Le quota de résumés du jour est atteint. Ce document sera résumé demain." }, 429);
   try {
-    const text = (await docText(env, u)).slice(0, 14000);
+    const text = focus(await docText(env, u)).slice(0, 14000);
     if (text.length < 300) return json({ error: "Document trop court ou illisible." }, 422);
     const out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS }, { role: "user", content: "Document :\n\n" + text }], max_tokens: 700, temperature: 0.2 });
     const txt = String(out.response || (out.result && out.result.response) || "").replace(/—/g, ",").trim();
-    if (txt.length < 80) throw new Error("réponse vide");
+    if (txt.length < 200 || /ne (peux|peut) pas|pas d'informations exploitables/i.test(txt)) throw new Error("le document ne contient pas de chiffres lisibles");
     await env.DB.prepare(`INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)`).bind(u, txt, Date.now()).run();
     return json({ txt, at: Date.now() });
   } catch (e) { return json({ error: "Résumé impossible pour ce document : " + String(e.message || e).slice(0, 120) }, 502); }
