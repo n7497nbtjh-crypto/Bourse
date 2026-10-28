@@ -454,6 +454,18 @@ async function docText(env, u) {
   let md = await env.AI.toMarkdown([{ name: "doc.pdf", blob: new Blob([buf], { type: "application/pdf" }) }]);
   return String((md[0] || {}).data || "");
 }
+function focus(t) {
+  if (t.length < 3e4) return t;
+  let re = /management['’]s discussion and analysis/gi, m, best = -1;
+  for (; m = re.exec(t); ) {
+    let after = t.slice(m.index, m.index + 3e3);
+    if ((after.match(/%/g) || []).length >= 4 && /\$\s?\d/.test(after)) {
+      best = m.index;
+      break;
+    }
+  }
+  return best >= 0 ? t.slice(best) : t;
+}
 var SYS = `Tu es un journaliste financier p\xE9dagogue qui \xE9crit pour des personnes qui d\xE9butent en Bourse. Tu r\xE9sumes en fran\xE7ais un document officiel publi\xE9 par une entreprise cot\xE9e.
 R\xE8gles strictes :
 - Utilise uniquement les informations et les chiffres pr\xE9sents dans le document. N'invente rien. Si un chiffre n'y figure pas, ne le donne pas.
