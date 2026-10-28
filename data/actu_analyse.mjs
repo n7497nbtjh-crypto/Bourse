@@ -47,7 +47,7 @@ export function extractEN(text) {
   take("eps", /\b(earnings|EPS|net income) per (diluted )?share|\bdiluted (EPS|earnings per share)\b/i, /\$\s?(\d+\.\d{2})\b/);
   take("div", /\bdividend\b/i, /\$\s?(\d+\.\d{2,4})\s*(?:per share|a share)/i);
   take("rachat", /\b(repurchase|buyback|buy back)\b/i);
-  const guide = S.find(x => /\b(outlook|guidance|expects?|anticipates?|forecast)\b/i.test(x) && AMT.test(x));
+  const guide = S.find(x => /\b(outlook|guidance|expects?|anticipates?|forecast)\b/i.test(x) && /\b(revenues?|net sales|sales)\b/i.test(x) && AMT.test(x) && !/repurchase|buyback|capital expenditure|capex/i.test(x));
   if (guide) { const m = guide.match(AMT); out.prevision = { v: num(m[1], m[2]), s: guide, q: /quarter/i.test(guide) ? "trimestre" : /year/i.test(guide) ? "année" : "" }; }
   return out;
 }
@@ -83,7 +83,7 @@ export function plausible(x, annual) {
   for (const k of Object.keys(x)) ok[k] = x[k];
   if (x.ca) { const [a, b] = range(q(x.ca)); if (!(x.ca.v >= a * CA && x.ca.v <= b * CA)) delete ok.ca; }
   for (const k of ["net", "rop"]) if (x[k] && !(Math.abs(x[k].v) <= 0.6 * CA && Math.abs(x[k].v) >= 0.002 * CA)) delete ok[k];
-  if (x.prevision && !(x.prevision.v >= 0.1 * CA && x.prevision.v <= 1.6 * CA)) delete ok.prevision;
+  if (x.prevision && (!(x.prevision.v >= 0.1 * CA && x.prevision.v <= 1.6 * CA) || (x.ca && Math.abs(x.prevision.v / x.ca.v - 1) < 0.02))) delete ok.prevision;
   if (x.eps && annual.eps > 0 && !(x.eps.v >= annual.eps * 0.08 && x.eps.v <= annual.eps * 2)) delete ok.eps;
   if (x.div && annual.dps > 0 && !(x.div.v >= annual.dps * 0.1 && x.div.v <= annual.dps * 3)) delete ok.div;
   if (x.rachat && !(x.rachat.v <= 0.6 * CA * 3)) delete ok.rachat;

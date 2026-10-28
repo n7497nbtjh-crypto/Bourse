@@ -50,6 +50,7 @@ jobs:
           node tests/t_etf.mjs
           node tests/t_presse.mjs
           node tests/t_agenda.mjs
+          node tests/t_actu.mjs
           node --no-warnings tests/t_communaute.mjs
           NO_SLEEP=1 node tests/t_esef.mjs
       - name: Analyse des annonces officielles (SEC et AMF)
