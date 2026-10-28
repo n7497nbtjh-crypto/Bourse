@@ -1,5 +1,6 @@
 # Mesure la pertinence de l'IA locale de bilan. (copilote « Demander à bilan. » et assistant de fiche).
 # Usage : python3 tests/t_ia.py            (avec cf/site/ia.js, les nouvelles règles)
+#         python3 tests/t_ia.py --sortie r.json (enregistre toutes les réponses pour les relire)
 #         python3 tests/t_ia.py --ancien   (anciennes règles de index.html, pour comparer)
 #         python3 tests/t_ia.py -v         (affiche aussi les réponses des questions réussies)
 import os, sys, json, re, unicodedata
@@ -7,10 +8,18 @@ exec(open("tests/audit.py").read().split("CHECK = ")[0])  # donne route() et syn
 STATE = {}
 ANCIEN = "--ancien" in sys.argv
 VERB = "-v" in sys.argv
+SORTIE = sys.argv[sys.argv.index("--sortie") + 1] if "--sortie" in sys.argv else None  # écrit toutes les réponses (JSON) pour les relire
 QS = json.load(open("tests/ia_questions.json"))
 
+HTML = open("cf/site/index.html", encoding="utf-8").read()
+if not ANCIEN and '<script src="/ia.js">' not in HTML:  # ancienne page sans ia.js : on l'ajoute comme en production
+    HTML = HTML.replace("const termeTexte = t =>", "const termeTexte_ancien = t =>").replace("</body>", '<script src="/ia.js"></script></body>')
+if ANCIEN: sys.exit("--ancien n'a plus de sens : les anciennes règles ont été retirées de index.html")
 def route2(r):  # les vrais cours du site (data/cours.json) plutôt que la maquette : médianes de PER réalistes
-    if "/api/cours" in r.request.url: return r.fulfill(status=404, body="")
+    u = r.request.url
+    if "/api/cours" in u: return r.fulfill(status=404, body="")
+    path = u.split("//t.local", 1)[-1].split("?")[0]
+    if "//t.local" in u and not path.startswith("/api/") and "." not in path.rsplit("/", 1)[-1]: return r.fulfill(body=HTML, content_type="text/html; charset=utf-8")
     if "/api/" in r.request.url and not any(k in r.request.url for k in ("/api/premium/statut", "/api/amf", "/api/espace/moi")): return r.fulfill(status=503, json={"error": "test"})
     return route(r)
 
@@ -40,7 +49,7 @@ ASSIST = r"""async ([ids, qs]) => {
   return out;
 }"""
 
-def n(s): return unicodedata.normalize("NFD", str(s or "")).encode("ascii", "ignore").decode().lower().replace("’", "'")
+def n(s): return unicodedata.normalize("NFD", str(s or "").replace("\u202f", " ").replace("\u00a0", " ").replace("’", "'")).encode("ascii", "ignore").decode().lower().replace("\n", " ")
 REFUS = re.compile(r"personne ne (peut|sait|connait)|ne (peut|pouvons) pas (savoir|prevoir|dire)|ne (predit|prevoit|recommande|conseille|dit) (pas|jamais|aucun)|ne donne (pas|aucun)|aucune? (prevision|prediction|recommandation)|pas (de|un) conseil")
 HORS = re.compile(r"(le site|bilan\.?|l.ia|je) (repond|traite|parle|couvre|explique|suit|ne suit)|questions? sur (la bourse|les placements|l.investissement)|ne suit pas|hors du champ|ne (couvre|traite) pas")
 STYLE = [("tiret cadratin", "—"), ("tiret demi-cadratin", "–"), ("point d'exclamation", "!"), ("undefined", "undefined"), ("NaN", "NaN"), ("null", "null"), ("[object", "[object")]
@@ -93,13 +102,26 @@ with sync_playwright() as pw:
     pg.on("pageerror", lambda e: errs.append(str(e)))
     pg.route("**/*", route2)
     pg.goto("http://t.local/demander"); pg.wait_for_function("typeof R !== 'undefined' && R && R.companies && R.companies.length > 100", timeout=20000)
-    if not ANCIEN: pg.add_script_tag(path="cf/site/ia.js")
     cop = QS["copilote"]
     res = pg.evaluate(RUN, [x["q"] for x in cop])
     fq = QS["fiche"]
     asr = pg.evaluate(ASSIST, [QS["societes"], [x["q"] for x in fq]])
+    # Parcours réel dans la page : iaRun affiche le résultat ou ouvre la bonne page ; l'assistant de fiche répond
+    ui = []
+    for q, attendu in [("boites tech pas cheres", "entreprises remplissent"), ("etf monde eligible pea", "ETF"), ("c'est quoi un etf", "indice"), ("quelle action va monter demain", "Personne"),
+                       ("comment declarer mes dividendes aux impots", "Académie"), ("lvmh ou hermes", "/comparer?ids=lvmh,hermes"), ("etf cw8", "/etf/amundi-msci-world-swap"), ("total", "/entreprise/totalenergies")]:
+        pg.goto("http://t.local/demander?q=" + q.replace(" ", "+")); pg.wait_for_timeout(900)
+        txt = pg.url + " " + pg.inner_text("#app")
+        if attendu not in txt or "undefined" in txt or "NaN" in txt: ui.append(f"« {q} » : attendu « {attendu} », obtenu {pg.url} {pg.inner_text('#app')[:160]!r}")
+    pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(900)
+    if pg.locator("#assistant").count():
+        pg.fill("#assistant input", "pourquoi le cours baisse"); pg.press("#assistant input", "Enter"); pg.wait_for_timeout(500)
+        t = pg.inner_text("#assistant")
+        if "Réponse instantanée" not in t or "Sur un an" not in t: ui.append("assistant de fiche : pas de réponse locale affichée")
+    else: ui.append("assistant de fiche absent")
     b.close()
 
+if SORTIE: json.dump({"copilote": [{"q": x["q"], "r": o} for x, o in zip(cop, res)], "fiche": {sid: [{"q": x["q"], "r": asr[sid][i]} for i, x in enumerate(fq)] for sid in QS["societes"]}}, open(SORTIE, "w"), ensure_ascii=False, indent=1)
 print(f"== Règles {'anciennes (index.html)' if ANCIEN else 'nouvelles (cf/site/ia.js)'}")
 ok_c, par_cat, fails = 0, {}, []
 for x, o in zip(cop, res):
@@ -112,7 +134,11 @@ for x, o in zip(cop, res):
     if not good: fails.append((x, o))
     elif VERB: print("  ok  ", x["q"], "→", court(o))
 print(f"Copilote : {ok_c}/{len(cop)} = {ok_c / len(cop):.1%}")
+ctl = [(x, o) for x, o in zip(cop, res) if x.get("jeu") == "controle"]
+if ctl: k = sum(1 for x, o in ctl if x not in [f[0] for f in fails]); print(f"  dont jeu de contrôle (questions écrites après les règles) : {k}/{len(ctl)} = {k / len(ctl):.1%}")
 print("  par catégorie : " + ", ".join(f"{k} {a}/{t}" for k, (a, t) in par_cat.items()))
+vides = [x["q"] for x, o in zip(cop, res) if o.get("_vide")]
+if vides: print(f"  recherches comprises mais sans résultat dans les données ({len(vides)}) : " + " ; ".join(vides))
 for x, o in fails:
     print(f"  ÉCHEC [{x['cat']}] « {x['q']} »\n      attendu : {x['comportement']}\n      obtenu  : {court(o)}")
 
@@ -138,10 +164,13 @@ for i, x in enumerate(fq):
         if not good: ffails.append((x, sid, t, why))
         elif VERB: print("  ok  ", sid, x["q"], "→", (t or "(serveur)")[:200].replace("\n", " / "))
 print(f"Assistant de fiche : {ok_f}/{tot_f} = {ok_f / tot_f:.1%} ({len(fq)} questions × {len(QS['societes'])} entreprises)")
+fctl = [x for x in fq if x.get("jeu") == "controle"]
+if fctl: nb = sum(1 for x, sid, t, w in ffails if x.get("jeu") == "controle"); print(f"  dont jeu de contrôle : {len(fctl) * len(QS['societes']) - nb}/{len(fctl) * len(QS['societes'])}")
 print("  par intention : " + ", ".join(f"{k} {a}/{t}" for k, (a, t) in par_int.items()))
 for x, sid, t, why in ffails:
     print(f"  ÉCHEC [{sid}] « {x['q']} » : {', '.join(why)}\n      obtenu : {(t or '(rien)')[:260].replace(chr(10), ' / ')}")
 tot = ok_c + ok_f; N = len(cop) + tot_f
 print(f"TOTAL : {tot}/{N} = {tot / N:.1%}  (questions distinctes : {len(cop) + len(fq)})")
+print(f"Parcours dans la page : {8 + 1 - len(ui)}/9" + ("" if not ui else "\n  " + "\n  ".join(ui)))
 if errs: print("Erreurs JS :", errs[:5])
-sys.exit(0 if tot / N >= 0.9 and not errs else 1)
+sys.exit(0 if tot / N >= 0.9 and not errs and not ui else 1)

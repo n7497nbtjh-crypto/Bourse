@@ -1,5 +1,13 @@
 {
   "version": 1,
-  "include": ["/*"],
-  "exclude": ["/data/*", "/calc.js", "/sitemap.xml", "/robots.txt"]
+  "include": [
+    "/*"
+  ],
+  "exclude": [
+    "/data/*",
+    "/calc.js",
+    "/ia.js",
+    "/sitemap.xml",
+    "/robots.txt"
+  ]
 }

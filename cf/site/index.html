@@ -998,6 +998,7 @@ mark.nm{background:linear-gradient(transparent 55%,#D6F26B 55%);color:inherit;fo
 .acaxp{font-size:13px;color:var(--grey);background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 12px}
 .acagrid .acacard:nth-child(8n+1) .acatop .n{background:#0E6B4A}.acagrid .acacard:nth-child(8n+2) .acatop .n{background:#2F5D8C}.acagrid .acacard:nth-child(8n+3) .acatop .n{background:#7A4E9C}.acagrid .acacard:nth-child(8n+4) .acatop .n{background:#B5651D}.acagrid .acacard:nth-child(8n+5) .acatop .n{background:#1E7A7A}.acagrid .acacard:nth-child(8n+6) .acatop .n{background:#8C2F4A}.acagrid .acacard:nth-child(8n+7) .acatop .n{background:#5A6B1E}.acagrid .acacard:nth-child(8n+8) .acatop .n{background:#B23A1E}
 @media (max-width:760px){.acatopbar{top:52px}.acacard2{padding:16px 16px 16px 50px}.acan{left:12px}.wenv{grid-template-columns:110px 1fr 70px;font-size:13px}.wdg{padding:18px 16px}}
+.iaplus{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}.iaplus .hbr{display:flex;flex-direction:column;padding:8px 26px 8px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit;position:relative}.iaplus .hbr span{font-size:.85em;color:var(--grey)}
 </style>
 </head>
 <body>
@@ -1044,6 +1045,7 @@ mark.nm{background:linear-gradient(transparent 55%,#D6F26B 55%);color:inherit;fo
 <div class="pop" id="pop" tabindex="-1" role="dialog" aria-modal="false"></div>
 
 <script src="/calc.js"></script>
+<script src="/ia.js"></script>
 <script>
 "use strict";
 const SITE = "bilan.";
@@ -3715,8 +3717,14 @@ const INDI = {
 };
 const MEDI = {};
 function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing).map(INDI[k][1])); return MEDI[key]; }
+// Thèmes repérés dans la question : filtre sur le nom et la description des entreprises, le nom et l'indice des ETF.
+const THEME_RE = { defense: [/d[ée]fense|armement|militaire|munitions|defense/i, "défense"], semi: [/semi.?conduct|puces|semiconductor/i, "semi-conducteurs"], eau: [/\beau\b|water/i, "eau"],
+  ia: [/intelligence artificielle|artificial intelligence|big data|\bIA\b/, "intelligence artificielle"], robot: [/robot|automation|automatisation/i, "robotique"], cyber: [/cyber/i, "cybersécurité"],
+  clean: [/clean|renouvelable|solaire|[ée]olien|transition [ée]nerg/i, "énergies renouvelables"], or: [/gold|\bor\b|aurif/i, "or"], mines: [/\bmines?\b|mini[eè]re?s?|cuivre|lithium|zinc|nickel|gold|\bor\b|uranium/i, "mines"],
+  luxe: [/luxe|luxury|maroquinerie|joaill|haute couture|montres/i, "luxe"], sante: [/health|sant[ée]|pharma|m[ée]dic|biotech/i, "santé"] };
 function runFiltre(a) {
   let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region || (a.region === "EU" && c.region === "FR")) && (!a.pays || (c.isin || "").startsWith(a.pays)) && (!a.pea || peaOk(c)));
+  if (a.mot && THEME_RE[a.mot]) { const l2 = l.filter(c => THEME_RE[a.mot][0].test(c.name + " " + (c.desc || ""))); if (l2.length) l = l2; else a.mot = null; }
   l = l.filter(c => a.criteres.every(k => { const f = INDI[k.indicateur]; if (!f) return true; const v = f[1](c); if (v == null) return false;
     if (k.condition === "sup") return k.valeur == null || v > k.valeur; if (k.condition === "inf") return k.valeur == null || v < k.valeur;
     const m = medInd(c.sector, k.indicateur); if (m == null) return false; return k.condition === "sup_mediane" ? v > m : v < m; }));
@@ -3737,7 +3745,7 @@ function cellInd(c, k) {
 }
 function filtreHTML(a) {
   const { l, tri } = runFiltre(a), lim = isPrem() ? 30 : 8, cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
-  const desc = [a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
+  const desc = [a.mot && THEME_RE[a.mot] && "thème " + THEME_RE[a.mot][1], a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
   if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
   return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
     <p class="note" style="margin:0 0 10px">Vert : nettement mieux que la médiane de son secteur. Orange : nettement moins bien. Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</p>
@@ -3747,10 +3755,12 @@ function filtreHTML(a) {
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">${l.length > 1 ? `<a class="more" href="/comparer?ids=${l.slice(0, 3).map(c => c.id).join(",")}">Comparer les trois premières →</a>` : ""}<button type="button" class="linkbtn" data-favall="${l.slice(0, lim).map(c => "c:" + c.id).join(",")}">☆ Tout ajouter à mes favoris</button></div>`;
 }
 function etfIAHTML(a) {
-  const l = ETF.list.filter(e => (!a.categorie || e.categorie === a.categorie) && (!a.pea || e.pea) && e.ter != null).sort((x, y) => x.ter - y.ter).slice(0, isPrem() ? 20 : 8);
+  let l0 = ETF.list.filter(e => (!a.categorie || e.categorie === a.categorie) && (!a.pea || e.pea) && e.ter != null);
+  if (a.mot && THEME_RE[a.mot]) { const l2 = l0.filter(e => THEME_RE[a.mot][0].test(e.name + " " + (e.index || ""))); if (l2.length) l0 = l2; else a.mot = null; }
+  const l = l0.sort((x, y) => x.ter - y.ter).slice(0, isPrem() ? 20 : 8);
   if (!l.length) return `<p class="lead">Aucun ETF du site ne correspond.</p>`;
   const m = median(l.map(e => e.ter));
-  return `<p class="lead" style="margin:0 0 10px"><b>${l.length} ETF</b>${a.categorie ? ` de la catégorie « ${esc(ECAT[a.categorie] || a.categorie)} »` : ""}${a.pea ? ", éligibles au PEA" : ""}, du moins cher au plus cher.</p>
+  return `<p class="lead" style="margin:0 0 10px"><b>${l.length} ETF</b>${a.mot && THEME_RE[a.mot] ? ` sur le thème « ${esc(THEME_RE[a.mot][1])} »` : a.categorie ? ` de la catégorie « ${esc(ECAT[a.categorie] || a.categorie)} »` : ""}${a.pea ? ", éligibles au PEA" : ""}, du moins cher au plus cher.</p>
     <div class="hb">${l.map(e => `<a class="hbr" href="/etf/${e.id}"><span class="hbl">${logo({ name: e.issuer, domain: issuerDom(e) }, 22)}${esc(e.name)}</span><span class="hbb"><span style="width:${Math.max(4, e.ter / Math.max(...l.map(x => x.ter)) * 100)}%;background:${e.ter <= m * 0.8 ? "var(--g)" : e.ter >= m * 1.25 ? "var(--o)" : ""}"></span></span><span class="hbv num">${pct(e.ter / 100, 2, false)}${e.pea ? " · PEA" : ""}</span></a>`).join("")}</div>
     <p class="note">Frais courants annuels. Vert : parmi les moins chers de la liste. Les frais ne sont pas le seul critère : regardez l'indice suivi sur chaque fiche.</p>`;
 }
@@ -3758,16 +3768,21 @@ async function iaRun(q, out) {
   out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA analyse votre question…</div>`;
   await Promise.all([premStatus(), PXP, loadAna()]); // les cours servent au PER, au rendement et aux médianes
   let a = localCopilot(q);
-  if (!a && /pourquoi|comment|c.?est quoi|qu.?est|explique|difference|faut.?il|doit.?on|risque|definition|signifie|fonctionne|marche|vaut.?il|interet/i.test(norm(q))) { await acaLoad(); const h = chercheLecons(q); if (h.length) a = { action: "lecons", hits: h, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()) }; }
+  let hitsL = [];
+  if (!a) { await acaLoad(); hitsL = chercheLecons(q);
+    const ouverte = /pourquoi|comment|c.?est quoi|qu.?est|explique|difference|faut.?il|doit.?on|risque|definition|signifie|fonctionne|marche|vaut.?il|interet|quel|quelle|combien|est.?ce|peut.?on|^(le|la|les|un|une) /i.test(norm(q));
+    if (hitsL.length && (ouverte || hitsL[0].s >= 8)) a = { action: "lecons", hits: hitsL, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()) }; }
   if (!a && LIA.eng) a = await liaCopilot(q);
   if (!a) try { const r = await iaFetch("/api/demande", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) }); a = await r.json(); } catch (e) { a = { error: "L'IA est indisponible pour le moment." }; }
   if (a.error) { await acaLoad(); const h = chercheLecons(q); if (h.length) a = { action: "lecons", hits: h, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()) };
     else { out.innerHTML = iaErr(a, a.error) + (a.quota || /demandée/.test(a.error) ? liaBoxHTML() : ""); liaUI(); return; } }
   if (a.action === "fiche") { const x = a.id ? RBY[a.id] : resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
   if (a.action === "comparer") { const ids = (a.ids ? a.ids.map(id => RBY[id]) : a.noms.map(resoudre)).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
+  if (a.action === "repondre" && !hitsL.length) { await acaLoad(); hitsL = chercheLecons(q); }
+  if (a.lien && !hitsL.some(h => "/academie/" + h.m.id + "/" + h.l.id === a.lien[0])) { const [mid, lid] = a.lien[0].split("/").slice(2); const m = ACA && ACA.modules.find(x => x.id === mid), l = m && m.lecons.find(x => x.id === lid); if (l) hitsL = [{ m, l }, ...hitsL]; }
   const titre = a.titre || q;
   out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
-    ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : a.action === "lecons" ? `<p class="lead" style="margin:0 0 10px">Les leçons de l'Académie qui répondent à votre question :</p>` + leconsHTML(a.hits) : resumeHTML(a.texte)}
+    ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : a.action === "lecons" ? `<p class="lead" style="margin:0 0 10px">Les leçons de l'Académie qui répondent à votre question :</p>` + leconsHTML(a.hits) : resumeHTML(a.texte) + (a.action === "repondre" && hitsL.length ? `<div class="iaplus"><p class="kick">Pour aller plus loin dans l'Académie</p>${hitsL.slice(0, 2).map(({ m, l }) => `<a class="hbr" href="/academie/${m.id}/${l.id}"><b>${esc(l.titre)}</b><span>${esc(m.titre)}</span></a>`).join("")}</div>` : "")}
     <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.lia ? "Réponse de l'IA installée sur votre appareil, à partir des données du site. À vérifier ; ce n'est pas un conseil." : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p></div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
@@ -3965,134 +3980,7 @@ document.addEventListener("click", e => { if (e.target.closest(".favx") && locat
 const strip = h => String(h || "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 const has = (q, re) => re.test(q);
 
-/* ---------- Notions supplémentaires (en plus du lexique) ---------- */
-const XTERMS = {
-  capitalisant: { name: "ETF capitalisant", what: "Un ETF qui réinvestit automatiquement dans le fonds les dividendes reçus des entreprises : rien ne vous est versé, la valeur de chaque part monte d'autant.", read: "Pratique pour faire travailler l'argent sur la durée sans rien faire. Dans un compte-titres, aucun impôt n'est dû tant que vous ne vendez pas.", ex: "Un ETF qui reçoit 2 % de dividendes par an les rachète en actions : votre part vaut 2 % de plus au lieu de vous verser 2 %.", re: /capitalisant/ },
-  distribuant: { name: "ETF distribuant", what: "Un ETF qui vous verse les dividendes reçus des entreprises, en général une à quatre fois par an.", read: "Utile si vous voulez un revenu. Dans un compte-titres, chaque versement est imposé l'année où vous le recevez.", re: /distribuant/ },
-  dividende: { name: "Dividende", what: "La part de son bénéfice qu'une entreprise verse à ses actionnaires, en général une à quatre fois par an.", read: "Il n'est jamais garanti : l'entreprise peut le baisser ou le supprimer. Le jour du détachement, le cours baisse à peu près du montant versé.", ex: "Une action à 50 € qui verse 2 € par an a un rendement de 4 %.", re: /dividende/ },
-  diversification: { name: "Diversification", what: "Répartir son argent sur beaucoup d'entreprises, de secteurs et de pays, pour qu'un seul échec pèse peu.", read: "Un ETF monde contient plus de 1 000 entreprises : la faillite de l'une d'elles change très peu sa valeur.", re: /diversif/ },
-  obligation: { name: "Obligation", what: "Un prêt à un État ou à une entreprise, qui vous verse des intérêts puis rembourse la somme à une date fixée.", read: "En général moins risquée qu'une action, et moins rémunératrice sur longue durée. Sa valeur baisse quand les taux d'intérêt montent.", re: /obligation/ },
-  ordre: { name: "Ordre de Bourse", what: "L'instruction d'achat ou de vente donnée à votre courtier. Au marché : exécuté tout de suite au prix disponible. À cours limité : exécuté seulement à votre prix ou mieux.", read: "Le cours limité évite d'acheter plus cher que prévu sur une action peu échangée.", re: /\bordre|cours limit|au marche/ },
-  dca: { name: "Investissement programmé", what: "Investir la même somme à intervalle régulier, par exemple 100 € chaque mois, quel que soit le cours.", read: "On achète plus de parts quand le prix est bas, moins quand il est haut, et on évite de devoir choisir « le bon moment ».", ex: "100 € à 10 € la part achètent 10 parts ; 100 € à 5 € en achètent 20. Prix moyen : 6,67 € au lieu de 7,50 €.", re: /programm|dca|chaque mois|regulier/ },
-  composes: { name: "Intérêts composés", what: "Les gains produisent eux-mêmes des gains, car ils restent placés.", read: "C'est pourquoi la durée compte autant que le montant.", ex: "1 000 € à 7 % par an deviennent environ 1 967 € en 10 ans et 3 870 € en 20 ans.", re: /compos/ },
-  flat: { name: "Flat tax", what: "L'impôt forfaitaire sur les gains d'un compte-titres : 31,4 % en 2026 (12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux).", read: "Dans un PEA de plus de 5 ans, seuls les 18,6 % de prélèvements sociaux s'appliquent.", re: /flat|pfu|imposition|impot/ },
-  courtier: { name: "Courtier", what: "L'intermédiaire (banque ou application) chez qui vous ouvrez un compte pour acheter des actions ou des ETF.", read: "Comparez les frais par ordre, les frais de garde et l'offre PEA.", re: /courtier|broker/ },
-  krach: { name: "Krach", what: "Une chute brutale et rapide des marchés, souvent de 20 % ou plus en quelques semaines.", read: "Il y en a eu en 1987, 2000, 2008 et 2020. Les marchés ont fini par remonter, parfois après plusieurs années : c'est pourquoi l'argent investi en actions doit pouvoir rester placé longtemps.", re: /krach|crash|chute/ },
-  inflation: { name: "Inflation", what: "La hausse générale des prix, qui fait perdre du pouvoir d'achat à l'argent qui dort.", read: "Un livret à 1,7 % avec une inflation à 2 % fait perdre un peu de pouvoir d'achat chaque année.", re: /inflation/ },
-  isin: { name: "Code ISIN", what: "L'identifiant unique d'un titre dans le monde : deux lettres de pays et dix caractères, par exemple FR0000121014 pour LVMH.", read: "Le plus sûr pour retrouver exactement le bon ETF chez votre courtier.", re: /isin/ },
-};
-function termeDe(q) {
-  const x = Object.values(XTERMS).find(t => t.re.test(q)); if (x) return x;
-  const w = x => new RegExp("(^|[^a-z0-9])" + x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z0-9])");
-  const k = Object.keys(TERMS).find(k => { const n = norm(TERMS[k].name).replace(/\(.*\)/, "").trim(); return (n.length > 2 && w(n).test(q)) || (k.length > 2 && w(k).test(q)); });
-  return k ? TERMS[k] : null;
-}
-const termeTexte = t => [t.what, t.calc ? `Calcul : ${t.calc}` : "", t.read, t.ex ? `Exemple : ${t.ex}` : "", t.limit ? `Limite : ${t.limit}` : ""].filter(Boolean).join("\n");
-
-/* ---------- Le copilote comprend seul les demandes courantes ---------- */
-const SECW = [[/tech|informatiq|logiciel|semi.?conduct|puce|numerique|cloud|intelligence artificielle|\bia\b/, "tech"], [/banque|bancaire|assur|financ/, "finance"], [/sante|pharma|medic|biotech|laboratoire/, "sante"], [/energie|petrol|petroli|\bgaz\b/, "energie"], [/industri|aero|defense|aeronaut|transport|automobile|voiture/, "industrie"], [/luxe|conso|distribution|grande surface|alimenta|boisson|textile/, "conso"], [/telecom|media|television/, "telecom"], [/materiau|chimi|mines|minier|metaux|acier/, "materiaux"], [/immobili|fonciere/, "immo"], [/electricite|eau\b|services aux collectivites|utilities/, "services"]];
-const PAYSW = [[/allemand|allemagne/, "DE"], [/neerland|pays.?bas|hollandais/, "NL"], [/italien|italie/, "IT"], [/espagnol|espagne/, "ES"], [/suisse/, "CH"], [/britanni|anglais|royaume.?uni|londres/, "GB"], [/suedois|suede/, "SE"], [/danois|danemark/, "DK"], [/norvegien|norvege/, "NO"], [/finlandais|finlande/, "FI"], [/belge|belgique/, "BE"], [/japonais|japon/, "JP"], [/coreen|coree/, "KR"], [/indien|inde\b/, "IN"], [/canadien|canada/, "CA"], [/bresilien|bresil/, "BR"], [/taiwan/, "TW"], [/australien|australie/, "AU"], [/irlandais|irlande/, "IE"], [/portugais|portugal/, "PT"], [/autrichien|autriche/, "AT"], [/polonais|pologne/, "PL"]];
-const REGW = [[/francais|france|\bcac\b|paris/, "FR"], [/europ/, "EU"], [/americain|etats.?unis|\bus\b|\busa\b|wall street/, "US"], [/japon|chin|asi|coree|inde|bresil|monde emergent|australi|canad/, "MONDE"]];
-const ECATW = [[/monde|world|acwi/, "actions-monde"], [/s.?p|nasdaq|americ|etats.?unis|\bus\b|\busa\b/, "actions-usa"], [/emergent/, "actions-emergents"], [/asi|japon|chin|inde/, "actions-asie"], [/europ|stoxx/, "actions-europe"], [/france|cac/, "actions-france"], [/dividend/, "dividendes"], [/obligat/, "obligations"], [/monetaire/, "monetaire"], [/immobil/, "immobilier"], [/\bor\b|matieres|petrole/, "matieres"], [/theme|robot|eau\b|climat|semi|cyber|sante|defense/, "theme"]];
-function trouveEntreprises(q) {
-  const out = [];
-  for (const c of R.companies) { const n = norm(c.name).replace(/\b(sa|se|inc|corp|plc|ag|nv|group|groupe)\b/g, "").trim(); if (n.length >= 3 && new RegExp("(^|[^a-z])" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z])").test(q)) out.push(c); }
-  return out.filter((c, i, a) => !a.some(d => d !== c && norm(d.name).includes(norm(c.name)) && norm(d.name).length > norm(c.name).length && out.includes(d)));
-}
-function localCopilot(raw) {
-  const q = " " + norm(raw).replace(/[’']/g, " ").replace(/\s+/g, " ") + " ";
-  // 0. « quoi acheter ? » : le site ne choisit pas à la place du lecteur, il donne la méthode
-  if (has(q, /quoi acheter|quelle action acheter|quelles actions acheter|devenir riche|meilleures? actions?|que faut.?il acheter|ou investir|sur quoi investir|quoi investir/)) return { action: "repondre", local: true, titre: "Sur quoi investir ?",
-    texte: "Personne ne peut vous dire quelle action va monter, et le site ne le fait pas. Ce qui marche le mieux pour débuter, c'est une méthode.\nD'abord, gardez de côté 3 à 6 mois de dépenses sur un livret. Ensuite, n'investissez en actions que l'argent dont vous n'aurez pas besoin avant au moins 5 ans. Pour commencer, beaucoup d'épargnants choisissent un ETF monde dans un PEA : un seul achat, plus de 1 000 entreprises, des frais souvent inférieurs à 0,3 % par an. Enfin, investissez un peu chaque mois plutôt que tout d'un coup.\nLe guide « Par où commencer » détaille ces étapes et vous aide à trouver votre profil en cinq questions." };
-  // 1. une définition
-  if (has(q, /c est quoi|qu est.?ce qu|que veut dire|que signifie|definition|definir|explique|comment (fonctionne|marche)|a quoi sert|difference entre/)) {
-    const t = termeDe(q); if (t) return { action: "repondre", texte: termeTexte(t), titre: t.name, local: true };
-  }
-  const cos = trouveEntreprises(q);
-  // 2. une comparaison
-  if (cos.length >= 2 && has(q, /compar|\bvs\b|versus| ou |entre| et |mieux/)) return { action: "comparer", ids: cos.slice(0, 5).map(c => c.id), local: true };
-  // 3. une entreprise seule
-  if (cos.length === 1 && !has(q, /compar/) && (q.trim().split(" ").length <= 4 || has(q, /avis|penser|pense|analyse|parle|presente|fiche|que vaut|bonne|acheter|investir|resultats|dividende|dette|chere?/))) return { action: "fiche", id: cos[0].id, local: true };
-  // 4. des ETF
-  if (has(q, /\betf\b|tracker|fonds indiciel/)) { const cat = (ECATW.find(([re]) => re.test(q)) || [])[1] || null; return { action: "etf", titre: raw.trim(), categorie: cat, pea: has(q, /\bpea\b/), local: true }; }
-  // 5. une recherche d'entreprises
-  const pays = (PAYSW.find(([re]) => re.test(q)) || [])[1] || null, secteur = (SECW.find(([re]) => re.test(q)) || [])[1] || null, region = pays ? null : (REGW.find(([re]) => re.test(q)) || [])[1] || null, crit = [];
-  if (has(q, /peu endett|pas (de |trop de )?dette|sans dette|faible(ment)? endett|peu de dette|bilan solide|solides?\b/)) crit.push({ indicateur: "dette", condition: "inf", valeur: 1 });
-  else if (has(q, /tres endett|beaucoup de dette|fortement endett/)) crit.push({ indicateur: "dette", condition: "sup", valeur: 3 });
-  if (has(q, /dividende|rendement|revenus? passif|rente/)) crit.push({ indicateur: "rendement", condition: "sup", valeur: has(q, /gros|fort|eleve|genereu|bon/) ? 4 : 2.5 });
-  if (has(q, /pas cher|bon marche|decote|sous.?evalu|moins chere?s?|faible per|per bas|attracti/)) crit.push({ indicateur: "per", condition: "inf_mediane", valeur: null });
-  else if (has(q, /\bcheres?\b|per eleve|surevalu/)) crit.push({ indicateur: "per", condition: "sup_mediane", valeur: null });
-  if (has(q, /rentab|marge|profitab|qualite/)) crit.push({ indicateur: "marge", condition: "sup_mediane", valeur: null });
-  if (has(q, /croissance|croissent|grandi|en forte hausse des ventes|dynamique/)) crit.push({ indicateur: "croissance", condition: "sup", valeur: 8 });
-  let tri = null;
-  if (has(q, /plus gros|plus grandes?|geant|leaders?|grosses capi/)) tri = { indicateur: "capitalisation", ordre: "desc" };
-  else if (has(q, /petites?|small/)) tri = { indicateur: "capitalisation", ordre: "asc" };
-  else if (has(q, /plus (forte|grosse)s? baisse|le plus baisse|plus baisse|chute|ont baisse|perdu/)) tri = { indicateur: "variation_1an", ordre: "asc" };
-  else if (has(q, /plus (forte|grosse)s? hausse|le plus monte|plus monte|performan|progress/)) tri = { indicateur: "variation_1an", ordre: "desc" };
-  const pea = has(q, /\bpea\b/), quoiq = has(q, /entreprise|action|societe|valeur|titre|groupe|boite|quoi (acheter|investir)|investir|secteur/);
-  if ((crit.length || tri || pea || (secteur || region || pays) && quoiq) && (crit.length || secteur || region || pays || tri)) {
-    if (!tri && crit[0]) tri = { indicateur: crit[0].indicateur, ordre: INDI[crit[0].indicateur][3] ? "asc" : "desc" };
-    const titre = raw.trim().replace(/^./, m => m.toUpperCase()).replace(/\?$/, "");
-    return { action: "filtre", titre: has(q, /meilleur|acheter|investir/) ? "Entreprises qui correspondent à vos critères" : titre, secteur, region, pays, pea, criteres: crit, tri, limite: 12, local: true };
-  }
-  return null;
-}
-
-/* ---------- L'assistant de fiche répond seul aux questions courantes ---------- */
-function localAssist(s, c, raw) {
-  const q = " " + norm(raw).replace(/[’']/g, " ") + " ", f = c ? figuresOf(c) : null, m = ratios(s), md = MED[s.sector] || {}, v = valo(s), mp = MEDPE[s.sector], bank = isBank(s);
-  const items = f ? lecture(s, f) : [], forts = items.filter(i => i.lv === "fort"), vigs = items.filter(i => i.lv === "vig");
-  const P = [];
-  if (has(q, /\bpourquoi\b/)) return null; // une question « pourquoi » demande un raisonnement : elle passe par l'IA
-  const cmp = (val, med, fmt, lowGood) => med == null || val == null ? "" : ` La médiane de son secteur est de ${fmt(med)} : ${(lowGood ? val < med * 0.85 : val > med * 1.15) ? "c'est nettement mieux que la plupart de ses concurrentes" : (lowGood ? val > med * 1.15 : val < med * 0.85) ? "c'est nettement moins bien que la plupart de ses concurrentes" : "c'est dans la moyenne"}.`;
-  if (has(q, /acheter|investir|bonne affaire|bon placement|faut.?il|conseill|vaut.?il|interessant/)) {
-    P.push(`Le site ne dit pas s'il faut acheter : cela dépend de votre situation, de votre horizon et du reste de votre épargne. Voici ce que disent les chiffres.`);
-    if (forts.length) P.push(`Points forts : ${forts.slice(0, 3).map(i => strip(i.text)).join(" ")}`);
-    if (vigs.length) P.push(`Points de vigilance : ${vigs.slice(0, 3).map(i => strip(i.text)).join(" ")}`);
-    if (v && v.pe) P.push(`Prix : l'action coûte ${F0.format(v.pe)} fois son bénéfice annuel${mp ? `, contre ${F0.format(mp)} pour la médiane du secteur` : ""}.`);
-    P.push(`Avant d'acheter une action seule, regardez quelle part de votre épargne elle représenterait : au-delà de 5 à 10 %, le risque augmente nettement.`);
-  } else if (has(q, /que fait|activite|metier|que vend|vend quoi|produits?|gagne.{0,20}argent|modele economique|ses clients/)) {
-    if (s.fiche) P.push(`${s.fiche.fait} ${s.fiche.argent}`); else if (s.desc) P.push(s.desc);
-    const rep = REP[s.id]; if (rep && (rep.activites || rep.zones)) { const l = (rep.activites || rep.zones), t = l.reduce((a, x) => a + x[1], 0) || 1; P.push(`Répartition de ses ventes : ${l.slice(0, 4).map(([n, x]) => `${n} ${F0.format(x / t * 100)} %`).join(", ")}.`); }
-    if (s.fiche && s.fiche.depend) P.push(`Ce qui fait varier ses résultats : ${s.fiche.depend}`);
-  } else if (has(q, /\bcheres?\b|\bprix\b|\bper\b|valoris|\bcours\b|surevalu|sous.?evalu/)) {
-    if (!v || !v.pe) P.push(f && f.net != null && f.net <= 0 ? "L'entreprise a perdu de l'argent sur son dernier exercice : on ne peut pas comparer son prix à son bénéfice (le PER ne se calcule pas)." : "Le cours de l'action n'est pas disponible pour le moment.");
-    else { P.push(`L'action coûte ${F0.format(v.pe)} fois le bénéfice de sa dernière année : si le bénéfice restait le même, il faudrait ${F0.format(v.pe)} ans pour « rembourser » le prix payé.${cmp(v.pe, mp, x => F0.format(x) + " fois", true)}`);
-      if (mp) P.push(v.pe > mp * 1.3 ? "Le marché la paie plus cher que ses concurrentes : il attend plus de croissance. Si cette croissance n'arrive pas, le cours peut baisser." : v.pe < mp * 0.75 ? "Le marché la paie moins cher que ses concurrentes : il attend moins de croissance, ou il voit un risque. Moins cher ne veut pas dire bonne affaire." : "Son prix est comparable à celui de ses concurrentes.");
-      const p = v.p; if (p && p.h52 > p.l52) { const pos = (p.p - p.l52) / (p.h52 - p.l52); P.push(`Sur un an, le cours est ${pos > 0.85 ? "proche de son plus haut" : pos < 0.15 ? "proche de son plus bas" : `à ${F0.format(pos * 100)} % entre son plus bas et son plus haut`}.`); } }
-  } else if (has(q, /dette|endett|emprunt|faillite|tresorerie/)) {
-    if (bank) P.push("Pour une banque, la dette est la matière première du métier : elle se juge avec d'autres ratios (fonds propres, solvabilité), que le site ne publie pas encore.");
-    else if (s.netDebt != null && s.netDebt < 0) P.push(`${s.name} a plus de trésorerie que de dettes : elle pourrait rembourser tout ce qu'elle doit avec l'argent qu'elle a en caisse. C'est un signe de solidité.`);
-    else if (m.lev != null) P.push(`Sa dette nette représente ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} de résultat d'exploitation avant amortissements : c'est le temps qu'il lui faudrait pour la rembourser si elle y consacrait tout ce résultat.${cmp(m.lev, md.lev, x => F1.format(x) + " an" + (x >= 2 ? "s" : ""), true)} ${m.lev > 3 ? "Au-delà de 3 ans, la dette devient un point à surveiller, surtout si les taux montent." : m.lev < 1.5 ? "Moins de 1,5 an : un endettement faible." : ""}`);
-  } else if (has(q, /dividende|rendement|verse|distribu|coupon/)) {
-    if (!(s.divPaid > 0.5)) P.push(`${s.name} n'a pas versé de dividende sur son dernier exercice : elle garde ses bénéfices pour investir ou racheter ses actions.`);
-    else { P.push(`Elle a versé ${big(s.divPaid, s.currency)} à ses actionnaires${m.payout != null ? `, soit ${F0.format(m.payout * 100)} % de son bénéfice` : ""}.${v && v.yld != null ? ` Au cours actuel, cela représente un rendement de ${pct(v.yld, 1, false)} par an : 1 000 € d'actions rapporteraient environ ${F0.format(v.yld * 1000)} € avant impôts, si le dividende restait le même.` : ""}`);
-      if (m.payout != null) P.push(m.payout > 1 ? "Elle verse plus que ce qu'elle gagne : ce n'est pas tenable longtemps, le dividende pourrait baisser." : m.payout > 0.75 ? "Elle reverse l'essentiel de son bénéfice : le dividende a peu de marge si les résultats baissent." : "Le dividende est couvert par le bénéfice, avec une marge de sécurité."); }
-  } else if (has(q, /croissance|ventes|chiffre d.?affaires|grandi|progress|recul/)) {
-    if (m.g1 != null) P.push(`Ses ventes ont ${m.g1 >= 0 ? "progressé" : "reculé"} de ${pct(Math.abs(m.g1), 1, false)} sur son dernier exercice${f && f.cagr != null ? `, et de ${pct(f.cagr, 1)} par an en moyenne depuis ${f.first}` : ""}.${cmp(m.g1, md.g1, x => pct(x, 1), false)}`);
-  } else if (has(q, /marge|rentab|profit|benefice|gagne/)) {
-    if (m.marge != null && !bank) P.push(`Sur 100 € de ventes, il lui reste ${F1.format(m.marge * 100)} € une fois payés les salaires, les achats et les frais (marge d'exploitation).${cmp(m.marge, md.marge, x => pct(x, 1, false), false)}`);
-    if (m.roe != null) P.push(`Pour 100 € qui appartiennent aux actionnaires, elle gagne ${F1.format(m.roe * 100)} € par an.${cmp(m.roe, md.roe, x => pct(x, 1, false), false)}`);
-  } else if (has(q, /concurren|rival|secteur|compar/)) {
-    const pr = peersOf(s, 4).list; if (pr.length) P.push(`Ses concurrentes directes sur le site : ${pr.map(x => x.name).join(", ")}. ${pr.map(x => { const r = ratios(x); return r.marge != null ? `${x.name} garde ${F1.format(r.marge * 100)} € sur 100 € vendus` : ""; }).filter(Boolean).join(", ")}${m.marge != null ? `, contre ${F1.format(m.marge * 100)} € pour ${s.name}` : ""}. Le bouton « Comparer à ses concurrents » les met côte à côte.`);
-  } else if (has(q, /vigilance|risque|faiblesse|inquiet|danger|probleme|negati/)) {
-    P.push(vigs.length ? `Points de vigilance dans ses comptes : ${vigs.map(i => strip(i.text)).join(" ")}` : "Ses derniers comptes ne montrent pas de point de vigilance par rapport à son secteur.");
-    if (s.fiche && s.fiche.depend) P.push(`Ce qui peut peser sur ses résultats : ${s.fiche.depend}`);
-  } else if (has(q, /point.? fort|atout|qualite|positif/)) {
-    P.push(forts.length ? `Points forts dans ses comptes : ${forts.map(i => strip(i.text)).join(" ")}` : "Ses derniers comptes ne montrent pas de point nettement meilleur que la médiane de son secteur.");
-  } else if (has(q, /derniers? (comptes|resultats)|bilan|annonce|publie|trimestre|actualite|nouvelle/)) {
-    if (f) P.push(strip(enBref(s, f, items)));
-    const a = Object.values(ANA || {}).filter(x => x.id === s.id && x.chiffres && x.chiffres.length).sort((x, y) => y.date.localeCompare(x.date))[0];
-    if (a) P.push(`Dernière annonce officielle (${dLabel(a.date)}) : ${a.chiffres.map(x => x.join(" : ")).join(" ; ")}. ${(a.lecture || []).join(" ")}`);
-  } else if (has(q, /quand|date|prochain|calendrier|agenda|assemblee/)) {
-    const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 4);
-    P.push(up.length ? `Prochaines dates : ${up.map(e => `${dLabel(e.date)}, ${e.label}`).join(" ; ")}.` : "Aucune date n'est encore annoncée. Le site ajoute les dates dès qu'elles sont publiées.");
-  } else if (has(q, /pea|compte.?titres|eligib/)) {
-    P.push(peaOk(s) == null ? "Le site ne sait pas encore si cette action est éligible au PEA." : peaOk(s) ? `${s.name} est une entreprise européenne : ses actions peuvent aller dans un PEA ou un compte-titres.` : `${s.name} n'est pas européenne : ses actions vont dans un compte-titres, pas dans un PEA. Pour l'exposition à ce pays dans un PEA, il existe des ETF éligibles.`);
-  }
-  const t = P.filter(Boolean).join("\n");
-  return t.length > 30 ? t : null;
-}
+/* Le moteur local (localCopilot, localAssist, termeDe, chercheLecons…) est dans /ia.js. */
 
 /* ---------- Textes de secours, toujours disponibles ---------- */
 function bilanLocal(b) {
@@ -4370,24 +4258,6 @@ function pageFormation() {
   $$("[data-step]").forEach(c => c.onchange = () => { if (c.checked) st[c.dataset.step] = 1; else delete st[c.dataset.step]; try { localStorage.setItem(FKEY2, JSON.stringify(st)); } catch (e) { } });
 }
 
-/* ---------- Répondre aux questions ouvertes avec les cours vérifiés (au lieu d'un texte inventé) ---------- */
-const STOPW = new Set("le la les un une des de du d l et ou a au aux en dans pour par sur que qui quoi quel quelle quels quelles est sont c ce cet cette ces je j me mon ma mes ses son sa leur leurs vos votre nos notre on il elle se s y pourquoi comment combien quand faut il t ne pas plus moins tres avec sans entre vers ca cela fait font faire choisir quoi bien bon bonne".split(" "));
-const SYNW = { bitcoin: "crypto", ethereum: "crypto", cryptomonnaie: "crypto", cryptoactif: "crypto", courtier: "courtage", broker: "courtage", impot: "fiscal", impots: "fiscal", fiscalite: "fiscal", declaration: "declarer", declare: "declarer", tracker: "etf", indiciel: "etf", retraite: "per", vendre: "panique", vend: "panique", baisse: "krach", baisser: "krach", chute: "krach", taux: "obligation", arnaqu: "arnaque" };
-let ACAIDX = null;
-function chercheLecons(q, n = 3) {
-  if (!ACA) return [];
-  const mots = t => [...new Set(norm(t).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(w => w.length > 1).map(w => w.replace(/(s|x)$/, "")))];
-  if (!ACAIDX) { const docs = ACA.modules.flatMap(m => m.lecons.map(l => ({ m, l, T: mots(l.titre + " " + l.id.replace(/-/g, " ")), Rz: mots(l.resume + " " + (l.a_retenir || []).join(" ")), P: mots(l.paragraphes.join(" ") + " " + (l.exemple || "")) })));
-    ACAIDX = { docs, N: docs.length }; }
-  const has = (arr, t) => arr.some(w => w === t || (t.length >= 4 && w.startsWith(t)));
-  const toks = [...new Set(norm(q).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(t => t.length > 1 && !STOPW.has(t)).map(t => t.replace(/(s|x)$/, "")).map(t => SYNW[t] || t))];
-  if (!toks.length) return [];
-  const idf = t => { const df = ACAIDX.docs.filter(d => has(d.T, t) || has(d.Rz, t) || has(d.P, t)).length; return df ? Math.log(1 + ACAIDX.N / df) : 0; };
-  const W = Object.fromEntries(toks.map(t => [t, idf(t)]));
-  const sc = ACAIDX.docs.map(d => { let s = 0, hitT = 0; toks.forEach(t => { const w = W[t]; if (has(d.T, t)) { s += 4 * w; hitT++; } if (has(d.Rz, t)) s += 2 * w; if (has(d.P, t)) s += w; }); if (hitT > 1) s *= 1.3; return { m: d.m, l: d.l, s: s / Math.sqrt(toks.length) }; });
-  const best = sc.sort((a, b) => b.s - a.s);
-  return best.slice(0, n).filter(x => x.s >= 4 && x.s >= best[0].s * 0.45);
-}
 function leconsHTML(hits) {
   return `<div class="acahits">${hits.map(({ m, l }, i) => `<div class="acahit${i ? "" : " top"}"><p class="kick">${esc(m.titre)}</p><h3><a href="/academie/${m.id}/${l.id}">${esc(l.titre)}</a></h3><p>${esc(l.resume)}</p>${i === 0 && !acaLocked(l) && (l.a_retenir || []).length ? `<ul>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}<a class="more" href="/academie/${m.id}/${l.id}">Lire la leçon${acaLocked(l) ? " (Premium)" : ""} →</a></div>`).join("")}</div>`;
 }
