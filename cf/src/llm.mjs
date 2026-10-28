@@ -13,6 +13,8 @@
 
 const TODAY = () => new Date().toISOString().slice(0, 10);
 let ready = false;
+export const DIAG = [];
+const note = m => { DIAG.push(String(m).slice(0, 160)); if (DIAG.length > 6) DIAG.shift(); };
 async function init(db) { if (ready || !db) return; await db.prepare(`CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)`).run(); ready = true; }
 async function neuronesUtilises(env) { await init(env.DB); const r = env.DB ? await env.DB.prepare(`SELECT n FROM ia_neurones WHERE jour = ?`).bind(TODAY()).first() : null; return r ? r.n : 0; }
 async function ajouterNeurones(env, n) { if (!env.DB || !(n > 0)) return; await init(env.DB); await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(TODAY(), n, n).run(); }
@@ -30,9 +32,9 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
   try {
     const r = await fetch(url, { method: "POST", signal: ctl.signal, headers: { authorization: "Bearer " + key, "content-type": "application/json" },
       body: JSON.stringify({ model, messages, max_tokens, temperature, ...(json ? { response_format: { type: "json_object" } } : {}) }) });
-    if (!r.ok) return null;
+    if (!r.ok) { note(url.split('/')[2] + " " + r.status); return null; }
     const j = await r.json(); return nettoie(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
-  } catch (e) { return null; } finally { clearTimeout(t); }
+  } catch (e) { note("fetch " + e.message); return null; } finally { clearTimeout(t); }
 }
 
 const FOURNISSEURS = [
@@ -42,7 +44,7 @@ const FOURNISSEURS = [
     const plafond = +env.IA_NEURONES_JOUR || 10000;
     for (const [model, cin, cout] of CF) {
       const estime = (approxTokens(messages.map(x => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
-      if ((await neuronesUtilises(env)) + estime > plafond) continue;
+      if ((await neuronesUtilises(env)) + estime > plafond) { note(model + " plafond"); continue; }
       try {
         const msgs = model.includes("qwen3") ? messages.map((x, i) => i === messages.length - 1 ? { ...x, content: x.content + "\n/no_think" } : x) : messages;
         const out = await env.AI.run(model, { messages: msgs, max_tokens, temperature });
@@ -50,7 +52,8 @@ const FOURNISSEURS = [
         const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
         await ajouterNeurones(env, reel);
         if (txt && txt.length > 15) return txt;
-      } catch (e) { }
+        note(model + " vide : " + JSON.stringify(out).slice(0, 120));
+      } catch (e) { note(model + " " + (e.message || e)); }
     }
     return null;
   }],

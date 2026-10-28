@@ -1,7 +1,7 @@
 // /api/demande : « Demander à bilan. ». Le modèle traduit la question en une action que le navigateur exécute
 // sur les données du site (recherche d'entreprises par critères, comparaison, fiche, ETF) ou rédige une explication.
 // Les résultats eux-mêmes sont calculés par le site, jamais inventés par le modèle.
-import { rediger, jsonDe } from "./llm.mjs";
+import { rediger, jsonDe, DIAG } from "./llm.mjs";
 import { quota, quotaError, json } from "./compte.mjs";
 import { SECTEURS } from "./index.gen.mjs";
 
@@ -45,7 +45,7 @@ export async function demande(request, env) {
   const qq = await quota(request, env, "demande"); if (!qq.ok) return quotaError(qq, "questions à l'IA");
   const t = await rediger(env, { systeme: SYS, utilisateur: q, max_tokens: 500, temperature: 0.1, json: true });
   const a = valide(jsonDe(t));
-  if (!a) return json({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : « entreprises françaises peu endettées qui versent un dividende »." : "L'IA est très demandée en ce moment : réessayez dans quelques instants." }, t ? 422 : 503);
+  if (!a) return json({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : « entreprises françaises peu endettées qui versent un dividende »." : "L'IA est très demandée en ce moment : réessayez dans quelques instants.", diag: DIAG.slice(-3) }, t ? 422 : 503);
   if (env.DB) { try { await env.DB.prepare(`INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)`).bind(key, JSON.stringify(a), Date.now()).run(); } catch (e) { } }
   return json(a);
 }

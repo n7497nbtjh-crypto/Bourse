@@ -273,7 +273,9 @@ async function cours(request, ctx) {
 }
 
 // cf/src/llm.mjs
-var TODAY = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), ready2 = !1;
+var TODAY = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), ready2 = !1, DIAG = [], note = (m) => {
+  DIAG.push(String(m).slice(0, 160)), DIAG.length > 6 && DIAG.shift();
+};
 async function init2(db) {
   ready2 || !db || (await db.prepare("CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)").run(), ready2 = !0);
 }
@@ -298,11 +300,12 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
       headers: { authorization: "Bearer " + key, "content-type": "application/json" },
       body: JSON.stringify({ model, messages, max_tokens, temperature, ...json4 ? { response_format: { type: "json_object" } } : {} })
     });
-    if (!r.ok) return null;
+    if (!r.ok)
+      return note(url.split("/")[2] + " " + r.status), null;
     let j = await r.json();
     return nettoie(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
-  } catch {
-    return null;
+  } catch (e) {
+    return note("fetch " + e.message), null;
   } finally {
     clearTimeout(t);
   }
@@ -314,13 +317,18 @@ var FOURNISSEURS = [
     let plafond = +env.IA_NEURONES_JOUR || 1e4;
     for (let [model, cin, cout] of CF) {
       let estime = (approxTokens(messages.map((x) => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
-      if (!(await neuronesUtilises(env) + estime > plafond))
-        try {
-          let msgs = model.includes("qwen3") ? messages.map((x, i) => i === messages.length - 1 ? { ...x, content: x.content + `
+      if (await neuronesUtilises(env) + estime > plafond) {
+        note(model + " plafond");
+        continue;
+      }
+      try {
+        let msgs = model.includes("qwen3") ? messages.map((x, i) => i === messages.length - 1 ? { ...x, content: x.content + `
 /no_think` } : x) : messages, out = await env.AI.run(model, { messages: msgs, max_tokens, temperature }), txt = nettoie(out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content)), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
-          if (await ajouterNeurones(env, reel), txt && txt.length > 15) return txt;
-        } catch {
-        }
+        if (await ajouterNeurones(env, reel), txt && txt.length > 15) return txt;
+        note(model + " vide : " + JSON.stringify(out).slice(0, 120));
+      } catch (e) {
+        note(model + " " + (e.message || e));
+      }
     }
     return null;
   }]
@@ -1277,7 +1285,7 @@ async function demande(request, env) {
   let qq = await quota(request, env, "demande");
   if (!qq.ok) return quotaError(qq, "questions \xE0 l'IA");
   let t = await rediger(env, { systeme: SYS2, utilisateur: q, max_tokens: 500, temperature: 0.1, json: !0 }), a = valide(jsonDe(t));
-  if (!a) return json2({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : \xAB entreprises fran\xE7aises peu endett\xE9es qui versent un dividende \xBB." : "L'IA est tr\xE8s demand\xE9e en ce moment : r\xE9essayez dans quelques instants." }, t ? 422 : 503);
+  if (!a) return json2({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : \xAB entreprises fran\xE7aises peu endett\xE9es qui versent un dividende \xBB." : "L'IA est tr\xE8s demand\xE9e en ce moment : r\xE9essayez dans quelques instants.", diag: DIAG.slice(-3) }, t ? 422 : 503);
   if (env.DB)
     try {
       await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, JSON.stringify(a), Date.now()).run();
