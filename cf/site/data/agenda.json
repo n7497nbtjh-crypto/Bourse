@@ -1,0 +1,16 @@
+{
+  "note": "Dates relevées à la main sur les calendriers financiers officiels des sociétés. Ajouter une ligne par événement, avec la source.",
+  "events": [
+    { "id": "totalenergies", "date": "2026-10-29", "type": "Résultats", "label": "Résultats du 3e trimestre 2026", "source": "https://totalenergies.com/fr/actualites/agenda" },
+    { "id": "totalenergies", "date": "2026-12-31", "type": "Dividende", "label": "Détachement du 2e acompte sur dividende (exercice 2026)", "source": "https://totalenergies.com/fr/actualites/agenda" },
+    { "id": "totalenergies", "date": "2027-02-10", "type": "Résultats", "label": "Résultats du 4e trimestre et de l'année 2026", "source": "https://totalenergies.com/fr/actualites/agenda" },
+    { "id": "totalenergies", "date": "2027-03-31", "type": "Dividende", "label": "Détachement du 3e acompte sur dividende (exercice 2026)", "source": "https://totalenergies.com/fr/actualites/agenda" },
+    { "id": "totalenergies", "date": "2027-04-23", "type": "Résultats", "label": "Résultats du 1er trimestre 2027", "source": "https://totalenergies.com/fr/actualites/agenda" },
+    { "id": "totalenergies", "date": "2027-05-21", "type": "Assemblée", "label": "Assemblée générale 2027", "source": "https://totalenergies.com/fr/actualites/agenda" },
+    { "id": "totalenergies", "date": "2027-06-30", "type": "Dividende", "label": "Détachement du solde du dividende (exercice 2026)", "source": "https://totalenergies.com/fr/actualites/agenda" },
+    { "id": "sanofi", "date": "2026-10-30", "type": "Résultats", "label": "Résultats du 3e trimestre 2026", "source": "https://www.sanofi.com/en/investors/financial-results-and-events/financial-calendar/" },
+    { "id": "sanofi", "date": "2027-01-28", "type": "Résultats", "label": "Résultats du 4e trimestre et de l'année 2026", "source": "https://www.sanofi.com/en/investors/financial-results-and-events/financial-calendar/" },
+    { "id": "sanofi", "date": "2027-04-23", "type": "Résultats", "label": "Résultats du 1er trimestre 2027", "source": "https://www.sanofi.com/en/investors/financial-results-and-events/financial-calendar/" },
+    { "id": "sanofi", "date": "2027-07-29", "type": "Résultats", "label": "Résultats du 2e trimestre 2027", "source": "https://www.sanofi.com/en/investors/financial-results-and-events/financial-calendar/" }
+  ]
+}

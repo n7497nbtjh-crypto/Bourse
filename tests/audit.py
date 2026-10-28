@@ -1,0 +1,86 @@
+# Parcourt toutes les pages à 1440, 375 et 340 px : débordement horizontal, erreurs JavaScript, contenu vide.
+# Usage : python3 tests/audit.py [--shots dossier]
+import os, sys, json
+from playwright.sync_api import sync_playwright
+root = os.path.abspath("cf/site")
+FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
+shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
+data = json.load(open(os.path.join(root, "data/demo.json")))
+pages = ["/", "/actualites", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/passe", "/simulateurs/interets", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/une-fois", "/mentions-legales", "/page-inconnue"]
+FIX = os.path.abspath("tests/fixtures/site")
+pages += [f"/entreprise/{i}{t}" for i in ("exemple", "lvmh", "totalenergies", "bnp-paribas") for t in ("", "/comptes", "/actualite", "/agenda")]
+AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
+                 {"date": "2026-10-27T17:45:00", "company": "LVMH MOET HENNESSY LOUIS VUITTON", "title": "Déclaration des transactions sur actions propres", "type": "Rachat d'actions", "url": ""}] * 4}
+def route(r):
+    u = r.request.url
+    if "/api/amf" in u: return r.fulfill(json=AMF)
+    if "tradingview.com" in u: return r.fulfill(body="", content_type="text/javascript")
+    if "/data/societes" in u:
+        f = os.path.join(FIX, u.split("/data/", 1)[1].split("?")[0])
+        return r.fulfill(path=f) if os.path.isfile(f) else r.fulfill(status=404, body="")
+    if "fonts.googleapis.com" in u:
+        if not FONT: return r.fulfill(body="", content_type="text/css")
+        css = "".join(f"@font-face{{font-family:'Instrument Serif';font-style:{s};font-weight:400;src:url(https://fonts.gstatic.com/{f}) format('woff2')}}" for s, f in [("normal", "instrument-serif-latin-400-normal.woff2"), ("italic", "instrument-serif-latin-400-italic.woff2")])
+        return r.fulfill(body=css, content_type="text/css")
+    if "fonts.gstatic.com" in u:
+        f = os.path.join(FONT or "", u.rsplit("/", 1)[1]); return r.fulfill(path=f) if FONT and os.path.isfile(f) else r.fulfill(status=404, body="")
+    path = u.split("//t.local", 1)[1].split("#")[0].split("?")[0]
+    f = os.path.join(root, path.lstrip("/"))
+    if os.path.isfile(f): return r.fulfill(path=f)
+    if "." in path.rsplit("/", 1)[-1]: return r.fulfill(status=404, body="")
+    return r.fulfill(path=os.path.join(root, "index.html"))
+CHECK = r"""(W) => {
+  const p = [];
+  if (document.documentElement.scrollWidth > W + 1) p.push('page plus large que l\'écran : ' + document.documentElement.scrollWidth);
+  document.querySelectorAll('main *').forEach(e => {
+    if (e.closest('.scroll-x,.tabs,.chart,.bars,.filters,.qtabs')) return;
+    const r = e.getBoundingClientRect(); if (r.width && r.right > W + 1) p.push('dépasse : ' + e.tagName + '.' + String(e.className).slice(0, 24));
+  });
+  if (!document.querySelector('#app').textContent.trim()) p.push('page vide');
+  if (document.querySelector('#app').textContent.includes('NaN') || document.querySelector('#app').textContent.includes('undefined')) p.push('NaN ou undefined affiché');
+  return [...new Set(p)].slice(0, 6);
+}"""
+bad = 0
+with sync_playwright() as pw:
+    b = pw.chromium.launch()
+    for name, opts in [("ordi", dict(viewport={"width": 1440, "height": 900})), ("tel", dict(viewport={"width": 375, "height": 812}, has_touch=True, is_mobile=True, device_scale_factor=2)), ("petit", dict(viewport={"width": 340, "height": 700}, has_touch=True, is_mobile=True))]:
+        ctx = b.new_context(**opts); pg = ctx.new_page(); errs = []
+        pg.on("pageerror", lambda e: errs.append(str(e)))
+        pg.on("console", lambda m: m.type == "error" and errs.append(m.text))
+        pg.route("**/*", route)
+        probs = {}
+        for path in pages:
+            pg.goto("http://t.local" + path); pg.wait_for_timeout(450)
+            p = pg.evaluate(CHECK, opts["viewport"]["width"])
+            if p: probs[path] = p
+            if shots and name != "petit" and path in ("/", "/entreprise/exemple", "/entreprise/exemple/comptes", "/entreprise/totalenergies/agenda", "/actualites", "/agenda", "/simulateurs/passe", "/portefeuille"):
+                os.makedirs(shots, exist_ok=True)
+                pg.screenshot(path=f"{shots}/{name}{(path.replace('/', '_').replace('?', '_') if path != '/' else '_accueil')}.png", full_page=True)
+        # Portefeuille : ajout d'une opération
+        pg.goto("http://t.local/portefeuille"); pg.wait_for_timeout(300)
+        pg.fill("#op", "100"); pg.click("#oadd"); pg.wait_for_timeout(200)
+        if "Aucune opération" in pg.inner_text("#pfbody"): probs["/portefeuille (ajout)"] = ["l'opération n'a pas été ajoutée"]
+        p = pg.evaluate(CHECK, opts["viewport"]["width"])
+        if p: probs["/portefeuille après ajout"] = p
+        if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
+        # Définition : ouverture de la bulle
+        pg.goto("http://t.local/entreprise/exemple/comptes"); pg.wait_for_timeout(300)
+        pg.click(".def[data-def=marge]"); pg.wait_for_timeout(150)
+        if not pg.evaluate("document.getElementById('pop').classList.contains('open')"): probs["définition"] = ["la bulle ne s'ouvre pas"]
+        p = pg.evaluate(CHECK, opts["viewport"]["width"])
+        if p: probs["chiffres + bulle"] = p
+        if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_definition.png")
+        # Simulation : ajout de lignes
+        pg.goto("http://t.local/simulateurs/passe"); pg.wait_for_timeout(300)
+        pg.click("#addL"); pg.click("#addL"); pg.fill(".ln:nth-child(2) input", "30"); pg.fill(".ln:nth-child(3) input", "20"); pg.fill(".ln:nth-child(1) input", "50"); pg.wait_for_timeout(200)
+        p = pg.evaluate(CHECK, opts["viewport"]["width"])
+        if p: probs["/simulateurs/passe (3 lignes)"] = p
+        if shots and name == "ordi": pg.screenshot(path=f"{shots}/{name}_sim3.png", full_page=True)
+        ectx = [e for e in errs if "fonts" not in e and "404" not in e]
+        print(f"== {name} : {len(pages)} pages, problèmes : {len(probs)}, erreurs JS : {len(ectx)}")
+        for k, v in probs.items(): print("  ", k, v)
+        for e in ectx[:5]: print("   erreur :", e)
+        bad += len(probs) + len(ectx)
+        ctx.close()
+    b.close()
+sys.exit(1 if bad else 0)
