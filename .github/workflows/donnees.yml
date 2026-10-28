@@ -8,7 +8,7 @@
 #   CLOUDFLARE_API_TOKEN  : jeton Cloudflare avec le droit « Cloudflare Pages : Edit »
 #   CLOUDFLARE_ACCOUNT_ID : identifiant du compte Cloudflare
 # Sans ces secrets, le site reste à déposer à la main (fichier « repere-site » dans Artifacts).
-# Pas de _routes.json : Cloudflare le refuse en dépôt direct ; le Worker trie lui-même les requêtes.
+# _routes.json : les fichiers de données (/data/*) sont servis directement, sans passer par le Worker (quota gratuit préservé).
 name: Mise à jour des données
 on:
   workflow_dispatch: {}
