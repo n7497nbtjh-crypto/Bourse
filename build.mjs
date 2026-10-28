@@ -12,10 +12,6 @@ import { copyFileSync, existsSync, readFileSync, writeFileSync as wfs } from "no
   wfs("cf/site/data/agenda.json", JSON.stringify({ note: base.note, events: ev })); }
 if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "cf/site/data/segments-fr.json");
 { const { gfCsv, INDICES } = await import("./data/gf.mjs"); const UNI = (await import("./data/univers.mjs")).default; const EL = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; wfs("cf/site/data/gf.csv", gfCsv(UNI, EL, INDICES)); }
-{ // consignes des modèles, partagées avec l'IA qui tourne dans le navigateur des visiteurs
-  const ia = await import("./cf/src/ia.mjs"), dm = await import("./cf/src/demande.mjs");
-  wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF }));
-}
 for (const f of ["parcours", "commencer", "legal", "academie"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
 if (existsSync("data/concurrents.json")) wfs("cf/site/data/concurrents.json", readFileSync("data/concurrents.json", "utf8"));
 { const R = {}; for (const f of ["france", "europe", "us"]) if (existsSync(`data/repartitions/${f}.mjs`)) Object.assign(R, (await import(`./data/repartitions/${f}.mjs`)).default); wfs("cf/site/data/repartitions.json", JSON.stringify(R)); }
@@ -30,5 +26,9 @@ writeFileSync("cf/site/sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<u
 writeFileSync("cf/site/robots.txt", `User-agent: *\nDisallow: /api/\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 { const { default: U, SECTEURS } = await import("./data/univers.mjs");
   wfs("cf/src/index.gen.mjs", "// Fichier fabriqué par build.mjs : la liste minimale des entreprises pour le Worker.\nexport const SECTEURS = " + JSON.stringify(SECTEURS) + ";\nexport default " + JSON.stringify(U.map(({ id, name, sector, desc, region, isin }) => ({ id, name, sector, desc, region, isin }))) + ";\n"); }
+{ // consignes des modèles, partagées avec l'IA qui tourne dans le navigateur des visiteurs
+  const ia = await import("./cf/src/ia.mjs"), dm = await import("./cf/src/demande.mjs");
+  wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF }));
+}
 execSync("npx --yes esbuild@0.24.0 cf/src/worker.mjs --bundle --format=esm --minify-syntax --outfile=cf/site/_worker.js", { stdio: "inherit" });
 console.log(paths.length, "pages dans le sitemap");
