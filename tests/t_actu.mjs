@@ -1,0 +1,10 @@
+import assert from "node:assert";
+import { extractEN, extractFR, htmlText, money, pctS } from "../data/actu_analyse.mjs";
+const en = extractEN(htmlText(`<p>NVIDIA Announces Financial Results for Third Quarter Fiscal 2026</p><p>Record revenue of $57.0 billion, up 22% from Q2 and up 62% from a year ago. GAAP net income was $31.9 billion, up 65% from a year ago.</p><p>GAAP earnings per diluted share for the quarter were $1.30, up 67% from a year ago.</p><p>Outlook: Revenue is expected to be $65.0 billion, plus or minus 2%.</p>`));
+assert.equal(en.ca.v, 57e9); assert.ok(Math.abs(en.ca.g - 0.62) < 1e-9); assert.ok(en.net.v === 31.9e9 && Math.abs(en.net.g - 0.65) < 1e-9);
+assert.equal(en.eps.v, 1.3); assert.equal(en.prevision.v, 65e9);
+const fr = extractFR(`Paris, le 21 octobre 2026. Au troisième trimestre 2026, le chiffre d'affaires du Groupe s'établit à 6 742 millions d'euros, en hausse de 3,1 % en données publiées. Le Groupe confirme son objectif d'amélioration de la marge opérationnelle en 2026. Le résultat net atteint 1,2 milliard d'euros, en baisse de 4 %.`);
+assert.equal(fr.ca.v, 6742e6); assert.ok(Math.abs(fr.ca.g - 0.031) < 1e-9); assert.equal(fr.ca.q, "trimestre");
+assert.equal(fr.net.v, 1.2e9); assert.ok(Math.abs(fr.net.g + 0.04) < 1e-9); assert.ok(fr.objectif);
+assert.equal(money(57e9), "57,0 Md$"); assert.equal(pctS(0.62), "+62 %");
+console.log("t_actu ok");
