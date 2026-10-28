@@ -29,8 +29,11 @@ export async function getJSON(fetchFn, url, accept = "application/json") {
 }
 
 // ISIN -> LEI (GLEIF)
-export async function leiFromIsin(fetchFn, isin) {
-  const j = await getJSON(fetchFn, `https://api.gleif.org/api/v1/lei-records?filter[isin]=${isin}`, "application/vnd.api+json");
+export async function leiFromIsin(fetchFn, isin, name) {
+  let j = await getJSON(fetchFn, `https://api.gleif.org/api/v1/lei-records?filter[isin]=${isin}`, "application/vnd.api+json");
+  if ((!j || !j.data || !j.data.length) && name) { // repli : recherche par nom légal dans le pays de l'ISIN
+    j = await getJSON(fetchFn, `https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=${encodeURIComponent(name)}&filter[entity.legalAddress.country]=${isin.slice(0, 2)}&filter[entity.status]=ACTIVE`, "application/vnd.api+json");
+  }
   const rec = j && j.data && j.data[0];
   return rec ? { lei: rec.id, legalName: rec.attributes && rec.attributes.entity && rec.attributes.entity.legalName && rec.attributes.entity.legalName.name } : null;
 }
@@ -59,7 +62,7 @@ export async function filingsFor(fetchFn, lei, max = 3) {
 const abs = u => u.startsWith("http") ? u : "https://filings.xbrl.org" + (u.startsWith("/") ? "" : "/") + u;
 
 export async function collectOne(fetchFn, c) {
-  const id = await leiFromIsin(fetchFn, c.isin);
+  const id = c.lei ? { lei: c.lei, legalName: c.name } : await leiFromIsin(fetchFn, c.isin, c.legal || c.name);
   if (!id) throw new Error("LEI introuvable pour " + c.isin);
   const fl = await filingsFor(fetchFn, id.lei);
   if (!fl.length) throw new Error("aucun rapport ESEF pour " + id.lei);
@@ -80,7 +83,7 @@ export function summary(c) {
   return {
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, sector: c.sector, currency: c.currency,
     year: c.years[L] ?? null, ca: at("ca"), caPrev: at("ca", L - 1), ebit: at("ebit"), net: at("net"), equity: at("equity"),
-    netDebt: at("netDebt"), ebitda: at("ebitda"), dps: at("dps"), eps: at("eps"),
+    netDebt: at("netDebt"), ebitda: at("ebitda"), dps: at("dps") ?? at("dpsEst"), eps: at("eps"),
   };
 }
 

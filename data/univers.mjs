@@ -9,7 +9,7 @@ export default [
   { id: "accor", name: "Accor", ticker: "AC", isin: "FR0000120404", sector: "conso" },
   { id: "air-liquide", name: "Air Liquide", ticker: "AI", isin: "FR0000120073", sector: "materiaux" },
   { id: "airbus", name: "Airbus", ticker: "AIR", isin: "NL0000235190", sector: "industrie" },
-  { id: "arcelormittal", name: "ArcelorMittal", ticker: "MT", isin: "LU1598757687", sector: "materiaux" },
+  { id: "arcelormittal", name: "ArcelorMittal", legal: "ArcelorMittal", ticker: "MT", isin: "LU1598757687", sector: "materiaux" },
   { id: "axa", name: "AXA", ticker: "CS", isin: "FR0000120628", sector: "finance" },
   { id: "biomerieux", name: "bioMérieux", ticker: "BIM", isin: "FR0013280286", sector: "sante" },
   { id: "bnp-paribas", name: "BNP Paribas", ticker: "BNP", isin: "FR0000131104", sector: "finance" },

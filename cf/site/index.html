@@ -644,8 +644,8 @@ function synthese(s, c) {
   if (m.marge != null || net != null) rows.push(["Rentabilité", `${m.marge != null ? `${def("marge", "Marge d'exploitation")} de ${pct(m.marge, 1, false)}${med.marge != null && med.n > 1 ? `${cmp(m.marge, med.marge, 0.01)} ${def("mediane", "médiane du secteur")} (${pct(med.marge, 1, false)})` : ""}. ` : ""}${net != null ? `${def("net", "Résultat net")} de ${big(net, cur)}${net0 ? `, ${verb(net / net0 - 1, "en hausse", "en baisse")} de ${pct(Math.abs(net / net0 - 1), 1, false)}` : ""}.` : ""}`]);
   if (s.sector === "finance") rows.push(["Solidité", `Banque ou assurance : le ratio dette nette sur EBITDA ne s'applique pas.${m.roe != null ? ` ${def("roe", "Rentabilité des capitaux propres")} : ${pct(m.roe, 1, false)}.` : ""}`]);
   else if (m.lev != null) rows.push(["Solidité", `${def("dettenette", "Dette nette")} estimée à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} d'${def("ebitda", "EBITDA")} (le seuil de 2 sert souvent de repère).${at(c, "fcf", L) != null ? ` ${def("fcf", "Flux de trésorerie disponible")} : ${big(at(c, "fcf", L), cur)}.` : ""}`]);
-  const dps = at(c, "dps", L);
-  if (dps != null) rows.push(["Dividende", `${def("dps", "Dividende")} versé pendant l'exercice ${y} : ${eur(dps, 2, cur)} par action.${at(c, "eps", L) ? ` ${def("bnpa", "BNPA")} : ${eur(at(c, "eps", L), 2, cur)}.` : ""}`]);
+  const dpsP = at(c, "dps", L), dps = dpsP ?? at(c, "dpsEst", L);
+  if (dps != null) rows.push(["Dividende", `${def("dps", "Dividende")} versé pendant l'exercice ${y} : ${dpsP == null ? "environ " : ""}${eur(dps, 2, cur)} par action.${at(c, "eps", L) ? ` ${def("bnpa", "BNPA")} : ${eur(at(c, "eps", L), 2, cur)}.` : ""}`]);
   const ev = eventsOf(s.id).find(e => e.date >= TODAY);
   if (ev) rows.push(["À suivre", `${esc(ev.label)} le ${dLabel(ev.date)}.`]);
   return rows.length ? `<div class="syn"><dl>${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></div>` : `<div class="empty">Les chiffres standard de cette entreprise ne sont pas disponibles.</div>`;
@@ -663,7 +663,7 @@ function tabSynthese(s, c, el) {
       ${kv(def("net"), big(at(c, "net", L), cur), at(c, "eps", L) != null ? `BNPA : ${eur(at(c, "eps", L), 2, cur)}` : "")}
       ${kv(def("roe"), pct(m.roe, 1, false), mm(med.roe, v => pct(v, 1, false)))}
       ${s.sector === "finance" ? "" : kv(def("lev"), m.lev == null ? "–" : F1.format(m.lev), mm(med.lev, v => F1.format(v)))}
-      ${kv(def("dps"), eur(at(c, "dps", L), 2, cur), "versé pendant l'exercice")}
+      ${kv(def("dps"), eur(at(c, "dps", L) ?? at(c, "dpsEst", L), 2, cur), at(c, "dps", L) == null && at(c, "dpsEst", L) != null ? "versé pendant l'exercice, estimé" : "versé pendant l'exercice")}
     </table><div class="src">Exercice ${c.years[L]}. Cliquez sur un intitulé pour sa définition.</div>`;
   }
   el.innerHTML = `
@@ -709,7 +709,7 @@ function tabComptes(s, c, el) {
         ${has("net") && has("equity") ? r("roe", "Rentabilité des capitaux propres", div(f.net, f.equity), v => pct(v, 1, false), mref(med.roe, v => pct(v, 1, false))) : ""}
         ${grp("Par action")}
         ${has("eps") ? r("bnpa", "Bénéfice net par action", f.eps, ps) : ""}
-        ${has("dps") ? r("dps", "Dividende versé par action", f.dps, ps) : ""}
+        ${has("dps") ? r("dps", "Dividende versé par action", f.dps, ps) : has("dpsEst") ? r("dps", "Dividende versé par action (estimé)", f.dpsEst, ps) : ""}
         ${has("divPaid") && has("net") ? r("payout", "Taux de distribution", div(f.divPaid, f.net), v => pct(v, 0, false)) : ""}
         ${grp("Bilan et trésorerie")}
         ${has("equity") ? r("capitaux", "Capitaux propres", f.equity, money) : ""}

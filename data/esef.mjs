@@ -4,7 +4,7 @@
 
 // Pour chaque indicateur : les étiquettes IFRS acceptées, dans l'ordre de préférence.
 export const CONCEPTS = {
-  ca: ["ifrs-full:Revenue", "ifrs-full:RevenueFromContractsWithCustomers"],
+  ca: ["ifrs-full:Revenue", "ifrs-full:RevenueFromContractsWithCustomers", "ifrs-full:RevenueFromSaleOfGoods"],
   ebit: ["ifrs-full:ProfitLossFromOperatingActivities"],
   net: ["ifrs-full:ProfitLossAttributableToOwnersOfParent", "ifrs-full:ProfitLoss"],
   eps: ["ifrs-full:BasicEarningsLossPerShare", "ifrs-full:BasicEarningsLossPerShareFromContinuingOperations"],
@@ -15,7 +15,7 @@ export const CONCEPTS = {
   cfo: ["ifrs-full:CashFlowsFromUsedInOperatingActivities"],
   capexPpe: ["ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities", "ifrs-full:PurchaseOfPropertyPlantAndEquipment"],
   capexInt: ["ifrs-full:PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities", "ifrs-full:PurchaseOfIntangibleAssets"],
-  da: ["ifrs-full:DepreciationAndAmortisationExpense", "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss"],
+  da: ["ifrs-full:DepreciationAndAmortisationExpense", "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss", "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpense", "ifrs-full:AdjustmentsForDepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss"],
   debtTotal: ["ifrs-full:Borrowings"],
   debtLong: ["ifrs-full:NoncurrentPortionOfNoncurrentBorrowings", "ifrs-full:LongtermBorrowings"],
   debtShortAll: ["ifrs-full:CurrentBorrowingsAndCurrentPortionOfNoncurrentBorrowings"],
@@ -71,6 +71,8 @@ export function extract(doc) {
     if (debt != null) { r.debt = debt; if (r.cash != null) r.netDebt = debt - r.cash; }
     if (r.ebit != null && r.da != null) r.ebitda = r.ebit + Math.abs(r.da);
     if (r.divPaid != null) r.divPaid = Math.abs(r.divPaid);
+    // Dividende par action estimé quand il n'est pas publié : dividendes versés ÷ nombre d'actions (résultat net ÷ BNPA)
+    if (r.dps == null && r.divPaid != null && r.eps && r.net) { const shares = r.net / r.eps; if (shares > 0) r.dpsEst = r.divPaid / shares; }
     for (const k of ["capexPpe", "capexInt", "debtTotal", "debtLong", "debtShortAll", "debtShort", "debtCurLong", "da"]) delete r[k];
   }
   return { currency: currency || "EUR", fyEnd, years };
@@ -90,7 +92,7 @@ export function merge(reports) {
 }
 
 // Mise en forme pour le site : années triées, une série par indicateur.
-export const KEYS = ["ca", "ebit", "net", "eps", "dps", "divPaid", "equity", "cash", "debt", "netDebt", "ebitda", "cfo", "fcf"];
+export const KEYS = ["ca", "ebit", "net", "eps", "dps", "dpsEst", "divPaid", "equity", "cash", "debt", "netDebt", "ebitda", "cfo", "fcf"];
 export function toSeries(merged, maxYears = 5) {
   const ys = Object.keys(merged.years).map(Number).filter(y => merged.years[y].ca != null || merged.years[y].net != null).sort().slice(-maxYears);
   const fin = {};
