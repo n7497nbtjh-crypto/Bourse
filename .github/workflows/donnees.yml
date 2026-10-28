@@ -33,8 +33,10 @@ jobs:
           node-version: 22
       - name: Collecte (GLEIF, filings.xbrl.org, SEC)
         env:
-          CONTACT: ${{ vars.CONTACT }}
-        run: node data/fetch_data.mjs
+          CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
+        run: |
+          if [ -n "$CONTACT" ]; then echo "Contact SEC : renseigné"; else echo "::warning::Contact SEC absent : ajoutez la variable CONTACT (Settings > Secrets and variables > Actions > Variables)"; fi
+          node data/fetch_data.mjs
       - name: Construction et tests
         run: |
           node build.mjs
