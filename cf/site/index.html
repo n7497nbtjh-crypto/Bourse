@@ -999,6 +999,54 @@ mark.nm{background:linear-gradient(transparent 55%,#D6F26B 55%);color:inherit;fo
 .acagrid .acacard:nth-child(8n+1) .acatop .n{background:#0E6B4A}.acagrid .acacard:nth-child(8n+2) .acatop .n{background:#2F5D8C}.acagrid .acacard:nth-child(8n+3) .acatop .n{background:#7A4E9C}.acagrid .acacard:nth-child(8n+4) .acatop .n{background:#B5651D}.acagrid .acacard:nth-child(8n+5) .acatop .n{background:#1E7A7A}.acagrid .acacard:nth-child(8n+6) .acatop .n{background:#8C2F4A}.acagrid .acacard:nth-child(8n+7) .acatop .n{background:#5A6B1E}.acagrid .acacard:nth-child(8n+8) .acatop .n{background:#B23A1E}
 @media (max-width:760px){.acatopbar{top:52px}.acacard2{padding:16px 16px 16px 50px}.acan{left:12px}.wenv{grid-template-columns:110px 1fr 70px;font-size:13px}.wdg{padding:18px 16px}}
 .iaplus{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}.iaplus .hbr{display:flex;flex-direction:column;padding:8px 26px 8px 0;border-bottom:1px solid var(--line);text-decoration:none;color:inherit;position:relative}.iaplus .hbr span{font-size:.85em;color:var(--grey)}
+
+@media (max-width:600px){.ess ul.facts li{grid-template-columns:1fr;gap:2px}.ess ul.facts .lbl{padding-top:0!important}}
+/* v13 : formation guidée en parcours visuel */
+.frmhero{display:grid;grid-template-columns:1fr 300px;gap:28px;align-items:center;margin:4px 0 20px}
+.frmhr{display:flex;flex-direction:column;align-items:center;gap:8px;text-align:center}.frmhr p{margin:0}
+.frmring{width:118px;height:118px}.frmring circle{fill:none;stroke-width:9}.frmring .bg{stroke:var(--line2)}.frmring .fg{stroke:#0E6B4A;stroke-linecap:round;transition:stroke-dasharray .5s}
+.frmring text{font:600 20px var(--mono);text-anchor:middle;dominant-baseline:middle;fill:var(--ink)}
+.frmstats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.frmstats span{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:12.5px;color:var(--grey);display:flex;flex-direction:column;min-width:74px}
+.frmstats b{font:600 20px var(--serif);color:var(--ink)}
+.frmroad{list-style:none;display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin:0 0 18px;padding:0;position:relative}
+.frmroad li{position:relative}.frmroad li:not(:last-child)::after{content:"";position:absolute;top:22px;left:calc(50% + 24px);right:calc(-50% + 24px);height:3px;border-radius:2px;background:var(--line)}
+.frmroad li.full:not(:last-child)::after{background:var(--wc)}
+.frmroad button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;text-align:center;padding:0 4px}
+.frmroad .dot{position:relative;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font:600 16px var(--mono);background:var(--card);border:2px solid var(--line);color:var(--ink);transition:transform .15s}
+.frmroad .dot i{position:absolute;inset:-5px;border-radius:50%;background:conic-gradient(var(--wc) var(--p),transparent 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 4px),#000 calc(100% - 3px))}
+.frmroad li.full .dot{background:var(--wc);border-color:var(--wc);color:#fff}
+.frmroad li.on .dot{transform:scale(1.12);border-color:var(--wc);box-shadow:0 0 0 5px color-mix(in srgb,var(--wc) 18%,transparent)}
+.frmroad .lb{font-size:12.5px;line-height:1.3;color:var(--grey);max-width:150px}.frmroad .lb small{display:block;font:11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--light)}
+.frmroad li.on .lb{color:var(--ink);font-weight:600}
+.frmweek{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow);border-top:5px solid var(--wc)}
+.frmwh{padding:20px 22px 14px}.frmwn{display:inline-block;background:var(--wc);color:#fff;font:600 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:4px 10px}
+.frmwh h2{font:600 26px/1.15 var(--serif);margin:10px 0 6px}.frmwh>p{color:var(--grey);margin:0 0 12px;max-width:720px}
+.frmchips{display:flex;flex-wrap:wrap;gap:8px}.frmchips span{display:inline-flex;align-items:center;gap:6px;font-size:13px;background:var(--page);border:1px solid var(--line2);border-radius:999px;padding:5px 11px}
+.frmchips svg,.frmgrp h3 .ic svg,.frmgoal .ic svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.frmwprog{display:flex;align-items:center;gap:10px;margin-top:12px;font-size:13px;color:var(--grey)}.frmwprog .feub{flex:1;max-width:320px}.frmwprog .feub .f{background:var(--wc)}
+.frmcols{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:0;border-top:1px solid var(--line2)}
+.frmgrp{padding:16px 18px;border-right:1px solid var(--line2)}.frmgrp:last-child{border-right:0}
+.frmgrp h3{display:flex;align-items:center;flex-wrap:wrap;gap:8px;font:600 16px var(--serif);margin:0 0 10px}.frmgrp h3 small{flex-basis:100%;font:400 12px var(--sans,inherit);color:var(--light)}
+.frmgrp h3 .ic{width:28px;height:28px;border-radius:8px;display:grid;place-items:center;background:color-mix(in srgb,var(--wc) 14%,transparent);color:var(--wc)}
+.frmtile{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line2);border-radius:12px;margin:0 0 8px;background:var(--page);text-decoration:none;color:inherit;transition:border-color .15s,transform .15s}
+a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
+.frmtile.lec{border-left:4px solid var(--mc)}.frmtile .tx{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}.frmtile .tx b{font-weight:600;font-size:14px;line-height:1.35}.frmtile .tx small{font-size:12.5px;color:var(--grey);line-height:1.4}
+.frmtile.lec .tx small{font:11px var(--mono);text-transform:uppercase;letter-spacing:.04em;color:var(--light)}
+.frmtile .st{width:22px;height:22px;flex:none;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:12px;color:#fff;margin-top:2px}
+.frmtile.ok .st{background:#0E6B4A;border-color:#0E6B4A}.frmtile.ok{background:color-mix(in srgb,#0E6B4A 6%,var(--card))}
+.frmtile .go{font-size:12.5px;font-weight:600;white-space:nowrap;align-self:center;color:var(--ink)}
+.frmtile.out{flex-wrap:wrap}.frmtile.out .go{flex-basis:100%;padding-left:32px}
+.frmtile .ck{position:relative;flex:none;margin-top:1px}.frmtile .ck input{position:absolute;opacity:0;width:22px;height:22px;margin:0;cursor:pointer}
+.frmtile .ck span{display:block;width:22px;height:22px;border-radius:7px;border:2px solid var(--line);background:var(--card)}
+.frmtile .ck input:checked+span{background:#0E6B4A;border-color:#0E6B4A}.frmtile .ck input:checked+span::after{content:"✓";color:#fff;font-size:13px;display:grid;place-items:center;height:100%}
+.frmtile .ck input:focus-visible+span{outline:2px solid var(--ink);outline-offset:2px}.frmtile .ck input:disabled+span{opacity:.5}
+.frmtile.ok .tx b{text-decoration:line-through;text-decoration-color:color-mix(in srgb,var(--ink) 35%,transparent)}
+.frmgoal{display:flex;gap:12px;align-items:flex-start;margin:0;padding:14px 22px;background:color-mix(in srgb,var(--wc) 8%,var(--card));border-top:1px solid var(--line2)}.frmgoal p{margin:0}.frmgoal .ic{color:var(--wc);margin-top:2px}
+.frmnav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 22px;border-top:1px solid var(--line2)}
+@media (max-width:900px){.frmhero{grid-template-columns:1fr}.frmhr{flex-direction:row;flex-wrap:wrap;justify-content:flex-start;text-align:left}.frmring{width:84px;height:84px}
+  .frmroad{display:flex;overflow-x:auto;gap:0;padding:6px 2px 4px;scroll-snap-type:x mandatory}.frmroad li{flex:0 0 104px;scroll-snap-align:start}.frmroad li:not(:last-child)::after{left:calc(50% + 24px);right:calc(-50% + 24px)}
+  .frmcols{grid-template-columns:1fr}.frmgrp{border-right:0;border-bottom:1px solid var(--line2)}.frmwh h2{font-size:22px}}
+@media (max-width:420px){.frmstats span{min-width:0;flex:1 1 28%}.frmnav .more{order:3;flex-basis:100%}}
 </style>
 </head>
 <body>
@@ -4246,16 +4294,53 @@ function pageFormation() {
   const F = ACA.formation; if (!F) return pageNotFound();
   setTitle(F.titre); setNav("aca");
   let st = {}; try { st = JSON.parse(localStorage.getItem(FKEY2) || "{}"); } catch (e) { }
-  const prem = isPrem(), lesson = ref => { const [mi, li] = String(ref).split("/"), [m, l] = acaFind(mi, li); return m && l ? { m, l } : null; };
-  const total = F.semaines.reduce((a, w) => a + w.etapes.length, 0), done = Object.keys(st).length;
-  app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › Formation guidée</div><div class="acahero"><p class="kick">Formation guidée${prem ? "" : " · Premium"}</p><h1 class="pagetitle">${esc(F.titre)}</h1><p class="pagesub">${esc(F.intro)}</p>
-      ${prem ? `<div class="acaprog"><div class="feub"><span class="f" style="width:${done / total * 100}%"></span></div><span>${done} / ${total} étapes faites</span></div>` : `<div class="acalock" style="margin-top:12px"><b>La formation guidée fait partie de Premium.</b><p>Six semaines, étape par étape : chaque semaine des leçons, un outil du site à utiliser sur votre propre cas, et une action concrète. Voici le programme.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`}</div>
-    ${F.semaines.map(w => `<section class="panel formw"><div class="ph"><h2>Semaine ${w.semaine} · ${esc(w.titre)}</h2></div><div class="pb"><p class="muted" style="margin-top:0">${esc(w.objectif)}</p>
-      ${w.etapes.map((e, j) => { const id = w.semaine + "-" + j, L = e.type === "lecon" ? lesson(e.ref) : null;
-        const label = e.type === "lecon" ? (L ? `Leçon : <a class="lnk" href="/academie/${L.m.id}/${L.l.id}">${esc(L.l.titre)}</a>` : esc(e.ref)) : e.type === "outil" ? `Outil : <a class="lnk" href="${esc(e.href)}">${esc(e.texte)}</a>` : `À faire : ${esc(e.texte)}`;
-        return `<label class="formstep${prem ? "" : " off"}"><input type="checkbox" data-step="${id}" ${st[id] ? "checked" : ""} ${prem ? "" : "disabled"}><span>${label}</span></label>`; }).join("")}
-      <p class="note">À la fin de la semaine : ${esc(w.bilan)}</p></div></section>`).join("")}`;
-  $$("[data-step]").forEach(c => c.onchange = () => { if (c.checked) st[c.dataset.step] = 1; else delete st[c.dataset.step]; try { localStorage.setItem(FKEY2, JSON.stringify(st)); } catch (e) { } });
+  const prem = isPrem(), lus = acaSt();
+  const lesson = ref => { const [mi, li] = String(ref).split("/"), [m, l] = acaFind(mi, li); return m && l ? { m, l, mi: ACA.modules.indexOf(m) } : null; };
+  const COLS = ["#0E6B4A", "#2F5D8C", "#7A4E9C", "#B5651D", "#1E7A7A", "#8C2F4A", "#5A6B1E", "#B23A1E"];
+  const ICO = { lecon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14C9.5 18 6.5 18 4 19.5zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z"/></svg>`,
+    outil: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg>`, action: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16zM14 6l3 3"/></svg>`,
+    flag: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>` };
+  const fait = (w, j, e) => e.type === "lecon" ? !!lus[e.ref] : !!st[w.semaine + "-" + j];
+  const semInfo = w => { const n = w.etapes.length, d = w.etapes.filter((e, j) => fait(w, j, e)).length;
+    const min = w.etapes.reduce((a, e) => a + (e.type === "lecon" ? ((lesson(e.ref) || {}).l || {}).duree_min || 6 : e.type === "outil" ? 10 : 15), 0);
+    const c = t => w.etapes.filter(e => e.type === t).length; return { n, d, min, le: c("lecon"), ou: c("outil"), ac: c("action") }; };
+  const infos = F.semaines.map(semInfo), total = infos.reduce((a, x) => a + x.n, 0);
+  const doneN = () => infos.reduce((a, x) => a + x.d, 0), curW = () => F.semaines.findIndex((w, i) => infos[i].d < infos[i].n), cur = curW();
+  const qs = +new URLSearchParams(location.search).get("semaine");
+  let sel = qs >= 1 && qs <= F.semaines.length ? qs - 1 : Math.max(0, cur);
+  const hMin = infos.reduce((a, x) => a + x.min, 0), cnt = t => F.semaines.reduce((a, w) => a + w.etapes.filter(e => e.type === t).length, 0);
+  const ring = (v, r = 30) => { const C = 2 * Math.PI * r; return `<svg class="frmring" viewBox="0 0 ${2 * r + 12} ${2 * r + 12}"><circle cx="${r + 6}" cy="${r + 6}" r="${r}" class="bg"/><circle cx="${r + 6}" cy="${r + 6}" r="${r}" class="fg" stroke-dasharray="${C * v / 100} ${C}" transform="rotate(-90 ${r + 6} ${r + 6})"/><text x="50%" y="53%">${v}%</text></svg>`; };
+  const weekHTML = i => { const w = F.semaines[i], x = infos[i], col = COLS[i % COLS.length];
+    const tile = (e, j) => { const ok = fait(w, j, e), id = w.semaine + "-" + j;
+      if (e.type === "lecon") { const L = lesson(e.ref); if (!L) return "";
+        return `<a class="frmtile lec${ok ? " ok" : ""}" href="/academie/${L.m.id}/${L.l.id}" style="--mc:${COLS[L.mi % COLS.length]}"><span class="st">${ok ? "✓" : ""}</span><span class="tx"><small>${esc(L.m.titre)} · ${L.l.duree_min || 6} min${acaLocked(L.l) ? " · Premium" : ""}</small><b>${esc(L.l.titre)}</b></span><span class="go">${ok ? "Relire" : "Lire"} →</span></a>`; }
+      const [t1, ...rest] = String(e.texte).split(/(?<=[.:?!])\s+/);
+      if (e.type === "outil") return `<div class="frmtile out${ok ? " ok" : ""}"><label class="ck"><input type="checkbox" data-step="${id}" ${ok ? "checked" : ""} ${prem ? "" : "disabled"}><span></span></label><span class="tx"><b>${esc(t1)}</b>${rest.length ? `<small>${esc(rest.join(" "))}</small>` : ""}</span><a class="go" href="${esc(e.href)}">Ouvrir l'outil →</a></div>`;
+      return `<div class="frmtile act${ok ? " ok" : ""}"><label class="ck"><input type="checkbox" data-step="${id}" ${ok ? "checked" : ""} ${prem ? "" : "disabled"}><span></span></label><span class="tx"><b>${esc(t1)}</b>${rest.length ? `<small>${esc(rest.join(" "))}</small>` : ""}</span></div>`; };
+    const grp = (t, titre, sous) => { const items = w.etapes.map((e, j) => e.type === t ? tile(e, j) : "").filter(Boolean); return items.length ? `<div class="frmgrp"><h3><span class="ic">${ICO[t]}</span>${titre}<small>${sous}</small></h3>${items.join("")}</div>` : ""; };
+    const firstL = w.etapes.map(e => e.type === "lecon" && lesson(e.ref)).find(Boolean);
+    return `<section class="frmweek" style="--wc:${col}"><div class="frmwh"><span class="frmwn">Semaine ${w.semaine}</span><h2>${esc(w.titre)}</h2><p>${esc(w.objectif)}</p>
+        <div class="frmchips"><span>${ICO.lecon}${x.le} leçon${x.le > 1 ? "s" : ""}</span>${x.ou ? `<span>${ICO.outil}${x.ou} outil${x.ou > 1 ? "s" : ""}</span>` : ""}<span>${ICO.action}${x.ac} action${x.ac > 1 ? "s" : ""}</span><span>≈ ${Math.round(x.min / 5) * 5} min</span></div>
+        <div class="frmwprog"><div class="feub"><span class="f" style="width:${x.d / x.n * 100}%"></span></div><span>${x.d} / ${x.n} étapes</span></div></div>
+      <div class="frmcols">${grp("lecon", "Comprendre", "les leçons se cochent dès que vous les avez lues")}${grp("outil", "Essayer sur le site", "sur votre propre cas")}${grp("action", "Passer à l'action", "chez vous, à votre rythme")}</div>
+      <div class="frmgoal"><span class="ic">${ICO.flag}</span><div><p class="kick">Objectif de la semaine</p><p>${esc(w.bilan)}</p></div></div>
+      <div class="frmnav">${i > 0 ? `<button type="button" class="linkbtn" data-sem="${i - 1}">← Semaine ${i}</button>` : "<span></span>"}
+        ${firstL && firstL.m.quiz && firstL.m.quiz.length ? `<a class="more" href="/academie/${firstL.m.id}/quiz">Testez-vous : quiz « ${esc(firstL.m.titre)} »</a>` : ""}
+        ${i < F.semaines.length - 1 ? `<button type="button" class="btn" data-sem="${i + 1}">Semaine ${i + 2} →</button>` : `<a class="btn" href="/portefeuille">Construire mon portefeuille fictif →</a>`}</div></section>`; };
+  const road = () => `<ol class="frmroad">${F.semaines.map((w, i) => { const x = infos[i], full = x.d === x.n;
+      return `<li class="${i === sel ? "on" : ""}${full ? " full" : ""}" style="--wc:${COLS[i % COLS.length]}"><button type="button" data-sem="${i}"><span class="dot">${full ? "✓" : w.semaine}<i style="--p:${x.d / x.n * 360}deg"></i></span><span class="lb"><small>Semaine ${w.semaine}</small>${esc(w.titre)}</span></button></li>`; }).join("")}</ol>`;
+  function heroR() { const d = doneN(), c = curW(); return `${ring(Math.round(d / total * 100))}<p><b>${d} / ${total}</b> étapes faites</p>${c >= 0 ? `<button type="button" class="btn" data-sem="${c}">${d ? "Reprendre" : "Commencer"} : semaine ${c + 1}</button>` : `<p class="note">Formation terminée. Bravo.</p>`}`; }
+  const draw = () => { $("#frmroadw").innerHTML = road(); $("#frmweekw").innerHTML = weekHTML(sel); if (prem && $("#frmhr")) $("#frmhr").innerHTML = heroR(); };
+  app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › Formation guidée</div>
+    <div class="frmhero"><div class="frmhl"><p class="kick">Formation guidée${prem ? "" : " · Premium"}</p><h1 class="pagetitle">${esc(F.titre)}</h1><p class="pagesub">${esc(F.intro)}</p>
+      <div class="frmstats"><span><b>${F.semaines.length}</b>semaines</span><span><b>${cnt("lecon")}</b>leçons</span><span><b>${cnt("outil")}</b>outils</span><span><b>${cnt("action")}</b>actions</span><span><b>${Math.round(hMin / 60)} h</b>en tout</span></div></div>
+      <div class="frmhr" id="frmhr">${prem ? heroR()
+        : `<div class="acalock" style="margin:0"><b>La formation guidée fait partie de Premium.</b><p>Le programme est visible et les leçons gratuites se lisent déjà. Premium débloque toutes les leçons et le suivi de vos étapes.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`}</div></div>
+    <div id="frmroadw"></div><div id="frmweekw"></div>`;
+  draw();
+  app.onclick = e => { const b = e.target.closest("[data-sem]"); if (!b || !app.contains(b) || !$("#frmweekw")) return; sel = +b.dataset.sem; history.replaceState({}, "", "/academie/formation?semaine=" + (sel + 1)); draw(); const r = $("#frmroadw"); if (r && r.getBoundingClientRect().top < 0) r.scrollIntoView({ behavior: "smooth" }); };
+  app.onchange = e => { const c = e.target.closest("[data-step]"); if (!c || !$("#frmweekw")) return; if (c.checked) st[c.dataset.step] = 1; else delete st[c.dataset.step]; try { localStorage.setItem(FKEY2, JSON.stringify(st)); } catch (er) { }
+    infos.splice(0, infos.length, ...F.semaines.map(semInfo)); draw(); if (c.checked) toast("Étape cochée ✓"); };
 }
 
 function leconsHTML(hits) {
