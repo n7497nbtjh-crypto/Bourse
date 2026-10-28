@@ -799,6 +799,7 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 .gf{display:grid;grid-template-columns:14px 1fr;gap:10px;padding:10px 0;border-bottom:1px solid var(--line2)}.gf .dot{margin-top:5px}.gf p{margin:3px 0 0;font-size:13.5px;color:var(--grey);line-height:1.5}
 .chart2{max-width:720px}
 @media (max-width:760px){.mvs{grid-template-columns:1fr}}
+.hbb{height:8px}
 </style>
 </head>
 <body>
@@ -1703,7 +1704,7 @@ function rankHTML() {
 function dayPick() { const l = R.companies.filter(c => !c.missing && c.fiche && c.ca > 2000); if (!l.length) return null; const d = Math.floor(Date.now() / 864e5); return l[(d * 7919) % l.length]; }
 async function pageHome() {
   setTitle(""); setNav("home");
-  await PXP;
+  await Promise.all([PXP, loadAna()]);
   const n = R.companies.length, nOk = R.companies.filter(c => !c.missing).length, day = dayPick();
   const secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length, m: MED[k] })).filter(x => x.n).sort((a, b) => b.n - a.n);
   app.innerHTML = `
@@ -2954,7 +2955,9 @@ function moversData(region = "all", n = 8) {
 }
 function moverRow(x) {
   const ev = eventsOf(x.c.id).find(e => e.date <= TODAY && e.date >= addDays(TODAY, -2)), big = Math.abs(x.p.chg) >= 5;
-  return `<a class="mv" href="/entreprise/${x.c.id}/actualite">${logo(x.c, 28)}<span class="mn"><b>${esc(x.c.name)}</b><small>${ev ? `${esc(ev.label)} (${dLabel(ev.date)})` : big ? "Mouvement important : voir l'actualité" : esc(secName(x.c))}</small></span><span class="mc ${x.p.chg > 0 ? "up" : "down"}">${x.p.chg > 0 ? "+" : ""}${F1.format(x.p.chg)} %</span></a>`;
+  const an = ANA ? Object.values(ANA).filter(a => a.id === x.c.id && a.date >= addDays(TODAY, -3)).sort((a, b) => b.date.localeCompare(a.date))[0] : null;
+  const why = an ? `${an.type}${an.chiffres && an.chiffres[0] ? ` : ${an.chiffres[0][0].toLowerCase()} ${an.chiffres[0][1]}` : ""}` : ev ? `${ev.label} (${dLabel(ev.date)})` : big ? "Pas d'annonce officielle repérée : voir la presse" : secName(x.c);
+  return `<a class="mv" href="/entreprise/${x.c.id}/actualite">${logo(x.c, 28)}<span class="mn"><b>${esc(x.c.name)}</b><small>${esc(why)}</small></span><span class="mc ${x.p.chg > 0 ? "up" : "down"}">${x.p.chg > 0 ? "+" : ""}${F1.format(x.p.chg)} %</span></a>`;
 }
 function moversHTML(region = moverRegion) {
   const { up, dn, n } = moversData(region);
@@ -2962,8 +2965,9 @@ function moversHTML(region = moverRegion) {
   return `<div class="mvs"><div><p class="kick">Les plus fortes hausses</p>${up.map(moverRow).join("") || `<p class="muted">Aucune hausse.</p>`}</div><div><p class="kick">Les plus fortes baisses</p>${dn.map(moverRow).join("") || `<p class="muted">Aucune baisse.</p>`}</div></div>
     <div class="synth" style="margin-top:12px"><p><b>Comment lire ces mouvements ?</b> Pour une grande entreprise, une variation de plus de 5 % en une journée est importante : elle suit presque toujours une annonce (résultats, prévisions, rachat, changement de dirigeant) ou une nouvelle sur son secteur. Ouvrez la ligne pour voir l'actualité. Un mouvement d'une journée ne dit rien de la solidité de l'entreprise : ses comptes, eux, ne changent qu'à chaque publication.</p></div>`;
 }
-function pageMarches() {
+async function pageMarches() {
   setTitle("Les marchés aujourd'hui"); setNav("mkt");
+  await Promise.all([PXP, loadAna()]);
   app.innerHTML = `<h1 class="pagetitle">Les marchés aujourd'hui</h1><p class="pagesub">Les grands indices et les entreprises qui ont le plus bougé dans la journée, parmi les ${F0.format(R.companies.length)} suivies (valeur en Bourse supérieure à 2 milliards d'euros). Cours différés.</p>
     <section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section>
     <section class="panel"><div class="ph"><h2>Les plus forts mouvements du jour</h2><div class="chips" id="mvr">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"], ["MONDE", "Reste du monde"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === moverRegion ? "on" : ""}">${l}</button>`).join("")}</div></div><div class="pb" id="mvb">${moversHTML()}</div></section>`;
