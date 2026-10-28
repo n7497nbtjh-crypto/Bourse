@@ -1649,7 +1649,7 @@ const MARKETS = [
   { title: "Taux et devises", symbols: [["FX:EURUSD", "Euro / dollar"], ["TVC:GOLD", "Or"], ["TVC:UKOIL", "Pétrole Brent"], ["TVC:DE10Y", "Taux allemand 10 ans"], ["TVC:FR10Y", "Taux français 10 ans"], ["TVC:US10Y", "Taux américain 10 ans"]] },
 ];
 const RANKS = [
-  ["marge", "Marge d'exploitation la plus élevée", "Part des ventes qui reste une fois payés salaires, achats et frais. Hors banques et foncières (leurs comptes incluent la variation de valeur des immeubles).", c => !isBank(c) && c.sector !== "immo" && ratios(c).marge < 1 ? ratios(c).marge : null, v => pct(v, 1, false), "marge"],
+  ["marge", "Marge d'exploitation la plus élevée", "Part des ventes qui reste une fois payés salaires, achats et frais. Hors banques et foncières (leurs comptes incluent la variation de valeur des immeubles)", c => !isBank(c) && c.sector !== "immo" && ratios(c).marge < 1 ? ratios(c).marge : null, v => pct(v, 1, false), "marge"],
   ["g1", "Ventes en plus forte hausse", "Hausse des ventes sur le dernier exercice", c => ratios(c).g1, v => pct(v), "croissance"],
   ["roe", "Meilleure rentabilité des capitaux propres", "Bénéfice annuel pour 100 € appartenant aux actionnaires", c => ratios(c).roe, v => pct(v, 1, false), "roe"],
   ["cash", "Plus de trésorerie que de dettes", "Trésorerie nette rapportée aux ventes", c => !isBank(c) && c.netDebt < 0 && c.ca > 0 ? -c.netDebt / c.ca : null, v => pct(v, 0, false) + " des ventes", "dette"],
