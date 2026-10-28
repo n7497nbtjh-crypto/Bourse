@@ -3644,7 +3644,7 @@ function etfIAHTML(a) {
 }
 async function iaRun(q, out) {
   out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA analyse votre question…</div>`;
-  await premStatus();
+  await Promise.all([premStatus(), PXP, loadAna()]); // les cours servent au PER, au rendement et aux médianes
   let a = localCopilot(q);
   if (!a) try { const r = await iaFetch("/api/demande", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) }); a = await r.json(); } catch (e) { a = { error: "L'IA est indisponible pour le moment." }; }
   if (a.error) { out.innerHTML = iaErr(a, a.error); return; }
