@@ -353,6 +353,16 @@ function jsonDe(t) {
   }
 }
 
+// cf/src/regles.mjs
+var REGLES = `R\xE8gles d'objectivit\xE9, \xE0 respecter strictement :
+- S\xE9pare les faits (les chiffres fournis) de leur interpr\xE9tation, et dis quand une interpr\xE9tation est incertaine.
+- Pr\xE9sente toujours les deux c\xF4t\xE9s : ce qui est favorable et ce qui demande de la vigilance.
+- Ne donne pas plus de poids \xE0 la derni\xE8re nouvelle ou au dernier mouvement de cours qu'aux comptes de plusieurs ann\xE9es.
+- Compare \xE0 la m\xE9diane du secteur ou \xE0 des rep\xE8res chiffr\xE9s plut\xF4t que de juger dans l'absolu.
+- N'emploie aucun mot charg\xE9 ou d'emphase (\xAB p\xE9pite \xBB, \xAB incontournable \xBB, \xAB catastrophe \xBB, \xAB exceptionnel \xBB).
+- Ne pr\xE9dis jamais un cours, ne recommande jamais d'acheter, de vendre ou de conserver un titre pr\xE9cis.
+- Si une information manque, dis qu'elle manque au lieu de la deviner. N'invente aucune source.`;
+
 // cf/src/compte.mjs
 var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
   "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
@@ -574,7 +584,8 @@ R\xE8gles strictes :
 - Donne les chiffres cl\xE9s avec leur p\xE9riode et leur \xE9volution (par exemple : chiffre d'affaires du trimestre, r\xE9sultat, pr\xE9visions, dividende, rachats d'actions). Montants en fran\xE7ais (12,4 milliards d'euros ; +5 %).
 - Explique simplement ce que signifient les termes techniques la premi\xE8re fois qu'ils apparaissent.
 - Reste prudent et factuel : aucun conseil d'achat ou de vente, aucune pr\xE9diction sur le cours.
-- Pas de tirets cadratins, pas de listes \xE0 puces, pas de formules creuses.`;
+- Pas de tirets cadratins, pas de listes \xE0 puces, pas de formules creuses.
+${REGLES}`;
 async function resume(request, env) {
   if (!env || !env.DB || !env.AI) return json3({ error: "R\xE9sum\xE9s indisponibles pour le moment." }, 503);
   let u = new URL(request.url).searchParams.get("u") || "", url;
@@ -610,13 +621,15 @@ Tu re\xE7ois des faits en JSON (variations de cours, annonces r\xE9centes r\xE9s
 - 150 \xE0 250 mots, en quatre courts paragraphes titr\xE9s : \xAB En r\xE9sum\xE9 \xBB, \xAB Ce qui a boug\xE9 \xBB, \xAB Ce qui a \xE9t\xE9 annonc\xE9 \xBB, \xAB \xC0 venir \xBB.
 - Explique ce que veut dire un mouvement (par exemple : une baisse de 8 % en une semaine est importante pour une grande entreprise).
 - Mets en garde, sans dramatiser, si une ligne concentre l'attention (forte baisse, r\xE9sultats imminents).
-- Aucun conseil d'achat ou de vente. Pas de tirets cadratins, pas de listes \xE0 puces.`, SYS_PF = `Tu commentes, en fran\xE7ais, le portefeuille d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON (lignes, poids, plus-values, pays, premi\xE8res expositions une fois les ETF ouverts, frais, remarques d\xE9j\xE0 calcul\xE9es).
+- Aucun conseil d'achat ou de vente. Pas de tirets cadratins, pas de listes \xE0 puces.
+${REGLES}`, SYS_PF = `Tu commentes, en fran\xE7ais, le portefeuille d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON (lignes, poids, plus-values, pays, premi\xE8res expositions une fois les ETF ouverts, frais, remarques d\xE9j\xE0 calcul\xE9es).
 R\xE8gles :
 - N'utilise que ces faits, n'invente aucun chiffre.
 - 150 \xE0 230 mots, en trois courts paragraphes titr\xE9s : \xAB Ce qui ressort \xBB, \xAB Points d'attention \xBB, \xAB \xC0 suivre \xBB.
 - Explique simplement la diversification, la concentration, le poids d'un pays ou d'une devise, l'effet des frais, quand c'est pertinent.
 - Aucun conseil d'achat ou de vente, aucune recommandation de ligne pr\xE9cise, aucune pr\xE9diction. Tu peux rappeler des rep\xE8res g\xE9n\xE9raux (par exemple : une action seule au-del\xE0 de 10 % du portefeuille augmente le risque).
-- Pas de tirets cadratins, pas de listes \xE0 puces.`;
+- Pas de tirets cadratins, pas de listes \xE0 puces.
+${REGLES}`;
 async function veille(request, env) {
   if (!env || !env.DB || !env.AI) return json3({ error: "Bilan indisponible pour le moment." }, 503);
   let path = new URL(request.url).pathname;
@@ -652,7 +665,8 @@ R\xE8gles :
 - Vouvoie toujours le lecteur.
 - La dette se mesure en ann\xE9es de r\xE9sultat d'exploitation avant amortissements (pas de b\xE9n\xE9fice net) : reprends exactement l'unit\xE9 donn\xE9e dans les faits.
 - Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses onglets : \xAB Vue d'ensemble \xBB, \xAB Crit\xE8re par crit\xE8re \xBB, \xAB Tous les chiffres \xBB, \xAB Actualit\xE9s \xBB, ou le bouton \xAB Comparer \xE0 ses concurrents \xBB.
-- Pas de listes \xE0 puces, pas de tirets cadratins.`;
+- Pas de listes \xE0 puces, pas de tirets cadratins.
+${REGLES}`;
 async function assistant(request, env) {
   if (!env || !env.DB || !env.AI) return json3({ error: "L'assistant est indisponible pour le moment." }, 503);
   if (request.method !== "POST") return json3({ error: "M\xE9thode non prise en charge." }, 405);
@@ -1028,7 +1042,8 @@ R\xE8gles strictes :
 - Cite uniquement des chiffres pr\xE9sents dans les faits. N'invente aucun chiffre et aucune cause \xE0 un mouvement de cours : si la cause n'est pas dans les faits, dis qu'elle n'est pas connue.
 - Explique simplement ce que repr\xE9sente un mouvement (par exemple : 8 % en une semaine, c'est beaucoup pour une grande entreprise).
 - Aucun conseil d'achat ou de vente, aucune recommandation, aucune pr\xE9diction sur les cours.
-- Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.`, faitsIA = (c) => ({
+- Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REGLES}`, faitsIA = (c) => ({
   semaine: c.semaine,
   moyenne_semaine_pct: c.moyenne,
   nombre_de_lignes: c.lignes.length,
@@ -1263,8 +1278,10 @@ Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"
 4. Chercher des ETF : {"action":"etf","titre":"\u2026","categorie":null ou "actions-monde"|"actions-usa"|"actions-europe"|"actions-france"|"actions-emergents"|"actions-asie"|"dividendes"|"obligations"|"monetaire"|"theme"|"immobilier"|"matieres"|"facteurs","pea":null ou true}
 5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
 R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si on te demande \xAB quoi acheter \xBB, choisis une action "filtre" ou "etf" qui aide \xE0 explorer, et un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). R\xE9ponds uniquement avec le JSON.
-${REPERES}`, SYS_EXPL = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas. Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
-${REPERES}`, clean2 = (s) => String(s || "").replace(/\s+/g, " ").trim();
+${REPERES}
+${REGLES}`, SYS_EXPL = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas. Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REPERES}
+${REGLES}`, clean2 = (s) => String(s || "").replace(/\s+/g, " ").trim();
 function valide(a) {
   if (!a || typeof a != "object") return null;
   if (a.action === "filtre") {

@@ -12,7 +12,11 @@ import { copyFileSync, existsSync, readFileSync, writeFileSync as wfs } from "no
   wfs("cf/site/data/agenda.json", JSON.stringify({ note: base.note, events: ev })); }
 if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "cf/site/data/segments-fr.json");
 { const { gfCsv, INDICES } = await import("./data/gf.mjs"); const UNI = (await import("./data/univers.mjs")).default; const EL = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; wfs("cf/site/data/gf.csv", gfCsv(UNI, EL, INDICES)); }
-for (const f of ["parcours", "commencer", "legal"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
+{ // consignes des modèles, partagées avec l'IA qui tourne dans le navigateur des visiteurs
+  const ia = await import("./cf/src/ia.mjs"), dm = await import("./cf/src/demande.mjs");
+  wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF }));
+}
+for (const f of ["parcours", "commencer", "legal", "academie"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
 if (existsSync("data/concurrents.json")) wfs("cf/site/data/concurrents.json", readFileSync("data/concurrents.json", "utf8"));
 { const R = {}; for (const f of ["france", "europe", "us"]) if (existsSync(`data/repartitions/${f}.mjs`)) Object.assign(R, (await import(`./data/repartitions/${f}.mjs`)).default); wfs("cf/site/data/repartitions.json", JSON.stringify(R)); }
 { const E = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; wfs("cf/site/data/etf.json", JSON.stringify({ updated: "2026-10-28", list: E })); }

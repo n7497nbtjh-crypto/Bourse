@@ -6,6 +6,7 @@
 //  POST /api/espace/tache   robot quotidien (.github/workflows/espace.yml), protégé par ADMIN_KEY
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
+import { REGLES } from "./regles.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 import { rediger } from "./llm.mjs";
@@ -174,7 +175,8 @@ Règles strictes :
 - Cite uniquement des chiffres présents dans les faits. N'invente aucun chiffre et aucune cause à un mouvement de cours : si la cause n'est pas dans les faits, dis qu'elle n'est pas connue.
 - Explique simplement ce que représente un mouvement (par exemple : 8 % en une semaine, c'est beaucoup pour une grande entreprise).
 - Aucun conseil d'achat ou de vente, aucune recommandation, aucune prédiction sur les cours.
-- Pas de listes à puces, pas de titres, pas de tirets cadratins.`;
+- Pas de listes à puces, pas de titres, pas de tirets cadratins.
+${REGLES}`;
 const faitsIA = c => ({
   semaine: c.semaine, moyenne_semaine_pct: c.moyenne, nombre_de_lignes: c.lignes.length, hausses: c.hausses, baisses: c.baisses,
   lignes: c.lignes.filter(l => l.variation_semaine_pct != null).slice(0, 25).map(l => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct })),

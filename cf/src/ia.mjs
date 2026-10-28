@@ -5,6 +5,7 @@
 //  /api/veille/envoi, /alertes : envois groupés déclenchés par le robot (remplacés par les alertes de Mon espace : .github/workflows/espace.yml) avec ADMIN_KEY
 //  /api/assistant      questions sur une fiche, réponses tirées des seules données transmises
 import { rediger } from "./llm.mjs";
+import { REGLES } from "./regles.mjs";
 import { quota, quotaError, sendMail, mailReady, mailCapacity, premiumOf, initCompte } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 const MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
@@ -48,14 +49,15 @@ export function focus(t) {
   while ((m = re.exec(t))) { const after = t.slice(m.index, m.index + 3000); if ((after.match(/%/g) || []).length >= 4 && /\$\s?\d/.test(after)) { best = m.index; break; } }
   return best >= 0 ? t.slice(best) : t;
 }
-const SYS = `Tu es un journaliste financier pédagogue qui écrit pour des personnes qui débutent en Bourse. Tu résumes en français un document officiel publié par une entreprise cotée.
+export const SYS = `Tu es un journaliste financier pédagogue qui écrit pour des personnes qui débutent en Bourse. Tu résumes en français un document officiel publié par une entreprise cotée.
 Règles strictes :
 - Utilise uniquement les informations et les chiffres présents dans le document. N'invente rien. Si un chiffre n'y figure pas, ne le donne pas.
 - Écris 140 à 220 mots, en trois paragraphes courts, précédés exactement de ces titres sur leur propre ligne : « Ce qui est annoncé », « Ce que ça veut dire », « À surveiller ».
 - Donne les chiffres clés avec leur période et leur évolution (par exemple : chiffre d'affaires du trimestre, résultat, prévisions, dividende, rachats d'actions). Montants en français (12,4 milliards d'euros ; +5 %).
 - Explique simplement ce que signifient les termes techniques la première fois qu'ils apparaissent.
 - Reste prudent et factuel : aucun conseil d'achat ou de vente, aucune prédiction sur le cours.
-- Pas de tirets cadratins, pas de listes à puces, pas de formules creuses.`;
+- Pas de tirets cadratins, pas de listes à puces, pas de formules creuses.
+${REGLES}`;
 export async function resume(request, env) {
   if (!env || !env.DB || !env.AI) return json({ error: "Résumés indisponibles pour le moment." }, 503);
   const u = new URL(request.url).searchParams.get("u") || "";
@@ -79,20 +81,22 @@ export async function resume(request, env) {
 }
 
 // Bilan d'une liste : le navigateur envoie les faits (cours, variations, annonces, dates) ; l'IA rédige, sans rien ajouter.
-const SYS_VEILLE = `Tu écris, en français, le bilan d'une liste d'entreprises suivies par un particulier qui débute en Bourse.
+export const SYS_VEILLE = `Tu écris, en français, le bilan d'une liste d'entreprises suivies par un particulier qui débute en Bourse.
 Tu reçois des faits en JSON (variations de cours, annonces récentes résumées, prochaines dates). Règles :
 - N'utilise que ces faits. N'invente aucun chiffre, aucune explication de mouvement de cours qui ne figure pas dans les faits ; si la cause d'un mouvement n'est pas connue, dis-le.
 - 150 à 250 mots, en quatre courts paragraphes titrés : « En résumé », « Ce qui a bougé », « Ce qui a été annoncé », « À venir ».
 - Explique ce que veut dire un mouvement (par exemple : une baisse de 8 % en une semaine est importante pour une grande entreprise).
 - Mets en garde, sans dramatiser, si une ligne concentre l'attention (forte baisse, résultats imminents).
-- Aucun conseil d'achat ou de vente. Pas de tirets cadratins, pas de listes à puces.`;
-const SYS_PF = `Tu commentes, en français, le portefeuille d'un particulier qui débute en Bourse. Tu reçois des faits en JSON (lignes, poids, plus-values, pays, premières expositions une fois les ETF ouverts, frais, remarques déjà calculées).
+- Aucun conseil d'achat ou de vente. Pas de tirets cadratins, pas de listes à puces.
+${REGLES}`;
+export const SYS_PF = `Tu commentes, en français, le portefeuille d'un particulier qui débute en Bourse. Tu reçois des faits en JSON (lignes, poids, plus-values, pays, premières expositions une fois les ETF ouverts, frais, remarques déjà calculées).
 Règles :
 - N'utilise que ces faits, n'invente aucun chiffre.
 - 150 à 230 mots, en trois courts paragraphes titrés : « Ce qui ressort », « Points d'attention », « À suivre ».
 - Explique simplement la diversification, la concentration, le poids d'un pays ou d'une devise, l'effet des frais, quand c'est pertinent.
 - Aucun conseil d'achat ou de vente, aucune recommandation de ligne précise, aucune prédiction. Tu peux rappeler des repères généraux (par exemple : une action seule au-delà de 10 % du portefeuille augmente le risque).
-- Pas de tirets cadratins, pas de listes à puces.`;
+- Pas de tirets cadratins, pas de listes à puces.
+${REGLES}`;
 export async function veille(request, env) {
   if (!env || !env.DB || !env.AI) return json({ error: "Bilan indisponible pour le moment." }, 503);
   const path = new URL(request.url).pathname;
@@ -117,7 +121,7 @@ export async function veille(request, env) {
 }
 
 /* ---------- Assistant de fiche : répond à une question à partir des seules données de la fiche ---------- */
-const SYS_ASSIST = `Tu es l'assistant du site d'information boursière « bilan. », pour des personnes qui débutent. Tu réponds en français à une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, comparaison au secteur, concurrents, cours, annonces récentes, agenda).
+export const SYS_ASSIST = `Tu es l'assistant du site d'information boursière « bilan. », pour des personnes qui débutent. Tu réponds en français à une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, comparaison au secteur, concurrents, cours, annonces récentes, agenda).
 Règles :
 - 60 à 160 mots, phrases courtes, termes techniques expliqués une fois.
 - Si les faits ne permettent pas de répondre, dis-le simplement et indique quelle rubrique du site regarder.
@@ -126,7 +130,8 @@ Règles :
 - Vouvoie toujours le lecteur.
 - La dette se mesure en années de résultat d'exploitation avant amortissements (pas de bénéfice net) : reprends exactement l'unité donnée dans les faits.
 - Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses onglets : « Vue d'ensemble », « Critère par critère », « Tous les chiffres », « Actualités », ou le bouton « Comparer à ses concurrents ».
-- Pas de listes à puces, pas de tirets cadratins.`;
+- Pas de listes à puces, pas de tirets cadratins.
+${REGLES}`;
 export async function assistant(request, env) {
   if (!env || !env.DB || !env.AI) return json({ error: "L'assistant est indisponible pour le moment." }, 503);
   if (request.method !== "POST") return json({ error: "Méthode non prise en charge." }, 405);

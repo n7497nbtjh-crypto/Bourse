@@ -933,6 +933,17 @@ a.hbr{color:inherit;text-decoration:none;border-radius:6px}a.hbr:hover{backgroun
 /* légende des points de couleur (bug d'affichage) */
 .dleg span.f,.dleg span.m,.dleg span.v{background:none!important}.dleg .f i{background:var(--g)}.dleg .m i{background:var(--n)}.dleg .v i{background:var(--o)}.dleg{margin:0 0 16px!important}
 #secTabs{flex-wrap:wrap}
+
+/* v10 : IA locale, graphiques tactiles, pastilles, portefeuille */
+.liabox{margin:14px 0 0;display:flex;flex-direction:column;gap:6px;align-items:flex-start}.liabox.compact{margin:10px 0 0}
+.liabox .liago{background:var(--g);border-color:var(--g);height:40px}.liaok{color:var(--g);font-weight:600;font-size:14px}
+.liaprog{width:100%;max-width:420px;height:8px;border-radius:99px;background:var(--soft);overflow:hidden}.liaprog span{display:block;height:100%;background:var(--g);transition:width .3s}
+.chart2 svg{touch-action:pan-y;width:100%;height:auto}.chart2 rect[data-tip]:hover,.chart2 rect[data-tip].on{fill:rgba(17,18,20,.05)}
+.pills > span.f,.pills > span.m,.pills > span.v{border:0;padding:0;margin:0;font-size:12.5px;display:inline-flex;align-items:center;gap:4px;justify-content:flex-start;background:none}
+.pills{align-items:center;line-height:1}.cocard .f .pills{margin-left:auto}
+.pfhab{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.pfhab label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}
+.pfhab select,.pfhab input{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:inherit;font-weight:400;background:#fff;min-width:0;width:100%;max-width:100%}.pfhab label{min-width:0}
+@media (max-width:760px){.tile .v{font-size:22px;white-space:nowrap}#secTabs{flex-wrap:nowrap;overflow-x:auto}.pfhab{grid-template-columns:1fr 1fr}.tv-top{height:320px}}
 </style>
 </head>
 <body>
@@ -946,7 +957,7 @@ a.hbr{color:inherit;text-decoration:none;border-radius:6px}a.hbr:hover{backgroun
         <div class="results"></div>
       </div>
       <nav class="main d-only" id="nav">
-        <div class="dd" data-g="deb"><button type="button" aria-expanded="false">Débuter</button><div class="ddm"><a href="/commencer"><b>Par où commencer</b><span>Le guide du nouvel investisseur</span></a><a href="/debuter"><b>Premiers pas</b><span>Leçons de trois minutes, avec quiz</span></a><a href="/pea-cto"><b>PEA ou compte-titres</b><span>Choisir son compte et sa fiscalité</span></a><a href="/lexique"><b>Lexique</b><span>Chaque chiffre de la Bourse expliqué</span></a><a href="/outils/verifier"><b>Vérifier une offre</b><span>Contre les arnaques, listes de l'AMF</span></a></div></div>
+        <div class="dd" data-g="deb"><button type="button" aria-expanded="false">Débuter</button><div class="ddm"><a href="/commencer"><b>Par où commencer</b><span>Le guide du nouvel investisseur</span></a><a href="/debuter"><b>Premiers pas</b><span>Leçons de trois minutes, avec quiz</span></a><a href="/pea-cto"><b>PEA ou compte-titres</b><span>Choisir son compte et sa fiscalité</span></a><a href="/lexique"><b>Lexique</b><span>Chaque chiffre de la Bourse expliqué</span></a><a href="/outils/verifier"><b>Vérifier une offre</b><span>Contre les arnaques, listes de l'AMF</span></a><a href="/methode"><b>Méthode et sources</b><span>Comment le site et l'IA travaillent</span></a></div></div>
         <div class="dd" data-g="mkt"><button type="button" aria-expanded="false">Marchés</button><div class="ddm"><a href="/marches"><b>Les marchés du jour</b><span>Indices, plus fortes hausses et baisses</span></a><a href="/actualites"><b>Actualités</b><span>Annonces officielles lues et expliquées</span></a><a href="/agenda"><b>Agenda</b><span>Résultats et assemblées à venir</span></a><a href="/dividendes"><b>Dividendes</b><span>Le calendrier des versements</span></a></div></div>
         <div class="dd" data-g="ent"><button type="button" aria-expanded="false">Entreprises et ETF</button><div class="ddm"><a href="/entreprises"><b>Les entreprises</b><span>Leurs comptes comparés à leur secteur</span></a><a href="/etf"><b>Les ETF</b><span>Fonds indiciels : contenu et frais</span></a><a href="/comparer"><b>Comparer</b><span>Plusieurs entreprises côte à côte</span></a><a href="/demander"><b>Recherche par l'IA</b><span>Décrivez ce que vous cherchez</span></a></div></div>
         <div class="dd" data-g="out"><button type="button" aria-expanded="false">Outils</button><div class="ddm"><a href="/portefeuille"><b>Portefeuille</b><span>Ce que vous possédez vraiment</span></a><a href="/outils/si-javais"><b>Et si j'avais investi…</b><span>1 000 € placés il y a 1, 3 ou 5 ans</span></a><a href="/outils/recouvrement"><b>Deux ETF se recouvrent-ils ?</b><span>Les entreprises en commun</span></a><a href="/simulateurs/epargne"><b>Simulateurs</b><span>Épargne, frais, PEA ou compte-titres</span></a><a href="/communaute"><b>Communauté</b><span>Questions et idées des visiteurs</span></a></div></div>
@@ -973,7 +984,7 @@ a.hbr{color:inherit;text-decoration:none;border-radius:6px}a.hbr:hover{backgroun
   <div class="wrap f">
     <div><p>Informations factuelles à but pédagogique. Aucun contenu du site n'est un conseil en investissement.</p>
       <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a> et <a class="lnk" style="margin:0" href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC (EDGAR)</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours différés de Google Finance, taux de change de la BCE.</p></div>
-    <div><a href="/commencer">Par où commencer</a><a href="/lexique">Lexique</a><a href="/premium">Premium</a><a href="/mentions-legales">Mentions légales</a><a href="/cgv">CGV</a><a href="/confidentialite">Confidentialité</a><a href="/avertissement">Avertissement sur les risques</a></div>
+    <div><a href="/commencer">Par où commencer</a><a href="/lexique">Lexique</a><a href="/premium">Premium</a><a href="/mentions-legales">Mentions légales</a><a href="/cgv">CGV</a><a href="/confidentialite">Confidentialité</a><a href="/avertissement">Avertissement sur les risques</a><a href="/methode">Méthode et sources</a></div>
   </div>
 </footer>
 <div class="pop" id="pop" tabindex="-1" role="dialog" aria-modal="false"></div>
@@ -1271,7 +1282,7 @@ function niceTicks(min, max, n = 4) {
   return t;
 }
 function lineChart(el, { labels, series, fmt, area }) {
-  el.innerHTML = '<svg></svg><div class="tip"></div>';
+  el.innerHTML = '<svg></svg><div class="tip"></div>'; el.style.touchAction = "pan-y";
   const svg = el.firstChild, tip = el.lastChild;
   const draw = () => {
     const W = el.clientWidth, H = el.clientHeight; if (!W) return;
@@ -1830,7 +1841,7 @@ function erankHTML() {
 function rankHTML() {
   const [, , sub, fn, fmt, ct] = RANKS.find(r => r[0] === rankState.k);
   const rows = R.companies.filter(c => !c.missing && (rankState.region === "all" || c.region === rankState.region) && (c.ca == null || caEur(c) > 500)).map(c => ({ c, v: fn(c) })).filter(x => okn(x.v)).sort((a, b) => b.v - a.v).slice(0, 10);
-  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}?voir=${ct}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
+  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
 }
 function dayPick() { const l = R.companies.filter(c => !c.missing && c.fiche && c.ca > 2000); if (!l.length) return null; const d = Math.floor(Date.now() / 864e5); return l[(d * 7919) % l.length]; }
 async function pageHomeV1() {
@@ -1966,6 +1977,7 @@ async function pageCompany(id, tab) {
   if (location.pathname.split("/")[2] !== id) return; // l'utilisateur a changé de page entre-temps
   const ph = $("#pxh"); if (ph) ph.innerHTML = priceHead(s);
   ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
+  if (tab === "comptes") $$("#ctab .scroll-x").forEach(x => { x.scrollLeft = x.scrollWidth; }); // les années les plus récentes d'abord visibles
   if (!tab && !s.missing) premStatus().then(() => { if (location.pathname.split("/")[2] === id) assistantPanel(s, c, $("#ctab")); });
 }
 const lastIdx = c => c.years.length - 1;
@@ -2050,7 +2062,7 @@ function tabBref(s, c, el) {
       </aside>
     </div>`;
   const voir = new URLSearchParams(location.search).get("voir");
-  if (voir) { const d = $(`details[data-term="${voir}"]`) || $("#" + voir); if (d) { if (d.tagName === "DETAILS") d.open = true; setTimeout(() => d.scrollIntoView({ block: "center" }), 60); } }
+  if (voir) { const d = $(`details[data-term="${voir}"]`) || $("#" + voir); if (d && d.tagName === "DETAILS") d.open = true; }
   if (s.sec) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false, filters: false, max: 3 });
   else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false, filters: false, max: 3 });
   presseBlock($("#pres"), { id: s.id, max: 5 });
@@ -2515,7 +2527,7 @@ function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = 
   const all = series.flatMap(s => s.values).filter(v => v != null).concat(ref != null ? [ref] : []);
   if (!all.length) return `<p class="muted" style="margin:0">Pas de chiffres publiés pour ce graphique.</p>`;
   const ticks = niceTicks(Math.min(0, ...all), Math.max(0, ...all)), tmin = ticks[0], tmax = ticks.at(-1);
-  const W = 640, H = h, pl = 54, pr = 12, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / n;
+  const W = chartW(), H = h, pl = W < 420 ? 46 : 54, pr = 12, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / n;
   const Y = v => pt + (H - pt - pb) * (tmax - v) / (tmax - tmin || 1), X = i => pl + band * (i + .5);
   const ns = series.length, bw = Math.min(ns > 1 ? 14 : 20, band * 0.5 / ns), gap = 2, tf = tickFmt || fmt;
   let g = ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#CFC6B4" : GRIDC}" stroke-width="1"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11" fill="${AXC}">${esc(tf(t))}</text>`).join("");
@@ -2545,7 +2557,7 @@ function trendChart({ labels, series, fmt, h = 220 }) {
   if (all.length < 2) return `<p class="muted" style="margin:0">Pas assez d'années publiées pour tracer une évolution.</p>`;
   const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * 0.15 || Math.abs(hi) * 0.1 || 1;
   const ticks = niceTicks(Math.min(lo - pad, lo >= 0 ? 0 : lo - pad), hi + pad), tmin = ticks[0], tmax = ticks.at(-1);
-  const W = 640, H = h, pl = 54, pr = 70, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / Math.max(1, n - 1);
+  const W = chartW(), H = h, pl = W < 420 ? 46 : 54, pr = W < 420 ? 58 : 70, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / Math.max(1, n - 1);
   const Y = v => pt + (H - pt - pb) * (tmax - v) / (tmax - tmin || 1), X = i => pl + band * i;
   let g = ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#CFC6B4" : GRIDC}"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11.5" fill="${AXC}">${esc(fmt(t))}</text>`).join("");
   labels.forEach((l, i) => { g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#55524C">${esc(l)}</text>`; });
@@ -3160,7 +3172,8 @@ async function veilleBilan(cos) {
   await loadAna();
   const loc = listeLocale(cos);
   el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">L'IA rédige une lecture plus détaillée…</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
-  try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
+  try { const lt = LIA.eng ? await liaAsk("veille", JSON.stringify(listeFaits(cos)), 600) : null;
+    const j = lt ? { txt: lt } : await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
     if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>`;
     else if (loc) $("#vbilf").innerHTML = `Résumé automatique de vos chiffres.${j.quota && !j.premium ? ` La lecture détaillée par l'IA est limitée à 1 par jour en version gratuite : <a class="lnk" href="/premium">Premium</a>.` : ""}`;
     else el.innerHTML = iaErr(j, "Bilan indisponible.");
@@ -3234,7 +3247,7 @@ async function pagePortefeuille() {
   };
   drawLines();
 }
-function gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps) { // ce qui mérite l'attention, avec la raison
+function gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps, extra = []) { // ce qui mérite l'attention, avec la raison
   const W = [], pctS2 = v => F0.format(v * 100) + " %";
   const big = lines.slice().sort((a, b) => b.v - a.v);
   if (big[0] && big[0].v / tot > 0.25 && big[0].k.startsWith("c:")) W.push(["vig", `Une seule action pèse ${pctS2(big[0].v / tot)} du portefeuille (${esc(keyName(big[0].k))}).`, "Si elle chute de 30 %, c'est près de " + pctS2(big[0].v / tot * 0.3) + " de votre portefeuille qui disparaît. Beaucoup d'investisseurs limitent une action seule à 5 ou 10 %."]);
@@ -3250,6 +3263,7 @@ function gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps) { // ce qu
   overlaps.forEach(([a, b, ov]) => W.push(["moyen", `${esc(a)} et ${esc(b)} se recouvrent à ${F0.format(ov)} %.`, "Ils contiennent en bonne partie les mêmes entreprises : les deux réunis diversifient moins qu'il n'y paraît."]));
   lines.filter(l => l.k.startsWith("c:")).forEach(l => { const c = RBY[l.k.slice(2)], t = c && quick(c); if (t && t.vig >= 3) W.push(["moyen", `${esc(c.name)} cumule ${t.vig} points de vigilance dans ses comptes.`, "Ce n'est pas une raison de vendre, mais une raison de lire sa fiche et de suivre ses prochains résultats."]); });
   lines.forEach(l => { const cost = lineCost(l); if (cost && l.v / cost - 1 < -0.3) W.push(["moyen", `${esc(keyName(l.k))} est en baisse de ${F0.format((1 - l.v / cost) * 100)} % par rapport à votre prix de revient.`, "Une forte baisse est le moment de vérifier si les comptes de l'entreprise ont changé, ou seulement son cours."]); });
+  W.push(...extra);
   if (!W.length) W.push(["fort", "Rien de particulier à signaler.", "Pas de ligne trop lourde, pas de secteur dominant, des frais raisonnables. Cela ne dit rien des performances futures."]);
   return `<section class="panel"><div class="ph"><h2>Ce que l'analyse remarque</h2></div><div class="pb">${W.map(([lv, t, why]) => `<div class="gf"><span class="dot dot-${lv}"></span><div><b>${t}</b><p>${why}</p></div></div>`).join("")}
     <p class="note">Repères de diversification généraux, calculés sur vos lignes. Ce ne sont pas des conseils personnalisés : votre situation, votre horizon et votre tolérance au risque comptent.</p></div></section>`;
@@ -3280,6 +3294,7 @@ async function radiographie(P) {
   const top = Object.values(expo).sort((a, b) => b.w - a.w).slice(0, 15), cs = Object.entries(ctry).sort((a, b) => b[1] - a[1]).slice(0, 10), biggest = lines.slice().sort((a, b) => b.v - a.v)[0];
   const cos = lines.filter(l => l.k.startsWith("c:")).map(l => RBY[l.k.slice(2)]).filter(Boolean);
   const up = AG.events.filter(e => e.date >= TODAY && cos.some(c => c.id === e.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+  const habHTML = await pfHabitudes(P), prof = await profilInvestisseur();
   el.innerHTML = `<section class="panel"><div class="ph"><h2>Votre portefeuille en un coup d'œil</h2></div>
     <div class="tiles">
       <div class="tile"><span class="kick">Valeur actuelle</span><span class="v">${F0.format(tot)} €</span><small>${lines.length} ligne${lines.length > 1 ? "s" : ""}, aux cours du jour</small></div>
@@ -3288,7 +3303,8 @@ async function radiographie(P) {
       <div class="tile"><span class="kick">Dividendes</span><span class="v">≈ ${F0.format(divs)} € / an</span><small>actions en direct, avant impôts</small></div>
       <div class="tile"><span class="kick">Éligible au PEA</span><span class="v">${F0.format(pea / tot * 100)} %</span><small>de la valeur</small></div>
     </div></section>
-    ${gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps)}
+    ${habHTML}
+    ${gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps, pfAnalyseHabitudes(P, lines, tot, prof))}
     <section class="panel"><div class="ph"><h2>Le commentaire de l'IA</h2><button type="button" class="btn" id="pfia">Analyser mon portefeuille</button></div><div class="pb" id="pfiab"><p class="muted" style="margin:0">Un commentaire rédigé à partir de vos lignes, de leurs poids et des remarques ci-dessus : ce qui ressort, ce qui est déséquilibré, ce qu'il faut suivre. Rien n'est conservé.</p></div></section>
     <div class="two"><section class="panel"><div class="ph"><h2>Ce que vous possédez vraiment</h2></div><div class="pb">${hbars(top.map(x => ({ label: x.name, v: x.w, href: x.href })), v => pct(v, 1, false))}<p class="note">Les ETF sont « ouverts » : leurs principales lignes sont réparties selon leur poids${uncovered > 0.05 ? ` ; ${F0.format(uncovered * 100)} % correspond aux autres lignes, plus petites, des ETF` : ""}.</p></div></section>
       <section class="panel"><div class="ph"><h2>Par pays</h2></div><div class="pb">${hbars(cs.map(([k, w]) => ({ label: COUNTRY[k] || k, v: w })), v => pct(v, 0, false))}</div></section></div>
@@ -3296,11 +3312,14 @@ async function radiographie(P) {
       <section class="panel"><div class="ph"><h2>Partager anonymement</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Ajoutez la composition de votre portefeuille (les lignes et leur poids, jamais les montants) au <a class="lnk" href="/communaute?onglet=portefeuilles">classement des visiteurs</a>.</p><button type="button" class="btn" id="pfsh">Partager anonymement</button> <button type="button" class="linkbtn" id="pfun">Retirer mon partage</button> <span class="muted" id="pfsm" style="font-size:12.5px"></span></div></section></div>`;
   $("#pfsh").onclick = () => post("/api/communaute/portefeuille", { lignes: lines.map(l => [l.k, l.v / tot]) }).then(j => { $("#pfsm").textContent = j.error || "Partagé, merci."; }).catch(() => { $("#pfsm").textContent = "Indisponible pour le moment."; });
   $("#pfun").onclick = () => post("/api/communaute/portefeuille", { retirer: true }).then(() => { $("#pfsm").textContent = "Partage retiré."; });
+  $$("[data-c]", el).forEach(inp => inp.onchange = () => { P.cfg = { ...(P.cfg || {}), [inp.dataset.c]: inp.value }; pf2Save(P); radiographie(P); });
   $("#pfia").onclick = async () => {
     $("#pfiab").innerHTML = `<p class="muted">Analyse en cours…</p>`;
     const faits = { type: "portefeuille", valeur_eur: Math.round(tot), plus_value_pct: Math.round(gain / cost * 1000) / 10, lignes: lines.map(l => ({ nom: keyName(l.k), type: l.k.startsWith("e:") ? "ETF" : "action", poids_pct: Math.round(l.v / tot * 1000) / 10, plus_value_pct: lineCost(l) ? Math.round((l.v / lineCost(l) - 1) * 1000) / 10 : null })),
-      pays: cs.slice(0, 5).map(([k, w]) => [COUNTRY[k] || k, Math.round(w * 1000) / 10]), premieres_expositions: top.slice(0, 6).map(x => [x.name, Math.round(x.w * 1000) / 10]), frais_etf_eur_an: Math.round(fees), remarques: $$(".gf b", el).map(b => b.textContent) };
-    try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits, type: "portefeuille" }) })).json();
+      pays: cs.slice(0, 5).map(([k, w]) => [COUNTRY[k] || k, Math.round(w * 1000) / 10]), premieres_expositions: top.slice(0, 6).map(x => [x.name, Math.round(x.w * 1000) / 10]), frais_etf_eur_an: Math.round(fees), remarques: $$(".gf b", el).map(b => b.textContent),
+      habitudes: P.cfg ? { courtier: (BROKERS.list.find(b => b.id === P.cfg.courtier) || {}).name || null, compte: P.cfg.env || null, versement_mensuel_eur: +P.cfg.mensuel || null, achats_par_mois: +P.cfg.ordres || null } : null, profil_questionnaire: prof ? prof.titre : null };
+    try { const lt = LIA.eng ? await liaAsk("portefeuille", JSON.stringify(faits), 600) : null;
+      const j = lt ? { txt: lt } : await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits, type: "portefeuille" }) })).json();
       $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Commentaire rédigé par une IA à partir de vos lignes. Ce n'est pas un conseil en investissement.</p></div>` : iaErr(j, "Analyse indisponible.");
     } catch (e) { $("#pfiab").innerHTML = `<p class="muted">Analyse indisponible pour le moment.</p>`; }
   };
@@ -3398,8 +3417,9 @@ function assistantPanel(s, c, root) {
     <p class="muted" style="margin:0 0 10px;font-size:14px">L'assistant répond à partir des seules données de cette fiche : comptes, médianes du secteur, concurrentes, cours et annonces. Il explique ; il ne dit pas s'il faut acheter.</p>
     <div class="chips">${ASK.map(q => `<button type="button" class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>
     <form class="askf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question, par exemple : pourquoi sa marge baisse-t-elle ?" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
-    <div class="asklog"></div><p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres passent par l'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
+    <div class="asklog"></div>${liaBoxHTML(true)}<p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres passent par l'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
   const first = root.firstElementChild; first ? first.after(sec) : root.appendChild(sec); // juste sous l'essentiel, bien visible
+  liaUI();
   const log = $(".asklog", sec), inp = $("input", sec);
   const ask = async q => {
     q = q.trim(); if (q.length < 5) return;
@@ -3407,8 +3427,9 @@ function assistantPanel(s, c, root) {
     await loadAna();
     const loc = localAssist(s, c, q);
     if (loc) { $(".aska", item).innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, tirée des chiffres de la fiche.</p>`; return; }
+    if (LIA.eng) { const t = await liaAsk("assistant", `Faits : ${JSON.stringify(ficheFaits(s, c)).slice(0, 7000)}\n\nQuestion : ${q}`, 450); if (t) { $(".aska", item).innerHTML = resumeHTML(t) + `<p class="iafoot">Réponse de l'IA installée sur votre appareil, à partir des chiffres de la fiche. À vérifier.</p>`; return; } }
     try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, c) }) })).json();
-      $(".aska", item).innerHTML = j.txt ? resumeHTML(j.txt) : iaErr(j, "Réponse indisponible.");
+      $(".aska", item).innerHTML = j.txt ? resumeHTML(j.txt) : iaErr(j, "Réponse indisponible.") + (j.quota ? liaBoxHTML() : ""); liaUI();
     } catch (e) { $(".aska", item).innerHTML = `<p class="muted">L'assistant est indisponible pour le moment.</p>`; }
   };
   sec.addEventListener("click", e => { const b = e.target.closest("[data-ask]"); if (b) { b.disabled = true; ask(b.dataset.ask); } });
@@ -3649,15 +3670,15 @@ function etfIAHTML(a) {
 async function iaRun(q, out) {
   out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA analyse votre question…</div>`;
   await Promise.all([premStatus(), PXP, loadAna()]); // les cours servent au PER, au rendement et aux médianes
-  let a = localCopilot(q);
+  let a = localCopilot(q) || (LIA.eng ? await liaCopilot(q) : null);
   if (!a) try { const r = await iaFetch("/api/demande", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) }); a = await r.json(); } catch (e) { a = { error: "L'IA est indisponible pour le moment." }; }
-  if (a.error) { out.innerHTML = iaErr(a, a.error); return; }
+  if (a.error) { out.innerHTML = iaErr(a, a.error) + (a.quota || /demandée/.test(a.error) ? liaBoxHTML() : ""); liaUI(); return; }
   if (a.action === "fiche") { const x = a.id ? RBY[a.id] : resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
   if (a.action === "comparer") { const ids = (a.ids ? a.ids.map(id => RBY[id]) : a.noms.map(resoudre)).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
   const titre = a.titre || q;
   out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
     ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : resumeHTML(a.texte)}
-    <p class="iafoot">${a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p></div>`;
+    <p class="iafoot">${a.lia ? "Réponse de l'IA installée sur votre appareil, à partir des données du site. À vérifier ; ce n'est pas un conseil." : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p></div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
 function iaBox(id, big = false) {
@@ -3668,9 +3689,9 @@ function pageDemander() {
   setTitle("Demander à l'IA"); setNav("ia");
   const q = new URLSearchParams(location.search).get("q") || "";
   app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à bilan.</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
-    ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>
+    ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>${liaBoxHTML()}</div>
     <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres passent par l'IA : ${isPrem() ? "200 par jour avec Premium." : `10 par jour en version gratuite, 200 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div></section>`;
-  const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
+  const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out); liaUI();
   app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (!b) return; $("input", f).value = b.dataset.iaq; f.requestSubmit(); });
   if (q) { $("input", f).value = q; iaRun(q, out); }
 }
@@ -3793,8 +3814,10 @@ async function espaceAlertes(el, m) {
 function espaceReglages(el, m) {
   el.innerHTML = `<div class="two"><section class="panel"><div class="ph"><h2>Mot de passe</h2></div><div class="pb"><form id="mdpf" class="espform"><label>Mot de passe actuel<input type="password" name="a" required autocomplete="current-password"></label><label>Nouveau mot de passe<input type="password" name="n" required minlength="10" autocomplete="new-password"></label><button class="btn">Changer</button><p class="muted" id="mdpm" style="font-size:13.5px;margin:0"></p></form></div></section>
     <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail ? `<label class="chk"><input type="checkbox" id="teas"${m.teaser ? " checked" : ""}> Recevoir un court e-mail quand mon bilan de la semaine est prêt (sans son contenu).</label>` : `<p class="muted" style="margin-top:0">Votre bilan de la semaine vous attend ici chaque samedi matin.</p>`}
+      <div style="margin-top:16px">${liaBoxHTML()}</div>
       <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button>${m.premium ? `<a class="btn ghost" href="/premium">Mon abonnement</a>` : ""}</div></div></section></div>
     <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte, vos favoris, votre portefeuille, vos bilans et vos alertes sont effacés définitivement. Un abonnement Premium se résilie à part, depuis la page Premium.</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
+  liaUI();
   $("#mdpf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/motdepasse", { ancien: fd.get("a"), nouveau: fd.get("n") }); $("#mdpm").textContent = r.error || "Mot de passe changé."; };
   if ($("#teas")) $("#teas").onchange = e => post2("/api/espace/preferences", { teaser: e.target.checked });
   $("#logout").onclick = async () => { await post2("/api/espace/deconnexion"); MOI = { connecte: false }; document.documentElement.classList.remove("is-in"); espaceBadge(); go("/"); };
@@ -3999,6 +4022,167 @@ function listeLocale(cos) {
     up.length ? `À venir\n${up.slice(0, 4).map(e => `${dLabel(e.date)} : ${e.c.name}, ${e.label}`).join(" ; ")}.` : ""].filter(Boolean).join("\n");
 }
 
+/* ====================================================================================================
+   v10 : IA locale (le modèle tourne dans le navigateur du visiteur : gratuit, illimité, privé),
+   graphiques tactiles, portefeuille analysé avec les habitudes et le profil, page Méthode.
+   ==================================================================================================== */
+
+/* ---------- IA locale (WebLLM, modèle ouvert Qwen, exécuté sur la carte graphique de l'appareil) ---------- */
+const LIA = { st: "off", eng: null, p: 0, msg: "", model: null, prompts: null, loading: null, queue: Promise.resolve() };
+const LKEY = "bilan.ia_locale";
+const liaOn = () => { try { return localStorage.getItem(LKEY) === "on"; } catch (e) { return false; } };
+async function liaSupport() {
+  if (!navigator.gpu) return null;
+  try { const a = await navigator.gpu.requestAdapter(); return a ? { f16: a.features.has("shader-f16") } : null; } catch (e) { return null; }
+}
+const liaPetit = () => matchMedia("(max-width: 760px)").matches || (navigator.deviceMemory && navigator.deviceMemory <= 4);
+const liaModel = sup => (liaPetit() ? "Qwen3.5-0.8B" : "Qwen3.5-2B") + (sup.f16 ? "-q4f16_1-MLC" : "-q4f32_1-MLC");
+const liaTaille = () => liaPetit() ? "environ 0,6 Go" : "environ 1,5 Go";
+function liaStart() {
+  if (LIA.eng) return Promise.resolve(LIA.eng);
+  if (LIA.loading) return LIA.loading;
+  LIA.loading = (async () => {
+    const sup = await liaSupport();
+    if (!sup) { LIA.st = "unsupported"; liaUI(); return null; }
+    LIA.st = "loading"; LIA.model = liaModel(sup); liaUI();
+    const webllm = await import("https://esm.run/@mlc-ai/web-llm@0.2.86");
+    const eng = await webllm.CreateMLCEngine(LIA.model, { initProgressCallback: r => { LIA.p = r.progress || 0; LIA.msg = r.text || ""; liaUI(); } });
+    LIA.eng = eng; LIA.st = "ready"; try { localStorage.setItem(LKEY, "on"); } catch (e) { } liaUI(); return eng;
+  })().catch(e => { LIA.st = "error"; LIA.msg = String(e && e.message || e).slice(0, 200); LIA.loading = null; liaUI(); return null; });
+  return LIA.loading;
+}
+function liaAsk(kind, utilisateur, max_tokens = 450) {
+  if (!LIA.eng) return Promise.resolve(null);
+  const run = async () => {
+    if (!LIA.prompts) LIA.prompts = await fetch("/data/prompts.json").then(r => r.json()).catch(() => ({}));
+    const sys = LIA.prompts[kind]; if (!sys) return null;
+    try {
+      const r = await LIA.eng.chat.completions.create({ messages: [{ role: "system", content: sys }, { role: "user", content: utilisateur }], max_tokens, temperature: 0.2, extra_body: { enable_thinking: false } });
+      const t = String((r.choices[0].message || {}).content || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/, "").replace(/—/g, ",").replace(/\*\*/g, "").trim();
+      return t.length > 15 ? t : null;
+    } catch (e) { return null; }
+  };
+  const p = LIA.queue.then(run, run); LIA.queue = p.catch(() => null); return p; // une question à la fois
+}
+function liaBoxHTML(compact = false) { return `<div class="liabox${compact ? " compact" : ""}"></div>`; }
+function liaUI() {
+  $$(".liabox").forEach(el => {
+    const c = el.classList.contains("compact");
+    if (LIA.st === "ready") { el.innerHTML = `<span class="liaok">⚡ IA illimitée active sur cet appareil</span>${c ? "" : `<span class="light"> · modèle ouvert ${esc(String(LIA.model || "").split("-q")[0])}, rien ne quitte votre appareil</span>`}`; return; }
+    if (LIA.st === "loading") { el.innerHTML = `<div class="liaprog"><span style="width:${Math.round(LIA.p * 100)}%"></span></div><small class="light">Installation de l'IA sur cet appareil : ${Math.round(LIA.p * 100)} %. Une seule fois ; la page reste utilisable.</small>`; return; }
+    if (LIA.st === "unsupported") { el.innerHTML = c ? "" : `<small class="light">L'IA illimitée sur l'appareil demande un navigateur récent avec WebGPU (Chrome ou Edge sur ordinateur, Chrome sur Android, Safari 26 sur iPhone).</small>`; return; }
+    if (LIA.st === "error") { el.innerHTML = `<small class="light">L'installation de l'IA locale n'a pas abouti (${esc(LIA.msg)}). Le site continue avec l'IA en ligne.</small> <button type="button" class="linkbtn" data-lia>Réessayer</button>`; return; }
+    el.innerHTML = `<button type="button" class="btn liago" data-lia>⚡ Activer l'IA illimitée sur cet appareil</button>${c ? "" : `<small class="light">Gratuit et sans limite de questions : un modèle d'IA ouvert s'installe dans votre navigateur (${liaTaille()}, une seule fois, de préférence en Wi-Fi). Vos questions ne quittent plus votre appareil.</small>`}`;
+  });
+}
+document.addEventListener("click", e => { if (e.target.closest("[data-lia]")) liaStart(); });
+if (liaOn()) setTimeout(liaStart, 2500); // déjà installé : rechargé depuis le cache du navigateur
+
+/* Validation d'une action du copilote produite par le modèle local (même règle que le serveur) */
+function iaValide(a) {
+  if (!a || typeof a !== "object") return null;
+  const IND = Object.keys(INDI), clean = s => String(s || "").replace(/\s+/g, " ").trim();
+  if (a.action === "filtre") return { action: "filtre", titre: clean(a.titre).slice(0, 120), secteur: R.sectors[a.secteur] ? a.secteur : null, region: ["FR", "EU", "US", "MONDE"].includes(a.region) ? a.region : null, pea: a.pea === true,
+    criteres: (Array.isArray(a.criteres) ? a.criteres : []).filter(c => c && IND.includes(c.indicateur) && ["sup_mediane", "inf_mediane", "sup", "inf"].includes(c.condition)).slice(0, 5).map(c => ({ indicateur: c.indicateur, condition: c.condition, valeur: typeof c.valeur === "number" ? c.valeur : null })),
+    tri: a.tri && IND.includes(a.tri.indicateur) ? { indicateur: a.tri.indicateur, ordre: a.tri.ordre === "asc" ? "asc" : "desc" } : null, limite: 12 };
+  if (a.action === "comparer" && Array.isArray(a.noms)) return { action: "comparer", noms: a.noms.map(clean).filter(Boolean).slice(0, 5) };
+  if (a.action === "fiche" && a.nom) return { action: "fiche", nom: clean(a.nom) };
+  if (a.action === "etf") return { action: "etf", titre: clean(a.titre), categorie: /^[a-z-]{3,30}$/.test(a.categorie || "") ? a.categorie : null, pea: a.pea === true };
+  if (a.action === "repondre" && clean(a.texte).length > 30) return { action: "repondre", texte: String(a.texte) };
+  return null;
+}
+const jsonFrom = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { return JSON.parse(t.slice(i, j + 1)); } catch (e) { return null; } };
+async function liaCopilot(q) {
+  if (!LIA.eng) return null;
+  const a = iaValide(jsonFrom(await liaAsk("demande", q, 400)));
+  if (a && a.action === "repondre") { const x = await liaAsk("expliquer", q, 450); if (x) a.texte = x; a.lia = true; }
+  if (a) a.lia = true;
+  return a;
+}
+
+/* ---------- Graphiques : taille réelle de l'écran et infobulles au doigt ---------- */
+const chartW = () => Math.max(300, Math.min(640, (window.innerWidth || 640) - 44));
+let tipOn = null;
+function tipAt(x, y, show = true) {
+  const t = document.elementFromPoint(x, y), el = t && t.closest && t.closest("[data-tip]");
+  if (tipOn && tipOn !== el) tipOn.classList.remove("on");
+  if (el && show) { tipShow(el, x, y); el.classList.add("on"); tipOn = el; } else if (!el) { CTIP.style.display = "none"; tipOn = null; }
+}
+document.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") tipAt(e.clientX, e.clientY); }, { passive: true });
+document.addEventListener("pointermove", e => { if (e.pointerType !== "mouse" && e.buttons) tipAt(e.clientX, e.clientY); }, { passive: true });
+window.addEventListener("scroll", () => { if (CTIP.style.display === "block" && tipOn) { CTIP.style.display = "none"; tipOn.classList.remove("on"); tipOn = null; } }, { passive: true });
+
+/* ---------- Profil du questionnaire, utilisé par les analyses ---------- */
+let COMMP = null;
+async function profilInvestisseur() {
+  let ans = null; try { ans = JSON.parse(localStorage.getItem("bilan.profil") || "null"); } catch (e) { }
+  if ((!ans || !Object.keys(ans).length) && MOI && MOI.donnees && MOI.donnees.profil) ans = MOI.donnees.profil;
+  if (!ans || Object.keys(ans).length < 5) return null;
+  if (!COMMP) COMMP = await fetch("/data/commencer.json").then(r => r.json()).catch(() => null);
+  if (!COMMP) return null;
+  const sc = Object.fromEntries(COMMP.profils.map(p => [p.id, 0]));
+  COMMP.questions.forEach(q => { const o = q.options[ans[q.id]]; if (o) Object.entries(o.points).forEach(([k, v]) => sc[k] = (sc[k] || 0) + v); });
+  const order = COMMP.profils.map(p => p.id), best = order.reduce((a, b) => sc[b] > sc[a] ? b : a, order[0]);
+  return { id: best, titre: COMMP.profils.find(p => p.id === best).titre, ans };
+}
+
+/* ---------- Portefeuille : vos habitudes (courtier, enveloppe, versements) et le profil ---------- */
+async function pfHabitudes(P) {
+  if (!BROKERS.list.length) { try { BROKERS = await (await fetch("/data/courtiers.json")).json(); } catch (e) { } }
+  const c = P.cfg || {};
+  return `<section class="panel"><div class="ph"><h2>Vos habitudes d'achat</h2><span class="light" style="font-size:12.5px">pour calculer ce que vous coûtent vraiment vos achats</span></div><div class="pb pfhab">
+    <label>Votre courtier<select data-c="courtier"><option value="">Choisir…</option>${BROKERS.list.filter(b => !b.custom).map(b => `<option value="${b.id}" ${b.id === c.courtier ? "selected" : ""}>${esc(b.name)}</option>`).join("")}</select></label>
+    <label>Votre compte<select data-c="env"><option value="">Choisir…</option>${[["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"], ["mix", "Plusieurs comptes"]].map(([k, l]) => `<option value="${k}" ${k === c.env ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+    <label>Versement par mois<input data-c="mensuel" type="number" min="0" step="10" value="${c.mensuel || ""}" placeholder="100"></label>
+    <label>Achats par mois<input data-c="ordres" type="number" min="1" step="1" value="${c.ordres || ""}" placeholder="1"></label></div></section>`;
+}
+function pfAnalyseHabitudes(P, lines, tot, prof) {
+  const c = P.cfg || {}, W = [], equity = lines.filter(l => !(l.k.startsWith("e:") && ["obligations", "monetaire"].includes((ETFBY[l.k.slice(2)] || {}).categorie))).reduce((a, l) => a + l.v, 0) / tot;
+  const b = c.courtier && BROKERS.list.find(x => x.id === c.courtier), m = +c.mensuel || 0, n = Math.max(1, +c.ordres || 1);
+  if (b && m > 0) {
+    const amt = m / n, fee = brokerFee(b, amt), r = fee / amt, an = fee * n * 12;
+    const best = BROKERS.list.filter(x => !x.custom && (c.env !== "pea" || x.pea)).map(x => ({ x, f: brokerFee(x, amt) })).sort((a, z) => a.f - z.f)[0];
+    if (r > 0.01) W.push(["vig", `Chaque achat de ${F0.format(amt)} € vous coûte ${eur(fee, 2)} chez ${esc(b.name)}, soit ${pct(r, 1, false)} du montant (${F0.format(an)} € par an).`, `Les frais fixes pèsent lourd sur les petits achats : à ${pct(r, 1, false)}, il faut que votre placement monte d'autant avant d'être rentable. Regrouper vos achats (par exemple un tous les deux mois) ou passer par un plan d'investissement programmé sans frais réduit ce coût.${best && best.x.id !== b.id && best.f < fee ? ` Pour un achat de ${F0.format(amt)} €, ${esc(best.x.name)} facture ${eur(best.f, 2)} (grille relevée le ${dLabel(BROKERS.updated || TODAY)}).` : ""}`]);
+    else if (r > 0.004) W.push(["moyen", `Vos frais de courtage représentent ${pct(r, 2, false)} de chaque achat (${F0.format(an)} € par an).`, "C'est acceptable. Au-delà de 1 %, les frais commencent à peser nettement sur le rendement."]);
+    else W.push(["fort", `Vos frais de courtage sont faibles : ${pct(r, 2, false)} de chaque achat.`, "Les frais par ordre ne grignotent presque pas vos versements."]);
+    const ter = lines.filter(l => l.k.startsWith("e:")).reduce((a, l) => a + l.v * ((ETFBY[l.k.slice(2)] || {}).ter || 0) / 100, 0);
+    const coutAn = an + ter, base = Calc.compound({ initial: tot, monthly: m, years: 20, rate: 0.06 }).final, net = Calc.compound({ initial: tot, monthly: m, years: 20, rate: 0.06, fee: Math.min(0.05, coutAn / Math.max(tot, 1)) }).final;
+    if (tot > 0) W.push(["moyen", `Tous frais compris (courtage et frais des ETF), vous payez environ ${F0.format(coutAn)} € par an, soit ${pct(coutAn / tot, 2, false)} de votre portefeuille.`, `Exemple illustratif : avec ${F0.format(m)} € par mois pendant 20 ans et un rendement hypothétique de 6 % par an avant frais, cet écart de frais représenterait environ ${F0.format(Math.max(0, base - net))} € à l'arrivée. Ce rendement n'est pas une prévision.`]);
+  } else W.push(["moyen", "Indiquez votre courtier et votre versement mensuel ci-dessus.", "L'analyse calculera alors ce que vous coûte chaque achat, et ce que représentent vos frais sur 20 ans."]);
+  if (c.env === "pea") { const hors = lines.filter(l => l.k.startsWith("c:") ? peaOk(RBY[l.k.slice(2)] || {}) === false : (ETFBY[l.k.slice(2)] || {}).pea === false); if (hors.length) W.push(["vig", `${hors.length} ligne${hors.length > 1 ? "s ne sont" : " n'est"} pas éligible${hors.length > 1 ? "s" : ""} au PEA : ${hors.slice(0, 4).map(l => esc(keyName(l.k))).join(", ")}.`, "Un PEA n'accepte que les actions européennes et les ETF éligibles. Ces lignes doivent être dans un compte-titres, ou remplacées par un ETF éligible au PEA qui suit le même marché."]); }
+  if (c.env === "cto") { const peaW = lines.filter(l => l.k.startsWith("c:") ? peaOk(RBY[l.k.slice(2)] || {}) : (ETFBY[l.k.slice(2)] || {}).pea).reduce((a, l) => a + l.v, 0) / tot; if (peaW > 0.4) W.push(["moyen", `${F0.format(peaW * 100)} % de vos lignes pourraient être détenues dans un PEA.`, "En 2026, les gains d'un PEA de plus de 5 ans sont imposés à 18,6 % (prélèvements sociaux seuls), contre 31,4 % dans un compte-titres. Les versements d'un PEA sont plafonnés à 150 000 €."]);
+    const dist = lines.filter(l => l.k.startsWith("e:") && /dist/i.test((ETFBY[l.k.slice(2)] || {}).distribution || "")); if (dist.length) W.push(["moyen", `${dist.length} ETF distribuant${dist.length > 1 ? "s" : ""} dans un compte-titres.`, "Chaque dividende versé est imposé l'année où vous le recevez. Un ETF capitalisant réinvestit les dividendes et ne crée pas d'impôt tant que vous ne vendez pas."]); }
+  if (prof) {
+    const a = prof.ans;
+    if (a.horizon === 0 && equity > 0.5) W.push(["vig", `Vous avez indiqué avoir besoin de cet argent dans moins de 5 ans, et ${F0.format(equity * 100)} % du portefeuille est en actions.`, "Sur moins de 5 ans, une baisse de 30 % ou plus est possible sans laisser le temps de remonter. C'est la règle la plus importante du guide « Par où commencer »."]);
+    if (a.precaution === 0) W.push(["vig", "Vous avez indiqué ne pas avoir encore d'épargne de précaution.", "Sans réserve sur un livret, un imprévu peut obliger à vendre au pire moment. La pratique courante est de garder 3 à 6 mois de dépenses disponibles avant d'investir en Bourse."]);
+    if (a.baisse === 0 && equity > 0.6) W.push(["moyen", `Vous avez indiqué que vous vendriez après une baisse de 30 %, avec ${F0.format(equity * 100)} % en actions.`, "Vendre après une forte baisse transforme une perte temporaire en perte définitive. Une part d'actions plus faible rend les baisses plus supportables."]);
+    if (a.choisir === 0 && lines.filter(l => l.k.startsWith("c:")).length >= 5) W.push(["moyen", "Vous préférez une solution simple, et vous détenez plusieurs actions en direct.", "Suivre plusieurs entreprises demande du temps : lire leurs résultats deux à quatre fois par an. Un ETF large fait ce travail de diversification pour vous."]);
+  } else W.push(["moyen", "L'analyse ne connaît pas encore votre profil.", `Répondez aux <a class="lnk" href="/commencer#profil">5 questions du questionnaire</a> : l'analyse tiendra compte de votre horizon, de votre épargne de précaution et de votre réaction aux baisses.`]);
+  return W;
+}
+
+/* ---------- Méthode, sources et IA ---------- */
+function pageMethode() {
+  setTitle("Méthode, sources et IA"); setNav("new");
+  app.innerHTML = `<div class="legal"><p class="kick">Transparence</p><h1 class="pagetitle">Méthode, sources et intelligence artificielle</h1><p class="pagesub">Comment le site calcule ses chiffres, d'où ils viennent, et comment l'IA est encadrée pour rester factuelle.</p>
+    <section class="panel"><div class="pb">
+      <h2>D'où viennent les chiffres</h2>
+      <p>Les comptes des entreprises viennent des documents officiels : les rapports annuels au format européen ESEF (filings.xbrl.org) et les dépôts auprès de la SEC américaine (EDGAR). Les annonces françaises viennent de l'AMF (info-financiere.gouv.fr). Les cours sont différés (Google Finance) et les taux de change sont ceux de la Banque centrale européenne. Les listes de sites non autorisés viennent de l'AMF, via data.gouv.fr.</p>
+      <h2>Comment les chiffres sont jugés</h2>
+      <p>Chaque chiffre est comparé à la médiane des entreprises du même secteur suivies par le site : la moitié fait mieux, l'autre moins bien. Vert signifie nettement mieux que la médiane, orange nettement moins bien, gris dans la moyenne. Un point orange n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller.</p>
+      <h2>Ce que fait l'intelligence artificielle</h2>
+      <p>Les questions courantes (recherches par critères, comparaisons, définitions, questions sur une fiche) sont comprises et calculées directement par le site, sans modèle d'IA : la réponse est donc exacte par construction et sans limite. Pour les questions libres, un modèle d'IA reçoit uniquement les chiffres du site et des consignes strictes. Il peut tourner dans votre navigateur (IA locale, modèle ouvert Qwen) ou sur nos serveurs.</p>
+      <h2>Les règles données à l'IA contre les biais</h2>
+      <p>Séparer les faits de leur interprétation. Toujours présenter ce qui est favorable et ce qui demande de la vigilance. Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années. Comparer à la médiane du secteur plutôt que juger dans l'absolu. Aucun mot d'emphase. Aucune prédiction de cours, aucune recommandation d'acheter, de vendre ou de conserver un titre. Dire quand une information manque. Ne citer que les chiffres fournis.</p>
+      <h2>Ce que le site ne fait pas</h2>
+      <p>Il ne publie pas d'objectifs de cours ni de recommandations d'analystes : ces travaux sont payants, leur reprise est soumise à licence, et ils ne tiennent pas compte de votre situation. Il ne connaît pas votre patrimoine ni vos revenus : ses repères sont généraux. Pour un conseil adapté à votre situation, adressez-vous à un conseiller en investissements financiers (CIF) enregistré à l'ORIAS.</p>
+      <h2>Les limites à connaître</h2>
+      <p>Les comptes ont souvent plusieurs mois de retard sur l'activité réelle. Un ratio d'une seule année peut être faussé par un élément exceptionnel. Les cours sont différés. L'IA peut se tromper : vérifiez toujours un chiffre important dans le document source, dont le lien est donné.</p>
+    </div></section>
+    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/academie">L'Académie</a></p></div>`;
+}
+
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -4032,6 +4216,7 @@ function route() {
   else if (LEGAL_PAGES[p]) pageLegal(p);
   else if (p === "/commencer") pageCommencer();
   else if (p === "/demander") pageDemander();
+  else if (p === "/methode") pageMethode();
   else if ((m = p.match(/^\/espace(?:\/(bilan|alertes|reglages))?$/))) pageEspace(m[1]);
   else if ((m = p.match(/^\/premium(?:\/(merci))?$/))) pagePremium(m[1]);
   else pageNotFound();
