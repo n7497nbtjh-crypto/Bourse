@@ -673,7 +673,7 @@ async function assistant(request, env) {
   try {
     let out = { response: await rediger(env, { systeme: SYS_ASSIST, utilisateur: `Faits : ${faits}
 
-Question : ${question}`, max_tokens: 450 }) }, txt = String(out.response || "").replace(/—/g, ",").trim();
+Question : ${question}`, max_tokens: 450, qualite: !1 }) }, txt = String(out.response || "").replace(/—/g, ",").trim();
     if (txt.length < 20) throw new Error("vide");
     return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json3({ txt, reste: q.max - q.used });
   } catch {

@@ -857,7 +857,7 @@ mark.todo{background:#FFF1C9;padding:0 3px;border-radius:3px;color:var(--ink)}
 /* recherche : suggestion IA */
 .results a.iasug{background:#F4FAF6}.results a.iasug span:first-child{color:var(--g);font-weight:600}
 /* v8 : menu en rubriques, copilote IA, accueil en bandeaux, Mon espace, favoris en liste, jauges */
-.bar .search{min-width:320px;max-width:420px}@media (max-width:1380px){.bar .logo span{display:none}}.bar .search input{height:40px;font-size:14.5px}
+.bar .search{min-width:300px;max-width:420px}@media (max-width:1560px){.bar .logo span{display:none}}@media (max-width:1240px){.bar .search{min-width:200px}#nav .dd>button{padding-left:7px;padding-right:7px}}@media (max-width:1120px){#nav a.navia{display:none}.bar .search{min-width:150px}#nav .dd>button{font-size:13.5px}}.bar .search input{height:40px;font-size:14.5px}
 #nav{gap:4px!important;align-items:center}
 #nav .dd{position:relative}
 #nav .dd>button{background:none;border:0;font:inherit;font-size:14px;color:var(--grey);padding:18px 10px 16px;cursor:pointer;display:flex;align-items:center;gap:5px;border-bottom:2px solid transparent;white-space:nowrap}
@@ -3153,11 +3153,14 @@ function listeFaits(cos) { // les faits transmis à l'IA : rien d'autre que les 
 }
 async function veilleBilan(cos) {
   const el = $("#vbil"); if (!el) return;
-  el.innerHTML = `<p class="muted">Rédaction du bilan de votre liste…</p>`;
   await loadAna();
+  const loc = listeLocale(cos);
+  el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">L'IA rédige une lecture plus détaillée…</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
   try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
-    el.innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>` : iaErr(j, "Bilan indisponible.");
-  } catch (e) { el.innerHTML = `<p class="muted">Bilan indisponible pour le moment.</p>`; }
+    if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>`;
+    else if (loc) $("#vbilf").innerHTML = `Résumé automatique de vos chiffres.${j.quota && !j.premium ? ` La lecture détaillée par l'IA est limitée à 1 par jour en version gratuite : <a class="lnk" href="/premium">Premium</a>.` : ""}`;
+    else el.innerHTML = iaErr(j, "Bilan indisponible.");
+  } catch (e) { if (loc) $("#vbilf").textContent = "Résumé automatique de vos chiffres."; else el.innerHTML = `<p class="muted">Bilan indisponible pour le moment.</p>`; }
 }
 async function pageFavorisV1() {
   setTitle("Mes favoris"); setNav("fav");
@@ -3391,13 +3394,15 @@ function assistantPanel(s, c, root) {
     <p class="muted" style="margin:0 0 10px;font-size:14px">L'assistant répond à partir des seules données de cette fiche : comptes, médianes du secteur, concurrentes, cours et annonces. Il explique ; il ne dit pas s'il faut acheter.</p>
     <div class="chips">${ASK.map(q => `<button type="button" class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>
     <form class="askf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question, par exemple : pourquoi sa marge baisse-t-elle ?" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
-    <div class="asklog"></div><p class="iafoot" style="margin-top:10px">${isPrem() ? "Premium : jusqu'à 40 questions par jour." : `3 questions par jour en version gratuite, 40 avec <a class="lnk" href="/premium">Premium</a>.`} Réponses rédigées par une IA : vérifiez les chiffres sur la fiche.</p></div>`;
+    <div class="asklog"></div><p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres passent par l'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
   const first = root.firstElementChild; first ? first.after(sec) : root.appendChild(sec); // juste sous l'essentiel, bien visible
   const log = $(".asklog", sec), inp = $("input", sec);
   const ask = async q => {
     q = q.trim(); if (q.length < 5) return;
     const item = document.createElement("div"); item.className = "askit"; item.innerHTML = `<p class="askq">${esc(q)}</p><div class="aska"><p class="muted">L'assistant lit la fiche…</p></div>`; log.prepend(item);
     await loadAna();
+    const loc = localAssist(s, c, q);
+    if (loc) { $(".aska", item).innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, tirée des chiffres de la fiche.</p>`; return; }
     try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, c) }) })).json();
       $(".aska", item).innerHTML = j.txt ? resumeHTML(j.txt) : iaErr(j, "Réponse indisponible.");
     } catch (e) { $(".aska", item).innerHTML = `<p class="muted">L'assistant est indisponible pour le moment.</p>`; }
@@ -3420,9 +3425,10 @@ async function pagePremium(sub) {
     ["Bilan de la semaine commenté par l'IA", "Oui", "Oui"],
     ["Historique des bilans", "2 semaines", "12 semaines"],
     ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "Toutes"],
-    ["Questions à l'IA « Demander à bilan. »", "10 par jour", "200 par jour"],
+    ["Questions courantes à l'IA (recherches, comparaisons, définitions, questions sur une fiche)", "Sans limite", "Sans limite"],
+    ["Questions libres à l'IA « Demander à bilan. »", "10 par jour", "200 par jour"],
     ["Résultats d'une recherche par l'IA", "8", "30"],
-    ["Questions à l'assistant de chaque fiche", `${L.assistant[0]} par jour`, `${L.assistant[1]} par jour`],
+    ["Questions libres à l'assistant de chaque fiche", `${L.assistant[0]} par jour`, `${L.assistant[1]} par jour`],
     ["Résumés détaillés des documents officiels", `${L.resume[0]} par jour`, `${L.resume[1]} par jour`],
     ["Bilan rédigé de vos favoris, à la demande", `${L.veille[0]} par jour`, `${L.veille[1]} par jour`],
     ["Commentaire IA de votre portefeuille", `${L.portefeuille[0]} par jour`, `${L.portefeuille[1]} par jour`],
@@ -3599,7 +3605,7 @@ const INDI = {
 const MEDI = {};
 function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing).map(INDI[k][1])); return MEDI[key]; }
 function runFiltre(a) {
-  let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region) && (!a.pea || peaOk(c)));
+  let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region || (a.region === "EU" && c.region === "FR")) && (!a.pea || peaOk(c)));
   l = l.filter(c => a.criteres.every(k => { const f = INDI[k.indicateur]; if (!f) return true; const v = f[1](c); if (v == null) return false;
     if (k.condition === "sup") return k.valeur == null || v > k.valeur; if (k.condition === "inf") return k.valeur == null || v < k.valeur;
     const m = medInd(c.sector, k.indicateur); if (m == null) return false; return k.condition === "sup_mediane" ? v > m : v < m; }));
@@ -3639,14 +3645,15 @@ function etfIAHTML(a) {
 async function iaRun(q, out) {
   out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA analyse votre question…</div>`;
   await premStatus();
-  let a; try { const r = await iaFetch("/api/demande", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) }); a = await r.json(); } catch (e) { a = { error: "L'IA est indisponible pour le moment." }; }
+  let a = localCopilot(q);
+  if (!a) try { const r = await iaFetch("/api/demande", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) }); a = await r.json(); } catch (e) { a = { error: "L'IA est indisponible pour le moment." }; }
   if (a.error) { out.innerHTML = iaErr(a, a.error); return; }
-  if (a.action === "fiche") { const x = resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
-  if (a.action === "comparer") { const ids = a.noms.map(resoudre).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
+  if (a.action === "fiche") { const x = a.id ? RBY[a.id] : resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
+  if (a.action === "comparer") { const ids = (a.ids ? a.ids.map(id => RBY[id]) : a.noms.map(resoudre)).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
   const titre = a.titre || q;
-  out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
+  out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
     ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : resumeHTML(a.texte)}
-    <p class="iafoot">${a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p></div>`;
+    <p class="iafoot">${a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p></div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
 function iaBox(id, big = false) {
@@ -3658,7 +3665,7 @@ function pageDemander() {
   const q = new URLSearchParams(location.search).get("q") || "";
   app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à bilan.</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
     ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>
-    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. ${isPrem() ? "Premium : 200 questions par jour." : `10 questions par jour en version gratuite, 200 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div></section>`;
+    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres passent par l'IA : ${isPrem() ? "200 par jour avec Premium." : `10 par jour en version gratuite, 200 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div></section>`;
   const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
   app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (!b) return; $("input", f).value = b.dataset.iaq; f.requestSubmit(); });
   if (q) { $("input", f).value = q; iaRun(q, out); }
@@ -3760,7 +3767,7 @@ async function espaceBilan(el, m) {
   el.innerHTML = `<div class="cols"><div>
     <section class="panel"><div class="ph"><h2>Semaine ${esc(String(b.semaine || "").replace(/^\d{4}-W/, ""))}</h2><span class="light" style="font-size:12.5px">${b.genere ? "préparé le " + new Date(b.genere).toLocaleDateString("fr-FR") : ""}</span></div>
       <div class="pb"><div class="bigstat"><span class="${b.moyenne >= 0 ? "up" : "down"}">${b.moyenne != null ? pct(b.moyenne / 100) : "–"}</span><small>évolution moyenne de vos lignes sur la semaine</small></div>
-      ${b.texte ? `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des chiffres ci-dessous. Ce n'est pas un conseil.</p></div>` : `<p class="muted">Le commentaire de l'IA sera prêt à votre prochaine visite. Les chiffres, eux, sont à jour.</p>`}</div></section>
+      ${b.texte ? `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des chiffres ci-dessous. Ce n'est pas un conseil.</p></div>` : bilanLocal(b) ? `<div class="iares">${resumeHTML(bilanLocal(b))}<p class="iafoot">Résumé automatique de vos chiffres. Le commentaire de l'IA s'ajoutera à votre prochaine visite.</p></div>` : ""}</div></section>
     <section class="panel"><div class="ph"><h2>Ce qui a bougé</h2></div><div class="pb"><div class="hb">${L.map(x => `<a class="hbr" href="${x.k.startsWith("c:") ? "/entreprise/" : "/etf/"}${x.k.slice(2)}"><span class="hbl">${esc(x.nom)}</span><span class="hbb ctr"><span style="width:${Math.abs(x.variation_semaine_pct) / mx * 50}%;${x.variation_semaine_pct < 0 ? "right:50%;background:var(--o)" : "left:50%;background:var(--g)"}"></span></span><span class="hbv num ${x.variation_semaine_pct >= 0 ? "up" : "down"}">${pct(x.variation_semaine_pct / 100)}</span></a>`).join("")}</div>
       ${sansCours.length ? `<p class="note">Sans cours de la semaine dernière : ${sansCours.map(x => esc(x.nom)).join(", ")}.</p>` : ""}</div></section>
     ${(b.annonces || []).length ? `<section class="panel"><div class="ph"><h2>Ce qui a été annoncé</h2></div><div class="pb">${b.annonces.map(a => `<div class="espann"><p><b>${esc(a.nom || keyName("c:" + a.id) || "")}</b> <span class="light">· ${esc(a.date ? dLabel(a.date) : "")} · ${esc(a.type || "")}</span></p>${(a.chiffres || []).length ? `<p>${a.chiffres.map(c => `${esc(c[0])} : <b>${esc(c[1])}</b>`).join(" · ")}</p>` : ""}${(a.lecture || []).length ? `<p class="muted">${esc(a.lecture.join(" "))}</p>` : ""}</div>`).join("")}</div></section>` : ""}
@@ -3832,6 +3839,161 @@ async function pageFavoris() {
 }
 
 document.addEventListener("click", e => { if (e.target.closest(".favx") && location.pathname === "/favoris") setTimeout(pageFavoris, 0); });
+
+/* ====================================================================================================
+   v9 : IA sans limite pour l'essentiel. Les questions courantes sont comprises et traitées dans le navigateur,
+   avec les données du site : réponse instantanée, aucun appel au modèle, aucun quota. Le modèle ne sert qu'aux
+   questions vraiment libres.
+   ==================================================================================================== */
+const strip = h => String(h || "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+const has = (q, re) => re.test(q);
+
+/* ---------- Notions supplémentaires (en plus du lexique) ---------- */
+const XTERMS = {
+  capitalisant: { name: "ETF capitalisant", what: "Un ETF qui réinvestit automatiquement dans le fonds les dividendes reçus des entreprises : rien ne vous est versé, la valeur de chaque part monte d'autant.", read: "Pratique pour faire travailler l'argent sur la durée sans rien faire. Dans un compte-titres, aucun impôt n'est dû tant que vous ne vendez pas.", ex: "Un ETF qui reçoit 2 % de dividendes par an les rachète en actions : votre part vaut 2 % de plus au lieu de vous verser 2 %.", re: /capitalisant/ },
+  distribuant: { name: "ETF distribuant", what: "Un ETF qui vous verse les dividendes reçus des entreprises, en général une à quatre fois par an.", read: "Utile si vous voulez un revenu. Dans un compte-titres, chaque versement est imposé l'année où vous le recevez.", re: /distribuant/ },
+  dividende: { name: "Dividende", what: "La part de son bénéfice qu'une entreprise verse à ses actionnaires, en général une à quatre fois par an.", read: "Il n'est jamais garanti : l'entreprise peut le baisser ou le supprimer. Le jour du détachement, le cours baisse à peu près du montant versé.", ex: "Une action à 50 € qui verse 2 € par an a un rendement de 4 %.", re: /dividende/ },
+  diversification: { name: "Diversification", what: "Répartir son argent sur beaucoup d'entreprises, de secteurs et de pays, pour qu'un seul échec pèse peu.", read: "Un ETF monde contient plus de 1 000 entreprises : la faillite de l'une d'elles change très peu sa valeur.", re: /diversif/ },
+  obligation: { name: "Obligation", what: "Un prêt à un État ou à une entreprise, qui vous verse des intérêts puis rembourse la somme à une date fixée.", read: "En général moins risquée qu'une action, et moins rémunératrice sur longue durée. Sa valeur baisse quand les taux d'intérêt montent.", re: /obligation/ },
+  ordre: { name: "Ordre de Bourse", what: "L'instruction d'achat ou de vente donnée à votre courtier. Au marché : exécuté tout de suite au prix disponible. À cours limité : exécuté seulement à votre prix ou mieux.", read: "Le cours limité évite d'acheter plus cher que prévu sur une action peu échangée.", re: /\bordre|cours limit|au marche/ },
+  dca: { name: "Investissement programmé", what: "Investir la même somme à intervalle régulier, par exemple 100 € chaque mois, quel que soit le cours.", read: "On achète plus de parts quand le prix est bas, moins quand il est haut, et on évite de devoir choisir « le bon moment ».", ex: "100 € à 10 € la part achètent 10 parts ; 100 € à 5 € en achètent 20. Prix moyen : 6,67 € au lieu de 7,50 €.", re: /programm|dca|chaque mois|regulier/ },
+  composes: { name: "Intérêts composés", what: "Les gains produisent eux-mêmes des gains, car ils restent placés.", read: "C'est pourquoi la durée compte autant que le montant.", ex: "1 000 € à 7 % par an deviennent environ 1 967 € en 10 ans et 3 870 € en 20 ans.", re: /compos/ },
+  flat: { name: "Flat tax", what: "L'impôt forfaitaire sur les gains d'un compte-titres : 31,4 % en 2026 (12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux).", read: "Dans un PEA de plus de 5 ans, seuls les 18,6 % de prélèvements sociaux s'appliquent.", re: /flat|pfu|imposition|impot/ },
+  courtier: { name: "Courtier", what: "L'intermédiaire (banque ou application) chez qui vous ouvrez un compte pour acheter des actions ou des ETF.", read: "Comparez les frais par ordre, les frais de garde et l'offre PEA.", re: /courtier|broker/ },
+  krach: { name: "Krach", what: "Une chute brutale et rapide des marchés, souvent de 20 % ou plus en quelques semaines.", read: "Il y en a eu en 1987, 2000, 2008 et 2020. Les marchés ont fini par remonter, parfois après plusieurs années : c'est pourquoi l'argent investi en actions doit pouvoir rester placé longtemps.", re: /krach|crash|chute/ },
+  inflation: { name: "Inflation", what: "La hausse générale des prix, qui fait perdre du pouvoir d'achat à l'argent qui dort.", read: "Un livret à 1,7 % avec une inflation à 2 % fait perdre un peu de pouvoir d'achat chaque année.", re: /inflation/ },
+  isin: { name: "Code ISIN", what: "L'identifiant unique d'un titre dans le monde : deux lettres de pays et dix caractères, par exemple FR0000121014 pour LVMH.", read: "Le plus sûr pour retrouver exactement le bon ETF chez votre courtier.", re: /isin/ },
+};
+function termeDe(q) {
+  const x = Object.values(XTERMS).find(t => t.re.test(q)); if (x) return x;
+  const w = x => new RegExp("(^|[^a-z0-9])" + x.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z0-9])");
+  const k = Object.keys(TERMS).find(k => { const n = norm(TERMS[k].name).replace(/\(.*\)/, "").trim(); return (n.length > 2 && w(n).test(q)) || (k.length > 2 && w(k).test(q)); });
+  return k ? TERMS[k] : null;
+}
+const termeTexte = t => [t.what, t.calc ? `Calcul : ${t.calc}` : "", t.read, t.ex ? `Exemple : ${t.ex}` : "", t.limit ? `Limite : ${t.limit}` : ""].filter(Boolean).join("\n");
+
+/* ---------- Le copilote comprend seul les demandes courantes ---------- */
+const SECW = [[/tech|informatiq|logiciel|semi.?conduct|puce|numerique|cloud|intelligence artificielle|\bia\b/, "tech"], [/banque|bancaire|assur|financ/, "finance"], [/sante|pharma|medic|biotech|laboratoire/, "sante"], [/energie|petrol|petroli|\bgaz\b/, "energie"], [/industri|aero|defense|aeronaut|transport|automobile|voiture/, "industrie"], [/luxe|conso|distribution|grande surface|alimenta|boisson|textile/, "conso"], [/telecom|media|television/, "telecom"], [/materiau|chimi|mines|minier|metaux|acier/, "materiaux"], [/immobili|fonciere/, "immo"], [/electricite|eau\b|services aux collectivites|utilities/, "services"]];
+const REGW = [[/francais|france|\bcac\b|paris/, "FR"], [/europ/, "EU"], [/americain|etats.?unis|\bus\b|\busa\b|wall street/, "US"], [/japon|chin|asi|coree|inde|bresil|monde emergent|australi|canad/, "MONDE"]];
+const ECATW = [[/monde|world|acwi/, "actions-monde"], [/s.?p|nasdaq|americ|etats.?unis|\bus\b|\busa\b/, "actions-usa"], [/emergent/, "actions-emergents"], [/asi|japon|chin|inde/, "actions-asie"], [/europ|stoxx/, "actions-europe"], [/france|cac/, "actions-france"], [/dividend/, "dividendes"], [/obligat/, "obligations"], [/monetaire/, "monetaire"], [/immobil/, "immobilier"], [/\bor\b|matieres|petrole/, "matieres"], [/theme|robot|eau\b|climat|semi|cyber|sante|defense/, "theme"]];
+function trouveEntreprises(q) {
+  const out = [];
+  for (const c of R.companies) { const n = norm(c.name).replace(/\b(sa|se|inc|corp|plc|ag|nv|group|groupe)\b/g, "").trim(); if (n.length >= 3 && new RegExp("(^|[^a-z])" + n.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "($|[^a-z])").test(q)) out.push(c); }
+  return out.filter((c, i, a) => !a.some(d => d !== c && norm(d.name).includes(norm(c.name)) && norm(d.name).length > norm(c.name).length && out.includes(d)));
+}
+function localCopilot(raw) {
+  const q = " " + norm(raw).replace(/[’']/g, " ").replace(/\s+/g, " ") + " ";
+  // 0. « quoi acheter ? » : le site ne choisit pas à la place du lecteur, il donne la méthode
+  if (has(q, /quoi acheter|quelle action acheter|quelles actions acheter|devenir riche|meilleures? actions?|que faut.?il acheter|ou investir|sur quoi investir|quoi investir/)) return { action: "repondre", local: true, titre: "Sur quoi investir ?",
+    texte: "Personne ne peut vous dire quelle action va monter, et le site ne le fait pas. Ce qui marche le mieux pour débuter, c'est une méthode.\nD'abord, gardez de côté 3 à 6 mois de dépenses sur un livret. Ensuite, n'investissez en actions que l'argent dont vous n'aurez pas besoin avant au moins 5 ans. Pour commencer, beaucoup d'épargnants choisissent un ETF monde dans un PEA : un seul achat, plus de 1 000 entreprises, des frais souvent inférieurs à 0,3 % par an. Enfin, investissez un peu chaque mois plutôt que tout d'un coup.\nLe guide « Par où commencer » détaille ces étapes et vous aide à trouver votre profil en cinq questions." };
+  // 1. une définition
+  if (has(q, /c est quoi|qu est.?ce qu|que veut dire|que signifie|definition|definir|explique|comment (fonctionne|marche)|a quoi sert|difference entre/)) {
+    const t = termeDe(q); if (t) return { action: "repondre", texte: termeTexte(t), titre: t.name, local: true };
+  }
+  const cos = trouveEntreprises(q);
+  // 2. une comparaison
+  if (cos.length >= 2 && has(q, /compar|\bvs\b|versus| ou |entre| et |mieux/)) return { action: "comparer", ids: cos.slice(0, 5).map(c => c.id), local: true };
+  // 3. une entreprise seule
+  if (cos.length === 1 && q.trim().split(" ").length <= 4 && !has(q, /compar/)) return { action: "fiche", id: cos[0].id, local: true };
+  // 4. des ETF
+  if (has(q, /\betf\b|tracker|fonds indiciel/)) { const cat = (ECATW.find(([re]) => re.test(q)) || [])[1] || null; return { action: "etf", titre: raw.trim(), categorie: cat, pea: has(q, /\bpea\b/), local: true }; }
+  // 5. une recherche d'entreprises
+  const secteur = (SECW.find(([re]) => re.test(q)) || [])[1] || null, region = (REGW.find(([re]) => re.test(q)) || [])[1] || null, crit = [];
+  if (has(q, /peu endett|pas (de |trop de )?dette|sans dette|faible(ment)? endett|peu de dette|bilan solide|solides?\b/)) crit.push({ indicateur: "dette", condition: "inf", valeur: 1 });
+  else if (has(q, /tres endett|beaucoup de dette|fortement endett/)) crit.push({ indicateur: "dette", condition: "sup", valeur: 3 });
+  if (has(q, /dividende|rendement|revenus? passif|rente/)) crit.push({ indicateur: "rendement", condition: "sup", valeur: has(q, /gros|fort|eleve|genereu|bon/) ? 4 : 2.5 });
+  if (has(q, /pas cher|bon marche|decote|sous.?evalu|moins chere?s?|faible per|per bas|attracti/)) crit.push({ indicateur: "per", condition: "inf_mediane", valeur: null });
+  else if (has(q, /\bcheres?\b|per eleve|surevalu/)) crit.push({ indicateur: "per", condition: "sup_mediane", valeur: null });
+  if (has(q, /rentab|marge|profitab|qualite/)) crit.push({ indicateur: "marge", condition: "sup_mediane", valeur: null });
+  if (has(q, /croissance|croissent|grandi|en forte hausse des ventes|dynamique/)) crit.push({ indicateur: "croissance", condition: "sup", valeur: 8 });
+  let tri = null;
+  if (has(q, /plus gros|plus grandes?|geant|leaders?|grosses capi/)) tri = { indicateur: "capitalisation", ordre: "desc" };
+  else if (has(q, /petites?|small/)) tri = { indicateur: "capitalisation", ordre: "asc" };
+  else if (has(q, /plus (forte|grosse)s? baisse|le plus baisse|plus baisse|chute|ont baisse|perdu/)) tri = { indicateur: "variation_1an", ordre: "asc" };
+  else if (has(q, /plus (forte|grosse)s? hausse|le plus monte|plus monte|performan|progress/)) tri = { indicateur: "variation_1an", ordre: "desc" };
+  const pea = has(q, /\bpea\b/), quoiq = has(q, /entreprise|action|societe|valeur|titre|groupe|boite|quoi (acheter|investir)|investir|secteur/);
+  if ((crit.length || tri || pea || (secteur || region) && quoiq) && (crit.length || secteur || region || tri)) {
+    if (!tri && crit[0]) tri = { indicateur: crit[0].indicateur, ordre: INDI[crit[0].indicateur][3] ? "asc" : "desc" };
+    const titre = raw.trim().replace(/^./, m => m.toUpperCase()).replace(/\?$/, "");
+    return { action: "filtre", titre: has(q, /meilleur|acheter|investir/) ? "Entreprises qui correspondent à vos critères" : titre, secteur, region, pea, criteres: crit, tri, limite: 12, local: true };
+  }
+  return null;
+}
+
+/* ---------- L'assistant de fiche répond seul aux questions courantes ---------- */
+function localAssist(s, c, raw) {
+  const q = " " + norm(raw).replace(/[’']/g, " ") + " ", f = c ? figuresOf(c) : null, m = ratios(s), md = MED[s.sector] || {}, v = valo(s), mp = MEDPE[s.sector], bank = isBank(s);
+  const items = f ? lecture(s, f) : [], forts = items.filter(i => i.lv === "fort"), vigs = items.filter(i => i.lv === "vig");
+  const P = [];
+  if (has(q, /\bpourquoi\b/)) return null; // une question « pourquoi » demande un raisonnement : elle passe par l'IA
+  const cmp = (val, med, fmt, lowGood) => med == null || val == null ? "" : ` La médiane de son secteur est de ${fmt(med)} : ${(lowGood ? val < med * 0.85 : val > med * 1.15) ? "c'est nettement mieux que la plupart de ses concurrentes" : (lowGood ? val > med * 1.15 : val < med * 0.85) ? "c'est nettement moins bien que la plupart de ses concurrentes" : "c'est dans la moyenne"}.`;
+  if (has(q, /acheter|investir|bonne affaire|bon placement|faut.?il|conseill|vaut.?il|interessant/)) {
+    P.push(`Le site ne dit pas s'il faut acheter : cela dépend de votre situation, de votre horizon et du reste de votre épargne. Voici ce que disent les chiffres.`);
+    if (forts.length) P.push(`Points forts : ${forts.slice(0, 3).map(i => strip(i.text)).join(" ")}`);
+    if (vigs.length) P.push(`Points de vigilance : ${vigs.slice(0, 3).map(i => strip(i.text)).join(" ")}`);
+    if (v && v.pe) P.push(`Prix : l'action coûte ${F0.format(v.pe)} fois son bénéfice annuel${mp ? `, contre ${F0.format(mp)} pour la médiane du secteur` : ""}.`);
+    P.push(`Avant d'acheter une action seule, regardez quelle part de votre épargne elle représenterait : au-delà de 5 à 10 %, le risque augmente nettement.`);
+  } else if (has(q, /que fait|activite|metier|que vend|vend quoi|produits?|gagne.{0,20}argent|modele economique|ses clients/)) {
+    if (s.fiche) P.push(`${s.fiche.fait} ${s.fiche.argent}`); else if (s.desc) P.push(s.desc);
+    const rep = REP[s.id]; if (rep && (rep.activites || rep.zones)) { const l = (rep.activites || rep.zones), t = l.reduce((a, x) => a + x[1], 0) || 1; P.push(`Répartition de ses ventes : ${l.slice(0, 4).map(([n, x]) => `${n} ${F0.format(x / t * 100)} %`).join(", ")}.`); }
+    if (s.fiche && s.fiche.depend) P.push(`Ce qui fait varier ses résultats : ${s.fiche.depend}`);
+  } else if (has(q, /\bcheres?\b|\bprix\b|\bper\b|valoris|\bcours\b|surevalu|sous.?evalu/)) {
+    if (!v || !v.pe) P.push(f && f.net != null && f.net <= 0 ? "L'entreprise a perdu de l'argent sur son dernier exercice : on ne peut pas comparer son prix à son bénéfice (le PER ne se calcule pas)." : "Le cours de l'action n'est pas disponible pour le moment.");
+    else { P.push(`L'action coûte ${F0.format(v.pe)} fois le bénéfice de sa dernière année : si le bénéfice restait le même, il faudrait ${F0.format(v.pe)} ans pour « rembourser » le prix payé.${cmp(v.pe, mp, x => F0.format(x) + " fois", true)}`);
+      if (mp) P.push(v.pe > mp * 1.3 ? "Le marché la paie plus cher que ses concurrentes : il attend plus de croissance. Si cette croissance n'arrive pas, le cours peut baisser." : v.pe < mp * 0.75 ? "Le marché la paie moins cher que ses concurrentes : il attend moins de croissance, ou il voit un risque. Moins cher ne veut pas dire bonne affaire." : "Son prix est comparable à celui de ses concurrentes.");
+      const p = v.p; if (p && p.h52 > p.l52) { const pos = (p.p - p.l52) / (p.h52 - p.l52); P.push(`Sur un an, le cours est ${pos > 0.85 ? "proche de son plus haut" : pos < 0.15 ? "proche de son plus bas" : `à ${F0.format(pos * 100)} % entre son plus bas et son plus haut`}.`); } }
+  } else if (has(q, /dette|endett|emprunt|faillite|tresorerie/)) {
+    if (bank) P.push("Pour une banque, la dette est la matière première du métier : elle se juge avec d'autres ratios (fonds propres, solvabilité), que le site ne publie pas encore.");
+    else if (s.netDebt != null && s.netDebt < 0) P.push(`${s.name} a plus de trésorerie que de dettes : elle pourrait rembourser tout ce qu'elle doit avec l'argent qu'elle a en caisse. C'est un signe de solidité.`);
+    else if (m.lev != null) P.push(`Sa dette nette représente ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} de résultat d'exploitation avant amortissements : c'est le temps qu'il lui faudrait pour la rembourser si elle y consacrait tout ce résultat.${cmp(m.lev, md.lev, x => F1.format(x) + " an" + (x >= 2 ? "s" : ""), true)} ${m.lev > 3 ? "Au-delà de 3 ans, la dette devient un point à surveiller, surtout si les taux montent." : m.lev < 1.5 ? "Moins de 1,5 an : un endettement faible." : ""}`);
+  } else if (has(q, /dividende|rendement|verse|distribu|coupon/)) {
+    if (!(s.divPaid > 0.5)) P.push(`${s.name} n'a pas versé de dividende sur son dernier exercice : elle garde ses bénéfices pour investir ou racheter ses actions.`);
+    else { P.push(`Elle a versé ${big(s.divPaid, s.currency)} à ses actionnaires${m.payout != null ? `, soit ${F0.format(m.payout * 100)} % de son bénéfice` : ""}.${v && v.yld != null ? ` Au cours actuel, cela représente un rendement de ${pct(v.yld, 1, false)} par an : 1 000 € d'actions rapporteraient environ ${F0.format(v.yld * 1000)} € avant impôts, si le dividende restait le même.` : ""}`);
+      if (m.payout != null) P.push(m.payout > 1 ? "Elle verse plus que ce qu'elle gagne : ce n'est pas tenable longtemps, le dividende pourrait baisser." : m.payout > 0.75 ? "Elle reverse l'essentiel de son bénéfice : le dividende a peu de marge si les résultats baissent." : "Le dividende est couvert par le bénéfice, avec une marge de sécurité."); }
+  } else if (has(q, /croissance|ventes|chiffre d.?affaires|grandi|progress|recul/)) {
+    if (m.g1 != null) P.push(`Ses ventes ont ${m.g1 >= 0 ? "progressé" : "reculé"} de ${pct(Math.abs(m.g1), 1, false)} sur son dernier exercice${f && f.cagr != null ? `, et de ${pct(f.cagr, 1)} par an en moyenne depuis ${f.first}` : ""}.${cmp(m.g1, md.g1, x => pct(x, 1), false)}`);
+  } else if (has(q, /marge|rentab|profit|benefice|gagne/)) {
+    if (m.marge != null && !bank) P.push(`Sur 100 € de ventes, il lui reste ${F1.format(m.marge * 100)} € une fois payés les salaires, les achats et les frais (marge d'exploitation).${cmp(m.marge, md.marge, x => pct(x, 1, false), false)}`);
+    if (m.roe != null) P.push(`Pour 100 € qui appartiennent aux actionnaires, elle gagne ${F1.format(m.roe * 100)} € par an.${cmp(m.roe, md.roe, x => pct(x, 1, false), false)}`);
+  } else if (has(q, /concurren|rival|secteur|compar/)) {
+    const pr = peersOf(s, 4).list; if (pr.length) P.push(`Ses concurrentes directes sur le site : ${pr.map(x => x.name).join(", ")}. ${pr.map(x => { const r = ratios(x); return r.marge != null ? `${x.name} garde ${F1.format(r.marge * 100)} € sur 100 € vendus` : ""; }).filter(Boolean).join(", ")}${m.marge != null ? `, contre ${F1.format(m.marge * 100)} € pour ${s.name}` : ""}. Le bouton « Comparer à ses concurrents » les met côte à côte.`);
+  } else if (has(q, /vigilance|risque|faiblesse|inquiet|danger|probleme|negati/)) {
+    P.push(vigs.length ? `Points de vigilance dans ses comptes : ${vigs.map(i => strip(i.text)).join(" ")}` : "Ses derniers comptes ne montrent pas de point de vigilance par rapport à son secteur.");
+    if (s.fiche && s.fiche.depend) P.push(`Ce qui peut peser sur ses résultats : ${s.fiche.depend}`);
+  } else if (has(q, /point.? fort|atout|qualite|positif/)) {
+    P.push(forts.length ? `Points forts dans ses comptes : ${forts.map(i => strip(i.text)).join(" ")}` : "Ses derniers comptes ne montrent pas de point nettement meilleur que la médiane de son secteur.");
+  } else if (has(q, /derniers? (comptes|resultats)|bilan|annonce|publie|trimestre|actualite|nouvelle/)) {
+    if (f) P.push(strip(enBref(s, f, items)));
+    const a = Object.values(ANA || {}).filter(x => x.id === s.id && x.chiffres && x.chiffres.length).sort((x, y) => y.date.localeCompare(x.date))[0];
+    if (a) P.push(`Dernière annonce officielle (${dLabel(a.date)}) : ${a.chiffres.map(x => x.join(" : ")).join(" ; ")}. ${(a.lecture || []).join(" ")}`);
+  } else if (has(q, /quand|date|prochain|calendrier|agenda|assemblee/)) {
+    const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 4);
+    P.push(up.length ? `Prochaines dates : ${up.map(e => `${dLabel(e.date)}, ${e.label}`).join(" ; ")}.` : "Aucune date n'est encore annoncée. Le site ajoute les dates dès qu'elles sont publiées.");
+  } else if (has(q, /pea|compte.?titres|eligib/)) {
+    P.push(peaOk(s) == null ? "Le site ne sait pas encore si cette action est éligible au PEA." : peaOk(s) ? `${s.name} est une entreprise européenne : ses actions peuvent aller dans un PEA ou un compte-titres.` : `${s.name} n'est pas européenne : ses actions vont dans un compte-titres, pas dans un PEA. Pour l'exposition à ce pays dans un PEA, il existe des ETF éligibles.`);
+  }
+  const t = P.filter(Boolean).join("\n");
+  return t.length > 30 ? t : null;
+}
+
+/* ---------- Textes de secours, toujours disponibles ---------- */
+function bilanLocal(b) {
+  const L = (b.lignes || []).filter(x => x.variation_semaine_pct != null); if (!L.length && !(b.annonces || []).length) return "";
+  const P = [];
+  if (L.length) { const up = L.filter(x => x.variation_semaine_pct > 0).length, best = L[0], worst = L[L.length - 1];
+    P.push(`Ce qui a bougé\nSur la semaine, vos lignes ont évolué de ${pct((b.moyenne || 0) / 100)} en moyenne : ${up} en hausse, ${L.length - up} en baisse. La plus forte hausse : ${best.nom} (${pct(best.variation_semaine_pct / 100)}). ${L.length > 1 ? `La plus forte baisse : ${worst.nom} (${pct(worst.variation_semaine_pct / 100)}).` : ""}${L.some(x => Math.abs(x.variation_semaine_pct) >= 8) ? " Une variation de plus de 8 % en une semaine est importante pour une grande entreprise : regardez son actualité." : ""}`); }
+  if ((b.annonces || []).length) P.push(`Ce qui a été annoncé\n${b.annonces.slice(0, 3).map(a => `${a.nom} a publié ${String(a.type || "une annonce").toLowerCase()}${(a.chiffres || []).length ? ` : ${a.chiffres.slice(0, 2).map(c => c.join(" ")).join(", ")}` : ""}.`).join(" ")}`);
+  if ((b.a_venir || []).length) P.push(`À venir\n${b.a_venir.slice(0, 3).map(e => `${dLabel(e.date)} : ${e.nom}, ${e.label || ""}`).join(" ; ")}.`);
+  return P.join("\n");
+}
+function listeLocale(cos) {
+  const l = cos.map(c => ({ c, p: pxOf(c) })).filter(x => x.p && x.p.chg != null).sort((a, b) => b.p.chg - a.p.chg); if (!l.length) return "";
+  const avg = l.reduce((a, x) => a + x.p.chg, 0) / l.length, up = cos.flatMap(c => eventsOf(c.id).filter(e => e.date >= TODAY && e.date <= addDays(TODAY, 14)).map(e => ({ ...e, c }))).sort((a, b) => a.date.localeCompare(b.date));
+  const ann = Object.values(ANA || {}).filter(a => cos.some(c => c.id === a.id) && a.date >= addDays(TODAY, -7) && a.chiffres && a.chiffres.length);
+  return [`Ce qui a bougé\nAujourd'hui, vos entreprises évoluent de ${(avg > 0 ? "+" : "") + F2.format(avg)} % en moyenne. En tête : ${l[0].c.name} (${(l[0].p.chg > 0 ? "+" : "") + F2.format(l[0].p.chg)} %)${l.length > 1 ? `, en dernier : ${l.at(-1).c.name} (${(l.at(-1).p.chg > 0 ? "+" : "") + F2.format(l.at(-1).p.chg)} %)` : ""}.`,
+    ann.length ? `Ce qui a été annoncé\n${ann.slice(0, 3).map(a => `${RBY[a.id].name} (${dLabel(a.date)}) : ${a.chiffres.slice(0, 2).map(x => x.join(" : ")).join(", ")}.`).join(" ")}` : "",
+    up.length ? `À venir\n${up.slice(0, 4).map(e => `${dLabel(e.date)} : ${e.c.name}, ${e.label}`).join(" ; ")}.` : ""].filter(Boolean).join("\n");
+}
 
 function route() {
   closeDef();

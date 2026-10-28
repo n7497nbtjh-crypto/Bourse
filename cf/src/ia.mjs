@@ -141,7 +141,7 @@ export async function assistant(request, env) {
   const q = await quota(request, env, "assistant"); if (!q.ok) return quotaError(q, "questions à l'assistant");
   if (!(await budget(env.DB, env))) return json({ error: "L'assistant a atteint son nombre de réponses pour aujourd'hui. Réessayez demain." }, 429);
   try {
-    const out = { response: await rediger(env, { systeme: SYS_ASSIST, utilisateur: `Faits : ${faits}\n\nQuestion : ${question}`, max_tokens: 450 }) };
+    const out = { response: await rediger(env, { systeme: SYS_ASSIST, utilisateur: `Faits : ${faits}\n\nQuestion : ${question}`, max_tokens: 450, qualite: false }) };
     const txt = String(out.response || "").replace(/—/g, ",").trim();
     if (txt.length < 20) throw new Error("vide");
     await env.DB.prepare(`INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)`).bind(key, txt, Date.now()).run();
