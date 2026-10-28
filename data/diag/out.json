@@ -1,21 +1,9 @@
 {
  "auto1": [
-  "[0s] figi priorités 6088",
-  "[0s] figi à lire 2898 déjà 3190",
-  "[1s] figi 3200",
-  "[67s] figi 3450",
-  "[89s] durée esef 24 sociétés en 89 s",
-  "[91s] durée sec 24 sociétés en 2 s",
-  "[133s] figi 3700",
-  "[199s] figi 3950",
-  "[265s] figi 4200",
-  "[331s] figi 4450",
-  "[397s] figi 4700",
-  "[462s] figi 4950",
-  "[527s] figi 5200",
-  "[592s] figi 5450",
-  "[658s] figi 5700",
-  "[724s] figi 5950",
-  "[763s] figi fini 6088"
+  "[1s] six six_fqs 400 140 \"<html>\\n<body>\\n  <tt>Bad request ERR-1793231413580</tt>\\n  <br/>\\n  <tt>Invalid name 'ListingSegment' in select parameter</tt>\\n</body>\\n</html>\\n\"",
+  "[2s] six six_fqs2 200 33290 \"ShortName;ValorSymbol;ISIN;SecTypeDesc\\n1&1 AG;1U1;DE0005545503;Sponsored Foreign Shares\\n3D SYSTEMS CORP;DDD;US88554D2053;Sponsored Foreign Shares\\n3M;MMM;US88579Y1010;Registered Share\\nABB LTD N;ABBN;CH0012221716;Registered Share\\nABB LTD N 2. LINIE;ABBNE;CH0357679619;Registered Share\\nABBOTT LABOR;ABT;\"",
+  "[3s] xetra page https://www.xetra.com/xetra-en/instruments/instruments 200 141446 [\"/resource/blob/1528/302cd4df859105c15e1527995bb05649/data/t7-xetr-allTradableInstruments.csv\"]",
+  "[4s] six six_issuers 200 183479 \"{\\n  \\\"status\\\" : \\\"Ok\\\",\\n  \\\"totalCount\\\" : 241,\\n  \\\"itemList\\\" : [ {\\n    \\\"company\\\" : \\\"3M Company\\\",\\n    \\\"isin\\\" : \\\"US88579Y1010\\\",\\n    \\\"valorSymbol\\\" : \\\"MMM\\\",\\n    \\\"valorNumber\\\" : 1405105,\\n    \\\"country\\\" : \\\"US\\\",\\n    \\\"tradingCurrency\\\" : \\\"CHF\\\",\\n    \\\"tradingPlatform\\\" : \\\"XSWX\\\",\\n    \\\"classOfShareCode\\\" : \\\"RS\\\",\\n    \\\"cl\"",
+  "[4s] xetra csv https://www.xetra.com/resource/blob/1528/302cd4df859105c15e1527995bb05649/data/t7-xetr-allTradableInstruments.csv 200 4899459 \"Market:;XETR\\nDate Last Update:;29.10.2026\\nProduct Status;Instrument Status;Instrument;ISIN;Product ID;Instrument ID;WKN;Mnemonic;MIC Code;CCP eligible Code;Trading Model Type;Product Assignment Group;Product Assignment Group Description;Designated Sponsor Member ID;Designated Sponsor;Price Range Val\""
  ]
 }
