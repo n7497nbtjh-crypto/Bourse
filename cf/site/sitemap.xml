@@ -16,6 +16,7 @@
   <url><loc>https://repere.pages.dev/comparer</loc></url>
   <url><loc>https://repere.pages.dev/dividendes</loc></url>
   <url><loc>https://repere.pages.dev/outils</loc></url>
+  <url><loc>https://repere.pages.dev/marches</loc></url>
   <url><loc>https://repere.pages.dev/outils/si-javais</loc></url>
   <url><loc>https://repere.pages.dev/outils/recouvrement</loc></url>
   <url><loc>https://repere.pages.dev/outils/verifier</loc></url>
@@ -58,36 +59,85 @@
   <url><loc>https://repere.pages.dev/etf/ishares-nasdaq100</loc></url>
   <url><loc>https://repere.pages.dev/etf/invesco-eqqq-nasdaq100</loc></url>
   <url><loc>https://repere.pages.dev/etf/spdr-russell-2000</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-sp500-swap-pea</loc></url>
+  <url><loc>https://repere.pages.dev/etf/amundi-sp500-swap</loc></url>
+  <url><loc>https://repere.pages.dev/etf/amundi-core-nasdaq100-swap</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-sp500-equal-weight</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-sp-smallcap-600</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-stoxx-europe-600</loc></url>
   <url><loc>https://repere.pages.dev/etf/bnp-stoxx-europe-600</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-stoxx-europe-600</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-msci-europe-pea</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-core-msci-europe</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-euro-stoxx-50</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-core-euro-stoxx-50</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-euro-stoxx-50</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-msci-europe-small-cap</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-core-ftse-100</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-core-dax</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-swiss-large-cap</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-cac40</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-pea-emergents</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-core-msci-em-imi</loc></url>
   <url><loc>https://repere.pages.dev/etf/xtrackers-msci-china</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-pea-chine</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-msci-india</loc></url>
+  <url><loc>https://repere.pages.dev/etf/franklin-ftse-india</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-em-asia</loc></url>
+  <url><loc>https://repere.pages.dev/etf/amundi-msci-em-asia</loc></url>
+  <url><loc>https://repere.pages.dev/etf/amundi-pea-asie-emergente</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-harvest-csi300</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-china-a</loc></url>
+  <url><loc>https://repere.pages.dev/etf/kraneshares-csi-china-internet</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-korea</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-taiwan</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-em-latin-america</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-brazil</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-msci-em</loc></url>
+  <url><loc>https://repere.pages.dev/etf/amundi-msci-em-swap</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-core-msci-japan</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-pea-japon-topix</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-msci-japan</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-nikkei-225</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-core-msci-pacific-ex-japan</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-msci-global-semiconductors</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-msci-water</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-global-water</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-global-clean-energy</loc></url>
   <url><loc>https://repere.pages.dev/etf/xtrackers-msci-world-health-care</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-stoxx-europe-defense</loc></url>
+  <url><loc>https://repere.pages.dev/etf/vaneck-defense</loc></url>
+  <url><loc>https://repere.pages.dev/etf/vaneck-semiconductor</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-automation-robotics</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-ai-big-data</loc></url>
+  <url><loc>https://repere.pages.dev/etf/lg-cyber-security</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-sp500-health-care</loc></url>
+  <url><loc>https://repere.pages.dev/etf/vaneck-gold-miners</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-stoxx-europe-select-dividend-30</loc></url>
   <url><loc>https://repere.pages.dev/etf/spdr-us-dividend-aristocrats</loc></url>
   <url><loc>https://repere.pages.dev/etf/spdr-euro-dividend-aristocrats</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-euro-dividend</loc></url>
+  <url><loc>https://repere.pages.dev/etf/vanguard-ftse-all-world-high-dividend</loc></url>
+  <url><loc>https://repere.pages.dev/etf/spdr-global-dividend-aristocrats</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-world-quality</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-world-momentum</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-msci-world-min-vol</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-developed-markets-property-yield</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-european-property-yield</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-core-euro-govt-bond</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-core-euro-corp-bond</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-usd-treasury-7-10</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-euro-aggregate-esg</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-eurozone-govt-bond</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-euro-inflation-linked-govt</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-euro-ultrashort-bond</loc></url>
+  <url><loc>https://repere.pages.dev/etf/ishares-euro-high-yield</loc></url>
+  <url><loc>https://repere.pages.dev/etf/xtrackers-eur-overnight-rate</loc></url>
+  <url><loc>https://repere.pages.dev/etf/amundi-smart-overnight-return</loc></url>
   <url><loc>https://repere.pages.dev/etf/amundi-physical-gold</loc></url>
   <url><loc>https://repere.pages.dev/etf/ishares-physical-gold</loc></url>
   <url><loc>https://repere.pages.dev/etf/invesco-physical-gold</loc></url>
+  <url><loc>https://repere.pages.dev/etf/wisdomtree-core-physical-gold</loc></url>
   <url><loc>https://repere.pages.dev/entreprise/accor</loc></url>
   <url><loc>https://repere.pages.dev/entreprise/accor/comptes</loc></url>
   <url><loc>https://repere.pages.dev/entreprise/accor/comprendre/argent</loc></url>
@@ -3322,4 +3372,244 @@
   <url><loc>https://repere.pages.dev/entreprise/weyerhaeuser</loc></url>
   <url><loc>https://repere.pages.dev/entreprise/weyerhaeuser/comptes</loc></url>
   <url><loc>https://repere.pages.dev/entreprise/weyerhaeuser/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/samsung-electronics</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/samsung-electronics/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/samsung-electronics/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sk-hynix</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sk-hynix/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sk-hynix/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hyundai-motor</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hyundai-motor/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hyundai-motor/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kia</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kia/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kia/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/lg-electronics</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/lg-electronics/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/lg-electronics/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kb-financial</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kb-financial/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kb-financial/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/shinhan</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/shinhan/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/shinhan/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/woori-financial</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/woori-financial/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/woori-financial/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/posco</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/posco/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/posco/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sk-telecom</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sk-telecom/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sk-telecom/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kepco</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kepco/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kepco/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tencent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tencent/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tencent/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/byd</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/byd/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/byd/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/xiaomi</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/xiaomi/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/xiaomi/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/meituan</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/meituan/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/meituan/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/catl</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/catl/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/catl/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/ping-an</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/ping-an/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/ping-an/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kweichow-moutai</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kweichow-moutai/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/kweichow-moutai/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/icbc</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/icbc/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/icbc/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/aia</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/aia/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/aia/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/yum-china</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/yum-china/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/yum-china/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/trip-com</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/trip-com/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/trip-com/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/li-auto</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/li-auto/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/li-auto/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nio</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nio/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nio/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/xpeng</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/xpeng/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/xpeng/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/futu</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/futu/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/futu/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/zto-express</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/zto-express/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/zto-express/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bilibili</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bilibili/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bilibili/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nintendo</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nintendo/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nintendo/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/keyence</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/keyence/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/keyence/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tokyo-electron</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tokyo-electron/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tokyo-electron/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/fast-retailing</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/fast-retailing/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/fast-retailing/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/softbank-group</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/softbank-group/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/softbank-group/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hitachi</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hitachi/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hitachi/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mitsubishi-corp</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mitsubishi-corp/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mitsubishi-corp/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/shin-etsu</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/shin-etsu/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/shin-etsu/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/recruit</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/recruit/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/recruit/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/daikin</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/daikin/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/daikin/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/canon</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/canon/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/canon/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/panasonic</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/panasonic/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/panasonic/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nissan</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nissan/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nissan/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/denso</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/denso/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/denso/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sumitomo-mitsui</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sumitomo-mitsui/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sumitomo-mitsui/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mizuho</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mizuho/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mizuho/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/reliance-industries</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/reliance-industries/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/reliance-industries/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tcs</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tcs/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tcs/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bharti-airtel</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bharti-airtel/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bharti-airtel/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/dr-reddys</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/dr-reddys/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/dr-reddys/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hon-hai</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hon-hai/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/hon-hai/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mediatek</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mediatek/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/mediatek/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/commonwealth-bank</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/commonwealth-bank/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/commonwealth-bank/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/csl</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/csl/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/csl/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/woolworths-group</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/woolworths-group/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/woolworths-group/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/dbs</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/dbs/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/dbs/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/grab</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/grab/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/grab/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/saudi-aramco</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/saudi-aramco/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/saudi-aramco/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/credicorp</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/credicorp/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/credicorp/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/grupo-cibest</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/grupo-cibest/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/grupo-cibest/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/southern-copper</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/southern-copper/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/southern-copper/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/gerdau</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/gerdau/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/gerdau/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bradesco</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bradesco/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bradesco/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/embraer</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/embraer/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/embraer/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/femsa</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/femsa/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/femsa/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/televisa</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/televisa/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/televisa/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bank-of-montreal</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bank-of-montreal/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bank-of-montreal/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/scotiabank</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/scotiabank/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/scotiabank/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cibc</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cibc/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cibc/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/manulife</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/manulife/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/manulife/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sun-life</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sun-life/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/sun-life/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/thomson-reuters</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/thomson-reuters/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/thomson-reuters/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bce</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bce/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/bce/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/suncor</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/suncor/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/suncor/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cenovus</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cenovus/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cenovus/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tc-energy</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tc-energy/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/tc-energy/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nutrien</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nutrien/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/nutrien/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/barrick</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/barrick/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/barrick/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/agnico-eagle</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/agnico-eagle/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/agnico-eagle/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cameco</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cameco/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/cameco/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/waste-connections</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/waste-connections/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/waste-connections/comprendre/argent</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/restaurant-brands</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/restaurant-brands/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/entreprise/restaurant-brands/comprendre/argent</loc></url>
 </urlset>

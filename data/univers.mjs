@@ -120,6 +120,7 @@ import LUS4 from "./lots/us4.mjs";
 import LUK from "./lots/uk.mjs";
 import LEU2 from "./lots/europe2.mjs";
 import LFR2 from "./lots/france2.mjs";
+import LMO2 from "./lots/monde2.mjs";
 const seen = new Set();
-export default [...FRANCE, ...AUTRES, ...LFR, ...LEU, ...LUS, ...LMO, ...LFR2, ...LEU2, ...LUK, ...LUS2, ...LUS3, ...LUS4].filter(c => !seen.has(c.id) && seen.add(c.id));
+export default [...FRANCE, ...AUTRES, ...LFR, ...LEU, ...LUS, ...LMO, ...LFR2, ...LEU2, ...LUK, ...LUS2, ...LUS3, ...LUS4, ...LMO2].filter(c => !seen.has(c.id) && seen.add(c.id));
 export const REGIONS = { FR: "France", EU: "Europe", US: "États-Unis", MONDE: "Reste du monde" };
