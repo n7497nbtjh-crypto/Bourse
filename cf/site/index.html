@@ -3172,8 +3172,7 @@ async function veilleBilan(cos) {
   await loadAna();
   const loc = listeLocale(cos);
   el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">L'IA rédige une lecture plus détaillée…</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
-  try { const lt = LIA.eng ? await liaAsk("veille", JSON.stringify(listeFaits(cos)), 600) : null;
-    const j = lt ? { txt: lt } : await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
+  try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
     if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>`;
     else if (loc) $("#vbilf").innerHTML = `Résumé automatique de vos chiffres.${j.quota && !j.premium ? ` La lecture détaillée par l'IA est limitée à 1 par jour en version gratuite : <a class="lnk" href="/premium">Premium</a>.` : ""}`;
     else el.innerHTML = iaErr(j, "Bilan indisponible.");
@@ -3318,8 +3317,7 @@ async function radiographie(P) {
     const faits = { type: "portefeuille", valeur_eur: Math.round(tot), plus_value_pct: Math.round(gain / cost * 1000) / 10, lignes: lines.map(l => ({ nom: keyName(l.k), type: l.k.startsWith("e:") ? "ETF" : "action", poids_pct: Math.round(l.v / tot * 1000) / 10, plus_value_pct: lineCost(l) ? Math.round((l.v / lineCost(l) - 1) * 1000) / 10 : null })),
       pays: cs.slice(0, 5).map(([k, w]) => [COUNTRY[k] || k, Math.round(w * 1000) / 10]), premieres_expositions: top.slice(0, 6).map(x => [x.name, Math.round(x.w * 1000) / 10]), frais_etf_eur_an: Math.round(fees), remarques: $$(".gf b", el).map(b => b.textContent),
       habitudes: P.cfg ? { courtier: (BROKERS.list.find(b => b.id === P.cfg.courtier) || {}).name || null, compte: P.cfg.env || null, versement_mensuel_eur: +P.cfg.mensuel || null, achats_par_mois: +P.cfg.ordres || null } : null, profil_questionnaire: prof ? prof.titre : null };
-    try { const lt = LIA.eng ? await liaAsk("portefeuille", JSON.stringify(faits), 600) : null;
-      const j = lt ? { txt: lt } : await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits, type: "portefeuille" }) })).json();
+    try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits, type: "portefeuille" }) })).json();
       $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Commentaire rédigé par une IA à partir de vos lignes. Ce n'est pas un conseil en investissement.</p></div>` : iaErr(j, "Analyse indisponible.");
     } catch (e) { $("#pfiab").innerHTML = `<p class="muted">Analyse indisponible pour le moment.</p>`; }
   };
@@ -3417,7 +3415,7 @@ function assistantPanel(s, c, root) {
     <p class="muted" style="margin:0 0 10px;font-size:14px">L'assistant répond à partir des seules données de cette fiche : comptes, médianes du secteur, concurrentes, cours et annonces. Il explique ; il ne dit pas s'il faut acheter.</p>
     <div class="chips">${ASK.map(q => `<button type="button" class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>
     <form class="askf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question, par exemple : pourquoi sa marge baisse-t-elle ?" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
-    <div class="asklog"></div>${liaBoxHTML(true)}<p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres passent par l'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
+    <div class="asklog"></div><p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres passent par l'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
   const first = root.firstElementChild; first ? first.after(sec) : root.appendChild(sec); // juste sous l'essentiel, bien visible
   liaUI();
   const log = $(".asklog", sec), inp = $("input", sec);
@@ -3427,9 +3425,8 @@ function assistantPanel(s, c, root) {
     await loadAna();
     const loc = localAssist(s, c, q);
     if (loc) { $(".aska", item).innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, tirée des chiffres de la fiche.</p>`; return; }
-    if (LIA.eng) { const t = await liaAsk("assistant", `Faits : ${JSON.stringify(ficheFaits(s, c)).slice(0, 7000)}\n\nQuestion : ${q}`, 450); if (t) { $(".aska", item).innerHTML = resumeHTML(t) + `<p class="iafoot">Réponse de l'IA installée sur votre appareil, à partir des chiffres de la fiche. À vérifier.</p>`; return; } }
     try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, c) }) })).json();
-      $(".aska", item).innerHTML = j.txt ? resumeHTML(j.txt) : iaErr(j, "Réponse indisponible.") + (j.quota ? liaBoxHTML() : ""); liaUI();
+      $(".aska", item).innerHTML = j.txt ? resumeHTML(j.txt) : iaErr(j, "Réponse indisponible.");
     } catch (e) { $(".aska", item).innerHTML = `<p class="muted">L'assistant est indisponible pour le moment.</p>`; }
   };
   sec.addEventListener("click", e => { const b = e.target.closest("[data-ask]"); if (b) { b.disabled = true; ask(b.dataset.ask); } });
@@ -3630,11 +3627,12 @@ const INDI = {
 const MEDI = {};
 function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing).map(INDI[k][1])); return MEDI[key]; }
 function runFiltre(a) {
-  let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region || (a.region === "EU" && c.region === "FR")) && (!a.pea || peaOk(c)));
+  let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region || (a.region === "EU" && c.region === "FR")) && (!a.pays || (c.isin || "").startsWith(a.pays)) && (!a.pea || peaOk(c)));
   l = l.filter(c => a.criteres.every(k => { const f = INDI[k.indicateur]; if (!f) return true; const v = f[1](c); if (v == null) return false;
     if (k.condition === "sup") return k.valeur == null || v > k.valeur; if (k.condition === "inf") return k.valeur == null || v < k.valeur;
     const m = medInd(c.sector, k.indicateur); if (m == null) return false; return k.condition === "sup_mediane" ? v > m : v < m; }));
   const t = a.tri || (a.criteres[0] ? { indicateur: a.criteres[0].indicateur, ordre: INDI[a.criteres[0].indicateur][3] ? "asc" : "desc" } : { indicateur: "capitalisation", ordre: "desc" });
+  if (INDI[t.indicateur] && INDI[t.indicateur][3] === true && a.criteres.some(k => k.indicateur === t.indicateur && /inf/.test(k.condition))) t.ordre = "asc";
   const f = INDI[t.indicateur] ? INDI[t.indicateur][1] : INDI.capitalisation[1];
   return { l: l.map(c => ({ c, v: f(c) })).sort((x, y) => (y.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1) - (x.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1)).map(x => x.c), tri: t };
 }
@@ -3650,7 +3648,7 @@ function cellInd(c, k) {
 }
 function filtreHTML(a) {
   const { l, tri } = runFiltre(a), lim = isPrem() ? 30 : 8, cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
-  const desc = [a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
+  const desc = [a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
   if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
   return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
     <p class="note" style="margin:0 0 10px">Vert : nettement mieux que la médiane de son secteur. Orange : nettement moins bien. Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</p>
@@ -3901,6 +3899,7 @@ const termeTexte = t => [t.what, t.calc ? `Calcul : ${t.calc}` : "", t.read, t.e
 
 /* ---------- Le copilote comprend seul les demandes courantes ---------- */
 const SECW = [[/tech|informatiq|logiciel|semi.?conduct|puce|numerique|cloud|intelligence artificielle|\bia\b/, "tech"], [/banque|bancaire|assur|financ/, "finance"], [/sante|pharma|medic|biotech|laboratoire/, "sante"], [/energie|petrol|petroli|\bgaz\b/, "energie"], [/industri|aero|defense|aeronaut|transport|automobile|voiture/, "industrie"], [/luxe|conso|distribution|grande surface|alimenta|boisson|textile/, "conso"], [/telecom|media|television/, "telecom"], [/materiau|chimi|mines|minier|metaux|acier/, "materiaux"], [/immobili|fonciere/, "immo"], [/electricite|eau\b|services aux collectivites|utilities/, "services"]];
+const PAYSW = [[/allemand|allemagne/, "DE"], [/neerland|pays.?bas|hollandais/, "NL"], [/italien|italie/, "IT"], [/espagnol|espagne/, "ES"], [/suisse/, "CH"], [/britanni|anglais|royaume.?uni|londres/, "GB"], [/suedois|suede/, "SE"], [/danois|danemark/, "DK"], [/norvegien|norvege/, "NO"], [/finlandais|finlande/, "FI"], [/belge|belgique/, "BE"], [/japonais|japon/, "JP"], [/coreen|coree/, "KR"], [/indien|inde\b/, "IN"], [/canadien|canada/, "CA"], [/bresilien|bresil/, "BR"], [/taiwan/, "TW"], [/australien|australie/, "AU"], [/irlandais|irlande/, "IE"], [/portugais|portugal/, "PT"], [/autrichien|autriche/, "AT"], [/polonais|pologne/, "PL"]];
 const REGW = [[/francais|france|\bcac\b|paris/, "FR"], [/europ/, "EU"], [/americain|etats.?unis|\bus\b|\busa\b|wall street/, "US"], [/japon|chin|asi|coree|inde|bresil|monde emergent|australi|canad/, "MONDE"]];
 const ECATW = [[/monde|world|acwi/, "actions-monde"], [/s.?p|nasdaq|americ|etats.?unis|\bus\b|\busa\b/, "actions-usa"], [/emergent/, "actions-emergents"], [/asi|japon|chin|inde/, "actions-asie"], [/europ|stoxx/, "actions-europe"], [/france|cac/, "actions-france"], [/dividend/, "dividendes"], [/obligat/, "obligations"], [/monetaire/, "monetaire"], [/immobil/, "immobilier"], [/\bor\b|matieres|petrole/, "matieres"], [/theme|robot|eau\b|climat|semi|cyber|sante|defense/, "theme"]];
 function trouveEntreprises(q) {
@@ -3925,7 +3924,7 @@ function localCopilot(raw) {
   // 4. des ETF
   if (has(q, /\betf\b|tracker|fonds indiciel/)) { const cat = (ECATW.find(([re]) => re.test(q)) || [])[1] || null; return { action: "etf", titre: raw.trim(), categorie: cat, pea: has(q, /\bpea\b/), local: true }; }
   // 5. une recherche d'entreprises
-  const secteur = (SECW.find(([re]) => re.test(q)) || [])[1] || null, region = (REGW.find(([re]) => re.test(q)) || [])[1] || null, crit = [];
+  const pays = (PAYSW.find(([re]) => re.test(q)) || [])[1] || null, secteur = (SECW.find(([re]) => re.test(q)) || [])[1] || null, region = pays ? null : (REGW.find(([re]) => re.test(q)) || [])[1] || null, crit = [];
   if (has(q, /peu endett|pas (de |trop de )?dette|sans dette|faible(ment)? endett|peu de dette|bilan solide|solides?\b/)) crit.push({ indicateur: "dette", condition: "inf", valeur: 1 });
   else if (has(q, /tres endett|beaucoup de dette|fortement endett/)) crit.push({ indicateur: "dette", condition: "sup", valeur: 3 });
   if (has(q, /dividende|rendement|revenus? passif|rente/)) crit.push({ indicateur: "rendement", condition: "sup", valeur: has(q, /gros|fort|eleve|genereu|bon/) ? 4 : 2.5 });
@@ -3939,10 +3938,10 @@ function localCopilot(raw) {
   else if (has(q, /plus (forte|grosse)s? baisse|le plus baisse|plus baisse|chute|ont baisse|perdu/)) tri = { indicateur: "variation_1an", ordre: "asc" };
   else if (has(q, /plus (forte|grosse)s? hausse|le plus monte|plus monte|performan|progress/)) tri = { indicateur: "variation_1an", ordre: "desc" };
   const pea = has(q, /\bpea\b/), quoiq = has(q, /entreprise|action|societe|valeur|titre|groupe|boite|quoi (acheter|investir)|investir|secteur/);
-  if ((crit.length || tri || pea || (secteur || region) && quoiq) && (crit.length || secteur || region || tri)) {
+  if ((crit.length || tri || pea || (secteur || region || pays) && quoiq) && (crit.length || secteur || region || pays || tri)) {
     if (!tri && crit[0]) tri = { indicateur: crit[0].indicateur, ordre: INDI[crit[0].indicateur][3] ? "asc" : "desc" };
     const titre = raw.trim().replace(/^./, m => m.toUpperCase()).replace(/\?$/, "");
-    return { action: "filtre", titre: has(q, /meilleur|acheter|investir/) ? "Entreprises qui correspondent à vos critères" : titre, secteur, region, pea, criteres: crit, tri, limite: 12, local: true };
+    return { action: "filtre", titre: has(q, /meilleur|acheter|investir/) ? "Entreprises qui correspondent à vos critères" : titre, secteur, region, pays, pea, criteres: crit, tri, limite: 12, local: true };
   }
   return null;
 }
@@ -4068,11 +4067,11 @@ function liaBoxHTML(compact = false) { return `<div class="liabox${compact ? " c
 function liaUI() {
   $$(".liabox").forEach(el => {
     const c = el.classList.contains("compact");
-    if (LIA.st === "ready") { el.innerHTML = `<span class="liaok">⚡ IA illimitée active sur cet appareil</span>${c ? "" : `<span class="light"> · modèle ouvert ${esc(String(LIA.model || "").split("-q")[0])}, rien ne quitte votre appareil</span>`}`; return; }
+    if (LIA.st === "ready") { el.innerHTML = `<span class="liaok">⚡ Recherche par l'IA illimitée sur cet appareil</span>${c ? "" : `<span class="light"> · vos demandes sont comprises par un modèle ouvert (${esc(String(LIA.model || "").split("-q")[0])}) qui tourne dans votre navigateur ; les résultats viennent des chiffres du site</span>`}`; return; }
     if (LIA.st === "loading") { el.innerHTML = `<div class="liaprog"><span style="width:${Math.round(LIA.p * 100)}%"></span></div><small class="light">Installation de l'IA sur cet appareil : ${Math.round(LIA.p * 100)} %. Une seule fois ; la page reste utilisable.</small>`; return; }
     if (LIA.st === "unsupported") { el.innerHTML = c ? "" : `<small class="light">L'IA illimitée sur l'appareil demande un navigateur récent avec WebGPU (Chrome ou Edge sur ordinateur, Chrome sur Android, Safari 26 sur iPhone).</small>`; return; }
     if (LIA.st === "error") { el.innerHTML = `<small class="light">L'installation de l'IA locale n'a pas abouti (${esc(LIA.msg)}). Le site continue avec l'IA en ligne.</small> <button type="button" class="linkbtn" data-lia>Réessayer</button>`; return; }
-    el.innerHTML = `<button type="button" class="btn liago" data-lia>⚡ Activer l'IA illimitée sur cet appareil</button>${c ? "" : `<small class="light">Gratuit et sans limite de questions : un modèle d'IA ouvert s'installe dans votre navigateur (${liaTaille()}, une seule fois, de préférence en Wi-Fi). Vos questions ne quittent plus votre appareil.</small>`}`;
+    el.innerHTML = `<button type="button" class="btn liago" data-lia>⚡ Rendre la recherche par l'IA illimitée</button>${c ? "" : `<small class="light">Un modèle d'IA ouvert s'installe dans votre navigateur (${liaTaille()}, une seule fois, de préférence en Wi-Fi). Il comprend vos recherches formulées librement, sans limite et sans que vos questions quittent l'appareil. Les réponses, elles, sont toujours calculées sur les chiffres du site.</small>`}`;
   });
 }
 document.addEventListener("click", e => { if (e.target.closest("[data-lia]")) liaStart(); });
@@ -4095,9 +4094,8 @@ const jsonFrom = t => { if (!t) return null; const i = t.indexOf("{"), j = t.las
 async function liaCopilot(q) {
   if (!LIA.eng) return null;
   const a = iaValide(jsonFrom(await liaAsk("demande", q, 400)));
-  if (a && a.action === "repondre") { const x = await liaAsk("expliquer", q, 450); if (x) a.texte = x; a.lia = true; }
-  if (a) a.lia = true;
-  return a;
+  if (!a || a.action === "repondre") return null; // les explications ouvertes passent par le modèle en ligne ou par les cours vérifiés
+  a.lia = true; return a;
 }
 
 /* ---------- Graphiques : taille réelle de l'écran et infobulles au doigt ---------- */
