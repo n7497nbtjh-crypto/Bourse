@@ -5,7 +5,7 @@ from playwright.sync_api import sync_playwright
 root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
-pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue", "/pea-cto", "/comparer?ids=lvmh,kering,hermes,apple", "/comparer", "/favoris", "/dividendes", "/debuter", "/debuter/bases", "/debuter/bases/quiz", "/entreprise/nvidia", "/entreprise/rio-tinto", "/entreprise/air-liquide", "/entreprise/nvidia/comprendre/marge", "/comparer?ids=nvidia,amd,intel,broadcom", "/outils", "/outils/si-javais", "/outils/recouvrement", "/outils/verifier", "/communaute?onglet=pronostics", "/communaute?onglet=portefeuilles", "/communaute?onglet=discussions"]
+pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue", "/pea-cto", "/comparer?ids=lvmh,kering,hermes,apple", "/comparer", "/favoris", "/dividendes", "/debuter", "/debuter/bases", "/debuter/bases/quiz", "/entreprise/nvidia", "/entreprise/rio-tinto", "/entreprise/air-liquide", "/entreprise/nvidia/comprendre/marge", "/comparer?ids=nvidia,amd,intel,broadcom", "/outils", "/marches", "/outils/si-javais", "/outils/recouvrement", "/outils/verifier", "/communaute?onglet=pronostics", "/communaute?onglet=portefeuilles", "/communaute?onglet=discussions"]
 pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh/communaute", "/entreprise/lvmh/actualite", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
@@ -27,6 +27,8 @@ def route(r):
               "i:cac40": {"s": "INDEXEURO:PX1", "cur": "EUR", "p": 7886, "chg": 0.0, "cap": None, "h52": 8200, "l52": 7000, "p1y": 7500, "p3y": 7300, "p5y": 5600},
               "i:sp500": {"s": "INDEXSP:.INX", "cur": "USD", "p": 6800, "chg": 0.1, "cap": None, "h52": 6900, "l52": 5000, "p1y": 5800, "p3y": 4200, "p5y": 3300}}
         return r.fulfill(json={"updated": "2026-10-28T16:00:00Z", "items": it})
+    if "/api/resume" in u or "/api/veille" in u:
+        return r.fulfill(json={"txt": "Ce qui est annoncé\nLe chiffre d'affaires du trimestre atteint 6,7 milliards d'euros, en hausse de 3 %.\nCe que ça veut dire\nL'activité progresse.\nÀ surveiller\nLes prochains résultats."} if "inscription" not in u else {"error": "L'envoi par e-mail n'est pas encore ouvert."})
     if "/api/presse" in u:
         return r.fulfill(json={"items": [{"title": "Le groupe publie des ventes en hausse au troisième trimestre", "url": "https://example.org/a", "site": "example.org", "date": "2026-10-27T15:00:00Z", "lang": "French"}] * 6})
     if "/api/communaute/avis" in u:
@@ -81,7 +83,7 @@ with sync_playwright() as pw:
         pg.goto("http://t.local/portefeuille"); pg.wait_for_timeout(400)
         pg.fill("#pfq", "LVMH"); pg.wait_for_timeout(150); pg.click("#pfs button"); pg.wait_for_timeout(200)
         pg.fill("#pfq", "MSCI World"); pg.wait_for_timeout(150); pg.click("#pfs button"); pg.wait_for_timeout(600)
-        if "radiographie" not in pg.inner_text("#pfrx").lower(): probs["/portefeuille (radiographie)"] = ["la radiographie ne s'affiche pas"]
+        if "coup d" not in pg.inner_text("#pfrx").lower(): probs["/portefeuille (radiographie)"] = ["la radiographie ne s'affiche pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["/portefeuille rempli"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
