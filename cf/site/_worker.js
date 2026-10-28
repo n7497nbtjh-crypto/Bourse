@@ -302,8 +302,8 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
     });
     if (!r.ok)
       return note(url.split("/")[2] + " " + r.status), null;
-    let j = await r.json();
-    return nettoie(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
+    let j = await r.json(), raw = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+    return nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw);
   } catch (e) {
     return note("fetch " + e.message), null;
   } finally {
@@ -323,7 +323,7 @@ var FOURNISSEURS = [
       }
       try {
         let msgs = model.includes("qwen3") ? messages.map((x, i) => i === messages.length - 1 ? { ...x, content: x.content + `
-/no_think` } : x) : messages, out = await env.AI.run(model, { messages: msgs, max_tokens, temperature }), txt = nettoie(out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content)), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+/no_think` } : x) : messages, out = await env.AI.run(model, { messages: msgs, max_tokens, temperature }), raw = out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content), txt = nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
         if (await ajouterNeurones(env, reel), txt && txt.length > 15) return txt;
         note(model + " vide : " + JSON.stringify(out).slice(0, 120));
       } catch (e) {

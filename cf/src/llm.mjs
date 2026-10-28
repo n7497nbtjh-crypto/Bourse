@@ -33,7 +33,7 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
     const r = await fetch(url, { method: "POST", signal: ctl.signal, headers: { authorization: "Bearer " + key, "content-type": "application/json" },
       body: JSON.stringify({ model, messages, max_tokens, temperature, ...(json ? { response_format: { type: "json_object" } } : {}) }) });
     if (!r.ok) { note(url.split('/')[2] + " " + r.status); return null; }
-    const j = await r.json(); return nettoie(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
+    const j = await r.json(), raw = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content; return nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw);
   } catch (e) { note("fetch " + e.message); return null; } finally { clearTimeout(t); }
 }
 
@@ -48,7 +48,7 @@ const FOURNISSEURS = [
       try {
         const msgs = model.includes("qwen3") ? messages.map((x, i) => i === messages.length - 1 ? { ...x, content: x.content + "\n/no_think" } : x) : messages;
         const out = await env.AI.run(model, { messages: msgs, max_tokens, temperature });
-        const txt = nettoie(out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content)));
+        const raw = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content)), txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw); // Workers AI renvoie parfois le JSON déjà décodé
         const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
         await ajouterNeurones(env, reel);
         if (txt && txt.length > 15) return txt;
