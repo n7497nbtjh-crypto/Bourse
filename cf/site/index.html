@@ -1159,9 +1159,11 @@ async function pageComprendre(id, k) {
 
 /* ---------- ETF ---------- */
 let ETF = { list: [] }, ETFBY = {};
+const ISSUERDOM = { Amundi: "amundietf.fr", iShares: "ishares.com", Vanguard: "vanguard.fr", "BNP Paribas": "bnpparibas-am.com", "BNP Paribas Easy": "bnpparibas-am.com", Xtrackers: "etf.dws.com", SPDR: "ssga.com", Invesco: "invesco.com", Lyxor: "amundietf.fr" };
+const issuerDom = e => e.domain || ISSUERDOM[e.issuer] || ISSUERDOM[Object.keys(ISSUERDOM).find(k => (e.issuer || "").startsWith(k))] || "";
 const ECAT = { "actions-monde": "Monde", "actions-usa": "États-Unis", "actions-europe": "Europe", "actions-france": "France", "actions-emergents": "Pays émergents", "actions-asie": "Asie", theme: "Thématiques", dividendes: "Dividendes", immobilier: "Immobilier", obligations: "Obligations", matieres: "Matières premières" };
 const COUNTRY = { US: "États-Unis", JP: "Japon", GB: "Royaume-Uni", FR: "France", CA: "Canada", DE: "Allemagne", CH: "Suisse", NL: "Pays-Bas", AU: "Australie", TW: "Taïwan", CN: "Chine", IN: "Inde", KR: "Corée du Sud", IT: "Italie", ES: "Espagne", SE: "Suède", DK: "Danemark", IE: "Irlande", BR: "Brésil", HK: "Hong Kong", SG: "Singapour", BE: "Belgique", FI: "Finlande", NO: "Norvège", ZA: "Afrique du Sud", SA: "Arabie saoudite", MX: "Mexique", IL: "Israël", AT: "Autriche", PT: "Portugal", LU: "Luxembourg", JE: "Jersey", BM: "Bermudes", KY: "Îles Caïmans" };
-const etfCard = e => `<a class="cocard" href="/etf/${e.id}"><div class="top">${logo({ name: e.issuer, domain: e.domain }, 44)}<div><div class="nm">${esc(e.name)}</div><div class="sec">${esc(ECAT[e.categorie] || "")} · ${esc(e.index)}</div></div></div>
+const etfCard = e => `<a class="cocard" href="/etf/${e.id}"><div class="top">${logo({ name: e.issuer, domain: issuerDom(e) }, 44)}<div><div class="nm">${esc(e.name)}</div><div class="sec">${esc(ECAT[e.categorie] || "")} · ${esc(e.index)}</div></div></div>
   <div class="d">${esc(e.fiche ? e.fiche.quoi : "")}</div><div class="f"><span class="light">Frais <b class="num" style="color:var(--ink)">${pct((e.ter || 0) / 100, 2, false)}</b> par an</span><span class="tags">${e.pea ? `<span class="tag">PEA</span>` : ""}<span class="tag">${e.distribution === "distribution" ? "Distribue" : "Capitalise"}</span></span></div></a>`;
 let etfState = { cat: "all", pea: false };
 function pageEtfs() {
@@ -1185,7 +1187,7 @@ async function pageEtf(id) {
   const e = ETFBY[id]; if (!e) return pageNotFound();
   setTitle(e.name); setNav("etf");
   app.innerHTML = `<div class="crumbs"><a href="/etf">ETF</a> › ${esc(ECAT[e.categorie] || "")}</div>
-    <div class="panel" style="margin-bottom:16px"><div class="qhead"><div class="who">${logo({ name: e.issuer, domain: e.domain }, 56)}<div><h1>${esc(e.name)}</h1><div class="desc">${esc(e.index)} · ${esc(e.issuer)}</div><div class="id">${esc(e.ticker)} · ISIN ${esc(e.isin)}${e.pea ? " · Éligible au PEA" : ""}</div></div></div><div class="px tv" id="tvinfo"></div></div>
+    <div class="panel" style="margin-bottom:16px"><div class="qhead"><div class="who">${logo({ name: e.issuer, domain: issuerDom(e) }, 56)}<div><h1>${esc(e.name)}</h1><div class="desc">${esc(e.index)} · ${esc(e.issuer)}</div><div class="id">${esc(e.ticker)} · ISIN ${esc(e.isin)}${e.pea ? " · Éligible au PEA" : ""}</div></div></div><div class="px tv" id="tvinfo"></div></div>
       <div class="tv tv-chart tv-top" id="tvchart"></div></div>
     <div class="cols"><div>
       ${e.fiche ? `<section class="panel"><div class="ph"><h2>Ce que contient cet ETF</h2></div><div class="syn"><dl><dt>Ce qu'il permet d'acheter</dt><dd>${esc(e.fiche.quoi)}</dd><dt>Ce qu'il contient</dt><dd>${esc(e.fiche.contenu)}</dd><dt>Ce qui fait varier sa valeur</dt><dd>${esc(e.fiche.varie)}</dd></dl></div></section>` : ""}
@@ -1198,7 +1200,7 @@ async function pageEtf(id) {
         <tr><td>Réplication<span class="s">${e.replication === "synthétique" ? "via un contrat d'échange" : "achète les titres"}</span></td><td>${esc(e.replication || "–")}</td></tr>
         ${e.encours ? `<tr><td>Encours</td><td class="num">${big(e.encours)}</td></tr>` : ""}<tr><td>Émetteur</td><td>${esc(e.issuer)}</td></tr></table>
         <div class="src">Frais et caractéristiques relevés sur les documents de l'émetteur. Vérifiez-les avant d'investir.</div></section>
-      <section class="panel"><div class="ph"><h2>Communauté</h2><a href="/communaute?salon=etf-${e.id}">Ouvrir</a></div><div id="cmini"></div></section>
+      <section class="panel"><div class="ph"><h2>Communauté</h2><a href="/communaute?salon=etf-${e.id}">Ouvrir</a></div><div class="pb" id="cmini"></div></section>
     </aside></div>`;
   tv($("#tvinfo"), "single-quote", { symbol: e.tv, width: "100%" });
   tvChart($("#tvchart"), e.tv, e.name);
