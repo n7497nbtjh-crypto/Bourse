@@ -9,7 +9,7 @@ on:
   workflow_dispatch: {}
   push:                    # se lance aussi quand la liste des entreprises ou la collecte changent
     branches: [main]
-    paths: ["data/univers.mjs", "data/esef.mjs", "data/fetch_data.mjs", ".github/workflows/donnees.yml"]
+    paths: ["data/univers.mjs", "data/esef.mjs", "data/fetch_data.mjs", "data/sec.mjs", ".github/workflows/donnees.yml"]
 permissions:
   contents: write
 jobs:

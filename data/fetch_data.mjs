@@ -81,8 +81,8 @@ export const DIAGNOSTIC = {};
 
 let CIK = null;
 export async function collectSec(fetchFn, c) {
-  CIK = CIK || await cikMap(getJSON, fetchFn);
-  const cik = CIK[c.sec];
+  if (!c.cik) CIK = CIK || await cikMap(getJSON, fetchFn);
+  const cik = c.cik || CIK[c.sec];
   if (!cik) throw new Error("numéro SEC introuvable pour " + c.sec);
   const doc = await getJSON(fetchFn, factsUrl(cik));
   if (!doc) throw new Error("aucun compte à la SEC pour " + c.sec);

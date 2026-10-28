@@ -801,9 +801,13 @@ function logo(c, size = 40) { // icône du site de l'entreprise ; initiales si e
   return `<span class="lg" style="--s:${size}px"><b>${esc(initials(c.name))}</b>${c.domain ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(c.domain)}&sz=128" alt="" loading="lazy" onerror="this.remove()">` : ""}</span>`;
 }
 function caLine(c) {
-  if (c.missing) return `<span class="light">Comptes en cours de collecte</span>`;
+  if (c.missing) return `<span class="light">${missingTxt(c)}</span>`;
   const t = quick(c);
   return `<span class="light">${c.ca != null ? `Ventes ${c.year} : <b class="num" style="color:var(--ink)">${big(c.ca, c.currency)}</b>` : `Exercice ${c.year ?? "–"}`}</span>${t ? `<span class="dots" title="${esc(tallyTxt(t))}">${"<i class='f'></i>".repeat(t.fort)}${"<i class='m'></i>".repeat(t.moyen)}${"<i class='v'></i>".repeat(t.vig)}</span>` : ""}`;
+}
+function missingTxt(c, long) { // pourquoi les comptes manquent
+  if ((c.isin || "").startsWith("DE")) return long ? "Les sociétés allemandes déposent leurs comptes au registre fédéral allemand, qui ne propose pas de base ouverte réutilisable : leurs chiffres ne peuvent pas être affichés ici pour l'instant. La fiche et le cours restent disponibles." : "Comptes non disponibles en données ouvertes";
+  return long ? `Les comptes de ${esc(c.name)} sont en cours de collecte. Ils apparaîtront après la prochaine mise à jour.` : "Comptes en cours de collecte";
 }
 function coCard(c) {
   return `<a class="cocard" href="/entreprise/${c.id}"><div class="top">${logo(c, 44)}<div><div class="nm">${esc(c.name)}</div><div class="sec">${esc(regName(c))} · ${esc(secName(c))}</div></div></div>
@@ -865,7 +869,7 @@ function pageEntreprises() {
     const th = (key, label) => `<th class="sort" data-k="${key}">${label}${key === k ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`;
     $("#elist").innerHTML = `<section class="panel"><div class="scroll-x"><table class="t click"><thead><tr>${th("name", "Entreprise")}${th("ca", "Ventes")}${th("g1", "Croissance")}${th("marge", "Marge")}${th("net", "Bénéfice")}${th("vig", "Repères")}<th>Exercice</th></tr></thead><tbody>
       ${rows.map(({ c, m, t }) => `<tr data-id="${c.id}"><td><div class="cell-co">${logo(c, 32)}<div><div class="nm">${esc(c.name)}</div><div class="sub">${esc(regName(c))} · ${esc(secName(c))}</div></div></div></td>
-      ${c.missing ? `<td colspan="6" class="light">Comptes en cours de collecte</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td><span class="dots">${"<i class='f'></i>".repeat(t.fort)}${"<i class='m'></i>".repeat(t.moyen)}${"<i class='v'></i>".repeat(t.vig)}</span></td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
+      ${c.missing ? `<td colspan="6" class="light">${missingTxt(c)}</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td><span class="dots">${"<i class='f'></i>".repeat(t.fort)}${"<i class='m'></i>".repeat(t.moyen)}${"<i class='v'></i>".repeat(t.vig)}</span></td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
       <div class="src">Chiffres du dernier rapport annuel publié, dans la devise de l'entreprise. Cliquez sur un en-tête pour trier, sur une ligne pour ouvrir la fiche.</div></section>`;
     $("#elist thead").onclick = e => { const t = e.target.closest("th.sort"); if (!t) return; if (listState.sort === t.dataset.k) listState.dir *= -1; else { listState.sort = t.dataset.k; listState.dir = t.dataset.k === "name" ? 1 : -1; } render(); };
   };
@@ -967,7 +971,7 @@ function tabBref(s, c, el) {
     <div class="cols">
       <div>
         ${ficheHTML(s)}
-        ${c ? lectureHTML(s, c) : `<section class="panel"><div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte. Ils apparaîtront après la prochaine mise à jour.</div></section>`}
+        ${c ? lectureHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
         ${c ? prixHTML(s, c) : ""}
         <section class="panel"><div class="ph"><h2>Cours de l'action</h2></div><div class="tv tv-chart" id="tvchart"></div></section>
       </div>
