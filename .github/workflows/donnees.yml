@@ -41,6 +41,6 @@ jobs:
         run: |
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
-          git add cf/site/data cf/site/sitemap.xml cf/site/_worker.js
+          git add cf/site/data cf/site/sitemap.xml cf/site/_worker.js data/diagnostic.json
           git diff --cached --quiet || git commit -m "Données du $(date +%F)"
           git push

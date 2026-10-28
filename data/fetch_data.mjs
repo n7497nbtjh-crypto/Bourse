@@ -49,6 +49,7 @@ export async function filingsFor(fetchFn, lei, max = 3) {
     if (!rel) return [];
     j = await getJSON(fetchFn, rel.startsWith("http") ? rel : "https://filings.xbrl.org" + rel, "application/vnd.api+json");
   }
+  if (DIAGNOSTIC.__raw) DIAGNOSTIC.__raw[lei] = ((j && j.data) || []).map(f => [f.attributes && f.attributes.period_end, !!(f.attributes && f.attributes.json_url), f.attributes && f.attributes.error_count, f.attributes && f.attributes.processed]);
   const byPeriod = new Map();
   for (const f of (j && j.data) || []) {
     const a = f.attributes || {};
@@ -61,13 +62,34 @@ export async function filingsFor(fetchFn, lei, max = 3) {
 }
 const abs = u => u.startsWith("http") ? u : "https://filings.xbrl.org" + (u.startsWith("/") ? "" : "/") + u;
 
+// Diagnostic : étiquettes du dernier rapport qui ressemblent aux chiffres recherchés (pour améliorer la lecture)
+const DIAG = /operat|ebit|recurring|debt|borrow|financialliab|depreciat|amortis|revenue|sales|turnover|dividend|netdebt|leaseliab/i;
+export function candidates(doc) {
+  const out = {};
+  for (const f of Object.values((doc && doc.facts) || {})) {
+    const d = f.dimensions || {};
+    if (!d.concept || Object.keys(d).some(k => !["concept", "entity", "period", "unit", "language", "noteId"].includes(k))) continue;
+    if (!DIAG.test(d.concept.split(":")[1] || "")) continue;
+    const v = Number(f.value); if (!isFinite(v)) continue;
+    const key = d.concept + " @ " + d.period;
+    if (!(key in out)) out[key] = Math.abs(v) >= 1e5 ? Math.round(v / 1e6) : v;
+  }
+  return out;
+}
+export const DIAGNOSTIC = {};
+
 export async function collectOne(fetchFn, c) {
   const id = c.lei ? { lei: c.lei, legalName: c.name } : await leiFromIsin(fetchFn, c.isin, c.legal || c.name);
   if (!id) throw new Error("LEI introuvable pour " + c.isin);
   const fl = await filingsFor(fetchFn, id.lei);
   if (!fl.length) throw new Error("aucun rapport ESEF pour " + id.lei);
   const reports = [];
-  for (const f of fl) { const doc = await getJSON(fetchFn, f.json); if (doc) reports.push(extract(doc)); await sleep(500); }
+  let first = true;
+  for (const f of fl) {
+    const doc = await getJSON(fetchFn, f.json);
+    if (doc) { reports.push(extract(doc)); if (first) { DIAGNOSTIC[c.id] = { periods: fl.map(x => x.period_end), concepts: candidates(doc) }; first = false; } }
+    await sleep(500);
+  }
   const s = toSeries(merge(reports));
   return {
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, lei: id.lei, legalName: id.legalName || c.name,
@@ -89,6 +111,7 @@ export function summary(c) {
 
 async function main() {
   const only = process.argv[2];
+  DIAGNOSTIC.__raw = {};
   mkdirSync(new URL("societes/", OUT), { recursive: true });
   const prevIndex = existsSync(new URL("societes.json", OUT)) ? JSON.parse(readFileSync(new URL("societes.json", OUT))) : { companies: [] };
   const prev = Object.fromEntries((prevIndex.companies || []).map(c => [c.id, c]));
@@ -108,6 +131,7 @@ async function main() {
     }
     await sleep(800);
   }
+  writeFileSync(new URL("./diagnostic.json", import.meta.url), JSON.stringify(DIAGNOSTIC, null, 1));
   writeFileSync(new URL("societes.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), sectors: SECTEURS, companies: list, errors }));
   console.log(`${list.length - errors.length} sociétés à jour, ${errors.length} échec(s)`);
 }
