@@ -775,6 +775,9 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 .nexp{margin:4px 0;font-size:12.5px;color:var(--grey)}
 .nsrc{font-size:12.5px;color:var(--grey);text-decoration:underline}
 .nwhy blockquote{margin:6px 0;padding:6px 10px;border-left:3px solid var(--line);font-size:13px;color:var(--grey)}
+.lnwarn{background:#FBEDE8;border:1px solid #F0C7B8;border-radius:12px;padding:12px 14px;margin-bottom:8px;color:#7A2A14}
+.lnok{background:#EAF5EF;border:1px solid #BFE0CD;border-radius:12px;padding:12px 14px;color:#0E4D35}
+.lnit{padding:8px 2px;border-bottom:1px dashed var(--line)}
 </style>
 </head>
 <body>
@@ -1881,6 +1884,7 @@ function tabBref(s, c, el) {
         <section class="panel" id="actus"><div class="ph"><h2>Actualités</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div>
           ${fr || s.sec ? `<div class="pb"><div class="cap">Annonces officielles</div><div id="offi"></div></div>` : ""}
           <div class="pb"><div class="cap">Dans la presse</div><div id="pres"></div></div></section>
+        ${s.sec ? `<section class="panel" id="dirig"></section>` : ""}
         <section class="panel" id="avis"><div class="ph"><h2>Avis des visiteurs</h2><a href="/entreprise/${s.id}/communaute">Discussion</a></div><div class="pb" id="avisb"></div></section>
       </aside>
     </div>`;
@@ -1889,6 +1893,7 @@ function tabBref(s, c, el) {
   if (s.sec) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false, filters: false, max: 3 });
   else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false, filters: false, max: 3 });
   presseBlock($("#pres"), { id: s.id, max: 5 });
+  dirigeantsHTML(s, $("#dirig"));
   avisBlock($("#avisb"), s.id, s.name, { compact: true });
 }
 function tabComptes(s, c, el) {
@@ -2886,6 +2891,7 @@ const OUTILS = [
   ["/comparer", "Comparer des entreprises", "Jusqu'à cinq entreprises côte à côte, avec une synthèse en phrases."],
   ["/outils/si-javais", "Et si j'avais investi…", "Ce que seraient devenus 1 000 € placés il y a 1, 3 ou 5 ans dans une action ou un ETF, comparé au marché."],
   ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?", "Les entreprises que deux ETF ont en commun, pour éviter d'acheter deux fois la même chose."],
+  ["/outils/verifier", "Vérifier un site ou une offre", "Le nom d'un site, d'une appli ou d'un « conseiller » comparé aux listes noires de l'AMF, mises à jour chaque jour."],
   ["/simulateurs/epargne", "Épargner chaque mois", "Ce que peut devenir une somme placée tous les mois, selon le rendement."],
   ["/simulateurs/frais", "Le coût des frais", "Ce que coûtent les frais de courtage et de gestion sur 10, 20 ou 30 ans."],
   ["/simulateurs/pea-cto", "PEA ou compte-titres", "L'impôt payé sur vos gains selon le compte, avec vos montants."],
@@ -2896,6 +2902,7 @@ function pageOutils(t) {
   setNav("sim");
   if (t === "si-javais") return outilSiJavais();
   if (t === "recouvrement") return outilRecouvrement();
+  if (t === "verifier") return outilVerifier();
   setTitle("Outils");
   app.innerHTML = `<h1 class="pagetitle">Outils</h1><p class="pagesub">Des calculs et des comparaisons pour décider en connaissance de cause. Les hypothèses sont toujours affichées.</p>
     <div class="cards">${OUTILS.map(([h, t, d], i) => `<a class="cocard tool" href="${h}"><div class="top"><span class="tnum">${String(i + 1).padStart(2, "0")}</span><div><div class="nm">${t}</div></div></div><div class="d">${d}</div></a>`).join("")}</div>`;
@@ -2935,6 +2942,44 @@ async function outilRecouvrement() {
       ${commons.length ? `<p class="kick">Principales entreprises en commun</p>${hbars(commons.map(h => ({ label: ISINBY[h.isin] ? ISINBY[h.isin].name : titleCase(h.name), v: Math.min(h.pct, mb.get(h.isin) || 0), href: ISINBY[h.isin] ? "/entreprise/" + ISINBY[h.isin].id : null })), v => pct(v / 100, 1, false))}<p class="note">Poids le plus faible des deux ETF pour chaque entreprise.</p>` : ""}</div>
       <div class="src">Compositions relevées dans les déclarations N-PORT déposées à la SEC par des fonds équivalents (même indice), au ${esc(ca.asOf || "")}.</div>`; };
   bindPicker("ra", x => { a = x; run(); }, true); bindPicker("rb", x => { b = x; run(); }, true); $("#ra").value = keyName(a); $("#rb").value = keyName(b); run();
+}
+
+
+/* ---------- Vérifier un site, une appli ou une offre (listes noires de l'AMF) ---------- */
+let LN = null;
+async function outilVerifier() {
+  setTitle("Vérifier un site ou une offre");
+  app.innerHTML = `<div class="crumbs"><a href="/outils">Outils</a> › Vérifier un site ou une offre</div><h1 class="pagetitle">Vérifier un site, une appli ou une offre</h1>
+    <p class="pagesub">Une publicité promet 10 % par mois, un « conseiller » vous contacte sur WhatsApp, un site propose du trading de cryptos ? Tapez son nom ou son adresse : le site cherche dans les listes noires publiées chaque jour par l'AMF.</p>
+    <section class="panel"><div class="pb"><div class="field" style="max-width:520px"><label for="lnq">Nom, site internet ou adresse e-mail</label><input id="lnq" type="search" autocomplete="off" placeholder="ex. invest-profit-plus.com"></div><div id="lnr" style="margin-top:12px"></div></div>
+      <div class="src" id="lns">Chargement des listes…</div></section>
+    <section class="panel"><div class="ph"><h2>Les signaux qui doivent alerter</h2></div><div class="pb"><ul style="margin:0;padding-left:18px;line-height:1.7">
+      <li>Un rendement élevé <b>et</b> garanti : en Bourse, un rendement élevé s'accompagne toujours d'un risque de perte.</li>
+      <li>Un contact que vous n'avez pas demandé (appel, message privé, réseau social) et une pression pour décider vite.</li>
+      <li>Un versement demandé par virement vers un compte à l'étranger, en cryptomonnaie ou par carte cadeau.</li>
+      <li>Une société introuvable dans les registres officiels, ou au nom proche d'une institution connue.</li></ul>
+      <p class="muted" style="margin:12px 0 0">Ne pas figurer sur une liste noire ne prouve pas qu'un acteur est autorisé : les listes ne recensent que les cas signalés. Vérifiez aussi qu'il figure sur les registres officiels : <a class="lnk" href="https://www.regafi.fr" target="_blank" rel="noopener">REGAFI</a> (banques, prestataires d'investissement), <a class="lnk" href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a> (conseillers, intermédiaires) et la liste des prestataires de crypto-actifs agréés sur le site de l'AMF. En cas de doute : AMF Épargne Info Service, 01 53 45 62 00.</p></div></section>`;
+  if (!LN) { try { LN = await (await fetch("/data/listes-noires.json")).json(); } catch (e) { LN = { items: [] }; } }
+  $("#lns").innerHTML = LN.items.length ? `${F0.format(LN.items.length)} entrées, mises à jour le ${dLabel(LN.updated)} · source : listes noires de l'AMF (data.gouv.fr).` : "Les listes noires ne sont pas disponibles pour le moment : consultez directement le site de l'AMF.";
+  const q = $("#lnq");
+  q.oninput = () => { const t = norm(q.value.trim()).replace(/^https?:\/\/|^www\./g, "").replace(/\/.*$/, ""); if (t.length < 3) { $("#lnr").innerHTML = ""; return; }
+    const hits = LN.items.filter(x => norm(x.t).includes(t)).slice(0, 12);
+    $("#lnr").innerHTML = hits.length ? `<div class="lnwarn"><b>${hits.length >= 12 ? "Au moins 12" : hits.length} correspondance${hits.length > 1 ? "s" : ""} sur les listes noires de l'AMF.</b> L'AMF signale ces acteurs comme non autorisés à proposer des produits ou services financiers en France. Ne versez pas d'argent.</div>${hits.map(x => `<div class="lnit"><b>${esc(x.n || x.s)}</b>${x.s && x.n ? ` <span class="light">${esc(x.s)}</span>` : ""}<div class="light" style="font-size:12.5px">${esc(x.c)}${x.d ? ` · inscrit le ${esc(x.d)}` : ""}</div></div>`).join("")}`
+      : `<div class="lnok">Aucune correspondance sur les listes noires de l'AMF. Ce n'est pas une garantie : vérifiez que l'acteur figure sur les registres officiels ci-dessous.</div>`; };
+}
+
+/* ---------- Opérations des dirigeants (sociétés américaines) ---------- */
+let DIR = null;
+async function dirigeantsHTML(s, el) {
+  if (!s.sec || !el) return;
+  if (!DIR) { try { DIR = (await (await fetch("/data/dirigeants.json")).json()).items || {}; } catch (e) { DIR = {}; } }
+  const tx = DIR[s.id]; if (!tx || !tx.length) { el.remove(); return; }
+  const buy = tx.filter(t => t.code === "P"), sell = tx.filter(t => t.code === "S"), val = l => l.reduce((a, t) => a + (t.px || 0) * t.sh, 0);
+  el.innerHTML = `<div class="ph"><h2>Les dirigeants achètent-ils ou vendent-ils ?</h2></div><div class="pb" style="padding-top:2px">
+    <p class="lead" style="margin:0 0 8px">Ces quatre derniers mois : ${buy.length ? `<b>${buy.length} achat${buy.length > 1 ? "s" : ""}</b> (${big(val(buy) / 1e6, "USD")})` : "aucun achat"} et ${sell.length ? `<b>${sell.length} vente${sell.length > 1 ? "s" : ""}</b> (${big(val(sell) / 1e6, "USD")})` : "aucune vente"} d'actions en Bourse par des dirigeants ou administrateurs.</p>
+    <p class="muted" style="margin:0 0 10px;font-size:13px">Les ventes sont fréquentes et souvent programmées à l'avance (impôts, diversification) : elles disent peu. Les achats avec leur propre argent sont plus rares et plus parlants.</p>
+    <div class="scroll-x"><table class="t"><thead><tr><th class="l">Date</th><th class="l">Qui</th><th class="l">Opération</th><th>Actions</th><th>Prix</th></tr></thead><tbody>${tx.slice(0, 8).map(t => `<tr><td class="l">${dLabel(t.d)}</td><td class="l wrap">${esc(titleCase(t.owner))}<div class="sub">${esc(t.title)}</div></td><td class="l ${t.code === "P" ? "up" : ""}">${t.code === "P" ? "Achat" : "Vente"}</td><td class="num">${F0.format(t.sh)}</td><td class="num">${t.px ? F2.format(t.px) + " $" : "–"}</td></tr>`).join("")}</tbody></table></div></div>
+    <div class="src">Formulaires 4 déposés à la SEC. Achats et ventes en Bourse seulement (sans les attributions gratuites ni les levées d'options).</div>`;
 }
 
 function route() {

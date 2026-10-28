@@ -16,7 +16,7 @@ on:
     - cron: "17 5 * * *"   # chaque jour vers 6 h 17 (heure de Paris en hiver)
   push:
     branches: [main]
-    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "data/etf.mjs", "data/etf_fetch.mjs", "data/agenda/**", "data/agenda_presse.mjs", "data/repartitions/**", "data/gf.mjs", "build.mjs", "data/actu_analyse.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
+    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "data/etf.mjs", "data/etf_fetch.mjs", "data/agenda/**", "data/agenda_presse.mjs", "data/repartitions/**", "data/gf.mjs", "build.mjs", "data/actu_analyse.mjs", "data/listes_noires.mjs", "data/dirigeants.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
 permissions:
   contents: write
 concurrency:
@@ -36,7 +36,8 @@ jobs:
           CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
         run: |
           if [ -n "$CONTACT" ]; then echo "Contact SEC : renseigné"; else echo "::warning::Contact SEC absent : ajoutez la variable CONTACT (Settings > Secrets and variables > Actions > Variables)"; fi
-          node data/fetch_data.mjs
+          # Node 22 plante parfois dans undici sur de longues séries de requêtes : on relance, les sociétés déjà lues sont gardées
+          for i in 1 2 3; do node data/fetch_data.mjs && break; echo "::warning::Collecte interrompue, nouvelle tentative ($i)"; done
           node data/etf_fetch.mjs || echo "::warning::Composition des ETF non mise à jour"
           node data/cours_fetch.mjs || echo "::warning::Cours non mis à jour"
       - name: Construction et tests
@@ -57,6 +58,8 @@ jobs:
         run: |
           npm i --no-save --silent pdfjs-dist@4.10.38 || true
           node data/actu_analyse.mjs 2>&1 | grep -v "^Warning: TT" || echo "::warning::Analyse des annonces interrompue"
+          node data/listes_noires.mjs || true
+          node data/dirigeants.mjs || true
       - name: Dates de résultats trouvées dans l'actualité
         run: node data/agenda_presse.mjs || echo "::warning::Recherche des dates dans la presse interrompue"
       - name: Site prêt à déposer sur Cloudflare
