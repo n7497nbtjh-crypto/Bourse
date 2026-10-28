@@ -1,8 +1,9 @@
 {
  "__raw": {
+  "W38RGI023J3WT1HWRP32": [],
   "529900D6BF99LW9R2E68": [],
   "529900K9B0N5BT694847": [],
-  "W38RGI023J3WT1HWRP32": [],
+  "549300V9QSIG4WX4GJ96": [],
   "529900R27DL06UVNT076": [],
   "549300V9QSIG4WX4GJ96": [],
   "529900PM64WH8AF1E917": [],
@@ -16,6 +17,19 @@
   "Munich Re : l'ISIN DE0008430026 renvoie à « Münchener Rückversicherungs-Gesellschaft Aktiengesellschaft in München »",
   "SII : l'ISIN FR0000074122 renvoie à « SOCIETE POUR L'INFORMATIQUE INDUSTRIELLE »",
   "Plastivaloire : l'ISIN FR0013252186 renvoie à « PLASTIQUES DU VAL DE LOIRE »",
-  "TFF Group : l'ISIN FR0013295789 renvoie à « TONNELLERIE FRANCOIS FRERES »"
+  "TFF Group : l'ISIN FR0013295789 renvoie à « TONNELLERIE FRANCOIS FRERES »",
+  "Tencent : l'ISIN KYG875721634 renvoie à « 騰訊控股有限公司 »",
+  "FEMSA : le code FMX renvoie à « Mexican Economic Development, Inc. »",
+  "Nintendo : l'ISIN JP3756600007 renvoie à « 任天堂株式会社 »",
+  "Tokyo Electron : l'ISIN JP3571400005 renvoie à « トウキョウエレクトロン »",
+  "SoftBank Group : l'ISIN JP3436100006 renvoie à « ソフトバンクグループ株式会社 »",
+  "Mitsubishi Corporation : l'ISIN JP3898400001 renvoie à « 三菱商事株式会社 »",
+  "Shin-Etsu Chemical : l'ISIN JP3371200001 renvoie à « 信越化学工業株式会社 »",
+  "Recruit : l'ISIN JP3970300004 renvoie à « 株式会社リクルートホールディングス »",
+  "Daikin : l'ISIN JP3481800005 renvoie à « ダイキン工業株式会社 »",
+  "Canon : l'ISIN JP3242800005 renvoie à « キヤノン株式会社 »",
+  "Panasonic : l'ISIN JP3866800000 renvoie à « パナソニックホールディングス株式会社 »",
+  "Nissan : l'ISIN JP3672400003 renvoie à « 日産自動車株式会社 »",
+  "Denso : l'ISIN JP3551500006 renvoie à « 株式会社デンソー »"
  ]
 }
