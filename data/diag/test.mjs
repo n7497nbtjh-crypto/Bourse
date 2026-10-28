@@ -1,4 +1,4 @@
-// Diagnostic : collecte brute pour élargir la liste des entreprises (lot auto1), étape 4 (suite OpenFIGI, durée de lecture des comptes).
+// Diagnostic : collecte brute pour élargir la liste des entreprises (lot auto1), étape 5 (listes officielles Xetra et SIX).
 // Sources ouvertes : GLEIF (correspondance ISIN-LEI), listes officielles des bourses (Euronext, Nasdaq Nordic), OpenFIGI (ISIN -> cotations).
 // Résultats bruts dans data/diag/auto1/ ; le tri et le choix des sociétés se font ensuite hors ligne.
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
@@ -91,19 +91,39 @@ async function timing() {
   save("timing.json", res);
 }
 
+// ---------- Listes officielles Xetra (Deutsche Börse) et SIX Swiss Exchange ----------
+async function listes2() {
+  const H = { "user-agent": BROWSER, accept: "*/*" };
+  // Xetra : le lien du fichier change chaque jour, on le cherche dans les pages de la bourse
+  for (const page of ["https://www.xetra.com/xetra-en/instruments/instruments", "https://www.xetra.com/xetra-en/instruments/shares/list-of-tradable-shares", "https://www.xetra.com/xetra-de/instrumente/alle-handelbaren-instrumente", "https://www.xetra.com/xetra-en/trading/trading-calendar-and-trading-hours/all-tradable-instruments"]) {
+    try {
+      const r = await fetch(page, { headers: H, signal: AbortSignal.timeout(60e3) }); const t = await r.text();
+      const links = [...new Set([...t.matchAll(/href="([^"]*allTradableInstruments[^"]*\.csv)"/gi)].map(m => m[1]))];
+      L("xetra page", page, r.status, t.length, JSON.stringify(links.slice(0, 4)));
+      for (const l of links) {
+        const u = l.startsWith("http") ? l : "https://www.xetra.com" + l;
+        const c = await fetch(u, { headers: H, signal: AbortSignal.timeout(120e3) }); const ct = await c.text();
+        L("xetra csv", u, c.status, ct.length, JSON.stringify(ct.slice(0, 300)));
+        if (c.ok && ct.length > 10000) { writeFileSync(DIR + "liste_xetra.csv", ct); return; }
+      }
+    } catch (e) { L("xetra", page, e.message); }
+    await sleep(1000);
+  }
+}
+async function listes3() {
+  const H = { "user-agent": BROWSER, accept: "*/*" };
+  const tries = [
+    ["six_fqs", "https://www.six-group.com/fqs/ref.csv?select=ShortName,ValorSymbol,ValorNumber,ISIN,TradingBaseCurrency,SecTypeDesc,ListingSegment,PortalSegment&where=PortalSegment=EQ*PortalSegment=FU*PortalSegment=EP&orderby=ShortName&page=1&pagesize=99999"],
+    ["six_fqs2", "https://www.six-group.com/fqs/ref.csv?select=ShortName,ValorSymbol,ISIN,SecTypeDesc&where=PortalSegment=EQ&pagesize=99999"],
+    ["six_issuers", "https://www.six-group.com/sheldon/equity_issuers/v1/equity_issuers.json"],
+  ];
+  for (const [k, u] of tries) {
+    try { const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(60e3) }); const t = await r.text(); L("six", k, r.status, t.length, JSON.stringify(t.slice(0, 300))); if (r.ok && t.length > 5000) writeFileSync(DIR + "liste_" + k + (t.trim().startsWith("{") || t.trim().startsWith("[") ? ".json" : ".csv"), t); } catch (e) { L("six", k, e.message); }
+    await sleep(1000);
+  }
+}
+
 const fin = () => writeFileSync("data/diag/out.json", JSON.stringify({ auto1: log }, null, 1));
 setTimeout(() => { L("arrêt forcé"); fin(); process.exit(0); }, 15.3 * 60e3).unref();
-const W = load("wd.json", {}), E = load("esef.json", {});
-const U = (await import("../univers.mjs")).default, hi = new Set(U.map(c => c.isin).filter(Boolean));
-// ISIN européens de Wikidata absents de la liste : d'abord ceux qui ont des rapports ESEF, puis par notoriété
-const sl = o => +(o.sl || 0), esefL = new Set(Object.keys(E));
-const wdEu = Object.values(W).filter(o => o.isin && !o.dead && o.web && !o.isin.some(i => hi.has(i)) && o.isin.some(i => EU.has(i.slice(0, 2))))
-  .sort((a, b) => ((b.lei || []).some(l => esefL.has(l)) - (a.lei || []).some(l => esefL.has(l))) || sl(b) - sl(a));
-const G = load("gleif.json", {}); const TM = timing().catch(e => L("durée", e.message));
-const prio = [], seen = new Set(), add = i => { if (i && !seen.has(i) && !hi.has(i)) { seen.add(i); prio.push(i); } };
-wdEu.filter(o => (o.lei || []).some(l => esefL.has(l)) || o.isin.some(i => G.isinLei && esefL.has(G.isinLei[i]))).forEach(o => o.isin.filter(i => EU.has(i.slice(0, 2))).slice(0, 2).forEach(add));
-for (const [lei, l] of Object.entries((G && G.leiIsin) || {})) { const c = (E[lei] || {}).c; const s = l.filter(i => /^[A-Z]{2}/.test(i)).sort((a, b) => (b.slice(0, 2) === c) - (a.slice(0, 2) === c)); if (s.length <= 6) s.slice(0, 3).forEach(add); }
-wdEu.forEach(o => o.isin.filter(i => EU.has(i.slice(0, 2))).slice(0, 1).forEach(add));
-L("figi priorités", prio.length);
-await Promise.all([figi(prio), TM]);
+await Promise.all([listes2().catch(e => L("xetra", e.message)), listes3().catch(e => L("six", e.message))]);
 fin();
