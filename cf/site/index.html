@@ -686,6 +686,23 @@ table.t.click tbody tr:hover td{background:var(--hl)}
 .notice{background:var(--hl);border-color:#DCEBA6;color:#3B4A12}
 footer{border-top:1.5px solid var(--ink)}
 @media (max-width:760px){.hero2{padding:22px 18px 24px;border-radius:14px}.hero2 h1{font-size:29px}}
+
+.favbtn{margin-top:8px;background:transparent;border:1.5px solid var(--ink);border-radius:99px;padding:4px 12px;font-size:13px;font-weight:600;cursor:pointer}
+.favbtn.on{background:var(--lime);border-color:var(--lime)}
+.favn:not(:empty){display:inline-block;margin-left:5px;background:var(--lime);color:var(--ink);border-radius:99px;font-size:11px;font-weight:700;padding:0 6px;line-height:17px}
+.favcard{display:flex;flex-direction:column;gap:6px}.favcard .favbtn{align-self:flex-start;margin:0}
+table.cmp th.rowh{font-family:var(--sans);text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--ink);font-weight:600;white-space:normal;min-width:170px;max-width:230px;vertical-align:top;border-bottom:1px solid var(--soft);background:var(--panel);position:sticky;left:0;z-index:1}
+table.cmp th.rowh small{display:block;font-weight:400;color:var(--light);font-size:12px;margin-top:2px}
+table.cmp td{vertical-align:top;white-space:normal;min-width:150px}
+table.cmp td small{display:block;font-size:11.5px;color:var(--light)}
+table.cmp td .dot{display:inline-block;width:9px;height:9px;margin-right:6px;vertical-align:1px}
+table.cmp .hl{background:var(--hl)}
+table.cmp thead th{text-transform:none;letter-spacing:0;font-size:13px;color:var(--ink)}
+table.env td{min-width:220px;font-size:13.5px;line-height:1.5}
+.chipx,.chip{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--ink);border-radius:99px;padding:3px 11px;font-size:13px;margin:0 6px 6px 0}
+.chipx{background:var(--ink);color:#fff}.chip:hover{background:var(--hl)}
+#cmps{position:absolute;left:0;right:0;top:100%;z-index:20}
+.herolinks{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px!important}.herolinks a{color:#fff;text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:2px;text-underline-offset:4px;font-weight:500}
 </style>
 </head>
 <body>
@@ -699,7 +716,7 @@ footer{border-top:1.5px solid var(--ink)}
         <div class="results"></div>
       </div>
       <nav class="main d-only" id="nav">
-        <a href="/" data-nav="home">Accueil</a>
+        <a href="/favoris" data-nav="fav">Favoris<span class="favn"></span></a>
         <a href="/entreprises" data-nav="ent">Entreprises</a>
         <a href="/etf" data-nav="etf">ETF</a>
         <a href="/actualites" data-nav="news">Actualité</a>
@@ -710,7 +727,7 @@ footer{border-top:1.5px solid var(--ink)}
       </nav>
       <div class="mright m-only"><button class="mbtn" id="searchBtn" aria-expanded="false">Chercher</button><button class="mbtn" id="menuBtn" aria-expanded="false">Menu</button></div>
     </div>
-    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/actualites">Actualité</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/simulateurs">Simulateurs</a><a href="/portefeuille">Portefeuille</a><a href="/lexique">Lexique</a></div>
+    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/actualites">Actualité</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/simulateurs">Simulateurs</a><a href="/portefeuille">Portefeuille</a><a href="/lexique">Lexique</a></div>
     <div class="msearch" id="msearch">
       <div class="search" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -726,7 +743,7 @@ footer{border-top:1.5px solid var(--ink)}
 <footer>
   <div class="wrap f">
     <div><p>Informations factuelles à but pédagogique. Aucun contenu du site n'est un conseil en investissement.</p>
-      <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a> et <a class="lnk" style="margin:0" href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC (EDGAR)</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours fournis par <a class="lnk" style="margin:0" href="https://fr.tradingview.com" target="_blank" rel="noopener nofollow">TradingView</a>.</p></div>
+      <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a> et <a class="lnk" style="margin:0" href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC (EDGAR)</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours fournis par TradingView.</p></div>
     <div><a href="/lexique">Lexique</a><a href="/mentions-legales">Mentions légales</a></div>
   </div>
 </footer>
@@ -1006,7 +1023,7 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") closeDef(); 
 /* ---------- Modules de cours TradingView (gratuits, avec mention de la source) ---------- */
 function tv(el, widget, cfg) {
   if (!el) return;
-  el.innerHTML = `<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><div class="tradingview-widget-copyright"><a href="https://fr.tradingview.com/" rel="noopener nofollow" target="_blank">Cours fournis par TradingView</a></div></div>`;
+  el.innerHTML = `<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><div class="tradingview-widget-copyright">Cours fournis par TradingView</div></div>`;
   const s = document.createElement("script");
   s.src = `https://s3.tradingview.com/external-embedding/embed-widget-${widget}.js`;
   s.async = true; s.type = "text/javascript";
@@ -1075,7 +1092,7 @@ function lineChart(el, { labels, series, fmt, area }) {
 
 /* ---------- Pièces communes ---------- */
 const app = $("#app");
-function setTitle(t) { document.title = t ? `${t} · ${SITE}` : `${SITE} · La Bourse expliquée`; }
+function setTitle(t) { document.title = t ? `${t} · ${SITE}` : `${SITE} · La Bourse, comptes à l'appui`; }
 function setNav(k) { $$("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === k)); }
 function agendaHTML(list, showCo = true) {
   if (!list.length) return `<div class="empty">Aucune date renseignée pour l'instant.</div>`;
@@ -1270,7 +1287,7 @@ function serieHTML(s, c, k) {
   const vals = d.serie(c), med = MED[s.sector] || {};
   const fmt = d.money ? (v => big(v, c.currency)) : d.fmt;
   const ref = !d.money && med.n >= 3 && med[d.metric] != null ? med[d.metric] : null;
-  return `<section class="panel"><div class="ph"><h2>${esc(d.short)} de ${c.years[0]} à ${c.years.at(-1)}</h2></div><div class="pb">${barsSVG({ labels: c.years.map(String), values: vals, fmt, ref, refLabel: "Médiane du secteur" })}</div></section>`;
+  return `<section class="panel"><div class="ph"><h2>${esc(d.short)} de ${c.years[Math.max(0, vals.findIndex(okn))]} à ${c.years.at(-1)}</h2></div><div class="pb">${barsSVG({ labels: c.years.map(String), values: vals, fmt, ref, refLabel: "Médiane du secteur" })}</div></section>`;
 }
 function argentHTML(s, c) {
   const segs = c && c.segments || {}, f = c ? figuresOf(c) : null, cur = c ? c.currency : "EUR";
@@ -1336,7 +1353,7 @@ async function pageComprendre(id, k) {
 
 /* ---------- ETF ---------- */
 let ETF = { list: [] }, ETFBY = {};
-const ISSUERDOM = { Amundi: "amundi.com", iShares: "ishares.com", Vanguard: "vanguard.com", "BNP Paribas": "bnpparibas.com", "BNP Paribas Easy": "bnpparibas.com", Xtrackers: "dws.com", SPDR: "ssga.com", Invesco: "invesco.com", Lyxor: "amundi.com" };
+const ISSUERDOM = { Amundi: "amundi.com", iShares: "ishares.com", Vanguard: "vanguard.com", "BNP Paribas": "bnpparibas.com", "BNP Paribas Easy": "bnpparibas.com", Xtrackers: "xtrackers.com", SPDR: "ssga.com", Invesco: "invesco.com", Lyxor: "amundi.com" };
 const issuerDom = e => e.domain || ISSUERDOM[e.issuer] || ISSUERDOM[Object.keys(ISSUERDOM).find(k => (e.issuer || "").startsWith(k))] || "";
 const ECAT = { "actions-monde": "Monde", "actions-usa": "États-Unis", "actions-europe": "Europe", "actions-france": "France", "actions-emergents": "Pays émergents", "actions-asie": "Asie", theme: "Thématiques", dividendes: "Dividendes", immobilier: "Immobilier", obligations: "Obligations", matieres: "Matières premières" };
 const COUNTRY = { US: "États-Unis", JP: "Japon", GB: "Royaume-Uni", FR: "France", CA: "Canada", DE: "Allemagne", CH: "Suisse", NL: "Pays-Bas", AU: "Australie", TW: "Taïwan", CN: "Chine", IN: "Inde", KR: "Corée du Sud", IT: "Italie", ES: "Espagne", SE: "Suède", DK: "Danemark", IE: "Irlande", BR: "Brésil", HK: "Hong Kong", SG: "Singapour", BE: "Belgique", FI: "Finlande", NO: "Norvège", ZA: "Afrique du Sud", SA: "Arabie saoudite", MX: "Mexique", IL: "Israël", AT: "Autriche", PT: "Portugal", LU: "Luxembourg", JE: "Jersey", BM: "Bermudes", KY: "Îles Caïmans" };
@@ -1364,7 +1381,7 @@ async function pageEtf(id) {
   const e = ETFBY[id]; if (!e) return pageNotFound();
   setTitle(e.name); setNav("etf");
   app.innerHTML = `<div class="crumbs"><a href="/etf">ETF</a> › ${esc(ECAT[e.categorie] || "")}</div>
-    <div class="panel" style="margin-bottom:16px"><div class="qhead"><div class="who">${logo({ name: e.issuer, domain: issuerDom(e) }, 56)}<div><h1>${esc(e.name)}</h1><div class="desc">${esc(e.index)} · ${esc(e.issuer)}</div><div class="id">${esc(e.ticker)} · ISIN ${esc(e.isin)}${e.pea ? " · Éligible au PEA" : ""}</div></div></div><div class="px tv" id="tvinfo"></div></div>
+    <div class="panel" style="margin-bottom:16px"><div class="qhead"><div class="who">${logo({ name: e.issuer, domain: issuerDom(e) }, 56)}<div><h1>${esc(e.name)}</h1><div class="desc">${esc(e.index)} · ${esc(e.issuer)}</div><div class="id">${esc(e.ticker)} · ISIN ${esc(e.isin)}${e.pea ? " · Éligible au PEA" : ""}</div>${favBtn("e:" + e.id)}</div></div><div class="px tv" id="tvinfo"></div></div>
       <div class="tv tv-chart tv-top" id="tvchart"></div></div>
     <div class="cols"><div>
       ${e.fiche ? `<section class="panel"><div class="ph"><h2>Ce que contient cet ETF</h2></div><div class="syn"><dl><dt>Ce qu'il permet d'acheter</dt><dd>${esc(e.fiche.quoi)}</dd><dt>Ce qu'il contient</dt><dd>${esc(e.fiche.contenu)}</dd><dt>Ce qui fait varier sa valeur</dt><dd>${esc(e.fiche.varie)}</dd></dl></div></section>` : ""}
@@ -1601,7 +1618,7 @@ function pageHome() {
   const secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length, m: MED[k] })).filter(x => x.n).sort((a, b) => b.n - a.n);
   app.innerHTML = `
     <section class="hero2"><div><h1>Avant d'acheter une action, <em>lisez ses comptes.</em> On les a traduits.</h1>
-      <p>${F0.format(n)} entreprises et ${ETF.list.length} ETF. Pour chacune : ce qu'elle fait, ses chiffres en clair, ses points forts et ses points de vigilance. Sans conseil, avec les sources.</p></div>
+      <p>${F0.format(n)} entreprises et ${ETF.list.length} ETF. Pour chacune : ce qu'elle fait, ses chiffres en clair, ses points forts et ses points de vigilance. Sans conseil, avec les sources.</p><p class="herolinks"><a href="/pea-cto">PEA ou compte-titres : par où commencer ?</a><a href="/comparer">Comparer des entreprises</a><a href="/favoris">Mes favoris</a></p></div>
       <div class="search big" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Chercher une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div></section>
     <div class="homegrid">
       <section class="panel mktp"><div class="ph"><h2>Les grands indices aujourd'hui</h2><span class="light" style="font-size:12.5px">Cours en direct, différés selon les places</span></div><div class="tv tv-mkt" id="mkt"></div></section>
@@ -1708,7 +1725,7 @@ async function pageCompany(id, tab) {
     <div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?region=${s.region}">${esc(regName(s))}</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a></div>
     <div class="panel" style="margin-bottom:16px">
       <div class="qhead">
-        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div></div></div>
+        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div>${favBtn("c:" + s.id)}</div></div>
         <div class="px tv" id="tvinfo"></div>
       </div>
       <div class="tv tv-chart tv-top" id="tvchart"></div>
@@ -1737,6 +1754,7 @@ function ficheHTML(s, c) {
     ["Pays", regName(s)], ["Secteur", secName(s)], ["Code en Bourse", `${s.ticker} · ${String(s.tv || "").split(":")[0]}`],
     fg && fg.ca != null ? [isBank(s) ? "Revenus" : "Ventes", `${big(fg.ca, fg.currency)} <span class="light">en ${fg.year}</span>`] : null,
     fg && fg.net != null ? ["Bénéfice", `${big(fg.net, fg.currency)}`] : null,
+    peaOk(s) != null ? ["Compte possible", peaOk(s) ? `PEA ou compte-titres <a class="lnk" href="/pea-cto">?</a>` : `Compte-titres (pas de PEA) <a class="lnk" href="/pea-cto">?</a>`] : null,
     rank ? ["Taille", `${rank}<sup>${rank === 1 ? "re" : "e"}</sup> sur ${peers.length} de son secteur sur le site`] : null,
   ].filter(Boolean);
   return `<section class="panel" id="metier"><div class="ph"><h2>Ce que fait ${esc(s.name)}</h2></div>
@@ -1855,12 +1873,12 @@ function tabBref(s, c, el) {
     <section class="panel bref-box"><div class="pb">
       ${phrase ? `<p class="bref-big">${phrase}</p>` : `<p class="bref-big">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p>`}
       ${f ? feu(tally(items)) : ""}
-      <nav class="jump">${[f && ["retenir", "À retenir"], ["metier", "Ce qu'elle fait"], f && ["comptes", "Ses comptes"], f && ["dividende", "Dividende"], f && ["prix", "Prix de l'action"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
+      <nav class="jump">${[f && ["retenir", "À retenir"], ["metier", "Ce qu'elle fait"], f && ["comptes", "Ses comptes"], f && ["concurrents", "Concurrents"], f && ["dividende", "Dividende"], f && ["prix", "Prix de l'action"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
     </div></section>
     <div class="cols"><div>
         ${c ? retenirHTML(s, c) : ""}
         ${ficheHTML(s, c)}
-        ${c ? lectureHTML(s, c) + dividendeHTML(s, c) + prixHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
+        ${c ? lectureHTML(s, c) + concurrentsHTML(s) + dividendeHTML(s, c) + prixHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
       </div>
       <aside>
         <section class="panel" id="agenda"><div class="ph"><h2>Agenda</h2></div>${up.length ? agendaHTML(up.slice(0, 5), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant. Le site ajoute les dates dès qu'elles sont publiées par l'entreprise ou annoncées dans la presse.</div>`}</section>
@@ -1969,7 +1987,7 @@ function pageLexique() {
   const term = (id, t, n) => `<div class="term" id="${id}">${n ? `<div class="tn">${n}</div>` : ""}<h3>${esc(t.name)}</h3><p>${esc(t.what)}</p>${dl(id, t)}</div>`;
   const rest = [["Les bases", BASES], ["Lire une entreprise", TERMS], ["Portefeuille et simulations", PTERMS]]
     .map(([g, o]) => [g, Object.entries(o).filter(([k]) => !ESSENTIEL.includes(k))]).filter(([, l]) => l.length);
-  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Dix notions suffisent pour lire une fiche. Pour chacune : ce que c'est, un exemple réel, et à partir de quand c'est bon ou moins bon.</p>
+  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Dix notions suffisent pour lire une fiche. Pour chacune : ce que c'est, un exemple réel, et à partir de quand c'est bon ou moins bon.</p><section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Avant d'acheter une action : dans quel compte ?</b><div class="muted">PEA, compte-titres, assurance-vie : ce qu'on peut y mettre et l'impôt sur les gains.</div></div><a class="more" href="/pea-cto">Lire le guide →</a></div></section>
     <section class="panel"><div class="ph"><h2>Les dix notions essentielles</h2><span class="light" style="font-size:12.5px">Dans l'ordre conseillé</span></div>
       <div class="essgrid">${ESSENTIEL.map((k, i) => term(k, ALL[k], i + 1)).join("")}</div></section>
     <h2 class="subh">Pour aller plus loin</h2>
@@ -2164,6 +2182,157 @@ function pageMentions() { setTitle("Mentions légales"); setNav(""); app.innerHT
 function pageNotFound() { setTitle("Page introuvable"); setNav(""); app.innerHTML = `<h1 class="pagetitle">Page introuvable</h1><p class="pagesub"><a class="lnk" href="/">Retour à l'accueil</a></p>`; }
 
 /* ---------- Navigation ---------- */
+/* ---------- Favoris : entreprises et ETF suivis, gardés sur l'appareil (sans compte) ---------- */
+const FKEY = "bilan.favoris"; let FAVMEM = [];
+function favs() { try { const x = JSON.parse(localStorage.getItem(FKEY) || "null"); if (Array.isArray(x)) return x; } catch (e) { } return FAVMEM; }
+function setFavs(a) { FAVMEM = a; try { localStorage.setItem(FKEY, JSON.stringify(a)); } catch (e) { } favCount(); }
+const isFav = k => favs().includes(k);
+const favLbl = k => isFav(k) ? "★ Dans vos favoris" : "☆ Ajouter aux favoris";
+const favBtn = k => `<button type="button" class="favbtn${isFav(k) ? " on" : ""}" data-fav="${k}" aria-pressed="${isFav(k)}">${favLbl(k)}</button>`;
+function favCount() { const n = favs().filter(k => k.startsWith("c:") ? RBY[k.slice(2)] : ETFBY[k.slice(2)]).length; $$(".favn").forEach(el => el.textContent = n ? String(n) : ""); }
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-fav]"); if (!b) return;
+  const k = b.dataset.fav, a = favs().slice(), i = a.indexOf(k);
+  if (i >= 0) a.splice(i, 1); else a.unshift(k);
+  setFavs(a);
+  $$(`[data-fav="${k}"]`).forEach(x => { x.classList.toggle("on", isFav(k)); x.setAttribute("aria-pressed", isFav(k)); x.textContent = favLbl(k); });
+  if (location.pathname === "/favoris" && b.closest(".favlist")) pageFavoris();
+});
+function pageFavoris() {
+  setTitle("Mes favoris"); setNav("fav");
+  const all = favs(), cos = all.filter(k => k.startsWith("c:")).map(k => RBY[k.slice(2)]).filter(Boolean), etfs = all.filter(k => k.startsWith("e:")).map(k => ETFBY[k.slice(2)]).filter(Boolean);
+  const note = `<p class="light" style="font-size:12.5px;margin:6px 0 0">Vos favoris sont enregistrés dans ce navigateur, sur cet appareil. Pas de compte, rien n'est envoyé.</p>`;
+  if (!cos.length && !etfs.length) {
+    const sug = ["lvmh", "totalenergies", "airbus", "apple", "nvidia", "microsoft"].map(id => RBY[id]).filter(Boolean);
+    app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><p class="pagesub">Suivez les entreprises et les ETF qui vous intéressent : leurs chiffres clés, leurs prochaines dates (résultats, dividende, assemblée générale) et ce que la presse en dit, au même endroit.</p>
+      <section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Vous ne suivez encore rien. Sur chaque fiche, le bouton <b>☆ Ajouter aux favoris</b> l'ajoute ici.</p>${note}</div></section>
+      <section class="panel"><div class="ph"><h2>Pour commencer : quelques entreprises très suivies</h2></div><div class="pb favlist"><div class="cards">${sug.map(c => `<div class="favcard">${coCard(c)}${favBtn("c:" + c.id)}</div>`).join("")}</div></div></section>`;
+    return;
+  }
+  const up = AG.events.filter(e => e.date >= TODAY && cos.some(c => c.id === e.id)).sort((a, b) => a.date.localeCompare(b.date));
+  const row = c => { const f = c.missing ? null : c, m = f ? ratios(f) : {}, t = quick(c), nx = eventsOf(c.id).find(e => e.date >= TODAY);
+    return `<tr data-href="/entreprise/${c.id}"><td class="l"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 28)}<span style="display:flex;flex-direction:column"><span class="nm">${esc(c.name)}</span><span class="sub">${esc(secName(c))}</span></span></a></td>
+      <td class="num">${f && f.ca != null ? big(f.ca, f.currency) : "–"}</td><td class="num">${pct(m.g1, 0)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${f && f.net != null ? big(f.net, f.currency) : "–"}</td>
+      <td>${t ? pills(t) : `<span class="light">${missingTxt(c)}</span>`}</td><td class="l">${nx ? `${dLabel(nx.date)} <span class="light">${esc(nx.type)}</span>` : `<span class="light">–</span>`}</td>
+      <td><button type="button" class="linkbtn" data-fav="c:${c.id}" title="Retirer des favoris">Retirer</button></td></tr>`; };
+  app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><p class="pagesub">${cos.length} entreprise${cos.length > 1 ? "s" : ""} et ${etfs.length} ETF suivis.</p>
+    ${cos.length ? `<section class="panel favlist"><div class="ph"><h2>Vos entreprises</h2>${cos.length > 1 ? `<a href="/comparer?ids=${cos.slice(0, 4).map(c => c.id).join(",")}">Les comparer →</a>` : ""}</div>
+      <div class="scroll-x"><table class="t click"><thead><tr><th class="l">Entreprise</th><th>Ventes</th><th>Sur un an</th><th>Marge</th><th>Bénéfice</th><th class="l">Bilan des comptes</th><th class="l">Prochaine date</th><th></th></tr></thead><tbody>${cos.map(row).join("")}</tbody></table></div>
+      <div class="src">Chiffres du dernier exercice publié. Pastilles : nombre de points forts, dans la moyenne et de vigilance.${note}</div></section>` : ""}
+    <div class="cols"><div>
+      ${up.length ? `<section class="panel"><div class="ph"><h2>Leurs prochaines dates</h2><a href="/agenda">Tout l'agenda</a></div>${agendaHTML(up.slice(0, 12), true)}</section>` : cos.length ? `<section class="panel"><div class="ph"><h2>Leurs prochaines dates</h2></div><div class="pb muted">Aucune date annoncée pour l'instant par ces entreprises.</div></section>` : ""}
+      ${etfs.length ? `<section class="panel favlist"><div class="ph"><h2>Vos ETF</h2></div><div class="pb"><div class="cards">${etfs.map(e => `<div class="favcard">${etfCard(e)}${favBtn("e:" + e.id)}</div>`).join("")}</div></div></section>` : ""}
+    </div><aside>${cos.length ? `<section class="panel"><div class="ph"><h2>Dans la presse</h2></div>${cos.slice(0, 6).map((c, i) => `<div class="pb"><div class="cap">${esc(c.name)}</div><div id="fp${i}"></div></div>`).join("")}<div class="src">Articles repérés par GDELT, non vérifiés par le site.</div></section>` : ""}</aside></div>`;
+  $$("tr[data-href]", app).forEach(tr => tr.onclick = ev => { if (!ev.target.closest("a,button")) go(tr.dataset.href); });
+  cos.slice(0, 6).forEach((c, i) => presseBlock($("#fp" + i), { id: c.id, max: 2 }));
+}
+
+/* ---------- Concurrents directs et comparateur ---------- */
+let CONC = {};
+function peersOf(s, n = 4) {
+  const hand = (CONC[s.id] || []).map(id => RBY[id]).filter(Boolean);
+  if (hand.length >= 2) return { list: hand.slice(0, n), auto: false };
+  const size = caEur(s) || 1, same = R.companies.filter(x => x.id !== s.id && x.sector === s.sector && !x.missing && x.ca > 0 && !hand.includes(x));
+  const auto = same.sort((a, b) => Math.abs(Math.log((caEur(a) || 1) / size)) - Math.abs(Math.log((caEur(b) || 1) / size))).slice(0, n - hand.length);
+  return { list: [...hand, ...auto], auto: !hand.length };
+}
+const CMP_ROWS = [
+  ["ventes", "Ventes", "Ce que l'entreprise a facturé à ses clients sur l'année.", c => c.ca != null ? { v: big(c.ca, c.currency), s: `exercice ${c.year}` } : null],
+  ["croissance", "Croissance des ventes", "Évolution des ventes sur un an.", null],
+  ["marge", "Marge d'exploitation", "Ce qui reste sur 100 de ventes une fois payés salaires, achats et frais.", null],
+  ["net", "Bénéfice net", "Ce qui reste après tout, impôts compris.", null],
+  ["roe", "Rentabilité des capitaux propres", "Ce que rapporte en un an l'argent qui appartient aux actionnaires.", null],
+  [["dettenette", "lev", "gear"], "Endettement", "La dette nette, en années de résultat pour la rembourser, ou en part de ce que possèdent les actionnaires.", null],
+  ["fcf", "Trésorerie disponible", "L'argent qui reste une fois les investissements payés.", null],
+  ["payout", "Dividende", "Part du bénéfice reversée aux actionnaires.", null],
+];
+function cmpCell(c, row, items) {
+  if (c.missing) return `<span class="light">–</span>`;
+  if (row[3]) { const x = row[3](c); return x ? `<b class="num">${x.v}</b><small>${esc(x.s)}</small>` : "–"; }
+  const keys = [].concat(row[0]), it = items.find(i => keys.includes(i.term));
+  return it ? `<span class="dot dot-${it.lv}"></span><b class="num">${esc(String(it.value))}</b><small class="vd vd-${it.lv}">${VERDICT[it.lv]}</small>` : `<span class="light">–</span>`;
+}
+function cmpTable(list, hl) {
+  const items = list.map(c => c.missing ? [] : lecture(c, { ...c, cagr: null }));
+  return `<div class="scroll-x"><table class="t cmp"><thead><tr><th class="l"></th>${list.map(c => `<th class="l${c.id === hl ? " hl" : ""}"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 28)}<span class="nm">${esc(c.name)}</span></a></th>`).join("")}</tr></thead><tbody>
+    ${CMP_ROWS.map(r => `<tr><th class="l rowh">${r[1]}<small>${r[2]}</small></th>${list.map((c, i) => `<td class="l${c.id === hl ? " hl" : ""}">${cmpCell(c, r, items[i])}</td>`).join("")}</tr>`).join("")}
+    <tr><th class="l rowh">Bilan des comptes<small>Nombre de points forts, dans la moyenne et de vigilance.</small></th>${list.map(c => { const t = quick(c); return `<td class="l${c.id === hl ? " hl" : ""}">${t ? pills(t) : `<span class="light">${missingTxt(c)}</span>`}</td>`; }).join("")}</tr>
+  </tbody></table></div>`;
+}
+function concurrentsHTML(s) {
+  const { list, auto } = peersOf(s, 3); if (!list.length) return "";
+  const all = [s, ...list];
+  return `<section class="panel" id="concurrents"><div class="ph"><h2>${auto ? "Des entreprises comparables" : "Ses concurrents directs"}</h2><a href="/comparer?ids=${all.map(c => c.id).join(",")}">Comparer en détail →</a></div>
+    <div class="pb" style="padding-bottom:4px"><p class="muted" style="margin:0 0 6px">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services que ${esc(s.name)}, aux mêmes clients.`} Une marge ou une dette se juge mieux à côté de celles des concurrents.</p></div>
+    ${cmpTable(all, s.id)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise ; les montants restent dans la devise de chaque entreprise, les pourcentages se comparent directement.</div></section>`;
+}
+function pageComparer() {
+  setTitle("Comparer des entreprises"); setNav("ent");
+  let ids = (new URLSearchParams(location.search).get("ids") || "").split(",").filter(id => RBY[id]);
+  ids = [...new Set(ids)].slice(0, 5);
+  const list = ids.map(id => RBY[id]);
+  const sug = list.length ? [...new Set(list.flatMap(c => peersOf(c, 5).list))].filter(c => !ids.includes(c.id)).slice(0, 8) : ["lvmh", "kering", "hermes", "apple", "microsoft", "nvidia", "amd", "totalenergies"].map(id => RBY[id]).filter(Boolean);
+  const url = a => "/comparer?ids=" + a.join(",");
+  app.innerHTML = `<div class="crumbs"><a href="/entreprises">Entreprises</a> › Comparer</div><h1 class="pagetitle">Comparer des entreprises</h1>
+    <p class="pagesub">Jusqu'à cinq entreprises côte à côte, sur les mêmes critères. Les couleurs disent si chaque chiffre est un point fort, dans la moyenne ou un point de vigilance ; elles ne disent pas quelle action acheter.</p>
+    <section class="panel"><div class="pb">
+      <div class="chips cmpsel">${list.map(c => `<a class="chipx" href="${url(ids.filter(x => x !== c.id))}" title="Retirer">${esc(c.name)} <span aria-hidden="true">×</span></a>`).join("")}</div>
+      ${ids.length < 5 ? `<div class="field" style="max-width:420px;margin-top:10px;position:relative"><label for="cmpq">Ajouter une entreprise</label><input id="cmpq" type="search" autocomplete="off" placeholder="Nom de l'entreprise"><div class="msug" id="cmps" hidden></div></div>
+      ${sug.length ? `<div class="chips" style="margin-top:10px"><span class="light" style="font-size:13px">${list.length ? "Ses concurrents :" : "Exemples :"}</span>${sug.map(c => `<a class="chip" href="${url([...ids, c.id])}">+ ${esc(c.name)}</a>`).join("")}</div>` : ""}` : ""}
+    </div></section>
+    ${list.length ? `<section class="panel">${cmpTable(list, null)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise (rapports ESEF et SEC). Les montants restent dans la devise de chaque entreprise ; les pourcentages se comparent directement. Pour une banque ou un assureur, la marge et la dette ne se lisent pas de la même façon.</div></section>
+      <section class="panel"><div class="ph"><h2>Comment lire cette comparaison</h2></div><div class="pb"><ol class="steps2">
+        <li><b>Comparez des entreprises du même métier.</b> Une marge de 10 % est faible pour un éditeur de logiciels et élevée pour un supermarché.</li>
+        <li><b>Regardez plusieurs lignes ensemble.</b> Une forte rentabilité avec beaucoup de dette ne vaut pas une forte rentabilité sans dette.</li>
+        <li><b>Un chiffre est une photo d'une année.</b> Sur chaque fiche, l'onglet « Approfondir » montre l'évolution sur plusieurs années.</li>
+        <li><b>Le prix de l'action n'est pas ici.</b> Une entreprise solide peut avoir une action chère : comparez aussi le prix aux bénéfices (rubrique « Prix de l'action » de chaque fiche).</li></ol></div></section>` : `<section class="panel"><div class="empty">Ajoutez une entreprise pour commencer.</div></section>`}`;
+  const q = $("#cmpq"), box = $("#cmps");
+  if (q) q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
+    const hits = R.companies.filter(c => !ids.includes(c.id) && (norm(c.name).includes(t) || norm(c.ticker || "") === t)).slice(0, 7);
+    box.innerHTML = hits.map(c => `<button type="button" data-id="${c.id}">${esc(c.name)} <small>${esc(secName(c))}</small></button>`).join("") || `<div class="light" style="padding:8px 10px">Aucune entreprise trouvée</div>`; box.hidden = false;
+    $$("button", box).forEach(b => b.onclick = () => go(url([...ids, b.dataset.id]))); };
+}
+
+/* ---------- PEA, compte-titres, assurance-vie : où acheter des actions ---------- */
+const gain1000 = r => F0.format(1000 * (1 - r)) + " €";
+function pageEnveloppes() {
+  setTitle("PEA, compte-titres, assurance-vie : lequel choisir"); setNav("lex");
+  const rows = [
+    ["Ce qu'on peut y acheter", "Actions d'entreprises dont le siège est dans l'Union européenne (ou en Norvège, Islande, Liechtenstein) et ETF « éligibles PEA », y compris des ETF Monde ou S&P 500.", "Tout : actions du monde entier (Apple, Nvidia…), tous les ETF, obligations.", "Fonds proposés par l'assureur (fonds euros, ETF, fonds d'actions). Rarement des actions en direct."],
+    ["Combien on peut y verser", "150 000 € au maximum (20 000 € pour un jeune majeur rattaché au foyer de ses parents).", "Sans limite.", "Sans limite."],
+    ["Impôt sur les gains", `Aucun tant que l'argent reste dans le PEA. Au retrait après 5 ans : seulement ${pct(RATES.ps, 1, false)} de prélèvements sociaux. Avant 5 ans : ${pct(RATES.pfu, 1, false)}.`, `${pct(RATES.pfu, 1, false)} sur chaque dividende et chaque plus-value, l'année où on les touche (« flat tax »).`, "Rien tant qu'on ne retire pas. Après 8 ans : 4 600 € de gains par an sans impôt sur le revenu (9 200 € pour un couple), mais 17,2 % de prélèvements sociaux."],
+    ["Retirer son argent", "Possible à tout moment. Avant 5 ans, un retrait ferme le PEA (sauf exceptions : licenciement, invalidité, création d'entreprise).", "Possible à tout moment, sans conséquence sur le compte.", "Possible à tout moment ; l'avantage fiscal grandit avec les années."],
+    ["Combien par personne", "Un seul PEA par personne.", "Autant qu'on veut.", "Autant qu'on veut."],
+  ];
+  const ex = [["Compte-titres", RATES.pfu, `${pct(RATES.pfu, 1, false)} prélevés`], ["PEA, retrait avant 5 ans", RATES.pfu, `${pct(RATES.pfu, 1, false)} prélevés, et le PEA est fermé`], ["PEA, retrait après 5 ans", RATES.ps, `${pct(RATES.ps, 1, false)} de prélèvements sociaux`], ["Assurance-vie après 8 ans", 0.172, "17,2 % de prélèvements sociaux, si les gains retirés dans l'année restent sous 4 600 €"]];
+  app.innerHTML = `<div class="crumbs"><a href="/lexique">Apprendre</a> › PEA, compte-titres, assurance-vie</div>
+    <h1 class="pagetitle">PEA, compte-titres, assurance-vie : où acheter ses actions</h1>
+    <p class="pagesub">On n'achète pas une action « toute seule » : on l'achète dans un compte, ouvert chez une banque ou un courtier. En France, il en existe trois grands types. Ils ne changent rien à l'action elle-même, mais beaucoup aux impôts que vous paierez sur vos gains.</p>
+    <section class="panel"><div class="ph"><h2>L'essentiel en une phrase chacun</h2></div><div class="trois">
+      <div class="carte"><div class="n">1</div><h3>Le PEA (plan d'épargne en actions)</h3><p>Le compte pensé pour les actions européennes et les ETF éligibles : au bout de 5 ans, vos gains échappent à l'impôt sur le revenu.</p></div>
+      <div class="carte"><div class="n">2</div><h3>Le compte-titres ordinaire (CTO)</h3><p>Le compte sans limite ni condition : on y achète tout, partout dans le monde, mais chaque gain est taxé à ${pct(RATES.pfu, 1, false)}.</p></div>
+      <div class="carte"><div class="n">3</div><h3>L'assurance-vie</h3><p>Un contrat d'épargne qui peut contenir des fonds d'actions ; intéressant après 8 ans, et pour transmettre un capital.</p></div></div></section>
+    <section class="panel"><div class="ph"><h2>Les trois comptes, critère par critère</h2><span class="light" style="font-size:12.5px">Règles ${RATES.year}</span></div>
+      <div class="scroll-x"><table class="t cmp env"><thead><tr><th class="l"></th><th class="l">PEA</th><th class="l">Compte-titres</th><th class="l">Assurance-vie</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><th class="l rowh">${r[0]}</th>${r.slice(1).map(x => `<td class="l wrap">${x}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
+    <section class="panel"><div class="ph"><h2>Exemple : 1 000 € de gain, combien vous reste-t-il ?</h2></div><div class="pb">
+      ${hbars(ex.map(([l, r]) => ({ label: l, v: 1000 * (1 - r) })), v => F0.format(v) + " €")}
+      <ul style="margin:12px 0 0;padding-left:18px;font-size:14px;line-height:1.55">${ex.map(([l, r, t]) => `<li><b>${l}</b> : ${t}, il vous reste <b class="num">${gain1000(r)}</b>.</li>`).join("")}</ul>
+      <p class="muted" style="margin:10px 0 0">Calcul simplifié pour un gain retiré en une fois. Sur un compte-titres, on peut aussi choisir d'être imposé au barème de l'impôt sur le revenu, intéressant pour les foyers peu ou pas imposables.</p></div></section>
+    <section class="panel"><div class="ph"><h2>Les questions qu'on se pose au début</h2></div><div class="pb">
+      ${acc("Je débute : par lequel commencer ?", `<p>Beaucoup de débutants ouvrent d'abord un PEA, même avec peu d'argent : le délai de 5 ans commence au premier versement, alors l'ouvrir tôt fait gagner du temps. Un ETF Monde éligible au PEA permet d'y détenir des actions du monde entier, y compris américaines.</p><p>Le compte-titres devient utile pour acheter une action précise hors d'Europe (Apple, Nvidia, Microsoft…), qui ne peut pas aller dans un PEA.</p><p class="muted">Ce sont des pratiques courantes, pas un conseil : le bon choix dépend de votre situation et de votre horizon.</p>`)}
+      ${acc("Une action précise peut-elle aller dans mon PEA ?", `<p>Il faut que l'entreprise ait son siège dans l'Union européenne ou l'Espace économique européen. Sur chaque fiche, la ligne <b>« Compte possible »</b> l'indique d'après le pays de l'entreprise. LVMH, TotalEnergies ou ASML : oui. Apple, Nestlé (Suisse) ou Shell (Royaume-Uni) : non.</p>`)}
+      ${acc("Et les ETF ?", `<p>Un ETF est éligible au PEA s'il détient au moins 75 % d'actions européennes, ou s'il reproduit un indice étranger par un mécanisme d'échange (« réplication synthétique »). C'est ainsi qu'existent des ETF MSCI World ou S&P 500 éligibles au PEA. La page <a class="lnk" href="/etf">ETF</a> indique pour chacun s'il est éligible.</p>`)}
+      ${acc("Que se passe-t-il pour les dividendes ?", `<p>Dans un PEA, les dividendes arrivent sur le compte sans impôt et peuvent être réinvestis. Sur un compte-titres, ${pct(RATES.pfu, 1, false)} sont prélevés à chaque versement. Pour une action américaine, les États-Unis prélèvent en plus une retenue de 15 % (avec le formulaire W-8BEN, proposé par la plupart des courtiers), qui se déduit en partie de l'impôt français.</p>`)}
+      ${acc("Le PEA bloque-t-il mon argent 5 ans ?", `<p>Non, l'argent n'est pas bloqué : vous pouvez retirer à tout moment. Mais avant 5 ans, un retrait ferme le PEA et les gains sont imposés comme sur un compte-titres (${pct(RATES.pfu, 1, false)}), sauf cas prévus par la loi (licenciement, invalidité, création d'entreprise). Après 5 ans, on peut retirer une partie sans fermer le plan.</p>`)}
+      ${acc("Et le livret A, le PER ?", `<p>Le livret A ne contient pas d'actions : l'argent est disponible et garanti, ses intérêts sont exonérés d'impôt. Le PER (plan d'épargne retraite) peut contenir des fonds d'actions ; ses versements réduisent l'impôt sur le revenu, mais l'argent reste bloqué jusqu'à la retraite, sauf exceptions (achat de la résidence principale notamment).</p>`)}
+    </div></section>
+    <section class="panel"><div class="pb" style="display:flex;gap:18px;flex-wrap:wrap"><a class="more" href="/simulateurs/pea-cto">Simuler PEA ou compte-titres avec vos montants →</a><a class="more" href="/etf">Voir les ETF éligibles au PEA →</a></div>
+      <div class="src">Règles en vigueur en ${RATES.year}, vérifiées le 28/10/2026 : <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2385" target="_blank" rel="noopener">Service-public.fr, fiche PEA</a> (mise à jour du 22/05/2026). Hausse des prélèvements sociaux à 18,6 % au 1er janvier 2026 (loi de financement de la Sécurité sociale pour 2026), l'assurance-vie restant à 17,2 %. Les règles fiscales changent souvent : vérifiez auprès de votre banque ou de votre courtier.</div></section>`;
+}
+const EEA = new Set(["FR", "DE", "NL", "BE", "LU", "IT", "ES", "PT", "IE", "AT", "FI", "SE", "DK", "NO", "IS", "LI", "PL", "CZ", "GR", "HU", "SK", "SI", "EE", "LV", "LT", "MT", "CY", "HR", "BG", "RO"]);
+const peaOk = c => c.isin ? EEA.has(c.isin.slice(0, 2)) : c.region === "FR" ? true : null;
+
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -2187,6 +2356,9 @@ function route() {
   else if (p === "/agenda") pageAgenda();
   else if (p === "/portefeuille") pagePortefeuille();
   else if (p === "/lexique") pageLexique();
+  else if (p === "/favoris") pageFavoris();
+  else if (p === "/comparer") pageComparer();
+  else if (p === "/pea-cto") pageEnveloppes();
   else if (p === "/mentions-legales") pageMentions();
   else pageNotFound();
 }
@@ -2247,8 +2419,8 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 
 /* ---------- Démarrage ---------- */
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), getJSON("/data/segments-fr.json", {}), getJSON("/data/repartitions.json", {})]).then(([r, ag, uni, br, auto, etf, segfr, rep]) => {
-  REP = rep || {};
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), getJSON("/data/segments-fr.json", {}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {})]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc]) => {
+  REP = rep || {}; CONC = conc || {};
   ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = segfr || {};
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
   // Agenda : dates officielles relevées à la main, puis dates estimées d'après l'an dernier pour les autres
@@ -2259,6 +2431,7 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   R = { ...r, regions: uni.regions, companies: uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u })) };
   R.companies.forEach(c => { RBY[c.id] = c; if (c.isin) ISINBY[c.isin] = c; });
   computeMedians();
+  favCount();
   route();
 });
 </script>
