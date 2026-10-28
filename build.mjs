@@ -6,6 +6,7 @@ const ORIGIN = process.argv[2] || "https://repere.pages.dev";
 import { copyFileSync, existsSync, writeFileSync as wfs } from "node:fs";
 copyFileSync("data/agenda.json", "cf/site/data/agenda.json");
 if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "cf/site/data/segments-fr.json");
+{ const R = {}; for (const f of ["france", "europe", "us"]) if (existsSync(`data/repartitions/${f}.mjs`)) Object.assign(R, (await import(`./data/repartitions/${f}.mjs`)).default); wfs("cf/site/data/repartitions.json", JSON.stringify(R)); }
 { const E = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; wfs("cf/site/data/etf.json", JSON.stringify({ updated: "2026-10-28", list: E })); }
 { const { default: U, REGIONS } = await import("./data/univers.mjs"); const { default: F } = await import("./data/fiches.mjs"); const { default: C, SOURCES_COURTIERS } = await import("./data/courtiers.mjs");
   writeFileSync("cf/site/data/univers.json", JSON.stringify({ regions: REGIONS, companies: U.map(({ id, name, ticker, domain, desc, sector, isin, tv, region, fiche, sec }) => ({ id, name, ticker, domain, desc, sector, isin, tv, region, sec, fiche: F[id] || fiche || null })) }));
