@@ -170,7 +170,7 @@ table.t td.wrap{white-space:normal}
 .legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:6px}
 
 /* Synthèse */
-.syn dl{margin:0;display:grid;grid-template-columns:120px 1fr;gap:0}
+.syn dl{margin:0;display:grid;grid-template-columns:130px 1fr;gap:0}
 .syn dt{padding:9px 0 9px 16px;font-weight:600;font-size:13px;border-bottom:1px solid var(--soft)}
 .syn dd{margin:0;padding:9px 16px 9px 8px;border-bottom:1px solid var(--soft)}
 .syn dl > :nth-last-child(-n+2){border-bottom:0}
@@ -292,6 +292,92 @@ footer a:hover{color:var(--ink)}
   .term dd{margin-bottom:6px}
   .pop{position:fixed;left:12px!important;right:12px;bottom:12px;top:auto!important;width:auto;max-width:none}
 }
+/* ---------- Présentation plus douce (refonte du 28/10) ---------- */
+:root{--page:#F7F6F3;--rule:#ECE9E3;--soft:#F3F1ED;--link:#2B4C7E;--radius:14px}
+.bar{background:#fff;color:var(--ink);border-bottom:1px solid var(--rule)}
+.logo span{color:var(--light)}
+.search input{background:#F3F1ED;color:var(--ink);border-radius:10px}
+.search input::placeholder{color:#8A857D}
+.search input:focus{background:#fff;box-shadow:0 0 0 1px var(--rule)}
+nav.main a{color:var(--grey)}
+nav.main a:hover,nav.main a.on{color:var(--ink)}
+nav.main a.on{border-bottom-color:var(--ink)}
+.mbtn{color:var(--ink)}
+.mpanel{background:#fff;border-top:1px solid var(--rule)}
+.mpanel a{color:var(--ink);border-bottom-color:var(--soft)}
+.results{border-radius:12px}
+.panel{border-radius:var(--radius);border-color:var(--rule);box-shadow:0 1px 2px rgba(20,20,20,.03);overflow:hidden}
+.ph{padding:14px 18px}
+.ph h2{font-size:15.5px}
+table.t th{background:#FAF9F7;font-size:12px;padding:10px 12px}
+table.t td{padding:11px 12px}
+table.t th:first-child,table.t td:first-child{padding-left:18px}
+table.t th:last-child,table.t td:last-child{padding-right:18px}
+.kv td{padding:10px 18px}
+.figs{border-radius:12px}
+.field input,.field select,.lines select,.lines input{border-radius:10px}
+.btn{border-radius:10px}
+.pop{border-radius:12px}
+.pagetitle{font-size:28px;letter-spacing:-.02em}
+.hero{padding:22px 0 4px}
+.hero h1{font-size:32px;letter-spacing:-.02em;line-height:1.15}
+.hero p{color:var(--grey);font-size:16px;margin:10px 0 0;max-width:640px}
+.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0 36px}
+.step{background:#fff;border:1px solid var(--rule);border-radius:var(--radius);padding:18px;transition:border-color .15s,box-shadow .15s}
+.step:hover,.cocard:hover{border-color:#D6D1C8;box-shadow:0 4px 16px rgba(20,20,20,.05)}
+.step .n{font-size:12px;font-weight:600;color:var(--link)}
+.step h3{font-size:16px;margin-top:6px}
+.step p{margin:4px 0 0;color:var(--grey);font-size:13.5px}
+.sect{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 12px}
+.sect h2{font-size:19px}
+.sect a{color:var(--link);font-size:13.5px}
+.cards{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:32px}
+.cocard{background:#fff;border:1px solid var(--rule);border-radius:var(--radius);padding:16px;display:flex;flex-direction:column;gap:10px;transition:border-color .15s,box-shadow .15s}
+.cocard .top{display:flex;align-items:center;gap:12px}
+.cocard .nm{font-size:16px;font-weight:600;line-height:1.2}
+.cocard .sec{font-size:12.5px;color:var(--light)}
+.cocard .d{font-size:13.5px;color:var(--grey);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:2.9em}
+.cocard .f{font-size:13px;border-top:1px solid var(--soft);padding-top:10px;display:flex;justify-content:space-between;gap:8px;margin-top:auto}
+.lg{position:relative;flex:none;width:var(--s,40px);height:var(--s,40px);border-radius:12px;background:#fff;border:1px solid var(--rule);display:inline-grid;place-items:center;overflow:hidden}
+.lg b{font-size:calc(var(--s,40px) * .32);font-weight:600;color:var(--grey)}
+.lg img{position:absolute;inset:18%;width:64%;height:64%;object-fit:contain;background:#fff}
+.cell-co{display:flex;align-items:center;gap:10px}
+.duo{display:grid;grid-template-columns:1fr 1fr;gap:20px;align-items:start}
+.viewsw{display:flex;gap:16px;white-space:nowrap}
+.viewsw button{background:none;border:0;color:var(--grey);cursor:pointer;padding:12px 0;font-size:13.5px}
+.viewsw .on{color:var(--ink);font-weight:500}
+.qhead{padding:18px}
+.qhead .who{display:flex;gap:16px;align-items:center}
+.qhead h1{font-size:26px}
+.qhead .desc{color:var(--grey);margin-top:2px}
+.ess .syn dt{color:var(--ink)}
+.essgrid{display:grid;grid-template-columns:1fr 1fr}
+.essgrid .term{border-right:1px solid var(--soft)}
+.essgrid .term:nth-child(2n){border-right:0}
+.tn{font-size:12px;font-weight:600;color:var(--link)}
+.subh{font-size:19px;margin:28px 0 12px}
+details.more summary{cursor:pointer;list-style:none;padding:14px 18px;font-weight:600;display:flex;justify-content:space-between;gap:12px}
+details.more summary::-webkit-details-marker{display:none}
+details.more summary .light{font-weight:400;font-size:13px}
+details.more[open] summary{border-bottom:1px solid var(--rule)}
+@media (max-width:1040px){
+  .steps{grid-template-columns:1fr 1fr}
+  .cards{grid-template-columns:1fr 1fr}
+}
+@media (max-width:760px){
+  .hero h1{font-size:26px}
+  .hero p{font-size:15px}
+  .steps{gap:10px;margin:18px 0 28px}
+  .step{padding:14px}
+  .cards{grid-template-columns:1fr;gap:10px}
+  .duo{grid-template-columns:1fr;gap:0}
+  .qhead .who{align-items:flex-start}
+  .qhead h1{font-size:22px}
+  .essgrid{grid-template-columns:1fr}
+  .essgrid .term{border-right:0}
+  .ph{padding:12px 14px}
+  .kv td{padding:9px 14px}
+}
 </style>
 </head>
 <body>
@@ -305,16 +391,16 @@ footer a:hover{color:var(--ink)}
         <div class="results"></div>
       </div>
       <nav class="main d-only" id="nav">
-        <a href="/" data-nav="home">Marchés</a>
+        <a href="/" data-nav="home">Accueil</a>
+        <a href="/entreprises" data-nav="ent">Entreprises</a>
         <a href="/actualites" data-nav="news">Actualité</a>
-        <a href="/agenda" data-nav="agenda">Agenda</a>
         <a href="/simulateurs" data-nav="sim">Simulateurs</a>
         <a href="/portefeuille" data-nav="pf">Portefeuille</a>
         <a href="/lexique" data-nav="lex">Lexique</a>
       </nav>
       <div class="mright m-only"><button class="mbtn" id="searchBtn" aria-expanded="false">Chercher</button><button class="mbtn" id="menuBtn" aria-expanded="false">Menu</button></div>
     </div>
-    <div class="mpanel" id="mpanel"><a href="/">Marchés</a><a href="/actualites">Actualité</a><a href="/agenda">Agenda</a><a href="/simulateurs">Simulateurs</a><a href="/portefeuille">Portefeuille</a><a href="/lexique">Lexique</a></div>
+    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/entreprises">Entreprises</a><a href="/actualites">Actualité</a><a href="/agenda">Agenda</a><a href="/simulateurs">Simulateurs</a><a href="/portefeuille">Portefeuille</a><a href="/lexique">Lexique</a></div>
     <div class="msearch" id="msearch">
       <div class="search" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -324,7 +410,6 @@ footer a:hover{color:var(--ink)}
     </div>
   </div>
 </header>
-<div class="tape" id="tape"></div>
 
 <main><div class="wrap" id="app"></div></main>
 
@@ -380,13 +465,14 @@ function ratios(s) { // s : résumé d'une entreprise (dernier exercice)
     nm: s.ca && s.net != null ? s.net / s.ca : null,
     roe: s.equity && s.net != null && s.equity > 0 ? s.net / s.equity : null,
     lev: s.ebitda && s.netDebt != null && s.ebitda > 0 ? s.netDebt / s.ebitda : null,
+    gear: s.equity && s.netDebt != null && s.equity > 0 ? s.netDebt / s.equity : null,
   };
 }
 let MED = {};
 function computeMedians() { // médiane des entreprises suivies, par secteur
   const by = {};
   R.companies.filter(c => !c.missing).forEach(c => { (by[c.sector] = by[c.sector] || []).push(ratios(c)); });
-  MED = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, { n: l.length, ...Object.fromEntries(["g1", "marge", "nm", "roe", "lev"].map(m => [m, median(l.map(x => x[m]))])) }]));
+  MED = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, { n: l.length, ...Object.fromEntries(["g1", "marge", "nm", "roe", "lev", "gear"].map(m => [m, median(l.map(x => x[m]))])) }]));
 }
 const secName = c => c.kind === "fonds" ? "Fonds indiciel" : c.kind === "action" ? "Exemple fictif" : (R.sectors[c.sector] || c.sector);
 const eventsOf = id => AG.events.filter(e => e.id === id).sort((a, b) => a.date.localeCompare(b.date));
@@ -411,6 +497,7 @@ const TERMS = {
   tresorerie: { name: "Trésorerie", what: "L'argent disponible immédiatement.", calc: "Trésorerie et équivalents de trésorerie à la clôture.", read: "Permet de faire face aux dépenses sans emprunter.", limit: "Une photo à la date de clôture des comptes." },
   dettenette: { name: "Dette nette", what: "Les dettes financières moins la trésorerie disponible.", calc: "Dette financière − trésorerie. Ici estimée à partir des comptes publiés.", read: "Négative : l'entreprise a plus de trésorerie que de dettes.", limit: "Peut différer de la dette nette annoncée par l'entreprise, qui inclut parfois d'autres éléments." },
   lev: { name: "Dette nette ÷ EBITDA", what: "En combien d'années l'entreprise pourrait rembourser sa dette avec ce que génère son activité.", calc: "Dette nette ÷ EBITDA.", read: "Moins de 2 : situation solide. De 2 à 4 : maîtrisée. Plus de 4 : endettement élevé.", limit: "Ne s'applique pas aux banques et assureurs, dont la dette fait partie du métier." },
+  gear: { name: "Dette nette ÷ capitaux propres", what: "Le poids de la dette par rapport à ce qui appartient aux actionnaires.", calc: "Dette nette ÷ capitaux propres.", read: "Moins de 50 % : endettement modéré. Au-delà de 100 % : la dette dépasse les capitaux propres.", limit: "Ne s'applique pas aux banques et assureurs." },
   capitaux: { name: "Capitaux propres", what: "Ce qui appartient aux actionnaires dans le bilan.", calc: "Total des actifs − total des dettes, part du groupe.", read: "Sert au calcul de la rentabilité des capitaux propres.", limit: "Valeur comptable, souvent loin de la valeur en Bourse." },
   roe: { name: "Rentabilité des capitaux propres (ROE)", what: "Ce que l'entreprise gagne avec l'argent de ses actionnaires.", calc: "Résultat net ÷ capitaux propres.", read: "Se compare au secteur.", limit: "Une dette importante le gonfle artificiellement." },
   cfo: { name: "Flux de trésorerie d'exploitation", what: "L'argent réellement encaissé grâce à l'activité.", calc: "Résultat corrigé des éléments sans effet sur la trésorerie et des variations du besoin en fonds de roulement.", read: "Proche du résultat net ou au-dessus : les bénéfices se transforment bien en argent.", limit: "Varie avec les délais de paiement des clients et des fournisseurs." },
@@ -559,56 +646,74 @@ function amfBlock(target, params, limit) {
   }).catch(() => { target.innerHTML = `<div class="empty">Le flux de l'AMF n'est pas disponible pour le moment.</div>`; });
 }
 
-/* ---------- Accueil : marchés ---------- */
-let homeState = { sector: "all", sort: "ca", dir: -1 };
+/* ---------- Logos et cartes d'entreprise ---------- */
+const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+function logo(c, size = 40) { // icône du site de l'entreprise ; initiales si elle ne charge pas
+  return `<span class="lg" style="--s:${size}px"><b>${esc(initials(c.name))}</b>${c.domain ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(c.domain)}&sz=128" alt="" loading="lazy" onerror="this.remove()">` : ""}</span>`;
+}
+function caLine(c) {
+  if (c.missing) return `<span class="light">Comptes en cours de collecte</span>`;
+  if (c.ca != null) return `<span class="light">Chiffre d'affaires ${c.year}</span><b class="num">${big(c.ca, c.currency)}</b>`;
+  if (c.net != null) return `<span class="light">Résultat net ${c.year}</span><b class="num">${big(c.net, c.currency)}</b>`;
+  return `<span class="light">Exercice ${c.year ?? "–"}</span>`;
+}
+function coCard(c) {
+  return `<a class="cocard" href="/entreprise/${c.id}"><div class="top">${logo(c, 44)}<div><div class="nm">${esc(c.name)}</div><div class="sec">${esc(secName(c))}</div></div></div>
+    <div class="d">${esc(c.desc || "")}</div><div class="f">${caLine(c)}</div></a>`;
+}
+
+/* ---------- Accueil : un parcours pas à pas ---------- */
+const FEATURED = ["lvmh", "totalenergies", "loreal", "airbus", "sanofi", "hermes", "schneider-electric", "bnp-paribas"];
 function pageHome() {
   setTitle(""); setNav("home");
-  const rows = R.companies.map(c => ({ c, m: ratios(c) }));
-  const sectors = [...new Set(R.companies.map(c => c.sector))].sort((a, b) => secName({ sector: a }).localeCompare(secName({ sector: b }), "fr"));
+  const feat = FEATURED.map(id => RBY[id]).filter(Boolean);
   app.innerHTML = `
-    <div class="cols">
-      <div>
-        <section class="panel">
-          <div class="ph"><h2>Actualité des entreprises suivies</h2><a href="/actualites">Toute l'actualité</a></div>
-          <div id="amf"></div>
-          <div class="src">Publications officielles déposées auprès de l'AMF (info-financiere.gouv.fr), en direct.</div>
-        </section>
-        <section class="panel">
-          <div class="ph"><h2>Valeurs suivies</h2><span class="light" style="font-size:12.5px">${R.updated ? "Comptes mis à jour le " + dLabel(R.updated) : "Comptes en cours de collecte"}</span></div>
-          <div class="filters" id="secTabs"><button data-s="all">Toutes</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
-          <div class="scroll-x"><table class="t click" id="clist"><thead><tr>
-            <th class="sort" data-k="name">Entreprise</th><th class="sort" data-k="ca">Chiffre d'affaires</th><th class="sort" data-k="g1">Croissance</th>
-            <th class="sort d-only" data-k="marge">Marge d'exploitation</th><th class="sort d-only" data-k="net">Résultat net</th><th class="d-only" data-k="year">Exercice</th></tr></thead><tbody></tbody></table></div>
-          <div class="src">Chiffres du dernier rapport annuel publié. Le cours de chaque action est sur sa fiche.</div>
-        </section>
-      </div>
-      <aside>
-        <section class="panel"><div class="ph"><h2>Agenda</h2><a href="/agenda">Tout l'agenda</a></div>${agendaHTML(upcoming().slice(0, 6))}</section>
-        <section class="panel"><div class="ph"><h2>Cours</h2></div><div class="tv tv-quotes" id="quotes"></div></section>
-        <section class="panel"><div class="ph"><h2>Simulateurs</h2></div><table class="t click"><tbody>
-          <tr data-href="/simulateurs/interets"><td>Intérêts composés</td></tr><tr data-href="/simulateurs/frais"><td>Impact des frais</td></tr>
-          <tr data-href="/simulateurs/pea-cto"><td>PEA ou compte-titres</td></tr><tr data-href="/simulateurs/passe"><td>Portefeuille sur le passé</td></tr></tbody></table></section>
-      </aside>
+    <section class="hero"><h1>Comprendre la Bourse, étape par étape</h1>
+      <p>Des chiffres expliqués simplement et des outils pour s'entraîner. Le site informe, il ne conseille pas : vous restez seul juge de vos décisions.</p></section>
+    <div class="steps">
+      <a class="step" href="/lexique"><div class="n">Étape 1</div><h3>Les mots essentiels</h3><p>Dix notions pour lire n'importe quelle fiche.</p></a>
+      <a class="step" href="/entreprises"><div class="n">Étape 2</div><h3>Découvrir une entreprise</h3><p>Ce qu'elle fait, ce qu'elle gagne, ce qu'elle doit.</p></a>
+      <a class="step" href="/simulateurs"><div class="n">Étape 3</div><h3>Simuler avant d'investir</h3><p>Intérêts composés, frais, PEA ou compte-titres.</p></a>
+      <a class="step" href="/portefeuille"><div class="n">Étape 4</div><h3>Suivre ses placements</h3><p>Votre gain réel, frais et dividendes compris.</p></a>
+    </div>
+    <div class="sect"><h2>Quelques grandes entreprises</h2><a href="/entreprises">Voir les ${R.companies.length} entreprises</a></div>
+    <div class="cards">${feat.map(coCard).join("")}</div>
+    <div class="duo">
+      <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Tout l'agenda</a></div>${agendaHTML(upcoming().slice(0, 4))}</section>
+      <section class="panel"><div class="ph"><h2>Dernières publications</h2><a href="/actualites">Toute l'actualité</a></div><div id="amf"></div></section>
     </div>`;
-  const tbody = $("#clist tbody");
-  const labels = Object.fromEntries($$("#clist th").map(th => [th.dataset.k, th.textContent]));
-  const val = (r, k) => k === "ca" || k === "net" ? r.c[k] : r.m[k];
+  amfBlock($("#amf"), "&suivies=1", 4);
+}
+
+/* ---------- Liste des entreprises ---------- */
+let listState = { sector: "all", view: "cartes", sort: "name", dir: 1 };
+function pageEntreprises() {
+  setTitle("Les entreprises"); setNav("ent");
+  const sectors = [...new Set(R.companies.map(c => c.sector))].sort((a, b) => secName({ sector: a }).localeCompare(secName({ sector: b }), "fr"));
+  app.innerHTML = `<h1 class="pagetitle">Les entreprises</h1><p class="pagesub">Les grandes entreprises cotées à Paris. Choisissez-en une pour voir ce qu'elle fait, ses comptes et son actualité.</p>
+    <section class="panel"><div class="ph" style="padding-top:0;padding-bottom:0;border-bottom:0">
+      <div class="filters" id="secTabs" style="border:0;padding:0;flex:1"><button data-s="all">Toutes</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
+      <div class="viewsw d-only" id="vsw"><button data-v="cartes">Cartes</button><button data-v="tableau">Tableau</button></div></div></section>
+    <div id="elist"></div>`;
   const render = () => {
-    const k = homeState.sort, dir = homeState.dir;
-    const list = rows.filter(r => homeState.sector === "all" || r.c.sector === homeState.sector)
-      .sort((a, b) => k === "name" ? dir * a.c.name.localeCompare(b.c.name, "fr") : dir * ((val(a, k) ?? -1e15) - (val(b, k) ?? -1e15)));
-    tbody.innerHTML = list.map(({ c, m }) => `<tr data-id="${c.id}"><td><div class="nm">${esc(c.name)}</div><div class="sub">${esc(c.ticker)} · ${esc(secName(c))}</div></td>
-      ${c.missing ? `<td colspan="5" class="light l wrap" style="text-align:right">Comptes en cours de collecte</td>` : `
-      <td class="num">${big(c.ca, c.currency)}</td><td class="num ${cls(m.g1)}">${pct(m.g1)}</td>
-      <td class="num d-only">${pct(m.marge, 1, false)}</td><td class="num d-only">${big(c.net, c.currency)}</td><td class="num d-only">${c.year ?? "–"}</td>`}</tr>`).join("");
-    $$("#secTabs button").forEach(b => b.classList.toggle("on", b.dataset.s === homeState.sector));
-    $$("#clist th").forEach(th => { th.textContent = labels[th.dataset.k] + (th.dataset.k === k ? (dir > 0 ? " ↑" : " ↓") : ""); });
+    $$("#secTabs button").forEach(b => b.classList.toggle("on", b.dataset.s === listState.sector));
+    $$("#vsw button").forEach(b => b.classList.toggle("on", b.dataset.v === listState.view));
+    const list = R.companies.filter(c => listState.sector === "all" || c.sector === listState.sector);
+    const view = innerWidth <= 760 ? "cartes" : listState.view;
+    if (view === "cartes") { $("#elist").innerHTML = `<div class="cards">${[...list].sort((a, b) => a.name.localeCompare(b.name, "fr")).map(coCard).join("")}</div>`; return; }
+    const k = listState.sort, dir = listState.dir, rows = list.map(c => ({ c, m: ratios(c) }));
+    const val = (r, k) => k === "ca" || k === "net" ? r.c[k] : r.m[k];
+    rows.sort((a, b) => k === "name" ? dir * a.c.name.localeCompare(b.c.name, "fr") : dir * ((val(a, k) ?? -1e15) - (val(b, k) ?? -1e15)));
+    const th = (key, label) => `<th class="sort" data-k="${key}">${label}${key === k ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`;
+    $("#elist").innerHTML = `<section class="panel"><div class="scroll-x"><table class="t click"><thead><tr>${th("name", "Entreprise")}${th("ca", "Chiffre d'affaires")}${th("g1", "Croissance")}${th("marge", "Marge d'exploitation")}${th("net", "Résultat net")}<th>Exercice</th></tr></thead><tbody>
+      ${rows.map(({ c, m }) => `<tr data-id="${c.id}"><td><div class="cell-co">${logo(c, 32)}<div><div class="nm">${esc(c.name)}</div><div class="sub">${esc(secName(c))}</div></div></div></td>
+      ${c.missing ? `<td colspan="5" class="light">Comptes en cours de collecte</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
+      <div class="src">Chiffres du dernier rapport annuel publié. Cliquez sur un en-tête pour trier, sur une ligne pour ouvrir la fiche.</div></section>`;
+    $("#elist thead").onclick = e => { const t = e.target.closest("th.sort"); if (!t) return; if (listState.sort === t.dataset.k) listState.dir *= -1; else { listState.sort = t.dataset.k; listState.dir = t.dataset.k === "name" ? 1 : -1; } render(); };
   };
-  $("#secTabs").onclick = e => { const b = e.target.closest("button"); if (b) { homeState.sector = b.dataset.s; render(); } };
-  $("#clist thead").onclick = e => { const th = e.target.closest("th.sort"); if (!th) return; const k = th.dataset.k; if (homeState.sort === k) homeState.dir *= -1; else { homeState.sort = k; homeState.dir = k === "name" ? 1 : -1; } render(); };
+  $("#secTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.sector = b.dataset.s; render(); } };
+  $("#vsw").onclick = e => { const b = e.target.closest("button"); if (b) { listState.view = b.dataset.v; render(); } };
   render();
-  amfBlock($("#amf"), "&suivies=1", 10);
-  tv($("#quotes"), "market-quotes", { width: "100%", height: "100%", showSymbolLogo: false, symbolsGroups: [{ name: "Valeurs suivies", symbols: followed().map(c => ({ name: c.tv, displayName: c.name })) }] });
 }
 document.addEventListener("click", e => {
   if (e.target.closest("a,button,.def,input,select")) return;
@@ -621,14 +726,14 @@ const CTABS = [["", "Synthèse"], ["comptes", "Comptes"], ["actualite", "Actuali
 async function pageCompany(id, tab) {
   const s = RBY[id];
   if (!s) return pageNotFound();
-  setNav("home");
+  setNav("ent");
   tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
   setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
   app.innerHTML = `
-    <div class="crumbs"><a href="/">Marchés</a> › ${esc(secName(s))} › ${esc(s.name)}</div>
+    <div class="crumbs"><a href="/entreprises">Entreprises</a> › ${esc(secName(s))}</div>
     <div class="panel" style="margin-bottom:16px">
       <div class="qhead">
-        <div><h1>${esc(s.name)}</h1><div class="id">${esc(s.ticker)} · ISIN ${esc(s.isin)} · ${esc(secName(s))}</div></div>
+        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)} · ISIN ${esc(s.isin)} · ${esc(secName(s))}</div></div></div>
         <div class="px tv" id="tvinfo"></div>
       </div>
       <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
@@ -656,6 +761,7 @@ function synthese(s, c) {
   if (ca != null) rows.push(["Activité", `${def("ca", "Chiffre d'affaires")} ${y} : ${big(ca, cur)}${m.g1 != null ? `, ${verb(m.g1, "en hausse", "en baisse")} de ${pct(Math.abs(m.g1), 1, false)} sur un an` : ""}.${cagr != null ? ` Depuis ${first}, ${verb(cagr, "croissance moyenne", "recul moyen")} de ${pct(Math.abs(cagr), 1, false)} par an.` : ""}`]);
   if (m.marge != null || net != null) rows.push(["Rentabilité", `${m.marge != null ? `${def("marge", "Marge d'exploitation")} de ${pct(m.marge, 1, false)}${med.marge != null && med.n > 1 ? `${cmp(m.marge, med.marge, 0.01)} ${def("mediane", "médiane du secteur")} (${pct(med.marge, 1, false)})` : ""}. ` : ""}${net != null ? `${def("net", "Résultat net")} de ${big(net, cur)}${net0 ? `, ${verb(net / net0 - 1, "en hausse", "en baisse")} de ${pct(Math.abs(net / net0 - 1), 1, false)}` : ""}.` : ""}`]);
   if (s.sector === "finance") rows.push(["Solidité", `Banque ou assurance : le ratio dette nette sur EBITDA ne s'applique pas.${m.roe != null ? ` ${def("roe", "Rentabilité des capitaux propres")} : ${pct(m.roe, 1, false)}.` : ""}`]);
+  else if (m.lev == null && m.gear != null) rows.push(["Solidité", `${def("dettenette", "Dette nette")} estimée à ${pct(m.gear, 0, false)} des ${def("capitaux", "capitaux propres")}${m.gear < 0 ? " : l'entreprise a plus de trésorerie que de dettes" : m.gear <= 0.5 ? ", un endettement modéré" : m.gear > 1 ? ", la dette dépasse les capitaux propres" : ""}.${at(c, "fcf", L) != null ? ` ${def("fcf", "Flux de trésorerie disponible")} : ${big(at(c, "fcf", L), cur)}.` : ""}`]);
   else if (m.lev != null) rows.push(["Solidité", `${def("dettenette", "Dette nette")} estimée à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} d'${def("ebitda", "EBITDA")} (le seuil de 2 sert souvent de repère).${at(c, "fcf", L) != null ? ` ${def("fcf", "Flux de trésorerie disponible")} : ${big(at(c, "fcf", L), cur)}.` : ""}`]);
   const dpsP = at(c, "dps", L), dps = dpsP ?? at(c, "dpsEst", L);
   if (dps != null) rows.push(["Dividende", `${def("dps", "Dividende")} versé pendant l'exercice ${y} : ${dpsP == null ? "environ " : ""}${eur(dps, 2, cur)} par action.${at(c, "eps", L) ? ` ${def("bnpa", "BNPA")} : ${eur(at(c, "eps", L), 2, cur)}.` : ""}`]);
@@ -670,21 +776,24 @@ function tabSynthese(s, c, el) {
     const L = lastIdx(c), cur = c.currency, med = MED[s.sector] || {};
     const m = ratios({ ca: at(c, "ca", L), caPrev: at(c, "ca", L - 1), ebit: at(c, "ebit", L), net: at(c, "net", L), equity: at(c, "equity", L), netDebt: at(c, "netDebt", L), ebitda: at(c, "ebitda", L) });
     const mm = (v, f) => v != null && med.n > 1 ? `Médiane secteur : ${f(v)}` : "";
-    keyfig = `<table class="kv">
-      ${kv(def("ca"), big(at(c, "ca", L), cur), m.g1 != null ? `${pct(m.g1)} sur un an` : "")}
-      ${kv(def("marge"), pct(m.marge, 1, false), mm(med.marge, v => pct(v, 1, false)))}
-      ${kv(def("net"), big(at(c, "net", L), cur), at(c, "eps", L) != null ? `BNPA : ${eur(at(c, "eps", L), 2, cur)}` : "")}
-      ${kv(def("roe"), pct(m.roe, 1, false), mm(med.roe, v => pct(v, 1, false)))}
-      ${s.sector === "finance" ? "" : kv(def("lev"), m.lev == null ? "–" : F1.format(m.lev), mm(med.lev, v => F1.format(v)))}
-      ${kv(def("dps"), eur(at(c, "dps", L) ?? at(c, "dpsEst", L), 2, cur), at(c, "dps", L) == null && at(c, "dpsEst", L) != null ? "versé pendant l'exercice, estimé" : "versé pendant l'exercice")}
-    </table><div class="src">Exercice ${c.years[L]}. Cliquez sur un intitulé pour sa définition.</div>`;
+    const rows = [
+      at(c, "ca", L) != null && kv(def("ca"), big(at(c, "ca", L), cur), m.g1 != null ? `${pct(m.g1)} sur un an` : ""),
+      m.marge != null && kv(def("marge"), pct(m.marge, 1, false), mm(med.marge, v => pct(v, 1, false))),
+      at(c, "net", L) != null && kv(def("net"), big(at(c, "net", L), cur), at(c, "eps", L) != null ? `BNPA : ${eur(at(c, "eps", L), 2, cur)}` : ""),
+      m.roe != null && kv(def("roe"), pct(m.roe, 1, false), mm(med.roe, v => pct(v, 1, false))),
+      s.sector !== "finance" && m.lev != null && kv(def("lev"), F1.format(m.lev), mm(med.lev, v => F1.format(v))),
+      s.sector !== "finance" && m.lev == null && m.gear != null && kv(def("gear"), pct(m.gear, 0, false), mm(med.gear, v => pct(v, 0, false))),
+      (at(c, "dps", L) ?? at(c, "dpsEst", L)) != null && kv(def("dps"), eur(at(c, "dps", L) ?? at(c, "dpsEst", L), 2, cur), at(c, "dps", L) == null ? "versé pendant l'exercice, estimé" : "versé pendant l'exercice"),
+    ].filter(Boolean);
+    keyfig = `<table class="kv">${rows.join("")}</table><div class="src">Exercice ${c.years[L]}. Cliquez sur un intitulé pour sa définition.</div>`;
   }
   el.innerHTML = `
     <div class="cols">
       <div>
-        <section class="panel"><div class="tv tv-chart" id="tvchart"></div></section>
-        <section class="panel"><div class="ph"><h2>Synthèse</h2>${c ? `<span class="light" style="font-size:12.5px">Exercice ${c.years[lastIdx(c)]}</span>` : ""}</div>${c ? synthese(s, c) : `<div class="empty">Comptes en cours de collecte.</div>`}
-          <div class="src">Établie automatiquement à partir du dernier ${def("esef", "rapport annuel")} publié. Elle décrit, elle ne recommande pas.</div></section>
+        <section class="panel ess"><div class="ph"><h2>L'essentiel sur ${esc(s.name)}</h2>${c ? `<span class="light" style="font-size:12.5px">Exercice ${c.years[lastIdx(c)]}</span>` : ""}</div>
+          ${c ? synthese(s, c) : `<div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte.</div>`}
+          <div class="src">Établi automatiquement à partir du dernier ${def("esef", "rapport annuel")} publié. Il décrit, il ne recommande pas.</div></section>
+        <section class="panel"><div class="ph"><h2>Cours de l'action</h2></div><div class="tv tv-chart" id="tvchart"></div></section>
         <section class="panel"><div class="ph"><h2>Valorisation au cours actuel</h2></div>
           <div class="defs"><span class="light">Définitions :</span>${def("per")}${def("rdt", "Rendement")}${def("cap")}</div>
           <div class="tv tv-fin" id="tvfin"></div></section>
@@ -695,7 +804,7 @@ function tabSynthese(s, c, el) {
         <section class="panel"><div class="ph"><h2>Prochains événements</h2><a href="/entreprise/${s.id}/agenda">Agenda</a></div>${agendaHTML(eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3), false)}</section>
       </aside>
     </div>`;
-  tv($("#tvchart"), "symbol-overview", { symbols: [[s.name, s.tv + "|12M"]], chartOnly: false, width: "100%", height: "100%", autosize: true, showVolume: false, hideDateRanges: false, scalePosition: "right", scaleMode: "Normal", fontFamily: "Inter, sans-serif", fontSize: "11", noTimeScale: false, valuesTracking: "1", changeMode: "price-and-percent", chartType: "area", lineColor: "#141414", topColor: "rgba(20,20,20,0.10)", bottomColor: "rgba(20,20,20,0)", lineWidth: 2, dateRanges: ["1m|1D", "3m|1D", "12m|1D", "60m|1W", "all|1M"] });
+  tv($("#tvchart"), "symbol-overview", { symbols: [[s.name, s.tv + "|12M"]], chartOnly: false, width: "100%", height: "100%", autosize: true, showVolume: false, hideDateRanges: false, scalePosition: "right", scaleMode: "Normal", fontFamily: "Inter, sans-serif", fontSize: "11", noTimeScale: false, valuesTracking: "1", changeMode: "price-and-percent", chartType: "area", lineColor: "#2B4C7E", topColor: "rgba(43,76,126,0.10)", bottomColor: "rgba(43,76,126,0)", lineWidth: 2, dateRanges: ["1m|1D", "3m|1D", "12m|1D", "60m|1W", "all|1M"] });
   tv($("#tvfin"), "financials", { symbol: s.tv, displayMode: "compact", width: "100%", height: "100%", largeChartUrl: "" });
   amfBlock($("#amf"), "&isin=" + s.isin, 5);
 }
@@ -713,7 +822,7 @@ function tabComptes(s, c, el) {
     <section class="panel"><div class="ph"><h2>Comptes annuels</h2><span class="light" style="font-size:12.5px">${cur === "EUR" ? "En euros" : "En " + cur} · clôture au ${c.fyEnd ? c.fyEnd.split("-").reverse().join("/") : "–"}</span></div>
       <div class="scroll-x"><table class="t fin"><thead><tr><th class="l"></th>${Y.map(y => `<th>${y}</th>`).join("")}<th class="d-only">${def("mediane", "Médiane secteur")}</th></tr></thead><tbody>
         ${grp("Activité")}
-        ${has("ca") ? r("ca", "Chiffre d'affaires", f.ca, money) : ""}
+        ${has("ca") ? r("ca", s.sector === "finance" ? "Revenus (produit net bancaire)" : "Chiffre d'affaires", f.ca, money) : ""}
         ${has("ca") ? r("croissance", "Croissance", g, v => pct(v), mref(med.g1, v => pct(v))) : ""}
         ${grp("Rentabilité")}
         ${has("ebit") ? r("resexp", "Résultat d'exploitation", f.ebit, money) : ""}
@@ -731,6 +840,7 @@ function tabComptes(s, c, el) {
         ${has("netDebt") && s.sector !== "finance" ? r("dettenette", "Dette nette (estimée)", f.netDebt, money) : ""}
         ${has("ebitda") && s.sector !== "finance" ? r("ebitda", "EBITDA (estimé)", f.ebitda, money) : ""}
         ${has("netDebt") && has("ebitda") && s.sector !== "finance" ? r("lev", "Dette nette ÷ EBITDA", div(f.netDebt, f.ebitda), v => F1.format(v), mref(med.lev, v => F1.format(v))) : ""}
+        ${has("netDebt") && has("equity") && s.sector !== "finance" ? r("gear", "Dette nette ÷ capitaux propres", div(f.netDebt, f.equity), v => pct(v, 0, false), mref(med.gear, v => pct(v, 0, false))) : ""}
         ${has("cfo") ? r("cfo", "Flux de trésorerie d'exploitation", f.cfo, money) : ""}
         ${has("fcf") ? r("fcf", "Flux de trésorerie disponible", f.fcf, money) : ""}
       </tbody></table></div>
@@ -758,7 +868,7 @@ function tabAgenda(s, c, el) {
 function pageActus() {
   setTitle("Actualité des entreprises"); setNav("news");
   const src = new URLSearchParams(location.search).get("src") === "toutes" ? "toutes" : "suivies";
-  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">Publications officielles des sociétés cotées : résultats, rapports annuels, assemblées, dividendes, opérations sur le capital.</p>
+  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">Publications officielles des sociétés cotées : résultats, rapports annuels, assemblées, dividendes. Les prochaines dates sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
     <section class="panel"><div class="filters"><a href="/actualites" class="${src === "suivies" ? "on" : ""}">Entreprises suivies</a><a href="/actualites?src=toutes" class="${src === "toutes" ? "on" : ""}">Toutes les sociétés</a></div>
     ${src === "toutes" ? `<div class="pb" style="border-bottom:1px solid var(--rule)"><div class="field" style="max-width:420px;margin:0"><input id="aq" type="search" placeholder="Filtrer par société" aria-label="Filtrer par société"></div></div>` : ""}
     <div id="amfL"></div><div class="src">Source : AMF, info-financiere.gouv.fr. Licence Ouverte.</div></section>`;
@@ -768,7 +878,7 @@ function pageActus() {
   } else amfBlock($("#amfL"), "&suivies=1", 40);
 }
 function pageAgenda() {
-  setTitle("Agenda financier"); setNav("agenda");
+  setTitle("Agenda financier"); setNav("news");
   let ty = "Tous";
   app.innerHTML = `<h1 class="pagetitle">Agenda</h1><p class="pagesub">Les prochaines dates annoncées par les entreprises suivies.</p>
     <section class="panel"><div class="filters" id="af">${[["Tous", "Tous"], ["Résultats", "Résultats"], ["Assemblée", "Assemblées"], ["Dividende", "Dividendes"]].map(([t, l]) => `<button data-t="${t}">${l}</button>`).join("")}</div><div class="scroll-x" id="al"></div>
@@ -782,16 +892,20 @@ function pageAgenda() {
   render();
 }
 
-/* ---------- Lexique ---------- */
+/* ---------- Lexique : l'essentiel d'abord ---------- */
+const ESSENTIEL = ["action", "fonds", "pea", "ca", "net", "marge", "per", "rdt", "dettenette", "cap"];
 function pageLexique() {
   setTitle("Lexique"); setNav("lex");
-  const term = (id, t) => `<div class="term" id="${id}"><h3>${esc(t.name)}</h3><p>${esc(t.what)}</p>${(t.calc || t.read || t.limit) ? `<dl>
-    ${t.calc ? `<dt>Calcul</dt><dd>${esc(t.calc)}</dd>` : ""}${t.read ? `<dt>Comment le lire</dt><dd>${esc(t.read)}</dd>` : ""}${t.limit ? `<dt>Limite</dt><dd>${esc(t.limit)}</dd>` : ""}</dl>` : ""}</div>`;
-  const groups = [["Les bases", BASES], ["Fiche entreprise", TERMS], ["Portefeuille et simulations", PTERMS]];
-  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Chaque chiffre affiché sur le site, ce qu'il mesure et ses limites.</p>
-    <div class="lex"><nav class="panel lexnav">${groups.map(([g, o]) => `<div class="g">${g}</div>${Object.entries(o).map(([k, t]) => `<a href="#${k}">${esc(t.name)}</a>`).join("")}`).join("")}</nav>
-    <div>${groups.map(([g, o]) => `<section class="panel"><div class="ph"><h2>${g}</h2></div>${Object.entries(o).map(([k, t]) => term(k, t)).join("")}</section>`).join("")}</div></div>`;
-  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+  const dl = t => (t.calc || t.read || t.limit) ? `<dl>${t.calc ? `<dt>Calcul</dt><dd>${esc(t.calc)}</dd>` : ""}${t.read ? `<dt>Comment le lire</dt><dd>${esc(t.read)}</dd>` : ""}${t.limit ? `<dt>Limite</dt><dd>${esc(t.limit)}</dd>` : ""}</dl>` : "";
+  const term = (id, t, n) => `<div class="term" id="${id}">${n ? `<div class="tn">${n}</div>` : ""}<h3>${esc(t.name)}</h3><p>${esc(t.what)}</p>${dl(t)}</div>`;
+  const rest = [["Les bases", BASES], ["Lire une entreprise", TERMS], ["Portefeuille et simulations", PTERMS]]
+    .map(([g, o]) => [g, Object.entries(o).filter(([k]) => !ESSENTIEL.includes(k))]).filter(([, l]) => l.length);
+  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Commencez par les dix notions essentielles : elles suffisent pour lire une fiche d'entreprise. Le reste est là quand vous en aurez besoin.</p>
+    <section class="panel"><div class="ph"><h2>Les dix notions essentielles</h2><span class="light" style="font-size:12.5px">Dans l'ordre conseillé</span></div>
+      <div class="essgrid">${ESSENTIEL.map((k, i) => term(k, ALL[k], i + 1)).join("")}</div></section>
+    <h2 class="subh">Pour aller plus loin</h2>
+    ${rest.map(([g, l]) => `<details class="panel more"><summary>${g}<span class="light">${l.length} notions</span></summary>${l.map(([k, t]) => term(k, t)).join("")}</details>`).join("")}`;
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { const d = t.closest("details"); if (d) d.open = true; t.scrollIntoView(); } }
 }
 
 /* ---------- Simulateurs ---------- */
@@ -1013,7 +1127,7 @@ function renderPf() {
 }
 
 function pageMentions() { setTitle("Mentions légales"); setNav(""); app.innerHTML = `<h1 class="pagetitle">Mentions légales</h1><p class="pagesub">À compléter avant la mise en ligne : éditeur du site, hébergeur, contact, sources des données et conditions d'utilisation.</p>`; }
-function pageNotFound() { setTitle("Page introuvable"); setNav(""); app.innerHTML = `<h1 class="pagetitle">Page introuvable</h1><p class="pagesub"><a class="lnk" href="/">Retour aux marchés</a></p>`; }
+function pageNotFound() { setTitle("Page introuvable"); setNav(""); app.innerHTML = `<h1 class="pagetitle">Page introuvable</h1><p class="pagesub"><a class="lnk" href="/">Retour à l'accueil</a></p>`; }
 
 /* ---------- Navigation ---------- */
 function route() {
@@ -1021,6 +1135,7 @@ function route() {
   const p = location.pathname.replace(/\/+$/, "") || "/";
   let m;
   if (p === "/") pageHome();
+  else if (p === "/entreprises") pageEntreprises();
   else if ((m = p.match(/^\/entreprise\/([a-z0-9-]+)(?:\/([a-z]+))?$/))) pageCompany(m[1], m[2]);
   else if ((m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/))) pageSim(m[1]);
   else if (p === "/actualites") pageActus();
@@ -1082,13 +1197,13 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 
 /* ---------- Démarrage ---------- */
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/demo.json", null), getJSON("/data/agenda.json", { events: [] })]).then(([r, d, ag]) => {
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/demo.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", [])]).then(([r, d, ag, uni]) => {
   if (!r || !d) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
   R = r; D = d; AG = ag || { events: [] };
-  R.companies.forEach(c => RBY[c.id] = c);
+  const U = Object.fromEntries(uni.map(u => [u.id, u]));
+  R.companies.forEach(c => { if (U[c.id]) { c.domain = c.domain || U[c.id].domain; c.desc = c.desc || U[c.id].desc; } RBY[c.id] = c; });
   [...D.companies, ...D.funds].forEach(c => DBY[c.id] = c);
   computeMedians();
-  tv($("#tape"), "ticker-tape", { symbols: R.companies.slice(0, 20).map(c => ({ proName: c.tv, title: c.name })), showSymbolLogo: false, displayMode: "adaptive" });
   route();
 });
 </script>

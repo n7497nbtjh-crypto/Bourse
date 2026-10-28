@@ -11,46 +11,46 @@ var SECTEURS = {
   services: "Services aux collectivit\xE9s",
   immo: "Immobilier"
 }, univers_default = [
-  { id: "accor", name: "Accor", ticker: "AC", isin: "FR0000120404", sector: "conso" },
-  { id: "air-liquide", name: "Air Liquide", ticker: "AI", isin: "FR0000120073", sector: "materiaux" },
-  { id: "airbus", name: "Airbus", ticker: "AIR", isin: "NL0000235190", sector: "industrie" },
-  { id: "arcelormittal", name: "ArcelorMittal", legal: "ArcelorMittal", ticker: "MT", isin: "LU1598757687", sector: "materiaux" },
-  { id: "axa", name: "AXA", ticker: "CS", isin: "FR0000120628", sector: "finance" },
-  { id: "biomerieux", name: "bioM\xE9rieux", ticker: "BIM", isin: "FR0013280286", sector: "sante" },
-  { id: "bnp-paribas", name: "BNP Paribas", ticker: "BNP", isin: "FR0000131104", sector: "finance" },
-  { id: "bouygues", name: "Bouygues", ticker: "EN", isin: "FR0000120503", sector: "industrie" },
-  { id: "bureau-veritas", name: "Bureau Veritas", ticker: "BVI", isin: "FR0006174348", sector: "industrie" },
-  { id: "capgemini", name: "Capgemini", ticker: "CAP", isin: "FR0000125338", sector: "tech" },
-  { id: "carrefour", name: "Carrefour", ticker: "CA", isin: "FR0000120172", sector: "conso" },
-  { id: "credit-agricole", name: "Cr\xE9dit Agricole", ticker: "ACA", isin: "FR0000045072", sector: "finance" },
-  { id: "danone", name: "Danone", ticker: "BN", isin: "FR0000120644", sector: "conso" },
-  { id: "dassault-systemes", name: "Dassault Syst\xE8mes", ticker: "DSY", isin: "FR0014003TT8", sector: "tech" },
-  { id: "edenred", name: "Edenred", ticker: "EDEN", isin: "FR0010908533", sector: "tech" },
-  { id: "engie", name: "Engie", ticker: "ENGI", isin: "FR0010208488", sector: "services" },
-  { id: "essilorluxottica", name: "EssilorLuxottica", ticker: "EL", isin: "FR0000121667", sector: "sante" },
-  { id: "eurofins", name: "Eurofins Scientific", ticker: "ERF", isin: "FR0014000MR3", sector: "sante" },
-  { id: "hermes", name: "Herm\xE8s", ticker: "RMS", isin: "FR0000052292", sector: "conso" },
-  { id: "kering", name: "Kering", ticker: "KER", isin: "FR0000121485", sector: "conso" },
-  { id: "legrand", name: "Legrand", ticker: "LR", isin: "FR0010307819", sector: "industrie" },
-  { id: "loreal", name: "L'Or\xE9al", ticker: "OR", isin: "FR0000120321", sector: "conso" },
-  { id: "lvmh", name: "LVMH", ticker: "MC", isin: "FR0000121014", sector: "conso" },
-  { id: "michelin", name: "Michelin", ticker: "ML", isin: "FR001400AJ45", sector: "industrie" },
-  { id: "orange", name: "Orange", ticker: "ORA", isin: "FR0000133308", sector: "telecom" },
-  { id: "pernod-ricard", name: "Pernod Ricard", ticker: "RI", isin: "FR0000120693", sector: "conso" },
-  { id: "publicis", name: "Publicis", ticker: "PUB", isin: "FR0000130577", sector: "telecom" },
-  { id: "renault", name: "Renault", ticker: "RNO", isin: "FR0000131906", sector: "industrie" },
-  { id: "safran", name: "Safran", ticker: "SAF", isin: "FR0000073272", sector: "industrie" },
-  { id: "saint-gobain", name: "Saint-Gobain", ticker: "SGO", isin: "FR0000125007", sector: "materiaux" },
-  { id: "sanofi", name: "Sanofi", ticker: "SAN", isin: "FR0000120578", sector: "sante" },
-  { id: "schneider-electric", name: "Schneider Electric", ticker: "SU", isin: "FR0000121972", sector: "industrie" },
-  { id: "societe-generale", name: "Soci\xE9t\xE9 G\xE9n\xE9rale", ticker: "GLE", isin: "FR0000130809", sector: "finance" },
-  { id: "stmicroelectronics", name: "STMicroelectronics", ticker: "STMPA", isin: "NL0000226223", sector: "tech" },
-  { id: "teleperformance", name: "Teleperformance", ticker: "TEP", isin: "FR0000051807", sector: "tech" },
-  { id: "thales", name: "Thales", ticker: "HO", isin: "FR0000121329", sector: "industrie" },
-  { id: "totalenergies", name: "TotalEnergies", ticker: "TTE", isin: "FR0000120271", sector: "energie" },
-  { id: "unibail-rodamco-westfield", name: "Unibail-Rodamco-Westfield", ticker: "URW", isin: "FR0013326246", sector: "immo" },
-  { id: "veolia", name: "Veolia", ticker: "VIE", isin: "FR0000124141", sector: "services" },
-  { id: "vinci", name: "Vinci", ticker: "DG", isin: "FR0000125486", sector: "industrie" }
+  { id: "accor", domain: "accor.com", desc: "H\xF4tellerie dans le monde entier (Novotel, Ibis, Sofitel\u2026).", name: "Accor", ticker: "AC", isin: "FR0000120404", sector: "conso" },
+  { id: "air-liquide", domain: "airliquide.com", desc: "Gaz pour l'industrie et la sant\xE9 : oxyg\xE8ne, azote, hydrog\xE8ne.", name: "Air Liquide", ticker: "AI", isin: "FR0000120073", sector: "materiaux" },
+  { id: "airbus", domain: "airbus.com", desc: "Avions de ligne, h\xE9licopt\xE8res, d\xE9fense et espace.", name: "Airbus", ticker: "AIR", isin: "NL0000235190", sector: "industrie" },
+  { id: "arcelormittal", domain: "arcelormittal.com", desc: "Production d'acier.", name: "ArcelorMittal", legal: "ArcelorMittal", ticker: "MT", isin: "LU1598757687", sector: "materiaux" },
+  { id: "axa", domain: "axa.com", desc: "Assurance (dommages, sant\xE9, vie) et gestion d'\xE9pargne.", name: "AXA", ticker: "CS", isin: "FR0000120628", sector: "finance" },
+  { id: "biomerieux", domain: "biomerieux.com", desc: "Tests de diagnostic m\xE9dical pour les laboratoires.", name: "bioM\xE9rieux", ticker: "BIM", isin: "FR0013280286", sector: "sante" },
+  { id: "bnp-paribas", domain: "bnpparibas.com", desc: "Banque de d\xE9tail, banque d'investissement et assurance.", name: "BNP Paribas", ticker: "BNP", isin: "FR0000131104", sector: "finance" },
+  { id: "bouygues", domain: "bouygues.com", desc: "Construction, t\xE9l\xE9coms (Bouygues Telecom) et m\xE9dias (TF1).", name: "Bouygues", ticker: "EN", isin: "FR0000120503", sector: "industrie" },
+  { id: "bureau-veritas", domain: "bureauveritas.com", desc: "Contr\xF4le, inspection et certification.", name: "Bureau Veritas", ticker: "BVI", isin: "FR0006174348", sector: "industrie" },
+  { id: "capgemini", domain: "capgemini.com", desc: "Conseil et services informatiques.", name: "Capgemini", ticker: "CAP", isin: "FR0000125338", sector: "tech" },
+  { id: "carrefour", domain: "carrefour.com", desc: "Grande distribution alimentaire.", name: "Carrefour", ticker: "CA", isin: "FR0000120172", sector: "conso" },
+  { id: "credit-agricole", domain: "credit-agricole.com", desc: "Banque et assurance (Cr\xE9dit Agricole S.A., LCL, Amundi).", name: "Cr\xE9dit Agricole", ticker: "ACA", isin: "FR0000045072", sector: "finance" },
+  { id: "danone", domain: "danone.com", desc: "Produits laitiers, eaux min\xE9rales et nutrition sp\xE9cialis\xE9e.", name: "Danone", ticker: "BN", isin: "FR0000120644", sector: "conso" },
+  { id: "dassault-systemes", domain: "3ds.com", desc: "Logiciels de conception 3D et de simulation.", name: "Dassault Syst\xE8mes", ticker: "DSY", isin: "FR0014003TT8", sector: "tech" },
+  { id: "edenred", domain: "edenred.com", desc: "Titres-restaurant et solutions de paiement pour les entreprises.", name: "Edenred", ticker: "EDEN", isin: "FR0010908533", sector: "tech" },
+  { id: "engie", domain: "engie.com", desc: "Production et distribution d'\xE9lectricit\xE9 et de gaz.", name: "Engie", ticker: "ENGI", isin: "FR0010208488", sector: "services" },
+  { id: "essilorluxottica", domain: "essilorluxottica.com", desc: "Verres correcteurs, montures et lunettes de soleil.", name: "EssilorLuxottica", ticker: "EL", isin: "FR0000121667", sector: "sante" },
+  { id: "eurofins", domain: "eurofins.com", desc: "Analyses de laboratoire : alimentation, environnement, pharmacie.", name: "Eurofins Scientific", ticker: "ERF", isin: "FR0014000MR3", sector: "sante" },
+  { id: "hermes", domain: "hermes.com", desc: "Maroquinerie et objets de luxe.", name: "Herm\xE8s", ticker: "RMS", isin: "FR0000052292", sector: "conso" },
+  { id: "kering", domain: "kering.com", desc: "Mode et maroquinerie de luxe (Gucci, Saint Laurent).", name: "Kering", ticker: "KER", isin: "FR0000121485", sector: "conso" },
+  { id: "legrand", domain: "legrand.com", desc: "\xC9quipements \xE9lectriques pour les b\xE2timents.", name: "Legrand", ticker: "LR", isin: "FR0010307819", sector: "industrie" },
+  { id: "loreal", domain: "loreal.com", desc: "Produits de beaut\xE9 et cosm\xE9tiques.", name: "L'Or\xE9al", ticker: "OR", isin: "FR0000120321", sector: "conso" },
+  { id: "lvmh", domain: "lvmh.com", desc: "Luxe : mode, maroquinerie, vins et spiritueux, parfums, montres.", name: "LVMH", ticker: "MC", isin: "FR0000121014", sector: "conso" },
+  { id: "michelin", domain: "michelin.com", desc: "Pneumatiques.", name: "Michelin", ticker: "ML", isin: "FR001400AJ45", sector: "industrie" },
+  { id: "orange", domain: "orange.com", desc: "Op\xE9rateur de t\xE9l\xE9communications.", name: "Orange", ticker: "ORA", isin: "FR0000133308", sector: "telecom" },
+  { id: "pernod-ricard", domain: "pernod-ricard.com", desc: "Vins et spiritueux.", name: "Pernod Ricard", ticker: "RI", isin: "FR0000120693", sector: "conso" },
+  { id: "publicis", domain: "publicisgroupe.com", desc: "Publicit\xE9 et marketing.", name: "Publicis", ticker: "PUB", isin: "FR0000130577", sector: "telecom" },
+  { id: "renault", domain: "renaultgroup.com", desc: "Construction automobile.", name: "Renault", ticker: "RNO", isin: "FR0000131906", sector: "industrie" },
+  { id: "safran", domain: "safran-group.com", desc: "Moteurs d'avion, \xE9quipements a\xE9ronautiques et d\xE9fense.", name: "Safran", ticker: "SAF", isin: "FR0000073272", sector: "industrie" },
+  { id: "saint-gobain", domain: "saint-gobain.com", desc: "Mat\xE9riaux de construction.", name: "Saint-Gobain", ticker: "SGO", isin: "FR0000125007", sector: "materiaux" },
+  { id: "sanofi", domain: "sanofi.com", desc: "M\xE9dicaments et vaccins.", name: "Sanofi", ticker: "SAN", isin: "FR0000120578", sector: "sante" },
+  { id: "schneider-electric", domain: "se.com", desc: "Gestion de l'\xE9nergie et automatismes.", name: "Schneider Electric", ticker: "SU", isin: "FR0000121972", sector: "industrie" },
+  { id: "societe-generale", domain: "societegenerale.com", desc: "Banque de d\xE9tail et banque d'investissement.", name: "Soci\xE9t\xE9 G\xE9n\xE9rale", ticker: "GLE", isin: "FR0000130809", sector: "finance" },
+  { id: "stmicroelectronics", domain: "st.com", desc: "Puces \xE9lectroniques (semi-conducteurs).", name: "STMicroelectronics", ticker: "STMPA", isin: "NL0000226223", sector: "tech" },
+  { id: "teleperformance", domain: "tp.com", desc: "Relation client pour le compte d'autres entreprises.", name: "Teleperformance", ticker: "TEP", isin: "FR0000051807", sector: "tech" },
+  { id: "thales", domain: "thalesgroup.com", desc: "D\xE9fense, a\xE9ronautique, espace et cybers\xE9curit\xE9.", name: "Thales", ticker: "HO", isin: "FR0000121329", sector: "industrie" },
+  { id: "totalenergies", domain: "totalenergies.com", desc: "P\xE9trole, gaz et \xE9lectricit\xE9.", name: "TotalEnergies", ticker: "TTE", isin: "FR0000120271", sector: "energie" },
+  { id: "unibail-rodamco-westfield", domain: "urw.com", desc: "Centres commerciaux (Westfield).", name: "Unibail-Rodamco-Westfield", ticker: "URW", isin: "FR0013326246", sector: "immo" },
+  { id: "veolia", domain: "veolia.com", desc: "Gestion de l'eau, des d\xE9chets et de l'\xE9nergie.", name: "Veolia", ticker: "VIE", isin: "FR0000124141", sector: "services" },
+  { id: "vinci", domain: "vinci.com", desc: "Construction et concessions (autoroutes, a\xE9roports).", name: "Vinci", ticker: "DG", isin: "FR0000125486", sector: "industrie" }
 ].map((c) => ({ ...c, tv: "EURONEXT:" + c.ticker }));
 
 // cf/src/amf.mjs
@@ -102,19 +102,19 @@ async function amf(request, followed = []) {
 }
 
 // cf/src/worker.mjs
-var INDEX = univers_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: "" })), SITE = "Rep\xE8re", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { passe: "Simulateur sur le pass\xE9", interets: "Simulateur d'int\xE9r\xEAts compos\xE9s", frais: "Simulateur de l'impact des frais", "pea-cto": "Simulateur PEA ou compte-titres", "une-fois": "Investir en une fois ou chaque mois" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+var INDEX = univers_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "Rep\xE8re", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { passe: "Simulateur sur le pass\xE9", interets: "Simulateur d'int\xE9r\xEAts compos\xE9s", frais: "Simulateur de l'impact des frais", "pea-cto": "Simulateur PEA ou compte-titres", "une-fois": "Investir en une fois ou chaque mois" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path) {
   let p = path.replace(/\/+$/, "") || "/", base = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda)$/, "$1"), m;
   if (p === "/") return { title: `${SITE} \xB7 La Bourse expliqu\xE9e`, desc: BASE_DESC };
   if (m = base.match(/^\/entreprise\/([a-z0-9-]+)$/)) {
     let c = BY[m[1]];
-    return c ? { title: `${c.name} : cours, comptes et actualit\xE9 \xB7 ${SITE}`, desc: `${c.name} (${c.sector}) : cours de l'action, chiffre d'affaires, marge, r\xE9sultat, dette et dividende tir\xE9s des rapports annuels, publications officielles AMF. Chaque chiffre est expliqu\xE9.` } : null;
+    return c ? { title: `${c.name} : cours, comptes et actualit\xE9 \xB7 ${SITE}`, desc: `${c.name} (${c.sector}). ${c.desc} Cours de l'action, chiffre d'affaires, marge, r\xE9sultat, dette et dividende tir\xE9s des rapports annuels, publications officielles AMF. Chaque chiffre est expliqu\xE9.` } : null;
   }
   if (m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/)) {
     let t = TOOLS[m[1] || "passe"];
     return t ? { title: `${t} \xB7 ${SITE}`, desc: "Simulez l'\xE9volution d'un placement, avec les hypoth\xE8ses affich\xE9es. Outil p\xE9dagogique, sans conseil." } : null;
   }
-  return p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises cot\xE9es \xE0 Paris : ce qu'elles font, leurs comptes et leur actualit\xE9, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 var worker_default = {
   async fetch(request, env) {

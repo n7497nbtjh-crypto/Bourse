@@ -4,7 +4,7 @@
 // Plus tard : routes /api/* pour interroger le fournisseur de données. Sa clé (DATA_API_KEY) sera saisie
 // par Romain dans Cloudflare > Variables et secrets, jamais dans le code.
 import U, { SECTEURS } from "../../data/univers.mjs";
-const INDEX = U.map(c => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: "" }));
+const INDEX = U.map(c => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" }));
 import amf from "./amf.mjs";
 
 const SITE = "Repère";
@@ -21,13 +21,14 @@ export function meta(path) {
   if ((m = base.match(/^\/entreprise\/([a-z0-9-]+)$/))) {
     const c = BY[m[1]];
     if (!c) return null;
-    return { title: `${c.name} : cours, comptes et actualité · ${SITE}`, desc: `${c.name} (${c.sector}) : cours de l'action, chiffre d'affaires, marge, résultat, dette et dividende tirés des rapports annuels, publications officielles AMF. Chaque chiffre est expliqué.` };
+    return { title: `${c.name} : cours, comptes et actualité · ${SITE}`, desc: `${c.name} (${c.sector}). ${c.desc} Cours de l'action, chiffre d'affaires, marge, résultat, dette et dividende tirés des rapports annuels, publications officielles AMF. Chaque chiffre est expliqué.` };
   }
   if ((m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/))) {
     const t = TOOLS[m[1] || "passe"];
     if (!t) return null;
     return { title: `${t} · ${SITE}`, desc: "Simulez l'évolution d'un placement, avec les hypothèses affichées. Outil pédagogique, sans conseil." };
   }
+  if (p === "/entreprises") return { title: `Les entreprises · ${SITE}`, desc: "Les grandes entreprises cotées à Paris : ce qu'elles font, leurs comptes et leur actualité, expliqués simplement." };
   if (p === "/actualites") return { title: `Actualité des entreprises · ${SITE}`, desc: "Résultats, dividendes, assemblées générales et publications officielles déposées auprès de l'AMF." };
   if (p === "/agenda") return { title: `Agenda financier · ${SITE}`, desc: "Dates des résultats, assemblées générales et dividendes des entreprises cotées." };
   if (p === "/portefeuille") return { title: `Portefeuille · ${SITE}`, desc: "Suivez la performance réelle de vos placements ou entraînez-vous avec un portefeuille virtuel." };

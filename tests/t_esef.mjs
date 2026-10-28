@@ -25,4 +25,19 @@ const fake = async url => {
 const c = await collectOne(fake, { id: "exemple", name: "Société Exemple", ticker: "EX", tv: "EURONEXT:EX", isin: "FR0000000000", sector: "industrie" });
 if (c.lei !== "969500EXEMPLE0000001" || c.sources.length !== 3 || !c.sources[0].report.startsWith("https://filings.xbrl.org/")) { bad++; console.log("ÉCART collecte", c.lei, c.sources); } else console.log("ok  collecte : LEI, 3 rapports, liens complets");
 near(summary(c).ca, 20000, "résumé pour la liste");
+// Étiquettes propres à une entreprise (exemple inspiré de LVMH et Safran)
+const ext = { facts: {
+  a: { value: "86000000000", dimensions: { concept: "ifrs-full:Revenue", period: "2024-01-01T00:00:00/2025-01-01T00:00:00", unit: "iso4217:EUR" } },
+  b: { value: "19500000000", dimensions: { concept: "LVM:ProfitLossFromOperatingActivitiesAfterShareOfProfitLossOfAssociatesAndJointVentures", period: "2024-01-01T00:00:00/2025-01-01T00:00:00", unit: "iso4217:EUR" } },
+  c: { value: "2446000000", dimensions: { concept: "saf:NonCurrentInterestBearingFinancialLiablities", period: "2025-01-01T00:00:00", unit: "iso4217:EUR" } },
+  d: { value: "2605000000", dimensions: { concept: "saf:CurrentInterestBearingFinancialLiablities", period: "2025-01-01T00:00:00", unit: "iso4217:EUR" } },
+  e: { value: "1000000000", dimensions: { concept: "ifrs-full:CashAndCashEquivalents", period: "2025-01-01T00:00:00", unit: "iso4217:EUR" } },
+  f: { value: "7000000000", dimensions: { concept: "LVM:AdjustmentsForProvisionsAndAdjustmentsForDepreciationAndAmortisationExpense", period: "2024-01-01T00:00:00/2025-01-01T00:00:00", unit: "iso4217:EUR" } },
+  g: { value: "900000000", dimensions: { concept: "LVM:AdjustmentsForDepreciationRightOfUseAssets", period: "2024-01-01T00:00:00/2025-01-01T00:00:00", unit: "iso4217:EUR" } },
+} };
+const e = extract(ext).years[2024];
+near(e.ebit, 19500, "résultat d'exploitation lu sur une étiquette propre");
+near(e.debt, 5051, "dette : parts long et court terme propres à l'entreprise");
+near(e.netDebt, 4051, "dette nette correspondante");
+near(e.ebitda, 26500, "EBITDA : amortissements totaux, sous-totaux ignorés");
 console.log(bad ? `${bad} écart(s)` : "0 écart"); process.exit(bad ? 1 : 0);

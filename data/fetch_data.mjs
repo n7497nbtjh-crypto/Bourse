@@ -92,7 +92,7 @@ export async function collectOne(fetchFn, c) {
   }
   const s = toSeries(merge(reports));
   return {
-    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, lei: id.lei, legalName: id.legalName || c.name,
+    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, domain: c.domain, desc: c.desc, lei: id.lei, legalName: id.legalName || c.name,
     sector: c.sector, ...s,
     sources: fl.map(f => ({ periodEnd: f.period_end, report: f.report, json: f.json })),
     updated: new Date().toISOString().slice(0, 10),
@@ -103,7 +103,7 @@ export async function collectOne(fetchFn, c) {
 export function summary(c) {
   const L = c.years.length - 1, f = c.fin, at = (k, i = L) => f[k] && i >= 0 ? f[k][i] : null;
   return {
-    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, sector: c.sector, currency: c.currency,
+    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, domain: c.domain, desc: c.desc, sector: c.sector, currency: c.currency,
     year: c.years[L] ?? null, ca: at("ca"), caPrev: at("ca", L - 1), ebit: at("ebit"), net: at("net"), equity: at("equity"),
     netDebt: at("netDebt"), ebitda: at("ebitda"), dps: at("dps") ?? at("dpsEst"), eps: at("eps"),
   };

@@ -6,7 +6,7 @@ root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 data = json.load(open(os.path.join(root, "data/demo.json")))
-pages = ["/", "/actualites", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/passe", "/simulateurs/interets", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/une-fois", "/mentions-legales", "/page-inconnue"]
+pages = ["/", "/entreprises", "/actualites", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/passe", "/simulateurs/interets", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/une-fois", "/mentions-legales", "/page-inconnue"]
 FIX = os.path.abspath("tests/fixtures/site")
 pages += [f"/entreprise/{i}{t}" for i in ("exemple", "lvmh", "totalenergies", "bnp-paribas") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
@@ -24,6 +24,7 @@ def route(r):
         return r.fulfill(body=css, content_type="text/css")
     if "fonts.gstatic.com" in u:
         f = os.path.join(FONT or "", u.rsplit("/", 1)[1]); return r.fulfill(path=f) if FONT and os.path.isfile(f) else r.fulfill(status=404, body="")
+    if "//t.local" not in u: return r.fulfill(status=404, body="")  # logos et autres sites extérieurs
     path = u.split("//t.local", 1)[1].split("#")[0].split("?")[0]
     f = os.path.join(root, path.lstrip("/"))
     if os.path.isfile(f): return r.fulfill(path=f)
@@ -53,7 +54,7 @@ with sync_playwright() as pw:
             pg.goto("http://t.local" + path); pg.wait_for_timeout(450)
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p: probs[path] = p
-            if shots and name != "petit" and path in ("/", "/entreprise/exemple", "/entreprise/exemple/comptes", "/entreprise/totalenergies/agenda", "/actualites", "/agenda", "/simulateurs/passe", "/portefeuille"):
+            if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/exemple", "/entreprise/exemple/comptes", "/lexique", "/actualites"):
                 os.makedirs(shots, exist_ok=True)
                 pg.screenshot(path=f"{shots}/{name}{(path.replace('/', '_').replace('?', '_') if path != '/' else '_accueil')}.png", full_page=True)
         # Portefeuille : ajout d'une opération
