@@ -38,6 +38,7 @@ jobs:
           if [ -n "$CONTACT" ]; then echo "Contact SEC : renseigné"; else echo "::warning::Contact SEC absent : ajoutez la variable CONTACT (Settings > Secrets and variables > Actions > Variables)"; fi
           node data/fetch_data.mjs
           node data/etf_fetch.mjs || echo "::warning::Composition des ETF non mise à jour"
+          node data/cours_fetch.mjs || echo "::warning::Cours non mis à jour"
       - name: Construction et tests
         run: |
           node build.mjs
@@ -63,7 +64,7 @@ jobs:
         run: |
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
-          git add cf/site data/diagnostic.json
+          git add cf/site data/diagnostic.json data/historique
           git diff --cached --quiet || git commit -m "Données du $(date +%F)"
           for i in 1 2 3; do git pull --rebase -X theirs -q && git push && break; sleep 5; done
       - name: Publication sur Cloudflare Pages

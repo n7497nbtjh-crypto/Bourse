@@ -1,0 +1,542 @@
+{
+  "niveaux": [
+    {
+      "id": "bases",
+      "titre": "Les bases",
+      "intro": "Six leçons pour comprendre ce que vous achetez quand vous achetez une action ou un ETF, où le loger, ce que cela coûte et ce que vous risquez.",
+      "lecons": [
+        {
+          "id": "action",
+          "titre": "Ce qu'est une action",
+          "resume": "Une action est une part du capital d'une entreprise, qui donne droit à une part des bénéfices distribués et à un droit de vote.",
+          "paragraphes": [
+            "Une entreprise est divisée en parts égales appelées actions. Détenir une action, c'est posséder une petite fraction de l'entreprise : on devient actionnaire.",
+            "L'actionnaire peut recevoir un dividende, c'est-à-dire une part du bénéfice versée en argent, si l'entreprise décide d'en distribuer. Il peut aussi voter en assemblée générale, la réunion annuelle où les actionnaires approuvent les comptes et élisent les administrateurs.",
+            "Une entreprise cotée est une entreprise dont les actions s'échangent en Bourse. La Bourse est un marché organisé où se rencontrent acheteurs et vendeurs, par exemple Euronext Paris pour les grandes sociétés françaises.",
+            "Quand vous achetez une action en Bourse, vous l'achetez presque toujours à un autre investisseur, pas à l'entreprise. L'entreprise ne reçoit de l'argent que lorsqu'elle émet de nouvelles actions, par exemple lors de son introduction en Bourse."
+          ],
+          "exemple": "Prenons une entreprise fictive divisée en 10 millions d'actions. Si vous en détenez 100, vous possédez 0,001 % de l'entreprise. Si elle distribue 20 millions d'euros de dividendes, chaque action reçoit 2 €, soit 200 € pour vous avant impôts.",
+          "a_retenir": [
+            "Une action est une fraction du capital d'une entreprise.",
+            "Elle donne droit aux dividendes éventuels et à un vote en assemblée générale.",
+            "En Bourse, on achète ses actions à d'autres investisseurs."
+          ],
+          "voir": "/lexique"
+        },
+        {
+          "id": "cours",
+          "titre": "Pourquoi le cours bouge",
+          "resume": "Le cours d'une action résulte de l'équilibre entre acheteurs et vendeurs, qui réagissent aux résultats et aux annonces de l'entreprise.",
+          "paragraphes": [
+            "Le cours est le prix auquel s'est faite la dernière transaction sur une action. À Paris, il varie en continu de 9 h à 17 h 30, les jours ouvrés.",
+            "Le mécanisme de base est l'offre et la demande. Si davantage d'investisseurs veulent acheter que vendre au prix actuel, le cours monte. Dans le cas inverse, il baisse.",
+            "Les investisseurs réagissent d'abord aux résultats, les chiffres que l'entreprise publie chaque trimestre ou semestre. Ce qui compte est l'écart avec ce que le marché attendait : un bénéfice en hausse mais inférieur aux prévisions peut faire baisser le cours.",
+            "Les annonces jouent aussi : rachat d'un concurrent, départ d'un dirigeant, perte d'un gros client, enquête d'une autorité. La conjoncture compte également, une hausse des taux d'intérêt pesant souvent sur l'ensemble des actions.",
+            "Sur quelques jours, les variations sont souvent difficiles à expliquer. Sur plusieurs années, le cours suit davantage l'évolution des bénéfices."
+          ],
+          "exemple": "Une entreprise fictive cote 50 €. Les analystes attendaient un bénéfice de 2 € par action pour l'année. Elle annonce 2,20 €, soit 10 % de plus que prévu, et le cours passe à 54 € dans la journée, une hausse de 8 %. Si elle avait annoncé 2,05 €, en hausse sur un an mais sous les attentes, le cours aurait pu reculer.",
+          "a_retenir": [
+            "Le cours dépend de l'équilibre entre acheteurs et vendeurs.",
+            "Le marché réagit à l'écart entre les résultats publiés et les attentes.",
+            "Sur longue période, le cours suit surtout les bénéfices."
+          ]
+        },
+        {
+          "id": "etf-indice",
+          "titre": "Indices et ETF",
+          "resume": "Un indice mesure l'évolution d'un groupe d'actions, et un ETF permet d'acheter tout ce groupe en une seule opération.",
+          "paragraphes": [
+            "Un indice boursier est un panier d'actions dont on calcule la valeur globale chaque jour. Il sert de repère pour mesurer l'évolution d'un marché.",
+            "Le CAC 40 regroupe 40 grandes entreprises cotées à Paris. Le S&P 500 suit environ 500 grandes entreprises américaines. Le MSCI World réunit environ 1 400 entreprises de 23 pays développés, dont près de 70 % sont américaines en valeur.",
+            "Dans ces indices, chaque entreprise pèse selon sa valeur en Bourse. Les plus grandes influencent donc davantage l'évolution de l'indice.",
+            "Un ETF, ou fonds indiciel coté, est un fonds qui reproduit un indice et s'achète en Bourse comme une action. Avec une seule part, vous détenez indirectement toutes les entreprises de l'indice.",
+            "Un ETF ne cherche pas à faire mieux que son indice. Il cherche à le suivre au plus près, avec des frais faibles."
+          ],
+          "exemple": "Une part d'un ETF MSCI World coûte par exemple 100 €. Si une entreprise représente 5 % de l'indice, 5 € de votre part dépendent d'elle. Si l'indice monte de 8 % sur l'année, la part vaut environ 108 €, moins les frais du fonds, par exemple 0,2 %.",
+          "a_retenir": [
+            "Un indice mesure l'évolution d'un panier d'actions.",
+            "Un ETF reproduit un indice et s'achète comme une action.",
+            "Une part d'ETF suffit pour détenir des centaines d'entreprises."
+          ],
+          "voir": "/etf"
+        },
+        {
+          "id": "enveloppes",
+          "titre": "PEA, compte-titres, assurance-vie",
+          "resume": "Le même ETF peut être logé dans trois enveloppes, dont les règles fiscales changent nettement ce que vous gardez.",
+          "paragraphes": [
+            "Une enveloppe est le compte dans lequel vous détenez vos placements. Elle ne change pas ce que vous achetez, elle change l'impôt et ce que vous avez le droit d'y placer.",
+            "Le PEA, plan d'épargne en actions, accepte les actions européennes et les ETF éligibles, dont certains suivent le S&P 500 ou le MSCI World. Les versements sont plafonnés à 150 000 €. Après 5 ans, les gains retirés ne supportent que 18,6 % de prélèvements sociaux.",
+            "Avant 5 ans, un retrait entraîne en principe la clôture du PEA, et les gains sont imposés comme sur un compte-titres. Le PEA convient donc à de l'argent dont vous n'avez pas besoin à court terme.",
+            "Le compte-titres ordinaire accepte presque tous les titres du monde, sans plafond. Les gains et les dividendes sont imposés à 31,4 %, au titre du prélèvement forfaitaire unique, appelé flat tax.",
+            "L'assurance-vie est un contrat d'assurance dans lequel on peut détenir des fonds, dont des ETF en unités de compte. Les gains supportent 17,2 % de prélèvements sociaux. Après 8 ans, les premiers 4 600 € de gains retirés chaque année échappent à l'impôt sur le revenu pour une personne seule."
+          ],
+          "exemple": "Vous retirez 10 000 € de gains. Sur un PEA de plus de 5 ans, vous payez 1 860 € et gardez 8 140 €. Sur un compte-titres, vous payez 3 140 € et gardez 6 860 €. L'écart de 1 280 € vient uniquement de l'enveloppe.",
+          "a_retenir": [
+            "Le PEA est plafonné à 150 000 € et taxé à 18,6 % après 5 ans.",
+            "Le compte-titres est ouvert à tout, mais taxé à 31,4 %.",
+            "L'assurance-vie offre un abattement de 4 600 € par an après 8 ans."
+          ],
+          "voir": "/pea-cto"
+        },
+        {
+          "id": "frais",
+          "titre": "Ce que coûtent les frais",
+          "resume": "Les frais paraissent faibles sur un an, mais sur 20 ans ils peuvent réduire le capital final de plus d'un quart.",
+          "paragraphes": [
+            "Les frais de courtage sont prélevés par le courtier à chaque achat ou vente. Ils prennent la forme d'un montant fixe, par exemple 1 € par ordre, ou d'un pourcentage, par exemple 0,5 % du montant.",
+            "Les frais courants d'un ETF sont prélevés chaque année par le gestionnaire, directement sur la valeur du fonds. Pour un ETF sur un grand indice, ils se situent souvent entre 0,1 % et 0,5 % par an. Vous ne les voyez pas passer, mais ils réduisent la performance.",
+            "Un fonds géré activement facture souvent 1,5 % à 2 % par an. Une assurance-vie ajoute en général des frais de gestion du contrat, souvent entre 0,5 % et 1 % par an.",
+            "Un écart faible sur un an devient important sur 20 ans. Les frais sont prélevés chaque année sur un capital qui grossit, et l'argent prélevé ne produit plus de gains."
+          ],
+          "exemple": "Vous placez 10 000 € pendant 20 ans sur un placement qui rapporte 6 % par an avant frais. Avec 0,2 % de frais par an, vous obtenez environ 30 900 €. Avec 2 % de frais par an, vous obtenez environ 21 900 €. La différence, environ 9 000 €, dépasse le capital de départ.",
+          "a_retenir": [
+            "Le courtage se paie à chaque opération, les frais courants chaque année.",
+            "Sur 20 ans, 1,8 point de frais en plus peut coûter près de 30 % du capital final.",
+            "Comparer les frais avant d'acheter est l'un des rares leviers que vous maîtrisez."
+          ],
+          "voir": "/simulateurs/frais"
+        },
+        {
+          "id": "risque",
+          "titre": "Le risque et l'horizon",
+          "resume": "Un placement en actions peut perdre la moitié de sa valeur, ce qui impose un horizon long et une bonne diversification.",
+          "paragraphes": [
+            "Une action ou un ETF d'actions peut perdre une grande partie de sa valeur. Entre 2007 et 2009, le CAC 40 a perdu environ la moitié de sa valeur. Hors dividendes, il n'a retrouvé son niveau de 2007 qu'en 2021.",
+            "La volatilité désigne l'ampleur des variations d'un placement. Les actions sont plus volatiles qu'un livret ou un fonds en euros, en échange d'un rendement espéré plus élevé sur longue période.",
+            "Une baisse se rattrape plus difficilement qu'elle ne se produit. Après une chute de 50 %, il faut une hausse de 100 % pour revenir au point de départ.",
+            "L'horizon de placement est la durée pendant laquelle vous pouvez laisser l'argent investi. Plus il est long, moins vous risquez d'être contraint de vendre au plus bas. L'argent dont vous aurez besoin dans les prochaines années n'a donc pas sa place en actions.",
+            "La diversification consiste à répartir son argent sur de nombreuses entreprises et plusieurs pays. La faillite d'une société pèse alors peu sur l'ensemble. Elle ne protège pas d'une baisse générale des marchés."
+          ],
+          "exemple": "Vous placez 10 000 € sur un indice d'actions. Une crise le fait baisser de 50 % et votre placement ne vaut plus que 5 000 €. Pour revenir à 10 000 €, il doit doubler. Si vous deviez vendre à ce moment-là, la perte de 5 000 € deviendrait définitive.",
+          "a_retenir": [
+            "Les actions peuvent perdre la moitié de leur valeur en quelques mois.",
+            "Une baisse de 50 % demande une hausse de 100 % pour être effacée.",
+            "Un horizon long et la diversification limitent le risque sans le supprimer."
+          ],
+          "voir": "/simulateurs/epargne"
+        }
+      ],
+      "quiz": [
+        {
+          "q": "Une entreprise compte 2 millions d'actions. Vous en détenez 500. Quelle part de l'entreprise possédez-vous ?",
+          "options": [
+            "0,025 %",
+            "0,25 %",
+            "2,5 %",
+            "0,0025 %"
+          ],
+          "bonne": 0,
+          "explication": "500 ÷ 2 000 000 = 0,00025, soit 0,025 %. Vous recevez donc 0,025 % des dividendes versés."
+        },
+        {
+          "q": "Une entreprise annonce un bénéfice en hausse de 5 % sur un an. Les analystes attendaient une hausse de 12 %. Que se passe-t-il le plus souvent pour le cours ?",
+          "options": [
+            "Il monte, puisque le bénéfice progresse",
+            "Il baisse, car le résultat est inférieur aux attentes",
+            "Il ne bouge pas, car le marché attend l'assemblée générale",
+            "Il est suspendu jusqu'à la publication suivante"
+          ],
+          "bonne": 1,
+          "explication": "Le cours intègre déjà les attentes. Un résultat en hausse mais sous les prévisions déçoit, et les vendeurs l'emportent."
+        },
+        {
+          "q": "Vous achetez une part d'un ETF qui suit le CAC 40. Que détenez-vous ?",
+          "options": [
+            "Une action de la société qui gère l'ETF",
+            "Une créance sur la Bourse de Paris",
+            "Les actions de votre choix parmi les 40 plus grandes",
+            "Une petite fraction de chacune des 40 entreprises de l'indice"
+          ],
+          "bonne": 3,
+          "explication": "L'ETF détient les 40 entreprises dans les proportions de l'indice. Votre part vous en donne une fraction indirecte."
+        },
+        {
+          "q": "Vous retirez 8 000 € de gains d'un PEA ouvert depuis 7 ans. Combien d'impôts et de prélèvements payez-vous ?",
+          "options": [
+            "1 376 €",
+            "2 512 €",
+            "1 488 €",
+            "0 €"
+          ],
+          "bonne": 2,
+          "explication": "Après 5 ans, seuls les prélèvements sociaux de 18,6 % s'appliquent : 8 000 × 0,186 = 1 488 €. Le montant de 2 512 € correspond aux 31,4 % d'un compte-titres."
+        },
+        {
+          "q": "Vous placez 20 000 € dans un fonds à 1,8 % de frais courants plutôt que dans un ETF à 0,2 %. Combien de frais en plus payez-vous la première année ?",
+          "options": [
+            "32 €",
+            "320 €",
+            "360 €",
+            "400 €"
+          ],
+          "bonne": 1,
+          "explication": "L'écart est de 1,6 point : 20 000 × 0,016 = 320 €. Cet écart se répète chaque année sur un capital qui grossit."
+        },
+        {
+          "q": "Votre placement de 10 000 € perd 40 %. De combien doit-il remonter pour retrouver 10 000 € ?",
+          "options": [
+            "40 %",
+            "50 %",
+            "66,7 %",
+            "100 %"
+          ],
+          "bonne": 2,
+          "explication": "Il vaut 6 000 €. Pour regagner 4 000 €, il faut 4 000 ÷ 6 000 = 66,7 % de hausse."
+        }
+      ]
+    },
+    {
+      "id": "lire",
+      "titre": "Lire une entreprise",
+      "intro": "Six indicateurs pour comprendre ce qu'une entreprise vend, ce qu'elle gagne, ce qu'elle doit et ce qu'elle reverse. Les entreprises et les chiffres des exemples sont inventés.",
+      "lecons": [
+        {
+          "id": "chiffre-affaires",
+          "titre": "Chiffre d'affaires et croissance",
+          "resume": "Le chiffre d'affaires mesure les ventes, et sa croissance indique si l'activité progresse.",
+          "paragraphes": [
+            "Le chiffre d'affaires est le total des ventes de l'entreprise sur une période, avant toute dépense. Les rapports en anglais l'appellent revenue ou sales.",
+            "La croissance se calcule en comparant deux périodes : (chiffre d'affaires de l'année ÷ chiffre d'affaires de l'année précédente - 1) × 100.",
+            "Les entreprises publient souvent une croissance organique, qui exclut les rachats d'entreprises et les effets de change. Elle indique mieux si le métier lui-même progresse.",
+            "Une croissance organique régulière, supérieure à l'inflation, est plutôt bon signe. Des ventes en baisse plusieurs années de suite, ou une croissance qui ne vient que de rachats, sont à surveiller.",
+            "Limite : le chiffre d'affaires ne dit rien des coûts. Une entreprise peut vendre beaucoup et perdre de l'argent."
+          ],
+          "exemple": "Une entreprise fictive réalise 400 M€ de chiffre d'affaires cette année, contre 360 M€ l'an dernier. Sa croissance est de (400 ÷ 360 - 1) × 100, soit environ 11 %. Si 30 M€ viennent d'une société rachetée en cours d'année, la croissance organique est de (370 ÷ 360 - 1) × 100, soit environ 3 %.",
+          "a_retenir": [
+            "Le chiffre d'affaires est le total des ventes, avant les coûts.",
+            "La croissance organique exclut les rachats et les effets de change.",
+            "Des ventes en hausse ne garantissent pas des bénéfices."
+          ]
+        },
+        {
+          "id": "marge-exploitation",
+          "titre": "Marge d'exploitation",
+          "resume": "La marge d'exploitation indique combien l'entreprise garde sur 100 € de ventes une fois payés les coûts de son activité.",
+          "paragraphes": [
+            "Le résultat d'exploitation est ce qu'il reste du chiffre d'affaires après les coûts de l'activité : achats, salaires, loyers, amortissements. Il ne tient compte ni des intérêts de la dette ni de l'impôt.",
+            "La marge d'exploitation rapporte ce résultat aux ventes : résultat d'exploitation ÷ chiffre d'affaires × 100.",
+            "Le niveau normal dépend du secteur. Une chaîne de supermarchés dégage souvent 2 % à 5 %, un éditeur de logiciels peut dépasser 25 %.",
+            "Une marge stable ou en hausse sur plusieurs années suggère que l'entreprise maîtrise ses coûts ou peut relever ses prix. Une marge qui recule année après année est à surveiller.",
+            "Limite : la marge n'a de sens que comparée à celle d'entreprises du même secteur. Dans les secteurs cycliques, comme l'automobile, elle varie fortement d'une année sur l'autre."
+          ],
+          "exemple": "Une entreprise fictive vend pour 400 M€. Ses coûts d'exploitation s'élèvent à 340 M€. Son résultat d'exploitation est de 60 M€ et sa marge de 60 ÷ 400 × 100 = 15 %. Sur 100 € de ventes, elle garde 15 € avant intérêts et impôts.",
+          "a_retenir": [
+            "Marge d'exploitation = résultat d'exploitation ÷ chiffre d'affaires.",
+            "Elle se compare d'abord avec les entreprises du même secteur.",
+            "Sa tendance sur plusieurs années compte plus qu'un chiffre isolé."
+          ]
+        },
+        {
+          "id": "benefice-net",
+          "titre": "Bénéfice net",
+          "resume": "Le bénéfice net est ce qui reste aux actionnaires une fois toutes les charges payées, y compris les intérêts et l'impôt.",
+          "paragraphes": [
+            "Le bénéfice net, ou résultat net, est ce qu'il reste après toutes les charges : coûts d'exploitation, intérêts de la dette, impôt sur les sociétés, éléments exceptionnels. C'est le bénéfice qui revient aux actionnaires.",
+            "En simplifiant, il se calcule ainsi : résultat d'exploitation, moins les intérêts, plus ou moins les éléments exceptionnels, moins l'impôt.",
+            "Divisé par le nombre d'actions, il donne le bénéfice par action, ou BPA. Ce chiffre sert au calcul du PER, étudié au niveau suivant.",
+            "Un bénéfice net qui progresse avec le chiffre d'affaires est plutôt bon signe. Des pertes répétées, ou un bénéfice qui stagne alors que les ventes montent, sont à surveiller.",
+            "Limite : le bénéfice net est sensible aux éléments ponctuels. La vente d'une filiale ou une dépréciation d'actifs peut le faire bondir ou chuter une année, sans lien avec l'activité courante."
+          ],
+          "exemple": "Une entreprise fictive dégage 60 M€ de résultat d'exploitation. Elle paie 10 M€ d'intérêts, il reste 50 M€. Après un impôt de 25 %, soit 12,5 M€, son bénéfice net est de 37,5 M€. Avec 25 millions d'actions, son BPA est de 1,50 €.",
+          "a_retenir": [
+            "Le bénéfice net est ce qui reste après toutes les charges.",
+            "BPA = bénéfice net ÷ nombre d'actions.",
+            "Un élément exceptionnel peut fausser le bénéfice d'une année."
+          ]
+        },
+        {
+          "id": "dette-nette",
+          "titre": "Dette nette et endettement",
+          "resume": "La dette nette mesure ce que l'entreprise doit une fois sa trésorerie déduite, et le ratio dette nette sur EBITDA indique si elle peut la supporter.",
+          "paragraphes": [
+            "La dette brute regroupe tous les emprunts de l'entreprise, prêts bancaires et obligations. La dette nette en retranche la trésorerie : dette nette = dette brute - trésorerie.",
+            "Pour juger son poids, on la compare à l'EBITDA, le résultat d'exploitation avant amortissements. L'EBITDA donne une idée approximative de l'argent que dégage l'activité chaque année.",
+            "Le ratio dette nette ÷ EBITDA indique en combien d'années l'entreprise pourrait rembourser sa dette. En dessous de 2, l'endettement est en général jugé modéré. Au-dessus de 3 ou 4, il est à surveiller, surtout si les taux d'intérêt montent ou si l'activité ralentit.",
+            "Une dette nette négative signifie que l'entreprise détient plus de trésorerie qu'elle n'a de dettes.",
+            "Limite : les seuils varient selon les secteurs. Une société d'autoroutes, aux revenus stables, supporte plus de dette qu'une entreprise dont les ventes fluctuent fortement."
+          ],
+          "exemple": "Une entreprise fictive a emprunté 500 M€ et dispose de 100 M€ de trésorerie. Sa dette nette est de 400 M€. Son EBITDA est de 160 M€. Le ratio vaut 400 ÷ 160 = 2,5 : il lui faudrait deux ans et demi d'EBITDA pour rembourser.",
+          "a_retenir": [
+            "Dette nette = dette brute - trésorerie.",
+            "Le ratio dette nette ÷ EBITDA est jugé modéré sous 2, à surveiller au-delà de 3.",
+            "Le niveau acceptable dépend de la stabilité des revenus."
+          ]
+        },
+        {
+          "id": "free-cash-flow",
+          "titre": "Trésorerie disponible (free cash flow)",
+          "resume": "La trésorerie disponible mesure l'argent réellement dégagé par l'entreprise une fois ses investissements payés.",
+          "paragraphes": [
+            "Le bénéfice est une notion comptable. La trésorerie disponible, ou free cash flow, mesure l'argent réellement entré dans les caisses sur l'année, une fois payés les investissements.",
+            "Elle se calcule ainsi : flux de trésorerie d'exploitation - investissements. Le flux de trésorerie d'exploitation est l'argent encaissé grâce à l'activité. Les investissements, appelés capex, sont les dépenses en usines, machines, logiciels ou magasins.",
+            "C'est avec cet argent que l'entreprise rembourse sa dette, verse des dividendes ou rachète ses propres actions. Une trésorerie disponible positive et proche du bénéfice net sur plusieurs années est plutôt bon signe.",
+            "Un bénéfice élevé accompagné d'une trésorerie disponible faible ou négative plusieurs années de suite est à surveiller. Cela peut venir de clients qui paient de plus en plus tard, ou d'investissements très lourds.",
+            "Limite : une année de gros investissements peut rendre le chiffre négatif sans que ce soit mauvais, si ces investissements rapportent ensuite. Il faut regarder plusieurs années."
+          ],
+          "exemple": "Une entreprise fictive encaisse 90 M€ grâce à son activité et dépense 50 M€ en investissements. Sa trésorerie disponible est de 40 M€. Son bénéfice net est de 37,5 M€ : le bénéfice comptable se retrouve bien en argent réel.",
+          "a_retenir": [
+            "Trésorerie disponible = flux de trésorerie d'exploitation - investissements.",
+            "Elle doit rester proche du bénéfice net sur plusieurs années.",
+            "Une année négative ne suffit pas à conclure."
+          ]
+        },
+        {
+          "id": "dividende",
+          "titre": "Dividende et taux de distribution",
+          "resume": "Le taux de distribution indique quelle part du bénéfice l'entreprise reverse à ses actionnaires.",
+          "paragraphes": [
+            "Le dividende est la part du bénéfice versée aux actionnaires, en général une fois par an. Son montant est voté en assemblée générale.",
+            "Le taux de distribution mesure la part du bénéfice reversée : dividende par action ÷ bénéfice par action × 100. Le reste est conservé pour investir ou réduire la dette.",
+            "Un taux entre 30 % et 60 % laisse en général une marge de sécurité. Au-delà de 100 %, l'entreprise verse plus qu'elle ne gagne : c'est possible une année, pas durablement.",
+            "Une entreprise qui ne verse rien n'est pas forcément en difficulté. Beaucoup d'entreprises en forte croissance réinvestissent tout leur bénéfice.",
+            "Limite : un dividende n'est jamais garanti. Il peut être réduit ou supprimé, comme l'ont fait de nombreuses entreprises européennes en 2020."
+          ],
+          "exemple": "Une entreprise fictive affiche un BPA de 1,50 € et verse 0,60 € par action. Son taux de distribution est de 0,60 ÷ 1,50 × 100 = 40 %. Elle conserve 0,90 € par action pour financer son activité.",
+          "a_retenir": [
+            "Taux de distribution = dividende par action ÷ BPA.",
+            "Un taux supérieur à 100 % n'est pas tenable durablement.",
+            "Un dividende peut être réduit ou supprimé."
+          ],
+          "voir": "/lexique"
+        }
+      ],
+      "quiz": [
+        {
+          "q": "Une entreprise passe de 250 M€ à 275 M€ de chiffre d'affaires en un an. Quelle est sa croissance ?",
+          "options": [
+            "25 %",
+            "10 %",
+            "9,1 %",
+            "27,5 %"
+          ],
+          "bonne": 1,
+          "explication": "(275 ÷ 250 - 1) × 100 = 10 %. Le chiffre de 9,1 % divise la hausse par le nouveau chiffre d'affaires au lieu de l'ancien."
+        },
+        {
+          "q": "Une entreprise réalise 800 M€ de chiffre d'affaires et 720 M€ de coûts d'exploitation. Quelle est sa marge d'exploitation ?",
+          "options": [
+            "90 %",
+            "11,1 %",
+            "8 %",
+            "10 %"
+          ],
+          "bonne": 3,
+          "explication": "Le résultat d'exploitation est de 80 M€, et 80 ÷ 800 × 100 = 10 %. La marge se rapporte toujours au chiffre d'affaires, pas aux coûts."
+        },
+        {
+          "q": "Une entreprise a 600 M€ d'emprunts, 200 M€ de trésorerie et un EBITDA de 200 M€. Que vaut le ratio dette nette ÷ EBITDA ?",
+          "options": [
+            "2",
+            "3",
+            "4",
+            "1"
+          ],
+          "bonne": 0,
+          "explication": "Dette nette = 600 - 200 = 400 M€, et 400 ÷ 200 = 2. Le chiffre de 3 oublie de déduire la trésorerie."
+        },
+        {
+          "q": "Une entreprise affiche 100 M€ de bénéfice net, 120 M€ de flux de trésorerie d'exploitation et 70 M€ d'investissements. Quelle est sa trésorerie disponible ?",
+          "options": [
+            "170 M€",
+            "30 M€",
+            "50 M€",
+            "20 M€"
+          ],
+          "bonne": 2,
+          "explication": "Trésorerie disponible = 120 - 70 = 50 M€. Elle part du flux de trésorerie d'exploitation, pas du bénéfice net."
+        },
+        {
+          "q": "Une entreprise a un BPA de 2 € et verse un dividende de 2,40 € par action. Que peut-on en dire ?",
+          "options": [
+            "Son taux de distribution est de 83 %, un niveau confortable",
+            "Son taux de distribution est de 120 % : elle verse plus qu'elle ne gagne, ce qui n'est pas tenable durablement",
+            "Son rendement du dividende est de 120 %",
+            "Son dividende est sûr, puisqu'il dépasse le bénéfice"
+          ],
+          "bonne": 1,
+          "explication": "2,40 ÷ 2 × 100 = 120 %. L'entreprise puise dans sa trésorerie ou s'endette pour payer ce dividende."
+        },
+        {
+          "q": "Le bénéfice net d'une entreprise double en un an, alors que son résultat d'exploitation est stable. Quelle explication est la plus probable ?",
+          "options": [
+            "Ses ventes ont doublé",
+            "Sa marge d'exploitation a doublé",
+            "Un élément ponctuel, comme la vente d'une filiale, a gonflé le résultat",
+            "Sa dette a doublé"
+          ],
+          "bonne": 2,
+          "explication": "Si le résultat d'exploitation est stable, la hausse vient de ce qui se situe en dessous, souvent un élément exceptionnel. Le résultat d'exploitation reflète mieux l'activité courante."
+        }
+      ]
+    },
+    {
+      "id": "prix",
+      "titre": "Juger le prix",
+      "intro": "Une bonne entreprise n'est pas toujours un bon placement. Cinq leçons pour relier le prix d'une action à ce que l'entreprise gagne. Les entreprises et les chiffres des exemples sont inventés.",
+      "lecons": [
+        {
+          "id": "capitalisation",
+          "titre": "Capitalisation boursière",
+          "resume": "La capitalisation boursière est la valeur totale d'une entreprise en Bourse, égale au cours multiplié par le nombre d'actions.",
+          "paragraphes": [
+            "La capitalisation boursière se calcule ainsi : cours de l'action × nombre d'actions. C'est le prix qu'il faudrait payer pour acheter toutes les actions au cours du jour.",
+            "Le cours seul ne dit pas si une entreprise est grande ou chère. Une action à 500 € peut appartenir à une entreprise plus petite qu'une action à 20 €, si elle compte beaucoup moins d'actions.",
+            "La capitalisation sert à classer les entreprises par taille. On parle souvent de grandes capitalisations au-delà de 10 Md€, mais les seuils varient selon les sources.",
+            "Elle prend son sens comparée aux chiffres de l'entreprise. Une capitalisation de 10 Md€ ne signifie pas la même chose pour 500 M€ de bénéfice que pour 50 M€.",
+            "Limite : la capitalisation ignore la dette. Celui qui rachèterait l'entreprise reprendrait aussi ses dettes, d'où la valeur d'entreprise : capitalisation + dette nette."
+          ],
+          "exemple": "Entreprise fictive A : 2 millions d'actions à 500 €, soit une capitalisation de 1 Md€. Entreprise fictive B : 100 millions d'actions à 20 €, soit 2 Md€. B vaut deux fois plus en Bourse, alors que son action coûte 25 fois moins cher.",
+          "a_retenir": [
+            "Capitalisation = cours × nombre d'actions.",
+            "Le prix d'une action seule ne dit rien de la taille de l'entreprise.",
+            "La valeur d'entreprise ajoute la dette nette à la capitalisation."
+          ]
+        },
+        {
+          "id": "per",
+          "titre": "Le PER",
+          "resume": "Le PER indique combien de fois son bénéfice annuel vous payez une action.",
+          "paragraphes": [
+            "Le PER, pour price earnings ratio, compare le cours au bénéfice : PER = cours ÷ bénéfice par action. On obtient le même résultat avec capitalisation ÷ bénéfice net.",
+            "Un PER de 20 signifie que l'action coûte 20 fois le bénéfice annuel qui lui revient. Autrement dit, chaque euro de bénéfice coûte 20 €.",
+            "Un PER élevé signifie en général que le marché attend une forte hausse des bénéfices. Un PER faible peut signaler une action peu chère, ou une entreprise dont le marché anticipe le déclin.",
+            "Sur les dernières décennies, le PER des grands indices européens a souvent évolué entre 10 et 20. Ce repère sert à situer un chiffre, pas à fixer un seuil.",
+            "Limite : le PER n'a pas de sens si l'entreprise perd de l'argent, et il hérite des défauts du bénéfice net. Vérifiez aussi s'il porte sur le dernier bénéfice publié ou sur un bénéfice prévu, qui n'est qu'une estimation."
+          ],
+          "exemple": "Une entreprise fictive cote 30 € et son BPA est de 1,50 €. Son PER est de 30 ÷ 1,50 = 20. Si son bénéfice double et que le cours ne bouge pas, le PER tombe à 10 : le prix est le même, mais chaque euro de bénéfice coûte deux fois moins.",
+          "a_retenir": [
+            "PER = cours ÷ bénéfice par action.",
+            "Un PER élevé traduit de fortes attentes de croissance.",
+            "Le PER n'a pas de sens pour une entreprise en perte."
+          ],
+          "voir": "/lexique"
+        },
+        {
+          "id": "rendement-dividende",
+          "titre": "Rendement du dividende",
+          "resume": "Le rendement du dividende indique ce que rapporte le dividende pour 100 € investis au cours actuel.",
+          "paragraphes": [
+            "Le rendement du dividende se calcule ainsi : dividende annuel par action ÷ cours × 100.",
+            "Il évolue à l'inverse du cours. Si le cours baisse et que le dividende reste identique, le rendement monte.",
+            "Pour les grandes entreprises européennes, un rendement de 2 % à 5 % est courant. Un rendement très élevé, au-delà de 7 % ou 8 %, signale souvent que le marché doute du maintien du dividende.",
+            "Le rendement se lit avec le taux de distribution. Un rendement élevé financé par un taux de distribution supérieur à 100 % a peu de chances de durer.",
+            "Limite : le dividende n'est qu'une partie du gain. Une action à fort rendement dont le cours baisse peut rapporter moins au total qu'une action sans dividende dont le cours monte."
+          ],
+          "exemple": "Une action fictive cote 30 € et verse 0,60 € par an : son rendement est de 2 %. Si le cours tombe à 15 €, le même dividende donne un rendement de 4 %. Le chiffre a doublé parce que le cours a été divisé par deux, pas parce que l'entreprise verse davantage.",
+          "a_retenir": [
+            "Rendement du dividende = dividende ÷ cours.",
+            "Un rendement qui monte peut simplement refléter un cours qui baisse.",
+            "Un rendement très élevé doit faire vérifier le taux de distribution."
+          ]
+        },
+        {
+          "id": "comparer",
+          "titre": "Comparer avec les concurrents et le passé",
+          "resume": "Un indicateur prend son sens comparé à des entreprises du même secteur et à l'historique de l'entreprise elle-même.",
+          "paragraphes": [
+            "Un indicateur isolé dit peu de chose. Un PER de 25 peut être bas pour un éditeur de logiciels et élevé pour un constructeur automobile.",
+            "La première comparaison se fait avec des concurrents du même secteur et de taille proche. Leurs modèles économiques se ressemblent, donc leurs marges, leurs dettes et leurs PER sont comparables.",
+            "La seconde se fait avec le passé de l'entreprise. Un PER de 15 pour une entreprise qui a coté en moyenne 22 fois ses bénéfices sur dix ans pose une question : le marché voit-il un problème nouveau, ou l'action est-elle moins chère que d'habitude ?",
+            "Les chiffres comparés doivent être calculés de la même façon : même année, même type de bénéfice, même devise.",
+            "Limite : la moyenne passée n'est pas une règle. Si l'entreprise a changé, par exemple si sa croissance a ralenti, son ancien niveau de PER peut ne plus être justifié."
+          ],
+          "exemple": "Trois entreprises fictives du même secteur. A a un PER de 12 et une marge d'exploitation de 8 %. B a un PER de 18 et une marge de 14 %. C a un PER de 30 et une marge de 9 %. B est plus chère que A, mais nettement plus rentable. C est la plus chère sans être plus rentable : il faut chercher ce qui justifie cet écart, par exemple une croissance plus forte.",
+          "a_retenir": [
+            "On compare des entreprises du même secteur.",
+            "On compare aussi l'entreprise avec sa propre moyenne sur plusieurs années.",
+            "Un écart important appelle une explication, pas une conclusion immédiate."
+          ],
+          "voir": "/comparer"
+        },
+        {
+          "id": "prix-et-qualite",
+          "titre": "Bonne entreprise, mauvais prix",
+          "resume": "Le résultat d'un placement dépend autant du prix payé au départ que de la qualité de l'entreprise.",
+          "paragraphes": [
+            "Le gain d'un actionnaire dépend de deux éléments : l'évolution des bénéfices de l'entreprise et le prix payé au départ. Une excellente entreprise achetée trop cher peut rapporter peu pendant des années.",
+            "Un PER élevé suppose une forte croissance future. Si cette croissance arrive moins vite que prévu, le PER a tendance à baisser, et le cours avec lui, même si les bénéfices progressent.",
+            "À l'inverse, une entreprise ordinaire achetée à un prix bas peut bien rapporter, si ses résultats se révèlent meilleurs que ce que le marché craignait.",
+            "Un prix bas n'est pas une garantie pour autant. Une action peu chère peut le rester, ou baisser encore, si ses bénéfices continuent de reculer.",
+            "Juger le prix revient donc à comparer ce que le marché anticipe, lisible dans le PER, avec ce que l'entreprise a des chances de réaliser."
+          ],
+          "exemple": "Une entreprise fictive cote 100 € pour un BPA de 2 €, soit un PER de 50. Son bénéfice progresse de 10 % par an et atteint environ 3,22 € au bout de 5 ans. Si le marché ne lui accorde plus qu'un PER de 25, le cours vaut environ 80 €. Le bénéfice a progressé de 61 %, et l'action a perdu 20 %.",
+          "a_retenir": [
+            "Le prix payé pèse autant que la qualité de l'entreprise.",
+            "Un PER élevé peut baisser même si les bénéfices montent.",
+            "Un prix bas ne protège pas d'un déclin de l'entreprise."
+          ],
+          "voir": "/comparer"
+        }
+      ],
+      "quiz": [
+        {
+          "q": "Une entreprise compte 40 millions d'actions qui cotent 25 €. Quelle est sa capitalisation boursière ?",
+          "options": [
+            "100 M€",
+            "1 Md€",
+            "10 Md€",
+            "1,6 Md€"
+          ],
+          "bonne": 1,
+          "explication": "40 000 000 × 25 = 1 000 000 000 €, soit 1 Md€."
+        },
+        {
+          "q": "Une action cote 45 € et le bénéfice par action est de 3 €. Quel est son PER ?",
+          "options": [
+            "15",
+            "135",
+            "6,7",
+            "42"
+          ],
+          "bonne": 0,
+          "explication": "PER = 45 ÷ 3 = 15. Vous payez 15 € pour chaque euro de bénéfice annuel."
+        },
+        {
+          "q": "Une action cote 40 € et verse 1,20 € de dividende. Le cours tombe à 30 €, le dividende ne change pas. Quel est le nouveau rendement ?",
+          "options": [
+            "3 %",
+            "25 %",
+            "1,2 %",
+            "4 %"
+          ],
+          "bonne": 3,
+          "explication": "1,20 ÷ 30 × 100 = 4 %. Le rendement est passé de 3 % à 4 % uniquement parce que le cours a baissé."
+        },
+        {
+          "q": "L'entreprise A a un PER de 28. Ses concurrents ont un PER moyen de 16. Sur dix ans, le PER moyen de A est de 27. Quelle lecture est la plus juste ?",
+          "options": [
+            "A est bon marché, puisque son PER est proche de sa moyenne",
+            "A est chère par rapport à ses concurrents mais conforme à ses habitudes : le marché lui prête depuis longtemps une croissance ou une rentabilité supérieure, à vérifier dans ses comptes",
+            "A est surévaluée et son cours va baisser",
+            "A est moins chère que ses concurrents"
+          ],
+          "bonne": 1,
+          "explication": "Les deux comparaisons donnent des réponses différentes. Il faut alors chercher dans la croissance et les marges de A ce qui justifie ou non cet écart durable."
+        },
+        {
+          "q": "Vous achetez une action à un PER de 40. Quelques années plus tard, le bénéfice par action a augmenté de 50 % mais le PER est redescendu à 20. Qu'est devenu le cours ?",
+          "options": [
+            "Il a augmenté de 50 %",
+            "Il est inchangé",
+            "Il a baissé de 50 %",
+            "Il a baissé de 25 %"
+          ],
+          "bonne": 3,
+          "explication": "Cours = PER × BPA. Au départ 40 × 1 = 40, à l'arrivée 20 × 1,5 = 30, soit une baisse de 25 % malgré des bénéfices en hausse."
+        },
+        {
+          "q": "L'action A a un PER de 6 et des bénéfices en baisse depuis quatre ans. L'action B a un PER de 22 et des bénéfices en hausse régulière. Quelle affirmation est exacte ?",
+          "options": [
+            "A est une meilleure affaire, car elle est moins chère",
+            "B est une meilleure affaire, car l'entreprise est meilleure",
+            "On ne peut pas conclure sans comparer le prix payé avec l'évolution probable des bénéfices de chacune",
+            "Le PER ne sert à rien quand les bénéfices varient"
+          ],
+          "bonne": 2,
+          "explication": "Un PER bas peut refléter un déclin attendu, un PER élevé une croissance déjà payée. Seule la comparaison entre prix et perspectives permet de juger."
+        }
+      ]
+    }
+  ]
+}

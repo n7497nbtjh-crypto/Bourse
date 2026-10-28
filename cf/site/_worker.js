@@ -174,6 +174,51 @@ async function presse(request, index) {
   return cache && status === 200 && await cache.put(key, res.clone()), res;
 }
 
+// data/cours_config.mjs
+var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv";
+function parseCours(txt) {
+  let rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g, row = [], m;
+  for (; (m = re.exec(txt)) && m[0] !== ""; ) {
+    let v = m[1];
+    v.startsWith('"') && (v = v.slice(1, -1).replace(/""/g, '"')), row.push(v), m[3] !== "," && (rows.push(row), row = []);
+  }
+  let head = rows.shift() || [], col = (k) => head.indexOf(k), out = {}, num = (v) => {
+    let x = parseFloat(String(v).replace(/[^0-9.eE+-]/g, ""));
+    return isFinite(x) ? x : null;
+  };
+  for (let r of rows) {
+    let id = r[col("id")];
+    if (!id || !r[col("sym")]) continue;
+    let cur = r[col("cur")] || null, p = num(r[col("price")]), k = 1;
+    cur === "GBX" && (cur = "GBP", k = 0.01);
+    let o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num(r[col("chg")]), cap: num(r[col("cap")]) };
+    for (let f of ["h52", "l52", "p1y", "p3y", "p5y"]) {
+      let x = num(r[col(f)]);
+      o[f] = x != null ? x * k : null;
+    }
+    o.p != null && (out[id] = o);
+  }
+  return out;
+}
+
+// cf/src/cours.mjs
+async function cours(request, ctx) {
+  let cache = caches.default, key = new Request(new URL("/api/cours", request.url).toString()), hit = await cache.match(key);
+  if (hit) return hit;
+  let body;
+  try {
+    let r = await fetch(COURS_CSV, { cf: { cacheTtl: 300 } });
+    if (!r.ok) throw new Error("feuille " + r.status);
+    let items = parseCours(await r.text());
+    if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
+    body = JSON.stringify({ updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items });
+  } catch (e) {
+    return Response.json({ error: String(e.message || e) }, { status: 503 });
+  }
+  let res = new Response(body, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=600" } });
+  return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
+}
+
 // cf/src/worker.mjs
 var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path) {
@@ -187,14 +232,15 @@ function meta(path) {
     let t = TOOLS[m[1] || "epargne"] || TOOLS.epargne;
     return t ? { title: `${t} \xB7 ${SITE}`, desc: "Simulez l'\xE9volution d'un placement, avec les hypoth\xE8ses affich\xE9es. Outil p\xE9dagogique, sans conseil." } : null;
   }
-  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/dividendes" ? { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." } : p.startsWith("/debuter") ? { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 var worker_default = {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     let url = new URL(request.url);
     if (url.pathname === "/api/amf") return amf(request, index_gen_default.filter((c) => c.region === "FR").map((c) => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, index_gen_default);
+    if (url.pathname === "/api/cours") return cours(request, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     let info = meta(url.pathname);
     if (!info) {

@@ -105,7 +105,7 @@ export async function collectSec(fetchFn, c) {
 const words = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !["the", "group", "groupe", "holding", "societe", "company", "spa", "plc"].includes(w));
 export function nameMatches(name, legal) { const a = new Set(words(name)); return !legal || words(legal).some(w => a.has(w)) || words(name).some(w => String(legal).toLowerCase().replace(/[^a-z0-9]/g, "").includes(w)); }
 export const VERIF = [];
-export const VERSION = 2; // à augmenter quand la lecture des comptes change : force une nouvelle lecture
+export const VERSION = 3; // à augmenter quand la lecture des comptes change : force une nouvelle lecture
 
 
 export async function collectOne(fetchFn, c) {

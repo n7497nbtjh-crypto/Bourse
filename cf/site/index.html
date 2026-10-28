@@ -643,18 +643,6 @@ h1,h2,h3,.pagetitle,.hero2 h1,.qhead h1,.ph h2,.dayh .nm,.carte h3,.step h3,.sec
 table.t td{font-variant-numeric:tabular-nums}
 .lnk,.ph a,.src a,a.more{color:var(--ink);text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
 .lnk:hover,.ph a:hover,a.more:hover{text-decoration-color:var(--ink)}
-/* barre du haut : tableau de bord sombre */
-.bar{background:var(--night);color:#fff;border-bottom:0}
-.logo{font-family:var(--serif);font-weight:900;font-size:24px;letter-spacing:-.03em}
-.logo i{color:var(--lime);font-style:normal}
-.logo span{font-family:var(--sans);color:#9BA3AE;font-weight:400}
-.search input{background:var(--night2);color:#fff;border:1px solid var(--nrule);border-radius:10px}
-.search input::placeholder{color:#8B94A0}
-.search input:focus{background:#fff;color:var(--ink)}
-nav.main a{color:#C2C8D0}
-nav.main a:hover,nav.main a.on{color:#fff}
-nav.main a.on{border-bottom-color:var(--lime)}
-.mbtn{color:#fff}.mpanel{background:var(--night)}.mpanel a{color:#E6E9ED;border-bottom-color:var(--nrule)}
 /* panneaux : papier, filet d'encre */
 .panel{border:1.5px solid var(--ink);border-radius:14px;box-shadow:none}
 .ph{border-bottom:1.5px solid var(--ink)}
@@ -666,20 +654,6 @@ table.t.click tbody tr:hover td{background:var(--hl)}
 .tag,.pills > span{border-radius:6px}
 .hbb span{background:var(--ink)}
 .hbr.hl .hbb span{background:var(--g)}
-/* accueil : bandeau sombre */
-.hero2{background:var(--night);color:#fff;border-radius:18px;padding:34px 34px 36px;margin-top:6px}
-.hero2 h1{font-size:40px;line-height:1.05;font-weight:900}
-.hero2 h1 em{font-style:normal;color:var(--lime)}
-.hero2 p{color:#B7BFC9}
-.hero2 .search.big input{background:#fff;color:var(--ink);border:0}
-/* « Ce qu'il faut retenir » : panneau tableau de bord */
-#retenir{background:var(--night);color:#E8EAED;border-color:var(--night)}
-#retenir .ph{border-bottom-color:var(--nrule)} #retenir .ph h2{color:#fff}
-#retenir .ret-f{border-right-color:var(--nrule)}
-#retenir .ret-f h3{color:var(--lime)} #retenir .ret-v h3{color:var(--amber)}
-#retenir .ret-f h3 i{background:var(--lime)} #retenir .ret-v h3 i{background:var(--amber)}
-#retenir .muted,#retenir .src{color:#9BA3AE} #retenir .src{border-top-color:var(--nrule)}
-#retenir li::marker{color:#6B7380}
 .vd-fort{color:var(--g)} .vd-vig{color:#B23A1E}
 .carte{background:var(--page);border:1px solid var(--rule)}
 .carte .n{background:var(--lime);color:var(--ink);font-family:var(--mono)}
@@ -703,6 +677,85 @@ table.env td{min-width:220px;font-size:13.5px;line-height:1.5}
 .chipx{background:var(--ink);color:#fff}.chip:hover{background:var(--hl)}
 #cmps{position:absolute;left:0;right:0;top:100%;z-index:20}
 .herolinks{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:16px!important}.herolinks a{color:#fff;text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:2px;text-underline-offset:4px;font-weight:500}
+
+/* ================= Refonte « bilan. » v2 : clair, éditorial ================= */
+:root{--card:#FFFFFF;--line:#E6E0D4;--line2:#EFEAE0;--shadow:0 1px 2px rgba(17,18,20,.04),0 6px 24px -12px rgba(17,18,20,.10)}
+body{background:var(--page)}
+.bar{background:var(--page);color:var(--ink);border-bottom:1.5px solid var(--ink)}
+.logo{color:var(--ink)} .logo i{color:var(--g);font-style:normal} .logo span{color:var(--grey);font-family:var(--sans)}
+.search input{background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:10px}
+.search input::placeholder{color:var(--light)} .search svg{stroke:var(--light)}
+nav.main a{color:var(--grey)} nav.main a:hover,nav.main a.on{color:var(--ink)} nav.main a.on{border-bottom-color:var(--ink)}
+.mbtn{color:var(--ink)} .mpanel{background:var(--page);border-top:1px solid var(--line)} .mpanel a{color:var(--ink);border-bottom-color:var(--line2)}
+/* cartes : fond blanc, filet léger, titre de section éditorial */
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);overflow:hidden}
+.ph{border-bottom:0;padding:18px 22px 6px;align-items:baseline}
+.ph h2{font-size:19px;font-weight:800}
+.ph a{font-size:13px}
+.pb{padding:12px 22px 18px}
+.src{border-top:1px solid var(--line2);padding:10px 22px;background:#FCFBF8}
+.kick{font-family:var(--mono);font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--light);margin:0 0 2px}
+table.t th{border-bottom:1px solid var(--line);font-size:10.5px}
+table.t td{border-bottom:1px solid var(--line2)}
+details.acc{border-bottom:1px solid var(--line2)}
+details.acc > summary{padding:14px 22px}
+.trois{padding:6px 22px 18px}
+.carte{background:#FBF9F4;border:1px solid var(--line2)}
+.ident > div{padding:10px 22px}
+/* accueil clair */
+.hero2{background:none;color:var(--ink);border-radius:0;padding:28px 0 26px;border-bottom:1.5px solid var(--ink);margin-bottom:22px}
+.hero2 h1{font-size:44px;line-height:1.04;font-weight:900;letter-spacing:-.025em}
+.hero2 h1 em{font-style:normal;background:linear-gradient(transparent 62%,var(--lime) 62%,var(--lime) 92%,transparent 92%)}
+.hero2 p{color:var(--grey)}
+.herolinks a{color:var(--ink)!important}
+.hero2 .search.big input{border:1.5px solid var(--ink);background:#fff}
+/* l'essentiel */
+.ess{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:0}
+.ess-l{padding:20px 22px;border-right:1px solid var(--line2)}
+.ess-r{padding:20px 22px;background:#FCFBF8}
+.ess ul.facts{list-style:none;margin:0;padding:0}
+.ess ul.facts li{display:grid;grid-template-columns:120px 1fr;gap:14px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:14.5px;line-height:1.45}
+.ess ul.facts li:last-child{border-bottom:0}
+.ess ul.facts b.k{font-family:var(--mono);font-size:15px;font-weight:600;white-space:nowrap}
+.ess .lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--light);display:block}
+/* points forts / vigilance : clair */
+#retenir .ret > div{padding:18px 22px}
+.ret-f{border-right:1px solid var(--line2)}
+.ret h3{font-family:var(--serif);font-size:17px}
+.ret-f h3{color:var(--g)} .ret-v h3{color:#B23A1E}
+.ret li{margin:7px 0}
+/* prix */
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2)}
+.tile{padding:14px 22px;border-right:1px solid var(--line2)}
+.tile:last-child{border-right:0}
+.tile .v{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-.02em;display:block;margin:2px 0}
+.tile small{color:var(--grey);font-size:12.5px;line-height:1.35;display:block}
+.range{position:relative;height:6px;background:var(--line2);border-radius:99px;margin:22px 0 6px}
+.range i{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;background:var(--ink);border:3px solid #fff;box-shadow:0 0 0 1px var(--ink);transform:translateX(-50%)}
+.range-l{display:flex;justify-content:space-between;font-size:12px;color:var(--grey)}
+.pxhead{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:right}
+.pxhead .p{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em}
+.pxhead .d{font-size:12px;color:var(--light)}
+/* graphiques */
+.chart2{position:relative}
+.chart2 svg{width:100%;height:auto;display:block;overflow:visible}
+.chart2 .lg2{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:12.5px;color:var(--grey);margin:0 0 8px}
+.chart2 .lg2 i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.chart2 .lg2 i.ln{height:2px;border-radius:2px;vertical-align:3px;width:16px}
+.ctip{position:fixed;z-index:80;pointer-events:none;background:#fff;border:1px solid var(--line);box-shadow:0 8px 24px rgba(0,0,0,.12);border-radius:10px;padding:8px 10px;font-size:12.5px;min-width:120px;display:none}
+.ctip b{font-family:var(--mono);font-size:14px}
+.ctip .r{display:flex;align-items:center;gap:8px;justify-content:space-between;margin-top:3px}
+.ctip .r span{display:flex;align-items:center;gap:6px;color:var(--grey)}
+.ctip .r span i{display:inline-block;width:12px;height:2px;border-radius:2px}
+.ctip .h{font-weight:600;margin-bottom:2px}
+[data-tip]{cursor:default}
+.synth{background:#FCFBF8;border-top:1px solid var(--line2);padding:14px 22px;font-size:14.5px;line-height:1.55}
+.synth p{margin:0 0 6px}
+@media (max-width:760px){.ess{grid-template-columns:1fr}.ess-l{border-right:0;border-bottom:1px solid var(--line2)}.ess ul.facts li{grid-template-columns:96px 1fr}.hero2 h1{font-size:31px}.tile{border-right:0;border-bottom:1px solid var(--line2)}.ph,.pb,.src,details.acc > summary,.synth{padding-left:16px;padding-right:16px}}
+.qopts{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.qopt{text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14.5px;cursor:pointer}
+.qopt:hover:not([disabled]){border-color:var(--ink)}
+.qopt.ok{border-color:var(--g);background:#EAF5EF}.qopt.ko{border-color:var(--o);background:#FBEDE8}
 </style>
 </head>
 <body>
@@ -723,11 +776,11 @@ table.env td{min-width:220px;font-size:13.5px;line-height:1.5}
         <a href="/communaute" data-nav="com">Communauté</a>
         <a href="/simulateurs" data-nav="sim">Outils</a>
         <a href="/portefeuille" data-nav="pf">Portefeuille</a>
-        <a href="/lexique" data-nav="lex">Lexique</a>
+        <a href="/debuter" data-nav="lex">Apprendre</a>
       </nav>
       <div class="mright m-only"><button class="mbtn" id="searchBtn" aria-expanded="false">Chercher</button><button class="mbtn" id="menuBtn" aria-expanded="false">Menu</button></div>
     </div>
-    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/actualites">Actualité</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/simulateurs">Simulateurs</a><a href="/portefeuille">Portefeuille</a><a href="/lexique">Lexique</a></div>
+    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/actualites">Actualité</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/simulateurs">Simulateurs</a><a href="/portefeuille">Portefeuille</a><a href="/debuter">Apprendre : premiers pas</a><a href="/lexique">Lexique</a><a href="/dividendes">Calendrier des dividendes</a></div>
     <div class="msearch" id="msearch">
       <div class="search" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1209,25 +1262,6 @@ const LEGEND = `<div class="dleg"><span class="f"><i></i>Points forts</span><spa
 /* ---------- Petits graphiques (SVG et barres HTML) ---------- */
 const PAL = ["#111214", "#0E6B4A", "#D94F2B", "#8FB51E", "#C2410C", "#0E7490", "#8A6D1E", "#B42318", "#5B4FC4", "#5F5B55"];
 // Barres verticales par année, avec ligne de repère facultative (médiane du secteur)
-function barsSVG({ labels, values, fmt, ref = null, refLabel = "", h = 220 }) {
-  // Les années de début sans chiffre (ex. la croissance de la première année) ne sont pas affichées
-  let k = 0; while (k < values.length - 1 && !okn(values[k])) k++;
-  labels = labels.slice(k); values = values.slice(k);
-  const n = labels.length, W = Math.max(320, n * 120), H = h, pl = 6, pr = 6, pt = 26, pb = 28;
-  const vals = values.map(v => okn(v) ? v : null), all = vals.filter(v => v != null).concat(ref != null ? [ref] : []);
-  if (!all.length) return `<div class="empty">Pas de chiffres disponibles.</div>`;
-  const max = Math.max(0, ...all), min = Math.min(0, ...all), span = max - min || 1;
-  const Y = v => pt + (H - pt - pb) * (max - v) / span, bw = Math.min(72, (W - pl - pr) / n * 0.56);
-  const X = i => pl + (W - pl - pr) * (i + 0.5) / n;
-  let s = `<line x1="${pl}" x2="${W - pr}" y1="${Y(0)}" y2="${Y(0)}" stroke="#D9D5CE"/>`;
-  if (ref != null) s += `<line x1="${pl}" x2="${W - pr}" y1="${Y(ref)}" y2="${Y(ref)}" stroke="#141414" stroke-dasharray="5 4" opacity=".45"/>`;
-  vals.forEach((v, i) => {
-    if (v == null) { s += `<text x="${X(i)}" y="${Y(0) - 6}" text-anchor="middle" font-size="12" fill="#8A857D">non publié</text>`; }
-    else { const y0 = Y(Math.max(0, v)), y1 = Y(Math.min(0, v)); s += `<rect x="${X(i) - bw / 2}" y="${y0}" width="${bw}" height="${Math.max(1.5, y1 - y0)}" rx="4" fill="${v < 0 ? "#D94F2B" : i === n - 1 ? "#111214" : "#CFC7B6"}"/><text x="${X(i)}" y="${v < 0 ? Math.min(H - pb - 2, y1 + 15) : Math.max(14, y0 - 7)}" text-anchor="middle" font-size="13" font-weight="600" fill="#141414">${esc(fmt(v))}</text>`; }
-    s += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12.5" fill="#5F5B55">${esc(labels[i])}</text>`;
-  });
-  return `<svg class="bars" viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Graphique">${s}</svg>${ref != null ? `<div class="barleg"><i></i>${esc(refLabel)} : ${esc(fmt(ref))}</div>` : ""}`;
-}
 // Barres horizontales : une ligne par élément (classements, comparaisons, répartitions)
 function hbars(rows, fmt, { pctOfMax = true } = {}) {
   const max = Math.max(...rows.map(r => Math.abs(r.v)).filter(okn), 1e-9);
@@ -1282,12 +1316,25 @@ function peersHTML(s, k) { // comparaison avec les entreprises du même secteur
     ${rank ? `<p class="lead" style="margin-bottom:10px">${esc(s.name)} est ${rank === 1 ? "en tête" : `${rank}e sur ${list.length}`} sur ce repère${d.metric === "nm" ? " (bénéfice pour 100 € de ventes)" : d.metric === "conv" ? " (argent disponible pour 100 € de bénéfice)" : ""}.</p>` : ""}
     ${hbars(shown.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}/comprendre/${k}`, hl: x.c.id === s.id })), d.metric === "nm" || d.metric === "conv" ? (v => pct(v, 0, false)) : fmt)}</div></section>`;
 }
+
+function serieChart(s, c, k, h = 220) { // l'évolution d'un critère, avec la médiane du secteur quand elle a un sens
+  const d = CT[k], vals = d.serie(c), med = MED[s.sector] || {}, cur = c.currency;
+  if (d.money) {
+    const extra = k === "fcf" ? [{ name: "Bénéfice net", values: c.years.map((_, i) => at(c, "net", i)), color: SAND }] : [];
+    const main = { name: k === "fcf" ? "Trésorerie disponible" : d.short, values: vals, color: INK };
+    if (k === "fcf" && !vals.some(okn)) { const cfo = c.years.map((_, i) => at(c, "cfo", i)); return cfo.some(okn) ? colChart({ labels: c.years.map(String), series: [{ name: "Argent encaissé grâce à l'activité", values: cfo }], fmt: v => big(v, cur), tickFmt: compact(cur), h, note: `${esc(s.name)} ne publie pas ses investissements sous une forme lisible automatiquement : le graphique montre l'argent encaissé grâce à l'activité, avant investissements.` }) : `<p class="muted" style="margin:0">Chiffre non publié sous une forme lisible automatiquement.</p>`; }
+    return colChart({ labels: c.years.map(String), series: [main, ...extra], fmt: v => big(v, cur), tickFmt: compact(cur), h });
+  }
+  const ref = med.n >= 3 && med[d.metric] != null ? med[d.metric] : null;
+  if (!vals.some(okn)) return `<p class="muted" style="margin:0">Chiffre non publié sous une forme lisible automatiquement par ${esc(s.name)}.</p>`;
+  return colChart({ labels: c.years.map(String), series: [{ name: d.short, values: vals }], fmt: d.fmt, tickFmt: k === "dette" ? (v => F1.format(v)) : pctTick, ref, refLabel: "Médiane du secteur", h });
+}
 function serieHTML(s, c, k) {
   const d = CT[k]; if (!d.serie) return "";
   const vals = d.serie(c), med = MED[s.sector] || {};
   const fmt = d.money ? (v => big(v, c.currency)) : d.fmt;
   const ref = !d.money && med.n >= 3 && med[d.metric] != null ? med[d.metric] : null;
-  return `<section class="panel"><div class="ph"><h2>${esc(d.short)} de ${c.years[Math.max(0, vals.findIndex(okn))]} à ${c.years.at(-1)}</h2></div><div class="pb">${barsSVG({ labels: c.years.map(String), values: vals, fmt, ref, refLabel: "Médiane du secteur" })}</div></section>`;
+  return `<section class="panel"><div class="ph"><h2>${esc(d.short)} de ${c.years[Math.max(0, vals.findIndex(okn))]} à ${c.years.at(-1)}</h2></div><div class="pb">${serieChart(s, c, k, 240)}</div></section>`;
 }
 function argentHTML(s, c) {
   const segs = c && c.segments || {}, f = c ? figuresOf(c) : null, cur = c ? c.currency : "EUR";
@@ -1333,22 +1380,21 @@ async function pageComprendre(id, k) {
   const d = CT[k];
   setNav("ent"); setTitle(`${s.name} : ${d.short.toLowerCase()}`);
   let c = null; if (!s.missing) { try { c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); } catch (e) { } }
+  await PXP;
   if (location.pathname.split("/")[2] !== id) return;
   const f = c ? figuresOf(c) : null, item = f && d.term ? lecture(s, f).find(i => TERM2CT[i.term] === k) : null;
   const nav = `<nav class="ctnav">${CT_ORDER.map(x => `<a href="/entreprise/${s.id}/comprendre/${x}" class="${x === k ? "on" : ""}">${CT[x].short}</a>`).join("")}</nav>`;
   let body = "";
   if (k === "argent") body = argentHTML(s, c);
   else if (k === "varier") body = varierHTML(s, c);
-  else if (k === "prix") body = c ? prixHTML(s, c) + `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Le prix d'une action ne dit rien seul : il faut le comparer à ce que l'entreprise gagne. Le PER fait cette comparaison. Un PER de 20 veut dire que l'action coûte 20 fois le bénéfice annuel par action.</p></div></section>` : "";
+  else if (k === "prix") body = c ? prixHTML(s, c) + `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Le prix d'une action ne dit rien seul : il faut le comparer à ce que l'entreprise gagne. Le PER fait cette comparaison. Un PER de 20 veut dire que l'entreprise coûte en Bourse 20 fois son bénéfice annuel.</p></div></section>` : "";
   else if (!c) body = `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`;
   else body = `${item ? `<section class="panel"><div class="pb"><div class="lvv"><span class="num big">${item.value}</span>${lvTag(item.lv)}</div><p class="lead">${item.text}</p>${calcHTML(k, s, f)}</div></section>` : `<section class="panel"><div class="pb muted">Ce repère ne peut pas être calculé avec les chiffres publiés par ${esc(s.name)}.</div></section>`}
     ${serieHTML(s, c, k)}${peersHTML(s, k)}
     <section class="panel"><div class="ph"><h2>Comment lire ce chiffre</h2></div><div class="pb">${ALL[d.term] ? `<p>${esc(ALL[d.term].what)}</p>${ALL[d.term].ex ? `<p class="muted">Exemple simple : ${esc(ALL[d.term].ex)}</p>` : ""}` : ""}${RULES[d.term] ? `<p><b>Bon ou moins bon ?</b> ${esc(RULES[d.term])}</p>` : ""}${ALL[d.term] && ALL[d.term].limit ? `<p class="muted">Limite : ${esc(ALL[d.term].limit)}</p>` : ""}${WITH[d.term] ? `<p>À lire avec : ${WITH[d.term].map(w => TERM2CT[w] ? `<a class="lnk" href="/entreprise/${s.id}/comprendre/${TERM2CT[w]}">${esc(ALL[w].name)}</a>` : esc(ALL[w].name)).join(", ")}</p>` : ""}</div></section>`;
-  app.innerHTML = `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a> › Comprendre</div>
-    <div class="cthead">${logo(s, 44)}<div><h1 class="pagetitle" style="margin:0">${esc(d.t)}</h1><div class="muted">${esc(s.name)}${f ? ` · exercice ${f.year}` : ""}</div></div></div>
-    ${nav}<div class="ctbody">${body}</div>
+  app.innerHTML = companyHeader(s, "comprendre", false) + `<p style="margin:-4px 0 12px"><a class="more" href="/entreprise/${s.id}">← Retour à la vue d'ensemble de ${esc(s.name)}</a></p>
+    ${nav}<h2 class="pagetitle" style="font-size:24px;margin:14px 0 4px">${esc(d.t)}</h2><p class="pagesub">${esc(s.name)}${f ? ` · exercice ${f.year}` : ""}</p><div class="ctbody">${body}</div>
     <p class="note">Explications tirées des comptes publiés. Elles décrivent ; elles ne recommandent pas.</p>`;
-  if (k === "prix" && c) prixRun(s, c);
 }
 
 /* ---------- ETF ---------- */
@@ -1609,7 +1655,7 @@ function erankHTML() {
 function rankHTML() {
   const [, , sub, fn, fmt, ct] = RANKS.find(r => r[0] === rankState.k);
   const rows = R.companies.filter(c => !c.missing && (rankState.region === "all" || c.region === rankState.region) && (c.ca == null || caEur(c) > 500)).map(c => ({ c, v: fn(c) })).filter(x => okn(x.v)).sort((a, b) => b.v - a.v).slice(0, 10);
-  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}/comprendre/${ct}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
+  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}?voir=${ct}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
 }
 function dayPick() { const l = R.companies.filter(c => !c.missing && c.fiche && c.ca > 2000); if (!l.length) return null; const d = Math.floor(Date.now() / 864e5); return l[(d * 7919) % l.length]; }
 function pageHome() {
@@ -1713,7 +1759,19 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- Fiche entreprise ---------- */
-const CTABS = [["", "Vue d'ensemble"], ["comprendre", "Approfondir"], ["comptes", "Tous les chiffres"], ["actualite", "Actualités"], ["communaute", "Discussion"]];
+const CTABS = [["", "Vue d'ensemble"], ["comprendre", "Critère par critère"], ["comptes", "Tous les chiffres"], ["actualite", "Actualités"], ["communaute", "Discussion"]];
+function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
+  return `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a></div>
+    <div class="panel" style="margin-bottom:16px">
+      <div class="qhead">
+        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${favBtn("c:" + s.id)}<a class="favbtn" style="text-decoration:none" href="/comparer?ids=${[s, ...peersOf(s, 3).list].map(c => c.id).join(",")}">Comparer à ses concurrents</a></div></div></div>
+        <div class="px" id="pxh">${priceHead(s)}</div>
+      </div>
+      ${chart ? `<div class="tv tv-chart tv-top" id="tvchart"></div>` : ""}
+      <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k === "comprendre" ? "/comprendre/croissance" : k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
+    </div>`;
+}
 async function pageCompany(id, tab) {
   const s = RBY[id];
   if (!s) return pageNotFound();
@@ -1721,24 +1779,13 @@ async function pageCompany(id, tab) {
   if (tab === "agenda") tab = "actualite";
   tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
   setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
-  app.innerHTML = `
-    <div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?region=${s.region}">${esc(regName(s))}</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a></div>
-    <div class="panel" style="margin-bottom:16px">
-      <div class="qhead">
-        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div>${favBtn("c:" + s.id)}</div></div>
-        <div class="px tv" id="tvinfo"></div>
-      </div>
-      <div class="tv tv-chart tv-top" id="tvchart"></div>
-      <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k === "comprendre" ? "/comprendre/argent" : k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
-    </div>
-    <div id="ctab"><div class="empty">Chargement…</div></div>`;
-  tv($("#tvinfo"), "single-quote", { symbol: s.tv, width: "100%" });
+  app.innerHTML = companyHeader(s, tab) + `<div id="ctab"><div class="empty">Chargement…</div></div>`;
   tvChart($("#tvchart"), s.tv, s.name);
   let c = null;
-  if (!s.missing) {
-    try { c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); } catch (e) { c = null; }
-  }
+  const load = s.missing ? Promise.resolve(null) : (FULL[id] ? Promise.resolve(FULL[id]) : fetch(`/data/societes/${id}.json`).then(r => r.json()).then(j => FULL[id] = j).catch(() => null));
+  [c] = await Promise.all([load, PXP]);
   if (location.pathname.split("/")[2] !== id) return; // l'utilisateur a changé de page entre-temps
+  const ph = $("#pxh"); if (ph) ph.innerHTML = priceHead(s);
   ({ "": tabBref, comptes: tabComptes, actualite: tabActu, communaute: tabCommu })[tab](s, c, $("#ctab"));
 }
 const lastIdx = c => c.years.length - 1;
@@ -1786,82 +1833,16 @@ function lectureHTML(s, c) {
   const f = figuresOf(c), items = concret(s, f, lecture(s, f)), cross = croisements(s, f);
   const body = i => { const k = TERM2CT[i.term], d = CT[k];
     return `<p class="lead">${i.text}</p>${k ? calcHTML(k, s, f) : ""}
-      ${d && d.serie ? `<div class="mini"><div class="cap">Évolution sur ${c.years.length} ans</div>${barsSVG({ labels: c.years.map(String), values: d.serie(c), fmt: d.money ? (v => big(v, c.currency)) : d.fmt, h: 140 })}</div>` : ""}
+      ${d && d.serie ? `<div class="mini" style="margin-top:14px">${serieChart(s, c, k, 180)}</div>` : ""}
       ${RULES[i.term] ? `<p class="rule"><b>Pourquoi ${i.lv === "fort" ? "vert" : i.lv === "vig" ? "orange" : i.lv === "na" ? "pas de couleur" : "gris"} ?</b> ${esc(RULES[i.term])}</p>` : ""}
       <div class="links">${k ? ctLink(s, k, "Comparer avec les autres entreprises du secteur") : ""} ${ALL[i.term] ? `<button type="button" class="def linkbtn" data-def="${i.term}">Définition</button>` : ""}</div>`; };
-  const row = i => acc(`<span class="dot dot-${i.lv}"></span><span class="q"><small>${esc(i.cat)} · <span class="vd vd-${i.lv}">${VERDICT[i.lv]}</span></small>${i.say}</span>`, body(i), false, "qrow");
+  const row = i => acc(`<span class="dot dot-${i.lv}"></span><span class="q"><small>${esc(i.cat)} · <span class="vd vd-${i.lv}">${VERDICT[i.lv]}</span></small>${i.say}</span>`, body(i), false, "qrow").replace("<details ", `<details data-term="${TERM2CT[i.term] || i.term}" `);
   return `<section class="panel" id="comptes"><div class="ph"><h2>Ses comptes, critère par critère</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
       <div class="qrows">${items.map(row).join("")}</div>
       <div class="src">Ouvrez une ligne pour voir le calcul, l'évolution sur plusieurs années et la règle qui donne la couleur. Les couleurs comparent l'entreprise à des seuils simples et à son secteur. Elles ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
     ${cross.length ? `<section class="panel"><div class="ph"><h2>Ce que les chiffres disent ensemble</h2></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
 }
 /* Le dividende, expliqué */
-function dividendeHTML(s, c) {
-  const f = figuresOf(c), cur = f.currency, m = ratios(f);
-  // Historique en montant total versé : il ne dépend pas des divisions d'actions (qui faussent le montant par action)
-  const vals = c.years.map((_, i) => at(c, "divPaid", i));
-  const next = eventsOf(s.id).filter(e => e.date >= TODAY && e.type === "Dividende");
-  const us = s.region === "US" || s.region === "MONDE";
-  const how = `<ol class="steps2">
-      <li><b>Le montant est décidé</b> par le conseil d'administration, puis voté par les actionnaires en assemblée générale.${us ? " Aux États-Unis, le dividende est le plus souvent versé chaque trimestre." : " En France, il est le plus souvent versé une fois par an, parfois en plusieurs fois (acomptes)."}</li>
-      <li><b>Le jour du détachement</b>, il faut déjà posséder l'action (l'avoir achetée au plus tard la veille). Ce jour-là, le cours baisse en général à peu près du montant du dividende : l'argent sort de l'entreprise.</li>
-      <li><b>Le jour du paiement</b>, quelques jours plus tard, l'argent arrive sur le compte du courtier.</li>
-      <li><b>Les impôts :</b> sur un compte-titres, ${pct(RATES.pfu, 1, false)} sont prélevés (12,8 % d'impôt et ${pct(RATES.ps, 1, false)} de prélèvements sociaux). Dans un PEA, rien n'est prélevé tant que l'argent reste dans le PEA.${us ? " Pour une société étrangère, son pays prélève souvent une retenue à la source (15 % aux États-Unis avec le formulaire W-8BEN, que proposent la plupart des courtiers). Ces actions ne vont pas dans un PEA." : ""}</li></ol>`;
-  if (!(f.divPaid > 0.5) && !(f.dps > 0)) return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende : la part du bénéfice reversée aux actionnaires</h2></div><div class="pb">
-      <p class="lead" style="margin-top:0">${esc(s.name)} n'a pas versé de dividende sur l'exercice ${f.year}. Elle garde ses bénéfices pour investir, se désendetter ou racheter ses propres actions.</p>
-      ${acc("Comment fonctionne un dividende ?", how)}</div></section>`;
-  const first = vals.findIndex(okn), last = vals.length - 1;
-  const evo = first >= 0 && first < last && vals[first] > 0 && okn(vals[last]) ? vals[last] / vals[first] - 1 : null;
-  const cov = m.payout != null ? (m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig") : null;
-  return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende : la part du bénéfice reversée aux actionnaires</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant estimé à partir des comptes</span>` : ""}</div><div class="pb">
-    <p class="lead" style="margin-top:0">${f.dps > 0 ? `Pour chaque action détenue, ${esc(s.name)} a versé ${f.dpsEst ? "environ " : ""}<b>${eur(f.dps, 2, cur)}</b> pendant l'exercice ${f.year}.` : `${esc(s.name)} a versé ${big(f.divPaid, cur)} de dividendes pendant l'exercice ${f.year}.`}${m.payout != null ? ` Cela représente ${pct(m.payout, 0, false)} de son bénéfice.` : ""}</p>
-    <div class="dfigs">
-      ${f.dps > 0 ? `<div><span>Par action</span><b>${eur(f.dps, 2, cur)}</b></div>` : ""}
-      ${m.payout != null ? `<div><span>Part du bénéfice versée</span><b>${pct(m.payout, 0, false)}</b>${cov ? lvTag(cov) : ""}</div>` : ""}
-      ${evo != null ? `<div><span>Total versé depuis ${c.years[first]}</span><b>${pct(evo)}</b></div>` : ""}
-      ${next.length ? `<div><span>Prochaine date</span><b>${dLabel(next[0].date)}</b><small>${esc(next[0].label)}</small></div>` : ""}</div>
-    ${vals.some(okn) ? `<div class="mini"><div class="cap">Dividendes versés au total, année par année</div>${barsSVG({ labels: c.years.map(String), values: vals, fmt: v => big(v, cur), h: 150 })}</div>` : ""}
-    ${acc("Combien pour 1 000 € investis ?", `<p>Ça dépend du prix de l'action. Indiquez-le dans « Le prix de l'action » plus bas : le site calcule le rendement et ce que rapporteraient 1 000 €.</p><p class="muted">Ordre de grandeur : la plupart des grandes entreprises versent chaque année entre 1 et 5 % du prix de l'action.</p>`)}
-    ${acc("Comment fonctionne un dividende ?", how)}
-    ${acc("Le dividende est-il solide ?", `<p>${m.payout == null ? "Impossible à dire sans bénéfice." : m.payout > 1 ? `Non : l'entreprise verse plus (${pct(m.payout, 0, false)}) que ce qu'elle gagne. Elle puise dans sa trésorerie ou s'endette.` : m.payout > 0.9 ? `Fragile : l'entreprise verse ${pct(m.payout, 0, false)} de son bénéfice. Si le bénéfice baisse, le dividende risque de baisser aussi.` : m.payout > 0.6 ? `Plutôt oui : ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une petite marge.` : `Oui : seulement ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une bonne marge si les bénéfices baissent.`}</p><p class="muted">Un dividende n'est jamais garanti : l'entreprise peut le réduire ou le supprimer.</p>${ctLink(s, "dividende", "Comparer avec les autres entreprises du secteur")}`)}
-  </div></section>`;
-}
-function prixHTML(s, c) {
-  const f = figuresOf(c), cur = CUR[f.currency] || f.currency;
-  return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action, comparé à ses bénéfices</h2></div><div class="pb">
-    <p class="muted" style="margin:0 0 10px">Le prix d'une action ne dit rien seul : on le compare à ce que l'entreprise gagne. Recopiez le cours affiché en haut de la page.</p>
-    <div class="field" style="max-width:240px"><label for="pxin">Cours de l'action (${esc(cur)})</label><input id="pxin" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ex. ${f.eps > 0 ? F0.format(f.eps * 15) : "100"}"></div>
-    <div id="pxout"></div></div>
-    <div class="src">${def("per", "PER")} et ${def("rdt", "rendement")} calculés avec les chiffres du dernier exercice publié, pas avec les prévisions des analystes.</div></section>`;
-}
-function prixRun(s, c) {
-  const f = figuresOf(c), m = ratios(f), inp = $("#pxin"), out = $("#pxout"), cur = f.currency;
-  if (!inp) return;
-  const KEY = "repere.px." + s.id;
-  try { const x = localStorage.getItem(KEY); if (x) inp.value = x; } catch (e) { }
-  const run = () => {
-    const px = parseFloat(String(inp.value).replace(",", "."));
-    if (!(px > 0)) { out.innerHTML = ""; return; }
-    try { localStorage.setItem(KEY, String(px)); } catch (e) { }
-    const rows = [];
-    if (f.eps > 0) {
-      const per = px / f.eps, lv = per < 10 ? "Bas" : per <= 20 ? "Zone courante" : per <= 30 ? "Élevé" : "Très élevé";
-      rows.push(`<div class="li"><div class="lq">${def("per", "PER")}</div><div class="lvv"><span class="num">${F1.format(per)}</span><span class="lv lv-n">${lv}</span></div>
-        <p>À ${eur(px, 2, cur)}, l'action coûte ${F1.format(per)} fois le bénéfice par action de ${f.year} (${eur(f.eps, 2, cur)}). Au rythme actuel, il faudrait ${F0.format(per)} ans de bénéfices pour « rembourser » ce prix.</p>
-        <p class="muted">Un PER élevé veut dire que les acheteurs attendent une hausse des bénéfices. Un PER bas, qu'ils doutent de l'avenir ou que le secteur est peu recherché.</p></div>`);
-      if (per > 25 && m.g1 != null && m.g1 < 0.05) rows.push(`<div class="note2">Prix élevé alors que les ventes ont progressé de ${pct(m.g1)} : ce prix suppose que la croissance accélère.</div>`);
-      if (per < 10 && m.ng != null && m.ng < -0.1) rows.push(`<div class="note2">Prix bas, mais bénéfice en baisse de ${pct(Math.abs(m.ng), 0, false)} : le marché anticipe peut-être une nouvelle baisse.</div>`);
-    } else if (f.eps != null) rows.push(`<div class="li"><div class="lq">${def("per", "PER")}</div><p>L'entreprise a perdu de l'argent sur l'exercice : le PER ne se calcule pas.</p></div>`);
-    if (f.dps > 0) {
-      const y = f.dps / px;
-      rows.push(`<div class="li"><div class="lq">${def("rdt", "Rendement du dividende")}</div><div class="lvv"><span class="num">${pct(y, 1, false)}</span></div>
-        <p>Pour ${eur(1000, 0, cur)} d'actions, l'actionnaire aurait reçu environ ${eur(1000 * y, 0, cur)} de dividende sur l'exercice${f.dpsEst ? " (montant estimé)" : ""}, avant impôts.</p></div>`);
-      if (y > 0.06 && m.payout > 0.9) rows.push(`<div class="note2">Rendement élevé, mais l'entreprise verse déjà ${pct(m.payout, 0, false)} de son bénéfice : le dividende a peu de marge si les bénéfices baissent.</div>`);
-    }
-    out.innerHTML = `<div class="lect">${rows.join("")}</div>`;
-  };
-  inp.oninput = run; run();
-}
 function officielLink(s) {
   if (s.region === "US" || s.sec) return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${encodeURIComponent(s.sec || s.ticker)}&type=&dateb=&owner=include&count=40`;
   return s.domain ? "https://www." + s.domain : "";
@@ -1870,15 +1851,14 @@ function tabBref(s, c, el) {
   const fr = s.region === "FR", f = c ? figuresOf(c) : null, items = f ? lecture(s, f) : [], phrase = f ? enBref(s, f, items) : "";
   const up = eventsOf(s.id).filter(e => e.date >= TODAY);
   el.innerHTML = `
-    <section class="panel bref-box"><div class="pb">
-      ${phrase ? `<p class="bref-big">${phrase}</p>` : `<p class="bref-big">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p>`}
-      ${f ? feu(tally(items)) : ""}
-      <nav class="jump">${[f && ["retenir", "À retenir"], ["metier", "Ce qu'elle fait"], f && ["comptes", "Ses comptes"], f && ["concurrents", "Concurrents"], f && ["dividende", "Dividende"], f && ["prix", "Prix de l'action"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
+    ${c ? essentielHTML(s, c) : `<section class="panel"><div class="pb"><p class="lead" style="margin:0">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p></div></section>`}
+    <section class="panel bref-box" style="background:none;border:0;box-shadow:none;margin:-8px 0 14px"><div class="pb" style="padding:0">
+      <nav class="jump">${[f && ["retenir", "Points forts et vigilance"], f && ["concurrents", "Concurrents"], f && ["prix", "Prix de l'action"], ["metier", "Ce qu'elle fait"], f && ["comptes", "Ses comptes"], f && ["dividende", "Dividende"], f && ["faq", "Questions fréquentes"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
     </div></section>
     <div class="cols"><div>
-        ${c ? retenirHTML(s, c) : ""}
+        ${c ? retenirHTML(s, c) + concurrentsHTML(s) + prixHTML(s, c) : ""}
         ${ficheHTML(s, c)}
-        ${c ? lectureHTML(s, c) + concurrentsHTML(s) + dividendeHTML(s, c) + prixHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
+        ${c ? lectureHTML(s, c) + dividendeHTML(s, c) + faqHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
       </div>
       <aside>
         <section class="panel" id="agenda"><div class="ph"><h2>Agenda</h2></div>${up.length ? agendaHTML(up.slice(0, 5), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant. Le site ajoute les dates dès qu'elles sont publiées par l'entreprise ou annoncées dans la presse.</div>`}</section>
@@ -1888,7 +1868,8 @@ function tabBref(s, c, el) {
         <section class="panel" id="avis"><div class="ph"><h2>Avis des visiteurs</h2><a href="/entreprise/${s.id}/communaute">Discussion</a></div><div class="pb" id="avisb"></div></section>
       </aside>
     </div>`;
-  if (c) prixRun(s, c);
+  const voir = new URLSearchParams(location.search).get("voir");
+  if (voir) { const d = $(`details[data-term="${voir}"]`) || $("#" + voir); if (d) { if (d.tagName === "DETAILS") d.open = true; setTimeout(() => d.scrollIntoView({ block: "center" }), 60); } }
   if (s.sec) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false, filters: false, max: 3 });
   else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false, filters: false, max: 3 });
   presseBlock($("#pres"), { id: s.id, max: 5 });
@@ -2228,7 +2209,7 @@ function pageFavoris() {
 }
 
 /* ---------- Concurrents directs et comparateur ---------- */
-let CONC = {};
+let CONC = {}, PXP = Promise.resolve();
 function peersOf(s, n = 4) {
   const hand = (CONC[s.id] || []).map(id => RBY[id]).filter(Boolean);
   if (hand.length >= 2) return { list: hand.slice(0, n), auto: false };
@@ -2245,6 +2226,8 @@ const CMP_ROWS = [
   [["dettenette", "lev", "gear"], "Endettement", "La dette nette, en années de résultat pour la rembourser, ou en part de ce que possèdent les actionnaires.", null],
   ["fcf", "Trésorerie disponible", "L'argent qui reste une fois les investissements payés.", null],
   ["payout", "Dividende", "Part du bénéfice reversée aux actionnaires.", null],
+  ["cap", "Valeur en Bourse", "Le prix de toutes ses actions (capitalisation), en euros.", c => { const v = valo(c); return v && v.capE ? { v: capFmt(v.capE), s: "au cours actuel" } : null; }],
+  ["pe", "Prix rapporté au bénéfice", "Combien d'années de bénéfice coûte l'entreprise en Bourse (PER).", c => { const v = valo(c); return v && v.pe ? { v: F0.format(v.pe) + " fois", s: MEDPE[c.sector] ? `secteur : ${F0.format(MEDPE[c.sector])} fois` : "" } : null; }],
 ];
 function cmpCell(c, row, items) {
   if (c.missing) return `<span class="light">–</span>`;
@@ -2264,10 +2247,11 @@ function concurrentsHTML(s) {
   const all = [s, ...list];
   return `<section class="panel" id="concurrents"><div class="ph"><h2>${auto ? "Des entreprises comparables" : "Ses concurrents directs"}</h2><a href="/comparer?ids=${all.map(c => c.id).join(",")}">Comparer en détail →</a></div>
     <div class="pb" style="padding-bottom:4px"><p class="muted" style="margin:0 0 6px">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services que ${esc(s.name)}, aux mêmes clients.`} Une marge ou une dette se juge mieux à côté de celles des concurrents.</p></div>
-    ${cmpTable(all, s.id)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise ; les montants restent dans la devise de chaque entreprise, les pourcentages se comparent directement.</div></section>`;
+    ${cmpTable(all, s.id)}${compareSynth(all, s)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise ; les montants restent dans la devise de chaque entreprise, les pourcentages se comparent directement.</div></section>`;
 }
-function pageComparer() {
+async function pageComparer() {
   setTitle("Comparer des entreprises"); setNav("ent");
+  app.innerHTML = `<div class="empty">Chargement…</div>`; await PXP;
   let ids = (new URLSearchParams(location.search).get("ids") || "").split(",").filter(id => RBY[id]);
   ids = [...new Set(ids)].slice(0, 5);
   const list = ids.map(id => RBY[id]);
@@ -2280,7 +2264,7 @@ function pageComparer() {
       ${ids.length < 5 ? `<div class="field" style="max-width:420px;margin-top:10px;position:relative"><label for="cmpq">Ajouter une entreprise</label><input id="cmpq" type="search" autocomplete="off" placeholder="Nom de l'entreprise"><div class="msug" id="cmps" hidden></div></div>
       ${sug.length ? `<div class="chips" style="margin-top:10px"><span class="light" style="font-size:13px">${list.length ? "Ses concurrents :" : "Exemples :"}</span>${sug.map(c => `<a class="chip" href="${url([...ids, c.id])}">+ ${esc(c.name)}</a>`).join("")}</div>` : ""}` : ""}
     </div></section>
-    ${list.length ? `<section class="panel">${cmpTable(list, null)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise (rapports ESEF et SEC). Les montants restent dans la devise de chaque entreprise ; les pourcentages se comparent directement. Pour une banque ou un assureur, la marge et la dette ne se lisent pas de la même façon.</div></section>
+    ${list.length ? `<section class="panel">${list.length > 1 ? compareSynth(list).replace('class="synth"', 'class="synth" style="border-top:0;border-bottom:1px solid var(--line2)"') : ""}${cmpTable(list, null)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise (rapports ESEF et SEC). Les montants restent dans la devise de chaque entreprise ; les pourcentages se comparent directement. Pour une banque ou un assureur, la marge et la dette ne se lisent pas de la même façon.</div></section>
       <section class="panel"><div class="ph"><h2>Comment lire cette comparaison</h2></div><div class="pb"><ol class="steps2">
         <li><b>Comparez des entreprises du même métier.</b> Une marge de 10 % est faible pour un éditeur de logiciels et élevée pour un supermarché.</li>
         <li><b>Regardez plusieurs lignes ensemble.</b> Une forte rentabilité avec beaucoup de dette ne vaut pas une forte rentabilité sans dette.</li>
@@ -2333,6 +2317,366 @@ function pageEnveloppes() {
 const EEA = new Set(["FR", "DE", "NL", "BE", "LU", "IT", "ES", "PT", "IE", "AT", "FI", "SE", "DK", "NO", "IS", "LI", "PL", "CZ", "GR", "HU", "SK", "SI", "EE", "LV", "LT", "MT", "CY", "HR", "BG", "RO"]);
 const peaOk = c => c.isin ? EEA.has(c.isin.slice(0, 2)) : c.region === "FR" ? true : null;
 
+/* =====================================================================
+   Refonte v2 : graphiques, cours, l'essentiel, dividende, prix, synthèses
+   ===================================================================== */
+
+/* ---------- Infobulles des graphiques (une seule, partagée) ---------- */
+const CTIP = document.createElement("div"); CTIP.className = "ctip"; document.body.appendChild(CTIP);
+function tipShow(el, x, y) {
+  let d; try { d = JSON.parse(el.getAttribute("data-tip")); } catch (e) { return; }
+  CTIP.textContent = "";
+  const h = document.createElement("div"); h.className = "h"; h.textContent = d.h || ""; CTIP.appendChild(h);
+  (d.r || []).forEach(([name, val, col]) => {
+    const r = document.createElement("div"); r.className = "r";
+    const sp = document.createElement("span"); if (col) { const i = document.createElement("i"); i.style.background = col; sp.appendChild(i); }
+    sp.appendChild(document.createTextNode(name)); const b = document.createElement("b"); b.textContent = val;
+    r.append(sp, b); CTIP.appendChild(r);
+  });
+  if (d.n) { const n = document.createElement("div"); n.style.cssText = "margin-top:4px;color:var(--light);font-size:11.5px"; n.textContent = d.n; CTIP.appendChild(n); }
+  CTIP.style.display = "block";
+  const w = CTIP.offsetWidth, hh = CTIP.offsetHeight;
+  CTIP.style.left = Math.min(innerWidth - w - 8, Math.max(8, x + 14)) + "px";
+  CTIP.style.top = Math.max(8, y - hh - 12) + "px";
+}
+document.addEventListener("pointermove", e => { const el = e.target.closest && e.target.closest("[data-tip]"); if (el) tipShow(el, e.clientX, e.clientY); else CTIP.style.display = "none"; });
+document.addEventListener("focusin", e => { const el = e.target.closest && e.target.closest("[data-tip]"); if (el) { const r = el.getBoundingClientRect(); tipShow(el, r.left + r.width / 2, r.top); } });
+document.addEventListener("focusout", () => { CTIP.style.display = "none"; });
+const tipAttr = o => `data-tip="${esc(JSON.stringify(o))}"`;
+
+/* ---------- Échelles « rondes » ---------- */
+function niceTicks(min, max, n = 4) {
+  if (min === max) { max = min + 1; }
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), f = step0 / mag;
+  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag;
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, t = [];
+  for (let v = lo; v <= hi + step / 2; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+const INK = "#111214", SAND = "#B9AE97", GREENC = "#0E6B4A", ORANGEC = "#D94F2B", GRIDC = "#ECE6DA", AXC = "#8A857D";
+const SERIES_COL = [INK, "#0E7490", "#B9AE97", "#7A5C99", "#8FB51E"];
+
+/* Colonnes par année : une ou deux séries, axe gradué, repère facultatif (médiane du secteur), infobulle par année */
+function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = "", h = 230, note = "" }) {
+  // On retire les années de début vides pour toutes les séries
+  let k = 0; while (k < labels.length - 1 && series.every(s => !okn(s.values[k]))) k++;
+  labels = labels.slice(k); series = series.map(s => ({ ...s, values: s.values.slice(k).map(v => okn(v) ? v : null) }));
+  const all = series.flatMap(s => s.values).filter(v => v != null).concat(ref != null ? [ref] : []);
+  if (!all.length) return `<p class="muted" style="margin:0">Pas de chiffres publiés pour ce graphique.</p>`;
+  const ticks = niceTicks(Math.min(0, ...all), Math.max(0, ...all)), tmin = ticks[0], tmax = ticks.at(-1);
+  const W = 640, H = h, pl = 54, pr = 12, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / n;
+  const Y = v => pt + (H - pt - pb) * (tmax - v) / (tmax - tmin || 1), X = i => pl + band * (i + .5);
+  const ns = series.length, bw = Math.min(26, band * 0.62 / ns), gap = 3, tf = tickFmt || fmt;
+  let g = ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#CFC6B4" : GRIDC}" stroke-width="1"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11.5" fill="${AXC}">${esc(tf(t))}</text>`).join("");
+  let bars = "", hits = "";
+  labels.forEach((lab, i) => {
+    const x0 = X(i) - (ns * bw + (ns - 1) * gap) / 2;
+    series.forEach((s, j) => {
+      const v = s.values[i]; if (v == null) { if (ns === 1) bars += `<text x="${X(i)}" y="${Y(0) - 6}" text-anchor="middle" font-size="11" fill="${AXC}">non publié</text>`; return; }
+      const x = x0 + j * (bw + gap), y0 = Y(Math.max(0, v)), y1 = Y(Math.min(0, v)), hh = Math.max(1.5, y1 - y0), r = Math.min(4, bw / 2, hh);
+      const col = v < 0 ? ORANGEC : (s.color || INK);
+      // extrémité arrondie côté valeur, carrée côté zéro
+      bars += v >= 0 ? `<path d="M${x},${y1} V${y0 + r} Q${x},${y0} ${x + r},${y0} H${x + bw - r} Q${x + bw},${y0} ${x + bw},${y0 + r} V${y1} Z" fill="${col}"/>`
+        : `<path d="M${x},${y0} V${y1 - r} Q${x},${y1} ${x + r},${y1} H${x + bw - r} Q${x + bw},${y1} ${x + bw},${y1 - r} V${y0} Z" fill="${col}"/>`;
+    });
+    if (i === n - 1 && ns === 1) { const v = series[0].values[i]; if (v != null) bars += `<text x="${X(i)}" y="${v >= 0 ? Y(v) - 7 : Y(v) + 15}" text-anchor="middle" font-size="12.5" font-weight="600" fill="${INK}">${esc(fmt(v))}</text>`; }
+    g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#55524C">${esc(lab)}</text>`;
+    const tip = { h: String(lab), r: series.map(s => [s.name, s.values[i] == null ? "non publié" : fmt(s.values[i]), s.color || INK]).concat(ref != null ? [[refLabel, fmt(ref), SAND]] : []) };
+    hits += `<rect x="${pl + band * i}" y="${pt}" width="${band}" height="${H - pt - pb}" fill="transparent" tabindex="0" ${tipAttr(tip)}/>`;
+  });
+  const refl = ref != null ? `<line x1="${pl}" x2="${W - pr}" y1="${Y(ref)}" y2="${Y(ref)}" stroke="${SAND}" stroke-width="2"/>` : "";
+  const leg = ns > 1 || ref != null ? `<div class="lg2">${series.map(s => `<span><i style="background:${s.color || INK}"></i>${esc(s.name)}</span>`).join("")}${ref != null ? `<span><i class="ln" style="background:${SAND}"></i>${esc(refLabel)} : ${esc(fmt(ref))}</span>` : ""}</div>` : "";
+  return `<div class="chart2">${leg}<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(s => s.name).join(", "))}">${g}${refl}${bars}${hits}</svg>${note ? `<p class="note">${note}</p>` : ""}</div>`;
+}
+/* Courbes (pourcentages au fil des années, comparaison à une référence) */
+function trendChart({ labels, series, fmt, h = 220 }) {
+  const all = series.flatMap(s => s.values).filter(okn);
+  if (all.length < 2) return `<p class="muted" style="margin:0">Pas assez d'années publiées pour tracer une évolution.</p>`;
+  const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * 0.15 || Math.abs(hi) * 0.1 || 1;
+  const ticks = niceTicks(Math.min(lo - pad, lo >= 0 ? 0 : lo - pad), hi + pad), tmin = ticks[0], tmax = ticks.at(-1);
+  const W = 640, H = h, pl = 54, pr = 70, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / Math.max(1, n - 1);
+  const Y = v => pt + (H - pt - pb) * (tmax - v) / (tmax - tmin || 1), X = i => pl + band * i;
+  let g = ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#CFC6B4" : GRIDC}"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11.5" fill="${AXC}">${esc(fmt(t))}</text>`).join("");
+  labels.forEach((l, i) => { g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#55524C">${esc(l)}</text>`; });
+  let lines = "";
+  series.forEach((s, j) => {
+    const col = s.color || SERIES_COL[j], pts = s.values.map((v, i) => okn(v) ? [X(i), Y(v)] : null);
+    let d = "", on = false; pts.forEach(p => { if (p) { d += (on ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1); on = true; } else on = false; });
+    lines += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const li = s.values.map(okn).lastIndexOf(true);
+    if (li >= 0) lines += `<circle cx="${X(li)}" cy="${Y(s.values[li])}" r="4.5" fill="${col}" stroke="#fff" stroke-width="2"/><text x="${X(li) + 9}" y="${Y(s.values[li]) + 4}" font-size="12" font-weight="600" fill="${INK}">${esc(fmt(s.values[li]))}</text>`;
+  });
+  let hits = ""; labels.forEach((l, i) => { hits += `<rect x="${X(i) - band / 2}" y="${pt}" width="${band}" height="${H - pt - pb}" fill="transparent" tabindex="0" ${tipAttr({ h: String(l), r: series.map((s, j) => [s.name, okn(s.values[i]) ? fmt(s.values[i]) : "–", s.color || SERIES_COL[j]]) })}/>`; });
+  const leg = `<div class="lg2">${series.map((s, j) => `<span><i class="ln" style="background:${s.color || SERIES_COL[j]}"></i>${esc(s.name)}</span>`).join("")}</div>`;
+  return `<div class="chart2">${series.length > 1 ? leg : ""}<svg viewBox="0 0 ${W} ${H}" role="img">${g}${lines}${hits}</svg></div>`;
+}
+// Ancienne fonction gardée pour les appels existants : redirige vers le nouveau graphique
+function barsSVG({ labels, values, fmt, ref = null, refLabel = "", h = 220, name = "" }) {
+  return colChart({ labels, series: [{ name: name || "Valeur", values }], fmt, ref, refLabel, h });
+}
+const compact = cur => v => { const a = Math.abs(v), s = CUR[cur] || cur || "", d1 = x => F1.format(x).replace(/,0$/, ""); return a >= 1000 ? d1(v / 1000) + " Md" + (s ? " " + s : "") : F0.format(v) + " M" + (s ? " " + s : ""); };
+const pctTick = v => F0.format(v * 100) + " %";
+
+/* ---------- Cours de Bourse (feuille Google publiée) et taux de change (BCE) ---------- */
+let PX = {}, PXUP = null, FX = null;
+async function loadPrices() {
+  if (PXUP) return;
+  try { const r = await fetch("/api/cours"); if (r.ok) { const j = await r.json(); PX = j.items || {}; PXUP = j.updated; } } catch (e) { }
+  if (!PXUP) { try { const j = await (await fetch("/data/cours.json")).json(); PX = j.items || {}; PXUP = j.updated; } catch (e) { PXUP = "none"; } }
+  try { FX = (await (await fetch("/data/fx.json")).json()).eur; } catch (e) { FX = null; }
+  computePE();
+}
+const toEur = (v, cur) => v == null || !cur ? null : v * ((FX && FX[cur]) || FXE[cur] || (cur === "EUR" ? 1 : NaN));
+const pxOf = c => PX["c:" + c.id] || null;
+const pxEtf = e => PX["e:" + e.id] || null;
+function valo(c) { // capitalisation, PER, rendement, à partir du cours et des derniers comptes
+  const p = pxOf(c); if (!p) return null;
+  const capE = p.cap ? toEur(p.cap, p.cur) : null, netE = c.net != null ? toEur(c.net * 1e6, c.currency) : null;
+  let pe = capE && netE > 0 ? capE / netE : null;
+  if (pe == null && c.eps > 0 && p.cur === c.currency) pe = p.p / c.eps;
+  let yld = null;
+  if (c.divPaid > 0.5 && capE) yld = toEur(c.divPaid * 1e6, c.currency) / capE;
+  else if (c.dps > 0 && p.cur === c.currency) yld = c.dps / p.p;
+  if (yld != null && (yld > 0.25 || yld < 0)) yld = null;
+  if (pe != null && (pe > 500 || pe <= 0)) pe = null;
+  return { p, capE, pe, yld };
+}
+let MEDPE = {};
+function computePE() {
+  const by = {}; R.companies.forEach(c => { if (c.missing) return; const v = valo(c); if (v && v.pe) (by[c.sector] = by[c.sector] || []).push(v.pe); });
+  MEDPE = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, l.length >= 5 ? median(l) : null]));
+}
+const pxFmt = (v, cur) => v == null ? "–" : nf(v >= 1000 ? 0 : 2).format(v) + " " + (CUR[cur] || cur || "");
+const capFmt = v => v == null ? "–" : v >= 1e12 ? F1.format(v / 1e12) + " 000 Md€".replace(" 000 Md€", " billions d'€") : v >= 1e9 ? F1.format(v / 1e9) + " Md€" : F0.format(v / 1e6) + " M€";
+function priceHead(c, isEtf = false) {
+  const p = isEtf ? pxEtf(c) : pxOf(c);
+  if (!p) return `<div class="pxhead"><span class="d">${PXUP && PXUP !== "none" ? "Cours non disponible pour ce titre" : "Chargement du cours…"}</span></div>`;
+  const ch = p.chg;
+  return `<div class="pxhead"><span class="kick">Cours</span><span class="p">${pxFmt(p.p, p.cur)}</span>${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % aujourd'hui</span>` : ""}<span class="d">Différé d'environ 20 min · ${esc(p.s)}</span></div>`;
+}
+
+/* ---------- Mots simples pour les tendances ---------- */
+const trendWords = g => g == null ? "" : g >= 0.25 ? "en très forte hausse" : g >= 0.08 ? "en forte hausse" : g >= 0.02 ? "en hausse" : g > -0.02 ? "stables" : g > -0.08 ? "en léger recul" : "en net recul";
+const trendWordsM = g => g == null ? "" : g >= 0.25 ? "en très forte hausse" : g >= 0.08 ? "en forte hausse" : g >= 0.02 ? "en hausse" : g > -0.02 ? "stable" : g > -0.08 ? "en léger recul" : "en net recul";
+function partWords(p) {
+  if (p == null) return "";
+  if (p >= 0.97) return "la quasi-totalité";
+  if (p >= 0.7) return "les trois quarts environ";
+  if (p >= 0.6) return "un peu plus de la moitié";
+  if (p >= 0.45) return "la moitié environ";
+  if (p >= 0.38) return "un peu moins de la moitié";
+  if (p >= 0.28) return "un tiers environ";
+  if (p >= 0.2) return "un quart environ";
+  if (p >= 0.08) return "une petite partie";
+  return "une très petite partie";
+}
+const sgn = (v, d = 0) => (v > 0 ? "+" : v < 0 ? "−" : "") + nf(d).format(Math.abs(v * 100)) + " %";
+
+/* ---------- L'essentiel : cinq faits, chacun avec son chiffre ---------- */
+function essentielFacts(s, f) {
+  const m = ratios(f), cur = f.currency, B = v => big(v, cur), med = MED[s.sector] || {}, bank = isBank(s), out = [];
+  CURSYM = CUR[cur] || "€";
+  if (f.ca != null) out.push(["Ventes", B(f.ca), `${bank ? "de revenus" : "de chiffre d'affaires"} sur l'exercice ${f.year}${m.g1 != null ? `, ${trendWords(m.g1)} sur un an (${sgn(m.g1)})` : ""}.`]);
+  if (!bank && m.marge != null) {
+    const mm = med.n >= 3 ? med.marge : null, cmp = mm != null && mm > 0 ? (m.marge > mm * 1.25 ? `, nettement plus que la médiane de son secteur (${pct(mm, 0, false)})` : m.marge < mm * 0.75 ? `, moins que la médiane de son secteur (${pct(mm, 0, false)})` : `, proche de la médiane de son secteur (${pct(mm, 0, false)})`) : "";
+    out.push(["Marge", pct(m.marge, m.marge < 0.1 ? 1 : 0, false), m.marge >= 0 ? `de marge d'exploitation : sur ${"100 " + CURSYM} de ventes, il reste ${e100(m.marge)} une fois payés salaires, achats et frais${cmp}.` : `de marge d'exploitation : l'activité coûte plus qu'elle ne rapporte.`]);
+  }
+  if (f.net != null) out.push(["Bénéfice", B(f.net), f.net >= 0 ? `de bénéfice net, après impôts${m.ng != null ? ` : ${trendWordsM(m.ng)} sur un an (${sgn(m.ng)})` : ""}.` : `de perte nette sur l'exercice.`]);
+  if (!bank && f.netDebt != null) {
+    if (f.netDebt < 0) out.push(["Dette", "aucune", `dette nette : l'entreprise a ${B(-f.netDebt)} de trésorerie de plus que ses emprunts.`]);
+    else if (m.lev != null) out.push(["Dette", `${F1.format(m.lev)} an${m.lev >= 2 ? "s" : ""}`, `de résultat d'exploitation (avant amortissements) suffiraient à rembourser sa dette nette de ${B(f.netDebt)} : un endettement ${m.lev <= 1.5 ? "faible" : m.lev <= 3 ? "modéré" : "élevé"}.`]);
+  }
+  if (f.divPaid != null) {
+    if (f.divPaid < 0.5) out.push(["Dividende", "aucun", "dividende versé : l'entreprise garde ses bénéfices."]);
+    else if (m.payout != null && f.net > 0) out.push(["Dividende", pct(m.payout, 0, false), `du bénéfice reversé aux actionnaires en dividendes, soit ${partWords(m.payout)}.`]);
+    else out.push(["Dividende", B(f.divPaid), "versés aux actionnaires alors que l'entreprise est en perte."]);
+  }
+  const v = valo(s);
+  if (v && v.pe) { const mp = MEDPE[s.sector]; out.push(["Prix", `${F0.format(v.pe)} fois`, `son bénéfice annuel : c'est ce que coûte l'entreprise en Bourse (PER)${mp ? `, contre ${F0.format(mp)} fois pour la médiane de son secteur` : ""}.`]); }
+  return out;
+}
+function essentielHTML(s, c) {
+  const f = figuresOf(c), facts = essentielFacts(s, f), t = tally(lecture(s, f));
+  return `<section class="panel" id="essentiel"><div class="ess">
+    <div class="ess-l"><p class="kick">L'essentiel · exercice ${f.year}</p><ul class="facts">${facts.map(([l, k, t]) => `<li><span class="lbl" style="padding-top:3px">${l}</span><span><b class="k">${k}</b> ${t}</span></li>`).join("")}</ul></div>
+    <div class="ess-r"><p class="kick">Ce qu'elle fait</p><p style="margin:2px 0 12px;font-size:15px;line-height:1.5">${esc(s.fiche ? s.fiche.fait : s.desc || "")}</p>
+      ${feu(t)}<p class="muted" style="font-size:12.5px;margin:8px 0 0">Les couleurs comparent chaque chiffre à des seuils simples et à son secteur. Elles ne disent pas s'il faut acheter l'action.</p></div>
+  </div></section>`;
+}
+
+/* ---------- Synthèse d'une comparaison ---------- */
+const listFr = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " et " + a.at(-1);
+function compareSynth(list, focus = null) {
+  const rows = list.filter(c => !c.missing).map(c => ({ c, m: ratios(c), v: valo(c), t: quick(c) }));
+  if (rows.length < 2) return "";
+  const nm = c => `<b>${esc(c.name)}</b>`, out = [];
+  const best = (key, dir = 1, filt = () => true) => { const l = rows.filter(r => okn(r.m[key]) && filt(r)).sort((a, b) => dir * (b.m[key] - a.m[key])); return l; };
+  const g = best("g1"); if (g.length >= 2) { const neg = g.filter(r => r.m.g1 < 0); out.push(`<b>Croissance.</b> ${nm(g[0].c)} progresse le plus vite (${sgn(g[0].m.g1)} sur un an)${g[1] ? `, devant ${esc(g[1].c.name)} (${sgn(g[1].m.g1)})` : ""}.${neg.length ? ` ${listFr(neg.map(r => esc(r.c.name)))} ${neg.length > 1 ? "voient leurs ventes reculer" : "voit ses ventes reculer"}.` : ""}`); }
+  const mg = best("marge", 1, r => !isBank(r.c)); if (mg.length >= 2) { const last = mg.at(-1); out.push(`<b>Marge.</b> ${nm(mg[0].c)} garde le plus sur chaque vente (${pct(mg[0].m.marge, 0, false)} de marge d'exploitation)${last.m.marge < 0 ? `, ${esc(last.c.name)} perd de l'argent sur son activité` : `, ${esc(last.c.name)} le moins (${pct(last.m.marge, 0, false)})`}. Un écart de marge vient souvent du métier exact, de la taille ou du pouvoir de fixer ses prix.`); }
+  const nodebt = rows.filter(r => !isBank(r.c) && r.c.netDebt != null && r.c.netDebt < 0), lev = best("lev", 1, r => !isBank(r.c) && r.c.netDebt > 0);
+  if (nodebt.length || lev.length) out.push(`<b>Dette.</b> ${nodebt.length ? `${listFr(nodebt.map(r => esc(r.c.name)))} ${nodebt.length > 1 ? "n'ont" : "n'a"} pas de dette nette` : ""}${nodebt.length && lev.length ? " ; " : ""}${lev.length ? `${nm(lev[0].c)} est la plus endettée (${F1.format(lev[0].m.lev)} années de résultat pour rembourser)` : ""}.`);
+  const pe = rows.filter(r => r.v && r.v.pe).sort((a, b) => a.v.pe - b.v.pe);
+  if (pe.length >= 2) out.push(`<b>Prix.</b> Rapportée à ses bénéfices, l'action la moins chère est ${nm(pe[0].c)} (${F0.format(pe[0].v.pe)} fois le bénéfice annuel), la plus chère ${nm(pe.at(-1).c)} (${F0.format(pe.at(-1).v.pe)} fois). Un prix élevé traduit souvent des attentes de croissance plus fortes.`);
+  const tt = rows.filter(r => r.t).sort((a, b) => (b.t.fort - b.t.vig) - (a.t.fort - a.t.vig));
+  if (tt.length >= 2) out.push(`<b>En résumé.</b> ${nm(tt[0].c)} a les comptes les plus solides du groupe (${tt[0].t.fort} points forts, ${tt[0].t.vig} de vigilance)${tt.at(-1).t.vig ? `, ${esc(tt.at(-1).c.name)} cumule le plus de points de vigilance (${tt.at(-1).t.vig})` : ""}. Cela décrit les derniers comptes, pas l'évolution future de l'action.`);
+  return `<div class="synth"><p class="kick" style="margin-bottom:6px">Synthèse</p>${out.map(p => `<p>${p}</p>`).join("")}</div>`;
+}
+
+/* ---------- Dividende, refait ---------- */
+function dividendeHTML(s, c) {
+  const f = figuresOf(c), cur = f.currency, m = ratios(f), v = valo(s);
+  const vals = c.years.map((_, i) => at(c, "divPaid", i)), next = eventsOf(s.id).filter(e => e.date >= TODAY && /ividende/.test(e.type + e.label));
+  const us = s.region === "US" || s.region === "MONDE";
+  const how = `<ol class="steps2">
+      <li><b>Le montant est décidé</b> par le conseil d'administration puis voté en assemblée générale.${us ? " Aux États-Unis, le dividende est le plus souvent versé chaque trimestre." : " En France, il est le plus souvent versé une fois par an, parfois en plusieurs acomptes."}</li>
+      <li><b>Le jour du détachement</b>, il faut déjà détenir l'action (l'avoir achetée au plus tard la veille). Ce jour-là, le cours baisse en général à peu près du montant du dividende.</li>
+      <li><b>Le jour du paiement</b>, quelques jours plus tard, l'argent arrive sur votre compte.</li>
+      <li><b>L'impôt</b> dépend du compte : rien dans un PEA tant que l'argent y reste, ${pct(RATES.pfu, 1, false)} sur un compte-titres. <a class="lnk" href="/pea-cto">Le détail par compte</a>.${us ? " Pour une société étrangère, son pays prélève souvent une retenue à la source (15 % aux États-Unis avec le formulaire W-8BEN)." : ""}</li></ol>`;
+  if (!(f.divPaid > 0.5) && !(f.dps > 0)) return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2></div><div class="pb">
+      <p class="lead" style="margin-top:0">${esc(s.name)} n'a pas versé de dividende sur l'exercice ${f.year}. Elle garde ses bénéfices pour investir, réduire sa dette ou racheter ses propres actions (ce qui augmente la part de chaque actionnaire).</p>
+      ${acc("Comment fonctionne un dividende ?", how)}</div></section>`;
+  const okv = vals.map((x, i) => [x, c.years[i]]).filter(([x]) => okn(x) && x > 0);
+  const ups = okv.slice(1).filter(([x], i) => x >= okv[i][0] * 0.98).length;
+  const cov = m.payout != null ? (m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig") : null;
+  const per1000 = v && v.yld ? 1000 * v.yld : null;
+  const tiles = [
+    f.dps > 0 ? ["Par action", eur(f.dps, 2, cur), `versé${f.dpsEst ? " (estimé)" : ""} pendant l'exercice ${f.year}`] : null,
+    v && v.yld ? ["Rendement", pct(v.yld, 1, false), "dividende annuel ÷ prix actuel de l'action"] : null,
+    m.payout != null ? ["Part du bénéfice", pct(m.payout, 0, false), cov === "fort" ? "reversée : il reste de la marge si le bénéfice baisse" : cov === "moyen" ? "reversée : peu de marge si le bénéfice baisse" : "reversée : plus que ce que l'entreprise gagne"] : null,
+    next.length ? ["Prochaine date", dLabel(next[0].date), next[0].label] : null,
+  ].filter(Boolean);
+  return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant par action estimé à partir des comptes</span>` : ""}</div>
+    <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${esc(s.name)} a reversé ${big(f.divPaid, cur)} à ses actionnaires pendant l'exercice ${f.year}${m.payout != null ? `, soit ${partWords(m.payout)} de son bénéfice (${pct(m.payout, 0, false)})` : ""}.${per1000 != null ? ` Au cours actuel, <b>1 000 € d'actions rapporteraient environ ${F0.format(per1000)} € par an</b> avant impôts, si le dividende restait au même niveau.` : ""}${okv.length >= 3 ? ` Le total versé ${ups === okv.length - 1 ? "a progressé ou s'est maintenu chaque année" : `a progressé ou s'est maintenu ${ups} année${ups > 1 ? "s" : ""} sur ${okv.length - 1}`} depuis ${okv[0][1]}.` : ""}</p></div>
+    <div class="tiles">${tiles.map(([k, val, sub]) => `<div class="tile"><span class="kick">${k}</span><span class="v">${esc(val)}</span><small>${esc(sub)}</small></div>`).join("")}</div>
+    <div class="pb">${colChart({ labels: c.years.map(String), series: [{ name: "Dividendes versés", values: vals }], fmt: v => big(v, cur), tickFmt: compact(cur), h: 200 })}<p class="note">Total versé chaque année, toutes actions confondues : contrairement au montant par action, il n'est pas faussé quand l'entreprise divise ses actions.</p>
+    ${acc("Le dividende est-il solide ?", `<p>${m.payout == null ? "Impossible à dire sans bénéfice." : m.payout > 1 ? `Non : l'entreprise verse plus (${pct(m.payout, 0, false)}) que ce qu'elle gagne. Elle puise dans sa trésorerie ou s'endette pour payer.` : m.payout > 0.9 ? `Fragile : ${pct(m.payout, 0, false)} du bénéfice est versé. Si le bénéfice baisse, le dividende risque de baisser aussi.` : m.payout > 0.6 ? `Plutôt oui : ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une marge.` : `Oui : seulement ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une bonne marge si les bénéfices baissent.`}${f.fcf != null && f.divPaid > 0 ? ` La trésorerie disponible (${big(f.fcf, cur)}) ${f.fcf >= f.divPaid ? "couvre" : "ne couvre pas"} le dividende versé.` : ""}</p><p class="muted">Un dividende n'est jamais garanti : l'entreprise peut le réduire ou le supprimer.</p>`)}
+    ${acc("Comment fonctionne un dividende ?", how)}
+    <p style="margin:12px 0 0"><a class="more" href="/dividendes">Calendrier des dividendes à venir →</a></p></div></section>`;
+}
+
+/* ---------- Prix de l'action, calculé automatiquement ---------- */
+function prixHTML(s, c) {
+  const f = figuresOf(c), v = valo(s), idxId = s.region === "US" || s.region === "MONDE" ? "sp500" : "cac40", idx = PX["i:" + idxId], idxName = idxId === "sp500" ? "S&P 500" : "CAC 40";
+  if (!v) return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2></div><div class="pb muted">${PXUP && PXUP !== "none" ? "Le cours de cette action n'est pas disponible dans notre source pour le moment." : "Chargement du cours…"}</div></section>`;
+  const p = v.p, mp = MEDPE[s.sector];
+  const perf = (a, b) => a && b ? a / b - 1 : null;
+  const prow = [["1 an", "p1y"], ["3 ans", "p3y"], ["5 ans", "p5y"]].map(([l, k]) => [l, perf(p.p, p[k]), idx ? perf(idx.p, idx[k]) : null]).filter(r => r[1] != null);
+  const pos = p.h52 && p.l52 && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null;
+  const peTxt = v.pe ? `L'action coûte <b>${F0.format(v.pe)} fois</b> le bénéfice de la dernière année${mp ? `, contre ${F0.format(mp)} fois pour la médiane de son secteur` : ""}. ${mp ? (v.pe > mp * 1.3 ? "Le marché la paie plus cher que ses concurrentes : il attend plus de croissance, ou il est optimiste." : v.pe < mp * 0.75 ? "Le marché la paie moins cher que ses concurrentes : il attend moins de croissance, ou il est prudent." : "C'est dans la moyenne de son secteur.") : ""}` : f.net != null && f.net <= 0 ? "L'entreprise a perdu de l'argent sur le dernier exercice : le PER (prix ÷ bénéfice) ne se calcule pas." : "";
+  return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2><span class="light" style="font-size:12.5px">Cours différé · ${esc(p.s)}</span></div>
+    <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${peTxt}</p></div>
+    <div class="tiles">
+      <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
+      <div class="tile"><span class="kick">Valeur en Bourse</span><span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
+      <div class="tile"><span class="kick">PER</span><span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `années de bénéfice pour « rembourser » le prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : "non calculable (perte ou donnée manquante)"}</small></div>
+      <div class="tile"><span class="kick">Rendement</span><span class="v">${v.yld != null ? pct(v.yld, 1, false) : "–"}</span><small>${v.yld != null ? "dividende annuel ÷ valeur en Bourse" : "pas de dividende"}</small></div>
+    </div>
+    <div class="pb">
+      ${pos != null ? `<p class="kick" style="margin-top:4px">Sur un an : du plus bas au plus haut</p><div class="range"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>${pxFmt(p.l52, p.cur)}</span><span>${pos > 0.85 ? "proche de son plus haut de l'année" : pos < 0.15 ? "proche de son plus bas de l'année" : `à ${F0.format(pos * 100)} % entre le plus bas et le plus haut`}</span><span>${pxFmt(p.h52, p.cur)}</span></div>` : ""}
+      ${prow.length ? `<p class="kick" style="margin-top:18px">Évolution du cours, comparée au ${idxName}</p>
+        <div class="scroll-x"><table class="t"><thead><tr><th class="l">Sur</th><th>${esc(s.name)}</th>${idx ? `<th>${idxName}</th>` : ""}</tr></thead><tbody>${prow.map(([l, a, b]) => `<tr><td class="l">${l}</td><td class="num ${a >= 0 ? "up" : "down"}">${sgn(a, 0)}</td>${idx ? `<td class="num">${b != null ? sgn(b, 0) : "–"}</td>` : ""}</tr>`).join("")}</tbody></table></div>
+        <p class="note">Évolution du prix seul, dividendes non compris. ${prow.at(-1)[2] != null ? (prow.at(-1)[1] > prow.at(-1)[2] ? `Sur ${prow.at(-1)[0]}, l'action a fait mieux que le ${idxName}.` : `Sur ${prow.at(-1)[0]}, l'action a fait moins bien que le ${idxName}.`) : ""} Le passé ne dit rien de l'avenir.</p>` : ""}
+    </div>
+    <div class="src">PER et rendement calculés avec les derniers comptes annuels publiés (exercice ${f.year}) et la valeur en Bourse actuelle, convertie en euros aux taux de la BCE. Cours : Google Finance, différés.</div></section>`;
+}
+function prixRun() { }
+
+/* ---------- Questions fréquentes sur une entreprise (en bas de fiche) ---------- */
+function faqHTML(s, c) {
+  const f = figuresOf(c), m = ratios(f), v = valo(s), next = eventsOf(s.id).find(e => e.date >= TODAY && /ésultat/.test(e.type)), peers = peersOf(s, 4), pea = peaOk(s), cur = f.currency;
+  const qa = [];
+  if (s.fiche) qa.push([`Que fait ${s.name} ?`, `${esc(s.fiche.fait)} ${esc(s.fiche.argent)}`]);
+  qa.push([`${s.name} verse-t-elle un dividende ?`, f.divPaid > 0.5 ? `Oui. Sur l'exercice ${f.year}, elle a versé ${big(f.divPaid, cur)} à ses actionnaires${m.payout != null ? `, soit ${pct(m.payout, 0, false)} de son bénéfice` : ""}${f.dps > 0 ? ` (${eur(f.dps, 2, cur)} par action)` : ""}.${v && v.yld ? ` Au cours actuel, cela représente un rendement d'environ ${pct(v.yld, 1, false)} par an.` : ""}` : `Non, pas sur l'exercice ${f.year} : elle garde ses bénéfices pour investir ou racheter ses actions.`]);
+  if (pea != null) qa.push([`Peut-on mettre des actions ${s.name} dans un PEA ?`, pea ? `Oui : son siège est dans l'Union européenne (ou l'Espace économique européen), ce qui la rend éligible au PEA. Elle peut aussi être achetée sur un compte-titres. <a class="lnk" href="/pea-cto">Comparer les comptes</a>.` : `Non : son siège n'est pas dans l'Union européenne. Il faut un compte-titres. Un ETF éligible au PEA peut en revanche la contenir indirectement. <a class="lnk" href="/pea-cto">Comparer les comptes</a>.`]);
+  if (!isBank(s) && f.netDebt != null) qa.push([`${s.name} est-elle endettée ?`, f.netDebt < 0 ? `Non : elle a ${big(-f.netDebt, cur)} de trésorerie de plus que ses emprunts.` : m.lev != null ? `Sa dette nette est de ${big(f.netDebt, cur)}, soit ${F1.format(m.lev)} années de résultat d'exploitation : un endettement ${m.lev <= 1.5 ? "faible" : m.lev <= 3 ? "modéré" : "élevé"}.` : `Sa dette nette est de ${big(f.netDebt, cur)}.`]);
+  qa.push([`Quand ${s.name} publie-t-elle ses résultats ?`, next ? `La prochaine publication annoncée est le ${dLabel(next.date)} (${esc(next.label)}).` : `Aucune date n'est encore annoncée. Les grandes entreprises publient en général leurs résultats annuels un à trois mois après la fin de l'exercice, puis des résultats trimestriels ou semestriels.`]);
+  if (peers.list.length) qa.push([`Qui sont les concurrents de ${s.name} ?`, `${peers.auto ? "Parmi les entreprises suivies sur le site, les plus comparables sont" : "Ses principaux concurrents suivis sur le site sont"} ${peers.list.map(c => `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a>`).join(", ")}. <a class="lnk" href="/comparer?ids=${[s, ...peers.list].map(c => c.id).join(",")}">Les comparer</a>.`]);
+  if (v && v.pe) qa.push([`L'action ${s.name} est-elle chère ?`, `Le site ne dit pas si une action est une bonne affaire. Il donne un repère : l'entreprise vaut en Bourse ${F0.format(v.pe)} fois son bénéfice annuel${MEDPE[s.sector] ? `, contre ${F0.format(MEDPE[s.sector])} fois pour la médiane de son secteur` : ""}. Un multiple élevé traduit des attentes de croissance fortes ; si elles ne se réalisent pas, le cours peut baisser.`]);
+  return `<section class="panel" id="faq"><div class="ph"><h2>Questions fréquentes sur ${esc(s.name)}</h2></div><div class="pb" style="padding-top:4px">${qa.map(([q, a]) => acc(esc(q), `<p>${a}</p>`)).join("")}</div></section>`;
+}
+
+/* ---------- Calendrier des dividendes (avec export vers un agenda) ---------- */
+function icsFile(events, name) {
+  const d = x => x.replace(/-/g, ""), esc2 = t => String(t).replace(/[,;\\]/g, m => "\\" + m).replace(/\n/g, " ");
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//bilan//calendrier//FR", "CALSCALE:GREGORIAN", "X-WR-CALNAME:" + esc2(name)];
+  events.forEach((e, i) => { const co = RBY[e.id]; const next = new Date(e.date + "T00:00:00Z"); next.setUTCDate(next.getUTCDate() + 1);
+    lines.push("BEGIN:VEVENT", `UID:${d(e.date)}-${e.id}-${i}@bilan`, `DTSTAMP:${d(TODAY)}T000000Z`, `DTSTART;VALUE=DATE:${d(e.date)}`, `DTEND;VALUE=DATE:${d(next.toISOString().slice(0, 10))}`, `SUMMARY:${esc2((co ? co.name : e.id) + " : " + e.label)}`, e.source ? `URL:${e.source}` : "", "END:VEVENT"); });
+  lines.push("END:VCALENDAR");
+  return new Blob([lines.filter(Boolean).join("\r\n")], { type: "text/calendar" });
+}
+function pageDividendes() {
+  setTitle("Calendrier des dividendes"); setNav("news");
+  const favIds = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
+  const all = AG.events.filter(e => e.date >= TODAY && RBY[e.id] && /ividende|acompte|détachement|solde/i.test(e.type + " " + e.label)).sort((a, b) => a.date.localeCompare(b.date));
+  let only = false;
+  const render = () => {
+    const list = all.filter(e => !only || favIds.has(e.id));
+    const byM = {}; list.forEach(e => (byM[e.date.slice(0, 7)] = byM[e.date.slice(0, 7)] || []).push(e));
+    $("#dvl").innerHTML = list.length ? Object.entries(byM).map(([mk, l]) => `<section class="panel"><div class="ph"><h2>${MOISL[+mk.slice(5) - 1].replace(/^./, x => x.toUpperCase())} ${mk.slice(0, 4)}</h2><span class="light" style="font-size:12.5px">${l.length} date${l.length > 1 ? "s" : ""}</span></div>${agendaHTML(l, true)}</section>`).join("")
+      : `<section class="panel"><div class="empty">${only ? "Aucune date de dividende annoncée pour vos favoris." : "Aucune date de dividende annoncée pour l'instant."}</div></section>`;
+  };
+  app.innerHTML = `<h1 class="pagetitle">Calendrier des dividendes</h1>
+    <p class="pagesub">Les prochaines dates annoncées par les entreprises : détachement (il faut détenir l'action la veille au soir) et paiement. Chaque date vient du calendrier publié par l'entreprise ou d'un article de presse, avec sa source.</p>
+    <section class="panel"><div class="pb" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <div class="chips"><button type="button" data-o="0" class="on">Toutes les entreprises</button><button type="button" data-o="1">Mes favoris${favIds.size ? ` (${favIds.size})` : ""}</button></div>
+      <button type="button" class="btn" id="ics" style="margin-left:auto">Ajouter à mon agenda (.ics)</button></div>
+      <div class="src">Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook : les dates s'y ajoutent, rien n'est envoyé.</div></section>
+    <div id="dvl"></div>`;
+  render();
+  $(".chips", app).onclick = e => { const b = e.target.closest("button"); if (!b) return; only = b.dataset.o === "1"; $$(".chips button", app).forEach(x => x.classList.toggle("on", x === b)); render(); };
+  $("#ics").onclick = () => { const list = all.filter(e => !only || favIds.has(e.id)); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (bilan.)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+}
+
+/* ---------- Premiers pas : parcours en trois niveaux, avec quiz ---------- */
+let PARCOURS = null;
+const PKEY = "bilan.parcours";
+function pState() { try { return JSON.parse(localStorage.getItem(PKEY) || "{}"); } catch (e) { return {}; } }
+function pSave(st) { try { localStorage.setItem(PKEY, JSON.stringify(st)); } catch (e) { } }
+async function pageDebuter(niv, lec) {
+  setTitle("Premiers pas en Bourse"); setNav("lex");
+  if (!PARCOURS) { try { PARCOURS = await (await fetch("/data/parcours.json")).json(); } catch (e) { app.innerHTML = `<div class="empty">Le parcours n'a pas pu être chargé.</div>`; return; } }
+  const st = pState(), N = PARCOURS.niveaux;
+  if (!niv) {
+    app.innerHTML = `<h1 class="pagetitle">Premiers pas en Bourse</h1><p class="pagesub">Trois étapes, dans l'ordre. Chaque leçon se lit en trois minutes, avec un exemple chiffré ; un quiz de six questions termine chaque étape. Votre progression reste sur cet appareil.</p>
+      <div class="trois" style="padding:0;margin-bottom:20px">${N.map((n, i) => { const done = n.lecons.filter(l => st[n.id + "/" + l.id]).length, q = st["quiz/" + n.id];
+        return `<a class="carte" href="/debuter/${n.id}" style="text-decoration:none;color:inherit;background:#fff"><div class="n">${i + 1}</div><h3>${esc(n.titre)}</h3><p>${esc(n.intro)}</p><p class="light" style="font-size:13px;margin-top:6px">${done} / ${n.lecons.length} leçons lues${q != null ? ` · quiz : ${q} / ${n.quiz.length}` : ""}</p><div class="feub" style="margin-top:6px"><span class="f" style="width:${done / n.lecons.length * 100}%"></span></div></a>`; }).join("")}</div>
+      <section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Ensuite : passer à la pratique</b><div class="muted">Ouvrir une fiche, comparer deux entreprises, choisir son compte.</div></div><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/entreprises">Les entreprises →</a><a class="more" href="/comparer">Comparer →</a><a class="more" href="/pea-cto">PEA ou compte-titres →</a></div></div></section>`;
+    return;
+  }
+  const n = N.find(x => x.id === niv); if (!n) return pageNotFound();
+  const ni = N.indexOf(n);
+  const side = `<nav class="lexnav" style="display:flex;flex-direction:column;gap:2px">${n.lecons.map((l, i) => `<a href="/debuter/${n.id}/${l.id}" style="${l.id === lec ? "font-weight:700;color:var(--ink)" : ""}">${st[n.id + "/" + l.id] ? "✓ " : `${i + 1}. `}${esc(l.titre)}</a>`).join("")}<a href="/debuter/${n.id}/quiz" style="${lec === "quiz" ? "font-weight:700;color:var(--ink)" : ""}">Quiz${st["quiz/" + n.id] != null ? ` (${st["quiz/" + n.id]}/${n.quiz.length})` : ""}</a></nav>`;
+  const head = `<div class="crumbs"><a href="/debuter">Premiers pas</a> › ${esc(n.titre)}</div>`;
+  if (lec === "quiz") {
+    let i = 0, score = 0, ans = null;
+    const draw = () => {
+      const q = n.quiz[i];
+      $("#qz").innerHTML = i >= n.quiz.length ? `<p class="lead">Score : <b>${score} / ${n.quiz.length}</b>. ${score >= 5 ? "Les notions de cette étape sont acquises." : score >= 3 ? "Une ou deux notions méritent d'être relues." : "Relire les leçons de cette étape vous aidera avant de passer à la suite."}</p>
+          <div style="display:flex;gap:16px;flex-wrap:wrap"><button type="button" class="btn" id="qre">Recommencer</button>${N[ni + 1] ? `<a class="more" href="/debuter/${N[ni + 1].id}">Étape suivante : ${esc(N[ni + 1].titre)} →</a>` : `<a class="more" href="/entreprises">Passer aux fiches entreprises →</a>`}</div>`
+        : `<p class="kick">Question ${i + 1} sur ${n.quiz.length}</p><p class="lead" style="margin-top:4px">${esc(q.q)}</p>
+          <div class="qopts">${q.options.map((o, k) => `<button type="button" class="qopt${ans != null ? (k === q.bonne ? " ok" : k === ans ? " ko" : "") : ""}" data-k="${k}" ${ans != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}</div>
+          ${ans != null ? `<p class="${ans === q.bonne ? "up" : "down"}" style="font-weight:600;margin:12px 0 2px">${ans === q.bonne ? "Bonne réponse." : "Ce n'est pas la bonne réponse."}</p><p style="margin:0 0 12px">${esc(q.explication)}</p><button type="button" class="btn" id="qnx">${i + 1 < n.quiz.length ? "Question suivante" : "Voir le score"}</button>` : ""}`;
+      $$(".qopt", $("#qz")).forEach(b => b.onclick = () => { ans = +b.dataset.k; if (ans === q.bonne) score++; draw(); });
+      const nx = $("#qnx"); if (nx) nx.onclick = () => { i++; ans = null; if (i >= n.quiz.length) { const s2 = pState(); s2["quiz/" + n.id] = score; pSave(s2); } draw(); };
+      const re = $("#qre"); if (re) re.onclick = () => { i = 0; score = 0; ans = null; draw(); };
+    };
+    app.innerHTML = head + `<div class="cols"><div><h1 class="pagetitle">Quiz : ${esc(n.titre)}</h1><section class="panel"><div class="pb" id="qz"></div></section></div><aside><section class="panel"><div class="ph"><h2>${esc(n.titre)}</h2></div><div class="pb">${side}</div></section></aside></div>`;
+    draw(); return;
+  }
+  const L = n.lecons.find(l => l.id === lec) || n.lecons[0], li = n.lecons.indexOf(L);
+  st[n.id + "/" + L.id] = 1; pSave(st);
+  const nextL = n.lecons[li + 1];
+  app.innerHTML = head + `<div class="cols"><div>
+      <p class="kick">Étape ${ni + 1} · leçon ${li + 1} sur ${n.lecons.length}</p><h1 class="pagetitle">${esc(L.titre)}</h1><p class="pagesub">${esc(L.resume)}</p>
+      <section class="panel"><div class="pb" style="font-size:15.5px;line-height:1.65">${L.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}
+        <div class="calc" style="display:block;margin:14px 0"><span class="kick">Exemple</span><p style="margin:4px 0 0;color:var(--ink)">${esc(L.exemple)}</p></div>
+        <p class="kick" style="margin-top:16px">À retenir</p><ul style="margin:4px 0 0;padding-left:18px">${L.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+        ${L.voir ? `<p style="margin:14px 0 0"><a class="more" href="${esc(L.voir)}">Voir sur le site →</a></p>` : ""}</div></section>
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">${li > 0 ? `<a class="more" href="/debuter/${n.id}/${n.lecons[li - 1].id}">← ${esc(n.lecons[li - 1].titre)}</a>` : "<span></span>"}${nextL ? `<a class="more" href="/debuter/${n.id}/${nextL.id}">${esc(nextL.titre)} →</a>` : `<a class="more" href="/debuter/${n.id}/quiz">Faire le quiz de l'étape →</a>`}</div>
+    </div><aside><section class="panel"><div class="ph"><h2>${esc(n.titre)}</h2></div><div class="pb">${side}</div></section></aside></div>`;
+  scrollTo(0, 0);
+}
+
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -2359,6 +2703,8 @@ function route() {
   else if (p === "/favoris") pageFavoris();
   else if (p === "/comparer") pageComparer();
   else if (p === "/pea-cto") pageEnveloppes();
+  else if (p === "/dividendes") pageDividendes();
+  else if ((m = p.match(/^\/debuter(?:\/([a-z-]+))?(?:\/([a-z0-9-]+))?$/))) pageDebuter(m[1], m[2]);
   else if (p === "/mentions-legales") pageMentions();
   else pageNotFound();
 }
@@ -2432,6 +2778,7 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   R.companies.forEach(c => { RBY[c.id] = c; if (c.isin) ISINBY[c.isin] = c; });
   computeMedians();
   favCount();
+  PXP = loadPrices();
   route();
 });
 </script>

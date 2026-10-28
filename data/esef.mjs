@@ -13,7 +13,7 @@ export const CONCEPTS = {
   equity: ["ifrs-full:EquityAttributableToOwnersOfParent", "ifrs-full:Equity"],
   cash: ["ifrs-full:CashAndCashEquivalents"],
   cfo: ["ifrs-full:CashFlowsFromUsedInOperatingActivities"],
-  capexPpe: ["ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities", "ifrs-full:PurchaseOfPropertyPlantAndEquipment"],
+  capexPpe: ["ifrs-full:PurchaseOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities", "ifrs-full:PurchaseOfPropertyPlantAndEquipment", "ifrs-full:PurchaseOfPropertyPlantAndEquipmentIntangibleAssetsOtherThanGoodwillInvestmentPropertyAndOtherNoncurrentAssets"],
   capexInt: ["ifrs-full:PurchaseOfIntangibleAssetsClassifiedAsInvestingActivities", "ifrs-full:PurchaseOfIntangibleAssets"],
   da: ["ifrs-full:DepreciationAndAmortisationExpense", "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss", "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpense", "ifrs-full:AdjustmentsForDepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss"],
   debtTotal: ["ifrs-full:Borrowings"],

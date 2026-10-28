@@ -8,6 +8,7 @@ const INDEX = U.map(c => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], 
 import amf from "./amf.mjs";
 import communaute from "./communaute.mjs";
 import presse from "./presse.mjs";
+import { cours } from "./cours.mjs";
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -41,16 +42,19 @@ export function meta(path) {
   if (p === "/favoris") return { title: `Mes favoris · ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres clés, prochaines dates et presse." };
   if (p === "/comparer") return { title: `Comparer des entreprises · ${SITE}`, desc: "Ventes, marge, bénéfice, dette et dividende de plusieurs entreprises côte à côte, expliqués simplement." };
   if (p === "/pea-cto") return { title: `PEA, compte-titres ou assurance-vie : lequel choisir · ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'impôt sur les gains en 2026, avec un exemple chiffré." };
+  if (p === "/dividendes") return { title: `Calendrier des dividendes · ${SITE}`, desc: "Les prochaines dates de détachement et de paiement des dividendes, avec leur source, à ajouter à votre agenda." };
+  if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse · ${SITE}`, desc: "Un parcours en trois étapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
   return null;
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     if (url.pathname === "/api/amf") return amf(request, U.filter(c => c.region === "FR").map(c => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, U);
+    if (url.pathname === "/api/cours") return cours(request, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const info = meta(url.pathname);
     if (!info) {
