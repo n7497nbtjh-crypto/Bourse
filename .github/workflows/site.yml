@@ -1,0 +1,32 @@
+# Mise en ligne rapide (2 à 3 minutes) quand seul le site change : pas de nouvelle collecte de données.
+name: Mise en ligne du site
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [main]
+    paths: ["cf/site/index.html", "cf/site/calc.js", "cf/src/**", "build.mjs", "data/gf.mjs", "data/concurrents.json", "data/parcours.json", ".github/workflows/site.yml"]
+permissions:
+  contents: read
+concurrency:
+  group: site
+  cancel-in-progress: true
+jobs:
+  site:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Construction et tests
+        run: |
+          node build.mjs
+          node tests/t_calc.mjs
+          node tests/t_worker.mjs
+          node --no-warnings tests/t_communaute.mjs
+      - name: Publication sur Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx --yes wrangler@3.114.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true
