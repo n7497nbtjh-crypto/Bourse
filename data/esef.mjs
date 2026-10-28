@@ -62,7 +62,7 @@ export function extract(doc) {
     (byConcept[d.concept] = byConcept[d.concept] || []).push({ v, unit: d.unit || "", ...parsePeriod(d.period) });
   }
   const years = {};
-  let currency = null, fyEnd = null;
+  let currency = null, fyEnd = null, anyCur = null;
   const put = (key, y, v) => { (years[y] = years[y] || {}); if (years[y][key] == null) years[y][key] = v; };
   for (const [key, concepts] of Object.entries(CONCEPTS)) {
     for (const c of concepts) {
@@ -73,6 +73,7 @@ export function extract(doc) {
         }
         const y = fiscalYear(f.end);
         if (key === "ca" && /^iso4217:/.test(f.unit)) { currency = currency || f.unit.slice(8, 11); }
+        if ((key === "net" || key === "equity") && /^iso4217:/.test(f.unit)) anyCur = anyCur || f.unit.slice(8, 11); // banques et assureurs : pas de « chiffre d'affaires »
         if (key === "ca" || key === "net") { const e = new Date(f.end.getTime() - 1000).toISOString().slice(5, 10); fyEnd = fyEnd || e; }
         put(key, y, MONEY_PER_SHARE.has(key) ? f.v : f.v / 1e6);
       }
@@ -119,7 +120,7 @@ export function extract(doc) {
     if (r.dps == null && r.divPaid != null && r.eps && r.net) { const shares = r.net / r.eps; if (shares > 0) r.dpsEst = r.divPaid / shares; }
     for (const k of ["capexPpe", "capexInt", "debtTotal", "debtLong", "debtShortAll", "debtShort", "debtCurLong", "debtInstrNC", "debtInstrC", "debtFinNC", "debtFinC", "debtExtSum", "daExtMax", "ebitdaExt", "ebitdaExtExt", "da"]) delete r[k];
   }
-  return { currency: currency || "EUR", fyEnd, years };
+  return { currency: currency || anyCur || "EUR", fyEnd, years };
 }
 
 // Fusionne plusieurs rapports : le plus récent l'emporte pour une même année.

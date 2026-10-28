@@ -93,7 +93,7 @@ export async function collectSec(fetchFn, c) {
   const s = toSeries(extractSec(doc));
   if (!s.years.length) throw new Error("aucun exercice annuel lisible");
   if (!nameMatches(c.legal || c.name, doc.entityName)) VERIF.push(`${c.name} : le code ${c.sec} renvoie à « ${doc.entityName} »`);
-  return { v: VERSION,
+  return { v: VERSION, devise2: true,
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, region: c.region, domain: c.domain, desc: c.desc, cik, legalName: doc.entityName || c.name,
     sector: c.sector, ...s,
     sources: [{ periodEnd: s.years[s.years.length - 1] + "", report: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=10-K`, json: factsUrl(cik) }],
@@ -124,7 +124,7 @@ export async function collectOne(fetchFn, c) {
   }
   const merged = merge(reports), s = toSeries(merged);
   const caByYear = Object.fromEntries(Object.entries(merged.years).map(([y, r]) => [y, r.ca]));
-  return { v: VERSION, segments: bestSegments(segs, caByYear),
+  return { v: VERSION, devise2: true, segments: bestSegments(segs, caByYear),
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id.lei, legalName: id.legalName || c.name,
     sector: c.sector, ...s,
     sources: fl.map(f => ({ periodEnd: f.period_end, report: f.report, json: f.json })),
@@ -180,7 +180,8 @@ async function main() {
     const file = new URL(`societes/${c.id}.json`, OUT);
     if (!only && existsSync(file)) { // comptes récents : on garde (les comptes ne changent qu'une fois par an)
       const old = JSON.parse(readFileSync(file));
-      if (old.v === VERSION && old.updated && Date.now() - new Date(old.updated) < FRESH) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      const deviseDouteuse = !old.devise2 && old.currency === "EUR" && /^(SE|DK|NO|GB|CH|PL|CZ|HU|IS)/.test(old.isin || c.isin || ""); // comptes non européens lus à tort en euros
+      if (old.v === VERSION && !deviseDouteuse && old.updated && Date.now() - new Date(old.updated) < FRESH) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);

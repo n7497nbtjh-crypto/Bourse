@@ -2582,14 +2582,18 @@ const pxOf = c => PX["c:" + c.id] || null;
 const pxEtf = e => PX["e:" + e.id] || null;
 function valo(c) { // capitalisation, PER, rendement, à partir du cours et des derniers comptes
   const p = pxOf(c); if (!p) return null;
-  const capE = p.cap ? toEur(p.cap, p.cur) : null, netE = c.net != null ? toEur(c.net * 1e6, c.currency) : null;
-  let pe = capE && netE > 0 ? capE / netE : null;
+  let capE = p.cap ? toEur(p.cap, p.cur) : null; const netE = c.net != null ? toEur(c.net * 1e6, c.currency) : null;
+  let pe = capE && netE > 0 ? capE / netE : null, sain = true;
   if (pe == null && c.eps > 0 && p.cur === c.currency) pe = p.p / c.eps;
+  // Garde-fou : devise des comptes mal lue ou capitalisation erronée dans la source des cours.
+  // Si le PER tiré de la capitalisation est invraisemblable, on le recalcule avec le cours et le bénéfice par action.
+  const peE = c.eps > 0 && p.p > 0 ? p.p / c.eps : null;
+  if (peE != null && peE >= 3 && peE <= 150 && (pe == null || pe < 3 || pe > 150)) { pe = peE; sain = false; if (c.net > 0) capE = toEur(p.p * c.net * 1e6 / c.eps, p.cur); }
   let yld = null;
-  if (c.divPaid > 0.5 && capE) yld = toEur(c.divPaid * 1e6, c.currency) / capE;
-  else if (c.dps > 0 && p.cur === c.currency) yld = c.dps / p.p;
+  if (sain && c.divPaid > 0.5 && capE) yld = toEur(c.divPaid * 1e6, c.currency) / capE;
+  if ((yld == null || yld > 0.15) && c.dps > 0 && (p.cur === c.currency || !sain)) yld = c.dps / p.p;
   if (yld != null && (yld > 0.25 || yld < 0)) yld = null;
-  if (pe != null && (pe > 500 || pe <= 0)) pe = null;
+  if (pe != null && (pe > 500 || pe < 2)) pe = null;
   return { p, capE, pe, yld };
 }
 let MEDPE = {};
