@@ -40,3 +40,10 @@ NO_SLEEP=1 node tests/fixtures/site_data.mjs && python3 tests/audit.py
 
 ## Taux fiscaux
 `RATES` en haut du script de `index.html` : 31,4 % (prélèvement forfaitaire) et 18,6 % (prélèvements sociaux), taux 2026. À vérifier chaque année.
+
+## Ajouts du 28/10/2026
+- **États-Unis** : comptes annuels lus à la SEC (data.sec.gov, « companyfacts », domaine public). Numéro CIK fixé dans `data/univers.mjs`. La SEC exige une adresse e-mail dans l'en-tête : variable de dépôt GitHub `CONTACT` (Settings > Secrets and variables > Actions > Variables).
+- **Europe** : même collecte ESEF que la France (filings.xbrl.org). Les sociétés allemandes n'y sont pas : leurs comptes sont au registre fédéral allemand, sans base ouverte réutilisable.
+- **Fiches** : `data/fiches.mjs`, écrites à la main (métier, origine du chiffre d'affaires, ce qui fait varier les résultats).
+- **Courtiers** : `data/courtiers.mjs`, grilles relevées le 28/10/2026 (pour-vos-finances.fr, finance-heros.fr). À revérifier chaque année.
+- **Lecture des comptes** : seuils affichés sur chaque fiche et dans le lexique (constante `RULES` de `cf/site/index.html`). Repères descriptifs, pas de recommandation.
