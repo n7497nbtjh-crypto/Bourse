@@ -16,7 +16,7 @@ on:
     - cron: "17 5 * * *"   # chaque jour vers 6 h 17 (heure de Paris en hiver)
   push:
     branches: [main]
-    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "data/etf.mjs", "data/etf_fetch.mjs", "data/agenda/**", "data/agenda_presse.mjs", "data/repartitions/**", "data/gf.mjs", "build.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
+    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "data/etf.mjs", "data/etf_fetch.mjs", "data/agenda/**", "data/agenda_presse.mjs", "data/repartitions/**", "data/gf.mjs", "build.mjs", "data/actu_analyse.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
 permissions:
   contents: write
 concurrency:
@@ -51,6 +51,12 @@ jobs:
           node tests/t_agenda.mjs
           node --no-warnings tests/t_communaute.mjs
           NO_SLEEP=1 node tests/t_esef.mjs
+      - name: Analyse des annonces officielles (SEC et AMF)
+        env:
+          CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
+        run: |
+          npm i --no-save --silent pdfjs-dist@4.10.38 || true
+          node data/actu_analyse.mjs 2>&1 | grep -v "^Warning: TT" || echo "::warning::Analyse des annonces interrompue"
       - name: Dates de résultats trouvées dans l'actualité
         run: node data/agenda_presse.mjs || echo "::warning::Recherche des dates dans la presse interrompue"
       - name: Site prêt à déposer sur Cloudflare

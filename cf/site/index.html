@@ -756,6 +756,25 @@ details.acc > summary{padding:14px 22px}
 .qopt{text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:11px 14px;font-size:14.5px;cursor:pointer}
 .qopt:hover:not([disabled]){border-color:var(--ink)}
 .qopt.ok{border-color:var(--g);background:#EAF5EF}.qopt.ko{border-color:var(--o);background:#FBEDE8}
+.qlist{display:flex;flex-direction:column}
+.qli{display:grid;grid-template-columns:74px 1fr;gap:14px;padding:12px 22px;border-top:1px solid var(--line2);color:inherit;text-decoration:none;align-items:center}
+.qli:hover{background:#FCFBF8}.qli .qt{display:block;font-weight:500;line-height:1.4}
+.qn{display:flex;flex-direction:column;align-items:center;border:1px solid var(--line);border-radius:10px;padding:6px 0;font-size:11.5px;color:var(--grey)}
+.qn b{font-family:var(--mono);font-size:18px;color:var(--ink)}.qn.has{border-color:var(--g);background:#EAF5EF}
+.qbody{font-size:16px;line-height:1.6}
+.prono .pbtn{display:flex;gap:8px;margin-top:auto}.prono .pbtn button{flex:1;border:1.5px solid var(--ink);background:#fff;border-radius:10px;padding:8px;font-weight:600;cursor:pointer}
+.prono .pbtn button.on{background:var(--ink);color:#fff}
+.prono a.nm{color:inherit;text-decoration:none}
+.pastp{padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.cocard.tool .tnum{font-family:var(--mono);font-size:22px;font-weight:600;color:var(--g)}
+table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;padding:5px 8px;background:#fff}
+.nti{display:block;font-weight:600;line-height:1.4}
+.nfig{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 4px}
+.nfig span{display:flex;flex-direction:column}.nfig small{font-size:11.5px;color:var(--light)}.nfig b{font-family:var(--mono);font-size:14px}
+.nlec{margin:6px 0 4px;padding-left:18px;font-size:14px;line-height:1.5}
+.nexp{margin:4px 0;font-size:12.5px;color:var(--grey)}
+.nsrc{font-size:12.5px;color:var(--grey);text-decoration:underline}
+.nwhy blockquote{margin:6px 0;padding:6px 10px;border-left:3px solid var(--line);font-size:13px;color:var(--grey)}
 </style>
 </head>
 <body>
@@ -774,13 +793,13 @@ details.acc > summary{padding:14px 22px}
         <a href="/etf" data-nav="etf">ETF</a>
         <a href="/actualites" data-nav="news">Actualité</a>
         <a href="/communaute" data-nav="com">Communauté</a>
-        <a href="/simulateurs" data-nav="sim">Outils</a>
+        <a href="/outils" data-nav="sim">Outils</a>
         <a href="/portefeuille" data-nav="pf">Portefeuille</a>
         <a href="/debuter" data-nav="lex">Apprendre</a>
       </nav>
       <div class="mright m-only"><button class="mbtn" id="searchBtn" aria-expanded="false">Chercher</button><button class="mbtn" id="menuBtn" aria-expanded="false">Menu</button></div>
     </div>
-    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/actualites">Actualité</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/simulateurs">Simulateurs</a><a href="/portefeuille">Portefeuille</a><a href="/debuter">Apprendre : premiers pas</a><a href="/lexique">Lexique</a><a href="/dividendes">Calendrier des dividendes</a></div>
+    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/actualites">Actualité</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/outils">Outils</a><a href="/portefeuille">Portefeuille</a><a href="/debuter">Apprendre : premiers pas</a><a href="/lexique">Lexique</a><a href="/dividendes">Calendrier des dividendes</a></div>
     <div class="msearch" id="msearch">
       <div class="search" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1211,6 +1230,17 @@ function dayLabel(iso) {
   const d = new Date(iso); return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "long", day: "numeric", month: "long" }).format(d).replace(/^./, c => c.toUpperCase());
 }
 const hhmm = iso => { const d = new Date(iso); return isNaN(d) || !/T\d/.test(iso) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).format(d); };
+let ANA = null, ANAP = null;
+const loadAna = () => ANAP || (ANAP = fetch("/data/actu-analyse.json").then(r => r.json()).then(j => { ANA = j.items || {}; }).catch(() => { ANA = {}; }));
+function anaHTML(i, C) { // l'annonce lue et résumée par le site, le document en source
+  const a = ANA && i.url ? ANA[i.url] : null, src = i.url ? `<a class="nsrc" href="${esc(i.url)}" target="_blank" rel="noopener">Document source${/sec\.gov/.test(i.url) ? " (SEC, en anglais)" : " (PDF)"}</a>` : "";
+  if (!a || (!a.chiffres?.length && !a.extraits?.length)) return `<span class="nti">${esc(a && a.titre || i.title)}</span><p class="nexp">${esc(a ? a.explication : C.why)}</p>${src}`;
+  return `<span class="nti">${esc(a.titre || i.title)}</span>
+    ${a.chiffres?.length ? `<div class="nfig">${a.chiffres.map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(v)}</b></span>`).join("")}</div>` : ""}
+    ${a.lecture?.length ? `<ul class="nlec">${a.lecture.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    ${a.extraits?.length ? `<details class="nwhy"><summary>Ce que dit le communiqué</summary>${a.extraits.map(x => `<blockquote>${esc(x)}</blockquote>`).join("")}</details>` : ""}
+    <p class="nexp">${esc(a.explication || C.why)}</p>${src}`;
+}
 function newsHTML(items, { showCo = true, max = 40 } = {}) {
   if (!items.length) return `<div class="empty">Aucune publication pour ce choix.</div>`;
   let out = "", last = "";
@@ -1220,8 +1250,7 @@ function newsHTML(items, { showCo = true, max = 40 } = {}) {
     const C = NCAT[i.cat];
     out += `<div class="nit">${showCo ? (i.co ? `<a href="/entreprise/${i.co.id}" class="nlogo">${logo(i.co, 36)}</a>` : `<span class="nlogo">${logo({ name: i.coName || "?" }, 36)}</span>`) : ""}
       <div class="nbody"><div class="nmeta">${showCo ? (i.co ? `<a class="nco" href="/entreprise/${i.co.id}">${esc(i.co.name)}</a>` : `<span class="nco">${esc(i.coName || "")}</span>`) : ""}<span class="ncat" style="--c:${C.c}">${C.label}</span><span class="light">${hhmm(i.date)}</span></div>
-        ${i.url ? `<a class="nti" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : `<span class="nti">${esc(i.title)}</span>`}
-        <details class="nwhy"><summary>Qu'est-ce que c'est ?</summary><p>${esc(C.why)}</p></details></div></div>`;
+        ${anaHTML(i, C)}</div></div>`;
   }
   return `<div class="news">${out}</div>`;
 }
@@ -1231,7 +1260,7 @@ const nfilter = (items, f) => items.filter(i => f === "tout" ? true : f === "imp
 function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, max = 40, showCo = true, filters = true, f = "imp" } = {}) {
   target.innerHTML = `${filters ? `<div class="chips nfil">${NFILTERS.map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>` : ""}<div class="nlist"><div class="empty">Chargement…</div></div>`;
   const list = $(".nlist", target);
-  (src === "US" ? loadSec(id) : loadAmf(params, limit)).then(items => {
+  Promise.all([src === "US" ? loadSec(id) : loadAmf(params, limit), loadAna()]).then(([items]) => {
     const draw = () => { list.innerHTML = newsHTML(nfilter(items, f), { showCo, max }); };
     draw();
     if (filters) $(".nfil", target).onclick = e => { const b = e.target.closest("button"); if (!b) return; f = b.dataset.f; $$(".nfil button", target).forEach(x => x.classList.toggle("on", x === b)); draw(); };
@@ -1565,19 +1594,6 @@ function chatBlock(el, room, { compact = false } = {}) {
     fetch(`/api/communaute/${b.dataset.a}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id }) }).then(() => { if (b.dataset.a === "aime") b.textContent = "♥ " + ((parseInt(b.textContent.replace(/\D/g, "")) || 0) + 1); else b.textContent = "Signalé"; b.disabled = true; });
   };
   load();
-}
-function pageCommunaute() {
-  setTitle("Communauté"); setNav("com");
-  const room = new URLSearchParams(location.search).get("salon") || "general";
-  app.innerHTML = `<h1 class="pagetitle">Communauté</h1><p class="pagesub">Partagez une idée, posez une question, comparez vos analyses. Citez une entreprise ou un ETF en tapant son nom : il devient cliquable et votre message apparaît aussi sur sa fiche.</p>
-    <div class="cols"><div><section class="panel"><div class="ph"><h2>${esc(roomName(room))}</h2>${room !== "general" ? `<a href="${roomHref(room)}">Voir la fiche</a>` : ""}</div><div class="pb" id="chat"></div></section></div>
-    <aside><section class="panel"><div class="ph"><h2>Salons actifs cette semaine</h2></div><div id="rooms"><div class="empty">Chargement…</div></div></section>
-      <section class="panel"><div class="ph"><h2>Derniers messages</h2></div><div class="pb" id="recent"></div></section></aside></div>`;
-  chatBlock($("#chat"), room);
-  fetch("/api/communaute/recent").then(r => r.json()).then(j => {
-    $("#rooms").innerHTML = (j.rooms || []).length ? `<div class="ag">${j.rooms.map(r => `<div class="it" style="grid-template-columns:1fr auto"><a class="co" href="/communaute?salon=${r.room}">${esc(roomName(r.room))}</a><span class="light">${r.n} message${r.n > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<div class="empty">Aucun salon actif.</div>`;
-    $("#recent").innerHTML = (j.items || []).length ? j.items.slice(0, 8).map(m => msgHTML(m, true)).join("") : `<div class="muted">Aucun message pour l'instant.</div>`;
-  }).catch(() => { $("#rooms").innerHTML = `<div class="empty">Indisponible pour le moment.</div>`; });
 }
 function tabCommu(s, c, el) {
   el.innerHTML = `<div class="cols"><div><section class="panel"><div class="ph"><h2>Discussion sur ${esc(s.name)}</h2></div><div class="pb" id="chat"></div></section></div>
@@ -2101,13 +2117,6 @@ function pfFeedback(r) { // constats chiffrés, sans recommandation
   const unset = r.lines.filter(l => !l.set).length;
   if (unset) out.push(`${unset} ligne${unset > 1 ? "s sont valorisées" : " est valorisée"} au dernier prix d'achat : indiquez le cours actuel dans le tableau des positions.`);
   return out;
-}
-function pagePortefeuille() {
-  setTitle("Portefeuille"); setNav("pf");
-  PF = pfLoad() || PF_EMPTY();
-  app.innerHTML = `<h1 class="pagetitle">Portefeuille</h1><p class="pagesub">Notez vos achats : le site calcule les frais de votre courtier, votre gain réel et ce que dit votre portefeuille.</p>
-    <section class="panel"><div class="pb" id="pfbody"></div><div class="src">Vos opérations restent dans ce navigateur, rien n'est envoyé. ${brokerSrc()}</div></section>`;
-  renderPf();
 }
 function renderPf() {
   const ops = PF.ops, r = pfCompute(ops, PF.prix), body = $("#pfbody"), sectorW = {}, b = brokerBy(PF.broker);
@@ -2677,6 +2686,257 @@ async function pageDebuter(niv, lec) {
   scrollTo(0, 0);
 }
 
+/* =====================================================================
+   Communauté, Portefeuille et Outils : nouvelle version
+   ===================================================================== */
+const keyName = k => k.startsWith("c:") ? (RBY[k.slice(2)] || {}).name : (ETFBY[k.slice(2)] || {}).name;
+const keyHref = k => k.startsWith("c:") ? `/entreprise/${k.slice(2)}` : `/etf/${k.slice(2)}`;
+const keyLogo = (k, s = 28) => k.startsWith("c:") ? logo(RBY[k.slice(2)] || { name: "?" }, s) : logo({ name: (ETFBY[k.slice(2)] || {}).issuer || "E", domain: ETFBY[k.slice(2)] ? issuerDom(ETFBY[k.slice(2)]) : "" }, s);
+function pseudoGet() { try { return localStorage.getItem(PSEUDO_KEY) || ""; } catch (e) { return ""; } }
+function pseudoSet(v) { try { localStorage.setItem(PSEUDO_KEY, v || ""); } catch (e) { } }
+const post = (path, body) => fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
+
+/* ---------- Communauté : questions-réponses, pronostics, portefeuille des visiteurs, discussions ---------- */
+const CTAB = [["questions", "Questions et réponses"], ["pronostics", "Pronostics de résultats"], ["portefeuilles", "Ce que détiennent les visiteurs"], ["discussions", "Discussions"]];
+function pageCommunaute() {
+  setTitle("Communauté"); setNav("com");
+  const qs = new URLSearchParams(location.search), tab = CTAB.some(t => t[0] === qs.get("onglet")) ? qs.get("onglet") : qs.get("salon") ? "discussions" : "questions";
+  app.innerHTML = `<h1 class="pagetitle">Communauté</h1>
+    <p class="pagesub">Les visiteurs s'entraident : questions de débutants, pronostics sur les prochains résultats, portefeuilles partagés anonymement. Rien de tout cela n'est un conseil ; c'est un lieu pour apprendre ensemble.</p>
+    <nav class="qtabs" style="margin-bottom:16px;border-bottom:1px solid var(--line)">${CTAB.map(([k, n]) => `<a href="/communaute?onglet=${k}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
+    <div id="ctb"><div class="empty">Chargement…</div></div>`;
+  ({ questions: commQuestions, pronostics: commPronos, portefeuilles: commPf, discussions: commDiscussions })[tab]($("#ctb"), qs);
+}
+function composeHTML(placeholder, btn, withPseudo = true) {
+  return `<form class="cform qform" autocomplete="off">${withPseudo ? `<div class="field"><label>Pseudo</label><input name="pseudo" maxlength="30" value="${esc(pseudoGet())}" placeholder="Votre pseudo"></div>` : ""}
+    <div class="field mwrap"><textarea name="body" rows="3" maxlength="1000" placeholder="${esc(placeholder)}"></textarea><div class="msug" hidden></div></div>
+    <input name="website" class="hp" tabindex="-1" aria-hidden="true"><button class="btn" type="submit">${btn}</button> <span class="muted cmsg" style="font-size:12.5px"></span></form>`;
+}
+function bindCompose(root, extra, done) {
+  const form = $(".qform", root), msg = $(".cmsg", root), picked = new Map();
+  mentionSuggest(form.body, $(".msug", root), picked);
+  form.onsubmit = ev => {
+    ev.preventDefault();
+    const fd = { ...Object.fromEntries(new FormData(form)), ...extra };
+    for (const [label, tok] of picked) fd.body = fd.body.split(label).join(tok);
+    pseudoSet(fd.pseudo); msg.textContent = "Envoi…";
+    post("/api/communaute", fd).then(j => { if (j.error) { msg.textContent = j.error; return; } msg.textContent = "Publié."; form.body.value = ""; picked.clear(); done && done(j.item); }).catch(() => { msg.textContent = "Envoi impossible pour le moment."; });
+  };
+}
+function commQuestions(el, qs) {
+  const id = parseInt(qs.get("q") || "0", 10);
+  if (id) {
+    el.innerHTML = `<div class="cols"><div id="fil"><div class="empty">Chargement…</div></div><aside>${qGuide()}</aside></div>`;
+    const load = () => fetch(`/api/communaute/fil?id=${id}`).then(r => r.json()).then(j => {
+      if (j.error) { $("#fil").innerHTML = `<section class="panel"><div class="empty">${esc(j.error)}</div></section>`; return; }
+      $("#fil").innerHTML = `<p style="margin:0 0 10px"><a class="more" href="/communaute?onglet=questions">← Toutes les questions</a></p>
+        <section class="panel"><div class="pb"><p class="kick">Question de ${esc(j.question.pseudo)} · ${new Date(j.question.created).toLocaleDateString("fr-FR")}</p><div class="qbody">${msgBody(j.question.body)}</div></div></section>
+        <section class="panel"><div class="ph"><h2>${j.answers.length ? `${j.answers.length} réponse${j.answers.length > 1 ? "s" : ""}` : "Pas encore de réponse"}</h2><span class="light" style="font-size:12.5px">Les plus utiles en premier</span></div>
+          <div class="pb">${j.answers.map(a => msgHTML(a, false)).join("") || `<p class="muted" style="margin:0">Soyez le premier à répondre.</p>`}</div></section>
+        <section class="panel"><div class="ph"><h2>Répondre</h2></div><div class="pb" id="rep">${composeHTML("Votre réponse. Expliquez simplement, citez une entreprise en tapant son nom.", "Publier la réponse")}</div></section>`;
+      bindCompose($("#rep"), { room: "questions", kind: "avis", parent: id }, load);
+      bindVotes($("#fil"));
+    }).catch(() => { $("#fil").innerHTML = `<section class="panel"><div class="empty">Indisponible pour le moment.</div></section>`; });
+    load(); return;
+  }
+  el.innerHTML = `<div class="cols"><div>
+      <section class="panel"><div class="ph"><h2>Poser une question</h2></div><div class="pb" id="ask">${composeHTML("Par exemple : pourquoi l'action de Danone baisse-t-elle alors que ses ventes montent ? Tapez le nom d'une entreprise pour la citer.", "Poser la question")}</div></section>
+      <section class="panel"><div class="ph"><h2>Les dernières questions</h2></div><div id="qlist"><div class="empty">Chargement…</div></div></section>
+    </div><aside>${qGuide()}</aside></div>`;
+  const load = () => fetch("/api/communaute/questions").then(r => r.json()).then(j => {
+    $("#qlist").innerHTML = (j.items || []).length ? `<div class="qlist">${j.items.map(q => `<a class="qli" href="/communaute?onglet=questions&q=${q.id}"><span class="qn ${q.n ? "has" : ""}"><b>${q.n || 0}</b>réponse${q.n > 1 ? "s" : ""}</span><span><span class="qt">${esc(stripTok(q.body).slice(0, 160))}${q.body.length > 160 ? "…" : ""}</span><span class="light" style="font-size:12.5px">${esc(q.pseudo)} · ${new Date(q.created).toLocaleDateString("fr-FR")}${q.likes ? ` · ♥ ${q.likes}` : ""}</span></span></a>`).join("")}</div>`
+      : `<div class="empty">Pas encore de question. Lancez-vous : il n'y a pas de question naïve.</div>`;
+  }).catch(() => { $("#qlist").innerHTML = `<div class="empty">L'espace communauté n'est pas disponible pour le moment.</div>`; });
+  bindCompose($("#ask"), { room: "questions", kind: "question" }, item => go(`/communaute?onglet=questions&q=${item.id}`));
+  load();
+}
+const stripTok = b => String(b).replace(/\[\[[ce]:([a-z0-9-]+)\]\]/g, (m, id) => (RBY[id] || ETFBY[id] || { name: id }).name);
+function qGuide() { return `<section class="panel"><div class="ph"><h2>Comment ça marche</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Posez une question sur une entreprise, un ETF, un chiffre que vous ne comprenez pas. Les autres visiteurs répondent ; les réponses jugées utiles (♥) remontent en tête.</p><p>Avant de demander, le <a class="lnk" href="/debuter">parcours Premiers pas</a> et le <a class="lnk" href="/lexique">lexique</a> répondent peut-être déjà.</p><p class="muted" style="margin-bottom:0">Pas de liens, pas de conseils d'achat ou de vente, pas d'informations personnelles. Un message signalé trois fois est masqué.</p></div></section>`; }
+function msgBody(b) { return esc(b).replace(/\[\[([ce]):([a-z0-9-]+)\]\]/g, (m, t, id) => { const o = t === "c" ? RBY[id] : ETFBY[id]; return o ? `<a class="mention" href="${t === "c" ? "/entreprise/" : "/etf/"}${id}">${esc(o.name)}</a>` : esc(id); }).replace(/\n/g, "<br>"); }
+function bindVotes(root) {
+  root.onclick = ev => { const b = ev.target.closest("button[data-a]"); if (!b) return; const id = +b.closest(".msg").dataset.id;
+    post(`/api/communaute/${b.dataset.a}`, { id }).then(() => { if (b.dataset.a === "aime") b.textContent = "♥ " + ((parseInt(b.textContent.replace(/\D/g, ""), 10) || 0) + 1); else b.textContent = "Signalé"; b.disabled = true; }); };
+}
+function commPronos(el) {
+  const soon = AG.events.filter(e => RBY[e.id] && /ésultat|chiffre d'affaires/i.test(e.type + " " + e.label) && e.date >= TODAY && e.date <= addDays(TODAY, 30)).sort((a, b) => a.date.localeCompare(b.date));
+  const seen = new Set(), list = soon.filter(e => { const k = e.id + ":" + e.date; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 40);
+  const past = AG.events.filter(e => RBY[e.id] && /ésultat|chiffre d'affaires/i.test(e.type + " " + e.label) && e.date < TODAY && e.date >= addDays(TODAY, -30)).slice(-20);
+  el.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Avant chaque publication de résultats, une seule question : <b>les ventes seront-elles en hausse ou en baisse par rapport à la même période de l'an dernier ?</b> Votez, puis revenez après la publication : le site affiche le résultat réel, lu dans le communiqué de l'entreprise.</p>
+      <p class="muted" style="margin:8px 0 0;font-size:13px">C'est un exercice pour apprendre à anticiper, pas un pari : il n'y a rien à gagner. Un vote par publication et par jour, modifiable jusqu'à la date.</p></div></section>
+    <div class="cards" id="pr">${list.map(e => { const c = RBY[e.id], k = e.id + ":" + e.date, f = c.missing ? null : ratios(c);
+      return `<div class="cocard prono" data-evt="${k}"><div class="top">${logo(c, 40)}<div><a class="nm" href="/entreprise/${c.id}">${esc(c.name)}</a><div class="sec">${dLabel(e.date)} · ${esc(e.label)}</div></div></div>
+        <p class="d" style="margin:6px 0">${f && f.g1 != null ? `Sur le dernier exercice complet, ses ventes ont évolué de ${sgn(f.g1)}.` : ""}</p>
+        <div class="pbtn"><button type="button" data-v="1">↑ En hausse</button><button type="button" data-v="-1">↓ En baisse</button></div><div class="pres light" style="font-size:12.5px;margin-top:6px"></div></div>`; }).join("") || `<section class="panel"><div class="empty">Aucune publication de résultats annoncée dans les 30 prochains jours.</div></section>`}</div>
+    ${past.length ? `<section class="panel"><div class="ph"><h2>Publiées ces 30 derniers jours</h2></div><div class="pb" id="pastp">${past.map(e => `<div class="pastp" data-id="${e.id}" data-date="${e.date}"><a class="lnk" href="/entreprise/${e.id}/actualite">${esc(RBY[e.id].name)}</a> <span class="light">· ${dLabel(e.date)}</span> <span class="pr2"></span></div>`).join("")}</div></section>` : ""}`;
+  const draw = items => $$(".prono", el).forEach(card => { const o = items[card.dataset.evt] || { hausse: 0, baisse: 0 }, n = o.hausse + o.baisse;
+    $$("button", card).forEach(b => b.classList.toggle("on", o.moi != null && +b.dataset.v === o.moi));
+    $(".pres", card).innerHTML = n ? `<div class="feub"><span class="f" style="width:${o.hausse / n * 100}%"></span><span class="v" style="width:${o.baisse / n * 100}%"></span></div>${F0.format(o.hausse / n * 100)} % des ${n} votant${n > 1 ? "s" : ""} attendent une hausse` : "Pas encore de vote."; });
+  const ids = list.map(e => e.id + ":" + e.date);
+  if (ids.length) fetch(`/api/communaute/pronos?evt=${encodeURIComponent(ids.join(","))}`).then(r => r.json()).then(j => draw(j.items || {})).catch(() => { });
+  el.onclick = ev => { const b = ev.target.closest(".pbtn button"); if (!b) return; const evt = b.closest(".prono").dataset.evt;
+    post("/api/communaute/prono", { evt, v: +b.dataset.v }).then(j => { if (j.error) return alertMsg(b, j.error); fetch(`/api/communaute/pronos?evt=${encodeURIComponent(ids.join(","))}`).then(r => r.json()).then(j => draw(j.items || {})); }); };
+  if (past.length) fetch("/data/actu-analyse.json").then(r => r.json()).then(j => { const A = Object.values(j.items || {});
+    $$(".pastp", el).forEach(d => { const a = A.filter(x => x.id === d.dataset.id && x.date >= d.dataset.date && x.chiffres && x.chiffres.length).sort((x, y) => x.date.localeCompare(y.date))[0];
+      $(".pr2", d).innerHTML = a ? `: ${a.chiffres.slice(0, 1).map(([l, v]) => `${esc(l)} ${esc(v)}`).join("")}` : `<span class="light">: résultat en cours de lecture</span>`; }); }).catch(() => { });
+}
+function alertMsg(el, t) { const s = document.createElement("div"); s.className = "muted"; s.style.fontSize = "12.5px"; s.textContent = t; el.parentElement.after(s); setTimeout(() => s.remove(), 4000); }
+const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+function commPf(el) {
+  el.innerHTML = `<div class="cols"><div><section class="panel"><div class="ph"><h2>Les lignes les plus détenues</h2><span class="light" id="pfn" style="font-size:12.5px"></span></div><div class="pb" id="pfl"><div class="empty">Chargement…</div></div>
+      <div class="src">Portefeuilles partagés anonymement depuis la page <a href="/portefeuille">Portefeuille</a> ces quatre derniers mois : seules les lignes et leur poids sont envoyés, jamais les montants. Ce que détiennent d'autres particuliers n'est pas une recommandation.</div></section></div>
+    <aside><section class="panel"><div class="ph"><h2>Partager le vôtre</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Saisissez vos lignes dans la page Portefeuille, puis cliquez sur « Partager anonymement ». Votre portefeuille rejoint ce classement ; vous pouvez le retirer à tout moment.</p><a class="more" href="/portefeuille">Ouvrir mon portefeuille →</a></div></section></aside></div>`;
+  fetch("/api/communaute/portefeuilles").then(r => r.json()).then(j => {
+    $("#pfn").textContent = j.n ? `${j.n} portefeuille${j.n > 1 ? "s" : ""} partagé${j.n > 1 ? "s" : ""}` : "";
+    const items = (j.items || []).filter(x => keyName(x.k));
+    $("#pfl").innerHTML = items.length ? `${hbars(items.map(x => ({ label: keyName(x.k), v: x.part, href: keyHref(x.k), lg: keyLogo(x.k, 22) })), v => F0.format(v * 100) + " %")}<p class="note">Part des portefeuilles partagés qui contiennent la ligne.</p>` : `<div class="empty">Personne n'a encore partagé son portefeuille.</div>`;
+  }).catch(() => { $("#pfl").innerHTML = `<div class="empty">Indisponible pour le moment.</div>`; });
+}
+function commDiscussions(el, qs) {
+  const room = qs.get("salon") || "general";
+  el.innerHTML = `<div class="cols"><div><section class="panel"><div class="ph"><h2>${esc(roomName(room))}</h2>${room !== "general" ? `<a href="${roomHref(room)}">Voir la fiche</a>` : ""}</div><div class="pb" id="chat"></div></section></div>
+    <aside><section class="panel"><div class="ph"><h2>Salons actifs cette semaine</h2></div><div id="rooms"><div class="empty">Chargement…</div></div></section></aside></div>`;
+  chatBlock($("#chat"), room);
+  fetch("/api/communaute/recent").then(r => r.json()).then(j => {
+    $("#rooms").innerHTML = (j.rooms || []).filter(r => r.room !== "questions").length ? `<div class="ag">${j.rooms.filter(r => r.room !== "questions").map(r => `<div class="it" style="grid-template-columns:1fr auto"><a class="co" href="/communaute?onglet=discussions&salon=${r.room}">${esc(roomName(r.room))}</a><span class="light">${r.n} message${r.n > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<div class="pb muted">Aucun salon actif cette semaine.</div>`;
+  }).catch(() => { $("#rooms").innerHTML = `<div class="empty">Indisponible.</div>`; });
+}
+
+/* ---------- Portefeuille : la radiographie de ce que vous possédez vraiment ---------- */
+const PF2 = "bilan.portefeuille";
+function pf2Load() { try { const x = JSON.parse(localStorage.getItem(PF2) || "null"); if (x && Array.isArray(x.l)) return x; } catch (e) { } return { l: [] }; }
+function pf2Save(p) { try { localStorage.setItem(PF2, JSON.stringify(p)); } catch (e) { } }
+const ETFCOMP = {};
+async function etfComp(e) { if (!e || !e.proxy) return null; if (ETFCOMP[e.proxy] !== undefined) return ETFCOMP[e.proxy]; try { ETFCOMP[e.proxy] = await (await fetch(`/data/etf/${e.proxy}.json`)).json(); } catch (x) { ETFCOMP[e.proxy] = null; } return ETFCOMP[e.proxy]; }
+const lineValue = l => { const p = PX[l.k]; if (l.mode === "qte" && p) return toEur(p.p * l.q, p.cur); return l.m || 0; };
+async function pagePortefeuille() {
+  setTitle("Mon portefeuille"); setNav("pf");
+  await PXP;
+  const P = pf2Load();
+  app.innerHTML = `<h1 class="pagetitle">Mon portefeuille</h1><p class="pagesub">Ajoutez vos actions et vos ETF. Le site montre ce que vous possédez vraiment, une fois les ETF « ouverts » : les entreprises, les pays, les secteurs, les frais, les dividendes et les dates à venir. Tout reste dans ce navigateur.</p>
+    <section class="panel"><div class="ph"><h2>Vos lignes</h2></div><div class="pb">
+      <div class="row2" style="align-items:end;gap:12px"><div class="field" style="position:relative;flex:2"><label for="pfq">Ajouter une action ou un ETF</label><input id="pfq" type="search" autocomplete="off" placeholder="LVMH, MSCI World, Apple…"><div class="msug" id="pfs" hidden></div></div></div>
+      <div id="pflines"></div></div>
+      <div class="src">Saisissez le montant investi en euros, ou le nombre de titres (la valeur est alors calculée au cours actuel). Aucune donnée n'est envoyée, sauf si vous choisissez de partager anonymement la composition.</div></section>
+    <div id="pfrx"></div>`;
+  const q = $("#pfq"), box = $("#pfs");
+  q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
+    const hits = [...ETF.list.filter(e => norm(e.name + " " + e.index + " " + (e.ticker || "")).includes(t)).map(e => ["e:" + e.id, e.name, "ETF · " + e.index]), ...R.companies.filter(c => norm(c.name + " " + c.ticker).includes(t)).map(c => ["c:" + c.id, c.name, secName(c)])].slice(0, 8);
+    box.innerHTML = hits.map(([k, n, s]) => `<button type="button" data-k="${k}">${esc(n)} <small>${esc(s)}</small></button>`).join("") || `<div class="light" style="padding:8px 10px">Rien trouvé</div>`; box.hidden = false;
+    $$("button", box).forEach(b => b.onclick = () => { if (!P.l.some(l => l.k === b.dataset.k)) P.l.push({ k: b.dataset.k, mode: "eur", m: 1000, q: 0 }); pf2Save(P); q.value = ""; box.hidden = true; drawLines(); }); };
+  const drawLines = () => {
+    $("#pflines").innerHTML = P.l.length ? `<div class="scroll-x"><table class="t pft"><thead><tr><th class="l">Ligne</th><th class="l">Saisie</th><th>Montant ou nombre</th><th>Valeur</th><th></th></tr></thead><tbody>${P.l.map((l, i) => `<tr data-i="${i}"><td class="l"><a class="cell-co" href="${keyHref(l.k)}">${keyLogo(l.k, 26)}<span class="nm">${esc(keyName(l.k) || l.k)}</span></a></td>
+        <td class="l"><select data-f="mode"><option value="eur"${l.mode === "eur" ? " selected" : ""}>Montant (€)</option><option value="qte"${l.mode === "qte" ? " selected" : ""}${PX[l.k] ? "" : " disabled"}>Nombre de titres</option></select></td>
+        <td><input data-f="${l.mode === "qte" ? "q" : "m"}" type="number" min="0" step="any" value="${l.mode === "qte" ? l.q : l.m}" style="width:120px;text-align:right"></td>
+        <td class="num">${F0.format(lineValue(l) || 0)} €</td><td><button type="button" class="linkbtn" data-x="${i}">Retirer</button></td></tr>`).join("")}</tbody></table></div>`
+      : `<p class="muted" style="margin:12px 0 0">Aucune ligne pour l'instant. ${favs().length ? `<button type="button" class="linkbtn" id="fromfav">Reprendre mes favoris</button>` : ""}</p>`;
+    const ff = $("#fromfav"); if (ff) ff.onclick = () => { favs().forEach(k => { if (!P.l.some(l => l.k === k)) P.l.push({ k, mode: "eur", m: 1000, q: 0 }); }); pf2Save(P); drawLines(); };
+    $$("#pflines tr[data-i]").forEach(tr => { const l = P.l[+tr.dataset.i];
+      $$("[data-f]", tr).forEach(inp => inp.onchange = () => { const f = inp.dataset.f; if (f === "mode") { l.mode = inp.value; if (l.mode === "qte" && !l.q && PX[l.k]) l.q = Math.max(1, Math.round((l.m || 1000) / (toEur(PX[l.k].p, PX[l.k].cur) || 1))); } else l[f] = parseFloat(inp.value) || 0; pf2Save(P); drawLines(); }); });
+    $$("[data-x]", $("#pflines")).forEach(b => b.onclick = () => { P.l.splice(+b.dataset.x, 1); pf2Save(P); drawLines(); });
+    radiographie(P);
+  };
+  drawLines();
+}
+async function radiographie(P) {
+  const el = $("#pfrx"); if (!el) return;
+  const lines = P.l.map(l => ({ ...l, v: lineValue(l) })).filter(l => l.v > 0), tot = lines.reduce((a, l) => a + l.v, 0);
+  if (!tot) { el.innerHTML = ""; return; }
+  const expo = {}, ctry = {}, sect = {}; let fees = 0, divs = 0, etfV = 0, pea = 0, uncovered = 0;
+  for (const l of lines) {
+    const w = l.v / tot;
+    if (l.k.startsWith("c:")) { const c = RBY[l.k.slice(2)]; if (!c) continue;
+      expo[c.isin || c.id] = { name: c.name, href: "/entreprise/" + c.id, w: (expo[c.isin || c.id]?.w || 0) + w };
+      const cc = (c.isin || "").slice(0, 2) || (c.region === "US" ? "US" : "FR"); ctry[cc] = (ctry[cc] || 0) + w; sect[secName(c)] = (sect[secName(c)] || 0) + w;
+      const v = valo(c); if (v && v.yld) divs += l.v * v.yld; if (peaOk(c)) pea += l.v;
+    } else { const e = ETFBY[l.k.slice(2)]; if (!e) continue; etfV += l.v; fees += l.v * (e.ter || 0) / 100; if (e.pea) pea += l.v;
+      const comp = await etfComp(e);
+      if (comp) { let covered = 0;
+        (comp.top || []).forEach(h => { const co = h.isin ? ISINBY[h.isin] : null, key = h.isin || h.name; covered += h.pct / 100; expo[key] = { name: co ? co.name : titleCase(h.name), href: co ? "/entreprise/" + co.id : null, w: (expo[key]?.w || 0) + w * h.pct / 100 }; });
+        uncovered += w * Math.max(0, 1 - covered);
+        (comp.countries || []).forEach(([k, p]) => { ctry[k] = (ctry[k] || 0) + w * p / 100; });
+      } else uncovered += w;
+      sect["ETF " + (ECAT[e.categorie] || "")] = (sect["ETF " + (ECAT[e.categorie] || "")] || 0) + w;
+    }
+  }
+  const top = Object.values(expo).sort((a, b) => b.w - a.w).slice(0, 15), cs = Object.entries(ctry).sort((a, b) => b[1] - a[1]).slice(0, 10), biggest = lines.slice().sort((a, b) => b.v - a.v)[0];
+  const cos = lines.filter(l => l.k.startsWith("c:")).map(l => RBY[l.k.slice(2)]).filter(Boolean);
+  const up = AG.events.filter(e => e.date >= TODAY && cos.some(c => c.id === e.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+  const usPart = (ctry.US || 0);
+  el.innerHTML = `<section class="panel"><div class="ph"><h2>La radiographie de votre portefeuille</h2></div>
+    <div class="tiles">
+      <div class="tile"><span class="kick">Valeur</span><span class="v">${F0.format(tot)} €</span><small>${lines.length} ligne${lines.length > 1 ? "s" : ""}</small></div>
+      <div class="tile"><span class="kick">Plus grosse ligne</span><span class="v">${F0.format(biggest.v / tot * 100)} %</span><small>${esc(keyName(biggest.k) || "")}</small></div>
+      <div class="tile"><span class="kick">Frais des ETF</span><span class="v">${F0.format(fees)} € / an</span><small>${etfV ? `soit ${pct(fees / etfV, 2, false)} des ETF détenus` : "aucun ETF"}</small></div>
+      <div class="tile"><span class="kick">Dividendes</span><span class="v">≈ ${F0.format(divs)} € / an</span><small>actions en direct, avant impôts</small></div>
+      <div class="tile"><span class="kick">Éligible PEA</span><span class="v">${F0.format(pea / tot * 100)} %</span><small>de la valeur</small></div>
+    </div>
+    <div class="pb"><p class="lead" style="margin-top:4px">${usPart > 0.5 ? `Plus de la moitié de votre argent (${F0.format(usPart * 100)} %) est placée dans des entreprises américaines. ` : ""}${top[0] ? `Votre première exposition, toutes lignes confondues, est <b>${esc(top[0].name)}</b> (${pct(top[0].w, 1, false)} du portefeuille).` : ""}${biggest.v / tot > 0.4 && biggest.k.startsWith("c:") ? ` Une seule action pèse ${F0.format(biggest.v / tot * 100)} % : si elle chute, tout le portefeuille le ressent.` : ""}</p></div></section>
+    <div class="two"><section class="panel"><div class="ph"><h2>Ce que vous possédez vraiment</h2></div><div class="pb">${hbars(top.map(x => ({ label: x.name, v: x.w, href: x.href })), v => pct(v, 1, false))}<p class="note">Les ETF sont « ouverts » : leurs principales lignes sont réparties selon leur poids${uncovered > 0.05 ? ` ; ${F0.format(uncovered * 100)} % du portefeuille correspond aux autres lignes, plus petites, des ETF` : ""}. Composition des ETF : dernier relevé publié.</p></div></section>
+      <section class="panel"><div class="ph"><h2>Par pays</h2></div><div class="pb">${hbars(cs.map(([k, w]) => ({ label: COUNTRY[k] || k, v: w })), v => pct(v, 0, false))}</div></section></div>
+    <div class="two"><section class="panel"><div class="ph"><h2>Prochaines dates de vos entreprises</h2></div>${up.length ? agendaHTML(up, true) : `<div class="pb muted">Aucune date annoncée pour vos actions en direct.</div>`}</section>
+      <section class="panel"><div class="ph"><h2>Partager anonymement</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Ajoutez la composition de votre portefeuille (les lignes et leur poids, jamais les montants) au <a class="lnk" href="/communaute?onglet=portefeuilles">classement des visiteurs</a>.</p><button type="button" class="btn" id="pfsh">Partager anonymement</button> <button type="button" class="linkbtn" id="pfun">Retirer mon partage</button> <span class="muted" id="pfsm" style="font-size:12.5px"></span></div></section></div>`;
+  $("#pfsh").onclick = () => post("/api/communaute/portefeuille", { lignes: lines.map(l => [l.k, l.v / tot]) }).then(j => { $("#pfsm").textContent = j.error || "Partagé, merci."; }).catch(() => { $("#pfsm").textContent = "Indisponible pour le moment."; });
+  $("#pfun").onclick = () => post("/api/communaute/portefeuille", { retirer: true }).then(() => { $("#pfsm").textContent = "Partage retiré."; });
+}
+const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Inc|Corp|Corporation|Ltd|Plc|Sa|Se|Nv|Ag|Co)\b\.?/gi, m => m.toUpperCase() === "SA" || m.toUpperCase() === "SE" ? m.toUpperCase() : m);
+
+/* ---------- Outils ---------- */
+const OUTILS = [
+  ["/portefeuille", "Radiographie de portefeuille", "Ce que vous possédez vraiment une fois vos ETF ouverts : entreprises, pays, frais, dividendes."],
+  ["/comparer", "Comparer des entreprises", "Jusqu'à cinq entreprises côte à côte, avec une synthèse en phrases."],
+  ["/outils/si-javais", "Et si j'avais investi…", "Ce que seraient devenus 1 000 € placés il y a 1, 3 ou 5 ans dans une action ou un ETF, comparé au marché."],
+  ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?", "Les entreprises que deux ETF ont en commun, pour éviter d'acheter deux fois la même chose."],
+  ["/simulateurs/epargne", "Épargner chaque mois", "Ce que peut devenir une somme placée tous les mois, selon le rendement."],
+  ["/simulateurs/frais", "Le coût des frais", "Ce que coûtent les frais de courtage et de gestion sur 10, 20 ou 30 ans."],
+  ["/simulateurs/pea-cto", "PEA ou compte-titres", "L'impôt payé sur vos gains selon le compte, avec vos montants."],
+  ["/dividendes", "Calendrier des dividendes", "Les prochaines dates de détachement et de paiement, à ajouter à votre agenda."],
+  ["/debuter", "Premiers pas, avec quiz", "Trois étapes pour comprendre les actions, lire une entreprise et juger son prix."],
+];
+function pageOutils(t) {
+  setNav("sim");
+  if (t === "si-javais") return outilSiJavais();
+  if (t === "recouvrement") return outilRecouvrement();
+  setTitle("Outils");
+  app.innerHTML = `<h1 class="pagetitle">Outils</h1><p class="pagesub">Des calculs et des comparaisons pour décider en connaissance de cause. Les hypothèses sont toujours affichées.</p>
+    <div class="cards">${OUTILS.map(([h, t, d], i) => `<a class="cocard tool" href="${h}"><div class="top"><span class="tnum">${String(i + 1).padStart(2, "0")}</span><div><div class="nm">${t}</div></div></div><div class="d">${d}</div></a>`).join("")}</div>`;
+}
+function pickerHTML(id, ph) { return `<div class="field" style="position:relative"><label for="${id}">${ph}</label><input id="${id}" type="search" autocomplete="off" placeholder="Nom d'une action ou d'un ETF"><div class="msug" hidden></div></div>`; }
+function bindPicker(id, onPick, etfOnly = false) {
+  const q = $("#" + id), box = q.nextElementSibling;
+  q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
+    const hits = [...ETF.list.filter(e => norm(e.name + " " + e.index).includes(t)).map(e => ["e:" + e.id, e.name, "ETF"]), ...(etfOnly ? [] : R.companies.filter(c => norm(c.name + " " + c.ticker).includes(t)).map(c => ["c:" + c.id, c.name, secName(c)]))].slice(0, 8);
+    box.innerHTML = hits.map(([k, n, s]) => `<button type="button" data-k="${k}">${esc(n)} <small>${esc(s)}</small></button>`).join(""); box.hidden = !hits.length;
+    $$("button", box).forEach(b => b.onclick = () => { q.value = keyName(b.dataset.k); box.hidden = true; onPick(b.dataset.k); }); };
+}
+async function outilSiJavais() {
+  setTitle("Et si j'avais investi…"); await PXP;
+  let k = "c:lvmh", amt = 1000;
+  app.innerHTML = `<div class="crumbs"><a href="/outils">Outils</a> › Et si j'avais investi…</div><h1 class="pagetitle">Et si j'avais investi…</h1><p class="pagesub">Ce que seraient devenus 1 000 € placés dans une action ou un ETF il y a 1, 3 ou 5 ans, comparé au marché. Évolution du prix seul : les dividendes s'y ajouteraient.</p>
+    <section class="panel"><div class="pb"><div class="row2">${pickerHTML("sjq", "Action ou ETF")}${numIn("sja", "Montant investi (€)", 1000, "", 'min="1" step="100"')}</div></div><div id="sjr"></div></section>`;
+  const run = () => { amt = v("sja") || 1000; const p = PX[k], c = k.startsWith("c:") ? RBY[k.slice(2)] : null, idxId = c && (c.region === "US" || c.region === "MONDE") ? "sp500" : "cac40", idx = PX["i:" + idxId];
+    if (!p) { $("#sjr").innerHTML = `<div class="pb muted">Pas de cours disponible pour ${esc(keyName(k) || "")}.</div>`; return; }
+    const rows = [["1 an", "p1y"], ["3 ans", "p3y"], ["5 ans", "p5y"]].filter(([, f]) => p[f]).map(([l, f]) => [l, amt * p.p / p[f], idx && idx[f] ? amt * idx.p / idx[f] : null]);
+    $("#sjr").innerHTML = `<div class="pb"><p class="lead" style="margin:0">${rows.length ? `${F0.format(amt)} € placés dans <b>${esc(keyName(k))}</b> il y a ${rows.at(-1)[0]} vaudraient aujourd'hui <b>${F0.format(rows.at(-1)[1])} €</b>${rows.at(-1)[2] ? `, contre ${F0.format(rows.at(-1)[2])} € placés dans le ${idxId === "sp500" ? "S&P 500" : "CAC 40"}` : ""}.` : "Historique insuffisant."}</p>
+      ${rows.length ? colChart({ labels: rows.map(r => "Il y a " + r[0]), series: [{ name: keyName(k), values: rows.map(r => r[1]) }, ...(idx ? [{ name: idxId === "sp500" ? "S&P 500" : "CAC 40", values: rows.map(r => r[2]), color: SAND }] : [])], fmt: v => F0.format(v) + " €", tickFmt: v => F0.format(v) + " €", h: 220 }) : ""}
+      <p class="note">Calcul : montant × (cours actuel ÷ cours à la date de départ), en devise de cotation. Hors dividendes, frais et impôts. Le passé ne dit rien de l'avenir.</p></div>`; };
+  bindPicker("sjq", x => { k = x; run(); }); $("#sjq").value = keyName(k); $("#sja").oninput = run; run();
+}
+async function outilRecouvrement() {
+  setTitle("Deux ETF se recouvrent-ils ?");
+  let a = "e:" + (ETF.list.find(e => /world/i.test(e.index) && e.pea) || ETF.list[0]).id, b = "e:" + (ETF.list.find(e => /S&P 500/i.test(e.index)) || ETF.list[1]).id;
+  app.innerHTML = `<div class="crumbs"><a href="/outils">Outils</a> › Recouvrement de deux ETF</div><h1 class="pagetitle">Deux ETF se recouvrent-ils ?</h1><p class="pagesub">Beaucoup d'ETF contiennent les mêmes grandes entreprises. Acheter un ETF Monde et un ETF S&P 500, par exemple, revient à acheter deux fois Apple, Microsoft et Nvidia.</p>
+    <section class="panel"><div class="pb"><div class="row2">${pickerHTML("ra", "Premier ETF")}${pickerHTML("rb", "Second ETF")}</div></div><div id="rr"></div></section>`;
+  const run = async () => { const ea = ETFBY[a.slice(2)], eb = ETFBY[b.slice(2)], [ca, cb] = await Promise.all([etfComp(ea), etfComp(eb)]);
+    if (!ca || !cb) { $("#rr").innerHTML = `<div class="pb muted">Composition non disponible pour l'un des deux ETF.</div>`; return; }
+    const ma = new Map(ca.isins || []), mb = new Map(cb.isins || []); let ov = 0, n = 0; for (const [isin, w] of ma) if (mb.has(isin)) { ov += Math.min(w, mb.get(isin)); n++; }
+    const commons = (ca.top || []).filter(h => mb.has(h.isin)).slice(0, 10);
+    $("#rr").innerHTML = `<div class="tiles"><div class="tile"><span class="kick">Recouvrement</span><span class="v">${F0.format(ov)} %</span><small>part du portefeuille identique dans les deux ETF</small></div><div class="tile"><span class="kick">Lignes communes</span><span class="v">${F0.format(n)}</span><small>sur ${F0.format(ca.lines)} et ${F0.format(cb.lines)} lignes</small></div></div>
+      <div class="pb"><p class="lead" style="margin-top:4px">${ov > 60 ? "Les deux ETF se ressemblent beaucoup : en détenir deux diversifie peu." : ov > 30 ? "Les deux ETF ont une base commune importante, mais chacun apporte des entreprises que l'autre n'a pas." : "Les deux ETF sont assez différents : ils se complètent."}</p>
+      ${commons.length ? `<p class="kick">Principales entreprises en commun</p>${hbars(commons.map(h => ({ label: ISINBY[h.isin] ? ISINBY[h.isin].name : titleCase(h.name), v: Math.min(h.pct, mb.get(h.isin) || 0), href: ISINBY[h.isin] ? "/entreprise/" + ISINBY[h.isin].id : null })), v => pct(v / 100, 1, false))}<p class="note">Poids le plus faible des deux ETF pour chaque entreprise.</p>` : ""}</div>
+      <div class="src">Compositions relevées dans les déclarations N-PORT déposées à la SEC par des fonds équivalents (même indice), au ${esc(ca.asOf || "")}.</div>`; };
+  bindPicker("ra", x => { a = x; run(); }, true); bindPicker("rb", x => { b = x; run(); }, true); $("#ra").value = keyName(a); $("#rb").value = keyName(b); run();
+}
+
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -2704,6 +2964,7 @@ function route() {
   else if (p === "/comparer") pageComparer();
   else if (p === "/pea-cto") pageEnveloppes();
   else if (p === "/dividendes") pageDividendes();
+  else if ((m = p.match(/^\/outils(?:\/([a-z-]+))?$/))) pageOutils(m[1]);
   else if ((m = p.match(/^\/debuter(?:\/([a-z-]+))?(?:\/([a-z0-9-]+))?$/))) pageDebuter(m[1], m[2]);
   else if (p === "/mentions-legales") pageMentions();
   else pageNotFound();

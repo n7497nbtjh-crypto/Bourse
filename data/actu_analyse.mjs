@@ -41,9 +41,9 @@ export function extractEN(text) {
   const S = sentences(text.slice(0, 20000)), out = {}, used = [];
   const take = (key, re, need = AMT) => { if (out[key]) return; const s = S.find(x => re.test(x) && need.test(x) && !/non-gaap|adjusted/i.test(x.slice(0, 80))) || S.find(x => re.test(x) && need.test(x)); if (!s) return;
     const m = s.match(need), gy = yoy(s);
-    out[key] = { v: need === AMT ? num(m[1], m[2]) : parseFloat(m[1]), g: gy, q: /quarter/i.test(s) ? "trimestre" : /full[- ]year|fiscal year|twelve months|annual/i.test(s) ? "année" : "", s }; used.push(s); };
-  take("ca", /\b(revenues?|net sales|total sales|sales)\b/i);
-  take("net", /\bnet (income|earnings|profit)\b/i);
+    out[key] = { v: m[2] && /illion/i.test(m[2]) ? num(m[1], m[2]) : parseFloat(m[1].replace(/,/g, "")), g: gy, q: /quarter/i.test(s) ? "trimestre" : /full[- ]year|fiscal year|twelve months|annual/i.test(s) ? "année" : "", s }; used.push(s); };
+  take("ca", /\b(revenues?|net sales|total sales|sales)\b/i, /\b(?:revenues?|net sales|total sales)\b(?: (?:of|was|were|totaled|totalled|reached|came in at|grew to|increased to|rose to)| for the [\w\s-]{3,30} (?:was|were|of))? \$\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(billion|million)\b/i);
+  take("net", /\bnet (income|earnings|profit)\b/i, /\bnet (?:income|earnings|profit)(?: attributable to [\w\s.,&-]{3,40})?(?: (?:of|was|were|totaled|totalled|reached|came in at))? \$\s?(\d{1,3}(?:,\d{3})*(?:\.\d+)?)\s*(billion|million)\b/i);
   take("eps", /\b(earnings|EPS|net income) per (diluted )?share|\bdiluted (EPS|earnings per share)\b/i, /\$\s?(\d+\.\d{2})\b/);
   take("div", /\bdividend\b/i, /\$\s?(\d+\.\d{2,4})\s*(?:per share|a share)/i);
   take("rachat", /\b(repurchase|buyback|buy back)\b/i);
@@ -63,17 +63,32 @@ export function extractFR(text) {
   const take = (key, re, need = FR_AMT) => { if (out[key]) return; const s = S.find(x => re.test(x) && need.test(x)); if (!s) return;
     const m = s.match(need), u = s.match(FR_UP), d = s.match(FR_DN), sg = s.match(FR_SIGNED);
     const g = u ? parseFloat(u[1].replace(",", ".")) / 100 : d ? -parseFloat(d[1].replace(",", ".")) / 100 : sg ? (sg[1] === "+" ? 1 : -1) * parseFloat(sg[2].replace(",", ".")) / 100 : null;
-    out[key] = { v: need === FR_AMT ? frNum(m[1], m[2]) : parseFloat(m[1].replace(",", ".")), g, q: /trimestre|T[1-4]\b/i.test(s) ? "trimestre" : /semestre|S1\b/i.test(s) ? "semestre" : /annuel|exercice|année/i.test(s) ? "année" : "", s }; extraits.push(s); };
-  take("ca", /chiffre d['’]affaires|ventes (?:du|de|consolidées)|revenus/i);
-  take("rop", /résultat opérationnel|résultat d['’]exploitation|EBIT|marge opérationnelle/i);
-  take("net", /résultat net/i);
+    out[key] = { v: m[2] ? frNum(m[1], m[2]) : parseFloat(m[1].replace(",", ".")), g, q: /trimestre|T[1-4]\b/i.test(s) ? "trimestre" : /semestre|S1\b/i.test(s) ? "semestre" : /annuel|exercice|année/i.test(s) ? "année" : "", s }; extraits.push(s); };
+  const near = kw => new RegExp(`(?:${kw})[^.;:]{0,70}?(?:s['’]établit à|s['’]est établi à|atteint|ressort à|s['’]élève à|de|à)\\s+(\\d{1,3}(?:[ \\u202f\\u00a0.]\\d{3})*(?:,\\d+)?)\\s*(milliards?|millions?|Md|M)\\s*(?:d['’]\\s?euros|€|EUR)`, "i");
+  take("ca", /chiffre d['’]affaires|revenus/i, near("chiffre d['’]affaires|revenus"));
+  take("rop", /résultat opérationnel|résultat d['’]exploitation/i, near("résultat opérationnel|résultat d['’]exploitation"));
+  take("net", /résultat net/i, near("résultat net"));
   take("div", /dividende/i, /(\d+(?:,\d+)?)\s?(?:€|euros?)\s*par action/i);
   const obj = S.find(x => /objectif|perspective|prévision|confirme|relève|abaisse|guidance/i.test(x) && /(\d)/.test(x));
   if (obj) { out.objectif = { s: obj }; extraits.push(obj); }
-  out.extraits = [...new Set(extraits)].slice(0, 4).map(s => s.length > 320 ? s.slice(0, 317).replace(/\s\S*$/, "") + "…" : s);
+  out.extraits = [...new Set(extraits)].filter(s => s.length < 300 && !/[«»]|je tiens|nous sommes|j['’]/i.test(s) && !/\d \d \d/.test(s)).slice(0, 3);
   return out;
 }
 
+/* ---------- Garde-fous : on écarte tout chiffre invraisemblable au regard des comptes annuels ---------- */
+export function plausible(x, annual) {
+  if (!annual || !annual.ca) return x;
+  const CA = Math.abs(annual.ca) * 1e6, q = o => o && o.q, ok = {};
+  const range = qq => qq === "trimestre" ? [0.12, 0.45] : qq === "semestre" ? [0.3, 0.7] : qq === "année" ? [0.7, 1.5] : [0.1, 1.5];
+  for (const k of Object.keys(x)) ok[k] = x[k];
+  if (x.ca) { const [a, b] = range(q(x.ca)); if (!(x.ca.v >= a * CA && x.ca.v <= b * CA)) delete ok.ca; }
+  for (const k of ["net", "rop"]) if (x[k] && !(Math.abs(x[k].v) <= 0.6 * CA && Math.abs(x[k].v) >= 0.002 * CA)) delete ok[k];
+  if (x.prevision && !(x.prevision.v >= 0.1 * CA && x.prevision.v <= 1.6 * CA)) delete ok.prevision;
+  if (x.eps && annual.eps > 0 && !(x.eps.v >= annual.eps * 0.08 && x.eps.v <= annual.eps * 2)) delete ok.eps;
+  if (x.div && annual.dps > 0 && !(x.div.v >= annual.dps * 0.1 && x.div.v <= annual.dps * 3)) delete ok.div;
+  if (x.rachat && !(x.rachat.v <= 0.6 * CA * 3)) delete ok.rachat;
+  return ok;
+}
 /* ---------- Lecture : ce que les chiffres veulent dire ---------- */
 function lecture(c, x, annual) {
   const L = [];
@@ -155,7 +170,7 @@ async function analyseSec(it) {
     const r = await fetch(url, { headers: { "user-agent": UA } }); if (r.ok) text = htmlText(await r.text());
   } catch (e) { }
   if (!text) return { ...res, lecture: [explication] };
-  const x = extractEN(text), per = q => q === "trimestre" ? " du trimestre" : q === "année" ? " de l'année" : "";
+  const x = plausible(extractEN(text), annual), per = q => q === "trimestre" ? " du trimestre" : q === "année" ? " de l'année" : "";
   if (x.ca) res.chiffres.push([`Ventes${per(x.ca.q)}`, money(x.ca.v, c.currency || "USD") + (x.ca.g != null ? ` (${pctS(x.ca.g)} sur un an)` : "")]);
   if (x.net) res.chiffres.push([`Bénéfice net${per(x.net.q)}`, money(x.net.v, c.currency || "USD") + (x.net.g != null ? ` (${pctS(x.net.g)} sur un an)` : "")]);
   if (x.eps) res.chiffres.push(["Bénéfice par action", NF(2).format(x.eps.v) + " $" + (x.eps.g != null ? ` (${pctS(x.eps.g)})` : "")]);
@@ -207,7 +222,7 @@ async function analyseAmf(r) {
   try {
     const rr = await fetch(url, { headers: { "user-agent": UA } }); if (!rr.ok) return { ...res, lecture: [explication] };
     const buf = await rr.arrayBuffer(); if (buf.byteLength > 6e6) return { ...res, lecture: [explication] };
-    const x = extractFR(await pdfText(buf)), per = q => q === "trimestre" ? " du trimestre" : q === "semestre" ? " du semestre" : q === "année" ? " de l'année" : "";
+    const x = plausible(extractFR(await pdfText(buf)), summaryOf(c.id)), per = q => q === "trimestre" ? " du trimestre" : q === "semestre" ? " du semestre" : q === "année" ? " de l'année" : "";
     if (x.ca) res.chiffres.push([`Chiffre d'affaires${per(x.ca.q)}`, money(x.ca.v, "EUR") + (x.ca.g != null ? ` (${pctS(x.ca.g)})` : "")]);
     if (x.rop) res.chiffres.push([`Résultat opérationnel${per(x.rop.q)}`, money(x.rop.v, "EUR") + (x.rop.g != null ? ` (${pctS(x.rop.g)})` : "")]);
     if (x.net) res.chiffres.push([`Résultat net${per(x.net.q)}`, money(x.net.v, "EUR") + (x.net.g != null ? ` (${pctS(x.net.g)})` : "")]);
@@ -223,7 +238,7 @@ let SUM = null;
 function summaryOf(id) {
   if (!SUM) { try { SUM = Object.fromEntries(JSON.parse(readFileSync(new URL("societes.json", OUT))).companies.map(c => [c.id, c])); } catch (e) { SUM = {}; } }
   const c = SUM[id]; if (!c) return null;
-  return { g1: c.ca && c.caPrev ? c.ca / c.caPrev - 1 : null, dps: c.dps || null };
+  return { g1: c.ca && c.caPrev ? c.ca / c.caPrev - 1 : null, dps: c.dps || null, ca: c.ca || null, eps: c.eps || null };
 }
 
 async function main() {

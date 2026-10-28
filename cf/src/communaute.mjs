@@ -12,6 +12,9 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS avis (room TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (room, who))`,
 ];
 // Colonnes ajoutées après coup : on tente de les créer, l'erreur « déjà présente » est ignorée
+SCHEMA.push(
+  `CREATE TABLE IF NOT EXISTS pronos (evt TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (evt, who))`,
+  `CREATE TABLE IF NOT EXISTS partages (who TEXT PRIMARY KEY, lignes TEXT NOT NULL, at INTEGER NOT NULL)`);
 const ALTERS = [`ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''`];
 let ready = false;
 async function init(db) { if (ready) return; for (const q of SCHEMA) await db.prepare(q).run(); for (const q of ALTERS) { try { await db.prepare(q).run(); } catch (e) { } } ready = true; }
@@ -57,6 +60,33 @@ export default async function communaute(request, env) {
     const t = await db.prepare(`SELECT room, COUNT(*) AS n FROM messages WHERE hidden = 0 AND created > ? GROUP BY room ORDER BY n DESC LIMIT 10`).bind(Date.now() - 7 * 864e5).all();
     return json({ items: r.results || [], rooms: t.results || [] });
   }
+  if (request.method === "GET" && path === "/api/communaute/questions") { // questions des visiteurs, avec le nombre de réponses
+    const r = await db.prepare(`SELECT q.id, q.pseudo, q.body, q.created, q.likes, q.tags, (SELECT COUNT(*) FROM messages a WHERE a.parent = q.id AND a.hidden = 0) AS n FROM messages q WHERE q.kind = 'question' AND q.parent IS NULL AND q.hidden = 0 ORDER BY q.id DESC LIMIT 60`).all();
+    return json({ items: r.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/fil") { // une question et ses réponses (les plus appréciées d'abord)
+    const id = parseInt(url.searchParams.get("id") || "0", 10);
+    const q = await db.prepare(`SELECT id, room, pseudo, body, kind, created, likes FROM messages WHERE id = ? AND hidden = 0`).bind(id).first();
+    if (!q) return json({ error: "Question introuvable." }, 404);
+    const a = await db.prepare(`SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE parent = ? AND hidden = 0 ORDER BY likes DESC, id ASC LIMIT 100`).bind(id).all();
+    return json({ question: q, answers: a.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/pronos") { // pronostics : hausse ou baisse des ventes, par publication
+    const ids = (url.searchParams.get("evt") || "").split(",").filter(x => /^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(x)).slice(0, 80);
+    if (!ids.length) return json({ items: {} });
+    const r = await db.prepare(`SELECT evt, v, COUNT(*) AS n FROM pronos WHERE evt IN (${ids.map(() => "?").join(",")}) GROUP BY evt, v`).bind(...ids).all();
+    const mine = await db.prepare(`SELECT evt, v FROM pronos WHERE who = ? AND evt IN (${ids.map(() => "?").join(",")})`).bind(await who(request), ...ids).all();
+    const o = {}; for (const x of r.results || []) { o[x.evt] = o[x.evt] || { hausse: 0, baisse: 0 }; o[x.evt][x.v > 0 ? "hausse" : "baisse"] = x.n; }
+    for (const x of mine.results || []) { o[x.evt] = o[x.evt] || { hausse: 0, baisse: 0 }; o[x.evt].moi = x.v; }
+    return json({ items: o });
+  }
+  if (request.method === "GET" && path === "/api/communaute/portefeuilles") { // ce que détiennent les visiteurs qui ont partagé leur portefeuille
+    const r = await db.prepare(`SELECT lignes FROM partages WHERE at > ?`).bind(Date.now() - 120 * 864e5).all();
+    const tot = {}, held = {}; let n = 0;
+    for (const x of r.results || []) { let l = []; try { l = JSON.parse(x.lignes); } catch (e) { continue; } n++; for (const [k, w] of l) { tot[k] = (tot[k] || 0) + w; held[k] = (held[k] || 0) + 1; } }
+    const items = Object.entries(tot).map(([k, w]) => ({ k, poids: n ? w / n : 0, part: n ? held[k] / n : 0 })).sort((a, b) => b.part - a.part || b.poids - a.poids).slice(0, 25);
+    return json({ n, items });
+  }
   if (request.method !== "POST") return json({ error: "Méthode non prise en charge." }, 405);
   let b = {};
   try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible." }, 400); }
@@ -76,6 +106,21 @@ export default async function communaute(request, env) {
     const tags = mentions(body);
     const r = await db.prepare(`INSERT INTO messages (room, pseudo, body, kind, parent, created, who, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id`).bind(room, pseudo, body, kind, parent, now, me, tags.length ? "," + tags.join(",") + "," : "").first();
     return json({ ok: true, item: { id: r.id, room, pseudo, body, kind, parent, created: now, likes: 0 } }, 201);
+  }
+  if (path === "/api/communaute/prono") {
+    const evt = String(b.evt || ""), v = Math.sign(parseInt(b.v, 10) || 0);
+    if (!/^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) || !v) return json({ error: "Pronostic invalide." }, 400);
+    if (evt.slice(-10) < new Date().toISOString().slice(0, 10)) return json({ error: "Les résultats sont déjà publiés." }, 400);
+    await db.prepare(`INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at`).bind(evt, me, v, Date.now()).run();
+    return json({ ok: true });
+  }
+  if (path === "/api/communaute/portefeuille") { // partage anonyme : seulement les lignes et leur poids
+    const l = Array.isArray(b.lignes) ? b.lignes.filter(x => Array.isArray(x) && /^[ce]:[a-z0-9-]{1,60}$/.test(x[0]) && x[1] > 0).slice(0, 40) : [];
+    if (b.retirer) { await db.prepare(`DELETE FROM partages WHERE who = ?`).bind(me).run(); return json({ ok: true }); }
+    if (!l.length) return json({ error: "Portefeuille vide." }, 400);
+    const sum = l.reduce((a, x) => a + +x[1], 0), norm = l.map(([k, w]) => [k, Math.round(+w / sum * 1000) / 1000]);
+    await db.prepare(`INSERT INTO partages (who, lignes, at) VALUES (?, ?, ?) ON CONFLICT (who) DO UPDATE SET lignes = excluded.lignes, at = excluded.at`).bind(me, JSON.stringify(norm), Date.now()).run();
+    return json({ ok: true });
   }
   if (path === "/api/communaute/avis") { // un avis par visiteur et par salon, modifiable
     const room = String(b.room || ""), v = Math.sign(parseInt(b.v, 10) || 0);

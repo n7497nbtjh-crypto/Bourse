@@ -56,7 +56,12 @@ var SCHEMA = [
   "CREATE INDEX IF NOT EXISTS m_who ON messages (who, created)",
   "CREATE TABLE IF NOT EXISTS votes (msg INTEGER NOT NULL, who TEXT NOT NULL, kind TEXT NOT NULL, PRIMARY KEY (msg, who, kind))",
   "CREATE TABLE IF NOT EXISTS avis (room TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (room, who))"
-], ALTERS = ["ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''"], ready = !1;
+];
+SCHEMA.push(
+  "CREATE TABLE IF NOT EXISTS pronos (evt TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (evt, who))",
+  "CREATE TABLE IF NOT EXISTS partages (who TEXT PRIMARY KEY, lignes TEXT NOT NULL, at INTEGER NOT NULL)"
+);
+var ALTERS = ["ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''"], ready = !1;
 async function init(db) {
   if (!ready) {
     for (let q of SCHEMA) await db.prepare(q).run();
@@ -97,6 +102,42 @@ async function communaute(request, env) {
     let r = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes FROM messages WHERE hidden = 0 ORDER BY id DESC LIMIT 30").all(), t = await db.prepare("SELECT room, COUNT(*) AS n FROM messages WHERE hidden = 0 AND created > ? GROUP BY room ORDER BY n DESC LIMIT 10").bind(Date.now() - 7 * 864e5).all();
     return json({ items: r.results || [], rooms: t.results || [] });
   }
+  if (request.method === "GET" && path === "/api/communaute/questions") {
+    let r = await db.prepare("SELECT q.id, q.pseudo, q.body, q.created, q.likes, q.tags, (SELECT COUNT(*) FROM messages a WHERE a.parent = q.id AND a.hidden = 0) AS n FROM messages q WHERE q.kind = 'question' AND q.parent IS NULL AND q.hidden = 0 ORDER BY q.id DESC LIMIT 60").all();
+    return json({ items: r.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/fil") {
+    let id = parseInt(url.searchParams.get("id") || "0", 10), q = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes FROM messages WHERE id = ? AND hidden = 0").bind(id).first();
+    if (!q) return json({ error: "Question introuvable." }, 404);
+    let a = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE parent = ? AND hidden = 0 ORDER BY likes DESC, id ASC LIMIT 100").bind(id).all();
+    return json({ question: q, answers: a.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/pronos") {
+    let ids = (url.searchParams.get("evt") || "").split(",").filter((x) => /^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(x)).slice(0, 80);
+    if (!ids.length) return json({ items: {} });
+    let r = await db.prepare(`SELECT evt, v, COUNT(*) AS n FROM pronos WHERE evt IN (${ids.map(() => "?").join(",")}) GROUP BY evt, v`).bind(...ids).all(), mine = await db.prepare(`SELECT evt, v FROM pronos WHERE who = ? AND evt IN (${ids.map(() => "?").join(",")})`).bind(await who(request), ...ids).all(), o = {};
+    for (let x of r.results || [])
+      o[x.evt] = o[x.evt] || { hausse: 0, baisse: 0 }, o[x.evt][x.v > 0 ? "hausse" : "baisse"] = x.n;
+    for (let x of mine.results || [])
+      o[x.evt] = o[x.evt] || { hausse: 0, baisse: 0 }, o[x.evt].moi = x.v;
+    return json({ items: o });
+  }
+  if (request.method === "GET" && path === "/api/communaute/portefeuilles") {
+    let r = await db.prepare("SELECT lignes FROM partages WHERE at > ?").bind(Date.now() - 10368e6).all(), tot = {}, held = {}, n = 0;
+    for (let x of r.results || []) {
+      let l = [];
+      try {
+        l = JSON.parse(x.lignes);
+      } catch {
+        continue;
+      }
+      n++;
+      for (let [k, w] of l)
+        tot[k] = (tot[k] || 0) + w, held[k] = (held[k] || 0) + 1;
+    }
+    let items = Object.entries(tot).map(([k, w]) => ({ k, poids: n ? w / n : 0, part: n ? held[k] / n : 0 })).sort((a, b2) => b2.part - a.part || b2.poids - a.poids).slice(0, 25);
+    return json({ n, items });
+  }
   if (request.method !== "POST") return json({ error: "M\xE9thode non prise en charge." }, 405);
   let b = {};
   try {
@@ -117,6 +158,18 @@ async function communaute(request, env) {
     if (recent && recent.n >= 5) return json({ error: "Trop de messages d'affil\xE9e : r\xE9essayez dans quelques minutes." }, 429);
     let parent = Number.isInteger(b.parent) ? b.parent : null, now = Date.now(), tags = mentions(body), r = await db.prepare("INSERT INTO messages (room, pseudo, body, kind, parent, created, who, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(room, pseudo, body, kind, parent, now, me, tags.length ? "," + tags.join(",") + "," : "").first();
     return json({ ok: !0, item: { id: r.id, room, pseudo, body, kind, parent, created: now, likes: 0 } }, 201);
+  }
+  if (path === "/api/communaute/prono") {
+    let evt = String(b.evt || ""), v = Math.sign(parseInt(b.v, 10) || 0);
+    return !/^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) || !v ? json({ error: "Pronostic invalide." }, 400) : evt.slice(-10) < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? json({ error: "Les r\xE9sultats sont d\xE9j\xE0 publi\xE9s." }, 400) : (await db.prepare("INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(evt, me, v, Date.now()).run(), json({ ok: !0 }));
+  }
+  if (path === "/api/communaute/portefeuille") {
+    let l = Array.isArray(b.lignes) ? b.lignes.filter((x) => Array.isArray(x) && /^[ce]:[a-z0-9-]{1,60}$/.test(x[0]) && x[1] > 0).slice(0, 40) : [];
+    if (b.retirer)
+      return await db.prepare("DELETE FROM partages WHERE who = ?").bind(me).run(), json({ ok: !0 });
+    if (!l.length) return json({ error: "Portefeuille vide." }, 400);
+    let sum = l.reduce((a, x) => a + +x[1], 0), norm = l.map(([k, w]) => [k, Math.round(+w / sum * 1e3) / 1e3]);
+    return await db.prepare("INSERT INTO partages (who, lignes, at) VALUES (?, ?, ?) ON CONFLICT (who) DO UPDATE SET lignes = excluded.lignes, at = excluded.at").bind(me, JSON.stringify(norm), Date.now()).run(), json({ ok: !0 });
   }
   if (path === "/api/communaute/avis") {
     let room = String(b.room || ""), v = Math.sign(parseInt(b.v, 10) || 0);
@@ -232,7 +285,7 @@ function meta(path) {
     let t = TOOLS[m[1] || "epargne"] || TOOLS.epargne;
     return t ? { title: `${t} \xB7 ${SITE}`, desc: "Simulez l'\xE9volution d'un placement, avec les hypoth\xE8ses affich\xE9es. Outil p\xE9dagogique, sans conseil." } : null;
   }
-  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/dividendes" ? { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." } : p.startsWith("/debuter") ? { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/dividendes" ? { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." } : p.startsWith("/debuter") ? { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." } : p.startsWith("/outils") ? { title: `Outils \xB7 ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'\xE9pargne et de frais." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 var worker_default = {
   async fetch(request, env, ctx) {
