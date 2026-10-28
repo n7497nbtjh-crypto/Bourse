@@ -1,4 +1,4 @@
-// Repère : site statique + pages indexables (Cloudflare Pages, mode _worker.js).
+// bilan. : site statique + pages indexables (Cloudflare Pages, mode _worker.js).
 // Le Worker renvoie index.html pour chaque page du site, avec le titre et la description propres à la page
 // (Google lit ainsi un vrai titre pour chaque entreprise). Le reste (données, scripts) est servi tel quel.
 // Plus tard : routes /api/* pour interroger le fournisseur de données. Sa clé (DATA_API_KEY) sera saisie
@@ -9,7 +9,7 @@ import amf from "./amf.mjs";
 import communaute from "./communaute.mjs";
 import presse from "./presse.mjs";
 
-const SITE = "Repère";
+const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
 const TOOLS = { epargne: "Simulateur d'épargne", interets: "Simulateur d'épargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" };
 const BY = Object.fromEntries(INDEX.map(c => [c.id, c]));
@@ -19,7 +19,7 @@ export function meta(path) {
   const p = path.replace(/\/+$/, "") || "/";
   const base = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1");
   let m;
-  if (p === "/" || p === "/aller") return { title: `${SITE} · La Bourse expliquée`, desc: BASE_DESC };
+  if (p === "/" || p === "/aller") return { title: `${SITE} · La Bourse, comptes à l'appui`, desc: BASE_DESC };
   if ((m = base.match(/^\/entreprise\/([a-z0-9-]+)$/))) {
     const c = BY[m[1]];
     if (!c) return null;

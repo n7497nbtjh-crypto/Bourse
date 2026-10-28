@@ -3,12 +3,12 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Repère · La Bourse expliquée</title>
+<title>bilan. · La Bourse, comptes à l'appui</title>
 <meta name="description" content="Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23141414'/%3E%3Cpath d='M10 24V8h6.5a4.5 4.5 0 0 1 0 9H10m6 0 6 7' stroke='%23fff' stroke-width='2.8' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,800;9..144,900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
   --page:#F6F5F2; --panel:#FFFFFF; --ink:#141414; --grey:#5F5B55; --light:#8A857D; --rule:#E4E1DB; --soft:#F1EFEB;
@@ -626,13 +626,73 @@ a.mention{color:var(--link);font-weight:600;background:#EEF1F6;border-radius:6px
 .qrow summary .q small{font-size:11.5px;font-weight:600;color:var(--light);text-transform:uppercase;letter-spacing:.04em}
 .qrow summary .q small .vd{text-transform:none;letter-spacing:0}
 @media (max-width:760px){.ret{grid-template-columns:1fr}.ret-f{border-right:0;border-bottom:1px solid var(--soft)}.ret > div{padding:12px 14px}}
+
+/* ================= Direction artistique « bilan. » : journal + tableau de bord ================= */
+:root{
+  --page:#F8F5EE; --panel:#FFFFFF; --ink:#111214; --grey:#55524C; --light:#87827A; --rule:#E2DCCF; --soft:#F1ECE1;
+  --up:#0E6B4A; --down:#C8452A; --link:#0E6B4A; --hl:#F3FBD3;
+  --g:#0E6B4A; --n:#B9B2A5; --o:#D94F2B;
+  --night:#0E1116; --night2:#161B22; --nrule:#2A313C; --lime:#C6F432; --amber:#FFB020;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --serif:Fraunces,Georgia,serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+body{font:14.5px/1.5 var(--sans)}
+h1,h2,h3,.pagetitle,.hero2 h1,.qhead h1,.ph h2,.dayh .nm,.carte h3,.step h3,.sect h2,.term h3,.ret h3{font-family:var(--serif);font-weight:800;letter-spacing:-.015em}
+.ph h2{font-size:17px}
+.num,.figs .v,.dfigs b,.hbv,.calc b,table.t td.r{font-family:var(--mono);font-feature-settings:normal;letter-spacing:-.02em}
+table.t td{font-variant-numeric:tabular-nums}
+.lnk,.ph a,.src a,a.more{color:var(--ink);text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+.lnk:hover,.ph a:hover,a.more:hover{text-decoration-color:var(--ink)}
+/* barre du haut : tableau de bord sombre */
+.bar{background:var(--night);color:#fff;border-bottom:0}
+.logo{font-family:var(--serif);font-weight:900;font-size:24px;letter-spacing:-.03em}
+.logo i{color:var(--lime);font-style:normal}
+.logo span{font-family:var(--sans);color:#9BA3AE;font-weight:400}
+.search input{background:var(--night2);color:#fff;border:1px solid var(--nrule);border-radius:10px}
+.search input::placeholder{color:#8B94A0}
+.search input:focus{background:#fff;color:var(--ink)}
+nav.main a{color:#C2C8D0}
+nav.main a:hover,nav.main a.on{color:#fff}
+nav.main a.on{border-bottom-color:var(--lime)}
+.mbtn{color:#fff}.mpanel{background:var(--night)}.mpanel a{color:#E6E9ED;border-bottom-color:var(--nrule)}
+/* panneaux : papier, filet d'encre */
+.panel{border:1.5px solid var(--ink);border-radius:14px;box-shadow:none}
+.ph{border-bottom:1.5px solid var(--ink)}
+.src{border-top:1px dashed var(--rule)}
+table.t th{background:transparent;text-transform:uppercase;letter-spacing:.06em;font-size:11px;font-weight:600;border-bottom:1.5px solid var(--ink)}
+table.t.click tbody tr:hover td{background:var(--hl)}
+.filters .on,.qtabs a.on,.ctnav a.on{border-bottom-color:var(--ink);border-bottom-width:3px}
+.btn{background:var(--ink);color:#fff;border-radius:10px}
+.tag,.pills > span{border-radius:6px}
+.hbb span{background:var(--ink)}
+.hbr.hl .hbb span{background:var(--g)}
+/* accueil : bandeau sombre */
+.hero2{background:var(--night);color:#fff;border-radius:18px;padding:34px 34px 36px;margin-top:6px}
+.hero2 h1{font-size:40px;line-height:1.05;font-weight:900}
+.hero2 h1 em{font-style:normal;color:var(--lime)}
+.hero2 p{color:#B7BFC9}
+.hero2 .search.big input{background:#fff;color:var(--ink);border:0}
+/* « Ce qu'il faut retenir » : panneau tableau de bord */
+#retenir{background:var(--night);color:#E8EAED;border-color:var(--night)}
+#retenir .ph{border-bottom-color:var(--nrule)} #retenir .ph h2{color:#fff}
+#retenir .ret-f{border-right-color:var(--nrule)}
+#retenir .ret-f h3{color:var(--lime)} #retenir .ret-v h3{color:var(--amber)}
+#retenir .ret-f h3 i{background:var(--lime)} #retenir .ret-v h3 i{background:var(--amber)}
+#retenir .muted,#retenir .src{color:#9BA3AE} #retenir .src{border-top-color:var(--nrule)}
+#retenir li::marker{color:#6B7380}
+.vd-fort{color:var(--g)} .vd-vig{color:#B23A1E}
+.carte{background:var(--page);border:1px solid var(--rule)}
+.carte .n{background:var(--lime);color:var(--ink);font-family:var(--mono)}
+.notice{background:var(--hl);border-color:#DCEBA6;color:#3B4A12}
+footer{border-top:1.5px solid var(--ink)}
+@media (max-width:760px){.hero2{padding:22px 18px 24px;border-radius:14px}.hero2 h1{font-size:29px}}
 </style>
 </head>
 <body>
 <header class="bar" id="bar">
   <div class="wrap">
     <div class="in">
-      <a class="logo" href="/">Repère<span>La Bourse expliquée</span></a>
+      <a class="logo" href="/">bilan<i>.</i><span>La Bourse, comptes à l'appui</span></a>
       <div class="search d-only" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
         <input type="search" placeholder="Entreprise, code, secteur" aria-label="Rechercher une entreprise" autocomplete="off">
@@ -675,7 +735,7 @@ a.mention{color:var(--link);font-weight:600;background:#EEF1F6;border-radius:6px
 <script src="/calc.js"></script>
 <script>
 "use strict";
-const SITE = "Repère";
+const SITE = "bilan.";
 const RATES = { pfu: 0.314, ps: 0.186, year: 2026 }; // taux en vigueur en 2026, à vérifier chaque année
 let R = null, AG = { events: [] }; // R : entreprises ; AG : agenda
 const RBY = {}, FULL = {};
@@ -779,7 +839,7 @@ function lecture(co, f) {
     const mm = medOk ? med.marge : null;
     let lv = mm != null ? (m.marge >= mm + Math.max(0.03, Math.abs(mm) * 0.25) ? "fort" : m.marge <= mm - Math.max(0.03, Math.abs(mm) * 0.3) ? "vig" : "moyen") : (m.marge >= 0.15 ? "fort" : m.marge >= 0.07 ? "moyen" : "vig");
     if (m.marge < 0) lv = "vig";
-    out.push({ term: "marge", q: "Combien reste-t-il sur 100 € vendus ?", value: pct(m.marge, 1, false), lv,
+    out.push({ term: "marge", q: "Que reste-t-il des ventes une fois les coûts payés ?", value: pct(m.marge, 1, false), lv,
       text: (m.marge >= 0 ? `Sur 100 ${CURSYM} de ventes, il reste ${e100(m.marge)} une fois payés les salaires, les achats et les autres coûts de l'activité.` : `L'activité perd ${e100(-m.marge)} pour 100 ${CURSYM} de ventes.`) + medTxt(mm, e100) });
   }
   if (f.net != null) {
@@ -812,23 +872,23 @@ function lecture(co, f) {
   return out;
 }
 // Une phrase concrète par repère, avec les chiffres de l'entreprise (titre de chaque ligne)
-const CAT = { croissance: "Ventes", marge: "Marge", net: "Bénéfice", roe: "Rentabilité", lev: "Dette", gear: "Dette", dettenette: "Dette", fcf: "Argent disponible", payout: "Dividende" };
+const CAT = { croissance: "Croissance des ventes", marge: "Marge d'exploitation", net: "Bénéfice net", roe: "Rentabilité des capitaux propres", lev: "Endettement", gear: "Endettement", dettenette: "Endettement", fcf: "Trésorerie disponible", payout: "Dividende" };
 function concret(co, f, items) {
   CURSYM = CUR[f.currency] || "€";
-  const m = ratios(f), med = MED[co.sector] || {}, B = v => big(v, f.currency), bank = isBank(co);
-  const fois = (a, b) => { const r = a / b; return r >= 1.8 ? `${F1.format(r).replace(",0", "")} fois plus que la moyenne de son secteur` : r <= 0.55 ? `${F1.format(1 / r).replace(",0", "")} fois moins que la moyenne de son secteur` : r >= 1.1 ? "plus que la moyenne de son secteur" : r <= 0.9 ? "moins que la moyenne de son secteur" : "autant que la moyenne de son secteur"; };
+  const m = ratios(f), med = MED[co.sector] || {}, B = v => big(v, f.currency), bank = isBank(co), medOk = med.n >= 3;
+  const sect = (v, fm) => v != null && medOk ? ` (secteur : ${fm(v)})` : "";
   for (const i of items) {
     const t = i.term;
-    if (t === "croissance") i.say = m.g1 >= 0 ? `${bank ? "Revenus" : "Ventes"} en hausse de ${pct(m.g1, 0, false)} en un an` : `${bank ? "Revenus" : "Ventes"} en baisse de ${pct(-m.g1, 0, false)} en un an`;
-    else if (t === "marge") i.say = m.marge < 0 ? `Perd de l'argent sur son activité : −${e100(-m.marge)} pour 100 ${CURSYM} vendus` : `Garde ${e100(m.marge)} sur 100 ${CURSYM} vendus${med.n >= 3 && med.marge > 0 ? `, ${fois(m.marge, med.marge)}` : ""}`;
-    else if (t === "net") i.say = f.net < 0 ? `En perte : ${B(f.net)} sur l'exercice` : m.ng != null ? `Bénéfice de ${B(f.net)}, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, false)}` : `Bénéfice de ${B(f.net)}`;
-    else if (t === "roe") i.say = i.lv === "na" ? "Rentabilité impossible à calculer (capitaux propres négatifs)" : `Gagne ${e100(m.roe)} par an pour 100 ${CURSYM} apportés par les actionnaires`;
-    else if (t === "lev" && i.lv === "na") i.say = "La dette fait partie du métier d'une banque : pas de repère";
-    else if (t === "dettenette") i.say = `Aucune dette nette : ${B(-f.netDebt)} de trésorerie en plus`;
-    else if (t === "lev") i.say = m.lev <= 1.5 ? `Dette faible : remboursable en ${F1.format(m.lev)} an de résultats` : m.lev <= 3 ? `Dette raisonnable : ${F1.format(m.lev)} ans de résultats pour la rembourser` : `Dette lourde : ${F1.format(m.lev)} ans de résultats pour la rembourser`;
-    else if (t === "gear") i.say = `Dette égale à ${pct(m.gear, 0, false)} de ce que possèdent les actionnaires`;
-    else if (t === "fcf") i.say = f.fcf >= 0 ? `Il lui reste ${B(f.fcf)} une fois ses investissements payés` : `Ses investissements coûtent plus que ce que l'activité rapporte (${B(f.fcf)})`;
-    else if (t === "payout") i.say = i.lv === "na" ? "Ne verse pas de dividende" : !(f.net > 0) ? "Verse un dividende alors qu'elle perd de l'argent" : `Verse ${pct(m.payout, 0, false)} de son bénéfice en dividende`;
+    if (t === "croissance") i.say = `${bank ? "Revenus" : "Ventes"} ${m.g1 >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.g1), 0, false)} en un an, à ${B(f.ca)}`;
+    else if (t === "marge") i.say = m.marge < 0 ? `L'activité coûte plus qu'elle ne rapporte : −${e100(-m.marge)} pour 100 ${CURSYM} de ventes` : `Une fois payés salaires, achats et frais, il reste ${e100(m.marge)} sur 100 ${CURSYM} de ventes${sect(med.marge > 0 ? med.marge : null, e100)}`;
+    else if (t === "net") i.say = f.net < 0 ? `Perte de ${B(-f.net)} sur l'exercice ${f.year}` : `${B(f.net)} de bénéfice après impôts${m.ng != null ? `, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, false)} sur un an` : ""}`;
+    else if (t === "roe") i.say = i.lv === "na" ? "Ne se calcule pas : les capitaux propres sont négatifs" : `Gagne ${e100(m.roe)} par an pour 100 ${CURSYM} appartenant aux actionnaires${sect(med.roe, e100)}`;
+    else if (t === "lev" && i.lv === "na") i.say = "Emprunter et prêter est le métier d'une banque : ce critère ne s'applique pas";
+    else if (t === "dettenette") i.say = `Pas de dette nette : ${B(-f.netDebt)} de trésorerie de plus que ses emprunts`;
+    else if (t === "lev") i.say = `Il faudrait ${F1.format(m.lev)} an${m.lev >= 2 ? "s" : ""} de résultat d'exploitation pour rembourser sa dette nette (${B(f.netDebt)})`;
+    else if (t === "gear") i.say = `Dette nette de ${B(f.netDebt)}, soit ${pct(m.gear, 0, false)} de ce qui appartient aux actionnaires`;
+    else if (t === "fcf") i.say = f.fcf >= 0 ? `Une fois ses investissements payés, il lui reste ${B(f.fcf)} d'argent disponible` : `Ses investissements ont coûté ${B(-f.fcf)} de plus que ce que l'activité a rapporté`;
+    else if (t === "payout") i.say = i.lv === "na" ? "Aucun dividende versé : les bénéfices restent dans l'entreprise" : !(f.net > 0) ? `Verse ${B(f.divPaid)} de dividendes alors qu'elle est en perte` : `Reverse ${pct(m.payout, 0, false)} de son bénéfice aux actionnaires et garde le reste`;
     i.cat = CAT[t] || "";
   }
   return items;
@@ -1166,16 +1226,16 @@ function stack(parts, fmt) {
 /* ---------- « Comprendre » : une explication détaillée par idée, avec les chiffres de l'entreprise ---------- */
 const TERM2CT = { croissance: "croissance", marge: "marge", net: "net", roe: "roe", lev: "dette", gear: "dette", dettenette: "dette", fcf: "fcf", payout: "dividende" };
 const CT = {
-  argent: { t: "D'où vient l'argent ?", short: "D'où vient l'argent" },
-  varier: { t: "Qu'est-ce qui fait varier ses résultats ?", short: "Ce qui fait varier" },
-  croissance: { t: "Les ventes progressent-elles ?", short: "Croissance", term: "croissance", metric: "g1", fmt: v => pct(v), serie: c => c.years.map((_, i) => i && at(c, "ca", i) != null && at(c, "ca", i - 1) > 0 ? at(c, "ca", i) / at(c, "ca", i - 1) - 1 : null) },
-  marge: { t: "Combien reste-t-il sur 100 € vendus ?", short: "Marge", term: "marge", metric: "marge", fmt: v => pct(v, 1, false), serie: c => c.years.map((_, i) => at(c, "ca", i) > 0 && at(c, "ebit", i) != null ? at(c, "ebit", i) / at(c, "ca", i) : null) },
-  net: { t: "L'entreprise gagne-t-elle de l'argent ?", short: "Bénéfice", term: "net", metric: "nm", money: true, serie: c => c.years.map((_, i) => at(c, "net", i)) },
-  roe: { t: "L'argent des actionnaires rapporte-t-il ?", short: "Rentabilité", term: "roe", metric: "roe", fmt: v => pct(v, 1, false), serie: c => c.years.map((_, i) => at(c, "equity", i) > 0 && at(c, "net", i) != null ? at(c, "net", i) / at(c, "equity", i) : null) },
-  dette: { t: "La dette est-elle sous contrôle ?", short: "Dette", term: "lev", metric: "lev", fmt: v => F1.format(v) + " an" + (Math.abs(v) >= 2 ? "s" : ""), serie: c => c.years.map((_, i) => at(c, "ebitda", i) > 0 && at(c, "netDebt", i) != null ? at(c, "netDebt", i) / at(c, "ebitda", i) : null) },
-  fcf: { t: "Les bénéfices se transforment-ils en argent ?", short: "Argent disponible", term: "fcf", metric: "conv", money: true, serie: c => c.years.map((_, i) => at(c, "fcf", i)) },
-  dividende: { t: "Le dividende est-il couvert ?", short: "Dividende", term: "payout", metric: "payout", fmt: v => pct(v, 0, false), serie: c => c.years.map((_, i) => at(c, "net", i) > 0 && at(c, "divPaid", i) != null ? at(c, "divPaid", i) / at(c, "net", i) : null) },
-  prix: { t: "Le prix de l'action est-il élevé ?", short: "Prix de l'action" },
+  argent: { t: "D'où viennent ses ventes : métiers et pays", short: "D'où viennent ses ventes" },
+  varier: { t: "Ce qui fait monter ou baisser ses résultats", short: "Ce qui fait varier ses résultats" },
+  croissance: { t: "Croissance : les ventes progressent-elles ?", short: "Croissance des ventes", term: "croissance", metric: "g1", fmt: v => pct(v), serie: c => c.years.map((_, i) => i && at(c, "ca", i) != null && at(c, "ca", i - 1) > 0 ? at(c, "ca", i) / at(c, "ca", i - 1) - 1 : null) },
+  marge: { t: "Marge d'exploitation : que reste-t-il des ventes une fois les coûts payés ?", short: "Marge d'exploitation", term: "marge", metric: "marge", fmt: v => pct(v, 1, false), serie: c => c.years.map((_, i) => at(c, "ca", i) > 0 && at(c, "ebit", i) != null ? at(c, "ebit", i) / at(c, "ca", i) : null) },
+  net: { t: "Bénéfice net : l'entreprise gagne-t-elle de l'argent ?", short: "Bénéfice net", term: "net", metric: "nm", money: true, serie: c => c.years.map((_, i) => at(c, "net", i)) },
+  roe: { t: "Rentabilité : que rapporte l'argent des actionnaires ?", short: "Rentabilité des capitaux propres", term: "roe", metric: "roe", fmt: v => pct(v, 1, false), serie: c => c.years.map((_, i) => at(c, "equity", i) > 0 && at(c, "net", i) != null ? at(c, "net", i) / at(c, "equity", i) : null) },
+  dette: { t: "Endettement : en combien d'années la dette serait-elle remboursée ?", short: "Endettement", term: "lev", metric: "lev", fmt: v => F1.format(v) + " an" + (Math.abs(v) >= 2 ? "s" : ""), serie: c => c.years.map((_, i) => at(c, "ebitda", i) > 0 && at(c, "netDebt", i) != null ? at(c, "netDebt", i) / at(c, "ebitda", i) : null) },
+  fcf: { t: "Trésorerie disponible : le bénéfice se retrouve-t-il en argent ?", short: "Trésorerie disponible", term: "fcf", metric: "conv", money: true, serie: c => c.years.map((_, i) => at(c, "fcf", i)) },
+  dividende: { t: "Dividende : quelle part du bénéfice est reversée ?", short: "Dividende", term: "payout", metric: "payout", fmt: v => pct(v, 0, false), serie: c => c.years.map((_, i) => at(c, "net", i) > 0 && at(c, "divPaid", i) != null ? at(c, "divPaid", i) / at(c, "net", i) : null) },
+  prix: { t: "Prix de l'action : est-il élevé par rapport aux bénéfices ?", short: "Prix de l'action" },
 };
 const CT_ORDER = ["argent", "varier", "croissance", "marge", "net", "roe", "dette", "fcf", "dividende", "prix"];
 const ctLink = (s, k, label) => `<a class="more" href="/entreprise/${s.id}/comprendre/${k}">${label || "Comprendre en détail"} →</a>`;
@@ -1210,7 +1270,7 @@ function serieHTML(s, c, k) {
   const vals = d.serie(c), med = MED[s.sector] || {};
   const fmt = d.money ? (v => big(v, c.currency)) : d.fmt;
   const ref = !d.money && med.n >= 3 && med[d.metric] != null ? med[d.metric] : null;
-  return `<section class="panel"><div class="ph"><h2>Sur ${c.years.length} ans</h2></div><div class="pb">${barsSVG({ labels: c.years.map(String), values: vals, fmt, ref, refLabel: "Médiane du secteur" })}</div></section>`;
+  return `<section class="panel"><div class="ph"><h2>${esc(d.short)} de ${c.years[0]} à ${c.years.at(-1)}</h2></div><div class="pb">${barsSVG({ labels: c.years.map(String), values: vals, fmt, ref, refLabel: "Médiane du secteur" })}</div></section>`;
 }
 function argentHTML(s, c) {
   const segs = c && c.segments || {}, f = c ? figuresOf(c) : null, cur = c ? c.currency : "EUR";
@@ -1266,7 +1326,7 @@ async function pageComprendre(id, k) {
   else if (!c) body = `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`;
   else body = `${item ? `<section class="panel"><div class="pb"><div class="lvv"><span class="num big">${item.value}</span>${lvTag(item.lv)}</div><p class="lead">${item.text}</p>${calcHTML(k, s, f)}</div></section>` : `<section class="panel"><div class="pb muted">Ce repère ne peut pas être calculé avec les chiffres publiés par ${esc(s.name)}.</div></section>`}
     ${serieHTML(s, c, k)}${peersHTML(s, k)}
-    <section class="panel"><div class="ph"><h2>Comment le lire</h2></div><div class="pb">${ALL[d.term] ? `<p>${esc(ALL[d.term].what)}</p>${ALL[d.term].ex ? `<p class="muted">Exemple simple : ${esc(ALL[d.term].ex)}</p>` : ""}` : ""}${RULES[d.term] ? `<p><b>Bon ou moins bon ?</b> ${esc(RULES[d.term])}</p>` : ""}${ALL[d.term] && ALL[d.term].limit ? `<p class="muted">Limite : ${esc(ALL[d.term].limit)}</p>` : ""}${WITH[d.term] ? `<p>À lire avec : ${WITH[d.term].map(w => TERM2CT[w] ? `<a class="lnk" href="/entreprise/${s.id}/comprendre/${TERM2CT[w]}">${esc(ALL[w].name)}</a>` : esc(ALL[w].name)).join(", ")}</p>` : ""}</div></section>`;
+    <section class="panel"><div class="ph"><h2>Comment lire ce chiffre</h2></div><div class="pb">${ALL[d.term] ? `<p>${esc(ALL[d.term].what)}</p>${ALL[d.term].ex ? `<p class="muted">Exemple simple : ${esc(ALL[d.term].ex)}</p>` : ""}` : ""}${RULES[d.term] ? `<p><b>Bon ou moins bon ?</b> ${esc(RULES[d.term])}</p>` : ""}${ALL[d.term] && ALL[d.term].limit ? `<p class="muted">Limite : ${esc(ALL[d.term].limit)}</p>` : ""}${WITH[d.term] ? `<p>À lire avec : ${WITH[d.term].map(w => TERM2CT[w] ? `<a class="lnk" href="/entreprise/${s.id}/comprendre/${TERM2CT[w]}">${esc(ALL[w].name)}</a>` : esc(ALL[w].name)).join(", ")}</p>` : ""}</div></section>`;
   app.innerHTML = `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a> › Comprendre</div>
     <div class="cthead">${logo(s, 44)}<div><h1 class="pagetitle" style="margin:0">${esc(d.t)}</h1><div class="muted">${esc(s.name)}${f ? ` · exercice ${f.year}` : ""}</div></div></div>
     ${nav}<div class="ctbody">${body}</div>
@@ -1311,7 +1371,7 @@ async function pageEtf(id) {
       <div id="ecomp"><section class="panel"><div class="empty">Chargement de la composition…</div></section></div>
       <section class="panel"><div class="ph"><h2>Ce que coûtent ses frais</h2></div><div class="pb"><p class="lead" style="margin:0">Avec ${pct((e.ter || 0) / 100, 2, false)} de frais par an, 10 000 € placés 20 ans à 5 % par an deviennent environ <b>${eur(Calc.compound({ initial: 10000, monthly: 0, years: 20, rate: .05, fee: (e.ter || 0) / 100 }).final, 0)}</b>, contre ${eur(Calc.compound({ initial: 10000, monthly: 0, years: 20, rate: .05 }).final, 0)} sans frais.</p></div></section>
     </div><aside>
-      <section class="panel"><div class="ph"><h2>L'essentiel</h2></div><table class="kv">
+      <section class="panel"><div class="ph"><h2>Fiche d'identité</h2></div><table class="kv">
         <tr><td>Indice suivi</td><td>${esc(e.index)}</td></tr><tr><td>Frais courants<span class="s">prélevés chaque année</span></td><td class="num">${pct((e.ter || 0) / 100, 2, false)}</td></tr>
         <tr><td>PEA</td><td>${e.pea ? "Oui" : "Non"}</td></tr><tr><td>Dividendes</td><td>${e.distribution === "distribution" ? "Versés" : "Réinvestis"}</td></tr>
         <tr><td>Réplication<span class="s">${e.replication === "synthétique" ? "via un contrat d'échange" : "achète les titres"}</span></td><td>${esc(e.replication || "–")}</td></tr>
@@ -1540,11 +1600,11 @@ function pageHome() {
   const n = R.companies.length, nOk = R.companies.filter(c => !c.missing).length, day = dayPick();
   const secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length, m: MED[k] })).filter(x => x.n).sort((a, b) => b.n - a.n);
   app.innerHTML = `
-    <section class="hero2"><div><h1>La Bourse expliquée, entreprise par entreprise</h1>
+    <section class="hero2"><div><h1>Avant d'acheter une action, <em>lisez ses comptes.</em> On les a traduits.</h1>
       <p>${F0.format(n)} entreprises et ${ETF.list.length} ETF. Pour chacune : ce qu'elle fait, ses chiffres en clair, ses points forts et ses points de vigilance. Sans conseil, avec les sources.</p></div>
       <div class="search big" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Chercher une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div></section>
     <div class="homegrid">
-      <section class="panel mktp"><div class="ph"><h2>Les marchés</h2><span class="light" style="font-size:12.5px">Cours en direct, différés selon les places</span></div><div class="tv tv-mkt" id="mkt"></div></section>
+      <section class="panel mktp"><div class="ph"><h2>Les grands indices aujourd'hui</h2><span class="light" style="font-size:12.5px">Cours en direct, différés selon les places</span></div><div class="tv tv-mkt" id="mkt"></div></section>
       ${day ? `<section class="panel dayc"><div class="ph"><h2>L'entreprise du jour</h2></div><div class="pb">
         <a class="dayh" href="/entreprise/${day.id}">${logo(day, 48)}<div><div class="nm">${esc(day.name)}</div><div class="light">${esc(regName(day))} · ${esc(secName(day))}</div></div></a>
         <p>${esc(day.fiche.fait)}</p><p class="muted">${esc(day.fiche.argent)}</p>${feu(quick(day))}
@@ -1708,14 +1768,14 @@ function lectureHTML(s, c) {
   const f = figuresOf(c), items = concret(s, f, lecture(s, f)), cross = croisements(s, f);
   const body = i => { const k = TERM2CT[i.term], d = CT[k];
     return `<p class="lead">${i.text}</p>${k ? calcHTML(k, s, f) : ""}
-      ${d && d.serie ? `<div class="mini"><div class="cap">Sur ${c.years.length} ans</div>${barsSVG({ labels: c.years.map(String), values: d.serie(c), fmt: d.money ? (v => big(v, c.currency)) : d.fmt, h: 140 })}</div>` : ""}
+      ${d && d.serie ? `<div class="mini"><div class="cap">Évolution sur ${c.years.length} ans</div>${barsSVG({ labels: c.years.map(String), values: d.serie(c), fmt: d.money ? (v => big(v, c.currency)) : d.fmt, h: 140 })}</div>` : ""}
       ${RULES[i.term] ? `<p class="rule"><b>Pourquoi ${i.lv === "fort" ? "vert" : i.lv === "vig" ? "orange" : i.lv === "na" ? "pas de couleur" : "gris"} ?</b> ${esc(RULES[i.term])}</p>` : ""}
       <div class="links">${k ? ctLink(s, k, "Comparer avec les autres entreprises du secteur") : ""} ${ALL[i.term] ? `<button type="button" class="def linkbtn" data-def="${i.term}">Définition</button>` : ""}</div>`; };
   const row = i => acc(`<span class="dot dot-${i.lv}"></span><span class="q"><small>${esc(i.cat)} · <span class="vd vd-${i.lv}">${VERDICT[i.lv]}</span></small>${i.say}</span>`, body(i), false, "qrow");
-  return `<section class="panel" id="comptes"><div class="ph"><h2>Le bilan, point par point</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
+  return `<section class="panel" id="comptes"><div class="ph"><h2>Ses comptes, critère par critère</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
       <div class="qrows">${items.map(row).join("")}</div>
-      <div class="src">Touchez une ligne pour voir le calcul, l'évolution sur 5 ans et pourquoi cette couleur. Les couleurs comparent l'entreprise à des seuils simples et à son secteur. Elles ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
-    ${cross.length ? `<section class="panel"><div class="ph"><h2>À lire ensemble</h2></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
+      <div class="src">Ouvrez une ligne pour voir le calcul, l'évolution sur plusieurs années et la règle qui donne la couleur. Les couleurs comparent l'entreprise à des seuils simples et à son secteur. Elles ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
+    ${cross.length ? `<section class="panel"><div class="ph"><h2>Ce que les chiffres disent ensemble</h2></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
 }
 /* Le dividende, expliqué */
 function dividendeHTML(s, c) {
@@ -1729,13 +1789,13 @@ function dividendeHTML(s, c) {
       <li><b>Le jour du détachement</b>, il faut déjà posséder l'action (l'avoir achetée au plus tard la veille). Ce jour-là, le cours baisse en général à peu près du montant du dividende : l'argent sort de l'entreprise.</li>
       <li><b>Le jour du paiement</b>, quelques jours plus tard, l'argent arrive sur le compte du courtier.</li>
       <li><b>Les impôts :</b> sur un compte-titres, ${pct(RATES.pfu, 1, false)} sont prélevés (12,8 % d'impôt et ${pct(RATES.ps, 1, false)} de prélèvements sociaux). Dans un PEA, rien n'est prélevé tant que l'argent reste dans le PEA.${us ? " Pour une société étrangère, son pays prélève souvent une retenue à la source (15 % aux États-Unis avec le formulaire W-8BEN, que proposent la plupart des courtiers). Ces actions ne vont pas dans un PEA." : ""}</li></ol>`;
-  if (!(f.divPaid > 0.5) && !(f.dps > 0)) return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2></div><div class="pb">
+  if (!(f.divPaid > 0.5) && !(f.dps > 0)) return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende : la part du bénéfice reversée aux actionnaires</h2></div><div class="pb">
       <p class="lead" style="margin-top:0">${esc(s.name)} n'a pas versé de dividende sur l'exercice ${f.year}. Elle garde ses bénéfices pour investir, se désendetter ou racheter ses propres actions.</p>
       ${acc("Comment fonctionne un dividende ?", how)}</div></section>`;
   const first = vals.findIndex(okn), last = vals.length - 1;
   const evo = first >= 0 && first < last && vals[first] > 0 && okn(vals[last]) ? vals[last] / vals[first] - 1 : null;
   const cov = m.payout != null ? (m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig") : null;
-  return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant estimé à partir des comptes</span>` : ""}</div><div class="pb">
+  return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende : la part du bénéfice reversée aux actionnaires</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant estimé à partir des comptes</span>` : ""}</div><div class="pb">
     <p class="lead" style="margin-top:0">${f.dps > 0 ? `Pour chaque action détenue, ${esc(s.name)} a versé ${f.dpsEst ? "environ " : ""}<b>${eur(f.dps, 2, cur)}</b> pendant l'exercice ${f.year}.` : `${esc(s.name)} a versé ${big(f.divPaid, cur)} de dividendes pendant l'exercice ${f.year}.`}${m.payout != null ? ` Cela représente ${pct(m.payout, 0, false)} de son bénéfice.` : ""}</p>
     <div class="dfigs">
       ${f.dps > 0 ? `<div><span>Par action</span><b>${eur(f.dps, 2, cur)}</b></div>` : ""}
@@ -1743,14 +1803,14 @@ function dividendeHTML(s, c) {
       ${evo != null ? `<div><span>Total versé depuis ${c.years[first]}</span><b>${pct(evo)}</b></div>` : ""}
       ${next.length ? `<div><span>Prochaine date</span><b>${dLabel(next[0].date)}</b><small>${esc(next[0].label)}</small></div>` : ""}</div>
     ${vals.some(okn) ? `<div class="mini"><div class="cap">Dividendes versés au total, année par année</div>${barsSVG({ labels: c.years.map(String), values: vals, fmt: v => big(v, cur), h: 150 })}</div>` : ""}
-    ${acc("Combien pour 1 000 € investis ?", `<p>Ça dépend du prix de l'action. Indiquez-le dans « Est-ce cher ? » plus bas : le site calcule le rendement et ce que rapporteraient 1 000 €.</p><p class="muted">Repère : la plupart des grandes entreprises versent chaque année entre 1 et 5 % du prix de l'action.</p>`)}
+    ${acc("Combien pour 1 000 € investis ?", `<p>Ça dépend du prix de l'action. Indiquez-le dans « Le prix de l'action » plus bas : le site calcule le rendement et ce que rapporteraient 1 000 €.</p><p class="muted">Ordre de grandeur : la plupart des grandes entreprises versent chaque année entre 1 et 5 % du prix de l'action.</p>`)}
     ${acc("Comment fonctionne un dividende ?", how)}
     ${acc("Le dividende est-il solide ?", `<p>${m.payout == null ? "Impossible à dire sans bénéfice." : m.payout > 1 ? `Non : l'entreprise verse plus (${pct(m.payout, 0, false)}) que ce qu'elle gagne. Elle puise dans sa trésorerie ou s'endette.` : m.payout > 0.9 ? `Fragile : l'entreprise verse ${pct(m.payout, 0, false)} de son bénéfice. Si le bénéfice baisse, le dividende risque de baisser aussi.` : m.payout > 0.6 ? `Plutôt oui : ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une petite marge.` : `Oui : seulement ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une bonne marge si les bénéfices baissent.`}</p><p class="muted">Un dividende n'est jamais garanti : l'entreprise peut le réduire ou le supprimer.</p>${ctLink(s, "dividende", "Comparer avec les autres entreprises du secteur")}`)}
   </div></section>`;
 }
 function prixHTML(s, c) {
   const f = figuresOf(c), cur = CUR[f.currency] || f.currency;
-  return `<section class="panel" id="prix"><div class="ph"><h2>Est-ce cher ?</h2></div><div class="pb">
+  return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action, comparé à ses bénéfices</h2></div><div class="pb">
     <p class="muted" style="margin:0 0 10px">Le prix d'une action ne dit rien seul : on le compare à ce que l'entreprise gagne. Recopiez le cours affiché en haut de la page.</p>
     <div class="field" style="max-width:240px"><label for="pxin">Cours de l'action (${esc(cur)})</label><input id="pxin" type="number" inputmode="decimal" min="0" step="0.01" placeholder="Ex. ${f.eps > 0 ? F0.format(f.eps * 15) : "100"}"></div>
     <div id="pxout"></div></div>
@@ -1828,7 +1888,7 @@ function tabComptes(s, c, el) {
   const money = v => big(v, cur), ps = v => eur(v, 2, cur);
   const GR = [["ca", bank ? "Revenus" : "Ventes", f.ca, money], ["net", "Résultat net", f.net, money], ["marge", "Marge", div(f.ebit, f.ca), v => pct(v, 1, false)], ["fcf", "Argent disponible", f.fcf, money], ["netDebt", "Dette nette", f.netDebt, money], ["dps", "Dividende par action", f.dps || f.dpsEst, ps]].filter(g => g[2] && g[2].some(okn) && !(bank && ["marge", "fcf", "netDebt"].includes(g[0])));
   el.innerHTML = `
-    <section class="panel"><div class="ph"><h2>En graphique</h2></div><div class="filters" id="gsel">${GR.map((g, i) => `<button data-i="${i}" class="${i ? "" : "on"}">${g[1]}</button>`).join("")}</div><div class="pb" id="gbox">${GR.length ? barsSVG({ labels: Y.map(String), values: GR[0][2], fmt: GR[0][3] }) : ""}</div></section>
+    <section class="panel"><div class="ph"><h2>Ses comptes en graphique, année par année</h2></div><div class="filters" id="gsel">${GR.map((g, i) => `<button data-i="${i}" class="${i ? "" : "on"}">${g[1]}</button>`).join("")}</div><div class="pb" id="gbox">${GR.length ? barsSVG({ labels: Y.map(String), values: GR[0][2], fmt: GR[0][3] }) : ""}</div></section>
     <section class="panel"><div class="ph"><h2>Comptes annuels</h2><span class="light" style="font-size:12.5px">${cur === "EUR" ? "En euros" : "En " + cur} · clôture au ${c.fyEnd ? c.fyEnd.split("-").reverse().join("/") : "–"}</span></div>
       <div class="scroll-x"><table class="t fin"><thead><tr><th class="l"></th>${Y.map(y => `<th>${y}</th>`).join("")}<th class="d-only">${def("mediane", "Médiane secteur")}</th></tr></thead><tbody>
         ${grp("Activité")}

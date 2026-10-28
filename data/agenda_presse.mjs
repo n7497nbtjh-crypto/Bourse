@@ -53,7 +53,7 @@ async function main() {
       const u = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
       u.searchParams.set("query", queryFor(c.name)); u.searchParams.set("mode", "artlist"); u.searchParams.set("format", "json");
       u.searchParams.set("maxrecords", "50"); u.searchParams.set("timespan", "45d"); u.searchParams.set("sort", "datedesc");
-      const r = await fetch(u, { headers: { "user-agent": "Repere (site pedagogique)" } });
+      const r = await fetch(u, { headers: { "user-agent": "bilan (site pedagogique)" } });
       const txt = r.ok ? await r.text() : "";
       const arts = txt.trim().startsWith("{") ? (JSON.parse(txt).articles || []) : [];
       const found = arts.map(a => ({ a, d: dateFromTitle(a.title, today) })).filter(x => x.d && norm(x.a.title).includes(norm(c.name.split(" ")[0])));

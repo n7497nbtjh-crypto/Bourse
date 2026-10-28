@@ -163,7 +163,7 @@ async function presse(request, index) {
   }
   let body, status = 200;
   try {
-    let r = await fetch(api.toString(), { headers: { "user-agent": "Repere (site pedagogique)" }, cf: { cacheTtl: 1800 } });
+    let r = await fetch(api.toString(), { headers: { "user-agent": "bilan (site pedagogique)" }, cf: { cacheTtl: 1800 } });
     if (!r.ok) throw new Error("GDELT " + r.status);
     let txt = await r.text();
     body = { source: "GDELT", items: normalize2(txt.trim().startsWith("{") ? JSON.parse(txt) : {}) };
@@ -175,10 +175,10 @@ async function presse(request, index) {
 }
 
 // cf/src/worker.mjs
-var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "Rep\xE8re", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path) {
   let p = path.replace(/\/+$/, "") || "/", base = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1"), m;
-  if (p === "/" || p === "/aller") return { title: `${SITE} \xB7 La Bourse expliqu\xE9e`, desc: BASE_DESC };
+  if (p === "/" || p === "/aller") return { title: `${SITE} \xB7 La Bourse, comptes \xE0 l'appui`, desc: BASE_DESC };
   if (m = base.match(/^\/entreprise\/([a-z0-9-]+)$/)) {
     let c = BY[m[1]];
     return c ? { title: `${c.name} : cours, comptes et actualit\xE9 \xB7 ${SITE}`, desc: `${c.name} (${c.sector}). ${c.desc} Cours de l'action, chiffre d'affaires, marge, r\xE9sultat, dette et dividende tir\xE9s des rapports annuels, publications officielles AMF. Chaque chiffre est expliqu\xE9.` } : null;

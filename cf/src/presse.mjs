@@ -39,7 +39,7 @@ export default async function presse(request, index) {
   if (cache) { const hit = await cache.match(key); if (hit) return hit; }
   let body, status = 200;
   try {
-    const r = await fetch(api.toString(), { headers: { "user-agent": "Repere (site pedagogique)" }, cf: { cacheTtl: TTL } });
+    const r = await fetch(api.toString(), { headers: { "user-agent": "bilan (site pedagogique)" }, cf: { cacheTtl: TTL } });
     if (!r.ok) throw new Error("GDELT " + r.status);
     const txt = await r.text();
     body = { source: "GDELT", items: normalize(txt.trim().startsWith("{") ? JSON.parse(txt) : {}) };

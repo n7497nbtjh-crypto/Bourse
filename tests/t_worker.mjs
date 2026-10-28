@@ -15,7 +15,7 @@ const check = async (path, status, titlePart) => {
   if (!ok) bad++;
   console.log(ok ? "ok " : "ÉCART", path, r.status, t ? t[1] : "");
 };
-await check("/", 200, "La Bourse expliquée");
+await check("/", 200, "comptes à l'appui");
 await check("/entreprise/lvmh", 200, "LVMH");
 await check("/entreprise/totalenergies/comptes", 200, "TotalEnergies");
 await check("/actualites", 200, "Actualité");
