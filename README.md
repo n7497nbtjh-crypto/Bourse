@@ -6,7 +6,7 @@ Construit sur le modèle de Kartel Des Cartes : Cloudflare Pages en mode `_worke
 ## Sources de données (toutes gratuites)
 | Donnée | Source | Comment |
 | --- | --- | --- |
-| Comptes annuels (chiffre d'affaires, marge, résultat, dette, dividende…) | Rapports ESEF via filings.xbrl.org, LEI via GLEIF | Collecte chaque lundi par GitHub Actions (`data/fetch_data.mjs`) |
+| Comptes annuels (chiffre d'affaires, marge, résultat, dette, dividende…) | Rapports ESEF via filings.xbrl.org, LEI via GLEIF | Collecte lancée à la main sur GitHub, une fois par an (`data/fetch_data.mjs`) |
 | Actualité | Publications officielles AMF (info-financiere.gouv.fr), Licence Ouverte | En direct via `/api/amf` (`cf/src/amf.mjs`), 15 min de cache |
 | Cours, graphique, PER, rendement, capitalisation | Modules gratuits TradingView | Chargés dans la page, mention « Cours fournis par TradingView » obligatoire |
 | Agenda | Calendriers financiers officiels des sociétés | Saisi à la main dans `data/agenda.json`, avec la source |
@@ -21,14 +21,15 @@ Construit sur le modèle de Kartel Des Cartes : Cloudflare Pages en mode `_worke
 - `data/univers.mjs` : les 40 entreprises suivies (nom, code, ISIN, secteur). Ajouter une ligne pour en suivre une nouvelle.
 - `data/esef.mjs` : lecture des rapports ESEF ; `data/fetch_data.mjs` : collecte ; `data/agenda.json` : agenda.
 - `data/gen_demo.mjs` : séries fictives des simulateurs.
-- `.github/workflows/donnees.yml` : collecte automatique chaque lundi.
+- `.github/workflows/donnees.yml` : collecte et fabrication du site prêt à déposer.
 - `tests/` : `t_univers.mjs` (codes ISIN), `t_esef.mjs` (lecture des comptes, sur des exemples), `t_amf.mjs`, `t_calc.mjs`, `t_worker.mjs`, `audit.py` (toutes les pages, 3 largeurs).
 
-## Mise en place (une seule fois)
-1. Créer un dépôt GitHub (privé possible) et y mettre ce dossier.
-2. Dans Cloudflare : Workers & Pages > Créer > Pages > Connecter à Git > choisir le dépôt. Commande de build : aucune. Dossier de sortie : `cf/site`.
-3. Dans GitHub : onglet Actions > « Mise à jour des données » > Run workflow. La collecte remplit `cf/site/data/` et Cloudflare republie le site.
-4. Facultatif : GitHub > Settings > Secrets and variables > Actions > Variables > `CONTACT` = une adresse de contact (demandée par filings.xbrl.org pour un usage régulier).
+## Mettre le site à jour (comme pour Kartel)
+1. GitHub > dépôt Bourse > onglet Actions > « Mise à jour des données » > Run workflow.
+2. Attendre la coche verte (environ 5 minutes), ouvrir l'exécution, section Artifacts : télécharger « repere-site ».
+3. Glisser ce fichier dans Cloudflare Pages (nouveau déploiement), onglet ouvert jusqu'au bout.
+Les comptes annuels ne changent qu'une fois par an : refaire la collecte après la saison des rapports annuels (avril). L'actualité AMF et les cours TradingView sont toujours à jour, sans rien faire.
+Facultatif : GitHub > Settings > Secrets and variables > Actions > Variables > `CONTACT` = une adresse de contact (demandée par filings.xbrl.org).
 
 ## Reconstruire et tester en local
 ```
