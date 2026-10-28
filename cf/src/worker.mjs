@@ -19,7 +19,7 @@ export function meta(path) {
   const p = path.replace(/\/+$/, "") || "/";
   const base = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1");
   let m;
-  if (p === "/") return { title: `${SITE} · La Bourse expliquée`, desc: BASE_DESC };
+  if (p === "/" || p === "/aller") return { title: `${SITE} · La Bourse expliquée`, desc: BASE_DESC };
   if ((m = base.match(/^\/entreprise\/([a-z0-9-]+)$/))) {
     const c = BY[m[1]];
     if (!c) return null;
