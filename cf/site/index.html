@@ -901,7 +901,7 @@ mark.todo{background:#FFF1C9;padding:0 3px;border-radius:3px;color:var(--ink)}
 .espben{margin:8px 0 0;padding-left:18px;color:var(--grey);font-size:14.5px;line-height:1.6}.espben.big{font-size:15.5px;padding-left:20px}.espben.big li{margin-bottom:8px}
 .premband{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:16px;padding:22px 26px}
 .premband ul{margin:0;padding-left:18px;line-height:1.7;font-size:14.5px}.premband .btn{background:#D6F26B;color:var(--ink);border-color:#D6F26B;height:44px;display:inline-flex;align-items:center;text-decoration:none}
-a.hbr{color:inherit;text-decoration:none;border-radius:6px}a.hbr:hover{background:var(--soft)}a.hbr:hover .hbl{text-decoration:underline}
+a.hbr{color:inherit;text-decoration:none;border-radius:6px;position:relative;padding-right:14px}a.hbr::after{content:"›";position:absolute;right:2px;top:50%;transform:translateY(-52%);color:var(--light);font-size:16px}a.hbr:hover{background:var(--soft)}a.hbr:hover .hbl{text-decoration:underline}
 .hbb.ctr{position:relative}.hbb.ctr span{position:absolute;top:0;bottom:0}
 /* mon espace */
 .esplog{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start;margin-top:10px}
@@ -966,6 +966,38 @@ a.hbr{color:inherit;text-decoration:none;border-radius:6px}a.hbr:hover{backgroun
 .formw .formstep{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:1px dashed var(--line2);font-size:14.5px}.formstep.off{opacity:.75}.formstep input{margin-top:4px}
 .acahits{display:flex;flex-direction:column;gap:10px}.acahit{border:1px solid var(--line2);border-radius:12px;padding:12px 16px}.acahit.top{border-color:var(--g);background:#F4FAF6}.acahit h3{font-family:var(--serif);font-size:18px;margin:2px 0 4px}.acahit h3 a{color:inherit}.acahit p{margin:0 0 6px;font-size:14.5px}.acahit ul{margin:4px 0 8px;padding-left:18px;font-size:14px}
 @media (max-width:760px){.acal{padding:12px 16px}.acales{font-size:16px}}
+
+/* fiche en étapes */
+.etapes{position:sticky;top:58px;z-index:20;display:flex;gap:6px;align-items:center;overflow-x:auto;background:var(--page);padding:10px 0;margin:4px 0 12px;border-bottom:1px solid var(--line);scrollbar-width:none}
+.etapes::-webkit-scrollbar{display:none}.etl{font-size:12.5px;color:var(--light);white-space:nowrap;margin-right:4px}
+.etapes button{display:flex;align-items:center;gap:7px;white-space:nowrap;font:inherit;font-size:13.5px;padding:7px 12px;border:1px solid var(--line);border-radius:99px;background:#fff;color:var(--grey);cursor:pointer}
+.etapes button span{width:20px;height:20px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font-size:11.5px;font-weight:700;color:var(--ink)}
+.etapes button.on{background:var(--ink);border-color:var(--ink);color:#fff}.etapes button.on span{background:#D6F26B}
+.etnav{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin:-4px 0 18px}.etnav .btn{height:auto;min-height:40px;white-space:normal;text-align:left}
+@media (max-width:760px){.etapes{top:52px;transition:top .2s}.bar.hide ~ main .etapes{top:0}.etl{display:none}}
+
+/* v12 : leçons interactives */
+.acatopbar{display:flex;flex-direction:column;gap:8px;position:sticky;top:58px;background:var(--page);padding:8px 0;z-index:5}
+.acapb{height:5px;border-radius:99px;background:var(--soft);overflow:hidden}.acapb span{display:block;height:100%;background:var(--g);transition:width .35s}
+.acacards{display:flex;flex-direction:column;gap:12px;margin:18px 0}
+.acacard2{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px 18px 56px;box-shadow:var(--shadow)}.acacard2 p{margin:0}
+.acacard2.in{animation:acain .35s ease}@keyframes acain{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.acan{position:absolute;left:16px;top:18px;width:26px;height:26px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-size:12.5px;font-weight:700}
+mark.nm{background:linear-gradient(transparent 55%,#D6F26B 55%);color:inherit;font-weight:600;padding:0 1px}
+.acamore{display:flex;gap:16px;align-items:center;margin:4px 0 20px}.acamore .btn{height:44px;padding:0 26px}
+.wdg{background:var(--ink);color:#fff;border-radius:18px;padding:20px 22px;margin:20px 0}.wdg .kick{color:#D6F26B;margin:0}.wdg h3{font-family:var(--serif);font-size:21px;margin:4px 0 14px}
+.wdgs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px 22px}.wdgs label{display:flex;flex-direction:column;gap:6px;font-size:13.5px;color:#D9D5CE}.wdgs label b{color:#fff;font-family:var(--mono,monospace)}
+.wdgs input[type=range]{width:100%;accent-color:#D6F26B}
+.wdgo{margin-top:14px;padding-top:14px;border-top:1px solid rgba(255,255,255,.15)}.wdg .wr{margin:0;font-size:16px}.wdg .wr b{color:#D6F26B;font-family:var(--mono,monospace)}.wdg .muted{color:#BDB7AC!important}.wdg .note{color:#A8A39A}
+.wdg .up{color:#9FE3C2!important}.wdg .down{color:#FFB08A!important}
+.wb{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:12px 0 6px;background:rgba(255,255,255,.1)}.wb span{display:block;height:100%;transition:width .3s}.wa{background:#D6F26B}.wbb{background:#5E9C7F}
+.wbl{display:flex;gap:16px;flex-wrap:wrap;font-size:12.5px;color:#D9D5CE}.wbl i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.wenv{display:grid;grid-template-columns:170px 1fr 90px;gap:10px;align-items:center;margin:8px 0;font-size:14px}.wenvb{height:10px;background:rgba(255,255,255,.1);border-radius:5px;overflow:hidden}.wenvb i{display:block;height:100%;background:#D6F26B}.wenv b{text-align:right;font-family:var(--mono,monospace)}
+.acaret ol{margin:0;padding-left:20px}.acaret li{margin-bottom:6px;font-weight:500}
+.acaqz{border:2px solid var(--ink);border-radius:16px;padding:16px 18px;margin:20px 0}.acaqq{font-weight:700;font-size:16.5px;margin:4px 0 12px}
+.acaxp{font-size:13px;color:var(--grey);background:#fff;border:1px solid var(--line);border-radius:99px;padding:5px 12px}
+.acagrid .acacard:nth-child(8n+1) .acatop .n{background:#0E6B4A}.acagrid .acacard:nth-child(8n+2) .acatop .n{background:#2F5D8C}.acagrid .acacard:nth-child(8n+3) .acatop .n{background:#7A4E9C}.acagrid .acacard:nth-child(8n+4) .acatop .n{background:#B5651D}.acagrid .acacard:nth-child(8n+5) .acatop .n{background:#1E7A7A}.acagrid .acacard:nth-child(8n+6) .acatop .n{background:#8C2F4A}.acagrid .acacard:nth-child(8n+7) .acatop .n{background:#5A6B1E}.acagrid .acacard:nth-child(8n+8) .acatop .n{background:#B23A1E}
+@media (max-width:760px){.acatopbar{top:52px}.acacard2{padding:16px 16px 16px 50px}.acan{left:12px}.wenv{grid-template-columns:110px 1fr 70px;font-size:13px}.wdg{padding:18px 16px}}
 </style>
 </head>
 <body>
@@ -2061,19 +2093,48 @@ function officielLink(s) {
   if (s.region === "US" || s.sec) return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${encodeURIComponent(s.sec || s.ticker)}&type=&dateb=&owner=include&count=40`;
   return s.domain ? "https://www." + s.domain : "";
 }
+/* ---------- Fiche entreprise : un parcours en étapes, dans l'ordre où un débutant se pose les questions ---------- */
+function etapesListe(s, c) {
+  if (!c) return [["metier", "Son métier", () => ficheHTML(s, c) + `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`]];
+  const dv = dividendeHTML(s, c);
+  return [
+    ["retenir", "L'essentiel à retenir", () => retenirHTML(s, c)],
+    ["metier", "Son métier", () => ficheHTML(s, c)],
+    ["comptes", "Ses comptes", () => lectureHTML(s, c)],
+    ["prix", "Son prix", () => prixHTML(s, c)],
+    dv ? ["dividende", "Dividende", () => dv] : null,
+    ["concurrents", "Concurrents", () => concurrentsHTML(s)],
+    ["faq", "Questions", () => faqHTML(s, c)],
+  ].filter(Boolean);
+}
+function etapeCourante(L) { const k = new URLSearchParams(location.search).get("etape"); return L.some(x => x[0] === k) ? k : L[0][0]; }
+function etapesHTML(s, c) {
+  const L = etapesListe(s, c), cur = etapeCourante(L);
+  return `<nav class="etapes scroll-x" id="etapes" aria-label="Comprendre ${esc(s.name)} étape par étape"><span class="etl">Comprendre ${esc(s.name)} :</span>${L.map(([k, l], i) => `<button type="button" data-et="${k}" class="${k === cur ? "on" : ""}"><span>${i + 1}</span>${l}</button>`).join("")}</nav>`;
+}
+function etapesCorps(s, c) {
+  const L = etapesListe(s, c), cur = etapeCourante(L);
+  return L.map(([k, l, fn], i) => `<div class="etape" data-etape="${k}"${k === cur ? "" : " hidden"}>${fn()}
+    <div class="etnav">${i > 0 ? `<button type="button" class="linkbtn" data-et="${L[i - 1][0]}">← ${L[i - 1][1]}</button>` : "<span></span>"}${L[i + 1] ? `<button type="button" class="btn" data-et="${L[i + 1][0]}">Étape suivante : ${L[i + 1][1]} →</button>` : `<a class="more" href="/comparer?ids=${[s.id, ...peersOf(s, 3).list.map(x => x.id)].join(",")}">Comparer à ses concurrentes →</a>`}</div></div>`).join("");
+}
+function etapesBind(s) {
+  const show = k => {
+    $$("#etapes [data-et]").forEach(b => b.classList.toggle("on", b.dataset.et === k));
+    $$("#etapes-corps .etape").forEach(d => d.hidden = d.dataset.etape !== k);
+    const u = new URL(location.href); u.searchParams.set("etape", k); history.replaceState({}, "", u.pathname + u.search);
+    const nav = $("#etapes"); if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
+    const b = $(`#etapes [data-et="${k}"]`); if (b) b.scrollIntoView({ block: "nearest", inline: "center" });
+  };
+  app.addEventListener("click", e => { const b = e.target.closest("[data-et]"); if (b && app.contains(b)) { e.preventDefault(); show(b.dataset.et); } });
+}
+
 function tabBref(s, c, el) {
   const fr = s.region === "FR", f = c ? figuresOf(c) : null, items = f ? lecture(s, f) : [], phrase = f ? enBref(s, f, items) : "";
   const up = eventsOf(s.id).filter(e => e.date >= TODAY);
   el.innerHTML = `
     ${c ? essentielHTML(s, c) : `<section class="panel"><div class="pb"><p class="lead" style="margin:0">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p></div></section>`}
-    <section class="panel bref-box" style="background:none;border:0;box-shadow:none;margin:-8px 0 14px"><div class="pb" style="padding:0">
-      <nav class="jump">${[f && ["retenir", "Points forts et vigilance"], f && ["concurrents", "Concurrents"], f && ["prix", "Prix de l'action"], f && ["comptes", "Ses comptes"], f && ["dividende", "Dividende"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
-    </div></section>
-    <div class="cols"><div>
-        ${c ? retenirHTML(s, c) + concurrentsHTML(s) + prixHTML(s, c) : ""}
-        ${ficheHTML(s, c)}
-        ${c ? lectureHTML(s, c) + dividendeHTML(s, c) + faqHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
-      </div>
+    ${etapesHTML(s, c)}
+    <div class="cols"><div id="etapes-corps">${etapesCorps(s, c)}</div>
       <aside>
         <section class="panel" id="agenda"><div class="ph"><h2>Agenda</h2></div>${up.length ? agendaHTML(up.slice(0, 5), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant. Le site ajoute les dates dès qu'elles sont publiées par l'entreprise ou annoncées dans la presse.</div>`}</section>
         <section class="panel" id="actus"><div class="ph"><h2>Actualités</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div>
@@ -2083,6 +2144,7 @@ function tabBref(s, c, el) {
         <section class="panel" id="avis"><div class="ph"><h2>Avis des visiteurs</h2><a href="/entreprise/${s.id}/communaute">Discussion</a></div><div class="pb" id="avisb"></div></section>
       </aside>
     </div>`;
+  etapesBind(s);
   const voir = new URLSearchParams(location.search).get("voir");
   if (voir) { const d = $(`details[data-term="${voir}"]`) || $("#" + voir); if (d && d.tagName === "DETAILS") d.open = true; }
   if (s.sec) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false, filters: false, max: 3 });
@@ -3438,7 +3500,8 @@ function assistantPanel(s, c, root) {
     <div class="chips">${ASK.map(q => `<button type="button" class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>
     <form class="askf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question, par exemple : pourquoi sa marge baisse-t-elle ?" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
     <div class="asklog"></div><p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres passent par l'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
-  const first = root.firstElementChild; first ? first.after(sec) : root.appendChild(sec); // juste sous l'essentiel, bien visible
+  const corps = $("#etapes-corps", root), first = root.firstElementChild;
+  if (corps) corps.appendChild(sec); else if (first) first.after(sec); else root.appendChild(sec); // sous les étapes, visible quelle que soit l'étape
   liaUI();
   const log = $(".asklog", sec), inp = $("input", sec);
   const ask = async q => {
@@ -4237,7 +4300,7 @@ function acaAccueil() {
   const next = ACA.modules.flatMap(m => m.lecons.map(l => [m, l])).find(([m, l]) => !st[m.id + "/" + l.id]);
   app.innerHTML = `<div class="acahero"><p class="kick">L'Académie bilan.</p><h1 class="pagetitle">La culture financière, de zéro.</h1>
       <p class="pagesub">${ACA.modules.length} modules, ${tot} leçons et des quiz pour comprendre l'argent, la Bourse et les placements, avec des exemples chiffrés et des sources officielles. Environ ${F0.format(mins / 60)} heures en tout, à votre rythme. Votre progression reste sur cet appareil.</p>
-      <div class="acaprog"><div class="feub"><span class="f" style="width:${lus / tot * 100}%"></span></div><span>${lus} / ${tot} leçons lues</span>${next ? `<a class="btn" href="/academie/${next[0].id}/${next[1].id}">${lus ? "Reprendre" : "Commencer"} : ${esc(next[1].titre)}</a>` : ""}</div></div>
+      <div class="acaprog"><div class="feub"><span class="f" style="width:${lus / tot * 100}%"></span></div><span>${lus} / ${tot} leçons lues</span>${(() => { const xp = acaXP(st), [nv, a, b] = acaNiveau(xp); return `<span class="acaxp"><b>${xp} points</b> · niveau ${nv}${b ? ` · encore ${b - xp} pour le suivant` : ""}</span>`; })()}${next ? `<a class="btn" href="/academie/${next[0].id}/${next[1].id}">${lus ? "Reprendre" : "Commencer"} : ${esc(next[1].titre)}</a>` : ""}</div></div>
     <div class="acagrid">${ACA.modules.map((m, i) => { const p = acaProgress(m, st), lk = m.lecons.filter(l => l.premium).length;
       return `<a class="acacard" href="/academie/${m.id}"><div class="acatop"><span class="n">${i + 1}</span><span class="nv ${niveauCls(m.niveau)}">${esc(m.niveau || "")}</span></div><h3>${esc(m.titre)}</h3><p>${esc(m.intro)}</p>
         <div class="acameta"><span>${m.lecons.length} leçons · ${m.duree_min || m.lecons.reduce((a, l) => a + (l.duree_min || 5), 0)} min${lk && !isPrem() ? ` · ${lk} Premium` : ""}</span><span>${p.d}/${p.n}${p.q != null ? ` · quiz ${p.q}/${m.quiz.length}` : ""}</span></div><div class="feub"><span class="f" style="width:${p.d / p.n * 100}%"></span></div></a>`; }).join("")}</div>
@@ -4253,7 +4316,7 @@ function acaModule(m) {
       <a class="acal quiz" href="/academie/${m.id}/quiz"><span class="n">?</span><span><b>Le quiz du module</b><small class="light">${m.quiz.length} questions, avec l'explication de chaque réponse</small></span><span class="light acam">${p.q != null ? `${p.q}/${m.quiz.length}` : ""}</span></a></section>
       <section class="panel"><div class="ph"><h2>À la fin de ce module, vous saurez</h2></div><div class="pb"><ul class="pl2">${(m.objectifs || []).map(o => `<li>${esc(o)}</li>`).join("")}</ul></div></section></div>`;
 }
-function acaLecon(m, l) {
+function acaLeconV1(m, l) {
   const st = acaSt(), i = m.lecons.indexOf(l), prev = m.lecons[i - 1], next = m.lecons[i + 1], mi = ACA.modules.indexOf(m), nm = ACA.modules[mi + 1];
   setTitle(l.titre + " · L'Académie");
   const lock = acaLocked(l);
@@ -4325,6 +4388,114 @@ function chercheLecons(q, n = 3) {
 }
 function leconsHTML(hits) {
   return `<div class="acahits">${hits.map(({ m, l }, i) => `<div class="acahit${i ? "" : " top"}"><p class="kick">${esc(m.titre)}</p><h3><a href="/academie/${m.id}/${l.id}">${esc(l.titre)}</a></h3><p>${esc(l.resume)}</p>${i === 0 && !acaLocked(l) && (l.a_retenir || []).length ? `<ul>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}<a class="more" href="/academie/${m.id}/${l.id}">Lire la leçon${acaLocked(l) ? " (Premium)" : ""} →</a></div>`).join("")}</div>`;
+}
+
+/* ====================================================================================================
+   v12 : l'Académie devient interactive : leçons en cartes à dévoiler, chiffres mis en valeur,
+   manipulations (curseurs) intégrées, question d'auto-évaluation, points et niveau.
+   ==================================================================================================== */
+const fmtE = v => F0.format(Math.round(v)) + " €";
+const numsMark = t => esc(t).replace(/(\d[\d\s ]*(?:,\d+)?\s?(?:%|€|ans?\b|mois\b|fois\b))/g, '<mark class="nm">$1</mark>');
+// Un curseur : [clé, libellé, min, max, pas, valeur, format]
+function widgetHTML(id, titre, sliders, note = "") {
+  return `<div class="wdg" data-w="${id}"><p class="kick">À vous de jouer</p><h3>${titre}</h3><div class="wdgs">${sliders.map(([k, l, mn, mx, st, v, u]) => `<label><span>${l}<b data-v="${k}"></b>${u ? ` ${u}` : ""}</span><input type="range" min="${mn}" max="${mx}" step="${st}" value="${v}" data-k="${k}"></label>`).join("")}</div><div class="wdgo"></div>${note ? `<p class="note">${note}</p>` : ""}</div>`;
+}
+const barre2 = (a, b, la, lb) => { const t = a + b || 1; return `<div class="wb"><span style="width:${a / t * 100}%" class="wa"></span><span style="width:${b / t * 100}%" class="wbb"></span></div><div class="wbl"><span><i class="wa"></i>${la}</span><span><i class="wbb"></i>${lb}</span></div>`; };
+const WIDGETS = {
+  "bases/interets-composes": () => widgetHTML("compose", "Combien deviendrait votre épargne ?", [["m", "Versement par mois", 0, 1000, 10, 100, "€"], ["r", "Rendement annuel hypothétique", 0, 10, 0.5, 5, "%"], ["y", "Durée", 1, 40, 1, 20, "ans"]], "Rendement constant et hypothétique, avant impôts : la réalité varie chaque année."),
+  "bases/inflation": () => widgetHTML("inflation", "Ce que vaudront 1 000 € qui dorment", [["i", "Inflation moyenne", 0, 8, 0.5, 2, "%"], ["y", "Durée", 1, 30, 1, 10, "ans"]]),
+  "bases/epargne-precaution": () => widgetHTML("precaution", "Votre épargne de précaution", [["d", "Vos dépenses par mois", 300, 5000, 50, 1500, "€"]], "Fourchette courante : 3 à 6 mois de dépenses, sur un livret disponible à tout moment."),
+  "placements/livrets": () => widgetHTML("livret", "Ce que rapporte un livret A", [["a", "Somme placée", 100, 22950, 50, 5000, "€"]], "Taux du livret A et du LDDS : 1,7 % net d'impôt depuis le 1er août 2026 (révisé deux fois par an)."),
+  "valorisation/per": () => widgetHTML("per", "Calculez un PER", [["p", "Prix de l'action", 5, 500, 1, 60, "€"], ["b", "Bénéfice par action", 0.5, 30, 0.5, 4, "€"]]),
+  "valorisation/rendement-dividende": () => widgetHTML("rdt", "Calculez un rendement", [["p", "Prix de l'action", 5, 500, 1, 50, "€"], ["d", "Dividende annuel", 0, 25, 0.1, 2, "€"]]),
+  "bourse/dividendes": () => widgetHTML("detach", "Le jour du détachement", [["p", "Cours la veille", 10, 300, 1, 50, "€"], ["d", "Dividende versé", 0.1, 15, 0.1, 2, "€"]], "En pratique le cours varie aussi pour d'autres raisons ce jour-là."),
+  "portefeuille/diversification": () => widgetHTML("divers", "Une entreprise perd la moitié de sa valeur", [["n", "Nombre de lignes de même poids", 1, 50, 1, 5, ""]]),
+  "portefeuille/investissement-programme": () => widgetHTML("dca", "Investir 100 € par mois, trois mois de suite", [["a", "Prix de la part, mois 1", 5, 20, 0.5, 10, "€"], ["b", "Prix de la part, mois 2", 5, 20, 0.5, 5, "€"], ["c", "Prix de la part, mois 3", 5, 20, 0.5, 10, "€"]]),
+  "frais-fiscalite/frais-courtage": () => widgetHTML("courtage", "Ce que coûte un ordre", [["a", "Montant de l'achat", 25, 2000, 25, 100, "€"], ["f", "Frais fixes par ordre", 0, 10, 0.5, 2, "€"]]),
+  "frais-fiscalite/frais-courants": () => widgetHTML("ter", "Le poids des frais sur 25 ans", [["m", "Versement par mois", 50, 1000, 10, 200, "€"], ["f1", "Frais annuels, fonds A", 0.05, 1, 0.05, 0.2, "%"], ["f2", "Frais annuels, fonds B", 0.5, 3, 0.1, 1.8, "%"]], "Rendement hypothétique de 6 % par an avant frais, identique pour les deux fonds."),
+  "frais-fiscalite/flat-tax": () => widgetHTML("impot", "L'impôt sur un gain de compte-titres", [["g", "Plus-value réalisée", 100, 50000, 100, 5000, "€"]], "Taux 2026 : 12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux. L'option pour le barème progressif peut être plus favorable selon votre tranche."),
+  "frais-fiscalite/enveloppes-fiscales": () => widgetHTML("enveloppes", "Le même gain dans trois comptes", [["g", "Plus-value réalisée", 500, 50000, 100, 10000, "€"]], "Taux 2026, gain retiré après 5 ans pour le PEA et 8 ans pour l'assurance-vie (personne seule, abattement de 4 600 €, versements sous 150 000 €). Simplification : sans option pour le barème."),
+  "psychologie/levier-cfd": () => widgetHTML("levier", "L'effet de levier", [["l", "Levier", 1, 30, 1, 10, "×"], ["v", "Variation du marché", -20, 20, 1, -5, "%"]], "Une mise de 1 000 € ; au-delà de −100 %, la position est en général fermée de force."),
+  "psychologie/aversion-pertes": () => widgetHTML("perte", "Remonter après une baisse", [["b", "Baisse subie", 5, 80, 5, 30, "%"]]),
+  "bourse/krachs": () => widgetHTML("perte", "Remonter après une baisse", [["b", "Baisse subie", 5, 80, 5, 50, "%"]]),
+};
+function widgetCalc(w, v) {
+  switch (w) {
+    case "compose": { const r = Calc.compound({ initial: 0, monthly: v.m, years: v.y, rate: v.r / 100 }), verse = v.m * 12 * v.y, gain = r.final - verse;
+      return `<p class="wr"><b>${fmtE(r.final)}</b> au bout de ${v.y} ans</p>${barre2(verse, Math.max(0, gain), `vos versements : ${fmtE(verse)}`, `les intérêts : ${fmtE(Math.max(0, gain))}`)}`; }
+    case "inflation": { const x = 1000 / Math.pow(1 + v.i / 100, v.y); return `<p class="wr">Dans ${v.y} ans, 1 000 € n'achèteront plus que ce qui coûte aujourd'hui <b>${fmtE(x)}</b>.</p>${barre2(x, 1000 - x, "pouvoir d'achat restant", "perdu par l'inflation")}`; }
+    case "precaution": return `<p class="wr">Votre réserve : entre <b>${fmtE(v.d * 3)}</b> et <b>${fmtE(v.d * 6)}</b>.</p>`;
+    case "livret": return `<p class="wr"><b>${eur(v.a * 0.017, 2)}</b> d'intérêts par an, sans impôt ni prélèvements sociaux.</p>`;
+    case "per": { const pe = v.p / v.b; return `<p class="wr">PER : <b>${F1.format(pe)}</b>. Vous payez ${F1.format(pe)} années de bénéfice. Rendement bénéficiaire : <b>${pct(1 / pe, 1, false)}</b> par an.</p><p class="muted" style="margin:4px 0 0">${pe < 10 ? "Un PER bas : le marché attend peu de croissance, ou voit un risque." : pe > 25 ? "Un PER élevé : le marché parie sur une forte croissance des bénéfices." : "Un PER dans la zone la plus fréquente des grandes entreprises."}</p>`; }
+    case "rdt": return `<p class="wr">Rendement : <b>${pct(v.d / v.p, 2, false)}</b> par an. 1 000 € d'actions rapporteraient environ <b>${fmtE(v.d / v.p * 1000)}</b> avant impôts.</p>`;
+    case "detach": return `<p class="wr">Le jour du détachement, le cours ouvre en théorie vers <b>${eur(v.p - v.d, 2)}</b>. Votre richesse ne change pas : ${eur(v.d, 2)} passent du cours à votre compte (avant impôts).</p>`;
+    case "divers": { const w1 = 1 / v.n; return `<p class="wr">Avec ${v.n} ligne${v.n > 1 ? "s" : ""}, la chute de moitié d'une seule d'entre elles fait perdre <b>${pct(w1 * 0.5, 1, false)}</b> à votre portefeuille.</p>${barre2(1 - w1 * 0.5, w1 * 0.5, "ce qui reste", "la perte")}`; }
+    case "dca": { const parts = 100 / v.a + 100 / v.b + 100 / v.c, moy = 300 / parts, simple = (v.a + v.b + v.c) / 3; return `<p class="wr">Vous détenez <b>${F1.format(parts)} parts</b> pour 300 €, soit un prix moyen de <b>${eur(moy, 2)}</b>, contre ${eur(simple, 2)} de prix moyen sur les trois mois.</p><p class="muted" style="margin:4px 0 0">Les mois où le prix est bas, la même somme achète plus de parts.</p>`; }
+    case "courtage": { const r = v.f / v.a; return `<p class="wr">Frais : <b>${pct(r, 2, false)}</b> du montant.</p><p class="muted" style="margin:4px 0 0">${r > 0.01 ? "Au-delà de 1 %, votre placement doit d'abord monter d'autant pour couvrir les frais. Regrouper ses achats réduit ce coût." : "Des frais faibles par rapport au montant investi."}</p>`; }
+    case "ter": { const a = Calc.compound({ initial: 0, monthly: v.m, years: 25, rate: 0.06, fee: v.f1 / 100 }).final, b = Calc.compound({ initial: 0, monthly: v.m, years: 25, rate: 0.06, fee: v.f2 / 100 }).final;
+      return `<p class="wr">Fonds A : <b>${fmtE(a)}</b> · Fonds B : <b>${fmtE(b)}</b></p><p class="wr" style="margin-top:4px">Écart dû aux seuls frais : <b class="down">${fmtE(a - b)}</b> pour ${fmtE(v.m * 300)} versés.</p>`; }
+    case "impot": { const ir = v.g * 0.128, ps = v.g * 0.186; return `<p class="wr">Impôt : <b>${fmtE(ir + ps)}</b> (${fmtE(ir)} d'impôt sur le revenu et ${fmtE(ps)} de prélèvements sociaux). Il vous reste <b>${fmtE(v.g - ir - ps)}</b>.</p>`; }
+    case "enveloppes": { const cto = v.g * 0.314, pea = v.g * 0.186, av = v.g * 0.172 + Math.max(0, v.g - 4600) * 0.075;
+      const row = (n, t) => `<div class="wenv"><span>${n}</span><span class="wenvb"><i style="width:${t / cto * 100}%"></i></span><b>${fmtE(t)}</b></div>`;
+      return `<p class="wr">Impôt payé sur ${fmtE(v.g)} de gain :</p>${row("Compte-titres", cto)}${row("PEA (plus de 5 ans)", pea)}${row("Assurance-vie (plus de 8 ans)", av)}`; }
+    case "levier": { const r = v.l * v.v; return `<p class="wr">Le marché varie de ${v.v > 0 ? "+" : ""}${v.v} % ; votre mise varie de <b class="${r >= 0 ? "up" : "down"}">${r > 0 ? "+" : ""}${F0.format(Math.max(-100, r))} %</b>${r <= -100 ? " : la mise est entièrement perdue" : ""}.</p><p class="muted" style="margin:4px 0 0">1 000 € deviennent ${fmtE(Math.max(0, 1000 * (1 + r / 100)))}.</p>`; }
+    case "perte": { const up = 1 / (1 - v.b / 100) - 1; return `<p class="wr">Après une baisse de ${v.b} %, il faut une hausse de <b>${pct(up, 0, false)}</b> pour revenir au point de départ.</p>`; }
+  }
+  return "";
+}
+function widgetsBind(root) {
+  $$(".wdg", root).forEach(w => {
+    const run = () => { const v = {}; $$("input[data-k]", w).forEach(i => { v[i.dataset.k] = +i.value; const o = $(`[data-v="${i.dataset.k}"]`, w); if (o) o.textContent = " " + (Number.isInteger(+i.step) ? F0.format(+i.value) : F1.format(+i.value).replace(/,0$/, "")); }); $(".wdgo", w).innerHTML = widgetCalc(w.dataset.w, v); };
+    $$("input", w).forEach(i => i.oninput = run); run();
+  });
+}
+/* Une question du quiz du module, choisie parce qu'elle parle de la leçon */
+function questionDeLecon(m, l) {
+  const mots = t => new Set(norm(t).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(w => w.length > 4));
+  const L = mots(l.titre + " " + l.resume + " " + (l.a_retenir || []).join(" "));
+  let best = null, bs = 0; (m.quiz || []).forEach((q, i) => { const Q = mots(q.q + " " + q.explication); let s = 0; Q.forEach(w => { if (L.has(w)) s++; }); if (s > bs) { bs = s; best = i; } });
+  return bs >= 2 ? best : null;
+}
+/* Points et niveau */
+function acaXP(st) { let xp = 0; Object.keys(st).forEach(k => { xp += k.startsWith("quiz/") ? (st[k] || 0) * 5 : k.startsWith("q/") ? 5 : 10; }); return xp; }
+const acaNiveau = xp => xp >= 600 ? ["Confirmé", 600, null] : xp >= 250 ? ["Intermédiaire", 250, 600] : ["Débutant", 0, 250];
+function acaLecon(m, l) {
+  const st = acaSt(), i = m.lecons.indexOf(l), prev = m.lecons[i - 1], next = m.lecons[i + 1], mi = ACA.modules.indexOf(m), nm = ACA.modules[mi + 1];
+  setTitle(l.titre + " · L'Académie");
+  const lock = acaLocked(l), qi = lock ? null : questionDeLecon(m, l), q = qi != null ? m.quiz[qi] : null, deja = !!st[m.id + "/" + l.id];
+  const cards = lock ? [] : l.paragraphes;
+  app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
+    <article class="acales"><div class="acatopbar"><span class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</span>${lock ? "" : `<div class="acapb"><span id="acapb" style="width:0%"></span></div>`}</div>
+    <h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead">${esc(l.resume)}</p>
+    ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie, à la formation guidée de six semaines et à l'IA sans compter.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
+      : `<div class="acacards">${cards.map((p, j) => `<div class="acacard2" data-c="${j}"${deja || j === 0 ? "" : " hidden"}><span class="acan">${j + 1}</span><p>${numsMark(p)}</p></div>`).join("")}</div>
+      <div class="acamore"${deja ? " hidden" : ""}><button type="button" class="btn" id="acanext">Continuer</button><button type="button" class="linkbtn" id="acaall">Tout afficher</button></div>
+      <div class="acarest"${deja ? "" : " hidden"}>
+        ${l.exemple ? `<div class="acaex"><p class="kick">Exemple chiffré</p><p>${numsMark(l.exemple)}</p></div>` : ""}
+        ${WIDGETS[m.id + "/" + l.id] ? WIDGETS[m.id + "/" + l.id]() : ""}
+        ${(l.a_retenir || []).length ? `<div class="acaret"><p class="kick">À retenir</p><ol>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
+        ${l.erreur_frequente ? `<div class="acaerr"><p class="kick">L'erreur à éviter</p><p>${esc(l.erreur_frequente)}</p></div>` : ""}
+        ${q ? `<div class="acaqz" id="acaqz"><p class="kick">Testez-vous</p><p class="acaqq">${esc(q.q)}</p><div class="acaopts">${q.options.map((o, j) => `<button type="button" class="acao" data-i="${j}">${esc(o)}</button>`).join("")}</div><div class="acaqe"></div></div>` : ""}
+        ${l.lien_site ? `<p><a class="more" href="${esc(l.lien_site.href)}">${esc(l.lien_site.texte)} →</a></p>` : ""}
+        ${(l.sources || []).length ? `<p class="note">Sources : ${l.sources.map(s => `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(" · ")}</p>` : ""}
+      </div>`}
+    <nav class="acanav">${prev ? `<a class="more" href="/academie/${m.id}/${prev.id}">← ${esc(prev.titre)}</a>` : "<span></span>"}${next ? `<a class="btn" href="/academie/${m.id}/${next.id}">Leçon suivante : ${esc(next.titre)}</a>` : `<a class="btn" href="/academie/${m.id}/quiz">Faire le quiz du module</a>`}</nav></article>
+    ${!next && nm ? `<p class="note" style="text-align:right">Ensuite : <a class="lnk" href="/academie/${nm.id}">${esc(nm.titre)}</a></p>` : ""}`;
+  if (lock) return;
+  let shown = deja ? cards.length : 1;
+  const prog = () => { const b = $("#acapb"); if (b) b.style.width = Math.round(shown / cards.length * 100) + "%"; };
+  const finish = () => { $$(".acacard2").forEach(c => c.hidden = false); shown = cards.length; prog(); $(".acamore").hidden = true; $(".acarest").hidden = false; widgetsBind(app);
+    const s2 = acaSt(); if (!s2[m.id + "/" + l.id]) { s2[m.id + "/" + l.id] = 1; acaSave(s2); toast(`+10 points · leçon terminée. Niveau : ${acaNiveau(acaXP(s2))[0]}`); } };
+  prog();
+  if (deja) { widgetsBind(app); }
+  else {
+    $("#acanext").onclick = () => { const c = $(`.acacard2[data-c="${shown}"]`); if (c) { c.hidden = false; c.classList.add("in"); shown++; prog(); c.scrollIntoView({ block: "nearest", behavior: "smooth" }); } if (shown >= cards.length) finish(); };
+    $("#acaall").onclick = finish;
+  }
+  const qz = $("#acaqz"); if (qz) $$(".acao", qz).forEach(b => b.onclick = () => { const k = +b.dataset.i, ok = k === q.bonne;
+    $$(".acao", qz).forEach(x => { x.disabled = true; const j = +x.dataset.i; if (j === q.bonne) x.classList.add("good"); else if (j === k) x.classList.add("bad"); });
+    $(".acaqe", qz).innerHTML = `<div class="acaexp ${ok ? "good" : "bad"}"><b>${ok ? "Bonne réponse." : "Pas tout à fait."}</b> ${esc(q.explication)}</div>`;
+    if (ok) { const s2 = acaSt(); if (!s2["q/" + m.id + "/" + qi]) { s2["q/" + m.id + "/" + qi] = 1; acaSave(s2); toast("+5 points"); } } });
 }
 
 function route() {
