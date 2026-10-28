@@ -8,12 +8,14 @@
 // Lancé chaque semaine par GitHub Actions (.github/workflows/donnees.yml), ou à la main :
 //   node data/fetch_data.mjs            toutes les sociétés
 //   node data/fetch_data.mjs lvmh       une seule société
+//   node data/fetch_data.mjs --actu     seulement les dépôts récents à la SEC (actualité, agenda estimé)
+// Les comptes d'une société déjà collectés depuis moins de FRESH_DAYS jours (7 par défaut) ne sont pas relus.
 // Variable facultative CONTACT : adresse ou lien de contact ajouté à l'en-tête User-Agent,
 // comme le demande filings.xbrl.org pour un usage régulier.
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import U, { SECTEURS } from "./univers.mjs";
 import { extract, merge, toSeries } from "./esef.mjs";
-import { extractSec, cikMap, factsUrl } from "./sec.mjs";
+import { extractSec, cikMap, factsUrl, subsUrl, recentFilings, estimatedAgenda } from "./sec.mjs";
 
 const OUT = new URL("../cf/site/data/", import.meta.url);
 const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse");
@@ -88,6 +90,7 @@ export async function collectSec(fetchFn, c) {
   if (!doc) throw new Error("aucun compte à la SEC pour " + c.sec);
   const s = toSeries(extractSec(doc));
   if (!s.years.length) throw new Error("aucun exercice annuel lisible");
+  if (!nameMatches(c.legal || c.name, doc.entityName)) VERIF.push(`${c.name} : le code ${c.sec} renvoie à « ${doc.entityName} »`);
   return {
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, region: c.region, domain: c.domain, desc: c.desc, cik, legalName: doc.entityName || c.name,
     sector: c.sector, ...s,
@@ -96,10 +99,16 @@ export async function collectSec(fetchFn, c) {
   };
 }
 
+// Le nom légal trouvé par l'ISIN doit ressembler au nom de l'entreprise : sinon l'ISIN est peut-être faux
+const words = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !["the", "group", "groupe", "holding", "societe", "company", "spa", "plc"].includes(w));
+export function nameMatches(name, legal) { const a = new Set(words(name)); return !legal || words(legal).some(w => a.has(w)) || words(name).some(w => String(legal).toLowerCase().replace(/[^a-z0-9]/g, "").includes(w)); }
+export const VERIF = [];
+
 export async function collectOne(fetchFn, c) {
   if (c.sec) return collectSec(fetchFn, c);
   const id = c.lei ? { lei: c.lei, legalName: c.name } : await leiFromIsin(fetchFn, c.isin, c.legal || c.name);
   if (!id) throw new Error("LEI introuvable pour " + c.isin);
+  if (!nameMatches(c.legal || c.name, id.legalName)) VERIF.push(`${c.name} : l'ISIN ${c.isin} renvoie à « ${id.legalName} »`);
   const fl = await filingsFor(fetchFn, id.lei);
   if (!fl.length) throw new Error("aucun rapport ESEF pour " + id.lei);
   const reports = [];
@@ -128,8 +137,29 @@ export function summary(c) {
   };
 }
 
+// Dépôts récents à la SEC pour toutes les sociétés concernées -> actualité et agenda estimé
+async function collectActuSec(fetchFn, list) {
+  const items = [], events = [];
+  for (const c of list.filter(c => c.sec)) {
+    try {
+      if (!c.cik) CIK = CIK || await cikMap(getJSON, fetchFn);
+      const cik = c.cik || CIK[c.sec]; if (!cik) continue;
+      const sub = await getJSON(fetchFn, subsUrl(cik));
+      recentFilings(sub, cik, 8).forEach(f => items.push({ id: c.id, ...f }));
+      estimatedAgenda(sub).forEach(e => events.push({ id: c.id, ...e }));
+    } catch (e) { console.log("actu SEC", c.name, e.message); }
+    await sleep(150);
+  }
+  items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  writeFileSync(new URL("actu-sec.json", OUT), JSON.stringify({ updated: new Date().toISOString(), source: "SEC EDGAR", items: items.slice(0, 600) }));
+  writeFileSync(new URL("agenda-auto.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), events }));
+  console.log(items.length, "dépôts SEC,", events.length, "dates estimées");
+}
+
 async function main() {
-  const only = process.argv[2];
+  const only = process.argv[2] && !process.argv[2].startsWith("--") ? process.argv[2] : null;
+  if (process.argv.includes("--actu")) return collectActuSec(fetch, U);
+  const FRESH = +(process.env.FRESH_DAYS ?? 7) * 864e5;
   DIAGNOSTIC.__raw = {};
   mkdirSync(new URL("societes/", OUT), { recursive: true });
   const prevIndex = existsSync(new URL("societes.json", OUT)) ? JSON.parse(readFileSync(new URL("societes.json", OUT))) : { companies: [] };
@@ -137,21 +167,29 @@ async function main() {
   const list = [], errors = [];
   for (const c of U) {
     if (only && c.id !== only) { if (prev[c.id]) list.push(prev[c.id]); continue; }
+    const file = new URL(`societes/${c.id}.json`, OUT);
+    if (!only && existsSync(file)) { // comptes récents : on garde (les comptes ne changent qu'une fois par an)
+      const old = JSON.parse(readFileSync(file));
+      if (old.updated && Date.now() - new Date(old.updated) < FRESH) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); list.push(summary(m)); continue; }
+    }
     try {
       const full = await collectOne(fetch, c);
-      writeFileSync(new URL(`societes/${c.id}.json`, OUT), JSON.stringify(full));
+      writeFileSync(file, JSON.stringify(full));
       list.push(summary(full));
       console.log("ok ", c.name, full.years.join(", "));
     } catch (e) {
       errors.push(`${c.name} : ${e.message}`);
       console.log("ÉCHEC", c.name, e.message);
-      if (prev[c.id]) list.push(prev[c.id]); // on garde la version précédente
+      if (prev[c.id] && !prev[c.id].missing) list.push(prev[c.id]); // on garde la version précédente
       else list.push({ id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true });
     }
-    await sleep(800);
+    await sleep(c.sec ? 200 : 800);
   }
+  DIAGNOSTIC.__verif = VERIF;
   writeFileSync(new URL("./diagnostic.json", import.meta.url), JSON.stringify(DIAGNOSTIC, null, 1));
-  writeFileSync(new URL("societes.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), sectors: SECTEURS, companies: list, errors }));
-  console.log(`${list.length - errors.length} sociétés à jour, ${errors.length} échec(s)`);
+  writeFileSync(new URL("societes.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), sectors: SECTEURS, companies: list, errors, verif: VERIF }));
+  console.log(`${list.filter(c => !c.missing).length} sociétés avec comptes sur ${list.length}, ${errors.length} échec(s)`);
+  if (VERIF.length) console.log("À vérifier :\n" + VERIF.join("\n"));
+  if (!only) await collectActuSec(fetch, U);
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error(e); process.exit(1); });

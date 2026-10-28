@@ -423,6 +423,46 @@ table.brk tr.sel td{background:#F4F7FB}
   .dleg{margin:-6px 0 16px}
   .brkbar{gap:10px}
 }
+.tv-top{height:340px;border-top:1px solid var(--soft);overflow:hidden}
+.tv-top .tradingview-widget-container{height:100%}
+.tv-top .tradingview-widget-container__widget{height:calc(100% - 26px)!important}
+.bref{margin:0;padding:14px 18px;font-size:15px;line-height:1.55;border-bottom:1px solid var(--soft);background:#FCFBF9}
+.feu{padding:12px 18px;border-bottom:1px solid var(--soft)}
+.feun{display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px}
+.feun span{display:inline-flex;align-items:center;gap:6px}
+.feun b{font-size:16px}
+.feun i,.pills i,.dleg i{display:inline-block;width:10px;height:10px;border-radius:50%}
+.f > i,.feub .f{background:var(--g)} .m > i,.feub .m{background:var(--n)} .v > i,.feub .v{background:var(--o)}
+.feub{display:flex;height:8px;border-radius:99px;overflow:hidden;background:var(--soft);margin-top:10px}
+.feub span{display:block;height:100%}
+:root{--g:#1E8A52;--n:#BDB7AC;--o:#E07B24}
+.lect .li{border-left:4px solid transparent}
+.lect .li-fort{border-left-color:var(--g)} .lect .li-moyen{border-left-color:var(--n)} .lect .li-vig{border-left-color:var(--o)} .lect .li-na{border-left-color:#C9D3E3}
+.lv-fort{background:#E3F2E9;color:#0F6B3E}.lv-vig{background:#FCE9D6;color:#9A4A0B}
+.pills{display:inline-flex;gap:8px;font-size:12.5px;font-weight:600;white-space:nowrap}
+.pills > span{display:inline-flex;align-items:center;gap:4px}
+.pills i{width:9px;height:9px}
+.dleg span{display:inline-flex;gap:6px;align-items:center}
+.cocard .f{align-items:center}
+.nday{font-size:12px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.04em;padding:14px 0 6px;border-bottom:1px solid var(--soft)}
+.nday:first-child{padding-top:4px}
+.nit{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--soft)}
+.nit:last-child{border-bottom:0}
+.nlogo{flex:none}
+.nbody{min-width:0;flex:1}
+.nmeta{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.nco{font-weight:600}
+a.nco:hover,a.nti:hover{text-decoration:underline}
+.ncat{font-size:11.5px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 12%,#fff);border-radius:99px;padding:1px 8px}
+.nti{display:block;font-weight:500;margin-top:3px;overflow-wrap:anywhere}
+.nwhy{font-size:12.5px;color:var(--grey);margin-top:3px}
+.nwhy summary{cursor:pointer;color:var(--link);list-style:none}
+.nwhy summary::-webkit-details-marker{display:none}
+.nwhy p{margin:4px 0 0;max-width:640px}
+.nfil{margin-bottom:6px}
+aside .news .nit{padding:10px 0}
+aside .pb .news,aside #amf{padding:0 16px}
+@media (max-width:760px){.tv-top{height:280px}.bref{padding:12px 14px;font-size:14.5px}.feu{padding:12px 14px}.feun{gap:12px}aside #amf{padding:0 12px}}
 </style>
 </head>
 <body>
@@ -776,23 +816,103 @@ function agendaHTML(list, showCo = true) {
   return `<div class="ag">${list.map(e => { const [y, m, d] = e.date.split("-"); const c = RBY[e.id]; return `<div class="it"><div class="d"><b>${+d}</b>${MOIS[+m - 1]} ${y.slice(2)}</div><div>
     ${showCo && c ? `<a class="co" href="/entreprise/${c.id}">${esc(c.name)}</a>` : ""}<div class="ev">${esc(e.label)}</div></div></div>`; }).join("")}</div>`;
 }
-// Publications officielles (AMF), en direct
-function amfBlock(target, params, limit) {
-  target.innerHTML = `<div class="empty">Chargement des publications de l'AMF…</div>`;
-  fetch(`/api/amf?limit=${Math.min(50, limit * 2)}${params}`).then(r => r.ok ? r.json() : Promise.reject()).then(j => {
-    // Même communiqué en français et en anglais : on garde la version française
-    const seen = new Map();
-    for (const i of (j.items || []).filter(i => i.title)) {
-      const k = (i.isin || i.company) + "|" + String(i.date).slice(0, 16);
-      const prev = seen.get(k);
-      if (!prev || (prev.lang === "Anglais" && i.lang !== "Anglais")) seen.set(k, i);
-    }
-    const items = [...seen.values()].slice(0, limit);
-    if (!items.length) { target.innerHTML = `<div class="empty">Aucune publication trouvée.</div>`; return; }
-    target.innerHTML = `<div class="feed">${items.map(i => { const c = i.isin ? R.companies.find(x => x.isin === i.isin) : null; return `<div class="it"><div class="when">${whenParis(i.date)}</div><div>
-      <div>${c ? `<a class="co" href="/entreprise/${c.id}">${esc(c.name)}</a>` : i.company ? `<span class="co">${esc(i.company)}</span>` : ""}${i.type ? `<span class="ty">${esc(i.type)}</span>` : ""}</div>
-      ${i.url ? `<a class="ti" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : `<span class="ti">${esc(i.title)}</span>`}</div></div>`; }).join("")}</div>`;
-  }).catch(() => { target.innerHTML = `<div class="empty">Le flux de l'AMF n'est pas disponible pour le moment.</div>`; });
+/* ---------- Actualité : publications officielles classées et expliquées ---------- */
+const NCAT = {
+  resultats: { label: "Résultats", c: "#1E6FD9", why: "L'entreprise publie ses ventes et ses bénéfices de la période. C'est en général l'annonce qui fait le plus bouger le cours." },
+  rapport: { label: "Rapport annuel", c: "#5B4FC4", why: "Le document complet de l'année : comptes, risques, rémunérations des dirigeants. C'est la source des chiffres du site." },
+  dividende: { label: "Dividende", c: "#1E8A52", why: "Montant et dates de versement du dividende. Pour le recevoir, il faut détenir l'action la veille de la date de détachement." },
+  assemblee: { label: "Assemblée générale", c: "#8A6D1E", why: "Réunion annuelle des actionnaires : ils votent les comptes, le dividende et la nomination des administrateurs. Chaque actionnaire peut voter." },
+  operation: { label: "Opération", c: "#C2410C", why: "Achat ou vente d'une activité, levée d'argent ou emprunt. Peut changer la taille, la dette ou le nombre d'actions de l'entreprise." },
+  dirigeants: { label: "Direction", c: "#7C3A8F", why: "Changement à la tête de l'entreprise ou au conseil d'administration." },
+  incident: { label: "Incident", c: "#B42318", why: "La société signale un incident important, par exemple une attaque informatique." },
+  rachat: { label: "Rachat d'actions", c: "#8A857D", routine: true, why: "L'entreprise rachète ses propres actions. Moins d'actions en circulation : chaque action restante représente une part un peu plus grande des bénéfices. La déclaration est obligatoire et répétée chaque semaine : rarement une nouvelle en soi." },
+  capital: { label: "Nombre d'actions", c: "#8A857D", routine: true, why: "Publication mensuelle obligatoire du nombre d'actions et de droits de vote. Rarement importante." },
+  autre: { label: "Communiqué", c: "#5F5B55", why: "Communiqué officiel de la société." },
+};
+const normt = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function amfCat(i) {
+  const t = normt(i.type + " " + i.title);
+  if (/droits de vote|nombre total d.actions|nombre d.actions composant|total voting rights|total number of shares/.test(t)) return "capital";
+  if (/rachat|actions propres|contrat de liquidite|buyback|own shares|bilan semestriel du contrat/.test(t)) return "rachat";
+  if (/rapport financier annuel|document d.enregistrement universel|rapport annuel|annual financial report|universal registration/.test(t)) return "rapport";
+  if (/dividende|coupon|acompte sur dividende/.test(t)) return "dividende";
+  if (/assemblee|general meeting|modalites de mise a disposition/.test(t)) return "assemblee";
+  if (/resultat|chiffre d.affaires|information financiere (trimestrielle|semestrielle|annuelle)|rapport financier semestriel|trimestre|semestre|results|half-year|quarter|ventes/.test(t)) return "resultats";
+  if (/acquisition|cession|acquiert|rachete|fusion|offre publique|emprunt obligataire|emission|augmentation de capital|obligations|placement/.test(t)) return "operation";
+  if (/dirigeant|nomination|directeur general|conseil d.administration|gouvernance|president/.test(t)) return "dirigeants";
+  return "autre";
+}
+const SECKIND = { resultats: "resultats", "rapport-annuel": "rapport", "rapport-trimestriel": "resultats", dirigeants: "dirigeants", accord: "operation", acquisition: "operation", assemblee: "assemblee", incident: "incident", communique: "autre", autre: "autre" };
+const SECTITLE = { "8-K": "Communiqué officiel (formulaire 8-K)", "10-K": "Rapport annuel (formulaire 10-K)", "10-Q": "Rapport trimestriel (formulaire 10-Q)", "20-F": "Rapport annuel (formulaire 20-F)", "40-F": "Rapport annuel (formulaire 40-F)", "6-K": "Communiqué (formulaire 6-K)", "DEF 14A": "Convocation à l'assemblée générale (DEF 14A)" };
+function secTitle(f) {
+  if (f.form === "8-K" && f.kind === "resultats") return "Communiqué de résultats (formulaire 8-K)";
+  if (f.form === "8-K" && f.kind === "dirigeants") return "Changement de dirigeant ou d'administrateur (8-K)";
+  if (f.form === "8-K" && (f.kind === "accord" || f.kind === "acquisition")) return "Accord ou opération importante (8-K)";
+  if (f.form === "8-K" && f.kind === "assemblee") return "Résultat des votes de l'assemblée générale (8-K)";
+  return SECTITLE[f.form] || f.form;
+}
+// Publications de l'AMF (France), dédoublonnées FR/EN, au format commun
+async function loadAmf(params, limit) {
+  const r = await fetch(`/api/amf?limit=${Math.min(100, limit)}${params}`);
+  if (!r.ok) throw new Error("amf");
+  const j = await r.json(), seen = new Map();
+  for (const i of (j.items || []).filter(i => i.title)) {
+    const k = (i.isin || i.company) + "|" + String(i.date).slice(0, 16), prev = seen.get(k);
+    if (!prev || (prev.lang === "Anglais" && i.lang !== "Anglais")) seen.set(k, i);
+  }
+  return [...seen.values()].map(i => { const c = i.isin ? R.companies.find(x => x.isin === i.isin) : null; return { date: i.date, co: c, coName: i.company, cat: amfCat(i), title: i.title, url: i.url, src: "AMF" }; });
+}
+let SECN = null;
+async function loadSec(id) {
+  SECN = SECN || await getJSON("/data/actu-sec.json", { items: [] });
+  return SECN.items.filter(f => !id || f.id === id).map(f => ({ date: f.date, co: RBY[f.id], cat: SECKIND[f.kind] || "autre", title: secTitle(f), url: f.url, src: "SEC" }));
+}
+const dayKey = iso => { const d = new Date(iso); return isNaN(d) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
+function dayLabel(iso) {
+  const k = dayKey(iso), now = new Date();
+  if (k === dayKey(now.toISOString())) return "Aujourd'hui";
+  if (k === dayKey(new Date(now - 864e5).toISOString())) return "Hier";
+  const d = new Date(iso); return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "long", day: "numeric", month: "long" }).format(d).replace(/^./, c => c.toUpperCase());
+}
+const hhmm = iso => { const d = new Date(iso); return isNaN(d) || !/T\d/.test(iso) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).format(d); };
+function newsHTML(items, { showCo = true, max = 40 } = {}) {
+  if (!items.length) return `<div class="empty">Aucune publication pour ce choix.</div>`;
+  let out = "", last = "";
+  for (const i of items.slice(0, max)) {
+    const dk = dayKey(i.date);
+    if (dk !== last) { out += `<div class="nday">${esc(dayLabel(i.date))}</div>`; last = dk; }
+    const C = NCAT[i.cat];
+    out += `<div class="nit">${showCo ? (i.co ? `<a href="/entreprise/${i.co.id}" class="nlogo">${logo(i.co, 36)}</a>` : `<span class="nlogo">${logo({ name: i.coName || "?" }, 36)}</span>`) : ""}
+      <div class="nbody"><div class="nmeta">${showCo ? (i.co ? `<a class="nco" href="/entreprise/${i.co.id}">${esc(i.co.name)}</a>` : `<span class="nco">${esc(i.coName || "")}</span>`) : ""}<span class="ncat" style="--c:${C.c}">${C.label}</span><span class="light">${hhmm(i.date)}</span></div>
+        ${i.url ? `<a class="nti" href="${esc(i.url)}" target="_blank" rel="noopener">${esc(i.title)}</a>` : `<span class="nti">${esc(i.title)}</span>`}
+        <details class="nwhy"><summary>Qu'est-ce que c'est ?</summary><p>${esc(C.why)}</p></details></div></div>`;
+  }
+  return `<div class="news">${out}</div>`;
+}
+const NFILTERS = [["imp", "L'essentiel"], ["resultats", "Résultats"], ["dividende", "Dividendes"], ["assemblee", "Assemblées"], ["operation", "Opérations"], ["tout", "Tout"]];
+const nfilter = (items, f) => items.filter(i => f === "tout" ? true : f === "imp" ? !NCAT[i.cat].routine : i.cat === f);
+// Bloc réutilisable : charge, filtre, affiche
+function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, max = 40, showCo = true, filters = true, f = "imp" } = {}) {
+  target.innerHTML = `${filters ? `<div class="chips nfil">${NFILTERS.map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>` : ""}<div class="nlist"><div class="empty">Chargement…</div></div>`;
+  const list = $(".nlist", target);
+  (src === "US" ? loadSec(id) : loadAmf(params, limit)).then(items => {
+    const draw = () => { list.innerHTML = newsHTML(nfilter(items, f), { showCo, max }); };
+    draw();
+    if (filters) $(".nfil", target).onclick = e => { const b = e.target.closest("button"); if (!b) return; f = b.dataset.f; $$(".nfil button", target).forEach(x => x.classList.toggle("on", x === b)); draw(); };
+  }).catch(() => { list.innerHTML = `<div class="empty">${src === "US" ? "Les publications de la SEC ne sont pas disponibles pour le moment." : "Le flux de l'AMF n'est pas disponible pour le moment."}</div>`; });
+}
+function amfBlock(target, params, limit) { newsBlock(target, { params, max: limit, filters: false }); }
+function pageActus() {
+  setTitle("Actualité des entreprises"); setNav("news");
+  const q = new URLSearchParams(location.search), src = q.get("src") === "us" ? "us" : q.get("src") === "toutes" ? "toutes" : "fr";
+  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">Les annonces officielles des entreprises, classées et expliquées. Par défaut, les publications de routine (déclarations de rachat d'actions, nombre d'actions) sont masquées. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
+    <section class="panel"><div class="filters"><a href="/actualites" class="${src === "fr" ? "on" : ""}">France</a><a href="/actualites?src=us" class="${src === "us" ? "on" : ""}">États-Unis et sociétés suivies par la SEC</a><a href="/actualites?src=toutes" class="${src === "toutes" ? "on" : ""}">Toutes les sociétés françaises</a></div>
+    ${src === "toutes" ? `<div class="pb" style="border-bottom:1px solid var(--rule)"><div class="field" style="max-width:420px;margin:0"><input id="aq" type="search" placeholder="Filtrer par société" aria-label="Filtrer par société"></div></div>` : ""}
+    <div class="pb" id="nb"></div><div class="src">${src === "us" ? "Source : SEC, EDGAR. Liste mise à jour chaque jour." : "Source : AMF, info-financiere.gouv.fr, en direct. Licence Ouverte."}</div></section>`;
+  if (src === "toutes") {
+    let t = null; const run = () => newsBlock($("#nb"), { params: $("#aq").value.trim() ? "&q=" + encodeURIComponent($("#aq").value.trim()) : "" });
+    $("#aq").oninput = () => { clearTimeout(t); t = setTimeout(run, 400); }; run();
+  } else newsBlock($("#nb"), src === "us" ? { src: "US" } : { params: "&suivies=1" });
 }
 
 /* ---------- Logos et cartes d'entreprise ---------- */
@@ -803,17 +923,18 @@ function logo(c, size = 40) { // icône du site de l'entreprise ; initiales si e
 function caLine(c) {
   if (c.missing) return `<span class="light">${missingTxt(c)}</span>`;
   const t = quick(c);
-  return `<span class="light">${c.ca != null ? `Ventes ${c.year} : <b class="num" style="color:var(--ink)">${big(c.ca, c.currency)}</b>` : `Exercice ${c.year ?? "–"}`}</span>${t ? `<span class="dots" title="${esc(tallyTxt(t))}">${"<i class='f'></i>".repeat(t.fort)}${"<i class='m'></i>".repeat(t.moyen)}${"<i class='v'></i>".repeat(t.vig)}</span>` : ""}`;
+  return `<span class="light">${c.ca != null ? `Ventes ${c.year} : <b class="num" style="color:var(--ink)">${big(c.ca, c.currency)}</b>` : `Exercice ${c.year ?? "–"}`}</span>${t ? pills(t) : ""}`;
 }
 function missingTxt(c, long) { // pourquoi les comptes manquent
   if ((c.isin || "").startsWith("DE")) return long ? "Les sociétés allemandes déposent leurs comptes au registre fédéral allemand, qui ne propose pas de base ouverte réutilisable : leurs chiffres ne peuvent pas être affichés ici pour l'instant. La fiche et le cours restent disponibles." : "Comptes non disponibles en données ouvertes";
   return long ? `Les comptes de ${esc(c.name)} sont en cours de collecte. Ils apparaîtront après la prochaine mise à jour.` : "Comptes en cours de collecte";
 }
+const pills = t => `<span class="pills" title="${esc(tallyTxt(t))}"><span class="f"><i></i>${t.fort}</span><span class="m"><i></i>${t.moyen}</span><span class="v"><i></i>${t.vig}</span></span>`;
 function coCard(c) {
   return `<a class="cocard" href="/entreprise/${c.id}"><div class="top">${logo(c, 44)}<div><div class="nm">${esc(c.name)}</div><div class="sec">${esc(regName(c))} · ${esc(secName(c))}</div></div></div>
     <div class="d">${esc(c.desc || "")}</div><div class="f">${caLine(c)}</div></a>`;
 }
-const LEGEND = `<div class="dleg"><span><i class="f"></i>Point fort</span><span><i class="m"></i>Dans la moyenne</span><span><i class="v"></i>Point de vigilance</span></div>`;
+const LEGEND = `<div class="dleg"><span class="f"><i></i>Points forts</span><span class="m"><i></i>Dans la moyenne</span><span class="v"><i></i>Points de vigilance</span><span class="light">Nombre de repères de chaque couleur dans les comptes de l'entreprise.</span></div>`;
 
 /* ---------- Accueil : un parcours pas à pas ---------- */
 const FEATURED = ["lvmh", "apple", "totalenergies", "asml", "airbus", "nvidia", "loreal", "sanofi"];
@@ -854,12 +975,14 @@ function pageEntreprises() {
       <div class="ph" style="padding-top:0;padding-bottom:0;border-bottom:0">
       <div class="filters" id="secTabs" style="border:0;padding:0;flex:1"><button data-s="all">Tous les secteurs</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
       <div class="viewsw d-only" id="vsw"><button data-v="cartes">Cartes</button><button data-v="tableau">Tableau</button></div></div></section>
+    <div class="field" style="max-width:360px;margin:0 0 14px"><input id="eq" type="search" placeholder="Filtrer : nom, code, pays…" aria-label="Filtrer les entreprises"></div>
     ${LEGEND}<div id="elist"></div>`;
   const render = () => {
     $$("#regTabs button").forEach(b => b.classList.toggle("on", b.dataset.r === listState.region));
     $$("#secTabs button").forEach(b => b.classList.toggle("on", b.dataset.s === listState.sector));
     $$("#vsw button").forEach(b => b.classList.toggle("on", b.dataset.v === listState.view));
-    const list = R.companies.filter(c => (listState.region === "all" || c.region === listState.region) && (listState.sector === "all" || c.sector === listState.sector));
+    const q = norm(($("#eq") || {}).value || "").trim();
+    const list = R.companies.filter(c => (listState.region === "all" || c.region === listState.region) && (listState.sector === "all" || c.sector === listState.sector) && (!q || norm(c.name + " " + c.ticker + " " + (c.desc || "")).includes(q)));
     if (!list.length) { $("#elist").innerHTML = `<section class="panel"><div class="empty">Aucune entreprise pour ce choix.</div></section>`; return; }
     const view = innerWidth <= 760 ? "cartes" : listState.view;
     if (view === "cartes") { $("#elist").innerHTML = `<div class="cards">${[...list].sort((a, b) => a.name.localeCompare(b.name, "fr")).map(coCard).join("")}</div>`; return; }
@@ -869,10 +992,11 @@ function pageEntreprises() {
     const th = (key, label) => `<th class="sort" data-k="${key}">${label}${key === k ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`;
     $("#elist").innerHTML = `<section class="panel"><div class="scroll-x"><table class="t click"><thead><tr>${th("name", "Entreprise")}${th("ca", "Ventes")}${th("g1", "Croissance")}${th("marge", "Marge")}${th("net", "Bénéfice")}${th("vig", "Repères")}<th>Exercice</th></tr></thead><tbody>
       ${rows.map(({ c, m, t }) => `<tr data-id="${c.id}"><td><div class="cell-co">${logo(c, 32)}<div><div class="nm">${esc(c.name)}</div><div class="sub">${esc(regName(c))} · ${esc(secName(c))}</div></div></div></td>
-      ${c.missing ? `<td colspan="6" class="light">${missingTxt(c)}</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td><span class="dots">${"<i class='f'></i>".repeat(t.fort)}${"<i class='m'></i>".repeat(t.moyen)}${"<i class='v'></i>".repeat(t.vig)}</span></td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
+      ${c.missing ? `<td colspan="6" class="light">${missingTxt(c)}</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td>${pills(t)}</td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
       <div class="src">Chiffres du dernier rapport annuel publié, dans la devise de l'entreprise. Cliquez sur un en-tête pour trier, sur une ligne pour ouvrir la fiche.</div></section>`;
     $("#elist thead").onclick = e => { const t = e.target.closest("th.sort"); if (!t) return; if (listState.sort === t.dataset.k) listState.dir *= -1; else { listState.sort = t.dataset.k; listState.dir = t.dataset.k === "name" ? 1 : -1; } render(); };
   };
+  let qt = null; $("#eq").oninput = () => { clearTimeout(qt); qt = setTimeout(render, 200); };
   $("#regTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.region = b.dataset.r; render(); } };
   $("#secTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.sector = b.dataset.s; render(); } };
   $("#vsw").onclick = e => { const b = e.target.closest("button"); if (b) { listState.view = b.dataset.v; render(); } };
@@ -899,10 +1023,12 @@ async function pageCompany(id, tab) {
         <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div></div></div>
         <div class="px tv" id="tvinfo"></div>
       </div>
+      <div class="tv tv-chart tv-top" id="tvchart"></div>
       <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
     </div>
     <div id="ctab"><div class="empty">Chargement…</div></div>`;
   tv($("#tvinfo"), "single-quote", { symbol: s.tv, width: "100%" });
+  tv($("#tvchart"), "symbol-overview", { symbols: [[s.name, s.tv + "|12M"]], chartOnly: false, width: "100%", height: "100%", autosize: true, showVolume: false, hideDateRanges: false, scalePosition: "right", scaleMode: "Normal", fontFamily: "Inter, sans-serif", fontSize: "11", noTimeScale: false, valuesTracking: "1", changeMode: "price-and-percent", chartType: "area", lineColor: "#2B4C7E", topColor: "rgba(43,76,126,0.10)", bottomColor: "rgba(43,76,126,0)", lineWidth: 2, dateRanges: ["1m|1D", "3m|1D", "12m|1D", "60m|1W", "all|1M"] });
   let c = null;
   if (!s.missing) {
     try { c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); } catch (e) { c = null; }
@@ -918,13 +1044,30 @@ function ficheHTML(s) {
   return `<section class="panel"><div class="ph"><h2>Ce que fait ${esc(s.name)}</h2></div>
     <div class="syn"><dl><dt>Son métier</dt><dd>${esc(f.fait)}</dd><dt>D'où vient l'argent</dt><dd>${esc(f.argent)}</dd><dt>Ce qui fait varier ses résultats</dt><dd>${esc(f.depend)}</dd></dl></div></section>`;
 }
+function enBref(s, f, items) { // une phrase qui résume, à partir des chiffres
+  const cur = f.currency, m = ratios(f), bank = isBank(s), parts = [];
+  if (f.ca != null) parts.push(`${bank ? "réalise" : "vend pour"} ${big(f.ca, cur)} par an${m.g1 != null ? ` (${m.g1 >= 0 ? "+" : "−"}${pct(Math.abs(m.g1), 0, false)} sur un an)` : ""}`);
+  if (m.marge != null && !bank && m.marge > 0) parts.push(`garde ${e100(m.marge)} sur 100 € vendus`);
+  if (f.net != null) parts.push(f.net >= 0 ? `a gagné ${big(f.net, cur)}` : `a perdu ${big(-f.net, cur)}`);
+  if (!bank && f.netDebt != null) parts.push(f.netDebt < 0 ? "n'a pas de dette nette" : m.lev != null ? `a une dette équivalente à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} de résultats avant investissements` : "");
+  if (m.payout != null && f.divPaid > 0.5) parts.push(`verse ${pct(m.payout, 0, false)} de son bénéfice en dividende`);
+  const p = parts.filter(Boolean);
+  if (!p.length) return "";
+  return `En ${f.year}, ${esc(s.name)} ${p.length > 1 ? p.slice(0, -1).join(", ") + " et " + p.at(-1) : p[0]}.`;
+}
+function feu(t) { // les trois couleurs, avec leur nombre et une barre de proportion
+  const n = t.fort + t.moyen + t.vig || 1;
+  return `<div class="feu"><div class="feun"><span class="f"><i></i><b>${t.fort}</b> point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i><b>${t.moyen}</b> dans la moyenne</span><span class="v"><i></i><b>${t.vig}</b> point${t.vig > 1 ? "s" : ""} de vigilance</span></div>
+    <div class="feub"><span class="f" style="width:${t.fort / n * 100}%"></span><span class="m" style="width:${t.moyen / n * 100}%"></span><span class="v" style="width:${t.vig / n * 100}%"></span></div></div>`;
+}
 function lectureHTML(s, c) {
-  const f = figuresOf(c), items = lecture(s, f), cross = croisements(s, f), t = tally(items);
+  const f = figuresOf(c), items = lecture(s, f), cross = croisements(s, f), t = tally(items), phrase = enBref(s, f, items);
   return `<section class="panel"><div class="ph"><h2>Ce que disent ses comptes</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
-      <div class="sum">${tallyTxt(t) || "Pas assez de chiffres pour une lecture."}</div>
-      <div class="lect">${items.map(i => `<div class="li"><div class="lq">${def(i.term, i.q)}</div><div class="lvv"><span class="num">${i.value}</span>${lvTag(i.lv)}</div><p>${i.text}</p>${RULES[i.term] ? `<details><summary>Comment ce repère est fixé</summary><p>${esc(RULES[i.term])}</p></details>` : ""}</div>`).join("")}</div>
-      <div class="src">Repères calculés à partir du dernier rapport annuel publié. Ils décrivent les comptes ; ils ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
-    ${cross.length ? `<section class="panel"><div class="ph"><h2>À lire ensemble</h2></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
+      ${phrase ? `<p class="bref">${phrase}</p>` : ""}
+      ${feu(t)}
+      <div class="lect">${items.map(i => `<div class="li li-${i.lv}"><div class="lq">${def(i.term, i.q)}</div><div class="lvv"><span class="num">${i.value}</span>${lvTag(i.lv)}</div><p>${i.text}</p>${RULES[i.term] ? `<details><summary>Pourquoi cette couleur ?</summary><p>${esc(RULES[i.term])}</p></details>` : ""}</div>`).join("")}</div>
+      <div class="src">Vert, gris, orange : repères calculés sur le dernier rapport annuel et comparés au secteur. Ils décrivent les comptes ; ils ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
+    ${cross.length ? `<section class="panel"><div class="ph"><h2>À lire ensemble</h2><span class="light d-only" style="font-size:12.5px">Ce que les chiffres disent quand on les combine</span></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
 }
 function prixHTML(s, c) {
   const f = figuresOf(c), cur = CUR[f.currency] || f.currency;
@@ -973,17 +1116,16 @@ function tabBref(s, c, el) {
         ${ficheHTML(s)}
         ${c ? lectureHTML(s, c) : `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`}
         ${c ? prixHTML(s, c) : ""}
-        <section class="panel"><div class="ph"><h2>Cours de l'action</h2></div><div class="tv tv-chart" id="tvchart"></div></section>
       </div>
       <aside>
         <section class="panel"><div class="ph"><h2>Prochains événements</h2><a href="/entreprise/${s.id}/agenda">Agenda</a></div>${agendaHTML(eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3), false)}</section>
-        ${fr ? `<section class="panel"><div class="ph"><h2>Publications officielles</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div><div id="amf"></div></section>`
-             : `<section class="panel"><div class="ph"><h2>Publications officielles</h2></div><div class="pb">${s.region === "US" ? `Les sociétés américaines déposent leurs rapports à la SEC, le gendarme boursier américain.` : `Cette société publie ses communiqués auprès du régulateur de son pays et sur son site.`}${officielLink(s) ? ` <a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">${s.region === "US" ? "Voir ses dépôts à la SEC" : "Site de l'entreprise"}</a>` : ""}</div></section>`}
+        ${fr || s.sec ? `<section class="panel"><div class="ph"><h2>Dernières annonces</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div><div id="amf"></div></section>`
+             : `<section class="panel"><div class="ph"><h2>Annonces officielles</h2></div><div class="pb">Cette société publie ses communiqués auprès du régulateur de son pays et sur son site.${officielLink(s) ? ` <a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">Site de l'entreprise</a>` : ""}</div></section>`}
       </aside>
     </div>`;
-  tv($("#tvchart"), "symbol-overview", { symbols: [[s.name, s.tv + "|12M"]], chartOnly: false, width: "100%", height: "100%", autosize: true, showVolume: false, hideDateRanges: false, scalePosition: "right", scaleMode: "Normal", fontFamily: "Inter, sans-serif", fontSize: "11", noTimeScale: false, valuesTracking: "1", changeMode: "price-and-percent", chartType: "area", lineColor: "#2B4C7E", topColor: "rgba(43,76,126,0.10)", bottomColor: "rgba(43,76,126,0)", lineWidth: 2, dateRanges: ["1m|1D", "3m|1D", "12m|1D", "60m|1W", "all|1M"] });
   if (c) prixRun(s, c);
-  if (fr) amfBlock($("#amf"), "&isin=" + s.isin, 5);
+  if (s.sec) newsBlock($("#amf"), { src: "US", id: s.id, showCo: false, filters: false, max: 5 });
+  else if (fr) newsBlock($("#amf"), { params: "&isin=" + s.isin, showCo: false, filters: false, max: 5 });
 }
 function tabComptes(s, c, el) {
   if (!c) { el.innerHTML = `<section class="panel"><div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte.</div></section>`; return; }
@@ -1029,10 +1171,11 @@ function tabComptes(s, c, el) {
       <div class="src">${c.cik ? "Comptes lus dans les données publiques de la SEC (EDGAR), au format XBRL." : `Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org.`} Mis à jour le ${dLabel(c.updated)}.</div></section>`;
 }
 function tabActu(s, c, el) {
-  if (s.region !== "FR") { el.innerHTML = `<section class="panel"><div class="ph"><h2>Publications officielles de ${esc(s.name)}</h2></div><div class="pb">Le flux de l'AMF ne couvre que les sociétés cotées en France. ${s.region === "US" ? "Les sociétés américaines déposent leurs rapports à la SEC." : "Cette société publie auprès du régulateur de son pays et sur son site."} ${officielLink(s) ? `<a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">${s.region === "US" ? "Voir ses dépôts à la SEC" : "Site de l'entreprise"}</a>` : ""}</div></section>`; return; }
-  el.innerHTML = `<section class="panel"><div class="ph"><h2>${def("amf", "Publications officielles")} de ${esc(s.name)}</h2></div><div id="amf"></div>
-    <div class="src">Source : AMF, info-financiere.gouv.fr.</div></section>`;
-  amfBlock($("#amf"), "&isin=" + s.isin, 40);
+  const us = !!s.sec, fr = s.region === "FR";
+  if (!us && !fr) { el.innerHTML = `<section class="panel"><div class="ph"><h2>Annonces officielles de ${esc(s.name)}</h2></div><div class="pb">Cette société publie ses communiqués auprès du régulateur de son pays, dont les annonces ne sont pas disponibles en données ouvertes. ${officielLink(s) ? `<a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">Site de l'entreprise</a>` : ""}</div></section>`; return; }
+  el.innerHTML = `<section class="panel"><div class="ph"><h2>Annonces officielles de ${esc(s.name)}</h2></div><div class="pb" id="nb"></div>
+    <div class="src">Source : ${us ? "SEC, EDGAR" : "AMF, info-financiere.gouv.fr"}.</div></section>`;
+  newsBlock($("#nb"), us ? { src: "US", id: s.id, showCo: false } : { params: "&isin=" + s.isin, showCo: false });
 }
 function tabAgenda(s, c, el) {
   const ev = eventsOf(s.id), up = ev.filter(e => e.date >= TODAY), past = ev.filter(e => e.date < TODAY).reverse();
@@ -1044,18 +1187,6 @@ function tabAgenda(s, c, el) {
 }
 
 /* ---------- Actualité et agenda ---------- */
-function pageActus() {
-  setTitle("Actualité des entreprises"); setNav("news");
-  const src = new URLSearchParams(location.search).get("src") === "toutes" ? "toutes" : "suivies";
-  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">Publications officielles des sociétés cotées : résultats, rapports annuels, assemblées, dividendes. Les prochaines dates sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
-    <section class="panel"><div class="filters"><a href="/actualites" class="${src === "suivies" ? "on" : ""}">Entreprises suivies</a><a href="/actualites?src=toutes" class="${src === "toutes" ? "on" : ""}">Toutes les sociétés</a></div>
-    ${src === "toutes" ? `<div class="pb" style="border-bottom:1px solid var(--rule)"><div class="field" style="max-width:420px;margin:0"><input id="aq" type="search" placeholder="Filtrer par société" aria-label="Filtrer par société"></div></div>` : ""}
-    <div id="amfL"></div><div class="src">Source : AMF, info-financiere.gouv.fr. Licence Ouverte.</div></section>`;
-  if (src === "toutes") {
-    let t = null; const run = () => amfBlock($("#amfL"), $("#aq").value.trim() ? "&q=" + encodeURIComponent($("#aq").value.trim()) : "", 40);
-    $("#aq").oninput = () => { clearTimeout(t); t = setTimeout(run, 400); }; run();
-  } else amfBlock($("#amfL"), "&suivies=1", 40);
-}
 function pageAgenda() {
   setTitle("Agenda financier"); setNav("news");
   let ty = "Tous";
@@ -1355,9 +1486,11 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 
 /* ---------- Démarrage ---------- */
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] })]).then(([r, ag, uni, br]) => {
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] })]).then(([r, ag, uni, br, auto]) => {
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
-  AG = ag || { events: [] }; BROKERS = br;
+  // Agenda : dates officielles relevées à la main, puis dates estimées d'après l'an dernier pour les autres
+  const manual = new Set((ag?.events || []).map(e => e.id));
+  AG = { events: [...(ag?.events || []), ...(auto?.events || []).filter(e => !manual.has(e.id))] }; BROKERS = br;
   const S = Object.fromEntries((r.companies || []).map(c => [c.id, c]));
   // La liste des entreprises suivies fait foi ; les comptes collectés s'y ajoutent
   R = { ...r, regions: uni.regions, companies: uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u })) };

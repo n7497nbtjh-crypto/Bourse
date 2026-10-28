@@ -65,7 +65,7 @@ export const AUTRES = [
   { id: "rheinmetall", name: "Rheinmetall", ticker: "RHM", isin: "DE0007030033", tv: "XETR:RHM", region: "EU", sector: "industrie", domain: "rheinmetall.com", desc: "Défense : véhicules blindés et munitions." },
   { id: "iberdrola", name: "Iberdrola", ticker: "IBE", isin: "ES0144580Y14", tv: "BME:IBE", region: "EU", sector: "services", domain: "iberdrola.com", desc: "Électricité, en grande partie renouvelable." },
   { id: "santander", name: "Banco Santander", ticker: "SAN", isin: "ES0113900J37", tv: "BME:SAN", region: "EU", sector: "finance", domain: "santander.com", desc: "Banque de détail en Europe et en Amérique." },
-  { id: "inditex", name: "Inditex", ticker: "ITX", isin: "ES0148396007", tv: "BME:ITX", region: "EU", sector: "conso", domain: "inditex.com", desc: "Vêtements (Zara, Massimo Dutti, Bershka)." },
+  { id: "inditex", name: "Inditex", legal: "Industria de Diseno Textil", ticker: "ITX", isin: "ES0148396007", tv: "BME:ITX", region: "EU", sector: "conso", domain: "inditex.com", desc: "Vêtements (Zara, Massimo Dutti, Bershka)." },
   { id: "enel", name: "Enel", ticker: "ENEL", isin: "IT0003128367", tv: "MIL:ENEL", region: "EU", sector: "services", domain: "enel.com", desc: "Production et distribution d'électricité." },
   { id: "eni", name: "Eni", ticker: "ENI", isin: "IT0003132476", tv: "MIL:ENI", region: "EU", sector: "energie", domain: "eni.com", desc: "Pétrole et gaz." },
   { id: "intesa-sanpaolo", name: "Intesa Sanpaolo", ticker: "ISP", isin: "IT0000072618", tv: "MIL:ISP", region: "EU", sector: "finance", domain: "intesasanpaolo.com", desc: "Banque." },
@@ -109,5 +109,11 @@ export const AUTRES = [
 ];
 
 
-export default [...FRANCE, ...AUTRES];
-export const REGIONS = { FR: "France", EU: "Europe", US: "États-Unis" };
+// Lots ajoutés ensuite (avec leur fiche) : data/lots/*.mjs
+import LUS from "./lots/us.mjs";
+import LFR from "./lots/france.mjs";
+import LEU from "./lots/europe.mjs";
+import LMO from "./lots/monde.mjs";
+const seen = new Set();
+export default [...FRANCE, ...AUTRES, ...LFR, ...LEU, ...LUS, ...LMO].filter(c => !seen.has(c.id) && seen.add(c.id));
+export const REGIONS = { FR: "France", EU: "Europe", US: "États-Unis", MONDE: "Reste du monde" };

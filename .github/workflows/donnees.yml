@@ -1,27 +1,37 @@
-# Collecte des comptes annuels et fabrication du site prêt à déposer sur Cloudflare.
+# Le « bot » du site : met à jour les données puis publie le site sur Cloudflare.
+#  - chaque jour : annonces et dates estimées (SEC), comptes des sociétés dont la dernière lecture date de plus de 7 jours ;
+#  - à chaque modification de la liste des entreprises ou de la collecte ;
+#  - à la main : onglet Actions > « Mise à jour des données » > Run workflow.
+# Les cours viennent en direct des modules TradingView et les annonces françaises en direct de l'AMF : rien à collecter pour eux.
+#
+# Publication automatique : il faut deux secrets dans GitHub (Settings > Secrets and variables > Actions > Secrets) :
+#   CLOUDFLARE_API_TOKEN  : jeton Cloudflare avec le droit « Cloudflare Pages : Edit »
+#   CLOUDFLARE_ACCOUNT_ID : identifiant du compte Cloudflare
+# Sans ces secrets, le site reste à déposer à la main (fichier « repere-site » dans Artifacts).
 # Pas de _routes.json : Cloudflare le refuse en dépôt direct ; le Worker trie lui-même les requêtes.
-# Lancement à la main : onglet Actions > « Mise à jour des données » > Run workflow.
-# À la fin : ouvrir l'exécution, section Artifacts, télécharger « repere-site »,
-# puis glisser ce fichier dans Cloudflare Pages (comme pour Kartel Des Cartes).
-# Les comptes annuels ne changent qu'une fois par an : une collecte par an suffit (après avril).
 name: Mise à jour des données
 on:
   workflow_dispatch: {}
-  push:                    # se lance aussi quand la liste des entreprises ou la collecte changent
+  schedule:
+    - cron: "17 5 * * *"   # chaque jour vers 6 h 17 (heure de Paris en hiver)
+  push:
     branches: [main]
-    paths: ["data/univers.mjs", "data/esef.mjs", "data/fetch_data.mjs", "data/sec.mjs", ".github/workflows/donnees.yml"]
+    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
 permissions:
   contents: write
+concurrency:
+  group: donnees
+  cancel-in-progress: false
 jobs:
   donnees:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-      - name: Collecte (GLEIF, filings.xbrl.org)
+          node-version: 22
+      - name: Collecte (GLEIF, filings.xbrl.org, SEC)
         env:
           CONTACT: ${{ vars.CONTACT }}
         run: node data/fetch_data.mjs
@@ -30,6 +40,7 @@ jobs:
           node build.mjs
           node tests/t_calc.mjs
           node tests/t_univers.mjs
+          node tests/t_sec.mjs
           NO_SLEEP=1 node tests/t_esef.mjs
       - name: Site prêt à déposer sur Cloudflare
         uses: actions/upload-artifact@v4
@@ -41,6 +52,16 @@ jobs:
         run: |
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
-          git add cf/site/data cf/site/sitemap.xml cf/site/_worker.js data/diagnostic.json
+          git add cf/site data/diagnostic.json
           git diff --cached --quiet || git commit -m "Données du $(date +%F)"
-          git push
+          git pull --rebase -q && git push
+      - name: Publication sur Cloudflare Pages
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo "Secrets Cloudflare absents : publication à faire à la main avec le fichier repere-site."
+            exit 0
+          fi
+          npx --yes wrangler@3.114.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true

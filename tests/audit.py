@@ -5,8 +5,8 @@ from playwright.sync_api import sync_playwright
 root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
-pages = ["/", "/entreprises", "/actualites", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue"]
-pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield") for t in ("", "/comptes", "/actualite", "/agenda")]
+pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue"]
+pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
                  {"date": "2026-10-27T17:45:00", "company": "LVMH MOET HENNESSY LOUIS VUITTON", "title": "Déclaration des transactions sur actions propres", "type": "Rachat d'actions", "url": ""}] * 4}
 def route(r):
@@ -63,6 +63,7 @@ with sync_playwright() as pw:
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
         pg.goto("http://t.local/entreprise/lvmh/comptes"); pg.wait_for_timeout(300)
+        pg.locator(".def[data-def=marge]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(300)  # le défilement referme la bulle : on défile d'abord
         pg.click(".def[data-def=marge]"); pg.wait_for_timeout(150)
         if not pg.evaluate("document.getElementById('pop').classList.contains('open')"): probs["définition"] = ["la bulle ne s'ouvre pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])

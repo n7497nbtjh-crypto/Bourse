@@ -3,7 +3,7 @@
 // Les réponses sont gardées 15 minutes en cache pour rester loin du quota.
 //
 // Paramètres de /api/amf :
-//   limit  (1 à 50, défaut 20)
+//   limit  (1 à 100, défaut 20)
 //   q      recherche libre (nom de société)
 //   isin   code ISIN d'une société
 //   raw=1  renvoie la réponse brute de l'AMF (pour vérifier les noms de champs)
@@ -42,7 +42,7 @@ export function normalize(rec) {
 
 export default async function amf(request, followed = []) {
   const u = new URL(request.url);
-  const limit = Math.max(1, Math.min(50, parseInt(u.searchParams.get("limit") || "20", 10) || 20));
+  const limit = Math.max(1, Math.min(100, parseInt(u.searchParams.get("limit") || "20", 10) || 20));
   const q = (u.searchParams.get("q") || "").replace(/["\\]/g, "").slice(0, 60).trim();
   const isin = (u.searchParams.get("isin") || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
   const raw = u.searchParams.get("raw") === "1";
