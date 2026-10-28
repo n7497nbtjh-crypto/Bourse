@@ -2,8 +2,9 @@
 //  /api/resume?u=…    résumé en français d'un document officiel (communiqué AMF en PDF, dépôt SEC), gardé en base
 //  /api/veille        bilan rédigé d'une liste d'entreprises suivies (données du site fournies par le navigateur)
 //  /api/veille/inscription, /confirmer, /desinscrire : bilan hebdomadaire par e-mail (actif quand MAIL_FROM et un service d'envoi sont définis)
-//  /api/veille/envoi, /alertes : envois groupés déclenchés par le robot (.github/workflows/mails.yml) avec ADMIN_KEY
+//  /api/veille/envoi, /alertes : envois groupés déclenchés par le robot (remplacés par les alertes de Mon espace : .github/workflows/espace.yml) avec ADMIN_KEY
 //  /api/assistant      questions sur une fiche, réponses tirées des seules données transmises
+import { rediger } from "./llm.mjs";
 import { quota, quotaError, sendMail, mailReady, mailCapacity, premiumOf, initCompte } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 const MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
@@ -24,13 +25,7 @@ export function htmlText(html) {
     .replace(/&nbsp;|&#160;|&#xa0;/gi, " ").replace(/&amp;/g, "&").replace(/&#(\d+);/g, (m, d) => String.fromCharCode(+d)).replace(/&[a-z]+;/g, " ")
     .replace(/[ \t ]+/g, " ").replace(/\n\s*\n+/g, "\n").trim();
 }
-async function budget(db, env = {}) { // compteur quotidien : true si on peut encore appeler le modèle aujourd'hui
-  const jour = new Date().toISOString().slice(0, 10);
-  const r = await db.prepare(`SELECT n FROM ia_compte WHERE jour = ?`).bind(jour).first();
-  if (r && r.n >= (+env.IA_MAX_JOUR || MAX_JOUR)) return false;
-  await db.prepare(`INSERT INTO ia_compte (jour, n) VALUES (?, 1) ON CONFLICT (jour) DO UPDATE SET n = n + 1`).bind(jour).run();
-  return true;
-}
+async function budget() { return true; } // le plafond est géré par llm.mjs (neurones Workers AI, services gratuits)
 async function docText(env, u) {
   const url = new URL(u);
   if (url.hostname === "www.sec.gov") { // dépôt SEC : la pièce jointe principale (communiqué EX-99.1) si elle existe
@@ -74,7 +69,8 @@ export async function resume(request, env) {
   try {
     const text = focus(await docText(env, u)).slice(0, 14000);
     if (text.length < 300) return json({ error: "Document trop court ou illisible." }, 422);
-    const out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS }, { role: "user", content: "Document :\n\n" + text }], max_tokens: 700, temperature: 0.2 });
+    const out = { response: await rediger(env, { systeme: SYS, utilisateur: "Document :\n\n" + text, max_tokens: 700 }) };
+    if (!out.response) return json({ error: "Le service de résumé est très demandé : réessayez dans quelques minutes." }, 503);
     const txt = String(out.response || (out.result && out.result.response) || "").replace(/—/g, ",").trim();
     if (txt.length < 200 || /ne (peux|peut) pas|pas d'informations exploitables/i.test(txt)) throw new Error("le document ne contient pas de chiffres lisibles");
     await env.DB.prepare(`INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)`).bind(u, txt, Date.now()).run();
@@ -110,7 +106,8 @@ export async function veille(request, env) {
     const q = await quota(request, env, b.type === "portefeuille" ? "portefeuille" : "veille"); if (!q.ok) return quotaError(q, b.type === "portefeuille" ? "analyses de portefeuille" : "bilans rédigés");
     if (!(await budget(env.DB, env))) return json({ error: "Le site a atteint son nombre de bilans rédigés pour aujourd'hui : réessayez demain. Les chiffres restent à jour." }, 429);
     try {
-      const out = await env.AI.run(MODEL, { messages: [{ role: "system", content: b.type === "portefeuille" ? SYS_PF : SYS_VEILLE }, { role: "user", content: faits }], max_tokens: 700, temperature: 0.2 });
+      const out = { response: await rediger(env, { systeme: b.type === "portefeuille" ? SYS_PF : SYS_VEILLE, utilisateur: faits, max_tokens: 700 }) };
+      if (!out.response) throw new Error("vide");
       const txt = String(out.response || "").replace(/—/g, ",").trim();
       await env.DB.prepare(`INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)`).bind(key, txt, Date.now()).run();
       return json({ txt });
@@ -144,7 +141,7 @@ export async function assistant(request, env) {
   const q = await quota(request, env, "assistant"); if (!q.ok) return quotaError(q, "questions à l'assistant");
   if (!(await budget(env.DB, env))) return json({ error: "L'assistant a atteint son nombre de réponses pour aujourd'hui. Réessayez demain." }, 429);
   try {
-    const out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS_ASSIST }, { role: "user", content: `Faits : ${faits}\n\nQuestion : ${question}` }], max_tokens: 450, temperature: 0.2 });
+    const out = { response: await rediger(env, { systeme: SYS_ASSIST, utilisateur: `Faits : ${faits}\n\nQuestion : ${question}`, max_tokens: 450 }) };
     const txt = String(out.response || "").replace(/—/g, ",").trim();
     if (txt.length < 20) throw new Error("vide");
     await env.DB.prepare(`INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)`).bind(key, txt, Date.now()).run();

@@ -7,6 +7,6 @@ const list = Object.entries(j.items || {}).filter(([, v]) => v.chiffres && v.chi
 let ok = 0, stop = Date.now() + 10 * 60e3;
 for (const [u] of list) {
   if (Date.now() > stop) break;
-  try { const r = await fetch(`${SITE}/api/resume?u=${encodeURIComponent(u)}`); const x = await r.json(); if (x.txt) ok++; else if (r.status === 429) break; } catch (e) { }
+  try { const r = await fetch(`${SITE}/api/resume?u=${encodeURIComponent(u)}`, { headers: process.env.ADMIN_KEY ? { "x-admin-key": process.env.ADMIN_KEY } : {} }); const x = await r.json(); if (x.txt) ok++; else if (r.status === 429) break; } catch (e) { }
 }
 console.log(ok, "résumés IA prêts sur", list.length);

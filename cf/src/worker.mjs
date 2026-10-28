@@ -11,6 +11,8 @@ import presse from "./presse.mjs";
 import { cours } from "./cours.mjs";
 import { resume, veille, assistant } from "./ia.mjs";
 import { premium } from "./compte.mjs";
+import { espace } from "./espace.mjs";
+import { demande } from "./demande.mjs";
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -41,6 +43,7 @@ export function meta(path) {
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications · ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqués simplement." };
   if (p === "/communaute") return { title: `Communauté · ${SITE}`, desc: "Échangez des idées et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." };
   if (p === "/lexique") return { title: `Lexique · ${SITE}`, desc: "PER, rendement, marge, dette, volatilité : chaque chiffre de la Bourse expliqué simplement, avec ses limites." };
+  if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace · ${SITE}`, desc: "Votre bilan de la semaine, vos notifications et vos listes, sur tous vos appareils." };
   if (p === "/favoris") return { title: `Mes favoris · ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres clés, prochaines dates et presse." };
   if (p === "/comparer") return { title: `Comparer des entreprises · ${SITE}`, desc: "Ventes, marge, bénéfice, dette et dividende de plusieurs entreprises côte à côte, expliqués simplement." };
   if (p === "/pea-cto") return { title: `PEA, compte-titres ou assurance-vie : lequel choisir · ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'impôt sur les gains en 2026, avec un exemple chiffré." };
@@ -48,6 +51,8 @@ export function meta(path) {
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse · ${SITE}`, desc: "Un parcours en trois étapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
   if (p.startsWith("/outils")) return { title: `Outils · ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'épargne et de frais." };
   if (p === "/marches") return { title: `Les marchés aujourd'hui · ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliquées." };
+  if (p === "/demander") return { title: `Demandez à bilan. : la recherche d'entreprises par l'IA · ${SITE}`, desc: "Décrivez ce que vous cherchez avec vos mots : l'IA le traduit en critères et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." };
+  if (p.startsWith("/espace")) return { title: `Mon espace · ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, commenté par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." };
   if (p === "/commencer") return { title: `Par où commencer en Bourse : le guide du nouvel investisseur · ${SITE}`, desc: "Épargne de précaution, horizon, choix du compte, diversification, frais, pièges à éviter : sept étapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalisé." };
   if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Plus de questions à l'assistant IA, de résumés détaillés et de bilans rédigés, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
@@ -67,7 +72,9 @@ export default {
     if (url.pathname === "/api/resume") return resume(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/assistant") return assistant(request, env);
+    if (url.pathname === "/api/demande") return demande(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
+    if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const info = meta(url.pathname);
     if (!info) {

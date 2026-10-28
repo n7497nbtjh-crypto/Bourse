@@ -272,17 +272,90 @@ async function cours(request, ctx) {
   return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
 }
 
+// cf/src/llm.mjs
+var TODAY = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), ready2 = !1;
+async function init2(db) {
+  ready2 || !db || (await db.prepare("CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)").run(), ready2 = !0);
+}
+async function neuronesUtilises(env) {
+  await init2(env.DB);
+  let r = env.DB ? await env.DB.prepare("SELECT n FROM ia_neurones WHERE jour = ?").bind(TODAY()).first() : null;
+  return r ? r.n : 0;
+}
+async function ajouterNeurones(env, n) {
+  !env.DB || !(n > 0) || (await init2(env.DB), await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(TODAY(), n, n).run());
+}
+var CF = [
+  ["@cf/qwen/qwen3-30b-a3b-fp8", 4625, 30475],
+  ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488]
+], approxTokens = (s) => Math.ceil(String(s).length / 3.2), nettoie = (t) => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/g, "").replace(/—/g, ",").replace(/\*\*/g, "").trim();
+async function viaOpenAI(url, key, model, messages, max_tokens, temperature, json4) {
+  let ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 25e3);
+  try {
+    let r = await fetch(url, {
+      method: "POST",
+      signal: ctl.signal,
+      headers: { authorization: "Bearer " + key, "content-type": "application/json" },
+      body: JSON.stringify({ model, messages, max_tokens, temperature, ...json4 ? { response_format: { type: "json_object" } } : {} })
+    });
+    if (!r.ok) return null;
+    let j = await r.json();
+    return nettoie(j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content);
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(t);
+  }
+}
+var FOURNISSEURS = [
+  ["mistral", (env) => env.MISTRAL_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.mistral.ai/v1/chat/completions", env.MISTRAL_KEY, env.MISTRAL_MODEL || "mistral-small-latest", m, mt, te, js)],
+  ["groq", (env) => env.GROQ_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.groq.com/openai/v1/chat/completions", env.GROQ_KEY, env.GROQ_MODEL || "openai/gpt-oss-20b", m, mt, te, js)],
+  ["workers-ai", (env) => env.AI, async (env, messages, max_tokens, temperature) => {
+    let plafond = +env.IA_NEURONES_JOUR || 1e4;
+    for (let [model, cin, cout] of CF) {
+      let estime = (approxTokens(messages.map((x) => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
+      if (!(await neuronesUtilises(env) + estime > plafond))
+        try {
+          let msgs = model.includes("qwen3") ? messages.map((x, i) => i === messages.length - 1 ? { ...x, content: x.content + `
+/no_think` } : x) : messages, out = await env.AI.run(model, { messages: msgs, max_tokens, temperature }), txt = nettoie(out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content)), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+          if (await ajouterNeurones(env, reel), txt && txt.length > 15) return txt;
+        } catch {
+        }
+    }
+    return null;
+  }]
+];
+async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json: json4 = !1 }) {
+  let messages = [{ role: "system", content: systeme }, { role: "user", content: utilisateur }];
+  for (let [nom, actif, appel] of FOURNISSEURS) {
+    if (!actif(env)) continue;
+    let t = await appel(env, messages, max_tokens, temperature, json4);
+    if (t) return t;
+  }
+  return null;
+}
+function jsonDe(t) {
+  if (!t) return null;
+  let i = t.indexOf("{"), j = t.lastIndexOf("}");
+  if (i < 0 || j <= i) return null;
+  try {
+    return JSON.parse(t.slice(i, j + 1));
+  } catch {
+    return null;
+  }
+}
+
 // cf/src/compte.mjs
 var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
   "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
   "CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)",
   "CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))",
   "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))"
-], ready2 = !1;
+], ready3 = !1;
 async function initCompte(db) {
-  if (!ready2) {
+  if (!ready3) {
     for (let q of SCHEMA2) await db.prepare(q).run();
-    ready2 = !0;
+    ready3 = !0;
   }
 }
 var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -290,9 +363,29 @@ async function visitor(request, env = {}) {
   let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + today() + "|" + (env.HASH_SALT || "bilan-sel-2026")));
   return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+var sha256hex = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join(""), cookieSession = (request) => {
+  let m = (request.headers.get("cookie") || "").match(/(?:^|;\s*)bilan_s=([a-f0-9]{64})(?:;|$)/);
+  return m ? m[1] : null;
+}, SESS = /* @__PURE__ */ new WeakMap();
+function sessionCompte(request, env) {
+  return !env || !env.DB ? Promise.resolve(null) : (SESS.has(request) || SESS.set(request, (async () => {
+    let t = cookieSession(request);
+    if (!t) return null;
+    try {
+      return await env.DB.prepare("SELECT c.* FROM sessions s JOIN comptes c ON c.id = s.compte WHERE s.h = ? AND s.expires > ?").bind(await sha256hex(t), Date.now()).first() || null;
+    } catch {
+      return null;
+    }
+  })()), SESS.get(request));
+}
 async function premiumOf(request, env) {
+  if (!env || !env.DB) return null;
   let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
-  if (!t || !env.DB) return null;
+  if (!t) {
+    let c = await sessionCompte(request, env);
+    t = c && c.premium || "";
+  }
+  if (!t) return null;
   await initCompte(env.DB);
   let a = await env.DB.prepare("SELECT * FROM abonnes WHERE token = ?").bind(t).first();
   if (!a) return null;
@@ -307,10 +400,11 @@ async function premiumOf(request, env) {
     }
   return a.until > Date.now() ? a : null;
 }
-var LIMITS = { resume: [5, 80], assistant: [3, 40], veille: [1, 10], portefeuille: [1, 10] };
+var LIMITS = { demande: [10, 200], assistant: [5, 100], resume: [3, 100], veille: [1, 20], portefeuille: [1, 20] };
 async function quota(request, env, kind) {
+  if (env.ADMIN_KEY && request.headers.get("x-admin-key") === env.ADMIN_KEY) return { ok: !0, premium: !0, max: 1e9, used: 0 };
   await initCompte(env.DB);
-  let p = await premiumOf(request, env), who2 = p ? "p:" + p.token : await visitor(request, env), [free, prem] = LIMITS[kind] || [3, 30], max = p ? prem : free, r = await env.DB.prepare("SELECT n FROM usage WHERE who = ? AND jour = ? AND kind = ?").bind(who2, today(), kind).first();
+  let p = await premiumOf(request, env), c = p ? null : await sessionCompte(request, env), who2 = p ? "p:" + p.token : c ? "u:" + c.id : await visitor(request, env), [free, prem] = LIMITS[kind] || [3, 30], max = p ? prem : free, r = await env.DB.prepare("SELECT n FROM usage WHERE who = ? AND jour = ? AND kind = ?").bind(who2, today(), kind).first();
   return r && r.n >= max ? { ok: !1, premium: !!p, max } : (!r && Math.random() < 0.02 && await env.DB.prepare("DELETE FROM usage WHERE jour < ?").bind(new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)).run(), await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1").bind(who2, today(), kind).run(), { ok: !0, premium: !!p, max, used: (r ? r.n : 0) + 1 });
 }
 function quotaError(q, what) {
@@ -414,15 +508,15 @@ async function sendMail(env, to, subject, text, html = "") {
 }
 
 // cf/src/ia.mjs
-var MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct", MAX_JOUR = 110, HOSTS = /^(www\.sec\.gov|fr\.ftp\.opendatasoft\.com|www\.info-financiere\.gouv\.fr)$/, SCHEMA3 = [
+var HOSTS = /^(www\.sec\.gov|fr\.ftp\.opendatasoft\.com|www\.info-financiere\.gouv\.fr)$/, SCHEMA3 = [
   "CREATE TABLE IF NOT EXISTS resumes (u TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)",
   "CREATE TABLE IF NOT EXISTS ia_compte (jour TEXT PRIMARY KEY, n INTEGER NOT NULL)",
   "CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)"
-], ready3 = !1;
-async function init2(db) {
-  if (!ready3) {
+], ready4 = !1;
+async function init3(db) {
+  if (!ready4) {
     for (let q of SCHEMA3) await db.prepare(q).run();
-    ready3 = !0;
+    ready4 = !0;
   }
 }
 var json3 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), UA = "bilan (site pedagogique) contact@repere-bourse.pages.dev";
@@ -431,9 +525,8 @@ function htmlText(html) {
 `).replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;|&#xa0;/gi, " ").replace(/&amp;/g, "&").replace(/&#(\d+);/g, (m, d) => String.fromCharCode(+d)).replace(/&[a-z]+;/g, " ").replace(/[ \t ]+/g, " ").replace(/\n\s*\n+/g, `
 `).trim();
 }
-async function budget(db, env = {}) {
-  let jour = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), r = await db.prepare("SELECT n FROM ia_compte WHERE jour = ?").bind(jour).first();
-  return r && r.n >= (+env.IA_MAX_JOUR || MAX_JOUR) ? !1 : (await db.prepare("INSERT INTO ia_compte (jour, n) VALUES (?, 1) ON CONFLICT (jour) DO UPDATE SET n = n + 1").bind(jour).run(), !0);
+async function budget() {
+  return !0;
 }
 async function docText(env, u) {
   if (new URL(u).hostname === "www.sec.gov") {
@@ -443,9 +536,9 @@ async function docText(env, u) {
       ex && (target = u.replace(/[^/]+$/, ex.name));
     } catch {
     }
-    let r2 = await fetch(target, { headers: { "user-agent": UA } });
-    if (!r2.ok) throw new Error("document " + r2.status);
-    return htmlText(await r2.text());
+    let r3 = await fetch(target, { headers: { "user-agent": UA } });
+    if (!r3.ok) throw new Error("document " + r3.status);
+    return htmlText(await r3.text());
   }
   let r = await fetch(u);
   if (!r.ok) throw new Error("document " + r.status);
@@ -483,7 +576,7 @@ async function resume(request, env) {
     return json3({ error: "Adresse invalide." }, 400);
   }
   if (!HOSTS.test(url.hostname)) return json3({ error: "Source non prise en charge." }, 400);
-  await init2(env.DB);
+  await init3(env.DB);
   let hit = await env.DB.prepare("SELECT txt, at FROM resumes WHERE u = ?").bind(u).first();
   if (hit && !/ne (peux|peut) pas/i.test(hit.txt)) return json3({ txt: hit.txt, at: hit.at, cache: !0 });
   let q = await quota(request, env, "resume");
@@ -492,9 +585,11 @@ async function resume(request, env) {
   try {
     let text = focus(await docText(env, u)).slice(0, 14e3);
     if (text.length < 300) return json3({ error: "Document trop court ou illisible." }, 422);
-    let out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS }, { role: "user", content: `Document :
+    let out = { response: await rediger(env, { systeme: SYS, utilisateur: `Document :
 
-` + text }], max_tokens: 700, temperature: 0.2 }), txt = String(out.response || out.result && out.result.response || "").replace(/—/g, ",").trim();
+` + text, max_tokens: 700 }) };
+    if (!out.response) return json3({ error: "Le service de r\xE9sum\xE9 est tr\xE8s demand\xE9 : r\xE9essayez dans quelques minutes." }, 503);
+    let txt = String(out.response || out.result && out.result.response || "").replace(/—/g, ",").trim();
     if (txt.length < 200 || /ne (peux|peut) pas|pas d'informations exploitables/i.test(txt)) throw new Error("le document ne contient pas de chiffres lisibles");
     return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(u, txt, Date.now()).run(), json3({ txt, at: Date.now() });
   } catch (e) {
@@ -517,7 +612,7 @@ R\xE8gles :
 async function veille(request, env) {
   if (!env || !env.DB || !env.AI) return json3({ error: "Bilan indisponible pour le moment." }, 503);
   let path = new URL(request.url).pathname;
-  if (await init2(env.DB), path === "/api/veille" && request.method === "POST") {
+  if (await init3(env.DB), path === "/api/veille" && request.method === "POST") {
     let b;
     try {
       b = await request.json();
@@ -530,7 +625,9 @@ async function veille(request, env) {
     if (!q.ok) return quotaError(q, b.type === "portefeuille" ? "analyses de portefeuille" : "bilans r\xE9dig\xE9s");
     if (!await budget(env.DB, env)) return json3({ error: "Le site a atteint son nombre de bilans r\xE9dig\xE9s pour aujourd'hui : r\xE9essayez demain. Les chiffres restent \xE0 jour." }, 429);
     try {
-      let out = await env.AI.run(MODEL, { messages: [{ role: "system", content: b.type === "portefeuille" ? SYS_PF : SYS_VEILLE }, { role: "user", content: faits }], max_tokens: 700, temperature: 0.2 }), txt = String(out.response || "").replace(/—/g, ",").trim();
+      let out = { response: await rediger(env, { systeme: b.type === "portefeuille" ? SYS_PF : SYS_VEILLE, utilisateur: faits, max_tokens: 700 }) };
+      if (!out.response) throw new Error("vide");
+      let txt = String(out.response || "").replace(/—/g, ",").trim();
       return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json3({ txt });
     } catch {
       return json3({ error: "Bilan impossible pour le moment." }, 502);
@@ -551,7 +648,7 @@ R\xE8gles :
 async function assistant(request, env) {
   if (!env || !env.DB || !env.AI) return json3({ error: "L'assistant est indisponible pour le moment." }, 503);
   if (request.method !== "POST") return json3({ error: "M\xE9thode non prise en charge." }, 405);
-  await init2(env.DB);
+  await init3(env.DB);
   let b;
   try {
     b = await request.json();
@@ -566,9 +663,9 @@ async function assistant(request, env) {
   if (!q.ok) return quotaError(q, "questions \xE0 l'assistant");
   if (!await budget(env.DB, env)) return json3({ error: "L'assistant a atteint son nombre de r\xE9ponses pour aujourd'hui. R\xE9essayez demain." }, 429);
   try {
-    let out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS_ASSIST }, { role: "user", content: `Faits : ${faits}
+    let out = { response: await rediger(env, { systeme: SYS_ASSIST, utilisateur: `Faits : ${faits}
 
-Question : ${question}` }], max_tokens: 450, temperature: 0.2 }), txt = String(out.response || "").replace(/—/g, ",").trim();
+Question : ${question}`, max_tokens: 450 }) }, txt = String(out.response || "").replace(/—/g, ",").trim();
     if (txt.length < 20) throw new Error("vide");
     return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json3({ txt, reste: q.max - q.used });
   } catch {
@@ -729,6 +826,466 @@ function alertes(d, ids, origin, token, last) {
   return { subject: `Alerte bilan. : ${out[0].slice(0, 70)}`, ...w };
 }
 
+// cf/src/espace.mjs
+var SCHEMA4 = [
+  "CREATE TABLE IF NOT EXISTS comptes (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, hash TEXT NOT NULL, sel TEXT NOT NULL, created INTEGER NOT NULL, secours TEXT, premium TEXT, teaser INTEGER NOT NULL DEFAULT 0, last_tache INTEGER NOT NULL DEFAULT 0, last_semaine TEXT)",
+  "CREATE INDEX IF NOT EXISTS comptes_premium ON comptes (premium)",
+  "CREATE TABLE IF NOT EXISTS sessions (h TEXT PRIMARY KEY, compte TEXT NOT NULL, created INTEGER NOT NULL, expires INTEGER NOT NULL)",
+  "CREATE INDEX IF NOT EXISTS sessions_compte ON sessions (compte)",
+  "CREATE TABLE IF NOT EXISTS donnees (compte TEXT PRIMARY KEY, favoris TEXT, portefeuille TEXT, profil TEXT, updated INTEGER)",
+  "CREATE TABLE IF NOT EXISTS bilans (compte TEXT NOT NULL, semaine TEXT NOT NULL, contenu TEXT NOT NULL, created INTEGER NOT NULL, vu INTEGER NOT NULL DEFAULT 0, PRIMARY KEY (compte, semaine))",
+  "CREATE TABLE IF NOT EXISTS notifs (id INTEGER PRIMARY KEY AUTOINCREMENT, compte TEXT NOT NULL, at INTEGER NOT NULL, type TEXT NOT NULL, texte TEXT NOT NULL, lien TEXT, lu INTEGER NOT NULL DEFAULT 0, cle TEXT)",
+  "CREATE UNIQUE INDEX IF NOT EXISTS notifs_cle ON notifs (compte, cle)",
+  "CREATE INDEX IF NOT EXISTS notifs_at ON notifs (compte, at)",
+  "CREATE TABLE IF NOT EXISTS essais (cle TEXT NOT NULL, at INTEGER NOT NULL)",
+  "CREATE INDEX IF NOT EXISTS essais_cle ON essais (cle, at)"
+], ready5 = !1;
+async function init4(db) {
+  if (!ready5) {
+    await initCompte(db);
+    for (let q of SCHEMA4) await db.prepare(q).run();
+    ready5 = !0;
+  }
+}
+var ITER = 1e5, JOUR = 864e5, SESSION_MS = 60 * JOUR, FENETRE = 15 * 6e4, MAX_ESSAIS = 8, MAX_CHAMP = 60 * 1024, KEY = /^[ce]:[a-z0-9-]{1,60}$/, hex = (u8) => [...u8].map((b) => b.toString(16).padStart(2, "0")).join(""), alea = (n) => hex(crypto.getRandomValues(new Uint8Array(n))), egal = (a, b) => {
+  if (typeof a != "string" || typeof b != "string" || a.length !== b.length) return !1;
+  let r = 0;
+  for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return r === 0;
+};
+async function derive(mdp, sel, iter = ITER) {
+  let k = await crypto.subtle.importKey("raw", new TextEncoder().encode(mdp), "PBKDF2", !1, ["deriveBits"]), bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new Uint8Array(sel.match(/../g).map((h) => parseInt(h, 16))), iterations: iter }, k, 256);
+  return hex(new Uint8Array(bits));
+}
+async function nouveauHash(mdp) {
+  let sel = alea(16);
+  return { sel, hash: `pbkdf2-sha256$${ITER}$` + await derive(mdp, sel) };
+}
+async function verifie(mdp, compte) {
+  if (!compte)
+    return await derive(String(mdp), "00".repeat(16)), !1;
+  let [, it, h] = String(compte.hash).split("$");
+  return egal(await derive(String(mdp), compte.sel, +it || ITER), h || "");
+}
+var ALPHA = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", nouveauCode = () => [...crypto.getRandomValues(new Uint8Array(16))].map((b) => ALPHA[b & 31]).join("").match(/..../g).join("-"), normCode = (c) => String(c || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 32);
+async function hashCode(code) {
+  let s = alea(16);
+  return s + "$" + await sha256hex(s + "|" + normCode(code));
+}
+async function codeOk(code, stocke) {
+  let [s, h] = String(stocke || "").split("$");
+  return !!(s && h) && egal(await sha256hex(s + "|" + normCode(code)), h);
+}
+var emailOk = (e) => e.length <= 254 && /^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/.test(e), mdpOk = (m) => typeof m == "string" && m.length >= 10 && m.length <= 200, COOKIE = "HttpOnly; Secure; SameSite=Lax; Path=/", avecCookie = (r, v) => (r.headers.append("set-cookie", v), r);
+async function ouvrirSession(env, compteId) {
+  let t = alea(32), now = Date.now();
+  return await env.DB.prepare("INSERT INTO sessions (h, compte, created, expires) VALUES (?, ?, ?, ?)").bind(await sha256hex(t), compteId, now, now + SESSION_MS).run(), Math.random() < 0.05 && await env.DB.prepare("DELETE FROM sessions WHERE expires < ?").bind(now).run(), `bilan_s=${t}; ${COOKIE}; Max-Age=${SESSION_MS / 1e3}`;
+}
+var EFFACE = `bilan_s=; ${COOKIE}; Max-Age=0`;
+async function limite(env, cles) {
+  for (let c of cles) {
+    let r = await env.DB.prepare("SELECT COUNT(*) AS n FROM essais WHERE cle = ? AND at > ?").bind(c, Date.now() - FENETRE).first();
+    if (r && r.n >= MAX_ESSAIS) return !0;
+  }
+  return !1;
+}
+async function echec(env, cles) {
+  for (let c of cles) await env.DB.prepare("INSERT INTO essais (cle, at) VALUES (?, ?)").bind(c, Date.now()).run();
+}
+var TROP = () => json2({ error: "Trop de tentatives. Par s\xE9curit\xE9, r\xE9essayez dans un quart d'heure." }, 429);
+async function lire(request) {
+  let t = await request.text();
+  if (t.length > 4e5) return { err: json2({ error: "Donn\xE9es trop volumineuses." }, 413) };
+  try {
+    let b = t ? JSON.parse(t) : {};
+    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json2({ error: "Requ\xEAte illisible." }, 400) };
+  } catch {
+    return { err: json2({ error: "Requ\xEAte illisible." }, 400) };
+  }
+}
+var parse = (s, d) => {
+  try {
+    let v = JSON.parse(s);
+    return v === void 0 ? d : v;
+  } catch {
+    return d;
+  }
+}, taille = (v) => new TextEncoder().encode(JSON.stringify(v)).length;
+function valider(b, strict) {
+  let out = {}, ignores = [], ko = (champ, msg) => strict ? msg : (ignores.push(champ), null);
+  if (b.favoris !== void 0) {
+    let f = b.favoris === null ? [] : b.favoris;
+    if (!Array.isArray(f)) {
+      let e = ko("favoris", "La liste de favoris doit \xEAtre un tableau.");
+      if (e) return { error: e };
+      f = null;
+    }
+    if (f) {
+      if (strict && f.some((x) => typeof x != "string" || !KEY.test(x))) return { error: "Favori invalide dans la liste." };
+      if (f = [...new Set(f.filter((x) => typeof x == "string" && KEY.test(x)))], f.length > 200) {
+        if (strict) return { error: "200 favoris au plus." };
+        f = f.slice(0, 200);
+      }
+      out.favoris = JSON.stringify(f);
+    }
+  }
+  for (let [champ, objet] of [["portefeuille", !1], ["profil", !0]]) {
+    if (b[champ] === void 0) continue;
+    let v = b[champ];
+    if (v !== null && (typeof v != "object" || objet && Array.isArray(v))) {
+      let e = ko(champ, `Format de ${champ} invalide.`);
+      if (e) return { error: e };
+      continue;
+    }
+    if (taille(v) > MAX_CHAMP) {
+      let e = ko(champ, `${champ === "profil" ? "Profil" : "Portefeuille"} trop volumineux (60 Ko au plus).`);
+      if (e) return { error: e };
+      continue;
+    }
+    out[champ] = JSON.stringify(v);
+  }
+  return { data: out, ignores };
+}
+async function enregistrer(env, compteId, d) {
+  await env.DB.prepare(`INSERT INTO donnees (compte, favoris, portefeuille, profil, updated) VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT (compte) DO UPDATE SET favoris = COALESCE(excluded.favoris, favoris), portefeuille = COALESCE(excluded.portefeuille, portefeuille), profil = COALESCE(excluded.profil, profil), updated = excluded.updated`).bind(compteId, d.favoris ?? null, d.portefeuille ?? null, d.profil ?? null, Date.now()).run();
+}
+var premiumDe = async (env, token, origin) => token ? premiumOf(new Request(origin + "/", { headers: { "x-bilan-token": token } }), env) : null;
+function jourParis(t = Date.now()) {
+  let p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+  return `${p.year}-${p.month}-${p.day}`;
+}
+function semaineIso(ymd) {
+  let d = /* @__PURE__ */ new Date(ymd + "T00:00:00Z");
+  d.setUTCDate(d.getUTCDate() + 3 - (d.getUTCDay() + 6) % 7);
+  let y = d.getUTCFullYear(), w = 1 + Math.floor((d - Date.UTC(y, 0, 1)) / (7 * JOUR));
+  return `${y}-W${String(w).padStart(2, "0")}`;
+}
+var jourSemaine = (ymd) => (/* @__PURE__ */ new Date(ymd + "T12:00:00Z")).getUTCDay(), semainePrecedente = (ymd) => semaineIso(new Date(Date.parse(ymd + "T12:00:00Z") - 7 * JOUR).toISOString().slice(0, 10));
+async function siteData2(request, env) {
+  let get = async (p) => {
+    try {
+      return await (await env.ASSETS.fetch(new Request(new URL(p, request.url)))).json();
+    } catch {
+      return null;
+    }
+  }, [uni, etf, ana, ag, agAuto, sem] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json")]), px = {};
+  try {
+    px = (await (await cours(new Request(new URL("/api/cours", request.url)))).json()).items || {};
+  } catch {
+  }
+  let names = {};
+  return (uni && uni.companies || []).forEach((c) => names["c:" + c.id] = c.name), (etf && etf.list || []).forEach((e) => names["e:" + e.id] = e.name), { names, px, sem: sem && sem.items || {}, ana: ana && ana.items || {}, ev: [...ag && ag.events || [], ...agAuto && agAuto.events || []] };
+}
+function clesPortefeuille(pf, names) {
+  let out = /* @__PURE__ */ new Set(), n = 0, walk = (x, depth) => {
+    if (!(!x || typeof x != "object" || depth > 6 || n++ > 5e3)) {
+      if (Array.isArray(x)) {
+        x.forEach((y) => walk(y, depth + 1));
+        return;
+      }
+      for (let f of ["k", "id"]) {
+        let v = x[f];
+        typeof v == "string" && (KEY.test(v) ? out.add(v) : /^[a-z0-9-]{1,60}$/.test(v) && names["c:" + v] && out.add("c:" + v));
+      }
+      for (let v of Object.values(x)) v && typeof v == "object" && walk(v, depth + 1);
+    }
+  };
+  return walk(pf, 0), [...out];
+}
+var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...parse(row && row.favoris, []).filter((k) => typeof k == "string" && KEY.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r2 = (v) => Math.round(v * 100) / 100, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF2(Math.abs(v)) + " %";
+function faitsSemaine(d, keys, semaine) {
+  let lignes = keys.filter((k) => d.names[k]).map((k) => {
+    let p = d.px[k], w = d.sem[k], v = p && p.p && w ? r2((p.p / w - 1) * 100) : null;
+    return { k, nom: d.names[k], variation_semaine_pct: v, cours: p && p.p != null ? p.p : null, devise: p && p.cur || null };
+  }).sort((a, b) => (b.variation_semaine_pct ?? -1e9) - (a.variation_semaine_pct ?? -1e9)), mv = lignes.filter((l) => l.variation_semaine_pct != null), court = (l) => l && { k: l.k, nom: l.nom, variation_semaine_pct: l.variation_semaine_pct }, today2 = jourParis(), il7 = jourParis(Date.now() - 7 * JOUR), in14 = jourParis(Date.now() + 14 * JOUR), ids = new Set(lignes.filter((l) => l.k.startsWith("c:")).map((l) => l.k.slice(2))), annonces = Object.entries(d.ana).filter(([, a]) => a && ids.has(a.id) && a.date >= il7 && a.chiffres && a.chiffres.length).sort((x, y) => String(y[1].date).localeCompare(x[1].date)).slice(0, 12).map(([u, a]) => ({ k: "c:" + a.id, nom: d.names["c:" + a.id], date: a.date, type: a.type || null, titre: a.titre || null, chiffres: a.chiffres.slice(0, 4), lecture: (a.lecture || []).slice(0, 3), source: u, lien: "/entreprise/" + a.id + "/actualite" })), a_venir = d.ev.filter((e) => e && ids.has(e.id) && e.date >= today2 && e.date <= in14).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 10).map((e) => ({ k: "c:" + e.id, nom: d.names["c:" + e.id], date: e.date, type: e.type || null, label: e.label || "", lien: "/entreprise/" + e.id + "/agenda" }));
+  return {
+    semaine,
+    genere: Date.now(),
+    lignes,
+    moyenne: mv.length ? r2(mv.reduce((a, l) => a + l.variation_semaine_pct, 0) / mv.length) : null,
+    meilleure: court(mv[0]) || null,
+    pire: mv.length > 1 ? court(mv[mv.length - 1]) : null,
+    hausses: mv.filter((l) => l.variation_semaine_pct > 0).length,
+    baisses: mv.filter((l) => l.variation_semaine_pct < 0).length,
+    annonces,
+    a_venir,
+    texte: null
+  };
+}
+var SYS_BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine et les prochaines dates.
+R\xE8gles strictes :
+- Explique la semaine de fa\xE7on factuelle et p\xE9dagogique, en 120 \xE0 220 mots, en deux ou trois courts paragraphes de texte suivi.
+- Vouvoie le lecteur.
+- Cite uniquement des chiffres pr\xE9sents dans les faits. N'invente aucun chiffre et aucune cause \xE0 un mouvement de cours : si la cause n'est pas dans les faits, dis qu'elle n'est pas connue.
+- Explique simplement ce que repr\xE9sente un mouvement (par exemple : 8 % en une semaine, c'est beaucoup pour une grande entreprise).
+- Aucun conseil d'achat ou de vente, aucune recommandation, aucune pr\xE9diction sur les cours.
+- Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.`, faitsIA = (c) => ({
+  semaine: c.semaine,
+  moyenne_semaine_pct: c.moyenne,
+  nombre_de_lignes: c.lignes.length,
+  hausses: c.hausses,
+  baisses: c.baisses,
+  lignes: c.lignes.filter((l) => l.variation_semaine_pct != null).slice(0, 25).map((l) => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct })),
+  annonces: c.annonces.slice(0, 6).map((a) => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, lecture: a.lecture })),
+  a_venir: c.a_venir.slice(0, 6).map((e) => ({ entreprise: e.nom, date: e.date, evenement: e.label }))
+}), redige = rediger;
+async function assurerBilan(env, d, compteId, keys, semaine, stocke) {
+  let cles = [...keys].sort().join(","), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)), c = stocke ? parse(stocke.contenu, null) : null;
+  if (!(!c || c._cles !== cles || !c._final && (Date.now() - c.genere > JOUR || weekend))) return { c, change: !1 };
+  let n = faitsSemaine(d, keys, semaine);
+  n._cles = cles, n._final = weekend, n._ia_n = c && c._ia_n || 0, n._ia_at = c && c._ia_at || 0;
+  let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length;
+  return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
+}
+async function commenter(env, compteId, c) {
+  if (c.texte || !c.lignes.length || (c._ia_n || 0) >= 4 || Date.now() - (c._ia_at || 0) < 6 * 36e5) return c;
+  c._ia_n = (c._ia_n || 0) + 1, c._ia_at = Date.now();
+  let t = null;
+  try {
+    t = await redige(env, { systeme: SYS_BILAN, utilisateur: JSON.stringify(faitsIA(c)), max_tokens: 600, temperature: 0.2 });
+  } catch {
+  }
+  return t && String(t).trim().length > 80 && (c.texte = String(t).replace(/—/g, ",").trim()), await env.DB.prepare("UPDATE bilans SET contenu = ? WHERE compte = ? AND semaine = ?").bind(JSON.stringify(c), compteId, c.semaine).run(), c;
+}
+var publicBilan = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_")));
+async function espace(request, env) {
+  if (!env || !env.DB) return json2({ error: "L'espace personnel est indisponible pour le moment." }, 503);
+  await init4(env.DB);
+  let url = new URL(request.url), path = url.pathname.replace(/\/+$/, ""), m = request.method;
+  if (m !== "GET" && m !== "HEAD" && path !== "/api/espace/tache") {
+    let o = request.headers.get("origin");
+    if (o && o !== "null")
+      try {
+        if (new URL(o).host !== url.host) return json2({ error: "Origine refus\xE9e." }, 403);
+      } catch {
+        return json2({ error: "Origine refus\xE9e." }, 403);
+      }
+  }
+  if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
+  if (path === "/api/espace/inscription" && m === "POST") {
+    let { b, err } = await lire(request);
+    if (err) return err;
+    let ip = "s:" + await visitor(request, env);
+    if (await limite(env, [ip])) return json2({ error: "Trop de comptes cr\xE9\xE9s depuis cette connexion. R\xE9essayez plus tard." }, 429);
+    let email = String(b.email || "").trim().toLowerCase(), mdp = b.motdepasse;
+    if (!emailOk(email)) return json2({ error: "Adresse e-mail invalide." }, 400);
+    if (!mdpOk(mdp)) return json2({ error: "Le mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    let v = valider(b, !1);
+    if (await echec(env, [ip]), await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE email = ?").bind(email).first()) return json2({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
+    let id = alea(16), { sel, hash } = await nouveauHash(mdp), code = nouveauCode();
+    try {
+      await env.DB.prepare("INSERT INTO comptes (id, email, hash, sel, created, secours, teaser) VALUES (?, ?, ?, ?, ?, ?, 0)").bind(id, email, hash, sel, Date.now(), await hashCode(code)).run();
+    } catch {
+      return json2({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
+    }
+    return await enregistrer(env, id, v.data), avecCookie(json2({ ok: !0, email, code_secours: code, ...v.ignores.length ? { ignores: v.ignores } : {} }), await ouvrirSession(env, id));
+  }
+  if (path === "/api/espace/connexion" && m === "POST") {
+    let { b, err } = await lire(request);
+    if (err) return err;
+    let email = String(b.email || "").trim().toLowerCase().slice(0, 254), cles = ["e:" + email, "i:" + await visitor(request, env)];
+    if (await limite(env, cles)) return TROP();
+    let c2 = emailOk(email) ? await env.DB.prepare("SELECT * FROM comptes WHERE email = ?").bind(email).first() : null;
+    return await verifie(String(b.motdepasse || "").slice(0, 200), c2) ? (await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json2({ ok: !0, email: c2.email }), await ouvrirSession(env, c2.id))) : (await echec(env, cles), json2({ error: "Adresse ou mot de passe incorrect." }, 401));
+  }
+  if (path === "/api/espace/secours" && m === "POST") {
+    let { b, err } = await lire(request);
+    if (err) return err;
+    let email = String(b.email || "").trim().toLowerCase().slice(0, 254), cles = ["e:" + email, "i:" + await visitor(request, env)];
+    if (await limite(env, cles)) return TROP();
+    if (!mdpOk(b.nouveau)) return json2({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    let c2 = emailOk(email) ? await env.DB.prepare("SELECT * FROM comptes WHERE email = ?").bind(email).first() : null;
+    if (!c2 || !await codeOk(b.code, c2.secours))
+      return await echec(env, cles), json2({ error: "Adresse ou code de secours incorrect." }, 401);
+    let { sel, hash } = await nouveauHash(b.nouveau), code = nouveauCode();
+    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ?, secours = ? WHERE id = ?").bind(hash, sel, await hashCode(code), c2.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ?").bind(c2.id).run(), await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json2({ ok: !0, email: c2.email, code_secours: code }), await ouvrirSession(env, c2.id));
+  }
+  if (path === "/api/espace/deconnexion" && m === "POST") {
+    let t = cookieSession(request);
+    return t && await env.DB.prepare("DELETE FROM sessions WHERE h = ?").bind(await sha256hex(t)).run(), avecCookie(json2({ ok: !0 }), EFFACE);
+  }
+  let c = await sessionCompte(request, env);
+  if (path === "/api/espace/moi" && m === "GET") {
+    if (!c) return json2({ connecte: !1 });
+    let [d, nl, sess] = await Promise.all([
+      env.DB.prepare("SELECT favoris, portefeuille, profil, updated FROM donnees WHERE compte = ?").bind(c.id).first(),
+      env.DB.prepare("SELECT COUNT(*) AS n FROM notifs WHERE compte = ? AND lu = 0").bind(c.id).first(),
+      env.DB.prepare("SELECT h, expires FROM sessions WHERE h = ?").bind(await sha256hex(cookieSession(request))).first()
+    ]), p = await premiumDe(env, c.premium, url.origin), dernier = await env.DB.prepare("SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1").bind(c.id).first(), r = json2({
+      connecte: !0,
+      email: c.email,
+      premium: !!p,
+      plan: p ? p.plan : null,
+      premium_jusqu_au: p ? p.until : null,
+      donnees: { favoris: parse(d && d.favoris, []) || [], portefeuille: parse(d && d.portefeuille, null), profil: parse(d && d.profil, null), maj: d ? d.updated : null },
+      nonlus: nl && nl.n || 0,
+      teaser: !!c.teaser,
+      mail: mailReady(env),
+      cree: c.created,
+      bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null
+    });
+    return sess && sess.expires - Date.now() < SESSION_MS - 7 * JOUR && (await env.DB.prepare("UPDATE sessions SET expires = ? WHERE h = ?").bind(Date.now() + SESSION_MS, sess.h).run(), avecCookie(r, `bilan_s=${cookieSession(request)}; ${COOKIE}; Max-Age=${SESSION_MS / 1e3}`)), r;
+  }
+  if (!c) return json2({ error: "Connectez-vous pour acc\xE9der \xE0 votre espace.", connecte: !1 }, 401);
+  if (path === "/api/espace/donnees" && (m === "PUT" || m === "POST")) {
+    let { b, err } = await lire(request);
+    if (err) return err;
+    let v = valider(b, !0);
+    return v.error ? json2({ error: v.error }, 400) : (await enregistrer(env, c.id, v.data), json2({ ok: !0 }));
+  }
+  if (path === "/api/espace/motdepasse" && m === "POST") {
+    let { b, err } = await lire(request);
+    if (err) return err;
+    let cles = ["e:" + c.email];
+    if (await limite(env, cles)) return TROP();
+    if (!mdpOk(b.nouveau)) return json2({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    if (!await verifie(String(b.ancien || "").slice(0, 200), c))
+      return await echec(env, cles), json2({ error: "Mot de passe actuel incorrect." }, 401);
+    let { sel, hash } = await nouveauHash(b.nouveau);
+    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ? WHERE id = ?").bind(hash, sel, c.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ? AND h <> ?").bind(c.id, await sha256hex(cookieSession(request))).run(), json2({ ok: !0 });
+  }
+  if (path === "/api/espace/preferences" && m === "POST") {
+    let { b, err } = await lire(request);
+    return err || (typeof b.teaser != "boolean" ? json2({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json2({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
+  }
+  if (path === "/api/espace/supprimer" && m === "POST") {
+    let { b, err } = await lire(request);
+    if (err) return err;
+    let cles = ["e:" + c.email];
+    if (await limite(env, cles)) return TROP();
+    if (!await verifie(String(b.motdepasse || "").slice(0, 200), c))
+      return await echec(env, cles), json2({ error: "Mot de passe incorrect." }, 401);
+    for (let q of ["DELETE FROM notifs WHERE compte = ?", "DELETE FROM bilans WHERE compte = ?", "DELETE FROM donnees WHERE compte = ?", "DELETE FROM sessions WHERE compte = ?", "DELETE FROM comptes WHERE id = ?"]) await env.DB.prepare(q).bind(c.id).run();
+    return avecCookie(json2({ ok: !0 }), EFFACE);
+  }
+  if (path === "/api/espace/premium" && m === "POST") {
+    let { b, err } = await lire(request);
+    if (err) return err;
+    let token = String(b.token || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
+    if (!token) return json2({ error: "Collez votre code Premium." }, 400);
+    let p = await premiumDe(env, token, url.origin);
+    return p ? await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE premium = ? AND id <> ?").bind(token, c.id).first() ? json2({ error: "Ce code Premium est d\xE9j\xE0 rattach\xE9 \xE0 un autre compte." }, 409) : (await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(token, c.id).run(), json2({ ok: !0, premium: !0, plan: p.plan, premium_jusqu_au: p.until })) : json2({ error: "Code Premium inconnu ou expir\xE9." }, 404);
+  }
+  if (path === "/api/espace/bilan" && m === "GET") {
+    let auj = jourParis(), cur = semaineIso(auj), semaine = url.searchParams.get("semaine") || cur;
+    if (!/^\d{4}-W\d{2}$/.test(semaine)) return json2({ error: "Semaine invalide (format 2026-W44)." }, 400);
+    let row = await env.DB.prepare("SELECT contenu, vu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, semaine).first(), b = row ? parse(row.contenu, null) : null;
+    if (semaine === cur) {
+      let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille FROM donnees WHERE compte = ?").bind(c.id).first(), r = await assurerBilan(env, d, c.id, clesDe(don, d.names), cur, row);
+      b = r.c, r.change && !r.stocke && (b = { ...b, vide: !0 });
+    } else if (!b || semaine > cur) return json2({ error: "Aucun bilan pour cette semaine." }, 404);
+    b && !b.vide && (semaine === cur || semaine === semainePrecedente(auj)) && (b = await commenter(env, c.id, b)), await env.DB.prepare("UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?").bind(c.id, semaine).run();
+    let hist = ((await env.DB.prepare("SELECT semaine, contenu FROM bilans WHERE compte = ? AND semaine <> ? ORDER BY semaine DESC LIMIT 12").bind(c.id, semaine).all()).results || []).map((h) => ({ semaine: h.semaine, moyenne: (parse(h.contenu, {}) || {}).moyenne ?? null }));
+    return json2({ ...publicBilan(b), provisoire: semaine === cur && !b._final, historique: hist });
+  }
+  if (path === "/api/espace/notifs" && m === "GET") {
+    let rows = (await env.DB.prepare("SELECT id, at, type, texte, lien, lu FROM notifs WHERE compte = ? ORDER BY at DESC, id DESC LIMIT 50").bind(c.id).all()).results || [];
+    return json2({ notifs: rows.map((r) => ({ ...r, lu: !!r.lu })), nonlus: rows.filter((r) => !r.lu).length });
+  }
+  return path === "/api/espace/notifs/lu" && m === "POST" ? (await env.DB.prepare("UPDATE notifs SET lu = 1 WHERE compte = ? AND lu = 0").bind(c.id).run(), json2({ ok: !0 })) : json2({ error: "Introuvable." }, 404);
+}
+async function notifier(env, compteId, type, texte, lien, jour, extra = "") {
+  let r = await env.DB.prepare("INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)").bind(compteId, Date.now(), type, texte.slice(0, 400), lien, [type, lien, jour, extra].join("|").slice(0, 500)).run();
+  return r && r.meta && r.meta.changes || 0;
+}
+async function tache(request, env, url) {
+  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Non autoris\xE9." }, 403);
+  let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || !quoi && wd === 6, cutoff = now - 6 * 36e5, W = modeBilan ? "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? [cutoff, sem] : [cutoff], rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
+  if (rows.length) {
+    let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
+    for (let r of rows) {
+      let keys = clesDe(r, d.names).filter((k) => d.names[k]), ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2)));
+      if (keys.length && r.last_tache < cutoff) {
+        let depuis = jourParis(Math.max(r.last_tache || 0, now - 2 * JOUR));
+        for (let [u, a] of Object.entries(d.ana)) a && ids.has(a.id) && a.date >= depuis && a.chiffres && a.chiffres.length && (notifs += await notifier(env, r.id, "annonce", `${d.names["c:" + a.id]} : ${a.type || "nouvelle publication"}. ${a.chiffres.slice(0, 3).map((x) => x.join(" : ")).join(" ; ")}.`, "/entreprise/" + a.id + "/actualite", a.date, u));
+        if (ouvre) for (let k of keys) {
+          let p = d.px[k];
+          p && p.chg != null && Math.abs(p.chg) >= 5 && (notifs += await notifier(env, r.id, "mouvement", `${d.names[k]} : ${sgnP2(p.chg)} aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualit\xE9.`, lienDe(k), auj));
+        }
+        for (let e of d.ev) e && ids.has(e.id) && e.date === demain && (notifs += await notifier(env, r.id, /r[ée]sultat/i.test(e.type || e.label || "") ? "resultats" : "agenda", `${d.names["c:" + e.id]} : demain, ${e.label || e.type}.`, "/entreprise/" + e.id + "/agenda", e.date));
+      }
+      if (modeBilan && r.last_semaine !== sem && keys.length) {
+        let st = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, sem).first();
+        if ((await assurerBilan(env, d, r.id, keys, sem, st)).stocke !== !1 && (bilans++, notifs += await notifier(env, r.id, "bilan", "Votre bilan de la semaine est pr\xEAt.", "/espace", sem), r.teaser && cap > 0))
+          try {
+            await sendMail(
+              env,
+              r.email,
+              "Votre bilan de la semaine est pr\xEAt",
+              `Bonjour,
+
+Votre bilan de la semaine est pr\xEAt sur bilan. :
+${origin}/espace
+
+Vous recevez ce message parce que vous l'avez demand\xE9 dans votre espace. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.
+
+bilan. Informations factuelles, sans conseil en investissement.`,
+              `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px"><p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><p style="font-size:17px;margin:16px 0">Votre bilan de la semaine est pr\xEAt.</p><p><a href="${origin}/espace" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir mon bilan</a></p><p style="font-size:12px;color:#87827A;margin-top:22px">Vous recevez ce message parce que vous l'avez demand\xE9. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.</p></div></div>`
+            ), mails2++, cap--;
+          } catch {
+            cap = 0;
+          }
+      }
+      await env.DB.prepare(modeBilan ? "UPDATE comptes SET last_tache = ?, last_semaine = ? WHERE id = ?" : "UPDATE comptes SET last_tache = ? WHERE id = ?").bind(...modeBilan ? [now, sem, r.id] : [now, r.id]).run();
+    }
+    await env.DB.prepare("DELETE FROM notifs WHERE at < ?").bind(now - 90 * JOUR).run(), await env.DB.prepare("DELETE FROM essais WHERE at < ?").bind(now - JOUR).run(), await env.DB.prepare("DELETE FROM sessions WHERE expires < ?").bind(now).run();
+  }
+  let reste = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM comptes c WHERE ${W}`).bind(...B).first() || {}).n || 0;
+  return json2({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
+}
+
+// cf/src/demande.mjs
+var IND = ["croissance", "marge", "marge_nette", "rentabilite", "dette", "per", "rendement", "distribution", "variation_1an", "capitalisation", "taille"], SYS2 = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
+
+Actions possibles :
+1. Chercher des entreprises selon des crit\xE8res :
+{"action":"filtre","titre":"phrase courte qui reformule la demande","secteur":null ou une cl\xE9 de ${JSON.stringify(SECTEURS)},"region":null ou "FR" (France), "EU" (Europe hors France), "US" (\xC9tats-Unis), "MONDE" (reste du monde),"pea":null ou true,"criteres":[{"indicateur":"\u2026","condition":"sup_mediane"|"inf_mediane"|"sup"|"inf","valeur":nombre ou null}],"tri":{"indicateur":"\u2026","ordre":"desc"|"asc"},"limite":10}
+Indicateurs : croissance (hausse des ventes sur un an, en %), marge (marge d'exploitation, %), marge_nette (%), rentabilite (b\xE9n\xE9fice / capitaux propres, %), dette (dette nette en ann\xE9es de r\xE9sultat avant amortissements ; n\xE9gative ou faible = peu endett\xE9e), per (prix de l'action / b\xE9n\xE9fice), rendement (dividende / cours, %), distribution (part du b\xE9n\xE9fice vers\xE9e en dividende, %), variation_1an (\xE9volution du cours sur un an, %), capitalisation (valeur en Bourse, milliards d'euros), taille (ventes annuelles, milliards d'euros).
+\xAB sup_mediane \xBB/\xAB inf_mediane \xBB comparent \xE0 la m\xE9diane du secteur de chaque entreprise ; \xAB sup \xBB/\xAB inf \xBB utilisent "valeur" (pourcentages en nombre : 5 pour 5 %).
+Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"inf","valeur":1} ; \xAB bon dividende \xBB \u2192 {"indicateur":"rendement","condition":"sup","valeur":3} ; \xAB pas ch\xE8res \xBB \u2192 {"indicateur":"per","condition":"inf_mediane","valeur":null} ; \xAB tr\xE8s rentables \xBB \u2192 {"indicateur":"marge","condition":"sup_mediane","valeur":null} ; \xAB les plus grosses \xBB \u2192 tri capitalisation desc.
+2. Comparer des entreprises nomm\xE9es : {"action":"comparer","noms":["LVMH","Herm\xE8s"]}
+3. Ouvrir la fiche d'une entreprise ou d'un ETF nomm\xE9 : {"action":"fiche","nom":"Apple"}
+4. Chercher des ETF : {"action":"etf","titre":"\u2026","categorie":null ou "actions-monde"|"actions-usa"|"actions-europe"|"actions-france"|"actions-emergents"|"actions-asie"|"dividendes"|"obligations"|"monetaire"|"theme"|"immobilier"|"matieres"|"facteurs","pea":null ou true}
+5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
+R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si on te demande \xAB quoi acheter \xBB, choisis une action "filtre" ou "etf" qui aide \xE0 explorer, et un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). R\xE9ponds uniquement avec le JSON.`, clean2 = (s) => String(s || "").replace(/\s+/g, " ").trim();
+function valide(a) {
+  if (!a || typeof a != "object") return null;
+  if (a.action === "filtre") {
+    let crit = (Array.isArray(a.criteres) ? a.criteres : []).filter((c) => c && IND.includes(c.indicateur) && ["sup_mediane", "inf_mediane", "sup", "inf"].includes(c.condition)).slice(0, 5).map((c) => ({ indicateur: c.indicateur, condition: c.condition, valeur: typeof c.valeur == "number" && isFinite(c.valeur) ? c.valeur : null })), tri = a.tri && IND.includes(a.tri.indicateur) ? { indicateur: a.tri.indicateur, ordre: a.tri.ordre === "asc" ? "asc" : "desc" } : null;
+    return { action: "filtre", titre: clean2(a.titre).slice(0, 120), secteur: SECTEURS[a.secteur] ? a.secteur : null, region: ["FR", "EU", "US", "MONDE"].includes(a.region) ? a.region : null, pea: a.pea === !0, criteres: crit, tri, limite: Math.min(30, Math.max(3, +a.limite || 12)) };
+  }
+  return a.action === "comparer" && Array.isArray(a.noms) ? { action: "comparer", noms: a.noms.map(clean2).filter(Boolean).slice(0, 5) } : a.action === "fiche" && a.nom ? { action: "fiche", nom: clean2(a.nom).slice(0, 80) } : a.action === "etf" ? { action: "etf", titre: clean2(a.titre).slice(0, 120), categorie: /^[a-z-]{3,30}$/.test(a.categorie || "") ? a.categorie : null, pea: a.pea === !0 } : a.action === "repondre" && clean2(a.texte).length > 30 ? { action: "repondre", texte: String(a.texte).replace(/—/g, ",").trim().slice(0, 2e3) } : null;
+}
+async function demande(request, env) {
+  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
+  let b;
+  try {
+    b = await request.json();
+  } catch {
+    return json2({ error: "Requ\xEAte illisible." }, 400);
+  }
+  let q = clean2(b.question).slice(0, 300);
+  if (q.length < 4) return json2({ error: "\xC9crivez une question un peu plus longue." }, 400);
+  let key = "demande:" + q.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôöùûüç ]/g, "");
+  if (env.DB)
+    try {
+      let hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
+      if (hit) return json2({ ...JSON.parse(hit.txt), cache: !0 });
+    } catch {
+    }
+  let qq = await quota(request, env, "demande");
+  if (!qq.ok) return quotaError(qq, "questions \xE0 l'IA");
+  let t = await rediger(env, { systeme: SYS2, utilisateur: q, max_tokens: 500, temperature: 0.1, json: !0 }), a = valide(jsonDe(t));
+  if (!a) return json2({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : \xAB entreprises fran\xE7aises peu endett\xE9es qui versent un dividende \xBB." : "L'IA est tr\xE8s demand\xE9e en ce moment : r\xE9essayez dans quelques instants." }, t ? 422 : 503);
+  if (env.DB)
+    try {
+      await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, JSON.stringify(a), Date.now()).run();
+    } catch {
+    }
+  return json2(a);
+}
+
 // cf/src/worker.mjs
 var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path) {
@@ -742,7 +1299,7 @@ function meta(path) {
     let t = TOOLS[m[1] || "epargne"] || TOOLS.epargne;
     return t ? { title: `${t} \xB7 ${SITE}`, desc: "Simulez l'\xE9volution d'un placement, avec les hypoth\xE8ses affich\xE9es. Outil p\xE9dagogique, sans conseil." } : null;
   }
-  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/dividendes" ? { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." } : p.startsWith("/debuter") ? { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." } : p.startsWith("/outils") ? { title: `Outils \xB7 ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'\xE9pargne et de frais." } : p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/espace" || p.startsWith("/espace/") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Votre bilan de la semaine, vos notifications et vos listes, sur tous vos appareils." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/dividendes" ? { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." } : p.startsWith("/debuter") ? { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." } : p.startsWith("/outils") ? { title: `Outils \xB7 ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'\xE9pargne et de frais." } : p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 var worker_default = {
   async fetch(request, env, ctx) {
@@ -754,7 +1311,9 @@ var worker_default = {
     if (url.pathname === "/api/resume") return resume(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/assistant") return assistant(request, env);
+    if (url.pathname === "/api/demande") return demande(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
+    if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     let info = meta(url.pathname);
     if (!info) {

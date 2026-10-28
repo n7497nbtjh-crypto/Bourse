@@ -25,9 +25,24 @@ export async function visitor(request, env = {}) { // empreinte pseudonyme : cha
   const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + today() + "|" + (env.HASH_SALT || "bilan-sel-2026")));
   return [...new Uint8Array(h)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
 }
+/* ---------- Compte connecté (cookie de session bilan_s, voir espace.mjs) ---------- */
+export const sha256hex = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("");
+export const cookieSession = request => { const m = (request.headers.get("cookie") || "").match(/(?:^|;\s*)bilan_s=([a-f0-9]{64})(?:;|$)/); return m ? m[1] : null; };
+const SESS = new WeakMap(); // une seule lecture de la session par requête
+export function sessionCompte(request, env) {
+  if (!env || !env.DB) return Promise.resolve(null);
+  if (!SESS.has(request)) SESS.set(request, (async () => {
+    const t = cookieSession(request); if (!t) return null;
+    try { return (await env.DB.prepare(`SELECT c.* FROM sessions s JOIN comptes c ON c.id = s.compte WHERE s.h = ? AND s.expires > ?`).bind(await sha256hex(t), Date.now()).first()) || null; }
+    catch (e) { return null; } // tables pas encore créées
+  })());
+  return SESS.get(request);
+}
 export async function premiumOf(request, env) {
-  const t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
-  if (!t || !env.DB) return null;
+  if (!env || !env.DB) return null;
+  let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
+  if (!t) { const c = await sessionCompte(request, env); t = (c && c.premium) || ""; } // Premium rattaché au compte : actif sur tous les appareils
+  if (!t) return null;
   await initCompte(env.DB);
   let a = await env.DB.prepare(`SELECT * FROM abonnes WHERE token = ?`).bind(t).first();
   if (!a) return null;
@@ -38,10 +53,11 @@ export async function premiumOf(request, env) {
   return a.until > Date.now() ? a : null;
 }
 /* ---------- Quotas : la version gratuite est limitée par jour, Premium beaucoup moins ---------- */
-export const LIMITS = { resume: [5, 80], assistant: [3, 40], veille: [1, 10], portefeuille: [1, 10] };
+export const LIMITS = { demande: [10, 200], assistant: [5, 100], resume: [3, 100], veille: [1, 20], portefeuille: [1, 20] };
 export async function quota(request, env, kind) {
+  if (env.ADMIN_KEY && request.headers.get("x-admin-key") === env.ADMIN_KEY) return { ok: true, premium: true, max: 1e9, used: 0 }; // robot du site
   await initCompte(env.DB);
-  const p = await premiumOf(request, env), who = p ? "p:" + p.token : await visitor(request, env), [free, prem] = LIMITS[kind] || [3, 30], max = p ? prem : free;
+  const p = await premiumOf(request, env), c = p ? null : await sessionCompte(request, env), who = p ? "p:" + p.token : c ? "u:" + c.id : await visitor(request, env), [free, prem] = LIMITS[kind] || [3, 30], max = p ? prem : free;
   const r = await env.DB.prepare(`SELECT n FROM usage WHERE who = ? AND jour = ? AND kind = ?`).bind(who, today(), kind).first();
   if (r && r.n >= max) return { ok: false, premium: !!p, max };
   if (!r && Math.random() < 0.02) await env.DB.prepare(`DELETE FROM usage WHERE jour < ?`).bind(new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)).run(); // les compteurs ne sont gardés que deux jours

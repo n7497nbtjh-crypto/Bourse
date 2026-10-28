@@ -21,7 +21,7 @@ const req = (method, path, body, h = {}) => new Request("https://t.local" + path
 const J = async r => [r.status, await r.json()];
 
 // Offres et activation
-let [s, j] = await J(await premium(req("GET", "/api/premium/offres"), env)); ok(s === 200 && j.limites.assistant[0] === 3, "offres");
+let [s, j] = await J(await premium(req("GET", "/api/premium/offres"), env)); ok(s === 200 && j.limites.assistant[0] === 5, "offres");
 [s, j] = await J(await premium(req("GET", "/api/premium/activer?session_id=cs_wait"), env)); ok(s === 402, "paiement non confirmé refusé");
 [s, j] = await J(await premium(req("GET", "/api/premium/activer?session_id=cs_ok"), env)); ok(s === 200 && j.token && j.plan === "unique", "activation " + JSON.stringify(j));
 const tok = j.token;
@@ -31,11 +31,11 @@ const tok = j.token;
 
 // Assistant : 3 questions gratuites, réponse en cache gratuite, Premium au-delà
 const ask = (q, h) => assistant(req("POST", "/api/assistant", { question: q, faits: { entreprise: "LVMH" } }, h), env);
-for (const q of ["Question numéro un ?", "Question numéro deux ?", "Question numéro trois ?"]) { [s] = await J(await ask(q)); ok(s === 200, "question gratuite " + s); }
+for (const q of ["Question numéro un ?", "Question numéro deux ?", "Question numéro trois ?", "Question numéro 3b ?", "Question numéro 3c ?"]) { [s] = await J(await ask(q)); ok(s === 200, "question gratuite " + s); }
 [s, j] = await J(await ask("Question numéro un ?")); ok(s === 200 && j.cache, "question déjà posée : réponse en cache");
-[s, j] = await J(await ask("Question numéro quatre ?")); ok(s === 429 && j.quota && !j.premium, "4e question gratuite bloquée");
+[s, j] = await J(await ask("Question numéro quatre ?")); ok(s === 429 && j.quota && !j.premium, "6e question gratuite bloquée");
 [s, j] = await J(await ask("Question numéro quatre ?", { "x-bilan-token": tok })); ok(s === 200, "Premium passe");
-ok(aiCalls === 4, "appels au modèle " + aiCalls);
+ok(aiCalls === 6, "appels au modèle " + aiCalls);
 [s] = await J(await ask("abc")); ok(s === 400, "question trop courte");
 
 // Inscription, confirmation, envoi hebdomadaire, alertes

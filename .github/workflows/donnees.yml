@@ -89,6 +89,8 @@ jobs:
           npx --yes wrangler@3.114.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true
       - name: Résumés IA des dernières annonces (IA Cloudflare, sans crédits Claude)
         if: ${{ success() }}
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
         run: |
           sleep 60
           node data/ia_prechauffe.mjs || true

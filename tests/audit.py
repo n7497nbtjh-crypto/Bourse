@@ -6,7 +6,7 @@ root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue", "/pea-cto", "/comparer?ids=lvmh,kering,hermes,apple", "/comparer", "/favoris", "/dividendes", "/debuter", "/debuter/bases", "/debuter/bases/quiz", "/entreprise/nvidia", "/entreprise/rio-tinto", "/entreprise/air-liquide", "/entreprise/nvidia/comprendre/marge", "/comparer?ids=nvidia,amd,intel,broadcom", "/outils", "/marches", "/outils/si-javais", "/outils/recouvrement", "/outils/verifier", "/communaute?onglet=pronostics", "/communaute?onglet=portefeuilles", "/communaute?onglet=discussions"]
-pages += ["/commencer", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement"]
+pages += ["/demander", "/demander?q=entreprises+peu+endettees", "/espace", "/commencer", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement"]
 pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh/communaute", "/entreprise/lvmh/actualite", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
@@ -28,6 +28,11 @@ def route(r):
               "i:cac40": {"s": "INDEXEURO:PX1", "cur": "EUR", "p": 7886, "chg": 0.0, "cap": None, "h52": 8200, "l52": 7000, "p1y": 7500, "p3y": 7300, "p5y": 5600},
               "i:sp500": {"s": "INDEXSP:.INX", "cur": "USD", "p": 6800, "chg": 0.1, "cap": None, "h52": 6900, "l52": 5000, "p1y": 5800, "p3y": 4200, "p5y": 3300}}
         return r.fulfill(json={"updated": "2026-10-28T16:00:00Z", "items": it})
+    if "/api/demande" in u: return r.fulfill(json={"action": "filtre", "titre": "Entreprises françaises peu endettées", "secteur": None, "region": "FR", "pea": False, "criteres": [{"indicateur": "dette", "condition": "inf", "valeur": 1}], "tri": {"indicateur": "rendement", "ordre": "desc"}, "limite": 12})
+    if "/api/espace/moi" in u: return r.fulfill(json={"connecte": True, "email": "test@exemple.fr", "premium": False, "plan": None, "donnees": {"favoris": ["c:lvmh", "c:nvidia"], "portefeuille": None, "profil": None}, "nonlus": 2, "teaser": False} if STATE.get("in") else {"connecte": False})
+    if "/api/espace/bilan" in u: return r.fulfill(json={"semaine": "2026-W44", "genere": 1761650000000, "lignes": [{"k": "c:lvmh", "nom": "LVMH", "variation_semaine_pct": 3.2, "cours": 612.4, "devise": "EUR"}, {"k": "c:nvidia", "nom": "Nvidia", "variation_semaine_pct": -4.1, "cours": 186.2, "devise": "USD"}], "moyenne": -0.45, "annonces": [{"id": "lvmh", "nom": "LVMH", "date": "2026-10-27", "type": "Résultats", "chiffres": [["Ventes", "18,3 Md€"]], "lecture": ["Les ventes reculent de 2 %."]}], "a_venir": [{"id": "nvidia", "nom": "Nvidia", "date": "2026-11-19", "label": "Résultats du trimestre"}], "texte": "Ce qui a bougé\nLVMH progresse de 3,2 % sur la semaine.", "historique": [{"semaine": "2026-W43", "moyenne": 1.2}]})
+    if "/api/espace/notifs" in u: return r.fulfill(json={"nonlus": 1, "notifs": [{"id": 1, "at": 1761650000000, "type": "mouvement", "texte": "Nvidia : −5,2 % aujourd'hui", "lien": "/entreprise/nvidia", "lu": 0}]})
+    if "/api/espace" in u: return r.fulfill(json={"ok": True})
     if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": "https://buy.stripe.com/test_m", "unique": None, "limites": {"resume": [5, 80], "assistant": [3, 40], "veille": [1, 10], "portefeuille": [1, 10]}})
     if "/api/premium/statut" in u: return r.fulfill(json={"premium": False})
     if "/api/premium/activer" in u: return r.fulfill(json={"token": "a" * 40, "plan": "mensuel"})
@@ -68,6 +73,7 @@ CHECK = r"""(W) => {
   return [...new Set(p)].slice(0, 6);
 }"""
 bad = 0
+STATE = {}
 with sync_playwright() as pw:
     b = pw.chromium.launch()
     for name, opts in [("ordi", dict(viewport={"width": 1440, "height": 900})), ("tel", dict(viewport={"width": 375, "height": 812}, has_touch=True, is_mobile=True, device_scale_factor=2)), ("petit", dict(viewport={"width": 340, "height": 700}, has_touch=True, is_mobile=True))]:
@@ -123,6 +129,18 @@ with sync_playwright() as pw:
             pg.screenshot(path=f"{shots}/{name}_commencer.png", full_page=True)
             for u, n in (("/premium", "premium"), ("/entreprise/lvmh", "assistant")):
                 pg.goto("http://t.local" + u); pg.wait_for_timeout(700); pg.screenshot(path=f"{shots}/{name}_{n}.png", full_page=True)
+        # Mon espace connecté : bilan, alertes, réglages
+        STATE["in"] = True
+        for u in ("/espace", "/espace/alertes", "/espace/reglages", "/favoris"):
+            pg.goto("http://t.local" + u); pg.wait_for_timeout(500)
+            p = pg.evaluate(CHECK, opts["viewport"]["width"])
+            if p: probs[u + " (connecté)"] = p
+            if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}{u.replace('/', '_')}_in.png", full_page=True)
+        if "LVMH" not in pg.inner_text("#app"): probs["favoris connecté"] = ["liste vide"]
+        STATE["in"] = False
+        if shots and name != "petit":
+            for u, n in (("/", "accueil8"), ("/demander?q=test", "demander"), ("/entreprise/lvmh", "fiche8"), ("/entreprises", "entreprises8")):
+                pg.goto("http://t.local" + u); pg.wait_for_timeout(800); pg.screenshot(path=f"{shots}/{name}_{n}.png", full_page=True)
         ectx = [e for e in errs if "fonts" not in e and "404" not in e]
         print(f"== {name} : {len(pages)} pages, problèmes : {len(probs)}, erreurs JS : {len(ectx)}")
         for k, v in probs.items(): print("  ", k, v)

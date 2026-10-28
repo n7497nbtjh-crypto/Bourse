@@ -832,7 +832,7 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 .offers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px}
 .offer{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}.offer.main{border:2px solid var(--ink)}
 .offer .price{font-family:var(--serif);font-size:30px;font-weight:800;margin:4px 0 4px}.offer .btn{display:inline-flex;align-items:center;text-decoration:none;height:40px}
-.ptab{width:100%}.ptab td{font-size:14px;white-space:normal;text-align:left}.ptab td:nth-child(n+2){text-align:center;width:22%}
+.ptab{width:100%}.ptab td{font-size:14px;white-space:normal;text-align:left;overflow-wrap:anywhere}.ptab td:nth-child(n+2){text-align:center;width:22%}
 .offer .btn:disabled{background:var(--soft);color:var(--grey);border-color:var(--line);cursor:default}.ptab th:nth-child(n+2){text-align:center}
 .premok{border-left:4px solid var(--g)}.code{font-family:var(--mono,monospace);font-size:15px;background:var(--soft);padding:10px 12px;border-radius:8px;word-break:break-all;user-select:all}
 .hero-new{margin-bottom:6px}.hero-new .chips{margin:4px 0 18px}
@@ -854,6 +854,85 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 mark.todo{background:#FFF1C9;padding:0 3px;border-radius:3px;color:var(--ink)}
 @media (max-width:760px){.ptab thead{display:none}.ptab tr{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line2);padding:8px 0}.ptab td{border:0!important;padding:2px 12px!important;width:auto!important;text-align:left!important}.ptab td:first-child{grid-column:1/-1;font-weight:600;padding-bottom:4px!important}.ptab td:nth-child(2)::before{content:"Gratuit : ";color:var(--light)}.ptab td:nth-child(3)::before{content:"Premium : ";color:var(--light);font-weight:400}
 .askf input{flex:none;width:100%}.offers{grid-template-columns:1fr}.st7b{padding-left:22px}.qo{margin-left:0}.askf{flex-direction:column}}
+/* recherche : suggestion IA */
+.results a.iasug{background:#F4FAF6}.results a.iasug span:first-child{color:var(--g);font-weight:600}
+/* v8 : menu en rubriques, copilote IA, accueil en bandeaux, Mon espace, favoris en liste, jauges */
+.bar .search{min-width:240px;max-width:380px}.bar .search input{height:40px;font-size:14.5px}
+#nav{gap:4px!important;align-items:center}
+#nav .dd{position:relative}
+#nav .dd>button{background:none;border:0;font:inherit;font-size:14px;color:var(--grey);padding:18px 10px 16px;cursor:pointer;display:flex;align-items:center;gap:5px;border-bottom:2px solid transparent;white-space:nowrap}
+#nav .dd>button::after{content:"";width:6px;height:6px;border-right:1.5px solid currentColor;border-bottom:1.5px solid currentColor;transform:rotate(45deg) translateY(-2px);opacity:.6}
+#nav .dd>button:hover,#nav .dd.open>button,#nav .dd.on>button{color:var(--ink)}#nav .dd.on>button{border-bottom-color:var(--ink)}
+#nav .ddm{display:none;position:absolute;top:calc(100% - 4px);left:-8px;min-width:300px;background:#fff;border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px -12px rgba(17,18,20,.25);padding:8px;z-index:50}
+#nav .dd.open .ddm{display:block}
+#nav .ddm a{display:flex;flex-direction:column;gap:1px;padding:9px 12px;border-radius:9px;border:0;color:var(--ink);white-space:normal}
+#nav .ddm a:hover{background:var(--soft)}#nav .ddm b{font-weight:600;font-size:14px}#nav .ddm span{font-size:12.5px;color:var(--light)}
+#nav a.navia{color:var(--g);font-weight:700;padding:18px 8px 16px}
+#nav a.navesp{padding:18px 8px 16px;display:flex;gap:6px;align-items:center}
+.espn:empty,.favn:empty{display:none}.espn{background:var(--o);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:1px 6px;line-height:1.4}
+.mpanel .mg{padding:10px 16px 4px;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--light);border:0!important}
+/* copilote */
+.iabox2{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--ink);border-radius:16px;padding:6px 6px 6px 14px;box-shadow:0 10px 30px -18px rgba(17,18,20,.35)}
+.iabox2 input{flex:1;min-width:0;border:0;outline:none;font:inherit;font-size:16px;height:44px;background:none}
+.iabox2.big input{font-size:17px;height:50px}.iabox2 .btn{height:44px;border-radius:12px;padding:0 20px}
+.iaspark{color:var(--g);font-size:20px}
+.iaex{margin:12px 0 0}.iaex .chip{cursor:pointer;font:inherit;font-size:13px;background:#fff}
+.iahero{max-width:860px;margin:10px 0 18px}
+.iathink{display:flex;gap:6px;align-items:center;color:var(--grey)}.iathink span{width:7px;height:7px;border-radius:50%;background:var(--g);animation:iab 1s infinite alternate}.iathink span:nth-child(2){animation-delay:.2s}.iathink span:nth-child(3){animation-delay:.4s;margin-right:6px}
+@keyframes iab{from{opacity:.2;transform:translateY(2px)}to{opacity:1;transform:translateY(-2px)}}
+.iah{font-family:var(--serif);font-size:22px;margin:0 0 10px}
+.iat td,.iat th{vertical-align:middle}.iat td small{display:block;font-size:11px}.iat .cell-co span{display:flex;flex-direction:column}
+.zgood{color:var(--g);font-weight:700}.zbad{color:var(--o);font-weight:700}
+/* jauge à zones */
+.zg{margin:10px 0 2px}.zgb{position:relative;display:flex;height:12px;border-radius:6px;overflow:visible}
+.zgb>span{display:block;height:100%}.zgb>span:first-child{border-radius:6px 0 0 6px}.zgb>span:nth-child(3){border-radius:0 6px 6px 0}
+.zgm{position:absolute;top:-4px;width:2px;height:20px;background:var(--ink);opacity:.55;transform:translateX(-1px)}
+.zgv{position:absolute;top:-3px;width:18px;height:18px;border-radius:50%;transform:translateX(-9px);box-shadow:0 0 0 3px #fff,0 1px 4px rgba(0,0,0,.25)}
+.zgl{display:flex;justify-content:space-between;font-size:12px;color:var(--light);margin-top:6px;gap:8px}.zgl span:nth-child(2){text-align:center}.zgl span:last-child{text-align:right}
+.perx{border-top:1px solid var(--line2);padding:16px 22px;background:#FCFBF8;font-size:14.5px;line-height:1.6}
+/* accueil */
+.hero3{padding:34px 0 18px;max-width:880px}.hero3 h1{font-family:var(--serif);font-size:clamp(32px,5vw,54px);line-height:1.05;margin:8px 0 22px;letter-spacing:-.02em}
+.hero3 h1 em{font-style:normal;background:linear-gradient(transparent 62%,#D6F26B 62%)}.herosub{color:var(--light);font-size:13.5px;margin:12px 0 0}
+.band{margin:34px 0 0}.bandh{display:flex;align-items:flex-end;gap:14px;margin:0 0 14px;padding-top:22px;border-top:1px solid var(--ink)}
+.bandh h2{font-family:var(--serif);font-size:26px;margin:2px 0 0;line-height:1.1}.bandh .kick{margin:0}.bandh .more{margin-left:auto;white-space:nowrap}
+.bandn{font-family:var(--mono,monospace);font-size:13px;color:#fff;background:var(--ink);border-radius:99px;width:30px;height:30px;display:grid;place-items:center;flex:none}
+.nb4{grid-template-columns:repeat(4,minmax(0,1fr))}
+.espteaser{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap}.espteaser .btn{display:inline-flex;align-items:center;height:42px;text-decoration:none}
+.espben{margin:8px 0 0;padding-left:18px;color:var(--grey);font-size:14.5px;line-height:1.6}.espben.big{font-size:15.5px;padding-left:20px}.espben.big li{margin-bottom:8px}
+.premband{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:16px;padding:22px 26px}
+.premband ul{margin:0;padding-left:18px;line-height:1.7;font-size:14.5px}.premband .btn{background:#D6F26B;color:var(--ink);border-color:#D6F26B;height:44px;display:inline-flex;align-items:center;text-decoration:none}
+a.hbr{color:inherit;text-decoration:none;border-radius:6px}a.hbr:hover{background:var(--soft)}a.hbr:hover .hbl{text-decoration:underline}
+.hbb.ctr{position:relative}.hbb.ctr span{position:absolute;top:0;bottom:0}
+/* mon espace */
+.esplog{display:grid;grid-template-columns:1.1fr 1fr;gap:28px;align-items:start;margin-top:10px}
+.espform{display:flex;flex-direction:column;gap:12px}.espform label{display:flex;flex-direction:column;gap:5px;font-size:14px;font-weight:600}
+.espform input[type=email],.espform input[type=password],.espform input[name=code]{height:42px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;font-weight:400;background:#fff}
+.espform .btn{height:42px}.chk{display:flex!important;flex-direction:row!important;gap:8px;align-items:flex-start;font-weight:400!important;font-size:13.5px!important}
+.esphead{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:10px 0 12px}
+.esptabs{display:flex;gap:4px;border-bottom:1px solid var(--line);margin:0 0 16px;overflow-x:auto}.esptabs a{padding:10px 14px;color:var(--grey);border-bottom:2px solid transparent;white-space:nowrap;text-decoration:none}.esptabs a.on{color:var(--ink);border-bottom-color:var(--ink);font-weight:600}
+.espn2{background:var(--o);color:#fff;font-size:11px;font-weight:700;border-radius:99px;padding:1px 6px}
+.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line);display:inline-flex;align-items:center;text-decoration:none;height:40px}.btn.danger{background:#B23A1E;border-color:#B23A1E}
+.bigstat{display:flex;align-items:baseline;gap:12px;margin:0 0 12px}.bigstat span{font-family:var(--serif);font-size:40px;font-weight:800}.bigstat small{color:var(--grey)}
+.espann{border-bottom:1px dashed var(--line2);padding:8px 0}.espann p{margin:0 0 4px;font-size:14.5px}
+.espev{display:grid;grid-template-columns:110px 1fr;gap:10px;margin:0 0 8px;font-size:14px}
+.espweek{display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--line2);color:inherit;text-decoration:none}
+.notif{display:flex;gap:12px;padding:12px 22px;border-bottom:1px solid var(--line2);color:inherit;text-decoration:none}.notif.new{background:#F4FAF6}.notif small{display:block;margin-top:2px}.notif .ni{width:22px;text-align:center}
+.upsell2{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;background:#FBF9F4}.upsell2 .btn{display:inline-flex;align-items:center;height:40px;text-decoration:none}
+/* favoris */
+.favhead{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap;margin:10px 0 14px}
+.favday{display:flex;flex-direction:column;align-items:flex-end;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px 16px}.favday b{font-family:var(--serif);font-size:28px}.favday small{color:var(--light);font-size:12px}
+.favact{display:flex;gap:10px;flex-wrap:wrap;margin:0 0 14px}.favact .btn{height:40px;display:inline-flex;align-items:center;text-decoration:none}
+.frow{display:grid;grid-template-columns:minmax(200px,1.6fr) 120px 70px 120px 90px minmax(140px,1.2fr) 32px;gap:14px;align-items:center;padding:12px 22px;border-bottom:1px solid var(--line2)}
+.frow:last-child{border-bottom:0}.frow .cell-co span{display:flex;flex-direction:column}.frow small{display:block;font-size:11.5px}
+.fpx{display:flex;flex-direction:column;align-items:flex-end}.fpx span{font-size:13px}.f1y{text-align:right}.fnx span{font-size:13px;display:block;line-height:1.35}
+.range.sm{height:4px;margin:6px 0 0}.range.sm i{width:10px;height:10px;top:-3px}
+.favx{background:none;border:0;color:#E0A100;font-size:19px;cursor:pointer;padding:0}.favx:hover{color:var(--light)}
+@media (max-width:900px){.nb4{grid-template-columns:1fr 1fr}.esplog{grid-template-columns:1fr}
+  .frow{grid-template-columns:1fr auto auto;grid-template-areas:"co px x" "y nx nx";row-gap:6px;padding:12px 16px}.frow .cell-co{grid-area:co}.fpx{grid-area:px}.favx{grid-area:x}.f1y{grid-area:y;text-align:left;display:flex;gap:6px;align-items:baseline}.fnx{grid-area:nx;text-align:right}.f52,.fpr{display:none}}
+@media (max-width:760px){.nb4{grid-template-columns:1fr}.bandh{flex-wrap:wrap}.bandh .more{margin-left:44px}.iabox2{flex-wrap:wrap;padding:8px}.iabox2 input{flex-basis:calc(100% - 40px)}.iabox2 .btn{width:100%}.hero3{padding-top:18px}}
+/* légende des points de couleur (bug d'affichage) */
+.dleg span.f,.dleg span.m,.dleg span.v{background:none!important}.dleg .f i{background:var(--g)}.dleg .m i{background:var(--n)}.dleg .v i{background:var(--o)}.dleg{margin:0 0 16px!important}
+#secTabs{flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -863,29 +942,25 @@ mark.todo{background:#FFF1C9;padding:0 3px;border-radius:3px;color:var(--ink)}
       <a class="logo" href="/">bilan<i>.</i><span>La Bourse, comptes à l'appui</span></a>
       <div class="search d-only" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" placeholder="Entreprise, code, secteur" aria-label="Rechercher une entreprise" autocomplete="off">
+        <input type="search" placeholder="Une entreprise, un ETF, ou une question…" aria-label="Rechercher une entreprise ou poser une question" autocomplete="off">
         <div class="results"></div>
       </div>
       <nav class="main d-only" id="nav">
-        <a href="/commencer" data-nav="new" class="navnew">Commencer</a>
-        <a href="/favoris" data-nav="fav">Favoris<span class="favn"></span></a>
-        <a href="/entreprises" data-nav="ent">Entreprises</a>
-        <a href="/etf" data-nav="etf">ETF</a>
-        <a href="/marches" data-nav="mkt">Marchés</a>
-        <a href="/actualites" data-nav="news">Actualités</a>
-        <a href="/communaute" data-nav="com">Communauté</a>
-        <a href="/outils" data-nav="sim">Outils</a>
-        <a href="/portefeuille" data-nav="pf">Portefeuille</a>
-        <a href="/debuter" data-nav="lex">Apprendre</a>
+        <div class="dd" data-g="deb"><button type="button" aria-expanded="false">Débuter</button><div class="ddm"><a href="/commencer"><b>Par où commencer</b><span>Le guide du nouvel investisseur</span></a><a href="/debuter"><b>Premiers pas</b><span>Leçons de trois minutes, avec quiz</span></a><a href="/pea-cto"><b>PEA ou compte-titres</b><span>Choisir son compte et sa fiscalité</span></a><a href="/lexique"><b>Lexique</b><span>Chaque chiffre de la Bourse expliqué</span></a><a href="/outils/verifier"><b>Vérifier une offre</b><span>Contre les arnaques, listes de l'AMF</span></a></div></div>
+        <div class="dd" data-g="mkt"><button type="button" aria-expanded="false">Marchés</button><div class="ddm"><a href="/marches"><b>Les marchés du jour</b><span>Indices, plus fortes hausses et baisses</span></a><a href="/actualites"><b>Actualités</b><span>Annonces officielles lues et expliquées</span></a><a href="/agenda"><b>Agenda</b><span>Résultats et assemblées à venir</span></a><a href="/dividendes"><b>Dividendes</b><span>Le calendrier des versements</span></a></div></div>
+        <div class="dd" data-g="ent"><button type="button" aria-expanded="false">Entreprises et ETF</button><div class="ddm"><a href="/entreprises"><b>Les entreprises</b><span>Leurs comptes comparés à leur secteur</span></a><a href="/etf"><b>Les ETF</b><span>Fonds indiciels : contenu et frais</span></a><a href="/comparer"><b>Comparer</b><span>Plusieurs entreprises côte à côte</span></a><a href="/demander"><b>Recherche par l'IA</b><span>Décrivez ce que vous cherchez</span></a></div></div>
+        <div class="dd" data-g="out"><button type="button" aria-expanded="false">Outils</button><div class="ddm"><a href="/portefeuille"><b>Portefeuille</b><span>Ce que vous possédez vraiment</span></a><a href="/outils/si-javais"><b>Et si j'avais investi…</b><span>1 000 € placés il y a 1, 3 ou 5 ans</span></a><a href="/outils/recouvrement"><b>Deux ETF se recouvrent-ils ?</b><span>Les entreprises en commun</span></a><a href="/simulateurs/epargne"><b>Simulateurs</b><span>Épargne, frais, PEA ou compte-titres</span></a><a href="/communaute"><b>Communauté</b><span>Questions et idées des visiteurs</span></a></div></div>
+        <a href="/demander" data-nav="ia" class="navia">✦ Demander à l'IA</a>
+        <a href="/espace" data-nav="esp" class="navesp"><span class="esplbl">Se connecter</span><span class="espn"></span></a>
         <a href="/premium" data-nav="prem" class="navprem">Premium</a>
       </nav>
       <div class="mright m-only"><button class="mbtn" id="searchBtn" aria-expanded="false">Chercher</button><button class="mbtn" id="menuBtn" aria-expanded="false">Menu</button></div>
     </div>
-    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/commencer"><b>Nouvel investisseur : par où commencer</b></a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/marches">Marchés du jour</a><a href="/actualites">Actualités</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/outils">Outils</a><a href="/portefeuille">Portefeuille</a><a href="/debuter">Apprendre : premiers pas</a><a href="/lexique">Lexique</a><a href="/dividendes">Calendrier des dividendes</a><a href="/premium">Premium</a></div>
+    <div class="mpanel" id="mpanel"><a href="/demander"><b>✦ Demander à l'IA</b></a><a href="/espace"><b class="esplbl">Se connecter</b> <span class="espn"></span></a><a href="/favoris">Mes favoris <span class="favn"></span></a><p class="mg">Débuter</p><a href="/commencer">Par où commencer</a><a href="/debuter">Premiers pas</a><a href="/pea-cto">PEA ou compte-titres</a><a href="/lexique">Lexique</a><a href="/outils/verifier">Vérifier une offre</a><p class="mg">Marchés</p><a href="/marches">Les marchés du jour</a><a href="/actualites">Actualités</a><a href="/agenda">Agenda</a><a href="/dividendes">Dividendes</a><p class="mg">Entreprises et ETF</p><a href="/entreprises">Les entreprises</a><a href="/etf">Les ETF</a><a href="/comparer">Comparer</a><a href="/demander">Recherche par l'IA</a><p class="mg">Outils</p><a href="/portefeuille">Portefeuille</a><a href="/outils/si-javais">Et si j'avais investi…</a><a href="/outils/recouvrement">Deux ETF se recouvrent-ils ?</a><a href="/simulateurs/epargne">Simulateurs</a><a href="/communaute">Communauté</a><a href="/premium"><b>Premium</b></a></div>
     <div class="msearch" id="msearch">
       <div class="search" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-        <input type="search" placeholder="Entreprise, code, secteur" aria-label="Rechercher une entreprise" autocomplete="off">
+        <input type="search" placeholder="Une entreprise, un ETF, ou une question…" aria-label="Rechercher une entreprise ou poser une question" autocomplete="off">
         <div class="results"></div>
       </div>
     </div>
@@ -1247,7 +1322,7 @@ function lineChart(el, { labels, series, fmt, area }) {
 /* ---------- Pièces communes ---------- */
 const app = $("#app");
 function setTitle(t) { document.title = t ? `${t} · ${SITE}` : `${SITE} · La Bourse, comptes à l'appui`; }
-function setNav(k) { $$("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === k)); }
+function setNav(k) { $$("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === k)); $$("#nav .dd").forEach(d => { d.classList.remove("open"); d.classList.toggle("on", d.dataset.g === (NAVG[k] || "-")); }); }
 function agendaHTML(list, showCo = true) {
   if (!list.length) return `<div class="empty">Aucune date renseignée pour l'instant.</div>`;
   return `<div class="ag">${list.map(e => { const [y, m, d] = e.date.split("-"); const c = RBY[e.id]; return `<div class="it"><div class="d"><b>${+d}</b>${MOIS[+m - 1]} ${y.slice(2)}</div><div>
@@ -1377,7 +1452,7 @@ const PAL = ["#111214", "#0E6B4A", "#D94F2B", "#8FB51E", "#C2410C", "#0E7490", "
 // Barres horizontales : une ligne par élément (classements, comparaisons, répartitions)
 function hbars(rows, fmt, { pctOfMax = true } = {}) {
   const max = Math.max(...rows.map(r => Math.abs(r.v)).filter(okn), 1e-9);
-  return `<div class="hb">${rows.map(r => `<div class="hbr${r.hl ? " hl" : ""}">${r.href ? `<a class="hbl" href="${r.href}">${r.lg || ""}${esc(r.label)}</a>` : `<span class="hbl">${r.lg || ""}${esc(r.label)}</span>`}<span class="hbb"><span style="width:${Math.max(1.5, Math.abs(r.v) / max * 100)}%;${r.c ? `background:${r.c}` : r.v < 0 ? "background:var(--o)" : ""}"></span></span><span class="hbv num">${esc(fmt(r.v))}</span></div>`).join("")}</div>`;
+  return `<div class="hb">${rows.map(r => `<${r.href ? `a href="${r.href}"` : "div"} class="hbr${r.hl ? " hl" : ""}"><span class="hbl">${r.lg || ""}${esc(r.label)}</span><span class="hbb"><span style="width:${Math.max(1.5, Math.abs(r.v) / max * 100)}%;${r.c ? `background:${r.c}` : r.v < 0 ? "background:var(--o)" : ""}"></span></span><span class="hbv num">${esc(fmt(r.v))}</span></${r.href ? "a" : "div"}>`).join("")}</div>`;
 }
 // Barre empilée à 100 % avec légende (répartition du chiffre d'affaires)
 function stack(parts, fmt) {
@@ -1758,7 +1833,7 @@ function rankHTML() {
   return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}?voir=${ct}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
 }
 function dayPick() { const l = R.companies.filter(c => !c.missing && c.fiche && c.ca > 2000); if (!l.length) return null; const d = Math.floor(Date.now() / 864e5); return l[(d * 7919) % l.length]; }
-async function pageHome() {
+async function pageHomeV1() {
   setTitle(""); setNav("home");
   await Promise.all([PXP, loadAna()]);
   const n = R.companies.length, nOk = R.companies.filter(c => !c.missing).length, day = dayPick();
@@ -1863,7 +1938,7 @@ document.addEventListener("click", e => {
 });
 
 /* ---------- Fiche entreprise ---------- */
-const CTABS = [["", "Vue d'ensemble"], ["comprendre", "Critère par critère"], ["comptes", "Tous les chiffres"], ["actualite", "Actualités"], ["communaute", "Discussion"]];
+const CTABS = [["", "Vue d'ensemble"], ["comptes", "Les chiffres en détail"], ["actualite", "Actualités et discussion"]];
 function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
   return `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a></div>
     <div class="panel" style="margin-bottom:16px">
@@ -1880,7 +1955,7 @@ async function pageCompany(id, tab) {
   const s = RBY[id];
   if (!s) return pageNotFound();
   setNav("ent");
-  if (tab === "agenda") tab = "actualite";
+  if (tab === "agenda" || tab === "communaute") tab = "actualite";
   tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
   setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
   app.innerHTML = companyHeader(s, tab) + `<div id="ctab"><div class="empty">Chargement…</div></div>`;
@@ -1890,7 +1965,7 @@ async function pageCompany(id, tab) {
   [c] = await Promise.all([load, PXP]);
   if (location.pathname.split("/")[2] !== id) return; // l'utilisateur a changé de page entre-temps
   const ph = $("#pxh"); if (ph) ph.innerHTML = priceHead(s);
-  ({ "": tabBref, comptes: tabComptes, actualite: tabActu, communaute: tabCommu })[tab](s, c, $("#ctab"));
+  ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
   if (!tab && !s.missing) premStatus().then(() => { if (location.pathname.split("/")[2] === id) assistantPanel(s, c, $("#ctab")); });
 }
 const lastIdx = c => c.years.length - 1;
@@ -1958,7 +2033,7 @@ function tabBref(s, c, el) {
   el.innerHTML = `
     ${c ? essentielHTML(s, c) : `<section class="panel"><div class="pb"><p class="lead" style="margin:0">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p></div></section>`}
     <section class="panel bref-box" style="background:none;border:0;box-shadow:none;margin:-8px 0 14px"><div class="pb" style="padding:0">
-      <nav class="jump">${[f && ["retenir", "Points forts et vigilance"], f && ["concurrents", "Concurrents"], f && ["prix", "Prix de l'action"], ["metier", "Ce qu'elle fait"], f && ["comptes", "Ses comptes"], f && ["dividende", "Dividende"], f && ["faq", "Questions fréquentes"], ["agenda", "Agenda"], ["actus", "Actualités"], ["avis", "Avis des visiteurs"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
+      <nav class="jump">${[f && ["retenir", "Points forts et vigilance"], f && ["concurrents", "Concurrents"], f && ["prix", "Prix de l'action"], f && ["comptes", "Ses comptes"], f && ["dividende", "Dividende"]].filter(Boolean).map(([k, l]) => `<a href="#${k}">${l}</a>`).join("")}</nav>
     </div></section>
     <div class="cols"><div>
         ${c ? retenirHTML(s, c) + concurrentsHTML(s) + prixHTML(s, c) : ""}
@@ -2265,7 +2340,7 @@ function pageNotFound() { setTitle("Page introuvable"); setNav(""); app.innerHTM
 /* ---------- Favoris : entreprises et ETF suivis, gardés sur l'appareil (sans compte) ---------- */
 const FKEY = "bilan.favoris"; let FAVMEM = [];
 function favs() { try { const x = JSON.parse(localStorage.getItem(FKEY) || "null"); if (Array.isArray(x)) return x; } catch (e) { } return FAVMEM; }
-function setFavs(a) { FAVMEM = a; try { localStorage.setItem(FKEY, JSON.stringify(a)); } catch (e) { } favCount(); }
+function setFavs(a) { FAVMEM = a; try { localStorage.setItem(FKEY, JSON.stringify(a)); } catch (e) { } favCount(); if (typeof pushDonnees === "function") pushDonnees(); }
 const isFav = k => favs().includes(k);
 const favLbl = k => isFav(k) ? "★ Dans vos favoris" : "☆ Ajouter aux favoris";
 const favBtn = k => `<button type="button" class="favbtn${isFav(k) ? " on" : ""}" data-fav="${k}" aria-pressed="${isFav(k)}">${favLbl(k)}</button>`;
@@ -2644,9 +2719,10 @@ function prixHTML(s, c) {
     <div class="tiles">
       <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
       <div class="tile"><span class="kick">Valeur en Bourse</span><span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
-      <div class="tile"><span class="kick">PER</span><span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `années de bénéfice pour « rembourser » le prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : "non calculable (perte ou donnée manquante)"}</small></div>
+      <div class="tile"><span class="kick">PER</span><span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : "non calculable (perte ou donnée manquante)"}</small></div>
       <div class="tile"><span class="kick">Rendement</span><span class="v">${v.yld != null ? pct(v.yld, 1, false) : "–"}</span><small>${v.yld != null ? "dividende annuel ÷ valeur en Bourse" : "pas de dividende"}</small></div>
     </div>
+    ${perExplique(s)}
     <div class="pb">
       ${pos != null ? `<p class="kick" style="margin-top:4px">Sur un an : du plus bas au plus haut</p><div class="range"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>${pxFmt(p.l52, p.cur)}</span><span>${pos > 0.85 ? "proche de son plus haut de l'année" : pos < 0.15 ? "proche de son plus bas de l'année" : `à ${F0.format(pos * 100)} % entre le plus bas et le plus haut`}</span><span>${pxFmt(p.h52, p.cur)}</span></div>` : ""}
       ${prow.length ? `<p class="kick" style="margin-top:18px">Évolution du cours, comparée au ${idxName}</p>
@@ -2871,7 +2947,7 @@ function commDiscussions(el, qs) {
 /* ---------- Portefeuille : la radiographie de ce que vous possédez vraiment ---------- */
 const PF2 = "bilan.portefeuille";
 function pf2Load() { try { const x = JSON.parse(localStorage.getItem(PF2) || "null"); if (x && Array.isArray(x.l)) return x; } catch (e) { } return { l: [] }; }
-function pf2Save(p) { try { localStorage.setItem(PF2, JSON.stringify(p)); } catch (e) { } }
+function pf2Save(p) { try { localStorage.setItem(PF2, JSON.stringify(p)); } catch (e) { } if (typeof pushDonnees === "function") pushDonnees(); }
 const ETFCOMP = {};
 async function etfComp(e) { if (!e || !e.proxy) return null; if (ETFCOMP[e.proxy] !== undefined) return ETFCOMP[e.proxy]; try { ETFCOMP[e.proxy] = await (await fetch(`/data/etf/${e.proxy}.json`)).json(); } catch (x) { ETFCOMP[e.proxy] = null; } return ETFCOMP[e.proxy]; }
 const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Inc|Corp|Corporation|Ltd|Plc|Sa|Se|Nv|Ag|Co)\b\.?/gi, m => m.toUpperCase() === "SA" || m.toUpperCase() === "SE" ? m.toUpperCase() : m);
@@ -3083,7 +3159,7 @@ async function veilleBilan(cos) {
     el.innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>` : iaErr(j, "Bilan indisponible.");
   } catch (e) { el.innerHTML = `<p class="muted">Bilan indisponible pour le moment.</p>`; }
 }
-async function pageFavoris() {
+async function pageFavorisV1() {
   setTitle("Mes favoris"); setNav("fav");
   await PXP;
   const all = favs(), cos = all.filter(k => k.startsWith("c:")).map(k => RBY[k.slice(2)]).filter(Boolean), etfs = all.filter(k => k.startsWith("e:")).map(k => ETFBY[k.slice(2)]).filter(Boolean);
@@ -3337,26 +3413,28 @@ async function pagePremium(sub) {
   if (sub === "merci") return premiumMerci();
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
-  PREM = null; const st = await premStatus(), L = OFFRES.limites || { resume: [5, 80], assistant: [3, 40], veille: [1, 10], portefeuille: [1, 10] };
+  PREM = null; const st = await premStatus(), L = OFFRES.limites || { demande: [10, 200], assistant: [5, 100], resume: [3, 100], veille: [1, 20], portefeuille: [1, 20] };
   const rows = [
-    ["Fiches entreprises et ETF, comptes expliqués, médianes, concurrentes", "Oui", "Oui"],
-    ["Cours, marchés du jour, actualités analysées, agenda, dividendes", "Oui", "Oui"],
-    ["Parcours Premiers pas, lexique, simulateurs, vérificateur d'arnaques", "Oui", "Oui"],
-    ["Questions à l'assistant IA sur une fiche", `${L.assistant[0]} par jour`, `${L.assistant[1]} par jour`],
+    ["Fiches, comptes expliqués, médianes, concurrentes, actualités, outils", "Oui", "Oui"],
+    ["Mon espace : favoris et portefeuille sur tous vos appareils", "Oui", "Oui"],
+    ["Bilan de la semaine commenté par l'IA", "Oui", "Oui"],
+    ["Historique des bilans", "2 semaines", "12 semaines"],
+    ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "Toutes"],
+    ["Questions à l'IA « Demander à bilan. »", "10 par jour", "200 par jour"],
+    ["Résultats d'une recherche par l'IA", "8", "30"],
+    ["Questions à l'assistant de chaque fiche", `${L.assistant[0]} par jour`, `${L.assistant[1]} par jour`],
     ["Résumés détaillés des documents officiels", `${L.resume[0]} par jour`, `${L.resume[1]} par jour`],
-    ["Bilan rédigé de vos favoris", `${L.veille[0]} par jour`, `${L.veille[1]} par jour`],
+    ["Bilan rédigé de vos favoris, à la demande", `${L.veille[0]} par jour`, `${L.veille[1]} par jour`],
     ["Commentaire IA de votre portefeuille", `${L.portefeuille[0]} par jour`, `${L.portefeuille[1]} par jour`],
     ["Lignes suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
     ["Entreprises comparées côte à côte", `${FREE.cmp}`, "5"],
-    ["Bilan de votre liste par e-mail, chaque samedi", "10 lignes", "40 lignes"],
-    ["Alertes par e-mail : annonce officielle, variation de plus de 5 %, résultats le lendemain", "–", "Oui"],
   ];
   const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<button class="btn" disabled>Ouverture prochaine</button>`}</div>`;
-  app.innerHTML = `<h1 class="pagetitle">bilan. Premium</h1><p class="pagesub">Le site reste gratuit pour l'essentiel : chaque fiche, chaque chiffre, chaque explication. Premium lève les limites de l'intelligence artificielle et ajoute les alertes par e-mail. Le prix finance les données et les serveurs, pas la publicité.</p>
+  app.innerHTML = `<h1 class="pagetitle">bilan. Premium</h1><p class="pagesub">Le site reste gratuit pour l'essentiel : chaque fiche, chaque chiffre, chaque explication, votre espace et votre bilan de la semaine. Premium vous donne l'intelligence artificielle sans compter, toutes vos alertes et l'historique de vos bilans. Le prix finance les données et les serveurs, pas la publicité.</p>
     ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
     <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>`}
-    <section class="panel"><div class="ph"><h2>Ce qui change avec Premium</h2></div><div class="pb" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table></div></section>
+    <section class="panel"><div class="ph"><h2>Ce qui change avec Premium</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table></div></section>
     <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p class="muted" id="codem" style="font-size:13px"></p></div></section>
       <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p class="muted" id="lostm" style="font-size:13px"></p></div></section></div>
     <section class="panel"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">
@@ -3429,6 +3507,332 @@ async function pageLegal(p) {
     <p class="note">${Object.entries(LEGAL_PAGES).filter(([, v]) => v !== k).map(([u, v]) => `<a class="lnk" href="${u}">${esc(LEGAL.pages[v].titre)}</a>`).join(" · ")}</p></div>`;
 }
 
+/* ====================================================================================================
+   v8 : comptes clients (Mon espace), copilote IA « Demander à bilan. », accueil en bandeaux, favoris refaits
+   ==================================================================================================== */
+
+/* ---------- Compte : session par cookie, synchronisation des favoris et du portefeuille ---------- */
+let MOI = null, MOIP = null;
+function moi(force) {
+  if (MOI && !force) return Promise.resolve(MOI);
+  if (MOIP && !force) return MOIP;
+  return MOIP = fetch("/api/espace/moi", { credentials: "same-origin" }).then(r => r.ok ? r.json() : { connecte: false }).catch(() => ({ connecte: false })).then(j => {
+    MOIP = null; MOI = j; document.documentElement.classList.toggle("is-in", !!j.connecte);
+    if (j.connecte) { if (j.premium) { PREM = { premium: true, plan: j.plan }; document.documentElement.classList.add("is-prem"); } syncFromServer(j); }
+    espaceBadge(); return j;
+  });
+}
+const connecte = () => !!(MOI && MOI.connecte);
+let SYNCING = false;
+function syncFromServer(j) {
+  const d = j.donnees || {}; SYNCING = true;
+  try {
+    const local = favs(), srv = Array.isArray(d.favoris) ? d.favoris : [];
+    const union = [...new Set([...srv, ...local])];
+    setFavs(union);
+    const P = pf2Load();
+    if (d.portefeuille && Array.isArray(d.portefeuille.l) && (d.portefeuille.l.length || !P.l.length)) pf2Save(d.portefeuille);
+    SYNCING = false;
+    if (union.length !== srv.length || (!d.portefeuille && P.l.length)) pushDonnees();
+  } finally { SYNCING = false; }
+}
+let pushT = null;
+function pushDonnees() {
+  if (!connecte() || SYNCING) return;
+  clearTimeout(pushT);
+  pushT = setTimeout(() => fetch("/api/espace/donnees", { method: "PUT", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ favoris: favs(), portefeuille: pf2Load() }) }).catch(() => { }), 800);
+}
+function espaceBadge() {
+  const n = MOI && MOI.connecte ? MOI.nonlus || 0 : 0;
+  $$(".espn").forEach(el => el.textContent = n ? String(n) : "");
+  $$(".esplbl").forEach(el => el.textContent = MOI && MOI.connecte ? "Mon espace" : "Se connecter");
+}
+moi();
+
+/* ---------- Menu en rubriques ---------- */
+const NAVG = { home: "", new: "deb", lex: "deb", mkt: "mkt", news: "mkt", ent: "ent", etf: "ent", sim: "out", com: "out", fav: "esp", pf: "esp", esp: "esp", ia: "ia", prem: "prem" };
+document.addEventListener("click", e => {
+  const b = e.target.closest(".dd > button");
+  $$(".dd.open").forEach(d => { if (!b || d !== b.parentElement) d.classList.remove("open"); });
+  if (b) { b.parentElement.classList.toggle("open"); b.setAttribute("aria-expanded", b.parentElement.classList.contains("open")); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") $$(".dd.open").forEach(d => d.classList.remove("open")); });
+
+/* ---------- Jauge à zones : où se place un chiffre par rapport à la médiane de son secteur ---------- */
+// lowGood : true quand un chiffre bas est favorable (dette, PER)
+function zoneGauge({ v, med, lowGood = false, fmt = x => F1.format(x), lo = 0.75, hi = 1.3, labels }) {
+  if (v == null || med == null || !isFinite(v) || !isFinite(med) || med <= 0) return "";
+  const min = Math.min(v, med * 0.4), max = Math.max(v, med * 1.9), sc = x => Math.max(0, Math.min(100, (x - min) / (max - min) * 100));
+  const a = sc(med * lo), b = sc(med * hi), good = lowGood ? "var(--g)" : "var(--o)", bad = lowGood ? "var(--o)" : "var(--g)";
+  const L = labels || (lowGood ? ["moins que le secteur", "dans la moyenne", "plus que le secteur"] : ["sous le secteur", "dans la moyenne", "au-dessus du secteur"]);
+  const zone = v < med * lo ? 0 : v > med * hi ? 2 : 1;
+  return `<div class="zg"><div class="zgb"><span style="width:${a}%;background:${good};opacity:.18"></span><span style="width:${b - a}%;background:var(--n);opacity:.25"></span><span style="width:${100 - b}%;background:${bad};opacity:.18"></span>
+    <i class="zgm" style="left:${sc(med)}%" title="Médiane du secteur"></i><i class="zgv" style="left:${sc(v)}%;background:${zone === 1 ? "var(--ink)" : zone === 0 ? good : bad}"></i></div>
+    <div class="zgl"><span>${L[0]}</span><span>médiane : <b>${fmt(med)}</b></span><span>${L[2]}</span></div></div>`;
+}
+
+/* ---------- Le PER expliqué avec les chiffres de l'entreprise ---------- */
+function perExplique(s) {
+  const v = valo(s); if (!v || !v.pe) return "";
+  const mp = MEDPE[s.sector], netE = s.net != null ? toEur(s.net * 1e6, s.currency) : null, rb = 100 / v.pe;
+  return `<div class="perx"><p class="kick" style="margin:0 0 6px">Le PER, concrètement</p>
+    <p style="margin:0 0 8px">Imaginez que vous achetiez <b>toute l'entreprise</b> au prix de la Bourse : ${capFmt(v.capE)}. Elle a gagné ${netE ? capFmt(netE) : "son bénéfice"} sur sa dernière année. Si ce bénéfice restait le même, il faudrait <b>${F0.format(v.pe)} ans</b> de bénéfices pour retrouver votre mise : c'est son PER.</p>
+    <p style="margin:0 0 8px">Autre façon de le lire : pour <b>100 €</b> d'actions achetées, l'entreprise gagne environ <b>${F1.format(rb)} €</b> par an. Elle en reverse une partie en dividende et garde le reste pour investir.</p>
+    ${mp ? zoneGauge({ v: v.pe, med: mp, lowGood: true, fmt: x => F0.format(x) + " ans", labels: ["moins cher que le secteur", "", "plus cher que le secteur"] }) + `<p class="note" style="margin:6px 0 0">${v.pe > mp * 1.3 ? "Plus cher que la plupart de ses concurrentes : le marché parie sur une croissance plus forte. Si elle ne vient pas, ce prix peut baisser." : v.pe < mp * 0.75 ? "Moins cher que la plupart de ses concurrentes : le marché attend moins de croissance, ou voit un risque. Moins cher ne veut pas dire « bonne affaire »." : "Dans la moyenne de son secteur : ni plus cher, ni moins cher que ses concurrentes."}</p>` : ""}</div>`;
+}
+
+/* ---------- Copilote : « Demander à bilan. » ---------- */
+const IA_EX = ["Entreprises françaises peu endettées qui versent un bon dividende", "Les entreprises tech européennes les plus rentables", "Compare LVMH, Hermès et Kering", "C'est quoi un ETF capitalisant ?", "ETF monde éligibles au PEA les moins chers", "Actions américaines moins chères que leur secteur"];
+const INDI = {
+  croissance: ["Croissance des ventes", c => { const x = ratios(c).g1; return x == null ? null : x * 100; }, x => pct(x / 100), false],
+  marge: ["Marge d'exploitation", c => isBank(c) ? null : (x => x == null ? null : x * 100)(ratios(c).marge), x => pct(x / 100, 1, false), false],
+  marge_nette: ["Marge nette", c => { const x = ratios(c).nm; return x == null ? null : x * 100; }, x => pct(x / 100, 1, false), false],
+  rentabilite: ["Rentabilité des capitaux propres", c => { const x = ratios(c).roe; return x == null ? null : x * 100; }, x => pct(x / 100, 1, false), false],
+  dette: ["Dette (années de résultat)", c => isBank(c) ? null : c.netDebt != null && c.netDebt < 0 ? -0.1 : ratios(c).lev, x => x < 0 ? "plus de trésorerie que de dette" : F1.format(x) + " an" + (x >= 2 ? "s" : ""), true],
+  per: ["PER", c => { const v = valo(c); return v && v.pe ? v.pe : null; }, x => F0.format(x), true],
+  rendement: ["Rendement du dividende", c => { const v = valo(c); return v && v.yld != null ? v.yld * 100 : null; }, x => pct(x / 100, 1, false), false],
+  distribution: ["Part du bénéfice versée", c => { const x = ratios(c).payout; return x == null ? null : x * 100; }, x => pct(x / 100, 0, false), null],
+  variation_1an: ["Cours sur 1 an", c => { const p = pxOf(c); return p && p.p1y ? (p.p / p.p1y - 1) * 100 : null; }, x => pct(x / 100), null],
+  capitalisation: ["Valeur en Bourse", c => { const v = valo(c); return v && v.capE ? v.capE / 1e9 : null; }, x => capFmt(x * 1e9), null],
+  taille: ["Ventes annuelles", c => c.ca > 0 ? caEur(c) / 1000 : null, x => F1.format(x) + " Md€", null],
+};
+const MEDI = {};
+function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing).map(INDI[k][1])); return MEDI[key]; }
+function runFiltre(a) {
+  let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region) && (!a.pea || peaOk(c)));
+  l = l.filter(c => a.criteres.every(k => { const f = INDI[k.indicateur]; if (!f) return true; const v = f[1](c); if (v == null) return false;
+    if (k.condition === "sup") return k.valeur == null || v > k.valeur; if (k.condition === "inf") return k.valeur == null || v < k.valeur;
+    const m = medInd(c.sector, k.indicateur); if (m == null) return false; return k.condition === "sup_mediane" ? v > m : v < m; }));
+  const t = a.tri || (a.criteres[0] ? { indicateur: a.criteres[0].indicateur, ordre: INDI[a.criteres[0].indicateur][3] ? "asc" : "desc" } : { indicateur: "capitalisation", ordre: "desc" });
+  const f = INDI[t.indicateur] ? INDI[t.indicateur][1] : INDI.capitalisation[1];
+  return { l: l.map(c => ({ c, v: f(c) })).sort((x, y) => (y.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1) - (x.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1)).map(x => x.c), tri: t };
+}
+function resoudre(nom) {
+  const q = norm(nom); if (!q) return null;
+  return R.companies.find(c => norm(c.name) === q) || R.companies.find(c => norm(c.name).startsWith(q)) || R.companies.find(c => norm(c.name).includes(q)) || R.companies.find(c => norm(c.ticker) === q)
+    || (ETF.list.find(e => norm(e.name).includes(q)) && { etf: ETF.list.find(e => norm(e.name).includes(q)) });
+}
+function cellInd(c, k) {
+  const f = INDI[k], v = f[1](c); if (v == null) return `<td class="num light">–</td>`;
+  const m = medInd(c.sector, k), good = f[3] == null || m == null ? null : (f[3] ? v < m * 0.85 : v > m * 1.15), bad = f[3] == null || m == null ? null : (f[3] ? v > m * 1.15 : v < m * 0.85);
+  return `<td class="num"><span class="${good ? "zgood" : bad ? "zbad" : ""}">${f[2](v)}</span>${m != null ? `<small class="light">secteur ${f[2](m)}</small>` : ""}</td>`;
+}
+function filtreHTML(a) {
+  const { l, tri } = runFiltre(a), lim = isPrem() ? 30 : 8, cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
+  const desc = [a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
+  if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
+  return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
+    <p class="note" style="margin:0 0 10px">Vert : nettement mieux que la médiane de son secteur. Orange : nettement moins bien. Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</p>
+    <div class="scroll-x"><table class="t iat"><thead><tr><th class="l">Entreprise</th>${cols.map(k => `<th>${esc(INDI[k][0])}</th>`).join("")}<th class="l">Comptes</th></tr></thead><tbody>
+    ${l.slice(0, lim).map(c => `<tr><td class="l"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 26)}<span><b>${esc(c.name)}</b><small class="light">${esc(regName(c))} · ${esc(secName(c))}</small></span></a></td>${cols.map(k => cellInd(c, k)).join("")}<td class="l">${(t => t ? pills(t) : "")(quick(c))}</td></tr>`).join("")}</tbody></table></div>
+    ${l.length > lim ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">${l.length - lim} autres entreprises. ${isPrem() ? "" : `<a class="lnk" href="/premium">Premium</a> affiche jusqu'à 30 résultats.`}</p>` : ""}
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">${l.length > 1 ? `<a class="more" href="/comparer?ids=${l.slice(0, 3).map(c => c.id).join(",")}">Comparer les trois premières →</a>` : ""}<button type="button" class="linkbtn" data-favall="${l.slice(0, lim).map(c => "c:" + c.id).join(",")}">☆ Tout ajouter à mes favoris</button></div>`;
+}
+function etfIAHTML(a) {
+  const l = ETF.list.filter(e => (!a.categorie || e.categorie === a.categorie) && (!a.pea || e.pea) && e.ter != null).sort((x, y) => x.ter - y.ter).slice(0, isPrem() ? 20 : 8);
+  if (!l.length) return `<p class="lead">Aucun ETF du site ne correspond.</p>`;
+  const m = median(l.map(e => e.ter));
+  return `<p class="lead" style="margin:0 0 10px"><b>${l.length} ETF</b>${a.categorie ? ` de la catégorie « ${esc(ECAT[a.categorie] || a.categorie)} »` : ""}${a.pea ? ", éligibles au PEA" : ""}, du moins cher au plus cher.</p>
+    <div class="hb">${l.map(e => `<a class="hbr" href="/etf/${e.id}"><span class="hbl">${logo({ name: e.issuer, domain: issuerDom(e) }, 22)}${esc(e.name)}</span><span class="hbb"><span style="width:${Math.max(4, e.ter / Math.max(...l.map(x => x.ter)) * 100)}%;background:${e.ter <= m * 0.8 ? "var(--g)" : e.ter >= m * 1.25 ? "var(--o)" : ""}"></span></span><span class="hbv num">${pct(e.ter / 100, 2, false)}${e.pea ? " · PEA" : ""}</span></a>`).join("")}</div>
+    <p class="note">Frais courants annuels. Vert : parmi les moins chers de la liste. Les frais ne sont pas le seul critère : regardez l'indice suivi sur chaque fiche.</p>`;
+}
+async function iaRun(q, out) {
+  out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA analyse votre question…</div>`;
+  await premStatus();
+  let a; try { const r = await iaFetch("/api/demande", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) }); a = await r.json(); } catch (e) { a = { error: "L'IA est indisponible pour le moment." }; }
+  if (a.error) { out.innerHTML = iaErr(a, a.error); return; }
+  if (a.action === "fiche") { const x = resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
+  if (a.action === "comparer") { const ids = a.noms.map(resoudre).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
+  const titre = a.titre || q;
+  out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
+    ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : resumeHTML(a.texte)}
+    <p class="iafoot">${a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p></div>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
+function iaBox(id, big = false) {
+  return `<form class="iabox2${big ? " big" : ""}" id="${id}" autocomplete="off"><span class="iaspark" aria-hidden="true">✦</span><input type="text" maxlength="300" placeholder="Demandez à bilan. : « entreprises françaises peu endettées avec un dividende »" aria-label="Posez votre question à l'IA"><button class="btn" type="submit">Demander</button></form>`;
+}
+function bindIaBox(form, out) { form.onsubmit = e => { e.preventDefault(); const q = $("input", form).value.trim(); if (q.length < 4) return; if (out) { history.replaceState({}, "", "/demander?q=" + encodeURIComponent(q)); iaRun(q, out); } else go("/demander?q=" + encodeURIComponent(q)); }; }
+function pageDemander() {
+  setTitle("Demander à l'IA"); setNav("ia");
+  const q = new URLSearchParams(location.search).get("q") || "";
+  app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à bilan.</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
+    ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div></div>
+    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. ${isPrem() ? "Premium : 200 questions par jour." : `10 questions par jour en version gratuite, 200 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div></section>`;
+  const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
+  app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (!b) return; $("input", f).value = b.dataset.iaq; f.requestSubmit(); });
+  if (q) { $("input", f).value = q; iaRun(q, out); }
+}
+
+/* ---------- Accueil en bandeaux ---------- */
+const band = (n, kick, title, link, body) => `<section class="band"><div class="bandh"><span class="bandn">${n}</span><div><p class="kick">${kick}</p><h2>${title}</h2></div>${link ? `<a class="more" href="${link[0]}">${link[1]} →</a>` : ""}</div>${body}</section>`;
+async function pageHome() {
+  setTitle(""); setNav("home");
+  await Promise.all([PXP, loadAna()]);
+  const day = dayPick(), secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length, m: MED[k] })).filter(x => x.n).sort((a, b) => b.n - a.n);
+  app.innerHTML = `
+    <section class="hero3"><p class="kick">${F0.format(R.companies.length)} entreprises · ${ETF.list.length} ETF · comptes officiels</p>
+      <h1>La Bourse, comptes à l'appui.<br><em>Posez votre question.</em></h1>
+      ${iaBox("hia", true)}
+      <div class="chips iaex">${IA_EX.slice(0, 4).map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <p class="herosub">Ou cherchez directement une entreprise ou un ETF dans la barre en haut de la page.</p></section>
+    ${band(1, "Aujourd'hui", "Les marchés du jour", ["/marches", "Tous les marchés"], `<div class="homegrid"><section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section><section class="panel"><div class="ph"><h2>Plus fortes hausses et baisses</h2></div><div class="pb">${moversHTML("all")}</div></section></div>`)}
+    ${band(2, "Mon espace", "Votre bilan de la semaine", ["/espace", "Mon espace"], `<div id="homeesp"></div>`)}
+    ${band(3, "Débuter", "Vous ne savez pas par où commencer ?", ["/commencer", "Le guide du nouvel investisseur"], `<div class="nb3 nb4">
+      <a href="/commencer"><b>1. Trouver son profil</b><span>Sept étapes dans l'ordre et cinq questions pour savoir quel type d'investisseur vous êtes.</span></a>
+      <a href="/debuter"><b>2. Comprendre les bases</b><span>Action, ETF, indice, risque : des leçons de trois minutes, avec un quiz.</span></a>
+      <a href="/entreprise/lvmh"><b>3. Lire une vraie fiche</b><span>Exemple avec LVMH : ses chiffres comparés à la médiane de son secteur.</span></a>
+      <a href="/pea-cto"><b>4. Choisir son compte</b><span>PEA, compte-titres ou assurance-vie : ce qui reste après impôts.</span></a></div>`)}
+    ${band(4, "Explorer", "Les entreprises et les ETF", ["/entreprises", "Toutes les entreprises"], `
+      <section class="panel"><div class="ph"><h2>Classements des entreprises</h2><div class="chips" id="rreg">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === rankState.region ? "on" : ""}">${l}</button>`).join("")}</div></div>
+        <div class="filters" id="rk">${RANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === rankState.k ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="rkb">${rankHTML()}</div></section>
+      <div class="homegrid"><section class="panel"><div class="ph"><h2>Les ETF en classement</h2><a href="/etf">Tous les ETF</a></div>
+        <div class="filters" id="erk">${ERANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === erankK ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="erkb">${erankHTML()}</div></section>
+        ${day ? `<section class="panel dayc"><div class="ph"><h2>L'entreprise du jour</h2></div><div class="pb"><a class="dayh" href="/entreprise/${day.id}">${logo(day, 48)}<div><div class="nm">${esc(day.name)}</div><div class="light">${esc(regName(day))} · ${esc(secName(day))}</div></div></a><p>${esc(day.fiche.fait)}</p>${profilMini(day)}${feu(quick(day))}<a class="more" href="/entreprise/${day.id}">Lire la fiche →</a></div></section>` : ""}</div>
+      <div class="secgrid">${secs.map(x => `<a class="sectile" href="/entreprises?secteur=${x.k}"><b>${esc(x.name)}</b><span>${x.n} entreprises</span>${x.m && x.m.marge != null ? `<span class="light">Marge médiane ${pct(x.m.marge, 1, false)}</span>` : ""}</a>`).join("")}</div>`)}
+    ${band(5, "Actualité", "Ce qui se passe dans les entreprises", ["/actualites", "Toute l'actualité"], `<div class="trio">
+      <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Agenda</a></div>${agendaHTML(upcoming().slice(0, 5))}</section>
+      <section class="panel"><div class="ph"><h2>Annonces en France</h2></div><div class="pb" id="amf"></div></section>
+      <section class="panel"><div class="ph"><h2>La communauté</h2><a href="/communaute">Participer</a></div><div class="pb" id="crec"></div></section></div>`)}
+    ${band(6, "Premium", "Toute la puissance de l'IA, sans compter", ["/premium", "Voir l'offre"], `<div class="premband"><ul>
+      <li><b>200 questions par jour</b> à l'IA, 100 à l'assistant de chaque fiche</li><li><b>Alertes chaque soir</b> dans votre espace : annonces, mouvements de plus de 5 %, résultats du lendemain</li>
+      <li><b>12 semaines d'historique</b> de vos bilans, portefeuille sans limite, comparaisons à 5</li></ul><a class="btn" href="/premium">Découvrir Premium</a></div>`)}`;
+  $("#rk").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.k = b.dataset.k; $$("#rk button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
+  $("#erk").onclick = e => { const b = e.target.closest("button"); if (!b) return; erankK = b.dataset.k; $$("#erk button").forEach(x => x.classList.toggle("on", x === b)); $("#erkb").innerHTML = erankHTML(); };
+  $("#rreg").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.region = b.dataset.r; $$("#rreg button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
+  bindIaBox($("#hia"));
+  app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (b) go("/demander?q=" + encodeURIComponent(b.dataset.iaq)); });
+  amfBlock($("#amf"), "&suivies=1", 5);
+  fetch("/api/communaute/recent").then(r => r.json()).then(j => { $("#crec").innerHTML = (j.items || []).length ? j.items.slice(0, 3).map(m => msgHTML(m, true)).join("") : `<p class="muted" style="margin:0">Pas encore de message. <a class="lnk" href="/communaute">Lancer la discussion</a>.</p>`; }).catch(() => { $("#crec").innerHTML = `<p class="muted" style="margin:0">Bientôt disponible.</p>`; });
+  moi().then(m => { const el = $("#homeesp"); if (!el) return;
+    el.innerHTML = m.connecte ? `<section class="panel"><div class="pb espteaser"><div><b>Votre bilan de la semaine est prêt.</b><div class="muted">Les mouvements de vos ${favs().length} favoris, les annonces et les dates à venir, commentés par l'IA.${m.nonlus ? ` ${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""} non lue${m.nonlus > 1 ? "s" : ""}.` : ""}</div></div><a class="btn" href="/espace">Ouvrir mon bilan</a></div></section>`
+      : `<section class="panel"><div class="pb espteaser"><div><b>Créez votre espace, c'est gratuit.</b><ul class="espben"><li>Chaque semaine, le bilan de vos entreprises rédigé par l'IA</li><li>Vos favoris et votre portefeuille sur tous vos appareils</li><li>Les alertes quand une de vos entreprises publie ou bouge fortement</li></ul></div><a class="btn" href="/espace">Créer mon espace</a></div></section>`; });
+}
+
+/* ---------- Mon espace : connexion, bilan de la semaine, alertes, réglages ---------- */
+const post2 = (u, b, m = "POST") => fetch(u, { method: m, credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(b || {}) }).then(async r => ({ status: r.status, ...(await r.json().catch(() => ({}))) }));
+async function pageEspace(onglet) {
+  setTitle("Mon espace"); setNav("esp");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  const m = await moi(true);
+  if (!m.connecte) return espaceConnexion();
+  onglet = onglet || "bilan";
+  const tabs = [["bilan", "Bilan de la semaine"], ["alertes", `Alertes${m.nonlus ? ` <span class="espn2">${m.nonlus}</span>` : ""}`], ["favoris", "Mes favoris"], ["portefeuille", "Mon portefeuille"], ["reglages", "Réglages"]];
+  app.innerHTML = `<div class="esphead"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ""}</p><h1 class="pagetitle" style="margin:2px 0 0">Bonjour</h1><p class="muted" style="margin:2px 0 0">${esc(m.email)}</p></div>${m.premium ? "" : `<a class="btn ghost" href="/premium">Passer à Premium</a>`}</div>
+    <nav class="esptabs scroll-x">${tabs.map(([k, l]) => `<a href="${k === "favoris" ? "/favoris" : k === "portefeuille" ? "/portefeuille" : "/espace/" + k}" class="${k === onglet ? "on" : ""}">${l}</a>`).join("")}</nav><div id="espb"></div>`;
+  const el = $("#espb");
+  if (onglet === "bilan") return espaceBilan(el, m);
+  if (onglet === "alertes") return espaceAlertes(el, m);
+  return espaceReglages(el, m);
+}
+function espaceConnexion() {
+  app.innerHTML = `<div class="esplog"><div class="esppitch"><p class="kick">Mon espace</p><h1 class="pagetitle">Votre Bourse, suivie pour vous.</h1>
+      <ul class="espben big"><li><b>Le bilan de la semaine</b> de vos entreprises et ETF, commenté par l'IA : ce qui a bougé, ce qui a été annoncé, ce qui arrive.</li><li><b>Des alertes</b> quand une de vos entreprises publie ses résultats ou bouge de plus de 5 %.</li><li><b>Vos favoris et votre portefeuille</b> sur votre téléphone et votre ordinateur.</li></ul>
+      <p class="note">Gratuit. Aucune donnée vendue. Vous pouvez supprimer votre compte à tout moment.</p></div>
+    <div><section class="panel"><div class="ph"><h2 id="lt">Créer mon espace</h2></div><div class="pb">
+      <form id="espf" class="espform"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>
+        <label class="chk" id="cgu"><input type="checkbox" name="cgu" required> J'accepte les <a class="lnk" href="/cgv" target="_blank">conditions</a> et la <a class="lnk" href="/confidentialite" target="_blank">politique de confidentialité</a>.</label>
+        <button class="btn" type="submit" id="espgo">Créer mon espace</button><p class="muted" id="espm" style="font-size:13.5px;margin:0"></p></form>
+      <p style="margin:14px 0 0;font-size:14px"><button type="button" class="linkbtn" id="swap">J'ai déjà un espace : me connecter</button> · <button type="button" class="linkbtn" id="lost">Mot de passe oublié</button></p></div></section></div></div>`;
+  let mode = "inscription";
+  const f = $("#espf"), setMode = md => { mode = md; $("#lt").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Retrouver mon accès";
+    $("#espgo").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Changer mon mot de passe"; $("#cgu").hidden = md !== "inscription"; $("input[name=cgu]", f).required = md === "inscription";
+    $("#swap").textContent = md === "inscription" ? "J'ai déjà un espace : me connecter" : "Créer un espace";
+    let c = $("input[name=code]", f); if (md === "secours" && !c) { $("label", f).insertAdjacentHTML("afterend", `<label>Code de secours <small class="light">(reçu à la création)</small><input name="code" required autocomplete="off"></label>`); } else if (md !== "secours" && c) c.parentElement.remove();
+    $("input[name=mdp]", f).autocomplete = md === "connexion" ? "current-password" : "new-password"; };
+  $("#swap").onclick = () => setMode(mode === "inscription" ? "connexion" : "inscription");
+  $("#lost").onclick = () => setMode("secours");
+  f.onsubmit = async e => { e.preventDefault(); const fd = new FormData(f), email = fd.get("email"), mdp = fd.get("mdp"); $("#espm").textContent = "Un instant…";
+    const r = mode === "inscription" ? await post2("/api/espace/inscription", { email, motdepasse: mdp, favoris: favs(), portefeuille: pf2Load() }) : mode === "connexion" ? await post2("/api/espace/connexion", { email, motdepasse: mdp }) : await post2("/api/espace/secours", { email, code: fd.get("code"), nouveau: mdp });
+    if (r.error) { $("#espm").textContent = r.error; return; }
+    if (r.code_secours) { app.innerHTML = `<section class="panel" style="max-width:640px;margin:20px auto"><div class="pb"><h1 class="pagetitle" style="margin-top:0">Votre espace est créé</h1><p>Gardez ce <b>code de secours</b> : il permet de changer de mot de passe si vous l'oubliez. Il ne sera plus affiché.</p><p class="code">${esc(r.code_secours)}</p><a class="btn" href="/espace">Voir mon espace</a></div></section>`; MOI = null; moi(true); return; }
+    MOI = null; await moi(true); pageEspace(); };
+}
+async function espaceBilan(el, m) {
+  el.innerHTML = `<div class="empty">Préparation de votre bilan…</div>`;
+  const sem = new URLSearchParams(location.search).get("semaine") || "";
+  const b = await fetch("/api/espace/bilan" + (sem ? "?semaine=" + encodeURIComponent(sem) : ""), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({ error: "Bilan indisponible." }));
+  if (b.error) { el.innerHTML = `<section class="panel"><div class="pb">${esc(b.error)}</div></section>`; return; }
+  const L = (b.lignes || []).filter(x => x.variation_semaine_pct != null).sort((x, y) => y.variation_semaine_pct - x.variation_semaine_pct), sansCours = (b.lignes || []).filter(x => x.variation_semaine_pct == null);
+  const mx = Math.max(1, ...L.map(x => Math.abs(x.variation_semaine_pct)));
+  const hist = (b.historique || []).slice(0, isPrem() ? 12 : 2);
+  if (b.vide || !(b.lignes || []).length) { el.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Votre bilan se construit à partir de vos favoris et de votre portefeuille.</p><p>Ajoutez des entreprises ou des ETF avec le bouton « ☆ Ajouter aux favoris » de leur fiche, ou <a class="lnk" href="/demander">demandez à l'IA</a> de vous en trouver.</p><a class="btn" href="/entreprises">Parcourir les entreprises</a></div></section>`; return; }
+  el.innerHTML = `<div class="cols"><div>
+    <section class="panel"><div class="ph"><h2>Semaine ${esc(String(b.semaine || "").replace(/^\d{4}-W/, ""))}</h2><span class="light" style="font-size:12.5px">${b.genere ? "préparé le " + new Date(b.genere).toLocaleDateString("fr-FR") : ""}</span></div>
+      <div class="pb"><div class="bigstat"><span class="${b.moyenne >= 0 ? "up" : "down"}">${b.moyenne != null ? pct(b.moyenne / 100) : "–"}</span><small>évolution moyenne de vos lignes sur la semaine</small></div>
+      ${b.texte ? `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des chiffres ci-dessous. Ce n'est pas un conseil.</p></div>` : `<p class="muted">Le commentaire de l'IA sera prêt à votre prochaine visite. Les chiffres, eux, sont à jour.</p>`}</div></section>
+    <section class="panel"><div class="ph"><h2>Ce qui a bougé</h2></div><div class="pb"><div class="hb">${L.map(x => `<a class="hbr" href="${x.k.startsWith("c:") ? "/entreprise/" : "/etf/"}${x.k.slice(2)}"><span class="hbl">${esc(x.nom)}</span><span class="hbb ctr"><span style="width:${Math.abs(x.variation_semaine_pct) / mx * 50}%;${x.variation_semaine_pct < 0 ? "right:50%;background:var(--o)" : "left:50%;background:var(--g)"}"></span></span><span class="hbv num ${x.variation_semaine_pct >= 0 ? "up" : "down"}">${pct(x.variation_semaine_pct / 100)}</span></a>`).join("")}</div>
+      ${sansCours.length ? `<p class="note">Sans cours de la semaine dernière : ${sansCours.map(x => esc(x.nom)).join(", ")}.</p>` : ""}</div></section>
+    ${(b.annonces || []).length ? `<section class="panel"><div class="ph"><h2>Ce qui a été annoncé</h2></div><div class="pb">${b.annonces.map(a => `<div class="espann"><p><b>${esc(a.nom || keyName("c:" + a.id) || "")}</b> <span class="light">· ${esc(a.date ? dLabel(a.date) : "")} · ${esc(a.type || "")}</span></p>${(a.chiffres || []).length ? `<p>${a.chiffres.map(c => `${esc(c[0])} : <b>${esc(c[1])}</b>`).join(" · ")}</p>` : ""}${(a.lecture || []).length ? `<p class="muted">${esc(a.lecture.join(" "))}</p>` : ""}</div>`).join("")}</div></section>` : ""}
+    </div><aside>
+      <section class="panel"><div class="ph"><h2>À venir</h2></div><div class="pb">${(b.a_venir || []).length ? b.a_venir.map(e => `<p class="espev"><b>${esc(e.date ? dLabel(e.date) : "")}</b><span>${esc(e.nom || keyName("c:" + e.id) || "")} : ${esc(e.label || e.quoi || "")}</span></p>`).join("") : `<p class="muted" style="margin:0">Aucune date annoncée dans les deux prochaines semaines.</p>`}</div></section>
+      <section class="panel"><div class="ph"><h2>Semaines précédentes</h2></div><div class="pb">${hist.length ? hist.map(h => `<a class="espweek" href="/espace/bilan?semaine=${esc(h.semaine)}"><span>Semaine ${esc(String(h.semaine).replace(/^\d{4}-W/, ""))}</span><b class="${h.moyenne >= 0 ? "up" : "down"}">${h.moyenne != null ? pct(h.moyenne / 100) : "–"}</b></a>`).join("") : `<p class="muted" style="margin:0">Votre premier bilan est celui-ci.</p>`}${!isPrem() && (b.historique || []).length > 2 ? `<p class="note"><a class="lnk" href="/premium">Premium</a> garde 12 semaines d'historique.</p>` : ""}</div></section>
+      <section class="panel"><div class="pb"><b>Votre liste</b><p class="muted" style="font-size:13.5px">${favs().length} favoris, ${pf2Load().l.length} lignes de portefeuille. Le bilan se met à jour chaque samedi.</p><a class="more" href="/favoris">Gérer mes favoris →</a></div></section>
+    </aside></div>`;
+}
+async function espaceAlertes(el, m) {
+  const j = await fetch("/api/espace/notifs", { credentials: "same-origin" }).then(r => r.json()).catch(() => ({ items: [] }));
+  const items = j.notifs || j.items || [];
+  fetch("/api/espace/notifs/lu", { method: "POST", credentials: "same-origin" }).then(() => { if (MOI) MOI.nonlus = 0; espaceBadge(); });
+  const ico = { annonce: "📄", mouvement: "↕", resultats: "📅", agenda: "📅", bilan: "✦" };
+  el.innerHTML = `<section class="panel"><div class="ph"><h2>Vos alertes</h2><span class="light" style="font-size:12.5px">mises à jour chaque soir de semaine</span></div>
+    ${items.length ? (m.premium ? items : items.slice(0, 3)).map(n => `<a class="notif${n.lu ? "" : " new"}" href="${esc(n.lien || "/espace")}"><span class="ni">${ico[n.type] || "•"}</span><span><b>${esc(n.texte)}</b><small class="light">${new Date(n.at).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</small></span></a>`).join("") : `<div class="pb muted">Aucune alerte pour l'instant. Vous serez prévenu ici quand une de vos entreprises publiera ses comptes ou bougera de plus de 5 % en une séance.</div>`}
+    ${!m.premium && items.length > 3 ? `<div class="pb upsell2"><b>${items.length - 3} autres alertes</b> vous attendent. <a class="btn" href="/premium">Les voir avec Premium</a></div>` : ""}</section>`;
+}
+function espaceReglages(el, m) {
+  el.innerHTML = `<div class="two"><section class="panel"><div class="ph"><h2>Mot de passe</h2></div><div class="pb"><form id="mdpf" class="espform"><label>Mot de passe actuel<input type="password" name="a" required autocomplete="current-password"></label><label>Nouveau mot de passe<input type="password" name="n" required minlength="10" autocomplete="new-password"></label><button class="btn">Changer</button><p class="muted" id="mdpm" style="font-size:13.5px;margin:0"></p></form></div></section>
+    <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail ? `<label class="chk"><input type="checkbox" id="teas"${m.teaser ? " checked" : ""}> Recevoir un court e-mail quand mon bilan de la semaine est prêt (sans son contenu).</label>` : `<p class="muted" style="margin-top:0">Votre bilan de la semaine vous attend ici chaque samedi matin.</p>`}
+      <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button>${m.premium ? `<a class="btn ghost" href="/premium">Mon abonnement</a>` : ""}</div></div></section></div>
+    <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte, vos favoris, votre portefeuille, vos bilans et vos alertes sont effacés définitivement. Un abonnement Premium se résilie à part, depuis la page Premium.</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
+  $("#mdpf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/motdepasse", { ancien: fd.get("a"), nouveau: fd.get("n") }); $("#mdpm").textContent = r.error || "Mot de passe changé."; };
+  if ($("#teas")) $("#teas").onchange = e => post2("/api/espace/preferences", { teaser: e.target.checked });
+  $("#logout").onclick = async () => { await post2("/api/espace/deconnexion"); MOI = { connecte: false }; document.documentElement.classList.remove("is-in"); espaceBadge(); go("/"); };
+  $("#delf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/supprimer", { motdepasse: fd.get("p") }); if (r.error) { $("#delm").textContent = r.error; return; } MOI = { connecte: false }; espaceBadge(); app.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Votre espace a été supprimé. Les favoris enregistrés sur cet appareil restent ici tant que vous ne videz pas votre navigateur.</p></div></section>`; };
+}
+
+/* ---------- Favoris, en liste lisible ---------- */
+let favTab = "actions";
+async function pageFavoris() {
+  setTitle("Mes favoris"); setNav("fav");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  await Promise.all([PXP, loadAna()]);
+  const keys = favs(), cos = keys.filter(k => k.startsWith("c:")).map(k => RBY[k.slice(2)]).filter(Boolean), etfs = keys.filter(k => k.startsWith("e:")).map(k => ETFBY[k.slice(2)]).filter(Boolean);
+  if (!cos.length && !etfs.length) { app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Vous ne suivez encore aucune entreprise.</p><p>Sur chaque fiche, le bouton « ☆ Ajouter aux favoris » l'ajoute ici. Vous pouvez aussi <a class="lnk" href="/demander">demander à l'IA</a> : « entreprises européennes rentables et peu endettées ».</p><a class="btn" href="/entreprises">Parcourir les entreprises</a></div></section>`; return; }
+  const withP = cos.map(c => ({ c, p: pxOf(c) })), chgs = withP.filter(x => x.p && x.p.chg != null).map(x => x.p.chg), avg = chgs.length ? chgs.reduce((a, b) => a + b, 0) / chgs.length : null;
+  const up = cos.flatMap(c => eventsOf(c.id).filter(e => e.date >= TODAY).map(e => ({ ...e, c }))).sort((a, b) => a.date.localeCompare(b.date));
+  const ups = withP.filter(x => x.p && x.p.chg > 0).length, downs = withP.filter(x => x.p && x.p.chg < 0).length;
+  if (favTab === "etf" && !etfs.length) favTab = "actions"; if (favTab === "actions" && !cos.length) favTab = "etf";
+  const row = c => { const p = pxOf(c), y = p && p.p1y ? p.p / p.p1y - 1 : null, pos = p && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null, nx = eventsOf(c.id).find(e => e.date >= TODAY), t = quick(c);
+    return `<div class="frow"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 34)}<span><b>${esc(c.name)}</b><small class="light">${esc(secName(c))}</small></span></a>
+      <div class="fpx">${p ? `<b class="num">${pxFmt(p.p, p.cur)}</b><span class="num ${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " %" : ""}</span>` : `<span class="light">–</span>`}</div>
+      <div class="f1y"><small class="light">1 an</small><b class="num ${y >= 0 ? "up" : "down"}">${y != null ? sgn(y, 0) : "–"}</b></div>
+      <div class="f52">${pos != null ? `<small class="light">${pos > 0.85 ? "près du plus haut" : pos < 0.15 ? "près du plus bas" : "sur un an"}</small><div class="range sm"><i style="left:${pos * 100}%"></i></div>` : ""}</div>
+      <div class="fpr">${t ? pills(t) : ""}</div>
+      <div class="fnx">${nx ? `<small class="light">${esc(dLabel(nx.date))}</small><span>${esc(nx.label)}</span>` : `<small class="light">pas de date annoncée</small>`}</div>
+      <button type="button" class="favx" data-fav="c:${c.id}" title="Retirer des favoris" aria-label="Retirer ${esc(c.name)} des favoris">★</button></div>`; };
+  const erow = e => { const p = pxEtf(e), y = p && p.p1y ? p.p / p.p1y - 1 : null;
+    return `<div class="frow"><a class="cell-co" href="/etf/${e.id}">${logo({ name: e.issuer, domain: issuerDom(e) }, 34)}<span><b>${esc(e.name)}</b><small class="light">${esc(ECAT[e.categorie] || "")}${e.pea ? " · PEA" : ""}</small></span></a>
+      <div class="fpx">${p ? `<b class="num">${pxFmt(p.p, p.cur)}</b><span class="num ${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " %" : ""}</span>` : `<span class="light">–</span>`}</div>
+      <div class="f1y"><small class="light">1 an</small><b class="num ${y >= 0 ? "up" : "down"}">${y != null ? sgn(y, 0) : "–"}</b></div>
+      <div class="f52"><small class="light">frais</small><b class="num">${e.ter != null ? pct(e.ter / 100, 2, false) : "–"}</b></div><div class="fpr"></div><div class="fnx"><small class="light">${esc(e.index || "")}</small></div>
+      <button type="button" class="favx" data-fav="e:${e.id}" title="Retirer des favoris" aria-label="Retirer ${esc(e.name)} des favoris">★</button></div>`; };
+  app.innerHTML = `<div class="favhead"><div><p class="kick">Mon espace</p><h1 class="pagetitle" style="margin:2px 0 4px">Mes favoris</h1>
+      <p class="muted" style="margin:0">${cos.length} entreprise${cos.length > 1 ? "s" : ""} et ${etfs.length} ETF suivis${connecte() ? ", enregistrés dans votre espace" : `, enregistrés sur cet appareil. <a class="lnk" href="/espace">Créez votre espace</a> pour les retrouver partout et recevoir votre bilan de la semaine`}.</p></div>
+      ${avg != null ? `<div class="favday"><small>Aujourd'hui, en moyenne</small><b class="${avg >= 0 ? "up" : "down"}">${(avg > 0 ? "+" : "") + F2.format(avg)} %</b><small>${ups} en hausse · ${downs} en baisse</small></div>` : ""}</div>
+    <div class="favact"><button type="button" class="btn" id="vgo">✦ Bilan de ma liste par l'IA</button><a class="btn ghost" href="/espace">Mon bilan de la semaine</a>${cos.length > 1 ? `<a class="btn ghost" href="/comparer?ids=${cos.slice(0, isPrem() ? 5 : 3).map(c => c.id).join(",")}">Les comparer</a>` : ""}</div>
+    <div id="vbil"></div>
+    <section class="panel"><div class="filters" id="ftab">${cos.length ? `<button data-t="actions" class="${favTab === "actions" ? "on" : ""}">Actions <span class="light">${cos.length}</span></button>` : ""}${etfs.length ? `<button data-t="etf" class="${favTab === "etf" ? "on" : ""}">ETF <span class="light">${etfs.length}</span></button>` : ""}</div>
+      <div class="flist">${favTab === "actions" ? cos.map(row).join("") : etfs.map(erow).join("")}</div>
+      ${favTab === "actions" ? `<div class="src">Points de couleur : ce que disent les comptes (vert : points forts, gris : dans la moyenne, orange : points de vigilance). Cours différés.</div>` : ""}</section>
+    <div class="two"><section class="panel"><div class="ph"><h2>Leurs prochaines dates</h2><a href="/dividendes">Dividendes</a></div>${up.length ? agendaHTML(up.slice(0, 8), true) : `<div class="pb muted">Aucune date annoncée.</div>`}</section>
+      <section class="panel"><div class="ph"><h2>Dans la presse</h2></div><div id="fpz">${cos.slice(0, 3).map((c, i) => `<div class="pb"><div class="cap">${esc(c.name)}</div><div id="fp${i}"></div></div>`).join("")}</div><div class="src">Articles repérés par GDELT, non vérifiés par le site.</div></section></div>`;
+  $("#ftab").onclick = e => { const b = e.target.closest("button"); if (!b) return; favTab = b.dataset.t; pageFavoris(); };
+  $("#vgo").onclick = () => veilleBilan(cos);
+  cos.slice(0, 3).forEach((c, i) => presseBlock($("#fp" + i), { id: c.id, max: 2 }));
+}
+
+document.addEventListener("click", e => { if (e.target.closest(".favx") && location.pathname === "/favoris") setTimeout(pageFavoris, 0); });
+
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -3461,6 +3865,8 @@ function route() {
   else if ((m = p.match(/^\/debuter(?:\/([a-z-]+))?(?:\/([a-z0-9-]+))?$/))) pageDebuter(m[1], m[2]);
   else if (LEGAL_PAGES[p]) pageLegal(p);
   else if (p === "/commencer") pageCommencer();
+  else if (p === "/demander") pageDemander();
+  else if ((m = p.match(/^\/espace(?:\/(bilan|alertes|reglages))?$/))) pageEspace(m[1]);
   else if ((m = p.match(/^\/premium(?:\/(merci))?$/))) pagePremium(m[1]);
   else pageNotFound();
 }
@@ -3492,13 +3898,15 @@ function bindSearch(root) {
     const etfs = ETF.list.filter(e => norm(e.name + " " + e.index + " " + e.ticker).includes(q) || e.isin.toLowerCase() === q).slice(0, 4);
     sel = -1;
     res.innerHTML = cos.length || etfs.length ? cos.map(c => `<a href="/entreprise/${c.id}"><span>${esc(c.name)}</span><span class="light">${esc(c.ticker)} · ${esc(regName(c))}</span></a>`).join("") + etfs.map(e => `<a href="/etf/${e.id}"><span>${esc(e.name)}</span><span class="light">ETF · ${esc(e.ticker)}</span></a>`).join("") : `<div class="none">Aucun résultat</div>`;
+    if (inp.value.trim().length >= 3) res.insertAdjacentHTML(cos.length || etfs.length ? "beforeend" : "afterbegin", `<a class="iasug" href="/demander?q=${encodeURIComponent(inp.value.trim())}"><span>✦ Demander à l'IA : « ${esc(inp.value.trim().slice(0, 60))} »</span><span class="light">recherche par critères, explications</span></a>`);
+    $(".none", res) && $(".none", res).remove();
     res.classList.add("open");
   };
   inp.addEventListener("input", show); inp.addEventListener("focus", show);
   inp.addEventListener("keydown", e => {
     const items = $$("a", res);
     if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, Math.min(items.length - 1, sel + (e.key === "ArrowDown" ? 1 : -1))); items.forEach((a, i) => a.classList.toggle("sel", i === sel)); }
-    else if (e.key === "Enter" && items.length) { e.preventDefault(); inp.value = ""; go(new URL(items[Math.max(0, sel)].href).pathname); inp.blur(); }
+    else if (e.key === "Enter" && items.length) { e.preventDefault(); const q = inp.value.trim(), ia = sel < 0 && (q.split(/\s+/).length >= 3 || /\?$/.test(q)); const a = ia ? $(".iasug", res) : items[Math.max(0, sel)]; inp.value = ""; const u = new URL(a.href); go(u.pathname + u.search); inp.blur(); }
     else if (e.key === "Escape") { res.classList.remove("open"); inp.blur(); }
   });
   res.addEventListener("click", () => { inp.value = ""; });
