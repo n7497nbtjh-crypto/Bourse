@@ -14,19 +14,21 @@
 // comme le demande filings.xbrl.org pour un usage régulier.
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import U, { SECTEURS } from "./univers.mjs";
-import { extract, merge, toSeries } from "./esef.mjs";
+import { extract, merge, toSeries, extractSegments, bestSegments } from "./esef.mjs";
 import { extractSec, cikMap, factsUrl, subsUrl, recentFilings, estimatedAgenda } from "./sec.mjs";
 
 const OUT = new URL("../cf/site/data/", import.meta.url);
-const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse");
+export const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse");
 const sleep = ms => process.env.NO_SLEEP ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
 
 export async function getJSON(fetchFn, url, accept = "application/json") {
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    const r = await fetchFn(url, { headers: { "user-agent": UA, accept } });
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    let r;
+    try { r = await fetchFn(url, { headers: { "user-agent": UA, accept } }); }
+    catch (e) { if (attempt < 4) { await sleep(2000 * attempt); continue; } throw e; }
     if (r.ok) return r.json();
     if (r.status === 404) return null;
-    if (attempt < 3) await sleep(2000 * attempt);
+    if (attempt < 4) await sleep((r.status === 429 ? 5000 : 2000) * attempt);
     else throw new Error(`${r.status} sur ${url}`);
   }
 }
@@ -91,7 +93,7 @@ export async function collectSec(fetchFn, c) {
   const s = toSeries(extractSec(doc));
   if (!s.years.length) throw new Error("aucun exercice annuel lisible");
   if (!nameMatches(c.legal || c.name, doc.entityName)) VERIF.push(`${c.name} : le code ${c.sec} renvoie à « ${doc.entityName} »`);
-  return {
+  return { v: VERSION,
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, region: c.region, domain: c.domain, desc: c.desc, cik, legalName: doc.entityName || c.name,
     sector: c.sector, ...s,
     sources: [{ periodEnd: s.years[s.years.length - 1] + "", report: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=10-K`, json: factsUrl(cik) }],
@@ -103,6 +105,8 @@ export async function collectSec(fetchFn, c) {
 const words = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !["the", "group", "groupe", "holding", "societe", "company", "spa", "plc"].includes(w));
 export function nameMatches(name, legal) { const a = new Set(words(name)); return !legal || words(legal).some(w => a.has(w)) || words(name).some(w => String(legal).toLowerCase().replace(/[^a-z0-9]/g, "").includes(w)); }
 export const VERIF = [];
+export const VERSION = 2; // à augmenter quand la lecture des comptes change : force une nouvelle lecture
+
 
 export async function collectOne(fetchFn, c) {
   if (c.sec) return collectSec(fetchFn, c);
@@ -111,15 +115,16 @@ export async function collectOne(fetchFn, c) {
   if (!nameMatches(c.legal || c.name, id.legalName)) VERIF.push(`${c.name} : l'ISIN ${c.isin} renvoie à « ${id.legalName} »`);
   const fl = await filingsFor(fetchFn, id.lei);
   if (!fl.length) throw new Error("aucun rapport ESEF pour " + id.lei);
-  const reports = [];
+  const reports = [], segs = [];
   let first = true;
   for (const f of fl) {
     const doc = await getJSON(fetchFn, f.json);
-    if (doc) { reports.push(extract(doc)); if (first) { DIAGNOSTIC[c.id] = { periods: fl.map(x => x.period_end), concepts: candidates(doc) }; first = false; } }
-    await sleep(500);
+    if (doc) { reports.push(extract(doc)); segs.push(extractSegments(doc)); if (first) { DIAGNOSTIC[c.id] = { periods: fl.map(x => x.period_end), concepts: candidates(doc) }; first = false; } }
+    await sleep(300);
   }
-  const s = toSeries(merge(reports));
-  return {
+  const merged = merge(reports), s = toSeries(merged);
+  const caByYear = Object.fromEntries(Object.entries(merged.years).map(([y, r]) => [y, r.ca]));
+  return { v: VERSION, segments: bestSegments(segs, caByYear),
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id.lei, legalName: id.legalName || c.name,
     sector: c.sector, ...s,
     sources: fl.map(f => ({ periodEnd: f.period_end, report: f.report, json: f.json })),
@@ -140,20 +145,26 @@ export function summary(c) {
 // Dépôts récents à la SEC pour toutes les sociétés concernées -> actualité et agenda estimé
 async function collectActuSec(fetchFn, list) {
   const items = [], events = [];
-  for (const c of list.filter(c => c.sec)) {
+  try { CIK = CIK || await cikMap(getJSON, fetchFn); } catch (e) { console.log("liste SEC", e.message); CIK = {}; }
+  await pool(list.filter(c => c.sec), 5, async c => {
     try {
-      if (!c.cik) CIK = CIK || await cikMap(getJSON, fetchFn);
-      const cik = c.cik || CIK[c.sec]; if (!cik) continue;
+      const cik = c.cik || CIK[c.sec]; if (!cik) return;
       const sub = await getJSON(fetchFn, subsUrl(cik));
       recentFilings(sub, cik, 8).forEach(f => items.push({ id: c.id, ...f }));
       estimatedAgenda(sub).forEach(e => events.push({ id: c.id, ...e }));
     } catch (e) { console.log("actu SEC", c.name, e.message); }
     await sleep(150);
-  }
+  });
   items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
   writeFileSync(new URL("actu-sec.json", OUT), JSON.stringify({ updated: new Date().toISOString(), source: "SEC EDGAR", items: items.slice(0, 600) }));
   writeFileSync(new URL("agenda-auto.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), events }));
   console.log(items.length, "dépôts SEC,", events.length, "dates estimées");
+}
+
+// Exécute fn sur chaque élément, n à la fois
+export async function pool(items, n, fn) {
+  let k = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => { while (k < items.length) { const it = items[k++]; await fn(it); } }));
 }
 
 async function main() {
@@ -164,27 +175,32 @@ async function main() {
   mkdirSync(new URL("societes/", OUT), { recursive: true });
   const prevIndex = existsSync(new URL("societes.json", OUT)) ? JSON.parse(readFileSync(new URL("societes.json", OUT))) : { companies: [] };
   const prev = Object.fromEntries((prevIndex.companies || []).map(c => [c.id, c]));
-  const list = [], errors = [];
-  for (const c of U) {
-    if (only && c.id !== only) { if (prev[c.id]) list.push(prev[c.id]); continue; }
+  const errors = [], slots = new Array(U.length);
+  let done = 0;
+  const one = async (c, i) => {
+    if (only && c.id !== only) { if (prev[c.id]) slots[i] = prev[c.id]; return; }
     const file = new URL(`societes/${c.id}.json`, OUT);
     if (!only && existsSync(file)) { // comptes récents : on garde (les comptes ne changent qu'une fois par an)
       const old = JSON.parse(readFileSync(file));
-      if (old.updated && Date.now() - new Date(old.updated) < FRESH) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); list.push(summary(m)); continue; }
+      if (old.v === VERSION && old.updated && Date.now() - new Date(old.updated) < FRESH) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);
       writeFileSync(file, JSON.stringify(full));
-      list.push(summary(full));
-      console.log("ok ", c.name, full.years.join(", "));
+      slots[i] = summary(full);
+      if (++done % 25 === 0) console.log(done, "sociétés lues");
     } catch (e) {
       errors.push(`${c.name} : ${e.message}`);
       console.log("ÉCHEC", c.name, e.message);
-      if (prev[c.id] && !prev[c.id].missing) list.push(prev[c.id]); // on garde la version précédente
-      else list.push({ id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true });
+      if (prev[c.id] && !prev[c.id].missing) slots[i] = prev[c.id]; // on garde la version précédente
+      else slots[i] = { id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true };
     }
-    await sleep(c.sec ? 200 : 800);
-  }
+  };
+  // Plusieurs lectures en même temps : 3 pour filings.xbrl.org, 5 pour la SEC (qui accepte 10 requêtes par seconde)
+  const idx = U.map((c, i) => [c, i]);
+  if (!only && !CIK && idx.some(([c]) => c.sec && !c.cik)) { try { CIK = await cikMap(getJSON, fetch); } catch (e) { console.log("liste SEC", e.message); } }
+  await Promise.all([pool(idx.filter(([c]) => !c.sec), 3, ([c, i]) => one(c, i)), pool(idx.filter(([c]) => c.sec), 5, async ([c, i]) => { await one(c, i); await sleep(150); })]);
+  const list = slots.filter(Boolean);
   DIAGNOSTIC.__verif = VERIF;
   writeFileSync(new URL("./diagnostic.json", import.meta.url), JSON.stringify(DIAGNOSTIC, null, 1));
   writeFileSync(new URL("societes.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), sectors: SECTEURS, companies: list, errors, verif: VERIF }));

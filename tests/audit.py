@@ -6,12 +6,17 @@ root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue"]
+pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh/communaute", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
                  {"date": "2026-10-27T17:45:00", "company": "LVMH MOET HENNESSY LOUIS VUITTON", "title": "Déclaration des transactions sur actions propres", "type": "Rachat d'actions", "url": ""}] * 4}
 def route(r):
     u = r.request.url
     if "/api/amf" in u: return r.fulfill(json=AMF)
+    if "/api/communaute" in u:
+        msg = {"id": 1, "room": "lvmh", "pseudo": "Romain", "body": "La marge baisse depuis trois ans, c'est à suivre aux prochains résultats.", "kind": "idee", "created": 1761650000000, "likes": 2}
+        if r.request.method == "POST": return r.fulfill(status=201, json={"ok": True, "item": msg})
+        return r.fulfill(json={"items": [msg] * 3, "rooms": [{"room": "lvmh", "n": 3}, {"room": "general", "n": 1}]})
     if "tradingview.com" in u: return r.fulfill(body="", content_type="text/javascript")
     if "fonts.googleapis.com" in u:
         if not FONT: return r.fulfill(body="", content_type="text/css")
@@ -49,7 +54,7 @@ with sync_playwright() as pw:
             pg.goto("http://t.local" + path); pg.wait_for_timeout(450)
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p: probs[path] = p
-            if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/lvmh", "/entreprise/lvmh/comptes", "/simulateurs/frais", "/lexique", "/actualites"):
+            if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/lvmh", "/entreprise/lvmh/comptes", "/lexique", "/etf/amundi-msci-world-pea", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/communaute"):
                 os.makedirs(shots, exist_ok=True)
                 pg.screenshot(path=f"{shots}/{name}{(path.replace('/', '_').replace('?', '_') if path != '/' else '_accueil')}.png", full_page=True)
         # Portefeuille : ajout d'une opération

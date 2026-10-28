@@ -143,3 +143,68 @@ export function toSeries(merged, maxYears = 5) {
   for (const k of KEYS) { const s = ys.map(y => merged.years[y][k] ?? null); if (s.some(v => v != null)) fin[k] = s.map(v => v == null ? null : typeof v === "boolean" ? v : Math.round(v * 100) / 100); }
   return { years: ys, currency: merged.currency, fyEnd: merged.fyEnd, fin };
 }
+
+// Ventilation du chiffre d'affaires (et du résultat d'exploitation) par activité, zone ou produit.
+// Les chiffres ventilés portent une dimension en plus : un axe (SegmentsAxis, GeographicalAreasAxis…) et un membre
+// propre à l'entreprise (ex. « mc:FashionAndLeatherGoodsMember »). On garde le dernier exercice.
+const AXIS_OK = /segment|geograph|product|region|activit|business|market|divis|area|countr|brand/i;
+const SEG_CONCEPTS = { ca: ["ifrs-full:Revenue", "ifrs-full:RevenueFromContractsWithCustomers"], ebit: ["ifrs-full:ProfitLossFromOperatingActivities"] };
+const NOISE = /total|consolidat|eliminat|intersegment|intragroup|unallocat|reconcil|adjust|^allother/i;
+export function humanize(member) {
+  let s = String(member).split(":").pop().replace(/Member$/, "").replace(/Segments?$/, "");
+  s = s.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2").replace(/_/g, " ").trim();
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+export function axisKind(axis) {
+  const a = axis.split(":").pop();
+  if (/geograph|region|area|countr/i.test(a)) return "geo";
+  if (/product|brand|service/i.test(a)) return "produits";
+  return "activites";
+}
+export function extractSegments(doc) {
+  const facts = doc && doc.facts ? Object.values(doc.facts) : [];
+  const by = {}; // axe -> exercice -> membre -> { ca, ebit }
+  for (const f of facts) {
+    const d = f.dimensions || {};
+    if (!d.concept || !d.period || !d.period.includes("/")) continue;
+    const key = Object.entries(SEG_CONCEPTS).find(([, cs]) => cs.includes(d.concept));
+    if (!key) continue;
+    const extra = Object.keys(d).filter(k => !BASE_DIMS.has(k));
+    // Un seul axe de ventilation ; l'axe « éléments de consolidation » est toléré s'il vaut « secteurs opérationnels »
+    const axes = extra.filter(k => !/ConsolidationItemsAxis/.test(k));
+    if (axes.length !== 1) continue;
+    const cons = extra.find(k => /ConsolidationItemsAxis/.test(k));
+    if (cons && !/OperatingSegments|ReportableSegments/.test(d[cons])) continue;
+    const axis = axes[0];
+    if (!AXIS_OK.test(axis.split(":").pop())) continue;
+    const member = d[axis];
+    if (NOISE.test(member.split(":").pop())) continue;
+    const { start, end } = parsePeriod(d.period);
+    const days = (end - start) / 864e5; if (days < 330 || days > 400) continue;
+    const v = Number(f.value); if (!isFinite(v)) continue;
+    const y = fiscalYear(end);
+    const A = (by[axis] = by[axis] || {}), Y = (A[y] = A[y] || {}), M = (Y[member] = Y[member] || {});
+    if (M[key[0]] == null) M[key[0]] = v / 1e6;
+  }
+  return by;
+}
+// Fusionne les ventilations de plusieurs rapports et garde, par type d'axe, le meilleur axe du dernier exercice
+export function bestSegments(list, total) {
+  const all = {};
+  for (const by of list) for (const [axis, years] of Object.entries(by)) for (const [y, mem] of Object.entries(years)) {
+    const A = (all[axis] = all[axis] || {}); A[y] = A[y] || {};
+    for (const [m, v] of Object.entries(mem)) A[y][m] = A[y][m] || v;
+  }
+  const out = {};
+  for (const [axis, years] of Object.entries(all)) {
+    const ys = Object.keys(years).map(Number).sort(), y = ys[ys.length - 1];
+    const items = Object.entries(years[y]).filter(([, v]) => v.ca != null && v.ca > 0).map(([m, v]) => ({ m, name: humanize(m), ca: Math.round(v.ca), ebit: v.ebit != null ? Math.round(v.ebit) : null, prev: years[y - 1]?.[m]?.ca != null ? Math.round(years[y - 1][m].ca) : null }));
+    if (items.length < 2 || items.length > 25) continue;
+    const sum = items.reduce((a, i) => a + i.ca, 0), tot = total && total[y];
+    if (tot && (sum > tot * 1.2 || sum < tot * 0.5)) continue; // ne correspond pas au chiffre d'affaires du groupe
+    const kind = axisKind(axis), score = items.length + (tot ? 10 - Math.abs(1 - sum / tot) * 10 : 0);
+    if (!out[kind] || out[kind].score < score) out[kind] = { axis, year: y, items: items.sort((a, b) => b.ca - a.ca), score };
+  }
+  for (const k of Object.keys(out)) delete out[k].score;
+  return out;
+}

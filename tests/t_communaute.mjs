@@ -1,0 +1,26 @@
+// Espace communauté, testé sur une base SQLite en mémoire qui imite Cloudflare D1.
+import { DatabaseSync } from "node:sqlite";
+import communaute from "../cf/src/communaute.mjs";
+const sql = new DatabaseSync(":memory:");
+const stmt = (q, p = []) => ({ bind: (...a) => stmt(q, a), all: async () => ({ results: sql.prepare(q).all(...p) }), first: async () => sql.prepare(q).get(...p) ?? null, run: async () => ({ meta: { changes: Number(sql.prepare(q).run(...p).changes) } }) });
+const env = { DB: { prepare: q => stmt(q) }, ADMIN_KEY: "k" };
+let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log("ÉCHEC", m); } };
+const call = async (method, path, body, ip = "1.1.1.1", h = {}) => { const r = await communaute(new Request("https://t.local" + path, { method, headers: { "content-type": "application/json", "cf-connecting-ip": ip, ...h }, body: body ? JSON.stringify(body) : undefined }), env); return [r.status, await r.json()]; };
+let [s, j] = await call("POST", "/api/communaute", { room: "lvmh", pseudo: "Romain", body: "Marge en baisse depuis 3 ans, intéressant à suivre.", kind: "idee" });
+ok(s === 201 && j.item.id === 1, "message créé " + s + JSON.stringify(j));
+[s, j] = await call("GET", "/api/communaute?room=lvmh");
+ok(j.items.length === 1 && j.items[0].kind === "idee" && !("who" in j.items[0]), "lecture sans empreinte");
+[s] = await call("POST", "/api/communaute", { room: "lvmh", pseudo: "Spam", body: "va sur www.arnaque.com" }); ok(s === 400, "lien refusé");
+[s] = await call("POST", "/api/communaute", { room: "lvmh", pseudo: "A", body: "trop court pseudo" }); ok(s === 400, "pseudo trop court");
+for (let i = 0; i < 4; i++) await call("POST", "/api/communaute", { room: "general", pseudo: "Bob", body: "message " + i }, "2.2.2.2");
+[s] = await call("POST", "/api/communaute", { room: "general", pseudo: "Bob", body: "message 5" }, "2.2.2.2"); ok(s === 201, "5e message accepté");
+[s] = await call("POST", "/api/communaute", { room: "general", pseudo: "Bob", body: "message 6" }, "2.2.2.2"); ok(s === 429, "6e message limité");
+await call("POST", "/api/communaute/aime", { id: 1 }, "3.3.3.3"); await call("POST", "/api/communaute/aime", { id: 1 }, "3.3.3.3");
+[s, j] = await call("GET", "/api/communaute?room=lvmh"); ok(j.items[0].likes === 1, "un seul « j'aime » par visiteur");
+for (const ip of ["4.4.4.4", "5.5.5.5", "6.6.6.6"]) await call("POST", "/api/communaute/signaler", { id: 1 }, ip);
+[s, j] = await call("GET", "/api/communaute?room=lvmh"); ok(j.items.length === 0, "masqué après 3 signalements");
+[s] = await call("POST", "/api/communaute/masquer", { id: 2 }); ok(s === 403, "modération protégée");
+[s] = await call("POST", "/api/communaute/masquer", { id: 2 }, "1.1.1.1", { "x-admin-key": "k" }); ok(s === 200, "modération avec la clé");
+[s, j] = await call("GET", "/api/communaute/recent"); ok(j.items.length === 4 && j.rooms[0].room === "general", "fil récent " + JSON.stringify(j.rooms));
+const r = await communaute(new Request("https://t.local/api/communaute"), {}); ok(r.status === 503, "sans base : message clair");
+console.log(fails ? fails + " échec(s)" : "communauté : tout est bon"); process.exit(fails ? 1 : 0);

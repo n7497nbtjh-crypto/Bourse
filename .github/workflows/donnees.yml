@@ -16,7 +16,7 @@ on:
     - cron: "17 5 * * *"   # chaque jour vers 6 h 17 (heure de Paris en hiver)
   push:
     branches: [main]
-    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
+    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "data/etf.mjs", "data/etf_fetch.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
 permissions:
   contents: write
 concurrency:
@@ -37,12 +37,16 @@ jobs:
         run: |
           if [ -n "$CONTACT" ]; then echo "Contact SEC : renseigné"; else echo "::warning::Contact SEC absent : ajoutez la variable CONTACT (Settings > Secrets and variables > Actions > Variables)"; fi
           node data/fetch_data.mjs
+          node data/etf_fetch.mjs || echo "::warning::Composition des ETF non mise à jour"
       - name: Construction et tests
         run: |
           node build.mjs
           node tests/t_calc.mjs
           node tests/t_univers.mjs
           node tests/t_sec.mjs
+          node tests/t_segments.mjs
+          node tests/t_etf.mjs
+          node --no-warnings tests/t_communaute.mjs
           NO_SLEEP=1 node tests/t_esef.mjs
       - name: Site prêt à déposer sur Cloudflare
         uses: actions/upload-artifact@v4
@@ -60,7 +64,7 @@ jobs:
       - name: Publication sur Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
             echo "Secrets Cloudflare absents : publication à faire à la main avec le fichier repere-site."
