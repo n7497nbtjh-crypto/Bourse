@@ -3894,7 +3894,7 @@ function localCopilot(raw) {
   // 2. une comparaison
   if (cos.length >= 2 && has(q, /compar|\bvs\b|versus| ou |entre| et |mieux/)) return { action: "comparer", ids: cos.slice(0, 5).map(c => c.id), local: true };
   // 3. une entreprise seule
-  if (cos.length === 1 && q.trim().split(" ").length <= 4 && !has(q, /compar/)) return { action: "fiche", id: cos[0].id, local: true };
+  if (cos.length === 1 && !has(q, /compar/) && (q.trim().split(" ").length <= 4 || has(q, /avis|penser|pense|analyse|parle|presente|fiche|que vaut|bonne|acheter|investir|resultats|dividende|dette|chere?/))) return { action: "fiche", id: cos[0].id, local: true };
   // 4. des ETF
   if (has(q, /\betf\b|tracker|fonds indiciel/)) { const cat = (ECATW.find(([re]) => re.test(q)) || [])[1] || null; return { action: "etf", titre: raw.trim(), categorie: cat, pea: has(q, /\bpea\b/), local: true }; }
   // 5. une recherche d'entreprises
