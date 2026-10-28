@@ -2125,8 +2125,10 @@ function etapesBind(s) {
     const nav = $("#etapes"); if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
     const b = $(`#etapes [data-et="${k}"]`); if (b) b.scrollIntoView({ block: "nearest", inline: "center" });
   };
-  app.addEventListener("click", e => { const b = e.target.closest("[data-et]"); if (b && app.contains(b)) { e.preventDefault(); show(b.dataset.et); } });
+  ETAPE_SHOW = show;
+  if (!etapesBind.on) { etapesBind.on = true; app.addEventListener("click", e => { const b = e.target.closest("[data-et]"); if (b && app.contains(b) && ETAPE_SHOW) { e.preventDefault(); ETAPE_SHOW(b.dataset.et); } }); }
 }
+let ETAPE_SHOW = null;
 
 function tabBref(s, c, el) {
   const fr = s.region === "FR", f = c ? figuresOf(c) : null, items = f ? lecture(s, f) : [], phrase = f ? enBref(s, f, items) : "";
