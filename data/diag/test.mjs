@@ -1,4 +1,4 @@
-// Diagnostic : collecte brute pour élargir la liste des entreprises (lot auto1), étape 6 (listes officielles hors d’Europe : Tokyo, Hong Kong, Inde, Australie, Toronto).
+// Diagnostic : collecte brute pour élargir la liste des entreprises (lot auto1), étape 7 (liste de Hong Kong).
 // Sources ouvertes : GLEIF (correspondance ISIN-LEI), listes officielles des bourses (Euronext, Nasdaq Nordic), OpenFIGI (ISIN -> cotations).
 // Résultats bruts dans data/diag/auto1/ ; le tri et le choix des sociétés se font ensuite hors ligne.
 import { writeFileSync, mkdirSync, readFileSync, existsSync } from "node:fs";
@@ -96,9 +96,10 @@ async function listes4() {
   const H = { "user-agent": BROWSER, accept: "*/*" };
   try { execSync("npm i --no-save --silent xlsx@0.18.5", { timeout: 120e3, stdio: "ignore" }); } catch (e) { L("npm xlsx", e.message.slice(0, 100)); }
   let XLSX = null; try { XLSX = (await import("xlsx")).default; } catch (e) { L("xlsx", e.message.slice(0, 100)); }
-  const sheet = (buf) => { const wb = XLSX.read(buf, { type: "buffer" }); const ws = wb.Sheets[wb.SheetNames[0]]; return XLSX.utils.sheet_to_json(ws, { header: 1, raw: false }); };
-  // Tokyo (JPX) : la page donne le lien du fichier Excel
-  try {
+  const sheet = (buf) => { const wb = XLSX.read(buf, { type: "buffer" }); const ws = wb.Sheets[wb.SheetNames[0]];
+    { let r = 0, c = 0; for (const k of Object.keys(ws)) { if (k[0] === "!") continue; const d = XLSX.utils.decode_cell(k); if (d.r > r) r = d.r; if (d.c > c) c = d.c; } ws["!ref"] = XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r, c } }); } return XLSX.utils.sheet_to_json(ws, { header: 1, raw: false }); };
+  // Tokyo (JPX) : déjà lu à l’étape 6
+  if (0) try {
     const r = await fetch("https://www.jpx.co.jp/english/markets/statistics-equities/misc/01.html", { headers: H, signal: AbortSignal.timeout(60e3) }); const t = await r.text();
     const link = (t.match(/href="([^"]+\.xls[x]?)"/i) || [])[1]; L("jpx page", r.status, link);
     if (link && XLSX) { const u = link.startsWith("http") ? link : "https://www.jpx.co.jp" + link; const b = Buffer.from(await (await fetch(u, { headers: H })).arrayBuffer()); const rows = sheet(b); save("liste_jpx.json", rows.map(x => [x[1], x[2], x[3], x[5]])); L("jpx", rows.length, JSON.stringify(rows.slice(0, 3))); }
@@ -109,7 +110,7 @@ async function listes4() {
     if (XLSX) { const rows = sheet(b); save("liste_hkex.json", rows.filter(x => x && x[2] === "Equity").map(x => [x[0], x[1], x[3]])); L("hkex", rows.length, JSON.stringify(rows.slice(2, 5))); }
   } catch (e) { L("hkex", e.message); }
   // Inde (NSE), Australie (ASX), Toronto (TSX)
-  for (const [k, u] of [["nse", "https://archives.nseindia.com/content/equities/EQUITY_L.csv"], ["nse2", "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv"],
+  if (0) for (const [k, u] of [["nse", "https://archives.nseindia.com/content/equities/EQUITY_L.csv"], ["nse2", "https://nsearchives.nseindia.com/content/equities/EQUITY_L.csv"],
     ["asx", "https://www.asx.com.au/asx/research/ASXListedCompanies.csv"], ["asx2", "https://asx.api.markitdigital.com/asx-research/1.0/companies/directory/file"],
     ["tsx", "https://www.tsx.com/json/company-directory/search/tsx/%5E*"]]) {
     try { const r = await fetch(u, { headers: H, signal: AbortSignal.timeout(60e3) }); const t = await r.text(); L("liste", k, r.status, t.length, JSON.stringify(t.slice(0, 200))); if (r.ok && t.length > 5000) writeFileSync(DIR + "liste_" + k + (t.trim().startsWith("{") ? ".json" : ".csv"), t); } catch (e) { L("liste", k, e.message); }
