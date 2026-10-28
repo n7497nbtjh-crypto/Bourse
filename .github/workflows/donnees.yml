@@ -16,7 +16,7 @@ on:
     - cron: "17 5 * * *"   # chaque jour vers 6 h 17 (heure de Paris en hiver)
   push:
     branches: [main]
-    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "data/etf.mjs", "data/etf_fetch.mjs", "data/agenda/**", "data/agenda_presse.mjs", "data/repartitions/**", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
+    paths: ["data/univers.mjs", "data/lots/**", "data/fiches.mjs", "data/esef.mjs", "data/sec.mjs", "data/fetch_data.mjs", "data/etf.mjs", "data/etf_fetch.mjs", "data/agenda/**", "data/agenda_presse.mjs", "data/repartitions/**", "data/gf.mjs", "build.mjs", "cf/site/index.html", "cf/site/calc.js", "cf/src/**", ".github/workflows/donnees.yml"]
 permissions:
   contents: write
 concurrency:
