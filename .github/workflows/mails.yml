@@ -1,0 +1,30 @@
+# Envoi des e-mails : bilan hebdomadaire (samedi matin) et alertes Premium (chaque soir de semaine).
+# Ne fait rien tant que le secret ADMIN_KEY n'est pas défini (dans GitHub ET dans Cloudflare, même valeur).
+name: mails
+on:
+  schedule:
+    - cron: "17 6 * * 6"    # samedi 6 h 17 UTC : bilan de la semaine
+    - cron: "43 17 * * 1-5" # 17 h 43 UTC en semaine : alertes après la clôture européenne
+  workflow_dispatch:
+    inputs:
+      quoi: { description: "envoi ou alertes", default: "envoi" }
+jobs:
+  mails:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Envoyer
+        env:
+          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
+          SITE: https://repere-bourse.pages.dev
+        run: |
+          if [ -z "$ADMIN_KEY" ]; then echo "ADMIN_KEY absent : envoi désactivé."; exit 0; fi
+          QUOI="${{ github.event.inputs.quoi }}"
+          if [ -z "$QUOI" ]; then if [ "$(date -u +%u)" = "6" ]; then QUOI=envoi; else QUOI=alertes; fi; fi
+          for i in $(seq 1 40); do
+            R=$(curl -sS -X POST -H "x-admin-key: $ADMIN_KEY" "$SITE/api/veille/$QUOI" || echo '{}')
+            echo "$R"
+            N=$(echo "$R" | jq -r '.envoyes // 0'); L=$(echo "$R" | jq -r '.reste // 0')
+            if [ "$N" = "0" ] && [ "$QUOI" = "envoi" ]; then break; fi; if [ "$L" = "0" ]; then break; fi
+            sleep 5
+          done

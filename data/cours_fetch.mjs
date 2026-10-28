@@ -13,6 +13,10 @@ try {
     const f = new URL(today.slice(0, 7) + ".json", dir), h = existsSync(f) ? JSON.parse(readFileSync(f)) : {};
     h[today] = Object.fromEntries(Object.entries(items).map(([k, v]) => [k, v.p]));
     writeFileSync(f, JSON.stringify(h));
+    // Cours d'il y a une semaine (jour de Bourse le plus proche, 6 à 9 jours avant) : sert au bilan hebdomadaire par e-mail
+    const all = {}; for (const m of [today.slice(0, 7), new Date(Date.now() - 12 * 864e5).toISOString().slice(0, 7)]) { const g = new URL(m + ".json", dir); if (existsSync(g)) Object.assign(all, JSON.parse(readFileSync(g))); }
+    const ref = Object.keys(all).filter(d => d <= new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10)).sort().pop();
+    if (ref) writeFileSync(new URL("semaine.json", OUT), JSON.stringify({ date: ref, items: all[ref] }));
   }
 } catch (e) { console.log("::warning::Cours non lus :", e.message); }
 try {

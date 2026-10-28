@@ -9,7 +9,8 @@ import amf from "./amf.mjs";
 import communaute from "./communaute.mjs";
 import presse from "./presse.mjs";
 import { cours } from "./cours.mjs";
-import { resume, veille } from "./ia.mjs";
+import { resume, veille, assistant } from "./ia.mjs";
+import { premium } from "./compte.mjs";
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -47,7 +48,12 @@ export function meta(path) {
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse · ${SITE}`, desc: "Un parcours en trois étapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
   if (p.startsWith("/outils")) return { title: `Outils · ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'épargne et de frais." };
   if (p === "/marches") return { title: `Les marchés aujourd'hui · ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliquées." };
+  if (p === "/commencer") return { title: `Par où commencer en Bourse : le guide du nouvel investisseur · ${SITE}`, desc: "Épargne de précaution, horizon, choix du compte, diversification, frais, pièges à éviter : sept étapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalisé." };
+  if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Plus de questions à l'assistant IA, de résumés détaillés et de bilans rédigés, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
+  if (p === "/cgv") return { title: `Conditions générales de vente · ${SITE}`, desc: BASE_DESC };
+  if (p === "/confidentialite") return { title: `Politique de confidentialité · ${SITE}`, desc: BASE_DESC };
+  if (p === "/avertissement") return { title: `Avertissement sur les risques · ${SITE}`, desc: BASE_DESC };
   return null;
 }
 
@@ -60,6 +66,8 @@ export default {
     if (url.pathname === "/api/cours") return cours(request, ctx);
     if (url.pathname === "/api/resume") return resume(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
+    if (url.pathname === "/api/assistant") return assistant(request, env);
+    if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const info = meta(url.pathname);
     if (!info) {

@@ -1,0 +1,437 @@
+{
+  "a_faire": [
+    "Faire couvrir l'activité par la micro-entreprise. L'activité déclarée aujourd'hui (achat-revente de cartes) est une vente de marchandises. La vente d'abonnements numériques est une prestation de services. Déclarer l'ajout de cette activité sur le guichet unique des formalités des entreprises (formalites.entreprises.gouv.fr). Depuis le 1er janvier 2023, aucune autre voie n'est possible. Source : https://entreprendre.service-public.gouv.fr/vosdroits/F36250",
+    "Surveiller les seuils en activité mixte. Micro-entreprise 2026 : 203 100 € au total, dont 83 600 € maximum pour les services. Franchise de TVA 2026 : 85 000 € au total, dont 37 500 € maximum pour les services (seuil majoré 41 250 €). Au-delà, la TVA s'applique et la mention « TVA non applicable, art. 293 B du CGI » doit disparaître. Sources : https://entreprendre.service-public.gouv.fr/vosdroits/F32353 et https://entreprendre.service-public.gouv.fr/vosdroits/F21746",
+    "Choisir et signer avec un médiateur de la consommation référencé par la CECMC (liste sur economie.gouv.fr), puis reporter son nom, son adresse postale et son site dans les CGV et sur le site. Amende jusqu'à 3 000 € pour un entrepreneur individuel. La plateforme européenne RLL a fermé le 20 juillet 2025 : ne plus mettre de lien vers elle. Sources : https://entreprendre.service-public.gouv.fr/vosdroits/F33338 , https://www.economie.gouv.fr/mediation-conso/liste-des-mediateurs-references et https://www.inc-conso.fr/content/reglement-en-ligne-des-litiges-de-consommation-leurope-ferme-sa-plateforme-mais-des",
+    "Remplir les mentions légales avec vos vraies données : nom et prénom suivis de « EI » ou « entrepreneur individuel », adresse, e-mail, téléphone, numéro d'immatriculation (RNE/SIREN), hébergeur. Amende jusqu'à 75 000 € pour une entreprise individuelle. Si vous ne voulez pas publier votre adresse personnelle, prévoir une domiciliation. Source : https://entreprendre.service-public.gouv.fr/vosdroits/F37351",
+    "Mettre en place la résiliation en ligne avant le premier abonnement : un bouton « Résilier mon abonnement » visible, un résumé de la demande, un bouton de confirmation, puis un accusé de réception par e-mail avec la date de fin. Pas de création de compte imposée pour résilier. Le portail client Stripe peut servir de base, à vérifier. Sanction jusqu'à 15 000 € (personne physique). Source : https://www.inc-conso.fr/content/vous-pouvez-resilier-votre-contrat-dabonnement-en-quelques-clics",
+    "Préparer le parcours de paiement pour le droit de rétractation : une case non cochée par défaut où le client demande l'accès immédiat et reconnaît perdre ou réduire son droit de rétractation, le formulaire type de rétractation, et un e-mail de confirmation de commande qui reprend cet accord (support durable). Source : https://www.service-public.gouv.fr/particuliers/vosdroits/F10485",
+    "Vérifier les conditions d'utilisation de chaque source de données (SEC, filings.xbrl.org, AMF, GDELT, Google Finance, BCE) pour un usage commercial payant. Certaines interdisent la reprise ou la revente des données. Retirer ou remplacer toute source dont la licence ne couvre pas un site payant. Source : conditions de chaque fournisseur (non vérifiées ici).",
+    "Rester dans l'information et ne jamais publier d'avis sur le cours futur d'une action précise (« acheter », « objectif de cours »). Selon l'AMF, cela devient une recommandation d'investissement soumise au règlement MAR : identité, sources et conflits d'intérêts à publier. Un conseil personnalisé exige le statut de CIF. Déclarer vos propres positions si un titre que vous détenez est présenté. Source : https://www.amf-france.org/fr/actualites-publications/communiques/communiques-de-lamf/recommandations-dinvestissement-sur-les-reseaux-sociaux-lamf-appuie-le-rappel-de-lesma",
+    "Corriger le traitement de l'empreinte anti-abus. Un hash de l'IP et de la date n'est pas anonyme : il reste une donnée pseudonymisée, donc une donnée personnelle. Ajouter un sel secret changé chaque jour, supprimer les empreintes après la durée annoncée et l'inscrire au registre des traitements. Vérifier aussi que Cloudflare, Stripe et Brevo figurent dans la liste du Data Privacy Framework. Sources : https://www.cnil.fr/fr/transferts-de-donnees-vers-les-etats-unis-la-commission-europeenne-adopte-une-nouvelle-decision et https://www.dataprivacyframework.gov/list",
+    "Fixer les points commerciaux laissés entre crochets : sens exact de « à vie » (durée d'exploitation du service), préavis en cas d'arrêt, éventuel remboursement partiel, durée de conservation de chaque donnée. Faire relire l'ensemble par un juriste ou une CCI avant d'encaisser, car ces pages sont un modèle et non un avis juridique."
+  ],
+  "pages": {
+    "mentions": {
+      "titre": "Mentions légales",
+      "sections": [
+        {
+          "h": "Éditeur du site",
+          "p": [
+            "Le site [Nom de domaine] (ci-après « bilan. ») est édité par [Nom Prénom], entrepreneur individuel (EI), sous le régime de la micro-entreprise.",
+            "Adresse : [Adresse].",
+            "E-mail : [E-mail de contact]. Téléphone : [Téléphone].",
+            "Immatriculation : SIREN [SIREN], SIRET [SIRET], inscrit au Registre national des entreprises (RNE).",
+            "TVA : TVA non applicable, art. 293 B du CGI."
+          ]
+        },
+        {
+          "h": "Directeur de la publication",
+          "p": [
+            "Le directeur de la publication est [Nom Prénom], en qualité d'éditeur."
+          ]
+        },
+        {
+          "h": "Hébergeur",
+          "p": [
+            "Le site est hébergé par Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis.",
+            "Téléphone : [Téléphone de l'hébergeur, à vérifier sur le site de Cloudflare].",
+            "Site : https://www.cloudflare.com."
+          ]
+        },
+        {
+          "h": "Prestataires techniques",
+          "p": [
+            "Envoi des e-mails : Brevo, marque de Sendinblue SAS, société française.",
+            "Paiement en ligne : Stripe. bilan. ne voit ni ne conserve vos numéros de carte bancaire.",
+            "Intelligence artificielle : Cloudflare Workers AI, utilisé pour résumer des documents publics et rédiger des bilans à partir des données du site."
+          ]
+        },
+        {
+          "h": "Nature du site",
+          "p": [
+            "bilan. publie des informations factuelles et pédagogiques sur la bourse.",
+            "bilan. ne fournit aucun conseil en investissement. Voir la page « Avertissement ».",
+            "Certains textes sont générés par une intelligence artificielle. Ils sont signalés comme tels sur le site."
+          ]
+        },
+        {
+          "h": "Sources des données",
+          "p": [
+            "Les données proviennent de sources publiques ou tierces : SEC (États-Unis), filings.xbrl.org, AMF, GDELT, Google Finance et Banque centrale européenne (BCE).",
+            "Ces données restent la propriété de leurs auteurs. Elles peuvent être retardées, incomplètes ou erronées."
+          ]
+        },
+        {
+          "h": "Propriété intellectuelle",
+          "p": [
+            "Les textes, la mise en page, le nom et le logo de bilan. sont protégés.",
+            "Toute reproduction sans autorisation écrite est interdite, sauf courte citation avec mention de la source."
+          ]
+        },
+        {
+          "h": "Espace communauté",
+          "p": [
+            "Les messages publiés dans l'espace communauté engagent leurs auteurs.",
+            "Pour signaler un contenu illicite, écrivez à [E-mail de contact] en indiquant l'adresse du message et la raison du signalement.",
+            "L'éditeur retire rapidement tout contenu manifestement illicite qui lui est signalé."
+          ]
+        },
+        {
+          "h": "Médiation de la consommation",
+          "p": [
+            "Médiateur : [Nom du médiateur], [Adresse postale du médiateur], [Site du médiateur].",
+            "Les conditions de recours sont détaillées dans les CGV."
+          ]
+        },
+        {
+          "h": "Contact",
+          "p": [
+            "Pour toute question : [E-mail de contact]."
+          ]
+        }
+      ]
+    },
+    "cgv": {
+      "titre": "Conditions générales de vente et d'utilisation",
+      "sections": [
+        {
+          "h": "1. Objet",
+          "p": [
+            "Ces conditions s'appliquent à l'utilisation du site [Nom de domaine] et à la vente de l'offre payante de bilan.",
+            "Le vendeur est [Nom Prénom], entrepreneur individuel (EI), SIRET [SIRET], [Adresse], [E-mail de contact].",
+            "Le client est une personne physique qui agit à titre personnel (consommateur).",
+            "En payant, le client accepte ces conditions. Elles sont datées et la version applicable est celle en vigueur le jour de l'achat."
+          ]
+        },
+        {
+          "h": "2. Offres",
+          "p": [
+            "Version gratuite : accès limité aux contenus et outils du site, sans paiement.",
+            "Abonnement mensuel : 4,90 € par mois, sans engagement.",
+            "Accès à vie : paiement unique de 49 €.",
+            "Le détail de ce que comprend chaque offre est affiché sur la page [Page des offres] avant le paiement.",
+            "« À vie » signifie : pendant toute la durée d'exploitation du service bilan. par l'éditeur."
+          ]
+        },
+        {
+          "h": "3. Prix",
+          "p": [
+            "Les prix sont indiqués en euros, toutes taxes comprises.",
+            "TVA non applicable, art. 293 B du CGI.",
+            "L'éditeur peut modifier le prix de l'abonnement mensuel. Il prévient les abonnés par e-mail au moins [30] jours avant. L'abonné qui refuse peut résilier avant la date du changement.",
+            "Le prix de l'accès à vie déjà payé ne change pas."
+          ]
+        },
+        {
+          "h": "4. Commande et paiement",
+          "p": [
+            "Le client choisit son offre, indique son adresse e-mail, accepte les CGV puis paie.",
+            "Le paiement se fait par carte bancaire ou autre moyen proposé, via Stripe.",
+            "L'abonnement mensuel est prélevé chaque mois à la date anniversaire de la souscription.",
+            "Une confirmation de commande est envoyée par e-mail. Elle reprend les CGV et l'accord du client sur l'accès immédiat.",
+            "En cas d'échec de paiement, l'accès payant peut être suspendu jusqu'à régularisation."
+          ]
+        },
+        {
+          "h": "5. Accès au service",
+          "p": [
+            "L'accès payant est ouvert dès la confirmation du paiement.",
+            "Le client doit être majeur ou avoir l'accord de son représentant légal.",
+            "Le service est fourni en l'état. L'éditeur fait de son mieux pour qu'il soit disponible, sans garantie de disponibilité permanente.",
+            "Des interruptions sont possibles pour maintenance ou en cas de panne d'un prestataire."
+          ]
+        },
+        {
+          "h": "6. Droit de rétractation",
+          "p": [
+            "Le client dispose de 14 jours pour se rétracter, sans donner de motif. Le délai court à partir du lendemain de la commande.",
+            "Pour se rétracter, il envoie le formulaire ci-dessous ou tout message clair à [E-mail de contact].",
+            "L'éditeur rembourse au plus tard 14 jours après avoir reçu la demande, par le même moyen de paiement.",
+            "Accès immédiat au service : lors de la commande, le client peut demander que l'accès commence tout de suite, avant la fin des 14 jours. S'il se rétracte ensuite, il paie seulement la part du service déjà utilisée, calculée au prorata des jours écoulés (article L. 221-25 du Code de la consommation).",
+            "Exception pour le contenu numérique : pour un contenu numérique fourni immédiatement sans support matériel (par exemple un bilan ou un fichier téléchargé), le droit de rétractation ne s'applique plus si le client a donné son accord exprès pour un accès immédiat et a reconnu perdre son droit de rétractation (article L. 221-28 du Code de la consommation). Cet accord est recueilli par une case à cocher, non cochée par défaut, et confirmé par e-mail.",
+            "Formulaire type : « À l'attention de [Nom Prénom] EI, [Adresse], [E-mail de contact]. Je notifie par la présente ma rétractation du contrat portant sur [offre]. Commandé le [date]. Nom du client : [nom]. Adresse e-mail du compte : [e-mail]. Date : [date]. »"
+          ]
+        },
+        {
+          "h": "7. Résiliation de l'abonnement",
+          "p": [
+            "L'abonnement mensuel est sans engagement. Il peut être résilié à tout moment.",
+            "Résiliation en ligne : le bouton « Résilier mon abonnement » est accessible depuis [emplacement du bouton, par exemple le pied de page et l'espace abonné]. Le client confirme son identité, voit un résumé de sa demande, puis la valide.",
+            "Aucune création de compte n'est exigée pour résilier.",
+            "Un accusé de réception est envoyé par e-mail. Il indique la date de fin de l'abonnement.",
+            "La résiliation prend effet à la fin de la période mensuelle en cours. Le mois commencé n'est pas remboursé, sauf rétractation dans les 14 jours.",
+            "L'accès à vie ne se résilie pas, car il ne donne lieu à aucun prélèvement récurrent."
+          ]
+        },
+        {
+          "h": "8. Arrêt du service",
+          "p": [
+            "Si l'éditeur arrête définitivement bilan., il prévient les clients par e-mail au moins [3] mois avant.",
+            "Les abonnements mensuels prennent fin sans nouveau prélèvement.",
+            "[Option à décider : remboursement partiel de l'accès à vie si l'arrêt intervient moins de [X] mois après l'achat.]"
+          ]
+        },
+        {
+          "h": "9. Espace communauté",
+          "p": [
+            "Chaque membre publie sous un pseudo et reste responsable de ses messages.",
+            "Sont interdits : les propos illicites, injurieux ou haineux, le spam, la publicité, les fausses informations destinées à influencer un cours de bourse, et les sollicitations à investir.",
+            "Signalement : chaque message peut être signalé à [E-mail de contact] ou via le bouton prévu.",
+            "L'éditeur peut retirer un message ou suspendre un accès en cas de manquement. Il en informe la personne concernée, avec le motif, sauf si la loi l'interdit.",
+            "Les messages de la communauté ne sont pas des conseils en investissement."
+          ]
+        },
+        {
+          "h": "10. Responsabilité",
+          "p": [
+            "bilan. fournit de l'information générale et pédagogique, pas de conseil en investissement.",
+            "Les décisions d'investissement restent celles du client. L'éditeur n'est pas responsable des pertes liées à ces décisions.",
+            "Les données de tiers et les textes générés par IA peuvent contenir des erreurs. Le client doit vérifier les informations importantes à la source.",
+            "Rien dans ces CGV ne limite les droits que la loi accorde au consommateur."
+          ]
+        },
+        {
+          "h": "11. Réclamations et médiation",
+          "p": [
+            "En cas de problème, le client écrit d'abord à [E-mail de contact]. L'éditeur répond sous [15] jours.",
+            "Si la réclamation écrite n'aboutit pas, le client peut saisir gratuitement le médiateur de la consommation : [Nom du médiateur], [Adresse postale du médiateur], [Site du médiateur].",
+            "Le client doit saisir le médiateur dans un délai d'un an à compter de sa réclamation écrite à l'éditeur.",
+            "Le recours au médiateur n'est pas obligatoire avant d'aller devant un juge."
+          ]
+        },
+        {
+          "h": "12. Données personnelles",
+          "p": [
+            "Le traitement des données est décrit dans la politique de confidentialité."
+          ]
+        },
+        {
+          "h": "13. Droit applicable",
+          "p": [
+            "Ces conditions sont soumises au droit français.",
+            "En cas de litige, le client peut saisir le tribunal de son domicile ou celui du lieu du fait dommageable."
+          ]
+        },
+        {
+          "h": "Version",
+          "p": [
+            "CGV en vigueur au [Date de mise en ligne]."
+          ]
+        }
+      ]
+    },
+    "confidentialite": {
+      "titre": "Politique de confidentialité",
+      "sections": [
+        {
+          "h": "Responsable du traitement",
+          "p": [
+            "Le responsable du traitement est [Nom Prénom], entrepreneur individuel (EI), [Adresse].",
+            "Contact pour vos données : [E-mail de contact]."
+          ]
+        },
+        {
+          "h": "Principe",
+          "p": [
+            "bilan. collecte le moins de données possible.",
+            "Aucune donnée n'est vendue ni utilisée pour de la publicité ciblée."
+          ]
+        },
+        {
+          "h": "Bilan hebdomadaire et alertes",
+          "p": [
+            "Données : adresse e-mail, choix des alertes, date d'inscription et de confirmation.",
+            "Finalité : envoyer le bilan hebdomadaire et les alertes demandées.",
+            "Base légale : votre consentement. Il est confirmé par un double clic (lien envoyé par e-mail).",
+            "Durée : jusqu'à votre désinscription. Sans confirmation, l'adresse est supprimée après [7] jours. Sans ouverture ni clic pendant [3] ans, l'adresse est supprimée.",
+            "Chaque e-mail contient un lien de désinscription.",
+            "Prestataire : Brevo (Sendinblue SAS, France)."
+          ]
+        },
+        {
+          "h": "Abonnement payant",
+          "p": [
+            "Données : adresse e-mail, offre choisie, historique des paiements, identifiant client Stripe.",
+            "Finalité : gérer la commande, l'accès payant, la résiliation et la facturation.",
+            "Base légale : l'exécution du contrat. Pour les pièces comptables, une obligation légale.",
+            "Durée : pendant l'abonnement, puis [3] ans pour gérer les éventuelles réclamations. Les pièces comptables sont gardées 10 ans (Code de commerce).",
+            "Les données de carte bancaire sont traitées par Stripe. bilan. n'y a jamais accès."
+          ]
+        },
+        {
+          "h": "Espace communauté",
+          "p": [
+            "Données : pseudo, texte des messages, date de publication.",
+            "Finalité : publier vos messages et modérer l'espace.",
+            "Base légale : l'exécution des conditions d'utilisation que vous acceptez en publiant.",
+            "Les messages sont publics. N'y mettez pas d'informations personnelles.",
+            "Durée : tant que le message est en ligne. Vous pouvez demander sa suppression à tout moment."
+          ]
+        },
+        {
+          "h": "Protection contre les abus",
+          "p": [
+            "Données : une empreinte quotidienne calculée à partir de votre adresse IP et de la date (hash avec une clé secrète). L'adresse IP elle-même n'est pas conservée.",
+            "Cette empreinte est pseudonymisée. Elle ne permet pas de vous identifier directement.",
+            "Finalité : limiter le spam, les votes multiples et les abus.",
+            "Base légale : l'intérêt légitime de l'éditeur à protéger le site.",
+            "Durée : [7] jours, puis suppression automatique."
+          ]
+        },
+        {
+          "h": "Préférences dans votre navigateur",
+          "p": [
+            "Le site enregistre certaines préférences dans votre navigateur (localStorage) : par exemple le thème, la liste d'actions suivies ou votre portefeuille simulé.",
+            "Ces données restent sur votre appareil. Elles ne sont pas envoyées à bilan.",
+            "Voir la section « Cookies et stockage local »."
+          ]
+        },
+        {
+          "h": "Intelligence artificielle",
+          "p": [
+            "Cloudflare Workers AI sert à résumer des documents publics et à rédiger des bilans à partir des données du site.",
+            "[À confirmer] Aucune donnée personnelle des utilisateurs n'est envoyée au modèle d'IA."
+          ]
+        },
+        {
+          "h": "Destinataires et sous-traitants",
+          "p": [
+            "Seul l'éditeur a accès à vos données. Elles sont aussi traitées par ses prestataires, uniquement pour le service :",
+            "Cloudflare, Inc. (États-Unis) : hébergement, sécurité, base de données, IA.",
+            "Sendinblue SAS, marque Brevo (France) : envoi des e-mails.",
+            "Stripe : paiement. Pour les clients européens, le prestataire contractant est [Entité Stripe, à vérifier dans votre contrat Stripe]."
+          ]
+        },
+        {
+          "h": "Transferts hors de l'Union européenne",
+          "p": [
+            "Cloudflare et Stripe peuvent traiter des données aux États-Unis.",
+            "Ces transferts reposent sur la décision d'adéquation de la Commission européenne du 10 juillet 2023 (Data Privacy Framework), pour les entreprises inscrites sur la liste officielle [à vérifier pour chaque prestataire].",
+            "À défaut, ils reposent sur les clauses contractuelles types de la Commission européenne."
+          ]
+        },
+        {
+          "h": "Vos droits",
+          "p": [
+            "Vous avez un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité.",
+            "Vous pouvez retirer votre consentement à tout moment, par exemple en vous désinscrivant des e-mails.",
+            "Vous pouvez définir des directives sur le sort de vos données après votre décès.",
+            "Pour exercer vos droits : [E-mail de contact]. Réponse sous un mois.",
+            "Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL : www.cnil.fr, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07."
+          ]
+        },
+        {
+          "h": "Cookies et stockage local",
+          "p": [
+            "bilan. n'utilise aucun cookie publicitaire ni outil de mesure d'audience.",
+            "Le site utilise seulement le stockage local du navigateur (localStorage) pour des besoins techniques : garder vos préférences d'affichage, vos listes de suivi, votre portefeuille simulé et, le cas échéant, votre session d'abonné.",
+            "Ces traceurs sont nécessaires au service que vous demandez. Selon les règles de la CNIL, ils ne demandent pas de consentement. C'est pourquoi le site n'affiche pas de bandeau cookies.",
+            "Vous pouvez effacer ces données à tout moment dans les réglages de votre navigateur. Certaines fonctions ne marcheront alors plus.",
+            "Cloudflare peut déposer un cookie technique de sécurité (protection contre les robots). [À vérifier selon la configuration Cloudflare.]",
+            "Si un outil de mesure ou un cookie non nécessaire est ajouté un jour, votre consentement sera demandé avant."
+          ]
+        },
+        {
+          "h": "Sécurité",
+          "p": [
+            "Les échanges avec le site sont chiffrés (HTTPS).",
+            "L'accès aux données est limité à l'éditeur."
+          ]
+        },
+        {
+          "h": "Mise à jour",
+          "p": [
+            "Politique en vigueur au [Date de mise en ligne]. En cas de changement important, les inscrits sont prévenus par e-mail."
+          ]
+        }
+      ]
+    },
+    "avertissement": {
+      "titre": "Avertissement sur les risques",
+      "sections": [
+        {
+          "h": "Pas de conseil en investissement",
+          "p": [
+            "bilan. publie de l'information générale, factuelle et pédagogique.",
+            "bilan. ne fournit pas de conseil en investissement au sens de l'article L. 541-1 du Code monétaire et financier. Aucun contenu ne tient compte de votre situation personnelle.",
+            "bilan. ne publie pas de recommandation d'acheter, de vendre ou de conserver un titre, ni d'objectif de cours.",
+            "L'éditeur n'est ni conseiller en investissements financiers (CIF), ni prestataire de services d'investissement."
+          ]
+        },
+        {
+          "h": "Risque de perte en capital",
+          "p": [
+            "Investir en bourse comporte un risque de perte en capital. Vous pouvez perdre tout ou partie de la somme investie.",
+            "N'investissez que l'argent dont vous n'avez pas besoin à court terme.",
+            "Certains produits (effet de levier, produits dérivés, cryptoactifs) présentent des risques encore plus élevés."
+          ]
+        },
+        {
+          "h": "Performances passées",
+          "p": [
+            "Les performances passées ne préjugent pas des performances futures.",
+            "Les chiffres affichés ne garantissent aucun résultat."
+          ]
+        },
+        {
+          "h": "Outils de simulation",
+          "p": [
+            "Le simulateur de portefeuille est un outil d'apprentissage. Il utilise des hypothèses simplifiées.",
+            "Il ne tient pas toujours compte des frais, de la fiscalité, de l'inflation ou des écarts de prix réels.",
+            "Un résultat de simulation n'est pas une promesse de gain."
+          ]
+        },
+        {
+          "h": "Données et intelligence artificielle",
+          "p": [
+            "Les cours et données viennent de sources tierces (SEC, filings.xbrl.org, AMF, GDELT, Google Finance, BCE). Ils peuvent être retardés, incomplets ou faux.",
+            "Certains résumés et bilans sont rédigés par une intelligence artificielle. Ils sont signalés. Ils peuvent contenir des erreurs ou des oublis.",
+            "Vérifiez toujours une information importante dans le document d'origine."
+          ]
+        },
+        {
+          "h": "Espace communauté",
+          "p": [
+            "Les messages des membres expriment leur seul avis.",
+            "Ils ne sont pas vérifiés à l'avance et ne sont pas des conseils.",
+            "Méfiez-vous de toute personne qui vous promet un gain ou vous invite à investir hors des plateformes autorisées."
+          ]
+        },
+        {
+          "h": "Liens d'intérêts",
+          "p": [
+            "L'éditeur peut détenir à titre personnel des titres ou des fonds présentés sur le site.",
+            "[Indiquer ici les positions détenues sur les titres présentés, ou « Aucun lien d'intérêts à déclarer ».]",
+            "bilan. ne reçoit aucune rémunération des sociétés présentées. [Modifier si des liens affiliés ou partenariats sont ajoutés.]"
+          ]
+        },
+        {
+          "h": "Avant d'investir",
+          "p": [
+            "Renseignez-vous sur le produit et lisez son document d'informations clés.",
+            "Vérifiez que l'intermédiaire est autorisé, par exemple sur le site de l'AMF (www.amf-france.org) ou le registre ORIAS.",
+            "En cas de doute, consultez un professionnel agréé."
+          ]
+        }
+      ]
+    }
+  },
+  "sources": [
+    "https://entreprendre.service-public.gouv.fr/vosdroits/F37351",
+    "https://www.service-public.gouv.fr/particuliers/vosdroits/F10485",
+    "https://www.inc-conso.fr/content/vous-pouvez-resilier-votre-contrat-dabonnement-en-quelques-clics",
+    "https://entreprendre.service-public.gouv.fr/vosdroits/F33338",
+    "https://www.economie.gouv.fr/mediation-conso/liste-des-mediateurs-references",
+    "https://www.inc-conso.fr/content/reglement-en-ligne-des-litiges-de-consommation-leurope-ferme-sa-plateforme-mais-des",
+    "https://entreprendre.service-public.gouv.fr/vosdroits/F21746",
+    "https://entreprendre.service-public.gouv.fr/vosdroits/F32353",
+    "https://entreprendre.service-public.gouv.fr/vosdroits/F36250",
+    "https://www.cnil.fr/fr/cookies-et-autres-traceurs/regles/cookies/que-dit-la-loi",
+    "https://www.cnil.fr/fr/les-durees-de-conservation-des-donnees",
+    "https://www.cnil.fr/fr/transferts-de-donnees-vers-les-etats-unis-la-commission-europeenne-adopte-une-nouvelle-decision",
+    "https://www.dataprivacyframework.gov/list",
+    "https://www.cnil.fr",
+    "https://www.amf-france.org/fr/actualites-publications/communiques/communiques-de-lamf/recommandations-dinvestissement-sur-les-reseaux-sociaux-lamf-appuie-le-rappel-de-lesma"
+  ]
+}

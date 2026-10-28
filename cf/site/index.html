@@ -809,6 +809,51 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 .prof .pl{position:relative;height:6px;background:linear-gradient(90deg,#F6DED5,#EEE9DF 45%,#EEE9DF 55%,#D9EBDF);border-radius:99px}
 .prof .pm{position:absolute;left:50%;top:-4px;width:2px;height:14px;background:var(--light)}
 .prof .pd{position:absolute;top:-5px;width:16px;height:16px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.15);transform:translateX(-50%)}
+/* v7 : Premium, assistant, nouvel investisseur, pages légales, profil compact */
+#nav a.navnew{color:var(--g);font-weight:700}
+#nav{align-items:center}#nav a{white-space:nowrap}
+#nav a.navprem{border:1px solid var(--ink);border-radius:99px;padding:4px 12px;line-height:1.3;color:var(--ink);font-weight:600}
+#nav a.navprem.on,#nav a.navprem:hover{background:var(--ink);color:#fff;border-bottom-color:var(--ink)}
+.is-prem #nav a.navprem{border-color:var(--g);color:var(--g)}
+.nbtop{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.nbq{margin:4px 0 0;font-size:15px}.nbq a{color:var(--g);font-weight:600}
+.nbtop .btn{display:inline-flex;align-items:center;text-decoration:none;height:40px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;max-width:min(92vw,520px);transition:.25s;z-index:60}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}.toast a{color:#9FE3C2;font-weight:600}
+.pmini{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px 10px;margin:12px 0 4px}
+.pmini span{display:flex;flex-direction:column;gap:3px}.pmini small{font-size:11px;color:var(--light);text-transform:uppercase;letter-spacing:.04em}
+.pmini .pl,.pcmp .pl{position:relative;display:block;height:4px;border-radius:4px;background:var(--line2)}
+.pmini .pm,.pcmp .pm{position:absolute;left:50%;top:-3px;width:1px;height:10px;background:var(--light)}
+.pmini .pd,.pcmp .pd{position:absolute;top:-3px;width:10px;height:10px;border-radius:50%;transform:translateX(-50%);box-shadow:0 0 0 2px #fff}
+.pcmp td{min-width:110px;vertical-align:middle}.pcmp td small{display:block;margin-top:6px;font-size:11.5px}.pcmp td:first-child{min-width:130px}
+.asst .chips{margin-bottom:10px}.asst .chip{cursor:pointer;font:inherit;font-size:13px}.asst .chip:disabled{opacity:.5;cursor:default}
+.askf{display:flex;gap:8px;margin:4px 0}.askf input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit;font-size:14.5px;background:#fff}
+.askf .btn{height:40px}
+.askit{border-top:1px solid var(--line2);padding:12px 0 2px;margin-top:10px}.askq{font-weight:700;margin:0 0 6px}.aska p{font-size:14.5px;line-height:1.6}
+.offers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:16px}
+.offer{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;box-shadow:var(--shadow)}.offer.main{border:2px solid var(--ink)}
+.offer .price{font-family:var(--serif);font-size:30px;font-weight:800;margin:4px 0 4px}.offer .btn{display:inline-flex;align-items:center;text-decoration:none;height:40px}
+.ptab{width:100%}.ptab td{font-size:14px;white-space:normal;text-align:left}.ptab td:nth-child(n+2){text-align:center;width:22%}
+.offer .btn:disabled{background:var(--soft);color:var(--grey);border-color:var(--line);cursor:default}.ptab th:nth-child(n+2){text-align:center}
+.premok{border-left:4px solid var(--g)}.code{font-family:var(--mono,monospace);font-size:15px;background:var(--soft);padding:10px 12px;border-radius:8px;word-break:break-all;user-select:all}
+.hero-new{margin-bottom:6px}.hero-new .chips{margin:4px 0 18px}
+.steps7 .st7{border-bottom:1px solid var(--line2)}.steps7 summary{display:grid;grid-template-columns:34px 1fr 20px;gap:12px;align-items:center;padding:14px 22px;cursor:pointer;list-style:none}
+.steps7 summary::-webkit-details-marker{display:none}.steps7 summary b{display:block;font-family:var(--serif);font-size:17px}.steps7 summary small{display:block;color:var(--grey);font-size:13.5px;margin-top:2px}
+.steps7 .n,.qf .n{display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;font-weight:700;font-size:13px;flex:none}
+.st7b{padding:0 22px 16px 68px;font-size:15px;line-height:1.6}.st7b p{margin:0 0 10px}
+.repere{background:#EEF6F1;border-left:3px solid var(--g);padding:10px 12px;border-radius:0 8px 8px 0;font-size:14px}.repere b{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--g);margin-bottom:2px}
+.qf{border:0;padding:0;margin:0 0 16px}.qf legend{display:flex;gap:10px;align-items:center;font-weight:700;margin-bottom:8px;font-size:15.5px}
+.qo{display:flex;gap:10px;align-items:center;padding:9px 12px;border:1px solid var(--line);border-radius:10px;margin:0 0 6px 38px;cursor:pointer;font-size:14.5px}
+.qo:has(input:checked){border-color:var(--g);background:#EEF6F1}
+.pres{border-top:1px solid var(--line);padding-top:16px;margin-top:6px}.pres h3{font-family:var(--serif);font-size:24px;margin:2px 0 6px}
+.pl2{margin:0;padding-left:18px;font-size:14.5px;line-height:1.55}.pl2 li{margin-bottom:6px}
+.rbar{display:flex;height:14px;border-radius:7px;overflow:hidden;margin:6px 0 10px}.rbar span{display:block;height:100%}
+.rleg{list-style:none;margin:0;padding:0;font-size:14px}.rleg li{display:flex;align-items:center;gap:8px;padding:4px 0;border-bottom:1px dashed var(--line2)}.rleg i{width:10px;height:10px;border-radius:3px;flex:none}.rleg b{margin-left:auto;font-family:var(--mono,monospace)}
+.exetf{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}.exetf>div{border:1px solid var(--line2);border-radius:10px;padding:10px 12px;background:#FBF9F4}
+.exetf small{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--light);margin-bottom:4px}.exetf a{display:block;font-size:14px;padding:3px 0;color:var(--ink)}.exetf a .light{display:block;font-size:12.5px}
+.legal h2{font-family:var(--serif);font-size:19px;margin:20px 0 8px}.legal h2:first-child{margin-top:0}.legal p{font-size:14.5px;line-height:1.6;margin:0 0 8px}
+mark.todo{background:#FFF1C9;padding:0 3px;border-radius:3px;color:var(--ink)}
+@media (max-width:760px){.ptab thead{display:none}.ptab tr{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid var(--line2);padding:8px 0}.ptab td{border:0!important;padding:2px 12px!important;width:auto!important;text-align:left!important}.ptab td:first-child{grid-column:1/-1;font-weight:600;padding-bottom:4px!important}.ptab td:nth-child(2)::before{content:"Gratuit : ";color:var(--light)}.ptab td:nth-child(3)::before{content:"Premium : ";color:var(--light);font-weight:400}
+.askf input{flex:none;width:100%}.offers{grid-template-columns:1fr}.st7b{padding-left:22px}.qo{margin-left:0}.askf{flex-direction:column}}
 </style>
 </head>
 <body>
@@ -822,6 +867,7 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
         <div class="results"></div>
       </div>
       <nav class="main d-only" id="nav">
+        <a href="/commencer" data-nav="new" class="navnew">Commencer</a>
         <a href="/favoris" data-nav="fav">Favoris<span class="favn"></span></a>
         <a href="/entreprises" data-nav="ent">Entreprises</a>
         <a href="/etf" data-nav="etf">ETF</a>
@@ -831,10 +877,11 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
         <a href="/outils" data-nav="sim">Outils</a>
         <a href="/portefeuille" data-nav="pf">Portefeuille</a>
         <a href="/debuter" data-nav="lex">Apprendre</a>
+        <a href="/premium" data-nav="prem" class="navprem">Premium</a>
       </nav>
       <div class="mright m-only"><button class="mbtn" id="searchBtn" aria-expanded="false">Chercher</button><button class="mbtn" id="menuBtn" aria-expanded="false">Menu</button></div>
     </div>
-    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/marches">Marchés du jour</a><a href="/actualites">Actualités</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/outils">Outils</a><a href="/portefeuille">Portefeuille</a><a href="/debuter">Apprendre : premiers pas</a><a href="/lexique">Lexique</a><a href="/dividendes">Calendrier des dividendes</a></div>
+    <div class="mpanel" id="mpanel"><a href="/">Accueil</a><a href="/commencer"><b>Nouvel investisseur : par où commencer</b></a><a href="/favoris">Mes favoris <span class="favn"></span></a><a href="/pea-cto">PEA ou compte-titres ?</a><a href="/entreprises">Entreprises</a><a href="/etf">ETF</a><a href="/marches">Marchés du jour</a><a href="/actualites">Actualités</a><a href="/communaute">Communauté</a><a href="/agenda">Agenda</a><a href="/outils">Outils</a><a href="/portefeuille">Portefeuille</a><a href="/debuter">Apprendre : premiers pas</a><a href="/lexique">Lexique</a><a href="/dividendes">Calendrier des dividendes</a><a href="/premium">Premium</a></div>
     <div class="msearch" id="msearch">
       <div class="search" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -850,8 +897,8 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 <footer>
   <div class="wrap f">
     <div><p>Informations factuelles à but pédagogique. Aucun contenu du site n'est un conseil en investissement.</p>
-      <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a> et <a class="lnk" style="margin:0" href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC (EDGAR)</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours fournis par TradingView.</p></div>
-    <div><a href="/lexique">Lexique</a><a href="/mentions-legales">Mentions légales</a></div>
+      <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a> et <a class="lnk" style="margin:0" href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC (EDGAR)</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours différés de Google Finance, taux de change de la BCE.</p></div>
+    <div><a href="/commencer">Par où commencer</a><a href="/lexique">Lexique</a><a href="/premium">Premium</a><a href="/mentions-legales">Mentions légales</a><a href="/cgv">CGV</a><a href="/confidentialite">Confidentialité</a><a href="/avertissement">Avertissement sur les risques</a></div>
   </div>
 </footer>
 <div class="pop" id="pop" tabindex="-1" role="dialog" aria-modal="false"></div>
@@ -1720,7 +1767,7 @@ async function pageHome() {
     <section class="hero2"><div><h1>Avant d'acheter une action, <em>lisez ses comptes.</em> On les a traduits.</h1>
       <p>${F0.format(n)} entreprises et ${ETF.list.length} ETF. Pour chacune : ce qu'elle fait, ses chiffres en clair, ses points forts et ses points de vigilance. Sans conseil, avec les sources.</p><p class="herolinks"><a href="/pea-cto">PEA ou compte-titres : par où commencer ?</a><a href="/comparer">Comparer des entreprises</a><a href="/favoris">Mes favoris</a></p></div>
       <div class="search big" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Chercher une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div></section>
-    <section class="panel newbie"><div class="pb"><p class="kick">Vous débutez ? Trois étapes, dans l'ordre</p><div class="nb3">
+    <section class="panel newbie"><div class="pb"><div class="nbtop"><div><p class="kick">Vous débutez ? Trois étapes, dans l'ordre</p><p class="nbq">Vous ne savez pas sur quoi investir ? <a href="/commencer">Le guide du nouvel investisseur</a> : 7 étapes et un questionnaire de 5 questions pour trouver votre profil.</p></div><a class="btn" href="/commencer">Par où commencer</a></div><div class="nb3">
       <a href="/debuter"><b>1. Comprendre les bases</b><span>Ce qu'est une action, un ETF, un indice, et ce que l'on risque. Six leçons de trois minutes, avec un quiz.</span></a>
       <a href="/entreprise/lvmh"><b>2. Lire une vraie fiche</b><span>Exemple avec LVMH : ce qu'elle vend, ce qu'elle garde, ses points forts et ses points de vigilance, comparés à ses concurrentes.</span></a>
       <a href="/pea-cto"><b>3. Choisir où investir</b><span>PEA, compte-titres ou assurance-vie : ce qu'on peut y mettre et ce qui reste après impôts.</span></a></div></div></section>
@@ -1844,6 +1891,7 @@ async function pageCompany(id, tab) {
   if (location.pathname.split("/")[2] !== id) return; // l'utilisateur a changé de page entre-temps
   const ph = $("#pxh"); if (ph) ph.innerHTML = priceHead(s);
   ({ "": tabBref, comptes: tabComptes, actualite: tabActu, communaute: tabCommu })[tab](s, c, $("#ctab"));
+  if (!tab && !s.missing) premStatus().then(() => { if (location.pathname.split("/")[2] === id) assistantPanel(s, c, $("#ctab")); });
 }
 const lastIdx = c => c.years.length - 1;
 const at = (c, k, i) => c.fin[k] ? c.fin[k][i] : null;
@@ -2211,7 +2259,6 @@ function renderPf() {
   body.onchange = e => { const i = e.target.closest("input[data-px]"); if (i) { const x = parseFloat(i.value); if (x > 0) { PF.prix[i.dataset.px] = x; pfSave(PF); renderPf(); } } };
 }
 
-function pageMentions() { setTitle("Mentions légales"); setNav(""); app.innerHTML = `<h1 class="pagetitle">Mentions légales</h1><p class="pagesub">À compléter avant la mise en ligne : éditeur du site, hébergeur, contact, sources des données et conditions d'utilisation.</p>`; }
 function pageNotFound() { setTitle("Page introuvable"); setNav(""); app.innerHTML = `<h1 class="pagetitle">Page introuvable</h1><p class="pagesub"><a class="lnk" href="/">Retour à l'accueil</a></p>`; }
 
 /* ---------- Navigation ---------- */
@@ -2278,18 +2325,21 @@ async function pageComparer() {
   setTitle("Comparer des entreprises"); setNav("ent");
   app.innerHTML = `<div class="empty">Chargement…</div>`; await PXP;
   let ids = (new URLSearchParams(location.search).get("ids") || "").split(",").filter(id => RBY[id]);
-  ids = [...new Set(ids)].slice(0, 5);
+  await premStatus(); const CMAX = isPrem() ? 5 : FREE.cmp, cut = new Set(ids).size > CMAX;
+  ids = [...new Set(ids)].slice(0, CMAX);
   const list = ids.map(id => RBY[id]);
   const sug = list.length ? [...new Set(list.flatMap(c => peersOf(c, 5).list))].filter(c => !ids.includes(c.id)).slice(0, 8) : ["lvmh", "kering", "hermes", "apple", "microsoft", "nvidia", "amd", "totalenergies"].map(id => RBY[id]).filter(Boolean);
   const url = a => "/comparer?ids=" + a.join(",");
   app.innerHTML = `<div class="crumbs"><a href="/entreprises">Entreprises</a> › Comparer</div><h1 class="pagetitle">Comparer des entreprises</h1>
-    <p class="pagesub">Jusqu'à cinq entreprises côte à côte, sur les mêmes critères. Les couleurs disent si chaque chiffre est un point fort, dans la moyenne ou un point de vigilance ; elles ne disent pas quelle action acheter.</p>
+    <p class="pagesub">Jusqu'à ${CMAX === 5 ? "cinq" : "trois"} entreprises côte à côte${CMAX === 5 ? "" : ` (cinq avec <a class="lnk" href="/premium">Premium</a>)`}, sur les mêmes critères. Les couleurs disent si chaque chiffre est un point fort, dans la moyenne ou un point de vigilance ; elles ne disent pas quelle action acheter.</p>
     <section class="panel"><div class="pb">
       <div class="chips cmpsel">${list.map(c => `<a class="chipx" href="${url(ids.filter(x => x !== c.id))}" title="Retirer">${esc(c.name)} <span aria-hidden="true">×</span></a>`).join("")}</div>
-      ${ids.length < 5 ? `<div class="field" style="max-width:420px;margin-top:10px;position:relative"><label for="cmpq">Ajouter une entreprise</label><input id="cmpq" type="search" autocomplete="off" placeholder="Nom de l'entreprise"><div class="msug" id="cmps" hidden></div></div>
+      ${cut || (!isPrem() && ids.length >= CMAX) ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">La version gratuite compare ${FREE.cmp} entreprises à la fois. <a class="lnk" href="/premium">Premium</a> en compare cinq.</p>` : ""}
+      ${ids.length < CMAX ? `<div class="field" style="max-width:420px;margin-top:10px;position:relative"><label for="cmpq">Ajouter une entreprise</label><input id="cmpq" type="search" autocomplete="off" placeholder="Nom de l'entreprise"><div class="msug" id="cmps" hidden></div></div>
       ${sug.length ? `<div class="chips" style="margin-top:10px"><span class="light" style="font-size:13px">${list.length ? "Ses concurrents :" : "Exemples :"}</span>${sug.map(c => `<a class="chip" href="${url([...ids, c.id])}">+ ${esc(c.name)}</a>`).join("")}</div>` : ""}` : ""}
     </div></section>
     ${list.length ? `<section class="panel">${list.some(c => c.currency !== list[0].currency) ? `<div class="pb" style="padding-bottom:0"><p class="muted" style="margin:0;font-size:13px">Les montants sont convertis en euros aux taux de la BCE pour être comparables ; le montant d'origine est indiqué dessous.</p></div>` : ""}${list.length > 1 ? compareSynth(list).replace('class="synth"', 'class="synth" style="border-top:0;border-bottom:1px solid var(--line2)"') : ""}${cmpTable(list, null)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise (rapports ESEF et SEC). Les montants restent dans la devise de chaque entreprise ; les pourcentages se comparent directement. Pour une banque ou un assureur, la marge et la dette ne se lisent pas de la même façon.</div></section>
+      ${profilsCompare(list)}
       <section class="panel"><div class="ph"><h2>Comment lire cette comparaison</h2></div><div class="pb"><ol class="steps2">
         <li><b>Comparez des entreprises du même métier.</b> Une marge de 10 % est faible pour un éditeur de logiciels et élevée pour un supermarché.</li>
         <li><b>Regardez plusieurs lignes ensemble.</b> Une forte rentabilité avec beaucoup de dette ne vaut pas une forte rentabilité sans dette.</li>
@@ -2829,7 +2879,8 @@ const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g
 /* ---------- Outils ---------- */
 const OUTILS = [
   ["/portefeuille", "Radiographie de portefeuille", "Ce que vous possédez vraiment une fois vos ETF ouverts : entreprises, pays, frais, dividendes."],
-  ["/comparer", "Comparer des entreprises", "Jusqu'à cinq entreprises côte à côte, avec une synthèse en phrases."],
+  ["/commencer", "Par où commencer ?", "Sept étapes dans l'ordre et un questionnaire de cinq questions pour trouver votre profil d'investisseur."],
+  ["/comparer", "Comparer des entreprises", "Plusieurs entreprises côte à côte, avec une synthèse en phrases et leur place dans le secteur."],
   ["/outils/si-javais", "Et si j'avais investi…", "Ce que seraient devenus 1 000 € placés il y a 1, 3 ou 5 ans dans une action ou un ETF, comparé au marché."],
   ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?", "Les entreprises que deux ETF ont en commun, pour éviter d'acheter deux fois la même chose."],
   ["/outils/verifier", "Vérifier un site ou une offre", "Le nom d'un site, d'une appli ou d'un « conseiller » comparé aux listes noires de l'AMF, mises à jour chaque jour."],
@@ -3000,8 +3051,8 @@ function resumeHTML(txt) {
 async function loadResume(el, url) {
   if (RESUMES[url]) { el.innerHTML = RESUMES[url]; return; }
   el.innerHTML = `<p class="muted" style="margin:6px 0">Lecture du document et rédaction du résumé…</p>`;
-  try { const j = await (await fetch("/api/resume?u=" + encodeURIComponent(url))).json();
-    el.innerHTML = RESUMES[url] = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Résumé rédigé automatiquement par une IA à partir du document officiel. Vérifiez les chiffres dans le document source.</p></div>` : `<p class="muted" style="margin:6px 0">${esc(j.error || "Résumé indisponible.")}</p>`;
+  try { const j = await (await iaFetch("/api/resume?u=" + encodeURIComponent(url))).json();
+    el.innerHTML = RESUMES[url] = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Résumé rédigé automatiquement par une IA à partir du document officiel. Vérifiez les chiffres dans le document source.</p></div>` : iaErr(j, "Résumé indisponible.");
   } catch (e) { el.innerHTML = `<p class="muted">Résumé indisponible pour le moment.</p>`; }
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-resume]"); if (!b) return; e.preventDefault(); const box = b.nextElementSibling; b.remove(); loadResume(box, b.dataset.resume); });
@@ -3014,6 +3065,7 @@ function favCard(c) {
     <div class="fcp">${p ? `<span class="p">${pxFmt(p.p, p.cur)}</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % aujourd'hui" : ""}</span>` : `<span class="muted">Cours indisponible</span>`}</div>
     ${pos != null ? `<div class="range" style="margin:14px 0 4px"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>plus bas 1 an</span><span>plus haut 1 an</span></div>` : ""}
     <div class="fcg">${y != null ? `<span><small>Sur 1 an</small><b class="${y >= 0 ? "up" : "down"}">${sgn(y, 0)}</b></span>` : ""}${v && v.pe ? `<span><small>PER</small><b>${F0.format(v.pe)}</b></span>` : ""}${v && v.yld >= 0.001 ? `<span><small>Rendement</small><b>${pct(v.yld, 1, false)}</b></span>` : ""}${t ? `<span><small>Comptes</small>${pills(t)}</span>` : ""}</div>
+    ${profilMini(c)}
     <p class="fcn">${nx ? `<b>${dLabel(nx.date)}</b> · ${esc(nx.label)}` : `<span class="light">Aucune date annoncée</span>`}</p></div>`;
 }
 function listeFaits(cos) { // les faits transmis à l'IA : rien d'autre que les données du site
@@ -3027,8 +3079,8 @@ async function veilleBilan(cos) {
   const el = $("#vbil"); if (!el) return;
   el.innerHTML = `<p class="muted">Rédaction du bilan de votre liste…</p>`;
   await loadAna();
-  try { const j = await (await fetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
-    el.innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>` : `<p class="muted">${esc(j.error || "Bilan indisponible.")}</p>`;
+  try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
+    el.innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>` : iaErr(j, "Bilan indisponible.");
   } catch (e) { el.innerHTML = `<p class="muted">Bilan indisponible pour le moment.</p>`; }
 }
 async function pageFavoris() {
@@ -3061,8 +3113,8 @@ async function pageFavoris() {
   cos.slice(0, 5).forEach((c, i) => presseBlock($("#fp" + i), { id: c.id, max: 2 }));
   fetch("/api/veille/inscription", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).then(r => r.json()).then(j => {
     if (j.error && /pas encore ouvert/.test(j.error)) return; // envoi non configuré : on laisse « bientôt disponible »
-    $("#vmail").innerHTML = `<form id="vmf" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b>Recevoir ce bilan chaque semaine par e-mail</b><input type="email" required placeholder="votre@adresse.fr" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px"><button class="btn" type="submit">S'inscrire</button><span class="muted" id="vmm" style="font-size:12.5px">Un e-mail de confirmation vous sera envoyé. Désinscription en un clic.</span></form>`;
-    $("#vmf").onsubmit = ev => { ev.preventDefault(); post("/api/veille/inscription", { email: $("input", $("#vmf")).value, ids: favs() }).then(r => { $("#vmm").textContent = r.error || "Vérifiez votre boîte : un lien de confirmation vient de partir."; }); };
+    $("#vmail").innerHTML = `<form id="vmf" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b>Recevoir ce bilan chaque semaine par e-mail</b><input type="email" required placeholder="votre@adresse.fr" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px"><button class="btn" type="submit">S'inscrire</button><span class="muted" id="vmm" style="font-size:12.5px">Un e-mail de confirmation vous sera envoyé. Désinscription en un clic.${isPrem() ? " Premium : vous recevrez aussi une alerte le soir d'une annonce officielle, d'une variation de plus de 5 % ou la veille de résultats." : ` Les alertes du soir (annonce, variation de plus de 5 %, résultats le lendemain) sont réservées à <a class="lnk" href="/premium">Premium</a>.`}</span></form>`;
+    $("#vmf").onsubmit = ev => { ev.preventDefault(); iaFetch("/api/veille/inscription", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: $("input", $("#vmf")).value, ids: favs() }) }).then(r => r.json()).then(r => { $("#vmm").textContent = r.error || "Vérifiez votre boîte : un lien de confirmation vient de partir."; }); };
   }).catch(() => { });
 }
 
@@ -3084,7 +3136,7 @@ async function pagePortefeuille() {
   q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
     const hits = [...ETF.list.filter(e => norm(e.name + " " + e.index + " " + (e.ticker || "")).includes(t)).map(e => ["e:" + e.id, e.name, "ETF · " + e.index]), ...R.companies.filter(c => norm(c.name + " " + c.ticker).includes(t)).map(c => ["c:" + c.id, c.name, secName(c)])].slice(0, 8);
     box.innerHTML = hits.map(([k, n, s]) => `<button type="button" data-k="${k}">${esc(n)} <small>${esc(s)}</small></button>`).join("") || `<div class="light" style="padding:8px 10px">Rien trouvé</div>`; box.hidden = false;
-    $$("button", box).forEach(b => b.onclick = () => { const p = PX[b.dataset.k]; if (!P.l.some(l => l.k === b.dataset.k)) P.l.push(p ? { k: b.dataset.k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k: b.dataset.k, m: 1000 }); pf2Save(P); q.value = ""; box.hidden = true; drawLines(); }); };
+    $$("button", box).forEach(b => b.onclick = () => { const p = PX[b.dataset.k]; if (!P.l.some(l => l.k === b.dataset.k) && !pfFull(P)) P.l.push(p ? { k: b.dataset.k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k: b.dataset.k, m: 1000 }); pf2Save(P); q.value = ""; box.hidden = true; drawLines(); }); };
   const drawLines = () => {
     $("#pflines").innerHTML = P.l.length ? `<div class="scroll-x"><table class="t pft"><thead><tr><th class="l">Ligne</th><th>Nombre</th><th>Prix de revient</th><th>Cours</th><th>Valeur</th><th>Plus ou moins-value</th><th></th></tr></thead><tbody>${P.l.map((l, i) => { const p = PX[l.k], val = lineValue(l), cost = lineCost(l), g = cost ? val - cost : null;
       return `<tr data-i="${i}"><td class="l"><a class="cell-co" href="${keyHref(l.k)}">${keyLogo(l.k, 26)}<span class="nm">${esc(keyName(l.k) || l.k)}</span></a></td>
@@ -3092,7 +3144,7 @@ async function pagePortefeuille() {
           : `<td colspan="2"><input data-f="m" type="number" min="0" step="any" value="${l.m || 0}" style="width:110px;text-align:right"> <small class="light">€ investis</small></td><td class="num light">–</td>`}
         <td class="num">${F0.format(val || 0)} €</td><td class="num ${g == null ? "" : g >= 0 ? "up" : "down"}">${g == null ? "–" : `${g >= 0 ? "+" : "−"}${F0.format(Math.abs(g))} € (${sgn(g / cost, 1)})`}</td><td><button type="button" class="linkbtn" data-x="${i}">Retirer</button></td></tr>`; }).join("")}</tbody></table></div>`
       : `<p class="muted" style="margin:12px 0 0">Aucune ligne pour l'instant. ${favs().length ? `<button type="button" class="linkbtn" id="fromfav">Reprendre mes favoris</button>` : ""}</p>`;
-    const ff = $("#fromfav"); if (ff) ff.onclick = () => { favs().forEach(k => { if (!P.l.some(l => l.k === k)) { const p = PX[k]; P.l.push(p ? { k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k, m: 1000 }); } }); pf2Save(P); drawLines(); };
+    const ff = $("#fromfav"); if (ff) ff.onclick = () => { favs().forEach(k => { if (!P.l.some(l => l.k === k) && !pfFull(P)) { const p = PX[k]; P.l.push(p ? { k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k, m: 1000 }); } }); pf2Save(P); drawLines(); };
     $$("#pflines tr[data-i]").forEach(tr => { const l = P.l[+tr.dataset.i]; $$("[data-f]", tr).forEach(inp => inp.onchange = () => { l[inp.dataset.f] = parseFloat(inp.value) || 0; pf2Save(P); drawLines(); }); });
     $$("[data-x]", $("#pflines")).forEach(b => b.onclick = () => { P.l.splice(+b.dataset.x, 1); pf2Save(P); drawLines(); });
     radiographie(P);
@@ -3165,8 +3217,8 @@ async function radiographie(P) {
     $("#pfiab").innerHTML = `<p class="muted">Analyse en cours…</p>`;
     const faits = { type: "portefeuille", valeur_eur: Math.round(tot), plus_value_pct: Math.round(gain / cost * 1000) / 10, lignes: lines.map(l => ({ nom: keyName(l.k), type: l.k.startsWith("e:") ? "ETF" : "action", poids_pct: Math.round(l.v / tot * 1000) / 10, plus_value_pct: lineCost(l) ? Math.round((l.v / lineCost(l) - 1) * 1000) / 10 : null })),
       pays: cs.slice(0, 5).map(([k, w]) => [COUNTRY[k] || k, Math.round(w * 1000) / 10]), premieres_expositions: top.slice(0, 6).map(x => [x.name, Math.round(x.w * 1000) / 10]), frais_etf_eur_an: Math.round(fees), remarques: $$(".gf b", el).map(b => b.textContent) };
-    try { const j = await (await fetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits, type: "portefeuille" }) })).json();
-      $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Commentaire rédigé par une IA à partir de vos lignes. Ce n'est pas un conseil en investissement.</p></div>` : `<p class="muted">${esc(j.error || "Analyse indisponible.")}</p>`;
+    try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits, type: "portefeuille" }) })).json();
+      $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Commentaire rédigé par une IA à partir de vos lignes. Ce n'est pas un conseil en investissement.</p></div>` : iaErr(j, "Analyse indisponible.");
     } catch (e) { $("#pfiab").innerHTML = `<p class="muted">Analyse indisponible pour le moment.</p>`; }
   };
 }
@@ -3192,6 +3244,189 @@ function profilHTML(s) {
   const word = p => p >= 0.75 ? "parmi les meilleures" : p >= 0.55 ? "au-dessus de la médiane" : p > 0.45 ? "dans la médiane" : p > 0.25 ? "sous la médiane" : "parmi les plus faibles";
   return `<div class="prof"><p class="kick" style="margin-bottom:8px">Son profil dans le secteur ${esc(secName(s).toLowerCase())}</p>${axes.map(([t, d, r]) => `<div class="pa2" ${tipAttr({ h: t, r: [[d, `${r.rank}e sur ${r.n}`, ""]], n: "Le trait du milieu est la médiane du secteur." })} tabindex="0"><span class="pt"><b>${t}</b><small>${word(r.p)}</small></span><span class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${r.p >= 0.55 ? "var(--g)" : r.p > 0.45 ? "var(--n)" : "var(--o)"}"></i></span></div>`).join("")}
     <p class="note" style="margin:6px 0 0">Chaque point place l'entreprise parmi les ${axes[0][2].n} entreprises du secteur suivies : à droite les mieux placées, au milieu la ${medBtn()}. Ce profil décrit les derniers comptes ; ce n'est pas une note d'achat.</p></div>`;
+}
+
+/* ---------- Premium : jeton gardé sur l'appareil, quotas, incitations ---------- */
+const TKEY = "bilan.premium", FREE = { pf: 6, cmp: 3 };
+function premTok() { try { return localStorage.getItem(TKEY) || ""; } catch (e) { return ""; } }
+function setPremTok(t) { try { t ? localStorage.setItem(TKEY, t) : localStorage.removeItem(TKEY); } catch (e) { } PREM = null; }
+let PREM = null, PREMP = null;
+function premStatus() {
+  if (PREM) return Promise.resolve(PREM);
+  if (PREMP) return PREMP;
+  const t = premTok(); if (!t) return Promise.resolve(PREM = { premium: false });
+  return PREMP = fetch("/api/premium/statut", { headers: { "x-bilan-token": t } }).then(r => r.json()).catch(() => ({ premium: false })).then(j => { PREMP = null; PREM = j; document.documentElement.classList.toggle("is-prem", !!j.premium); return j; });
+}
+const isPrem = () => !!(PREM && PREM.premium);
+function iaFetch(url, opts = {}) { const t = premTok(); return fetch(url, { ...opts, headers: { ...(opts.headers || {}), ...(t ? { "x-bilan-token": t } : {}) } }); }
+function iaErr(j, def) { return `<p class="muted" style="margin:6px 0">${esc((j && j.error) || def)}</p>${j && j.quota && !j.premium ? `<p style="margin:4px 0 8px"><a class="more" href="/premium">Découvrir Premium →</a></p>` : ""}`; }
+function toast(html) { let t = $("#toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; document.body.appendChild(t); } t.innerHTML = html; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 6000); }
+function pfFull(P) { if (isPrem() || P.l.length < FREE.pf) return false; toast(`La version gratuite suit jusqu'à ${FREE.pf} lignes. <a href="/premium">Premium</a> les suit sans limite.`); return true; }
+premStatus();
+
+/* ---------- Score visuel : le profil en 5 axes, en version compacte (cartes, comparaisons) ---------- */
+function profilAxes(s) {
+  if (s.missing) return [];
+  const bank = isBank(s), m = ratios(s);
+  return [
+    ["Croissance", rankIn(s, c => ratios(c).g1)],
+    [bank ? "Rentabilité" : "Marge", bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge)],
+    ["Solidité", bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false)],
+    ["Dividende", m.payout != null && m.payout > 0 ? rankIn(s, c => { const p = ratios(c).payout; return p > 0 ? p : null; }, false) : null],
+    ["Prix", valo(s) && valo(s).pe ? rankIn(s, c => { const v = valo(c); return v && v.pe ? v.pe : null; }, false) : null],
+  ].filter(a => a[1]);
+}
+const axCol = p => p >= 0.55 ? "var(--g)" : p > 0.45 ? "var(--n)" : "var(--o)";
+const axWord = p => p >= 0.75 ? "parmi les meilleures" : p >= 0.55 ? "au-dessus de la médiane" : p > 0.45 ? "dans la médiane" : p > 0.25 ? "sous la médiane" : "parmi les plus faibles";
+function profilMini(s) {
+  const ax = profilAxes(s); if (ax.length < 3) return "";
+  return `<div class="pmini" aria-label="Profil dans son secteur">${ax.map(([t, r]) => `<span ${tipAttr({ h: t, r: [["Place dans le secteur", `${r.rank}e sur ${r.n}`, ""]], n: axWord(r.p) + ". Le trait du milieu est la médiane." })} tabindex="0"><small>${t}</small><i class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${axCol(r.p)}"></i></i></span>`).join("")}</div>`;
+}
+function profilsCompare(list) {
+  const rows = list.map(c => [c, profilAxes(c)]).filter(([, a]) => a.length >= 3); if (rows.length < 2) return "";
+  const names = ["Croissance", "Marge", "Rentabilité", "Solidité", "Dividende", "Prix"].filter(n => rows.some(([, a]) => a.some(x => x[0] === n)));
+  return `<section class="panel"><div class="ph"><h2>Où chacune se place dans son secteur</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t pcmp"><thead><tr><th></th>${names.map(n => `<th>${n}</th>`).join("")}</tr></thead><tbody>${rows.map(([c, a]) => `<tr><td><b>${esc(c.name)}</b></td>${names.map(n => { const x = a.find(y => y[0] === n); return `<td>${x ? `<span class="pl" title="${esc(axWord(x[1].p))} (${x[1].rank}e sur ${x[1].n})"><i class="pm"></i><i class="pd" style="left:${x[1].p * 100}%;background:${axCol(x[1].p)}"></i></span><small class="light">${axWord(x[1].p)}</small>` : `<span class="light">–</span>`}</td>`; }).join("")}</tr>`).join("")}</tbody></table>
+    <p class="note" style="margin:8px 0 0">Chaque point place l'entreprise parmi celles de son propre secteur : à droite les mieux placées, au milieu la ${medBtn()}. Pour « Prix », à droite signifie une action moins chère au regard du bénéfice. Ce n'est pas une note d'achat.</p></div></section>`;
+}
+
+/* ---------- Assistant de fiche : questions sur l'entreprise, réponses tirées des données du site ---------- */
+const R1 = x => x == null || !isFinite(x) ? null : Math.round(x * 1000) / 10;
+function ficheFaits(s, c) {
+  const f = c ? figuresOf(c) : null, r = ratios(s), m = MED[s.sector] || {}, v = valo(s), p = pxOf(s);
+  return {
+    entreprise: s.name, secteur: secName(s), pays: regName(s), activite: s.fiche ? s.fiche.fait : s.desc, comment_elle_gagne_de_l_argent: s.fiche && s.fiche.argent, ce_qui_fait_varier_ses_resultats: s.fiche && s.fiche.depend,
+    compte_possible: peaOk(s) == null ? null : peaOk(s) ? "PEA ou compte-titres" : "compte-titres seulement",
+    comptes: f && { exercice: f.year, devise: s.currency, ventes_millions: s.ca, ventes_annee_precedente_millions: s.caPrev, benefice_net_millions: s.net, croissance_ventes_pct: R1(r.g1), marge_operationnelle_pct: R1(r.marge), marge_nette_pct: R1(r.nm), rentabilite_capitaux_propres_pct: R1(r.roe), dette_nette_en_annees_de_resultat: r.lev == null ? null : Math.round(r.lev * 10) / 10, tresorerie_superieure_a_la_dette: s.netDebt != null && s.netDebt < 0, part_du_benefice_versee_en_dividende_pct: R1(r.payout) },
+    mediane_du_secteur: { entreprises: m.n, croissance_ventes_pct: R1(m.g1), marge_operationnelle_pct: R1(m.marge), rentabilite_pct: R1(m.roe), dette_annees: m.lev == null ? null : Math.round(m.lev * 10) / 10, distribution_pct: R1(m.payout), per: MEDPE[s.sector] ? Math.round(MEDPE[s.sector]) : null },
+    lecture_du_site: f ? lecture(s, f).map(i => `${i.q} ${String(i.value || "").replace(/<[^>]+>/g, "")} (${i.lv === "fort" ? "point fort" : i.lv === "vig" ? "point de vigilance" : "dans la moyenne"})`) : [],
+    profil_dans_le_secteur: profilAxes(s).map(([t, x]) => `${t} : ${x.rank}e sur ${x.n}, ${axWord(x.p)}`),
+    action: p && { cours: p.p, devise: p.cur, variation_jour_pct: p.chg, variation_1an_pct: p.p1y ? R1(p.p / p.p1y - 1) : null, plus_haut_1an: p.h52, plus_bas_1an: p.l52, per: v && v.pe ? Math.round(v.pe * 10) / 10 : null, rendement_dividende_pct: v ? R1(v.yld) : null, capitalisation_milliards_eur: v && v.capE ? Math.round(v.capE / 1e8) / 10 : null },
+    concurrents: peersOf(s, 4).list.map(x => { const rr = ratios(x), vv = valo(x); return { nom: x.name, croissance_ventes_pct: R1(rr.g1), marge_pct: R1(rr.marge), per: vv && vv.pe ? Math.round(vv.pe) : null }; }),
+    annonces_recentes: Object.values(ANA || {}).filter(x => x.id === s.id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map(x => ({ date: x.date, type: x.type, chiffres: x.chiffres, lecture: x.lecture })),
+    prochaines_dates: eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3).map(e => ({ date: e.date, quoi: e.label })),
+    date_du_jour: TODAY,
+  };
+}
+const ASK = ["Comment gagne-t-elle de l'argent ?", "Que retenir de ses derniers comptes ?", "Est-elle chère par rapport à ses concurrentes ?", "Sa dette est-elle un problème ?", "Son dividende est-il solide ?", "Quels sont ses points de vigilance ?"];
+function assistantPanel(s, c, root) {
+  if (!root) return;
+  const sec = document.createElement("section"); sec.className = "panel asst"; sec.id = "assistant";
+  sec.innerHTML = `<div class="ph"><h2>Une question sur ${esc(s.name)} ?</h2><span class="light" style="font-size:12.5px">Assistant IA</span></div><div class="pb">
+    <p class="muted" style="margin:0 0 10px;font-size:14px">L'assistant répond à partir des seules données de cette fiche : comptes, médianes du secteur, concurrentes, cours et annonces. Il explique ; il ne dit pas s'il faut acheter.</p>
+    <div class="chips">${ASK.map(q => `<button type="button" class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+    <form class="askf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question, par exemple : pourquoi sa marge baisse-t-elle ?" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
+    <div class="asklog"></div><p class="iafoot" style="margin-top:10px">${isPrem() ? "Premium : jusqu'à 40 questions par jour." : `3 questions par jour en version gratuite, 40 avec <a class="lnk" href="/premium">Premium</a>.`} Réponses rédigées par une IA : vérifiez les chiffres sur la fiche.</p></div>`;
+  const first = root.firstElementChild; first ? first.after(sec) : root.appendChild(sec); // juste sous l'essentiel, bien visible
+  const log = $(".asklog", sec), inp = $("input", sec);
+  const ask = async q => {
+    q = q.trim(); if (q.length < 5) return;
+    const item = document.createElement("div"); item.className = "askit"; item.innerHTML = `<p class="askq">${esc(q)}</p><div class="aska"><p class="muted">L'assistant lit la fiche…</p></div>`; log.prepend(item);
+    await loadAna();
+    try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, c) }) })).json();
+      $(".aska", item).innerHTML = j.txt ? resumeHTML(j.txt) : iaErr(j, "Réponse indisponible.");
+    } catch (e) { $(".aska", item).innerHTML = `<p class="muted">L'assistant est indisponible pour le moment.</p>`; }
+  };
+  sec.addEventListener("click", e => { const b = e.target.closest("[data-ask]"); if (b) { b.disabled = true; ask(b.dataset.ask); } });
+  $("form", sec).onsubmit = e => { e.preventDefault(); ask(inp.value); inp.value = ""; };
+}
+
+/* ---------- Page Premium ---------- */
+let OFFRES = null;
+async function pagePremium(sub) {
+  setTitle(sub === "merci" ? "Merci" : "Premium"); setNav("prem");
+  if (sub === "merci") return premiumMerci();
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
+  PREM = null; const st = await premStatus(), L = OFFRES.limites || { resume: [5, 80], assistant: [3, 40], veille: [1, 10], portefeuille: [1, 10] };
+  const rows = [
+    ["Fiches entreprises et ETF, comptes expliqués, médianes, concurrentes", "Oui", "Oui"],
+    ["Cours, marchés du jour, actualités analysées, agenda, dividendes", "Oui", "Oui"],
+    ["Parcours Premiers pas, lexique, simulateurs, vérificateur d'arnaques", "Oui", "Oui"],
+    ["Questions à l'assistant IA sur une fiche", `${L.assistant[0]} par jour`, `${L.assistant[1]} par jour`],
+    ["Résumés détaillés des documents officiels", `${L.resume[0]} par jour`, `${L.resume[1]} par jour`],
+    ["Bilan rédigé de vos favoris", `${L.veille[0]} par jour`, `${L.veille[1]} par jour`],
+    ["Commentaire IA de votre portefeuille", `${L.portefeuille[0]} par jour`, `${L.portefeuille[1]} par jour`],
+    ["Lignes suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
+    ["Entreprises comparées côte à côte", `${FREE.cmp}`, "5"],
+    ["Bilan de votre liste par e-mail, chaque samedi", "10 lignes", "40 lignes"],
+    ["Alertes par e-mail : annonce officielle, variation de plus de 5 %, résultats le lendemain", "–", "Oui"],
+  ];
+  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<button class="btn" disabled>Ouverture prochaine</button>`}</div>`;
+  app.innerHTML = `<h1 class="pagetitle">bilan. Premium</h1><p class="pagesub">Le site reste gratuit pour l'essentiel : chaque fiche, chaque chiffre, chaque explication. Premium lève les limites de l'intelligence artificielle et ajoute les alertes par e-mail. Le prix finance les données et les serveurs, pas la publicité.</p>
+    ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
+    <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>`}
+    <section class="panel"><div class="ph"><h2>Ce qui change avec Premium</h2></div><div class="pb" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table></div></section>
+    <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p class="muted" id="codem" style="font-size:13px"></p></div></section>
+      <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p class="muted" id="lostm" style="font-size:13px"></p></div></section></div>
+    <section class="panel"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">
+      ${acc("Premium donne-t-il des conseils pour acheter ?", "<p>Non. Premium donne plus d'explications et de suivi, jamais de recommandation d'achat ou de vente. bilan. n'est pas un conseiller en investissement.</p>")}
+      ${acc("Faut-il créer un compte ?", "<p>Non. Après le paiement, un code d'accès est enregistré sur votre appareil. Pour l'utiliser ailleurs, collez-le sur cette page. Le site ne demande ni mot de passe ni nom.</p>")}
+      ${acc("Comment résilier ?", "<p>L'abonnement mensuel se résilie à tout moment depuis cette page (« Gérer ou résilier mon abonnement »). L'accès reste ouvert jusqu'à la fin du mois payé. Le paiement unique ne se renouvelle pas.</p>")}
+      ${acc("Le paiement est-il sûr ?", "<p>Le paiement passe par Stripe, un prestataire de paiement agréé. bilan. ne voit jamais votre numéro de carte.</p>")}
+      ${acc("Puis-je changer d'avis ?", `<p>Les conditions de rétractation sont détaillées dans les <a class="lnk" href="/cgv">conditions générales de vente</a>.</p>`)}
+    </div></section>
+    <p class="note">Paiement sécurisé par Stripe. <a class="lnk" href="/cgv">Conditions générales de vente</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/avertissement">Avertissement sur les risques</a></p>`;
+  const P = $("#portail"); if (P) P.onclick = async () => { P.disabled = true; try { const j = await (await iaFetch("/api/premium/portail")).json(); if (j.url) location.href = j.url; else { toast(esc(j.error || "Portail indisponible.")); P.disabled = false; } } catch (e) { P.disabled = false; } };
+  const U = $("#unprem"); if (U) U.onclick = () => { setPremTok(""); document.documentElement.classList.remove("is-prem"); pagePremium(); };
+  $("#codef").onsubmit = async e => { e.preventDefault(); const v = $("#codef input").value.trim().replace(/[^a-f0-9]/gi, "").toLowerCase(); if (v.length < 20) { $("#codem").textContent = "Ce code ne semble pas complet."; return; }
+    setPremTok(v); const s = await premStatus(); if (s.premium) { toast("Premium est activé sur cet appareil."); pagePremium(); } else { setPremTok(""); $("#codem").textContent = "Ce code n'est pas reconnu ou l'accès a expiré."; } };
+  $("#lostf").onsubmit = async e => { e.preventDefault(); const v = $("#lostf input").value.trim(); if (!/@/.test(v)) return; try { const j = await (await fetch("/api/premium/retrouver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: v }) })).json(); $("#lostm").textContent = j.error || "Si un accès actif correspond à cette adresse, le code vient d'y être envoyé."; } catch (x) { $("#lostm").textContent = "Indisponible pour le moment."; } };
+}
+async function premiumMerci() {
+  const sid = new URLSearchParams(location.search).get("session_id") || "";
+  app.innerHTML = `<h1 class="pagetitle">Merci</h1><section class="panel"><div class="pb" id="merci"><p class="muted">Vérification du paiement…</p></div></section>`;
+  let j = {}; for (let i = 0; i < 4; i++) { try { j = await (await fetch("/api/premium/activer?session_id=" + encodeURIComponent(sid))).json(); } catch (e) { j = { error: "Vérification impossible pour le moment." }; } if (j.token || !/pas encore confirmé/.test(j.error || "")) break; await new Promise(r => setTimeout(r, 4000)); }
+  if (!j.token) { $("#merci").innerHTML = `<p>${esc(j.error || "Paiement introuvable.")}</p><p class="muted">Si vous avez été débité, écrivez-nous en indiquant l'adresse utilisée pour payer : votre accès sera ouvert à la main.</p>`; return; }
+  setPremTok(j.token); await premStatus();
+  $("#merci").innerHTML = `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Les limites sont levées sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/favoris">Activer les alertes sur mes favoris →</a><a class="more" href="/entreprises">Ouvrir une fiche →</a></div>`;
+}
+
+/* ---------- Nouvel investisseur : par où commencer ---------- */
+let COMM = null;
+const CKEY = "bilan.profil";
+async function pageCommencer() {
+  setTitle("Par où commencer en Bourse"); setNav("new");
+  if (!COMM) { try { COMM = await (await fetch("/data/commencer.json")).json(); } catch (e) { app.innerHTML = `<div class="empty">Le guide n'a pas pu être chargé.</div>`; return; } }
+  const C = COMM; let ans = {}; try { ans = JSON.parse(localStorage.getItem(CKEY) || "{}"); } catch (e) { }
+  app.innerHTML = `<div class="hero-new"><p class="kick">Nouvel investisseur</p><h1 class="pagetitle" style="margin-top:4px">Vous ne savez pas sur quoi investir ? Commencez ici.</h1><p class="pagesub">${esc(C.intro)}</p>
+      <div class="chips"><a class="chip" href="#etapes">Les 7 étapes</a><a class="chip" href="#profil">Trouver son profil en 5 questions</a><a class="chip" href="#faq">Questions fréquentes</a></div></div>
+    <section class="panel" id="etapes"><div class="ph"><h2>Les 7 étapes, dans l'ordre</h2></div><div class="steps7">${C.etapes.map((e, i) => `<details class="st7"${i === 0 ? " open" : ""}><summary><span class="n">${i + 1}</span><span><b>${esc(e.titre)}</b><small>${esc(e.resume)}</small></span><span class="chev" aria-hidden="true"></span></summary><div class="st7b">${e.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}${e.repere ? `<p class="repere"><b>Repère</b> ${esc(e.repere)}</p>` : ""}${e.lien ? `<a class="more" href="${esc(e.lien.href)}">${esc(e.lien.texte)} →</a>` : ""}</div></details>`).join("")}</div></section>
+    <section class="panel" id="profil"><div class="ph"><h2>Quel type d'investisseur êtes-vous ?</h2><span class="light" style="font-size:12.5px">5 questions · réponses gardées sur cet appareil</span></div><div class="pb"><form id="qprof">${C.questions.map((q, i) => `<fieldset class="qf"><legend><span class="n">${i + 1}</span>${esc(q.q)}</legend>${q.options.map((o, j) => `<label class="qo"><input type="radio" name="${esc(q.id)}" value="${j}"${ans[q.id] === j ? " checked" : ""}><span>${esc(o.label)}</span></label>`).join("")}</fieldset>`).join("")}</form><div id="presult"></div></div></section>
+    <section class="panel" id="faq"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">${C.faq.map(f => acc(esc(f.q), `<p>${esc(f.a)}</p>`)).join("")}</div></section>
+    <section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Pour aller plus loin</b><div class="muted">Comprendre les actions et lire les comptes, avec des quiz.</div></div><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/debuter">Le parcours Premiers pas →</a><a class="more" href="/pea-cto">PEA ou compte-titres →</a><a class="more" href="/outils/verifier">Vérifier une offre →</a></div></div></section>
+    <p class="note">${esc(C.avertissement)}</p>`;
+  const draw = () => {
+    const done = C.questions.filter(q => ans[q.id] != null).length, el = $("#presult");
+    if (done < C.questions.length) { el.innerHTML = `<p class="muted" style="margin:12px 0 0">${done ? `Encore ${C.questions.length - done} question${C.questions.length - done > 1 ? "s" : ""}.` : "Répondez aux questions : le profil qui vous ressemble le plus s'affiche ici."}</p>`; return; }
+    const sc = Object.fromEntries(C.profils.map(p => [p.id, 0]));
+    C.questions.forEach(q => { const o = q.options[ans[q.id]]; if (o) Object.entries(o.points).forEach(([k, v]) => sc[k] = (sc[k] || 0) + v); });
+    const order = C.profils.map(p => p.id); // en cas d'égalité, le profil le plus prudent l'emporte
+    const best = order.reduce((a, b) => sc[b] > sc[a] ? b : a, order[0]), P = C.profils.find(p => p.id === best);
+    const ex = (P.categories_etf || []).map(cat => [cat, ETF.list.filter(e => e.categorie === cat && e.ter != null).sort((a, b) => (b.pea - a.pea) || a.ter - b.ter).slice(0, 2)]).filter(([, l]) => l.length);
+    const cols = ["#0E6B4A", "#5E9C7F", "#B9B2A5", "#D9A35B"];
+    el.innerHTML = `<div class="pres"><p class="kick">Votre profil</p><h3>${esc(P.titre)}</h3><p>${esc(P.pour_qui)}</p>
+      <div class="two" style="margin-top:12px"><div><p class="cap">Ce qui guide ce profil</p><ul class="pl2">${P.principes.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div><p class="cap">Exemple de répartition, à but pédagogique</p><div class="rbar">${P.exemple_repartition.map(([l, v], i) => `<span style="width:${v}%;background:${cols[i % 4]}" title="${esc(l)} : ${v} %"></span>`).join("")}</div><ul class="rleg">${P.exemple_repartition.map(([l, v], i) => `<li><i style="background:${cols[i % 4]}"></i>${esc(l)}<b>${v} %</b></li>`).join("")}</ul></div></div>
+      ${ex.length ? `<p class="cap" style="margin-top:14px">Des exemples de fonds pour chaque catégorie, classés par frais</p><div class="exetf">${ex.map(([cat, l]) => `<div><small>${esc(ECAT[cat] || cat)}</small>${l.map(e => `<a href="/etf/${e.id}">${esc(e.name)} <span class="light">${pct(e.ter / 100, 2, false)} par an${e.pea ? " · PEA" : ""}</span></a>`).join("")}</div>`).join("")}</div><p class="note" style="margin-top:6px">Ces fonds sont cités parce qu'ils sont parmi les moins chers de leur catégorie sur le site. Ce n'est pas une sélection personnalisée : comparez-les sur leur fiche.</p>` : ""}
+      <p class="repere" style="margin-top:12px"><b>À retenir</b> ${esc(P.a_retenir)}</p>
+      <p class="note">Ce questionnaire donne un repère général. Il ne remplace pas l'évaluation de votre situation par un conseiller en investissement, qui doit tenir compte de vos revenus, de votre patrimoine et de vos projets.</p></div>`;
+  };
+  $("#qprof").onchange = e => { const t = e.target; if (t.name) { ans[t.name] = +t.value; try { localStorage.setItem(CKEY, JSON.stringify(ans)); } catch (x) { } draw(); } };
+  draw();
+}
+
+/* ---------- Pages légales ---------- */
+let LEGAL = null;
+const LEGAL_PAGES = { "/mentions-legales": "mentions", "/cgv": "cgv", "/confidentialite": "confidentialite", "/avertissement": "avertissement" };
+async function pageLegal(p) {
+  const k = LEGAL_PAGES[p]; setNav("");
+  if (!LEGAL) { try { LEGAL = await (await fetch("/data/legal.json")).json(); } catch (e) { app.innerHTML = `<div class="empty">Page indisponible.</div>`; return; } }
+  const P = LEGAL.pages[k]; setTitle(P.titre);
+  const fill = s => esc(s).replace(/\[([^\]]{2,40})\]/g, `<mark class="todo" title="À compléter par l'éditeur">$1</mark>`);
+  app.innerHTML = `<div class="legal"><h1 class="pagetitle">${esc(P.titre)}</h1>${/\[[^\]]+\]/.test(JSON.stringify(P)) ? `<p class="note">Les passages surlignés sont en cours de complétion par l'éditeur.</p>` : ""}
+    <section class="panel"><div class="pb">${P.sections.map(s => `<h2>${esc(s.h)}</h2>${s.p.map(x => `<p>${fill(x)}</p>`).join("")}`).join("")}</div></section>
+    <p class="note">${Object.entries(LEGAL_PAGES).filter(([, v]) => v !== k).map(([u, v]) => `<a class="lnk" href="${u}">${esc(LEGAL.pages[v].titre)}</a>`).join(" · ")}</p></div>`;
 }
 
 function route() {
@@ -3224,7 +3459,9 @@ function route() {
   else if (p === "/marches") pageMarches();
   else if ((m = p.match(/^\/outils(?:\/([a-z-]+))?$/))) pageOutils(m[1]);
   else if ((m = p.match(/^\/debuter(?:\/([a-z-]+))?(?:\/([a-z0-9-]+))?$/))) pageDebuter(m[1], m[2]);
-  else if (p === "/mentions-legales") pageMentions();
+  else if (LEGAL_PAGES[p]) pageLegal(p);
+  else if (p === "/commencer") pageCommencer();
+  else if ((m = p.match(/^\/premium(?:\/(merci))?$/))) pagePremium(m[1]);
   else pageNotFound();
 }
 function go(url) { history.pushState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); closePanels(); }

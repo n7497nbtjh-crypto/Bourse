@@ -1,0 +1,417 @@
+{
+ "intro": "Investir en bourse ne commence pas par le choix d'une action. Cela commence par quelques décisions simples : mettre de côté une réserve, fixer une durée, choisir un compte et limiter les frais. Cette page présente ces étapes dans l'ordre, avec des repères chiffrés publics, sans vous dire quoi acheter.",
+ "etapes": [
+  {
+   "id": "epargne-precaution",
+   "titre": "Constituer d'abord une épargne de précaution",
+   "resume": "Avant d'investir, gardez de côté une réserve disponible à tout moment pour les imprévus.",
+   "paragraphes": [
+    "L'épargne de précaution est une somme que vous pouvez retirer immédiatement, sans perte, en cas d'imprévu : panne de voiture, frais médicaux, perte d'emploi, déménagement. La pratique courante est de garder l'équivalent de 3 à 6 mois de dépenses.",
+    "Cette réserve se place en général sur un livret réglementé, comme le livret A ou le LDDS (livret de développement durable et solidaire). Ces livrets sont garantis par l'État, les intérêts ne sont pas imposés et l'argent reste disponible.",
+    "Pourquoi commencer par là ? La bourse peut baisser fortement sur quelques mois. Sans réserve, un imprévu peut vous obliger à vendre vos placements au pire moment, avec une perte. La réserve protège donc aussi vos investissements.",
+    "Le montant dépend de votre situation. Un salarié en CDI avec peu de charges peut viser le bas de la fourchette. Un indépendant, un étudiant aux revenus irréguliers ou une personne avec des enfants vise plutôt le haut."
+   ],
+   "repere": "Livret A et LDDS : 1,70 % par an net d'impôt depuis le 1er août 2026 (taux révisé deux fois par an, prochaine révision le 1er février 2027). Plafonds de versement : 22 950 € pour le livret A, 12 000 € pour le LDDS.",
+   "lien": {
+    "texte": "Simuler l'évolution d'une épargne",
+    "href": "/simulateurs/epargne"
+   }
+  },
+  {
+   "id": "horizon",
+   "titre": "Fixer votre horizon de placement",
+   "resume": "L'horizon, c'est la durée pendant laquelle vous pouvez laisser l'argent placé sans y toucher.",
+   "paragraphes": [
+    "L'horizon de placement est la date à laquelle vous aurez besoin de l'argent. Un apport pour un achat immobilier dans 3 ans et une retraite dans 40 ans n'appellent pas les mêmes placements.",
+    "Une règle courante : l'argent dont vous aurez besoin dans moins de 5 ans n'a pas sa place en actions. Sur une période courte, une baisse de 30 % ou plus est possible, et vous n'auriez pas le temps d'attendre une remontée.",
+    "Sur des durées longues, l'historique est plus favorable aux actions diversifiées. Selon une analyse publiée en 2017 par le site allemand de finances personnelles Finanztip, toutes les périodes de 15 ans entre 1975 et 2016 se sont terminées sans perte pour l'indice MSCI World, qui regroupe les grandes entreprises des pays développés.",
+    "Le passé ne garantit rien. Un indice d'un seul pays peut rester longtemps sous son record : l'indice japonais Nikkei 225 n'a dépassé son sommet de décembre 1989 qu'en février 2024, hors dividendes. C'est une raison de plus pour diversifier entre pays et pour garder un horizon long."
+   ],
+   "repere": "Selon Finanztip (2017), sur les périodes de 15 ans entre 1975 et 2016, le MSCI World a rapporté en moyenne 7,7 % par an, et 1,3 % par an pour la pire période.",
+   "lien": {
+    "texte": "Tester un portefeuille fictif",
+    "href": "/portefeuille"
+   }
+  },
+  {
+   "id": "compte",
+   "titre": "Choisir le bon compte",
+   "resume": "Le type de compte (on parle d'enveloppe) décide de ce que vous pouvez acheter et de la façon dont vos gains seront imposés.",
+   "paragraphes": [
+    "Le PEA (plan d'épargne en actions) permet d'acheter des actions européennes et des ETF éligibles, y compris certains ETF qui suivent des indices mondiaux. Les versements sont plafonnés à 150 000 €. Après 5 ans, les gains retirés ne paient pas d'impôt sur le revenu, seulement les prélèvements sociaux de 18,6 %. Un retrait avant 5 ans entraîne en principe la clôture du plan et une imposition à 31,4 %.",
+    "Le compte-titres ordinaire (CTO) n'a ni plafond ni restriction géographique : vous pouvez y acheter des actions du monde entier. En contrepartie, dividendes et plus-values sont imposés chaque année à 31,4 % (12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux), sauf option pour le barème progressif de l'impôt.",
+    "L'assurance-vie est un contrat qui peut contenir un fonds en euros (capital garanti par l'assureur, rendement modeste) et des unités de compte (ETF, fonds, actions, sans garantie). Les prélèvements sociaux y restent à 17,2 %. Après 8 ans, les gains retirés bénéficient d'un abattement annuel de 4 600 € pour une personne seule (9 200 € pour un couple) sur la part impôt sur le revenu.",
+    "Beaucoup d'investisseurs ouvrent un PEA tôt, même avec une petite somme, car le délai de 5 ans court à partir du premier versement. Ouvrir un compte ne vous oblige pas à investir tout de suite."
+   ],
+   "repere": "Fiscalité 2026 des gains : PEA après 5 ans 18,6 %, CTO 31,4 %, assurance-vie 17,2 % de prélèvements sociaux plus l'impôt sur le revenu, avec un abattement de 4 600 € par an après 8 ans.",
+   "lien": {
+    "texte": "Comparer PEA et compte-titres",
+    "href": "/pea-cto"
+   }
+  },
+  {
+   "id": "diversification",
+   "titre": "Diversifier, souvent avec un ETF large",
+   "resume": "Répartir son argent sur beaucoup d'entreprises réduit le risque qu'une seule mauvaise nouvelle fasse tout perdre.",
+   "paragraphes": [
+    "Diversifier, c'est ne pas dépendre d'une seule entreprise, d'un seul secteur ou d'un seul pays. Une entreprise peut faire faillite. Un indice de plusieurs centaines d'entreprises de plusieurs pays est beaucoup moins exposé à ce risque.",
+    "Un ETF (fonds indiciel coté, aussi appelé tracker) est un fonds qui reproduit un indice, par exemple le MSCI World, le MSCI ACWI (pays développés et émergents) ou le S&P 500 (500 grandes entreprises américaines). Il s'achète en bourse comme une action. Avec un seul achat, vous détenez une petite part de toutes les entreprises de l'indice.",
+    "C'est pour cela que beaucoup de débutants commencent par un ETF large plutôt que par des actions choisies une à une. Choisir des actions demande du temps, de la méthode et l'acceptation de se tromper. Un ETF large suit simplement la moyenne du marché.",
+    "Un ETF large n'est pas sans risque : s'il suit les actions, il baisse quand les marchés baissent. Le MSCI World est aussi très concentré sur les États-Unis, qui en représentent la majeure partie. Lisez la composition avant d'acheter."
+   ],
+   "repere": "Au 31 août 2026, selon MSCI, l'indice MSCI World compte 1 280 entreprises de 23 pays développés, et le MSCI ACWI 2 458 entreprises de 47 pays.",
+   "lien": {
+    "texte": "Explorer les ETF par catégorie",
+    "href": "/etf"
+   }
+  },
+  {
+   "id": "regularite",
+   "titre": "Investir régulièrement",
+   "resume": "Verser une somme fixe chaque mois évite d'avoir à deviner le bon moment pour acheter.",
+   "paragraphes": [
+    "Le versement programmé consiste à investir automatiquement la même somme à date fixe, par exemple 100 € chaque mois. La plupart des courtiers proposent cette option, parfois sous le nom de plan d'investissement programmé.",
+    "Cette méthode lisse le prix d'achat. Quand le prix baisse, la même somme achète plus de parts. Quand il monte, elle en achète moins. Sur la durée, votre prix moyen d'achat se rapproche de la moyenne du marché, sans que vous ayez à prendre de décision.",
+    "Elle aide surtout à tenir dans le temps. Le versement part même les mois où l'actualité fait peur, et c'est souvent pendant ces mois que les prix sont les plus bas.",
+    "Si vous disposez déjà d'une somme importante, investir tout en une fois ou en plusieurs fois sont deux pratiques courantes. Aucune n'est meilleure à coup sûr. L'étalement réduit surtout le regret d'avoir acheté juste avant une baisse."
+   ],
+   "repere": "Exemple : 100 € investis quand la part vaut 10 € achètent 10 parts, puis 100 € quand elle vaut 5 € en achètent 20. Vous détenez 30 parts pour 200 €, soit un prix moyen de 6,67 € au lieu de 7,50 €.",
+   "lien": {
+    "texte": "Simuler des versements mensuels",
+    "href": "/simulateurs/epargne"
+   }
+  },
+  {
+   "id": "frais",
+   "titre": "Surveiller les frais",
+   "resume": "Les frais sont la seule partie du rendement que vous connaissez à l'avance, et ils se cumulent chaque année.",
+   "paragraphes": [
+    "Il existe plusieurs types de frais. Les frais de courtage sont payés à chaque achat ou vente. Les frais de tenue de compte sont prélevés par le courtier ou la banque. Les frais courants d'un fonds ou d'un ETF sont prélevés chaque année sur sa valeur. En assurance-vie, s'ajoutent des frais de gestion du contrat et parfois des frais sur versement.",
+    "Un écart qui paraît faible devient important sur une longue durée, car les frais réduisent aussi les gains futurs que l'argent aurait produits. Les ETF larges ont souvent des frais courants inférieurs à 0,5 % par an, quand beaucoup de fonds gérés activement dépassent 1,5 %.",
+    "Sur un PEA, la loi plafonne certains frais depuis le 1er juillet 2020 : 10 € à l'ouverture, 0,5 % du montant pour un ordre passé en ligne, 0,4 % par an de la valeur des titres pour la tenue de compte, et 150 € au total pour un transfert vers un autre établissement.",
+    "Avant d'ouvrir un compte, lisez la grille tarifaire complète. Le document d'informations clés (DIC) de chaque fonds indique ses frais annuels."
+   ],
+   "repere": "Calcul illustratif : 200 € par mois pendant 30 ans avec un rendement brut hypothétique de 6 % par an donnent environ 189 000 € avec 0,2 % de frais annuels, contre environ 142 000 € avec 1,8 %. Les versements sont les mêmes : 72 000 €.",
+   "lien": {
+    "texte": "Mesurer l'effet des frais",
+    "href": "/simulateurs/frais"
+   }
+  },
+  {
+   "id": "a-eviter",
+   "titre": "Ce qu'il vaut mieux éviter",
+   "resume": "La plupart des pertes évitables viennent de promesses trop belles, de produits trop risqués ou de décisions prises sous le coup de l'émotion.",
+   "paragraphes": [
+    "Méfiez-vous de toute promesse de rendement élevé et garanti. Un rendement élevé va toujours avec un risque élevé. Avant de verser de l'argent, vérifiez que l'intermédiaire est autorisé et qu'il ne figure pas sur les listes noires de l'AMF (Autorité des marchés financiers), qui recensent les sites et sociétés non autorisés.",
+    "Les produits à effet de levier, comme les CFD (contrats sur la différence), multiplient les gains mais aussi les pertes. Avec un levier de 10, une baisse de 10 % suffit à perdre toute la mise. Selon l'ESMA, l'autorité européenne des marchés financiers, 74 % à 89 % des comptes de particuliers perdent de l'argent sur ces produits (analyse publiée en 2018).",
+    "Les cryptomonnaies achetées sur un coup de tête, après une forte hausse ou sur le conseil d'un inconnu, exposent à des baisses de plus de 50 % et à des plateformes parfois peu fiables. Les « influenceurs » financiers sont souvent rémunérés par les produits qu'ils mettent en avant, sans toujours le dire.",
+    "Enfin, vendre en panique pendant une baisse transforme une perte temporaire en perte définitive. Si votre épargne de précaution est en place et votre horizon long, une baisse fait partie du parcours normal d'un placement en actions."
+   ],
+   "repere": "Avec un effet de levier de 10, une baisse de 10 % du sous-jacent fait perdre 100 % de la mise.",
+   "lien": {
+    "texte": "Vérifier un site ou une offre",
+    "href": "/outils/verifier"
+   }
+  }
+ ],
+ "profils": [
+  {
+   "id": "prudent",
+   "titre": "Je découvre et je veux rester prudent",
+   "pour_qui": "Vous commencez tout juste, votre épargne de précaution n'est pas encore complète ou votre horizon est inférieur à 5 ans, et une forte baisse vous inquiéterait.",
+   "principes": [
+    "La priorité est de compléter l'épargne de précaution, avant de placer de l'argent en bourse.",
+    "La part en actions reste limitée, pour que les baisses restent supportables.",
+    "Un premier versement modeste sur un ETF large permet d'apprendre comment fonctionne un placement en bourse.",
+    "La part en actions peut augmenter plus tard, quand l'horizon s'allonge et que vous êtes plus à l'aise."
+   ],
+   "exemple_repartition": [
+    [
+     "Épargne de précaution (livret)",
+     40
+    ],
+    [
+     "Fonds en euros / obligations",
+     35
+    ],
+    [
+     "ETF actions monde",
+     25
+    ]
+   ],
+   "categories_etf": [
+    "actions-monde",
+    "obligations",
+    "monetaire"
+   ],
+   "a_retenir": "Commencer petit et sécuriser sa réserve n'empêche pas d'investir davantage ensuite."
+  },
+  {
+   "id": "long",
+   "titre": "J'ai un horizon long et j'accepte les baisses",
+   "pour_qui": "Votre épargne de précaution est en place, vous n'aurez pas besoin de cet argent avant 10 ans ou plus, et vous savez que la valeur peut baisser de 30 % ou plus en cours de route.",
+   "principes": [
+    "La majorité de la somme investie est placée en actions très diversifiées, souvent via un ETF large.",
+    "Des versements réguliers et automatiques évitent d'avoir à choisir le moment d'acheter.",
+    "Les frais sont réduits au minimum, car leur effet se cumule sur toute la durée.",
+    "Une révision de la répartition une fois par an suffit, sans réagir à chaque nouvelle."
+   ],
+   "exemple_repartition": [
+    [
+     "Épargne de précaution (livret)",
+     10
+    ],
+    [
+     "ETF actions monde",
+     70
+    ],
+    [
+     "ETF actions d'une zone (Europe, pays émergents)",
+     10
+    ],
+    [
+     "Fonds en euros / obligations",
+     10
+    ]
+   ],
+   "categories_etf": [
+    "actions-monde",
+    "actions-usa",
+    "actions-europe",
+    "actions-emergents"
+   ],
+   "a_retenir": "Sur un horizon long, la régularité et des frais bas comptent plus que le choix du moment."
+  },
+  {
+   "id": "actions",
+   "titre": "Je veux aussi choisir quelques entreprises",
+   "pour_qui": "Votre épargne de précaution est en place, votre horizon est long, et vous voulez consacrer du temps à étudier des entreprises et leurs comptes.",
+   "principes": [
+    "Une pratique courante consiste à garder un socle diversifié en ETF et à réserver une petite part aux actions choisies une à une.",
+    "Chaque entreprise achetée doit être comprise : son activité, ses résultats, sa dette et son prix par rapport à ses bénéfices.",
+    "Limiter le poids de chaque action évite qu'une seule erreur pèse lourd sur l'ensemble.",
+    "Comparer ses choix à un ETF large, sur plusieurs années, indique si le temps passé apporte quelque chose."
+   ],
+   "exemple_repartition": [
+    [
+     "Épargne de précaution (livret)",
+     10
+    ],
+    [
+     "ETF actions monde",
+     60
+    ],
+    [
+     "Actions choisies une à une",
+     20
+    ],
+    [
+     "Fonds en euros / obligations",
+     10
+    ]
+   ],
+   "categories_etf": [
+    "actions-monde",
+    "actions-europe",
+    "actions-france",
+    "dividendes"
+   ],
+   "a_retenir": "Les actions choisies une à une complètent un socle diversifié, elles ne le remplacent pas."
+  }
+ ],
+ "questions": [
+  {
+   "id": "horizon",
+   "q": "Dans combien de temps pensez-vous avoir besoin de cet argent ?",
+   "options": [
+    {
+     "label": "Dans moins de 5 ans",
+     "points": {
+      "prudent": 3,
+      "long": 0,
+      "actions": 0
+     }
+    },
+    {
+     "label": "Entre 5 et 10 ans",
+     "points": {
+      "prudent": 1,
+      "long": 2,
+      "actions": 1
+     }
+    },
+    {
+     "label": "Dans plus de 10 ans",
+     "points": {
+      "prudent": 0,
+      "long": 3,
+      "actions": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "baisse",
+   "q": "Votre placement perd 30 % en quelques mois. Que faites-vous ?",
+   "options": [
+    {
+     "label": "Je vends pour arrêter les pertes",
+     "points": {
+      "prudent": 3,
+      "long": 0,
+      "actions": 0
+     }
+    },
+    {
+     "label": "J'attends, mais je suis inquiet",
+     "points": {
+      "prudent": 1,
+      "long": 2,
+      "actions": 0
+     }
+    },
+    {
+     "label": "Je continue mes versements comme prévu",
+     "points": {
+      "prudent": 0,
+      "long": 3,
+      "actions": 1
+     }
+    },
+    {
+     "label": "J'en profite pour étudier des entreprises devenues moins chères",
+     "points": {
+      "prudent": 0,
+      "long": 1,
+      "actions": 3
+     }
+    }
+   ]
+  },
+  {
+   "id": "precaution",
+   "q": "Avez-vous déjà mis de côté 3 à 6 mois de dépenses sur un livret ?",
+   "options": [
+    {
+     "label": "Non, pas encore",
+     "points": {
+      "prudent": 3,
+      "long": 0,
+      "actions": 0
+     }
+    },
+    {
+     "label": "En partie",
+     "points": {
+      "prudent": 2,
+      "long": 1,
+      "actions": 0
+     }
+    },
+    {
+     "label": "Oui, c'est fait",
+     "points": {
+      "prudent": 0,
+      "long": 2,
+      "actions": 2
+     }
+    }
+   ]
+  },
+  {
+   "id": "connaissance",
+   "q": "Que savez-vous déjà de la bourse ?",
+   "options": [
+    {
+     "label": "Presque rien, je découvre",
+     "points": {
+      "prudent": 2,
+      "long": 1,
+      "actions": 0
+     }
+    },
+    {
+     "label": "Je connais les bases : ETF, PEA, diversification",
+     "points": {
+      "prudent": 0,
+      "long": 2,
+      "actions": 1
+     }
+    },
+    {
+     "label": "Je sais lire les comptes d'une entreprise",
+     "points": {
+      "prudent": 0,
+      "long": 1,
+      "actions": 3
+     }
+    }
+   ]
+  },
+  {
+   "id": "choisir",
+   "q": "Avez-vous envie de choisir vous-même des entreprises ?",
+   "options": [
+    {
+     "label": "Non, je préfère une solution simple",
+     "points": {
+      "prudent": 1,
+      "long": 3,
+      "actions": 0
+     }
+    },
+    {
+     "label": "Un peu, pour une petite partie",
+     "points": {
+      "prudent": 0,
+      "long": 1,
+      "actions": 2
+     }
+    },
+    {
+     "label": "Oui, c'est ce qui m'intéresse",
+     "points": {
+      "prudent": 0,
+      "long": 0,
+      "actions": 3
+     }
+    }
+   ]
+  }
+ ],
+ "avertissement": "Ce questionnaire et ces exemples de répartition sont pédagogiques : ils illustrent des pratiques courantes et ne constituent pas un conseil en investissement personnalisé. Pour un conseil adapté à votre situation, adressez-vous à un conseiller en investissements financiers (CIF) enregistré à l'ORIAS.",
+ "faq": [
+  {
+   "q": "Combien faut-il pour commencer ?",
+   "a": "Il n'y a pas de minimum légal. Une fois l'épargne de précaution en place, beaucoup de courtiers permettent d'investir à partir de quelques dizaines d'euros, parfois moins grâce aux versements programmés. Ce qui compte le plus au départ, c'est la régularité et la durée, pas le montant du premier versement."
+  },
+  {
+   "q": "Quel courtier choisir ?",
+   "a": "Comparez quatre critères. Les comptes proposés : PEA, compte-titres, assurance-vie. Les frais : courtage, tenue de compte, frais de change. Le choix de produits : ETF éligibles au PEA, versements programmés. La solidité : vérifiez que l'établissement est agréé et figure au registre REGAFI ou sur la liste des intermédiaires autorisés de l'AMF."
+  },
+  {
+   "q": "Quel est le bon moment pour acheter ?",
+   "a": "Personne ne connaît à l'avance le point bas ou le point haut du marché. Attendre le moment idéal conduit souvent à ne jamais investir, ou à acheter après une forte hausse. Investir une somme fixe à intervalles réguliers évite d'avoir à prendre cette décision."
+  },
+  {
+   "q": "Que faire quand la bourse baisse ?",
+   "a": "D'abord, ne rien décider dans l'urgence. Si votre épargne de précaution est en place et que vous n'avez pas besoin de cet argent avant plusieurs années, une baisse n'a pas de conséquence immédiate : la perte n'est réelle que si vous vendez. Les versements réguliers continuent et achètent à un prix plus bas."
+  },
+  {
+   "q": "Faut-il acheter des actions ou des ETF ?",
+   "a": "Un ETF large répartit votre argent sur des centaines ou des milliers d'entreprises en un seul achat. Une action isolée dépend d'une seule entreprise et demande plus de temps d'analyse. Beaucoup de débutants commencent par un ETF large, puis ajoutent éventuellement quelques actions une fois à l'aise."
+  },
+  {
+   "q": "Faut-il suivre l'actualité tous les jours ?",
+   "a": "Non. Pour un investissement de long terme, les nouvelles quotidiennes changent rarement quelque chose. Les suivre de près pousse souvent à agir trop vite. Un point une fois par trimestre, ou une fois par an pour revoir la répartition, suffit dans la plupart des cas."
+  },
+  {
+   "q": "Comment les gains sont-ils imposés ?",
+   "a": "Cela dépend du compte. En 2026, sur un PEA de plus de 5 ans, seuls les prélèvements sociaux de 18,6 % s'appliquent aux gains retirés. Sur un compte-titres, dividendes et plus-values sont imposés à 31,4 % chaque année. En assurance-vie, les prélèvements sociaux sont de 17,2 % et, après 8 ans, un abattement de 4 600 € par an (9 200 € pour un couple) s'applique à la part impôt sur le revenu. Tant que vous ne vendez pas, une plus-value n'est pas imposée."
+  },
+  {
+   "q": "Comment éviter les arnaques ?",
+   "a": "Vérifiez toujours que l'intermédiaire est autorisé, sur le registre REGAFI, sur le registre de l'ORIAS et sur les listes noires de l'AMF. Méfiez-vous des rendements garantis élevés, des contacts non sollicités par téléphone ou sur les réseaux sociaux, et de toute pression pour décider vite. En cas de doute, ne versez rien et contactez AMF Épargne Info Service au 01 53 45 62 00."
+  }
+ ]
+}

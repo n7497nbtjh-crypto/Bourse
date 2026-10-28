@@ -272,28 +272,168 @@ async function cours(request, ctx) {
   return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
 }
 
-// cf/src/ia.mjs
-var MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct";
-var HOSTS = /^(www\.sec\.gov|fr\.ftp\.opendatasoft\.com|www\.info-financiere\.gouv\.fr)$/, SCHEMA2 = [
-  "CREATE TABLE IF NOT EXISTS resumes (u TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)",
-  "CREATE TABLE IF NOT EXISTS ia_compte (jour TEXT PRIMARY KEY, n INTEGER NOT NULL)",
-  "CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)"
+// cf/src/compte.mjs
+var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
+  "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
+  "CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)",
+  "CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))",
+  "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))"
 ], ready2 = !1;
-async function init2(db) {
+async function initCompte(db) {
   if (!ready2) {
     for (let q of SCHEMA2) await db.prepare(q).run();
     ready2 = !0;
   }
 }
-var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), UA = "bilan (site pedagogique) contact@repere-bourse.pages.dev";
+var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+async function visitor(request, env = {}) {
+  let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + today() + "|" + (env.HASH_SALT || "bilan-sel-2026")));
+  return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+async function premiumOf(request, env) {
+  let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
+  if (!t || !env.DB) return null;
+  await initCompte(env.DB);
+  let a = await env.DB.prepare("SELECT * FROM abonnes WHERE token = ?").bind(t).first();
+  if (!a) return null;
+  if (a.until < Date.now() && a.sub_id && env.STRIPE_SECRET)
+    try {
+      let s = await stripe(env, `subscriptions/${a.sub_id}`);
+      if (["active", "trialing", "past_due"].includes(s.status)) {
+        let until = s.current_period_end * 1e3 + 2592e5;
+        await env.DB.prepare("UPDATE abonnes SET until = ? WHERE token = ?").bind(until, t).run(), a = { ...a, until };
+      }
+    } catch {
+    }
+  return a.until > Date.now() ? a : null;
+}
+var LIMITS = { resume: [5, 80], assistant: [3, 40], veille: [1, 10], portefeuille: [1, 10] };
+async function quota(request, env, kind) {
+  await initCompte(env.DB);
+  let p = await premiumOf(request, env), who2 = p ? "p:" + p.token : await visitor(request, env), [free, prem] = LIMITS[kind] || [3, 30], max = p ? prem : free, r = await env.DB.prepare("SELECT n FROM usage WHERE who = ? AND jour = ? AND kind = ?").bind(who2, today(), kind).first();
+  return r && r.n >= max ? { ok: !1, premium: !!p, max } : (!r && Math.random() < 0.02 && await env.DB.prepare("DELETE FROM usage WHERE jour < ?").bind(new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)).run(), await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1").bind(who2, today(), kind).run(), { ok: !0, premium: !!p, max, used: (r ? r.n : 0) + 1 });
+}
+function quotaError(q, what) {
+  return json2({ error: q.premium ? `Limite du jour atteinte (${q.max} ${what}). Elle revient demain.` : `Limite gratuite du jour atteinte (${q.max} ${what}). Elle revient demain, ou passez \xE0 Premium pour en avoir beaucoup plus.`, premium: q.premium, quota: !0 }, 429);
+}
+async function stripe(env, path) {
+  let r = await fetch("https://api.stripe.com/v1/" + path, { headers: { authorization: "Bearer " + env.STRIPE_SECRET } }), j = await r.json();
+  if (!r.ok) throw new Error(j.error && j.error.message || "Stripe " + r.status);
+  return j;
+}
+var newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+async function premium(request, env) {
+  if (!env || !env.DB) return json2({ error: "Indisponible pour le moment." }, 503);
+  await initCompte(env.DB);
+  let url = new URL(request.url), path = url.pathname;
+  if (path === "/api/premium/offres") return json2({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, limites: LIMITS, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
+  if (path === "/api/premium/statut") {
+    let p = await premiumOf(request, env);
+    return json2(p ? { premium: !0, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1\u2026$2") : null } : { premium: !1 });
+  }
+  if (path === "/api/premium/activer") {
+    if (!env.STRIPE_SECRET) return json2({ error: "Le paiement n'est pas encore configur\xE9." }, 503);
+    let sid = (url.searchParams.get("session_id") || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 200);
+    if (!sid.startsWith("cs_")) return json2({ error: "Paiement introuvable." }, 400);
+    let old = await env.DB.prepare("SELECT token FROM abonnes WHERE session = ?").bind(sid).first();
+    if (old) return json2({ token: old.token });
+    try {
+      let s = await stripe(env, `checkout/sessions/${sid}`);
+      if (!(s.status === "complete" && (s.payment_status === "paid" || s.payment_status === "no_payment_required"))) return json2({ error: "Le paiement n'est pas encore confirm\xE9. R\xE9essayez dans une minute." }, 402);
+      let plan = "unique", until = Date.now() + 368 * 864e5, sub = null;
+      if (s.mode === "subscription" && s.subscription) {
+        sub = typeof s.subscription == "string" ? s.subscription : s.subscription.id;
+        let so = await stripe(env, `subscriptions/${sub}`);
+        plan = "mensuel", until = so.current_period_end * 1e3 + 3 * 864e5;
+      }
+      let token = newToken(), email = s.customer_details && s.customer_details.email || s.customer_email || null;
+      return await env.DB.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run(), json2({ token, plan });
+    } catch (e) {
+      return json2({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 502);
+    }
+  }
+  if (path === "/api/premium/retrouver" && request.method === "POST") {
+    let b = {};
+    try {
+      b = await request.json();
+    } catch {
+    }
+    let email = String(b.email || "").trim().toLowerCase(), rows = (await env.DB.prepare("SELECT token, plan FROM abonnes WHERE email = ? AND until > ?").bind(email, Date.now()).all()).results || [];
+    if (rows.length)
+      try {
+        await sendMail(env, email, "Votre code d'acc\xE8s bilan. Premium", `Bonjour,
+
+Voici votre code d'acc\xE8s Premium : ${rows[0].token}
+
+Sur le site, ouvrez la page Premium et collez ce code dans \xAB J'ai d\xE9j\xE0 un code \xBB.
+
+bilan.`);
+      } catch {
+        return json2({ error: "L'envoi d'e-mail n'est pas encore disponible : \xE9crivez-nous pour retrouver votre acc\xE8s." }, 503);
+      }
+    return json2({ ok: !0 });
+  }
+  if (path === "/api/premium/portail") {
+    let p = await premiumOf(request, env);
+    if (!p || !p.sub_id || !env.STRIPE_SECRET) return json2({ error: "Aucun abonnement mensuel actif." }, 400);
+    try {
+      let sub = await stripe(env, `subscriptions/${p.sub_id}`), r = await fetch("https://api.stripe.com/v1/billing_portal/sessions", { method: "POST", headers: { authorization: "Bearer " + env.STRIPE_SECRET, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ customer: sub.customer, return_url: url.origin + "/premium" }) }), j = await r.json();
+      if (!r.ok) throw new Error(j.error && j.error.message);
+      return json2({ url: j.url });
+    } catch (e) {
+      return json2({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 502);
+    }
+  }
+  return json2({ error: "Introuvable." }, 404);
+}
+var PROVIDERS = [
+  ["brevo", (env) => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text, htmlContent: html || void 0 }) })],
+  ["mailjet", (env) => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "bilan." }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || void 0 }] }) })],
+  ["resend", (env) => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `bilan. <${env.MAIL_FROM}>`, to, subject, text, html: html || void 0 }) })]
+], mailReady = (env) => !!(env.MAIL_FROM && PROVIDERS.some(([, on]) => on(env)));
+async function mailCapacity(env) {
+  await initCompte(env.DB);
+  let left = 0;
+  for (let [name, on, max] of PROVIDERS) {
+    if (!on(env)) continue;
+    let r = await env.DB.prepare("SELECT n FROM mail_compte WHERE fournisseur = ? AND jour = ?").bind(name, today()).first();
+    left += Math.max(0, max - (r ? r.n : 0));
+  }
+  return left;
+}
+async function sendMail(env, to, subject, text, html = "") {
+  if (!mailReady(env)) throw new Error("envoi non configur\xE9");
+  await initCompte(env.DB);
+  for (let [name, on, max, send] of PROVIDERS) {
+    if (!on(env)) continue;
+    let r = await env.DB.prepare("SELECT n FROM mail_compte WHERE fournisseur = ? AND jour = ?").bind(name, today()).first();
+    if (!(r && r.n >= max || !(await send(env, to, subject, text, html)).ok))
+      return await env.DB.prepare("INSERT INTO mail_compte (fournisseur, jour, n) VALUES (?, ?, 1) ON CONFLICT (fournisseur, jour) DO UPDATE SET n = n + 1").bind(name, today()).run(), name;
+  }
+  throw new Error("quota d'envoi du jour atteint");
+}
+
+// cf/src/ia.mjs
+var MODEL = "@cf/mistralai/mistral-small-3.1-24b-instruct", MAX_JOUR = 110, HOSTS = /^(www\.sec\.gov|fr\.ftp\.opendatasoft\.com|www\.info-financiere\.gouv\.fr)$/, SCHEMA3 = [
+  "CREATE TABLE IF NOT EXISTS resumes (u TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)",
+  "CREATE TABLE IF NOT EXISTS ia_compte (jour TEXT PRIMARY KEY, n INTEGER NOT NULL)",
+  "CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)"
+], ready3 = !1;
+async function init2(db) {
+  if (!ready3) {
+    for (let q of SCHEMA3) await db.prepare(q).run();
+    ready3 = !0;
+  }
+}
+var json3 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), UA = "bilan (site pedagogique) contact@repere-bourse.pages.dev";
 function htmlText(html) {
   return String(html).replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<br\s*\/?>|<\/(p|div|tr|li|h\d)>/gi, `
 `).replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;|&#xa0;/gi, " ").replace(/&amp;/g, "&").replace(/&#(\d+);/g, (m, d) => String.fromCharCode(+d)).replace(/&[a-z]+;/g, " ").replace(/[ \t ]+/g, " ").replace(/\n\s*\n+/g, `
 `).trim();
 }
-async function budget(db) {
+async function budget(db, env = {}) {
   let jour = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), r = await db.prepare("SELECT n FROM ia_compte WHERE jour = ?").bind(jour).first();
-  return r && r.n >= 60 ? !1 : (await db.prepare("INSERT INTO ia_compte (jour, n) VALUES (?, 1) ON CONFLICT (jour) DO UPDATE SET n = n + 1").bind(jour).run(), !0);
+  return r && r.n >= (+env.IA_MAX_JOUR || MAX_JOUR) ? !1 : (await db.prepare("INSERT INTO ia_compte (jour, n) VALUES (?, 1) ON CONFLICT (jour) DO UPDATE SET n = n + 1").bind(jour).run(), !0);
 }
 async function docText(env, u) {
   if (new URL(u).hostname === "www.sec.gov") {
@@ -323,28 +463,30 @@ R\xE8gles strictes :
 - Reste prudent et factuel : aucun conseil d'achat ou de vente, aucune pr\xE9diction sur le cours.
 - Pas de tirets cadratins, pas de listes \xE0 puces, pas de formules creuses.`;
 async function resume(request, env) {
-  if (!env || !env.DB || !env.AI) return json2({ error: "R\xE9sum\xE9s indisponibles pour le moment." }, 503);
+  if (!env || !env.DB || !env.AI) return json3({ error: "R\xE9sum\xE9s indisponibles pour le moment." }, 503);
   let u = new URL(request.url).searchParams.get("u") || "", url;
   try {
     url = new URL(u);
   } catch {
-    return json2({ error: "Adresse invalide." }, 400);
+    return json3({ error: "Adresse invalide." }, 400);
   }
-  if (!HOSTS.test(url.hostname)) return json2({ error: "Source non prise en charge." }, 400);
+  if (!HOSTS.test(url.hostname)) return json3({ error: "Source non prise en charge." }, 400);
   await init2(env.DB);
   let hit = await env.DB.prepare("SELECT txt, at FROM resumes WHERE u = ?").bind(u).first();
-  if (hit) return json2({ txt: hit.txt, at: hit.at, cache: !0 });
-  if (!await budget(env.DB)) return json2({ error: "Le quota de r\xE9sum\xE9s du jour est atteint. Ce document sera r\xE9sum\xE9 demain." }, 429);
+  if (hit && !/ne (peux|peut) pas/i.test(hit.txt)) return json3({ txt: hit.txt, at: hit.at, cache: !0 });
+  let q = await quota(request, env, "resume");
+  if (!q.ok) return quotaError(q, "r\xE9sum\xE9s d\xE9taill\xE9s");
+  if (!await budget(env.DB, env)) return json3({ error: "Le site a atteint son nombre de r\xE9sum\xE9s pour aujourd'hui. Ce document sera r\xE9sum\xE9 demain." }, 429);
   try {
-    let text = (await docText(env, u)).slice(0, 14e3);
-    if (text.length < 300) return json2({ error: "Document trop court ou illisible." }, 422);
+    let text = focus(await docText(env, u)).slice(0, 14e3);
+    if (text.length < 300) return json3({ error: "Document trop court ou illisible." }, 422);
     let out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS }, { role: "user", content: `Document :
 
 ` + text }], max_tokens: 700, temperature: 0.2 }), txt = String(out.response || out.result && out.result.response || "").replace(/—/g, ",").trim();
-    if (txt.length < 80) throw new Error("r\xE9ponse vide");
-    return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(u, txt, Date.now()).run(), json2({ txt, at: Date.now() });
+    if (txt.length < 200 || /ne (peux|peut) pas|pas d'informations exploitables/i.test(txt)) throw new Error("le document ne contient pas de chiffres lisibles");
+    return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(u, txt, Date.now()).run(), json3({ txt, at: Date.now() });
   } catch (e) {
-    return json2({ error: "R\xE9sum\xE9 impossible pour ce document : " + String(e.message || e).slice(0, 120) }, 502);
+    return json3({ error: "R\xE9sum\xE9 impossible pour ce document : " + String(e.message || e).slice(0, 120) }, 502);
   }
 }
 var SYS_VEILLE = `Tu \xE9cris, en fran\xE7ais, le bilan d'une liste d'entreprises suivies par un particulier qui d\xE9bute en Bourse.
@@ -361,61 +503,219 @@ R\xE8gles :
 - Aucun conseil d'achat ou de vente, aucune recommandation de ligne pr\xE9cise, aucune pr\xE9diction. Tu peux rappeler des rep\xE8res g\xE9n\xE9raux (par exemple : une action seule au-del\xE0 de 10 % du portefeuille augmente le risque).
 - Pas de tirets cadratins, pas de listes \xE0 puces.`;
 async function veille(request, env) {
-  if (!env || !env.DB || !env.AI) return json2({ error: "Bilan indisponible pour le moment." }, 503);
+  if (!env || !env.DB || !env.AI) return json3({ error: "Bilan indisponible pour le moment." }, 503);
   let path = new URL(request.url).pathname;
   if (await init2(env.DB), path === "/api/veille" && request.method === "POST") {
     let b;
     try {
       b = await request.json();
     } catch {
-      return json2({ error: "Requ\xEAte illisible." }, 400);
+      return json3({ error: "Requ\xEAte illisible." }, 400);
     }
     let faits = JSON.stringify(b.faits || {}).slice(0, 9e3), key = (b.type === "portefeuille" ? "pf:" : "veille:") + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ":" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(faits)))].slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join(""), hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
-    if (hit) return json2({ txt: hit.txt, cache: !0 });
-    if (!await budget(env.DB)) return json2({ error: "Le quota du jour est atteint : le bilan r\xE9dig\xE9 sera disponible demain. Les chiffres ci-dessous restent \xE0 jour." }, 429);
+    if (hit) return json3({ txt: hit.txt, cache: !0 });
+    let q = await quota(request, env, b.type === "portefeuille" ? "portefeuille" : "veille");
+    if (!q.ok) return quotaError(q, b.type === "portefeuille" ? "analyses de portefeuille" : "bilans r\xE9dig\xE9s");
+    if (!await budget(env.DB, env)) return json3({ error: "Le site a atteint son nombre de bilans r\xE9dig\xE9s pour aujourd'hui : r\xE9essayez demain. Les chiffres restent \xE0 jour." }, 429);
     try {
       let out = await env.AI.run(MODEL, { messages: [{ role: "system", content: b.type === "portefeuille" ? SYS_PF : SYS_VEILLE }, { role: "user", content: faits }], max_tokens: 700, temperature: 0.2 }), txt = String(out.response || "").replace(/—/g, ",").trim();
-      return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json2({ txt });
+      return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json3({ txt });
     } catch {
-      return json2({ error: "Bilan impossible pour le moment." }, 502);
+      return json3({ error: "Bilan impossible pour le moment." }, 502);
     }
   }
-  let mailOn = env.RESEND_KEY && env.MAIL_FROM && env.ADMIN_KEY;
+  return mails(request, env, path);
+}
+var SYS_ASSIST = `Tu es l'assistant du site d'information boursi\xE8re \xAB bilan. \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, comparaison au secteur, concurrents, cours, annonces r\xE9centes, agenda).
+R\xE8gles :
+- 60 \xE0 160 mots, phrases courtes, termes techniques expliqu\xE9s une fois.
+- Si les faits ne permettent pas de r\xE9pondre, dis-le simplement et indique quelle rubrique du site regarder.
+- N'invente aucun chiffre ni aucune information. Cite les chiffres avec leur ann\xE9e.
+- Aucun conseil d'achat ou de vente, aucune pr\xE9diction de cours, aucun objectif de prix. Si on te demande \xAB faut-il acheter ? \xBB, explique les \xE9l\xE9ments \xE0 regarder (points forts, points de vigilance, prix par rapport aux b\xE9n\xE9fices) sans trancher, et rappelle que ce n'est pas un conseil.
+- Pas de listes \xE0 puces, pas de tirets cadratins.`;
+async function assistant(request, env) {
+  if (!env || !env.DB || !env.AI) return json3({ error: "L'assistant est indisponible pour le moment." }, 503);
+  if (request.method !== "POST") return json3({ error: "M\xE9thode non prise en charge." }, 405);
+  await init2(env.DB);
+  let b;
+  try {
+    b = await request.json();
+  } catch {
+    return json3({ error: "Requ\xEAte illisible." }, 400);
+  }
+  let question = String(b.question || "").replace(/\s+/g, " ").trim().slice(0, 300);
+  if (question.length < 5) return json3({ error: "Posez une question un peu plus pr\xE9cise." }, 400);
+  let faits = JSON.stringify(b.faits || {}).slice(0, 9e3), key = "assist:" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map((x) => x.toString(16).padStart(2, "0")).join(""), hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
+  if (hit) return json3({ txt: hit.txt, cache: !0 });
+  let q = await quota(request, env, "assistant");
+  if (!q.ok) return quotaError(q, "questions \xE0 l'assistant");
+  if (!await budget(env.DB, env)) return json3({ error: "L'assistant a atteint son nombre de r\xE9ponses pour aujourd'hui. R\xE9essayez demain." }, 429);
+  try {
+    let out = await env.AI.run(MODEL, { messages: [{ role: "system", content: SYS_ASSIST }, { role: "user", content: `Faits : ${faits}
+
+Question : ${question}` }], max_tokens: 450, temperature: 0.2 }), txt = String(out.response || "").replace(/—/g, ",").trim();
+    if (txt.length < 20) throw new Error("vide");
+    return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json3({ txt, reste: q.max - q.used });
+  } catch {
+    return json3({ error: "L'assistant n'a pas pu r\xE9pondre. R\xE9essayez dans un instant." }, 502);
+  }
+}
+var ALTERS2 = ["ALTER TABLE veille ADD COLUMN last_semaine INTEGER NOT NULL DEFAULT 0", "ALTER TABLE veille ADD COLUMN last_alerte INTEGER NOT NULL DEFAULT 0", "ALTER TABLE veille ADD COLUMN alertes INTEGER NOT NULL DEFAULT 1"], altered = !1;
+async function alter(db) {
+  if (!altered) {
+    for (let q of ALTERS2)
+      try {
+        await db.prepare(q).run();
+      } catch {
+      }
+    altered = !0;
+  }
+}
+var page = (msg) => new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>bilan.</title><body style="background:#F8F5EE;font:16px/1.5 system-ui,sans-serif;color:#111"><div style="max-width:520px;margin:60px auto;padding:0 16px"><p style="font:900 28px Georgia,serif">bilan<span style="color:#0E6B4A">.</span></p><p>${msg}</p><p><a href="/favoris" style="color:#0E6B4A">Revenir au site</a></p></div>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+async function mails(request, env, path) {
+  await alter(env.DB);
+  let url = new URL(request.url);
   if (path === "/api/veille/inscription" && request.method === "POST") {
-    if (!mailOn) return json2({ error: "L'envoi par e-mail n'est pas encore ouvert. Le bilan reste disponible ici, \xE0 tout moment." }, 503);
+    if (!mailReady(env)) return json3({ error: "L'envoi par e-mail n'est pas encore ouvert. Le bilan reste disponible ici, \xE0 tout moment." }, 503);
     let b;
     try {
       b = await request.json();
     } catch {
-      return json2({ error: "Requ\xEAte illisible." }, 400);
+      return json3({ error: "Requ\xEAte illisible." }, 400);
     }
-    let email = String(b.email || "").trim().toLowerCase(), ids = (Array.isArray(b.ids) ? b.ids : []).filter((x) => /^[ce]:[a-z0-9-]{1,60}$/.test(x)).slice(0, 30);
-    if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/.test(email) || !ids.length) return json2({ error: "Adresse ou liste invalide." }, 400);
+    let email = String(b.email || "").trim().toLowerCase(), p = await premiumOf(request, env), ids = (Array.isArray(b.ids) ? b.ids : []).filter((x) => /^[ce]:[a-z0-9-]{1,60}$/.test(x)).slice(0, p ? 40 : 10);
+    if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/.test(email) || !ids.length) return json3({ error: "Adresse ou liste invalide." }, 400);
+    let recent = await env.DB.prepare("SELECT COUNT(*) AS n FROM veille WHERE email = ? AND at > ?").bind(email, Date.now() - 864e5).first();
+    if (recent && recent.n >= 3) return json3({ error: "Trop de demandes pour cette adresse aujourd'hui." }, 429);
+    await env.DB.prepare("DELETE FROM veille WHERE email = ? AND ok = 0").bind(email).run();
     let token = crypto.randomUUID().replace(/-/g, "");
-    await env.DB.prepare("INSERT INTO veille (token, email, ids, ok, at) VALUES (?, ?, ?, 0, ?)").bind(token, email, JSON.stringify(ids), Date.now()).run();
-    let base = new URL(request.url).origin;
-    return await sendMail(env, email, "Confirmez votre bilan hebdomadaire bilan.", `Bonjour,
+    await env.DB.prepare("INSERT INTO veille (token, email, ids, ok, at, alertes) VALUES (?, ?, ?, 0, ?, ?)").bind(token, email, JSON.stringify(ids), Date.now(), p ? 1 : 0).run();
+    try {
+      await sendMail(env, email, "Confirmez votre bilan hebdomadaire bilan.", `Bonjour,
 
-Pour recevoir chaque semaine le bilan de votre liste (${ids.length} lignes), confirmez votre adresse :
-${base}/api/veille/confirmer?t=${token}
+Pour recevoir chaque samedi le bilan de votre liste (${ids.length} ligne${ids.length > 1 ? "s" : ""}), confirmez votre adresse en ouvrant ce lien :
+${url.origin}/api/veille/confirmer?t=${token}
 
-Si vous n'\xEAtes pas \xE0 l'origine de cette demande, ignorez ce message.
+Si vous n'\xEAtes pas \xE0 l'origine de cette demande, ignorez ce message : rien ne sera envoy\xE9.
 
-bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil.`), json2({ ok: !0 });
+bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en investissement.`);
+    } catch {
+      return json3({ error: "L'e-mail de confirmation n'a pas pu partir aujourd'hui. R\xE9essayez demain." }, 503);
+    }
+    return json3({ ok: !0 });
   }
   if (path === "/api/veille/confirmer" || path === "/api/veille/desinscrire") {
-    let t = new URL(request.url).searchParams.get("t") || "";
-    return path.endsWith("confirmer") ? await env.DB.prepare("UPDATE veille SET ok = 1 WHERE token = ?").bind(t).run() : await env.DB.prepare("DELETE FROM veille WHERE token = ?").bind(t).run(), new Response(`<!doctype html><meta charset="utf-8"><title>bilan.</title><p style="font:16px sans-serif;max-width:520px;margin:60px auto">${path.endsWith("confirmer") ? "Adresse confirm\xE9e : vous recevrez le bilan de votre liste chaque semaine." : "Vous ne recevrez plus le bilan hebdomadaire. Votre adresse a \xE9t\xE9 supprim\xE9e."} <a href="/favoris">Revenir au site</a></p>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+    let t = (url.searchParams.get("t") || "").replace(/[^a-f0-9]/g, "");
+    if (path.endsWith("confirmer")) {
+      let r = await env.DB.prepare("SELECT email FROM veille WHERE token = ?").bind(t).first();
+      return r ? (await env.DB.prepare("DELETE FROM veille WHERE email = ? AND ok = 1 AND token <> ?").bind(r.email, t).run(), await env.DB.prepare("UPDATE veille SET ok = 1 WHERE token = ?").bind(t).run(), page("Adresse confirm\xE9e. Vous recevrez le bilan de votre liste chaque samedi matin. Chaque e-mail contient un lien pour vous d\xE9sinscrire.")) : page("Lien expir\xE9 ou d\xE9j\xE0 utilis\xE9.");
+    }
+    return await env.DB.prepare("DELETE FROM veille WHERE token = ?").bind(t).run(), page("C'est fait : vous ne recevrez plus d'e-mails de bilan. Votre adresse a \xE9t\xE9 supprim\xE9e.");
   }
-  return json2({ error: "Introuvable." }, 404);
+  if ((path === "/api/veille/envoi" || path === "/api/veille/alertes") && request.method === "POST") {
+    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json3({ error: "Non autoris\xE9." }, 403);
+    if (!mailReady(env)) return json3({ error: "Envoi non configur\xE9." }, 503);
+    let cap = Math.min(50, await mailCapacity(env));
+    if (!cap) return json3({ envoyes: 0, reste: 0, info: "quota du jour atteint" });
+    let data = await siteData(request, env), weekly = path.endsWith("envoi"), SEL = weekly ? "ok = 1 AND last_semaine < ?" : "ok = 1 AND alertes = 1 AND last_alerte < ?", since = Date.now() - (weekly ? 5 * 864e5 : 12 * 36e5), rows = (await env.DB.prepare(`SELECT * FROM veille WHERE ${SEL} LIMIT ?`).bind(since, weekly ? cap : 200).all()).results || [], n = 0;
+    for (let r of rows) {
+      if (n >= cap) break;
+      let ids = [];
+      try {
+        ids = JSON.parse(r.ids);
+      } catch {
+      }
+      let m = weekly ? digest(data, ids, url.origin, r.token) : alertes(data, ids, url.origin, r.token, r.last_alerte);
+      if (!m) {
+        weekly || await env.DB.prepare("UPDATE veille SET last_alerte = ? WHERE token = ?").bind(Date.now(), r.token).run();
+        continue;
+      }
+      try {
+        await sendMail(env, r.email, m.subject, m.text, m.html), n++;
+      } catch {
+        break;
+      }
+      await env.DB.prepare(weekly ? "UPDATE veille SET last_semaine = ? WHERE token = ?" : "UPDATE veille SET last_alerte = ? WHERE token = ?").bind(Date.now(), r.token).run();
+    }
+    let left = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM veille WHERE ${SEL}`).bind(since).first() || {}).n || 0;
+    return json3({ envoyes: n, reste: left });
+  }
+  return json3({ error: "Introuvable." }, 404);
 }
-async function sendMail(env, to, subject, text) {
-  let r = await fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: env.MAIL_FROM, to, subject, text }) });
-  if (!r.ok) throw new Error("envoi " + r.status);
+async function siteData(request, env) {
+  let get = async (p) => {
+    try {
+      return await (await env.ASSETS.fetch(new Request(new URL(p, request.url)))).json();
+    } catch {
+      return null;
+    }
+  }, [uni, etf, ana, ag, agAuto, sem] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json")]), px = {};
+  try {
+    px = (await (await cours(new Request(new URL("/api/cours", request.url)))).json()).items || {};
+  } catch {
+  }
+  let names = {};
+  return (uni && uni.companies || []).forEach((c) => names["c:" + c.id] = c.name), (etf && etf.list || []).forEach((e) => names["e:" + e.id] = e.name), { names, px, sem: sem && sem.items || {}, ana: ana && ana.items || {}, ev: [...ag && ag.events || [], ...agAuto && agAuto.events || []] };
+}
+var NF = (v, d = 2) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF(Math.abs(v), 1) + " %", esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+function mailWrap(title, blocks, origin, token) {
+  let text = `${title}
+
+${blocks.map((b) => b.t).join(`
+
+`)}
+
+Voir sur le site : ${origin}/favoris
+Se d\xE9sinscrire : ${origin}/api/veille/desinscrire?t=${token}
+
+bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en investissement. Les performances pass\xE9es ne pr\xE9jugent pas des performances futures.`, html = `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px">
+    <p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><h1 style="font:800 20px Georgia,serif;margin:14px 0 6px">${esc(title)}</h1>
+    ${blocks.map((b) => b.h).join("")}
+    <p style="margin:22px 0 0"><a href="${origin}/favoris" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir ma liste sur le site</a></p>
+    <p style="font-size:12px;color:#87827A;margin-top:22px">Informations factuelles, sans conseil en investissement. <a href="${origin}/api/veille/desinscrire?t=${token}" style="color:#87827A">Se d\xE9sinscrire</a></p></div></div>`;
+  return { text, html };
+}
+function digest(d, ids, origin, token) {
+  let lines = ids.map((k) => ({ k, name: d.names[k], p: d.px[k], w: d.sem[k] })).filter((x) => x.name);
+  if (!lines.length) return null;
+  let mv = lines.filter((x) => x.p && x.w).map((x) => ({ ...x, ch: (x.p.p / x.w - 1) * 100 })).sort((a, b) => b.ch - a.ch), since = Date.now() - 7 * 864e5, idset = new Set(ids.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))), news = Object.values(d.ana).filter((a) => idset.has(a.id) && new Date(a.date) >= since && a.chiffres && a.chiffres.length).slice(0, 8), today2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), in14 = new Date(Date.now() + 14 * 864e5).toISOString().slice(0, 10), ev = d.ev.filter((e) => idset.has(e.id) && e.date >= today2 && e.date <= in14).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8), blocks = [];
+  if (mv.length) {
+    let avg = mv.reduce((a, x) => a + x.ch, 0) / mv.length;
+    blocks.push({
+      t: `CE QUI A BOUG\xC9
+En moyenne, vos actions ont \xE9volu\xE9 de ${sgnP(avg)} sur la semaine.
+${mv.map((x) => `- ${x.name} : ${sgnP(x.ch)}`).join(`
+`)}${mv.some((x) => Math.abs(x.ch) >= 8) ? `
+Une variation de plus de 8 % en une semaine est importante pour une grande entreprise : regardez son actualit\xE9.` : ""}`,
+      h: `<h2 style="font:700 16px Georgia,serif;margin:18px 0 6px">Ce qui a boug\xE9</h2><p style="margin:0 0 8px">En moyenne, vos actions ont \xE9volu\xE9 de <b>${sgnP(avg)}</b> sur la semaine.</p><table style="width:100%;border-collapse:collapse">${mv.map((x) => `<tr><td style="padding:5px 0;border-bottom:1px solid #EFEAE0">${esc(x.name)}</td><td style="padding:5px 0;border-bottom:1px solid #EFEAE0;text-align:right;font-family:monospace;color:${x.ch >= 0 ? "#0E6B4A" : "#B23A1E"}">${sgnP(x.ch)}</td></tr>`).join("")}</table>`
+    });
+  }
+  news.length && blocks.push({
+    t: `CE QUI A \xC9T\xC9 ANNONC\xC9
+${news.map((a) => `- ${d.names["c:" + a.id]} (${a.date}) : ${a.type}. ${a.chiffres.map((c) => c.join(" : ")).join(" ; ")}. ${(a.lecture || []).join(" ")}`).join(`
+`)}`,
+    h: `<h2 style="font:700 16px Georgia,serif;margin:18px 0 6px">Ce qui a \xE9t\xE9 annonc\xE9</h2>${news.map((a) => `<p style="margin:0 0 10px"><b>${esc(d.names["c:" + a.id])}</b> <span style="color:#87827A">\xB7 ${esc(a.date)} \xB7 ${esc(a.type)}</span><br>${a.chiffres.map((c) => `${esc(c[0])} : <b>${esc(c[1])}</b>`).join(" \xB7 ")}<br><span style="color:#55524C">${esc((a.lecture || []).join(" "))}</span></p>`).join("")}`
+  }), ev.length && blocks.push({ t: `\xC0 VENIR
+${ev.map((e) => `- ${e.date} : ${d.names["c:" + e.id]}, ${e.label}`).join(`
+`)}`, h: `<h2 style="font:700 16px Georgia,serif;margin:18px 0 6px">\xC0 venir</h2>${ev.map((e) => `<p style="margin:0 0 6px"><b>${esc(e.date.split("-").reverse().join("/"))}</b> \xB7 ${esc(d.names["c:" + e.id])} : ${esc(e.label)}</p>`).join("")}` }), blocks.length || blocks.push({ t: "Semaine calme pour votre liste : pas d'annonce officielle ni de date importante.", h: "<p>Semaine calme pour votre liste : pas d'annonce officielle ni de date importante.</p>" });
+  let w = mailWrap("Le bilan de votre liste", blocks, origin, token);
+  return { subject: `Votre bilan de la semaine : ${mv.length ? `${sgnP(mv.reduce((a, x) => a + x.ch, 0) / mv.length)} en moyenne` : "ce qu'il faut savoir"}`, ...w };
+}
+function alertes(d, ids, origin, token, last) {
+  let idset = new Set(ids.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))), since = Math.max(last || 0, Date.now() - 2 * 864e5), out = [];
+  Object.values(d.ana).filter((a) => idset.has(a.id) && /* @__PURE__ */ new Date(a.date + "T23:59:59Z") >= since && a.chiffres && a.chiffres.length).forEach((a) => out.push(`${d.names["c:" + a.id]} : ${a.type}. ${a.chiffres.slice(0, 3).map((c) => c.join(" : ")).join(" ; ")}.`)), ids.forEach((k) => {
+    let p = d.px[k];
+    p && p.chg != null && Math.abs(p.chg) >= 5 && out.push(`${d.names[k]} : ${sgnP(p.chg)} aujourd'hui. Un mouvement de cette taille suit souvent une annonce.`);
+  });
+  let tom = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
+  if (d.ev.filter((e) => idset.has(e.id) && e.date === tom).forEach((e) => out.push(`${d.names["c:" + e.id]} : demain, ${e.label}.`)), !out.length) return null;
+  let w = mailWrap("Alerte sur votre liste", [{ t: out.map((x) => "- " + x).join(`
+`), h: out.map((x) => `<p style="margin:0 0 8px">${esc(x)}</p>`).join("") }], origin, token);
+  return { subject: `Alerte bilan. : ${out[0].slice(0, 70)}`, ...w };
 }
 
 // cf/src/worker.mjs
-var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path) {
   let p = path.replace(/\/+$/, "") || "/", base = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1"), m;
   if (p === "/" || p === "/aller") return { title: `${SITE} \xB7 La Bourse, comptes \xE0 l'appui`, desc: BASE_DESC };
@@ -427,7 +727,7 @@ function meta(path) {
     let t = TOOLS[m[1] || "epargne"] || TOOLS.epargne;
     return t ? { title: `${t} \xB7 ${SITE}`, desc: "Simulez l'\xE9volution d'un placement, avec les hypoth\xE8ses affich\xE9es. Outil p\xE9dagogique, sans conseil." } : null;
   }
-  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/dividendes" ? { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." } : p.startsWith("/debuter") ? { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." } : p.startsWith("/outils") ? { title: `Outils \xB7 ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'\xE9pargne et de frais." } : p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/entreprises" ? { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." } : p === "/actualites" ? { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, assembl\xE9es g\xE9n\xE9rales et publications officielles d\xE9pos\xE9es aupr\xE8s de l'AMF." } : p === "/agenda" ? { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." } : p === "/portefeuille" ? { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." } : p === "/etf" ? { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." } : /^\/etf\/[a-z0-9-]+$/.test(p) ? { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." } : p === "/communaute" ? { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." } : p === "/lexique" ? { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." } : p === "/favoris" ? { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." } : p === "/comparer" ? { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Ventes, marge, b\xE9n\xE9fice, dette et dividende de plusieurs entreprises c\xF4te \xE0 c\xF4te, expliqu\xE9s simplement." } : p === "/pea-cto" ? { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." } : p === "/dividendes" ? { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." } : p.startsWith("/debuter") ? { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." } : p.startsWith("/outils") ? { title: `Outils \xB7 ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'\xE9pargne et de frais." } : p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 var worker_default = {
   async fetch(request, env, ctx) {
@@ -438,6 +738,8 @@ var worker_default = {
     if (url.pathname === "/api/cours") return cours(request, ctx);
     if (url.pathname === "/api/resume") return resume(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
+    if (url.pathname === "/api/assistant") return assistant(request, env);
+    if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     let info = meta(url.pathname);
     if (!info) {
@@ -446,7 +748,7 @@ var worker_default = {
       if (url.pathname.match(/\.[a-z0-9]+$/i)) return new Response("Introuvable", { status: 404 });
     }
     let html = await (await env.ASSETS.fetch(new Request(new URL("/", url), request))).text(), t = info || { title: `Page introuvable \xB7 ${SITE}`, desc: BASE_DESC };
-    return html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`).replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">
+    return html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc2(t.title)}</title>`).replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc2(t.desc)}">
 <link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">`), new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" } });
   }
 };
