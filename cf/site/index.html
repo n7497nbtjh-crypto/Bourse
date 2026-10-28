@@ -1008,7 +1008,7 @@ mark.nm{background:linear-gradient(transparent 55%,#D6F26B 55%);color:inherit;fo
 .frmring text{font:600 20px var(--mono);text-anchor:middle;dominant-baseline:middle;fill:var(--ink)}
 .frmstats{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.frmstats span{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:12.5px;color:var(--grey);display:flex;flex-direction:column;min-width:74px}
 .frmstats b{font:600 20px var(--serif);color:var(--ink)}
-.frmroad{list-style:none;display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin:0 0 18px;padding:0;position:relative}
+.frmroad{list-style:none;display:grid;grid-template-columns:repeat(6,1fr);gap:0;margin:0 0 14px;padding:10px 2px 6px;position:relative}
 .frmroad li{position:relative}.frmroad li:not(:last-child)::after{content:"";position:absolute;top:22px;left:calc(50% + 24px);right:calc(-50% + 24px);height:3px;border-radius:2px;background:var(--line)}
 .frmroad li.full:not(:last-child)::after{background:var(--wc)}
 .frmroad button{all:unset;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:8px;width:100%;text-align:center;padding:0 4px}
@@ -4327,7 +4327,7 @@ function pageFormation() {
       <div class="frmnav">${i > 0 ? `<button type="button" class="linkbtn" data-sem="${i - 1}">← Semaine ${i}</button>` : "<span></span>"}
         ${firstL && firstL.m.quiz && firstL.m.quiz.length ? `<a class="more" href="/academie/${firstL.m.id}/quiz">Testez-vous : quiz « ${esc(firstL.m.titre)} »</a>` : ""}
         ${i < F.semaines.length - 1 ? `<button type="button" class="btn" data-sem="${i + 1}">Semaine ${i + 2} →</button>` : `<a class="btn" href="/portefeuille">Construire mon portefeuille fictif →</a>`}</div></section>`; };
-  const road = () => `<ol class="frmroad">${F.semaines.map((w, i) => { const x = infos[i], full = x.d === x.n;
+  const road = () => `<ol class="frmroad scroll-x">${F.semaines.map((w, i) => { const x = infos[i], full = x.d === x.n;
       return `<li class="${i === sel ? "on" : ""}${full ? " full" : ""}" style="--wc:${COLS[i % COLS.length]}"><button type="button" data-sem="${i}"><span class="dot">${full ? "✓" : w.semaine}<i style="--p:${x.d / x.n * 360}deg"></i></span><span class="lb"><small>Semaine ${w.semaine}</small>${esc(w.titre)}</span></button></li>`; }).join("")}</ol>`;
   function heroR() { const d = doneN(), c = curW(); return `${ring(Math.round(d / total * 100))}<p><b>${d} / ${total}</b> étapes faites</p>${c >= 0 ? `<button type="button" class="btn" data-sem="${c}">${d ? "Reprendre" : "Commencer"} : semaine ${c + 1}</button>` : `<p class="note">Formation terminée. Bravo.</p>`}`; }
   const draw = () => { $("#frmroadw").innerHTML = road(); $("#frmweekw").innerHTML = weekHTML(sel); if (prem && $("#frmhr")) $("#frmhr").innerHTML = heroR(); };
