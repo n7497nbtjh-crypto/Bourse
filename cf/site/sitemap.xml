@@ -25,6 +25,71 @@
   <url><loc>https://repere.pages.dev/demander</loc></url>
   <url><loc>https://repere.pages.dev/espace</loc></url>
   <url><loc>https://repere.pages.dev/premium</loc></url>
+  <url><loc>https://repere.pages.dev/methode</loc></url>
+  <url><loc>https://repere.pages.dev/academie</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bases</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bases/epargne-investissement</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bases/inflation</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bases/interets-composes</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bases/risque-rendement</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bases/epargne-precaution</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bases/horizon</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/livrets</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/assurance-vie</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/pea</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/compte-titres</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/per</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/actions</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/obligations</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/etf</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/immobilier</loc></url>
+  <url><loc>https://repere.pages.dev/academie/placements/crypto</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bourse</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bourse/action</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bourse/cours</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bourse/indices</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bourse/ordres</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bourse/dividendes</loc></url>
+  <url><loc>https://repere.pages.dev/academie/bourse/krachs</loc></url>
+  <url><loc>https://repere.pages.dev/academie/comptes</loc></url>
+  <url><loc>https://repere.pages.dev/academie/comptes/compte-resultat</loc></url>
+  <url><loc>https://repere.pages.dev/academie/comptes/bilan</loc></url>
+  <url><loc>https://repere.pages.dev/academie/comptes/flux</loc></url>
+  <url><loc>https://repere.pages.dev/academie/comptes/ratios</loc></url>
+  <url><loc>https://repere.pages.dev/academie/comptes/mediane</loc></url>
+  <url><loc>https://repere.pages.dev/academie/comptes/pieges</loc></url>
+  <url><loc>https://repere.pages.dev/academie/valorisation</loc></url>
+  <url><loc>https://repere.pages.dev/academie/valorisation/per</loc></url>
+  <url><loc>https://repere.pages.dev/academie/valorisation/rendement-dividende</loc></url>
+  <url><loc>https://repere.pages.dev/academie/valorisation/valeur-entreprise</loc></url>
+  <url><loc>https://repere.pages.dev/academie/valorisation/croissance-prix</loc></url>
+  <url><loc>https://repere.pages.dev/academie/valorisation/actualisation</loc></url>
+  <url><loc>https://repere.pages.dev/academie/valorisation/efficience</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille/allocation</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille/diversification</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille/etf-monde</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille/investissement-programme</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille/reequilibrage</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille/recouvrement</loc></url>
+  <url><loc>https://repere.pages.dev/academie/portefeuille/concentration</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite/frais-courtage</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite/frais-courants</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite/garde-change</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite/flat-tax</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite/enveloppes-fiscales</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite/dividendes-etrangers</loc></url>
+  <url><loc>https://repere.pages.dev/academie/frais-fiscalite/declarer</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie/exces-confiance</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie/aversion-pertes</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie/recence-troupeau</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie/trading-timing</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie/levier-cfd</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie/arnaques</loc></url>
+  <url><loc>https://repere.pages.dev/academie/psychologie/finfluenceurs</loc></url>
   <url><loc>https://repere.pages.dev/mentions-legales</loc></url>
   <url><loc>https://repere.pages.dev/cgv</loc></url>
   <url><loc>https://repere.pages.dev/confidentialite</loc></url>

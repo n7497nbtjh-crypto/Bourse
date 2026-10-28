@@ -1,0 +1,1497 @@
+{
+ "modules": [
+  {
+   "id": "bases",
+   "titre": "L'argent qui travaille",
+   "niveau": "Débutant",
+   "duree_min": 47,
+   "intro": "Avant de choisir un placement, il faut comprendre ce qui fait varier la valeur de l'argent dans le temps. Ce module pose les bases : inflation, intérêts composés, risque, réserve de sécurité et horizon.",
+   "objectifs": [
+    "Distinguer épargne et investissement",
+    "Calculer un rendement réel après inflation",
+    "Comprendre l'effet des intérêts composés et le lien entre risque et rendement",
+    "Dimensionner une épargne de précaution et définir un horizon de placement"
+   ],
+   "lecons": [
+    {
+     "id": "epargne-investissement",
+     "titre": "Épargner ou investir : deux gestes différents",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Épargner protège une somme disponible, investir accepte des variations pour viser un rendement plus élevé.",
+     "paragraphes": [
+      "Épargner, c'est mettre de côté une partie de ses revenus au lieu de la dépenser. L'argent reste disponible et le montant inscrit ne baisse pas. Un Livret A, un livret bancaire ou un compte courant servent à cela. En contrepartie, la rémunération est faible et connue à l'avance. Depuis le 1er août 2026, le Livret A rapporte 1,7 % par an.",
+      "Investir, c'est confier son argent à une activité qui peut produire un revenu ou prendre de la valeur : une entreprise, avec une action, un État ou une société qui emprunte, avec une obligation, ou encore un immeuble. Le gain n'est pas garanti. La valeur de ce que vous détenez varie, à la hausse comme à la baisse. C'est la contrepartie d'un rendement espéré plus élevé sur longue période.",
+      "Les deux gestes ne s'opposent pas. Ils se complètent. L'épargne protège contre les imprévus et finance les projets proches. L'investissement vise des objectifs lointains, comme la retraite ou la transmission d'un patrimoine. L'ordre est presque toujours le même : d'abord une réserve disponible, ensuite seulement des placements dont la valeur fluctue.",
+      "Dans le langage courant, on appelle souvent « épargne » tout l'argent mis de côté, y compris celui placé en Bourse. Ce cours distingue les deux sens pour une raison simple. Ce qui compte n'est pas le nom du produit, mais ce qui peut arriver à votre argent. Peut-il baisser ? Pouvez-vous le récupérer demain ? Combien rapporte-t-il une fois l'inflation déduite ?",
+      "Pour vous repérer, la réglementation impose aux produits d'investissement un document d'informations clés, le DIC. Il affiche un indicateur de risque de 1 à 7. Le niveau 1 correspond aux placements les moins risqués, le niveau 7 aux plus risqués. L'AMF, l'Autorité des marchés financiers, rappelle qu'un niveau bas ne signifie pas une absence de risque. Ce document est gratuit et doit être lu avant de souscrire."
+     ],
+     "exemple": "Claire dispose de 12 000 €. Elle garde 6 000 € sur son Livret A. Cet argent rapporte 1,7 % par an, soit 102 € la première année, et reste disponible à tout moment. Elle place les 6 000 € restants sur un fonds investi en actions, pour un objectif à quinze ans. Sur une année, ce fonds peut aussi bien gagner 15 %, soit 900 €, que perdre 20 %, soit 1 200 €. Ces deux chiffres sont des hypothèses, pas des prévisions. Les deux sommes n'ont pas le même rôle : la première absorbe les imprévus, la seconde n'a de sens que si Claire peut attendre plusieurs années sans y toucher.",
+     "a_retenir": [
+      "Épargner, c'est garder une somme disponible et protégée ; investir, c'est accepter des variations pour viser plus.",
+      "La réserve disponible passe avant les placements dont la valeur fluctue.",
+      "Le DIC classe le risque d'un produit sur une échelle de 1 à 7."
+     ],
+     "erreur_frequente": "Investir en Bourse une somme dont vous aurez besoin dans six mois. Si les marchés baissent à ce moment-là, vous devrez vendre à perte.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, Livret A",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2365"
+      },
+      {
+       "label": "AMF, Document d'informations clés : comprendre l'information sur le risque",
+       "url": "https://www.amf-france.org/fr/document-dinformations-cles-comprendre-linformation-sur-le-risque-du-placement"
+      }
+     ],
+     "lien_site": {
+      "texte": "Par où commencer",
+      "href": "/commencer"
+     }
+    },
+    {
+     "id": "inflation",
+     "titre": "L'inflation et le pouvoir d'achat",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "L'inflation réduit ce que chaque euro permet d'acheter ; un placement se juge donc après inflation.",
+     "paragraphes": [
+      "L'inflation est la hausse générale et durable des prix. En France, l'Insee la mesure chaque mois avec l'indice des prix à la consommation, qui suit le prix d'un large panier de biens et de services. Quand les prix montent, chaque euro permet d'acheter un peu moins. On dit que le pouvoir d'achat de la monnaie baisse.",
+      "Les chiffres récents montrent que l'inflation peut changer vite. Selon l'Insee, les prix ont augmenté en moyenne de 5,2 % en 2022, de 4,9 % en 2023, de 2,0 % en 2024 et de 0,9 % en 2025. Sur ces quatre années, la hausse cumulée atteint environ 13,6 %. Un panier qui coûtait 100 € en moyenne en 2021 coûtait donc près de 114 € en 2025.",
+      "Pour juger un placement, il faut distinguer deux rendements. Le rendement nominal est le chiffre affiché. Le rendement réel est ce qui reste une fois l'inflation déduite. Une approximation suffit le plus souvent : rendement réel égale rendement nominal moins inflation. Un livret à 3 % quand les prix montent de 2 % vous enrichit d'environ 1 % par an en pouvoir d'achat.",
+      "Le rendement réel peut être négatif. En 2022, le taux du Livret A est passé de 0,5 % à 1 % au 1er février, puis à 2 % au 1er août. Sur l'année, il a rapporté environ 1,4 %. L'inflation moyenne était de 5,2 %. L'épargnant a vu son solde augmenter, mais ce solde achetait environ 3,6 % de moins qu'un an plus tôt.",
+      "Sur longue période, même une inflation modérée pèse lourd. À 2 % par an, les prix doublent en 35 ans environ. Avec la même hausse, 1 000 € gardés sans rémunération pendant vingt ans ne permettent plus d'acheter que ce qui coûtait environ 673 € au départ. Laisser dormir de grosses sommes sur un compte courant a donc un coût, même s'il ne se voit sur aucun relevé.",
+      "L'inflation n'est pas la même pour tout le monde. Le panier de l'Insee est une moyenne. Un ménage qui consacre une grande part de son budget à l'énergie ou à l'alimentation a pu subir une hausse plus forte en 2022 et 2023. L'indice national reste un bon repère pour vos décisions, mais votre inflation personnelle peut s'en écarter."
+     ],
+     "exemple": "En 2021, Marc dispose de 10 000 €. Il les laisse sur un compte courant qui ne rapporte rien. Entre 2021 et 2025, les prix moyens montent d'environ 13,6 % selon l'Insee. En 2025, ses 10 000 € n'achètent plus que ce qui valait environ 8 805 € en 2021, soit 10 000 divisé par 1,136. Marc a perdu près de 1 200 € de pouvoir d'achat sans qu'aucune ligne de son relevé ne le montre. Le même calcul s'applique à tout placement : un rendement de 1 % pendant une inflation de 5 % reste une perte.",
+     "a_retenir": [
+      "L'inflation réduit ce que chaque euro permet d'acheter.",
+      "Rendement réel : environ le rendement affiché moins l'inflation.",
+      "En 2022, l'inflation (5,2 %) a largement dépassé la rémunération du Livret A."
+     ],
+     "erreur_frequente": "Regarder seulement si son solde augmente. Un solde qui progresse de 1 % pendant que les prix montent de 5 % représente une perte de pouvoir d'achat.",
+     "sources": [
+      {
+       "label": "Insee, Indice des prix à la consommation, résultats annuels 2025",
+       "url": "https://www.insee.fr/fr/statistiques/8726461"
+      },
+      {
+       "label": "Selectra, Historique du taux du Livret A",
+       "url": "https://selectra.info/finance/guides/livrets-epargne/livret-a/historique"
+      }
+     ],
+     "lien_site": {
+      "texte": "Simuler la croissance d'une épargne",
+      "href": "/simulateurs/epargne"
+     }
+    },
+    {
+     "id": "interets-composes",
+     "titre": "Les intérêts composés",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Les intérêts composés produisent des gains sur les gains passés, et leur effet grandit avec la durée.",
+     "paragraphes": [
+      "Les intérêts simples sont calculés uniquement sur la somme de départ. Les intérêts composés sont calculés sur la somme de départ et sur les intérêts déjà gagnés. Chaque année, les gains de l'année précédente produisent à leur tour des gains. Ce mécanisme paraît modeste au début. Il devient très puissant avec le temps.",
+      "Prenons 10 000 € placés à 4 % par an. Avec des intérêts simples, vous gagnez 400 € chaque année, soit 12 000 € en trente ans et un total de 22 000 €. Avec des intérêts composés, vous gagnez 400 € la première année, 416 € la deuxième, puis un peu plus chaque année. Au bout de trente ans, le capital atteint environ 32 434 €. La différence vient uniquement des intérêts réinvestis.",
+      "Trois paramètres comptent : le taux, la durée et la régularité des versements. La durée est le plus souvent sous-estimée. Commencer dix ans plus tôt pèse souvent davantage qu'un taux légèrement supérieur. C'est pourquoi le temps est le principal allié de l'investisseur de long terme.",
+      "Une règle simple aide à se représenter l'effet : la règle de 72. Divisez 72 par le taux annuel pour obtenir le nombre approximatif d'années nécessaires pour doubler un capital. À 4 %, il faut environ 18 ans. À 2 %, environ 36 ans. À 8 %, environ 9 ans. C'est une approximation utile pour comparer, pas un calcul exact.",
+      "Le mécanisme fonctionne aussi à l'envers. Des frais annuels se composent comme des gains. Un écart de 1 % de frais par an paraît faible sur une année. Sur vingt ou trente ans, il peut représenter une part importante du capital final. L'inflation se compose de la même manière. Les intérêts composés jouent donc pour vous ou contre vous.",
+      "Pour que les intérêts se composent, il faut les laisser travailler. Sur un Livret A, les intérêts de l'année sont ajoutés au capital au 31 décembre et produisent eux-mêmes des intérêts l'année suivante. Un fonds dit « capitalisant » réinvestit automatiquement les revenus qu'il perçoit. Si vous retirez chaque année vos gains pour les dépenser, vous revenez à des intérêts simples."
+     ],
+     "exemple": "Vous versez 100 € par mois pendant 30 ans, soit 36 000 € au total. Si ces versements rapportent 4 % par an, avec des intérêts ajoutés chaque mois, le capital final atteint environ 69 400 €. Plus de 33 000 € proviennent donc des intérêts, et une large part de ces intérêts provient elle-même d'intérêts antérieurs. Le taux de 4 % est une hypothèse de calcul, constante chaque année, ce qui n'arrive jamais sur un placement dont la valeur varie. Le principe reste vrai : plus la durée est longue, plus l'effet est marqué.",
+     "a_retenir": [
+      "Les intérêts composés produisent des gains sur les gains déjà obtenus.",
+      "La durée compte autant que le taux.",
+      "Règle de 72 : 72 divisé par le taux donne le temps de doublement approximatif."
+     ],
+     "erreur_frequente": "Attendre d'avoir une grosse somme pour commencer. Dix années de capitalisation perdues pèsent souvent plus lourd que le montant de départ.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, Livret A",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2365"
+      }
+     ],
+     "lien_site": {
+      "texte": "Simuler l'effet des intérêts composés",
+      "href": "/simulateurs/epargne"
+     }
+    },
+    {
+     "id": "risque-rendement",
+     "titre": "Risque et rendement",
+     "premium": false,
+     "duree_min": 9,
+     "resume": "Un rendement espéré plus élevé s'accompagne toujours de variations plus fortes, que la diversification réduit sans les supprimer.",
+     "paragraphes": [
+      "En finance, le risque désigne l'incertitude sur le résultat. Un placement risqué n'est pas forcément un mauvais placement. C'est un placement dont la valeur peut s'écarter beaucoup, à la hausse comme à la baisse, de ce que vous attendiez. On mesure souvent cet écart avec la volatilité, c'est-à-dire l'ampleur des variations de prix sur une période.",
+      "Risque et rendement vont ensemble. Aucun placement ne combine durablement un rendement élevé, une sécurité totale et une disponibilité immédiate. Un livret réglementé garantit le capital et reste disponible, mais rapporte peu. Les actions ont historiquement rapporté davantage sur longue période, au prix de fortes baisses temporaires. Une promesse de gain élevé sans risque doit être traitée comme un signal d'alerte.",
+      "Les chiffres le montrent. L'indice MSCI World, qui regroupe environ 1 250 grandes et moyennes entreprises de 23 pays développés, a progressé d'environ 9 % par an en dollars, dividendes réinvestis, entre fin 1987 et septembre 2026, selon MSCI. Sur la même période, il a aussi perdu 57,5 % entre octobre 2007 et mars 2009. Ces performances passées ne préjugent pas des performances futures.",
+      "Une perte et un gain de même pourcentage ne se compensent pas. Si un placement perd 50 %, il doit ensuite gagner 100 % pour revenir à son point de départ. Une baisse de 20 % demande une hausse de 25 %. Plus la baisse est profonde, plus la remontée nécessaire est forte. Limiter les pertes extrêmes compte donc autant que chercher la performance.",
+      "La diversification réduit une partie du risque. Elle consiste à répartir son argent entre plusieurs entreprises, secteurs, pays ou types de placements. Si une entreprise fait faillite, l'effet sur un portefeuille de plusieurs centaines de lignes reste limité. La diversification ne supprime pas le risque de marché : quand l'ensemble des Bourses baisse, un portefeuille diversifié baisse aussi.",
+      "Le bon niveau de risque dépend de vous : de votre horizon, de vos revenus, de votre capacité à supporter une baisse sans vendre. Ce n'est pas qu'une question de chiffres. Demandez-vous comment vous réagiriez si votre placement perdait un tiers de sa valeur en quelques semaines, comme les grandes Bourses en février et mars 2020."
+     ],
+     "exemple": "Deux placements de 10 000 €. Le premier rapporte 3 % chaque année, sans variation. Le second gagne 25 % la première année, perd 20 % la deuxième, puis gagne 25 % la troisième. Après trois ans, le premier vaut 10 927 €. Le second vaut 10 000 × 1,25 × 0,80 × 1,25, soit 12 500 €. Sa moyenne arithmétique est de 10 % par an, mais son rendement annuel effectif n'est que d'environ 7,7 %. La baisse de 20 % a effacé tout le gain de la première année. Le second placement a mieux rapporté, mais son détenteur devait supporter la mauvaise année sans vendre.",
+     "a_retenir": [
+      "Plus le rendement espéré est élevé, plus les variations possibles sont fortes.",
+      "Après une baisse de 50 %, il faut une hausse de 100 % pour revenir au départ.",
+      "La diversification réduit le risque propre à une entreprise, pas celui de tout le marché."
+     ],
+     "erreur_frequente": "Croire une offre qui promet un rendement élevé sans risque. Cette promesse est un signe classique d'escroquerie, car rendement et risque vont toujours ensemble.",
+     "sources": [
+      {
+       "label": "MSCI, MSCI World Index (USD), fiche au 30 septembre 2026",
+       "url": "https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb"
+      },
+      {
+       "label": "AMF, Document d'informations clés : comprendre l'information sur le risque",
+       "url": "https://www.amf-france.org/fr/document-dinformations-cles-comprendre-linformation-sur-le-risque-du-placement"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir ce qu'aurait donné un placement passé",
+      "href": "/outils/si-javais"
+     }
+    },
+    {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Une réserve disponible de deux à six mois de revenus évite de vendre un placement au mauvais moment.",
+     "paragraphes": [
+      "L'épargne de précaution est une réserve d'argent disponible immédiatement, destinée aux imprévus : une panne de voiture, une réparation dans le logement, une baisse de revenus, des frais de santé. Elle n'a pas pour but de rapporter. Elle sert à éviter deux choses : le découvert ou le crédit à la consommation d'un côté, la vente forcée d'un placement au mauvais moment de l'autre.",
+      "Combien mettre de côté ? La Banque de France donne un ordre de grandeur de deux à six mois de revenus. Le bon niveau dépend de votre situation. Un salarié en CDI dans un logement récent peut viser le bas de la fourchette. Un indépendant aux revenus irréguliers, le propriétaire d'une maison ancienne ou une famille avec un seul revenu ont intérêt à viser plus haut.",
+      "Cette réserve doit être sûre et accessible. Les livrets réglementés remplissent ces deux conditions. Le Livret A et le LDDS, livret de développement durable et solidaire, rapportent 1,7 % depuis le 1er août 2026, sans impôt ni prélèvements sociaux. Leurs plafonds sont de 22 950 € et 12 000 €. Le LEP, livret d'épargne populaire, rapporte 2,5 % avec un plafond de 10 000 €.",
+      "Le LEP mérite d'être vérifié. En 2026, il est ouvert aux personnes dont le revenu fiscal de référence ne dépasse pas 23 028 € pour une part en métropole. Ce revenu figure sur votre avis d'impôt, que la banque vous demandera. Si vous y avez droit, son taux plus élevé en fait un support adapté à une épargne de précaution.",
+      "Les sommes déposées sur ces livrets sont protégées en cas de faillite de la banque. Le Livret A, le LDDS et le LEP bénéficient d'une garantie de l'État, versée par le Fonds de garantie des dépôts et de résolution (FGDR), jusqu'à 100 000 € par personne et par établissement. Cette garantie s'ajoute à celle de 100 000 € qui couvre vos autres dépôts, comme le compte courant.",
+      "Une fois la réserve constituée, l'argent supplémentaire peut financer des projets ou des placements de plus long terme. Si vous devez puiser dans la réserve, la priorité est de la reconstituer avant de reprendre des investissements risqués. Cette discipline protège vos placements de long terme contre les retraits imprévus."
+     ],
+     "exemple": "Sophie gagne 2 100 € net par mois. Elle est salariée en CDI et locataire. Avec le repère de la Banque de France, sa réserve se situe entre 4 200 €, soit deux mois, et 12 600 €, soit six mois. Elle vise 6 300 €, trois mois de revenus. Elle met de côté 300 € par mois sur son Livret A : il lui faut 21 mois pour y arriver. Une fois atteinte, la réserve rapporte environ 107 € par an à 1,7 %, sans impôt. Ce n'est pas un rendement élevé. C'est ce qui lui évitera de vendre un placement en pleine baisse.",
+     "a_retenir": [
+      "La Banque de France donne un repère de deux à six mois de revenus.",
+      "Livret A, LDDS et LEP : capital garanti, argent disponible, intérêts sans impôt.",
+      "La réserve passe avant tout placement risqué."
+     ],
+     "erreur_frequente": "Placer son épargne de précaution en Bourse pour qu'elle rapporte davantage. Les imprévus arrivent souvent pendant une crise, au moment même où les marchés baissent.",
+     "sources": [
+      {
+       "label": "INC et Banque de France, L'épargne de précaution",
+       "url": "https://www.inc-conso.fr/content/lepargne-de-precaution-indispensable-pour-les-imprevus-avec-la-banque-de-france"
+      },
+      {
+       "label": "Service-public.gouv.fr, Livret A",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2365"
+      },
+      {
+       "label": "Service-public.gouv.fr, LEP",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2367"
+      },
+      {
+       "label": "La finance pour tous, La garantie des dépôts en cas de faillite bancaire",
+       "url": "https://www.lafinancepourtous.com/pratique/banque/le-compte-bancaire/la-garantie-des-depots-en-cas-de-faillite-bancaire/"
+      }
+     ],
+     "lien_site": {
+      "texte": "Calculer le temps pour constituer votre réserve",
+      "href": "/simulateurs/epargne"
+     }
+    },
+    {
+     "id": "horizon",
+     "titre": "L'horizon de placement",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "La durée pendant laquelle vous n'aurez pas besoin d'une somme détermine les placements qui lui conviennent.",
+     "paragraphes": [
+      "L'horizon de placement est la durée pendant laquelle vous pouvez laisser une somme placée sans en avoir besoin. C'est le critère le plus utile pour choisir un placement. Une même action peut être un choix cohérent pour un objectif à vingt ans et un très mauvais choix pour un achat prévu l'an prochain.",
+      "Pourquoi la durée change-t-elle tout ? Parce qu'à court terme, les marchés d'actions peuvent baisser fortement. Des baisses de plus de 30 % en quelques semaines ou quelques mois se sont produites en 1987 et en 2020. Sur une longue durée, ces baisses ont jusqu'ici été rattrapées, parfois en quelques mois, parfois en plusieurs années. Plus votre horizon est long, plus vous avez de temps pour traverser une mauvaise période.",
+      "Les durées de récupération varient beaucoup. Selon les données de Yardeni Research, le S&P 500, indice des grandes entreprises américaines, a retrouvé son plus haut moins de cinq mois après le creux de mars 2020. Après la crise de 2008, il lui a fallu quatre ans depuis le creux de mars 2009, et plus de cinq ans depuis le sommet d'octobre 2007. Ces chiffres excluent les dividendes et ne prédisent pas l'avenir.",
+      "Un repère courant consiste à classer ses projets par horizon. L'argent nécessaire dans moins de deux ou trois ans, pour une voiture, un voyage ou un apport immobilier, reste sur des supports garantis. Entre trois et huit ans, un mélange de supports garantis et de placements plus dynamiques peut se discuter. Au-delà de huit ou dix ans, comme pour la retraite, la part en actions peut être plus importante.",
+      "Les documents officiels donnent aussi cette information. Le DIC de chaque fonds indique une période de détention recommandée. Pour les SCPI, sociétés civiles de placement immobilier, l'AMF évoque une durée de placement de 10 à 20 ans. Sortir avant la durée recommandée augmente le risque de récupérer moins que la somme investie.",
+      "L'horizon n'est pas figé. Il se raccourcit à mesure que l'objectif approche. Une épargne retraite investie en actions à 35 ans n'a plus le même horizon à 60 ans. Beaucoup de contrats proposent pour cela une gestion dite « pilotée », qui réduit progressivement la part risquée à l'approche de l'échéance. Le plan d'épargne retraite (PER) l'applique par défaut."
+     ],
+     "exemple": "Thomas a 30 ans et dispose de 20 000 €. Il prévoit d'acheter un appartement dans deux ans et veut garder 15 000 € pour l'apport. Il a aussi 5 000 € qu'il ne compte pas toucher avant sa retraite. Pour les 15 000 €, l'horizon est de deux ans : une baisse de 30 % lui ferait perdre 4 500 € au moment de signer. Cet argent reste sur des livrets. Pour les 5 000 €, l'horizon dépasse trente ans. Une baisse de même ampleur serait pénible, mais il aurait le temps d'attendre une remontée, sans aucune garantie qu'elle arrive aussi vite que par le passé.",
+     "a_retenir": [
+      "L'horizon est la durée pendant laquelle vous n'aurez pas besoin de l'argent.",
+      "Argent nécessaire sous deux ou trois ans : supports garantis.",
+      "Après 2008, le S&P 500 a mis plus de cinq ans à retrouver son sommet de 2007."
+     ],
+     "erreur_frequente": "Choisir un placement d'après sa performance récente plutôt que d'après la date à laquelle vous aurez besoin de l'argent.",
+     "sources": [
+      {
+       "label": "Yardeni Research, S&P 500 bull and bear market tables",
+       "url": "https://archive.yardeni.com/pub/sp500corrbeartables.pdf"
+      },
+      {
+       "label": "AMF, SCPI : un autre moyen d'investir dans l'immobilier",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59262/fr/SCPI__un_autre_moyen_d%27investir_dans_l%27immobilier.pdf"
+      },
+      {
+       "label": "AMF, Document d'informations clés : comprendre l'information sur le risque",
+       "url": "https://www.amf-france.org/fr/document-dinformations-cles-comprendre-linformation-sur-le-risque-du-placement"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir le temps de récupération après les grandes baisses",
+      "href": "/outils/recouvrement"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Selon l'Insee, quelle a été l'inflation moyenne en France en 2022 ?",
+     "options": [
+      "2,0 %",
+      "3,5 %",
+      "5,2 %",
+      "8,1 %"
+     ],
+     "bonne": 2,
+     "explication": "Les prix ont augmenté de 5,2 % en moyenne en 2022, puis de 4,9 % en 2023, de 2,0 % en 2024 et de 0,9 % en 2025."
+    },
+    {
+     "q": "Que devient environ un capital de 10 000 € placé 30 ans à 4 % par an, avec intérêts composés ?",
+     "options": [
+      "32 434 €",
+      "22 000 €",
+      "40 000 €",
+      "14 000 €"
+     ],
+     "bonne": 0,
+     "explication": "10 000 × 1,04 puissance 30 donne environ 32 434 €. Avec des intérêts simples, on obtiendrait 22 000 €."
+    },
+    {
+     "q": "D'après la règle de 72, combien de temps faut-il environ pour doubler un capital placé à 6 % par an ?",
+     "options": [
+      "6 ans",
+      "72 ans",
+      "18 ans",
+      "12 ans"
+     ],
+     "bonne": 3,
+     "explication": "72 divisé par 6 donne 12 ans. C'est une approximation, pas un calcul exact."
+    },
+    {
+     "q": "Un placement perd 50 %. Quelle hausse lui faut-il ensuite pour revenir à sa valeur de départ ?",
+     "options": [
+      "50 %",
+      "100 %",
+      "75 %",
+      "150 %"
+     ],
+     "bonne": 1,
+     "explication": "1 000 € devenus 500 € doivent doubler, donc gagner 100 %, pour revenir à 1 000 €."
+    },
+    {
+     "q": "Quel ordre de grandeur la Banque de France donne-t-elle pour l'épargne de précaution ?",
+     "options": [
+      "Une semaine de revenus",
+      "Deux à six mois de revenus",
+      "Deux ans de revenus",
+      "10 % du patrimoine immobilier"
+     ],
+     "bonne": 1,
+     "explication": "La Banque de France évoque généralement deux à six mois de revenus, selon la situation de chacun."
+    },
+    {
+     "q": "Quel est le taux du Livret A depuis le 1er août 2026 ?",
+     "options": [
+      "1,5 %",
+      "3 %",
+      "2,4 %",
+      "1,7 %"
+     ],
+     "bonne": 3,
+     "explication": "Le taux est passé de 1,5 % à 1,7 % au 1er août 2026, selon l'arrêté du 28 juillet 2026."
+    },
+    {
+     "q": "Un livret rapporte 3 % et l'inflation est de 2 %. Quel est environ le rendement réel ?",
+     "options": [
+      "1 %",
+      "3 %",
+      "5 %",
+      "Moins 1 %"
+     ],
+     "bonne": 0,
+     "explication": "Rendement réel approximatif : 3 % moins 2 %, soit environ 1 % de gain de pouvoir d'achat."
+    },
+    {
+     "q": "Sur quelle échelle le DIC classe-t-il le risque d'un produit ?",
+     "options": [
+      "De 1 à 3",
+      "De 1 à 5",
+      "De 1 à 7",
+      "De A à E"
+     ],
+     "bonne": 2,
+     "explication": "L'indicateur de risque du document d'informations clés va de 1, le moins risqué, à 7, le plus risqué."
+    }
+   ]
+  },
+  {
+   "id": "placements",
+   "titre": "Les placements disponibles en France",
+   "niveau": "Débutant",
+   "duree_min": 86,
+   "intro": "Livrets, assurance-vie, PEA, compte-titres, PER, immobilier ou cryptoactifs : chaque placement obéit à ses propres règles de risque, de disponibilité et de fiscalité. Ce module présente ces règles avec les chiffres en vigueur en 2026.",
+   "objectifs": [
+    "Connaître les taux, plafonds et règles fiscales des principaux placements en 2026",
+    "Distinguer une enveloppe fiscale (PEA, assurance-vie, PER, compte-titres) des titres qu'elle contient",
+    "Comprendre le fonctionnement des actions, obligations, ETF et SCPI",
+    "Repérer les risques propres aux cryptoactifs et le cadre MiCA"
+   ],
+   "lecons": [
+    {
+     "id": "livrets",
+     "titre": "Les livrets réglementés",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Livret A, LDDS et LEP : capital garanti, argent disponible et intérêts sans impôt, dans la limite de plafonds fixés par l'État.",
+     "paragraphes": [
+      "Les livrets réglementés sont des comptes d'épargne dont les règles sont fixées par l'État : taux, plafond, fiscalité. Les plus connus sont le Livret A, le LDDS et le LEP. Leur capital est garanti, l'argent est disponible à tout moment et les intérêts sont exonérés d'impôt sur le revenu et de prélèvements sociaux.",
+      "Depuis le 1er août 2026, le Livret A et le LDDS rapportent 1,7 % par an. Le Livret A est plafonné à 22 950 € de versements pour un particulier, le LDDS à 12 000 €. Une personne ne peut détenir qu'un seul Livret A et un seul LDDS. Les intérêts continuent de s'ajouter au-delà du plafond, mais vous ne pouvez plus faire de dépôt.",
+      "Le LEP rapporte 2,5 % et son plafond est de 10 000 €. Il est réservé aux foyers dont le revenu fiscal de référence ne dépasse pas un seuil : 23 028 € pour une part en métropole en 2026. Le seuil augmente avec le nombre de parts du foyer. La banque vérifie ce revenu à l'ouverture.",
+      "Le taux du Livret A est calculé selon une formule qui combine l'inflation et les taux d'intérêt à court terme, avec un plancher de 0,5 %. Il peut être révisé au 1er février et au 1er août. Il a ainsi varié de 0,5 % début 2022 à 3 % en 2023 et 2024, avant de redescendre à 1,5 % en février 2026 puis de remonter à 1,7 %.",
+      "Les intérêts sont calculés par quinzaine. Une somme déposée commence à rapporter à partir de la quinzaine suivante. Une somme retirée cesse de rapporter dès la quinzaine du retrait. Les intérêts de l'année sont ajoutés au livret au 31 décembre. Pour un dépôt important, il est donc préférable de verser juste avant le 1er ou le 16 du mois.",
+      "Les livrets bancaires non réglementés, parfois appelés « super livrets », sont une autre option. Leur taux est libre, souvent promotionnel pendant quelques mois. Leurs intérêts sont soumis au prélèvement forfaitaire unique, qui atteint 31,4 % en 2026. Un super livret à 3 % brut rapporte donc environ 2,06 % net, à comparer au Livret A à 1,7 % net."
+     ],
+     "exemple": "Léa verse 22 950 € sur son Livret A, le plafond, le 1er août 2026. Si le taux de 1,7 % ne change pas pendant un an, elle perçoit environ 390 € d'intérêts sur douze mois, sans impôt ni prélèvements sociaux. Son compagnon, éligible au LEP, y place 10 000 € à 2,5 % : il perçoit environ 250 €. Sur un super livret à 3 % brut, 10 000 € rapporteraient 300 € avant impôt, puis environ 206 € après le prélèvement de 31,4 %. Le taux brut le plus élevé n'est pas toujours le meilleur une fois l'impôt payé.",
+     "a_retenir": [
+      "Livret A et LDDS : 1,7 % depuis le 1er août 2026, plafonds de 22 950 € et 12 000 €.",
+      "LEP : 2,5 %, plafond de 10 000 €, sous condition de revenus.",
+      "Comparez toujours les taux après impôt."
+     ],
+     "erreur_frequente": "Comparer un super livret et le Livret A sur leur taux brut. Les intérêts du premier sont taxés à 31,4 %, ceux du second ne le sont pas.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, Livret A",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2365"
+      },
+      {
+       "label": "Service-public.gouv.fr, LDDS",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2368"
+      },
+      {
+       "label": "Service-public.gouv.fr, LEP",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2367"
+      },
+      {
+       "label": "Selectra, Historique du taux du Livret A",
+       "url": "https://selectra.info/finance/guides/livrets-epargne/livret-a/historique"
+      },
+      {
+       "label": "Selectra, Flat tax 2026 : les placements passés à 31,4 % et ceux restés à 30 %",
+       "url": "https://selectra.info/finance/actualites/marche/flat-tax-31-4-placements-restes-a-30-pourcent"
+      }
+     ],
+     "lien_site": {
+      "texte": "Simuler les intérêts d'un livret",
+      "href": "/simulateurs/epargne"
+     }
+    },
+    {
+     "id": "assurance-vie",
+     "titre": "L'assurance-vie : fonds en euros et unités de compte",
+     "premium": false,
+     "duree_min": 10,
+     "resume": "L'assurance-vie est une enveloppe souple qui combine un fonds en euros garanti et des unités de compte non garanties, avec une fiscalité qui s'allège après 8 ans.",
+     "paragraphes": [
+      "L'assurance-vie n'est pas une assurance décès au sens courant. C'est une enveloppe d'épargne, c'est-à-dire un cadre juridique et fiscal dans lequel vous placez de l'argent. Vous pouvez y faire des versements quand vous voulez, sans plafond, et retirer votre argent à tout moment. Un retrait s'appelle un « rachat ».",
+      "À l'intérieur du contrat, l'argent est placé sur deux grands types de supports. Le fonds en euros garantit le capital par l'assureur, hors frais. Selon l'ACPR, l'autorité de contrôle des assureurs, et France Assureurs, les fonds en euros ont rapporté en moyenne environ 2,6 % en 2025. En cas de faillite d'un assureur, un fonds de garantie, le FGAP, couvre jusqu'à 70 000 € par assuré et par assureur.",
+      "Les unités de compte (UC) sont des supports dont la valeur varie : fonds d'actions, d'obligations, d'immobilier ou ETF. Leur valeur n'est pas garantie. Elles offrent un potentiel de rendement plus élevé sur longue période et un risque de perte en capital. Beaucoup d'assureurs imposent une part minimale d'unités de compte pour donner accès à leur fonds en euros.",
+      "La fiscalité dépend de l'âge du contrat, pas de votre âge. Seuls les gains contenus dans un rachat sont imposés, pas les sommes versées. Avant 8 ans, ils supportent un prélèvement de 12,8 % au titre de l'impôt sur le revenu. Après 8 ans, ils bénéficient d'un abattement annuel de 4 600 € pour une personne seule et de 9 200 € pour un couple. Au-delà, le taux est de 7,5 % tant que les primes versées ne dépassent pas 150 000 €.",
+      "Les prélèvements sociaux s'ajoutent à l'impôt. Pour l'assurance-vie, ils restent de 17,2 % en 2026, car la hausse de la CSG votée pour 2026 ne s'applique pas à ces contrats. Sur le fonds en euros, ils sont prélevés chaque année sur les intérêts. Sur les unités de compte, ils sont prélevés au moment du rachat.",
+      "L'assurance-vie sert aussi à transmettre. Au décès, les sommes vont aux bénéficiaires que vous avez désignés, avec une fiscalité propre. Pour les primes versées avant 70 ans, chaque bénéficiaire profite d'un abattement de 152 500 €. Pour les primes versées après 70 ans, l'abattement est de 30 500 € au total, tous bénéficiaires confondus.",
+      "Les frais varient beaucoup d'un contrat à l'autre : frais sur versements, frais de gestion annuels, frais d'arbitrage entre supports. Ils se composent dans le temps, comme les gains. Avant de souscrire, comparez-les dans les conditions générales et dans les documents d'information de chaque support."
+     ],
+     "exemple": "Paul a ouvert un contrat il y a dix ans. Il a versé 40 000 € et le contrat vaut aujourd'hui 50 000 €. Il retire 10 000 €. Ce rachat contient une part de gains proportionnelle : 10 000 × 10 000 / 50 000, soit 2 000 €. Les 8 000 € restants sont du capital versé, non imposé. Le contrat a plus de 8 ans et Paul vit seul : ses 2 000 € de gains restent sous l'abattement de 4 600 €, donc sans impôt sur le revenu. Si le rachat porte sur des unités de compte, il paie 17,2 % de prélèvements sociaux sur 2 000 €, soit 344 €.",
+     "a_retenir": [
+      "Fonds en euros : capital garanti par l'assureur ; unités de compte : valeur non garantie.",
+      "Après 8 ans : abattement annuel de 4 600 € (9 200 € pour un couple) sur les gains retirés.",
+      "Prélèvements sociaux de 17,2 % en 2026 pour l'assurance-vie."
+     ],
+     "erreur_frequente": "Croire que toute la somme retirée est imposée. Seule la part de gains contenue dans le rachat l'est.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, Fiscalité des rachats d'assurance-vie",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F22414"
+      },
+      {
+       "label": "Impots.gouv.fr, Bénéficiaire d'une assurance-vie",
+       "url": "https://impots.gouv.fr/node/13935"
+      },
+      {
+       "label": "Meilleurtaux, Fonds en euros à 2,6 % en 2025 selon l'ACPR",
+       "url": "https://placement.meilleurtaux.com/assurance-vie/actualites/2026-mars/assurance-vie-fonds-euros-a-2-6-en-2025-selon-lacpr.html"
+      },
+      {
+       "label": "Auguste Patrimoine, FGAP : la garantie de 70 000 € de l'assurance-vie",
+       "url": "https://www.auguste-patrimoine.fr/blog/fgap-garantie-assurance-vie"
+      },
+      {
+       "label": "Légifiscal, PLFSS 2026 : hausse de la CSG et produits exclus",
+       "url": "https://www.legifiscal.fr/actualites-fiscales/4355-plfss-2026-hausse-csg-immobilier-assurance-vie.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Mesurer l'effet des frais d'un contrat",
+      "href": "/simulateurs/frais"
+     }
+    },
+    {
+     "id": "pea",
+     "titre": "Le PEA (plan d'épargne en actions)",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Le PEA permet d'investir en actions européennes avec des gains exonérés d'impôt sur le revenu après 5 ans.",
+     "paragraphes": [
+      "Le PEA est une enveloppe fiscale créée pour orienter l'épargne vers les entreprises européennes. Il s'ouvre dans une banque, chez un courtier en ligne ou chez un assureur. Chaque personne majeure fiscalement domiciliée en France peut en détenir un. Les versements sont plafonnés à 150 000 €. Un jeune majeur rattaché au foyer fiscal de ses parents est limité à 20 000 €.",
+      "On peut y loger des actions de sociétés ayant leur siège dans l'Union européenne ou l'Espace économique européen, et des fonds investis à plus de 75 % dans ces actions. Certains ETF qui suivent des indices mondiaux y sont tout de même éligibles, grâce à une technique appelée réplication synthétique, présentée dans la leçon sur les ETF. Les obligations et les actions américaines achetées en direct n'y ont pas leur place.",
+      "L'avantage est fiscal. Tant que l'argent reste dans le plan, les dividendes et les plus-values ne sont pas imposés. Après 5 ans, les gains retirés sont exonérés d'impôt sur le revenu. Ils restent soumis aux prélèvements sociaux, de 18,6 % en 2026. Sur un compte-titres ordinaire, les mêmes gains supporteraient 31,4 %.",
+      "Avant 5 ans, un retrait entraîne en principe la clôture du plan, et les gains sont imposés au prélèvement forfaitaire de 31,4 %. Il existe des exceptions, notamment en cas de licenciement, d'invalidité ou de mise à la retraite anticipée. Après 5 ans, vous pouvez faire des retraits partiels sans fermer le plan et continuer à verser.",
+      "Le délai de 5 ans court à partir du premier versement, pas de chaque versement. C'est pourquoi beaucoup d'investisseurs ouvrent un PEA tôt, même avec une petite somme, pour « prendre date ». Les versements faits plus tard profitent de l'antériorité du plan.",
+      "Le PEA-PME-ETI est une variante destinée aux petites et moyennes entreprises et aux entreprises de taille intermédiaire. Son plafond est de 225 000 €. Ce plafond est commun avec le PEA classique : à eux deux, les versements ne peuvent pas dépasser 225 000 €, dont 150 000 € au maximum sur le PEA classique."
+     ],
+     "exemple": "Inès a ouvert un PEA il y a six ans. Elle a versé 30 000 € et le plan vaut 50 000 €. Si elle retire tout, son gain de 20 000 € est exonéré d'impôt sur le revenu, car le plan a plus de 5 ans. Elle paie 18,6 % de prélèvements sociaux, soit 3 720 €. Avec le même gain sur un compte-titres, elle aurait payé 31,4 %, soit 6 280 €. L'écart atteint 2 560 €. Le calcul exact, qui peut dépendre de la date à laquelle les gains ont été acquis, est fait par l'établissement qui tient le plan.",
+     "a_retenir": [
+      "Plafond de versements : 150 000 € (225 000 € avec le PEA-PME-ETI).",
+      "Après 5 ans : pas d'impôt sur le revenu sur les gains, mais 18,6 % de prélèvements sociaux en 2026.",
+      "Le délai de 5 ans court dès le premier versement."
+     ],
+     "erreur_frequente": "Attendre d'avoir une somme importante pour ouvrir un PEA. Le délai de 5 ans ne commence qu'au premier versement.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, Plan d'épargne en actions (PEA)",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2385"
+      },
+      {
+       "label": "Meilleurtaux, Les prélèvements sociaux du PEA passent à 18,6 %",
+       "url": "https://placement.meilleurtaux.com/bourse/actualites/2026-fevrier/taux-prelevements-sociaux-applique-pea-passe-desormais-18-6.html"
+      },
+      {
+       "label": "La finance pour tous (IEFP), Prélèvement forfaitaire unique",
+       "url": "https://www.lafinancepourtous.com/pratique/impots/fiscalite-de-l-epargne-2/prelevement-forfaitaire-unique-pfu/"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer PEA et compte-titres",
+      "href": "/pea-cto"
+     }
+    },
+    {
+     "id": "compte-titres",
+     "titre": "Le compte-titres ordinaire",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Le compte-titres donne accès à presque tous les titres, sans plafond, mais ses gains sont imposés chaque année.",
+     "paragraphes": [
+      "Le compte-titres ordinaire, souvent abrégé CTO, permet d'acheter et de conserver presque tous les titres financiers : actions françaises et étrangères, obligations, ETF, fonds. Il n'a pas de plafond de versement. Vous pouvez en ouvrir plusieurs, dans différents établissements, et retirer votre argent à tout moment sans clôturer le compte.",
+      "Sa contrepartie est fiscale. Les dividendes, les intérêts et les plus-values réalisées sont imposés l'année où vous les percevez. Par défaut, ils supportent le prélèvement forfaitaire unique (PFU), aussi appelé flat tax. En 2026, son taux est de 31,4 % : 12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux. Avant 2026, il était de 30 %.",
+      "Vous pouvez choisir à la place l'imposition au barème progressif de l'impôt sur le revenu. Ce choix est global : il vaut pour tous vos revenus de placement de l'année. Il peut être intéressant pour un foyer non imposable ou faiblement imposé. Les dividendes bénéficient alors d'un abattement de 40 %. Les prélèvements sociaux restent dus dans tous les cas.",
+      "Les moins-values ont une utilité. Si vous vendez un titre à perte, cette perte se déduit des plus-values de la même année, puis de celles des dix années suivantes. Elle réduit donc l'impôt sur des gains futurs. Elle ne se déduit pas, en revanche, des dividendes ni de vos autres revenus.",
+      "Le CTO est souvent utilisé en complément d'un PEA : pour les actions américaines ou asiatiques, les obligations, ou quand le plafond du PEA est atteint. Chaque achat entraîne des frais de courtage. L'achat d'actions de sociétés françaises dont la capitalisation dépasse 1 milliard d'euros supporte aussi la taxe sur les transactions financières de 0,4 % depuis le 1er avril 2025. Cette taxe concerne 121 sociétés en 2026 et s'applique aussi dans un PEA.",
+      "Pour les titres étrangers, une retenue à la source peut être prélevée sur les dividendes dans le pays de la société. Les conventions fiscales permettent en général d'en déduire une partie de l'impôt français, pour éviter d'être imposé deux fois sur la même somme. L'imprimé fiscal unique (IFU) envoyé chaque année par votre courtier récapitule ces montants."
+     ],
+     "exemple": "Karim détient des actions sur un compte-titres. En 2026, il perçoit 500 € de dividendes et réalise une plus-value de 2 000 € en vendant une ligne. Il a aussi vendu une autre ligne avec une perte de 600 €. Sa plus-value nette est de 1 400 €. Avec le PFU de 31,4 %, il paie 157 € sur les dividendes et environ 440 € sur la plus-value nette, soit 597 € au total. Dans un PEA de plus de 5 ans, ces 1 900 € de gains n'auraient supporté que 18,6 % de prélèvements sociaux, soit environ 353 €, et seulement au moment d'un retrait.",
+     "a_retenir": [
+      "Pas de plafond, presque tous les titres, retraits libres.",
+      "Gains imposés chaque année : PFU de 31,4 % en 2026.",
+      "Les moins-values s'imputent sur les plus-values de l'année et des dix années suivantes."
+     ],
+     "erreur_frequente": "Oublier que l'impôt de 31,4 % s'applique à chaque vente avec gain, même si l'argent est aussitôt réinvesti sur le même compte.",
+     "sources": [
+      {
+       "label": "La finance pour tous (IEFP), Prélèvement forfaitaire unique",
+       "url": "https://www.lafinancepourtous.com/pratique/impots/fiscalite-de-l-epargne-2/prelevement-forfaitaire-unique-pfu/"
+      },
+      {
+       "label": "Selectra, Flat tax 2026 : les placements passés à 31,4 % et ceux restés à 30 %",
+       "url": "https://selectra.info/finance/actualites/marche/flat-tax-31-4-placements-restes-a-30-pourcent"
+      },
+      {
+       "label": "Légifiscal, Taxe sur les transactions financières : sociétés concernées en 2026",
+       "url": "https://www.legifiscal.fr/actualites-fiscales/4362-taxe-transactions-financieres-liste-societes-concernees-1er-decembre-2025.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Simuler l'écart entre PEA et compte-titres",
+      "href": "/simulateurs/pea-cto"
+     }
+    },
+    {
+     "id": "per",
+     "titre": "Le PER (plan d'épargne retraite)",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Le PER bloque une épargne jusqu'à la retraite en échange d'une déduction des versements du revenu imposable.",
+     "paragraphes": [
+      "Le plan d'épargne retraite (PER) est une enveloppe destinée à préparer la retraite, créée par la loi PACTE de 2019. L'argent est en principe bloqué jusqu'au départ à la retraite. À cette date, vous pouvez le récupérer en capital, en une ou plusieurs fois, ou sous forme de rente versée à vie, selon les options du contrat.",
+      "Son principal attrait est fiscal. Les versements volontaires peuvent être déduits de votre revenu imposable, dans une limite annuelle. Pour un salarié, ce plafond est égal à 10 % des revenus professionnels de l'année précédente, avec un minimum de 4 710 € et un maximum de 37 680 € pour les versements de 2026. La part du plafond non utilisée peut être reportée sur les années suivantes.",
+      "L'économie d'impôt dépend de votre tranche marginale d'imposition, c'est-à-dire du taux qui s'applique à la dernière tranche de votre revenu. Un versement de 1 000 € fait économiser 300 € dans la tranche à 30 %, 110 € dans la tranche à 11 % et rien à un foyer non imposable. Le PER est donc surtout intéressant pour les foyers imposés.",
+      "Cette déduction n'est pas un cadeau définitif. C'est un report d'impôt. À la sortie en capital, les sommes versées et déduites sont imposées au barème de l'impôt sur le revenu, et les gains au prélèvement forfaitaire. L'opération est surtout avantageuse si votre taux d'imposition à la retraite est plus bas que pendant votre vie active.",
+      "Des déblocages anticipés sont possibles dans des cas prévus par la loi : achat de la résidence principale, décès du conjoint, invalidité, surendettement, fin des droits au chômage, cessation d'activité après une liquidation judiciaire. En dehors de ces cas, l'argent reste indisponible jusqu'à la retraite.",
+      "La loi de finances pour 2026 a apporté deux changements. Les plafonds non utilisés à partir des revenus de 2026 peuvent être reportés sur cinq ans au lieu de trois. Les versements volontaires effectués à partir de 70 ans ne sont plus déductibles. Par défaut, l'épargne est placée en gestion pilotée, qui réduit progressivement la part risquée à l'approche de la retraite."
+     ],
+     "exemple": "Nadia est salariée et se situe dans la tranche à 30 %. Ses revenus professionnels de 2025 lui donnent un plafond de déduction de 4 710 €. Elle verse 3 000 € sur un PER en 2026. Son impôt sur les revenus de 2026, payé en 2027, baisse de 900 €. Son effort réel est donc de 2 100 €. À la retraite, si elle récupère ce capital, les 3 000 € s'ajouteront à son revenu imposable de l'année. Si elle est alors dans la tranche à 11 %, elle paiera 330 € sur cette part, plus l'impôt sur les gains. L'avantage net dépend de cet écart de taux.",
+     "a_retenir": [
+      "Versements déductibles dans la limite de 10 % des revenus professionnels (de 4 710 € à 37 680 € en 2026 pour un salarié).",
+      "L'économie dépend de la tranche marginale d'imposition : c'est un report d'impôt.",
+      "L'argent est bloqué jusqu'à la retraite, sauf cas de déblocage prévus par la loi."
+     ],
+     "erreur_frequente": "Verser sur un PER en déduisant les versements alors que l'on n'est pas imposable. La déduction ne rapporte rien, l'argent est bloqué et la sortie sera imposée.",
+     "sources": [
+      {
+       "label": "Fortuneo, Fiscalité du PER en 2026",
+       "url": "https://www.fortuneo.fr/blog/fiscalite-per-2026"
+      },
+      {
+       "label": "Meilleurtaux, PER 2026 : nouveaux plafonds de déduction",
+       "url": "https://placement.meilleurtaux.com/retraite/actualites/2026-janvier/per-2026-nouveaux-plafonds-de-deduction-annonces.html"
+      }
+     ],
+     "lien_site": null
+    },
+    {
+     "id": "actions",
+     "titre": "Les actions",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Une action est une part de propriété d'une entreprise ; elle rapporte par les dividendes et les plus-values, sans aucune garantie.",
+     "paragraphes": [
+      "Une action est un titre de propriété d'une fraction d'entreprise. En achetant une action, vous devenez actionnaire : vous possédez une petite part du capital. Cette part donne des droits : voter en assemblée générale, recevoir une part des bénéfices lorsque l'entreprise verse un dividende, et être informé de la marche de la société.",
+      "Une action peut rapporter de deux façons. La première est le dividende, une somme versée en général une fois par an et prélevée sur les bénéfices. Il n'est jamais garanti : l'entreprise peut le baisser ou le supprimer. La seconde est la plus-value, la différence positive entre le prix de vente et le prix d'achat. Elle n'existe que si le cours a monté.",
+      "Le risque est réel. Le cours peut baisser durablement. En cas de faillite, les actionnaires passent après tous les créanciers, et leur mise peut être perdue en totalité. Une seule action concentre le risque d'une seule entreprise. L'AMF recommande de diversifier ses placements et de ne pas investir en actions l'argent dont on peut avoir besoin à court terme.",
+      "Pour acheter une action cotée, il faut un compte chez un intermédiaire : banque ou courtier en ligne. On choisit ensuite l'enveloppe : le PEA pour les sociétés européennes, le compte-titres pour le reste. Chaque ordre entraîne des frais de courtage, et l'achat de grandes sociétés françaises supporte une taxe de 0,4 %. Ces frais pèsent davantage sur les petits ordres.",
+      "Le prix d'une action ne dit rien, seul, de sa cherté. Une action à 500 € n'est pas plus « chère » qu'une action à 10 €. Ce qui compte, c'est le rapport entre ce prix et ce que l'entreprise gagne, possède ou distribue. Le module 4 de ce cours explique comment lire les comptes et comparer une entreprise aux autres sociétés de son secteur.",
+      "Acheter des actions en direct demande du temps : suivre les résultats, les annonces, les assemblées générales. Une autre approche consiste à détenir des centaines d'actions à la fois au moyen de fonds ou d'ETF. Les deux peuvent coexister. Aucune n'élimine la baisse des marchés dans leur ensemble."
+     ],
+     "exemple": "Vous achetez 20 actions d'une société à 50 €, soit 1 000 €. Les frais de courtage sont de 2 € et la taxe sur les transactions financières de 0,4 %, soit 4 €. Votre coût total est de 1 006 €. L'année suivante, la société verse un dividende de 1,50 € par action : vous recevez 30 € avant impôt. Si vous revendez à 55 €, vous obtenez 1 100 € moins 2 € de frais, soit un gain de 92 € en plus des 30 € de dividendes. Si le cours tombe à 40 €, vous perdez 208 € à la revente. Les frais indiqués sont des hypothèses : ils varient selon les courtiers.",
+     "a_retenir": [
+      "Une action est une part de propriété d'une entreprise.",
+      "Dividendes et plus-values ne sont jamais garantis.",
+      "En cas de faillite, l'actionnaire est remboursé en dernier, le plus souvent pas du tout."
+     ],
+     "erreur_frequente": "Juger qu'une action est bon marché parce que son prix unitaire est bas. Le prix seul ne dit rien tant qu'on ne le rapporte pas aux bénéfices.",
+     "sources": [
+      {
+       "label": "AMF, Investir en actions",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59273/fr/Investir_en_actions.pdf"
+      },
+      {
+       "label": "Légifiscal, Taxe sur les transactions financières : sociétés concernées en 2026",
+       "url": "https://www.legifiscal.fr/actualites-fiscales/4362-taxe-transactions-financieres-liste-societes-concernees-1er-decembre-2025.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Explorer les fiches entreprises",
+      "href": "/entreprises"
+     }
+    },
+    {
+     "id": "obligations",
+     "titre": "Les obligations",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Une obligation est un prêt à un État ou à une entreprise ; son prix baisse quand les taux montent.",
+     "paragraphes": [
+      "Une obligation est un titre de dette. L'émetteur, un État, une collectivité ou une entreprise, emprunte de l'argent aux investisseurs. En échange, il s'engage à verser un intérêt régulier, appelé coupon, puis à rembourser la somme empruntée à une date fixée, l'échéance. L'État français emprunte ainsi au moyen des OAT, les obligations assimilables du Trésor.",
+      "Le coupon est exprimé en pourcentage de la valeur de remboursement, appelée valeur nominale. Une obligation de 1 000 € à 3 % verse 30 € par an jusqu'à l'échéance. Si l'émetteur honore ses engagements, celui qui la garde jusqu'au bout récupère ses 1 000 € et a perçu tous les coupons.",
+      "Entre-temps, l'obligation s'échange sur un marché et son prix varie. La raison principale est l'évolution des taux d'intérêt. Si les taux montent, les nouvelles obligations offrent un coupon plus élevé. Les anciennes, moins attrayantes, voient leur prix baisser. L'AMF le résume ainsi : le prix des obligations baisse lorsque les taux montent, et inversement.",
+      "Le deuxième risque est le risque de crédit : l'émetteur peut ne pas rembourser. Des agences de notation évaluent ce risque. Plus il est élevé, plus l'émetteur doit offrir un taux élevé pour trouver des prêteurs. Un rendement très supérieur à celui des emprunts d'État signale donc un risque plus élevé, pas une affaire.",
+      "La sensibilité mesure l'effet d'une variation des taux sur le prix. Plus l'échéance est lointaine, plus le prix réagit. Une obligation à dix ans perd beaucoup plus de valeur qu'une obligation à un an quand les taux montent d'un point. C'est ce qui s'est produit en 2022, quand la hausse rapide des taux a fait reculer les fonds obligataires.",
+      "Les particuliers détiennent rarement des obligations en direct, car les montants unitaires sont souvent élevés et le marché peu accessible. Ils passent plutôt par des fonds ou des ETF obligataires, ou indirectement par le fonds en euros de l'assurance-vie, investi en grande partie en obligations. Les obligations ne sont pas éligibles au PEA."
+     ],
+     "exemple": "Vous détenez une obligation de 1 000 € à 3 %, qui arrive à échéance dans dix ans. Elle verse 30 € par an. Les taux du marché passent à 4 % pour la même durée. Un acheteur peut désormais obtenir 40 € par an pour 1 000 €. Pour que votre titre lui offre le même rendement, son prix doit descendre à environ 919 €. Vous perdez près de 8 % sur le papier. Si vous gardez l'obligation jusqu'à l'échéance et que l'émetteur rembourse, vous récupérez quand même 1 000 € et tous vos coupons.",
+     "a_retenir": [
+      "Une obligation est un prêt : coupon régulier, puis remboursement à l'échéance.",
+      "Quand les taux montent, le prix des obligations existantes baisse.",
+      "Un rendement élevé reflète un risque de non-remboursement plus élevé."
+     ],
+     "erreur_frequente": "Penser qu'une obligation ou un fonds obligataire ne peut pas perdre de valeur. Avant l'échéance, son prix dépend des taux et de la solidité de l'émetteur.",
+     "sources": [
+      {
+       "label": "AMF, Comprendre les obligations avant d'investir",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/comprendre-les-produits-financiers/actions-obligations/obligations/comprendre-les-obligations-avant-dinvestir"
+      },
+      {
+       "label": "AMF, Pourquoi le prix des obligations baisse lorsque les taux montent",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/comprendre-les-produits-financiers/actions-obligations/obligations/pourquoi-le-prix-des-obligations-baisse-lorsque-les-taux-montent"
+      }
+     ],
+     "lien_site": {
+      "texte": "Retrouver les termes obligataires dans le lexique",
+      "href": "/lexique"
+     }
+    },
+    {
+     "id": "etf",
+     "titre": "Les ETF (fonds indiciels cotés)",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Un ETF reproduit un indice à faibles frais ; il diversifie mais suit son indice dans les baisses.",
+     "paragraphes": [
+      "Un ETF, ou tracker, est un fonds qui cherche à reproduire la performance d'un indice, par exemple le CAC 40 ou le MSCI World. Il s'achète et se vend en Bourse comme une action, pendant les heures de cotation. Avec un seul titre, vous détenez une part de toutes les entreprises de l'indice.",
+      "Cette approche s'appelle la gestion passive. Le gérant ne cherche pas à choisir les meilleures actions : il suit l'indice. Elle s'oppose à la gestion active, où un gérant sélectionne les titres pour tenter de battre le marché. Les études SPIVA de S&P Dow Jones Indices montrent que cela réussit rarement sur longue période : sur les dix ans terminés fin 2025, 98,1 % des fonds d'actions françaises en euros ont fait moins bien que leur indice.",
+      "Les frais expliquent une partie de cet écart. Un ETF n'a pas d'équipe de sélection à rémunérer. Ses frais courants sont en général nettement plus bas que ceux d'un fonds actif. Sur vingt ans, un écart de frais d'un ou deux points par an se compose et peut représenter plusieurs milliers d'euros sur un placement de 10 000 €.",
+      "Il existe deux grandes méthodes de réplication. Un ETF à réplication physique achète réellement les actions de l'indice. Un ETF à réplication synthétique détient un autre panier de titres et passe un contrat d'échange, appelé swap, avec une banque qui lui verse la performance de l'indice. Cette technique permet de proposer dans un PEA des ETF qui suivent des indices mondiaux. Elle ajoute un risque de contrepartie, limité par la réglementation européenne.",
+      "Un ETF peut être capitalisant ou distribuant. Le premier réinvestit automatiquement les dividendes reçus, le second les verse aux porteurs. Sur un compte-titres, un ETF capitalisant évite l'imposition annuelle des dividendes, puisqu'il n'en verse pas. L'écart de suivi, ou tracking error, mesure à quel point l'ETF s'écarte de son indice : mieux vaut qu'il soit faible.",
+      "Un ETF n'est pas sans risque. Il suit son indice à la hausse comme à la baisse. Un placement qui suivait le MSCI World a ainsi subi la baisse de 57,5 % de l'indice entre octobre 2007 et mars 2009, frais en plus. Il faut aussi regarder ce que contient l'indice : fin septembre 2026, les États-Unis représentaient 72,9 % du MSCI World et les technologies de l'information 31,8 %."
+     ],
+     "exemple": "Deux placements de 10 000 € sur vingt ans. Supposons que les actions sous-jacentes rapportent 6 % par an, une hypothèse et non une prévision. Un ETF facture 0,2 % de frais par an : il rapporte donc 5,8 % et le capital atteint environ 30 900 €. Un fonds actif facture 1,8 % par an et obtient la même performance brute que l'indice : il rapporte 4,2 % et le capital atteint environ 22 800 €. L'écart de frais de 1,6 point par an coûte environ 8 100 € en vingt ans. Le fonds actif devrait battre l'indice de 1,6 point chaque année pour simplement faire jeu égal.",
+     "a_retenir": [
+      "Un ETF reproduit un indice et s'échange en Bourse comme une action.",
+      "Sur dix ans, 98,1 % des fonds actifs d'actions françaises ont fait moins bien que leur indice (SPIVA, fin 2025).",
+      "Un ETF diversifie, il ne protège pas des baisses de son indice."
+     ],
+     "erreur_frequente": "Acheter un ETF « monde » en croyant être réparti à parts égales entre les pays. Fin septembre 2026, les États-Unis pesaient près de 73 % du MSCI World.",
+     "sources": [
+      {
+       "label": "S&P Dow Jones Indices, SPIVA Europe Year-End 2025",
+       "url": "https://www.spglobal.com/spdji/en/documents/spiva/spiva-europe-year-end-2025.pdf"
+      },
+      {
+       "label": "MSCI, MSCI World Index (USD), fiche au 30 septembre 2026",
+       "url": "https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb"
+      },
+      {
+       "label": "AMF, ETF et risques associés",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/56796/fr/ETF_et_risques_associes__l%27AMF_apporte_un_eclairage_sur_le_marche_francais_des_fonds_indiciels_cotes.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer les ETF",
+      "href": "/etf"
+     }
+    },
+    {
+     "id": "immobilier",
+     "titre": "L'immobilier et les SCPI",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "L'immobilier locatif et les SCPI produisent des loyers, avec des frais élevés, une liquidité faible et un capital non garanti.",
+     "paragraphes": [
+      "Pour beaucoup de ménages, l'immobilier commence par la résidence principale. Acheter son logement n'est pas un placement comme les autres : il répond à un besoin, se finance souvent à crédit et ne produit pas de loyer. Il remplace en revanche un loyer que vous n'avez plus à payer.",
+      "L'investissement locatif consiste à acheter un logement pour le louer. Il produit des loyers, mais demande du temps : recherche de locataires, entretien, gestion des impayés et des périodes sans locataire. Il concentre aussi une grosse somme sur un seul bien. Les loyers sont imposés dans la catégorie des revenus fonciers, avec des prélèvements sociaux de 17,2 %, et non au prélèvement forfaitaire.",
+      "Les SCPI, sociétés civiles de placement immobilier, permettent d'investir dans l'immobilier sans acheter de bien en direct. Vous achetez des parts d'une société qui détient un ensemble d'immeubles : bureaux, commerces, entrepôts, établissements de santé. La société encaisse les loyers et en reverse l'essentiel aux associés. On parle de « pierre-papier ».",
+      "En 2025, le taux de distribution moyen des SCPI a atteint 4,91 %, selon l'ASPIM, l'association professionnelle du secteur. Ce taux rapporte les revenus versés au prix de la part. Il ne dit pas tout : la même année, le prix moyen des parts a baissé de 3,45 %, une baisse qui comprend les réductions de prix décidées par certaines sociétés de gestion.",
+      "Les frais sont élevés à l'entrée. Selon l'AMF, les frais de souscription représentent de 5 % à 12 % du prix de la part, et des frais de gestion de 8 % à 10 % des revenus sont prélevés chaque année. Ni les revenus ni le capital ne sont garantis. La revente peut prendre des semaines, voire des mois, faute d'acheteur. L'AMF évoque une durée de placement de 10 à 20 ans.",
+      "Les revenus des SCPI détenues en direct sont imposés comme des revenus fonciers. Il est aussi possible de loger des parts de SCPI dans une assurance-vie, sous forme d'unités de compte. La fiscalité est alors celle de l'assurance-vie, mais l'assureur prélève ses propres frais en plus de ceux de la SCPI."
+     ],
+     "exemple": "Vous achetez 50 parts de SCPI à 200 €, soit 10 000 €. Les frais de souscription de 10 % sont inclus dans ce prix. La valeur de retrait, ce que vous récupéreriez en revendant aussitôt, est d'environ 180 € par part, soit 9 000 €. Avec un taux de distribution de 4,9 %, vous recevez environ 490 € par an avant impôt. Il faut donc environ deux ans de revenus pour compenser les seuls frais d'entrée, à condition que le prix de la part ne baisse pas. Ces chiffres sont des hypothèses inspirées des moyennes de 2025, pas une prévision.",
+     "a_retenir": [
+      "Une SCPI est un placement immobilier collectif, non garanti et peu liquide.",
+      "Taux de distribution moyen de 4,91 % en 2025, mais prix moyen des parts en baisse de 3,45 %.",
+      "Frais d'entrée de 5 % à 12 % : un placement de 10 ans au minimum."
+     ],
+     "erreur_frequente": "Regarder uniquement le taux de distribution. Un revenu de 5 % par an ne compense pas une baisse de 10 % du prix de la part.",
+     "sources": [
+      {
+       "label": "ASPIM, Marché des fonds immobiliers non cotés, 4e trimestre 2025",
+       "url": "https://www.aspim.fr/content/uploads/2026/02/ASPIM_CP-4T-2025_V4.pdf"
+      },
+      {
+       "label": "AMF, SCPI : un autre moyen d'investir dans l'immobilier",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59262/fr/SCPI__un_autre_moyen_d%27investir_dans_l%27immobilier.pdf"
+      },
+      {
+       "label": "Légifiscal, PLFSS 2026 : hausse de la CSG et produits exclus",
+       "url": "https://www.legifiscal.fr/actualites-fiscales/4355-plfss-2026-hausse-csg-immobilier-assurance-vie.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Mesurer le poids des frais d'entrée",
+      "href": "/simulateurs/frais"
+     }
+    },
+    {
+     "id": "crypto",
+     "titre": "Les cryptoactifs : ce qu'il faut savoir",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Les cryptoactifs sont extrêmement volatils ; depuis le 1er juillet 2026, seules les plateformes agréées MiCA peuvent servir des clients en France.",
+     "paragraphes": [
+      "Un cryptoactif est un actif numérique enregistré sur une blockchain, un registre partagé et sécurisé par la cryptographie. Le bitcoin, créé en 2009, est le plus connu. Contrairement à une action ou à une obligation, la plupart des cryptoactifs ne donnent droit ni à un dividende, ni à un coupon, ni à une part d'entreprise. Leur prix dépend essentiellement de l'offre et de la demande.",
+      "Leur volatilité est extrême. Le bitcoin est passé d'environ 20 000 dollars en décembre 2017 à environ 3 200 dollars un an plus tard, soit une baisse d'environ 84 %. Après un sommet proche de 68 000 dollars en novembre 2021, il est retombé sous 20 000 dollars en juin 2022. D'autres cryptoactifs ont perdu la quasi-totalité de leur valeur. Ces mouvements passés ne disent rien des prix futurs.",
+      "L'Union européenne s'est dotée d'un cadre commun, le règlement MiCA (Markets in Crypto-Assets). En France, les plateformes étaient jusque-là enregistrées auprès de l'AMF sous le statut de PSAN, prestataire de services sur actifs numériques, créé par la loi PACTE. La période de transition s'est terminée le 1er juillet 2026. Depuis, seuls les prestataires agréés selon MiCA, appelés PSCA en français et CASP en anglais, peuvent servir des clients en France.",
+      "L'agrément impose aux plateformes des règles d'information sur leurs frais et leurs risques, de gouvernance, de conservation des actifs et de cybersécurité. Un prestataire agréé dans un pays de l'Union peut exercer dans les autres. L'AMF publie une liste blanche des PSCA autorisés. Vérifiez que l'adresse du site correspond exactement à celle de la liste, car de faux sites imitent de vraies plateformes.",
+      "Le cadre MiCA ne protège pas contre la baisse des prix. Aucune garantie publique, comparable à celle des livrets bancaires, ne couvre les cryptoactifs. L'AMF et l'ESMA, l'autorité européenne des marchés financiers, rappellent que l'on peut perdre la totalité de la somme investie. En cas d'escroquerie, les chances de récupérer les fonds sont faibles. Ne communiquez jamais vos clés privées ou vos phrases de récupération.",
+      "Sur le plan fiscal, les plus-values réalisées par un particulier en vendant des cryptoactifs contre des euros sont imposables, sauf si le total des cessions de l'année ne dépasse pas 305 €. Les comptes ouverts sur des plateformes étrangères doivent être déclarés à l'administration fiscale. Une règle de prudence simple consiste à n'y consacrer qu'une somme dont la perte totale resterait supportable."
+     ],
+     "exemple": "Julien achète pour 1 000 € de bitcoins en décembre 2017, au plus haut. Un an plus tard, avec une baisse d'environ 84 %, son placement ne vaut plus qu'environ 160 €. Pour revenir à 1 000 €, le cours doit être multiplié par plus de six. Le bitcoin a ensuite dépassé ce niveau, mais d'autres cryptoactifs achetés à la même époque n'ont jamais remonté. Cet exemple ne prédit rien. Il montre l'ampleur des variations possibles et l'importance de la taille de la mise par rapport à votre patrimoine.",
+     "a_retenir": [
+      "La plupart des cryptoactifs ne produisent aucun revenu et sont extrêmement volatils.",
+      "Depuis le 1er juillet 2026, seuls les PSCA agréés MiCA peuvent opérer en France.",
+      "Aucune garantie publique ne couvre la baisse des prix."
+     ],
+     "erreur_frequente": "Utiliser une plateforme découverte par une publicité ou un réseau social sans vérifier qu'elle figure sur la liste blanche de l'AMF.",
+     "sources": [
+      {
+       "label": "AMF, Fin de la période transitoire des PSAN au 1er juillet 2026",
+       "url": "https://www.amf-france.org/fr/actualites-publications/actualites/lamf-rappelle-que-la-periode-transitoire-pour-les-psan-pour-continuer-de-fournir-des-services-sur"
+      },
+      {
+       "label": "AMF, Entrée en application de MiCA : conséquences pour les détenteurs",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/79584/fr/Entree_en_application_du_reglement_europeen_MiCA__quelles_consequences_pour_les_detenteurs_de_cryptos_.pdf"
+      },
+      {
+       "label": "AMF, Crypto-actifs : appel à la prudence de l'ESMA",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/74854/fr/Crypto-actifs__l%27AMF_appuie_l%27appel_a_la_prudence_lancee_par_l%27ESMA_a_destination_des_investisseurs_individuels.pdf"
+      },
+      {
+       "label": "Cointelegraph, A brief history of Bitcoin crashes and bear markets",
+       "url": "https://cointelegraph.com/magazine/a-brief-history-of-bitcoin-crashes-and-bear-markets-2009-2022"
+      },
+      {
+       "label": "Moneyvox, Fiscalité des cryptos et seuil de 305 €",
+       "url": "https://www.moneyvox.fr/impot/actualites/106566/impots-2026-pourquoi-vos-cryptos-risquent-etre-encore-plus-taxees"
+      }
+     ],
+     "lien_site": {
+      "texte": "Vérifier un site ou une offre",
+      "href": "/outils/verifier"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Quel est le plafond de versements du Livret A pour un particulier ?",
+     "options": [
+      "10 000 €",
+      "12 000 €",
+      "22 950 €",
+      "150 000 €"
+     ],
+     "bonne": 2,
+     "explication": "Le Livret A est plafonné à 22 950 €. Le LDDS l'est à 12 000 € et le LEP à 10 000 €."
+    },
+    {
+     "q": "Quel est le taux des prélèvements sociaux sur les gains d'assurance-vie en 2026 ?",
+     "options": [
+      "17,2 %",
+      "12,8 %",
+      "18,6 %",
+      "31,4 %"
+     ],
+     "bonne": 0,
+     "explication": "L'assurance-vie reste à 17,2 % : la hausse de la CSG de 2026 ne s'applique pas à ces contrats."
+    },
+    {
+     "q": "Quel est le plafond de versements d'un PEA classique ?",
+     "options": [
+      "22 950 €",
+      "100 000 €",
+      "Aucun plafond",
+      "150 000 €"
+     ],
+     "bonne": 3,
+     "explication": "Le PEA classique est plafonné à 150 000 € de versements, 225 000 € au total avec le PEA-PME-ETI."
+    },
+    {
+     "q": "Quel est le taux du prélèvement forfaitaire unique sur les dividendes d'un compte-titres en 2026 ?",
+     "options": [
+      "17,2 %",
+      "31,4 %",
+      "30 %",
+      "25 %"
+     ],
+     "bonne": 1,
+     "explication": "12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux, soit 31,4 % depuis le 1er janvier 2026."
+    },
+    {
+     "q": "Après 8 ans, quel abattement annuel s'applique aux gains d'assurance-vie d'une personne seule ?",
+     "options": [
+      "1 000 €",
+      "4 600 €",
+      "9 200 €",
+      "152 500 €"
+     ],
+     "bonne": 1,
+     "explication": "L'abattement est de 4 600 € pour une personne seule et de 9 200 € pour un couple soumis à imposition commune."
+    },
+    {
+     "q": "Les taux d'intérêt du marché montent. Que devient le prix d'une obligation existante ?",
+     "options": [
+      "Il monte",
+      "Il double",
+      "Il ne change pas",
+      "Il baisse"
+     ],
+     "bonne": 3,
+     "explication": "Une obligation à 3 % devient moins attrayante quand les nouvelles offrent 4 % : sur dix ans, son prix tombe vers 919 € pour 1 000 €."
+    },
+    {
+     "q": "Selon le rapport SPIVA Europe de fin 2025, quelle part des fonds actifs d'actions françaises a fait moins bien que son indice sur dix ans ?",
+     "options": [
+      "98,1 %",
+      "50 %",
+      "75 %",
+      "25 %"
+     ],
+     "bonne": 0,
+     "explication": "98,1 % des fonds d'actions françaises en euros ont sous-performé leur indice sur les dix ans terminés fin 2025."
+    },
+    {
+     "q": "Depuis quelle date seuls les prestataires agréés MiCA (PSCA) peuvent-ils servir des clients en France ?",
+     "options": [
+      "1er janvier 2020",
+      "30 décembre 2024",
+      "1er juillet 2026",
+      "1er janvier 2028"
+     ],
+     "bonne": 2,
+     "explication": "La période transitoire des PSAN s'est terminée le 1er juillet 2026. Depuis, un agrément MiCA est obligatoire."
+    }
+   ]
+  },
+  {
+   "id": "bourse",
+   "titre": "Comprendre la Bourse",
+   "niveau": "Débutant",
+   "duree_min": 48,
+   "intro": "La Bourse est un marché où se rencontrent des acheteurs et des vendeurs d'actions. Ce module explique comment se forment les cours, ce que mesurent les indices, comment passer un ordre et ce que les grands krachs ont montré.",
+   "objectifs": [
+    "Comprendre ce qu'est une action cotée et une capitalisation boursière",
+    "Lire un carnet d'ordres et choisir un type d'ordre",
+    "Savoir ce que mesurent le CAC 40, l'Euro Stoxx 50, le S&P 500 et le MSCI World",
+    "Situer l'ampleur et la durée des krachs de 1987, 2000, 2008 et 2020"
+   ],
+   "lecons": [
+    {
+     "id": "action",
+     "titre": "Ce qu'est une action cotée",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Une action cotée est une part d'entreprise qui s'échange entre investisseurs sur un marché organisé.",
+     "paragraphes": [
+      "Une entreprise a besoin de capitaux pour se développer. Elle peut emprunter ou faire entrer de nouveaux associés. Lorsqu'elle s'introduit en Bourse, elle ouvre une partie de son capital au public sous forme d'actions. Ces actions s'échangent ensuite entre investisseurs sur un marché organisé, comme Euronext Paris.",
+      "Il faut distinguer deux marchés. Sur le marché primaire, l'entreprise émet de nouvelles actions et reçoit l'argent, lors d'une introduction en Bourse ou d'une augmentation de capital. Sur le marché secondaire, les investisseurs s'échangent des actions qui existent déjà. Quand vous achetez une action en Bourse, vous l'achetez presque toujours à un autre investisseur, pas à l'entreprise.",
+      "La capitalisation boursière est la valeur totale de l'entreprise selon la Bourse. Elle se calcule en multipliant le cours de l'action par le nombre d'actions. Une société de 100 millions d'actions cotées 50 € vaut 5 milliards d'euros en Bourse. C'est cette capitalisation, et non le prix d'une action, qui permet de comparer la taille des entreprises.",
+      "Une action ordinaire donne en général une voix en assemblée générale. En France, depuis la loi Florange de 2014, les actionnaires qui conservent leurs titres au nominatif pendant au moins deux ans obtiennent par défaut un droit de vote double dans les sociétés cotées, sauf si les statuts l'écartent. Les grands actionnaires historiques en profitent souvent.",
+      "Une société cotée a des obligations d'information. Elle publie ses résultats annuels et semestriels, ainsi qu'un rapport financier annuel, souvent intégré à un document d'enregistrement universel. Elle doit rendre publique dès que possible toute information susceptible d'influencer son cours. L'AMF contrôle ces publications, gratuites et disponibles sur le site de chaque société.",
+      "Détenir une action, c'est partager le sort de l'entreprise. Si elle prospère, ses bénéfices et son cours peuvent progresser. Si elle décline, le cours baisse, parfois définitivement. En cas de liquidation, les actionnaires ne sont remboursés qu'après les salariés, l'État, les banques et les autres créanciers, ce qui signifie le plus souvent qu'ils ne récupèrent rien."
+     ],
+     "exemple": "Une société compte 200 millions d'actions et son cours est de 40 €. Sa capitalisation est de 8 milliards d'euros. Vous achetez 100 actions pour 4 000 €. Vous détenez 0,00005 % du capital. Si la société réalise un bénéfice de 400 millions d'euros, cela représente 2 € par action. Votre part théorique du bénéfice est donc de 200 €. Elle ne vous est pas versée en totalité : l'entreprise en distribue une partie en dividende et garde le reste pour investir ou réduire sa dette.",
+     "a_retenir": [
+      "Une action cotée s'achète en général à un autre investisseur, sur le marché secondaire.",
+      "Capitalisation boursière = cours × nombre d'actions.",
+      "Les sociétés cotées doivent publier leurs comptes, sous le contrôle de l'AMF."
+     ],
+     "erreur_frequente": "Comparer deux entreprises sur le prix de leur action. Seule la capitalisation dit laquelle vaut le plus en Bourse.",
+     "sources": [
+      {
+       "label": "AMF, Bien s'informer sur les sociétés cotées en bourse",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59207/fr/Bien_s%27informer_sur_les_societes_cotees_en_bourse.pdf"
+      },
+      {
+       "label": "AMF, Investir en actions",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59273/fr/Investir_en_actions.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir une fiche entreprise : Air Liquide",
+      "href": "/entreprise/air-liquide"
+     }
+    },
+    {
+     "id": "cours",
+     "titre": "Comment se forme un cours",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Le cours naît de la rencontre des ordres d'achat et de vente, rassemblés dans le carnet d'ordres.",
+     "paragraphes": [
+      "Le cours d'une action est le prix du dernier échange réalisé. Il résulte de la rencontre entre des acheteurs et des vendeurs. Si davantage d'investisseurs veulent acheter qu'il n'y a de vendeurs au prix actuel, le prix monte jusqu'à trouver des vendeurs. Dans le cas inverse, il baisse. Le cours change donc à chaque transaction.",
+      "Les intentions des investisseurs sont rassemblées dans le carnet d'ordres. D'un côté, les ordres d'achat, classés du prix le plus élevé au plus bas. De l'autre, les ordres de vente, classés du prix le plus bas au plus élevé. Le meilleur prix d'achat et le meilleur prix de vente forment la « fourchette ». L'écart entre les deux s'appelle le spread.",
+      "Les ordres sont exécutés selon deux priorités, rappelle l'AMF. D'abord le prix : un ordre d'achat à un prix plus élevé passe avant un ordre à un prix plus bas. Ensuite le temps : à prix égal, le premier ordre arrivé est servi le premier. Les ordres « au marché », sans limite de prix, passent avant tous les autres.",
+      "À Paris, la séance se déroule en plusieurs phases. De 7 h 15 à 9 h, les ordres s'accumulent sans être exécutés : c'est la préouverture. À 9 h, un fixing détermine le prix d'ouverture qui permet d'échanger le plus grand nombre de titres. La cotation est ensuite continue jusqu'à 17 h 30. Une préclôture précède le fixing de clôture, à 17 h 35.",
+      "Qu'est-ce qui fait bouger l'offre et la demande ? Les résultats publiés, les perspectives annoncées, les taux d'intérêt, la conjoncture, les décisions des concurrents, mais aussi l'humeur générale des investisseurs. Le cours reflète ce que le marché anticipe pour l'avenir, pas seulement ce que l'entreprise a déjà réalisé. Une bonne nouvelle déjà attendue peut ainsi faire baisser un cours.",
+      "La liquidité désigne la facilité à acheter ou à vendre un titre sans faire bouger son prix. Les grandes sociétés du CAC 40 s'échangent en grandes quantités chaque jour : leur fourchette est étroite. Les petites valeurs peu échangées ont une fourchette plus large, et un ordre important peut à lui seul déplacer le cours. Sur ces titres, un ordre à cours limité évite les mauvaises surprises."
+     ],
+     "exemple": "Voici le carnet d'une action à un instant donné. À l'achat : 200 titres à 49,95 €, 300 à 49,90 € et 500 à 49,85 €. À la vente : 150 titres à 50,00 €, 400 à 50,05 € et 600 à 50,10 €. La fourchette va de 49,95 € à 50,00 €. Si vous passez un ordre d'achat au marché de 300 titres, vous achetez 150 titres à 50,00 € et 150 à 50,05 €. Votre prix moyen est de 50,025 € et le dernier cours affiché devient 50,05 €. Un acheteur pressé a fait monter le cours de 5 centimes, sans aucune nouvelle sur l'entreprise.",
+     "a_retenir": [
+      "Le cours est le prix du dernier échange entre un acheteur et un vendeur.",
+      "Le carnet d'ordres classe les ordres par prix, puis par heure d'arrivée.",
+      "À Paris, la cotation est continue de 9 h à 17 h 30."
+     ],
+     "erreur_frequente": "Passer un gros ordre au marché sur une petite valeur peu échangée. Le prix obtenu peut être très éloigné du dernier cours affiché.",
+     "sources": [
+      {
+       "label": "AMF, Choisir et passer un ordre de bourse",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/comprendre-les-marches-financiers/les-ordres-de-bourse/choisir-et-passer-un-ordre-de-bourse-ce-quil-faut-savoir"
+      },
+      {
+       "label": "Fortuneo, Horaires de cotation d'Euronext Paris",
+       "url": "https://www.fortuneo.fr/bourse/horaire-fermeture-marches"
+      }
+     ],
+     "lien_site": {
+      "texte": "Suivre les marchés",
+      "href": "/marches"
+     }
+    },
+    {
+     "id": "indices",
+     "titre": "Les indices boursiers",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Un indice mesure l'évolution d'un groupe d'actions ; sa composition et la prise en compte des dividendes changent beaucoup sa lecture.",
+     "paragraphes": [
+      "Un indice boursier mesure l'évolution d'un ensemble d'actions. Il sert de thermomètre à un marché et de point de comparaison pour les fonds. La plupart des grands indices sont pondérés par la capitalisation boursière : plus une entreprise vaut cher en Bourse, plus elle pèse dans l'indice. Les variations des plus grandes sociétés comptent donc davantage.",
+      "Le CAC 40 regroupe 40 grandes sociétés cotées à Paris. Sa valeur a été fixée par convention à 1 000 points le 31 décembre 1987. Sa composition est revue régulièrement. Dans sa version habituelle, c'est un indice de prix : il ne tient pas compte des dividendes versés. Une version dividendes réinvestis existe, le CAC 40 GR.",
+      "D'autres indices servent de référence. L'Euro Stoxx 50 rassemble 50 grandes entreprises de plusieurs pays de la zone euro. Le S&P 500 suit 500 grandes entreprises américaines. Le MSCI World couvre les pays développés : fin septembre 2026, il comptait 1 249 entreprises de 23 pays, et les États-Unis y pesaient 72,9 % selon la fiche publiée par MSCI.",
+      "Un indice de prix et un indice dividendes réinvestis peuvent raconter deux histoires différentes. Le CAC 40 a atteint 6 944 points le 4 septembre 2000. Il n'a franchi les 7 000 points qu'en novembre 2021. Sur le papier, plus de vingt ans sans progression. Pourtant, les sociétés de l'indice ont versé des dividendes presque chaque année. Un investisseur qui les réinvestissait n'a pas connu la même stagnation.",
+      "Un indice ne s'achète pas directement. On peut en revanche acheter un fonds ou un ETF qui le reproduit. Il faut alors regarder sa composition. Le CAC 40 donne un poids important à quelques grandes valeurs du luxe, de l'énergie, de l'industrie et de la banque. Le MSCI World est dominé par les grandes entreprises technologiques américaines.",
+      "Les indices évoluent avec le temps. Des entreprises entrent, d'autres sortent quand leur capitalisation baisse ou après un rachat. Cette rotation fait qu'un indice retient naturellement les entreprises qui grandissent et écarte celles qui déclinent. Elle explique aussi pourquoi un indice créé il y a près de quarante ans ne contient plus les mêmes sociétés qu'à sa naissance."
+     ],
+     "exemple": "Un indice fictif compte trois sociétés. A vaut 80 milliards d'euros en Bourse, B 15 milliards et C 5 milliards, soit 100 milliards au total. Leurs poids sont de 80 %, 15 % et 5 %. Un jour, A recule de 2 % et C bondit de 10 %. L'effet de A sur l'indice est de 80 % × 2 %, soit une baisse de 1,6 point. L'effet de C est de 5 % × 10 %, soit une hausse de 0,5 point. Si B ne bouge pas, l'indice baisse de 1,1 %. La plus forte hausse du jour n'a pas suffi à compenser le recul de la plus grosse société.",
+     "a_retenir": [
+      "La plupart des indices sont pondérés par la capitalisation.",
+      "Le CAC 40 habituel n'inclut pas les dividendes.",
+      "Fin septembre 2026, les États-Unis pesaient 72,9 % du MSCI World."
+     ],
+     "erreur_frequente": "Comparer la performance d'un fonds dividendes réinvestis à celle d'un indice de prix. Le fonds paraît alors meilleur qu'il ne l'est.",
+     "sources": [
+      {
+       "label": "Moneyvox, Le CAC 40 : une histoire entre pics et abîmes",
+       "url": "https://www.moneyvox.fr/bourse/actualites/105717/le-cac-40-bientot-40-ans-histoire-entre-pics-et-abimes"
+      },
+      {
+       "label": "MSCI, MSCI World Index (USD), fiche au 30 septembre 2026",
+       "url": "https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir l'évolution des indices",
+      "href": "/marches"
+     }
+    },
+    {
+     "id": "ordres",
+     "titre": "Les types d'ordres",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Le type d'ordre choisi détermine si vous maîtrisez le prix d'exécution ou la certitude d'être servi.",
+     "paragraphes": [
+      "Pour acheter ou vendre une action, vous transmettez un ordre à votre intermédiaire. Cet ordre précise le sens, achat ou vente, le titre, désigné par son nom ou son code ISIN, la quantité, le type d'ordre, l'éventuel prix limite et la durée de validité. Le type d'ordre détermine comment et à quel prix il sera exécuté.",
+      "L'ordre au marché est exécuté le plus vite possible, au meilleur prix disponible en face. Vous êtes quasiment sûr d'être servi, mais vous ne contrôlez pas le prix. L'AMF met en garde contre son usage sur les valeurs volatiles. Passé avant l'ouverture, un ordre au marché sera exécuté au prix d'ouverture, quel qu'il soit.",
+      "L'ordre à cours limité fixe un prix maximal à l'achat ou minimal à la vente. Il ne sera exécuté qu'à ce prix ou à un prix meilleur. Vous contrôlez le prix, pas l'exécution : si le cours n'atteint jamais votre limite, rien ne se passe. L'ordre peut aussi n'être exécuté qu'en partie, notamment sur des titres peu échangés.",
+      "L'ordre à la meilleure limite est exécuté au meilleur prix proposé en face au moment où il arrive sur le marché. Si la quantité disponible à ce prix ne suffit pas, le reste devient un ordre à cours limité à ce même prix. Il se situe entre l'ordre au marché et l'ordre à cours limité.",
+      "Les ordres à déclenchement servent surtout à limiter les pertes. L'ordre à seuil de déclenchement devient un ordre au marché dès qu'un prix donné est atteint : vous savez quand il se déclenche, pas à quel prix il sera exécuté. L'ordre à plage de déclenchement ajoute une limite. Une fois déclenché, il devient un ordre à cours limité et peut ne pas être exécuté si le cours chute trop vite.",
+      "La durée de validité compte aussi. Un ordre « jour » expire à la fin de la séance. Un ordre à date déterminée reste valable jusqu'à la date choisie. Un ordre « à révocation » reste actif jusqu'à ce que vous l'annuliez, dans la limite d'un an. Vérifiez régulièrement vos ordres en attente : un ordre oublié peut s'exécuter des semaines plus tard, dans un contexte très différent."
+     ],
+     "exemple": "Une action cote 50 €. Vous voulez en acheter 40, mais pas au-delà de 49 €. Vous passez un ordre à cours limité à 49 €, valable un mois. Si le cours descend à 48,80 €, votre ordre est exécuté à 49 € au plus, pour 1 960 € au maximum. S'il remonte à 55 € sans repasser par 49 €, vous n'achetez rien. Vous détenez par ailleurs 100 actions achetées à 60 € et voulez limiter la perte. Un ordre à plage de déclenchement à 45 €, avec une limite à 44 €, se déclenchera si le cours touche 45 € et ne vendra qu'à 44 € ou plus.",
+     "a_retenir": [
+      "Au marché : exécution quasi certaine, prix non maîtrisé.",
+      "À cours limité : prix maîtrisé, exécution non garantie.",
+      "Un ordre à seuil de déclenchement devient un ordre au marché une fois le seuil atteint."
+     ],
+     "erreur_frequente": "Passer un ordre au marché en dehors des heures de séance. Il sera exécuté au prix d'ouverture, qui peut être très éloigné du cours de la veille après une annonce importante.",
+     "sources": [
+      {
+       "label": "AMF, Choisir et passer un ordre de bourse",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/comprendre-les-marches-financiers/les-ordres-de-bourse/choisir-et-passer-un-ordre-de-bourse-ce-quil-faut-savoir"
+      }
+     ],
+     "lien_site": {
+      "texte": "Estimer les frais de vos ordres",
+      "href": "/simulateurs/frais"
+     }
+    },
+    {
+     "id": "dividendes",
+     "titre": "Les dividendes et le détachement",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Le dividende est une part du bénéfice versée aux actionnaires ; le jour du détachement, le cours baisse d'un montant proche.",
+     "paragraphes": [
+      "Le dividende est la part du bénéfice qu'une entreprise reverse à ses actionnaires. Il est proposé par le conseil d'administration et voté par l'assemblée générale. En France, il est le plus souvent versé une fois par an, parfois en deux fois avec un acompte. Une entreprise n'est jamais obligée d'en verser et peut le réduire d'une année sur l'autre.",
+      "Le rendement du dividende rapporte le dividende annuel au cours de l'action. Une action à 80 € qui verse 3,20 € offre un rendement de 4 %. Ce chiffre bouge avec le cours : si le cours baisse, le rendement affiché monte. Un rendement très élevé signale parfois un risque que le marché anticipe, comme une baisse future du dividende.",
+      "Le versement suit un calendrier. La date de détachement est le jour à partir duquel l'action s'échange sans le droit au dividende. Pour le recevoir, il faut avoir acheté l'action au plus tard la veille de cette date. Le paiement intervient quelques jours plus tard, à la date de mise en paiement. Acheter le jour du détachement ne donne plus droit au dividende.",
+      "Le jour du détachement, le cours baisse mécaniquement d'un montant proche du dividende. La valeur de l'entreprise diminue de l'argent qu'elle sort de sa trésorerie. Pour l'actionnaire, il n'y a donc pas de gain immédiat : une partie de la valeur de l'action est transformée en argent versé. Le gain réel vient de la capacité de l'entreprise à continuer de produire des bénéfices.",
+      "Le dividende est imposé selon l'enveloppe. Sur un compte-titres, il supporte le prélèvement forfaitaire unique de 31,4 % en 2026, sauf option pour le barème. Dans un PEA, il n'est pas imposé tant que l'argent reste dans le plan. Pour une action étrangère, une retenue à la source peut s'appliquer dans le pays de la société.",
+      "Pour juger un dividende, regardez sa régularité et sa couverture. Le taux de distribution indique la part du bénéfice net versée en dividende. Une entreprise qui distribue plus que ce qu'elle gagne ne peut pas le faire longtemps sans s'endetter ou puiser dans ses réserves. Le module 4 revient en détail sur ce ratio."
+     ],
+     "exemple": "Vous détenez 100 actions à 80 €, soit 8 000 €. La société verse 3,20 € par action. La veille du détachement, l'action clôture à 80 €. Le jour du détachement, elle ouvre autour de 76,80 €, toutes choses égales par ailleurs. Votre portefeuille vaut 7 680 € en actions, plus 320 € de dividende à recevoir : toujours 8 000 €. Sur un compte-titres, le PFU de 31,4 % prélève environ 100 € et vous encaissez environ 220 €. Dans un PEA, les 320 € restent entiers dans le plan.",
+     "a_retenir": [
+      "Le jour du détachement, le cours baisse d'un montant proche du dividende.",
+      "Pour toucher le dividende, il faut avoir acheté l'action avant la date de détachement.",
+      "Un rendement très élevé peut annoncer une baisse du dividende."
+     ],
+     "erreur_frequente": "Acheter une action juste avant le détachement pour toucher le dividende. Le cours baisse d'autant et, sur un compte-titres, vous payez l'impôt sur ce dividende.",
+     "sources": [
+      {
+       "label": "AMF, Investir en actions",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59273/fr/Investir_en_actions.pdf"
+      },
+      {
+       "label": "La finance pour tous (IEFP), Prélèvement forfaitaire unique",
+       "url": "https://www.lafinancepourtous.com/pratique/impots/fiscalite-de-l-epargne-2/prelevement-forfaitaire-unique-pfu/"
+      }
+     ],
+     "lien_site": {
+      "texte": "Consulter le calendrier des dividendes",
+      "href": "/dividendes"
+     }
+    },
+    {
+     "id": "krachs",
+     "titre": "Volatilité et krachs historiques",
+     "premium": false,
+     "duree_min": 10,
+     "resume": "Les grandes Bourses ont connu des baisses de 30 % à 60 %, rattrapées en quelques mois ou en plusieurs années.",
+     "paragraphes": [
+      "La volatilité mesure l'ampleur des variations d'un cours. Une action volatile peut gagner ou perdre plusieurs pour cent en une séance. Un marché baissier, souvent défini comme une baisse d'au moins 20 % depuis un plus haut, revient régulièrement dans l'histoire des Bourses. Un krach est une chute brutale, sur quelques jours ou quelques semaines.",
+      "Le 19 octobre 1987, surnommé « lundi noir », l'indice américain Dow Jones a perdu 22,6 % en une seule séance, selon la Réserve fédérale. Du sommet d'août au creux de décembre 1987, le S&P 500 a reculé de 33,5 %. Il a retrouvé son plus haut en juillet 1989, moins de deux ans plus tard. Cette crise a conduit les Bourses à créer des mécanismes qui suspendent les cotations en cas de chute brutale.",
+      "L'éclatement de la bulle internet a été plus long. De mars 2000 à octobre 2002, le S&P 500 a perdu 49,1 %, et il n'a retrouvé son sommet qu'en mai 2007. À Paris, le CAC 40 est passé de 6 944 points en septembre 2000 à 2 401 points en mars 2003, soit une baisse d'environ 65 %. Les valeurs technologiques, les plus spéculatives, ont été les plus touchées.",
+      "La crise financière de 2008, déclenchée par les crédits immobiliers à risque américains, les subprimes, a été la plus profonde des quatre. Le S&P 500 a perdu 56,8 % entre octobre 2007 et mars 2009. Il n'a retrouvé son plus haut qu'en mars 2013. Le CAC 40 est tombé de 6 168 points en juin 2007 à 2 465 points en mars 2009, soit environ 60 % de baisse.",
+      "Le krach de 2020, lié à la pandémie de Covid-19, a été le plus rapide. Le S&P 500 a perdu 33,9 % en 33 jours, entre le 19 février et le 23 mars 2020. Le 12 mars, le CAC 40 a chuté de 12,28 % en une séance, sa plus forte baisse quotidienne. Pourtant, le S&P 500 a retrouvé son plus haut dès le 18 août 2020, moins de cinq mois après le creux.",
+      "Ces épisodes enseignent trois choses. Les baisses de 30 % à 60 % font partie de l'histoire des actions. Leur durée est imprévisible : quelques mois ou plusieurs années. Ceux qui ont dû vendre au plus bas ont transformé une perte temporaire en perte définitive. Ces chiffres portent sur des indices hors dividendes et ne prédisent pas les crises futures, qui peuvent être plus longues."
+     ],
+     "exemple": "Vous placez 10 000 € sur un fonds qui suit le S&P 500 au sommet d'octobre 2007, hors dividendes et hors effet du taux de change. En mars 2009, après une baisse de 56,8 %, votre placement vaut 4 320 €. Pour revenir à 10 000 €, il faut une hausse de 131 %. L'indice y parvient en mars 2013, cinq ans et demi après le sommet. Avec les dividendes réinvestis, le retour aurait été un peu plus rapide. Si vous aviez dû récupérer votre argent en 2009, la perte serait devenue définitive. Cet historique ne garantit pas qu'une baisse future sera rattrapée dans le même délai.",
+     "a_retenir": [
+      "1987 : le Dow Jones perd 22,6 % en une seule séance.",
+      "2008 : le S&P 500 perd 56,8 % et ne retrouve son plus haut qu'en mars 2013.",
+      "2020 : le S&P 500 perd 33,9 % en 33 jours et retrouve son plus haut en août 2020."
+     ],
+     "erreur_frequente": "Vendre en pleine baisse sous le coup de la peur. La perte devient définitive, et il faut ensuite décider quand racheter, ce que personne ne sait faire de façon fiable.",
+     "sources": [
+      {
+       "label": "Federal Reserve History, Stock Market Crash of 1987",
+       "url": "https://www.federalreservehistory.org/essays/stock-market-crash-of-1987"
+      },
+      {
+       "label": "Yardeni Research, S&P 500 bull and bear market tables",
+       "url": "https://archive.yardeni.com/pub/sp500corrbeartables.pdf"
+      },
+      {
+       "label": "Moneyvox, Le CAC 40 : une histoire entre pics et abîmes",
+       "url": "https://www.moneyvox.fr/bourse/actualites/105717/le-cac-40-bientot-40-ans-histoire-entre-pics-et-abimes"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir le temps de récupération après les grandes baisses",
+      "href": "/outils/recouvrement"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Une société compte 100 millions d'actions cotées 50 €. Quelle est sa capitalisation boursière ?",
+     "options": [
+      "50 millions d'euros",
+      "500 millions d'euros",
+      "5 milliards d'euros",
+      "50 milliards d'euros"
+     ],
+     "bonne": 2,
+     "explication": "100 millions × 50 € = 5 milliards d'euros."
+    },
+    {
+     "q": "Dans le carnet d'ordres, quelle est la règle de priorité entre deux ordres d'achat à cours limité ?",
+     "options": [
+      "Le prix, puis l'heure d'arrivée",
+      "Le plus gros ordre passe d'abord",
+      "L'heure d'arrivée, puis le prix",
+      "Le tirage au sort"
+     ],
+     "bonne": 0,
+     "explication": "L'AMF rappelle la priorité prix puis temps : le prix le plus élevé à l'achat passe d'abord, et à prix égal, le premier arrivé."
+    },
+    {
+     "q": "Quels sont les horaires de la cotation continue à la Bourse de Paris ?",
+     "options": [
+      "7 h 15 à 9 h",
+      "8 h à 20 h",
+      "10 h à 18 h",
+      "9 h à 17 h 30"
+     ],
+     "bonne": 3,
+     "explication": "La cotation est continue de 9 h à 17 h 30, après une préouverture à partir de 7 h 15 et avant le fixing de clôture de 17 h 35."
+    },
+    {
+     "q": "Quelle valeur de départ a été donnée au CAC 40 le 31 décembre 1987 ?",
+     "options": [
+      "100 points",
+      "1 000 points",
+      "4 000 points",
+      "6 944 points"
+     ],
+     "bonne": 1,
+     "explication": "Le CAC 40 a été fixé par convention à 1 000 points le 31 décembre 1987."
+    },
+    {
+     "q": "Fin septembre 2026, quel était le poids des États-Unis dans le MSCI World ?",
+     "options": [
+      "Environ 25 %",
+      "72,9 %",
+      "Environ 50 %",
+      "100 %"
+     ],
+     "bonne": 1,
+     "explication": "Selon la fiche MSCI au 30 septembre 2026, les États-Unis représentaient 72,9 % de l'indice."
+    },
+    {
+     "q": "Quelle est la caractéristique d'un ordre à cours limité ?",
+     "options": [
+      "Exécution garantie, prix libre",
+      "Annulation automatique à 12 h",
+      "Exécution à l'ouverture uniquement",
+      "Prix maîtrisé, exécution non garantie"
+     ],
+     "bonne": 3,
+     "explication": "Un ordre limité à 49 € ne s'exécute qu'à 49 € ou mieux, mais il peut ne jamais être exécuté."
+    },
+    {
+     "q": "Une action à 80 € détache un dividende de 3,20 €. Que se passe-t-il en principe à l'ouverture ?",
+     "options": [
+      "Le cours baisse d'environ 3,20 €",
+      "Le cours monte de 3,20 €",
+      "Le cours ne bouge pas",
+      "La cotation est suspendue"
+     ],
+     "bonne": 0,
+     "explication": "Le cours baisse mécaniquement d'un montant proche du dividende, ici vers 76,80 €."
+    },
+    {
+     "q": "De combien le S&P 500 a-t-il baissé entre octobre 2007 et mars 2009 ?",
+     "options": [
+      "22,6 %",
+      "33,9 %",
+      "56,8 %",
+      "49,1 %"
+     ],
+     "bonne": 2,
+     "explication": "Le S&P 500 a perdu 56,8 % et n'a retrouvé son plus haut qu'en mars 2013."
+    }
+   ]
+  },
+  {
+   "id": "comptes",
+   "titre": "Lire les comptes d'une entreprise",
+   "niveau": "Intermédiaire",
+   "duree_min": 54,
+   "intro": "Les comptes publiés par une société cotée disent ce qu'elle vend, ce qu'elle gagne, ce qu'elle doit et l'argent qu'elle produit. Ce module apprend à les lire, à calculer les ratios clés et à situer une entreprise par rapport à la médiane de son secteur.",
+   "objectifs": [
+    "Lire un compte de résultat, un bilan et un tableau des flux de trésorerie",
+    "Calculer marge, ROE, dette nette sur EBITDA et taux de distribution",
+    "Comparer une entreprise à la médiane de son secteur",
+    "Repérer les éléments exceptionnels, les effets d'acquisition et les rachats d'actions"
+   ],
+   "lecons": [
+    {
+     "id": "compte-resultat",
+     "titre": "Le compte de résultat",
+     "premium": false,
+     "duree_min": 9,
+     "resume": "Le compte de résultat part des ventes et retire les charges étape par étape jusqu'au bénéfice des actionnaires.",
+     "paragraphes": [
+      "Le compte de résultat raconte ce que l'entreprise a gagné et dépensé pendant une période, en général un an ou six mois. Il se lit de haut en bas, comme un entonnoir. On part des ventes, on retire successivement les différentes charges, et on arrive au bénéfice final. Chaque étape intermédiaire apporte une information différente.",
+      "La première ligne est le chiffre d'affaires : le montant des ventes de biens et de services de la période, hors taxes. Il mesure la taille de l'activité, pas sa rentabilité. Une entreprise peut augmenter son chiffre d'affaires tout en perdant de l'argent. Regardez sa croissance, mais aussi son origine : hausse des volumes, hausse des prix, acquisitions ou effet des taux de change.",
+      "On retire ensuite les charges liées à l'activité : achats, salaires, loyers, énergie, amortissements. On obtient le résultat d'exploitation, souvent appelé EBIT dans les communications en anglais. Il mesure ce que rapporte le métier de l'entreprise, avant le coût de sa dette et avant l'impôt. C'est la ligne la plus utile pour comparer des entreprises d'un même secteur.",
+      "Juste au-dessus apparaît souvent l'EBITDA, proche de ce que l'on appelle en France l'excédent brut d'exploitation. C'est le résultat d'exploitation avant les dotations aux amortissements. L'amortissement répartit sur plusieurs années le coût d'un investissement, comme une usine ou des machines. L'EBITDA donne une idée de la trésorerie produite par l'activité, mais il ignore le coût du remplacement des équipements.",
+      "Viennent ensuite le résultat financier, surtout composé des intérêts de la dette, puis l'impôt sur les sociétés. On obtient le résultat net, c'est-à-dire le bénéfice qui revient aux actionnaires. Divisé par le nombre d'actions, il donne le bénéfice par action, ou BPA. C'est la base des dividendes futurs et de nombreux ratios de valorisation.",
+      "Depuis 2005, les sociétés cotées de l'Union européenne publient leurs comptes consolidés selon les normes internationales IFRS. Consolidés signifie que les comptes regroupent la société mère et toutes ses filiales, comme s'il s'agissait d'une seule entreprise. Ces comptes figurent dans le rapport financier annuel, disponible gratuitement sur le site de chaque société."
+     ],
+     "exemple": "La société fictive Alpha publie un chiffre d'affaires de 2 000 millions d'euros. Ses charges d'exploitation, hors amortissements, s'élèvent à 1 600 millions : son EBITDA est de 400 millions. Les amortissements de 150 millions ramènent le résultat d'exploitation à 250 millions, soit une marge d'exploitation de 12,5 %. Après 30 millions de frais financiers et 55 millions d'impôt, le résultat net est de 165 millions. Avec 100 millions d'actions, le bénéfice par action est de 1,65 €. Sur 100 € de ventes, Alpha garde 8,25 € de bénéfice net.",
+     "a_retenir": [
+      "Chiffre d'affaires : la taille de l'activité, pas sa rentabilité.",
+      "Résultat d'exploitation : ce que rapporte le métier, avant dette et impôt.",
+      "Résultat net : le bénéfice des actionnaires ; BPA = résultat net / nombre d'actions."
+     ],
+     "erreur_frequente": "Se réjouir d'une forte hausse du chiffre d'affaires sans regarder les marges. Vendre davantage en perdant de l'argent sur chaque vente n'enrichit personne.",
+     "sources": [
+      {
+       "label": "AMF, Bien s'informer sur les sociétés cotées en bourse",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59207/fr/Bien_s%27informer_sur_les_societes_cotees_en_bourse.pdf"
+      },
+      {
+       "label": "EUR-Lex, Règlement (CE) n° 1606/2002 sur l'application des normes IFRS",
+       "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32002R1606"
+      }
+     ],
+     "lien_site": {
+      "texte": "Lire les comptes de LVMH sur sa fiche",
+      "href": "/entreprise/lvmh"
+     }
+    },
+    {
+     "id": "bilan",
+     "titre": "Le bilan",
+     "premium": false,
+     "duree_min": 9,
+     "resume": "Le bilan montre ce que l'entreprise possède et comment elle l'a financé, dont sa dette nette.",
+     "paragraphes": [
+      "Le bilan est une photographie du patrimoine de l'entreprise à une date donnée, par exemple le 31 décembre. Il comporte deux colonnes. À gauche, l'actif : ce que l'entreprise possède. À droite, le passif : la façon dont ces biens ont été financés. Les deux colonnes ont toujours le même total.",
+      "L'actif se divise en deux grandes parties. L'actif non courant regroupe ce qui sert durablement : usines, machines, brevets, logiciels, et l'écart d'acquisition, ou goodwill. Ce dernier apparaît quand l'entreprise rachète une société plus cher que la valeur de ses actifs nets. L'actif courant regroupe ce qui tourne vite : stocks, créances sur les clients, trésorerie.",
+      "Le passif indique qui a financé ces actifs. Les capitaux propres représentent l'argent apporté par les actionnaires et les bénéfices conservés au fil des années. Les dettes financières correspondent aux emprunts bancaires et obligataires. Les autres dettes regroupent notamment ce qui est dû aux fournisseurs, aux salariés et à l'État.",
+      "La dette nette se calcule en retirant la trésorerie disponible des dettes financières. Une entreprise qui doit 750 millions d'euros et dispose de 150 millions en banque a une dette nette de 600 millions. Si la trésorerie dépasse les dettes, on parle de trésorerie nette. Depuis 2019, la norme IFRS 16 impose d'inscrire au bilan la plupart des loyers futurs sous forme de dette, ce qui a augmenté la dette affichée de nombreuses sociétés.",
+      "Le rapport entre dette nette et capitaux propres, appelé gearing, mesure la dépendance aux prêteurs. Une entreprise très endettée est plus fragile quand l'activité ralentit ou quand les taux d'intérêt montent, car les intérêts restent dus. Elle peut devoir réduire son dividende pour rembourser. La dette n'est pas mauvaise en soi : elle peut financer des investissements rentables.",
+      "Le bilan se lit avec prudence. La plupart des actifs y figurent à leur coût d'origine, diminué des amortissements, et non à leur valeur de marché. Un goodwill important peut être déprécié si une acquisition déçoit, ce qui réduit d'un coup les capitaux propres. Comparez toujours plusieurs bilans successifs pour voir la tendance."
+     ],
+     "exemple": "Au 31 décembre, la société Alpha possède 1 800 millions d'euros d'actifs non courants, 250 millions de stocks, 300 millions de créances clients et 150 millions de trésorerie. Total de l'actif : 2 500 millions. En face, ses capitaux propres sont de 1 100 millions, ses dettes financières de 750 millions et ses autres dettes de 650 millions. Total du passif : 2 500 millions. Sa dette nette est de 750 moins 150, soit 600 millions. Son gearing est de 600 divisé par 1 100, soit environ 55 %.",
+     "a_retenir": [
+      "Actif : ce que l'entreprise possède ; passif : comment elle l'a financé.",
+      "Dette nette = dettes financières moins trésorerie.",
+      "Depuis IFRS 16, en 2019, la plupart des loyers futurs figurent en dette."
+     ],
+     "erreur_frequente": "Confondre capitaux propres et trésorerie. Une entreprise peut afficher des capitaux propres élevés et manquer d'argent disponible.",
+     "sources": [
+      {
+       "label": "AMF, Bien s'informer sur les sociétés cotées en bourse",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59207/fr/Bien_s%27informer_sur_les_societes_cotees_en_bourse.pdf"
+      },
+      {
+       "label": "AMF, Entrée en vigueur de la norme IFRS 16",
+       "url": "https://www.amf-france.org/fr/actualites-publications/actualites/entree-en-vigueur-de-la-nouvelle-norme-ifrs-16-lamf-attire-lattention-du-marche-sur-les-impacts"
+      }
+     ],
+     "lien_site": {
+      "texte": "Consulter le bilan de TotalEnergies",
+      "href": "/entreprise/totalenergies"
+     }
+    },
+    {
+     "id": "flux",
+     "titre": "Les flux de trésorerie et le cash-flow libre",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Le tableau des flux montre l'argent réellement encaissé et dépensé ; le cash-flow libre est ce qui reste après les investissements.",
+     "paragraphes": [
+      "Le bénéfice comptable et l'argent réellement encaissé ne sont pas la même chose. Une vente compte dans le chiffre d'affaires dès qu'elle est facturée, même si le client paie trois mois plus tard. Un amortissement réduit le bénéfice sans aucune sortie d'argent. Le tableau des flux de trésorerie corrige ces écarts et montre les entrées et sorties d'argent réelles.",
+      "Il se divise en trois parties. Les flux liés à l'activité, ou flux opérationnels, montrent l'argent produit par le métier. Les flux d'investissement retracent les achats et ventes d'équipements, d'entreprises ou de placements. Les flux de financement regroupent les emprunts, les remboursements, les dividendes versés et les rachats d'actions.",
+      "Le besoin en fonds de roulement explique souvent l'écart entre bénéfice et trésorerie. Il correspond à l'argent immobilisé dans les stocks et les créances clients, diminué de ce que l'entreprise doit à ses fournisseurs. Quand une entreprise grandit vite, ce besoin augmente et consomme de la trésorerie, même si elle est rentable.",
+      "Le cash-flow libre, ou free cash-flow, est la mesure la plus suivie. Il se calcule en retirant des flux opérationnels les investissements nécessaires à l'activité, appelés capex. C'est l'argent qui reste disponible pour verser des dividendes, racheter des actions, réduire la dette ou acheter d'autres sociétés. Sa définition varie un peu d'une entreprise à l'autre : lisez la note qui l'explique.",
+      "Comparer cash-flow libre et résultat net est un bon test de qualité. Sur plusieurs années, une entreprise solide transforme une large part de son bénéfice en trésorerie. Si le résultat net progresse chaque année alors que le cash-flow libre reste faible ou négatif, il faut comprendre pourquoi : investissements lourds, stocks qui gonflent, clients qui paient de plus en plus tard.",
+      "Ce tableau montre aussi d'où vient l'argent distribué. Une entreprise qui verse plus de dividendes que son cash-flow libre finance la différence par sa trésorerie ou par de la dette. Cela peut se justifier une année, pas indéfiniment. Les flux de financement indiquent si la dette augmente ou diminue."
+     ],
+     "exemple": "Alpha a dégagé un résultat net de 165 millions d'euros. On y ajoute les 150 millions d'amortissements, qui n'ont fait sortir aucun argent, et on retire 15 millions immobilisés dans des stocks supplémentaires. Les flux opérationnels atteignent 300 millions. Alpha a investi 130 millions dans ses usines : son cash-flow libre est de 170 millions, un peu plus que son bénéfice. Elle a versé 80 millions de dividendes et racheté pour 50 millions de ses propres actions. Il lui reste 40 millions pour réduire sa dette. Ses distributions sont couvertes par la trésorerie qu'elle produit.",
+     "a_retenir": [
+      "Bénéfice et trésorerie diffèrent à cause des amortissements, des stocks et des délais de paiement.",
+      "Cash-flow libre = flux opérationnels moins investissements.",
+      "Des distributions durablement supérieures au cash-flow libre sont financées par la dette ou les réserves."
+     ],
+     "erreur_frequente": "Juger une entreprise sur son seul bénéfice. Un bénéfice qui ne se transforme jamais en trésorerie mérite une explication.",
+     "sources": [
+      {
+       "label": "AMF, Bien s'informer sur les sociétés cotées en bourse",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59207/fr/Bien_s%27informer_sur_les_societes_cotees_en_bourse.pdf"
+      },
+      {
+       "label": "AMF, Indicateurs alternatifs de performance",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/62779/fr/Indicateurs_alternatifs_de_performance.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir les flux de trésorerie d'Air Liquide",
+      "href": "/entreprise/air-liquide"
+     }
+    },
+    {
+     "id": "ratios",
+     "titre": "Les ratios clés",
+     "premium": true,
+     "duree_min": 10,
+     "resume": "Marges, ROE, dette nette sur EBITDA et taux de distribution rendent comparables des entreprises de tailles différentes.",
+     "paragraphes": [
+      "Un ratio rapporte deux chiffres l'un à l'autre pour les rendre comparables. Il permet de comparer une entreprise à elle-même dans le temps, ou à d'autres entreprises de tailles différentes. Un ratio isolé dit peu de chose. C'est son évolution sur plusieurs années, et sa position face aux sociétés comparables, qui le rendent utile.",
+      "Les marges mesurent la rentabilité de l'activité. La marge d'exploitation rapporte le résultat d'exploitation au chiffre d'affaires. La marge nette rapporte le résultat net au chiffre d'affaires. Une marge d'exploitation de 12,5 % signifie que, sur 100 € de ventes, l'entreprise dégage 12,50 € avant frais financiers et impôt. Les marges varient énormément d'un secteur à l'autre : la grande distribution et le logiciel n'ont rien de comparable.",
+      "Le ROE, pour return on equity, ou rentabilité des capitaux propres, rapporte le résultat net aux capitaux propres. Il indique ce que l'entreprise gagne avec l'argent de ses actionnaires. Un ROE de 15 % signifie 15 € de bénéfice annuel pour 100 € de capitaux propres. La dette gonfle mécaniquement ce ratio, car elle réduit les capitaux propres nécessaires. Un ROE élevé se lit donc avec l'endettement.",
+      "Le ratio dette nette sur EBITDA mesure le poids de la dette face à la capacité de l'activité à produire de la trésorerie. Un ratio de 1,5 signifie qu'il faudrait environ un an et demi d'EBITDA pour rembourser la dette nette, si tout l'EBITDA y était consacré. Ce n'est jamais le cas, car il faut aussi payer l'impôt, investir et rémunérer les actionnaires. Les contrats de prêt bancaire fixent souvent un plafond à ce ratio.",
+      "Le taux de distribution rapporte les dividendes versés au résultat net. Un taux de 50 % signifie que l'entreprise distribue la moitié de son bénéfice et conserve l'autre moitié. Un taux supérieur à 100 % indique qu'elle distribue plus qu'elle ne gagne, ce qui ne peut pas durer. Comparez-le aussi au cash-flow libre, car c'est la trésorerie qui paie les dividendes.",
+      "Il n'existe pas de seuil universel pour ces ratios. Une dette nette égale à trois fois l'EBITDA peut être courante pour un gestionnaire d'autoroutes aux revenus très réguliers et préoccupante pour une entreprise dont l'activité suit les cycles économiques. C'est pourquoi le site compare chaque ratio à celui des autres entreprises du même secteur, ce qu'explique la leçon suivante."
+     ],
+     "exemple": "Reprenons la société Alpha. Marge d'exploitation : 250 divisé par 2 000, soit 12,5 %. Marge nette : 165 divisé par 2 000, soit 8,25 %. ROE : 165 divisé par 1 100, soit 15 %. Dette nette sur EBITDA : 600 divisé par 400, soit 1,5. Taux de distribution : 80 divisé par 165, soit environ 48 %. Lu seul, aucun de ces chiffres ne permet de dire si Alpha est une entreprise solide. Ils deviennent parlants quand on les compare à ses années précédentes et aux sociétés de son secteur.",
+     "a_retenir": [
+      "Marge = résultat / chiffre d'affaires ; ROE = résultat net / capitaux propres.",
+      "Dette nette / EBITDA : le poids de la dette face à l'activité.",
+      "Taux de distribution = dividendes / résultat net ; au-delà de 100 %, ce n'est pas durable."
+     ],
+     "erreur_frequente": "Admirer un ROE élevé sans regarder la dette. Une entreprise très endettée affiche un ROE flatteur, mais elle est plus fragile.",
+     "sources": [
+      {
+       "label": "AMF, Indicateurs alternatifs de performance",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/62779/fr/Indicateurs_alternatifs_de_performance.pdf"
+      },
+      {
+       "label": "ESMA, Orientations sur les indicateurs alternatifs de performance",
+       "url": "https://www.esma.europa.eu/sites/default/files/library/2015/10/2015-esma-1415fr.pdf"
+      },
+      {
+       "label": "AMF, Bien s'informer sur les sociétés cotées en bourse",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/59207/fr/Bien_s%27informer_sur_les_societes_cotees_en_bourse.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer des entreprises",
+      "href": "/comparer"
+     }
+    },
+    {
+     "id": "mediane",
+     "titre": "Comparer avec la médiane du secteur",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "La médiane du secteur sépare les entreprises en deux moitiés égales et résiste mieux que la moyenne aux cas extrêmes.",
+     "paragraphes": [
+      "Pour savoir si une marge de 12 % est bonne, il faut un point de comparaison. Le plus naturel est le secteur de l'entreprise : des sociétés qui exercent le même métier, avec des contraintes proches. Comparer un groupe de luxe à une chaîne de supermarchés n'aurait pas de sens. Comparer deux groupes de luxe en a beaucoup.",
+      "Le site utilise la médiane du secteur plutôt que la moyenne. La médiane est la valeur du milieu : quand on range les entreprises du secteur de la moins bonne à la meilleure, la moitié fait mieux que la médiane et l'autre moitié fait moins bien. Elle répond à une question simple : cette entreprise est-elle dans la meilleure moitié de son secteur, ou dans l'autre ?",
+      "Pourquoi pas la moyenne ? Parce qu'elle se laisse tirer par les valeurs extrêmes. Une seule société très rentable, ou en grande difficulté, suffit à la déplacer fortement. La médiane, elle, bouge peu. Quand un secteur compte peu d'entreprises cotées, ce qui arrive souvent, cette résistance aux cas extrêmes compte beaucoup.",
+      "Pour calculer une médiane, on range les valeurs dans l'ordre. Avec un nombre impair de sociétés, la médiane est la valeur centrale : la 5e sur 9. Avec un nombre pair, c'est la moyenne des deux valeurs centrales : la moyenne de la 5e et de la 6e sur 10. Le calcul est simple, et chacun peut le refaire à partir des comptes publiés.",
+      "La comparaison doit rester prudente. Les entreprises d'un même secteur n'ont pas toujours le même modèle : l'une fabrique, l'autre sous-traite, l'une vend surtout en Europe, l'autre en Asie. Un écart à la médiane est une question à poser, pas une conclusion. Il faut aussi comparer les mêmes années et des indicateurs définis de la même façon.",
+      "Être au-dessus de la médiane n'est pas toujours favorable. Pour une marge ou un ROE, mieux vaut être au-dessus. Pour l'endettement, être au-dessus de la médiane signifie être plus endetté que la moitié du secteur. Gardez ce sens en tête pour chaque indicateur. Une position face à la médiane décrit une situation : elle ne constitue pas une recommandation d'achat ou de vente."
+     ],
+     "exemple": "Neuf sociétés d'un même secteur affichent ces marges d'exploitation : 4 %, 6 %, 7 %, 9 %, 10 %, 11 %, 12,5 %, 14 % et 31 %. La médiane est la 5e valeur, 10 %. La moyenne est de 11,6 %, tirée vers le haut par la société à 31 %. Alpha, à 12,5 %, fait mieux que la médiane : elle est dans la meilleure moitié du secteur. Face à la moyenne, elle semblerait à peine au-dessus du lot. Si la société à 31 % sortait de la liste, la moyenne tomberait à 9,2 %, alors que la médiane ne passerait qu'à 9,5 %.",
+     "a_retenir": [
+      "La médiane sépare le secteur en deux moitiés égales.",
+      "Elle résiste mieux que la moyenne aux valeurs extrêmes.",
+      "Au-dessus de la médiane : favorable pour une marge, défavorable pour la dette."
+     ],
+     "erreur_frequente": "Comparer une entreprise à la moyenne d'un secteur dominé par un ou deux géants. La moyenne reflète alors surtout ces géants.",
+     "sources": [
+      {
+       "label": "Insee, Définition de la médiane",
+       "url": "https://www.insee.fr/fr/metadonnees/definition/c1376"
+      },
+      {
+       "label": "Blog de l'Insee, Pour les statisticiens, avoir la moyenne ne suffit pas",
+       "url": "https://blog.insee.fr/wp-content/uploads/2023/07/blogInsee_2023_07-pour_les_statisticiens_avoir_la_moyenne_ne_suffit_pas.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer une entreprise à son secteur",
+      "href": "/comparer"
+     }
+    },
+    {
+     "id": "pieges",
+     "titre": "Les pièges de lecture",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Éléments exceptionnels, acquisitions et rachats d'actions peuvent donner une image flatteuse d'une année ordinaire.",
+     "paragraphes": [
+      "Les comptes sont encadrés par des normes et vérifiés par des commissaires aux comptes. Ils restent faciles à mal lire. Les entreprises mettent naturellement en avant les chiffres qui les flattent. Trois situations demandent une attention particulière : les éléments exceptionnels, les acquisitions et les rachats d'actions.",
+      "Les éléments exceptionnels, ou non récurrents, sont des gains ou des pertes qui ne se répéteront pas : vente d'une filiale, dépréciation, coût d'une restructuration, amende. Ils peuvent gonfler ou écraser le résultat net d'une année. Si le bénéfice bondit grâce à la vente d'un immeuble, l'activité ne s'est pas améliorée pour autant. Le résultat d'exploitation courant est souvent plus fiable pour juger la tendance.",
+      "Les entreprises publient aussi des indicateurs « ajustés » : EBITDA ajusté, résultat net courant, cash-flow libre. Ce sont des indicateurs alternatifs de performance, qui ne sont pas définis par les normes IFRS. Depuis 2016, les orientations de l'ESMA, l'autorité européenne des marchés financiers, imposent de les définir et de les rapprocher des chiffres officiels. Lisez ce rapprochement : il montre ce qui a été retiré.",
+      "Les acquisitions faussent les comparaisons. Une entreprise qui rachète un concurrent ajoute ses ventes à son chiffre d'affaires. La croissance affichée peut alors être forte sans qu'aucune activité existante ne progresse. Cherchez la croissance organique, dite aussi à périmètre et change constants, qui retire l'effet des acquisitions, des cessions et des variations de devises. Surveillez aussi le goodwill et la dette créés par ces achats.",
+      "Un rachat d'actions consiste pour une entreprise à acheter ses propres actions en Bourse, puis souvent à les annuler. Le bénéfice se répartit alors entre moins d'actions : le bénéfice par action augmente, même si le bénéfice total ne bouge pas. C'est une façon de rendre de l'argent aux actionnaires, comme le dividende. Mais une hausse du BPA due aux seuls rachats n'est pas une amélioration de l'activité.",
+      "Quelques réflexes limitent les erreurs. Lisez plusieurs années plutôt qu'une seule. Comparez toujours le résultat net au cash-flow libre. Vérifiez si un changement de norme comptable, comme IFRS 16 en 2019, a modifié les chiffres. Cherchez enfin dans les notes annexes les explications que le communiqué de presse ne donne pas."
+     ],
+     "exemple": "Alpha annonce un résultat net en hausse de 30 %, de 165 à 215 millions d'euros. En lisant les notes, vous découvrez une plus-value exceptionnelle de 50 millions sur la vente d'un entrepôt. Hors cet élément, le résultat est stable à 165 millions. La même année, Alpha a racheté et annulé 5 % de ses actions : leur nombre passe de 100 à 95 millions. Le bénéfice par action courant passe de 1,65 € à environ 1,74 €, soit plus de 5 % de hausse, sans que l'activité ait progressé. Le communiqué parle de forte croissance. Les comptes montrent une année stable.",
+     "a_retenir": [
+      "Retirez les éléments exceptionnels pour juger la tendance.",
+      "Cherchez la croissance organique, hors acquisitions et effets de change.",
+      "Les rachats d'actions augmentent le BPA sans améliorer l'activité."
+     ],
+     "erreur_frequente": "Se fier au chiffre mis en avant dans le communiqué de presse. Le rapprochement avec les comptes IFRS, dans le rapport annuel, montre ce qui a été ajusté.",
+     "sources": [
+      {
+       "label": "ESMA, Orientations sur les indicateurs alternatifs de performance",
+       "url": "https://www.esma.europa.eu/sites/default/files/library/2015/10/2015-esma-1415fr.pdf"
+      },
+      {
+       "label": "AMF, Indicateurs alternatifs de performance",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/62779/fr/Indicateurs_alternatifs_de_performance.pdf"
+      },
+      {
+       "label": "AMF, Entrée en vigueur de la norme IFRS 16",
+       "url": "https://www.amf-france.org/fr/actualites-publications/actualites/entree-en-vigueur-de-la-nouvelle-norme-ifrs-16-lamf-attire-lattention-du-marche-sur-les-impacts"
+      }
+     ],
+     "lien_site": {
+      "texte": "Explorer les comptes des entreprises",
+      "href": "/entreprises"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Que mesure le résultat d'exploitation ?",
+     "options": [
+      "Les ventes hors taxes",
+      "Le bénéfice après impôt",
+      "Ce que rapporte le métier, avant frais financiers et impôt",
+      "La trésorerie disponible"
+     ],
+     "bonne": 2,
+     "explication": "Chez Alpha, 2 000 millions de ventes donnent 250 millions de résultat d'exploitation, avant 30 millions de frais financiers et 55 millions d'impôt."
+    },
+    {
+     "q": "Une entreprise a 750 millions d'euros de dettes financières et 150 millions de trésorerie. Quelle est sa dette nette ?",
+     "options": [
+      "600 millions",
+      "150 millions",
+      "750 millions",
+      "900 millions"
+     ],
+     "bonne": 0,
+     "explication": "Dette nette = 750 moins 150, soit 600 millions d'euros."
+    },
+    {
+     "q": "Résultat net de 165 millions, capitaux propres de 1 100 millions. Quel est le ROE ?",
+     "options": [
+      "8,25 %",
+      "12,5 %",
+      "55 %",
+      "15 %"
+     ],
+     "bonne": 3,
+     "explication": "165 divisé par 1 100 donne 15 % de rentabilité des capitaux propres."
+    },
+    {
+     "q": "Flux opérationnels de 300 millions, investissements de 130 millions. Quel est le cash-flow libre ?",
+     "options": [
+      "130 millions",
+      "170 millions",
+      "300 millions",
+      "430 millions"
+     ],
+     "bonne": 1,
+     "explication": "Cash-flow libre = 300 moins 130, soit 170 millions d'euros."
+    },
+    {
+     "q": "Quelle est la médiane de ces marges : 4, 6, 7, 9, 10, 11, 12,5, 14 et 31 % ?",
+     "options": [
+      "9 %",
+      "10 %",
+      "11,6 %",
+      "12,5 %"
+     ],
+     "bonne": 1,
+     "explication": "Avec neuf valeurs rangées, la médiane est la 5e : 10 %. La moyenne, 11,6 %, est tirée vers le haut par la valeur de 31 %."
+    },
+    {
+     "q": "Une entreprise affiche un taux de distribution de 120 %. Qu'est-ce que cela signifie ?",
+     "options": [
+      "Elle conserve 120 % de son bénéfice",
+      "Son dividende a augmenté de 120 %",
+      "Son rendement est de 120 %",
+      "Elle distribue plus qu'elle ne gagne"
+     ],
+     "bonne": 3,
+     "explication": "Elle verse 120 € de dividendes pour 100 € de bénéfice net, ce qui ne peut pas durer sans dette ou réserves."
+    },
+    {
+     "q": "Bénéfice stable de 165 millions, nombre d'actions ramené de 100 à 95 millions par un rachat. Que devient le BPA ?",
+     "options": [
+      "Il passe de 1,65 € à environ 1,74 €",
+      "Il ne change pas",
+      "Il baisse de 5 %",
+      "Il double"
+     ],
+     "bonne": 0,
+     "explication": "165 divisé par 95 donne environ 1,74 €, soit plus de 5 % de hausse sans progression de l'activité."
+    },
+    {
+     "q": "Depuis 2019, quelle norme impose d'inscrire la plupart des loyers futurs en dette au bilan ?",
+     "options": [
+      "IFRS 9",
+      "MiCA",
+      "IFRS 16",
+      "La loi PACTE"
+     ],
+     "bonne": 2,
+     "explication": "La norme IFRS 16, applicable depuis 2019, a augmenté la dette affichée de nombreuses sociétés."
+    }
+   ]
+  }
+ ]
+}

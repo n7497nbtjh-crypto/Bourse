@@ -1,0 +1,1762 @@
+{
+ "modules": [
+  {
+   "id": "valorisation",
+   "titre": "Prix et valorisation",
+   "niveau": "Intermédiaire",
+   "duree_min": 55,
+   "intro": "Une action a un prix, mais ce prix ne dit pas à lui seul si elle est chère. Ce module vous apprend à lire les principaux ratios de valorisation et explique pourquoi personne ne sait prédire les cours.",
+   "objectifs": [
+    "Calculer et interpréter un PER et un rendement bénéficiaire",
+    "Lire un rendement du dividende sans tomber dans le piège du dividende trop beau",
+    "Comprendre la valeur d'entreprise, le ratio VE/EBITDA et l'actualisation",
+    "Expliquer pourquoi la plupart des gérants actifs ne battent pas leur indice"
+   ],
+   "lecons": [
+    {
+     "id": "per",
+     "titre": "Le PER et le rendement bénéficiaire",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Le PER compare le prix d'une action au bénéfice qu'elle rapporte, et son inverse donne un rendement facile à comparer.",
+     "paragraphes": [
+      "Le PER, pour « price earnings ratio », est le ratio le plus cité en bourse. Il divise le cours d'une action par son bénéfice net par action, souvent appelé BPA. Le bénéfice net est ce qui reste à l'entreprise après toutes ses charges, ses intérêts et ses impôts. Le BPA est ce bénéfice divisé par le nombre d'actions. Un PER de 15 signifie que vous payez 15 euros pour chaque euro de bénéfice annuel.",
+      "Vous pouvez aussi calculer le PER à l'échelle de toute l'entreprise. Il suffit de diviser la capitalisation boursière, c'est-à-dire la valeur de toutes les actions réunies, par le bénéfice net total. Le résultat est le même. Cette méthode est pratique quand vous lisez un rapport annuel, où le bénéfice est donné en millions d'euros et non par action.",
+      "Le rendement bénéficiaire est l'inverse du PER. On divise le BPA par le cours. Un PER de 20 donne un rendement bénéficiaire de 5 %. Ce chiffre est utile parce qu'il se compare facilement à un taux d'intérêt. Attention, ce n'est pas ce que vous touchez. L'entreprise ne verse qu'une partie de son bénéfice en dividendes et garde le reste pour investir ou réduire sa dette.",
+      "Un PER bas ne veut pas dire qu'une action est une bonne affaire. Le marché peut anticiper une baisse des bénéfices, une dette inquiétante ou un secteur en déclin. À l'inverse, un PER élevé reflète souvent une croissance attendue. Le PER n'a donc de sens que comparé. Comparez-le à celui des entreprises du même secteur, à l'historique de l'entreprise et au marché dans son ensemble.",
+      "Il existe plusieurs PER. Le PER historique utilise le bénéfice de l'année écoulée. Le PER prévisionnel utilise le bénéfice estimé par les analystes pour l'année suivante, qui peut se révéler faux. Enfin, un bénéfice peut être gonflé ou réduit par un élément exceptionnel, comme la vente d'une usine. Regardez toujours quel bénéfice est utilisé avant de comparer deux chiffres."
+     ],
+     "exemple": "L'entreprise A cote 50 €. Son bénéfice net par action est de 4 €. Son PER vaut 50 / 4 = 12,5 et son rendement bénéficiaire 4 / 50 = 8 %. L'entreprise B cote 100 € pour un BPA de 2,50 €. Son PER vaut 40 et son rendement bénéficiaire 2,5 %. Pour 1 000 € investis, A correspond à 80 € de bénéfice annuel, B à seulement 25 €. B n'est pas forcément trop chère pour autant. Si ses bénéfices doublent en trois ans alors que ceux de A stagnent, l'écart se resserre vite. Le PER pose une question, il ne donne pas la réponse.",
+     "a_retenir": [
+      "PER = cours / bénéfice par action, ou capitalisation / bénéfice net.",
+      "Le rendement bénéficiaire est l'inverse du PER et se compare à un taux d'intérêt.",
+      "Un PER se compare au secteur, à l'historique de l'entreprise et au marché."
+     ],
+     "erreur_frequente": "Acheter une action uniquement parce que son PER est bas. Un PER très faible signale souvent que le marché attend une chute des bénéfices.",
+     "sources": [
+      {
+       "label": "Legifiscal, le PER (price earning ratio)",
+       "url": "https://www.legifiscal.fr/placements/epargne/bourse-pea/price-earning-ratio-per.html"
+      },
+      {
+       "label": "Aswath Damodaran (NYU Stern), PER par secteur",
+       "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/pedata.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir le PER des entreprises suivies",
+      "href": "/entreprises"
+     }
+    },
+    {
+     "id": "rendement-dividende",
+     "titre": "Le rendement du dividende",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Le rendement du dividende rapporte le dividende annuel au cours, mais un chiffre trop beau cache souvent un problème.",
+     "paragraphes": [
+      "Le rendement du dividende compare le dividende annuel au cours de l'action. Une action à 40 € qui verse 2 € par an offre un rendement de 5 %. Le dividende est la part du bénéfice que l'entreprise distribue à ses actionnaires, en général une ou plusieurs fois par an. Ce ratio intéresse surtout ceux qui cherchent un revenu régulier.",
+      "Le taux de distribution complète ce chiffre. Il indique quelle part du bénéfice est versée en dividendes. Une entreprise qui gagne 2,50 € par action et verse 2 € distribue 80 % de son bénéfice. Un taux proche de 100 %, ou au-dessus, est un signal d'alerte. L'entreprise verse alors plus qu'elle ne gagne. Elle devra un jour réduire ce versement ou s'endetter pour le payer.",
+      "Un rendement très élevé est souvent un piège. Le rendement affiché se calcule avec le dernier dividende versé. Si le cours s'effondre parce que les affaires vont mal, ce rendement grimpe mécaniquement, alors que le prochain dividende risque d'être réduit. Les professionnels parlent de piège à rendement. Un chiffre de 9 % ou 10 % doit vous pousser à chercher ce qui inquiète le marché.",
+      "Le dividende n'est pas de l'argent gratuit. Le jour du détachement, c'est-à-dire le premier jour où l'action se négocie sans le droit au dividende, le cours baisse en principe d'un montant proche du dividende. La valeur passe de l'entreprise à votre compte. De plus, sur un compte-titres, ce dividende est imposé l'année où vous le recevez. Une entreprise qui réinvestit ses bénéfices peut créer autant de richesse sans rien distribuer.",
+      "Pour juger un dividende, regardez sa régularité sur une dizaine d'années, le taux de distribution et la capacité de l'entreprise à produire de la trésorerie. Un dividende qui progresse lentement mais régulièrement en dit souvent plus sur la solidité d'une entreprise qu'un rendement spectaculaire sur une seule année."
+     ],
+     "exemple": "Une action cote 40 € et a versé 2 € de dividende l'an dernier. Son rendement est de 2 / 40 = 5 %. Son BPA est de 2,50 €, donc son taux de distribution est de 80 %. Six mois plus tard, les ventes chutent et le cours tombe à 25 €. Le rendement affiché devient 2 / 25 = 8 %. Mais le bénéfice attendu tombe à 1 € par action, et l'entreprise annonce un dividende réduit à 0,80 €. Le vrai rendement à venir est donc de 0,80 / 25 = 3,2 %. Entre-temps, l'actionnaire a perdu 37,5 % sur le cours.",
+     "a_retenir": [
+      "Rendement du dividende = dividende annuel / cours.",
+      "Un taux de distribution proche de 100 % rend le dividende fragile.",
+      "Un rendement anormalement élevé signale souvent une inquiétude du marché."
+     ],
+     "erreur_frequente": "Choisir une action pour son rendement affiché sans vérifier que le dividende est couvert par les bénéfices.",
+     "sources": [
+      {
+       "label": "La finance pour tous (IEFP), les dividendes",
+       "url": "https://www.lafinancepourtous.com/decryptages/marches-financiers/produits-financiers/actions/dividende/"
+      },
+      {
+       "label": "Aswath Damodaran (NYU Stern), dividendes et taux de distribution par secteur",
+       "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/divfund.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Explorer le calendrier des dividendes",
+      "href": "/dividendes"
+     }
+    },
+    {
+     "id": "valeur-entreprise",
+     "titre": "La valeur d'entreprise et le ratio VE/EBITDA",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "La valeur d'entreprise ajoute la dette au prix des actions, ce qui permet de comparer des sociétés plus ou moins endettées.",
+     "paragraphes": [
+      "La capitalisation boursière mesure la valeur des actions. Elle ignore la dette. Or deux entreprises de même capitalisation peuvent être très différentes si l'une doit 1 milliard d'euros à ses banques et l'autre a 300 millions d'euros sur son compte. La valeur d'entreprise, souvent notée VE, corrige ce défaut. Elle estime ce que coûterait le rachat de toute l'entreprise, dettes comprises.",
+      "Le calcul simplifié est le suivant. Vous prenez la capitalisation boursière, vous ajoutez la dette financière, puis vous retirez la trésorerie disponible. La différence entre la dette et la trésorerie s'appelle la dette nette. Si l'entreprise a plus de trésorerie que de dette, la dette nette est négative, et la valeur d'entreprise est inférieure à la capitalisation.",
+      "L'EBITDA est le résultat de l'activité avant les intérêts, les impôts et les amortissements. Les amortissements répartissent sur plusieurs années le coût des machines, des logiciels ou des bâtiments. L'EBITDA donne donc une idée de ce que l'activité rapporte avant les choix de financement et de fiscalité. Comme la valeur d'entreprise, il ne dépend pas de la façon dont l'entreprise est financée.",
+      "Le ratio VE/EBITDA divise la valeur d'entreprise par l'EBITDA. Il répond à une question simple : combien d'années d'EBITDA faudrait-il pour payer toute l'entreprise, dettes comprises ? Il permet de comparer des entreprises très endettées et d'autres sans dette, ce que le PER fait mal. Il est très utilisé dans les secteurs qui investissent beaucoup, comme les télécoms, l'énergie ou l'industrie.",
+      "Ce ratio a ses limites. L'EBITDA ignore les investissements nécessaires pour entretenir l'outil de production. Une entreprise qui doit remplacer ses machines tous les trois ans peut afficher un bel EBITDA et très peu de trésorerie réelle. Les niveaux habituels varient aussi beaucoup d'un secteur à l'autre. Pour les banques, la valeur d'entreprise n'a pas vraiment de sens, car la dette fait partie de leur métier."
+     ],
+     "exemple": "Deux entreprises valent chacune 2 000 millions d'euros en bourse et dégagent 350 millions d'euros d'EBITDA. La première a 1 000 millions de dette et 200 millions de trésorerie. Sa dette nette est de 800 millions et sa valeur d'entreprise de 2 800 millions. Son VE/EBITDA vaut 2 800 / 350 = 8. La seconde n'a pas de dette et dispose de 300 millions de trésorerie. Sa valeur d'entreprise est de 1 700 millions et son ratio de 1 700 / 350, soit environ 4,9. À capitalisation égale, la seconde est nettement moins chère pour un acheteur qui reprendrait toute l'entreprise.",
+     "a_retenir": [
+      "Valeur d'entreprise = capitalisation + dette nette.",
+      "Le VE/EBITDA compare des entreprises quel que soit leur endettement.",
+      "L'EBITDA ignore les investissements d'entretien : ce n'est pas de la trésorerie disponible."
+     ],
+     "erreur_frequente": "Comparer le VE/EBITDA d'entreprises de secteurs différents, ou l'utiliser pour juger une banque.",
+     "sources": [
+      {
+       "label": "Aswath Damodaran (NYU Stern), multiples VE/EBITDA par secteur",
+       "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/vebitda.html"
+      },
+      {
+       "label": "Aswath Damodaran (NYU Stern), cours et données de valorisation",
+       "url": "https://pages.stern.nyu.edu/~adamodar/"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer deux entreprises",
+      "href": "/comparer"
+     }
+    },
+    {
+     "id": "croissance-prix",
+     "titre": "Croissance et prix : pourquoi une action chère peut le rester ou chuter",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Une action chère est un pari sur la croissance future : si la croissance se réalise, le prix tient, si elle déçoit, il peut s'effondrer.",
+     "paragraphes": [
+      "Le prix d'une action ne reflète pas seulement les bénéfices d'aujourd'hui. Il intègre aussi ce que le marché attend pour les années à venir. Une entreprise dont les bénéfices progressent de 25 % par an peut justifier un PER de 40 ou 50, car ce PER baissera vite si la croissance se réalise. Un prix élevé est en fait un pari sur l'avenir.",
+      "Une action chère peut le rester longtemps. Si l'entreprise tient ses promesses année après année, ses bénéfices finissent par rattraper son cours. Le PER reste élevé parce que le marché continue d'anticiper de la croissance. Des investisseurs qui ont vendu trop tôt une action jugée trop chère ont parfois manqué des années de hausse.",
+      "Le risque est ailleurs. Quand le prix intègre beaucoup de croissance, la moindre déception coûte cher. Deux effets s'additionnent. Les bénéfices progressent moins que prévu, et le marché accepte de payer un PER plus faible. Les professionnels parlent de compression des multiples. Une entreprise qui continue de croître peut ainsi voir son cours baisser de moitié.",
+      "La bulle internet en offre un exemple frappant. L'indice Nasdaq Composite, riche en valeurs technologiques, a atteint un sommet le 10 mars 2000. En octobre 2002, il avait perdu environ 78 %. Il n'a dépassé son record de clôture de 2000 qu'en avril 2015. Beaucoup d'entreprises de l'époque ont continué à exister et à croître. Leur prix de départ intégrait simplement trop d'optimisme.",
+      "Pour juger le prix d'une valeur de croissance, posez-vous deux questions. Quelle croissance le prix actuel suppose-t-il pour les cinq ou dix prochaines années ? Et que se passe-t-il si cette croissance est deux fois plus faible ? Le ratio PEG, qui divise le PER par le taux de croissance attendu des bénéfices, aide à faire ce rapprochement. Il a les mêmes limites que les prévisions qu'il utilise."
+     ],
+     "exemple": "Une action cote 100 € pour un BPA de 2 €, soit un PER de 50. Premier scénario : les bénéfices croissent de 25 % par an pendant cinq ans. Le BPA atteint environ 6,10 €. Si le marché ne paie plus qu'un PER de 20, le cours vaut environ 122 €. C'est un gain de 22 % en cinq ans, malgré une croissance très forte. Second scénario : la croissance n'est que de 10 % par an. Le BPA atteint environ 3,22 €. Avec un PER de 20, le cours tombe à environ 64 €, soit une perte de 36 %. Ces chiffres sont illustratifs.",
+     "a_retenir": [
+      "Un PER élevé est un pari sur la croissance future.",
+      "Une déception fait baisser à la fois les bénéfices attendus et le PER.",
+      "Demandez-vous toujours quelle croissance le prix actuel suppose."
+     ],
+     "erreur_frequente": "Penser qu'une excellente entreprise est forcément un bon placement, quel que soit le prix payé.",
+     "sources": [
+      {
+       "label": "Wikipedia, historique du Nasdaq Composite",
+       "url": "https://en.wikipedia.org/wiki/Nasdaq_Composite"
+      },
+      {
+       "label": "Aswath Damodaran (NYU Stern), PER par secteur",
+       "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/pedata.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Tester un achat passé avec l'outil Si j'avais",
+      "href": "/outils/si-javais"
+     }
+    },
+    {
+     "id": "actualisation",
+     "titre": "L'actualisation et le DCF expliqués simplement",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Actualiser, c'est ramener des sommes futures à leur valeur d'aujourd'hui, et c'est la base de toute valorisation.",
+     "paragraphes": [
+      "Un euro reçu dans dix ans vaut moins qu'un euro aujourd'hui. Vous pourriez placer l'euro d'aujourd'hui et le voir grossir, et l'inflation réduit le pouvoir d'achat de l'euro futur. L'actualisation est le calcul inverse des intérêts composés. Elle transforme une somme future en valeur d'aujourd'hui, en la divisant par 1 plus le taux, autant de fois qu'il y a d'années.",
+      "Le taux utilisé s'appelle le taux d'actualisation. Il représente le rendement que vous exigez pour accepter d'attendre et de prendre un risque. Plus un flux est incertain, plus le taux exigé est élevé. Un placement sans risque se contente d'un taux faible. Une petite entreprise jeune et fragile exige un taux bien plus élevé.",
+      "La méthode DCF, pour « discounted cash flows », applique cette idée à une entreprise. Elle estime les flux de trésorerie que l'entreprise produira chaque année, après ses investissements. Elle actualise chacun de ces flux, puis les additionne. La somme obtenue est une estimation de la valeur de l'entreprise aujourd'hui. En la divisant par le nombre d'actions, on obtient une valeur par action.",
+      "Pour les années lointaines, on utilise souvent une formule simple. Si un flux de 10 € l'an prochain progresse ensuite d'un taux g chaque année, sans fin, sa valeur actuelle est de 10 divisé par l'écart entre le taux d'actualisation et g. Cette formule, dite de Gordon et Shapiro, montre une chose essentielle. La valeur dépend énormément des hypothèses retenues.",
+      "Les taux d'intérêt jouent un rôle direct. Quand ils montent, le taux d'actualisation monte aussi, et ce sont les flux les plus lointains qui perdent le plus de valeur. C'est une des raisons pour lesquelles les actions de croissance, dont les bénéfices sont attendus loin dans le futur, ont souvent davantage baissé que les autres lors de la remontée des taux de 2022.",
+      "Le DCF n'est donc pas une machine à trouver le vrai prix. C'est un outil pour rendre visibles les hypothèses cachées dans un cours. Vous pouvez partir du prix actuel et vous demander quelle croissance il suppose. Cette démarche, appelée DCF inversé, est souvent plus instructive que d'essayer de prédire soi-même dix ans de résultats."
+     ],
+     "exemple": "Avec un taux d'actualisation de 8 %, 100 € reçus dans un an valent aujourd'hui 100 / 1,08, soit environ 92,59 €. Reçus dans dix ans, ils ne valent plus qu'environ 46,32 €. Prenons une entreprise qui produira 10 € de trésorerie par action l'an prochain, puis 3 % de plus chaque année. À 8 %, sa valeur est de 10 / (0,08 moins 0,03), soit 200 €. Si vous exigez 9 % au lieu de 8 %, la valeur tombe à 10 / 0,06, soit environ 167 €. Un seul point de taux fait perdre environ 17 % de valeur.",
+     "a_retenir": [
+      "Actualiser, c'est ramener une somme future à sa valeur d'aujourd'hui.",
+      "Un DCF additionne les flux de trésorerie futurs actualisés.",
+      "Le résultat est très sensible au taux et à la croissance choisis."
+     ],
+     "erreur_frequente": "Prendre la valeur sortie d'un DCF pour une certitude, alors qu'elle dépend entièrement des hypothèses choisies.",
+     "sources": [
+      {
+       "label": "Aswath Damodaran (NYU Stern), cours et données de valorisation",
+       "url": "https://pages.stern.nyu.edu/~adamodar/"
+      },
+      {
+       "label": "Aswath Damodaran, données sur les taux d'actualisation par secteur",
+       "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/wacc.html"
+      },
+      {
+       "label": "Quilter, écart record entre actions value et croissance en 2022",
+       "url": "https://www.quilter.com/news-and-views/all-articles/value-leaves-growth-in-the-dust-in-2022"
+      }
+     ],
+     "lien_site": {
+      "texte": "Revoir les intérêts composés avec le simulateur",
+      "href": "/simulateurs/epargne"
+     }
+    },
+    {
+     "id": "efficience",
+     "titre": "Pourquoi personne ne prédit les cours",
+     "premium": true,
+     "duree_min": 9,
+     "resume": "Les prix intègrent vite l'information connue, et la grande majorité des gérants professionnels ne battent pas leur indice sur dix ans.",
+     "paragraphes": [
+      "Si un ratio simple permettait de gagner à coup sûr, des milliers de professionnels l'exploiteraient en même temps. Leurs achats feraient monter le prix jusqu'à faire disparaître l'avantage. C'est l'idée de l'efficience des marchés, formalisée par l'économiste Eugene Fama en 1970. Les prix intègrent rapidement l'information disponible. Seules des nouvelles imprévues les font bouger, et par définition elles sont imprévisibles.",
+      "Le marché n'est pas parfait pour autant. Il connaît des bulles et des paniques, et des chercheurs ont documenté des anomalies. Mais repérer une erreur de prix ne suffit pas. Il faut la repérer avant les autres, après les frais, et de manière répétée. C'est cette dernière condition que presque personne ne remplit sur une longue période.",
+      "Les chiffres de S&P Dow Jones Indices le montrent. Son rapport SPIVA compare les fonds gérés activement, où un gérant choisit les titres, à leur indice de référence. Sur les dix ans terminés fin juin 2024, 97,75 % des fonds actions françaises ont fait moins bien que l'indice S&P France BMI. Le taux est de 92,1 % pour les fonds actions européennes et de 97,3 % pour les fonds actions monde, en euros.",
+      "Le rapport SPIVA Europe de fin 2024 va dans le même sens. En moyenne, toutes catégories d'actions confondues, 93 % des fonds ont fait moins bien que leur indice sur dix ans. Une partie de l'explication est arithmétique, comme l'a montré William Sharpe en 1991. Avant frais, les gérants actifs obtiennent ensemble le rendement du marché. Après frais, ils font donc en moyenne moins bien.",
+      "Cela ne prouve pas qu'aucun gérant ne bat le marché. Quelques-uns y parviennent, mais il est très difficile de savoir à l'avance lesquels, et les bons résultats passés se répètent rarement. Pour un particulier, la leçon est pratique. La valorisation aide à comprendre ce que l'on achète et à éviter les excès. Elle ne permet pas de prédire le cours de la semaine prochaine."
+     ],
+     "exemple": "Imaginez 100 fonds actions françaises en activité il y a dix ans. D'après le rapport SPIVA France de mi-2024, environ 98 d'entre eux ont fait moins bien que l'indice sur la période. Côté frais, l'AMF indique que les fonds d'actions françaises prélevaient en moyenne 1,3 % de frais courants par an en 2025, contre 0,33 % en moyenne pour les ETF actions indiciels. Sur un rendement de marché supposé de 6 % par an, un point de frais en plus représente environ un sixième du rendement chaque année. Les performances passées ne préjugent pas des performances futures.",
+     "a_retenir": [
+      "Les prix intègrent vite l'information connue, seules les surprises les font bouger.",
+      "Sur dix ans, plus de neuf fonds actifs sur dix font moins bien que leur indice en Europe.",
+      "Les frais sont la principale raison arithmétique de ce retard."
+     ],
+     "erreur_frequente": "Croire qu'un fonds qui a battu son indice trois ans de suite continuera forcément à le faire.",
+     "sources": [
+      {
+       "label": "S&P Dow Jones Indices, SPIVA France mi-2024",
+       "url": "https://spglobal.com/spdji/en/documents/spiva/spiva-france-mid-year-2024.pdf"
+      },
+      {
+       "label": "S&P Dow Jones Indices, SPIVA Europe fin 2024",
+       "url": "https://www.spglobal.com/spdji/en/spiva/article/spiva-europe-year-end-2024"
+      },
+      {
+       "label": "William Sharpe (1991), The Arithmetic of Active Management",
+       "url": "https://web.stanford.edu/~wfsharpe/art/active/active.htm"
+      },
+      {
+       "label": "Eugene Fama (1970), Efficient Capital Markets, Journal of Finance",
+       "url": "https://www.jstor.org/stable/2325486"
+      },
+      {
+       "label": "AMF, Lettre de l'Observatoire de l'épargne n° 65, avril 2026",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/private/2026-04/loe-65_1.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer les frais des ETF",
+      "href": "/etf"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Une action cote 60 € et son bénéfice par action est de 3 €. Quel est son PER ?",
+     "options": [
+      "3",
+      "5 %",
+      "20",
+      "180"
+     ],
+     "bonne": 2,
+     "explication": "Le PER vaut 60 / 3 = 20. Son rendement bénéficiaire est l'inverse : 3 / 60 = 5 %."
+    },
+    {
+     "q": "Une action à 30 € a versé 3 € de dividende, mais son bénéfice attendu n'est que de 2 € par action. Que faut-il en penser ?",
+     "options": [
+      "Le dividende dépasse le bénéfice et risque d'être réduit",
+      "Le rendement de 10 % est un excellent signal",
+      "Le taux de distribution est de 50 %",
+      "Le PER est de 10"
+     ],
+     "bonne": 0,
+     "explication": "Le taux de distribution serait de 150 %. L'entreprise verse plus qu'elle ne gagne, ce qui ne peut pas durer."
+    },
+    {
+     "q": "Pourquoi utiliser la valeur d'entreprise plutôt que la seule capitalisation ?",
+     "options": [
+      "Elle ne varie jamais",
+      "Elle inclut les dividendes futurs",
+      "Elle est toujours plus faible",
+      "Elle tient compte de la dette et de la trésorerie"
+     ],
+     "bonne": 3,
+     "explication": "La valeur d'entreprise ajoute la dette nette à la capitalisation. Elle permet de comparer des entreprises plus ou moins endettées."
+    },
+    {
+     "q": "Une entreprise vaut 1 000 M€ en bourse, a 400 M€ de dette, 100 M€ de trésorerie et 130 M€ d'EBITDA. Quel est son VE/EBITDA ?",
+     "options": [
+      "7,7",
+      "10",
+      "10,8",
+      "8,5"
+     ],
+     "bonne": 1,
+     "explication": "La valeur d'entreprise est de 1 000 + 400 moins 100 = 1 300 M€. Le ratio vaut 1 300 / 130 = 10."
+    },
+    {
+     "q": "Avec un taux d'actualisation de 10 %, combien valent aujourd'hui 110 € reçus dans un an ?",
+     "options": [
+      "99 €",
+      "100 €",
+      "110 €",
+      "121 €"
+     ],
+     "bonne": 1,
+     "explication": "On divise la somme future par 1,10 : 110 / 1,10 = 100 €."
+    },
+    {
+     "q": "Que se passe-t-il souvent pour une action de croissance chère quand la croissance déçoit ?",
+     "options": [
+      "Seul le bénéfice baisse, le PER reste identique",
+      "Rien, le marché ignore les prévisions",
+      "Le cours monte car l'action devient moins chère",
+      "Le bénéfice attendu et le PER baissent ensemble"
+     ],
+     "bonne": 3,
+     "explication": "C'est la compression des multiples : moins de bénéfices et un PER plus faible, deux effets qui se cumulent sur le cours."
+    },
+    {
+     "q": "Selon le rapport SPIVA France de mi-2024, quelle part des fonds actions françaises a fait moins bien que son indice sur dix ans ?",
+     "options": [
+      "Environ 98 %",
+      "Environ 50 %",
+      "Environ 70 %",
+      "Environ 25 %"
+     ],
+     "bonne": 0,
+     "explication": "97,75 % des fonds actions françaises ont fait moins bien que l'indice S&P France BMI sur les dix ans terminés fin juin 2024."
+    }
+   ]
+  },
+  {
+   "id": "portefeuille",
+   "titre": "Construire son portefeuille",
+   "niveau": "Intermédiaire",
+   "duree_min": 56,
+   "intro": "Un bon portefeuille ne se résume pas à une liste de bons placements. Ce module vous montre comment répartir votre argent, le diversifier vraiment et le garder sur la bonne trajectoire au fil des années.",
+   "objectifs": [
+    "Choisir une allocation adaptée à votre horizon et à votre tolérance au risque",
+    "Diversifier par le nombre de lignes, les secteurs et les pays",
+    "Comprendre ce que contient réellement un ETF monde et repérer les recouvrements",
+    "Mettre en place un investissement programmé et une règle de rééquilibrage"
+   ],
+   "lecons": [
+    {
+     "id": "allocation",
+     "titre": "L'allocation selon l'horizon et la tolérance au risque",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "La répartition de votre argent entre actions et placements sûrs se choisit d'après votre horizon et ce que vous pouvez supporter.",
+     "paragraphes": [
+      "L'allocation d'actifs est la répartition de votre argent entre grandes familles de placements : actions, obligations, fonds en euros, livrets. C'est la décision qui pèse le plus sur le comportement de votre portefeuille. Le choix de telle ou telle action compte beaucoup moins que la part totale que vous consacrez aux actions.",
+      "L'horizon est le premier critère. C'est la durée pendant laquelle vous pouvez laisser l'argent placé sans y toucher. Les actions ont connu de fortes baisses. L'indice MSCI World a perdu 57,5 % entre octobre 2007 et mars 2009, mesuré en dollars. Une somme dont vous aurez besoin dans deux ans ne devrait pas être exposée à une telle chute. Une somme destinée à votre retraite dans 25 ans peut davantage la supporter.",
+      "La tolérance au risque est le second critère. Elle mesure ce que vous êtes capable de supporter sans paniquer. Elle dépend de vos revenus, de la stabilité de votre emploi, de votre patrimoine, mais aussi de votre caractère. Beaucoup de gens se croient prêts à voir leur portefeuille baisser de 40 %, puis vendent au pire moment quand cela arrive vraiment.",
+      "Un test simple consiste à traduire les pourcentages en euros. Pour chaque allocation envisagée, imaginez une baisse de moitié de la partie actions et calculez la perte en euros. Demandez-vous honnêtement si vous resteriez investi. Si la réponse est non, réduisez la part en actions. Une allocation un peu prudente que vous tenez vaut mieux qu'une allocation ambitieuse que vous abandonnez.",
+      "L'allocation n'est pas figée. Elle évolue avec votre vie : un achat immobilier, une naissance, l'approche de la retraite. Beaucoup d'investisseurs réduisent progressivement la part des actions à mesure que l'échéance approche. Ce module ne vous donne pas de répartition idéale, car elle dépend de votre situation. Il vous donne une méthode pour la choisir vous-même."
+     ],
+     "exemple": "Vous avez 20 000 € à placer, en plus de votre épargne de précaution. Allocation A : 80 % en actions, soit 16 000 €, et 20 % sur des placements garantis comme un fonds en euros, soit 4 000 €. Allocation B : 50 % et 50 %. Supposons une baisse de 50 % des actions, proche de ce qu'a connu le MSCI World en 2008 et 2009. A perd 8 000 € et tombe à 12 000 €, soit une baisse de 40 %. B perd 5 000 € et tombe à 15 000 €, soit une baisse de 25 %. La vraie question : laquelle de ces deux pertes pourriez-vous voir sans vendre ?",
+     "a_retenir": [
+      "La répartition entre actions et placements sûrs pèse plus que le choix des titres.",
+      "L'horizon fixe le risque possible, la tolérance fixe le risque supportable.",
+      "Traduisez toujours une baisse possible en euros avant de décider."
+     ],
+     "erreur_frequente": "Choisir son allocation en pleine hausse des marchés, en surestimant sa capacité à supporter une baisse.",
+     "sources": [
+      {
+       "label": "AMF, mieux se connaître en tant qu'épargnant",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/savoir-bien-investir/conseils-pratiques/mieux-se-connaitre-en-tant-quepargnant"
+      },
+      {
+       "label": "MSCI, fiche de l'indice MSCI World au 30 septembre 2026",
+       "url": "https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb"
+      }
+     ],
+     "lien_site": {
+      "texte": "Simuler une allocation dans le portefeuille fictif",
+      "href": "/portefeuille"
+     }
+    },
+    {
+     "id": "diversification",
+     "titre": "Diversifier : lignes, secteurs et pays",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Diversifier, c'est répartir son argent pour qu'une seule mauvaise nouvelle ne puisse pas tout emporter.",
+     "paragraphes": [
+      "Diversifier, c'est répartir son argent pour qu'un seul événement ne puisse pas tout détruire. Le principe tient en une phrase : ne pas mettre tous ses œufs dans le même panier. En bourse, il existe trois grands axes de diversification. Le nombre de lignes, les secteurs d'activité et les zones géographiques.",
+      "Le nombre de lignes, c'est le nombre de titres différents détenus. Avec une seule action, la faillite de l'entreprise peut effacer tout votre capital. Avec vingt actions à parts égales, la même faillite coûte 5 %. Chaque titre supplémentaire réduit le risque propre à une entreprise, mais l'effet s'atténue. Passer de une à dix lignes change beaucoup plus de choses que passer de cinquante à soixante.",
+      "La diversification sectorielle compte autant. Vingt actions de banques ne forment pas un portefeuille diversifié. Elles réagissent toutes de la même manière à une crise financière ou à un changement des taux. Les secteurs n'évoluent pas au même rythme. La santé ou l'alimentation résistent souvent mieux en récession que l'automobile ou le luxe, sans que ce soit une règle absolue.",
+      "La diversification géographique protège contre les difficultés d'un seul pays : récession, crise politique, changement de fiscalité. Elle protège aussi contre les longues périodes où une bourse nationale stagne. Une entreprise cotée en France peut réaliser l'essentiel de ses ventes à l'étranger, mais sa cotation et une partie de ses coûts restent liées à son pays d'origine.",
+      "Il y a une limite à connaître. La diversification réduit le risque propre à chaque entreprise, mais pas le risque de marché. Lors d'un krach général, presque toutes les actions baissent ensemble. Seule la répartition entre actions et placements plus sûrs, vue dans la leçon précédente, amortit ce risque. Diversifier ne supprime pas les pertes. Cela évite surtout la perte définitive."
+     ],
+     "exemple": "Portefeuille 1 : 10 000 € sur une seule action. L'entreprise annonce une fraude comptable et l'action perd 80 %. Il reste 2 000 €. Portefeuille 2 : 10 000 € répartis sur 25 actions de secteurs et de pays différents, soit 400 € par ligne. La même action perd 80 %, ce qui coûte 320 €. Si les 24 autres lignes ne bougent pas, le portefeuille vaut 9 680 €, soit une baisse de 3,2 %. Un ETF qui suit un indice de plus de 1 000 entreprises pousse cette logique encore plus loin.",
+     "a_retenir": [
+      "Diversifiez par le nombre de lignes, les secteurs et les pays.",
+      "Au-delà de quelques dizaines de lignes, le gain de diversification devient faible.",
+      "La diversification ne protège pas d'une baisse générale du marché."
+     ],
+     "erreur_frequente": "Se croire diversifié parce qu'on détient beaucoup de lignes, alors qu'elles appartiennent toutes au même secteur ou au même pays.",
+     "sources": [
+      {
+       "label": "AMF, mieux se connaître en tant qu'épargnant",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/savoir-bien-investir/conseils-pratiques/mieux-se-connaitre-en-tant-quepargnant"
+      },
+      {
+       "label": "MSCI, fiche de l'indice MSCI World au 30 septembre 2026",
+       "url": "https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir la répartition de votre portefeuille fictif",
+      "href": "/portefeuille"
+     }
+    },
+    {
+     "id": "etf-monde",
+     "titre": "ETF monde et biais domestique",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Un ETF monde donne accès à plus de mille entreprises, mais il est bien plus américain que son nom ne le laisse penser.",
+     "paragraphes": [
+      "Un ETF monde réplique un indice composé de grandes entreprises de nombreux pays. Le plus connu, le MSCI World, couvre 23 pays développés. Au 30 septembre 2026, il comptait 1 249 entreprises. Avec une seule ligne, vous détenez donc une petite part de plus d'un millier de sociétés. L'indice MSCI ACWI ajoute les pays émergents, comme la Chine, l'Inde ou le Brésil.",
+      "Le poids de chaque pays dépend de la valeur en bourse de ses entreprises. Au 30 septembre 2026, les États-Unis représentaient 72,9 % du MSCI World, le Japon 5,9 %, le Royaume-Uni 3,4 %, le Canada 3,3 % et la France 2,2 %. Le secteur des technologies de l'information pesait à lui seul 31,8 % de l'indice, et les dix premières entreprises 27,9 %.",
+      "Ces chiffres surprennent souvent. Un ETF monde est en réalité très américain, et assez concentré sur quelques géants de la technologie. Ce n'est ni bon ni mauvais en soi, mais il faut le savoir. Si la bourse américaine traverse une longue mauvaise période, votre ETF monde la suivra en grande partie. Les poids évoluent aussi avec le temps, au gré des performances.",
+      "Le biais domestique est la tendance à surinvestir dans son propre pays. Beaucoup d'épargnants français détiennent surtout des actions du CAC 40, parce qu'ils connaissent ces marques. Or la France pèse environ 2 % du MSCI World. Un portefeuille entièrement français parie, sans le dire, sur une seule économie, une seule fiscalité et quelques grands secteurs comme le luxe ou l'énergie.",
+      "Il existe des ETF monde éligibles au PEA, alors que le PEA est réservé aux actions européennes. Ils utilisent en général une réplication synthétique. Le fonds détient des actions européennes et échange leur performance contre celle de l'indice mondial, grâce à un contrat avec une banque. Ce montage est encadré par la réglementation européenne des fonds. Il comporte un risque de contrepartie limité, décrit dans le document d'informations clés."
+     ],
+     "exemple": "Vous investissez 10 000 € dans un ETF MSCI World. D'après la répartition au 30 septembre 2026, environ 7 290 € sont exposés aux entreprises américaines, 590 € au Japon, 340 € au Royaume-Uni et seulement 220 € à la France. Si vous placez au contraire 10 000 € dans un ETF CAC 40, toute la somme dépend des grandes entreprises françaises. Les deux choix sont possibles, mais ils ne portent pas du tout le même risque. Les répartitions changent chaque mois et ne disent rien des performances futures.",
+     "a_retenir": [
+      "Un ETF monde donne accès à plus de 1 000 entreprises en une seule ligne.",
+      "Le MSCI World est composé à près de 73 % d'actions américaines.",
+      "La France pèse environ 2 % : un portefeuille 100 % français est très concentré."
+     ],
+     "erreur_frequente": "Penser qu'un ETF monde est réparti à parts égales entre les pays.",
+     "sources": [
+      {
+       "label": "MSCI, fiche de l'indice MSCI World au 30 septembre 2026",
+       "url": "https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb"
+      },
+      {
+       "label": "Service-public.gouv.fr, le plan d'épargne en actions (PEA)",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2385"
+      }
+     ],
+     "lien_site": {
+      "texte": "Consulter les fiches des ETF",
+      "href": "/etf"
+     }
+    },
+    {
+     "id": "investissement-programme",
+     "titre": "L'investissement programmé",
+     "premium": true,
+     "duree_min": 7,
+     "resume": "Investir la même somme chaque mois lisse le prix d'achat et évite de chercher le bon moment.",
+     "paragraphes": [
+      "L'investissement programmé consiste à investir la même somme à intervalle régulier, par exemple 150 € chaque mois, quel que soit le niveau du marché. En anglais, on parle de « dollar cost averaging ». De nombreux courtiers proposent des plans d'investissement qui achètent automatiquement un ETF à date fixe.",
+      "Le premier avantage est mécanique. Avec une somme fixe, vous achetez plus de parts quand le prix est bas et moins quand il est haut. Votre prix de revient moyen, c'est-à-dire le prix moyen payé par part, est ainsi inférieur à la moyenne simple des prix observés sur la période.",
+      "Le second avantage est psychologique, et c'est souvent le plus important. Vous n'avez pas à choisir le bon moment. Une baisse devient l'occasion d'acheter moins cher plutôt qu'une source d'angoisse. L'habitude d'investir chaque mois, juste après la paie, transforme l'épargne en automatisme, comme un abonnement que l'on ne remet pas en question.",
+      "Il faut être honnête sur un point. Si vous disposez déjà d'une grosse somme, l'investir d'un coup a historiquement donné un meilleur résultat dans la majorité des cas, parce que les marchés montent plus souvent qu'ils ne baissent. Une étude de Vanguard publiée en 2012, portant sur les États-Unis, le Royaume-Uni et l'Australie, trouvait que l'investissement en une fois faisait mieux environ deux fois sur trois. L'étalement réduit surtout le regret d'avoir tout investi juste avant une baisse.",
+      "Pour la plupart des épargnants, la question ne se pose pas vraiment. Ils investissent ce qu'ils épargnent chaque mois. Vérifiez seulement que les frais restent faibles. Un plan programmé facturé 1 € pour un versement de 50 € coûte 2 % à chaque achat. Comparez donc les tarifs des plans programmés avant de choisir votre courtier."
+     ],
+     "exemple": "Vous investissez 200 € par mois dans un ETF. Le premier mois, la part vaut 100 € et vous en achetez 2. Le deuxième mois, elle tombe à 80 € et vous en achetez 2,5. Le troisième mois, elle remonte à 125 € et vous en achetez 1,6. Vous avez investi 600 € et vous détenez 6,1 parts. Votre prix de revient moyen est de 600 / 6,1, soit environ 98,36 €. La moyenne des trois prix est pourtant de 101,67 €. Les fractions de parts ne sont proposées que par certains courtiers.",
+     "a_retenir": [
+      "Investir une somme fixe chaque mois lisse le prix d'achat.",
+      "L'automatisme évite de chercher le bon moment.",
+      "Avec une grosse somme déjà disponible, investir en une fois a souvent mieux réussi par le passé."
+     ],
+     "erreur_frequente": "Suspendre ses versements programmés pendant une baisse, alors que c'est précisément le moment où ils achètent le moins cher.",
+     "sources": [
+      {
+       "label": "BenefitsPro, résumé de l'étude Vanguard (2012) sur l'investissement en une fois",
+       "url": "https://benefitspro.com/2012/10/31/lump-sum-investing-vs-dollar-cost-averaging"
+      },
+      {
+       "label": "AMF, Lettre de l'Observatoire de l'épargne n° 65, avril 2026",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/private/2026-04/loe-65_1.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Simuler un versement mensuel",
+      "href": "/simulateurs/epargne"
+     }
+    },
+    {
+     "id": "reequilibrage",
+     "titre": "Le rééquilibrage",
+     "premium": true,
+     "duree_min": 7,
+     "resume": "Rééquilibrer, c'est ramener régulièrement son portefeuille à l'allocation choisie pour garder le niveau de risque voulu.",
+     "paragraphes": [
+      "Avec le temps, votre portefeuille s'éloigne de l'allocation choisie. Si les actions montent fortement, elles prennent plus de place que prévu, et votre portefeuille devient plus risqué sans que vous l'ayez décidé. Le rééquilibrage consiste à revenir régulièrement à votre allocation cible.",
+      "Il existe deux méthodes principales. La méthode calendaire rééquilibre à date fixe, par exemple une fois par an. La méthode par seuil rééquilibre seulement quand une part s'écarte trop de sa cible, par exemple de plus de 5 points. Les deux fonctionnent. L'important est de choisir une règle à l'avance et de s'y tenir.",
+      "Rééquilibrer revient à vendre une partie de ce qui a monté et à racheter ce qui a baissé. C'est contre-intuitif, car on a envie de garder ce qui marche. Mais cette discipline force à prendre des bénéfices dans l'euphorie et à acheter quand tout le monde a peur. Son objectif premier n'est pas de gagner plus, mais de garder le niveau de risque choisi.",
+      "La façon la moins coûteuse de rééquilibrer consiste à utiliser les nouveaux versements. Au lieu de vendre, vous dirigez vos achats du mois vers la partie en retard. Vous évitez ainsi des frais de courtage et, sur un compte-titres, l'impôt sur les plus-values qui frappe chaque vente gagnante. Dans un PEA ou une assurance-vie, les ventes et rachats réalisés à l'intérieur de l'enveloppe ne déclenchent pas d'impôt.",
+      "Ne rééquilibrez pas trop souvent. Un rééquilibrage chaque semaine multiplie les frais sans réel bénéfice. Une à deux fois par an, ou au franchissement d'un seuil assez large, suffit pour la plupart des épargnants. Notez la date et la règle choisies, pour ne pas les modifier au gré de l'humeur du marché."
+     ],
+     "exemple": "Vous partez de 10 000 € : 70 % en actions, soit 7 000 €, et 30 % en obligations, soit 3 000 €. En un an, les actions gagnent 30 % et les obligations 2 %. Vous avez alors 9 100 € en actions et 3 060 € en obligations, soit 12 160 € au total. La part des actions est passée à 74,8 %. Pour revenir à 70 %, il faut 8 512 € en actions. Vous vendez donc 588 € d'actions et achetez 588 € d'obligations. Autre solution : vos prochains versements vont entièrement aux obligations jusqu'à retrouver l'équilibre.",
+     "a_retenir": [
+      "Le rééquilibrage ramène le portefeuille au niveau de risque choisi.",
+      "Fixez une règle : une date annuelle ou un seuil d'écart.",
+      "Utilisez d'abord les nouveaux versements pour limiter frais et impôts."
+     ],
+     "erreur_frequente": "Laisser les actions dériver vers 90 % du portefeuille pendant une longue hausse, puis découvrir son vrai niveau de risque lors du krach suivant.",
+     "sources": [
+      {
+       "label": "AMF, mieux se connaître en tant qu'épargnant",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/savoir-bien-investir/conseils-pratiques/mieux-se-connaitre-en-tant-quepargnant"
+      },
+      {
+       "label": "Service-public.gouv.fr, le plan d'épargne en actions (PEA)",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2385"
+      }
+     ],
+     "lien_site": {
+      "texte": "Suivre les poids de votre portefeuille",
+      "href": "/portefeuille"
+     }
+    },
+    {
+     "id": "recouvrement",
+     "titre": "Le recouvrement entre ETF",
+     "premium": true,
+     "duree_min": 6,
+     "resume": "Deux ETF différents peuvent contenir les mêmes entreprises, et en ajouter un ne diversifie alors presque rien.",
+     "paragraphes": [
+      "Détenir plusieurs ETF ne garantit pas d'être plus diversifié. Si deux fonds contiennent les mêmes entreprises, vous achetez deux fois la même chose. C'est ce qu'on appelle le recouvrement, ou chevauchement, entre ETF. Il est fréquent chez les débutants, qui ajoutent un ETF S&P 500 ou un ETF Nasdaq à un ETF monde en pensant se diversifier.",
+      "Le S&P 500 regroupe environ 500 grandes entreprises américaines. Or ces entreprises forment déjà la grande majorité de la partie américaine du MSCI World. Ajouter un ETF S&P 500 à un ETF monde ne diversifie donc presque rien. Cela augmente surtout votre exposition aux États-Unis et aux plus grandes entreprises.",
+      "Pour mesurer le recouvrement, comparez la composition des fonds. Chaque émetteur publie la liste complète des lignes et leur poids, souvent chaque jour. L'outil de recouvrement du site fait ce calcul pour vous. Regardez aussi les répartitions par pays et par secteur, plus parlantes qu'une liste de mille noms.",
+      "Le recouvrement n'est pas toujours une erreur. Vous pouvez vouloir renforcer volontairement une zone. Ajouter un ETF pays émergents à un ETF MSCI World, qui n'en contient pas, complète le portefeuille au lieu de le dupliquer. Le problème n'apparaît que lorsque le recouvrement est involontaire, et que vous vous croyez plus diversifié que vous ne l'êtes.",
+      "Une règle pratique : avant d'ajouter un fonds, demandez-vous ce qu'il apporte que vous n'avez pas déjà. Un nouveau pays, un nouveau type d'actif, une taille d'entreprise différente ? Si la réponse est rien, il ajoute surtout de la complexité, et parfois des frais."
+     ],
+     "exemple": "Vous placez 5 000 € dans un ETF MSCI World et 5 000 € dans un ETF S&P 500. Au 30 septembre 2026, les États-Unis pesaient 72,9 % du MSCI World. Votre exposition américaine est donc d'environ la moitié de 72,9 % plus la moitié de 100 %, soit 86,5 %. Cela représente environ 8 650 € sur 10 000 €. Vous pensiez avoir mieux diversifié avec deux fonds. Vous avez en réalité renforcé votre concentration sur un seul pays. Avec 10 000 € dans le seul ETF monde, votre exposition américaine serait d'environ 7 290 €.",
+     "a_retenir": [
+      "Deux ETF peuvent contenir en grande partie les mêmes entreprises.",
+      "Un ETF S&P 500 ajouté à un ETF monde renforce surtout le poids des États-Unis.",
+      "Avant d'ajouter un fonds, identifiez ce qu'il apporte de nouveau."
+     ],
+     "erreur_frequente": "Multiplier les ETF qui suivent des indices proches en pensant réduire son risque.",
+     "sources": [
+      {
+       "label": "MSCI, fiche de l'indice MSCI World au 30 septembre 2026",
+       "url": "https://www.msci.com/documents/10199/178e6643-6ae6-47b9-82be-e1fc565ededb"
+      },
+      {
+       "label": "AMF, mieux se connaître en tant qu'épargnant",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/savoir-bien-investir/conseils-pratiques/mieux-se-connaitre-en-tant-quepargnant"
+      }
+     ],
+     "lien_site": {
+      "texte": "Mesurer le recouvrement entre deux ETF",
+      "href": "/outils/recouvrement"
+     }
+    },
+    {
+     "id": "concentration",
+     "titre": "La part maximale d'une seule action",
+     "premium": true,
+     "duree_min": 7,
+     "resume": "Une seule ligne trop lourde peut effacer des années d'épargne, d'autant que peu d'actions font l'essentiel des gains.",
+     "paragraphes": [
+      "Beaucoup d'investisseurs détiennent une action qu'ils aiment particulièrement. Celle de leur employeur, d'une marque admirée, ou d'une entreprise qui a déjà beaucoup monté. Le risque est de laisser cette ligne grossir jusqu'à dominer le portefeuille. Une seule mauvaise nouvelle peut alors effacer des années d'épargne.",
+      "La recherche montre pourquoi ce risque est réel. Le professeur Hendrik Bessembinder a étudié toutes les actions américaines cotées entre 1926 et 2016. Environ 58 % d'entre elles ont fait moins bien, sur toute leur durée de cotation, que de simples bons du Trésor à un mois. Seulement 4 % des actions expliquent toute la richesse créée par la bourse américaine au-delà de ces bons du Trésor.",
+      "Autrement dit, la performance du marché repose sur un petit nombre de très grands gagnants, impossibles à identifier à coup sûr à l'avance. Un indice large les contient automatiquement. Un portefeuille de quelques actions a de fortes chances de les manquer, et de détenir à la place des titres qui feront moins bien qu'un placement sans risque.",
+      "La réglementation européenne des fonds offre un repère utile. Un OPCVM, c'est-à-dire un fonds conforme à la directive européenne sur les fonds grand public, ne peut en principe pas placer plus de 10 % de son actif chez un même émetteur. Les lignes qui dépassent 5 % ne peuvent pas représenter ensemble plus de 40 % du fonds. Ces règles ne s'imposent pas à vous, mais elles montrent ce que le législateur juge prudent pour l'épargne collective.",
+      "Un cas mérite une attention particulière : les actions de votre employeur. Si l'entreprise va mal, vous risquez de perdre en même temps votre emploi et votre épargne. Si vous en détenez beaucoup via l'épargne salariale, tenez-en compte dans votre allocation globale avant d'en acheter davantage à titre personnel.",
+      "Fixez-vous une limite écrite, par exemple qu'aucune action ne dépasse une certaine part de votre patrimoine financier, et décidez à l'avance de ce que vous ferez si elle est franchie. Cette limite dépend de vous. Ce qui compte, c'est qu'elle existe avant que l'émotion n'entre en jeu."
+     ],
+     "exemple": "Vous avez 30 000 € investis, dont 9 000 € dans une seule action, soit 30 %. Le reste est placé dans un ETF monde. L'entreprise publie un avertissement sur ses résultats et son cours chute de 60 %. Vous perdez 5 400 €, soit 18 % de tout votre portefeuille, même si l'ETF ne bouge pas. Si cette action ne pesait que 5 % du portefeuille, soit 1 500 €, la même chute vous aurait coûté 900 €, soit 3 %. La taille de la ligne compte souvent plus que le choix de l'action.",
+     "a_retenir": [
+      "Une minorité d'actions explique l'essentiel des gains de la bourse sur longue période.",
+      "Les fonds européens grand public sont limités en principe à 10 % par émetteur.",
+      "Fixez par écrit une part maximale par action avant d'acheter."
+     ],
+     "erreur_frequente": "Laisser une action gagnante grossir sans limite parce qu'elle a bien monté, ou concentrer son épargne sur l'action de son employeur.",
+     "sources": [
+      {
+       "label": "Hendrik Bessembinder (2018), Do stocks outperform Treasury bills ?",
+       "url": "https://knowledge.wpcarey.asu.edu/sites/default/files/do-stocks-outperform-treasury-bills.pdf"
+      },
+      {
+       "label": "Directive 2009/65/CE (OPCVM), EUR-Lex",
+       "url": "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32009L0065"
+      }
+     ],
+     "lien_site": {
+      "texte": "Vérifier le poids de chaque ligne",
+      "href": "/portefeuille"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Quelle décision pèse le plus sur le comportement d'un portefeuille ?",
+     "options": [
+      "Le choix de chaque action",
+      "Le jour de la semaine où l'on investit",
+      "La répartition entre actions et placements sûrs",
+      "Le nombre de courtiers utilisés"
+     ],
+     "bonne": 2,
+     "explication": "L'allocation entre grandes familles de placements détermine l'essentiel des hausses et des baisses du portefeuille."
+    },
+    {
+     "q": "Un portefeuille de 10 000 € contient 70 % d'actions. Les actions baissent de 40 % et le reste ne bouge pas. Quelle est la perte ?",
+     "options": [
+      "7 000 €",
+      "4 000 €",
+      "2 800 €",
+      "1 200 €"
+     ],
+     "bonne": 2,
+     "explication": "La partie actions vaut 7 000 €. Une baisse de 40 % représente 2 800 €, soit 28 % du portefeuille."
+    },
+    {
+     "q": "Au 30 septembre 2026, quel était le poids approximatif des États-Unis dans le MSCI World ?",
+     "options": [
+      "Environ 73 %",
+      "Environ 50 %",
+      "Environ 25 %",
+      "Environ 95 %"
+     ],
+     "bonne": 0,
+     "explication": "Selon la fiche MSCI, les États-Unis représentaient 72,94 % de l'indice, contre 2,24 % pour la France."
+    },
+    {
+     "q": "Vous investissez 100 € par mois. La part vaut 50 € le premier mois, puis 100 € le second. Quel est votre prix de revient moyen ?",
+     "options": [
+      "75 €",
+      "100 €",
+      "50 €",
+      "66,67 €"
+     ],
+     "bonne": 3,
+     "explication": "Vous achetez 2 parts puis 1 part, soit 3 parts pour 200 €. Le prix de revient moyen est de 200 / 3, soit environ 66,67 €."
+    },
+    {
+     "q": "Quelle est la façon la moins coûteuse de rééquilibrer un portefeuille ?",
+     "options": [
+      "Tout vendre puis tout racheter",
+      "Diriger les nouveaux versements vers la partie en retard",
+      "Rééquilibrer chaque semaine",
+      "Ne jamais rééquilibrer"
+     ],
+     "bonne": 1,
+     "explication": "Utiliser les nouveaux versements évite les frais de vente et, sur un compte-titres, l'impôt sur les plus-values."
+    },
+    {
+     "q": "Que produit surtout l'ajout d'un ETF S&P 500 à un ETF MSCI World ?",
+     "options": [
+      "L'ajout des pays émergents",
+      "Un renforcement du poids des États-Unis",
+      "Une baisse du risque de change",
+      "Une diversification vers les petites entreprises européennes"
+     ],
+     "bonne": 1,
+     "explication": "Les entreprises du S&P 500 sont déjà largement présentes dans le MSCI World. L'ajout augmente surtout l'exposition américaine."
+    },
+    {
+     "q": "Selon l'étude de Bessembinder sur les actions américaines de 1926 à 2016, quelle part des actions explique toute la richesse créée au-delà des bons du Trésor ?",
+     "options": [
+      "Environ 90 %",
+      "Environ 25 %",
+      "Environ 50 %",
+      "Environ 4 %"
+     ],
+     "bonne": 3,
+     "explication": "Environ 4 % des actions, soit 1 092 titres sur près de 26 000, expliquent toute cette richesse créée."
+    },
+    {
+     "q": "Quelle limite par émetteur la directive européenne sur les OPCVM impose-t-elle en principe aux fonds grand public ?",
+     "options": [
+      "10 %",
+      "2 %",
+      "25 %",
+      "50 %"
+     ],
+     "bonne": 0,
+     "explication": "Un OPCVM ne peut en principe pas investir plus de 10 % de son actif chez un même émetteur, avec une limite globale de 40 % pour les lignes de plus de 5 %."
+    }
+   ]
+  },
+  {
+   "id": "frais-fiscalite",
+   "titre": "Frais et fiscalité",
+   "niveau": "Débutant",
+   "duree_min": 59,
+   "intro": "Les frais et les impôts sont les seules parts du rendement que vous pouvez vraiment contrôler. Ce module détaille chaque type de frais et les règles fiscales applicables en France en 2026.",
+   "objectifs": [
+    "Calculer le coût réel d'un ordre et choisir un tarif adapté à vos montants",
+    "Mesurer l'effet des frais courants sur 20 à 30 ans",
+    "Connaître la fiscalité 2026 du compte-titres, du PEA et de l'assurance-vie",
+    "Vérifier sa déclaration de revenus à partir de l'IFU"
+   ],
+   "lecons": [
+    {
+     "id": "frais-courtage",
+     "titre": "Les frais de courtage : fixes ou proportionnels",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Un frais fixe pèse lourd sur un petit ordre : 2 € sur 50 € représentent déjà 4 % du montant.",
+     "paragraphes": [
+      "Les frais de courtage sont prélevés à chaque achat ou vente en bourse. Ils rémunèrent l'intermédiaire, banque ou courtier en ligne, qui transmet votre ordre au marché. Ils prennent deux formes. Un montant fixe par ordre, par exemple 2 €, ou un pourcentage du montant, par exemple 0,5 %. Beaucoup de tarifs combinent les deux, avec un minimum par ordre.",
+      "Un frais fixe pèse lourd sur les petits ordres. 2 € sur un ordre de 50 € représentent 4 % du montant. Sur un ordre de 1 000 €, les mêmes 2 € ne coûtent que 0,2 %. N'oubliez pas qu'il faudra aussi payer des frais à la revente. Un aller et retour de 50 € avec 2 € par ordre coûte donc environ 8 %, que le placement doit regagner avant que vous ne soyez à l'équilibre.",
+      "Un frais proportionnel est plus juste pour les petits montants, mais il devient cher sur les gros ordres. À 0,5 %, un ordre de 10 000 € coûte 50 €. La bonne formule dépend donc de votre manière d'investir : des petits montants fréquents, ou des montants plus importants quelques fois par an. Calculez toujours le coût pour votre montant habituel.",
+      "Les écarts entre établissements sont importants. Selon l'Observatoire de l'épargne de l'AMF, en janvier 2026, un ordre en ligne de 1 000 € sur la bourse de Paris coûtait en moyenne environ 0,65 % sur un compte-titres dans les banques de réseau, environ 0,45 % chez les acteurs en ligne établis et environ 0,15 % chez les néo-courtiers. Sur un PEA, la réglementation plafonne depuis 2020 les frais d'un ordre passé en ligne à 0,5 % du montant.",
+      "D'autres coûts s'ajoutent parfois. À l'achat d'actions de grandes sociétés françaises, dont la capitalisation dépasse un milliard d'euros, s'applique la taxe sur les transactions financières. Son taux est de 0,4 % depuis le 1er avril 2025. Elle ne concerne ni les ventes ni les ETF. Il faut aussi compter l'écart entre prix d'achat et prix de vente, présenté plus loin dans ce module."
+     ],
+     "exemple": "Vous voulez investir 50 € par mois pendant un an. Chez un courtier A qui facture 2 € par ordre, vous payez 24 € de frais pour 600 € investis, soit 4 %. Chez un courtier B qui facture 0,5 % avec un minimum de 0,50 €, chaque ordre coûte 0,50 €, car 0,5 % de 50 € ne fait que 0,25 €. Vous payez 6 € sur l'année, soit 1 %. Si vous investissez plutôt 600 € en une seule fois chez A, vous ne payez que 2 €, soit 0,33 %. Ces tarifs sont fictifs. Comparez les grilles réelles des courtiers.",
+     "a_retenir": [
+      "Un frais fixe de 2 € coûte 4 % sur un ordre de 50 € et 0,2 % sur 1 000 €.",
+      "Comptez toujours les frais d'achat et de revente.",
+      "Choisissez le tarif adapté à votre montant habituel par ordre."
+     ],
+     "erreur_frequente": "Passer de nombreux petits ordres chez un courtier qui facture un minimum fixe élevé.",
+     "sources": [
+      {
+       "label": "AMF, Lettre de l'Observatoire de l'épargne n° 65, avril 2026",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/private/2026-04/loe-65_1.pdf"
+      },
+      {
+       "label": "La finance pour tous, plafonnement des frais du PEA",
+       "url": "https://www.lafinancepourtous.com/2020/02/19/pea-les-frais-de-transaction-de-gestion-et-de-transfert-plafonnes/"
+      },
+      {
+       "label": "Legifiscal, hausse de la taxe sur les transactions financières au 1er avril 2025",
+       "url": "https://www.legifiscal.fr/actualites-fiscales/4078-hausse-taxe-transactions-financieres-1ier-avril-2025.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Calculer vos frais selon votre montant",
+      "href": "/simulateurs/frais"
+     }
+    },
+    {
+     "id": "frais-courants",
+     "titre": "Les frais courants et leur effet sur 20 à 30 ans",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Les frais courants d'un fonds se prélèvent chaque année sans bruit et, sur 25 ans, un point d'écart peut coûter des milliers d'euros.",
+     "paragraphes": [
+      "Les frais courants, souvent désignés par le sigle anglais TER, sont prélevés chaque année par un fonds ou un ETF pour couvrir sa gestion. Ils sont exprimés en pourcentage de l'encours. Vous ne les voyez jamais passer sur votre relevé, car ils sont déduits directement de la valeur des parts, un peu chaque jour. Ils figurent dans le document d'informations clés que chaque fonds doit publier.",
+      "Les écarts sont importants. Selon l'AMF, les frais annuels moyens des fonds d'actions françaises étaient de 1,3 % en 2025. Ceux des ETF actions qui répliquent un indice étaient en moyenne de 0,33 %. Un point de frais par an paraît peu. Mais il se prélève chaque année, sur un capital qui grossit, et il prive ce capital des intérêts composés qu'il aurait produits.",
+      "C'est le point essentiel à comprendre. Les frais ne réduisent pas seulement votre gain d'une année. Ils réduisent aussi la base sur laquelle les gains des années suivantes sont calculés. Sur 25 ou 30 ans, l'effet cumulé représente une part importante du capital final, comme le montre l'exemple de cette leçon.",
+      "Les frais courants ne disent pas tout. Ils n'incluent pas toujours les frais de transaction internes au fonds ni d'éventuelles commissions de surperformance. Un ETF peut aussi s'écarter un peu de son indice, ce qu'on appelle l'écart de suivi. Pour comparer deux fonds qui suivent le même indice, regardez donc aussi leur performance réelle sur plusieurs années.",
+      "Un fonds plus cher peut-il valoir la peine ? Oui, s'il apporte réellement plus que ses frais. Les études SPIVA présentées dans le module sur la valorisation montrent que c'est rare sur dix ans. À exposition comparable, les frais sont l'un des rares critères qui prédisent quelque chose avec certitude : ce que vous paierez."
+     ],
+     "exemple": "Vous placez 10 000 € pendant 25 ans. Supposons un rendement brut de 6 % par an avant frais, une hypothèse et non une prévision. Avec 0,33 % de frais courants, le rendement net est d'environ 5,67 % et le capital final d'environ 39 700 €. Avec 1,3 % de frais, le rendement net tombe à 4,7 % et le capital à environ 31 500 €. L'écart atteint environ 8 200 €, sans que vous ayez versé un euro de plus. Sur 30 ans, les montants deviennent environ 52 300 € et 39 700 €, soit 12 600 € d'écart. Calcul simplifié, avant impôts.",
+     "a_retenir": [
+      "Les frais courants sont prélevés chaque année, sans apparaître sur votre relevé.",
+      "Ils réduisent aussi les intérêts composés des années suivantes.",
+      "Sur 25 ans, un point de frais en plus peut coûter des milliers d'euros."
+     ],
+     "erreur_frequente": "Juger un fonds sur ses seuls frais d'entrée ou de courtage et oublier les frais courants, qui comptent beaucoup plus sur la durée.",
+     "sources": [
+      {
+       "label": "AMF, les frais des placements financiers continuent de baisser (avril 2026)",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/78695/fr/Les_frais_des_placements_financiers_continuent_de_baisser%2C_en_particulier_ceux_des_fonds_d%27investissement.pdf"
+      },
+      {
+       "label": "AMF, Lettre de l'Observatoire de l'épargne n° 65, avril 2026",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/private/2026-04/loe-65_1.pdf"
+      },
+      {
+       "label": "AMF, comprendre et s'informer sur les frais des placements financiers",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/pdf/71300/fr/Comprendre_et_s%27informer_sur_les_frais_des_placements_financiers.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Mesurer l'effet des frais sur votre épargne",
+      "href": "/simulateurs/frais"
+     }
+    },
+    {
+     "id": "garde-change",
+     "titre": "Frais de garde, frais de change et coûts cachés",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Au-delà du courtage, les droits de garde, la conversion de devises et la fourchette de prix pèsent sur votre rendement.",
+     "paragraphes": [
+      "Les droits de garde, aussi appelés frais de tenue de compte ou de conservation, rémunèrent l'établissement qui conserve vos titres. Ils sont prélevés chaque année, en pourcentage de la valeur du portefeuille, par ligne ou sous forme de forfait. Selon l'AMF, dans les banques de réseau, ils atteignaient en moyenne 0,35 % par an en 2026 pour un portefeuille de 60 000 € réparti sur dix lignes, soit environ 211 €.",
+      "Les tarifs varient beaucoup d'un établissement à l'autre, et certains courtiers en ligne n'en facturent pas. L'AMF signale toutefois qu'un établissement en ligne en facture aux clients qui passent peu d'ordres. Lisez donc la grille tarifaire complète, pas seulement la ligne du courtage. Sur un PEA, la réglementation plafonne la partie proportionnelle des frais de tenue de compte à 0,4 % par an de la valeur des titres.",
+      "Les frais de change s'appliquent quand vous achetez un titre coté dans une autre devise, par exemple une action américaine en dollars. Vos euros doivent être convertis, et l'établissement prélève une commission sur cette conversion, souvent en pourcentage du montant. Vous la payez à l'achat, puis de nouveau à la revente, quand les dollars sont reconvertis en euros. Un ETF coté en euros n'entraîne pas de frais de change à l'achat, même s'il contient des actions américaines.",
+      "Il existe aussi des coûts invisibles sur la facture. Le premier est l'écart entre le meilleur prix d'achat et le meilleur prix de vente, appelé fourchette ou spread. Sur une grande action ou un ETF très échangé, il est minime. Sur une petite valeur peu échangée, il peut dépasser 1 %. Le second est le risque de change. Si le dollar baisse face à l'euro, votre action américaine perd de la valeur en euros, même si son cours en dollars ne bouge pas.",
+      "Pour comparer deux établissements, faites le total sur une année type : nombre d'ordres multiplié par le courtage, droits de garde, frais de change éventuels, frais de transfert ou de clôture. C'est ce total, rapporté à votre encours, qui permet un vrai choix."
+     ],
+     "exemple": "Vous achetez pour 2 000 € d'actions américaines. Votre courtier facture 0,5 % de frais de change, soit 10 € à l'achat. Deux ans plus tard, votre position vaut 2 400 € et vous vendez. Vous payez 0,5 % de change en plus, soit 12 €. Ajoutez un courtage de 5 € à l'achat et à la vente. Au total, 32 € de frais, soit 8 % de votre gain de 400 €. Si en plus le dollar a perdu 5 % face à l'euro sur la période, votre position perd environ 120 € en euros. Ces tarifs sont fictifs.",
+     "a_retenir": [
+      "Vérifiez les droits de garde : environ 211 € par an en moyenne en banque de réseau pour 60 000 €.",
+      "Les frais de change se paient à l'achat et à la revente.",
+      "Faites le total annuel de tous les frais avant de choisir un établissement."
+     ],
+     "erreur_frequente": "Choisir un courtier sur son seul tarif de courtage sans regarder les frais de change ni les droits de garde.",
+     "sources": [
+      {
+       "label": "AMF, Lettre de l'Observatoire de l'épargne n° 65, avril 2026",
+       "url": "https://www.amf-france.org/sites/institutionnel/files/private/2026-04/loe-65_1.pdf"
+      },
+      {
+       "label": "La finance pour tous, plafonnement des frais du PEA",
+       "url": "https://www.lafinancepourtous.com/2020/02/19/pea-les-frais-de-transaction-de-gestion-et-de-transfert-plafonnes/"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer le coût total de vos frais",
+      "href": "/simulateurs/frais"
+     }
+    },
+    {
+     "id": "flat-tax",
+     "titre": "La flat tax à 31,4 % et l'option pour le barème",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Depuis 2026, les revenus d'un compte-titres sont imposés par défaut à 31,4 %, mais le barème peut être plus avantageux.",
+     "paragraphes": [
+      "En France, les revenus de placements détenus hors enveloppe fiscale, comme les dividendes, les intérêts et les plus-values d'un compte-titres, sont soumis par défaut au prélèvement forfaitaire unique, ou PFU, appelé couramment flat tax. Depuis le 1er janvier 2026, son taux global est de 31,4 %. Il se compose de 12,8 % d'impôt sur le revenu et de 18,6 % de prélèvements sociaux.",
+      "Cette hausse vient de la loi de financement de la Sécurité sociale pour 2026, qui a fait passer la CSG sur ces revenus de 9,2 % à 10,6 %. Les prélèvements sociaux sont ainsi passés de 17,2 % à 18,6 %, et la flat tax de 30 % à 31,4 %. Des exceptions demeurent. L'assurance-vie, le PEL, le CEL, les revenus fonciers et les plus-values immobilières restent soumis à 17,2 % de prélèvements sociaux.",
+      "La plus-value est la différence entre le prix de vente et le prix d'achat, frais compris. Elle n'est imposée que lorsque vous vendez. Tant que vous gardez vos titres, une hausse non réalisée n'est pas taxée. Si vous vendez à perte, la moins-value se déduit des plus-values de la même année. L'excédent peut être reporté sur les plus-values des dix années suivantes.",
+      "Pour les dividendes et les intérêts, votre banque prélève un acompte au moment du versement : 12,8 % d'impôt, plus les prélèvements sociaux. Cet acompte est régularisé lors de votre déclaration. Si votre revenu fiscal de référence de l'avant-dernière année est inférieur à 50 000 € pour une personne seule, ou 75 000 € pour un couple, vous pouvez demander à être dispensé de l'acompte sur les dividendes. La demande se fait avant le 30 novembre de l'année précédente.",
+      "Vous pouvez renoncer à la flat tax et choisir le barème progressif de l'impôt sur le revenu, en cochant la case 2OP de la déclaration. Ce choix est global. Il s'applique à tous vos revenus de placement et à toutes vos plus-values de l'année. Il donne droit à un abattement de 40 % sur les dividendes, et 6,8 points de CSG deviennent déductibles du revenu. Il est souvent intéressant si votre taux marginal d'imposition est de 0 % ou de 11 %."
+     ],
+     "exemple": "Une personne perçoit 1 000 € de dividendes sur un compte-titres en 2026. Avec la flat tax, elle paie 128 € d'impôt et 186 € de prélèvements sociaux, soit 314 €. Si sa tranche marginale est de 11 % et qu'elle opte pour le barème, l'impôt porte sur 600 € après l'abattement de 40 %, soit 66 €. Les 186 € de prélèvements sociaux restent dus. Le total est de 252 €, avant l'effet de la CSG déductible. Avec une tranche de 30 %, l'impôt serait de 180 €, et la flat tax redeviendrait plus favorable. Simulez votre cas avant de choisir.",
+     "a_retenir": [
+      "Flat tax 2026 : 31,4 %, dont 12,8 % d'impôt et 18,6 % de prélèvements sociaux.",
+      "Une plus-value n'est imposée qu'à la vente, et les moins-values se reportent sur dix ans.",
+      "L'option pour le barème est globale et souvent utile aux tranches de 0 % et 11 %."
+     ],
+     "erreur_frequente": "Cocher la case 2OP en pensant l'appliquer à un seul revenu, alors que l'option vaut pour tous les revenus de placement du foyer de l'année.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, taux des prélèvements sociaux sur les revenus du patrimoine et de placement",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2329"
+      },
+      {
+       "label": "Legifiscal, la flat tax (PFU) en 2026",
+       "url": "https://www.legifiscal.fr/reperes-fiscaux/flat-tax-pfu-champ-application-taux-applicables-2026.html"
+      },
+      {
+       "label": "Legifiscal, dispense du prélèvement forfaitaire non libératoire",
+       "url": "https://www.legifiscal.fr/impots-personnels/impot-revenu/dispense-prelevement-forfaitaire-liberatoire.html"
+      },
+      {
+       "label": "BoursoBank, déclarer ses plus ou moins-values en 2026",
+       "url": "https://www.boursobank.com/aide-en-ligne/fiscalite/declaration-d-impot/question/comment-declarer-en-2026-vos-plus-ou-moins-values-realisees-en-2025-26817"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer l'imposition PEA et compte-titres",
+      "href": "/simulateurs/pea-cto"
+     }
+    },
+    {
+     "id": "enveloppes-fiscales",
+     "titre": "Le PEA après 5 ans, l'assurance-vie après 8 ans",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Le PEA et l'assurance-vie réduisent fortement l'impôt sur les gains, à condition de respecter leurs délais.",
+     "paragraphes": [
+      "Le PEA, ou plan d'épargne en actions, est une enveloppe fiscale réservée aux actions européennes et aux fonds qui en détiennent plus de 75 %. Vous pouvez y verser jusqu'à 150 000 €. Tant que l'argent reste dans le plan, les dividendes et les plus-values ne sont pas imposés. L'impôt n'intervient qu'au moment d'un retrait, et il dépend de l'âge du plan.",
+      "Avant cinq ans, un retrait entraîne en principe la clôture du plan, sauf exceptions comme un licenciement ou une création d'entreprise. Le gain est alors imposé à 12,8 %, ou au barème sur option, plus 18,6 % de prélèvements sociaux. Après cinq ans, le gain retiré est exonéré d'impôt sur le revenu. Seuls les prélèvements sociaux de 18,6 % restent dus. Vous pouvez alors faire des retraits partiels sans fermer le plan, et continuer à verser.",
+      "L'assurance-vie est un contrat dans lequel vous placez de l'argent sur un fonds en euros, dont le capital est garanti par l'assureur, ou sur des unités de compte. Les unités de compte sont des fonds investis en actions, en obligations ou en immobilier, dont la valeur peut baisser. En cas de rachat, c'est-à-dire de retrait, seule la part de gains contenue dans la somme retirée est imposée, pas le capital versé.",
+      "Pour les versements effectués depuis le 27 septembre 2017, un rachat avant huit ans supporte 12,8 % d'impôt et 17,2 % de prélèvements sociaux, soit 30 %. Après huit ans, vous bénéficiez chaque année d'un abattement de 4 600 € de gains pour une personne seule et de 9 200 € pour un couple. Au-delà, l'impôt est de 7,5 % tant que vos versements ne dépassent pas 150 000 €, puis de 12,8 %. Les prélèvements sociaux de 17,2 % restent dus.",
+      "Ces deux enveloppes ne s'excluent pas. Le PEA est limité aux actions européennes et aux fonds éligibles, mais il est souvent peu coûteux. L'assurance-vie offre un choix plus large et un cadre favorable pour la transmission, mais ses frais de gestion annuels pèsent parfois lourd. Comparez les frais des contrats avant d'ouvrir. Dans les deux cas, ouvrir tôt fait courir le délai fiscal, même avec un petit versement."
+     ],
+     "exemple": "Vous avez versé 20 000 € sur un PEA ouvert il y a six ans. Il vaut aujourd'hui 30 000 €. Si vous retirez tout, le gain de 10 000 € supporte seulement 18,6 % de prélèvements sociaux, soit 1 860 €. Le même gain sur un compte-titres coûterait 31,4 %, soit 3 140 €. Sur une assurance-vie de plus de huit ans, une personne seule qui retire 15 000 €, dont 3 000 € de gains, ne paie aucun impôt sur le revenu grâce à l'abattement de 4 600 €. Seuls les prélèvements sociaux de 17,2 % s'appliquent à ces gains, s'ils n'ont pas déjà été prélevés.",
+     "a_retenir": [
+      "PEA après 5 ans : gains exonérés d'impôt, 18,6 % de prélèvements sociaux.",
+      "Assurance-vie après 8 ans : abattement annuel de 4 600 € ou 9 200 € sur les gains.",
+      "Ouvrir tôt fait courir le délai fiscal, même avec un petit montant."
+     ],
+     "erreur_frequente": "Retirer de l'argent d'un PEA de moins de cinq ans sans savoir que le plan sera en principe clôturé.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, le plan d'épargne en actions (PEA)",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2385"
+      },
+      {
+       "label": "Service-public.gouv.fr, fiscalité des retraits d'un PEA",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F22449"
+      },
+      {
+       "label": "Service-public.gouv.fr, imposition des revenus d'un contrat d'assurance-vie",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F22414"
+      },
+      {
+       "label": "Service-public.gouv.fr, taux des prélèvements sociaux sur les revenus du patrimoine et de placement",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F2329"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comparer PEA et compte-titres",
+      "href": "/pea-cto"
+     }
+    },
+    {
+     "id": "dividendes-etrangers",
+     "titre": "Dividendes étrangers et ETF capitalisants",
+     "premium": true,
+     "duree_min": 8,
+     "resume": "Les dividendes étrangers subissent une retenue à la source, et le choix d'un ETF capitalisant change votre fiscalité sur un compte-titres.",
+     "paragraphes": [
+      "Quand une société étrangère vous verse un dividende, son pays prélève souvent un impôt avant que l'argent n'arrive sur votre compte. C'est la retenue à la source. La France impose ensuite ce même dividende. Pour éviter une double imposition, la France a signé des conventions fiscales avec de nombreux pays. Elles limitent le taux de la retenue et vous donnent droit à un crédit d'impôt en France.",
+      "Pour les actions américaines, la retenue est de 15 % grâce à la convention entre la France et les États-Unis, à condition que votre courtier dispose d'un formulaire W-8BEN valide. Sans ce formulaire, elle est de 30 %. La Suisse prélève 35 %, mais la convention ramène le taux à 15 %. L'excédent doit alors être réclamé à l'administration suisse, ce qui demande des démarches.",
+      "Sur un compte-titres, le crédit d'impôt vient en déduction de l'impôt sur le revenu français. Il est plafonné au taux prévu par la convention et ne peut pas dépasser l'impôt français dû. La part non utilisée n'est pas remboursée. Les prélèvements sociaux restent calculés sur le dividende brut. Chez un établissement français, le crédit d'impôt figure sur l'IFU et se reporte en case 2AB de la déclaration.",
+      "Dans un PEA, la situation est différente. Les dividendes de sociétés européennes non françaises subissent aussi une retenue à la source étrangère, mais le crédit d'impôt est perdu. Comme les gains du PEA sont exonérés d'impôt sur le revenu, il n'existe pas d'impôt français sur lequel l'imputer. C'est un coût à connaître, à mettre en balance avec les avantages du plan.",
+      "Les ETF existent en deux versions. Un ETF distribuant verse les dividendes reçus aux porteurs de parts. Un ETF capitalisant les réinvestit automatiquement dans le fonds. Sur un compte-titres, la différence est fiscale. Les dividendes d'un ETF distribuant sont imposés chaque année à 31,4 %. Ceux d'un ETF capitalisant ne le sont qu'à la vente, sous forme de plus-value. L'impôt est différé, et le capital continue de travailler en attendant.",
+      "Dans un PEA ou une assurance-vie, cette différence disparaît en grande partie, puisque rien n'est imposé tant que l'argent reste dans l'enveloppe. Le choix relève alors surtout de vos besoins : recevoir un revenu ou laisser grossir le capital. Le fonds capitalisant subit lui aussi des retenues à la source sur les dividendes qu'il perçoit, ce qui explique une partie de son écart avec l'indice."
+     ],
+     "exemple": "Vous détenez 10 000 € d'un ETF sur un compte-titres, avec un rendement du dividende de 2 %. Version distribuante : vous recevez 200 € par an et payez 31,4 %, soit 62,80 €. Il vous reste 137,20 € à réinvestir, avec de nouveaux frais de courtage. Version capitalisante : les 200 € restent investis dans le fonds, sans impôt immédiat. Vous paierez l'impôt sur la plus-value au moment de la vente, peut-être des années plus tard. En attendant, ces 62,80 € par an continuent de produire des gains. Chiffres illustratifs, hors variation du cours.",
+     "a_retenir": [
+      "Sur un compte-titres, la retenue à la source est compensée par un crédit d'impôt, pas dans un PEA.",
+      "Actions américaines : 15 % de retenue avec un formulaire W-8BEN valide, 30 % sans.",
+      "Sur un compte-titres, un ETF capitalisant diffère l'impôt jusqu'à la vente."
+     ],
+     "erreur_frequente": "Acheter un ETF distribuant sur un compte-titres en voyant le dividende comme un gain en plus, alors qu'il est imposé chaque année.",
+     "sources": [
+      {
+       "label": "ABC Bourse, la fiscalité des valeurs américaines",
+       "url": "https://www.abcbourse.com/apprendre/5_fiscalite_us.html"
+      },
+      {
+       "label": "Rotek, convention fiscale France États-Unis et formulaire W-8BEN",
+       "url": "https://rotek.fr/convention-fiscale-france-usa-dividendes-interets-plus-values/"
+      },
+      {
+       "label": "CMS Francis Lefebvre, fiscalité des dividendes de sociétés étrangères",
+       "url": "https://cms.law/fr/fra/a-la-une/quelle-fiscalite-pour-les-dividendes-des-societes-etrangeres"
+      },
+      {
+       "label": "Legifiscal, la flat tax (PFU) en 2026",
+       "url": "https://www.legifiscal.fr/reperes-fiscaux/flat-tax-pfu-champ-application-taux-applicables-2026.html"
+      }
+     ],
+     "lien_site": {
+      "texte": "Voir les ETF capitalisants et distribuants",
+      "href": "/etf"
+     }
+    },
+    {
+     "id": "declarer",
+     "titre": "L'IFU et la déclaration de revenus",
+     "premium": true,
+     "duree_min": 7,
+     "resume": "L'IFU de votre banque récapitule vos revenus de placement, et c'est à partir de lui que vous vérifiez votre déclaration.",
+     "paragraphes": [
+      "Chaque année, votre banque ou votre courtier français vous envoie un imprimé fiscal unique, ou IFU. Ce document récapitule les revenus de placement de l'année précédente : dividendes, intérêts, plus-values réalisées sur le compte-titres, acomptes déjà prélevés et crédits d'impôt. Il arrive en général en début d'année, avant la campagne de déclaration du printemps. L'établissement transmet aussi ces informations à l'administration fiscale.",
+      "La plupart de ces montants sont préremplis dans votre déclaration en ligne. Vous devez toutefois vérifier qu'ils correspondent à votre IFU. Les dividendes figurent en case 2DC, les intérêts en case 2TR, l'acompte de 12,8 % déjà payé en case 2CK et les crédits d'impôt étrangers en case 2AB. Les plus-values se déclarent en case 3VG et les moins-values en case 3VH.",
+      "L'acompte prélevé dans l'année n'est pas un impôt supplémentaire. C'est une avance. Lors du calcul de votre impôt, il est déduit du montant dû. S'il dépasse l'impôt final, par exemple parce que vous avez opté pour le barème et que vous n'êtes pas imposable, l'excédent vous est remboursé.",
+      "Un PEA ne génère pas d'imposition annuelle tant que vous ne retirez rien. Il ne pèse donc pas sur votre déclaration pendant ces années. Il en va de même pour une assurance-vie sans rachat. En revanche, l'année d'un retrait de PEA ou d'un rachat d'assurance-vie, les gains concernés apparaissent sur les documents fiscaux que vous remet l'établissement.",
+      "Si votre courtier est établi à l'étranger, deux obligations s'ajoutent. Il ne vous fournit souvent pas d'IFU français, et c'est à vous de reporter vos revenus et vos plus-values dans la déclaration. Vous devez aussi déclarer chaque compte ouvert, utilisé ou clos à l'étranger avec le formulaire 3916. L'oubli est sanctionné d'une amende de 1 500 € par compte non déclaré, portée à 10 000 € pour certains pays sans accord d'assistance administrative avec la France.",
+      "Conservez vos IFU, vos avis d'opéré et vos relevés pendant plusieurs années. Ils permettent de justifier vos prix d'achat, de suivre vos moins-values reportables et de répondre à une éventuelle question de l'administration. Une moins-value non utilisée se reporte sur dix ans, mais encore faut-il en garder la trace. Un simple tableau, mis à jour chaque printemps au moment de la déclaration, suffit dans la plupart des cas."
+     ],
+     "exemple": "En 2026, Julie a perçu 400 € de dividendes et réalisé 1 200 € de plus-values sur son compte-titres français. Sa banque a déjà prélevé l'acompte de 12,8 % sur les dividendes, soit 51,20 €, ainsi que les prélèvements sociaux sur ces dividendes. Au printemps 2027, son IFU indique 400 € pour la case 2DC, 51,20 € pour la case 2CK et 1 200 € pour la case 3VG. Avec la flat tax, l'impôt sur le revenu est de 12,8 % de 1 600 €, soit 204,80 €. L'acompte étant déduit, il reste 153,60 € d'impôt, plus 223,20 € de prélèvements sociaux sur la plus-value.",
+     "a_retenir": [
+      "L'IFU récapitule vos revenus de placement : vérifiez le prérempli avec lui.",
+      "L'acompte de 12,8 % est une avance déduite de l'impôt final.",
+      "Un compte à l'étranger se déclare avec le formulaire 3916, sous peine d'amende."
+     ],
+     "erreur_frequente": "Ouvrir un compte chez un courtier étranger et oublier le formulaire 3916, ce qui expose à 1 500 € d'amende par compte.",
+     "sources": [
+      {
+       "label": "Service-public.gouv.fr, revenus d'épargne et de placement",
+       "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/F34913"
+      },
+      {
+       "label": "BoursoBank, déclarer ses plus ou moins-values en 2026",
+       "url": "https://www.boursobank.com/aide-en-ligne/fiscalite/declaration-d-impot/question/comment-declarer-en-2026-vos-plus-ou-moins-values-realisees-en-2025-26817"
+      },
+      {
+       "label": "impots.gouv.fr, notice du formulaire 3916 (comptes à l'étranger)",
+       "url": "https://static.impots.gouv.fr/tdir/static/2026-03-30T16:36:08Z/aide/notices/notices2023/3916/notice3916.pdf"
+      },
+      {
+       "label": "Selectra, amende pour compte étranger non déclaré",
+       "url": "https://selectra.info/finance/actualites/marche/compte-etranger-non-declare-amende-1500"
+      }
+     ],
+     "lien_site": {
+      "texte": "Retrouver les termes fiscaux dans le lexique",
+      "href": "/lexique"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Combien représentent, en pourcentage, 2 € de frais sur un ordre de 50 € ?",
+     "options": [
+      "0,4 %",
+      "2 %",
+      "4 %",
+      "8 %"
+     ],
+     "bonne": 2,
+     "explication": "2 / 50 = 4 %. Avec la revente, l'aller et retour coûte environ 8 %."
+    },
+    {
+     "q": "Quel est le taux global de la flat tax en 2026 sur les dividendes perçus sur un compte-titres ?",
+     "options": [
+      "12,8 %",
+      "17,2 %",
+      "31,4 %",
+      "30 %"
+     ],
+     "bonne": 2,
+     "explication": "Depuis le 1er janvier 2026, la flat tax est de 31,4 %, à la suite de la hausse de la CSG prévue par la loi de financement de la Sécurité sociale pour 2026."
+    },
+    {
+     "q": "De quoi se composent ces 31,4 % ?",
+     "options": [
+      "12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux",
+      "17,2 % d'impôt et 14,2 % de prélèvements sociaux",
+      "31,4 % d'impôt sur le revenu",
+      "15 % d'impôt et 16,4 % de CSG"
+     ],
+     "bonne": 0,
+     "explication": "L'impôt sur le revenu reste à 12,8 %. Les prélèvements sociaux passent à 18,6 %, dont 10,6 % de CSG."
+    },
+    {
+     "q": "Que paie-t-on sur les gains retirés d'un PEA de plus de cinq ans ?",
+     "options": [
+      "Rien du tout",
+      "12,8 % seulement",
+      "31,4 %",
+      "18,6 % de prélèvements sociaux seulement"
+     ],
+     "bonne": 3,
+     "explication": "Après cinq ans, les gains sont exonérés d'impôt sur le revenu, mais les prélèvements sociaux restent dus."
+    },
+    {
+     "q": "Quel abattement annuel s'applique aux gains d'une assurance-vie de plus de huit ans pour un couple ?",
+     "options": [
+      "1 500 €",
+      "9 200 €",
+      "4 600 €",
+      "150 000 €"
+     ],
+     "bonne": 1,
+     "explication": "L'abattement est de 4 600 € pour une personne seule et de 9 200 € pour un couple soumis à imposition commune."
+    },
+    {
+     "q": "Sur un compte-titres, quel est l'intérêt fiscal d'un ETF capitalisant ?",
+     "options": [
+      "Il est exonéré d'impôt",
+      "L'impôt est différé jusqu'à la vente",
+      "Il n'a pas de frais courants",
+      "Il évite les prélèvements sociaux"
+     ],
+     "bonne": 1,
+     "explication": "Les dividendes sont réinvestis dans le fonds. Vous n'êtes imposé que sur la plus-value au moment de la vente."
+    },
+    {
+     "q": "Que risquez-vous si vous oubliez de déclarer un compte ouvert chez un courtier étranger ?",
+     "options": [
+      "Rien si le compte est vide",
+      "Une hausse de votre taux de flat tax",
+      "La fermeture automatique du compte",
+      "Une amende de 1 500 € par compte non déclaré"
+     ],
+     "bonne": 3,
+     "explication": "Le formulaire 3916 est obligatoire. L'amende est de 1 500 € par compte, et 10 000 € pour certains pays sans accord d'assistance administrative."
+    },
+    {
+     "q": "L'option pour le barème progressif, en case 2OP, s'applique :",
+     "options": [
+      "à tous les revenus de placement et plus-values du foyer pour l'année",
+      "à un seul revenu choisi",
+      "uniquement aux prélèvements sociaux",
+      "uniquement aux PEA"
+     ],
+     "bonne": 0,
+     "explication": "L'option est globale et annuelle. Elle couvre tous les revenus et gains normalement soumis au PFU."
+    }
+   ]
+  },
+  {
+   "id": "psychologie",
+   "titre": "Psychologie et pièges",
+   "niveau": "Débutant",
+   "duree_min": 59,
+   "intro": "Les plus grosses erreurs en bourse viennent rarement d'un manque de calcul. Elles viennent de nos réflexes, et de ceux qui savent les exploiter.",
+   "objectifs": [
+    "Reconnaître les principaux biais comportementaux et leurs effets mesurés",
+    "Comprendre pourquoi le trading fréquent et le market timing coûtent cher",
+    "Mesurer le risque réel de l'effet de levier et des CFD",
+    "Repérer une arnaque, vérifier un intermédiaire et trier les conseils des réseaux sociaux"
+   ],
+   "lecons": [
+    {
+     "id": "exces-confiance",
+     "titre": "L'excès de confiance et le biais de confirmation",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Nous surestimons nos capacités de prévision et retenons surtout ce qui nous donne raison, ce qui pousse à trop agir.",
+     "paragraphes": [
+      "L'excès de confiance est la tendance à surestimer ses connaissances et sa capacité à prévoir. En bourse, il pousse à croire que l'on sait mieux que le marché quelle action va monter. Il se traduit surtout par un trop grand nombre d'opérations. On achète, on vend, on change d'avis, parce que l'on pense avoir compris quelque chose que les autres n'ont pas vu.",
+      "Les économistes Brad Barber et Terrance Odean l'ont mesuré en 2001 sur environ 35 000 foyers clients d'un courtier américain, entre 1991 et 1997. Les hommes, en moyenne plus confiants dans leurs capacités financières selon les études de psychologie, échangeaient 45 % de plus que les femmes. Ces transactions réduisaient leur rendement net de 2,65 points par an, contre 1,72 point pour les femmes.",
+      "Le biais de confirmation nourrit cet excès de confiance. C'est la tendance à chercher et à retenir les informations qui confirment ce que l'on pense déjà, et à négliger les autres. Dans une étude célèbre de 1979, des chercheurs de Stanford ont présenté à des partisans et à des opposants de la peine de mort les mêmes études, aux résultats mitigés. Chaque camp en est ressorti plus convaincu de sa position.",
+      "En bourse, le biais de confirmation prend une forme simple. Après avoir acheté une action, vous lisez surtout les articles favorables, vous suivez les comptes qui en disent du bien et vous trouvez des excuses aux mauvaises nouvelles. Les forums et les réseaux sociaux renforcent ce phénomène, car ils vous montrent davantage de contenus proches de ceux que vous avez déjà aimés.",
+      "Pour vous en protéger, écrivez avant chaque achat les raisons de votre décision et ce qui vous ferait changer d'avis. Cherchez volontairement l'argument contraire : pourquoi d'autres investisseurs vendent-ils cette action ? Tenez enfin un journal de vos décisions. Relire ses prévisions passées est l'un des moyens les plus efficaces de mesurer sa propre fiabilité."
+     ],
+     "exemple": "Deux investisseurs partent chacun de 20 000 €. Le premier garde son portefeuille diversifié et obtient le rendement du marché, supposé ici de 7 % par an. Le second échange beaucoup et perd 2,65 points par an, comme les hommes de l'étude de Barber et Odean. Il obtient 4,35 % par an. Après 20 ans, le premier dispose d'environ 77 400 € et le second d'environ 46 900 €. L'écart dépasse 30 000 €. Le rendement de 7 % est une hypothèse de calcul, pas une prévision.",
+     "a_retenir": [
+      "L'excès de confiance pousse à trop échanger, et cela coûte cher.",
+      "Le biais de confirmation fait retenir surtout ce qui nous donne raison.",
+      "Écrivez vos raisons d'acheter et ce qui vous ferait changer d'avis."
+     ],
+     "erreur_frequente": "Prendre une série de gains obtenus pendant une hausse générale du marché pour la preuve de son talent.",
+     "sources": [
+      {
+       "label": "Barber et Odean (2001), Boys Will Be Boys, Quarterly Journal of Economics",
+       "url": "https://faculty.haas.berkeley.edu/odean/papers/gender/BoysWillBeBoys.pdf"
+      },
+      {
+       "label": "Lord, Ross et Lepper (1979), Biased assimilation and attitude polarization",
+       "url": "https://doi.org/10.1037/0022-3514.37.11.2098"
+      }
+     ],
+     "lien_site": {
+      "texte": "Retrouver les termes clés dans le lexique",
+      "href": "/lexique"
+     }
+    },
+    {
+     "id": "aversion-pertes",
+     "titre": "L'aversion aux pertes et l'ancrage",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Une perte nous pèse plus qu'un gain équivalent, et nous restons accrochés à notre prix d'achat, ce qui fausse nos décisions de vente.",
+     "paragraphes": [
+      "Perdre 100 € fait plus mal que gagner 100 € ne fait plaisir. Daniel Kahneman et Amos Tversky ont décrit ce phénomène dans leur théorie des perspectives, publiée en 1979. En 1992, ils ont estimé qu'une perte pèse en moyenne environ 2,25 fois plus qu'un gain de même montant dans nos décisions. Daniel Kahneman a reçu le prix Nobel d'économie en 2002 pour ces travaux.",
+      "Cette aversion aux pertes produit un comportement bien connu, l'effet de disposition. On vend trop vite les actions qui ont monté, pour mettre le gain à l'abri, et on garde trop longtemps celles qui ont baissé, pour ne pas concrétiser la perte. Terrance Odean l'a mesuré en 1998 sur 10 000 comptes d'un courtier américain, entre 1987 et 1993. Les investisseurs vendaient nettement plus volontiers leurs titres gagnants que leurs titres perdants.",
+      "Ce comportement coûte de l'argent. Odean a constaté qu'il n'était pas justifié par l'évolution ultérieure des titres et qu'il réduisait les rendements, en particulier sur les comptes imposables. Sur un compte-titres, vendre une action en perte permet en effet de déduire la moins-value des plus-values imposables. Garder ses perdants et vendre ses gagnants fait donc payer plus d'impôt, plus tôt.",
+      "L'ancrage aggrave le problème. Notre esprit s'accroche à un premier chiffre, même sans rapport avec la question posée. Dans une expérience de 1974, Tversky et Kahneman faisaient tourner une roue qui s'arrêtait sur 10 ou sur 65, puis demandaient la part des pays africains à l'ONU. Les participants ayant vu 10 répondaient en médiane 25 %. Ceux ayant vu 65 répondaient 45 %.",
+      "En bourse, l'ancre la plus fréquente est le prix d'achat. « J'attends qu'elle revienne à mon prix pour vendre » est une phrase très courante. Pourtant, le marché ignore à quel prix vous avez acheté. Une autre ancre fréquente est le plus haut historique d'une action. Il la fait paraître bon marché après une baisse, même si ses perspectives se sont dégradées entre-temps.",
+      "La bonne question est toujours la même. Si vous aviez aujourd'hui en liquide la somme que vaut cette ligne, l'achèteriez-vous ? Si la réponse est non, votre prix d'achat ne devrait pas peser dans la décision. Contre l'aversion aux pertes, regarder son portefeuille moins souvent aide aussi. Plus on le consulte, plus on voit de baisses passagères, et plus on est tenté de réagir."
+     ],
+     "exemple": "Vous avez acheté 100 actions à 50 €. Elles cotent 30 €. Vous refusez de vendre tant qu'elles ne sont pas revenues à 50 €. Or, pour passer de 30 € à 50 €, l'action doit gagner 66,7 %. Sur un compte-titres, vendre à 30 € crée une moins-value de 2 000 €. Elle réduit l'impôt sur vos autres plus-values de l'année ou des dix suivantes, et peut éviter jusqu'à 628 € d'impôt au taux de 31,4 %. La seule question utile reste celle-ci : achèteriez-vous cette action aujourd'hui à 30 € ?",
+     "a_retenir": [
+      "Une perte pèse environ deux fois plus qu'un gain équivalent dans nos décisions.",
+      "On vend trop tôt ses gagnants et on garde trop longtemps ses perdants.",
+      "Le marché ignore votre prix d'achat : ne le laissez pas décider à votre place."
+     ],
+     "erreur_frequente": "Attendre qu'une action revienne à son prix d'achat avant de la vendre, quelles que soient ses perspectives.",
+     "sources": [
+      {
+       "label": "Kahneman et Tversky (1979), Prospect Theory, Econometrica",
+       "url": "https://www.jstor.org/stable/1914185"
+      },
+      {
+       "label": "Tversky et Kahneman (1992), Advances in Prospect Theory, Journal of Risk and Uncertainty",
+       "url": "https://ideas.repec.org/a/kap/jrisku/v5y1992i4p297-323.html"
+      },
+      {
+       "label": "Odean (1998), Are Investors Reluctant to Realize Their Losses ?",
+       "url": "https://faculty.haas.berkeley.edu/odean/papers/disposition/disposition.html"
+      },
+      {
+       "label": "Tversky et Kahneman (1974), Judgment under Uncertainty, Science",
+       "url": "https://www.science.org/doi/10.1126/science.185.4157.1124"
+      }
+     ],
+     "lien_site": {
+      "texte": "Revoir l'imposition des plus et moins-values",
+      "href": "/simulateurs/pea-cto"
+     }
+    },
+    {
+     "id": "recence-troupeau",
+     "titre": "Le biais de récence et l'effet de troupeau",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Nous projetons le passé récent sur l'avenir et suivons la foule, ce qui pousse à acheter cher et à vendre au plus bas.",
+     "paragraphes": [
+      "Le biais de récence consiste à donner trop de poids aux événements récents. Après deux années de forte hausse, on finit par croire que la bourse monte toujours. Après un krach, on est persuadé qu'elle va continuer de baisser. Robin Greenwood et Andrei Shleifer ont montré, à partir de plusieurs enquêtes menées auprès d'investisseurs américains, que les attentes de rendement suivent de près les performances passées.",
+      "Le problème est que ces attentes sont les plus optimistes au mauvais moment. Dans la même étude, les attentes des investisseurs évoluent à l'inverse des rendements que prévoient les modèles économiques. Elles sont hautes quand les prix sont déjà élevés, et basses après les baisses. Les flux d'argent vers les fonds actions suivent le même mouvement : ils affluent après la hausse.",
+      "L'effet de troupeau est la tendance à faire comme les autres. Il a une logique. Si beaucoup de gens achètent, on suppose qu'ils savent quelque chose. Mais quand chacun suit tout le monde, les prix peuvent s'éloigner durablement de toute valeur raisonnable. C'est le mécanisme des bulles, de la bulle internet de 2000 aux emballements récents sur certaines actions ou certains crypto-actifs portés par les réseaux sociaux.",
+      "La peur de rater le mouvement, souvent désignée par l'anglais FOMO, en est la version moderne. Voir des inconnus afficher leurs gains en ligne crée une forte pression pour entrer vite. Or les gains affichés sont sélectionnés. On montre ses réussites, rarement ses pertes. Et quand une hausse fait la une des journaux, une grande partie du chemin a souvent déjà été parcourue.",
+      "La meilleure protection est une règle décidée à froid. Une allocation écrite, des versements programmés et un rééquilibrage annuel vous font acheter un peu plus quand les prix baissent et prendre des bénéfices quand ils montent. C'est l'inverse du comportement de troupeau, sans avoir besoin de prévoir quoi que ce soit."
+     ],
+     "exemple": "Imaginons un investisseur qui achète un fonds indiciel Nasdaq au plus haut de mars 2000, porté par l'enthousiasme général. En octobre 2002, l'indice Nasdaq Composite avait perdu environ 78 %. 10 000 € investis au sommet ne valaient plus qu'environ 2 200 €, avant dividendes et frais. Pour revenir à 10 000 €, il fallait que l'indice soit multiplié par environ 4,5. Le Nasdaq n'a dépassé son record de clôture de 2000 qu'en avril 2015, quinze ans plus tard. Les performances passées ne préjugent pas des performances futures.",
+     "a_retenir": [
+      "Le biais de récence fait croire que la tendance récente va durer.",
+      "Les investisseurs sont souvent les plus optimistes quand les prix sont déjà hauts.",
+      "Une règle écrite à froid protège mieux que l'intuition du moment."
+     ],
+     "erreur_frequente": "Investir une grosse somme sur un actif uniquement parce qu'il a fortement monté et que tout le monde en parle.",
+     "sources": [
+      {
+       "label": "Greenwood et Shleifer, Expectations of Returns and Expected Returns, NBER",
+       "url": "https://www.nber.org/papers/w18686"
+      },
+      {
+       "label": "Wikipedia, historique du Nasdaq Composite",
+       "url": "https://en.wikipedia.org/wiki/Nasdaq_Composite"
+      }
+     ],
+     "lien_site": {
+      "texte": "Tester un achat au sommet avec l'outil Si j'avais",
+      "href": "/outils/si-javais"
+     }
+    },
+    {
+     "id": "trading-timing",
+     "titre": "Le coût du trading fréquent et du market timing",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Acheter et vendre souvent, ou tenter d'anticiper le marché, coûte en moyenne cher aux particuliers.",
+     "paragraphes": [
+      "Le trading fréquent consiste à acheter et vendre souvent, parfois plusieurs fois par jour. Chaque opération coûte des frais de courtage, une fourchette entre prix d'achat et prix de vente et, sur un compte-titres, de l'impôt sur les gains réalisés. Pour être gagnant, il faut avoir raison plus souvent que l'on ne se trompe, et en plus couvrir ces coûts à chaque opération.",
+      "Barber et Odean ont étudié 66 465 foyers américains entre 1991 et 1996. Pendant que le marché rapportait 17,9 % par an, le foyer moyen obtenait 16,4 % après frais. Les foyers qui échangeaient le plus n'obtenaient que 11,4 % par an. Le titre de leur article, publié en 2000, résume la conclusion : le trading est dangereux pour votre patrimoine.",
+      "Le constat est encore plus net pour le trading à la journée. Une étude de Barber, Lee, Liu et Odean porte sur les day traders de Taïwan entre 1992 et 2006. Elle conclut que moins de 1 % d'entre eux parviennent à obtenir de façon prévisible et régulière des rendements supérieurs à ce que justifie le risque pris, une fois les frais payés.",
+      "Le market timing, ou anticipation du marché, consiste à sortir avant les baisses et à revenir avant les hausses. Le problème est que les meilleures journées surviennent souvent juste après les pires, en pleine période de panique. Selon un calcul publié en octobre 2026 par The Motley Fool, sur les 20 dernières années, 7 des 10 meilleures journées d'un fonds répliquant le S&P 500 ont eu lieu moins de deux semaines après l'une de ses 10 pires journées.",
+      "Les épargnants paient ce coût même sans faire de trading. Morningstar compare chaque année le rendement des fonds américains à celui réellement obtenu par leurs porteurs, qui achètent et vendent au fil du temps. Sur les dix ans terminés fin 2025, les fonds ont rapporté 9,9 % par an, mais leurs investisseurs n'ont obtenu que 8,7 %. L'écart de 1,2 point par an vient du mauvais calendrier des achats et des ventes."
+     ],
+     "exemple": "Selon le calcul de The Motley Fool d'octobre 2026, 10 000 dollars placés dans un fonds suivant le S&P 500 et conservés 20 ans seraient devenus environ 82 300 dollars, soit près de 11 % par an. Un investisseur qui aurait manqué seulement les 10 meilleures journées de ces 20 ans, sur plus de 5 000 jours de bourse, n'aurait obtenu qu'environ 35 700 dollars, soit moins de 7 % par an. Sortir du marché pour éviter une baisse expose à manquer la reprise qui suit. Les performances passées ne préjugent pas des performances futures.",
+     "a_retenir": [
+      "Chaque opération coûte des frais, une fourchette et parfois de l'impôt.",
+      "Les foyers qui échangeaient le plus obtenaient 6,5 points de moins que le marché par an.",
+      "Les meilleures journées suivent souvent de près les pires : sortir du marché est risqué."
+     ],
+     "erreur_frequente": "Tout vendre pendant une chute en se promettant de racheter quand la situation sera meilleure, puis rater la reprise.",
+     "sources": [
+      {
+       "label": "Barber et Odean (2000), Trading Is Hazardous to Your Wealth, Journal of Finance",
+       "url": "https://faculty.haas.berkeley.edu/odean/Papers%20current%20versions/Individual_Investor_Performance_Final.pdf"
+      },
+      {
+       "label": "Barber, Lee, Liu et Odean (2014), The cross-section of speculator skill",
+       "url": "https://ideas.repec.org/a/eee/finmar/v18y2014icp1-24.html"
+      },
+      {
+       "label": "The Motley Fool via Webull, manquer les 10 meilleures journées du S&P 500 (octobre 2026)",
+       "url": "https://www.webull.com/news/15762946850827264"
+      },
+      {
+       "label": "Morningstar, Mind the Gap 2026 (États-Unis)",
+       "url": "https://www.morningstar.com/content/cs-assets/v3/assets/blt9415ea4cc4157833/blt852a4301adc2f5db/6a7373d51f7b5ae2da78e1e8/US_Mind_the_Gap_2026.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Mesurer le poids des frais de vos opérations",
+      "href": "/simulateurs/frais"
+     }
+    },
+    {
+     "id": "levier-cfd",
+     "titre": "L'effet de levier et les CFD",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Le levier multiplie les gains comme les pertes, et la grande majorité des particuliers perdent de l'argent sur les CFD.",
+     "paragraphes": [
+      "L'effet de levier permet de prendre une position plus grande que la somme engagée. Avec un levier de 5, une mise de 1 000 € vous expose à 5 000 € d'actions. Si le prix monte de 10 %, vous gagnez 500 €, soit 50 % de votre mise. S'il baisse de 10 %, vous perdez 500 €. Une baisse de 20 % efface la totalité de votre mise. Le levier multiplie les gains comme les pertes.",
+      "Les CFD, ou contrats sur la différence, sont le produit à levier le plus proposé aux particuliers. Vous ne possédez pas l'action. Vous concluez avec le courtier un contrat sur l'écart de prix entre l'ouverture et la clôture de votre position. Le courtier est souvent votre contrepartie directe, et vous payez des frais de financement pour chaque nuit où la position reste ouverte.",
+      "Les chiffres des régulateurs sont sans appel. En 2018, l'Autorité européenne des marchés financiers, l'ESMA, a relevé que 74 % à 89 % des comptes de particuliers perdaient de l'argent sur les CFD. En France, une étude de l'AMF portant sur environ 15 000 clients du Forex et des CFD entre 2009 et 2012 a montré que 89 % d'entre eux avaient perdu de l'argent, avec une perte moyenne d'environ 10 900 € par client.",
+      "L'ESMA a donc imposé en 2018 des restrictions dans toute l'Union européenne. Le levier est plafonné pour les particuliers : 30 pour les grandes paires de devises, 20 pour l'or et les grands indices, 10 pour les autres matières premières et indices, 5 pour les actions et 2 pour les crypto-actifs. Les courtiers doivent aussi afficher la part de leurs clients perdants, et vos pertes ne peuvent pas dépasser l'argent déposé sur votre compte.",
+      "Ces protections ne rendent pas les CFD sûrs. Elles limitent seulement les dégâts. Pour un épargnant qui construit un patrimoine à long terme, l'effet de levier n'apporte que du risque supplémentaire. Méfiez-vous des publicités qui présentent le trading de CFD comme un complément de revenu facile. L'avertissement obligatoire, souvent en bas de page, indique la part de clients qui y perdent de l'argent."
+     ],
+     "exemple": "Vous ouvrez un CFD sur une action avec 1 000 € et un levier de 5, le maximum autorisé pour les actions. Votre exposition est de 5 000 €. Le premier jour, l'action baisse de 8 %. Vous perdez 400 €, soit 40 % de votre mise. Le deuxième jour, elle remonte de 8 %. Sur une exposition ramenée à 4 600 €, vous regagnez 368 €. Il vous reste 968 €, alors que l'action n'a perdu que 0,64 % sur les deux jours. Ajoutez les frais de financement : la répétition de ces mouvements use vite le capital.",
+     "a_retenir": [
+      "Avec un levier de 5, une baisse de 20 % efface toute la mise.",
+      "Selon l'ESMA, 74 % à 89 % des comptes de particuliers perdent de l'argent sur les CFD.",
+      "Le levier n'a pas sa place dans une épargne de long terme."
+     ],
+     "erreur_frequente": "Croire qu'une bonne analyse suffit à gagner sur les CFD, alors que les frais et le levier jouent contre le particulier même quand il a souvent raison.",
+     "sources": [
+      {
+       "label": "ESMA, restrictions sur les CFD et interdiction des options binaires (mars 2018)",
+       "url": "https://www.esma.europa.eu/node/84933"
+      },
+      {
+       "label": "AMF, CFD et options binaires : les mesures de l'ESMA visent à protéger les épargnants",
+       "url": "https://www.amf-france.org/fr/actualites-publications/communiques/communiques-de-lamf/cfd-et-options-binaires-lamf-rappelle-aux-epargnants-que-les-mesures-de-restriction-decidees-par"
+      },
+      {
+       "label": "La finance pour tous, Forex : attention danger (étude AMF)",
+       "url": "https://www.lafinancepourtous.com/Actualites/Forex-attention-danger"
+      }
+     ],
+     "lien_site": {
+      "texte": "Comprendre les termes du levier dans le lexique",
+      "href": "/lexique"
+     }
+    },
+    {
+     "id": "arnaques",
+     "titre": "Reconnaître et éviter les arnaques",
+     "premium": false,
+     "duree_min": 8,
+     "resume": "Les arnaques financières suivent toujours le même schéma, et trois vérifications simples suffisent à en éviter la plupart.",
+     "paragraphes": [
+      "Les arnaques financières suivent presque toujours le même schéma. Une promesse de rendement élevé sans risque, une pression pour décider vite, un interlocuteur que vous ne connaissez pas, et un virement à faire, souvent vers un compte à l'étranger. Un placement qui peut rapporter beaucoup comporte toujours un risque élevé. Un rendement garanti de 8 % ou 10 % par an est un signal d'alarme.",
+      "Les escrocs se présentent sous de nombreuses formes. Faux livrets d'épargne à taux élevé, faux placements dans le vin ou les diamants, plateformes de trading ou de crypto-actifs non autorisées, faux conseillers rencontrés sur les réseaux sociaux ou sur des sites de rencontre. Le premier contact commence souvent par une publicité en ligne, un formulaire laissé sur un site de comparaison ou un appel téléphonique.",
+      "Une technique très répandue est l'usurpation d'identité. L'escroc utilise le nom, le logo, l'adresse et même le numéro d'agrément d'une vraie banque ou d'un vrai assureur. L'AMF a aussi mis en garde contre des personnes se présentant comme travaillant pour elle, qui proposent aux victimes de récupérer l'argent perdu contre de nouveaux frais. Un régulateur ne vous démarche jamais pour vous proposer un placement ou un remboursement.",
+      "Avant tout placement, faites trois vérifications. Consultez les listes noires et mises en garde de l'AMF, qui recensent les sites et entités non autorisés. Vérifiez l'agrément de l'établissement sur le registre REGAFI, ou l'immatriculation d'un intermédiaire sur le site de l'ORIAS. Contactez enfin l'établissement par ses coordonnées officielles, trouvées par vous-même, et jamais par celles qu'on vous a données.",
+      "En cas de doute, appelez AMF Épargne Info Service au 01 53 45 62 00. Si vous avez déjà versé de l'argent, prévenez votre banque immédiatement, déposez plainte et conservez toutes les preuves : messages, contrats, relevés de virement. Méfiez-vous ensuite des offres de récupération de fonds, qui sont souvent une seconde arnaque visant les mêmes victimes."
+     ],
+     "exemple": "Une annonce propose un placement garanti à 9 % par an. Un conseiller très aimable vous appelle, se dit employé d'une grande banque et vous envoie une brochure à son logo. Il insiste, car l'offre se termine vendredi. Vous vérifiez. La banque existe bien, mais le site, le numéro de téléphone et l'adresse de messagerie ne sont pas ceux de la banque officielle. L'IBAN fourni est domicilié à l'étranger, et le nom du site apparaît sur la liste noire de l'AMF. Ces vérifications vous ont pris dix minutes.",
+     "a_retenir": [
+      "Rendement élevé sans risque et urgence sont les deux signaux principaux.",
+      "Vérifiez les listes noires de l'AMF, REGAFI et l'ORIAS avant tout virement.",
+      "Un régulateur ne vous démarche jamais pour un placement ou un remboursement."
+     ],
+     "erreur_frequente": "Se fier au logo, au numéro d'agrément ou au site soigné d'un interlocuteur, alors que ces éléments se copient facilement.",
+     "sources": [
+      {
+       "label": "AMF, listes noires et mises en garde",
+       "url": "https://www.amf-france.org/fr/espace-epargnants/proteger-son-epargne/listes-noires-et-mises-en-garde"
+      },
+      {
+       "label": "AMF, tableau unique des mises en garde et listes noires",
+       "url": "https://www.amf-france.org/fr/actualites-publications/actualites/protection-des-epargnants-lamf-facilite-la-consultation-des-mises-en-garde-et-listes-noires-par-les"
+      },
+      {
+       "label": "Les clés de la banque, placements douteux et listes noires de l'AMF",
+       "url": "https://www.lesclesdelabanque.com/particulier/placements-douteux-listes-noires-amf/"
+      },
+      {
+       "label": "ORIAS, registre des intermédiaires en assurance, banque et finance",
+       "url": "https://www.orias.fr"
+      }
+     ],
+     "lien_site": {
+      "texte": "Vérifier un intermédiaire avec notre outil",
+      "href": "/outils/verifier"
+     }
+    },
+    {
+     "id": "finfluenceurs",
+     "titre": "Réseaux sociaux et finfluenceurs",
+     "premium": false,
+     "duree_min": 7,
+     "resume": "Les influenceurs financiers sont encadrés par la loi depuis 2023, mais leur popularité ne garantit ni leur compétence ni leur indépendance.",
+     "paragraphes": [
+      "Les finfluenceurs sont des créateurs de contenu qui parlent d'argent et d'investissement sur les réseaux sociaux. Certains font un vrai travail de pédagogie. D'autres sont payés pour promouvoir un courtier, une formation ou un crypto-actif, sans toujours le dire clairement. Le format court favorise les promesses simples et les gains spectaculaires, rarement les risques.",
+      "La loi du 9 juin 2023 visant à encadrer l'influence commerciale a fixé des règles. Un contenu sponsorisé doit porter une mention claire, comme « Publicité » ou « Collaboration commerciale », visible pendant toute la promotion. La loi interdit aussi aux influenceurs la promotion de certains produits financiers risqués, et n'autorise celle des crypto-actifs que pour des prestataires autorisés. Les sanctions peuvent aller jusqu'à deux ans de prison et 300 000 € d'amende.",
+      "L'AMF et l'ARPP, l'organisme d'autorégulation de la publicité, ont créé en 2023 un certificat de l'influence responsable dans la finance. Il a été mis à jour en 2025 pour intégrer MiCA, le règlement européen sur les crypto-actifs. Près d'une centaine de finfluenceurs l'ont obtenu. En janvier 2026, l'AMF et l'ESMA ont publié des recommandations communes : signaler toute rémunération, présenter les risques autant que les avantages, vérifier les autorisations des sociétés promues.",
+      "Les règles sont appliquées. Dès 2021, avant cette loi, une influenceuse très suivie a dû payer une amende de 20 000 € pour une publicité rémunérée et non signalée en faveur d'un service lié au bitcoin. Mais l'absence de mention publicitaire ne prouve pas l'indépendance. Un créateur peut toucher une commission d'affiliation à chaque inscription faite grâce à son lien ou à son code promotionnel.",
+      "Le conseil en investissement personnalisé est une activité réglementée, réservée à des professionnels agréés ou immatriculés, comme les conseillers en investissements financiers inscrits à l'ORIAS. Un créateur qui vous dit quoi acheter selon votre situation sort de son rôle. Pour trier les contenus, posez quatre questions. Comment cette personne est-elle payée ? Parle-t-elle des risques ? Promet-elle un rendement ? Pousse-t-elle à agir vite ?"
+     ],
+     "exemple": "Une vidéo de 40 secondes affirme : « Avec ma méthode, j'ai fait 300 % en six mois. Lien en bio pour la formation à 497 €. » Appliquez les quatre questions. Rémunération : la vente de la formation, et sans doute un lien d'affiliation. Risques : aucun n'est mentionné. Promesse : un rendement spectaculaire, sur une période choisie. Urgence : « places limitées ». Quatre signaux sur quatre. Même si l'auteur a vraiment gagné 300 %, rien ne dit combien d'autres ont perdu avec la même méthode, ni ce qu'elle donnera l'an prochain.",
+     "a_retenir": [
+      "Un contenu sponsorisé doit afficher « Publicité » ou « Collaboration commerciale ».",
+      "La promotion de certains produits financiers risqués est interdite aux influenceurs.",
+      "Demandez-vous toujours comment l'auteur est payé et s'il parle des risques."
+     ],
+     "erreur_frequente": "Confondre la popularité d'un compte avec sa compétence, ou un contenu sans mention publicitaire avec un avis indépendant.",
+     "sources": [
+      {
+       "label": "AMF, le certificat de l'influence responsable dans la finance intègre MiCA",
+       "url": "https://www.amf-france.org/fr/actualites-publications/actualites/le-certificat-de-linfluence-responsable-dans-la-finance-integre-desormais-les-evolutions-liees-au"
+      },
+      {
+       "label": "AMF et ESMA, conseils aux finfluenceurs (janvier 2026)",
+       "url": "https://www.amf-france.org/fr/actualites-publications/actualites/lesma-et-lamf-publient-lattention-des-finfluenceurs-des-conseils-pour-une-promotion-responsable-sur"
+      },
+      {
+       "label": "La finance pour tous, recommandations de l'AMF et de l'ESMA aux finfluenceurs",
+       "url": "https://www.lafinancepourtous.com/2026/01/22/finfluenceurs-recommandations-de-lamf-et-de-lesma-pour-une-promotion-responsable/"
+      },
+      {
+       "label": "Euronews, la loi influenceurs adoptée (juin 2023)",
+       "url": "https://fr.euronews.com/2023/06/06/loi-influenceurs-adoptee-a-lunanimite-voici-ce-qui-va-changer"
+      },
+      {
+       "label": "Bird & Bird, résumé de la loi influenceurs",
+       "url": "https://www.twobirds.com/-/media/new-website-content/insights/pdfs/resume-de-la-loi-influenceurs-par-bird.pdf"
+      }
+     ],
+     "lien_site": {
+      "texte": "Poser une question sur un contenu vu en ligne",
+      "href": "/demander"
+     }
+    }
+   ],
+   "quiz": [
+    {
+     "q": "Dans l'étude de Barber et Odean publiée en 2000, combien obtenaient par an les foyers qui échangeaient le plus, alors que le marché rapportait 17,9 % ?",
+     "options": [
+      "20,1 %",
+      "17,5 %",
+      "11,4 %",
+      "16,4 %"
+     ],
+     "bonne": 2,
+     "explication": "Les foyers les plus actifs n'obtenaient que 11,4 % par an. Le foyer moyen obtenait 16,4 %."
+    },
+    {
+     "q": "Selon Tversky et Kahneman (1992), une perte pèse environ combien de fois plus qu'un gain équivalent ?",
+     "options": [
+      "Autant",
+      "1,2 fois",
+      "2,25 fois",
+      "10 fois"
+     ],
+     "bonne": 2,
+     "explication": "Leur estimation médiane du coefficient d'aversion aux pertes est de 2,25."
+    },
+    {
+     "q": "Qu'appelle-t-on l'effet de disposition ?",
+     "options": [
+      "Vendre trop vite ses gagnants et garder trop longtemps ses perdants",
+      "Investir chaque mois la même somme",
+      "Garder une épargne de précaution disponible",
+      "Répartir ses actifs entre plusieurs pays"
+     ],
+     "bonne": 0,
+     "explication": "C'est une conséquence de l'aversion aux pertes, mesurée par Terrance Odean en 1998 sur 10 000 comptes."
+    },
+    {
+     "q": "Selon l'ESMA, quelle part des comptes de particuliers perd de l'argent sur les CFD ?",
+     "options": [
+      "10 % à 20 %",
+      "Environ la moitié",
+      "Moins de 5 %",
+      "74 % à 89 %"
+     ],
+     "bonne": 3,
+     "explication": "En 2018, l'ESMA a relevé que 74 % à 89 % des comptes de particuliers perdaient de l'argent sur ces produits."
+    },
+    {
+     "q": "Avec un levier de 5, quelle baisse du sous-jacent efface toute la mise ?",
+     "options": [
+      "5 %",
+      "20 %",
+      "50 %",
+      "100 %"
+     ],
+     "bonne": 1,
+     "explication": "Avec une exposition de cinq fois la mise, une baisse de 20 % représente une perte égale à 100 % de la mise."
+    },
+    {
+     "q": "Un inconnu vous propose par téléphone un placement garanti à 9 % par an. Quel est le bon réflexe ?",
+     "options": [
+      "Accepter vite avant la fin de l'offre",
+      "Consulter les listes noires de l'AMF et vérifier l'agrément sur REGAFI",
+      "Envoyer une pièce d'identité pour qu'il vérifie votre profil",
+      "Faire un petit virement pour tester"
+     ],
+     "bonne": 1,
+     "explication": "Rendement élevé garanti et urgence sont deux signaux d'arnaque. Vérifiez toujours avant tout virement."
+    },
+    {
+     "q": "Quelle mention un contenu sponsorisé d'influenceur doit-il porter depuis la loi du 9 juin 2023 ?",
+     "options": [
+      "« Avis personnel »",
+      "Aucune mention n'est exigée",
+      "« Non contractuel »",
+      "« Publicité » ou « Collaboration commerciale »"
+     ],
+     "bonne": 3,
+     "explication": "La loi impose une mention claire, lisible et visible pendant toute la promotion."
+    },
+    {
+     "q": "Selon Morningstar, sur les dix ans terminés fin 2025, quel écart annuel séparait le rendement des fonds américains de celui obtenu par leurs investisseurs ?",
+     "options": [
+      "1,2 point",
+      "0,1 point",
+      "Aucun écart",
+      "5 points"
+     ],
+     "bonne": 0,
+     "explication": "Les fonds ont rapporté 9,9 % par an, leurs investisseurs 8,7 %, à cause du calendrier de leurs achats et ventes."
+    }
+   ]
+  }
+ ],
+ "formation": {
+  "titre": "Six semaines pour construire votre premier portefeuille",
+  "intro": "Ce parcours vous guide pas à pas, de zéro jusqu'à un premier portefeuille diversifié. Comptez deux à trois heures par semaine. Chaque semaine associe des leçons, des outils du site et des actions concrètes à faire vous-même. Il ne vous dit pas quoi acheter. Il vous donne une méthode pour décider en connaissance de cause, et pour tenir vos décisions dans la durée.",
+  "semaines": [
+   {
+    "semaine": 1,
+    "titre": "Poser des bases solides",
+    "objectif": "Comprendre la différence entre épargner et investir, et mettre en place votre épargne de précaution avant de toucher à la bourse.",
+    "etapes": [
+     {
+      "type": "lecon",
+      "ref": "bases/epargne-investissement"
+     },
+     {
+      "type": "lecon",
+      "ref": "bases/inflation"
+     },
+     {
+      "type": "lecon",
+      "ref": "bases/interets-composes"
+     },
+     {
+      "type": "lecon",
+      "ref": "bases/epargne-precaution"
+     },
+     {
+      "type": "action",
+      "texte": "Listez vos dépenses mensuelles incompressibles : loyer, énergie, assurances, alimentation, transport. Multipliez le total par le nombre de mois de sécurité dont vous estimez avoir besoin, souvent entre trois et six. Vous obtenez le montant de votre épargne de précaution, à garder sur un livret disponible."
+     },
+     {
+      "type": "action",
+      "texte": "Comparez ce montant à ce que vous avez déjà de côté. Si la réserve n'est pas complète, notez combien vous devez encore y mettre chaque mois et en combien de temps."
+     },
+     {
+      "type": "outil",
+      "href": "/simulateurs/epargne",
+      "texte": "Simulez ce que deviendrait le montant que vous pouvez investir chaque mois sur 10, 20 et 30 ans."
+     },
+     {
+      "type": "action",
+      "texte": "Notez noir sur blanc la somme mensuelle que vous pouvez investir sans toucher à votre épargne de précaution ni à vos dépenses courantes."
+     }
+    ],
+    "bilan": "Vous savez quelle somme garder disponible, combien vous pouvez investir chaque mois, et pourquoi la durée compte autant que le montant."
+   },
+   {
+    "semaine": 2,
+    "titre": "Connaître votre profil et les grands placements",
+    "objectif": "Relier chaque projet à un horizon, comprendre le lien entre risque et rendement, et savoir ce que sont une action, une obligation et un ETF.",
+    "etapes": [
+     {
+      "type": "lecon",
+      "ref": "bases/risque-rendement"
+     },
+     {
+      "type": "lecon",
+      "ref": "bases/horizon"
+     },
+     {
+      "type": "lecon",
+      "ref": "placements/livrets"
+     },
+     {
+      "type": "lecon",
+      "ref": "placements/actions"
+     },
+     {
+      "type": "lecon",
+      "ref": "placements/obligations"
+     },
+     {
+      "type": "lecon",
+      "ref": "placements/etf"
+     },
+     {
+      "type": "action",
+      "texte": "Pour chacun de vos projets (achat, études, voyage, retraite), notez le montant visé et la date. Classez-les en trois groupes : moins de 3 ans, de 3 à 8 ans, plus de 8 ans."
+     },
+     {
+      "type": "lecon",
+      "ref": "portefeuille/allocation"
+     },
+     {
+      "type": "action",
+      "texte": "Pour l'argent destiné au groupe des projets à plus de 8 ans, calculez en euros ce que vous perdriez si la partie en actions baissait de moitié, avec trois répartitions différentes. Retenez celle dont la perte vous paraît supportable sans vendre."
+     }
+    ],
+    "bilan": "Vous savez quelle part de votre épargne peut être exposée aux actions, et pourquoi le reste doit rester sur des placements plus sûrs."
+   },
+   {
+    "semaine": 3,
+    "titre": "Comprendre comment fonctionne la bourse",
+    "objectif": "Savoir ce qu'est une action cotée, comment se forme un cours, ce que mesure un indice, et pourquoi les krachs font partie du parcours.",
+    "etapes": [
+     {
+      "type": "lecon",
+      "ref": "bourse/action"
+     },
+     {
+      "type": "lecon",
+      "ref": "bourse/cours"
+     },
+     {
+      "type": "lecon",
+      "ref": "bourse/indices"
+     },
+     {
+      "type": "lecon",
+      "ref": "bourse/dividendes"
+     },
+     {
+      "type": "lecon",
+      "ref": "bourse/krachs"
+     },
+     {
+      "type": "lecon",
+      "ref": "valorisation/per"
+     },
+     {
+      "type": "lecon",
+      "ref": "valorisation/efficience"
+     },
+     {
+      "type": "outil",
+      "href": "/marches",
+      "texte": "Observez les principaux indices pendant la semaine, sans rien acheter, pour vous habituer à leurs variations quotidiennes."
+     },
+     {
+      "type": "outil",
+      "href": "/entreprises",
+      "texte": "Ouvrez la fiche d'une entreprise que vous connaissez."
+     },
+     {
+      "type": "action",
+      "texte": "Sur cette fiche, relevez le cours, le PER et le rendement du dividende. Écrivez en deux phrases ce que ces chiffres vous apprennent, et ce qu'ils ne vous disent pas."
+     }
+    ],
+    "bilan": "Vous pouvez lire une fiche d'entreprise et un indice, et vous savez pourquoi la plupart des gérants ne parviennent pas à battre le marché sur dix ans."
+   },
+   {
+    "semaine": 4,
+    "titre": "Choisir votre enveloppe et votre courtier",
+    "objectif": "Choisir entre PEA, assurance-vie et compte-titres selon vos projets, et sélectionner un établissement dont les frais conviennent à vos montants.",
+    "etapes": [
+     {
+      "type": "lecon",
+      "ref": "placements/pea"
+     },
+     {
+      "type": "lecon",
+      "ref": "placements/assurance-vie"
+     },
+     {
+      "type": "lecon",
+      "ref": "placements/compte-titres"
+     },
+     {
+      "type": "lecon",
+      "ref": "placements/per"
+     },
+     {
+      "type": "lecon",
+      "ref": "frais-fiscalite/frais-courtage"
+     },
+     {
+      "type": "lecon",
+      "ref": "frais-fiscalite/frais-courants"
+     },
+     {
+      "type": "lecon",
+      "ref": "frais-fiscalite/garde-change"
+     },
+     {
+      "type": "lecon",
+      "ref": "frais-fiscalite/flat-tax"
+     },
+     {
+      "type": "lecon",
+      "ref": "frais-fiscalite/enveloppes-fiscales"
+     },
+     {
+      "type": "outil",
+      "href": "/pea-cto",
+      "texte": "Comparez le PEA et le compte-titres pour votre situation."
+     },
+     {
+      "type": "outil",
+      "href": "/simulateurs/frais",
+      "texte": "Calculez l'effet des frais sur votre versement mensuel et sur 25 ans."
+     },
+     {
+      "type": "action",
+      "texte": "Comparez les grilles tarifaires de trois établissements pour votre montant mensuel : courtage, frais de plan programmé, droits de garde, frais de change, frais de transfert. Faites le total sur une année et sur dix ans."
+     },
+     {
+      "type": "outil",
+      "href": "/outils/verifier",
+      "texte": "Vérifiez que l'établissement retenu est bien autorisé à exercer en France."
+     }
+    ],
+    "bilan": "Vous avez choisi une enveloppe adaptée à votre horizon et un établissement dont vous connaissez le coût total annuel."
+   },
+   {
+    "semaine": 5,
+    "titre": "Construire votre allocation",
+    "objectif": "Transformer votre profil en une répartition écrite, diversifiée, sans doublons, avec une limite par ligne.",
+    "etapes": [
+     {
+      "type": "lecon",
+      "ref": "portefeuille/diversification"
+     },
+     {
+      "type": "lecon",
+      "ref": "portefeuille/etf-monde"
+     },
+     {
+      "type": "lecon",
+      "ref": "portefeuille/recouvrement"
+     },
+     {
+      "type": "lecon",
+      "ref": "portefeuille/concentration"
+     },
+     {
+      "type": "lecon",
+      "ref": "frais-fiscalite/dividendes-etrangers"
+     },
+     {
+      "type": "outil",
+      "href": "/etf",
+      "texte": "Comparez les fiches de plusieurs ETF : indice suivi, frais courants, répartition par pays, éligibilité au PEA, version capitalisante ou distribuante."
+     },
+     {
+      "type": "outil",
+      "href": "/outils/recouvrement",
+      "texte": "Si vous envisagez deux fonds ou plus, mesurez leur recouvrement."
+     },
+     {
+      "type": "outil",
+      "href": "/portefeuille",
+      "texte": "Construisez un portefeuille fictif avec votre allocation cible et observez sa répartition par pays et par secteur."
+     },
+     {
+      "type": "action",
+      "texte": "Rédigez sur une page votre allocation cible : part en actions, part sur des placements sûrs, type de fonds pour chaque part, part maximale d'une seule ligne. Ajoutez une phrase qui explique chaque choix."
+     }
+    ],
+    "bilan": "Vous avez une allocation écrite et justifiée, vous savez ce que contiennent réellement vos fonds, et aucune ligne ne dépasse la limite que vous avez fixée."
+   },
+   {
+    "semaine": 6,
+    "titre": "Passer à l'action et tenir dans la durée",
+    "objectif": "Passer votre premier ordre, automatiser vos versements et fixer les règles qui vous protégeront de vos réflexes et des arnaques.",
+    "etapes": [
+     {
+      "type": "lecon",
+      "ref": "bourse/ordres"
+     },
+     {
+      "type": "lecon",
+      "ref": "portefeuille/investissement-programme"
+     },
+     {
+      "type": "lecon",
+      "ref": "portefeuille/reequilibrage"
+     },
+     {
+      "type": "lecon",
+      "ref": "psychologie/aversion-pertes"
+     },
+     {
+      "type": "lecon",
+      "ref": "psychologie/trading-timing"
+     },
+     {
+      "type": "lecon",
+      "ref": "psychologie/arnaques"
+     },
+     {
+      "type": "lecon",
+      "ref": "psychologie/finfluenceurs"
+     },
+     {
+      "type": "action",
+      "texte": "Ouvrez l'enveloppe choisie si ce n'est pas encore fait. Passez votre premier ordre en appliquant ce que vous avez appris sur les types d'ordres, puis vérifiez l'avis d'opéré : prix obtenu, frais, nombre de parts."
+     },
+     {
+      "type": "action",
+      "texte": "Programmez vos versements mensuels à une date proche de votre paie, pour le montant fixé en semaine 1."
+     },
+     {
+      "type": "action",
+      "texte": "Écrivez votre charte d'investisseur en cinq lignes : votre allocation cible, votre date annuelle de rééquilibrage, votre seuil d'écart, ce que vous ferez si le marché baisse de 30 %, et la règle de vérifier tout intermédiaire avant le moindre virement."
+     },
+     {
+      "type": "action",
+      "texte": "Mettez dans votre agenda un rappel annuel pour relire cette charte et rééquilibrer si nécessaire."
+     }
+    ],
+    "bilan": "Vous avez un premier portefeuille diversifié, des versements automatiques et une charte écrite qui vous dit quoi faire, et surtout quoi ne pas faire, quand les marchés s'agitent."
+   }
+  ]
+ }
+}
