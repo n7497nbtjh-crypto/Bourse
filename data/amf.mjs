@@ -10,8 +10,8 @@ const TYPES = /rapports? financiers? (et d'audit )?annuels?|document de r[ée]f[
 // Dépôts ESEF annuels d'une société (par ISIN), du plus récent au plus ancien
 export async function amfAnnualFilings(getJSON, fetchFn, isin, since = "2024-01-01") {
   const u = new URL(AMF_API);
-  u.searchParams.set("limit", "50"); u.searchParams.set("order_by", "uin_dat_amf desc");
-  u.searchParams.set("where", `identificationsociete_iso_cd_isi = "${isin}" AND uin_dat_amf >= date'${since}'`);
+  u.searchParams.set("limit", "100"); u.searchParams.set("order_by", "uin_dat_amf desc");
+  u.searchParams.set("where", `identificationsociete_iso_cd_isi = "${isin}" AND uin_dat_amf >= date'${since}' AND (sous_type_d_information = "Rapports financiers et d'audit annuels" OR sous_type_d_information = "Document de référence")`);
   const j = await getJSON(fetchFn, u.toString());
   const out = [];
   for (const r of (j && j.results) || []) {
