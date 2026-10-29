@@ -989,7 +989,60 @@ function indiceDe(k, meta2) {
   let ix = String(meta2.index || "");
   return /^Nasdaq-?100$/i.test(ix) ? "nasdaq100" : /^S&P 500$/i.test(ix) ? "sp500" : /^Euro Stoxx 50$/i.test(ix) ? "stoxx50" : /^CAC 40$/i.test(ix) ? "cac40" : /^DAX$/i.test(ix) ? "dax" : /^FTSE 100$/i.test(ix) ? "ftse100" : /^Nikkei 225$/i.test(ix) ? "nikkei" : null;
 }
-var CATS = [
+var SECTEURS2 = {
+  conso: "Consommation",
+  industrie: "Industrie",
+  energie: "\xC9nergie",
+  sante: "Sant\xE9",
+  tech: "Technologie",
+  finance: "Banque et assurance",
+  telecom: "T\xE9l\xE9coms et m\xE9dias",
+  materiaux: "Mat\xE9riaux",
+  services: "Services aux collectivit\xE9s",
+  immo: "Immobilier"
+}, RAPPORT_SUJETS = ["resultats", "dividendes", "actualite", "lecons"], RAPPORT_JOURS = [6, 0, 1], RAPPORT_MAX_SECTEURS = { gratuit: 2, premium: 6 }, RAPPORT_DEFAUT = Object.freeze({
+  v: 1,
+  favoris: !0,
+  portefeuille: !0,
+  secteurs: [],
+  indices: ["cac40", "stoxx50", "sp500", "nasdaq100", "dax", "ftse100", "nikkei"],
+  detail: "complet",
+  sujets: { resultats: !0, dividendes: !0, actualite: !0, lecons: !0 },
+  jour: 6,
+  notif: !0,
+  configure: !1
+}), bool = (v, d) => typeof v == "boolean" ? v : d;
+function normaliseRapport(r, max = RAPPORT_MAX_SECTEURS.premium) {
+  let D = RAPPORT_DEFAUT, x = r && typeof r == "object" && !Array.isArray(r) ? r : {}, liste = (v, ok, n) => Array.isArray(v) ? [...new Set(v.filter((k) => typeof k == "string" && ok(k)))].slice(0, n) : null, s = x.sujets && typeof x.sujets == "object" ? x.sujets : {};
+  return {
+    v: 1,
+    favoris: bool(x.favoris, D.favoris),
+    portefeuille: bool(x.portefeuille, D.portefeuille),
+    secteurs: liste(x.secteurs, (k) => k in SECTEURS2, max) || [],
+    indices: liste(x.indices, (k) => k in INDICES, 7) || [...D.indices],
+    detail: x.detail === "court" ? "court" : "complet",
+    sujets: Object.fromEntries(RAPPORT_SUJETS.map((k) => [k, bool(s[k], !0)])),
+    jour: RAPPORT_JOURS.includes(x.jour) ? x.jour : D.jour,
+    notif: bool(x.notif, D.notif),
+    configure: bool(x.configure, !1)
+  };
+}
+function validerRapport(b, premium2) {
+  if (!b || typeof b != "object" || Array.isArray(b)) return { error: "R\xE9glages invalides." };
+  for (let k of ["favoris", "portefeuille", "notif", "configure"]) if (b[k] !== void 0 && typeof b[k] != "boolean") return { error: `R\xE9glage \xAB ${k} \xBB invalide.` };
+  for (let k of ["secteurs", "indices"]) if (b[k] !== void 0 && (!Array.isArray(b[k]) || b[k].length > 20 || b[k].some((x) => typeof x != "string"))) return { error: `Liste \xAB ${k} \xBB invalide.` };
+  if (b.secteurs && b.secteurs.some((x) => !(x in SECTEURS2))) return { error: "Secteur inconnu." };
+  if (b.indices && b.indices.some((x) => !(x in INDICES))) return { error: "Indice inconnu." };
+  if (b.detail !== void 0 && !["court", "complet"].includes(b.detail)) return { error: "Niveau de d\xE9tail invalide (court ou complet)." };
+  if (b.jour !== void 0 && !RAPPORT_JOURS.includes(b.jour)) return { error: "Jour invalide (samedi, dimanche ou lundi)." };
+  if (b.sujets !== void 0 && (!b.sujets || typeof b.sujets != "object" || Array.isArray(b.sujets) || Object.entries(b.sujets).some(([k, v]) => !RAPPORT_SUJETS.includes(k) || typeof v != "boolean"))) return { error: "Sujets invalides." };
+  let max = premium2 ? RAPPORT_MAX_SECTEURS.premium : RAPPORT_MAX_SECTEURS.gratuit, rapport = normaliseRapport(b, max);
+  return !rapport.favoris && !rapport.portefeuille && !rapport.secteurs.length ? { error: "Choisissez au moins une source : vos favoris, votre portefeuille ou un secteur." } : { rapport, coupe: new Set(b.secteurs || []).size > max };
+}
+var rapportSignature = (r) => {
+  let x = normaliseRapport(r);
+  return [x.favoris ? "f" : "", x.portefeuille ? "p" : "", x.secteurs.join("+"), x.indices.join("+"), x.detail, RAPPORT_SUJETS.filter((k) => x.sujets[k]).join("+")].join("/");
+}, sujetDe = (code) => ["resultats", "ca", "rapport"].includes(code) ? "resultats" : code === "dividende" ? "dividendes" : "actualite", CATS = [
   ["opa", "Offre publique", 100, /\bOP[AERS]\b|offre publique|tender offer|retrait obligatoire/i],
   ["ca", "Chiffre d'affaires", 80, /chiffre d'affaires/i],
   ["resultats", "R\xE9sultats", 90, /r[ée]sultat|rapport (annuel|trimestriel|semestriel|financier)|10-[QK]|20-F|semestriel|earnings/i],
@@ -1105,8 +1158,10 @@ function evolutionAlertes(A, prec) {
   }), levees = [...P.values()].filter((p) => !A.some((a) => a.code === p.code) && p.niveau !== "fort" && p.niveau !== "info").map((p) => ({ code: p.code, texte: p.texte }));
   return { alertes: alertes2, levees };
 }
-function faitsSynthese(d, { favoris = [], pf = null } = {}, semaine, opts = {}) {
-  let auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null, LP = lignesPf(pf).filter((l) => d.names[l.k]), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY.test(k))), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k]).slice(0, 260), idx = {};
+function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, semaine, opts = {}) {
+  let auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null, RG = normaliseRapport(rapport);
+  RG.favoris || (favoris = []), RG.portefeuille || (pf = null);
+  let LP = lignesPf(pf).filter((l) => d.names[l.k]), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY.test(k))), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k]).slice(0, 260), idx = {};
   for (let id of Object.keys(INDICES)) {
     let v = variationSemaine(d.cs, "i:" + id, lundi, auj, d.px["i:" + id], d.sem);
     v && (idx[id] = { id, nom: INDICES[id], pct: v.pct, serie: v.serie, partiel: v.partiel });
@@ -1276,9 +1331,28 @@ function faitsSynthese(d, { favoris = [], pf = null } = {}, semaine, opts = {}) 
   let vus = /* @__PURE__ */ new Set(), annonces = [...actuO, ...off.filter((a) => !urlsO.has(a.source)), ...presse2].sort((a, b) => b.poids - a.poids || String(b.date).localeCompare(a.date)).filter((a) => {
     let c = a.source || a.k + "|" + (a.titre || a.type) + "|" + a.date;
     return vus.has(c) ? !1 : (vus.add(c), !0);
-  }).slice(0, 30), debutAv = auj && auj > lundi ? auj : lundi, finAv = addJ(debutAv, 14), a_venir = (d.ev || []).filter((e) => e && ids.has(e.id) && e.date >= debutAv && e.date <= finAv).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12).map((e) => {
+  }).filter((a) => RG.sujets[sujetDe(a.categorie)]).slice(0, RG.detail === "court" ? 3 : 30), debutAv = auj && auj > lundi ? auj : lundi, finAv = addJ(debutAv, 14), a_venir = (d.ev || []).filter((e) => e && ids.has(e.id) && e.date >= debutAv && e.date <= finAv).sort((a, b) => a.date.localeCompare(b.date)).map((e) => {
     let c = categorie(e.type, e.label);
     return { k: "c:" + e.id, id: e.id, nom: d.names["c:" + e.id], date: e.date, type: e.type || null, label: e.label || e.type || "", categorie: c.code, source: e.source || null, lien: "/entreprise/" + e.id + "/agenda" };
+  }).filter((e) => RG.sujets[sujetDe(e.categorie)]).slice(0, RG.detail === "court" ? 3 : 12), secteurs = RG.secteurs.map((sk) => {
+    let vs = [];
+    for (let [k, m] of Object.entries(d.meta || {})) if (m && m.sector === sk && d.names[k]) {
+      let v = variationSemaine(d.cs, k, lundi, auj, d.px[k], d.sem);
+      v && vs.push({ k, nom: d.names[k], variation_semaine_pct: v.pct });
+    }
+    vs.sort((a, b) => b.variation_semaine_pct - a.variation_semaine_pct);
+    let p = vs.map((x) => x.variation_semaine_pct), mid = p.length >> 1, med = p.length ? p.length % 2 ? p[mid] : (p[mid - 1] + p[mid]) / 2 : null;
+    return {
+      id: sk,
+      nom: SECTEURS2[sk],
+      n: vs.length,
+      mediane_pct: med != null ? r2(med) : null,
+      hausses: p.filter((x) => x > 0).length,
+      baisses: p.filter((x) => x < 0).length,
+      premieres: vs.slice(0, 3),
+      dernieres: vs.length > 3 ? vs.slice(Math.max(3, vs.length - 3)).reverse() : [],
+      vos_lignes: lignes.filter((l) => d.meta[l.k] && d.meta[l.k].sector === sk).map(court2)
+    };
   }), f = {
     v: 2,
     semaine,
@@ -1293,11 +1367,13 @@ function faitsSynthese(d, { favoris = [], pf = null } = {}, semaine, opts = {}) 
     baisses: mv.filter((l) => l.variation_semaine_pct < 0).length,
     partiel: mv.length > 0 && mv.every((l) => l.partiel),
     depuis: mv.length && mv.map((l) => l.du).filter(Boolean).sort()[0] || null,
-    indices: Object.values(idx).map(({ id, nom, pct: pct2, partiel }) => ({ id, nom, pct: pct2, partiel })),
+    indices: Object.values(idx).filter((i) => RG.indices.includes(i.id)).map(({ id, nom, pct: pct2, partiel }) => ({ id, nom, pct: pct2, partiel })),
     portefeuille,
     annonces,
     a_venir,
-    texte: null
+    secteurs,
+    texte: null,
+    reglages: { favoris: RG.favoris, portefeuille: RG.portefeuille, secteurs: RG.secteurs, indices: RG.indices, detail: RG.detail, sujets: RG.sujets, jour: RG.jour }
   };
   return f.essentiel = essentielDe(f), f.lecture_min = lectureMin(f), f;
 }
@@ -1307,6 +1383,11 @@ function essentielDe(f) {
     let vs = pf.vs && pf.vs.length ? `, contre ${pf.vs.map((i) => `${sgnP2(i.pct)} pour le ${i.nom}`).join(" et ")}` : "";
     P.push(`Votre portefeuille ${pf.var_eur >= 0 ? "a gagn\xE9" : "a perdu"} ${eurS(pf.var_eur).replace(/^[+−]/, "")} (${sgnP2(pf.var_pct)}) ${quand}${vs}.`);
   } else mv.length && P.push(`${mv.length > 1 ? "Vos " + mv.length + " valeurs suivies ont" : "Votre valeur suivie a"} \xE9volu\xE9 de ${sgnP2(f.moyenne)}${mv.length > 1 ? " en moyenne" : ""} ${quand}${mv.length > 1 ? ` (${f.hausses} en hausse, ${f.baisses} en baisse)` : ""}${cac ? `, contre ${sgnP2(cac.pct)} pour le CAC 40` : ""}.`);
+  let secs = (f.secteurs || []).filter((s) => s.mediane_pct != null && s.n >= 1);
+  if (secs.length && (!mv.length || f.reglages && !f.reglages.favoris && !f.reglages.portefeuille)) {
+    let s = secs[0], aut = secs.slice(1, 3);
+    P.push(`Le secteur ${s.nom} a \xE9volu\xE9 de ${sgnP2(s.mediane_pct)}${s.n > 1 ? " en m\xE9diane" : ""} ${quand} (${s.n} entreprise${s.n > 1 ? "s" : ""} suivie${s.n > 1 ? "s" : ""} par le site)${aut.length ? `, contre ${aut.map((x) => `${sgnP2(x.mediane_pct)} pour ${x.nom}`).join(" et ")}` : ""}.`);
+  }
   let fort = mv.slice().sort((a, b) => Math.abs(b.variation_semaine_pct) - Math.abs(a.variation_semaine_pct))[0];
   if (fort && Math.abs(fort.variation_semaine_pct) >= 0.5) {
     let ann = f.annonces.filter((a) => a.k === fort.k && a.origine === "officiel").sort((a, b) => b.poids - a.poids)[0], sens = fort.variation_semaine_pct > 0 ? "la plus forte hausse" : "la plus forte baisse", c0 = ann && ann.chiffres && ann.chiffres[0], chif = c0 ? ` : ${String(c0[0]).charAt(0).toLowerCase() + String(c0[0]).slice(1)} ${c0[1]}` : "";
@@ -1477,7 +1558,7 @@ async function siteData2(request, env) {
   }
   let names = {}, meta2 = {}, isin = {}, etfm = {};
   (uni && uni.companies || []).forEach((c) => {
-    names["c:" + c.id] = c.name, meta2["c:" + c.id] = { region: c.region }, c.isin && (isin["c:" + c.id] = c.isin);
+    names["c:" + c.id] = c.name, meta2["c:" + c.id] = { region: c.region, sector: c.sector }, c.isin && (isin["c:" + c.id] = c.isin);
   }), (etf && etf.list || []).forEach((e) => {
     names["e:" + e.id] = e.name, etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index };
   });
@@ -1521,7 +1602,7 @@ function clesPortefeuille(pf, names) {
   };
   return walk(pf, 0), [...out];
 }
-var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", SYS_BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine et les prochaines dates.
+var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", SYS_BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation m\xE9diane de secteurs entiers.
 R\xE8gles strictes :
 - Explique la semaine de fa\xE7on factuelle et p\xE9dagogique, en 120 \xE0 220 mots, en deux ou trois courts paragraphes de texte suivi.
 - Vouvoie le lecteur.
@@ -1546,22 +1627,24 @@ ${REGLES}`, faitsIA = (c) => ({
   } : null,
   lignes: c.lignes.filter((l) => l.variation_semaine_pct != null).slice(0, 25).map((l) => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct, indice_de_reference: l.indice ? l.indice.nom : null, ecart_avec_indice_points: l.ecart_pts, dans_le_portefeuille: !!l.en_portefeuille })),
   annonces: (c.annonces || []).slice(0, 8).map((a) => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, en_clair: a.resume })),
-  a_venir: (c.a_venir || []).slice(0, 6).map((e) => ({ entreprise: e.nom, date: e.date, evenement: e.label }))
+  a_venir: (c.a_venir || []).slice(0, 6).map((e) => ({ entreprise: e.nom, date: e.date, evenement: e.label })),
+  secteurs_suivis: (c.secteurs || []).filter((x) => x.n).map((x) => ({ secteur: x.nom, variation_mediane_semaine_pct: x.mediane_pct, entreprises: x.n, hausses: x.hausses, baisses: x.baisses }))
 }), redige = rediger;
+var rapportDe = (row) => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
 function suiviDe(row, names) {
-  let pf = parse(row && row.portefeuille, null), lp = lignesPf(pf).filter((l) => names[l.k]), fav = (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)), autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
-  return { favoris: [.../* @__PURE__ */ new Set([...fav, ...autres])], pf, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map((l) => `${l.k}:${r22(l.q)}:${Math.round(l.m)}`).sort().join(",") };
+  let R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter((l) => names[l.k]), fav = R.favoris ? (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)) : [], autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
+  return { favoris: [.../* @__PURE__ */ new Set([...fav, ...autres])], pf, rapport: R, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map((l) => `${l.k}:${r22(l.q)}:${Math.round(l.m)}`).sort().join(",") + "|" + rapportSignature(R) };
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
-  let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)), c = stocke ? parse(stocke.contenu, null) : null;
+  let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
   if (!(!c || c.v !== 2 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
-  let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles, n._final = weekend, n._ia_n = c && c._ia_n || 0, n._ia_at = c && c._ia_at || 0, c && c.texte && c._cles === s.cles && c.v === 2 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
-  let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length;
+  let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
+  n._cles = s.cles, n._final = weekend, n._ia_n = c && c._ia_n || 0, n._ia_at = c && c._ia_at || 0, n._sig = rapportSignature(s.rapport), c && c._sig !== n._sig && (n._ia_at = 0), c && c.texte && c._cles === s.cles && c.v === 2 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
+  let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some((x) => x.n);
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
 }
 async function commenter(env, compteId, c) {
-  if (c.texte || !c.lignes.length || (c._ia_n || 0) >= 4 || Date.now() - (c._ia_at || 0) < 6 * 36e5) return c;
+  if (c.texte || !(c.lignes.length || (c.secteurs || []).some((x) => x.n)) || c.reglages && c.reglages.detail === "court" || (c._ia_n || 0) >= 4 || Date.now() - (c._ia_at || 0) < 6 * 36e5) return c;
   c._ia_n = (c._ia_n || 0) + 1, c._ia_at = Date.now();
   let t = null;
   try {
@@ -1674,6 +1757,16 @@ async function espace(request, env) {
     let { b, err: err2 } = await lire(request);
     return err2 || (typeof b.teaser != "boolean" ? json2({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json2({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
   }
+  if (path === "/api/espace/rapport" && (m === "GET" || m === "POST")) {
+    let row = await env.DB.prepare("SELECT profil FROM donnees WHERE compte = ?").bind(c.id).first(), profil = parse(row && row.profil, null) || {}, p = await premiumDe(env, c.premium, url.origin), max = p ? RAPPORT_MAX_SECTEURS.premium : RAPPORT_MAX_SECTEURS.gratuit, out = (r) => ({ rapport: r, defaut: RAPPORT_DEFAUT, premium: !!p, max_secteurs: max, secteurs: SECTEURS2 });
+    if (m === "GET") return json2(out(normaliseRapport(profil.rapport, max)));
+    let { b, err: err2 } = await lire(request);
+    if (err2) return err2;
+    let v = validerRapport(b, !!p);
+    if (v.error) return json2({ error: v.error }, 400);
+    let neuf = { ...typeof profil == "object" && !Array.isArray(profil) ? profil : {}, rapport: v.rapport };
+    return taille(neuf) > MAX_CHAMP ? json2({ error: "Profil trop volumineux (60 Ko au plus)." }, 400) : (await enregistrer(env, c.id, { profil: JSON.stringify(neuf) }), json2({ ok: !0, ...out(v.rapport), ...v.coupe ? { limite: `Sans Premium, le rapport suit ${max} secteurs au plus : les premiers choisis sont gard\xE9s.` } : {} }));
+  }
   if (path === "/api/espace/supprimer" && m === "POST") {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
@@ -1697,7 +1790,7 @@ async function espace(request, env) {
     if (!/^\d{4}-W\d{2}$/.test(semaine)) return json2({ error: "Semaine invalide (format 2026-W44)." }, 400);
     let row = await env.DB.prepare("SELECT contenu, vu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, semaine).first(), b = row ? parse(row.contenu, null) : null;
     if (semaine === cur) {
-      let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille FROM donnees WHERE compte = ?").bind(c.id).first(), prec = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, precedenteDe(cur)).first(), r = await assurerBilan(env, d, c.id, don, cur, row, prec);
+      let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille, profil FROM donnees WHERE compte = ?").bind(c.id).first(), prec = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, precedenteDe(cur)).first(), r = await assurerBilan(env, d, c.id, don, cur, row, prec);
       b = r.c, r.change && !r.stocke && (b = { ...b, vide: !0 });
     } else if (!b || semaine > cur) return json2({ error: "Aucun bilan pour cette semaine." }, 404);
     !apercu && b && !b.vide && (semaine === cur || semaine === semainePrecedente(auj)) && (b = await commenter(env, c.id, b)), apercu || await env.DB.prepare("UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?").bind(c.id, semaine).run();
@@ -1719,7 +1812,7 @@ async function notifier(env, compteId, type, texte, lien2, jour, extra = "") {
 }
 async function tache(request, env, url) {
   if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Non autoris\xE9." }, 403);
-  let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || !quoi && wd === 6, cutoff = now - 6 * 36e5, W = modeBilan ? "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? [cutoff, sem] : [cutoff], rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
+  let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || quoi === "jour" || !quoi && wd === 6, cutoff = now - 6 * 36e5, parJour = (quoi === "jour" || !quoi && wd === 6) && [6, 0, 1].includes(wd), cible = parJour && wd === 1 ? precedenteDe(sem) : sem, W = modeBilan ? parJour ? "(c.last_tache < ? OR (c.last_semaine IS NOT ? AND COALESCE(json_extract(d.profil, '$.rapport.jour'), 6) = ?))" : "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? parJour ? [cutoff, cible, wd] : [cutoff, cible] : [cutoff], FROM = `FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W}`, rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
   if (rows.length) {
     let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre2 = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
     for (let r of rows) {
@@ -1733,12 +1826,13 @@ async function tache(request, env, url) {
         }
         for (let e of d.ev) e && ids.has(e.id) && e.date === demain && (notifs += await notifier(env, r.id, /r[ée]sultat/i.test(e.type || e.label || "") ? "resultats" : "agenda", `${d.names["c:" + e.id]} : demain, ${e.label || e.type}.`, "/entreprise/" + e.id + "/agenda", e.date));
       }
-      if (modeBilan && r.last_semaine !== sem && keys.length) {
-        let st = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, sem).first(), pr = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, precedenteDe(sem)).first(), b = await assurerBilan(env, d, r.id, r, sem, st, pr);
+      let RG = rapportDe(r), sonJour = !parJour || RG.jour === wd, aRapport = keys.length || RG.secteurs.length;
+      if (modeBilan && sonJour && r.last_semaine !== cible && aRapport) {
+        let st = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, cible).first(), pr = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, precedenteDe(cible)).first(), b = await assurerBilan(env, d, r.id, r, cible, st, pr);
         if (b.stocke !== !1) {
           bilans++;
-          let e0 = b.c && b.c.essentiel && b.c.essentiel[0];
-          if (notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est pr\xEAte. ${e0}` : "Votre semaine en 2 minutes est pr\xEAte.", "/espace", sem), r.teaser && cap > 0)
+          let e0 = b.c && b.c.essentiel && b.c.essentiel[0], lien2 = cible === sem ? "/espace" : "/espace?semaine=" + cible;
+          if (RG.notif && (notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est pr\xEAte. ${e0}` : "Votre semaine en 2 minutes est pr\xEAte.", lien2, cible)), r.teaser && cap > 0)
             try {
               await sendMail(
                 env,
@@ -1759,11 +1853,12 @@ bilan. Informations factuelles, sans conseil en investissement.`,
             }
         }
       }
-      await env.DB.prepare(modeBilan ? "UPDATE comptes SET last_tache = ?, last_semaine = ? WHERE id = ?" : "UPDATE comptes SET last_tache = ? WHERE id = ?").bind(...modeBilan ? [now, sem, r.id] : [now, r.id]).run();
+      let fait = modeBilan && sonJour;
+      await env.DB.prepare(fait ? "UPDATE comptes SET last_tache = ?, last_semaine = ? WHERE id = ?" : "UPDATE comptes SET last_tache = ? WHERE id = ?").bind(...fait ? [now, cible, r.id] : [now, r.id]).run();
     }
     await env.DB.prepare("DELETE FROM notifs WHERE at < ?").bind(now - 90 * JOUR).run(), await env.DB.prepare("DELETE FROM essais WHERE at < ?").bind(now - JOUR).run(), await env.DB.prepare("DELETE FROM sessions WHERE expires < ?").bind(now).run();
   }
-  let reste = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM comptes c WHERE ${W}`).bind(...B).first() || {}).n || 0;
+  let reste = (await env.DB.prepare(`SELECT COUNT(*) AS n ${FROM}`).bind(...B).first() || {}).n || 0;
   return json2({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
 }
 
@@ -2682,7 +2777,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "b9d982d5c57fccfa", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
+var VERSION = "a7ad8f5c0201df93", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
 function tete(html, { title, desc, url, statut }) {
   let canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/"), t = [
     `<meta name="bilan-version" content="${VERSION}">`,
@@ -2770,7 +2865,11 @@ function meta(path, q = null) {
     return { title: `Comparer des entreprises \xB7 ${SITE}`, desc: "Le verdict d'abord, crit\xE8re par crit\xE8re : taille, croissance, rentabilit\xE9, solidit\xE9, prix en Bourse et dividende de plusieurs entreprises, face \xE0 la m\xE9diane de leur secteur." };
   }
   if (p === "/pea-cto") return { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." };
-  if (p === "/dividendes") return { title: `Calendrier des dividendes \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement des dividendes, avec leur source, \xE0 ajouter \xE0 votre agenda." };
+  if (p === "/dividendes") return { title: `Dividendes : calendrier, rendements et simulateur \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement, les plus hauts rendements avec leur garde-fou, les dividendes relev\xE9s chaque ann\xE9e et ce que vous toucheriez en PEA ou compte-titres." };
+  if (p === "/classements") return { title: `Classements des entreprises \xB7 ${SITE}`, desc: "Les entreprises qui cumulent le plus de points forts, restent en t\xEAte de leur secteur, augmentent leurs ventes ou rel\xE8vent leur dividende chaque ann\xE9e, calcul\xE9es sur leurs comptes officiels." };
+  if (p === "/decouvertes") return { title: `D\xE9couvertes du jour \xB7 ${SITE}`, desc: "Chaque jour, six entreprises moins connues dont les comptes officiels ressortent sur les crit\xE8res du site, avec ce qui les distingue. Sans conseil d'achat." };
+  if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre \xB7 ${SITE}`, desc: "Le chemin pour apprendre : par o\xF9 commencer, les cours de l'Acad\xE9mie (l'essentiel en 3 \xE9tapes et le cours complet), le lexique et les outils p\xE9dagogiques, gratuits." };
+  if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 \xE9tapes \xB7 L'Acad\xE9mie \xB7 ${SITE}`, desc: "La version courte de l'Acad\xE9mie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en le\xE7ons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
   if (p.startsWith("/outils")) return { title: `Outils \xB7 ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'\xE9pargne et de frais." };
   let IDXN = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
@@ -2779,6 +2878,10 @@ function meta(path, q = null) {
     if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir \xB7 ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqu\xE9 simplement : sa r\xE8gle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, class\xE9s par frais.` };
   }
   return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/connecteur" ? { title: `Connecteur IA : bilan. dans Claude et ChatGPT \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
+}
+function redirectionParcours(p) {
+  let m = /^\/debuter(\/.*)?$/.exec(p || "");
+  return m ? "/academie/express" + (m[1] || "") : p === "/premiers-pas" ? "/academie/express" : null;
 }
 var worker_default = {
   async fetch(request, env, ctx) {
@@ -2799,6 +2902,8 @@ var worker_default = {
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
+    let redir = redirectionParcours(url.pathname.replace(/\/+$/, ""));
+    if (redir) return Response.redirect(url.origin + redir + url.search, 301);
     let info = meta(url.pathname, url.searchParams), etfId = (url.pathname.match(/^\/etf\/([a-z0-9-]+)\/?$/) || [])[1];
     if (etfId && (info = await etfMeta(etfId, env, url, SITE) || info), !info) {
       let r = await env.ASSETS.fetch(request);
@@ -2834,5 +2939,6 @@ async function tacheEtPush(request, env, url) {
 }
 export {
   worker_default as default,
-  meta
+  meta,
+  redirectionParcours
 };

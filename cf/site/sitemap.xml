@@ -22,12 +22,15 @@
   <url><loc>https://repere-bourse.pages.dev/pea-cto</loc></url>
   <url><loc>https://repere-bourse.pages.dev/comparer</loc></url>
   <url><loc>https://repere-bourse.pages.dev/dividendes</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/classements</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/decouvertes</loc></url>
   <url><loc>https://repere-bourse.pages.dev/outils</loc></url>
   <url><loc>https://repere-bourse.pages.dev/marches</loc></url>
   <url><loc>https://repere-bourse.pages.dev/outils/si-javais</loc></url>
   <url><loc>https://repere-bourse.pages.dev/outils/recouvrement</loc></url>
   <url><loc>https://repere-bourse.pages.dev/outils/verifier</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/apprendre</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express</loc></url>
   <url><loc>https://repere-bourse.pages.dev/commencer</loc></url>
   <url><loc>https://repere-bourse.pages.dev/demander</loc></url>
   <url><loc>https://repere-bourse.pages.dev/espace</loc></url>
@@ -104,26 +107,26 @@
   <url><loc>https://repere-bourse.pages.dev/cgv</loc></url>
   <url><loc>https://repere-bourse.pages.dev/confidentialite</loc></url>
   <url><loc>https://repere-bourse.pages.dev/avertissement</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/bases</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/bases/action</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/bases/cours</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/bases/etf-indice</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/bases/enveloppes</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/bases/frais</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/bases/risque</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/lire</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/lire/chiffre-affaires</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/lire/marge-exploitation</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/lire/benefice-net</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/lire/dette-nette</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/lire/free-cash-flow</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/lire/dividende</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/prix</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/prix/capitalisation</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/prix/per</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/prix/rendement-dividende</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/prix/comparer</loc></url>
-  <url><loc>https://repere-bourse.pages.dev/debuter/prix/prix-et-qualite</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/bases</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/bases/action</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/bases/cours</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/bases/etf-indice</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/bases/enveloppes</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/bases/frais</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/bases/risque</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/lire</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/lire/chiffre-affaires</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/lire/marge-exploitation</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/lire/benefice-net</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/lire/dette-nette</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/lire/free-cash-flow</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/lire/dividende</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/prix</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/prix/capitalisation</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/prix/per</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/prix/rendement-dividende</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/prix/comparer</loc></url>
+  <url><loc>https://repere-bourse.pages.dev/academie/express/prix/prix-et-qualite</loc></url>
   <url><loc>https://repere-bourse.pages.dev/etf/amundi-msci-world-pea</loc></url>
   <url><loc>https://repere-bourse.pages.dev/etf/amundi-msci-world-swap</loc></url>
   <url><loc>https://repere-bourse.pages.dev/etf/ishares-msci-world-swap-pea</loc></url>
