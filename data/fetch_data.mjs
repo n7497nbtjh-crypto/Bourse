@@ -144,7 +144,8 @@ export async function collectOne(fetchFn, c) {
   if (!reports.length) for (const [ex, doc, f] of spare) { reports.push(ex); segs.push(extractSegments(doc)); used.push({ periodEnd: f.period_end, report: f.report, json: f.json, ny: -Infinity }); }
   // Sociétés françaises : dernier rapport annuel déposé à l'AMF quand filings.xbrl.org ne l'a pas (encore) indexé
   const have = reports.length ? Math.max(...used.map(u => u.ny)) : -Infinity;
-  if (fr && have < expectedYear(reports[0] && reports[0].fyEnd)) {
+  const amfTried = fr && have < expectedYear(reports[0] && reports[0].fyEnd);
+  if (amfTried) {
     try {
       const af = await amfAnnualFilings(getJSON, fetchFn, c.isin, `${new Date().getUTCFullYear() - 2}-01-01`);
       // seuls les dépôts postérieurs à la clôture de l'exercice suivant celui déjà lu peuvent apporter du nouveau (évite de retélécharger des paquets de 20 à 90 Mo)
@@ -167,7 +168,7 @@ export async function collectOne(fetchFn, c) {
   return { v: VERSION, devise2: true, segments: bestSegments(segs, caByYear),
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id ? id.lei : null, legalName: (id && id.legalName) || c.name,
     sector: c.sector, ...s,
-    sources: used.map(u => ({ periodEnd: u.periodEnd, report: u.report, json: u.json, ...(u.amf ? { source: "AMF" } : {}) })),
+    sources: used.map(u => ({ periodEnd: u.periodEnd, report: u.report, json: u.json, ...(u.amf ? { source: "AMF" } : {}) })), ...(amfTried ? { amfTried: true } : {}),
     updated: new Date().toISOString().slice(0, 10),
   };
 }
@@ -225,7 +226,7 @@ async function main() {
       // comptes en retard d'un exercice (rapport attendu mais absent) : nouvel essai chaque jour pour la France (rapports AMF), tous les trois jours ailleurs.
       const spread = (FRESH ? [...c.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 7, 0) * 864e5 : 0);
       const lastY = (old.years || [])[(old.years || []).length - 1];
-      const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? 20 : 70) * 3600e3;
+      const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? (old.amfTried ? 20 : 0) : 70) * 3600e3; // France : premier essai AMF immédiat
       if (old.v === VERSION && !deviseDouteuse && !late && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
