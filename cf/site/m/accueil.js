@@ -294,6 +294,7 @@ async function pageHome() {
 
     <section class="acc-sec" id="acc-decouvrir">${accH("À découvrir", "Une sélection pour aller plus loin", ["/decouvertes", "Toutes les découvertes"])}
       ${typeof outilsDecouverteHTML === "function" ? outilsDecouverteHTML(3) : ""}
+      ${typeof recoAccueilHTML === "function" ? `<div style="margin-top:14px">${recoAccueilHTML()}</div>` : ""}
       <div class="acc-explo"><p class="acc-ah">Explorer par secteur</p><div class="acc-secs scroll-x">${secs.map(x => `<a href="/entreprises?secteur=${x.k}">${esc(x.name)} <small>${x.n}</small></a>`).join("")}</div>
         <p class="acc-liens"><a class="lnk" href="/classements">Les classements</a><a class="lnk" href="/etf">Trouver un ETF</a><a class="lnk" href="/comparer">Comparer des entreprises</a><a class="lnk" href="/entreprises">Toutes les entreprises</a></p></div></section>
 
