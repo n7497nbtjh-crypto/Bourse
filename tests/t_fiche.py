@@ -14,6 +14,7 @@ SHOTS = ARG("--shots")
 IDS = ARG("--ids", "totalenergies,lvmh,bnp-paribas,axa,scor,gecina,unibail-rodamco-westfield,apple,nvidia,microsoft,sap,lectra,dassault-aviation,vinci,schneider-electric,cegedim,hermes,sodexo,toyota,tsmc,hdfc-bank,saudi-aramco,siemens,asml,rio-tinto,weyerhaeuser,atalaya-mining,airbus,kering").split(",")
 WS = [int(x) for x in ARG("--largeurs", "1440,1280,1024,768,390").split(",")]
 BLOQUE = "--presse-bloquee" in sys.argv
+BASE = ARG("--base", "http://t.local")  # --base https://repere-bourse.pages.dev : contrôle en production
 FONTS = os.environ.get("FONT_DIR")
 U = {c["id"]: c for c in json.load(open("cf/site/data/univers.json"))["companies"]}
 IDS = [i for i in IDS if i in U]
@@ -66,10 +67,10 @@ with sync_playwright() as pw:
         pg = ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e) + " @ " + pg.url))
         pg.on("console", lambda m: m.type == "error" and "Failed to load resource" not in m.text and errs.append(m.text + " @ " + pg.url))
-        pg.route("**/*", route3)
+        if BASE == "http://t.local": pg.route("**/*", route3)
         probs = {}
         for i in IDS:
-            pg.goto(f"http://t.local/entreprise/{i}"); pg.wait_for_timeout(900)
+            pg.goto(f"{BASE}/entreprise/{i}"); pg.wait_for_timeout(900)
             m = pg.evaluate(MESURE, W)
             if not mob and m["verdict"] and m["verdict"] > 900: m["p"].append(f"verdict sous la ligne de flottaison ({m['verdict']} px)")
             e2 = pg.evaluate(ETAPES)
@@ -80,13 +81,13 @@ with sync_playwright() as pw:
                 if l: m["p"].append("Chargement… resté affiché : " + ", ".join(l))
             for t in ("comptes", "actualite"):
                 if W in (WS[0], WS[-1]):
-                    pg.goto(f"http://t.local/entreprise/{i}/{t}"); pg.wait_for_timeout(500)
+                    pg.goto(f"{BASE}/entreprise/{i}/{t}"); pg.wait_for_timeout(500)
                     x = pg.evaluate(MESURE, W); m["p"] += [f"[{t}] " + y for y in x["p"]]
             if m["p"]: probs[i] = m["p"]
             print(f"  {W:>4} {i:<28} doc {m['doc']:>5}  principale {m.get('main', '-'):>5}  latérale {m.get('side', '-'):>5}  verdict {m['verdict']}  étapes {m['etapes']}" + ("  !" if m["p"] else ""))
             if SHOTS:
                 os.makedirs(SHOTS, exist_ok=True)
-                pg.goto(f"http://t.local/entreprise/{i}"); pg.wait_for_timeout(900)
+                pg.goto(f"{BASE}/entreprise/{i}"); pg.wait_for_timeout(900)
                 pg.screenshot(path=f"{SHOTS}/{i}_{W}.png", full_page=True)
         print(f"== {W} px : {len(IDS)} fiches, problèmes : {len(probs)}, erreurs JS : {len(errs)}")
         for k, v in probs.items(): print("   ", k, v)

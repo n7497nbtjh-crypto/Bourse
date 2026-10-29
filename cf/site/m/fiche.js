@@ -52,6 +52,9 @@ const FICHE_CSS = `
 .fside .ag .it{padding:7px 18px}
 .fside .src{padding:8px 18px}
 .fann{list-style:none;margin:0;padding:0}
+#fannb.fcourt{max-height:400px;overflow:hidden;position:relative;padding-bottom:0}
+#fannb.fcourt:after{content:"";position:absolute;left:0;right:0;bottom:0;height:70px;background:linear-gradient(rgba(255,255,255,0),#fff)}
+.fannall{padding:2px 18px 14px}
 .fann li{padding:8px 0;border-bottom:1px solid var(--line2);font-size:13.5px;line-height:1.4}
 .fann li:last-child{border-bottom:0}
 .fann .fd{display:flex;gap:8px;align-items:center;font-size:11.5px;color:var(--light);margin-bottom:2px}
@@ -78,6 +81,8 @@ const FICHE_CSS = `
 .fm p{margin:0 0 10px;font-size:14.5px;line-height:1.55}
 .fm .src{margin:10px -22px -16px}
 .ftiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.ftiles.n1,.ftiles.n2,.ftiles.n3,.ftiles.n4{grid-template-columns:repeat(var(--n),minmax(0,1fr))}.ftiles.n6{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ftiles.n5{grid-template-columns:repeat(6,minmax(0,1fr))}.ftiles.n5 .ftile{grid-column:span 2}.ftiles.n5 .ftile:nth-child(n+4){grid-column:span 3}
 .ftile{border:1px solid var(--line2);border-radius:12px;padding:10px 14px;background:#FCFBF8;min-width:0}
 .ftile .kick{margin:0}
 .ftile b{display:block;font-family:var(--mono);font-size:18px;font-weight:600;letter-spacing:-.02em;margin:2px 0;overflow-wrap:anywhere}
@@ -129,7 +134,7 @@ const FICHE_CSS = `
 .ffaq .fq-ia{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--g);margin-bottom:6px}
 #fgraph .tv-chart{height:320px}
 @media (max-width:1100px){.fcols{grid-template-columns:minmax(0,1fr) 280px}.fkeys.n4{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:560px){.fkeys.n5 .fk,.fkeys.n5 .fk:nth-child(n+4){grid-column:auto}.fkeys.n2,.fkeys.n3,.fkeys.n4,.fkeys.n5,.fkeys.n6{grid-template-columns:1fr}}
+@media (max-width:560px){.ftiles.n3,.ftiles.n4,.ftiles.n5,.ftiles.n6{grid-template-columns:repeat(2,minmax(0,1fr))}.ftiles.n5 .ftile,.ftiles.n5 .ftile:nth-child(n+4){grid-column:auto}.ftiles.n3 .ftile:last-child,.ftiles.n5 .ftile:last-child{grid-column:span 2}.fkeys.n5 .fk,.fkeys.n5 .fk:nth-child(n+4){grid-column:auto}.fkeys.n2,.fkeys.n3,.fkeys.n4,.fkeys.n5,.fkeys.n6{grid-template-columns:1fr}}
 @media (max-width:900px){.fcols{grid-template-columns:minmax(0,1fr)}.fside{position:static}.fiamini{display:none}.fh-sum{grid-template-columns:1fr}.fh-prof{border-left:0;border-top:1px solid var(--line2)}}
 @media (max-width:760px){
   .fh-top{grid-template-columns:1fr;padding:14px 16px 12px;gap:12px}
@@ -253,7 +258,7 @@ function tabBref(s, c, el) {
     <div class="fcols"><div id="etapes-corps">${etapesCorps(s, c)}</div>
       <aside class="fside" id="fside">
         <section class="panel" id="agenda"><div class="ph"><h2>Prochaines dates</h2>${up.length > 3 ? `<a href="/entreprise/${s.id}/actualite">Toutes</a>` : ""}</div>${up.length ? agendaHTML(up.slice(0, 3), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant. Le site les ajoute dès que l'entreprise les publie.</div>`}</section>
-        <section class="panel" id="actus"><div class="ph"><h2>Dernières annonces</h2></div><div class="pb" id="fannb"></div></section>
+        <section class="panel" id="actus"><div class="ph"><h2>Dernières annonces</h2></div><div class="pb" id="fannb"></div><p class="fannall"><a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a></p></section>
         <section class="panel fiamini"><div class="ph"><h2>✦ Une question ?</h2></div><div class="pb"><p>L'IA répond avec les chiffres de cette fiche, tout de suite.</p><form class="askf" data-fiche-mini autocomplete="off"><input type="text" maxlength="300" placeholder="Ex. : sa dette est-elle un problème ?" aria-label="Votre question sur ${esc(s.name)}"><button class="btn" type="submit">Demander à l'IA</button></form></div></section>
       </aside></div>`;
   etapesBind(s);
@@ -266,10 +271,10 @@ function tabBref(s, c, el) {
 }
 function ficheAnnonces(s, el) {
   if (!el) return;
-  const all = `<a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a>`;
+  const all = "";
   if (typeof actuFicheCourt === "function") {
     try {
-      actuFicheCourt(el, s, { max: 4 });
+      actuFicheCourt(el, s, { max: 3 }); el.classList.add("fcourt"); // bloc borné : la colonne latérale reste courte
       const sec = el.closest("section"), titre = () => { if (sec && el.querySelector("h2,h3,.ph")) { const h = sec.querySelector(":scope > .ph"); if (h) h.remove(); } };
       titre(); setTimeout(titre, 1500); // le bloc de l'agent « actu » a déjà son titre : pas de double titre
       ficheVeille(el, 10000, `<p class="muted" style="margin:0 0 8px;font-size:13.5px">Pas d'annonce récente disponible pour le moment.</p>${all}`);
@@ -279,8 +284,8 @@ function ficheAnnonces(s, el) {
   const vide = `<p class="muted" style="margin:0 0 8px;font-size:13.5px">${s.region === "FR" || s.sec ? "Pas d'annonce récente disponible pour le moment." : "Cette société publie ses communiqués auprès du régulateur de son pays, sans flux ouvert."}</p>${all}`;
   if (!(s.region === "FR" || s.sec)) { el.innerHTML = vide; return; }
   el.innerHTML = `<p class="muted" style="margin:0;font-size:13px">Chargement…</p>`;
-  Promise.all([s.sec ? loadSec(s.id) : loadAmf("&isin=" + s.isin, 30), loadAna()]).then(([items]) => {
-    const l = items.filter(i => !NCAT[i.cat].routine).slice(0, 3);
+  Promise.all([s.sec ? loadSec(s.id) : loadAmf("&isin=" + s.isin, 60), loadAna()]).then(([items]) => {
+    const l = [...items.filter(i => !NCAT[i.cat].routine), ...items.filter(i => NCAT[i.cat].routine)].slice(0, 3); // les annonces importantes d'abord
     if (!l.length) { el.innerHTML = vide; return; }
     el.innerHTML = `<ul class="fann">${l.map(i => { const a = ANA && i.url ? ANA[i.url] : null, C = NCAT[i.cat]; return `<li><div class="fd"><span class="ncat" style="--c:${C.c}">${C.label}</span>${i.date ? dShort(i.date) : ""}</div><a href="/entreprise/${s.id}/actualite">${esc((a && a.titre) || i.title)}</a></li>`; }).join("")}</ul>${all}`;
   }).catch(() => { el.innerHTML = vide; });
@@ -367,6 +372,7 @@ function ficheMetierHTML(s, c) {
   // En une phrase
   const phrase = !gen ? s.fiche.fait : s.desc || (s.fiche && s.fiche.fait) || "";
   out.push(`<p class="f1p">${esc(phrase)}${!gen && s.desc && s.desc !== phrase ? `<small>${esc(s.desc)}</small>` : ""}</p>`);
+  if (wd && (wd.secteurs || wd.maison)) out.push(`<div class="fm" style="padding-top:12px;padding-bottom:12px">${wd.secteurs ? `<p class="fbt">Ses domaines d'activité</p><div class="fchips">${wd.secteurs.map(x => `<span>${esc(x)}</span>`).join("")}</div>` : ""}${wd.maison ? `<p style="margin:10px 0 0;font-size:13.5px">Elle appartient au groupe <b>${esc(wd.maison[0])}</b>.</p>` : ""}</div>`);
   // Chiffres clés
   const peers = R.companies.filter(x => x.sector === s.sector && !x.missing && x.ca > 0).sort((a, b) => caEur(b) - caEur(a)), rank = peers.findIndex(x => x.id === s.id) + 1, v = valo(s);
   const tiles = [
@@ -377,7 +383,7 @@ function ficheMetierHTML(s, c) {
     v && v.capE ? ["Valeur en Bourse", capFmt(v.capE), "au cours actuel"] : null,
     rank && peers.length > 2 ? ["Taille dans son secteur", `${rank}<sup>${rank === 1 ? "re" : "e"}</sup> sur ${peers.length}`, "par les ventes, parmi les entreprises suivies", false, true] : null,
   ].filter(Boolean);
-  if (tiles.length) out.push(`<div class="fm"><h3>${esc(s.name)} en chiffres</h3><div class="ftiles">${tiles.map(([k, val, sub, txt, html]) => `<div class="ftile"><p class="kick">${k}</p><b class="${txt ? "txt" : ""}">${html ? val : esc(val)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`).join("")}</div></div>`);
+  if (tiles.length) out.push(`<div class="fm"><h3>${esc(s.name)} en chiffres</h3><div class="ftiles n${tiles.length}" style="--n:${tiles.length}">${tiles.map(([k, val, sub, txt, html]) => `<div class="ftile"><p class="kick">${k}</p><b class="${txt ? "txt" : ""}">${html ? val : esc(val)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`).join("")}</div></div>`);
   // Comment elle gagne son argent
   let acts = null, zones = null, unite = "pct", srcRep = "", anRep = null;
   if (segs.activites || segs.produits || segs.geo) {
@@ -394,7 +400,7 @@ function ficheMetierHTML(s, c) {
       ${acts ? `<p class="fbt">Par activité${anRep ? " · " + anRep : ""}</p>${ficheBarres([...acts].sort((a, b) => b[1] - a[1]), caRep, cur, unite)}` : ""}
       ${zones ? `<p class="fbt">Par zone géographique${anRep ? " · " + anRep : ""}</p>${ficheBarres([...zones].sort((a, b) => b[1] - a[1]), caRep, cur, unite)}` : ""}
       ${!acts && !zones ? `<p class="muted" style="font-size:13.5px">La répartition de ses ventes par activité n'est pas encore relevée sur le site : elle figure dans son rapport annuel${c && c.cik ? " (10-K, « Segment information »)" : ", dans la note sur l'information sectorielle"}.</p>` : ""}
-      <p style="margin:8px 0 0">${ctLink(s, "argent", "D'où viennent ses ventes, en détail")}</p>
+      <p style="margin:8px 0 0;display:flex;gap:10px 18px;flex-wrap:wrap;align-items:center">${ctLink(s, "argent", "D'où viennent ses ventes, en détail")}<button type="button" class="fapp" style="margin:0" data-approf="Expliquez concrètement le métier de ${esc(s.name)} : ce qu'elle vend, à quels clients, comment elle gagne de l'argent et ce qui pèse sur ses coûts, avec les chiffres de la fiche.">✦ Le métier expliqué par l'IA</button></p>
       ${srcRep ? `<div class="src">${srcRep}</div>` : ""}</div>`);
   }
   // Marques, produits, filiales
@@ -415,7 +421,7 @@ function ficheMetierHTML(s, c) {
     out.push(`<div class="fm"><h3>Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h3><div class="fcmp">${rows.map(([l, val, ref, fm]) => { const better = val >= ref; return `<span>${l}<br><small>${esc(s.name)}</small></span>${bar(val, ref, better ? "var(--g)" : "var(--o)")}<span class="n">${fm(val)}</span><span><small>médiane du secteur</small></span>${bar(ref, val, "var(--n)")}<span class="n">${fm(ref)}</span>`; }).join("")}</div>
       <p class="muted" style="font-size:12.5px;margin:10px 0 0">Médiane des ${med.n} entreprises du secteur suivies par le site : la moitié fait mieux, l'autre moitié moins bien. ${medBtn("Qu'est-ce que la médiane ?")}</p></div>`);
   }
-  if (!c && md0.n >= 3) out.push(`<div class="fm"><h3>Son secteur en repères</h3><div class="ftiles">${[md0.g1 != null ? ["Croissance médiane", pct(md0.g1, 1), "des ventes sur un an"] : null, md0.marge != null ? ["Marge médiane", pct(md0.marge, 1, false), "marge d'exploitation"] : null, MEDPE[s.sector] ? ["PER médian", F0.format(MEDPE[s.sector]), "prix ÷ bénéfice annuel"] : null, ["Entreprises suivies", F0.format(md0.n), "avec des comptes publiés"]].filter(Boolean).map(([k, v2, sub]) => `<div class="ftile"><p class="kick">${k}</p><b>${esc(v2)}</b><small>${sub}</small></div>`).join("")}</div><p class="muted" style="font-size:12.5px;margin:10px 0 0">Valeurs de l'entreprise « du milieu » du secteur ${esc(secName(s).toLowerCase())} : en attendant les comptes de ${esc(s.name)}, elles donnent l'ordre de grandeur du métier. ${medBtn("Qu'est-ce que la médiane ?")}</p></div>`);
+  if (!c && md0.n >= 3) out.push(`<div class="fm"><h3>Son secteur en repères</h3><div class="ftiles n4" style="--n:4">${[md0.g1 != null ? ["Croissance médiane", pct(md0.g1, 1), "des ventes sur un an"] : null, md0.marge != null ? ["Marge médiane", pct(md0.marge, 1, false), "marge d'exploitation"] : null, MEDPE[s.sector] ? ["PER médian", F0.format(MEDPE[s.sector]), "prix ÷ bénéfice annuel"] : null, ["Entreprises suivies", F0.format(md0.n), "avec des comptes publiés"]].filter(Boolean).map(([k, v2, sub]) => `<div class="ftile"><p class="kick">${k}</p><b>${esc(v2)}</b><small>${sub}</small></div>`).join("")}</div><p class="muted" style="font-size:12.5px;margin:10px 0 0">Valeurs de l'entreprise « du milieu » du secteur ${esc(secName(s).toLowerCase())} : en attendant les comptes de ${esc(s.name)}, elles donnent l'ordre de grandeur du métier. ${medBtn("Qu'est-ce que la médiane ?")}</p></div>`);
   // Qui la dirige
   const dir = wd ? [["Directeur général", wd.pdg], ["Président", wd.president], [wd.fondateurs && wd.fondateurs.length > 1 ? "Fondateurs" : "Fondateur", wd.fondateurs]].filter(x => x[1] && x[1].length) : [];
   if (dir.length) out.push(`<div class="fm"><h3>Qui la dirige</h3><div class="fdir">${dir.map(([k, l]) => `<div><small>${k}</small><b>${l.map(esc).join(", ")}</b></div>`).join("")}</div><div class="src">Wikidata (licence CC0). Les changements récents peuvent ne pas y figurer encore : le rapport annuel fait foi.</div></div>`);
@@ -563,8 +569,8 @@ window.localAssist = function (s, c, raw) {
 /* ---------- Onglet Actualités : annonces, presse, agenda ---------- */
 function tabActu(s, c, el) {
   const us = !!s.sec, fr = s.region === "FR", up = eventsOf(s.id).filter(e => e.date >= TODAY), past = eventsOf(s.id).filter(e => e.date < TODAY).reverse();
-  const side = `<section class="panel"><div class="ph"><h2>À venir</h2></div>${up.length ? agendaHTML(up, false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant.</div>`}${up.find(e => e.source) ? `<div class="src">Sources : ${[...new Set(up.filter(e => e.source).map(e => e.source))].slice(0, 3).map(u => { let h = u; try { h = new URL(u).hostname.replace(/^www\./, ""); } catch (x) { } return `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener">${esc(h)}</a>`; }).join(", ")}</div>` : ""}</section>
-      ${past.length ? `<section class="panel"><div class="ph"><h2>Passé</h2></div>${agendaHTML(past.slice(0, 6), false)}</section>` : ""}`;
+  const side = `<section class="panel"><div class="ph"><h2>À venir</h2></div>${up.length ? agendaHTML(up.slice(0, 6), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant.</div>`}${up.find(e => e.source) ? `<div class="src">Sources : ${[...new Set(up.filter(e => e.source).map(e => e.source))].slice(0, 3).map(u => { let h = u; try { h = new URL(u).hostname.replace(/^www\./, ""); } catch (x) { } return `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener">${esc(h)}</a>`; }).join(", ")}</div>` : ""}</section>
+      ${past.length ? `<section class="panel"><div class="ph"><h2>Passé</h2></div>${agendaHTML(past.slice(0, 3), false)}</section>` : ""}`;
   if (typeof actuFicheDetail === "function") {
     el.innerHTML = `<div class="fcols"><div id="factu"></div><aside class="fside">${side}</aside></div>`;
     try { actuFicheDetail($("#factu"), s); return; } catch (e) { }

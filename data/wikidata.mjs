@@ -89,7 +89,7 @@ for (const [id, q] of Object.entries(QID)) {
   const emp = (cl.P1128 || []).filter(s => s.rank !== "deprecated" && s.mainsnak.snaktype === "value").map(s => [Math.round(+s.mainsnak.datavalue.value.amount), s.qualifiers && s.qualifiers.P585 ? s.qualifiers.P585[0].datavalue?.value?.time : null, s.rank])
     .filter(x => x[0] > 0).sort((a, b) => String(b[1] || "").localeCompare(String(a[1] || "")) || (b[2] === "preferred") - (a[2] === "preferred"));
   if (emp.length) o.effectif = [emp[0][0], year(emp[0][1])];
-  for (const [p, k, n] of [["P169", "pdg", 2], ["P488", "president", 2], ["P112", "fondateurs", 4], ["P1716", "marques", 12], ["P1056", "produits", 12], ["P355", "filiales", 10]]) {
+  for (const [p, k, n] of [["P169", "pdg", 2], ["P488", "president", 2], ["P112", "fondateurs", 4], ["P1716", "marques", 12], ["P1056", "produits", 12], ["P355", "filiales", 10], ["P452", "secteurs", 5], ["P749", "maison", 1]]) {
     const l = best(cl, p).map(qv).filter(Boolean).slice(0, n); if (l.length) { o[k] = l; l.forEach(x => need.add(x)); }
     if (p === "P355") o.nfiliales = best(cl, p).length;
   }
@@ -110,7 +110,7 @@ const items = {};
 for (const [id, o] of Object.entries(raw)) {
   const name = (U.find(c => c.id === id) || {}).name || "";
   const sg = L(o.siege), x = { q: o.q, fonde: o.fonde, siege: sg && !/^(siège|si[eè]ge social|headquarters|tour |building)/i.test(sg) ? sg : undefined, pays: L(o.pays), effectif: o.effectif, pdg: LL(o.pdg), president: LL(o.president), fondateurs: LL(o.fondateurs),
-    marques: LL(o.marques)?.filter(m => m.toLowerCase() !== name.toLowerCase()), produits: LL(o.produits), filiales: LL(o.filiales), nfiliales: o.nfiliales || undefined, site: o.site, wiki: o.wiki };
+    secteurs: LL(o.secteurs), maison: LL(o.maison), marques: LL(o.marques)?.filter(m => m.toLowerCase() !== name.toLowerCase()), produits: LL(o.produits), filiales: LL(o.filiales), nfiliales: o.nfiliales || undefined, site: o.site, wiki: o.wiki };
   for (const k of Object.keys(x)) if (x[k] == null || (Array.isArray(x[k]) && !x[k].length)) delete x[k];
   items[id] = x;
 }
