@@ -36,6 +36,8 @@ with sync_playwright() as pw:
             return t, all(a.lower() in t.lower() for a in attendu)
         # Fiche : tuiles de l'essentiel
         pg.goto(BASE + "/entreprise/lvmh"); pg.wait_for_timeout(1800)
+        try: pg.wait_for_selector("#retenir .prov-i", timeout=15000)
+        except Exception: pass
         n = pg.locator("#retenir .prov-i").count(); ok(n >= 5, tag + f"fiche : {n} boutons « i » sur les indicateurs principaux")
         t, good = bulle("#retenir .prov-i[data-prov=marge]", ("D'où vient", "Formule", "Période", "Source", "Récupéré le", "Calculé par le site"))
         ok(good, tag + "bulle de la marge : nature, formule, période, source, date de récupération")

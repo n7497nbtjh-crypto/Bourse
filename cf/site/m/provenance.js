@@ -289,7 +289,8 @@ function provPlace(btn) {
   if (innerWidth > 760) {
     const r = btn.getBoundingClientRect(), w = pop.offsetWidth;
     pop.style.left = Math.max(12, Math.min(innerWidth - w - 12, r.left + scrollX - 10)) + "px";
-    pop.style.top = (r.bottom + scrollY + 6) + "px";
+    const h = pop.offsetHeight, dessus = r.bottom + 6 + h > innerHeight && r.top - 6 - h > 60; // pas de place en dessous : la bulle s'ouvre au-dessus
+    pop.style.top = (dessus ? r.top + scrollY - 6 - h : r.bottom + scrollY + 6) + "px";
   } else { pop.style.left = ""; pop.style.top = ""; }
 }
 async function provOpen(btn, mode) {
