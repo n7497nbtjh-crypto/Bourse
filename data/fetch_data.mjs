@@ -147,7 +147,9 @@ export async function collectOne(fetchFn, c) {
   if (fr && have < expectedYear(reports[0] && reports[0].fyEnd)) {
     try {
       const af = await amfAnnualFilings(getJSON, fetchFn, c.isin, `${new Date().getUTCFullYear() - 2}-01-01`);
-      for (const f of af.slice(0, 3)) {
+      // seuls les dépôts postérieurs à la clôture de l'exercice suivant celui déjà lu peuvent apporter du nouveau (évite de retélécharger des paquets de 20 à 90 Mo)
+      const fy = (reports[0] && reports[0].fyEnd) || "12-31", after = isFinite(have) ? `${have + 1}-${fy}` : "";
+      for (const f of af.filter(x => x.date > after).slice(0, 2)) {
         const doc = await amfDoc(fetchFn, UA, f); await sleep(300);
         if (!doc) continue;
         const ex = extract(doc), ny = newestYear(ex);
@@ -220,10 +222,10 @@ async function main() {
       const old = JSON.parse(readFileSync(file));
       const deviseDouteuse = !old.devise2 && old.currency === "EUR" && /^(SE|DK|NO|GB|CH|PL|CZ|HU|IS)/.test(old.isin || c.isin || ""); // comptes non européens lus à tort en euros
       // Relecture étalée sur une semaine (selon l'identifiant) pour ne pas tout relire le même jour ;
-      // comptes en retard d'un exercice (rapport attendu mais absent) : nouvel essai à chaque passage pour la France (plus de 3 h après la dernière lecture : rapports AMF), tous les trois jours ailleurs.
+      // comptes en retard d'un exercice (rapport attendu mais absent) : nouvel essai chaque jour pour la France (rapports AMF), tous les trois jours ailleurs.
       const spread = (FRESH ? [...c.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 7, 0) * 864e5 : 0);
       const lastY = (old.years || [])[(old.years || []).length - 1];
-      const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? 3 : 70) * 3600e3;
+      const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? 20 : 70) * 3600e3;
       if (old.v === VERSION && !deviseDouteuse && !late && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
