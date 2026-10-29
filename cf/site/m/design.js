@@ -1,8 +1,7 @@
 /* =====================================================================================================
    Module « design » (29 octobre 2026)
-   1. Le cours de l'action est dessiné par le site, à partir des relevés réels. Plus aucun script
-      TradingView dans la page : il laissait un grand vide au chargement, affichait des liens vers
-      TradingView et pouvait lire ce que le navigateur garde pour le visiteur.
+   1. Le cours de l'action : graphique TradingView (widget gratuit, autorisé le 29/10/2026) ; en secours,
+      un dessin fait par le site à partir de ses relevés réels (5 ans, 3 ans, 1 an, aujourd'hui).
    2. Retouches de présentation : gris lisible, moins de cadres imbriqués, hiérarchie plus nette.
    ===================================================================================================== */
 
@@ -30,7 +29,7 @@ function dsgFmt(v, cur) {
   return sym ? `${n} ${sym}` : n;
 }
 
-function tvChart(el, symbol, name) {
+function dsgCourbe(el, symbol, name) { // dessin maison : secours quand le graphique TradingView ne peut pas s'afficher
   if (!el) return;
   dsgRedraw.set(el, [symbol, name]);
   const hit = dsgQuote(symbol, name), q = hit && hit.q;
@@ -38,7 +37,7 @@ function tvChart(el, symbol, name) {
     // Les cours ne sont pas encore chargés : on réessaie plutôt que d'annoncer une absence.
     el.innerHTML = `<div class="dsgc dsgc-vide"><p>Chargement du cours…</p></div>`;
     const n = (el.dataset.dsgTry = String(+(el.dataset.dsgTry || 0) + 1));
-    if (+n <= 24) { setTimeout(() => { if (document.body.contains(el)) tvChart(el, symbol, name); }, 300); return; }
+    if (+n <= 24) { setTimeout(() => { if (document.body.contains(el)) dsgCourbe(el, symbol, name); }, 300); return; }
   }
   if (!q || !(q.p > 0)) {
     el.innerHTML = `<div class="dsgc dsgc-vide"><p>Le cours de cette valeur n'est pas relevé pour l'instant. Les chiffres des comptes restent affichés plus bas.</p></div>`;
@@ -82,13 +81,39 @@ function tvChart(el, symbol, name) {
 }
 
 const dsgRedraw = new Map();
-addEventListener("resize", () => { for (const [el, a] of dsgRedraw) { if (document.body.contains(el)) tvChart(el, a[0], a[1]); else dsgRedraw.delete(el); } }, { passive: true });
+addEventListener("resize", () => { for (const [el, a] of dsgRedraw) { if (document.body.contains(el)) dsgCourbe(el, a[0], a[1]); else dsgRedraw.delete(el); } }, { passive: true });
+
+/* ---------- Graphique TradingView (autorisé par Romain le 29/10/2026) ----------
+   Le graphique complet (bougies ou ligne, zoom, périodes) est fourni par le widget gratuit de TradingView,
+   avec la mention et le lien exigés par leur licence. Si le script ne charge pas (bloqueur, panne, hors ligne),
+   le dessin maison à partir des relevés du site prend la place après 6 secondes. */
+const DSG_TV_SRC = "https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js";
+function tvChart(el, symbol, name) {
+  if (!el) return;
+  if (!symbol) return dsgCourbe(el, symbol, name);
+  const mobile = matchMedia("(max-width:760px)").matches;
+  el.innerHTML = `<div class="tradingview-widget-container dsg-tv"><div class="tradingview-widget-container__widget"></div><div class="tradingview-widget-copyright"><a href="https://www.tradingview.com/symbols/${encodeURIComponent(symbol.replace(":", "-"))}/" rel="noopener nofollow" target="_blank">Graphique ${esc(name)} par TradingView</a> · cours différé selon la bourse</div></div>`;
+  const s = document.createElement("script");
+  s.src = DSG_TV_SRC; s.async = true; s.type = "text/javascript";
+  s.innerHTML = JSON.stringify({ autosize: true, symbol, interval: "D", range: "12M", timezone: "Europe/Paris", theme: "light", style: "3", locale: "fr",
+    backgroundColor: "rgba(255,255,255,0)", gridColor: "rgba(0,0,0,0.05)", hide_top_toolbar: true, hide_legend: mobile, hide_side_toolbar: true, allow_symbol_change: false,
+    save_image: false, calendar: false, hide_volume: true, withdateranges: !mobile, details: false, support_host: "https://www.tradingview.com" });
+  s.onerror = () => dsgCourbe(el, symbol, name);
+  el.firstChild.insertBefore(s, el.firstChild.lastChild);
+  setTimeout(() => { if (document.body.contains(el) && !el.querySelector("iframe")) dsgCourbe(el, symbol, name); }, 6000);
+}
 
 /* Le module d'information du haut (anciennement TradingView) n'a plus lieu d'être : le cours figure déjà
    dans l'en-tête de la fiche, avec son heure de relevé et sa source. */
 function tv(el) { if (el) el.innerHTML = ""; }
 
 document.head.insertAdjacentHTML("beforeend", `<style>
+.f2-chart{display:flex;flex-direction:column}.f2-chart #tvchart.f2-tv{flex:1 1 auto;height:auto;min-height:300px}
+@media (max-width:760px){.f2-chart #tvchart.f2-tv{min-height:240px}}
+.dsg-tv{height:100%;display:flex;flex-direction:column}
+.dsg-tv .tradingview-widget-container__widget{flex:1 1 auto;min-height:0}
+.dsg-tv .tradingview-widget-copyright{font-size:11.5px;color:var(--grey);padding:6px 0 0;text-align:right}
+.dsg-tv .tradingview-widget-copyright a{color:var(--grey)}
 .dsgc{display:flex;flex-direction:column;height:100%;gap:8px}
 .dsgc svg{flex:1 1 auto;width:100%;min-height:200px}
 .dsgc-ax{font-size:11.5px;fill:var(--grey);font-family:var(--mono,inherit)}
