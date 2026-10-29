@@ -1,5 +1,9 @@
 {
- "auto1": [
-  "[3s] hkex 17239 [[\"Stock Code\",\"Name of Securities\",\"Category\",\"Sub-Category\",\"Board Lot\",\"ISIN\",\"Expiry Date\",\"Subject to Stamp Duty\",\"Shortsell Eligible\",\"CAS Eligible\",\"VCM Eligible\",\"Admitted to CCASS\",\"Debt Securities Board Lot (Nominal)\",\"Debt Securities Investor Type\",\"POS Eligible\",\"Spread Table\\r\\n1 = Part A\\r\\n3 = Part B\\r\\n5 = Part D\\r\\n4 & 6 = Part E\",\"Trading Currency\",\"RMB Counter\"],[\"00001\",\"CKH HOLDINGS\",\"Equity\",\"Equity Securities (Main Board)\",\"500\",\"KYG217651051\",\"\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"\",\"\",\"Y\",\"1 \",\"HKD\",\"\"],[\"00002\",\"CLP HOLDINGS\",\"Equity\",\"Equity Securities (Main Board)\",\"500\",\"HK0002007356\",\"\",\"Y\",\"Y\",\"Y\",\"Y\",\"Y\",\"\",\"\",\"Y\",\"1 \",\"HKD\",\"\"]]"
+ "fraicheur": [
+  "FR0000121014 94 documents",
+  "FR0000121485 74 documents",
+  "FR0014000MR3 67 documents",
+  "FR0000120271 100 documents",
+  "extensions {\"pdf\":371,\"zip\":16,\"xhtml\":6,\"xbri\":2}"
  ]
 }
