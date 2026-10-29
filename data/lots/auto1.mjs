@@ -1,4 +1,4 @@
-// Lot « auto1 » : 1084 sociétés cotées ajoutées automatiquement à partir de sources ouvertes (collecte : data/diag/test.mjs, résultats bruts dans data/diag/auto1/).
+// Lot « auto1 » : 1082 sociétés cotées ajoutées automatiquement à partir de sources ouvertes (collecte : data/diag/test.mjs, résultats bruts dans data/diag/auto1/).
 // Identifiants : Wikidata (ISIN, site officiel, secteur, description), GLEIF (correspondance ISIN-LEI), filings.xbrl.org (rapports ESEF/UKSEF),
 // listes officielles des bourses (Euronext, Nasdaq Nordic, Xetra, SIX, Tokyo, Hong Kong, NSE, ASX, TSX), OpenFIGI (cotations), SEC EDGAR (numéro CIK, code SIC, formulaires déposés).
 // Écartées : fonds, ETF, SPAC, sociétés dissoutes ou radiées, cotations secondaires, secteur indéterminé, site officiel incohérent avec le nom.
@@ -1632,9 +1632,6 @@ export default [
   { id: "ferguson-enterprises", name: "Ferguson Enterprises", ticker: "FERG", isin: "US31488V1070", sec: "FERG", cik: "0002011641", tv: "NYSE:FERG", region: "US", sector: "industrie", domain: "ferguson.com",
     desc: "Distribution de fournitures et d'équipements industriels.",
     fiche: { fait: "Distribue des fournitures, des pièces et des équipements aux professionnels.", argent: "Une marge sur les produits revendus aux entreprises.", depend: "L'activité industrielle et du bâtiment." } },
-  { id: "skydance", name: "Skydance", ticker: "SKYD", sec: "SKYD", cik: "0002041610", tv: "NYSE:SKYD", region: "US", sector: "telecom", domain: "skydance.com",
-    desc: "Télévision, radio et médias.",
-    fiche: { fait: "Exploite des chaînes de télévision, des radios ou des contenus audiovisuels.", argent: "La publicité et les abonnements.", depend: "Les recettes publicitaires et l'audience." } },
   { id: "hf-sinclair", name: "HF Sinclair", ticker: "DINO", isin: "US4361061082", sec: "DINO", cik: "0001915657", tv: "NYSE:DINO", region: "US", sector: "energie", domain: "hollyfrontier.com",
     desc: "Entreprise pétrolière américaine.",
     fiche: { fait: "Exploite des oléoducs, des gazoducs et des installations de stockage.", argent: "Des tarifs de transport et de stockage, souvent fixés par des contrats de long terme.", depend: "Les volumes transportés, la réglementation et les taux d'intérêt." } },
@@ -1650,9 +1647,6 @@ export default [
   { id: "athene-holding", name: "Athene Holding", ticker: "ATHS", sec: "ATHS", cik: "0001527469", tv: "NYSE:ATHS", region: "US", sector: "finance", domain: "athene.com",
     desc: "Assurance vie et épargne.",
     fiche: { fait: "Propose de l'assurance vie, de l'épargne et de la prévoyance.", argent: "Les primes versées par les clients et le rendement de ses placements.", depend: "Les taux d'intérêt et les marchés financiers." } },
-  { id: "the-bank-of-new-york-mellon", name: "The Bank of New York Mellon", ticker: "BNY", isin: "US0640581007", sec: "BNY", cik: "0001390777", tv: "NYSE:BNY", region: "US", sector: "finance", domain: "bnymellon.com",
-    desc: "Banque.",
-    fiche: { fait: "Collecte les dépôts et accorde des crédits aux particuliers et aux entreprises.", argent: "La marge entre les intérêts des crédits et ceux des dépôts, plus des commissions.", depend: "Les taux d'intérêt, la qualité des emprunteurs et l'économie." } },
   { id: "reinsurance-group-of-america", name: "Reinsurance Group of America", ticker: "RGA", isin: "US7593516047", sec: "RGA", cik: "0000898174", tv: "NYSE:RGA", region: "US", sector: "finance", domain: "rgare.com",
     desc: "Assurance vie et épargne.",
     fiche: { fait: "Propose de l'assurance vie, de l'épargne et de la prévoyance.", argent: "Les primes versées par les clients et le rendement de ses placements.", depend: "Les taux d'intérêt et les marchés financiers." } },

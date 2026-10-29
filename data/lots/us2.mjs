@@ -167,7 +167,7 @@ export default [
   { id: "news-corp", name: "News Corp", ticker: "NWSA", sec: "NWSA", tv: "NASDAQ:NWSA", region: "US", sector: "telecom", domain: "newscorp.com",
     desc: "Journaux, édition de livres et sites immobiliers.",
     fiche: { fait: "Possède des journaux (The Wall Street Journal, The Times, The Sun), l'éditeur HarperCollins et des sites immobiliers.", argent: "Les abonnements et la publicité des journaux, les livres et les annonces immobilières en ligne.", depend: "Les abonnements numériques, le marché publicitaire et le marché immobilier." } },
-  { id: "paramount-skydance", name: "Paramount Skydance", ticker: "PSKY", sec: "PSKY", tv: "NASDAQ:PSKY", region: "US", sector: "telecom", domain: "paramount.com",
+  { id: "paramount-skydance", name: "Paramount Skydance", ticker: "SKYD", sec: "SKYD", cik: "0002041610", tv: "NYSE:SKYD", region: "US", sector: "telecom", domain: "paramount.com",
     desc: "Télévision, cinéma et streaming (CBS, Paramount+).",
     fiche: { fait: "Possède la chaîne CBS, le studio Paramount Pictures, des chaînes (MTV, Nickelodeon) et le streaming Paramount+.", argent: "La publicité, les sommes versées par les distributeurs de télévision, les abonnements au streaming et les films.", depend: "Le déclin de la télévision classique, le nombre d'abonnés au streaming et le succès des films." } },
   { id: "omnicom", name: "Omnicom", ticker: "OMC", sec: "OMC", tv: "NYSE:OMC", region: "US", sector: "telecom", domain: "omnicomgroup.com",

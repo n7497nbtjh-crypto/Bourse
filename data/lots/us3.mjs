@@ -34,7 +34,7 @@ export default [
   { id: "state-street", name: "State Street", ticker: "STT", sec: "STT", tv: "NYSE:STT", region: "US", sector: "finance", domain: "statestreet.com",
     desc: "Conservation de titres et gestion d'actifs (fonds SPDR).",
     fiche: { fait: "Garde les titres des grands investisseurs et gère des fonds, dont les ETF SPDR.", argent: "Des commissions calculées sur les montants gardés ou gérés, plus des intérêts.", depend: "Le niveau des marchés boursiers, les taux d'intérêt et les flux des clients." } },
-  { id: "bny", name: "BNY", ticker: "BK", sec: "BK", tv: "NYSE:BK", region: "US", sector: "finance", domain: "bny.com",
+  { id: "bny", name: "BNY", ticker: "BNY", sec: "BNY", cik: "0001390777", tv: "NYSE:BNY", region: "US", sector: "finance", domain: "bny.com",
     desc: "Banque de conservation de titres et de paiements.",
     fiche: { fait: "Garde et administre les titres des investisseurs, traite des paiements et gère des fonds (ex-Bank of New York Mellon).", argent: "Surtout des commissions sur les actifs conservés, plus des intérêts sur les dépôts des clients.", depend: "Le niveau des marchés financiers, les taux d'intérêt et les volumes traités." } },
   { id: "northern-trust", name: "Northern Trust", ticker: "NTRS", sec: "NTRS", tv: "NASDAQ:NTRS", region: "US", sector: "finance", domain: "northerntrust.com",
