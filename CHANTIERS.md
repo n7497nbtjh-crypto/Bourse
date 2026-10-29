@@ -80,7 +80,7 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
 - Bouton d'abonnement : si le module « pwa » définit `pwaNotifBouton({ sujet, texte })` (renvoie du HTML), il est affiché dans la barre d'actions de la synthèse.
 - Tests : `node tests/t_synthese.mjs`, `python3 tests/t_synthese_ui.py [--shots dossier]` (maquette `tests/synthese_maquette.mjs`).
 
-## Présentation de la fiche (agent « fiche2 », module `cf/site/m/fiche2.js`, chargé en dernier)
+## Présentation de la fiche (agent « fiche2 », module `cf/site/m/fiche2.js`, chargé après fiche, comparer, tableaux et analyse)
 - Redéclare `companyHeader`, `ficheSommaire`, `pageCompany`, `etapesBind`, `ficheGraphBox`, `ficheGraphique`, `concurrentsHTML`
   (contenu repris de fiche.js / comparer.js) ; enveloppe `ficheMetierHTML` et `ficheAnalyse` (texte complété, rien de retiré).
   Agents « fiche » et « comparer » : vos changements sur ces fonctions doivent être reportés dans fiche2.js (ou prévenir).
