@@ -76,7 +76,7 @@ function actuItemHTML(it, { showCo = true, detail = true } = {}) {
   return `<div class="ax-it">${showCo ? (co ? `<a href="/entreprise/${co.id}/actualite" class="nlogo" aria-hidden="true" tabindex="-1">${logo(co, 36)}</a>` : "") : ""}
     <div class="ax-b"><div class="ax-m">${showCo && co ? `<a class="nco" href="/entreprise/${co.id}/actualite">${esc(co.name)}</a>` : ""}<span class="ax-chip" style="--c:${C.c}" title="${esc(C.why)}">${C.l}</span>${it.p ? `<span class="ax-imp" title="Information privilégiée : un fait susceptible d'influencer le cours, que l'entreprise doit publier sans délai">Info. privilégiée</span>` : ""}<span>${hhmm(it.d) || dShort(it.d)}</span></div>
       <span class="ax-tf">${esc(main)}</span>${sub ? `<span class="ax-t">${esc(sub)}</span>` : ""}
-      ${figs}${clair}${detail && /sec\.gov|opendatasoft|info-financiere/.test(it.u) && !C.routine ? iaBtn(it.u) : ""}${actuSrcLink(it)}</div></div>`;
+      ${figs}${clair}${detail && !C.routine && /sec\.gov|opendatasoft|info-financiere/.test(it.u) ? iaBtn(it.u) : detail && !(it.x && it.x.c) && it.i >= 2 && !C.routine ? `<button type="button" class="iabtn" data-clair="${esc(it.id)}|${esc(it.k)}">✦ Expliquer en clair</button><div class="iabox"></div>` : ""}${actuSrcLink(it)}</div></div>`;
 }
 function actuListHTML(items, opts = {}) {
   if (!items.length) return `<div class="ax-empty">${opts.vide || "Aucune annonce pour ce choix."}</div>`;
@@ -256,3 +256,14 @@ function pageActus() {
     $("#ax-srcs").innerHTML = S.length ? `<div class="ax-sources">Mis à jour ${j.maj ? `le ${esc(dLabel(j.maj.slice(0, 10)))} à ${esc(hhmm(j.maj))}` : ""}. Sources : ${S.map(x => `<a class="lnk" href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.nom)}</a>${x.at ? ` (${esc(hhmm(x.at) || dShort(x.at))})` : ""}`).join(", ")}. Titres et liens d'origine ; classement, chiffres et explications calculés par le site, sans conseil d'investissement.</div>` : "";
   });
 }
+
+// « Expliquer en clair » : rédigé par l'IA du serveur à partir de l'annonce publiée, puis gardé pour tous les visiteurs
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-clair]"); if (!b) return; e.preventDefault();
+  const [id, k] = b.dataset.clair.split("|"), box = b.nextElementSibling; b.disabled = true; b.textContent = "Rédaction en cours…";
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 45000);
+  fetch(`/api/actu/clair?id=${encodeURIComponent(id)}&k=${encodeURIComponent(k)}`, { signal: ctl.signal }).then(r => r.json()).then(j => {
+    b.remove();
+    box.outerHTML = j.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(j.clair)}</p>${j.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(j.change)}</p>` : ""}<small>Rédigé par l'IA du site à partir de l'annonce. La source fait foi.</small></div>` : `<p class="ax-why">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
+  }).catch(() => { b.remove(); box.outerHTML = `<p class="ax-why">Explication indisponible pour le moment.</p>`; }).finally(() => clearTimeout(t));
+});
