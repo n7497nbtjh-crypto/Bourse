@@ -105,6 +105,90 @@ ok(r.positions.length === 1 && r.positions[0].q === 3 && r.positions[0].pru === 
 r = PF3.read("");
 ok(r.error && !r.ops.length, "fichier vide");
 
+// =====================================================================
+// --- Import : reconstitution des positions (jamais l'ordre des lignes du fichier)
+// =====================================================================
+const act = R => Object.fromEntries(R.active.map(a => [a.isin || a.name, a]));
+// Oracle indépendant : la somme des quantités achetées, vendues et ajoutées par division, titre par titre, lue à la main dans le fichier TR
+const trOracle = txt => { const rows = txt.trim().split("\n").map(l => l.slice(1, -1).split('","')), H = rows[0], ix = n => H.indexOf(n), net = {}, ids = new Set();
+  for (const r of rows.slice(1)) { if (r[0] === "datetime" || ids.has(r[ix("transaction_id")])) continue; ids.add(r[ix("transaction_id")]);
+    const cat = r[ix("category")], t = r[ix("type")], s = r[ix("symbol")], q = +r[ix("shares")] || 0;
+    if (!/^[A-Z]{2}[A-Z0-9]{9}\d$/.test(s)) continue;
+    if (cat === "TRADING" && (t === "BUY" || t === "SELL")) net[s] = (net[s] || 0) + q; else if (t === "SPLIT") net[s] = (net[s] || 0) + q; else if (t === "BUY_CANCELLED") net[s] = (net[s] || 0) - q; }
+  return net; };
+{ // Le scénario de Romain : six premières lignes d'achats (revendus depuis), positions actuelles en fin de fichier
+  const txt = fx("traderepublic-romain.csv"), r1 = PF3.read(txt), R1 = PF3.reconstruct(r1), A = act(R1);
+  ok(r1.format === "traderepublic" && r1.kind === "operations", "TR Romain : journal d'opérations détecté " + r1.kind);
+  const firstSix = r1.ops.filter(o => o.t === "a").slice(0, 6).map(o => o.isin);
+  ok(firstSix.length === 6 && firstSix.every(i => !A[i]) && firstSix.every(i => R1.sold.some(s => s.isin === i)), "TR Romain : les 6 premières lignes (vendues) ne sont PAS des positions actives " + firstSix);
+  const net = trOracle(txt), held = Object.entries(net).filter(([, q]) => q > 1e-9);
+  ok(held.length === 12 && R1.active.length === 12, `TR Romain : 12 positions détenues (oracle ${held.length}, import ${R1.active.length})`);
+  ok(held.every(([i, q]) => A[i] && near(A[i].q, q, 1e-6)), "TR Romain : aucune position active perdue, quantités exactes " + held.filter(([i, q]) => !A[i] || !near(A[i].q, q, 1e-6)).map(x => x[0]));
+  ok(R1.sold.length === 6 && R1.sold.every(s => !(net[s.isin] > 1e-9)), "TR Romain : 6 positions soldées listées comme vendues " + R1.sold.map(s => s.name));
+  ok(near(A.US67066G1040.q, 10) && near(A.US67066G1040.pru, 88.1), "TR Romain : division Nvidia (+9 titres), PRU divisé par 10 " + A.US67066G1040.pru);
+  ok(near(A.FR0000120271.q, 12) && near(A.FR0000120271.pru, (584 + 1 + 280.5 + 1) / 15), "TR Romain : TotalEnergies, deux achats puis vente partielle, PRU inchangé " + A.FR0000120271.pru);
+  ok(near(A.FR001400U5Q4.q, 14 * 0 + [5.42, 5.38, 5.61, 5.70, 5.83, 5.95, 5.66, 5.31, 5.58, 5.74, 5.86, 5.92, 6.01, 6.10].reduce((a, p) => a + Math.round(100 / p * 1e10) / 1e10, 0), 1e-5) && near(A.FR001400U5Q4.cost, 1400, 0.01), "TR Romain : plan d'investissement en fractions (14 × 100 €) " + A.FR001400U5Q4.q);
+  ok(near(A.FR0000052292.q, 1) && near(A.FR0000052292.pru, 2296), "TR Romain : achat annulé le même jour retiré, l'achat du lendemain gardé " + A.FR0000052292.q);
+  ok(r1.ignored.filter(i => i.kind === "annule").length === 2, "TR Romain : l'ordre annulé et son annulation restent visibles dans les lignes ignorées");
+  ok(r1.dups === 2 && r1.ignored.some(i => /en-tête répété/.test(i.why)), "TR Romain : deux exports mis bout à bout, doublons comptés une fois " + r1.dups);
+  ok(R1.crypto.length === 1 && R1.crypto[0].name === "Bitcoin" && near(R1.crypto[0].q, 0.002), "TR Romain : cryptomonnaie signalée, non importée");
+  ok(R1.checks.every(c => c.ok) && R1.checks[0].t.startsWith(`${r1.rows} lignes lues sur ${r1.rows}`), "TR Romain : contrôles au vert, toutes les lignes comptées " + JSON.stringify(R1.checks.filter(c => !c.ok)));
+  ok(R1.active.every(a => a.ops && near(PF3.position(a.ops).q, a.q, 1e-6) && near(PF3.position(a.ops).pru, a.pru, 1e-6)), "TR Romain : opérations enregistrées = même quantité et même PRU");
+  ok(R1.active.every(a => { const l = PF3.cleanLine({ k: "x:" + a.isin, cur: a.cur, o: a.ops }); return l && near(l.q, a.q, 1e-6); }), "TR Romain : quantités gardées après enregistrement (6 décimales)");
+  // L'ordre du fichier ne change rien : mêmes positions si les lignes sont inversées
+  const lines = txt.trim().split("\n"), rev = [lines[0], ...lines.slice(1).filter(l => !l.startsWith('"datetime"')).reverse()].join("\n");
+  const Rr = PF3.reconstruct(PF3.read(rev)), Ar = act(Rr);
+  ok(Rr.active.length === 12 && R1.active.every(a => Ar[a.isin] && near(Ar[a.isin].q, a.q, 1e-6) && near(Ar[a.isin].pru, a.pru, 1e-6)), "TR Romain : fichier inversé, mêmes positions et mêmes PRU");
+  // Limite gratuite : 10 positions actives, les plus grosses en valeur ; jamais les premières lignes
+  const top = PF3.pick(R1.active, 10, a => a.cost), small = R1.active.filter(a => !top.includes(a));
+  ok(top.length === 10 && small.length === 2 && small.every(s => top.every(t => t.cost >= s.cost)), "limite gratuite : les 10 plus grosses positions actives sont retenues " + small.map(s => s.name));
+  ok(PF3.pick(R1.active, Infinity, a => a.cost).length === 12, "Premium : aucune limite");
+}
+{ // Journal générique : ventes totales, achats et ventes partiels, doublon exact, devises, transferts entrants, division, ligne de synthèse
+  const r2 = PF3.read(fx("journal-generique.csv")), R2 = PF3.reconstruct(r2), A = act(R2);
+  ok(r2.format === "generic" && R2.active.length === 5 && R2.sold.length === 2, "journal : 5 positions détenues, 2 vendues " + R2.active.map(a => a.name) + " / " + R2.sold.map(a => a.name));
+  ok(near(A.US0378331005.q, 5) && near(A.US0378331005.pru, (741.8 + 346) / 6) && A.US0378331005.cur === "USD", "journal : Apple en dollars, vente partielle, PRU " + A.US0378331005.pru);
+  ok(R2.extraIgn.some(i => /en EUR, alors que la position est suivie en USD/.test(i.why)) && A.US0378331005.amb.some(t => /autre devise/.test(t)), "journal : l'achat en euros d'un titre suivi en dollars est signalé, pas mélangé");
+  ok(near(A.US67066G1040.q, 20) && near(A.US67066G1040.pru, 2401 / 20) && A.US67066G1040.amb.some(t => /division/.test(t)), "journal : division (+18 titres), à vérifier");
+  ok(near(A.FR0000120073.q, 5) && near(A.FR0000120073.pru, 150) && !A.FR0000120073.needPru, "journal : transfert entrant avec son PRU");
+  ok(A.FR0000073272.needPru && A.FR0000073272.amb.some(t => /sans prix de revient/.test(t)), "journal : transfert entrant sans prix, PRU demandé");
+  ok(near(A.FR001400U5Q4.q, 120) && A.FR001400U5Q4.nOps === 2, "journal : ligne sans ISIN rattachée au même titre par son nom");
+  ok(r2.dups === 1 && r2.ignored.some(i => i.kind === "synthese") && r2.ignored.some(i => i.kind === "cash"), "journal : doublon, ligne « Total » et versement d'espèces écartés avec leur raison");
+  ok(R2.checks[0].ok, "journal : toutes les lignes comptées");
+  const Rf = PF3.reconstruct(r2, { pru: { [A.FR0000073272.id]: 180 } });
+  ok(near(act(Rf).FR0000073272.pru, 180) && !act(Rf).FR0000073272.needPru, "journal : PRU saisi dans l'aperçu pour les titres reçus");
+  const Rd = PF3.reconstruct(PF3.read(fx("journal-generique.csv"), { keepDup: true }));
+  ok(act(Rd).FR0000121485 && near(act(Rd).FR0000121485.q, 3), "journal : « compter aussi les doublons » garde le second achat Kering (cas ambigu laissé au choix)");
+}
+{ // État du portefeuille : statut, quantité nulle, ligne de synthèse, titre sur deux lignes, contrôle de la valorisation
+  const r3 = PF3.read(fx("etat-portefeuille.csv")), R3 = PF3.reconstruct(r3), A = act(R3);
+  ok(r3.kind === "positions" && R3.active.length === 3, "état : 3 positions actives " + R3.active.map(a => a.name));
+  ok(R3.sold.map(s => s.isin).sort().join() === "FR0000131906,FR0000133308", "état : « Clôturée », « Vendue » et quantité nulle → vendues " + R3.sold.map(s => s.name));
+  ok(near(A.FR0000120073.q, 6) && near(A.FR0000120073.pru, (4 * 160.1 + 2 * 170) / 6) && A.FR0000120073.amb.length, "état : titre sur deux lignes additionné, PRU pondéré, signalé");
+  ok(near(A.FR0000120271.q, 20), "état : ligne en double comptée une fois " + A.FR0000120271.q);
+  ok(A.FR0000121014.amb.some(t => /valorisation/.test(t)) && !A.FR0000120271.amb.some(t => /valorisation/.test(t)), "état : quantité × cours ≠ valorisation signalé");
+  ok(r3.ignored.some(i => i.kind === "synthese"), "état : ligne « Total portefeuille » écartée");
+}
+{ // pytr en français : dépôt, intérêts, transfert entrant sans prix, vente partielle
+  const r4 = PF3.read(fx("pytr-fr.csv")), R4 = PF3.reconstruct(r4), A = act(R4);
+  ok(r4.format === "pytr" && R4.active.length === 2, "pytr FR : 2 positions " + R4.active.map(a => a.name));
+  ok(near(A.FR001400U5Q4.q, 66.393443) && near(A.FR001400U5Q4.pru, 691 / 116.393443) && A.FR001400U5Q4.name.startsWith("Amundi"), "pytr FR : montants en colonne « Valeur », nom en « Note » " + A.FR001400U5Q4.pru);
+  ok(A.FR0000120073.needPru, "pytr FR : « Transfert (Entrant) » sans prix → PRU demandé");
+  ok(r4.ignored.filter(i => i.kind === "cash").length === 3, "pytr FR : dépôt, intérêts, remboursement d'impôts ignorés");
+}
+{ // Vente supérieure aux titres achetés : signalée, jamais masquée
+  const R5 = PF3.reconstruct(PF3.read("Date;Opération;Valeur;Quantité;Cours\n2026-01-02;Achat;LVMH;3;600\n2026-02-02;Vente;LVMH;5;650\n2026-03-02;Achat;Orange;10;11\n"));
+  ok(!R5.checks.find(c => /Quantités|vente/.test(c.t)).ok && R5.amb.some(a => a.items.some(t => /historique commence/.test(t))), "vente supérieure aux achats signalée");
+  ok(R5.active.length === 1 && R5.active[0].name === "Orange", "vente supérieure : la position vendue n'apparaît pas comme détenue");
+}
+{ // Export puis réimport avec une division : quantité et PRU identiques
+  const P0 = PF3.migrate({ v: 3, l: [{ k: "c:nvidia", cur: "USD", o: [["2024-05-20", "a", 1, 880, 1], ["2024-06-10", "r", 9, 0, 0]] }] });
+  const csv0 = PF3.toCsv(P0, l => ({ name: "NVIDIA", isin: "US67066G1040", ticker: "" }));
+  ok(csv0.includes(";Division;"), "export : la division a son libellé");
+  const Rx = PF3.reconstruct(PF3.read(csv0));
+  ok(Rx.active.length === 1 && near(Rx.active[0].q, 10) && near(Rx.active[0].pru, 88.1), "réimport d'une division : même quantité et même PRU " + JSON.stringify(Rx.active.map(a => [a.q, a.pru])));
+}
+
 // --- Export puis réimport : rien ne se perd
 const P = PF3.migrate({ v: 3, l: [{ k: "c:lvmh", env: "pea", br: "boursobank", cur: "EUR", o: [["2026-01-06", "a", 2, 610, 1], ["2026-06-18", "v", 1, 650, 1], ["2026-07-01", "d", 1, 6.5, 0]] }, { k: "e:amundi-msci-world-pea", q: 12, pru: 85.4, env: "pea" }, { k: "x:IE00B4L5Y983", nm: "iShares Core MSCI World", isin: "IE00B4L5Y983", q: 3, pru: 98.12, env: "cto", br: "degiro" }, { k: "c:apple", m: 1000 }] });
 const csv = PF3.toCsv(P, l => ({ name: l.nm || l.k.slice(2), isin: l.isin || "", ticker: "" }));

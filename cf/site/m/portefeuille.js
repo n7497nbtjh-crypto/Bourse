@@ -16,7 +16,7 @@
 
 const PF3 = (() => {
   const EPS = 1e-9;
-  const r4 = x => Math.round(x * 1e4) / 1e4;
+  const r4 = x => Math.round(x * 1e4) / 1e4, rq = x => Math.round(x * 1e6) / 1e6; // rq : quantités (fractions de parts gardées à 6 décimales)
   const fin = x => typeof x === "number" && isFinite(x);
   const numOr = (x, d = 0) => { const n = typeof x === "string" ? parseFloat(x.replace(",", ".")) : x; return fin(n) ? n : d; };
   const isoOk = d => typeof d === "string" && /^\d{4}-\d{2}-\d{2}$/.test(d);
@@ -50,7 +50,7 @@ const PF3 = (() => {
         if (q < EPS) { q = 0; cost = 0; costE = 0; }
       } else if (t === "d") divs += p * (oq || 1) - f;
     }
-    return { q: r4(q), cost, pru: q > EPS ? cost / q : 0, costE: eurOk ? costE : null, realE: eurOk ? realE : null, real, fees, bought, divs, nBuy, nSell, warn, first, last, buys };
+    return { q: rq(q), cost, pru: q > EPS ? cost / q : 0, costE: eurOk ? costE : null, realE: eurOk ? realE : null, real, fees, bought, divs, nBuy, nSell, warn, first, last, buys };
   }
   // La position d'une ligne : à partir de ses opérations, ou de la quantité et du PRU saisis.
   function linePos(l) {
@@ -73,7 +73,7 @@ const PF3 = (() => {
     const t = ["a", "v", "d", "r"].includes(o[1]) ? o[1] : null; if (!t) return null;
     const d = isoOk(o[0]) ? o[0] : "", q = Math.abs(numOr(o[2])), p = Math.abs(numOr(o[3])), f = Math.abs(numOr(o[4])), x = numOr(o[5], NaN);
     if (t !== "d" && !(q > 0)) return null;
-    const out = [d, t, r4(q) || (t === "d" ? 1 : 0), Math.round(p * 1e6) / 1e6, Math.round(f * 100) / 100];
+    const out = [d, t, Math.round(q * 1e8) / 1e8 || (t === "d" ? 1 : 0), Math.round(p * 1e6) / 1e6, Math.round(f * 100) / 100];
     if (fin(x) && x > 0 && x !== 1) out.push(Math.round(x * 1e6) / 1e6);
     return out;
   }
@@ -83,7 +83,7 @@ const PF3 = (() => {
     if (Array.isArray(l.o)) { const o = l.o.map(cleanOp).filter(Boolean); if (o.length) out.o = o; }
     if (!out.o) {
       const q = Math.max(0, numOr(l.q)), pru = Math.max(0, numOr(l.pru));
-      if (q > 0) { out.q = r4(q); out.pru = r4(pru); }
+      if (q > 0) { out.q = rq(q); out.pru = r4(pru); }
     }
     const m = Math.max(0, numOr(l.m)); if (m > 0 && !(out.q > 0) && !out.o) out.m = Math.round(m * 100) / 100;
     if (!out.o && !(out.q > 0) && !out.m) return null; // ligne vide
@@ -164,14 +164,14 @@ const PF3 = (() => {
     const score = d => lines.reduce((a, l) => a + Math.min(count(l, d), 40), 0);
     const delim = [";", ",", "\t", "|"].map(d => [d, score(d)]).sort((a, b) => b[1] - a[1])[0][0];
     const rows = csvRows(text, delim).map(r => r.map(c => String(c).trim()));
-    // Séparateur décimal du fichier : la forme la plus fréquente l'emporte
+    // Séparateur décimal du fichier : la forme la plus fréquente l'emporte (tout le fichier est examiné)
     let comma = 0, dot = 0;
-    for (const r of rows.slice(0, 300)) for (const c of r) { if (/^[-+(]?\d+,\d+\)?$/.test(c.replace(/[\s  ]/g, ""))) comma++; else if (/^[-+(]?\d+\.\d+\)?$/.test(c)) dot++; }
+    for (const r of rows) for (const c of r) { if (/^[-+(]?\d+,\d+\)?$/.test(c.replace(/[\s  ]/g, ""))) comma++; else if (/^[-+(]?\d+\.\d+\)?$/.test(c)) dot++; }
     return { delim, dec: comma > dot ? "," : ".", rows };
   }
   function num(s, dec = ",") {
     if (typeof s === "number") return isFinite(s) ? s : null;
-    let t = String(s == null ? "" : s).trim().replace(/[\s  ']/g, "").replace(/€|\$|£|EUR|USD|GBP|CHF/gi, "");
+    let t = String(s == null ? "" : s).trim().replace(/[\s  ']/g, "").replace(/€|\$|£|EUR|USD|GBP|CHF/gi, "");
     if (!t || t === "-" || t === "–") return null;
     let neg = false;
     if (/^\(.*\)$/.test(t)) { neg = true; t = t.slice(1, -1); }
@@ -207,15 +207,16 @@ const PF3 = (() => {
     price: [/^(price|prix|cours|kurs|koers|pu|p\.u\.|prix unitaire|prix d.?execution|cours d.?execution|cours execute|unit price|prix execute|prix net|cours net)$/, /^prix|^cours|price|kurs|koers/],
     pru: [/^(buyingprice|pru|prix de revient|prix de revient unitaire|prix moyen|prix moyen d.?achat|prix d.?achat moyen|pmp|average price|average cost|avg price|cout moyen|prix d.?achat|average buy in|averagebuyin)$/, /buyingprice|pru|revient|prix moyen|average|pmp/],
     fees: [/^(fee|fees|frais|courtage|commission|frais de courtage|gebuhren|gebuhr|transactiekosten|kosten|frais de transaction|commissions|frais ttc|courtage ttc)$/, /fee|frais|courtage|commission|gebuhr|kosten/],
-    amount: [/^(amount|montant|montant net|montant brut|total|value|wert|waarde|valeur|net amount|montant total|montant ttc|value eur|valeur eur|total eur|montant eur)$/, /amount|montant|total|wert|waarde/],
+    amount: [/^(amount|montant|montant net|montant brut|total|value|wert|waarde|valeur|net amount|montant total|montant ttc|value eur|valeur eur|total eur|montant eur|valorisation)$/, /amount|montant|total|wert|waarde|valorisation/],
     currency: [/^(currency|devise|wahrung|valuta|monnaie|devise de cotation)$/],
     fx: [/^(fx|fx rate|fx_rate|exchange rate|taux de change|wechselkurs|wisselkoers|change)$/, /exchange rate|taux de change|wechselkurs|wisselkoers|fx/],
+    status: [/^(statut|status|etat|state|situation)$/],
   };
   function guessMap(header) {
     const H = header.map(nrm), used = new Set(), map = {};
     for (const [f, res] of Object.entries(FIELDS)) {
       for (const re of res) {
-        const i = H.findIndex((h, j) => h && !used.has(j) && re.test(h) && !(f === "fees" && /autofx/.test(h)) && !(f === "amount" && /(fee|frais|kosten|courtage)/.test(h)) && !(f === "name" && /isin/.test(h)) && !(f === "price" && /revient|moyen|average|buying/.test(h)) && !(f === "date" && /valeur|valuta|value date/.test(h)));
+        const i = H.findIndex((h, j) => h && !used.has(j) && re.test(h) && !(f === "fees" && /autofx/.test(h)) && !(f === "amount" && /(fee|frais|kosten|courtage|variation|latente|\+\/-)/.test(h)) && !(f === "name" && /isin/.test(h)) && !(f === "price" && /revient|moyen|average|buying/.test(h)) && !(f === "date" && /valeur|valuta|value date/.test(h)));
         if (i >= 0) { map[f] = i; used.add(i); break; }
       }
     }
@@ -236,64 +237,113 @@ const PF3 = (() => {
   }
   const FORMATS = { traderepublic: "Trade Republic (export des transactions)", boursobank: "BoursoBank (export des positions)", degiro: "Degiro (export des transactions)", "degiro-pf": "Degiro (export du portefeuille)", fortuneo: "Fortuneo (historique des opérations)", "fortuneo-pf": "Fortuneo (export du portefeuille)", pytr: "Trade Republic (fichier pytr)", bilan: "bilan. (export de ce site)", generic: "Fichier CSV" };
   const BROKER_OF = { traderepublic: "trade-republic", pytr: "trade-republic", boursobank: "boursobank", degiro: "degiro", "degiro-pf": "degiro", fortuneo: "fortuneo", "fortuneo-pf": "fortuneo" };
-  // Type d'opération lu dans une cellule
+  /* Type d'opération lu dans une cellule :
+     a achat · v vente · d dividende · s division ou regroupement (quantité ajoutée ou retirée) · ti titres reçus (transfert)
+     · to titres sortis (transfert, remboursement) · x annulation · cash mouvement d'espèces · r position (export de ce site) */
   function opType(s, q) {
     const t = nrm(s);
+    if (!t) return q != null ? (q < 0 ? "v" : q > 0 ? "a" : null) : null;
+    if (/annul|cancel|storno|extourne/.test(t)) return "x";
+    if (/^position/.test(t)) return "r";
     if (/dividend|dividende|coupon|distribution|ausschuttung/.test(t)) return "d";
+    if (/split|division|regroupement|reverse|attribution (gratuite|d.?actions)|actions? gratuites?|bonusaktien|titres? ajoutes?/.test(t)) return "s";
+    if (/transf|virement de titres|umbuchung|depotubertrag|aktien (erhalten|ubertragen)|entree de titres|sortie de titres|reception de titres|livraison de titres/.test(t)) return /sort|\bout|ausgang|ubertragen|emis|envoi/.test(t) ? "to" : "ti";
+    if (/^(depot|deposit|einlage|retrait|removal|entnahme|interets?|interest|zinsen|frais|fees|gebuhren|impots|taxes?|steuern|remboursement (de frais|impots)|tax refund|fees refund|virement|versement|prelevement|carte|card|solde)\b/.test(t)) return "cash";
     if (/\b(sell|sold|vente|vendre|verkauf|verkoop|cession|rachat|remboursement)\b|^v$|vente/.test(t)) return "v";
     if (/\b(buy|bought|achat|acheter|kauf|koop|souscription|purchase|sparplan)\b|^a$|achat|savings plan|plan d.?investissement|investissement programme/.test(t)) return "a";
-    if (!t && q != null) return q < 0 ? "v" : q > 0 ? "a" : null;
     return null;
   }
+  // Ligne de synthèse (total, liquidités…) : jamais une position
+  const SUMMARY = /^(total|totaux|sous total|sous-total|solde|soldes|liquidites?|especes|cash|valorisation( totale)?|montant total|somme|resultat|plus.?value totale|total general|grand total|gesamt|summe|totaal)\b/;
+  const CLOSED = /clotur|vendu|solde|sold|closed|ferme|termin|annul/;
   // Header : première ligne contenant au moins deux champs reconnus (certains exports ont des lignes de titre avant)
   function headerRow(rows) {
     for (let i = 0; i < Math.min(rows.length, 15); i++) { const m = guessMap(rows[i]); if (Object.keys(m).length >= 2 && rows[i].filter(Boolean).length >= 3) return i; }
     return 0;
   }
-  // Lecture complète : renvoie des opérations (achats, ventes, dividendes) ou des positions (quantité et PRU)
+  /* Lecture complète : TOUT le fichier est parcouru, chaque ligne aboutit à une opération, une position ou une ligne ignorée
+     (avec sa raison). Renvoie des opérations (achats, ventes, dividendes, divisions, transferts) ou des positions (état du portefeuille). */
   function read(text, opts = {}) {
     const { rows, dec, delim } = parseCsv(text);
-    if (!rows.length) return { format: "generic", rows: 0, ops: [], positions: [], ignored: [], header: [], map: {}, dec, delim, error: "Le fichier est vide." };
+    if (!rows.length) return { format: "generic", rows: 0, ops: [], positions: [], ignored: [], sold: [], header: [], map: {}, dec, delim, error: "Le fichier est vide.", dups: 0 };
     const hi = headerRow(rows), header = rows[hi], body = rows.slice(hi + 1);
     const format = opts.format || detect(header);
     const map = opts.map ? { ...opts.map } : guessMap(header);
-    if (format === "pytr" && map.name == null) { const i = header.map(nrm).findIndex(h => h === "note" || h === "notiz"); if (i >= 0) map.name = i; }
-    const out = { format, label: FORMATS[format] || FORMATS.generic, broker: BROKER_OF[format] || null, header, map, dec, delim, rows: body.length, ops: [], positions: [], ignored: [], sample: body.slice(0, 5) };
+    if (format === "pytr" && !opts.map) { // pytr : Note = nom du titre, Value / Valeur / Wert = montant (quelle que soit la langue de l'export)
+      const Hn = header.map(nrm), i = Hn.findIndex(h => h === "note" || h === "notiz"), v = Hn.findIndex(h => /^(value|valeur|wert|waarde|valor|valore)$/.test(h));
+      if (i >= 0) map.name = i; if (v >= 0) map.amount = v;
+    }
+    const out = { format, label: FORMATS[format] || FORMATS.generic, broker: BROKER_OF[format] || null, header, map, dec, delim, rows: body.length, ops: [], positions: [], ignored: [], sold: [], crypto: {}, dups: 0, sample: body.slice(0, 5) };
     const H = header.map(nrm), col = re => H.findIndex(h => re.test(h));
-    const cell = (r, i) => i != null && i >= 0 ? r[i] : "";
+    const cell = (r, i) => i != null && i >= 0 && i < r.length ? r[i] : "";
     const N = (r, i) => num(cell(r, i), dec);
-    const ign = (line, why) => out.ignored.push({ line, why });
+    const ign = (line, why, kind = "") => { out.ignored.push({ line, why, kind }); };
+    const op = o => { out.ops.push(o); };
+    const seen = new Map(), headKey = header.join("\u0001");
+    // Annulation : retire l'opération d'origine (même titre, même quantité, déjà lue), les deux restent visibles dans les lignes ignorées
+    // Seule une opération du même jour, même titre et même quantité est retirée ; sinon rien n'est supprimé (à vérifier)
+    const pending = [], cancel = (line, isin, name, q, label, d) => { pending.push([line, isin, name, q, label, d]); };
+    const cancelNow = (line, isin, name, q, label, d) => {
+      const id = isin || nrm(name);
+      let k = -1; for (let i = out.ops.length - 1; i >= 0; i--) { const o = out.ops[i]; if ((o.isin || nrm(o.name)) === id && (o.t === "a" || o.t === "v") && q && Math.abs(o.q - Math.abs(q)) < 1e-6 && (o.date || "") === (d || "")) { k = i; break; } }
+      if (k >= 0) { const o = out.ops.splice(k, 1)[0]; ign(o.line, `${label || name || isin} : ordre annulé par le courtier (annulation ligne ${line})`, "annule"); ign(line, `${label || name || isin} : annulation de l'ordre de la ligne ${o.line}`, "annule"); }
+      else ign(line, `${label || name || isin} : annulation sans ordre correspondant le même jour dans le fichier (rien n'a été retiré, vérifiez la quantité)`, "annule");
+    };
     body.forEach((r, j) => {
       const line = hi + j + 2;
+      // Lignes en double : l'en-tête répété (fichiers mis bout à bout) et les lignes identiques à une ligne déjà lue
+      const key = r.join("\u0001");
+      if (key === headKey) return ign(line, "en-tête répété (plusieurs exports mis bout à bout)", "doublon");
+      const tid = format === "traderepublic" ? cell(r, H.indexOf("transaction id")) : "";
+      const dk = tid ? "id:" + tid : key;
+      if (seen.has(dk) && !(opts.keepDup && !tid)) { out.dups++; return ign(line, `doublon exact de la ligne ${seen.get(dk)}${tid ? " (même identifiant d'opération)" : ""}`, "doublon"); }
+      if (!seen.has(dk)) seen.set(dk, line);
       if (format === "traderepublic") {
         const g = n => cell(r, H.indexOf(nrm(n)));
-        const cat = g("category"), type = g("type"), isin = isinIn(g("symbol"));
-        if (cat === "TRADING" && (type === "BUY" || type === "SELL")) {
-          if (!isin) return ign(line, `${g("name") || g("symbol")} : pas d'ISIN (cryptomonnaie ou produit non coté)`);
-          if (g("asset_class") === "CRYPTO") return ign(line, `${g("name")} : cryptomonnaie, non suivie par le site`);
-          const q = Math.abs(num(g("shares"), dec) || 0), amt = Math.abs(num(g("amount"), dec) || 0), p = num(g("price"), dec) || (q ? amt / q : 0);
-          if (!(q > 0)) return ign(line, "quantité absente");
-          const fx = num(g("fx_rate"), dec);
-          out.ops.push({ isin, name: g("name"), date: date(g("date") || g("datetime")), t: type === "BUY" ? "a" : "v", q, p, f: Math.abs(num(g("fee"), dec) || 0), cur: g("currency") || "EUR", x: null, plan: /savings plan|sparplan/i.test(g("description")), fxNote: fx || null });
-        } else if (cat === "CASH" && type === "DIVIDEND") {
+        const cat = g("category"), type = g("type"), ac = g("asset_class"), isin = isinIn(g("symbol")), name = g("name") || g("symbol");
+        const sh = num(g("shares"), dec), amt = num(g("amount"), dec), acct = g("account_type"), env = /pea/i.test(acct) ? "PEA" : "";
+        const base = { isin, name, date: date(g("date") || g("datetime")), cur: g("currency") || "EUR", env, acct: acct && acct !== "DEFAULT" ? acct : "", line };
+        if (/CANCEL/.test(type)) return cancel(line, isin, name, sh, name, base.date);
+        const trade = cat === "TRADING" || /^PRIVATE_MARKET_(BUY|SELL)$/.test(type);
+        if (trade) {
+          if (ac === "CRYPTO" || !isin) { if (sh) out.crypto[name || "?"] = (out.crypto[name || "?"] || 0) + (/SELL/.test(type) ? -Math.abs(sh) : Math.abs(sh)); return ign(line, `${name || "?"} : cryptomonnaie ou produit sans ISIN, non suivi par le site`, "crypto"); }
+          const q = Math.abs(sh || 0);
+          if (!(q > 0)) return ign(line, `${name} : quantité absente`);
+          const t = /BUY/.test(type) ? "a" : /SELL/.test(type) ? "v" : sh < 0 ? "v" : "a";
+          const p = num(g("price"), dec) || (amt ? Math.abs(amt) / q : 0);
+          if (!(p > 0)) return ign(line, `${name} : prix absent`);
+          return op({ ...base, t, q, p, f: Math.abs(num(g("fee"), dec) || 0), plan: /savings plan|sparplan|saveback|round ?up/i.test(g("description")), fxNote: num(g("fx_rate"), dec) || null });
+        }
+        if (cat === "CASH" && /^(DIVIDEND|DISTRIBUTION|DIVIDEND_EQUIVALENT_PAYMENT)$/.test(type)) {
           if (!isin) return ign(line, "dividende sans ISIN");
-          const amt = num(g("amount"), dec) || 0, tax = num(g("tax"), dec) || 0;
-          out.ops.push({ isin, name: g("name"), date: date(g("date")), t: "d", q: 1, p: amt + tax, f: 0, cur: g("currency") || "EUR" });
-        } else if (cat === "CORPORATE_ACTION" || /SPLIT|MERGER|EXCHANGE|REDEMPTION|SPINOFF/.test(type)) ign(line, `${g("name") || ""} : opération sur titres (${type.toLowerCase().replace(/_/g, " ")}) à vérifier à la main`);
-        else ign(line, "mouvement d'espèces (virement, carte, intérêts, impôts)");
-        return;
+          if (amt != null && amt < 0) return ign(line, `${name} : correction d'un dividende (montant négatif), à vérifier sur votre relevé`, "ambigu");
+          const tax = num(g("tax"), dec) || 0;
+          return op({ ...base, t: "d", q: 1, p: (amt || 0) + tax, f: 0 });
+        }
+        if (cat === "CORPORATE_ACTION") {
+          if (!isin || !sh) return ign(line, `${name || ""} : opération sur titres (${type.toLowerCase().replace(/_/g, " ")}) sans quantité`);
+          if (type === "SPLIT") return op({ ...base, t: "s", q: sh, p: 0, f: 0, why: "division" });
+          if (/REDEMPTION|MATURITY|WARRANT_EXERCISE|LIQUIDATION/.test(type) && sh < 0) return op({ ...base, t: "to", q: Math.abs(sh), p: 0, f: 0, why: "remboursement ou échéance" });
+          return op({ ...base, t: sh > 0 ? "ti" : "to", q: Math.abs(sh), p: null, f: 0, why: type.toLowerCase().replace(/_/g, " "), amb: true });
+        }
+        if (cat !== "CASH" && isin && sh) return op({ ...base, t: sh > 0 ? "ti" : "to", q: Math.abs(sh), p: null, f: 0, why: (cat + " " + type).toLowerCase().replace(/_/g, " "), amb: true });
+        if (isin) return ign(line, `${name} : impôt ou montant en espèces lié au titre (${type.toLowerCase().replace(/_/g, " ")}), sans effet sur la quantité`, "cash");
+        return ign(line, "mouvement d'espèces (virement, carte, intérêts, impôts)", "cash");
       }
-      if (format === "boursobank" || format === "degiro-pf" || format === "fortuneo-pf") {
+      if (format === "boursobank" || format === "degiro-pf" || format === "fortuneo-pf" || (format === "generic" && map.pru != null && map.type == null)) {
         const isin = isinIn(cell(r, map.isin)) || isinIn(r.join(" "));
-        const name = cell(r, map.name);
-        const q = Math.abs(N(r, map.qty) || 0);
-        if (!(q > 0)) return ign(line, `${name || isin || "ligne"} : quantité absente`);
+        const name = cell(r, map.name) || cell(r, map.ticker);
+        if (!isin && SUMMARY.test(nrm(name || r.find(c => c) || ""))) return ign(line, `ligne de synthèse (« ${String(name || r.find(c => c)).slice(0, 40)} »)`, "synthese");
+        if (!isin && !name) return ign(line, "ligne sans nom ni ISIN");
+        const qs = N(r, map.qty), q = Math.abs(qs || 0), st = nrm(cell(r, map.status));
+        if (!(q > 0) || (st && CLOSED.test(st))) { out.sold.push({ isin, name, line }); return ign(line, `${name || isin} : position soldée (${st && CLOSED.test(st) ? "statut « " + cell(r, map.status) + " »" : "quantité nulle"})`, "solde"); }
         let pru = N(r, map.pru);
+        const val = N(r, map.amount), px = N(r, col(/^(cours|lastprice|last price|cloture|closing|dernier cours|schlusskurs|slotkoers|dernier)$/));
         if (format === "boursobank") { // le coût d'achat se déduit le plus sûrement de la valeur et de la plus-value latente
           const amount = N(r, col(/^amount$/)), varA = N(r, col(/^amountvariation$/));
           if (amount != null && varA != null && amount - varA > 0) pru = (amount - varA) / q;
         }
-        out.positions.push({ isin, name, q, pru: pru != null && pru > 0 ? pru : null, cur: cell(r, map.currency) || "EUR", ticker: cell(r, map.ticker) });
+        out.positions.push({ isin, name, q, pru: pru != null && pru > 0 ? pru : null, cur: (cell(r, map.currency) || "EUR").toUpperCase(), ticker: cell(r, map.ticker), line, val: val > 0 ? val : null, px: px > 0 ? px : null, neg: qs < 0 });
         return;
       }
       if (format === "degiro") {
@@ -310,38 +360,141 @@ const PF3 = (() => {
         const fee = H.reduce((a, h, k) => a + (/(fee|frais|kosten|gebuhr)/.test(h) ? Math.abs(N(r, k) || 0) : 0), 0);
         const curP = cell(r, (map.price || 0) + 1);
         const t = qs > 0 ? "a" : "v", accCur = ((H[iEur] || "").match(/\b(eur|chf|usd|gbp)\b/) || [0, "eur"])[1].toUpperCase();
-        if (eur != null && Math.abs(eur) > 0) out.ops.push({ isin, name: cell(r, map.name), date: date(cell(r, map.date)), t, q, p: Math.abs(eur) / q, f: fee, cur: accCur, pLocal: price, curLocal: /^[A-Z]{3}$/.test(curP) ? curP : null });
-        else if (price) out.ops.push({ isin, name: cell(r, map.name), date: date(cell(r, map.date)), t, q, p: price, f: fee, cur: /^[A-Z]{3}$/.test(curP) ? curP : "EUR", x: rate ? 1 / rate : null });
+        if (eur != null && Math.abs(eur) > 0) op({ isin, name: cell(r, map.name), date: date(cell(r, map.date)), t, q, p: Math.abs(eur) / q, f: fee, cur: accCur, pLocal: price, curLocal: /^[A-Z]{3}$/.test(curP) ? curP : null, line });
+        else if (price) op({ isin, name: cell(r, map.name), date: date(cell(r, map.date)), t, q, p: price, f: fee, cur: /^[A-Z]{3}$/.test(curP) ? curP : "EUR", x: rate ? 1 / rate : null, line });
         else ign(line, "prix absent");
         return;
       }
       // Formats d'opérations : pytr, Fortuneo, export de ce site, fichier générique
       const name = cell(r, map.name), isin = isinIn(cell(r, map.isin)) || (map.isin == null ? isinIn(r.join(" ")) : "");
       const tick = cell(r, map.ticker);
-      if (!isin && !name && !tick) return ign(line, "ligne sans nom ni ISIN");
+      if (!isin && SUMMARY.test(nrm(name || r.find(c => c) || ""))) return ign(line, `ligne de synthèse (« ${String(name || r.find(c => c)).slice(0, 40)} »)`, "synthese");
       const typ = cell(r, map.type), qty = N(r, map.qty), price = N(r, map.price), pru = N(r, map.pru), fees = Math.abs(N(r, map.fees) || 0), amt = N(r, map.amount);
+      if (map.type != null && opType(typ) === "cash") return ign(line, `mouvement d'espèces ou impôt (« ${typ} »)`, "cash");
+      if (!isin && !name && !tick) return ign(line, "ligne sans nom ni ISIN");
+      const label = name || isin || tick;
       // Sans colonne « opération » : un PRU ou l'absence de date indiquent une position ; sinon le signe de la quantité
       let t = map.type == null ? (qty && (map.pru != null || map.date == null) ? "r" : opType("", qty)) : opType(typ, map.qty != null ? null : qty);
-      if (format === "bilan" && /position/i.test(typ)) t = "r";
       if (!t && map.type != null && !typ.trim() && qty) t = opType("", qty);
-      if (!t) return ign(line, `${name || isin} : opération « ${typ || "?"} » non prise en compte`);
-      const cur = (cell(r, map.currency) || "").toUpperCase();
-      const q = Math.abs(qty || 0);
-      if (t === "r" && !(q > 0) && amt > 0) { out.positions.push({ isin, name, ticker: tick, q: 0, m: Math.abs(amt), pru: null, cur: "EUR", env: cell(r, col(/^compte$/)), br: cell(r, col(/^courtier$/)) }); return; }
-      if (t === "d") { const v = Math.abs(amt != null ? amt : (price || 0) * (q || 1)); if (!v) return ign(line, "dividende sans montant"); out.ops.push({ isin, name, ticker: tick, date: date(cell(r, map.date)), t, q: 1, p: v, f: 0, cur: /^[A-Z]{3}$/.test(cur) ? cur : "EUR" }); return; }
-      if (!(q > 0)) return ign(line, `${name || isin} : quantité absente`);
+      if (t === "cash") return ign(line, `mouvement d'espèces ou impôt (« ${typ} »)`, "cash");
+      if (t === "x") return cancel(line, isin, name, qty, label, date(cell(r, map.date)));
+      if (!t) return ign(line, `${label} : opération « ${typ || "?"} » non prise en compte`);
+      const cur = (cell(r, map.currency) || "").toUpperCase(), curOk = /^[A-Z]{3}$/.test(cur) ? cur : "EUR";
+      const q = Math.abs(qty || 0), d = date(cell(r, map.date));
+      const extra = format === "bilan" ? { env: cell(r, col(/^compte$/)), br: cell(r, col(/^courtier$/)) } : {};
+      if (t === "r" && !(q > 0) && amt > 0) { out.positions.push({ isin, name, ticker: tick, q: 0, m: Math.abs(amt), pru: null, cur: "EUR", line, ...extra }); return; }
+      if (t === "d") { const v = Math.abs(amt != null ? amt : (price || 0) * (q || 1)); if (!v) return ign(line, "dividende sans montant"); return op({ isin, name, ticker: tick, date: d, t, q: 1, p: v, f: 0, cur: curOk, line, ...extra }); }
+      if (t === "s") { if (!qty) return ign(line, `${label} : division sans quantité`, "ambigu"); return op({ isin, name, ticker: tick, date: d, t, q: /regroupement|reverse/.test(nrm(typ)) && qty > 0 ? -qty : qty, p: 0, f: 0, cur: curOk, line, why: nrm(typ), amb: format !== "bilan", ...extra }); }
+      if (!(q > 0)) return ign(line, `${label} : quantité absente`);
+      if (t === "ti" || t === "to") { const pp = price > 0 ? price : pru > 0 ? pru : amt ? Math.abs(amt) / q : null; return op({ isin, name, ticker: tick, date: d, t, q, p: t === "ti" ? pp : 0, f: 0, cur: curOk, line, why: "transfert", amb: t === "ti" && !(pp > 0), ...extra }); }
       let p = t === "r" ? (pru != null ? pru : price) : price;
       if (!(p > 0) && amt != null) p = format === "pytr" ? Math.max(0, Math.abs(amt) - (t === "a" ? fees : -fees)) / q : Math.abs(amt) / q;
       if (format === "pytr" && t === "a" && price == null && amt != null) p = Math.max(0, Math.abs(amt) - fees) / q;
       if (format === "pytr" && t === "v" && price == null && amt != null) p = (Math.abs(amt) + fees) / q;
-      if (!(p > 0)) return ign(line, `${name || isin} : prix absent`);
-      const d = date(cell(r, map.date));
-      if (t === "r" && !d) { out.positions.push({ isin, name, ticker: tick, q, pru: p, cur: /^[A-Z]{3}$/.test(cur) ? cur : "EUR", env: cell(r, col(/^compte$/)), br: cell(r, col(/^courtier$/)) }); return; }
-      out.ops.push({ isin, name, ticker: tick, date: d, t, q, p, f: fees, cur: /^[A-Z]{3}$/.test(cur) ? cur : "EUR", env: format === "bilan" ? cell(r, col(/^compte$/)) : "", br: format === "bilan" ? cell(r, col(/^courtier$/)) : "" });
+      if (!(p > 0)) return ign(line, `${label} : prix absent`);
+      if (t === "r" && !d) { out.positions.push({ isin, name, ticker: tick, q, pru: p, cur: curOk, line, ...extra }); return; }
+      op({ isin, name, ticker: tick, date: d, t, q, p, f: fees, cur: curOk, line, ...extra });
     });
-    if (!out.ops.length && !out.positions.length && !out.error) out.error = format === "generic" ? "Aucune opération ni position reconnue : indiquez ci-dessous quelle colonne contient quoi." : "Aucune opération sur des actions ou des ETF dans ce fichier.";
+    pending.forEach(a => cancelNow(...a));
+    out.kind = out.ops.length && out.positions.length ? "mixte" : out.positions.length || (!out.ops.length && out.sold.length) ? "positions" : "operations";
+    if (!out.ops.length && !out.positions.length && !out.sold.length && !out.error) out.error = format === "generic" ? "Aucune opération ni position reconnue : indiquez ci-dessous quelle colonne contient quoi." : "Aucune opération sur des actions ou des ETF dans ce fichier.";
     return out;
   }
+
+  /* ---------- Reconstitution des positions ----------
+     On ne choisit jamais des lignes du fichier : on rejoue toutes les opérations de chaque titre dans l'ordre des dates
+     (achats, ventes, divisions, transferts) pour obtenir ce qui est détenu aujourd'hui. Les positions à zéro sont « vendues ».
+     Chaque position reçoit ses opérations au format enregistré (a, v, d, r), ce qui garde le PRU identique dans tout le site. */
+  function reconstruct(r, opts = {}) {
+    const fill = opts.pru || {}; // prix de revient saisis dans l'aperçu pour des titres reçus sans prix
+    const gid = x => [x.isin || (x.ticker ? "t:" + x.ticker.toUpperCase() : "n:" + nrm(x.name)), nrm(x.env), x.br || "", x.acct || ""].join("|");
+    // Un titre lu tantôt avec son ISIN, tantôt avec son seul nom : on le regroupe sous l'ISIN
+    const isinOfName = {};
+    for (const x of [...r.ops, ...r.positions]) if (x.isin && x.name && !isinOfName[nrm(x.name)]) isinOfName[nrm(x.name)] = x.isin;
+    const norm1 = x => (!x.isin && x.name && isinOfName[nrm(x.name)] ? { ...x, isin: isinOfName[nrm(x.name)], viaName: true } : x);
+    const G = new Map(), get = x => { const id = gid(x); if (!G.has(id)) G.set(id, { id, isin: x.isin || "", name: x.name || x.isin || x.ticker || "", ticker: x.ticker || "", env: x.env || "", br: x.br || "", acct: x.acct || "", ops: [], pos: [], lines: [] }); const g = G.get(id); if (!g.name && x.name) g.name = x.name; if (!g.ticker && x.ticker) g.ticker = x.ticker; return g; };
+    r.ops.map(norm1).forEach(o => { const g = get(o); g.ops.push(o); g.lines.push(o.line); });
+    r.positions.map(norm1).forEach(p => { const g = get(p); g.pos.push(p); g.lines.push(p.line); });
+    const soldRows = (r.sold || []).map(norm1).filter(x => !G.has(gid(x))); // état du portefeuille : lignes soldées (quantité nulle ou statut clôturé)
+    const active = [], sold = [], orphans = [], amb = [], extraIgn = [];
+    let oversell = 0;
+    for (const g of G.values()) {
+      const A = [];
+      // Devise : une position est suivie dans une seule devise ; les opérations dans une autre devise sont signalées, pas mélangées
+      const curs = {}; [...g.ops.filter(o => o.t !== "d"), ...g.pos].forEach(x => { const c = x.cur || "EUR"; curs[c] = (curs[c] || 0) + 1; });
+      const cur = Object.entries(curs).sort((a, b) => b[1] - a[1])[0]?.[0] || (g.ops[0] && g.ops[0].cur) || "EUR";
+      const ops = g.ops.filter(o => { if ((o.cur || "EUR") === cur || o.t === "d" && Object.keys(curs).length <= 1) return true; extraIgn.push({ line: o.line, why: `${g.name} : opération en ${o.cur}, alors que la position est suivie en ${cur} (non mélangée)`, kind: "ambigu" }); return false; });
+      if (ops.length < g.ops.length) A.push(`${g.ops.length - ops.length} opération${g.ops.length - ops.length > 1 ? "s" : ""} dans une autre devise que ${cur} : vérifiez la quantité.`);
+      // Positions d'un état du portefeuille : plusieurs lignes du même titre sont additionnées (PRU pondéré)
+      let q0 = 0, c0 = 0, m0 = 0, pruMiss = false, val = null, px = null;
+      for (const p of g.pos) { if (p.m) { m0 += p.m; continue; } q0 += p.q; if (p.pru > 0) c0 += p.q * p.pru; else pruMiss = true; if (p.val) val = (val || 0) + p.val; if (p.px) px = p.px; }
+      if (g.pos.filter(p => !p.m).length > 1) A.push(`apparaît sur ${g.pos.length} lignes du fichier (${g.pos.map(p => "ligne " + p.line).join(", ")}) : quantités additionnées, PRU moyen pondéré.`);
+      if (pruMiss) A.push("prix de revient absent du fichier : à compléter.");
+      const list = ops.map((o, i) => ({ o, i })).sort((a, b) => (a.o.date || "").localeCompare(b.o.date || "") || a.i - b.i).map(x => x.o);
+      const st = []; let q = 0, cost = 0, real = 0, divs = 0, needPru = false, first = null, last = null;
+      if (q0 > 0) { st.push(["", "r", rq(q0), c0 > 0 ? Math.round(c0 / q0 * 1e6) / 1e6 : 0, 0]); q = q0; cost = c0; }
+      for (const o of list) {
+        if (o.date && (!first || o.date < first)) first = o.date;
+        if (o.date && (!last || o.date > last)) last = o.date;
+        if (o.t === "a" || o.t === "r") { q += o.q; cost += o.q * o.p + (o.t === "a" ? o.f || 0 : 0); st.push([o.date || "", o.t, o.q, Math.round(o.p * 1e6) / 1e6, Math.round((o.f || 0) * 100) / 100]); }
+        else if (o.t === "v") {
+          if (o.q > q + 1e-6) { oversell++; A.push(`vente de ${fmtQ(o.q)} titre${o.q > 1 ? "s" : ""} le ${fmtD(o.date)} alors que le fichier n'en montre que ${fmtQ(q)} : l'historique commence sans doute après vos premiers achats.`); }
+          const qq = Math.min(o.q, q), pru = q > 1e-9 ? cost / q : 0;
+          real += qq * o.p - (o.f || 0) * (qq / o.q) - pru * qq; cost -= pru * qq; q -= qq; if (q < 1e-9) { q = 0; cost = 0; }
+          st.push([o.date || "", "v", o.q, Math.round(o.p * 1e6) / 1e6, Math.round((o.f || 0) * 100) / 100]);
+        } else if (o.t === "d") { divs += o.p - (o.f || 0); st.push([o.date || "", "d", 1, Math.round(o.p * 1e6) / 1e6, 0]); }
+        else if (o.t === "s") {
+          if (o.q > 0 && q <= 1e-9) { // division sans titres détenus d'après le fichier : l'historique est incomplet, le PRU est inconnu
+            let p = fill[g.id] > 0 ? fill[g.id] : 0; if (p) g.filled = true; else needPru = true;
+            A.push(`division le ${fmtD(o.date)} alors que le fichier ne montre aucun titre détenu : l'historique est incomplet, indiquez le prix de revient.`);
+            q += o.q; cost += o.q * p; st.push([o.date || "", "r", o.q, Math.round(p * 1e6) / 1e6, 0]); continue;
+          }
+          if (o.q > 0) { q += o.q; st.push([o.date || "", "r", o.q, 0, 0]); }
+          else if (q > 1e-9) { const f = Math.max(0, (q + o.q) / q); st.forEach(s => { if (s[1] !== "d") { s[2] = rq(s[2] * f); if (s[3]) s[3] = Math.round(s[3] / f * 1e6) / 1e6; } }); q = q * f; if (q < 1e-9) { q = 0; cost = 0; } }
+          A.push(o.amb ? `${o.why === "division" ? "division" : o.why || "division"} le ${fmtD(o.date)} : ${o.q > 0 ? "+" : "−"}${fmtQ(Math.abs(o.q))} titre${Math.abs(o.q) > 1 ? "s" : ""}, coût total inchangé. Vérifiez la quantité finale.` : null);
+        } else if (o.t === "ti") {
+          let p = o.p > 0 ? o.p : null;
+          if (!(p > 0) && fill[g.id] > 0) { p = fill[g.id]; g.filled = true; }
+          if (!(p > 0)) { needPru = true; p = 0; A.push(`${fmtQ(o.q)} titre${o.q > 1 ? "s" : ""} reçu${o.q > 1 ? "s" : ""} le ${fmtD(o.date)} (${o.why || "transfert"}) sans prix de revient : indiquez-le.`); }
+          q += o.q; cost += o.q * p; st.push([o.date || "", "r", o.q, Math.round(p * 1e6) / 1e6, 0]);
+        } else if (o.t === "to") {
+          const qq = Math.min(o.q, q), pru = q > 1e-9 ? cost / q : 0;
+          if (o.q > q + 1e-6) A.push(`sortie de ${fmtQ(o.q)} titres le ${fmtD(o.date)} alors que le fichier n'en montre que ${fmtQ(q)}.`);
+          if (qq > 0) st.push([o.date || "", "v", rq(qq), Math.round(pru * 1e6) / 1e6, 0]);
+          cost -= pru * qq; q -= qq; if (q < 1e-9) { q = 0; cost = 0; }
+        }
+      }
+      const amb1 = A.filter(Boolean);
+      // Contrôle : le calcul enregistré (méthode du site) redonne la même quantité et le même PRU
+      const chk = st.length ? position(st) : null;
+      const same = !chk || (Math.abs(chk.q - rq(q)) < 1e-5 && (q < 1e-9 || Math.abs(chk.pru - cost / q) <= Math.max(1e-6, (cost / q) * 1e-5)));
+      if (!same) amb1.push("écart entre le calcul pas à pas et le calcul enregistré : vérifiez cette ligne.");
+      const item = { id: g.id, isin: g.isin, name: g.name, ticker: g.ticker, env: g.env, br: g.br, acct: g.acct, cur, q: rq(q), pru: q > 1e-9 ? cost / q : 0, cost, real, divs, m: m0 || 0,
+        ops: list.length ? st : null, pos: !list.length && q0 > 0 ? { q: rq(q0), pru: c0 > 0 ? c0 / q0 : 0 } : null, nOps: list.filter(o => o.t !== "d").length, first, last, lines: g.lines, amb: amb1, needPru, filled: !!g.filled, val, px, same };
+      if (item.q > 1e-6 || item.m > 0) active.push(item);
+      else if (!item.nOps && !g.pos.length) { item.orphan = true; amb1.push("dividendes reçus mais aucun achat dans le fichier : ce titre a sans doute été acheté avant la période exportée. Ajoutez-le à la main s'il est toujours détenu."); orphans.push(item); }
+      else sold.push(item);
+      if (amb1.length) amb.push({ id: g.id, name: g.name, items: amb1 });
+    }
+    for (const x of soldRows) if (!sold.some(y => y.id === gid(x))) sold.push({ id: gid(x), isin: x.isin || "", name: x.name || x.isin, ticker: "", env: x.env || "", br: x.br || "", acct: "", cur: "EUR", q: 0, pru: 0, cost: 0, real: 0, divs: 0, m: 0, ops: null, pos: null, nOps: 0, first: null, last: null, lines: [x.line], amb: [], needPru: false, filled: false, same: true, fromState: true });
+    // Contrôle des valorisations d'un état du portefeuille : quantité × cours ≈ valorisation
+    for (const a of active) if (a.val && a.px && a.q > 0 && Math.abs(a.q * a.px - a.val) / a.val > 0.03) { const t = `quantité × cours (${fmtQ(a.q)} × ${fmtQ(a.px)}) ne redonne pas la valorisation du fichier (${fmtQ(a.val)}) : vérifiez la quantité.`; a.amb.push(t); const e = amb.find(x => x.id === a.id); if (e) e.items.push(t); else amb.push({ id: a.id, name: a.name, items: [t] }); }
+    // Toutes les lignes du fichier sont-elles comptées ?
+    const seenL = new Set([...r.ops.map(o => o.line), ...r.positions.map(p => p.line), ...r.ignored.map(i => i.line), ...(r.cancelled || [])]);
+    const dates = r.ops.map(o => o.date).filter(Boolean).sort();
+    const period = dates.length ? { from: dates[0], to: dates[dates.length - 1] } : null;
+    const checks = [];
+    checks.push({ ok: seenL.size === r.rows, t: `${r.rows} ligne${r.rows > 1 ? "s" : ""} lue${r.rows > 1 ? "s" : ""} sur ${r.rows} : chacune est reprise ou listée avec sa raison.` });
+    if (r.kind !== "positions") checks.push({ ok: !oversell, t: oversell ? `${oversell} vente${oversell > 1 ? "s" : ""} portant sur plus de titres que l'historique n'en montre : voir « À vérifier ».` : "Quantités cohérentes : aucune vente ne dépasse les titres achetés auparavant." });
+    checks.push({ ok: active.every(a => a.same) && sold.every(a => a.same), t: "PRU recalculé deux fois (pas à pas, puis avec la méthode du site) : mêmes résultats." });
+    if (period) checks.push({ ok: true, info: true, t: `Opérations du ${fmtD(period.from)} au ${fmtD(period.to)}. Les titres achetés avant le ${fmtD(period.from)} n'apparaissent pas si l'export ne couvre qu'une période.` });
+    if (r.dups) checks.push({ ok: true, info: true, t: `${r.dups} ligne${r.dups > 1 ? "s" : ""} en double comptée${r.dups > 1 ? "s" : ""} une seule fois.` });
+    return { kind: r.kind, active, sold, orphans, amb, checks, period, extraIgn, crypto: Object.entries(r.crypto || {}).filter(([, v]) => Math.abs(v) > 1e-9).map(([n, v]) => ({ name: n, q: rq(v) })) };
+  }
+  const fmtQ = v => { const x = Math.round(v * 1e4) / 1e4; return String(x).replace(".", ","); };
+  const fmtD = d => /^\d{4}-\d{2}-\d{2}$/.test(d || "") ? d.slice(8, 10) + "/" + d.slice(5, 7) + "/" + d.slice(0, 4) : "?";
+  // Limite de la version gratuite : elle porte sur les positions actives, les plus importantes en valeur d'abord (jamais l'ordre du fichier)
+  function pick(list, n, val) { return list.map((x, i) => ({ x, i, v: +val(x) || 0 })).sort((a, b) => b.v - a.v || a.i - b.i).slice(0, n === Infinity ? undefined : Math.max(0, n)).map(o => o.x); }
   // Export : un fichier lisible par Excel (point-virgule, virgule décimale) et réimportable ici
   function toCsv(P, nameOf) {
     const f = v => v == null || v === "" ? "" : String(Math.round(v * 1e6) / 1e6).replace(".", ",");
@@ -352,13 +505,13 @@ const PF3 = (() => {
       const n = nameOf ? nameOf(l) : { name: l.nm || l.k, isin: l.isin || "", ticker: "" }, cur = l.cur || n.cur || "EUR";
       const base = [q(n.name), n.isin || "", q(n.ticker || "")];
       const tail = [cur, ENV[l.env] || "", l.br || ""];
-      if (l.o && l.o.length) for (const o of l.o) out.push([o[0], T[o[1]], ...base, o[1] === "d" ? "" : f(o[2]), f(o[1] === "d" ? o[3] * (o[2] || 1) : o[3]), f(o[4]), ...tail, ""].join(";"));
+      if (l.o && l.o.length) for (const o of l.o) out.push([o[0], o[1] === "r" && o[0] && !o[3] ? "Division" : T[o[1]], ...base, o[1] === "d" ? "" : f(o[2]), f(o[1] === "d" ? o[3] * (o[2] || 1) : o[3]), f(o[4]), ...tail, ""].join(";"));
       else if (l.q > 0) out.push(["", T.r, ...base, f(l.q), f(l.pru), "", ...tail, ""].join(";"));
       else if (l.m > 0) out.push(["", T.r, ...base, "", "", "", ...tail, f(l.m)].join(";"));
     }
     return "﻿" + out.join("\r\n") + "\r\n";
   }
-  return { position, linePos, syncLine, migrate, compact, size, parseCsv, num, date, read, detect, guessMap, toCsv, FORMATS, BROKER_OF, opType, cleanLine, KEYOK };
+  return { position, linePos, syncLine, migrate, compact, size, parseCsv, num, date, read, reconstruct, pick, detect, guessMap, toCsv, FORMATS, BROKER_OF, opType, cleanLine, KEYOK };
 })();
 if (typeof module === "object" && module) module.exports = PF3;
 
@@ -414,11 +567,14 @@ function pf3ByName(name) {
   const w = s.split(" "); for (let n = w.length - 1; n >= 1; n--) { const t = w.slice(0, n).join(" "); if (t.length >= 4 && PF3_NAMES.has(t)) return PF3_NAMES.get(t); }
   return null;
 }
+// Cours en sous-unités (agorot israéliens, pence) ramenés à l'unité de la devise : les montants restent cohérents avec les fiches
+const PF3_SUB = { ILA: ["ILS", 100], GBX: ["GBP", 100], GBp: ["GBP", 100], ZAc: ["ZAR", 100] };
+function pf3PxN(px) { if (!px) return null; const s = PF3_SUB[px.cur]; if (!s) return px; const d = s[1], o = { ...px, cur: s[0] }; ["p", "h52", "l52", "p1y", "p3y", "p5y"].forEach(k => { if (typeof o[k] === "number") o[k] = o[k] / d; }); return o; }
 function pf3Info(l) {
   const k = l.k, kind = k.slice(0, 1);
-  if (kind === "c") { const c = RBY[k.slice(2)]; if (c) { const px = PX[k] || null;
+  if (kind === "c") { const c = RBY[k.slice(2)]; if (c) { const px = pf3PxN(PX[k]);
     return { kind, c, name: c.name, href: "/entreprise/" + c.id, ticker: c.ticker || "", isin: c.isin || "", type: "Action", pea: peaOk(c), px, sector: secName(c), country: (c.isin || "").slice(0, 2) || (c.region === "US" ? "US" : c.region === "FR" ? "FR" : ""), curQ: (px && px.cur) || c.currency || "EUR" }; } }
-  if (kind === "e") { const e = ETFBY[k.slice(2)]; if (e) { const px = PX[k] || null;
+  if (kind === "e") { const e = ETFBY[k.slice(2)]; if (e) { const px = pf3PxN(PX[k]);
     return { kind, e, name: e.name, href: "/etf/" + e.id, ticker: e.ticker || "", isin: e.isin || "", type: "ETF", pea: !!e.pea, px, ter: e.ter || 0, cat: e.categorie, curQ: (px && px.cur) || e.devise || "EUR" }; } }
   return { kind: "x", name: l.nm || (l.isin || k.slice(2)), href: null, ticker: "", isin: l.isin || (/^x:[A-Z0-9]{12}$/.test(k) ? k.slice(2) : ""), type: "Titre", pea: null, px: null, curQ: l.cur || "EUR" };
 }
@@ -817,7 +973,7 @@ function pf3Form() {
     } else el.innerHTML = `<div class="pf3pk"><span class="kick">Votre prix de revient unitaire (PRU)</span><b class="light">–</b></div><p class="pf3pd"><b>PRU</b> : ce qu'une part vous a coûté en moyenne, frais d'achat compris. Exemple : 10 parts à 50 € + 2 € de frais = 50,20 € par part. Il se calcule dès que vous indiquez la quantité et le prix.</p>`;
     if (F.env === "pea" && Y.info.pea === false) msgs.push(`<span class="pf3warn">${esc(Y.info.name)} n'est pas éligible au PEA${Y.info.kind === "c" ? " (siège hors de l'Union européenne)" : ""}.</span>`);
     if (Y.exist && F.mode === "pru") msgs.push(`Vous avez déjà cette ligne sur ce compte : sa quantité et son PRU seront remplacés.`);
-    if (!Y.exist && pfFullQuiet(pf3P())) msgs.push(`<span class="pf3warn">La version gratuite suit jusqu'à ${FREE.pf} lignes : <a class="lnk" href="/premium">Premium</a> les suit sans limite.</span>`);
+    if (!Y.exist && pfFullQuiet(pf3P())) msgs.push(`<span class="pf3warn">La version gratuite suit jusqu'à ${FREE.pf} positions actives : <a class="lnk" href="/premium">Premium</a> les suit sans limite.</span>`);
     if (msgs.length) el.insertAdjacentHTML("beforeend", msgs.map(m => `<p class="pf3pm">${m}</p>`).join(""));
   };
   $$(".pf3new input, .pf3new select", box).forEach(i => { i.oninput = prev; i.onchange = i.tagName === "SELECT" ? () => { read(); pf3DraftSave(F); pf3Form(); } : prev; i.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); $("#pf3nok").click(); } }; });
@@ -828,7 +984,9 @@ function pf3Form() {
   $("#pf3nok").onclick = () => { read(); pf3FormSubmit(); };
   prev();
 }
-function pfFullQuiet(P) { return !isPrem() && P.l.length >= FREE.pf; }
+function pfFullQuiet(P) { return !isPrem() && P.l.filter(pf3IsActive).length >= FREE.pf; }
+// La limite gratuite porte sur les positions actives (les lignes entièrement vendues ne comptent pas).
+function pfFull(P) { if (isPrem() || P.l.filter(pf3IsActive).length < FREE.pf) return false; toast(`La version gratuite suit jusqu'à ${FREE.pf} positions actives. <a href="/premium">Premium</a> les suit sans limite.`); return true; }
 function pf3FormSubmit() {
   const F = PF3S.form, P = pf3P(), prev = JSON.parse(JSON.stringify(P)), X = pf3FormCalc(F, P), el = $("#pf3nprev");
   const err = m => { el.insertAdjacentHTML("afterbegin", `<p class="pf3err">${m}</p>`); };
@@ -917,7 +1075,7 @@ function pf3Demo() {
 /* ---------- Le détail d'une ligne : opérations, compte, courtier ---------- */
 function pf3Det(r, P) {
   const l = r.l, i = r.info, pos = r.pos, hasOps = !!(l.o && l.o.length), cur = r.lcur, C = CUR[cur] || cur;
-  const T = { a: "Achat", v: "Vente", d: "Dividende", r: "Position reprise" };
+  const T = { a: "Achat", v: "Vente", d: "Dividende", r: "Position reprise", s: "Division (titres ajoutés)" };
   const facts = [["Quantité", r.mOnly ? "–" : nf(pos.q % 1 ? 4 : 0).format(pos.q)], [def("pf_pru", "Prix de revient (PRU)"), r.mOnly ? "–" : pf3Px(pos.pru, cur), "frais d'achat inclus"], [def("pf_investi", "Montant investi"), pf3Eu(r.costE, 2), r.fxApprox ? "converti au taux du jour" : ""], [def("pf_valeur", "Valeur actuelle"), pf3Eu(r.valE, 2), r.price && r.price.src !== "cours" ? "au dernier prix connu" : ""],
     [def("pf_latente", "Plus ou moins-value latente"), r.gainE == null ? "–" : `<span class="${pf3Cls(r.gainE)}">${pf3Sg(r.gainE, 2)} (${pf3Pc(r.gainPct)})</span>`, r.local != null && r.lcur !== "EUR" ? `${pf3Pc(r.local)} en ${cur}` : ""],
     ...(r.realE ? [["Plus-value réalisée", `<span class="${pf3Cls(r.realE)}">${pf3Sg(r.realE, 2)}</span>`, "sur vos ventes"]] : []), ...(r.feesE ? [["Frais de courtage payés", pf3Eu(r.feesE, 2), pos.bought ? pct(pos.fees / pos.bought, 2, false) + " des achats" : ""]] : []), ...(r.divsE ? [["Dividendes reçus", pf3Eu(r.divsE, 2), ""]] : [])];
@@ -926,7 +1084,7 @@ function pf3Det(r, P) {
     <div class="pf3grid pf3g2 pf3set"><div class="pf3f"><span>Compte</span>${pf3Chips("lenv", [["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"]], l.env || "")}</div>${pf3BrSel("pf3lbr", l.br || "")}</div>
     ${l.env === "pea" && i.pea === false ? `<p class="pf3warn">${esc(i.name)} n'est pas éligible au PEA : vérifiez le compte de cette ligne.</p>` : ""}
     ${hasOps ? `<div class="pf3ops"><p class="kick">Opérations</p><div class="scroll-x"><table class="t pf3ot"><thead><tr><th class="l">Date</th><th class="l">Opération</th><th>Quantité</th><th>Prix</th><th>Frais</th><th>Montant</th><th></th></tr></thead><tbody>
-      ${l.o.map((o, j) => [o, j]).sort((a, b) => (b[0][0] || "").localeCompare(a[0][0] || "")).map(([o, j]) => `<tr class="${o[1] === "d" ? "pf3od" : ""}"><td class="l">${o[0] ? dLabel(o[0]) : "–"}</td><td class="l">${T[o[1]]}</td><td class="num">${o[1] === "d" ? "–" : nf(o[2] % 1 ? 4 : 0).format(o[2])}</td><td class="num">${o[1] === "d" ? "–" : pf3Px(o[3], cur)}</td><td class="num">${o[4] ? nf(2).format(o[4]) + " " + C : "–"}</td><td class="num">${nf(2).format(o[1] === "d" ? o[3] * (o[2] || 1) : o[2] * o[3] + (o[1] === "a" ? o[4] : -o[4])) + " " + C}</td><td><button type="button" class="pf3del" data-op="${j}" aria-label="Supprimer cette opération">×</button></td></tr>`).join("")}</tbody></table></div></div>`
+      ${l.o.map((o, j) => [o, j]).sort((a, b) => (b[0][0] || "").localeCompare(a[0][0] || "")).map(([o, j]) => `<tr class="${o[1] === "d" ? "pf3od" : ""}"><td class="l">${o[0] ? dLabel(o[0]) : "–"}</td><td class="l">${T[o[1] === "r" && o[0] && !o[3] ? "s" : o[1]]}</td><td class="num">${o[1] === "d" ? "–" : nf(o[2] % 1 ? 4 : 0).format(o[2])}</td><td class="num">${o[1] === "d" ? "–" : pf3Px(o[3], cur)}</td><td class="num">${o[4] ? nf(2).format(o[4]) + " " + C : "–"}</td><td class="num">${nf(2).format(o[1] === "d" ? o[3] * (o[2] || 1) : o[2] * o[3] + (o[1] === "a" ? o[4] : -o[4])) + " " + C}</td><td><button type="button" class="pf3del" data-op="${j}" aria-label="Supprimer cette opération">×</button></td></tr>`).join("")}</tbody></table></div></div>`
     : r.mOnly ? `<div class="pf3grid">${pf3In("pf3lq", "Nombre de parts", "", 'placeholder="12"')}${pf3In("pf3lpru", "Prix de revient unitaire", "", "", C)}</div><p class="pf3hint">Cette ligne n'a qu'un montant investi (${pf3Eu(l.m)}). Indiquez le nombre de parts et le PRU pour suivre sa valeur et sa plus-value.</p><div class="pf3btns"><button type="button" class="btn" id="pf3lsave">Enregistrer</button></div>`
     : `<div class="pf3grid">${pf3In("pf3lq", "Nombre de parts", pf3Fmt(l.q))}${pf3In("pf3lpru", "Prix de revient unitaire (PRU)", pf3Fmt(l.pru), "", C)}</div><div class="pf3btns"><button type="button" class="btn" id="pf3lsave">Enregistrer</button><span class="pf3saved light" id="pf3lmsg" aria-live="polite"></span></div>`}
     ${op ? pf3OpForm(r, op) : `<div class="pf3btns pf3addop"><button type="button" class="pf3opb" data-add="a">+ Achat</button><button type="button" class="pf3opb" data-add="v" ${pos.q > 0 ? "" : "disabled"}>+ Vente</button><button type="button" class="pf3opb" data-add="d">+ Dividende reçu</button>${!hasOps && !r.mOnly ? `<span class="pf3hint" style="margin:0">Ajouter une opération détaille la ligne : le PRU sera recalculé à chaque achat.</span>` : ""}</div>`}
@@ -1076,7 +1234,7 @@ async function pf3Dash(R0, P) {
       <p class="pf3disc">Information, pas conseil : cette analyse décrit votre portefeuille avec des repères généraux. Elle ne tient pas compte de toute votre situation et ne recommande ni achat ni vente.</p></div></section>
   <section class="panel" id="pf3-alertes"><div class="ph"><h2>Points d'attention</h2><span class="light" style="font-size:12.5px">${nAtt ? `${nAtt} remarque${nAtt > 1 ? "s" : ""}` : "aucune remarque"}</span></div><div class="pb">
     ${(A.length ? A : [{ lv: "fort", t: "Rien de particulier à signaler.", why: "Pas de ligne trop lourde, pas de secteur dominant, des frais raisonnables. Cela ne dit rien des performances futures." }]).map((a, i) => `<div class="gf pf3gf${i >= 5 ? " pf3more" : ""}" ${i >= 5 ? "hidden" : ""}><span class="dot dot-${a.lv === "info" ? "moyen" : a.lv}"></span><div><b>${a.t}</b><p>${a.why}</p></div></div>`).join("")}
-    ${A.length > 5 ? `<button type="button" class="linkbtn" id="pf3amore">Voir les ${A.length - 5} autres remarques</button>` : ""}
+    ${A.length > 5 ? `<button type="button" class="linkbtn" id="pf3amore">${A.length - 5 > 1 ? `Voir les ${A.length - 5} autres remarques` : "Voir l'autre remarque"}</button>` : ""}
     <p class="note">Repères généraux calculés sur vos lignes, pas des conseils personnalisés.</p></div></section>
   <section class="panel" id="pf3-repartition"><div class="ph"><h2>Répartition</h2><label class="pf3tog"><input type="checkbox" id="pf3lt" ${PF3S.lt ? "checked" : ""}> Ouvrir les ETF</label></div>
     <div class="filters pf3views" role="tablist">${VIEWS.map(([k, l]) => `<button type="button" role="tab" aria-selected="${PF3S.view === k}" data-v="${k}" class="${PF3S.view === k ? "on" : ""}">${l}</button>`).join("")}</div>
@@ -1124,7 +1282,7 @@ function pf3Rep(X, R0) {
     if (i.kind === "c") { o.sect[i.sector] = (o.sect[i.sector] || 0) + w; o.ctry[i.country || "Autres"] = (o.ctry[i.country || "Autres"] || 0) + w; o.cur[i.curQ] = (o.cur[i.curQ] || 0) + w; }
     else { const k = i.kind === "e" ? "ETF " + (ECAT[i.cat] || "") : "Autres"; o.sect[k] = (o.sect[k] || 0) + w; o.ctry[k] = (o.ctry[k] || 0) + w; o.cur[i.curQ || "EUR"] = (o.cur[i.curQ || "EUR"] || 0) + w; } }); return o; };
   if (v === "ligne") { const parts = X.line.slice().sort((a, b) => b.w - a.w).map((x, i) => ({ label: x.label, w: x.w, c: i < 9 ? PF3_PAL[i] : PF3_OTHER, href: x.k.startsWith("x:") ? null : keyHref(x.k) }));
-    const head = parts.slice(0, 9), rest = parts.slice(9), rw = rest.reduce((a, p) => a + p.w, 0); obj = [...head, ...(rw ? [{ label: `${rest.length} autres lignes`, w: rw, c: PF3_OTHER }] : [])]; }
+    const head = parts.slice(0, 9), rest = parts.slice(9), rw = rest.reduce((a, p) => a + p.w, 0); obj = [...head, ...(rw ? [{ label: rest.length > 1 ? `${rest.length} autres lignes` : (rest[0].label || "1 autre ligne"), w: rw, c: PF3_OTHER }] : [])]; }
   else if (v === "type" || v === "env") obj = pf3Parts(X[v], 7);
   else { const src = PF3S.lt ? X : raw(); obj = pf3Parts(src[v], 7, v === "ctry" ? k => COUNTRY[k] || k : v === "cur" ? k => PF3_CURN[k] || k : k => k);
     note = v === "cur" ? (PF3S.lt ? "Exposition économique : devise des pays où se trouvent les entreprises, même quand l'ETF est coté en euros." : "Devise de cotation de chaque ligne, telle que l'affiche votre courtier.") : v === "sect" && PF3S.lt ? `Secteur connu pour ${pct(X.sectKnown, 0, false)} de la valeur : dans les ETF, le secteur n'est connu que pour les entreprises suivies par le site et les principales lignes.` : v === "ctry" && PF3S.lt ? "Pays des entreprises contenues dans vos ETF (les douze premiers pays de chaque ETF), et pays d'immatriculation de vos actions." : ""; }
@@ -1160,7 +1318,7 @@ const PF3_HOW = [
 function pf3ImpOpen() {
   const box = $("#pf3impbox"); if (!box) return;
   PF3S.imp = null;
-  box.innerHTML = `<div class="pf3imp" id="pf3imp" role="region" aria-label="Importer un fichier"><div class="pf3nh"><div><b>Importer depuis votre courtier</b><small>Trade Republic, BoursoBank, Degiro, Fortuneo ou tout fichier CSV. Le fichier est lu dans ce navigateur : il n'est envoyé nulle part.</small></div><button type="button" class="pf3x" id="pf3ix" aria-label="Fermer">×</button></div>
+  box.innerHTML = `<div class="pf3imp" id="pf3impr" role="region" aria-label="Importer un fichier"><div class="pf3nh"><div><b>Importer depuis votre courtier</b><small>Trade Republic, BoursoBank, Degiro, Fortuneo ou tout fichier CSV. Le fichier est lu dans ce navigateur : il n'est envoyé nulle part.</small></div><button type="button" class="pf3x" id="pf3ix" aria-label="Fermer">×</button></div>
     <label class="pf3drop" id="pf3drop"><input type="file" id="pf3file" accept=".csv,.txt,text/csv,text/plain"><b>Choisir le fichier CSV</b><span>ou le déposer ici</span></label>
     <details class="pf3how"><summary>Où trouver ce fichier chez mon courtier ?</summary>${PF3_HOW.map(([n, t]) => `<p><b>${n}</b> : ${t}</p>`).join("")}<p class="light">Les menus changent d'une version à l'autre de chaque application : l'aperçu ci-dessous vous permet de vérifier avant d'importer.</p></details>
     <div id="pf3ires" aria-live="polite"></div></div>`;
@@ -1191,72 +1349,132 @@ function pf3Match(it) {
   const slug = norm(it.name || "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
   return slug ? "x:" + slug : null;
 }
-function pf3ImpBuild(r, env, br) { // regroupe opérations et positions en lignes
-  const by = new Map(), skipped = [];
-  const envOf = s => { const t = norm(s || ""); return /pea/.test(t) ? "pea" : /cto|compte.titres/.test(t) ? "cto" : /assurance/.test(t) ? "av" : env; };
-  const brOf = s => (s && BROKERS.list.find(b => b.id === s) ? s : br);
-  for (const o of r.ops) {
-    const k = pf3Match(o); if (!k) { skipped.push(o.name || o.isin); continue; }
-    const e = o.env ? envOf(o.env) : env, b = o.br ? brOf(o.br) : br, id = [k, e, b].join("|");
-    const l = by.get(id) || { k, o: [], cur: o.cur || "EUR", ...(e ? { env: e } : {}), ...(b ? { br: b } : {}), ...(k.startsWith("x:") ? { nm: o.name || o.isin, ...(o.isin ? { isin: o.isin } : {}) } : {}), _n: o.name || o.isin };
-    if (l.cur !== (o.cur || "EUR")) { skipped.push(`${o.name || o.isin} (devise différente)`); continue; }
-    l.o.push([o.date || "", o.t, o.q, Math.round(o.p * 1e6) / 1e6, Math.round((o.f || 0) * 100) / 100]); by.set(id, l);
+/* Import : le fichier est lu en entier, les positions sont reconstituées (PF3.reconstruct), puis rattachées aux titres du site.
+   Rien n'est enregistré avant la confirmation ; l'ancien portefeuille est sauvegardé et peut être restauré. */
+const PF3_IMPBAK = "bilan.portefeuille.avant-import";
+const pf3IsActive = l => { const p = PF3.linePos(l); return p.q > 1e-9 || (l.m > 0 && !(l.o && l.o.length)); };
+const pf3LKey = l => [l.k, l.env || "", l.br || ""].join("|");
+function pf3ImpBuild(S) {
+  const r = S.r, R = PF3.reconstruct(r, { pru: S.pru || {} });
+  const envOf = s => { const t = norm(s || ""); return /pea/.test(t) ? "pea" : /cto|compte.titres/.test(t) ? "cto" : /assurance/.test(t) ? "av" : S.env; };
+  const brOf = s => (s && BROKERS.list.find(b => b.id === s) ? s : S.br);
+  const by = new Map(), unk = [];
+  for (const it of [...R.active, ...R.sold]) {
+    const k = pf3Match(it); if (!k) { unk.push(it); continue; }
+    const env = it.env ? envOf(it.env) : S.env, br = it.br ? brOf(it.br) : S.br, id = [k, env || "", br || "", it.acct || "", it.cur].join("|");
+    if (!by.has(id)) by.set(id, { id, k, env, br, cur: it.cur, acct: it.acct || "", items: [] });
+    by.get(id).items.push(it);
   }
-  for (const p of r.positions) {
-    const k = pf3Match(p); if (!k) { skipped.push(p.name || p.isin); continue; }
-    const e = p.env ? envOf(p.env) : env, b = p.br ? brOf(p.br) : br, id = [k, e, b].join("|");
-    const l = by.get(id) || { k, cur: p.cur || "EUR", ...(e ? { env: e } : {}), ...(b ? { br: b } : {}), ...(k.startsWith("x:") ? { nm: p.name || p.isin, ...(p.isin ? { isin: p.isin } : {}) } : {}), _n: p.name || p.isin };
-    if (p.m) l.m = p.m; else { l.q = (l.q || 0) + p.q; l.pru = p.pru || 0; }
-    by.set(id, l);
+  const out = [];
+  for (const L of by.values()) {
+    const it0 = L.items[0], l = { k: L.k, cur: L.cur };
+    if (L.env) l.env = L.env; if (L.br) l.br = L.br;
+    if (L.k.startsWith("x:")) { l.nm = it0.name || it0.isin; if (it0.isin) l.isin = it0.isin; }
+    const ops = L.items.flatMap(i => i.ops || []), pos = L.items.filter(i => i.pos);
+    if (ops.length) l.o = [...pos.map(i => ["", "r", i.pos.q, i.pos.pru, 0]), ...ops];
+    else if (pos.length) { const q = pos.reduce((a, i) => a + i.pos.q, 0), c = pos.reduce((a, i) => a + i.pos.q * i.pos.pru, 0); l.q = q; l.pru = q > 0 ? c / q : 0; }
+    const m = L.items.reduce((a, i) => a + (i.m || 0), 0); if (m > 0 && !l.o && !(l.q > 0)) l.m = m;
+    const line = PF3.cleanLine(l, null); if (!line) continue;
+    const R1 = pf3Rows({ l: [line] }).rows[0], active = pf3IsActive(line);
+    out.push({ id: L.id, line, R1, active, name: R1.info.name, src: it0.name || it0.isin, acct: L.acct, items: L.items,
+      amb: L.items.flatMap(i => i.amb), needPru: L.items.some(i => i.needPru), filled: L.items.some(i => i.filled), gids: L.items.map(i => i.id),
+      nOps: L.items.reduce((a, i) => a + i.nOps, 0), first: L.items.map(i => i.first).filter(Boolean).sort()[0] || null, last: L.items.map(i => i.last).filter(Boolean).sort().pop() || null,
+      real: L.items.reduce((a, i) => a + (i.real || 0), 0), w: R1.valE != null ? R1.valE : pf3E(R1.pos.cost, R1.lcur) || 0 });
   }
-  const lines = [...by.values()].map(l => { const n = l._n; delete l._n; const c = PF3.cleanLine(l, null); if (c) c._n = n; return c; }).filter(Boolean);
-  return { lines, skipped };
+  const act = out.filter(x => x.active).sort((a, b) => b.w - a.w), sold = out.filter(x => !x.active).sort((a, b) => (b.last || "").localeCompare(a.last || ""));
+  return { R, act, sold, unk, nAmb: act.filter(x => x.amb.length || x.needPru).length + R.orphans.length };
 }
 function pf3ImpRead() {
   const S = PF3S.imp, res = $("#pf3ires"); if (!S || !res) return;
-  const r = PF3.read(S.text, S.map ? { map: S.map, format: "generic" } : {});
-  S.r = r; if (!S.br && r.broker) S.br = r.broker;
-  const B = pf3ImpBuild(r, S.env, S.br), P = pf3P(), lim = !isPrem() ? Math.max(0, FREE.pf - (S.mode === "replace" ? 0 : P.l.filter(l => !B.lines.some(n => n.k === l.k && (n.env || "") === (l.env || "") && (n.br || "") === (l.br || ""))).length)) : Infinity;
-  S.B = B;
-  const recog = B.lines.filter(l => !l.k.startsWith("x:")).length;
+  if (!S.r || S.reread) { S.r = PF3.read(S.text, { ...(S.map ? { map: S.map, format: "generic" } : {}), keepDup: !!S.keepDup }); S.reread = false; if (!S.br && S.r.broker) S.br = S.r.broker; }
+  const r = S.r, B = pf3ImpBuild(S), P = pf3P(); S.B = B;
+  const prem = isPrem(), replace = S.mode === "replace" || P.dem || !P.l.length;
+  const ids = new Set([...B.act, ...B.sold].map(x => pf3LKey(x.line)));
+  const kept = replace ? [] : P.l.filter(l => !ids.has(pf3LKey(l))), keptAct = kept.filter(pf3IsActive).length;
+  const avail = prem ? Infinity : Math.max(0, FREE.pf - keptAct);
+  // Sélection : par défaut, les positions les plus importantes en valeur (jamais l'ordre des lignes du fichier)
+  if (!S.sel || S.selFor !== S.mode + "|" + B.act.length) { S.sel = new Set(PF3.pick(B.act, avail, x => x.w).map(x => x.id)); S.selFor = S.mode + "|" + B.act.length; }
+  [...S.sel].forEach(id => { if (!B.act.some(x => x.id === id)) S.sel.delete(id); });
+  const sel = B.act.filter(x => S.sel.has(x.id)), selVal = sel.reduce((a, x) => a + (x.R1.valE || 0), 0);
+  const exSold = replace ? [] : B.sold.filter(x => P.l.some(l => pf3LKey(l) === pf3LKey(x.line) && pf3IsActive(l)));
+  if (!S.updSold) S.updSold = new Set(exSold.map(x => x.id));
+  const removed = replace && P.l.length && !P.dem ? P.l.filter(l => pf3IsActive(l) && !sel.some(x => pf3LKey(x.line) === pf3LKey(l))) : [];
+  const ignAll = [...r.ignored, ...B.R.extraIgn], ignBy = new Map();
+  ignAll.forEach(x => { const g = ignBy.get(x.why) || []; g.push(x.line); ignBy.set(x.why, g); });
+  const nCash = ignAll.filter(x => x.kind === "cash").length, nCrypto = ignAll.filter(x => x.kind === "crypto").length;
+  const ignAmb = ignAll.filter(x => x.kind === "annule" || x.kind === "ambigu"), nAmb = B.nAmb + ignAmb.length + (B.R.crypto.length ? 1 : 0);
+  const qf = q => nf(q % 1 ? (q < 10 ? 4 : 2) : 0).format(q);
   const F = [["name", "Nom du titre"], ["isin", "Code ISIN"], ["ticker", "Ticker"], ["date", "Date"], ["type", "Opération (achat, vente)"], ["qty", "Quantité"], ["price", "Prix unitaire"], ["pru", "Prix de revient (PRU)"], ["fees", "Frais"], ["amount", "Montant"], ["currency", "Devise"]];
   const showMap = r.format === "generic" || S.showMap;
-  const live = B.lines.map(l => { const R1 = pf3Rows({ l: [l] }).rows[0]; return { l, R1 }; });
+  const kindTxt = r.kind === "positions" ? "État du portefeuille" : r.kind === "mixte" ? "Positions et opérations" : "Journal d'opérations";
+  const over = B.act.length > avail;
+  const missPru = sel.filter(x => x.needPru);
+  const risky = replace && P.l.length && !P.dem && (sel.length < B.act.length || B.nAmb > 0 || removed.length > 0);
+  const posRow = x => { const R1 = x.R1, on = S.sel.has(x.id), dis = !on && sel.length >= avail, l = x.line;
+    const sub = [l.k.startsWith("x:") ? `<span class="pf3warn">hors liste du site</span>` : "", x.src && norm(x.src) !== norm(x.name) ? esc(x.src) : "", R1.mOnly ? "montant investi" : x.nOps ? `${x.nOps} opération${x.nOps > 1 ? "s" : ""}${x.first ? " depuis le " + dLabel(x.first) : ""}` : "position du fichier", l.env ? PF3_ENVS[l.env] : "", x.acct ? "compte " + esc(x.acct.toLowerCase()) : ""].filter(Boolean).join(" · ");
+    const valTxt = R1.valE == null ? "–" : pf3Eu(R1.valE), valSub = R1.mOnly ? "montant investi" : R1.price && R1.price.src === "cours" ? "au cours du jour" : R1.price ? "dernier prix connu" : "";
+    return `<li class="pf3ip${on ? " on" : ""}${x.amb.length || x.needPru ? " amb" : ""}"><label class="pf3ipc"><input type="checkbox" data-sel="${esc(x.id)}" ${on ? "checked" : ""} ${dis ? "disabled" : ""} aria-label="Importer ${esc(x.name)}"></label>
+      <span class="pf3ipn">${pf3Logo(l, 26)}<span><b>${esc(x.name)}</b><small>${sub}</small></span></span>
+      <span class="pf3ipv"><span><i>Quantité</i>${R1.mOnly ? "–" : qf(R1.pos.q)}</span><span><i>PRU</i>${R1.mOnly ? "–" : x.needPru ? "à saisir" : pf3Px(R1.pos.pru, R1.lcur)}</span><span><i>Valeur</i><b>${valTxt}</b>${valSub ? `<small>${valSub}</small>` : ""}</span></span>
+      ${x.amb.length || x.needPru ? `<div class="pf3ipa">${x.amb.filter(t => !/sans prix de revient/.test(t) || !x.filled).map(t => `<p>${esc(t)}</p>`).join("")}${x.needPru || x.filled ? `<label class="pf3f pf3ipru"><span>PRU des titres reçus (${CUR[R1.lcur] || R1.lcur})</span><span class="pf3iw"><input type="text" inputmode="decimal" data-pru="${esc(x.gids[0])}" value="${esc(S.pru && S.pru[x.gids[0]] ? pf3Fmt(S.pru[x.gids[0]]) : "")}" placeholder="sur le relevé de l'ancien courtier"></span></label>` : ""}</div>` : ""}</li>`; };
   res.innerHTML = `<div class="pf3ir">
-    <p class="pf3irh"><b>${esc(r.label)}</b> · ${esc(S.name)}<br><span class="light">${r.ops.length ? `${r.ops.length} opération${r.ops.length > 1 ? "s" : ""}` : ""}${r.ops.length && r.positions.length ? ", " : ""}${r.positions.length ? `${r.positions.length} position${r.positions.length > 1 ? "s" : ""}` : ""}${r.ignored.length ? ` · ${r.ignored.length} ligne${r.ignored.length > 1 ? "s" : ""} non reprise${r.ignored.length > 1 ? "s" : ""}` : ""}</span></p>
-    ${r.error && !B.lines.length ? `<p class="pf3err">${esc(r.error)}</p>` : ""}
-    ${B.lines.length ? `<div class="scroll-x"><table class="t pf3it"><thead><tr><th class="l">Titre reconnu</th><th>Quantité</th><th>PRU</th><th>Valeur</th></tr></thead><tbody>${live.map(({ l, R1 }, i) => `<tr class="${i >= lim ? "pf3off" : ""}"><td class="l wrap"><span class="pf3itn">${pf3Logo(l, 22)}<span><b>${esc(R1.info.name)}</b><small>${l.k.startsWith("x:") ? `<span class="pf3warn">hors liste du site</span> · ` : ""}${l._n && norm(l._n) !== norm(R1.info.name) ? esc(l._n) + " · " : ""}${l.o ? `${l.o.length} opération${l.o.length > 1 ? "s" : ""}` : "position"}${l.env ? " · " + PF3_ENVS[l.env] : ""}</small></span></span></td><td class="num">${R1.mOnly ? "–" : nf(R1.pos.q % 1 ? 4 : 0).format(R1.pos.q)}</td><td class="num">${R1.mOnly ? "–" : pf3Px(R1.pos.pru, R1.lcur)}</td><td class="num">${R1.price && R1.price.src === "cours" ? pf3Eu(R1.valE) : "–"}</td></tr>`).join("")}</tbody></table></div>
-      ${lim < B.lines.length ? `<p class="pf3warn">La version gratuite suit ${FREE.pf} lignes : ${lim ? `seules les ${lim} premières seront importées` : "aucune nouvelle ligne ne peut être ajoutée"}. <a class="lnk" href="/premium">Premium</a> les suit sans limite.</p>` : ""}
-      ${B.lines.length - recog ? `<p class="pf3hint">${B.lines.length - recog} titre${B.lines.length - recog > 1 ? "s" : ""} hors de la liste du site : ${B.lines.length - recog > 1 ? "ils seront suivis" : "il sera suivi"} sans cours automatique (valorisé au dernier prix connu).</p>` : ""}
-      <div class="pf3grid pf3g2"><div class="pf3f"><span>Compte de ces lignes</span>${pf3Chips("ienv", [["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"]], S.env)}</div>${pf3BrSel("pf3ibr", S.br)}</div>
-      ${P.l.length && !P.dem ? `<div class="pf3f"><span>Votre portefeuille actuel (${P.l.length} ligne${P.l.length > 1 ? "s" : ""})</span>${pf3Chips("imode", [["add", "Ajouter ces lignes"], ["replace", "Remplacer tout le portefeuille"]], S.mode)}</div><p class="pf3hint">${S.mode === "add" ? "Une ligne déjà présente (même titre, même compte, même courtier) est mise à jour : ses opérations sont complétées sans doublon, ou sa quantité et son PRU remplacés." : "Toutes vos lignes actuelles seront remplacées. Vous pourrez annuler juste après."}</p>` : ""}
-      <div class="pf3btns"><button type="button" class="btn" id="pf3igo">Importer ${Math.min(lim, B.lines.length)} ligne${Math.min(lim, B.lines.length) > 1 ? "s" : ""}</button><button type="button" class="linkbtn" id="pf3imap">${showMap ? "" : "Corriger la correspondance des colonnes"}</button></div>` : ""}
-    ${r.ignored.length ? `<details class="pf3how"><summary>Lignes non reprises (${r.ignored.length})</summary><ul>${[...new Map(r.ignored.map(x => [x.why, x])).values()].slice(0, 30).map(x => `<li>${esc(x.why)}${r.ignored.filter(y => y.why === x.why).length > 1 ? ` <span class="light">(${r.ignored.filter(y => y.why === x.why).length} lignes)</span>` : ` <span class="light">(ligne ${x.line})</span>`}</li>`).join("")}</ul></details>` : ""}
+    <div class="pf3irh"><p><b>${esc(r.label)}</b> · ${esc(S.name)} <span class="pf3tagk">${kindTxt}</span></p>
+      <p class="light">${r.rows} ligne${r.rows > 1 ? "s" : ""} lue${r.rows > 1 ? "s" : ""}, du début à la fin du fichier. ${B.act.length} position${B.act.length > 1 ? "s" : ""} détenue${B.act.length > 1 ? "s" : ""} aujourd'hui${B.sold.length ? `, ${B.sold.length} vendue${B.sold.length > 1 ? "s" : ""} depuis` : ""}${nCash || nCrypto ? `, ${nCash + nCrypto} ligne${nCash + nCrypto > 1 ? "s" : ""} sans effet sur vos titres (${[nCash ? "espèces, impôts" : "", nCrypto ? "cryptomonnaies" : ""].filter(Boolean).join(", ")})` : ""}.</p></div>
+    ${r.error && !B.act.length && !B.sold.length ? `<p class="pf3err">${esc(r.error)}</p>` : ""}
+    ${B.act.length ? `<div class="pf3isec"><div class="pf3ish"><h3>Positions détenues</h3><span class="light">triées par valeur</span></div>
+      ${over ? `<p class="pf3inote">${prem ? "" : `La version gratuite suit ${FREE.pf} positions actives${keptAct ? ` (vous en avez déjà ${keptAct} hors de ce fichier)` : ""}. Le fichier en contient ${B.act.length} : ${avail ? `les ${avail} plus importantes en valeur sont cochées, choisissez celles à suivre` : "aucune nouvelle position ne peut être ajoutée, choisissez « Remplacer tout le portefeuille » ou libérez des lignes"}. <a class="lnk" href="/premium">Premium</a> les suit toutes.`}</p>` : ""}
+      <ul class="pf3ipl">${B.act.map(posRow).join("")}</ul>
+      <p class="pf3isum"><b>${sel.length} position${sel.length > 1 ? "s" : ""} sélectionnée${sel.length > 1 ? "s" : ""}</b>${selVal ? ` · ${pf3Eu(selVal)} aux cours connus` : ""}${B.act.length > sel.length ? ` · ${B.act.length - sel.length} non cochée${B.act.length - sel.length > 1 ? "s" : ""}` : ""}</p></div>` : ""}
+    ${B.sold.length ? `<details class="pf3how pf3isold"${exSold.length ? " open" : ""}><summary>Positions vendues depuis (${B.sold.length}) : non importées</summary><p class="pf3hint" style="margin-top:2px">Toutes leurs parts ont été vendues d'après le fichier : elles ne font plus partie du portefeuille.</p><ul>${B.sold.map(x => `<li><b>${esc(x.name)}</b> <span class="light">${x.last ? "dernière opération le " + dLabel(x.last) : ""}${x.real ? ` · plus-value réalisée ${pf3Sg(pf3E(x.real, x.line.cur) || 0)}` : ""}</span>${exSold.includes(x) ? `<label class="pf3ichk"><input type="checkbox" data-usold="${esc(x.id)}" ${S.updSold.has(x.id) ? "checked" : ""}> encore dans votre portefeuille : la marquer vendue</label>` : ""}</li>`).join("")}</ul></details>` : ""}
+    ${nAmb ? `<details class="pf3how pf3iamb" open><summary>À vérifier (${nAmb})</summary><ul>${B.act.filter(x => x.amb.length || x.needPru).map(x => `<li><b>${esc(x.name)}</b> : ${esc(x.amb[0] || "prix de revient à saisir")}${x.amb.length > 1 ? ` <span class="light">(+${x.amb.length - 1})</span>` : ""}</li>`).join("")}${B.R.orphans.map(x => `<li><b>${esc(x.name)}</b> : ${esc(x.amb[0])}</li>`).join("")}${ignAmb.map(x => `<li>${esc(x.why)} <span class="light">(ligne ${x.line})</span></li>`).join("")}${B.R.crypto.length ? `<li><b>Cryptomonnaies</b> (non suivies par le site, non importées) : ${B.R.crypto.map(c => `${esc(c.name)} ${qf(c.q)}`).join(", ")}</li>` : ""}</ul></details>` : ""}
+    <details class="pf3how pf3ichecks"><summary>Contrôles (${B.R.checks.filter(c => !c.ok).length ? `${B.R.checks.filter(c => !c.ok).length} point${B.R.checks.filter(c => !c.ok).length > 1 ? "s" : ""} à vérifier` : "tout est cohérent"})</summary><ul>${B.R.checks.map(c => `<li class="${c.ok ? (c.info ? "i" : "ok") : "ko"}">${esc(c.t)}</li>`).join("")}${r.dups && !S.keepDup ? `<li class="i">Deux opérations réellement identiques le même jour ? <button type="button" class="linkbtn" id="pf3ikeep">Compter aussi les lignes en double</button></li>` : S.keepDup ? `<li class="i">Les lignes en double sont comptées. <button type="button" class="linkbtn" id="pf3ikeep">Les compter une seule fois</button></li>` : ""}</ul></details>
+    ${ignBy.size ? `<details class="pf3how"><summary>Lignes non reprises (${ignAll.length}), avec la raison</summary><ul>${[...ignBy.entries()].slice(0, 40).map(([why, ls]) => `<li>${esc(why)} <span class="light">(${ls.length > 1 ? `${ls.length} lignes : ` : "ligne "}${ls.slice(0, 6).join(", ")}${ls.length > 6 ? "…" : ""})</span></li>`).join("")}</ul></details>` : ""}
+    ${B.act.length || exSold.length ? `<div class="pf3grid pf3g2"><div class="pf3f"><span>Compte de ces positions</span>${pf3Chips("ienv", [["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"]], S.env)}</div>${pf3BrSel("pf3ibr", S.br)}</div>
+      ${P.l.length && !P.dem ? `<div class="pf3f"><span>Votre portefeuille actuel (${P.l.filter(pf3IsActive).length} position${P.l.filter(pf3IsActive).length > 1 ? "s" : ""})</span>${pf3Chips("imode", [["add", "Ajouter ou mettre à jour"], ["replace", "Remplacer tout le portefeuille"]], S.mode)}</div>
+        <p class="pf3hint">${S.mode === "add" ? "Une position déjà présente (même titre, même compte, même courtier) est mise à jour : ses opérations sont complétées sans doublon. Les autres lignes ne changent pas." : "Le portefeuille actuel sera remplacé par la sélection ci-dessus. Il est sauvegardé : vous pourrez le restaurer."}</p>
+        ${removed.length ? `<p class="pf3warn">Ces positions de votre portefeuille ne seront plus suivies : ${esc(removed.map(l => pf3Info(l).name).slice(0, 8).join(", "))}${removed.length > 8 ? "…" : ""}.</p>` : ""}
+        ${risky ? `<label class="pf3ichk pf3iconf"><input type="checkbox" id="pf3iconf" ${S.confirm ? "checked" : ""}> J'ai vérifié l'aperçu : remplacer mon portefeuille${sel.length < B.act.length ? ` par ${sel.length} des ${B.act.length} positions du fichier` : ""}${B.nAmb ? " malgré les points à vérifier" : ""}.</label>` : ""}` : ""}
+      <p class="pf3err" id="pf3imsg" aria-live="polite" hidden></p>
+      <div class="pf3btns"><button type="button" class="btn" id="pf3igo" ${(!sel.length && !(exSold.length && S.updSold.size)) || (risky && !S.confirm) ? "disabled" : ""}>${sel.length ? `Importer ${sel.length} position${sel.length > 1 ? "s" : ""}` : "Mettre à jour"}</button><button type="button" class="linkbtn" id="pf3ino">Annuler</button><button type="button" class="linkbtn" id="pf3imap">${showMap ? "" : "Corriger la correspondance des colonnes"}</button></div>` : ""}
     ${showMap ? `<div class="pf3map"><p class="kick">Quelle colonne contient quoi ?</p><div class="pf3grid">${F.map(([k, lab]) => `<label class="pf3f"><span>${lab}</span><select data-m="${k}"><option value="">—</option>${r.header.map((h, i) => `<option value="${i}" ${r.map[k] === i ? "selected" : ""}>${esc(h || "colonne " + (i + 1))}${r.sample[0] && r.sample[0][i] ? ` (ex. ${esc(String(r.sample[0][i]).slice(0, 18))})` : ""}</option>`).join("")}</select></label>`).join("")}</div><p class="pf3hint">Il faut au moins le nom ou l'ISIN, et la quantité. Avec une date et un prix, chaque ligne devient un achat ou une vente ; avec un PRU, une position.</p></div>` : ""}</div>`;
-  $$(".pf3chips[data-g=ienv] button", res).forEach(b => b.onclick = () => { S.env = S.env === b.dataset.v ? "" : b.dataset.v; pf3ImpRead(); });
-  $$(".pf3chips[data-g=imode] button", res).forEach(b => b.onclick = () => { S.mode = b.dataset.v; pf3ImpRead(); });
-  const br = $("#pf3ibr", res); if (br) br.onchange = () => { S.br = br.value; pf3ImpRead(); };
+  $$("[data-sel]", res).forEach(c => c.onchange = () => { if (c.checked) S.sel.add(c.dataset.sel); else S.sel.delete(c.dataset.sel); S.confirm = false; pf3ImpRead(); });
+  $$("[data-usold]", res).forEach(c => c.onchange = () => { if (c.checked) S.updSold.add(c.dataset.usold); else S.updSold.delete(c.dataset.usold); pf3ImpRead(); });
+  $$("[data-pru]", res).forEach(i => i.onchange = () => { S.pru = S.pru || {}; const v = pf3Num(i.value); if (v > 0) S.pru[i.dataset.pru] = v; else delete S.pru[i.dataset.pru]; pf3ImpRead(); });
+  $$(".pf3chips[data-g=ienv] button", res).forEach(b => b.onclick = () => { S.env = S.env === b.dataset.v ? "" : b.dataset.v; S.sel = null; pf3ImpRead(); });
+  $$(".pf3chips[data-g=imode] button", res).forEach(b => b.onclick = () => { S.mode = b.dataset.v; S.confirm = false; pf3ImpRead(); });
+  const br = $("#pf3ibr", res); if (br) br.onchange = () => { S.br = br.value; S.sel = null; pf3ImpRead(); };
+  const cf = $("#pf3iconf", res); if (cf) cf.onchange = () => { S.confirm = cf.checked; pf3ImpRead(); };
+  const kp = $("#pf3ikeep", res); if (kp) kp.onclick = () => { S.keepDup = !S.keepDup; S.reread = true; S.sel = null; pf3ImpRead(); };
   const mp = $("#pf3imap", res); if (mp) { if (!mp.textContent) mp.remove(); else mp.onclick = () => { S.showMap = true; pf3ImpRead(); }; }
-  $$("[data-m]", res).forEach(s => s.onchange = () => { S.map = Object.fromEntries($$("[data-m]", res).filter(x => x.value !== "").map(x => [x.dataset.m, +x.value])); S.showMap = true; pf3ImpRead(); });
-  const go = $("#pf3igo", res); if (go) go.onclick = () => pf3ImpApply(lim);
+  $$("[data-m]", res).forEach(s => s.onchange = () => { S.map = Object.fromEntries($$("[data-m]", res).filter(x => x.value !== "").map(x => [x.dataset.m, +x.value])); S.showMap = true; S.reread = true; S.sel = null; pf3ImpRead(); });
+  const no = $("#pf3ino", res); if (no) no.onclick = () => { const x = $("#pf3ix"); if (x) x.click(); };
+  const go = $("#pf3igo", res); if (go) go.onclick = () => pf3ImpApply();
 }
-function pf3ImpApply(lim) {
+function pf3ImpApply() {
   const S = PF3S.imp; if (!S || !S.B) return;
-  const P = pf3P(), prev = JSON.parse(JSON.stringify(P)), add = S.B.lines.slice(0, lim === Infinity ? undefined : lim).map(l => { const c = { ...l }; delete c._n; return c; });
-  let n = 0, upd = 0;
-  if (S.mode === "replace" || P.dem) P.l = [];
+  const B = S.B, msg = $("#pf3imsg"), P = pf3P(), prev = JSON.parse(JSON.stringify(P));
+  const sel = B.act.filter(x => S.sel.has(x.id)), miss = sel.filter(x => x.needPru);
+  if (miss.length) { if (msg) { msg.hidden = false; msg.textContent = `Indiquez le prix de revient des titres reçus pour ${miss.map(x => x.name).join(", ")} (il figure sur le relevé de l'ancien courtier), ou décochez ${miss.length > 1 ? "ces lignes" : "cette ligne"}.`; } const i = $(`[data-pru="${CSS.escape(miss[0].gids[0])}"]`); if (i) i.focus(); return; }
+  const replace = S.mode === "replace" || P.dem || !P.l.length;
+  if (replace && !sel.length) { if (msg) { msg.hidden = false; msg.textContent = "Aucune position sélectionnée : votre portefeuille n'est pas remplacé."; } return; }
+  const upd = replace ? [] : B.sold.filter(x => S.updSold && S.updSold.has(x.id));
+  try { if (P.l.length && !P.dem) localStorage.setItem(PF3_IMPBAK, JSON.stringify({ at: Date.now(), p: prev, file: S.name, mode: replace ? "replace" : "add" })); } catch (e) { }
+  if (replace) P.l = [];
   delete P.dem; PF3S.demo = null;
-  for (const l of add) {
-    const ex = P.l.find(x => x.k === l.k && (x.env || "") === (l.env || "") && (x.br || "") === (l.br || ""));
+  let n = 0, u = 0;
+  const key = o => [o[0], o[1], Math.round(o[2] * 1000), Math.round(o[3] * 100)].join("|"); // tolérant aux arrondis d'un import précédent
+  for (const x of [...sel, ...upd]) {
+    const l = JSON.parse(JSON.stringify(x.line));
+    const ex = P.l.find(y => pf3LKey(y) === pf3LKey(l));
     if (!ex) { P.l.push(l); n++; continue; }
-    upd++;
-    if (l.o) { if (!ex.o || (ex.cur || "EUR") !== (l.cur || "EUR")) { ex.o = l.o.slice(); ex.cur = l.cur; } else { const key = o => o.slice(0, 4).join("|"); const have = new Set(ex.o.map(key)); l.o.forEach(o => { if (!have.has(key(o))) ex.o.push(o); }); } }
-    else { delete ex.o; if (l.m) ex.m = l.m; else { ex.q = l.q; ex.pru = l.pru; ex.cur = l.cur; } }
+    u++;
+    if (l.o) { if (!ex.o || (ex.cur || "EUR") !== (l.cur || "EUR")) { ex.o = l.o.slice(); ex.cur = l.cur; } else { const have = new Set(ex.o.map(key)); l.o.forEach(o => { if (!have.has(key(o))) ex.o.push(o); }); } delete ex.m; }
+    else { delete ex.o; if (l.m) ex.m = l.m; else { ex.q = l.q; ex.pru = l.pru; ex.cur = l.cur; delete ex.m; } }
     PF3.syncLine(ex);
   }
   if (S.br) { P.cfg = P.cfg || {}; P.cfg.courtier = P.cfg.courtier || S.br; }
   pf2Save(P); PF3S.imp = null; $("#pf3impbox").innerHTML = ""; PF3S.open = -1; pf3Draw();
-  pf3Undo(`${n ? `${n} ligne${n > 1 ? "s" : ""} ajoutée${n > 1 ? "s" : ""}` : ""}${n && upd ? ", " : ""}${upd ? `${upd} mise${upd > 1 ? "s" : ""} à jour` : ""}${!n && !upd ? "Rien à importer" : ""}.`, prev);
+  pf3Undo(`${n ? `${n} position${n > 1 ? "s" : ""} importée${n > 1 ? "s" : ""}` : ""}${n && u ? ", " : ""}${u ? `${u} mise${u > 1 ? "s" : ""} à jour` : ""}${!n && !u ? "Rien à importer" : ""}.`, prev);
 }
 function pf3Export() {
   const P = pf3P(); if (!P.l.length) { toast("Votre portefeuille est vide."); return; }
@@ -1268,11 +1486,16 @@ function pf3Export() {
 /* ---------- Avertissement après synchronisation : la version de l'appareil est gardée ---------- */
 function pf3Notice() {
   const el = $("#pf3notice"); if (!el) return;
-  let b = null; try { b = JSON.parse(localStorage.getItem(PF3_BACKUP) || "null"); } catch (e) { }
-  if (!b || !b.p || !b.p.l || !b.p.l.length || Date.now() - b.at > 30 * 864e5) { el.innerHTML = ""; return; }
-  el.innerHTML = `<div class="notice pf3note"><span>Votre compte a remplacé le portefeuille enregistré sur cet appareil (${b.p.l.length} ligne${b.p.l.length > 1 ? "s" : ""}, le ${dLabel(new Date(b.at).toISOString().slice(0, 10))}). La version de l'appareil est gardée.</span><span><button type="button" class="linkbtn" id="pf3brest">Restaurer la version de l'appareil</button> · <button type="button" class="linkbtn" id="pf3bdel">Ignorer</button></span></div>`;
-  $("#pf3brest").onclick = () => { const prev = pf2Load(), p = b.p; p.maj = Date.now(); pf2Save(p); try { localStorage.removeItem(PF3_BACKUP); } catch (e) { } pf3Draw(); pf3Undo("Version de l'appareil restaurée.", prev); };
-  $("#pf3bdel").onclick = () => { try { localStorage.removeItem(PF3_BACKUP); } catch (e) { } el.innerHTML = ""; };
+  let b = null, ib = null; try { b = JSON.parse(localStorage.getItem(PF3_BACKUP) || "null"); ib = JSON.parse(localStorage.getItem(PF3_IMPBAK) || "null"); } catch (e) { }
+  const okB = b && b.p && b.p.l && b.p.l.length && Date.now() - b.at < 30 * 864e5, okI = ib && ib.p && ib.p.l && ib.p.l.length && Date.now() - ib.at < 14 * 864e5;
+  if (!okB && !okI) { el.innerHTML = ""; return; }
+  const one = (id, txt) => `<div class="notice pf3note"><span>${txt}</span><span><button type="button" class="linkbtn" data-rest="${id}">Restaurer cette version</button> · <button type="button" class="linkbtn" data-del="${id}">Ignorer</button></span></div>`;
+  const n = x => { const a = x.p.l.filter(pf3IsActive).length; return `${a} position${a > 1 ? "s" : ""}`; };
+  el.innerHTML = (okI ? one("i", `Import du ${dLabel(new Date(ib.at).toISOString().slice(0, 10))}${ib.file ? ` (${esc(ib.file)})` : ""} : votre portefeuille d'avant (${n(ib)}) est sauvegardé sur cet appareil.`) : "")
+    + (okB ? one("b", `Votre compte a remplacé le portefeuille enregistré sur cet appareil (${n(b)}, le ${dLabel(new Date(b.at).toISOString().slice(0, 10))}). La version de l'appareil est gardée.`) : "");
+  const K = { i: PF3_IMPBAK, b: PF3_BACKUP }, V = { i: ib, b };
+  $$("[data-rest]", el).forEach(x => x.onclick = () => { const id = x.dataset.rest, prev = pf2Load(), p = V[id].p; p.maj = Date.now(); pf2Save(p); try { localStorage.removeItem(K[id]); } catch (e) { } pf3Draw(); pf3Undo("Version précédente restaurée.", prev); });
+  $$("[data-del]", el).forEach(x => x.onclick = () => { try { localStorage.removeItem(K[x.dataset.del]); } catch (e) { } pf3Notice(); });
 }
 
 /* ---------- La page ---------- */
@@ -1529,6 +1752,48 @@ function pf3Css() {
 .pf3dg b{font-size:14px}.pf3dg p{margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--grey)}
 .pf3dx{color:var(--ink)!important}.pf3dx span{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--light);margin-right:4px}
 @media (max-width:760px){.pf3opt{grid-template-columns:1fr}.pf3verd{padding:0 16px 12px}.pf3defs > summary{padding:11px 16px}.pf3dg > div{padding:12px 16px}.pf3st .pf3iw{max-width:none}}
+.pf3irh p{margin:0 0 4px;line-height:1.5}
+.pf3tagk{display:inline-block;font-size:11.5px;font-weight:600;background:var(--soft);border:1px solid var(--line);border-radius:99px;padding:1px 8px;margin-left:4px;vertical-align:1px}
+.pf3isec{margin:14px 0 6px}
+.pf3ish{display:flex;align-items:baseline;gap:10px;margin-bottom:6px}
+.pf3ish h3{font-size:15px;margin:0}
+.pf3ish span{font-size:12.5px}
+.pf3inote{background:var(--hl);border:1px solid var(--line);border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.5;margin:0 0 8px}
+.pf3ipl{list-style:none;margin:0;padding:0;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+.pf3ip{display:grid;grid-template-columns:30px minmax(0,1fr) auto;align-items:center;gap:4px 8px;padding:9px 12px;border-top:1px solid var(--line2)}
+.pf3ip:first-child{border-top:0}
+.pf3ip:not(.on) .pf3ipn,.pf3ip:not(.on) .pf3ipv{opacity:.45}
+.pf3ipc input{width:18px;height:18px;accent-color:var(--ink);cursor:pointer}
+.pf3ipn{display:flex;align-items:center;gap:8px;min-width:0}
+.pf3ipn > span{display:flex;flex-direction:column;min-width:0}
+.pf3ipn b{font-size:14px;overflow-wrap:anywhere}
+.pf3ipn small{color:var(--light);font-size:11.5px;line-height:1.35;overflow-wrap:anywhere}
+.pf3ipv{display:grid;grid-template-columns:repeat(3,minmax(78px,auto));gap:12px;text-align:right;font-family:var(--mono);font-size:13px}
+.pf3ipv > span{display:flex;flex-direction:column}
+.pf3ipv i{font-style:normal;font-family:var(--sans);font-size:10.5px;color:var(--light);text-transform:uppercase;letter-spacing:.04em}
+.pf3ipv small{font-family:var(--sans);font-size:10.5px;color:var(--light)}
+.pf3ipa{grid-column:2/-1;font-size:12.5px;color:#8A3A12;line-height:1.45}
+.pf3ipa p{margin:2px 0}
+.pf3ipa p::before{content:"À vérifier : ";font-weight:600}
+.pf3ipru{max-width:320px;margin-top:6px}
+.pf3ip.amb{background:#FFFBF2}
+.pf3isum{font-size:13px;margin:8px 2px 0;color:var(--grey)}
+.pf3isum b{color:var(--ink)}
+.pf3isold ul,.pf3iamb ul,.pf3ichecks ul{margin:6px 0 0;padding-left:18px}
+.pf3isold li,.pf3iamb li,.pf3ichecks li{margin:4px 0}
+.pf3ichecks ul{list-style:none;padding-left:0}
+.pf3ichecks li{padding-left:22px;position:relative}
+.pf3ichecks li::before{position:absolute;left:0;top:0;font-weight:700}
+.pf3ichecks li.ok::before{content:"✓";color:var(--up)}
+.pf3ichecks li.ko::before{content:"!";color:var(--down)}
+.pf3ichecks li.i::before{content:"i";color:var(--light);font-style:italic}
+.pf3ichk{display:flex;gap:8px;align-items:flex-start;font-size:13px;margin:6px 0 0;cursor:pointer;line-height:1.45}
+.pf3ichk input{margin-top:2px;accent-color:var(--ink)}
+.pf3iconf{background:var(--hl);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin-top:10px}
+@media (max-width:760px){
+  .pf3ip{grid-template-columns:26px minmax(0,1fr);padding:10px}
+  .pf3ipv{grid-column:2/-1;grid-template-columns:repeat(3,minmax(0,1fr));text-align:left;gap:8px}
+}
 </style>`);
 }
 

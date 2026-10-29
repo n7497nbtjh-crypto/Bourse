@@ -3486,7 +3486,7 @@ function profilHTML(s) {
 }
 
 /* ---------- Premium : jeton gardé sur l'appareil, quotas, incitations ---------- */
-const TKEY = "bilan.premium", FREE = { pf: 6, cmp: 3 };
+const TKEY = "bilan.premium", FREE = { pf: 10, cmp: 3 };
 function premTok() { try { return localStorage.getItem(TKEY) || ""; } catch (e) { return ""; } }
 function setPremTok(t) { try { t ? localStorage.setItem(TKEY, t) : localStorage.removeItem(TKEY); } catch (e) { } PREM = null; }
 let PREM = null, PREMP = null;
@@ -3596,7 +3596,7 @@ async function pagePremium(sub) {
     ["Résumés détaillés des documents officiels", `${L.resume[0]} par jour`, `${L.resume[1]} par jour`],
     ["Bilan rédigé de vos favoris, à la demande", `${L.veille[0]} par jour`, `${L.veille[1]} par jour`],
     ["Commentaire IA de votre portefeuille", `${L.portefeuille[0]} par jour`, `${L.portefeuille[1]} par jour`],
-    ["Lignes suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
+    ["Positions actives suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
     ["Entreprises comparées côte à côte", `${FREE.cmp}`, "5"],
   ];
   const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<button class="btn" disabled>Ouverture prochaine</button>`}</div>`;

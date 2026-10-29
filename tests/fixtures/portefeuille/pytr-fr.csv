@@ -1,0 +1,9 @@
+Date;Type;Valeur;Note;ISIN;Parts;Frais;Impôts / Taxes;ISIN2;Parts2
+2025-01-06T10:00:00;Dépôt;500.0;;;;;;;
+2025-01-07T10:03:11;Achat;-591.0;Amundi PEA Monde (MSCI World);FR001400U5Q4;100.0;1.0;;;
+2025-02-10T09:00:00;Transfert (Entrant);0.0;Air Liquide;FR0000120073;3.0;;;;
+2025-03-03T08:00:00;Achat;-100.0;Amundi PEA Monde (MSCI World);FR001400U5Q4;16.393443;;;;
+2025-05-20T10:00:00;Dividendes;9.9;Air Liquide;FR0000120073;3.0;;;;
+2025-07-01T10:00:00;Intérêts;3.12;;;;;;;
+2025-09-01T15:20:00;Vente;307.0;Amundi PEA Monde (MSCI World);FR001400U5Q4;50.0;1.0;0.5;;
+2025-09-15T10:00:00;Remboursement Impôts / Taxes;0.5;;;;;;;
