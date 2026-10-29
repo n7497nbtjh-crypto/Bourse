@@ -3,7 +3,8 @@ tests/fixtures/site/
 node_modules/
 .DS_Store
 cf/src/index.gen.mjs
-.claude/
+.claude/worktrees/
+.claude/settings.local.json
 .wrangler/
 cf/site/data/faq/
 cf/site/data/wd/
