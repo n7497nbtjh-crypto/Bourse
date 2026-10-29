@@ -90,6 +90,6 @@ export default {
     const t = info || { title: `Page introuvable · ${SITE}`, desc: BASE_DESC };
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">`);
-    return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=300" } });
+    return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate" } });
   },
 };

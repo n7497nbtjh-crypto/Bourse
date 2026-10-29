@@ -4,7 +4,7 @@ on:
   workflow_dispatch: {}
   push:
     branches: [main]
-    paths: ["cf/site/index.html", "cf/site/calc.js", "cf/src/**", "build.mjs", "data/gf.mjs", "data/concurrents.json", "data/parcours.json", "data/commencer.json", "data/legal.json", ".github/workflows/site.yml"]
+    paths: ["cf/site/index.html", "cf/site/*.js", "cf/site/m/**", "cf/site/_routes.json", "cf/site/*.webmanifest", "cf/site/icons/**", "cf/src/**", "build.mjs", "data/gf.mjs", "data/concurrents.json", "data/parcours.json", "data/commencer.json", "data/legal.json", ".github/workflows/site.yml"]
 permissions:
   contents: read
 concurrency:

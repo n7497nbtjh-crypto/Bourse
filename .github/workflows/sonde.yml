@@ -1,0 +1,42 @@
+# Sonde à la demande pour les chantiers en parallèle : lance un script d'une branche de travail
+# (accès réseau complet de GitHub) et rend le dossier de sortie en artefact, sans rien écrire sur main.
+#   gh workflow run sonde.yml --ref <branche> -f script=data/sonde/<nom>.mjs -f sortie=data/sonde/out/<nom>
+name: Sonde
+on:
+  workflow_dispatch:
+    inputs:
+      script:
+        description: "Script à lancer (chemin dans la branche)"
+        required: true
+      sortie:
+        description: "Dossier rendu en artefact"
+        required: false
+        default: "data/sonde/out"
+      minutes:
+        description: "Durée maximale du script, en minutes"
+        required: false
+        default: "50"
+permissions:
+  contents: read
+jobs:
+  sonde:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - env:
+          CONTACT: ${{ vars.CONTACT }}
+          SORTIE: ${{ inputs.sortie }}
+        run: |
+          mkdir -p "$SORTIE"
+          npm i --no-save --silent pdfjs-dist@4.10.38 || true
+          timeout "${{ inputs.minutes }}m" node "${{ inputs.script }}" > "$SORTIE/_journal.txt" 2>&1 || echo "code de sortie $?" >> "$SORTIE/_journal.txt"
+          tail -c 3000 "$SORTIE/_journal.txt"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sonde
+          path: ${{ inputs.sortie }}
+          retention-days: 3

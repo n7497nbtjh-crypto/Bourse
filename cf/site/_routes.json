@@ -8,6 +8,10 @@
     "/calc.js",
     "/ia.js",
     "/sitemap.xml",
-    "/robots.txt"
+    "/robots.txt",
+    "/m/*",
+    "/sw.js",
+    "/manifest.webmanifest",
+    "/icons/*"
   ]
 }
