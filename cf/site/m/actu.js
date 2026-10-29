@@ -273,6 +273,6 @@ document.addEventListener("click", async e => {
   const j = await iaRediger("annonce", { entreprise: co ? co.name : id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture_calculee: it.r || [], dernier_exercice: f, lien: it.u }, { max: 420 });
   b.remove();
   const x = j.txt ? jsonFrom(j.txt) : null;
-  box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par votre IA connectée (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>`
-    : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par votre IA connectée (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>` : `<p class="ax-why">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
+  box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA de bilan. (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>`
+    : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par l'IA de bilan. (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>` : `<p class="ax-why">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
 });

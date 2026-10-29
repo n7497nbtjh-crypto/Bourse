@@ -188,13 +188,13 @@ async function orcIaAsk(q, o = {}) {
     if (!full) { try { full = FULL[s.id] = await (await fetch(`/data/societes/${s.id}.json`)).json(); } catch (e) { full = null; } }
     await loadAna();
     const rediger = async box => {
-      box.innerHTML = `<div class="iathink"><span></span><span></span><span></span> Votre IA rédige à partir des données de la fiche…</div>`;
+      box.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA du site rédige à partir des données de la fiche…</div>`;
       const faits = { ...ficheFaits(s, full), ...(typeof ficheWd === "function" ? { identite: ficheWd(s.id) } : {}) };
       box.innerHTML = miaRendu(await iaRediger("assistant", faits, { question: q, max: 600 }));
     };
     let loc = null; try { loc = localAssist(s, full, q); } catch (e) { }
     if (loc && !(o.rediger && miaConnectee())) {
-      out.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, calculée à partir des chiffres de la fiche.</p>` + (miaConnectee() ? `<button type="button" class="fapp" data-orcred>✦ Rédiger une réponse plus complète avec mon IA</button>` : o.rediger ? miaInvite() : "");
+      out.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, calculée à partir des chiffres de la fiche.</p>` + (miaConnectee() ? `<button type="button" class="fapp" data-orcred>✦ Rédiger une réponse plus complète avec l'IA</button>` : o.rediger ? miaInvite() : "");
       const b = $("[data-orcred]", out); if (b) b.onclick = () => { b.remove(); const d = document.createElement("div"); out.appendChild(d); rediger(d); };
       return;
     }
@@ -271,7 +271,7 @@ function pageMethode() {
       <section class="panel"><div class="ph"><h2>L'IA, en trois niveaux</h2></div><div class="pb mtdia">
         <div><b>1. Règles du site, dans votre navigateur</b><p>Recherches par critères, comparaisons, définitions, questions sur une fiche : comprises et calculées sur les données, sans modèle génératif. Réponse instantanée, exacte par construction, sans limite.</p></div>
         <div><b>2. Leçons vérifiées de l'Académie</b><p>Les questions de cours renvoient vers des leçons rédigées à partir de sources officielles, avec leurs chiffres 2026.</p></div>
-        <div><b>3. Votre IA, si vous la connectez</b><p>Facultatif : avec « Connecter mon IA » (ChatGPT, Claude, Gemini ou Mistral, avec votre propre clé ; Gemini et Mistral ont une offre gratuite), le modèle que vous choisissez reçoit votre question, les chiffres du site, leurs sources et des consignes strictes. Sa réponse est signalée comme rédigée par une IA. Le site, lui, n'appelle aucun modèle.</p></div></div></section>
+        <div><b>3. L'IA du site, pour les questions libres</b><p>Gratuite, sans compte ni clé : un modèle ouvert (Qwen3 ou Mistral Small) hébergé par Cloudflare reçoit votre question, les chiffres du site, leurs sources et des consignes strictes. Sa réponse est signalée comme rédigée par une IA. Un nombre de questions par jour et par visiteur permet au site de rester gratuit.</p></div></div></section>
     </div>
     <section class="panel"><div class="ph"><h2>Les règles données à l'IA contre les biais</h2></div><div class="pb"><ul class="mtdcheck">
       <li>Séparer les faits de leur interprétation</li><li>Présenter à la fois ce qui est favorable et ce qui demande de la vigilance</li><li>Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années</li>

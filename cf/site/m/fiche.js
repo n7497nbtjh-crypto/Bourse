@@ -373,7 +373,7 @@ function faqHTML(s, c) {
   return `<section class="panel ffaq" id="faq"><div class="ph"><h2>Questions fréquentes sur ${esc(s.name)}</h2><span class="light" style="font-size:12.5px">${Q.length} réponses calculées par le site</span></div>
     <form class="ffaqask" data-fiche-mini autocomplete="off"><label for="ffq">Posez votre propre question</label><div class="askf"><input id="ffq" type="text" maxlength="300" placeholder="Par exemple : pourquoi sa marge baisse-t-elle ?"><button class="btn" type="submit">Demander à l'IA</button></div></form>
     ${Q.map((x, i) => acc(esc(x.q), `<p class="fq-ia">✦ Réponse instantanée de l'IA, calculée à partir des données</p>${resumeHTML(x.a)}<p class="ffsrc">Source des chiffres : ${esc(x.src)}.</p><button type="button" class="fapp" data-approf="${esc(x.q)}">✦ Approfondir avec l'IA</button>`, i === 0)).join("")}
-    <div class="src">Les réponses sont calculées dans votre navigateur à partir des comptes officiels, des cours et des médianes du secteur : sans limite et sans invention. « Approfondir » ouvre le panneau ✦ : si vous avez connecté votre IA, elle rédige une explication plus complète à partir des mêmes données. Aucune réponse n'est un conseil d'achat ou de vente.</div></section>`;
+    <div class="src">Les réponses sont calculées dans votre navigateur à partir des comptes officiels, des cours et des médianes du secteur : sans limite et sans invention. « Approfondir » ouvre le panneau ✦ : l'IA du site rédige une explication plus complète à partir des mêmes données. Aucune réponse n'est un conseil d'achat ou de vente.</div></section>`;
 }
 document.addEventListener("submit", e => {
   const f = e.target.closest("[data-fiche-mini]"); if (!f || f.closest("#fside")) return;

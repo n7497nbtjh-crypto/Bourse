@@ -68,7 +68,7 @@ const NAV = [
       ["/favoris", "Mes favoris", "Les entreprises et ETF que vous suivez"],
       ["/portefeuille", "Mon portefeuille", "Vos lignes, leurs frais et leur diversification"],
       ["/espace/alertes", "Mes alertes", "Ce que le site vous signale, et les notifications"],
-      ["/espace/ia", "Mon IA", "Connecter votre propre modèle, la clé reste chez vous"],
+      ["/espace/ia", "L'IA du site", "Gratuite, sans compte ni clé, à partir des données du site"],
       ["/espace/reglages", "Réglages", "Compte, appareils, application"],
       ["/premium", "Premium", "Plus d'Académie, d'alertes et d'historique"],
     ],

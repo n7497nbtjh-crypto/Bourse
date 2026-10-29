@@ -12,7 +12,7 @@ const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, header
 export async function veille(request, env) {
   if (!env || !env.DB) return json({ error: "Bilan indisponible pour le moment." }, 503);
   const path = new URL(request.url).pathname;
-  if (path === "/api/veille") return json({ error: "Le site ne rédige plus de texte avec une IA. Le bilan calculé reste affiché ; pour un bilan rédigé, connectez votre IA.", ia_serveur: false }, 410);
+  if (path === "/api/veille") return json({ error: "Le site ne rédige plus de texte avec une IA. Le bilan calculé reste affiché ; l'IA du site le rédige depuis votre navigateur.", ia_serveur: false }, 410);
   await init(env.DB);
   return mails(request, env, path);
 }

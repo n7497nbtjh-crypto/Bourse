@@ -124,7 +124,8 @@ with sync_playwright() as pw:
             pg.wait_for_timeout(250); t = pg.inner_text("#orcialog")
             if "Réponse instantanée" in t: break
         if "Réponse instantanée" not in t or "Sur un an" not in t: ui.append("assistant de fiche : pas de réponse locale affichée " + t[:120])
-        if "Réponses calculées" not in pg.inner_text("#orcia"): ui.append("panneau ✦ : état « Réponses calculées » absent")
+        et = pg.inner_text("#orcia")
+        if "Réponses calculées" not in et and "IA du site" not in et: ui.append("panneau ✦ : état de l'IA absent " + et[:80])
     else: ui.append("assistant de fiche (panneau ✦) absent")
     b.close()
 

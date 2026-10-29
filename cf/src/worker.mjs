@@ -17,6 +17,7 @@ import { push, pousser } from "./push.mjs";
 import { mcp } from "./mcp.mjs";
 import { tete, VERSION } from "./pwa.mjs";
 import { etfMeta } from "./etf_meta.mjs";
+import { iaSite } from "./iasite.mjs";
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -80,7 +81,7 @@ export function meta(path, q = null) {
   if (p.startsWith("/espace")) return { title: `Mon espace · ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, commenté par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." };
   if (p === "/commencer") return { title: `Par où commencer en Bourse : le guide du nouvel investisseur · ${SITE}`, desc: "Épargne de précaution, horizon, choix du compte, diversification, frais, pièges à éviter : sept étapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalisé." };
   if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Plus de questions à l'assistant IA, de résumés détaillés et de bilans rédigés, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." };
-  if (p === "/espace/ia") return { title: `Mon IA · ${SITE}`, desc: "Les réponses calculées du site, gratuites et sans limite, et « Connecter mon IA » : ChatGPT, Claude, Gemini ou Mistral avec votre propre clé, gardée dans votre navigateur." };
+  if (p === "/espace/ia") return { title: `Mon IA · ${SITE}`, desc: "Les réponses calculées du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni clé." };
   if (p === "/connecteur") return { title: `Utiliser bilan. dans ChatGPT ou Claude · ${SITE}`, desc: "Ajoutez bilan. à Claude ou à ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda, sources à l'appui. Gratuit, en lecture seule, sans conseil." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
   if (p === "/cgv") return { title: `Conditions générales de vente · ${SITE}`, desc: BASE_DESC };
@@ -99,8 +100,8 @@ export function redirectionParcours(p) {
 }
 // Anciennes routes de l'IA du serveur (retirée le 29 octobre 2026) : le site ne paie et n'appelle plus aucun modèle.
 // Les réponses calculées restent dans le navigateur ; la rédaction passe par l'IA que le visiteur connecte (docs/ia.md).
-const IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair|ia\/etat)\/?$/;
-export const iaRetiree = () => Response.json({ error: "Le site ne rédige plus de texte avec une IA. Les réponses calculées restent disponibles ; pour une réponse rédigée, connectez votre IA (bouton ✦).", ia_serveur: false }, { status: 410, headers: { "cache-control": "no-store" } });
+const IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/;
+export const iaRetiree = () => Response.json({ error: "Cette adresse n'est plus utilisée. L'IA du site répond dans le panneau ✦ « Demander à l'IA »", ia_serveur: false }, { status: 410, headers: { "cache-control": "no-store" } });
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -109,6 +110,7 @@ export default {
     if (url.pathname === "/api/presse") return presse(request, U);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (IA_RETIREE.test(url.pathname)) return iaRetiree();
+    if (url.pathname.startsWith("/api/ia/")) return iaSite(request, env); // l'IA du site (Workers AI, gratuite, plafonnée)
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);

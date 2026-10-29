@@ -272,7 +272,7 @@ function synTexte(b) {
 let SYN_IA_B = null;
 function synIaBouton(b) {
   SYN_IA_B = b;
-  return miaConnectee() ? `<button type="button" class="fapp" data-syn-ia>✦ Commenter ma semaine avec mon IA</button>` : miaInvite();
+  return miaConnectee() ? `<button type="button" class="fapp" data-syn-ia>✦ Commenter ma semaine avec l'IA</button>` : miaInvite();
 }
 function synIaFaits(c) { // mêmes faits que l'ancien commentaire du serveur : tous calculés par le site
   const L = c.lignes || [];
@@ -287,7 +287,7 @@ function synIaFaits(c) { // mêmes faits que l'ancien commentaire du serveur : t
 }
 document.addEventListener("click", async e => {
   const bt = e.target.closest("[data-syn-ia]"); if (!bt || !SYN_IA_B) return;
-  bt.disabled = true; bt.textContent = "Votre IA rédige le commentaire…";
+  bt.disabled = true; bt.textContent = "L'IA rédige le commentaire…";
   const j = await iaRediger("bilan", synIaFaits(SYN_IA_B), { max: 650 });
   bt.outerHTML = j.txt ? `<div class="synia">${resumeHTML(j.txt)}${miaPied(j)}</div>` : miaRendu(j);
 });

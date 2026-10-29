@@ -1229,7 +1229,7 @@ async function pf3Dash(R0, P) {
       ${pf3In("pf3cm", "Versement par mois", cfg.mensuel || "", 'placeholder="150"', "€")}${pf3In("pf3co", "Achats par mois", cfg.ordres || "", 'placeholder="1"')}${pf3BrSel("pf3cb", cfg.courtier || "")}</div>
       ${prof ? `<p class="pf3hint">Votre profil du questionnaire : <b>${esc(prof.titre)}</b>. Il est pris en compte.</p>` : `<p class="pf3hint">Pour une analyse plus complète, répondez aux <a class="lnk" href="/commencer#profil">5 questions du profil</a> (horizon, épargne de précaution, réaction aux baisses).</p>`}
       <div class="pf3loc" id="pf3loc">${pf3Txt(loc.slice(0, 3))}${loc.length > 3 ? `<div id="pf3locm" hidden>${pf3Txt(loc.slice(3))}</div><button type="button" class="linkbtn" id="pf3locb">Lire la suite : ${loc.slice(3).map(x => x[0].toLowerCase()).join(", ")}</button>` : ""}</div>
-      <div class="pf3go"><button type="button" class="btn pf3gob" id="pf3go">✦ Expliquer mon portefeuille</button><span class="light">${miaConnectee() ? `Votre IA connectée (${esc(miaNomModele())}) rédige une explication à partir de ces calculs, sans rien ajouter. Les chiffres de vos lignes lui sont envoyés, sans votre nom.` : `Demande de <a class="lnk" href="/espace/ia">connecter votre IA</a> : elle rédige alors une explication à partir de ces calculs.`}</span></div>
+      <div class="pf3go"><button type="button" class="btn pf3gob" id="pf3go">✦ Expliquer mon portefeuille</button><span class="light">${miaConnectee() ? `L'IA du site rédige une explication à partir de ces calculs, sans rien ajouter. Les chiffres de vos lignes lui sont envoyés, sans votre nom.` : `<a class="lnk" href="/espace/ia">L'IA du site</a> n'est pas disponible pour le moment : elle rédige d'habitude une explication à partir de ces calculs.`}</span></div>
       <div id="pf3iab" aria-live="polite"></div>
       <p class="pf3disc">Information, pas conseil : cette analyse décrit votre portefeuille avec des repères généraux. Elle ne tient pas compte de toute votre situation et ne recommande ni achat ni vente.</p></div></section>
   <section class="panel" id="pf3-alertes"><div class="ph"><h2>Points d'attention</h2><span class="light" style="font-size:12.5px">${nAtt ? `${nAtt} remarque${nAtt > 1 ? "s" : ""}` : "aucune remarque"}</span></div><div class="pb">
@@ -1298,7 +1298,7 @@ async function pf3Explain() {
   box.innerHTML = `<div class="pf3wait"><span></span>Rédaction en cours à partir de vos chiffres…</div>`; btn.disabled = true;
   const done = (txt, foot) => { const html = `<div class="iares pf3res">${pf3Txt(txt)}<p class="iafoot">${foot}</p></div>`; box.innerHTML = html; PF3S.ia = { key, html }; btn.disabled = false; };
   const j = await iaRediger("portefeuille", faits, { max: 750 });
-  if (j.txt) return done(j.txt, `${j.sources ? `Sources : ${esc(j.sources)}. ` : ""}Rédigé par votre IA connectée (${esc(j.modele)}) à partir des seuls chiffres calculés sur cette page. Vérifiez-les ci-dessus. Ce n'est pas un conseil en investissement.`);
+  if (j.txt) return done(j.txt, `${j.sources ? `Sources : ${esc(j.sources)}. ` : ""}Rédigé par l'IA de bilan. (${esc(j.modele)}) à partir des seuls chiffres calculés sur cette page. Vérifiez-les ci-dessus. Ce n'est pas un conseil en investissement.`);
   box.innerHTML = j.invite ? miaInvite("L'analyse calculée ci-dessus est complète.") : `<p class="muted">${esc(j.error || "La rédaction n'est pas disponible pour le moment.")}</p><p class="pf3hint">L'analyse calculée ci-dessus reste complète et à jour.</p>`;
   btn.disabled = false;
 }

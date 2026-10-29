@@ -3185,7 +3185,7 @@ async function veilleBilan(cos) {
   const el = $("#vbil"); if (!el) return;
   await loadAna();
   const loc = listeLocale(cos);
-  el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">${miaConnectee() ? "Votre IA rédige une lecture plus détaillée…" : "Résumé automatique de vos chiffres."}</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
+  el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">${miaConnectee() ? "L'IA du site rédige une lecture plus détaillée…" : "Résumé automatique de vos chiffres."}</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
   const j = await iaRediger("veille", listeFaits(cos));
   if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}${miaPied(j)}</div>`;
   else if (loc) $("#vbilf").outerHTML = j.invite ? miaInvite("Résumé automatique de vos chiffres.") : `<p class="iafoot">Résumé automatique de vos chiffres. ${esc(j.error || "")}</p>`;
@@ -3437,7 +3437,7 @@ async function pagePremium(sub) {
     ["Historique des bilans", "2 semaines", "12 semaines"],
     ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "Toutes"],
     ["Réponses calculées par le site (recherches, comparaisons, définitions, questions sur une fiche)", "Sans limite", "Sans limite"],
-    ["Réponses rédigées par votre IA connectée (« Connecter mon IA »)", "Oui", "Oui"],
+    ["Réponses rédigées par l'IA du site (nombre de questions par jour limité)", "Oui", "Oui"],
     ["Résultats d'une recherche par critères", "8", "30"],
     ["Positions actives suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
     ["Entreprises comparées côte à côte", `${FREE.cmp}`, "5"],
@@ -3676,7 +3676,7 @@ async function iaRun(q, out) {
   const titre = a.titre || q;
   out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
     ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : a.action === "lecons" ? `<p class="lead" style="margin:0 0 10px">Les leçons de l'Académie qui répondent à votre question :</p>` + leconsHTML(a.hits) : resumeHTML(a.texte) + (a.action === "repondre" && hitsL.length ? `<div class="iaplus"><p class="kick">Pour aller plus loin dans l'Académie</p>${hitsL.slice(0, 2).map(({ m, l }) => `<a class="hbr" href="/academie/${m.id}/${l.id}"><b>${esc(l.titre)}</b><span>${esc(m.titre)}</span></a>`).join("")}</div>` : "")}
-    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.ia === "connectee" ? `Réponse de votre IA connectée (${esc(a.modele || "modèle choisi")}), à partir des données du site. À vérifier ; ce n'est pas un conseil.` : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p>${a.invite ? miaInvite() : ""}</div>`;
+    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.ia === "connectee" ? `Réponse rédigée par l'IA de bilan. (${esc(a.modele || "modèle choisi")}), à partir des données du site. À vérifier ; ce n'est pas un conseil.` : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p>${a.invite ? miaInvite() : ""}</div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
 function iaBox(id, big = false) {
@@ -3688,7 +3688,7 @@ function pageDemander() {
   const q = new URLSearchParams(location.search).get("q") || "";
   app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à bilan.</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
     ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div><p class="mia-etat" data-mia-etat>${miaEtatHTML()}</p></div>
-    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres reçoivent une réponse rédigée si vous <a class="lnk" href="/espace/ia">connectez votre IA</a>.</p></div></section>`;
+    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres reçoivent une réponse rédigée par <a class="lnk" href="/espace/ia">l'IA du site</a>, gratuite.</p></div></section>`;
   const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
   app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (!b) return; $("input", f).value = b.dataset.iaq; f.requestSubmit(); });
   if (q) { $("input", f).value = q; iaRun(q, out); }
@@ -3814,7 +3814,7 @@ async function espaceAlertes(el, m) {
 function espaceReglages(el, m) {
   el.innerHTML = `<div class="two"><section class="panel"><div class="ph"><h2>Mot de passe</h2></div><div class="pb"><form id="mdpf" class="espform"><label>Mot de passe actuel<input type="password" name="a" required autocomplete="current-password"></label><label>Nouveau mot de passe<input type="password" name="n" required minlength="10" autocomplete="new-password"></label><button class="btn">Changer</button><p class="muted" id="mdpm" style="font-size:13.5px;margin:0"></p></form></div></section>
     <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail ? `<label class="chk"><input type="checkbox" id="teas"${m.teaser ? " checked" : ""}> Recevoir un court e-mail quand mon bilan de la semaine est prêt (sans son contenu).</label>` : `<p class="muted" style="margin-top:0">Votre bilan de la semaine vous attend ici chaque samedi matin.</p>`}
-      <p style="margin:16px 0 0"><a class="lnk" href="/espace/ia">Mon IA</a> : réponses calculées, ou votre IA connectée pour des réponses rédigées.</p>
+      <p style="margin:16px 0 0"><a class="lnk" href="/espace/ia">L'IA du site</a> : réponses calculées, et réponses rédigées gratuites pour les questions libres.</p>
       <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button>${m.premium ? `<a class="btn ghost" href="/premium">Mon abonnement</a>` : ""}</div></div></section></div>
     <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte, vos favoris, votre portefeuille, vos bilans et vos alertes sont effacés définitivement. Un abonnement Premium se résilie à part, depuis la page Premium.</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
   $("#mdpf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/motdepasse", { ancien: fd.get("a"), nouveau: fd.get("n") }); $("#mdpm").textContent = r.error || "Mot de passe changé."; };
@@ -3985,7 +3985,7 @@ function pageMethode() {
       <h2>Comment les chiffres sont jugés</h2>
       <p>Chaque chiffre est comparé à la médiane des entreprises du même secteur suivies par le site : la moitié fait mieux, l'autre moins bien. Vert signifie nettement mieux que la médiane, orange nettement moins bien, gris dans la moyenne. Un point orange n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller.</p>
       <h2>Ce que fait l'intelligence artificielle</h2>
-      <p>Les questions courantes (recherches par critères, comparaisons, définitions, questions sur une fiche) sont comprises et calculées directement par le site, sans modèle d'IA : la réponse est donc exacte par construction et sans limite. Pour les questions libres, si vous avez connecté votre IA, le modèle choisi reçoit uniquement les chiffres du site et des consignes strictes.</p>
+      <p>Les questions courantes (recherches par critères, comparaisons, définitions, questions sur une fiche) sont comprises et calculées directement par le site, sans modèle d'IA : la réponse est donc exacte par construction et sans limite. Pour les questions libres, l'IA du site reçoit uniquement les chiffres du site et des consignes strictes.</p>
       <h2>Les règles données à l'IA contre les biais</h2>
       <p>Séparer les faits de leur interprétation. Toujours présenter ce qui est favorable et ce qui demande de la vigilance. Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années. Comparer à la médiane du secteur plutôt que juger dans l'absolu. Aucun mot d'emphase. Aucune prédiction de cours, aucune recommandation d'acheter, de vendre ou de conserver un titre. Dire quand une information manque. Ne citer que les chiffres fournis.</p>
       <h2>Ce que le site ne fait pas</h2>
