@@ -30,20 +30,20 @@ const jours = (a, b) => Math.round((Date.parse(b) - Date.parse(a)) / 864e5);
 
 // Places : préfixe TradingView (nos symboles) → MIC Marketstack. Euronext dépend du pays de l'ISIN.
 const MIC = { XETR: "XETR", BME: "XMAD", MIL: "XMIL", OMXHEX: "XHEL", NASDAQ: "XNAS", NYSE: "XNYS", LSE: "XLON", OMXCOP: "XCSE", OMXSTO: "XSTO", OSL: "XOSL", VIE: "XWBO", SIX: "XSWX", TSE: "XTKS", TWSE: "XTAI", NSE: "XNSE", HKEX: "XHKG", ASX: "XASX", TSX: "XTSE", BMFBOVESPA: "BVMF", BMV: "XMEX", TASE: "XTAE", GPW: "XWAR", ATHEX: "XATH", KRX: "XKRX", SZSE: "XSHE", SSE: "XSHG", SGX: "XSES", TADAWUL: "XSAU", AMEX: "XASE", NYSEARCA: "ARCX", CBOE: "BATS" };
-const EURONEXT = { FR: "XPAR", NL: "XAMS", BE: "XBRU", PT: "XLIS", IE: "XDUB", LU: "XPAR" };
-const micsDe = (tv, isin) => { const [ex] = String(tv || "").split(":"); if (ex === "EURONEXT") { const p = EURONEXT[(isin || "").slice(0, 2)]; return p ? [p, "XPAR", "XAMS", "XBRU", "XLIS", "XDUB"].filter((x, i, a) => a.indexOf(x) === i) : ["XPAR", "XAMS", "XBRU", "XLIS", "XDUB"]; } return MIC[ex] ? [MIC[ex]] : []; };
+const EURONEXT = { FR: "XPAR", NL: "XAMS", BE: "XBRU", PT: "XLIS", LU: "XPAR" };
+const micsDe = (tv, isin) => { const [ex] = String(tv || "").split(":"); if (ex === "EURONEXT") { const p = EURONEXT[(isin || "").slice(0, 2)]; return p ? [p === "XDUB" ? "XPAR" : p, "XPAR", "XAMS", "XBRU", "XLIS"].filter((x, i, a) => a.indexOf(x) === i) : ["XPAR", "XAMS", "XBRU", "XLIS"]; } return MIC[ex] ? [MIC[ex]] : []; };
 const norm = t => String(t || "").toUpperCase().replace(/[._ ]/g, "-");
 
 let nreq = 0;
 async function api(path, params) {
   if (nreq >= MAX) throw new Error("budget de requêtes atteint (" + MAX + ")");
   const u = new URL("https://api.marketstack.com/v2" + path); u.searchParams.set("access_key", KEY); for (const [k, v] of Object.entries(params || {})) u.searchParams.set(k, v);
-  for (let t = 0; t < 4; t++) {
+  for (let t = 0; t < 8; t++) {
     nreq++;
     const r = await fetch(u);
-    if (r.status === 429) { console.log("::warning::Marketstack : cadence trop élevée, pause"); await new Promise(z => setTimeout(z, 3000 * (t + 1))); continue; }
+    if (r.status === 429) { const w = Math.min(60, 8 * (t + 1)); if (t >= 2) console.log(`Marketstack : cadence trop élevée, pause de ${w} s`); await new Promise(z => setTimeout(z, w * 1000)); continue; }
     if (!r.ok) { const txt = await r.text().catch(() => ""); throw new Error(`Marketstack ${r.status} sur ${path} : ${txt.slice(0, 200)}`); }
-    const j = await r.json(); await new Promise(z => setTimeout(z, 220)); return j;
+    const j = await r.json(); await new Promise(z => setTimeout(z, 1100)); return j; // environ une requête par seconde : la cadence admise par l'abonnement
   }
   throw new Error("Marketstack : trop de réponses 429 sur " + path);
 }
@@ -58,6 +58,12 @@ const titres = [
 console.log(titres.length, "titres avec un symbole (entreprises et ETF)");
 
 // ---------- 2. Correspondance de symboles, par place ----------
+const BASES = new Map();
+function baseIdx(mic, S) { // symbole sans suffixe de place → symboles Marketstack
+  if (BASES.has(mic)) return BASES.get(mic);
+  const m = new Map(); for (const sym of Object.keys(S)) { if (S[sym].eod === false) continue; const b = norm(sym.replace(/\.[A-Z0-9]{1,5}$/, "")); if (!m.has(b)) m.set(b, []); m.get(b).push(sym); }
+  BASES.set(mic, m); return m;
+}
 let map = {}; try { map = JSON.parse(readFileSync(MAPF, "utf8")); } catch (e) { }
 async function tickersDe(mic) {
   const f = new URL(mic + ".json", TKDIR);
@@ -69,13 +75,13 @@ async function tickersDe(mic) {
     const l = (j.data && (j.data.tickers || j.data)) || []; const arr = Array.isArray(l) ? l : [];
     for (const t of arr) { const sym = t.symbol || t.ticker; if (!sym) continue; symbols[sym] = { n: t.name || "", eod: t.has_eod !== false }; }
     if (!arr.length) break; offset += 1000;
-    if (offset > 20000) break; // garde-fou
+    if (offset > 80000) break; // garde-fou (Londres, Nasdaq, NYSE : plus de 20 000 symboles)
   }
   writeFileSync(f, JSON.stringify({ date: today, mic, symbols }));
   console.log(mic, ":", Object.keys(symbols).length, "symboles");
   return symbols;
 }
-const aFaire = titres.filter(t => REMAP || !(t.k in map));
+const aFaire = titres.filter(t => REMAP || !map[t.k]); // les titres sans correspondance sont réessayés (listes des places en cache un mois)
 if (aFaire.length) {
   console.log(aFaire.length, "symboles à faire correspondre");
   const parMic = new Map();
@@ -85,11 +91,10 @@ if (aFaire.length) {
   for (const t of aFaire) {
     let found = null;
     for (const mic of micsDe(t.tv, t.isin)) {
-      const S = parMic.get(mic) || {}, want = norm(t.ticker);
-      // Marketstack suffixe les symboles hors États-Unis : "MC.XPAR" ; aux États-Unis, "AAPL" tout court
-      const cands = [want + "." + mic, want, want.replace(/-/g, ".") + "." + mic, want.replace(/-/g, "")];
-      for (const c of cands) if (S[c]) { found = c; break; }
-      if (!found) { const k = Object.keys(S).find(s => norm(s.replace(/\.[A-Z]{4}$/, "")) === want); if (k) found = k; }
+      const S = parMic.get(mic) || {}, want = norm(t.ticker), B = baseIdx(mic, S);
+      // Marketstack suffixe les symboles hors États-Unis, de façon variable : "MC.XPAR", "BNP.PA", "SAP.DE" ; aux États-Unis, "AAPL" tout court
+      const l = B.get(want) || B.get(want.replace(/-/g, "")) || [];
+      found = l.find(x => x.endsWith("." + mic)) || l.find(x => /\.[A-Z]{1,3}$/.test(x)) || l[0] || null;
       if (found) break;
     }
     map[t.k] = found; if (found) ok++;
@@ -111,7 +116,7 @@ const parSym = new Map(suivis.map(t => [map[t.k], t]));
 const ecrire = (t, rows) => { // rows : [{date, close, adj_close}] du plus ancien au plus récent
   const h = lire(t.k) || { s: map[t.k], d: [], c: [] };
   const idx = new Map(h.d.map((d, i) => [d, i]));
-  for (const r of rows) { const d = String(r.date).slice(0, 10); let v = r.adj_close != null ? +r.adj_close : +r.close; if (!(v > 0)) continue; if (/\.XLON$/.test(map[t.k]) && v > 1000) v = v / 100; // pence → livres
+  for (const r of rows) { const d = String(r.date).slice(0, 10); let v = r.adj_close != null ? +r.adj_close : +r.close; if (!(v > 0)) continue; if (r.price_currency) h.cur = String(r.price_currency).toUpperCase(); // Londres : souvent en pence (GBX) ; le site ramène l'échelle sur le cours du jour
     if (idx.has(d)) h.c[idx.get(d)] = v; else { idx.set(d, h.d.length); h.d.push(d); h.c.push(v); } }
   const ord = h.d.map((d, i) => [d, h.c[i]]).sort((a, b) => a[0].localeCompare(b[0])).filter(x => x[0] >= depuis);
   h.d = ord.map(x => x[0]); h.c = ord.map(x => +x[1].toFixed(4)); h.s = map[t.k]; h.updated = today;
@@ -120,7 +125,7 @@ const ecrire = (t, rows) => { // rows : [{date, close, adj_close}] du plus ancie
 const lots = (l, n) => { const out = []; for (let i = 0; i < l.length; i += n) out.push(l.slice(i, i + n)); return out; };
 let ecrits = 0;
 try {
-  for (const lot of lots(aCompleter, 100)) {
+  for (const lot of lots(aCompleter, 25)) {
     const syms = lot.map(t => map[t.k]).join(","), acc = new Map(); let offset = 0, total = Infinity;
     while (offset < total) {
       const j = await api("/eod", { symbols: syms, date_from: depuis, date_to: today, limit: 1000, offset, sort: "ASC" });
