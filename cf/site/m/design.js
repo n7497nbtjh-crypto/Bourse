@@ -108,6 +108,25 @@ function tvChart(el, symbol, name) {
 function tv(el) { if (el) el.innerHTML = ""; }
 
 document.head.insertAdjacentHTML("beforeend", `<style>
+/* Accessibilité (point 7, 29/10/2026) : sur téléphone, aucun texte sous 11 px, aucune cible tactile sous 24 px */
+.lg b{font-size:max(9px,calc(var(--s) * .36))}
+@media (max-width:760px){
+  table.t th,.cmpr-badge,.cmpr-all tr.grp th,.cmpr-sug .h,.ctx-tag,.ess .lbl,.rf-fct th[scope=row] small,table.tbx-full thead th small,.kick,.fk .kick,.rf-keys .fk .kick{font-size:11px}
+  .prov-i{width:24px;height:24px;font-size:12px;margin-left:4px}
+  .linkbtn,.crumbs a,a.more,button.more{padding-top:5px;padding-bottom:5px;min-height:28px;display:inline-flex;align-items:center}
+  .def,.lnk{padding-top:5px;padding-bottom:5px;line-height:1.3} /* restent en ligne : un mot défini peut passer à la ligne */
+  .cmpr-x{width:36px;height:36px}
+  span.ctx-tag{font-size:11px}
+  a.th,.cmpr-all a.th{display:inline-flex;align-items:center;min-height:28px}
+  .cmpr-co{min-height:28px}
+  .fh-act .favbtn{min-height:40px}
+  .tbx-gb{min-width:40px;min-height:36px}
+  /* Stabilité (point 7) : la place du cours et de la fiche est réservée avant leur arrivée, rien ne saute */
+  #pxh{min-height:112px}
+  .rf-mid .rf-sum.fh-wait{min-height:560px}
+}
+#ctab > .empty:only-child{min-height:70vh}
+.rf-mid .rf-sum.fh-wait{min-height:470px}
 .f2-chart{display:flex;flex-direction:column}.f2-chart #tvchart.f2-tv{flex:1 1 auto;height:auto;min-height:300px}
 @media (max-width:760px){.f2-chart #tvchart.f2-tv{min-height:240px}}
 .dsg-tv{height:100%;display:flex;flex-direction:column}

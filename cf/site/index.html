@@ -4360,7 +4360,8 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   computeMedians();
   favCount();
   PXP = loadPrices();
-  route();
+  // Premier affichage seulement quand tous les modules (styles compris) sont chargés : sinon la page se redessine un instant plus tard et saute
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => route(), { once: true }); else route();
 });
 </script>
 <script src="/m/etf.js"></script>
