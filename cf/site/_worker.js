@@ -59,9 +59,11 @@ var SCHEMA = [
 ];
 SCHEMA.push(
   "CREATE TABLE IF NOT EXISTS pronos (evt TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (evt, who))",
-  "CREATE TABLE IF NOT EXISTS partages (who TEXT PRIMARY KEY, lignes TEXT NOT NULL, at INTEGER NOT NULL)"
+  "CREATE TABLE IF NOT EXISTS partages (who TEXT PRIMARY KEY, lignes TEXT NOT NULL, at INTEGER NOT NULL)",
+  "CREATE TABLE IF NOT EXISTS listes (id INTEGER PRIMARY KEY AUTOINCREMENT, pseudo TEXT NOT NULL, titre TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', items TEXT NOT NULL, created INTEGER NOT NULL, who TEXT NOT NULL, cle TEXT NOT NULL, likes INTEGER NOT NULL DEFAULT 0, reports INTEGER NOT NULL DEFAULT 0, hidden INTEGER NOT NULL DEFAULT 0)",
+  "CREATE INDEX IF NOT EXISTS l_who ON listes (who, created)"
 );
-var ALTERS = ["ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''"], ready = !1;
+var ALTERS = ["ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''", "ALTER TABLE messages ADD COLUMN meta TEXT NOT NULL DEFAULT ''"], ready = !1;
 async function init(db) {
   if (!ready) {
     for (let q of SCHEMA) await db.prepare(q).run();
@@ -81,14 +83,27 @@ async function who(request) {
 }
 var clean = (s) => String(s ?? "").replace(/[\u0000-\u0008\u000B-\u001F\u007F]/g, "").replace(/\n{3,}/g, `
 
-`).trim(), LINK = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|fr|net|io|xyz|ru|ly|gg|me)\b)/i, BAD = /\b(enc[uo]l|connard|salope|pute|nique ta|ntm)\b/i, roomOk = (r) => /^[a-z0-9-]{1,60}$/.test(r);
+`).trim(), LINK = /(https?:\/\/|www\.|\b[a-z0-9-]+\.(com|fr|net|io|xyz|ru|ly|gg|me)\b)/i, BAD = /\b(enc[uo]l|connard|salope|pute|nique ta|ntm)\b/i, roomOk = (r) => /^[a-z0-9-]{1,60}$/.test(r), ficheOk = (r) => roomOk(r) && r !== "general" && r !== "questions", CONSIGNE = /(^|[^\p{L}])(achetez|vendez|ach[eè]te[sz]?[- ]la|vends[- ]la|foncez|all[- ]in|(gains?|rendements?|plus-values?|profits?|performances?) garanti(e|es|s)?|sans (aucun )?risque|100 ?% s[ûu]r|x ?10|objectif de cours|to the moon)(?![\p{L}\d])/iu, HORIZONS = ["court", "moyen", "long"], KEY = /^[ce]:[a-z0-9-]{1,60}$/, hex = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join(""), textOk = (...l) => l.some((x) => LINK.test(x)) ? "Les liens ne sont pas autoris\xE9s." : l.some((x) => BAD.test(x)) ? "Merci de rester courtois." : null;
+function analyseOk(b) {
+  let t = clean(b.these).replace(/\s+/g, " "), r = clean(b.risques), h = String(b.horizon || ""), body = clean(b.body);
+  if (!ficheOk(String(b.room || ""))) return ["Une analyse se rattache \xE0 une entreprise ou \xE0 un ETF."];
+  if (t.length < 10 || t.length > 140) return ["La th\xE8se tient en une phrase de 10 \xE0 140 caract\xE8res."];
+  if (body.length < 80 || body.length > 2e3) return ["Les arguments font entre 80 et 2 000 caract\xE8res."];
+  if (r.length < 30 || r.length > 800) return ["D\xE9crivez au moins un risque (30 \xE0 800 caract\xE8res)."];
+  if (!HORIZONS.includes(h)) return ["Choisissez un horizon."];
+  let e = textOk(t, r, body);
+  if (e) return [e];
+  if ([t, r, body].some((x) => CONSIGNE.test(x))) return ["Formulez une analyse, pas une consigne d'achat ou de vente ni une promesse de gain."];
+  let ex = parseInt(b.ex, 10);
+  return [null, { t, r, h, ...ex >= 2e3 && ex <= 2100 ? { ex } : {} }];
+}
 async function communaute(request, env) {
   if (!env || !env.DB) return json({ error: "L'espace communaut\xE9 n'est pas encore activ\xE9." }, 503);
   let db = env.DB, url = new URL(request.url), path = url.pathname.replace(/\/+$/, "");
   if (await init(db), request.method === "GET" && path === "/api/communaute") {
     let room = url.searchParams.get("room") || "general";
     if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
-    let before = parseInt(url.searchParams.get("before") || "0", 10) || 2 ** 52, r = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE (room = ? OR tags LIKE ?) AND hidden = 0 AND id < ? ORDER BY id DESC LIMIT 50").bind(room, `%,${room},%`, before).all();
+    let before = parseInt(url.searchParams.get("before") || "0", 10) || 2 ** 52, r = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes, meta FROM messages WHERE (room = ? OR tags LIKE ?) AND hidden = 0 AND id < ? ORDER BY id DESC LIMIT 50").bind(room, `%,${room},%`, before).all();
     return json({ room, items: r.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/avis") {
@@ -99,7 +114,7 @@ async function communaute(request, env) {
     return json({ room, ...o });
   }
   if (request.method === "GET" && path === "/api/communaute/recent") {
-    let r = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes FROM messages WHERE hidden = 0 ORDER BY id DESC LIMIT 30").all(), t = await db.prepare("SELECT room, COUNT(*) AS n FROM messages WHERE hidden = 0 AND created > ? GROUP BY room ORDER BY n DESC LIMIT 10").bind(Date.now() - 7 * 864e5).all();
+    let r = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes, meta FROM messages WHERE hidden = 0 ORDER BY id DESC LIMIT 30").all(), t = await db.prepare("SELECT room, COUNT(*) AS n FROM messages WHERE hidden = 0 AND created > ? GROUP BY room ORDER BY n DESC LIMIT 10").bind(Date.now() - 7 * 864e5).all();
     return json({ items: r.results || [], rooms: t.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/questions") {
@@ -107,10 +122,24 @@ async function communaute(request, env) {
     return json({ items: r.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/fil") {
-    let id = parseInt(url.searchParams.get("id") || "0", 10), q = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes FROM messages WHERE id = ? AND hidden = 0").bind(id).first();
-    if (!q) return json({ error: "Question introuvable." }, 404);
+    let id = parseInt(url.searchParams.get("id") || "0", 10), q = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes, meta FROM messages WHERE id = ? AND hidden = 0").bind(id).first();
+    if (!q) return json({ error: "Message introuvable." }, 404);
     let a = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE parent = ? AND hidden = 0 ORDER BY likes DESC, id ASC LIMIT 100").bind(id).all();
     return json({ question: q, answers: a.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/analyses") {
+    let room = url.searchParams.get("room") || "", tri = url.searchParams.get("tri") === "recentes" ? "m.id DESC" : "m.likes DESC, m.id DESC";
+    if (room && !ficheOk(room)) return json({ error: "Salon inconnu." }, 400);
+    let r = await db.prepare(`SELECT m.id, m.room, m.pseudo, m.body, m.kind, m.created, m.likes, m.meta, (SELECT COUNT(*) FROM messages a WHERE a.parent = m.id AND a.hidden = 0) AS n FROM messages m WHERE m.kind = 'analyse' AND m.meta != '' AND m.parent IS NULL AND m.hidden = 0${room ? " AND m.room = ?" : ""} ORDER BY ${tri} LIMIT 40`).bind(...room ? [room] : []).all();
+    return json({ items: r.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/listes") {
+    let tri = url.searchParams.get("tri") === "recentes" ? "id DESC" : "likes DESC, id DESC", r = await db.prepare(`SELECT id, pseudo, titre, note, items, created, likes FROM listes WHERE hidden = 0 ORDER BY ${tri} LIMIT 40`).all();
+    return json({ items: r.results || [] });
+  }
+  if (request.method === "GET" && path === "/api/communaute/liste") {
+    let x = await db.prepare("SELECT id, pseudo, titre, note, items, created, likes FROM listes WHERE id = ? AND hidden = 0").bind(parseInt(url.searchParams.get("id") || "0", 10)).first();
+    return x ? json({ item: x }) : json({ error: "Liste introuvable ou retir\xE9e." }, 404);
   }
   if (request.method === "GET" && path === "/api/communaute/pronos") {
     let ids = (url.searchParams.get("evt") || "").split(",").filter((x) => /^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(x)).slice(0, 80);
@@ -150,14 +179,49 @@ async function communaute(request, env) {
     let room = String(b.room || "general"), pseudo = clean(b.pseudo).slice(0, 30), body = clean(b.body), kind = KINDS.includes(b.kind) ? b.kind : "avis";
     if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
     if (pseudo.length < 2) return json({ error: "Choisissez un pseudo d'au moins 2 caract\xE8res." }, 400);
-    if (body.length < 3 || body.length > 1e3) return json({ error: "Le message doit faire entre 3 et 1 000 caract\xE8res." }, 400);
+    let meta2 = "";
+    if (b.these != null) {
+      let [err2, m] = analyseOk(b);
+      if (err2) return json({ error: err2 }, 400);
+      let e = textOk(pseudo);
+      if (e) return json({ error: e }, 400);
+      if (b.website) return json({ ok: !0 });
+      let jour = await db.prepare("SELECT COUNT(*) AS n FROM messages WHERE who = ? AND created > ? AND meta != ''").bind(me, Date.now() - 864e5).first();
+      if (jour && jour.n >= 3) return json({ error: "Trois analyses par jour au plus : prenez le temps de les \xE9tayer." }, 429);
+      meta2 = JSON.stringify(m);
+    } else if (body.length < 3 || body.length > 1e3) return json({ error: "Le message doit faire entre 3 et 1 000 caract\xE8res." }, 400);
     if (LINK.test(body) || LINK.test(pseudo)) return json({ error: "Les liens ne sont pas autoris\xE9s." }, 400);
     if (BAD.test(body) || BAD.test(pseudo)) return json({ error: "Merci de rester courtois." }, 400);
     if (b.website) return json({ ok: !0 });
     let recent = await db.prepare("SELECT COUNT(*) AS n FROM messages WHERE who = ? AND created > ?").bind(me, Date.now() - 10 * 6e4).first();
     if (recent && recent.n >= 5) return json({ error: "Trop de messages d'affil\xE9e : r\xE9essayez dans quelques minutes." }, 429);
-    let parent = Number.isInteger(b.parent) ? b.parent : null, now = Date.now(), tags = mentions(body), r = await db.prepare("INSERT INTO messages (room, pseudo, body, kind, parent, created, who, tags) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(room, pseudo, body, kind, parent, now, me, tags.length ? "," + tags.join(",") + "," : "").first();
-    return json({ ok: !0, item: { id: r.id, room, pseudo, body, kind, parent, created: now, likes: 0 } }, 201);
+    let parent = meta2 ? null : Number.isInteger(b.parent) ? b.parent : null, k = meta2 ? "analyse" : kind, now = Date.now(), tags = mentions(body), r = await db.prepare("INSERT INTO messages (room, pseudo, body, kind, parent, created, who, tags, meta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(room, pseudo, body, k, parent, now, me, tags.length ? "," + tags.join(",") + "," : "", meta2).first();
+    return json({ ok: !0, item: { id: r.id, room, pseudo, body, kind: k, parent, created: now, likes: 0, meta: meta2 } }, 201);
+  }
+  if (path === "/api/communaute/liste") {
+    let pseudo = clean(b.pseudo).slice(0, 30), titre = clean(b.titre).replace(/\s+/g, " "), note = clean(b.note), items = [...new Set(Array.isArray(b.items) ? b.items.map(String).filter((x) => KEY.test(x)) : [])].slice(0, 30);
+    if (pseudo.length < 2) return json({ error: "Choisissez un pseudo d'au moins 2 caract\xE8res." }, 400);
+    if (titre.length < 3 || titre.length > 80) return json({ error: "Le titre fait entre 3 et 80 caract\xE8res." }, 400);
+    if (note.length > 400) return json({ error: "La note fait 400 caract\xE8res au plus." }, 400);
+    if (items.length < 2) return json({ error: "Une liste contient au moins 2 entreprises ou ETF." }, 400);
+    let e = textOk(pseudo, titre, note);
+    if (e) return json({ error: e }, 400);
+    if (CONSIGNE.test(titre) || CONSIGNE.test(note)) return json({ error: "Une liste de suivi d\xE9crit ce que vous suivez, pas ce qu'il faut acheter." }, 400);
+    if (b.website) return json({ ok: !0 });
+    let jour = await db.prepare("SELECT COUNT(*) AS n FROM listes WHERE who = ? AND created > ?").bind(me, Date.now() - 864e5).first();
+    if (jour && jour.n >= 3) return json({ error: "Trois listes par jour au plus." }, 429);
+    let cle = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, "0")).join(""), r = await db.prepare("INSERT INTO listes (pseudo, titre, note, items, created, who, cle) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(pseudo, titre, note, JSON.stringify(items), Date.now(), me, await hex(cle)).first();
+    return json({ ok: !0, id: r.id, cle }, 201);
+  }
+  if (path === "/api/communaute/liste/retirer") {
+    let id = parseInt(b.id, 10) || 0, x = await db.prepare("SELECT cle FROM listes WHERE id = ?").bind(id).first();
+    return !x || !b.cle || x.cle !== await hex(String(b.cle)) ? json({ error: "Non autoris\xE9." }, 403) : (await db.prepare("UPDATE listes SET hidden = 1 WHERE id = ?").bind(id).run(), json({ ok: !0 }));
+  }
+  if (path === "/api/communaute/liste/utile" || path === "/api/communaute/liste/signaler") {
+    let id = parseInt(b.id, 10);
+    if (!id) return json({ error: "Liste inconnue." }, 400);
+    let kind = path.endsWith("utile") ? "l:like" : "l:report", ins = await db.prepare("INSERT OR IGNORE INTO votes (msg, who, kind) VALUES (?, ?, ?)").bind(id, me, kind).run();
+    return ins.meta && ins.meta.changes === 0 ? json({ ok: !0, deja: !0 }) : (kind === "l:like" ? await db.prepare("UPDATE listes SET likes = likes + 1 WHERE id = ?").bind(id).run() : await db.prepare("UPDATE listes SET reports = reports + 1, hidden = CASE WHEN reports + 1 >= 3 THEN 1 ELSE hidden END WHERE id = ?").bind(id).run(), json({ ok: !0 }));
   }
   if (path === "/api/communaute/prono") {
     let evt = String(b.evt || ""), v = Math.sign(parseInt(b.v, 10) || 0);
@@ -181,7 +245,7 @@ async function communaute(request, env) {
     let kind = path.endsWith("aime") ? "like" : "report", ins = await db.prepare("INSERT OR IGNORE INTO votes (msg, who, kind) VALUES (?, ?, ?)").bind(id, me, kind).run();
     return ins.meta && ins.meta.changes === 0 ? json({ ok: !0, deja: !0 }) : (kind === "like" ? await db.prepare("UPDATE messages SET likes = likes + 1 WHERE id = ?").bind(id).run() : await db.prepare("UPDATE messages SET reports = reports + 1, hidden = CASE WHEN reports + 1 >= 3 THEN 1 ELSE hidden END WHERE id = ?").bind(id).run(), json({ ok: !0 }));
   }
-  return path === "/api/communaute/masquer" ? !env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY ? json({ error: "Non autoris\xE9." }, 403) : (await db.prepare("UPDATE messages SET hidden = 1 WHERE id = ?").bind(parseInt(b.id, 10)).run(), json({ ok: !0 })) : json({ error: "Introuvable." }, 404);
+  return path === "/api/communaute/masquer" ? !env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY ? json({ error: "Non autoris\xE9." }, 403) : (await db.prepare(`UPDATE ${b.type === "liste" ? "listes" : "messages"} SET hidden = 1 WHERE id = ?`).bind(parseInt(b.id, 10)).run(), json({ ok: !0 })) : json({ error: "Introuvable." }, 404);
 }
 
 // cf/src/presse.mjs
@@ -234,117 +298,91 @@ async function presse(request, index, fetchFn = fetch) {
   }), res;
 }
 
-// cf/src/llm.mjs
-var TODAY = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), ready2 = !1, DIAG = [], note = (m) => {
-  DIAG.push(String(m).slice(0, 160)), DIAG.length > 6 && DIAG.shift();
-};
-async function init2(db) {
-  ready2 || !db || (await db.prepare("CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)").run(), ready2 = !0);
-}
-async function neuronesUtilises(env) {
-  await init2(env.DB);
-  let r = env.DB ? await env.DB.prepare("SELECT n FROM ia_neurones WHERE jour = ?").bind(TODAY()).first() : null;
-  return r ? r.n : 0;
-}
-async function ajouterNeurones(env, n) {
-  !env.DB || !(n > 0) || (await init2(env.DB), await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(TODAY(), n, n).run());
-}
-var CF = [
-  ["@cf/qwen/qwen3-30b-a3b-fp8", 4625, 30475],
-  ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488]
-], approxTokens = (s) => Math.ceil(String(s).length / 3.2), nettoie = (t) => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/g, "").replace(/—/g, ",").replace(/\*\*/g, "").trim();
-async function viaOpenAI(url, key, model, messages, max_tokens, temperature, json5) {
-  let ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 25e3);
-  try {
-    let r = await fetch(url, {
-      method: "POST",
-      signal: ctl.signal,
-      headers: { authorization: "Bearer " + key, "content-type": "application/json" },
-      body: JSON.stringify({ model, messages, max_tokens, temperature, ...json5 ? { response_format: { type: "json_object" } } : {} })
-    });
-    if (!r.ok)
-      return note(url.split("/")[2] + " " + r.status), null;
-    let j = await r.json(), raw = j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
-    return nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw);
-  } catch (e) {
-    return note("fetch " + e.message), null;
-  } finally {
-    clearTimeout(t);
+// data/cours_config.mjs
+var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv", COURS_CSV_SUITE = [
+  // copies de la feuille : gf2.csv, gf3.csv, gf4.csv (publiées le 29/10/2026)
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRss-rBkYNWtXDrNMHcDudDsxMJZ2djLCjTvt-w6bGiXqnPEbdr3sxPtcXpa9tgTDN045owZTzaxNd/pub?output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwYIFEt9Ux_l7uyPut1Hv--GFFmiBgi2tgV2HN4UigVZLfGmykoaKEr-E1ZRsIO09dOpgUgZmzlrld/pub?output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vR70B8qndqju4-YPgTIzxFTB7iPMfcUtHoKz9ZWG-ekQ_yXZfTs5ZPmDa4sxIvEaSbAo5jnIhJrSQon/pub?output=csv"
+], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
+function parseCours(txt) {
+  let rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g, row = [], m;
+  for (; (m = re.exec(txt)) && m[0] !== ""; ) {
+    let v = m[1];
+    v.startsWith('"') && (v = v.slice(1, -1).replace(/""/g, '"')), row.push(v), m[3] !== "," && (rows.push(row), row = []);
   }
-}
-var FOURNISSEURS = [
-  ["mistral", (env) => env.MISTRAL_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.mistral.ai/v1/chat/completions", env.MISTRAL_KEY, env.MISTRAL_MODEL || "mistral-small-latest", m, mt, te, js)],
-  ["groq", (env) => env.GROQ_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.groq.com/openai/v1/chat/completions", env.GROQ_KEY, env.GROQ_MODEL || "openai/gpt-oss-20b", m, mt, te, js)],
-  ["gemini", (env) => env.GEMINI_KEY, (env, m, mt, te, js) => viaOpenAI("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", env.GEMINI_KEY, env.GEMINI_MODEL || "gemini-flash-lite-latest", m, mt, te, js)],
-  ["openrouter", (env) => env.OPENROUTER_KEY, (env, m, mt, te, js) => viaOpenAI("https://openrouter.ai/api/v1/chat/completions", env.OPENROUTER_KEY, env.OPENROUTER_MODEL || "openai/gpt-oss-20b:free", m, mt, te, js)],
-  ["workers-ai", (env) => env.AI && String(env.IA_WORKERS_AI || "").toLowerCase() !== "off", async (env, messages, max_tokens, temperature, json5, qualite) => {
-    let plafond = +env.IA_NEURONES_JOUR || 1e4;
-    for (let [model, cin, cout] of qualite ? [...CF].reverse() : CF) {
-      let estime = (approxTokens(messages.map((x) => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
-      if (await neuronesUtilises(env) + estime > plafond) {
-        note(model + " plafond");
-        continue;
-      }
-      try {
-        let msgs = model.includes("qwen3") ? messages.map((x, i) => i === messages.length - 1 ? { ...x, content: x.content + `
-/no_think` } : x) : messages, out = await env.AI.run(model, { messages: msgs, max_tokens, temperature }), raw = out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content), txt = nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
-        if (await ajouterNeurones(env, reel), txt && txt.length > 15) return txt;
-        note(model + " vide : " + JSON.stringify(out).slice(0, 120));
-      } catch (e) {
-        note(model + " " + (e.message || e));
-      }
+  let head = rows.shift() || [], col = (k) => head.indexOf(k), out = {}, num2 = (v) => {
+    let x = parseFloat(String(v).replace(/[^0-9.eE+-]/g, ""));
+    return isFinite(x) ? x : null;
+  };
+  for (let r of rows) {
+    let id = r[col("id")];
+    if (!id || !r[col("sym")]) continue;
+    let cur = r[col("cur")] || null, p = num2(r[col("price")]), k = 1;
+    cur === "GBX" && (cur = "GBP", k = 0.01);
+    let o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num2(r[col("chg")]), cap: num2(r[col("cap")]) };
+    for (let f of ["h52", "l52", "p1y", "p3y", "p5y"]) {
+      let x = num2(r[col(f)]);
+      o[f] = x != null ? x * k : null;
     }
-    return null;
-  }]
-], serveurCoupe = (env) => !env || String(env.IA_SERVEUR || "").toLowerCase() === "off", servicesIA = (env) => serveurCoupe(env) ? [] : FOURNISSEURS.filter(([, a]) => a(env)).map(([n]) => n), iaActive = (env) => servicesIA(env).length > 0;
-async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json: json5 = !1, qualite = !0 }) {
-  let messages = [{ role: "system", content: systeme }, { role: "user", content: utilisateur }];
-  if (serveurCoupe(env)) return null;
-  for (let [nom, actif, appel] of FOURNISSEURS) {
-    if (!actif(env)) continue;
-    let t = await appel(env, messages, max_tokens, temperature, json5, qualite);
-    if (t) return t;
+    o.p != null && (out[id] = o);
   }
-  return null;
-}
-function jsonDe(t) {
-  if (!t) return null;
-  let i = t.indexOf("{"), j = t.lastIndexOf("}");
-  if (i < 0 || j <= i) return null;
-  try {
-    return JSON.parse(t.slice(i, j + 1));
-  } catch {
-    return null;
-  }
+  return out;
 }
 function etatPublic(env) {
   let s = servicesIA(env);
   return new Response(JSON.stringify({ serveur: s.length > 0, services: s }), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
 }
 
-// cf/src/regles.mjs
-var REGLES = `R\xE8gles d'objectivit\xE9, \xE0 respecter strictement :
-- S\xE9pare les faits (les chiffres fournis) de leur interpr\xE9tation, et dis quand une interpr\xE9tation est incertaine.
-- Pr\xE9sente toujours les deux c\xF4t\xE9s : ce qui est favorable et ce qui demande de la vigilance.
-- Ne donne pas plus de poids \xE0 la derni\xE8re nouvelle ou au dernier mouvement de cours qu'aux comptes de plusieurs ann\xE9es.
-- Compare \xE0 la m\xE9diane du secteur ou \xE0 des rep\xE8res chiffr\xE9s plut\xF4t que de juger dans l'absolu.
-- N'emploie aucun mot charg\xE9 ou d'emphase (\xAB p\xE9pite \xBB, \xAB incontournable \xBB, \xAB catastrophe \xBB, \xAB exceptionnel \xBB).
-- Ne pr\xE9dis jamais un cours, ne recommande jamais d'acheter, de vendre ou de conserver un titre pr\xE9cis.
-- Si une information manque, dis qu'elle manque au lieu de la deviner. N'invente aucune source.
-- Sois autocritique. Quand une donn\xE9e manque, est ancienne (comptes de plus de 16 mois), estim\xE9e par le site ou repose sur peu d'entreprises, ou quand la question d\xE9passe les faits fournis, dis-le clairement dans une phrase qui commence par \xAB Je ne suis pas s\xFBr : \xBB ou \xAB Ce que je ne sais pas : \xBB, puis indique ce qu'il faudrait v\xE9rifier et o\xF9 (rapport annuel, communiqu\xE9 de l'entreprise, AMF, service-public.fr, BCE\u2026).
-- Pour l'actualit\xE9 (guerre, prix de l'\xE9nergie, taux, droits de douane, Chine\u2026), ne cite que les faits dat\xE9s fournis, avec leur date, et d\xE9cris leurs effets au conditionnel : ce sont des m\xE9canismes possibles, jamais des certitudes ni des pr\xE9visions.`;
+// cf/src/cours.mjs
+async function cours(request, ctx, env) {
+  let cache = caches.default, key = new Request(new URL("/api/cours", request.url).toString()), hit = await cache.match(key);
+  if (hit) return hit;
+  let body;
+  try {
+    let items = {};
+    for (let [i, u] of COURS_CSVS.entries()) {
+      let r = await fetch(u, { cf: { cacheTtl: 300 } }).catch(() => null);
+      if (!r || !r.ok) {
+        if (i === 0) throw new Error("feuille " + (r ? r.status : "injoignable"));
+        continue;
+      }
+      Object.assign(items, parseCours(await r.text()));
+    }
+    if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
+    try {
+      let f = env && env.ASSETS ? await env.ASSETS.fetch(new URL("/data/cours.json", request.url)) : await fetch(new URL("/data/cours.json", request.url));
+      if (f.ok) {
+        let j = await f.json(), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
+        for (let [k, v] of Object.entries(j.items || {})) {
+          let it = items[k];
+          if (!it) {
+            items[k] = v;
+            continue;
+          }
+          for (let h of HF) it[h] == null && v[h] != null && (it[h] = v[h]);
+        }
+      }
+    } catch {
+    }
+    body = JSON.stringify({ updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items });
+  } catch (e) {
+    return Response.json({ error: String(e.message || e) }, { status: 503 });
+  }
+  let res = new Response(body, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=600" } });
+  return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
+}
 
 // cf/src/compte.mjs
 var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
   "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
   "CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)",
-  "CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))",
   "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))"
-], ready3 = !1;
+], ready2 = !1;
 async function initCompte(db) {
-  if (!ready3) {
+  if (!ready2) {
     for (let q of SCHEMA2) await db.prepare(q).run();
-    ready3 = !0;
+    ready2 = !0;
   }
 }
 var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -389,16 +427,6 @@ async function premiumOf(request, env) {
     }
   return a.until > Date.now() ? a : null;
 }
-var LIMITS = { demande: [10, 200], assistant: [5, 100], resume: [3, 100], veille: [1, 20], portefeuille: [1, 20] };
-async function quota(request, env, kind) {
-  if (env.ADMIN_KEY && request.headers.get("x-admin-key") === env.ADMIN_KEY) return { ok: !0, premium: !0, max: 1e9, used: 0 };
-  await initCompte(env.DB);
-  let p = await premiumOf(request, env), c = p ? null : await sessionCompte(request, env), who2 = p ? "p:" + p.token : c ? "u:" + c.id : await visitor(request, env), [free, prem] = LIMITS[kind] || [3, 30], max = p ? prem : free, r = await env.DB.prepare("SELECT n FROM usage WHERE who = ? AND jour = ? AND kind = ?").bind(who2, today(), kind).first();
-  return r && r.n >= max ? { ok: !1, premium: !!p, max } : (!r && Math.random() < 0.02 && await env.DB.prepare("DELETE FROM usage WHERE jour < ?").bind(new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)).run(), await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1").bind(who2, today(), kind).run(), { ok: !0, premium: !!p, max, used: (r ? r.n : 0) + 1 });
-}
-function quotaError(q, what) {
-  return json2({ error: q.premium ? `Limite du jour atteinte (${q.max} ${what}). Elle revient demain.` : `Limite gratuite du jour atteinte (${q.max} ${what}). Elle revient demain, ou passez \xE0 Premium pour en avoir beaucoup plus.`, premium: q.premium, quota: !0 }, 429);
-}
 async function stripe(env, path) {
   let r = await fetch("https://api.stripe.com/v1/" + path, { headers: { authorization: "Bearer " + env.STRIPE_SECRET } }), j = await r.json();
   if (!r.ok) throw new Error(j.error && j.error.message || "Stripe " + r.status);
@@ -409,7 +437,7 @@ async function premium(request, env) {
   if (!env || !env.DB) return json2({ error: "Indisponible pour le moment." }, 503);
   await initCompte(env.DB);
   let url = new URL(request.url), path = url.pathname;
-  if (path === "/api/premium/offres") return json2({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, limites: LIMITS, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
+  if (path === "/api/premium/offres") return json2({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
   if (path === "/api/premium/statut") {
     let p = await premiumOf(request, env);
     return json2(p ? { premium: !0, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1\u2026$2") : null } : { premium: !1 });
@@ -496,315 +524,19 @@ async function sendMail(env, to, subject, text, html = "") {
   throw new Error("quota d'envoi du jour atteint");
 }
 
-// cf/src/actu.mjs
-var json3 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), ready4 = !1;
-async function init3(db) {
-  ready4 || (await db.prepare("CREATE TABLE IF NOT EXISTS actu_clair (k TEXT PRIMARY KEY, clair TEXT NOT NULL, change TEXT NOT NULL, at INTEGER NOT NULL)").run(), ready4 = !0);
-}
-var SYS_CLAIR = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse une annonce officielle d'une entreprise cot\xE9e. Tu re\xE7ois des faits en JSON (type d'annonce, titre officiel, chiffres extraits du communiqu\xE9, phrases du communiqu\xE9, derniers comptes annuels).
-R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
-- "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annonc\xE9, avec les chiffres fournis et leur p\xE9riode, et expliquent chaque terme technique.
-- "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
-- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
-- Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
-- Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
-${REGLES}`, propre = (t) => String(t || "").replace(/—/g, ",").replace(/\s+/g, " ").trim().slice(0, 600);
-async function clair(request, env) {
-  if (!env || !env.DB) return json3({ error: "Indisponible." }, 503);
-  await init3(env.DB);
-  let u = new URL(request.url);
-  if (request.method === "GET" && u.searchParams.get("id")) {
-    let id = String(u.searchParams.get("id")).replace(/[^a-z0-9-]/g, "").slice(0, 80), k2 = String(u.searchParams.get("k") || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20), hit2 = await env.DB.prepare("SELECT clair, change FROM actu_clair WHERE k = ?").bind(k2).first();
-    if (hit2) return json3({ clair: hit2.clair, change: hit2.change, cache: !0 });
-    let it = null;
-    try {
-      let r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, u)));
-      r.ok && (it = ((await r.json()).o || []).find((x) => x.k === k2));
-    } catch {
-    }
-    if (!it || it.i < 2) return json3({ error: "Annonce introuvable ou trop courte pour \xEAtre expliqu\xE9e." }, 404);
-    if (!iaActive(env)) return json3({ error: "L'explication en ligne est indisponible pour le moment. Les chiffres de l'annonce restent affich\xE9s.", ia_serveur: !1 }, 503);
-    let q = await quota(request, env, "resume");
-    return q.ok ? rediges(env, k2, { type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture: it.r || [], entreprise: id }) : quotaError(q, "explications par l'IA");
-  }
-  if (request.method === "GET") {
-    let ks = String(u.searchParams.get("k") || "").split(",").map((x) => x.replace(/[^A-Za-z0-9_-]/g, "")).filter(Boolean).slice(0, 30);
-    if (!ks.length) return json3({ items: {} });
-    let r = await env.DB.prepare(`SELECT k, clair, change FROM actu_clair WHERE k IN (${ks.map(() => "?").join(",")})`).bind(...ks).all();
-    return json3({ items: Object.fromEntries((r.results || []).map((x) => [x.k, { c: x.clair, ch: x.change }])) });
-  }
-  if (request.method !== "POST") return json3({ error: "M\xE9thode non prise en charge." }, 405);
-  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json3({ error: "R\xE9serv\xE9 au robot du site." }, 403);
-  let b;
-  try {
-    b = await request.json();
-  } catch {
-    return json3({ error: "Requ\xEAte illisible." }, 400);
-  }
-  let k = String(b.k || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20);
-  if (!k) return json3({ error: "Cl\xE9 manquante." }, 400);
-  let hit = await env.DB.prepare("SELECT clair, change FROM actu_clair WHERE k = ?").bind(k).first();
-  return hit ? json3({ clair: hit.clair, change: hit.change, cache: !0 }) : rediges(env, k, b.faits || {});
-}
-async function rediges(env, k, f) {
-  let faits = JSON.stringify(f).slice(0, 5e3), t = await rediger(env, { systeme: SYS_CLAIR, utilisateur: faits, max_tokens: 380, json: !0 }), j = jsonDe(t);
-  if (!j || !j.clair || String(j.clair).length < 40) return json3({ error: "R\xE9daction impossible pour le moment." }, 503);
-  let c = propre(j.clair), ch = propre(j.change);
-  return await env.DB.prepare("INSERT OR REPLACE INTO actu_clair (k, clair, change, at) VALUES (?, ?, ?, ?)").bind(k, c, ch, Date.now()).run(), json3({ clair: c, change: ch });
-}
-
-// data/cours_config.mjs
-var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv", COURS_CSV_SUITE = [
-  // copies de la feuille : gf2.csv, gf3.csv, gf4.csv (publiées le 29/10/2026)
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRss-rBkYNWtXDrNMHcDudDsxMJZ2djLCjTvt-w6bGiXqnPEbdr3sxPtcXpa9tgTDN045owZTzaxNd/pub?output=csv",
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwYIFEt9Ux_l7uyPut1Hv--GFFmiBgi2tgV2HN4UigVZLfGmykoaKEr-E1ZRsIO09dOpgUgZmzlrld/pub?output=csv",
-  "https://docs.google.com/spreadsheets/d/e/2PACX-1vR70B8qndqju4-YPgTIzxFTB7iPMfcUtHoKz9ZWG-ekQ_yXZfTs5ZPmDa4sxIvEaSbAo5jnIhJrSQon/pub?output=csv"
-], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
-function parseCours(txt) {
-  let rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g, row = [], m;
-  for (; (m = re.exec(txt)) && m[0] !== ""; ) {
-    let v = m[1];
-    v.startsWith('"') && (v = v.slice(1, -1).replace(/""/g, '"')), row.push(v), m[3] !== "," && (rows.push(row), row = []);
-  }
-  let head = rows.shift() || [], col = (k) => head.indexOf(k), out = {}, num2 = (v) => {
-    let x = parseFloat(String(v).replace(/[^0-9.eE+-]/g, ""));
-    return isFinite(x) ? x : null;
-  };
-  for (let r of rows) {
-    let id = r[col("id")];
-    if (!id || !r[col("sym")]) continue;
-    let cur = r[col("cur")] || null, p = num2(r[col("price")]), k = 1;
-    cur === "GBX" && (cur = "GBP", k = 0.01);
-    let o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num2(r[col("chg")]), cap: num2(r[col("cap")]) };
-    for (let f of ["h52", "l52", "p1y", "p3y", "p5y"]) {
-      let x = num2(r[col(f)]);
-      o[f] = x != null ? x * k : null;
-    }
-    o.p != null && (out[id] = o);
-  }
-  return out;
-}
-
-// cf/src/cours.mjs
-async function cours(request, ctx, env) {
-  let cache = caches.default, key = new Request(new URL("/api/cours", request.url).toString()), hit = await cache.match(key);
-  if (hit) return hit;
-  let body;
-  try {
-    let items = {};
-    for (let [i, u] of COURS_CSVS.entries()) {
-      let r = await fetch(u, { cf: { cacheTtl: 300 } }).catch(() => null);
-      if (!r || !r.ok) {
-        if (i === 0) throw new Error("feuille " + (r ? r.status : "injoignable"));
-        continue;
-      }
-      Object.assign(items, parseCours(await r.text()));
-    }
-    if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
-    try {
-      let f = env && env.ASSETS ? await env.ASSETS.fetch(new URL("/data/cours.json", request.url)) : await fetch(new URL("/data/cours.json", request.url));
-      if (f.ok) {
-        let j = await f.json(), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-        for (let [k, v] of Object.entries(j.items || {})) {
-          let it = items[k];
-          if (!it) {
-            items[k] = v;
-            continue;
-          }
-          for (let h of HF) it[h] == null && v[h] != null && (it[h] = v[h]);
-        }
-      }
-    } catch {
-    }
-    body = JSON.stringify({ updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items });
-  } catch (e) {
-    return Response.json({ error: String(e.message || e) }, { status: 503 });
-  }
-  let res = new Response(body, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=600" } });
-  return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
-}
-
-// cf/src/ia.mjs
-var HOSTS = /^(www\.sec\.gov|fr\.ftp\.opendatasoft\.com|www\.info-financiere\.gouv\.fr)$/, SCHEMA3 = [
-  "CREATE TABLE IF NOT EXISTS resumes (u TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)",
-  "CREATE TABLE IF NOT EXISTS ia_compte (jour TEXT PRIMARY KEY, n INTEGER NOT NULL)",
-  "CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)"
-], ready5 = !1;
-async function init4(db) {
-  if (!ready5) {
+// cf/src/veille.mjs
+var SCHEMA3 = ["CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)"], ready3 = !1;
+async function init2(db) {
+  if (!ready3) {
     for (let q of SCHEMA3) await db.prepare(q).run();
-    ready5 = !0;
+    ready3 = !0;
   }
 }
-var json4 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), UA = "bilan (site pedagogique) contact@repere-bourse.pages.dev";
-function htmlText(html) {
-  return String(html).replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<br\s*\/?>|<\/(p|div|tr|li|h\d)>/gi, `
-`).replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;|&#xa0;/gi, " ").replace(/&amp;/g, "&").replace(/&#(\d+);/g, (m, d) => String.fromCharCode(+d)).replace(/&[a-z]+;/g, " ").replace(/[ \t ]+/g, " ").replace(/\n\s*\n+/g, `
-`).trim();
-}
-async function budget() {
-  return !0;
-}
-async function docText(env, u) {
-  if (new URL(u).hostname === "www.sec.gov") {
-    let target = u;
-    try {
-      let ex = (((await (await fetch(u.replace(/[^/]+$/, "index.json"), { headers: { "user-agent": UA } })).json()).directory || {}).item || []).filter((f) => /\.htm/i.test(f.name) && !/index/i.test(f.name)).find((f) => /ex-?99[._-]?1|ex991|exhibit99/i.test(f.name));
-      ex && (target = u.replace(/[^/]+$/, ex.name));
-    } catch {
-    }
-    let r3 = await fetch(target, { headers: { "user-agent": UA } });
-    if (!r3.ok) throw new Error("document " + r3.status);
-    return htmlText(await r3.text());
-  }
-  let r = await fetch(u);
-  if (!r.ok) throw new Error("document " + r.status);
-  let buf = await r.arrayBuffer();
-  if (buf.byteLength > 8e6) throw new Error("document trop lourd");
-  if (!env.AI) throw new Error("lecture des PDF indisponible (conversion Workers AI non branch\xE9e)");
-  let md = await env.AI.toMarkdown([{ name: "doc.pdf", blob: new Blob([buf], { type: "application/pdf" }) }]);
-  return String((md[0] || {}).data || "");
-}
-function focus(t) {
-  if (t.length < 3e4) return t;
-  let re = /management['’]s discussion and analysis/gi, m, best = -1;
-  for (; m = re.exec(t); ) {
-    let after = t.slice(m.index, m.index + 3e3);
-    if ((after.match(/%/g) || []).length >= 4 && /\$\s?\d/.test(after)) {
-      best = m.index;
-      break;
-    }
-  }
-  return best >= 0 ? t.slice(best) : t;
-}
-var SYS = `Tu es un journaliste financier p\xE9dagogue qui \xE9crit pour des personnes qui d\xE9butent en Bourse. Tu r\xE9sumes en fran\xE7ais un document officiel publi\xE9 par une entreprise cot\xE9e.
-R\xE8gles strictes :
-- Utilise uniquement les informations et les chiffres pr\xE9sents dans le document. N'invente rien. Si un chiffre n'y figure pas, ne le donne pas.
-- \xC9cris 140 \xE0 220 mots, en trois paragraphes courts, pr\xE9c\xE9d\xE9s exactement de ces titres sur leur propre ligne : \xAB Ce qui est annonc\xE9 \xBB, \xAB Ce que \xE7a veut dire \xBB, \xAB \xC0 surveiller \xBB.
-- Donne les chiffres cl\xE9s avec leur p\xE9riode et leur \xE9volution (par exemple : chiffre d'affaires du trimestre, r\xE9sultat, pr\xE9visions, dividende, rachats d'actions). Montants en fran\xE7ais (12,4 milliards d'euros ; +5 %).
-- Explique simplement ce que signifient les termes techniques la premi\xE8re fois qu'ils apparaissent.
-- Reste prudent et factuel : aucun conseil d'achat ou de vente, aucune pr\xE9diction sur le cours.
-- Pas de tirets cadratins, pas de listes \xE0 puces, pas de formules creuses.
-${REGLES}`;
-async function resume(request, env) {
-  if (!env || !env.DB || !iaActive(env)) return json4({ error: "R\xE9sum\xE9s indisponibles pour le moment.", ia_serveur: !1 }, 503);
-  let u = new URL(request.url).searchParams.get("u") || "", url;
-  try {
-    url = new URL(u);
-  } catch {
-    return json4({ error: "Adresse invalide." }, 400);
-  }
-  if (!HOSTS.test(url.hostname)) return json4({ error: "Source non prise en charge." }, 400);
-  await init4(env.DB);
-  let hit = await env.DB.prepare("SELECT txt, at FROM resumes WHERE u = ?").bind(u).first();
-  if (hit && !/ne (peux|peut) pas/i.test(hit.txt)) return json4({ txt: hit.txt, at: hit.at, cache: !0 });
-  let q = await quota(request, env, "resume");
-  if (!q.ok) return quotaError(q, "r\xE9sum\xE9s d\xE9taill\xE9s");
-  if (!await budget(env.DB, env)) return json4({ error: "Le site a atteint son nombre de r\xE9sum\xE9s pour aujourd'hui. Ce document sera r\xE9sum\xE9 demain." }, 429);
-  try {
-    let text = focus(await docText(env, u)).slice(0, 14e3);
-    if (text.length < 300) return json4({ error: "Document trop court ou illisible." }, 422);
-    let out = { response: await rediger(env, { systeme: SYS, utilisateur: `Document :
-
-` + text, max_tokens: 700 }) };
-    if (!out.response) return json4({ error: "Le service de r\xE9sum\xE9 est tr\xE8s demand\xE9 : r\xE9essayez dans quelques minutes." }, 503);
-    let txt = String(out.response || out.result && out.result.response || "").replace(/—/g, ",").trim();
-    if (txt.length < 200 || /ne (peux|peut) pas|pas d'informations exploitables/i.test(txt)) throw new Error("le document ne contient pas de chiffres lisibles");
-    return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(u, txt, Date.now()).run(), json4({ txt, at: Date.now() });
-  } catch (e) {
-    return json4({ error: "R\xE9sum\xE9 impossible pour ce document : " + String(e.message || e).slice(0, 120) }, 502);
-  }
-}
-var SYS_VEILLE = `Tu \xE9cris, en fran\xE7ais, le bilan d'une liste d'entreprises suivies par un particulier qui d\xE9bute en Bourse.
-Tu re\xE7ois des faits en JSON (variations de cours, annonces r\xE9centes r\xE9sum\xE9es, prochaines dates). R\xE8gles :
-- N'utilise que ces faits. N'invente aucun chiffre, aucune explication de mouvement de cours qui ne figure pas dans les faits ; si la cause d'un mouvement n'est pas connue, dis-le.
-- 150 \xE0 250 mots, en quatre courts paragraphes titr\xE9s : \xAB En r\xE9sum\xE9 \xBB, \xAB Ce qui a boug\xE9 \xBB, \xAB Ce qui a \xE9t\xE9 annonc\xE9 \xBB, \xAB \xC0 venir \xBB.
-- Explique ce que veut dire un mouvement (par exemple : une baisse de 8 % en une semaine est importante pour une grande entreprise).
-- Mets en garde, sans dramatiser, si une ligne concentre l'attention (forte baisse, r\xE9sultats imminents).
-- Aucun conseil d'achat ou de vente. Pas de tirets cadratins, pas de listes \xE0 puces.
-${REGLES}`, SYS_PF = `Tu expliques, en fran\xE7ais, le portefeuille d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON, tous d\xE9j\xE0 calcul\xE9s : lignes (poids, plus-values, compte PEA ou compte-titres, \xE9ligibilit\xE9 au PEA), score de diversification et ses rep\xE8res, premi\xE8res expositions une fois les ETF ouverts, pays, devises, secteurs, comptes, chevauchements d'ETF, frais (courtage pay\xE9 et sa part des achats, achats o\xF9 les frais d\xE9passent 1 %, frais annuels des ETF, co\xFBt sur 10 ans \xE0 valeur constante), dividendes estim\xE9s, versements, horizon et profil, remarques.
-R\xE8gles :
-- N'utilise que ces faits, n'invente aucun chiffre, ne refais aucun calcul.
-- 180 \xE0 260 mots, en quatre courts paragraphes titr\xE9s : \xAB En bref \xBB, \xAB Ce qui ressort \xBB, \xAB Points d'attention \xBB, \xAB \xC0 suivre \xBB. Vouvoiement, phrases courtes.
-- Explique simplement, quand c'est pertinent : la diversification, la concentration sur une ligne ou une entreprise, le poids d'un pays ou d'une devise (m\xEAme dans un ETF cot\xE9 en euros), le recouvrement de deux ETF, l'effet des frais fixes sur les petits ordres, le lien entre l'horizon et la part d'actions, l'int\xE9r\xEAt fiscal du PEA.
-- Aucun conseil d'achat ou de vente, aucune recommandation de ligne pr\xE9cise, aucune pr\xE9diction. Tu peux rappeler des rep\xE8res g\xE9n\xE9raux (par exemple : une action seule au-del\xE0 de 10 % du portefeuille augmente le risque).
-- Pas de tirets cadratins, pas de listes \xE0 puces.
-${REGLES}`;
+var json3 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 async function veille(request, env) {
-  if (!env || !env.DB) return json4({ error: "Bilan indisponible pour le moment." }, 503);
+  if (!env || !env.DB) return json3({ error: "Bilan indisponible pour le moment." }, 503);
   let path = new URL(request.url).pathname;
-  if (await init4(env.DB), path === "/api/veille" && request.method === "POST") {
-    let b;
-    try {
-      b = await request.json();
-    } catch {
-      return json4({ error: "Requ\xEAte illisible." }, 400);
-    }
-    let faits = JSON.stringify(b.faits || {}).slice(0, 9e3), key = (b.type === "portefeuille" ? "pf:" : "veille:") + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ":" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(faits)))].slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join(""), hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
-    if (hit) return json4({ txt: hit.txt, cache: !0 });
-    if (!iaActive(env)) return json4({ error: "La r\xE9daction en ligne est indisponible pour le moment. Les chiffres restent \xE0 jour.", ia_serveur: !1 }, 503);
-    let q = await quota(request, env, b.type === "portefeuille" ? "portefeuille" : "veille");
-    if (!q.ok) return quotaError(q, b.type === "portefeuille" ? "analyses de portefeuille" : "bilans r\xE9dig\xE9s");
-    if (!await budget(env.DB, env)) return json4({ error: "Le site a atteint son nombre de bilans r\xE9dig\xE9s pour aujourd'hui : r\xE9essayez demain. Les chiffres restent \xE0 jour." }, 429);
-    try {
-      let out = { response: await rediger(env, { systeme: b.type === "portefeuille" ? SYS_PF : SYS_VEILLE, utilisateur: faits, max_tokens: 700 }) };
-      if (!out.response) throw new Error("vide");
-      let txt = String(out.response || "").replace(/—/g, ",").trim();
-      return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json4({ txt });
-    } catch {
-      return json4({ error: "Bilan impossible pour le moment." }, 502);
-    }
-  }
-  return mails(request, env, path);
-}
-var SYS_ASSIST = `Tu es l'assistant du site d'information boursi\xE8re \xAB bilan. \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, \xE9volution sur plusieurs ann\xE9es avec son contexte dat\xE9 et sourc\xE9, comparaison au secteur, concurrents, cours, annonces r\xE9centes, actualit\xE9 qui la concerne, agenda, fiabilit\xE9 des donn\xE9es).
-R\xE8gles :
-- 60 \xE0 160 mots, phrases courtes, termes techniques expliqu\xE9s une fois.
-- Si les faits ne permettent pas de r\xE9pondre, dis-le simplement (\xAB Ce que je ne sais pas : \u2026 \xBB) et indique quelle rubrique du site ou quel document officiel regarder.
-- Si la liste \xAB fiabilite_des_donnees \xBB signale un point qui touche ta r\xE9ponse (comptes anciens, dividende estim\xE9, m\xE9diane sur peu d'entreprises), termine par une phrase \xAB Je ne suis pas s\xFBr : \u2026 \xBB qui le dit.
-- Pour une question d'actualit\xE9 ou sur l'\xE9volution des chiffres, utilise \xAB actualite_qui_la_concerne \xBB et \xAB evolution_pluriannuelle \xBB : cite la date de v\xE9rification, et rappelle que le site ne mesure pas la part exacte de ces \xE9v\xE9nements dans les r\xE9sultats.
-- N'invente aucun chiffre ni aucune information. Cite les chiffres avec leur ann\xE9e.
-- Aucun conseil d'achat ou de vente, aucune pr\xE9diction de cours, aucun objectif de prix. Si on te demande \xAB faut-il acheter ? \xBB, explique les \xE9l\xE9ments \xE0 regarder (points forts, points de vigilance, prix par rapport aux b\xE9n\xE9fices) sans trancher, et rappelle que ce n'est pas un conseil.
-- Vouvoie toujours le lecteur.
-- La dette se mesure en ann\xE9es de r\xE9sultat d'exploitation avant amortissements (pas de b\xE9n\xE9fice net) : reprends exactement l'unit\xE9 donn\xE9e dans les faits.
-- Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses onglets : \xAB Vue d'ensemble \xBB, \xAB Crit\xE8re par crit\xE8re \xBB, \xAB Tous les chiffres \xBB, \xAB Actualit\xE9s \xBB, ou le bouton \xAB Comparer \xE0 ses concurrents \xBB.
-- Pas de listes \xE0 puces, pas de tirets cadratins.
-${REGLES}`, SYS_CMP = `Tu expliques, en fran\xE7ais, la comparaison de plusieurs entreprises cot\xE9es \xE0 une personne qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : pour chaque entreprise, les chiffres de son dernier exercice publi\xE9 (ventes en euros, croissance, marges, rentabilit\xE9 des capitaux propres, dette, prix en Bourse rapport\xE9 au b\xE9n\xE9fice, dividende), la m\xE9diane de son secteur, et le verdict d\xE9j\xE0 calcul\xE9 par le site crit\xE8re par crit\xE8re.
-R\xE8gles :
-- N'utilise que ces faits. N'invente aucun chiffre, aucune cause, aucune actualit\xE9. Cite les chiffres avec l'ann\xE9e de leur exercice.
-- 150 \xE0 230 mots, en trois courts paragraphes pr\xE9c\xE9d\xE9s exactement de ces titres, chacun sur sa propre ligne : \xAB En r\xE9sum\xE9 \xBB, \xAB Ce qui les distingue \xBB, \xAB Ce qu'il faut regarder ensuite \xBB.
-- Explique ce que chaque \xE9cart veut dire concr\xE8tement (par exemple : une marge plus \xE9lev\xE9e signifie que l'entreprise garde plus d'argent sur chaque vente) et ce qui peut l'expliquer, en restant prudent (m\xE9tier diff\xE9rent, taille, pays, ann\xE9e d'exercice diff\xE9rente).
-- Signale quand les exercices ne portent pas sur la m\xEAme ann\xE9e, quand une entreprise est une banque ou un assureur (la marge et la dette ne s'y lisent pas pareil) ou quand des chiffres manquent.
-- Un prix bas par rapport au b\xE9n\xE9fice n'est pas une bonne affaire en soi ; un prix \xE9lev\xE9 traduit souvent des attentes de croissance plus fortes.
-- Aucun conseil d'achat ou de vente, aucun classement de la \xAB meilleure action \xBB, aucune pr\xE9diction de cours. Vouvoie toujours le lecteur.
-- Ne cite jamais le nom d'un champ JSON. Pas de listes \xE0 puces, pas de tirets cadratins.
-${REGLES}`;
-async function assistant(request, env) {
-  if (!env || !env.DB || !iaActive(env)) return json4({ error: "L'assistant en ligne est indisponible pour le moment.", ia_serveur: !1 }, 503);
-  if (request.method !== "POST") return json4({ error: "M\xE9thode non prise en charge." }, 405);
-  await init4(env.DB);
-  let b;
-  try {
-    b = await request.json();
-  } catch {
-    return json4({ error: "Requ\xEAte illisible." }, 400);
-  }
-  let question = String(b.question || "").replace(/\s+/g, " ").trim().slice(0, 300);
-  if (question.length < 5) return json4({ error: "Posez une question un peu plus pr\xE9cise." }, 400);
-  let faits = JSON.stringify(b.faits || {}).slice(0, 9e3), cmp = b.mode === "comparaison", key = (cmp ? "cmp1:" : "assist2:") + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map((x) => x.toString(16).padStart(2, "0")).join(""), hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
-  if (hit) return json4({ txt: hit.txt, cache: !0 });
-  let q = await quota(request, env, "assistant");
-  if (!q.ok) return quotaError(q, "questions \xE0 l'assistant");
-  if (!await budget(env.DB, env)) return json4({ error: "L'assistant a atteint son nombre de r\xE9ponses pour aujourd'hui. R\xE9essayez demain." }, 429);
-  try {
-    let out = { response: await rediger(env, { systeme: cmp ? SYS_CMP : SYS_ASSIST, utilisateur: `Faits : ${faits}
-
-Question : ${question}`, max_tokens: cmp ? 650 : 450, qualite: !1 }) }, txt = String(out.response || "").replace(/—/g, ",").trim();
-    if (txt.length < 20) throw new Error("vide");
-    return await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, txt, Date.now()).run(), json4({ txt, reste: q.max - q.used });
-  } catch {
-    return json4({ error: "L'assistant n'a pas pu r\xE9pondre. R\xE9essayez dans un instant." }, 502);
-  }
+  return path === "/api/veille" ? json3({ error: "Le site ne r\xE9dige plus de texte avec une IA. Le bilan calcul\xE9 reste affich\xE9 ; pour un bilan r\xE9dig\xE9, connectez votre IA.", ia_serveur: !1 }, 410) : (await init2(env.DB), mails(request, env, path));
 }
 var ALTERS2 = ["ALTER TABLE veille ADD COLUMN last_semaine INTEGER NOT NULL DEFAULT 0", "ALTER TABLE veille ADD COLUMN last_alerte INTEGER NOT NULL DEFAULT 0", "ALTER TABLE veille ADD COLUMN alertes INTEGER NOT NULL DEFAULT 1"], altered = !1;
 async function alter(db) {
@@ -822,17 +554,17 @@ async function mails(request, env, path) {
   await alter(env.DB);
   let url = new URL(request.url);
   if (path === "/api/veille/inscription" && request.method === "POST") {
-    if (!mailReady(env)) return json4({ error: "L'envoi par e-mail n'est pas encore ouvert. Le bilan reste disponible ici, \xE0 tout moment." }, 503);
+    if (!mailReady(env)) return json3({ error: "L'envoi par e-mail n'est pas encore ouvert. Le bilan reste disponible ici, \xE0 tout moment." }, 503);
     let b;
     try {
       b = await request.json();
     } catch {
-      return json4({ error: "Requ\xEAte illisible." }, 400);
+      return json3({ error: "Requ\xEAte illisible." }, 400);
     }
     let email = String(b.email || "").trim().toLowerCase(), p = await premiumOf(request, env), ids = (Array.isArray(b.ids) ? b.ids : []).filter((x) => /^[ce]:[a-z0-9-]{1,60}$/.test(x)).slice(0, p ? 40 : 10);
-    if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/.test(email) || !ids.length) return json4({ error: "Adresse ou liste invalide." }, 400);
+    if (!/^[^\s@]{1,64}@[^\s@]{1,190}\.[a-z]{2,}$/.test(email) || !ids.length) return json3({ error: "Adresse ou liste invalide." }, 400);
     let recent = await env.DB.prepare("SELECT COUNT(*) AS n FROM veille WHERE email = ? AND at > ?").bind(email, Date.now() - 864e5).first();
-    if (recent && recent.n >= 3) return json4({ error: "Trop de demandes pour cette adresse aujourd'hui." }, 429);
+    if (recent && recent.n >= 3) return json3({ error: "Trop de demandes pour cette adresse aujourd'hui." }, 429);
     await env.DB.prepare("DELETE FROM veille WHERE email = ? AND ok = 0").bind(email).run();
     let token = crypto.randomUUID().replace(/-/g, "");
     await env.DB.prepare("INSERT INTO veille (token, email, ids, ok, at, alertes) VALUES (?, ?, ?, 0, ?, ?)").bind(token, email, JSON.stringify(ids), Date.now(), p ? 1 : 0).run();
@@ -846,9 +578,9 @@ Si vous n'\xEAtes pas \xE0 l'origine de cette demande, ignorez ce message : rien
 
 bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en investissement.`);
     } catch {
-      return json4({ error: "L'e-mail de confirmation n'a pas pu partir aujourd'hui. R\xE9essayez demain." }, 503);
+      return json3({ error: "L'e-mail de confirmation n'a pas pu partir aujourd'hui. R\xE9essayez demain." }, 503);
     }
-    return json4({ ok: !0 });
+    return json3({ ok: !0 });
   }
   if (path === "/api/veille/confirmer" || path === "/api/veille/desinscrire") {
     let t = (url.searchParams.get("t") || "").replace(/[^a-f0-9]/g, "");
@@ -859,10 +591,10 @@ bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en
     return await env.DB.prepare("DELETE FROM veille WHERE token = ?").bind(t).run(), page("C'est fait : vous ne recevrez plus d'e-mails de bilan. Votre adresse a \xE9t\xE9 supprim\xE9e.");
   }
   if ((path === "/api/veille/envoi" || path === "/api/veille/alertes") && request.method === "POST") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json4({ error: "Non autoris\xE9." }, 403);
-    if (!mailReady(env)) return json4({ error: "Envoi non configur\xE9." }, 503);
+    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json3({ error: "Non autoris\xE9." }, 403);
+    if (!mailReady(env)) return json3({ error: "Envoi non configur\xE9." }, 503);
     let cap = Math.min(50, await mailCapacity(env));
-    if (!cap) return json4({ envoyes: 0, reste: 0, info: "quota du jour atteint" });
+    if (!cap) return json3({ envoyes: 0, reste: 0, info: "quota du jour atteint" });
     let data = await siteData(request, env), weekly = path.endsWith("envoi"), SEL = weekly ? "ok = 1 AND last_semaine < ?" : "ok = 1 AND alertes = 1 AND last_alerte < ?", since = Date.now() - (weekly ? 5 * 864e5 : 12 * 36e5), rows = (await env.DB.prepare(`SELECT * FROM veille WHERE ${SEL} LIMIT ?`).bind(since, weekly ? cap : 200).all()).results || [], n = 0;
     for (let r of rows) {
       if (n >= cap) break;
@@ -884,9 +616,9 @@ bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en
       await env.DB.prepare(weekly ? "UPDATE veille SET last_semaine = ? WHERE token = ?" : "UPDATE veille SET last_alerte = ? WHERE token = ?").bind(Date.now(), r.token).run();
     }
     let left = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM veille WHERE ${SEL}`).bind(since).first() || {}).n || 0;
-    return json4({ envoyes: n, reste: left });
+    return json3({ envoyes: n, reste: left });
   }
-  return json4({ error: "Introuvable." }, 404);
+  return json3({ error: "Introuvable." }, 404);
 }
 async function siteData(request, env) {
   let get = async (p) => {
@@ -961,7 +693,7 @@ function alertes(d, ids, origin, token, last) {
 }
 
 // cf/src/synthese.mjs
-var KEY = /^[ce]:[a-z0-9-]{1,60}$/, r2 = (v) => Math.round(v * 100) / 100, num = (v) => typeof v == "number" && isFinite(v) ? v : typeof v == "string" && v.trim() !== "" && isFinite(+v) ? +v : null, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v, d = 1) => {
+var KEY2 = /^[ce]:[a-z0-9-]{1,60}$/, r2 = (v) => Math.round(v * 100) / 100, num = (v) => typeof v == "number" && isFinite(v) ? v : typeof v == "string" && v.trim() !== "" && isFinite(+v) ? +v : null, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v, d = 1) => {
   let r = Math.round(v * 10 ** d) / 10 ** d;
   return (r > 0 ? "+" : r < 0 ? "\u2212" : "") + NF2(Math.abs(r), d) + " %";
 }, eurS = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(Math.abs(Math.round(v))) + " \u20AC", MOIS = ["janvier", "f\xE9vrier", "mars", "avril", "mai", "juin", "juillet", "ao\xFBt", "septembre", "octobre", "novembre", "d\xE9cembre"], JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"], dateLongue = (ymd) => {
@@ -1119,13 +851,13 @@ function lignesPf(pf) {
   if (!pf || typeof pf != "object") return [];
   let out = /* @__PURE__ */ new Map(), envDef = pf.cfg && typeof pf.cfg.env == "string" ? pf.cfg.env : null;
   if (Array.isArray(pf.l)) for (let l of pf.l) {
-    if (!l || typeof l.k != "string" || !KEY.test(l.k)) continue;
+    if (!l || typeof l.k != "string" || !KEY2.test(l.k)) continue;
     let o = out.get(l.k) || { k: l.k, q: 0, m: 0, cout: 0, env: [] }, q = num(l.q), m = num(l.m), pru = num(l.pru), env = typeof l.env == "string" && l.env ? l.env : envDef;
     q > 0 ? (o.q += q, pru > 0 && (o.cout += q * pru)) : m > 0 && (o.m += m), env && !o.env.includes(env) && o.env.push(env), out.set(l.k, o);
   }
   else if (Array.isArray(pf.ops)) for (let op of pf.ops) {
     if (!op) continue;
-    let k = typeof op.k == "string" && KEY.test(op.k) ? op.k : typeof op.id == "string" && /^[a-z0-9-]{1,60}$/.test(op.id) ? (op.etf ? "e:" : "c:") + op.id : null;
+    let k = typeof op.k == "string" && KEY2.test(op.k) ? op.k : typeof op.id == "string" && /^[a-z0-9-]{1,60}$/.test(op.id) ? (op.etf ? "e:" : "c:") + op.id : null;
     if (!k) continue;
     let q = num(op.q ?? op.qte ?? op.quantite), sens = /vente|vend|sell|cession/i.test(String(op.sens || op.type || "")) ? -1 : 1, o = out.get(k) || { k, q: 0, m: 0, cout: 0, env: [] };
     if (q > 0) o.q += sens * q;
@@ -1180,7 +912,7 @@ function evolutionAlertes(A, prec) {
 function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, semaine, opts = {}) {
   let auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null, RG = normaliseRapport(rapport);
   RG.favoris || (favoris = []), RG.portefeuille || (pf = null);
-  let LP = lignesPf(pf).filter((l) => d.names[l.k]), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY.test(k))), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k]).slice(0, 260), idx = {};
+  let LP = lignesPf(pf).filter((l) => d.names[l.k]), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY2.test(k))), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k]).slice(0, 260), idx = {};
   for (let id of Object.keys(INDICES)) {
     let v = variationSemaine(d.cs, "i:" + id, lundi, auj, d.px["i:" + id], d.sem);
     v && (idx[id] = { id, nom: INDICES[id], pct: v.pct, serie: v.serie, partiel: v.partiel });
@@ -1439,15 +1171,15 @@ var SCHEMA4 = [
   "CREATE INDEX IF NOT EXISTS notifs_at ON notifs (compte, at)",
   "CREATE TABLE IF NOT EXISTS essais (cle TEXT NOT NULL, at INTEGER NOT NULL)",
   "CREATE INDEX IF NOT EXISTS essais_cle ON essais (cle, at)"
-], ready6 = !1;
-async function init5(db) {
-  if (!ready6) {
+], ready4 = !1;
+async function init3(db) {
+  if (!ready4) {
     await initCompte(db);
     for (let q of SCHEMA4) await db.prepare(q).run();
-    ready6 = !0;
+    ready4 = !0;
   }
 }
-var ITER = 1e5, JOUR = 864e5, SESSION_MS = 60 * JOUR, FENETRE = 15 * 6e4, MAX_ESSAIS = 8, MAX_CHAMP = 60 * 1024, KEY2 = /^[ce]:[a-z0-9-]{1,60}$/, hex = (u8) => [...u8].map((b) => b.toString(16).padStart(2, "0")).join(""), alea = (n) => hex(crypto.getRandomValues(new Uint8Array(n))), egal = (a, b) => {
+var ITER = 1e5, JOUR = 864e5, SESSION_MS = 60 * JOUR, FENETRE = 15 * 6e4, MAX_ESSAIS = 8, MAX_CHAMP = 60 * 1024, KEY3 = /^[ce]:[a-z0-9-]{1,60}$/, hex2 = (u8) => [...u8].map((b) => b.toString(16).padStart(2, "0")).join(""), alea = (n) => hex2(crypto.getRandomValues(new Uint8Array(n))), egal = (a, b) => {
   if (typeof a != "string" || typeof b != "string" || a.length !== b.length) return !1;
   let r = 0;
   for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -1455,7 +1187,7 @@ var ITER = 1e5, JOUR = 864e5, SESSION_MS = 60 * JOUR, FENETRE = 15 * 6e4, MAX_ES
 };
 async function derive(mdp, sel, iter = ITER) {
   let k = await crypto.subtle.importKey("raw", new TextEncoder().encode(mdp), "PBKDF2", !1, ["deriveBits"]), bits = await crypto.subtle.deriveBits({ name: "PBKDF2", hash: "SHA-256", salt: new Uint8Array(sel.match(/../g).map((h) => parseInt(h, 16))), iterations: iter }, k, 256);
-  return hex(new Uint8Array(bits));
+  return hex2(new Uint8Array(bits));
 }
 async function nouveauHash(mdp) {
   let sel = alea(16);
@@ -1542,8 +1274,8 @@ function valider(b, strict) {
       f = null;
     }
     if (f) {
-      if (strict && f.some((x) => typeof x != "string" || !KEY2.test(x))) return { error: "Favori invalide dans la liste." };
-      if (f = [...new Set(f.filter((x) => typeof x == "string" && KEY2.test(x)))], f.length > 200) {
+      if (strict && f.some((x) => typeof x != "string" || !KEY3.test(x))) return { error: "Favori invalide dans la liste." };
+      if (f = [...new Set(f.filter((x) => typeof x == "string" && KEY3.test(x)))], f.length > 200) {
         if (strict) return { error: "200 favoris au plus." };
         f = f.slice(0, 200);
       }
@@ -1582,7 +1314,7 @@ function semaineIso(ymd) {
   let y = d.getUTCFullYear(), w = 1 + Math.floor((d - Date.UTC(y, 0, 1)) / (7 * JOUR));
   return `${y}-W${String(w).padStart(2, "0")}`;
 }
-var jourSemaine = (ymd) => (/* @__PURE__ */ new Date(ymd + "T12:00:00Z")).getUTCDay(), semainePrecedente = (ymd) => semaineIso(new Date(Date.parse(ymd + "T12:00:00Z") - 7 * JOUR).toISOString().slice(0, 10));
+var jourSemaine = (ymd) => (/* @__PURE__ */ new Date(ymd + "T12:00:00Z")).getUTCDay();
 async function siteData2(request, env) {
   let get = async (p) => {
     try {
@@ -1635,63 +1367,25 @@ function clesPortefeuille(pf, names) {
       }
       for (let f of ["k", "id"]) {
         let v = x[f];
-        typeof v == "string" && (KEY2.test(v) ? out.add(v) : /^[a-z0-9-]{1,60}$/.test(v) && names["c:" + v] && out.add("c:" + v));
+        typeof v == "string" && (KEY3.test(v) ? out.add(v) : /^[a-z0-9-]{1,60}$/.test(v) && names["c:" + v] && out.add("c:" + v));
       }
       for (let v of Object.values(x)) v && typeof v == "object" && walk(v, depth + 1);
     }
   };
   return walk(pf, 0), [...out];
 }
-var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", SYS_BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation m\xE9diane de secteurs entiers.
-R\xE8gles strictes :
-- Explique la semaine de fa\xE7on factuelle et p\xE9dagogique, en 120 \xE0 220 mots, en deux ou trois courts paragraphes de texte suivi.
-- Vouvoie le lecteur.
-- Cite uniquement des chiffres pr\xE9sents dans les faits. N'invente aucun chiffre et aucune cause \xE0 un mouvement de cours : si la cause n'est pas dans les faits, dis qu'elle n'est pas connue.
-- Explique simplement ce que repr\xE9sente un mouvement (par exemple : 8 % en une semaine, c'est beaucoup pour une grande entreprise).
-- Aucun conseil d'achat ou de vente, aucune recommandation, aucune pr\xE9diction sur les cours.
-- Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
-${REGLES}`, faitsIA = (c) => ({
-  semaine: c.semaine,
-  periode: c.partiel && c.depuis ? "depuis le " + c.depuis : "semaine compl\xE8te",
-  moyenne_semaine_pct: c.moyenne,
-  nombre_de_lignes: c.lignes.length,
-  hausses: c.hausses,
-  baisses: c.baisses,
-  essentiel_calcule: c.essentiel || [],
-  indices: (c.indices || []).map((i) => ({ indice: i.nom, variation_semaine_pct: i.pct })),
-  portefeuille: c.portefeuille ? {
-    valeur_eur: c.portefeuille.valeur_eur,
-    variation_semaine_eur: c.portefeuille.var_eur,
-    variation_semaine_pct: c.portefeuille.var_pct,
-    alertes: (c.portefeuille.alertes || []).filter((a) => a.niveau !== "fort").map((a) => ({ alerte: a.texte, evolution: a.evol }))
-  } : null,
-  lignes: c.lignes.filter((l) => l.variation_semaine_pct != null).slice(0, 25).map((l) => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct, indice_de_reference: l.indice ? l.indice.nom : null, ecart_avec_indice_points: l.ecart_pts, dans_le_portefeuille: !!l.en_portefeuille })),
-  annonces: (c.annonces || []).slice(0, 8).map((a) => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, en_clair: a.resume })),
-  a_venir: (c.a_venir || []).slice(0, 6).map((e) => ({ entreprise: e.nom, date: e.date, evenement: e.label })),
-  secteurs_suivis: (c.secteurs || []).filter((x) => x.n).map((x) => ({ secteur: x.nom, variation_mediane_semaine_pct: x.mediane_pct, entreprises: x.n, hausses: x.hausses, baisses: x.baisses }))
-}), redige = rediger;
-var rapportDe = (row) => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
+var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", rapportDe = (row) => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
 function suiviDe(row, names) {
-  let R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter((l) => names[l.k]), fav = R.favoris ? (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)) : [], autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
+  let R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter((l) => names[l.k]), fav = R.favoris ? (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)) : [], autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
   return { favoris: [.../* @__PURE__ */ new Set([...fav, ...autres])], pf, rapport: R, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map((l) => `${l.k}:${r22(l.q)}:${Math.round(l.m)}`).sort().join(",") + "|" + rapportSignature(R) };
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
   if (!(!c || c.v !== 2 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
   let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles, n._final = weekend, n._ia_n = c && c._ia_n || 0, n._ia_at = c && c._ia_at || 0, n._sig = rapportSignature(s.rapport), c && c._sig !== n._sig && (n._ia_at = 0), c && c.texte && c._cles === s.cles && c.v === 2 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
+  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 2 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
   let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some((x) => x.n);
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
-}
-async function commenter(env, compteId, c) {
-  if (c.texte || !(c.lignes.length || (c.secteurs || []).some((x) => x.n)) || c.reglages && c.reglages.detail === "court" || (c._ia_n || 0) >= 4 || Date.now() - (c._ia_at || 0) < 6 * 36e5) return c;
-  c._ia_n = (c._ia_n || 0) + 1, c._ia_at = Date.now();
-  let t = null;
-  try {
-    t = await redige(env, { systeme: SYS_BILAN, utilisateur: JSON.stringify(faitsIA(c)), max_tokens: 600, temperature: 0.2 });
-  } catch {
-  }
-  return t && String(t).trim().length > 80 && (c.texte = String(t).replace(/—/g, ",").trim(), c.annonces && (c.lecture_min = lectureMin(c))), await env.DB.prepare("UPDATE bilans SET contenu = ? WHERE compte = ? AND semaine = ?").bind(JSON.stringify(c), compteId, c.semaine).run(), c;
 }
 var publicBilan = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_"))), precedenteDe = (semaine) => {
   let m = /^(\d{4})-W(\d{2})$/.exec(semaine), l = new Date(Date.UTC(+m[1], 0, 4));
@@ -1699,7 +1393,7 @@ var publicBilan = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k
 };
 async function espace(request, env) {
   if (!env || !env.DB) return json2({ error: "L'espace personnel est indisponible pour le moment." }, 503);
-  await init5(env.DB);
+  await init3(env.DB);
   let url = new URL(request.url), path = url.pathname.replace(/\/+$/, ""), m = request.method;
   if (m !== "GET" && m !== "HEAD" && path !== "/api/espace/tache") {
     let o = request.headers.get("origin");
@@ -1843,7 +1537,7 @@ async function espace(request, env) {
       let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille, profil FROM donnees WHERE compte = ?").bind(c.id).first(), prec = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, precedenteDe(cur)).first(), r = await assurerBilan(env, d, c.id, don, cur, row, prec);
       b = r.c, r.change && !r.stocke && (b = { ...b, vide: !0 });
     } else if (!b || semaine > cur) return json2({ error: "Aucun bilan pour cette semaine." }, 404);
-    !apercu && b && !b.vide && (semaine === cur || semaine === semainePrecedente(auj)) && (b = await commenter(env, c.id, b)), apercu || await env.DB.prepare("UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?").bind(c.id, semaine).run();
+    apercu || await env.DB.prepare("UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?").bind(c.id, semaine).run();
     let hist = apercu ? [] : ((await env.DB.prepare("SELECT semaine, contenu FROM bilans WHERE compte = ? AND semaine <> ? ORDER BY semaine DESC LIMIT 12").bind(c.id, semaine).all()).results || []).map((h) => {
       let x = parse(h.contenu, {}) || {};
       return { semaine: h.semaine, moyenne: x.moyenne ?? null, portefeuille_pct: (x.portefeuille && x.portefeuille.var_pct) ?? null, portefeuille_eur: (x.portefeuille && x.portefeuille.var_eur) ?? null };
@@ -1912,83 +1606,15 @@ bilan. Informations factuelles, sans conseil en investissement.`,
   return json2({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
 }
 
-// cf/src/demande.mjs
-var REPERES = `Rep\xE8res exacts \xE0 respecter :
-- ETF capitalisant : les dividendes re\xE7us sont r\xE9investis automatiquement dans le fonds (rien n'est vers\xE9 \xE0 l'\xE9pargnant). ETF distribuant : les dividendes sont vers\xE9s \xE0 l'\xE9pargnant.
-- PER (price earning ratio) : prix de l'action divis\xE9 par le b\xE9n\xE9fice par action, ou valeur en Bourse divis\xE9e par le b\xE9n\xE9fice annuel. Ne pas confondre avec le PER plan d'\xE9pargne retraite.
-- PEA : actions europ\xE9ennes et ETF \xE9ligibles, versements plafonn\xE9s \xE0 150 000 \u20AC, gains impos\xE9s \xE0 18,6 % de pr\xE9l\xE8vements sociaux apr\xE8s 5 ans (2026). Compte-titres : tout titre, sans plafond, gains impos\xE9s \xE0 31,4 % (flat tax 2026 : 12,8 % d'imp\xF4t + 18,6 % de pr\xE9l\xE8vements sociaux).
-- Rendement d'un dividende : dividende annuel divis\xE9 par le cours. Marge d'exploitation : r\xE9sultat d'exploitation divis\xE9 par le chiffre d'affaires.
-- M\xE9diane d'un secteur : la valeur du milieu, la moiti\xE9 des entreprises fait mieux, l'autre moins bien.
-- Un indice (CAC 40, S&P 500, MSCI World) est un panier d'entreprises ; un ETF permet d'acheter tout le panier en une fois. Le MSCI World couvre environ 1 250 entreprises de 23 pays d\xE9velopp\xE9s, sans les pays \xE9mergents.
-- PEA-PME : plafond de 225 000 \u20AC, commun avec le PEA. Livret A : 1,7 % depuis le 1er ao\xFBt 2026, plafond de 22 950 \u20AC ; LDDS : plafond de 12 000 \u20AC. Assurance-vie : apr\xE8s 8 ans, abattement annuel de 4 600 \u20AC sur les gains retir\xE9s (9 200 \u20AC pour un couple), pr\xE9l\xE8vements sociaux de 17,2 % en 2026.
-- Si tu n'es pas s\xFBr d'un chiffre, ne le donne pas : dis \xAB Je ne suis pas s\xFBr de ce chiffre \xBB et o\xF9 le v\xE9rifier.`, IND = ["croissance", "marge", "marge_nette", "rentabilite", "dette", "per", "rendement", "distribution", "variation_1an", "capitalisation", "taille"], SYS2 = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
-
-Actions possibles :
-1. Chercher des entreprises selon des crit\xE8res :
-{"action":"filtre","titre":"phrase courte qui reformule la demande","secteur":null ou une cl\xE9 de ${JSON.stringify(SECTEURS)},"region":null ou "FR" (France), "EU" (Europe hors France), "US" (\xC9tats-Unis), "MONDE" (reste du monde),"pea":null ou true,"criteres":[{"indicateur":"\u2026","condition":"sup_mediane"|"inf_mediane"|"sup"|"inf","valeur":nombre ou null}],"tri":{"indicateur":"\u2026","ordre":"desc"|"asc"},"limite":10}
-Indicateurs : croissance (hausse des ventes sur un an, en %), marge (marge d'exploitation, %), marge_nette (%), rentabilite (b\xE9n\xE9fice / capitaux propres, %), dette (dette nette en ann\xE9es de r\xE9sultat avant amortissements ; n\xE9gative ou faible = peu endett\xE9e), per (prix de l'action / b\xE9n\xE9fice), rendement (dividende / cours, %), distribution (part du b\xE9n\xE9fice vers\xE9e en dividende, %), variation_1an (\xE9volution du cours sur un an, %), capitalisation (valeur en Bourse, milliards d'euros), taille (ventes annuelles, milliards d'euros).
-\xAB sup_mediane \xBB/\xAB inf_mediane \xBB comparent \xE0 la m\xE9diane du secteur de chaque entreprise ; \xAB sup \xBB/\xAB inf \xBB utilisent "valeur" (pourcentages en nombre : 5 pour 5 %).
-Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"inf","valeur":1} ; \xAB bon dividende \xBB \u2192 {"indicateur":"rendement","condition":"sup","valeur":3} ; \xAB pas ch\xE8res \xBB \u2192 {"indicateur":"per","condition":"inf_mediane","valeur":null} ; \xAB tr\xE8s rentables \xBB \u2192 {"indicateur":"marge","condition":"sup_mediane","valeur":null} ; \xAB les plus grosses \xBB \u2192 tri capitalisation desc.
-2. Comparer des entreprises nomm\xE9es : {"action":"comparer","noms":["LVMH","Herm\xE8s"]}. Noms courants : \xAB total \xBB = TotalEnergies, \xAB google \xBB = Alphabet, \xAB facebook \xBB = Meta, \xAB l'or\xE9al \xBB ou \xAB loreal \xBB = L'Or\xE9al, \xAB bnp \xBB = BNP Paribas, \xAB socgen \xBB = Soci\xE9t\xE9 G\xE9n\xE9rale, \xAB mcdo \xBB = McDonald's. Un ticker (NVDA, AAPL, TTE, MC) d\xE9signe l'entreprise.
-3. Ouvrir la fiche d'une entreprise ou d'un ETF nomm\xE9 : {"action":"fiche","nom":"Apple"}
-4. Chercher des ETF : {"action":"etf","titre":"\u2026","categorie":null ou "actions-monde"|"actions-usa"|"actions-europe"|"actions-france"|"actions-emergents"|"actions-asie"|"dividendes"|"obligations"|"monetaire"|"theme"|"immobilier"|"matieres"|"facteurs","pea":null ou true}. Inde, Chine, Cor\xE9e, Ta\xEFwan et Br\xE9sil sont dans "actions-emergents" ; le Japon dans "actions-asie" ; l'or dans "matieres" ; d\xE9fense, eau, semi-conducteurs, intelligence artificielle et sant\xE9 dans "theme".
-5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
-R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si la question demande une pr\xE9vision (\xAB va-t-elle monter \xBB, \xAB quel cours dans un an \xBB, \xAB quelle action va exploser \xBB) ou un conseil sans crit\xE8re (\xAB quoi acheter \xBB, \xAB la meilleure action \xBB), r\xE9ponds avec "repondre" : explique que personne ne peut pr\xE9voir les cours et donne la m\xE9thode (\xE9pargne de pr\xE9caution, horizon d'au moins 5 ans, diversification, versements r\xE9guliers). Si la demande contient des crit\xE8res (dividende, secteur, pays, dette, prix), choisis "filtre" ou "etf" avec un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). Si la question ne parle ni de Bourse, ni de placements, ni d'entreprises, r\xE9ponds avec "repondre" en une phrase : le site traite seulement de la Bourse et des placements. R\xE9ponds uniquement avec le JSON.
-${REPERES}
-${REGLES}`, SYS_EXPL = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas ; \xE9cris plut\xF4t \xAB Je ne suis pas s\xFBr : \u2026 \xBB et indique la source officielle o\xF9 le v\xE9rifier (service-public.fr, impots.gouv.fr, AMF, Banque de France). Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
-${REPERES}
-${REGLES}`, clean2 = (s) => String(s || "").replace(/\s+/g, " ").trim();
-function valide(a) {
-  if (!a || typeof a != "object") return null;
-  if (a.action === "filtre") {
-    let crit = (Array.isArray(a.criteres) ? a.criteres : []).filter((c) => c && IND.includes(c.indicateur) && ["sup_mediane", "inf_mediane", "sup", "inf"].includes(c.condition)).slice(0, 5).map((c) => ({ indicateur: c.indicateur, condition: c.condition, valeur: typeof c.valeur == "number" && isFinite(c.valeur) ? c.valeur : null })), tri = a.tri && IND.includes(a.tri.indicateur) ? { indicateur: a.tri.indicateur, ordre: a.tri.ordre === "asc" ? "asc" : "desc" } : null;
-    return { action: "filtre", titre: clean2(a.titre).slice(0, 120), secteur: SECTEURS[a.secteur] ? a.secteur : null, region: ["FR", "EU", "US", "MONDE"].includes(a.region) ? a.region : null, pea: a.pea === !0, criteres: crit, tri, limite: Math.min(30, Math.max(3, +a.limite || 12)) };
-  }
-  return a.action === "comparer" && Array.isArray(a.noms) ? { action: "comparer", noms: a.noms.map(clean2).filter(Boolean).slice(0, 5) } : a.action === "fiche" && a.nom ? { action: "fiche", nom: clean2(a.nom).slice(0, 80) } : a.action === "etf" ? { action: "etf", titre: clean2(a.titre).slice(0, 120), categorie: /^[a-z-]{3,30}$/.test(a.categorie || "") ? a.categorie : null, pea: a.pea === !0 } : a.action === "repondre" && clean2(a.texte).length > 30 ? { action: "repondre", texte: String(a.texte).replace(/—/g, ",").trim().slice(0, 2e3) } : null;
-}
-async function demande(request, env) {
-  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
-  let b;
-  try {
-    b = await request.json();
-  } catch {
-    return json2({ error: "Requ\xEAte illisible." }, 400);
-  }
-  let q = clean2(b.question).slice(0, 300);
-  if (q.length < 4) return json2({ error: "\xC9crivez une question un peu plus longue." }, 400);
-  let key = "demande2:" + q.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôöùûüç ]/g, "");
-  if (env.DB)
-    try {
-      let hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
-      if (hit) return json2({ ...JSON.parse(hit.txt), cache: !0 });
-    } catch {
-    }
-  if (!iaActive(env)) return json2({ error: "L'IA en ligne est indisponible pour le moment.", ia_serveur: !1 }, 503);
-  let qq = await quota(request, env, "demande");
-  if (!qq.ok) return quotaError(qq, "questions \xE0 l'IA");
-  let t = await rediger(env, { systeme: SYS2, utilisateur: q, max_tokens: 500, temperature: 0.1, json: !0, qualite: !1 }), a = valide(jsonDe(t));
-  if (a && a.action === "repondre") {
-    let x = await rediger(env, { systeme: SYS_EXPL, utilisateur: q, max_tokens: 450, temperature: 0.2, qualite: !0 });
-    x && x.length > 40 && (a.texte = x.replace(/—/g, ",").trim().slice(0, 2e3));
-  }
-  if (!a) return json2({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : \xAB entreprises fran\xE7aises peu endett\xE9es qui versent un dividende \xBB." : "L'IA est tr\xE8s demand\xE9e en ce moment : r\xE9essayez dans quelques instants.", diag: DIAG.slice(-3) }, t ? 422 : 503);
-  if (env.DB)
-    try {
-      await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, JSON.stringify(a), Date.now()).run();
-    } catch {
-    }
-  return json2(a);
-}
-
 // cf/src/signaler.mjs
 var SCHEMA5 = [
   "CREATE TABLE IF NOT EXISTS signalements (id INTEGER PRIMARY KEY AUTOINCREMENT, page TEXT NOT NULL, quoi TEXT NOT NULL, texte TEXT NOT NULL, who TEXT NOT NULL, created INTEGER NOT NULL, traite INTEGER NOT NULL DEFAULT 0)",
   "CREATE INDEX IF NOT EXISTS s_who ON signalements (who, created)"
-], ready7 = !1;
-async function init6(db) {
-  if (!ready7) {
+], ready5 = !1;
+async function init4(db) {
+  if (!ready5) {
     for (let q of SCHEMA5) await db.prepare(q).run();
-    ready7 = !0;
+    ready5 = !0;
   }
 }
 var QUOI = ["chiffre", "texte", "ia", "lien", "autre"];
@@ -1998,7 +1624,7 @@ async function empreinte(request) {
 }
 async function signaler(request, env) {
   if (!env.DB) return json2({ error: "Service indisponible." }, 503);
-  if (await init6(env.DB), request.method === "GET") {
+  if (await init4(env.DB), request.method === "GET") {
     if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Acc\xE8s r\xE9serv\xE9." }, 403);
     let r = await env.DB.prepare("SELECT id, page, quoi, texte, created, traite FROM signalements ORDER BY id DESC LIMIT 200").all();
     return json2({ items: r.results || [] });
@@ -2023,11 +1649,11 @@ var SCHEMA6 = [
   "CREATE TABLE IF NOT EXISTS push_abonnements (endpoint TEXT PRIMARY KEY, compte TEXT NOT NULL, p256dh TEXT NOT NULL, auth TEXT NOT NULL, choix TEXT NOT NULL, appareil TEXT, created INTEGER NOT NULL, last_ok INTEGER, echecs INTEGER NOT NULL DEFAULT 0, essai INTEGER NOT NULL DEFAULT 0)",
   "CREATE INDEX IF NOT EXISTS push_ab_compte ON push_abonnements (compte)",
   "CREATE TABLE IF NOT EXISTS push_envois (notif INTEGER PRIMARY KEY, at INTEGER NOT NULL)"
-], ready8 = !1;
-async function init7(db) {
-  if (!ready8) {
+], ready6 = !1;
+async function init5(db) {
+  if (!ready6) {
     for (let q of SCHEMA6) await db.prepare(q).run();
-    ready8 = !0;
+    ready6 = !0;
   }
 }
 var TE = (s) => new TextEncoder().encode(s), b64u = (u8) => {
@@ -2049,9 +1675,9 @@ async function chiffrer(p256dh, auth, texte, opts = {}) {
   let ua = typeof p256dh == "string" ? unb64u(p256dh) : p256dh, secret = typeof auth == "string" ? unb64u(auth) : auth;
   if (ua.length !== 65 || ua[0] !== 4) throw new Error("cl\xE9 p256dh invalide");
   if (secret.length !== 16) throw new Error("secret auth invalide");
-  let clair2 = typeof texte == "string" ? TE(texte) : texte;
-  if (clair2.length > MAX_CLAIR) throw new Error("message trop long");
-  let salt = opts.salt || crypto.getRandomValues(new Uint8Array(16)), as = opts.cles || await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, !0, ["deriveBits"]), asPub = new Uint8Array(await crypto.subtle.exportKey("raw", as.publicKey)), uaKey = await crypto.subtle.importKey("raw", ua, { name: "ECDH", namedCurve: "P-256" }, !1, []), ecdh = new Uint8Array(await crypto.subtle.deriveBits({ name: "ECDH", public: uaKey }, as.privateKey, 256)), ikm = await hkdf(secret, ecdh, concat(TE("WebPush: info\0"), ua, asPub), 32), cek = await hkdf(salt, ikm, TE("Content-Encoding: aes128gcm\0"), 16), nonce = await hkdf(salt, ikm, TE("Content-Encoding: nonce\0"), 12), key = await crypto.subtle.importKey("raw", cek, "AES-GCM", !1, ["encrypt"]), ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, concat(clair2, new Uint8Array([2])))), tete2 = new Uint8Array(21);
+  let clair = typeof texte == "string" ? TE(texte) : texte;
+  if (clair.length > MAX_CLAIR) throw new Error("message trop long");
+  let salt = opts.salt || crypto.getRandomValues(new Uint8Array(16)), as = opts.cles || await crypto.subtle.generateKey({ name: "ECDH", namedCurve: "P-256" }, !0, ["deriveBits"]), asPub = new Uint8Array(await crypto.subtle.exportKey("raw", as.publicKey)), uaKey = await crypto.subtle.importKey("raw", ua, { name: "ECDH", namedCurve: "P-256" }, !1, []), ecdh = new Uint8Array(await crypto.subtle.deriveBits({ name: "ECDH", public: uaKey }, as.privateKey, 256)), ikm = await hkdf(secret, ecdh, concat(TE("WebPush: info\0"), ua, asPub), 32), cek = await hkdf(salt, ikm, TE("Content-Encoding: aes128gcm\0"), 16), nonce = await hkdf(salt, ikm, TE("Content-Encoding: nonce\0"), 12), key = await crypto.subtle.importKey("raw", cek, "AES-GCM", !1, ["encrypt"]), ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv: nonce }, key, concat(clair, new Uint8Array([2])))), tete2 = new Uint8Array(21);
   return tete2.set(salt, 0), new DataView(tete2.buffer).setUint32(16, 4096), tete2[20] = 65, concat(tete2, asPub, ct);
 }
 async function jetonVapid(privateKey, aud, sub, exp) {
@@ -2061,7 +1687,7 @@ async function jetonVapid(privateKey, aud, sub, exp) {
 var VAPID = null, JETONS = /* @__PURE__ */ new Map();
 async function clesVapid(env) {
   if (VAPID && Date.now() - VAPID.at < 36e5) return VAPID;
-  await init7(env.DB);
+  await init5(env.DB);
   let row = await env.DB.prepare("SELECT public, prive FROM push_vapid WHERE id = 1").first();
   if (!row) {
     let k = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, !0, ["sign", "verify"]), pub = b64u(new Uint8Array(await crypto.subtle.exportKey("raw", k.publicKey))), jwk = await crypto.subtle.exportKey("jwk", k.privateKey);
@@ -2131,9 +1757,9 @@ var FENETRE2 = 36 * 36e5;
 async function resultat(env, ab, s) {
   return s >= 200 && s < 300 ? (await env.DB.prepare("UPDATE push_abonnements SET last_ok = ?, echecs = 0 WHERE endpoint = ?").bind(Date.now(), ab.endpoint).run(), "ok") : s === 404 || s === 410 || (ab.echecs || 0) >= 4 ? (await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ?").bind(ab.endpoint).run(), "supprime") : (await env.DB.prepare("UPDATE push_abonnements SET echecs = echecs + 1 WHERE endpoint = ?").bind(ab.endpoint).run(), "erreur");
 }
-async function pousser(env, { origin, budget: budget2 = 30 } = {}) {
+async function pousser(env, { origin, budget = 30 } = {}) {
   if (!env || !env.DB) return { envoyes: 0, reste: !1 };
-  await init7(env.DB);
+  await init5(env.DB);
   let now = Date.now(), rows;
   try {
     rows = (await env.DB.prepare("SELECT n.id, n.compte, n.at, n.type, n.texte, n.lien FROM notifs n WHERE n.at > ? AND n.compte IN (SELECT compte FROM push_abonnements) AND NOT EXISTS (SELECT 1 FROM push_envois e WHERE e.notif = n.id) ORDER BY n.id LIMIT 400").bind(now - FENETRE2).all()).results || [];
@@ -2141,7 +1767,7 @@ async function pousser(env, { origin, budget: budget2 = 30 } = {}) {
     return { envoyes: 0, reste: !1 };
   }
   if (!rows.length) {
-    if (budget2 > 0) {
+    if (budget > 0) {
       await env.DB.prepare("DELETE FROM push_envois WHERE at < ?").bind(now - 7 * 864e5).run();
       try {
         await env.DB.prepare("DELETE FROM push_abonnements WHERE compte NOT IN (SELECT id FROM comptes)").run();
@@ -2150,7 +1776,7 @@ async function pousser(env, { origin, budget: budget2 = 30 } = {}) {
     }
     return { envoyes: 0, reste: !1 };
   }
-  if (budget2 <= 0) return { envoyes: 0, reste: !0, en_attente: rows.length };
+  if (budget <= 0) return { envoyes: 0, reste: !0, en_attente: rows.length };
   let comptes = [...new Set(rows.map((r) => r.compte))], abos = [];
   for (let i = 0; i < comptes.length; i += 50) {
     let part = comptes.slice(i, i + 50);
@@ -2162,7 +1788,7 @@ async function pousser(env, { origin, budget: budget2 = 30 } = {}) {
       let ch = normChoix(parse2(a.choix, {})), sel = ns.filter((n) => n.at >= a.created - 6e4 && ch[categorie2(n)]);
       return sel.length ? [a, sel] : null;
     }).filter(Boolean);
-    if (utilise > 0 && utilise + jobs.length > budget2) break;
+    if (utilise > 0 && utilise + jobs.length > budget) break;
     utilise += jobs.length;
     let res = await Promise.all(jobs.map(([a, sel]) => envoyer(env, a, message(sel), { origin, ttl: sel.some((n) => n.type === "bilan") ? 172800 : 43200 }).catch(() => 0).then((s) => resultat(env, a, s))));
     for (let r of res)
@@ -2187,7 +1813,7 @@ async function lire2(request) {
 }
 async function push(request, env) {
   if (!env || !env.DB) return json2({ error: "Les notifications sont indisponibles pour le moment." }, 503);
-  await init7(env.DB);
+  await init5(env.DB);
   let url = new URL(request.url), path = url.pathname.replace(/\/+$/, ""), m = request.method;
   if (path === "/api/push/cle" && m === "GET") return json2({ cle: (await clesVapid(env)).public });
   if (m !== "POST") return json2({ error: "Introuvable." }, 404);
@@ -2828,7 +2454,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "ee4cdfa58605400a", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
+var VERSION = "922a14babc4fd650", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
 function tete(html, { title, desc, url, statut }) {
   let canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/"), t = [
     `<meta name="bilan-version" content="${VERSION}">`,
@@ -2895,15 +2521,18 @@ function meta(path, q = null) {
   }
   if (m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/)) {
     let t = TOOLS2[m[1] || "epargne"] || TOOLS2.epargne;
-    return t ? { title: `${t} \xB7 ${SITE}`, desc: "Simulez l'\xE9volution d'un placement, avec les hypoth\xE8ses affich\xE9es. Outil p\xE9dagogique, sans conseil." } : null;
+    return t ? { title: `${t} \xB7 ${SITE}`, desc: "Simulateur d'\xE9pargne : versements mensuels, frais r\xE9els du courtier et du fonds, imp\xF4t PEA ou compte-titres 2026, trois sc\xE9narios tir\xE9s de l'histoire. Hypoth\xE8ses et limites affich\xE9es, sans conseil." } : null;
   }
   if (p === "/entreprises") return { title: `Les entreprises \xB7 ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des \xC9tats-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqu\xE9s simplement." };
   if (p === "/actualites") return { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, acquisitions et changements de dirigeants des entreprises suivies en France, en Europe et aux \xC9tats-Unis : annonces officielles class\xE9es, chiffr\xE9es et expliqu\xE9es, et titres de la presse." };
-  if (p === "/agenda") return { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es." };
+  if (p === "/agenda") return { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es, avec l'heure de publication quand la soci\xE9t\xE9 l'annonce, et les chiffres publi\xE9s ces derniers jours." };
+  if (p === "/hier") return { title: `Ce qui s'est pass\xE9 hier : les r\xE9sultats publi\xE9s \xB7 ${SITE}`, desc: "Les r\xE9sultats publi\xE9s la veille par les entreprises suivies : chiffre d'affaires, r\xE9sultat, pr\xE9visions de la direction et lecture calcul\xE9e, d'apr\xE8s les communiqu\xE9s officiels." };
+  if (p === "/outils/recouvrement") return { title: `Mes ETF se recouvrent-ils ? \xB7 ${SITE}`, desc: "Positions communes et poids r\xE9ellement en double entre 2 \xE0 4 ETF, concentration du portefeuille combin\xE9, secteurs, pays et devises, d'apr\xE8s les compositions officielles." };
+  if (p === "/outils/si-javais") return { title: `Et si j'avais investi ? \xB7 ${SITE}`, desc: "Ce que serait devenue une somme plac\xE9e il y a 1, 3 ou 5 ans dans une action ou un ETF, compar\xE9e \xE0 un indice, au Livret A et \xE0 la hausse des prix. Cours r\xE9els et sources affich\xE9es." };
   if (p === "/portefeuille") return { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." };
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." };
-  if (p === "/communaute") return { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." };
+  if (p === "/communaute") return { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "Analyses argument\xE9es des visiteurs sur les entreprises et les ETF, avec les chiffres du site, questions de d\xE9butants et listes de suivi partag\xE9es. Aucun message n'est un conseil en investissement." };
   if (p === "/lexique") return { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." };
   if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace \xB7 ${SITE}`, desc: "Votre semaine en 2 minutes : variations, annonces et dates \xE0 venir de ce que vous suivez, vos alertes et vos listes, sur tous vos appareils." };
   if (p === "/favoris") return { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." };
@@ -2929,25 +2558,21 @@ function meta(path, q = null) {
     let mi = p.match(/^\/indice\/([a-z0-9]+)$/);
     if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir \xB7 ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqu\xE9 simplement : sa r\xE8gle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, class\xE9s par frais.` };
   }
-  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/connecteur" ? { title: `Connecteur IA : bilan. dans Claude et ChatGPT \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/espace/ia" ? { title: `Mon IA \xB7 ${SITE}`, desc: "Les r\xE9ponses calcul\xE9es du site, gratuites et sans limite, et \xAB Connecter mon IA \xBB : votre compte OpenRouter, des mod\xE8les gratuits au choix, la cl\xE9 gard\xE9e dans votre navigateur." } : p === "/connecteur" ? { title: `Utiliser bilan. dans ChatGPT ou Claude \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 function redirectionParcours(p) {
   let m = /^\/debuter(\/.*)?$/.exec(p || "");
   return m ? "/academie/express" + (m[1] || "") : p === "/premiers-pas" ? "/academie/express" : null;
 }
-var worker_default = {
+var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair|ia\/etat)\/?$/, iaRetiree = () => Response.json({ error: "Le site ne r\xE9dige plus de texte avec une IA. Les r\xE9ponses calcul\xE9es restent disponibles ; pour une r\xE9ponse r\xE9dig\xE9e, connectez votre IA (bouton \u2726).", ia_serveur: !1 }, { status: 410, headers: { "cache-control": "no-store" } }), worker_default = {
   async fetch(request, env, ctx) {
     let url = new URL(request.url);
     if (url.pathname === "/api/amf") return amf(request, index_gen_default.filter((c) => c.region === "FR").map((c) => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, index_gen_default);
-    if (url.pathname === "/api/actu/clair") return clair(request, env);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
-    if (url.pathname === "/api/resume") return resume(request, env);
+    if (IA_RETIREE.test(url.pathname)) return iaRetiree();
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
-    if (url.pathname === "/api/assistant") return assistant(request, env);
-    if (url.pathname === "/api/demande") return demande(request, env);
-    if (url.pathname === "/api/ia/etat") return etatPublic(env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
@@ -2992,6 +2617,7 @@ async function tacheEtPush(request, env, url) {
 }
 export {
   worker_default as default,
+  iaRetiree,
   meta,
   redirectionParcours
 };
