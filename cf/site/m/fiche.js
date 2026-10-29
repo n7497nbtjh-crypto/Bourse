@@ -372,7 +372,8 @@ function ficheMetierHTML(s, c) {
   // En une phrase
   const phrase = !gen ? s.fiche.fait : s.desc || (s.fiche && s.fiche.fait) || "";
   out.push(`<p class="f1p">${esc(phrase)}${!gen && s.desc && s.desc !== phrase ? `<small>${esc(s.desc)}</small>` : ""}</p>`);
-  if (wd && (wd.secteurs || wd.maison)) out.push(`<div class="fm" style="padding-top:12px;padding-bottom:12px">${wd.secteurs ? `<p class="fbt">Ses domaines d'activité</p><div class="fchips">${wd.secteurs.map(x => `<span>${esc(x)}</span>`).join("")}</div>` : ""}${wd.maison ? `<p style="margin:10px 0 0;font-size:13.5px">Elle appartient au groupe <b>${esc(wd.maison[0])}</b>.</p>` : ""}</div>`);
+  if (wd && wd.secteurs) wd.secteurs = wd.secteurs.filter(x => !/si[eè]ges? sociaux|holding/i.test(x));
+  if (wd && ((wd.secteurs && wd.secteurs.length) || wd.maison)) out.push(`<div class="fm" style="padding-top:12px;padding-bottom:12px">${wd.secteurs && wd.secteurs.length ? `<p class="fbt">Ses domaines d'activité</p><div class="fchips">${wd.secteurs.map(x => `<span>${esc(x)}</span>`).join("")}</div>` : ""}${wd.maison ? `<p style="margin:10px 0 0;font-size:13.5px">Elle appartient au groupe <b>${esc(wd.maison[0])}</b>.</p>` : ""}</div>`);
   // Chiffres clés
   const peers = R.companies.filter(x => x.sector === s.sector && !x.missing && x.ca > 0).sort((a, b) => caEur(b) - caEur(a)), rank = peers.findIndex(x => x.id === s.id) + 1, v = valo(s);
   const tiles = [
