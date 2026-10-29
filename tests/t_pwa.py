@@ -80,7 +80,10 @@ with sync_playwright() as pw:
         c2 = br.new_context(viewport={"width": W, "height": H}, is_mobile=mob, has_touch=mob, device_scale_factor=2 if mob else 1); c2.route("**/*", fonts)
         p2 = c2.new_page(); p2.on("pageerror", lambda e: errs.append(str(e)))
         for path in ["/connecteur", "/"]:
-            p2.goto(BASE + path); p2.wait_for_timeout(1500); pb = p2.evaluate(CHECK, W); ok(not pb, f"{path} à {W} px : {pb}")
+            p2.goto(BASE + path)
+            try: p2.wait_for_function("document.querySelector('#app').textContent.trim().length > 200", timeout=20000)
+            except Exception: pass
+            p2.wait_for_timeout(800); pb = p2.evaluate(CHECK, W); ok(not pb, f"{path} à {W} px : {pb}")
             if SHOTS: p2.screenshot(path=f"{SHOTS}/{path.strip('/') or 'accueil'}-{W}.png", full_page=path != "/")
         c2.close()
     g = pg.evaluate("u => fetch(u, { headers: { accept: 'text/html' }, redirect: 'manual' }).then(r => r.type)", BASE + "/mcp"); ok(g == "opaqueredirect", "GET /mcp depuis un navigateur : redirection " + g)

@@ -30,6 +30,8 @@ export function tete(html, { title, desc, url, statut }) {
     `<meta property="og:image:alt" content="bilan. La Bourse, comptes à l'appui : les comptes officiels des entreprises cotées, expliqués simplement.">`,
     `<meta name="twitter:card" content="summary_large_image">`,
     ...DONNEES.map(f => `<link rel="preload" href="/data/${f}.json" as="fetch" crossorigin>`),
+    // Avant l'affichage de la page : la zone de contenu garde la hauteur de l'écran (le pied de page ne saute plus) et un trait discret indique le chargement
+    `<style>#app:empty{min-height:calc(100vh - 56px)}#app:empty::after{content:"";display:block;width:64px;height:3px;margin:30vh auto 0;border-radius:3px;background:#111214;opacity:.22;animation:bilanCharge .9s ease-in-out infinite alternate}@keyframes bilanCharge{from{transform:scaleX(.25)}to{transform:scaleX(1)}}@media (prefers-reduced-motion:reduce){#app:empty::after{animation:none}}</style>`,
   ].join("\n");
   return html.replace(/<link rel="icon" href="data:[^"]*">\n?/, "").replace("</head>", t + "\n</head>");
 }
