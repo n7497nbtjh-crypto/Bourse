@@ -325,124 +325,17 @@ var REGLES = `R\xE8gles d'objectivit\xE9, \xE0 respecter strictement :
 - Ne pr\xE9dis jamais un cours, ne recommande jamais d'acheter, de vendre ou de conserver un titre pr\xE9cis.
 - Si une information manque, dis qu'elle manque au lieu de la deviner. N'invente aucune source.`;
 
-// cf/src/actu.mjs
-var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), ready3 = !1;
-async function init3(db) {
-  ready3 || (await db.prepare("CREATE TABLE IF NOT EXISTS actu_clair (k TEXT PRIMARY KEY, clair TEXT NOT NULL, change TEXT NOT NULL, at INTEGER NOT NULL)").run(), ready3 = !0);
-}
-var SYS_CLAIR = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse une annonce officielle d'une entreprise cot\xE9e. Tu re\xE7ois des faits en JSON (type d'annonce, titre officiel, chiffres extraits du communiqu\xE9, phrases du communiqu\xE9, derniers comptes annuels).
-R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
-- "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annonc\xE9, avec les chiffres fournis et leur p\xE9riode, et expliquent chaque terme technique.
-- "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
-- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
-- Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
-- Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
-${REGLES}`, propre = (t) => String(t || "").replace(/—/g, ",").replace(/\s+/g, " ").trim().slice(0, 600);
-async function clair(request, env) {
-  if (!env || !env.DB) return json2({ error: "Indisponible." }, 503);
-  await init3(env.DB);
-  let u = new URL(request.url);
-  if (request.method === "GET") {
-    let ks = String(u.searchParams.get("k") || "").split(",").map((x) => x.replace(/[^A-Za-z0-9_-]/g, "")).filter(Boolean).slice(0, 30);
-    if (!ks.length) return json2({ items: {} });
-    let r = await env.DB.prepare(`SELECT k, clair, change FROM actu_clair WHERE k IN (${ks.map(() => "?").join(",")})`).bind(...ks).all();
-    return json2({ items: Object.fromEntries((r.results || []).map((x) => [x.k, { c: x.clair, ch: x.change }])) });
-  }
-  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
-  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "R\xE9serv\xE9 au robot du site." }, 403);
-  let b;
-  try {
-    b = await request.json();
-  } catch {
-    return json2({ error: "Requ\xEAte illisible." }, 400);
-  }
-  let k = String(b.k || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20);
-  if (!k) return json2({ error: "Cl\xE9 manquante." }, 400);
-  let hit = await env.DB.prepare("SELECT clair, change FROM actu_clair WHERE k = ?").bind(k).first();
-  if (hit) return json2({ clair: hit.clair, change: hit.change, cache: !0 });
-  let faits = JSON.stringify(b.faits || {}).slice(0, 5e3), t = await rediger(env, { systeme: SYS_CLAIR, utilisateur: faits, max_tokens: 380, json: !0 }), j = jsonDe(t);
-  if (!j || !j.clair || String(j.clair).length < 40) return json2({ error: "R\xE9daction impossible pour le moment." }, 503);
-  let c = propre(j.clair), ch = propre(j.change);
-  return await env.DB.prepare("INSERT OR REPLACE INTO actu_clair (k, clair, change, at) VALUES (?, ?, ?, ?)").bind(k, c, ch, Date.now()).run(), json2({ clair: c, change: ch });
-}
-
-// data/cours_config.mjs
-var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv", COURS_CSV_SUITE = [], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
-function parseCours(txt) {
-  let rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g, row = [], m;
-  for (; (m = re.exec(txt)) && m[0] !== ""; ) {
-    let v = m[1];
-    v.startsWith('"') && (v = v.slice(1, -1).replace(/""/g, '"')), row.push(v), m[3] !== "," && (rows.push(row), row = []);
-  }
-  let head = rows.shift() || [], col = (k) => head.indexOf(k), out = {}, num = (v) => {
-    let x = parseFloat(String(v).replace(/[^0-9.eE+-]/g, ""));
-    return isFinite(x) ? x : null;
-  };
-  for (let r of rows) {
-    let id = r[col("id")];
-    if (!id || !r[col("sym")]) continue;
-    let cur = r[col("cur")] || null, p = num(r[col("price")]), k = 1;
-    cur === "GBX" && (cur = "GBP", k = 0.01);
-    let o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num(r[col("chg")]), cap: num(r[col("cap")]) };
-    for (let f of ["h52", "l52", "p1y", "p3y", "p5y"]) {
-      let x = num(r[col(f)]);
-      o[f] = x != null ? x * k : null;
-    }
-    o.p != null && (out[id] = o);
-  }
-  return out;
-}
-
-// cf/src/cours.mjs
-async function cours(request, ctx, env) {
-  let cache = caches.default, key = new Request(new URL("/api/cours", request.url).toString()), hit = await cache.match(key);
-  if (hit) return hit;
-  let body;
-  try {
-    let items = {};
-    for (let [i, u] of COURS_CSVS.entries()) {
-      let r = await fetch(u, { cf: { cacheTtl: 300 } }).catch(() => null);
-      if (!r || !r.ok) {
-        if (i === 0) throw new Error("feuille " + (r ? r.status : "injoignable"));
-        continue;
-      }
-      Object.assign(items, parseCours(await r.text()));
-    }
-    if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
-    try {
-      let f = env && env.ASSETS ? await env.ASSETS.fetch(new URL("/data/cours.json", request.url)) : await fetch(new URL("/data/cours.json", request.url));
-      if (f.ok) {
-        let j = await f.json(), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-        for (let [k, v] of Object.entries(j.items || {})) {
-          let it = items[k];
-          if (!it) {
-            items[k] = v;
-            continue;
-          }
-          for (let h of HF) it[h] == null && v[h] != null && (it[h] = v[h]);
-        }
-      }
-    } catch {
-    }
-    body = JSON.stringify({ updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items });
-  } catch (e) {
-    return Response.json({ error: String(e.message || e) }, { status: 503 });
-  }
-  let res = new Response(body, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=600" } });
-  return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
-}
-
 // cf/src/compte.mjs
-var json3 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
+var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
   "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
   "CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)",
   "CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))",
   "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))"
-], ready4 = !1;
+], ready3 = !1;
 async function initCompte(db) {
-  if (!ready4) {
+  if (!ready3) {
     for (let q of SCHEMA2) await db.prepare(q).run();
-    ready4 = !0;
+    ready3 = !0;
   }
 }
 var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
@@ -495,7 +388,7 @@ async function quota(request, env, kind) {
   return r && r.n >= max ? { ok: !1, premium: !!p, max } : (!r && Math.random() < 0.02 && await env.DB.prepare("DELETE FROM usage WHERE jour < ?").bind(new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)).run(), await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1").bind(who2, today(), kind).run(), { ok: !0, premium: !!p, max, used: (r ? r.n : 0) + 1 });
 }
 function quotaError(q, what) {
-  return json3({ error: q.premium ? `Limite du jour atteinte (${q.max} ${what}). Elle revient demain.` : `Limite gratuite du jour atteinte (${q.max} ${what}). Elle revient demain, ou passez \xE0 Premium pour en avoir beaucoup plus.`, premium: q.premium, quota: !0 }, 429);
+  return json2({ error: q.premium ? `Limite du jour atteinte (${q.max} ${what}). Elle revient demain.` : `Limite gratuite du jour atteinte (${q.max} ${what}). Elle revient demain, ou passez \xE0 Premium pour en avoir beaucoup plus.`, premium: q.premium, quota: !0 }, 429);
 }
 async function stripe(env, path) {
   let r = await fetch("https://api.stripe.com/v1/" + path, { headers: { authorization: "Bearer " + env.STRIPE_SECRET } }), j = await r.json();
@@ -504,23 +397,23 @@ async function stripe(env, path) {
 }
 var newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
 async function premium(request, env) {
-  if (!env || !env.DB) return json3({ error: "Indisponible pour le moment." }, 503);
+  if (!env || !env.DB) return json2({ error: "Indisponible pour le moment." }, 503);
   await initCompte(env.DB);
   let url = new URL(request.url), path = url.pathname;
-  if (path === "/api/premium/offres") return json3({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, limites: LIMITS, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
+  if (path === "/api/premium/offres") return json2({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, limites: LIMITS, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
   if (path === "/api/premium/statut") {
     let p = await premiumOf(request, env);
-    return json3(p ? { premium: !0, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1\u2026$2") : null } : { premium: !1 });
+    return json2(p ? { premium: !0, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1\u2026$2") : null } : { premium: !1 });
   }
   if (path === "/api/premium/activer") {
-    if (!env.STRIPE_SECRET) return json3({ error: "Le paiement n'est pas encore configur\xE9." }, 503);
+    if (!env.STRIPE_SECRET) return json2({ error: "Le paiement n'est pas encore configur\xE9." }, 503);
     let sid = (url.searchParams.get("session_id") || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 200);
-    if (!sid.startsWith("cs_")) return json3({ error: "Paiement introuvable." }, 400);
+    if (!sid.startsWith("cs_")) return json2({ error: "Paiement introuvable." }, 400);
     let old = await env.DB.prepare("SELECT token FROM abonnes WHERE session = ?").bind(sid).first();
-    if (old) return json3({ token: old.token });
+    if (old) return json2({ token: old.token });
     try {
       let s = await stripe(env, `checkout/sessions/${sid}`);
-      if (!(s.status === "complete" && (s.payment_status === "paid" || s.payment_status === "no_payment_required"))) return json3({ error: "Le paiement n'est pas encore confirm\xE9. R\xE9essayez dans une minute." }, 402);
+      if (!(s.status === "complete" && (s.payment_status === "paid" || s.payment_status === "no_payment_required"))) return json2({ error: "Le paiement n'est pas encore confirm\xE9. R\xE9essayez dans une minute." }, 402);
       let plan = "unique", until = Date.now() + 368 * 864e5, sub = null;
       if (s.mode === "subscription" && s.subscription) {
         sub = typeof s.subscription == "string" ? s.subscription : s.subscription.id;
@@ -528,9 +421,9 @@ async function premium(request, env) {
         plan = "mensuel", until = so.current_period_end * 1e3 + 3 * 864e5;
       }
       let token = newToken(), email = s.customer_details && s.customer_details.email || s.customer_email || null;
-      return await env.DB.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run(), json3({ token, plan });
+      return await env.DB.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run(), json2({ token, plan });
     } catch (e) {
-      return json3({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 502);
+      return json2({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 502);
     }
   }
   if (path === "/api/premium/retrouver" && request.method === "POST") {
@@ -550,22 +443,22 @@ Sur le site, ouvrez la page Premium et collez ce code dans \xAB J'ai d\xE9j\xE0 
 
 bilan.`);
       } catch {
-        return json3({ error: "L'envoi d'e-mail n'est pas encore disponible : \xE9crivez-nous pour retrouver votre acc\xE8s." }, 503);
+        return json2({ error: "L'envoi d'e-mail n'est pas encore disponible : \xE9crivez-nous pour retrouver votre acc\xE8s." }, 503);
       }
-    return json3({ ok: !0 });
+    return json2({ ok: !0 });
   }
   if (path === "/api/premium/portail") {
     let p = await premiumOf(request, env);
-    if (!p || !p.sub_id || !env.STRIPE_SECRET) return json3({ error: "Aucun abonnement mensuel actif." }, 400);
+    if (!p || !p.sub_id || !env.STRIPE_SECRET) return json2({ error: "Aucun abonnement mensuel actif." }, 400);
     try {
       let sub = await stripe(env, `subscriptions/${p.sub_id}`), r = await fetch("https://api.stripe.com/v1/billing_portal/sessions", { method: "POST", headers: { authorization: "Bearer " + env.STRIPE_SECRET, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ customer: sub.customer, return_url: url.origin + "/premium" }) }), j = await r.json();
       if (!r.ok) throw new Error(j.error && j.error.message);
-      return json3({ url: j.url });
+      return json2({ url: j.url });
     } catch (e) {
-      return json3({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 502);
+      return json2({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 502);
     }
   }
-  return json3({ error: "Introuvable." }, 404);
+  return json2({ error: "Introuvable." }, 404);
 }
 var PROVIDERS = [
   ["brevo", (env) => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text, htmlContent: html || void 0 }) })],
@@ -592,6 +485,128 @@ async function sendMail(env, to, subject, text, html = "") {
       return await env.DB.prepare("INSERT INTO mail_compte (fournisseur, jour, n) VALUES (?, ?, 1) ON CONFLICT (fournisseur, jour) DO UPDATE SET n = n + 1").bind(name, today()).run(), name;
   }
   throw new Error("quota d'envoi du jour atteint");
+}
+
+// cf/src/actu.mjs
+var json3 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), ready4 = !1;
+async function init3(db) {
+  ready4 || (await db.prepare("CREATE TABLE IF NOT EXISTS actu_clair (k TEXT PRIMARY KEY, clair TEXT NOT NULL, change TEXT NOT NULL, at INTEGER NOT NULL)").run(), ready4 = !0);
+}
+var SYS_CLAIR = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse une annonce officielle d'une entreprise cot\xE9e. Tu re\xE7ois des faits en JSON (type d'annonce, titre officiel, chiffres extraits du communiqu\xE9, phrases du communiqu\xE9, derniers comptes annuels).
+R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
+- "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annonc\xE9, avec les chiffres fournis et leur p\xE9riode, et expliquent chaque terme technique.
+- "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
+- Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
+- Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
+${REGLES}`, propre = (t) => String(t || "").replace(/—/g, ",").replace(/\s+/g, " ").trim().slice(0, 600);
+async function clair(request, env) {
+  if (!env || !env.DB) return json3({ error: "Indisponible." }, 503);
+  await init3(env.DB);
+  let u = new URL(request.url);
+  if (request.method === "GET" && u.searchParams.get("id")) {
+    let id = String(u.searchParams.get("id")).replace(/[^a-z0-9-]/g, "").slice(0, 80), k2 = String(u.searchParams.get("k") || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20), hit2 = await env.DB.prepare("SELECT clair, change FROM actu_clair WHERE k = ?").bind(k2).first();
+    if (hit2) return json3({ clair: hit2.clair, change: hit2.change, cache: !0 });
+    let it = null;
+    try {
+      let r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, u)));
+      r.ok && (it = ((await r.json()).o || []).find((x) => x.k === k2));
+    } catch {
+    }
+    if (!it || it.i < 2) return json3({ error: "Annonce introuvable ou trop courte pour \xEAtre expliqu\xE9e." }, 404);
+    let q = await quota(request, env, "resume");
+    return q.ok ? rediges(env, k2, { type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture: it.r || [], entreprise: id }) : quotaError(q, "explications par l'IA");
+  }
+  if (request.method === "GET") {
+    let ks = String(u.searchParams.get("k") || "").split(",").map((x) => x.replace(/[^A-Za-z0-9_-]/g, "")).filter(Boolean).slice(0, 30);
+    if (!ks.length) return json3({ items: {} });
+    let r = await env.DB.prepare(`SELECT k, clair, change FROM actu_clair WHERE k IN (${ks.map(() => "?").join(",")})`).bind(...ks).all();
+    return json3({ items: Object.fromEntries((r.results || []).map((x) => [x.k, { c: x.clair, ch: x.change }])) });
+  }
+  if (request.method !== "POST") return json3({ error: "M\xE9thode non prise en charge." }, 405);
+  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json3({ error: "R\xE9serv\xE9 au robot du site." }, 403);
+  let b;
+  try {
+    b = await request.json();
+  } catch {
+    return json3({ error: "Requ\xEAte illisible." }, 400);
+  }
+  let k = String(b.k || "").replace(/[^A-Za-z0-9_-]/g, "").slice(0, 20);
+  if (!k) return json3({ error: "Cl\xE9 manquante." }, 400);
+  let hit = await env.DB.prepare("SELECT clair, change FROM actu_clair WHERE k = ?").bind(k).first();
+  return hit ? json3({ clair: hit.clair, change: hit.change, cache: !0 }) : rediges(env, k, b.faits || {});
+}
+async function rediges(env, k, f) {
+  let faits = JSON.stringify(f).slice(0, 5e3), t = await rediger(env, { systeme: SYS_CLAIR, utilisateur: faits, max_tokens: 380, json: !0 }), j = jsonDe(t);
+  if (!j || !j.clair || String(j.clair).length < 40) return json3({ error: "R\xE9daction impossible pour le moment." }, 503);
+  let c = propre(j.clair), ch = propre(j.change);
+  return await env.DB.prepare("INSERT OR REPLACE INTO actu_clair (k, clair, change, at) VALUES (?, ?, ?, ?)").bind(k, c, ch, Date.now()).run(), json3({ clair: c, change: ch });
+}
+
+// data/cours_config.mjs
+var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv", COURS_CSV_SUITE = [], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
+function parseCours(txt) {
+  let rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g, row = [], m;
+  for (; (m = re.exec(txt)) && m[0] !== ""; ) {
+    let v = m[1];
+    v.startsWith('"') && (v = v.slice(1, -1).replace(/""/g, '"')), row.push(v), m[3] !== "," && (rows.push(row), row = []);
+  }
+  let head = rows.shift() || [], col = (k) => head.indexOf(k), out = {}, num2 = (v) => {
+    let x = parseFloat(String(v).replace(/[^0-9.eE+-]/g, ""));
+    return isFinite(x) ? x : null;
+  };
+  for (let r of rows) {
+    let id = r[col("id")];
+    if (!id || !r[col("sym")]) continue;
+    let cur = r[col("cur")] || null, p = num2(r[col("price")]), k = 1;
+    cur === "GBX" && (cur = "GBP", k = 0.01);
+    let o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num2(r[col("chg")]), cap: num2(r[col("cap")]) };
+    for (let f of ["h52", "l52", "p1y", "p3y", "p5y"]) {
+      let x = num2(r[col(f)]);
+      o[f] = x != null ? x * k : null;
+    }
+    o.p != null && (out[id] = o);
+  }
+  return out;
+}
+
+// cf/src/cours.mjs
+async function cours(request, ctx, env) {
+  let cache = caches.default, key = new Request(new URL("/api/cours", request.url).toString()), hit = await cache.match(key);
+  if (hit) return hit;
+  let body;
+  try {
+    let items = {};
+    for (let [i, u] of COURS_CSVS.entries()) {
+      let r = await fetch(u, { cf: { cacheTtl: 300 } }).catch(() => null);
+      if (!r || !r.ok) {
+        if (i === 0) throw new Error("feuille " + (r ? r.status : "injoignable"));
+        continue;
+      }
+      Object.assign(items, parseCours(await r.text()));
+    }
+    if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
+    try {
+      let f = env && env.ASSETS ? await env.ASSETS.fetch(new URL("/data/cours.json", request.url)) : await fetch(new URL("/data/cours.json", request.url));
+      if (f.ok) {
+        let j = await f.json(), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
+        for (let [k, v] of Object.entries(j.items || {})) {
+          let it = items[k];
+          if (!it) {
+            items[k] = v;
+            continue;
+          }
+          for (let h of HF) it[h] == null && v[h] != null && (it[h] = v[h]);
+        }
+      }
+    } catch {
+    }
+    body = JSON.stringify({ updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items });
+  } catch (e) {
+    return Response.json({ error: String(e.message || e) }, { status: 503 });
+  }
+  let res = new Response(body, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=600" } });
+  return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
 }
 
 // cf/src/ia.mjs
@@ -926,6 +941,391 @@ function alertes(d, ids, origin, token, last) {
   return { subject: `Alerte bilan. : ${out[0].slice(0, 70)}`, ...w };
 }
 
+// cf/src/synthese.mjs
+var KEY = /^[ce]:[a-z0-9-]{1,60}$/, r2 = (v) => Math.round(v * 100) / 100, num = (v) => typeof v == "number" && isFinite(v) ? v : typeof v == "string" && v.trim() !== "" && isFinite(+v) ? +v : null, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v, d = 1) => {
+  let r = Math.round(v * 10 ** d) / 10 ** d;
+  return (r > 0 ? "+" : r < 0 ? "\u2212" : "") + NF2(Math.abs(r), d) + " %";
+}, eurS = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(Math.abs(Math.round(v))) + " \u20AC", MOIS = ["janvier", "f\xE9vrier", "mars", "avril", "mai", "juin", "juillet", "ao\xFBt", "septembre", "octobre", "novembre", "d\xE9cembre"], JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"], dateLongue = (ymd) => {
+  let d = /* @__PURE__ */ new Date(ymd + "T12:00:00Z");
+  return `${JOURS[d.getUTCDay()]} ${d.getUTCDate()}${d.getUTCDate() === 1 ? "er" : ""} ${MOIS[d.getUTCMonth()]}`;
+}, addJ = (ymd, n) => new Date(Date.parse(ymd + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10), jsem = (ymd) => (/* @__PURE__ */ new Date(ymd + "T12:00:00Z")).getUTCDay(), ouvre = (ymd) => {
+  let w = jsem(ymd);
+  return w >= 1 && w <= 5;
+}, seancePrecedente = (ymd) => {
+  let d = addJ(ymd, -1);
+  for (; !ouvre(d); ) d = addJ(d, -1);
+  return d;
+};
+function lundiDe(semaine) {
+  let m = /^(\d{4})-W(\d{2})$/.exec(semaine || "");
+  if (!m) return null;
+  let j4 = Date.UTC(+m[1], 0, 4), w = (new Date(j4).getUTCDay() + 6) % 7;
+  return new Date(j4 - w * 864e5 + (+m[2] - 1) * 7 * 864e5).toISOString().slice(0, 10);
+}
+function variationSemaine(cs, k, lundi, auj, live, semPrec) {
+  let fin = addJ(lundi, 6), s = cs && cs.items && cs.items[k], dates = cs && cs.dates || [], pts = [], partiel = !1;
+  if (s) {
+    let iRef = -1;
+    for (let i = 0; i < dates.length; i++) dates[i] < lundi && s[i] != null && (iRef = i);
+    let dans = [];
+    for (let i = 0; i < dates.length; i++) dates[i] >= lundi && dates[i] <= fin && s[i] != null && dans.push(i);
+    iRef < 0 && dans.length && (iRef = dans.shift(), partiel = !0), iRef >= 0 && (pts = [[dates[iRef], s[iRef]], ...dans.map((i) => [dates[i], s[i]])]);
+  }
+  if (!pts.length && semPrec && num(semPrec.items && semPrec.items[k]) > 0 && (pts = [[semPrec.date || null, semPrec.items[k]]]), !pts.length) return null;
+  if (live && num(live.p) > 0 && auj && auj >= lundi && auj <= fin) {
+    let seance = ouvre(auj) ? auj : seancePrecedente(auj), der = pts[pts.length - 1][0];
+    (!der || der < seance) && pts.push([seance, live.p]);
+  }
+  if (pts.length < 2) return null;
+  let a = pts[0][1], b = pts[pts.length - 1][1];
+  if (!(a > 0) || !(b > 0)) return null;
+  let pct2 = r2((b / a - 1) * 100);
+  return Math.abs(pct2) > 80 ? null : { pct: pct2, serie: pts.map((p) => p[1]), dates: pts.map((p) => p[0]), du: pts[0][0], au: pts[pts.length - 1][0], partiel };
+}
+var INDICES = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", sp500: "S&P 500", nasdaq100: "Nasdaq 100", dax: "DAX", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
+function indiceDe(k, meta2) {
+  if (!meta2) return null;
+  if (k.startsWith("c:")) return { FR: "cac40", EU: "stoxx50", US: "sp500" }[meta2.region] || null;
+  let ix = String(meta2.index || "");
+  return /^Nasdaq-?100$/i.test(ix) ? "nasdaq100" : /^S&P 500$/i.test(ix) ? "sp500" : /^Euro Stoxx 50$/i.test(ix) ? "stoxx50" : /^CAC 40$/i.test(ix) ? "cac40" : /^DAX$/i.test(ix) ? "dax" : /^FTSE 100$/i.test(ix) ? "ftse100" : /^Nikkei 225$/i.test(ix) ? "nikkei" : null;
+}
+var CATS = [
+  ["opa", "Offre publique", 100, /\bOP[AERS]\b|offre publique|tender offer|retrait obligatoire/i],
+  ["ca", "Chiffre d'affaires", 80, /chiffre d'affaires/i],
+  ["resultats", "R\xE9sultats", 90, /r[ée]sultat|rapport (annuel|trimestriel|semestriel|financier)|10-[QK]|20-F|semestriel|earnings/i],
+  ["dividende", "Dividende", 75, /dividende|acompte|d[ée]tachement/i],
+  ["operation", "Op\xE9ration ou accord", 65, /acquisition|cession|fusion|accord|rachat de la soci/i],
+  ["dirigeants", "Dirigeants", 60, /dirigeant|directeur g[ée]n[ée]ral|PDG|pr[ée]sident|gouvernance|nomination|conseil d'administration/i],
+  ["ag", "Assembl\xE9e g\xE9n\xE9rale", 45, /assembl[ée]e/i],
+  ["capital", "Capital et actions", 20, /nombre d'actions|droits de vote|actions propres|rachat d'actions/i]
+];
+function categorie(type, titre) {
+  let t = `${type || ""} ${titre || ""}`;
+  for (let [code, label, poids, re] of CATS) if (re.test(t)) return { code, label, poids };
+  return { code: "communique", label: "Communiqu\xE9", poids: 30 };
+}
+var CAT_INFO = Object.fromEntries([
+  ...CATS.map(([c, l, p]) => [c, { label: l, poids: p }]),
+  ["financement", { label: "Financement", poids: 50 }],
+  ["incident", { label: "Incident", poids: 70 }],
+  ["initie", { label: "Transactions des dirigeants", poids: 25 }],
+  ["agenda", { label: "Calendrier", poids: 15 }],
+  ["communique", { label: "Communiqu\xE9", poids: 30 }],
+  ["presse", { label: "Presse", poids: 22 }]
+]), ACTU_CAT = {
+  resultats: "resultats",
+  rapport: "resultats",
+  dividende: "dividende",
+  operation: "operation",
+  contrat: "operation",
+  dirigeants: "dirigeants",
+  assemblee: "ag",
+  emission: "financement",
+  incident: "incident",
+  rachat: "capital",
+  capital: "capital",
+  initie: "initie",
+  agenda: "agenda",
+  autre: "communique"
+}, SOURCES = { amf: "AMF", sec: "SEC", nasdaq: "Nasdaq Nordic", oslo: "Oslo B\xF8rs", nsm: "FCA" };
+function categorieActu(c, titre) {
+  let rx = categorie(null, titre), code = rx.code === "opa" || rx.code === "ca" && (!c || c === "resultats" || c === "autre") ? rx.code : ACTU_CAT[c] || rx.code;
+  return { code, ...CAT_INFO[code] || CAT_INFO.communique };
+}
+var coupe = (t, n) => {
+  if (t = String(t || "").replace(/\s+/g, " ").trim(), t.length <= n) return t;
+  let c = t.slice(0, n);
+  return c.slice(0, Math.max(c.lastIndexOf(". ") + 1, c.lastIndexOf(" "))).replace(/[,;:]$/, "") + "\u2026";
+};
+function resumeAnnonce(a) {
+  let gen = String(a.explication || "").trim(), lect = (a.lecture || []).map(String).filter((x) => x.trim() && x.trim() !== gen);
+  if (lect.length) return coupe(lect.slice(0, 2).join(" "), 260);
+  let ex = (a.extraits || []).map(String).find((x) => x.trim().length > 30);
+  return ex ? coupe(ex, 240) : gen || null;
+}
+function lignesPf(pf) {
+  if (!pf || typeof pf != "object") return [];
+  let out = /* @__PURE__ */ new Map(), envDef = pf.cfg && typeof pf.cfg.env == "string" ? pf.cfg.env : null;
+  if (Array.isArray(pf.l)) for (let l of pf.l) {
+    if (!l || typeof l.k != "string" || !KEY.test(l.k)) continue;
+    let o = out.get(l.k) || { k: l.k, q: 0, m: 0, cout: 0, env: [] }, q = num(l.q), m = num(l.m), pru = num(l.pru), env = typeof l.env == "string" && l.env ? l.env : envDef;
+    q > 0 ? (o.q += q, pru > 0 && (o.cout += q * pru)) : m > 0 && (o.m += m), env && !o.env.includes(env) && o.env.push(env), out.set(l.k, o);
+  }
+  else if (Array.isArray(pf.ops)) for (let op of pf.ops) {
+    if (!op) continue;
+    let k = typeof op.k == "string" && KEY.test(op.k) ? op.k : typeof op.id == "string" && /^[a-z0-9-]{1,60}$/.test(op.id) ? (op.etf ? "e:" : "c:") + op.id : null;
+    if (!k) continue;
+    let q = num(op.q ?? op.qte ?? op.quantite), sens = /vente|vend|sell|cession/i.test(String(op.sens || op.type || "")) ? -1 : 1, o = out.get(k) || { k, q: 0, m: 0, cout: 0, env: [] };
+    if (q > 0) o.q += sens * q;
+    else {
+      let m = num(op.m ?? op.montant);
+      m > 0 && (o.m += sens * m);
+    }
+    out.set(k, o);
+  }
+  return [...out.values()].filter((o) => o.q > 0 || o.m > 0);
+}
+var versEur = (v, cur, fx) => v == null ? null : cur === "EUR" || !cur ? v : fx && fx[cur] > 0 ? v * fx[cur] : null, PEA_PAYS = new Set("AT BE BG CY CZ DE DK EE ES FI FR GR HR HU IE IT LT LU LV MT NL PL PT RO SE SI SK IS LI NO".split(" "));
+function alertesPf(lp, d) {
+  let tot = lp.reduce((a, l) => a + l.v, 0);
+  if (!(tot > 0)) return [];
+  let A = [], big2 = lp.slice().sort((a, b) => b.v - a.v), P = (v) => NF2(v * 100, 0) + " %", act = big2.find((l) => l.k.startsWith("c:"));
+  act && act.v / tot > 0.25 && A.push({ code: "ligne", niveau: "vig", valeur: r2(act.v / tot * 100), k: act.k, texte: `Une seule action p\xE8se ${P(act.v / tot)} du portefeuille (${d.names[act.k]}).`, pourquoi: `Si elle baissait de 30 %, le portefeuille perdrait environ ${P(act.v / tot * 0.3)}. Beaucoup d'investisseurs limitent une action seule \xE0 5 ou 10 %.` });
+  let top3 = big2.slice(0, 3).reduce((a, l) => a + l.v, 0) / tot;
+  lp.length >= 4 && top3 > 0.7 && A.push({ code: "top3", niveau: "vig", valeur: r2(top3 * 100), texte: `Trois lignes concentrent ${P(top3)} de votre argent.`, pourquoi: "Votre r\xE9sultat d\xE9pend surtout d'elles. C'est un choix possible, \xE0 faire en connaissance de cause." });
+  let etfs = lp.filter((l) => l.k.startsWith("e:") && d.etf[l.k] && num(d.etf[l.k].ter) != null), etfV = etfs.reduce((a, l) => a + l.v, 0);
+  if (etfV > 0) {
+    let ter = etfs.reduce((a, l) => a + l.v * d.etf[l.k].ter, 0) / etfV;
+    ter > 0.4 && A.push({ code: "frais", niveau: "moyen", valeur: r2(ter), texte: `Vos ETF co\xFBtent en moyenne ${NF2(ter, 2)} % par an.`, pourquoi: "Sur 20 ans, 0,3 point de frais en plus peut co\xFBter environ 6 % du capital final. Des ETF \xE9quivalents existent souvent \xE0 0,10 ou 0,20 %." });
+  }
+  let elig = 0, connu = 0, horsPea = [];
+  for (let l of lp) {
+    let ok = null;
+    if (l.k.startsWith("e:")) {
+      let e = d.etf[l.k];
+      e && typeof e.pea == "boolean" && (ok = e.pea);
+    } else {
+      let isin = (d.isin[l.k] || "").slice(0, 2);
+      /^[A-Z]{2}$/.test(isin) && (ok = PEA_PAYS.has(isin));
+    }
+    ok != null && (connu += l.v, ok && (elig += l.v), !ok && (l.env || []).includes("pea") && horsPea.push(l));
+  }
+  if (horsPea.length && A.push({ code: "pea_hors", niveau: "vig", valeur: horsPea.length, texte: `${horsPea.map((l) => d.names[l.k]).slice(0, 3).join(", ")} ${horsPea.length > 1 ? "sont rang\xE9s" : "est rang\xE9"} dans votre PEA mais ne ${horsPea.length > 1 ? "semblent" : "semble"} pas \xE9ligible${horsPea.length > 1 ? "s" : ""}.`, pourquoi: "Un titre non \xE9ligible ne peut pas \xEAtre achet\xE9 dans un PEA. V\xE9rifiez la ligne chez votre courtier : erreur de saisie, ou titre log\xE9 sur un autre compte." }), connu > 0 && !lp.some((l) => (l.env || []).length)) {
+    let part = elig / connu;
+    A.push({ code: "pea", niveau: part >= 0.999 ? "fort" : "info", valeur: r2(part * 100), texte: part >= 0.999 ? "Toutes vos lignes semblent \xE9ligibles au PEA." : `${P(part)} de vos lignes semblent \xE9ligibles au PEA.`, pourquoi: "Le PEA accepte les actions d'entreprises dont le si\xE8ge est dans l'Union europ\xE9enne ou l'Espace \xE9conomique europ\xE9en, et les ETF marqu\xE9s PEA. Rep\xE8re calcul\xE9 d'apr\xE8s le pays du code ISIN : v\xE9rifiez chez votre courtier." });
+  }
+  return A;
+}
+function evolutionAlertes(A, prec) {
+  let P = new Map((prec && prec.portefeuille && prec.portefeuille.alertes || []).map((a) => [a.code, a]));
+  if (!prec || !prec.portefeuille) return { alertes: A.map((a) => ({ ...a, evol: null })), levees: [] };
+  let alertes2 = A.map((a) => {
+    let p = P.get(a.code);
+    return { ...a, evol: p ? a.valeur != null && p.valeur != null && Math.abs(a.valeur - p.valeur) >= 3 ? a.valeur > p.valeur ? "hausse" : "baisse" : "stable" : "nouveau", avant: p ? p.valeur : null };
+  }), levees = [...P.values()].filter((p) => !A.some((a) => a.code === p.code) && p.niveau !== "fort" && p.niveau !== "info").map((p) => ({ code: p.code, texte: p.texte }));
+  return { alertes: alertes2, levees };
+}
+function faitsSynthese(d, { favoris = [], pf = null } = {}, semaine, opts = {}) {
+  let auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null, LP = lignesPf(pf).filter((l) => d.names[l.k]), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY.test(k))), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k]).slice(0, 260), idx = {};
+  for (let id of Object.keys(INDICES)) {
+    let v = variationSemaine(d.cs, "i:" + id, lundi, auj, d.px["i:" + id], d.sem);
+    v && (idx[id] = { id, nom: INDICES[id], pct: v.pct, serie: v.serie, partiel: v.partiel });
+  }
+  let lignes = keys.map((k) => {
+    let p = d.px[k], v = variationSemaine(d.cs, k, lundi, auj, p, d.sem), ix = indiceDe(k, k.startsWith("e:") ? d.etf[k] : d.meta[k]), l = {
+      k,
+      nom: d.names[k],
+      type: k.startsWith("e:") ? "etf" : "action",
+      variation_semaine_pct: v ? v.pct : null,
+      cours: p && p.p != null ? p.p : null,
+      devise: p && p.cur || null,
+      serie: v ? v.serie : null,
+      du: v ? v.du : null,
+      partiel: v ? v.partiel : !1,
+      favori: favSet.has(k),
+      en_portefeuille: pfSet.has(k),
+      indice: null,
+      ecart_pts: null
+    };
+    return ix && idx[ix] && (l.indice = { id: ix, nom: INDICES[ix], pct: idx[ix].pct }, l.variation_semaine_pct != null && (l.ecart_pts = r2(l.variation_semaine_pct - idx[ix].pct))), l;
+  }).sort((a, b) => (b.variation_semaine_pct ?? -1e9) - (a.variation_semaine_pct ?? -1e9)), L = Object.fromEntries(lignes.map((l) => [l.k, l])), mv = lignes.filter((l) => l.variation_semaine_pct != null), court2 = (l) => l && { k: l.k, nom: l.nom, variation_semaine_pct: l.variation_semaine_pct }, portefeuille = null;
+  if (LP.length) {
+    let lp = LP.map((l) => {
+      let p = d.px[l.k], vEur = p && l.q > 0 ? versEur(p.p * l.q, p.cur, d.fx) : null;
+      return { ...l, v: vEur ?? (l.m || 0), estime: vEur == null };
+    }).filter((l) => l.v > 0), tot = lp.reduce((a, l) => a + l.v, 0);
+    if (tot > 0) {
+      let varE = 0, couvert = 0;
+      for (let l of lp) {
+        let x = L[l.k], r = x && x.variation_semaine_pct;
+        l.poids = r2(l.v / tot * 100), r != null && (l.var_eur = l.v - l.v / (1 + r / 100), varE += l.var_eur, couvert += l.v), x && (x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime });
+      }
+      let jours = [...new Set(lp.flatMap((l) => {
+        let v = variationSemaine(d.cs, l.k, lundi, auj, d.px[l.k], d.sem);
+        return v ? v.dates.filter(Boolean) : [];
+      }))].sort(), serie = null;
+      if (jours.length >= 2) {
+        let parL = lp.map((l) => {
+          let v = variationSemaine(d.cs, l.k, lundi, auj, d.px[l.k], d.sem);
+          if (!v) return null;
+          let m = Object.fromEntries(v.dates.map((x, i) => [x, v.serie[i]]));
+          return { l, m, der: v.serie[v.serie.length - 1] };
+        }).filter(Boolean);
+        serie = jours.map((j) => Math.round(parL.reduce((a, { l, m, der }) => {
+          let px = m[j];
+          if (px == null) {
+            let ks = Object.keys(m).filter((x) => x <= j).sort();
+            px = ks.length ? m[ks[ks.length - 1]] : m[Object.keys(m).sort()[0]];
+          }
+          return a + l.v * px / der;
+        }, 0) + lp.filter((l) => !parL.some((x) => x.l === l)).reduce((a, l) => a + l.v, 0)));
+      }
+      let debut = tot - varE, ev = evolutionAlertes(alertesPf(lp, d), prec);
+      portefeuille = {
+        valeur_eur: Math.round(tot),
+        var_eur: couvert ? r2(varE) : null,
+        var_pct: couvert && debut > 0 ? r2(varE / debut * 100) : null,
+        couverture_pct: r2(couvert / tot * 100),
+        lignes: lp.length,
+        estime: lp.some((l) => l.estime),
+        serie,
+        vs: ["cac40", "sp500"].filter((i) => idx[i]).map((i) => ({ id: i, nom: INDICES[i], pct: idx[i].pct })),
+        alertes: ev.alertes,
+        levees: ev.levees,
+        plus_lourde: (() => {
+          let b = lp.slice().sort((a, b2) => b2.v - a.v)[0];
+          return b ? { k: b.k, nom: d.names[b.k], poids_pct: b.poids } : null;
+        })()
+      };
+    }
+  }
+  let ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))), off = Object.entries(d.ana || {}).filter(([, a]) => a && ids.has(a.id) && a.date >= lundi && a.date <= dimanche).map(([u, a]) => {
+    let cat = categorie(a.type, a.titre), x = L["c:" + a.id], fort = x && x.variation_semaine_pct != null && Math.abs(x.variation_semaine_pct) >= 5;
+    return {
+      k: "c:" + a.id,
+      nom: d.names["c:" + a.id],
+      date: a.date,
+      type: a.type || null,
+      titre: a.titre || null,
+      categorie: cat.code,
+      categorie_label: cat.label,
+      poids: cat.poids + ((a.chiffres || []).length ? 8 : 0) + (fort ? 12 : 0) + (pfSet.has("c:" + a.id) ? 5 : 0),
+      resume: resumeAnnonce(a),
+      chiffres: (a.chiffres || []).slice(0, 4),
+      lecture: (a.lecture || []).slice(0, 3),
+      source: /^https:\/\//.test(u) ? u : a.url || null,
+      origine: "officiel",
+      lien: "/entreprise/" + a.id + "/actualite"
+    };
+  }), dansSemaine = (x) => {
+    let j = String(x || "").slice(0, 10);
+    return j >= lundi && j <= dimanche;
+  }, url = (u) => typeof u == "string" && /^https:\/\//.test(u) ? u : null, actuO = [], presse2 = [];
+  for (let [k, j] of Object.entries(d.actu || {})) {
+    if (!L[k] || !j) continue;
+    let x = L[k], fort = x.variation_semaine_pct != null && Math.abs(x.variation_semaine_pct) >= 5, lien2 = "/entreprise/" + k.slice(2) + "/actualite";
+    for (let a of Array.isArray(j.o) ? j.o : []) {
+      if (!a || !dansSemaine(a.d) || !url(a.u)) continue;
+      let titre = a.tf || a.t || null, cat = categorieActu(a.c, titre), f2 = Array.isArray(a.f) ? a.f.filter((c) => Array.isArray(c) && c.length >= 2).slice(0, 4) : [], r = Array.isArray(a.r) ? a.r.map(String).slice(0, 3) : [], enClair = a.x && typeof a.x.c == "string" ? a.x.c : null, change = a.x && typeof a.x.ch == "string" ? a.x.ch : null;
+      actuO.push({
+        k,
+        nom: d.names[k],
+        date: String(a.d).slice(0, 10),
+        type: cat.label,
+        titre,
+        categorie: cat.code,
+        categorie_label: cat.label,
+        poids: cat.poids + (num(a.i) || 0) * 6 + (f2.length ? 8 : 0) + (fort ? 12 : 0) + (pfSet.has(k) ? 5 : 0) + (a.p ? 4 : 0),
+        resume: enClair ? coupe(enClair, 280) : r.length ? coupe(r.join(" "), 260) : null,
+        change: change ? coupe(change, 280) : null,
+        chiffres: f2,
+        lecture: r,
+        source: url(a.u),
+        source_nom: SOURCES[a.s] || null,
+        origine: "officiel",
+        lien: lien2
+      });
+    }
+    for (let a of (Array.isArray(j.p) ? j.p : []).filter((a2) => a2 && dansSemaine(a2.d) && url(a2.u)).slice(0, 3)) {
+      let cat = categorie(null, a.t), code = cat.code === "communique" ? "presse" : cat.code;
+      presse2.push({
+        k,
+        nom: d.names[k],
+        date: String(a.d).slice(0, 10),
+        type: "Article de presse",
+        titre: a.t || null,
+        categorie: code,
+        categorie_label: (CAT_INFO[code] || CAT_INFO.presse).label,
+        poids: Math.min(cat.poids, 60) - 15 + (fort ? 8 : 0),
+        resume: null,
+        chiffres: [],
+        lecture: [],
+        source: url(a.u),
+        site: a.s || null,
+        origine: "presse",
+        lien: lien2
+      });
+    }
+    if (Array.isArray(j)) for (let a of j) {
+      if (!a || !url(a.url) || !dansSemaine(a.date)) continue;
+      let cat = categorie(a.type || a.categorie, a.titre || a.title);
+      presse2.push({
+        k,
+        nom: d.names[k],
+        date: String(a.date).slice(0, 10),
+        type: a.type || "Article de presse",
+        titre: a.titre || a.title || null,
+        categorie: cat.code,
+        categorie_label: cat.label,
+        poids: cat.poids - 10,
+        resume: a.resume ? coupe(a.resume, 240) : null,
+        chiffres: [],
+        lecture: [],
+        source: url(a.url),
+        site: a.source || a.site || null,
+        origine: "presse",
+        lien: lien2
+      });
+    }
+  }
+  let urlsO = new Map(actuO.map((a) => [a.source, a]));
+  for (let a of off) {
+    let o = urlsO.get(a.source);
+    o && (!o.chiffres.length && a.chiffres.length && (o.chiffres = a.chiffres), o.resume || (o.resume = a.resume));
+  }
+  let vus = /* @__PURE__ */ new Set(), annonces = [...actuO, ...off.filter((a) => !urlsO.has(a.source)), ...presse2].sort((a, b) => b.poids - a.poids || String(b.date).localeCompare(a.date)).filter((a) => {
+    let c = a.source || a.k + "|" + (a.titre || a.type) + "|" + a.date;
+    return vus.has(c) ? !1 : (vus.add(c), !0);
+  }).slice(0, 30), debutAv = auj && auj > lundi ? auj : lundi, finAv = addJ(debutAv, 14), a_venir = (d.ev || []).filter((e) => e && ids.has(e.id) && e.date >= debutAv && e.date <= finAv).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12).map((e) => {
+    let c = categorie(e.type, e.label);
+    return { k: "c:" + e.id, id: e.id, nom: d.names["c:" + e.id], date: e.date, type: e.type || null, label: e.label || e.type || "", categorie: c.code, source: e.source || null, lien: "/entreprise/" + e.id + "/agenda" };
+  }), f = {
+    v: 2,
+    semaine,
+    genere: Date.now(),
+    du: lundi,
+    au: dimanche,
+    lignes,
+    moyenne: mv.length ? r2(mv.reduce((a, l) => a + l.variation_semaine_pct, 0) / mv.length) : null,
+    meilleure: court2(mv[0]) || null,
+    pire: mv.length > 1 ? court2(mv[mv.length - 1]) : null,
+    hausses: mv.filter((l) => l.variation_semaine_pct > 0).length,
+    baisses: mv.filter((l) => l.variation_semaine_pct < 0).length,
+    partiel: mv.length > 0 && mv.every((l) => l.partiel),
+    depuis: mv.length && mv.map((l) => l.du).filter(Boolean).sort()[0] || null,
+    indices: Object.values(idx).map(({ id, nom, pct: pct2, partiel }) => ({ id, nom, pct: pct2, partiel })),
+    portefeuille,
+    annonces,
+    a_venir,
+    texte: null
+  };
+  return f.essentiel = essentielDe(f), f.lecture_min = lectureMin(f), f;
+}
+function essentielDe(f) {
+  let P = [], mv = f.lignes.filter((l) => l.variation_semaine_pct != null), pf = f.portefeuille, cac = (f.indices || []).find((i) => i.id === "cac40"), quand = f.partiel && f.depuis ? `depuis le ${dateLongue(f.depuis)}` : "cette semaine";
+  if (pf && pf.var_eur != null && pf.var_pct != null) {
+    let vs = pf.vs && pf.vs.length ? `, contre ${pf.vs.map((i) => `${sgnP2(i.pct)} pour le ${i.nom}`).join(" et ")}` : "";
+    P.push(`Votre portefeuille ${pf.var_eur >= 0 ? "a gagn\xE9" : "a perdu"} ${eurS(pf.var_eur).replace(/^[+−]/, "")} (${sgnP2(pf.var_pct)}) ${quand}${vs}.`);
+  } else mv.length && P.push(`${mv.length > 1 ? "Vos " + mv.length + " valeurs suivies ont" : "Votre valeur suivie a"} \xE9volu\xE9 de ${sgnP2(f.moyenne)}${mv.length > 1 ? " en moyenne" : ""} ${quand}${mv.length > 1 ? ` (${f.hausses} en hausse, ${f.baisses} en baisse)` : ""}${cac ? `, contre ${sgnP2(cac.pct)} pour le CAC 40` : ""}.`);
+  let fort = mv.slice().sort((a, b) => Math.abs(b.variation_semaine_pct) - Math.abs(a.variation_semaine_pct))[0];
+  if (fort && Math.abs(fort.variation_semaine_pct) >= 0.5) {
+    let ann = f.annonces.filter((a) => a.k === fort.k && a.origine === "officiel").sort((a, b) => b.poids - a.poids)[0], sens = fort.variation_semaine_pct > 0 ? "la plus forte hausse" : "la plus forte baisse", c0 = ann && ann.chiffres && ann.chiffres[0], chif = c0 ? ` : ${String(c0[0]).charAt(0).toLowerCase() + String(c0[0]).slice(1)} ${c0[1]}` : "";
+    P.push(ann ? `${fort.nom} signe ${sens} de votre liste (${sgnP2(fort.variation_semaine_pct)}), la semaine de sa publication \xAB ${coupe(ann.titre || ann.type || ann.categorie_label, 90)} \xBB${chif}.` : `${fort.nom} signe ${sens} de votre liste (${sgnP2(fort.variation_semaine_pct)}). Aucune annonce officielle de la semaine ne l'explique : la cause n'est pas connue.`);
+  } else if (f.annonces.length) {
+    let a = f.annonces[0];
+    P.push(`\xC0 retenir c\xF4t\xE9 annonces : ${a.nom}, ${String(a.categorie_label || a.type || "communiqu\xE9").toLowerCase()} le ${dateLongue(a.date)}.`);
+  }
+  if (f.a_venir.length) {
+    let e = f.a_venir[0], n = f.a_venir.length;
+    P.push(`\xC0 venir : ${e.nom}, ${String(e.label).replace(/\.$/, "")}, le ${dateLongue(e.date)}${n > 1 ? `, puis ${n - 1} autre${n > 2 ? "s" : ""} rendez-vous d'ici deux semaines` : ""}.`);
+  } else (mv.length || f.annonces.length) && P.push("Aucune date de r\xE9sultats, de dividende ou d'assembl\xE9e n'est annonc\xE9e pour vos valeurs dans les deux prochaines semaines.");
+  return P.slice(0, 3);
+}
+function lectureMin(f) {
+  let mots = [...f.essentiel || [], ...f.annonces.slice(0, 8).map((a) => (a.resume || "") + " " + (a.titre || "")), ...f.a_venir.map((e) => e.label), f.texte || ""].join(" ").split(/\s+/).filter(Boolean).length + f.lignes.length * 4 + (f.portefeuille && f.portefeuille.alertes.length || 0) * 25;
+  return Math.max(1, Math.min(5, Math.ceil(mots / 200)));
+}
+
 // cf/src/espace.mjs
 var SCHEMA4 = [
   "CREATE TABLE IF NOT EXISTS comptes (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, hash TEXT NOT NULL, sel TEXT NOT NULL, created INTEGER NOT NULL, secours TEXT, premium TEXT, teaser INTEGER NOT NULL DEFAULT 0, last_tache INTEGER NOT NULL DEFAULT 0, last_semaine TEXT)",
@@ -947,7 +1347,7 @@ async function init5(db) {
     ready6 = !0;
   }
 }
-var ITER = 1e5, JOUR = 864e5, SESSION_MS = 60 * JOUR, FENETRE = 15 * 6e4, MAX_ESSAIS = 8, MAX_CHAMP = 60 * 1024, KEY = /^[ce]:[a-z0-9-]{1,60}$/, hex = (u8) => [...u8].map((b) => b.toString(16).padStart(2, "0")).join(""), alea = (n) => hex(crypto.getRandomValues(new Uint8Array(n))), egal = (a, b) => {
+var ITER = 1e5, JOUR = 864e5, SESSION_MS = 60 * JOUR, FENETRE = 15 * 6e4, MAX_ESSAIS = 8, MAX_CHAMP = 60 * 1024, KEY2 = /^[ce]:[a-z0-9-]{1,60}$/, hex = (u8) => [...u8].map((b) => b.toString(16).padStart(2, "0")).join(""), alea = (n) => hex(crypto.getRandomValues(new Uint8Array(n))), egal = (a, b) => {
   if (typeof a != "string" || typeof b != "string" || a.length !== b.length) return !1;
   let r = 0;
   for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
@@ -992,15 +1392,15 @@ async function limite(env, cles) {
 async function echec(env, cles) {
   for (let c of cles) await env.DB.prepare("INSERT INTO essais (cle, at) VALUES (?, ?)").bind(c, Date.now()).run();
 }
-var TROP = () => json3({ error: "Trop de tentatives. Par s\xE9curit\xE9, r\xE9essayez dans un quart d'heure." }, 429);
+var TROP = () => json2({ error: "Trop de tentatives. Par s\xE9curit\xE9, r\xE9essayez dans un quart d'heure." }, 429);
 async function lire(request) {
   let t = await request.text();
-  if (t.length > 4e5) return { err: json3({ error: "Donn\xE9es trop volumineuses." }, 413) };
+  if (t.length > 4e5) return { err: json2({ error: "Donn\xE9es trop volumineuses." }, 413) };
   try {
     let b = t ? JSON.parse(t) : {};
-    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json3({ error: "Requ\xEAte illisible." }, 400) };
+    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json2({ error: "Requ\xEAte illisible." }, 400) };
   } catch {
-    return { err: json3({ error: "Requ\xEAte illisible." }, 400) };
+    return { err: json2({ error: "Requ\xEAte illisible." }, 400) };
   }
 }
 var parse = (s, d) => {
@@ -1021,8 +1421,8 @@ function valider(b, strict) {
       f = null;
     }
     if (f) {
-      if (strict && f.some((x) => typeof x != "string" || !KEY.test(x))) return { error: "Favori invalide dans la liste." };
-      if (f = [...new Set(f.filter((x) => typeof x == "string" && KEY.test(x)))], f.length > 200) {
+      if (strict && f.some((x) => typeof x != "string" || !KEY2.test(x))) return { error: "Favori invalide dans la liste." };
+      if (f = [...new Set(f.filter((x) => typeof x == "string" && KEY2.test(x)))], f.length > 200) {
         if (strict) return { error: "200 favoris au plus." };
         f = f.slice(0, 200);
       }
@@ -1065,17 +1465,45 @@ var jourSemaine = (ymd) => (/* @__PURE__ */ new Date(ymd + "T12:00:00Z")).getUTC
 async function siteData2(request, env) {
   let get = async (p) => {
     try {
-      return await (await env.ASSETS.fetch(new Request(new URL(p, request.url)))).json();
+      let r = await env.ASSETS.fetch(new Request(new URL(p, request.url)));
+      return r.ok === !1 ? null : await r.json();
     } catch {
       return null;
     }
-  }, [uni, etf, ana, ag, agAuto, sem] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json")]), px = {};
+  }, [uni, etf, ana, ag, agAuto, sem, cs, fx] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json")]), px = {};
   try {
     px = (await (await cours(new Request(new URL("/api/cours", request.url)))).json()).items || {};
   } catch {
   }
-  let names = {};
-  return (uni && uni.companies || []).forEach((c) => names["c:" + c.id] = c.name), (etf && etf.list || []).forEach((e) => names["e:" + e.id] = e.name), { names, px, sem: sem && sem.items || {}, ana: ana && ana.items || {}, ev: [...ag && ag.events || [], ...agAuto && agAuto.events || []] };
+  let names = {}, meta2 = {}, isin = {}, etfm = {};
+  (uni && uni.companies || []).forEach((c) => {
+    names["c:" + c.id] = c.name, meta2["c:" + c.id] = { region: c.region }, c.isin && (isin["c:" + c.id] = c.isin);
+  }), (etf && etf.list || []).forEach((e) => {
+    names["e:" + e.id] = e.name, etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index };
+  });
+  let actuCache = /* @__PURE__ */ new Map();
+  return {
+    names,
+    meta: meta2,
+    isin,
+    etf: etfm,
+    px,
+    fx: fx && fx.eur || { EUR: 1 },
+    cs: cs && Array.isArray(cs.dates) ? cs : null,
+    sem: sem && sem.items ? sem : null,
+    ana: ana && ana.items || {},
+    ev: [...ag && ag.events || [], ...agAuto && agAuto.events || []],
+    // Articles par entreprise publiés par la collecte d'actualités (cf/site/data/actu/c/<id>.json), lus à la demande
+    actuDe: async (ids) => {
+      let out = {};
+      for (let id of ids.slice(0, 20)) {
+        actuCache.has(id) || actuCache.set(id, get("/data/actu/c/" + id + ".json"));
+        let j = await actuCache.get(id);
+        j && (Array.isArray(j) || Array.isArray(j.o) || Array.isArray(j.p)) && (out["c:" + id] = j);
+      }
+      return out;
+    }
+  };
 }
 function clesPortefeuille(pf, names) {
   let out = /* @__PURE__ */ new Set(), n = 0, walk = (x, depth) => {
@@ -1086,34 +1514,14 @@ function clesPortefeuille(pf, names) {
       }
       for (let f of ["k", "id"]) {
         let v = x[f];
-        typeof v == "string" && (KEY.test(v) ? out.add(v) : /^[a-z0-9-]{1,60}$/.test(v) && names["c:" + v] && out.add("c:" + v));
+        typeof v == "string" && (KEY2.test(v) ? out.add(v) : /^[a-z0-9-]{1,60}$/.test(v) && names["c:" + v] && out.add("c:" + v));
       }
       for (let v of Object.values(x)) v && typeof v == "object" && walk(v, depth + 1);
     }
   };
   return walk(pf, 0), [...out];
 }
-var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r2 = (v) => Math.round(v * 100) / 100, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF2(Math.abs(v)) + " %";
-function faitsSemaine(d, keys, semaine) {
-  let lignes = keys.filter((k) => d.names[k]).map((k) => {
-    let p = d.px[k], w = d.sem[k], v = p && p.p && w ? r2((p.p / w - 1) * 100) : null;
-    return { k, nom: d.names[k], variation_semaine_pct: v, cours: p && p.p != null ? p.p : null, devise: p && p.cur || null };
-  }).sort((a, b) => (b.variation_semaine_pct ?? -1e9) - (a.variation_semaine_pct ?? -1e9)), mv = lignes.filter((l) => l.variation_semaine_pct != null), court2 = (l) => l && { k: l.k, nom: l.nom, variation_semaine_pct: l.variation_semaine_pct }, today2 = jourParis(), il7 = jourParis(Date.now() - 7 * JOUR), in14 = jourParis(Date.now() + 14 * JOUR), ids = new Set(lignes.filter((l) => l.k.startsWith("c:")).map((l) => l.k.slice(2))), annonces = Object.entries(d.ana).filter(([, a]) => a && ids.has(a.id) && a.date >= il7 && a.chiffres && a.chiffres.length).sort((x, y) => String(y[1].date).localeCompare(x[1].date)).slice(0, 12).map(([u, a]) => ({ k: "c:" + a.id, nom: d.names["c:" + a.id], date: a.date, type: a.type || null, titre: a.titre || null, chiffres: a.chiffres.slice(0, 4), lecture: (a.lecture || []).slice(0, 3), source: u, lien: "/entreprise/" + a.id + "/actualite" })), a_venir = d.ev.filter((e) => e && ids.has(e.id) && e.date >= today2 && e.date <= in14).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 10).map((e) => ({ k: "c:" + e.id, nom: d.names["c:" + e.id], date: e.date, type: e.type || null, label: e.label || "", lien: "/entreprise/" + e.id + "/agenda" }));
-  return {
-    semaine,
-    genere: Date.now(),
-    lignes,
-    moyenne: mv.length ? r2(mv.reduce((a, l) => a + l.variation_semaine_pct, 0) / mv.length) : null,
-    meilleure: court2(mv[0]) || null,
-    pire: mv.length > 1 ? court2(mv[mv.length - 1]) : null,
-    hausses: mv.filter((l) => l.variation_semaine_pct > 0).length,
-    baisses: mv.filter((l) => l.variation_semaine_pct < 0).length,
-    annonces,
-    a_venir,
-    texte: null
-  };
-}
-var SYS_BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine et les prochaines dates.
+var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", SYS_BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine et les prochaines dates.
 R\xE8gles strictes :
 - Explique la semaine de fa\xE7on factuelle et p\xE9dagogique, en 120 \xE0 220 mots, en deux ou trois courts paragraphes de texte suivi.
 - Vouvoie le lecteur.
@@ -1123,19 +1531,32 @@ R\xE8gles strictes :
 - Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
 ${REGLES}`, faitsIA = (c) => ({
   semaine: c.semaine,
+  periode: c.partiel && c.depuis ? "depuis le " + c.depuis : "semaine compl\xE8te",
   moyenne_semaine_pct: c.moyenne,
   nombre_de_lignes: c.lignes.length,
   hausses: c.hausses,
   baisses: c.baisses,
-  lignes: c.lignes.filter((l) => l.variation_semaine_pct != null).slice(0, 25).map((l) => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct })),
-  annonces: c.annonces.slice(0, 6).map((a) => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, lecture: a.lecture })),
-  a_venir: c.a_venir.slice(0, 6).map((e) => ({ entreprise: e.nom, date: e.date, evenement: e.label }))
+  essentiel_calcule: c.essentiel || [],
+  indices: (c.indices || []).map((i) => ({ indice: i.nom, variation_semaine_pct: i.pct })),
+  portefeuille: c.portefeuille ? {
+    valeur_eur: c.portefeuille.valeur_eur,
+    variation_semaine_eur: c.portefeuille.var_eur,
+    variation_semaine_pct: c.portefeuille.var_pct,
+    alertes: (c.portefeuille.alertes || []).filter((a) => a.niveau !== "fort").map((a) => ({ alerte: a.texte, evolution: a.evol }))
+  } : null,
+  lignes: c.lignes.filter((l) => l.variation_semaine_pct != null).slice(0, 25).map((l) => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct, indice_de_reference: l.indice ? l.indice.nom : null, ecart_avec_indice_points: l.ecart_pts, dans_le_portefeuille: !!l.en_portefeuille })),
+  annonces: (c.annonces || []).slice(0, 8).map((a) => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, en_clair: a.resume })),
+  a_venir: (c.a_venir || []).slice(0, 6).map((e) => ({ entreprise: e.nom, date: e.date, evenement: e.label }))
 }), redige = rediger;
-async function assurerBilan(env, d, compteId, keys, semaine, stocke) {
-  let cles = [...keys].sort().join(","), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)), c = stocke ? parse(stocke.contenu, null) : null;
-  if (!(!c || c._cles !== cles || !c._final && (Date.now() - c.genere > JOUR || weekend))) return { c, change: !1 };
-  let n = faitsSemaine(d, keys, semaine);
-  n._cles = cles, n._final = weekend, n._ia_n = c && c._ia_n || 0, n._ia_at = c && c._ia_at || 0;
+function suiviDe(row, names) {
+  let pf = parse(row && row.portefeuille, null), lp = lignesPf(pf).filter((l) => names[l.k]), fav = (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY2.test(k)), autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
+  return { favoris: [.../* @__PURE__ */ new Set([...fav, ...autres])], pf, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map((l) => `${l.k}:${r22(l.q)}:${Math.round(l.m)}`).sort().join(",") };
+}
+async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
+  let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)), c = stocke ? parse(stocke.contenu, null) : null;
+  if (!(!c || c.v !== 2 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
+  let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
+  n._cles = s.cles, n._final = weekend, n._ia_n = c && c._ia_n || 0, n._ia_at = c && c._ia_at || 0, c && c.texte && c._cles === s.cles && c.v === 2 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
   let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length;
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
 }
@@ -1147,20 +1568,23 @@ async function commenter(env, compteId, c) {
     t = await redige(env, { systeme: SYS_BILAN, utilisateur: JSON.stringify(faitsIA(c)), max_tokens: 600, temperature: 0.2 });
   } catch {
   }
-  return t && String(t).trim().length > 80 && (c.texte = String(t).replace(/—/g, ",").trim()), await env.DB.prepare("UPDATE bilans SET contenu = ? WHERE compte = ? AND semaine = ?").bind(JSON.stringify(c), compteId, c.semaine).run(), c;
+  return t && String(t).trim().length > 80 && (c.texte = String(t).replace(/—/g, ",").trim(), c.annonces && (c.lecture_min = lectureMin(c))), await env.DB.prepare("UPDATE bilans SET contenu = ? WHERE compte = ? AND semaine = ?").bind(JSON.stringify(c), compteId, c.semaine).run(), c;
 }
-var publicBilan = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_")));
+var publicBilan = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_"))), precedenteDe = (semaine) => {
+  let m = /^(\d{4})-W(\d{2})$/.exec(semaine), l = new Date(Date.UTC(+m[1], 0, 4));
+  return l.setUTCDate(l.getUTCDate() - (l.getUTCDay() + 6) % 7 + (+m[2] - 1) * 7 - 7), semaineIso(l.toISOString().slice(0, 10));
+};
 async function espace(request, env) {
-  if (!env || !env.DB) return json3({ error: "L'espace personnel est indisponible pour le moment." }, 503);
+  if (!env || !env.DB) return json2({ error: "L'espace personnel est indisponible pour le moment." }, 503);
   await init5(env.DB);
   let url = new URL(request.url), path = url.pathname.replace(/\/+$/, ""), m = request.method;
   if (m !== "GET" && m !== "HEAD" && path !== "/api/espace/tache") {
     let o = request.headers.get("origin");
     if (o && o !== "null")
       try {
-        if (new URL(o).host !== url.host) return json3({ error: "Origine refus\xE9e." }, 403);
+        if (new URL(o).host !== url.host) return json2({ error: "Origine refus\xE9e." }, 403);
       } catch {
-        return json3({ error: "Origine refus\xE9e." }, 403);
+        return json2({ error: "Origine refus\xE9e." }, 403);
       }
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
@@ -1168,19 +1592,19 @@ async function espace(request, env) {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let ip = "s:" + await visitor(request, env);
-    if (await limite(env, [ip])) return json3({ error: "Trop de comptes cr\xE9\xE9s depuis cette connexion. R\xE9essayez plus tard." }, 429);
+    if (await limite(env, [ip])) return json2({ error: "Trop de comptes cr\xE9\xE9s depuis cette connexion. R\xE9essayez plus tard." }, 429);
     let email = String(b.email || "").trim().toLowerCase(), mdp = b.motdepasse;
-    if (!emailOk(email)) return json3({ error: "Adresse e-mail invalide." }, 400);
-    if (!mdpOk(mdp)) return json3({ error: "Le mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    if (!emailOk(email)) return json2({ error: "Adresse e-mail invalide." }, 400);
+    if (!mdpOk(mdp)) return json2({ error: "Le mot de passe doit faire au moins 10 caract\xE8res." }, 400);
     let v = valider(b, !1);
-    if (await echec(env, [ip]), await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE email = ?").bind(email).first()) return json3({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
+    if (await echec(env, [ip]), await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE email = ?").bind(email).first()) return json2({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
     let id = alea(16), { sel, hash } = await nouveauHash(mdp), code = nouveauCode();
     try {
       await env.DB.prepare("INSERT INTO comptes (id, email, hash, sel, created, secours, teaser) VALUES (?, ?, ?, ?, ?, ?, 0)").bind(id, email, hash, sel, Date.now(), await hashCode(code)).run();
     } catch {
-      return json3({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
+      return json2({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
     }
-    return await enregistrer(env, id, v.data), avecCookie(json3({ ok: !0, email, code_secours: code, ...v.ignores.length ? { ignores: v.ignores } : {} }), await ouvrirSession(env, id));
+    return await enregistrer(env, id, v.data), avecCookie(json2({ ok: !0, email, code_secours: code, ...v.ignores.length ? { ignores: v.ignores } : {} }), await ouvrirSession(env, id));
   }
   if (path === "/api/espace/connexion" && m === "POST") {
     let { b, err: err2 } = await lire(request);
@@ -1188,32 +1612,32 @@ async function espace(request, env) {
     let email = String(b.email || "").trim().toLowerCase().slice(0, 254), cles = ["e:" + email, "i:" + await visitor(request, env)];
     if (await limite(env, cles)) return TROP();
     let c2 = emailOk(email) ? await env.DB.prepare("SELECT * FROM comptes WHERE email = ?").bind(email).first() : null;
-    return await verifie(String(b.motdepasse || "").slice(0, 200), c2) ? (await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json3({ ok: !0, email: c2.email }), await ouvrirSession(env, c2.id))) : (await echec(env, cles), json3({ error: "Adresse ou mot de passe incorrect." }, 401));
+    return await verifie(String(b.motdepasse || "").slice(0, 200), c2) ? (await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json2({ ok: !0, email: c2.email }), await ouvrirSession(env, c2.id))) : (await echec(env, cles), json2({ error: "Adresse ou mot de passe incorrect." }, 401));
   }
   if (path === "/api/espace/secours" && m === "POST") {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let email = String(b.email || "").trim().toLowerCase().slice(0, 254), cles = ["e:" + email, "i:" + await visitor(request, env)];
     if (await limite(env, cles)) return TROP();
-    if (!mdpOk(b.nouveau)) return json3({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    if (!mdpOk(b.nouveau)) return json2({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
     let c2 = emailOk(email) ? await env.DB.prepare("SELECT * FROM comptes WHERE email = ?").bind(email).first() : null;
     if (!c2 || !await codeOk(b.code, c2.secours))
-      return await echec(env, cles), json3({ error: "Adresse ou code de secours incorrect." }, 401);
+      return await echec(env, cles), json2({ error: "Adresse ou code de secours incorrect." }, 401);
     let { sel, hash } = await nouveauHash(b.nouveau), code = nouveauCode();
-    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ?, secours = ? WHERE id = ?").bind(hash, sel, await hashCode(code), c2.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ?").bind(c2.id).run(), await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json3({ ok: !0, email: c2.email, code_secours: code }), await ouvrirSession(env, c2.id));
+    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ?, secours = ? WHERE id = ?").bind(hash, sel, await hashCode(code), c2.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ?").bind(c2.id).run(), await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json2({ ok: !0, email: c2.email, code_secours: code }), await ouvrirSession(env, c2.id));
   }
   if (path === "/api/espace/deconnexion" && m === "POST") {
     let t = cookieSession(request);
-    return t && await env.DB.prepare("DELETE FROM sessions WHERE h = ?").bind(await sha256hex(t)).run(), avecCookie(json3({ ok: !0 }), EFFACE);
+    return t && await env.DB.prepare("DELETE FROM sessions WHERE h = ?").bind(await sha256hex(t)).run(), avecCookie(json2({ ok: !0 }), EFFACE);
   }
   let c = await sessionCompte(request, env);
   if (path === "/api/espace/moi" && m === "GET") {
-    if (!c) return json3({ connecte: !1 });
+    if (!c) return json2({ connecte: !1 });
     let [d, nl, sess] = await Promise.all([
       env.DB.prepare("SELECT favoris, portefeuille, profil, updated FROM donnees WHERE compte = ?").bind(c.id).first(),
       env.DB.prepare("SELECT COUNT(*) AS n FROM notifs WHERE compte = ? AND lu = 0").bind(c.id).first(),
       env.DB.prepare("SELECT h, expires FROM sessions WHERE h = ?").bind(await sha256hex(cookieSession(request))).first()
-    ]), p = await premiumDe(env, c.premium, url.origin), dernier = await env.DB.prepare("SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1").bind(c.id).first(), r = json3({
+    ]), p = await premiumDe(env, c.premium, url.origin), dernier = await env.DB.prepare("SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1").bind(c.id).first(), r = json2({
       connecte: !0,
       email: c.email,
       premium: !!p,
@@ -1228,27 +1652,27 @@ async function espace(request, env) {
     });
     return sess && sess.expires - Date.now() < SESSION_MS - 7 * JOUR && (await env.DB.prepare("UPDATE sessions SET expires = ? WHERE h = ?").bind(Date.now() + SESSION_MS, sess.h).run(), avecCookie(r, `bilan_s=${cookieSession(request)}; ${COOKIE}; Max-Age=${SESSION_MS / 1e3}`)), r;
   }
-  if (!c) return json3({ error: "Connectez-vous pour acc\xE9der \xE0 votre espace.", connecte: !1 }, 401);
+  if (!c) return json2({ error: "Connectez-vous pour acc\xE9der \xE0 votre espace.", connecte: !1 }, 401);
   if (path === "/api/espace/donnees" && (m === "PUT" || m === "POST")) {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let v = valider(b, !0);
-    return v.error ? json3({ error: v.error }, 400) : (await enregistrer(env, c.id, v.data), json3({ ok: !0 }));
+    return v.error ? json2({ error: v.error }, 400) : (await enregistrer(env, c.id, v.data), json2({ ok: !0 }));
   }
   if (path === "/api/espace/motdepasse" && m === "POST") {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let cles = ["e:" + c.email];
     if (await limite(env, cles)) return TROP();
-    if (!mdpOk(b.nouveau)) return json3({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    if (!mdpOk(b.nouveau)) return json2({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
     if (!await verifie(String(b.ancien || "").slice(0, 200), c))
-      return await echec(env, cles), json3({ error: "Mot de passe actuel incorrect." }, 401);
+      return await echec(env, cles), json2({ error: "Mot de passe actuel incorrect." }, 401);
     let { sel, hash } = await nouveauHash(b.nouveau);
-    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ? WHERE id = ?").bind(hash, sel, c.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ? AND h <> ?").bind(c.id, await sha256hex(cookieSession(request))).run(), json3({ ok: !0 });
+    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ? WHERE id = ?").bind(hash, sel, c.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ? AND h <> ?").bind(c.id, await sha256hex(cookieSession(request))).run(), json2({ ok: !0 });
   }
   if (path === "/api/espace/preferences" && m === "POST") {
     let { b, err: err2 } = await lire(request);
-    return err2 || (typeof b.teaser != "boolean" ? json3({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json3({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
+    return err2 || (typeof b.teaser != "boolean" ? json2({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json2({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
   }
   if (path === "/api/espace/supprimer" && m === "POST") {
     let { b, err: err2 } = await lire(request);
@@ -1256,65 +1680,71 @@ async function espace(request, env) {
     let cles = ["e:" + c.email];
     if (await limite(env, cles)) return TROP();
     if (!await verifie(String(b.motdepasse || "").slice(0, 200), c))
-      return await echec(env, cles), json3({ error: "Mot de passe incorrect." }, 401);
+      return await echec(env, cles), json2({ error: "Mot de passe incorrect." }, 401);
     for (let q of ["DELETE FROM notifs WHERE compte = ?", "DELETE FROM bilans WHERE compte = ?", "DELETE FROM donnees WHERE compte = ?", "DELETE FROM sessions WHERE compte = ?", "DELETE FROM comptes WHERE id = ?"]) await env.DB.prepare(q).bind(c.id).run();
-    return avecCookie(json3({ ok: !0 }), EFFACE);
+    return avecCookie(json2({ ok: !0 }), EFFACE);
   }
   if (path === "/api/espace/premium" && m === "POST") {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let token = String(b.token || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
-    if (!token) return json3({ error: "Collez votre code Premium." }, 400);
+    if (!token) return json2({ error: "Collez votre code Premium." }, 400);
     let p = await premiumDe(env, token, url.origin);
-    return p ? await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE premium = ? AND id <> ?").bind(token, c.id).first() ? json3({ error: "Ce code Premium est d\xE9j\xE0 rattach\xE9 \xE0 un autre compte." }, 409) : (await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(token, c.id).run(), json3({ ok: !0, premium: !0, plan: p.plan, premium_jusqu_au: p.until })) : json3({ error: "Code Premium inconnu ou expir\xE9." }, 404);
+    return p ? await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE premium = ? AND id <> ?").bind(token, c.id).first() ? json2({ error: "Ce code Premium est d\xE9j\xE0 rattach\xE9 \xE0 un autre compte." }, 409) : (await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(token, c.id).run(), json2({ ok: !0, premium: !0, plan: p.plan, premium_jusqu_au: p.until })) : json2({ error: "Code Premium inconnu ou expir\xE9." }, 404);
   }
   if (path === "/api/espace/bilan" && m === "GET") {
-    let auj = jourParis(), cur = semaineIso(auj), semaine = url.searchParams.get("semaine") || cur;
-    if (!/^\d{4}-W\d{2}$/.test(semaine)) return json3({ error: "Semaine invalide (format 2026-W44)." }, 400);
+    let auj = jourParis(), cur = semaineIso(auj), semaine = url.searchParams.get("semaine") || cur, apercu = url.searchParams.get("apercu") === "1";
+    if (!/^\d{4}-W\d{2}$/.test(semaine)) return json2({ error: "Semaine invalide (format 2026-W44)." }, 400);
     let row = await env.DB.prepare("SELECT contenu, vu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, semaine).first(), b = row ? parse(row.contenu, null) : null;
     if (semaine === cur) {
-      let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille FROM donnees WHERE compte = ?").bind(c.id).first(), r = await assurerBilan(env, d, c.id, clesDe(don, d.names), cur, row);
+      let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille FROM donnees WHERE compte = ?").bind(c.id).first(), prec = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, precedenteDe(cur)).first(), r = await assurerBilan(env, d, c.id, don, cur, row, prec);
       b = r.c, r.change && !r.stocke && (b = { ...b, vide: !0 });
-    } else if (!b || semaine > cur) return json3({ error: "Aucun bilan pour cette semaine." }, 404);
-    b && !b.vide && (semaine === cur || semaine === semainePrecedente(auj)) && (b = await commenter(env, c.id, b)), await env.DB.prepare("UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?").bind(c.id, semaine).run();
-    let hist = ((await env.DB.prepare("SELECT semaine, contenu FROM bilans WHERE compte = ? AND semaine <> ? ORDER BY semaine DESC LIMIT 12").bind(c.id, semaine).all()).results || []).map((h) => ({ semaine: h.semaine, moyenne: (parse(h.contenu, {}) || {}).moyenne ?? null }));
-    return json3({ ...publicBilan(b), provisoire: semaine === cur && !b._final, historique: hist });
+    } else if (!b || semaine > cur) return json2({ error: "Aucun bilan pour cette semaine." }, 404);
+    !apercu && b && !b.vide && (semaine === cur || semaine === semainePrecedente(auj)) && (b = await commenter(env, c.id, b)), apercu || await env.DB.prepare("UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?").bind(c.id, semaine).run();
+    let hist = apercu ? [] : ((await env.DB.prepare("SELECT semaine, contenu FROM bilans WHERE compte = ? AND semaine <> ? ORDER BY semaine DESC LIMIT 12").bind(c.id, semaine).all()).results || []).map((h) => {
+      let x = parse(h.contenu, {}) || {};
+      return { semaine: h.semaine, moyenne: x.moyenne ?? null, portefeuille_pct: (x.portefeuille && x.portefeuille.var_pct) ?? null, portefeuille_eur: (x.portefeuille && x.portefeuille.var_eur) ?? null };
+    });
+    return json2({ ...publicBilan(b), provisoire: semaine === cur && !b._final, en_cours: semaine === cur, historique: hist });
   }
   if (path === "/api/espace/notifs" && m === "GET") {
     let rows = (await env.DB.prepare("SELECT id, at, type, texte, lien, lu FROM notifs WHERE compte = ? ORDER BY at DESC, id DESC LIMIT 50").bind(c.id).all()).results || [];
-    return json3({ notifs: rows.map((r) => ({ ...r, lu: !!r.lu })), nonlus: rows.filter((r) => !r.lu).length });
+    return json2({ notifs: rows.map((r) => ({ ...r, lu: !!r.lu })), nonlus: rows.filter((r) => !r.lu).length });
   }
-  return path === "/api/espace/notifs/lu" && m === "POST" ? (await env.DB.prepare("UPDATE notifs SET lu = 1 WHERE compte = ? AND lu = 0").bind(c.id).run(), json3({ ok: !0 })) : json3({ error: "Introuvable." }, 404);
+  return path === "/api/espace/notifs/lu" && m === "POST" ? (await env.DB.prepare("UPDATE notifs SET lu = 1 WHERE compte = ? AND lu = 0").bind(c.id).run(), json2({ ok: !0 })) : json2({ error: "Introuvable." }, 404);
 }
 async function notifier(env, compteId, type, texte, lien2, jour, extra = "") {
   let r = await env.DB.prepare("INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)").bind(compteId, Date.now(), type, texte.slice(0, 400), lien2, [type, lien2, jour, extra].join("|").slice(0, 500)).run();
   return r && r.meta && r.meta.changes || 0;
 }
 async function tache(request, env, url) {
-  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json3({ error: "Non autoris\xE9." }, 403);
+  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Non autoris\xE9." }, 403);
   let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || !quoi && wd === 6, cutoff = now - 6 * 36e5, W = modeBilan ? "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? [cutoff, sem] : [cutoff], rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
   if (rows.length) {
-    let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
+    let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre2 = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
     for (let r of rows) {
       let keys = clesDe(r, d.names).filter((k) => d.names[k]), ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2)));
       if (keys.length && r.last_tache < cutoff) {
         let depuis = jourParis(Math.max(r.last_tache || 0, now - 2 * JOUR));
         for (let [u, a] of Object.entries(d.ana)) a && ids.has(a.id) && a.date >= depuis && a.chiffres && a.chiffres.length && (notifs += await notifier(env, r.id, "annonce", `${d.names["c:" + a.id]} : ${a.type || "nouvelle publication"}. ${a.chiffres.slice(0, 3).map((x) => x.join(" : ")).join(" ; ")}.`, "/entreprise/" + a.id + "/actualite", a.date, u));
-        if (ouvre) for (let k of keys) {
+        if (ouvre2) for (let k of keys) {
           let p = d.px[k];
-          p && p.chg != null && Math.abs(p.chg) >= 5 && (notifs += await notifier(env, r.id, "mouvement", `${d.names[k]} : ${sgnP2(p.chg)} aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualit\xE9.`, lienDe(k), auj));
+          p && p.chg != null && Math.abs(p.chg) >= 5 && (notifs += await notifier(env, r.id, "mouvement", `${d.names[k]} : ${sgnP3(p.chg)} aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualit\xE9.`, lienDe(k), auj));
         }
         for (let e of d.ev) e && ids.has(e.id) && e.date === demain && (notifs += await notifier(env, r.id, /r[ée]sultat/i.test(e.type || e.label || "") ? "resultats" : "agenda", `${d.names["c:" + e.id]} : demain, ${e.label || e.type}.`, "/entreprise/" + e.id + "/agenda", e.date));
       }
       if (modeBilan && r.last_semaine !== sem && keys.length) {
-        let st = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, sem).first();
-        if ((await assurerBilan(env, d, r.id, keys, sem, st)).stocke !== !1 && (bilans++, notifs += await notifier(env, r.id, "bilan", "Votre bilan de la semaine est pr\xEAt.", "/espace", sem), r.teaser && cap > 0))
-          try {
-            await sendMail(
-              env,
-              r.email,
-              "Votre bilan de la semaine est pr\xEAt",
-              `Bonjour,
+        let st = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, sem).first(), pr = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, precedenteDe(sem)).first(), b = await assurerBilan(env, d, r.id, r, sem, st, pr);
+        if (b.stocke !== !1) {
+          bilans++;
+          let e0 = b.c && b.c.essentiel && b.c.essentiel[0];
+          if (notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est pr\xEAte. ${e0}` : "Votre semaine en 2 minutes est pr\xEAte.", "/espace", sem), r.teaser && cap > 0)
+            try {
+              await sendMail(
+                env,
+                r.email,
+                "Votre bilan de la semaine est pr\xEAt",
+                `Bonjour,
 
 Votre bilan de la semaine est pr\xEAt sur bilan. :
 ${origin}/espace
@@ -1322,18 +1752,19 @@ ${origin}/espace
 Vous recevez ce message parce que vous l'avez demand\xE9 dans votre espace. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.
 
 bilan. Informations factuelles, sans conseil en investissement.`,
-              `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px"><p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><p style="font-size:17px;margin:16px 0">Votre bilan de la semaine est pr\xEAt.</p><p><a href="${origin}/espace" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir mon bilan</a></p><p style="font-size:12px;color:#87827A;margin-top:22px">Vous recevez ce message parce que vous l'avez demand\xE9. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.</p></div></div>`
-            ), mails2++, cap--;
-          } catch {
-            cap = 0;
-          }
+                `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px"><p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><p style="font-size:17px;margin:16px 0">Votre bilan de la semaine est pr\xEAt.</p><p><a href="${origin}/espace" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir mon bilan</a></p><p style="font-size:12px;color:#87827A;margin-top:22px">Vous recevez ce message parce que vous l'avez demand\xE9. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.</p></div></div>`
+              ), mails2++, cap--;
+            } catch {
+              cap = 0;
+            }
+        }
       }
       await env.DB.prepare(modeBilan ? "UPDATE comptes SET last_tache = ?, last_semaine = ? WHERE id = ?" : "UPDATE comptes SET last_tache = ? WHERE id = ?").bind(...modeBilan ? [now, sem, r.id] : [now, r.id]).run();
     }
     await env.DB.prepare("DELETE FROM notifs WHERE at < ?").bind(now - 90 * JOUR).run(), await env.DB.prepare("DELETE FROM essais WHERE at < ?").bind(now - JOUR).run(), await env.DB.prepare("DELETE FROM sessions WHERE expires < ?").bind(now).run();
   }
   let reste = (await env.DB.prepare(`SELECT COUNT(*) AS n FROM comptes c WHERE ${W}`).bind(...B).first() || {}).n || 0;
-  return json3({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
+  return json2({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
 }
 
 // cf/src/demande.mjs
@@ -1371,20 +1802,20 @@ function valide(a) {
   return a.action === "comparer" && Array.isArray(a.noms) ? { action: "comparer", noms: a.noms.map(clean2).filter(Boolean).slice(0, 5) } : a.action === "fiche" && a.nom ? { action: "fiche", nom: clean2(a.nom).slice(0, 80) } : a.action === "etf" ? { action: "etf", titre: clean2(a.titre).slice(0, 120), categorie: /^[a-z-]{3,30}$/.test(a.categorie || "") ? a.categorie : null, pea: a.pea === !0 } : a.action === "repondre" && clean2(a.texte).length > 30 ? { action: "repondre", texte: String(a.texte).replace(/—/g, ",").trim().slice(0, 2e3) } : null;
 }
 async function demande(request, env) {
-  if (request.method !== "POST") return json3({ error: "M\xE9thode non prise en charge." }, 405);
+  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
   let b;
   try {
     b = await request.json();
   } catch {
-    return json3({ error: "Requ\xEAte illisible." }, 400);
+    return json2({ error: "Requ\xEAte illisible." }, 400);
   }
   let q = clean2(b.question).slice(0, 300);
-  if (q.length < 4) return json3({ error: "\xC9crivez une question un peu plus longue." }, 400);
+  if (q.length < 4) return json2({ error: "\xC9crivez une question un peu plus longue." }, 400);
   let key = "demande2:" + q.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôöùûüç ]/g, "");
   if (env.DB)
     try {
       let hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
-      if (hit) return json3({ ...JSON.parse(hit.txt), cache: !0 });
+      if (hit) return json2({ ...JSON.parse(hit.txt), cache: !0 });
     } catch {
     }
   let qq = await quota(request, env, "demande");
@@ -1394,13 +1825,13 @@ async function demande(request, env) {
     let x = await rediger(env, { systeme: SYS_EXPL, utilisateur: q, max_tokens: 450, temperature: 0.2, qualite: !0 });
     x && x.length > 40 && (a.texte = x.replace(/—/g, ",").trim().slice(0, 2e3));
   }
-  if (!a) return json3({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : \xAB entreprises fran\xE7aises peu endett\xE9es qui versent un dividende \xBB." : "L'IA est tr\xE8s demand\xE9e en ce moment : r\xE9essayez dans quelques instants.", diag: DIAG.slice(-3) }, t ? 422 : 503);
+  if (!a) return json2({ error: t ? "Je n'ai pas compris la demande. Essayez par exemple : \xAB entreprises fran\xE7aises peu endett\xE9es qui versent un dividende \xBB." : "L'IA est tr\xE8s demand\xE9e en ce moment : r\xE9essayez dans quelques instants.", diag: DIAG.slice(-3) }, t ? 422 : 503);
   if (env.DB)
     try {
       await env.DB.prepare("INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)").bind(key, JSON.stringify(a), Date.now()).run();
     } catch {
     }
-  return json3(a);
+  return json2(a);
 }
 
 // cf/src/signaler.mjs
@@ -1420,24 +1851,24 @@ async function empreinte(request) {
   return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 async function signaler(request, env) {
-  if (!env.DB) return json3({ error: "Service indisponible." }, 503);
+  if (!env.DB) return json2({ error: "Service indisponible." }, 503);
   if (await init6(env.DB), request.method === "GET") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json3({ error: "Acc\xE8s r\xE9serv\xE9." }, 403);
+    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Acc\xE8s r\xE9serv\xE9." }, 403);
     let r = await env.DB.prepare("SELECT id, page, quoi, texte, created, traite FROM signalements ORDER BY id DESC LIMIT 200").all();
-    return json3({ items: r.results || [] });
+    return json2({ items: r.results || [] });
   }
-  if (request.method !== "POST") return json3({ error: "M\xE9thode non prise en charge." }, 405);
+  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
   let b;
   try {
     b = await request.json();
   } catch {
-    return json3({ error: "Requ\xEAte illisible." }, 400);
+    return json2({ error: "Requ\xEAte illisible." }, 400);
   }
   let page2 = String(b.page || "").slice(0, 200), quoi = QUOI.includes(b.quoi) ? b.quoi : "autre", texte = String(b.texte || "").replace(/\s+/g, " ").trim().slice(0, 1e3);
-  if (!/^\/[a-z0-9/?=&%._-]*$/i.test(page2)) return json3({ error: "Page inconnue." }, 400);
-  if (texte.length < 10) return json3({ error: "D\xE9crivez l'erreur en quelques mots (10 caract\xE8res au moins)." }, 400);
+  if (!/^\/[a-z0-9/?=&%._-]*$/i.test(page2)) return json2({ error: "Page inconnue." }, 400);
+  if (texte.length < 10) return json2({ error: "D\xE9crivez l'erreur en quelques mots (10 caract\xE8res au moins)." }, 400);
   let who2 = await empreinte(request), depuis = Date.now() - 864e5, n = await env.DB.prepare("SELECT COUNT(*) AS n FROM signalements WHERE who = ? AND created > ?").bind(who2, depuis).first();
-  return n && n.n >= 5 ? json3({ error: "Merci : vous avez d\xE9j\xE0 envoy\xE9 5 signalements aujourd'hui." }, 429) : (await env.DB.prepare("INSERT INTO signalements (page, quoi, texte, who, created) VALUES (?, ?, ?, ?, ?)").bind(page2, quoi, texte, who2, Date.now()).run(), json3({ ok: !0 }));
+  return n && n.n >= 5 ? json2({ error: "Merci : vous avez d\xE9j\xE0 envoy\xE9 5 signalements aujourd'hui." }, 429) : (await env.DB.prepare("INSERT INTO signalements (page, quoi, texte, who, created) VALUES (?, ?, ?, ?, ?)").bind(page2, quoi, texte, who2, Date.now()).run(), json2({ ok: !0 }));
 }
 
 // cf/src/push.mjs
@@ -1536,12 +1967,15 @@ async function envoyer(env, ab, message2, { origin, ttl = 43200, urgence = "norm
   let body = await chiffrer(ab.p256dh, ab.auth, JSON.stringify(message2));
   return (await envoi(ab.endpoint, { method: "POST", body, headers: { authorization: `vapid t=${j.t}, k=${v.public}`, "content-encoding": "aes128gcm", "content-type": "application/octet-stream", ttl: String(ttl), urgency: urgence } })).status;
 }
-var categorie = (n) => n.type === "mouvement" ? "mouvements" : n.type === "bilan" ? "bilan" : n.type === "agenda" && /dividende/i.test(n.texte || "") ? "dividendes" : "annonces", court = (s, n) => (s = String(s || "").replace(/\s+/g, " ").trim(), s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "\u2026" : s);
+var categorie2 = (n) => n.type === "mouvement" ? "mouvements" : n.type === "bilan" ? "bilan" : n.type === "agenda" && /dividende/i.test(n.texte || "") ? "dividendes" : "annonces", court = (s, n) => (s = String(s || "").replace(/\s+/g, " ").trim(), s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "\u2026" : s);
 function message(ns) {
   if (ns.length === 1) {
     let n = ns[0], t = String(n.texte || ""), i = t.indexOf(" : ");
-    if (n.type === "bilan") return { t: "Votre bilan de la semaine est pr\xEAt", b: "Les mouvements de vos entreprises, leurs annonces et les dates \xE0 venir, en une page.", u: n.lien || "/espace", tag: "bilan-semaine", ts: n.at };
-    let nom = i > 0 && i < 80 ? t.slice(0, i) : "bilan.", reste = i > 0 && i < 80 ? t.slice(i + 3) : t, quoi = { annonce: "nouvelle publication", resultats: "r\xE9sultats demain", mouvement: "mouvement du jour" }[n.type] || (categorie(n) === "dividendes" ? "dividende demain" : "demain");
+    if (n.type === "bilan") {
+      let r = t.replace(/^Votre (bilan de la semaine est prêt|semaine en 2 minutes est prête)\.?\s*/, "");
+      return { t: "Votre semaine en 2 minutes est pr\xEAte", b: court(r || "Les variations, les annonces et les dates \xE0 venir de ce que vous suivez, en une page.", 240), u: n.lien || "/espace", tag: "bilan-semaine", ts: n.at };
+    }
+    let nom = i > 0 && i < 80 ? t.slice(0, i) : "bilan.", reste = i > 0 && i < 80 ? t.slice(i + 3) : t, quoi = { annonce: "nouvelle publication", resultats: "r\xE9sultats demain", mouvement: "mouvement du jour" }[n.type] || (categorie2(n) === "dividendes" ? "dividende demain" : "demain");
     return { t: court(`${nom} \xB7 ${quoi}`, 90), b: court(reste, 240), u: n.lien || "/espace/alertes", tag: "bilan-" + n.id, ts: n.at };
   }
   return { t: `${ns.length} nouvelles alertes sur vos entreprises`, b: court(ns.slice(0, 3).map((n) => n.texte).join(`
@@ -1579,7 +2013,7 @@ async function pousser(env, { origin, budget: budget2 = 30 } = {}) {
   let envoyes = 0, supprimes = 0, erreurs = 0, utilise = 0, faits = [];
   for (let c of comptes) {
     let ns = rows.filter((r) => r.compte === c), jobs = abos.filter((a) => a.compte === c).map((a) => {
-      let ch = normChoix(parse2(a.choix, {})), sel = ns.filter((n) => n.at >= a.created - 6e4 && ch[categorie(n)]);
+      let ch = normChoix(parse2(a.choix, {})), sel = ns.filter((n) => n.at >= a.created - 6e4 && ch[categorie2(n)]);
       return sel.length ? [a, sel] : null;
     }).filter(Boolean);
     if (utilise > 0 && utilise + jobs.length > budget2) break;
@@ -1597,59 +2031,59 @@ async function pousser(env, { origin, budget: budget2 = 30 } = {}) {
 }
 async function lire2(request) {
   let t = await request.text();
-  if (t.length > 8e3) return { err: json3({ error: "Requ\xEAte trop volumineuse." }, 413) };
+  if (t.length > 8e3) return { err: json2({ error: "Requ\xEAte trop volumineuse." }, 413) };
   try {
     let b = t ? JSON.parse(t) : {};
-    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json3({ error: "Requ\xEAte illisible." }, 400) };
+    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json2({ error: "Requ\xEAte illisible." }, 400) };
   } catch {
-    return { err: json3({ error: "Requ\xEAte illisible." }, 400) };
+    return { err: json2({ error: "Requ\xEAte illisible." }, 400) };
   }
 }
 async function push(request, env) {
-  if (!env || !env.DB) return json3({ error: "Les notifications sont indisponibles pour le moment." }, 503);
+  if (!env || !env.DB) return json2({ error: "Les notifications sont indisponibles pour le moment." }, 503);
   await init7(env.DB);
   let url = new URL(request.url), path = url.pathname.replace(/\/+$/, ""), m = request.method;
-  if (path === "/api/push/cle" && m === "GET") return json3({ cle: (await clesVapid(env)).public });
-  if (m !== "POST") return json3({ error: "Introuvable." }, 404);
+  if (path === "/api/push/cle" && m === "GET") return json2({ cle: (await clesVapid(env)).public });
+  if (m !== "POST") return json2({ error: "Introuvable." }, 404);
   let o = request.headers.get("origin");
   if (o && o !== "null")
     try {
-      if (new URL(o).host !== url.host) return json3({ error: "Origine refus\xE9e." }, 403);
+      if (new URL(o).host !== url.host) return json2({ error: "Origine refus\xE9e." }, 403);
     } catch {
-      return json3({ error: "Origine refus\xE9e." }, 403);
+      return json2({ error: "Origine refus\xE9e." }, 403);
     }
   let { b, err: err2 } = await lire2(request);
   if (err2) return err2;
   if (path === "/api/push/desabonnement")
-    return typeof b.endpoint != "string" || b.endpoint.length > 1024 ? json3({ error: "Abonnement invalide." }, 400) : (await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ?").bind(b.endpoint).run(), json3({ ok: !0 }));
+    return typeof b.endpoint != "string" || b.endpoint.length > 1024 ? json2({ error: "Abonnement invalide." }, 400) : (await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ?").bind(b.endpoint).run(), json2({ ok: !0 }));
   if (path === "/api/push/etat") {
-    if (typeof b.endpoint != "string" || b.endpoint.length > 1024) return json3({ abonne: !1 });
+    if (typeof b.endpoint != "string" || b.endpoint.length > 1024) return json2({ abonne: !1 });
     let [row, c] = await Promise.all([env.DB.prepare("SELECT compte, choix FROM push_abonnements WHERE endpoint = ?").bind(b.endpoint).first(), sessionCompte(request, env)]);
-    return row ? c && row.compte !== c.id ? json3({ abonne: !1, autre_compte: !0, choix: normChoix(null) }) : json3({ abonne: !0, choix: normChoix(parse2(row.choix, {})) }) : json3({ abonne: !1, choix: normChoix(null) });
+    return row ? c && row.compte !== c.id ? json2({ abonne: !1, autre_compte: !0, choix: normChoix(null) }) : json2({ abonne: !0, choix: normChoix(parse2(row.choix, {})) }) : json2({ abonne: !1, choix: normChoix(null) });
   }
   if (path === "/api/push/abonnement") {
     let a = b.abonnement || {}, k = a.keys || {};
-    if (!endpointOk(a.endpoint)) return json3({ error: "Service de notification non reconnu." }, 400);
-    if (!cleOk(k.p256dh, 65) || !cleOk(k.auth, 16)) return json3({ error: "Cl\xE9s de l'abonnement invalides." }, 400);
+    if (!endpointOk(a.endpoint)) return json2({ error: "Service de notification non reconnu." }, 400);
+    if (!cleOk(k.p256dh, 65) || !cleOk(k.auth, 16)) return json2({ error: "Cl\xE9s de l'abonnement invalides." }, 400);
     let compte = null, base2 = null, c = await sessionCompte(request, env);
     if (c && (compte = c.id), typeof b.ancien == "string" && b.ancien !== a.endpoint) {
       let old = await env.DB.prepare("SELECT compte, choix FROM push_abonnements WHERE endpoint = ?").bind(b.ancien).first();
       old && (!compte || old.compte === compte) && (compte = old.compte, base2 = parse2(old.choix, null));
     }
-    if (!compte) return json3({ error: "Connectez-vous \xE0 votre espace pour activer les notifications.", connecte: !1 }, 401);
+    if (!compte) return json2({ error: "Connectez-vous \xE0 votre espace pour activer les notifications.", connecte: !1 }, 401);
     let prev = await env.DB.prepare("SELECT compte, choix FROM push_abonnements WHERE endpoint = ?").bind(a.endpoint).first();
     prev && prev.compte === compte && !base2 && (base2 = parse2(prev.choix, null));
     let choix = normChoix(b.choix, base2), n = await env.DB.prepare("SELECT COUNT(*) AS n FROM push_abonnements WHERE compte = ? AND endpoint <> ?").bind(compte, a.endpoint).first();
     return n && n.n >= MAX_APPAREILS && await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint IN (SELECT endpoint FROM push_abonnements WHERE compte = ? AND endpoint <> ? ORDER BY COALESCE(last_ok, created) LIMIT ?)").bind(compte, a.endpoint, n.n - MAX_APPAREILS + 1).run(), await env.DB.prepare(`INSERT INTO push_abonnements (endpoint, compte, p256dh, auth, choix, appareil, created, echecs) VALUES (?, ?, ?, ?, ?, ?, ?, 0)
       ON CONFLICT (endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth, choix = excluded.choix, appareil = excluded.appareil, echecs = 0,
-      created = CASE WHEN push_abonnements.compte = excluded.compte THEN push_abonnements.created ELSE excluded.created END, compte = excluded.compte`).bind(a.endpoint, compte, k.p256dh, k.auth, JSON.stringify(choix), appareil(request.headers.get("user-agent") || "").slice(0, 60), Date.now()).run(), typeof b.ancien == "string" && b.ancien !== a.endpoint && await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ? AND compte = ?").bind(b.ancien, compte).run(), json3({ ok: !0, choix });
+      created = CASE WHEN push_abonnements.compte = excluded.compte THEN push_abonnements.created ELSE excluded.created END, compte = excluded.compte`).bind(a.endpoint, compte, k.p256dh, k.auth, JSON.stringify(choix), appareil(request.headers.get("user-agent") || "").slice(0, 60), Date.now()).run(), typeof b.ancien == "string" && b.ancien !== a.endpoint && await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ? AND compte = ?").bind(b.ancien, compte).run(), json2({ ok: !0, choix });
   }
   if (path === "/api/push/essai") {
     let c = await sessionCompte(request, env);
-    if (!c) return json3({ error: "Connectez-vous \xE0 votre espace.", connecte: !1 }, 401);
+    if (!c) return json2({ error: "Connectez-vous \xE0 votre espace.", connecte: !1 }, 401);
     let row = typeof b.endpoint == "string" ? await env.DB.prepare("SELECT * FROM push_abonnements WHERE endpoint = ? AND compte = ?").bind(b.endpoint, c.id).first() : null;
-    if (!row) return json3({ error: "Cet appareil n'est pas abonn\xE9." }, 404);
-    if (Date.now() - (row.essai || 0) < 6e4) return json3({ error: "Une notification d'essai vient d'\xEAtre envoy\xE9e. R\xE9essayez dans une minute." }, 429);
+    if (!row) return json2({ error: "Cet appareil n'est pas abonn\xE9." }, 404);
+    if (Date.now() - (row.essai || 0) < 6e4) return json2({ error: "Une notification d'essai vient d'\xEAtre envoy\xE9e. R\xE9essayez dans une minute." }, 429);
     await env.DB.prepare("UPDATE push_abonnements SET essai = ? WHERE endpoint = ?").bind(Date.now(), row.endpoint).run();
     let s = 0;
     try {
@@ -1657,9 +2091,9 @@ async function push(request, env) {
     } catch {
     }
     let r = await resultat(env, row, s);
-    return r === "ok" ? json3({ ok: !0 }) : json3({ error: r === "supprime" ? "Cet abonnement n'est plus valide : r\xE9activez les notifications." : "Le service de notification n'a pas accept\xE9 le message. R\xE9essayez plus tard.", statut: s }, 502);
+    return r === "ok" ? json2({ ok: !0 }) : json2({ error: r === "supprime" ? "Cet abonnement n'est plus valide : r\xE9activez les notifications." : "Le service de notification n'a pas accept\xE9 le message. R\xE9essayez plus tard.", statut: s }, 502);
   }
-  return json3({ error: "Introuvable." }, 404);
+  return json2({ error: "Introuvable." }, 404);
 }
 
 // cf/src/mcp.mjs
@@ -1776,7 +2210,7 @@ function peaSociete(c) {
   }
   return c.region === "FR" ? { eligible: !0, raison: "Oui : soci\xE9t\xE9 fran\xE7aise." } : { eligible: null, raison: "Non d\xE9termin\xE9 : l'ISIN de cette soci\xE9t\xE9 n'est pas dans nos donn\xE9es. Les deux premi\xE8res lettres de l'ISIN donnent le pays de la soci\xE9t\xE9 ; une soci\xE9t\xE9 dont le si\xE8ge est aux \xC9tats-Unis ou hors d'Europe n'est pas \xE9ligible." };
 }
-var nf = (d) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }), F0 = nf(0), F1 = nf(1), F2 = nf(2), CUR = { EUR: "\u20AC", USD: "$", GBP: "\xA3", CHF: "CHF" }, pct = (v, d = 1, sign = !0) => v == null || !isFinite(v) ? "\u2013" : (sign && v > 0 ? "+" : "") + nf(d).format(v * 100) + " %", big = (m, cur = "EUR") => m == null || !isFinite(m) ? "\u2013" : (Math.abs(m) >= 1e3 ? F1.format(m / 1e3) + " Md" : F0.format(m) + " M") + (CUR[cur] || " " + cur), capFmt = (v) => v == null ? "\u2013" : v >= 1e12 ? F1.format(v / 1e12) + " billions d'\u20AC" : v >= 1e9 ? F1.format(v / 1e9) + " Md\u20AC" : F0.format(v / 1e6) + " M\u20AC", pxFmt = (v, cur) => v == null ? "\u2013" : nf(v >= 1e3 ? 0 : 2).format(v) + " " + (CUR[cur] || cur || ""), r4 = (v) => v == null || !isFinite(v) ? null : Math.round(v * 1e4) / 1e4, r22 = (v) => v == null || !isFinite(v) ? null : Math.round(v * 100) / 100, norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(), jourParis2 = (t = Date.now()) => {
+var nf = (d) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }), F0 = nf(0), F1 = nf(1), F2 = nf(2), CUR = { EUR: "\u20AC", USD: "$", GBP: "\xA3", CHF: "CHF" }, pct = (v, d = 1, sign = !0) => v == null || !isFinite(v) ? "\u2013" : (sign && v > 0 ? "+" : "") + nf(d).format(v * 100) + " %", big = (m, cur = "EUR") => m == null || !isFinite(m) ? "\u2013" : (Math.abs(m) >= 1e3 ? F1.format(m / 1e3) + " Md" : F0.format(m) + " M") + (CUR[cur] || " " + cur), capFmt = (v) => v == null ? "\u2013" : v >= 1e12 ? F1.format(v / 1e12) + " billions d'\u20AC" : v >= 1e9 ? F1.format(v / 1e9) + " Md\u20AC" : F0.format(v / 1e6) + " M\u20AC", pxFmt = (v, cur) => v == null ? "\u2013" : nf(v >= 1e3 ? 0 : 2).format(v) + " " + (CUR[cur] || cur || ""), r4 = (v) => v == null || !isFinite(v) ? null : Math.round(v * 1e4) / 1e4, r23 = (v) => v == null || !isFinite(v) ? null : Math.round(v * 100) / 100, norm = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim(), jourParis2 = (t = Date.now()) => {
   let p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(new Date(t)).map((x) => [x.type, x.value]));
   return `${p.year}-${p.month}-${p.day}`;
 }, MOISL = ["janvier", "f\xE9vrier", "mars", "avril", "mai", "juin", "juillet", "ao\xFBt", "septembre", "octobre", "novembre", "d\xE9cembre"], dLabel = (iso2) => {
@@ -1843,13 +2277,13 @@ function reperes(c, MED) {
     pct(med.roe, 1, !1),
     RULES.roe,
     `Pour 100 ${S} qui appartiennent aux actionnaires, l'entreprise a gagn\xE9 ${F1.format(m.roe * 100)} ${S} en un an.`
-  ) : c.equity != null && c.equity <= 0 && ligne("rentabilite", "Rentabilit\xE9 des capitaux propres", null, "\u2013", "na", null, null, RULES.roe, "Capitaux propres n\xE9gatifs : ce ratio ne se calcule pas."), bank ? ligne("dette", "Endettement", null, "\u2013", "na", null, null, RULES.lev, "Pour une banque ou un assureur, emprunter et pr\xEAter est le m\xE9tier lui-m\xEAme : ce rep\xE8re ne s'applique pas.") : c.netDebt != null && (c.netDebt < 0 ? ligne("dette", "Endettement", r22(c.netDebt), "Pas de dette nette", "fort", r22(med.lev), med.lev != null ? ans(med.lev) + " de r\xE9sultat" : null, RULES.lev, `${B(-c.netDebt)} de tr\xE9sorerie de plus que ses dettes financi\xE8res.`) : m.lev != null ? ligne(
+  ) : c.equity != null && c.equity <= 0 && ligne("rentabilite", "Rentabilit\xE9 des capitaux propres", null, "\u2013", "na", null, null, RULES.roe, "Capitaux propres n\xE9gatifs : ce ratio ne se calcule pas."), bank ? ligne("dette", "Endettement", null, "\u2013", "na", null, null, RULES.lev, "Pour une banque ou un assureur, emprunter et pr\xEAter est le m\xE9tier lui-m\xEAme : ce rep\xE8re ne s'applique pas.") : c.netDebt != null && (c.netDebt < 0 ? ligne("dette", "Endettement", r23(c.netDebt), "Pas de dette nette", "fort", r23(med.lev), med.lev != null ? ans(med.lev) + " de r\xE9sultat" : null, RULES.lev, `${B(-c.netDebt)} de tr\xE9sorerie de plus que ses dettes financi\xE8res.`) : m.lev != null ? ligne(
     "dette",
     "Endettement (dette nette / EBITDA)",
-    r22(m.lev),
+    r23(m.lev),
     ans(m.lev),
     m.lev <= 1.5 ? "fort" : m.lev <= 3 ? "moyen" : "vig",
-    r22(med.lev),
+    r23(med.lev),
     med.lev != null ? ans(med.lev) : null,
     RULES.lev,
     `Dette nette de ${B(c.netDebt)}, soit ${F1.format(m.lev)} ann\xE9e${m.lev >= 2 ? "s" : ""} de l'argent d\xE9gag\xE9 par l'activit\xE9 avant investissements (EBITDA).`
@@ -2001,8 +2435,8 @@ async function ficheSociete(env, origin, ctx, B, c) {
       plus_haut_52_semaines: pxl.h52 ?? null,
       plus_bas_52_semaines: pxl.l52 ?? null,
       capitalisation_eur: v && v.capE ? Math.round(v.capE) : null,
-      per: v && v.pe ? r22(v.pe) : null,
-      per_median_secteur: mp ? r22(mp.m) : null,
+      per: v && v.pe ? r23(v.pe) : null,
+      per_median_secteur: mp ? r23(mp.m) : null,
       per_position: v && v.pe && mp ? v.pe > mp.m * 1.3 ? "plus cher que la plupart des entreprises du secteur" : v.pe < mp.m * 0.75 ? "moins cher que la plupart des entreprises du secteur" : "dans la moyenne du secteur" : null,
       rendement_dividende: v && v.yld != null ? r4(v.yld) : null,
       source: P.source,
@@ -2054,7 +2488,7 @@ ETF correspondants :
     if (cs.length < 2) throw new Erreur("Donnez au moins deux entreprises diff\xE9rentes.");
     let P = await optionnel(prix(env, origin, ctx), { items: {}, fx: null }), MP = medPE(B, P), lignes = cs.map((c) => {
       let v = c.missing ? null : valo(c, P), mp = MP[c.sector];
-      return { ...resumeSociete(B, c, origin), exercice: c.year || null, devise: c.currency || null, chiffre_affaires: c.ca ?? null, reperes: c.missing ? [] : reperes(c, B.MED), per: v && v.pe ? r22(v.pe) : null, per_median_secteur: mp ? r22(mp.m) : null, rendement_dividende: v && v.yld != null ? r4(v.yld) : null, pea: peaSociete(c).eligible };
+      return { ...resumeSociete(B, c, origin), exercice: c.year || null, devise: c.currency || null, chiffre_affaires: c.ca ?? null, reperes: c.missing ? [] : reperes(c, B.MED), per: v && v.pe ? r23(v.pe) : null, per_median_secteur: mp ? r23(mp.m) : null, rendement_dividende: v && v.yld != null ? r4(v.yld) : null, pea: peaSociete(c).eligible };
     }), cles = ["croissance", "marge", "benefice", "rentabilite", "dette", "tresorerie", "dividende"], lib = { croissance: "Croissance des ventes", marge: "Marge d'exploitation", benefice: "B\xE9n\xE9fice net", rentabilite: "Rentabilit\xE9 des capitaux propres", dette: "Endettement", tresorerie: "Tr\xE9sorerie disponible", dividende: "Dividende" }, cell = (l, k) => {
       let r = l.reperes.find((x) => x.cle === k);
       return r ? `${r.valeur_texte} (${r.verdict}${r.mediane_texte ? ", secteur " + r.mediane_texte : ""})` : "\u2013";
@@ -2248,7 +2682,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "7ca1dc38b2593867", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
+var VERSION = "b9d982d5c57fccfa", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
 function tete(html, { title, desc, url, statut }) {
   let canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/"), t = [
     `<meta name="bilan-version" content="${VERSION}">`,
@@ -2325,7 +2759,7 @@ function meta(path, q = null) {
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." };
   if (p === "/communaute") return { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "\xC9changez des id\xE9es et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." };
   if (p === "/lexique") return { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." };
-  if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace \xB7 ${SITE}`, desc: "Votre bilan de la semaine, vos notifications et vos listes, sur tous vos appareils." };
+  if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace \xB7 ${SITE}`, desc: "Votre semaine en 2 minutes : variations, annonces et dates \xE0 venir de ce que vous suivez, vos alertes et vos listes, sur tous vos appareils." };
   if (p === "/favoris") return { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." };
   if (p === "/comparer") {
     let cos = String(q && q.get("ids") || "").split(",").map((id) => BY[id]).filter(Boolean).slice(0, 5);
@@ -2344,7 +2778,7 @@ function meta(path, q = null) {
     let mi = p.match(/^\/indice\/([a-z0-9]+)$/);
     if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir \xB7 ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqu\xE9 simplement : sa r\xE8gle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, class\xE9s par frais.` };
   }
-  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/connecteur" ? { title: `Connecteur IA : bilan. dans Claude et ChatGPT \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/connecteur" ? { title: `Connecteur IA : bilan. dans Claude et ChatGPT \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 var worker_default = {
   async fetch(request, env, ctx) {
