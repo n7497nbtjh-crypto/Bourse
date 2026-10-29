@@ -49,7 +49,7 @@ with sync_playwright() as pw:
         for prem in (False, True):
             STATE["prem"] = prem
             pg.goto("http://t.local/espace"); pg.wait_for_selector(".synhero", timeout=8000); pg.wait_for_timeout(300)
-            txt = pg.inner_text("#app")
+            txt = pg.inner_text("#app").replace("\xa0", " ")
             for need in ("Votre semaine en 2 minutes", "min de lecture", "Votre portefeuille a perdu 95 €", "LVMH signe la plus forte baisse", "À venir : TotalEnergies", "Variations de la semaine", "Actualités de vos valeurs", "Ce que ça change", "Face à son indice" if W > 700 else "vs CAC 40", "Document officiel", "Ma semaine"):
                 if need.lower() not in txt.lower(): probs.setdefault(f"/espace prem={prem}", []).append("manque : " + need)
             if pg.locator(".synrow").count() != 6: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.synrow').count()} lignes au lieu de 6")
@@ -70,7 +70,7 @@ with sync_playwright() as pw:
         if pg.evaluate("document.getElementById('synact').getBoundingClientRect().top") > 200: probs["sommaire"] = ["le lien ne descend pas à la section"]
         # Accueil connecté
         pg.goto("http://t.local/"); pg.wait_for_selector(".synhome", timeout=8000); pg.wait_for_timeout(300)
-        h = pg.inner_text("#homeesp")
+        h = pg.inner_text("#homeesp").replace("\xa0", " ")
         if "Votre portefeuille a perdu 95 €" not in h or "Lire ma semaine (2 min)" not in h: probs["accueil"] = ["synthèse absente de l'accueil : " + h[:120]]
         p = pg.evaluate(CHECK, W)
         if p: probs["/ connecté"] = p
