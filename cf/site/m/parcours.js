@@ -567,7 +567,7 @@ async function parDemoHTML() {
     }
   }
   return `<div class="par-demo"><span class="tag">Aperçu</span><p class="kick">Votre rapport de la semaine</p><h3>Ce que vous y lirez</h3>
-    ${[["Variations", "Vos favoris et votre portefeuille, comparés aux indices"], ["Secteurs", "La médiane de la semaine des secteurs que vous suivez"], ["Actualités", "Résultats, dividendes, annonces officielles, expliqués"], ["À venir", "Les dates des deux prochaines semaines"]].map(([t, d]) => `<p class="row" style="display:block;margin:0;font-size:14px"><b>${t}</b> · <span class="muted">${d}</span></p>`).join("")}
+    ${[["Variations", "Vos favoris et votre portefeuille, comparés aux indices"], ["Secteurs", "La médiane de la semaine des secteurs que vous suivez"], ["Actualités", "Résultats, dividendes, annonces officielles, expliqués"], ["À venir", "Les dates des deux prochaines semaines"]].map(([t, d]) => `<p class="prow" style="margin:0;padding:7px 0;border-top:1px solid var(--line2,#EFEAE0);font-size:14px"><b>${t}</b> · <span class="muted">${d}</span></p>`).join("")}
     <p class="psrc">Toutes les données viennent des documents officiels et des cours de clôture, avec leurs sources.</p></div>`;
 }
 async function parAccueilVisiteur(el) {
