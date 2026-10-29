@@ -16,6 +16,7 @@ import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import U, { SECTEURS } from "./univers.mjs";
 import { extract, merge, toSeries, extractSegments, bestSegments } from "./esef.mjs";
 import { extractSec, cikMap, factsUrl, subsUrl, recentFilings, estimatedAgenda } from "./sec.mjs";
+import { amfAnnualFilings, amfDoc } from "./amf.mjs";
 
 const OUT = new URL("../cf/site/data/", import.meta.url);
 export const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse");
@@ -108,26 +109,63 @@ export const VERIF = [];
 export const VERSION = 3; // à augmenter quand la lecture des comptes change : force une nouvelle lecture
 
 
+// Dernier exercice dont les comptes devraient être publiés : clos depuis plus de quatre mois (fyEnd = "MM-JJ")
+export function expectedYear(fyEnd = "12-31", now = new Date()) {
+  const [m, d] = String(fyEnd || "12-31").split("-").map(Number);
+  for (let y = now.getUTCFullYear(); y > now.getUTCFullYear() - 3; y--) if (Date.UTC(y, (m || 12) - 1, d || 31) + 122 * 864e5 <= now.getTime()) return y;
+  return now.getUTCFullYear() - 2;
+}
+// Dernier exercice complet présent dans un rapport (chiffre d'affaires ou résultat sur environ un an)
+const newestYear = r => Math.max(-Infinity, ...Object.entries(r.years).filter(([, v]) => v.ca != null || v.net != null).map(([y]) => +y));
+
 export async function collectOne(fetchFn, c) {
   if (c.sec) return collectSec(fetchFn, c);
-  const id = c.lei ? { lei: c.lei, legalName: c.name } : await leiFromIsin(fetchFn, c.isin, c.legal || c.name);
-  if (!id) throw new Error("LEI introuvable pour " + c.isin);
-  if (!nameMatches(c.legal || c.name, id.legalName)) VERIF.push(`${c.name} : l'ISIN ${c.isin} renvoie à « ${id.legalName} »`);
-  const fl = await filingsFor(fetchFn, id.lei);
-  if (!fl.length) throw new Error("aucun rapport ESEF pour " + id.lei);
-  const reports = [], segs = [];
+  const fr = /^FR/.test(c.isin || "");
+  let id = c.lei ? { lei: c.lei, legalName: c.name } : await leiFromIsin(fetchFn, c.isin, c.legal || c.name);
+  if (!id && !fr) throw new Error("LEI introuvable pour " + c.isin);
+  if (id && !nameMatches(c.legal || c.name, id.legalName)) VERIF.push(`${c.name} : l'ISIN ${c.isin} renvoie à « ${id.legalName} »`);
+  const fl = id ? await filingsFor(fetchFn, id.lei, 8) : [];
+  // Rapports annuels seulement : un rapport n'est gardé que s'il apporte un exercice complet de plus
+  // (les rapports trimestriels ou semestriels déposés par certaines sociétés, au Danemark notamment, sont écartés).
+  const reports = [], segs = [], used = [], seen = new Set(), spare = [];
   let first = true;
   for (const f of fl) {
+    if (used.length >= 3) break;
     const doc = await getJSON(fetchFn, f.json);
-    if (doc) { reports.push(extract(doc)); segs.push(extractSegments(doc)); if (first) { DIAGNOSTIC[c.id] = { periods: fl.map(x => x.period_end), concepts: candidates(doc) }; first = false; } }
     await sleep(300);
+    if (!doc) continue;
+    const ex = extract(doc), ny = newestYear(ex);
+    if (spare.length < 3) spare.push([ex, doc, f]);
+    if (!isFinite(ny) || seen.has(ny)) continue;
+    seen.add(ny); reports.push(ex); segs.push(extractSegments(doc)); used.push({ periodEnd: f.period_end, report: f.report, json: f.json, ny });
+    if (first) { DIAGNOSTIC[c.id] = { periods: fl.map(x => x.period_end), concepts: candidates(doc) }; first = false; }
   }
+  // Aucun exercice complet reconnu (étiquettes inhabituelles) : on garde les rapports tels quels, comme avant
+  if (!reports.length) for (const [ex, doc, f] of spare) { reports.push(ex); segs.push(extractSegments(doc)); used.push({ periodEnd: f.period_end, report: f.report, json: f.json, ny: -Infinity }); }
+  // Sociétés françaises : dernier rapport annuel déposé à l'AMF quand filings.xbrl.org ne l'a pas (encore) indexé
+  const have = reports.length ? Math.max(...used.map(u => u.ny)) : -Infinity;
+  if (fr && have < expectedYear(reports[0] && reports[0].fyEnd)) {
+    try {
+      const af = await amfAnnualFilings(getJSON, fetchFn, c.isin, `${new Date().getUTCFullYear() - 2}-01-01`);
+      for (const f of af.slice(0, 3)) {
+        const doc = await amfDoc(fetchFn, UA, f); await sleep(300);
+        if (!doc) continue;
+        const ex = extract(doc), ny = newestYear(ex);
+        if (!isFinite(ny) || ny <= have) continue;
+        reports.unshift(ex); segs.unshift(extractSegments(doc));
+        used.unshift({ periodEnd: `${ny}-${ex.fyEnd || "12-31"}`, report: f.url, json: null, ny, amf: true });
+        if (!id && f.lei) id = { lei: f.lei, legalName: c.name };
+        break;
+      }
+    } catch (e) { console.log("AMF", c.name, e.message); }
+  }
+  if (!reports.length) throw new Error(id ? "aucun rapport ESEF pour " + id.lei : "LEI introuvable pour " + c.isin);
   const merged = merge(reports), s = toSeries(merged);
   const caByYear = Object.fromEntries(Object.entries(merged.years).map(([y, r]) => [y, r.ca]));
   return { v: VERSION, devise2: true, segments: bestSegments(segs, caByYear),
-    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id.lei, legalName: id.legalName || c.name,
+    id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id ? id.lei : null, legalName: (id && id.legalName) || c.name,
     sector: c.sector, ...s,
-    sources: fl.map(f => ({ periodEnd: f.period_end, report: f.report, json: f.json })),
+    sources: used.map(u => ({ periodEnd: u.periodEnd, report: u.report, json: u.json, ...(u.amf ? { source: "AMF" } : {}) })),
     updated: new Date().toISOString().slice(0, 10),
   };
 }
@@ -152,7 +190,7 @@ async function collectActuSec(fetchFn, list) {
       const sub = await getJSON(fetchFn, subsUrl(cik));
       recentFilings(sub, cik, 8).forEach(f => items.push({ id: c.id, ...f }));
     } catch (e) { console.log("actu SEC", c.name, e.message); }
-    await sleep(150);
+    await sleep(600); // SEC : 10 requêtes par seconde au plus ; 5 lectures en parallèle avec une pause restent en dessous (évite les refus 429)
   });
   items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
   writeFileSync(new URL("actu-sec.json", OUT), JSON.stringify({ updated: new Date().toISOString(), source: "SEC EDGAR", items: items.slice(0, 600) }));
@@ -181,7 +219,12 @@ async function main() {
     if (!only && existsSync(file)) { // comptes récents : on garde (les comptes ne changent qu'une fois par an)
       const old = JSON.parse(readFileSync(file));
       const deviseDouteuse = !old.devise2 && old.currency === "EUR" && /^(SE|DK|NO|GB|CH|PL|CZ|HU|IS)/.test(old.isin || c.isin || ""); // comptes non européens lus à tort en euros
-      if (old.v === VERSION && !deviseDouteuse && old.updated && Date.now() - new Date(old.updated) < FRESH) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      // Relecture étalée sur une semaine (selon l'identifiant) pour ne pas tout relire le même jour ;
+      // comptes en retard d'un exercice (rapport attendu mais absent) : nouvel essai chaque jour pour la France (rapports AMF), tous les trois jours ailleurs.
+      const spread = (FRESH ? [...c.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 7, 0) * 864e5 : 0);
+      const lastY = (old.years || [])[(old.years || []).length - 1];
+      const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? 20 : 70) * 3600e3;
+      if (old.v === VERSION && !deviseDouteuse && !late && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);
@@ -198,7 +241,7 @@ async function main() {
   // Plusieurs lectures en même temps : 3 pour filings.xbrl.org, 5 pour la SEC (qui accepte 10 requêtes par seconde)
   const idx = U.map((c, i) => [c, i]);
   if (!only && !CIK && idx.some(([c]) => c.sec && !c.cik)) { try { CIK = await cikMap(getJSON, fetch); } catch (e) { console.log("liste SEC", e.message); } }
-  await Promise.all([pool(idx.filter(([c]) => !c.sec), 3, ([c, i]) => one(c, i)), pool(idx.filter(([c]) => c.sec), 5, async ([c, i]) => { await one(c, i); await sleep(150); })]);
+  await Promise.all([pool(idx.filter(([c]) => !c.sec), 3, ([c, i]) => one(c, i)), pool(idx.filter(([c]) => c.sec), 5, async ([c, i]) => { await one(c, i); await sleep(400); })]);
   const list = slots.filter(Boolean);
   DIAGNOSTIC.__verif = VERIF;
   writeFileSync(new URL("./diagnostic.json", import.meta.url), JSON.stringify(DIAGNOSTIC, null, 1));

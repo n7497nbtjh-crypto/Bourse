@@ -40,4 +40,23 @@ near(e.ebit, 19500, "résultat d'exploitation lu sur une étiquette propre");
 near(e.debt, 5051, "dette : parts long et court terme propres à l'entreprise");
 near(e.netDebt, 4051, "dette nette correspondante");
 near(e.ebitda, 26500, "EBITDA : amortissements totaux, sous-totaux ignorés");
+// Rapport iXBRL déposé à l'AMF (data/amf.mjs) : contextes, échelle, signe, formats « point » et « virgule », ventilations ignorées
+const { ixbrlToJson, ixValue, unzip } = await import("../data/amf.mjs");
+const ix = `<xbrli:context id="d"><xbrli:entity><xbrli:identifier scheme="s">L</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:startDate>2025-01-01</xbrli:startDate><xbrli:endDate>2025-12-31</xbrli:endDate></xbrli:period></xbrli:context>
+<xbrli:context id="s"><xbrli:entity><xbrli:identifier scheme="s">L</xbrli:identifier><xbrli:segment><xbrldi:explicitMember dimension="ifrs-full:SegmentsAxis">x:AMember</xbrldi:explicitMember></xbrli:segment></xbrli:entity><xbrli:period><xbrli:startDate>2025-01-01</xbrli:startDate><xbrli:endDate>2025-12-31</xbrli:endDate></xbrli:period></xbrli:context>
+<xbrli:context id="i"><xbrli:entity><xbrli:identifier scheme="s">L</xbrli:identifier></xbrli:entity><xbrli:period><xbrli:instant>2025-12-31</xbrli:instant></xbrli:period></xbrli:context>
+<xbrli:unit id="u"><xbrli:measure>iso4217:EUR</xbrli:measure></xbrli:unit>
+<ix:nonFraction name="ifrs-full:Revenue" contextRef="d" unitRef="u" scale="6" format="ixt:num-dot-decimal">80,807</ix:nonFraction>
+<ix:nonFraction name="ifrs-full:Revenue" contextRef="s" unitRef="u" scale="6" format="ixt:num-dot-decimal">40,000</ix:nonFraction>
+<ix:nonFraction name="ifrs-full:ProfitLossAttributableToOwnersOfParent" contextRef="d" unitRef="u" scale="6" format="ixt:num-comma-decimal"><span>10.878,5</span></ix:nonFraction>
+<ix:nonFraction name="ifrs-full:CashAndCashEquivalents" contextRef="i" unitRef="u" scale="6" sign="-" format="ixt:num-dot-decimal">1 000</ix:nonFraction>`;
+const ixr = extract(ixbrlToJson([ix])).years[2025] || {};
+near(ixr.ca, 80807, "iXBRL : chiffre d'affaires du groupe (ventilation ignorée)");
+near(ixr.net, 10878.5, "iXBRL : format à virgule décimale");
+near(ixr.cash, -1000, "iXBRL : signe négatif et date de bilan");
+near(ixValue("-", "ixt:fixed-zero"), 0, "iXBRL : tiret = zéro");
+if (Object.keys(unzip(Buffer.from("pas un zip"))).length) { bad++; console.log("ÉCART zip invalide"); } else console.log("ok  fichier qui n'est pas un zip : ignoré");
+const { expectedYear } = await import("../data/fetch_data.mjs");
+const ey = [expectedYear("12-31", new Date("2026-03-15T00:00:00Z")), expectedYear("12-31", new Date("2026-05-15T00:00:00Z")), expectedYear("03-31", new Date("2026-10-29T00:00:00Z"))].join();
+if (ey !== "2024,2025,2026") { bad++; console.log("ÉCART exercice attendu", ey); } else console.log("ok  exercice attendu selon la date de clôture");
 console.log(bad ? `${bad} écart(s)` : "0 écart"); process.exit(bad ? 1 : 0);
