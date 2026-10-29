@@ -1,29 +1,33 @@
-// Diagnostic : rapports financiers annuels ESEF absents de filings.xbrl.org (ex. LVMH 2025) : que propose l'AMF (info-financiere.gouv.fr) ?
+// Diagnostic : lecture des rapports annuels ESEF déposés à l'AMF (data/amf.mjs) pour des sociétés en retard ou sans données.
 import { writeFileSync, mkdirSync } from "node:fs";
+import { amfAnnualFilings, amfDoc, ixbrlFiles, unzip } from "../amf.mjs";
+import { extract, toSeries, merge } from "../esef.mjs";
+import { getJSON, UA } from "../fetch_data.mjs";
 const DIR = "data/diag/fraicheur/"; mkdirSync(DIR, { recursive: true });
-const UA = "bilan-univers/1.0 (site pedagogique; " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse") + ")";
-const log = [], L = (...a) => { log.push(a.join(" ")); console.log(...a); };
-const API = "https://www.info-financiere.gouv.fr/api/explore/v2.1/catalog/datasets/flux-amf-new-prod/records";
-const out = {};
-try {
-  // 1. Les champs du jeu de données
-  const meta = await (await fetch("https://www.info-financiere.gouv.fr/api/explore/v2.1/catalog/datasets/flux-amf-new-prod", { headers: { "user-agent": UA } })).json();
-  out.fields = (meta.fields || []).map(f => [f.name, f.type, f.label]);
-  // 2. Documents récents de LVMH, Kering, TotalEnergies
-  for (const isin of ["FR0000121014", "FR0000121485", "FR0014000MR3", "FR0000120271"]) {
-    const u = new URL(API); u.searchParams.set("limit", "100"); u.searchParams.set("order_by", "uin_dat_amf desc");
-    u.searchParams.set("where", `identificationsociete_iso_cd_isi = "${isin}" AND uin_dat_amf >= date'2026-01-01'`);
-    const j = await (await fetch(u, { headers: { "user-agent": UA } })).json();
-    out[isin] = (j.results || []).map(r => r);
-    L(isin, (j.results || []).length, "documents");
-  }
-  // 3. Rapports financiers annuels récents
-  const u = new URL(API); u.searchParams.set("limit", "100"); u.searchParams.set("where", `uin_dat_amf >= date'2026-03-01' AND search("rapport financier annuel")`);
-  const j = await (await fetch(u, { headers: { "user-agent": UA } })).json();
-  out.rfa = (j.results || []).slice(0, 30); out.rfaTotal = j.total_count;
-  // 4. Fichiers joints : extensions
-  const ext = {}; for (const r of [...out.rfa, ...Object.values(out).filter(Array.isArray).flat()]) for (const v of Object.values(r || {})) if (typeof v === "string" && /^https?:\/\//.test(v)) { const e = (v.match(/\.([a-z0-9]{2,5})(\?|$)/i) || [])[1] || "?"; ext[e] = (ext[e] || 0) + 1; }
-  out.ext = ext; L("extensions", JSON.stringify(ext));
-} catch (e) { L("erreur", e.message); }
-writeFileSync(DIR + "amf.json", JSON.stringify(out, null, 1));
+const log = [], L = (...a) => { const s = a.join(" "); log.push(s); console.log(s); };
+const T0 = Date.now();
+const LIST = [["lvmh", "FR0000121014"], ["kering", "FR0000121485"], ["air-liquide", "FR0000120073"], ["danone", "FR0000120644"], ["orange", "FR0000133308"], ["eiffage", "FR0000130452"],
+  ["jcdecaux", "FR0000077919"], ["dassault-aviation", "FR0014004L86"], ["lectra", "FR0000065484"], ["virbac", "FR0000031577"], ["trigano", "FR0005691656"], ["capgemini", "FR0000125338"]];
+const res = {};
+for (const [id, isin] of LIST) {
+  if (Date.now() - T0 > 12 * 60e3) break;
+  try {
+    const fl = await amfAnnualFilings(getJSON, fetch, isin, "2025-01-01");
+    L(id, fl.length, "dépôts annuels", JSON.stringify(fl.slice(0, 4)));
+    res[id] = { filings: fl };
+    for (const f of fl.slice(0, 3)) {
+      const t = Date.now();
+      const r = await fetch(f.url, { headers: { "user-agent": UA } }); const buf = Buffer.from(await r.arrayBuffer());
+      const magic = buf.slice(0, 4).toString("hex"), z = magic === "504b0304" ? Object.keys(unzip(buf)) : [];
+      const htmls = ixbrlFiles(buf, f.url);
+      const doc = await amfDoc(async () => ({ ok: true, arrayBuffer: async () => buf }), UA, f);
+      const ex = doc ? extract(doc) : null, s = ex ? toSeries(merge([ex])) : null;
+      L("  ", f.url.split("/").pop(), "taille", buf.length, "magic", magic, "fichiers", z.length, JSON.stringify(z.filter(n => /html/i.test(n)).slice(0, 4)), "iXBRL", htmls.length, "faits", doc ? Object.keys(doc.facts).length : 0,
+        "années", s ? JSON.stringify(s.years) : "-", "CA", s && s.fin.ca ? JSON.stringify(s.fin.ca) : "-", "net", s && s.fin.net ? JSON.stringify(s.fin.net) : "-", Math.round((Date.now() - t) / 1000) + "s");
+      res[id][f.url] = s;
+      if (s && s.years.length) break;
+    }
+  } catch (e) { L(id, "erreur", e.message); }
+}
+writeFileSync(DIR + "amf_lecture.json", JSON.stringify(res, null, 1));
 writeFileSync("data/diag/out.json", JSON.stringify({ fraicheur: log }, null, 1));
