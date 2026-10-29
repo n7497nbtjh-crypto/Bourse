@@ -63,3 +63,17 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
 - Nouvelles notions dans `TERMS`/`ALL` (lexique) : `margenette`, `invest`, `conversion`, `divverses`.
 - À signaler (agent « actu ») : sur /entreprise/apple/actualite, « exercice clos le NaN undefined 2025 » : pour les comptes SEC,
   `periodEnd` vaut juste l'année (« 2025 ») et `dLabel()` ne sait pas le lire (ligne ~167 de `m/actu.js`).
+
+## Synthèse de la semaine (agent « synthese », module `cf/site/m/synthese.js`)
+« Votre semaine en 2 minutes » en tête de Mon espace (`espaceBilan` et `pageEspace` redéclarées) et sur l'accueil d'un membre connecté (`synAccueil(el, moi)`, appelée par `pageHome`).
+- Faits calculés côté serveur par `cf/src/synthese.mjs` (`faitsSynthese`, sans dépendance), stockés dans la table `bilans` (une ligne par compte et par semaine ISO, `v: 2`).
+  `GET /api/espace/bilan[?semaine=2026-W44][&apercu=1]` : `{ v, semaine, du, au, lignes: [{ k, nom, type, variation_semaine_pct, serie, du, partiel, indice: { id, nom, pct }, ecart_pts, favori, en_portefeuille, portefeuille: { valeur_eur, poids_pct, var_eur } }],
+  moyenne, meilleure, pire, hausses, baisses, indices, portefeuille: { valeur_eur, var_eur, var_pct, serie, vs, alertes: [{ code, niveau, valeur, texte, pourquoi, evol }], levees },
+  annonces: [{ k, nom, date, categorie, categorie_label, poids, titre, resume, change, chiffres, source, source_nom, origine: officiel|presse, lien }], a_venir, essentiel: [3 phrases], lecture_min, texte, historique }`.
+  `apercu=1` : sans appel au modèle (accueil). Le commentaire `texte` est rédigé par `rediger()` (au plus 4 essais par semaine), à partir des seuls faits.
+- Cours : `cf/site/data/cours-semaine.json` `{ dates: [clôtures], items: { "c:id": [cours…] } }`, écrit par `data/cours_fetch.mjs` (la copie du matin = clôture de la séance précédente).
+- Actualités lues dans `cf/site/data/actu/c/<id>.json` (agent « actu ») et `actu-analyse.json`, dédoublonnées par lien source.
+- Notifications : `syntheseNotif(env, compteId)` (export de `cf/src/espace.mjs`) renvoie `{ titre, resume, lien, semaine }` de la dernière synthèse ;
+  la notification « bilan » du samedi porte « Votre semaine en 2 minutes est prête. » + la première phrase, reprise par `message()` de `cf/src/push.mjs`.
+- Bouton d'abonnement : si le module « pwa » définit `pwaNotifBouton({ sujet, texte })` (renvoie du HTML), il est affiché dans la barre d'actions de la synthèse.
+- Tests : `node tests/t_synthese.mjs`, `python3 tests/t_synthese_ui.py [--shots dossier]` (maquette `tests/synthese_maquette.mjs`).

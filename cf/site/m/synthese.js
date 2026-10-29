@@ -114,7 +114,8 @@ a.synkpi:hover{border-color:var(--ink)}
 .synhome{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:center}
 .synhome .synk li{font-size:14.5px}
 .synhome .kp{display:grid;gap:8px}
-@media (max-width:860px){.synhome{grid-template-columns:minmax(0,1fr)}}
+.synhome .kp .synkpi small,.synhome .kp .synkpi span{white-space:normal}
+@media (max-width:860px){.synhome{grid-template-columns:minmax(0,1fr)}.synhome .kp{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.synhome .kp .synkpi{padding:8px 9px}.synhome .kp .synkpi b{font-size:19px}.synhome .kp .synkpi small,.synhome .kp .synkpi span{font-size:11.5px}}
 .synfoot{font-size:12.5px;color:var(--grey);margin:4px 0 0}
 .synmore{margin:10px 0 0;padding:10px 12px;border-radius:10px;background:var(--soft);font-size:13.5px;display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
 </style>`);
@@ -130,6 +131,7 @@ const SYN_LECONS = { // situation → leçon de l'Académie (module/leçon)
 };
 function synPct(v, d = 1) { if (v == null || !isFinite(v)) return "–"; const r = Math.round(v * 10 ** d) / 10 ** d; return (r > 0 ? "+" : r < 0 ? "−" : "") + nf(d).format(Math.abs(r)) + " %"; }
 function synEur(v, sign = true) { return v == null || !isFinite(v) ? "–" : (sign ? (v > 0 ? "+" : v < 0 ? "−" : "") : "") + F0.format(Math.abs(Math.round(v))) + " €"; }
+function synInsec(t) { return esc(t).replace(/ ([%€])/g, "&nbsp;$1").replace(/(\d) (Md€|M€|pts?)/g, "$1&nbsp;$2"); } // pas de retour à la ligne avant % ou €
 function synCls(v) { const r = Math.round((v || 0) * 10) / 10; return r > 0 ? "up" : r < 0 ? "down" : "muted"; }
 function synJour(iso) { const d = new Date(iso + "T12:00:00Z"); return `${SYN_JOURS[d.getUTCDay()]} ${d.getUTCDate()} ${SYN_MOIS[d.getUTCMonth()]}`; }
 function synDuAu(b) {
@@ -283,6 +285,8 @@ function synIcs(b, which) {
 }
 function synNotifHTML() { // lien avec le module « pwa » : bouton d'abonnement aux notifications, s'il le fournit
   try { if (typeof pwaNotifBouton === "function") return pwaNotifBouton({ sujet: "synthese", texte: "Être prévenu chaque samedi" }) || ""; } catch (e) { }
+  // sinon : les réglages des notifications push sont en tête de l'onglet Alertes (module pwa)
+  if (typeof pwaPanneauPush === "function" && "PushManager" in window && "Notification" in window) return `<a href="/espace/alertes">Être prévenu chaque samedi</a>`;
   return "";
 }
 
@@ -296,7 +300,7 @@ function synPageHTML(b, m) {
     <section class="synhero" aria-labelledby="synh"><p class="kick"><span>Votre semaine en 2 minutes</span></p>
       <h2 id="synh">Semaine ${esc(sem)}${b.du ? `, ${esc(synDuAu(b))}` : ""}</h2>
       <div class="synmeta"><span class="on">${b.lecture_min || 2} min de lecture</span><span>${esc(statut)}</span>${b.genere ? `<span>Chiffres du ${esc(new Date(b.genere).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))} à ${esc(new Date(b.genere).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }))}</span>` : ""}${partiel ? `<span>${esc(partiel)}</span>` : ""}</div>
-      ${ess.length ? `<ol class="synk">${ess.map(p => `<li>${esc(p)}</li>`).join("")}</ol>` : ""}
+      ${ess.length ? `<ol class="synk">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
       <nav class="synnav" aria-label="Aller à">${[["synvar", "Variations"], ["synact", `Actualités${(b.annonces || []).length ? " (" + b.annonces.length + ")" : ""}`], ["synav", `À venir${(b.a_venir || []).length ? " (" + b.a_venir.length + ")" : ""}`], ["synint", "Ce que ça change"]].map(([id, t]) => `<a href="#${id}" data-synjump="${id}">${t}</a>`).join("")}
         ${(b.a_venir || []).length ? `<button type="button" class="pri" data-synics="all">+ Ajouter les dates à mon agenda</button>` : ""}${lecPrincipale ? `<a href="${lecPrincipale.href}">Leçon : ${esc(lecPrincipale.titre)}</a>` : ""}${synNotifHTML()}</nav></section>
 
@@ -362,7 +366,7 @@ async function synAccueil(el, m) {
     best ? `<a class="synkpi" href="${synLien(best.k)}"><small>Plus forte hausse</small><b class="${synCls(best.variation_semaine_pct)}">${synPct(best.variation_semaine_pct)}</b><span>${esc(best.nom)}</span></a>` : "",
     worst ? `<a class="synkpi" href="${synLien(worst.k)}"><small>Plus forte baisse</small><b class="${synCls(worst.variation_semaine_pct)}">${synPct(worst.variation_semaine_pct)}</b><span>${esc(worst.nom)}</span></a>` : ""].filter(Boolean);
   el.innerHTML = `<section class="panel"><div class="pb synhome"><div><p class="kick">Votre semaine en 2 minutes · semaine ${esc(String(b.semaine || "").replace(/^\d{4}-W/, ""))}</p>
-      ${ess.length ? `<ol class="synk" style="margin-top:8px">${ess.map(p => `<li>${esc(p)}</li>`).join("")}</ol>` : ""}
+      ${ess.length ? `<ol class="synk" style="margin-top:8px">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
       <div class="synnav" style="border:0;padding-top:4px"><a class="pri" href="/espace">Lire ma semaine (${b.lecture_min || 2} min)</a>${(b.annonces || []).length ? `<a href="/espace#synact">${b.annonces.length} actualité${b.annonces.length > 1 ? "s" : ""}</a>` : ""}${(b.a_venir || []).length ? `<a href="/espace#synav">${b.a_venir.length} date${b.a_venir.length > 1 ? "s" : ""} à venir</a>` : ""}${m.nonlus ? `<a href="/espace/alertes">${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""}</a>` : ""}</div></div>
       ${kp.length ? `<div class="kp">${kp.join("")}</div>` : ""}</div></section>`;
 }

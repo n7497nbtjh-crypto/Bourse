@@ -115,7 +115,10 @@ const court = (s, n) => { s = String(s || "").replace(/\s+/g, " ").trim(); retur
 export function message(ns) {
   if (ns.length === 1) {
     const n = ns[0], t = String(n.texte || ""), i = t.indexOf(" : ");
-    if (n.type === "bilan") return { t: "Votre bilan de la semaine est prêt", b: "Les mouvements de vos entreprises, leurs annonces et les dates à venir, en une page.", u: n.lien || "/espace", tag: "bilan-semaine", ts: n.at };
+    if (n.type === "bilan") { // texte écrit par espace.mjs : « Votre semaine en 2 minutes est prête. » suivi de la première phrase de la synthèse (synthese.mjs)
+      const r = t.replace(/^Votre (bilan de la semaine est prêt|semaine en 2 minutes est prête)\.?\s*/, "");
+      return { t: "Votre semaine en 2 minutes est prête", b: court(r || "Les variations, les annonces et les dates à venir de ce que vous suivez, en une page.", 240), u: n.lien || "/espace", tag: "bilan-semaine", ts: n.at };
+    }
     const nom = i > 0 && i < 80 ? t.slice(0, i) : "bilan.", reste = i > 0 && i < 80 ? t.slice(i + 3) : t;
     const quoi = { annonce: "nouvelle publication", resultats: "résultats demain", mouvement: "mouvement du jour" }[n.type] || (categorie(n) === "dividendes" ? "dividende demain" : "demain");
     return { t: court(`${nom} · ${quoi}`, 90), b: court(reste, 240), u: n.lien || "/espace/alertes", tag: "bilan-" + n.id, ts: n.at };

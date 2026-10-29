@@ -145,6 +145,10 @@ sql.prepare("DELETE FROM bilans").run(); sql.prepare("UPDATE comptes SET last_ta
 const rt = await espace(new Request("https://t.local/api/espace/tache?quoi=bilan", { method: "POST", headers: { "x-admin-key": "k" } }), env), jt = await rt.json();
 const nb = sql.prepare("SELECT texte FROM notifs WHERE compte = ? AND type = 'bilan'").get(acc);
 ok(jt.bilans === 1 && nb && /^Votre semaine en 2 minutes est prête\. Votre portefeuille a gagné 50 €/.test(nb.texte), "notification du samedi " + JSON.stringify(jt) + " " + (nb && nb.texte));
+// Notification push (cf/src/push.mjs) : titre fixe, la première phrase de la synthèse en corps
+const { message } = await import("../cf/src/push.mjs");
+const mp = message([{ id: 1, type: "bilan", texte: nb.texte, lien: "/espace", at: 1 }]), mo = message([{ id: 2, type: "bilan", texte: "Votre bilan de la semaine est prêt.", lien: "/espace", at: 1 }]);
+ok(mp.t === "Votre semaine en 2 minutes est prête" && /^Votre portefeuille a gagné 50 €/.test(mp.b) && mp.u === "/espace" && mo.b.startsWith("Les variations"), "notification push " + JSON.stringify([mp, mo]));
 
 console.log(fails ? `synthese : ${fails} échec(s)` : "synthese : tout est bon");
 process.exit(fails ? 1 : 0);
