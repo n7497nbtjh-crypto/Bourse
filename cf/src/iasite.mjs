@@ -21,28 +21,25 @@ const json = (o, status = 200) => Response.json(o, { status, headers: { "cache-c
 let pret = false;
 async function init(db) {
   if (pret || !db) return;
-  await db.batch([
-    db.prepare(`CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)`),
-    db.prepare(`CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))`),
-  ]);
+  await db.prepare(`CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))`).run();
   pret = true;
 }
+// Les compteurs sont la garantie du coût nul : s'ils ne peuvent pas être lus, l'IA ne répond pas (erreur: true).
 async function compteurs(env, h) {
-  if (!env.DB) return { neurones: 0, questions: 0 };
-  await init(env.DB);
-  const [a, b] = await env.DB.batch([
-    env.DB.prepare(`SELECT n FROM ia_neurones WHERE jour = ?`).bind(jour()),
-    env.DB.prepare(`SELECT n FROM ia_visiteurs WHERE jour = ? AND h = ?`).bind(jour(), h),
-  ]);
-  return { neurones: (a.results[0] || {}).n || 0, questions: (b.results[0] || {}).n || 0 };
+  if (!env.DB) return { erreur: true, neurones: 0, questions: 0 };
+  try {
+    await init(env.DB);
+    const a = await env.DB.prepare(`SELECT n FROM ia_neurones WHERE jour = ?`).bind(jour()).first();
+    const b = await env.DB.prepare(`SELECT n FROM ia_visiteurs WHERE jour = ? AND h = ?`).bind(jour(), h).first();
+    return { neurones: (a && a.n) || 0, questions: (b && b.n) || 0 };
+  } catch (e) { return { erreur: true, neurones: 0, questions: 0, detail: String(e && e.message || e) }; }
 }
 async function compter(env, h, neurones) {
   if (!env.DB) return;
-  await env.DB.batch([
-    env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), neurones, neurones),
-    env.DB.prepare(`INSERT INTO ia_visiteurs (jour, h, n) VALUES (?, ?, 1) ON CONFLICT (jour, h) DO UPDATE SET n = n + 1`).bind(jour(), h),
-    env.DB.prepare(`DELETE FROM ia_visiteurs WHERE jour < ?`).bind(jour()),
-  ]);
+  await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), neurones, neurones).run();
+  await env.DB.prepare(`INSERT INTO ia_visiteurs (jour, h, n) VALUES (?, ?, 1) ON CONFLICT (jour, h) DO UPDATE SET n = n + 1`).bind(jour(), h).run();
+  if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_visiteurs WHERE jour < ?`).bind(jour()).run();
 }
 const plafonds = env => ({ neurones: +env.IA_NEURONES_JOUR || 9000, questions: +env.IA_QUESTIONS_JOUR || 25 });
 
@@ -53,6 +50,7 @@ export async function iaSite(request, env) {
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json({ disponible: false, raison: "absente" });
     const c = await compteurs(env, h);
+    if (c.erreur) return json({ disponible: false, raison: "compteur", detail: c.detail });
     return json({ disponible: c.neurones < P.neurones - 300 && c.questions < P.questions, reste_visiteur: Math.max(0, P.questions - c.questions), site_epuise: c.neurones >= P.neurones - 300, plafond_visiteur: P.questions });
   }
   if (url.pathname !== "/api/ia/rediger") return json({ error: "Introuvable" }, 404);
@@ -64,6 +62,7 @@ export async function iaSite(request, env) {
   const user = String(b.user || "").slice(0, 15000), max = Math.min(Math.max(+b.max || 600, 200), 900);
   if (user.length < 3) return json({ error: "Question vide" }, 400);
   const c = await compteurs(env, h);
+  if (c.erreur) return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
   if (c.questions >= P.questions) return json({ limite: "visiteur", message: `Vous avez posé ${P.questions} questions à l'IA du site aujourd'hui : c'est la limite quotidienne, pour que tout le monde y ait accès. Les réponses calculées restent disponibles, et l'IA revient demain.` }, 429);
   const messages = [{ role: "system", content: sys }, { role: "user", content: user }];
   for (const [model, cin, cout, nom] of MODELES) {
@@ -75,7 +74,7 @@ export async function iaSite(request, env) {
       const raw = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
       const txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw);
       const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
-      await compter(env, h, reel);
+      try { await compter(env, h, reel); } catch (e) { return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur en panne)." }, 503); }
       if (txt.length > 15) return json({ txt, modele: nom });
     } catch (e) { /* modèle suivant */ }
   }
