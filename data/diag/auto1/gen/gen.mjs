@@ -10,7 +10,8 @@ const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? +proce
 const J = f => existsSync(D + f) ? JSON.parse(readFileSync(D + f)) : {};
 const { isinOk } = await import(pathToFileURL(REPO + "/data/isin.mjs").href);
 // Liste existante, sans le lot auto1 lui-même (s'il est déjà branché dans univers.mjs)
-const AUTO = existsSync(REPO + "/data/lots/auto1.mjs") ? new Set((await import(pathToFileURL(REPO + "/data/lots/auto1.mjs").href)).default.map(c => c.id)) : new Set();
+const LOT = process.argv.includes("--lot") ? process.argv[process.argv.indexOf("--lot") + 1] : "auto1", ONLY_US = process.argv.includes("--only-us");
+const AUTO = existsSync(REPO + "/data/lots/" + LOT + ".mjs") ? new Set((await import(pathToFileURL(REPO + "/data/lots/" + LOT + ".mjs").href)).default.map(c => c.id)) : new Set();
 const U = (await import(pathToFileURL(REPO + "/data/univers.mjs").href)).default.filter(c => !AUTO.has(c.id));
 console.log("liste existante :", U.length, "sociétés");
 const W = J("wd.json"), LB = J("wdlab.json"), E = J("esef.json"), G = J("gleif.json"), F = J("figi.json"), SB = J("sec_base.json"), SS = J("sec_subs.json");
@@ -242,7 +243,7 @@ function fiche(kind) { const k = K[kind]; return { fait: k.fait, argent: k.argen
 const clean = s => String(s || "").replace(/\s*[—–]\s*/g, ", ").replace(/\s+/g, " ").trim();
 
 // ---------- Atalaya Mining (exemple signalé : fiche rédigée à la main) ----------
-push({ name: "Atalaya Mining", ticker: "ATYM", isin: "CY0106002112", lei: "549300QNQPXVRXGXOX56", tv: "LSE:ATYM", region: "EU", sector: "materiaux", domain: "atalayamining.com",
+if (LOT === "auto1") push({ name: "Atalaya Mining", ticker: "ATYM", isin: "CY0106002112", lei: "549300QNQPXVRXGXOX56", tv: "LSE:ATYM", region: "EU", sector: "materiaux", domain: "atalayamining.com",
   desc: "Extraction de cuivre à la mine de Riotinto, en Andalousie (Espagne).",
   fiche: { fait: "Exploite la mine de cuivre à ciel ouvert de Riotinto, en Andalousie (Espagne), et développe d'autres projets miniers dans la région.", argent: "La vente de concentrés de cuivre aux fonderies.", depend: "Le cours du cuivre, la teneur du minerai extrait et les coûts d'énergie et d'exploitation." } },
   { data: hasEsef("549300QNQPXVRXGXOX56"), score: 1e9, zone: "EU", kind: "cuivre" });
@@ -324,7 +325,7 @@ for (const [q, o] of Object.entries(W)) { for (const c of o.cik || []) wdByCik[+
 const usCand = [];
 const PREF = /-(P[A-Z]?|W[S]?|U[N]?|R[T]?)$|\.(W|U|R)$/;
 for (const [cik, s] of Object.entries(SS)) {
-  const pairs = (s.t || []).map((t, i) => [t, (s.x || [])[i]]).filter(([t, x]) => (x === "NYSE" || x === "Nasdaq") && !PREF.test(t) && !(x === "Nasdaq" && /^[A-Z]{4}[WURP]$/.test(t)));
+  const pairs = (s.t || []).map((t, i) => [t, (s.x || [])[i]]).filter(([t, x]) => (x === "NYSE" || x === "Nasdaq") && !PREF.test(t) && !(x === "Nasdaq" && (/^[A-Z]{4}[WURP]$/.test(t) || /^[A-Z]{3}P[A-Z]$/.test(t))));
   const nm = s.n || cik;
   if (!pairs.length) { drop("pas d'action ordinaire cotée à New York", nm); continue; }
   const [t, x] = pairs[0]; const p = x === "NYSE" ? "NYSE" : "NASDAQ", tvT = t.replace(/-/g, ".");
@@ -335,7 +336,7 @@ for (const [cik, s] of Object.entries(SS)) {
   if (!recent || recent < "2025-01-01") { drop("pas de rapport annuel récent à la SEC", nm); continue; }
   const o = wdByCik[+cik] || wdByTick[p + ":" + tvT] || null;
   if (!o) { drop("pas de fiche Wikidata (site officiel inconnu)", nm); continue; }
-  if (!tokOverlap(o.en || o.fr, nm) && !tokOverlap(o.fr || o.en, nm)) { drop("fiche Wikidata d'une autre société (nom différent de la SEC)", nm + " / " + (o.en || o.fr)); continue; }
+  if ((o.en || o.fr) && !tokOverlap(o.en || o.fr, nm) && !tokOverlap(o.fr || o.en, nm)) { drop("fiche Wikidata d'une autre société (nom différent de la SEC)", nm + " / " + (o.en || o.fr)); continue; }
   let kind = SIC[sic] || null;
   if (!kind) kind = kindOf(o);
   else if (GENS.has(kind)) { const w = kindOf(o, K[kind].sector); if (w && K[w].sector === K[kind].sector) kind = w; }
@@ -347,12 +348,16 @@ for (const [cik, s] of Object.entries(SS)) {
   if (/^(GEO GROUP|CoreCivic)/i.test(nm)) { drop("activité mal décrite par le code SIC (relecture)", nm); continue; }
   const wdName = clean(o.en || o.fr), secName = prettyName(secClean(nm));
   const name = toks(wdName).every(w => toks(secName).includes(w) || GENERIC_W.has(w)) ? wdName : secName; if (!name) { drop("nom manquant", nm); continue; }
+  // Relecture : sociétés écartées (activité mal décrite, site périmé, minage de cryptomonnaies) et secteurs corrigés
+  if (/^(Innovate|Neighborhood Intelligence|Valvoline|Compass Diversified|People|MARA Holdings|CleanSpark|Bitdeer|Argo Blockchain|Canaan|Riot Platforms|Hut 8|Cipher Mining|Bitfarms|TeraWulf|Core Scientific)\b/i.test(name)) { drop("relecture : activité mal décrite ou douteuse", name); continue; }
+  const OVR_US = { "SSR Mining": ["or", "ssrmining.com"], "Federal Signal Corporation": ["camions"], "MSA Safety": ["securite"], "Armstrong World Industries": ["materiaux_construction"] };
+  let domain2 = domain; if (OVR_US[name]) { kind = OVR_US[name][0]; if (OVR_US[name][1]) domain2 = OVR_US[name][1]; }
   const k = K[kind];
   let region = "US"; if (!US_STATES.has(s.ad || "")) { const cs = o.country || []; region = cs.includes("Q30") ? "US" : cs.some(c => EU_QID.has(c)) ? "EU" : "MONDE"; }
   const isin = (o.isin || []).find(i => isinOk(i) && i.startsWith("US")) || (o.isin || []).find(i => isinOk(i)) || null;
   const rev = (SB.frames || {})[String(+cik)] || 0;
-  usCand.push([{ name, ticker: t.replace(/-/g, "."), ...(isin ? { isin } : {}), sec: t, cik: String(cik).padStart(10, "0"), tv: `${p}:${tvT}`, region, sector: k.sector, domain, desc: descFr(o, k.desc), fiche: fiche(kind) },
-    { data: true, score: rev, zone: region === "US" ? "US" : "SEC-" + region, kind, sic, form: Object.keys(s.fm || {}).join("/") }]);
+  usCand.push([{ name, ticker: t.replace(/-/g, "."), ...(isin ? { isin } : {}), sec: t, cik: String(cik).padStart(10, "0"), tv: `${p}:${tvT}`, region, sector: k.sector, domain: domain2, desc: descFr(o, k.desc), fiche: fiche(kind) },
+    { data: true, score: rev || (+o.sl || 0) * 5e7, zone: region === "US" ? "US" : "SEC-" + region, kind, sic, form: Object.keys(s.fm || {}).join("/") }]);
 }
 
 function secClean(n) {
@@ -407,11 +412,12 @@ for (const [q, o] of Object.entries(W)) {
 const MAX = { US: arg("--max-us", 1e9), EUnd: arg("--max-eu-nodata", 1e9), MOnd: arg("--max-monde", 1e9) };
 const desc = l => l.sort((a, b) => b[1].score - a[1].score);
 let nUS = 0, nEUnd = 0, nMO = 0;
-for (const [rec, x] of desc(usCand)) { if (x.zone === "US") { if (nUS >= MAX.US) continue; if (push(rec, x)) nUS++; } else push(rec, x); }
-for (const [rec, x] of desc(euCand)) if (x.data) push(rec, x);
-for (const [rec, x] of desc(moCand)) if (x.data) push(rec, x);
-for (const [rec, x] of desc(euCand)) if (!x.data && nEUnd < MAX.EUnd && push(rec, x)) nEUnd++;
-for (const [rec, x] of desc(moCand)) if (!x.data && nMO < MAX.MOnd && push(rec, x)) nMO++;
+let nF = 0; const MAXF = arg("--max-foreign", 1e9);
+for (const [rec, x] of desc(usCand)) { if (x.zone === "US") { if (nUS >= MAX.US) continue; if (push(rec, x)) nUS++; } else if (nF < MAXF && push(rec, x)) nF++; }
+if (!ONLY_US) for (const [rec, x] of desc(euCand)) if (x.data) push(rec, x);
+if (!ONLY_US) for (const [rec, x] of desc(moCand)) if (x.data) push(rec, x);
+if (!ONLY_US) for (const [rec, x] of desc(euCand)) if (!x.data && nEUnd < MAX.EUnd && push(rec, x)) nEUnd++;
+if (!ONLY_US) for (const [rec, x] of desc(moCand)) if (!x.data && nMO < MAX.MOnd && push(rec, x)) nMO++;
 
 // ---------- Bilan ----------
 const by = (f) => { const m = {}; for (const r of OUT) { const k = f(r); m[k] = (m[k] || 0) + 1; } return m; };
@@ -441,6 +447,7 @@ if (process.argv.includes("--write")) {
 // Atalaya Mining (Londres : ATYM) est rédigée à la main.
 export default [
 `;
-  writeFileSync(REPO + "/data/lots/auto1.mjs", head + body + "];\n");
+  const head2 = LOT === "auto1" ? head : head.replace("Lot « auto1 »", "Lot « " + LOT + " »").replace(/\n\/\/ Atalaya[^\n]*/, "");
+  writeFileSync(REPO + "/data/lots/" + LOT + ".mjs", head2 + body + "];\n");
   console.log("écrit", OUT.length);
 }
