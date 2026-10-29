@@ -177,7 +177,9 @@ details.cmpr-det > div{padding:0 14px 12px}
 @media (max-width:900px){.cmpr-thb{grid-template-columns:1fr}.cmpr-exp{border-top:1px dashed var(--line2);padding-top:10px}}
 @media (max-width:760px){
   .cmpr-sel{grid-template-columns:1fr}
-  .cmpr-card{padding:10px 40px 10px 10px}
+  .cmpr-card:not(.cmpr-add):not(.cmpr-lim){padding:9px 40px 9px 9px}.cmpr-card .lg{--s:34px!important}.cmpr-card b{font-size:14.5px}
+  .cmpr-card .pills{margin:0 0 0 6px;vertical-align:-1px}
+  .cmpr-lim{border:0;padding:2px 2px 0;background:none;font-size:13px}.cmpr-lim b{font-size:13px!important}
   .cmpr-vl li{grid-template-columns:1fr;gap:3px}
   .cmpr-vl p{font-size:14.5px}
   .cmpr-ia,.cmpr-th,.cmpr-legend{padding-left:16px;padding-right:16px}
@@ -565,8 +567,8 @@ function cmprSugList(ids) { // concurrents directs des entreprises choisies (lis
 function cmprRender(ids, cut, CMAX) {
   const cos = ids.map(id => RBY[id]), url = a => "/comparer" + (a.length ? "?ids=" + a.join(",") : ""), sug = cmprSugList(ids);
   const card = c => { const t = c.missing ? null : quick(c);
-    return `<div class="cmpr-card"><a class="cmpr-cl" href="/entreprise/${c.id}">${logo(c, 40)}<span><b>${esc(c.name)}</b><small>${esc([c.ticker, regName(c), secName(c)].filter(Boolean).join(" · "))}</small><small>${c.missing ? esc(missingTxt(c)) : `Comptes ${c.year}${c.currency && c.currency !== "EUR" ? ` · en ${c.currency}` : ""}`}</small>${t ? pills(t) : ""}</span></a><button type="button" class="cmpr-x" data-cmpr-rm="${c.id}" aria-label="Retirer ${esc(c.name)} de la comparaison" title="Retirer">×</button></div>`; };
-  const add = ids.length < CMAX ? `<div class="cmpr-card cmpr-add"><label for="cmpq">${ids.length ? "Ajouter une entreprise" : "Choisir une entreprise"}</label><div class="cmpr-q"><input id="cmpq" type="search" autocomplete="off" spellcheck="false" placeholder="Nom ou code, par exemple LVMH ou AAPL" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmps"><div class="cmpr-sug" id="cmps" role="listbox" hidden></div></div><small>${ids.length}/${CMAX} · ${CMAX === 5 ? "Premium : cinq à la fois" : `trois à la fois, cinq avec <a class="lnk" href="/premium">Premium</a>`}</small></div>`
+    return `<div class="cmpr-card"><a class="cmpr-cl" href="/entreprise/${c.id}">${logo(c, 40)}<span><b>${esc(c.name)}</b><small>${esc([c.ticker, regName(c), secName(c)].filter(Boolean).join(" · "))}</small><small>${c.missing ? esc(missingTxt(c)) : `Comptes ${c.year}${c.currency && c.currency !== "EUR" ? ` · en ${c.currency}` : ""}`}${t ? " " + pills(t) : ""}</small></span></a><button type="button" class="cmpr-x" data-cmpr-rm="${c.id}" aria-label="Retirer ${esc(c.name)} de la comparaison" title="Retirer">×</button></div>`; };
+  const add = ids.length < CMAX ? `<div class="cmpr-card cmpr-add"><label for="cmpq">${ids.length ? "Ajouter une entreprise" : "Choisir une entreprise"}</label><div class="cmpr-q"><input id="cmpq" type="search" autocomplete="off" spellcheck="false" placeholder="Nom ou code (ex. LVMH, AAPL)" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmps"><div class="cmpr-sug" id="cmps" role="listbox" hidden></div></div><small>${ids.length}/${CMAX} · ${CMAX === 5 ? "Premium : cinq à la fois" : `trois à la fois, cinq avec <a class="lnk" href="/premium">Premium</a>`}</small></div>`
     : `<div class="cmpr-card cmpr-lim"><b style="font-size:14px">${CMAX} entreprises : c'est le maximum${CMAX === 5 ? "" : " en version gratuite"}.</b><span>${CMAX === 5 ? "Retirez-en une pour en ajouter une autre." : `Retirez-en une, ou passez à <a class="lnk" href="/premium">Premium</a> pour en comparer cinq.`}</span></div>`;
   app.innerHTML = `<div class="cmpr-page"><div class="crumbs"><a href="/entreprises">Entreprises</a> › Comparer</div>
     <h1 class="pagetitle">${cos.length >= 2 ? esc(listFr(cos.map(c => c.name))) : "Comparer des entreprises"}</h1>
