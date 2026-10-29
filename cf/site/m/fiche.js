@@ -301,7 +301,7 @@ function ficheMetierHTML(s, c) {
   if (!bank && m.marge != null && med.marge != null && med.n >= 3) rows.push(["Marge d'exploitation", m.marge, med.marge, x => pct(x, 1, false), true]);
   if (bank && m.roe != null && med.roe != null && med.n >= 3) rows.push(["Rentabilité des capitaux propres", m.roe, med.roe, x => pct(x, 1, false), true]);
   if (m.g1 != null && med.g1 != null && med.n >= 3) rows.push(["Croissance des ventes", m.g1, med.g1, x => pct(x), true]);
-  if (rows.length) {
+  if (false) { // les jauges « Sa place dans le secteur » de l'étape Concurrents remplacent ce bloc (Romain préfère cette présentation)
     const bar = (val, ref, good) => { const mx = Math.max(Math.abs(val), Math.abs(ref), 1e-9); return `<span class="b"><i style="width:${Math.max(2, Math.abs(val) / mx * 100)}%;background:${good}"></i></span>`; };
     out.push(`<div class="fm"><h3>Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h3><div class="fcmp">${rows.map(([l, val, ref, fm]) => { const better = val >= ref; return `<span>${l}<br><small>${esc(s.name)}</small></span>${bar(val, ref, better ? "var(--g)" : "var(--o)")}<span class="n">${fm(val)}</span><span><small>médiane du secteur</small></span>${bar(ref, val, "var(--n)")}<span class="n">${fm(ref)}</span>`; }).join("")}</div>
       <p class="muted" style="font-size:12.5px;margin:10px 0 0">Médiane des ${med.n} entreprises du secteur suivies par le site : la moitié fait mieux, l'autre moitié moins bien. ${medBtn("Qu'est-ce que la médiane ?")}</p></div>`);

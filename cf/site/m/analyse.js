@@ -519,11 +519,10 @@ function analyseHTML(s, c, mode) {
   return `<${T} class="${inner ? "anf anf-in" : "panel anf"}" id="analyse" data-analyse-id="${esc(s.id)}" data-analyse-mode="${inner ? "inner" : ""}">
     <div class="ph"><h2>${inner ? "Sur plusieurs années et selon son contexte" : "Ce qui la valorise, ce qui lui fait défaut"}</h2><span class="light" style="font-size:12.5px">${yr ? `Comptes ${yr}` : "Sans comptes"} · règles publiques</span></div>
     ${inner ? "" : `<p class="anf-intro">${nV} atout${nV > 1 ? "s" : ""}, ${nD} point${nD > 1 ? "s" : ""} faible${nD > 1 ? "s" : ""} ou risque${nD > 1 ? "s" : ""}, et ${nC} élément${nC > 1 ? "s" : ""} de contexte pour ${esc(s.name)}. Chaque point donne son chiffre et sa source. ${peu ? "Les comptes de cette entreprise sont incomplets : l'analyse s'appuie surtout sur son pays, son secteur, sa devise et sa cotation." : "Les points tirés des comptes portent sur plusieurs exercices, pas sur une seule année."}</p>`}
-    ${inner ? `<details class="anf-ctx anf-ctxd anf-pts"><summary>Le détail de chaque point : chiffre et source (${nV} atout${nV > 1 ? "s" : ""}, ${nD} point${nD > 1 ? "s" : ""} faible${nD > 1 ? "s" : ""})</summary>` : ""}
     <div class="anf-cols">
       <div class="anf-c anf-cv"><h3><i></i>Ce qui la valorise</h3>${analyseListe(r.valorise, "v", peu ? "Sans comptes complets, le site ne peut pas mesurer ses atouts financiers." : "Aucun atout net dans ses comptes au regard des règles du site.")}</div>
       <div class="anf-c anf-cd"><h3><i></i>Ce qui lui fait défaut</h3>${analyseListe(r.defaut, "d", "Aucun point faible net dans ses comptes ni dans les règles de contexte.")}</div>
-    </div>${inner ? "</details>" : ""}
+    </div>
     ${ctx.length ? (inner ? `<details class="anf-ctx anf-ctxd"><summary>Le contexte à connaître (${ctx.length} point${ctx.length > 1 ? "s" : ""} : pays, devise, secteur, fiscalité)</summary>${analyseListe(ctx, "c", "")}</details>` : `<div class="anf-ctx"><h3>Le contexte à connaître</h3><p class="anf-sub">Ni atout ni défaut en soi : ce qu'il faut savoir avant de lire son cours ou ses comptes.</p>${analyseListe(ctx, "c", "")}</div>`) : ""}
     <details class="anf-sait"${peu ? " open" : ""}><summary>Ce que le site sait d'elle, et ce qui manque</summary><div class="anf-sait-g">
       <div><h4>Ce que l'on sait</h4><ul>${r.connu.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>
@@ -577,6 +576,14 @@ function analyseCSS() {
 .anf-ctxd > summary::-webkit-details-marker{display:none}
 .anf-ctxd > summary:before{content:"+ ";font-family:var(--mono)} .anf-ctxd[open] > summary:before{content:"− "}
 .anf-meth{margin:0;padding:8px 22px 12px;font-size:12px;color:var(--light)}
+/* Dans la fiche : chaque point est une carte (bord coloré, titre, une phrase, source), plus lisible qu'une liste serrée */
+.anf-in .anf-c{padding:14px 16px 16px}.anf-in .anf-c h3{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--grey);margin:0 0 10px}
+.anf-in .anf-l{display:grid;gap:8px}.anf-in .anf-i{grid-template-columns:minmax(0,1fr);gap:0;padding:11px 14px 11px 14px;border:1px solid var(--line2,#EFEAE0);border-left:4px solid var(--g);border-radius:10px;background:#fff}
+.anf-in .anf-l > .anf-i:last-child{border-bottom:1px solid var(--line2,#EFEAE0)}
+.anf-in .anf-i.anf-d{border-left-color:var(--o)}.anf-in .anf-i.anf-c{border-left-color:var(--n)}
+.anf-in .anf-i .anf-w{display:none}.anf-in .anf-i b{font-size:14.5px;display:block;margin-bottom:3px}.anf-in .anf-i p{font-size:13.5px;line-height:1.5;color:var(--grey);margin:0}
+.anf-in .anf-i .anf-src{font-size:12px;color:var(--light);margin-top:6px;display:block}.anf-in .anf-more{margin-top:8px}.anf-in .anf-more > summary{font-size:13px}
+.anf-in .anf-ctx .anf-l{gap:8px}
 @media (max-width:760px){.anf-meth{padding:8px 14px 12px}.anf-cols,.anf-sait-g,.anf-ctx .anf-l{grid-template-columns:1fr}.anf-cv{border-right:0;border-bottom:1px solid var(--line2,#EFEAE0)}.anf-c,.anf-ctx,.anf-sait{padding-left:14px;padding-right:14px}.anf .anf-intro{padding:2px 14px 12px}}
 </style>`);
 }

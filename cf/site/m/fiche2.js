@@ -200,6 +200,7 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 .rf-keys .fk .fk-rr > span{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12.5px;color:var(--grey)}
 .rf-keys .fk .fk-rr b{font-size:13.5px;margin:0;line-height:1.3;color:var(--ink);font-family:var(--mono)}.rf-keys .fk .fk-rr b.up{color:var(--g)}.rf-keys .fk .fk-rr b.dn{color:var(--o)}
 .rf-keys .fk .fk-pos{display:block;margin-top:8px;font-size:12px;color:var(--light)}
+.fcols.fcols-1{grid-template-columns:minmax(0,1fr)}
 #rf-trim{padding:0 22px 16px}.rf-trimi{border:1px solid var(--line2);border-left:3px solid var(--lime);border-radius:10px;padding:12px 16px;background:#FDFCF7}
 .rf-trimh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.rf-trimh b{font-size:15px}.rf-trimh .light{font-size:12.5px}
 .rf-trimc{display:flex;flex-wrap:wrap;gap:8px 24px;margin:10px 0 4px}.rf-trimc div{display:flex;flex-direction:column}.rf-trimc span{font-size:12px;color:var(--grey)}.rf-trimc b{font-family:var(--mono);font-size:18px}
@@ -243,6 +244,8 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 .rf-ctab thead th small{display:block;font-size:11px;font-weight:400;color:var(--grey);text-transform:none;letter-spacing:0;margin-top:2px;white-space:normal}
 .rf-ctab td{vertical-align:middle;text-align:right;padding:10px 12px;height:58px}
 .rf-ctab td small{display:block;font-family:var(--sans);font-size:11.5px;color:var(--grey);margin-top:2px;white-space:normal;line-height:1.25}
+.rf-ctab td.rf-fort{background:#E6F3EB;color:#176B40}.rf-ctab td.rf-vig{background:#FBEBE2;color:#A8481A}.rf-ctab tr.z td.rf-fort{background:#DFEFE5}.rf-ctab tr.z td.rf-vig{background:#F8E3D7}
+.rf-lg{display:inline-block;padding:1px 8px;border-radius:99px;background:#F1EFEA;font-size:12.5px;color:var(--ink)}.rf-lg-f{background:#E6F3EB;color:#176B40}.rf-lg-v{background:#FBEBE2;color:#A8481A}
 .rf-ctab td.rf-fort small{color:var(--g)} .rf-ctab td.rf-vig small{color:var(--o)}
 .rf-ctab .rf-cv{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:14px;font-weight:600;white-space:nowrap}
 .rf-ctab .rf-na{color:var(--light)}
@@ -485,17 +488,13 @@ function rfFaceConc(s) {
 /* ---------- Vue d'ensemble : les étapes, une colonne latérale courte (dernières annonces) ---------- */
 function tabBref(s, c, el) {
   const nav = $("#etapes"); if (nav) { nav.outerHTML = fiche2Onglets(s, "", etapesListe(s, c)); fiche2Centrer(); }
-  el.innerHTML = `<div class="fcols"><div id="etapes-corps">${etapesCorps(s, c)}</div>
-      <aside class="fside" id="fside">
-        <section class="panel" id="actus"><div class="ph"><h2>Dernières annonces</h2></div><div class="pb" id="fannb"></div><p class="fannall"><a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a></p></section>
-        ${rfFaceConc(s)}
-      </aside></div>`;
+  // Plus de colonne latérale (29/10, demande de Romain) : les annonces ont leur onglet, les concurrents leur étape
+  el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">${etapesCorps(s, c)}</div></div>`;
   etapesBind(s);
   if (typeof tblxSortable === "function") $$(".rf-ctab", el).forEach(t => tblxSortable(t));
   if (typeof tblxBindScroll === "function") tblxBindScroll(el);
   const qs = new URLSearchParams(location.search), voir = qs.get("voir");
   if (voir) { const d = $(`details[data-term="${voir}"]`) || $("#" + voir); if (d && d.tagName === "DETAILS") d.open = true; }
-  ficheAnnonces(s, $("#fannb"));
   if (typeof dirigeantsHTML === "function") dirigeantsHTML(s, $("#fdirig"));
   ficheGraphique(s);
   if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0);
@@ -640,7 +639,6 @@ function etapesBind(s) {
   const show = k => {
     $$("#etapes [data-et]").forEach(b => b.classList.toggle("on", b.dataset.et === k));
     $$("#etapes-corps .etape").forEach(d => d.hidden = d.dataset.etape !== k);
-    const fc = $("#fside .rf-side-conc"); if (fc) fc.hidden = k === "concurrents"; // l'étape Concurrents contient déjà ce tableau, en entier
     const u = new URL(location.href); u.searchParams.set("etape", k); history.replaceState({}, "", u.pathname + u.search);
     const nav = $("#etapes"); if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
     else if (nav && nav.getBoundingClientRect().top > innerHeight * 0.6) nav.scrollIntoView({ block: "start", behavior: "smooth" });
@@ -675,7 +673,7 @@ function rfCmpCell(T, F, X) {
   if (!r) { const na = T.na(F, X); return `<td class="num na" data-v="" title="${esc(na)}"><span class="rf-na">–</span><small>${esc(na)}</small></td>`; }
   const lv = !T.neutral && r.lv && r.lv !== "na" ? r.lv : null, key = r.key != null ? r.key : r.v;
   const txt = r.cash ? "Aucune" : T.k === "dividende" && !(r.v > 0) ? "Aucun" : T.short && T.k !== "prix" ? T.short(r) : r.txt;
-  return `<td class="num${lv ? " rf-" + lv : ""}" data-v="${key != null && isFinite(key) ? key : ""}" title="${esc(F.c.name + " : " + T.say(r, F, X))}"><span class="rf-cv">${lv ? `<i class="dot dot-${lv}" aria-hidden="true"></i>` : ""}${esc(txt)}</span>${lv ? `<small class="vd-${lv}">${esc(r.word && T.k === "prix" ? r.word : CMPR_LV[lv])}</small>` : r.word && T.k !== "taille" ? `<small>${esc(r.word)}</small>` : ""}</td>`;
+  return `<td class="num${lv ? " rf-" + lv : ""}" data-v="${key != null && isFinite(key) ? key : ""}" title="${esc(F.c.name + " : " + T.say(r, F, X))}"><span class="rf-cv">${esc(txt)}</span></td>`;
 }
 function rfCmpForces(T, F, X) { // une phrase par critère coloré, sans comparaison au « meilleur » du groupe
   const r = T.val(F, X); if (!r || T.neutral || !r.lv || r.lv === "na" || r.lv === "moyen") return null;
@@ -702,7 +700,7 @@ function concurrentsHTML(s) {
   }).join("");
   const notes = cmprNotes(X);
   return `<section class="panel rf-cmp" id="concurrents"><div class="ph"><h2>${titre}</h2><a href="${link}">Comparer en détail →</a></div>
-    <div class="pb rf-cmpi"><p class="rf-intro">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services, aux mêmes clients.`} Chaque case est comparée aux repères du site et à la médiane du secteur de l'entreprise : <span class="rf-lg"><i class="dot dot-fort"></i>point fort</span> <span class="rf-lg"><i class="dot dot-vig"></i>point de vigilance</span> <span class="rf-lg"><i class="dot dot-moyen"></i>sans couleur : dans la moyenne</span>. La taille et le dividende ne sont pas colorés.</p></div>
+    <div class="pb rf-cmpi"><p class="rf-intro">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services, aux mêmes clients.`} Chaque case est comparée aux repères du site et à la médiane du secteur : <span class="rf-lg rf-lg-f">vert, point fort</span> <span class="rf-lg rf-lg-v">orange, à surveiller</span> <span class="rf-lg">sans couleur, dans la moyenne</span>. Survolez une case pour la phrase complète. La taille et le dividende ne sont pas colorés.</p></div>
     ${tblxScrollBox(`<table class="t tbx tbx-sort rf-ctab"><caption class="sr">${esc(s.name)} et ses ${auto ? "voisines de secteur" : "concurrentes"}, critère par critère</caption><thead>${head}</thead><tbody>${rows}</tbody><tfoot>${medRow}</tfoot></table>`, "Faites glisser pour voir tous les critères")}
     <div class="pb"><details class="cmpr-det rf-cartes" style="margin:0"><summary>Atouts et faiblesses de chacune<small>le tableau, lu entreprise par entreprise</small></summary><p class="rf-sub">Le tableau ne désigne pas de gagnante : une action plus chère peut correspondre à une entreprise qui grandit plus vite, une forte dette à un métier très régulier.</p>
       <div class="rf-cards">${cartes}</div></details>

@@ -96,7 +96,7 @@ function tvChart(el, symbol, name) {
   const s = document.createElement("script");
   s.src = DSG_TV_SRC; s.async = true; s.type = "text/javascript";
   s.innerHTML = JSON.stringify({ autosize: true, symbol, interval: "D", range: "12M", timezone: "Europe/Paris", theme: "light", style: "3", locale: "fr",
-    backgroundColor: "rgba(255,255,255,0)", gridColor: "rgba(0,0,0,0.05)", hide_top_toolbar: true, hide_legend: mobile, hide_side_toolbar: true, allow_symbol_change: false,
+    backgroundColor: "rgba(255,255,255,0)", gridColor: "rgba(0,0,0,0.05)", hide_top_toolbar: true, hide_legend: true, hide_side_toolbar: true, allow_symbol_change: false,
     save_image: false, calendar: false, hide_volume: true, withdateranges: !mobile, details: false, support_host: "https://www.tradingview.com" });
   s.onerror = () => dsgCourbe(el, symbol, name);
   el.firstChild.insertBefore(s, el.firstChild.lastChild);
@@ -108,6 +108,10 @@ function tvChart(el, symbol, name) {
 function tv(el) { if (el) el.innerHTML = ""; }
 
 document.head.insertAdjacentHTML("beforeend", `<style>
+/* Lisibilité (29/10/2026, demande de Romain) : les petites étiquettes (VENTES, BÉNÉFICE, DIVIDENDE…) étaient en police à chasse fixe,
+   11 px, gris clair : illisibles. Partout sur le site, elles passent en police de texte, 12 px, graisse 600, gris moyen. Les chiffres restent en chasse fixe. */
+.kick,.ess .lbl,.lbl,.pxhead .kick,.tile .kick,.ftile .kick,.rf-keys .fk .kick,.rf-trimh .kick,.pf3 .kick,.pf3hero .kick,.acc .kick,.cmpr .kick,.rf-sum .kick,.ctx .kick{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--grey)}
+.rf-keys .fk .kick{font-size:12.5px}
 /* Accessibilité (point 7, 29/10/2026) : sur téléphone, aucun texte sous 11 px, aucune cible tactile sous 24 px */
 .lg b{font-size:max(9px,calc(var(--s) * .36))}
 @media (max-width:760px){
@@ -127,7 +131,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 }
 #ctab > .empty:only-child{min-height:70vh}
 .rf-mid .rf-sum.fh-wait{min-height:470px}
-.f2-chart{display:flex;flex-direction:column}.f2-chart #tvchart.f2-tv{flex:1 1 auto;height:auto;min-height:300px}
+.f2-chart{display:flex;flex-direction:column;overflow:hidden}.f2-chart #tvchart,.f2-chart .tradingview-widget-container{overflow:hidden}.f2-chart #tvchart.f2-tv{flex:1 1 auto;height:auto;min-height:300px}
 @media (max-width:760px){.f2-chart #tvchart.f2-tv{min-height:240px}}
 .dsg-tv{height:100%;display:flex;flex-direction:column}
 .dsg-tv .tradingview-widget-container__widget{flex:1 1 auto;min-height:0}
