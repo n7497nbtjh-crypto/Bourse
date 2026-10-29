@@ -161,6 +161,9 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
 .rf-bl ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
 .rf-bl li{display:flex;gap:8px;align-items:baseline;font-size:13.5px;line-height:1.4}
 .rf-bl li i{flex:none;width:8px;height:8px;border-radius:50%;transform:translateY(-1px)}
+.rf-anf{background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:3px;transition:text-decoration-color .15s}
+.rf-anf:hover,.rf-anf:focus-visible{text-decoration-color:var(--lime);text-decoration-thickness:2px;outline:none}
+.anf-i.rf-flash{background:#F3F8E4;border-radius:8px;transition:background .3s}
 .rf-bl li.rf-v i{background:var(--g)} .rf-bl li.rf-d i{background:var(--o)}
 .rf-ev ul{gap:4px}
 .rf-ev li b{flex:none;min-width:58px;font-family:var(--mono);font-size:12.5px;font-weight:600}
@@ -185,8 +188,8 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 .rf-ctab{min-width:780px;width:100%}
 .rf-ctab th.lab{width:170px;min-width:150px}
 .rf-ctab thead th{vertical-align:bottom;text-align:right;padding:10px 12px;line-height:1.25}
-.rf-ctab thead th .rf-th{display:inline-flex;gap:5px;align-items:center;font-size:13px;color:var(--ink);text-transform:none;letter-spacing:0;font-weight:700}
-.rf-ctab thead th .rf-th svg{width:14px;height:14px}
+.rf-ctab thead th .rf-cth{display:inline-flex;gap:5px;align-items:center;font-size:13px;color:var(--ink);text-transform:none;letter-spacing:0;font-weight:700}
+.rf-ctab thead th .rf-cth svg{width:14px;height:14px}
 .rf-ctab thead th small{display:block;font-size:11px;font-weight:400;color:var(--grey);text-transform:none;letter-spacing:0;margin-top:2px;white-space:normal}
 .rf-ctab td{vertical-align:middle;text-align:right;padding:10px 12px;height:58px}
 .rf-ctab td small{display:block;font-family:var(--sans);font-size:11.5px;color:var(--grey);margin-top:2px;white-space:normal;line-height:1.25}
@@ -367,7 +370,7 @@ function ficheSommaire(s, c) {
   }
   CURSYM = CUR[s.currency] || s.currency || "€";
   const t = quick(s), sit = rfSituation(s, c), P = rfPoints(s, c);
-  const li = (i, k) => `<li class="rf-${k}"><i></i>${esc(i.titre)}</li>`;
+  const li = (i, k) => `<li class="rf-${k}"><i></i><button type="button" class="rf-anf" data-rf-anf="${esc(i.id)}" title="Lire le détail et la source">${esc(i.titre)}</button></li>`;
   return `<div class="fh-sum rf-sum"><div class="rf-sh"><h2 class="f2-h">En bref</h2><span class="f2-sub">Exercice ${esc(s.year)} · comptes officiels</span></div>
       <p class="fh-v" id="fverdict">${sit || esc(s.desc || "")}</p>
       ${P && (P.v.length || P.d.length) ? `<div class="rf-pts">
@@ -462,6 +465,13 @@ async function pageCompany(id, tab) {
   if (tab === "comptes" && location.hash.startsWith("#rf-")) { const t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(() => t.scrollIntoView({ block: "start" }), 30); }
   if (!tab) { fiche2Etapes(); premStatus().then(() => { if (ficheMemeId(id)) assistantPanel(s, c, $("#ctab")); }); }
 }
+document.addEventListener("click", e => { // « En bref » → le point détaillé, avec son chiffre et sa source, dans « L'essentiel »
+  const b = e.target.closest && e.target.closest("[data-rf-anf]"); if (!b) return;
+  e.preventDefault(); if (typeof ETAPE_SHOW === "function") ETAPE_SHOW("retenir");
+  const t = document.querySelector(`#etapes-corps [data-anf="${CSS.escape(b.dataset.rfAnf)}"]`); if (!t) return;
+  const d = t.closest("details"); if (d) d.open = true;
+  t.scrollIntoView({ behavior: "smooth", block: "center" }); t.classList.add("rf-flash"); setTimeout(() => t.classList.remove("rf-flash"), 1800);
+});
 document.addEventListener("analyse:pret", () => { // l'analyse complète (pays, devise…) arrive après l'affichage : « En bref » est mis à jour
   const m = location.pathname.match(/^\/entreprise\/([^/]+)\/?$/), sm = $(".rf-sum");
   if (m && sm && RBY[m[1]] && FULL[m[1]]) sm.outerHTML = ficheSommaire(RBY[m[1]], FULL[m[1]]);
@@ -540,15 +550,16 @@ function concurrentsHTML(s) {
   const titre = auto ? "Face aux entreprises comparables" : "Face à ses concurrents directs";
   if (!me0.ok) return `<section class="panel" id="concurrents"><div class="ph"><h2>${titre}</h2><a href="${link}">Comparer en détail →</a></div><div class="pb"><p class="muted" style="margin:0 0 6px">${esc(missingTxt(s, true))}</p><div class="cmpr-peers">${peers.map(c => `<a href="/entreprise/${c.id}">${logo(c, 24)}${esc(c.name)}</a>`).join("")}</div>${fiche2RangBouton(s)}</div></section>` + rfPlaceHTML(s);
   const T6 = RF_CMP_ORD.map(k => CMPR_T.find(T => T.k === k)).filter(Boolean);
-  const head = `<tr><th scope="col" class="l lab">Entreprise</th>${T6.map((T, i) => `<th scope="col" data-sk="${i + 1}" title="${esc(T.ind(X))} · cliquer pour trier"><span class="rf-th">${esc(RF_CMP_COURT[T.k])}</span><small>${esc(RF_CMP_SOUS[T.k](X))}</small></th>`).join("")}</tr>`;
+  const head = `<tr><th scope="col" class="l lab">Entreprise</th>${T6.map((T, i) => `<th scope="col" data-sk="${i + 1}" title="${esc(T.ind(X))} · cliquer pour trier"><span class="rf-cth">${esc(RF_CMP_COURT[T.k])}</span><small>${esc(RF_CMP_SOUS[T.k](X))}</small></th>`).join("")}</tr>`;
   const rows = X.F.map((F, j) => `<tr class="${j === 0 ? "rf-me" : j % 2 ? "" : "z"}"><th scope="row" class="l lab" data-v="${esc(F.c.name)}"><a class="rf-co" href="/entreprise/${F.c.id}">${logo(F.c, 24)}<span class="nm">${esc(F.c.name)}</span></a>${j === 0 ? `<small class="rf-tag">cette fiche</small>` : ""}</th>${T6.map(T => rfCmpCell(T, F, X)).join("")}</tr>`).join("");
   const medRow = `<tr class="rf-med"><th scope="row" class="l lab"><span class="nm">Médiane du secteur</span><small>${esc(secName(s))}</small></th>${T6.map(T => { const r = T.val(me0, X); return `<td class="num">${r && r.medTxt ? esc(r.medTxt) : `<span class="rf-na">–</span>`}</td>`; }).join("")}</tr>`;
   const cartes = X.F.map((F, j) => {
     if (!F.ok) return `<div class="rf-card"><div class="rf-ch">${logo(F.c, 24)}<b>${esc(F.c.name)}</b></div><p class="rf-no">${esc(cmprNa(F))} : comparaison impossible sur les comptes.</p></div>`;
     const L = T6.map(T => rfCmpForces(T, F, X)).filter(Boolean), plus = L.filter(x => x.lv === "fort"), moins = L.filter(x => x.lv === "vig");
     return `<div class="rf-card${j === 0 ? " rf-me" : ""}"><div class="rf-ch">${logo(F.c, 24)}<b>${esc(F.c.name)}</b>${j === 0 ? `<small class="rf-tag">cette fiche</small>` : `<a class="rf-lk" href="/entreprise/${F.c.id}">Sa fiche →</a>`}</div>
+      ${!plus.length && !moins.length ? `<p class="rf-no" style="margin-top:6px">Dans la moyenne sur tous les critères comparés : ni atout ni faiblesse nette.</p>` : `
       <h4 class="rf-p">Atouts</h4>${plus.length ? `<ul>${plus.map(x => `<li>${x.html}</li>`).join("")}</ul>` : `<p class="rf-no">Aucun critère nettement au-dessus des repères.</p>`}
-      <h4 class="rf-m">Faiblesses</h4>${moins.length ? `<ul>${moins.map(x => `<li>${x.html}</li>`).join("")}</ul>` : `<p class="rf-no">Aucun critère nettement en dessous des repères.</p>`}</div>`;
+      <h4 class="rf-m">Faiblesses</h4>${moins.length ? `<ul>${moins.map(x => `<li>${x.html}</li>`).join("")}</ul>` : `<p class="rf-no">Aucun critère nettement en dessous des repères.</p>`}`}</div>`;
   }).join("");
   const notes = cmprNotes(X);
   return `<section class="panel rf-cmp" id="concurrents"><div class="ph"><h2>${titre}</h2><a href="${link}">Comparer en détail →</a></div>
