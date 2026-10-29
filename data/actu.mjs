@@ -120,7 +120,7 @@ const HOME = id => { const c = C[id]; return c.region === "FR" || /^(OMXSTO|OMXC
 async function sec() {
   let tick = {};
   try { const j = await get("https://www.sec.gov/files/company_tickers.json", { json: true }); for (const v of Object.values(j || {})) tick[String(v.ticker).toUpperCase()] = String(v.cik_str); } catch (e) { log("SEC tickers", e.message); }
-  const list = U.filter(c => c.sec || c.cik), from = since("sec", HISTO), legacy = [];
+  const list = U.filter(c => c.sec || c.cik), from = NOW - HISTO, legacy = []; // toujours 90 jours : le fichier de chaque société est relu de toute façon, et une société manquée (refus 429) est rattrapée
   let n = 0, lus = 0;
   await pool(list, 2, async c => {
     if (Date.now() > STOP) return;
