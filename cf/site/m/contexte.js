@@ -25,7 +25,7 @@ const CTX_RE = {
   luxe: /\bluxe\b|maroquinerie|haute couture|joaill|horlog|\bmontres?\b|champagne|cognac/,
   spiritueux: /spiritueux|\bvins?\b|champagne|cognac|whisky|bieres?\b|brasseri/,
   ecommerce: /commerce en ligne|vente en ligne|e.?commerce|place de marche|livraison de repas|sites? de vente/,
-  aerien: /compagnies? aeriennes?|transport aerien|vols? (reguliers|low cost)|kerosene/,
+  aerien: /compagnies? aeriennes?|transport aerien|vols? (reguliers|low cost)/,
   tourisme: /hotel|hotellerie|croisiere|tourisme|agence de voyages?|reservation de voyages?/,
   chimie: /chimi|ciment|acier|siderurg|aluminium|engrais|\bverre\b|papier/,
   mine: /\bmines?\b|minier|miniere|cuivre|lithium|nickel|minerai|charbon|uranium/,

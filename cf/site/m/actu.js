@@ -92,7 +92,8 @@ const actuType = (it, f) => f === "tout" ? true : f === "imp" ? actuImp(it) : f 
 
 /* ---------- Presse ---------- */
 function presseHTML(items, max = 8) {
-  const L = (items || []).map(a => ({ t: a.t || a.title, u: a.u || a.url, s: a.s || a.site || "", d: a.d || a.date || "", l: a.l || (a.lang === "French" ? "fr" : a.lang === "English" ? "en" : "") })).filter(a => a.t && a.u);
+  const dec = x => String(x || "").replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(+d)).replace(/&quot;/g, '"').replace(/&#39;|&apos;/g, "'").replace(/&amp;/g, "&");
+  const L = (items || []).map(a => ({ t: dec(a.t || a.title), u: a.u || a.url, s: a.s || a.site || "", d: a.d || a.date || "", l: a.l || (a.lang === "French" ? "fr" : a.lang === "English" ? "en" : "") })).filter(a => a.t && a.u);
   if (!L.length) return `<div class="ax-empty" style="padding:6px 0">Aucun article récent repéré dans les médias suivis.</div>`;
   return `<div class="press">${L.slice(0, max).map(a => `<a class="ax-pr" href="${esc(a.u)}" target="_blank" rel="noopener nofollow"><span class="pt">${esc(a.t)}</span><span class="pm">${esc(String(a.s).replace(/^www\./, ""))}${a.l ? ` · ${esc(a.l.toUpperCase())}` : ""}${a.d ? ` · ${dShort(a.d)}` : ""}</span></a>`).join("")}</div>`;
 }
