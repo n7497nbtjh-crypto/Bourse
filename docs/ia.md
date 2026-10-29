@@ -4,7 +4,7 @@ Document du 29 octobre 2026. Réponse à la section 2.2 du cahier des charges : 
 
 ## En bref
 
-- **La plupart des réponses du site ne demandent pas de modèle d'IA.** Elles sont calculées dans le navigateur à partir des comptes officiels (règles locales) ou tirées des cours de l'Académie. Le test `tests/t_ia.py` le mesure : 509 questions sur 509 obtiennent la bonne réponse ou le bon renvoi sans appel au serveur.
+- **La plupart des réponses du site ne demandent pas de modèle d'IA.** Elles sont calculées dans le navigateur à partir des comptes officiels (règles locales) ou tirées des cours de l'Académie. Le test `tests/t_ia.py` le mesure : sur 509 questions de débutants, toutes reçoivent le traitement attendu, et seule une quinzaine de questions vraiment libres sont volontairement confiées à un modèle ; toutes les autres sont résolues sans appel au serveur.
 - **Le modèle de langue ne sert qu'à rédiger** des textes à partir de chiffres déjà calculés : commentaire de la semaine, explication d'une annonce, réponse à une question libre. Si aucun modèle n'est disponible, le site reste complet : les chiffres, verdicts et phrases calculées sont affichés.
 - **Architecture retenue (hybride, sans dépendance payante)** : règles locales → leçons → IA installée sur l'appareil (WebLLM) → clé personnelle du visiteur (BYOK, facultative) → IA du serveur sur des offres gratuites (Mistral, Groq, Gemini, OpenRouter), avec quotas. **Workers AI devient facultatif** (`IA_WORKERS_AI=off`).
 - **Coût : 0 € par mois** jusqu'à environ 10 000 utilisateurs actifs, grâce au cache des réponses et aux offres gratuites. Aucune facture ne peut partir sans décision : Workers AI est plafonné au palier gratuit par défaut.
