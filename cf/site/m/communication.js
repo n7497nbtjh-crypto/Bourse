@@ -290,6 +290,13 @@ function commListeNoire() {
   return fetch("/data/listes-noires.json").then(r => r.ok ? r.json() : null).then(j => COMM_LN = j && j.items ? { n: j.items.length, maj: j.updated } : null).catch(() => null);
 }
 const COMM_VERDICT = { faux: ["Faux", "cm-v-faux"], pfaux: ["Plutôt faux", "cm-v-pfaux"], partie: ["Vrai en partie", "cm-v-partie"] };
+// Exemple concret tiré des comptes chargés par le site (aucun chiffre écrit à la main)
+function commExempleComptes() {
+  const c = ["lvmh", "totalenergies", "airbus", "loreal"].map(id => typeof RBY !== "undefined" && RBY[id]).find(c => c && !c.missing && c.ca > 0 && c.caPrev > 0 && c.net != null);
+  if (!c) return "Chaque fiche d'entreprise du site compare ses ventes, sa marge et sa dette à la médiane de son secteur, à partir de ses comptes officiels.";
+  const g = c.ca / c.caPrev - 1;
+  return `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a> a publié pour ${c.year} des ventes de <b>${big(c.ca, c.currency)}</b> (${sgn(g, 1)} sur un an) et un bénéfice net de <b>${big(c.net, c.currency)}</b>, d'après ses comptes officiels. Ce sont ces chiffres que sa fiche compare à la médiane de son secteur.`;
+}
 function commIdees() {
   const S = commStats(), pc = (a, b) => b ? Math.round(a / b * 100) : 0;
   const pos = COMM_MWUSD.filter(v => v > 0).length, neg = COMM_MWUSD.length - pos;
@@ -301,19 +308,27 @@ function commIdees() {
         `De 1970 à 2025, il a monté <b>${pos} années sur ${COMM_MWUSD.length}</b> et baissé ${neg} fois.`],
       viz: () => `<div class="cm-years" role="img" aria-label="${pos} années de hausse et ${neg} années de baisse de 1970 à 2025">${COMM_MWUSD.map((v, i) => `<i class="${v >= 0 ? "p" : "n"}" title="${1970 + i} : ${commP(v, 1, true)}"></i>`).join("")}</div>
         <div class="cm-yleg"><span>1re ligne : 1970 à 1997 · 2e ligne : 1998 à 2025</span><span><i class="p"></i>hausse <i class="n"></i>baisse</span></div>`,
-      nuance: "Sur un jour ou un mois, le résultat ressemble à un tirage au sort. Une entreprise seule peut perdre presque toute sa valeur. Le trading à effet de levier (CFD) se rapproche vraiment du jeu : selon l'ESMA (2018), 74 % à 89 % des comptes de particuliers y perdent de l'argent. Ces chiffres sont passés et ne garantissent rien pour l'avenir.",
+      credible: "Les cours bougent chaque jour sans raison apparente. Les médias parlent surtout des krachs et des coups de chance. Et certains produits fonctionnent vraiment comme un pari.",
+      nuance: "Sur un jour ou un mois, le résultat ressemble à un tirage au sort. Une entreprise seule peut perdre presque toute sa valeur. Ces chiffres sont passés et ne garantissent rien pour l'avenir.",
+      exemple: "Le trading à effet de levier (CFD) se rapproche vraiment du jeu : selon l'ESMA (2018), <b>74 % à 89 %</b> des comptes de particuliers y perdent de l'argent. Détenir un indice large pendant des années est une tout autre démarche.",
+      retenir: "Le risque dépend de ce que vous achetez et de la durée. Une action seule sur quelques mois ressemble à un pari ; un indice large sur de nombreuses années, beaucoup moins.",
       src: ["msciUsd", "wikiMsci", "esmaCfd"], liens: [["Risque et rendement", "/academie/bases/risque-rendement"], ["L'effet de levier et les CFD", "/academie/psychologie/levier-cfd"]] },
     { id: "argent", mythe: "Il faut beaucoup d'argent pour commencer.", v: "faux",
       rep: "Quelques dizaines d'euros par mois suffisent pour démarrer. Ce qui compte, c'est que les frais restent petits par rapport au montant investi.",
       faits: ["Sur un PEA, les frais d'un ordre passé en ligne sont plafonnés à <b>0,5 %</b> du montant depuis 2020.",
         "En janvier 2026, un ordre de 1 000 € à Paris coûtait en moyenne environ <b>0,15 %</b> chez les néo-courtiers, 0,45 % chez les courtiers en ligne établis et 0,65 % dans les banques de réseau."],
       viz: () => commBars([["Ordre de 50 €", 4, "4 %", COMM_C.inf], ["Ordre de 100 €", 2, "2 %", "#E59A3A"], ["Ordre de 500 €", 0.4, "0,4 %", COMM_C.act], ["Ordre de 1 000 €", 0.2, "0,2 %", COMM_C.act]], 4, "Poids d'un frais fixe de 2 € par ordre, selon le montant (exemple de calcul)."),
-      nuance: "Un frais fixe par ordre écrase les petits montants : 2 € sur 50 €, c'est 4 %, et il faudra payer à nouveau à la revente. Comparez la grille de votre courtier pour votre montant habituel. Avant d'investir, gardez une épargne de précaution disponible.",
+      credible: "Les actions connues coûtent souvent plusieurs centaines d'euros l'unité. On imagine aussi des frais d'entrée élevés et des montants minimums, comme pour certains placements bancaires.",
+      nuance: "Un frais fixe par ordre écrase les petits montants. Comparez la grille de votre courtier pour votre montant habituel. Avant d'investir, gardez une épargne de précaution disponible.",
+      exemple: "Avec un frais fixe de 2 € par ordre, un achat de 50 € perd <b>4 %</b> dès le départ, et il faudra payer à nouveau à la revente. Le même frais sur 1 000 € ne pèse que <b>0,2 %</b>.",
+      retenir: "Le montant de départ compte moins que le poids des frais. Regardez le coût d'un ordre pour la somme que vous investissez vraiment.",
       src: ["amfObs", "peaFrais"], liens: [["Les frais de courtage", "/academie/frais-fiscalite/frais-courtage"], ["Simulateur de frais", "/simulateurs/frais"]] },
     { id: "experts", mythe: "La Bourse, c'est réservé aux experts.", v: "pfaux",
       rep: "Les professionnels eux-mêmes battent rarement le marché. Un ETF permet de détenir tout un indice avec un seul titre, sans choisir les actions une par une.",
-      faits: ["Sur les dix ans terminés fin 2025, <b>98,1 %</b> des fonds d'actions françaises en euros ont fait moins bien que leur indice.",
-        "Un ETF qui suit le MSCI World contient environ <b>1 249 entreprises</b> de 23 pays."],
+      faits: ["Sur les dix ans terminés fin 2025, <b>98,1 %</b> des fonds d'actions françaises en euros ont fait moins bien que leur indice."],
+      credible: "Le vocabulaire est technique, les écrans sont remplis de chiffres et les professionnels semblent disposer d'outils hors de portée.",
+      exemple: "Un seul ETF qui suit le MSCI World vous rend propriétaire d'une petite part d'environ <b>1 249 entreprises</b> de 23 pays, sans choisir les actions une par une.",
+      retenir: "Pas besoin d'être expert pour détenir le marché. Il faut en revanche comprendre le risque, l'horizon et les frais : c'est l'objet de l'Académie.",
       viz: () => `<div class="cm-dots" role="img" aria-label="98 fonds sur 100 sous leur indice">${Array.from({ length: 100 }, (_, i) => `<i class="${i < 98 ? "" : "g"}"></i>`).join("")}</div><p class="cm-vnote">Sur 100 fonds d'actions françaises gérés par des professionnels, environ 98 ont fait moins bien que leur indice en dix ans.</p>`,
       nuance: "Il faut tout de même comprendre trois choses : le risque, l'horizon et les frais. Un ETF baisse quand son indice baisse. C'est l'objet de l'Académie, gratuite pour l'essentiel.",
       src: ["spiva", "msciEur"], liens: [["Les indices boursiers", "/academie/bourse/indices"], ["L'Académie", "/academie"], ["Les ETF", "/etf"]] },
@@ -322,49 +337,66 @@ function commIdees() {
       faits: ["Pire baisse du MSCI World en euros depuis fin 2000 : <b>−53,6 %</b>, du 24 mai 2001 au 9 mars 2009.",
         "Pire séance du CAC 40 : <b>−12,28 %</b>, le 12 mars 2020."],
       viz: () => commBars([["Krach de 1987", 23, "23 mois", "#E59A3A"], ["Bulle internet, 2000", 86, "7 ans", COMM_C.inf], ["Crise de 2008", 65, "5 ans et demi", COMM_C.inf], ["Covid, 2020", 6, "6 mois", COMM_C.act]], 86, "Temps mis par le S&P 500 (hors dividendes) pour retrouver son plus haut d'avant la crise."),
-      nuance: "Ces baisses ont jusqu'ici été rattrapées, mais parfois après plus de cinq ans, et rien ne le garantit. N'investissez pas en actions l'argent dont vous aurez besoin dans les prochaines années. Une action seule peut perdre 80 % ou plus.",
+      credible: "Des entreprises célèbres ont fait faillite et des krachs ont effacé la moitié de la valeur des marchés. Ces histoires marquent davantage que les années calmes.",
+      nuance: "Ces baisses ont jusqu'ici été rattrapées, mais parfois après plus de cinq ans, et rien ne le garantit. Une action seule peut perdre 80 % ou plus.",
+      exemple: "Après la bulle internet de 2000, le S&P 500 (hors dividendes) a mis environ <b>7 ans</b> à retrouver son plus haut. Après la chute du Covid en 2020, environ <b>6 mois</b>.",
+      retenir: "Une entreprise seule peut disparaître ; un indice diversifié peut baisser de moitié et longtemps. L'argent dont vous aurez besoin dans les prochaines années est exposé à ces baisses.",
       src: ["msciEur", "fed87", "yardeni"], liens: [["Volatilité et krachs historiques", "/academie/bourse/krachs"], ["L'horizon de placement", "/academie/bases/horizon"], ["Diversifier", "/academie/portefeuille/diversification"]] },
     { id: "livret-a", mythe: "Le Livret A suffit.", v: "partie",
       rep: "Le Livret A est parfait pour l'argent dont vous pourriez avoir besoin vite. Sur longue durée, il protège mal contre la hausse des prix.",
       faits: ["Taux du Livret A : <b>1,7 %</b> net depuis le 1er août 2026.",
-        "Hausse des prix sur un an en septembre 2026 : <b>3,1 %</b> (Insee). Le rendement réel du Livret A est donc négatif.",
-        `${F0.format(100)} € par mois de 2016 à 2025 : environ <b>${commE(s20.la)}</b> sur un Livret A, contre ${commE(s20.act)} en actions monde, pour ${commE(s20.ver)} versés.`],
+        "Hausse des prix sur un an en septembre 2026 : <b>3,1 %</b> (Insee). Le rendement réel du Livret A est donc négatif."],
+      credible: "Le Livret A est simple, sans risque, sans impôt et disponible à tout moment. Pendant des années, il a semblé suffire.",
+      exemple: `${F0.format(100)} € par mois de 2016 à 2025 : environ <b>${commE(s20.la)}</b> sur un Livret A, contre <b>${commE(s20.act)}</b> en actions monde, pour ${commE(s20.ver)} versés. Les actions ont connu de fortes baisses en chemin.`,
+      retenir: "Le Livret A est fait pour la réserve de précaution. Sur longue durée, il protège mal contre la hausse des prix.",
       viz: () => commBars([["Livret A", 1.7, "1,7 %", COMM_C.la], ["Hausse des prix sur un an", 3.1, "3,1 %", COMM_C.inf]], 3.1, "Taux du Livret A au 1er août 2026 et inflation de septembre 2026.") + `<p class="cm-more"><a class="btn cm-btn" href="/livret-a-ou-bourse">Comparer sur 10, 20 ou 30 ans</a></p>`,
       nuance: "Le Livret A garantit le capital, reste disponible et n'est pas imposé. Les actions peuvent perdre la moitié de leur valeur. L'ordre logique : d'abord une réserve de précaution (la Banque de France cite deux à six mois de revenus), ensuite seulement des placements qui varient. Le Livret A est plafonné à 22 950 €.",
       src: ["livretAout", "livret", "ipcSept", "bdfPrec"], liens: [["Livret A ou Bourse : le comparateur", "/livret-a-ou-bourse"], ["Les livrets réglementés", "/academie/placements/livrets"], ["L'inflation", "/academie/bases/inflation"]] },
     { id: "bon-moment", mythe: "Il faut attendre le bon moment pour entrer.", v: "pfaux",
       rep: "Personne ne sait prévoir les meilleurs jours. Les manquer coûte très cher, et ils arrivent souvent en pleine panique.",
-      faits: ["10 000 $ placés 20 ans dans un fonds S&P 500 : environ <b>82 300 $</b>. En manquant seulement les 10 meilleures séances : environ 35 700 $.",
-        "7 des 10 meilleures séances ont eu lieu moins de deux semaines après l'une des 10 pires.",
+      faits: ["7 des 10 meilleures séances ont eu lieu moins de deux semaines après l'une des 10 pires.",
         "Investir une grosse somme d'un coup a fait mieux qu'étaler ses achats environ <b>deux fois sur trois</b> (Vanguard, 2012)."],
       viz: () => commBars([["Resté investi 20 ans", 82300, "82 300 $", COMM_C.act], ["Sans les 10 meilleures séances", 35700, "35 700 $", COMM_C.inf]], 82300, "10 000 $ placés dans un fonds S&P 500 sur 20 ans (calcul de The Motley Fool, octobre 2026)."),
+      credible: "Chacun connaît quelqu'un qui a acheté juste avant un krach. Attendre une baisse paraît prudent et logique.",
       nuance: "Tout investir juste avant une forte baisse est pénible : en 2000 ou en 2007, il a fallu des années pour se refaire. Investir chaque mois la même somme réduit ce regret, même si ce n'est pas toujours le plus rentable.",
+      exemple: "10 000 $ placés 20 ans dans un fonds S&P 500 : environ <b>82 300 $</b>. En manquant seulement les 10 meilleures séances : environ <b>35 700 $</b>.",
+      retenir: "Personne ne sait prévoir les meilleurs jours, et les manquer coûte cher. Investir régulièrement la même somme évite d'avoir à choisir le moment.",
       src: ["motley", "vanguard"], liens: [["Le coût du market timing", "/academie/psychologie/trading-timing"], ["Comparateur Livret A ou Bourse", "/livret-a-ou-bourse"]] },
     { id: "economie", mythe: "La Bourse n'a rien à voir avec l'économie réelle.", v: "faux",
       rep: "Une action est une part d'entreprise. Sur longue durée, son prix suit les ventes, les bénéfices et les dividendes que publient les comptes officiels.",
       faits: S.n ? [`Sur les <b>${F0.format(S.n)}</b> entreprises dont bilan. a lu les derniers comptes annuels, <b>${pc(S.benef, S.n)} %</b> ont fait un bénéfice et ${pc(S.div, S.n)} % ont versé un dividende.`,
         "Ces chiffres sont calculés par le site à partir des rapports déposés aux autorités : format ESEF en Europe, SEC aux États-Unis."] : ["Les comptes des entreprises n'ont pas pu être chargés."],
       viz: () => S.n ? commBars([["Ont fait un bénéfice", pc(S.benef, S.n), pc(S.benef, S.n) + " %", COMM_C.act], ["Ont versé un dividende", pc(S.div, S.n), pc(S.div, S.n) + " %", "#5E9C7C"]], 100, `Calcul de bilan. sur ${F0.format(S.n)} entreprises, dernier exercice publié.`) : "",
+      credible: "Un cours réagit parfois fortement à une rumeur ou à une déclaration, sans que l'entreprise ait changé. La Bourse semble vivre dans son propre monde.",
       nuance: "À court terme, le cours peut s'éloigner beaucoup des comptes, dans les deux sens : c'est l'effet des émotions et des anticipations. Et les comptes ont plusieurs mois de retard sur l'activité.",
+      exemple: commExempleComptes(),
+      retenir: "À long terme, le prix d'une action suit ce que l'entreprise vend et gagne ; à court terme, il peut s'en écarter beaucoup. Les comptes officiels restent le point de départ.",
       src: ["esef"], liens: [["Les entreprises et leurs comptes", "/entreprises"], ["Le compte de résultat", "/academie/comptes/compte-resultat"], ["Méthode et sources", "/methode"]] },
     { id: "frais", mythe: "Les frais, c'est un détail.", v: "faux",
       rep: "Les frais se prélèvent chaque année, sur un capital qui grossit. Sur 25 ans, un point de frais en plus coûte des milliers d'euros.",
-      faits: ["En 2025, frais annuels moyens : <b>1,3 %</b> pour les fonds d'actions françaises, <b>0,33 %</b> pour les ETF actions.",
-        "10 000 € placés 25 ans à 6 % par an avant frais (hypothèse) : environ 39 700 € avec 0,33 % de frais, 31 500 € avec 1,3 %."],
+      faits: ["En 2025, frais annuels moyens : <b>1,3 %</b> pour les fonds d'actions françaises, <b>0,33 %</b> pour les ETF actions."],
+      credible: "Un frais de 1 % par an paraît minuscule à côté des variations de la Bourse. Et il est prélevé discrètement, sans facture.",
+      exemple: "10 000 € placés 25 ans à 6 % par an avant frais (hypothèse) : environ <b>39 700 €</b> avec 0,33 % de frais par an, <b>31 500 €</b> avec 1,3 %. Soit 8 200 € d'écart.",
+      retenir: "Les frais font partie des rares choses que vous contrôlez. Comparer les frais courants avant de choisir un fonds évite un coût qui grossit avec les années.",
       viz: () => commBars([["Frais de 0,33 % par an", 39700, "39 700 €", COMM_C.act], ["Frais de 1,3 % par an", 31500, "31 500 €", COMM_C.inf]], 39700, "Capital final de 10 000 € placés 25 ans, hypothèse de 6 % par an avant frais : 8 200 € d'écart."),
       nuance: "Un fonds plus cher peut valoir la peine s'il rapporte plus que ses frais : c'est rare sur dix ans. Les frais courants ne disent pas tout : frais de courtage, de garde et de change s'ajoutent parfois.",
       src: ["amfFrais", "amfObs", "spiva"], liens: [["Les frais courants sur 20 à 30 ans", "/academie/frais-fiscalite/frais-courants"], ["Simulateur de frais", "/simulateurs/frais"], ["Comparer les ETF", "/etf"]] },
     { id: "trader", mythe: "Pour gagner, il faut acheter et vendre souvent.", v: "faux",
       rep: "Plus on passe d'ordres, plus on paie de frais et plus on se trompe de moment. Les études montrent que les plus actifs gagnent le moins.",
-      faits: ["66 465 foyers américains de 1991 à 1996 : marché <b>17,9 %</b> par an, foyer moyen 16,4 %, foyers les plus actifs <b>11,4 %</b>.",
-        "Moins de 1 % des day traders de Taïwan battent le marché de façon régulière une fois les frais payés."],
+      faits: ["Une étude a suivi <b>66 465</b> foyers américains de 1991 à 1996 : plus ils passaient d'ordres, moins ils gagnaient après frais.",
+        "Moins de <b>1 %</b> des day traders de Taïwan battent le marché de façon régulière une fois les frais payés."],
+      credible: "Les réseaux sociaux montrent des gains rapides. Agir souvent donne l'impression de maîtriser la situation.",
+      exemple: "De 1991 à 1996, les foyers les plus actifs ont gagné <b>11,4 %</b> par an, contre <b>17,9 %</b> pour le marché : 6,5 points de moins chaque année.",
+      retenir: "Chaque ordre coûte des frais et expose à une erreur de moment. En moyenne, les investisseurs les plus actifs gagnent le moins.",
       viz: () => commBars([["Le marché", 17.9, "17,9 %", COMM_C.act], ["Le foyer moyen", 16.4, "16,4 %", "#5E9C7C"], ["Les plus actifs", 11.4, "11,4 %", COMM_C.inf]], 17.9, "Rendement annuel après frais, 1991 à 1996 (Barber et Odean, 2000)."),
       nuance: "Ajuster son portefeuille de temps en temps reste normal, par exemple pour revenir à la répartition prévue. Ces études portent sur des marchés et des périodes passés.",
       src: ["barber", "barber2"], liens: [["Le coût du trading fréquent", "/academie/psychologie/trading-timing"], ["L'excès de confiance", "/academie/psychologie/exces-confiance"]] },
     { id: "france", mythe: "Mieux vaut investir dans ce qu'on connaît : la France.", v: "pfaux",
       rep: "La France pèse environ 2 % des grandes entreprises des pays développés. N'acheter que des actions françaises, c'est miser sur un seul pays.",
-      faits: ["Dans l'indice MSCI World, la France pèse <b>2,24 %</b>, les États-Unis <b>72,94 %</b> (30 septembre 2026).",
-        "Le CAC 40 est passé de 6 944 points en septembre 2000 à 2 401 points en mars 2003 : une seule Bourse peut stagner longtemps."],
+      faits: ["Dans l'indice MSCI World, la France pèse <b>2,24 %</b>, les États-Unis <b>72,94 %</b> (30 septembre 2026)."],
+      credible: "On connaît les marques françaises, on suit leur actualité, et le PEA favorise les actions européennes. Investir chez soi paraît plus sûr.",
+      exemple: "Le CAC 40 est passé de <b>6 944 points</b> en septembre 2000 à <b>2 401 points</b> en mars 2003 : une seule Bourse peut baisser fortement et stagner longtemps.",
+      retenir: "Un seul pays, c'est un seul risque. Un indice mondial répartit ce risque, avec ses propres excès : beaucoup d'États-Unis, de grandes valeurs et de dollar.",
       viz: () => { const w = [["États-Unis", 72.94, "#2B5C9E"], ["Japon", 5.91, "#5E9C7C"], ["Royaume-Uni", 3.41, "#8C7BB8"], ["Canada", 3.29, "#C98A2B"], ["France", 2.24, COMM_C.inf], ["Autres", 12.21, "#B9B2A5"]];
         return `<div class="cm-stack" role="img" aria-label="Répartition par pays du MSCI World">${w.map(([l, v, c]) => `<i style="width:${v}%;background:${c}" title="${l} : ${nf(2).format(v)} %"></i>`).join("")}</div><div class="cm-sleg">${w.map(([l, v, c]) => `<span><i style="background:${c}"></i>${l} <b>${nf(v < 10 ? 2 : 1).format(v)} %</b></span>`).join("")}</div>`; },
       nuance: "Un indice mondial a ses propres excès : plus de 70 % aux États-Unis, et environ 28 % sur seulement 10 entreprises. Le dollar ajoute un risque de change. Sur un PEA, des ETF monde existent grâce à la réplication synthétique.",
@@ -375,53 +407,153 @@ function commIdees() {
         `La liste noire de l'AMF compte <b class="cm-ln">plusieurs milliers</b> de sites et d'entités non autorisés.`,
         "Un « finfluenceur » doit dire s'il est rémunéré pour parler d'un produit (AMF et ESMA, janvier 2026)."],
       viz: () => commBars([["Ensemble des Français", 16, "16 %", "#E59A3A"], ["Les plus jeunes", 32, "32 %", COMM_C.inf]], 32, "Part des personnes qui estiment avoir été victimes d'une arnaque.") + `<p class="cm-more"><a class="btn cm-btn" href="/outils/verifier">Vérifier un site sur la liste noire</a></p>`,
+      credible: "Les publications montrent des gains spectaculaires, souvent avec des captures d'écran. Le ton est amical et le conseil semble gratuit.",
       nuance: "Tout n'est pas à jeter en ligne : certains créateurs suivent le certificat de l'influence responsable de l'ARPP et de l'AMF. Une information sérieuse se vérifie dans les comptes officiels et cite ses sources.",
+      exemple: "Situation type : un compte promet un gain rapide et sûr, puis vous dirige vers une plateforme de trading. Avant tout versement, le nom de la plateforme se vérifie sur la liste noire de l'AMF, en quelques secondes.",
+      retenir: "Une promesse de gain rapide et sans risque est un signal d'alerte. Vérifiez qui parle, s'il est payé, et si la plateforme est autorisée.",
       src: ["educfi", "amfListes", "esma"], liens: [["Reconnaître les arnaques", "/academie/psychologie/arnaques"], ["Réseaux sociaux et finfluenceurs", "/academie/psychologie/finfluenceurs"]] },
     { id: "impots", mythe: "La fiscalité de la Bourse est un casse-tête.", v: "pfaux",
       rep: "Deux enveloppes couvrent l'essentiel. Le PEA est très avantageux après 5 ans. Le courtier fournit chaque année un récapitulatif pour la déclaration.",
-      faits: ["PEA de plus de 5 ans : gains exonérés d'impôt sur le revenu, seuls <b>18,6 %</b> de prélèvements sociaux. Compte-titres : <b>31,4 %</b>.",
-        "Exemple : sur un gain de 20 000 €, 3 720 € d'impôts avec un PEA de plus de 5 ans, 6 280 € avec un compte-titres."],
+      faits: ["PEA de plus de 5 ans : gains exonérés d'impôt sur le revenu, seuls <b>18,6 %</b> de prélèvements sociaux. Compte-titres : <b>31,4 %</b>."],
+      credible: "Plus-values, dividendes, prélèvements sociaux, enveloppes : le vocabulaire fiscal intimide, et les règles changent souvent.",
+      exemple: "Sur un gain de 20 000 € : <b>3 720 €</b> d'impôts et prélèvements avec un PEA de plus de 5 ans, <b>6 280 €</b> avec un compte-titres (règles 2026).",
+      retenir: "Deux enveloppes couvrent l'essentiel, et le courtier fournit un récapitulatif chaque année pour la déclaration. Le choix du compte pèse autant que le choix des titres.",
       viz: () => commBars([["PEA de plus de 5 ans", 3720, "3 720 €", COMM_C.act], ["Compte-titres", 6280, "6 280 €", COMM_C.inf]], 6280, "Impôts et prélèvements sur un gain de 20 000 € (règles 2026)."),
       nuance: "Un retrait avant 5 ans ferme en principe le PEA. Les actions américaines achetées en direct n'y entrent pas. Le compte-titres reste utile au-delà des plafonds ou pour d'autres titres.",
       src: ["pea", "ps"], liens: [["PEA ou compte-titres", "/pea-cto"], ["Simulateur PEA ou compte-titres", "/simulateurs/pea-cto"], ["Le PEA", "/academie/placements/pea"]] },
   ];
 }
-function commIdeeHTML(x, i) {
-  const [vt, vc] = COMM_VERDICT[x.v];
-  return `<article class="cm-idee panel" id="${x.id}">
-    <header class="cm-ih"><span class="cm-n">${String(i + 1).padStart(2, "0")}</span><div><p class="cm-myth">« ${esc(x.mythe.replace(/\.$/, ""))} »</p><span class="cm-v ${vc}">${vt}</span></div></header>
-    <div class="cm-ib">
-      <p class="cm-rep">${x.rep}</p>
-      <div class="cm-grid2">
-        <div><p class="kick">Ce que disent les chiffres</p><ul class="cm-faits">${x.faits.map(f => `<li>${f}</li>`).join("")}</ul></div>
-        <div class="cm-viz">${x.viz()}</div>
-      </div>
-      <div class="cm-nuance"><p class="kick">La nuance honnête</p><p>${x.nuance}</p></div>
-      <div class="cm-foot"><div class="cm-go">${x.liens.map(([l, h]) => `<a class="chip" href="${h}">${esc(l)}</a>`).join("")}</div>
-      <details class="cm-src"><summary>Sources</summary>${commSrcHTML(x.src)}</details></div>
-    </div>
+/* ---------- Idées reçues déconstruites : une carte à retourner par idée ----------
+   Format de chaque carte : la croyance (« Vrai ou faux ? ») → le verdict → 1. pourquoi on y croit, 2. ce que montrent les données,
+   3. les nuances, 4. un exemple concret → ce que l'investisseur peut en retenir. Les réponses restent sur cet appareil (bilan.idees). */
+const COMM_IR_KEY = "bilan.idees";
+const COMM_IR_ETAPES = [["credible", "Pourquoi on y croit"], ["donnees", "Les données"], ["nuance", "Les nuances"], ["exemple", "Un exemple"]];
+function commIrEtat() { try { return JSON.parse(localStorage.getItem(COMM_IR_KEY) || "{}") || {}; } catch (e) { return {}; } }
+function commIrNoter(id, r) { const s = commIrEtat(); s[id] = r; try { localStorage.setItem(COMM_IR_KEY, JSON.stringify(s)); } catch (e) { } }
+const commIrJuste = (x, r) => x.v === "partie" ? "nuance" : r === "f" ? "oui" : r === "v" ? "non" : null; // « Faux » et « Plutôt faux » : la bonne intuition est « Faux »
+function commIrScore(L) {
+  const s = commIrEtat(), rep = L.filter(x => s[x.id] === "v" || s[x.id] === "f");
+  return { faites: L.filter(x => s[x.id]).length, rep: rep.length, ok: rep.filter(x => commIrJuste(x, s[x.id]) !== "non").length, n: L.length };
+}
+function commIrPane(x, k) {
+  if (k === "credible") return `<p>${x.credible}</p>`;
+  if (k === "donnees") return `<div class="cm-grid2"><ul class="cm-faits">${x.faits.map(f => `<li>${f}</li>`).join("")}</ul><div class="cm-viz">${x.viz()}</div></div>`;
+  if (k === "nuance") return `<p>${x.nuance}</p>`;
+  return `<p>${x.exemple}</p>`;
+}
+function commIrReponse(x, r) {
+  const [vt, vc] = COMM_VERDICT[x.v], j = commIrJuste(x, r);
+  const you = j === "oui" ? `<span class="ir-you ok">Bonne intuition</span>` : j === "non" ? `<span class="ir-you ko">Pas tout à fait</span>` : j === "nuance" && r !== "x" ? `<span class="ir-you nu">Les deux à la fois</span>` : "";
+  return `<div class="ir-verdict"><span class="cm-v ${vc}">${vt}</span>${you}</div>
+    <p class="ir-rep">${x.rep}</p>
+    <div class="ir-steps" role="tablist" aria-label="Déconstruire l'idée reçue">${COMM_IR_ETAPES.map(([k, t], i) => `<button type="button" role="tab" data-ir-tab="${k}" aria-selected="${i ? "false" : "true"}" class="${i ? "" : "on"}"><i>${i + 1}</i>${t}</button>`).join("")}</div>
+    <div class="ir-pane" role="tabpanel" data-k="credible">${commIrPane(x, "credible")}</div>
+    <div class="ir-ret"><p class="kick">Ce que l'on peut en retenir</p><p>${x.retenir}</p></div>
+    <div class="cm-foot"><div class="cm-go">${x.liens.map(([l, h]) => `<a class="chip" href="${h}">${esc(l)}</a>`).join("")}</div>
+      <details class="cm-src"><summary>Sources</summary>${commSrcHTML(x.src)}</details></div>`;
+}
+// Une carte. opts.seule : affichage isolé (Apprendre, Académie) avec le bouton « Une autre idée reçue »
+function commIdeeCarte(x, i, opts = {}) {
+  const r = commIrEtat()[x.id], ouvert = !!r;
+  return `<article class="ir${ouvert ? " open" : ""}${opts.seule ? " ir-seule" : ""}" id="${x.id}" data-ir="${x.id}">
+    <div class="ir-q"><span class="cm-n">${String(i + 1).padStart(2, "0")}</span><div class="ir-qb"><p class="cm-myth">« ${esc(x.mythe.replace(/\.$/, ""))} »</p>
+      <div class="ir-ask"${ouvert ? " hidden" : ""}><span class="kick">Vrai ou faux ?</span><button type="button" class="btn ghost" data-ir-ans="v">Vrai</button><button type="button" class="btn ghost" data-ir-ans="f">Faux</button><button type="button" class="linkbtn" data-ir-ans="x">Voir la réponse</button></div></div></div>
+    <div class="ir-a"${ouvert ? "" : " hidden"}>${ouvert ? commIrReponse(x, r) : ""}</div>
+    ${opts.seule ? `<div class="ir-nav"><span class="light ir-sc"></span><button type="button" class="linkbtn" data-ir-next>Une autre idée reçue →</button><a class="more" href="/idees-recues">Les ${commIdees().length} idées reçues →</a></div>` : ""}
   </article>`;
 }
+function commIdeeHTML(x, i) { return commIdeeCarte(x, i); } // ancien nom, gardé pour les appels existants
+function commIrScoreHTML(L) {
+  const s = commIrScore(L);
+  return s.faites ? `<b>${s.faites} / ${s.n}</b> idées vues${s.rep ? ` · <b>${s.ok}</b> bonne${s.ok > 1 ? "s" : ""} intuition${s.ok > 1 ? "s" : ""} sur ${s.rep}` : ""}` : `${s.n} idées, une minute chacune`;
+}
+function commIrMajScore() { const L = commIdees(), h = commIrScoreHTML(L); $$(".ir-score b.ir-sv, .ir-sc").forEach(e => { e.innerHTML = h; }); }
+// Une seule écoute pour toutes les cartes du site
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-ir-ans],[data-ir-tab],[data-ir-next]"); if (!b) return;
+  const card = b.closest("[data-ir]"); if (!card) return;
+  const L = commIdees(), x = L.find(y => y.id === card.dataset.ir); if (!x) return;
+  if (b.dataset.irAns) {
+    commIrNoter(x.id, b.dataset.irAns);
+    const a = $(".ir-a", card); a.innerHTML = commIrReponse(x, b.dataset.irAns); a.hidden = false; $(".ir-ask", card).hidden = true; card.classList.add("open", "flip");
+    setTimeout(() => card.classList.remove("flip"), 450); commIrMajScore();
+    const t = $(".ir-verdict", card); if (t && t.getBoundingClientRect().top > innerHeight - 120) card.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    return;
+  }
+  if (b.dataset.irTab) {
+    $$("[data-ir-tab]", card).forEach(t => { const on = t === b; t.classList.toggle("on", on); t.setAttribute("aria-selected", on ? "true" : "false"); });
+    const p = $(".ir-pane", card); p.dataset.k = b.dataset.irTab; p.innerHTML = commIrPane(x, b.dataset.irTab);
+    return;
+  }
+  if (b.hasAttribute("data-ir-next")) { // la prochaine idée pas encore vue (sinon la suivante)
+    const s = commIrEtat(), i = L.indexOf(x), n = L.slice(i + 1).concat(L.slice(0, i)).find(y => !s[y.id]) || L[(i + 1) % L.length];
+    card.outerHTML = commIdeeCarte(n, L.indexOf(n), { seule: true }); commIrMajScore();
+  }
+});
 function pageIdeesRecues() {
-  setTitle("Les idées reçues sur la Bourse"); setNav("aca");
-  const L = commIdees();
-  app.innerHTML = `<div class="cm-page">
-    <header class="cm-hero"><p class="kick">Idées reçues</p><h1 class="pagetitle">Les idées reçues sur la Bourse</h1>
-      <p class="pagesub">${L.length} phrases qu'on entend souvent, vérifiées avec des chiffres officiels. Pour chacune : le verdict, ce que disent les chiffres, et la nuance honnête, car la Bourse comporte de vrais risques.</p></header>
-    <nav class="cm-som" aria-label="Sommaire">${L.map((x, i) => `<a href="#${x.id}"><span class="cm-n">${String(i + 1).padStart(2, "0")}</span><span class="t">${esc(x.mythe)}</span><span class="cm-v ${COMM_VERDICT[x.v][1]}">${COMM_VERDICT[x.v][0]}</span></a>`).join("")}</nav>
-    ${L.map(commIdeeHTML).join("")}
+  setTitle("Idées reçues sur la Bourse : vrai ou faux ?"); setNav("aca");
+  const L = commIdees(), s = commIrEtat(), first = L.find(x => !s[x.id]);
+  app.innerHTML = `<div class="cm-page ir-page">
+    <header class="cm-hero"><p class="kick">Idées reçues déconstruites</p><h1 class="pagetitle">Vrai ou faux ? Les idées reçues sur la Bourse</h1>
+      <p class="pagesub">${L.length} phrases qu'on entend souvent. Répondez d'abord, puis retournez la carte : pourquoi on y croit, ce que montrent les données, les nuances, un exemple et ce qu'il faut en retenir. Chiffres officiels, sources à l'appui.</p>
+      <div class="ir-score"><span><b class="ir-sv">${commIrScoreHTML(L)}</b></span>${first ? `<a class="btn" href="#${first.id}">${Object.keys(s).length ? "Continuer" : "Commencer"}</a>` : `<button type="button" class="linkbtn" id="ir-raz">Tout recommencer</button>`}</div></header>
+    <div class="ir-list">${L.map((x, i) => commIdeeCarte(x, i)).join("")}</div>
     <section class="panel cm-end"><div class="pb"><h2>Pour aller plus loin</h2><p>Ces réponses sont générales. Elles ne tiennent pas compte de votre situation et ne sont pas des conseils d'investissement. Pour un conseil personnalisé, adressez-vous à un conseiller en investissements financiers enregistré auprès de l'ORIAS.</p>
-      <div class="cm-go"><a class="chip" href="/livret-a-ou-bourse">Livret A ou Bourse : le comparateur</a><a class="chip" href="/academie">L'Académie</a><a class="chip" href="/commencer">Par où commencer</a><a class="chip" href="/pourquoi-bilan">Pourquoi bilan.</a><a class="chip" href="/avertissement">Avertissement sur les risques</a></div></div></section>
+      <div class="cm-go"><a class="chip" href="/apprendre">Le parcours pour apprendre</a><a class="chip" href="/livret-a-ou-bourse">Livret A ou Bourse : le comparateur</a><a class="chip" href="/academie/psychologie">Psychologie et pièges</a><a class="chip" href="/avertissement">Avertissement sur les risques</a></div></div></section>
   </div>`;
-  commListeNoire().then(x => { const el = $(".cm-ln"); if (x && el) el.textContent = F0.format(x.n); });
-  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(() => t.scrollIntoView(), 0); }
+  const raz = $("#ir-raz"); if (raz) raz.onclick = () => { try { localStorage.removeItem(COMM_IR_KEY); } catch (e) { } pageIdeesRecues(); };
+  commListeNoire().then(x => { $$(".cm-ln").forEach(el => { if (x) el.textContent = F0.format(x.n); }); });
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(() => t.scrollIntoView({ block: "start" }), 0); }
+}
+// Une carte seule, pour Apprendre et l'Académie : la première idée pas encore vue
+function commIdeeSeuleHTML() {
+  const L = commIdees(), s = commIrEtat(), x = L.find(y => !s[y.id]) || L[0];
+  return commIdeeCarte(x, L.indexOf(x), { seule: true }).replace('<span class="light ir-sc"></span>', `<span class="light ir-sc">${commIrScoreHTML(L)}</span>`);
 }
 // Bloc court pour l'accueil : trois idées reçues, renvoi vers la page
 function commIdeesHTML(n = 3) {
   const L = commIdees().filter(x => ["casino", "argent", "livret-a", "bon-moment", "experts"].includes(x.id)).slice(0, n);
-  return `<div class="cm-teaser">${L.map(x => `<a class="cm-tz" href="/idees-recues#${x.id}"><span class="cm-v ${COMM_VERDICT[x.v][1]}">${COMM_VERDICT[x.v][0]}</span><b>« ${esc(x.mythe.replace(/\.$/, ""))} »</b><span>${x.rep.split(". ")[0]}.</span></a>`).join("")}</div>
+  return `<div class="cm-teaser">${L.map(x => `<a class="cm-tz" href="/idees-recues#${x.id}"><span class="kick">Vrai ou faux ?</span><b>« ${esc(x.mythe.replace(/\.$/, ""))} »</b><span>Répondez, puis découvrez ce que montrent les données.</span></a>`).join("")}</div>
     <p class="cm-more"><a class="lnk" href="/idees-recues">Les ${commIdees().length} idées reçues, chiffres et sources à l'appui</a></p>`;
 }
+document.head.insertAdjacentHTML("beforeend", `<style id="ir-css">
+.ir-page .cm-hero{margin-bottom:14px}
+.ir-score{display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between;margin:14px 0 0;padding:10px 14px;border:1px solid var(--line);border-radius:12px;background:#fff;font-size:14px}
+.ir-score b.ir-sv{font-weight:400}.ir-score b.ir-sv b{font-weight:700}
+.ir-list{display:grid;gap:12px;margin:0 0 20px}
+.ir{background:var(--card,#fff);border:1px solid var(--line);border-radius:16px;padding:16px 18px;scroll-margin-top:80px;transition:border-color .2s,box-shadow .2s}
+.ir.open{border-color:var(--ink)}
+.ir.flip .ir-a{animation:irflip .42s cubic-bezier(.2,.7,.2,1)}
+@keyframes irflip{from{opacity:0;transform:perspective(900px) rotateX(-12deg) translateY(-6px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ir.flip .ir-a{animation:none}}
+.ir-q{display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start}
+.ir-q .cm-n{font-size:20px;line-height:1.2;color:var(--ink);font-weight:600}
+.ir .cm-myth{margin:0;font-size:20px}
+.ir-ask{display:flex;flex-wrap:wrap;gap:8px 10px;align-items:center;margin-top:12px}
+.ir-ask .kick{margin:0 6px 0 0}
+.ir-ask[hidden],.ir-a[hidden]{display:none}
+.ir-ask .btn{min-width:84px;justify-content:center}
+.ir-a{margin-top:12px;border-top:1px solid var(--line2,#EFEAE0);padding-top:12px}
+.ir-verdict{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.ir-you{font-size:12.5px;font-weight:700;border-radius:99px;padding:2px 9px}
+.ir-you.ok{color:var(--g);background:#E5F2EA}.ir-you.ko{color:#9A3B12;background:#FBE7DD}.ir-you.nu{color:#7A4A00;background:#FFF1D8}
+.ir-rep{font-size:15.5px;line-height:1.5;margin:8px 0 12px;max-width:780px}
+.ir-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin:0 0 10px}
+.ir-steps button{display:flex;gap:7px;align-items:center;border:1px solid var(--line);background:#fff;border-radius:10px;padding:8px 10px;font:600 13px var(--sans,inherit);color:var(--grey);cursor:pointer;text-align:left;min-width:0}
+.ir-steps button i{font:700 11px var(--mono);font-style:normal;width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:var(--soft);color:var(--ink);flex:none}
+.ir-steps button.on{border-color:var(--ink);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
+.ir-steps button.on i{background:var(--ink);color:#fff}
+.ir-steps button:focus-visible{outline:2px solid var(--g);outline-offset:2px}
+.ir-pane{min-height:64px;font-size:15px;line-height:1.55}
+.ir-pane>p{margin:0;max-width:780px}
+.ir-pane[data-k=nuance]{background:#FFF8EC;border-left:3px solid #E59A3A;border-radius:0 10px 10px 0;padding:10px 14px}
+.ir-pane[data-k=exemple]{background:var(--soft);border-radius:10px;padding:10px 14px}
+.ir-ret{margin:12px 0 0;border:1px solid var(--g);background:#F2F8F4;border-radius:12px;padding:10px 14px}
+.ir-ret .kick{color:var(--g);margin:0 0 3px}.ir-ret p:last-child{margin:0;font-weight:600;line-height:1.45}
+.ir-nav{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;justify-content:flex-end;margin-top:12px;padding-top:10px;border-top:1px solid var(--line2,#EFEAE0);font-size:13.5px}
+.ir-nav .ir-sc{margin-right:auto}
+@media (max-width:860px){.ir{padding:14px}.ir .cm-myth{font-size:18px}.ir-q .cm-n{font-size:17px}.ir-steps{grid-template-columns:repeat(2,minmax(0,1fr))}.ir-steps button{font-size:12.5px;padding:7px 8px}.ir-nav{justify-content:flex-start}.ir-nav .ir-sc{flex-basis:100%}}
+</style>`);
 
 /* ====================================================================================
    5. Page « Livret A ou Bourse »

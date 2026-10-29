@@ -17,7 +17,6 @@ function parRedirection(p) {
   if (p === "/premiers-pas") return "/academie/express";
   return null;
 }
-const PAR_NIV_MODULE = { bases: "bourse", lire: "comptes", prix: "valorisation" };
 const PAR_APPROFONDIR = { // leçon express → leçon complète de l'Académie
   "bases/action": "bourse/action", "bases/cours": "bourse/cours", "bases/etf-indice": "placements/etf", "bases/enveloppes": "placements/pea", "bases/frais": "frais-fiscalite/frais-courtage", "bases/risque": "bases/risque-rendement",
   "lire/chiffre-affaires": "comptes/compte-resultat", "lire/marge-exploitation": "comptes/compte-resultat", "lire/benefice-net": "comptes/compte-resultat", "lire/dette-nette": "comptes/bilan", "lire/free-cash-flow": "comptes/flux", "lire/dividende": "bourse/dividendes",
@@ -26,43 +25,89 @@ const PAR_APPROFONDIR = { // leçon express → leçon complète de l'Académie
 
 /* ---------- Styles ---------- */
 document.head.insertAdjacentHTML("beforeend", `<style id="par-css">
-.par-hero{padding:6px 0 18px}
-.par-hero h1{margin:4px 0 6px}
-.par-prog{display:flex;flex-wrap:wrap;gap:8px 18px;align-items:center;margin:14px 0 0;font-size:13.5px;color:var(--grey)}
-.par-prog b{color:var(--ink);font-weight:600}
-.par-prog .btn{margin-left:auto}
-.par-path{display:grid;gap:14px;margin:8px 0 18px;counter-reset:par}
-.par-step{display:grid;grid-template-columns:44px minmax(0,1fr);gap:14px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px}
-.par-step>.n{width:40px;height:40px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font:700 17px var(--mono)}
-.par-step h2{font-size:21px;margin:2px 0 4px}
-.par-step>div>p{margin:0 0 10px;color:var(--grey);font-size:14.5px}
-.par-cta{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin-top:10px}
-.par-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.par-3>a{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;color:inherit;background:var(--paper,#FBF9F4);min-width:0}
-.par-3>a:hover{border-color:var(--ink)}
-.par-3>a small{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--light)}
-.par-3>a b{font-size:15.5px}
-.par-3>a span{font-size:13.5px;color:var(--grey)}
-.par-3>a .feub{margin-top:auto}
-.par-3>a.main{background:#fff;border-color:var(--ink);box-shadow:0 1px 0 var(--ink)}
-.par-mods{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.par-mods a{font-size:13px;border:1px solid var(--line);border-radius:99px;padding:4px 10px;text-decoration:none;color:inherit;background:#fff}
-.par-mods a.ok{border-color:var(--g);color:var(--g)}
-.par-tools{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
-.par-tools a{display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;color:inherit;background:#fff;min-width:0}
+/* Apprendre : trois niveaux */
+.pa-hero{padding:4px 0 16px}
+.pa-hero h1{margin:4px 0 6px}
+.pa-hero .pagesub{max-width:820px}
+.pa-go{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;margin:14px 0 0;font-size:13.5px}
+.pa-prof{margin:10px 0 0;font-size:14px;color:var(--grey)}
+.pa-lad{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:6px 0 26px;align-items:start;counter-reset:pa}
+.pa-niv{position:relative;background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.pa-niv.cur{border-color:var(--ink);box-shadow:0 1px 0 var(--ink)}
+.pa-niv:not(:last-child)::after{content:"";position:absolute;top:34px;right:-13px;width:14px;height:2px;background:var(--line)}
+.pa-nh{display:flex;gap:12px;align-items:center}
+.pa-n{width:36px;height:36px;border-radius:50%;background:var(--soft);color:var(--ink);display:grid;place-items:center;font:700 16px var(--mono);flex:none}
+.pa-niv.cur .pa-n{background:var(--ink);color:#fff}
+.pa-niv.done .pa-n{background:var(--g);color:#fff}
+.pa-nh .kick{margin:0}
+.pa-nh h3{margin:2px 0 0;font-size:19px;font-family:var(--serif,inherit);line-height:1.2}
+.pa-d{margin:0;font-size:14px;color:var(--grey);line-height:1.5}
+.pa-short{border-top:1px solid var(--line2,#EFEAE0);padding-top:10px;display:grid;gap:8px}
+.pa-sh{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;font-size:14px}
+.pa-sh span{color:var(--grey);font-size:13px}
+.pa-dots{display:flex;flex-wrap:wrap;gap:5px}
+.pa-dots a{width:22px;height:8px;border-radius:4px;background:var(--line);display:block}
+.pa-dots a.on{background:var(--g)}
+.pa-dots a.q{width:auto;height:auto;font:700 10px/1 var(--mono);padding:0 5px;display:grid;place-items:center;color:var(--grey);text-decoration:none;background:var(--soft)}
+.pa-dots a.q.on{background:var(--g);color:#fff}
+.pa-cta{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;font-size:13px}
+.pa-ok{color:var(--g);font-weight:600}
+.pa-next{margin:0;font-size:13px;color:var(--grey)}
+.pa-deep{border-top:1px solid var(--line2,#EFEAE0);padding-top:8px}
+.pa-deep summary,.pa-tools summary{cursor:pointer;display:flex;justify-content:space-between;gap:10px;font-size:13.5px;list-style:none}
+.pa-deep summary::-webkit-details-marker,.pa-tools summary::-webkit-details-marker{display:none}
+.pa-deep summary>span:first-child::before,.pa-tools summary>span:first-child::before{content:"▸ ";color:var(--grey)}
+.pa-deep[open] summary>span:first-child::before,.pa-tools[open] summary>span:first-child::before{content:"▾ "}
+.pa-deep summary>span:last-child{white-space:nowrap}
+.pa-cta .btn{min-height:38px;display:inline-flex;align-items:center;box-sizing:border-box}
+.pa-ir .ir-seule .ir-ask .kick{display:none}
+.pa-mods{display:grid;gap:6px;margin-top:8px}
+.pa-mods a{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;align-items:center;text-decoration:none;color:inherit;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13.5px}
+.pa-mods a:hover{border-color:var(--ink)}
+.pa-mods a .feub{grid-column:1/-1;margin:2px 0 0;height:4px}
+.pa-mods a span{font-size:12px}
+.pa-ir{background:#fff;border:1px solid var(--ink);border-radius:18px;padding:18px;margin:0 0 26px;box-shadow:4px 4px 0 var(--soft)}
+.pa-irh h2{margin:2px 0 4px;font-size:24px}
+.pa-irh .muted{margin:0 0 12px;font-size:14px;max-width:760px}
+.pa-ir .ir{border-color:var(--line);box-shadow:none}
+.pa-keep{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 12px}
+.pa-keep a{display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;color:inherit;background:#fff;min-width:0}
+.pa-keep a:hover{border-color:var(--ink)}
+.pa-keep a small{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--light)}
+.pa-keep a b{font-size:15.5px}
+.pa-keep a span{font-size:13.5px;color:var(--grey)}
+.pa-tools{background:#fff;border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin:0 0 16px;scroll-margin-top:80px}
+.pa-tools .par-tools{margin-top:12px}
+.par-tools{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.par-tools a{display:flex;flex-direction:column;gap:3px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;text-decoration:none;color:inherit;background:var(--paper,#FBF9F4);min-width:0}
 .par-tools a:hover{border-color:var(--ink)}
 .par-tools a b{font-size:15px}
 .par-tools a span{font-size:13.5px;color:var(--grey)}
 .par-tools a small{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--light)}
-.par-ways{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px}
-.par-ways a{display:flex;flex-direction:column;gap:4px;border:1px solid var(--line);border-radius:14px;padding:14px 16px;text-decoration:none;color:inherit;background:#fff;min-width:0}
-.par-ways a:hover{border-color:var(--ink)}
-.par-ways a small{font:600 11px var(--mono);text-transform:uppercase;letter-spacing:.05em;color:var(--light)}
-.par-ways a b{font-size:16.5px;font-family:var(--serif,inherit)}
-.par-ways a span{font-size:13.5px;color:var(--grey)}
-.par-ways a.on{border-color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
-.par-deep{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;justify-content:space-between;margin:12px 0 0;padding:10px 14px;border-radius:12px;background:var(--soft);font-size:14px}
-@media (max-width:860px){.par-3,.par-tools,.par-ways{grid-template-columns:minmax(0,1fr)}.par-step{grid-template-columns:minmax(0,1fr);padding:14px}.par-step>.n{width:34px;height:34px;font-size:15px}.par-prog .btn{margin-left:0}}
+.par-deep{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;margin:12px 0 0;padding:10px 14px;border-radius:12px;background:var(--soft);font-size:14px}
+.pa-chips{display:flex;flex-wrap:wrap;gap:6px}.pa-chips .chip{margin:0}
+/* Académie : le programme complet par niveau */
+.pa-prog-court{display:flex;flex-wrap:wrap;gap:4px 14px;margin:10px 0 0;font-size:13px}
+.pa-prog-court:empty{display:none}
+.pa-prog-court::before{content:"Parcours court :";color:var(--grey)}
+.pa-lv{margin:0 0 22px}
+.pa-lvh{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:flex-end;justify-content:space-between;margin:0 0 10px}
+.pa-lvh h2{margin:2px 0 2px;font-size:22px}
+.pa-lvh .kick{margin:0}.pa-lvh .muted{margin:0;font-size:14px}
+.pa-modl{display:grid;gap:8px}
+.pa-mod{display:grid;grid-template-columns:34px minmax(0,1fr) 230px;gap:12px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-decoration:none;color:inherit}
+.pa-mod:hover{border-color:var(--ink)}
+.pa-mn{width:30px;height:30px;border-radius:50%;background:var(--soft);display:grid;place-items:center;font:700 14px var(--mono)}
+.pa-mt{display:flex;flex-direction:column;gap:2px;min-width:0}
+.pa-mt b{font-size:16px}
+.pa-mt small{font-size:13px;color:var(--grey);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pa-mm{font-size:12.5px;color:var(--grey);display:grid;gap:3px}
+.pa-mm span{color:var(--ink);font-weight:600}
+.pa-mm .feub{height:4px;margin:0}
+.pa-irl{display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;margin:18px 0 6px;padding:12px 14px;border:1px dashed var(--ink);border-radius:12px;text-decoration:none;color:inherit;background:#fff}
+.pa-irl .kick{margin:0}.pa-irl b{font-family:var(--serif,inherit);font-size:16px}.pa-irl .more{margin-left:auto}
+@media (max-width:980px){.pa-lad{grid-template-columns:minmax(0,1fr)}.pa-niv:not(:last-child)::after{top:auto;bottom:-11px;right:auto;left:33px;width:2px;height:10px}.par-tools{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:860px){.pa-keep,.par-tools{grid-template-columns:minmax(0,1fr)}.pa-mod{grid-template-columns:30px minmax(0,1fr)}.pa-mm{grid-column:2}.pa-mt small{white-space:normal}.pa-ir{padding:14px;box-shadow:none}.pa-irh h2{font-size:21px}.pa-irl .more{margin-left:0}}
 
 /* Rapport sur mesure */
 .par-wiz{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:16px;align-items:start}
@@ -148,25 +193,66 @@ const parParcours = () => PARCOURS ? Promise.resolve(PARCOURS) : (PAR_PARCOURS_P
 function parCrumbs(items) { return `<div class="crumbs"><a href="/apprendre">Apprendre</a>${items.map(([h, t]) => ` › ${h ? `<a href="${h}">${esc(t)}</a>` : esc(t)}`).join("")}</div>`; }
 
 /* =====================================================================================================
-   1. Apprendre
+   1. Apprendre : trois niveaux, des fondamentaux aux sujets avancés.
+      Chaque niveau = un parcours court (les leçons de 3 minutes et le quiz de /academie/express/<niveau>)
+      + « Approfondir » à la demande (les modules du cours complet qui s'y rattachent). Rien n'est retiré :
+      les 17 leçons courtes, les 55 leçons du cours complet, les quiz, la formation guidée et la progression (pState, acaSt) sont les mêmes.
    ===================================================================================================== */
+const PAR_NIVEAUX = [
+  { n: 1, ex: "bases", tag: "Débutant", titre: "Les fondamentaux", desc: "Action, indice, ETF, enveloppes, frais et risque : ce qu'il faut savoir avant tout.", mods: ["bases", "bourse", "placements", "frais-fiscalite"] },
+  { n: 2, ex: "lire", tag: "Intermédiaire", titre: "Lire une entreprise", desc: "Ventes, marge, bénéfice, dette, dividende : lire des comptes et les comparer à la médiane du secteur.", mods: ["comptes"] },
+  { n: 3, ex: "prix", tag: "Avancé", titre: "Juger le prix, construire", desc: "PER, rendement et valorisation, puis un portefeuille diversifié, sans tomber dans les pièges.", mods: ["valorisation", "portefeuille", "psychologie"] },
+];
+const PAR_EXP = "/academie/express";
+function parNiveaux() { // progression par niveau, calculée sur ce qui est gardé dans le navigateur
+  const ps = pState(), st = typeof acaSt === "function" ? acaSt() : {}, N = (PARCOURS && PARCOURS.niveaux) || [];
+  return PAR_NIVEAUX.map(L => {
+    const ex = N.find(x => x.id === L.ex), lec = ex ? ex.lecons : [], lus = lec.filter(l => ps[L.ex + "/" + l.id]).length, quiz = ps["quiz/" + L.ex];
+    const mods = ACA ? L.mods.map(id => ACA.modules.find(m => m.id === id)).filter(Boolean) : [];
+    const dt = mods.reduce((a, m) => a + m.lecons.length, 0), dl = mods.reduce((a, m) => a + m.lecons.filter(l => st[m.id + "/" + l.id]).length, 0);
+    const dmin = mods.reduce((a, m) => a + m.lecons.reduce((b, l) => b + (l.duree_min || 5), 0), 0);
+    const next = lec.find(l => !ps[L.ex + "/" + l.id]), nextDeep = mods.flatMap(m => m.lecons.map(l => [m, l])).find(([m, l]) => !st[m.id + "/" + l.id]);
+    return { ...L, lec, lus, quiz, nq: ex ? ex.quiz.length : 0, mods, dt, dl, dmin, next, nextDeep, court: !!lec.length && lus >= lec.length && quiz != null };
+  });
+}
+function parProchaine(NV) { // la prochaine étape conseillée : le parcours court niveau par niveau, puis le cours complet
+  const v = NV.find(x => !x.court);
+  if (v) return v.next ? { h: `${PAR_EXP}/${v.ex}/${v.next.id}`, t: v.next.titre, v } : { h: `${PAR_EXP}/${v.ex}/quiz`, t: `le quiz du niveau ${v.n}`, v };
+  const d = NV.find(x => x.nextDeep);
+  return d ? { h: `/academie/${d.nextDeep[0].id}/${d.nextDeep[1].id}`, t: d.nextDeep[1].titre, v: d } : null;
+}
+function parNiveauHTML(v, cur) {
+  const pc = v.lec.length ? v.lus / v.lec.length : 0, etat = v.court ? `<span class="pa-ok">✓ Parcours court terminé</span>` : `${v.lus} / ${v.lec.length} leçons${v.quiz != null ? ` · quiz ${v.quiz} / ${v.nq}` : ""}`;
+  const cta = v.court ? `<a class="btn ghost" href="${PAR_EXP}/${v.ex}">Revoir le parcours</a>` : v.next ? `<a class="btn${cur ? "" : " ghost"}" href="${PAR_EXP}/${v.ex}/${v.next.id}">${v.lus ? "Continuer" : "Commencer"}</a>` : `<a class="btn${cur ? "" : " ghost"}" href="${PAR_EXP}/${v.ex}/quiz">Faire le quiz</a>`;
+  return `<section class="pa-niv${cur ? " cur" : ""}${v.court ? " done" : ""}" id="niveau-${v.n}">
+    <div class="pa-nh"><span class="pa-n">${v.court ? "✓" : v.n}</span><div><p class="kick">Niveau ${v.n} · ${v.tag}</p><h3>${esc(v.titre)}</h3></div></div>
+    <p class="pa-d">${esc(v.desc)}</p>
+    <div class="pa-short"><div class="pa-sh"><b>Parcours court</b><span>${v.lec.length} leçons de 3 min et un quiz</span></div>
+      <div class="pa-dots" aria-label="${v.lus} leçons lues sur ${v.lec.length}">${v.lec.map(l => `<a href="${PAR_EXP}/${v.ex}/${l.id}" title="${esc(l.titre)}" class="${pState()[v.ex + "/" + l.id] ? "on" : ""}"></a>`).join("")}<a href="${PAR_EXP}/${v.ex}/quiz" title="Quiz" class="q${v.quiz != null ? " on" : ""}">?</a></div>
+      <div class="pa-cta">${cta}<span class="light">${etat}</span></div>
+      ${v.next && !v.court ? `<p class="pa-next">Prochaine leçon : <a class="lnk" href="${PAR_EXP}/${v.ex}/${v.next.id}">${esc(v.next.titre)}</a></p>` : ""}</div>
+    ${v.mods.length ? `<details class="pa-deep"><summary><span><b>Approfondir</b> · ${v.mods.length} module${v.mods.length > 1 ? "s" : ""}, ${v.dt} leçons, ${F0.format(Math.max(1, Math.round(v.dmin / 60)))} h environ</span><span class="light">${v.dl} / ${v.dt}</span></summary>
+      <div class="pa-mods">${v.mods.map(m => { const p = acaProgress(m, acaSt()); return `<a href="/academie/${m.id}"><b>${esc(m.titre)}</b><span class="light">${m.lecons.length} leçons${p.d ? ` · ${p.d} lue${p.d > 1 ? "s" : ""}` : ""}</span>${parBar(p.d, p.n)}</a>`; }).join("")}</div></details>` : ""}
+  </section>`;
+}
+function parNiveauxHTML(NV) {
+  const nx = parProchaine(NV), cur = nx && nx.v ? nx.v.n : 0;
+  return `<div class="pa-lad">${NV.map(v => parNiveauHTML(v, v.n === cur)).join("")}</div>`;
+}
+function parIdeesBloc(titre = "Vrai ou faux ?") {
+  if (typeof commIdeeSeuleHTML !== "function") return "";
+  return `<section class="pa-ir" id="idees-recues"><div class="pa-irh"><div><p class="kick">Idées reçues déconstruites</p><h2>${titre}</h2>
+      <p class="muted">Une phrase qu'on entend souvent. Répondez, puis retournez la carte : pourquoi on y croit, ce que disent les données, les nuances, un exemple.</p></div></div>
+    ${commIdeeSeuleHTML()}</section>`;
+}
 async function pageApprendre() {
   setTitle("Apprendre la Bourse"); setNav("aca");
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   await Promise.all([acaLoad(), parParcours(), premStatus().catch(() => null)]);
-  const st = typeof acaSt === "function" ? acaSt() : {}, ps = pState(), prof = parSt(typeof CKEY !== "undefined" ? CKEY : "bilan.profil");
-  const mods = ACA ? ACA.modules : [], tot = mods.reduce((a, m) => a + m.lecons.length, 0), lus = mods.reduce((a, m) => a + m.lecons.filter(l => st[m.id + "/" + l.id]).length, 0);
-  const N = (PARCOURS && PARCOURS.niveaux) || [], etot = N.reduce((a, n) => a + n.lecons.length, 0), elus = N.reduce((a, n) => a + n.lecons.filter(l => ps[n.id + "/" + l.id]).length, 0);
-  const nq = Object.keys(prof).length, profOk = nq >= 5;
-  const mins = mods.reduce((a, m) => a + m.lecons.reduce((b, l) => b + (l.duree_min || 5), 0), 0);
-  // Prochaine étape conseillée : le profil, puis l'essentiel, puis le cours complet
-  const nextE = N.flatMap(n => n.lecons.map(l => [n, l])).find(([n, l]) => !ps[n.id + "/" + l.id]);
-  const nextA = mods.flatMap(m => m.lecons.map(l => [m, l])).find(([m, l]) => !st[m.id + "/" + l.id]);
-  const reprise = !profOk ? ["/commencer#profil", "Commencer : trouver mon profil"] : nextE && elus < etot ? [`/academie/express/${nextE[0].id}/${nextE[1].id}`, `Reprendre : ${nextE[1].titre}`]
-    : nextA ? [`/academie/${nextA[0].id}/${nextA[1].id}`, `Reprendre : ${nextA[1].titre}`] : ["/lexique", "Revoir le lexique"];
+  const prof = parSt(typeof CKEY !== "undefined" ? CKEY : "bilan.profil"), nq = Object.keys(prof).length, profOk = nq >= 5;
+  const NV = parNiveaux(), nx = parProchaine(NV), lus = NV.reduce((a, v) => a + v.lus + v.dl, 0), tot = NV.reduce((a, v) => a + v.lec.length + v.dt, 0);
   const outils = [
     ["/livret-a-ou-bourse", "Comparer", "Livret A ou Bourse ?", "100 € par mois sur 10, 20 ou 30 ans, inflation comprise."],
-    ["/idees-recues", "Comprendre", "Les idées reçues", "« La Bourse, c'est un casino » et les autres, chiffres et sources à l'appui."],
     ["/pea-cto", "Choisir", "PEA, compte-titres, assurance-vie", "Ce que chaque compte change à vos impôts."],
     ["/simulateurs/epargne", "Simuler", "Épargner chaque mois", "Ce que devient une somme placée tous les mois."],
     ["/simulateurs/frais", "Simuler", "Le coût des frais", "Courtage et frais de gestion sur 10, 20 ou 30 ans."],
@@ -176,34 +262,27 @@ async function pageApprendre() {
     ["/portefeuille", "S'entraîner", "Un portefeuille d'essai", "Composer un portefeuille fictif et voir ce qu'il contient vraiment."],
   ];
   const ess = typeof ESSENTIEL !== "undefined" && typeof ALL !== "undefined" ? ESSENTIEL.filter(k => ALL[k]) : [];
-  app.innerHTML = `<div class="par-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Apprendre la Bourse, dans l'ordre.</h1>
-      <p class="pagesub">Un seul chemin en quatre étapes : trouver son profil, suivre les cours, retrouver chaque mot, puis s'exercer avec de vrais chiffres. Tout est gratuit pour l'essentiel. Votre progression reste sur cet appareil.</p>
-      <div class="par-prog"><span>Profil : <b>${profOk ? "trouvé" : nq ? `${nq} réponse${nq > 1 ? "s" : ""} sur 5` : "à faire"}</b></span><span>L'essentiel : <b>${elus} / ${etot} leçons</b></span><span>Cours complet : <b>${lus} / ${tot} leçons</b></span><a class="btn" href="${reprise[0]}">${esc(reprise[1])}</a></div></div>
-    <div class="par-path">
-      <section class="par-step" id="commencer"><span class="n">1</span><div><p class="kick">10 minutes</p><h2>Par où commencer</h2>
-        <p>Les sept étapes à suivre dans l'ordre avant d'investir, et cinq questions pour savoir quel type d'investisseur vous êtes.</p>
-        <div class="par-cta"><a class="btn${profOk ? " ghost" : ""}" href="/commencer">Le guide du nouvel investisseur</a><a class="more" href="/commencer#profil">${profOk ? "Revoir mon profil" : "Trouver mon profil en 5 questions"} →</a><a class="more" href="/commencer#faq">Questions fréquentes →</a></div></div></section>
-      <section class="par-step" id="academie"><span class="n">2</span><div><p class="kick">À votre rythme</p><h2>L'Académie</h2>
-        <p>Les cours, en trois formats. Commencez par l'essentiel si vous êtes pressé, approfondissez avec le cours complet.</p>
-        <div class="par-3">
-          <a class="${elus < etot ? "main" : ""}" href="/academie/express"><small>Version courte · ${etot} leçons de 3 min</small><b>L'essentiel en 3 étapes</b><span>Comprendre une action, lire une entreprise, juger son prix. Un quiz par étape.</span>${parBar(elus, etot)}</a>
-          <a class="${elus >= etot ? "main" : ""}" href="/academie"><small>Cours complet · ${mods.length} modules · ${F0.format(Math.round(mins / 60))} h</small><b>Le cours de culture financière</b><span>L'argent, les placements, les comptes, les frais, la fiscalité et les pièges.</span>${parBar(lus, tot)}</a>
-          ${ACA && ACA.formation ? `<a href="/academie/formation"><small>Formation guidée${isPrem() ? "" : " · Premium"}</small><b>${esc(ACA.formation.titre)}</b><span>Une étape par semaine, de l'épargne de précaution au premier ordre.</span></a>` : ""}</div>
-        <div class="par-mods">${mods.map(m => { const d = m.lecons.filter(l => st[m.id + "/" + l.id]).length; return `<a href="/academie/${m.id}" class="${d === m.lecons.length ? "ok" : ""}">${d === m.lecons.length ? "✓ " : ""}${esc(m.titre)}</a>`; }).join("")}</div></div></section>
-      <section class="par-step" id="lexique"><span class="n">3</span><div><p class="kick">À garder sous la main</p><h2>Le lexique</h2>
-        <p>Chaque chiffre de la Bourse expliqué : ce que c'est, un exemple réel et à partir de quand c'est bon ou moins bon. Ces dix notions suffisent pour lire une fiche.</p>
-        <div class="par-mods">${ess.map((k, i) => `<a href="/lexique#${k}">${i + 1}. ${esc(ALL[k].name)}</a>`).join("")}</div>
-        <div class="par-cta"><a class="more" href="/lexique">Tout le lexique →</a></div></div></section>
-      <section class="par-step" id="outils"><span class="n">4</span><div><p class="kick">Avec vos chiffres</p><h2>Les outils pédagogiques</h2>
-        <p>Pour vérifier par vous-même ce que les cours expliquent. Les hypothèses sont toujours affichées.</p>
-        <div class="par-tools">${outils.map(([h, k, t, d]) => `<a href="${h}"><small>${k}</small><b>${t}</b><span>${d}</span></a>`).join("")}</div></div></section>
+  app.innerHTML = `<header class="pa-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Apprendre la Bourse, pas à pas.</h1>
+      <p class="pagesub">Trois niveaux, des fondamentaux aux sujets avancés. Chaque niveau commence par un parcours court de quelques leçons de 3 minutes ; le cours complet est là pour approfondir, quand vous le souhaitez.</p>
+      <div class="pa-go">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a>` : `<a class="btn" href="/lexique">Revoir le lexique</a>`}
+        <span class="light">${lus ? `${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot} · ` : ""}progression gardée sur cet appareil</span></div>
+      ${profOk ? "" : `<p class="pa-prof">Vous débutez vraiment ? <a class="lnk" href="/commencer#profil">Trouvez votre profil en 5 questions</a>${nq ? ` (${nq} sur 5)` : ""}, puis lancez le niveau 1.</p>`}</header>
+    <h2 class="subh" id="niveaux">Votre parcours</h2>
+    ${parNiveauxHTML(NV)}
+    ${parIdeesBloc()}
+    <h2 class="subh">À garder sous la main</h2>
+    <div class="pa-keep">
+      <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
+      <a href="/commencer"><small>10 minutes</small><b>Par où commencer</b><span>Les sept étapes avant d'investir et les questions fréquentes.</span></a>
+      ${ACA && ACA.formation ? `<a href="/academie/formation"><small>Formation guidée${isPrem() ? "" : " · Premium"}</small><b>Six semaines, pas à pas</b><span>De l'épargne de précaution au premier portefeuille.</span></a>` : ""}
     </div>
-    <section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Ensuite : passer à la pratique</b><div class="muted">Ouvrir une vraie fiche et comparer ses chiffres à la médiane de son secteur.</div></div><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/entreprises">Les entreprises →</a><a class="more" href="/etf">Les ETF →</a><a class="more" href="/methode">Méthode et sources →</a></div></div></section>
-    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement.</p>`;
-  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(() => t.scrollIntoView({ block: "start" }), 30); }
+    <details class="pa-tools" id="outils"><summary><span><b>Les outils pédagogiques</b> · ${outils.length} simulateurs et comparateurs, avec vos chiffres</span><span class="light">Afficher</span></summary>
+      <div class="par-tools">${outils.map(([h, k, t, d]) => `<a href="${h}"><small>${k}</small><b>${t}</b><span>${d}</span></a>`).join("")}</div></details>
+    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. <a class="lnk" href="/academie">Le programme complet de l'Académie</a> · <a class="lnk" href="/methode">Méthode et sources</a></p>`;
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { if (t.tagName === "DETAILS") t.open = true; setTimeout(() => t.scrollIntoView({ block: "start" }), 30); } }
 }
 
-/* ---------- L'Académie : l'accueil présente les trois formats ---------- */
+/* ---------- L'Académie : le programme complet, rangé par niveau ---------- */
 async function pageAcademie(mid, lid) {
   setTitle("L'Académie"); setNav("aca");
   if (mid === "express") return parExpress(lid);
@@ -217,70 +296,84 @@ async function pageAcademie(mid, lid) {
   if (lid && !l) return pageNotFound();
   return l ? acaLecon(m, l) : acaModule(m);
 }
-function parWays(on) {
-  const ps = pState(), N = (PARCOURS && PARCOURS.niveaux) || [], etot = N.reduce((a, n) => a + n.lecons.length, 0), elus = N.reduce((a, n) => a + n.lecons.filter(l => ps[n.id + "/" + l.id]).length, 0);
-  const st = acaSt(), tot = ACA ? ACA.modules.reduce((a, m) => a + m.lecons.length, 0) : 0, lus = ACA ? ACA.modules.reduce((a, m) => a + m.lecons.filter(l => st[m.id + "/" + l.id]).length, 0) : 0;
-  return `<div class="par-ways">
-    <a href="/academie/express" class="${on === "express" ? "on" : ""}"><small>Version courte${etot ? ` · ${elus} / ${etot} lues` : ""}</small><b>L'essentiel en 3 étapes</b><span>Des leçons de trois minutes et un quiz par étape.</span></a>
-    <a href="/academie" class="${on === "cours" ? "on" : ""}"><small>Cours complet · ${lus} / ${tot} lues</small><b>Les ${ACA ? ACA.modules.length : 8} modules</b><span>Pour approfondir chaque sujet, avec des sources officielles.</span></a>
-    ${ACA && ACA.formation ? `<a href="/academie/formation" class="${on === "formation" ? "on" : ""}"><small>Formation guidée${isPrem() ? "" : " · Premium"}</small><b>Six semaines, pas à pas</b><span>Construire son premier portefeuille, une étape par semaine.</span></a>` : ""}</div>`;
-}
-async function parAcaAccueilAsync() { await parParcours(); const w = $(".par-ways"); if (w) w.outerHTML = parWays("cours"); }
+async function parAcaAccueilAsync() { await parParcours(); const w = $(".pa-prog-court"); if (w) { const NV = parNiveaux(); w.innerHTML = NV.map(v => `<a href="${PAR_EXP}/${v.ex}">Niveau ${v.n} : ${v.court ? "✓" : `${v.lus} / ${v.lec.length}`}</a>`).join(""); } }
 function acaAccueil() {
   const st = acaSt(), tot = ACA.modules.reduce((a, m) => a + m.lecons.length, 0), lus = ACA.modules.reduce((a, m) => a + acaProgress(m, st).d, 0), mins = ACA.modules.reduce((a, m) => a + m.lecons.reduce((b, l) => b + (l.duree_min || 5), 0), 0);
-  const next = ACA.modules.flatMap(m => m.lecons.map(l => [m, l])).find(([m, l]) => !st[m.id + "/" + l.id]);
-  app.innerHTML = `${parCrumbs([[null, "L'Académie"]])}<div class="acahero"><p class="kick">L'Académie bilan.</p><h1 class="pagetitle">La culture financière, de zéro.</h1>
-      <p class="pagesub">${ACA.modules.length} modules, ${tot} leçons et des quiz pour comprendre l'argent, la Bourse et les placements, avec des exemples chiffrés et des sources officielles. Environ ${F0.format(mins / 60)} heures en tout, à votre rythme. Votre progression reste sur cet appareil.</p>
-      <div class="acaprog"><div class="feub"><span class="f" style="width:${lus / tot * 100}%"></span></div><span>${lus} / ${tot} leçons lues</span>${(() => { const xp = acaXP(st), [nv, a, b] = acaNiveau(xp); return `<span class="acaxp"><b>${xp} points</b> · niveau ${nv}${b ? ` · encore ${b - xp} pour le suivant` : ""}</span>`; })()}${next ? `<a class="btn" href="/academie/${next[0].id}/${next[1].id}">${lus ? "Reprendre" : "Commencer"} : ${esc(next[1].titre)}</a>` : ""}</div></div>
-    ${parWays("cours")}
-    <h2 class="subh">Le cours complet</h2>
-    <div class="acagrid">${ACA.modules.map((m, i) => { const p = acaProgress(m, st), lk = m.lecons.filter(l => l.premium).length;
-      return `<a class="acacard" href="/academie/${m.id}"><div class="acatop"><span class="n">${i + 1}</span><span class="nv ${niveauCls(m.niveau)}">${esc(m.niveau || "")}</span></div><h3>${esc(m.titre)}</h3><p>${esc(m.intro)}</p>
-        <div class="acameta"><span>${m.lecons.length} leçons · ${m.duree_min || m.lecons.reduce((a, l) => a + (l.duree_min || 5), 0)} min${lk && !isPrem() ? ` · ${lk} Premium` : ""}</span><span>${p.d}/${p.n}${p.q != null ? ` · quiz ${p.q}/${m.quiz.length}` : ""}</span></div><div class="feub"><span class="f" style="width:${p.d / p.n * 100}%"></span></div></a>`; }).join("")}</div>
+  const ordre = PAR_NIVEAUX.flatMap(v => v.mods).map(id => ACA.modules.find(m => m.id === id)).filter(Boolean);
+  ACA.modules.forEach(m => { if (!ordre.includes(m)) ordre.push(m); }); // un module ajouté plus tard reste visible
+  const next = ordre.flatMap(m => m.lecons.map(l => [m, l])).find(([m, l]) => !st[m.id + "/" + l.id]);
+  const xp = acaXP(st), [nv, , b] = acaNiveau(xp);
+  const row = m => { const p = acaProgress(m, st), lk = m.lecons.filter(l => l.premium).length, i = ordre.indexOf(m), intro = String(m.intro || "").split(/(?<=\.)\s/)[0];
+    return `<a class="pa-mod" href="/academie/${m.id}"><span class="pa-mn">${i + 1}</span><span class="pa-mt"><b>${esc(m.titre)}</b><small>${esc(intro)}</small></span>
+      <span class="pa-mm">${m.lecons.length} leçons · ${m.duree_min || m.lecons.reduce((a, l) => a + (l.duree_min || 5), 0)} min${lk && !isPrem() ? ` · ${lk} Premium` : ""}<span>${p.d ? `${p.d} / ${p.n}` : "à commencer"}${p.q != null ? ` · quiz ${p.q}/${m.quiz.length}` : ""}</span>${parBar(p.d, p.n)}</span></a>`; };
+  const autres = ordre.filter(m => !PAR_NIVEAUX.some(v => v.mods.includes(m.id)));
+  app.innerHTML = `${parCrumbs([[null, "L'Académie"]])}<header class="pa-hero"><p class="kick">L'Académie bilan.</p><h1 class="pagetitle">Le programme complet</h1>
+      <p class="pagesub">${ACA.modules.length} modules et ${tot} leçons, rangés en trois niveaux. Environ ${F0.format(Math.round(mins / 60))} heures en tout. Si vous débutez, commencez par le parcours court de chaque niveau : quelques leçons de 3 minutes et un quiz.</p>
+      <div class="acaprog"><div class="feub"><span class="f" style="width:${tot ? lus / tot * 100 : 0}%"></span></div><span>${lus} / ${tot} leçons lues</span><span class="acaxp"><b>${xp} points</b> · niveau ${nv}${b ? ` · encore ${b - xp} pour le suivant` : ""}</span>${next ? `<a class="btn" href="/academie/${next[0].id}/${next[1].id}">${lus ? "Reprendre" : "Commencer"} : ${esc(next[1].titre)}</a>` : ""}</div>
+      <p class="pa-prog-court light"></p></header>
+    ${PAR_NIVEAUX.map((v, k) => `<section class="pa-lv" id="niveau-${v.n}"><div class="pa-lvh"><div><p class="kick">Niveau ${v.n} · ${v.tag}</p><h2>${esc(v.titre)}</h2><p class="muted">${esc(v.desc)}</p></div><a class="more" href="${PAR_EXP}/${v.ex}">Parcours court →</a></div>
+      <div class="pa-modl">${v.mods.map(id => ACA.modules.find(m => m.id === id)).filter(Boolean).map(row).join("")}</div></section>${k === 0 ? parIdeesBloc("Une pause : vrai ou faux ?") : ""}`).join("")}
+    ${autres.length ? `<section class="pa-lv"><div class="pa-modl">${autres.map(row).join("")}</div></section>` : ""}
     ${ACA.formation ? `<section class="panel formcard"><div class="pb"><div><p class="kick">Formation guidée${isPrem() ? "" : " · Premium"}</p><h2>${esc(ACA.formation.titre)}</h2><p>${esc(ACA.formation.intro)}</p></div><a class="btn" href="/academie/formation">${isPrem() ? "Suivre la formation" : "Découvrir la formation"}</a></div></section>` : ""}
     <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. Les chiffres (fiscalité, plafonds) sont ceux de 2026 et sont vérifiés à chaque mise à jour. <a class="lnk" href="/methode">Méthode et sources</a> · <a class="lnk" href="/apprendre">Tout pour apprendre</a></p>`;
   parAcaAccueilAsync();
 }
+// Fin de leçon du cours complet : l'idée reçue qui s'y rattache, à tester en un clic
+(function () {
+  const lecon0 = window.acaLecon;
+  window.acaLecon = function (m, l) {
+    const r = lecon0.apply(this, arguments);
+    try {
+      if (typeof commIdees === "function" && !$(".pa-irl")) {
+        const h = `/academie/${m.id}/${l.id}`, x = commIdees().find(y => y.liens.some(([, u]) => u === h));
+        const nav = $(".acales .acanav"); if (x && nav) nav.insertAdjacentHTML("beforebegin", `<a class="pa-irl" href="/idees-recues#${x.id}"><span class="kick">Vrai ou faux ?</span><b>« ${esc(x.mythe.replace(/\.$/, ""))} »</b><span class="more">Tester cette idée reçue →</span></a>`);
+      }
+    } catch (e) { }
+    return r;
+  };
+})();
 
-/* ---------- L'essentiel en 3 étapes (ancien « Premiers pas », /debuter) ---------- */
+/* ---------- Le parcours court (ancien « Premiers pas », /debuter, puis « L'essentiel en 3 étapes ») ---------- */
+function parApprofondirHTML(ni) { // les modules du cours complet rattachés à ce niveau
+  const v = PAR_NIVEAUX[ni], mods = v && ACA ? v.mods.map(id => ACA.modules.find(m => m.id === id)).filter(Boolean) : [];
+  return mods.length ? `<div class="par-deep"><span><b>Approfondir</b> le niveau ${ni + 1} dans le cours complet :</span><span class="pa-chips">${mods.map(m => `<a class="chip" href="/academie/${m.id}">${esc(m.titre)}</a>`).join("")}</span></div>` : "";
+}
 function pageDebuter(niv, lec) { // anciennes adresses : redirigées vers l'Académie
   const u = parRedirection(location.pathname.replace(/\/+$/, "")) || "/academie/express";
   history.replaceState({}, "", u + location.search + location.hash);
   return parExpress(niv, lec);
 }
 async function parExpress(niv, lec) {
-  setTitle("L'essentiel en 3 étapes · L'Académie"); setNav("aca");
+  setTitle("Le parcours court · Apprendre"); setNav("aca");
   if (!PARCOURS) app.innerHTML = `<div class="empty">Chargement…</div>`;
   if (!(await parParcours())) { app.innerHTML = `<div class="empty">Le parcours n'a pas pu être chargé.</div>`; return; }
   acaLoad();
   const st = pState(), N = PARCOURS.niveaux, base = "/academie/express";
-  if (!niv) {
+  if (!niv) { // les trois niveaux, comme sur /apprendre, sans le reste de la page
     await acaLoad();
-    app.innerHTML = `${parCrumbs([["/academie", "L'Académie"], [null, "L'essentiel en 3 étapes"]])}<h1 class="pagetitle">L'essentiel en 3 étapes</h1><p class="pagesub">La version courte de l'Académie. Trois étapes, dans l'ordre. Chaque leçon se lit en trois minutes, avec un exemple chiffré ; un quiz de six questions termine chaque étape. Votre progression reste sur cet appareil.</p>
-      ${ACA ? parWays("express") : ""}
-      <div class="trois" style="padding:0;margin-bottom:20px">${N.map((n, i) => { const done = n.lecons.filter(l => st[n.id + "/" + l.id]).length, q = st["quiz/" + n.id];
-        return `<a class="carte" href="${base}/${n.id}" style="text-decoration:none;color:inherit;background:#fff"><div class="n">${i + 1}</div><h3>${esc(n.titre)}</h3><p>${esc(n.intro)}</p><p class="light" style="font-size:13px;margin-top:6px">${done} / ${n.lecons.length} leçons lues${q != null ? ` · quiz : ${q} / ${n.quiz.length}` : ""}</p>${parBar(done, n.lecons.length)}</a>`; }).join("")}</div>
-      <section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Ensuite : approfondir ou passer à la pratique</b><div class="muted">Le cours complet reprend chaque sujet en détail ; les fiches montrent les vrais chiffres.</div></div><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/academie">Le cours complet →</a><a class="more" href="/entreprises">Les entreprises →</a></div></div></section>`;
+    app.innerHTML = `${parCrumbs([[null, "Le parcours court"]])}<header class="pa-hero"><p class="kick">Parcours court</p><h1 class="pagetitle">L'essentiel, en trois niveaux</h1><p class="pagesub">La version courte de l'Académie. Chaque leçon se lit en trois minutes, avec un exemple chiffré ; un quiz de six questions termine chaque niveau. Votre progression reste sur cet appareil.</p></header>
+      ${parNiveauxHTML(parNiveaux())}
+      <p class="note">Pour tout approfondir : <a class="lnk" href="/academie">le programme complet de l'Académie</a>. Pour passer à la pratique : <a class="lnk" href="/entreprises">les fiches des entreprises</a>.</p>`;
     return;
   }
   const n = N.find(x => x.id === niv); if (!n) return pageNotFound();
-  const ni = N.indexOf(n), mod = PAR_NIV_MODULE[n.id];
+  const ni = N.indexOf(n);
   const side = `<nav class="lexnav" style="display:flex;flex-direction:column;gap:2px">${n.lecons.map((l, i) => `<a href="${base}/${n.id}/${l.id}" style="${l.id === lec ? "font-weight:700;color:var(--ink)" : ""}">${st[n.id + "/" + l.id] ? "✓ " : `${i + 1}. `}${esc(l.titre)}</a>`).join("")}<a href="${base}/${n.id}/quiz" style="${lec === "quiz" ? "font-weight:700;color:var(--ink)" : ""}">Quiz${st["quiz/" + n.id] != null ? ` (${st["quiz/" + n.id]} / ${n.quiz.length})` : ""}</a></nav>`;
-  const head = parCrumbs([["/academie", "L'Académie"], [base, "L'essentiel"], [lec ? `${base}/${n.id}` : null, n.titre]]);
+  const head = parCrumbs([[base, "Parcours court"], [lec ? `${base}/${n.id}` : null, `Niveau ${ni + 1} · ${n.titre}`]]);
   const aside = `<aside><section class="panel"><div class="ph"><h2>${esc(n.titre)}</h2></div><div class="pb">${side}</div></section></aside>`;
   if (!lec) { // une étape : la liste de ses leçons
-    app.innerHTML = head + `<div class="cols"><div><p class="kick">Étape ${ni + 1} sur ${N.length}</p><h1 class="pagetitle">${esc(n.titre)}</h1><p class="pagesub">${esc(n.intro)}</p>
+    app.innerHTML = head + `<div class="cols"><div><p class="kick">Niveau ${ni + 1} sur ${N.length} · parcours court</p><h1 class="pagetitle">${esc(n.titre)}</h1><p class="pagesub">${esc(n.intro)}</p>
       <section class="panel">${n.lecons.map((l, i) => `<a class="acal" href="${base}/${n.id}/${l.id}"><span class="n ${st[n.id + "/" + l.id] ? "ok" : ""}">${st[n.id + "/" + l.id] ? "✓" : i + 1}</span><span><b>${esc(l.titre)}</b><small class="light">${esc(l.resume)}</small></span><span class="light acam">3 min</span></a>`).join("")}
-        <a class="acal quiz" href="${base}/${n.id}/quiz"><span class="n">?</span><span><b>Le quiz de l'étape</b><small class="light">${n.quiz.length} questions, avec l'explication de chaque réponse</small></span><span class="light acam">${st["quiz/" + n.id] != null ? `${st["quiz/" + n.id]}/${n.quiz.length}` : ""}</span></a></section>
-      ${mod ? `<div class="par-deep"><span>Pour aller plus loin sur ce sujet : le module complet de l'Académie.</span><a class="more" href="/academie/${mod}">Approfondir →</a></div>` : ""}</div>${aside}</div>`;
+        <a class="acal quiz" href="${base}/${n.id}/quiz"><span class="n">?</span><span><b>Le quiz du niveau</b><small class="light">${n.quiz.length} questions, avec l'explication de chaque réponse</small></span><span class="light acam">${st["quiz/" + n.id] != null ? `${st["quiz/" + n.id]}/${n.quiz.length}` : ""}</span></a></section>
+      ${parApprofondirHTML(ni)}</div>${aside}</div>`;
     return;
   }
   if (lec === "quiz") {
     let i = 0, score = 0, ans = null;
     const draw = () => {
       const q = n.quiz[i];
-      $("#qz").innerHTML = i >= n.quiz.length ? `<p class="lead">Score : <b>${score} / ${n.quiz.length}</b>. ${score >= 5 ? "Les notions de cette étape sont acquises." : score >= 3 ? "Une ou deux notions méritent d'être relues." : "Relire les leçons de cette étape vous aidera avant de passer à la suite."}</p>
-          <div style="display:flex;gap:16px;flex-wrap:wrap"><button type="button" class="btn" id="qre">Recommencer</button>${N[ni + 1] ? `<a class="more" href="${base}/${N[ni + 1].id}">Étape suivante : ${esc(N[ni + 1].titre)} →</a>` : `<a class="more" href="/academie">Approfondir avec le cours complet →</a>`}</div>`
+      $("#qz").innerHTML = i >= n.quiz.length ? `<p class="lead">Score : <b>${score} / ${n.quiz.length}</b>. ${score >= 5 ? "Les notions de ce niveau sont acquises." : score >= 3 ? "Une ou deux notions méritent d'être relues." : "Relire les leçons de ce niveau vous aidera avant de passer à la suite."}</p>
+          <div style="display:flex;gap:16px;flex-wrap:wrap"><button type="button" class="btn" id="qre">Recommencer</button>${N[ni + 1] ? `<a class="more" href="${base}/${N[ni + 1].id}">Niveau suivant : ${esc(N[ni + 1].titre)} →</a>` : `<a class="more" href="/academie">Approfondir avec le cours complet →</a>`}</div>`
         : `<p class="kick">Question ${i + 1} sur ${n.quiz.length}</p><p class="lead" style="margin-top:4px">${esc(q.q)}</p>
           <div class="qopts">${q.options.map((o, k) => `<button type="button" class="qopt${ans != null ? (k === q.bonne ? " ok" : k === ans ? " ko" : "") : ""}" data-k="${k}" ${ans != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}</div>
           ${ans != null ? `<p class="${ans === q.bonne ? "up" : "down"}" style="font-weight:600;margin:12px 0 2px">${ans === q.bonne ? "Bonne réponse." : "Ce n'est pas la bonne réponse."}</p><p style="margin:0 0 12px">${esc(q.explication)}</p><button type="button" class="btn" id="qnx">${i + 1 < n.quiz.length ? "Question suivante" : "Voir le score"}</button>` : ""}`;
@@ -297,13 +390,13 @@ async function parExpress(niv, lec) {
   const deepL = deep && ACA ? (() => { const [m0, l0] = deep.split("/"), mm = ACA.modules.find(x => x.id === m0), ll = mm && mm.lecons.find(x => x.id === l0); return ll ? [mm, ll] : null; })() : null;
   setTitle(L.titre + " · L'essentiel");
   app.innerHTML = head + `<div class="cols"><div>
-      <p class="kick">Étape ${ni + 1} · leçon ${li + 1} sur ${n.lecons.length} · 3 min</p><h1 class="pagetitle">${esc(L.titre)}</h1><p class="pagesub">${esc(L.resume)}</p>
+      <p class="kick">Niveau ${ni + 1} · leçon ${li + 1} sur ${n.lecons.length} · 3 min</p><h1 class="pagetitle">${esc(L.titre)}</h1><p class="pagesub">${esc(L.resume)}</p>
       <section class="panel"><div class="pb" style="font-size:15.5px;line-height:1.65">${L.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}
         <div class="calc" style="display:block;margin:14px 0"><span class="kick">Exemple</span><p style="margin:4px 0 0;color:var(--ink)">${esc(L.exemple)}</p></div>
         <p class="kick" style="margin-top:16px">À retenir</p><ul style="margin:4px 0 0;padding-left:18px">${L.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
         ${L.voir ? `<p style="margin:14px 0 0"><a class="more" href="${esc(L.voir)}">Voir sur le site →</a></p>` : ""}</div></section>
       ${deep ? `<div class="par-deep"><span>Approfondir dans le cours complet${deepL ? ` : <b>${esc(deepL[1].titre)}</b>` : ""}</span><a class="more" href="/academie/${deep}">Lire la leçon complète →</a></div>` : ""}
-      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px">${li > 0 ? `<a class="more" href="${base}/${n.id}/${n.lecons[li - 1].id}">← ${esc(n.lecons[li - 1].titre)}</a>` : "<span></span>"}${nextL ? `<a class="more" href="${base}/${n.id}/${nextL.id}">${esc(nextL.titre)} →</a>` : `<a class="more" href="${base}/${n.id}/quiz">Faire le quiz de l'étape →</a>`}</div>
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:14px">${li > 0 ? `<a class="more" href="${base}/${n.id}/${n.lecons[li - 1].id}">← ${esc(n.lecons[li - 1].titre)}</a>` : "<span></span>"}${nextL ? `<a class="more" href="${base}/${n.id}/${nextL.id}">${esc(nextL.titre)} →</a>` : `<a class="more" href="${base}/${n.id}/quiz">Faire le quiz du niveau →</a>`}</div>
     </div>${aside}</div>`;
   scrollTo(0, 0);
 }
