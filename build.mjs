@@ -33,5 +33,10 @@ writeFileSync("cf/site/robots.txt", `User-agent: *\nDisallow: /api/\nSitemap: ${
   const ia = await import("./cf/src/ia.mjs"), dm = await import("./cf/src/demande.mjs");
   wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF, comparaison: ia.SYS_CMP }));
 }
-execSync("npx --yes esbuild@0.24.0 cf/src/worker.mjs --bundle --format=esm --minify-syntax --outfile=cf/site/_worker.js", { stdio: "inherit" });
+// Version du site : empreinte des fichiers servis (hors données). Le service worker (cf/site/sw.js) la lit dans l'en-tête
+// x-bilan-version des pages et vide son cache dès qu'elle change : jamais un ancien script avec une nouvelle page.
+const VERSION_SITE = await (async () => { const { createHash } = await import("node:crypto"), { readdirSync, statSync } = await import("node:fs"), h = createHash("sha256"), sauf = new Set(["cf/site/data", "cf/site/_worker.js", "cf/site/sitemap.xml", "cf/site/robots.txt"]);
+  const walk = d => readdirSync(d).sort().forEach(f => { const p = d + "/" + f; if (sauf.has(p)) return; if (statSync(p).isDirectory()) walk(p); else h.update(p + "\0").update(readFileSync(p)); });
+  walk("cf/site"); return h.digest("hex").slice(0, 16); })();
+execSync(`npx --yes esbuild@0.24.0 cf/src/worker.mjs --bundle --format=esm --minify-syntax --define:BILAN_VERSION='"${VERSION_SITE}"' --outfile=cf/site/_worker.js`, { stdio: "inherit" });
 console.log(paths.length, "pages dans le sitemap");

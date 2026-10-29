@@ -1,0 +1,30 @@
+{
+  "id": "/",
+  "name": "bilan. La Bourse, comptes à l'appui",
+  "short_name": "bilan.",
+  "description": "Les comptes officiels des entreprises cotées, expliqués simplement et comparés à la médiane de leur secteur. PEA, ETF, agenda, Académie et une IA qui calcule à partir des sources. Information, pas conseil.",
+  "lang": "fr-FR",
+  "dir": "ltr",
+  "start_url": "/?source=application",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "any",
+  "background_color": "#F8F5EE",
+  "theme_color": "#F8F5EE",
+  "categories": ["finance", "education", "news"],
+  "prefer_related_applications": false,
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ],
+  "shortcuts": [
+    { "name": "Mon espace", "short_name": "Mon espace", "description": "Votre bilan de la semaine et vos alertes", "url": "/espace?source=raccourci", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Mes favoris", "short_name": "Favoris", "description": "Les entreprises et ETF que vous suivez", "url": "/favoris?source=raccourci", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Demander à l'IA", "short_name": "Demander", "description": "Rechercher des entreprises avec vos mots", "url": "/demander?source=raccourci", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
+    { "name": "Les marchés du jour", "short_name": "Marchés", "url": "/marches?source=raccourci", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] }
+  ]
+}

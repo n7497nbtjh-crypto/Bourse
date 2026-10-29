@@ -25,6 +25,8 @@ jobs:
           node tests/t_calc.mjs
           node tests/t_worker.mjs
           node --no-warnings tests/t_communaute.mjs
+          node --no-warnings tests/t_push.mjs
+          node --no-warnings tests/t_mcp.mjs
           node --no-warnings tests/t_signaler.mjs
       - name: Publication sur Cloudflare Pages
         env:

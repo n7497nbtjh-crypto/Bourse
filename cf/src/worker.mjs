@@ -14,6 +14,9 @@ import { premium } from "./compte.mjs";
 import { espace } from "./espace.mjs";
 import { demande } from "./demande.mjs";
 import { signaler } from "./signaler.mjs";
+import { push, pousser } from "./push.mjs";
+import { mcp } from "./mcp.mjs";
+import { tete, VERSION } from "./pwa.mjs";
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -65,6 +68,7 @@ export function meta(path, q = null) {
   if (p.startsWith("/espace")) return { title: `Mon espace · ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, commenté par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." };
   if (p === "/commencer") return { title: `Par où commencer en Bourse : le guide du nouvel investisseur · ${SITE}`, desc: "Épargne de précaution, horizon, choix du compte, diversification, frais, pièges à éviter : sept étapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalisé." };
   if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Plus de questions à l'assistant IA, de résumés détaillés et de bilans rédigés, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." };
+  if (p === "/connecteur") return { title: `Connecteur IA : bilan. dans Claude et ChatGPT · ${SITE}`, desc: "Ajoutez bilan. à Claude ou à ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda, sources à l'appui. Gratuit, en lecture seule, sans conseil." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
   if (p === "/cgv") return { title: `Conditions générales de vente · ${SITE}`, desc: BASE_DESC };
   if (p === "/confidentialite") return { title: `Politique de confidentialité · ${SITE}`, desc: BASE_DESC };
@@ -85,7 +89,10 @@ export default {
     if (url.pathname === "/api/demande") return demande(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
+    if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
+    if (url.pathname.startsWith("/api/push/")) return push(request, env);
+    if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const info = meta(url.pathname, url.searchParams);
     if (!info) {
@@ -99,6 +106,19 @@ export default {
     const t = info || { title: `Page introuvable · ${SITE}`, desc: BASE_DESC };
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">`);
-    return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate" } });
+    html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 });
+    return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION } });
   },
 };
+
+// Tâche du soir (.github/workflows/espace.yml) : alertes et bilans de l'espace, puis notifications push des appareils abonnés.
+// Les envois partent dans un appel où l'espace n'a plus de compte à traiter (limite de sous-requêtes par appel) ;
+// tant qu'il en reste, « reste » vaut au moins 1 et le robot rappelle la tâche.
+async function tacheEtPush(request, env, url) {
+  const r = await espace(request, env);
+  if (r.status !== 200) return r;
+  const j = await r.json();
+  let p;
+  try { p = await pousser(env, { origin: url.origin, budget: j.traites ? 0 : 30 }); } catch (e) { p = { erreur: String(e && e.message || e) }; }
+  return Response.json({ ...j, push: p, reste: (j.reste || 0) + (p && p.reste ? 1 : 0) }, { headers: { "cache-control": "no-store" } });
+}

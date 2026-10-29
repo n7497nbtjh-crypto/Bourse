@@ -140,7 +140,7 @@ function clesPortefeuille(pf, names) {
   };
   walk(pf, 0); return [...out];
 }
-const clesDe = (row, names) => [...new Set([...parse(row && row.favoris, []).filter(k => typeof k === "string" && KEY.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260);
+const clesDe = (row, names) => [...new Set([...(parse(row && row.favoris, []) || []).filter(k => typeof k === "string" && KEY.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260);
 const lienDe = k => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2);
 const r2 = v => Math.round(v * 100) / 100;
 const NF = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
