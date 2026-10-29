@@ -51,7 +51,7 @@ with sync_playwright() as pw:
         if i["type"] != "image/png": continue
         b = pg.evaluate("u => fetch(u).then(r => r.arrayBuffer()).then(b => Array.from(new Uint8Array(b).slice(0, 24)))", i["src"])
         w, h = png_size(bytes(b)); ok(f"{w}x{h}" == i["sizes"], f"icône {i['src']} {w}x{h}")
-    for f, n in [("/icons/apple-touch-icon.png", 180), ("/icons/partage.png", 1200), ("/icons/badge-96.png", 96)]:
+    for f, n in [("/icons/apple-touch-icon.png", 180), ("/icons/partage.png", 1200), ("/icons/badge-96.png", 96)] + [(s["src"], 0) for s in man.get("screenshots", [])]:
         st =pg.evaluate("u => fetch(u).then(r => r.status)", f); ok(st == 200, f"{f} servi")
     # 2. Service worker : enregistré, contrôle la page, met en cache ce qu'il faut (et jamais /api)
     pg.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller !== null", timeout=15000)

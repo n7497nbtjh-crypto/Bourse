@@ -21,6 +21,11 @@
     { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "/icons/favicon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
   ],
+  "screenshots": [
+    { "src": "/icons/ecran-accueil.jpg", "sizes": "824x1784", "type": "image/jpeg", "form_factor": "narrow", "label": "L'accueil : posez votre question, l'IA cherche dans les comptes officiels" },
+    { "src": "/icons/ecran-fiche.jpg", "sizes": "824x1784", "type": "image/jpeg", "form_factor": "narrow", "label": "Une fiche : les chiffres clés comparés à la médiane du secteur" },
+    { "src": "/icons/ecran-large.jpg", "sizes": "1280x800", "type": "image/jpeg", "form_factor": "wide", "label": "Une fiche sur ordinateur : le verdict d'abord, les détails ensuite" }
+  ],
   "shortcuts": [
     { "name": "Mon espace", "short_name": "Mon espace", "description": "Votre bilan de la semaine et vos alertes", "url": "/espace?source=raccourci", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },
     { "name": "Mes favoris", "short_name": "Favoris", "description": "Les entreprises et ETF que vous suivez", "url": "/favoris?source=raccourci", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }] },

@@ -9,7 +9,7 @@
    - /api/*, /mcp et tout ce qui n'est pas une lecture (GET) : jamais interceptés ni mis en cache.
    - Polices Google : gardées (fichiers immuables). Autres sites : non interceptés. */
 "use strict";
-const SW_VERSION = "2026-10-29.1"; // à changer pour forcer la mise à jour du service worker lui-même
+const SW_VERSION = "2026-10-29.2"; // à changer pour forcer la mise à jour du service worker lui-même
 const C_COQUILLE = "bilan-coquille", C_DONNEES = "bilan-donnees", C_POLICES = "bilan-polices", P_STATIQUE = "bilan-statique-";
 const MAX_DONNEES = 160;
 
@@ -66,7 +66,7 @@ self.addEventListener("fetch", e => {
     if (u.pathname.startsWith("/api/") || u.pathname === "/mcp" || u.pathname.startsWith("/mcp/") || u.pathname === "/sw.js") return; // jamais en cache
     if (req.mode === "navigate") return e.respondWith(navigation(e));
     if (u.pathname.startsWith("/data/")) return e.respondWith(donnees(e));
-    if (/\.(js|css|png|svg|ico|webmanifest|woff2?)$/.test(u.pathname)) return e.respondWith(statique(e));
+    if (/\.(js|css|png|jpg|svg|ico|webmanifest|woff2?)$/.test(u.pathname)) return e.respondWith(statique(e));
     return;
   }
   if (u.hostname === "fonts.gstatic.com") return e.respondWith(police(e));
