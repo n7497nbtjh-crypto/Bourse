@@ -1,4 +1,4 @@
-// Consignes données au modèle d'IA que le visiteur a connecté (« Connecter mon IA », cf/site/m/monia.js, via OpenRouter).
+// Consignes données au modèle d'IA que le visiteur a connecté (« Connecter mon IA », cf/site/m/monia.js, appel direct à ChatGPT, Claude, Gemini ou Mistral).
 // build.mjs les écrit dans cf/site/data/prompts.json ; le navigateur les envoie avec la question et les faits du site.
 // Le site n'appelle plus aucun modèle lui-même (voir docs/ia.md). Chaque consigne se termine par les règles d'objectivité.
 import { REGLES } from "./regles.mjs";

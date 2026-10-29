@@ -4,17 +4,18 @@
    Contenu :
    1. RECO : calculs purs, sans navigateur (testés par tests/t_reco.mjs) :
       - éligibilité au PEA d'une action (règle documentée ci-dessous) et d'un ETF (champ « pea » fourni par l'émetteur) ;
-      - profil d'investisseur à partir du questionnaire (5 questions de /commencer + 6 questions de /pour-moi) ;
-      - allocation indicative par classe d'actifs, en fourchettes arrondies à 5 points ;
-      - niveau de risque d'une piste (1 à 5), modèle des retours (« pertinente », « trop risquée », « redondante », « inadaptée »)
-        et choix des pistes qui en tient compte.
-   2. Navigateur : peaOk() du site s'appuie sur RECO.peaAction (une seule règle partout), page /pour-moi,
-      recoCompactHTML() pour l'accueil et Mon espace (recoAccueilHTML, recoEspaceHTML), enregistrement des réponses
-      et des retours sur l'appareil (bilan.profil, bilan.reco.retours) et dans le compte (POST /api/espace/reco).
+      - niveau de risque d'un placement (1 à 5), d'après sa nature (catégorie d'ETF, taille de l'entreprise) ;
+      - ce que chaque compte accepte (placement) ;
+      - profil et choisir : gardés et testés, mais plus appelés par aucune page depuis la refonte du 29 octobre 2026.
+   2. Navigateur : peaOk() du site s'appuie sur RECO.peaAction (une seule règle partout) ;
+      page /repartitions (exemples de répartition expliqués, listes construites sur des critères choisis par le visiteur) ;
+      étiquettes PEA, niveaux de risque et catalyseurs réutilisés par m/outils.js.
 
-   Cadre : contenu pédagogique et informatif. Ce n'est pas un conseil en investissement personnalisé au sens de la
-   réglementation (MIF 2) : bilan. n'est pas conseiller en investissements financiers (CIF). Aucun chiffre n'est inventé :
-   tout vient des comptes publiés (ESEF/SEC), des cours du site, des fiches des émetteurs d'ETF et des réponses données. */
+   Cadre : information factuelle à but pédagogique. La page n'établit pas de profil, n'enregistre aucune réponse
+   et ne désigne aucune répartition ni aucun titre comme adapté à une personne : ce serait du conseil en
+   investissement (MIF 2), et bilan. n'est pas conseiller en investissements financiers (CIF).
+   Aucun chiffre n'est inventé : tout vient des comptes publiés (ESEF/SEC), des cours du site et des fiches
+   des émetteurs d'ETF, avec leur source. */
 
 const RECO = (() => {
   /* ---------- 1. Éligibilité au PEA ----------
@@ -285,58 +286,24 @@ function recoFillCatal(root) {
   $$("[data-rc-cat]", root).forEach(async el => { const c = RBY[el.dataset.rcCat]; if (!c || el.dataset.ok) return; el.dataset.ok = "1"; el.innerHTML = recoCatalHTML(await recoCatal(c)); });
 }
 
-/* ---------- Réponses et retours : sur l'appareil, et dans le compte si vous êtes connecté ---------- */
-const RECO_KP = "bilan.profil", RECO_KR = "bilan.reco.retours";
-const recoLS = (k, d) => { try { const v = JSON.parse(localStorage.getItem(k) || "null"); return v == null ? d : v; } catch (e) { return d; } };
-const recoSrv = () => (typeof MOI !== "undefined" && MOI && MOI.connecte && MOI.donnees && MOI.donnees.profil && typeof MOI.donnees.profil === "object") ? MOI.donnees.profil : {};
-function recoAns() { // réponses de l'appareil, complétées par celles du compte
-  const loc = recoLS(RECO_KP, {}), srv = recoSrv(), a = {};
-  RECO.IDS.forEach(k => { const v = Number.isInteger(loc[k]) ? loc[k] : Number.isInteger(srv[k]) ? srv[k] : null; if (v != null) a[k] = v; });
-  return a;
-}
-function recoRetours() {
-  const m = new Map(); [...((recoSrv().reco || {}).retours || []), ...recoLS(RECO_KR, [])].forEach(r => { if (r && r.id && (!m.has(r.id) || (r.at || 0) >= (m.get(r.id).at || 0))) m.set(r.id, r); });
-  return [...m.values()].filter(r => r.v).sort((a, b) => (a.at || 0) - (b.at || 0)).slice(-100);
-}
-let RECO_PT = null;
-function recoSave(ans, retours) {
-  try { if (ans) localStorage.setItem(RECO_KP, JSON.stringify({ ...recoLS(RECO_KP, {}), ...ans })); if (retours) localStorage.setItem(RECO_KR, JSON.stringify(retours)); } catch (e) { }
-  if (typeof connecte !== "function" || !connecte()) return;
-  const body = { reponses: recoAns(), retours: retours || recoRetours() };
-  if (MOI.donnees) MOI.donnees.profil = { ...recoSrv(), ...body.reponses, reco: { retours: body.retours } };
-  clearTimeout(RECO_PT);
-  RECO_PT = setTimeout(() => fetch("/api/espace/reco", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).catch(() => { }), 600);
-}
-// Un avis retiré est gardé avec v: null (horodaté) pour l'emporter sur l'ancien avis enregistré dans le compte
-function recoRetour(p, v) {
-  const all = new Map(); [...((recoSrv().reco || {}).retours || []), ...recoLS(RECO_KR, [])].forEach(r => { if (r && r.id && (!all.has(r.id) || (r.at || 0) >= (all.get(r.id).at || 0))) all.set(r.id, r); });
-  all.set(p.id, { id: p.id, v: v || null, kind: p.kind, tags: p.tags || [], risk: p.risk, at: Date.now() });
-  const l = [...all.values()].sort((a, b) => (a.at || 0) - (b.at || 0)).slice(-100);
-  recoSave(null, l);
-}
+/* =====================================================================
+   Répartitions types et listes par critères  (/repartitions)
+   =====================================================================
+   Refonte du 29 octobre 2026 (point P0-6 de docs/audit-2026-10.md).
+   Avant : un questionnaire établissait un profil, puis la page proposait une répartition et des titres « pour vous ».
+   Une proposition adaptée au profil d'une personne peut relever du conseil en investissement (statut CIF, ORIAS) :
+   la page ne le fait plus. À la place :
+   1. des exemples de répartition, expliqués : à quoi chacun correspond, ce qu'il implique, ses limites.
+      Les pourcentages sont fixes et identiques pour tous ; l'effet d'une baisse est un calcul arithmétique sur
+      l'exemple, jamais une prévision ;
+   2. des listes construites sur des critères que la personne choisit elle-même (catégorie, éligibilité au PEA,
+      frais, encours, secteur, région, taille), triées sur un chiffre publié ou calculé, avec sa source.
+   Aucune recommandation adressée à la personne, aucun « pour vous », aucune prédiction, aucun profil enregistré.
+   Les fonctions de calcul de RECO (profil, placement, choisir) restent dans le module : « placement » sert à dire
+   ce que chaque compte accepte, les autres sont gardées pour les tests (tests/t_reco.mjs) et ne sont plus appelées
+   par la page. */
 
-/* ---------- Contexte : portefeuille du site, historique des comptes ---------- */
-async function recoCtx() {
-  await Promise.all([PXP, recoDivLoad(), typeof outHist === "function" ? outHist() : null]);
-  if (typeof outStats === "function") outStats();
-  const P = typeof pf2Load === "function" ? pf2Load() : { l: [] }, held = new Set();
-  let R0 = null, X = null;
-  P.l.forEach(l => { if (l.k) held.add(l.k); });
-  if (P.l.length && typeof pf3Rows === "function") { try { R0 = pf3Rows(P); X = R0.T.tot > 0 ? await pf3Look(R0.rows) : null; } catch (e) { R0 = X = null; } }
-  return { P, R0, X, held };
-}
-const RECO_SECK = { it: "tech", fin: "finance", sante: "sante", conso_disc: "conso", conso_base: "conso", indus: "industrie", comm: "telecom", energie: "energie", materiaux: "materiaux", services_pub: "services", immo: "immo" };
-function recoSectW(X) { // poids de chaque secteur du site dans le portefeuille (actions en direct et contenu des ETF détaillés)
-  const w = {}; if (!X) return w;
-  const byName = Object.fromEntries(Object.entries(R.sectors).map(([k, v]) => [v, k]));
-  Object.entries(X.sect || {}).forEach(([s, v]) => { const k = byName[s] || RECO_SECK[s]; if (k) w[k] = (w[k] || 0) + v; });
-  return w;
-}
-function recoHash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0) / 4294967296; }
-const recoSemaine = () => { const d = new Date(); return d.getUTCFullYear() + "-" + Math.floor((Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()) - Date.UTC(d.getUTCFullYear(), 0, 1)) / 6048e5); };
-
-/* ---------- Pistes : ETF, entreprises, secteurs ---------- */
-function recoEtfAlt(region) { // l'ETF large le moins cher, comme alternative plus diversifiée
+function recoEtfAlt(region) { // l'ETF large le moins cher d'une zone (sert aussi à m/outils.js)
   const cat = region === "eu" ? "actions-europe" : "actions-monde";
   return (ETF.list || []).filter(e => e.categorie === cat && e.ter != null && !e.levier && (region !== "eu" || e.pea === true) && (e.encours || 0) >= 100).sort((a, b) => a.ter - b.ter || (b.encours || 0) - (a.encours || 0))[0] || null;
 }
@@ -345,280 +312,216 @@ function recoEtfSuspect(e) {
   const p1 = e && e.compo && Array.isArray(e.compo.p1) ? e.compo.p1[0] : null;
   return !!e && e.categorie === "actions-emergents" && (RECO.EEE.has(p1) || /\bEMU\b|euro ?stoxx/i.test((e.index || "") + " " + (e.name || "")));
 }
-function recoEtfCands(pr, ctx) {
-  const a = pr.ans, env = pr.env, heldCat = new Set(), out = [];
-  ctx.held.forEach(k => { if (k.startsWith("e:")) { const e = ETFBY[k.slice(2)]; if (e) heldCat.add(e.categorie); } });
-  const C = {};
-  if (pr.eq > 0) C["actions-monde"] = [5, "Le socle le plus simple : une seule ligne pour les grandes entreprises des pays développés."];
-  if (pr.eq >= 30) C["actions-europe"] = [env === "pea" ? 4 : 2.5, "Les grandes entreprises européennes, avec moins d'exposition au dollar."];
-  if (pr.niveau >= 3) C["actions-emergents"] = [a.objectif >= 2 ? 3 : 1.5, "Chine, Inde, Taïwan, Brésil… : des économies absentes d'un ETF Monde classique, plus volatiles."];
-  if (a.objectif === 1 && pr.eq > 0) C.dividendes = [4.5, "Des entreprises choisies pour leur dividende, pour un objectif de revenus."];
-  if (pr.niveau >= 4 && env === "pea") C["actions-france"] = [1, "Les grandes entreprises françaises : simple à suivre, mais concentré sur un seul pays."];
-  if ((pr.niveau <= 2 || a.liquidite === 0) && env !== "av") C.monetaire = [3.5, "Une poche qui varie très peu, disponible rapidement (sans garantie en capital)."];
-  if (pr.classes.some(x => x.k === "oblig") && env !== "pea") C.obligations = [3, "Des prêts aux États et entreprises, pour amortir les baisses des actions."];
-  if (pr.niveau >= 5) C.theme = [0.5, "Un thème précis (santé, énergie propre, semi-conducteurs…) : concentré, à garder petit."];
-  for (const e of ETF.list || []) {
-    const cc = C[e.categorie]; if (!cc || e.ter == null || e.levier) continue;
-    if (env === "pea" && e.pea !== true) continue;
-    // garde-fou contre une catégorie mal renseignée (ex. un ETF zone euro rangé dans les émergents)
-    if (recoEtfSuspect(e)) continue;
-    let s = cc[0] - e.ter * 2 + Math.log10((e.encours || 0) + 1) * 0.5;
-    if (/capi/i.test(e.distribution || "") && a.objectif !== 1) s += 0.4;
-    if (/dist/i.test(e.distribution || "") && a.objectif === 1) s += 0.4;
-    let redond = null;
-    if (heldCat.has(e.categorie)) { s -= 4; redond = "Vous détenez déjà un ETF de cette catégorie."; }
-    if (e.categorie === "actions-usa" && heldCat.has("actions-monde")) { s -= 4; redond = "Un ETF Monde contient déjà environ 70 % d'actions américaines."; }
-    out.push({ id: "e:" + e.id, kind: "etf", e, risk: RECO.risqueEtf(e), s, tags: ["cat:" + e.categorie, "emet:" + (e.issuer || "")], raison: cc[1], redond });
-  }
-  return out;
-}
-function recoCoCands(pr, ctx) {
-  if (pr.dMax <= 0 || pr.env === "av") return [];
-  const a = pr.ans, sw = recoSectW(ctx.X), y = new Date().getFullYear(), wk = recoSemaine(), out = [];
-  for (const c of R.companies) {
-    if (c.missing || !c.desc || !(c.year >= y - 2)) continue;
-    const q = quick(c); if (!q || q.fort + q.moyen + q.vig < 5 || q.vig > 2) continue;
-    const pea = recoPeaOk(c); if (pr.env === "pea" && pea !== true) continue;
-    const T = recoTaille(c); if (!T) continue;
-    const style = recoStyle(c), m = ratios(c);
-    const risk = RECO.risqueAction({ taille: T.t, perte: !(c.net > 0), levier: isBank(c) ? null : m.lev, amp: recoAmp(c) });
-    let s = q.fort - q.vig; const pq = [];
-    if (a.objectif === 1 && style === "rendement") { s += 3; pq.push("objectif de revenus : dividende couvert par le bénéfice"); }
-    if (a.objectif === 2 && style === "croissance") { s += 3; pq.push("objectif de croissance : ventes en hausse régulière"); }
-    if (a.objectif === 0 && style === "solidite") { s += 2; pq.push("objectif de protection : pas de dette nette"); }
-    if (a.objectif === 3 && !(sw[c.sector] > 0.02)) { s += 3; pq.push("diversification : secteur absent de votre portefeuille"); }
-    if (sw[c.sector] > 0.25) s -= 3;
-    if (T.t === "large") s -= 1.5; // pas de biais vers les grandes valeurs déjà connues
-    if (style === "redressement") s -= 0.5; // profil plus incertain, gardé mais moins mis en avant
-    s += recoHash(c.id + wk) * 1.5; // la sélection change chaque semaine, sans privilégier les plus connues
-    out.push({ id: "c:" + c.id, kind: "ent", c, T, style, risk, s, pea, tags: ["sect:" + c.sector, "taille:" + T.t, "style:" + (style || "autre"), "reg:" + c.region], pq });
-  }
-  return out;
-}
-function recoSectCands(pr, ctx) {
-  if (pr.eq <= 0 || pr.ans.objectif === 0) return [];
-  const sw = recoSectW(ctx.X), by = {};
-  R.companies.forEach(c => { if (c.missing) return; const v = valo(c), m = ratios(c); const b = by[c.sector] = by[c.sector] || { y: [], g: [], n: 0 }; b.n++; if (v && v.yld) b.y.push(v.yld); if (m.g1 != null) b.g.push(m.g1); });
-  return Object.entries(by).filter(([k, b]) => b.n >= 20 && !(sw[k] > 0.05)).map(([k, b]) => {
-    const my = b.y.length >= 10 ? median(b.y) : null, mg = b.g.length >= 10 ? median(b.g) : null, a = pr.ans;
-    const s = a.objectif === 1 ? (my || 0) * 100 : a.objectif === 2 ? (mg || 0) * 100 : 1 + recoHash(k + recoSemaine());
-    const why = a.objectif === 1 ? "Rendement médian du dividende parmi les plus élevés des secteurs suivis : en lien avec votre objectif de revenus." : a.objectif === 2 ? "Croissance médiane des ventes parmi les plus fortes des secteurs suivis : en lien avec votre objectif de croissance." : "Un secteur pour diversifier ce que vous détenez.";
-    return { id: "s:" + k, kind: "sect", k, risk: 3, s, tags: ["sect:" + k], my, mg, n: b.n, abs: ctx.X ? !(sw[k] > 0) : null, why };
-  });
-}
-
-/* ---------- Points de vigilance du portefeuille (calculés sur les lignes saisies dans /portefeuille) ---------- */
-function recoVigil(pr, ctx) {
-  const X = ctx.X, R0 = ctx.R0, W = []; if (!X || !R0) return W;
-  const t = X.type || {}, eqW = (t["Actions en direct"] || 0) + (t["ETF actions"] || 0) + (t["ETF immobilier"] || 0) + (t["Autres titres"] || 0), dW = t["Actions en direct"] || 0;
-  if (eqW * 100 > pr.eqMax + 5) W.push(["vig", `Environ ${F0.format(eqW * 100)} % de votre portefeuille est en actions, au-dessus de la fourchette de votre profil (${RECO.fourchette([pr.eqMin, pr.eqMax])}).`, "Calcul sur les lignes du portefeuille du site seulement : vos livrets et votre assurance-vie hors Bourse n'y sont pas, ils peuvent rééquilibrer l'ensemble."]);
-  if (dW * 100 > pr.dMax + 5) W.push(["vig", `Les actions en direct font ${F0.format(dW * 100)} % du portefeuille, pour ${pr.dMax ? `${pr.dMax} % au plus` : "aucune"} dans votre profil.`, "Une entreprise seule peut perdre la moitié de sa valeur ; un ETF large répartit ce risque."]);
-  const top = (X.top || []).find(x => !/composition non détaillée/.test(x.name));
-  if (top && top.w > 0.1) W.push(["vig", `${esc(top.name)} pèse ${pct(top.w, 0, false)} du portefeuille, en comptant le contenu de vos ETF.`, `Si elle perdait la moitié de sa valeur, le portefeuille baisserait d'environ ${pct(top.w / 2, 0, false)}.`]);
-  const ctry = Object.entries(X.ctry || {}).filter(([k]) => /^[A-Z]{2}$/.test(k)).sort((a, b) => b[1] - a[1])[0];
-  if (ctry && ctry[1] > 0.6 && X.known > 0.5) W.push(["moyen", `${esc(COUNTRY[ctry[0]] || ctry[0])} : ${pct(ctry[1], 0, false)} du portefeuille.`, ctry[0] === "US" ? "Un ETF Monde en contient déjà environ 70 % : c'est le poids des États-Unis dans la Bourse mondiale." : "Une crise propre à ce pays toucherait une grande partie du portefeuille."]);
-  const sw = recoSectW(X), s1 = Object.entries(sw).sort((a, b) => b[1] - a[1])[0];
-  if (s1 && s1[1] > 0.35) W.push(["moyen", `${esc(R.sectors[s1[0]] || s1[0])} : ${pct(s1[1], 0, false)} du portefeuille.`, "Les entreprises d'un même secteur montent et baissent souvent ensemble."]);
-  (X.overlaps || []).filter(o => o[2] >= 50).slice(0, 2).forEach(o => W.push(["moyen", `${esc(o[0].name)} et ${esc(o[1].name)} ont ${F0.format(o[2])} % de contenu en commun.`, "Deux ETF qui se recouvrent autant n'apportent presque pas de diversification."]));
-  const hors = R0.live.filter(r => r.l.env === "pea" && (r.info.kind === "c" ? recoPeaOk(r.info.c) === false : r.info.kind === "e" ? r.info.e && r.info.e.pea === false : false));
-  if (hors.length) W.push(["vig", `${hors.length} ligne${hors.length > 1 ? "s" : ""} rangée${hors.length > 1 ? "s" : ""} dans le PEA ${hors.length > 1 ? "ne sont" : "n'est"} pas éligible${hors.length > 1 ? "s" : ""} : ${hors.slice(0, 3).map(r => esc(r.info.name)).join(", ")}.`, "Vérifiez le compte indiqué pour ces lignes : un PEA n'accepte que des sociétés européennes imposées à l'impôt sur les sociétés et les ETF éligibles."]);
-  if (pr.ans.horizon === 0 && eqW > 0.5) W.push(["vig", "Horizon de moins de 5 ans avec plus de la moitié en actions.", "Une baisse de 30 % peut ne pas avoir le temps de se rattraper."]);
-  if (!W.length) W.push(["fort", "Aucun point de vigilance majeur sur les lignes saisies.", "Contrôle fait sur la part d'actions, la concentration par entreprise, pays et secteur, le recouvrement des ETF et les règles du PEA."]);
-  return W;
-}
-
-/* ---------- Affichage ---------- */
 const RECO_RISK = ["", "Très faible", "Faible", "Moyen", "Élevé", "Très élevé"];
 const recoRisk = r => `<span class="rc-risk rc-r${r}" title="Niveau de risque ${r} sur 5 : ${RECO_RISK[r]}"><i></i><i></i><i></i><i></i><i></i><em>Risque ${r}/5</em></span>`;
-function recoFb(p) {
-  const cur = recoRetours().find(r => r.id === p.id);
-  return `<div class="rc-fb" data-fb="${esc(p.id)}"><span>Cette piste vous semble :</span>${Object.entries(RECO.FB_V).map(([k, t]) => `<button type="button" data-v="${k}" aria-pressed="${!!(cur && cur.v === k)}">${t}</button>`).join("")}</div>`;
-}
-function recoEtfCard(p, pr) {
-  const e = p.e, pe = RECO.peaEtf(e), C = e.compo || {}, alt = p.risk >= 4 ? recoEtfAlt("monde") : null;
-  const facts = [`Frais : ${pct(e.ter / 100, 2, false)} par an`, e.encours ? `Encours : ${F0.format(e.encours)} M€` : null, C.n ? `${F0.format(C.n)} lignes, les 10 premières font ${F0.format(C.t10 || 0)} %` : null,
-    pe.expo ? `Exposition : ${F0.format(pe.expo.pct)} % ${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)}` : null, [e.replication, e.distribution].filter(Boolean).map(esc).join(" · ") || null].filter(Boolean);
-  return `<article class="rc-card" data-id="${esc(p.id)}"><header><span class="rc-ico">ETF</span><span class="rc-ht"><a href="/etf/${esc(e.id)}"><b>${esc(e.name)}</b></a><small>${esc([e.issuer, ECAT[e.categorie] || e.categorie, e.index].filter(Boolean).join(" · "))}</small></span></header>
-    <div class="rc-tags">${recoRisk(p.risk)}${recoEtfPeaTag(e)}</div>
-    <p class="rc-why"><b>Pourquoi cette piste</b>${esc(p.raison)}${p.redond ? ` <span class="rc-warn">${esc(p.redond)}</span>` : ""}</p>
-    <ul class="rc-facts">${facts.map(f => `<li>${f}</li>`).join("")}</ul>
-    <details class="rc-det"><summary>Limites, conditions et alternative</summary><div>
-      <p><b>Pertinente si</b> ${p.risk >= 4 ? "cette ligne reste une petite part de la partie actions, à côté d'un ETF large." : p.risk <= 2 ? "vous cherchez à réduire les variations ou à garder de l'argent disponible." : `vous gardez cet argent au moins ${pr.ans.horizon === 2 ? "10" : "5"} ans et acceptez des baisses passagères de 30 % ou plus.`}</p>
-      <p><b>Éligibilité au PEA</b> ${esc(pe.why)}${pe.expo ? ` Ce que le fonds suit est une autre question : ${F0.format(pe.expo.pct)} % ${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)}.` : ""}</p>
-      <p><b>Limites</b> Les performances passées ne préjugent pas des performances futures. Frais et encours viennent de la fiche de l'émetteur ; vérifiez-les chez votre courtier.${(e.encours || 0) < 100 ? " Petit encours : un fonds de moins de 100 M€ risque davantage d'être fermé." : ""}</p>
-      ${alt && alt.id !== e.id ? `<p><b>Moins risqué</b> <a class="lnk" href="/etf/${esc(alt.id)}">${esc(alt.name)}</a> répartit le risque sur ${alt.compo && alt.compo.n ? F0.format(alt.compo.n) + " entreprises" : "des centaines d'entreprises"}.</p>` : ""}</div></details>
-    ${recoFb(p)}</article>`;
-}
-function recoCoCard(p, pr) {
-  const c = p.c, F = typeof outFacts === "function" ? outFacts(c).slice(0, 2) : [], V = recoValo(c), Rk = recoRisques(c, p.T), pi = recoPeaInfo(c), alt = recoEtfAlt(c.region === "FR" || c.region === "EU" ? "eu" : "monde");
-  const raison = [p.style ? `Profil « ${RECO_STYLE[p.style]} »` : "Comptes au-dessus de la médiane de son secteur", ...p.pq].join(" ; ") + ".";
-  return `<article class="rc-card" data-id="${esc(p.id)}"><header>${logo(c, 36)}<span class="rc-ht"><a href="/entreprise/${esc(c.id)}"><b>${esc(c.name)}</b></a><small>${esc([secName(c), regName(c), RECO_TAILLE[p.T.t] + (p.T.src === "ventes" ? " (estimée par les ventes)" : "")].filter(Boolean).join(" · "))}</small></span></header>
-    <div class="rc-tags">${recoRisk(p.risk)}${recoPeaTag(c)}${p.style ? `<span class="rc-st">${RECO_STYLE[p.style]}</span>` : ""}</div>
-    <p class="rc-desc">${esc(c.desc)}</p>
-    <p class="rc-why"><b>Pourquoi cette piste</b>${esc(raison)}</p>
-    ${F.length ? `<ul class="rc-facts">${F.map(f => `<li>${f}</li>`).join("")}</ul>` : ""}
-    <details class="rc-det"><summary>Valorisation, risques et conditions</summary><div>
-      ${V.length ? `<p><b>Valorisation</b> ${V.join(" ")}</p>` : ""}
-      ${Rk.length ? `<p><b>Risques</b></p><ul class="rc-rk">${Rk.map(([t, x]) => `<li><b>${t}</b> ${x}</li>`).join("")}</ul>` : ""}
-      <p><b>Catalyseurs potentiels</b></p><div data-rc-cat="${esc(c.id)}"><p class="rc-mut">Chargement des annonces…</p></div>
-      <p><b>Pertinente si</b> vous voulez choisir vous-même une partie de vos actions, lisez ses résultats deux à quatre fois par an, et que cette ligne reste petite : vos actions en direct, toutes ensemble, sont au plus ${pr.dMax} % du total dans votre profil.</p>
-      <p><b>Éligibilité au PEA</b> ${esc(pi.why)}</p>
-      <p><b>Limites</b> Les chiffres décrivent l'exercice ${esc(String(c.year || ""))} : ils ne disent pas si le prix de l'action est intéressant aujourd'hui, ni ce qu'elle fera.</p>
-      ${alt ? `<p><b>Moins risqué</b> <a class="lnk" href="/etf/${esc(alt.id)}">${esc(alt.name)}</a> (${pct(alt.ter / 100, 2, false)} de frais par an) détient ${alt.compo && alt.compo.n ? F0.format(alt.compo.n) + " entreprises" : "des centaines d'entreprises"} : le sort d'une seule pèse peu.</p>` : ""}</div></details>
-    ${recoFb(p)}</article>`;
-}
-function recoSectCard(p) {
-  const n = R.sectors[p.k] || p.k;
-  return `<article class="rc-card rc-sect" data-id="${esc(p.id)}"><header><span class="rc-ico">◧</span><span class="rc-ht"><a href="/entreprises?secteur=${esc(p.k)}"><b>${esc(n)}</b></a><small>${F0.format(p.n)} entreprises suivies</small></span></header>
-    <p class="rc-why"><b>Pourquoi ce secteur</b>${p.abs === true ? "Absent de votre portefeuille." : p.abs === false ? "Peu présent dans votre portefeuille (moins de 5 %)." : p.why || "Un secteur à explorer pour votre objectif."}</p>
-    <ul class="rc-facts">${p.my != null ? `<li>Rendement médian du dividende : ${pct(p.my, 1, false)}</li>` : ""}${p.mg != null ? `<li>Croissance médiane des ventes : ${sgn(p.mg, 1)} sur le dernier exercice</li>` : ""}</ul>
-    <p class="rc-mut">Médianes des entreprises suivies par le site (comptes publiés, cours du site). Pour s'exposer à un secteur sans choisir d'entreprise, il existe des ETF sectoriels.</p>
-    ${recoFb(p)}</article>`;
-}
-const RECO_LEGAL = `<div class="rc-legal"><b>Contenu pédagogique et informatif, pas un conseil en investissement.</b> Ces pistes sont calculées à partir de vos réponses et des données publiques du site. Elles ne tiennent pas compte de toute votre situation (revenus, patrimoine, impôts, projets) et ne sont pas un conseil personnalisé au sens de la réglementation : bilan. n'est pas conseiller en investissements financiers (CIF). Pour un conseil adapté, adressez-vous à un CIF immatriculé à l'<a href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a>. Investir en Bourse comporte un risque de perte en capital.</div>`;
 
-/* ---------- Questionnaire ---------- */
-let RECO_COMM = null;
-async function recoComm() { if (!RECO_COMM) RECO_COMM = await fetch("/data/commencer.json").then(r => r.json()).catch(() => null); return RECO_COMM; }
-function recoQuestions(C) { // les 11 questions, regroupées en 3 temps
-  const base = Object.fromEntries((C && C.questions || []).map(q => [q.id, { id: q.id, q: q.question || q.q || q.texte || q.titre, o: q.options.map(o => o.label || o.t || o.texte || o.titre) }]));
-  const X = Object.fromEntries(RECO.QX.map(q => [q.id, q]));
-  return [["Votre situation", ["horizon", "liquidite", "precaution", "capital", "versement"]], ["Votre rapport au risque", ["perte", "baisse"]], ["Vos objectifs et votre compte", ["objectif", "connaissance", "choisir", "enveloppe"]]]
-    .map(([t, ids]) => [t, ids.map(id => base[id] || X[id]).filter(Boolean)]);
+/* ---------- 1. Les répartitions données en exemple ----------
+   Quatre exemples construits par le site pour montrer, par le calcul, ce que change la part d'actions.
+   Ils ne viennent d'aucune recommandation et ne désignent personne. */
+const RECO_CLASSES = {
+  etf: ["Actions, via des ETF larges", "#111214", 3, "Un ETF large suit des centaines ou des milliers d'entreprises à la fois, avec des frais souvent inférieurs à 0,30 % par an."],
+  oblig: ["Obligations, via des ETF d'obligations", "#B9AE97", 2, "Des prêts aux États et aux grandes entreprises. Ils varient moins que les actions, mais leur valeur baisse quand les taux montent."],
+  garanti: ["Sans risque de perte en capital", "#D9D3C7", 1, "Livrets réglementés, fonds en euros d'assurance-vie, ou ETF monétaire (risque très faible, sans garantie). L'argent reste disponible, ou presque."],
+};
+const RECO_EX = [
+  { id: "garantie", nom: "Tout sans risque de perte", parts: { garanti: 100 },
+    quoi: "Correspond à de l'argent dont on peut avoir besoin à tout moment, ou à un projet à moins de trois ans : apport, travaux, études.",
+    lim: "Le rendement est généralement proche de l'inflation, parfois en dessous : le pouvoir d'achat de la somme peut baisser avec le temps." },
+  { id: "prudente", nom: "Un quart en actions", parts: { etf: 25, oblig: 25, garanti: 50 },
+    quoi: "Une part d'actions faible, pour un horizon de trois à huit ans, ou quand une baisse de valeur passagère gênerait vraiment.",
+    lim: "Une part d'actions faible limite autant les baisses que les hausses. Trois lignes à tenir, c'est aussi trois lots de frais à surveiller." },
+  { id: "equilibree", nom: "La moitié en actions", parts: { etf: 50, oblig: 20, garanti: 30 },
+    quoi: "Un partage souvent cité en exemple dans la pédagogie financière, pour un horizon de huit ans et plus.",
+    lim: "La moitié du capital suit les marchés d'actions : les variations se voient sur les relevés, à la hausse comme à la baisse." },
+  { id: "dynamique", nom: "Quatre cinquièmes en actions", parts: { etf: 80, oblig: 10, garanti: 10 },
+    quoi: "Une part d'actions forte, qui suppose un horizon long (dix ans et plus) et de ne pas avoir besoin de cette somme entre-temps.",
+    lim: "Historiquement, les marchés d'actions ont connu des baisses de plus de 40 % suivies de plusieurs années de remontée. Il faut pouvoir attendre sans vendre." },
+];
+const RECO_ENV = [["pea", "un PEA"], ["cto", "un compte-titres"], ["both", "un PEA et un compte-titres"], ["av", "une assurance-vie"], ["none", "pas encore de compte"]];
+const RECO_ST = { env: "pea", type: "etf" };
+function recoBaisse(parts) { // arithmétique sur l'exemple : actions −30 %, obligations −5 %, garanti 0 %
+  return (parts.etf || 0) * 0.3 + (parts.oblig || 0) * 0.05;
 }
-function recoFormHTML(C, ans) {
-  const G = recoQuestions(C), n = G.reduce((a, g) => a + g[1].length, 0), done = RECO.IDS.filter(k => Number.isInteger(ans[k])).length, cx = typeof connecte === "function" && connecte();
-  return `<div class="ph"><h2>Votre profil en ${n} questions</h2><span class="light rc-cnt" style="font-size:12.5px">${done} sur ${n} · environ 2 minutes</span></div>
-    <div class="pb"><div class="rc-prog"><span style="width:${Math.round(done / n * 100)}%"></span></div><form id="rc-form">${G.map(([t, qs], gi) => `<div class="rc-grp"><p class="rc-gt"><span>${gi + 1}</span>${esc(t)}</p>${qs.map(q => `<fieldset class="rc-q${Number.isInteger(ans[q.id]) ? " ok" : ""}"><legend>${esc(q.q)}${q.aide ? `<small>${esc(q.aide)}</small>` : ""}</legend><div class="rc-opts">${q.o.map((o, i) => `<label><input type="radio" name="${q.id}" value="${i}"${ans[q.id] === i ? " checked" : ""}><span>${esc(o)}</span></label>`).join("")}</div></fieldset>`).join("")}</div>`).join("")}</form>
-    <p class="rc-mut" style="margin-top:12px">Réponses gardées sur cet appareil${cx ? " et dans votre compte" : ""}. Les 5 questions de « Par où commencer » sont reprises.${cx ? "" : ` <a class="lnk" href="/espace">Connectez-vous</a> pour les retrouver sur vos autres appareils.`}</p></div>`;
+function recoExCarte(x) {
+  const cl = Object.keys(RECO_CLASSES).filter(k => x.parts[k]);
+  return `<article class="rc-ex"><header><h3>${esc(x.nom)}</h3><p class="rc-exb">${cl.map(k => `${x.parts[k]} % ${RECO_CLASSES[k][0].toLowerCase().replace(/,.*/, "")}`).join(" · ")}</p></header>
+    <div class="rc-bar" role="img" aria-label="${cl.map(k => `${x.parts[k]} % ${RECO_CLASSES[k][0]}`).join(", ")}">${cl.map(k => `<span style="width:${x.parts[k]}%;background:${RECO_CLASSES[k][1]}" title="${esc(RECO_CLASSES[k][0])} : ${x.parts[k]} %"></span>`).join("")}</div>
+    <dl class="rc-exd">
+      ${cl.map(k => `<div class="rc-al"><i style="background:${RECO_CLASSES[k][1]}"></i><div><b>${esc(RECO_CLASSES[k][0])}</b><span class="rc-rg">${x.parts[k]} %</span>${recoRisk(RECO_CLASSES[k][2])}<p>${esc(RECO_CLASSES[k][3])}</p><p class="rc-where">${esc(RECO.placement(RECO_ST.env, k))}</p></div></div>`).join("")}
+    </dl>
+    <p class="rc-exq"><b>À quoi cet exemple correspond</b> ${esc(x.quoi)}</p>
+    <p class="rc-exl"><b>Ses limites</b> ${esc(x.lim)}</p>
+    <p class="rc-exc">Calcul sur cet exemple : si les actions baissaient de 30 % et les obligations de 5 %, l'ensemble baisserait d'environ <b>${F0.format(Math.round(recoBaisse(x.parts)))} %</b>. C'est une multiplication, pas une prévision : la baisse réelle peut être plus forte ou plus faible.</p>
+  </article>`;
 }
-function recoResumeHTML(C, ans) {
-  const G = recoQuestions(C).flatMap(g => g[1]);
-  return `<div class="ph"><h2>Vos réponses</h2><button type="button" class="linkbtn" id="rc-edit">Modifier mes réponses</button></div><div class="pb"><div class="rc-sum">${G.map(q => `<span title="${esc(q.q)}">${esc(q.o[ans[q.id]] || "")}</span>`).join("")}</div></div>`;
+function recoExHTML() {
+  return `<section class="panel"><div class="ph"><h2>Des répartitions en exemple</h2><span class="light" style="font-size:12.5px">les mêmes pour tout le monde</span></div><div class="pb">
+    <p class="rc-mut" style="margin:0 0 12px">Quatre exemples, du plus prudent au plus exposé, pour montrer ce que change la part d'actions. Le site ne désigne pas celui qui vous conviendrait : cela dépend de votre situation complète, qu'il ne connaît pas.</p>
+    <label class="rc-lab">Ce que chaque compte accepte, pour <select id="rc-env">${RECO_ENV.map(([k, l]) => `<option value="${k}"${k === RECO_ST.env ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+    <div class="rc-exs" id="rc-exs">${RECO_EX.map(recoExCarte).join("")}</div>
+    <p class="rc-mut">Les trois grandes familles de placements et leurs règles (plafonds, impôt en 2026) sont détaillées dans <a class="lnk" href="/pea-cto">PEA, compte-titres ou assurance-vie</a> et dans <a class="lnk" href="/academie">l'Académie</a>.</p></div></section>`;
 }
 
-/* ---------- La page /pour-moi ---------- */
-const RECO_ST = { edit: false };
-async function pageRecoPourMoi() {
-  setTitle("Pistes pour vous"); setNav("sim"); recoCSS();
+/* ---------- 2. Listes par critères ---------- */
+const RECO_TRI_ETF = [["ter", "Frais les plus bas"], ["encours", "Encours le plus élevé"], ["lignes", "Le plus de lignes détenues"], ["nom", "Nom"]];
+const RECO_TRI_ENT = [["q", "Le plus de points forts mesurés"], ["g1", "Croissance des ventes la plus forte"], ["marge", "Marge d'exploitation la plus élevée"], ["yld", "Rendement du dividende le plus élevé"], ["dette", "Dette la plus faible"], ["taille", "Ventes les plus élevées"]];
+const RECO_TAILLES = [["", "toutes tailles"], ["large", "grandes capitalisations"], ["mid", "moyennes"], ["small", "petites"], ["micro", "microcapitalisations"]];
+function recoFiltresHTML() {
+  const t = RECO_ST.type;
+  const sel = (id, l, opts, v) => `<label class="rc-sel"><span>${l}</span><select id="${id}">${opts.map(([k, x]) => `<option value="${k}"${String(k) === String(v) ? " selected" : ""}>${x}</option>`).join("")}</select></label>`;
+  const secs = Object.entries(R.sectors || {}).map(([k, v]) => [k, v]).sort((a, b) => a[1].localeCompare(b[1]));
+  const regs = Object.entries(R.regions || {}).map(([k, v]) => [k, typeof v === "string" ? v : v.name || k]);
+  return `<div class="rc-tabs" role="tablist" aria-label="Type de liste">${[["etf", "Des ETF"], ["ent", "Des entreprises"]].map(([k, l]) => `<button type="button" role="tab" data-rc-type="${k}" aria-selected="${k === t}" class="${k === t ? "on" : ""}">${l}</button>`).join("")}</div>
+    <div class="rc-filt" id="rc-filt">${t === "etf"
+      ? sel("f-cat", "Catégorie", [["", "toutes"], ...Object.entries(ECAT)], RECO_ST.cat || "")
+        + sel("f-pea", "Éligibilité au PEA", [["", "peu importe"], ["oui", "éligible au PEA"], ["non", "non éligible"]], RECO_ST.pea || "")
+        + sel("f-ter", "Frais annuels", [["", "peu importe"], ["0.15", "0,15 % au plus"], ["0.25", "0,25 % au plus"], ["0.5", "0,50 % au plus"]], RECO_ST.ter || "")
+        + sel("f-enc", "Encours", [["", "peu importe"], ["100", "100 M€ au moins"], ["1000", "1 Md€ au moins"]], RECO_ST.enc || "")
+        + sel("f-dist", "Dividendes du fonds", [["", "peu importe"], ["capi", "réinvestis (capitalisant)"], ["dist", "versés (distribuant)"]], RECO_ST.dist || "")
+        + sel("f-tri", "Trier par", RECO_TRI_ETF, RECO_ST.tri || "ter")
+      : sel("f-sect", "Secteur", [["", "tous"], ...secs], RECO_ST.sect || "")
+        + sel("f-reg", "Région", [["", "toutes"], ...regs], RECO_ST.reg || "")
+        + sel("f-taille", "Taille", RECO_TAILLES, RECO_ST.taille || "")
+        + sel("f-pea", "Éligibilité au PEA", [["", "peu importe"], ["oui", "éligible au PEA"], ["non", "non éligible"]], RECO_ST.pea || "")
+        + sel("f-tri", "Trier par", RECO_TRI_ENT, RECO_ST.tri || "q")}</div>`;
+}
+function recoEtfListe() {
+  const S = RECO_ST, terMax = S.ter ? +S.ter : null, encMin = S.enc ? +S.enc : null;
+  let L = (ETF.list || []).filter(e => {
+    if (S.cat && e.categorie !== S.cat) return false;
+    if (S.pea === "oui" && e.pea !== true) return false;
+    if (S.pea === "non" && e.pea === true) return false;
+    if (terMax != null && !(e.ter != null && e.ter <= terMax)) return false;
+    if (encMin != null && !((e.encours || 0) >= encMin)) return false;
+    if (S.dist === "capi" && !/capi/i.test(e.distribution || "")) return false;
+    if (S.dist === "dist" && !/dist/i.test(e.distribution || "")) return false;
+    return !recoEtfSuspect(e);
+  });
+  const tri = S.tri || "ter";
+  L.sort(tri === "encours" ? (a, b) => (b.encours || 0) - (a.encours || 0)
+    : tri === "lignes" ? (a, b) => ((b.compo || {}).n || 0) - ((a.compo || {}).n || 0)
+    : tri === "nom" ? (a, b) => a.name.localeCompare(b.name)
+    : (a, b) => (a.ter == null ? 99 : a.ter) - (b.ter == null ? 99 : b.ter) || (b.encours || 0) - (a.encours || 0));
+  return L;
+}
+function recoEtfLigne(e) {
+  const C = e.compo || {}, pe = RECO.peaEtf(e);
+  const faits = [e.ter != null ? `Frais ${pct(e.ter / 100, 2, false)} par an` : null, e.encours ? `Encours ${F0.format(e.encours)} M€` : null,
+    C.n ? `${F0.format(C.n)} lignes, les 10 premières font ${F0.format(C.t10 || 0)} %` : null,
+    pe.expo ? `${F0.format(pe.expo.pct)} % ${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)}` : null,
+    [e.replication, e.distribution].filter(Boolean).join(" · ") || null].filter(Boolean);
+  return `<a class="rc-row" href="/etf/${esc(e.id)}"><span class="rc-ico2">ETF</span><span class="rc-rh"><b>${esc(e.name)}</b><small>${esc([e.issuer, ECAT[e.categorie] || e.categorie, e.index].filter(Boolean).join(" · "))}</small></span>
+    <span class="rc-rt">${recoRisk(RECO.risqueEtf(e))}${recoEtfPeaTag(e)}</span>
+    <span class="rc-rf">${faits.map(f => `<em>${f}</em>`).join("")}</span></a>`;
+}
+function recoEntListe() {
+  const S = RECO_ST, out = [];
+  for (const c of R.companies || []) {
+    if (c.missing || !c.desc) continue;
+    if (S.sect && c.sector !== S.sect) continue;
+    if (S.reg && c.region !== S.reg) continue;
+    const pea = recoPeaOk(c);
+    if (S.pea === "oui" && pea !== true) continue;
+    if (S.pea === "non" && pea === true) continue;
+    const T = recoTaille(c);
+    if (S.taille && (!T || T.t !== S.taille)) continue;
+    const m = ratios(c), v = valo(c), q = typeof quick === "function" ? quick(c) : null;
+    out.push({ c, T, m, v, q, risk: RECO.risqueAction({ taille: T && T.t, perte: !(c.net > 0), levier: typeof isBank === "function" && isBank(c) ? null : m.lev, amp: recoAmp(c) }) });
+  }
+  const n = x => x == null || !isFinite(x) ? -Infinity : x;
+  const tri = RECO_ST.tri || "q";
+  out.sort(tri === "g1" ? (a, b) => n(b.m.g1) - n(a.m.g1)
+    : tri === "marge" ? (a, b) => n(b.m.marge) - n(a.m.marge)
+    : tri === "yld" ? (a, b) => n(b.v && b.v.yld) - n(a.v && a.v.yld)
+    : tri === "dette" ? (a, b) => (a.m.lev == null ? Infinity : a.m.lev) - (b.m.lev == null ? Infinity : b.m.lev)
+    : tri === "taille" ? (a, b) => n(typeof eurM === "function" ? eurM(b.c.ca, b.c.currency) : b.c.ca) - n(typeof eurM === "function" ? eurM(a.c.ca, a.c.currency) : a.c.ca)
+    : (a, b) => ((b.q ? b.q.fort - b.q.vig : -9)) - ((a.q ? a.q.fort - a.q.vig : -9)));
+  return out;
+}
+function recoEntLigne(x) {
+  const c = x.c, m = x.m, v = x.v;
+  const faits = [c.ca ? `Ventes ${big(c.ca, c.currency)}` : null, m.marge != null ? `Marge d'exploitation ${pct(m.marge, 1, false)}` : null,
+    m.g1 != null ? `Ventes ${m.g1 >= 0 ? "en hausse de" : "en baisse de"} ${pct(Math.abs(m.g1), 1, false)} sur un an` : null,
+    v && v.pe != null ? `PER ${F1.format(v.pe)}` : null, v && v.yld != null ? `Rendement ${pct(v.yld, 1, false)}` : null,
+    c.year ? `Exercice ${c.year}` : null].filter(Boolean);
+  return `<a class="rc-row" href="/entreprise/${esc(c.id)}">${logo(c, 30)}<span class="rc-rh"><b>${esc(c.name)}</b><small>${esc([secName(c), typeof regName === "function" ? regName(c) : "", x.T ? RECO_TAILLE[x.T.t] : ""].filter(Boolean).join(" · "))}</small></span>
+    <span class="rc-rt">${recoRisk(x.risk)}${recoPeaTag(c)}</span>
+    <span class="rc-rf">${faits.map(f => `<em>${f}</em>`).join("")}</span></a>`;
+}
+function recoListeHTML() {
+  const etf = RECO_ST.type === "etf";
+  const L = etf ? recoEtfListe() : recoEntListe(), vus = L.slice(0, 12);
+  const lien = etf ? "/etf" : "/entreprises" + (RECO_ST.sect ? "?secteur=" + RECO_ST.sect : "");
+  if (!L.length) return `<p class="rc-mut">Aucun ${etf ? "ETF" : "titre"} suivi par le site ne réunit ces critères. Élargissez-en un.</p>`;
+  return `<p class="rc-cnt2"><b>${F0.format(L.length)}</b> ${etf ? (L.length > 1 ? "ETF réunissent" : "ETF réunit") : (L.length > 1 ? "entreprises réunissent" : "entreprise réunit")} ces critères${L.length > 12 ? `, les 12 premiers du tri sont affichés` : ""}.</p>
+    <div class="rc-rows">${vus.map(etf ? recoEtfLigne : recoEntLigne).join("")}</div>
+    <p class="rc-mut">Liste calculée sur les données du site : ${etf ? "fiches des émetteurs d'ETF (frais, encours, composition, éligibilité au PEA déclarée)" : "comptes annuels publiés (ESEF en Europe, SEC aux États-Unis) et cours différés du site"}. Un chiffre élevé n'est pas une bonne nouvelle en soi, un chiffre bas n'est pas une mauvaise nouvelle : la fiche donne le détail et la médiane du secteur. <a class="lnk" href="${lien}">La liste complète et tous les filtres</a></p>`;
+}
+const RECO_LEGAL = `<div class="rc-legal"><b>Information factuelle à but pédagogique, pas un conseil en investissement.</b> Cette page ne tient pas compte de votre situation et ne désigne aucune répartition ni aucun titre comme adapté à qui que ce soit : elle montre des exemples et des listes triées sur des critères que vous choisissez. bilan. n'est pas conseiller en investissements financiers (CIF). Pour un conseil adapté à votre situation, adressez-vous à un CIF immatriculé à l'<a href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a>. Investir en Bourse comporte un risque de perte en capital.</div>`;
+
+/* ---------- La page ---------- */
+async function pageRepartitions() {
+  setTitle("Répartitions types et listes par critères"); setNav("sim"); recoCSS();
   if (!R) return;
   app.innerHTML = `<div class="empty">Chargement…</div>`;
-  const [C, ctx] = await Promise.all([recoComm(), recoCtx(), typeof moi === "function" ? moi() : null]);
-  if (location.pathname !== "/pour-moi") return;
-  app.innerHTML = `<div class="rc-page"><div class="crumbs"><a href="/outils">Outils</a> › Pistes pour vous</div>
-    <h1 class="pagetitle">Des pistes adaptées à votre profil</h1>
-    <p class="pagesub">Une répartition indicative, des ETF et des entreprises à étudier, et les points de vigilance de votre portefeuille. Tout est calculé à partir de vos réponses, de votre portefeuille sur le site et des données officielles.</p>
-    ${RECO_LEGAL}<section class="panel" id="rc-q"></section><div id="rc-out"></div></div>`;
-  recoDraw(C, ctx);
+  await Promise.all([PXP, recoDivLoad()]);
+  if (location.pathname !== "/repartitions") return;
+  app.innerHTML = `<div class="rc-page"><div class="crumbs"><a href="/outils">Outils</a> › Répartitions et listes</div>
+    <h1 class="pagetitle">Répartitions types et listes par critères</h1>
+    <p class="pagesub">Des exemples de répartition expliqués, et des listes d'ETF et d'entreprises construites sur les critères que vous choisissez. Le site n'établit pas de profil et ne désigne rien comme adapté à votre situation.</p>
+    ${RECO_LEGAL}
+    <div id="rc-ex">${recoExHTML()}</div>
+    <section class="panel"><div class="ph"><h2>Une liste à partir de vos critères</h2><span class="light" style="font-size:12.5px">vous choisissez, le site calcule</span></div><div class="pb">
+      <div id="rc-f">${recoFiltresHTML()}</div><div id="rc-l">${recoListeHTML()}</div></div></section>
+    <section class="panel"><details class="acc"><summary><b>Comment ces listes sont calculées</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px">
+      <p><b>Niveau de risque (1 à 5).</b> Il vient de la nature du placement, pas d'un jugement : ETF monétaire 1, obligations 2, ETF d'actions larges 3, pays émergents, thématiques et pays unique 4, matières premières 5. Une action seule vaut au moins 3 : 3 pour une grande ou moyenne entreprise, 4 pour une petite, 5 pour une microcapitalisation, un point de plus en cas de perte, de dette lourde ou de cours très variable.</p>
+      <p><b>Éligibilité au PEA.</b> Pour une action : siège dans l'Union européenne ou l'EEE (pays du code ISIN, recoupé avec Wikidata) et société soumise à l'impôt sur les sociétés ; les foncières exonérées (SIIC, SIR, SOCIMI, REIT) sont exclues. Pour un ETF : l'éligibilité déclarée par l'émetteur, qui ne dit rien de ce que le fonds suit. Votre courtier fait foi au moment de l'achat.</p>
+      <p><b>Chiffres des entreprises.</b> Ventes, marge, croissance et dette viennent du dernier exercice publié ; le PER et le rendement rapportent un cours du jour (différé) à un résultat déjà clos. Les deux ne portent donc pas sur la même période.</p>
+      <p><b>Exemples de répartition.</b> Les pourcentages sont fixes, identiques pour tous, et choisis pour échelonner la part d'actions de 0 à 80 %. L'effet d'une baisse est une multiplication sur l'exemple (actions −30 %, obligations −5 %), pas une prévision.</p>
+      <p class="rc-mut">Sources : comptes annuels ESEF (Europe) et SEC (États-Unis), cours différés du site, fiches des émetteurs d'ETF, Wikidata (CC0). Les performances passées ne préjugent pas des performances futures.</p></div></details></section></div>`;
+  recoLier();
 }
-function recoDraw(C, ctx) {
-  const ans = recoAns(), pr = RECO.profil(ans, recoRetours()), q = $("#rc-q"); if (!q) return;
-  q.innerHTML = pr.complet && !RECO_ST.edit ? recoResumeHTML(C, ans) : recoFormHTML(C, ans);
-  const f = $("#rc-form", q);
-  if (f) f.onchange = e => {
-    const t = e.target; if (!t.name) return;
-    recoSave({ [t.name]: +t.value });
-    const a2 = recoAns(), fs = t.closest("fieldset"); if (fs) fs.classList.add("ok");
-    const done = RECO.IDS.filter(k => Number.isInteger(a2[k])).length, pg = $(".rc-prog span", q), lt = $(".rc-cnt", q);
-    if (pg) pg.style.width = Math.round(done / RECO.IDS.length * 100) + "%";
-    if (lt) lt.textContent = `${done} sur ${RECO.IDS.length} · environ 2 minutes`;
-    if (!RECO.manquantes(a2).length && !RECO_ST.edit) { recoDraw(C, ctx); const o = $("#rc-out"); if (o && o.scrollIntoView) o.scrollIntoView({ behavior: "smooth", block: "start" }); }
-    else recoOut(C, ctx);
-  };
-  const ed = $("#rc-edit", q); if (ed) ed.onclick = () => { RECO_ST.edit = true; recoDraw(C, ctx); };
-  if (RECO_ST.edit && pr.complet) q.querySelector(".ph").insertAdjacentHTML("beforeend", `<button type="button" class="linkbtn" id="rc-done">Terminé</button>`);
-  const dn = $("#rc-done", q); if (dn) dn.onclick = () => { RECO_ST.edit = false; recoDraw(C, ctx); };
-  recoOut(C, ctx);
-}
-function recoPistes(pr, ctx) {
-  const M = pr.modele, held = ctx.held;
-  const etf = RECO.choisir(recoEtfCands(pr, ctx), { n: 3, riskMax: pr.riskMax, modele: M, held, uniq: "cat:" });
-  const ent = RECO.choisir(recoCoCands(pr, ctx), { n: 3, riskMax: pr.riskMax, modele: M, held, uniq: "sect:" });
-  const sect = RECO.choisir(recoSectCands(pr, ctx), { n: 3, riskMax: 5, modele: M, held: new Set(), uniq: "sect:" });
-  return { etf, ent, sect };
-}
-function recoOut(C, ctx) {
-  const el = $("#rc-out"); if (!el) return;
-  const ans = recoAns(), retours = recoRetours(), pr = RECO.profil(ans, retours);
-  if (!pr.complet) { el.innerHTML = `<section class="panel"><div class="pb rc-wait"><b>Encore ${pr.manque.length} question${pr.manque.length > 1 ? "s" : ""}</b><span>Les pistes s'affichent dès que le profil est complet.</span></div></section>`; return; }
-  const P = recoPistes(pr, ctx), V = recoVigil(pr, ctx), cols = { etf: "#111214", direct: "#0E6B4A", oblig: "#B9AE97", garanti: "#D9D3C7" };
-  const pAlloc = { id: "alloc:" + pr.niveau, kind: "alloc", tags: ["alloc"], risk: pr.niveau };
-  const nRet = retours.length;
-  el.innerHTML = `
-    <section class="panel rc-verdict"><div class="pb">
-      <div class="rc-vh"><div><p class="kick">Votre profil</p><h2>${esc(pr.label)}</h2><p class="rc-vs">Part d'actions indicative : <b>${RECO.fourchette([pr.eqMin, pr.eqMax])}</b>${pr.eq <= 0 ? "" : pr.dMax ? `, dont ${pr.dMax} % au plus en actions en direct` : ", uniquement via des ETF"}.</p></div>
-        <div class="rc-gauge" role="img" aria-label="Niveau de risque ${pr.niveau} sur 5">${[1, 2, 3, 4, 5].map(i => `<span class="${i <= pr.niveau ? "on" : ""}"></span>`).join("")}<small>Risque ${pr.niveau} sur 5</small></div></div>
-      ${pr.prereq.map(x => `<p class="rc-pre">${esc(x)}</p>`).join("")}
-    </div></section>
-    <section class="panel"><div class="ph"><h2>1. Répartition indicative</h2><span class="light" style="font-size:12.5px">en fourchettes, pas en chiffres exacts</span></div><div class="pb">
-      <div class="rc-bar">${pr.classes.map(x => `<span style="width:${x.v}%;background:${cols[x.k]}" title="${esc(x.label)} : ${RECO.fourchette(x.r)}"></span>`).join("")}</div>
-      <div class="rc-alloc">${pr.classes.map(x => `<div class="rc-al"><i style="background:${cols[x.k]}"></i><div><b>${esc(x.label)}</b><span class="rc-rg">${RECO.fourchette(x.r)}</span>${recoRisk(x.risk)}<p>${esc(x.why)}</p><p class="rc-where">${esc(RECO.placement(pr.env, x.k))}</p></div></div>`).join("")}</div>
-      <details class="rc-det"><summary>Hypothèses de calcul</summary><div><ul class="rc-rk">${pr.hyp.map(h => `<li>${esc(h)}</li>`).join("")}</ul>
-        ${pr.eqMax > 0 ? `<p><b>Plus prudent</b> La même répartition avec ${RECO.fourchette([Math.max(0, pr.eqMin - 15), Math.max(0, pr.eqMax - 15)])} d'actions réduit l'ampleur des baisses, au prix d'une croissance attendue plus faible.</p>` : ""}</div></details>
-      ${recoFb(pAlloc)}</div></section>
-    <section class="panel"><div class="ph"><h2>2. Votre portefeuille : points de vigilance</h2>${ctx.X ? `<a href="/portefeuille">Ouvrir le portefeuille</a>` : ""}</div><div class="pb">
-      ${ctx.X ? `<ul class="rc-vig">${V.map(([z, t, w]) => `<li class="${z}"><b>${t}</b><span>${w}</span></li>`).join("")}</ul>` : `<div class="rc-wait"><b>Aucun portefeuille sur le site</b><span>Ajoutez vos lignes ou importez le fichier de votre courtier : les pistes éviteront ce que vous détenez déjà et signaleront les concentrations.</span><a class="btn" href="/portefeuille">Ajouter mon portefeuille</a></div>`}</div></section>
-    <section class="panel"><div class="ph"><h2>3. ETF à étudier</h2><span class="light" style="font-size:12.5px">${pr.env === "pea" ? "uniquement des fonds éligibles au PEA" : "classés par adéquation, puis par frais"}</span></div><div class="pb">
-      ${P.etf.length ? `<div class="rc-grid">${P.etf.map(p => recoEtfCard(p, pr)).join("")}</div>` : `<p class="rc-mut">Aucun ETF ne correspond avec ces réponses et vos retours.</p>`}</div></section>
-    <section class="panel"><div class="ph"><h2>4. Entreprises à étudier</h2><span class="light" style="font-size:12.5px">${pr.env === "pea" ? "sociétés éligibles au PEA" : "toutes tailles, tous pays"}</span></div><div class="pb">
-      ${pr.dMax <= 0 ? `<p class="rc-mut">Votre profil ne prévoit pas d'actions en direct${pr.ans.choisir === 0 ? " (vous préférez une solution simple)" : pr.ans.connaissance === 0 ? " tant que vous découvrez la Bourse" : ""} : les ETF font ce travail de diversification. <a class="lnk" href="/decouvertes">Les découvertes du jour</a> restent ouvertes pour apprendre.</p>`
-        : pr.env === "av" ? `<p class="rc-mut">Une assurance-vie permet rarement d'acheter des actions en direct : les pistes d'entreprises concernent un PEA ou un compte-titres.</p>`
-        : P.ent.length ? `<div class="rc-grid">${P.ent.map(p => recoCoCard(p, pr)).join("")}</div>` : `<p class="rc-mut">Aucune entreprise ne remplit les conditions avec vos retours actuels.</p>`}</div></section>
-    ${P.sect.length ? `<section class="panel"><div class="ph"><h2>5. Secteurs à explorer</h2></div><div class="pb"><div class="rc-grid">${P.sect.map(recoSectCard).join("")}</div></div></section>` : ""}
-    <section class="panel"><details class="acc"><summary><b>Comment ces pistes sont choisies</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px">
-      <p><b>Répartition.</b> La part d'actions est la plus basse des limites fixées par votre horizon, votre réaction à une baisse, la baisse que vous pouvez supporter et votre besoin de disponibilité. La prudence l'emporte toujours.</p>
-      <p><b>Niveau de risque (1 à 5).</b> ETF monétaire 1, obligations 2, ETF actions larges 3, émergents, thématiques et un seul pays 4, matières premières 5. Une action seule vaut au moins 3 : 3 pour une grande ou moyenne entreprise, 4 pour une petite, 5 pour une micro, un point de plus en cas de perte, de dette lourde ou de cours très variable. Seules les pistes sous le plafond de votre profil sont proposées.</p>
-      <p><b>Entreprises.</b> Comptes publiés depuis moins de deux ans, au moins 5 critères mesurés, au plus 2 points de vigilance, un secteur différent par piste, ni celles que vous détenez déjà. La sélection tourne chaque semaine pour ne pas favoriser les plus connues.</p>
-      <p><b>PEA.</b> Siège dans l'Union européenne ou l'EEE (code ISIN, recoupé avec Wikidata) et société imposée à l'impôt sur les sociétés : les foncières exonérées (SIIC, SIR, SOCIMI, REIT) sont exclues. Pour un ETF, l'éligibilité est celle déclarée par l'émetteur ; elle ne dit rien de ce que le fonds suit. Votre courtier fait foi.</p>
-      <p><b>Vos retours (${nRet}).</b> « Trop risquée » abaisse le plafond de risque et la part d'actions ; « redondante » et « inadaptée » retirent la piste et éloignent les pistes semblables ; « pertinente » met en avant les pistes semblables.${nRet ? ` <button type="button" class="linkbtn" id="rc-reset">Effacer mes retours</button>` : ""}</p>
-      <p class="rc-mut">Sources : comptes annuels ESEF (Europe) et SEC (États-Unis), cours du site, fiches des émetteurs d'ETF, annonces officielles (AMF, SEC…), Wikidata (CC0). Les performances passées ne préjugent pas des performances futures.</p></div></details></section>`;
-  recoFillCatal(el);
-  recoBindFb(el, () => recoOut(C, ctx), [...P.etf, ...P.ent, ...P.sect, pAlloc]);
-  const rs = $("#rc-reset", el);
-  if (rs) rs.onclick = () => { const l = recoRetours().map(r => ({ ...r, v: null, at: Date.now() })); recoSave(null, l); recoOut(C, ctx); toast("Vos retours ont été effacés."); };
-}
-function recoBindFb(root, redraw, all) {
-  $$(".rc-fb button", root).forEach(b => b.onclick = () => {
-    const id = b.closest(".rc-fb").dataset.fb, p = all.find(x => x.id === id); if (!p) return;
-    const cur = recoRetours().find(r => r.id === id), v = cur && cur.v === b.dataset.v ? null : b.dataset.v;
-    recoRetour(p, v);
-    toast(v ? (v === "ok" ? "Merci : les pistes semblables seront mises en avant." : v === "risque" ? "Noté : les pistes suivantes seront moins risquées." : "Noté : cette piste est remplacée par une autre.") : "Avis retiré.");
-    redraw();
+function recoLier() {
+  const maj = () => { const l = $("#rc-l"); if (l) l.innerHTML = recoListeHTML(); };
+  const f = $("#rc-f");
+  if (f) f.addEventListener("change", e => {
+    const id = e.target.id;
+    if (id === "f-cat") RECO_ST.cat = e.target.value;
+    else if (id === "f-pea") RECO_ST.pea = e.target.value;
+    else if (id === "f-ter") RECO_ST.ter = e.target.value;
+    else if (id === "f-enc") RECO_ST.enc = e.target.value;
+    else if (id === "f-dist") RECO_ST.dist = e.target.value;
+    else if (id === "f-sect") RECO_ST.sect = e.target.value;
+    else if (id === "f-reg") RECO_ST.reg = e.target.value;
+    else if (id === "f-taille") RECO_ST.taille = e.target.value;
+    else if (id === "f-tri") RECO_ST.tri = e.target.value;
+    maj();
   });
+  if (f) f.addEventListener("click", e => {
+    const b = e.target.closest("[data-rc-type]"); if (!b || b.dataset.rcType === RECO_ST.type) return;
+    RECO_ST.type = b.dataset.rcType; RECO_ST.tri = RECO_ST.type === "etf" ? "ter" : "q";
+    f.innerHTML = recoFiltresHTML(); maj();
+  });
+  const env = $("#rc-env");
+  if (env) env.onchange = () => { RECO_ST.env = env.value; const x = $("#rc-exs"); if (x) x.innerHTML = RECO_EX.map(recoExCarte).join(""); };
 }
 
-/* ---------- Version compacte : accueil et Mon espace ----------
-   recoCompactHTML({ titre }) renvoie le HTML tout de suite (rien à attendre) ; l'accueil et Mon espace le placent. */
-function recoCompactHTML(o = {}) {
-  if (!R) return ""; recoCSS(); recoDivLoad();
-  const ans = recoAns(), pr = RECO.profil(ans, recoRetours()), titre = o.titre || "Des pistes pour vous", N = RECO.IDS.length;
-  if (!pr.complet) {
-    const n = N - pr.manque.length;
-    return `<section class="panel rc-mini"><div class="ph"><h2>${esc(titre)}</h2><a href="/pour-moi">Commencer</a></div><div class="pb"><p>Répondez à ${N} questions en 2 minutes : horizon, baisse supportable, compte utilisé. Le site calcule une répartition indicative, et des ETF et entreprises à étudier.</p>
-      ${n ? `<div class="rc-prog"><span style="width:${Math.round(n / N * 100)}%"></span></div><p class="rc-mut">${n} réponse${n > 1 ? "s" : ""} sur ${N} déjà données.</p>` : ""}<a class="btn" href="/pour-moi">${n ? "Terminer mon profil" : "Trouver mes pistes"}</a></div></section>`;
-  }
-  const ctx = { held: new Set((typeof pf2Load === "function" ? pf2Load().l : []).map(l => l.k)), X: null, R0: null };
-  const P = recoPistes(pr, ctx), top = [...P.etf.slice(0, 2), ...P.ent.slice(0, 1)];
-  return `<section class="panel rc-mini"><div class="ph"><h2>${esc(titre)}</h2><a href="/pour-moi">Toutes mes pistes</a></div><div class="pb">
-    <div class="rc-mh"><div><span class="rc-mut">Votre profil</span><b>${esc(pr.label)}</b></div><div><span class="rc-mut">Part d'actions</span><b>${RECO.fourchette([pr.eqMin, pr.eqMax])}</b></div><div class="rc-gauge sm" role="img" aria-label="Risque ${pr.niveau} sur 5">${[1, 2, 3, 4, 5].map(i => `<span class="${i <= pr.niveau ? "on" : ""}"></span>`).join("")}</div></div>
-    ${top.length ? `<ul class="rc-ml">${top.map(p => p.kind === "etf" ? `<li><a href="/etf/${esc(p.e.id)}"><b>${esc(p.e.name)}</b><small>ETF · ${esc(ECAT[p.e.categorie] || "")} · ${pct(p.e.ter / 100, 2, false)} par an</small></a>${recoRisk(p.risk)}</li>` : `<li><a href="/entreprise/${esc(p.c.id)}"><b>${esc(p.c.name)}</b><small>${esc(secName(p.c))} · ${esc(RECO_TAILLE[p.T.t])}</small></a>${recoRisk(p.risk)}</li>`).join("")}</ul>` : ""}
-    <p class="rc-mut">Pédagogique, pas un conseil en investissement. Donnez votre avis sur chaque piste pour affiner les suivantes.</p></div></section>`;
+/* ---------- Routes, menu ---------- */
+if (typeof ROUTES_EXTRA !== "undefined") {
+  ROUTES_EXTRA.push([/^\/repartitions$/, () => pageRepartitions()]);
+  ROUTES_EXTRA.push([/^\/pour-moi$/, () => { history.replaceState({}, "", "/repartitions" + location.search); return pageRepartitions(); }]); // ancienne adresse
 }
-function recoAccueilHTML() { return recoCompactHTML({ titre: "Des pistes pour vous" }); }
-function recoEspaceHTML() { return recoCompactHTML({ titre: "Vos pistes" }); }
+if (typeof OUTILS !== "undefined" && Array.isArray(OUTILS)) {
+  const i = OUTILS.findIndex(o => o[0] === "/pour-moi"); if (i >= 0) OUTILS.splice(i, 1);
+  if (!OUTILS.some(o => o[0] === "/repartitions")) OUTILS.push(["/repartitions", "Répartitions types et listes par critères", "Des exemples de répartition expliqués, et des listes d'ETF et d'entreprises triées sur les critères que vous choisissez."]);
+}
+if (typeof document !== "undefined" && document.querySelector) recoDivLoad();
 
-/* ---------- Route, menu ---------- */
-if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/pour-moi$/, () => pageRecoPourMoi()]);
-if (typeof document !== "undefined" && document.querySelector) {
-  recoDivLoad();
-  // le menu est construit par m/nav.js ; « Pistes pour vous » n'y figure plus (à reformuler, point 4)
-  if (typeof OUTILS !== "undefined" && Array.isArray(OUTILS) && !OUTILS.some(o => o[0] === "/pour-moi")) OUTILS.unshift(["/pour-moi", "Pistes pour vous", "Une répartition indicative, des ETF et des entreprises à étudier selon votre profil et votre portefeuille."]);
-}
 let RECO_CSS = false;
 function recoCSS() {
   if (RECO_CSS || typeof document === "undefined") return; RECO_CSS = true;
   document.head.insertAdjacentHTML("beforeend", `<style id="rc-css">
-.rc-page>.panel,.rc-page>#rc-out>.panel{margin-top:16px}
+.rc-page>.panel,.rc-page>#rc-ex>.panel{margin-top:16px}
 .rc-legal{margin-top:14px;background:#F3EFE6;border-radius:12px;padding:11px 14px;font-size:13px;line-height:1.5;color:#4A4336}.rc-legal b{color:var(--ink)}.rc-legal a{color:var(--link)}
 .rc-mut{color:var(--grey);font-size:13px;line-height:1.5;margin:6px 0 0}
 .rc-prog{height:6px;border-radius:99px;background:var(--soft);overflow:hidden;margin:0 0 14px}.rc-prog span{display:block;height:100%;background:var(--ink);border-radius:99px;transition:width .2s}
@@ -664,6 +567,35 @@ function recoCSS() {
 .rc-mini .rc-mh{display:flex;gap:18px;align-items:center;flex-wrap:wrap}.rc-mini .rc-mh>div{display:flex;flex-direction:column}.rc-mini .rc-mh b{font:700 17px var(--serif)}.rc-mini .rc-mh .rc-mut{margin:0;font-size:12px}
 .rc-ml{list-style:none;margin:10px 0 0;padding:0}.rc-ml li{display:flex;justify-content:space-between;gap:10px;align-items:center;padding:8px 0;border-top:1px solid var(--rule)}.rc-ml a{display:flex;flex-direction:column;min-width:0;color:var(--ink);text-decoration:none}.rc-ml a b{font-size:14.5px}.rc-ml small{font-size:12px;color:var(--grey)}
 .rc-mini .btn{margin-top:10px}.rc-mini p{margin:0 0 8px;font-size:14px;line-height:1.5}
+
+/* Répartitions en exemple et listes par critères (refonte du 29/10/2026) */
+.rc-lab{display:block;font-size:13.5px;color:var(--grey);margin:0 0 14px}
+.rc-lab select{font:inherit;font-size:14px;color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:6px 8px;background:#fff;margin-left:4px;min-height:36px}
+.rc-exs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.rc-ex{border:1px solid var(--rule);border-radius:14px;padding:16px 18px;background:#fff;min-width:0;display:flex;flex-direction:column}
+.rc-ex h3{font:700 19px var(--serif);margin:0}
+.rc-exb{margin:3px 0 10px;font-size:12.5px;color:var(--grey);line-height:1.4}
+.rc-exd{margin:0 0 12px}
+.rc-exq,.rc-exl{margin:0 0 8px;font-size:13.5px;line-height:1.5}
+.rc-exq>b,.rc-exl>b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--grey);margin-bottom:2px}
+.rc-exc{margin:auto 0 0;background:var(--soft);border-radius:10px;padding:9px 12px;font-size:13px;line-height:1.5}
+.rc-tabs{display:flex;gap:8px;margin:0 0 14px;flex-wrap:wrap}
+.rc-tabs button{font:600 14px inherit;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:8px 16px;min-height:40px;cursor:pointer}
+.rc-tabs button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.rc-filt{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:flex-end;margin:0 0 16px}
+.rc-filt .rc-sel span{font-size:12.5px;color:var(--grey)}
+.rc-filt select{min-height:38px}
+.rc-cnt2{margin:0 0 10px;font-size:13.5px;color:var(--grey)}.rc-cnt2 b{color:var(--ink);font-family:var(--mono,monospace)}
+.rc-rows{display:flex;flex-direction:column}
+.rc-row{display:grid;grid-template-columns:auto minmax(0,1fr) minmax(0,1.25fr);gap:4px 14px;align-items:center;padding:12px 10px;margin:0 -10px;border-top:1px solid var(--rule);border-radius:10px;color:var(--ink);text-decoration:none;min-height:60px}
+.rc-row:first-child{border-top:0}.rc-row:hover{background:var(--soft)}
+.rc-row>.lg,.rc-ico2{grid-column:1;grid-row:1 / span 2;align-self:center;flex:none}
+.rc-ico2{width:34px;height:34px;border-radius:9px;background:var(--soft);display:grid;place-items:center;font:700 11px var(--sans);color:var(--grey)}
+.rc-rh{grid-column:2;grid-row:1}.rc-rt{grid-column:2;grid-row:2}.rc-rf{grid-column:3;grid-row:1 / span 2}
+.rc-rh{display:flex;flex-direction:column;min-width:0}.rc-rh b{font-size:14.5px;font-weight:600}.rc-rh small{font-size:12.5px;color:var(--grey);line-height:1.35}
+.rc-rt{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center}
+.rc-rf{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:12.5px;color:var(--grey)}.rc-rf em{font-style:normal;white-space:nowrap}
+@media (max-width:980px){.rc-exs{grid-template-columns:1fr}.rc-row{grid-template-columns:auto minmax(0,1fr);row-gap:6px}.rc-row .rc-rt{grid-column:2;grid-row:2}.rc-row .rc-rf{grid-column:1 / -1;grid-row:3}}
 @media (max-width:720px){.rc-alloc{grid-template-columns:1fr}.rc-verdict h2{font-size:22px}.rc-grid{grid-template-columns:1fr}.rc-gauge small{text-align:left}.rc-ml li .rc-risk em{display:none}}
 </style>`);
 }

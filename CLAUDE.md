@@ -22,7 +22,7 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Il adore les **médianes du secteur** et les **zones vertes / rouges**. Toujours expliquer et interpréter pour un débutant, sans le prendre pour un enfant.
 - Direction artistique : papier crème + titres serif (style « journal ») et touches de vert acide (style « tableau de bord »), sans cadres sombres.
 - Favoris bien visibles. Concurrents affichés avec comparaison. PEA / compte-titres expliqués.
-- Simplicité et coût nul : aucune IA payée par le site (réponses calculées pour tous, « Connecter mon IA » via OpenRouter, connecteur MCP). Pas de services payants multiples.
+- Simplicité et coût nul : aucune IA payée par le site (réponses calculées pour tous, « Connecter mon IA » directement chez ChatGPT, Claude, Gemini ou Mistral avec la clé du visiteur, sans intermédiaire, connecteur MCP). Pas de services payants multiples.
 
 ## Interdits
 - Aucun conseil d'investissement ni prédiction ; pas de profil + titres proposés à la personne (« Pistes pour vous » reformulé sans personnalisation).

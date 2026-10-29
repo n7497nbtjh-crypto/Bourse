@@ -13,7 +13,7 @@ Mise à jour du 29 octobre 2026 (IA simplifiée). La partie 1 se lit sans connai
 | D1 | Base de données des comptes (favoris, portefeuille, bilans, alertes). | Le classeur |
 | GitHub Actions | Robots qui collectent les données officielles, testent et mettent en ligne. | L'équipe de nuit |
 
-**L'IA, en une phrase.** Le site calcule ses réponses dans le navigateur du visiteur, gratuitement et sans limite ; un visiteur qui veut des réponses rédigées connecte sa propre IA (OpenRouter), à ses frais ou sur des modèles gratuits. Le site n'appelle et ne paie aucun modèle. Détails : `docs/ia.md`.
+**L'IA, en une phrase.** Le site calcule ses réponses dans le navigateur du visiteur, gratuitement et sans limite ; un visiteur qui veut des réponses rédigées connecte sa propre IA (ChatGPT, Claude, Gemini ou Mistral, avec sa clé), à ses frais ou sur les offres gratuites de Gemini et Mistral. Le site n'appelle et ne paie aucun modèle. Détails : `docs/ia.md`.
 
 **Pourquoi c'est solide.**
 - Les données changent au plus une fois par jour : elles sont calculées à l'avance et servies comme de simples fichiers. C'est rapide, gratuit et presque impossible à faire tomber.
@@ -46,7 +46,7 @@ cf/site/ia.js          réponses calculées (localCopilot, localAssist, chercheL
 cf/site/calc.js        calculs financiers
 cf/site/m/*.js         modules chargés après le script principal (ordre en bas d'index.html)
 cf/site/m/orchestre.js panneau ✦ : le seul point d'entrée de l'IA (orcIaOpen, orcIaAsk)
-cf/site/m/monia.js     « Connecter mon IA » (OpenRouter, OAuth PKCE), iaRediger, miaCopilote, page /espace/ia
+cf/site/m/monia.js     « Connecter mon IA » (ChatGPT, Claude, Gemini, Mistral, clé du visiteur), iaRediger, miaCopilote, page /espace/ia
 cf/src/*.mjs           Worker, assemblé par node build.mjs en cf/site/_worker.js
   worker.mjs           routes /api/*, meta() des pages ; anciennes routes d'IA → 410 (iaRetiree)
   consignes.mjs        consignes données à l'IA connectée (→ cf/site/data/prompts.json) + regles.mjs
@@ -62,7 +62,7 @@ tests/                 tests node et Playwright
 1. `/entreprise/lvmh` : le Worker renvoie `index.html` avec le titre et la description de la page.
 2. Le navigateur charge les données (`/data/*`) directement depuis Pages, sans passer par le Worker.
 3. Les modules `m/*.js` complètent le script principal, puis `route()` affiche la page.
-4. Une question : réponse calculée dans le navigateur ; si le visiteur a connecté son IA, appel direct navigateur → `openrouter.ai`.
+4. Une question : réponse calculée dans le navigateur ; si le visiteur a connecté son IA, appel direct navigateur → l'éditeur choisi (OpenAI, Anthropic, Google ou Mistral).
 
 ### Développer et tester
 ```
@@ -72,7 +72,7 @@ node tests/t_calc.mjs && node tests/t_worker.mjs && node --no-warnings tests/t_c
 node --no-warnings tests/t_espace.mjs && node --no-warnings tests/t_synthese.mjs
 python3 tests/audit.py     # toutes les pages, 3 largeurs : 0 problème attendu
 python3 tests/t_ia.py      # réponses calculées : 100 % attendu
-python3 tests/t_monia.py   # « Connecter mon IA » (OpenRouter simulé), clé jamais envoyée au site
+python3 tests/t_monia.py   # « Connecter mon IA » (quatre éditeurs simulés), clé jamais envoyée au site
 ```
 
 ### Mise en ligne

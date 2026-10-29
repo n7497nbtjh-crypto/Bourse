@@ -1,89 +1,70 @@
 /* Module « monia » de bilan. : « Connecter mon IA » (voir docs/ia.md). Chargé en dernier.
    - Sans connexion, le site répond avec ses réponses calculées (cf/site/ia.js, leçons de l'Académie, données) : gratuit et illimité.
-   - « Connecter mon IA » : connexion au compte OpenRouter du visiteur (OAuth PKCE), choix d'un modèle dans une courte liste.
-     La clé obtenue reste dans ce navigateur (localStorage) : elle n'est envoyée qu'à openrouter.ai, jamais au site.
+   - « Connecter mon IA » (refonte du 29 octobre 2026, à la demande de Romain : plus d'intermédiaire) : le visiteur choisit
+     ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google) ou Mistral, colle la clé d'accès créée chez cet éditeur, et le site
+     appelle directement l'éditeur depuis son navigateur. Les quatre acceptent ces appels (en-têtes CORS vérifiés le 29/10/2026
+     pour OpenAI, Anthropic et Mistral ; Gemini non vérifiable depuis l'environnement de travail).
+     La clé reste dans ce navigateur (localStorage) : elle n'est envoyée qu'à l'éditeur choisi, jamais au site.
    - iaRediger(tâche, faits, { question }) : envoie la consigne (cf/src/consignes.mjs → /data/prompts.json), les faits
      calculés par le site et la question au modèle choisi. Sans IA connectée : { invite: true }, l'appelant garde la réponse calculée.
    Le site n'appelle aucun modèle lui-même et ne paie aucune IA. */
 
-const MIA_OR = "https://openrouter.ai";
-const MIA_CLE = "bilan.monia"; // { key, model, nom, gratuit, at }
-const MIA_PKCE = "bilan.monia.pkce";
-const MIA = { prompts: null, modeles: null, memo: new Map() };
+const MIA_CLE = "bilan.monia"; // { f: fournisseur, key, model, nom, at }
+const MIA = { prompts: null, modeles: {}, memo: new Map() };
+/* Les quatre éditeurs. cle : où créer la clé ; prix : ce que le visiteur doit savoir avant de choisir. */
+const MIA_F = {
+  openai: { nom: "ChatGPT", ed: "OpenAI", cle: "https://platform.openai.com/api-keys", forme: /^sk-[\w-]{20,}$/,
+    prix: "Payant à l'usage : un crédit prépayé chez OpenAI (quelques centimes pour des dizaines de questions). L'abonnement ChatGPT Plus ne s'applique pas ici." },
+  anthropic: { nom: "Claude", ed: "Anthropic", cle: "https://console.anthropic.com/settings/keys", forme: /^sk-ant-[\w-]{20,}$/,
+    prix: "Payant à l'usage : un crédit prépayé chez Anthropic. L'abonnement Claude Pro ne s'applique pas ici." },
+  gemini: { nom: "Gemini", ed: "Google", cle: "https://aistudio.google.com/app/apikey", forme: /^[\w-]{30,}$/,
+    prix: "Offre gratuite avec un nombre de questions limité par jour, sans carte bancaire. Sur l'offre gratuite, Google peut utiliser les échanges pour améliorer ses produits." },
+  mistral: { nom: "Mistral", ed: "Mistral AI", pays: "France", cle: "https://console.mistral.ai/api-keys", forme: /^[\w-]{20,}$/,
+    prix: "Offre gratuite « Experiment » (numéro de téléphone demandé, pas de carte bancaire). Sur cette offre, Mistral peut utiliser les échanges pour entraîner ses modèles." },
+};
+const MIA_ORDRE = ["openai", "anthropic", "gemini", "mistral"];
 
 /* ---------- Ce que garde le navigateur ---------- */
-function miaLire() { try { const o = JSON.parse(localStorage.getItem(MIA_CLE) || "null"); return o && typeof o.key === "string" && o.key ? o : null; } catch (e) { return null; } }
+function miaLire() { try { const o = JSON.parse(localStorage.getItem(MIA_CLE) || "null"); return o && typeof o.key === "string" && o.key && MIA_F[o.f] ? o : null; } catch (e) { return null; } }
 function miaEcrire(o) { try { localStorage.setItem(MIA_CLE, JSON.stringify(o)); return true; } catch (e) { return false; } }
 function miaDeconnecter() { try { localStorage.removeItem(MIA_CLE); } catch (e) { } MIA.memo.clear(); miaMaj(); }
 const miaConnectee = () => { const c = miaLire(); return !!(c && c.model); };
-const miaNomModele = () => { const c = miaLire(); return c && c.model ? (c.nom || c.model) : null; };
+const miaNomModele = () => { const c = miaLire(); return c && c.model ? `${MIA_F[c.f].nom} · ${c.nom || c.model}` : null; };
 function miaSess() { try { return sessionStorage; } catch (e) { return localStorage; } }
 
-/* ---------- Connexion OpenRouter (OAuth PKCE, https://openrouter.ai/docs/guides/overview/auth/oauth) ---------- */
-const miaB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-async function miaConnecter() {
-  const verif = miaB64(crypto.getRandomValues(new Uint8Array(32))), etat = miaB64(crypto.getRandomValues(new Uint8Array(12)));
-  const defi = miaB64(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verif)));
-  try { miaSess().setItem(MIA_PKCE, JSON.stringify({ verif, etat, at: Date.now() })); } catch (e) { toast("Votre navigateur bloque le stockage local : la connexion est impossible."); return; }
-  const cb = location.origin + "/espace/ia";
-  location.assign(`${MIA_OR}/auth?callback_url=${encodeURIComponent(cb)}&code_challenge=${defi}&code_challenge_method=S256&state=${etat}&key_label=${encodeURIComponent("bilan. (" + location.host + ")")}`);
+/* ---------- Liste des modèles de l'éditeur, lue avec la clé du visiteur (elle sert aussi à vérifier la clé) ----------
+   Les noms de modèles changent souvent : le site ne les écrit pas en dur, il lit la liste de l'éditeur et garde
+   les modèles de conversation généralistes. Par défaut : le plus rapide et le moins cher de la gamme. */
+const MIA_EXCLU = /(audio|realtime|image|tts|transcribe|whisper|embed|moderation|search|codex|code|computer|vision|ocr|voxtral|pixtral|devstral|magistral|live|robotics|learnlm|aqa|instruct|-\d{4}-\d{2}-\d{2}|preview|exp\b|experimental|thinking|nano)/i;
+function miaHeaders(c) {
+  if (c.f === "anthropic") return { "x-api-key": c.key, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true", "content-type": "application/json" };
+  if (c.f === "gemini") return { "x-goog-api-key": c.key, "content-type": "application/json" };
+  return { authorization: "Bearer " + c.key, "content-type": "application/json" };
 }
-/** Retour d'OpenRouter sur /espace/ia?code=… : échange du code contre la clé, directement entre le navigateur et OpenRouter. */
-async function miaRetour() {
-  const u = new URLSearchParams(location.search), code = u.get("code"); if (!code) return null;
-  history.replaceState({}, "", "/espace/ia"); // le code ne reste pas dans l'adresse
-  let p = null; try { p = JSON.parse(miaSess().getItem(MIA_PKCE) || "null"); miaSess().removeItem(MIA_PKCE); } catch (e) { }
-  if (!p || !p.verif || Date.now() - p.at > 15 * 60e3) return { erreur: "La connexion a expiré. Recommencez avec le bouton « Connecter mon IA »." };
-  if (u.get("state") && u.get("state") !== p.etat) return { erreur: "La réponse d'OpenRouter ne correspond pas à votre demande. Recommencez." };
-  try {
-    const r = await fetch(MIA_OR + "/api/v1/auth/keys", { method: "POST", credentials: "omit", referrerPolicy: "no-referrer", headers: { "content-type": "application/json" }, body: JSON.stringify({ code, code_verifier: p.verif, code_challenge_method: "S256" }) });
-    const j = await r.json().catch(() => ({}));
-    if (!r.ok || !j.key) return { erreur: r.status === 403 ? "OpenRouter a refusé le code (expiré ou déjà utilisé). Recommencez." : "OpenRouter n'a pas pu finaliser la connexion. Réessayez dans un instant." };
-    const avant = miaLire() || {};
-    miaEcrire({ key: j.key, model: avant.model || null, nom: avant.nom || null, gratuit: avant.gratuit || false, at: Date.now() });
-    return { ok: true };
-  } catch (e) { return { erreur: "OpenRouter est injoignable depuis ce navigateur. Vérifiez votre connexion." }; }
-}
-
-/* ---------- Choix du modèle : courte liste tirée de l'API publique /api/v1/models ---------- */
-// Éditeurs connus, dans l'ordre d'affichage ; modèles spécialisés (code, image, son, sécurité), trop petits, en lot ou « qui réfléchissent » écartés.
-const MIA_EDITEURS = [["mistralai/", "Mistral AI"], ["google/", "Google"], ["meta-llama/", "Meta"], ["deepseek/", "DeepSeek"], ["nvidia/", "NVIDIA"], ["qwen/", "Qwen"], ["openai/", "OpenAI"], ["microsoft/", "Microsoft"], ["anthropic/", "Anthropic"]];
-const MIA_EXCLU = /(vision|-vl\b|omni|embed|guard|cod(e|er|estral)|audio|voxtral|image|tts|whisper|ocr|math|research|online|search|sonar|nano|tiny|\b[0-4](\.\d)?b\b|:batch|:extended|:thinking|:beta|reasoning|preview|exp\b|safety|moderation|uncensored|roleplay)/i;
-const MIA_SECOURS = [ // si la liste en ligne ne répond pas (relevé du 29 octobre 2026 par la sonde data/sonde/ia-simple.mjs)
-  { id: "google/gemma-4-31b-it:free", nom: "Gemma 4 31B", editeur: "Google", gratuit: true },
-  { id: "nvidia/nemotron-3-ultra-550b-a55b:free", nom: "Nemotron 3 Ultra", editeur: "NVIDIA", gratuit: true },
-  { id: "mistralai/mistral-small-3.2-24b-instruct", nom: "Mistral Small 3.2 24B", editeur: "Mistral AI", gratuit: false, cout: 0.033 },
-  { id: "deepseek/deepseek-v4-flash", nom: "DeepSeek V4 Flash", editeur: "DeepSeek", gratuit: false, cout: 0.036 },
-];
-function miaTrier(data) {
-  const ok = (data || []).filter(m => m && typeof m.id === "string" && !MIA_EXCLU.test(m.id) && (m.context_length || 0) >= 32000
-    && (!m.architecture || ((m.architecture.output_modalities || ["text"]).join() === "text" && (m.architecture.input_modalities || ["text"]).includes("text"))));
-  const ed = m => MIA_EDITEURS.find(([p]) => m.id.startsWith(p));
-  const prix = m => { const p = m.pricing || {}; return (+p.prompt || 0) * 3000 + (+p.completion || 0) * 500; }; // une question : environ 3 000 jetons envoyés, 500 reçus
-  const nom = m => String(m.name || m.id).replace(/^[^:]{2,30}:\s*/, "").replace(/\s*\(free\)\s*$/i, "").trim();
-  const gr = [], pa = [];
-  for (const [p, n] of MIA_EDITEURS) {
-    const l = ok.filter(m => m.id.startsWith(p)).sort((a, b) => (b.created || 0) - (a.created || 0));
-    const g = l.find(m => /:free$/.test(m.id) || prix(m) === 0); if (g) gr.push({ id: g.id, nom: nom(g), editeur: n, gratuit: true });
-    const c = l.find(m => !/:free$/.test(m.id) && prix(m) > 0 && prix(m) < 0.0008); if (c) pa.push({ id: c.id, nom: nom(c), editeur: n, gratuit: false, cout: prix(c) * 100 }); // moins de 0,08 $ les 100 questions
-  }
-  return [...gr.slice(0, 4), ...pa.slice(0, 4)].filter(m => ed(m));
-}
-async function miaModeles() {
-  if (MIA.modeles) return MIA.modeles;
-  try {
-    const r = await fetch(MIA_OR + "/api/v1/models", { credentials: "omit", referrerPolicy: "no-referrer", signal: AbortSignal.timeout(12000) });
-    const l = miaTrier((await r.json()).data); if (l.length >= 2) return MIA.modeles = { l, secours: false };
-  } catch (e) { }
-  return MIA.modeles = { l: MIA_SECOURS, secours: true };
-}
-async function miaQuota(c) { // questions gratuites du jour sur le compte OpenRouter (champ documenté de GET /api/v1/key)
-  try { const r = await fetch(MIA_OR + "/api/v1/key", { credentials: "omit", referrerPolicy: "no-referrer", headers: { authorization: "Bearer " + c.key } });
-    if (r.status === 401) return { invalide: true };
-    const d = ((await r.json()) || {}).data || {}; return { gratuit: d.free_model_daily_requests || null, libre: d.is_free_tier }; } catch (e) { return null; }
+const MIA_URL = { openai: "https://api.openai.com/v1", anthropic: "https://api.anthropic.com/v1", gemini: "https://generativelanguage.googleapis.com/v1beta", mistral: "https://api.mistral.ai/v1" };
+const miaVer = id => (String(id).match(/\d+(\.\d+)?/g) || ["0"]).map(Number).reduce((a, n, i) => a + n / Math.pow(100, i), 0); // gemini-2.5-flash → 2.05
+async function miaModeles(c) {
+  const k = c.f + "|" + c.key.slice(-6); if (MIA.modeles[k]) return MIA.modeles[k];
+  let r;
+  try { r = await fetch(MIA_URL[c.f] + "/models" + (c.f === "anthropic" ? "?limit=50" : c.f === "gemini" ? "?pageSize=200" : ""), { headers: miaHeaders(c), credentials: "omit", referrerPolicy: "no-referrer", signal: AbortSignal.timeout(15000) }); }
+  catch (e) { return { erreur: `${MIA_F[c.f].ed} est injoignable depuis ce navigateur. Vérifiez votre connexion, puis réessayez.` }; }
+  if (r.status === 401 || r.status === 403 || r.status === 400) return { invalide: true, erreur: `${MIA_F[c.f].ed} refuse cette clé. Vérifiez que vous l'avez copiée en entier, sans espace.` };
+  if (!r.ok) return { erreur: `${MIA_F[c.f].ed} n'a pas répondu correctement (code ${r.status}). Réessayez dans un moment.` };
+  const j = await r.json().catch(() => ({}));
+  let l = [];
+  if (c.f === "gemini") l = (j.models || []).filter(m => (m.supportedGenerationMethods || []).includes("generateContent") && /^models\/gemini-/.test(m.name) && !MIA_EXCLU.test(m.name))
+    .map(m => ({ id: m.name.replace(/^models\//, ""), nom: m.displayName || m.name.replace(/^models\//, ""), v: miaVer(m.name) }));
+  else if (c.f === "anthropic") l = (j.data || []).filter(m => /^claude-/.test(m.id)).map(m => ({ id: m.id, nom: m.display_name || m.id, v: Date.parse(m.created_at) || 0 }));
+  else if (c.f === "openai") l = (j.data || []).filter(m => /^gpt-\d/.test(m.id) && !MIA_EXCLU.test(m.id)).map(m => ({ id: m.id, nom: m.id.replace(/^gpt-/, "GPT-"), v: m.created || 0 }));
+  else l = (j.data || []).filter(m => (!m.capabilities || m.capabilities.completion_chat) && !MIA_EXCLU.test(m.id) && /latest$/.test(m.id)).map(m => ({ id: m.id, nom: m.name || m.id, v: m.created || 0 }));
+  const vus = new Set(); l = l.filter(m => !vus.has(m.id) && vus.add(m.id)).sort((a, b) => b.v - a.v).slice(0, 8);
+  if (!l.length) return { erreur: `Aucun modèle de conversation trouvé sur ce compte ${MIA_F[c.f].ed}.` };
+  const rapide = { openai: /mini/, anthropic: /haiku/, gemini: /flash(?!-lite)/, mistral: /small/ }[c.f];
+  const def = l.find(m => rapide.test(m.id)) || l[0];
+  return MIA.modeles[k] = { l, def };
 }
 
-/* ---------- Appel du modèle (navigateur → OpenRouter) ---------- */
+/* ---------- Appel du modèle (navigateur → éditeur choisi) ---------- */
 async function miaPrompts() {
   if (MIA.prompts) return MIA.prompts;
   try { MIA.prompts = await (await fetch("/data/prompts.json")).json(); } catch (e) { MIA.prompts = null; }
@@ -91,19 +72,28 @@ async function miaPrompts() {
 }
 const miaNettoie = t => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/, "").replace(/—/g, ",").replace(/\*\*/g, "").replace(/^#+\s*/gm, "").trim();
 async function miaAppel(c, messages, max_tokens = 600) {
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 75000);
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 75000), F = MIA_F[c.f];
+  const sys = messages.filter(m => m.role === "system").map(m => m.content).join("\n\n"), user = messages.filter(m => m.role !== "system");
+  let url = MIA_URL[c.f] + "/chat/completions", body;
+  if (c.f === "anthropic") { url = MIA_URL.anthropic + "/messages"; body = { model: c.model, system: sys, messages: user, max_tokens, temperature: 0.2 }; }
+  else if (c.f === "gemini") { url = `${MIA_URL.gemini}/models/${encodeURIComponent(c.model)}:generateContent`;
+    body = { systemInstruction: { parts: [{ text: sys }] }, contents: user.map(m => ({ role: "user", parts: [{ text: m.content }] })), generationConfig: { maxOutputTokens: max_tokens * 4, temperature: 0.2 } }; }
+  else if (c.f === "openai") body = { model: c.model, messages, max_completion_tokens: max_tokens * 4 }; // modèles récents : pas de température, et une marge pour leur réflexion
+  else body = { model: c.model, messages, max_tokens, temperature: 0.2 };
   try {
-    const r = await fetch(MIA_OR + "/api/v1/chat/completions", { method: "POST", credentials: "omit", referrerPolicy: "no-referrer", signal: ctl.signal,
-      headers: { authorization: "Bearer " + c.key, "content-type": "application/json", "HTTP-Referer": location.origin, "X-Title": "bilan." },
-      body: JSON.stringify({ model: c.model, messages, max_tokens, temperature: 0.2 }) });
+    const r = await fetch(url, { method: "POST", credentials: "omit", referrerPolicy: "no-referrer", signal: ctl.signal, headers: miaHeaders(c), body: JSON.stringify(body) });
     const j = await r.json().catch(() => ({}));
-    if (r.status === 401) { miaDeconnecter(); return { message: "Votre connexion OpenRouter n'est plus valable : reconnectez votre IA." }; }
-    if (r.status === 402) return { message: "Votre compte OpenRouter n'a plus de crédit pour ce modèle. Choisissez un modèle gratuit dans « Mon IA »." };
-    if (r.status === 429) return { message: "Votre limite chez OpenRouter est atteinte pour le moment (les modèles gratuits sont limités par jour). Réessayez plus tard ou choisissez un autre modèle." };
-    if (!r.ok) return { message: `Le modèle choisi n'a pas pu répondre${j.error && j.error.message ? ` (${String(j.error.message).slice(0, 120)})` : ""}. Essayez un autre modèle dans « Mon IA ».` };
-    const txt = miaNettoie(((j.choices || [])[0] || {}).message ? j.choices[0].message.content : "");
+    const detail = String((j.error && (j.error.message || j.error.type)) || (Array.isArray(j) && j[0] && j[0].error && j[0].error.message) || "").slice(0, 140);
+    if (r.status === 401 || (r.status === 403 && c.f !== "gemini")) { miaDeconnecter(); return { message: `${F.ed} refuse votre clé : elle a été effacée de ce navigateur. Reconnectez votre IA dans « Mon IA ».` }; }
+    if (r.status === 402 || /credit|quota|billing|insufficient/i.test(detail)) return { message: `Votre compte ${F.ed} n'a plus de crédit ou a atteint son quota. Rechargez-le chez ${F.ed}, ou connectez un autre éditeur dans « Mon IA ».` };
+    if (r.status === 429) return { message: `Votre limite chez ${F.ed} est atteinte pour le moment. Réessayez dans quelques minutes.` };
+    if (!r.ok) return { message: `${F.nom} n'a pas pu répondre${detail ? ` (${detail})` : ""}. Essayez un autre modèle dans « Mon IA ».` };
+    const brut = c.f === "anthropic" ? (j.content || []).filter(b => b.type === "text").map(b => b.text).join("")
+      : c.f === "gemini" ? (((j.candidates || [])[0] || {}).content || { parts: [] }).parts.filter(p => !p.thought).map(p => p.text || "").join("")
+      : (((j.choices || [])[0] || {}).message || {}).content || "";
+    const txt = miaNettoie(brut);
     return txt.length > 15 ? { txt } : { message: "Le modèle a renvoyé une réponse vide. Réessayez ou choisissez un autre modèle." };
-  } catch (e) { return { message: e && e.name === "AbortError" ? "Le modèle met trop de temps à répondre. Réessayez." : "OpenRouter est injoignable depuis ce navigateur." }; }
+  } catch (e) { return { message: e && e.name === "AbortError" ? "Le modèle met trop de temps à répondre. Réessayez." : `${F.ed} est injoignable depuis ce navigateur.` }; }
   finally { clearTimeout(t); }
 }
 // Sources jointes aux faits : la réponse doit citer celles qu'elle utilise (consigne « Sources : »).
@@ -128,7 +118,7 @@ async function iaRediger(tache, faits, o = {}) {
   let out = { error: r.message };
   if (r.txt) { // la ligne « Sources : » demandée par la consigne est affichée à part, sous la réponse
     const m = tache === "annonce" ? null : r.txt.match(/\n\s*Sources?\s*:\s*([^\n]+)\s*$/i);
-    out = { txt: m ? r.txt.slice(0, m.index).trim() : r.txt, sources: m ? m[1].trim() : null, modele: c.nom || c.model, ia: "connectee" };
+    out = { txt: m ? r.txt.slice(0, m.index).trim() : r.txt, sources: m ? m[1].trim() : null, modele: `${MIA_F[c.f].nom} · ${c.nom || c.model}`, ia: "connectee" };
   }
   if (r.txt) MIA.memo.set(cle, out);
   return out;
@@ -148,13 +138,13 @@ async function miaCopilote(q) {
       sources: h.flatMap(({ l }) => (l.sources || []).map(s => s.label)).slice(0, 6) }, { question: q, max: 550 });
     if (x.txt) a.texte = x.txt.slice(0, 2400);
   }
-  return { ...a, ia: "connectee", modele: c.nom || c.model };
+  return { ...a, ia: "connectee", modele: `${MIA_F[c.f].nom} · ${c.nom || c.model}` };
 }
 
 /* ---------- Petits morceaux d'interface ---------- */
 /** Pied d'une réponse rédigée, ou invitation discrète à connecter son IA. */
 function miaPied(j) {
-  if (j && j.ia === "connectee") return `${j.sources ? `<p class="mia-src"><b>Sources</b> ${esc(j.sources)}</p>` : ""}<p class="iafoot">Rédigé par votre IA connectée (${esc(j.modele || "modèle choisi")}, via OpenRouter) à partir des seules données du site. À vérifier ; ce n'est pas un conseil.</p>`;
+  if (j && j.ia === "connectee") return `${j.sources ? `<p class="mia-src"><b>Sources</b> ${esc(j.sources)}</p>` : ""}<p class="iafoot">Rédigé par votre IA connectée (${esc(j.modele || "modèle choisi")}) à partir des seules données du site. À vérifier ; ce n'est pas un conseil.</p>`;
   return "";
 }
 function miaInvite(txt) { return `<p class="mia-inv"><span aria-hidden="true">✦</span> ${txt ? esc(txt) + " " : ""}<a href="/espace/ia">Connectez votre IA</a> pour une réponse rédigée.</p>`; }
@@ -172,53 +162,69 @@ function miaMaj() { $$("[data-mia-etat]").forEach(el => el.innerHTML = miaEtatHT
 addEventListener("storage", e => { if (e.key === MIA_CLE) { MIA.memo.clear(); miaMaj(); } });
 
 /* ---------- Page « Mon IA » (/espace/ia, avec ou sans compte ; onglet dans Mon espace) ---------- */
+let MIA_CHOIX = "mistral"; // éditeur sélectionné sur la page avant connexion
 async function miaPage(el, retour) {
   const autonome = !el; if (autonome) { setTitle("Mon IA"); setNav("esp"); el = app; }
   const tete = autonome ? `<p class="kick">Mon espace</p><h1 class="pagetitle">Mon IA</h1><p class="pagesub">Le site répond toujours avec ses calculs, gratuitement et sans limite. Connectez votre propre IA pour obtenir en plus des réponses rédigées.</p>` : "";
   const c = miaLire();
-  const msg = retour && retour.erreur ? `<p class="mia-msg ko">${esc(retour.erreur)}</p>` : retour && retour.ok ? `<p class="mia-msg ok">Votre compte OpenRouter est connecté. Choisissez maintenant un modèle.</p>` : "";
-  const calc = `<section class="panel"><div class="ph"><h2>Toujours disponible : les réponses calculées</h2></div><div class="pb"><p style="margin-top:0">Recherches par critères, comparaisons, définitions, questions courantes sur une fiche, leçons de l'Académie : le site calcule la réponse dans votre navigateur, à partir des comptes officiels et de ses données. Rien à installer, aucune limite.</p>
+  const msg = retour && retour.erreur ? `<p class="mia-msg ko">${esc(retour.erreur)}</p>` : retour && retour.ok ? `<p class="mia-msg ok">${esc(retour.ok)}</p>` : "";
+  const calc = `<section class="panel"><div class="ph"><h2>Toujours disponible : les réponses calculées</h2></div><div class="pb"><p style="margin-top:0">Recherches par critères, comparaisons, définitions, questions courantes sur une fiche, leçons de l'Académie : le site calcule la réponse dans votre navigateur, à partir de ses données et de leurs sources.</p>
     <p class="muted" style="margin:0;font-size:13.5px">Vous utilisez déjà ChatGPT ou Claude ? <a class="lnk" href="/connecteur">Utilisez bilan. dans ChatGPT ou Claude</a>.</p></div></section>`;
   if (!c) {
-    el.innerHTML = `${tete}${msg}<div class="mia-grid"><section class="panel mia-cta"><div class="ph"><h2>Connecter mon IA</h2><span class="light" style="font-size:12.5px">Facultatif · gratuit</span></div><div class="pb">
-      <ol class="mia-etapes"><li>Vous vous connectez à votre compte <b>OpenRouter</b> (service qui donne accès à de nombreux modèles d'IA, dont des modèles gratuits). La création du compte est gratuite.</li>
-        <li>Vous choisissez un modèle dans une courte liste. Les modèles gratuits sont signalés.</li>
-        <li>Vos questions reçoivent une réponse rédigée, appuyée sur les chiffres et les sources du site.</li></ol>
-      <button type="button" class="btn" data-mia-connect>✦ Connecter mon IA</button>
-      <ul class="mia-garanties"><li>La clé d'accès reste dans ce navigateur. Elle n'est jamais envoyée à bilan.</li><li>Vos questions et les données du site utiles à la réponse partent directement de votre navigateur vers OpenRouter et le modèle choisi.</li><li>Déconnexion en un clic, ici même.</li></ul>
+    const F = MIA_F[MIA_CHOIX];
+    el.innerHTML = `${tete}${msg}<div class="mia-grid"><section class="panel mia-cta"><div class="ph"><h2>Connecter mon IA</h2><span class="light" style="font-size:12.5px">Facultatif</span></div><div class="pb">
+      <p class="fbt" style="margin-top:0">1. Choisissez votre IA</p>
+      <div class="mia-fs" role="radiogroup" aria-label="Éditeur d'IA">${MIA_ORDRE.map(k => `<label class="mia-f${k === MIA_CHOIX ? " on" : ""}"><input type="radio" name="miaf" value="${k}"${k === MIA_CHOIX ? " checked" : ""}><b>${esc(MIA_F[k].nom)}</b><small>${esc(MIA_F[k].ed)}${MIA_F[k].pays ? " · " + esc(MIA_F[k].pays) : ""}</small></label>`).join("")}</div>
+      <p class="mia-prix">${esc(F.prix)}</p>
+      <p class="fbt">2. Créez une clé d'accès chez ${esc(F.ed)}</p>
+      <p style="margin:0 0 4px;font-size:14.5px">Connectez-vous à votre compte ${esc(F.ed)}, créez une clé, puis copiez-la. <a class="lnk" href="${F.cle}" target="_blank" rel="noopener">Créer ma clé chez ${esc(F.ed)} ↗</a></p>
+      <p class="fbt">3. Collez-la ici</p>
+      <form class="mia-form" data-mia-form autocomplete="off"><input type="password" name="cle" placeholder="Votre clé ${esc(F.nom)}" aria-label="Clé d'accès ${esc(F.nom)}" spellcheck="false" autocomplete="off" required><button type="submit" class="btn">✦ Connecter</button></form>
+      <ul class="mia-garanties"><li>La clé reste dans ce navigateur. Elle n'est envoyée qu'à ${esc(F.ed)}, jamais à bilan.</li><li>Vos questions et les données du site utiles à la réponse partent directement de votre navigateur vers ${esc(F.ed)}.</li><li>Déconnexion en un clic, ici même : la clé est alors effacée.</li></ul>
     </div></section>${calc}</div>`;
     return;
   }
-  el.innerHTML = `${tete}${msg}<div class="mia-grid"><section class="panel"><div class="ph"><h2>Votre IA</h2><span data-mia-etat class="mia-etat"></span></div><div class="pb">
-      <p class="fbt" style="margin-top:0">Modèle utilisé pour les réponses rédigées</p><div id="miamods" class="mia-mods"><p class="muted">Chargement de la liste des modèles…</p></div>
-      <p class="muted" id="miaquota" style="font-size:13px;margin:10px 0 0"></p>
-      <div class="mia-act"><button type="button" class="linkbtn" data-mia-off>Déconnecter mon IA</button><a class="lnk" href="https://openrouter.ai/settings/keys" target="_blank" rel="noopener">Gérer mes clés chez OpenRouter</a></div>
-      <p class="note" style="margin:10px 0 0">La clé reste dans ce navigateur et n'est envoyée qu'à OpenRouter. Sur un ordinateur partagé, déconnectez-vous après usage.</p></div></section>${calc}</div>`;
+  const F = MIA_F[c.f];
+  el.innerHTML = `${tete}${msg}<div class="mia-grid"><section class="panel"><div class="ph"><h2>Votre IA : ${esc(F.nom)}</h2><span data-mia-etat class="mia-etat"></span></div><div class="pb">
+      <label class="fbt" for="miamod" style="display:block;margin-top:0">Modèle utilisé pour les réponses rédigées</label>
+      <div id="miamods"><p class="muted">Lecture des modèles de votre compte ${esc(F.ed)}…</p></div>
+      <p class="mia-prix">${esc(F.prix)}</p>
+      <div class="mia-act"><button type="button" class="linkbtn" data-mia-off>Déconnecter mon IA</button><a class="lnk" href="${F.cle}" target="_blank" rel="noopener">Gérer mes clés chez ${esc(F.ed)} ↗</a></div>
+      <p class="note" style="margin:10px 0 0">La clé reste dans ce navigateur et n'est envoyée qu'à ${esc(F.ed)}. Sur un ordinateur partagé, déconnectez-vous après usage.</p></div></section>${calc}</div>`;
   miaMaj();
-  const { l, secours } = await miaModeles(), cur = miaLire();
-  const box = $("#miamods", el); if (!box) return;
-  box.innerHTML = l.map(m => `<label class="mia-mod${cur && cur.model === m.id ? " on" : ""}"><input type="radio" name="miamod" value="${esc(m.id)}"${cur && cur.model === m.id ? " checked" : ""}><span><b>${esc(m.nom)}</b><small>${esc(m.editeur)}</small></span><em class="${m.gratuit ? "g" : ""}">${m.gratuit ? "Gratuit" : m.cout != null ? `environ ${m.cout < 0.01 ? "moins de 0,01" : F2.format(m.cout)} $ les 100 questions` : "Payant"}</em></label>`).join("")
-    + `<p class="note" style="margin:6px 0 0">${secours ? "Liste de secours : la liste en ligne d'OpenRouter n'a pas répondu. " : "Liste tirée d'OpenRouter, filtrée sur des modèles généralistes d'éditeurs connus. "}Les modèles gratuits sont limités par OpenRouter (de l'ordre de 50 questions par jour sur un compte gratuit). Les modèles payants utilisent le crédit de votre compte OpenRouter.</p>`;
-  box.onchange = e => { const m = l.find(x => x.id === e.target.value); const o = miaLire(); if (!m || !o) return; miaEcrire({ ...o, model: m.id, nom: m.nom, gratuit: m.gratuit }); MIA.memo.clear();
-    $$(".mia-mod", box).forEach(x => x.classList.toggle("on", x.contains(e.target))); miaMaj(); toast(`IA connectée : ${esc(m.nom)}.`); };
-  if (cur && !cur.model && l[0]) { const m = l[0]; miaEcrire({ ...cur, model: m.id, nom: m.nom, gratuit: m.gratuit }); const r = $(`input[value="${CSS.escape(m.id)}"]`, box); if (r) { r.checked = true; r.closest(".mia-mod").classList.add("on"); } miaMaj(); }
-  const q = await miaQuota(cur), qe = $("#miaquota", el);
-  if (q && q.invalide) { miaDeconnecter(); return miaPage(autonome ? null : el, { erreur: "La clé n'est plus valable chez OpenRouter : reconnectez votre IA." }); }
-  if (qe && q && q.gratuit && q.gratuit.limit) qe.textContent = `Questions aux modèles gratuits aujourd'hui : ${q.gratuit.used ?? 0} sur ${q.gratuit.limit}.`;
+  const m = await miaModeles(c), box = $("#miamods", el); if (!box) return;
+  if (m.invalide) { miaDeconnecter(); return miaPage(autonome ? null : el, { erreur: m.erreur }); }
+  if (m.erreur) { box.innerHTML = `<p class="mia-msg ko" style="margin:0">${esc(m.erreur)}</p>`; return; }
+  box.innerHTML = `<select id="miamod" class="mia-sel">${m.l.map(x => `<option value="${esc(x.id)}"${x.id === c.model ? " selected" : ""}>${esc(x.nom)}${x.id === m.def.id ? " (rapide, recommandé pour ce site)" : ""}</option>`).join("")}</select>`;
+  $("#miamod", box).onchange = e => { const x = m.l.find(y => y.id === e.target.value), o = miaLire(); if (!x || !o) return; miaEcrire({ ...o, model: x.id, nom: x.nom }); MIA.memo.clear(); miaMaj(); toast(`Modèle choisi : ${esc(x.nom)}.`); };
+}
+async function miaConnecterCle(form) {
+  const f = MIA_CHOIX, key = String(new FormData(form).get("cle") || "").replace(/\s+/g, "");
+  const btn = form.querySelector("button"), el = form.closest("#espb") || null;
+  if (!MIA_F[f].forme.test(key)) return miaPage(el, { erreur: `Ce texte ne ressemble pas à une clé ${MIA_F[f].nom}. Copiez la clé entière depuis ${MIA_F[f].ed}.` });
+  if (btn) { btn.disabled = true; btn.textContent = "Vérification…"; }
+  const m = await miaModeles({ f, key });
+  if (m.erreur) return miaPage(el, { erreur: m.erreur });
+  if (!miaEcrire({ f, key, model: m.def.id, nom: m.def.nom, at: Date.now() })) return miaPage(el, { erreur: "Votre navigateur bloque le stockage local : la connexion est impossible." });
+  MIA.memo.clear(); miaMaj();
+  miaPage(el, { ok: `${MIA_F[f].nom} est connecté. Vos questions recevront une réponse rédigée par ${m.def.nom}.` });
 }
 document.addEventListener("click", e => {
-  if (e.target.closest("[data-mia-connect]")) { e.preventDefault(); miaConnecter(); }
   if (e.target.closest("[data-mia-off]")) { e.preventDefault(); miaDeconnecter(); toast("Votre IA est déconnectée : la clé a été effacée de ce navigateur."); if (location.pathname === "/espace/ia") route(); }
 });
+document.addEventListener("change", e => {
+  const r = e.target.closest && e.target.closest('input[name="miaf"]'); if (!r) return;
+  MIA_CHOIX = r.value; miaPage(r.closest("#espb") || null);
+});
+document.addEventListener("submit", e => { const f = e.target.closest && e.target.closest("[data-mia-form]"); if (!f) return; e.preventDefault(); miaConnecterCle(f); });
 ROUTES_EXTRA.push([/^\/espace\/ia$/, async () => {
-  const retour = await miaRetour();
   const m = typeof moi === "function" ? await moi() : { connecte: false };
-  if (!m || !m.connecte) return miaPage(null, retour);
+  if (!m || !m.connecte) return miaPage(null);
   await pageEspace("reglages"); // en-tête et onglets de Mon espace
-  const nav = $(".esptabs"); if (!nav) return miaPage(null, retour);
+  const nav = $(".esptabs"); if (!nav) return miaPage(null);
   setTitle("Mon IA · Mon espace"); $$("a", nav).forEach(a => a.classList.remove("on"));
   const a = nav.querySelector('a[href="/espace/ia"]'); if (a) { a.classList.add("on"); nav.scrollLeft = Math.max(0, a.offsetLeft - 16); }
-  miaPage($("#espb"), retour);
+  miaPage($("#espb"));
 }]);
 (() => { // onglet « Mon IA » dans Mon espace
   const esp0 = window.pageEspace; if (typeof esp0 !== "function") return;
@@ -264,6 +270,14 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 @media (max-width:900px){.mia-grid{grid-template-columns:1fr}}
 .mia-etapes{margin:0 0 16px;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14.5px;line-height:1.5}
 .mia-garanties{margin:16px 0 0;padding:12px 14px 12px 30px;border:1px solid var(--line);border-radius:12px;background:var(--page);font-size:13.5px;color:var(--grey);display:flex;flex-direction:column;gap:5px}
+.mia-fs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 10px}
+@media (max-width:620px){.mia-fs{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.mia-f{display:flex;flex-direction:column;gap:1px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;min-height:44px}
+.mia-f input{position:absolute;opacity:0;pointer-events:none}.mia-f b{font-size:15px}.mia-f small{font-size:12px;color:var(--grey)}
+.mia-f.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}.mia-f:has(input:focus-visible){outline:2px solid var(--ink);outline-offset:2px}
+.mia-prix{margin:0 0 14px;padding:9px 12px;border-radius:10px;background:var(--page);font-size:13px;color:var(--grey);line-height:1.45}
+.mia-form{display:flex;gap:8px;flex-wrap:wrap}.mia-form input{flex:1 1 220px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;background:var(--card)}
+.mia-sel{width:100%;min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;background:var(--card);margin:4px 0 12px}
 .mia-mods{display:flex;flex-direction:column;gap:8px}
 .mia-mod{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer}
 .mia-mod.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}

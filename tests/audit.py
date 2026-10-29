@@ -7,7 +7,7 @@ FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captu
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/simulateurs/epargne", "/simulateurs/frais", "/simulateurs/pea-cto", "/simulateurs/passe", "/mentions-legales", "/page-inconnue", "/pea-cto", "/comparer?ids=lvmh,kering,hermes,apple", "/comparer", "/favoris", "/dividendes", "/debuter", "/debuter/bases", "/debuter/bases/quiz", "/entreprise/nvidia", "/entreprise/rio-tinto", "/entreprise/air-liquide", "/entreprise/nvidia/comprendre/marge", "/comparer?ids=nvidia,amd,intel,broadcom", "/outils", "/marches", "/outils/si-javais", "/outils/recouvrement", "/outils/verifier", "/communaute?onglet=pronostics", "/communaute?onglet=portefeuilles", "/communaute?onglet=discussions"]
 pages += ["/academie", "/academie/bases", "/academie/bases/interets-composes", "/academie/frais-fiscalite", "/academie/bases/quiz", "/academie/formation", "/methode", "/demander", "/demander?q=entreprises+peu+endettees", "/espace", "/commencer", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement", "/connecteur"]
-pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes", "/pour-moi", "/plan"]
+pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes", "/pour-moi", "/repartitions", "/plan"]
 pages += ["/hier", "/simulateurs", "/outils/recouvrement?a=amundi-msci-world-pea&b=ishares-core-sp500&c=amundi-nasdaq100-pea", "/outils/si-javais?k=c:apple&ans=3"]
 pages += ["/entreprise/alibaba?etape=comptes", "/entreprise/klepierre?etape=comptes", "/entreprise/totalenergies?etape=comptes"]
 pages += ["/communaute?onglet=analyses", "/communaute?onglet=listes", "/communaute?onglet=listes&liste=1", "/communaute?onglet=analyses&a=1"]
@@ -40,7 +40,7 @@ def route(r):
     if "/api/espace/notifs" in u: return r.fulfill(json={"nonlus": 1, "notifs": [{"id": 1, "at": 1761650000000, "type": "mouvement", "texte": "Nvidia : −5,2 % aujourd'hui", "lien": "/entreprise/nvidia", "lu": 0}]})
     if "/api/espace" in u: return r.fulfill(json={"ok": True})
     if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": "https://buy.stripe.com/test_m", "unique": None})
-    if "openrouter.ai" in u: return r.fulfill(status=503, json={"error": "hors ligne (audit)"})  # « Connecter mon IA » : jamais de vrai appel pendant l'audit
+    if any(h in u for h in ("openrouter.ai", "api.openai.com", "api.anthropic.com", "generativelanguage.googleapis.com", "api.mistral.ai")): return r.fulfill(status=503, json={"error": "hors ligne (audit)"})  # « Connecter mon IA » : jamais de vrai appel pendant l'audit
     if "/api/premium/statut" in u: return r.fulfill(json={"premium": False})
     if "/api/premium/activer" in u: return r.fulfill(json={"token": "a" * 40, "plan": "mensuel"})
     if "/api/veille" in u:

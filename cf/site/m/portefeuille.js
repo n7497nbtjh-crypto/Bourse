@@ -1298,7 +1298,7 @@ async function pf3Explain() {
   box.innerHTML = `<div class="pf3wait"><span></span>Rédaction en cours à partir de vos chiffres…</div>`; btn.disabled = true;
   const done = (txt, foot) => { const html = `<div class="iares pf3res">${pf3Txt(txt)}<p class="iafoot">${foot}</p></div>`; box.innerHTML = html; PF3S.ia = { key, html }; btn.disabled = false; };
   const j = await iaRediger("portefeuille", faits, { max: 750 });
-  if (j.txt) return done(j.txt, `${j.sources ? `Sources : ${esc(j.sources)}. ` : ""}Rédigé par votre IA connectée (${esc(j.modele)}, via OpenRouter) à partir des seuls chiffres calculés sur cette page. Vérifiez-les ci-dessus. Ce n'est pas un conseil en investissement.`);
+  if (j.txt) return done(j.txt, `${j.sources ? `Sources : ${esc(j.sources)}. ` : ""}Rédigé par votre IA connectée (${esc(j.modele)}) à partir des seuls chiffres calculés sur cette page. Vérifiez-les ci-dessus. Ce n'est pas un conseil en investissement.`);
   box.innerHTML = j.invite ? miaInvite("L'analyse calculée ci-dessus est complète.") : `<p class="muted">${esc(j.error || "La rédaction n'est pas disponible pour le moment.")}</p><p class="pf3hint">L'analyse calculée ci-dessus reste complète et à jour.</p>`;
   btn.disabled = false;
 }

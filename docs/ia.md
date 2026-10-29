@@ -6,10 +6,10 @@ Décision du 29 octobre 2026 : simple, gratuite pour le site, utilisable par bea
 
 **1. Pour tout le monde, sans rien faire : les réponses calculées.** Recherches par critères, comparaisons, définitions, questions courantes sur une fiche (prix, dette, dividende, marge, concurrentes, risques, dates), leçons de l'Académie. Le site calcule la réponse dans le navigateur du visiteur, à partir des comptes officiels et de ses données. Gratuit, illimité, exact par construction. Test : `tests/t_ia.py`, 509 questions de débutants, 100 %.
 
-**2. « Connecter mon IA » : un seul bouton, facultatif.** Le visiteur se connecte à son compte OpenRouter (création gratuite) et choisit un modèle dans une courte liste ; les modèles gratuits sont signalés (environ 50 questions par jour sur un compte gratuit). Ensuite, les fonctions qui rédigent lui répondent en texte : question libre, question sur une fiche, « Le métier expliqué », « Expliquer en clair » d'une annonce, explication d'une comparaison, commentaire de la semaine, bilan des favoris, analyse du portefeuille. Le modèle reçoit la question, les faits calculés par le site (médianes, analyse, sources) et nos règles d'objectivité et d'autocritique. Sa réponse est signalée et cite ses sources.
+**2. « Connecter mon IA » : facultatif, sans intermédiaire (refonte du 29 octobre 2026, 18 h, demande de Romain : plus d'OpenRouter).** Le visiteur choisit ChatGPT (OpenAI), Claude (Anthropic), Gemini (Google) ou Mistral, crée une clé d'accès chez cet éditeur et la colle sur la page « Mon IA ». Le site lit la liste des modèles du compte (ce qui vérifie la clé) et choisit le modèle rapide de la gamme (mini, Haiku, Flash, Small) ; le visiteur peut en changer. Gemini et Mistral ont une offre gratuite ; OpenAI et Anthropic demandent un crédit prépayé (un abonnement ChatGPT Plus ou Claude Pro ne s'applique pas : les éditeurs ne le permettent pas à un site tiers, sauf partenaires choisis par OpenAI). Les fonctions qui rédigent répondent alors en texte : question libre, question sur une fiche, « Le métier expliqué », « Expliquer en clair » d'une annonce, explication d'une comparaison, commentaire de la semaine, bilan des favoris, analyse du portefeuille. Le modèle reçoit la question, les faits calculés par le site (médianes, analyse, sources) et nos règles d'objectivité et d'autocritique. Sa réponse est signalée et cite ses sources.
 - La clé reste dans le navigateur du visiteur. Elle n'est jamais envoyée à bilan.
-- Les appels partent directement du navigateur vers OpenRouter.
-- Déconnexion en un clic (page « Mon IA »).
+- Les appels partent directement du navigateur vers l'éditeur choisi (en-têtes CORS vérifiés le 29/10/2026 pour OpenAI, Anthropic et Mistral ; Gemini non vérifiable depuis l'environnement de travail, à contrôler en production).
+- Déconnexion en un clic (page « Mon IA ») : la clé est effacée.
 - Sans IA connectée, ces fonctions montrent la réponse calculée et une invitation discrète : « Connectez votre IA pour une réponse rédigée ».
 
 **3. Pour ceux qui utilisent déjà ChatGPT ou Claude : le connecteur.** Page `/connecteur` (« Utiliser bilan. dans ChatGPT ou Claude ») : l'assistant du visiteur lit nos données par le protocole MCP (`/mcp`).
@@ -25,15 +25,13 @@ Décision du 29 octobre 2026 : simple, gratuite pour le site, utilisable par bea
 | Quoi | Où |
 |---|---|
 | Réponses calculées | `cf/site/ia.js` (`localCopilot`, `localAssist`, `chercheLecons`), `ficheFaits` (analyse.js, contexte.js) |
-| Connexion OpenRouter, appel du modèle | `cf/site/m/monia.js` : `miaConnecter` (PKCE S256 vers `https://openrouter.ai/auth`), `miaRetour` (POST `https://openrouter.ai/api/v1/auth/keys`), `miaModeles` (`/api/v1/models`, filtré), `iaRediger(tâche, faits, { question })`, `miaCopilote(q)` |
+| Connexion et appel du modèle | `cf/site/m/monia.js` : `MIA_F` (les quatre éditeurs), `miaModeles` (liste des modèles du compte, filtrée), `miaAppel` (format propre à chaque éditeur : chat/completions pour OpenAI et Mistral, messages pour Anthropic, generateContent pour Gemini), `iaRediger(tâche, faits, { question })`, `miaCopilote(q)` |
 | Consignes envoyées au modèle | `cf/src/consignes.mjs` + `cf/src/regles.mjs`, écrites par `build.mjs` dans `/data/prompts.json` (tâches : demande, expliquer, assistant, comparaison, veille, portefeuille, annonce, bilan) |
 | Panneau ✦ | `cf/site/m/orchestre.js` (`orcIaOpen`, `orcIaAsk(q, { rediger })`) ; la fiche (`ficheDemander`) et les ETF y envoient leurs questions |
 | Anciennes routes d'IA | `/api/assistant`, `/api/demande`, `/api/resume`, `/api/actu/clair`, `/api/ia/etat`, `POST /api/veille` : réponse 410 avec un message clair (`iaRetiree` dans `worker.mjs`) |
-| Tests | `tests/t_ia.py` (réponses calculées), `tests/t_monia.py` (flux OpenRouter simulé, aucune clé envoyée au site) |
+| Tests | `tests/t_ia.py` (réponses calculées), `tests/t_monia.py` (quatre éditeurs simulés, aucune clé envoyée au site) |
 
-Stockage dans le navigateur : `localStorage["bilan.monia"]` = `{ key, model, nom, gratuit }` ; vérificateur PKCE dans `sessionStorage` le temps de l'aller-retour. Un modèle qui renvoie 401 déconnecte l'IA ; 402 et 429 donnent un message clair (crédit ou limite du jour).
-
-Documentation officielle : https://openrouter.ai/docs/guides/overview/auth/oauth (consultée le 29 octobre 2026) ; limites des modèles gratuits : https://openrouter.ai/docs/api/reference/limits
+Stockage dans le navigateur : `localStorage["bilan.monia"]` = `{ f, key, model, nom, at }` (f : openai, anthropic, gemini, mistral). Une ancienne connexion OpenRouter (sans `f`) est ignorée. Une clé refusée (401) déconnecte l'IA ; crédit épuisé et limite atteinte donnent un message clair.
 
 ## Ce qui a été retiré le 29 octobre 2026
 IA installée sur l'appareil (WebLLM, Qwen) ; saisie de clé multi-fournisseurs (`m/iacle.js`) ; toute l'IA du serveur (`cf/src/llm.mjs`, `ia.mjs`, `demande.mjs`, `actu.mjs`, commentaire de la semaine par le serveur, rotation Mistral, Groq, Gemini, OpenRouter et Workers AI, compteur de neurones) ; quotas d'IA (`LIMITS`, `quota()` de `compte.mjs`) ; préchauffage `data/ia_prechauffe.mjs` et rédaction « En clair » par le robot de l'actualité ; résumé détaillé des PDF de l'AMF (il demandait Workers AI). Les textes « En clair » déjà publiés restent affichés.

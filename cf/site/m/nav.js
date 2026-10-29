@@ -23,6 +23,7 @@ const NAV = [
     aussi: [
       ["/academie/express", "L'essentiel en trois étapes"],
       ["/livret-a-ou-bourse", "Livret A ou Bourse"],
+      ["/repartitions", "Répartitions types"],
       ["/pourquoi-bilan", "Pourquoi bilan."],
       ["/methode", "Méthode et sources"],
     ],
@@ -55,6 +56,7 @@ const NAV = [
     aussi: [
       ["/outils/si-javais", "Et si j'avais investi ?"],
       ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?"],
+      ["/repartitions", "Répartitions types et listes par critères"],
       ["/demander", "Demander à l'IA"],
       ["/outils", "Tous les outils"],
     ],

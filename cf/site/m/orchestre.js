@@ -142,7 +142,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 
 /* ---------- L'IA sur toutes les pages : bouton et panneau contextuel (le seul point d'entrée de l'IA) ----------
    Sur une fiche, l'IA répond sur l'entreprise : réponse calculée d'abord, puis, si le visiteur a connecté son IA
-   (m/monia.js, OpenRouter), réponse rédigée à partir des faits de la fiche. Ailleurs, c'est le copilote « Demander à bilan. »
+   (m/monia.js, appel direct à l'éditeur choisi), réponse rédigée à partir des faits de la fiche. Ailleurs, c'est le copilote « Demander à bilan. »
    (critères, comparaisons, notions, leçons). En tête du panneau : « IA connectée : <modèle> » ou « Réponses calculées ». */
 const ORC_IA = { open: false };
 function orcIaCtx() {
@@ -271,7 +271,7 @@ function pageMethode() {
       <section class="panel"><div class="ph"><h2>L'IA, en trois niveaux</h2></div><div class="pb mtdia">
         <div><b>1. Règles du site, dans votre navigateur</b><p>Recherches par critères, comparaisons, définitions, questions sur une fiche : comprises et calculées sur les données, sans modèle génératif. Réponse instantanée, exacte par construction, sans limite.</p></div>
         <div><b>2. Leçons vérifiées de l'Académie</b><p>Les questions de cours renvoient vers des leçons rédigées à partir de sources officielles, avec leurs chiffres 2026.</p></div>
-        <div><b>3. Votre IA, si vous la connectez</b><p>Facultatif : avec « Connecter mon IA » (compte OpenRouter, modèles gratuits possibles), le modèle que vous choisissez reçoit votre question, les chiffres du site, leurs sources et des consignes strictes. Sa réponse est signalée comme rédigée par une IA. Le site, lui, n'appelle aucun modèle.</p></div></div></section>
+        <div><b>3. Votre IA, si vous la connectez</b><p>Facultatif : avec « Connecter mon IA » (ChatGPT, Claude, Gemini ou Mistral, avec votre propre clé ; Gemini et Mistral ont une offre gratuite), le modèle que vous choisissez reçoit votre question, les chiffres du site, leurs sources et des consignes strictes. Sa réponse est signalée comme rédigée par une IA. Le site, lui, n'appelle aucun modèle.</p></div></div></section>
     </div>
     <section class="panel"><div class="ph"><h2>Les règles données à l'IA contre les biais</h2></div><div class="pb"><ul class="mtdcheck">
       <li>Séparer les faits de leur interprétation</li><li>Présenter à la fois ce qui est favorable et ce qui demande de la vigilance</li><li>Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années</li>

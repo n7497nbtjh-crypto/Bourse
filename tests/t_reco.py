@@ -1,4 +1,6 @@
-# Pistes personnalisées (/pour-moi), classements floutés et découvertes du jour, à 1440 et 390 px.
+# Répartitions types et listes par critères (/repartitions), classements floutés et découvertes du jour, à 1440 et 390 px.
+# Depuis la refonte du 29 octobre 2026 (point P0-6 de l'audit), la page n'établit plus de profil et ne propose plus
+# de répartition ni de titres à la personne : le test vérifie aussi que ce ton a disparu.
 # Usage : python3 tests/t_reco.py [--shots dossier]
 import os, sys, json
 exec(open("tests/audit.py").read().split("CHECK = ")[0])  # donne route() et sync_playwright
@@ -23,8 +25,6 @@ CHK = r"""(W) => {
   if (/NaN|undefined|Infinity|\[object/.test(t)) p.push('NaN/undefined/Infinity');
   return [...new Set(p)].slice(0, 6);
 }"""
-ANS = {"horizon": 2, "liquidite": 2, "precaution": 2, "capital": 2, "versement": 2, "perte": 2, "baisse": 2, "objectif": 2, "connaissance": 1, "choisir": 1, "enveloppe": 0}
-PF = {"v": 3, "l": [{"k": "e:amundi-msci-world-pea", "m": 12000, "env": "pea"}, {"k": "c:lvmh", "m": 4000, "env": "pea"}, {"k": "c:nvidia", "m": 3000, "env": "pea"}, {"k": "c:klepierre", "m": 1500, "env": "pea"}]}
 bad = 0
 def fail(*a):
     global bad; bad += 1; print("ÉCHEC", *a)
@@ -37,68 +37,47 @@ with sync_playwright() as pw:
         pg.on("console", lambda m: m.type == "error" and "Failed to load resource" not in m.text and errs.append(m.text))
         pg.route("**/*", route3)
         shot = lambda n: SHOTS and (os.makedirs(SHOTS, exist_ok=True) or pg.screenshot(path=f"{SHOTS}/{nom}_{n}.png", full_page=True))
-        # 1. Questionnaire vide puis rempli au clic
-        pg.goto("http://t.local/pour-moi"); pg.wait_for_timeout(1500)
-        if pg.locator("#rc-form fieldset").count() != 11: fail(nom, "11 questions attendues", pg.locator("#rc-form fieldset").count())
-        p = pg.evaluate(CHK, W); p and fail(nom, "/pour-moi vide", p)
-        shot("pourmoi_vide")
-        for k, v in ANS.items():
-            pg.click(f"#rc-form input[name={k}][value='{v}'] + span"); pg.wait_for_timeout(60)
-        pg.wait_for_timeout(1500)
-        t = pg.inner_text("#rc-out")
-        for s in ["Votre profil", "Répartition indicative", "ETF à étudier", "Entreprises à étudier", "points de vigilance"]:
-            if s.lower() not in t.lower(): fail(nom, "section manquante", s)
-        stored = pg.evaluate("JSON.parse(localStorage.getItem('bilan.profil'))")
-        if any(stored.get(k) != v for k, v in ANS.items()): fail(nom, "réponses mal enregistrées", stored)
-        # PEA : toutes les pistes affichées sont éligibles
-        nok = pg.evaluate("[...document.querySelectorAll('#rc-out .rc-card:not(.rc-sect) .rc-pea')].filter(x => !x.classList.contains('rc-pea-ok')).length")
-        if nok: fail(nom, "piste non éligible au PEA proposée pour un PEA", nok)
-        if pg.locator("#rc-out .rc-card").count() < 5: fail(nom, "trop peu de pistes", pg.locator("#rc-out .rc-card").count())
-        p = pg.evaluate(CHK, W); p and fail(nom, "/pour-moi rempli", p)
-        # ouvrir les détails d'une entreprise : catalyseurs chargés
-        pg.evaluate("document.querySelectorAll('#rc-out .rc-det').forEach(d => d.open = true)"); pg.wait_for_timeout(800)
-        if "Chargement des annonces" in pg.inner_text("#rc-out"): fail(nom, "catalyseurs non chargés")
-        shot("pourmoi_resultats")
-        # 2. Retour « trop risquée » sur la piste la plus risquée : le plafond baisse
-        risks = pg.evaluate("[...document.querySelectorAll('#rc-out .rc-card[data-id^=\"c:\"], #rc-out .rc-card[data-id^=\"e:\"]')].map(c => +c.querySelector('.rc-risk').className.match(/rc-r(\\d)/)[1])")
-        mx = max(risks)
-        cid = pg.evaluate(f"[...document.querySelectorAll('#rc-out .rc-card[data-id^=\"c:\"], #rc-out .rc-card[data-id^=\"e:\"]')].find(c => c.querySelector('.rc-r{mx}')).dataset.id")
-        eq0 = pg.inner_text(".rc-vs")
-        pg.click(f".rc-fb[data-fb='{cid}'] button[data-v=risque]"); pg.wait_for_timeout(500)
-        risks2 = pg.evaluate("[...document.querySelectorAll('#rc-out .rc-card[data-id^=\"c:\"], #rc-out .rc-card[data-id^=\"e:\"]')].map(c => +c.querySelector('.rc-risk').className.match(/rc-r(\\d)/)[1])")
-        if max(risks2) >= mx: fail(nom, "après « trop risquée », risque max", mx, "→", max(risks2))
-        if pg.locator(f"#rc-out .rc-card[data-id='{cid}']").count(): fail(nom, "la piste jugée trop risquée est encore affichée")
-        if pg.inner_text(".rc-vs") == eq0: fail(nom, "la part d'actions n'a pas bougé", eq0)
-        ret = pg.evaluate("JSON.parse(localStorage.getItem('bilan.reco.retours'))")
-        if not ret or ret[-1]["v"] != "risque": fail(nom, "retour non enregistré", ret)
-        # « redondante » sur un ETF : remplacé
-        eid = pg.evaluate("document.querySelector('#rc-out .rc-card[data-id^=\"e:\"]').dataset.id")
-        pg.click(f".rc-fb[data-fb='{eid}'] button[data-v=redondant]"); pg.wait_for_timeout(400)
-        if pg.locator(f"#rc-out .rc-card[data-id='{eid}']").count(): fail(nom, "ETF redondant encore affiché")
-        # effacer les retours
-        pg.evaluate("document.querySelector('#rc-out details.acc').open = true"); pg.click("#rc-reset"); pg.wait_for_timeout(400)
-        if pg.evaluate("JSON.parse(localStorage.getItem('bilan.reco.retours')).filter(r => r.v).length"): fail(nom, "retours non effacés")
-        # 3. Avec un portefeuille : points de vigilance et lignes déjà détenues exclues
-        pg.evaluate(f"localStorage.setItem('bilan.portefeuille', {json.dumps(json.dumps(PF))})")
-        pg.goto("http://t.local/pour-moi"); pg.wait_for_timeout(1800)
-        v = pg.inner_text("#rc-out")
-        if "Klépierre" not in v or "Nvidia" not in v: fail(nom, "Klépierre (SIIC) et Nvidia (États-Unis) dans un PEA non signalées", v[:300])
-        if pg.locator("#rc-out .rc-card[data-id='e:amundi-msci-world-pea']").count(): fail(nom, "ETF déjà détenu proposé")
-        p = pg.evaluate(CHK, W); p and fail(nom, "/pour-moi portefeuille", p)
-        shot("pourmoi_portefeuille")
-        # 4. Version compacte (accueil, Mon espace)
-        h = pg.evaluate("recoAccueilHTML()")
-        if "Votre profil" not in h or "/pour-moi" not in h: fail(nom, "version compacte", h[:200])
-        h2 = pg.evaluate("localStorage.removeItem('bilan.profil'); recoEspaceHTML()")
-        if "Trouver mes pistes" not in h2: fail(nom, "compacte sans profil", h2[:200])
-        # 5. Compte connecté : réponses et retours envoyés au serveur
-        STATE["in"] = True; STATE["posts"].clear(); STATE["profil"] = {"rapport": {"x": 1}, **ANS}
-        pg.goto("http://t.local/pour-moi"); pg.wait_for_timeout(1500)
-        if pg.locator("#rc-form").count(): fail(nom, "les réponses du compte ne sont pas reprises")
-        cid = pg.evaluate("document.querySelector('#rc-out .rc-card[data-id^=\"e:\"]').dataset.id")
-        pg.click(f".rc-fb[data-fb='{cid}'] button[data-v=ok]"); pg.wait_for_timeout(1000)
-        if not STATE["posts"] or not any(r.get("v") == "ok" for r in STATE["posts"][-1].get("retours", [])): fail(nom, "retour non envoyé au compte", STATE["posts"][-1:] )
-        STATE["in"] = False; pg.evaluate("localStorage.clear()")
+        # 1. La page : quatre exemples de répartition, expliqués, sans questionnaire ni profil
+        pg.goto("http://t.local/repartitions"); pg.wait_for_timeout(1500)
+        if pg.locator("#rc-form").count(): fail(nom, "un questionnaire de profil est encore affiché")
+        if pg.locator(".rc-ex").count() != 4: fail(nom, "4 exemples de répartition attendus", pg.locator(".rc-ex").count())
+        t = pg.inner_text("#app")
+        for s2 in ["À quoi cet exemple correspond", "Ses limites", "Calcul sur cet exemple", "pas un conseil en investissement"]:
+            if s2.lower() not in t.lower(): fail(nom, "texte manquant", s2)
+        for s2 in ["pour vous", "votre profil", "selon votre profil", "à étudier"]:  # « conseil adapté à votre situation » reste : c'est le renvoi vers un CIF
+            if s2 in t.lower(): fail(nom, "ton personnalisé", s2)
+        p = pg.evaluate(CHK, W); p and fail(nom, "/repartitions", p)
+        shot("repartitions")
+        # rien n'est enregistré sur l'appareil
+        if pg.evaluate("localStorage.getItem('bilan.profil') || localStorage.getItem('bilan.reco.retours')"): fail(nom, "la page enregistre encore des réponses")
+        # 2. Le compte choisi change ce que chaque classe peut contenir
+        pg.select_option("#rc-env", "pea"); pg.wait_for_timeout(300)
+        if "Pas possible dans un PEA" not in pg.inner_text("#rc-ex"): fail(nom, "PEA : les obligations devraient être signalées comme impossibles")
+        pg.select_option("#rc-env", "av"); pg.wait_for_timeout(300)
+        if "Assurance-vie" not in pg.inner_text("#rc-ex"): fail(nom, "assurance-vie : placement non mis à jour")
+        # 3. Liste d'ETF sur critères choisis
+        n0 = pg.locator("#rc-l .rc-row").count()
+        if n0 < 5: fail(nom, "liste d'ETF trop courte", n0)
+        pg.select_option("#f-pea", "oui"); pg.wait_for_timeout(400)
+        nok = pg.evaluate("[...document.querySelectorAll('#rc-l .rc-row .rc-pea')].filter(x => !x.classList.contains('rc-pea-ok')).length")
+        if nok: fail(nom, "critère « éligible au PEA » non respecté", nok)
+        pg.select_option("#f-ter", "0.15"); pg.wait_for_timeout(400)
+        hors = pg.evaluate("""[...document.querySelectorAll('#rc-l .rc-row em')].map(e => e.textContent).filter(x => /^Frais /.test(x)).filter(x => parseFloat(x.replace(',', '.').match(/[\\d.]+/)[0]) > 0.15).length""")
+        if hors: fail(nom, "critère « frais » non respecté", hors)
+        p = pg.evaluate(CHK, W); p and fail(nom, "/repartitions ETF filtrés", p)
+        # 4. Liste d'entreprises
+        pg.click("[data-rc-type=ent]"); pg.wait_for_timeout(700)
+        if pg.locator("#rc-l .rc-row").count() < 5: fail(nom, "liste d'entreprises trop courte", pg.locator("#rc-l .rc-row").count())
+        pg.select_option("#f-sect", "sante"); pg.wait_for_timeout(500)
+        if pg.locator("#rc-l .rc-row").count() < 1: fail(nom, "filtre par secteur : aucune entreprise")
+        pg.select_option("#f-pea", "oui"); pg.wait_for_timeout(500)
+        nok = pg.evaluate("[...document.querySelectorAll('#rc-l .rc-row .rc-pea')].filter(x => !x.classList.contains('rc-pea-ok')).length")
+        if nok: fail(nom, "entreprises : critère PEA non respecté", nok)
+        p = pg.evaluate(CHK, W); p and fail(nom, "/repartitions entreprises", p)
+        shot("repartitions_entreprises")
+        # 5. Ancienne adresse redirigée
+        pg.goto("http://t.local/pour-moi"); pg.wait_for_timeout(1200)
+        if pg.evaluate("location.pathname") != "/repartitions": fail(nom, "/pour-moi non redirigé", pg.evaluate("location.pathname"))
         # 6. Classements : aperçu flouté sans Premium
         pg.goto("http://t.local/classements"); pg.wait_for_timeout(1500)
         nb = pg.locator(".out-blur").count(); nv = pg.locator("a.out-row").count()

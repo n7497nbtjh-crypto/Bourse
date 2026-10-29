@@ -15,6 +15,7 @@ function parRedirection(p) {
   const m = /^\/debuter(\/.*)?$/.exec(p || ""); if (m) return "/academie/express" + (m[1] || "");
   if (p === "/premiers-pas") return "/academie/express";
   if (p === "/simulateurs/passe") return "/outils/si-javais";
+  if (p === "/pour-moi") return "/repartitions";
   return null;
 }
 const PAR_APPROFONDIR = { // leçon express → leçon complète de l'Académie
