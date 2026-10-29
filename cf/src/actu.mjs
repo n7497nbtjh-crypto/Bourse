@@ -5,7 +5,7 @@
 //   GET  /api/actu/clair?id=<id>&k=<k>   rédige pour un visiteur une annonce importante du fichier publié /data/actu/c/<id>.json
 //        (faits relus par le serveur, jamais fournis par le navigateur ; quota « résumés » ; ensuite gardé pour tous)
 // Le robot recopie les textes dans les fichiers /data/actu/*.json : les visiteurs les lisent sans appeler le serveur.
-import { rediger, jsonDe } from "./llm.mjs";
+import { rediger, jsonDe, iaActive } from "./llm.mjs";
 import { REGLES } from "./regles.mjs";
 import { quota, quotaError } from "./compte.mjs";
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
@@ -31,6 +31,7 @@ export async function clair(request, env) {
     let it = null;
     try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, u))); if (r.ok) it = ((await r.json()).o || []).find(x => x.k === k); } catch (e) { }
     if (!it || it.i < 2) return json({ error: "Annonce introuvable ou trop courte pour être expliquée." }, 404);
+    if (!iaActive(env)) return json({ error: "L'explication en ligne est indisponible pour le moment. Les chiffres de l'annonce restent affichés.", ia_serveur: false }, 503);
     const q = await quota(request, env, "resume"); if (!q.ok) return quotaError(q, "explications par l'IA");
     return rediges(env, k, { type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture: it.r || [], entreprise: id });
   }

@@ -14,6 +14,7 @@ import { resume, veille, assistant } from "./ia.mjs";
 import { premium } from "./compte.mjs";
 import { espace } from "./espace.mjs";
 import { demande } from "./demande.mjs";
+import { etatPublic } from "./llm.mjs";
 import { signaler } from "./signaler.mjs";
 import { push, pousser } from "./push.mjs";
 import { mcp } from "./mcp.mjs";
@@ -103,6 +104,7 @@ export default {
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/assistant") return assistant(request, env);
     if (url.pathname === "/api/demande") return demande(request, env);
+    if (url.pathname === "/api/ia/etat") return etatPublic(env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);

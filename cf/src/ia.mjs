@@ -1,10 +1,11 @@
-// IA du site (Cloudflare Workers AI, offert dans le palier gratuit : aucun crédit Claude).
+// IA du serveur (services gratuits à tour de rôle via rediger() de llm.mjs ; Workers AI facultatif ; aucun crédit Claude).
+// Le visiteur peut aussi utiliser l'IA installée sur son appareil ou sa propre clé (m/iacle.js) : ces appels ne passent pas ici.
 //  /api/resume?u=…    résumé en français d'un document officiel (communiqué AMF en PDF, dépôt SEC), gardé en base
 //  /api/veille        bilan rédigé d'une liste d'entreprises suivies (données du site fournies par le navigateur)
 //  /api/veille/inscription, /confirmer, /desinscrire : bilan hebdomadaire par e-mail (actif quand MAIL_FROM et un service d'envoi sont définis)
 //  /api/veille/envoi, /alertes : envois groupés déclenchés par le robot (remplacés par les alertes de Mon espace : .github/workflows/espace.yml) avec ADMIN_KEY
 //  /api/assistant      questions sur une fiche, réponses tirées des seules données transmises
-import { rediger } from "./llm.mjs";
+import { rediger, iaActive } from "./llm.mjs";
 import { REGLES } from "./regles.mjs";
 import { quota, quotaError, sendMail, mailReady, mailCapacity, premiumOf, initCompte } from "./compte.mjs";
 import { cours } from "./cours.mjs";
@@ -39,6 +40,7 @@ async function docText(env, u) {
   }
   const r = await fetch(u); if (!r.ok) throw new Error("document " + r.status);
   const buf = await r.arrayBuffer(); if (buf.byteLength > 8e6) throw new Error("document trop lourd");
+  if (!env.AI) throw new Error("lecture des PDF indisponible (conversion Workers AI non branchée)"); // toMarkdown : gratuit pour la plupart des formats selon Cloudflare, indépendant des modèles de langue
   const md = await env.AI.toMarkdown([{ name: "doc.pdf", blob: new Blob([buf], { type: "application/pdf" }) }]);
   return String((md[0] || {}).data || "");
 }
@@ -59,7 +61,7 @@ Règles strictes :
 - Pas de tirets cadratins, pas de listes à puces, pas de formules creuses.
 ${REGLES}`;
 export async function resume(request, env) {
-  if (!env || !env.DB || !env.AI) return json({ error: "Résumés indisponibles pour le moment." }, 503);
+  if (!env || !env.DB || !iaActive(env)) return json({ error: "Résumés indisponibles pour le moment.", ia_serveur: false }, 503);
   const u = new URL(request.url).searchParams.get("u") || "";
   let url; try { url = new URL(u); } catch (e) { return json({ error: "Adresse invalide." }, 400); }
   if (!HOSTS.test(url.hostname)) return json({ error: "Source non prise en charge." }, 400);
@@ -98,7 +100,7 @@ Règles :
 - Pas de tirets cadratins, pas de listes à puces.
 ${REGLES}`;
 export async function veille(request, env) {
-  if (!env || !env.DB || !env.AI) return json({ error: "Bilan indisponible pour le moment." }, 503);
+  if (!env || !env.DB) return json({ error: "Bilan indisponible pour le moment." }, 503);
   const path = new URL(request.url).pathname;
   await init(env.DB);
   if (path === "/api/veille" && request.method === "POST") {
@@ -107,6 +109,7 @@ export async function veille(request, env) {
     const key = (b.type === "portefeuille" ? "pf:" : "veille:") + new Date().toISOString().slice(0, 10) + ":" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(faits)))].slice(0, 10).map(x => x.toString(16).padStart(2, "0")).join("");
     const hit = await env.DB.prepare(`SELECT txt FROM resumes WHERE u = ?`).bind(key).first();
     if (hit) return json({ txt: hit.txt, cache: true });
+    if (!iaActive(env)) return json({ error: "La rédaction en ligne est indisponible pour le moment. Les chiffres restent à jour.", ia_serveur: false }, 503);
     const q = await quota(request, env, b.type === "portefeuille" ? "portefeuille" : "veille"); if (!q.ok) return quotaError(q, b.type === "portefeuille" ? "analyses de portefeuille" : "bilans rédigés");
     if (!(await budget(env.DB, env))) return json({ error: "Le site a atteint son nombre de bilans rédigés pour aujourd'hui : réessayez demain. Les chiffres restent à jour." }, 429);
     try {
@@ -146,7 +149,7 @@ Règles :
 - Ne cite jamais le nom d'un champ JSON. Pas de listes à puces, pas de tirets cadratins.
 ${REGLES}`;
 export async function assistant(request, env) {
-  if (!env || !env.DB || !env.AI) return json({ error: "L'assistant est indisponible pour le moment." }, 503);
+  if (!env || !env.DB || !iaActive(env)) return json({ error: "L'assistant en ligne est indisponible pour le moment.", ia_serveur: false }, 503);
   if (request.method !== "POST") return json({ error: "Méthode non prise en charge." }, 405);
   await init(env.DB);
   let b; try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible." }, 400); }

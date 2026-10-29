@@ -188,7 +188,7 @@ async function orcIaAsk(q) {
     const loc = localAssist(s, full, q);
     if (loc) { out.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, calculée à partir des chiffres de la fiche.</p>`; return; }
     try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, full) }) })).json();
-      out.innerHTML = j.txt ? resumeHTML(j.txt) + `<p class="iafoot">Rédigé par l'IA à partir des seules données de la fiche. À vérifier ; ce n'est pas un conseil.</p>` : iaErr(j, "Réponse indisponible.");
+      out.innerHTML = j.txt ? resumeHTML(j.txt) + `<p class="iafoot">${(typeof iakSource === "function" && iakSource(j)) || "Rédigé par l'IA à partir des seules données de la fiche. À vérifier ; ce n'est pas un conseil."}</p>` : iaErr(j, "Réponse indisponible.");
     } catch (e) { out.innerHTML = `<p class="muted">L'IA est indisponible pour le moment.</p>`; }
     return;
   }

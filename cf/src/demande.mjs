@@ -1,7 +1,7 @@
 // /api/demande : « Demander à bilan. ». Le modèle traduit la question en une action que le navigateur exécute
 // sur les données du site (recherche d'entreprises par critères, comparaison, fiche, ETF) ou rédige une explication.
 // Les résultats eux-mêmes sont calculés par le site, jamais inventés par le modèle.
-import { rediger, jsonDe, DIAG } from "./llm.mjs";
+import { rediger, jsonDe, DIAG, iaActive } from "./llm.mjs";
 import { REGLES } from "./regles.mjs";
 import { quota, quotaError, json } from "./compte.mjs";
 import { SECTEURS } from "./index.gen.mjs";
@@ -57,6 +57,7 @@ export async function demande(request, env) {
   if (q.length < 4) return json({ error: "Écrivez une question un peu plus longue." }, 400);
   const key = "demande2:" + q.toLowerCase().replace(/[^a-z0-9àâäéèêëïîôöùûüç ]/g, "");
   if (env.DB) { try { const hit = await env.DB.prepare(`SELECT txt FROM resumes WHERE u = ?`).bind(key).first(); if (hit) return json({ ...JSON.parse(hit.txt), cache: true }); } catch (e) { } }
+  if (!iaActive(env)) return json({ error: "L'IA en ligne est indisponible pour le moment.", ia_serveur: false }, 503); // pas de quota consommé pour rien
   const qq = await quota(request, env, "demande"); if (!qq.ok) return quotaError(qq, "questions à l'IA");
   const t = await rediger(env, { systeme: SYS, utilisateur: q, max_tokens: 500, temperature: 0.1, json: true, qualite: false });
   const a = valide(jsonDe(t));

@@ -10,7 +10,7 @@ pages += ["/academie", "/academie/bases", "/academie/bases/interets-composes", "
 pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes"]
 pages += ["/entreprise/alibaba?etape=comptes", "/entreprise/klepierre?etape=comptes", "/entreprise/totalenergies?etape=comptes"]
 pages += ["/idees-recues", "/idees-recues#livret-a", "/livret-a-ou-bourse", "/pourquoi-bilan"]
-pages += ["/apprendre", "/apprendre#outils", "/academie/express", "/academie/express/lire", "/academie/express/lire/dette-nette", "/academie/express/prix/quiz", "/espace/rapport"]
+pages += ["/apprendre", "/apprendre#outils", "/academie/express", "/academie/express/lire", "/academie/express/lire/dette-nette", "/academie/express/prix/quiz", "/espace/rapport", "/espace/ia"]
 pages += ["/comparer?ids=bnp-paribas,societe-generale,sap", "/comparer?ids=apple,microsoft,alphabet", "/entreprise/bnp-paribas?etape=concurrents", "/entreprise/apple?etape=concurrents", "/entreprise/totalenergies?etape=concurrents", "/entreprise/siemens", "/entreprise/alibaba?etape=metier"]
 pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh/communaute", "/entreprise/lvmh/actualite", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
@@ -40,6 +40,7 @@ def route(r):
     if "/api/espace" in u: return r.fulfill(json={"ok": True})
     if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": "https://buy.stripe.com/test_m", "unique": None, "limites": {"resume": [5, 80], "assistant": [3, 40], "veille": [1, 10], "portefeuille": [1, 10]}})
     if "/api/premium/statut" in u: return r.fulfill(json={"premium": False})
+    if "/api/ia/etat" in u: return r.fulfill(json={"serveur": True, "services": ["mistral", "groq"]})
     if "/api/premium/activer" in u: return r.fulfill(json={"token": "a" * 40, "plan": "mensuel"})
     if "/api/assistant" in u: return r.fulfill(json={"txt": "LVMH vend surtout des produits de luxe. Sa marge opérationnelle de 2024 reste au-dessus de la médiane du secteur."})
     if "/api/resume" in u or "/api/veille" in u:

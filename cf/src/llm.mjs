@@ -1,14 +1,19 @@
-// Accès aux modèles de langue, sur plusieurs services gratuits ou presque, utilisés à tour de rôle.
+// Accès aux modèles de langue du serveur, sur plusieurs services gratuits ou presque, utilisés à tour de rôle.
+// Le site n'en dépend pas : sans aucune clé ni Workers AI, les réponses calculées (règles locales, leçons,
+// IA installée sur l'appareil, clé personnelle du visiteur) continuent de fonctionner. Voir docs/ia.md.
 //
-// Ordre d'essai (le premier qui répond gagne) :
-//   1. Mistral (La Plateforme, offre gratuite « Experiment ») si MISTRAL_KEY est défini.
-//      Environ 1 milliard de jetons par mois et par modèle, 1 requête par seconde. Les requêtes peuvent servir
-//      à entraîner les modèles de Mistral : le site ne leur envoie que des données publiques et la question.
-//   2. Groq (offre gratuite) si GROQ_KEY est défini : environ 1 000 requêtes et 200 000 jetons par jour.
-//   3. Workers AI (Cloudflare), déjà branché : 10 000 « neurones » gratuits par jour. On utilise d'abord un
-//      modèle économe (environ 5 fois moins cher que Mistral Small), puis Mistral Small s'il reste du budget.
-//      Au-delà, avec l'offre Workers payante, 1 000 neurones coûtent 0,011 $ : environ 0,03 € pour 100 réponses.
-//      IA_NEURONES_JOUR fixe le plafond quotidien (10 000 par défaut, à relever avec l'offre payante).
+// Ordre d'essai (le premier qui répond gagne ; un service sans clé est ignoré) :
+//   1. Mistral (offre gratuite de La Plateforme) si MISTRAL_KEY est défini : 1 requête par seconde,
+//      500 000 jetons par minute, 1 milliard par mois. Les requêtes gratuites peuvent servir à entraîner les modèles :
+//      le site ne leur envoie que des données publiques et la question.
+//   2. Groq (offre gratuite) si GROQ_KEY est défini : gpt-oss-20b, 1 000 requêtes et 200 000 jetons par jour.
+//   3. Gemini (offre gratuite de Google AI Studio) si GEMINI_KEY est défini, point d'accès compatible OpenAI.
+//   4. OpenRouter (modèles « :free ») si OPENROUTER_KEY est défini : 20 requêtes par minute, 50 par jour.
+//   5. Workers AI (Cloudflare), facultatif : 10 000 « neurones » gratuits par jour. IA_WORKERS_AI=off le désactive.
+//      On utilise d'abord un modèle économe, puis Mistral Small s'il reste du budget.
+//      Au-delà, avec l'offre Workers payante, 1 000 neurones coûtent 0,011 $.
+//      IA_NEURONES_JOUR fixe le plafond quotidien (10 000 par défaut : jamais de facture sans décision).
+// IA_SERVEUR=off coupe toute l'IA du serveur (les pages et les réponses calculées restent disponibles).
 // Toutes les réponses identiques sont gardées en cache par les appelants (table resumes).
 
 const TODAY = () => new Date().toISOString().slice(0, 10);
@@ -40,7 +45,9 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
 const FOURNISSEURS = [
   ["mistral", env => env.MISTRAL_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.mistral.ai/v1/chat/completions", env.MISTRAL_KEY, env.MISTRAL_MODEL || "mistral-small-latest", m, mt, te, js)],
   ["groq", env => env.GROQ_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.groq.com/openai/v1/chat/completions", env.GROQ_KEY, env.GROQ_MODEL || "openai/gpt-oss-20b", m, mt, te, js)],
-  ["workers-ai", env => env.AI, async (env, messages, max_tokens, temperature, json, qualite) => {
+  ["gemini", env => env.GEMINI_KEY, (env, m, mt, te, js) => viaOpenAI("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", env.GEMINI_KEY, env.GEMINI_MODEL || "gemini-flash-lite-latest", m, mt, te, js)],
+  ["openrouter", env => env.OPENROUTER_KEY, (env, m, mt, te, js) => viaOpenAI("https://openrouter.ai/api/v1/chat/completions", env.OPENROUTER_KEY, env.OPENROUTER_MODEL || "openai/gpt-oss-20b:free", m, mt, te, js)],
+  ["workers-ai", env => env.AI && String(env.IA_WORKERS_AI || "").toLowerCase() !== "off", async (env, messages, max_tokens, temperature, json, qualite) => {
     const plafond = +env.IA_NEURONES_JOUR || 10000;
     for (const [model, cin, cout] of (qualite ? [...CF].reverse() : CF)) {
       const estime = (approxTokens(messages.map(x => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
@@ -59,10 +66,16 @@ const FOURNISSEURS = [
   }],
 ];
 
+const serveurCoupe = env => !env || String(env.IA_SERVEUR || "").toLowerCase() === "off";
+/** Services d'IA du serveur utilisables (noms seulement, jamais de clé). */
+export const servicesIA = env => serveurCoupe(env) ? [] : FOURNISSEURS.filter(([, a]) => a(env)).map(([n]) => n);
+/** Vrai si au moins un service d'IA du serveur est configuré. */
+export const iaActive = env => servicesIA(env).length > 0;
 /** Rédige un texte. Ne lève jamais d'erreur : renvoie null si aucun service n'a pu répondre. */
 // qualite : true pour les textes qui expliquent (modèle plus fiable d'abord) ; false pour classer une demande (modèle économe d'abord)
 export async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json = false, qualite = true }) {
   const messages = [{ role: "system", content: systeme }, { role: "user", content: utilisateur }];
+  if (serveurCoupe(env)) return null;
   for (const [nom, actif, appel] of FOURNISSEURS) {
     if (!actif(env)) continue;
     const t = await appel(env, messages, max_tokens, temperature, json, qualite);
@@ -77,5 +90,10 @@ export function jsonDe(t) {
 }
 /** État des services (pour la page d'administration et les tests). */
 export async function etatIA(env) {
-  return { services: FOURNISSEURS.filter(([, a]) => a(env)).map(([n]) => n), neurones_utilises: Math.round(await neuronesUtilises(env)), plafond_neurones: +env.IA_NEURONES_JOUR || 10000 };
+  return { services: servicesIA(env), neurones_utilises: Math.round(await neuronesUtilises(env)), plafond_neurones: +env.IA_NEURONES_JOUR || 10000 };
+}
+/** GET /api/ia/etat : ce que le serveur sait faire, pour l'écran « Mon IA » (noms des services seulement, jamais de clé). */
+export function etatPublic(env) {
+  const s = servicesIA(env);
+  return new Response(JSON.stringify({ serveur: s.length > 0, services: s }), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
 }
