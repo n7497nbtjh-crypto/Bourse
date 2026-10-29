@@ -1,32 +1,25 @@
-// Diagnostic : fiches EDGAR (code SIC, site, formulaires) des sociétés cotées à New York non encore lues (suite de data/diag/auto1/sec_subs.json)
-import { writeFileSync, readFileSync } from "node:fs";
-const DIR = "data/diag/auto1/";
-const UA = "bilan-univers/1.0 (site pedagogique; " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse") + ")";
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-const T0 = Date.now(), log = [], L = (...a) => { const s = `[${Math.round((Date.now() - T0) / 1000)}s] ` + a.join(" "); log.push(s); console.log(s); };
-const S = JSON.parse(readFileSync(DIR + "sec_base.json")), subs = JSON.parse(readFileSync(DIR + "sec_subs.json"));
-const U = (await import("../univers.mjs")).default, have = new Set(U.map(c => c.sec).filter(Boolean)), haveCik = new Set(U.map(c => c.cik && +c.cik).filter(Boolean));
-const f = S.tickers.fields, rows = S.tickers.data.map(r => Object.fromEntries(f.map((k, i) => [k, r[i]])));
-const byCik = {}; for (const r of rows) (byCik[r.cik] || (byCik[r.cik] = [])).push(r);
-for (const r of rows) if (have.has(r.ticker)) haveCik.add(r.cik);
-const todo = Object.keys(byCik).map(Number).filter(c => !haveCik.has(c) && !subs[c] && byCik[c].some(r => ["NYSE", "Nasdaq"].includes(r.exchange)));
-L("fiches à lire", todo.length);
-let qi = 0, n = 0;
-await Promise.all([0, 1].map(async () => {
-  while (qi < todo.length && Date.now() - T0 < 13.5 * 60e3) {
-    const c = todo[qi++];
-    try {
-      const r = await fetch(`https://data.sec.gov/submissions/CIK${String(c).padStart(10, "0")}.json`, { headers: { "user-agent": UA, accept: "application/json" }, signal: AbortSignal.timeout(30e3) });
-      if (r.status === 429) { L("429"); await sleep(10e3); qi--; continue; }
-      if (r.ok) {
-        const j = await r.json(), rec = j.filings && j.filings.recent || {};
-        const forms = {}; (rec.form || []).forEach((fm, i) => { if (/^(10-K|20-F|40-F|10-Q|6-K)$/.test(fm) && !forms[fm]) forms[fm] = rec.filingDate[i]; });
-        subs[c] = { n: j.name, sic: j.sic, sd: j.sicDescription, w: j.website, t: j.tickers, x: j.exchanges, et: j.entityType, cat: j.category, st: j.stateOfIncorporation, ad: j.addresses && j.addresses.business && j.addresses.business.stateOrCountry, fm: forms, fy: j.fiscalYearEnd };
-        if (++n % 300 === 0) { L("fiches", n); writeFileSync(DIR + "sec_subs.json", JSON.stringify(subs)); }
-      }
-    } catch (e) { }
-    await sleep(260);
-  }
-}));
-writeFileSync(DIR + "sec_subs.json", JSON.stringify(subs)); L("fini", n, "nouvelles fiches, total", Object.keys(subs).length);
-writeFileSync("data/diag/out.json", JSON.stringify({ sec: log }, null, 1));
+// Sonde : grille tarifaire officielle de Fortuneo (ordres de Bourse, offre Starter)
+import { writeFileSync, mkdirSync } from "node:fs";
+const DIR = "data/diag/courtiers/"; mkdirSync(DIR, { recursive: true });
+const BROWSER = "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36";
+const log = [], L = (...a) => { const s = a.join(" "); log.push(s); console.log(s); };
+const strip = h => h.replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/&nbsp;|&#160;/g, " ").replace(/&euro;/g, "€").replace(/&eacute;/g, "é").replace(/&egrave;/g, "è").replace(/&agrave;/g, "à").replace(/&amp;/g, "&").replace(/\s+/g, " ");
+const urls = ["https://www.fortuneo.fr/bourse/tarifs", "https://www.fortuneo.fr/tarifs-bancaires", "https://www.fortuneo.fr/bourse", "https://www.fortuneo.fr/bourse/offre-starter", "https://www.fortuneo.fr/tarifs", "https://www.fortuneo.fr/aide/bourse/tarifs-bourse"];
+const out = {};
+for (const u of urls) {
+  try {
+    const r = await fetch(u, { headers: { "user-agent": BROWSER, accept: "text/html,*/*", "accept-language": "fr-FR" }, redirect: "follow", signal: AbortSignal.timeout(30e3) });
+    const h = await r.text(), t = strip(h);
+    const pdfs = [...new Set([...h.matchAll(/href="([^"]+\.pdf[^"]*)"/gi)].map(m => m[1]))].filter(x => /tarif|grille|condition/i.test(x));
+    const hits = [...t.matchAll(/.{0,220}(Starter|1,95|0,35 ?%|500 ?€|premier ordre).{0,260}/gi)].map(m => m[0]).slice(0, 12);
+    out[u] = { status: r.status, url: r.url, len: h.length, pdfs: pdfs.slice(0, 10), hits };
+    L(u, r.status, r.url, h.length, "pdf", pdfs.length, "extraits", hits.length);
+    for (const p of pdfs.slice(0, 3)) {
+      const pu = p.startsWith("http") ? p : new URL(p, r.url).toString();
+      const pr = await fetch(pu, { headers: { "user-agent": BROWSER } }); const b = Buffer.from(await pr.arrayBuffer());
+      writeFileSync(DIR + "fortuneo_" + pu.split("/").pop().replace(/[^\w.-]/g, "_").slice(0, 60), b); L("  pdf", pu, pr.status, b.length);
+    }
+  } catch (e) { L(u, "erreur", e.message); }
+}
+writeFileSync(DIR + "fortuneo.json", JSON.stringify(out, null, 1));
+writeFileSync("data/diag/out.json", JSON.stringify({ courtiers: log, date: new Date().toISOString() }, null, 1));
