@@ -105,8 +105,9 @@ function presseBlock(el, { id = null, sujet = null, max = 8 } = {}) {
     const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 7000);
     return fetch(`/api/presse?${id ? "id=" + encodeURIComponent(id) : "sujet=" + sujet}`, { signal: ctl.signal }).then(r => r.ok ? r.json() : { items: [] }).then(j => j.items || []).catch(() => []).finally(() => clearTimeout(t));
   };
-  const p = id ? actuCo(id).then(j => j.p || []) : actuFil().then(j => (j.p || []).filter(a => sujet === "monde" ? a.l !== "fr" : a.l === "fr" || sujet !== "marches"));
-  p.then(L => L.length ? L : secours()).then(fin).catch(() => fin([]));
+  let collecte = false; // le fichier de l'entreprise existe : la collecte est passée, inutile d'interroger GDELT en direct
+  const p = id ? actuGet(`/data/actu/c/${encodeURIComponent(id)}.json`).then(j => { collecte = !!j; return (j && j.p) || []; }) : actuFil().then(j => (j.p || []).filter(a => sujet === "monde" ? a.l !== "fr" : a.l === "fr" || sujet !== "marches"));
+  p.then(L => L.length || collecte ? L : secours()).then(fin).catch(() => fin([]));
 }
 
 /* ---------- Bloc d'annonces réutilisable (compatible avec les appels existants) ---------- */

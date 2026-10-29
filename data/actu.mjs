@@ -61,6 +61,7 @@ const ETAT = readJSON(new URL("etat.json", DIR), {});
 const STORE = {}; // id -> { o: Map(k -> item), p: Map(k -> item) }
 for (const f of readdirSync(new URL("c/", DIR))) {
   const j = readJSON(new URL("c/" + f, DIR), null); if (!j || !C[j.id]) continue;
+  for (const x of j.o || []) if (x.c === "autre" && x.s !== "sec") { const c = classe(x.t); if (c && c !== "autre") { x.c = c; x.i = Math.max(x.i, importance(c, x.t)); x.tf = titreFr(c, x.t); } } // règles améliorées depuis
   STORE[j.id] = { o: new Map((j.o || []).map(x => [x.k, x])), p: new Map((j.p || []).map(x => [x.k, x])) };
 }
 const store = id => STORE[id] || (STORE[id] = { o: new Map(), p: new Map() });
