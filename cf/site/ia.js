@@ -493,6 +493,7 @@ function localAssist(s, c, raw) {
   const ret = f ? retenir(s, f) : { forts: [], vig: [] }, list = a => lc(a.slice(0, 3).map(x => IA_pt(x)).join(" "));
   const pxS = x => eur(x, x >= 100 ? 0 : 2, p ? p.cur : cur);
   const dep = s.fiche && s.fiche.depend ? s.fiche.depend.charAt(0).toLowerCase() + s.fiche.depend.slice(1) : null, lc = x => x ? x.charAt(0).toLowerCase() + x.slice(1) : x;
+  const AF = g => { try { return typeof analyseAssist === "function" ? analyseAssist(s, c, g) : []; } catch (e) { return []; } }; // facteurs du module « analyse » (m/analyse.js)
   const ann = () => Object.values(ANA || {}).filter(x => x.id === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
   const tally = () => { if (!f) return ""; const t = { fort: 0, moyen: 0, vig: 0 }; items.forEach(i => { if (t[i.lv] != null) t[i.lv]++; }); return `Sur les ${t.fort + t.moyen + t.vig} critères que le site lit dans ses comptes ${yr} : ${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}, ${t.moyen} dans la moyenne et ${t.vig} point${t.vig > 1 ? "s" : ""} de vigilance.`; };
   const prixTxt = () => {
@@ -564,6 +565,7 @@ function localAssist(s, c, raw) {
       P.push(m.gear > 1 ? "Au-delà de 100 %, la dette dépasse les capitaux propres : un point à surveiller." : m.gear < 0.5 ? "Moins de 50 % : un endettement modéré." : "Entre 50 et 100 % : un endettement significatif mais courant.");
     } else P.push("Les comptes collectés ne permettent pas de mesurer sa dette nette.");
     if (!bank && f && f.fcf != null) P.push(f.fcf >= 0 ? `Après ses investissements, il lui est resté ${B(f.fcf)} d'argent disponible sur l'année : de quoi rembourser, verser un dividende ou investir.` : `Ses investissements ont coûté ${B(-f.fcf)} de plus que ce que son activité a rapporté sur l'année : l'écart est financé par sa trésorerie ou par de la dette.`);
+    if (/solid|sante financiere|faillite|solvab/.test(q)) AF("solide_sans_dette").forEach(x => P.push(x));
     if (/faillite/.test(q)) P.push("Ces chiffres ne permettent pas de prédire l'avenir, mais ils montrent sa capacité actuelle à faire face à ses dettes.");
   } else if (it === "dividende") {
     const amt = +((q.match(/(\d+) ?(euros?|e)\b/) || [])[1] || 1000), dv = eventsOf(s.id).filter(e => e.date >= TODAY && /dividende|detachement|acompte/i.test(norm(e.label + " " + (e.type || "")))).slice(0, 2);
@@ -603,12 +605,15 @@ function localAssist(s, c, raw) {
     const sec = R.companies.filter(x => x.sector === s.sector && !x.missing && x.ca > 0).sort((a, b) => caEur(b) - caEur(a)), rk = sec.findIndex(x => x.id === s.id);
     if (rk >= 0) P.push(`Par ses ventes, ${nom} est la ${rk + 1}${rk ? "e" : "re"} des ${sec.length} entreprises du secteur ${secName(s).toLowerCase()} suivies par le site. Le bouton « Comparer à ses concurrents » les met côte à côte.`);
   } else if (it === "risques") {
-    P.push(ret.vig.length ? `Points de vigilance dans ses comptes ${yr} : ${list(ret.vig)}` : `Ses derniers comptes (${yr}) ne montrent pas de point de vigilance par rapport à son secteur.`);
+    const af = AF("risques");
+    P.push(!f ? `Le site n'a pas encore lu les comptes de ${nom}.` : ret.vig.length ? `Points de vigilance dans ses comptes ${yr} : ${list(ret.vig)}` : `Ses derniers comptes (${yr}) ne montrent pas de point de vigilance par rapport à son secteur.`);
     if (v && v.pe && mp && v.pe > mp * 1.3) P.push(`Son prix est élevé par rapport à son secteur (PER de ${F0.format(v.pe)} contre ${F0.format(mp)} pour la médiane) : si la croissance attendue ne vient pas, le cours peut baisser.`);
     if (dep) P.push(`Ce qui peut peser sur ses résultats : ${dep}`);
-    if (["energie", "materiaux"].includes(s.sector)) P.push("Son secteur est cyclique : les bénéfices suivent les prix du pétrole, du gaz ou des métaux. Une seule année dit peu.");
+    if (["energie", "materiaux"].includes(s.sector) && !af.length) P.push("Son secteur est cyclique : les bénéfices suivent les prix du pétrole, du gaz ou des métaux. Une seule année dit peu.");
+    af.forEach(x => P.push(x));
   } else if (it === "forts") {
-    P.push(ret.forts.length ? `Points forts dans ses comptes ${yr} : ${list(ret.forts)}` : `Ses derniers comptes (${yr}) ne montrent pas de point nettement meilleur que la médiane de son secteur.`);
+    P.push(!f ? `Le site n'a pas encore lu les comptes de ${nom} : ses atouts financiers ne peuvent pas encore être mesurés.` : ret.forts.length ? `Points forts dans ses comptes ${yr} : ${list(ret.forts)}` : `Ses derniers comptes (${yr}) ne montrent pas de point nettement meilleur que la médiane de son secteur.`);
+    AF("forts").forEach(x => P.push(x));
     if (ret.vig.length) P.push(`À regarder aussi, les points de vigilance : ${list(ret.vig.slice(0, 2))}`);
   } else if (it === "pea") {
     const ok = peaOk(s);
@@ -625,6 +630,7 @@ function localAssist(s, c, raw) {
     if (ret.vig.length) P.push(`Points de vigilance : ${list(ret.vig.slice(0, 2))}`);
     if (v && v.pe) P.push(`Prix : ${F0.format(v.pe)} fois son bénéfice annuel${mp ? `, contre ${F0.format(mp)} pour la médiane du secteur` : ""}.`);
     const a = ann(); if (a && /annonce|actualite|nouvelle|news|trimestre|publie|resultat/.test(q)) P.push(`Dernière annonce officielle (${dLabel(a.date)}) : ${String(a.type || "communiqué").toLowerCase()}${(a.chiffres || []).length ? `, ${a.chiffres.map(x => x.join(" : ")).join(" ; ")}` : ""}. ${(a.lecture || []).filter(x => x !== a.explication).join(" ")}`.trim());
+    if (/solide|robuste|fiable|\bsaine?\b|tient la route/.test(q)) AF("solide").forEach(x => P.push(x));
     if (/avis|pense|verdict|note|bonne/.test(q)) P.push("Le site ne donne pas d'avis sur l'action : ce résumé vient de ses comptes publiés, comparés à son secteur.");
   }
   const t = P.filter(Boolean).join("\n").replace(/ ?[—–] ?/g, ", ").replace(/!/g, ".").replace(/\.\./g, ".");

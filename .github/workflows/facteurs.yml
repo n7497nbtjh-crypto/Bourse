@@ -1,0 +1,37 @@
+# Faits de contexte pour l'analyse des entreprises (pays, cotations, actionnaires déclarés : Wikidata, CC0)
+# et taux de change mensuels de la BCE. Écrit cf/site/data/facteurs.json, lu par cf/site/m/analyse.js.
+name: Facteurs d'analyse
+on:
+  schedule:
+    - cron: "41 4 9 * *"   # le 9 de chaque mois
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: facteurs
+  cancel-in-progress: false
+jobs:
+  facteurs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Collecte
+        env:
+          CONTACT: ${{ vars.CONTACT }}
+        run: |
+          node data/facteurs.mjs /tmp/facteurs.json
+          # garde-fou : on ne remplace le fichier que si la collecte a trouvé l'essentiel des entreprises
+          n=$(node -e 'console.log(JSON.parse(require("fs").readFileSync("/tmp/facteurs.json","utf8")).n||0)')
+          echo "entreprises : $n"
+          if [ "$n" -gt 1500 ]; then cp /tmp/facteurs.json cf/site/data/facteurs.json; else echo "collecte incomplète, fichier conservé"; fi
+      - name: Enregistrement
+        run: |
+          git config user.name "repere-bot"
+          git config user.email "repere-bot@users.noreply.github.com"
+          git add cf/site/data/facteurs.json
+          git diff --cached --quiet || git commit -m "Facteurs d'analyse du $(date +%F)"
+          for i in 1 2 3; do git pull --rebase -X theirs -q && git push && break; sleep 5; done
