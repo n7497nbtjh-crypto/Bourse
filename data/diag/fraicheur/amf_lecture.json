@@ -1,92 +1,112 @@
 {
  "lvmh": {
-  "filings": []
- },
- "kering": {
   "filings": [
    {
-    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/299/8888/01/FC299625120_20260421.xbri",
-    "date": "2026-04-21",
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/156/8888/01/FC156622038_20260331.xbri",
+    "date": "2026-03-31",
     "type": "Document de référence",
-    "lei": "549300VGEJKB7SVUZR78"
+    "lei": "IOG4E947OATN0KJYSD45"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/156/8888/01/FC156575444_20250325.zip",
+    "date": "2025-03-25",
+    "type": "Document de référence",
+    "lei": "IOG4E947OATN0KJYSD45"
    }
   ],
-  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/299/8888/01/FC299625120_20260421.xbri": {
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/156/8888/01/FC156622038_20260331.xbri": {
    "years": [
+    2023,
     2024,
     2025
    ],
    "currency": "EUR",
    "fyEnd": "12-31",
    "fin": {
+    "ebitExt": [
+     true,
+     true,
+     true
+    ],
     "ca": [
-     16874,
-     14675
+     86153,
+     84683,
+     80807
     ],
     "ebit": [
-     2198,
-     1047
+     22802,
+     19571,
+     17755
     ],
     "net": [
-     1133,
-     72
+     15174,
+     12550,
+     10878
     ],
     "eps": [
-     9.24,
-     0.59
-    ],
-    "dps": [
-     null,
-     6
+     30.34,
+     25.13,
+     21.86
     ],
     "dpsEst": [
-     13.99,
-     null
+     14.31,
+     14.66,
+     14.31
     ],
     "divPaid": [
-     1716,
-     736
+     7159,
+     7322,
+     7123
     ],
     "equity": [
-     14904,
-     14706
+     61017,
+     67517,
+     67472
     ],
     "cash": [
-     3518,
-     4313
+     7774,
+     9631,
+     8794
     ],
     "debt": [
-     14035,
-     12352
+     21907,
+     22942,
+     20343
     ],
     "netDebt": [
-     10517,
-     8039
+     14133,
+     13311,
+     11549
     ],
     "ebitda": [
-     4311,
-     3091
+     26948,
+     24139,
+     22613
     ],
     "cfo": [
-     4709,
-     3100
+     18400,
+     18924,
+     18874
     ]
    }
   }
  },
  "air-liquide": {
-  "filings": []
- },
- "danone": {
   "filings": [
    {
-    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/124/8888/01/FC124616831_20260304.xbri",
-    "date": "2026-03-04",
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/126/8888/01/FC126617165_20260305.xbri",
+    "date": "2026-03-05",
     "type": "Document de référence",
-    "lei": "969500KMUQ2B6CBAF162"
+    "lei": "969500MMPQVHK671GT54"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/126/8888/01/FC126572494_20250306.zip",
+    "date": "2025-03-06",
+    "type": "Document de référence",
+    "lei": "969500MMPQVHK671GT54"
    }
   ],
-  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/124/8888/01/FC124616831_20260304.xbri": {
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/126/8888/01/FC126617165_20260305.xbri": {
    "years": [
     2024,
     2025
@@ -95,81 +115,150 @@
    "fyEnd": "12-31",
    "fin": {
     "ca": [
-     27376,
-     27283
+     27057.8,
+     26940.2
     ],
     "ebit": [
-     3379,
-     2940
+     4945.6,
+     5278.7
     ],
     "net": [
-     2021,
-     1825
+     3306.1,
+     3517.9
     ],
     "eps": [
-     3.14,
-     2.82
+     5.74,
+     6.1
     ],
     "dpsEst": [
-     2.09,
-     2.13
+     2.98,
+     3.39
     ],
     "divPaid": [
-     1348,
-     1379
+     1718.1,
+     1955
     ],
     "equity": [
-     17795,
-     16917
+     26860,
+     26213.9
     ],
     "cash": [
-     1475,
-     1983
+     1915.3,
+     3962
     ],
     "debt": [
-     4627,
-     5045
+     11074.5,
+     12377.5
     ],
     "netDebt": [
-     3152,
-     3062
+     9159.2,
+     8415.5
+    ],
+    "ebitda": [
+     7450.7,
+     7842.2
     ],
     "cfo": [
-     3831,
-     3779
-    ],
-    "fcf": [
-     2908,
-     2724
+     6322.2,
+     6518.4
     ]
    }
   }
  },
  "orange": {
-  "filings": []
- },
- "eiffage": {
-  "filings": []
- },
- "jcdecaux": {
-  "filings": []
- },
- "dassault-aviation": {
   "filings": [
    {
-    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW130036_20260313.zip",
-    "date": "2026-03-13",
-    "type": "Rapports financiers et d'audit annuels",
-    "lei": "969500CVFTUT88V8QN95"
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/177/8888/01/FC177622727_20260402.xbri",
+    "date": "2026-04-02",
+    "type": "Document de référence",
+    "lei": "969500MCOONR8990S771"
    },
    {
-    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/152/2026/03/FC152618863_20260313.zip",
-    "date": "2026-03-13",
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/177/2026/04/FC177622708_20260402.xbri",
+    "date": "2026-04-02",
     "type": "Rapports financiers et d'audit annuels",
-    "lei": "969500CVFTUT88V8QN95"
+    "lei": "969500MCOONR8990S771"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/177/8888/01/FC177575773_20250327.zip",
+    "date": "2025-03-27",
+    "type": "Document de référence",
+    "lei": "969500MCOONR8990S771"
    }
   ],
-  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW130036_20260313.zip": {
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/177/8888/01/FC177622727_20260402.xbri": {
+   "years": [
+    2024,
+    2025
+   ],
+   "currency": "EUR",
+   "fyEnd": "12-31",
+   "fin": {
+    "ebitExt": [
+     true,
+     true
+    ],
+    "ca": [
+     40260,
+     40396
+    ],
+    "ebit": [
+     5116,
+     3422
+    ],
+    "net": [
+     2350,
+     538
+    ],
+    "eps": [
+     0.82,
+     0.14
+    ],
+    "dpsEst": [
+     0.67,
+     0.52
+    ],
+    "divPaid": [
+     1915,
+     1994
+    ],
+    "equity": [
+     31773,
+     29739
+    ],
+    "cash": [
+     8766,
+     12167
+    ],
+    "debt": [
+     35014,
+     37995
+    ],
+    "netDebt": [
+     26248,
+     25828
+    ],
+    "ebitda": [
+     11635,
+     10427
+    ],
+    "cfo": [
+     10195,
+     10780
+    ]
+   }
+  }
+ },
+ "eiffage": {
+  "filings": [
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/151/8888/01/FC151621258_20260327.xbri",
+    "date": "2026-03-27",
+    "type": "Document de référence",
+    "lei": "969500OQXKE5WDM9M994"
+   }
+  ],
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/151/8888/01/FC151621258_20260327.xbri": {
    "years": [
     2024,
     2025
@@ -178,69 +267,162 @@
    "fyEnd": "12-31",
    "fin": {
     "ca": [
-     6239.71,
-     7425.97
+     24013,
+     26119
     ],
     "ebit": [
-     527.16,
-     639.23
+     2415,
+     2545
     ],
     "net": [
-     923.82,
-     977.39
+     1039,
+     1022
     ],
     "eps": [
-     11.78,
-     12.52
-    ],
-    "dps": [
-     null,
-     4.72
+     11.05,
+     10.83
     ],
     "dpsEst": [
-     3.38,
-     null
+     4.2,
+     4.79
     ],
     "divPaid": [
-     264.73,
-     369.21
+     395,
+     452
     ],
     "equity": [
-     6331.99,
-     6656.15
+     6677,
+     7501
     ],
     "cash": [
-     1611.44,
-     1965.15
+     6025,
+     5870
+    ],
+    "debt": [
+     14382,
+     13419
+    ],
+    "netDebt": [
+     8357,
+     7549
     ],
     "ebitda": [
-     713.24,
-     845.29
+     3873,
+     4139
     ],
     "cfo": [
-     1881.07,
-     1848.53
+     3710,
+     3469
+    ]
+   }
+  }
+ },
+ "jcdecaux": {
+  "filings": [
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/294/8888/01/FC294623423_20260409.zip",
+    "date": "2026-04-09",
+    "type": "Document de référence",
+    "lei": "9695009KV7AFPDEI5S30"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/294/8888/01/FC294578135_20250410.zip",
+    "date": "2025-04-10",
+    "type": "Document de référence",
+    "lei": "9695009KV7AFPDEI5S30"
+   }
+  ],
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/294/8888/01/FC294623423_20260409.zip": {
+   "years": [
+    2024,
+    2025
+   ],
+   "currency": "EUR",
+   "fyEnd": "12-31",
+   "fin": {
+    "ca": [
+     3632.6,
+     3673.4
+    ],
+    "ebit": [
+     448.4,
+     458.3
+    ],
+    "net": [
+     258.9,
+     262.6
+    ],
+    "eps": [
+     1.21,
+     1.23
+    ],
+    "dpsEst": [
+     0.15,
+     0.68
+    ],
+    "divPaid": [
+     31.2,
+     146
+    ],
+    "equity": [
+     2201,
+     2239.9
+    ],
+    "cash": [
+     1262.3,
+     1311.3
+    ],
+    "debt": [
+     292.7,
+     143
+    ],
+    "netDebt": [
+     -969.6,
+     -1168.3
+    ],
+    "ebitda": [
+     1311,
+     1256.4
+    ],
+    "cfo": [
+     1130.3,
+     1181.6
     ],
     "fcf": [
-     1535.18,
-     1653.79
+     811.3,
+     878.2
     ]
    }
   }
  },
  "lectra": {
-  "filings": []
- },
- "virbac": {
   "filings": [
    {
-    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/2026/04/FCMKW138187_20260427.zip",
-    "date": "2026-04-27",
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW112720_20260327.zip",
+    "date": "2026-03-27",
     "type": "Rapports financiers et d'audit annuels",
-    "lei": "969500QQ1X5XHG649644"
+    "lei": "9695000KWQEBUDT6IO19"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW132720_20260327.zip",
+    "date": "2026-03-27",
+    "type": "Rapports financiers et d'audit annuels",
+    "lei": "9695000KWQEBUDT6IO19"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW116863_20250328.zip",
+    "date": "2025-03-28",
+    "type": "Rapports financiers et d'audit annuels",
+    "lei": "9695000KWQEBUDT6IO19"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW136863_20250328.zip",
+    "date": "2025-03-28",
+    "type": "Rapports financiers et d'audit annuels",
+    "lei": "9695000KWQEBUDT6IO19"
    }
   ],
-  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/2026/04/FCMKW138187_20260427.zip": {
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW112720_20260327.zip": {
    "years": [
     2024,
     2025
@@ -249,142 +431,80 @@
    "fyEnd": "12-31",
    "fin": {
     "ca": [
-     1397.38,
-     1464.68
+     526.67,
+     506.73
     ],
     "ebit": [
-     217.08,
-     226.13
+     48.8,
+     35.38
     ],
     "net": [
-     145.29,
-     150.89
+     31.16,
+     25.96
     ],
     "eps": [
-     17.35,
-     18.01
+     0.82,
+     0.68
+    ],
+    "dps": [
+     null,
+     0.4
     ],
     "dpsEst": [
-     1.32,
-     1.45
+     0.37,
+     null
     ],
     "divPaid": [
-     11.05,
-     12.15
+     14.11,
+     15.2
     ],
     "equity": [
-     1043.12,
-     1125.19
+     374.35,
+     360.29
     ],
     "cash": [
-     149.63,
-     122.5
+     81.9,
+     65.07
     ],
     "debt": [
-     280.07,
-     256.29
+     102.48,
+     86.39
     ],
     "netDebt": [
-     130.43,
-     133.79
+     20.58,
+     21.32
     ],
     "ebitda": [
-     274.43,
-     286.72
+     90.66,
+     76.93
     ],
     "cfo": [
-     204.22,
-     198.99
+     88.32,
+     73.75
     ],
     "fcf": [
-     123.78,
-     96.85
+     81.55,
+     63.73
     ]
    }
   }
  },
- "trigano": {
+ "essilorluxottica": {
   "filings": [
    {
-    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/ECO/2025/12/FCECO080530_20251219.zip",
-    "date": "2025-12-19",
-    "type": "Rapports financiers et d'audit annuels",
-    "lei": "969500KLZPNMO8TUM811"
-   }
-  ],
-  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/ECO/2025/12/FCECO080530_20251219.zip": {
-   "years": [
-    2024,
-    2025
-   ],
-   "currency": "EUR",
-   "fyEnd": "08-31",
-   "fin": {
-    "ca": [
-     3926.3,
-     3660.2
-    ],
-    "ebit": [
-     499,
-     334.3
-    ],
-    "net": [
-     374.4,
-     239.3
-    ],
-    "eps": [
-     19.39,
-     12.41
-    ],
-    "dpsEst": [
-     3.5,
-     3.5
-    ],
-    "divPaid": [
-     67.6,
-     67.5
-    ],
-    "equity": [
-     1914.4,
-     2080.5
-    ],
-    "cash": [
-     261.3,
-     650.8
-    ],
-    "debt": [
-     130,
-     290.7
-    ],
-    "netDebt": [
-     -131.3,
-     -360.1
-    ],
-    "ebitda": [
-     579,
-     409.8
-    ],
-    "cfo": [
-     40.6,
-     563.9
-    ],
-    "fcf": [
-     -20.2,
-     520.7
-    ]
-   }
-  }
- },
- "capgemini": {
-  "filings": [
-   {
-    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/183/8888/01/FC183620359_20260323.xbri",
-    "date": "2026-03-23",
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/152/8888/01/FC152617368_20260306.xbri",
+    "date": "2026-03-06",
     "type": "Document de référence",
-    "lei": "96950077L0TN7BAROX36"
+    "lei": "549300M3VH1A3ER1TB49"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/152/8888/01/FC152572677_20250307.zip",
+    "date": "2025-03-07",
+    "type": "Document de référence",
+    "lei": "549300M3VH1A3ER1TB49"
    }
   ],
-  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/183/8888/01/FC183620359_20260323.xbri": {
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/152/8888/01/FC152617368_20260306.xbri": {
    "years": [
     2024,
     2025
@@ -393,56 +513,262 @@
    "fyEnd": "12-31",
    "fin": {
     "ca": [
-     22096,
-     22465
+     26508,
+     28491
     ],
     "ebit": [
-     2356,
-     2199
+     3448,
+     3379
     ],
     "net": [
-     1671,
-     1601
+     2359,
+     2315
     ],
     "eps": [
-     9.82,
-     9.46
+     5.2,
+     5.04
+    ],
+    "dps": [
+     3.95,
+     null
     ],
     "dpsEst": [
-     3.41,
-     3.42
+     null,
+     1.19
     ],
     "divPaid": [
-     580,
-     578
+     1163,
+     547
     ],
     "equity": [
-     11775,
-     11648
+     40376,
+     38889
     ],
     "cash": [
-     2789,
-     2814
+     2251,
+     3544
     ],
     "debt": [
-     5144,
-     8338
+     9569,
+     10839
     ],
     "netDebt": [
-     2355,
-     5524
-    ],
-    "ebitda": [
-     3039,
-     2897
+     7318,
+     7295
     ],
     "cfo": [
-     2526,
-     2482
+     4874,
+     5291
+    ]
+   }
+  }
+ },
+ "publicis": {
+  "filings": [
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/118/8888/01/FC118626790_20260430.xbri",
+    "date": "2026-04-30",
+    "type": "Document de référence",
+    "lei": "2138004KW8BV57III342"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/118/8888/01/FC118580509_20250430.zip",
+    "date": "2025-04-30",
+    "type": "Document de référence",
+    "lei": "2138004KW8BV57III342"
+   }
+  ],
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/118/8888/01/FC118626790_20260430.xbri": {
+   "years": [
+    2024,
+    2025
+   ],
+   "currency": "EUR",
+   "fyEnd": "12-31",
+   "fin": {
+    "ca": [
+     16030,
+     17399
     ],
-    "fcf": [
-     2211,
-     2195
+    "ebit": [
+     2214,
+     2394
+    ],
+    "net": [
+     1660,
+     1653
+    ],
+    "eps": [
+     6.62,
+     6.58
+    ],
+    "dps": [
+     null,
+     3.6
+    ],
+    "dpsEst": [
+     3.4,
+     null
+    ],
+    "divPaid": [
+     853,
+     903
+    ],
+    "equity": [
+     11060,
+     10447
+    ],
+    "cash": [
+     3644,
+     4031
+    ],
+    "ebitda": [
+     5228,
+     5562
+    ],
+    "cfo": [
+     2301,
+     2943
+    ]
+   }
+  }
+ },
+ "veolia": {
+  "filings": [
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/316/8888/01/FC316619762_20260319.xbri",
+    "date": "2026-03-19",
+    "type": "Document de référence",
+    "lei": "969500LENY69X51OOT31"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/316/8888/01/FC316574704_20250320.zip",
+    "date": "2025-03-20",
+    "type": "Document de référence",
+    "lei": "969500LENY69X51OOT31"
+   }
+  ],
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/316/8888/01/FC316619762_20260319.xbri": {
+   "years": [
+    2024,
+    2025
+   ],
+   "currency": "EUR",
+   "fyEnd": "12-31",
+   "fin": {
+    "ca": [
+     44692,
+     44396
+    ],
+    "ebit": [
+     2881,
+     3208
+    ],
+    "net": [
+     1098,
+     1217
+    ],
+    "eps": [
+     1.45,
+     1.55
+    ],
+    "dps": [
+     1.25,
+     1.4
+    ],
+    "divPaid": [
+     1218,
+     1280
+    ],
+    "equity": [
+     12915,
+     10855
+    ],
+    "cash": [
+     9601,
+     8021
+    ],
+    "ebitda": [
+     5952,
+     6230
+    ],
+    "cfo": [
+     5038,
+     5153
+    ]
+   }
+  }
+ },
+ "bouygues": {
+  "filings": [
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/134/8888/01/FC134619630_20260319.xbri",
+    "date": "2026-03-19",
+    "type": "Document de référence",
+    "lei": "969500MOCLNQFNZN0D63"
+   },
+   {
+    "url": "https://fr.ftp.opendatasoft.com/datadila/INFOFI/134/8888/01/FC134575370_20250325.zip",
+    "date": "2025-03-25",
+    "type": "Document de référence",
+    "lei": "969500MOCLNQFNZN0D63"
+   }
+  ],
+  "https://fr.ftp.opendatasoft.com/datadila/INFOFI/134/8888/01/FC134619630_20260319.xbri": {
+   "years": [
+    2024,
+    2025
+   ],
+   "currency": "EUR",
+   "fyEnd": "12-31",
+   "fin": {
+    "ca": [
+     56752,
+     56877
+    ],
+    "ebit": [
+     2242,
+     2331
+    ],
+    "net": [
+     1058,
+     1138
+    ],
+    "eps": [
+     2.8,
+     2.99
+    ],
+    "dpsEst": [
+     1.9,
+     1.98
+    ],
+    "divPaid": [
+     718,
+     755
+    ],
+    "equity": [
+     12700,
+     13036
+    ],
+    "cash": [
+     5567,
+     7535
+    ],
+    "debt": [
+     10883,
+     10646
+    ],
+    "netDebt": [
+     5316,
+     3111
+    ],
+    "ebitda": [
+     4640,
+     4828
+    ],
+    "cfo": [
+     5378,
+     5472
     ]
    }
   }
