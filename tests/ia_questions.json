@@ -4917,9 +4917,9 @@
   {
    "q": "combien d'employes",
    "intent": "absent",
-   "comportement": "Donnée absente du site : le dire, ou passer au modèle.",
+   "comportement": "Effectif tiré de Wikidata quand il est connu ; sinon dire que le site ne l'a pas, ou passer au modèle.",
    "attendu": {
-    "re": "ne (publie|connait|dispose) pas|pas cette information|n.a pas cette",
+    "re": "ne (publie|connait|dispose) pas|pas cette information|n.a pas cette|emploie environ \\d",
     "chiffre": false,
     "ou_serveur": true
    }

@@ -33,6 +33,10 @@ writeFileSync("cf/site/robots.txt", `User-agent: *\nDisallow: /api/\nSitemap: ${
   const ia = await import("./cf/src/ia.mjs"), dm = await import("./cf/src/demande.mjs");
   wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF, comparaison: ia.SYS_CMP }));
 }
+if (existsSync("cf/site/data/wikidata.json")) { // faits Wikidata découpés par entreprise : une fiche ne charge que les siens
+  const W = JSON.parse(readFileSync("cf/site/data/wikidata.json", "utf8")); (await import("node:fs")).mkdirSync("cf/site/data/wd", { recursive: true });
+  for (const [id, x] of Object.entries(W.items || {})) wfs(`cf/site/data/wd/${id}.json`, JSON.stringify({ ...x, maj: W.updated })); }
+if (existsSync("data/faq_seo.mjs")) { const { faqSeo } = await import("./data/faq_seo.mjs"); console.log(faqSeo(), "FAQ de fiches (JSON-LD)"); }
 // Version du site : empreinte des fichiers servis (hors données). Le service worker (cf/site/sw.js) la lit dans l'en-tête
 // x-bilan-version des pages et vide son cache dès qu'elle change : jamais un ancien script avec une nouvelle page.
 const VERSION_SITE = await (async () => { const { createHash } = await import("node:crypto"), { readdirSync, statSync } = await import("node:fs"), h = createHash("sha256"), sauf = new Set(["cf/site/data", "cf/site/_worker.js", "cf/site/sitemap.xml", "cf/site/robots.txt"]);

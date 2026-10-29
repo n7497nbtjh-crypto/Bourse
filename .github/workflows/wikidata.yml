@@ -1,0 +1,34 @@
+# Faits d'identité des entreprises (création, siège, effectif, dirigeants, marques, filiales) lus dans Wikidata (CC0).
+# Une fois par mois : data/wikidata.mjs écrit cf/site/data/wikidata.json, publié avec la prochaine mise en ligne.
+name: Wikidata
+on:
+  workflow_dispatch: {}
+  schedule:
+    - cron: "17 3 3 * *"
+permissions:
+  contents: write
+concurrency:
+  group: wikidata
+  cancel-in-progress: false
+jobs:
+  wikidata:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Collecte
+        run: node data/wikidata.mjs
+      - name: Contrôle
+        run: node -e 'const j=JSON.parse(require("fs").readFileSync("cf/site/data/wikidata.json","utf8"));const n=Object.keys(j.items).length;console.log(n,"fiches");if(n<1000)process.exit(1)'
+      - name: Publication des données
+        run: |
+          git config user.name "bilan-robot"
+          git config user.email "robot@users.noreply.github.com"
+          git add cf/site/data/wikidata.json
+          git diff --cached --quiet && exit 0
+          git commit -m "Faits Wikidata du $(date -u +%F)"
+          for i in 1 2 3 4 5; do git pull --rebase -X theirs origin main && git push origin HEAD:main && exit 0; sleep $((i * 10)); done
+          exit 1

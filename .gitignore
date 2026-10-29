@@ -5,3 +5,5 @@ node_modules/
 cf/src/index.gen.mjs
 .claude/
 .wrangler/
+cf/site/data/faq/
+cf/site/data/wd/

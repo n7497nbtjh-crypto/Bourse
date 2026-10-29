@@ -104,6 +104,10 @@ export default {
     const page = await env.ASSETS.fetch(new Request(new URL("/", url), request));
     let html = await page.text();
     const t = info || { title: `Page introuvable · ${SITE}`, desc: BASE_DESC };
+    const fq = info && url.pathname.replace(/\/+$/, "").match(/^\/entreprise\/([a-z0-9-]+)$/);
+    if (fq) { // questions fréquentes de la fiche (JSON-LD FAQPage), fichier fabriqué par data/faq_seo.mjs
+      try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/${fq[1]}.json`, url))); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { const ld = (await r.text()).replace(/</g, "\\u003c"); html = html.replace("</head>", `<script type="application/ld+json">${ld}</script>\n</head>`); } } catch (e) { }
+    }
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">`);
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 });
