@@ -79,3 +79,14 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   la notification « bilan » du samedi porte « Votre semaine en 2 minutes est prête. » + la première phrase, reprise par `message()` de `cf/src/push.mjs`.
 - Bouton d'abonnement : si le module « pwa » définit `pwaNotifBouton({ sujet, texte })` (renvoie du HTML), il est affiché dans la barre d'actions de la synthèse.
 - Tests : `node tests/t_synthese.mjs`, `python3 tests/t_synthese_ui.py [--shots dossier]` (maquette `tests/synthese_maquette.mjs`).
+
+## Présentation de la fiche (agent « fiche2 », module `cf/site/m/fiche2.js`, chargé en dernier)
+- Redéclare `companyHeader`, `ficheSommaire`, `pageCompany`, `etapesBind`, `ficheGraphBox`, `ficheGraphique`, `concurrentsHTML`
+  (contenu repris de fiche.js / comparer.js) ; enveloppe `ficheMetierHTML` et `ficheAnalyse` (texte complété, rien de retiré).
+  Agents « fiche » et « comparer » : vos changements sur ces fonctions doivent être reportés dans fiche2.js (ou prévenir).
+- En-tête de la vue d'ensemble : courbe du cours (`#tvchart.f2-tv`, widget `tvChart` chargé en différé par `requestIdleCallback`)
+  à côté de « En bref », profil dans le secteur en dessous avec un vrai titre. Un seul graphique par page : l'étape « Son prix » renvoie à l'en-tête.
+- Onglets de la fiche : `nav.qtabs.f2tabs` hors de l'en-tête, en segments, collants (top 57 px ; 52 px sur mobile) ; étapes `#etapes` collées dessous (124 px / 110 px).
+- Taille dans le secteur cliquable partout (`[data-f2-rang="<id>"]`) : fenêtre `#f2dlg` = classement du secteur par les ventes en euros
+  (ou la capitalisation sans comptes), bouton « Comparer avec » ses voisines de rang (/comparer, limite gratuite respectée).
+- Concurrents : logos `.f2-lgd` à la place des points, couloirs anti-chevauchement calculés en pixels (`fiche2Lanes`).
