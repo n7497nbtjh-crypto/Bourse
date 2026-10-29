@@ -275,7 +275,9 @@ async function viaOpenAI(url, key, model, messages, max_tokens, temperature, jso
 var FOURNISSEURS = [
   ["mistral", (env) => env.MISTRAL_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.mistral.ai/v1/chat/completions", env.MISTRAL_KEY, env.MISTRAL_MODEL || "mistral-small-latest", m, mt, te, js)],
   ["groq", (env) => env.GROQ_KEY, (env, m, mt, te, js) => viaOpenAI("https://api.groq.com/openai/v1/chat/completions", env.GROQ_KEY, env.GROQ_MODEL || "openai/gpt-oss-20b", m, mt, te, js)],
-  ["workers-ai", (env) => env.AI, async (env, messages, max_tokens, temperature, json5, qualite) => {
+  ["gemini", (env) => env.GEMINI_KEY, (env, m, mt, te, js) => viaOpenAI("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", env.GEMINI_KEY, env.GEMINI_MODEL || "gemini-flash-lite-latest", m, mt, te, js)],
+  ["openrouter", (env) => env.OPENROUTER_KEY, (env, m, mt, te, js) => viaOpenAI("https://openrouter.ai/api/v1/chat/completions", env.OPENROUTER_KEY, env.OPENROUTER_MODEL || "openai/gpt-oss-20b:free", m, mt, te, js)],
+  ["workers-ai", (env) => env.AI && String(env.IA_WORKERS_AI || "").toLowerCase() !== "off", async (env, messages, max_tokens, temperature, json5, qualite) => {
     let plafond = +env.IA_NEURONES_JOUR || 1e4;
     for (let [model, cin, cout] of qualite ? [...CF].reverse() : CF) {
       let estime = (approxTokens(messages.map((x) => x.content).join(" ")) * cin + max_tokens * cout) / 1e6;
@@ -294,9 +296,10 @@ var FOURNISSEURS = [
     }
     return null;
   }]
-];
+], serveurCoupe = (env) => !env || String(env.IA_SERVEUR || "").toLowerCase() === "off", servicesIA = (env) => serveurCoupe(env) ? [] : FOURNISSEURS.filter(([, a]) => a(env)).map(([n]) => n), iaActive = (env) => servicesIA(env).length > 0;
 async function rediger(env, { systeme, utilisateur, max_tokens = 600, temperature = 0.2, json: json5 = !1, qualite = !0 }) {
   let messages = [{ role: "system", content: systeme }, { role: "user", content: utilisateur }];
+  if (serveurCoupe(env)) return null;
   for (let [nom, actif, appel] of FOURNISSEURS) {
     if (!actif(env)) continue;
     let t = await appel(env, messages, max_tokens, temperature, json5, qualite);
@@ -314,6 +317,10 @@ function jsonDe(t) {
     return null;
   }
 }
+function etatPublic(env) {
+  let s = servicesIA(env);
+  return new Response(JSON.stringify({ serveur: s.length > 0, services: s }), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
+}
 
 // cf/src/regles.mjs
 var REGLES = `R\xE8gles d'objectivit\xE9, \xE0 respecter strictement :
@@ -323,7 +330,9 @@ var REGLES = `R\xE8gles d'objectivit\xE9, \xE0 respecter strictement :
 - Compare \xE0 la m\xE9diane du secteur ou \xE0 des rep\xE8res chiffr\xE9s plut\xF4t que de juger dans l'absolu.
 - N'emploie aucun mot charg\xE9 ou d'emphase (\xAB p\xE9pite \xBB, \xAB incontournable \xBB, \xAB catastrophe \xBB, \xAB exceptionnel \xBB).
 - Ne pr\xE9dis jamais un cours, ne recommande jamais d'acheter, de vendre ou de conserver un titre pr\xE9cis.
-- Si une information manque, dis qu'elle manque au lieu de la deviner. N'invente aucune source.`;
+- Si une information manque, dis qu'elle manque au lieu de la deviner. N'invente aucune source.
+- Sois autocritique. Quand une donn\xE9e manque, est ancienne (comptes de plus de 16 mois), estim\xE9e par le site ou repose sur peu d'entreprises, ou quand la question d\xE9passe les faits fournis, dis-le clairement dans une phrase qui commence par \xAB Je ne suis pas s\xFBr : \xBB ou \xAB Ce que je ne sais pas : \xBB, puis indique ce qu'il faudrait v\xE9rifier et o\xF9 (rapport annuel, communiqu\xE9 de l'entreprise, AMF, service-public.fr, BCE\u2026).
+- Pour l'actualit\xE9 (guerre, prix de l'\xE9nergie, taux, droits de douane, Chine\u2026), ne cite que les faits dat\xE9s fournis, avec leur date, et d\xE9cris leurs effets au conditionnel : ce sont des m\xE9canismes possibles, jamais des certitudes ni des pr\xE9visions.`;
 
 // cf/src/compte.mjs
 var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
@@ -514,6 +523,7 @@ async function clair(request, env) {
     } catch {
     }
     if (!it || it.i < 2) return json3({ error: "Annonce introuvable ou trop courte pour \xEAtre expliqu\xE9e." }, 404);
+    if (!iaActive(env)) return json3({ error: "L'explication en ligne est indisponible pour le moment. Les chiffres de l'annonce restent affich\xE9s.", ia_serveur: !1 }, 503);
     let q = await quota(request, env, "resume");
     return q.ok ? rediges(env, k2, { type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture: it.r || [], entreprise: id }) : quotaError(q, "explications par l'IA");
   }
@@ -544,7 +554,12 @@ async function rediges(env, k, f) {
 }
 
 // data/cours_config.mjs
-var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv", COURS_CSV_SUITE = [], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
+var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv", COURS_CSV_SUITE = [
+  // copies de la feuille : gf2.csv, gf3.csv, gf4.csv (publiées le 29/10/2026)
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRss-rBkYNWtXDrNMHcDudDsxMJZ2djLCjTvt-w6bGiXqnPEbdr3sxPtcXpa9tgTDN045owZTzaxNd/pub?output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwYIFEt9Ux_l7uyPut1Hv--GFFmiBgi2tgV2HN4UigVZLfGmykoaKEr-E1ZRsIO09dOpgUgZmzlrld/pub?output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vR70B8qndqju4-YPgTIzxFTB7iPMfcUtHoKz9ZWG-ekQ_yXZfTs5ZPmDa4sxIvEaSbAo5jnIhJrSQon/pub?output=csv"
+], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
 function parseCours(txt) {
   let rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g, row = [], m;
   for (; (m = re.exec(txt)) && m[0] !== ""; ) {
@@ -646,6 +661,7 @@ async function docText(env, u) {
   if (!r.ok) throw new Error("document " + r.status);
   let buf = await r.arrayBuffer();
   if (buf.byteLength > 8e6) throw new Error("document trop lourd");
+  if (!env.AI) throw new Error("lecture des PDF indisponible (conversion Workers AI non branch\xE9e)");
   let md = await env.AI.toMarkdown([{ name: "doc.pdf", blob: new Blob([buf], { type: "application/pdf" }) }]);
   return String((md[0] || {}).data || "");
 }
@@ -671,7 +687,7 @@ R\xE8gles strictes :
 - Pas de tirets cadratins, pas de listes \xE0 puces, pas de formules creuses.
 ${REGLES}`;
 async function resume(request, env) {
-  if (!env || !env.DB || !env.AI) return json4({ error: "R\xE9sum\xE9s indisponibles pour le moment." }, 503);
+  if (!env || !env.DB || !iaActive(env)) return json4({ error: "R\xE9sum\xE9s indisponibles pour le moment.", ia_serveur: !1 }, 503);
   let u = new URL(request.url).searchParams.get("u") || "", url;
   try {
     url = new URL(u);
@@ -715,7 +731,7 @@ R\xE8gles :
 - Pas de tirets cadratins, pas de listes \xE0 puces.
 ${REGLES}`;
 async function veille(request, env) {
-  if (!env || !env.DB || !env.AI) return json4({ error: "Bilan indisponible pour le moment." }, 503);
+  if (!env || !env.DB) return json4({ error: "Bilan indisponible pour le moment." }, 503);
   let path = new URL(request.url).pathname;
   if (await init4(env.DB), path === "/api/veille" && request.method === "POST") {
     let b;
@@ -726,6 +742,7 @@ async function veille(request, env) {
     }
     let faits = JSON.stringify(b.faits || {}).slice(0, 9e3), key = (b.type === "portefeuille" ? "pf:" : "veille:") + (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) + ":" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(faits)))].slice(0, 10).map((x) => x.toString(16).padStart(2, "0")).join(""), hit = await env.DB.prepare("SELECT txt FROM resumes WHERE u = ?").bind(key).first();
     if (hit) return json4({ txt: hit.txt, cache: !0 });
+    if (!iaActive(env)) return json4({ error: "La r\xE9daction en ligne est indisponible pour le moment. Les chiffres restent \xE0 jour.", ia_serveur: !1 }, 503);
     let q = await quota(request, env, b.type === "portefeuille" ? "portefeuille" : "veille");
     if (!q.ok) return quotaError(q, b.type === "portefeuille" ? "analyses de portefeuille" : "bilans r\xE9dig\xE9s");
     if (!await budget(env.DB, env)) return json4({ error: "Le site a atteint son nombre de bilans r\xE9dig\xE9s pour aujourd'hui : r\xE9essayez demain. Les chiffres restent \xE0 jour." }, 429);
@@ -740,10 +757,12 @@ async function veille(request, env) {
   }
   return mails(request, env, path);
 }
-var SYS_ASSIST = `Tu es l'assistant du site d'information boursi\xE8re \xAB bilan. \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, comparaison au secteur, concurrents, cours, annonces r\xE9centes, agenda).
+var SYS_ASSIST = `Tu es l'assistant du site d'information boursi\xE8re \xAB bilan. \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, \xE9volution sur plusieurs ann\xE9es avec son contexte dat\xE9 et sourc\xE9, comparaison au secteur, concurrents, cours, annonces r\xE9centes, actualit\xE9 qui la concerne, agenda, fiabilit\xE9 des donn\xE9es).
 R\xE8gles :
 - 60 \xE0 160 mots, phrases courtes, termes techniques expliqu\xE9s une fois.
-- Si les faits ne permettent pas de r\xE9pondre, dis-le simplement et indique quelle rubrique du site regarder.
+- Si les faits ne permettent pas de r\xE9pondre, dis-le simplement (\xAB Ce que je ne sais pas : \u2026 \xBB) et indique quelle rubrique du site ou quel document officiel regarder.
+- Si la liste \xAB fiabilite_des_donnees \xBB signale un point qui touche ta r\xE9ponse (comptes anciens, dividende estim\xE9, m\xE9diane sur peu d'entreprises), termine par une phrase \xAB Je ne suis pas s\xFBr : \u2026 \xBB qui le dit.
+- Pour une question d'actualit\xE9 ou sur l'\xE9volution des chiffres, utilise \xAB actualite_qui_la_concerne \xBB et \xAB evolution_pluriannuelle \xBB : cite la date de v\xE9rification, et rappelle que le site ne mesure pas la part exacte de ces \xE9v\xE9nements dans les r\xE9sultats.
 - N'invente aucun chiffre ni aucune information. Cite les chiffres avec leur ann\xE9e.
 - Aucun conseil d'achat ou de vente, aucune pr\xE9diction de cours, aucun objectif de prix. Si on te demande \xAB faut-il acheter ? \xBB, explique les \xE9l\xE9ments \xE0 regarder (points forts, points de vigilance, prix par rapport aux b\xE9n\xE9fices) sans trancher, et rappelle que ce n'est pas un conseil.
 - Vouvoie toujours le lecteur.
@@ -761,7 +780,7 @@ R\xE8gles :
 - Ne cite jamais le nom d'un champ JSON. Pas de listes \xE0 puces, pas de tirets cadratins.
 ${REGLES}`;
 async function assistant(request, env) {
-  if (!env || !env.DB || !env.AI) return json4({ error: "L'assistant est indisponible pour le moment." }, 503);
+  if (!env || !env.DB || !iaActive(env)) return json4({ error: "L'assistant en ligne est indisponible pour le moment.", ia_serveur: !1 }, 503);
   if (request.method !== "POST") return json4({ error: "M\xE9thode non prise en charge." }, 405);
   await init4(env.DB);
   let b;
@@ -1491,7 +1510,28 @@ var parse = (s, d) => {
   } catch {
     return d;
   }
-}, taille = (v) => new TextEncoder().encode(JSON.stringify(v)).length;
+}, taille = (v) => new TextEncoder().encode(JSON.stringify(v)).length, RECO_CLES = ["horizon", "baisse", "precaution", "connaissance", "choisir", "perte", "liquidite", "objectif", "capital", "versement", "enveloppe"];
+function validerReco(b) {
+  if (!b || typeof b != "object") return { error: "Requ\xEAte illisible." };
+  let rep2 = {}, src = b.reponses && typeof b.reponses == "object" && !Array.isArray(b.reponses) ? b.reponses : {};
+  for (let k of RECO_CLES) {
+    let v = src[k];
+    if (v != null) {
+      if (!Number.isInteger(v) || v < 0 || v > 5) return { error: `R\xE9ponse invalide : ${k}.` };
+      rep2[k] = v;
+    }
+  }
+  if (b.retours !== void 0 && !Array.isArray(b.retours)) return { error: "Les retours doivent \xEAtre une liste." };
+  let txt = (s, n) => String(s ?? "").replace(/[\u0000-\u001f<>]/g, "").slice(0, n), retours = (b.retours || []).slice(-100).filter((r) => r && typeof r == "object" && typeof r.id == "string" && r.id.length <= 80).map((r) => ({
+    id: txt(r.id, 80),
+    v: ["ok", "risque", "redondant", "inadapte"].includes(r.v) ? r.v : null,
+    kind: ["ent", "etf", "sect", "alloc"].includes(r.kind) ? r.kind : "ent",
+    tags: (Array.isArray(r.tags) ? r.tags : []).slice(0, 6).map((t) => txt(t, 40)),
+    risk: Number.isInteger(r.risk) && r.risk >= 1 && r.risk <= 5 ? r.risk : null,
+    at: Number.isFinite(r.at) ? Math.round(r.at) : 0
+  }));
+  return { reponses: rep2, retours: b.retours === void 0 ? void 0 : retours };
+}
 function valider(b, strict) {
   let out = {}, ignores = [], ko = (champ, msg) => strict ? msg : (ignores.push(champ), null);
   if (b.favoris !== void 0) {
@@ -1757,6 +1797,16 @@ async function espace(request, env) {
     let { b, err: err2 } = await lire(request);
     return err2 || (typeof b.teaser != "boolean" ? json2({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json2({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
   }
+  if (path === "/api/espace/reco" && (m === "GET" || m === "POST")) {
+    let row = await env.DB.prepare("SELECT profil FROM donnees WHERE compte = ?").bind(c.id).first(), p0 = parse(row && row.profil, null), profil = p0 && typeof p0 == "object" && !Array.isArray(p0) ? p0 : {};
+    if (m === "GET") return json2({ reponses: Object.fromEntries(RECO_CLES.filter((k) => Number.isInteger(profil[k])).map((k) => [k, profil[k]])), retours: profil.reco && Array.isArray(profil.reco.retours) ? profil.reco.retours : [] });
+    let { b, err: err2 } = await lire(request);
+    if (err2) return err2;
+    let v = validerReco(b);
+    if (v.error) return json2({ error: v.error }, 400);
+    let neuf = { ...profil, ...v.reponses, ...v.retours ? { reco: { retours: v.retours, maj: Date.now() } } : {} };
+    return taille(neuf) > MAX_CHAMP ? json2({ error: "Profil trop volumineux (60 Ko au plus)." }, 400) : (await enregistrer(env, c.id, { profil: JSON.stringify(neuf) }), json2({ ok: !0 }));
+  }
   if (path === "/api/espace/rapport" && (m === "GET" || m === "POST")) {
     let row = await env.DB.prepare("SELECT profil FROM donnees WHERE compte = ?").bind(c.id).first(), profil = parse(row && row.profil, null) || {}, p = await premiumDe(env, c.premium, url.origin), max = p ? RAPPORT_MAX_SECTEURS.premium : RAPPORT_MAX_SECTEURS.gratuit, out = (r) => ({ rapport: r, defaut: RAPPORT_DEFAUT, premium: !!p, max_secteurs: max, secteurs: SECTEURS2 });
     if (m === "GET") return json2(out(normaliseRapport(profil.rapport, max)));
@@ -1871,7 +1921,7 @@ var REPERES = `Rep\xE8res exacts \xE0 respecter :
 - M\xE9diane d'un secteur : la valeur du milieu, la moiti\xE9 des entreprises fait mieux, l'autre moins bien.
 - Un indice (CAC 40, S&P 500, MSCI World) est un panier d'entreprises ; un ETF permet d'acheter tout le panier en une fois. Le MSCI World couvre environ 1 250 entreprises de 23 pays d\xE9velopp\xE9s, sans les pays \xE9mergents.
 - PEA-PME : plafond de 225 000 \u20AC, commun avec le PEA. Livret A : 1,7 % depuis le 1er ao\xFBt 2026, plafond de 22 950 \u20AC ; LDDS : plafond de 12 000 \u20AC. Assurance-vie : apr\xE8s 8 ans, abattement annuel de 4 600 \u20AC sur les gains retir\xE9s (9 200 \u20AC pour un couple), pr\xE9l\xE8vements sociaux de 17,2 % en 2026.
-- Si tu n'es pas s\xFBr d'un chiffre, ne le donne pas.`, IND = ["croissance", "marge", "marge_nette", "rentabilite", "dette", "per", "rendement", "distribution", "variation_1an", "capitalisation", "taille"], SYS2 = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
+- Si tu n'es pas s\xFBr d'un chiffre, ne le donne pas : dis \xAB Je ne suis pas s\xFBr de ce chiffre \xBB et o\xF9 le v\xE9rifier.`, IND = ["croissance", "marge", "marge_nette", "rentabilite", "dette", "per", "rendement", "distribution", "variation_1an", "capitalisation", "taille"], SYS2 = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
 
 Actions possibles :
 1. Chercher des entreprises selon des crit\xE8res :
@@ -1885,7 +1935,7 @@ Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"
 5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
 R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si la question demande une pr\xE9vision (\xAB va-t-elle monter \xBB, \xAB quel cours dans un an \xBB, \xAB quelle action va exploser \xBB) ou un conseil sans crit\xE8re (\xAB quoi acheter \xBB, \xAB la meilleure action \xBB), r\xE9ponds avec "repondre" : explique que personne ne peut pr\xE9voir les cours et donne la m\xE9thode (\xE9pargne de pr\xE9caution, horizon d'au moins 5 ans, diversification, versements r\xE9guliers). Si la demande contient des crit\xE8res (dividende, secteur, pays, dette, prix), choisis "filtre" ou "etf" avec un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). Si la question ne parle ni de Bourse, ni de placements, ni d'entreprises, r\xE9ponds avec "repondre" en une phrase : le site traite seulement de la Bourse et des placements. R\xE9ponds uniquement avec le JSON.
 ${REPERES}
-${REGLES}`, SYS_EXPL = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas. Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REGLES}`, SYS_EXPL = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas ; \xE9cris plut\xF4t \xAB Je ne suis pas s\xFBr : \u2026 \xBB et indique la source officielle o\xF9 le v\xE9rifier (service-public.fr, impots.gouv.fr, AMF, Banque de France). Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
 ${REPERES}
 ${REGLES}`, clean2 = (s) => String(s || "").replace(/\s+/g, " ").trim();
 function valide(a) {
@@ -1913,6 +1963,7 @@ async function demande(request, env) {
       if (hit) return json2({ ...JSON.parse(hit.txt), cache: !0 });
     } catch {
     }
+  if (!iaActive(env)) return json2({ error: "L'IA en ligne est indisponible pour le moment.", ia_serveur: !1 }, 503);
   let qq = await quota(request, env, "demande");
   if (!qq.ok) return quotaError(qq, "questions \xE0 l'IA");
   let t = await rediger(env, { systeme: SYS2, utilisateur: q, max_tokens: 500, temperature: 0.1, json: !0, qualite: !1 }), a = valide(jsonDe(t));
@@ -2777,7 +2828,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "a7ad8f5c0201df93", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
+var VERSION = "ee4cdfa58605400a", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
 function tete(html, { title, desc, url, statut }) {
   let canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/"), t = [
     `<meta name="bilan-version" content="${VERSION}">`,
@@ -2867,7 +2918,8 @@ function meta(path, q = null) {
   if (p === "/pea-cto") return { title: `PEA, compte-titres ou assurance-vie : lequel choisir \xB7 ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'imp\xF4t sur les gains en 2026, avec un exemple chiffr\xE9." };
   if (p === "/dividendes") return { title: `Dividendes : calendrier, rendements et simulateur \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement, les plus hauts rendements avec leur garde-fou, les dividendes relev\xE9s chaque ann\xE9e et ce que vous toucheriez en PEA ou compte-titres." };
   if (p === "/classements") return { title: `Classements des entreprises \xB7 ${SITE}`, desc: "Les entreprises qui cumulent le plus de points forts, restent en t\xEAte de leur secteur, augmentent leurs ventes ou rel\xE8vent leur dividende chaque ann\xE9e, calcul\xE9es sur leurs comptes officiels." };
-  if (p === "/decouvertes") return { title: `D\xE9couvertes du jour \xB7 ${SITE}`, desc: "Chaque jour, six entreprises moins connues dont les comptes officiels ressortent sur les crit\xE8res du site, avec ce qui les distingue. Sans conseil d'achat." };
+  if (p === "/decouvertes") return { title: `D\xE9couvertes du jour \xB7 ${SITE}`, desc: "Chaque jour, des petites et moyennes entreprises d'Europe et du monde, et des ETF \xE9ligibles au PEA : activit\xE9, chiffres, valorisation, catalyseurs et risques, sources \xE0 l'appui. Sans conseil d'achat." };
+  if (p === "/pour-moi") return { title: `Des pistes adapt\xE9es \xE0 votre profil \xB7 ${SITE}`, desc: "Une r\xE9partition indicative en fourchettes, des ETF et des entreprises \xE0 \xE9tudier selon votre horizon, votre tol\xE9rance au risque et votre compte (PEA, compte-titres). P\xE9dagogique, pas un conseil en investissement." };
   if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre \xB7 ${SITE}`, desc: "Le chemin pour apprendre : par o\xF9 commencer, les cours de l'Acad\xE9mie (l'essentiel en 3 \xE9tapes et le cours complet), le lexique et les outils p\xE9dagogiques, gratuits." };
   if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 \xE9tapes \xB7 L'Acad\xE9mie \xB7 ${SITE}`, desc: "La version courte de l'Acad\xE9mie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en le\xE7ons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
@@ -2895,6 +2947,7 @@ var worker_default = {
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/assistant") return assistant(request, env);
     if (url.pathname === "/api/demande") return demande(request, env);
+    if (url.pathname === "/api/ia/etat") return etatPublic(env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
