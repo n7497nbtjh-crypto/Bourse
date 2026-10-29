@@ -131,3 +131,15 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   `#rf-bilan`, `#rf-flux`, `#rf-valorisation` = `prixHTML`, `#rf-dividende` = `dividendeHTML`), tableau complet replié (`#rf-tout`), sources.
 - Fiche ETF (`pageEtf`, `ETF_bref` dans `m/etf.js`) : même hiérarchie (courbe + « En bref », puis composition, frais, risques, questions ;
   caractéristiques, émetteur, ETF proches, avis et discussion dans la colonne latérale). Une seule liste de questions (`#efaq`) + champ vers `orcIaAsk`.
+## Accueil (agent « accueil », module `cf/site/m/accueil.js`, chargé après orchestre.js)
+- Redéclare `pageHome` (remplace aussi l'enveloppe de parcours.js : `parAccueilVisiteur` et `synAccueil` sont appelés ici dans `#homeesp`).
+  Ordre : question à l'IA → « Le point du jour » (synthèse de l'actualité) → Pour vous (membre : semaine + favoris + portefeuille) →
+  Annonces des entreprises → (visiteur avec favoris : Pour vous) → À découvrir (`outilsDecouverteHTML`, secteurs) → Débuter (simulateur, idées reçues)
+  → rapport sur mesure (visiteurs) → Premium sur une ligne. Plus de classements d'entreprises ni d'ETF sur l'accueil (ils sont dans /classements et /etf).
+- Le point du jour : `contexte.json` (sujets non expirés, ordre éditorial), `actu/fil.json`, `PX` (indices, `moversData`), `AG` (agenda).
+  Chaque sujet sépare Fait (dernier fait daté), Interprétation (qui est concerné et dans quel sens), Hypothèse (mécanisme au conditionnel),
+  À surveiller (dates à venir des entreprises visées, calculées avec `ctxProfil`/`ctxCible` de contexte.js). « Approfondir » déplie `#acc-det`
+  (tous les faits, sources, presse repérée par les mots-clés du sujet, impacts avec le nombre d'entreprises suivies concernées).
+- Simulateur Livret A (communication.js) : mise à jour sur place (`commMaj`) avec animation des courbes, de l'échelle et des montants ;
+  curseur continu (`step="any"`, année = entier le plus proche, calage au lâcher), flèches = une année. `commSimule` inchangé.
+- `main` a désormais `min-height: calc(100vh - 56px)` (index.html) : le pied de page ne saute plus au chargement (CLS).

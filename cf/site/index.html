@@ -63,7 +63,7 @@ nav.main a.on{color:#fff;border-bottom-color:#fff}
 .tape .tradingview-widget-copyright a{color:var(--light)}
 
 /* Mise en page */
-main{padding:18px 0 48px;min-height:60vh}
+main{padding:18px 0 48px;min-height:calc(100vh - 56px)}
 .cols{display:grid;grid-template-columns:minmax(0,1fr) 336px;gap:20px;align-items:start}
 .cols > *{min-width:0}
 .panel{background:var(--panel);border:1px solid var(--rule);border-radius:4px;margin-bottom:20px}
@@ -4595,5 +4595,6 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
 <script src="/m/outils.js"></script>
 <script src="/m/parcours.js"></script>
 <script src="/m/orchestre.js"></script>
+<script src="/m/accueil.js"></script>
 </body>
 </html>

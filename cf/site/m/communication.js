@@ -98,10 +98,10 @@ function commChartHTML(r) {
   const line = (k, c, dash) => `<polyline points="${P.map((p, i) => X(i) + "," + Y(p[k])).join(" ")}" fill="none" stroke="${c}" stroke-width="${k === "act" ? 3 : 2.25}" ${dash ? `stroke-dasharray="7 6"` : ""} vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>`;
   const grid = []; for (let v = 0; v <= top + 1e-6; v += st) grid.push(v);
   const step = n > 15 ? 5 : 2;
-  const xs = P.map((p, i) => i % step === 0 || i === n ? `<span style="left:${(i / n * 100).toFixed(2)}%">${p.y}</span>` : "").join("");
+  const xs = P.map((p, i) => (i % step === 0 && n - i > step / 2) || i === n ? `<span style="left:${(i / n * 100).toFixed(2)}%">${p.y}</span>` : "").join("");
   return `<div class="cm-chart" data-n="${n}" role="img" aria-label="Évolution du capital, de fin ${P[0].y} à fin ${P[n].y}">
     <div class="cm-plot">
-      ${grid.map(v => `<i class="cm-grid" style="top:${(100 - v / top * 100).toFixed(2)}%"><em>${v >= 1000 ? F0.format(v / 1000) + " k€" : F0.format(v) + " €"}</em></i>`).join("")}
+      ${grid.map(v => `<i class="cm-grid" data-v="${v}" style="top:${(100 - v / top * 100).toFixed(2)}%"><em>${v >= 1000 ? F0.format(v / 1000) + " k€" : F0.format(v) + " €"}</em></i>`).join("")}
       <svg viewBox="0 0 1000 300" preserveAspectRatio="none" aria-hidden="true">${line("ver", COMM_C.ver)}${line("inf", COMM_C.inf, true)}${line("la", COMM_C.la)}${line("act", COMM_C.act)}</svg>
       <i class="cm-vl" hidden></i><div class="cm-tip" hidden></div>
     </div>
@@ -118,7 +118,7 @@ function commComparaisonHTML(opts = {}) {
   debut = Math.min(COMM_FIN - 4, Math.max(COMM_DEB, debut));
   const r = commSimule(debut, COMM_FIN, m), f = r.fin, ans = r.ans, compact = !!opts.compact;
   const gA = f.act - f.inf, gL = f.la - f.inf;
-  const card = (k, t, v, sub, cls = "") => `<div class="cm-k ${cls}"><small><i style="background:${COMM_C[k]}"${k === "inf" ? ` class="d"` : ""}></i>${t}</small><b>${commE(v)}</b><span>${sub}</span></div>`;
+  const card = (k, t, v, sub, cls = "") => `<div class="cm-k ${cls}" data-k="${k}"><small><i style="background:${COMM_C[k]}"${k === "inf" ? ` class="d"` : ""}></i>${t}</small><b>${commE(v)}</b><span>${sub}</span></div>`;
   const reel = g => g >= 0 ? `<em class="up">+${commE(g)}</em> au-dessus du seuil inflation` : `<em class="down">${commE(g)}</em> sous le seuil inflation : pouvoir d'achat perdu`;
   const pr = r.pire, perte = pr ? pr.avant + 12 * m - pr.apres : 0, pireTxt = pr && COMM_MW[pr.y] < 0 ? `Pire année traversée : <b>${pr.y}</b>, ${commP(COMM_MW[pr.y], 1, true)} pour l'indice. Fin ${pr.y - 1}, le capital en actions valait ${commE(pr.avant)}. Malgré ${commE(12 * m)} versés pendant l'année, il ne valait plus que ${commE(pr.apres)} fin ${pr.y} : la baisse a effacé environ <b>${commE(perte)}</b>.` : `Aucune année de baisse de l'indice sur cette période : c'est l'exception, pas la règle.`;
   return `<div class="cm-sim${compact ? " cm-compact" : ""}" data-m="${m}" data-debut="${debut}" data-compact="${compact ? 1 : ""}">
@@ -126,7 +126,7 @@ function commComparaisonHTML(opts = {}) {
       <div class="cm-seg" role="group" aria-label="Durée">${[10, 20, 30].map(a => `<button type="button" data-cm-debut="${COMM_FIN - a + 1}" class="${debut === COMM_FIN - a + 1 ? "on" : ""}" aria-pressed="${debut === COMM_FIN - a + 1}">${a} ans</button>`).join("")}</div>
       <div class="cm-seg cm-seg-m" role="group" aria-label="Versement mensuel">${[50, 100, 200, 500].map(a => `<button type="button" data-cm-mois="${a}" class="${m === a ? "on" : ""}" aria-pressed="${m === a}">${a} €</button>`).join("")}<span>par mois</span></div>
     </div>
-    <label class="cm-range"><span>Année de départ : <b>${debut}</b></span><input type="range" min="${COMM_DEB}" max="${COMM_FIN - 4}" step="1" value="${debut}" data-cm-range aria-label="Année de départ"><small>${COMM_DEB}</small><small>${COMM_FIN - 4}</small></label>
+    <label class="cm-range"><span>Année de départ : <b>${debut}</b></span><input type="range" min="${COMM_DEB}" max="${COMM_FIN - 4}" step="any" value="${debut}" data-cm-range aria-label="Année de départ" aria-valuetext="Départ en ${debut}" style="--p:${((debut - COMM_DEB) / (COMM_FIN - 4 - COMM_DEB) * 100).toFixed(2)}%"><small>${COMM_DEB}</small><small>${COMM_FIN - 4}</small></label>
     <p class="cm-lead">${F0.format(m)} € versés chaque mois de janvier ${debut} à décembre ${COMM_FIN} (${ans} ans), soit <b>${commE(f.ver)}</b> versés. Leur valeur fin ${COMM_FIN} :</p>
     <div class="cm-ks">
       ${card("act", "Actions monde (MSCI World)", f.act, reel(gA), "cm-k-act")}
@@ -143,23 +143,102 @@ function commComparaisonHTML(opts = {}) {
       ${commSrcHTML(["msciEur", "msciUsd", "wikiMsci", "bce", "fredDem", "livretHist", "livret", "ipc"])}</details>`}
   </div>`;
 }
-// Interactions du comparateur (délégation : fonctionne où que le bloc soit inséré)
+// Interactions du comparateur (délégation : fonctionne où que le bloc soit inséré).
+// Mise à jour sur place, sans reconstruire le bloc : le curseur glisse en continu (l'année retenue est l'entier le plus proche),
+// les courbes, l'échelle et les montants passent en douceur de l'ancienne à la nouvelle valeur. Les calculs restent ceux de commSimule.
+const COMM_ANIM = { ms: 420, n: 600 };
+const commEase = t => 1 - Math.pow(1 - t, 3);
+function commEtat(debut, m) { // ce qu'il faut dessiner pour une période : points, échelle, montants finaux
+  const r = commSimule(debut, COMM_FIN, m), P = r.pts, max = Math.max(...P.map(p => Math.max(p.act, p.la, p.inf, p.ver))) * 1.06, st = commNice(max);
+  return { r, P, st, top: Math.ceil(max / st) * st, f: r.fin };
+}
+function commEch(P, k, x) { // valeur de la série k à l'abscisse x (0 à 1), interpolation linéaire entre deux fins d'année
+  const n = P.length - 1, u = x * n, i = Math.min(n - 1, Math.floor(u)), t = u - i;
+  return P[i][k] + (P[i + 1][k] - P[i][k]) * t;
+}
+function commDessin(box, A, B, t) { // état intermédiaire entre A et B (t de 0 à 1)
+  const svg = box.querySelector(".cm-plot svg"); if (!svg) return;
+  const top = A.top + (B.top - A.top) * t, N = COMM_ANIM.n, lines = svg.querySelectorAll("polyline"), keys = ["ver", "inf", "la", "act"];
+  if (t >= 1) { // état final exact : un point par fin d'année
+    const n = B.P.length - 1;
+    keys.forEach((k, j) => lines[j] && lines[j].setAttribute("points", B.P.map((p, i) => (i / n * 1000).toFixed(1) + "," + (300 - p[k] / B.top * 300).toFixed(1)).join(" ")));
+  } else {
+    keys.forEach((k, j) => {
+      if (!lines[j]) return; let s = "";
+      for (let i = 0; i <= N; i++) { const x = i / N, v = commEch(A.P, k, x) + (commEch(B.P, k, x) - commEch(A.P, k, x)) * t; s += (x * 1000).toFixed(1) + "," + (300 - v / top * 300).toFixed(1) + " "; }
+      lines[j].setAttribute("points", s);
+    });
+  }
+  box.querySelectorAll(".cm-grid").forEach(g => { const v = +g.dataset.v, y = 100 - v / top * 100; g.style.top = y.toFixed(2) + "%"; g.style.opacity = y < -0.5 ? 0 : 1; });
+  box.querySelectorAll(".cm-k[data-k]").forEach(c => { const k = c.dataset.k, b = c.querySelector("b"); if (b) b.textContent = commE(A.f[k] + (B.f[k] - A.f[k]) * t); });
+}
+function commGrille(box, B) { // lignes de l'échelle de la nouvelle période (placées ensuite à chaque image)
+  const plot = box.querySelector(".cm-plot"); if (!plot) return;
+  plot.querySelectorAll(".cm-grid").forEach(g => g.remove());
+  const frag = []; for (let v = 0; v <= B.top + 1e-6; v += B.st) frag.push(`<i class="cm-grid" data-v="${v}"><em>${v >= 1000 ? F0.format(v / 1000) + " k€" : F0.format(v) + " €"}</em></i>`);
+  plot.insertAdjacentHTML("afterbegin", frag.join(""));
+}
+function commMaj(box, patch = {}) {
+  const m0 = +box.dataset.m, d0 = +box.dataset.debut;
+  const m = patch.mois != null ? +patch.mois : m0, debut = Math.min(COMM_FIN - 4, Math.max(COMM_DEB, patch.debut != null ? Math.round(+patch.debut) : d0));
+  if (m === m0 && debut === d0) return;
+  const tmp = document.createElement("div"); tmp.innerHTML = commComparaisonHTML({ mois: m, debut, compact: !!box.dataset.compact });
+  const nb = tmp.firstElementChild;
+  box.dataset.m = m; box.dataset.debut = debut;
+  // textes : phrase d'introduction, écarts au seuil inflation, pire année, libellé du curseur, graduations des années
+  [".cm-lead", ".cm-pire", ".cm-range > span", ".cm-xs"].forEach(sel => { const a = box.querySelector(sel), b = nb.querySelector(sel); if (a && b && a.innerHTML !== b.innerHTML) a.innerHTML = b.innerHTML; });
+  box.querySelectorAll(".cm-k[data-k]").forEach(c => { const n2 = nb.querySelector(`.cm-k[data-k="${c.dataset.k}"] span`), s = c.querySelector("span"); if (n2 && s) s.innerHTML = n2.innerHTML; });
+  box.querySelectorAll(".cm-seg button").forEach(b => { const on = b.dataset.cmDebut ? +b.dataset.cmDebut === debut : +b.dataset.cmMois === m; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on); });
+  const ch = box.querySelector(".cm-chart"), n2 = nb.querySelector(".cm-chart"); if (ch && n2) { ch.dataset.n = n2.dataset.n; ch.setAttribute("aria-label", n2.getAttribute("aria-label")); }
+  const rg = box.querySelector("[data-cm-range]");
+  if (rg) { rg.setAttribute("aria-valuetext", `Départ en ${debut}`); if (!patch.glisse) commCurseur(rg, debut); }
+  // animation : on repart de l'état affiché (même au milieu d'une animation précédente)
+  const B = commEtat(debut, m), now = performance.now();
+  let A = box._cmB || commEtat(d0, m0);
+  if (box._cmA && box._cmT0 != null) { const t = commEase(Math.min(1, (now - box._cmT0) / COMM_ANIM.ms)); if (t < 1) A = commMelange(box._cmA, box._cmB, t); }
+  box._cmA = A; box._cmB = B; box._cmT0 = now;
+  commGrille(box, B);
+  box.querySelectorAll(".cm-plot .cm-vl,.cm-plot .cm-tip").forEach(x => x.hidden = true);
+  box.classList.remove("cm-flash"); void box.offsetWidth; box.classList.add("cm-flash");
+  const reduit = matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduit) { commDessin(box, A, B, 1); box._cmT0 = null; return; }
+  if (!box._cmRaf) { const step = () => { if (!box.isConnected || box._cmT0 == null) { box._cmRaf = 0; return; }
+      const t = Math.min(1, (performance.now() - box._cmT0) / COMM_ANIM.ms); commDessin(box, box._cmA, box._cmB, t >= 1 ? 1 : commEase(t));
+      if (t < 1) box._cmRaf = requestAnimationFrame(step); else { box._cmRaf = 0; box._cmT0 = null; } };
+    box._cmRaf = requestAnimationFrame(step); }
+}
+function commMelange(A, B, t) { // état intermédiaire figé (point de départ d'une nouvelle animation)
+  const N = 120, P = []; for (let i = 0; i <= N; i++) { const x = i / N, o = {}; ["ver", "la", "act", "inf"].forEach(k => o[k] = commEch(A.P, k, x) + (commEch(B.P, k, x) - commEch(A.P, k, x)) * t); P.push(o); }
+  const f = {}; ["ver", "la", "act", "inf"].forEach(k => f[k] = A.f[k] + (B.f[k] - A.f[k]) * t);
+  return { P, top: A.top + (B.top - A.top) * t, st: B.st, f };
+}
+function commCurseur(rg, v, anime = true) { // place le curseur (glissement court vers une année entière)
+  const a = +rg.value, fin = () => { rg.value = v; commRemplir(rg); };
+  if (!anime || Math.abs(a - v) < 0.01 || (matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches)) return fin();
+  const t0 = performance.now(), d = 220, st = () => { const t = Math.min(1, (performance.now() - t0) / d); rg.value = a + (v - a) * commEase(t); commRemplir(rg); if (t < 1) requestAnimationFrame(st); else fin(); };
+  requestAnimationFrame(st);
+}
+function commRemplir(rg) { const mn = +rg.min, mx = +rg.max; rg.style.setProperty("--p", ((+rg.value - mn) / (mx - mn) * 100).toFixed(2) + "%"); }
 (function () {
-  const redraw = (box, patch) => {
-    const o = { mois: +box.dataset.m, debut: +box.dataset.debut, compact: !!box.dataset.compact, ...patch };
-    const tmp = document.createElement("div"); tmp.innerHTML = commComparaisonHTML(o);
-    const nb = tmp.firstElementChild; box.replaceWith(nb);
-    if (patch.focus) { const el = nb.querySelector(patch.focus); if (el) el.focus(); }
-  };
   document.addEventListener("click", e => {
     const b = e.target.closest(".cm-sim [data-cm-debut], .cm-sim [data-cm-mois]"); if (!b) return;
     const box = b.closest(".cm-sim");
-    if (b.dataset.cmDebut) redraw(box, { debut: +b.dataset.cmDebut, focus: `[data-cm-debut="${b.dataset.cmDebut}"]` });
-    else redraw(box, { mois: +b.dataset.cmMois, focus: `[data-cm-mois="${b.dataset.cmMois}"]` });
+    if (b.dataset.cmDebut) commMaj(box, { debut: +b.dataset.cmDebut }); else commMaj(box, { mois: +b.dataset.cmMois });
   });
   document.addEventListener("input", e => {
     const r = e.target.closest(".cm-sim [data-cm-range]"); if (!r) return;
-    redraw(r.closest(".cm-sim"), { debut: +r.value, focus: "[data-cm-range]" });
+    commRemplir(r); commMaj(r.closest(".cm-sim"), { debut: Math.round(+r.value), glisse: true });
+  });
+  document.addEventListener("change", e => { // au lâcher : le curseur se cale sur l'année retenue
+    const r = e.target.closest(".cm-sim [data-cm-range]"); if (!r) return;
+    commCurseur(r, Math.round(+r.value));
+  });
+  document.addEventListener("keydown", e => { // clavier : une année par flèche, cinq par page
+    const r = e.target.closest && e.target.closest(".cm-sim [data-cm-range]"); if (!r) return;
+    const d = { ArrowLeft: -1, ArrowDown: -1, ArrowRight: 1, ArrowUp: 1, PageDown: -5, PageUp: 5 }[e.key], v0 = Math.round(+r.value);
+    const v = e.key === "Home" ? +r.min : e.key === "End" ? +r.max : d ? Math.min(+r.max, Math.max(+r.min, v0 + d)) : null;
+    if (v == null) return; e.preventDefault();
+    commCurseur(r, v); commMaj(r.closest(".cm-sim"), { debut: v, glisse: true });
   });
   const tip = e => {
     const plot = e.target.closest && e.target.closest(".cm-plot"); if (!plot) return;
@@ -171,11 +250,31 @@ function commComparaisonHTML(opts = {}) {
     t.hidden = false; t.innerHTML = commTipHTML(p); t.style.left = (i / n > 0.55 ? "auto" : `calc(${(i / n * 100).toFixed(2)}% + 10px)`); t.style.right = (i / n > 0.55 ? `calc(${(100 - i / n * 100).toFixed(2)}% + 10px)` : "auto");
   };
   document.addEventListener("pointermove", tip, { passive: true });
-  document.addEventListener("pointerleave", e => { }, true);
   document.addEventListener("pointerout", e => {
     const plot = e.target.closest && e.target.closest(".cm-plot"); if (!plot || plot.contains(e.relatedTarget)) return;
     plot.querySelectorAll(".cm-vl,.cm-tip").forEach(x => x.hidden = true);
   });
+  document.head.insertAdjacentHTML("beforeend", `<style id="cm-anim-css">
+.cm-range input[type=range]{-webkit-appearance:none;appearance:none;height:28px;background:transparent;cursor:pointer;touch-action:pan-y;margin:2px 0}
+.cm-range input[type=range]:focus{outline:none}
+.cm-range input[type=range]::-webkit-slider-runnable-track{height:6px;border-radius:99px;background:linear-gradient(to right,var(--ink) 0 var(--p,50%),var(--rule) var(--p,50%) 100%)}
+.cm-range input[type=range]::-moz-range-track{height:6px;border-radius:99px;background:var(--rule)}
+.cm-range input[type=range]::-moz-range-progress{height:6px;border-radius:99px;background:var(--ink)}
+.cm-range input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:var(--panel,#fff);border:2px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.18);transition:transform .15s ease,box-shadow .15s ease}
+.cm-range input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--panel,#fff);border:2px solid var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.18);transition:transform .15s ease}
+.cm-range input[type=range]:hover::-webkit-slider-thumb{transform:scale(1.08)}
+.cm-range input[type=range]:active::-webkit-slider-thumb{transform:scale(1.2);box-shadow:0 0 0 7px rgba(17,18,20,.08),0 1px 4px rgba(0,0,0,.2)}
+.cm-range input[type=range]:active::-moz-range-thumb{transform:scale(1.2)}
+.cm-range input[type=range]:focus-visible::-webkit-slider-thumb{box-shadow:0 0 0 4px #D6F26B}
+.cm-range>span b{display:inline-block;min-width:3.2em;font-family:var(--mono)}
+.cm-grid{transition:opacity .2s}
+.cm-k{transition:background-color .5s ease,border-color .5s ease}
+.cm-flash .cm-k b{animation:cmPulse .45s ease}
+@keyframes cmPulse{0%{opacity:.55}100%{opacity:1}}
+.cm-k b{font-variant-numeric:tabular-nums}
+.cm-seg button{transition:background-color .15s,color .15s,box-shadow .15s}
+@media (prefers-reduced-motion:reduce){.cm-flash .cm-k b{animation:none}.cm-range input[type=range]::-webkit-slider-thumb{transition:none}}
+</style>`);
 })();
 
 /* ====================================================================================
