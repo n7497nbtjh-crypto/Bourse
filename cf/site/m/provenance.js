@@ -384,6 +384,14 @@ function valo(c) {
   return { p, capE, pe, yld, vieux };
 }
 
+// Médianes du secteur : sans les entreprises dont les comptes ont plus de 15 mois (reprise de computeMedians et medInd d'index.html)
+function computeMedians() {
+  const by = {};
+  R.companies.filter(c => !c.missing && !provComptesPerimes(c)).forEach(c => { const r = ratios(c); if (isBank(c)) { r.lev = r.gear = r.conv = r.marge = null; } (by[c.sector] = by[c.sector] || []).push(r); });
+  MED = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, { n: l.length, ...Object.fromEntries(MKEYS.map(m => [m, median(l.map(x => x[m]))])) }]));
+}
+function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing && !provComptesPerimes(c)).map(INDI[k][1])); return MEDI[key]; }
+
 /* ---------- 6. Cours : fraîcheur affichée honnêtement ---------- */
 function priceHead(c, isEtf = false) {
   const p = isEtf ? pxEtf(c) : pxOf(c);
