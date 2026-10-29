@@ -37,11 +37,14 @@ export function meta(path, q = null) {
   if ((m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/))) {
     const t = TOOLS[m[1] || "epargne"] || TOOLS.epargne;
     if (!t) return null;
-    return { title: `${t} · ${SITE}`, desc: "Simulez l'évolution d'un placement, avec les hypothèses affichées. Outil pédagogique, sans conseil." };
+    return { title: `${t} · ${SITE}`, desc: "Simulateur d'épargne : versements mensuels, frais réels du courtier et du fonds, impôt PEA ou compte-titres 2026, trois scénarios tirés de l'histoire. Hypothèses et limites affichées, sans conseil." };
   }
   if (p === "/entreprises") return { title: `Les entreprises · ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des États-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqués simplement." };
   if (p === "/actualites") return { title: `Actualité des entreprises · ${SITE}`, desc: "Résultats, dividendes, acquisitions et changements de dirigeants des entreprises suivies en France, en Europe et aux États-Unis : annonces officielles classées, chiffrées et expliquées, et titres de la presse." };
-  if (p === "/agenda") return { title: `Agenda financier · ${SITE}`, desc: "Dates des résultats, assemblées générales et dividendes des entreprises cotées." };
+  if (p === "/agenda") return { title: `Agenda financier · ${SITE}`, desc: "Dates des résultats, assemblées générales et dividendes des entreprises cotées, avec l'heure de publication quand la société l'annonce, et les chiffres publiés ces derniers jours." };
+  if (p === "/hier") return { title: `Ce qui s'est passé hier : les résultats publiés · ${SITE}`, desc: "Les résultats publiés la veille par les entreprises suivies : chiffre d'affaires, résultat, prévisions de la direction et lecture calculée, d'après les communiqués officiels." };
+  if (p === "/outils/recouvrement") return { title: `Mes ETF se recouvrent-ils ? · ${SITE}`, desc: "Positions communes et poids réellement en double entre 2 à 4 ETF, concentration du portefeuille combiné, secteurs, pays et devises, d'après les compositions officielles." };
+  if (p === "/outils/si-javais") return { title: `Et si j'avais investi ? · ${SITE}`, desc: "Ce que serait devenue une somme placée il y a 1, 3 ou 5 ans dans une action ou un ETF, comparée à un indice, au Livret A et à la hausse des prix. Cours réels et sources affichées." };
   if (p === "/portefeuille") return { title: `Portefeuille · ${SITE}`, desc: "Suivez la performance réelle de vos placements ou entraînez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqués · ${SITE}`, desc: "Les fonds indiciels les plus utilisés en France : ce qu'ils contiennent, leurs frais, leur éligibilité au PEA, leur composition par pays et par entreprise." };
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications · ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqués simplement." };

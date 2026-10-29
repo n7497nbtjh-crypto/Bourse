@@ -520,60 +520,8 @@ function pageEntreprises() {
   render();
 }
 
-/* ---------- Agenda : par mois, avec le délai et le type ---------- */
-function pageAgenda() {
-  setTitle("Agenda financier"); setNav("news");
-  let ty = "Tous";
-  app.innerHTML = `<h1 class="pagetitle">Agenda</h1><p class="pagesub">Les prochaines dates annoncées par les entreprises suivies.</p>
-    <section class="panel"><div class="filters" id="af">${[["Tous", "Tous"], ["Résultats", "Résultats"], ["Assemblée", "Assemblées"], ["Dividende", "Dividendes"]].map(([t, l]) => `<button data-t="${t}">${l}</button>`).join("")}</div><div id="al"></div>
-    <div class="src">Dates relevées sur les calendriers financiers officiels. ${AG.events.length ? new Set(AG.events.map(e => e.id)).size : 0} entreprise(s) renseignée(s) pour l'instant.</div></section>`;
-  const T0 = new Date(TODAY + "T00:00:00Z");
-  const delay = d => { const n = Math.round((new Date(d + "T00:00:00Z") - T0) / 864e5); return n === 0 ? "aujourd'hui" : n === 1 ? "demain" : `dans ${n} jours`; };
-  const JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
-  const render = () => {
-    $$("#af button").forEach(b => b.classList.toggle("on", b.dataset.t === ty));
-    const list = upcoming().filter(e => ty === "Tous" || e.type === ty);
-    if (!list.length) { $("#al").innerHTML = `<div class="empty">Aucun événement.</div>`; return; }
-    let mk = "", z = 0, body = "";
-    list.forEach(e => {
-      const m = e.date.slice(0, 7); if (m !== mk) { mk = m; z = 0; body += `<tr class="grp"><th colspan="4" scope="colgroup"><span>${MOISL[+m.slice(5) - 1].replace(/^./, x => x.toUpperCase())} ${m.slice(0, 4)}</span></th></tr>`; }
-      const co = RBY[e.id], d = new Date(e.date + "T00:00:00Z");
-      body += `<tr class="${z++ % 2 ? "z" : ""}" data-href="/entreprise/${e.id}/agenda"><td class="l tbx-date"><b>${d.getUTCDate()}</b> ${JOURS[d.getUTCDay()]}<small>${delay(e.date)}</small></td><th scope="row" class="l"><a class="cell-co" href="/entreprise/${e.id}/agenda">${logo(co, 24)}<span><b>${esc(co.name)}</b></span></a><div class="m-only tbx-agl">${esc(e.label)}</div></th><td class="l wrap d-only">${esc(e.label)}</td><td class="l d-only"><span class="tbx-tag">${esc(e.type || "")}</span></td></tr>`;
-    });
-    $("#al").innerHTML = tblxScrollBox(`<table class="t tbx tbx-ag"><thead><tr><th class="l" scope="col">Date</th><th class="l" scope="col">Entreprise</th><th class="l d-only" scope="col">Événement</th><th class="l d-only" scope="col">Type</th></tr></thead><tbody>${body}</tbody></table>`);
-    tblxBindScroll($("#al"));
-  };
-  $("#af").onclick = e => { const b = e.target.closest("button"); if (b) { ty = b.dataset.t; render(); } };
-  render();
-}
+/* pageAgenda et simFrais : déplacées dans m/outils2.js (agenda avec heures vérifiées, simulateur refait). */
 
-/* ---------- Simulateur de frais : le même achat chez chaque courtier ---------- */
-function simFrais(root) {
-  root.innerHTML = `<div class="form"><div class="field"><label for="bk">Mon courtier</label><select id="bk">${brokerOptions("trade-republic")}</select></div>
-    <div class="row2" id="persoF" hidden>${numIn("pfx", "Frais fixes (€)", 5, "", 'min="0" step="0.5"')}${numIn("ppc", "Pourcentage (%)", 0.5, "", 'min="0" step="0.05"')}</div>
-    ${numIn("amt", "Montant de chaque achat (€)", 200, "", 'min="1" step="50"')}${numIn("n", "Nombre d'achats par an", 12, "12 = un achat par mois.", 'min="1" max="250"')}${numIn("yrs", "Pendant (années)", 20, "", 'min="1" max="50"')}
-    ${numIn("ff", "Frais annuels du fonds (%)", 0.2, "Pour un fonds indiciel (ETF), souvent entre 0,1 et 0,5 %. Mettez 0 pour des actions.", 'min="0" step="0.05"')}</div><div class="res" id="res"></div>`;
-  const run = () => {
-    const b = brokerBy($("#bk").value), perso = { fixe: v("pfx"), pct: v("ppc") };
-    $("#persoF").hidden = !b.custom;
-    const amt = Math.max(1, v("amt")), n = Math.max(1, Math.min(250, Math.round(v("n")))), yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), ff = v("ff") / 100;
-    const fee = brokerFee(b, amt, perso), feeY = fee * n, rate = 0.05;
-    const gross = Calc.compound({ initial: 0, monthly: amt * n / 12, years: yrs, rate }), net = Calc.compound({ initial: 0, monthly: Math.max(0, amt - fee) * n / 12, years: yrs, rate, fee: ff });
-    const cost = gross.final - net.final;
-    const all = BROKERS.list.filter(x => !x.custom).map(x => ({ x, f: brokerFee(x, amt) })).sort((a, c) => a.f - c.f);
-    const fmax = Math.max(0.01, ...all.map(a => a.f)), fmin = all.length ? all[0].f : 0;
-    $("#res").innerHTML = `<p class="lead">Avec ${esc(b.name)}, chaque achat de ${eur(amt, 0)} coûte <b>${eur(fee)}</b> : ${pct(fee / amt, 2, false)} de votre argent part en frais avant même d'être investi.${ff ? ` Le fonds prélève en plus ${pct(ff, 2, false)} par an sur tout ce qui est placé.` : ""}</p>`
-      + figs([["Frais par achat", eur(fee), pct(fee / amt, 2, false) + " du montant"], ["Frais de courtage par an", eur(feeY, 0), `${n} achat${n > 1 ? "s" : ""}`], ["Coût total des frais", eur(cost, 0), `sur ${yrs} ans, gains perdus compris`], ["Valeur finale", eur(net.final, 0), `au lieu de ${eur(gross.final, 0)} sans frais`]])
-      + `<div class="cap" style="margin-top:6px">Le même achat de ${eur(amt, 0)} chez chaque courtier, du moins cher au plus cher</div>
-      ${tblxScrollBox(`<table class="t tbx tbx-sort brk"><thead><tr><th class="l lab" scope="col" data-sk="0">Courtier<i class="tbx-so"></i></th>${tblxTh("Frais par achat", 1)}${tblxTh("En % de l'achat", 2)}${tblxTh(`Par an (${n} achat${n > 1 ? "s" : ""})`, 3)}<th class="l" scope="col" data-sk="4">PEA<i class="tbx-so"></i></th></tr></thead><tbody>
-      ${all.map(({ x, f }, j) => `<tr class="${j % 2 ? "z" : ""}${x.id === b.id ? " sel" : ""}"><th scope="row" class="l lab" data-v="${esc(x.name)}"><span class="nm">${esc(x.name)}</span>${x.id === b.id ? ` <span class="tbx-tag on">votre choix</span>` : ""}${f === fmin ? ` <span class="tbx-tag g">le moins cher</span>` : ""}<span class="sub d-only" style="display:block">${esc(x.note || "")}</span></th>
-        <td class="num" data-v="${f}"><span class="tbx-fee"><i style="width:${Math.max(2, f / fmax * 100)}%"></i></span><b>${eur(f)}</b></td><td class="num" data-v="${f / amt}">${pct(f / amt, 2, false)}</td><td class="num" data-v="${f * n}">${eur(f * n, 0)}</td><td class="l" data-v="${x.pea ? 1 : 0}">${x.pea ? "Oui" : "Non"}</td></tr>`).join("")}</tbody></table>`)}
-      <div class="note"><p>Un frais fixe pèse lourd sur les petits achats : 1 € représente 1 % d'un achat de 100 €, mais 0,1 % d'un achat de 1 000 €. Grouper ses achats réduit cette part.</p>
-        <p>Calcul avec 5 % de rendement par an avant frais. Les frais ne sont pas le seul critère : disponibilité du PEA, place de cotation, service client.</p><p>${brokerSrc()}</p></div>`;
-    tblxBindScroll($("#res"));
-  };
-  root.oninput = root.onchange = run; run();
-}
 
 /* ---------- Styles du composant ---------- */
 document.head.insertAdjacentHTML("beforeend", `<style id="tbx-css">

@@ -190,3 +190,18 @@ Trois niveaux, rien d'autre. Détails : `docs/ia.md`.
 - Le serveur n'appelle aucun modèle : plus de `llm.mjs`, `ia.mjs`, `demande.mjs`, `actu.mjs`, binding `AI`, variables `IA_*`, quotas d'IA.
   Les anciennes routes (`/api/assistant`, `/api/demande`, `/api/resume`, `/api/actu/clair`, `/api/ia/etat`, `POST /api/veille`) répondent 410.
 - Interdit : ajouter un appel à un modèle d'IA côté serveur ou une clé d'IA du site.
+## Outils, simulateur, agenda et « hier » (agent « outils2 », vague du 29 octobre 13 h 30, module `cf/site/m/outils2.js`)
+- Chargé avant orchestre.js, avec `m/outils2_calc.js` (calculs purs `O2C`, testés par `node tests/t_outils2.mjs`). Une seule définition par fonction :
+  `pageAgenda`, `pageSim`, `outilSiJavais`, `outilRecouvrement` sont dans outils2.js (supprimées d'index.html et de m/tableaux.js ; `simEpargne`, `simFrais`, `simPeaCto` n'existent plus).
+- /simulateurs (et /simulateurs/epargne|frais|pea-cto, qui ouvrent la même page à la bonne section) : versements, grille réelle du courtier (plan programmé si `plan` dans courtiers),
+  frais courants (médiane des ETF monde PEA), change, revente, impôt 2026 (`RATES`), scénarios prudent/central/favorable = 10e centile, médiane, 90e centile des périodes
+  de N ans du MSCI World en euros (`COMM_MW` de communication.js). Paramètres dans l'adresse (?ini=&men=&ans=&env=&bk=…).
+- /outils/recouvrement?a=&b=&c=&d=&w=60,30,10 : 2 à 4 ETF (`etfComp`), poids identique (somme des minimums), inclusion, concentration (Herfindahl), secteurs, pays, devises.
+- /outils/si-javais?k=&vs=&m=&ans=&bk= : une courbe (`O2_courbe`, axe de temps, infobulle, légende cliquable) avec cours relevés (p5y/p3y/p1y/p), dividendes publiés
+  (historique.json), indice, Livret A et inflation. Séries de référence : `cf/site/data/hist-ref.json` (Insee IPC base 2025 série 011814630, BCE moyennes mensuelles,
+  taux du Livret A) écrit par `data/outils2_hist.mjs`, workflow `.github/workflows/outils2.yml` (lundi).
+- Agenda : heures vérifiées à la main dans `data/agenda/heures.mjs` (pub / cal / moment / conf, fuseau IANA, source), recopiées par build.mjs dans `agenda.json` (champ `h`).
+  Sans heure : « Heure non communiquée ». Section « Publié ces derniers jours » : chiffres des annonces officielles (`actuCo`).
+- /hier (menu Marchés) : `pageHier`, annonces `resultats` du jour ouvré précédent (actu/j/*.json, heure de Paris), regroupées par entreprise, lecture `O2_lecture`
+  (chiffres classés, prévisions et extraits de actu-analyse.json, positifs/négatifs/risques, pas de synthèse avec moins de 2 évolutions), bouton IA = `iaRediger("annonce", …)` (IA connectée du visiteur, sinon `miaInvite`).
+  Tests : `python3 tests/t_outils2.py [--shots dossier]`.
