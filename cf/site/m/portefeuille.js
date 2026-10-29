@@ -1,3 +1,6 @@
+/* Les compositions d'ETF classent par code (it, fin, conso_disc…) : on les ramène aux dix secteurs du site, pour une seule liste lisible */
+const PF_SECT_ETF = { it: "tech", fin: "finance", sante: "sante", conso_disc: "conso", conso_base: "conso", indus: "industrie", comm: "telecom", energie: "energie", materiaux: "materiaux", services_pub: "services", immo: "immo", liquidites: "Liquidités et dérivés", autre: "Autres" };
+function pfSecteurEtf(code) { const k = PF_SECT_ETF[code]; if (!k) return (typeof ETF_SECT !== "undefined" && ETF_SECT[code]) || code; return (R && R.sectors && R.sectors[k]) || k; }
 /* Module « portefeuille » de bilan. : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
 
@@ -661,7 +664,7 @@ async function pf3Look(rows) {
           coAdd(c ? "c:" + c.id : names[isin] ? "n:" + pf3Strip(names[isin]) : "i:" + isin, c ? c.name : names[isin] ? titleCase(names[isin]).replace(/,?\s+(Class|Cl\.?) [A-Z]\.?$/i, "") : isin, c ? "/entreprise/" + c.id : null, ww, e.name);
           if (!secs && c) { add(X.sect, secName(c), ww); sk += ww; }
         }
-        if (secs) { secs.forEach(([s, p]) => { add(X.sect, s, w * p / 100); sk += w * p / 100; }); }
+        if (secs) { secs.forEach(([s, p]) => { add(X.sect, pfSecteurEtf(s), w * p / 100); sk += w * p / 100; }); }
         if (sk < w - 1e-9) add(X.sect, "Non renseigné (dans les ETF)", w - sk);
         X.sectKnown += sk;
       } else {
@@ -1154,14 +1157,14 @@ function pf3Parts(obj, max = 7, labelOf = k => k) {
   return [...head.map(([k, w], i) => ({ label: labelOf(k), w, c: PF3_PAL[i % PF3_PAL.length] })), ...(tw > 0.0005 ? [{ label: tail.length === 1 ? labelOf(tail[0][0]) : "Autres", w: tw, c: PF3_OTHER }] : [])];
 }
 function pf3Months(D) {
-  const vals = D.months.map(m => D.per[m]), all = [...vals, D.undated], max = Math.max(...all, 1e-9), W = 900, H = 180, bw = W / 13;
-  const bars = all.map((v, i) => { const h = Math.max(v > 0 ? 3 : 0, v / max * (H - 46)), x = i * bw + 6, lab = i < 12 ? MOIS[+D.months[i].slice(5) - 1] : "sans date";
+  const mob = matchMedia("(max-width:760px)").matches, vals = D.months.map(m => D.per[m]), all = [...vals, D.undated], max = Math.max(...all, 1e-9), W = mob ? 400 : 900, H = mob ? 150 : 180, bw = W / 13;
+  const bars = all.map((v, i) => { const h = Math.max(v > 0 ? 3 : 0, v / max * (H - 46)), x = i * bw + 6, lab = i < 12 ? MOIS[+D.months[i].slice(5) - 1] : mob ? "?" : "sans date";
     return `<g ${tipAttr({ h: i < 12 ? `${MOISL[+D.months[i].slice(5) - 1]} ${D.months[i].slice(0, 4)}` : "Date non annoncée", r: [["Estimation", pf3Eu(v), i < 12 ? INK : SAND]] })} tabindex="0"><rect x="${x}" y="${H - 24 - h}" width="${bw - 12}" height="${h}" rx="3" fill="${i < 12 ? "var(--ink)" : SAND}"/>${v > 0 ? `<text x="${x + (bw - 12) / 2}" y="${H - 30 - h}" text-anchor="middle" class="pf3bv">${F0.format(v)} €</text>` : ""}<text x="${x + (bw - 12) / 2}" y="${H - 8}" text-anchor="middle" class="pf3bl">${lab}</text><rect x="${i * bw}" y="0" width="${bw}" height="${H}" fill="transparent"/></g>`; }).join("");
   return `<div class="scroll-x"><svg class="pf3bars" viewBox="0 0 ${W} ${H}" role="img" aria-label="Dividendes estimés par mois">${bars}<line x1="0" x2="${W}" y1="${H - 24}" y2="${H - 24}" stroke="var(--line)"/></svg></div>`;
 }
 function pf3FeeChart(F) {
   const b = F.mainB; if (!b) return "";
-  const W = 900, H = 230, pl = 44, pr = 12, pt = 14, pb = 30, xs = [25, 50, 100, 200, 500, 1000, 2000, 5000];
+  const mob = matchMedia("(max-width:760px)").matches, W = mob ? 400 : 900, H = mob ? 190 : 230, pl = 44, pr = 12, pt = 14, pb = 30, xs = mob ? [25, 100, 500, 1000, 5000] : [25, 50, 100, 200, 500, 1000, 2000, 5000];
   const X = a => pl + (Math.log(a) - Math.log(25)) / (Math.log(5000) - Math.log(25)) * (W - pl - pr);
   const pts = []; for (let a = 25; a <= 5000; a *= 1.06) pts.push([a, brokerFee(b, a) / a]);
   const ords = F.orders.filter(o => o.a >= 25 && o.a <= 5000), ymax = Math.min(0.08, Math.max(0.012, ...pts.map(p => p[1]).filter(v => v < 0.08), ...ords.map(o => o.f / o.a))) * 1.1;
@@ -1178,7 +1181,7 @@ function pf3FeeChart(F) {
     </svg></div></div>`;
 }
 
-function pf3DefsOpen() { try { return localStorage.getItem("bilan.portefeuille.defs") !== "0"; } catch (e) { return true; } }
+function pf3DefsOpen() { try { return localStorage.getItem("bilan.portefeuille.defs") === "1"; } catch (e) { return false; } } // fermé par défaut : les définitions s'ouvrent à la demande
 /* ---------- Haut de page : la valeur, le gain, la journée ---------- */
 function pf3Hero(R0, P) {
   const el = $("#pf3hero"); if (!el) return;
@@ -1218,7 +1221,7 @@ async function pf3Dash(R0, P) {
       D.total > 0 ? `<a href="#pf3-dividendes"><span class="dot dot-fort"></span>Dividendes attendus <b>≈ ${pf3Eu(D.total)}/an</b></a>` : "",
       `<a href="#pf3-alertes"><span class="dot dot-${att ? "moyen" : "fort"}"></span>${att ? `<b>${att}</b> point${att > 1 ? "s" : ""} d'attention` : "Aucun point d'attention"}</a>`].filter(Boolean).join("");
     $$("a", vd).forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }); }
-  const loc = pf3Local(R0, X, S, F, D, A, P, prof);
+  const loc = pf3Local(R0, X, S, F, D, A, P, prof).filter(([h]) => h === "En bref" || h === "Ce qui ressort"); // le verdict seulement : frais, dividendes et remarques ont chacun leur bloc plus bas, inutile de les répéter ici
   const nAtt = A.filter(a => a.lv !== "info").length;
   const VIEWS = [["ligne", "Lignes"], ["sect", "Secteurs"], ["ctry", "Pays"], ["cur", "Devises"], ["type", "Types"], ["env", "Comptes"]];
   const cos = R0.live.filter(r => r.info.kind === "c").map(r => r.info.c), up = AG.events.filter(e => e.date >= TODAY && cos.some(c => c.id === e.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
@@ -1244,7 +1247,7 @@ async function pf3Dash(R0, P) {
       ${S.items.map(it => `<div class="pf3crit"><div class="pf3ct"><span class="dot dot-${it.zone}"></span><b>${it.t}</b><span class="num">${it.txt}</span></div><div class="pf3zone"><i style="left:${Math.round((1 - it.s) * 100)}%"></i></div><p>${it.rep} ${it.why}</p></div>`).join("")}` : `<p class="muted">Pas assez de données.</p>`}
       ${X.noComp.length ? `<p class="note">Composition non disponible pour ${X.noComp.map(r => esc(r.info.name)).join(", ")} : ${X.noComp.length > 1 ? "ces lignes comptent" : "cette ligne compte"} comme un seul bloc.</p>` : ""}</div></section>
     <section class="panel"><div class="ph"><h2>Ce que vous possédez vraiment</h2></div><div class="pb">${hbars(X.top.slice(0, 12).map(x => ({ label: x.name, v: x.w, href: x.href })), v => pct(v, v < 0.01 ? 2 : 1, false))}
-      <p class="note">Vos ETF sont « ouverts » : chaque entreprise qu'ils contiennent est comptée selon son poids, et additionnée à vos actions en direct.${X.comps.length ? ` Compositions publiées par des fonds équivalents (même indice), au ${esc(X.comps.map(c => c[1].asOf).filter(Boolean).sort()[0] || "")}.` : ""}</p></div></section></div>
+      <p class="note">Vos ETF sont « ouverts » : chaque entreprise qu'ils contiennent est comptée selon son poids, et additionnée à vos actions en direct.${X.comps.length ? (d => ` Compositions publiées par des fonds équivalents (même indice)${d ? `, au ${esc(d)}` : ""}.`)(X.comps.map(c => c[1].asOf).filter(Boolean).sort()[0]) : ""}</p></div></section></div>
   <section class="panel" id="pf3-frais"><div class="ph"><h2>Les frais</h2></div>
     <div class="tiles"><div class="tile"><span class="kick">Courtage payé</span><span class="v">${F.orders.length ? pf3Eu(F.fromOrders, 2) : "–"}</span><small>${F.orders.length ? `${pct(F.ratio, 2, false)} de ${pf3Eu(F.bought)} achetés, ${F.orders.length} achat${F.orders.length > 1 ? "s" : ""}` : "ajoutez vos achats datés pour le calculer"}</small></div>
       <div class="tile"><span class="kick">Frais des ETF</span><span class="v">${F.ter != null ? pct(F.ter, 2, false) : "–"}</span><small>${F.ter != null ? `par an en moyenne pondérée, soit ${pf3Eu(F.terE)} par an` : "aucun ETF"}</small></div>
@@ -1719,7 +1722,10 @@ function pf3Css() {
   .pf3new,.pf3imp{padding:12px}
   .pf3closed > summary{padding:12px 16px}
   .pf3 .tiles .tile:last-child:nth-child(odd){grid-column:1/-1}
-  .pf3fc{min-width:600px}
+  .pf3fc{min-width:0;width:100%;height:auto;display:block}.pf3bars{min-width:0;max-width:none} /* dessinés en 400 unités sur téléphone : tout tient dans l'écran, sans défilement */
+  .pf3fc .pf3bl,.pf3bars .pf3bl,.pf3bars .pf3bv{font-size:10px}
+  .pf3dt th:nth-child(2),.pf3dt td:nth-child(2){display:none} /* sur téléphone, la colonne « dernier dividende » cède la place : l'estimation et la date comptent davantage */
+  .pf3dt td.l{white-space:normal}
   .pf3ot{display:block}.pf3ot thead{display:none}.pf3ot tbody{display:block}.pf3ot tr{display:grid;grid-template-columns:minmax(0,1fr) auto auto 32px;grid-template-areas:"d q m x" "o p f x";column-gap:12px;row-gap:2px;padding:9px 0;border-bottom:1px solid var(--line2);align-items:center}.pf3ot td{border:0!important;padding:0!important;text-align:right}.pf3ot td:nth-child(1){grid-area:d;text-align:left}.pf3ot td:nth-child(2){grid-area:o;text-align:left;color:var(--grey);font-size:12px}.pf3ot td:nth-child(3){grid-area:q}.pf3ot td:nth-child(4){grid-area:p;color:var(--grey);font-size:12px}.pf3ot td:nth-child(5){grid-area:f;color:var(--grey);font-size:12px}.pf3ot td:nth-child(6){grid-area:m;font-weight:600}.pf3ot td:nth-child(7){grid-area:x}.pf3ot td:nth-child(3)::after{content:" parts"}.pf3ot td:nth-child(4)::before{content:"à "}.pf3ot td:nth-child(5)::before{content:"frais "}.pf3od td:nth-child(3),.pf3od td:nth-child(4),.pf3od td:nth-child(5){visibility:hidden}
 }
 .pf3steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}

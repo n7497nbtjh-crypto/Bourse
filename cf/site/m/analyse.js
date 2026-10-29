@@ -518,11 +518,12 @@ function analyseHTML(s, c, mode) {
   const T = inner ? "div" : "section";
   return `<${T} class="${inner ? "anf anf-in" : "panel anf"}" id="analyse" data-analyse-id="${esc(s.id)}" data-analyse-mode="${inner ? "inner" : ""}">
     <div class="ph"><h2>${inner ? "Sur plusieurs années et selon son contexte" : "Ce qui la valorise, ce qui lui fait défaut"}</h2><span class="light" style="font-size:12.5px">${yr ? `Comptes ${yr}` : "Sans comptes"} · règles publiques</span></div>
-    <p class="anf-intro">${nV} atout${nV > 1 ? "s" : ""}, ${nD} point${nD > 1 ? "s" : ""} faible${nD > 1 ? "s" : ""} ou risque${nD > 1 ? "s" : ""}, et ${nC} élément${nC > 1 ? "s" : ""} de contexte pour ${esc(s.name)}. Chaque point donne son chiffre et sa source. ${peu ? "Les comptes de cette entreprise sont incomplets : l'analyse s'appuie surtout sur son pays, son secteur, sa devise et sa cotation." : "Les points tirés des comptes portent sur plusieurs exercices, pas sur une seule année."}</p>
+    ${inner ? "" : `<p class="anf-intro">${nV} atout${nV > 1 ? "s" : ""}, ${nD} point${nD > 1 ? "s" : ""} faible${nD > 1 ? "s" : ""} ou risque${nD > 1 ? "s" : ""}, et ${nC} élément${nC > 1 ? "s" : ""} de contexte pour ${esc(s.name)}. Chaque point donne son chiffre et sa source. ${peu ? "Les comptes de cette entreprise sont incomplets : l'analyse s'appuie surtout sur son pays, son secteur, sa devise et sa cotation." : "Les points tirés des comptes portent sur plusieurs exercices, pas sur une seule année."}</p>`}
+    ${inner ? `<details class="anf-ctx anf-ctxd anf-pts"><summary>Le détail de chaque point : chiffre et source (${nV} atout${nV > 1 ? "s" : ""}, ${nD} point${nD > 1 ? "s" : ""} faible${nD > 1 ? "s" : ""})</summary>` : ""}
     <div class="anf-cols">
       <div class="anf-c anf-cv"><h3><i></i>Ce qui la valorise</h3>${analyseListe(r.valorise, "v", peu ? "Sans comptes complets, le site ne peut pas mesurer ses atouts financiers." : "Aucun atout net dans ses comptes au regard des règles du site.")}</div>
       <div class="anf-c anf-cd"><h3><i></i>Ce qui lui fait défaut</h3>${analyseListe(r.defaut, "d", "Aucun point faible net dans ses comptes ni dans les règles de contexte.")}</div>
-    </div>
+    </div>${inner ? "</details>" : ""}
     ${ctx.length ? (inner ? `<details class="anf-ctx anf-ctxd"><summary>Le contexte à connaître (${ctx.length} point${ctx.length > 1 ? "s" : ""} : pays, devise, secteur, fiscalité)</summary>${analyseListe(ctx, "c", "")}</details>` : `<div class="anf-ctx"><h3>Le contexte à connaître</h3><p class="anf-sub">Ni atout ni défaut en soi : ce qu'il faut savoir avant de lire son cours ou ses comptes.</p>${analyseListe(ctx, "c", "")}</div>`) : ""}
     <details class="anf-sait"${peu ? " open" : ""}><summary>Ce que le site sait d'elle, et ce qui manque</summary><div class="anf-sait-g">
       <div><h4>Ce que l'on sait</h4><ul>${r.connu.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>

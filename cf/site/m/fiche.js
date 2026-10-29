@@ -114,6 +114,7 @@ const FICHE_CSS = `
 .fid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:0 18px}
 .fid2 div{padding:7px 0;border-bottom:1px dashed var(--line2);font-size:13.5px;display:flex;justify-content:space-between;gap:10px}
 .fid2 span{color:var(--light)}.fid2 b{font-weight:500;text-align:right;overflow-wrap:anywhere}
+.fid2 b small{font-weight:400;color:var(--light);font-size:12px}
 .fgen{background:#FBF9F2;border:1px solid var(--line2);border-radius:10px;padding:10px 12px;font-size:13.5px;color:var(--grey)}
 .fia{border:1.5px solid var(--ink)}
 .fia-h{display:flex;gap:14px;align-items:flex-start;padding:18px 22px 6px}
@@ -255,9 +256,9 @@ function ficheMetierHTML(s, c) {
   const Y = +TODAY.slice(0, 4), out = [];
   // En une phrase
   const phrase = !gen ? s.fiche.fait : s.desc || (s.fiche && s.fiche.fait) || "";
-  out.push(`<p class="f1p">${esc(phrase)}${!gen && s.desc && s.desc !== phrase ? `<small>${esc(s.desc)}</small>` : ""}</p>`);
+  out.push(`<p class="f1p">${esc(phrase)}</p>`); // la ligne « Luxe : mode… » figure déjà sous le titre de la fiche : on ne la répète pas
   if (wd && wd.secteurs) wd.secteurs = wd.secteurs.filter(x => !/si[eè]ges? sociaux|holding/i.test(x));
-  if (wd && ((wd.secteurs && wd.secteurs.length) || wd.maison)) out.push(`<div class="fm" style="padding-top:12px;padding-bottom:12px">${wd.secteurs && wd.secteurs.length ? `<p class="fbt">Ses domaines d'activité</p><div class="fchips">${wd.secteurs.map(x => `<span>${esc(x)}</span>`).join("")}</div>` : ""}${wd.maison ? `<p style="margin:10px 0 0;font-size:13.5px">Elle appartient au groupe <b>${esc(wd.maison[0])}</b>.</p>` : ""}</div>`);
+  if (wd && wd.maison) out.push(`<div class="fm" style="padding-top:12px;padding-bottom:12px">${wd.maison ? `<p style="margin:10px 0 0;font-size:13.5px">Elle appartient au groupe <b>${esc(wd.maison[0])}</b>.</p>` : ""}</div>`);
   // Chiffres clés
   const peers = R.companies.filter(x => x.sector === s.sector && !x.missing && x.ca > 0).sort((a, b) => caEur(b) - caEur(a)), rank = peers.findIndex(x => x.id === s.id) + 1, v = valo(s);
   const tiles = [
@@ -268,7 +269,7 @@ function ficheMetierHTML(s, c) {
     v && v.capE ? ["Valeur en Bourse", capFmt(v.capE), "au cours actuel"] : null,
     rank && peers.length > 2 ? ["Taille dans son secteur", `${rank}<sup>${rank === 1 ? "re" : "e"}</sup> sur ${peers.length}`, "par les ventes, parmi les entreprises suivies", false, true] : null,
   ].filter(Boolean);
-  if (tiles.length) out.push(`<div class="fm"><h3>${esc(s.name)} en chiffres</h3><div class="ftiles n${tiles.length}" style="--n:${tiles.length}">${tiles.map(([k, val, sub, txt, html]) => `<div class="ftile"><p class="kick">${k}</p><b class="${txt ? "txt" : ""}">${html ? val : esc(val)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`).join("")}</div></div>`);
+  if (false) out.push(`<div class="fm"><h3>${esc(s.name)} en chiffres</h3><div class="ftiles n${tiles.length}" style="--n:${tiles.length}">${tiles.map(([k, val, sub, txt, html]) => `<div class="ftile"><p class="kick">${k}</p><b class="${txt ? "txt" : ""}">${html ? val : esc(val)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`).join("")}</div></div>`);
   // Comment elle gagne son argent
   let acts = null, zones = null, unite = "pct", srcRep = "", anRep = null;
   if (segs.activites || segs.produits || segs.geo) {
@@ -289,7 +290,7 @@ function ficheMetierHTML(s, c) {
       ${srcRep ? `<div class="src">${srcRep}</div>` : ""}</div>`);
   }
   // Marques, produits, filiales
-  const marques = wd ? [...new Set([...(wd.marques || []), ...(wd.produits || [])])].filter(x => x.length < 40).slice(0, 14) : [];
+  const marques = wd ? [...new Set([...(wd.marques || []), ...(wd.produits || [])])].filter(x => x.length < 40 && /^[A-ZÀ-Ý0-9]/.test(x)).slice(0, 14) : []; // les mots génériques en minuscules (« vêtement ») ne sont pas des marques
   if (marques.length || (wd && wd.filiales)) out.push(`<div class="fm"><h3>Ses marques, produits et filiales connus</h3>
       ${marques.length ? `<div class="fchips">${marques.map(m => `<span>${esc(m)}</span>`).join("")}</div>` : ""}
       ${wd.filiales ? `<p class="fbt" style="margin-top:12px">Principales filiales${wd.nfiliales > wd.filiales.length ? ` (${wd.nfiliales} recensées)` : ""}</p><div class="fchips">${wd.filiales.map(m => `<span>${esc(m)}</span>`).join("")}</div>` : ""}
@@ -301,7 +302,7 @@ function ficheMetierHTML(s, c) {
   if (!bank && m.marge != null && med.marge != null && med.n >= 3) rows.push(["Marge d'exploitation", m.marge, med.marge, x => pct(x, 1, false), true]);
   if (bank && m.roe != null && med.roe != null && med.n >= 3) rows.push(["Rentabilité des capitaux propres", m.roe, med.roe, x => pct(x, 1, false), true]);
   if (m.g1 != null && med.g1 != null && med.n >= 3) rows.push(["Croissance des ventes", m.g1, med.g1, x => pct(x), true]);
-  if (rows.length) {
+  if (false) { // doublon de L'essentiel (indicateurs et « Face à ses concurrents »)
     const bar = (val, ref, good) => { const mx = Math.max(Math.abs(val), Math.abs(ref), 1e-9); return `<span class="b"><i style="width:${Math.max(2, Math.abs(val) / mx * 100)}%;background:${good}"></i></span>`; };
     out.push(`<div class="fm"><h3>Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h3><div class="fcmp">${rows.map(([l, val, ref, fm]) => { const better = val >= ref; return `<span>${l}<br><small>${esc(s.name)}</small></span>${bar(val, ref, better ? "var(--g)" : "var(--o)")}<span class="n">${fm(val)}</span><span><small>médiane du secteur</small></span>${bar(ref, val, "var(--n)")}<span class="n">${fm(ref)}</span>`; }).join("")}</div>
       <p class="muted" style="font-size:12.5px;margin:10px 0 0">Médiane des ${med.n} entreprises du secteur suivies par le site : la moitié fait mieux, l'autre moitié moins bien. ${medBtn("Qu'est-ce que la médiane ?")}</p></div>`);
@@ -316,12 +317,14 @@ function ficheMetierHTML(s, c) {
   if (c && c.years.length > 1) fr.push([String(c.years[0]), "Premiers comptes lus par le site"]);
   if (f) fr.push([String(f.year), "Dernier exercice publié"]);
   if (ev) fr.push([dShort(ev.date), esc(ev.label), true]);
-  if (fr.length >= 3) out.push(`<div class="fm"><h3>Repères dans le temps</h3><ol class="ffrise">${fr.map(([d, l, fut]) => `<li class="${fut ? "fut" : ""}"><b>${d}</b>${l}</li>`).join("")}</ol></div>`);
+  if (false) out.push(`<div class="fm"><h3>Repères dans le temps</h3><ol class="ffrise">${fr.map(([d, l, fut]) => `<li class="${fut ? "fut" : ""}"><b>${d}</b>${l}</li>`).join("")}</ol></div>`);
   // Ce qui fait bouger ses résultats
   if (!gen && s.fiche.depend) out.push(`<div class="fm"><h3>Ce qui fait bouger ses résultats</h3><p>${esc(s.fiche.depend)}</p><p style="margin:0">${ctLink(s, "varier", "Le bénéfice année après année")}</p></div>`);
   // Identité
   const pea = peaOk(s), [bx, tk] = String(s.tv || "").split(":"), site = (wd && wd.site) || (s.domain ? "https://www." + s.domain : "");
-  const idl = [["Pays", (s.isin && typeof COUNTRY !== "undefined" && COUNTRY[s.isin.slice(0, 2)]) || regName(s)], ["Secteur", esc(secName(s))], ["Code en Bourse", esc(`${tk || s.ticker}${bx ? " · " + ((typeof IA_BOURSES !== "undefined" && IA_BOURSES[bx]) || bx) : ""}`)], s.isin ? ["ISIN", esc(s.isin)] : null,
+  const idl = [["Pays", (s.isin && typeof COUNTRY !== "undefined" && COUNTRY[s.isin.slice(0, 2)]) || regName(s)], wd && wd.siege ? ["Siège", esc(wd.siege)] : null, wd && wd.fonde ? ["Création", `${wd.fonde}${Y - wd.fonde > 1 ? ` <small>(il y a ${Y - wd.fonde} ans)</small>` : ""}`] : null,
+    wd && wd.effectif ? ["Salariés", `${F0.format(wd.effectif[0])}${wd.effectif[1] ? ` <small>(${wd.effectif[1]})</small>` : ""}`] : null, ["Secteur", esc(secName(s))],
+    v && v.capE ? ["Valeur en Bourse", `${esc(capFmt(v.capE))} <small>(au cours actuel)</small>`] : null, ["Code en Bourse", esc(`${tk || s.ticker}${bx ? " · " + ((typeof IA_BOURSES !== "undefined" && IA_BOURSES[bx]) || bx) : ""}`)], s.isin ? ["ISIN", esc(s.isin)] : null,
     pea != null ? ["Compte possible", pea ? `PEA ou compte-titres <a class="lnk" href="/pea-cto">?</a>` : `Compte-titres <a class="lnk" href="/pea-cto">?</a>`] : null,
     site ? ["Site officiel", `<a class="lnk" href="${esc(site)}" target="_blank" rel="noopener">${esc(site.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").slice(0, 32))}</a>`] : null,
     wd && wd.wiki ? ["Encyclopédie", `<a class="lnk" href="${esc(ficheWikiUrl(wd.wiki))}" target="_blank" rel="noopener">Wikipédia</a>`] : null].filter(Boolean);

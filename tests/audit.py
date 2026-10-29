@@ -105,7 +105,7 @@ with sync_playwright() as pw:
             pg.fill("#pfq", q); pg.wait_for_timeout(150); pg.click("#pfs [role=option]"); pg.wait_for_timeout(200)
             pg.fill("#pf3nq", n); pg.fill("#pf3np", pru); pg.click("#pf3nok"); pg.wait_for_timeout(500)
         pg.wait_for_timeout(500)
-        if "valeur totale" not in pg.inner_text("#pf3hero").lower() or "diversification" not in pg.inner_text("#pf3dash").lower(): probs["/portefeuille (tableau de bord)"] = ["le tableau de bord ne s'affiche pas"]
+        if "valeur actuelle" not in pg.inner_text("#pf3hero").lower() or "diversification" not in pg.inner_text("#pf3dash").lower(): probs["/portefeuille (tableau de bord)"] = ["le tableau de bord ne s'affiche pas"]
         pg.locator(".pf3rb").first.click(); pg.wait_for_timeout(300)
         if not pg.locator(".pf3det:not([hidden])").count(): probs["/portefeuille (détail)"] = ["le détail d'une ligne ne s'ouvre pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
