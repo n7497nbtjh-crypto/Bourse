@@ -332,3 +332,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 @media (max-width:900px){.mtdflow{grid-template-columns:repeat(2,1fr)}.mtdflow li::after{display:none}.mtdgrid{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:560px){.mtdflow{grid-template-columns:1fr}.mtdcheck,.mtdsrc{grid-template-columns:1fr}}
 </style>`);
+
+/* Barre de recherche : texte d'aide court quand la barre est étroite (tablette) */
+(() => { const fit = () => { const i = document.querySelector("header [data-search] input"); if (!i) return; i.dataset.ph = i.dataset.ph || i.placeholder; i.placeholder = innerWidth > 760 && innerWidth < 940 ? "Rechercher" : i.dataset.ph; };
+  addEventListener("resize", fit, { passive: true }); if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fit); else fit(); })();
