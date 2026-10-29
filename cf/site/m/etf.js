@@ -152,6 +152,8 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .etfnb b{font-size:14px}.etfnb small{display:block;font-size:12px;color:var(--grey)}
 .etfnb .n{font-family:var(--mono);font-size:14px;text-align:right}
 .etfnb .ov{font-size:12px;color:var(--grey);text-align:right;min-width:74px}
+/* noms d'indice longs dans le classement de l'accueil (m/orchestre.js) : une ligne, coupée proprement */
+a.orcrow span.t small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;white-space:normal;overflow:hidden}
 @media (max-width:860px){
  .etfgrid{grid-template-columns:1fr}.etfgrid>div+div{border-left:0;border-top:1px solid var(--line2,#EFECE6)}
  .etfcols{grid-template-columns:1fr}
