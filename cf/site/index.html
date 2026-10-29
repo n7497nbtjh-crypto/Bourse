@@ -3437,13 +3437,13 @@ async function pagePremium(sub) {
     ["Historique des bilans", "2 semaines", "12 semaines"],
     ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "Toutes"],
     ["Réponses calculées par le site (recherches, comparaisons, définitions, questions sur une fiche)", "Sans limite", "Sans limite"],
-    ["Réponses rédigées par l'IA du site (nombre de questions par jour limité)", "Oui", "Oui"],
+    ["Réponses rédigées par l'IA du site, pour vos questions libres", "3 par jour (10 avec un compte gratuit)", "Sans limite"],
     ["Résultats d'une recherche par critères", "8", "30"],
     ["Positions actives suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
     ["Entreprises comparées côte à côte", `${FREE.cmp}`, "5"],
   ];
   const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<button class="btn" disabled>Ouverture prochaine</button>`}</div>`;
-  app.innerHTML = `<h1 class="pagetitle">bilan. Premium</h1><p class="pagesub">Le site reste gratuit pour l'essentiel : chaque fiche, chaque chiffre, chaque explication, votre espace et votre bilan de la semaine. Premium vous donne toute l'Académie, toutes vos alertes, l'historique de vos bilans et un suivi plus large. Le prix finance les données et les serveurs, pas la publicité.</p>
+  app.innerHTML = `<h1 class="pagetitle">bilan. Premium</h1><p class="pagesub">Le site reste gratuit pour l'essentiel : chaque fiche, chaque chiffre, chaque explication, votre espace et votre bilan de la semaine. Premium vous donne l'IA du site sans limite, toute l'Académie, toutes vos alertes, l'historique de vos bilans et un suivi plus large. Le prix finance les données, les serveurs et l'IA, pas la publicité.</p>
     ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
     <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>`}

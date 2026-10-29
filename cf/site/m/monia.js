@@ -12,7 +12,7 @@ try { localStorage.removeItem("bilan.monia"); } catch (e) { } // clé d'une anci
 function miaEtat() {
   if (MIA.etat) return MIA.etat;
   return MIA.etat = fetch("/api/ia/etat", { credentials: "same-origin" }).then(r => r.ok ? r.json() : null).catch(() => null)
-    .then(j => { if (j && !j.disponible) MIA.coupee = j.site_epuise ? "site" : j.raison === "absente" ? "absente" : "visiteur"; miaMaj(); return j; });
+    .then(j => { if (j) MIA.niveau = j.niveau || "visiteur"; if (j && !j.disponible) MIA.coupee = j.site_epuise ? "site" : j.raison === "absente" ? "absente" : "visiteur"; miaMaj(); return j; });
 }
 const miaConnectee = () => !MIA.coupee; // nom gardé : « une IA répond » (les autres modules l'utilisent)
 const miaNomModele = () => "l'IA de bilan.";
@@ -25,7 +25,7 @@ async function miaAppel(tache, user, max = 600) {
   try {
     const r = await fetch("/api/ia/rediger", { method: "POST", credentials: "same-origin", signal: ctl.signal, headers: { "content-type": "application/json" }, body: JSON.stringify({ tache, user, max }) });
     const j = await r.json().catch(() => ({}));
-    if (r.status === 429 || r.status === 503) { MIA.coupee = j.limite || "absente"; miaMaj(); return { coupee: true, message: j.message || "L'IA du site n'est pas disponible pour le moment." }; }
+    if (r.status === 429 || r.status === 503) { MIA.coupee = j.limite || "absente"; if (j.niveau) MIA.niveau = j.niveau; miaMaj(); return { coupee: true, message: j.message || "L'IA du site n'est pas disponible pour le moment." }; }
     if (!r.ok) return { message: "L'IA du site n'a pas pu répondre. Réessayez dans un moment." };
     const txt = miaNettoie(j.txt);
     return txt.length > 15 ? { txt, modele: j.modele } : { message: "L'IA a renvoyé une réponse vide. Réessayez." };
@@ -84,9 +84,15 @@ function miaPied(j) {
   return "";
 }
 /** Quand l'IA ne peut pas rédiger : la réponse calculée reste, avec une ligne d'explication. */
+function miaSuite() { // la marche suivante : compte gratuit, puis Premium
+  if (MIA.niveau === "premium") return "";
+  if (MIA.niveau === "compte") return ` <a href="/premium">Premium</a> n'a pas de limite.`;
+  return ` Avec un <a href="/espace">compte gratuit</a>, 10 par jour ; avec <a href="/premium">Premium</a>, sans limite.`;
+}
 function miaInvite(txt) {
-  const why = MIA.coupee === "visiteur" ? "Vous avez atteint le nombre de questions à l'IA du site pour aujourd'hui ; elle revient demain."
-    : MIA.coupee === "site" ? "L'IA du site a atteint sa limite gratuite pour aujourd'hui ; elle revient demain." : MIA.coupee === "absente" ? "L'IA du site n'est pas disponible pour le moment." : "";
+  const why = MIA.coupee === "visiteur" ? "Vous avez posé vos questions rédigées du jour ; l'IA revient demain." + miaSuite()
+    : MIA.coupee === "site" ? "L'IA du site a atteint sa part gratuite pour aujourd'hui ; elle revient demain." + (MIA.niveau === "premium" ? "" : ` <a href="/premium">Premium</a> n'a pas cette limite.`)
+    : MIA.coupee === "absente" ? "L'IA du site n'est pas disponible pour le moment." : "";
   return why ? `<p class="mia-inv"><span aria-hidden="true">✦</span> ${txt ? esc(txt) + " " : ""}${why}</p>` : "";
 }
 /** Le bloc à afficher après une demande de rédaction : texte, explication ou erreur. */
@@ -110,13 +116,14 @@ async function miaPage(el) {
       <ol class="mia-etapes"><li><b>D'abord, le calcul.</b> Recherches par critères, comparaisons, définitions, questions courantes sur une fiche : le site calcule la réponse dans votre navigateur, sans limite.</li>
         <li><b>Ensuite, la rédaction.</b> Pour une question libre, un modèle ouvert (Qwen3 ou Mistral Small), hébergé par Cloudflare, rédige la réponse à partir des seuls chiffres et sources du site, avec des consignes strictes : pas de conseil, pas de prévision, les incertitudes dites.</li>
         <li><b>Chaque réponse rédigée est signalée</b> et cite ses sources. Vérifiez-la : une IA peut se tromper.</li></ol>
-      <p class="mia-prix" id="miareste">Pour rester gratuit, le site limite le nombre de questions rédigées par jour et par visiteur.</p>
+      <p class="mia-prix" id="miareste">Pour rester gratuit, le site limite le nombre de questions rédigées par jour : 3 sans compte, 10 avec un compte gratuit, sans limite avec Premium.</p>
       <ul class="mia-garanties"><li>Aucun compte, aucune clé à fournir.</li><li>Vos questions sont envoyées à Cloudflare, qui héberge déjà le site, pour être traitées ; elles ne servent pas à entraîner le modèle. Le site ne garde pas leur texte, seulement un compteur anonyme du jour.</li></ul>
     </div></section>
     <section class="panel"><div class="ph"><h2>Vous utilisez déjà ChatGPT ou Claude ?</h2></div><div class="pb"><p style="margin-top:0">Ajoutez bilan. à votre assistant : il pourra lire les données du site pour vous répondre.</p><a class="lnk" href="/connecteur">Utiliser bilan. dans ChatGPT ou Claude</a></div></section></div>`;
   miaMaj();
   const j = await miaEtat(), r = $("#miareste", el);
-  if (r && j && j.plafond_visiteur) r.textContent = `Pour rester gratuit, le site limite les questions rédigées à ${j.plafond_visiteur} par jour et par visiteur. ${j.disponible ? `Il vous en reste ${j.reste_visiteur} aujourd'hui.` : j.site_epuise ? "La part gratuite du site est épuisée pour aujourd'hui : l'IA revient demain." : "Vous les avez utilisées aujourd'hui : l'IA revient demain."}`;
+  if (r && j && j.plafonds) { const Q = j.plafonds, nv = { visiteur: "sans compte", compte: "avec votre compte gratuit", premium: "avec Premium" }[j.niveau] || "";
+    r.innerHTML = `Pour rester gratuit, le site limite les questions rédigées par jour : ${Q.visiteur} sans compte, ${Q.compte} avec un <a class="lnk" href="/espace">compte gratuit</a>, sans limite avec <a class="lnk" href="/premium">Premium</a> (usage raisonnable : ${Q.premium}). Vous êtes ${esc(nv)} : ${j.disponible ? `il vous en reste ${j.reste_visiteur} aujourd'hui.` : j.site_epuise ? "la part gratuite du site est épuisée pour aujourd'hui, l'IA revient demain." : "vous les avez utilisées aujourd'hui, l'IA revient demain."}`; }
 }
 ROUTES_EXTRA.push([/^\/espace\/ia$/, async () => {
   const m = typeof moi === "function" ? await moi() : { connecte: false };

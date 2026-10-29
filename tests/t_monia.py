@@ -17,11 +17,11 @@ def route3(r):
     u = r.request.url
     if any(h in u for h in ("openrouter.ai", "api.openai.com", "api.anthropic.com", "googleapis.com/v1", "api.mistral.ai")): ST["ext"].append(u); return r.fulfill(status=500, body="")
     if "/api/ia/etat" in u:
-        if ST["mode"] == "epuise": return r.fulfill(json={"disponible": False, "site_epuise": True, "reste_visiteur": 20, "plafond_visiteur": 25})
-        return r.fulfill(json={"disponible": True, "reste_visiteur": 22, "plafond_visiteur": 25, "site_epuise": False})
+        if ST["mode"] == "epuise": return r.fulfill(json={"disponible": False, "site_epuise": True, "reste_visiteur": 2, "plafond_visiteur": 3, "niveau": "visiteur", "plafonds": {"visiteur": 3, "compte": 10, "premium": 150}})
+        return r.fulfill(json={"disponible": True, "reste_visiteur": 2, "plafond_visiteur": 3, "site_epuise": False, "niveau": "visiteur", "plafonds": {"visiteur": 3, "compte": 10, "premium": 150}})
     if "/api/ia/rediger" in u:
         b = json.loads(r.request.post_data or "{}"); ST["appels"].append(b)
-        if ST["mode"] == "limite": return r.fulfill(status=429, json={"limite": "visiteur", "message": "Vous avez posé 25 questions à l'IA du site aujourd'hui."})
+        if ST["mode"] == "limite": return r.fulfill(status=429, json={"limite": "visiteur", "niveau": "visiteur", "message": "Vous avez posé vos 3 questions rédigées du jour."})
         if b.get("tache") == "demande": return r.fulfill(json={"txt": FILTRE, "modele": "Qwen3 30B"})
         return r.fulfill(json={"txt": "Réponse rédigée de test : la marge reste au-dessus de la médiane du secteur.\nSources : comptes annuels publiés par l'entreprise (ESEF).", "modele": "Qwen3 30B"})
     return route(r)
@@ -35,7 +35,7 @@ with sync_playwright() as pw:
         pg.route("**/*", route3)
         tag = f"[{W}] "
         # 1. Page « L'IA du site »
-        pg.goto(B + "/espace/ia", timeout=90000); pg.wait_for_function("document.querySelector('#miareste') && /reste 22/.test(document.querySelector('#miareste').innerText)", timeout=20000)
+        pg.goto(B + "/espace/ia", timeout=90000); pg.wait_for_function("document.querySelector('#miareste') && /reste 2 aujourd/.test(document.querySelector('#miareste').innerText)", timeout=20000)
         t = pg.inner_text("#app")
         ok("Gratuite, sans compte et sans clé" in t and "IA du site : gratuite" in t and "clé" not in t.split("Comment elle répond")[1].split("Aucun compte")[0], tag + "page L'IA du site : gratuite, reste du jour affiché")
         pg.screenshot(path=f"/tmp/monia_page_{W}.png", full_page=True)
@@ -59,7 +59,7 @@ with sync_playwright() as pw:
         # 4. Limite du visiteur atteinte : la réponse calculée reste, une ligne explique
         ST["mode"] = "limite"; pg.goto(B + "/entreprise/lvmh"); pg.wait_for_selector("#orciab", state="attached"); pg.wait_for_timeout(600)
         pg.evaluate("orcIaOpen()"); pg.evaluate("orcIaAsk('Expliquez concrètement le métier de LVMH', { rediger: true })"); pg.wait_for_timeout(1500)
-        t = pg.inner_text("#orcialog"); ok("nombre de questions" in t and "revient demain" in t, tag + "limite du visiteur : explication claire " + t[-160:])
+        t = pg.inner_text("#orcialog"); ok("questions rédigées du jour" in t and "revient demain" in t and "compte gratuit" in t and "Premium" in t, tag + "limite du visiteur : explication et marche suivante " + t[-200:])
         n1 = len(ST["appels"]); pg.evaluate("orcIaAsk('Pourquoi la marge baisse ?', { rediger: true })"); pg.wait_for_timeout(1000)
         ok(len(ST["appels"]) == n1, tag + "après la limite : plus d'appel au serveur sur cette page")
         ok("limite du jour atteinte" in pg.inner_text("#orcia"), tag + "panneau : « Réponses calculées (limite du jour atteinte) »")

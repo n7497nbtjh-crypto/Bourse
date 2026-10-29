@@ -51,6 +51,18 @@ for (const [m, u] of [["POST", "/api/assistant"], ["POST", "/api/demande"], ["GE
   [s, j] = await J(await W("POST", "/api/ia/rediger", { tache: "expliquer", user: "Autre visiteur" }, ));
   const r2 = await worker.fetch(new Request("https://t.local/api/ia/rediger", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": "2.2.2.2" }, body: JSON.stringify({ tache: "expliquer", user: "Autre visiteur" }) }), envIA, { waitUntil() { } });
   const j2 = await r2.json(); ok(r2.status === 429 && j2.limite === "site" && appels.length === 3, "plafond du site : plus aucun appel au modèle " + JSON.stringify(j2));
+  // Premium : passe malgré le plafond du site, et a son propre plafond (150)
+  const rp = await worker.fetch(req("POST", "/api/ia/rediger", { tache: "expliquer", user: "Question Premium" }, { "x-bilan-token": tok }), envIA, { waitUntil() { } });
+  const jp = await rp.json(); ok(rp.status === 200 && jp.txt && appels.length === 4, "Premium répond malgré le plafond du site " + JSON.stringify(jp).slice(0, 80));
+  const ep = await (await worker.fetch(req("GET", "/api/ia/etat", null, { "x-bilan-token": tok }), envIA, { waitUntil() { } })).json();
+  ok(ep.niveau === "premium" && ep.plafond_visiteur === 150 && ep.reste_visiteur === 149 && ep.site_epuise === false, "état Premium " + JSON.stringify(ep));
+  // Budget mensuel : avec 1 € de budget, un gratuit repasse (99 000 neurones de marge)
+  const envB = { ...envIA, IA_BUDGET_MOIS: "1" };
+  const rb = await worker.fetch(new Request("https://t.local/api/ia/rediger", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": "3.3.3.3" }, body: JSON.stringify({ tache: "expliquer", user: "Avec budget" }) }), envB, { waitUntil() { } });
+  ok(rb.status === 200 && appels.length === 5, "budget mensuel : le gratuit repasse au-delà de la part gratuite du jour");
+  sql.exec(`UPDATE ia_neurones SET n = 10000 + 99000`);
+  const rc = await worker.fetch(new Request("https://t.local/api/ia/rediger", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": "4.4.4.4" }, body: JSON.stringify({ tache: "expliquer", user: "Budget épuisé" }) }), envB, { waitUntil() { } });
+  const jc = await rc.json(); ok(rc.status === 429 && jc.limite === "site" && /budget du mois/.test(jc.message) && appels.length === 5, "budget mensuel épuisé : arrêt pour les gratuits " + jc.message);
 }
 [s, j] = await J(await veille(req("POST", "/api/veille", { faits: {} }), env)); ok(s === 410 && /IA du site/.test(j.error), "bilan rédigé retiré du serveur");
 

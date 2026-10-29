@@ -43,7 +43,7 @@ def route(r):
     if any(h in u for h in ("openrouter.ai", "api.openai.com", "api.anthropic.com", "generativelanguage.googleapis.com", "api.mistral.ai")): return r.fulfill(status=503, json={"error": "hors ligne (audit)"})  # « Connecter mon IA » : jamais de vrai appel pendant l'audit
     if "/api/premium/statut" in u: return r.fulfill(json={"premium": False})
     if "/api/premium/activer" in u: return r.fulfill(json={"token": "a" * 40, "plan": "mensuel"})
-    if "/api/ia/etat" in u: return r.fulfill(json={"disponible": True, "reste_visiteur": 25, "plafond_visiteur": 25, "site_epuise": False})  # l'IA du site (cf/src/iasite.mjs), simulée
+    if "/api/ia/etat" in u: return r.fulfill(json={"disponible": True, "reste_visiteur": 3, "plafond_visiteur": 3, "site_epuise": False, "niveau": "visiteur", "plafonds": {"visiteur": 3, "compte": 10, "premium": 150}})  # l'IA du site (cf/src/iasite.mjs), simulée
     if "/api/ia/rediger" in u: return r.fulfill(json={"txt": "Réponse de test rédigée par l'IA du site, appuyée sur les données de la page.", "modele": "Qwen3 30B"})
     if "/api/veille" in u:
         return r.fulfill(json={"txt": "Ce qui est annoncé\nLe chiffre d'affaires du trimestre atteint 6,7 milliards d'euros, en hausse de 3 %.\nCe que ça veut dire\nL'activité progresse.\nÀ surveiller\nLes prochains résultats."} if "inscription" not in u else {"error": "L'envoi par e-mail n'est pas encore ouvert."})
