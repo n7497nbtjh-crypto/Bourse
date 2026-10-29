@@ -26,3 +26,17 @@ Côté serveur, ajouter la page dans `meta()` de cf/src/worker.mjs (sinon le HTM
 - Les anciennes `cmpTable`, `cmpCell`, `CMP_ROWS`, `compareSynth`, `profilsCompare` ne sont plus appelées (laissées dans index.html).
 - Serveur : `/api/assistant` accepte `mode: "comparaison"` (consigne `SYS_CMP` de `cf/src/ia.mjs`, quota « assistant ») ;
   `prompts.json` gagne la clé `comparaison` (IA installée sur l'appareil) ; `meta()` du Worker nomme les entreprises d'un lien /comparer?ids=….
+
+## Chantier « etf » (module `cf/site/m/etf.js`)
+- Pages : `pageEtfs` (liste filtrable, état dans l'adresse : `/etf?q=&cat=&env=pea|cto&dist=&em=&fr=&tri=`) et `pageEtf` (fiche complète).
+- `etfComp(e)` est redéfinie dans `m/etf.js` : elle lit `/data/etf/<e.id>.json` quand `e.compo` existe, sinon l'ancien fichier du fonds américain (`e.proxy`). Le portefeuille et le recouvrement l'utilisent tels quels.
+- Collecte : `data/etf_collecte.mjs` (+ `etf_emetteurs.mjs`, `etf_lib.mjs`), workflow `.github/workflows/etf.yml` (mensuel, le 3). Sources : sites des émetteurs (Amundi, iShares/BlackRock France, SPDR, Invesco). `data/etf.mjs` exporte la liste choisie à la main (`CHOISIS`, identifiants stables) complétée par `data/etf_catalogue.json`.
+- Champs ajoutés dans `etf.json` (les anciens ne changent pas) : `methode` (complète | échantillonnée | swap), `domicile`, `creation` (AAAA-MM-JJ), `cotations` [{place, ticker, devise}], `nomOfficiel`, `indexOfficiel`, `url` (fiche de l'émetteur), `src`, `couvert`, `levier`, `contrepartie`, `nIndex`, et `compo` = résumé { n (lignes), t10 (% des 10 premières), asOf, niveau, pays (nombre), p1 [pays, %], s1 [secteur, %] }. `pea` peut valoir `null` (non indiqué par l'émetteur).
+- Format de `cf/site/data/etf/<id>.json` (transparence du portefeuille) :
+  `{ id, isin, niveau: "fonds"|"indice"|"panier", source: { nom, url }, asOf, lines (nombre de lignes),
+     top: [{ name, isin, pct, country (ISO 2), sector }] (15 au plus, % du fonds, titres seulement),
+     countries: [[ISO2, %]], sectors: [[clé, %]] (clés : it, fin, sante, conso_disc, indus, comm, conso_base, energie, materiaux, services_pub, immo, liquidites, autre),
+     isins: [[ISIN, %]] (lignes ≥ 0,003 %, pour la transparence et le chevauchement), via?: { id, name } (fonds physique dont on reprend la composition de l'indice) }`.
+  `top`, `countries`, `isins`, `lines`, `asOf` gardent les noms de l'ancien format (fichiers des fonds américains, sans `niveau`).
+- Ajout au portefeuille depuis la fiche : `pf2Load()` / `pf2Save()` (ligne `{ k: "e:<id>", m: 1000 }`). Si le stockage du portefeuille change, garder ces deux fonctions ou prévenir.
+- Le Worker ajoute titre, description et FAQ structurée (FAQPage) des fiches ETF : `cf/src/etf_meta.mjs` (appelé dans `fetch` de `worker.mjs`).

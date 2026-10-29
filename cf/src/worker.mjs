@@ -17,6 +17,7 @@ import { signaler } from "./signaler.mjs";
 import { push, pousser } from "./push.mjs";
 import { mcp } from "./mcp.mjs";
 import { tete, VERSION } from "./pwa.mjs";
+import { etfMeta } from "./etf_meta.mjs";
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -94,7 +95,9 @@ export default {
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
-    const info = meta(url.pathname, url.searchParams);
+    let info = meta(url.pathname, url.searchParams);
+    const etfId = (url.pathname.match(/^\/etf\/([a-z0-9-]+)\/?$/) || [])[1];
+    if (etfId) info = await etfMeta(etfId, env, url, SITE) || info;
     if (!info) {
       // Fichier existant (données, scripts) ou vraie page 404
       const r = await env.ASSETS.fetch(request);
@@ -109,7 +112,7 @@ export default {
       try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/${fq[1]}.json`, url))); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { const ld = (await r.text()).replace(/</g, "\\u003c"); html = html.replace("</head>", `<script type="application/ld+json">${ld}</script>\n</head>`); } } catch (e) { }
     }
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
-      .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">`);
+      .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `\n<script type="application/ld+json">${t.ld}</script>` : ""}`);
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 });
     return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION } });
   },

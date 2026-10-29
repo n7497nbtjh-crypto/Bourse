@@ -8,7 +8,7 @@
 //   Invesco  : plan du site invesco.com/fr + interface de données des fiches (dng-api.invesco.com)
 import { http, num, isoDate, unesc } from "./etf_lib.mjs";
 
-const PLACE_BBG = { FP: "Euronext Paris", NA: "Euronext Amsterdam", GY: "Xetra", GR: "Francfort", IM: "Borsa Italiana", LN: "Londres", SW: "SIX", SE: "SIX", BB: "Euronext Bruxelles", SM: "Madrid", ID: "Dublin", PL: "Lisbonne", AV: "Vienne", SS: "Stockholm" };
+const PLACE_BBG = { FP: "Euronext Paris", PA: "Euronext Paris", NA: "Euronext Amsterdam", GY: "Xetra", GR: "Francfort", IM: "Borsa Italiana", LN: "Londres", SW: "SIX", SE: "SIX", BB: "Euronext Bruxelles", SM: "Madrid", ID: "Dublin", PL: "Lisbonne", AV: "Vienne", SS: "Stockholm" };
 export const placeDeBbg = code => { const m = String(code || "").trim().match(/^(\S+)\s+([A-Z]{2})$/); return m ? { ticker: m[1], place: PLACE_BBG[m[2]] || m[2], bbg: m[2] } : null; };
 const placeDeNom = s => { const t = String(s || "").toLowerCase();
   return /paris/.test(t) ? "Euronext Paris" : /amsterdam/.test(t) ? "Euronext Amsterdam" : /xetra|deutsche b|frankfurt|francfort/.test(t) ? "Xetra" : /milan|italiana/.test(t) ? "Borsa Italiana" : /london|londres|lse/.test(t) ? "Londres" : /six|swiss/.test(t) ? "SIX" : /brussel|bruxelles/.test(t) ? "Euronext Bruxelles" : s; };
@@ -181,10 +181,11 @@ export async function invesco(log) {
       const [replication, methode] = repl(j.replicationMethod);
       const listings = (j.shareclassListings || []).map(l => { const b = placeDeBbg(l.listingBloombergTicker); return { place: b ? b.place : placeDeNom(l.listingExchangeName), ticker: l.listingTicker, devise: l.listingCurrency }; });
       const ter = num(j.shareclassCharges && (j.shareclassCharges.ongoingCharge || j.shareclassCharges.fundManagementCharge));
-      const aum = (t.match(/"(?:fundSize|totalNetAssets|aum)"\s*:\s*"?([\d.,]+)"?/i) || [])[1];
-      out.push({ isin, name: j.shareClassFullName, issuer: "Invesco", ter, aumM: null, aumCur: null, devise: j.shareClassCurrency, creation: isoDate(j.shareClassInceptionDate), domicile: (j.account || {}).domicileCountry === "IE" ? "Irlande" : (j.account || {}).domicileCountry,
-        distribution: distrib(j.shareClassSuffix + " " + (j.distributionFrequency || "")), replication, methode, indexOfficiel: ((j.benchmarkRelationships || [])[0] || {}).benchmarkFullName || null,
-        pea: j.peaEligible ? /yes|oui/i.test(j.peaEligible) : null, classe: (j.investmentStrategy || {}).assetType, couvert: !!j.hedgedIndicator, listings, url, ref: { type: "invesco" }, _aum: aum });
+      const ks = await http(IV + isin + "/keyStats?idType=isin&productCode=ETF&bondType=NotCallable", { type: "json", pause: 600 }).catch(() => null);
+      const aum = ks && (ks.keyStats || []).find(k => k.name === "assetsUnderManagement");
+      out.push({ isin, name: unesc(j.shareClassFullName), issuer: "Invesco", ter, aumM: aum && aum.value ? aum.value / 1e6 : null, aumCur: ks && ks.currency || null, devise: j.shareClassCurrency, creation: isoDate(j.shareClassInceptionDate), domicile: (j.account || {}).domicileCountry === "IE" ? "Irlande" : (j.account || {}).domicileCountry,
+        distribution: distrib(j.shareClassSuffix + " " + (j.distributionFrequency || "")), replication, methode, indexOfficiel: unesc(((j.benchmarkRelationships || [])[0] || {}).benchmarkFullName || "") || null,
+        pea: j.peaEligible ? /yes|oui/i.test(j.peaEligible) : null, classe: (j.investmentStrategy || {}).assetType, couvert: !!j.hedgedIndicator, listings, url, ref: { type: "invesco" } });
     } catch (e) { log("invesco " + url + " : " + e.message); }
     if (out.length % 50 === 0) log("invesco : " + out.length + " lues");
   }

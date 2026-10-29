@@ -408,9 +408,7 @@ async function pageEtf(id) {
     <p class="note" style="margin:8px 0 0">Les questions ci-dessus ont une réponse immédiate, calculée à partir des données de la fiche. Les autres passent par l'assistant IA du site. Aucune réponse n'est un conseil d'achat.</p>`;
   $("#eia .etfqa").onclick = ev => { const b = ev.target.closest("button"); if (!b) return; const it = Q.find(x => x[0] === b.dataset.q); $$("#eia .etfqa button").forEach(x => x.classList.toggle("on", x === b)); $("#eans").innerHTML = `<div class="etfans"><p>${it[2]}</p></div>`; };
   $("#eask").onsubmit = ev => { ev.preventDefault(); const q = $("#eask input").value.trim(); if (!q) return; const full = /etf|fonds|il |-il|ce fonds/i.test(q) ? `${q} (${e.name})` : `${e.name} : ${q}`; if (typeof orcIaAsk === "function") orcIaAsk(full); else go("/demander?q=" + encodeURIComponent(full)); };
-  const strip = h => String(h).replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
   const FAQ = [...Q.map(([, q, a]) => [q, a]), ["Où l'acheter ?", `Chez un courtier ou une banque en ligne, comme une action, pendant les heures de cotation${pl ? ` : il est coté sur ${esc(pl.place)} sous le code ${esc(e.ticker)}` : ""}. Son code ISIN, ${esc(e.isin)}, permet de le retrouver chez n'importe quel courtier.`]];
   $("#efaq").innerHTML = FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${a}</p></details>`).join("");
-  const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: strip(a) } })) };
-  let s = document.getElementById("etf-ld"); if (!s) { s = document.createElement("script"); s.type = "application/ld+json"; s.id = "etf-ld"; document.head.appendChild(s); } s.textContent = JSON.stringify(ld);
+  // La FAQ structurée (FAQPage) est ajoutée au HTML par le Worker (cf/src/etf_meta.mjs) : lisible par les moteurs sans JavaScript.
 }
