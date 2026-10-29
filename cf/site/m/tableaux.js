@@ -365,6 +365,155 @@ function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = 
   return `<div class="chart2">${leg}<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(s => s.name).join(", "))}">${g}${refl}${bars}${hits}</svg>${note ? `<p class="note">${note}</p>` : ""}</div>`;
 }
 
+/* ---------- Tri générique par délégation : table.tbx-sort th[data-sk], valeurs dans td[data-v] ---------- */
+document.addEventListener("click", e => {
+  const th = e.target.closest("table.tbx-sort th[data-sk]"); if (!th || e.target.closest(".def")) return;
+  const table = th.closest("table"), col = +th.dataset.sk, asc = th.getAttribute("aria-sort") === "descending";
+  $$("th[data-sk]", table).forEach(x => x.removeAttribute("aria-sort"));
+  th.setAttribute("aria-sort", asc ? "ascending" : "descending");
+  const tb = table.tBodies[0], rows = [...tb.rows], dir = asc ? 1 : -1;
+  const val = r => { const c = r.cells[col], v = c ? c.dataset.v : null; return v == null || v === "" ? null : isNaN(+v) ? v : +v; };
+  rows.sort((a, b) => { const x = val(a), y = val(b); if (x == null) return y == null ? 0 : 1; if (y == null) return -1; return typeof x === "string" ? dir * String(x).localeCompare(y, "fr") : dir * (x - y); });
+  rows.forEach(r => tb.appendChild(r));
+});
+const tblxTh = (label, i, cls = "") => `<th scope="col" class="${cls}" data-sk="${i}" title="Cliquer pour trier">${label}<i class="tbx-so" aria-hidden="true"></i></th>`;
+// Case colorée selon la zone (vert : nettement mieux que la médiane du secteur, orange : nettement moins bien)
+function tblxZoneCell(v, fmt, m, lowerBetter, band = null) { // band : écart absolu jugé net (sinon 15 %)
+  if (!okn(v)) return `<td class="num na" data-v="">–</td>`;
+  const b = band != null ? band : Math.abs(m || 0) * 0.15, d = m == null ? 0 : (v - m) * (lowerBetter ? -1 : 1);
+  const z = lowerBetter == null || m == null ? "" : d > b ? "tz-fort" : d < -b ? "tz-vig" : "tz-moyen";
+  return `<td class="num" data-v="${v}"><span class="tbx-val sm ${z}">${esc(fmt(v))}</span>${m != null ? `<small class="tbx-sec">secteur ${esc(fmt(m))}</small>` : ""}</td>`;
+}
+
+/* ---------- Résultats du copilote (« Demander ») ---------- */
+function cellInd(c, k) {
+  const f = INDI[k], v = f[1](c);
+  const m = v == null ? null : medInd(c.sector, k), pctLike = ["croissance", "marge", "marge_nette", "rentabilite", "rendement", "distribution"].includes(k);
+  return tblxZoneCell(v, f[2], m, f[3], pctLike && m != null ? Math.max(2, Math.abs(m) * 0.2) : null);
+}
+function filtreHTML(a) {
+  const { l, tri } = runFiltre(a), lim = isPrem() ? 30 : 8, cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
+  const desc = [a.mot && THEME_RE[a.mot] && "thème " + THEME_RE[a.mot][1], a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
+  if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
+  const tally = c => { const t = quick(c); return t ? t.fort - t.vig : ""; };
+  return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
+    <div class="tbx-legend" style="padding:0 0 8px"><span><i class="lg-up"></i>nettement mieux que la médiane du secteur</span><span><i class="lg-dn"></i>nettement moins bien</span><span class="light">Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</span></div>
+    ${tblxScrollBox(`<table class="t tbx tbx-sort iat"><thead><tr><th class="l lab" scope="col" data-sk="0">Entreprise<i class="tbx-so"></i></th>${cols.map((k, i) => tblxTh(esc(INDI[k][0]), i + 1)).join("")}<th class="l" scope="col" data-sk="${cols.length + 1}">Repères<i class="tbx-so"></i></th></tr></thead><tbody>
+    ${l.slice(0, lim).map((c, j) => `<tr class="${j % 2 ? "z" : ""}"><th scope="row" class="l lab" data-v="${esc(c.name)}"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 26)}<span><b>${esc(c.name)}</b><small class="light">${esc(regName(c))} · ${esc(secName(c))}</small></span></a></th>${cols.map(k => cellInd(c, k)).join("")}<td class="l" data-v="${tally(c)}">${(t => t ? pills(t) : "")(quick(c))}</td></tr>`).join("")}</tbody></table>`)}
+    ${l.length > lim ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">${l.length - lim} autres entreprises. ${isPrem() ? "" : `<a class="lnk" href="/premium">Premium</a> affiche jusqu'à 30 résultats.`}</p>` : ""}
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">${l.length > 1 ? `<a class="more" href="/comparer?ids=${l.slice(0, 3).map(c => c.id).join(",")}">Comparer les trois premières →</a>` : ""}<button type="button" class="linkbtn" data-favall="${l.slice(0, lim).map(c => "c:" + c.id).join(",")}">☆ Tout ajouter à mes favoris</button></div>`;
+}
+// Les tableaux insérés après coup (copilote, IA) reçoivent leurs ombres de défilement
+try { new MutationObserver(() => { if (document.querySelector(".tbx-box .tbx-sc:not([data-tb])")) tblxBindScroll(); }).observe(document.getElementById("app") || document.body, { childList: true, subtree: true }); } catch (e) { }
+
+/* ---------- Liste des entreprises, vue tableau ---------- */
+function pageEntreprises() {
+  setTitle("Les entreprises"); setNav("ent");
+  const qs = new URLSearchParams(location.search); if (qs.get("secteur")) listState.sector = qs.get("secteur"); if (qs.get("region")) listState.region = qs.get("region");
+  const sectors = [...new Set(R.companies.map(c => c.sector))].sort((a, b) => secName({ sector: a }).localeCompare(secName({ sector: b }), "fr"));
+  const n = r => R.companies.filter(c => c.region === r).length;
+  app.innerHTML = `<h1 class="pagetitle">Les entreprises</h1><p class="pagesub">${R.companies.length} grandes entreprises de France, d'Europe et des États-Unis. Les points de couleur résument ce que disent leurs comptes.</p>
+    <section class="panel">
+      <div class="filters" id="regTabs"><button data-r="all">Toutes</button>${Object.entries(R.regions).map(([k, l]) => `<button data-r="${k}">${esc(l)} <span class="light">${n(k)}</span></button>`).join("")}</div>
+      <div class="ph" style="padding-top:0;padding-bottom:0;border-bottom:0">
+      <div class="filters" id="secTabs" style="border:0;padding:0;flex:1"><button data-s="all">Tous les secteurs</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
+      <div class="viewsw d-only" id="vsw"><button data-v="cartes">Cartes</button><button data-v="tableau">Tableau</button></div></div></section>
+    <div class="field" style="max-width:360px;margin:0 0 14px"><input id="eq" type="search" placeholder="Filtrer : nom, code, pays…" aria-label="Filtrer les entreprises"></div>
+    ${LEGEND}<div id="elist"></div>`;
+  const render = () => {
+    $$("#regTabs button").forEach(b => b.classList.toggle("on", b.dataset.r === listState.region));
+    $$("#secTabs button").forEach(b => b.classList.toggle("on", b.dataset.s === listState.sector));
+    $$("#vsw button").forEach(b => b.classList.toggle("on", b.dataset.v === listState.view));
+    const q = norm(($("#eq") || {}).value || "").trim();
+    const list = R.companies.filter(c => (listState.region === "all" || c.region === listState.region) && (listState.sector === "all" || c.sector === listState.sector) && (!q || norm(c.name + " " + c.ticker + " " + (c.desc || "")).includes(q)));
+    if (!list.length) { $("#elist").innerHTML = `<section class="panel"><div class="empty">Aucune entreprise pour ce choix.</div></section>`; return; }
+    const view = innerWidth <= 760 ? "cartes" : listState.view;
+    if (view === "cartes") {
+      const sorted = [...list].sort((a, b) => (!!a.missing - !!b.missing) || (caEur(b) - caEur(a)) || a.name.localeCompare(b.name, "fr"));
+      const shown = sorted.slice(0, listState.max || 60);
+      $("#elist").innerHTML = `<p class="muted" style="margin:0 0 10px;font-size:13px">${F0.format(list.length)} entreprise${list.length > 1 ? "s" : ""}, des plus grosses aux plus petites.</p><div class="cards">${shown.map(coCard).join("")}</div>${sorted.length > shown.length ? `<div style="text-align:center;margin:-12px 0 28px"><button class="btn" id="emore" type="button">Voir ${Math.min(60, sorted.length - shown.length)} de plus</button></div>` : ""}`;
+      const mb = $("#emore"); if (mb) mb.onclick = () => { listState.max = (listState.max || 60) + 60; render(); };
+      return;
+    }
+    const k = listState.sort, dir = listState.dir, rows = list.map(c => ({ c, m: ratios(c), t: quick(c) }));
+    const val = (r, k) => k === "ca" ? caEur(r.c) || null : k === "net" ? (r.c.net != null ? r.c.net * (FXE[r.c.currency] ?? 0) : null) : k === "vig" ? (r.t ? r.t.fort - r.t.vig : null) : k === "year" ? r.c.year : r.m[k];
+    rows.sort((a, b) => k === "name" ? dir * a.c.name.localeCompare(b.c.name, "fr") : (!!a.c.missing - !!b.c.missing) || dir * ((val(a, k) ?? -1e15) - (val(b, k) ?? -1e15)));
+    const max = listState.tmax || 100, shown = rows.slice(0, max);
+    const th = (key, label, cls = "") => `<th scope="col" class="sort ${cls}" data-k="${key}"${key === k ? ` aria-sort="${dir > 0 ? "ascending" : "descending"}"` : ""} title="Cliquer pour trier">${label}<i class="tbx-so" aria-hidden="true"></i></th>`;
+    const arrow = (a, b, sens = 1) => { const d = tblxDir("money", b, a); return d == null ? "" : tblxArrow(d, d * sens, a > 0 && b > 0 ? tblxRel(a / b - 1) : "", "Par rapport à l'exercice précédent"); };
+    const med = s => MED[s] || {};
+    $("#elist").innerHTML = `<section class="panel"><div class="tbx-legend" style="padding:12px 18px 8px"><span><i class="lg-up"></i>nettement mieux que la médiane du secteur</span><span><i class="lg-dn"></i>nettement moins bien</span><span class="light">↑ ↓ : évolution sur un an. Chiffres du dernier rapport annuel, dans la devise de l'entreprise.</span></div>
+      ${tblxScrollBox(`<table class="t tbx tbx-list click"><thead><tr>${th("name", "Entreprise", "l lab")}${th("ca", "Ventes")}${th("g1", "Croissance")}${th("marge", "Marge")}${th("net", "Bénéfice")}${th("vig", "Repères", "l")}${th("year", "Exercice")}</tr></thead><tbody>
+      ${shown.map(({ c, m, t }, j) => `<tr data-id="${c.id}" class="${j % 2 ? "z" : ""}"><th scope="row" class="l lab"><div class="cell-co">${logo(c, 32)}<div><a class="nm" href="/entreprise/${c.id}">${esc(c.name)}</a><div class="sub">${esc(regName(c))} · ${esc(secName(c))}</div></div></div></th>
+      ${c.missing ? `<td colspan="6" class="l light">${missingTxt(c)}</td>` : `<td class="num"><b class="tbx-big">${big(c.ca, c.currency)}</b>${arrow(c.ca, c.caPrev)}</td>${tblxZoneCell(m.g1, v => pct(v), med(c.sector).g1, false, Math.max(0.02, Math.abs(med(c.sector).g1 || 0) * 0.25))}${isBank(c) ? `<td class="num na" title="Ne s'applique pas aux banques et assurances">–</td>` : tblxZoneCell(m.marge, v => pct(v, 1, false), med(c.sector).marge, false, Math.max(0.03, Math.abs(med(c.sector).marge || 0) * 0.25))}<td class="num"><b class="tbx-big${c.net < 0 ? " neg" : ""}">${big(c.net, c.currency)}</b>${arrow(c.net, c.netPrev)}</td><td class="l">${t ? pills(t) : ""}</td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}
+      ${rows.length > max ? `<div style="text-align:center;padding:14px"><button class="btn" id="tmore" type="button">Voir ${Math.min(100, rows.length - max)} de plus (${F0.format(rows.length - max)} restantes)</button></div>` : ""}
+      <div class="src">${F0.format(list.length)} entreprise${list.length > 1 ? "s" : ""}. Cliquez sur un en-tête pour trier (ventes et bénéfices convertis en euros pour le tri), sur une ligne pour ouvrir la fiche. Couleurs : comparaison à la médiane des entreprises suivies du même secteur, pas un avis sur l'action.</div></section>`;
+    tblxBindScroll($("#elist"));
+    const tm = $("#tmore"); if (tm) tm.onclick = () => { listState.tmax = max + 100; render(); };
+    $("#elist thead").onclick = e => { const t = e.target.closest("th.sort"); if (!t) return; if (listState.sort === t.dataset.k) listState.dir *= -1; else { listState.sort = t.dataset.k; listState.dir = t.dataset.k === "name" ? 1 : -1; } listState.tmax = 100; render(); };
+  };
+  let qt = null; $("#eq").oninput = () => { clearTimeout(qt); qt = setTimeout(() => { listState.tmax = 100; render(); }, 200); };
+  $("#regTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.region = b.dataset.r; listState.max = 60; listState.tmax = 100; render(); } };
+  $("#secTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.sector = b.dataset.s; listState.max = 60; listState.tmax = 100; render(); } };
+  $("#vsw").onclick = e => { const b = e.target.closest("button"); if (b) { listState.view = b.dataset.v; render(); } };
+  render();
+}
+
+/* ---------- Agenda : par mois, avec le délai et le type ---------- */
+function pageAgenda() {
+  setTitle("Agenda financier"); setNav("news");
+  let ty = "Tous";
+  app.innerHTML = `<h1 class="pagetitle">Agenda</h1><p class="pagesub">Les prochaines dates annoncées par les entreprises suivies.</p>
+    <section class="panel"><div class="filters" id="af">${[["Tous", "Tous"], ["Résultats", "Résultats"], ["Assemblée", "Assemblées"], ["Dividende", "Dividendes"]].map(([t, l]) => `<button data-t="${t}">${l}</button>`).join("")}</div><div id="al"></div>
+    <div class="src">Dates relevées sur les calendriers financiers officiels. ${AG.events.length ? new Set(AG.events.map(e => e.id)).size : 0} entreprise(s) renseignée(s) pour l'instant.</div></section>`;
+  const T0 = new Date(TODAY + "T00:00:00Z");
+  const delay = d => { const n = Math.round((new Date(d + "T00:00:00Z") - T0) / 864e5); return n === 0 ? "aujourd'hui" : n === 1 ? "demain" : `dans ${n} jours`; };
+  const JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
+  const render = () => {
+    $$("#af button").forEach(b => b.classList.toggle("on", b.dataset.t === ty));
+    const list = upcoming().filter(e => ty === "Tous" || e.type === ty);
+    if (!list.length) { $("#al").innerHTML = `<div class="empty">Aucun événement.</div>`; return; }
+    let mk = "", z = 0, body = "";
+    list.forEach(e => {
+      const m = e.date.slice(0, 7); if (m !== mk) { mk = m; z = 0; body += `<tr class="grp"><th colspan="4" scope="colgroup"><span>${MOISL[+m.slice(5) - 1].replace(/^./, x => x.toUpperCase())} ${m.slice(0, 4)}</span></th></tr>`; }
+      const co = RBY[e.id], d = new Date(e.date + "T00:00:00Z");
+      body += `<tr class="${z++ % 2 ? "z" : ""}" data-href="/entreprise/${e.id}/agenda"><td class="l tbx-date"><b>${d.getUTCDate()}</b> ${JOURS[d.getUTCDay()]}<small>${delay(e.date)}</small></td><th scope="row" class="l"><a class="cell-co" href="/entreprise/${e.id}/agenda">${logo(co, 24)}<span><b>${esc(co.name)}</b></span></a><div class="m-only tbx-agl">${esc(e.label)}</div></th><td class="l wrap d-only">${esc(e.label)}</td><td class="l d-only"><span class="tbx-tag">${esc(e.type || "")}</span></td></tr>`;
+    });
+    $("#al").innerHTML = tblxScrollBox(`<table class="t tbx tbx-ag"><thead><tr><th class="l" scope="col">Date</th><th class="l" scope="col">Entreprise</th><th class="l d-only" scope="col">Événement</th><th class="l d-only" scope="col">Type</th></tr></thead><tbody>${body}</tbody></table>`);
+    tblxBindScroll($("#al"));
+  };
+  $("#af").onclick = e => { const b = e.target.closest("button"); if (b) { ty = b.dataset.t; render(); } };
+  render();
+}
+
+/* ---------- Simulateur de frais : le même achat chez chaque courtier ---------- */
+function simFrais(root) {
+  root.innerHTML = `<div class="form"><div class="field"><label for="bk">Mon courtier</label><select id="bk">${brokerOptions("trade-republic")}</select></div>
+    <div class="row2" id="persoF" hidden>${numIn("pfx", "Frais fixes (€)", 5, "", 'min="0" step="0.5"')}${numIn("ppc", "Pourcentage (%)", 0.5, "", 'min="0" step="0.05"')}</div>
+    ${numIn("amt", "Montant de chaque achat (€)", 200, "", 'min="1" step="50"')}${numIn("n", "Nombre d'achats par an", 12, "12 = un achat par mois.", 'min="1" max="250"')}${numIn("yrs", "Pendant (années)", 20, "", 'min="1" max="50"')}
+    ${numIn("ff", "Frais annuels du fonds (%)", 0.2, "Pour un fonds indiciel (ETF), souvent entre 0,1 et 0,5 %. Mettez 0 pour des actions.", 'min="0" step="0.05"')}</div><div class="res" id="res"></div>`;
+  const run = () => {
+    const b = brokerBy($("#bk").value), perso = { fixe: v("pfx"), pct: v("ppc") };
+    $("#persoF").hidden = !b.custom;
+    const amt = Math.max(1, v("amt")), n = Math.max(1, Math.min(250, Math.round(v("n")))), yrs = Math.max(1, Math.min(50, Math.round(v("yrs")))), ff = v("ff") / 100;
+    const fee = brokerFee(b, amt, perso), feeY = fee * n, rate = 0.05;
+    const gross = Calc.compound({ initial: 0, monthly: amt * n / 12, years: yrs, rate }), net = Calc.compound({ initial: 0, monthly: Math.max(0, amt - fee) * n / 12, years: yrs, rate, fee: ff });
+    const cost = gross.final - net.final;
+    const all = BROKERS.list.filter(x => !x.custom).map(x => ({ x, f: brokerFee(x, amt) })).sort((a, c) => a.f - c.f);
+    const fmax = Math.max(0.01, ...all.map(a => a.f)), fmin = all.length ? all[0].f : 0;
+    $("#res").innerHTML = `<p class="lead">Avec ${esc(b.name)}, chaque achat de ${eur(amt, 0)} coûte <b>${eur(fee)}</b> : ${pct(fee / amt, 2, false)} de votre argent part en frais avant même d'être investi.${ff ? ` Le fonds prélève en plus ${pct(ff, 2, false)} par an sur tout ce qui est placé.` : ""}</p>`
+      + figs([["Frais par achat", eur(fee), pct(fee / amt, 2, false) + " du montant"], ["Frais de courtage par an", eur(feeY, 0), `${n} achat${n > 1 ? "s" : ""}`], ["Coût total des frais", eur(cost, 0), `sur ${yrs} ans, gains perdus compris`], ["Valeur finale", eur(net.final, 0), `au lieu de ${eur(gross.final, 0)} sans frais`]])
+      + `<div class="cap" style="margin-top:6px">Le même achat de ${eur(amt, 0)} chez chaque courtier, du moins cher au plus cher</div>
+      ${tblxScrollBox(`<table class="t tbx tbx-sort brk"><thead><tr><th class="l lab" scope="col" data-sk="0">Courtier<i class="tbx-so"></i></th>${tblxTh("Frais par achat", 1)}${tblxTh("En % de l'achat", 2)}${tblxTh(`Par an (${n} achat${n > 1 ? "s" : ""})`, 3)}<th class="l" scope="col" data-sk="4">PEA<i class="tbx-so"></i></th></tr></thead><tbody>
+      ${all.map(({ x, f }, j) => `<tr class="${j % 2 ? "z" : ""}${x.id === b.id ? " sel" : ""}"><th scope="row" class="l lab" data-v="${esc(x.name)}"><span class="nm">${esc(x.name)}</span>${x.id === b.id ? ` <span class="tbx-tag on">votre choix</span>` : ""}${f === fmin ? ` <span class="tbx-tag g">le moins cher</span>` : ""}<span class="sub d-only" style="display:block">${esc(x.note || "")}</span></th>
+        <td class="num" data-v="${f}"><span class="tbx-fee"><i style="width:${Math.max(2, f / fmax * 100)}%"></i></span><b>${eur(f)}</b></td><td class="num" data-v="${f / amt}">${pct(f / amt, 2, false)}</td><td class="num" data-v="${f * n}">${eur(f * n, 0)}</td><td class="l" data-v="${x.pea ? 1 : 0}">${x.pea ? "Oui" : "Non"}</td></tr>`).join("")}</tbody></table>`)}
+      <div class="note"><p>Un frais fixe pèse lourd sur les petits achats : 1 € représente 1 % d'un achat de 100 €, mais 0,1 % d'un achat de 1 000 €. Grouper ses achats réduit cette part.</p>
+        <p>Calcul avec 5 % de rendement par an avant frais. Les frais ne sont pas le seul critère : disponibilité du PEA, place de cotation, service client.</p><p>${brokerSrc()}</p></div>`;
+    tblxBindScroll($("#res"));
+  };
+  root.oninput = root.onchange = run; run();
+}
+
 /* ---------- Styles du composant ---------- */
 document.head.insertAdjacentHTML("beforeend", `<style id="tbx-css">
 .sr{position:absolute!important;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
@@ -444,9 +593,9 @@ table.tbx-full tbody tr[data-k]:focus-visible{outline:2px solid var(--ink);outli
 table.tbx-full td.tr{text-align:left}
 .tbx-trw{display:inline-flex;align-items:center;gap:6px}
 table.tbx-full td.md{color:var(--grey)}table.tbx-full td.md .num{font-family:var(--mono);font-size:13px}
-table.tbx-full tr.grp th{background:#F6F2E9;text-align:left;padding:14px 0 8px;border-bottom:1.5px solid #D9D1C0}
-table.tbx-full tr.grp th > span{position:sticky;left:18px;display:inline-block;font-family:var(--serif);font-weight:800;font-size:15px;color:var(--ink);letter-spacing:-.01em;text-transform:none;padding-left:0}
-table.tbx-full tr.grp small{font-family:var(--sans);font-weight:400;font-size:12px;color:var(--grey);margin-left:10px;letter-spacing:0}
+table.tbx tr.grp th{background:#F6F2E9;text-align:left;padding:14px 0 8px;border-bottom:1.5px solid #D9D1C0}
+table.tbx tr.grp th > span{position:sticky;left:18px;display:inline-block;font-family:var(--serif);font-weight:800;font-size:15px;color:var(--ink);letter-spacing:-.01em;text-transform:none;padding-left:0}
+table.tbx tr.grp small{font-family:var(--sans);font-weight:400;font-size:12px;color:var(--grey);margin-left:10px;letter-spacing:0}
 table.tbx-full tr.det td{background:#FFFDF4;padding:0;text-align:left;white-space:normal}
 .tbx-detw{position:sticky;left:0;padding:10px 16px 12px;box-sizing:border-box}
 .tbx-det p{margin:0 0 6px;font-size:13.5px;line-height:1.5}.tbx-det p:last-child{margin:0}
@@ -456,6 +605,28 @@ table.tbx-full tr.det td{background:#FFFDF4;padding:0;text-align:left;white-spac
 .lg2 i.tbx-dash{background:none!important;height:0;border-top:2px dashed #A39679;border-radius:0}
 .tbx-empty .lead{font-size:15px}
 table.tbx-src td{white-space:normal}
+/* tri, cases à zone, étiquettes */
+table.tbx th[data-sk],table.tbx th.sort{cursor:pointer;user-select:none;white-space:nowrap}
+.tbx-so{display:inline-block;width:0;height:0;margin-left:6px;border:4px solid transparent;border-top-color:#C9C1B1;vertical-align:-1px;opacity:.9}
+th[aria-sort=descending] .tbx-so{border-top-color:var(--ink)}th[aria-sort=ascending] .tbx-so{border-top-color:transparent;border-bottom-color:var(--ink);vertical-align:3px}
+table.tbx th[data-sk]:hover,table.tbx th.sort:hover{color:var(--ink)}
+.tbx-val.sm{font-size:13.5px;font-weight:600;padding:1px 6px;white-space:normal;max-width:150px;line-height:1.35}
+.tbx-sec{display:block;font-size:11px;color:var(--light);font-family:var(--sans);letter-spacing:0;margin-top:2px}
+.tbx-big{font-weight:600}.tbx-big.neg{color:#A8361C}
+table.tbx td.num .tbx-ar{display:flex;justify-content:flex-end;font-size:11.5px;margin-top:2px}
+table.tbx td.num .tbx-ar b{font-size:13px}
+table.tbx td.na{color:#B5AFA4}
+table.tbx-list th.lab{min-width:240px}table.tbx-list .lab a.nm{color:var(--ink);text-decoration:none;font-weight:600}table.tbx-list .lab a.nm:hover{text-decoration:underline}
+table.tbx-list tbody tr{cursor:pointer}
+table.tbx.iat th.lab{min-width:200px}
+.tbx-tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:999px;background:#F1ECE1;color:var(--grey);white-space:nowrap}
+.tbx-tag.g{background:rgba(14,107,74,.12);color:#0B5A3E}.tbx-tag.on{background:var(--ink);color:#fff}
+table.tbx.brk tr.sel > *{background:#F3FBD3}
+.tbx-fee{display:inline-block;width:60px;height:6px;background:#F1ECE1;border-radius:3px;margin-right:10px;vertical-align:middle;overflow:hidden}.tbx-fee i{display:block;height:100%;background:var(--ink);border-radius:3px}
+.tbx-date{white-space:nowrap}.tbx-date b{font-family:var(--mono);font-size:16px}.tbx-date small{display:block;font-size:11.5px;color:var(--light)}
+table.tbx-ag tbody tr[data-href]{cursor:pointer}
+.tbx-agl{font-size:13px;color:var(--grey);margin-top:3px;white-space:normal}table.tbx-ag tbody th{white-space:normal}
+@media (max-width:760px){ .tbx-fee{display:none} table.tbx-list th.lab,table.tbx.iat th.lab{min-width:150px} }
 @media (max-width:760px){
   .tbx-bar{padding:10px 12px 2px}.tbx-legend{padding:6px 12px 8px}.tbx-sum{padding:0 12px 8px}.tbx-hint{padding:6px 12px 0}
   .tbx-legend span.light{display:none}
@@ -476,8 +647,8 @@ table.tbx-src td{white-space:normal}
   table.tbx-full th.lab{min-width:138px;max-width:150px}
   table.tbx-full .lab .nm,table.tbx-full .lab .def{font-size:13px;line-height:1.3}
   table.tbx-full td{padding:9px 9px}
-  table.tbx-full tr.grp th > span{left:12px;padding-left:0;font-size:14px}
-  table.tbx-full tr.grp small{display:block;margin:2px 0 0}
+  table.tbx tr.grp th > span{left:12px;padding-left:0;font-size:14px}
+  table.tbx tr.grp small{display:block;margin:2px 0 0}
   .tbx-seg button{padding:7px 11px;font-size:13px}
 }
 @media (max-width:400px){ table.tbx-ess td.tr .tbx-gb{margin-right:2px} table.tbx-ess .spk{width:58px} }
