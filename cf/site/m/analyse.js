@@ -581,7 +581,7 @@ function analyseCSS() {
 }
 
 /* =====================================================================
-   Pour l'IA : faits compacts (assistant de fiche, serveur /api/assistant)
+   Pour l'IA : faits compacts (assistant de fiche, IA connectée du visiteur via iaRediger)
    ===================================================================== */
 function analyseFaitsIA(s, c) {
   if (!s) return "";

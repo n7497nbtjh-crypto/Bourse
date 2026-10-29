@@ -4,7 +4,7 @@
    - en-tête : identité, cours, verdict en une phrase et profil dans le secteur, sans défiler ;
    - parcours en étapes dans la colonne principale ; colonne latérale courte et collante (dates, dernières annonces, IA) ;
    - « Son métier » concret (répartition des ventes, chiffres clés, marques, dirigeants, frise) avec les faits Wikidata (CC0) ;
-   - « Questions » : 8 à 12 questions de débutant, réponses calculées tout de suite par l'IA locale, « Approfondir avec l'IA » ;
+   - « Questions » : 8 à 12 questions de débutant, réponses calculées tout de suite par les règles du site (ia.js), « Approfondir avec l'IA » dans le panneau ✦ ;
    - confiance : document officiel source, « chiffres calculés, pas générés par une IA », date de mise à jour. */
 
 const FICHE_CSS = `
@@ -201,14 +201,9 @@ function ficheCours(s) {
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-fiche-ia]"); if (!b) return;
   e.preventDefault();
-  if (!$("#assistant")) { const id = location.pathname.split("/")[2]; go(`/entreprise/${id}?ia=1`); return; }
   ficheVersIA();
 });
-function ficheVersIA(q) {
-  const a = $("#assistant"); if (!a) return;
-  a.scrollIntoView({ behavior: "smooth", block: "start" });
-  const inp = $("#assistant input"); if (inp && !q) setTimeout(() => inp.focus({ preventScroll: true }), 350);
-}
+function ficheVersIA() { if (typeof orcIaOpen === "function") orcIaOpen(); } // un seul point d'entrée : le panneau ✦ (m/orchestre.js)
 
 function ficheAnnonces(s, el) {
   if (!el) return;
@@ -375,60 +370,24 @@ function ficheReponse(s, c, ask) {
 }
 function faqHTML(s, c) {
   const Q = ficheQuestions(s, c).map(x => ({ ...x, a: x.a || ficheReponse(s, c, x.ask) })).filter(x => x.a);
-  return `<section class="panel ffaq" id="faq"><div class="ph"><h2>Questions fréquentes sur ${esc(s.name)}</h2><span class="light" style="font-size:12.5px">${Q.length} réponses calculées par l'IA du site</span></div>
+  return `<section class="panel ffaq" id="faq"><div class="ph"><h2>Questions fréquentes sur ${esc(s.name)}</h2><span class="light" style="font-size:12.5px">${Q.length} réponses calculées par le site</span></div>
     <form class="ffaqask" data-fiche-mini autocomplete="off"><label for="ffq">Posez votre propre question</label><div class="askf"><input id="ffq" type="text" maxlength="300" placeholder="Par exemple : pourquoi sa marge baisse-t-elle ?"><button class="btn" type="submit">Demander à l'IA</button></div></form>
     ${Q.map((x, i) => acc(esc(x.q), `<p class="fq-ia">✦ Réponse instantanée de l'IA, calculée à partir des données</p>${resumeHTML(x.a)}<p class="ffsrc">Source des chiffres : ${esc(x.src)}.</p><button type="button" class="fapp" data-approf="${esc(x.q)}">✦ Approfondir avec l'IA</button>`, i === 0)).join("")}
-    <div class="src">Les réponses sont calculées dans votre navigateur à partir des comptes officiels, des cours et des médianes du secteur : sans limite et sans invention. « Approfondir » transmet la question et les mêmes données au modèle d'IA du site, qui rédige une explication plus complète. Aucune réponse n'est un conseil d'achat ou de vente.</div></section>`;
+    <div class="src">Les réponses sont calculées dans votre navigateur à partir des comptes officiels, des cours et des médianes du secteur : sans limite et sans invention. « Approfondir » ouvre le panneau ✦ : si vous avez connecté votre IA, elle rédige une explication plus complète à partir des mêmes données. Aucune réponse n'est un conseil d'achat ou de vente.</div></section>`;
 }
 document.addEventListener("submit", e => {
   const f = e.target.closest("[data-fiche-mini]"); if (!f || f.closest("#fside")) return;
   e.preventDefault(); const i = $("input", f), q = i.value.trim(); if (q.length < 3) return; i.value = ""; ficheDemander(q);
 });
 document.addEventListener("click", e => { const b = e.target.closest("[data-approf]"); if (!b) return; e.preventDefault(); b.disabled = true; ficheDemander(b.dataset.approf, true); });
-let FICHE_ASK = null;
-function ficheDemander(q, serveur = false) {
-  if (!FICHE_ASK) { setTimeout(() => FICHE_ASK && FICHE_ASK(q, serveur), 600); return; }
-  FICHE_ASK(q, serveur);
+// Questions de la fiche (FAQ, « Approfondir », « Le métier expliqué ») : posées dans le panneau ✦, le seul point d'entrée de l'IA.
+function ficheDemander(q, rediger = false) {
+  if (typeof orcIaOpen !== "function") return;
+  orcIaOpen(); orcIaAsk(q, { rediger });
 }
-
-/* ---------- L'assistant de la fiche ---------- */
-function assistantPanel(s, c, root) {
-  if (!root || $("#assistant")) return;
-  const sec = document.createElement("section"); sec.className = "panel asst fia"; sec.id = "assistant";
-  const asks = c ? ASK : ["Comment gagne-t-elle de l'argent ?", "Où est-elle cotée ?", "Peut-on la mettre dans un PEA ?", "Qui sont ses concurrentes ?"];
-  sec.innerHTML = `<div class="fia-h"><span class="fia-ic" aria-hidden="true">✦</span><div><h2>Une question sur ${esc(s.name)} ? L'IA vous répond</h2>
-      <p>Réponses calculées à partir des comptes officiels, des médianes du secteur, du cours et des annonces de cette fiche. L'IA explique ; elle ne dit jamais s'il faut acheter.</p></div></div><div class="pb">
-    <form class="askf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question, par exemple : pourquoi sa marge baisse-t-elle ?" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
-    <div class="chips">${asks.map(q => `<button type="button" class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-    <div class="asklog"></div><p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres, et « Approfondir », passent par le modèle d'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
-  const corps = $("#etapes-corps", root), first = root.firstElementChild;
-  if (corps) corps.appendChild(sec); else if (first) first.after(sec); else root.appendChild(sec);
-  liaUI();
-  const log = $(".asklog", sec), inp = $("input", sec);
-  const serveur = async (q, box) => {
-    box.innerHTML = `<div class="iathink"><span></span><span></span><span></span>L'IA rédige une réponse à partir des données de la fiche…</div>`;
-    try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: { ...ficheFaits(s, c), identite: ficheWd(s.id) } }) })).json();
-      box.innerHTML = j.txt ? resumeHTML(j.txt) + `<p class="iafoot">Rédigé par le modèle d'IA du site à partir des chiffres de la fiche. Vérifiez les chiffres dans les étapes ci-dessus.</p>` : iaErr(j, "Réponse indisponible.");
-    } catch (e) { box.innerHTML = `<p class="muted">L'IA est indisponible pour le moment. Les réponses instantanées restent disponibles.</p>`; }
-  };
-  const ask = async (q, force = false) => {
-    q = q.trim(); if (q.length < 3) return;
-    const item = document.createElement("div"); item.className = "askit"; item.innerHTML = `<p class="askq">${esc(q)}</p><div class="aska"><p class="muted">L'IA lit la fiche…</p></div>`; log.prepend(item);
-    const box = $(".aska", item);
-    if (force) { sec.scrollIntoView({ behavior: "smooth", block: "start" }); return serveur(q, box); }
-    await loadAna();
-    const loc = ficheReponse(s, c, q);
-    if (loc) {
-      box.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, tirée des chiffres de la fiche. Rien n'est généré au hasard : chaque chiffre vient des comptes publiés.</p><button type="button" class="fapp">✦ Approfondir avec l'IA</button>`;
-      $(".fapp", box).onclick = ev => { ev.target.disabled = true; const d = document.createElement("div"); d.className = "aska"; item.appendChild(d); serveur(q, d); };
-      return;
-    }
-    return serveur(q, box);
-  };
-  FICHE_ASK = (q, force) => { ask(q, force); if (!force) sec.scrollIntoView({ behavior: "smooth", block: "start" }); };
-  sec.addEventListener("click", e => { const b = e.target.closest("[data-ask]"); if (b) { b.disabled = true; ask(b.dataset.ask); } });
-  $("form", sec).onsubmit = e => { e.preventDefault(); ask(inp.value); inp.value = ""; };
-  if (new URLSearchParams(location.search).get("ia")) ficheVersIA();
+/* L'assistant de la fiche est le panneau ✦ lui-même (contexte « Question sur … ») ; ?ia=1 l'ouvre directement. */
+function assistantPanel() {
+  if (new URLSearchParams(location.search).get("ia")) setTimeout(ficheVersIA, 300);
 }
 
 /* ---------- L'IA locale de la fiche : faits Wikidata, et le cours sur un an même sans historique ---------- */

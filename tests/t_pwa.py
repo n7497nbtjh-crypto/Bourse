@@ -72,7 +72,7 @@ with sync_playwright() as pw:
     ok(pg.locator("#pwaoff").count() == 0, "bandeau retiré au retour du réseau")
     # 4. Page /connecteur et appel réel du connecteur
     pg.goto(BASE + "/connecteur"); pg.wait_for_timeout(1200)
-    ok("Connecteur IA" in pg.title() and BASE + "/mcp" in pg.inner_text("#pwaurl"), "page /connecteur")
+    ok("ChatGPT ou Claude" in pg.title() and BASE + "/mcp" in pg.inner_text("#pwaurl"), "page /connecteur")
     pg.click("[data-ong=chatgpt]"); ok(pg.is_visible("[data-pan=chatgpt]") and not pg.is_visible("[data-pan=claude]"), "onglets")
     pg.fill("#pwaq", "Air Liquide"); pg.click("#pwatry button"); pg.wait_for_function("document.querySelector('#pwaout').textContent.includes('Sources')", timeout=15000)
     out = pg.inner_text("#pwaout"); ok("Air Liquide" in out and "médiane du secteur" in out and "pas un conseil" in out, "le connecteur répond depuis la page")

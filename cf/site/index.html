@@ -1516,7 +1516,7 @@ function anaHTML(i, C) { // l'annonce lue et résumée par le site, le document 
     ${a.extraits?.length ? `<details class="nwhy"><summary>Ce que dit le communiqué</summary>${a.extraits.map(x => `<blockquote>${esc(x)}</blockquote>`).join("")}</details>` : ""}
     <p class="nexp">${esc(a.explication || C.why)}</p>${iaBtn(i.url)}${src}`;
 }
-const iaBtn = u => u && /sec\.gov|opendatasoft|info-financiere/.test(u) ? `<button type="button" class="iabtn" data-resume="${esc(u)}">Lire le résumé détaillé</button><div class="iabox"></div>` : "";
+const iaBtn = u => ""; // ancien « résumé détaillé » rédigé par le serveur, retiré : chiffres et extraits restent affichés
 function newsHTML(items, { showCo = true, max = 40 } = {}) {
   if (!items.length) return `<div class="empty">Aucune publication pour ce choix.</div>`;
   let out = "", last = "";
@@ -3274,21 +3274,11 @@ async function pageMarches() {
 const eurM = (v, cur) => { const e = toEur(v, cur); return e == null || !isFinite(e) ? null : e; }; // en millions
 function moneyCell(c, v) { if (v == null) return null; const e = eurM(v, c.currency), same = c.currency === "EUR"; return { v: big(same ? v : e, "EUR"), s: same ? "" : `${big(v, c.currency)} converti en euros` }; }
 
-/* ---------- Résumé IA d'une annonce ---------- */
-const RESUMES = {};
+/* ---------- Mise en forme d'un texte rédigé (titres de paragraphes reconnus) ---------- */
 function resumeHTML(txt) {
   const parts = String(txt).split(/\n+/).map(x => x.trim()).filter(Boolean);
   return parts.map(p => /^(« ?)?(Ce qui est annoncé|Ce que ça veut dire|À surveiller|En résumé|Ce qui a bougé|Ce qui a été annoncé|À venir|Ce que l'analyse remarque|Points d'attention)( ?»)?\s*:?$/i.test(p.replace(/[*#]/g, "")) ? `<p class="kick" style="margin:10px 0 2px">${esc(p.replace(/[*#«»:]/g, "").trim())}</p>` : `<p style="margin:0 0 6px">${esc(p.replace(/[*#]/g, ""))}</p>`).join("");
 }
-async function loadResume(el, url) {
-  if (RESUMES[url]) { el.innerHTML = RESUMES[url]; return; }
-  el.innerHTML = `<p class="muted" style="margin:6px 0">Lecture du document et rédaction du résumé…</p>`;
-  try { const j = await (await iaFetch("/api/resume?u=" + encodeURIComponent(url))).json();
-    el.innerHTML = RESUMES[url] = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Résumé rédigé automatiquement par une IA à partir du document officiel. Vérifiez les chiffres dans le document source.</p></div>` : iaErr(j, "Résumé indisponible.");
-  } catch (e) { el.innerHTML = `<p class="muted">Résumé indisponible pour le moment.</p>`; }
-}
-document.addEventListener("click", e => { const b = e.target.closest("[data-resume]"); if (!b) return; e.preventDefault(); const box = b.nextElementSibling; b.remove(); loadResume(box, b.dataset.resume); });
-
 /* ---------- Favoris : présentation soignée et bilan rédigé de la liste ---------- */
 function favCard(c) {
   const p = pxOf(c), v = valo(c), t = quick(c), nx = eventsOf(c.id).find(e => e.date >= TODAY);
@@ -3311,12 +3301,11 @@ async function veilleBilan(cos) {
   const el = $("#vbil"); if (!el) return;
   await loadAna();
   const loc = listeLocale(cos);
-  el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">L'IA rédige une lecture plus détaillée…</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
-  try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits: listeFaits(cos) }) })).json();
-    if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Bilan rédigé par une IA à partir des seules données du site (cours, annonces officielles, agenda). Ce n'est pas un conseil.</p></div>`;
-    else if (loc) $("#vbilf").innerHTML = `Résumé automatique de vos chiffres.${j.quota && !j.premium ? ` La lecture détaillée par l'IA est limitée à 1 par jour en version gratuite : <a class="lnk" href="/premium">Premium</a>.` : ""}`;
-    else el.innerHTML = iaErr(j, "Bilan indisponible.");
-  } catch (e) { if (loc) $("#vbilf").textContent = "Résumé automatique de vos chiffres."; else el.innerHTML = `<p class="muted">Bilan indisponible pour le moment.</p>`; }
+  el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">${miaConnectee() ? "Votre IA rédige une lecture plus détaillée…" : "Résumé automatique de vos chiffres."}</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
+  const j = await iaRediger("veille", listeFaits(cos));
+  if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}${miaPied(j)}</div>`;
+  else if (loc) $("#vbilf").outerHTML = j.invite ? miaInvite("Résumé automatique de vos chiffres.") : `<p class="iafoot">Résumé automatique de vos chiffres. ${esc(j.error || "")}</p>`;
+  else el.innerHTML = miaRendu(j, "Les chiffres de votre liste sont affichés ci-dessus.");
 }
 async function pageFavorisV1() {
   setTitle("Mes favoris"); setNav("fav");
@@ -3457,9 +3446,8 @@ async function radiographie(P) {
     const faits = { type: "portefeuille", valeur_eur: Math.round(tot), plus_value_pct: Math.round(gain / cost * 1000) / 10, lignes: lines.map(l => ({ nom: keyName(l.k), type: l.k.startsWith("e:") ? "ETF" : "action", poids_pct: Math.round(l.v / tot * 1000) / 10, plus_value_pct: lineCost(l) ? Math.round((l.v / lineCost(l) - 1) * 1000) / 10 : null })),
       pays: cs.slice(0, 5).map(([k, w]) => [COUNTRY[k] || k, Math.round(w * 1000) / 10]), premieres_expositions: top.slice(0, 6).map(x => [x.name, Math.round(x.w * 1000) / 10]), frais_etf_eur_an: Math.round(fees), remarques: $$(".gf b", el).map(b => b.textContent),
       habitudes: P.cfg ? { courtier: (BROKERS.list.find(b => b.id === P.cfg.courtier) || {}).name || null, compte: P.cfg.env || null, versement_mensuel_eur: +P.cfg.mensuel || null, achats_par_mois: +P.cfg.ordres || null } : null, profil_questionnaire: prof ? prof.titre : null };
-    try { const j = await (await iaFetch("/api/veille", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ faits, type: "portefeuille" }) })).json();
-      $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}<p class="iafoot">Commentaire rédigé par une IA à partir de vos lignes. Ce n'est pas un conseil en investissement.</p></div>` : iaErr(j, "Analyse indisponible.");
-    } catch (e) { $("#pfiab").innerHTML = `<p class="muted">Analyse indisponible pour le moment.</p>`; }
+    const j = await iaRediger("portefeuille", faits);
+    $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}${miaPied(j)}</div>` : miaRendu(j, "L'analyse calculée ci-dessus reste complète.");
   };
 }
 
@@ -3548,32 +3536,6 @@ function ficheFaits(s, c) {
   };
 }
 const ASK = ["Comment gagne-t-elle de l'argent ?", "Que retenir de ses derniers comptes ?", "Est-elle chère par rapport à ses concurrentes ?", "Sa dette est-elle un problème ?", "Son dividende est-il solide ?", "Quels sont ses points de vigilance ?"];
-function assistantPanel(s, c, root) {
-  if (!root) return;
-  const sec = document.createElement("section"); sec.className = "panel asst"; sec.id = "assistant";
-  sec.innerHTML = `<div class="ph"><h2>Une question sur ${esc(s.name)} ?</h2><span class="light" style="font-size:12.5px">Assistant IA</span></div><div class="pb">
-    <p class="muted" style="margin:0 0 10px;font-size:14px">L'assistant répond à partir des seules données de cette fiche : comptes, médianes du secteur, concurrentes, cours et annonces. Il explique ; il ne dit pas s'il faut acheter.</p>
-    <div class="chips">${ASK.map(q => `<button type="button" class="chip" data-ask="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-    <form class="askf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question, par exemple : pourquoi sa marge baisse-t-elle ?" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
-    <div class="asklog"></div><p class="iafoot" style="margin-top:10px">Les questions courantes (activité, prix, dette, dividende, croissance, marge, concurrentes, risques, dates) ont une réponse instantanée et illimitée. Les autres passent par l'IA : ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div>`;
-  const corps = $("#etapes-corps", root), first = root.firstElementChild;
-  if (corps) corps.appendChild(sec); else if (first) first.after(sec); else root.appendChild(sec); // sous les étapes, visible quelle que soit l'étape
-  liaUI();
-  const log = $(".asklog", sec), inp = $("input", sec);
-  const ask = async q => {
-    q = q.trim(); if (q.length < 5) return;
-    const item = document.createElement("div"); item.className = "askit"; item.innerHTML = `<p class="askq">${esc(q)}</p><div class="aska"><p class="muted">L'assistant lit la fiche…</p></div>`; log.prepend(item);
-    await loadAna();
-    const loc = localAssist(s, c, q);
-    if (loc) { $(".aska", item).innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, tirée des chiffres de la fiche.</p>`; return; }
-    try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, c) }) })).json();
-      $(".aska", item).innerHTML = j.txt ? resumeHTML(j.txt) : iaErr(j, "Réponse indisponible.");
-    } catch (e) { $(".aska", item).innerHTML = `<p class="muted">L'assistant est indisponible pour le moment.</p>`; }
-  };
-  sec.addEventListener("click", e => { const b = e.target.closest("[data-ask]"); if (b) { b.disabled = true; ask(b.dataset.ask); } });
-  $("form", sec).onsubmit = e => { e.preventDefault(); ask(inp.value); inp.value = ""; };
-}
-
 /* ---------- Page Premium ---------- */
 let OFFRES = null;
 async function pagePremium(sub) {
@@ -3581,27 +3543,23 @@ async function pagePremium(sub) {
   if (sub === "merci") return premiumMerci();
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
-  PREM = null; const st = await premStatus(), L = OFFRES.limites || { demande: [10, 200], assistant: [5, 100], resume: [3, 100], veille: [1, 20], portefeuille: [1, 20] };
+  PREM = null; const st = await premStatus();
   const rows = [
     ["Fiches, comptes expliqués, médianes, concurrentes, actualités, outils", "Oui", "Oui"],
     ["Mon espace : favoris et portefeuille sur tous vos appareils", "Oui", "Oui"],
-    ["Bilan de la semaine commenté par l'IA", "Oui", "Oui"],
+    ["Bilan de la semaine calculé : variations, annonces, dates à venir", "Oui", "Oui"],
     ["L'Académie : cours de culture financière et quiz", "Les essentiels", "Tous les cours"],
     ["Formation guidée de 6 semaines, étape par étape", "–", "Oui"],
     ["Historique des bilans", "2 semaines", "12 semaines"],
     ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "Toutes"],
-    ["Questions courantes à l'IA (recherches, comparaisons, définitions, questions sur une fiche)", "Sans limite", "Sans limite"],
-    ["Questions libres à l'IA « Demander à bilan. »", "10 par jour", "200 par jour"],
-    ["Résultats d'une recherche par l'IA", "8", "30"],
-    ["Questions libres à l'assistant de chaque fiche", `${L.assistant[0]} par jour`, `${L.assistant[1]} par jour`],
-    ["Résumés détaillés des documents officiels", `${L.resume[0]} par jour`, `${L.resume[1]} par jour`],
-    ["Bilan rédigé de vos favoris, à la demande", `${L.veille[0]} par jour`, `${L.veille[1]} par jour`],
-    ["Commentaire IA de votre portefeuille", `${L.portefeuille[0]} par jour`, `${L.portefeuille[1]} par jour`],
+    ["Réponses calculées par le site (recherches, comparaisons, définitions, questions sur une fiche)", "Sans limite", "Sans limite"],
+    ["Réponses rédigées par votre IA connectée (« Connecter mon IA »)", "Oui", "Oui"],
+    ["Résultats d'une recherche par critères", "8", "30"],
     ["Positions actives suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
     ["Entreprises comparées côte à côte", `${FREE.cmp}`, "5"],
   ];
   const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<button class="btn" disabled>Ouverture prochaine</button>`}</div>`;
-  app.innerHTML = `<h1 class="pagetitle">bilan. Premium</h1><p class="pagesub">Le site reste gratuit pour l'essentiel : chaque fiche, chaque chiffre, chaque explication, votre espace et votre bilan de la semaine. Premium vous donne l'intelligence artificielle sans compter, toutes vos alertes et l'historique de vos bilans. Le prix finance les données et les serveurs, pas la publicité.</p>
+  app.innerHTML = `<h1 class="pagetitle">bilan. Premium</h1><p class="pagesub">Le site reste gratuit pour l'essentiel : chaque fiche, chaque chiffre, chaque explication, votre espace et votre bilan de la semaine. Premium vous donne toute l'Académie, toutes vos alertes, l'historique de vos bilans et un suivi plus large. Le prix finance les données et les serveurs, pas la publicité.</p>
     ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
     <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>`}
@@ -3628,7 +3586,7 @@ async function premiumMerci() {
   let j = {}; for (let i = 0; i < 4; i++) { try { j = await (await fetch("/api/premium/activer?session_id=" + encodeURIComponent(sid))).json(); } catch (e) { j = { error: "Vérification impossible pour le moment." }; } if (j.token || !/pas encore confirmé/.test(j.error || "")) break; await new Promise(r => setTimeout(r, 4000)); }
   if (!j.token) { $("#merci").innerHTML = `<p>${esc(j.error || "Paiement introuvable.")}</p><p class="muted">Si vous avez été débité, écrivez-nous en indiquant l'adresse utilisée pour payer : votre accès sera ouvert à la main.</p>`; return; }
   setPremTok(j.token); await premStatus();
-  $("#merci").innerHTML = `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Les limites sont levées sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/favoris">Activer les alertes sur mes favoris →</a><a class="more" href="/entreprises">Ouvrir une fiche →</a></div>`;
+  $("#merci").innerHTML = `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Toute l'Académie et toutes vos alertes sont ouvertes sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/favoris">Activer les alertes sur mes favoris →</a><a class="more" href="/entreprises">Ouvrir une fiche →</a></div>`;
 }
 
 /* ---------- Nouvel investisseur : par où commencer ---------- */
@@ -3824,10 +3782,9 @@ async function iaRun(q, out) {
   if (!a) { await acaLoad(); hitsL = chercheLecons(q);
     const ouverte = /pourquoi|comment|c.?est quoi|qu.?est|explique|difference|faut.?il|doit.?on|risque|definition|signifie|fonctionne|marche|vaut.?il|interet|quel|quelle|combien|est.?ce|peut.?on|^(le|la|les|un|une) /i.test(norm(q));
     if (hitsL.length && (ouverte || hitsL[0].s >= 8)) a = { action: "lecons", hits: hitsL, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()) }; }
-  if (!a && LIA.eng) a = await liaCopilot(q);
-  if (!a) try { const r = await iaFetch("/api/demande", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q }) }); a = await r.json(); } catch (e) { a = { error: "L'IA est indisponible pour le moment." }; }
-  if (a.error) { await acaLoad(); const h = chercheLecons(q); if (h.length) a = { action: "lecons", hits: h, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()) };
-    else { out.innerHTML = iaErr(a, a.error) + (a.quota || /demandée/.test(a.error) ? liaBoxHTML() : ""); liaUI(); return; } }
+  if (!a) a = await miaCopilote(q); // IA connectée par le visiteur (m/monia.js), sinon { invite: true }
+  if (a.error || a.invite) { await acaLoad(); const h = chercheLecons(q); if (h.length) a = { action: "lecons", hits: h, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()), invite: a.invite };
+    else { out.innerHTML = a.invite ? `<p class="lead" style="margin:0 0 6px">Les réponses calculées du site ne couvrent pas encore cette question.</p><p class="muted" style="margin:0">Essayez une recherche par critères (secteur, pays, dette, dividende, prix), une comparaison (« Compare LVMH et Hermès ») ou une notion (« C'est quoi le PER ? »).</p>${miaInvite()}` : `<p class="muted" style="margin:6px 0">${esc(a.error)}</p>`; return; } }
   if (a.action === "fiche") { const x = a.id ? RBY[a.id] : resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
   if (a.action === "comparer") { const ids = (a.ids ? a.ids.map(id => RBY[id]) : a.noms.map(resoudre)).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
   if (a.action === "repondre" && !hitsL.length) { await acaLoad(); hitsL = chercheLecons(q); }
@@ -3835,7 +3792,7 @@ async function iaRun(q, out) {
   const titre = a.titre || q;
   out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
     ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : a.action === "lecons" ? `<p class="lead" style="margin:0 0 10px">Les leçons de l'Académie qui répondent à votre question :</p>` + leconsHTML(a.hits) : resumeHTML(a.texte) + (a.action === "repondre" && hitsL.length ? `<div class="iaplus"><p class="kick">Pour aller plus loin dans l'Académie</p>${hitsL.slice(0, 2).map(({ m, l }) => `<a class="hbr" href="/academie/${m.id}/${l.id}"><b>${esc(l.titre)}</b><span>${esc(m.titre)}</span></a>`).join("")}</div>` : "")}
-    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.lia ? "Réponse de l'IA installée sur votre appareil, à partir des données du site. À vérifier ; ce n'est pas un conseil." : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p></div>`;
+    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.ia === "connectee" ? `Réponse de votre IA connectée (${esc(a.modele || "modèle choisi")}), à partir des données du site. À vérifier ; ce n'est pas un conseil.` : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p>${a.invite ? miaInvite() : ""}</div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
 function iaBox(id, big = false) {
@@ -3846,9 +3803,9 @@ function pageDemander() {
   setTitle("Demander à l'IA"); setNav("ia");
   const q = new URLSearchParams(location.search).get("q") || "";
   app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à bilan.</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
-    ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>${liaBoxHTML()}</div>
-    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres passent par l'IA : ${isPrem() ? "200 par jour avec Premium." : `10 par jour en version gratuite, 200 avec <a class="lnk" href="/premium">Premium</a>.`}</p></div></section>`;
-  const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out); liaUI();
+    ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div><p class="mia-etat" data-mia-etat>${miaEtatHTML()}</p></div>
+    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres reçoivent une réponse rédigée si vous <a class="lnk" href="/espace/ia">connectez votre IA</a>.</p></div></section>`;
+  const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
   app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (!b) return; $("input", f).value = b.dataset.iaq; f.requestSubmit(); });
   if (q) { $("input", f).value = q; iaRun(q, out); }
 }
@@ -3885,8 +3842,8 @@ async function pageHome() {
       <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Agenda</a></div>${agendaHTML(upcoming().slice(0, 5))}</section>
       <section class="panel"><div class="ph"><h2>Annonces des entreprises</h2><a href="/actualites">Toutes</a></div><div class="pb" id="amf"></div></section>
       <section class="panel"><div class="ph"><h2>La communauté</h2><a href="/communaute">Participer</a></div><div class="pb" id="crec"></div></section></div>`)}
-    ${band(6, "Premium", "Toute la puissance de l'IA, sans compter", ["/premium", "Voir l'offre"], `<div class="premband"><ul>
-      <li><b>Toute l'Académie</b> et la formation guidée de six semaines</li><li><b>200 questions par jour</b> à l'IA, 100 à l'assistant de chaque fiche</li><li><b>Alertes chaque soir</b> dans votre espace : annonces, mouvements de plus de 5 %, résultats du lendemain</li>
+    ${band(6, "Premium", "Aller plus loin, sans publicité", ["/premium", "Voir l'offre"], `<div class="premband"><ul>
+      <li><b>Toute l'Académie</b> et la formation guidée de six semaines</li><li><b>30 résultats</b> par recherche par critères, au lieu de 8</li><li><b>Alertes chaque soir</b> dans votre espace : annonces, mouvements de plus de 5 %, résultats du lendemain</li>
       <li><b>12 semaines d'historique</b> de vos bilans, portefeuille sans limite, comparaisons à 5</li></ul><a class="btn" href="/premium">Découvrir Premium</a></div>`)}`;
   $("#rk").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.k = b.dataset.k; $$("#rk button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
   $("#erk").onclick = e => { const b = e.target.closest("button"); if (!b) return; erankK = b.dataset.k; $$("#erk button").forEach(x => x.classList.toggle("on", x === b)); $("#erkb").innerHTML = erankHTML(); };
@@ -3973,10 +3930,9 @@ async function espaceAlertes(el, m) {
 function espaceReglages(el, m) {
   el.innerHTML = `<div class="two"><section class="panel"><div class="ph"><h2>Mot de passe</h2></div><div class="pb"><form id="mdpf" class="espform"><label>Mot de passe actuel<input type="password" name="a" required autocomplete="current-password"></label><label>Nouveau mot de passe<input type="password" name="n" required minlength="10" autocomplete="new-password"></label><button class="btn">Changer</button><p class="muted" id="mdpm" style="font-size:13.5px;margin:0"></p></form></div></section>
     <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail ? `<label class="chk"><input type="checkbox" id="teas"${m.teaser ? " checked" : ""}> Recevoir un court e-mail quand mon bilan de la semaine est prêt (sans son contenu).</label>` : `<p class="muted" style="margin-top:0">Votre bilan de la semaine vous attend ici chaque samedi matin.</p>`}
-      <div style="margin-top:16px">${liaBoxHTML()}</div>
+      <p style="margin:16px 0 0"><a class="lnk" href="/espace/ia">Mon IA</a> : réponses calculées, ou votre IA connectée pour des réponses rédigées.</p>
       <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button>${m.premium ? `<a class="btn ghost" href="/premium">Mon abonnement</a>` : ""}</div></div></section></div>
     <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte, vos favoris, votre portefeuille, vos bilans et vos alertes sont effacés définitivement. Un abonnement Premium se résilie à part, depuis la page Premium.</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
-  liaUI();
   $("#mdpf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/motdepasse", { ancien: fd.get("a"), nouveau: fd.get("n") }); $("#mdpm").textContent = r.error || "Mot de passe changé."; };
   if ($("#teas")) $("#teas").onchange = e => post2("/api/espace/preferences", { teaser: e.target.checked });
   $("#logout").onclick = async () => { await post2("/api/espace/deconnexion"); MOI = { connecte: false }; document.documentElement.classList.remove("is-in"); espaceBadge(); go("/"); };
@@ -4056,62 +4012,10 @@ function listeLocale(cos) {
 }
 
 /* ====================================================================================================
-   v10 : IA locale (le modèle tourne dans le navigateur du visiteur : gratuit, illimité, privé),
-   graphiques tactiles, portefeuille analysé avec les habitudes et le profil, page Méthode.
+   v10 : graphiques tactiles, portefeuille analysé avec les habitudes et le profil, page Méthode.
    ==================================================================================================== */
 
-/* ---------- IA locale (WebLLM, modèle ouvert Qwen, exécuté sur la carte graphique de l'appareil) ---------- */
-const LIA = { st: "off", eng: null, p: 0, msg: "", model: null, prompts: null, loading: null, queue: Promise.resolve() };
-const LKEY = "bilan.ia_locale";
-const liaOn = () => { try { return localStorage.getItem(LKEY) === "on"; } catch (e) { return false; } };
-async function liaSupport() {
-  if (!navigator.gpu) return null;
-  try { const a = await navigator.gpu.requestAdapter(); return a ? { f16: a.features.has("shader-f16") } : null; } catch (e) { return null; }
-}
-const liaPetit = () => matchMedia("(max-width: 760px)").matches || (navigator.deviceMemory && navigator.deviceMemory <= 4);
-const liaModel = sup => (liaPetit() ? "Qwen3.5-0.8B" : "Qwen3.5-2B") + (sup.f16 ? "-q4f16_1-MLC" : "-q4f32_1-MLC");
-const liaTaille = () => liaPetit() ? "environ 0,6 Go" : "environ 1,5 Go";
-function liaStart() {
-  if (LIA.eng) return Promise.resolve(LIA.eng);
-  if (LIA.loading) return LIA.loading;
-  LIA.loading = (async () => {
-    const sup = await liaSupport();
-    if (!sup) { LIA.st = "unsupported"; liaUI(); return null; }
-    LIA.st = "loading"; LIA.model = liaModel(sup); liaUI();
-    const webllm = await import("https://esm.run/@mlc-ai/web-llm@0.2.86");
-    const eng = await webllm.CreateMLCEngine(LIA.model, { initProgressCallback: r => { LIA.p = r.progress || 0; LIA.msg = r.text || ""; liaUI(); } });
-    LIA.eng = eng; LIA.st = "ready"; try { localStorage.setItem(LKEY, "on"); } catch (e) { } liaUI(); return eng;
-  })().catch(e => { LIA.st = "error"; LIA.msg = String(e && e.message || e).slice(0, 200); LIA.loading = null; liaUI(); return null; });
-  return LIA.loading;
-}
-function liaAsk(kind, utilisateur, max_tokens = 450) {
-  if (!LIA.eng) return Promise.resolve(null);
-  const run = async () => {
-    if (!LIA.prompts) LIA.prompts = await fetch("/data/prompts.json").then(r => r.json()).catch(() => ({}));
-    const sys = LIA.prompts[kind]; if (!sys) return null;
-    try {
-      const r = await LIA.eng.chat.completions.create({ messages: [{ role: "system", content: sys }, { role: "user", content: utilisateur }], max_tokens, temperature: 0.2, extra_body: { enable_thinking: false } });
-      const t = String((r.choices[0].message || {}).content || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/, "").replace(/—/g, ",").replace(/\*\*/g, "").trim();
-      return t.length > 15 ? t : null;
-    } catch (e) { return null; }
-  };
-  const p = LIA.queue.then(run, run); LIA.queue = p.catch(() => null); return p; // une question à la fois
-}
-function liaBoxHTML(compact = false) { return `<div class="liabox${compact ? " compact" : ""}"></div>`; }
-function liaUI() {
-  $$(".liabox").forEach(el => {
-    const c = el.classList.contains("compact");
-    if (LIA.st === "ready") { el.innerHTML = `<span class="liaok">⚡ Recherche par l'IA illimitée sur cet appareil</span>${c ? "" : `<span class="light"> · vos demandes sont comprises par un modèle ouvert (${esc(String(LIA.model || "").split("-q")[0])}) qui tourne dans votre navigateur ; les résultats viennent des chiffres du site</span>`}`; return; }
-    if (LIA.st === "loading") { el.innerHTML = `<div class="liaprog"><span style="width:${Math.round(LIA.p * 100)}%"></span></div><small class="light">Installation de l'IA sur cet appareil : ${Math.round(LIA.p * 100)} %. Une seule fois ; la page reste utilisable.</small>`; return; }
-    if (LIA.st === "unsupported") { el.innerHTML = c ? "" : `<small class="light">L'IA illimitée sur l'appareil demande un navigateur récent avec WebGPU (Chrome ou Edge sur ordinateur, Chrome sur Android, Safari 26 sur iPhone).</small>`; return; }
-    if (LIA.st === "error") { el.innerHTML = `<small class="light">L'installation de l'IA locale n'a pas abouti (${esc(LIA.msg)}). Le site continue avec l'IA en ligne.</small> <button type="button" class="linkbtn" data-lia>Réessayer</button>`; return; }
-    el.innerHTML = `<button type="button" class="btn liago" data-lia>⚡ Rendre la recherche par l'IA illimitée</button>${c ? "" : `<small class="light">Un modèle d'IA ouvert s'installe dans votre navigateur (${liaTaille()}, une seule fois, de préférence en Wi-Fi). Il comprend vos recherches formulées librement, sans limite et sans que vos questions quittent l'appareil. Les réponses, elles, sont toujours calculées sur les chiffres du site.</small>`}`;
-  });
-}
-document.addEventListener("click", e => { if (e.target.closest("[data-lia]")) liaStart(); });
-if (liaOn()) setTimeout(liaStart, 2500); // déjà installé : rechargé depuis le cache du navigateur
-
-/* Validation d'une action du copilote produite par le modèle local (même règle que le serveur) */
+/* Validation d'une action du copilote proposée par l'IA connectée (m/monia.js) : seules les actions et les champs connus passent */
 function iaValide(a) {
   if (!a || typeof a !== "object") return null;
   const IND = Object.keys(INDI), clean = s => String(s || "").replace(/\s+/g, " ").trim();
@@ -4125,13 +4029,6 @@ function iaValide(a) {
   return null;
 }
 const jsonFrom = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { return JSON.parse(t.slice(i, j + 1)); } catch (e) { return null; } };
-async function liaCopilot(q) {
-  if (!LIA.eng) return null;
-  const a = iaValide(jsonFrom(await liaAsk("demande", q, 400)));
-  if (!a || a.action === "repondre") return null; // les explications ouvertes passent par le modèle en ligne ou par les cours vérifiés
-  a.lia = true; return a;
-}
-
 /* ---------- Graphiques : taille réelle de l'écran et infobulles au doigt ---------- */
 const chartW = () => Math.max(300, Math.min(640, (window.innerWidth || 640) - 44));
 let tipOn = null;
@@ -4204,7 +4101,7 @@ function pageMethode() {
       <h2>Comment les chiffres sont jugés</h2>
       <p>Chaque chiffre est comparé à la médiane des entreprises du même secteur suivies par le site : la moitié fait mieux, l'autre moins bien. Vert signifie nettement mieux que la médiane, orange nettement moins bien, gris dans la moyenne. Un point orange n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller.</p>
       <h2>Ce que fait l'intelligence artificielle</h2>
-      <p>Les questions courantes (recherches par critères, comparaisons, définitions, questions sur une fiche) sont comprises et calculées directement par le site, sans modèle d'IA : la réponse est donc exacte par construction et sans limite. Pour les questions libres, un modèle d'IA reçoit uniquement les chiffres du site et des consignes strictes. Il peut tourner dans votre navigateur (IA locale, modèle ouvert Qwen) ou sur nos serveurs.</p>
+      <p>Les questions courantes (recherches par critères, comparaisons, définitions, questions sur une fiche) sont comprises et calculées directement par le site, sans modèle d'IA : la réponse est donc exacte par construction et sans limite. Pour les questions libres, si vous avez connecté votre IA, le modèle choisi reçoit uniquement les chiffres du site et des consignes strictes.</p>
       <h2>Les règles données à l'IA contre les biais</h2>
       <p>Séparer les faits de leur interprétation. Toujours présenter ce qui est favorable et ce qui demande de la vigilance. Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années. Comparer à la médiane du secteur plutôt que juger dans l'absolu. Aucun mot d'emphase. Aucune prédiction de cours, aucune recommandation d'acheter, de vendre ou de conserver un titre. Dire quand une information manque. Ne citer que les chiffres fournis.</p>
       <h2>Ce que le site ne fait pas</h2>
@@ -4267,7 +4164,7 @@ function acaLeconV1(m, l) {
   if (!lock) { st[m.id + "/" + l.id] = 1; acaSave(st); }
   app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
     <article class="acales"><p class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</p><h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead">${esc(l.resume)}</p>
-    ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie, à la formation guidée de six semaines et à l'IA sans compter.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
+    ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie et à la formation guidée de six semaines.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
       : `${l.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}
       ${l.exemple ? `<div class="acaex"><p class="kick">Exemple chiffré</p><p>${esc(l.exemple)}</p></div>` : ""}
       ${(l.a_retenir || []).length ? `<div class="acaret"><p class="kick">À retenir</p><ul>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
@@ -4430,7 +4327,7 @@ function acaLecon(m, l) {
   app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
     <article class="acales"><div class="acatopbar"><span class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</span>${lock ? "" : `<div class="acapb"><span id="acapb" style="width:0%"></span></div>`}</div>
     <h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead">${esc(l.resume)}</p>
-    ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie, à la formation guidée de six semaines et à l'IA sans compter.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
+    ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie et à la formation guidée de six semaines.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
       : `<div class="acacards">${cards.map((p, j) => `<div class="acacard2" data-c="${j}"${deja || j === 0 ? "" : " hidden"}><span class="acan">${j + 1}</span><p>${numsMark(p)}</p></div>`).join("")}</div>
       <div class="acamore"${deja ? " hidden" : ""}><button type="button" class="btn" id="acanext">Continuer</button><button type="button" class="linkbtn" id="acaall">Tout afficher</button></div>
       <div class="acarest"${deja ? "" : " hidden"}>
@@ -4599,6 +4496,6 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
 <script src="/m/reco.js"></script>
 <script src="/m/orchestre.js"></script>
 <script src="/m/accueil.js"></script>
-<script src="/m/iacle.js"></script>
+<script src="/m/monia.js"></script>
 </body>
 </html>

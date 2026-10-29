@@ -275,28 +275,6 @@ async function chiffres() {
   log("chiffres :", ok, "communiqués lus,", n2, "analyses AMF/SEC rattachées");
 }
 
-/* ---------- IA du site : « En clair » et « Ce que cela change » pour les annonces importantes ---------- */
-async function enClair() {
-  const SITE = process.env.SITE_URL || "https://repere-bourse.pages.dev", ADMIN = process.env.ADMIN_KEY;
-  if (!ADMIN) { log("IA : ADMIN_KEY absent, résumés IA non demandés"); return; }
-  const all = Object.values(STORE).flatMap(S => [...S.o.values()]).filter(it => !it.x && it.i >= 3 && NOW - Date.parse(it.d) < 10 * JOUR && (it.f || /^(operation|dirigeants|incident)$/.test(it.c)))
-    .sort((a, b) => b.d.localeCompare(a.d)).slice(0, +(process.env.IA_MAX || 30));
-  let ok = 0;
-  for (const it of all) {
-    if (Date.now() > STOP) break;
-    const c = C[it.id], a = annual(it.id);
-    const faits = { entreprise: c.name, secteur: c.sector, pays: c.region, activite: c.fiche ? c.fiche.fait : c.desc, type: it.tf, titre_officiel: it.t, date: it.d.slice(0, 10), chiffres: it.f || [], lecture: it.r || [], extraits: it._ext || [],
-      dernier_exercice: a ? { ventes_millions: a.ca, devise: a.cur, croissance_ventes: a.g1 != null ? Math.round(a.g1 * 1000) / 10 + " %" : null } : null };
-    try {
-      const r = await fetch(SITE + "/api/actu/clair", { method: "POST", headers: { "content-type": "application/json", "x-admin-key": ADMIN, "user-agent": UA }, body: JSON.stringify({ k: it.k, faits }), signal: AbortSignal.timeout(60000) });
-      const j = await r.json().catch(() => ({}));
-      if (j.clair) { it.x = { c: j.clair, ch: j.change || "" }; ok++; } else if (r.status === 429 || r.status === 503) break;
-    } catch (e) { log("IA", e.message); }
-    await sleep(1200);
-  }
-  log("IA :", ok, "résumés « En clair » sur", all.length, "demandés");
-}
-
 /* ---------- Presse : GDELT (GKG) et BBC News ---------- */
 // Médias reconnus (presse généraliste et économique). Exclus : agrégateurs, sites de cotations et de communiqués.
 export const MEDIAS = ("lesechos.fr investir.lesechos.fr lefigaro.fr latribune.fr bfmtv.com challenges.fr capital.fr usinenouvelle.com lemonde.fr franceinfo.fr francetvinfo.fr ouest-france.fr lexpress.fr lepoint.fr " +
@@ -430,7 +408,7 @@ function dedoublonne(L) {
 async function main() {
   const etapes = [["amf", amf], ["sec", sec], ["nasdaq", nasdaq], ["oslo", oslo], ["nsm", nsm]];
   const only = process.argv.slice(2).filter(a => !a.startsWith("-"));
-  if (only.includes("relire")) { await chiffres(); await enClair(); ecrire(); return; } // après data/actu_analyse.mjs : rattache les chiffres AMF et SEC
+  if (only.includes("relire")) { await chiffres(); ecrire(); return; } // après data/actu_analyse.mjs : rattache les chiffres AMF et SEC
   for (const [k, fn] of etapes) {
     if (only.length && !only.includes(k)) continue;
     if (Date.now() > STOP) break;
@@ -439,7 +417,6 @@ async function main() {
   }
   await chiffres();
   if (!only.length || only.includes("presse")) { await bbc(); try { await gdelt(); } catch (e) { log("ÉCHEC GDELT", e.message); note("gdelt", { erreur: e.message }); } ETAT.bbc = new Date().toISOString(); }
-  await enClair();
   ecrire();
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error(e); process.exit(1); });

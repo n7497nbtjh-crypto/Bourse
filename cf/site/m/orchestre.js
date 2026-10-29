@@ -140,9 +140,10 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 @media (max-width:520px){.orctrust{gap:8px}.orctrust a{padding:10px;align-items:center}.orctrust small{display:none}.orctrust b{margin:0;font-size:13px}}
 </style>`);
 
-/* ---------- L'IA sur toutes les pages : bouton et panneau contextuel ----------
-   Sur une fiche, l'IA répond sur l'entreprise (règles locales instantanées, puis serveur) ;
-   ailleurs, c'est le copilote « Demander à bilan. » (critères, comparaisons, notions, leçons). */
+/* ---------- L'IA sur toutes les pages : bouton et panneau contextuel (le seul point d'entrée de l'IA) ----------
+   Sur une fiche, l'IA répond sur l'entreprise : réponse calculée d'abord, puis, si le visiteur a connecté son IA
+   (m/monia.js, OpenRouter), réponse rédigée à partir des faits de la fiche. Ailleurs, c'est le copilote « Demander à bilan. »
+   (critères, comparaisons, notions, leçons). En tête du panneau : « IA connectée : <modèle> » ou « Réponses calculées ». */
 const ORC_IA = { open: false };
 function orcIaCtx() {
   const p = location.pathname, m = p.match(/^\/entreprise\/([a-z0-9-]+)/), e = p.match(/^\/etf\/([a-z0-9-]+)/), i = p.match(/^\/indice\/([a-z0-9]+)/);
@@ -157,7 +158,7 @@ function orcIaShell() {
   if ($("#orcia")) return;
   document.body.insertAdjacentHTML("beforeend", `<button type="button" id="orciab" class="orciab" aria-haspopup="dialog" aria-controls="orcia"><span class="st">✦</span><span class="lb">Demander à l'IA</span></button>
     <div id="orcia" class="orcia" role="dialog" aria-modal="true" aria-labelledby="orciat" hidden><div class="orciabg" data-orcclose></div>
-      <div class="orciap"><div class="orciah"><div><p class="kick" id="orciactx"></p><h2 id="orciat">✦ L'IA de bilan.</h2></div><button type="button" class="orciax" data-orcclose aria-label="Fermer">×</button></div>
+      <div class="orciap"><div class="orciah"><div><p class="kick" id="orciactx"></p><h2 id="orciat">✦ L'IA de bilan.</h2><p class="orcia-etat" data-mia-etat></p></div><button type="button" class="orciax" data-orcclose aria-label="Fermer">×</button></div>
         <div class="orciab2"><div class="chips" id="orciaq"></div><div id="orcialog" class="orcialog"></div></div>
         <form id="orciaf" class="orciaf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question…" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
         <p class="orciaft">Chiffres calculés sur les comptes officiels et les données du site, avec leur source. Information, pas conseil.</p></div></div>`);
@@ -171,11 +172,12 @@ function orcIaOpen() {
   const c = orcIaCtx(); ORC_IA.ctx = c;
   $("#orciactx").textContent = c.label ? (c.type === "co" ? "Question sur " : "À propos de : ") + c.label : "Copilote · 2 000 entreprises et des ETF";
   $("#orciaq").innerHTML = c.qs.map(q => `<button type="button" class="chip" data-orcq="${esc(q)}">${esc(q)}</button>`).join("");
+  if (typeof miaMaj === "function") miaMaj();
   $("#orcia").hidden = false; ORC_IA.open = true; document.documentElement.classList.add("orcia-on");
   setTimeout(() => $("#orciaf input").focus(), 50);
 }
 function orcIaClose() { const d = $("#orcia"); if (d) d.hidden = true; ORC_IA.open = false; document.documentElement.classList.remove("orcia-on"); const b = $("#orciab"); if (b) b.focus({ preventScroll: true }); }
-async function orcIaAsk(q) {
+async function orcIaAsk(q, o = {}) {
   q = String(q || "").trim(); if (q.length < 3) return;
   const log = $("#orcialog"), c = ORC_IA.ctx || orcIaCtx();
   const it = document.createElement("div"); it.className = "orciait"; it.innerHTML = `<p class="askq">${esc(q)}</p><div class="aska"></div>`; log.prepend(it);
@@ -185,11 +187,20 @@ async function orcIaAsk(q) {
     const s = c.s; let full = FULL[s.id];
     if (!full) { try { full = FULL[s.id] = await (await fetch(`/data/societes/${s.id}.json`)).json(); } catch (e) { full = null; } }
     await loadAna();
-    const loc = localAssist(s, full, q);
-    if (loc) { out.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, calculée à partir des chiffres de la fiche.</p>`; return; }
-    try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, full) }) })).json();
-      out.innerHTML = j.txt ? resumeHTML(j.txt) + `<p class="iafoot">${(typeof iakSource === "function" && iakSource(j)) || "Rédigé par l'IA à partir des seules données de la fiche. À vérifier ; ce n'est pas un conseil."}</p>` : iaErr(j, "Réponse indisponible.");
-    } catch (e) { out.innerHTML = `<p class="muted">L'IA est indisponible pour le moment.</p>`; }
+    const rediger = async box => {
+      box.innerHTML = `<div class="iathink"><span></span><span></span><span></span> Votre IA rédige à partir des données de la fiche…</div>`;
+      const faits = { ...ficheFaits(s, full), ...(typeof ficheWd === "function" ? { identite: ficheWd(s.id) } : {}) };
+      box.innerHTML = miaRendu(await iaRediger("assistant", faits, { question: q, max: 600 }));
+    };
+    let loc = null; try { loc = localAssist(s, full, q); } catch (e) { }
+    if (loc && !(o.rediger && miaConnectee())) {
+      out.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, calculée à partir des chiffres de la fiche.</p>` + (miaConnectee() ? `<button type="button" class="fapp" data-orcred>✦ Rédiger une réponse plus complète avec mon IA</button>` : o.rediger ? miaInvite() : "");
+      const b = $("[data-orcred]", out); if (b) b.onclick = () => { b.remove(); const d = document.createElement("div"); out.appendChild(d); rediger(d); };
+      return;
+    }
+    if (miaConnectee()) return rediger(out);
+    out.innerHTML = `<p class="muted" style="margin:0 0 6px">Pas de réponse calculée pour cette question précise. Les réponses calculées couvrent l'activité, les comptes, le prix, la dette, le dividende, la croissance, la marge, les concurrentes, les risques et les dates.</p>
+      <div class="chips">${(c.qs || []).slice(0, 3).map(x => `<button type="button" class="chip" data-orcq="${esc(x)}">${esc(x)}</button>`).join("")}</div>${miaInvite()}`;
     return;
   }
   const before = location.pathname + location.search;
@@ -214,7 +225,7 @@ function orcIaVisibilite() {
 .orciabg{position:absolute;inset:0;background:rgba(17,18,20,.35)}
 .orciap{position:absolute;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--page);display:flex;flex-direction:column;box-shadow:-12px 0 40px -12px rgba(0,0,0,.3);animation:orcin .22s ease-out}
 @keyframes orcin{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
-.orciah{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 18px 10px;border-bottom:1px solid var(--line)}.orciah h2{font:600 20px var(--serif);margin:2px 0 0}
+.orciah{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 18px 10px;border-bottom:1px solid var(--line)}.orciah h2{font:600 20px var(--serif);margin:2px 0 0}.orciah .orcia-etat{margin:4px 0 0}
 .orciax{border:0;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--grey);padding:0 4px}
 .orciab2{flex:1;overflow:auto;padding:14px 18px}.orciab2 .chips{margin-bottom:12px}
 .orcialog{display:flex;flex-direction:column;gap:14px}.orciait{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px}
@@ -260,7 +271,7 @@ function pageMethode() {
       <section class="panel"><div class="ph"><h2>L'IA, en trois niveaux</h2></div><div class="pb mtdia">
         <div><b>1. Règles du site, dans votre navigateur</b><p>Recherches par critères, comparaisons, définitions, questions sur une fiche : comprises et calculées sur les données, sans modèle génératif. Réponse instantanée, exacte par construction, sans limite.</p></div>
         <div><b>2. Leçons vérifiées de l'Académie</b><p>Les questions de cours renvoient vers des leçons rédigées à partir de sources officielles, avec leurs chiffres 2026.</p></div>
-        <div><b>3. Modèle de langage encadré</b><p>Pour les questions libres seulement : un modèle ouvert (dans votre navigateur si votre appareil le permet, sinon sur nos serveurs) reçoit uniquement les chiffres du site et des consignes strictes. Sa réponse est signalée comme rédigée par une IA.</p></div></div></section>
+        <div><b>3. Votre IA, si vous la connectez</b><p>Facultatif : avec « Connecter mon IA » (compte OpenRouter, modèles gratuits possibles), le modèle que vous choisissez reçoit votre question, les chiffres du site, leurs sources et des consignes strictes. Sa réponse est signalée comme rédigée par une IA. Le site, lui, n'appelle aucun modèle.</p></div></div></section>
     </div>
     <section class="panel"><div class="ph"><h2>Les règles données à l'IA contre les biais</h2></div><div class="pb"><ul class="mtdcheck">
       <li>Séparer les faits de leur interprétation</li><li>Présenter à la fois ce qui est favorable et ce qui demande de la vigilance</li><li>Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années</li>

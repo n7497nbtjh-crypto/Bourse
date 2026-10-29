@@ -27,7 +27,6 @@ jobs:
       - name: Collecte des annonces et de la presse
         env:
           CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
-          ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
           ACTU_MINUTES: "30"
         run: |
           npm i --no-save --silent pdfjs-dist@4.10.38 || true

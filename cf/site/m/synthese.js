@@ -265,9 +265,32 @@ function synHistHTML(b, prem) {
 }
 function synTexte(b) {
   if (b.texte) return `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des seuls chiffres de cette page. Ce n'est pas un conseil.</p></div>`;
-  const t = typeof bilanLocal === "function" ? bilanLocal(b) : ""; if (!t) return "";
-  return `<div class="iares">${resumeHTML(t)}<p class="iafoot">Résumé calculé à partir de vos chiffres. Le commentaire rédigé par l'IA s'ajoutera à une prochaine visite.</p></div>`;
+  const t = typeof bilanLocal === "function" ? bilanLocal(b) : "";
+  return `<div class="iares" id="syniab">${t ? `${resumeHTML(t)}<p class="iafoot">Résumé calculé à partir de vos chiffres.</p>` : ""}${synIaBouton(b)}</div>`;
 }
+/* Commentaire de la semaine : rédigé à la demande par l'IA connectée du visiteur (m/monia.js), à partir des faits de la synthèse. */
+let SYN_IA_B = null;
+function synIaBouton(b) {
+  SYN_IA_B = b;
+  return miaConnectee() ? `<button type="button" class="fapp" data-syn-ia>✦ Commenter ma semaine avec mon IA</button>` : miaInvite();
+}
+function synIaFaits(c) { // mêmes faits que l'ancien commentaire du serveur : tous calculés par le site
+  const L = c.lignes || [];
+  return { semaine: c.semaine, periode: c.partiel && c.depuis ? "depuis le " + c.depuis : "semaine complète", moyenne_semaine_pct: c.moyenne, nombre_de_lignes: L.length, hausses: c.hausses, baisses: c.baisses,
+    essentiel_calcule: c.essentiel || [], indices: (c.indices || []).map(i => ({ indice: i.nom, variation_semaine_pct: i.pct })),
+    portefeuille: c.portefeuille ? { valeur_eur: c.portefeuille.valeur_eur, variation_semaine_eur: c.portefeuille.var_eur, variation_semaine_pct: c.portefeuille.var_pct,
+      alertes: (c.portefeuille.alertes || []).filter(a => a.niveau !== "fort").map(a => ({ alerte: a.texte, evolution: a.evol })) } : null,
+    lignes: L.filter(l => l.variation_semaine_pct != null).slice(0, 25).map(l => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct, indice_de_reference: l.indice ? l.indice.nom : null, ecart_avec_indice_points: l.ecart_pts, dans_le_portefeuille: !!l.en_portefeuille })),
+    annonces: (c.annonces || []).slice(0, 8).map(a => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, en_clair: a.resume })),
+    a_venir: (c.a_venir || []).slice(0, 6).map(e => ({ entreprise: e.nom, date: e.date, evenement: e.label })),
+    secteurs_suivis: (c.secteurs || []).filter(x => x.n).map(x => ({ secteur: x.nom, variation_mediane_semaine_pct: x.mediane_pct, entreprises: x.n, hausses: x.hausses, baisses: x.baisses })) };
+}
+document.addEventListener("click", async e => {
+  const bt = e.target.closest("[data-syn-ia]"); if (!bt || !SYN_IA_B) return;
+  bt.disabled = true; bt.textContent = "Votre IA rédige le commentaire…";
+  const j = await iaRediger("bilan", synIaFaits(SYN_IA_B), { max: 650 });
+  bt.outerHTML = j.txt ? `<div class="synia">${resumeHTML(j.txt)}${miaPied(j)}</div>` : miaRendu(j);
+});
 function synEssentiel(b) {
   if ((b.essentiel || []).length) return b.essentiel;
   const L = (b.lignes || []).filter(l => l.variation_semaine_pct != null).sort((x, y) => y.variation_semaine_pct - x.variation_semaine_pct), E = [];

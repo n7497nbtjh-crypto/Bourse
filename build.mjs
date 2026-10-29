@@ -29,9 +29,9 @@ writeFileSync("cf/site/sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<u
 writeFileSync("cf/site/robots.txt", `User-agent: *\nDisallow: /api/\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 { const { default: U, SECTEURS } = await import("./data/univers.mjs");
   wfs("cf/src/index.gen.mjs", "// Fichier fabriqué par build.mjs : la liste minimale des entreprises pour le Worker.\nexport const SECTEURS = " + JSON.stringify(SECTEURS) + ";\nexport default " + JSON.stringify(U.map(({ id, name, sector, desc, region, isin }) => ({ id, name, sector, desc, region, isin }))) + ";\n"); }
-{ // consignes des modèles, partagées avec l'IA qui tourne dans le navigateur des visiteurs
-  const ia = await import("./cf/src/ia.mjs"), dm = await import("./cf/src/demande.mjs");
-  wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF, comparaison: ia.SYS_CMP }));
+{ // consignes envoyées par le navigateur à l'IA que le visiteur a connectée (cf/src/consignes.mjs, cf/site/m/monia.js)
+  const { CONSIGNES } = await import("./cf/src/consignes.mjs");
+  wfs("cf/site/data/prompts.json", JSON.stringify(CONSIGNES));
 }
 { const { pea } = await import("./data/pea.mjs"); console.log(pea(), "entreprises au siège à vérifier pour le PEA (pea.json)"); }
 { const { historique } = await import("./data/outils_historique.mjs"); console.log(historique(), "entreprises dans historique.json (classements, dividendes)"); }

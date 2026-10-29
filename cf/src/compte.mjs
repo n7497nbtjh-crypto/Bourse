@@ -1,4 +1,4 @@
-// Comptes Premium (paiement Stripe), quotas de la version gratuite, envoi d'e-mails sur plusieurs services gratuits.
+// Comptes Premium (paiement Stripe), envoi d'e-mails sur plusieurs services gratuits.
 // Réglages Cloudflare (Paramètres > Variables et secrets) :
 //   STRIPE_SECRET (secret)            clé secrète Stripe, pour vérifier les paiements
 //   STRIPE_LINK_MENSUEL, STRIPE_LINK_UNIQUE (texte)   liens de paiement Stripe (Payment Links)
@@ -7,12 +7,10 @@
 //   ADMIN_KEY (secret)                clé du robot pour déclencher les envois
 //   PRIX_MENSUEL, PRIX_UNIQUE (texte)  prix affichés sur la page Premium, ex. « 4,90 € par mois »
 //   HASH_SALT (secret, facultatif)     sel de l'empreinte anonyme des visiteurs
-//   IA_MAX_JOUR (texte, facultatif)    nombre maximal d'appels au modèle par jour sur tout le site
 export const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)`,
-  `CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))`,
   `CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))`,
 ];
 let ready = false;
@@ -52,22 +50,6 @@ export async function premiumOf(request, env) {
   }
   return a.until > Date.now() ? a : null;
 }
-/* ---------- Quotas : la version gratuite est limitée par jour, Premium beaucoup moins ---------- */
-export const LIMITS = { demande: [10, 200], assistant: [5, 100], resume: [3, 100], veille: [1, 20], portefeuille: [1, 20] };
-export async function quota(request, env, kind) {
-  if (env.ADMIN_KEY && request.headers.get("x-admin-key") === env.ADMIN_KEY) return { ok: true, premium: true, max: 1e9, used: 0 }; // robot du site
-  await initCompte(env.DB);
-  const p = await premiumOf(request, env), c = p ? null : await sessionCompte(request, env), who = p ? "p:" + p.token : c ? "u:" + c.id : await visitor(request, env), [free, prem] = LIMITS[kind] || [3, 30], max = p ? prem : free;
-  const r = await env.DB.prepare(`SELECT n FROM usage WHERE who = ? AND jour = ? AND kind = ?`).bind(who, today(), kind).first();
-  if (r && r.n >= max) return { ok: false, premium: !!p, max };
-  if (!r && Math.random() < 0.02) await env.DB.prepare(`DELETE FROM usage WHERE jour < ?`).bind(new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)).run(); // les compteurs ne sont gardés que deux jours
-  await env.DB.prepare(`INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, ?, 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1`).bind(who, today(), kind).run();
-  return { ok: true, premium: !!p, max, used: (r ? r.n : 0) + 1 };
-}
-export function quotaError(q, what) {
-  return json({ error: q.premium ? `Limite du jour atteinte (${q.max} ${what}). Elle revient demain.` : `Limite gratuite du jour atteinte (${q.max} ${what}). Elle revient demain, ou passez à Premium pour en avoir beaucoup plus.`, premium: q.premium, quota: true }, 429);
-}
-
 /* ---------- Stripe ---------- */
 async function stripe(env, path) {
   const r = await fetch("https://api.stripe.com/v1/" + path, { headers: { authorization: "Bearer " + env.STRIPE_SECRET } });
@@ -78,7 +60,7 @@ export async function premium(request, env) {
   if (!env || !env.DB) return json({ error: "Indisponible pour le moment." }, 503);
   await initCompte(env.DB);
   const url = new URL(request.url), path = url.pathname;
-  if (path === "/api/premium/offres") return json({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, limites: LIMITS, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
+  if (path === "/api/premium/offres") return json({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
   if (path === "/api/premium/statut") { const p = await premiumOf(request, env); return json(p ? { premium: true, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1…$2") : null } : { premium: false }); }
   if (path === "/api/premium/activer") { // retour de Stripe après paiement : ?session_id=cs_…
     if (!env.STRIPE_SECRET) return json({ error: "Le paiement n'est pas encore configuré." }, 503);

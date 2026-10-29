@@ -2,7 +2,7 @@
 // Base SQLite en mémoire (comme D1), données du site, cours, modèle et e-mails simulés.
 import { DatabaseSync } from "node:sqlite";
 import { espace, compteDe, semaineIso, jourParis } from "../cf/src/espace.mjs";
-import { premiumOf, quota } from "../cf/src/compte.mjs";
+import { premiumOf } from "../cf/src/compte.mjs";
 const sql = new DatabaseSync(":memory:");
 const stmt = (q, p = []) => ({ bind: (...a) => stmt(q, a), all: async () => ({ results: sql.prepare(q).all(...p) }), first: async () => sql.prepare(q).get(...p) ?? null, run: async () => ({ meta: { changes: Number(sql.prepare(q).run(...p).changes) } }) });
 const DAY = 864e5, today = jourParis(), demain = jourParis(Date.now() + DAY), wd = new Date(today + "T12:00:00Z").getUTCDay();
@@ -78,29 +78,21 @@ ok(s === 200 && j.semaine === semaineIso(today) && j.lignes.length === 3, "bilan
 ok(L["c:lvmh"].variation_semaine_pct === 10 && L["c:totalenergies"].variation_semaine_pct === -5 && L["e:cw8"].variation_semaine_pct === 1 && L["c:lvmh"].cours === 550 && L["c:lvmh"].devise === "EUR" && L["c:lvmh"].nom === "LVMH", "variations de la semaine");
 ok(j.moyenne === 2 && j.meilleure.k === "c:lvmh" && j.pire.k === "c:totalenergies" && j.hausses === 2 && j.baisses === 1, "moyenne, meilleure, pire");
 ok(j.annonces.length === 1 && j.annonces[0].nom === "LVMH" && j.a_venir.length === 1 && j.a_venir[0].date === demain, "annonces et dates à venir");
-ok(j.texte === aiText && aiCalls === 1 && Array.isArray(j.historique) && j.historique.length === 0 && typeof j.provisoire === "boolean" && !Object.keys(j).some(k => k.startsWith("_")), "commentaire rédigé " + JSON.stringify(j.texte));
+ok(j.texte == null && aiCalls === 0 && Array.isArray(j.historique) && j.historique.length === 0 && typeof j.provisoire === "boolean" && !Object.keys(j).some(k => k.startsWith("_")), "aucun commentaire rédigé par le serveur, aucun appel à un modèle " + JSON.stringify(j.texte));
 ok(sql.prepare("SELECT vu FROM bilans").get().vu === 1, "bilan marqué vu");
-[s, j] = await E("GET", "/api/espace/bilan", null, A); ok(s === 200 && j.texte === aiText && aiCalls === 1, "bilan relu sans nouvel appel au modèle");
+[s, j] = await E("GET", "/api/espace/bilan", null, A); ok(s === 200 && j.texte == null && aiCalls === 0, "bilan relu : chiffres seuls");
 sql.prepare("INSERT INTO bilans (compte, semaine, contenu, created) VALUES (?, '2026-W30', ?, 0)").run(rowA.id, JSON.stringify({ semaine: "2026-W30", genere: 0, lignes: [], moyenne: -1.5, annonces: [], a_venir: [], texte: "ancien", _cles: "" }));
 [s, j] = await E("GET", "/api/espace/bilan", null, A); ok(j.historique.length === 1 && j.historique[0].semaine === "2026-W30" && j.historique[0].moyenne === -1.5, "historique " + JSON.stringify(j.historique));
-[s, j] = await E("GET", "/api/espace/bilan?semaine=2026-W30", null, A); ok(s === 200 && j.texte === "ancien" && j.provisoire === false && aiCalls === 1, "semaine passée");
+[s, j] = await E("GET", "/api/espace/bilan?semaine=2026-W30", null, A); ok(s === 200 && j.texte === "ancien" && j.provisoire === false && aiCalls === 0, "semaine passée (ancien commentaire gardé)");
 [s] = await E("GET", "/api/espace/bilan?semaine=2026-W01", null, A); ok(s === 404, "semaine absente");
 [s] = await E("GET", "/api/espace/bilan?semaine=44", null, A); ok(s === 400, "semaine invalide");
 [s] = await E("GET", "/api/espace/bilan"); ok(s === 401, "bilan : connexion requise");
 
-// Compte B (gratuit) : modèle indisponible, chiffres affichés quand même, nouvel essai plus tard
+// Compte B (gratuit) : chiffres affichés, jamais de modèle appelé
 [s, j, sc] = await E("POST", "/api/espace/inscription", { email: "b@ex.fr", motdepasse: "motdepasse-de-b", favoris: ["c:totalenergies"] }); const B = cookieOf(sc);
 aiText = ""; [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(s === 200 && j.texte === null && j.lignes.length === 1 && j.moyenne === -5, "sans IA : chiffres seuls");
-const n0 = aiCalls; [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(aiCalls === n0, "pas de nouvel essai tout de suite");
-const rowB = sql.prepare("SELECT * FROM comptes WHERE email = 'b@ex.fr'").get(), cb = JSON.parse(sql.prepare("SELECT contenu FROM bilans WHERE compte = ?").get(rowB.id).contenu);
-cb._ia_at = 0; sql.prepare("UPDATE bilans SET contenu = ? WHERE compte = ?").run(JSON.stringify(cb), rowB.id);
-aiText = "Texte de rattrapage assez long : TotalEnergies a reculé de 5 % sur la semaine, sans cause connue dans les faits. Ce mouvement reste modéré."; [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(j.texte && j.texte.startsWith("Texte de rattrapage"), "nouvel essai lors d'une visite suivante");
+const rowB = sql.prepare("SELECT * FROM comptes WHERE email = 'b@ex.fr'").get();
 [s] = await E("PUT", "/api/espace/donnees", { favoris: ["c:totalenergies", "c:lvmh"] }, B); [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(j.lignes.length === 2, "bilan refait quand la liste change");
-
-// Quotas : un compte gratuit est compté sous son identifiant, pas sous l'IP
-let q = await quota(req("POST", "/api/veille", null, { cookie: B }), env, "veille");
-ok(q.ok && sql.prepare("SELECT who FROM usage").all().some(x => x.who === "u:" + rowB.id), "quota compté par compte " + JSON.stringify(sql.prepare("SELECT who FROM usage").all()));
-q = await quota(req("POST", "/api/veille", null, { cookie: B, "cf-connecting-ip": "9.9.9.9" }), env, "veille"); ok(!q.ok, "même compte, autre appareil : même compteur");
 
 // Premium rattaché au compte
 const TOK = "abcdef0123456789abcdef0123456789abcdef01";
@@ -114,7 +106,6 @@ ok((await premiumOf(req("GET", "/", null, { cookie: A }), env)).token === TOK, "
 ok((await premiumOf(req("GET", "/", null, { "x-bilan-token": TOK }), env)).token === TOK, "premiumOf par le code (inchangé)");
 ok((await premiumOf(req("GET", "/", null, { cookie: B }), env)) === null, "B n'est pas Premium");
 [s] = await E("POST", "/api/espace/premium", { token: TOK }, B); ok(s === 409, "code déjà rattaché à un autre compte");
-q = await quota(req("POST", "/api/veille", null, { cookie: A }), env, "veille"); ok(q.ok && q.premium, "quota Premium par le compte");
 
 // Préférences et robot
 [s] = await E("POST", "/api/espace/preferences", { teaser: "oui" }, A); ok(s === 400, "préférence invalide");
@@ -163,9 +154,9 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
   ok(s === 200 && j.rapport.secteurs.join() === "energie,tech" && j.limite && j.rapport.sujets.dividendes === false && j.rapport.sujets.resultats === true && j.rapport.configure, "réglages enregistrés, 2 secteurs sans Premium " + JSON.stringify(j).slice(0, 300));
   [s, j] = await E("GET", "/api/espace/moi", null, B); ok(j.donnees.profil && j.donnees.profil.rapport.jour === 0 && j.donnees.profil.rapport.detail === "court", "réglages renvoyés avec le compte");
   [s, j] = await E("POST", "/api/espace/rapport", { secteurs: ["energie", "tech", "sante"] }, A); ok(s === 200 && j.premium && j.rapport.secteurs.length === 3 && !j.limite, "Premium : 6 secteurs au plus " + JSON.stringify(j).slice(0, 200));
-  const n0 = aiCalls; [s, j] = await E("GET", "/api/espace/bilan", null, B);
+  [s, j] = await E("GET", "/api/espace/bilan", null, B);
   ok(s === 200 && j.reglages && j.reglages.detail === "court" && j.indices.every(i => i.id === "cac40") && j.secteurs.length === 2 && j.secteurs[0].nom === "Énergie" && j.secteurs[0].n === 1 && j.secteurs[0].vos_lignes[0].nom === "TotalEnergies", "synthèse selon les réglages " + JSON.stringify(j.secteurs));
-  ok(aiCalls === n0 && j.annonces.length <= 3 && j.a_venir.length <= 3, "rapport court : sans commentaire rédigé, 3 actualités au plus");
+  ok(aiCalls === 0 && j.annonces.length <= 3 && j.a_venir.length <= 3, "rapport court : sans commentaire rédigé, 3 actualités au plus");
   ok(j.annonces.every(a => a.categorie !== "dividende"), "sujet dividendes retiré");
   [s, j] = await E("POST", "/api/espace/rapport", { favoris: false, portefeuille: false, secteurs: ["energie"], jour: 0, configure: true }, B);
   [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(s === 200 && !j.vide && j.lignes.length === 0 && j.secteurs[0].n === 1 && /secteur Énergie/.test(j.essentiel[0] || ""), "rapport des seuls secteurs suivis " + JSON.stringify(j.essentiel));

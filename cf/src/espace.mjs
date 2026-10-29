@@ -7,10 +7,8 @@
 //  POST /api/espace/tache   robot quotidien (.github/workflows/espace.yml), protégé par ADMIN_KEY
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
-import { REGLES } from "./regles.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail } from "./compte.mjs";
 import { cours } from "./cours.mjs";
-import { rediger } from "./llm.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
 
 const SCHEMA = [
@@ -136,7 +134,6 @@ export function semaineIso(ymd) {
   return `${y}-W${String(w).padStart(2, "0")}`;
 }
 const jourSemaine = ymd => new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 dimanche … 6 samedi
-const semainePrecedente = ymd => semaineIso(new Date(Date.parse(ymd + "T12:00:00Z") - 7 * JOUR).toISOString().slice(0, 10));
 
 /* ---------- Données du site (mêmes sources que les pages) ---------- */
 async function siteData(request, env) {
@@ -170,28 +167,6 @@ const r2 = v => Math.round(v * 100) / 100;
 const NF = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
 const sgnP = v => (v > 0 ? "+" : v < 0 ? "−" : "") + NF(Math.abs(v)) + " %";
 
-const SYS_BILAN = `Tu écris, en français, le commentaire du bilan de la semaine d'un particulier qui débute en Bourse. Tu reçois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il possède, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation médiane de secteurs entiers.
-Règles strictes :
-- Explique la semaine de façon factuelle et pédagogique, en 120 à 220 mots, en deux ou trois courts paragraphes de texte suivi.
-- Vouvoie le lecteur.
-- Cite uniquement des chiffres présents dans les faits. N'invente aucun chiffre et aucune cause à un mouvement de cours : si la cause n'est pas dans les faits, dis qu'elle n'est pas connue.
-- Explique simplement ce que représente un mouvement (par exemple : 8 % en une semaine, c'est beaucoup pour une grande entreprise).
-- Aucun conseil d'achat ou de vente, aucune recommandation, aucune prédiction sur les cours.
-- Pas de listes à puces, pas de titres, pas de tirets cadratins.
-${REGLES}`;
-const faitsIA = c => ({
-  semaine: c.semaine, periode: c.partiel && c.depuis ? "depuis le " + c.depuis : "semaine complète", moyenne_semaine_pct: c.moyenne, nombre_de_lignes: c.lignes.length, hausses: c.hausses, baisses: c.baisses,
-  essentiel_calcule: c.essentiel || [],
-  indices: (c.indices || []).map(i => ({ indice: i.nom, variation_semaine_pct: i.pct })),
-  portefeuille: c.portefeuille ? { valeur_eur: c.portefeuille.valeur_eur, variation_semaine_eur: c.portefeuille.var_eur, variation_semaine_pct: c.portefeuille.var_pct,
-    alertes: (c.portefeuille.alertes || []).filter(a => a.niveau !== "fort").map(a => ({ alerte: a.texte, evolution: a.evol })) } : null,
-  lignes: c.lignes.filter(l => l.variation_semaine_pct != null).slice(0, 25).map(l => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct, indice_de_reference: l.indice ? l.indice.nom : null, ecart_avec_indice_points: l.ecart_pts, dans_le_portefeuille: !!l.en_portefeuille })),
-  annonces: (c.annonces || []).slice(0, 8).map(a => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, en_clair: a.resume })),
-  a_venir: (c.a_venir || []).slice(0, 6).map(e => ({ entreprise: e.nom, date: e.date, evenement: e.label })),
-  secteurs_suivis: (c.secteurs || []).filter(x => x.n).map(x => ({ secteur: x.nom, variation_mediane_semaine_pct: x.mediane_pct, entreprises: x.n, hausses: x.hausses, baisses: x.baisses })),
-});
-let redige = rediger; // remplaçable dans les tests
-export function _redacteur(f) { redige = f || rediger; }
 
 // Ce que suit la personne : ses favoris, les lignes de son portefeuille (et toute ligne reconnue dans un autre format).
 // Les réglages du rapport (rapportDe) décident de ce qui entre : favoris, portefeuille, secteurs suivis.
@@ -211,20 +186,11 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   if (!refaire) return { c, change: false };
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
   const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles; n._final = weekend; n._ia_n = (c && c._ia_n) || 0; n._ia_at = (c && c._ia_at) || 0; n._sig = rapportSignature(s.rapport);
-  if (c && c._sig !== n._sig) n._ia_at = 0; // réglages du rapport changés : le commentaire peut être réécrit sans attendre (4 essais par semaine au plus)
-  if (c && c.texte && c._cles === s.cles && c.v === SYN_VERSION) { n.texte = c.texte; n.lecture_min = lectureMin(n); } // le commentaire reste tant que la liste ne change pas
+  n._cles = s.cles; n._final = weekend; n._sig = rapportSignature(s.rapport);
+  if (c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === SYN_VERSION) { n.texte = c.texte; n.lecture_min = lectureMin(n); } // ancien commentaire rédigé (avant le 29 octobre 2026) gardé tant que rien ne change
   const utile = n.lignes.some(l => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some(x => x.n);
   if (utile) await env.DB.prepare(`INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0`).bind(compteId, semaine, JSON.stringify(n), Date.now()).run();
   return { c: n, change: true, stocke: !!utile };
-}
-async function commenter(env, compteId, c) { // au plus 4 essais par semaine, espacés de 6 h ; sans réponse, la page montre les chiffres
-  if (c.texte || !(c.lignes.length || (c.secteurs || []).some(x => x.n)) || (c.reglages && c.reglages.detail === "court") || (c._ia_n || 0) >= 4 || Date.now() - (c._ia_at || 0) < 6 * 36e5) return c;
-  c._ia_n = (c._ia_n || 0) + 1; c._ia_at = Date.now();
-  let t = null; try { t = await redige(env, { systeme: SYS_BILAN, utilisateur: JSON.stringify(faitsIA(c)), max_tokens: 600, temperature: 0.2 }); } catch (e) { }
-  if (t && String(t).trim().length > 80) { c.texte = String(t).replace(/—/g, ",").trim(); if (c.annonces) c.lecture_min = lectureMin(c); }
-  await env.DB.prepare(`UPDATE bilans SET contenu = ? WHERE compte = ? AND semaine = ?`).bind(JSON.stringify(c), compteId, c.semaine).run();
-  return c;
 }
 const publicBilan = c => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_")));
 const precedenteDe = semaine => { const m = /^(\d{4})-W(\d{2})$/.exec(semaine); const l = new Date(Date.UTC(+m[1], 0, 4)); l.setUTCDate(l.getUTCDate() - ((l.getUTCDay() + 6) % 7) + (+m[2] - 1) * 7 - 7); return semaineIso(l.toISOString().slice(0, 10)); };
@@ -395,7 +361,6 @@ export async function espace(request, env) {
       const r = await assurerBilan(env, d, c.id, don, cur, row, prec); b = r.c;
       if (r.change && !r.stocke) b = { ...b, vide: true };
     } else if (!b || semaine > cur) return json({ error: "Aucun bilan pour cette semaine." }, 404);
-    if (!apercu && b && !b.vide && (semaine === cur || semaine === semainePrecedente(auj))) b = await commenter(env, c.id, b);
     if (!apercu) await env.DB.prepare(`UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?`).bind(c.id, semaine).run();
     const hist = apercu ? [] : ((await env.DB.prepare(`SELECT semaine, contenu FROM bilans WHERE compte = ? AND semaine <> ? ORDER BY semaine DESC LIMIT 12`).bind(c.id, semaine).all()).results || [])
       .map(h => { const x = parse(h.contenu, {}) || {}; return { semaine: h.semaine, moyenne: x.moyenne ?? null, portefeuille_pct: (x.portefeuille && x.portefeuille.var_pct) ?? null, portefeuille_eur: (x.portefeuille && x.portefeuille.var_eur) ?? null }; });
@@ -450,7 +415,7 @@ async function tache(request, env, url) {
       if (modeBilan && sonJour && r.last_semaine !== cible && aRapport) {
         const st = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, cible).first();
         const pr = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, precedenteDe(cible)).first();
-        const b = await assurerBilan(env, d, r.id, r, cible, st, pr); // les chiffres seulement : le commentaire est rédigé à la visite
+        const b = await assurerBilan(env, d, r.id, r, cible, st, pr); // les chiffres calculés (le site ne rédige plus de commentaire par IA)
         if (b.stocke !== false) {
           bilans++;
           const e0 = b.c && b.c.essentiel && b.c.essentiel[0], lien = cible === sem ? "/espace" : "/espace?semaine=" + cible;

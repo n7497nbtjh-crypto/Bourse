@@ -24,8 +24,8 @@ Côté serveur, ajouter la page dans `meta()` de cf/src/worker.mjs (sinon le HTM
 - Remplace `pageComparer()` (page /comparer) et `concurrentsHTML(s)` (étape « Concurrents » de la fiche, appelée par `etapesListe`).
   Agent « fiche » : ne pas redéclarer `concurrentsHTML` ; si `etapesListe` est refaite, garder `() => concurrentsHTML(s)` pour l'étape « concurrents ».
 - Les anciennes `cmpTable`, `cmpCell`, `CMP_ROWS`, `compareSynth`, `profilsCompare` ne sont plus appelées (laissées dans index.html).
-- Serveur : `/api/assistant` accepte `mode: "comparaison"` (consigne `SYS_CMP` de `cf/src/ia.mjs`, quota « assistant ») ;
-  `prompts.json` gagne la clé `comparaison` (IA installée sur l'appareil) ; `meta()` du Worker nomme les entreprises d'un lien /comparer?ids=….
+- « Approfondir avec l'IA » : `iaRediger("comparaison", faits, { question })` (IA connectée du visiteur, voir « IA ») ;
+  `meta()` du Worker nomme les entreprises d'un lien /comparer?ids=….
 
 ## Chantier « etf » (module `cf/site/m/etf.js`)
 - Pages : `pageEtfs` (liste filtrable, état dans l'adresse : `/etf?q=&cat=&env=pea|cto&dist=&em=&fr=&tri=`) et `pageEtf` (fiche complète).
@@ -72,7 +72,8 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   `GET /api/espace/bilan[?semaine=2026-W44][&apercu=1]` : `{ v, semaine, du, au, lignes: [{ k, nom, type, variation_semaine_pct, serie, du, partiel, indice: { id, nom, pct }, ecart_pts, favori, en_portefeuille, portefeuille: { valeur_eur, poids_pct, var_eur } }],
   moyenne, meilleure, pire, hausses, baisses, indices, portefeuille: { valeur_eur, var_eur, var_pct, serie, vs, alertes: [{ code, niveau, valeur, texte, pourquoi, evol }], levees },
   annonces: [{ k, nom, date, categorie, categorie_label, poids, titre, resume, change, chiffres, source, source_nom, origine: officiel|presse, lien }], a_venir, essentiel: [3 phrases], lecture_min, texte, historique }`.
-  `apercu=1` : sans appel au modèle (accueil). Le commentaire `texte` est rédigé par `rediger()` (au plus 4 essais par semaine), à partir des seuls faits.
+  `apercu=1` : version accueil. Le serveur ne rédige plus de commentaire : `texte` n'existe que pour les anciens bilans ; le commentaire se rédige
+  dans le navigateur avec l'IA connectée (bouton « Commenter ma semaine avec mon IA », `synIaFaits` + `iaRediger("bilan", …)`).
 - Cours : `cf/site/data/cours-semaine.json` `{ dates: [clôtures], items: { "c:id": [cours…] } }`, écrit par `data/cours_fetch.mjs` (la copie du matin = clôture de la séance précédente).
 - Actualités lues dans `cf/site/data/actu/c/<id>.json` (agent « actu ») et `actu-analyse.json`, dédoublonnées par lien source.
 - Notifications : `syntheseNotif(env, compteId)` (export de `cf/src/espace.mjs`) renvoie `{ titre, resume, lien, semaine }` de la dernière synthèse ;
@@ -158,6 +159,7 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   les données restent publiques sur les fiches) ; découvertes refaites (6 cases : petite valeur PEA, Europe, hors Europe, rendement, croissance,
   redressement ; pas de grandes capitalisations ; 2 ETF éligibles PEA ; activité, chiffres, valorisation, catalyseurs sourcés, risques).
 - À signaler (agent « etf ») : dans `etf.json`, des ETF MSCI EMU (zone euro) sont rangés en `actions-emergents` ; `recoEtfSuspect(e)` les écarte des pistes.
+
 ## Apprendre, idées reçues et communauté (agent « apprendre2 », vague du 29 octobre 13 h 30)
 - Apprendre (`m/parcours.js`) : `PAR_NIVEAUX` range tout en 3 niveaux (fondamentaux, lire une entreprise, juger le prix et construire).
   Chaque niveau = parcours court (`/academie/express/<niveau>`, progression `pState`) + « Approfondir » (modules du cours complet, `acaSt`).
@@ -172,3 +174,19 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   table `listes` (`POST /api/communaute/liste` → `{ id, cle }`, `GET /listes`, `GET /liste?id=`, `POST /liste/utile|signaler|retirer`), `masquer` accepte `{ type: "liste" }`.
   Garde-fous : pas de liens, refus des consignes d'achat ou de vente et des promesses de gain (`CONSIGNE`), 3 analyses et 3 listes par jour, masquage après 3 signalements.
 - Tests : `node tests/t_communaute.mjs`, `python3 tests/t_communaute_ui.py [--shots dossier]`, `python3 tests/t_parcours.py`.
+
+
+## IA (agent « ia-simple », décision de Romain du 29 octobre 15 h, module `cf/site/m/monia.js`, chargé en dernier)
+Trois niveaux, rien d'autre. Détails : `docs/ia.md`.
+1. Réponses calculées pour tous (`cf/site/ia.js`, leçons, données) : gratuit, illimité. Test : `tests/t_ia.py` (100 %).
+2. « Connecter mon IA » (OpenRouter, OAuth PKCE) : la clé reste dans `localStorage["bilan.monia"]`, appels directs navigateur → openrouter.ai.
+   API pour les modules : `iaRediger(tâche, faits, { question, max })` → `{ txt, sources, modele }` | `{ invite: true }` (pas d'IA connectée) | `{ error }` ;
+   `miaCopilote(q)` (action du copilote validée par `iaValide`) ; `miaConnectee()`, `miaNomModele()` ; interface : `miaRendu(j)`, `miaPied(j)`, `miaInvite(texte)`, `miaEtatHTML()`.
+   Tâches (consignes dans `cf/src/consignes.mjs` → `/data/prompts.json`) : demande, expliquer, assistant, comparaison, veille, portefeuille, annonce, bilan.
+   Toujours afficher d'abord la réponse calculée ; sans IA connectée, `miaInvite()` (discret). Test : `tests/t_monia.py` (OpenRouter simulé).
+3. Connecteur MCP `/mcp`, page `/connecteur` « Utiliser bilan. dans ChatGPT ou Claude ».
+- Un seul point d'entrée dans l'interface : le panneau ✦ de `m/orchestre.js` (`orcIaOpen()`, `orcIaAsk(q, { rediger })`). Les questions de la fiche
+  (`ficheDemander`), des ETF et des listes y sont envoyées ; pas d'autre boîte de dialogue d'IA.
+- Le serveur n'appelle aucun modèle : plus de `llm.mjs`, `ia.mjs`, `demande.mjs`, `actu.mjs`, binding `AI`, variables `IA_*`, quotas d'IA.
+  Les anciennes routes (`/api/assistant`, `/api/demande`, `/api/resume`, `/api/actu/clair`, `/api/ia/etat`, `POST /api/veille`) répondent 410.
+- Interdit : ajouter un appel à un modèle d'IA côté serveur ou une clé d'IA du site.

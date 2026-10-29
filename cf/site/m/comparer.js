@@ -7,7 +7,7 @@
    Principe : le verdict d'abord (phrases calculées sur les comptes, instantanées, sans modèle), puis six thèmes
    (taille, croissance, rentabilité, solidité financière, prix en Bourse, dividende) avec des barres sur une même échelle
    et la médiane du secteur, puis tous les chiffres en dépliant. Rien n'est retiré par rapport à l'ancien tableau.
-   « Approfondir avec l'IA » : IA installée sur l'appareil si elle est prête, sinon /api/assistant en mode « comparaison ». */
+   « Approfondir avec l'IA » : l'IA connectée par le visiteur (m/monia.js, consigne « comparaison ») ; sinon, invitation à la connecter. */
 
 /* ---------- Styles ---------- */
 document.head.insertAdjacentHTML("beforeend", `<style id="cmpr-css">
@@ -529,15 +529,13 @@ async function cmprAsk(X, focus, out, btn) {
   if (btn) btn.disabled = true;
   out.innerHTML = `<div class="iares"><div class="iathink"><span></span><span></span><span></span> L'IA relit les chiffres de la comparaison…</div></div>`;
   const faits = cmprFaits(X, focus), q = focus ? `Comment ${focus.name} se situe-t-elle face à ses concurrentes ? Expliquez les écarts simplement.` : "Expliquez simplement ce qui distingue ces entreprises, critère par critère, et ce qu'il faut regarder ensuite.";
-  let txt = null, j = null, local = false;
-  if (typeof LIA !== "undefined" && LIA.eng) { txt = await liaAsk("comparaison", `Faits : ${JSON.stringify(faits)}\n\nQuestion : ${q}`, 650); local = !!txt; }
-  if (!txt) { try { j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ mode: "comparaison", question: q, faits }) })).json(); txt = j && j.txt; } catch (e) { j = { error: "L'IA est indisponible pour le moment. Le verdict ci-dessus reste à jour." }; } }
+  const j = await iaRediger("comparaison", faits, { question: q, max: 700 }), txt = j.txt;
   if (!out.isConnected) return;
-  out.innerHTML = txt ? `<div class="iares"><p class="kick" style="margin:0 0 4px">✦ L'explication de l'IA</p>${cmprIAHTML(txt)}<p class="iafoot">${local ? "Rédigée par l'IA installée sur votre appareil" : "Rédigée par une IA"} à partir des seuls chiffres de cette page. Vérifiez-les ; ce n'est pas un conseil en investissement.</p></div>` : iaErr(j, "Explication indisponible pour le moment. Le verdict ci-dessus reste à jour.");
+  out.innerHTML = txt ? `<div class="iares"><p class="kick" style="margin:0 0 4px">✦ L'explication de l'IA</p>${cmprIAHTML(txt)}${miaPied(j)}</div>` : miaRendu(j, "Le verdict calculé ci-dessus reste complet.");
   if (btn) { btn.disabled = false; if (txt) btn.hidden = true; }
 }
 function cmprIABar(n, focus) {
-  return `<div class="cmpr-ia"><button type="button" class="btn" data-cmpr-ia${focus ? ` data-focus="${esc(focus.id)}"` : ""}><span class="s" aria-hidden="true">✦</span>Approfondir avec l'IA</button><p>Une explication rédigée de ${focus ? "sa position" : n > 2 ? "ces écarts" : "cet écart"}, à partir des seuls chiffres de cette page, sans conseil. ${isPrem() ? "100 par jour avec Premium." : `5 par jour en version gratuite, 100 avec <a class="lnk" href="/premium">Premium</a>.`} Illimitée avec l'IA installée sur votre appareil.</p></div><div class="cmpr-iaout" aria-live="polite"></div>`;
+  return `<div class="cmpr-ia"><button type="button" class="btn" data-cmpr-ia${focus ? ` data-focus="${esc(focus.id)}"` : ""}><span class="s" aria-hidden="true">✦</span>Approfondir avec l'IA</button><p>Une explication rédigée de ${focus ? "sa position" : n > 2 ? "ces écarts" : "cet écart"}, à partir des seuls chiffres de cette page, sans conseil. ${miaConnectee() ? `Rédigée par votre IA connectée (${esc(miaNomModele())}).` : `Demande de <a class="lnk" href="/espace/ia">connecter votre IA</a>.`}</p></div><div class="cmpr-iaout" aria-live="polite"></div>`;
 }
 
 /* ---------- Page /comparer ---------- */

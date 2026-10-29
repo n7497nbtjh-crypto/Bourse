@@ -70,13 +70,13 @@ function actuItemHTML(it, { showCo = true, detail = true } = {}) {
   const C = ACTU_CAT[it.c] || ACTU_CAT.autre, co = RBY[it.id];
   const figs = it.f && it.f.length ? `<div class="ax-fig">${it.f.slice(0, detail ? 5 : 3).map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(v)}</b></span>`).join("")}</div>` : "";
   let clair = "";
-  if (detail && it.x && it.x.c) clair = `<div class="ax-cl" style="--c:${C.c}"><b>En clair</b><p>${esc(it.x.c)}</p>${it.x.ch ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(it.x.ch)}</p>` : ""}<small>Rédigé par l'IA du site à partir de l'annonce et des chiffres ci-dessus. La source fait foi.</small></div>`;
+  if (detail && it.x && it.x.c) clair = `<div class="ax-cl" style="--c:${C.c}"><b>En clair</b><p>${esc(it.x.c)}</p>${it.x.ch ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(it.x.ch)}</p>` : ""}<small>Rédigé par une IA à partir de l'annonce et des chiffres ci-dessus. La source fait foi.</small></div>`;
   else if (detail && it.r && it.r.length) clair = `<div class="ax-cl" style="--c:${C.c}"><b>En clair</b><ul>${it.r.map(x => `<li>${esc(x)}</li>`).join("")}</ul><small>Calculé par le site à partir des chiffres de l'annonce.</small></div>`;
   const gen = !it.tf || /^(Communiqué|Information importante)$/.test(it.tf), main = gen && it.t ? it.t : (it.tf || C.l), sub = !gen && it.t && it.t !== it.tf ? it.t : "";
   return `<div class="ax-it">${showCo ? (co ? `<a href="/entreprise/${co.id}/actualite" class="nlogo" aria-hidden="true" tabindex="-1">${logo(co, 36)}</a>` : "") : ""}
     <div class="ax-b"><div class="ax-m">${showCo && co ? `<a class="nco" href="/entreprise/${co.id}/actualite">${esc(co.name)}</a>` : ""}<span class="ax-chip" style="--c:${C.c}" title="${esc(C.why)}">${C.l}</span>${it.p ? `<span class="ax-imp" title="Information privilégiée : un fait susceptible d'influencer le cours, que l'entreprise doit publier sans délai">Info. privilégiée</span>` : ""}<span>${hhmm(it.d) || dShort(it.d)}</span></div>
       <span class="ax-tf">${esc(main)}</span>${sub ? `<span class="ax-t">${esc(sub)}</span>` : ""}
-      ${figs}${clair}${detail && !C.routine && /sec\.gov|opendatasoft|info-financiere/.test(it.u) ? iaBtn(it.u) : detail && !(it.x && it.x.c) && it.i >= 2 && !C.routine ? `<button type="button" class="iabtn" data-clair="${esc(it.id)}|${esc(it.k)}">✦ Expliquer en clair</button><div class="iabox"></div>` : ""}${actuSrcLink(it)}</div></div>`;
+      ${figs}${clair}${detail && !(it.x && it.x.c) && it.i >= 2 && !C.routine ? `<button type="button" class="iabtn" data-clair="${esc(it.id)}|${esc(it.k)}">✦ Expliquer en clair</button><div class="iabox"></div>` : ""}${actuSrcLink(it)}</div></div>`;
 }
 function actuListHTML(items, opts = {}) {
   if (!items.length) return `<div class="ax-empty">${opts.vide || "Aucune annonce pour ce choix."}</div>`;
@@ -258,13 +258,18 @@ function pageActus() {
   });
 }
 
-// « Expliquer en clair » : rédigé par l'IA du serveur à partir de l'annonce publiée, puis gardé pour tous les visiteurs
-document.addEventListener("click", e => {
+// « Expliquer en clair » : rédigé par l'IA connectée du visiteur (m/monia.js) à partir des faits de l'annonce ; sinon, les phrases calculées restent affichées.
+document.addEventListener("click", async e => {
   const b = e.target.closest("[data-clair]"); if (!b) return; e.preventDefault();
-  const [id, k] = b.dataset.clair.split("|"), box = b.nextElementSibling; b.disabled = true; b.textContent = "Rédaction en cours…";
-  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), 45000);
-  fetch(`/api/actu/clair?id=${encodeURIComponent(id)}&k=${encodeURIComponent(k)}`, { signal: ctl.signal }).then(r => r.json()).then(j => {
-    b.remove();
-    box.outerHTML = j.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(j.clair)}</p>${j.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(j.change)}</p>` : ""}<small>Rédigé par l'IA du site à partir de l'annonce. La source fait foi.</small></div>` : `<p class="ax-why">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
-  }).catch(() => { b.remove(); box.outerHTML = `<p class="ax-why">Explication indisponible pour le moment.</p>`; }).finally(() => clearTimeout(t));
+  const [id, k] = b.dataset.clair.split("|"), box = b.nextElementSibling;
+  if (!miaConnectee()) { b.remove(); box.outerHTML = miaInvite(); return; }
+  b.disabled = true; b.textContent = "Rédaction en cours…";
+  const co = RBY[id], it = ((await actuCo(id)).o || []).find(x => x.k === k);
+  if (!it) { b.remove(); box.outerHTML = `<p class="ax-why">Annonce introuvable : rechargez la page.</p>`; return; }
+  const f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
+  const j = await iaRediger("annonce", { entreprise: co ? co.name : id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture_calculee: it.r || [], dernier_exercice: f, lien: it.u }, { max: 420 });
+  b.remove();
+  const x = j.txt ? jsonFrom(j.txt) : null;
+  box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par votre IA connectée (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>`
+    : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par votre IA connectée (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>` : `<p class="ax-why">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
 });

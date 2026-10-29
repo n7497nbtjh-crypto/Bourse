@@ -1,12 +1,13 @@
-// Premium, quotas, assistant et envois d'e-mails, testés sur une base SQLite en mémoire et des services simulés.
+// Premium, routes de l'ancienne IA du serveur (retirées) et envois d'e-mails, testés sur une base SQLite en mémoire et des services simulés.
 import { DatabaseSync } from "node:sqlite";
-import { premium, quota, sendMail, mailCapacity } from "../cf/src/compte.mjs";
-import { assistant, veille } from "../cf/src/ia.mjs";
+import * as compte from "../cf/src/compte.mjs";
+import { veille } from "../cf/src/veille.mjs";
+import worker from "../cf/src/worker.mjs";
+const { premium, sendMail, mailCapacity } = compte;
 const sql = new DatabaseSync(":memory:");
 const stmt = (q, p = []) => ({ bind: (...a) => stmt(q, a), all: async () => ({ results: sql.prepare(q).all(...p) }), first: async () => sql.prepare(q).get(...p) ?? null, run: async () => ({ meta: { changes: Number(sql.prepare(q).run(...p).changes) } }) });
-let aiCalls = 0, sent = [];
+let sent = [];
 const env = { DB: { prepare: q => stmt(q) }, ADMIN_KEY: "k", MAIL_FROM: "bilan@exemple.fr", BREVO_KEY: "b", RESEND_KEY: "r", STRIPE_SECRET: "sk_test",
-  AI: { run: async () => { aiCalls++; return { response: "Réponse de test assez longue pour être acceptée par le site." }; } },
   ASSETS: { fetch: async req => { const p = new URL(req.url).pathname; const d = { "/data/univers.json": { companies: [{ id: "lvmh", name: "LVMH" }] }, "/data/etf.json": { list: [] }, "/data/actu-analyse.json": { items: {} }, "/data/agenda.json": { events: [] }, "/data/agenda-auto.json": { events: [] }, "/data/semaine.json": { items: { "c:lvmh": 500 } } }[p]; return new Response(JSON.stringify(d || {})); } } };
 globalThis.caches = { default: { match: async () => new Response(JSON.stringify({ items: { "c:lvmh": { p: 550, chg: 6 } } })), put: async () => { } } };
 const realFetch = globalThis.fetch;
@@ -21,7 +22,7 @@ const req = (method, path, body, h = {}) => new Request("https://t.local" + path
 const J = async r => [r.status, await r.json()];
 
 // Offres et activation
-let [s, j] = await J(await premium(req("GET", "/api/premium/offres"), env)); ok(s === 200 && j.limites.assistant[0] === 5, "offres");
+let [s, j] = await J(await premium(req("GET", "/api/premium/offres"), env)); ok(s === 200 && !("limites" in j) && !("quota" in compte) && !("LIMITS" in compte), "offres sans quotas d'IA");
 [s, j] = await J(await premium(req("GET", "/api/premium/activer?session_id=cs_wait"), env)); ok(s === 402, "paiement non confirmé refusé");
 [s, j] = await J(await premium(req("GET", "/api/premium/activer?session_id=cs_ok"), env)); ok(s === 200 && j.token && j.plan === "unique", "activation " + JSON.stringify(j));
 const tok = j.token;
@@ -29,14 +30,11 @@ const tok = j.token;
 [s, j] = await J(await premium(req("GET", "/api/premium/statut", null, { "x-bilan-token": tok }), env)); ok(j.premium && j.until < Date.now() + 370 * 864e5 && j.email === "c…@ex.fr", "statut premium 12 mois " + JSON.stringify(j));
 [s, j] = await J(await premium(req("GET", "/api/premium/statut", null, { "x-bilan-token": "abcdef" }), env)); ok(!j.premium, "code inconnu");
 
-// Assistant : 3 questions gratuites, réponse en cache gratuite, Premium au-delà
-const ask = (q, h) => assistant(req("POST", "/api/assistant", { question: q, faits: { entreprise: "LVMH" } }, h), env);
-for (const q of ["Question numéro un ?", "Question numéro deux ?", "Question numéro trois ?", "Question numéro 3b ?", "Question numéro 3c ?"]) { [s] = await J(await ask(q)); ok(s === 200, "question gratuite " + s); }
-[s, j] = await J(await ask("Question numéro un ?")); ok(s === 200 && j.cache, "question déjà posée : réponse en cache");
-[s, j] = await J(await ask("Question numéro quatre ?")); ok(s === 429 && j.quota && !j.premium, "6e question gratuite bloquée");
-[s, j] = await J(await ask("Question numéro quatre ?", { "x-bilan-token": tok })); ok(s === 200, "Premium passe");
-ok(aiCalls === 6, "appels au modèle " + aiCalls);
-[s] = await J(await ask("abc")); ok(s === 400, "question trop courte");
+// L'IA du serveur est retirée : ses anciennes routes répondent 410 avec un message clair, sans appeler de modèle
+for (const [m, u] of [["POST", "/api/assistant"], ["POST", "/api/demande"], ["GET", "/api/resume?u=https://www.sec.gov/x"], ["GET", "/api/actu/clair?id=lvmh&k=a"], ["GET", "/api/ia/etat"]]) {
+  [s, j] = await J(await worker.fetch(req(m, u, m === "POST" ? { question: "Question de test ?" } : null), env, { waitUntil() { } })); ok(s === 410 && /connectez votre IA/.test(j.error) && j.ia_serveur === false, "route retirée " + u + " " + s);
+}
+[s, j] = await J(await veille(req("POST", "/api/veille", { faits: {} }), env)); ok(s === 410 && /connectez votre IA/.test(j.error), "bilan rédigé retiré du serveur");
 
 // Inscription, confirmation, envoi hebdomadaire, alertes
 [s, j] = await J(await veille(req("POST", "/api/veille/inscription", { email: "a@ex.fr", ids: ["c:lvmh"] }, { "x-bilan-token": tok }), env)); ok(s === 200, "inscription " + JSON.stringify(j));

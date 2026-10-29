@@ -601,7 +601,7 @@ function parSecteursSeuls(el, b) {
   el.innerHTML = `<section class="synhero"><p class="kick"><span>Votre semaine en 2 minutes</span></p><h2>Semaine ${esc(String(b.semaine || "").replace(/^\d{4}-W/, ""))}${b.du && typeof synDuAu === "function" ? `, ${esc(synDuAu(b))}` : ""}</h2>
       ${ess.length ? `<ol class="synk">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}</section>
     <div id="synvar"></div>
-    ${b.texte && typeof synTexte === "function" ? `<section class="panel synsec" id="synint"><div class="ph"><h2>Le commentaire de la semaine</h2></div><div class="pb">${synTexte(b)}</div></section>` : ""}
+    ${typeof synTexte === "function" ? `<section class="panel synsec" id="synint"><div class="ph"><h2>Le commentaire de la semaine</h2></div><div class="pb">${synTexte(b)}</div></section>` : ""}
     <section class="panel"><div class="pb par-lec"><p><b>Suivez aussi des entreprises précises</b><br><span class="muted">Ajoutez des favoris ou votre portefeuille à votre rapport pour lire leurs variations, leurs annonces et leurs dates.</span></p><a class="btn ghost" href="/espace/rapport">Modifier mon rapport</a></div></section>`;
 }
 

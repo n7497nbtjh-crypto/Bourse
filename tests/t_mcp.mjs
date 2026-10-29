@@ -93,7 +93,7 @@ ok(lim && /Trop de requêtes/.test(lim.result.content[0].text), "241e appel de l
 
 // Page /connecteur servie avec son titre
 const pg = await W.fetch(new Request("https://t.local/connecteur"), env, {}); const ht = await pg.text();
-ok(pg.status === 200 && /<title>Connecteur IA/.test(ht) && /rel="manifest"/.test(ht) && /og:image/.test(ht) && pg.headers.get("x-bilan-version"), "page /connecteur");
+ok(pg.status === 200 && /<title>Utiliser bilan. dans ChatGPT ou Claude/.test(ht) && /rel="manifest"/.test(ht) && /og:image/.test(ht) && pg.headers.get("x-bilan-version"), "page /connecteur");
 
 // Client MCP officiel (facultatif)
 if (process.env.MCP_SDK) {

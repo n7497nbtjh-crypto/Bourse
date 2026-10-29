@@ -1,4 +1,4 @@
-# Mesure la pertinence de l'IA locale de bilan. (copilote « Demander à bilan. » et assistant de fiche).
+# Mesure la pertinence des réponses calculées de bilan. (copilote « Demander à bilan. » et assistant de fiche).
 # Usage : python3 tests/t_ia.py            (avec cf/site/ia.js, les nouvelles règles)
 #         python3 tests/t_ia.py --sortie r.json (enregistre toutes les réponses pour les relire)
 #         python3 tests/t_ia.py --ancien   (anciennes règles de index.html, pour comparer)
@@ -23,7 +23,7 @@ def route2(r):  # les vrais cours du site (data/cours.json) plutôt que la maque
     if "/api/" in r.request.url and not any(k in r.request.url for k in ("/api/premium/statut", "/api/amf", "/api/espace/moi")): return r.fulfill(status=503, json={"error": "test"})
     return route(r)
 
-# Même enchaînement que iaRun : règles locales, puis leçons pour les questions ouvertes, sinon le serveur.
+# Même enchaînement que iaRun : règles locales, puis leçons pour les questions ouvertes, sinon l'IA connectée du visiteur (« serveur » ci-dessous).
 RUN = r"""async (qs) => {
   await Promise.all([PXP, loadAna(), acaLoad()]);
   const OUV = /pourquoi|comment|c.?est quoi|qu.?est|explique|difference|faut.?il|doit.?on|risque|definition|signifie|fonctionne|marche|vaut.?il|interet/i;
@@ -117,11 +117,15 @@ with sync_playwright() as pw:
             pg.wait_for_timeout(250)
         if attendu not in txt or "undefined" in txt or "NaN" in txt: ui.append(f"« {q} » : attendu « {attendu} », obtenu {pg.url} {pg.inner_text('#app')[:160]!r}")
     pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(900)
-    if pg.locator("#assistant").count():
-        pg.fill("#assistant input", "pourquoi le cours baisse"); pg.press("#assistant input", "Enter"); pg.wait_for_timeout(500)
-        t = pg.inner_text("#assistant")
-        if "Réponse instantanée" not in t or "Sur un an" not in t: ui.append("assistant de fiche : pas de réponse locale affichée")
-    else: ui.append("assistant de fiche absent")
+    if pg.locator("#orciab").count():  # l'assistant de fiche est le panneau ✦ (seul point d'entrée de l'IA)
+        pg.click("#orciab"); pg.fill("#orciaf input", "pourquoi le cours baisse"); pg.press("#orciaf input", "Enter")
+        t = ""
+        for _ in range(16):
+            pg.wait_for_timeout(250); t = pg.inner_text("#orcialog")
+            if "Réponse instantanée" in t: break
+        if "Réponse instantanée" not in t or "Sur un an" not in t: ui.append("assistant de fiche : pas de réponse locale affichée " + t[:120])
+        if "Réponses calculées" not in pg.inner_text("#orcia"): ui.append("panneau ✦ : état « Réponses calculées » absent")
+    else: ui.append("assistant de fiche (panneau ✦) absent")
     b.close()
 
 if SORTIE: json.dump({"copilote": [{"q": x["q"], "r": o} for x, o in zip(cop, res)], "fiche": {sid: [{"q": x["q"], "r": asr[sid][i]} for i, x in enumerate(fq)] for sid in QS["societes"]}}, open(SORTIE, "w"), ensure_ascii=False, indent=1)

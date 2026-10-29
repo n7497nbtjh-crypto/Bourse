@@ -203,7 +203,7 @@ if (PWA_REGLAGES) espaceReglages = function (el, m) {
   if (del && del.onsubmit) { const o = del.onsubmit; del.onsubmit = async e => { await o.call(del, e); if (typeof MOI === "object" && MOI && MOI.connecte === false) pwaDesabonnerLocal(); }; }
   const s = document.createElement("section"); s.className = "panel"; s.id = "pwaapp";
   const inst = PWA_SEUL() || PWA_LS("installe");
-  s.innerHTML = `<div class="ph"><h2>Application et notifications</h2></div><div class="pb"><div class="pwa-acts" style="margin-bottom:10px">${inst ? `<span class="pwa-etat on"><i></i>bilan. est installé</span>` : PWA_INVITE ? `<button type="button" class="btn" id="pwainst">Installer bilan. sur cet appareil</button>` : ""}<a class="btn ghost" href="/espace/alertes">Régler les notifications</a><a class="btn ghost" href="/connecteur">Utiliser bilan. dans Claude ou ChatGPT</a></div>
+  s.innerHTML = `<div class="ph"><h2>Application et notifications</h2></div><div class="pb"><div class="pwa-acts" style="margin-bottom:10px">${inst ? `<span class="pwa-etat on"><i></i>bilan. est installé</span>` : PWA_INVITE ? `<button type="button" class="btn" id="pwainst">Installer bilan. sur cet appareil</button>` : ""}<a class="btn ghost" href="/espace/alertes">Régler les notifications</a><a class="btn ghost" href="/connecteur">Utiliser bilan. dans ChatGPT ou Claude</a></div>
     <p class="muted" style="margin:0;font-size:13.5px">${inst ? "Ouvrez bilan. depuis son icône : les pages déjà vues restent lisibles sans connexion." : PWA_IOS ? `Sur iPhone et iPad : touchez ${PWA_PARTAGE} Partager, puis « Sur l'écran d'accueil ».` : PWA_INVITE ? "L'application s'ouvre en un geste depuis votre écran d'accueil et reste lisible sans connexion." : "Dans Chrome ou Edge, le menu du navigateur propose « Installer bilan. » ; sur iPhone, « Sur l'écran d'accueil » dans le menu Partager."}</p></div>`;
   const sup = del && del.closest("section");
   if (sup && sup.parentElement === el) el.insertBefore(s, sup); else el.appendChild(s);
@@ -212,7 +212,7 @@ if (PWA_REGLAGES) espaceReglages = function (el, m) {
 };
 
 /* ---------- Pied de page : liens ---------- */
-(() => { const f = document.querySelector("footer .f > div:last-child"); if (f && !f.querySelector('a[href="/connecteur"]')) f.insertAdjacentHTML("beforeend", `<a href="/connecteur">Connecteur IA (Claude, ChatGPT)</a>`); })();
+(() => { const f = document.querySelector("footer .f > div:last-child"); if (f && !f.querySelector('a[href="/connecteur"]')) f.insertAdjacentHTML("beforeend", `<a href="/connecteur">Utiliser bilan. dans ChatGPT ou Claude</a>`); })();
 
 /* ---------- Page /connecteur : bilan. dans Claude, ChatGPT et les autres assistants ---------- */
 const PWA_OUTILS = [
@@ -225,11 +225,11 @@ const PWA_OUTILS = [
   ["rechercher_entreprise", "Trouver une entreprise", "Par son nom, son ticker, son ISIN ou un mot de son activité.", "Trouve les entreprises françaises de la défense."],
 ];
 function pageConnecteur() {
-  setTitle("Connecteur IA"); setNav("");
+  setTitle("Utiliser bilan. dans ChatGPT ou Claude"); setNav("");
   const url = location.origin + "/mcp", dans = PWA_LS("onglet") || "claude";
-  app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › Connecteur IA</div>
+  app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › bilan. dans ChatGPT ou Claude</div>
     <section class="pwa-hero"><p class="kick">Connecteur IA · gratuit · lecture seule</p>
-      <h1>bilan. dans Claude et ChatGPT</h1>
+      <h1>Utiliser bilan. dans ChatGPT ou Claude</h1>
       <p class="lead">Ajoutez bilan. à votre assistant IA. Il lit alors les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda. Il calcule à partir de ces données au lieu d'inventer, et il cite ses sources.</p>
       <div class="pwa-url"><code id="pwaurl">${esc(url)}</code><button type="button" class="btn" id="pwacopie">Copier l'adresse</button></div>
       <p class="note" style="margin:6px 0 0">Aucun compte ni clé nécessaire. Protocole ouvert MCP (Model Context Protocol), reconnu par Claude, ChatGPT et la plupart des assistants.</p></section>

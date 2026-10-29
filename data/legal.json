@@ -44,7 +44,7 @@
      "p": [
       "Envoi des e-mails : Brevo, marque de Sendinblue SAS, société française.",
       "Paiement en ligne : Stripe. bilan. ne voit ni ne conserve vos numéros de carte bancaire.",
-      "Intelligence artificielle : Cloudflare Workers AI, utilisé pour résumer des documents publics et rédiger des bilans à partir des données du site."
+      "Intelligence artificielle : le site n'appelle aucun modèle d'IA. Si vous connectez votre propre IA (« Connecter mon IA »), vos questions sont traitées par OpenRouter (OpenRouter, Inc., États-Unis) et le modèle que vous choisissez, sous votre propre compte."
      ]
     },
     {
@@ -52,7 +52,7 @@
      "p": [
       "bilan. publie des informations factuelles et pédagogiques sur la bourse.",
       "bilan. ne fournit aucun conseil en investissement. Voir la page « Avertissement ».",
-      "Certains textes sont générés par une intelligence artificielle. Ils sont signalés comme tels sur le site."
+      "Les réponses calculées sont produites par le site à partir des données. Les textes rédigés par une intelligence artificielle (votre IA connectée, ou d'anciens textes publiés avant le 29 octobre 2026) sont signalés comme tels."
      ]
     },
     {
@@ -290,15 +290,17 @@
     {
      "h": "Intelligence artificielle",
      "p": [
-      "Cloudflare Workers AI sert à résumer des documents publics et à rédiger des bilans à partir des données du site.",
-      "[À confirmer] Aucune donnée personnelle des utilisateurs n'est envoyée au modèle d'IA."
+      "Le site n'envoie aucune donnée à un modèle d'IA : ses réponses sont calculées dans votre navigateur.",
+      "Si vous choisissez « Connecter mon IA », votre navigateur se connecte à votre compte OpenRouter (OpenRouter, Inc., États-Unis). La clé obtenue est gardée dans votre navigateur et n'est jamais envoyée à bilan.",
+      "Quand vous demandez une réponse rédigée, votre question et les données du site utiles à la réponse partent directement de votre navigateur vers OpenRouter et le modèle choisi. Pour l'analyse de votre portefeuille, cela comprend les chiffres de vos lignes (sans votre nom ni votre adresse). Ces échanges relèvent des conditions d'OpenRouter et du fournisseur du modèle.",
+      "Vous pouvez déconnecter votre IA à tout moment depuis la page « Mon IA » : la clé est alors effacée de votre navigateur."
      ]
     },
     {
      "h": "Destinataires et sous-traitants",
      "p": [
       "Seul l'éditeur a accès à vos données. Elles sont aussi traitées par ses prestataires, uniquement pour le service :",
-      "Cloudflare, Inc. (États-Unis) : hébergement, sécurité, base de données, IA.",
+      "Cloudflare, Inc. (États-Unis) : hébergement, sécurité, base de données.",
       "Sendinblue SAS, marque Brevo (France) : envoi des e-mails.",
       "Stripe : paiement. Pour les clients européens, le prestataire contractant est [Entité Stripe, à vérifier dans votre contrat Stripe]."
      ]
@@ -386,7 +388,7 @@
      "h": "Données et intelligence artificielle",
      "p": [
       "Les cours et données viennent de sources tierces (SEC, filings.xbrl.org, AMF, GDELT, Google Finance, BCE). Ils peuvent être retardés, incomplets ou faux.",
-      "Certains résumés et bilans sont rédigés par une intelligence artificielle. Ils sont signalés. Ils peuvent contenir des erreurs ou des oublis.",
+      "Les textes rédigés par une intelligence artificielle (votre IA connectée) sont signalés. Ils peuvent contenir des erreurs ou des oublis.",
       "Vérifiez toujours une information importante dans le document d'origine."
      ]
     },

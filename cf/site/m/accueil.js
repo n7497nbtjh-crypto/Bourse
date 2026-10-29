@@ -305,7 +305,7 @@ async function pageHome() {
 
     ${membre ? "" : `<section class="acc-sec" id="acc-rapport">${accH("Mon espace · gratuit", "Votre rapport de la semaine, sur mesure", ["/espace", "Créer mon rapport"])}<div id="homeesp"></div></section>`}
 
-    ${prem ? "" : `<a class="acc-prem" href="/premium"><span class="acc-pk">Premium</span><span class="acc-pt">Toute l'Académie, 200 questions par jour à l'IA, des alertes chaque soir et 12 semaines d'historique.</span><span class="acc-pl">Découvrir →</span></a>`}
+    ${prem ? "" : `<a class="acc-prem" href="/premium"><span class="acc-pk">Premium</span><span class="acc-pt">Toute l'Académie, des alertes chaque soir, 12 semaines d'historique et un portefeuille sans limite.</span><span class="acc-pl">Découvrir →</span></a>`}
   </div>`;
   accLier(membre);
   const dg = $("#acc-decouvrir .out-dg"); if (dg) dg.classList.add("scroll-x");

@@ -34,17 +34,15 @@ def route(r):
               "i:cac40": {"s": "INDEXEURO:PX1", "cur": "EUR", "p": 7886, "chg": 0.0, "cap": None, "h52": 8200, "l52": 7000, "p1y": 7500, "p3y": 7300, "p5y": 5600},
               "i:sp500": {"s": "INDEXSP:.INX", "cur": "USD", "p": 6800, "chg": 0.1, "cap": None, "h52": 6900, "l52": 5000, "p1y": 5800, "p3y": 4200, "p5y": 3300}}
         return r.fulfill(json={"updated": "2026-10-28T16:00:00Z", "items": it})
-    if "/api/demande" in u: return r.fulfill(json={"action": "filtre", "titre": "Entreprises françaises peu endettées", "secteur": None, "region": "FR", "pea": False, "criteres": [{"indicateur": "dette", "condition": "inf", "valeur": 1}], "tri": {"indicateur": "rendement", "ordre": "desc"}, "limite": 12})
     if "/api/espace/moi" in u: return r.fulfill(json={"connecte": True, "email": "test@exemple.fr", "premium": False, "plan": None, "donnees": {"favoris": ["c:lvmh", "c:nvidia"], "portefeuille": None, "profil": None}, "nonlus": 2, "teaser": False} if STATE.get("in") else {"connecte": False})
     if "/api/espace/bilan" in u: return r.fulfill(json={"semaine": "2026-W44", "genere": 1761650000000, "lignes": [{"k": "c:lvmh", "nom": "LVMH", "variation_semaine_pct": 3.2, "cours": 612.4, "devise": "EUR"}, {"k": "c:nvidia", "nom": "Nvidia", "variation_semaine_pct": -4.1, "cours": 186.2, "devise": "USD"}], "moyenne": -0.45, "annonces": [{"id": "lvmh", "nom": "LVMH", "date": "2026-10-27", "type": "Résultats", "chiffres": [["Ventes", "18,3 Md€"]], "lecture": ["Les ventes reculent de 2 %."]}], "a_venir": [{"id": "nvidia", "nom": "Nvidia", "date": "2026-11-19", "label": "Résultats du trimestre"}], "texte": "Ce qui a bougé\nLVMH progresse de 3,2 % sur la semaine.", "historique": [{"semaine": "2026-W43", "moyenne": 1.2}]})
     if "/api/espace/notifs" in u: return r.fulfill(json={"nonlus": 1, "notifs": [{"id": 1, "at": 1761650000000, "type": "mouvement", "texte": "Nvidia : −5,2 % aujourd'hui", "lien": "/entreprise/nvidia", "lu": 0}]})
     if "/api/espace" in u: return r.fulfill(json={"ok": True})
-    if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": "https://buy.stripe.com/test_m", "unique": None, "limites": {"resume": [5, 80], "assistant": [3, 40], "veille": [1, 10], "portefeuille": [1, 10]}})
+    if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": "https://buy.stripe.com/test_m", "unique": None})
+    if "openrouter.ai" in u: return r.fulfill(status=503, json={"error": "hors ligne (audit)"})  # « Connecter mon IA » : jamais de vrai appel pendant l'audit
     if "/api/premium/statut" in u: return r.fulfill(json={"premium": False})
-    if "/api/ia/etat" in u: return r.fulfill(json={"serveur": True, "services": ["mistral", "groq"]})
     if "/api/premium/activer" in u: return r.fulfill(json={"token": "a" * 40, "plan": "mensuel"})
-    if "/api/assistant" in u: return r.fulfill(json={"txt": "LVMH vend surtout des produits de luxe. Sa marge opérationnelle de 2024 reste au-dessus de la médiane du secteur."})
-    if "/api/resume" in u or "/api/veille" in u:
+    if "/api/veille" in u:
         return r.fulfill(json={"txt": "Ce qui est annoncé\nLe chiffre d'affaires du trimestre atteint 6,7 milliards d'euros, en hausse de 3 %.\nCe que ça veut dire\nL'activité progresse.\nÀ surveiller\nLes prochains résultats."} if "inscription" not in u else {"error": "L'envoi par e-mail n'est pas encore ouvert."})
     if "/api/presse" in u:
         return r.fulfill(json={"items": [{"title": "Le groupe publie des ventes en hausse au troisième trimestre", "url": "https://example.org/a", "site": "example.org", "date": "2026-10-27T15:00:00Z", "lang": "French"}] * 6})
@@ -124,13 +122,19 @@ with sync_playwright() as pw:
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["fiche + PER"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_fiche_per.png", full_page=True)
-        # Assistant de fiche : une question suggérée, une réponse
+        # Assistant de fiche (panneau ✦, seul point d'entrée de l'IA) : une question suggérée, une réponse calculée
         pg.goto("http://t.local/entreprise/lvmh", timeout=90000); pg.wait_for_timeout(700)
-        if not pg.locator("#assistant").count(): pg.wait_for_timeout(3000)
-        if not pg.locator("#assistant").count(): probs["assistant"] = ["le panneau de l'assistant manque"]
+        if not pg.locator("#orciab").count(): pg.wait_for_timeout(3000)
+        if not pg.locator("#orciab").count(): probs["assistant"] = ["le panneau ✦ de l'IA manque"]
         else:
-            pg.locator("#assistant [data-ask]").first.click(); pg.wait_for_timeout(400)
-            if "luxe" not in pg.inner_text("#assistant"): probs["assistant"] = ["pas de réponse affichée"]
+            pg.evaluate("orcIaOpen()"); pg.locator("#orciaq [data-orcq]").first.click()
+            for _ in range(16):
+                pg.wait_for_timeout(250)
+                if "luxe" in pg.inner_text("#orcialog"): break
+            if "luxe" not in pg.inner_text("#orcialog"): probs["assistant"] = ["pas de réponse affichée"]
+            p = pg.evaluate(CHECK, opts["viewport"]["width"])
+            if p: probs["panneau ✦"] = p
+            pg.evaluate("orcIaClose()")
         # Nouvel investisseur : 5 réponses donnent un profil
         pg.goto("http://t.local/commencer"); pg.wait_for_timeout(400)
         for q in pg.locator("#qprof fieldset").all(): q.locator("label.qo").first.click()

@@ -2,7 +2,7 @@
 // Base SQLite en mémoire (comme D1), données du site, cours et modèle simulés.
 import { DatabaseSync } from "node:sqlite";
 import { clotures, lundiDe, variationSemaine, indiceDe, categorie, lignesPf, faitsSynthese, essentielDe, resumeCourt, seancePrecedente, addJ, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT } from "../cf/src/synthese.mjs";
-import { espace, syntheseNotif, semaineIso, jourParis, _redacteur } from "../cf/src/espace.mjs";
+import { espace, syntheseNotif, semaineIso, jourParis } from "../cf/src/espace.mjs";
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log("ÉCHEC", m); } };
 
 // Dates
@@ -111,7 +111,7 @@ ok(resumeCourt(null) === null && resumeCourt({ semaine: "2026-W40", moyenne: 1 }
 const sql = new DatabaseSync(":memory:");
 const stmt = (q, p = []) => ({ bind: (...a) => stmt(q, a), all: async () => ({ results: sql.prepare(q).all(...p) }), first: async () => sql.prepare(q).get(...p) ?? null, run: async () => ({ meta: { changes: Number(sql.prepare(q).run(...p).changes) } }) });
 const today = jourParis(), lundi = lundiDe(semaineIso(today)), avant = addJ(lundi, -3);
-let aiCalls = 0; _redacteur(async () => { aiCalls++; return "Cette semaine, Alpha a progressé de 5 %, un peu plus que le CAC 40. La cause de ce mouvement n'est pas connue. Gamma US publiera ses résultats bientôt ; ce n'est pas un conseil."; });
+const aiCalls = 0; // le serveur n'appelle plus aucun modèle d'IA (commentaire rédigé dans le navigateur, avec l'IA connectée)
 const cours2 = { dates: [avant], items: { "c:alpha": [100], "i:cac40": [8000] } };
 const env = { DB: { prepare: q => stmt(q) }, ADMIN_KEY: "k", HASH_SALT: "sel",
   ASSETS: { fetch: async req => { const p = new URL(req.url).pathname; const m = {
@@ -129,9 +129,9 @@ ok(s === 200 && j.v === 2 && j.lignes[0].variation_semaine_pct === 5 && j.portef
 ok(j.annonces[0].resume === "Les ventes montent." && j.indices.find(i => i.id === "cac40").pct === 2.5 && j.lignes[0].ecart_pts === 2.5, "annonce et indice dans la réponse");
 ok(!Object.keys(j).some(k => k.startsWith("_")), "champs internes cachés");
 [s, j] = await E("GET", "/api/espace/bilan", null, C);
-ok(s === 200 && aiCalls === 1 && /Alpha/.test(j.texte) && j.lecture_min >= 1, "commentaire rédigé à la visite " + aiCalls);
+ok(s === 200 && j.texte == null && j.lecture_min >= 1 && j.essentiel.length >= 2, "visite : chiffres et « l'essentiel » calculés, sans commentaire du serveur");
 [s, j] = await E("GET", "/api/espace/bilan", null, C);
-ok(aiCalls === 1 && /Alpha/.test(j.texte), "commentaire gardé en cache");
+ok(j.texte == null, "toujours sans appel à un modèle");
 const acc = sql.prepare("SELECT id FROM comptes WHERE email = 's@ex.fr'").get().id;
 const n = await syntheseNotif(env, acc);
 ok(n && n.titre === "Votre semaine en 2 minutes" && /^Votre portefeuille a gagné 50 €/.test(n.resume) && n.semaine === semaineIso(today), "syntheseNotif " + JSON.stringify(n));

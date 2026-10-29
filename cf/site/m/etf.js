@@ -420,7 +420,7 @@ async function pageEtf(id) {
   const FAQ = [...Q.map(([, q, a]) => [q, a]), ["Où l'acheter ?", `Chez un courtier ou une banque en ligne, comme une action, pendant les heures de cotation${pl ? ` : il est coté sur ${esc(pl.place)} sous le code ${esc(e.ticker)}` : ""}. Son code ISIN, ${esc(e.isin)}, permet de le retrouver chez n'importe quel courtier.`]];
   $("#eia").innerHTML = `<div id="efaq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${a}</p></details>`).join("")}</div>
     <form class="etfask" id="eask"><input type="text" placeholder="Une autre question sur cet ETF ?" aria-label="Votre question sur cet ETF" maxlength="300"><button class="btn" type="submit">Demander à l'IA</button></form>
-    <p class="note" style="margin:8px 0 0">Les réponses ci-dessus sont calculées à partir des données de la fiche. Les autres questions passent par l'assistant IA du site. Aucune réponse n'est un conseil d'achat.</p>`;
-  $("#eask").onsubmit = ev => { ev.preventDefault(); const q = $("#eask input").value.trim(); if (!q) return; const full = /etf|fonds|il |-il|ce fonds/i.test(q) ? `${q} (${e.name})` : `${e.name} : ${q}`; if (typeof orcIaAsk === "function") orcIaAsk(full); else go("/demander?q=" + encodeURIComponent(full)); };
+    <p class="note" style="margin:8px 0 0">Les réponses ci-dessus sont calculées à partir des données de la fiche. Les autres questions s'ouvrent dans le panneau ✦ de l'IA. Aucune réponse n'est un conseil d'achat.</p>`;
+  $("#eask").onsubmit = ev => { ev.preventDefault(); const q = $("#eask input").value.trim(); if (!q) return; const full = /etf|fonds|il |-il|ce fonds/i.test(q) ? `${q} (${e.name})` : `${e.name} : ${q}`; if (typeof orcIaAsk === "function") { orcIaOpen(); orcIaAsk(full); } else go("/demander?q=" + encodeURIComponent(full)); };
   // La FAQ structurée (FAQPage) est ajoutée au HTML par le Worker (cf/src/etf_meta.mjs) : lisible par les moteurs sans JavaScript.
 }
