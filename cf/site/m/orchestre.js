@@ -76,7 +76,7 @@ async function pageIndice(id) {
         ${etfs.length ? `<p class="muted" style="margin:0 0 10px;font-size:13.5px">${etfs.length} ETF du site reproduisent cet indice, du moins cher au plus cher. Les frais courants sont prélevés chaque année dans le fonds.</p><div class="orclist">${etfs.slice(0, 8).map(etfRow).join("")}</div>`
           : proches.length ? `<p class="muted" style="margin:0 0 10px;font-size:13.5px">Aucun ETF du site ne reproduit exactement cet indice. Voici des ETF sur la même zone, du moins cher au plus cher.</p><div class="orclist">${proches.map(etfRow).join("")}</div>` : `<p class="muted" style="margin:0">Aucun ETF du site ne suit encore cet indice.</p>`}
         <p class="note" style="margin:10px 0 0">Comparez aussi l'indice suivi, la taille du fonds et vos frais de courtage. Ce n'est pas une recommandation. <a class="lnk" href="/etf">Tous les ETF</a></p></div></section>
-      <section class="panel orcia"><div class="ph"><h2>✦ Questions à l'IA</h2></div><div class="pb"><div class="chips">${qs.map(q => `<a class="chip" href="/demander?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join("")}</div>
+      <section class="panel orcidxia"><div class="ph"><h2>✦ Questions à l'IA</h2></div><div class="pb"><div class="chips">${qs.map(q => `<a class="chip" href="/demander?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join("")}</div>
         <p class="note" style="margin:10px 0 0">Réponses calculées à partir des données du site et des leçons de l'Académie.</p></div></section>
     </div></div>`;
 }

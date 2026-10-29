@@ -1047,6 +1047,7 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
   .frmroad{display:flex;overflow-x:auto;gap:0;padding:6px 2px 4px;scroll-snap-type:x mandatory}.frmroad li{flex:0 0 104px;scroll-snap-align:start}.frmroad li:not(:last-child)::after{left:calc(50% + 24px);right:calc(-50% + 24px)}
   .frmcols{grid-template-columns:1fr}.frmgrp{border-right:0;border-bottom:1px solid var(--line2)}.frmwh h2{font-size:22px}}
 @media (max-width:420px){.frmstats span{min-width:0;flex:1 1 28%}.frmnav .more{order:3;flex-basis:100%}}
+.results a.srow{display:flex!important;align-items:center;justify-content:flex-start!important;text-align:left!important;gap:10px;flex-direction:row!important}.results a.srow .st{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:1}.results a.srow .st>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.results a.srow .lg{flex:none}
 </style>
 </head>
 <body>
@@ -4523,10 +4524,11 @@ function bindSearch(root) {
   const show = () => {
     const q = norm(inp.value.trim());
     if (!q || !R) { res.classList.remove("open"); return; }
-    const cos = R.companies.filter(c => norm(c.name).includes(q) || norm(c.ticker) === q || (c.isin || "").toLowerCase() === q).slice(0, 7);
+    const rk = c => norm(c.ticker) === q || (c.isin || "").toLowerCase() === q ? 0 : norm(c.name).startsWith(q) ? 1 : 2;
+    const cos = R.companies.filter(c => norm(c.name).includes(q) || norm(c.ticker) === q || (c.isin || "").toLowerCase() === q).sort((a, b) => rk(a) - rk(b) || (a.missing ? 1 : 0) - (b.missing ? 1 : 0)).slice(0, 7);
     const etfs = ETF.list.filter(e => norm(e.name + " " + e.index + " " + e.ticker).includes(q) || e.isin.toLowerCase() === q).slice(0, 4);
     sel = -1;
-    res.innerHTML = cos.length || etfs.length ? cos.map(c => `<a href="/entreprise/${c.id}"><span>${esc(c.name)}</span><span class="light">${esc(c.ticker)} · ${esc(regName(c))}</span></a>`).join("") + etfs.map(e => `<a href="/etf/${e.id}"><span>${esc(e.name)}</span><span class="light">ETF · ${esc(e.ticker)}</span></a>`).join("") : `<div class="none">Aucun résultat</div>`;
+    res.innerHTML = cos.length || etfs.length ? cos.map(c => `<a href="/entreprise/${c.id}" class="srow">${logo(c, 26)}<span class="st"><span>${esc(c.name)}</span><span class="light">${esc(c.ticker)} · ${esc(regName(c))} · ${esc(secName(c))}</span></span></a>`).join("") + etfs.map(e => `<a href="/etf/${e.id}" class="srow">${logo({ name: e.issuer, domain: issuerDom(e) }, 26)}<span class="st"><span>${esc(e.name)}</span><span class="light">ETF · ${esc(e.ticker)}${e.pea ? " · PEA" : ""}</span></span></a>`).join("") : `<div class="none">Aucun résultat</div>`;
     if (inp.value.trim().length >= 3) res.insertAdjacentHTML(cos.length || etfs.length ? "beforeend" : "afterbegin", `<a class="iasug" href="/demander?q=${encodeURIComponent(inp.value.trim())}"><span>✦ Demander à l'IA : « ${esc(inp.value.trim().slice(0, 60))} »</span><span class="light">recherche par critères, explications</span></a>`);
     $(".none", res) && $(".none", res).remove();
     res.classList.add("open");
