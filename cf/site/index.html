@@ -1236,7 +1236,7 @@ function lecture(co, f) {
 // Une phrase concrète par repère, avec les chiffres de l'entreprise (titre de chaque ligne)
 const CAT = { croissance: "Croissance des ventes", marge: "Marge d'exploitation", net: "Bénéfice net", roe: "Rentabilité des capitaux propres", lev: "Endettement", gear: "Endettement", dettenette: "Endettement", fcf: "Trésorerie disponible", payout: "Dividende" };
 function concret(co, f, items) {
-  CURSYM = CUR[f.currency] || "€";
+  CURSYM = CUR[f.currency] || f.currency || "€";
   const m = ratios(f), med = MED[co.sector] || {}, B = v => big(v, f.currency), bank = isBank(co), medOk = med.n >= 3;
   const sect = (v, fm) => v != null && medOk ? ` (secteur : ${fm(v)})` : "";
   for (const i of items) {
