@@ -2,8 +2,36 @@
 
 Site d'information boursière pour débutants : factuel, sans conseil d'investissement, sources affichées.
 En ligne : https://repere-bourse.pages.dev (Cloudflare Pages + Worker + D1, déployé par GitHub Actions).
+Propriétaire : Romain. Répondre en français, simplement, sans jargon technique inutile.
 
-- Lire `docs/architecture.md` (fonctionnement et coûts) et `docs/ia.md` (IA : réponses calculées, IA connectée du visiteur, connecteur MCP ; aucun modèle appelé par le serveur).
+## Façon de travailler (règles de Romain, à respecter dans chaque session)
+- **Économiser les crédits.** Le 28-29 octobre 2026, une dizaine d'agents lancés en parallèle ont consommé environ 40 € pour des résultats jugés décevants. Donc :
+  - pas d'agents (sous-agents, Task, Agent) sauf si Romain le demande explicitement ;
+  - un seul sujet à la fois, le plus visible d'abord ; pas de chantier de plusieurs heures ;
+  - avant une tâche longue ou coûteuse, dire ce qu'elle coûtera et demander ;
+  - lectures ciblées (`grep -n`, `sed -n`), jamais relire `cf/site/index.html` (540 ko) en entier ;
+  - peu de captures d'écran ; `python3 tests/audit.py` (long) une seule fois, juste avant de pousser.
+- **Montrer le résultat** : une capture avant/après de ce qui a changé, en quelques lignes, puis demander la suite.
+- **Ne jamais dire « terminé » sans l'avoir testé.** Ne rien inventer (chiffres, sources, résultats de tests).
+
+## Ce que Romain veut pour le site
+- Mot d'ordre : **professionnel, inspirer confiance**. Clair, ordonné, visuel, pas de pavés de texte, rien de « bricolé », rien qui fasse « IA ».
+- Il **n'aime pas la présentation actuelle** du site et des fiches entreprises (29/10/2026). Sujets connus : deux rangées d'onglets superposées sur la fiche, indicateurs noyés dans du texte, colonne de droite vide, page longue où tout a le même poids, graphiques trop gros ou amateurs.
+- Son cahier d'audit fait référence : `docs/audit-2026-10.md` (plan P0/P1/P2). Navigation voulue : Découvrir / Explorer / Analyser / Mon espace. Accueil plus court, actions principales en premier.
+- Verdict d'abord, détail ensuite (« approfondir » au clic). Ne pas retirer d'information : la rendre plus compréhensible.
+- Il adore les **médianes du secteur** et les **zones vertes / rouges**. Toujours expliquer et interpréter pour un débutant, sans le prendre pour un enfant.
+- Direction artistique : papier crème + titres serif (style « journal ») et touches de vert acide (style « tableau de bord »), sans cadres sombres.
+- Favoris bien visibles. Concurrents affichés avec comparaison. PEA / compte-titres expliqués.
+- Simplicité et coût nul : aucune IA payée par le site (réponses calculées pour tous, « Connecter mon IA » via OpenRouter, connecteur MCP). Pas de services payants multiples.
+
+## Interdits
+- Aucun conseil d'investissement ni prédiction ; pas de profil + titres proposés à la personne (« Pistes pour vous » reformulé sans personnalisation).
+- Aucun lien ni script TradingView. Pas de scraping de Boursorama, Yahoo, Zonebourse. Pas de contournement anti-robot.
+- Ne jamais manipuler de clé secrète (Stripe, ADMIN_KEY, tokens) : Romain les saisit lui-même. Pas de compte de test en production, pas d'e-mail envoyé.
+- Une donnée ancienne ou estimée ne doit jamais passer pour actuelle ou publiée.
+- Pas de tiret cadratin dans les textes du site ; vouvoiement.
+
+## Où trouver quoi
+- `docs/architecture.md` (fonctionnement et coûts), `docs/ia.md` (IA), `docs/audit-2026-10.md` (audit et plan).
 - Compétences du dépôt (`.claude/skills/`) : `bilan-module` (modifier le site), `bilan-mise-en-ligne` (tester et déployer), `bilan-sonde` (lire un site externe, collectes).
 - `CHANTIERS.md` : contrats entre modules (fonctions partagées, formats des fichiers de données).
-- Répondre en français.
