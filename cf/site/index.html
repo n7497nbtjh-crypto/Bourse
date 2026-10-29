@@ -3878,6 +3878,7 @@ async function pageHome() {
       <div class="homegrid"><section class="panel"><div class="ph"><h2>Les ETF en classement</h2><a href="/etf">Tous les ETF</a></div>
         <div class="filters" id="erk">${ERANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === erankK ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="erkb">${erankHTML()}</div></section>
         ${day ? `<section class="panel dayc"><div class="ph"><h2>L'entreprise du jour</h2></div><div class="pb"><a class="dayh" href="/entreprise/${day.id}">${logo(day, 48)}<div><div class="nm">${esc(day.name)}</div><div class="light">${esc(regName(day))} · ${esc(secName(day))}</div></div></a><p>${esc(day.fiche.fait)}</p>${profilMini(day)}${feu(quick(day))}<a class="more" href="/entreprise/${day.id}">Lire la fiche →</a></div></section>` : ""}</div>
+      ${typeof outilsDecouverteHTML === "function" ? outilsDecouverteHTML(3) : ""}
       <div class="secgrid">${secs.map(x => `<a class="sectile" href="/entreprises?secteur=${x.k}"><b>${esc(x.name)}</b><span>${x.n} entreprises</span>${x.m && x.m.marge != null ? `<span class="light">Marge médiane ${pct(x.m.marge, 1, false)}</span>` : ""}</a>`).join("")}</div>`)}
     ${band(5, "Actualité", "Ce qui se passe dans les entreprises", ["/actualites", "Toute l'actualité"], `<div class="trio">
       <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Agenda</a></div>${agendaHTML(upcoming().slice(0, 5))}</section>
