@@ -571,15 +571,7 @@ if (typeof cmprRenderBody === "function") { // enveloppe : la page de m/comparer
 ROUTES_EXTRA.push([/^\/classements$/, () => { outCSS(); pageClassements(); }]);
 ROUTES_EXTRA.push([/^\/decouvertes$/, () => { outCSS(); pageDecouvertes(); }]);
 (function outMenu() { // liens ajoutés au menu sans retoucher index.html
-  const dd = document.querySelector('#nav .dd[data-g="ent"] .ddm');
-  if (dd && !dd.querySelector('a[href="/classements"]')) {
-    const cmp = dd.querySelector('a[href="/comparer"]');
-    const h = `<a href="/classements"><b>Classements</b><span>Le plus de points forts, en tête de leur secteur</span></a><a href="/decouvertes"><b>Découvertes du jour</b><span>Des entreprises moins connues à explorer</span></a>`;
-    if (cmp) cmp.insertAdjacentHTML("afterend", h); else dd.insertAdjacentHTML("beforeend", h);
-  }
-  const dv = document.querySelector('#nav .dd[data-g="mkt"] a[href="/dividendes"] span'); if (dv) dv.textContent = "Calendrier, rendements, simulateur";
-  const mp = document.getElementById("mpanel");
-  if (mp && !mp.querySelector('a[href="/classements"]')) { const c = mp.querySelector('a[href="/comparer"]'); if (c) c.insertAdjacentHTML("afterend", `<a href="/classements">Classements</a><a href="/decouvertes">Découvertes du jour</a>`); }
+  // le menu (barre, téléphone, pied de page) est construit par m/nav.js
   if (typeof OUTILS !== "undefined" && Array.isArray(OUTILS) && !OUTILS.some(o => o[0] === "/classements")) OUTILS.push(["/classements", "Classements des entreprises", "Celles qui cumulent le plus de points forts, restent en tête de leur secteur ou relèvent leur dividende."], ["/decouvertes", "Découvertes du jour", "Chaque jour, six entreprises moins connues dont les comptes ressortent."]);
 })();
 let OUT_CSS = false;

@@ -63,6 +63,7 @@ export function meta(path, q = null) {
   if (p === "/classements") return { title: `Classements des entreprises · ${SITE}`, desc: "Les entreprises qui cumulent le plus de points forts, restent en tête de leur secteur, augmentent leurs ventes ou relèvent leur dividende chaque année, calculées sur leurs comptes officiels." };
   if (p === "/decouvertes") return { title: `Découvertes du jour · ${SITE}`, desc: "Chaque jour, des petites et moyennes entreprises d'Europe et du monde, et des ETF éligibles au PEA : activité, chiffres, valorisation, catalyseurs et risques, sources à l'appui. Sans conseil d'achat." };
   if (p === "/pour-moi") return { title: `Des pistes adaptées à votre profil · ${SITE}`, desc: "Une répartition indicative en fourchettes, des ETF et des entreprises à étudier selon votre horizon, votre tolérance au risque et votre compte (PEA, compte-titres). Pédagogique, pas un conseil en investissement." };
+  if (p === "/plan") return { title: `Plan du site · ${SITE}`, desc: "Toutes les pages de bilan., rangées en quatre rubriques : Découvrir, Explorer, Analyser et Mon espace." };
   if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre · ${SITE}`, desc: "Le chemin pour apprendre : par où commencer, les cours de l'Académie (l'essentiel en 3 étapes et le cours complet), le lexique et les outils pédagogiques, gratuits." };
   if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 étapes · L'Académie · ${SITE}`, desc: "La version courte de l'Académie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en leçons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse · ${SITE}`, desc: "Un parcours en trois étapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
@@ -92,6 +93,7 @@ export function meta(path, q = null) {
 export function redirectionParcours(p) {
   const m = /^\/debuter(\/.*)?$/.exec(p || ""); if (m) return "/academie/express" + (m[1] || "");
   if (p === "/premiers-pas") return "/academie/express";
+  if (p === "/simulateurs/passe") return "/outils/si-javais"; // affichait le simulateur d'épargne sans le dire (audit P2-6)
   return null;
 }
 // Anciennes routes de l'IA du serveur (retirée le 29 octobre 2026) : le site ne paie et n'appelle plus aucun modèle.

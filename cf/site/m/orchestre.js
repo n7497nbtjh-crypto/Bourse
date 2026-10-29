@@ -351,25 +351,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 /* Favoris bien visibles : lien « ★ Favoris » avec compteur dans la barre (ordinateur), bouton étoile sur mobile,
    et un court message après chaque ajout pour dire où retrouver la liste. */
 document.head.insertAdjacentHTML("beforeend", `<style>
-#nav a.navfav{padding:18px 8px 16px;display:flex;gap:5px;align-items:center;font-weight:700;white-space:nowrap}
-#nav a.navfav .st{color:#C98A00;font-size:15px;line-height:1}
-#nav a.navfav.on .st{color:inherit}
-.mbtn.mfav{display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:700}
-.mbtn.mfav .st{color:#C98A00}
 .orcfavt{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;z-index:90;background:var(--ink);color:#fff;border-radius:12px;padding:11px 16px;font-size:14px;box-shadow:0 12px 40px -12px rgba(0,0,0,.45);transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);display:flex;gap:12px;align-items:center}
 .orcfavt.vis{opacity:1;transform:translate(-50%,0)}.orcfavt a{color:#fff;font-weight:700;text-decoration:underline;white-space:nowrap}
 @media (max-width:760px){.orcfavt{bottom:84px;width:calc(100% - 32px);justify-content:space-between}}
-@media (min-width:761px) and (max-width:939px){#nav a.navfav{padding-left:5px!important;padding-right:5px!important;font-size:13px!important}#nav a.navfav .lb{display:none}}
 </style>`);
 (() => {
-  const put = () => {
-    const esp = document.querySelector("#nav .navesp");
-    if (esp && !document.querySelector("#nav .navfav")) esp.insertAdjacentHTML("beforebegin", `<a href="/favoris" data-nav="fav" class="navfav" title="Mes favoris"><span class="st">★</span><span class="lb">Favoris</span><span class="favn"></span></a>`);
-    const mr = document.querySelector(".mright");
-    if (mr && !mr.querySelector(".mfav")) mr.insertAdjacentHTML("afterbegin", `<a class="mbtn mfav" href="/favoris" aria-label="Mes favoris"><span class="st">★</span><span class="favn"></span></a>`);
-    if (typeof favCount === "function") try { favCount(); } catch (e) { }
-  };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", put); else put();
+  // le lien « ★ Favoris » de la barre et l'étoile du téléphone sont construits par m/nav.js
   let tm;
   document.addEventListener("click", ev => {
     const b = ev.target.closest("[data-fav]"); if (!b || location.pathname === "/favoris") return;

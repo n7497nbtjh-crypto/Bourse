@@ -1062,18 +1062,10 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
         <input type="search" placeholder="Une entreprise, un ETF, ou une question…" aria-label="Rechercher une entreprise ou poser une question" autocomplete="off">
         <div class="results"></div>
       </div>
-      <nav class="main d-only" id="nav">
-        <div class="dd" data-g="deb"><button type="button" aria-expanded="false">Apprendre</button><div class="ddm"><a href="/apprendre"><b>Apprendre pas à pas</b><span>Trois niveaux, des bases aux sujets avancés</span></a><a href="/idees-recues"><b>Vrai ou faux ?</b><span>Les idées reçues, déconstruites</span></a><a href="/academie"><b>L'Académie</b><span>Le programme complet, par niveau</span></a><a href="/lexique"><b>Le lexique</b><span>Chaque chiffre de la Bourse expliqué</span></a><a href="/commencer"><b>Par où commencer</b><span>Le guide et votre profil en 5 questions</span></a><a href="/apprendre#outils"><b>Outils pédagogiques</b><span>Livret A ou Bourse, simulateurs</span></a></div></div>
-        <div class="dd" data-g="mkt"><button type="button" aria-expanded="false">Marchés</button><div class="ddm"><a href="/marches"><b>Les marchés du jour</b><span>Indices, plus fortes hausses et baisses</span></a><a href="/actualites"><b>Actualités</b><span>Annonces officielles lues et expliquées</span></a><a href="/agenda"><b>Agenda</b><span>Résultats et assemblées à venir</span></a><a href="/hier"><b>Ce qui s'est passé hier</b><span>Les résultats publiés la veille, chiffres à l'appui</span></a><a href="/dividendes"><b>Dividendes</b><span>Le calendrier des versements</span></a></div></div>
-        <div class="dd" data-g="ent"><button type="button" aria-expanded="false">Entreprises et ETF</button><div class="ddm"><a href="/entreprises"><b>Les entreprises</b><span>Leurs comptes comparés à leur secteur</span></a><a href="/etf"><b>Les ETF</b><span>Fonds indiciels : contenu et frais</span></a><a href="/comparer"><b>Comparer</b><span>Plusieurs entreprises côte à côte</span></a></div></div>
-        <div class="dd" data-g="out"><button type="button" aria-expanded="false">Outils</button><div class="ddm"><a href="/portefeuille"><b>Portefeuille</b><span>Ce que vous possédez vraiment</span></a><a href="/outils/si-javais"><b>Et si j'avais investi…</b><span>1 000 € placés il y a 1, 3 ou 5 ans</span></a><a href="/outils/recouvrement"><b>Deux ETF se recouvrent-ils ?</b><span>Les entreprises en commun</span></a><a href="/simulateurs/epargne"><b>Simulateurs</b><span>Épargne, frais, PEA ou compte-titres</span></a><a href="/outils/verifier"><b>Vérifier une offre</b><span>Contre les arnaques, listes de l'AMF</span></a><a href="/communaute"><b>Communauté</b><span>Questions et idées des visiteurs</span></a></div></div>
-        <a href="/demander" data-nav="ia" class="navia">✦ Demander à l'IA</a>
-        <a href="/espace" data-nav="esp" class="navesp"><span class="esplbl">Se connecter</span><span class="espn"></span></a>
-        <a href="/premium" data-nav="prem" class="navprem">Premium</a>
-      </nav>
+      <nav class="main d-only" id="nav" aria-label="Navigation principale"></nav>
       <div class="mright m-only"><button class="mbtn" id="searchBtn" aria-expanded="false">Chercher</button><button class="mbtn" id="menuBtn" aria-expanded="false">Menu</button></div>
     </div>
-    <div class="mpanel" id="mpanel"><a href="/demander"><b>✦ Demander à l'IA</b></a><a href="/espace"><b class="esplbl">Se connecter</b> <span class="espn"></span></a><a href="/favoris">Mes favoris <span class="favn"></span></a><p class="mg">Apprendre</p><a href="/apprendre">Apprendre pas à pas</a><a href="/idees-recues">Vrai ou faux ? Les idées reçues</a><a href="/academie">L'Académie</a><a href="/lexique">Le lexique</a><a href="/commencer">Par où commencer</a><a href="/apprendre#outils">Outils pédagogiques</a><p class="mg">Marchés</p><a href="/marches">Les marchés du jour</a><a href="/actualites">Actualités</a><a href="/agenda">Agenda</a><a href="/hier">Ce qui s'est passé hier</a><a href="/dividendes">Dividendes</a><p class="mg">Entreprises et ETF</p><a href="/entreprises">Les entreprises</a><a href="/etf">Les ETF</a><a href="/comparer">Comparer</a><p class="mg">Outils</p><a href="/portefeuille">Portefeuille</a><a href="/outils/si-javais">Et si j'avais investi…</a><a href="/outils/recouvrement">Deux ETF se recouvrent-ils ?</a><a href="/simulateurs/epargne">Simulateurs</a><a href="/outils/verifier">Vérifier une offre</a><a href="/communaute">Communauté</a><a href="/premium"><b>Premium</b></a></div>
+    <div class="mpanel" id="mpanel"></div>
     <div class="msearch" id="msearch">
       <div class="search" data-search>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
@@ -1090,7 +1082,8 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
   <div class="wrap f">
     <div><p>Informations factuelles à but pédagogique. Aucun contenu du site n'est un conseil en investissement.</p>
       <p>Sources : comptes annuels ESEF via <a class="lnk" style="margin:0" href="https://filings.xbrl.org" target="_blank" rel="noopener">filings.xbrl.org</a> et <a class="lnk" style="margin:0" href="https://www.sec.gov/edgar" target="_blank" rel="noopener">SEC (EDGAR)</a>, publications de l'<a class="lnk" style="margin:0" href="https://www.info-financiere.gouv.fr" target="_blank" rel="noopener">AMF</a>, cours différés de Google Finance, taux de change de la BCE.</p></div>
-    <div><a href="/commencer">Par où commencer</a><a href="/lexique">Lexique</a><a href="/premium">Premium</a><a href="/mentions-legales">Mentions légales</a><a href="/cgv">CGV</a><a href="/confidentialite">Confidentialité</a><a href="/avertissement">Avertissement sur les risques</a><a href="/methode">Méthode et sources</a></div>
+    <div id="footnav"></div>
+    <noscript><div><a href="/apprendre">Apprendre</a><a href="/entreprises">Les entreprises</a><a href="/etf">Les ETF</a><a href="/marches">Les marchés</a><a href="/actualites">Actualités</a><a href="/comparer">Comparer</a><a href="/portefeuille">Portefeuille</a><a href="/lexique">Lexique</a><a href="/premium">Premium</a><a href="/methode">Méthode et sources</a><a href="/mentions-legales">Mentions légales</a><a href="/cgv">CGV</a><a href="/confidentialite">Confidentialité</a><a href="/avertissement">Avertissement sur les risques</a><a href="/plan">Plan du site</a></div></noscript>
   </div>
 </footer>
 <div class="pop" id="pop" tabindex="-1" role="dialog" aria-modal="false"></div>
@@ -4391,6 +4384,7 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
 <script src="/m/accueil.js"></script>
 <script src="/m/provenance.js"></script>
 <script src="/m/monia.js"></script>
+<script src="/m/nav.js"></script>
 <script src="/m/design.js"></script>
 </body>
 </html>

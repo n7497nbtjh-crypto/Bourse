@@ -611,10 +611,7 @@ function recoEspaceHTML() { return recoCompactHTML({ titre: "Vos pistes" }); }
 if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/pour-moi$/, () => pageRecoPourMoi()]);
 if (typeof document !== "undefined" && document.querySelector) {
   recoDivLoad();
-  const dd = document.querySelector('#nav .dd[data-g="out"] .ddm');
-  if (dd && !dd.querySelector('a[href="/pour-moi"]')) { const pf = dd.querySelector('a[href="/portefeuille"]'), h = `<a href="/pour-moi"><b>Pistes pour vous</b><span>Répartition et idées selon votre profil</span></a>`; if (pf) pf.insertAdjacentHTML("afterend", h); else dd.insertAdjacentHTML("afterbegin", h); }
-  const mp = document.getElementById("mpanel");
-  if (mp && !mp.querySelector('a[href="/pour-moi"]')) { const pf = mp.querySelector('a[href="/portefeuille"]'); if (pf) pf.insertAdjacentHTML("afterend", `<a href="/pour-moi">Pistes pour vous</a>`); }
+  // le menu est construit par m/nav.js ; « Pistes pour vous » n'y figure plus (à reformuler, point 4)
   if (typeof OUTILS !== "undefined" && Array.isArray(OUTILS) && !OUTILS.some(o => o[0] === "/pour-moi")) OUTILS.unshift(["/pour-moi", "Pistes pour vous", "Une répartition indicative, des ETF et des entreprises à étudier selon votre profil et votre portefeuille."]);
 }
 let RECO_CSS = false;
