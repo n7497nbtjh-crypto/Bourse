@@ -1,0 +1,140 @@
+{
+ "sec_chine": [
+  "https://www.sec.gov/corpfin/disclosure-considerations-china-based-issuers"
+ ],
+ "sec_vie": [
+  "https://www.sec.gov/news/statement/gensler-2021-07-30"
+ ],
+ "hfcaa": [
+  "https://www.sec.gov/hfcaa",
+  "https://pcaobus.org/oversight/international/china-related-access-challenges",
+  "https://www.sec.gov/divisions/corpfin/disclosure-pursuant-holding-foreign-companies-accountable-act"
+ ],
+ "fmi_chine": [
+  "https://www.imf.org/en/Countries/CHN"
+ ],
+ "fmi_groupes": [
+  "https://www.imf.org/en/Publications/WEO/weo-database/2024/October/groups-and-aggregates",
+  "https://www.imf.org/en/Publications/WEO/weo-database/2025/April/groups-and-aggregates",
+  "https://www.imf.org/en/Publications/WEO/weo-database/2023/April/groups-and-aggregates"
+ ],
+ "ce_chine": [
+  "https://policy.trade.ec.europa.eu/eu-trade-relationships-country-and-region/countries-and-regions/china_en"
+ ],
+ "bis_export": [
+  "https://www.bis.gov/",
+  "https://www.bis.doc.gov/index.php/policy-guidance/lists-of-parties-of-concern/entity-list",
+  "https://www.bis.gov/regulations/ear"
+ ],
+ "hkma": [
+  "https://www.hkma.gov.hk/eng/key-functions/money/linked-exchange-rate-system/"
+ ],
+ "hkex": [
+  "https://www.hkex.com.hk/",
+  "https://www.hkex.com.hk/?sc_lang=en"
+ ],
+ "ue_russie": [
+  "https://www.consilium.europa.eu/fr/policies/sanctions-against-russia/",
+  "https://finance.ec.europa.eu/eu-and-world/sanctions-restrictive-measures/sanctions-adopted-following-russias-military-aggression-against-ukraine_en"
+ ],
+ "bce_change": [
+  "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/euro_reference_exchange_rates/html/index.fr.html"
+ ],
+ "mce2": [
+  "https://economy-finance.ec.europa.eu/euro/enlargement-euro-area/introducing-euro/adoption-fixed-euro-conversion-rate/erm-ii-eus-exchange-rate-mechanism_en",
+  "https://www.ecb.europa.eu/ecb/tasks/monpol/erm2/html/index.fr.html",
+  "https://www.nationalbanken.dk/en/what-we-do/stable-prices-monetary-policy-and-the-danish-economy/monetary-policy"
+ ],
+ "amf_actions": [
+  "https://www.amf-france.org/sites/institutionnel/files/pdf/59273/fr/Investir_en_actions.pdf"
+ ],
+ "amf_infos": [
+  "https://www.amf-france.org/sites/institutionnel/files/pdf/59207/fr/Bien_s%27informer_sur_les_societes_cotees_en_bourse.pdf"
+ ],
+ "irs_w8": [
+  "https://www.irs.gov/forms-pubs/about-form-w-8-ben"
+ ],
+ "afc_ch": [
+  "https://www.estv.admin.ch/estv/fr/accueil/impot-anticipe.html",
+  "https://www.estv.admin.ch/estv/fr/home/verrechnungssteuer.html",
+  "https://www.estv.admin.ch/fr/impot-anticipe",
+  "https://www.estv.admin.ch/estv/fr/accueil/impot-anticipe/remboursement-impot-anticipe-etranger.html"
+ ],
+ "uk_stamp": [
+  "https://www.gov.uk/tax-buy-shares"
+ ],
+ "ttf": [
+  "https://bofip.impots.gouv.fr/bofip/9136-PGP.html",
+  "https://www.impots.gouv.fr/professionnel/questions/quest-ce-que-la-taxe-sur-les-transactions-financieres",
+  "https://www.economie.gouv.fr/particuliers/taxe-transactions-financieres",
+  "https://bofip.impots.gouv.fr/bofip/9137-PGP.html",
+  "https://www.legifrance.gouv.fr/codes/article_lc/LEGIARTI000051213075"
+ ],
+ "pea": [
+  "https://www.service-public.gouv.fr/particuliers/vosdroits/F2385"
+ ],
+ "eu_ets": [
+  "https://climate.ec.europa.eu/eu-action/eu-emissions-trading-system-eu-ets_en"
+ ],
+ "cbam": [
+  "https://taxation-customs.ec.europa.eu/carbon-border-adjustment-mechanism_en"
+ ],
+ "co2_auto": [
+  "https://climate.ec.europa.eu/eu-action/transport/road-transport-reducing-co2-emissions-vehicles/co2-emission-performance-standards-cars-and-vans_en",
+  "https://climate.ec.europa.eu/eu-action/transport-decarbonisation/road-transport/reducing-co2-emissions-vehicles/co2-emission-performance-standards-cars-and-vans_en"
+ ],
+ "bm_mp": [
+  "https://www.worldbank.org/en/research/commodity-markets"
+ ],
+ "bce_ssm": [
+  "https://www.bankingsupervision.europa.eu/home/html/index.fr.html"
+ ],
+ "bri_bale": [
+  "https://www.bis.org/bcbs/basel3.htm"
+ ],
+ "eiopa": [
+  "https://www.eiopa.europa.eu/browse/regulation-and-policy/solvency-ii_en",
+  "https://www.eiopa.europa.eu/"
+ ],
+ "inpi": [
+  "https://www.inpi.fr/proteger-vos-creations/le-brevet",
+  "https://www.inpi.fr/comprendre-la-propriete-intellectuelle/le-brevet",
+  "https://www.inpi.fr/"
+ ],
+ "ema": [
+  "https://www.ema.europa.eu/en/human-regulatory-overview/marketing-authorisation",
+  "https://www.ema.europa.eu/fr"
+ ],
+ "cms": [
+  "https://www.cms.gov/priorities/medicare-prescription-drug-affordability/overview/medicare-drug-price-negotiation-program",
+  "https://www.cms.gov/inflation-reduction-act-and-medicare/medicare-drug-price-negotiation"
+ ],
+ "bce_taux": [
+  "https://www.ecb.europa.eu/stats/policy_and_exchange_rates/key_ecb_interest_rates/html/index.fr.html"
+ ],
+ "reit": [
+  "https://www.investor.gov/introduction-investing/investing-basics/investment-products/real-estate-investment-trusts-reits"
+ ],
+ "cre": [
+  "https://www.cre.fr/"
+ ],
+ "arcep": [
+  "https://www.arcep.fr/"
+ ],
+ "iata": [
+  "https://www.iata.org/en/publications/economics/"
+ ],
+ "armes": [
+  "https://eur-lex.europa.eu/legal-content/FR/TXT/?uri=CELEX:32008E0944"
+ ],
+ "ocde_ep": [
+  "https://www.oecd.org/en/topics/state-owned-enterprises.html",
+  "https://www.oecd.org/fr/topics/state-owned-enterprises.html",
+  "https://www.oecd.org/corporate/soes/"
+ ],
+ "sec_fpi": [
+  "https://www.sec.gov/divisions/corpfin/internatl/foreign-private-issuers-overview.shtml",
+  "https://www.sec.gov/resources-small-businesses/going-public/foreign-private-issuers",
+  "https://www.sec.gov/rules-regulations/staff-guidance/foreign-private-issuers"
+ ]
+}

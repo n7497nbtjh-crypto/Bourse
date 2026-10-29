@@ -102,6 +102,18 @@ for (const [id, q] of Object.entries(ITEM)) {
   if (f.etat) o.etat = true;
   out[id] = o;
 }
+// 4. Devises : taux de référence mensuels de la BCE sur 10 ans (unités de devise pour 1 euro)
+const devises = {};
+try {
+  const L = "USD+GBP+CHF+SEK+NOK+DKK+JPY+CAD+AUD+PLN+HKD+CNY+KRW+INR+BRL+MXN+ILS+SGD+ZAR+TRY+HUF+CZK+IDR+NZD";
+  const y0 = new Date().getUTCFullYear() - 10;
+  const r = await fetch(`https://data-api.ecb.europa.eu/service/data/EXR/M.${L}.EUR.SP00.A?startPeriod=${y0}-01&format=csvdata`, { headers: { "User-Agent": UA, Accept: "text/csv" } });
+  const t = await r.text(), lines = t.trim().split(/\r?\n/), h = lines.shift().split(",");
+  const iC = h.indexOf("CURRENCY"), iT = h.indexOf("TIME_PERIOD"), iV = h.indexOf("OBS_VALUE");
+  for (const l of lines) { const x = l.split(","); const cur = x[iC], v = +x[iV]; if (cur && x[iT] && v > 0) (devises[cur] = devises[cur] || []).push([x[iT], Math.round(v * 10000) / 10000]); }
+  Object.values(devises).forEach(a => a.sort((p, q) => p[0].localeCompare(q[0])));
+  console.log("devises BCE", Object.keys(devises).length);
+} catch (e) { console.error("devises BCE : échec", String(e).slice(0, 200)); }
 fs.mkdirSync(path.dirname(OUT), { recursive: true });
-fs.writeFileSync(OUT, JSON.stringify({ updated: new Date().toISOString().slice(0, 10), source: "Wikidata (licence CC0), https://www.wikidata.org", n: Object.keys(out).length, societes: out }));
+fs.writeFileSync(OUT, JSON.stringify({ updated: new Date().toISOString().slice(0, 10), source: "Wikidata (licence CC0), https://www.wikidata.org", sourceDevises: "BCE, taux de référence de l'euro (moyennes mensuelles), https://data.ecb.europa.eu", n: Object.keys(out).length, societes: out, devises }));
 console.log("écrit", OUT, Object.keys(out).length);
