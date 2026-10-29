@@ -296,9 +296,12 @@ const BLOQUES = /(^|\.)(boursorama|yahoo|zonebourse|marketscreener|news\.google|
 const media = dom => { let d = String(dom || "").toLowerCase().replace(/^www\./, ""); while (d) { if (MSET.has(d)) return d; const i = d.indexOf("."); if (i < 0) break; d = d.slice(i + 1); if (!d.includes(".")) break; } return null; };
 const LANG = { fra: "fr", eng: "en", deu: "de", spa: "es", ita: "it", nld: "nl", swe: "sv", dan: "da", nor: "no", nob: "no", fin: "fi", por: "pt", jpn: "ja", kor: "ko", zho: "zh" };
 const PRESSE = []; let presseVus = new Set();
+// Entités HTML des titres de presse (&#xE9;, &#233;, &amp;, &nbsp;…) : décodées, sinon elles s'affichent telles quelles
+export const decodeEntites = s => String(s).replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(+d))
+  .replace(/&(amp|quot|apos|lt|gt|nbsp);/g, (m, k) => ({ amp: "&", quot: '"', apos: "'", lt: "<", gt: ">", nbsp: " " }[k])).replace(/\u00a0/g, " ");
 function ajoutePresse({ d, t, u, site, l, src, sur = true }) {
   if (!t || !u || !d || NOW - Date.parse(d) > HISTO_P) return;
-  const titre = String(t).replace(/\s+[|–—-]\s+[^|–—-]{2,40}$/, "").replace(/\s+/g, " ").trim();
+  const titre = decodeEntites(t).replace(/\s+[|–—-]\s+[^|–—-]{2,40}$/, "").replace(/\s+/g, " ").trim();
   if (titre.length < 25 || titre.length > 260) return;
   const ids = inTitle(PI, titre); if (!ids.length) return;
   const nk = fold(titre).replace(/[^a-z0-9]/g, "").slice(0, 70); if (presseVus.has(nk) || presseVus.has(u)) return;

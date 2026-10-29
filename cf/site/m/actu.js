@@ -50,10 +50,13 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 </style>`);
 
 /* ---------- Chargement (avec délai maximal : jamais de « Chargement… » sans fin) ---------- */
+// Titres de presse collectés avec des entités HTML (&#xE9;…) : décodés une fois, au chargement (le collecteur data/actu.mjs les décode désormais lui-même)
+const actuDec = s => typeof s !== "string" || s.indexOf("&") < 0 ? s : s.replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(+d)).replace(/&(amp|quot|apos|nbsp);/g, (m, k) => ({ amp: "&", quot: '"', apos: "'", nbsp: " " }[k]));
+function actuDecodeTitres(j) { if (j && Array.isArray(j.p)) j.p.forEach(a => { if (a) a.t = actuDec(a.t); }); return j; }
 function actuGet(u, ms = 8000) {
   if (ACTU_MEM[u]) return ACTU_MEM[u];
   const ctl = typeof AbortController !== "undefined" ? new AbortController() : null, t = setTimeout(() => ctl && ctl.abort(), ms);
-  const p = fetch(u, ctl ? { signal: ctl.signal } : {}).then(r => r.ok ? r.json() : null).catch(() => null).finally(() => clearTimeout(t));
+  const p = fetch(u, ctl ? { signal: ctl.signal } : {}).then(r => r.ok ? r.json() : null).then(actuDecodeTitres).catch(() => null).finally(() => clearTimeout(t));
   ACTU_MEM[u] = p; p.then(j => { if (!j) delete ACTU_MEM[u]; });
   return p;
 }
