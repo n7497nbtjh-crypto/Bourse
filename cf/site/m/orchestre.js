@@ -139,3 +139,91 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 @media (max-width:980px){.orctrust{grid-template-columns:repeat(2,1fr)}}
 @media (max-width:520px){.orctrust{gap:8px}.orctrust a{padding:10px;align-items:center}.orctrust small{display:none}.orctrust b{margin:0;font-size:13px}}
 </style>`);
+
+/* ---------- L'IA sur toutes les pages : bouton et panneau contextuel ----------
+   Sur une fiche, l'IA répond sur l'entreprise (règles locales instantanées, puis serveur) ;
+   ailleurs, c'est le copilote « Demander à bilan. » (critères, comparaisons, notions, leçons). */
+const ORC_IA = { open: false };
+function orcIaCtx() {
+  const p = location.pathname, m = p.match(/^\/entreprise\/([a-z0-9-]+)/), e = p.match(/^\/etf\/([a-z0-9-]+)/), i = p.match(/^\/indice\/([a-z0-9]+)/);
+  if (m && RBY[m[1]] && !RBY[m[1]].missing) return { type: "co", s: RBY[m[1]], label: RBY[m[1]].name, qs: ASK.slice(0, 4) };
+  if (e && ETFBY[e[1]]) { const x = ETFBY[e[1]]; return { type: "etf", label: x.name, qs: [`${x.name} est-il éligible au PEA ?`, "C'est quoi un ETF capitalisant ?", "Comment choisir un ETF ?", "ETF monde PEA pas cher"] }; }
+  if (i) { const I = INDEX_INFO.find(x => x[0] === i[1]); if (I) return { type: "gen", label: I[1], qs: [`C'est quoi le ${I[1]} ?`, `Comment investir dans le ${I[1]} ?`, "Pourquoi diversifier ?"] }; }
+  if (/^\/portefeuille/.test(p)) return { type: "gen", label: "Votre portefeuille", qs: ["Combien de lignes dans un portefeuille ?", "Les frais de courtage c'est combien ?", "PEA ou compte-titres ?", "Que faire quand ça baisse ?"] };
+  if (/^\/academie/.test(p)) return { type: "gen", label: "L'Académie", qs: ["C'est quoi le PER ?", "Comment fonctionne le PEA ?", "C'est quoi un ETF ?", "Pourquoi les intérêts composés comptent ?"] };
+  return { type: "gen", label: null, qs: ["Entreprises françaises peu endettées qui versent un dividende", "Compare LVMH et Hermès", "ETF monde éligible PEA", "C'est quoi le PER ?"] };
+}
+function orcIaShell() {
+  if ($("#orcia")) return;
+  document.body.insertAdjacentHTML("beforeend", `<button type="button" id="orciab" class="orciab" aria-haspopup="dialog" aria-controls="orcia"><span class="st">✦</span><span class="lb">Demander à l'IA</span></button>
+    <div id="orcia" class="orcia" role="dialog" aria-modal="true" aria-labelledby="orciat" hidden><div class="orciabg" data-orcclose></div>
+      <div class="orciap"><div class="orciah"><div><p class="kick" id="orciactx"></p><h2 id="orciat">✦ L'IA de bilan.</h2></div><button type="button" class="orciax" data-orcclose aria-label="Fermer">×</button></div>
+        <div class="orciab2"><div class="chips" id="orciaq"></div><div id="orcialog" class="orcialog"></div></div>
+        <form id="orciaf" class="orciaf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question…" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
+        <p class="orciaft">Chiffres calculés sur les comptes officiels et les données du site, avec leur source. Information, pas conseil.</p></div></div>`);
+  $("#orciab").onclick = () => orcIaOpen();
+  $("#orcia").addEventListener("click", e => { if (e.target.closest("[data-orcclose]")) orcIaClose(); const q = e.target.closest("[data-orcq]"); if (q) orcIaAsk(q.dataset.orcq); if (e.target.closest("#orcialog a[href^='/']")) setTimeout(orcIaClose, 0); });
+  $("#orciaf").onsubmit = e => { e.preventDefault(); const i = $("#orciaf input"); orcIaAsk(i.value); i.value = ""; };
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && ORC_IA.open) orcIaClose(); });
+  addEventListener("popstate", () => { if (ORC_IA.open) orcIaClose(); });
+}
+function orcIaOpen() {
+  const c = orcIaCtx(); ORC_IA.ctx = c;
+  $("#orciactx").textContent = c.label ? (c.type === "co" ? "Question sur " : "À propos de : ") + c.label : "Copilote · 2 000 entreprises et des ETF";
+  $("#orciaq").innerHTML = c.qs.map(q => `<button type="button" class="chip" data-orcq="${esc(q)}">${esc(q)}</button>`).join("");
+  $("#orcia").hidden = false; ORC_IA.open = true; document.documentElement.classList.add("orcia-on");
+  setTimeout(() => $("#orciaf input").focus(), 50);
+}
+function orcIaClose() { const d = $("#orcia"); if (d) d.hidden = true; ORC_IA.open = false; document.documentElement.classList.remove("orcia-on"); const b = $("#orciab"); if (b) b.focus({ preventScroll: true }); }
+async function orcIaAsk(q) {
+  q = String(q || "").trim(); if (q.length < 3) return;
+  const log = $("#orcialog"), c = ORC_IA.ctx || orcIaCtx();
+  const it = document.createElement("div"); it.className = "orciait"; it.innerHTML = `<p class="askq">${esc(q)}</p><div class="aska"></div>`; log.prepend(it);
+  const out = $(".aska", it);
+  if (c.type === "co") {
+    out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA lit la fiche…</div>`;
+    const s = c.s; let full = FULL[s.id];
+    if (!full) { try { full = FULL[s.id] = await (await fetch(`/data/societes/${s.id}.json`)).json(); } catch (e) { full = null; } }
+    await loadAna();
+    const loc = localAssist(s, full, q);
+    if (loc) { out.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, calculée à partir des chiffres de la fiche.</p>`; return; }
+    try { const j = await (await iaFetch("/api/assistant", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ question: q, faits: ficheFaits(s, full) }) })).json();
+      out.innerHTML = j.txt ? resumeHTML(j.txt) + `<p class="iafoot">Rédigé par l'IA à partir des seules données de la fiche. À vérifier ; ce n'est pas un conseil.</p>` : iaErr(j, "Réponse indisponible.");
+    } catch (e) { out.innerHTML = `<p class="muted">L'IA est indisponible pour le moment.</p>`; }
+    return;
+  }
+  const before = location.pathname + location.search;
+  await iaRun(q, out);
+  if (location.pathname + location.search !== before) orcIaClose(); // l'IA a ouvert une fiche ou une comparaison
+}
+function orcIaVisibilite() {
+  const b = $("#orciab"); if (!b) return;
+  const p = location.pathname, cache = p === "/demander" || (p === "/" && scrollY < 520);
+  b.classList.toggle("off", cache);
+}
+(() => {
+  const start = () => { orcIaShell(); orcIaVisibilite(); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
+  addEventListener("scroll", orcIaVisibilite, { passive: true });
+  addEventListener("popstate", () => setTimeout(orcIaVisibilite, 0));
+  document.addEventListener("click", e => { if (e.target.closest("a[href^='/']")) setTimeout(orcIaVisibilite, 50); });
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.orciab{position:fixed;right:20px;bottom:20px;z-index:60;display:flex;align-items:center;gap:8px;height:46px;padding:0 18px 0 14px;border-radius:999px;border:0;background:var(--ink);color:#fff;font:600 14px inherit;cursor:pointer;box-shadow:0 8px 24px -8px rgba(17,18,20,.45);transition:transform .2s,opacity .2s}
+.orciab .st{color:#D6F26B;font-size:17px}.orciab:hover{transform:translateY(-2px)}.orciab.off{opacity:0;pointer-events:none;transform:translateY(12px)}
+.orcia{position:fixed;inset:0;z-index:80}.orcia[hidden]{display:none}
+.orciabg{position:absolute;inset:0;background:rgba(17,18,20,.35)}
+.orciap{position:absolute;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--page);display:flex;flex-direction:column;box-shadow:-12px 0 40px -12px rgba(0,0,0,.3);animation:orcin .22s ease-out}
+@keyframes orcin{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
+.orciah{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 18px 10px;border-bottom:1px solid var(--line)}.orciah h2{font:600 20px var(--serif);margin:2px 0 0}
+.orciax{border:0;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--grey);padding:0 4px}
+.orciab2{flex:1;overflow:auto;padding:14px 18px}.orciab2 .chips{margin-bottom:12px}
+.orcialog{display:flex;flex-direction:column;gap:14px}.orciait{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px}
+.orciait .askq{font-weight:600;margin:0 0 6px}.orciait .iares2 h2.iah{font-size:17px}.orciait table{font-size:12.5px}
+.orciaf{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);background:var(--card)}.orciaf input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit}
+.orciaft{margin:0;padding:0 18px 14px;background:var(--card);font-size:11.5px;color:var(--light)}
+html.orcia-on{overflow:hidden}
+@media (max-width:760px){.orciab{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));height:44px;padding:0 14px 0 12px}.orciab .lb{font-size:13px}
+  .orciap{top:auto;height:88vh;width:100%;border-radius:18px 18px 0 0;animation:orcup .22s ease-out}@keyframes orcup{from{transform:translateY(40px)}to{transform:none}}}
+@media print{.orciab,.orcia{display:none!important}}
+</style>`);
+})();
