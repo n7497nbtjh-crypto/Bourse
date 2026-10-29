@@ -329,10 +329,6 @@ function parseCours(txt) {
   }
   return out;
 }
-function etatPublic(env) {
-  let s = servicesIA(env);
-  return new Response(JSON.stringify({ serveur: s.length > 0, services: s }), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
-}
 
 // cf/src/cours.mjs
 async function cours(request, ctx, env) {
@@ -357,7 +353,7 @@ async function cours(request, ctx, env) {
         for (let [k, v] of Object.entries(j.items || {})) {
           let it = items[k];
           if (!it) {
-            items[k] = v;
+            items[k] = j.updated ? { ...v, d: j.updated } : v;
             continue;
           }
           for (let h of HF) it[h] == null && v[h] != null && (it[h] = v[h]);
@@ -2454,7 +2450,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "922a14babc4fd650", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
+var VERSION = "5e4bbba857cd4444", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
 function tete(html, { title, desc, url, statut }) {
   let canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/"), t = [
     `<meta name="bilan-version" content="${VERSION}">`,
