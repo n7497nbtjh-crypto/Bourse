@@ -141,6 +141,16 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
 [s] = await E("POST", "/api/espace/secours", { email: "a@ex.fr", code: codeA, nouveau: "encore-un-autre-mdp" }); ok(s === 401, "ancien code inutilisable");
 [s] = await E("POST", "/api/espace/connexion", { email: "a@ex.fr", motdepasse: "nouveau-mdp-tres-sur" }); ok(s === 200, "connexion avec le nouveau mot de passe");
 
+// Portefeuille au format 3 (opérations datées) : accepté tel quel, et compacté sous la limite de 60 Ko quand l'historique est long
+{ const { readFileSync } = await import("node:fs"), vm = await import("node:vm"), cx = { module: { exports: null }, TextEncoder };
+  vm.createContext(cx); vm.runInContext(readFileSync("cf/site/m/portefeuille.js", "utf8"), cx); const PF3 = cx.module.exports;
+  const v3 = PF3.migrate({ v: 3, maj: 1, l: [{ k: "c:totalenergies", env: "pea", br: "boursobank", cur: "EUR", o: [["2026-01-02", "a", 10, 55, 1.99], ["2026-03-02", "v", 2, 60, 1.99]] }, { k: "e:cw8", q: 3, pru: 540 }] });
+  [s] = await E("PUT", "/api/espace/donnees", { portefeuille: v3 }, A); ok(s === 200, "portefeuille v3 accepté " + s);
+  [s, j] = await E("GET", "/api/espace/moi", null, A); ok(j.donnees.portefeuille.v === 3 && j.donnees.portefeuille.l[0].o.length === 2 && j.donnees.portefeuille.l[0].q === 8, "portefeuille v3 relu à l'identique");
+  const big = { v: 3, l: [] }; for (let i = 0; i < 8; i++) { const o = []; for (let n = 0; n < 300; n++) o.push([`20${10 + Math.floor(n / 12)}-${String(1 + n % 12).padStart(2, "0")}-02`, "a", 1.5, 50 + n / 7, 1]); big.l.push(PF3.syncLine({ k: "e:cw8", env: ["pea", "cto"][i % 2], br: "b" + i, o })); }
+  [s] = await E("PUT", "/api/espace/donnees", { portefeuille: big }, A); ok(s === 400, "historique trop long refusé sans compactage " + s);
+  [s] = await E("PUT", "/api/espace/donnees", { portefeuille: PF3.compact(big) }, A); ok(s === 200, "historique compacté accepté " + s); }
+
 // Changement de mot de passe, déconnexion
 [s] = await E("POST", "/api/espace/motdepasse", { ancien: "faux-mot-de-passe", nouveau: "troisieme-mdp-sur" }, A); ok(s === 401, "ancien mot de passe faux");
 [s] = await E("POST", "/api/espace/motdepasse", { ancien: "nouveau-mdp-tres-sur", nouveau: "troisieme-mdp-sur" }, A); ok(s === 200, "mot de passe changé");

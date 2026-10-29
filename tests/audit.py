@@ -93,9 +93,13 @@ with sync_playwright() as pw:
         # Portefeuille : ajout d'une opération
         # Portefeuille : ajout d'une action et d'un ETF, radiographie
         pg.goto("http://t.local/portefeuille"); pg.wait_for_timeout(400)
-        pg.fill("#pfq", "LVMH"); pg.wait_for_timeout(150); pg.click("#pfs button"); pg.wait_for_timeout(200)
-        pg.fill("#pfq", "MSCI World"); pg.wait_for_timeout(150); pg.click("#pfs button"); pg.wait_for_timeout(600)
-        if "coup d" not in pg.inner_text("#pfrx").lower(): probs["/portefeuille (radiographie)"] = ["la radiographie ne s'affiche pas"]
+        for q, n, pru in (("LVMH", "5", "600"), ("MSCI World", "12", "85,40")):
+            pg.fill("#pfq", q); pg.wait_for_timeout(150); pg.click("#pfs [role=option]"); pg.wait_for_timeout(200)
+            pg.fill("#pf3nq", n); pg.fill("#pf3npru", pru); pg.click("#pf3nok"); pg.wait_for_timeout(500)
+        pg.wait_for_timeout(500)
+        if "valeur totale" not in pg.inner_text("#pf3hero").lower() or "diversification" not in pg.inner_text("#pf3dash").lower(): probs["/portefeuille (tableau de bord)"] = ["le tableau de bord ne s'affiche pas"]
+        pg.locator(".pf3rb").first.click(); pg.wait_for_timeout(300)
+        if not pg.locator(".pf3det:not([hidden])").count(): probs["/portefeuille (détail)"] = ["le détail d'une ligne ne s'ouvre pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["/portefeuille rempli"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
