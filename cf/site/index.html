@@ -1048,6 +1048,7 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
   .frmcols{grid-template-columns:1fr}.frmgrp{border-right:0;border-bottom:1px solid var(--line2)}.frmwh h2{font-size:22px}}
 @media (max-width:420px){.frmstats span{min-width:0;flex:1 1 28%}.frmnav .more{order:3;flex-basis:100%}}
 .results a.srow{display:flex!important;align-items:center;justify-content:flex-start!important;text-align:left!important;gap:10px;flex-direction:row!important}.results a.srow .st{display:flex;flex-direction:column;align-items:flex-start;min-width:0;flex:1}.results a.srow .st>span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.results a.srow .lg{flex:none}
+.homecomm{margin-top:16px}
 </style>
 </head>
 <body>
@@ -3869,7 +3870,7 @@ async function pageHome() {
       <a href="/commencer"><b>1. Trouver son profil</b><span>Sept étapes dans l'ordre et cinq questions pour savoir quel type d'investisseur vous êtes.</span></a>
       <a href="/academie"><b>2. Suivre les cours</b><span>L'Académie : l'argent, la Bourse, les placements, les frais et les pièges, avec des quiz.</span></a>
       <a href="/entreprise/lvmh"><b>3. Lire une vraie fiche</b><span>Exemple avec LVMH : ses chiffres comparés à la médiane de son secteur.</span></a>
-      <a href="/pea-cto"><b>4. Choisir son compte</b><span>PEA, compte-titres ou assurance-vie : ce qui reste après impôts.</span></a></div>`)}
+      <a href="/pea-cto"><b>4. Choisir son compte</b><span>PEA, compte-titres ou assurance-vie : ce qui reste après impôts.</span></a></div>${typeof commComparaisonHTML === "function" ? `<section class="panel homecomm"><div class="ph"><h2>Livret A, inflation ou actions : ce que deviennent vos versements</h2><a href="/livret-a-ou-bourse">Le comparateur complet</a></div><div class="pb">${commComparaisonHTML({ compact: true })}</div></section>` : ""}${typeof commIdeesHTML === "function" ? `<div class="homecomm"><div class="bandsub" style="display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px"><h3 style="margin:0;font:600 18px var(--serif)">Trois idées reçues, démontées</h3><a class="lnk" href="/idees-recues">Les 12 idées reçues</a></div>${commIdeesHTML(3)}</div>` : ""}`)}
     ${band(4, "Explorer", "Les entreprises et les ETF", ["/entreprises", "Toutes les entreprises"], `
       <section class="panel"><div class="ph"><h2>Classements des entreprises</h2><div class="chips" id="rreg">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === rankState.region ? "on" : ""}">${l}</button>`).join("")}</div></div>
         <div class="filters" id="rk">${RANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === rankState.k ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="rkb">${rankHTML()}</div></section>
