@@ -1,0 +1,5 @@
+# Fichiers servis sans passer par le worker (données, modules, icônes) : pas de reniflage de type, HTTPS imposé.
+/*
+  X-Content-Type-Options: nosniff
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Referrer-Policy: strict-origin-when-cross-origin

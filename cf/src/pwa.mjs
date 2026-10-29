@@ -5,6 +5,32 @@
 export const VERSION = typeof BILAN_VERSION === "string" ? BILAN_VERSION : "dev"; // empreinte des fichiers du site, fixée par build.mjs
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"]; // lues au démarrage de chaque page (segments-fr.json, facultatif, n'est pas préchargé)
+/* En-têtes de sécurité des pages HTML (audit P0-4, 29/10/2026). Les scripts de la page sont en ligne (index.html) et les
+   modules ajoutent leurs styles : 'unsafe-inline' reste nécessaire pour script et style. Ce que la règle garantit malgré tout :
+   aucun script ni cadre d'un autre domaine que le site et TradingView (graphique des fiches), aucune connexion sortante
+   depuis la page vers un autre domaine, pas d'inclusion du site dans un cadre tiers. */
+export const SECURITE = {
+  "content-security-policy": [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: https:",
+    "connect-src 'self'",
+    "frame-src https://*.tradingview.com https://*.tradingview-widget.com",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self' https://buy.stripe.com https://billing.stripe.com",
+    "frame-ancestors 'self'",
+    "object-src 'none'",
+  ].join("; "),
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "SAMEORIGIN",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+};
 export function tete(html, { title, desc, url, statut }) {
   const canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/");
   const t = [

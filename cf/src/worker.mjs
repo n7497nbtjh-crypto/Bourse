@@ -15,7 +15,7 @@ import { espace } from "./espace.mjs";
 import { signaler } from "./signaler.mjs";
 import { push, pousser } from "./push.mjs";
 import { mcp } from "./mcp.mjs";
-import { tete, VERSION } from "./pwa.mjs";
+import { tete, VERSION, SECURITE } from "./pwa.mjs";
 import { etfMeta } from "./etf_meta.mjs";
 import { iaSite } from "./iasite.mjs";
 
@@ -140,7 +140,7 @@ export default {
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `\n<script type="application/ld+json">${t.ld}</script>` : ""}`);
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 });
-    return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION } });
+    return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION, ...SECURITE } });
   },
 };
 

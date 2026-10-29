@@ -4344,8 +4344,9 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 })();
 
 /* ---------- Démarrage ---------- */
-const getJSON = (u, fallback) => fetch(u).then(r => r.ok ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), getJSON("/data/segments-fr.json", {}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {})]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc]) => {
+// Un fichier absent sous /data/ renvoyait la page d'accueil entière (516 ko) avec un code 200 : on refuse tout ce qui n'est pas du JSON (audit P0-3).
+const getJSON = (u, fallback) => fetch(u).then(r => r.ok && /json/i.test(r.headers.get("content-type") || "") ? r.json() : fallback).catch(() => fallback);
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {})]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc]) => {
   REP = rep || {}; CONC = conc || {};
   ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = segfr || {};
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
