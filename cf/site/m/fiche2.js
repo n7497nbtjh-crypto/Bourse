@@ -185,13 +185,26 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 .fk-l:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:4px}
 .rf-keys .fk{padding:16px 20px 16px;display:flex;flex-direction:column}
 .rf-keys .fk .kick{font-size:12px;letter-spacing:.06em;align-items:center;min-height:22px}
-.rf-keys .fk .vd{padding:2px 8px;border-radius:99px;font-size:11.5px}
+.rf-keys .fk .vd{padding:2px 8px;border-radius:99px;font-size:11.5px;white-space:nowrap}
 .rf-keys .fk.fk-fort .vd{background:#DDEFE3}.rf-keys .fk.fk-vig .vd{background:#FBE3D9}.rf-keys .fk.fk-moyen .vd{background:#EEEBE4}
-.rf-keys .fk b{font-size:32px;line-height:1.1;margin:10px 0 8px;color:var(--ink)}
+.rf-keys .fk b{font-size:32px;line-height:1.1;margin:10px 0 10px;color:var(--ink)}
 .rf-keys .fk .fk-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;margin:0 0 8px;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);font-size:12.5px;color:var(--grey)}
 .rf-keys .fk .fk-r b{font-size:14px;margin:0;line-height:1.3;color:var(--ink)}
 .rf-keys .fk .fk-r b.up{color:var(--g)}.rf-keys .fk .fk-r b.dn{color:var(--o)}
 .rf-keys .fk p{font-size:13px;line-height:1.45;color:var(--grey)}
+.rf-keys .fk .fk-g{position:relative;display:block;height:6px;border-radius:9px;background:linear-gradient(90deg,var(--o),#E3D9A6 50%,var(--g));margin:4px 0 10px}
+.rf-keys .fk .fk-g.fk-gn{background:linear-gradient(90deg,#E6E1D6,#B8B2A6)}
+.rf-keys .fk .fk-g em{position:absolute;left:50%;top:-3px;width:2px;height:12px;background:var(--ink);opacity:.45;transform:translateX(-50%)}
+.rf-keys .fk .fk-g i{position:absolute;top:-4px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--ink);transform:translateX(-50%)}
+.rf-keys .fk .fk-rr{display:flex;flex-direction:column;gap:3px;margin:0}
+.rf-keys .fk .fk-rr > span{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12.5px;color:var(--grey)}
+.rf-keys .fk .fk-rr b{font-size:13.5px;margin:0;line-height:1.3;color:var(--ink);font-family:var(--mono)}.rf-keys .fk .fk-rr b.up{color:var(--g)}.rf-keys .fk .fk-rr b.dn{color:var(--o)}
+.rf-keys .fk .fk-pos{display:block;margin-top:8px;font-size:12px;color:var(--light)}
+#rf-trim{padding:0 22px 16px}.rf-trimi{border:1px solid var(--line2);border-left:3px solid var(--lime);border-radius:10px;padding:12px 16px;background:#FDFCF7}
+.rf-trimh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}.rf-trimh b{font-size:15px}.rf-trimh .light{font-size:12.5px}
+.rf-trimc{display:flex;flex-wrap:wrap;gap:8px 24px;margin:10px 0 4px}.rf-trimc div{display:flex;flex-direction:column}.rf-trimc span{font-size:12px;color:var(--grey)}.rf-trimc b{font-family:var(--mono);font-size:18px}
+.rf-triml{font-size:13.5px;color:var(--grey);margin:8px 0 0;line-height:1.5}.rf-trimf{font-size:13px;margin:8px 0 0}
+@media (max-width:760px){#rf-trim{padding:0 16px 14px}}
 .rf-fct{width:100%;border-collapse:collapse;font-size:13px}
 .rf-fct th,.rf-fct td{padding:7px 6px;border-top:1px solid var(--line2);text-align:right;white-space:nowrap}
 .rf-fct thead th{border-top:0;font-size:11.5px;font-weight:600;color:var(--grey);padding-top:2px}
@@ -271,6 +284,7 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
   .rf-sum{padding:14px 16px}
   .rf-mid #tvchart.f2-tv{height:230px;min-height:230px}
   .rf-keys.fkeys{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .rf-keys .fk .kick{justify-content:flex-start;flex-wrap:wrap;gap:4px 8px}.rf-keys .fk .fk-mx{display:none}.rf-keys .fk .kick .prov-i{width:20px;height:20px;font-size:11px}
   .rf-keys .fk{padding:11px 14px 12px}
   .rf-keys .fk b{font-size:24px;margin:6px 0}
   .rf-keys .fk .fk-r{font-size:11.5px;flex-direction:column;gap:0}
@@ -506,16 +520,33 @@ function etapesListe(s, c) {
 /* Étape 1 : les indicateurs principaux (une tuile chacun, reliée à son thème détaillé), puis l'analyse sur plusieurs années */
 const RF_TUILE_PROV = { Ventes: () => "ca", Marge: () => "marge", "Bénéfice": () => "net", Dette: k => k === "aucune" ? "netDebt" : "lev", Dividende: k => /%/.test(k) ? "payout" : "divPaid", Prix: () => "per" };
 const RF_TUILE_THEME = { Ventes: "croissance", Marge: "rentabilite", "Bénéfice": "rentabilite", Dette: "bilan", Dividende: "dividende", Prix: "valorisation" };
-function rfRepere(s, f, l) { // un repère court par indicateur : évolution sur un an ou médiane du secteur (29 octobre, 17 h 30)
-  const m = ratios(f), md = MED[s.sector] || {}, B = v => big(v, f.currency);
-  const sec = (v, lab) => `<span class="fk-r"><span>Médiane du secteur</span><b>${v}</b></span>`;
-  const evo = v => `<span class="fk-r"><span>Sur un an</span><b class="${v > 0 ? "up" : v < 0 ? "dn" : ""}">${sgn(v)}</b></span>`;
-  if (l === "Ventes" && m.g1 != null) return evo(m.g1);
-  if (l === "Marge" && md.n >= 3 && md.marge != null) return sec(pct(md.marge, 0, false));
-  if (l === "Bénéfice" && m.ng != null && f.net > 0) return evo(m.ng);
-  if (l === "Dette" && f.netDebt != null) return `<span class="fk-r"><span>${f.netDebt < 0 ? "Trésorerie nette" : "Dette nette"}</span><b>${B(Math.abs(f.netDebt))}</b></span>`;
-  if (l === "Prix" && MEDPE[s.sector]) return sec(`${F0.format(MEDPE[s.sector])} fois`);
-  return "";
+/* Jauge d'un indicateur : position de l'entreprise parmi celles de son secteur (rang en pourcentage), la médiane au milieu.
+   Rouge à gauche, vert à droite ; pour la dette et le prix, l'échelle est inversée (moins, c'est mieux). Le dividende n'est ni bon ni mauvais : jauge grise. */
+const RF_JAUGE = { Ventes: ["g1", false], Marge: ["marge", false], "Bénéfice": ["ng", false], Dette: ["lev", true], Dividende: ["payout", null], Prix: ["pe", true] };
+function rfSecteurVals(s, key) {
+  const l = [];
+  (R.companies || []).forEach(c => { if (c.sector !== s.sector || c.missing || (typeof donRetenue === "function" && !donRetenue(c))) return;
+    let v = null; if (key === "pe") { const x = valo(c); v = x && x.pe; } else { if (isBank(c) && (key === "lev" || key === "marge")) return; v = ratios(c)[key]; }
+    if (v != null && isFinite(v)) l.push(v); });
+  return l;
+}
+function rfRepere(s, f, l) { // sous le chiffre : la jauge, puis deux repères courts (sur un an, médiane du secteur)
+  const m = ratios(f), md = MED[s.sector] || {}, B = v => big(v, f.currency), spec = RF_JAUGE[l]; if (!spec) return "";
+  const [key, inv] = spec;
+  let val = key === "pe" ? (valo(s) || {}).pe : key === "lev" && f.netDebt != null && f.netDebt < 0 ? -1 : m[key];
+  if (l === "Dividende" && !(f.divPaid >= 0.5 && f.net > 0)) val = null;
+  const vals = rfSecteurVals(s, key), n = vals.length;
+  let pos = null; if (val != null && isFinite(val) && n >= 5) { const below = vals.filter(x => x < val).length, eq = vals.filter(x => x === val).length; pos = (below + eq / 2) / n; if (inv) pos = 1 - pos; }
+  const medV = key === "pe" ? MEDPE[s.sector] : (md.n >= 3 ? md[key] : null);
+  const fmt = v => key === "pe" ? `${F0.format(v)} fois` : key === "lev" ? `${F1.format(v)} an${v >= 2 ? "s" : ""}` : key === "g1" || key === "ng" ? sgn(v) : pct(v, 0, false);
+  const rep = [];
+  if ((key === "g1" || key === "ng") && val != null) rep.push(`<span>Sur un an<b class="${val > 0 ? "up" : val < 0 ? "dn" : ""}">${sgn(val)}</b></span>`);
+  if (key === "lev" && f.netDebt != null) rep.push(`<span>${f.netDebt < 0 ? "Trésorerie nette" : "Dette nette"}<b>${B(Math.abs(f.netDebt))}</b></span>`);
+  if (medV != null && isFinite(medV)) rep.push(`<span><span>Médiane<span class="fk-mx"> du secteur</span></span><b>${fmt(medV)}</b></span>`);
+  const mots = l === "Prix" ? ["Moins cher que", "Plus cher que"] : l === "Dette" ? ["Moins endetté que", "Plus endetté que"] : ["Mieux placé que", "Moins bien placé que"];
+  const place = pos == null ? "" : inv === null ? `${pos >= 0.5 ? "Plus élevé" : "Plus bas"} que ${F0.format(Math.round((pos >= 0.5 ? pos : 1 - pos) * 100))} % du secteur` : pos >= 0.5 ? `${mots[0]} ${F0.format(Math.round(pos * 100))} % du secteur` : `${mots[1]} ${F0.format(Math.round((1 - pos) * 100))} % du secteur`;
+  return `${pos != null ? `<span class="fk-g${inv === null ? " fk-gn" : ""}" title="${esc(s.name)} parmi les ${n} entreprises du secteur suivies par le site : la médiane est au milieu"><em></em><i style="left:${Math.round(pos * 100)}%"></i></span>` : ""}
+    ${rep.length ? `<span class="fk-rr">${rep.join("")}</span>` : ""}${place ? `<small class="fk-pos">${place}</small>` : ""}`;
 }
 function ficheRetenirHTML(s, c) {
   const f = figuresOf(c), facts = essentielFacts(s, f), items = lecture(s, f);
@@ -523,11 +554,32 @@ function ficheRetenirHTML(s, c) {
   return `<section class="panel" id="retenir"><div class="ph"><h2>Les indicateurs principaux</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
     <div class="fkeys rf-keys n${facts.length}">${facts.map(([l, k, t]) => { const lv = lvOf(l), th = RF_TUILE_THEME[l], pk = RF_TUILE_PROV[l] && RF_TUILE_PROV[l](k);
       // tuile entière cliquable (lien étiré) ; le bouton « i » (provenance du chiffre) reste au-dessus du lien
-      return `<div class="fk fk-l${lv ? " fk-" + lv : ""}"><span class="kick"><span>${l}${pk && typeof provBtn === "function" ? provBtn(pk, "c:" + s.id) : ""}</span>${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><a class="fk-a" href="/entreprise/${s.id}/comptes#rf-${th}"><b>${k}</b>${rfRepere(s, f, l)}<p>${t}</p></a></div>`; }).join("")}</div>
+      return `<div class="fk fk-l${lv ? " fk-" + lv : ""}"><span class="kick"><span>${l}${pk && typeof provBtn === "function" ? provBtn(pk, "c:" + s.id) : ""}</span>${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><a class="fk-a" href="/entreprise/${s.id}/comptes#rf-${th}" title="${esc(String(t).replace(/<[^>]+>/g, ""))}"><b>${k}</b>${rfRepere(s, f, l)}</a></div>`; }).join("")}</div>
     <p class="rf-keysn">Touchez un indicateur pour son évolution sur plusieurs années, dans l'onglet <a class="lnk" href="/entreprise/${s.id}/comptes">Les chiffres en détail</a>.</p>
+    <div id="rf-trim" hidden></div>
     ${ficheAnalyse(s, c)}
     ${ficheConfiance(c)}
     <div class="src">Les couleurs comparent chaque chiffre à des seuils simples et à la médiane de son secteur. Un point de vigilance n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller. Rien ici ne dit s'il faut acheter.</div></section>`;
+}
+
+/* Depuis la clôture : la dernière publication de résultats (trimestre, semestre), avec ses chiffres quand le site les a relevés
+   (rapports 10-Q de la SEC, communiqués lus). Les indicateurs restent ceux de l'exercice clos : un trimestre ne donne ni marge
+   annuelle, ni dette comparable. Le visiteur voit ainsi ce qui a été publié depuis, et ce que le site en a ou non. */
+async function rfDernierTrimestre(s, c) {
+  const box = document.getElementById("rf-trim"); if (!box || typeof actuGet !== "function") return;
+  let j = null; try { j = await actuGet(`/data/actu/c/${s.id}.json`); } catch (e) { }
+  if (!j || !document.body.contains(box)) return;
+  const fin = c && c.years && c.years.length ? `${c.years.at(-1)}-${typeof c.fyEnd === "string" && /^\d{2}-\d{2}$/.test(c.fyEnd) ? c.fyEnd : "12-31"}` : ""; // clôture du dernier exercice (juin pour Microsoft, par exemple)
+  const o = (j.o || []).filter(x => x.c === "resultats" && (!fin || x.d.slice(0, 10) > fin)).sort((a, b) => b.d.localeCompare(a.d))[0];
+  if (!o) return;
+  let A = null; try { if (typeof loadAna === "function") { await loadAna(); A = ANA && o.u && ANA[o.u]; } } catch (e) { }
+  const ch = (A && A.chiffres) || [], lec = (A && A.lecture) || [];
+  const quand = dLabel(o.d.slice(0, 10));
+  box.innerHTML = `<div class="rf-trimi"><div class="rf-trimh"><span class="kick">Depuis la clôture de l'exercice ${esc(c.years.at(-1))}</span><b>${esc(o.tf || o.t)}</b><span class="light">publié le ${quand}</span></div>
+    ${ch.length ? `<div class="rf-trimc">${ch.slice(0, 4).map(([l, v]) => `<div><span>${esc(l)}</span><b>${esc(v)}</b></div>`).join("")}</div>${lec.length ? `<p class="rf-triml">${lec.slice(0, 2).map(esc).join(" ")}</p>` : ""}`
+      : `<p class="rf-triml">Les chiffres de cette publication ne sont pas encore relevés par le site : les indicateurs ci-dessus portent sur le dernier exercice clos, audité et déposé.</p>`}
+    <p class="rf-trimf"><a class="lnk" href="${esc(o.u)}" target="_blank" rel="noopener">Lire la publication</a> · <a class="lnk" href="/entreprise/${s.id}/actualite">Toutes ses annonces</a></p></div>`;
+  box.hidden = false;
 }
 async function pageCompany(id, tab) {
   const s = RBY[id];
@@ -550,6 +602,7 @@ async function pageCompany(id, tab) {
   const ph = $("#pxh"); if (ph) ph.innerHTML = ficheCours(s);
   const sm = $(".fh-sum"); if (sm) sm.outerHTML = ficheSommaire(s, c); // la situation et le prix ont besoin des comptes et du cours
   ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); if (typeof contexteActuHTML === "function") { el.insertAdjacentHTML("afterbegin", contexteActuHTML(s, c)); if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0); } const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
+  if (!tab && c) rfDernierTrimestre(s, c);
   if (tab === "comptes" && location.hash.startsWith("#rf-")) { const t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(() => t.scrollIntoView({ block: "start" }), 30); }
   if (!tab) { fiche2Etapes(); premStatus().then(() => { if (ficheMemeId(id)) assistantPanel(s, c, $("#ctab")); }); }
 }

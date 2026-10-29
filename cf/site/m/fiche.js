@@ -262,14 +262,13 @@ function ficheMetierHTML(s, c) {
   // Chiffres clés
   const peers = R.companies.filter(x => x.sector === s.sector && !x.missing && x.ca > 0).sort((a, b) => caEur(b) - caEur(a)), rank = peers.findIndex(x => x.id === s.id) + 1, v = valo(s);
   const tiles = [
-    f && f.ca != null ? [bank ? `Revenus ${f.year}` : `Ventes ${f.year}`, big(f.ca, cur), bank ? "produit de son activité sur l'année" : "chiffre d'affaires de l'année"] : null,
     wd && wd.effectif ? ["Salariés", F0.format(wd.effectif[0]), wd.effectif[1] ? `chiffre de ${wd.effectif[1]}` : "dernier chiffre connu"] : null,
     wd && wd.fonde ? ["Création", String(wd.fonde), Y - wd.fonde > 1 ? `il y a ${Y - wd.fonde} ans` : "récente"] : null,
     wd && wd.siege ? ["Siège", wd.siege, wd.pays || "", true] : null,
     v && v.capE ? ["Valeur en Bourse", capFmt(v.capE), "au cours actuel"] : null,
     rank && peers.length > 2 ? ["Taille dans son secteur", `${rank}<sup>${rank === 1 ? "re" : "e"}</sup> sur ${peers.length}`, "par les ventes, parmi les entreprises suivies", false, true] : null,
   ].filter(Boolean);
-  if (false) out.push(`<div class="fm"><h3>${esc(s.name)} en chiffres</h3><div class="ftiles n${tiles.length}" style="--n:${tiles.length}">${tiles.map(([k, val, sub, txt, html]) => `<div class="ftile"><p class="kick">${k}</p><b class="${txt ? "txt" : ""}">${html ? val : esc(val)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`).join("")}</div></div>`);
+  if (tiles.length) out.push(`<div class="fm"><h3>${esc(s.name)} en chiffres</h3><div class="ftiles n${tiles.length}" style="--n:${tiles.length}">${tiles.map(([k, val, sub, txt, html]) => `<div class="ftile"><p class="kick">${k}</p><b class="${txt ? "txt" : ""}">${html ? val : esc(val)}</b>${sub ? `<small>${esc(sub)}</small>` : ""}</div>`).join("")}</div></div>`);
   // Comment elle gagne son argent
   let acts = null, zones = null, unite = "pct", srcRep = "", anRep = null;
   if (segs.activites || segs.produits || segs.geo) {
@@ -302,7 +301,7 @@ function ficheMetierHTML(s, c) {
   if (!bank && m.marge != null && med.marge != null && med.n >= 3) rows.push(["Marge d'exploitation", m.marge, med.marge, x => pct(x, 1, false), true]);
   if (bank && m.roe != null && med.roe != null && med.n >= 3) rows.push(["Rentabilité des capitaux propres", m.roe, med.roe, x => pct(x, 1, false), true]);
   if (m.g1 != null && med.g1 != null && med.n >= 3) rows.push(["Croissance des ventes", m.g1, med.g1, x => pct(x), true]);
-  if (false) { // doublon de L'essentiel (indicateurs et « Face à ses concurrents »)
+  if (rows.length) {
     const bar = (val, ref, good) => { const mx = Math.max(Math.abs(val), Math.abs(ref), 1e-9); return `<span class="b"><i style="width:${Math.max(2, Math.abs(val) / mx * 100)}%;background:${good}"></i></span>`; };
     out.push(`<div class="fm"><h3>Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h3><div class="fcmp">${rows.map(([l, val, ref, fm]) => { const better = val >= ref; return `<span>${l}<br><small>${esc(s.name)}</small></span>${bar(val, ref, better ? "var(--g)" : "var(--o)")}<span class="n">${fm(val)}</span><span><small>médiane du secteur</small></span>${bar(ref, val, "var(--n)")}<span class="n">${fm(ref)}</span>`; }).join("")}</div>
       <p class="muted" style="font-size:12.5px;margin:10px 0 0">Médiane des ${med.n} entreprises du secteur suivies par le site : la moitié fait mieux, l'autre moitié moins bien. ${medBtn("Qu'est-ce que la médiane ?")}</p></div>`);
@@ -322,9 +321,7 @@ function ficheMetierHTML(s, c) {
   if (!gen && s.fiche.depend) out.push(`<div class="fm"><h3>Ce qui fait bouger ses résultats</h3><p>${esc(s.fiche.depend)}</p><p style="margin:0">${ctLink(s, "varier", "Le bénéfice année après année")}</p></div>`);
   // Identité
   const pea = peaOk(s), [bx, tk] = String(s.tv || "").split(":"), site = (wd && wd.site) || (s.domain ? "https://www." + s.domain : "");
-  const idl = [["Pays", (s.isin && typeof COUNTRY !== "undefined" && COUNTRY[s.isin.slice(0, 2)]) || regName(s)], wd && wd.siege ? ["Siège", esc(wd.siege)] : null, wd && wd.fonde ? ["Création", `${wd.fonde}${Y - wd.fonde > 1 ? ` <small>(il y a ${Y - wd.fonde} ans)</small>` : ""}`] : null,
-    wd && wd.effectif ? ["Salariés", `${F0.format(wd.effectif[0])}${wd.effectif[1] ? ` <small>(${wd.effectif[1]})</small>` : ""}`] : null, ["Secteur", esc(secName(s))],
-    v && v.capE ? ["Valeur en Bourse", `${esc(capFmt(v.capE))} <small>(au cours actuel)</small>`] : null, ["Code en Bourse", esc(`${tk || s.ticker}${bx ? " · " + ((typeof IA_BOURSES !== "undefined" && IA_BOURSES[bx]) || bx) : ""}`)], s.isin ? ["ISIN", esc(s.isin)] : null,
+  const idl = [["Pays", (s.isin && typeof COUNTRY !== "undefined" && COUNTRY[s.isin.slice(0, 2)]) || regName(s)], ["Secteur", esc(secName(s))], ["Code en Bourse", esc(`${tk || s.ticker}${bx ? " · " + ((typeof IA_BOURSES !== "undefined" && IA_BOURSES[bx]) || bx) : ""}`)], s.isin ? ["ISIN", esc(s.isin)] : null,
     pea != null ? ["Compte possible", pea ? `PEA ou compte-titres <a class="lnk" href="/pea-cto">?</a>` : `Compte-titres <a class="lnk" href="/pea-cto">?</a>`] : null,
     site ? ["Site officiel", `<a class="lnk" href="${esc(site)}" target="_blank" rel="noopener">${esc(site.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "").slice(0, 32))}</a>`] : null,
     wd && wd.wiki ? ["Encyclopédie", `<a class="lnk" href="${esc(ficheWikiUrl(wd.wiki))}" target="_blank" rel="noopener">Wikipédia</a>`] : null].filter(Boolean);
