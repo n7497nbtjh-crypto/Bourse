@@ -4455,6 +4455,7 @@ function acaLecon(m, l) {
     if (ok) { const s2 = acaSt(); if (!s2["q/" + m.id + "/" + qi]) { s2["q/" + m.id + "/" + qi] = 1; acaSave(s2); toast("+5 points"); } } });
 }
 
+const ROUTES_EXTRA = [];
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -4493,8 +4494,10 @@ function route() {
   else if (p === "/formation") { history.replaceState({}, "", "/academie/formation"); pageAcademie("formation"); }
   else if ((m = p.match(/^\/espace(?:\/(bilan|alertes|reglages))?$/))) pageEspace(m[1]);
   else if ((m = p.match(/^\/premium(?:\/(merci))?$/))) pagePremium(m[1]);
+  else if (ROUTES_EXTRA.some(([re, fn]) => { const mm = p.match(re); if (mm) fn(...mm.slice(1)); return !!mm; })) { }
   else pageNotFound();
 }
+// Routes ajoutées par les modules (cf/site/m/*.js) : ROUTES_EXTRA.push([/^\/chemin\/([a-z0-9-]+)$/, id => pageX(id)])
 function go(url) { history.pushState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); closePanels(); }
 document.addEventListener("click", e => {
   const a = e.target.closest("a[href]");
