@@ -164,7 +164,7 @@ function actuSecours(box, s) {
   if (s.region === "FR" && typeof loadAmf === "function") loadAmf("&isin=" + s.isin, 30).then(L => { if (L.length) box.innerHTML = newsHTML(L, { showCo: false, max: 15 }); }).catch(() => { });
   actuGet(`/data/societes/${s.id}.json`).then(c => {
     const src = c && (c.sources || []).slice(-3).reverse();
-    const lignes = (src || []).filter(x => x.report || x.json).map(x => `<li>Comptes annuels de l'exercice clos le ${esc(dLabel(String(x.periodEnd || "").slice(0, 10) || TODAY))} : <a class="lnk" href="${esc(x.report || x.json)}" target="_blank" rel="noopener">document officiel</a></li>`);
+    const lignes = (src || []).filter(x => x.report || x.json).map(x => `<li>Comptes annuels de l'exercice clos le ${esc((d => /^\d{4}-\d{2}-\d{2}$/.test(d) ? dLabel(d) : d || "?")(String(x.periodEnd || "").slice(0, 10)))} : <a class="lnk" href="${esc(x.report || x.json)}" target="_blank" rel="noopener">document officiel</a></li>`);
     if (lignes.length || lien) box.insertAdjacentHTML("beforeend", `<div style="margin-top:6px"><div class="ax-cap" style="font-size:12px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.04em">Dernières publications officielles connues</div><ul style="margin:6px 0 0;padding-left:18px;font-size:13.5px">${lignes.join("")}${lien ? `<li>Communiqués de l'entreprise : <a class="lnk" href="${esc(lien)}" target="_blank" rel="noopener">site officiel</a></li>` : ""}</ul></div>`);
   });
 }
