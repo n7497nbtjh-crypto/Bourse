@@ -74,7 +74,7 @@ jobs:
         run: |
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
-          git add cf/site data/diagnostic.json data/historique
+          git add cf/site data/diagnostic.json data/historique data/cours_ref.json
           git diff --cached --quiet || git commit -m "Données du $(date +%F)"
           for i in 1 2 3; do git pull --rebase -X theirs -q && git push && break; sleep 5; done
       - name: Publication sur Cloudflare Pages

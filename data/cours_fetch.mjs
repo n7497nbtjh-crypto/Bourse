@@ -7,6 +7,18 @@ try {
   const r = await fetch(COURS_CSV); const items = parseCours(await r.text());
   console.log(Object.keys(items).length, "cours lus dans la feuille");
   if (Object.keys(items).length > 50) {
+    // Les colonnes historiques de la feuille (plus haut/bas sur 52 semaines, cours il y a 1, 3 et 5 ans) tombent parfois toutes
+    // en panne (limites de GOOGLEFINANCE). On garde alors la dernière valeur connue, au plus 10 jours, mémorisée dans data/cours_ref.json.
+    const REF = new URL("../data/cours_ref.json", import.meta.url), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
+    let mem = { items: {} }; try { mem = JSON.parse(readFileSync(REF)); } catch (e) { }
+    const frais = Object.values(items).filter(v => v.p1y != null).length;
+    if (frais > Object.keys(items).length * 0.5) { // la feuille répond : on met la mémoire à jour
+      mem = { date: today, items: Object.fromEntries(Object.entries(items).map(([k, v]) => [k, Object.fromEntries(HF.filter(f => v[f] != null).map(f => [f, v[f]]))])) };
+      writeFileSync(REF, JSON.stringify(mem));
+    } else if (mem.date && (Date.parse(today) - Date.parse(mem.date)) / 864e5 <= 10) {
+      let n = 0; for (const [k, v] of Object.entries(items)) { const r = mem.items[k]; if (!r) continue; for (const f of HF) if (v[f] == null && r[f] != null) { v[f] = r[f]; n++; } }
+      console.log(`::warning::Colonnes historiques vides dans la feuille : ${n} valeurs reprises du ${mem.date}`);
+    }
     writeFileSync(new URL("cours.json", OUT), JSON.stringify({ updated: today, source: "Google Finance, cours de clôture ou différés", items }));
     // Historique quotidien (un fichier par mois) pour tracer nos propres courbes au fil du temps
     const dir = new URL("../data/historique/", import.meta.url); if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
