@@ -6,7 +6,11 @@ export const COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8
 //   3. dans la copie, cellule A1, remplacer « gf.csv » par « gf2.csv » (ou gf3.csv…) dans la formule IMPORTDATA, Entrée ;
 //   4. Fichier > Partager > Publier sur le Web > « Feuille entière », format « Valeurs séparées par des virgules (.csv) » > Publier ;
 //   5. ajouter le lien obtenu à la liste ci-dessous, dans l'ordre (ou le donner à Claude).
-export const COURS_CSV_SUITE = [];
+export const COURS_CSV_SUITE = [ // copies de la feuille : gf2.csv, gf3.csv, gf4.csv (publiées le 29/10/2026)
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRss-rBkYNWtXDrNMHcDudDsxMJZ2djLCjTvt-w6bGiXqnPEbdr3sxPtcXpa9tgTDN045owZTzaxNd/pub?output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwYIFEt9Ux_l7uyPut1Hv--GFFmiBgi2tgV2HN4UigVZLfGmykoaKEr-E1ZRsIO09dOpgUgZmzlrld/pub?output=csv",
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vR70B8qndqju4-YPgTIzxFTB7iPMfcUtHoKz9ZWG-ekQ_yXZfTs5ZPmDa4sxIvEaSbAo5jnIhJrSQon/pub?output=csv",
+];
 export const COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
 // Lecture du CSV publié : { "c:lvmh": { s, p, chg, cur, cap, h52, l52, p1y, p3y, p5y }, … }
 export function parseCours(txt) {
