@@ -109,3 +109,12 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   agent « synthese », vos redéclarations restent prises en compte. Onglet « Mon rapport » (`/espace/rapport`), assistant en 3 étapes au premier passage
   (« Plus tard » : `localStorage["bilan.rapport.plustard"]`), aperçu de rapport calculé avec `/data/cours-semaine.json` sur l'accueil des visiteurs.
 - Tests : `node tests/t_espace.mjs`, `node tests/t_synthese.mjs`, `node tests/t_worker.mjs`, `python3 tests/t_parcours.py [--shots dossier]`.
+## Contexte (agent « contexte », module `cf/site/m/contexte.js`, chargé en dernier)
+- Données écrites à la main et sourcées : `data/contexte.mjs` → `cf/site/data/contexte.json` (`node data/contexte.mjs`).
+  `evenements` (grands événements par année civile, sens +/-/0, cible secteurs/mots-clés/pays, sources) et
+  `sujets` (actualité vérifiée : `maj`, `fin` = date de fin de pertinence, faits datés, impacts par cible avec mécanisme au conditionnel).
+  Revérifier les sujets et repousser `fin` à chaque mise à jour ; un sujet expiré n'est plus affiché.
+- Enveloppe (window.f = function…, sans redéclarer) : `etapesListe` (ajoute « Ce qui explique ces chiffres » à l'étape « Ses comptes »
+  et « L'actualité qui la concerne » à « L'essentiel », ou à « Son métier » sans comptes), `analyseForcesFaiblesses` (points `actu_*` et `ctx_evol`
+  dans `contexte`), `ficheFaits` (`actualite_qui_la_concerne`, `evolution_pluriannuelle`, `fiabilite_des_donnees`), `localAssist`, `localCopilot`.
+- Fonctions publiques : `contexteChiffresHTML(s, c)`, `contexteActuHTML(s, c)`, `contexteSujets(s, c)`. Tests : `python3 tests/t_contexte.py [--shots dossier]`.
