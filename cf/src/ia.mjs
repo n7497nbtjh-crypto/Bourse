@@ -20,7 +20,7 @@ const SCHEMA = [
 let ready = false;
 async function init(db) { if (ready) return; for (const q of SCHEMA) await db.prepare(q).run(); ready = true; }
 const json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
-const UA = "bilan (site pedagogique) contact@repere-bourse.pages.dev";
+const UA = "bilan (site pedagogique ; contact via github.com/n7497nbtjh-crypto)"; // pas d'adresse personnelle dans le code
 
 export function htmlText(html) {
   return String(html).replace(/<(script|style)[\s\S]*?<\/\1>/gi, " ").replace(/<br\s*\/?>|<\/(p|div|tr|li|h\d)>/gi, "\n").replace(/<[^>]+>/g, " ")
