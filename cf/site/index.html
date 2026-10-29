@@ -3851,6 +3851,7 @@ function pageDemander() {
 
 /* ---------- Accueil en bandeaux ---------- */
 const band = (n, kick, title, link, body) => `<section class="band"><div class="bandh"><span class="bandn">${n}</span><div><p class="kick">${kick}</p><h2>${title}</h2></div>${link ? `<a class="more" href="${link[0]}">${link[1]} →</a>` : ""}</div>${body}</section>`;
+function orcConfiance() { return ""; } // remplacée par cf/site/m/orchestre.js
 async function pageHome() {
   setTitle(""); setNav("home");
   await Promise.all([PXP, loadAna()]);
@@ -3860,7 +3861,7 @@ async function pageHome() {
       <h1>La Bourse, comptes à l'appui.<br><em>Posez votre question.</em></h1>
       ${iaBox("hia", true)}
       <div class="chips iaex">${IA_EX.slice(0, 4).map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>
-      <p class="herosub">Ou cherchez directement une entreprise ou un ETF dans la barre en haut de la page.</p></section>
+      <p class="herosub">Ou cherchez directement une entreprise ou un ETF dans la barre en haut de la page.</p>${orcConfiance()}</section>
     ${band(1, "Aujourd'hui", "Les marchés du jour", ["/marches", "Tous les marchés"], `<div class="homegrid"><section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section><section class="panel"><div class="ph"><h2>Plus fortes hausses et baisses</h2></div><div class="pb">${moversHTML("all")}</div></section></div>`)}
     ${band(2, "Mon espace", "Votre bilan de la semaine", ["/espace", "Mon espace"], `<div id="homeesp"></div>`)}
     ${band(3, "Débuter", "Vous ne savez pas par où commencer ?", ["/commencer", "Le guide du nouvel investisseur"], `<div class="nb3 nb4">
