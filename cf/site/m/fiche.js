@@ -42,6 +42,7 @@ const FICHE_CSS = `
 .fh-prof{padding:14px 22px;background:#FCFBF8;border-left:1px solid var(--line2)}
 .fh-prof .prof .pa2{padding:4px 0}
 .fh-prof .prof .note{font-size:11.5px}
+.fh-pm{display:none}@media (max-width:760px){.fh-pl{display:none}.fh-pm{display:block}.fh-pm .pmini{margin:8px 0 0}}
 .fhero .qtabs{border-top:1px solid var(--line2);padding:0 22px}
 .fcols{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
 .fcols>*{min-width:0}
@@ -207,7 +208,7 @@ function ficheSommaire(s) {
   return `<div class="fh-sum"><div class="fh-vl"><p class="kick">En bref · exercice ${esc(s.year)}</p><p class="fh-v" id="fverdict">${phrase || esc(s.desc || "")}</p>
       ${t ? `<div class="fh-feu"><span class="f"><i></i><b>${t.fort}</b> point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i><b>${t.moyen}</b> dans la moyenne</span><span class="v"><i></i><b>${t.vig}</b> point${t.vig > 1 ? "s" : ""} de vigilance</span><button type="button" class="linkbtn lnk" data-et="retenir">Le détail</button></div>` : ""}
       <div class="fh-go"><p><b>Nouveau en Bourse ?</b> La fiche se lit en sept étapes, dans l'ordre où l'on se pose les questions : ce qu'il faut retenir, son métier, ses comptes, son prix, puis vos questions à l'IA.</p><button type="button" class="btn" data-et="retenir">Commencer</button></div></div>
-    <div class="fh-prof">${prof || `<p class="kick">Son profil dans le secteur</p><p class="muted" style="margin:4px 0 0;font-size:13.5px">Pas assez d'entreprises comparables suivies dans son secteur pour la situer.</p>`}</div></div>`;
+    <div class="fh-prof">${prof ? `<div class="fh-pl">${prof}</div><div class="fh-pm"><p class="kick">Son profil dans le secteur</p>${profilMini(s)}</div>` : ""}${prof ? "" : `<p class="kick">Son profil dans le secteur</p><p class="muted" style="margin:4px 0 0;font-size:13.5px">Pas assez d'entreprises comparables suivies dans son secteur pour la situer.</p>`}</div></div>`;
 }
 function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
   const pea = peaOk(s), place = String(s.tv || "").split(":")[0], bourse = (typeof IA_BOURSES !== "undefined" && IA_BOURSES[place]) || place;

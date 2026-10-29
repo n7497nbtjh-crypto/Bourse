@@ -70,7 +70,7 @@ with sync_playwright() as pw:
         if BASE == "http://t.local": pg.route("**/*", route3)
         probs = {}
         for i in IDS:
-            pg.goto(f"{BASE}/entreprise/{i}"); pg.wait_for_timeout(900)
+            pg.goto(f"{BASE}/entreprise/{i}"); pg.wait_for_timeout(900 if BASE == "http://t.local" else 3500)
             m = pg.evaluate(MESURE, W)
             if not mob and m["verdict"] and m["verdict"] > 900: m["p"].append(f"verdict sous la ligne de flottaison ({m['verdict']} px)")
             e2 = pg.evaluate(ETAPES)
@@ -87,7 +87,7 @@ with sync_playwright() as pw:
             print(f"  {W:>4} {i:<28} doc {m['doc']:>5}  principale {m.get('main', '-'):>5}  latérale {m.get('side', '-'):>5}  verdict {m['verdict']}  étapes {m['etapes']}" + ("  !" if m["p"] else ""))
             if SHOTS:
                 os.makedirs(SHOTS, exist_ok=True)
-                pg.goto(f"{BASE}/entreprise/{i}"); pg.wait_for_timeout(900)
+                pg.goto(f"{BASE}/entreprise/{i}"); pg.wait_for_timeout(900 if BASE == "http://t.local" else 3500)
                 pg.screenshot(path=f"{SHOTS}/{i}_{W}.png", full_page=True)
         print(f"== {W} px : {len(IDS)} fiches, problèmes : {len(probs)}, erreurs JS : {len(errs)}")
         for k, v in probs.items(): print("   ", k, v)
