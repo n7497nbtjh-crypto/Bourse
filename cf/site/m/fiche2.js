@@ -459,7 +459,7 @@ function rfFaceConc(s) {
     return `<tr class="${me ? "me" : ""}"><th scope="row"><a href="/entreprise/${c.id}">${logo(c, 20)}<span>${esc(c.name)}</span>${y}</a></th>
       <td class="${col(m.g1, md.g1)}">${m.g1 != null ? sgn(m.g1) : "–"}</td><td class="${isBank(c) ? "" : col(m.marge, md.marge)}">${!isBank(c) && m.marge != null ? pct(m.marge, 0, false) : "–"}</td><td>${v && v.pe ? F0.format(v.pe) : "–"}</td></tr>`; };
   const ids = [s, ...P].map(c => c.id).join(",");
-  return `<section class="panel rf-fc"><div class="ph"><h2>Face à ses concurrents</h2></div>
+  return `<section class="panel rf-fc rf-side-conc"><div class="ph"><h2>Face à ses concurrents</h2></div>
     <table class="rf-fct"><thead><tr><th scope="col"><span class="sr">Entreprise</span></th><th scope="col" title="Évolution des ventes sur un an">Ventes 1 an</th><th scope="col" title="Marge d'exploitation">Marge</th><th scope="col" title="Prix en Bourse en années de bénéfice">PER</th></tr></thead>
     <tbody>${row(s, true)}${P.map(c => row(c, false)).join("")}</tbody>
     ${md.n >= 3 ? `<tfoot><tr><th scope="row">Médiane du secteur</th><td>${md.g1 != null ? sgn(md.g1) : "–"}</td><td>${md.marge != null ? pct(md.marge, 0, false) : "–"}</td><td>${mp ? F0.format(mp) : "–"}</td></tr></tfoot>` : ""}</table>
@@ -587,6 +587,7 @@ function etapesBind(s) {
   const show = k => {
     $$("#etapes [data-et]").forEach(b => b.classList.toggle("on", b.dataset.et === k));
     $$("#etapes-corps .etape").forEach(d => d.hidden = d.dataset.etape !== k);
+    const fc = $("#fside .rf-side-conc"); if (fc) fc.hidden = k === "concurrents"; // l'étape Concurrents contient déjà ce tableau, en entier
     const u = new URL(location.href); u.searchParams.set("etape", k); history.replaceState({}, "", u.pathname + u.search);
     const nav = $("#etapes"); if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
     else if (nav && nav.getBoundingClientRect().top > innerHeight * 0.6) nav.scrollIntoView({ block: "start", behavior: "smooth" });
@@ -650,8 +651,8 @@ function concurrentsHTML(s) {
   return `<section class="panel rf-cmp" id="concurrents"><div class="ph"><h2>${titre}</h2><a href="${link}">Comparer en détail →</a></div>
     <div class="pb rf-cmpi"><p class="rf-intro">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services, aux mêmes clients.`} Chaque case est comparée aux repères du site et à la médiane du secteur de l'entreprise : <span class="rf-lg"><i class="dot dot-fort"></i>point fort</span> <span class="rf-lg"><i class="dot dot-vig"></i>point de vigilance</span> <span class="rf-lg"><i class="dot dot-moyen"></i>sans couleur : dans la moyenne</span>. La taille et le dividende ne sont pas colorés.</p></div>
     ${tblxScrollBox(`<table class="t tbx tbx-sort rf-ctab"><caption class="sr">${esc(s.name)} et ses ${auto ? "voisines de secteur" : "concurrentes"}, critère par critère</caption><thead>${head}</thead><tbody>${rows}</tbody><tfoot>${medRow}</tfoot></table>`, "Faites glisser pour voir tous les critères")}
-    <div class="pb"><h3 class="rf-h3">Atouts et faiblesses de chacune</h3><p class="rf-sub">Le tableau ne désigne pas de gagnante : une action plus chère peut correspondre à une entreprise qui grandit plus vite, une forte dette à un métier très régulier.</p>
-      <div class="rf-cards">${cartes}</div>
+    <div class="pb"><details class="cmpr-det rf-cartes" style="margin:0"><summary>Atouts et faiblesses de chacune<small>le tableau, lu entreprise par entreprise</small></summary><p class="rf-sub">Le tableau ne désigne pas de gagnante : une action plus chère peut correspondre à une entreprise qui grandit plus vite, une forte dette à un métier très régulier.</p>
+      <div class="rf-cards">${cartes}</div></details>
       ${notes.length ? `<ul class="cmpr-notes">${notes.map(n => `<li>${n}</li>`).join("")}</ul>` : ""}
       <div class="cmpr-fact"><a class="btn" href="${link}" style="display:inline-flex;align-items:center;height:40px">Comparer en détail</a><span class="light" style="font-size:12.5px">${all.length > CMAX ? `Les ${CMAX} premières en version gratuite, ${Math.min(5, all.length)} avec Premium.` : "Barres, graphiques et tous les chiffres côte à côte."}</span></div></div>
     ${cmprIABar(all.length, s)}

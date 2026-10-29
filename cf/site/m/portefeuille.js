@@ -798,9 +798,7 @@ function pf3Local(R0, X, S, F, D, A, P, prof) {
   // Ce qui ressort
   const r2 = [];
   if (S.score != null) r2.push(`Sa diversification est ${S.label} (${S.score} sur 100)${X.neff ? ` : une fois vos ETF ouverts, votre argent est réparti comme sur environ ${F0.format(X.neff)} entreprises de même poids` : ""}.`);
-  if (big[0]) r2.push(`La plus grosse ligne est ${big[0].info.name}, avec ${pct(big[0].w, 0, false)} de la valeur.`);
-  const c1 = Object.entries(X.ctry || {}).filter(([k]) => !/^(Autres|Non détaillé)$/.test(k)).sort((a, b) => b[1] - a[1])[0];
-  if (c1) r2.push(`Le premier pays est ${COUNTRY[c1[0]] || c1[0]} (${pct(c1[1], 0, false)}).`);
+  // la plus grosse ligne et le premier pays sont déjà lus dans le bloc Diversification (jauges) : on ne les répète pas ici
   const fxW = Object.entries(X.cur || {}).filter(([k]) => k !== "EUR").reduce((a, [, w]) => a + w, 0);
   if (fxW > 0.2) r2.push(`Environ ${pct(fxW, 0, false)} de la valeur dépend d'autres devises que l'euro, même si vos titres sont cotés en euros.`);
   const envs = Object.keys(X.env || {}); if (envs.length && !(envs.length === 1 && envs[0] === "Compte non précisé")) r2.push(`Répartition par compte : ${Object.entries(X.env).sort((a, b) => b[1] - a[1]).map(([k, w]) => `${k} ${pct(w, 0, false)}`).join(", ")}.`);
