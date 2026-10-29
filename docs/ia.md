@@ -122,7 +122,7 @@ Rien n'a répondu : chiffres, verdicts calculés et leçons restent affichés.
 ### Actions manuelles conseillées (Romain)
 
 1. Créer une clé gratuite Mistral (console.mistral.ai) et une clé gratuite Groq (console.groq.com), les ajouter comme secrets `MISTRAL_KEY` et `GROQ_KEY` dans Cloudflare Pages. Facultatif : `GEMINI_KEY` (aistudio.google.com).
-2. Si l'on veut se passer de Workers AI pour la rédaction : variable `IA_WORKERS_AI=off`.
+2. Si l'on veut se passer de Workers AI pour la rédaction : variable `IA_WORKERS_AI=off`. **Attention** : le 29 octobre 2026, `/api/ia/etat` en production indique `["workers-ai"]` seulement. Ajouter d'abord au moins une clé gratuite (étape 1), sinon l'IA du serveur s'éteint (le site reste utilisable, sans rédaction en ligne).
 3. Ne pas passer à l'offre Workers payante pour l'IA : ce n'est pas nécessaire.
 
 ## 5. Coûts mensuels estimés de l'IA
