@@ -1,50 +1,48 @@
-// Sonde de l'agent « actu » : accessibilité des sources d'annonces officielles et de presse depuis GitHub Actions.
-// Rien n'est publié : les réponses brutes sont rendues en artefact pour vérifier formats, volumes et conditions.
-import { writeFileSync, mkdirSync } from "node:fs";
+// Sonde de l'agent « actu » (2) : fichiers bruts de GDELT (GKG), SEC avec contact, pagination NSM et Nasdaq Nordic.
+// Rien n'est publié : les réponses brutes sont rendues en artefact pour vérifier formats et volumes.
+import { writeFileSync, mkdirSync, readFileSync } from "node:fs";
+import { execSync } from "node:child_process";
 const OUT = process.env.SORTIE || "data/sonde/out/actu";
 mkdirSync(OUT, { recursive: true });
-const UA = "bilan-site (contact via GitHub n7497nbtjh-crypto/Bourse)";
+const UA = `bilan-site ${process.env.CONTACT || "contact via GitHub n7497nbtjh-crypto/Bourse"}`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 const log = [];
-async function get(name, url, opt = {}) {
+async function get(name, url, opt = {}, keep = 400000) {
   const t0 = Date.now();
   try {
-    const r = await fetch(url, { ...opt, headers: { "user-agent": UA, accept: "*/*", ...(opt.headers || {}) }, signal: AbortSignal.timeout(40000) });
-    const t = await r.text();
-    writeFileSync(`${OUT}/${name}.txt`, `${r.status} ${url}\n${[...r.headers].map(h => h.join(": ")).join("\n")}\n\n${t}`);
-    log.push(`${name}\t${r.status}\t${t.length}\t${Date.now() - t0}ms\t${url}`);
-    return t;
-  } catch (e) { log.push(`${name}\tERR\t${e.message}\t${url}`); return ""; }
+    const r = await fetch(url, { ...opt, headers: { "user-agent": UA, accept: "*/*", ...(opt.headers || {}) }, signal: AbortSignal.timeout(60000) });
+    const buf = Buffer.from(await r.arrayBuffer());
+    if (name) writeFileSync(`${OUT}/${name}.txt`, `${r.status} ${url}\n\n` + buf.subarray(0, keep).toString("utf8"));
+    log.push(`${name}\t${r.status}\t${buf.length}\t${Date.now() - t0}ms\t${url}`);
+    return { status: r.status, buf };
+  } catch (e) { log.push(`${name}\tERR\t${e.message}\t${url}`); return { status: 0, buf: Buffer.alloc(0) }; }
 }
-const GNW = n => `https://www.globenewswire.com/RssFeed/${n}`;
-const L = [
-  ["amf", "https://www.info-financiere.gouv.fr/api/explore/v2.1/catalog/datasets/flux-amf-new-prod/records?limit=100&order_by=uin_dat_amf%20desc"],
-  ["sec_current", "https://www.sec.gov/cgi-bin/browse-edgar?action=getcurrent&type=8-K&count=100&output=atom"],
-  ["gnw_fr", GNW("country/France/feedTitle/GlobeNewswire%20-%20News%20from%20France")],
-  ["gnw_dk", GNW("country/Denmark/feedTitle/GlobeNewswire%20-%20News%20from%20Denmark")],
-  ["gnw_eu_reg", GNW("subjectcode/85-European%20Regulatory%20News/feedTitle/GlobeNewswire%20-%20European%20Regulatory%20News")],
-  ["nasdaq_nordic", "https://api.news.eu.nasdaq.com/news/query.action?type=json&showAttachments=false&showCnsSpecific=true&showCompany=true&countResults=true&globalGroup=exchangeNotice&globalName=NordicAllMarkets&displayLanguage=en&timeZone=CET&dateMask=yyyy-MM-dd+HH%3Amm%3Ass&limit=200&start=0&dir=DESC"],
-  ["oslo", `https://api3.oslo.oslobors.no/v1/newsreader/list?category=&issuer=&fromDate=${new Date(Date.now() - 2 * 864e5).toISOString().slice(0, 10)}&toDate=${new Date().toISOString().slice(0, 10)}&market=&messageTitle=`],
-  ["cnmv_oir", "https://www.cnmv.es/Portal/Otra-Informacion-Relevante/AlDia-OIR.aspx?lang=en"],
-  ["cnmv_ip", "https://www.cnmv.es/Portal/Informacion-Privilegiada/AlDia-IP.aspx?lang=en"],
-  ["cnmv_robots", "https://www.cnmv.es/robots.txt"],
-  ["actusnews_rss", "https://www.actusnews.com/fr/rss"],
-  ["actusnews_robots", "https://www.actusnews.com/robots.txt"],
-  ["bbc_business", "https://feeds.bbci.co.uk/news/business/rss.xml"],
-  ["cision_fr", "https://news.cision.com/fr/ListItems?format=rss"],
-  ["bw_home", "https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeEF9YXA=="],
-];
-for (const [n, u] of L) { await get(n, u); await sleep(400); }
-await get("nsm", "https://api.data.fca.org.uk/search?index=nsm-search", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ from: 0, size: 200, sortorder: "desc", sort: "submitted_date", criteriaObj: null }) });
-// GDELT : une requête groupée (plusieurs noms) toutes les 6 secondes
-const groups = [["TotalEnergies", "LVMH", "Sanofi", "Airbus", "Schneider Electric", "Air Liquide", "BNP Paribas", "L'Oréal", "Hermès", "Safran"],
-  ["Nvidia", "Microsoft", "Apple", "Novo Nordisk", "ASML", "Siemens", "SAP", "Nestlé", "Shell", "AstraZeneca"]];
-for (const [i, g] of groups.entries()) {
-  await sleep(6500);
-  const u = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
-  u.searchParams.set("query", `(${g.map(x => `"${x}"`).join(" OR ")}) (sourcelang:french OR sourcelang:english)`);
-  u.searchParams.set("mode", "artlist"); u.searchParams.set("format", "json"); u.searchParams.set("maxrecords", "250"); u.searchParams.set("timespan", "2d"); u.searchParams.set("sort", "datedesc");
-  await get("gdelt_" + i, u.toString());
+// 1. GDELT GKG : dernier fichier, taille, titres de pages et organisations
+const lu = (await get("gdelt_last", "http://data.gdeltproject.org/gdeltv2/lastupdate.txt")).buf.toString();
+const gkgUrl = (lu.match(/(http\S+gkg\.csv\.zip)/) || [])[1];
+if (gkgUrl) {
+  const z = await get("", gkgUrl);
+  writeFileSync("/tmp/g.zip", z.buf); execSync("cd /tmp && unzip -o -q g.zip");
+  const f = execSync("ls /tmp/*.gkg.csv").toString().trim().split("\n")[0];
+  const rows = readFileSync(f, "latin1").split("\n").filter(Boolean);
+  const titled = rows.map(r => r.split("\t")).filter(c => /<PAGE_TITLE>/.test(c[26] || ""));
+  const sample = titled.slice(0, 40).map(c => ({ date: c[1], src: c[3], url: c[4], orgs: (c[14] || "").slice(0, 200), orgs2: (c[13] || "").slice(0, 200), title: ((c[26] || "").match(/<PAGE_TITLE>(.*?)<\/PAGE_TITLE>/) || [])[1] }));
+  writeFileSync(`${OUT}/gdelt_gkg.json`, JSON.stringify({ zip: z.buf.length, rows: rows.length, titled: titled.length, sample }, null, 1));
 }
+const lt = (await get("gdelt_last_tr", "http://data.gdeltproject.org/gdeltv2/lastupdate-translation.txt")).buf.toString();
+const gkgT = (lt.match(/(http\S+gkg\.csv\.zip)/) || [])[1];
+if (gkgT) { const z = await get("", gkgT); log.push("translation gkg zip " + z.buf.length); }
+// 2. SEC avec contact
+await get("sec_sub", "https://data.sec.gov/submissions/CIK0000320193.json", {}, 3000);
+// 3. NSM : page 2 et filtre par date
+const day = new Date(Date.now() - 864e5).toISOString().slice(0, 10);
+await get("nsm_p2", "https://api.data.fca.org.uk/search?index=nsm-search", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ from: 200, size: 200, sortorder: "desc", sort: "submitted_date", criteriaObj: null }) }, 3000);
+await get("nsm_date", "https://api.data.fca.org.uk/search?index=nsm-search", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ from: 0, size: 5, sortorder: "desc", sort: "submitted_date", criteriaObj: { criteria: [{ name: "latest_flag", value: "Y" }], dateCriteria: [{ name: "submitted_date", value: { from: day + "T00:00:00Z", to: day + "T23:59:59Z" } }] } }) }, 6000);
+// 4. Nasdaq Nordic : décalage et plage de dates
+await get("nasdaq_p", `https://api.news.eu.nasdaq.com/news/query.action?type=json&showAttachments=false&showCnsSpecific=true&showCompany=true&countResults=true&globalGroup=exchangeNotice&globalName=NordicAllMarkets&displayLanguage=en&timeZone=CET&dateMask=yyyy-MM-dd+HH%3Amm%3Ass&limit=500&start=500&dir=DESC&fromDate=${day}`, {}, 4000);
+// 5. Cision par langue et Business Wire (structure des éléments)
+for (const l of ["fr", "fi", "dk", "no", "de"]) { await get("cision_" + l, `https://news.cision.com/${l}/ListItems?format=rss`, {}, 6000); await sleep(500); }
+await get("bw", "https://feed.businesswire.com/rss/home/?rss=G1QFDERJXkJeEF9YXA==", {}, 5000);
+await get("emarket", "https://www.emarketstorage.it/en", {}, 3000);
 writeFileSync(`${OUT}/_log.txt`, log.join("\n"));
 console.log(log.join("\n"));

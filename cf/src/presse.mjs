@@ -1,9 +1,16 @@
-// Articles de presse récents sur une entreprise ou sur les marchés, via GDELT (gdeltproject.org).
-// GDELT recense la presse mondiale en continu ; son API est gratuite et ouverte, sans clé.
+// Articles de presse récents sur une entreprise ou sur les marchés, via GDELT (gdeltproject.org), en secours.
+// La source principale est désormais la collecte du robot (data/actu.mjs -> /data/actu/c/<id>.json et /data/actu/fil.json),
+// lue directement par le navigateur. Cette route ne sert que de complément quand le fichier ne contient rien.
+// GDELT recense la presse mondiale ; son API est gratuite et ouverte, sans clé, limitée à une requête toutes les 5 secondes.
 // On ne reprend que le titre, le site, la date et le lien : l'article se lit chez l'éditeur.
-// Les réponses sont gardées 30 minutes en cache (GDELT limite le nombre d'appels).
+//
+// Panne corrigée (octobre 2026) : GDELT répond souvent « 429 » (trop de requêtes) aux adresses partagées de Cloudflare.
+// Avec `cf.cacheTtl`, cette réponse texte était mise en cache sous l'adresse de GDELT, puis renvoyée telle quelle par
+// `caches.default.match` (statut 429, texte brut) : le navigateur ne pouvait pas la lire. Sans délai maximal, une
+// réponse lente de GDELT laissait aussi la fiche bloquée sur « Chargement… ». Désormais : délai maximal de 5 secondes,
+// cache sous une clé propre au site, seules les réponses JSON valides sont gardées 30 minutes, les échecs 2 minutes.
 const API = "https://api.gdeltproject.org/api/v2/doc/doc";
-const TTL = 1800;
+const TTL = 1800, TTL_ECHEC = 120, DELAI = 5000;
 const CONTEXTE = "(bourse OR action OR actions OR résultats OR dividende OR chiffre OR stock OR shares OR earnings OR revenue OR results)";
 export const SUJETS = {
   marches: { q: "theme:ECON_STOCKMARKET sourcelang:french", label: "Marchés, presse française" },
@@ -24,27 +31,36 @@ export function normalize(j) {
   }
   return out;
 }
-export default async function presse(request, index) {
+const reponse = (body, status, ttl) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${ttl}` } });
+// Lit la réponse de GDELT : JSON attendu, sinon erreur (429 en texte brut, page d'erreur…)
+export async function lireGdelt(r) {
+  if (!r.ok) throw new Error("GDELT " + r.status);
+  const txt = await r.text();
+  if (!txt.trim().startsWith("{")) throw new Error("GDELT réponse illisible");
+  return normalize(JSON.parse(txt));
+}
+export default async function presse(request, index, fetchFn = fetch) {
   const u = new URL(request.url);
   const id = (u.searchParams.get("id") || "").replace(/[^a-z0-9-]/g, "").slice(0, 60);
   const sujet = SUJETS[u.searchParams.get("sujet")] ? u.searchParams.get("sujet") : null;
   const c = id ? index.find(x => x.id === id) : null;
-  if (!c && !sujet) return new Response(JSON.stringify({ error: "Sujet inconnu.", items: [] }), { status: 400, headers: { "content-type": "application/json; charset=utf-8" } });
+  if (!c && !sujet) return reponse({ error: "Sujet inconnu.", items: [] }, 400, 60);
   const api = new URL(API);
   api.searchParams.set("query", c ? queryFor(c.name) : SUJETS[sujet].q);
   api.searchParams.set("mode", "artlist"); api.searchParams.set("format", "json");
   api.searchParams.set("maxrecords", "40"); api.searchParams.set("sort", "datedesc");
   api.searchParams.set("timespan", c ? "21d" : "2d");
-  const cache = typeof caches !== "undefined" ? caches.default : null, key = new Request(api.toString());
-  if (cache) { const hit = await cache.match(key); if (hit) return hit; }
-  let body, status = 200;
+  const cache = typeof caches !== "undefined" ? caches.default : null;
+  const key = new Request(`https://cache.bilan.invalid/presse?${c ? "id=" + c.id : "sujet=" + sujet}`); // clé propre : jamais l'adresse de GDELT
+  if (cache) { const hit = await cache.match(key).catch(() => null); if (hit) return hit; }
+  let res;
+  const ctl = new AbortController(), t = setTimeout(() => ctl.abort(), DELAI);
   try {
-    const r = await fetch(api.toString(), { headers: { "user-agent": "bilan (site pedagogique)" }, cf: { cacheTtl: TTL } });
-    if (!r.ok) throw new Error("GDELT " + r.status);
-    const txt = await r.text();
-    body = { source: "GDELT", items: normalize(txt.trim().startsWith("{") ? JSON.parse(txt) : {}) };
-  } catch (e) { status = 502; body = { error: "La presse n'est pas disponible pour le moment.", items: [] }; }
-  const res = new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": `public, max-age=${status === 200 ? TTL : 60}` } });
-  if (cache && status === 200) await cache.put(key, res.clone());
+    const r = await fetchFn(api.toString(), { headers: { "user-agent": "bilan (site pedagogique)" }, signal: ctl.signal });
+    res = reponse({ source: "GDELT", items: await lireGdelt(r) }, 200, TTL);
+  } catch (e) {
+    res = reponse({ error: "La presse n'est pas disponible pour le moment.", items: [] }, 200, TTL_ECHEC); // 200 + liste vide : le navigateur affiche un état vide propre
+  } finally { clearTimeout(t); }
+  if (cache) await cache.put(key, res.clone()).catch(() => { });
   return res;
 }
