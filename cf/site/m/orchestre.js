@@ -347,3 +347,38 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 /* Barre de recherche : texte d'aide court quand la barre est étroite (tablette) */
 (() => { const fit = () => { const i = document.querySelector("header [data-search] input"); if (!i) return; i.dataset.ph = i.dataset.ph || i.placeholder; i.placeholder = innerWidth > 760 && innerWidth < 940 ? "Rechercher" : i.dataset.ph; };
   addEventListener("resize", fit, { passive: true }); if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", fit); else fit(); })();
+
+/* Favoris bien visibles : lien « ★ Favoris » avec compteur dans la barre (ordinateur), bouton étoile sur mobile,
+   et un court message après chaque ajout pour dire où retrouver la liste. */
+document.head.insertAdjacentHTML("beforeend", `<style>
+#nav a.navfav{padding:18px 8px 16px;display:flex;gap:5px;align-items:center;font-weight:700;white-space:nowrap}
+#nav a.navfav .st{color:#C98A00;font-size:15px;line-height:1}
+#nav a.navfav.on .st{color:inherit}
+.mbtn.mfav{display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:700}
+.mbtn.mfav .st{color:#C98A00}
+.orcfavt{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;z-index:90;background:var(--ink);color:#fff;border-radius:12px;padding:11px 16px;font-size:14px;box-shadow:0 12px 40px -12px rgba(0,0,0,.45);transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);display:flex;gap:12px;align-items:center}
+.orcfavt.vis{opacity:1;transform:translate(-50%,0)}.orcfavt a{color:#fff;font-weight:700;text-decoration:underline;white-space:nowrap}
+@media (max-width:760px){.orcfavt{bottom:84px;width:calc(100% - 32px);justify-content:space-between}}
+@media (min-width:761px) and (max-width:939px){#nav a.navfav{padding-left:5px!important;padding-right:5px!important;font-size:13px!important}#nav a.navfav .lb{display:none}}
+</style>`);
+(() => {
+  const put = () => {
+    const esp = document.querySelector("#nav .navesp");
+    if (esp && !document.querySelector("#nav .navfav")) esp.insertAdjacentHTML("beforebegin", `<a href="/favoris" data-nav="fav" class="navfav" title="Mes favoris"><span class="st">★</span><span class="lb">Favoris</span><span class="favn"></span></a>`);
+    const mr = document.querySelector(".mright");
+    if (mr && !mr.querySelector(".mfav")) mr.insertAdjacentHTML("afterbegin", `<a class="mbtn mfav" href="/favoris" aria-label="Mes favoris"><span class="st">★</span><span class="favn"></span></a>`);
+    if (typeof favCount === "function") try { favCount(); } catch (e) { }
+  };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", put); else put();
+  let tm;
+  document.addEventListener("click", ev => {
+    const b = ev.target.closest("[data-fav]"); if (!b || location.pathname === "/favoris") return;
+    setTimeout(() => {
+      if (typeof isFav !== "function" || !isFav(b.dataset.fav)) return;
+      let t = document.querySelector(".orcfavt");
+      if (!t) { t = document.createElement("div"); t.className = "orcfavt"; t.setAttribute("role", "status"); document.body.appendChild(t); }
+      t.innerHTML = `<span>Ajouté à vos favoris. Retrouvez-les avec <b>★ Favoris</b> en haut de page.</span><a href="/favoris">Voir</a>`;
+      requestAnimationFrame(() => t.classList.add("vis")); clearTimeout(tm); tm = setTimeout(() => t.classList.remove("vis"), 3800);
+    }, 0);
+  });
+})();
