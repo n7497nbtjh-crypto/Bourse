@@ -115,6 +115,21 @@ document.head.insertAdjacentHTML("beforeend", `<style>
    11 px, gris clair : illisibles. Partout sur le site, elles passent en police de texte, 12 px, graisse 600, gris moyen. Les chiffres restent en chasse fixe. */
 .kick,.ess .lbl,.lbl,.pxhead .kick,.tile .kick,.ftile .kick,.rf-keys .fk .kick,.rf-trimh .kick,.pf3 .kick,.pf3hero .kick,.acc .kick,.cmpr .kick,.rf-sum .kick,.ctx .kick{font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--grey)}
 .rf-keys .fk .kick{font-size:12.5px}
+/* Apaisement (29/10/2026, soir) : Romain trouve le site « fatigant » : trop d'étiquettes colorées, de titres de couleurs.
+   Règle : la couleur ne sert qu'au sens (vert = favorable, orange = à surveiller, hausse / baisse). Tout le reste est gris ou encre.
+   Ici l'accueil ; la même règle sera appliquée page par page. */
+.acc{--accf:var(--grey);--acci:var(--grey);--acch:var(--grey);--accs:var(--grey)}
+.acc .acc-tag{font:600 11px/1 var(--sans);letter-spacing:.04em;background:transparent;color:var(--grey);border:1px solid var(--line);padding:3px 7px;border-radius:99px}
+.acc .acc-tag.acc-tf{background:var(--ink);color:#fff;border-color:var(--ink)}
+.acc .acc-tag.acc-th{border-style:dashed}
+.acc .acc-lf,.acc .acc-li,.acc .acc-lh,.acc .acc-ls{--c:var(--line)}
+.acc em.acc-smx{color:var(--ink)}
+.acc .acc-trust svg{stroke:var(--grey)}.acc .acc-dot{background:var(--grey)}
+.acc .acc-al.fav b,.acc .acc-age.fav b{color:var(--ink)}
+.acc .pill,.acc .badge{background:#F1EFEA;color:var(--grey);border:0}
+.acc .pill.fort,.acc .badge.fort{background:#E6F3EB;color:#176B40}.acc .pill.vig,.acc .badge.vig{background:#FBEBE2;color:#A8481A}
+/* Sujets du jour : la carte garde le fait et l'interprétation ; hypothèse et entreprises à surveiller s'ouvrent avec « Approfondir » */
+.acc .acc-sj .acc-lh,.acc .acc-sj .acc-ls{display:none}
 /* Accessibilité (point 7, 29/10/2026) : sur téléphone, aucun texte sous 11 px, aucune cible tactile sous 24 px */
 .lg b{font-size:max(9px,calc(var(--s) * .36))}
 @media (max-width:760px){
