@@ -11,7 +11,7 @@ import { REGLES } from "./regles.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 import { rediger } from "./llm.mjs";
-import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION } from "./synthese.mjs";
+import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS comptes (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, hash TEXT NOT NULL, sel TEXT NOT NULL, created INTEGER NOT NULL, secours TEXT, premium TEXT, teaser INTEGER NOT NULL DEFAULT 0, last_tache INTEGER NOT NULL DEFAULT 0, last_semaine TEXT)`,
@@ -129,7 +129,7 @@ async function siteData(request, env) {
   const [uni, etf, ana, ag, agAuto, sem, cs, fx] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json")]);
   let px = {}; try { px = (await (await cours(new Request(new URL("/api/cours", request.url)))).json()).items || {}; } catch (e) { }
   const names = {}, meta = {}, isin = {}, etfm = {};
-  (uni && uni.companies || []).forEach(c => { names["c:" + c.id] = c.name; meta["c:" + c.id] = { region: c.region }; if (c.isin) isin["c:" + c.id] = c.isin; });
+  (uni && uni.companies || []).forEach(c => { names["c:" + c.id] = c.name; meta["c:" + c.id] = { region: c.region, sector: c.sector }; if (c.isin) isin["c:" + c.id] = c.isin; });
   (etf && etf.list || []).forEach(e => { names["e:" + e.id] = e.name; etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index }; });
   const actuCache = new Map();
   return { names, meta, isin, etf: etfm, px, fx: (fx && fx.eur) || { EUR: 1 }, cs: cs && Array.isArray(cs.dates) ? cs : null, sem: sem && sem.items ? sem : null,
@@ -155,7 +155,7 @@ const r2 = v => Math.round(v * 100) / 100;
 const NF = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
 const sgnP = v => (v > 0 ? "+" : v < 0 ? "−" : "") + NF(Math.abs(v)) + " %";
 
-const SYS_BILAN = `Tu écris, en français, le commentaire du bilan de la semaine d'un particulier qui débute en Bourse. Tu reçois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il possède, la moyenne, les annonces officielles de la semaine et les prochaines dates.
+const SYS_BILAN = `Tu écris, en français, le commentaire du bilan de la semaine d'un particulier qui débute en Bourse. Tu reçois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il possède, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation médiane de secteurs entiers.
 Règles strictes :
 - Explique la semaine de façon factuelle et pédagogique, en 120 à 220 mots, en deux ou trois courts paragraphes de texte suivi.
 - Vouvoie le lecteur.
@@ -173,34 +173,37 @@ const faitsIA = c => ({
   lignes: c.lignes.filter(l => l.variation_semaine_pct != null).slice(0, 25).map(l => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct, indice_de_reference: l.indice ? l.indice.nom : null, ecart_avec_indice_points: l.ecart_pts, dans_le_portefeuille: !!l.en_portefeuille })),
   annonces: (c.annonces || []).slice(0, 8).map(a => ({ entreprise: a.nom, date: a.date, type: a.type, chiffres: a.chiffres, en_clair: a.resume })),
   a_venir: (c.a_venir || []).slice(0, 6).map(e => ({ entreprise: e.nom, date: e.date, evenement: e.label })),
+  secteurs_suivis: (c.secteurs || []).filter(x => x.n).map(x => ({ secteur: x.nom, variation_mediane_semaine_pct: x.mediane_pct, entreprises: x.n, hausses: x.hausses, baisses: x.baisses })),
 });
 let redige = rediger; // remplaçable dans les tests
 export function _redacteur(f) { redige = f || rediger; }
 
 // Ce que suit la personne : ses favoris, les lignes de son portefeuille (et toute ligne reconnue dans un autre format).
+// Les réglages du rapport (rapportDe) décident de ce qui entre : favoris, portefeuille, secteurs suivis.
+const rapportDe = row => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
 function suiviDe(row, names) {
-  const pf = parse(row && row.portefeuille, null), lp = lignesPf(pf).filter(l => names[l.k]);
-  const fav = (parse(row && row.favoris, []) || []).filter(k => typeof k === "string" && KEY.test(k));
+  const R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter(l => names[l.k]);
+  const fav = R.favoris ? (parse(row && row.favoris, []) || []).filter(k => typeof k === "string" && KEY.test(k)) : [];
   const autres = clesPortefeuille(pf, names).filter(k => !lp.some(l => l.k === k));
   const cles = [...new Set([...fav, ...autres, ...lp.map(l => l.k)])].filter(k => names[k]).slice(0, 260);
-  return { favoris: [...new Set([...fav, ...autres])], pf, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map(l => `${l.k}:${r2(l.q)}:${Math.round(l.m)}`).sort().join(",") };
+  return { favoris: [...new Set([...fav, ...autres])], pf, rapport: R, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map(l => `${l.k}:${r2(l.q)}:${Math.round(l.m)}`).sort().join(",") + "|" + rapportSignature(R) };
 }
 // Synthèse de la semaine en cours : construite ou rafraîchie si besoin (liste changée, chiffres de plus de 6 h, nouvelle version, ou week-end : version définitive).
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
-  const s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj));
+  const s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj); // semaine passée : version définitive
   let c = stocke ? parse(stocke.contenu, null) : null;
   const refaire = !c || c.v !== SYN_VERSION || c._cles !== s.cles || (!c._final && (Date.now() - c.genere > 6 * 36e5 || weekend));
   if (!refaire) return { c, change: false };
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
-  const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
+  const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
   n._cles = s.cles; n._final = weekend; n._ia_n = (c && c._ia_n) || 0; n._ia_at = (c && c._ia_at) || 0;
   if (c && c.texte && c._cles === s.cles && c.v === SYN_VERSION) { n.texte = c.texte; n.lecture_min = lectureMin(n); } // le commentaire reste tant que la liste ne change pas
-  const utile = n.lignes.some(l => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length;
+  const utile = n.lignes.some(l => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some(x => x.n);
   if (utile) await env.DB.prepare(`INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0`).bind(compteId, semaine, JSON.stringify(n), Date.now()).run();
   return { c: n, change: true, stocke: !!utile };
 }
 async function commenter(env, compteId, c) { // au plus 4 essais par semaine, espacés de 6 h ; sans réponse, la page montre les chiffres
-  if (c.texte || !c.lignes.length || (c._ia_n || 0) >= 4 || Date.now() - (c._ia_at || 0) < 6 * 36e5) return c;
+  if (c.texte || !(c.lignes.length || (c.secteurs || []).some(x => x.n)) || (c.reglages && c.reglages.detail === "court") || (c._ia_n || 0) >= 4 || Date.now() - (c._ia_at || 0) < 6 * 36e5) return c;
   c._ia_n = (c._ia_n || 0) + 1; c._ia_at = Date.now();
   let t = null; try { t = await redige(env, { systeme: SYS_BILAN, utilisateur: JSON.stringify(faitsIA(c)), max_tokens: 600, temperature: 0.2 }); } catch (e) { }
   if (t && String(t).trim().length > 80) { c.texte = String(t).replace(/—/g, ",").trim(); if (c.annonces) c.lecture_min = lectureMin(c); }
@@ -321,6 +324,20 @@ export async function espace(request, env) {
     return json({ ok: true, teaser: b.teaser, mail: mailReady(env) });
   }
 
+  // Réglages du rapport de la semaine (ce qu'il contient, niveau de détail, sujets, jour, notification), gardés dans donnees.profil.rapport
+  if (path === "/api/espace/rapport" && (m === "GET" || m === "POST")) {
+    const row = await env.DB.prepare(`SELECT profil FROM donnees WHERE compte = ?`).bind(c.id).first(), profil = parse(row && row.profil, null) || {};
+    const p = await premiumDe(env, c.premium, url.origin), max = p ? RAPPORT_MAX_SECTEURS.premium : RAPPORT_MAX_SECTEURS.gratuit;
+    const out = r => ({ rapport: r, defaut: RAPPORT_DEFAUT, premium: !!p, max_secteurs: max, secteurs: SECTEURS });
+    if (m === "GET") return json(out(normaliseRapport(profil.rapport, max)));
+    const { b, err } = await lire(request); if (err) return err;
+    const v = validerRapport(b, !!p); if (v.error) return json({ error: v.error }, 400);
+    const neuf = { ...(typeof profil === "object" && !Array.isArray(profil) ? profil : {}), rapport: v.rapport };
+    if (taille(neuf) > MAX_CHAMP) return json({ error: "Profil trop volumineux (60 Ko au plus)." }, 400);
+    await enregistrer(env, c.id, { profil: JSON.stringify(neuf) });
+    return json({ ok: true, ...out(v.rapport), ...(v.coupe ? { limite: `Sans Premium, le rapport suit ${max} secteurs au plus : les premiers choisis sont gardés.` } : {}) });
+  }
+
   if (path === "/api/espace/supprimer" && m === "POST") {
     const { b, err } = await lire(request); if (err) return err;
     const cles = ["e:" + c.email]; if (await limite(env, cles)) return TROP();
@@ -345,7 +362,7 @@ export async function espace(request, env) {
     if (!/^\d{4}-W\d{2}$/.test(semaine)) return json({ error: "Semaine invalide (format 2026-W44)." }, 400);
     let row = await env.DB.prepare(`SELECT contenu, vu FROM bilans WHERE compte = ? AND semaine = ?`).bind(c.id, semaine).first(), b = row ? parse(row.contenu, null) : null;
     if (semaine === cur) {
-      const d = await siteData(request, env), don = await env.DB.prepare(`SELECT favoris, portefeuille FROM donnees WHERE compte = ?`).bind(c.id).first();
+      const d = await siteData(request, env), don = await env.DB.prepare(`SELECT favoris, portefeuille, profil FROM donnees WHERE compte = ?`).bind(c.id).first();
       const prec = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(c.id, precedenteDe(cur)).first();
       const r = await assurerBilan(env, d, c.id, don, cur, row, prec); b = r.c;
       if (r.change && !r.stocke) b = { ...b, vide: true };
@@ -376,9 +393,16 @@ async function notifier(env, compteId, type, texte, lien, jour, extra = "") {
 async function tache(request, env, url) {
   if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json({ error: "Non autorisé." }, 403);
   const quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now();
-  const modeBilan = quoi === "bilan" || (!quoi && wd === 6), cutoff = now - 6 * 36e5;
-  const W = modeBilan ? `(c.last_tache < ? OR c.last_semaine IS NOT ?)` : `c.last_tache < ?`, B = modeBilan ? [cutoff, sem] : [cutoff];
-  const rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [];
+  const modeBilan = quoi === "bilan" || quoi === "jour" || (!quoi && wd === 6), cutoff = now - 6 * 36e5;
+  // Jour de réception choisi dans les réglages du rapport (samedi par défaut, dimanche ou lundi) : le samedi, le dimanche et le lundi,
+  // seuls les comptes dont c'est le jour reçoivent leur rapport ; le lundi, il porte sur la semaine qui vient de finir.
+  // quoi=jour (robot du matin) ou samedi sans précision ; quoi=bilan (lancement à la main) : tout le monde le reçoit, comme avant.
+  const parJour = (quoi === "jour" || (!quoi && wd === 6)) && [6, 0, 1].includes(wd), cible = parJour && wd === 1 ? precedenteDe(sem) : sem;
+  const JOUR_SQL = `COALESCE(json_extract(d.profil, '$.rapport.jour'), 6)`;
+  const W = modeBilan ? (parJour ? `(c.last_tache < ? OR (c.last_semaine IS NOT ? AND ${JOUR_SQL} = ?))` : `(c.last_tache < ? OR c.last_semaine IS NOT ?)`) : `c.last_tache < ?`;
+  const B = modeBilan ? (parJour ? [cutoff, cible, wd] : [cutoff, cible]) : [cutoff];
+  const FROM = `FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W}`;
+  const rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [];
   let notifs = 0, mails = 0, bilans = 0;
   if (rows.length) {
     const d = await siteData(request, env), demain = jourParis(now + JOUR), ouvre = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, "");
@@ -394,25 +418,27 @@ async function tache(request, env, url) {
         for (const e of d.ev) if (e && ids.has(e.id) && e.date === demain)
           notifs += await notifier(env, r.id, /r[ée]sultat/i.test(e.type || e.label || "") ? "resultats" : "agenda", `${d.names["c:" + e.id]} : demain, ${e.label || e.type}.`, "/entreprise/" + e.id + "/agenda", e.date);
       }
-      if (modeBilan && r.last_semaine !== sem && keys.length) {
-        const st = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, sem).first();
-        const pr = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, precedenteDe(sem)).first();
-        const b = await assurerBilan(env, d, r.id, r, sem, st, pr); // les chiffres seulement : le commentaire est rédigé à la visite
+      const RG = rapportDe(r), sonJour = !parJour || RG.jour === wd, aRapport = keys.length || RG.secteurs.length;
+      if (modeBilan && sonJour && r.last_semaine !== cible && aRapport) {
+        const st = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, cible).first();
+        const pr = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, precedenteDe(cible)).first();
+        const b = await assurerBilan(env, d, r.id, r, cible, st, pr); // les chiffres seulement : le commentaire est rédigé à la visite
         if (b.stocke !== false) {
           bilans++;
-          const e0 = b.c && b.c.essentiel && b.c.essentiel[0];
-          notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est prête. ${e0}` : "Votre semaine en 2 minutes est prête.", "/espace", sem);
+          const e0 = b.c && b.c.essentiel && b.c.essentiel[0], lien = cible === sem ? "/espace" : "/espace?semaine=" + cible;
+          if (RG.notif) notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est prête. ${e0}` : "Votre semaine en 2 minutes est prête.", lien, cible);
           if (r.teaser && cap > 0) { try { await sendMail(env, r.email, "Votre bilan de la semaine est prêt",
             `Bonjour,\n\nVotre bilan de la semaine est prêt sur bilan. :\n${origin}/espace\n\nVous recevez ce message parce que vous l'avez demandé dans votre espace. Pour ne plus le recevoir, décochez l'option dans votre espace.\n\nbilan. Informations factuelles, sans conseil en investissement.`,
             `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px"><p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><p style="font-size:17px;margin:16px 0">Votre bilan de la semaine est prêt.</p><p><a href="${origin}/espace" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir mon bilan</a></p><p style="font-size:12px;color:#87827A;margin-top:22px">Vous recevez ce message parce que vous l'avez demandé. Pour ne plus le recevoir, décochez l'option dans votre espace.</p></div></div>`); mails++; cap--; } catch (e) { cap = 0; } }
         }
       }
-      await env.DB.prepare(modeBilan ? `UPDATE comptes SET last_tache = ?, last_semaine = ? WHERE id = ?` : `UPDATE comptes SET last_tache = ? WHERE id = ?`).bind(...(modeBilan ? [now, sem, r.id] : [now, r.id])).run();
+      const fait = modeBilan && sonJour; // last_semaine : la semaine dont le rapport a été préparé pour ce compte
+      await env.DB.prepare(fait ? `UPDATE comptes SET last_tache = ?, last_semaine = ? WHERE id = ?` : `UPDATE comptes SET last_tache = ? WHERE id = ?`).bind(...(fait ? [now, cible, r.id] : [now, r.id])).run();
     }
     await env.DB.prepare(`DELETE FROM notifs WHERE at < ?`).bind(now - 90 * JOUR).run(); // ménage
     await env.DB.prepare(`DELETE FROM essais WHERE at < ?`).bind(now - JOUR).run();
     await env.DB.prepare(`DELETE FROM sessions WHERE expires < ?`).bind(now).run();
   }
-  const reste = ((await env.DB.prepare(`SELECT COUNT(*) AS n FROM comptes c WHERE ${W}`).bind(...B).first()) || {}).n || 0;
+  const reste = ((await env.DB.prepare(`SELECT COUNT(*) AS n ${FROM}`).bind(...B).first()) || {}).n || 0;
   return json({ traites: rows.length, reste, notifs, bilans, mails, mode: modeBilan ? "bilan" : "alertes" });
 }

@@ -10,7 +10,7 @@ let aiCalls = 0, aiText = "Cette semaine, vos lignes ont progressé de 2 % en mo
 const env = { DB: { prepare: q => stmt(q) }, ADMIN_KEY: "k", MAIL_FROM: "bilan@exemple.fr", BREVO_KEY: "b", HASH_SALT: "sel-test",
   AI: { run: async () => { aiCalls++; return { response: aiText }; } },
   ASSETS: { fetch: async req => { const p = new URL(req.url).pathname; const d = {
-    "/data/univers.json": { companies: [{ id: "lvmh", name: "LVMH" }, { id: "totalenergies", name: "TotalEnergies" }] },
+    "/data/univers.json": { companies: [{ id: "lvmh", name: "LVMH", sector: "conso" }, { id: "totalenergies", name: "TotalEnergies", sector: "energie" }] },
     "/data/etf.json": { list: [{ id: "cw8", name: "Amundi MSCI World" }] },
     "/data/actu-analyse.json": { items: { "https://ex.fr/lvmh-t3.pdf": { id: "lvmh", type: "Chiffre d'affaires trimestriel", date: today, chiffres: [["Ventes", "19,1 Md€ (+2 %)"]], lecture: ["Les ventes progressent un peu."] } } },
     "/data/agenda.json": { events: [{ id: "totalenergies", date: demain, type: "Résultats", label: "Résultats du 3e trimestre" }] },
@@ -150,6 +150,45 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
   const big = { v: 3, l: [] }; for (let i = 0; i < 8; i++) { const o = []; for (let n = 0; n < 300; n++) o.push([`20${10 + Math.floor(n / 12)}-${String(1 + n % 12).padStart(2, "0")}-02`, "a", 1.5, 50 + n / 7, 1]); big.l.push(PF3.syncLine({ k: "e:cw8", env: ["pea", "cto"][i % 2], br: "b" + i, o })); }
   [s] = await E("PUT", "/api/espace/donnees", { portefeuille: big }, A); ok(s === 400, "historique trop long refusé sans compactage " + s);
   [s] = await E("PUT", "/api/espace/donnees", { portefeuille: PF3.compact(big) }, A); ok(s === 200, "historique compacté accepté " + s); }
+
+// Réglages du rapport de la semaine : stockés avec le compte (donnees.profil.rapport) et pris en compte par la synthèse et le robot
+{ [s, j] = await E("GET", "/api/espace/rapport", null, B);
+  ok(s === 200 && j.rapport.jour === 6 && j.rapport.detail === "complet" && j.rapport.favoris && j.rapport.sujets.lecons && j.max_secteurs === 2 && !j.premium && j.secteurs.energie === "Énergie", "réglages par défaut " + JSON.stringify(j).slice(0, 200));
+  [s] = await E("POST", "/api/espace/rapport", { detail: "long" }, B); ok(s === 400, "niveau de détail inconnu refusé");
+  [s] = await E("POST", "/api/espace/rapport", { jour: 3 }, B); ok(s === 400, "jour hors samedi, dimanche, lundi refusé");
+  [s] = await E("POST", "/api/espace/rapport", { secteurs: ["or"] }, B); ok(s === 400, "secteur inconnu refusé");
+  [s] = await E("POST", "/api/espace/rapport", { sujets: { meteo: true } }, B); ok(s === 400, "sujet inconnu refusé");
+  [s] = await E("POST", "/api/espace/rapport", { favoris: false, portefeuille: false }, B); ok(s === 400, "au moins une source");
+  [s, j] = await E("POST", "/api/espace/rapport", { favoris: true, portefeuille: true, secteurs: ["energie", "tech", "sante"], indices: ["cac40"], detail: "court", jour: 0, sujets: { dividendes: false }, notif: true, configure: true }, B);
+  ok(s === 200 && j.rapport.secteurs.join() === "energie,tech" && j.limite && j.rapport.sujets.dividendes === false && j.rapport.sujets.resultats === true && j.rapport.configure, "réglages enregistrés, 2 secteurs sans Premium " + JSON.stringify(j).slice(0, 300));
+  [s, j] = await E("GET", "/api/espace/moi", null, B); ok(j.donnees.profil && j.donnees.profil.rapport.jour === 0 && j.donnees.profil.rapport.detail === "court", "réglages renvoyés avec le compte");
+  [s, j] = await E("POST", "/api/espace/rapport", { secteurs: ["energie", "tech", "sante"] }, A); ok(s === 200 && j.premium && j.rapport.secteurs.length === 3 && !j.limite, "Premium : 6 secteurs au plus " + JSON.stringify(j).slice(0, 200));
+  const n0 = aiCalls; [s, j] = await E("GET", "/api/espace/bilan", null, B);
+  ok(s === 200 && j.reglages && j.reglages.detail === "court" && j.indices.every(i => i.id === "cac40") && j.secteurs.length === 2 && j.secteurs[0].nom === "Énergie" && j.secteurs[0].n === 1 && j.secteurs[0].vos_lignes[0].nom === "TotalEnergies", "synthèse selon les réglages " + JSON.stringify(j.secteurs));
+  ok(aiCalls === n0 && j.annonces.length <= 3 && j.a_venir.length <= 3, "rapport court : sans commentaire rédigé, 3 actualités au plus");
+  ok(j.annonces.every(a => a.categorie !== "dividende"), "sujet dividendes retiré");
+  [s, j] = await E("POST", "/api/espace/rapport", { favoris: false, portefeuille: false, secteurs: ["energie"], jour: 0, configure: true }, B);
+  [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(s === 200 && !j.vide && j.lignes.length === 0 && j.secteurs[0].n === 1 && /secteur Énergie/.test(j.essentiel[0] || ""), "rapport des seuls secteurs suivis " + JSON.stringify(j.essentiel));
+  [s] = await E("POST", "/api/espace/rapport", { secteurs: ["energie"], jour: 0, configure: true }, B);
+  // Jour de réception : samedi (A, par défaut), dimanche (B), puis lundi (B) qui reçoit la semaine écoulée
+  const vrai = Date.now, at = iso => { Date.now = () => Date.parse(iso); }, bil = id => sql.prepare("SELECT lien, cle FROM notifs WHERE compte = ? AND type = 'bilan' ORDER BY id").all(id);
+  const idA = sql.prepare("SELECT id FROM comptes WHERE email = 'a@ex.fr'").get().id, idB = rowB.id, nA = bil(idA).length, nB = bil(idB).length;
+  try {
+    at("2026-11-07T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    ok(s === 200 && j.bilans === 1 && j.reste === 0 && bil(idA).length === nA + 1 && bil(idB).length === nB, "samedi : seul le compte du samedi " + JSON.stringify(j));
+    at("2026-11-08T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    ok(j.bilans === 1 && j.reste === 0 && bil(idB).length === nB + 1 && bil(idA).length === nA + 1, "dimanche : le compte du dimanche " + JSON.stringify(j));
+    [s] = await E("POST", "/api/espace/rapport", { secteurs: ["energie"], jour: 1, notif: true }, B);
+    const f0 = env.ASSETS.fetch, cs = { dates: ["2026-11-06", "2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-16", "2026-11-17"], items: { "c:totalenergies": [60, 61, 59, 60, 62, 63, 64, 62], "c:lvmh": [500, 505, 510, 508, 512, 515, 511, 509] } };
+    env.ASSETS.fetch = async r => new URL(r.url).pathname === "/data/cours-semaine.json" ? new Response(JSON.stringify(cs)) : f0(r);
+    at("2026-11-16T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    const lb = bil(idB).pop(); ok(j.bilans === 1 && j.reste === 0 && lb.lien === "/espace?semaine=2026-W46" && bil(idA).length === nA + 1, "lundi : la semaine écoulée " + JSON.stringify([j, lb]));
+    [s] = await E("POST", "/api/espace/rapport", { secteurs: ["energie"], jour: 1, notif: false }, B);
+    at("2026-11-23T07:00:00Z"); const avant = bil(idB).length; [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    ok(j.bilans === 1 && bil(idB).length === avant, "notification désactivée : rapport préparé sans alerte " + JSON.stringify(j));
+    env.ASSETS.fetch = f0;
+  } finally { Date.now = vrai; }
+}
 
 // Changement de mot de passe, déconnexion
 [s] = await E("POST", "/api/espace/motdepasse", { ancien: "faux-mot-de-passe", nouveau: "troisieme-mdp-sur" }, A); ok(s === 401, "ancien mot de passe faux");

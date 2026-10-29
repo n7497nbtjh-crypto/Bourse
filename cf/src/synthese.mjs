@@ -82,6 +82,48 @@ export function indiceDe(k, meta) {
   return null; // pas d'indice équivalent suivi par le site (MSCI World, obligations…) : pas de comparaison plutôt qu'une fausse
 }
 
+/* ---------- Réglages du rapport (choisis par la personne, gardés avec son compte : donnees.profil.rapport) ---------- */
+// { v: 1, favoris, portefeuille (bool : ce que contient le rapport), secteurs: [clé] (secteurs suivis), indices: [id],
+//   detail: "court" | "complet", sujets: { resultats, dividendes, actualite, lecons }, jour: 6 | 0 | 1 (samedi, dimanche, lundi),
+//   notif (bool : notification « rapport prêt »), configure (bool : assistant terminé) }
+export const SECTEURS = { conso: "Consommation", industrie: "Industrie", energie: "Énergie", sante: "Santé", tech: "Technologie", finance: "Banque et assurance",
+  telecom: "Télécoms et médias", materiaux: "Matériaux", services: "Services aux collectivités", immo: "Immobilier" };
+export const RAPPORT_SUJETS = ["resultats", "dividendes", "actualite", "lecons"];
+export const RAPPORT_JOURS = [6, 0, 1];
+export const RAPPORT_MAX_SECTEURS = { gratuit: 2, premium: 6 };
+export const RAPPORT_DEFAUT = Object.freeze({ v: 1, favoris: true, portefeuille: true, secteurs: [], indices: ["cac40", "stoxx50", "sp500", "nasdaq100", "dax", "ftse100", "nikkei"],
+  detail: "complet", sujets: { resultats: true, dividendes: true, actualite: true, lecons: true }, jour: 6, notif: true, configure: false });
+const bool = (v, d) => typeof v === "boolean" ? v : d;
+/** Réglages complets et sûrs, quel que soit ce qui est stocké (champs manquants : valeurs par défaut). */
+export function normaliseRapport(r, max = RAPPORT_MAX_SECTEURS.premium) {
+  const D = RAPPORT_DEFAUT, x = r && typeof r === "object" && !Array.isArray(r) ? r : {};
+  const liste = (v, ok, n) => Array.isArray(v) ? [...new Set(v.filter(k => typeof k === "string" && ok(k)))].slice(0, n) : null;
+  const s = x.sujets && typeof x.sujets === "object" ? x.sujets : {};
+  return { v: 1, favoris: bool(x.favoris, D.favoris), portefeuille: bool(x.portefeuille, D.portefeuille),
+    secteurs: liste(x.secteurs, k => k in SECTEURS, max) || [], indices: liste(x.indices, k => k in INDICES, 7) || [...D.indices],
+    detail: x.detail === "court" ? "court" : "complet", sujets: Object.fromEntries(RAPPORT_SUJETS.map(k => [k, bool(s[k], true)])),
+    jour: RAPPORT_JOURS.includes(x.jour) ? x.jour : D.jour, notif: bool(x.notif, D.notif), configure: bool(x.configure, false) };
+}
+/** Contrôle strict de ce qu'envoie le navigateur. Renvoie { rapport, coupe } ou { error }. */
+export function validerRapport(b, premium) {
+  if (!b || typeof b !== "object" || Array.isArray(b)) return { error: "Réglages invalides." };
+  for (const k of ["favoris", "portefeuille", "notif", "configure"]) if (b[k] !== undefined && typeof b[k] !== "boolean") return { error: `Réglage « ${k} » invalide.` };
+  for (const k of ["secteurs", "indices"]) if (b[k] !== undefined && (!Array.isArray(b[k]) || b[k].length > 20 || b[k].some(x => typeof x !== "string"))) return { error: `Liste « ${k} » invalide.` };
+  if (b.secteurs && b.secteurs.some(x => !(x in SECTEURS))) return { error: "Secteur inconnu." };
+  if (b.indices && b.indices.some(x => !(x in INDICES))) return { error: "Indice inconnu." };
+  if (b.detail !== undefined && !["court", "complet"].includes(b.detail)) return { error: "Niveau de détail invalide (court ou complet)." };
+  if (b.jour !== undefined && !RAPPORT_JOURS.includes(b.jour)) return { error: "Jour invalide (samedi, dimanche ou lundi)." };
+  if (b.sujets !== undefined && (!b.sujets || typeof b.sujets !== "object" || Array.isArray(b.sujets) || Object.entries(b.sujets).some(([k, v]) => !RAPPORT_SUJETS.includes(k) || typeof v !== "boolean"))) return { error: "Sujets invalides." };
+  const max = premium ? RAPPORT_MAX_SECTEURS.premium : RAPPORT_MAX_SECTEURS.gratuit;
+  const rapport = normaliseRapport(b, max);
+  if (!rapport.favoris && !rapport.portefeuille && !rapport.secteurs.length) return { error: "Choisissez au moins une source : vos favoris, votre portefeuille ou un secteur." };
+  return { rapport, coupe: new Set(b.secteurs || []).size > max };
+}
+/** Ce qui change le contenu du rapport (le jour et la notification n'en font pas partie). */
+export const rapportSignature = r => { const x = normaliseRapport(r); return [x.favoris ? "f" : "", x.portefeuille ? "p" : "", x.secteurs.join("+"), x.indices.join("+"), x.detail, RAPPORT_SUJETS.filter(k => x.sujets[k]).join("+")].join("/"); };
+// Sujet d'une annonce ou d'un rendez-vous : résultats, dividendes ou actualité (tout le reste)
+const sujetDe = code => ["resultats", "ca", "rapport"].includes(code) ? "resultats" : code === "dividende" ? "dividendes" : "actualite";
+
 /* ---------- Annonces : catégorie et importance ---------- */
 const CATS = [
   ["opa", "Offre publique", 100, /\bOP[AERS]\b|offre publique|tender offer|retrait obligatoire/i],
@@ -181,8 +223,9 @@ function evolutionAlertes(A, prec) {
 
 /* ---------- Les faits de la semaine ---------- */
 // d : { names, px, cs, sem, ana, ev, etf: { "e:id": { ter, pea, index } }, meta: { "c:id": { region } }, isin, fx, actu: { "c:id": [articles] } }
-export function faitsSynthese(d, { favoris = [], pf = null } = {}, semaine, opts = {}) {
-  const auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null;
+export function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, semaine, opts = {}) {
+  const auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null, RG = normaliseRapport(rapport);
+  if (!RG.favoris) favoris = []; if (!RG.portefeuille) pf = null;
   const LP = lignesPf(pf).filter(l => d.names[l.k]), pfSet = new Set(LP.map(l => l.k)), favSet = new Set(favoris.filter(k => KEY.test(k)));
   const keys = [...new Set([...favSet, ...pfSet])].filter(k => d.names[k]).slice(0, 260);
   const idx = {};
@@ -258,12 +301,24 @@ export function faitsSynthese(d, { favoris = [], pf = null } = {}, semaine, opts
   for (const a of off) { const o = urlsO.get(a.source); if (o) { if (!o.chiffres.length && a.chiffres.length) o.chiffres = a.chiffres; if (!o.resume) o.resume = a.resume; } }
   const vus = new Set();
   const annonces = [...actuO, ...off.filter(a => !urlsO.has(a.source)), ...presse].sort((a, b) => b.poids - a.poids || String(b.date).localeCompare(a.date))
-    .filter(a => { const c = a.source || a.k + "|" + (a.titre || a.type) + "|" + a.date; if (vus.has(c)) return false; vus.add(c); return true; }).slice(0, 30);
+    .filter(a => { const c = a.source || a.k + "|" + (a.titre || a.type) + "|" + a.date; if (vus.has(c)) return false; vus.add(c); return true; })
+    .filter(a => RG.sujets[sujetDe(a.categorie)]).slice(0, RG.detail === "court" ? 3 : 30);
 
   // Rendez-vous des 14 prochains jours (agenda du site)
   const debutAv = auj && auj > lundi ? auj : lundi, finAv = addJ(debutAv, 14);
-  const a_venir = (d.ev || []).filter(e => e && ids.has(e.id) && e.date >= debutAv && e.date <= finAv).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 12)
-    .map(e => { const c = categorie(e.type, e.label); return { k: "c:" + e.id, id: e.id, nom: d.names["c:" + e.id], date: e.date, type: e.type || null, label: e.label || e.type || "", categorie: c.code, source: e.source || null, lien: "/entreprise/" + e.id + "/agenda" }; });
+  const a_venir = (d.ev || []).filter(e => e && ids.has(e.id) && e.date >= debutAv && e.date <= finAv).sort((a, b) => a.date.localeCompare(b.date))
+    .map(e => { const c = categorie(e.type, e.label); return { k: "c:" + e.id, id: e.id, nom: d.names["c:" + e.id], date: e.date, type: e.type || null, label: e.label || e.type || "", categorie: c.code, source: e.source || null, lien: "/entreprise/" + e.id + "/agenda" }; })
+    .filter(e => RG.sujets[sujetDe(e.categorie)]).slice(0, RG.detail === "court" ? 3 : 12);
+
+  // Secteurs suivis : variation médiane de la semaine des entreprises du secteur suivies par le site
+  const secteurs = RG.secteurs.map(sk => {
+    const vs = [];
+    for (const [k, m] of Object.entries(d.meta || {})) if (m && m.sector === sk && d.names[k]) { const v = variationSemaine(d.cs, k, lundi, auj, d.px[k], d.sem); if (v) vs.push({ k, nom: d.names[k], variation_semaine_pct: v.pct }); }
+    vs.sort((a, b) => b.variation_semaine_pct - a.variation_semaine_pct);
+    const p = vs.map(x => x.variation_semaine_pct), mid = p.length >> 1, med = p.length ? (p.length % 2 ? p[mid] : (p[mid - 1] + p[mid]) / 2) : null;
+    return { id: sk, nom: SECTEURS[sk], n: vs.length, mediane_pct: med != null ? r2(med) : null, hausses: p.filter(x => x > 0).length, baisses: p.filter(x => x < 0).length,
+      premieres: vs.slice(0, 3), dernieres: vs.length > 3 ? vs.slice(-3).reverse() : [], vos_lignes: lignes.filter(l => d.meta[l.k] && d.meta[l.k].sector === sk).map(court) };
+  });
 
   const f = {
     v: SYN_VERSION, semaine, genere: Date.now(), du: lundi, au: dimanche, lignes,
@@ -271,7 +326,8 @@ export function faitsSynthese(d, { favoris = [], pf = null } = {}, semaine, opts
     meilleure: court(mv[0]) || null, pire: mv.length > 1 ? court(mv[mv.length - 1]) : null,
     hausses: mv.filter(l => l.variation_semaine_pct > 0).length, baisses: mv.filter(l => l.variation_semaine_pct < 0).length,
     partiel: mv.length > 0 && mv.every(l => l.partiel), depuis: mv.length ? mv.map(l => l.du).filter(Boolean).sort()[0] || null : null,
-    indices: Object.values(idx).map(({ id, nom, pct, partiel }) => ({ id, nom, pct, partiel })), portefeuille, annonces, a_venir, texte: null,
+    indices: Object.values(idx).filter(i => RG.indices.includes(i.id)).map(({ id, nom, pct, partiel }) => ({ id, nom, pct, partiel })), portefeuille, annonces, a_venir, secteurs, texte: null,
+    reglages: { favoris: RG.favoris, portefeuille: RG.portefeuille, secteurs: RG.secteurs, indices: RG.indices, detail: RG.detail, sujets: RG.sujets, jour: RG.jour },
   };
   f.essentiel = essentielDe(f);
   f.lecture_min = lectureMin(f);
@@ -287,6 +343,11 @@ export function essentielDe(f) {
     P.push(`Votre portefeuille ${pf.var_eur >= 0 ? "a gagné" : "a perdu"} ${eurS(pf.var_eur).replace(/^[+−]/, "")} (${sgnP(pf.var_pct)}) ${quand}${vs}.`);
   } else if (mv.length) {
     P.push(`${mv.length > 1 ? "Vos " + mv.length + " valeurs suivies ont" : "Votre valeur suivie a"} évolué de ${sgnP(f.moyenne)}${mv.length > 1 ? " en moyenne" : ""} ${quand}${mv.length > 1 ? ` (${f.hausses} en hausse, ${f.baisses} en baisse)` : ""}${cac ? `, contre ${sgnP(cac.pct)} pour le CAC 40` : ""}.`);
+  }
+  const secs = (f.secteurs || []).filter(s => s.mediane_pct != null && s.n >= 1);
+  if (secs.length && (!mv.length || (f.reglages && !f.reglages.favoris && !f.reglages.portefeuille))) {
+    const s = secs[0], aut = secs.slice(1, 3);
+    P.push(`Le secteur ${s.nom} a évolué de ${sgnP(s.mediane_pct)}${s.n > 1 ? " en médiane" : ""} ${quand} (${s.n} entreprise${s.n > 1 ? "s" : ""} suivie${s.n > 1 ? "s" : ""} par le site)${aut.length ? `, contre ${aut.map(x => `${sgnP(x.mediane_pct)} pour ${x.nom}`).join(" et ")}` : ""}.`);
   }
   const fort = mv.slice().sort((a, b) => Math.abs(b.variation_semaine_pct) - Math.abs(a.variation_semaine_pct))[0];
   if (fort && Math.abs(fort.variation_semaine_pct) >= 0.5) {

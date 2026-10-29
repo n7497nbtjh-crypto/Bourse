@@ -6,10 +6,10 @@ name: espace
 on:
   schedule:
     - cron: "43 17 * * *"   # chaque soir, 17 h 43 UTC : alertes après la clôture européenne
-    - cron: "17 6 * * 6"    # samedi 6 h 17 UTC : bilan de la semaine
+    - cron: "17 6 * * 0,1,6"    # samedi, dimanche et lundi 6 h 17 UTC : rapport de la semaine, le jour choisi par chacun (samedi par défaut)
   workflow_dispatch:
     inputs:
-      quoi: { description: "alertes ou bilan (vide : automatique, bilan le samedi)", default: "" }
+      quoi: { description: "alertes, bilan (tout le monde) ou jour (rapport de ceux qui l'ont choisi ce jour-là) ; vide : automatique", default: "" }
 jobs:
   espace:
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
           PLANNING: ${{ github.event.schedule }}
         run: |
           if [ -z "$ADMIN_KEY" ]; then echo "ADMIN_KEY absent : rien à faire."; exit 0; fi
-          if [ -z "$QUOI" ] && [ "$PLANNING" = "17 6 * * 6" ]; then QUOI=bilan; fi
+          if [ -z "$QUOI" ] && [ "$PLANNING" = "17 6 * * 0,1,6" ]; then QUOI=jour; fi
           Q=""; if [ -n "$QUOI" ]; then Q="?quoi=$QUOI"; fi
           for i in $(seq 1 60); do
             R=$(curl -sS -X POST -H "x-admin-key: $ADMIN_KEY" "$SITE/api/espace/tache$Q" || echo '{}')

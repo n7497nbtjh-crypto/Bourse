@@ -1,7 +1,7 @@
 // Synthèse « Votre semaine en 2 minutes » : faits calculés (cf/src/synthese.mjs) et route /api/espace/bilan.
 // Base SQLite en mémoire (comme D1), données du site, cours et modèle simulés.
 import { DatabaseSync } from "node:sqlite";
-import { clotures, lundiDe, variationSemaine, indiceDe, categorie, lignesPf, faitsSynthese, essentielDe, resumeCourt, seancePrecedente, addJ } from "../cf/src/synthese.mjs";
+import { clotures, lundiDe, variationSemaine, indiceDe, categorie, lignesPf, faitsSynthese, essentielDe, resumeCourt, seancePrecedente, addJ, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT } from "../cf/src/synthese.mjs";
 import { espace, syntheseNotif, semaineIso, jourParis, _redacteur } from "../cf/src/espace.mjs";
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log("ÉCHEC", m); } };
 
@@ -146,6 +146,24 @@ const rt = await espace(new Request("https://t.local/api/espace/tache?quoi=bilan
 const nb = sql.prepare("SELECT texte FROM notifs WHERE compte = ? AND type = 'bilan'").get(acc);
 ok(jt.bilans === 1 && nb && /^Votre semaine en 2 minutes est prête\. Votre portefeuille a gagné 50 €/.test(nb.texte), "notification du samedi " + JSON.stringify(jt) + " " + (nb && nb.texte));
 // Notification push (cf/src/push.mjs) : titre fixe, la première phrase de la synthèse en corps
+// Réglages du rapport : valeurs sûres, contrôle strict, effet sur les faits
+{ const n = normaliseRapport({ detail: "x", jour: 4, secteurs: ["tech", "or", "tech"], indices: ["dax", "lune"], sujets: { resultats: false, meteo: 1 }, favoris: "oui" });
+  ok(n.detail === "complet" && n.jour === 6 && n.secteurs.join() === "tech" && n.indices.join() === "dax" && n.sujets.resultats === false && n.sujets.lecons === true && n.favoris === true, "normaliseRapport " + JSON.stringify(n));
+  ok(JSON.stringify(normaliseRapport(null)) === JSON.stringify({ ...RAPPORT_DEFAUT, sujets: { ...RAPPORT_DEFAUT.sujets } }), "défaut");
+  ok(validerRapport({ favoris: "oui" }).error && validerRapport({ jour: 2 }).error && validerRapport({ indices: ["x"] }).error && validerRapport([]).error, "validerRapport refuse le reste");
+  const v = validerRapport({ secteurs: ["tech", "sante", "energie"] }, false); ok(v.rapport.secteurs.length === 2 && v.coupe, "2 secteurs sans Premium");
+  ok(validerRapport({ secteurs: ["tech", "sante", "energie"] }, true).rapport.secteurs.length === 3, "6 avec Premium");
+  ok(rapportSignature({ jour: 0 }) === rapportSignature({ jour: 1, notif: false }) && rapportSignature({ detail: "court" }) !== rapportSignature({}), "signature : le jour ne change pas le contenu");
+  const dS = { ...d, meta: { ...d.meta, "c:a": { region: "FR", sector: "tech" }, "c:b": { region: "FR", sector: "tech" }, "c:g": { region: "US", sector: "tech" } } };
+  const r1 = faitsSynthese(dS, { favoris: ["c:b", "c:a"], pf, rapport: { portefeuille: false, secteurs: ["tech"], indices: ["sp500"], sujets: { resultats: false } } }, "2026-W44", { auj: "2026-10-29" });
+  ok(r1.portefeuille === null && r1.lignes.every(l => !l.en_portefeuille) && r1.lignes.length === 2, "portefeuille exclu du rapport");
+  ok(r1.indices.length === 1 && r1.indices[0].id === "sp500" && r1.annonces.every(a => !["resultats", "ca"].includes(a.categorie)), "indices et sujets choisis " + JSON.stringify(r1.annonces.map(a => a.categorie)));
+  const sec = r1.secteurs[0]; ok(sec && sec.n === 3 && sec.mediane_pct === 5 && sec.premieres[0].k === "c:g" && sec.vos_lignes.length === 2 && r1.reglages.secteurs[0] === "tech", "secteur suivi : médiane de la semaine " + JSON.stringify(sec));
+  const r2c = faitsSynthese(dS, { favoris: ["c:b", "c:a"], pf, rapport: { favoris: false, portefeuille: false, secteurs: ["tech"] } }, "2026-W44", { auj: "2026-10-29" });
+  ok(r2c.lignes.length === 0 && /^Le secteur Technologie a évolué de \+5,0 % en médiane/.test(r2c.essentiel[0]), "rapport des seuls secteurs " + JSON.stringify(r2c.essentiel));
+  const r3 = faitsSynthese(d, { favoris: ["c:b", "c:a"], pf, rapport: { detail: "court" } }, "2026-W44", { auj: "2026-10-29" });
+  ok(r3.annonces.length <= 3 && r3.a_venir.length <= 3 && r3.reglages.detail === "court", "rapport court"); }
+
 const { message } = await import("../cf/src/push.mjs");
 const mp = message([{ id: 1, type: "bilan", texte: nb.texte, lien: "/espace", at: 1 }]), mo = message([{ id: 2, type: "bilan", texte: "Votre bilan de la semaine est prêt.", lien: "/espace", at: 1 }]);
 ok(mp.t === "Votre semaine en 2 minutes est prête" && /^Votre portefeuille a gagné 50 €/.test(mp.b) && mp.u === "/espace" && mo.b.startsWith("Les variations"), "notification push " + JSON.stringify([mp, mo]));
