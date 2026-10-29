@@ -17,7 +17,8 @@ function accCharge() {
   if (ACC.prets) return ACC.prets;
   const ctx = (typeof ctxCharge === "function" ? ctxCharge() : fetch(ACC_CTX_URL).then(r => r.ok ? r.json() : null)).catch(() => null);
   const fil = (typeof actuFil === "function" ? actuFil() : fetch("/data/actu/fil.json").then(r => r.ok ? r.json() : null)).catch(() => null);
-  return ACC.prets = Promise.all([ctx, fil]).then(([c, f]) => { ACC.ctx = c; ACC.fil = f || { o: [], p: [] }; return ACC; });
+  const fi = typeof loadFiches === "function" ? loadFiches().catch(() => null) : null; // les sujets du jour désignent les entreprises concernées d'après leurs textes de fiche
+  return ACC.prets = Promise.all([ctx, fil, fi]).then(([c, f]) => { ACC.ctx = c; ACC.fil = f || { o: [], p: [] }; return ACC; });
 }
 if (location.pathname === "/") accCharge(); // téléchargement lancé pendant que le site charge ses données
 const accAttendre = (p, ms) => Promise.race([p, new Promise(r => setTimeout(r, ms))]);
@@ -311,7 +312,28 @@ async function pageHome() {
     ${membre ? "" : accPourVousHTML(false)}
 
     <button type="button" class="acc-plus" id="acc-plus" aria-expanded="false" aria-controls="acc-plusb">Voir plus : à découvrir, débuter, Premium<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
-    <div id="acc-plusb" hidden>
+    <div id="acc-plusb" hidden></div>
+  </div>`;
+  ACC.prem = prem; ACC.secs = secs;
+  accLier(membre);
+  if (!pret) accCharge().then(() => { if (location.pathname !== "/") return; const a = $("#acc-pointb"), b = $("#acc-annw"); if (a) a.innerHTML = accPointHTML(); if (b) b.innerHTML = accAnnoncesHTML(); if (!membre && !$("#acc-pourvous")) { const d = $("#acc-decouvrir"); const h = accPourVousHTML(false); if (d && h) d.insertAdjacentHTML("beforebegin", h); } });
+  moi().then(m => {
+    if (location.pathname !== "/") return;
+    try { localStorage.setItem("bilan.acc.membre", m.connecte ? "1" : "0"); } catch (e) { }
+    if (!!m.connecte !== membre) return pageHome(); // l'état a changé depuis la dernière visite : la page se recompose une fois
+  });
+}
+function accEspace(membre) { // le rapport de la semaine (bloc « Mon espace »), une fois le « Voir plus » ouvert
+  moi().then(m => {
+    if (location.pathname !== "/") return;
+    const el = $("#homeesp"); if (!el) return;
+    if (m.connecte && typeof synAccueil === "function") return synAccueil(el, m);
+    if (!m.connecte && typeof parAccueilVisiteur === "function") return parAccueilVisiteur(el);
+  });
+}
+/* Le bloc « Voir plus » n'est construit qu'au clic : ses données (historique des comptes, cours de la semaine) ne sont pas chargées au démarrage */
+function accPlusHTML(membre, prem, secs) {
+  return `
     <section class="acc-sec" id="acc-decouvrir">${accH("À découvrir", "Une sélection pour aller plus loin", ["/decouvertes", "Toutes les découvertes"])}
       ${typeof outilsDecouverteHTML === "function" ? outilsDecouverteHTML(3) : ""}
       <div class="acc-explo"><p class="acc-ah">Explorer par secteur</p><div class="acc-secs scroll-x">${secs.map(x => `<a href="/entreprises?secteur=${x.k}">${esc(x.name)} <small>${x.n}</small></a>`).join("")}</div>
@@ -325,25 +347,13 @@ async function pageHome() {
     ${membre ? "" : `<section class="acc-sec" id="acc-rapport">${accH("Mon espace · gratuit", "Votre rapport de la semaine, sur mesure", ["/espace", "Créer mon rapport"])}<div id="homeesp"></div></section>`}
 
     ${prem ? "" : `<a class="acc-prem" href="/premium"><span class="acc-pk">Premium</span><span class="acc-pt">Toute l'Académie, des alertes chaque soir, 12 semaines d'historique et un portefeuille sans limite.</span><span class="acc-pl">Découvrir →</span></a>`}
-    </div>
-  </div>`;
-  accLier(membre);
-  const dg = $("#acc-decouvrir .out-dg"); if (dg) dg.classList.add("scroll-x");
-  if (!pret) accCharge().then(() => { if (location.pathname !== "/") return; const a = $("#acc-pointb"), b = $("#acc-annw"); if (a) a.innerHTML = accPointHTML(); if (b) b.innerHTML = accAnnoncesHTML(); if (!membre && !$("#acc-pourvous")) { const d = $("#acc-decouvrir"); const h = accPourVousHTML(false); if (d && h) d.insertAdjacentHTML("beforebegin", h); } });
-  moi().then(m => {
-    if (location.pathname !== "/") return;
-    try { localStorage.setItem("bilan.acc.membre", m.connecte ? "1" : "0"); } catch (e) { }
-    if (!!m.connecte !== membre) return pageHome(); // l'état a changé depuis la dernière visite : la page se recompose une fois
-    const el = $("#homeesp"); if (!el) return;
-    if (m.connecte && typeof synAccueil === "function") return synAccueil(el, m);
-    if (!m.connecte && typeof parAccueilVisiteur === "function") return parAccueilVisiteur(el);
-  });
+  `;
 }
 function accLier(membre) {
   bindIaBox($("#hia"));
   const root = $(".acc"); if (!root) return;
   const pl = $("#acc-plus"), plb = $("#acc-plusb");
-  if (pl && plb) pl.onclick = () => { plb.hidden = false; pl.remove(); const dg = $("#acc-decouvrir .out-dg"); if (dg) dg.classList.add("scroll-x"); };
+  if (pl && plb) pl.onclick = () => { if (!plb.innerHTML) { plb.innerHTML = accPlusHTML(membre, ACC.prem, ACC.secs); accEspace(membre); } plb.hidden = false; pl.remove(); const dg = $("#acc-decouvrir .out-dg"); if (dg) dg.classList.add("scroll-x"); };
   root.addEventListener("click", e => {
     const q = e.target.closest("[data-iaq]"); if (q) return go("/demander?q=" + encodeURIComponent(q.dataset.iaq));
     const o = e.target.closest("[data-acc-open]"); if (o) return accOuvrir(o.dataset.accOpen, o);

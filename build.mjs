@@ -27,6 +27,9 @@ if (existsSync("data/concurrents.json")) wfs("cf/site/data/concurrents.json", re
   wfs("cf/site/data/etf.json", JSON.stringify({ updated: maj, list: E })); }
 { const { default: U, REGIONS } = await import("./data/univers.mjs"); const { default: F } = await import("./data/fiches.mjs"); const { default: C, SOURCES_COURTIERS } = await import("./data/courtiers.mjs");
   writeFileSync("cf/site/data/univers.json", JSON.stringify({ regions: REGIONS, companies: U.map(({ id, name, ticker, domain, desc, sector, isin, tv, region, fiche, sec }) => ({ id, name, ticker, domain, desc, sector, isin, tv, region, sec, fiche: F[id] || fiche || null })) }));
+  // Le navigateur démarre avec la version sans les textes de fiche (moitié du poids) ; ils arrivent à part, à la première fiche ouverte (loadFiches, index.html)
+  writeFileSync("cf/site/data/univers-min.json", JSON.stringify({ regions: REGIONS, companies: U.map(({ id, name, ticker, domain, desc, sector, isin, tv, region, sec }) => ({ id, name, ticker, domain, desc, sector, isin, tv, region, sec })) }));
+  writeFileSync("cf/site/data/fiches.json", JSON.stringify(Object.fromEntries(U.map(({ id, fiche }) => [id, F[id] || fiche || null]).filter(x => x[1]))));
   writeFileSync("cf/site/data/courtiers.json", JSON.stringify({ updated: "2026-10-28", sources: SOURCES_COURTIERS, list: C.map(c => ({ ...c, grille: c.grille.map(g => [g[0] === Infinity ? null : g[0], g[1], g[2]]) })) }));
   const miss = U.filter(c => !F[c.id] && !c.fiche).map(c => c.id); if (miss.length) { console.log("fiches manquantes :", miss.join(", ")); process.exit(1); } }
 const { default: INDEX } = await import("./data/univers.mjs");

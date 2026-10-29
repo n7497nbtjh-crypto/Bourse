@@ -4,7 +4,7 @@
 /* global BILAN_VERSION */
 export const VERSION = typeof BILAN_VERSION === "string" ? BILAN_VERSION : "dev"; // empreinte des fichiers du site, fixée par build.mjs
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-const DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"]; // lues au démarrage de chaque page (segments-fr.json, facultatif, n'est pas préchargé)
+const DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"]; // lues au démarrage de chaque page (segments-fr.json, facultatif, n'est pas préchargé)
 /* En-têtes de sécurité des pages HTML (audit P0-4, 29/10/2026). Les scripts de la page sont en ligne (index.html) et les
    modules ajoutent leurs styles : 'unsafe-inline' reste nécessaire pour script et style. Ce que la règle garantit malgré tout :
    aucun script ni cadre d'un autre domaine que le site et TradingView (graphique des fiches), aucune connexion sortante

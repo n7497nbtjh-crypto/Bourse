@@ -545,7 +545,7 @@ async function pageCompany(id, tab) {
   fiche2Centrer();
   if (!tab) ficheGraphique(s); // la courbe se charge pendant que la fiche arrive, sans la retarder
   const load = s.missing ? Promise.resolve(null) : (FULL[id] ? Promise.resolve(FULL[id]) : fetch(`/data/societes/${id}.json`).then(r => r.json()).then(j => FULL[id] = j).catch(() => null));
-  const [c] = await Promise.all([load, PXP, ficheWDLoad(id)]);
+  const [c] = await Promise.all([load, PXP, ficheWDLoad(id), typeof loadFiches === "function" ? loadFiches() : null]); // les textes de fiche arrivent avec les comptes
   if (!ficheMemeId(id)) return; // l'utilisateur a changé de page entre-temps
   const ph = $("#pxh"); if (ph) ph.innerHTML = ficheCours(s);
   const sm = $(".fh-sum"); if (sm) sm.outerHTML = ficheSommaire(s, c); // la situation et le prix ont besoin des comptes et du cours

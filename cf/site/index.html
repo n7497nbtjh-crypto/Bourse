@@ -1150,6 +1150,15 @@ function computeMedians() { // médiane des entreprises suivies, par secteur (to
 }
 const regName = c => (R.regions && R.regions[c.region]) || "";
 const secName = c => R.sectors[c.sector] || c.sector;
+/* Les textes de fiche (ce qu'elle fait, d'où vient l'argent, ce qui fait varier ses résultats) pèsent la moitié de l'univers :
+   ils sont servis à part (/data/fiches.json) et rattachés aux entreprises à la première demande. */
+let FICHES = null, FICHESP = null;
+function fichesMerge() { if (!FICHES || !R) return; R.companies.forEach(c => { if (FICHES[c.id]) c.fiche = FICHES[c.id]; }); FICHES.__ok = true; }
+function loadFiches() {
+  if (!FICHESP) FICHESP = getJSON("/data/fiches.json", {}).then(F => { FICHES = F; fichesMerge(); return F; });
+  if (FICHES && R && !FICHES.__ok) fichesMerge(); // demandé avant l'univers, arrivé avant lui : rattachement au premier appel suivant
+  return FICHESP;
+}
 const eventsOf = id => AG.events.filter(e => e.id === id).sort((a, b) => a.date.localeCompare(b.date));
 const upcoming = () => AG.events.filter(e => e.date >= TODAY && RBY[e.id]).sort((a, b) => a.date.localeCompare(b.date));
 
@@ -4346,7 +4355,7 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 /* ---------- Démarrage ---------- */
 // Un fichier absent sous /data/ renvoyait la page d'accueil entière (516 ko) avec un code 200 : on refuse tout ce qui n'est pas du JSON (audit P0-3).
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok && /json/i.test(r.headers.get("content-type") || "") ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {})]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc]) => {
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {})]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc]) => {
   REP = rep || {}; CONC = conc || {};
   ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = segfr || {};
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
@@ -4357,6 +4366,7 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   // La liste des entreprises suivies fait foi ; les comptes collectés s'y ajoutent
   R = { ...r, regions: uni.regions, companies: uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u })) };
   R.companies.forEach(c => { RBY[c.id] = c; if (c.isin) ISINBY[c.isin] = c; });
+  fichesMerge(); // si les textes de fiche sont déjà arrivés (accueil)
   computeMedians();
   favCount();
   PXP = loadPrices();

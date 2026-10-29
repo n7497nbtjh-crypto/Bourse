@@ -61,7 +61,7 @@ with sync_playwright() as pw:
     ok(stat == ["bilan-statique-" + v], "un seul cache de scripts, à la version en ligne " + str(list(caches)))
     ok(stat and "/ia.js" in caches[stat[0]] and any(p.startswith("/m/") for p in caches[stat[0]]), "scripts du site en cache")
     ok("/" in caches.get("bilan-coquille", []), "coquille en cache")
-    ok("/data/societes.json" in caches.get("bilan-donnees", []) and "/data/univers.json" in caches.get("bilan-donnees", []), "données en cache")
+    ok("/data/societes.json" in caches.get("bilan-donnees", []) and "/data/univers-min.json" in caches.get("bilan-donnees", []), "données en cache")
     ok(not any(p.startswith("/api/") or p == "/mcp" for l in caches.values() for p in l), "rien de /api ni /mcp en cache")
     # 3. Hors ligne : la fiche s'ouvre avec les dernières données, une page jamais vue garde la coquille, le bandeau s'affiche
     ctx.set_offline(True)

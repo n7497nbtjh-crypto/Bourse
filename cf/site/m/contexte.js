@@ -49,7 +49,7 @@ function ctxProfil(s, c) {
   const kw = new Set(Object.keys(CTX_RE).filter(k => CTX_RE[k].test(txt)));
   Object.keys(CTX_DEP).forEach(k => { if (CTX_DEP[k].test(dep)) kw.add(k); });
   let pays = null;
-  try { if (typeof analyseCtx === "function") pays = analyseCtx(s, c).pays; } catch (e) { }
+  try { if (typeof analyseCtx === "function" && (ANALYSE_WD || /^\/entreprise\//.test(location.pathname))) pays = analyseCtx(s, c).pays; } catch (e) { } // hors fiche, pas de chargement de facteurs.json rien que pour le pays : l'ISIN suffit
   if (!pays && s.isin && /^[A-Z]{2}/.test(s.isin) && !["XS", "EU", "KY", "BM", "VG", "JE", "GG"].includes(s.isin.slice(0, 2))) pays = s.isin.slice(0, 2);
   if (!pays && (s.region === "FR" || s.region === "US")) pays = s.region;
   const bank = isBank(s) && !kw.has("assur");
