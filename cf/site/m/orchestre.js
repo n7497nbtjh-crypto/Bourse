@@ -227,3 +227,108 @@ html.orcia-on{overflow:hidden}
 @media print{.orciab,.orcia{display:none!important}}
 </style>`);
 })();
+
+/* ---------- Méthode et sources : la fiabilité rendue visible ---------- */
+function pageMethode() {
+  setTitle("Méthode, sources et IA"); setNav("new");
+  const ico = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
+  const nCo = R.companies.filter(c => !c.missing).length;
+  const SRC = [
+    ["Comptes annuels des entreprises européennes", "Rapports financiers annuels au format officiel ESEF, déposés par les sociétés cotées", "filings.xbrl.org", "https://filings.xbrl.org"],
+    ["Comptes des entreprises américaines", "Dépôts auprès de la Securities and Exchange Commission (10-K, 20-F)", "SEC EDGAR", "https://www.sec.gov/edgar"],
+    ["Annonces des sociétés françaises", "Informations réglementées publiées par les émetteurs", "AMF, info-financiere.gouv.fr", "https://www.info-financiere.gouv.fr"],
+    ["Listes noires", "Sites et entités non autorisés signalés par l'Autorité des marchés financiers", "AMF via data.gouv.fr", "https://www.data.gouv.fr"],
+    ["Taux de change", "Taux de référence quotidiens de l'euro", "Banque centrale européenne", "https://www.ecb.europa.eu"],
+    ["Cours de Bourse", "Cours de clôture ou différés, à titre indicatif", "Google Finance", "https://www.google.com/finance"],
+    ["ETF", "Fiches, documents d'informations clés et compositions publiés par les émetteurs", "Sites des émetteurs", null],
+  ];
+  app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › Méthode et sources</div>
+    <div class="mtdhero"><p class="kick">Transparence</p><h1 class="pagetitle">Comment bilan. fabrique ses chiffres</h1>
+      <p class="pagesub">Des documents officiels, des calculs vérifiables, une IA encadrée. Voici, étape par étape, ce qui se passe entre le rapport annuel d'une entreprise et ce que vous lisez.</p>
+      <div class="mtdkpi"><span><b>${F0.format(nCo)}</b>entreprises avec leurs comptes</span><span><b>${ETF.list.length}</b>ETF suivis</span><span><b>0</b>publicité</span><span><b>0</b>conseil d'achat ou de vente</span></div></div>
+    <ol class="mtdflow">
+      <li><span class="ic">${ico("M6 3h9l3 3v15H6zM9 9h6M9 13h6M9 17h4")}</span><b>1. Les sources officielles</b><p>Rapports annuels déposés auprès des autorités (ESEF en Europe, SEC aux États-Unis), annonces réglementées, taux de la BCE.</p></li>
+      <li><span class="ic">${ico("M4 19V5M4 19h16M8 15l3-4 3 2 4-6")}</span><b>2. Le calcul</b><p>Le site lit les chiffres (ventes, résultats, dette, dividendes) et calcule les ratios lui-même. Des contrôles écartent les valeurs incohérentes.</p></li>
+      <li><span class="ic">${ico("M12 3v18M5 8h14M5 16h14")}</span><b>3. La comparaison</b><p>Chaque chiffre est situé par rapport à la médiane des entreprises du même secteur : vert nettement mieux, orange nettement moins bien, gris dans la moyenne.</p></li>
+      <li><span class="ic">${ico("M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z")}</span><b>4. L'explication</b><p>Des phrases simples, construites à partir des chiffres. L'IA traduit vos questions en calculs ; elle ne fabrique pas les chiffres.</p></li>
+    </ol>
+    <div class="mtdgrid">
+      <section class="panel"><div class="ph"><h2>Comment lire les couleurs</h2></div><div class="pb">
+        <div class="mtdleg"><span class="g">Point fort</span><span class="n">Dans la moyenne</span><span class="o">Point de vigilance</span></div>
+        <p>La <b>médiane</b> d'un secteur est la valeur du milieu : la moitié des entreprises fait mieux, l'autre moins bien. Un chiffre est vert quand il est nettement meilleur que cette médiane, orange quand il est nettement moins bon.</p>
+        <p class="muted" style="margin:0">Un point orange n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller. Une couleur n'est jamais une note d'achat.</p></div></section>
+      <section class="panel"><div class="ph"><h2>L'IA, en trois niveaux</h2></div><div class="pb mtdia">
+        <div><b>1. Règles du site, dans votre navigateur</b><p>Recherches par critères, comparaisons, définitions, questions sur une fiche : comprises et calculées sur les données, sans modèle génératif. Réponse instantanée, exacte par construction, sans limite.</p></div>
+        <div><b>2. Leçons vérifiées de l'Académie</b><p>Les questions de cours renvoient vers des leçons rédigées à partir de sources officielles, avec leurs chiffres 2026.</p></div>
+        <div><b>3. Modèle de langage encadré</b><p>Pour les questions libres seulement : un modèle ouvert (dans votre navigateur si votre appareil le permet, sinon sur nos serveurs) reçoit uniquement les chiffres du site et des consignes strictes. Sa réponse est signalée comme rédigée par une IA.</p></div></div></section>
+    </div>
+    <section class="panel"><div class="ph"><h2>Les règles données à l'IA contre les biais</h2></div><div class="pb"><ul class="mtdcheck">
+      <li>Séparer les faits de leur interprétation</li><li>Présenter à la fois ce qui est favorable et ce qui demande de la vigilance</li><li>Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années</li>
+      <li>Comparer à la médiane du secteur plutôt que juger dans l'absolu</li><li>Aucun mot d'emphase, aucune prédiction de cours</li><li>Aucune recommandation d'acheter, de vendre ou de conserver</li>
+      <li>Dire quand une information manque</li><li>Ne citer que les chiffres fournis</li></ul></div></section>
+    <section class="panel"><div class="ph"><h2>Nos sources</h2></div><div class="pb"><div class="mtdsrc">${SRC.map(([t, d, n, u]) => `<div><b>${t}</b><span>${d}</span>${u ? `<a class="lnk" href="${u}" target="_blank" rel="noopener">${n}</a>` : `<span class="light">${n}</span>`}</div>`).join("")}</div>
+      <p class="note" style="margin:12px 0 0">Les cours viennent d'une source gratuite et différée : ils sont indicatifs et peuvent avoir plusieurs minutes de retard.</p></div></section>
+    <div class="mtdgrid">
+      <section class="panel"><div class="ph"><h2>Ce que le site ne fait pas</h2></div><div class="pb"><ul class="mtdno">
+        <li>Il ne dit pas quoi acheter ni quand vendre.</li><li>Il ne publie ni objectifs de cours ni recommandations d'analystes (travaux payants, soumis à licence).</li>
+        <li>Il ne connaît ni votre patrimoine ni vos revenus : ses repères sont généraux.</li><li>Il ne vend aucun produit financier et n'affiche aucune publicité.</li></ul>
+        <p class="note" style="margin:10px 0 0">Pour un conseil adapté à votre situation : un conseiller en investissements financiers (CIF) enregistré à l'ORIAS.</p></div></section>
+      <section class="panel"><div class="ph"><h2>Les limites à connaître</h2></div><div class="pb"><ul class="mtdno">
+        <li>Les comptes annuels ont plusieurs mois de retard sur l'activité réelle.</li><li>Un ratio d'une seule année peut être faussé par un élément exceptionnel.</li>
+        <li>Les cours sont différés.</li><li>L'IA peut se tromper : vérifiez un chiffre important dans le document source, dont le lien est donné.</li></ul></div></section>
+    </div>
+    <section class="panel mtderr"><div class="pb"><div><h2 style="margin:0 0 4px">Vous voyez une erreur ?</h2><p class="muted" style="margin:0">Un chiffre faux, une explication trompeuse, un lien cassé : dites-le nous, chaque signalement est relu.</p></div><button type="button" class="btn" data-signaler>Signaler une erreur</button></div></section>
+    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/mentions-legales">Mentions légales</a> · <a class="lnk" href="/academie">L'Académie</a></p>`;
+}
+
+/* ---------- Signaler une erreur (pied de page et page Méthode) ---------- */
+function orcSignaler() {
+  let d = $("#orcsig");
+  if (!d) {
+    document.body.insertAdjacentHTML("beforeend", `<div id="orcsig" class="orcia" role="dialog" aria-modal="true" aria-labelledby="orcsigt" hidden><div class="orciabg" data-sigclose></div>
+      <form class="orcsigp" autocomplete="off"><div class="orciah" style="padding:0 0 10px"><h2 id="orcsigt" style="font:600 20px var(--serif);margin:0">Signaler une erreur</h2><button type="button" class="orciax" data-sigclose aria-label="Fermer">×</button></div>
+        <p class="muted" style="margin:0 0 10px;font-size:13.5px">Page concernée : <b id="orcsigpage"></b></p>
+        <label class="orcsigl">Type d'erreur<select name="quoi"><option value="chiffre">Un chiffre faux</option><option value="ia">Une réponse de l'IA</option><option value="texte">Un texte ou une explication</option><option value="lien">Un lien cassé</option><option value="autre">Autre</option></select></label>
+        <label class="orcsigl">Ce qui ne va pas<textarea name="texte" rows="4" maxlength="1000" placeholder="Par exemple : la marge 2025 affichée est 23 %, le rapport annuel indique 21,9 %." required></textarea></label>
+        <p class="note" style="margin:0 0 10px">N'indiquez pas de données personnelles. Aucune adresse n'est conservée.</p>
+        <div style="display:flex;gap:10px;align-items:center"><button class="btn" type="submit">Envoyer</button><span id="orcsigmsg" class="muted" style="font-size:13.5px"></span></div></form></div>`);
+    d = $("#orcsig");
+    d.addEventListener("click", e => { if (e.target.closest("[data-sigclose]")) d.hidden = true; });
+    $("form", d).onsubmit = async e => {
+      e.preventDefault(); const f = e.target, msg = $("#orcsigmsg");
+      msg.textContent = "Envoi…";
+      try { const r = await fetch("/api/signaler", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ page: location.pathname + location.search, quoi: f.quoi.value, texte: f.texte.value }) }); const j = await r.json();
+        if (j.ok) { msg.textContent = ""; f.reset(); d.hidden = true; toast("Merci, votre signalement a bien été envoyé. Il sera relu."); } else msg.textContent = j.error || "Envoi impossible.";
+      } catch (er) { msg.textContent = "Envoi impossible pour le moment."; }
+    };
+  }
+  $("#orcsigpage").textContent = location.pathname;
+  d.hidden = false; setTimeout(() => $("textarea", d).focus(), 50);
+}
+document.addEventListener("click", e => { if (e.target.closest("[data-signaler]")) { e.preventDefault(); orcSignaler(); } });
+(() => { const add = () => { const f = document.querySelector("footer .f > div:last-child"); if (f && !f.querySelector("[data-signaler]")) f.insertAdjacentHTML("beforeend", `<a href="#" data-signaler>Signaler une erreur</a>`); };
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", add); else add(); })();
+document.head.insertAdjacentHTML("beforeend", `<style>
+.mtdhero{margin:6px 0 18px}.mtdkpi{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.mtdkpi span{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--grey);display:flex;flex-direction:column;min-width:120px}.mtdkpi b{font:600 22px var(--serif);color:var(--ink)}
+.mtdflow{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;counter-reset:none}
+.mtdflow li{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;position:relative}
+.mtdflow li:not(:last-child)::after{content:"";position:absolute;right:-12px;top:34px;width:12px;height:2px;background:var(--line)}
+.mtdflow .ic{width:36px;height:36px;border-radius:10px;background:#E4F1EA;color:#0E6B4A;display:grid;place-items:center;margin-bottom:10px}
+.mtdflow svg,.mtdno svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.mtdflow b{display:block;margin-bottom:4px}.mtdflow p{margin:0;font-size:13.5px;color:var(--grey);line-height:1.5}
+.mtdgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.mtdleg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.mtdleg span{font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px}
+.mtdleg .g{background:#E4F1EA;color:#0E6B4A}.mtdleg .n{background:var(--soft);color:var(--grey)}.mtdleg .o{background:#FBE9DF;color:#B5501D}
+.mtdia{display:flex;flex-direction:column;gap:12px}.mtdia>div{border-left:3px solid #0E6B4A;padding-left:12px}.mtdia p{margin:3px 0 0;font-size:13.5px;color:var(--grey)}
+.mtdcheck{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px}
+.mtdcheck li{position:relative;padding-left:26px;font-size:14px}.mtdcheck li::before{content:"✓";position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;background:#E4F1EA;color:#0E6B4A;font-size:11px;display:grid;place-items:center;font-weight:700}
+.mtdno{margin:0;padding-left:18px}.mtdno li{margin:0 0 6px;font-size:14px}
+.mtdsrc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.mtdsrc>div{border:1px solid var(--line2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}.mtdsrc span{font-size:13px;color:var(--grey)}.mtdsrc .lnk{font-size:13px;align-self:flex-start}
+.mtderr .pb{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.orcsigp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,calc(100% - 32px));background:var(--page);border-radius:16px;padding:18px;box-shadow:0 20px 60px -20px rgba(0,0,0,.4)}
+.orcsigl{display:flex;flex-direction:column;gap:5px;font-size:13.5px;font-weight:600;margin:0 0 10px}.orcsigl select,.orcsigl textarea{font:inherit;font-weight:400;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--card)}
+@media (max-width:900px){.mtdflow{grid-template-columns:repeat(2,1fr)}.mtdflow li::after{display:none}.mtdgrid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:560px){.mtdflow{grid-template-columns:1fr}.mtdcheck,.mtdsrc{grid-template-columns:1fr}}
+</style>`);

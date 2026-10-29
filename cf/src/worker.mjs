@@ -13,6 +13,7 @@ import { resume, veille, assistant } from "./ia.mjs";
 import { premium } from "./compte.mjs";
 import { espace } from "./espace.mjs";
 import { demande } from "./demande.mjs";
+import { signaler } from "./signaler.mjs";
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -77,6 +78,7 @@ export default {
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/assistant") return assistant(request, env);
     if (url.pathname === "/api/demande") return demande(request, env);
+    if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
