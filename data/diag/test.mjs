@@ -1,32 +1,20 @@
-// Diagnostic (2) : lecture des rapports annuels ESEF déposés à l'AMF (data/amf.mjs) pour des sociétés en retard ou sans données.
-import { writeFileSync, mkdirSync } from "node:fs";
-import { amfAnnualFilings, amfDoc, ixbrlFiles, unzip } from "../amf.mjs";
-import { extract, toSeries, merge } from "../esef.mjs";
-import { getJSON, UA } from "../fetch_data.mjs";
-const DIR = "data/diag/fraicheur/"; mkdirSync(DIR, { recursive: true });
+// Diagnostic : feuille Google des cours (combien de lignes, où elle s'arrête, quels onglets)
+import { writeFileSync, readFileSync } from "node:fs";
+import { COURS_CSV, parseCours } from "../cours_config.mjs";
 const log = [], L = (...a) => { const s = a.join(" "); log.push(s); console.log(s); };
-const T0 = Date.now();
-const LIST = [["lvmh", "FR0000121014"], ["air-liquide", "FR0000120073"], ["orange", "FR0000133308"], ["eiffage", "FR0000130452"], ["jcdecaux", "FR0000077919"], ["lectra", "FR0000065484"], ["essilorluxottica", "FR0000121667"], ["publicis", "FR0000130577"], ["veolia", "FR0000124141"], ["bouygues", "FR0000120503"]];
-const res = {};
-for (const [id, isin] of LIST) {
-  if (Date.now() - T0 > 12 * 60e3) break;
-  try {
-    const fl = await amfAnnualFilings(getJSON, fetch, isin, "2025-01-01");
-    L(id, fl.length, "dépôts annuels", JSON.stringify(fl.slice(0, 4)));
-    res[id] = { filings: fl };
-    for (const f of fl.slice(0, 3)) {
-      const t = Date.now();
-      const r = await fetch(f.url, { headers: { "user-agent": UA } }); const buf = Buffer.from(await r.arrayBuffer());
-      const magic = buf.slice(0, 4).toString("hex"), z = magic === "504b0304" ? Object.keys(unzip(buf)) : [];
-      const htmls = ixbrlFiles(buf, f.url);
-      const doc = await amfDoc(async () => ({ ok: true, arrayBuffer: async () => buf }), UA, f);
-      const ex = doc ? extract(doc) : null, s = ex ? toSeries(merge([ex])) : null;
-      L("  ", f.url.split("/").pop(), "taille", buf.length, "magic", magic, "fichiers", z.length, JSON.stringify(z.filter(n => /html/i.test(n)).slice(0, 4)), "iXBRL", htmls.length, "faits", doc ? Object.keys(doc.facts).length : 0,
-        "années", s ? JSON.stringify(s.years) : "-", "CA", s && s.fin.ca ? JSON.stringify(s.fin.ca) : "-", "net", s && s.fin.net ? JSON.stringify(s.fin.net) : "-", Math.round((Date.now() - t) / 1000) + "s");
-      res[id][f.url] = s;
-      if (s && s.years.length) break;
-    }
-  } catch (e) { L(id, "erreur", e.message); }
-}
-writeFileSync(DIR + "amf_lecture.json", JSON.stringify(res, null, 1));
-writeFileSync("data/diag/out.json", JSON.stringify({ fraicheur: log }, null, 1));
+try {
+  const t = await (await fetch(COURS_CSV)).text();
+  const lines = t.split(/\r?\n/);
+  L("lignes du CSV publié", lines.length, "taille", t.length);
+  L("en-tête", lines[0]);
+  for (const i of [1, 2, 3, 500, 1000, 1100, 1140, 1150, 1160, 1170, 1180, 1199, 1200, 1201, 1300, 2000, 2300, lines.length - 2, lines.length - 1]) if (lines[i] != null) L("ligne", i, lines[i].slice(0, 160));
+  const items = parseCours(t); L("cours lus", Object.keys(items).length);
+  const gf = readFileSync("cf/site/data/gf.csv", "utf8").split(/\r?\n/); L("gf.csv lignes", gf.length);
+  const ids = lines.map(l => l.split(",")[0]);
+  const firstMissing = gf.slice(1).map(l => l.split(",")[0]).findIndex(id => id && !ids.includes(id)); L("premier id de gf.csv absent de la feuille : rang", firstMissing, gf[firstMissing + 1]);
+  // vides : lignes présentes sans cours
+  const empty = lines.filter(l => /^[cei]:/.test(l) && !items[l.split(",")[0]]).length; L("lignes sans cours", empty, "exemples", lines.filter(l => /^[cei]:/.test(l) && !items[l.split(",")[0]]).slice(0, 8).join(" || ").slice(0, 600));
+  const ph = await (await fetch(COURS_CSV.replace(/pub\?output=csv.*/, "pubhtml"))).text();
+  L("onglets", JSON.stringify([...ph.matchAll(/gid=(\d+)[^>]*>([^<]{1,40})</g)].map(m => [m[1], m[2]]).slice(0, 10)), "taille pubhtml", ph.length);
+} catch (e) { L("erreur", e.message); }
+writeFileSync("data/diag/out.json", JSON.stringify({ cours: log }, null, 1));
