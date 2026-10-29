@@ -1,5 +1,6 @@
 // Catalogue des ETF les plus utilisés par les épargnants français (PEA et compte-titres).
-// Données vérifiées sur justetf.com et les sites des émetteurs (octobre 2026) :
+// Liste choisie à la main (identifiants stables, textes « fiche »). Les chiffres sont mis à jour chaque mois
+// par data/etf_collecte.mjs à partir des sites des émetteurs (data/etf_catalogue.json), qui ajoute aussi des centaines d'autres ETF :
 // ISIN, frais courants (ter, en % par an), éligibilité PEA, réplication, distribution.
 // encours : en millions d'euros, ordre de grandeur seulement.
 // tv : symbole TradingView de la ligne cotée en euros utilisée pour les cours.
@@ -331,4 +332,17 @@ const ETF = [
     fiche: { quoi: "De l'or, sans avoir à le stocker. C'est un ETC garanti par de l'or physique, coté à Paris.", contenu: "Des lingots stockés dans un coffre à Londres.", varie: "Le prix de l'or en dollars et le taux de change euro-dollar." } },
 ];
 
-export default ETF;
+// Liste choisie à la main, telle quelle (sert à la collecte)
+export const CHOISIS = ETF;
+
+// Liste complète : la liste choisie, complétée et mise à jour par le catalogue des émetteurs, puis les autres ETF du catalogue.
+import { readFileSync, existsSync } from "node:fs";
+const lire = f => { const u = new URL(f, import.meta.url); return existsSync(u) ? JSON.parse(readFileSync(u, "utf8")) : null; };
+const CAT = (lire("./etf_catalogue.json") || { list: [] }).list, RES = lire("./etf_compo_choisis.json") || {};
+const parIsin = Object.fromEntries(CAT.map(e => [e.isin, e]));
+// champs que la collecte met à jour sur les ETF choisis (les autres, dont l'identifiant et les textes, restent ceux de la liste)
+const MAJ = ["ter", "pea", "encours", "replication", "methode", "distribution", "domicile", "creation", "cotations", "url", "src", "nomOfficiel", "indexOfficiel", "nIndex", "couvert", "levier", "contrepartie", "compo"];
+const propre = o => Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && v !== null && !k.startsWith("_")));
+const choisis = ETF.map(e => { const c = parIsin[e.isin]; const m = c ? propre(Object.fromEntries(MAJ.map(k => [k, c[k]]))) : {}; const r = { ...e, ...m }; if (!r.compo && RES[e.id]) r.compo = RES[e.id]; return r; });
+const vus = new Set(ETF.map(e => e.isin));
+export default [...choisis, ...CAT.filter(e => !vus.has(e.isin)).map(propre)];
