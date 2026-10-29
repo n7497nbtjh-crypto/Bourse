@@ -25,7 +25,11 @@ export function gfParts(companies, etfs, indices, known = {}, size = GF_ROWS) {
   const row = (k, tv, isin) => [k, ...candidates(tv, isin), "", "", ""].slice(0, 4);
   const first = [...indices.map(([id, sym]) => ["i:" + id, sym, "", ""]), ...etfs.map(e => row("e:" + e.id, e.tv, e.isin))];
   const cs = companies.map(c => row("c:" + c.id, c.tv, c.isin));
-  const ok = cs.filter(r => known[r[0]]), rest = cs.filter(r => !known[r[0]]);
+  const ok = cs.filter(r => known[r[0]]);
+  // Places restantes : d'abord les bourses que GOOGLEFINANCE sait lire (Oslo et Dublin, par exemple, ne répondent jamais)
+  const st = {}; for (const r of cs) { const p = r[1].split(":")[0]; st[p] = st[p] || [0, 0]; st[p][0]++; if (known[r[0]]) st[p][1]++; }
+  const dead = r => r.slice(1).filter(Boolean).every(c => { const s = st[c.split(":")[0]]; return s && s[0] >= 5 && s[1] === 0; });
+  const rest = [...cs.filter(r => !known[r[0]] && !dead(r)), ...cs.filter(r => !known[r[0]] && dead(r))];
   const all = [...first, ...ok, ...rest];
   const csv = rows => [["id", "c1", "c2", "c3"], ...rows].map(r => r.join(",")).join("\n") + "\n";
   return [csv(all.slice(0, size)), csv(all.slice(size))];
