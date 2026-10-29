@@ -2304,43 +2304,6 @@ async function etfMeta(id, env, url, SITE2) {
   }
 }
 
-// cf/src/signaler.mjs
-var SCHEMA5 = [
-  "CREATE TABLE IF NOT EXISTS signalements (id INTEGER PRIMARY KEY AUTOINCREMENT, page TEXT NOT NULL, quoi TEXT NOT NULL, texte TEXT NOT NULL, who TEXT NOT NULL, created INTEGER NOT NULL, traite INTEGER NOT NULL DEFAULT 0)",
-  "CREATE INDEX IF NOT EXISTS s_who ON signalements (who, created)"
-], ready6 = !1;
-async function init5(db) {
-  if (!ready6) {
-    for (let q of SCHEMA5) await db.prepare(q).run();
-    ready6 = !0;
-  }
-}
-var QUOI = ["chiffre", "texte", "ia", "lien", "autre"];
-async function empreinte(request) {
-  let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", day = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + day + "|signaler"));
-  return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-async function signaler(request, env) {
-  if (!env.DB) return json2({ error: "Service indisponible." }, 503);
-  if (await init5(env.DB), request.method === "GET") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Acc\xE8s r\xE9serv\xE9." }, 403);
-    let r = await env.DB.prepare("SELECT id, page, quoi, texte, created, traite FROM signalements ORDER BY id DESC LIMIT 200").all();
-    return json2({ items: r.results || [] });
-  }
-  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
-  let b;
-  try {
-    b = await request.json();
-  } catch {
-    return json2({ error: "Requ\xEAte illisible." }, 400);
-  }
-  let page2 = String(b.page || "").slice(0, 200), quoi = QUOI.includes(b.quoi) ? b.quoi : "autre", texte = String(b.texte || "").replace(/\s+/g, " ").trim().slice(0, 1e3);
-  if (!/^\/[a-z0-9/?=&%._-]*$/i.test(page2)) return json2({ error: "Page inconnue." }, 400);
-  if (texte.length < 10) return json2({ error: "D\xE9crivez l'erreur en quelques mots (10 caract\xE8res au moins)." }, 400);
-  let who2 = await empreinte(request), depuis = Date.now() - 864e5, n = await env.DB.prepare("SELECT COUNT(*) AS n FROM signalements WHERE who = ? AND created > ?").bind(who2, depuis).first();
-  return n && n.n >= 5 ? json2({ error: "Merci : vous avez d\xE9j\xE0 envoy\xE9 5 signalements aujourd'hui." }, 429) : (await env.DB.prepare("INSERT INTO signalements (page, quoi, texte, who, created) VALUES (?, ?, ?, ?, ?)").bind(page2, quoi, texte, who2, Date.now()).run(), json2({ ok: !0 }));
-}
-
 // cf/src/worker.mjs
 var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS2 = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc3 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path, q = null) {
