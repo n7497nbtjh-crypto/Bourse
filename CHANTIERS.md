@@ -90,3 +90,22 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
 - Taille dans le secteur cliquable partout (`[data-f2-rang="<id>"]`) : fenêtre `#f2dlg` = classement du secteur par les ventes en euros
   (ou la capitalisation sans comptes), bouton « Comparer avec » ses voisines de rang (/comparer, limite gratuite respectée).
 - Concurrents : logos `.f2-lgd` à la place des points, couloirs anti-chevauchement calculés en pixels (`fiche2Lanes`).
+## Parcours : Apprendre et rapport sur mesure (agent « parcours », module `cf/site/m/parcours.js`, chargé en dernier)
+- Apprendre : point d'entrée unique `/apprendre` (1. Par où commencer → 2. L'Académie → 3. Lexique → 4. Outils pédagogiques, ancre `#outils`).
+  Menu « Apprendre » (ordinateur et mobile) : Vue d'ensemble, Par où commencer, L'Académie, Le lexique, Outils pédagogiques ; « Vérifier une offre » passe dans « Outils ».
+- L'ancien parcours « Premiers pas » (`/debuter`, `data/parcours.json`) devient « L'essentiel en 3 étapes », version courte de l'Académie :
+  `/academie/express[/<étape>[/<leçon>|/quiz]]` (progression inchangée : `pState()`). `/debuter/…` et `/premiers-pas` sont redirigés
+  (301 par le Worker : `redirectionParcours` de `cf/src/worker.mjs` ; dans le navigateur : `parRedirection`, `pageDebuter` redéclarée). Sitemap à jour.
+- Redéclarées dans le module : `pageAcademie`, `acaAccueil`, `pageDebuter`, `pageOutils` (la page Outils ne liste plus les cours).
+  Les liens `/debuter` restants sont réécrits à l'affichage et les pages d'apprentissage reçoivent un fil d'Ariane « Apprendre ».
+- Rapport de la semaine sur mesure : réglages dans `donnees.profil.rapport` (`GET/POST /api/espace/rapport`, POST = remplacement complet ;
+  format et contrôle : `normaliseRapport` / `validerRapport` de `cf/src/synthese.mjs`) :
+  `{ v: 1, favoris, portefeuille, secteurs: [clé de secteur] (2 sans Premium, 6 avec), indices: [id], detail: "court"|"complet",
+     sujets: { resultats, dividendes, actualite, lecons }, jour: 6|0|1, notif, configure }`.
+  `faitsSynthese(d, { favoris, pf, rapport })` les applique ; la synthèse gagne `secteurs` (médiane de la semaine par secteur suivi) et `reglages`.
+  Version courte : pas de commentaire rédigé, 3 actualités et 3 dates. Jour : le robot (`espace.yml`, `quoi=jour` samedi, dimanche, lundi 6 h 17 UTC)
+  ne prépare le rapport que des comptes dont c'est le jour ; le lundi, il porte sur la semaine écoulée (`/espace?semaine=…`). `notif: false` : pas d'alerte « bilan ».
+- Navigateur : `pageEspace`, `espaceBilan`, `synCharger`, `synAccueil`, `pageHome`, `pagePremium` sont ENVELOPPÉES (`window.x = …` qui appelle l'original) :
+  agent « synthese », vos redéclarations restent prises en compte. Onglet « Mon rapport » (`/espace/rapport`), assistant en 3 étapes au premier passage
+  (« Plus tard » : `localStorage["bilan.rapport.plustard"]`), aperçu de rapport calculé avec `/data/cours-semaine.json` sur l'accueil des visiteurs.
+- Tests : `node tests/t_espace.mjs`, `node tests/t_synthese.mjs`, `node tests/t_worker.mjs`, `python3 tests/t_parcours.py [--shots dossier]`.

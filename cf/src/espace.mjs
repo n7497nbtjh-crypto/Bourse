@@ -196,7 +196,8 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   if (!refaire) return { c, change: false };
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
   const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles; n._final = weekend; n._ia_n = (c && c._ia_n) || 0; n._ia_at = (c && c._ia_at) || 0;
+  n._cles = s.cles; n._final = weekend; n._ia_n = (c && c._ia_n) || 0; n._ia_at = (c && c._ia_at) || 0; n._sig = rapportSignature(s.rapport);
+  if (c && c._sig !== n._sig) n._ia_at = 0; // réglages du rapport changés : le commentaire peut être réécrit sans attendre (4 essais par semaine au plus)
   if (c && c.texte && c._cles === s.cles && c.v === SYN_VERSION) { n.texte = c.texte; n.lecture_min = lectureMin(n); } // le commentaire reste tant que la liste ne change pas
   const utile = n.lignes.some(l => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some(x => x.n);
   if (utile) await env.DB.prepare(`INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0`).bind(compteId, semaine, JSON.stringify(n), Date.now()).run();

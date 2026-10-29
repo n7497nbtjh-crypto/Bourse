@@ -61,6 +61,8 @@ export function meta(path, q = null) {
   if (p === "/dividendes") return { title: `Dividendes : calendrier, rendements et simulateur · ${SITE}`, desc: "Les prochaines dates de détachement et de paiement, les plus hauts rendements avec leur garde-fou, les dividendes relevés chaque année et ce que vous toucheriez en PEA ou compte-titres." };
   if (p === "/classements") return { title: `Classements des entreprises · ${SITE}`, desc: "Les entreprises qui cumulent le plus de points forts, restent en tête de leur secteur, augmentent leurs ventes ou relèvent leur dividende chaque année, calculées sur leurs comptes officiels." };
   if (p === "/decouvertes") return { title: `Découvertes du jour · ${SITE}`, desc: "Chaque jour, six entreprises moins connues dont les comptes officiels ressortent sur les critères du site, avec ce qui les distingue. Sans conseil d'achat." };
+  if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre · ${SITE}`, desc: "Le chemin pour apprendre : par où commencer, les cours de l'Académie (l'essentiel en 3 étapes et le cours complet), le lexique et les outils pédagogiques, gratuits." };
+  if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 étapes · L'Académie · ${SITE}`, desc: "La version courte de l'Académie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en leçons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse · ${SITE}`, desc: "Un parcours en trois étapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
   if (p.startsWith("/outils")) return { title: `Outils · ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'épargne et de frais." };
   const IDXN = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
@@ -83,6 +85,12 @@ export function meta(path, q = null) {
   return null;
 }
 
+// Anciennes adresses de l'apprentissage, fusionnées dans l'Académie (même règle que parRedirection dans cf/site/m/parcours.js)
+export function redirectionParcours(p) {
+  const m = /^\/debuter(\/.*)?$/.exec(p || ""); if (m) return "/academie/express" + (m[1] || "");
+  if (p === "/premiers-pas") return "/academie/express";
+  return null;
+}
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -102,6 +110,8 @@ export default {
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
+    const redir = redirectionParcours(url.pathname.replace(/\/+$/, ""));
+    if (redir) return Response.redirect(url.origin + redir + url.search, 301);
     let info = meta(url.pathname, url.searchParams);
     const etfId = (url.pathname.match(/^\/etf\/([a-z0-9-]+)\/?$/) || [])[1];
     if (etfId) info = await etfMeta(etfId, env, url, SITE) || info;

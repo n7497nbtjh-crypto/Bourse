@@ -26,6 +26,12 @@ await check("/data/courtiers.json", 200);
 await check("/entreprise/apple", 200, "Apple");
 await check("/calc.js", 200);
 await check("/nimporte.png", 404);
+await check("/apprendre", 200, "Apprendre");
+await check("/academie/express/lire/per", 200, "essentiel");
+await check("/espace/rapport", 200, "Mon espace");
+for (const [de, vers] of [["/debuter", "/academie/express"], ["/debuter/", "/academie/express"], ["/debuter/lire", "/academie/express/lire"], ["/debuter/prix/per?x=1", "/academie/express/prix/per?x=1"]]) {
+  const r = await W.fetch(new Request("https://t.local" + de), env), ok = r.status === 301 && r.headers.get("location") === "https://t.local" + vers;
+  if (!ok) bad++; console.log(ok ? "ok " : "ÉCART", de, "→", r.status, r.headers.get("location")); }
 { const h = await (await W.fetch(new Request("https://t.local/entreprise/lvmh"), env)).text(), m = h.match(/<script type="application\/ld\+json">([^<]*)<\/script>/);
   let ok = false; try { const j = JSON.parse(m[1]); ok = j["@type"] === "FAQPage" && j.mainEntity.length >= 3 && j.mainEntity.every(q => q.name && q.acceptedAnswer.text); } catch (e) { }
   if (!ok) bad++; console.log(ok ? "ok " : "ÉCART", "/entreprise/lvmh : FAQ JSON-LD"); }

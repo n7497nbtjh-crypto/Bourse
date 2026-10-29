@@ -317,7 +317,7 @@ export function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {
     vs.sort((a, b) => b.variation_semaine_pct - a.variation_semaine_pct);
     const p = vs.map(x => x.variation_semaine_pct), mid = p.length >> 1, med = p.length ? (p.length % 2 ? p[mid] : (p[mid - 1] + p[mid]) / 2) : null;
     return { id: sk, nom: SECTEURS[sk], n: vs.length, mediane_pct: med != null ? r2(med) : null, hausses: p.filter(x => x > 0).length, baisses: p.filter(x => x < 0).length,
-      premieres: vs.slice(0, 3), dernieres: vs.length > 3 ? vs.slice(-3).reverse() : [], vos_lignes: lignes.filter(l => d.meta[l.k] && d.meta[l.k].sector === sk).map(court) };
+      premieres: vs.slice(0, 3), dernieres: vs.length > 3 ? vs.slice(Math.max(3, vs.length - 3)).reverse() : [], vos_lignes: lignes.filter(l => d.meta[l.k] && d.meta[l.k].sector === sk).map(court) };
   });
 
   const f = {
