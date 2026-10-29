@@ -136,7 +136,7 @@ with sync_playwright() as pw:
                 pg.goto("http://t.local" + u); pg.wait_for_timeout(700); pg.screenshot(path=f"{shots}/{name}_{n}.png", full_page=True)
         # Mon espace connecté : bilan, alertes, réglages
         STATE["in"] = True
-        for u in ("/espace", "/espace/alertes", "/espace/reglages", "/favoris"):
+        for u in ("/espace", "/espace/alertes", "/espace/reglages", "/", "/favoris"):
             pg.goto("http://t.local" + u); pg.wait_for_timeout(500)
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p: probs[u + " (connecté)"] = p

@@ -3864,7 +3864,7 @@ async function pageHome() {
       <div class="chips iaex">${IA_EX.slice(0, 4).map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>
       <p class="herosub">Ou cherchez directement une entreprise ou un ETF dans la barre en haut de la page.</p>${orcConfiance()}</section>
     ${band(1, "Aujourd'hui", "Les marchés du jour", ["/marches", "Tous les marchés"], `<div class="homegrid"><section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section><section class="panel"><div class="ph"><h2>Plus fortes hausses et baisses</h2></div><div class="pb">${moversHTML("all")}</div></section></div>`)}
-    ${band(2, "Mon espace", "Votre bilan de la semaine", ["/espace", "Mon espace"], `<div id="homeesp"></div>`)}
+    ${band(2, "Mon espace", "Votre semaine en 2 minutes", ["/espace", "Mon espace"], `<div id="homeesp"></div>`)}
     ${band(3, "Débuter", "Vous ne savez pas par où commencer ?", ["/commencer", "Le guide du nouvel investisseur"], `<div class="nb3 nb4">
       <a href="/commencer"><b>1. Trouver son profil</b><span>Sept étapes dans l'ordre et cinq questions pour savoir quel type d'investisseur vous êtes.</span></a>
       <a href="/academie"><b>2. Suivre les cours</b><span>L'Académie : l'argent, la Bourse, les placements, les frais et les pièges, avec des quiz.</span></a>
@@ -3891,7 +3891,7 @@ async function pageHome() {
   app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (b) go("/demander?q=" + encodeURIComponent(b.dataset.iaq)); });
   if (typeof actuBandeau === "function") actuBandeau($("#amf")); else amfBlock($("#amf"), "&suivies=1", 5);
   fetch("/api/communaute/recent").then(r => r.json()).then(j => { $("#crec").innerHTML = (j.items || []).length ? j.items.slice(0, 3).map(m => msgHTML(m, true)).join("") : `<p class="muted" style="margin:0">Pas encore de message. <a class="lnk" href="/communaute">Lancer la discussion</a>.</p>`; }).catch(() => { $("#crec").innerHTML = `<p class="muted" style="margin:0">Bientôt disponible.</p>`; });
-  moi().then(m => { const el = $("#homeesp"); if (!el) return;
+  moi().then(m => { const el = $("#homeesp"); if (!el) return; if (m.connecte && typeof synAccueil === "function") return synAccueil(el, m); // cf/site/m/synthese.js
     el.innerHTML = m.connecte ? `<section class="panel"><div class="pb espteaser"><div><b>Votre bilan de la semaine est prêt.</b><div class="muted">Les mouvements de vos ${favs().length} favoris, les annonces et les dates à venir, commentés par l'IA.${m.nonlus ? ` ${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""} non lue${m.nonlus > 1 ? "s" : ""}.` : ""}</div></div><a class="btn" href="/espace">Ouvrir mon bilan</a></div></section>`
       : `<section class="panel"><div class="pb espteaser"><div><b>Créez votre espace, c'est gratuit.</b><ul class="espben"><li>Chaque semaine, le bilan de vos entreprises rédigé par l'IA</li><li>Vos favoris et votre portefeuille sur tous vos appareils</li><li>Les alertes quand une de vos entreprises publie ou bouge fortement</li></ul></div><a class="btn" href="/espace">Créer mon espace</a></div></section>`; });
 }

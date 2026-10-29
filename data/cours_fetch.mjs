@@ -1,6 +1,7 @@
 // Le bot garde chaque jour une copie des cours (secours si la feuille ne répond pas) et les taux de change de la BCE.
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { COURS_CSVS, parseCours } from "./cours_config.mjs";
+import { clotures } from "../cf/src/synthese.mjs";
 const OUT = new URL("../cf/site/data/", import.meta.url);
 const today = new Date().toISOString().slice(0, 10);
 try {
@@ -27,9 +28,13 @@ try {
     h[today] = Object.fromEntries(Object.entries(items).map(([k, v]) => [k, v.p]));
     writeFileSync(f, JSON.stringify(h));
     // Cours d'il y a une semaine (jour de Bourse le plus proche, 6 à 9 jours avant) : sert au bilan hebdomadaire par e-mail
-    const all = {}; for (const m of [today.slice(0, 7), new Date(Date.now() - 12 * 864e5).toISOString().slice(0, 7)]) { const g = new URL(m + ".json", dir); if (existsSync(g)) Object.assign(all, JSON.parse(readFileSync(g))); }
+    const all = {}; for (const m of new Set([today.slice(0, 7), new Date(Date.now() - 12 * 864e5).toISOString().slice(0, 7), new Date(Date.now() - 22 * 864e5).toISOString().slice(0, 7)])) { const g = new URL(m + ".json", dir); if (existsSync(g)) Object.assign(all, JSON.parse(readFileSync(g))); }
     const ref = Object.keys(all).filter(d => d <= new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10)).sort().pop();
     if (ref) writeFileSync(new URL("semaine.json", OUT), JSON.stringify({ date: ref, items: all[ref] }));
+    // Cours de clôture des derniers jours de Bourse : synthèse de la semaine (variations, mini-graphiques).
+    // Le robot passe tôt le matin : la copie du jour J contient la clôture du jour de Bourse précédent.
+    const cl = clotures(all);
+    if (cl.dates.length) writeFileSync(new URL("cours-semaine.json", OUT), JSON.stringify({ updated: today, source: "Google Finance, cours de clôture relevés chaque matin par le site", ...cl }));
   }
 } catch (e) { console.log("::warning::Cours non lus :", e.message); }
 try {
