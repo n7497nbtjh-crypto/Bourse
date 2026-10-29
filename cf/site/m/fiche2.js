@@ -51,11 +51,10 @@ const FICHE2_CSS = `
 .f2tabs.qtabs{position:sticky;top:57px;z-index:21;display:block;padding:8px 0;margin:-4px 0 6px;background:var(--page);overflow:visible;gap:0}
 .f2seg{display:flex;gap:4px;padding:4px;background:#EAE5DA;border-radius:14px;max-width:100%;overflow-x:auto;scrollbar-width:none}
 .f2seg::-webkit-scrollbar{display:none}
-.f2tabs.qtabs a{flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 16px;border:0;border-radius:11px;font-size:15px;font-weight:600;color:#4A4741;white-space:nowrap;text-decoration:none;min-width:0}
-.f2tabs.qtabs a svg{width:17px;height:17px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.f2tabs.qtabs a:hover{background:rgba(255,255,255,.6);color:var(--ink)}
-.f2tabs.qtabs a.on{background:var(--ink);color:#fff;box-shadow:0 1px 3px rgba(17,18,20,.25)}
-.f2tabs.qtabs a.on svg{stroke:#D6F26B}
+.f2tabs.qtabs :is(a,button){flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:8px;padding:10px 14px;border:0;border-radius:11px;background:none;font:inherit;font-size:15px;font-weight:600;color:#4A4741;white-space:nowrap;text-decoration:none;min-width:0;cursor:pointer}
+.f2tabs.qtabs :is(a,button):hover{background:rgba(255,255,255,.6);color:var(--ink)}
+.f2tabs.qtabs :is(a,button).on{background:var(--ink);color:#fff;box-shadow:0 1px 3px rgba(17,18,20,.25)}
+.f2tabs.qtabs :is(a,button):focus-visible{outline:2px solid var(--ink);outline-offset:2px}
 .f2tabs .f2ts{display:none}
 /* Étapes du parcours */
 .etapes{top:124px;padding:8px 0 10px;margin:0 0 14px;border-bottom:1.5px solid var(--line)}
@@ -65,7 +64,8 @@ const FICHE2_CSS = `
 .etapes button span{width:22px;height:22px;font-size:12px;background:#EAE5DA}
 .etapes button.fait span{background:#DDEFE3;color:var(--g)}
 .etapes button.on{font-weight:600}
-.fside{top:190px}
+.fside{top:130px}
+@media (max-height:860px){.fside{position:static}}
 /* Titres de section dans la fiche */
 #ctab .ph{padding:18px 22px 10px;border-bottom:1px solid var(--line2);margin-bottom:2px}
 #ctab .ph h2{font-size:22px;line-height:1.2}
@@ -127,10 +127,8 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
   .f2-mid .fh-vl,.f2-mid .fh-prof{padding:12px 16px}
   .f2tabs.qtabs{top:52px;padding:6px 0;transition:top .2s}
   .bar.hide ~ main .f2tabs.qtabs{top:0}
-  .f2tabs.qtabs a{padding:9px 6px;font-size:13.5px;gap:6px}
-  .f2tabs.qtabs a svg{width:15px;height:15px}
+  .f2tabs.qtabs :is(a,button){flex:none;padding:9px 12px;font-size:14px;min-height:40px}
   .f2tabs .f2tl{display:none}.f2tabs .f2ts{display:inline}
-  .f2tabs.qtabs a{flex:1 1 auto}
   .fh-act{gap:6px}.fh-act .favbtn{font-size:13px;padding:5px 11px}
   .etapes{top:110px}
   .bar.hide ~ main .etapes{top:58px}
@@ -141,7 +139,6 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
   .f2dlg-l li a{grid-template-columns:26px 24px minmax(0,1fr) auto;padding:7px 8px}
   .f2dlg-l .b{display:none}
 }
-@media (max-width:420px){.f2tabs.qtabs a svg{display:none}.f2tabs.qtabs a{padding:9px 4px}}
 /* ===== Refonte du 29 octobre (13 h 30) : en-tête allégé, « En bref » en synthèse, concurrents en tableau ===== */
 .rf-hero .fh-top{padding:16px 22px 14px;gap:20px}
 .rf-hero .fh-t h1{font-size:28px}
@@ -186,6 +183,39 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 .fk-l:hover,.fk-l:focus-within{background:#FBF9F2}
 .fk-l:has(.fk-a:focus-visible){box-shadow:inset 0 0 0 2px var(--link,#1F4FD1)}
 .fk-l:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:4px}
+.rf-keys .fk{padding:16px 20px 16px;display:flex;flex-direction:column}
+.rf-keys .fk .kick{font-size:12px;letter-spacing:.06em;align-items:center;min-height:22px}
+.rf-keys .fk .vd{padding:2px 8px;border-radius:99px;font-size:11.5px}
+.rf-keys .fk.fk-fort .vd{background:#DDEFE3}.rf-keys .fk.fk-vig .vd{background:#FBE3D9}.rf-keys .fk.fk-moyen .vd{background:#EEEBE4}
+.rf-keys .fk b{font-size:32px;line-height:1.1;margin:10px 0 8px;color:var(--ink)}
+.rf-keys .fk .fk-r{display:flex;justify-content:space-between;align-items:baseline;gap:8px;padding:6px 0;margin:0 0 8px;border-top:1px solid var(--line2);border-bottom:1px solid var(--line2);font-size:12.5px;color:var(--grey)}
+.rf-keys .fk .fk-r b{font-size:14px;margin:0;line-height:1.3;color:var(--ink)}
+.rf-keys .fk .fk-r b.up{color:var(--g)}.rf-keys .fk .fk-r b.dn{color:var(--o)}
+.rf-keys .fk p{font-size:13px;line-height:1.45;color:var(--grey)}
+.rf-fct{width:100%;border-collapse:collapse;font-size:13px}
+.rf-fct th,.rf-fct td{padding:7px 6px;border-top:1px solid var(--line2);text-align:right;white-space:nowrap}
+.rf-fct thead th{border-top:0;font-size:11.5px;font-weight:600;color:var(--grey);padding-top:2px}
+.rf-fct th[scope=row]{text-align:left;font-weight:500;padding-left:18px;max-width:130px}
+.rf-fct td{font-family:var(--mono);letter-spacing:-.02em}.rf-fct td:last-child{padding-right:18px}
+.rf-fct th[scope=row] a{display:flex;align-items:center;gap:7px;color:inherit;text-decoration:none;min-width:0}
+.rf-fct th[scope=row] a span{overflow:hidden;text-overflow:ellipsis}
+.rf-fct th[scope=row] small{font-size:10.5px;color:var(--o);font-weight:600}
+.rf-fct tr.me{background:#F6F8E6}.rf-fct tr.me th,.rf-fct tr.me td{font-weight:700}
+.rf-fct td.up,.rf-fcl .up{color:var(--g)}.rf-fct td.dn,.rf-fcl .dn{color:var(--o)}
+.rf-fct tfoot th,.rf-fct tfoot td{border-top:1.5px solid var(--line);color:var(--grey);font-size:12px}
+.rf-fct .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+.rf-fcl{margin:0;padding:8px 18px 4px;font-size:11.5px;color:var(--grey);line-height:1.4}.rf-fcl span{font-weight:600}
+.rf-fc .rf-fcrk{margin:8px 18px 0;width:calc(100% - 36px)}
+/* 1d : verdict d'abord. « En bref » à gauche et en premier, la courbe à droite ; la phrase de synthèse en grand */
+@media (min-width:901px){
+  .rf-hero:not(.rf-etf) .rf-mid:not(.f2-noc){grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"vl ch"}
+  .rf-hero:not(.rf-etf) .rf-mid:not(.f2-noc) .rf-sum{border-left:0;border-right:1px solid var(--line2)}
+}
+.rf-hero .rf-sum .fh-v{font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.4;letter-spacing:-.01em}
+.rf-sum p.rf-tally{margin:0;gap:6px;font-size:13px}
+.rf-sum p.rf-tally span{padding:4px 10px;border-radius:99px;font-weight:600;color:var(--ink)}
+@media (max-width:760px){.rf-hero .rf-sum .fh-v{font-size:18px}}
+.rf-sum p.rf-tally .f{background:#DDEFE3}.rf-sum p.rf-tally .m{background:#EEEBE4}.rf-sum p.rf-tally .v{background:#FBE3D9}
 .rf-keysn{margin:0;padding:10px 20px;font-size:13px;color:var(--grey);border-bottom:1px solid var(--line2)}
 /* Étape « Concurrents » : tableau côte à côte */
 .rf-intro{margin:0;font-size:14px;line-height:1.55;color:#3E3B36}
@@ -242,7 +272,9 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
   .rf-mid #tvchart.f2-tv{height:230px;min-height:230px}
   .rf-keys.fkeys{grid-template-columns:repeat(2,minmax(0,1fr))!important}
   .rf-keys .fk{padding:11px 14px 12px}
-  .rf-keys .fk b{font-size:18px}
+  .rf-keys .fk b{font-size:24px;margin:6px 0}
+  .rf-keys .fk .fk-r{font-size:11.5px;flex-direction:column;gap:0}
+  .rf-keys .fk .fk-r b{font-size:13px}
   .rf-keys .fk p{font-size:12.5px;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
   .rf-keys .fk .kick{flex-direction:column;gap:1px}
   .rf-keysn{padding:10px 16px}
@@ -270,17 +302,29 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 `;
 document.head.insertAdjacentHTML("beforeend", `<style id="fiche2-css">${FICHE2_CSS}</style>`);
 
-const FICHE2_ICONS = {
-  "": `<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5"/></svg>`,
-  comptes: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16"/><path d="M7 16V10"/><path d="M12 16V5"/><path d="M17 16v-4"/></svg>`,
-  actualite: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 5h14a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1h-8l-4 3.5V16H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M8 9.5h8M8 12.5h5"/></svg>`,
-};
-const FICHE2_COURT = { "": "Vue d'ensemble", comptes: "Chiffres", actualite: "Actualités" };
-
-/* ---------- Onglets de la fiche ---------- */
-function fiche2Onglets(s, tab) {
-  return `<nav class="qtabs f2tabs" aria-label="Rubriques de la fiche ${esc(s.name)}"><div class="f2seg">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k ? "/" + k : ""}" class="${k === (tab || "") ? "on" : ""}"${k === (tab || "") ? ` aria-current="page"` : ""}>${FICHE2_ICONS[k] || ""}<span class="f2tl">${n}</span><span class="f2ts">${FICHE2_COURT[k] || n}</span></a>`).join("")}</div></nav>`;
+/* ---------- Une seule rangée d'onglets (29 octobre, 17 h) ----------
+   Les étapes de la vue d'ensemble (boutons, sans rechargement) et les deux autres pages de la fiche
+   (« Les chiffres en détail », « Actualités et discussion », liens) sont réunies dans une seule barre collante.
+   Plus de seconde rangée « Comprendre … : 1, 2, 3 » ; l'ancienne étape « Actualité » est en tête de l'onglet Actualités. */
+const FICHE2_ORDRE = ["retenir", "metier", "prix", "@comptes", "concurrents", "@actualite", "faq"];
+const FICHE2_LIB = { retenir: ["L'essentiel", "Essentiel"], metier: ["Son métier", "Métier"], prix: ["Son prix", "Prix"], "@comptes": ["Les chiffres en détail", "Chiffres"], concurrents: ["Concurrents", "Concurrents"], "@actualite": ["Actualités et discussion", "Actualités"], faq: ["Questions", "Questions"] };
+function fiche2EtapesPrevues(s) { return (s.missing ? ["metier", "prix", "faq"] : ["retenir", "metier", "concurrents", "faq"]).map(k => [k, FICHE2_LIB[k][0]]); }
+function fiche2Onglets(s, tab, L) {
+  L = L || fiche2EtapesPrevues(s);
+  const keys = new Set(L.map(x => x[0])), cur = tab ? null : etapeCourante(L);
+  const lab = (k, n) => `<span class="f2tl">${esc(n || FICHE2_LIB[k][0])}</span><span class="f2ts">${esc(FICHE2_LIB[k] ? FICHE2_LIB[k][1] : n)}</span>`;
+  const items = FICHE2_ORDRE.filter(k => k[0] === "@" || keys.has(k)).map(k => {
+    if (k[0] === "@") { const t = k.slice(1), on = tab === t; return `<a href="/entreprise/${s.id}/${t}" class="${on ? "on" : ""}"${on ? ` aria-current="page"` : ""}>${lab(k)}</a>`; }
+    const n = L.find(x => x[0] === k)[1];
+    if (!tab) return `<button type="button" data-et="${k}" class="${k === cur ? "on" : ""}"${k === cur ? ` aria-current="true"` : ""}>${lab(k, n)}</button>`;
+    return `<a href="/entreprise/${s.id}${k === L[0][0] ? "" : "?etape=" + k}">${lab(k, n)}</a>`;
+  });
+  return `<nav class="qtabs f2tabs" id="etapes" aria-label="Rubriques de la fiche ${esc(s.name)}"><div class="f2seg">${items.join("")}</div></nav>`;
 }
+function fiche2Centrer() { // sur téléphone, l'onglet actif reste visible dans la barre qui défile
+  const b = $("#etapes .on"), p = b && b.parentElement; if (p) p.scrollLeft = Math.max(0, b.offsetLeft - (p.clientWidth - b.offsetWidth) / 2);
+}
+function etapesHTML() { return ""; } // la rangée « Comprendre … » est fusionnée dans fiche2Onglets
 
 /* ---------- Taille dans le secteur : classement et voisines de rang ---------- */
 function fiche2Rang(s) {
@@ -380,11 +424,12 @@ function ficheSommaire(s, c) {
   const li = (i, k) => `<li class="rf-${k}"><i></i><button type="button" class="rf-anf" data-rf-anf="${esc(i.id)}" title="Lire le détail et la source">${esc(i.titre)}</button></li>`;
   return `<div class="fh-sum rf-sum"><div class="rf-sh"><h2 class="f2-h">En bref</h2><span class="f2-sub">Exercice ${esc(s.year)} · comptes officiels</span></div>
       <p class="fh-v" id="fverdict">${sit || esc(s.desc || "")}</p>
+      ${t ? `<p class="rf-tally" title="Selon les seuils de lecture du site et la médiane du secteur"><span class="f"><i></i>${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i>${t.moyen} dans la moyenne</span><span class="v"><i></i>${t.vig} à surveiller</span></p>` : ""}
       ${P && (P.v.length || P.d.length) ? `<div class="rf-pts">
         <div class="rf-bl"><h3>Atouts</h3>${P.v.length ? `<ul>${P.v.map(i => li(i, "v")).join("")}</ul>` : `<p class="rf-no">Aucun atout net dans ses comptes.</p>`}</div>
         <div class="rf-bl"><h3>À surveiller</h3>${P.d.length ? `<ul>${P.d.map(i => li(i, "d")).join("")}</ul>` : `<p class="rf-no">Rien d'inquiétant dans les derniers comptes.</p>`}</div></div>` : ""}
       ${rfAVenir(s)}
-      <div class="rf-foot">${t ? `<span class="rf-tally" title="Selon les seuils de lecture du site et la médiane du secteur"><span class="f"><i></i>${t.fort} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i>${t.moyen} moyen${t.moyen > 1 ? "s" : ""}</span><span class="v"><i></i>${t.vig} à surveiller</span></span>` : ""}<button type="button" class="linkbtn lnk" data-et="retenir">L'analyse complète</button></div></div>`;
+      <div class="rf-foot"><button type="button" class="linkbtn lnk" data-et="retenir">L'analyse complète</button></div></div>`;
 }
 function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
   const pea = peaOk(s), place = String(s.tv || "").split(":")[0], bourse = (typeof IA_BOURSES !== "undefined" && IA_BOURSES[place]) || place;
@@ -401,12 +446,34 @@ function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les 
     ${fiche2Onglets(s, tab)}`;
 }
 
+/* ---------- Colonne de droite : face à ses concurrents (29 octobre, 17 h 45) ----------
+   L'entreprise et 3 concurrentes sur trois repères, la médiane du secteur en dernière ligne.
+   Vert / orange : au-dessus / en dessous de la médiane (croissance, marge). Le PER n'est pas coloré : moins cher n'est ni bien ni mal. */
+function rfFaceConc(s) {
+  if (s.missing || !s.ca) return "";
+  const P = peersOf(s, 3).list.filter(c => !c.missing); if (!P.length) return "";
+  const md = MED[s.sector] || {}, mp = MEDPE[s.sector];
+  const col = (v, m) => v == null || m == null || md.n < 3 ? "" : v > m * 1.1 + 0.002 ? "up" : v < m * 0.9 - 0.002 ? "dn" : "";
+  const row = (c, me) => { const m = ratios(c), v = valo(c), y = c.year && c.year !== s.year ? `<small title="Dernier exercice publié">${esc(String(c.year))}</small>` : "";
+    return `<tr class="${me ? "me" : ""}"><th scope="row"><a href="/entreprise/${c.id}">${logo(c, 20)}<span>${esc(c.name)}</span>${y}</a></th>
+      <td class="${col(m.g1, md.g1)}">${m.g1 != null ? sgn(m.g1) : "–"}</td><td class="${isBank(c) ? "" : col(m.marge, md.marge)}">${!isBank(c) && m.marge != null ? pct(m.marge, 0, false) : "–"}</td><td>${v && v.pe ? F0.format(v.pe) : "–"}</td></tr>`; };
+  const ids = [s, ...P].map(c => c.id).join(",");
+  return `<section class="panel rf-fc"><div class="ph"><h2>Face à ses concurrents</h2></div>
+    <table class="rf-fct"><thead><tr><th scope="col"><span class="sr">Entreprise</span></th><th scope="col" title="Évolution des ventes sur un an">Ventes 1 an</th><th scope="col" title="Marge d'exploitation">Marge</th><th scope="col" title="Prix en Bourse en années de bénéfice">PER</th></tr></thead>
+    <tbody>${row(s, true)}${P.map(c => row(c, false)).join("")}</tbody>
+    ${md.n >= 3 ? `<tfoot><tr><th scope="row">Médiane du secteur</th><td>${md.g1 != null ? sgn(md.g1) : "–"}</td><td>${md.marge != null ? pct(md.marge, 0, false) : "–"}</td><td>${mp ? F0.format(mp) : "–"}</td></tr></tfoot>` : ""}</table>
+    <p class="rf-fcl"><span class="up">vert</span> au-dessus de la médiane, <span class="dn">orange</span> en dessous. Derniers comptes publiés de chaque entreprise.</p>
+    ${fiche2RangBouton(s, "f2-rk rf-fcrk")}
+    <p class="fannall"><a class="more" href="/comparer?ids=${ids}">Comparer en détail →</a></p></section>`;
+}
+
 /* ---------- Vue d'ensemble : les étapes, une colonne latérale courte (dernières annonces) ---------- */
 function tabBref(s, c, el) {
-  el.innerHTML = `${etapesHTML(s, c)}
-    <div class="fcols"><div id="etapes-corps">${etapesCorps(s, c)}</div>
+  const nav = $("#etapes"); if (nav) { nav.outerHTML = fiche2Onglets(s, "", etapesListe(s, c)); fiche2Centrer(); }
+  el.innerHTML = `<div class="fcols"><div id="etapes-corps">${etapesCorps(s, c)}</div>
       <aside class="fside" id="fside">
         <section class="panel" id="actus"><div class="ph"><h2>Dernières annonces</h2></div><div class="pb" id="fannb"></div><p class="fannall"><a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a></p></section>
+        ${rfFaceConc(s)}
       </aside></div>`;
   etapesBind(s);
   if (typeof tblxSortable === "function") $$(".rf-ctab", el).forEach(t => tblxSortable(t));
@@ -418,36 +485,44 @@ function tabBref(s, c, el) {
   ficheGraphique(s);
   if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0);
 }
-/* Le parcours : l'essentiel, le métier, les concurrents, l'actualité, les questions.
+/* Le parcours : l'essentiel, le métier, les concurrents, les questions (l'actualité est l'onglet « Actualités et discussion »).
    Les comptes, le prix et le dividende sont regroupés par thème dans l'onglet « Les chiffres en détail ». */
 const RF_ETAPES_CHIFFRES = { comptes: "", prix: "valorisation", dividende: "dividende" };
 function etapesListe(s, c) {
   if (typeof ctxCharge === "function") ctxCharge();
-  const actu = () => typeof contexteActuHTML === "function" ? contexteActuHTML(s, c) : "";
   if (!c) return [
     ["metier", "Son métier", () => ficheMetierHTML(s, null) + `<section class="panel"><div class="pb muted">${missingTxt(s, true)}</div></section>`],
     ["prix", "Son prix", () => ficheGraphBox(s) + fichePrixSans(s)],
-    ["actualite", "Actualité", actu],
     ["faq", "Questions", () => faqHTML(s, null)],
   ];
   return [
     ["retenir", "L'essentiel", () => ficheRetenirHTML(s, c)],
     ["metier", "Son métier", () => ficheMetierHTML(s, c)],
     ["concurrents", "Concurrents", () => concurrentsHTML(s)],
-    ["actualite", "Actualité", actu],
     ["faq", "Questions", () => faqHTML(s, c)],
   ];
 }
 /* Étape 1 : les indicateurs principaux (une tuile chacun, reliée à son thème détaillé), puis l'analyse sur plusieurs années */
 const RF_TUILE_PROV = { Ventes: () => "ca", Marge: () => "marge", "Bénéfice": () => "net", Dette: k => k === "aucune" ? "netDebt" : "lev", Dividende: k => /%/.test(k) ? "payout" : "divPaid", Prix: () => "per" };
 const RF_TUILE_THEME = { Ventes: "croissance", Marge: "rentabilite", "Bénéfice": "rentabilite", Dette: "bilan", Dividende: "dividende", Prix: "valorisation" };
+function rfRepere(s, f, l) { // un repère court par indicateur : évolution sur un an ou médiane du secteur (29 octobre, 17 h 30)
+  const m = ratios(f), md = MED[s.sector] || {}, B = v => big(v, f.currency);
+  const sec = (v, lab) => `<span class="fk-r"><span>Médiane du secteur</span><b>${v}</b></span>`;
+  const evo = v => `<span class="fk-r"><span>Sur un an</span><b class="${v > 0 ? "up" : v < 0 ? "dn" : ""}">${sgn(v)}</b></span>`;
+  if (l === "Ventes" && m.g1 != null) return evo(m.g1);
+  if (l === "Marge" && md.n >= 3 && md.marge != null) return sec(pct(md.marge, 0, false));
+  if (l === "Bénéfice" && m.ng != null && f.net > 0) return evo(m.ng);
+  if (l === "Dette" && f.netDebt != null) return `<span class="fk-r"><span>${f.netDebt < 0 ? "Trésorerie nette" : "Dette nette"}</span><b>${B(Math.abs(f.netDebt))}</b></span>`;
+  if (l === "Prix" && MEDPE[s.sector]) return sec(`${F0.format(MEDPE[s.sector])} fois`);
+  return "";
+}
 function ficheRetenirHTML(s, c) {
   const f = figuresOf(c), facts = essentielFacts(s, f), items = lecture(s, f);
   const lvOf = l => { const k = { Ventes: ["croissance"], Marge: ["marge"], "Bénéfice": ["net"], Dette: ["lev", "dettenette", "gear"], Dividende: ["payout"] }[l]; const it = k && items.find(i => k.includes(i.term)); return it ? it.lv : null; };
   return `<section class="panel" id="retenir"><div class="ph"><h2>Les indicateurs principaux</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
     <div class="fkeys rf-keys n${facts.length}">${facts.map(([l, k, t]) => { const lv = lvOf(l), th = RF_TUILE_THEME[l], pk = RF_TUILE_PROV[l] && RF_TUILE_PROV[l](k);
       // tuile entière cliquable (lien étiré) ; le bouton « i » (provenance du chiffre) reste au-dessus du lien
-      return `<div class="fk fk-l${lv ? " fk-" + lv : ""}"><span class="kick"><span>${l}${pk && typeof provBtn === "function" ? provBtn(pk, "c:" + s.id) : ""}</span>${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><a class="fk-a" href="/entreprise/${s.id}/comptes#rf-${th}"><b>${k}</b><p>${t}</p></a></div>`; }).join("")}</div>
+      return `<div class="fk fk-l${lv ? " fk-" + lv : ""}"><span class="kick"><span>${l}${pk && typeof provBtn === "function" ? provBtn(pk, "c:" + s.id) : ""}</span>${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><a class="fk-a" href="/entreprise/${s.id}/comptes#rf-${th}"><b>${k}</b>${rfRepere(s, f, l)}<p>${t}</p></a></div>`; }).join("")}</div>
     <p class="rf-keysn">Touchez un indicateur pour son évolution sur plusieurs années, dans l'onglet <a class="lnk" href="/entreprise/${s.id}/comptes">Les chiffres en détail</a>.</p>
     ${ficheAnalyse(s, c)}
     ${ficheConfiance(c)}
@@ -460,18 +535,20 @@ async function pageCompany(id, tab) {
   if (tab === "agenda" || tab === "communaute") tab = "actualite";
   tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
   const et = new URLSearchParams(location.search).get("etape");
+  if (!tab && et === "actualite") { tab = "actualite"; history.replaceState(history.state, "", `/entreprise/${id}/actualite`); }
   if (!tab && !s.missing && et in RF_ETAPES_CHIFFRES) { // anciens liens vers les étapes « Ses comptes », « Son prix », « Dividende »
     tab = "comptes"; history.replaceState(history.state, "", `/entreprise/${id}/comptes${RF_ETAPES_CHIFFRES[et] ? "#rf-" + RF_ETAPES_CHIFFRES[et] : ""}`);
   }
   setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
   app.innerHTML = companyHeader(s, tab) + `<div id="ctab"><div class="empty">Chargement de la fiche…</div></div>`;
+  fiche2Centrer();
   if (!tab) ficheGraphique(s); // la courbe se charge pendant que la fiche arrive, sans la retarder
   const load = s.missing ? Promise.resolve(null) : (FULL[id] ? Promise.resolve(FULL[id]) : fetch(`/data/societes/${id}.json`).then(r => r.json()).then(j => FULL[id] = j).catch(() => null));
   const [c] = await Promise.all([load, PXP, ficheWDLoad(id)]);
   if (!ficheMemeId(id)) return; // l'utilisateur a changé de page entre-temps
   const ph = $("#pxh"); if (ph) ph.innerHTML = ficheCours(s);
   const sm = $(".fh-sum"); if (sm) sm.outerHTML = ficheSommaire(s, c); // la situation et le prix ont besoin des comptes et du cours
-  ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
+  ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); if (typeof contexteActuHTML === "function") { el.insertAdjacentHTML("afterbegin", contexteActuHTML(s, c)); if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0); } const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
   if (tab === "comptes" && location.hash.startsWith("#rf-")) { const t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(() => t.scrollIntoView({ block: "start" }), 30); }
   if (!tab) { fiche2Etapes(); premStatus().then(() => { if (ficheMemeId(id)) assistantPanel(s, c, $("#ctab")); }); }
 }
@@ -504,10 +581,7 @@ function ficheGraphique(s) {
 }
 
 /* ---------- Parcours en étapes : étapes lues cochées, logos des concurrents replacés ---------- */
-function fiche2Etapes() {
-  const L = $$("#etapes [data-et]"), i = L.findIndex(b => b.classList.contains("on"));
-  L.forEach((b, j) => { b.classList.toggle("fait", j < i); const n = b.querySelector("span"); if (n) n.textContent = j < i ? "✓" : String(j + 1); });
-}
+function fiche2Etapes() { } // les onglets ne sont plus numérotés
 function etapesBind(s) {
   const show = k => {
     $$("#etapes [data-et]").forEach(b => b.classList.toggle("on", b.dataset.et === k));
