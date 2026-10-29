@@ -341,8 +341,10 @@ const lire = f => { const u = new URL(f, import.meta.url); return existsSync(u) 
 const CAT = (lire("./etf_catalogue.json") || { list: [] }).list, RES = lire("./etf_compo_choisis.json") || {};
 const parIsin = Object.fromEntries(CAT.map(e => [e.isin, e]));
 // champs que la collecte met à jour sur les ETF choisis (les autres, dont l'identifiant et les textes, restent ceux de la liste)
-const MAJ = ["ter", "pea", "encours", "replication", "methode", "distribution", "domicile", "creation", "cotations", "url", "src", "nomOfficiel", "indexOfficiel", "nIndex", "couvert", "levier", "contrepartie", "compo"];
-const propre = o => Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && v !== null && !k.startsWith("_")));
+const MAJ = ["ter", "pea", "encours", "replication", "methode", "distribution", "domicile", "creation", "couvert", "levier", "compo"];
+// détails lus seulement par la fiche, rangés dans cf/site/data/etf/<id>.json (clé info) pour garder etf.json léger
+const DETAIL = new Set(["nomOfficiel", "indexOfficiel", "url", "src", "cotations", "contrepartie", "nIndex"]);
+const propre = o => Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && v !== null && !k.startsWith("_") && !DETAIL.has(k)));
 const choisis = ETF.map(e => { const c = parIsin[e.isin]; const m = c ? propre(Object.fromEntries(MAJ.map(k => [k, c[k]]))) : {}; const r = { ...e, ...m }; if (!r.compo && RES[e.id]) r.compo = RES[e.id]; return r; });
 const vus = new Set(ETF.map(e => e.isin));
 export default [...choisis, ...CAT.filter(e => !vus.has(e.isin)).map(propre)];

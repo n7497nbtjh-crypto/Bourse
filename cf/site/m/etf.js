@@ -26,9 +26,11 @@ const ETF_DOMI = { Irlande: "L'Irlande accueille la plupart des ETF vendus en Eu
 
 /* ---------- Petits calculs ---------- */
 const ETF_COMPO = {};
+// Fichier détaillé de l'ETF (composition et informations de la fiche), chargé une fois
+async function ETF_fichier(e) { if (ETF_COMPO[e.id] === undefined) ETF_COMPO[e.id] = await getJSON(`/data/etf/${e.id}.json`, null); return ETF_COMPO[e.id]; }
 async function etfComp(e) {   // remplace celle d'index.html : composition détaillée de l'émetteur, sinon l'ancien fonds américain de référence
   if (!e) return null;
-  if (e.compo) { if (ETF_COMPO[e.id] === undefined) ETF_COMPO[e.id] = await getJSON(`/data/etf/${e.id}.json`, null); if (ETF_COMPO[e.id]) return ETF_COMPO[e.id]; }
+  if (e.compo) { const f = await ETF_fichier(e); if (f && f.top) return f; }
   if (!e.proxy) return null;
   if (ETFCOMP[e.proxy] !== undefined) return ETFCOMP[e.proxy];
   ETFCOMP[e.proxy] = await getJSON(`/data/etf/${e.proxy}.json`, null); return ETFCOMP[e.proxy];
@@ -51,7 +53,7 @@ function ETF_rank(e, f, higherBetter = true) {
 }
 const ETF_cout = (ter, years, monthly = 100, rate = 0.05) => { const a = Calc.compound({ initial: 0, monthly, years, rate }).final, b = Calc.compound({ initial: 0, monthly, years, rate, fee: (ter || 0) / 100 }).final; return { brut: a, net: b, cout: a - b }; };
 const ETF_pctS = (v, d = 1) => v == null ? "–" : nf(d).format(v) + " %";
-const ETF_nomLigne = t => { const c = t.isin && ISINBY[t.isin]; if (c) return c.name; let s = String(t.name || ""); for (let i = 0; i < 3; i++) s = s.replace(/[\s,]+(INC|CORP|CORPORATION|LTD|PLC|SA|SE|NV|AG|CO|CLASS [A-Z]|CL [A-Z]|REG|ORD|NAMEN|-REG|USD[\d.]+|EUR[\d.]+)\.?\s*$/i, ""); return titleCase(s.replace(/[\s,.]+$/, "")); };
+const ETF_nomLigne = t => { const c = t.isin && ISINBY[t.isin]; if (c) return c.name; let s = String(t.name || ""); for (let i = 0; i < 3; i++) s = s.replace(/[\s,]+(INC|CORP|CORPORATION|LTD|PLC|SA|SE|NV|AG|CO|CLASS [A-Z]|CL [A-Z]|REG|ORD|NAMEN|-REG|USD[\d.]+|EUR[\d.]+)\.?\s*$/i, ""); s = s.replace(/\s*-?\s*(INC|CORP)?-?\s*CL(ASS)?\s+[A-Z]$/i, "").replace(/\s*&\s*(CO\.?)?$/i, ""); return titleCase(s.replace(/[\s,.&-]+$/, "")).replace(/\.Com\b/g, ".com"); };
 const ETF_place = e => (e.cotations || []).find(c => c.ticker === e.ticker) || null;
 const ETF_badges = (e, big) => [
   e.pea === true ? `<span class="eb eb-g">PEA</span>` : e.pea === false && big ? `<span class="eb">Hors PEA</span>` : "",
@@ -294,6 +296,7 @@ function ETF_ajoutPf(e) {
 }
 async function pageEtf(id) {
   const e = ETFBY[id]; if (!e) return pageNotFound();
+  if (!e.proxy || e.compo) { const F = await ETF_fichier(e); if (F && F.info) Object.assign(e, F.info); if (location.pathname !== "/etf/" + id) return; }
   setTitle(`${e.name} : composition, frais, PEA`); setNav("etf");
   const v = ETF_terVerdict(e), pl = ETF_place(e), em = ETF_EMET[e.issuer] || ETF_EMET[Object.keys(ETF_EMET).find(k => (e.issuer || "").startsWith(k))];
   const { same, cat } = ETF_voisins(e), voisin = same[0] && same[0].ter < (e.ter ?? 9) ? same[0] : same[0] || cat[0];
@@ -376,7 +379,7 @@ async function pageEtf(id) {
   const tops = C && C.top ? C.top.slice(0, 10) : [], secs = C && (C.sectors || []).filter(s => s[1] >= 0.5), ctry = C && (C.countries || []).filter(x => x[1] >= 0.5);
   const t10 = tops.reduce((a, x) => a + (x.pct || 0), 0), nP = ctry ? ctry.length : 0;
   $("#ebuy .pb").innerHTML = `<p class="etfbuy">${ETF_phrase(e, C)}</p>
-    ${C && C.lines ? `<div class="etft3"><div><span>Lignes</span><b>${F0.format(C.lines)}</b><small>${["obligations", "monetaire"].includes(e.categorie) ? "titres" : "entreprises ou titres"}</small></div><div><span>10 premières</span><b>${F0.format(t10)} %</b><small>du fonds</small></div><div><span>Pays</span><b>${F0.format(nP || (C.countries || []).length)}</b><small>${ctry && ctry[0] ? esc(COUNTRY[ctry[0][0]] || ctry[0][0]) + " en tête" : ""}</small></div></div>` : ""}
+    ${C && C.lines ? `<div class="etft3"><div><span>Lignes</span><b>${F0.format(C.lines)}</b><small>${["obligations", "monetaire"].includes(e.categorie) ? "titres" : "entreprises ou titres"}</small></div><div><span>10 premières</span><b>${F0.format(t10)} %</b><small>du fonds</small></div><div><span>Pays</span><b>${F0.format((C.countries || []).filter(x => x[0] !== "XS" && x[0] !== "EU").length)}</b><small>${ctry && ctry[0] ? esc(COUNTRY[ctry[0][0]] || ctry[0][0]) + " en tête" : ""}</small></div></div>` : ""}
     ${C && C.niveau === "indice" && e.replication === "synthétique" ? `<div class="etfnote" style="margin-top:12px">Ce fonds est <b>synthétique</b> : il détient en réalité un autre panier de titres${C.panier && C.panier.lines ? ` (${F0.format(C.panier.lines)} lignes)` : ""} et reçoit la performance de l'indice ${esc(e.index || "")} par un contrat d'échange avec une banque. Ce qui compte pour vous, c'est l'indice : c'est sa composition qui est montrée ici.</div>` : ""}
     ${e.fiche ? `<p style="margin:12px 0 0;font-size:14px;line-height:1.55"><b>Ce qui fait varier sa valeur :</b> ${esc(e.fiche.varie)}</p>` : ""}
     ${C ? `<div class="etfsrc">${ETF_srcLine(C, e)}</div>` : !e.fiche ? `<div class="etfsrc">La composition détaillée de cet ETF n'est pas encore disponible. Elle est relevée chaque mois sur le site de l'émetteur.</div>` : ""}`;

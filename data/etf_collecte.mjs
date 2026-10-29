@@ -154,11 +154,16 @@ for (const e of tous) {
   }
 }
 // Écriture : un fichier par ETF, et un résumé dans le catalogue (lu au démarrage du site)
+// Informations détaillées (lues seulement sur la fiche) : rangées dans le fichier de l'ETF pour garder etf.json léger
+const INFO = ["nomOfficiel", "indexOfficiel", "url", "src", "cotations", "contrepartie", "nIndex"];
 const keep = new Set();
-for (const [id, c] of Object.entries(compo)) {
-  if (c.niveau === "panier" && !c.isins.length) continue;
-  const f = { ...c }; delete f.couverture;
-  writeFileSync(OUTD + id + ".json", JSON.stringify(f)); keep.add(id);
+for (const e of [...sel, ...CURATED.filter(c => !sel.some(s => s.id === c.id))]) {
+  const c = compo[e.id] && !(compo[e.id].niveau === "panier" && !compo[e.id].isins.length) ? compo[e.id] : null;
+  const s = sel.find(x => x.id === e.id) || {};
+  const info = Object.fromEntries(INFO.map(k => [k, s[k]]).filter(([, v]) => v != null));
+  if (!c && !Object.keys(info).length) continue;
+  const f = c ? { ...c } : { id: e.id, isin: e.isin }; delete f.couverture; f.info = info;
+  writeFileSync(OUTD + e.id + ".json", JSON.stringify(f)); if (c) keep.add(e.id);
 }
 for (const e of sel) {
   const c = compo[e.id]; if (!c || !keep.has(e.id)) continue;
