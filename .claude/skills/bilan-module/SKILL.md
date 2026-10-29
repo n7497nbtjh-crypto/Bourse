@@ -25,7 +25,7 @@ Le site n'appelle aucun modèle côté serveur. Réponse calculée d'abord ; ré
 ## Règles de contenu
 - Français, vouvoiement, phrases courtes, pas de tiret cadratin, pas de jargon sans explication.
 - Aucun conseil d'achat ou de vente, aucune prédiction. Aucun chiffre, article, cours ou image inventé : chaque donnée a une source affichée et une date ; une donnée ancienne est signalée comme telle.
-- Pas de lien vers TradingView. Pas de clé ni de secret dans le code du navigateur.
+- TradingView autorisé (widget, Lightweight Charts). Pas de clé ni de secret dans le code du navigateur.
 - Professionnel et sobre : verdict d'abord, détails ensuite ; médiane du secteur et zones vert / gris / orange.
 
 ## Vérifier

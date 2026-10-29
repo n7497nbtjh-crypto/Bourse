@@ -26,7 +26,7 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 
 ## Interdits
 - Aucun conseil d'investissement ni prédiction ; pas de profil + titres proposés à la personne (« Pistes pour vous » reformulé sans personnalisation).
-- Aucun lien ni script TradingView. Pas de scraping de Boursorama, Yahoo, Zonebourse. Pas de contournement anti-robot.
+- TradingView autorisé depuis le 29/10/2026 (décision de Romain) : widget gratuit et bibliothèque Lightweight Charts, avec la mention prévue par leur licence. Pas de scraping de Boursorama, Yahoo, Zonebourse. Pas de contournement anti-robot.
 - Ne jamais manipuler de clé secrète (Stripe, ADMIN_KEY, tokens) : Romain les saisit lui-même. Pas de compte de test en production, pas d'e-mail envoyé.
 - Une donnée ancienne ou estimée ne doit jamais passer pour actuelle ou publiée.
 - Pas de tiret cadratin dans les textes du site ; vouvoiement.
