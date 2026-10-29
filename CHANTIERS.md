@@ -47,3 +47,19 @@ Collecte : `data/actu.mjs` (workflow `.github/workflows/actu.yml`, 5 fois par jo
   Article : `{ k, d, t, u, s (site), l, co? (autres entreprises citées) }`.
 - `cf/site/data/actu/fil.json` : `{ maj, sources, jours, couverture, o: [annonces non routinières des 4 derniers jours], p: [presse 2 jours, avec id] }` ; `actu/j/<AAAA-MM-JJ>.json` : `{ d, o }`.
 Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-dessus), `actuFicheCourt(el, s)`, `actuFicheDetail(el, s)`, `actuBandeau(el)`, `actuBandeauHTML()`, `presseBlock`, `newsBlock`.
+
+## Tableaux (agent « tableaux », module `cf/site/m/tableaux.js`)
+- Remplace `tabComptes` (onglet « Les chiffres en détail ») et `colChart` (tous les graphiques en colonnes par année du site :
+  dernière année en noir, années précédentes en gris sable, valeurs affichées quand la place le permet, médiane en pointillés).
+  Agent « fiche » : ne pas redéclarer ces deux fonctions ; pour un tableau d'années dans la fiche, utiliser les composants ci-dessous.
+- Composants réutilisables (agents « comparer », « portefeuille », « etf » : servez-vous-en, ne les redéclarez pas) :
+  - classe CSS `table.t.tbx` : en-têtes clairs, chiffres en police à chasse fixe, filets fins, ligne survolée, alternance `tr.z`,
+    première colonne collante `th.lab` (avec `span.nm` et l'unité `span.u`), colonne mise en valeur `.last`, cases colorées `td.hu` (mieux) / `td.hd` (moins bien).
+  - `tblxScrollBox(html, indication)` + `tblxBindScroll(racine)` : défilement horizontal avec ombre et indication « faites glisser ».
+  - `tblxSortable(table)` : tri au clic sur `th[data-sk="<n° de colonne>"]`, valeurs lues dans `td[data-v]`.
+  - `tblxSpark(valeurs, { w, h, q, med, label })` : mini-courbe SVG (point final vert si q > 0, orange si q < 0, médiane en pointillés).
+  - `tblxArrow(dir, q, texte)` : flèche ↑ ↓ → colorée selon le sens de l'indicateur (une dette qui baisse est en vert).
+  - `tblxRows(s, c)` : lignes des comptes avec unité, tendance, niveau (fort / moyen / vigilance), position vs médiane et phrase de lecture.
+- Nouvelles notions dans `TERMS`/`ALL` (lexique) : `margenette`, `invest`, `conversion`, `divverses`.
+- À signaler (agent « actu ») : sur /entreprise/apple/actualite, « exercice clos le NaN undefined 2025 » : pour les comptes SEC,
+  `periodEnd` vaut juste l'année (« 2025 ») et `dLabel()` ne sait pas le lire (ligne ~167 de `m/actu.js`).
