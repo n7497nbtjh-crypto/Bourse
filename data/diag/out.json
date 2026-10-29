@@ -1,9 +1,22 @@
 {
  "fraicheur": [
-  "FR0000121014 94 documents",
-  "FR0000121485 74 documents",
-  "FR0014000MR3 67 documents",
-  "FR0000120271 100 documents",
-  "extensions {\"pdf\":371,\"zip\":16,\"xhtml\":6,\"xbri\":2}"
+  "lvmh 0 dépôts annuels []",
+  "kering 1 dépôts annuels [{\"url\":\"https://fr.ftp.opendatasoft.com/datadila/INFOFI/299/8888/01/FC299625120_20260421.xbri\",\"date\":\"2026-04-21\",\"type\":\"Document de référence\",\"lei\":\"549300VGEJKB7SVUZR78\"}]",
+  "   FC299625120_20260421.xbri taille 27230763 magic 504b0304 fichiers 9 [\"kering-2025-12-31-fr/reports/kering-2025-12-31-fr.xhtml\"] iXBRL 1 faits 377 années [2024,2025] CA [16874,14675] net [1133,72] 3s",
+  "air-liquide 0 dépôts annuels []",
+  "danone 1 dépôts annuels [{\"url\":\"https://fr.ftp.opendatasoft.com/datadila/INFOFI/124/8888/01/FC124616831_20260304.xbri\",\"date\":\"2026-03-04\",\"type\":\"Document de référence\",\"lei\":\"969500KMUQ2B6CBAF162\"}]",
+  "   FC124616831_20260304.xbri taille 18045760 magic 504b0304 fichiers 9 [\"dan-2025-12-31-1-fr/reports/dan-2025-12-31-1-fr.xhtml\"] iXBRL 1 faits 504 années [2024,2025] CA [27376,27283] net [2021,1825] 1s",
+  "orange 0 dépôts annuels []",
+  "eiffage 0 dépôts annuels []",
+  "jcdecaux 0 dépôts annuels []",
+  "dassault-aviation 2 dépôts annuels [{\"url\":\"https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/8888/01/FCMKW130036_20260313.zip\",\"date\":\"2026-03-13\",\"type\":\"Rapports financiers et d'audit annuels\",\"lei\":\"969500CVFTUT88V8QN95\"},{\"url\":\"https://fr.ftp.opendatasoft.com/datadila/INFOFI/152/2026/03/FC152618863_20260313.zip\",\"date\":\"2026-03-13\",\"type\":\"Rapports financiers et d'audit annuels\",\"lei\":\"969500CVFTUT88V8QN95\"}]",
+  "   FCMKW130036_20260313.zip taille 1657749 magic 504b0304 fichiers 9 [\"dassaultaviation-2025-12-31-1-fr/reports/dassaultaviation-2025-12-31-fr.xhtml\"] iXBRL 1 faits 293 années [2024,2025] CA [6239.71,7425.97] net [923.82,977.39] 0s",
+  "lectra 0 dépôts annuels []",
+  "virbac 1 dépôts annuels [{\"url\":\"https://fr.ftp.opendatasoft.com/datadila/INFOFI/MKW/2026/04/FCMKW138187_20260427.zip\",\"date\":\"2026-04-27\",\"type\":\"Rapports financiers et d'audit annuels\",\"lei\":\"969500QQ1X5XHG649644\"}]",
+  "   FCMKW138187_20260427.zip taille 25229031 magic 504b0304 fichiers 10 [\"virp-2025-12-31-1-en/reports/virp-2025-12-31-1-en.xhtml\"] iXBRL 1 faits 357 années [2024,2025] CA [1397.38,1464.68] net [145.29,150.89] 2s",
+  "trigano 1 dépôts annuels [{\"url\":\"https://fr.ftp.opendatasoft.com/datadila/INFOFI/ECO/2025/12/FCECO080530_20251219.zip\",\"date\":\"2025-12-19\",\"type\":\"Rapports financiers et d'audit annuels\",\"lei\":\"969500KLZPNMO8TUM811\"}]",
+  "   FCECO080530_20251219.zip taille 4571004 magic 504b0304 fichiers 9 [\"969500KLZPNMO8TUM811-2025-08-31-1-fr/reports/969500KLZPNMO8TUM811-2025-08-31-1-fr.xhtml\"] iXBRL 1 faits 297 années [2024,2025] CA [3926.3,3660.2] net [374.4,239.3] 0s",
+  "capgemini 1 dépôts annuels [{\"url\":\"https://fr.ftp.opendatasoft.com/datadila/INFOFI/183/8888/01/FC183620359_20260323.xbri\",\"date\":\"2026-03-23\",\"type\":\"Document de référence\",\"lei\":\"96950077L0TN7BAROX36\"}]",
+  "   FC183620359_20260323.xbri taille 15848142 magic 504b0304 fichiers 9 [\"capg-2025-12-31-1-fr/reports/capg-2025-12-31-1-fr.xhtml\"] iXBRL 1 faits 345 années [2024,2025] CA [22096,22465] net [1671,1601] 1s"
  ]
 }
