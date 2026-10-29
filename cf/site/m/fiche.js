@@ -196,50 +196,8 @@ function ficheCours(s) {
   if (p.p1y) out += `<div class="fh-perf">Sur un an : <b class="${p.p >= p.p1y ? "up" : "down"}">${sgn(p.p / p.p1y - 1)}</b></div>`;
   return out;
 }
-function ficheSommaire(s) {
-  if (s.missing) {
-    const wd = ficheWd(s.id), md = MED[s.sector] || {}, faits = [wd && wd.fonde ? `créée en ${wd.fonde}` : "", wd && wd.siege ? `siège à ${esc(wd.siege)}` : "", wd && wd.effectif ? `${F0.format(wd.effectif[0])} salariés` : ""].filter(Boolean);
-    return `<div class="fh-sum"><div class="fh-vl"><p class="kick">En bref</p><p class="fh-v" id="fverdict">${esc(s.desc || (s.fiche && s.fiche.fait) || "")}${faits.length ? ` ${esc(s.name)} : ${faits.join(", ")}.` : ""}</p><p class="muted" style="margin:0;font-size:13px">${esc(missingTxt(s))} : en attendant, son métier, son secteur, son cours et les réponses de l'IA sont ci-dessous.</p></div>
-      <div class="fh-prof"><p class="kick">Son secteur en repères · ${esc(secName(s).toLowerCase())}</p>${md.n >= 3 ? `<div class="fh-feu" style="margin-top:8px">${md.marge != null ? `<span>Marge médiane <b>${pct(md.marge, 1, false)}</b></span>` : ""}${md.g1 != null ? `<span>Croissance médiane <b>${pct(md.g1, 1)}</b></span>` : ""}${MEDPE[s.sector] ? `<span>PER médian <b>${F0.format(MEDPE[s.sector])}</b></span>` : ""}</div><p class="muted" style="margin:8px 0 0;font-size:12.5px">Valeurs de l'entreprise « du milieu » parmi les ${md.n} du secteur suivies par le site.</p>` : `<p class="muted" style="margin:4px 0 0;font-size:13.5px">Pas assez d'entreprises comparables suivies dans ce secteur.</p>`}</div></div>`;
-  }
-  CURSYM = CUR[s.currency] || s.currency || "€";
-  const t = quick(s), phrase = enBref(s, { ...s, currency: s.currency, year: s.year }, []);
-  const prof = profilHTML(s);
-  return `<div class="fh-sum"><div class="fh-vl"><p class="kick">En bref · exercice ${esc(s.year)}</p><p class="fh-v" id="fverdict">${phrase || esc(s.desc || "")}</p>
-      ${t ? `<div class="fh-feu"><span class="f"><i></i><b>${t.fort}</b> point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i><b>${t.moyen}</b> dans la moyenne</span><span class="v"><i></i><b>${t.vig}</b> point${t.vig > 1 ? "s" : ""} de vigilance</span><button type="button" class="linkbtn lnk" data-et="retenir">Le détail</button></div>` : ""}
-      <div class="fh-go"><p><b>Nouveau en Bourse ?</b> La fiche se lit en sept étapes, dans l'ordre où l'on se pose les questions : ce qu'il faut retenir, son métier, ses comptes, son prix, puis vos questions à l'IA.</p><button type="button" class="btn" data-et="retenir">Commencer</button></div></div>
-    <div class="fh-prof">${prof ? `<div class="fh-pl">${prof}</div><div class="fh-pm"><p class="kick">Son profil dans le secteur</p>${profilMini(s)}</div>` : ""}${prof ? "" : `<p class="kick">Son profil dans le secteur</p><p class="muted" style="margin:4px 0 0;font-size:13.5px">Pas assez d'entreprises comparables suivies dans son secteur pour la situer.</p>`}</div></div>`;
-}
-function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
-  const pea = peaOk(s), place = String(s.tv || "").split(":")[0], bourse = (typeof IA_BOURSES !== "undefined" && IA_BOURSES[place]) || place;
-  const cmp = `/comparer?ids=${[s, ...peersOf(s, 3).list].map(c => c.id).join(",")}`;
-  return `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a></div>
-    <section class="panel fhero"><div class="fh-top">
-      <div class="fh-id">${logo(s, 56)}<div class="fh-t"><h1>${esc(s.name)}</h1>${s.desc ? `<p class="fh-desc">${esc(s.desc)}</p>` : ""}
-        <div class="fh-tags"><span title="Code de l'action">${esc(s.ticker)}</span>${bourse ? `<span>${esc(bourse)}</span>` : ""}<span>${esc(regName(s))}</span><a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a>${pea != null ? `<span class="${pea ? "ok" : ""}">${pea ? "Éligible au PEA" : "Hors PEA : compte-titres"}</span>` : ""}</div>
-        <div class="fh-act">${favBtn("c:" + s.id)}<a class="favbtn" href="${cmp}">Comparer à ses concurrents</a>${tab === "comprendre" ? "" : `<button type="button" class="favbtn fh-ia" data-fiche-ia>✦ Poser une question à l'IA</button>`}</div></div></div>
-      <div class="px" id="pxh">${ficheCours(s)}</div></div>
-      ${!tab ? ficheSommaire(s) : ""}
-      <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
-    </section>`;
-}
-async function pageCompany(id, tab) {
-  const s = RBY[id];
-  if (!s) return pageNotFound();
-  setNav("ent");
-  if (tab === "agenda" || tab === "communaute") tab = "actualite";
-  tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
-  setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
-  app.innerHTML = companyHeader(s, tab) + `<div id="ctab"><div class="empty">Chargement de la fiche…</div></div>`;
-  const load = s.missing ? Promise.resolve(null) : (FULL[id] ? Promise.resolve(FULL[id]) : fetch(`/data/societes/${id}.json`).then(r => r.json()).then(j => FULL[id] = j).catch(() => null));
-  const [c] = await Promise.all([load, PXP, ficheWDLoad(id)]);
-  if (!ficheMemeId(id)) return; // l'utilisateur a changé de page entre-temps
-  const ph = $("#pxh"); if (ph) ph.innerHTML = ficheCours(s);
-  const sm = $(".fh-sum"); if (sm) sm.outerHTML = ficheSommaire(s); // le profil « Prix » a besoin du cours
-  ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
-  if (tab === "comptes") $$("#ctab .scroll-x").forEach(x => { x.scrollLeft = x.scrollWidth; });
-  if (!tab) premStatus().then(() => { if (ficheMemeId(id)) assistantPanel(s, c, $("#ctab")); });
-}
+/* ficheSommaire, companyHeader, pageCompany, tabBref, etapesListe, etapesBind, ficheGraphBox, ficheGraphique et ficheRetenirHTML
+   sont définies une seule fois, dans m/fiche2.js (refonte de la fiche du 29 octobre). */
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-fiche-ia]"); if (!b) return;
   e.preventDefault();
@@ -252,24 +210,6 @@ function ficheVersIA(q) {
   const inp = $("#assistant input"); if (inp && !q) setTimeout(() => inp.focus({ preventScroll: true }), 350);
 }
 
-/* ---------- Vue d'ensemble : étapes dans la colonne principale, colonne latérale courte ---------- */
-function tabBref(s, c, el) {
-  const up = eventsOf(s.id).filter(e => e.date >= TODAY);
-  el.innerHTML = `${etapesHTML(s, c)}
-    <div class="fcols"><div id="etapes-corps">${etapesCorps(s, c)}</div>
-      <aside class="fside" id="fside">
-        <section class="panel" id="agenda"><div class="ph"><h2>Prochaines dates</h2>${up.length > 3 ? `<a href="/entreprise/${s.id}/actualite">Toutes</a>` : ""}</div>${up.length ? agendaHTML(up.slice(0, 3), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant. Le site les ajoute dès que l'entreprise les publie.</div>`}</section>
-        <section class="panel" id="actus"><div class="ph"><h2>Dernières annonces</h2></div><div class="pb" id="fannb"></div><p class="fannall"><a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a></p></section>
-        <section class="panel fiamini"><div class="ph"><h2>✦ Une question ?</h2></div><div class="pb"><p>L'IA répond avec les chiffres de cette fiche, tout de suite.</p><form class="askf" data-fiche-mini autocomplete="off"><input type="text" maxlength="300" placeholder="Ex. : sa dette est-elle un problème ?" aria-label="Votre question sur ${esc(s.name)}"><button class="btn" type="submit">Demander à l'IA</button></form></div></section>
-      </aside></div>`;
-  etapesBind(s);
-  const qs = new URLSearchParams(location.search), voir = qs.get("voir");
-  if (voir) { const d = $(`details[data-term="${voir}"]`) || $("#" + voir); if (d && d.tagName === "DETAILS") d.open = true; }
-  ficheAnnonces(s, $("#fannb"));
-  dirigeantsHTML(s, $("#fdirig"));
-  ficheGraphique(s);
-  $("[data-fiche-mini]", el).onsubmit = e => { e.preventDefault(); const i = $("input", e.target), q = i.value.trim(); if (q.length < 3) return; i.value = ""; ficheDemander(q); };
-}
 function ficheAnnonces(s, el) {
   if (!el) return;
   const all = "";
@@ -293,45 +233,6 @@ function ficheAnnonces(s, el) {
   ficheVeille(el, 9000, vide);
 }
 
-/* ---------- Le parcours en étapes ---------- */
-function etapesListe(s, c) {
-  if (!c) return [
-    ["metier", "Son métier", () => ficheMetierHTML(s, null) + `<section class="panel"><div class="pb muted">${missingTxt(s, true)}</div></section>`],
-    ["prix", "Son prix", () => ficheGraphBox(s) + fichePrixSans(s)],
-    ["faq", "Questions", () => faqHTML(s, null)],
-  ];
-  const dv = dividendeHTML(s, c);
-  return [
-    ["retenir", "L'essentiel à retenir", () => ficheRetenirHTML(s, c)],
-    ["metier", "Son métier", () => ficheMetierHTML(s, c)],
-    ["comptes", "Ses comptes", () => lectureHTML(s, c).replace(`<div class="qrows">`, `${ficheConfiance(c)}<div class="qrows">`)],
-    ["prix", "Son prix", () => ficheGraphBox(s) + prixHTML(s, c)],
-    dv ? ["dividende", "Dividende", () => dv] : null,
-    ["concurrents", "Concurrents", () => concurrentsHTML(s)],
-    ["faq", "Questions", () => faqHTML(s, c)],
-  ].filter(Boolean);
-}
-function etapesBind(s) {
-  const show = k => {
-    $$("#etapes [data-et]").forEach(b => b.classList.toggle("on", b.dataset.et === k));
-    $$("#etapes-corps .etape").forEach(d => d.hidden = d.dataset.etape !== k);
-    const u = new URL(location.href); u.searchParams.set("etape", k); history.replaceState({}, "", u.pathname + u.search);
-    const nav = $("#etapes"); if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
-    else if (nav && nav.getBoundingClientRect().top > innerHeight * 0.6) nav.scrollIntoView({ block: "start", behavior: "smooth" });
-    const b = $(`#etapes [data-et="${k}"]`); if (b && b.parentElement) { const p = b.parentElement; p.scrollLeft = Math.max(0, b.offsetLeft - (p.clientWidth - b.offsetWidth) / 2); }
-    ficheGraphique(s);
-  };
-  ETAPE_SHOW = show;
-  if (!etapesBind.on) { etapesBind.on = true; app.addEventListener("click", e => { const b = e.target.closest("[data-et]"); if (b && app.contains(b) && ETAPE_SHOW) { e.preventDefault(); ETAPE_SHOW(b.dataset.et); } }); }
-}
-function ficheGraphBox(s) {
-  if (!s.tv) return "";
-  return `<section class="panel" id="fgraph"><div class="ph"><h2>Le cours de l'action</h2><span class="light" style="font-size:12.5px">Choisissez la période sous le graphique</span></div><div class="tv tv-chart" id="tvchart"></div></section>`;
-}
-function ficheGraphique(s) { // le graphique TradingView ne se charge que lorsque l'étape « Son prix » est ouverte
-  const el = $("#tvchart"); if (!el || el.dataset.on || el.closest("[hidden]")) return;
-  el.dataset.on = "1"; tvChart(el, s.tv, s.name);
-}
 function fichePrixSans(s) {
   const p = pxOf(s);
   if (!p) return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2></div><div class="pb muted">${PXUP && PXUP !== "none" ? "Le cours de cette action n'est pas disponible dans notre source pour le moment." : "Chargement du cours…"}</div></section>`;
@@ -343,19 +244,6 @@ function fichePrixSans(s) {
     <div class="pb"><p class="muted" style="margin:0">Sans comptes publiés lisibles, le prix ne peut pas être comparé au bénéfice (PER).</p></div></section>`;
 }
 
-/* ---------- Étape 1 : l'essentiel à retenir (chiffres clés, points forts et de vigilance, source) ---------- */
-function ficheRetenirHTML(s, c) {
-  const f = figuresOf(c), facts = essentielFacts(s, f), items = lecture(s, f), { forts, vig } = retenir(s, f);
-  const lvOf = l => { const k = { Ventes: ["croissance"], Marge: ["marge"], "Bénéfice": ["net"], Dette: ["lev", "dettenette", "gear"], Dividende: ["payout"] }[l]; const it = k && items.find(i => k.includes(i.term)); return it ? it.lv : null; };
-  return `<section class="panel" id="retenir"><div class="ph"><h2>L'essentiel à retenir</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
-    <div class="fkeys n${facts.length}">${facts.map(([l, k, t]) => { const lv = lvOf(l); return `<div class="fk${lv ? " fk-" + lv : ""}"><span class="kick">${l}${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><b>${k}</b><p>${t}</p></div>`; }).join("")}</div>
-    ${forts.length || vig.length ? `<div class="ret">
-      <div class="ret-f"><h3><i></i>Points forts</h3>${forts.length ? `<ul>${forts.map(x => `<li>${x}</li>`).join("")}</ul>` : `<p class="muted">Aucun point fort net dans les comptes.</p>`}</div>
-      <div class="ret-v"><h3><i></i>Points de vigilance</h3>${vig.length ? `<ul>${vig.map(x => `<li>${x}</li>`).join("")}</ul>` : `<p class="muted">Rien d'inquiétant dans les derniers comptes.</p>`}</div></div>` : ""}
-    ${ficheAnalyse(s, c)}
-    ${ficheConfiance(c)}
-    <div class="src">Les couleurs comparent chaque chiffre à des seuils simples et à la médiane de son secteur. Un point de vigilance n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller. Rien ici ne dit s'il faut acheter.</div></section>`;
-}
 
 function ficheAnalyse(s, c) { // emplacement réservé à l'agent « analyse » (facteurs qui valorisent ou pénalisent l'entreprise)
   if (typeof analyseForcesFaiblesses !== "function") return "";

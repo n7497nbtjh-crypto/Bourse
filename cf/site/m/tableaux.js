@@ -268,6 +268,70 @@ function tblxChart(s, c, r) {
     + `<p class="tbx-gph"><b>${esc(r.short || r.label)}${r.unit && r.kind === "money" ? ` <span class="light">(${esc(r.ulong)})</span>` : ""}.</b> ${esc(r.phrase)}</p>`;
 }
 
+/* ---------- Onglet « Les chiffres en détail » : regroupé par thème (refonte du 29 octobre, 13 h 30) ----------
+   En tête, ce qui a le plus changé sur un an ; puis un bloc par thème (croissance, rentabilité, bilan et endettement,
+   flux de trésorerie, valorisation, dividende) : une question simple, les indicateurs avec leur tendance et la médiane du secteur,
+   un graphique, et le détail accessible sans tout afficher. Le tableau complet année par année reste disponible, replié. */
+const TBLX_THEMES = [
+  { k: "croissance", t: "Croissance", q: "Vend-elle plus qu'avant ?", rows: ["ca", "g", "eps"],
+    ex: "Les ventes (chiffre d'affaires) mesurent la taille de l'activité. Une hausse peut venir des volumes, des prix, du change ou d'un rachat : il faut la lire avec la rentabilité." },
+  { k: "rentabilite", t: "Rentabilité", q: "Que lui reste-t-il sur ce qu'elle vend ?", rows: ["marge", "ebit", "ebitda", "net", "nm", "roe"],
+    ex: "La marge d'exploitation dit ce qu'il reste sur 100 de ventes une fois payés salaires, achats et frais. La rentabilité des capitaux propres (ROE) rapporte le bénéfice à l'argent des actionnaires." },
+  { k: "bilan", t: "Bilan et endettement", q: "Ce qu'elle possède, ce qu'elle doit", rows: ["lev", "netDebt", "debt", "cash", "equity", "gear"],
+    ex: "La dette nette est la dette financière moins la trésorerie. Rapportée au résultat d'exploitation avant amortissements (EBITDA), elle dit en combien d'années l'entreprise pourrait la rembourser." },
+  { k: "flux", t: "Flux de trésorerie", q: "Ses bénéfices deviennent-ils de l'argent disponible ?", rows: ["fcf", "cfo", "capex", "conv"],
+    ex: "Le bénéfice est un calcul comptable ; la trésorerie, de l'argent réellement encaissé. L'argent disponible est ce qui reste après les investissements : il paie dividendes, rachats d'actions et remboursements." },
+  { k: "valorisation", t: "Valorisation", q: "Combien coûte l'entreprise en Bourse ?", special: "prix" },
+  { k: "dividende", t: "Dividende", q: "Que reçoit l'actionnaire ?", special: "div" },
+];
+function tblxThemeOf(k) { const T = TBLX_THEMES.find(T => T.rows && T.rows.includes(k)); return T ? T.k : k === "dps" || k === "divPaid" || k === "payout" ? "dividende" : "croissance"; }
+function tblxScore(r) { // ampleur d'une évolution sur un an, 1 = significative
+  if (r.prev == null || r.last == null || !r.sens || r.k === "g") return 0;
+  if (r.kind === "money" || r.kind === "ps") return r.prev !== 0 ? Math.abs((r.last - r.prev) / r.prev) / 0.10 : 0;
+  if (r.kind === "pct" || r.kind === "pctS") return Math.abs(r.last - r.prev) * 100 / 2;
+  if (r.kind === "x") return Math.abs(r.last - r.prev) / 0.5;
+  return 0;
+}
+function tblxChanges(P, yi) {
+  const l = P.rows.filter(r => r.li === yi).map(r => ({ r, sc: tblxScore(r) * (r.ess ? 1.3 : 1) })).filter(x => x.sc >= 1).sort((a, b) => b.sc - a.sc);
+  const out = [], seen = new Set();
+  for (const { r } of l) { const th = tblxThemeOf(r.k); if (seen.has(r.k) || (r.k === "nm" && seen.has("net")) || (r.k === "debt" && seen.has("netDebt"))) continue; seen.add(r.k); out.push(r); if (out.length >= 4) break; }
+  return out;
+}
+function tblxThemeRows(rows, Y) {
+  const yl = Y.at(-1);
+  return rows.map(r => {
+    const ly = Y[r.li], stale = ly !== yl, one = tblxChange(r.kind, r.prev, r.last);
+    return `<tr data-k="${r.k}" tabindex="0" aria-expanded="false">
+      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.short || r.label)}</span><p class="tbx-ph">${esc(r.phrase)}</p></th>
+      <td class="v"><span class="tbx-val ${tblxLvCls(r)}">${esc(r.full(r.last))}</span>${stale ? `<small class="light">en ${ly}</small>` : ""}${r.lv ? `<small class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</small>` : ""}${r.med != null ? `<small class="light tbx-mm">secteur : ${esc(r.full(r.med))}</small>` : ""}</td>
+      <td class="tr"><button type="button" class="tbx-gb" data-g="${r.k}" aria-label="Voir l'évolution en graphique : ${esc(r.short || r.label)}">${tblxSpark(r.vals, { w: 76, h: 26, q: r.q, med: r.med, label: `Évolution de ${Y[0]} à ${yl}` })}</button>${tblxArrow(r.dir, r.q, one, "Sur un an")}</td></tr>`;
+  }).join("");
+}
+function tblxThemeHTML(T, s, c, P) {
+  const Y = c.years;
+  if (T.special === "prix") {
+    const h = prixHTML(s, c);
+    if (!h || !/id="prix"/.test(h)) return "";
+    return h.replace(`<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2>`, `<section class="panel rf-th" id="rf-valorisation"><div class="ph"><h2>Valorisation <small>${esc(T.q)}</small></h2>`)
+      .replace(/<div class="tile"><span class="kick">Cours<\/span>[\s\S]*?<\/small><\/div>\s*/, "") // le cours est déjà dans l'en-tête
+      .replace(/<div class="tile"><span class="kick">Rendement<\/span>[\s\S]*?<\/small><\/div>\s*/, ""); // le rendement est dans le thème « Dividende »
+  }
+  if (T.special === "div") {
+    const h = dividendeHTML(s, c); if (!h) return "";
+    return h.replace(`<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>`, `<section class="panel rf-th" id="rf-dividende"><div class="ph"><h2>Dividende <small>${esc(T.q)}</small></h2>`);
+  }
+  const rows = T.rows.map(k => P.rows.find(r => r.k === k)).filter(Boolean);
+  if (!rows.length) return "";
+  const ctx = T.k === "croissance" && typeof contexteChiffresHTML === "function" ? contexteChiffresHTML(s, c, true) : "";
+  const gr = rows.filter(r => r.n >= 2);
+  return `<section class="panel rf-th" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
+    <p class="rf-thx">${esc(T.ex)}</p>
+    <div class="rf-thg${ctx || !gr.length ? " rf-th1" : ""}">
+      ${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Évolution ${Y[0]}-${Y.at(-1)}</th></tr></thead><tbody>${tblxThemeRows(rows, Y)}</tbody></table>`)}
+      ${ctx || !gr.length ? "" : `<div class="rf-thc" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>`}
+    </div>${ctx}</section>`;
+}
 function tabComptes(s, c, el) {
   if (!c || !c.years || !c.years.length || !c.fin) {
     el.innerHTML = `<section class="panel"><div class="ph"><h2>Les comptes de ${esc(s.name)}</h2></div><div class="pb tbx-empty"><p class="lead" style="margin:0 0 6px">${missingTxt(s, true)}</p><p class="muted" style="margin:0">En attendant, la <a class="lnk" href="/entreprise/${s.id}">vue d'ensemble</a> donne le cours et l'actualité, et vous pouvez <a class="lnk" href="/comparer?ids=${[s, ...peersOf(s, 3).list].map(x => x.id).join(",")}">comparer ses concurrentes</a>.</p></div></section>`;
@@ -275,60 +339,57 @@ function tabComptes(s, c, el) {
   }
   const P = tblxRows(s, c), Y = c.years, cur = c.currency, med = MED[s.sector] || {}, bank = isBank(s), yl = Y[lastIdx(c)];
   if (!P.rows.length) { el.innerHTML = `<section class="panel"><div class="empty">Aucun chiffre lisible automatiquement dans les comptes de ${esc(s.name)} pour l'instant.</div></section>`; return; }
-  let view = tblxGetV(), gk = (P.ess[0] || P.rows[0]).k;
+  if (typeof ctxCharge === "function") ctxCharge();
   const fy = c.fyEnd ? c.fyEnd.split("-").reverse().join("/") : null;
   const curTxt = TBLX_CURN[cur] ? TBLX_CURN[cur] + (CUR[cur] ? ` (${CUR[cur]})` : ` (${cur})`) : cur;
-  const nFort = P.ess.filter(r => r.lv === "fort").length, nVig = P.ess.filter(r => r.lv === "vig").length;
+  const f = figuresOf(c), cross = typeof croisements === "function" ? croisements(s, f) : [];
+  const chg = tblxChanges(P, lastIdx(c)), themes = TBLX_THEMES.map(T => [T, tblxThemeHTML(T, s, c, P)]).filter(x => x[1]);
   el.innerHTML = `
-    <section class="panel tbx-panel" id="tbx">
-      <div class="ph"><h2>Les comptes de ${esc(s.name)}, année par année</h2><span class="light tbx-meta">${Y.length} exercice${Y.length > 1 ? "s" : ""} (${Y[0]}${Y.length > 1 ? " à " + yl : ""})${fy ? ` · clos le ${fy}` : ""}</span></div>
-      <div class="tbx-bar">
-        <div class="tbx-seg" role="tablist" aria-label="Affichage du tableau"><button type="button" role="tab" data-v="ess">L'essentiel <span>${P.ess.length} lignes</span></button><button type="button" role="tab" data-v="tout">Tout voir <span>${P.rows.length} lignes</span></button></div>
-        <p class="tbx-unit">Montants en ${esc(curTxt)} : <b>M</b> = millions, <b>Md</b> = milliards.</p>
+    <section class="panel tbx-panel rf-top" id="tbx">
+      <div class="ph"><h2>Les chiffres de ${esc(s.name)}, par thème</h2><span class="light tbx-meta">${Y.length} exercice${Y.length > 1 ? "s" : ""} (${Y[0]}${Y.length > 1 ? " à " + yl : ""})${fy ? ` · clos le ${fy}` : ""}</span></div>
+      <div class="pb">
+        <h3 class="rf-h3">Ce qui a le plus changé sur un an</h3>
+        ${chg.length ? `<div class="rf-chgs">${chg.map(r => `<a class="rf-chg ${r.q > 0 ? "q-up" : r.q < 0 ? "q-dn" : "q-eq"}" href="#rf-${tblxThemeOf(r.k)}"><span class="rf-cl">${esc(r.short || r.label)}</span><b>${tblxArrow(r.dir, r.q, tblxChange(r.kind, r.prev, r.last))}</b><small>de ${esc(r.full(r.prev))} à ${esc(r.full(r.last))} (${Y[r.li - 1]} → ${Y[r.li]})</small></a>`).join("")}</div>` : `<p class="rf-no">Aucune évolution marquée entre les deux derniers exercices.</p>`}
+        ${cross.length ? `<h3 class="rf-h3" style="margin-top:18px">À lire ensemble</h3><ul class="rf-cross">${cross.map(([h, p]) => `<li><b>${esc(h)}.</b> ${p}</li>`).join("")}</ul>` : ""}
+        <p class="tbx-unit" style="margin:14px 0 0">Montants en ${esc(curTxt)} : <b>M</b> = millions, <b>Md</b> = milliards. Vert : mieux que l'année précédente ou que les repères ; orange : moins bien. Le sens dépend de l'indicateur : une dette qui baisse est une bonne nouvelle.</p>
       </div>
-      <div class="tbx-legend"><span><i class="lg-up"></i>mieux que l'année précédente</span><span><i class="lg-dn"></i>moins bien</span><span><i class="lg-md"></i>médiane du secteur</span><span class="light">Le sens dépend de l'indicateur : une dette qui baisse est une bonne nouvelle.</span></div>
-      <div class="tbx-view" data-view="ess">
-        ${P.ess.length ? `<p class="tbx-sum">${nFort || nVig ? `Sur ces ${P.ess.length} repères : ${nFort ? `<b class="vd-fort">${nFort} point${nFort > 1 ? "s" : ""} fort${nFort > 1 ? "s" : ""}</b>` : "aucun point fort"}, ${nVig ? `<b class="vd-vig">${nVig} point${nVig > 1 ? "s" : ""} de vigilance</b>` : "aucun point de vigilance"}, selon les seuils du site.` : `Les ${P.ess.length} lignes clés des comptes, avec leur évolution.`} Cliquez sur une mini-courbe pour l'agrandir.</p>` : ""}
-        ${tblxScrollBox(tblxEssHTML(s, c, P))}
-      </div>
-      <div class="tbx-view" data-view="tout">
-        <p class="tbx-sum">Chaque case est colorée selon l'évolution par rapport à l'année précédente. Touchez une ligne pour lire ce qu'elle dit.</p>
-        ${tblxScrollBox(tblxFullHTML(s, c, P), tblxMob() ? "Faites glisser pour voir les années précédentes, la tendance et la médiane" : "Faites glisser pour voir les années précédentes")}
-      </div>
-      <div class="src">Un tiret signifie que le chiffre n'est pas publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes, peut différer du chiffre annoncé par l'entreprise.${bank ? " Banques et assurances : marge d'exploitation, dette et EBITDA ne s'appliquent pas." : ""} Médiane calculée sur le dernier exercice de ${med.n || 0} entreprise${med.n > 1 ? "s" : ""} suivie${med.n > 1 ? "s" : ""} du secteur ${esc(secName(s).toLowerCase())}. Couleurs : seuils de lecture du site, pas un avis sur l'action.</div>
+      <nav class="rf-thnav" aria-label="Thèmes">${themes.map(([T]) => `<a href="#rf-${T.k}">${esc(T.t)}</a>`).join("")}<a href="#rf-tout">Tout le tableau</a></nav>
     </section>
-    <section class="panel tbx-gpanel" id="tbxg"><div class="ph"><h2>En graphique</h2><span class="light tbx-meta">${esc(curTxt)}</span></div>
-      <div class="filters" id="tbxgsel">${P.ess.concat(P.rows.filter(r => !r.ess && ["cfo", "fcf", "netDebt", "eps", "equity", "g"].includes(r.k)).slice(0, 3)).map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div>
-      <div class="pb" id="tbxgbox"></div></section>
+    ${themes.map(x => x[1]).join("")}
+    <section class="panel rf-th" id="rf-tout"><details class="rf-all"${tblxGetV() === "tout" ? " open" : ""}><summary><span><b>Tous les comptes, année par année</b><small>${P.rows.length} lignes, ${Y.length} exercices : compte de résultat, bilan, flux de trésorerie, actionnaire</small></span></summary>
+      <p class="tbx-sum">Chaque case est colorée selon l'évolution par rapport à l'année précédente. Touchez une ligne pour lire ce qu'elle dit.</p>
+      ${tblxScrollBox(tblxFullHTML(s, c, P), tblxMob() ? "Faites glisser pour voir les années précédentes, la tendance et la médiane" : "Faites glisser pour voir les années précédentes")}</details>
+      <div class="src">Un tiret signifie que le chiffre n'est pas publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes, peut différer du chiffre annoncé par l'entreprise.${bank ? " Banques et assurances : marge d'exploitation, dette et EBITDA ne s'appliquent pas." : ""} Médiane calculée sur le dernier exercice de ${med.n || 0} entreprise${med.n > 1 ? "s" : ""} suivie${med.n > 1 ? "s" : ""} du secteur ${esc(secName(s).toLowerCase())}. Couleurs : seuils de lecture du site, pas un avis sur l'action.</div></section>
     <section class="panel"><div class="ph"><h2>Sources</h2></div>
       <table class="t tbx tbx-src"><thead><tr><th class="l">Exercice clos le</th><th class="l">Document</th></tr></thead><tbody>
       ${c.cik ? `<tr><td class="l wrap">Exercices ${Y[0]} à ${yl}</td><td class="l wrap"><a class="lnk" href="${esc((c.sources[0] || {}).report || "")}" target="_blank" rel="noopener">Rapports annuels 10-K déposés à la SEC</a></td></tr>`
         : (c.sources || []).map(x => `<tr><td class="l wrap">${dLabel(x.periodEnd)}</td><td class="l wrap">${x.report ? `<a class="lnk" href="${esc(x.report)}" target="_blank" rel="noopener">Rapport financier annuel (ESEF)</a>` : "Rapport financier annuel (ESEF)"}</td></tr>`).join("")}</tbody></table>
-      <div class="src">${c.cik ? "Comptes lus dans les données publiques de la SEC (EDGAR), au format XBRL." : `Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org.`}${c.updated ? ` Mis à jour le ${dLabel(c.updated)}.` : ""}</div></section>`;
-  const root = $("#tbx"), byK = k => P.rows.find(r => r.k === k);
-  const setView = v => { view = v; $$(".tbx-seg button", root).forEach(b => { b.classList.toggle("on", b.dataset.v === v); b.setAttribute("aria-selected", b.dataset.v === v); }); $$(".tbx-view", root).forEach(x => x.hidden = x.dataset.view !== v); tblxBindScroll(root); $$(".tbx-view:not([hidden]) .tbx-sc", root).forEach(x => { x.scrollLeft = tblxMob() ? 0 : x.scrollWidth; x.dispatchEvent(new Event("scroll")); }); };
-  const setG = (k, scroll) => { gk = k; const r = byK(k); $$("#tbxgsel button").forEach(b => b.classList.toggle("on", b.dataset.g === k)); $("#tbxgbox").innerHTML = tblxChart(s, c, r); if (scroll) $("#tbxg").scrollIntoView({ behavior: "smooth", block: "start" }); };
-  $(".tbx-seg", root).onclick = e => { const b = e.target.closest("button"); if (b) { tblxSetV(b.dataset.v); setView(b.dataset.v); } };
-  $("#tbxgsel").onclick = e => { const b = e.target.closest("button"); if (b) setG(b.dataset.g); };
+      <div class="src">${c.cik ? "Comptes lus dans les données publiques de la SEC (EDGAR), au format XBRL." : `Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org.`}${c.updated ? ` Mis à jour le ${dLabel(c.updated)}.` : ""} Cours : Google Finance, différés. Taux de change : BCE.</div></section>`;
+  const byK = k => P.rows.find(r => r.k === k);
+  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); };
+  $$(".rf-thc", el).forEach(box => { const b = $(".rf-gsel button", box); if (b) setG(box, b.dataset.g); });
   const toggleDet = tr => {
     const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("det");
     if (open) { tr.nextElementSibling.remove(); tr.setAttribute("aria-expanded", "false"); return; }
     const r = byK(tr.dataset.k); if (!r) return;
-    const sc = tr.closest(".tbx-sc"), w = sc ? sc.clientWidth : 320;
-    tr.insertAdjacentHTML("afterend", `<tr class="det"><td colspan="${Y.length + 3}"><div class="tbx-detw" style="width:${Math.max(240, w - 2)}px">${tblxDetail(r, Y)}</div></td></tr>`);
+    const sc = tr.closest(".tbx-sc"), w = sc ? sc.clientWidth : 320, n = tr.cells.length;
+    tr.insertAdjacentHTML("afterend", `<tr class="det"><td colspan="${n}"><div class="tbx-detw" style="width:${Math.max(240, w - 2)}px">${tblxDetail(r, Y)}</div></td></tr>`);
     tr.setAttribute("aria-expanded", "true");
   };
-  root.addEventListener("click", e => {
-    const gb = e.target.closest(".tbx-gb"); if (gb) { setG(gb.dataset.g, true); return; }
-    if (e.target.closest(".def,a,button")) return;
-    const tr = e.target.closest(".tbx-full tbody tr[data-k]"); if (tr) toggleDet(tr);
+  el.addEventListener("click", e => {
+    const gb = e.target.closest(".tbx-gb");
+    if (gb) { const th = gb.closest(".rf-th"), box = th && $(".rf-thc", th); if (box && $(`.rf-gsel button[data-g="${gb.dataset.g}"]`, box)) { setG(box, gb.dataset.g); if (box.getBoundingClientRect().top > innerHeight || box.getBoundingClientRect().bottom < 0) box.scrollIntoView({ behavior: "smooth", block: "center" }); } else { const tr = gb.closest("tr[data-k]"); if (tr) toggleDet(tr); } return; }
+    const sel = e.target.closest(".rf-gsel button"); if (sel) { setG(sel.closest(".rf-thc"), sel.dataset.g); return; }
+    const a = e.target.closest(".rf-thnav a, a.rf-chg"); if (a) { const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) { e.preventDefault(); if (t.id === "rf-tout") $("details", t).open = true; t.scrollIntoView({ behavior: "smooth", block: "start" }); history.replaceState(history.state, "", a.getAttribute("href")); } return; }
+    if (e.target.closest(".def,a,button,summary")) return;
+    const tr = e.target.closest(".tbx-full tbody tr[data-k], .rf-tht tbody tr[data-k]"); if (tr) toggleDet(tr);
   });
-  root.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".tbx-full tbody tr[data-k]")) { e.preventDefault(); toggleDet(e.target); } });
-  $$(".tbx-full .lab .def", root).forEach(b => { const t = ALL[b.dataset.def]; if (t) b.title = t.what; });
-  $$(".tbx-ess .lab .def", root).forEach(b => { const t = ALL[b.dataset.def]; if (t) b.title = t.what; });
-  setView(view); setG(gk);
+  el.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".tbx-full tbody tr[data-k], .rf-tht tbody tr[data-k]")) { e.preventDefault(); toggleDet(e.target); } });
+  const all = $(".rf-all", el); if (all) all.addEventListener("toggle", () => { tblxSetV(all.open ? "tout" : "ess"); tblxBindScroll(el); $$(".tbx-full", el).forEach(t => { const sc = t.closest(".tbx-sc"); if (sc) { sc.scrollLeft = tblxMob() ? 0 : sc.scrollWidth; sc.dispatchEvent(new Event("scroll")); } }); });
+  $$(".lab .def", el).forEach(b => { const t = ALL[b.dataset.def]; if (t) b.title = t.what; });
   requestAnimationFrame(() => tblxBindScroll(el));
-  setTimeout(() => $$(".tbx-sc", el).forEach(x => { x.scrollLeft = tblxMob() ? 0 : x.scrollWidth; x.dispatchEvent(new Event("scroll")); }), 0); // après le défilement automatique de pageCompany
+  setTimeout(() => $$(".tbx-full", el).forEach(t => { const x = t.closest(".tbx-sc"); if (x) { x.scrollLeft = tblxMob() ? 0 : x.scrollWidth; x.dispatchEvent(new Event("scroll")); } }), 0);
+  if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0);
 }
 
 /* ---------- Graphique en colonnes par année : dernière année accentuée, valeurs affichées, repère médiane ---------- */
@@ -663,4 +724,50 @@ table.tbx-ag tbody tr[data-href]{cursor:pointer}
   .tbx-box::after,table.tbx .lab::after{display:none}
   .tbx-panel,.tbx-gpanel{break-inside:auto}
 }
+/* Onglet « Les chiffres en détail » par thème (refonte du 29 octobre, 13 h 30) */
+.rf-top .pb{padding-top:14px}
+.rf-h3{font-family:var(--serif);font-size:18px;font-weight:800;margin:0 0 10px}
+.rf-chgs{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.rf-chg{display:flex;flex-direction:column;gap:3px;padding:11px 14px;border:1px solid var(--line);border-left:3px solid var(--n);border-radius:10px;background:#fff;color:var(--ink);text-decoration:none}
+.rf-chg.q-up{border-left-color:var(--g)} .rf-chg.q-dn{border-left-color:var(--o)}
+.rf-chg:hover{border-color:var(--ink)}
+.rf-chg .rf-cl{font-size:13px;font-weight:600}
+.rf-chg b{font-family:var(--mono);font-size:16px}
+.rf-chg small{font-size:12px;color:var(--grey);line-height:1.35}
+.rf-cross{margin:0;padding-left:18px;display:grid;gap:6px;font-size:14px;line-height:1.5}
+.rf-no{margin:0;font-size:13.5px;color:var(--grey)}
+.rf-thnav{display:flex;flex-wrap:wrap;gap:6px;padding:12px 22px 16px;border-top:1px solid var(--line2)}
+.rf-thnav a{font-size:13.5px;font-weight:600;padding:6px 12px;border:1.5px solid var(--line);border-radius:99px;color:var(--ink);text-decoration:none;background:#fff}
+.rf-thnav a:hover{border-color:var(--ink)}
+.rf-th{scroll-margin-top:130px}
+.rf-th .ph h2 small,#ctab .rf-th .ph h2 small{display:block;font-family:var(--sans);font-size:13.5px;font-weight:500;color:var(--grey);margin-top:3px;letter-spacing:0}
+.rf-thx{margin:0;padding:10px 22px 4px;font-size:13.5px;line-height:1.5;color:#55524C}
+.rf-thg{padding-bottom:10px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 8px;align-items:start}
+.rf-thg.rf-th1{grid-template-columns:minmax(0,1fr)}
+.rf-thg .tbx-box{margin:0}
+.rf-thc{padding:12px 22px 14px;min-width:0}
+.rf-gsel{margin:0 0 8px;display:flex;flex-wrap:wrap;gap:6px}
+.rf-gsel button{font:inherit;font-size:12.5px;padding:4px 10px;border:1.5px solid var(--line);border-radius:99px;background:#fff;cursor:pointer;color:#3E3B36}
+.rf-gsel button.on{background:var(--ink);border-color:var(--ink);color:#fff}
+.rf-tht th.lab{max-width:none}
+.rf-tht tbody tr[data-k]{cursor:pointer}
+.ctx-in{border-top:1px solid var(--line2);margin-top:6px}
+.ctx-in .ph{border-bottom:0!important}
+.ctx-in .ctx-ti{font-family:var(--serif);font-size:18px;font-weight:800;margin:0}
+.ctx-more{margin:14px 0 4px;border:1px solid var(--line);border-radius:10px;padding:0 14px;background:#FBF9F2}
+.ctx-more > summary{cursor:pointer;padding:11px 0;font-weight:600;font-size:14.5px;list-style:none}
+.ctx-more > summary::-webkit-details-marker{display:none}
+.ctx-more > summary::before{content:"+";display:inline-block;width:18px;font-weight:700}
+.ctx-more[open] > summary::before{content:"−"}
+.ctx-more > summary small{display:block;font-weight:400;font-size:12.5px;color:var(--grey);margin-left:18px}
+.ctx-more[open]{padding-bottom:12px}
+.rf-all > summary{cursor:pointer;list-style:none;padding:16px 22px;display:flex;align-items:center;gap:12px}
+.rf-all > summary::-webkit-details-marker{display:none}
+.rf-all > summary::after{content:"+";margin-left:auto;font-size:22px;line-height:1;font-weight:400}
+.rf-all[open] > summary::after{content:"−"}
+.rf-all > summary b{display:block;font-family:var(--serif);font-size:20px;font-weight:800}
+.rf-all > summary small{display:block;font-size:13px;color:var(--grey);margin-top:2px}
+.rf-all .tbx-sum{padding:0 22px 8px}
+@media (max-width:1000px){.rf-thg{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:760px){.rf-thx{padding:10px 16px 4px}.rf-thc{padding:10px 12px 12px}.rf-thnav{padding:10px 12px 14px}.rf-all > summary{padding:14px 16px}.rf-all .tbx-sum{padding:0 12px 8px}.rf-th .ph h2 small{font-size:13px}}
 </style>`);

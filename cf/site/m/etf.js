@@ -296,6 +296,22 @@ function ETF_ajoutPf(e) {
   if (!P.l.some(l => l.k === k)) { if (typeof pfFull === "function" && pfFull(P)) { toast(`Votre portefeuille est plein. <a href="/portefeuille">Le voir</a>`); return; } const p = typeof PX === "object" && PX[k]; P.l.push(p ? { k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k, m: 1000 }); pf2Save(P); }
   toast(`${esc(e.name)} est dans votre portefeuille. <a href="/portefeuille">Ajuster le montant</a>`);
 }
+/* « En bref » de la fiche ETF (refonte du 29 octobre, 13 h 30) : ce que contient une part, ses frais, l'essentiel pratique,
+   les risques principaux (titres seulement, détaillés plus bas). Aucun chiffre qui ne vienne de la fiche. */
+function ETF_bref(e, C, v) {
+  const R = ETF_risques(e, C).map(([k, t]) => [k, (t.match(/<b>([^<]+?)\.?<\/b>/) || [])[1]]).filter(x => x[1]);
+  const pea = e.pea === true ? "Éligible au PEA" : e.pea === false ? "Hors PEA : compte-titres" : null;
+  const ess = [pea, e.distribution === "distribution" ? "Dividendes versés aux porteurs" : e.distribution ? "Dividendes réinvestis (capitalisant)" : null,
+    e.replication === "synthétique" ? "Réplication synthétique : un contrat d'échange avec une banque" : e.replication ? (e.methode === "échantillonnée" ? "Réplication physique, sur un échantillon de l'indice" : "Réplication physique : le fonds achète les titres") : null,
+    e.levier ? "Levier ou stratégie inverse" : null, e.couvert ? "Part couverte contre le change" : null].filter(Boolean);
+  return `<div class="rf-sh"><h2 class="f2-h">En bref</h2><span class="f2-sub">${e.index ? `Indice ${esc(e.index)}` : esc(ECAT[e.categorie] || "")}</span></div>
+    <p class="fh-v" id="fverdict">${ETF_phrase(e, C)}</p>
+    <div class="rf-bl"><h3>Frais</h3><p class="rf-fr"><b>${e.ter != null ? ETF_pctS(e.ter, 2) : "non communiqués"}</b>${e.ter != null ? " par an" : ""}${v ? `<span class="etfvd vd-${v.c}"><i></i>${esc(v.w)} de sa catégorie</span>` : ""}</p></div>
+    <div class="rf-pts"><div class="rf-bl"><h3>L'essentiel pratique</h3><ul>${ess.map(t => `<li class="rf-n"><i></i>${esc(t)}</li>`).join("")}</ul></div>
+      <div class="rf-bl"><h3>Risques principaux</h3><ul>${R.slice(0, 4).map(([k, t]) => `<li class="${k === "o" ? "rf-d" : "rf-n"}"><i></i>${esc(t)}</li>`).join("")}</ul></div></div>
+    <div class="rf-foot"><a class="rf-lk" href="#ebuy" data-rf-go="ebuy">Sa composition</a><a class="rf-lk" href="#erisques" data-rf-go="erisques">Les risques en détail</a></div>`;
+}
+document.addEventListener("click", ev => { const a = ev.target.closest && ev.target.closest("[data-rf-go]"); if (!a) return; const t = document.getElementById(a.dataset.rfGo); if (t) { ev.preventDefault(); t.scrollIntoView({ behavior: "smooth", block: "start" }); } });
 async function pageEtf(id) {
   const e = ETFBY[id]; if (!e) return pageNotFound();
   if (!e.proxy || e.compo) { const F = await ETF_fichier(e); if (F && F.info) Object.assign(e, F.info); if (location.pathname !== "/etf/" + id) return; }
@@ -307,36 +323,29 @@ async function pageEtf(id) {
   const axes = [["Frais", "moins cher à droite", rT, ["parmi les moins chers", "moins cher que la médiane", "dans la médiane", "plus cher que la médiane", "parmi les plus chers"]], ["Taille du fonds", "encours", rE, ["parmi les plus gros", "plus gros que la médiane", "dans la médiane", "plus petit que la médiane", "parmi les plus petits"]], ["Diversification", "nombre de lignes", rN, ["parmi les plus diversifiés", "plus que la médiane", "dans la médiane", "moins que la médiane", "parmi les moins diversifiés"]], ["Ancienneté", "date de création", rA, ["parmi les plus anciens", "plus ancien que la médiane", "dans la médiane", "plus récent que la médiane", "parmi les plus récents"]]].filter(a => a[2]);
   const created = e.creation ? dLabel(e.creation) : null;
   app.innerHTML = `<div class="crumbs"><a href="/etf">ETF</a> › <a href="/etf?cat=${esc(e.categorie || "")}">${esc(ECAT[e.categorie] || "Autres")}</a></div>
-    <section class="panel"><div class="etfhd"><div class="top">${logo({ name: e.issuer, domain: issuerDom(e) }, 52)}<div style="min-width:0">
+    <section class="panel fhero rf-hero rf-etf"><div class="etfhd rf-etfhd"><div class="top"><div class="rf-etfid">${logo({ name: e.issuer, domain: issuerDom(e) }, 52)}<div style="min-width:0">
       <h1>${esc(e.name)}</h1><div class="sub">${e.index ? `Indice <b style="color:var(--ink);font-weight:600">${esc(e.index)}</b> · ` : ""}${esc(e.issuer)}</div>
       <div class="ids">${e.ticker ? `<span>Ticker <b>${esc(e.ticker)}</b>${pl ? ` · ${esc(pl.place)}` : ""}</span>` : ""}<span>ISIN <b>${esc(e.isin)}</b> <button type="button" class="copy" id="ecopy" aria-label="Copier l'ISIN">copier</button></span></div>
-      <div class="badges">${ETF_badges(e, true)}</div>
-      <div class="acts">${favBtn("e:" + e.id)}<button type="button" class="linkbtn" id="epf">+ Ajouter à mon portefeuille</button>${voisin ? `<a class="pill" href="/outils/recouvrement?a=${e.id}&b=${voisin.id}">Comparer</a>` : ""}</div></div></div></div>
-      <div class="etfgrid"><div>
-        <p class="kick" style="margin:0 0 6px">Frais courants</p>
-        <div class="etfter"><span class="v">${e.ter != null ? ETF_pctS(e.ter, 2) : "–"}</span><span class="u">par an, prélevés dans la valeur de la part</span></div>
-        ${v ? `<div class="etfvd vd-${v.c}"><i></i>${v.w} de sa catégorie</div><p class="note" style="margin:4px 0 0">${medBtn("Médiane")} des ${ETF_peers(e).length} ETF « ${esc(ECAT[e.categorie] || "")} » : ${ETF_pctS(v.m, 2)} par an.</p>` : ""}
-        ${axes.length >= 2 ? `<div class="prof" style="margin-top:14px"><p class="kick" style="margin-bottom:6px">Sa place dans la catégorie</p>${axes.map(([t, d, r, w]) => `<div class="pa2"><span class="pt"><b>${t}</b><small>${word(r.p, w)}</small></span><span class="pl" title="${esc(d)}"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${t === "Frais" ? (r.p >= 0.55 ? "var(--g)" : r.p > 0.45 ? "var(--n)" : "var(--o)") : "var(--ink)"}"></i></span></div>`).join("")}<p class="note" style="margin:4px 0 0">Parmi les ${ETF_peers(e).length} ETF de la catégorie suivis par le site ; à droite : moins cher, plus gros, plus diversifié, plus ancien. Le trait du milieu est la ${medBtn()}. Ce n'est pas une note d'achat.</p></div>` : ""}
-      </div><div><div class="px tv" id="tvinfo"></div>
-        <dl class="etfkv">
-          <dt>Encours</dt><dd><b>${e.encours ? big(e.encours) : "–"}</b> placés dans le fonds</dd>
-          ${created ? `<dt>Création</dt><dd>${esc(created)}</dd>` : ""}
-          <dt>Réplication</dt><dd>${e.replication === "synthétique" ? "Synthétique : un contrat d'échange avec une banque" : e.replication ? (e.methode === "échantillonnée" ? "Physique, sur un échantillon des titres de l'indice" : "Physique : le fonds achète les titres de l'indice") : "–"}</dd>
-          <dt>Dividendes</dt><dd>${e.distribution === "distribution" ? "Versés aux porteurs" : e.distribution ? "Réinvestis dans le fonds" : "–"}</dd>
-          ${e.domicile ? `<dt>Pays du fonds</dt><dd>${esc(e.domicile)}</dd>` : ""}
-          ${(e.cotations || []).length > 1 ? `<dt>Cotations</dt><dd>${e.cotations.map(c => `${esc(c.ticker)} <span class="light">${esc(c.place.replace("Euronext ", ""))}</span>`).join(" · ")}</dd>` : ""}
-        </dl></div></div>
-      <div class="src">${e.url ? `Caractéristiques relevées sur <a href="${esc(e.url)}" target="_blank" rel="noopener nofollow">la fiche de l'émetteur</a>` : "Caractéristiques relevées sur les documents de l'émetteur"}${e.src ? ` (${esc(e.src)})` : ""}. Vérifiez-les dans le document d'informations clés (DIC) avant d'investir.</div></section>
+      <div class="acts">${favBtn("e:" + e.id)}<button type="button" class="linkbtn" id="epf">+ Ajouter à mon portefeuille</button>${voisin ? `<a class="pill" href="/outils/recouvrement?a=${e.id}&b=${voisin.id}">Comparer</a>` : ""}</div></div></div><div class="px tv rf-etfpx" id="tvinfo"></div></div></div>
+      <div class="f2-mid rf-mid${e.tv ? "" : " f2-noc"}">${e.tv ? `<div class="f2-chart"><div class="f2-ch-h"><h2 class="f2-h">Le cours de la part</h2><span class="f2-note">Cours différé</span></div><div class="tv tv-chart f2-tv" id="tvchart" role="img" aria-label="Courbe du cours de ${esc(e.name)}"><div class="f2-tvph">Chargement de la courbe…</div></div></div>` : ""}<div class="fh-sum rf-sum" id="ebref">${ETF_bref(e, null, v)}</div></div>
+    </section>
     <div class="cols"><div>
       <section class="panel" id="ebuy"><div class="ph"><h2>Ce que vous achetez vraiment</h2></div><div class="pb"><div class="empty">Chargement de la composition…</div></div></section>
       <div id="ecomp"></div>
-      ${e.tv ? `<section class="panel"><div class="ph"><h2>Évolution du cours</h2></div><div class="tv tv-chart tv-top" id="tvchart"></div></section>` : ""}
-      <section class="panel"><div class="ph"><h2>Ce que coûtent ses frais</h2></div><div class="pb" id="efees"></div></section>
-      <section class="panel"><div class="ph"><h2>Questions sur cet ETF</h2><span class="light" style="font-size:12.5px">Réponses calculées à partir de la fiche</span></div><div class="pb" id="eia"></div></section>
-      <section class="panel"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb etffaq" id="efaq"></div></section>
+      <section class="panel" id="efrais"><div class="ph"><h2>Ce que coûtent ses frais</h2></div><div class="pb" id="efees"></div>
+        <div class="pb rf-etfprof"><p class="etfter-l"><b>${e.ter != null ? ETF_pctS(e.ter, 2) : "–"}</b> par an, prélevés dans la valeur de la part${v ? `<span class="etfvd vd-${v.c}"><i></i>${v.w} de sa catégorie</span>` : ""}</p>${v ? `<p class="note" style="margin:4px 0 0">${medBtn("Médiane")} des ${ETF_peers(e).length} ETF « ${esc(ECAT[e.categorie] || "")} » : ${ETF_pctS(v.m, 2)} par an.</p>` : ""}
+        ${axes.length >= 2 ? `<div class="prof" style="margin-top:14px"><p class="kick" style="margin-bottom:6px">Sa place dans la catégorie</p>${axes.map(([t, d, r, w]) => `<div class="pa2"><span class="pt"><b>${t}</b><small>${word(r.p, w)}</small></span><span class="pl" title="${esc(d)}"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${t === "Frais" ? (r.p >= 0.55 ? "var(--g)" : r.p > 0.45 ? "var(--n)" : "var(--o)") : "var(--ink)"}"></i></span></div>`).join("")}<p class="note" style="margin:4px 0 0">Parmi les ${ETF_peers(e).length} ETF de la catégorie suivis par le site ; à droite : moins cher, plus gros, plus diversifié, plus ancien. Le trait du milieu est la ${medBtn()}. Ce n'est pas une note d'achat.</p></div>` : ""}</div></section>
+      <section class="panel" id="erisques"><div class="ph"><h2>Les risques à connaître</h2></div><div class="pb" id="erisk"></div></section>
+      <section class="panel" id="equestions"><div class="ph"><h2>Vos questions sur cet ETF</h2><span class="light" style="font-size:12.5px">Réponses calculées à partir de la fiche</span></div><div class="pb etffaq" id="eia"></div></section>
     </div><aside>
+      <section class="panel" id="ecarac"><div class="ph"><h2>Caractéristiques</h2></div><div class="pb"><dl class="etfkv">
+          <dt>Encours</dt><dd><b>${e.encours ? big(e.encours) : "–"}</b> placés dans le fonds</dd>
+          ${created ? `<dt>Création</dt><dd>${esc(created)}</dd>` : ""}
+          ${e.domicile ? `<dt>Pays du fonds</dt><dd>${esc(e.domicile)}</dd>` : ""}
+          ${(e.cotations || []).length > 1 ? `<dt>Cotations</dt><dd>${e.cotations.map(c => `${esc(c.ticker)} <span class="light">${esc(c.place.replace("Euronext ", ""))}</span>`).join(" · ")}</dd>` : ""}
+        </dl></div>
+        <div class="src">${e.url ? `Caractéristiques relevées sur <a href="${esc(e.url)}" target="_blank" rel="noopener nofollow">la fiche de l'émetteur</a>` : "Caractéristiques relevées sur les documents de l'émetteur"}${e.src ? ` (${esc(e.src)})` : ""}. Vérifiez-les dans le document d'informations clés (DIC) avant d'investir.</div></section>
       <section class="panel"><div class="ph"><h2>Qui crée ce fonds ?</h2></div><div class="pb" id="eemet"></div></section>
-      <section class="panel"><div class="ph"><h2>Les risques à connaître</h2></div><div class="pb" id="erisk"></div></section>
       <section class="panel"><div class="ph"><h2>ETF proches</h2>${same.length ? `<a href="/etf?q=${encodeURIComponent(e.index || "")}">Même indice</a>` : ""}</div><div class="pb" id="evois"></div></section>
       <section class="panel"><div class="ph"><h2>Avis des visiteurs</h2></div><div class="pb" id="eavis"></div></section>
       <section class="panel"><div class="ph"><h2>Discussion</h2><a href="/communaute?salon=etf-${e.id}">Ouvrir</a></div><div class="pb" id="cmini"></div></section>
@@ -380,15 +389,15 @@ async function pageEtf(id) {
   }
   const tops = C && C.top ? C.top.slice(0, 10) : [], secs = C && (C.sectors || []).filter(s => s[1] >= 0.5), ctry = C && (C.countries || []).filter(x => x[1] >= 0.5);
   const t10 = tops.reduce((a, x) => a + (x.pct || 0), 0), nP = ctry ? ctry.length : 0;
-  $("#ebuy .pb").innerHTML = `<p class="etfbuy">${ETF_phrase(e, C)}</p>
-    ${C && C.lines ? `<div class="etft3"><div><span>Lignes</span><b>${F0.format(C.lines)}</b><small>${["obligations", "monetaire"].includes(e.categorie) ? "titres" : "entreprises ou titres"}</small></div><div><span>10 premières</span><b>${F0.format(t10)} %</b><small>du fonds</small></div><div><span>Pays</span><b>${F0.format((C.countries || []).filter(x => x[0] !== "XS" && x[0] !== "EU").length)}</b><small>${ctry && ctry[0] ? esc(COUNTRY[ctry[0][0]] || ctry[0][0]) + " en tête" : ""}</small></div></div>` : ""}
-    ${C && C.niveau === "indice" && e.replication === "synthétique" ? `<div class="etfnote" style="margin-top:12px">Ce fonds est <b>synthétique</b> : il détient en réalité un autre panier de titres${C.panier && C.panier.lines ? ` (${F0.format(C.panier.lines)} lignes)` : ""} et reçoit la performance de l'indice ${esc(e.index || "")} par un contrat d'échange avec une banque. Ce qui compte pour vous, c'est l'indice : c'est sa composition qui est montrée ici.</div>` : ""}
+  const eb = $("#ebref"); if (eb) eb.innerHTML = ETF_bref(e, C, v);
+  $("#ebuy .pb").innerHTML = `${C && C.lines ? "" : `<p class="etfbuy">${ETF_phrase(e, C)}</p>`}
+        ${C && C.niveau === "indice" && e.replication === "synthétique" ? `<div class="etfnote" style="margin-top:12px">Ce fonds est <b>synthétique</b> : il détient en réalité un autre panier de titres${C.panier && C.panier.lines ? ` (${F0.format(C.panier.lines)} lignes)` : ""} et reçoit la performance de l'indice ${esc(e.index || "")} par un contrat d'échange avec une banque. Ce qui compte pour vous, c'est l'indice : c'est sa composition qui est montrée ici.</div>` : ""}
     ${e.fiche ? `<p style="margin:12px 0 0;font-size:14px;line-height:1.55"><b>Ce qui fait varier sa valeur :</b> ${esc(e.fiche.varie)}</p>` : ""}
     ${C ? `<div class="etfsrc">${ETF_srcLine(C, e)}</div>` : !e.fiche ? `<div class="etfsrc">La composition détaillée de cet ETF n'est pas encore disponible. Elle est relevée chaque mois sur le site de l'émetteur.</div>` : ""}`;
   if (C && tops.length) {
     const bond = ["obligations", "monetaire"].includes(e.categorie);
     $("#ecomp").innerHTML = `<section class="panel"><div class="ph"><h2>${bond ? "Les 10 plus grosses lignes" : "Les 10 plus grosses entreprises"}</h2><span class="light" style="font-size:12.5px">${C.asOf ? "au " + dLabel(C.asOf) : ""}</span></div><div class="pb">
-        <p class="lead" style="margin:0 0 10px">${ETF_concentration(C)}</p>
+        ${ETF_risques(e, C).some(r => /<b>Concentration/.test(r[1])) ? "" : `<p class="lead" style="margin:0 0 10px">${ETF_concentration(C)}</p>`}
         ${hbars(tops.map(t => { const co = t.isin && ISINBY[t.isin]; return { label: ETF_nomLigne(t), v: (t.pct || 0) / 100, href: co ? `/entreprise/${co.id}` : null }; }), x => pct(x, 1, false))}
         ${tops.some(t => t.isin && ISINBY[t.isin]) ? `<p class="note" style="margin:8px 0 0">Les noms soulignés au survol mènent à la fiche de l'entreprise, avec ses comptes.</p>` : ""}
         <div class="etfsrc">${ETF_srcLine(C, e)}</div></div></section>
@@ -408,12 +417,10 @@ async function pageEtf(id) {
   }
   // Questions et FAQ
   const Q = ETF_qa(e, C, voisin);
-  $("#eia").innerHTML = `<div class="etfqa">${Q.map(([k, q]) => `<button type="button" data-q="${k}">${esc(q)}</button>`).join("")}</div><div id="eans"></div>
-    <form class="etfask" id="eask"><input type="text" placeholder="Votre question sur cet ETF" aria-label="Votre question sur cet ETF" maxlength="300"><button class="btn" type="submit">Demander</button></form>
-    <p class="note" style="margin:8px 0 0">Les questions ci-dessus ont une réponse immédiate, calculée à partir des données de la fiche. Les autres passent par l'assistant IA du site. Aucune réponse n'est un conseil d'achat.</p>`;
-  $("#eia .etfqa").onclick = ev => { const b = ev.target.closest("button"); if (!b) return; const it = Q.find(x => x[0] === b.dataset.q); $$("#eia .etfqa button").forEach(x => x.classList.toggle("on", x === b)); $("#eans").innerHTML = `<div class="etfans"><p>${it[2]}</p></div>`; };
-  $("#eask").onsubmit = ev => { ev.preventDefault(); const q = $("#eask input").value.trim(); if (!q) return; const full = /etf|fonds|il |-il|ce fonds/i.test(q) ? `${q} (${e.name})` : `${e.name} : ${q}`; if (typeof orcIaAsk === "function") orcIaAsk(full); else go("/demander?q=" + encodeURIComponent(full)); };
   const FAQ = [...Q.map(([, q, a]) => [q, a]), ["Où l'acheter ?", `Chez un courtier ou une banque en ligne, comme une action, pendant les heures de cotation${pl ? ` : il est coté sur ${esc(pl.place)} sous le code ${esc(e.ticker)}` : ""}. Son code ISIN, ${esc(e.isin)}, permet de le retrouver chez n'importe quel courtier.`]];
-  $("#efaq").innerHTML = FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${a}</p></details>`).join("");
+  $("#eia").innerHTML = `<div id="efaq">${FAQ.map(([q, a]) => `<details><summary>${esc(q)}</summary><p>${a}</p></details>`).join("")}</div>
+    <form class="etfask" id="eask"><input type="text" placeholder="Une autre question sur cet ETF ?" aria-label="Votre question sur cet ETF" maxlength="300"><button class="btn" type="submit">Demander à l'IA</button></form>
+    <p class="note" style="margin:8px 0 0">Les réponses ci-dessus sont calculées à partir des données de la fiche. Les autres questions passent par l'assistant IA du site. Aucune réponse n'est un conseil d'achat.</p>`;
+  $("#eask").onsubmit = ev => { ev.preventDefault(); const q = $("#eask input").value.trim(); if (!q) return; const full = /etf|fonds|il |-il|ce fonds/i.test(q) ? `${q} (${e.name})` : `${e.name} : ${q}`; if (typeof orcIaAsk === "function") orcIaAsk(full); else go("/demander?q=" + encodeURIComponent(full)); };
   // La FAQ structurée (FAQPage) est ajoutée au HTML par le Worker (cf/src/etf_meta.mjs) : lisible par les moteurs sans JavaScript.
 }

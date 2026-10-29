@@ -208,7 +208,7 @@ function ctxPrudence(s, P, ser) {
   if (ser.bank) return "Une baisse des revenus d'une banque ne signifie pas forcément qu'elle va mal : ils suivent les taux d'intérêt et l'activité des marchés financiers.";
   return "Une baisse du chiffre d'affaires ne signifie pas forcément que l'entreprise va mal : elle peut venir des prix, du change (comptes publiés dans une autre devise), d'une activité vendue ou d'une année précédente exceptionnelle.";
 }
-function contexteChiffresHTML(s, c) {
+function contexteChiffresHTML(s, c, inner) { // inner : bloc intégré au thème « Croissance » de l'onglet des chiffres
   try {
     ctxCSS();
     const ser = ctxSerie(s, c); if (!ser || ser.ys.length < 3) return "";
@@ -237,8 +237,9 @@ function contexteChiffresHTML(s, c) {
     if (ser.k === "net") conf.push(`Le site n'a pas son chiffre d'affaires : le tableau suit son bénéfice net, plus irrégulier.`);
     if (ser.cur !== "EUR") conf.push(`Ses comptes sont publiés en ${ser.cur === "USD" ? "dollars" : ser.cur} : une partie des variations peut venir du change.`);
     conf.push("Le site ne mesure pas la part de chaque événement dans ses chiffres : il montre ce qui s'est passé au même moment. Les rachats, cessions et effets de change peuvent aussi jouer.");
-    return `<section class="panel ctx" id="contexte-chiffres" data-ctx-chiffres="${esc(s.id)}"${CTX_D ? ' data-ctxv="1"' : ""}>
-      <div class="ph"><h2>Ce qui explique ces chiffres</h2><span class="light" style="font-size:12.5px">${y0} à ${yN} · comptes officiels</span></div>
+    const T = inner ? "div" : "section";
+    return `<${T} class="${inner ? "ctx ctx-in" : "panel ctx"}" id="contexte-chiffres" data-ctx-chiffres="${esc(s.id)}"${inner ? ' data-ctx-in="1"' : ""}${CTX_D ? ' data-ctxv="1"' : ""}>
+      <div class="ph"><${inner ? "h3" : "h2"} class="ctx-ti">Ce qui explique ces chiffres</${inner ? "h3" : "h2"}><span class="light" style="font-size:12.5px">${y0} à ${yN} · comptes officiels</span></div>
       <div class="pb">
         <p class="ctx-lead">${esc(ctxTendance(s, ser, R))}</p>
         <div class="ctx-kpis">
@@ -249,6 +250,7 @@ function contexteChiffresHTML(s, c) {
         <h3 class="ctx-h">1. ${esc(ser.Lab)} année par année</h3>
         ${chart}
         ${scroll(table)}
+        <details class="ctx-more"><summary>Comment lire cette évolution<small>les phases, le contexte daté, ce que cela signifie sur le long terme</small></summary>
         <h3 class="ctx-h">2. Comment lire cette évolution</h3>
         <ol class="ctx-phs">${ph}</ol>
         <p class="ctx-warn"><b>Attention :</b> ${esc(R.phases.some(p => p.dir === -1) ? ctxPrudence(s, P, ser) : `Une hausse des ${ser.lab} ne suffit pas à juger une entreprise : elle peut venir des prix, du change ou d'un rachat.`)} Il faut aussi regarder le bénéfice, la trésorerie, la dette, les investissements et le dividende.</p>
@@ -265,10 +267,11 @@ function contexteChiffresHTML(s, c) {
           <div class="ctx-profg">${PI.l.map(x => `<div class="ctx-pc"><div class="ctx-pch"><b>${esc(x.nom)}</b><span class="ctx-niv ${nivC[x.niv]}">${x.niv === "oui" ? "Oui" : x.niv === "non" ? "Non" : x.niv === "inconnu" ? "Non mesuré" : "En partie"}</span></div><p class="ctx-q">${esc(x.q)}</p><p>${esc(x.t)}</p><p class="ctx-rep">${esc(x.repere)}</p></div>`).join("")}</div>
           <p class="ctx-rep">Ce classement est calculé à partir des comptes passés, avec des seuils fixes. Il décrit, il ne recommande rien : une entreprise peut changer de profil.</p>
         </div>
+        </details>
         <details class="ctx-sur"><summary>Ce que le site ne sait pas</summary><ul>${conf.map(t => `<li>${esc(t)}</li>`).join("")}${rapport ? `<li>Pour les raisons précises, lisez le <a href="${esc(rapport)}" target="_blank" rel="noopener">rapport annuel ${yN}</a> (partie « commentaires sur l'exercice »).</li>` : ""}</ul></details>
       </div>
       <div class="src">Chiffres : comptes annuels officiels lus par le site (ESEF ou SEC). Contexte : table d'événements datés et sourcés (BCE, FMI, AIE, Commission européenne, Banque mondiale…), mise à jour le ${CTX_D ? dLabel(CTX_D.maj) : "·"}. Aucune prévision, aucun conseil.</div>
-    </section>`;
+    </${T}>`;
   } catch (e) { console.warn("contexte : chiffres", e); return ""; }
 }
 
@@ -324,26 +327,14 @@ function ctxCoFill(el, s) {
 }
 function ctxRafraichir() {
   document.querySelectorAll("[data-ctx-actu]").forEach(el => { const s = RBY[el.dataset.ctxActu]; if (!s || !CTX_D || el.querySelector(".ctx-sjs, .ctx-co")) return; const h = contexteActuHTML(s, FULL[s.id] || null); if (h) el.outerHTML = h; });
-  if (CTX_D) document.querySelectorAll("[data-ctx-chiffres]").forEach(el => { if (el.dataset.ctxv) return; const s = RBY[el.dataset.ctxChiffres]; const c = s && FULL[s.id]; if (!c) return; const h = contexteChiffresHTML(s, c); if (h) el.outerHTML = h; });
+  if (CTX_D) document.querySelectorAll("[data-ctx-chiffres]").forEach(el => { if (el.dataset.ctxv) return; const s = RBY[el.dataset.ctxChiffres]; const c = s && FULL[s.id]; if (!c) return; const h = contexteChiffresHTML(s, c, !!el.dataset.ctxIn); if (h) el.outerHTML = h; });
   document.querySelectorAll("[data-ctx-co]").forEach(el => { const s = RBY[el.dataset.ctxCo]; if (s) ctxCoFill(el, s); });
   try { if (typeof tblxBindScroll === "function") tblxBindScroll(); } catch (e) { }
 }
 
 /* ---------- Branchement dans la fiche ---------- */
-const CTX_etapes0 = window.etapesListe;
-window.etapesListe = function (s, c) {
-  const L = CTX_etapes0(s, c);
-  try {
-    ctxCharge();
-    const wrap = (k, f) => { const e = L.find(x => x && x[0] === k); if (!e) return false; const fn = e[2]; e[2] = () => f(fn()); return true; };
-    if (c) {
-      wrap("comptes", h => h + contexteChiffresHTML(s, c));
-      wrap("retenir", h => h + contexteActuHTML(s, c));
-    } else wrap("metier", h => h + contexteActuHTML(s, null));
-    setTimeout(ctxRafraichir, 0);
-  } catch (e) { console.warn("contexte : étapes", e); }
-  return L;
-};
+// Les blocs sont placés directement par la fiche (m/fiche2.js) : « L'actualité qui la concerne » dans l'étape « Actualité »,
+// « Ce qui explique ces chiffres » dans le thème « Croissance » de l'onglet « Les chiffres en détail » (m/tableaux.js).
 
 /* ---------- Dans l'analyse (m/analyse.js) et dans les faits envoyés à l'IA ---------- */
 if (typeof window.analyseForcesFaiblesses === "function") {
@@ -361,7 +352,7 @@ if (typeof window.analyseForcesFaiblesses === "function") {
       const ser = ctxSerie(s, c);
       if (ser && ser.ys.length >= 3 && !out.contexte.some(i => i.id === "ctx_evol")) {
         const R = ctxPhases(ser), P = ctxProfil(s, c), ev = [...new Set(R.phases.flatMap(p => ctxEvts(P, c, p).map(e => e.titre)))].slice(0, 3);
-        out.contexte.push({ id: "ctx_evol", poids: 2, titre: `Ce qui explique l'évolution de ses ${ser.lab}`, detail: `${ctxTendance(s, ser, R)} ${ev.length ? `Contexte connu sur la période : ${ev.join(" ; ")}.` : "Le site ne relie aucun grand événement de son secteur à ces variations."} Le détail année par année est dans l'étape « Ses comptes ».`, source: "bilan., comptes officiels et table d'événements datés", url: "/methode" });
+        out.contexte.push({ id: "ctx_evol", poids: 2, titre: `Ce qui explique l'évolution de ses ${ser.lab}`, detail: `${ctxTendance(s, ser, R)} ${ev.length ? `Contexte connu sur la période : ${ev.join(" ; ")}.` : "Le site ne relie aucun grand événement de son secteur à ces variations."} Le détail année par année est dans l'onglet « Les chiffres en détail ».`, source: "bilan., comptes officiels et table d'événements datés", url: "/methode" });
       }
       out.contexte.sort((a, b) => b.poids - a.poids);
     } catch (e) { console.warn("contexte : analyse", e); }

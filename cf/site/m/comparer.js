@@ -675,49 +675,7 @@ function cmprFiche(s) {
   const peers = list.filter(c => !c.missing).concat(list.filter(c => c.missing));
   return { peers, auto, all: [s, ...peers] };
 }
-function cmprPosSentence(T, X, S, me, s) {
-  const S2 = S.sorted, n = S2.length, rk = S2.indexOf(me) + 1, nm = esc(s.name), w = S2[0], short = r => T.short ? T.short(r) : r.txt;
-  if (T.k === "solidite" && me.r.cash) { const cash = S2.filter(x => x.r.cash); return cash.length > 1 ? `${nm} a plus de trésorerie que de dettes, comme ${listFr(cash.filter(x => x !== me).map(x => esc(x.F.c.name)))}.` : `${nm} est la seule à avoir plus de trésorerie que de dettes.`; }
-  if (T.k === "dividende" && !(me.r.v > 0)) return `${nm} ne verse pas de dividende.${w !== me && w.r.v > 0 ? ` ${esc(w.F.c.name)} a le rendement le plus élevé (${short(w.r)}).` : ""}`;
-  if (rk === 1) { const s2 = S2[1]; return `${nm} ${T.lead(me.r) || "est en tête"} : ${T.say(me.r, me.F, X)}${s2 ? `, devant ${esc(s2.F.c.name)} (${short(s2.r)})` : ""}.`; }
-  const lead = T.k === "solidite" && w.r.cash ? "est la plus solide" : T.lead(w.r) || "est en tête";
-  return `${nm} : ${T.say(me.r, me.F, X)}, ${rk === n ? "dernière" : rk + "e"} sur ${n}. ${esc(w.F.c.name)} ${lead} (${short(w.r)}).`;
-}
-function concurrentsHTML(s) {
-  const { peers, auto, all } = cmprFiche(s); if (!peers.length) return "";
-  const CMAX = isPrem() ? 5 : FREE.cmp, link = "/comparer?ids=" + all.slice(0, CMAX).map(c => c.id).join(",");
-  const X = cmprCtx(all), me0 = X.F[0];
-  if (!me0.ok) return `<section class="panel" id="concurrents"><div class="ph"><h2>${auto ? "Des entreprises comparables" : "Ses concurrents directs"}</h2><a href="${link}">Comparer en détail →</a></div><div class="pb"><p class="muted" style="margin:0 0 6px">${esc(missingTxt(s, true))}</p><div class="cmpr-peers">${peers.map(c => `<a href="/entreprise/${c.id}">${logo(c, 22)}${esc(c.name)}</a>`).join("")}</div></div></section>`;
-  const firsts = [], lasts = [];
-  const lines = CMPR_T.map(T => {
-    const S = cmprRows(T, X), me = S.ok.find(x => x.F === me0), pos = cmprScale(T, S), ind = T.ind(X);
-    const head = `<div class="cmpr-posh"><b>${CMPR_ICON[T.k]}${esc(T.t)}</b><small>${esc(ind)}</small>`;
-    const mine = S.rows[0].r;
-    if (!me || S.ok.length < 2) return `<li>${head}</div><p class="muted">${me ? (T.k === "solidite" && X.F.some(F => F.ok && F.bank) ? esc(cmprNoCmp(T, X)) : "Pas assez de chiffres publiés chez ses concurrentes pour comparer.") : mine && mine.gear ? `${esc(s.name)} : dette nette égale à ${esc(mine.txt)} de ses capitaux propres. Son résultat avant amortissements n'est pas publié : la comparaison en années de résultat n'est pas possible.` : `${esc(s.name)} : ${esc(T.na(me0, X))}.`}</p></li>`;
-    const rk = S.sorted.indexOf(me) + 1, n = S.sorted.length;
-    if (rk === 1) firsts.push(T); else if (rk === n) lasts.push(T);
-    const dots = pos ? S.ok.filter(x => x.r.v != null).sort((a, b) => (a === me) - (b === me)).map(x => {
-      const p = 2 + pos(x.r.v) * 0.96, isMe = x === me, col = T.neutral || !x.r.lv || x.r.lv === "moyen" ? "var(--ink)" : CMPR_COL[x.r.lv];
-      return `<i class="cmpr-dot${isMe ? " me" : ""}" style="left:${p.toFixed(2)}%;${isMe ? `background:${col}` : ""}" tabindex="0" ${tipAttr({ h: x.F.c.name, r: [[ind, x.r.txt, ""]], n: isMe ? "" : "Concurrente" })}></i>`; }).join("") : "";
-    const med = pos && me.r.med != null ? `<i class="cmpr-med" style="left:${(2 + pos(me.r.med) * 0.96).toFixed(2)}%" ${tipAttr({ h: "Médiane du secteur", r: [[(R.sectors[s.sector] || "").toLowerCase(), me.r.medTxt, SAND]] })}></i>` : "";
-    return `<li>${head}<span class="cmpr-rkc${rk === 1 ? " first" : ""}">${rk === 1 ? "1re" : rk + "e"} sur ${n}</span></div>
-      <div>${dots ? `<div class="cmpr-dots"><span class="trk"></span>${med}${dots}</div><div class="cmpr-dotl"><span>${T.k === "solidite" ? "moins endettée" : T.k === "prix" ? "moins chère" : "moins"}</span><span>${T.k === "solidite" ? "plus endettée" : T.k === "prix" ? "plus chère" : "plus"}</span></div>` : ""}</div>
-      <p>${cmprPosSentence(T, X, S, me, s)}</p></li>`;
-  });
-  const lbl = T => ({ taille: "la taille", croissance: "la croissance", rentabilite: "la rentabilité", solidite: "la solidité financière", prix: "le prix en Bourse le plus bas", dividende: "le rendement du dividende" }[T.k]);
-  const lead = firsts.length || lasts.length ? `Face à ${peers.filter(c => !c.missing).length > 1 ? `ses ${peers.filter(c => !c.missing).length} ${auto ? "voisines de secteur" : "concurrentes"}` : "sa concurrente"}, ${cmprB(s.name)} ${firsts.length ? `arrive en tête pour ${listFr(firsts.map(lbl))}` : ""}${firsts.length && lasts.length ? " ; elle est " : lasts.length ? "est " : ""}${lasts.length ? `dernière pour ${listFr(lasts.map(lbl).map(x => x.replace("le prix en Bourse le plus bas", "le prix en Bourse")))}` : ""}.` : "";
-  const notes = cmprNotes(X);
-  return `<section class="panel cmpr-clip" id="concurrents"><div class="ph"><h2>${auto ? "Face aux entreprises comparables" : "Face à ses concurrents directs"}</h2><a href="${link}">Comparer en détail →</a></div>
-    <div class="pb" style="padding-bottom:8px">${lead ? `<p class="cmpr-fl">${lead}</p>` : ""}
-      <p class="muted" style="margin:6px 0 0;font-size:13.5px">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services, aux mêmes clients.`} Le gros point est ${esc(s.name)}, les petits ses concurrentes (survolez-les pour leur nom), le trait la médiane du secteur.</p>
-      <div class="cmpr-peers"><a class="me" href="#etapes">${logo(s, 22)}${esc(s.name)}</a>${peers.map(c => `<a href="/entreprise/${c.id}">${logo(c, 22)}${esc(c.name)}</a>`).join("")}</div>
-      <ul class="cmpr-pos">${lines.join("")}</ul>
-      ${notes.length ? `<ul class="cmpr-notes">${notes.map(n => `<li>${n}</li>`).join("")}</ul>` : ""}
-      <div class="cmpr-fact"><a class="btn" href="${link}" style="display:inline-flex;align-items:center;height:40px">Comparer en détail</a><span class="light" style="font-size:12.5px">${all.length > CMAX ? `Les ${CMAX} premières en version gratuite, ${Math.min(5, all.length)} avec Premium.` : "Verdict, barres et tous les chiffres côte à côte."}</span></div></div>
-    ${cmprIABar(all.length, s)}
-    <div class="pb" style="padding-top:12px"><details class="cmpr-det" style="margin:0"><summary>Les chiffres de chaque concurrente<small>tous les indicateurs, côte à côte</small></summary><div>${cmprAllTable(X, s.id)}</div></details></div>
-    <div class="src">Chiffres du dernier exercice publié par chaque entreprise (rapports ESEF et SEC), montants convertis en euros aux taux de la BCE. Cours différés de Google Finance. Ce classement décrit les comptes ; ce n'est pas un conseil.</div></section>`;
-}
+// L'étape « Concurrents » de la fiche (concurrentsHTML) est définie une seule fois, dans m/fiche2.js.
 
 /* La page a pu être affichée avant le chargement de ce module : on la refait avec la nouvelle version */
 if (typeof R !== "undefined" && R && location.pathname === "/comparer") pageComparer();

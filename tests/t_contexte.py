@@ -20,6 +20,7 @@ J = r"""() => {
   return { ov, ch: ch ? ch.innerText : null, ac: ac ? ac.innerText : null, bad, wide };
 }"""
 ok, ko = 0, []
+ACTU = {}
 with sync_playwright() as pw:
     b = pw.chromium.launch()
     for W in (390, 1280):
@@ -28,17 +29,19 @@ with sync_playwright() as pw:
         pg.route("**/*", route)
         for i in IDS:
             errs.clear()
-            for et in (["metier"] if i in SANS else ["comptes", "retenir"]):
-                pg.goto(f"http://t.local/entreprise/{i}?etape={et}"); pg.wait_for_timeout(1300)
+            for et in (["actualite"] if i in SANS else ["comptes", "actualite"]):
+                pg.goto(f"http://t.local/entreprise/{i}?etape={et}"); pg.wait_for_timeout(1300)  # ?etape=comptes renvoie vers l'onglet des chiffres
+                pg.evaluate("document.querySelectorAll('#contexte-chiffres details').forEach(d => d.open = true)")
                 r = pg.evaluate(J); pb = []
                 if errs: pb.append("erreurs JS : " + "; ".join(errs[:2]))
                 if r["ov"] > 1: pb.append(f"débordement {r['ov']} px")
                 if r["bad"]: pb.append("texte suspect : " + ",".join(set(r["bad"])))
                 if r["wide"]: pb.append("élément trop large : " + ",".join(r["wide"]))
-                if not r["ac"]: pb.append("bloc actualité absent")
-                if i not in SANS and not r["ch"]: pb.append("bloc chiffres absent")
-                allt = (r["ch"] or "") + (r["ac"] or "")
-                for m in (ATTENDU.get(i, []) if W == 1280 and et == "comptes" else []):
+                if et != "comptes" and not r["ac"]: pb.append("bloc actualité absent")
+                if et == "comptes" and not r["ch"]: pb.append("bloc chiffres absent")
+                if et == "comptes": ACTU[i] = r["ch"] or ""  # « Ce qui explique ces chiffres » (onglet des chiffres)
+                allt = (r["ch"] or "") + (r["ac"] or "") + (ACTU.get(i, "") if et == "actualite" else "")
+                for m in (ATTENDU.get(i, []) if W == 1280 and et == "actualite" else []):
                     if m.lower() not in allt.lower(): pb.append(f"« {m} » absent")
                 if shots and i in ("totalenergies", "alibaba", "bnp-paribas", "sap", "klepierre", "nvidia"):
                     for sel, nm in (("#contexte-chiffres", "chiffres"), ("#contexte-actu", "actu")):

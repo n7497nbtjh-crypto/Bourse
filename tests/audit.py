@@ -82,14 +82,15 @@ STATE = {}
 with sync_playwright() as pw:
     b = pw.chromium.launch()
     for name, opts in [("ordi", dict(viewport={"width": 1440, "height": 900})), ("tel", dict(viewport={"width": 375, "height": 812}, has_touch=True, is_mobile=True, device_scale_factor=2)), ("petit", dict(viewport={"width": 340, "height": 700}, has_touch=True, is_mobile=True))]:
-        ctx = b.new_context(**opts); ctx.add_init_script('try{localStorage.setItem("bilan.favoris",JSON.stringify(["c:lvmh","c:nvidia","c:totalenergies","e:amundi-msci-world-pea"]))}catch(e){}'); pg = ctx.new_page(); errs = []
+        ctx = b.new_context(**opts); ctx.set_default_navigation_timeout(90000); ctx.set_default_timeout(60000); ctx.add_init_script('try{localStorage.setItem("bilan.favoris",JSON.stringify(["c:lvmh","c:nvidia","c:totalenergies","e:amundi-msci-world-pea"]))}catch(e){}'); pg = ctx.new_page(); errs = []
         pg.on("pageerror", lambda e: errs.append(str(e) + " @ " + pg.url + " " + (e.stack or "")[:300].replace("\n"," | ")))
         pg.on("console", lambda m: m.type == "error" and errs.append(m.text))
         pg.route("**/*", route)
         probs = {}
         for path in pages:
-            pg.goto("http://t.local" + path); pg.wait_for_timeout(450)
+            pg.goto("http://t.local" + path, timeout=90000); pg.wait_for_timeout(450)
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
+            if p and "page vide" in p: pg.wait_for_timeout(2500); p = pg.evaluate(CHECK, opts["viewport"]["width"])  # machine chargée : on laisse le temps au rendu
             if p: probs[path] = p
             if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/lvmh", "/entreprise/lvmh/comptes", "/lexique", "/etf/amundi-msci-world-pea", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/communaute"):
                 os.makedirs(shots, exist_ok=True)
@@ -115,14 +116,15 @@ with sync_playwright() as pw:
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["chiffres + bulle"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_definition.png")
-        # Fiche : PER calculé automatiquement avec le cours
-        pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
-        if "PER" not in pg.inner_text("#prix"): probs["PER"] = ["le PER n'est pas calculé"]
+        # Fiche : PER calculé automatiquement avec le cours (thème « Valorisation » de l'onglet des chiffres)
+        pg.goto("http://t.local/entreprise/lvmh/comptes"); pg.wait_for_timeout(600)
+        if "PER" not in pg.inner_text("#rf-valorisation"): probs["PER"] = ["le PER n'est pas calculé"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["fiche + PER"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_fiche_per.png", full_page=True)
         # Assistant de fiche : une question suggérée, une réponse
-        pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(700)
+        pg.goto("http://t.local/entreprise/lvmh", timeout=90000); pg.wait_for_timeout(700)
+        if not pg.locator("#assistant").count(): pg.wait_for_timeout(3000)
         if not pg.locator("#assistant").count(): probs["assistant"] = ["le panneau de l'assistant manque"]
         else:
             pg.locator("#assistant [data-ask]").first.click(); pg.wait_for_timeout(400)

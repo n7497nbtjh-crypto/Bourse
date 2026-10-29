@@ -118,3 +118,16 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   et « L'actualité qui la concerne » à « L'essentiel », ou à « Son métier » sans comptes), `analyseForcesFaiblesses` (points `actu_*` et `ctx_evol`
   dans `contexte`), `ficheFaits` (`actualite_qui_la_concerne`, `evolution_pluriannuelle`, `fiabilite_des_donnees`), `localAssist`, `localCopilot`.
 - Fonctions publiques : `contexteChiffresHTML(s, c)`, `contexteActuHTML(s, c)`, `contexteSujets(s, c)`. Tests : `python3 tests/t_contexte.py [--shots dossier]`.
+## Refonte des fiches entreprise et ETF (agent « refonte-fiche », vague du 29 octobre 13 h 30)
+- Une seule définition par fonction : `ficheSommaire(s, c)`, `companyHeader`, `pageCompany`, `tabBref`, `etapesListe`, `etapesBind`,
+  `ficheRetenirHTML`, `concurrentsHTML` sont dans `m/fiche2.js` (supprimées de `m/fiche.js` et `m/comparer.js`) ; `tabComptes` dans `m/tableaux.js`.
+  `m/contexte.js` n'enveloppe plus `etapesListe` : la fiche appelle `contexteActuHTML` (étape « Actualité ») et `contexteChiffresHTML(s, c, true)`
+  (thème « Croissance » de l'onglet des chiffres, sections 2 à 4 repliées dans `details.ctx-more`).
+- Vue d'ensemble : en-tête compact (identité, cours) puis courbe + « En bref » (situation en mots, atouts et points à surveiller = titres de
+  `analyseForcesFaiblesses`, 3 prochaines dates). Étapes : L'essentiel (tuiles cliquables vers `/entreprise/:id/comptes#rf-<thème>` + analyse),
+  Son métier, Concurrents (tableau côte à côte `.rf-ctab`, atouts et faiblesses de chacune, « Sa place dans le secteur » = ancien bandeau de profil),
+  Actualité, Questions. Colonne latérale : dernières annonces seulement. Les anciens liens `?etape=comptes|prix|dividende` ouvrent l'onglet des chiffres.
+- Onglet « Les chiffres en détail » : ce qui a le plus changé sur un an, « À lire ensemble », puis un bloc par thème (`#rf-croissance`, `#rf-rentabilite`,
+  `#rf-bilan`, `#rf-flux`, `#rf-valorisation` = `prixHTML`, `#rf-dividende` = `dividendeHTML`), tableau complet replié (`#rf-tout`), sources.
+- Fiche ETF (`pageEtf`, `ETF_bref` dans `m/etf.js`) : même hiérarchie (courbe + « En bref », puis composition, frais, risques, questions ;
+  caractéristiques, émetteur, ETF proches, avis et discussion dans la colonne latérale). Une seule liste de questions (`#efaq`) + champ vers `orcIaAsk`.
