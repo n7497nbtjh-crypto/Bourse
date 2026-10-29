@@ -8,6 +8,7 @@ const INDEX = U.map(c => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], 
 import amf from "./amf.mjs";
 import communaute from "./communaute.mjs";
 import presse from "./presse.mjs";
+import { clair } from "./actu.mjs";
 import { cours } from "./cours.mjs";
 import { resume, veille, assistant } from "./ia.mjs";
 import { premium } from "./compte.mjs";
@@ -41,7 +42,7 @@ export function meta(path, q = null) {
     return { title: `${t} · ${SITE}`, desc: "Simulez l'évolution d'un placement, avec les hypothèses affichées. Outil pédagogique, sans conseil." };
   }
   if (p === "/entreprises") return { title: `Les entreprises · ${SITE}`, desc: "Les grandes entreprises de France, d'Europe et des États-Unis : ce qu'elles font, leurs comptes et leurs points forts et faibles, expliqués simplement." };
-  if (p === "/actualites") return { title: `Actualité des entreprises · ${SITE}`, desc: "Résultats, dividendes, assemblées générales et publications officielles déposées auprès de l'AMF." };
+  if (p === "/actualites") return { title: `Actualité des entreprises · ${SITE}`, desc: "Résultats, dividendes, acquisitions et changements de dirigeants des entreprises suivies en France, en Europe et aux États-Unis : annonces officielles classées, chiffrées et expliquées, et titres de la presse." };
   if (p === "/agenda") return { title: `Agenda financier · ${SITE}`, desc: "Dates des résultats, assemblées générales et dividendes des entreprises cotées." };
   if (p === "/portefeuille") return { title: `Portefeuille · ${SITE}`, desc: "Suivez la performance réelle de vos placements ou entraînez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqués · ${SITE}`, desc: "Les fonds indiciels les plus utilisés en France : ce qu'ils contiennent, leurs frais, leur éligibilité au PEA, leur composition par pays et par entreprise." };
@@ -83,6 +84,7 @@ export default {
     if (url.pathname === "/api/amf") return amf(request, U.filter(c => c.region === "FR").map(c => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, U);
+    if (url.pathname === "/api/actu/clair") return clair(request, env);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (url.pathname === "/api/resume") return resume(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);

@@ -40,3 +40,10 @@ Côté serveur, ajouter la page dans `meta()` de cf/src/worker.mjs (sinon le HTM
   `top`, `countries`, `isins`, `lines`, `asOf` gardent les noms de l'ancien format (fichiers des fonds américains, sans `niveau`).
 - Ajout au portefeuille depuis la fiche : `pf2Load()` / `pf2Save()` (ligne `{ k: "e:<id>", m: 1000 }`). Si le stockage du portefeuille change, garder ces deux fonctions ou prévenir.
 - Le Worker ajoute titre, description et FAQ structurée (FAQPage) des fiches ETF : `cf/src/etf_meta.mjs` (appelé dans `fetch` de `worker.mjs`).
+## Actualité des entreprises (agent « actu »)
+Collecte : `data/actu.mjs` (workflow `.github/workflows/actu.yml`, 5 fois par jour en semaine). Fichiers lisibles par tous les modules :
+- `cf/site/data/actu/c/<id>.json` (un par entreprise suivie, même vide) : `{ id, o: [annonces 90 jours], p: [presse 30 jours] }`.
+  Annonce : `{ k, d (ISO UTC), id, s (amf|sec|nasdaq|oslo|nsm), c (resultats|rapport|dividende|operation|dirigeants|assemblee|emission|contrat|incident|autre ; routinières : rachat|capital|initie|agenda), i (importance 0 à 3), tf (titre français du site), t (titre d'origine), u (lien source), l (langue), p (1 = information privilégiée), f ([[libellé, valeur]] chiffres), r ([phrases de lecture calculées]), x ({ c: « En clair », ch: « Ce que cela change » } rédigés par l'IA) }`.
+  Article : `{ k, d, t, u, s (site), l, co? (autres entreprises citées) }`.
+- `cf/site/data/actu/fil.json` : `{ maj, sources, jours, couverture, o: [annonces non routinières des 4 derniers jours], p: [presse 2 jours, avec id] }` ; `actu/j/<AAAA-MM-JJ>.json` : `{ d, o }`.
+Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-dessus), `actuFicheCourt(el, s)`, `actuFicheDetail(el, s)`, `actuBandeau(el)`, `actuBandeauHTML()`, `presseBlock`, `newsBlock`.
