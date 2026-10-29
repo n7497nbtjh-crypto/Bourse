@@ -17,4 +17,17 @@ export function gfCsv(companies, etfs, indices) {
   for (const [id, sym] of indices) rows.push(["i:" + id, sym, "", ""]);
   return rows.map(r => r.join(",")).join("\n") + "\n";
 }
+// La feuille Google ne calcule qu'environ 1 260 lignes (au-delà, GOOGLEFINANCE ne répond plus et les colonnes historiques tombent).
+// On découpe donc la liste en deux fichiers : gf.csv pour la feuille actuelle (indices, ETF, puis les entreprises dont la feuille
+// trouvait déjà un cours, dans l'ordre de la liste), gf2.csv pour une seconde feuille, copie de la première (voir data/cours_config.mjs).
+export const GF_ROWS = 1262;
+export function gfParts(companies, etfs, indices, known = {}, size = GF_ROWS) {
+  const row = (k, tv, isin) => [k, ...candidates(tv, isin), "", "", ""].slice(0, 4);
+  const first = [...indices.map(([id, sym]) => ["i:" + id, sym, "", ""]), ...etfs.map(e => row("e:" + e.id, e.tv, e.isin))];
+  const cs = companies.map(c => row("c:" + c.id, c.tv, c.isin));
+  const ok = cs.filter(r => known[r[0]]), rest = cs.filter(r => !known[r[0]]);
+  const all = [...first, ...ok, ...rest];
+  const csv = rows => [["id", "c1", "c2", "c3"], ...rows].map(r => r.join(",")).join("\n") + "\n";
+  return [csv(all.slice(0, size)), csv(all.slice(size))];
+}
 export const INDICES = [["cac40", "INDEXEURO:PX1"], ["sp500", "INDEXSP:.INX"], ["stoxx50", "INDEXSTOXX:SX5E"], ["nasdaq100", "INDEXNASDAQ:NDX"], ["dax", "INDEXDB:DAX"], ["ftse100", "INDEXFTSE:UKX"], ["nikkei", "INDEXNIKKEI:NI225"]];

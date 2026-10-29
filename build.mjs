@@ -11,7 +11,10 @@ import { copyFileSync, existsSync, readFileSync, writeFileSync as wfs } from "no
   const seen = new Set(); ev = ev.filter(e => e && e.id && /^\d{4}-\d{2}-\d{2}$/.test(e.date) && !seen.has(e.id + e.date + e.type) && seen.add(e.id + e.date + e.type));
   wfs("cf/site/data/agenda.json", JSON.stringify({ note: base.note, events: ev })); }
 if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "cf/site/data/segments-fr.json");
-{ const { gfCsv, INDICES } = await import("./data/gf.mjs"); const UNI = (await import("./data/univers.mjs")).default; const EL = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; wfs("cf/site/data/gf.csv", gfCsv(UNI, EL, INDICES)); }
+{ const { gfParts, INDICES } = await import("./data/gf.mjs"); const UNI = (await import("./data/univers.mjs")).default; const EL = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : [];
+  // gf.csv : feuille Google actuelle (entreprises qui y avaient déjà un cours en premier) ; gf2.csv : seconde feuille pour le reste
+  const known = existsSync("cf/site/data/cours.json") ? JSON.parse(readFileSync("cf/site/data/cours.json", "utf8")).items || {} : {};
+  const [g1, g2] = gfParts(UNI, EL, INDICES, known); wfs("cf/site/data/gf.csv", g1); wfs("cf/site/data/gf2.csv", g2); }
 for (const f of ["parcours", "commencer", "legal", "academie"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
 if (existsSync("data/concurrents.json")) wfs("cf/site/data/concurrents.json", readFileSync("data/concurrents.json", "utf8"));
 { const R = {}; for (const f of ["france", "europe", "us"]) if (existsSync(`data/repartitions/${f}.mjs`)) Object.assign(R, (await import(`./data/repartitions/${f}.mjs`)).default); wfs("cf/site/data/repartitions.json", JSON.stringify(R)); }

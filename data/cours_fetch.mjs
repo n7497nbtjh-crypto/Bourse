@@ -1,10 +1,11 @@
 // Le bot garde chaque jour une copie des cours (secours si la feuille ne répond pas) et les taux de change de la BCE.
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
-import { COURS_CSV, parseCours } from "./cours_config.mjs";
+import { COURS_CSVS, parseCours } from "./cours_config.mjs";
 const OUT = new URL("../cf/site/data/", import.meta.url);
 const today = new Date().toISOString().slice(0, 10);
 try {
-  const r = await fetch(COURS_CSV); const items = parseCours(await r.text());
+  const items = {};
+  for (const u of COURS_CSVS) { try { const r = await fetch(u); Object.assign(items, parseCours(await r.text())); } catch (e) { console.log("::warning::Feuille de cours non lue :", e.message); } }
   console.log(Object.keys(items).length, "cours lus dans la feuille");
   if (Object.keys(items).length > 50) {
     // Les colonnes historiques de la feuille (plus haut/bas sur 52 semaines, cours il y a 1, 3 et 5 ans) tombent parfois toutes

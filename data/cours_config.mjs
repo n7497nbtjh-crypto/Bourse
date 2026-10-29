@@ -1,5 +1,11 @@
 // Feuille Google « bilan - cours des actions » (GOOGLEFINANCE), publiée en CSV : lecture seule, cours différés d'environ 20 minutes.
 export const COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv";
+// Seconde feuille (entreprises au-delà des ~1 260 lignes que la première sait calculer), lit cf/site/data/gf2.csv.
+// À créer une fois par Romain : 1. ouvrir la feuille « bilan - cours des actions » ; 2. Fichier > Créer une copie ;
+// 3. dans la copie, remplacer « gf.csv » par « gf2.csv » dans la formule IMPORTDATA de la cellule A1 ; 4. Fichier > Partager >
+// Publier sur le Web > feuille entière, format CSV > Publier ; 5. coller le lien obtenu ci-dessous (ou le donner à Claude).
+export const COURS_CSV2 = "";
+export const COURS_CSVS = [COURS_CSV, COURS_CSV2].filter(Boolean);
 // Lecture du CSV publié : { "c:lvmh": { s, p, chg, cur, cap, h52, l52, p1y, p3y, p5y }, … }
 export function parseCours(txt) {
   const rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g;
