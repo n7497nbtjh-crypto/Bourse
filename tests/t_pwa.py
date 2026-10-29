@@ -6,6 +6,13 @@
 import json, os, sys, struct
 from playwright.sync_api import sync_playwright
 BASE = next((a for a in sys.argv[1:] if a.startswith("http")), "http://127.0.0.1:8788").rstrip("/")
+import time
+def attendre(page, expr, ms): # équivalent de wait_for_function sans eval côté page (la CSP du site interdit unsafe-eval)
+    fin = time.time() + ms / 1000
+    while time.time() < fin:
+        if page.evaluate("() => !!(" + expr + ")"): return True
+        page.wait_for_timeout(250)
+    raise TimeoutError(expr)
 SHOTS = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 FONT = os.environ.get("FONT_DIR")
 bad = 0
@@ -54,7 +61,7 @@ with sync_playwright() as pw:
     for f, n in [("/icons/apple-touch-icon.png", 180), ("/icons/partage.png", 1200), ("/icons/badge-96.png", 96)] + [(s["src"], 0) for s in man.get("screenshots", [])]:
         st =pg.evaluate("u => fetch(u).then(r => r.status)", f); ok(st == 200, f"{f} servi")
     # 2. Service worker : enregistré, contrôle la page, met en cache ce qu'il faut (et jamais /api)
-    pg.wait_for_function("navigator.serviceWorker && navigator.serviceWorker.controller !== null", timeout=15000)
+    attendre(pg, "navigator.serviceWorker && navigator.serviceWorker.controller !== null", 15000)
     pg.reload(); pg.wait_for_timeout(2500)
     caches = pg.evaluate("""async () => { const o = {}; for (const k of await caches.keys()) o[k] = (await (await caches.open(k)).keys()).map(r => new URL(r.url).pathname); return o; }""")
     stat = [k for k in caches if k.startswith("bilan-statique-")]
@@ -74,14 +81,14 @@ with sync_playwright() as pw:
     pg.goto(BASE + "/connecteur"); pg.wait_for_timeout(1200)
     ok("ChatGPT ou Claude" in pg.title() and BASE + "/mcp" in pg.inner_text("#pwaurl"), "page /connecteur")
     pg.click("[data-ong=chatgpt]"); ok(pg.is_visible("[data-pan=chatgpt]") and not pg.is_visible("[data-pan=claude]"), "onglets")
-    pg.fill("#pwaq", "Air Liquide"); pg.click("#pwatry button"); pg.wait_for_function("document.querySelector('#pwaout').textContent.includes('Sources')", timeout=15000)
+    pg.fill("#pwaq", "Air Liquide"); pg.click("#pwatry button"); attendre(pg, "document.querySelector('#pwaout').textContent.includes('Sources')", 15000)
     out = pg.inner_text("#pwaout"); ok("Air Liquide" in out and "médiane du secteur" in out and "pas un conseil" in out, "le connecteur répond depuis la page")
     for W, H, mob in [(1440, 900, False), (390, 844, True)]:
         c2 = br.new_context(viewport={"width": W, "height": H}, is_mobile=mob, has_touch=mob, device_scale_factor=2 if mob else 1); c2.route("**/*", fonts)
         p2 = c2.new_page(); p2.on("pageerror", lambda e: errs.append(str(e)))
         for path in ["/connecteur", "/"]:
             p2.goto(BASE + path)
-            try: p2.wait_for_function("document.querySelector('#app').textContent.trim().length > 200", timeout=20000)
+            try: attendre(p2, "document.querySelector('#app').textContent.trim().length > 200", 20000)
             except Exception: pass
             p2.wait_for_timeout(800); pb = p2.evaluate(CHECK, W); ok(not pb, f"{path} à {W} px : {pb}")
             if SHOTS: p2.screenshot(path=f"{SHOTS}/{path.strip('/') or 'accueil'}-{W}.png", full_page=path != "/")
