@@ -46,6 +46,7 @@ async function get(url, { json = false, text = true, opt = {}, tries = 3, timeou
     try {
       const r = await fetch(url, { ...opt, headers: { "user-agent": UA, accept: json ? "application/json" : "*/*", ...(opt.headers || {}) }, signal: AbortSignal.timeout(timeout) });
       if (r.status === 404) return null;
+      if (r.status === 429) { await sleep(8000 * a); throw new Error("429 " + url.slice(0, 90)); }
       if (!r.ok) throw new Error(r.status + " " + url.slice(0, 90));
       return json ? await r.json() : text ? await r.text() : Buffer.from(await r.arrayBuffer());
     } catch (e) { if (a === tries) throw e; await sleep(1500 * a); }
@@ -120,10 +121,10 @@ async function sec() {
   try { const j = await get("https://www.sec.gov/files/company_tickers.json", { json: true }); for (const v of Object.values(j || {})) tick[String(v.ticker).toUpperCase()] = String(v.cik_str); } catch (e) { log("SEC tickers", e.message); }
   const list = U.filter(c => c.sec || c.cik), from = since("sec", HISTO), legacy = [];
   let n = 0, lus = 0;
-  await pool(list, 6, async c => {
+  await pool(list, 2, async c => {
     if (Date.now() > STOP) return;
     const cik = String(+(c.cik || tick[String(c.sec).toUpperCase()] || 0)); if (!+cik) return;
-    let sub; try { sub = await get(`https://data.sec.gov/submissions/CIK${cik.padStart(10, "0")}.json`, { json: true }); } catch (e) { log("SEC", c.name, e.message); return; }
+    let sub; try { sub = await get(`https://data.sec.gov/submissions/CIK${cik.padStart(10, "0")}.json`, { json: true, tries: 4 }); } catch (e) { log("SEC", c.name, e.message); return; }
     lus++;
     const r = (sub && sub.filings && sub.filings.recent) || {};
     for (let i = 0; i < (r.form || []).length; i++) {
@@ -146,7 +147,7 @@ async function sec() {
       ajoute({ s: "sec", d, id: c.id, t, u, l: "en", c: cat, off: form });
       n += NOUVEAUX.length - before;
     }
-    await sleep(120);
+    await sleep(260);
   });
   legacy.sort((a, b) => String(b.date).localeCompare(String(a.date)));
   if (legacy.length > 50) writeFileSync(new URL("actu-sec.json", OUT), JSON.stringify({ updated: new Date().toISOString(), source: "SEC EDGAR", items: legacy.slice(0, 900) }));
@@ -312,17 +313,18 @@ export const MEDIAS = ("lesechos.fr investir.lesechos.fr lefigaro.fr latribune.f
   "asia.nikkei.com japantimes.co.jp scmp.com straitstimes.com theglobeandmail.com financialpost.com cbc.ca afr.com smh.com.au abc.net.au livemint.com economictimes.indiatimes.com business-standard.com " +
   "moneycontrol.com thehindubusinessline.com koreaherald.com koreatimes.co.kr caixinglobal.com rappler.com bnnbloomberg.ca dw.com euronews.com aljazeera.com").split(" ");
 const MSET = new Set(MEDIAS);
+const BLOQUES = /(^|\.)(boursorama|yahoo|zonebourse|marketscreener|news\.google|google|msn|globenewswire|businesswire|prnewswire|accesswire|newsfilecorp|einpresswire|benzinga|marketbeat|tickerreport|etfdailynews|defenseworld|thelincolnianonline|dailypolitical|wkrb13|themarketsdaily|thecerbatgem|modernreaders|zolmax|com-unik|americanbankingnews|watchlistnews|investing|seekingalpha|stocktitan|streetinsider|tipranks|zacks|insidermonkey|gurufocus|simplywall|finanznachrichten|finanzen|ad-hoc-news|openpr|newswire|prweb|issuewire)\./i;
 const media = dom => { let d = String(dom || "").toLowerCase().replace(/^www\./, ""); while (d) { if (MSET.has(d)) return d; const i = d.indexOf("."); if (i < 0) break; d = d.slice(i + 1); if (!d.includes(".")) break; } return null; };
 const LANG = { fra: "fr", eng: "en", deu: "de", spa: "es", ita: "it", nld: "nl", swe: "sv", dan: "da", nor: "no", nob: "no", fin: "fi", por: "pt", jpn: "ja", kor: "ko", zho: "zh" };
 const PRESSE = []; let presseVus = new Set();
-function ajoutePresse({ d, t, u, site, l, src }) {
+function ajoutePresse({ d, t, u, site, l, src, sur = true }) {
   if (!t || !u || !d || NOW - Date.parse(d) > HISTO_P) return;
   const titre = String(t).replace(/\s+[|–—-]\s+[^|–—-]{2,40}$/, "").replace(/\s+/g, " ").trim();
   if (titre.length < 25 || titre.length > 260) return;
   const ids = inTitle(PI, titre); if (!ids.length) return;
   const nk = fold(titre).replace(/[^a-z0-9]/g, "").slice(0, 70); if (presseVus.has(nk) || presseVus.has(u)) return;
   presseVus.add(nk); presseVus.add(u);
-  PRESSE.push({ k: key(u), d, ids, t: titre.slice(0, 220), u, s: site, l, src });
+  PRESSE.push({ k: key(u), d, ids, t: titre.slice(0, 220), u, s: site, l, src, ...(sur ? {} : { a: 1 }) });
 }
 async function gdelt() {
   const last = ETAT.gdelt ? Date.parse(ETAT.gdelt) : NOW - 12 * 3600e3;
@@ -339,12 +341,12 @@ async function gdelt() {
         const csv = execFileSync("unzip", ["-p", `${tmp}/g.zip`], { maxBuffer: 400 * 1024 * 1024 }).toString("utf8");
         for (const line of csv.split("\n")) {
           if (!line) continue; rows++;
-          const c = line.split("\t"); const site = media(c[3]); if (!site) continue;
+          const c = line.split("\t"), dom = String(c[3] || "").toLowerCase().replace(/^www\./, ""); if (!dom || BLOQUES.test(dom + ".")) continue; const site = media(dom) || dom, sur = site !== dom || MSET.has(dom);
           const tt = (c[26] || "").match(/<PAGE_TITLE>(.*?)<\/PAGE_TITLE>/); if (!tt) continue;
           const lc = kind === "gkg" ? "eng" : ((c[25] || "").match(/srclc:(\w{3})/) || [])[1];
           const l = LANG[lc] || ""; if (!l) continue;
           const d = c[1] && c[1].length === 14 ? `${c[1].slice(0, 4)}-${c[1].slice(4, 6)}-${c[1].slice(6, 8)}T${c[1].slice(8, 10)}:${c[1].slice(10, 12)}:00Z` : null;
-          ajoutePresse({ d, t: tt[1].replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'"), u: c[4], site, l, src: "gdelt" });
+          ajoutePresse({ sur, d, t: tt[1].replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#39;|&#x27;/g, "'"), u: c[4], site, l, src: "gdelt" });
         }
       } catch (e) { log("GDELT", f, kind, e.message.slice(0, 80)); }
     }
@@ -379,14 +381,14 @@ const SOURCES = [
 function ecrire() {
   const minO = NOW - HISTO, minP = NOW - HISTO_P;
   // Presse rattachée à chaque entreprise
-  for (const a of PRESSE) for (const id of a.ids) { const S = store(id); if (!S.p.has(a.k)) S.p.set(a.k, { k: a.k, d: a.d, t: a.t, u: a.u, s: a.s, l: a.l, ...(a.ids.length > 1 ? { co: a.ids } : {}) }); }
+  for (const a of PRESSE) for (const id of a.ids) { const S = store(id); if (!S.p.has(a.k)) S.p.set(a.k, { k: a.k, d: a.d, t: a.t, u: a.u, s: a.s, l: a.l, ...(a.a ? { a: 1 } : {}), ...(a.ids.length > 1 ? { co: a.ids } : {}) }); }
   const all = [], press = [];
   let ecrits = 0;
   for (const c of U) store(c.id); // un fichier par entreprise suivie, même vide : la fiche et la synthèse le lisent sans erreur
   for (const [id, S] of Object.entries(STORE)) {
     let nr = 0;
     const o = dedoublonne([...S.o.values()].filter(x => Date.parse(x.d) >= minO)).sort((a, b) => b.d.localeCompare(a.d)).filter(x => !ROUTINE.has(x.c) || x.c === "agenda" || nr++ < 25).slice(0, 300);
-    const p = [...S.p.values()].filter(x => Date.parse(x.d) >= minP).sort((a, b) => b.d.localeCompare(a.d)).slice(0, 40);
+    const p = [...S.p.values()].filter(x => Date.parse(x.d) >= minP).sort((a, b) => (a.a ? 1 : 0) - (b.a ? 1 : 0) || b.d.localeCompare(a.d)).slice(0, 40).sort((a, b) => b.d.localeCompare(a.d));
     const file = new URL(`c/${id}.json`, DIR);
     const txt = JSON.stringify({ id, o, p }), prev = existsSync(file) ? readFileSync(file, "utf8") : "";
     if (prev !== txt) { writeFileSync(file, txt); ecrits++; }
@@ -400,7 +402,7 @@ function ecrire() {
   for (const [d, L] of Object.entries(byDay)) { const file = new URL(`j/${d}.json`, DIR), txt = JSON.stringify({ d, o: L }); if (!existsSync(file) || readFileSync(file, "utf8") !== txt) writeFileSync(file, txt); }
   // Fil récent : 4 derniers jours d'annonces non routinières, 2 jours de presse (dédoublonnée)
   const filO = all.filter(x => !ROUTINE.has(x.c) && NOW - Date.parse(x.d) < 4 * JOUR).slice(0, 1500);
-  const seenP = new Set(), filP = press.sort((a, b) => b.d.localeCompare(a.d)).filter(x => NOW - Date.parse(x.d) < 2 * JOUR && !seenP.has(x.k) && seenP.add(x.k)).slice(0, 400);
+  const seenP = new Set(), filP = press.sort((a, b) => b.d.localeCompare(a.d)).filter(x => !x.a && NOW - Date.parse(x.d) < 2 * JOUR && !seenP.has(x.k) && seenP.add(x.k)).slice(0, 400);
   const parSrc = {}; for (const x of all) parSrc[x.s] = (parSrc[x.s] || 0) + 1;
   const parReg = {}; for (const x of all) { const r = C[x.id].region; parReg[r] = (parReg[r] || 0) + 1; }
   const sources = SOURCES.map(([k, nom, detail, url, licence, type]) => ({ k, nom, detail, url, licence, type, at: ETAT[k] || null, ok: SRC[k] ? !SRC[k].erreur : !!ETAT[k], erreur: SRC[k] && SRC[k].erreur || null, n90: k === "gdelt" || k === "bbc" ? press.filter(x => (k === "bbc") === (x.s === "bbc.co.uk")).length : parSrc[k] || 0 }));
