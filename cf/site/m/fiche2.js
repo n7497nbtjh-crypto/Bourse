@@ -21,7 +21,8 @@ const FICHE2_CSS = `
 .f2-h{font-family:var(--serif);font-weight:800;font-size:19px;line-height:1.2;letter-spacing:-.01em;color:var(--ink);margin:0}
 .f2-h span{white-space:nowrap}
 .f2-note{font-size:12.5px;color:var(--grey)}
-#tvchart.f2-tv{height:300px;position:relative;border-radius:10px}
+#tvchart.f2-tv{height:340px;position:relative;border-radius:10px}
+.f2-nm{display:none}@media (max-width:760px){.f2-nd{display:none}.f2-nm{display:inline}}
 #tvchart .tradingview-widget-container{height:100%}
 #tvchart .tradingview-widget-container__widget{height:calc(100% - 20px)}
 #tvchart .tradingview-widget-copyright{font-size:11px;color:var(--light);text-align:right;padding:3px 0 0;line-height:16px}
@@ -144,7 +145,7 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
   .f2-lg2{display:none}.f2-rk{width:auto;padding:7px 12px}
   .fhero .fh-t h1{font-size:26px}
   .f2-chart{padding:12px 16px 8px}
-  #tvchart.f2-tv{height:230px;min-height:230px}
+  #tvchart.f2-tv{height:220px;min-height:220px}
   .f2-h{font-size:18px}
   .f2-mid .fh-vl,.f2-mid .fh-prof{padding:12px 16px}
   .f2tabs.qtabs{top:52px;padding:6px 0;transition:top .2s}
@@ -256,7 +257,7 @@ function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les 
         <div class="fh-tags"><span title="Code de l'action">${esc(s.ticker)}</span>${bourse ? `<span>${esc(bourse)}</span>` : ""}<span>${esc(regName(s))}</span><a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a>${pea != null ? `<span class="${pea ? "ok" : ""}">${pea ? "Éligible au PEA" : "Hors PEA : compte-titres"}</span>` : ""}</div>
         <div class="fh-act">${favBtn("c:" + s.id)}<a class="favbtn" href="${cmp}">Comparer à ses concurrents</a>${tab === "comprendre" ? "" : `<button type="button" class="favbtn fh-ia" data-fiche-ia>✦ Poser une question à l'IA</button>`}</div></div></div>
       <div class="px" id="pxh">${ficheCours(s)}</div></div>
-      ${!tab ? `<div class="f2-mid${courbe ? "" : " f2-noc"}${s.missing ? " f2-miss" : ""}">${courbe ? `<div class="f2-chart"><div class="f2-ch-h"><h2 class="f2-h">Le cours de l'action</h2><span class="f2-note">Cours différé · choisissez la période sous la courbe</span></div><div class="tv tv-chart f2-tv" id="tvchart" role="img" aria-label="Courbe du cours de ${esc(s.name)}"><div class="f2-tvph">Chargement de la courbe…</div></div></div>` : ""}${ficheSommaire(s)}</div>` : ""}
+      ${!tab ? `<div class="f2-mid${courbe ? "" : " f2-noc"}${s.missing ? " f2-miss" : ""}">${courbe ? `<div class="f2-chart"><div class="f2-ch-h"><h2 class="f2-h">Le cours de l'action</h2><span class="f2-note"><span class="f2-nd">Cours différé · choisissez la période au-dessus de la courbe</span><span class="f2-nm">Cours différé</span></span></div><div class="tv tv-chart f2-tv" id="tvchart" role="img" aria-label="Courbe du cours de ${esc(s.name)}"><div class="f2-tvph">Chargement de la courbe…</div></div></div>` : ""}${ficheSommaire(s)}</div>` : ""}
     </section>
     ${fiche2Onglets(s, tab)}`;
 }
@@ -287,7 +288,11 @@ function ficheGraphBox(s) { // l'étape « Son prix » renvoie à la courbe de l
 function ficheGraphique(s) {
   const el = $("#tvchart"); if (!el || el.dataset.on || !el.classList.contains("f2-tv")) return;
   el.dataset.on = "1";
-  const run = () => { if (el.isConnected && s.tv) tvChart(el, s.tv, s.name); };
+  const run = () => {
+    if (!el.isConnected || !s.tv) return;
+    tvChart(el, s.tv, s.name);
+    try { const sc = el.querySelector("script"), cfg = JSON.parse(sc.innerHTML); cfg.symbols = [[s.name, s.tv + "|12M"]]; if (matchMedia("(max-width:760px)").matches) cfg.chartOnly = true; sc.innerHTML = JSON.stringify(cfg); } catch (e) { } // la courbe s'ouvre sur un an, plus parlant qu'une séance
+  };
   if ("requestIdleCallback" in window) requestIdleCallback(run, { timeout: 1200 }); else setTimeout(run, 300);
 }
 
