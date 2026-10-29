@@ -1,27 +1,16 @@
 {
- "cours": [
-  "lignes du CSV publié 1263 taille 96506",
-  "en-tête id,c1,c2,c3,sym,price,chg,cur,cap,h52,l52,p1y,p3y,p5y",
-  "ligne 1 c:accor,EPA:AC,AMS:AC,EBR:AC,EPA:AC,45.99,1.93,EUR,10509083403,52,37.54,,,",
-  "ligne 2 c:air-liquide,EPA:AI,AMS:AI,EBR:AI,EPA:AI,174.24,-0.11,EUR,111423435082,182.26,140.78,,,",
-  "ligne 3 c:airbus,AMS:AIR,EPA:AIR,EBR:AIR,EPA:AIR,191.92,-0.43,EUR,153273638200,221.3,157.42,,,",
-  "ligne 500 c:transgene,EPA:TNG,AMS:TNG,EBR:TNG,EPA:TNG,0.74,8.09,EUR,188272792,1.5,0.67,,,",
-  "ligne 1000 c:kinder-morgan,NYSE:KMI,,,NYSE:KMI,33.56,-0.92,USD,74762118459,34.81,25.6,,,",
-  "ligne 1100 c:trip-com,HKG:9961,,,HKG:9961,309,-0.97,HKD,198772551000,613,294.6,,,",
-  "ligne 1140 c:embraer,BVMF:EMBJ3,,,BVMF:EMBJ3,97.29,0,BRL,72039830798,104.88,67.69,,,",
-  "ligne 1150 c:suncor,TSE:SU,,,TSE:SU,108.52,1.43,CAD,91724858523,112.8,54.55,,,",
-  "ligne 1160 e:amundi-msci-world-swap,AMS:CW8,EPA:CW8,EBR:CW8,EPA:CW8,716.57,0.11,EUR,,719.38,583.79,,,",
-  "ligne 1170 e:vanguard-sp500,ISE:VUSA,AMS:VUSA,EPA:VUSA,AMS:VUSA,131.6,0.17,EUR,,132.66,105.03,,,",
-  "ligne 1180 e:xtrackers-sp500-equal-weight,ETR:XDEW,FRA:XDEW,,,,,,,,,,,",
-  "ligne 1199 e:ishares-msci-india,ETR:QDV5,FRA:QDV5,,,,,,,,,,,",
-  "ligne 1200 e:franklin-ftse-india,ETR:FLXI,FRA:FLXI,,,,,,,,,,,",
-  "ligne 1201 e:ishares-msci-em-asia,ETR:CEBL,FRA:CEBL,,,,,,,,,,,",
-  "ligne 1261 i:ftse100,INDEXFTSE:UKX,,,INDEXFTSE:UKX,10694.5,0.07,,,10989.45,9423.9,,,",
-  "ligne 1262 i:nikkei,INDEXNIKKEI:NI225,,,INDEXNIKKEI:NI225,64703.87,1.13,,,72831.73,48235.3,,,",
-  "cours lus 1140",
-  "gf.csv lignes 2348",
-  "premier id de gf.csv absent de la feuille : rang 1158 c:atalaya-mining,LON:ATYM,,",
-  "lignes sans cours 122 exemples c:equinor,OSL:EQNR,,,,,,,,,,,, || c:dnb,OSL:DNB,,,,,,,,,,,, || c:norsk-hydro,OSL:NHY,,,,,,,,,,,, || c:telenor,OSL:TEL,,,,,,,,,,,, || c:mowi,OSL:MOWI,,,,,,,,,,,, || c:yara,OSL:YAR,,,,,,,,,,,, || c:kerry-group,ISE:KRZ,AMS:KRZ,EPA:KRZ,,,,,,,,,, || c:ryanair,ISE:RYA,AMS:RYA,EPA:RYA,,,,,,,,,,",
-  "onglets [] taille pubhtml 58188"
+ "sec": [
+  "[0s] fiches à lire 3203",
+  "[52s] fiches 300",
+  "[105s] fiches 600",
+  "[159s] fiches 900",
+  "[211s] fiches 1200",
+  "[264s] fiches 1500",
+  "[315s] fiches 1800",
+  "[365s] fiches 2100",
+  "[416s] fiches 2400",
+  "[466s] fiches 2700",
+  "[517s] fiches 3000",
+  "[550s] fini 3203 nouvelles fiches, total 5466"
  ]
 }
