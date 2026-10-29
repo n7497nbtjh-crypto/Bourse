@@ -83,7 +83,7 @@ export default {
     if (url.pathname === "/api/amf") return amf(request, U.filter(c => c.region === "FR").map(c => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, U);
-    if (url.pathname === "/api/cours") return cours(request, ctx);
+    if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (url.pathname === "/api/resume") return resume(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/assistant") return assistant(request, env);
