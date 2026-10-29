@@ -268,6 +268,7 @@ function accPourVousHTML(membre) {
 const accH = (kick, titre, lien, id) => `<div class="acc-h"><div><p class="kick">${kick}</p><h2${id ? ` id="${id}"` : ""}>${titre}</h2></div>${lien ? `<a class="more" href="${lien[0]}">${lien[1]} →</a>` : ""}</div>`;
 async function pageHome() {
   setTitle(""); setNav("home");
+  if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="hero3 acc-hero"><p class="kick">Comptes officiels</p><h1>La Bourse, comptes à l'appui.<br><em>Posez votre question.</em></h1></section></div>`; // affichage immédiat, même titre
   await Promise.all([PXP, loadAna()]);
   await accAttendre(accCharge(), 300); // fichiers lancés au démarrage : en général déjà là ; sinon squelette de même taille
   if (location.pathname !== "/") return;
