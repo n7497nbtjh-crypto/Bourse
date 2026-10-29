@@ -221,3 +221,39 @@ Trois niveaux, rien d'autre. Détails : `docs/ia.md`.
   `etf/<id>.json` : `releve` ; `/api/cours` : `d` (date du fichier) pour un titre absent de la feuille. Ces champs apparaissent au prochain passage des robots ; le site fonctionne sans eux (« date de récupération non conservée »).
 - « Vérifier une offre » (`outilVerifier`) : recherche sur le nom et le site seulement (plus sur la catégorie), domaine d'une adresse ou d'un e-mail reconnu ;
   trois issues : correspondance trouvée, recherche insuffisante (moins de 4 caractères, mots génériques, plus de 40 entrées), aucune correspondance (jamais présentée comme un gage de fiabilité).
+
+## Calculs et données (agent « donnees », vague « audit » du 29 octobre, module `cf/site/m/donnees.js`, chargé juste avant orchestre.js)
+Chantier A du plan de `docs/audit-2026-10.md` : P0-1, P0-2, P1-8 à P1-12 (côté données), P2-1. Aucun affichage ici : ce module ne fait que des calculs
+et expose des champs que les modules d'affichage utilisent pour dire d'où vient chaque chiffre (agent « provenance »).
+
+**Changement de format des données collectées** (`data/fetch_data.mjs`, `summary()`, collecte version 4). Les champs existants sont inchangés ; nouveaux champs :
+- `fyEnd` (« MM-JJ », date de clôture), `yearPrev` (exercice précédent **réellement présent**), `ageMois` (mois depuis la clôture), `stale` (vrai au-delà de 15 mois), `norme` (`"IFRS"` ou `"US GAAP"`).
+- `dps` ne contient plus que le dividende **publié** ; l'estimation est dans `dpsEst` (comme dans les fiches détaillées depuis toujours). Avant, `dps = dps ?? dpsEst` fondait les deux.
+- `netDebtBaux` (dette nette, dettes locatives comprises), `leases` (dettes locatives IFRS 16), `capex` (investissements, plus supprimé après le calcul du flux disponible).
+- Fiches détaillées (`cf/site/data/societes/<id>.json`) : `tags.net`, `tags.debt`, `tags.norme` (une entrée par exercice, étiquette réellement retenue) et `fin.tax`, `fin.pretax`.
+- Les fichiers déjà en ligne restent lisibles : le module détecte l'ancien format (absence de la clé `stale`) et répond « nature inconnue » au lieu d'affirmer « publié ».
+
+**Fonctions de `index.html` redéclarées** (ne pas les redéfinir ailleurs) : `ratios`, `computeMedians`, `medInd`, `valo`, `computePE`, `figuresOf`.
+`INDI.taille` est remplacé (taux BCE) et trois entrées sont ajoutées : `ev_ebitda`, `rendement_fcf`, `cours_valeur_comptable`.
+
+**À appeler depuis un module d'affichage**
+- `donAge(c)` → `{ year, fyEnd, mois, stale, connue, approx }`. `stale` = comptes de plus de 15 mois. `connue:false` = on ne sait pas (ancien format sans date de clôture).
+- `donDps(c)` → `{ v, nature: "publie" | "estime" | "inconnue" | null }`. À afficher : « estimé » quand `nature === "estime"`.
+- `donDette(c)` → `{ v, baux, leases, def, norme }` : `def` dit ce qui entre dans la dette nette, `baux` la version dettes locatives comprises.
+- `donMed(secteur)` → `{ n, nPerime, annees: [min, max] }` : effectif de la médiane, nombre d'entreprises écartées pour comptes anciens, exercices couverts.
+  `donMedInd(secteur, indicateur, region)` : même médiane limitée à une région.
+- `donCroissance(s)` → `{ g1, multi, ans, verif }` : `g1` seulement si les deux exercices se suivent ; sinon `multi` sur `ans` années.
+- `donInd(c)` → `{ evEbitda, fcfYield, pb, evBaux, notes }` : indicateurs **calculés**, `notes` donne la formule et ses limites.
+- `valo(c)` rend en plus `perime`, `ageMois`, `peIndispo` / `yldIndispo` (`"comptes-anciens"`) et `yldNature`
+  (`"verses"` = dividendes versés ÷ capitalisation, `"dps-publie"`, `"dps-estime"`, `"dps-inconnue"`).
+- `ratios(s)` rend en plus `gMulti`, `gAns`, `gVerif`, `ngMulti`, `ngAns`, `levBaux`.
+- `figuresOf(c)` rend en plus `yearPrev`, `consecutif`, `cagr3`, `cagr5` (`{ v, de, a, ans }`, seulement sur exercices consécutifs), `capex`, `leases`, `netDebtBaux`,
+  `dpsNature`, `tagNet`, `tagDette`, `norme`, `stale`, `ageMois`.
+
+**Règles tenues ici**
+- Les entreprises aux comptes périmés n'entrent plus dans les médianes de secteur, dans la médiane de PER, ni dans les classements : `donRetenue(c)` est le filtre.
+- Pour elles, `valo()` ne rend plus de PER ni de rendement (un cours de 2026 rapporté à un bénéfice de 2014 ne veut rien dire) ; la capitalisation du jour reste disponible.
+- Les montants en euros passent par les taux de référence de la BCE (`cf/site/data/fx.json`), recopiés dans `FXE` par `donFxSync()` : `caEur()` et `toEur()` s'en servent sans changement.
+- ETF : `pea` peut maintenant valoir `null` dans `etf.json` (« l'émetteur ne le dit pas »), à ne jamais afficher comme « Non » (`data/etf.mjs`, `propreCat`).
+
+Tests : `node tests/t_donnees.mjs` (71 vérifications, dont les formules recoupées avec les comptes collectés de LVMH, Apple et Microsoft), `node tests/t_sec.mjs`, `NO_SLEEP=1 node tests/t_esef.mjs`.

@@ -23,13 +23,14 @@ export const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "gith
 const sleep = ms => process.env.NO_SLEEP ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
 
 export async function getJSON(fetchFn, url, accept = "application/json") {
-  for (let attempt = 1; attempt <= 4; attempt++) {
+  const MAX = 6; // 6 essais : filings.xbrl.org renvoie souvent 429 (limite de débit) en milieu de collecte
+  for (let attempt = 1; attempt <= MAX; attempt++) {
     let r;
     try { r = await fetchFn(url, { headers: { "user-agent": UA, accept } }); }
-    catch (e) { if (attempt < 4) { await sleep(2000 * attempt); continue; } throw e; }
+    catch (e) { if (attempt < MAX) { await sleep(2000 * attempt); continue; } throw e; }
     if (r.ok) return r.json();
     if (r.status === 404) return null;
-    if (attempt < 4) await sleep((r.status === 429 ? 5000 : 2000) * attempt);
+    if (attempt < MAX) await sleep((r.status === 429 ? 15000 : 2000) * attempt);
     else throw new Error(`${r.status} sur ${url}`);
   }
 }
@@ -40,7 +41,27 @@ export async function leiFromIsin(fetchFn, isin, name) {
   if ((!j || !j.data || !j.data.length) && name) { // repli : recherche par nom légal dans le pays de l'ISIN
     j = await getJSON(fetchFn, `https://api.gleif.org/api/v1/lei-records?filter[entity.legalName]=${encodeURIComponent(name)}&filter[entity.legalAddress.country]=${isin.slice(0, 2)}&filter[entity.status]=ACTIVE`, "application/vnd.api+json");
   }
-  const rec = j && j.data && j.data[0];
+  let rec = j && j.data && j.data[0];
+  // Dernier repli : recherche approchée du nom (certains ISIN ne figurent pas dans la table ISIN de GLEIF,
+  // Campari par exemple). On n'accepte le résultat que si le nom concorde ET si le pays du siège
+  // est celui de l'ISIN : une erreur d'identifiant afficherait les comptes d'une autre société.
+  if (!rec && name && isin) {
+    const q = await getJSON(fetchFn, `https://api.gleif.org/api/v1/fuzzycompletions?field=entity.legalName&q=${encodeURIComponent(name)}`, "application/vnd.api+json");
+    const cands = ((q && q.data) || []).map(d => [d.relationships && d.relationships["lei-records"] && d.relationships["lei-records"].data && d.relationships["lei-records"].data.id, d.attributes && d.attributes.value]).filter(x => x[0] && x[1]);
+    for (const [lei, legal] of cands.slice(0, 5)) {
+      if (!nameMatches(name, legal)) continue;
+      const r = await getJSON(fetchFn, `https://api.gleif.org/api/v1/lei-records/${lei}`, "application/vnd.api+json");
+      const ent = r && r.data && r.data.attributes && r.data.attributes.entity;
+      if (!ent) continue;
+      // Le pays doit être celui de l'ISIN : pays d'immatriculation (Campari est immatriculée aux Pays-Bas
+      // avec un siège en Italie), siège social ou adresse légale.
+      const p = isin.slice(0, 2);
+      const pays = [String(ent.legalJurisdiction || "").slice(0, 2), ent.legalAddress && ent.legalAddress.country, ent.headquartersAddress && ent.headquartersAddress.country];
+      if (!pays.includes(p)) continue;
+      VERIF.push(`${name} : identifiant LEI trouvé par recherche approchée du nom (« ${legal} », ${lei}), l'ISIN ${isin} n'est pas dans la table de GLEIF`);
+      return { lei, legalName: ent.legalName && ent.legalName.name };
+    }
+  }
   return rec ? { lei: rec.id, legalName: rec.attributes && rec.attributes.entity && rec.attributes.entity.legalName && rec.attributes.entity.legalName.name } : null;
 }
 
@@ -106,7 +127,9 @@ export async function collectSec(fetchFn, c) {
 const words = s => String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length >= 3 && !["the", "group", "groupe", "holding", "societe", "company", "spa", "plc"].includes(w));
 export function nameMatches(name, legal) { const a = new Set(words(name)); return !legal || words(legal).some(w => a.has(w)) || words(name).some(w => String(legal).toLowerCase().replace(/[^a-z0-9]/g, "").includes(w)); }
 export const VERIF = [];
-export const VERSION = 3; // à augmenter quand la lecture des comptes change : force une nouvelle lecture
+export const VERSION = 4; // à augmenter quand la lecture des comptes change : force une nouvelle lecture
+// v4 (29/10/2026) : les deux taxonomies des dépôts SEC sont lues (sociétés passées des normes américaines aux IFRS),
+// dettes locatives, investissements, impôt et étiquettes retenues collectés en plus.
 
 
 // Dernier exercice dont les comptes devraient être publiés : clos depuis plus de quatre mois (fyEnd = "MM-JJ")
@@ -173,9 +196,17 @@ export async function collectOne(fetchFn, c) {
   };
 }
 
+// Ancienneté des comptes : nombre de mois écoulés depuis la clôture du dernier exercice connu.
+// Au-delà de STALE_MOIS, les comptes ne décrivent plus l'entreprise d'aujourd'hui : le site doit le dire
+// et ne plus les faire entrer dans les médianes de secteur.
 // Résumé pour la liste (dernier exercice disponible)
+// Provenance (agent « provenance ») : dpsE = dividende par action estimé, clos = date de clôture, maj = date de lecture.
+// Calculs et données (agent « donnees », 29/10/2026) : yearPrev = exercice précédent réellement présent
+// (la croissance « sur un an » n'a de sens que si les deux exercices se suivent), netDebtBaux = dette nette
+// dettes locatives comprises, leases = dettes locatives, capex = investissements, norme = référentiel comptable.
 export function summary(c) {
   const L = c.years.length - 1, f = c.fin, at = (k, i = L) => f[k] && i >= 0 ? f[k][i] : null;
+  const tag = t => (c.tags && c.tags[t] && L >= 0 ? c.tags[t][L] ?? null : null);
   return {
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, currency: c.currency,
     year: c.years[L] ?? null, ca: at("ca"), caPrev: at("ca", L - 1), ebit: at("ebit"), net: at("net"), netPrev: at("net", L - 1), equity: at("equity"),
@@ -184,6 +215,9 @@ export function summary(c) {
     ...(at("dps") == null && at("dpsEst") != null ? { dpsE: 1 } : {}),
     clos: (c.sources && c.sources[0] && /^\d{4}-\d{2}-\d{2}$/.test(c.sources[0].periodEnd || "") ? c.sources[0].periodEnd : c.years[L] != null && /^\d{2}-\d{2}$/.test(c.fyEnd || "") ? `${c.years[L]}-${c.fyEnd}` : null),
     maj: c.updated || null,
+    yearPrev: L >= 1 ? c.years[L - 1] ?? null : null,
+    ...(at("netDebtBaux") != null ? { netDebtBaux: at("netDebtBaux") } : {}), ...(at("leases") != null ? { leases: at("leases") } : {}),
+    ...(at("capex") != null ? { capex: at("capex") } : {}), ...(tag("norme") ? { norme: tag("norme") } : {}),
   };
 }
 

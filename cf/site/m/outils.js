@@ -97,7 +97,7 @@ const OUT_CL = {
 };
 function outClRows(k, f) {
   const S = outStats();
-  let l = R.companies.filter(c => !c.missing && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)) && outTailleOk(c, f.t));
+  let l = R.companies.filter(c => !c.missing && !outVieux(c) && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)) && outTailleOk(c, f.t));
   const val = [];
   for (const c of l) {
     const st = S[c.id], m = ratios(c), q = quick(c);
@@ -206,7 +206,7 @@ function outDivCal(list0, all) {
     return `<div class="out-ev"><div class="out-d"><b>${+d}</b>${MOIS[+m - 1]}</div><a class="out-evc" href="/entreprise/${c.id}">${logo(c, 30)}<span><b>${esc(c.name)}</b><small>${esc(e.label)}</small></span></a><span class="out-k out-k-${k}" title="${esc(OUT_DK[k][1])}">${OUT_DK[k][0]}</span><span class="out-evv">${amt ? `<b class="num">${esc(amt)}</b>` : ""}${v && v.yld ? `<small>rend. ${pct(v.yld, 1, false)}</small>` : ""}</span>${e.source ? `<a class="out-src" href="${esc(e.source)}" target="_blank" rel="noopener" title="Source : ${esc(e.source.replace(/^https?:\/\/(www\.)?/, "").split("/")[0])}">source</a>` : ""}</div>`; }).join("")}</div>`).join("") + (rest > 0 ? `<button type="button" class="btn ghost out-more" id="out-more">Voir les ${rest} autres dates</button>` : "");
 }
 function outDivTop(f) {
-  return R.companies.filter(c => !c.missing && (!f.cv || (outCouv(c) || {}).k === "oui") && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)))
+  return R.companies.filter(c => !c.missing && !outVieux(c) && (!f.cv || (outCouv(c) || {}).k === "oui") && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)))
     .map(c => ({ c, v: valo(c) })).filter(x => x.v && x.v.yld > 0.001 && x.v.capE > 2e8).sort((a, b) => b.v.yld - a.v.yld);
 }
 function outDivRow(x, i, S) {
@@ -278,7 +278,7 @@ async function pageDividendes() {
     const top = outDivTop(f);
     $("#out-topb").innerHTML = top.length ? `<div class="out-tw"><table class="out-tb"><thead><tr><th></th><th>Entreprise</th><th>Rendement</th><th>Couvert ?</th><th>Relevé</th></tr></thead><tbody>${top.slice(0, 12).map((x, i) => outDivRow(x, i, S)).join("")}</tbody></table></div>
       <p class="out-warn">${f.cv ? "Seuls les dividendes payés avec moins de 90 % du bénéfice sont listés. Décochez la case pour voir tous les rendements, y compris ceux qui dépassent le bénéfice." : "Un rendement très élevé vient souvent d'un cours qui a beaucoup baissé ou d'un dividende exceptionnel. Regardez s'il est couvert par le bénéfice."}</p>` : `<div class="empty">Aucune entreprise avec ces filtres.</div>`;
-    const up = R.companies.filter(c => !c.missing && S[c.id] && S[c.id].divUp >= 2 && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)) && (!f.fav || favIds.has(c.id)))
+    const up = R.companies.filter(c => !c.missing && !outVieux(c) && S[c.id] && S[c.id].divUp >= 2 && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)) && (!f.fav || favIds.has(c.id)))
       .map(c => ({ c, y: (valo(c) || {}).yld || 0 })).filter(x => x.y >= 0.01).sort((a, b) => S[b.c.id].divUp - S[a.c.id].divUp || b.y - a.y).map(x => x.c).slice(0, 12);
     $("#out-upb").innerHTML = up.length ? `<div class="out-list out-list-s">${up.map((c, i) => { const st = S[c.id], v = valo(c); return `<a class="out-row" href="/entreprise/${c.id}"><span class="out-rk">${i + 1}</span>${logo(c, 30)}<span class="out-rt"><b>${esc(c.name)}</b><small>Relevé ${outAns(st.divUp)}${st.dCagr != null ? ` · ${sgn(st.dCagr, 1)} par an` : ""}${v && v.yld ? ` · rend. ${pct(v.yld, 1, false)}` : ""}</small></span><span class="out-rv">${outCouvTag(c)}</span></a>`; }).join("")}</div>` : `<div class="empty">Aucune entreprise avec ces filtres.</div>`;
   };
@@ -292,7 +292,7 @@ async function pageDividendes() {
   $("#out-sm").oninput = e => { sim.m = e.target.value; drawSim(); };
   $$(".out-acct button", app).forEach(b => b.onclick = () => { sim.a = b.dataset.a; $$(".out-acct button", app).forEach(x => x.classList.toggle("on", x === b)); drawSim(); });
   const q = $("#out-sq"), sg = $("#out-ss");
-  const pool = R.companies.filter(c => !c.missing && c.divPaid > 0.5);
+  const pool = R.companies.filter(c => !c.missing && !outVieux(c) && c.divPaid > 0.5);
   q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { sg.hidden = true; return; }
     const l = pool.filter(c => norm(c.name).includes(t) || norm(c.ticker || "") === t).slice(0, 6);
     sg.innerHTML = l.length ? l.map(c => `<button type="button" data-id="${c.id}">${logo(c, 22)}<span>${esc(c.name)}</span><small>${(() => { const v = valo(c); return v && v.yld ? pct(v.yld, 1, false) : ""; })()}</small></button>`).join("") : `<p class="muted">Aucune entreprise versant un dividende ne correspond.</p>`; sg.hidden = false; };
@@ -300,6 +300,10 @@ async function pageDividendes() {
   sg.onclick = e => { const b = e.target.closest("button[data-id]"); if (!b) return; sim.c = RBY[b.dataset.id]; q.value = sim.c.name; sg.hidden = true; drawSim(); };
   if (!OUT_DOCCLICK) { OUT_DOCCLICK = true; document.addEventListener("click", e => { const g = $("#out-ss"); if (g && !e.target.closest(".out-q")) g.hidden = true; }); }
 }
+
+// Comptes anciens (plus de 15 mois) : jamais dans un classement, une découverte ni une comparaison
+// recalculée. La règle est celle de m/donnees.js (donVieux), chargé après ce module.
+function outVieux(c) { try { return typeof donVieux === "function" ? donVieux(c) : false; } catch (e) { return false; } }
 
 /* ---------- 3. Découvertes : une sélection quotidienne, diversifiée, sans biais vers les grandes valeurs ----------
    Chaque jour : 6 entreprises (une par « case » : petite valeur éligible au PEA, petite ou moyenne valeur européenne,
@@ -323,7 +327,7 @@ function outPool() {
   if (OUT_POOL && OUT_POOLK === k) return OUT_POOL;
   const famous = new Set(OUT_PRESETS.flatMap(p => p.ids)), y = new Date().getFullYear(), l = [];
   for (const c of R.companies) {
-    if (c.missing || !c.desc || famous.has(c.id) || !(c.year >= y - 2)) continue;
+    if (c.missing || !c.desc || famous.has(c.id) || !(c.year >= y - 2) || outVieux(c)) continue;
     const q = quick(c); if (!q || q.fort + q.moyen + q.vig < 5 || q.fort < 2) continue;
     const T = typeof recoTaille === "function" ? recoTaille(c) : null; if (!T || T.t === "large") continue;
     const style = recoStyle(c);
@@ -519,7 +523,7 @@ const OUT_PRESETS = [
   { th: "immo", ids: ["verizon", "att", "t-mobile-us"], t: "Les opérateurs américains", d: "Trois opérateurs qui se partagent le marché américain." },
 ];
 function outCalcPresets() { // comparaisons recalculées à chaque visite, à partir des cours et des comptes
-  const L = R.companies.filter(c => !c.missing).map(c => ({ c, v: valo(c), m: ratios(c) })).filter(x => x.v && x.v.capE > 0);
+  const L = R.companies.filter(c => !c.missing && !outVieux(c)).map(c => ({ c, v: valo(c), m: ratios(c) })).filter(x => x.v && x.v.capE > 0);
   const fr = L.filter(x => x.c.region === "FR"), big = fr.filter(x => x.v.capE >= 1e10);
   const P = [];
   const add = (l, t, d) => { if (l.length >= 2) P.push({ th: "calc", ids: l.slice(0, 3).map(x => x.c.id), t, d, calc: true }); };

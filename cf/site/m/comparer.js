@@ -376,7 +376,7 @@ const CMPR_D = {
   dividende: [
     ["Rendement", "rdt", F => F.v && F.v.yld != null ? { txt: pct(F.v.yld, 1, false), sub: cmprMedSub(medInd(F.c.sector, "rendement"), x => pct(x / 100, 1, false)), plain: true } : null, true],
     ["Part du bénéfice versée", "payout", F => { const it = F.items.payout; return it ? { txt: String(it.value), lv: it.lv !== "na" ? it.lv : null, sub: it.lv === "na" ? "pas de dividende" : cmprMedSub(F.med.payout, x => pct(x, 0, false)) } : null; }],
-    ["Dividende par action", "dps", F => F.ok && F.c.dps > 0 ? { txt: eur(F.c.dps, 2, F.cur), sub: `versé pendant l'exercice ${F.c.year}`, plain: true } : null],
+    ["Dividende par action", "dps", F => F.ok && F.c.dps > 0 ? { txt: eur(F.c.dps, 2, F.cur), sub: `versé pendant l'exercice ${F.c.year}${typeof donDps === "function" && donDps(F.c).estime ? ", estimé" : ""}`, plain: true } : null],
     ["Total versé aux actionnaires", "divverses", F => F.ok && F.c.divPaid != null ? { txt: F.c.divPaid < 0.5 ? "Aucun" : big(F.c.divPaid, F.cur), plain: true } : null],
     ["Place dans son secteur", "mediane", F => cmprAxis(F, CMPR_AXE.dividende)],
   ],

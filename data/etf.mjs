@@ -345,6 +345,10 @@ const MAJ = ["ter", "pea", "encours", "replication", "methode", "distribution", 
 // détails lus seulement par la fiche, rangés dans cf/site/data/etf/<id>.json (clé info) pour garder etf.json léger
 const DETAIL = new Set(["nomOfficiel", "indexOfficiel", "url", "src", "cotations", "contrepartie", "nIndex"]);
 const propre = o => Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && v !== null && !k.startsWith("_") && !DETAIL.has(k)));
+// Pour les ETF qui viennent seulement du catalogue : « pea » doit rester même quand il vaut null.
+// Un null signifie « l'émetteur ne dit pas », ce qui n'est pas la même chose que « non éligible » :
+// sans cette exception la clé disparaissait et la page affichait « Non ».
+const propreCat = o => Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && (v !== null || k === "pea") && !k.startsWith("_") && !DETAIL.has(k)));
 const choisis = ETF.map(e => { const c = parIsin[e.isin]; const m = c ? propre(Object.fromEntries(MAJ.map(k => [k, c[k]]))) : {}; const r = { ...e, ...m }; if (!r.compo && RES[e.id]) r.compo = RES[e.id]; return r; });
 const vus = new Set(ETF.map(e => e.isin));
-export default [...choisis, ...CAT.filter(e => !vus.has(e.isin)).map(propre)];
+export default [...choisis, ...CAT.filter(e => !vus.has(e.isin)).map(propreCat)];
