@@ -1,11 +1,13 @@
 // Feuille Google « bilan - cours des actions » (GOOGLEFINANCE), publiée en CSV : lecture seule, cours différés d'environ 20 minutes.
 export const COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5yppVXXRcMpjRNx03oAqNSdNU4JCga490IjxCB7V-tHsichFZVB6gzpNmDn4htDrRA/pub?output=csv";
-// Seconde feuille (entreprises au-delà des ~1 260 lignes que la première sait calculer), lit cf/site/data/gf2.csv.
-// À créer une fois par Romain : 1. ouvrir la feuille « bilan - cours des actions » ; 2. Fichier > Créer une copie ;
-// 3. dans la copie, remplacer « gf.csv » par « gf2.csv » dans la formule IMPORTDATA de la cellule A1 ; 4. Fichier > Partager >
-// Publier sur le Web > feuille entière, format CSV > Publier ; 5. coller le lien obtenu ci-dessous (ou le donner à Claude).
-export const COURS_CSV2 = "";
-export const COURS_CSVS = [COURS_CSV, COURS_CSV2].filter(Boolean);
+// Une feuille ne calcule qu'environ 1 260 titres : la liste est découpée en gf.csv, gf2.csv, gf3.csv… (data/gf.mjs).
+// Pour chaque fichier gfN.csv à partir de gf2.csv, Romain crée une fois une copie de la feuille :
+//   1. ouvrir la feuille « bilan - cours des actions » ; 2. Fichier > Créer une copie (nom : « bilan - cours 2 », « bilan - cours 3 »…) ;
+//   3. dans la copie, cellule A1, remplacer « gf.csv » par « gf2.csv » (ou gf3.csv…) dans la formule IMPORTDATA, Entrée ;
+//   4. Fichier > Partager > Publier sur le Web > « Feuille entière », format « Valeurs séparées par des virgules (.csv) » > Publier ;
+//   5. ajouter le lien obtenu à la liste ci-dessous, dans l'ordre (ou le donner à Claude).
+export const COURS_CSV_SUITE = [];
+export const COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
 // Lecture du CSV publié : { "c:lvmh": { s, p, chg, cur, cap, h52, l52, p1y, p3y, p5y }, … }
 export function parseCours(txt) {
   const rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g;
