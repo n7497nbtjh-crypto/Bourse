@@ -38,7 +38,9 @@ jobs:
           git add data/etf_catalogue.json data/etf_compo_choisis.json cf/site/data/etf
           git diff --cached --quiet && exit 0
           git commit -m "ETF : catalogue et compositions du $(date +%F)"
-          for i in 1 2 3 4 5; do git pull --rebase -X theirs -q && git push && break; sleep 10; done
+          git checkout -- . && git clean -fdq -- cf/site   # fichiers refaits par build.mjs : la mise en ligne les reconstruit
+          ok=0; for i in 1 2 3 4 5; do git pull --rebase -X theirs -q && git push && ok=1 && break; sleep 10; done
+          [ "$ok" = 1 ] || { echo "::error::enregistrement impossible"; exit 1; }
       - name: Mise en ligne
         env:
           GH_TOKEN: ${{ github.token }}
