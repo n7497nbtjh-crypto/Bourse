@@ -148,7 +148,7 @@ function actuFicheDetail(el, s) {
     if (!o.length) { actuSecours(box, s); }
     else {
       let f = o.some(actuImp) ? "imp" : "tout", n = 15;
-      const draw = () => { const L = o.filter(it => actuType(it, f)); box.innerHTML = `<div class="chips nfil">${ACTU_TYPES.filter(([k]) => k === "imp" || k === "tout" || o.some(it => actuType(it, k))).map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>
+      const draw = () => { const L = o.filter(it => actuType(it, f)); box.innerHTML = `<div class="chips nfil scroll-x" style="flex-wrap:nowrap">${ACTU_TYPES.filter(([k]) => k === "imp" || k === "tout" || o.some(it => actuType(it, k))).map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>
         ${actuListHTML(L.slice(0, n), { showCo: false, vide: "Aucune annonce de ce type ces 90 derniers jours." })}${L.length > n ? `<button type="button" class="btn ghost ax-more" data-more>Afficher plus (${L.length - n})</button>` : ""}`; };
       draw();
       box.onclick = e => { const b = e.target.closest(".nfil button"); if (b) { f = b.dataset.f; n = 15; draw(); return; } if (e.target.closest("[data-more]")) { n += 20; draw(); } };
@@ -206,8 +206,8 @@ function pageActus() {
   app.innerHTML = `<h1 class="pagetitle">Actualité des entreprises</h1><p class="pagesub">Les annonces officielles des entreprises suivies, classées, chiffrées et expliquées, et les titres de la presse. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
     <div id="ax-tiles"></div>
     <section class="panel"><div class="filters" id="ax-vue"><button type="button" data-v="annonces">Annonces officielles</button><button type="button" data-v="presse">Dans la presse</button></div>
-      <div class="ax-bar"><div class="chips" id="ax-zone">${ACTU_ZONES.map(([k, l]) => `<button type="button" data-z="${k}">${l}</button>`).join("")}</div>
-        <div class="chips" id="ax-type">${ACTU_TYPES.map(([k, l]) => `<button type="button" data-t="${k}">${l}</button>`).join("")}</div>
+      <div class="ax-bar"><div class="chips scroll-x" id="ax-zone">${ACTU_ZONES.map(([k, l]) => `<button type="button" data-z="${k}">${l}</button>`).join("")}</div>
+        <div class="chips scroll-x" id="ax-type">${ACTU_TYPES.map(([k, l]) => `<button type="button" data-t="${k}">${l}</button>`).join("")}</div>
         <div class="ax-row"><select id="ax-sect" aria-label="Secteur"><option value="">Tous les secteurs</option>${Object.entries(R.sectors).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select><input id="ax-q" type="search" placeholder="Filtrer par entreprise" aria-label="Filtrer par entreprise"></div></div>
       <div class="pb" id="ax-feed"><div class="ax-empty">Chargement…</div></div><div class="src" id="ax-srcs"></div></section>`;
   $("#ax-sect").value = st.sect;
