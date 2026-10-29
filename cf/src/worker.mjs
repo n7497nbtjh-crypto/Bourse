@@ -21,7 +21,7 @@ const TOOLS = { epargne: "Simulateur d'épargne", interets: "Simulateur d'éparg
 const BY = Object.fromEntries(INDEX.map(c => [c.id, c]));
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-export function meta(path) {
+export function meta(path, q = null) {
   const p = path.replace(/\/+$/, "") || "/";
   const base = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1");
   let m;
@@ -46,7 +46,12 @@ export function meta(path) {
   if (p === "/lexique") return { title: `Lexique · ${SITE}`, desc: "PER, rendement, marge, dette, volatilité : chaque chiffre de la Bourse expliqué simplement, avec ses limites." };
   if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace · ${SITE}`, desc: "Votre bilan de la semaine, vos notifications et vos listes, sur tous vos appareils." };
   if (p === "/favoris") return { title: `Mes favoris · ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres clés, prochaines dates et presse." };
-  if (p === "/comparer") return { title: `Comparer des entreprises · ${SITE}`, desc: "Ventes, marge, bénéfice, dette et dividende de plusieurs entreprises côte à côte, expliqués simplement." };
+  if (p === "/comparer") { // lien partagé : le titre nomme les entreprises comparées
+    const cos = String((q && q.get("ids")) || "").split(",").map(id => BY[id]).filter(Boolean).slice(0, 5);
+    if (cos.length >= 2) { const n = cos.map(c => c.name), l = n.slice(0, -1).join(", ") + " et " + n.at(-1);
+      return { title: `${l} : la comparaison · ${SITE}`, desc: `${l} comparées critère par critère : taille, croissance, rentabilité, solidité financière, prix en Bourse et dividende, face à la médiane de leur secteur. Chiffres tirés des comptes officiels, sans conseil.` }; }
+    return { title: `Comparer des entreprises · ${SITE}`, desc: "Le verdict d'abord, critère par critère : taille, croissance, rentabilité, solidité, prix en Bourse et dividende de plusieurs entreprises, face à la médiane de leur secteur." };
+  }
   if (p === "/pea-cto") return { title: `PEA, compte-titres ou assurance-vie : lequel choisir · ${SITE}`, desc: "Ce qu'on peut acheter dans chaque compte, les plafonds et l'impôt sur les gains en 2026, avec un exemple chiffré." };
   if (p === "/dividendes") return { title: `Calendrier des dividendes · ${SITE}`, desc: "Les prochaines dates de détachement et de paiement des dividendes, avec leur source, à ajouter à votre agenda." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse · ${SITE}`, desc: "Un parcours en trois étapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
@@ -82,7 +87,7 @@ export default {
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
-    const info = meta(url.pathname);
+    const info = meta(url.pathname, url.searchParams);
     if (!info) {
       // Fichier existant (données, scripts) ou vraie page 404
       const r = await env.ASSETS.fetch(request);

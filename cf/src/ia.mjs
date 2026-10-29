@@ -132,6 +132,17 @@ Règles :
 - Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses onglets : « Vue d'ensemble », « Critère par critère », « Tous les chiffres », « Actualités », ou le bouton « Comparer à ses concurrents ».
 - Pas de listes à puces, pas de tirets cadratins.
 ${REGLES}`;
+// Comparaison de plusieurs entreprises (page /comparer, étape « Concurrents » de la fiche) : le navigateur envoie les chiffres et le verdict déjà calculé.
+export const SYS_CMP = `Tu expliques, en français, la comparaison de plusieurs entreprises cotées à une personne qui débute en Bourse. Tu reçois des faits en JSON : pour chaque entreprise, les chiffres de son dernier exercice publié (ventes en euros, croissance, marges, rentabilité des capitaux propres, dette, prix en Bourse rapporté au bénéfice, dividende), la médiane de son secteur, et le verdict déjà calculé par le site critère par critère.
+Règles :
+- N'utilise que ces faits. N'invente aucun chiffre, aucune cause, aucune actualité. Cite les chiffres avec l'année de leur exercice.
+- 150 à 230 mots, en trois courts paragraphes précédés exactement de ces titres, chacun sur sa propre ligne : « En résumé », « Ce qui les distingue », « Ce qu'il faut regarder ensuite ».
+- Explique ce que chaque écart veut dire concrètement (par exemple : une marge plus élevée signifie que l'entreprise garde plus d'argent sur chaque vente) et ce qui peut l'expliquer, en restant prudent (métier différent, taille, pays, année d'exercice différente).
+- Signale quand les exercices ne portent pas sur la même année, quand une entreprise est une banque ou un assureur (la marge et la dette ne s'y lisent pas pareil) ou quand des chiffres manquent.
+- Un prix bas par rapport au bénéfice n'est pas une bonne affaire en soi ; un prix élevé traduit souvent des attentes de croissance plus fortes.
+- Aucun conseil d'achat ou de vente, aucun classement de la « meilleure action », aucune prédiction de cours. Vouvoie toujours le lecteur.
+- Ne cite jamais le nom d'un champ JSON. Pas de listes à puces, pas de tirets cadratins.
+${REGLES}`;
 export async function assistant(request, env) {
   if (!env || !env.DB || !env.AI) return json({ error: "L'assistant est indisponible pour le moment." }, 503);
   if (request.method !== "POST") return json({ error: "Méthode non prise en charge." }, 405);
@@ -139,14 +150,14 @@ export async function assistant(request, env) {
   let b; try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible." }, 400); }
   const question = String(b.question || "").replace(/\s+/g, " ").trim().slice(0, 300);
   if (question.length < 5) return json({ error: "Posez une question un peu plus précise." }, 400);
-  const faits = JSON.stringify(b.faits || {}).slice(0, 9000);
-  const key = "assist2:" + [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
+  const faits = JSON.stringify(b.faits || {}).slice(0, 9000), cmp = b.mode === "comparaison"; // comparaison : page /comparer et étape « Concurrents » de la fiche
+  const key = (cmp ? "cmp1:" : "assist2:") +[...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(question.toLowerCase() + "|" + faits)))].slice(0, 12).map(x => x.toString(16).padStart(2, "0")).join("");
   const hit = await env.DB.prepare(`SELECT txt FROM resumes WHERE u = ?`).bind(key).first();
   if (hit) return json({ txt: hit.txt, cache: true });
   const q = await quota(request, env, "assistant"); if (!q.ok) return quotaError(q, "questions à l'assistant");
   if (!(await budget(env.DB, env))) return json({ error: "L'assistant a atteint son nombre de réponses pour aujourd'hui. Réessayez demain." }, 429);
   try {
-    const out = { response: await rediger(env, { systeme: SYS_ASSIST, utilisateur: `Faits : ${faits}\n\nQuestion : ${question}`, max_tokens: 450, qualite: false }) };
+    const out = { response: await rediger(env, { systeme: cmp ? SYS_CMP : SYS_ASSIST, utilisateur: `Faits : ${faits}\n\nQuestion : ${question}`, max_tokens: cmp ? 650 : 450, qualite: false }) };
     const txt = String(out.response || "").replace(/—/g, ",").trim();
     if (txt.length < 20) throw new Error("vide");
     await env.DB.prepare(`INSERT OR REPLACE INTO resumes (u, txt, at) VALUES (?, ?, ?)`).bind(key, txt, Date.now()).run();

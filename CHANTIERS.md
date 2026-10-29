@@ -19,3 +19,10 @@ Règles communes à tous les agents :
 Un module ajoute une page sans toucher à `route()` : `ROUTES_EXTRA.push([/^\/connecteur$/, () => pageConnecteur()]);`
 (les groupes capturés sont passés en arguments). Pour une route existante, redéclarer plutôt sa fonction `page…`.
 Côté serveur, ajouter la page dans `meta()` de cf/src/worker.mjs (sinon le HTML part avec un statut 404).
+
+## Chantier « comparer » (module `cf/site/m/comparer.js`)
+- Remplace `pageComparer()` (page /comparer) et `concurrentsHTML(s)` (étape « Concurrents » de la fiche, appelée par `etapesListe`).
+  Agent « fiche » : ne pas redéclarer `concurrentsHTML` ; si `etapesListe` est refaite, garder `() => concurrentsHTML(s)` pour l'étape « concurrents ».
+- Les anciennes `cmpTable`, `cmpCell`, `CMP_ROWS`, `compareSynth`, `profilsCompare` ne sont plus appelées (laissées dans index.html).
+- Serveur : `/api/assistant` accepte `mode: "comparaison"` (consigne `SYS_CMP` de `cf/src/ia.mjs`, quota « assistant ») ;
+  `prompts.json` gagne la clé `comparaison` (IA installée sur l'appareil) ; `meta()` du Worker nomme les entreprises d'un lien /comparer?ids=….

@@ -28,7 +28,7 @@ writeFileSync("cf/site/robots.txt", `User-agent: *\nDisallow: /api/\nSitemap: ${
   wfs("cf/src/index.gen.mjs", "// Fichier fabriqué par build.mjs : la liste minimale des entreprises pour le Worker.\nexport const SECTEURS = " + JSON.stringify(SECTEURS) + ";\nexport default " + JSON.stringify(U.map(({ id, name, sector, desc, region, isin }) => ({ id, name, sector, desc, region, isin }))) + ";\n"); }
 { // consignes des modèles, partagées avec l'IA qui tourne dans le navigateur des visiteurs
   const ia = await import("./cf/src/ia.mjs"), dm = await import("./cf/src/demande.mjs");
-  wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF }));
+  wfs("cf/site/data/prompts.json", JSON.stringify({ demande: dm.SYS, expliquer: dm.SYS_EXPL, assistant: ia.SYS_ASSIST, veille: ia.SYS_VEILLE, portefeuille: ia.SYS_PF, comparaison: ia.SYS_CMP }));
 }
 execSync("npx --yes esbuild@0.24.0 cf/src/worker.mjs --bundle --format=esm --minify-syntax --outfile=cf/site/_worker.js", { stdio: "inherit" });
 console.log(paths.length, "pages dans le sitemap");
