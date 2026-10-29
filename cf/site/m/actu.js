@@ -134,7 +134,7 @@ function actuFicheCourt(el, s, { max = 4 } = {}) {
     el.innerHTML = `<div class="ax-side">${o.length ? `<div class="ax-cap">Annonces officielles</div>${actuListHTML(o, { showCo: false, detail: false, days: false })}` : ""}
       ${p.length ? `<div class="ax-cap" style="margin-top:8px">Dans la presse</div>${presseHTML(p, 3)}` : ""}
       ${!o.length && !p.length ? `<div class="ax-empty" style="padding:6px 0">Pas d'annonce ni d'article repéré ces dernières semaines.${eventsOf(s.id).some(e => e.date >= TODAY) ? " Les prochaines dates sont dans l'agenda." : ""}</div>` : ""}
-      <a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a></div>`;
+      ${el.closest("#actus") ? "" : `<a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a>`}</div>`;
   });
 }
 function actuFicheDetail(el, s) {
