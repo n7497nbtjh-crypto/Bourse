@@ -525,9 +525,15 @@ const RF_JAUGE = { Ventes: ["g1", false], Marge: ["marge", false], "Bénéfice":
 function rfSecteurVals(s, key) {
   const l = [];
   (R.companies || []).forEach(c => { if (c.sector !== s.sector || c.missing || (typeof donRetenue === "function" && !donRetenue(c))) return;
-    let v = null; if (key === "pe") { const x = valo(c); v = x && x.pe; } else { if (isBank(c) && (key === "lev" || key === "marge")) return; v = ratios(c)[key]; }
+    let v = null; if (key === "pe" || key === "yld") { const x = valo(c); v = x && x[key]; } else if (key === "ca") { v = c.ca > 0 ? caEur(c) : null; } else { if (isBank(c) && (key === "lev" || key === "marge")) return; v = ratios(c)[key]; }
     if (v != null && isFinite(v)) l.push(v); });
   return l;
+}
+function rfPosition(s, key, inv, val) { // rang de l'entreprise (0 à 1) parmi son secteur pour un indicateur ; null si trop peu d'entreprises
+  if (val == null || !isFinite(val)) return null;
+  const vals = rfSecteurVals(s, key), n = vals.length; if (n < 5) return null;
+  const below = vals.filter(x => x < val).length, eq = vals.filter(x => x === val).length; let pos = (below + eq / 2) / n; if (inv) pos = 1 - pos;
+  return { pos, n };
 }
 function rfRepere(s, f, l) { // sous le chiffre : la jauge, puis deux repères courts (sur un an, médiane du secteur)
   const m = ratios(f), md = MED[s.sector] || {}, B = v => big(v, f.currency), spec = RF_JAUGE[l]; if (!spec) return "";

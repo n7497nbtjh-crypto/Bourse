@@ -86,6 +86,15 @@ document.head.insertAdjacentHTML("beforeend", `<style id="cmpr-css">
 .cmpr-win{margin-left:auto;align-self:center;background:var(--lime);color:var(--ink);border-radius:99px;padding:3px 11px;font-size:12.5px;font-weight:600;white-space:nowrap;max-width:100%;overflow:hidden;text-overflow:ellipsis}
 .cmpr-thb{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:16px 34px;align-items:start}
 .cmpr-rows{display:flex;flex-direction:column;gap:2px}
+.cmpr-jg{margin:4px 10px 14px}.cmpr-jgl{display:flex;justify-content:space-between;font-size:11.5px;color:var(--light);margin-bottom:6px}
+.cmpr-jgb{position:relative;height:var(--h,34px);margin:0 16px}.cmpr-jgb:before{content:"";position:absolute;left:0;right:0;top:14px;height:6px;border-radius:9px;background:linear-gradient(90deg,var(--o),#E3D9A6 50%,var(--g))}
+.cmpr-jgb.cmpr-jgn:before{background:linear-gradient(90deg,#E6E1D6,#B8B2A6)}
+.cmpr-jgb em{position:absolute;left:50%;top:9px;width:2px;height:16px;background:var(--ink);opacity:.45;transform:translateX(-50%)}
+.cmpr-dot{position:absolute;width:34px;height:34px;border-radius:50%;background:#fff;border:3px solid var(--n);transform:translateX(-50%);display:flex;align-items:center;justify-content:center;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.cmpr-dot.lv-fort{border-color:var(--g)}.cmpr-dot.lv-vig{border-color:var(--o)}.cmpr-dot.lv-moyen,.cmpr-dot.lv-n{border-color:#8F8A80}
+.cmpr-dot .lg{--s:24px!important;width:24px;height:24px}
+.cmpr-rows-j .cmpr-bar{display:none}.cmpr-rows-j .cmpr-row{grid-template-columns:minmax(110px,1fr) auto;padding:5px 10px}.cmpr-rows-j .cmpr-val{text-align:right}
+.cmpr-rows-j .cmpr-row.win{background:transparent}.cmpr-rows-j .cmpr-row.win .cmpr-co span{font-weight:700}
 .cmpr-row{display:grid;grid-template-columns:minmax(110px,170px) minmax(0,1fr) 150px;gap:14px;align-items:center;padding:7px 10px;border-radius:10px;outline:none}
 .cmpr-row.win{background:var(--hl)}
 .cmpr-row:focus-visible{box-shadow:0 0 0 2px var(--ink)}
@@ -451,6 +460,32 @@ function cmprBar(T, x, pos) {
   const col = T.neutral || !r.lv ? "var(--ink)" : CMPR_COL[r.lv];
   return `<span class="cmpr-trk">${z > 0.5 && z < 99.5 ? `<i class="cmpr-zero" style="left:${z.toFixed(2)}%"></i>` : ""}<i class="cmpr-fill" style="left:${a.toFixed(2)}%;width:${w.toFixed(2)}%;background:${col}"></i>${r.med != null ? `<i class="cmpr-med" style="left:${pos(r.med).toFixed(2)}%"></i>` : ""}</span>`;
 }
+/* La jauge « face à sa médiane » (29/10/2026, présentation voulue par Romain) : chaque entreprise est placée selon son rang parmi
+   les entreprises de SON secteur suivies par le site ; la médiane est au milieu, à droite les mieux placées. Les barres détaillées
+   restent dessous, pour les valeurs. Taille et dividende : rang seulement, sans couleur. */
+const CMPR_JG = { taille: ["ca", false, true], croissance: ["g1", false, false], rentabilite: [null, false, false], solidite: ["lev", true, false], prix: ["pe", true, false], dividende: ["yld", false, true] };
+function cmprJaugeHTML(T, X, S) {
+  const spec = CMPR_JG[T.k]; if (!spec || typeof rfPosition !== "function") return "";
+  const dots = S.rows.map(x => {
+    const F = x.F, c = F.c, r = x.r; if (!r || !F.ok) return null;
+    let key = spec[0], inv = spec[1], val;
+    if (T.k === "rentabilite") { key = X.roe ? "roe" : "marge"; val = r.raw; }
+    else if (T.k === "taille") val = F.caE;
+    else if (T.k === "croissance") val = r.v / 100;
+    else if (T.k === "solidite") val = r.cash ? -1 : r.gear ? null : r.v;
+    else if (T.k === "prix") val = r.v;
+    else if (T.k === "dividende") val = (valo(c) || {}).yld;
+    const P = rfPosition(c, key, inv, val); if (!P) return null;
+    const lv = spec[2] || T.neutral || !r.lv ? "n" : r.lv;
+    return { c, pos: P.pos, n: P.n, lv, txt: r.txt };
+  }).filter(Boolean);
+  if (dots.length < 2) return "";
+  // deux points trop proches : léger décalage vertical pour rester lisibles
+  const sorted = dots.slice().sort((a, b) => a.pos - b.pos); sorted.forEach((d, i) => { d.row = 0; for (let j = 0; j < i; j++) if (Math.abs(sorted[j].pos - d.pos) < 0.06 && sorted[j].row === d.row) d.row++; });
+  const H = 34 + 30 * Math.max(...dots.map(d => d.row));
+  return `<div class="cmpr-jg" style="--h:${H}px"><div class="cmpr-jgl"><span>sous la médiane de son secteur</span><span>médiane</span><span>au-dessus</span></div>
+    <div class="cmpr-jgb${spec[2] ? " cmpr-jgn" : ""}"><em></em>${dots.map(d => `<a class="cmpr-dot lv-${d.lv}" style="left:${(d.pos * 100).toFixed(1)}%;top:${d.row * 30}px" href="/entreprise/${d.c.id}" title="${esc(d.c.name)} : ${esc(d.txt)} · ${spec[1] ? "mieux placée" : "au-dessus"} de ${Math.round(d.pos * 100)} % des ${d.n} entreprises de son secteur">${logo(d.c, 20)}</a>`).join("")}</div></div>`;
+}
 function cmprThemeHTML(T, X, S) {
   const pos = cmprScale(T, S), ind = T.ind(X), term = typeof T.term === "function" ? T.term(X) : T.term;
   const na = S.rows.filter(x => !x.r);
@@ -465,10 +500,11 @@ function cmprThemeHTML(T, X, S) {
       <div class="cmpr-val">${r ? `<b>${esc(r.txt)}</b>${sub.length ? `<small${r.lv && !T.neutral ? ` class="vd vd-${r.lv}"` : r.lv && T.k === "dividende" ? ` class="vd vd-${r.lv}"` : ""}>${esc(sub[0])}</small>${sub[1] ? `<small>${esc(sub[1])}</small>` : ""}` : ""}` : `<b class="light">–</b><small>${esc(T.na(x.F, X))}</small>`}</div></div>`;
   }).join("");
   const axis = T.k === "solidite" && pos && S.ok.some(x => x.r.v != null && x.r.v < 0) ? `<div class="cmpr-axis"><span>← plus de trésorerie que de dettes</span><span>plus endettée →</span></div>` : "";
+  const jauge = cmprJaugeHTML(T, X, S);
   const D = CMPR_D[T.k] || [];
   const det = `<details class="cmpr-det"><summary><span style="white-space:nowrap">Tous les chiffres</span><small>${esc(D.map(d => d[0].toLowerCase()).join(", "))}</small></summary><div>${cmprDetTable(D, X)}<p class="cmpr-tnote">${esc(T.rule(X))}</p></div></details>`;
   return `<section class="cmpr-th" id="cmpr-${T.k}"><div class="cmpr-thh">${CMPR_ICON[T.k]}<h3>${T.t}</h3><span class="cmpr-ind">${term && ALL[term] ? def(term, ind) : esc(ind)}${typeof provBtn === "function" ? provBtn({ taille: "ca", croissance: "g", solidite: "lev", prix: "per", dividende: "rendement" }[T.k] || term, X.F.map(F => "c:" + F.c.id).join(","), ind) : ""}</span>${S.best ? `<span class="cmpr-win">${esc(cmprWinLabel(T, S.best.r))} : ${esc(S.best.F.c.name)}</span>` : ""}</div>
-    <div class="cmpr-thb"><div><div class="cmpr-rows">${rows}</div>${axis}</div>
+    <div class="cmpr-thb"><div>${jauge}<div class="cmpr-rows${jauge ? " cmpr-rows-j" : ""}">${rows}</div>${axis}</div>
       <div class="cmpr-exp"><p>${esc(T.ex(X))}</p>${S.ok.length < 2 ? `<p class="cmpr-na">${cmprNoCmp(T, X)}</p>` : ""}<p class="cmpr-rule">${esc(T.k === "taille" || T.k === "dividende" ? T.rule(X) : "Couleurs : " + (T.k === "prix" ? "vert, nettement moins cher que la médiane de son secteur ; orange, nettement plus cher." : "vert, point fort ; gris, dans la moyenne ; orange, point de vigilance. Le détail des seuils est dans « Tous les chiffres »."))}</p></div></div>
     ${det}</section>`;
 }
@@ -613,7 +649,7 @@ function cmprRenderBody(ids) {
         <p class="note" style="margin:12px 0 0">Être en tête sur un critère n'est ni une recommandation ni une prédiction : ce sont les derniers comptes publiés, comparés entre eux.</p></div>
       ${cmprIABar(cos.length, null)}</section>
     <section class="panel cmpr-clip" id="cmpr-themes"><div class="ph"><h2>Le détail, thème par thème</h2></div>
-      <div class="cmpr-legend"><span>Toutes les barres d'un thème sont sur la même échelle.</span><span><i class="m"></i>médiane de son secteur</span><span><i style="background:var(--g)"></i>point fort</span><span><i style="background:var(--n)"></i>dans la moyenne</span><span><i style="background:var(--o)"></i>point de vigilance</span></div>
+      <div class="cmpr-legend"><span>Chaque point place l'entreprise parmi celles de son secteur suivies par le site : à droite les mieux placées.</span><span><i class="m"></i>médiane de son secteur</span><span><i style="background:var(--g)"></i>point fort</span><span><i style="background:var(--n)"></i>dans la moyenne</span><span><i style="background:var(--o)"></i>point de vigilance</span></div>
       ${V.lines.map(l => cmprThemeHTML(l.T, X, l.S)).join("")}</section>
     <section class="panel cmpr-clip"><details class="acc" id="cmpr-tout"><summary><span><b>Tous les chiffres sur un seul tableau</b><br><small class="light" style="font-weight:400">Les ${CMPR_T.reduce((a, T) => a + CMPR_D[T.k].length, 0) + 1} indicateurs, entreprise par entreprise</small></span><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px">${cmprAllTable(X, null)}</div></details></section>
     <section class="panel"><div class="ph"><h2>Sources et dates</h2></div><div class="pb" style="padding-top:6px">${cmprSources(X)}</div></section>

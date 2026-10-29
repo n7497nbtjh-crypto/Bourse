@@ -512,9 +512,9 @@ function analyseHTML(s, c, mode) {
   const inner = mode === "inner"; // « inner » : bloc intégré dans le panneau « L'essentiel à retenir » de la fiche
   analyseCSS();
   let r; try { r = analyseForcesFaiblesses(s, c); } catch (e) { console.warn("analyse", e); return ""; }
-  const nV = r.valorise.length, nD = r.defaut.length, nC = r.contexte.length, peu = !c || !c.years || c.years.length < 2 || s.missing;
+  const nV = r.valorise.length, nD = r.defaut.length, peu = !c || !c.years || c.years.length < 2 || s.missing;
   const yr = c && c.years && c.years.length ? c.years.at(-1) : null;
-  const ctx = r.contexte.slice().sort((a, b) => b.poids - a.poids);
+  const ctx = r.contexte.filter(i => !inner || !String(i.id).startsWith("actu_")).sort((a, b) => b.poids - a.poids), nC = ctx.length; // dans la fiche, l'actualité a son onglet : pas de doublon ici
   const T = inner ? "div" : "section";
   return `<${T} class="${inner ? "anf anf-in" : "panel anf"}" id="analyse" data-analyse-id="${esc(s.id)}" data-analyse-mode="${inner ? "inner" : ""}">
     <div class="ph"><h2>${inner ? "Sur plusieurs années et selon son contexte" : "Ce qui la valorise, ce qui lui fait défaut"}</h2><span class="light" style="font-size:12.5px">${yr ? `Comptes ${yr}` : "Sans comptes"} · règles publiques</span></div>
@@ -523,7 +523,7 @@ function analyseHTML(s, c, mode) {
       <div class="anf-c anf-cv"><h3><i></i>Ce qui la valorise</h3>${analyseListe(r.valorise, "v", peu ? "Sans comptes complets, le site ne peut pas mesurer ses atouts financiers." : "Aucun atout net dans ses comptes au regard des règles du site.")}</div>
       <div class="anf-c anf-cd"><h3><i></i>Ce qui lui fait défaut</h3>${analyseListe(r.defaut, "d", "Aucun point faible net dans ses comptes ni dans les règles de contexte.")}</div>
     </div>
-    ${ctx.length ? (inner ? `<details class="anf-ctx anf-ctxd"><summary>Le contexte à connaître (${ctx.length} point${ctx.length > 1 ? "s" : ""} : pays, devise, secteur, fiscalité)</summary>${analyseListe(ctx, "c", "")}</details>` : `<div class="anf-ctx"><h3>Le contexte à connaître</h3><p class="anf-sub">Ni atout ni défaut en soi : ce qu'il faut savoir avant de lire son cours ou ses comptes.</p>${analyseListe(ctx, "c", "")}</div>`) : ""}
+    ${ctx.length ? (inner ? `<details class="anf-ctx anf-ctxd"><summary>Le contexte à connaître (${ctx.length} point${ctx.length > 1 ? "s" : ""} : pays, devise, secteur, fiscalité)<small> · l'actualité qui la concerne est dans l'onglet Actualités</small></summary>${analyseListe(ctx, "c", "")}</details>` : `<div class="anf-ctx"><h3>Le contexte à connaître</h3><p class="anf-sub">Ni atout ni défaut en soi : ce qu'il faut savoir avant de lire son cours ou ses comptes.</p>${analyseListe(ctx, "c", "")}</div>`) : ""}
     <details class="anf-sait"${peu ? " open" : ""}><summary>Ce que le site sait d'elle, et ce qui manque</summary><div class="anf-sait-g">
       <div><h4>Ce que l'on sait</h4><ul>${r.connu.map(t => `<li>${esc(t)}</li>`).join("")}</ul></div>
       <div><h4>Ce qui manque</h4><ul>${r.manque.map(t => `<li>${esc(t)}</li>`).join("") || "<li>Rien d'essentiel.</li>"}</ul></div></div></details>
@@ -573,7 +573,7 @@ function analyseCSS() {
 .anf-in{border-top:1px solid var(--line2,#EFEAE0);margin-top:6px}
 .anf-in .ph h2{font-size:17px}
 .anf-ctxd > summary{cursor:pointer;font-family:var(--serif);font-weight:800;font-size:16px;padding:2px 0 8px;list-style:none}
-.anf-ctxd > summary::-webkit-details-marker{display:none}
+.anf-ctxd > summary::-webkit-details-marker{display:none}.anf-ctxd > summary small{font-family:var(--sans);font-weight:400;font-size:12.5px;color:var(--light)}
 .anf-ctxd > summary:before{content:"+ ";font-family:var(--mono)} .anf-ctxd[open] > summary:before{content:"− "}
 .anf-meth{margin:0;padding:8px 22px 12px;font-size:12px;color:var(--light)}
 /* Dans la fiche : chaque point est une carte (bord coloré, titre, une phrase, source), plus lisible qu'une liste serrée */

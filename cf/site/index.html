@@ -1557,6 +1557,7 @@ function caLine(c) {
 }
 function missingTxt(c, long) { // pourquoi les comptes manquent
   if ((c.isin || "").startsWith("DE")) return long ? "Les sociétés allemandes déposent leurs comptes au registre fédéral allemand, qui ne propose pas de base ouverte réutilisable : leurs chiffres ne peuvent pas être affichés ici pour l'instant. La fiche et le cours restent disponibles." : "Comptes non disponibles en données ouvertes";
+  if (c.region === "MONDE" && !c.sec) return long ? `Le site n'a pas les comptes officiels de ${esc(c.name)} : sa place de cotation ne les publie pas dans un format ouvert que le site sait lire (le site lit les dépôts européens ESEF et américains SEC). Le cours, l'actualité et le métier restent disponibles.` : "Comptes non disponibles en données ouvertes";
   return long ? `Les comptes de ${esc(c.name)} sont en cours de collecte. Ils apparaîtront après la prochaine mise à jour.` : "Comptes en cours de collecte";
 }
 const pills = t => `<span class="pills" title="${esc(tallyTxt(t))}"><span class="f"><i></i>${t.fort}</span><span class="m"><i></i>${t.moyen}</span><span class="v"><i></i>${t.vig}</span></span>`;
