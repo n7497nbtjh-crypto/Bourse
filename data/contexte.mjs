@@ -154,7 +154,7 @@ export const SUJETS = [
         mecanisme: "Un conflit régional et des billets d'avion plus chers pourraient freiner une partie des voyages." },
     ],
     src: src("perrin", "aie_stocks", "brent_oct", "bm_2026") },
-  { id: "gaz_europe", mots: "\\bgaz\\b|\\bgas\\b|gnl|\\blng\\b|\\bttf\\b|qatar", depuis: "2026-03-01", maj: "2026-10-29", fin: "2027-03-31", theme: "Énergie",
+  { id: "gaz_europe", mots: "\\bgaz\\b|\\bgas\\b|gnl|\\blng\\b|\\bttf\\b|qatar", depuis: "2026-02-28", maj: "2026-10-29", fin: "2027-03-31", theme: "Énergie",
     titre: "Gaz européen au plus haut depuis fin 2022",
     faits: [
       "Le 13 octobre 2026, le prix du gaz européen (marché TTF) a atteint 87,43 euros le mégawattheure, un niveau inédit depuis décembre 2022.",
