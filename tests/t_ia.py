@@ -111,7 +111,10 @@ with sync_playwright() as pw:
     for q, attendu in [("boites tech pas cheres", "entreprises remplissent"), ("etf monde eligible pea", "ETF"), ("c'est quoi un etf", "indice"), ("quelle action va monter demain", "Personne"),
                        ("comment declarer mes dividendes aux impots", "Académie"), ("lvmh ou hermes", "/comparer?ids=lvmh,hermes"), ("etf cw8", "/etf/amundi-msci-world-swap"), ("total", "/entreprise/totalenergies")]:
         pg.goto("http://t.local/demander?q=" + q.replace(" ", "+")); pg.wait_for_timeout(900)
-        txt = pg.url + " " + pg.inner_text("#app")
+        for _ in range(12):  # machine chargée : on laisse la page finir de se remplir (4 s au plus)
+            txt = pg.url + " " + pg.inner_text("#app")
+            if attendu in txt and "undefined" not in txt and "NaN" not in txt: break
+            pg.wait_for_timeout(250)
         if attendu not in txt or "undefined" in txt or "NaN" in txt: ui.append(f"« {q} » : attendu « {attendu} », obtenu {pg.url} {pg.inner_text('#app')[:160]!r}")
     pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(900)
     if pg.locator("#assistant").count():
