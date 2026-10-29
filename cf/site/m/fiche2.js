@@ -179,6 +179,13 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
 a.fk{color:inherit;text-decoration:none;transition:background .15s}
 a.fk:hover,a.fk:focus-visible{background:#FBF9F2;outline:none}
 a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:4px}
+.fk-l{position:relative;transition:background .15s}
+.fk-l .fk-a{color:inherit;text-decoration:none;display:block;outline:none}
+.fk-l .fk-a::after{content:"";position:absolute;inset:0}
+.fk-l .kick .prov-i,.fk-l .fk-a .def,.fk-l .fk-a button{position:relative;z-index:1}
+.fk-l:hover,.fk-l:focus-within{background:#FBF9F2}
+.fk-l:has(.fk-a:focus-visible){box-shadow:inset 0 0 0 2px var(--link,#1F4FD1)}
+.fk-l:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:4px}
 .rf-keysn{margin:0;padding:10px 20px;font-size:13px;color:var(--grey);border-bottom:1px solid var(--line2)}
 /* Étape « Concurrents » : tableau côte à côte */
 .rf-intro{margin:0;font-size:14px;line-height:1.55;color:#3E3B36}
@@ -432,12 +439,15 @@ function etapesListe(s, c) {
   ];
 }
 /* Étape 1 : les indicateurs principaux (une tuile chacun, reliée à son thème détaillé), puis l'analyse sur plusieurs années */
+const RF_TUILE_PROV = { Ventes: () => "ca", Marge: () => "marge", "Bénéfice": () => "net", Dette: k => k === "aucune" ? "netDebt" : "lev", Dividende: k => /%/.test(k) ? "payout" : "divPaid", Prix: () => "per" };
 const RF_TUILE_THEME = { Ventes: "croissance", Marge: "rentabilite", "Bénéfice": "rentabilite", Dette: "bilan", Dividende: "dividende", Prix: "valorisation" };
 function ficheRetenirHTML(s, c) {
   const f = figuresOf(c), facts = essentielFacts(s, f), items = lecture(s, f);
   const lvOf = l => { const k = { Ventes: ["croissance"], Marge: ["marge"], "Bénéfice": ["net"], Dette: ["lev", "dettenette", "gear"], Dividende: ["payout"] }[l]; const it = k && items.find(i => k.includes(i.term)); return it ? it.lv : null; };
-  return `<section class="panel" id="retenir"><div class="ph"><h2>Les indicateurs principaux</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
-    <div class="fkeys rf-keys n${facts.length}">${facts.map(([l, k, t]) => { const lv = lvOf(l), th = RF_TUILE_THEME[l]; return `<a class="fk${lv ? " fk-" + lv : ""}" href="/entreprise/${s.id}/comptes#rf-${th}"><span class="kick">${l}${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><b>${k}</b><p>${t}</p></a>`; }).join("")}</div>
+  return `<section class="panel" id="retenir"><div class="ph"><h2>Les indicateurs principaux</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
+    <div class="fkeys rf-keys n${facts.length}">${facts.map(([l, k, t]) => { const lv = lvOf(l), th = RF_TUILE_THEME[l], pk = RF_TUILE_PROV[l] && RF_TUILE_PROV[l](k);
+      // tuile entière cliquable (lien étiré) ; le bouton « i » (provenance du chiffre) reste au-dessus du lien
+      return `<div class="fk fk-l${lv ? " fk-" + lv : ""}"><span class="kick"><span>${l}${pk && typeof provBtn === "function" ? provBtn(pk, "c:" + s.id) : ""}</span>${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><a class="fk-a" href="/entreprise/${s.id}/comptes#rf-${th}"><b>${k}</b><p>${t}</p></a></div>`; }).join("")}</div>
     <p class="rf-keysn">Touchez un indicateur pour son évolution sur plusieurs années, dans l'onglet <a class="lnk" href="/entreprise/${s.id}/comptes">Les chiffres en détail</a>.</p>
     ${ficheAnalyse(s, c)}
     ${ficheConfiance(c)}

@@ -16,7 +16,7 @@ export async function cours(request, ctx, env) {
     try {
       const f = env && env.ASSETS ? await env.ASSETS.fetch(new URL("/data/cours.json", request.url)) : await fetch(new URL("/data/cours.json", request.url));
       if (f.ok) { const j = await f.json(), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-        for (const [k, v] of Object.entries(j.items || {})) { const it = items[k]; if (!it) { items[k] = v; continue; } for (const h of HF) if (it[h] == null && v[h] != null) it[h] = v[h]; } }
+        for (const [k, v] of Object.entries(j.items || {})) { const it = items[k]; if (!it) { items[k] = j.updated ? { ...v, d: j.updated } : v; continue; } /* d : date du relevé du fichier (titre absent de la feuille : pas présenté comme frais) */ for (const h of HF) if (it[h] == null && v[h] != null) it[h] = v[h]; } }
     } catch (e) { }
     body = JSON.stringify({ updated: new Date().toISOString(), source: "Google Finance, cours différés", items });
   } catch (e) { return Response.json({ error: String(e.message || e) }, { status: 503 }); }

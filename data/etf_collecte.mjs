@@ -48,7 +48,7 @@ function normalise(r) {
     domicile: r.domicile ? ({ Ireland: "Irlande", France: "France", Luxembourg: "Luxembourg", Germany: "Allemagne", IE: "Irlande", LU: "Luxembourg", FR: "France", DE: "Allemagne" }[r.domicile] || r.domicile) : null,
     ticker: pick ? pick.ticker : null, tv: pick ? (pick.place === "Xetra" ? "XETR:" : "EURONEXT:") + pick.ticker : null, cotations: listings.filter(l => PLACES_FR.includes(l.place)).map(l => ({ place: l.place, ticker: l.ticker, devise: l.devise || null })),
     couvert: !!r.couvert || /hedged|couvert/i.test(r.name || "") || undefined, levier: LEVIER.test((r.name || "") + " " + (r.indexOfficiel || "")) || undefined, contrepartie: r.contrepartie || undefined,
-    nIndex: r.nIndex || undefined, url: r.url || null, src: { amundi: "amundietf.fr", ishares: "blackrock.com/fr", spdr: "ssga.com", invesco: "invesco.com/fr" }[r.ref && r.ref.type] || null, _r: r };
+    nIndex: r.nIndex || undefined, url: r.url || null, releve: new Date().toISOString().slice(0, 10), // date du relevé sur le site de l'émetteur (une ancienne liste garde la sienne) src: { amundi: "amundietf.fr", ishares: "blackrock.com/fr", spdr: "ssga.com", invesco: "invesco.com/fr" }[r.ref && r.ref.type] || null, _r: r };
 }
 let all = [];
 for (const [nom, l] of Object.entries(brut)) {
@@ -163,6 +163,7 @@ for (const e of [...sel, ...CURATED.filter(c => !sel.some(s => s.id === c.id))])
   const info = Object.fromEntries(INFO.map(k => [k, s[k]]).filter(([, v]) => v != null));
   if (!c && !Object.keys(info).length) continue;
   const f = c ? { ...c } : { id: e.id, isin: e.isin }; delete f.couverture; f.info = info;
+  if (c) f.releve = new Date().toISOString().slice(0, 10); // date de récupération de la composition (asOf = date de référence donnée par la source)
   writeFileSync(OUTD + e.id + ".json", JSON.stringify(f)); if (c) keep.add(e.id);
 }
 for (const e of sel) {

@@ -22,7 +22,9 @@ if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "
 for (const f of ["parcours", "commencer", "legal", "academie"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
 if (existsSync("data/concurrents.json")) wfs("cf/site/data/concurrents.json", readFileSync("data/concurrents.json", "utf8"));
 { const R = {}; for (const f of ["france", "europe", "us"]) if (existsSync(`data/repartitions/${f}.mjs`)) Object.assign(R, (await import(`./data/repartitions/${f}.mjs`)).default); wfs("cf/site/data/repartitions.json", JSON.stringify(R)); }
-{ const E = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; wfs("cf/site/data/etf.json", JSON.stringify({ updated: "2026-10-28", list: E })); }
+{ const E = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; // updated : date du dernier relevé du catalogue des émetteurs (data/etf_collecte.mjs), et non une date écrite à la main
+  let maj = null; try { maj = JSON.parse(readFileSync("data/etf_catalogue.json", "utf8")).updated || null; } catch (e) { }
+  wfs("cf/site/data/etf.json", JSON.stringify({ updated: maj, list: E })); }
 { const { default: U, REGIONS } = await import("./data/univers.mjs"); const { default: F } = await import("./data/fiches.mjs"); const { default: C, SOURCES_COURTIERS } = await import("./data/courtiers.mjs");
   writeFileSync("cf/site/data/univers.json", JSON.stringify({ regions: REGIONS, companies: U.map(({ id, name, ticker, domain, desc, sector, isin, tv, region, fiche, sec }) => ({ id, name, ticker, domain, desc, sector, isin, tv, region, sec, fiche: F[id] || fiche || null })) }));
   writeFileSync("cf/site/data/courtiers.json", JSON.stringify({ updated: "2026-10-28", sources: SOURCES_COURTIERS, list: C.map(c => ({ ...c, grille: c.grille.map(g => [g[0] === Infinity ? null : g[0], g[1], g[2]]) })) }));

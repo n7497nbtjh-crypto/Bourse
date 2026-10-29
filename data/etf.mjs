@@ -341,7 +341,7 @@ const lire = f => { const u = new URL(f, import.meta.url); return existsSync(u) 
 const CAT = (lire("./etf_catalogue.json") || { list: [] }).list, RES = lire("./etf_compo_choisis.json") || {};
 const parIsin = Object.fromEntries(CAT.map(e => [e.isin, e]));
 // champs que la collecte met à jour sur les ETF choisis (les autres, dont l'identifiant et les textes, restent ceux de la liste)
-const MAJ = ["ter", "pea", "encours", "replication", "methode", "distribution", "domicile", "creation", "couvert", "levier", "compo"];
+const MAJ = ["ter", "pea", "encours", "replication", "methode", "distribution", "domicile", "creation", "couvert", "levier", "compo", "releve"];
 // détails lus seulement par la fiche, rangés dans cf/site/data/etf/<id>.json (clé info) pour garder etf.json léger
 const DETAIL = new Set(["nomOfficiel", "indexOfficiel", "url", "src", "cotations", "contrepartie", "nIndex"]);
 const propre = o => Object.fromEntries(Object.entries(o).filter(([k, v]) => v !== undefined && v !== null && !k.startsWith("_") && !DETAIL.has(k)));

@@ -353,6 +353,8 @@ const CMPR_D = {
     ["Marge nette", "net", F => F.m.nm == null ? null : { txt: pct(F.m.nm, 1, false), sub: cmprMedSub(F.med.nm, x => pct(x, 1, false)) }],
     ["Rentabilité des capitaux propres", "roe", F => F.m.roe == null ? (F.ok && F.c.equity != null && F.c.equity <= 0 ? { txt: "–", sub: "capitaux propres négatifs", plain: true } : null) : { txt: pct(F.m.roe, 1, false), lv: cmprLvOf(F, "roe"), sub: cmprMedSub(F.med.roe, x => pct(x, 1, false)) }],
     ["Bénéfice net", "net", F => !F.ok || F.c.net == null ? null : { txt: big(F.c.net, F.cur), lv: cmprLvOf(F, "net"), sub: F.cur !== "EUR" && F.netE != null ? `${big(F.netE, "EUR")} en euros` : `exercice ${F.c.year}` }],
+    ["Rentabilité des capitaux employés (ROCE)", "roce", F => { if (F.ok && F.bank) return { txt: "–", sub: "ne s'applique pas", plain: true }; const x = typeof provRoce === "function" ? provRoce(F.c) : null; if (x == null) return null;
+      const md = medInd(F.c.sector, "roce"); return { txt: pct(x, 1, false), sub: cmprMedSub(md, v => pct(v / 100, 1, false)) || "avant impôt", plain: true }; }],
     ["Place dans son secteur", "mediane", (F, X) => cmprAxis(F, X.roe ? ["Rentabilité", "Marge"] : CMPR_AXE.rentabilite)],
   ],
   solidite: [
@@ -364,6 +366,8 @@ const CMPR_D = {
   ],
   prix: [
     ["PER", "per", F => { const r = CMPR_T[4].val(F); return r ? { txt: r.txt, lv: r.lv, word: r.word, sub: cmprMedSub(r.med, x => F0.format(x) + " fois") } : null; }, true],
+    ["Valeur d'entreprise ÷ EBITDA", "evebitda", F => { if (F.ok && F.bank) return { txt: "–", sub: "ne s'applique pas", plain: true }; const x = typeof provEvEbitda === "function" ? provEvEbitda(F.c) : null; if (x == null) return null;
+      const md = medInd(F.c.sector, "ev_ebitda"); return { txt: F1.format(x) + " fois", sub: cmprMedSub(md, v => F1.format(v) + " fois") || "dettes comprises", plain: true }; }, true],
     ["Valeur en Bourse", "cap", F => F.v && F.v.capE ? { txt: capFmt(F.v.capE), sub: "capitalisation, en euros" } : null, true],
     ["Cours de l'action", "cours", F => F.v ? { txt: pxFmt(F.v.p.p, F.v.p.cur), sub: F.v.p.chg != null ? `${F.v.p.chg > 0 ? "+" : ""}${F2.format(F.v.p.chg)} % aujourd'hui` : "", plain: true } : null, true],
     ["Sur un an", null, F => cmprRange(F), true],
@@ -373,7 +377,7 @@ const CMPR_D = {
     ["Rendement", "rdt", F => F.v && F.v.yld != null ? { txt: pct(F.v.yld, 1, false), sub: cmprMedSub(medInd(F.c.sector, "rendement"), x => pct(x / 100, 1, false)), plain: true } : null, true],
     ["Part du bénéfice versée", "payout", F => { const it = F.items.payout; return it ? { txt: String(it.value), lv: it.lv !== "na" ? it.lv : null, sub: it.lv === "na" ? "pas de dividende" : cmprMedSub(F.med.payout, x => pct(x, 0, false)) } : null; }],
     ["Dividende par action", "dps", F => F.ok && F.c.dps > 0 ? { txt: eur(F.c.dps, 2, F.cur), sub: `versé pendant l'exercice ${F.c.year}`, plain: true } : null],
-    ["Total versé aux actionnaires", "payout", F => F.ok && F.c.divPaid != null ? { txt: F.c.divPaid < 0.5 ? "Aucun" : big(F.c.divPaid, F.cur), plain: true } : null],
+    ["Total versé aux actionnaires", "divverses", F => F.ok && F.c.divPaid != null ? { txt: F.c.divPaid < 0.5 ? "Aucun" : big(F.c.divPaid, F.cur), plain: true } : null],
     ["Place dans son secteur", "mediane", F => cmprAxis(F, CMPR_AXE.dividende)],
   ],
 };
@@ -463,7 +467,7 @@ function cmprThemeHTML(T, X, S) {
   const axis = T.k === "solidite" && pos && S.ok.some(x => x.r.v != null && x.r.v < 0) ? `<div class="cmpr-axis"><span>← plus de trésorerie que de dettes</span><span>plus endettée →</span></div>` : "";
   const D = CMPR_D[T.k] || [];
   const det = `<details class="cmpr-det"><summary><span style="white-space:nowrap">Tous les chiffres</span><small>${esc(D.map(d => d[0].toLowerCase()).join(", "))}</small></summary><div>${cmprDetTable(D, X)}<p class="cmpr-tnote">${esc(T.rule(X))}</p></div></details>`;
-  return `<section class="cmpr-th" id="cmpr-${T.k}"><div class="cmpr-thh">${CMPR_ICON[T.k]}<h3>${T.t}</h3><span class="cmpr-ind">${term && ALL[term] ? def(term, ind) : esc(ind)}</span>${S.best ? `<span class="cmpr-win">${esc(cmprWinLabel(T, S.best.r))} : ${esc(S.best.F.c.name)}</span>` : ""}</div>
+  return `<section class="cmpr-th" id="cmpr-${T.k}"><div class="cmpr-thh">${CMPR_ICON[T.k]}<h3>${T.t}</h3><span class="cmpr-ind">${term && ALL[term] ? def(term, ind) : esc(ind)}${typeof provBtn === "function" ? provBtn({ taille: "ca", croissance: "g", solidite: "lev", prix: "per", dividende: "rendement" }[T.k] || term, X.F.map(F => "c:" + F.c.id).join(","), ind) : ""}</span>${S.best ? `<span class="cmpr-win">${esc(cmprWinLabel(T, S.best.r))} : ${esc(S.best.F.c.name)}</span>` : ""}</div>
     <div class="cmpr-thb"><div><div class="cmpr-rows">${rows}</div>${axis}</div>
       <div class="cmpr-exp"><p>${esc(T.ex(X))}</p>${S.ok.length < 2 ? `<p class="cmpr-na">${cmprNoCmp(T, X)}</p>` : ""}<p class="cmpr-rule">${esc(T.k === "taille" || T.k === "dividende" ? T.rule(X) : "Couleurs : " + (T.k === "prix" ? "vert, nettement moins cher que la médiane de son secteur ; orange, nettement plus cher." : "vert, point fort ; gris, dans la moyenne ; orange, point de vigilance. Le détail des seuils est dans « Tous les chiffres »."))}</p></div></div>
     ${det}</section>`;
@@ -475,15 +479,22 @@ function cmprNoCmp(T, X) {
 function cmprWinLabel(T, r) {
   return { taille: "La plus grande", croissance: r.v >= 0 ? "Croissance la plus forte" : "Recul le plus faible", rentabilite: "La plus rentable", solidite: r.cash ? "La plus solide" : "La moins endettée", prix: "La moins chère", dividende: "Rendement le plus élevé" }[T.k] || "En tête";
 }
+// Provenance (m/provenance.js) : clé du registre des indicateurs pour chaque ligne, quand elle diffère de la notion du lexique
+const CMPR_PROV = { "Croissance moyenne des ventes": "cagr", "Évolution du bénéfice net": "ng", "Bénéfice net en euros": "net", "Sur un an": "range52", "Trésorerie disponible": "fcf", "Exercice": null, "Place dans son secteur": null };
+function cmprProv(d, X) {
+  if (typeof provBtn !== "function") return "";
+  const k = d[0] in CMPR_PROV ? CMPR_PROV[d[0]] : d[1]; if (!k) return "";
+  return provBtn(k, X.F.map(F => "c:" + F.c.id).join(","), d[0]);
+}
 function cmprDetTable(D, X) {
-  return `<table class="cmpr-t"><thead><tr><th></th>${D.map(d => `<th>${d[1] && ALL[d[1]] ? def(d[1], d[0]) : esc(d[0])}</th>`).join("")}</tr></thead><tbody>
+  return `<table class="cmpr-t"><thead><tr><th></th>${D.map(d => `<th>${d[1] && ALL[d[1]] ? def(d[1], d[0]) : esc(d[0])}${cmprProv(d, X)}</th>`).join("")}</tr></thead><tbody>
     ${X.F.map(F => `<tr><th scope="row"><a class="cmpr-co" href="/entreprise/${F.c.id}">${logo(F.c, 22)}<span>${esc(F.c.name)}</span></a></th>${D.map(d => `<td data-l="${esc(d[0])}">${cmprCell((F.ok || d[3]) ? d[2](F, X) : null, F, d[0])}</td>`).join("")}</tr>`).join("")}</tbody></table>`;
 }
 // Tableau récapitulatif : un indicateur par ligne, une entreprise par colonne (en-tête collant ; cartes empilées sur téléphone)
 function cmprAllTable(X, hl) {
   const groups = CMPR_T.map(T => [T.t, CMPR_D[T.k]]);
   const head = `<thead><tr><th></th>${X.F.map(F => `<th${F.c.id === hl ? ' class="hl"' : ""}><a class="cmpr-co" href="/entreprise/${F.c.id}">${logo(F.c, 24)}<span>${esc(F.c.name)}</span></a></th>`).join("")}</tr></thead>`;
-  const body = groups.map(([t, D]) => `<tr class="grp"><th colspan="${X.F.length + 1}">${esc(t)}</th></tr>` + D.map(d => `<tr><th>${esc(d[0])}</th>${X.F.map(F => `<td data-co="${esc(F.c.name)}"${F.c.id === hl ? ' class="hl"' : ""}>${cmprCell((F.ok || d[3]) ? d[2](F, X) : null, F, d[0])}</td>`).join("")}</tr>`).join("")).join("")
+  const body = groups.map(([t, D]) => `<tr class="grp"><th colspan="${X.F.length + 1}">${esc(t)}</th></tr>` + D.map(d => `<tr><th>${esc(d[0])}${cmprProv(d, X)}</th>${X.F.map(F => `<td data-co="${esc(F.c.name)}"${F.c.id === hl ? ' class="hl"' : ""}>${cmprCell((F.ok || d[3]) ? d[2](F, X) : null, F, d[0])}</td>`).join("")}</tr>`).join("")).join("")
     + `<tr class="grp"><th colspan="${X.F.length + 1}">Bilan des comptes</th></tr><tr><th>Repères de lecture<small>points forts, dans la moyenne, de vigilance</small></th>${X.F.map(F => `<td data-co="${esc(F.c.name)}"${F.c.id === hl ? ' class="hl"' : ""}><div>${F.t ? pills(F.t) : `<small>${esc(missingTxt(F.c))}</small>`}</div></td>`).join("")}</tr>`;
   return `<table class="cmpr-all">${head}<tbody>${body}</tbody></table>`;
 }
@@ -499,7 +510,8 @@ function cmprSources(X) {
     if (src && src.report) doc = `<a class="lnk" href="${esc(src.report)}" target="_blank" rel="noopener">${doc}</a>`;
     return `<li><b>${esc(c.name)}</b> : exercice ${c.year}${close}, ${doc}${full && full.updated ? `, lu le ${dLabel(full.updated)}` : ""}.</li>`;
   }).join("");
-  const px = PXUP && PXUP !== "none" ? `Cours et valeur en Bourse : Google Finance, différés d'environ 20 minutes, relevés le ${dLabel(String(PXUP).slice(0, 10))}.` : "Cours en cours de chargement.";
+  const pk = typeof provCours === "function" ? provCours(null) : null;
+  const px = PXUP && PXUP !== "none" ? `Cours et valeur en Bourse : Google Finance, cours différés, relevés le ${dLabel(String(PXUP).slice(0, 10))}${pk && pk.live && pk.heure ? ` à ${pk.heure}` : ""}${pk && pk.vieux ? ` (pas de nouveau relevé depuis ${pk.jo} jours ouvrés)` : ""}.` : "Cours en cours de chargement.";
   return `<ul class="cmpr-src">${items}<li>${px} Taux de change : BCE. Médianes : entreprises du même secteur suivies par le site (${[...X.sectors].map(k => `${esc((R.sectors[k] || k).toLowerCase())} : ${R.companies.filter(c => c.sector === k && !c.missing).length}`).join(", ")}).</li></ul>`;
 }
 

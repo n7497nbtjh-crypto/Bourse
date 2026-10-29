@@ -184,7 +184,7 @@ function ficheSource(c) { // le document officiel d'où viennent les chiffres
 }
 function ficheConfiance(c) {
   const src = ficheSource(c);
-  return `<div class="fconf"><span class="fci" aria-hidden="true">✓</span><p><b>Chiffres calculés à partir des comptes publiés, pas générés par une IA.</b> ${src ? `Source : <a class="lnk" href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.label)}</a>` : ""}${c && c.updated ? ` · données mises à jour le ${dLabel(c.updated)}` : ""} · <a class="lnk" href="/methode">Notre méthode</a></p></div>`;
+  return `<div class="fconf"><span class="fci" aria-hidden="true">✓</span><p><b>Chiffres calculés à partir des comptes publiés, pas générés par une IA.</b> ${src ? `Source : <a class="lnk" href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.label)}</a>` : ""}${c && c.updated ? ` · document lu par le site le ${dLabel(c.updated)}` : ""} · <a class="lnk" href="/methode">Notre méthode</a></p></div>`;
 }
 
 /* ---------- En-tête : l'essentiel sans défiler ---------- */

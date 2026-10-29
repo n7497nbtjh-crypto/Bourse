@@ -130,6 +130,9 @@ function tblxRows(s, c) {
     { k: "lev", grp: "bil", label: "Dette nette ÷ EBITDA", short: "Endettement", term: "lev", vals: lev, kind: "x", sens: -1, med: M("lev"), hide: bank },
     { k: "gear", grp: "bil", label: "Dette nette ÷ capitaux propres", short: "Dette ÷ capitaux propres", term: "gear", vals: div(netDebt, equity), kind: "pct", sens: -1, med: M("gear"), hide: bank },
     { k: "roe", grp: "bil", label: "Rentabilité des capitaux propres", short: "Rentabilité (ROE)", term: "roe", vals: div(net, equity), kind: "pct", sens: 1, med: M("roe") },
+    { k: "roce", grp: "bil", label: "Rentabilité des capitaux employés (ROCE, avant impôt)", short: "Capitaux employés (ROCE)", term: "roce", kind: "pct", sens: 1, hide: bank,
+      vals: ebit.map((v, i) => v != null && equity[i] > 0 && netDebt[i] != null && equity[i] + netDebt[i] > 0 ? v / (equity[i] + netDebt[i]) : null),
+      med: useMed && typeof medInd === "function" && INDI.roce ? (x => okn(x) ? x / 100 : null)(medInd(s.sector, "roce")) : null },
     { k: "cfo", grp: "flx", label: "Flux de trésorerie d'exploitation", short: "Argent encaissé", term: "cfo", vals: cfo, kind: "money", sens: 1 },
     { k: "capex", grp: "flx", label: "Investissements (estimés)", short: "Investissements", term: "invest", vals: capex, kind: "money", sens: 0 },
     { k: "fcf", grp: "flx", label: "Flux de trésorerie disponible", short: "Argent disponible", term: "fcf", vals: fcf, kind: "money", sens: 1 },
@@ -222,6 +225,8 @@ const tblxGetV = () => { try { return localStorage.getItem(TBLX_VK) === "tout" ?
 const tblxSetV = v => { try { localStorage.setItem(TBLX_VK, v); } catch (e) { } };
 const tblxTitle = r => { const t = ALL[r.term]; return t ? t.what : ""; };
 const tblxMob = () => (window.innerWidth || 1000) <= 760;
+const tblxProv = (k, s) => typeof provBtn === "function" && s ? provBtn(k, "c:" + s.id) : ""; // bouton « i » : d'où vient ce chiffre (m/provenance.js)
+const tblxProvG = k => typeof provBtn === "function" ? provBtn(k, "") : ""; // en-tête d'un tableau de plusieurs entreprises
 function tblxLvCls(r) { return r.lv ? "tz-" + r.lv : ""; }
 
 function tblxEssHTML(s, c, P) {
@@ -230,7 +235,7 @@ function tblxEssHTML(s, c, P) {
     const ly = Y[r.li], stale = ly !== yl;
     const one = tblxChange(r.kind, r.prev, r.last);
     return `<tr data-k="${r.k}">
-      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.short || r.label)}</span><p class="tbx-ph">${esc(r.phrase)}</p></th>
+      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.short || r.label)}${tblxProv(r.k, s)}</span><p class="tbx-ph">${esc(r.phrase)}</p></th>
       <td class="v"><span class="tbx-val ${tblxLvCls(r)}">${esc(r.full(r.last))}</span>${stale ? `<small class="light">en ${ly}</small>` : ""}${r.lv ? `<small class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</small>` : ""}${r.med != null ? `<small class="m-only light tbx-mm">secteur : ${esc(r.full(r.med))}</small>` : ""}</td>
       <td class="tr"><button type="button" class="tbx-gb" data-g="${r.k}" aria-label="Voir l'évolution en graphique : ${esc(r.short || r.label)}">${tblxSpark(r.vals, { w: 76, h: 26, q: r.q, med: r.med, label: "Évolution de " + span })}</button>${tblxArrow(r.dir, r.q, one, "Sur un an")}</td>
       <td class="md d-only">${r.med != null ? `<span class="num">${esc(r.full(r.med))}</span>${r.vm ? `<small class="tbx-vm q${r.vm.q > 0 ? "up" : r.vm.q < 0 ? "dn" : "eq"}">${esc(r.vm.pos === 0 ? "proche" : (r.vm.strong ? "nettement " : "") + (r.vm.pos > 0 ? "au-dessus" : "en dessous"))}</small>` : ""}` : `<span class="light">–</span>`}</td></tr>`;
@@ -250,7 +255,7 @@ function tblxFullHTML(s, c, P) {
       return `<td class="num${q > 0 ? " hu" : q < 0 ? " hd" : ""}${i === L ? " last" : ""}${lvc}"${i > 0 && d != null ? ` title="${esc(Y[i] + " : " + r.full(v) + (tblxChange(r.kind, r.vals[i - 1], v) ? " (" + tblxChange(r.kind, r.vals[i - 1], v) + " sur un an)" : ""))}"` : ""}>${esc(r.cell(v))}</td>`;
     }).join("");
     out += `<tr data-k="${r.k}" class="${z++ % 2 ? "z" : ""}${r.ess ? " es" : ""}" tabindex="0" aria-expanded="false">
-      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.label)}</span><span class="u">${esc(r.unit)}</span></th>${cells}
+      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.label)}${tblxProv(r.k, s)}</span><span class="u">${esc(r.unit)}</span></th>${cells}
       <td class="tr"><span class="tbx-trw">${tblxSpark(r.vals, { w: 60, h: 20, q: r.q, med: r.med, label: "Évolution" })}${tblxArrow(r.dir, r.q, "", "Sur un an")}</span></td>
       <td class="md">${r.med != null ? `<span class="num">${esc(r.cell(r.med))}</span>` : `<span class="light">–</span>`}</td></tr>`;
   });
@@ -275,7 +280,7 @@ function tblxChart(s, c, r) {
 const TBLX_THEMES = [
   { k: "croissance", t: "Croissance", q: "Vend-elle plus qu'avant ?", rows: ["ca", "g", "eps"],
     ex: "Les ventes (chiffre d'affaires) mesurent la taille de l'activité. Une hausse peut venir des volumes, des prix, du change ou d'un rachat : il faut la lire avec la rentabilité." },
-  { k: "rentabilite", t: "Rentabilité", q: "Que lui reste-t-il sur ce qu'elle vend ?", rows: ["marge", "ebit", "ebitda", "net", "nm", "roe"],
+  { k: "rentabilite", t: "Rentabilité", q: "Que lui reste-t-il sur ce qu'elle vend ?", rows: ["marge", "ebit", "ebitda", "net", "nm", "roe", "roce"],
     ex: "La marge d'exploitation dit ce qu'il reste sur 100 de ventes une fois payés salaires, achats et frais. La rentabilité des capitaux propres (ROE) rapporte le bénéfice à l'argent des actionnaires." },
   { k: "bilan", t: "Bilan et endettement", q: "Ce qu'elle possède, ce qu'elle doit", rows: ["lev", "netDebt", "debt", "cash", "equity", "gear"],
     ex: "La dette nette est la dette financière moins la trésorerie. Rapportée au résultat d'exploitation avant amortissements (EBITDA), elle dit en combien d'années l'entreprise pourrait la rembourser." },
@@ -298,12 +303,12 @@ function tblxChanges(P, yi) {
   for (const { r } of l) { const th = tblxThemeOf(r.k); if (seen.has(r.k) || (r.k === "nm" && seen.has("net")) || (r.k === "debt" && seen.has("netDebt"))) continue; seen.add(r.k); out.push(r); if (out.length >= 4) break; }
   return out;
 }
-function tblxThemeRows(rows, Y) {
+function tblxThemeRows(rows, Y, s) {
   const yl = Y.at(-1);
   return rows.map(r => {
     const ly = Y[r.li], stale = ly !== yl, one = tblxChange(r.kind, r.prev, r.last);
     return `<tr data-k="${r.k}" tabindex="0" aria-expanded="false">
-      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.short || r.label)}</span><p class="tbx-ph">${esc(r.phrase)}</p></th>
+      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.short || r.label)}${tblxProv(r.k, s)}</span><p class="tbx-ph">${esc(r.phrase)}</p></th>
       <td class="v"><span class="tbx-val ${tblxLvCls(r)}">${esc(r.full(r.last))}</span>${stale ? `<small class="light">en ${ly}</small>` : ""}${r.lv ? `<small class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</small>` : ""}${r.med != null ? `<small class="light tbx-mm">secteur : ${esc(r.full(r.med))}</small>` : ""}</td>
       <td class="tr"><button type="button" class="tbx-gb" data-g="${r.k}" aria-label="Voir l'évolution en graphique : ${esc(r.short || r.label)}">${tblxSpark(r.vals, { w: 76, h: 26, q: r.q, med: r.med, label: `Évolution de ${Y[0]} à ${yl}` })}</button>${tblxArrow(r.dir, r.q, one, "Sur un an")}</td></tr>`;
   }).join("");
@@ -319,7 +324,10 @@ function tblxThemeHTML(T, s, c, P) {
   }
   if (T.special === "div") {
     const h = dividendeHTML(s, c); if (!h) return "";
-    return h.replace(`<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>`, `<section class="panel rf-th" id="rf-dividende"><div class="ph"><h2>Dividende <small>${esc(T.q)}</small></h2>`);
+    return h.replace(`<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>`, `<section class="panel rf-th" id="rf-dividende"><div class="ph"><h2>Dividende <small>${esc(T.q)}</small></h2>`)
+      .replace(`<span class="kick">Par action</span>`, `<span class="kick">Par action${tblxProv("dps", s)}</span>`)
+      .replace(`<span class="kick">Rendement</span>`, `<span class="kick">Rendement${tblxProv("rendement", s)}</span>`)
+      .replace(`<span class="kick">Part du bénéfice</span>`, `<span class="kick">Part du bénéfice${tblxProv("payout", s)}</span>`);
   }
   const rows = T.rows.map(k => P.rows.find(r => r.k === k)).filter(Boolean);
   if (!rows.length) return "";
@@ -328,7 +336,7 @@ function tblxThemeHTML(T, s, c, P) {
   return `<section class="panel rf-th" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
     <p class="rf-thx">${esc(T.ex)}</p>
     <div class="rf-thg${ctx || !gr.length ? " rf-th1" : ""}">
-      ${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Évolution ${Y[0]}-${Y.at(-1)}</th></tr></thead><tbody>${tblxThemeRows(rows, Y)}</tbody></table>`)}
+      ${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Évolution ${Y[0]}-${Y.at(-1)}</th></tr></thead><tbody>${tblxThemeRows(rows, Y, s)}</tbody></table>`)}
       ${ctx || !gr.length ? "" : `<div class="rf-thc" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>`}
     </div>${ctx}</section>`;
 }
@@ -347,6 +355,7 @@ function tabComptes(s, c, el) {
   el.innerHTML = `
     <section class="panel tbx-panel rf-top" id="tbx">
       <div class="ph"><h2>Les chiffres de ${esc(s.name)}, par thème</h2><span class="light tbx-meta">${Y.length} exercice${Y.length > 1 ? "s" : ""} (${Y[0]}${Y.length > 1 ? " à " + yl : ""})${fy ? ` · clos le ${fy}` : ""}</span></div>
+      ${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
       <div class="pb">
         <h3 class="rf-h3">Ce qui a le plus changé sur un an</h3>
         ${chg.length ? `<div class="rf-chgs">${chg.map(r => `<a class="rf-chg ${r.q > 0 ? "q-up" : r.q < 0 ? "q-dn" : "q-eq"}" href="#rf-${tblxThemeOf(r.k)}"><span class="rf-cl">${esc(r.short || r.label)}</span><b>${tblxArrow(r.dir, r.q, tblxChange(r.kind, r.prev, r.last))}</b><small>de ${esc(r.full(r.prev))} à ${esc(r.full(r.last))} (${Y[r.li - 1]} → ${Y[r.li]})</small></a>`).join("")}</div>` : `<p class="rf-no">Aucune évolution marquée entre les deux derniers exercices.</p>`}
@@ -459,7 +468,7 @@ function filtreHTML(a) {
   const tally = c => { const t = quick(c); return t ? t.fort - t.vig : ""; };
   return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
     <div class="tbx-legend" style="padding:0 0 8px"><span><i class="lg-up"></i>nettement mieux que la médiane du secteur</span><span><i class="lg-dn"></i>nettement moins bien</span><span class="light">Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</span></div>
-    ${tblxScrollBox(`<table class="t tbx tbx-sort iat"><thead><tr><th class="l lab" scope="col" data-sk="0">Entreprise<i class="tbx-so"></i></th>${cols.map((k, i) => tblxTh(esc(INDI[k][0]), i + 1)).join("")}<th class="l" scope="col" data-sk="${cols.length + 1}">Repères<i class="tbx-so"></i></th></tr></thead><tbody>
+    ${tblxScrollBox(`<table class="t tbx tbx-sort iat"><thead><tr><th class="l lab" scope="col" data-sk="0">Entreprise<i class="tbx-so"></i></th>${cols.map((k, i) => tblxTh(esc(INDI[k][0]) + tblxProvG(k), i + 1)).join("")}<th class="l" scope="col" data-sk="${cols.length + 1}">Repères<i class="tbx-so"></i></th></tr></thead><tbody>
     ${l.slice(0, lim).map((c, j) => `<tr class="${j % 2 ? "z" : ""}"><th scope="row" class="l lab" data-v="${esc(c.name)}"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 26)}<span><b>${esc(c.name)}</b><small class="light">${esc(regName(c))} · ${esc(secName(c))}</small></span></a></th>${cols.map(k => cellInd(c, k)).join("")}<td class="l" data-v="${tally(c)}">${(t => t ? pills(t) : "")(quick(c))}</td></tr>`).join("")}</tbody></table>`)}
     ${l.length > lim ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">${l.length - lim} autres entreprises. ${isPrem() ? "" : `<a class="lnk" href="/premium">Premium</a> affiche jusqu'à 30 résultats.`}</p>` : ""}
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">${l.length > 1 ? `<a class="more" href="/comparer?ids=${l.slice(0, 3).map(c => c.id).join(",")}">Comparer les trois premières →</a>` : ""}<button type="button" class="linkbtn" data-favall="${l.slice(0, lim).map(c => "c:" + c.id).join(",")}">☆ Tout ajouter à mes favoris</button></div>`;
@@ -504,7 +513,7 @@ function pageEntreprises() {
     const arrow = (a, b, sens = 1) => { const d = tblxDir("money", b, a); return d == null ? "" : tblxArrow(d, d * sens, a > 0 && b > 0 ? tblxRel(a / b - 1) : "", "Par rapport à l'exercice précédent"); };
     const med = s => MED[s] || {};
     $("#elist").innerHTML = `<section class="panel"><div class="tbx-legend" style="padding:12px 18px 8px"><span><i class="lg-up"></i>nettement mieux que la médiane du secteur</span><span><i class="lg-dn"></i>nettement moins bien</span><span class="light">↑ ↓ : évolution sur un an. Chiffres du dernier rapport annuel, dans la devise de l'entreprise.</span></div>
-      ${tblxScrollBox(`<table class="t tbx tbx-list click"><thead><tr>${th("name", "Entreprise", "l lab")}${th("ca", "Ventes")}${th("g1", "Croissance")}${th("marge", "Marge")}${th("net", "Bénéfice")}${th("vig", "Repères", "l")}${th("year", "Exercice")}</tr></thead><tbody>
+      ${tblxScrollBox(`<table class="t tbx tbx-list click"><thead><tr>${th("name", "Entreprise", "l lab")}${th("ca", "Ventes" + tblxProvG("ca"))}${th("g1", "Croissance" + tblxProvG("g"))}${th("marge", "Marge" + tblxProvG("marge"))}${th("net", "Bénéfice" + tblxProvG("net"))}${th("vig", "Repères", "l")}${th("year", "Exercice")}</tr></thead><tbody>
       ${shown.map(({ c, m, t }, j) => `<tr data-id="${c.id}" class="${j % 2 ? "z" : ""}"><th scope="row" class="l lab"><div class="cell-co">${logo(c, 32)}<div><a class="nm" href="/entreprise/${c.id}">${esc(c.name)}</a><div class="sub">${esc(regName(c))} · ${esc(secName(c))}</div></div></div></th>
       ${c.missing ? `<td colspan="6" class="l light">${missingTxt(c)}</td>` : `<td class="num"><b class="tbx-big">${big(c.ca, c.currency)}</b>${arrow(c.ca, c.caPrev)}</td>${tblxZoneCell(m.g1, v => pct(v), med(c.sector).g1, false, Math.max(0.02, Math.abs(med(c.sector).g1 || 0) * 0.25))}${isBank(c) ? `<td class="num na" title="Ne s'applique pas aux banques et assurances">–</td>` : tblxZoneCell(m.marge, v => pct(v, 1, false), med(c.sector).marge, false, Math.max(0.03, Math.abs(med(c.sector).marge || 0) * 0.25))}<td class="num"><b class="tbx-big${c.net < 0 ? " neg" : ""}">${big(c.net, c.currency)}</b>${arrow(c.net, c.netPrev)}</td><td class="l">${t ? pills(t) : ""}</td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}
       ${rows.length > max ? `<div style="text-align:center;padding:14px"><button class="btn" id="tmore" type="button">Voir ${Math.min(100, rows.length - max)} de plus (${F0.format(rows.length - max)} restantes)</button></div>` : ""}

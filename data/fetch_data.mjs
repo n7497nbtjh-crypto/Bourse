@@ -180,6 +180,10 @@ export function summary(c) {
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, currency: c.currency,
     year: c.years[L] ?? null, ca: at("ca"), caPrev: at("ca", L - 1), ebit: at("ebit"), net: at("net"), netPrev: at("net", L - 1), equity: at("equity"),
     netDebt: at("netDebt"), ebitda: at("ebitda"), fcf: at("fcf"), divPaid: at("divPaid"), dps: at("dps") ?? at("dpsEst"), eps: at("eps"),
+    // Provenance : dividende par action estimé, date de clôture du dernier exercice lu, date de lecture du document
+    ...(at("dps") == null && at("dpsEst") != null ? { dpsE: 1 } : {}),
+    clos: (c.sources && c.sources[0] && /^\d{4}-\d{2}-\d{2}$/.test(c.sources[0].periodEnd || "") ? c.sources[0].periodEnd : c.years[L] != null && /^\d{2}-\d{2}$/.test(c.fyEnd || "") ? `${c.years[L]}-${c.fyEnd}` : null),
+    maj: c.updated || null,
   };
 }
 

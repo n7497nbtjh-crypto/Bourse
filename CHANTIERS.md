@@ -205,3 +205,19 @@ Trois niveaux, rien d'autre. Détails : `docs/ia.md`.
 - /hier (menu Marchés) : `pageHier`, annonces `resultats` du jour ouvré précédent (actu/j/*.json, heure de Paris), regroupées par entreprise, lecture `O2_lecture`
   (chiffres classés, prévisions et extraits de actu-analyse.json, positifs/négatifs/risques, pas de synthèse avec moins de 2 évolutions), bouton IA = `iaRediger("annonce", …)` (IA connectée du visiteur, sinon `miaInvite`).
   Tests : `python3 tests/t_outils2.py [--shots dossier]`.
+
+
+## Provenance des chiffres (module `cf/site/m/provenance.js`, chargé juste avant `monia.js`)
+- Registre unique des indicateurs : `PROV_IND[clé] = { nom, formule, unite, nature (publie | calcule | estime | marche | emetteur), src (comptes | cours | mixte | etf | etfcompo), limite }`.
+  Les clés reprennent celles des lignes de `tblxRows` (ca, g, marge, net, roe, roce, fcf, payout…) ; `provKey(k)` accepte aussi les clés d'`INDI` et du lexique (`PROV_ALIAS`).
+  Tout nouvel indicateur affiché doit y être ajouté (formule en clair, nature, limites).
+- Bouton « i » : `provBtn(clé, ids, libellé)` avec `ids` = `"c:<id>"`, `"e:<id>"` ou plusieurs séparés par des virgules (comparateur) ; vide = en-tête d'un tableau de nombreuses entreprises.
+  La bulle (même `#pop` que les définitions) donne nature, formule, devise, période et date de clôture, document source, date de récupération, cours (date du relevé), change BCE, limites.
+  Elle s'ouvre au clic ou au toucher, au survol (souris) et au focus clavier ; le clic est capturé : ni tri de colonne ni lien de tuile.
+- Fraîcheur : `provComptesVieux(c, s)` (bandeau quand le dernier exercice a plus de 15 mois), `provCours(p)` (`vieux` au-delà de 3 jours ouvrés sans relevé),
+  `valo()` redéfinie : PER, rendement et VE/EBITDA ne sont plus calculés avec des comptes de plus de 15 mois (`v.vieux`).
+- Ratios ajoutés : `provRoce`, `provEvEbitda`, `provRdtFcf` (+ `INDI.roce`, `INDI.ev_ebitda`, `INDI.rendement_fcf`, notions `roce`, `evebitda`, `rdtfcf` du lexique). Tests : `node tests/t_provenance.mjs`, `python3 tests/t_provenance.py`.
+- Données : `societes.json` gagne `clos` (date de clôture), `maj` (date de lecture du document) et `dpsE` (dividende par action estimé) ; `etf.json` : `releve` par fonds et `updated` = date du catalogue des émetteurs ;
+  `etf/<id>.json` : `releve` ; `/api/cours` : `d` (date du fichier) pour un titre absent de la feuille. Ces champs apparaissent au prochain passage des robots ; le site fonctionne sans eux (« date de récupération non conservée »).
+- « Vérifier une offre » (`outilVerifier`) : recherche sur le nom et le site seulement (plus sur la catégorie), domaine d'une adresse ou d'un e-mail reconnu ;
+  trois issues : correspondance trouvée, recherche insuffisante (moins de 4 caractères, mots génériques, plus de 40 entrées), aucune correspondance (jamais présentée comme un gage de fiabilité).
