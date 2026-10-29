@@ -1,16 +1,15 @@
 {
- "sec": [
-  "[0s] fiches à lire 3203",
-  "[52s] fiches 300",
-  "[105s] fiches 600",
-  "[159s] fiches 900",
-  "[211s] fiches 1200",
-  "[264s] fiches 1500",
-  "[315s] fiches 1800",
-  "[365s] fiches 2100",
-  "[416s] fiches 2400",
-  "[466s] fiches 2700",
-  "[517s] fiches 3000",
-  "[550s] fini 3203 nouvelles fiches, total 5466"
- ]
+ "courtiers": [
+  "https://www.fortuneo.fr/bourse/tarifs 200 https://www.fortuneo.fr/bourse 680205 pdf 1 extraits 2",
+  "  pdf https://www.fortuneo.fr/files/tarifs_fortuneo.pdf 200 651352",
+  "https://www.fortuneo.fr/tarifs-bancaires 404 https://www.fortuneo.fr/tarifs-bancaires 241006 pdf 0 extraits 0",
+  "https://www.fortuneo.fr/bourse 200 https://www.fortuneo.fr/bourse 680205 pdf 1 extraits 2",
+  "  pdf https://www.fortuneo.fr/files/tarifs_fortuneo.pdf 200 651352",
+  "https://www.fortuneo.fr/bourse/offre-starter 404 https://www.fortuneo.fr/bourse/offre-starter 241006 pdf 0 extraits 0",
+  "https://www.fortuneo.fr/tarifs 200 https://www.fortuneo.fr/tarifs 268369 pdf 2 extraits 0",
+  "  pdf https://www.fortuneo.fr/files/tarifs_fortuneo.pdf 200 651352",
+  "  pdf https://www.fortuneo.fr/files/document-information-tarifaire.pdf 200 80351",
+  "https://www.fortuneo.fr/aide/bourse/tarifs-bourse 404 https://www.fortuneo.fr/aide/bourse/tarifs-bourse 241006 pdf 0 extraits 0"
+ ],
+ "date": "2026-10-29T02:01:30.619Z"
 }

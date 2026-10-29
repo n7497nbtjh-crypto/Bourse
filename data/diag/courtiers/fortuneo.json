@@ -1,0 +1,57 @@
+{
+ "https://www.fortuneo.fr/bourse/tarifs": {
+  "status": 200,
+  "url": "https://www.fortuneo.fr/bourse",
+  "len": 680205,
+  "pdfs": [
+   "https://www.fortuneo.fr/files/tarifs_fortuneo.pdf"
+  ],
+  "hits": [
+   "elon le montant de vos ordres de bourse Tarifs valables pour les ordres passés sur les marchés Euronext (Paris, Amsterdam, Bruxelles) et Equiduct. Pour les autres marchés, consultez notre brochure tarifaire en vigueur . Starter La formule la plus accessible, idéale pour découvrir la Bourse en investissant de petits montants jusqu’à 500 €. 0 € pour le 1er ordre ≤ 500 € chaque mois Sinon 0,35 % par ordre Aucune condition d’encours ou d’activité Éligible PEA / PEA-PME-ETI / Compte-titr",
+   "ourse (CTO, PEA ou PEA-PME-ETI). Jusqu’à 2 000 € remboursés (encours minimum de 5 000 €.). Offre valable pour un 1er transfert, sous conditions 1 . 0 € de frais sur votre 1er ordre de bourse chaque mois Avec votre tarif Starter, les frais de courtage sur votre 1er ordre du mois inférieur ou égal à 500 € vous sont offerts. 0€ de frais de courtage sur une sélection d’ETF Amundi Chaque mois, les frais de courtage de l’ensemble de vos ordres compris entre 500 € et 100 000 € sont gratuit"
+  ]
+ },
+ "https://www.fortuneo.fr/tarifs-bancaires": {
+  "status": 404,
+  "url": "https://www.fortuneo.fr/tarifs-bancaires",
+  "len": 241006,
+  "pdfs": [],
+  "hits": []
+ },
+ "https://www.fortuneo.fr/bourse": {
+  "status": 200,
+  "url": "https://www.fortuneo.fr/bourse",
+  "len": 680205,
+  "pdfs": [
+   "https://www.fortuneo.fr/files/tarifs_fortuneo.pdf"
+  ],
+  "hits": [
+   "elon le montant de vos ordres de bourse Tarifs valables pour les ordres passés sur les marchés Euronext (Paris, Amsterdam, Bruxelles) et Equiduct. Pour les autres marchés, consultez notre brochure tarifaire en vigueur . Starter La formule la plus accessible, idéale pour découvrir la Bourse en investissant de petits montants jusqu’à 500 €. 0 € pour le 1er ordre ≤ 500 € chaque mois Sinon 0,35 % par ordre Aucune condition d’encours ou d’activité Éligible PEA / PEA-PME-ETI / Compte-titr",
+   "ourse (CTO, PEA ou PEA-PME-ETI). Jusqu’à 2 000 € remboursés (encours minimum de 5 000 €.). Offre valable pour un 1er transfert, sous conditions 1 . 0 € de frais sur votre 1er ordre de bourse chaque mois Avec votre tarif Starter, les frais de courtage sur votre 1er ordre du mois inférieur ou égal à 500 € vous sont offerts. 0€ de frais de courtage sur une sélection d’ETF Amundi Chaque mois, les frais de courtage de l’ensemble de vos ordres compris entre 500 € et 100 000 € sont gratuit"
+  ]
+ },
+ "https://www.fortuneo.fr/bourse/offre-starter": {
+  "status": 404,
+  "url": "https://www.fortuneo.fr/bourse/offre-starter",
+  "len": 241006,
+  "pdfs": [],
+  "hits": []
+ },
+ "https://www.fortuneo.fr/tarifs": {
+  "status": 200,
+  "url": "https://www.fortuneo.fr/tarifs",
+  "len": 268369,
+  "pdfs": [
+   "https://www.fortuneo.fr/files/tarifs_fortuneo.pdf",
+   "https://www.fortuneo.fr/files/document-information-tarifaire.pdf"
+  ],
+  "hits": []
+ },
+ "https://www.fortuneo.fr/aide/bourse/tarifs-bourse": {
+  "status": 404,
+  "url": "https://www.fortuneo.fr/aide/bourse/tarifs-bourse",
+  "len": 241006,
+  "pdfs": [],
+  "hits": []
+ }
+}
