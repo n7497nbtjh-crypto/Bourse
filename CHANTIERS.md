@@ -158,3 +158,17 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
   les données restent publiques sur les fiches) ; découvertes refaites (6 cases : petite valeur PEA, Europe, hors Europe, rendement, croissance,
   redressement ; pas de grandes capitalisations ; 2 ETF éligibles PEA ; activité, chiffres, valorisation, catalyseurs sourcés, risques).
 - À signaler (agent « etf ») : dans `etf.json`, des ETF MSCI EMU (zone euro) sont rangés en `actions-emergents` ; `recoEtfSuspect(e)` les écarte des pistes.
+## Apprendre, idées reçues et communauté (agent « apprendre2 », vague du 29 octobre 13 h 30)
+- Apprendre (`m/parcours.js`) : `PAR_NIVEAUX` range tout en 3 niveaux (fondamentaux, lire une entreprise, juger le prix et construire).
+  Chaque niveau = parcours court (`/academie/express/<niveau>`, progression `pState`) + « Approfondir » (modules du cours complet, `acaSt`).
+  `/apprendre` (niveaux, idée reçue mise en avant, lexique, outils repliés dans `#outils`), `/academie` (programme complet par niveau), `/academie/express` (les 3 niveaux).
+  `acaLecon` est enveloppée : une leçon citée par une idée reçue affiche « Vrai ou faux ? » en fin de page.
+- Idées reçues (`m/communication.js`) : chaque entrée de `commIdees()` a `mythe`, `credible`, `faits` + `viz` (données), `nuance`, `exemple`, `retenir`, `src`, `liens`.
+  Carte « vrai ou faux » : `commIdeeCarte(x, i, { seule })`, réponses dans `localStorage["bilan.idees"]`, `commIdeeSeuleHTML()` pour Apprendre et l'Académie. `commIdeesHTML(n)` (accueil) garde sa signature.
+- Communauté (`m/communaute.js`, chargé après parcours.js) : redéclare `pageCommunaute`, `tabCommu`, `chatBlock` (bloc des fiches entreprise et ETF), `qGuide`.
+  Onglets : Analyses (thèse, arguments, risques, horizon ; chiffres de la fiche recalculés à l'affichage), Questions, Listes de suivi (+ portefeuilles partagés), Pronostics.
+  Anciennes adresses : `?onglet=discussions&salon=x` → analyses de la fiche + anciens messages ; `?onglet=portefeuilles` → Listes de suivi.
+  Serveur (`cf/src/communaute.mjs`) : colonne `messages.meta` (JSON `{ t, r, h, ex }`), `GET /api/communaute/analyses?room=&tri=utiles|recentes`,
+  table `listes` (`POST /api/communaute/liste` → `{ id, cle }`, `GET /listes`, `GET /liste?id=`, `POST /liste/utile|signaler|retirer`), `masquer` accepte `{ type: "liste" }`.
+  Garde-fous : pas de liens, refus des consignes d'achat ou de vente et des promesses de gain (`CONSIGNE`), 3 analyses et 3 listes par jour, masquage après 3 signalements.
+- Tests : `node tests/t_communaute.mjs`, `python3 tests/t_communaute_ui.py [--shots dossier]`, `python3 tests/t_parcours.py`.

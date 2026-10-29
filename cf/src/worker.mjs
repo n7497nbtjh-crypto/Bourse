@@ -48,7 +48,7 @@ export function meta(path, q = null) {
   if (p === "/portefeuille") return { title: `Portefeuille · ${SITE}`, desc: "Suivez la performance réelle de vos placements ou entraînez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqués · ${SITE}`, desc: "Les fonds indiciels les plus utilisés en France : ce qu'ils contiennent, leurs frais, leur éligibilité au PEA, leur composition par pays et par entreprise." };
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications · ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqués simplement." };
-  if (p === "/communaute") return { title: `Communauté · ${SITE}`, desc: "Échangez des idées et des questions sur les entreprises et la Bourse avec les autres visiteurs. Aucun message n'est un conseil en investissement." };
+  if (p === "/communaute") return { title: `Communauté · ${SITE}`, desc: "Analyses argumentées des visiteurs sur les entreprises et les ETF, avec les chiffres du site, questions de débutants et listes de suivi partagées. Aucun message n'est un conseil en investissement." };
   if (p === "/lexique") return { title: `Lexique · ${SITE}`, desc: "PER, rendement, marge, dette, volatilité : chaque chiffre de la Bourse expliqué simplement, avec ses limites." };
   if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace · ${SITE}`, desc: "Votre semaine en 2 minutes : variations, annonces et dates à venir de ce que vous suivez, vos alertes et vos listes, sur tous vos appareils." };
   if (p === "/favoris") return { title: `Mes favoris · ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres clés, prochaines dates et presse." };

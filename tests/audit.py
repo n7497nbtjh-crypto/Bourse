@@ -9,6 +9,7 @@ pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?
 pages += ["/academie", "/academie/bases", "/academie/bases/interets-composes", "/academie/frais-fiscalite", "/academie/bases/quiz", "/academie/formation", "/methode", "/demander", "/demander?q=entreprises+peu+endettees", "/espace", "/commencer", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement", "/connecteur"]
 pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes", "/pour-moi"]
 pages += ["/entreprise/alibaba?etape=comptes", "/entreprise/klepierre?etape=comptes", "/entreprise/totalenergies?etape=comptes"]
+pages += ["/communaute?onglet=analyses", "/communaute?onglet=listes", "/communaute?onglet=listes&liste=1", "/communaute?onglet=analyses&a=1"]
 pages += ["/idees-recues", "/idees-recues#livret-a", "/livret-a-ou-bourse", "/pourquoi-bilan"]
 pages += ["/apprendre", "/apprendre#outils", "/academie/express", "/academie/express/lire", "/academie/express/lire/dette-nette", "/academie/express/prix/quiz", "/espace/rapport", "/espace/ia"]
 pages += ["/comparer?ids=bnp-paribas,societe-generale,sap", "/comparer?ids=apple,microsoft,alphabet", "/entreprise/bnp-paribas?etape=concurrents", "/entreprise/apple?etape=concurrents", "/entreprise/totalenergies?etape=concurrents", "/entreprise/siemens", "/entreprise/alibaba?etape=metier"]

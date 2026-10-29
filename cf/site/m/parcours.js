@@ -1,10 +1,9 @@
 /* =====================================================================================================
    Module « parcours » (cf/site/m/parcours.js), chargé après le script principal et après m/synthese.js.
-   1. Apprendre : un seul point d'entrée, /apprendre, et un chemin clair.
-        Par où commencer (/commencer) → L'Académie (/academie : l'essentiel en 3 étapes, le cours complet, la formation guidée)
-        → Le lexique (/lexique) → Les outils pédagogiques (/apprendre#outils).
-      L'ancien parcours « Premiers pas » (/debuter) faisait doublon avec l'Académie : il devient « L'essentiel en 3 étapes »,
-      la version courte de l'Académie (/academie/express). Les anciennes adresses /debuter/… sont redirigées (ici et par le Worker, en 301).
+   1. Apprendre : un seul point d'entrée, /apprendre, en trois niveaux (PAR_NIVEAUX) : parcours court de chaque niveau
+      (/academie/express/<niveau>), « Approfondir » avec les modules du cours complet (/academie), idée reçue mise en avant.
+      L'ancien parcours « Premiers pas » (/debuter) est devenu le parcours court ; les anciennes adresses /debuter/… sont redirigées
+      (ici et par le Worker, en 301).
    2. Le rapport de la semaine sur mesure : réglages gardés avec le compte (GET/POST /api/espace/rapport, cf/src/espace.mjs),
       assistant en 3 étapes au premier passage dans Mon espace, onglet « Mon rapport », aperçu sur l'accueil pour les visiteurs,
       ligne dans la page Premium. Les réglages sont appliqués par le serveur (cf/src/synthese.mjs, faitsSynthese) ; ici on n'affiche que ce qu'il renvoie.
