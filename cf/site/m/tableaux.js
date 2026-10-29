@@ -768,6 +768,6 @@ table.tbx-ag tbody tr[data-href]{cursor:pointer}
 .rf-all > summary b{display:block;font-family:var(--serif);font-size:20px;font-weight:800}
 .rf-all > summary small{display:block;font-size:13px;color:var(--grey);margin-top:2px}
 .rf-all .tbx-sum{padding:0 22px 8px}
-@media (max-width:1000px){.rf-thg{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:1200px){.rf-thg{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:760px){.rf-thx{padding:10px 16px 4px}.rf-thc{padding:10px 12px 12px}.rf-thnav{padding:10px 12px 14px}.rf-all > summary{padding:14px 16px}.rf-all .tbx-sum{padding:0 12px 8px}.rf-th .ph h2 small{font-size:13px}}
 </style>`);

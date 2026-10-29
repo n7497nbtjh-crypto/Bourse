@@ -308,6 +308,9 @@ function contexteActuHTML(s, c) {
   </section>`;
 }
 // Annonces officielles et presse récentes de l'entreprise (agent « actu »), croisées avec les sujets
+// Titres de flux RSS parfois livrés avec des entités HTML (« b&#xE9;n&#xE9;fice ») : décodées avant l'échappement
+const CTX_ENT = { amp: "&", quot: '"', apos: "'", lt: "<", gt: ">", nbsp: " " };
+function ctxDec(t) { return String(t || "").replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, n) => String.fromCodePoint(+n)).replace(/&(amp|quot|apos|lt|gt|nbsp);/g, (m, k) => CTX_ENT[k]); }
 function ctxCoFill(el, s) {
   if (!el || el.dataset.ok) return; el.dataset.ok = "1";
   const pr = typeof actuCo === "function" ? actuCo(s.id) : fetch(`/data/actu/c/${s.id}.json`).then(r => r.ok ? r.json() : null);
@@ -320,8 +323,8 @@ function ctxCoFill(el, s) {
     if (!o.length && !p.length) { el.innerHTML = `<p class="muted ctx-cov">Pas d'annonce officielle importante ni d'article de presse récent sur elle dans les sources du site.</p>`; return; }
     const d = iso => dShort(iso);
     el.innerHTML = `<h3 class="ctx-h">Ses annonces et la presse récentes</h3><ul class="ctx-col">
-      ${o.map(a => `<li><span class="ctx-d">${d(a.d)}</span><span class="ctx-k">Annonce officielle</span><a href="${esc(a.u)}" target="_blank" rel="noopener">${esc(a.tf || a.t)}</a></li>`).join("")}
-      ${p.map(({ a, s: x }) => `<li><span class="ctx-d">${d(a.d)}</span><span class="ctx-k">${esc(a.s || "Presse")}</span><a href="${esc(a.u)}" target="_blank" rel="noopener">${esc(a.t)}</a>${x ? `<span class="ctx-lie">Lié à : ${esc(x.titre.split(" : ")[0])}</span>` : ""}</li>`).join("")}</ul>
+      ${o.map(a => `<li><span class="ctx-d">${d(a.d)}</span><span class="ctx-k">Annonce officielle</span><a href="${esc(a.u)}" target="_blank" rel="noopener">${esc(ctxDec(a.tf || a.t))}</a></li>`).join("")}
+      ${p.map(({ a, s: x }) => `<li><span class="ctx-d">${d(a.d)}</span><span class="ctx-k">${esc(a.s || "Presse")}</span><a href="${esc(a.u)}" target="_blank" rel="noopener">${esc(ctxDec(a.t))}</a>${x ? `<span class="ctx-lie">Lié à : ${esc(x.titre.split(" : ")[0])}</span>` : ""}</li>`).join("")}</ul>
       <p class="ctx-rep">Titres seulement : le site n'a pas lu ces articles en détail. Lisez-les avant d'en tirer une conclusion.</p>`;
   });
 }
