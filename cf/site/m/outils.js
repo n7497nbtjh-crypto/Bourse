@@ -126,6 +126,23 @@ function outClRow(k, x, i) {
   const c = x.c;
   return `<a class="out-row" href="/entreprise/${c.id}"><span class="out-rk${i < 3 ? " top" : ""}">${i + 1}</span>${logo(c, 36)}<span class="out-rt"><b>${esc(c.name)}</b><small>${esc([secName(c), regName(c)].filter(Boolean).join(" · "))} ${outPea(c)}</small><span class="out-why">${outClWhy(k, x)}</span></span><span class="out-rv">${x.q ? pills(x.q) : ""}${k === "dividende" ? outCouvTag(c) : ""}</span></a>`;
 }
+const OUT_CRIT = { points: "Critères : croissance, marge, bénéfice, rentabilité, dette, argent disponible et dividende, chacun face à la médiane du secteur.",
+  tete: "Critère : marge d'exploitation (rentabilité des capitaux propres pour les banques), rang dans le secteur sur cinq exercices au plus.",
+  croissance: "Critère : années de suite avec des ventes en hausse, puis croissance moyenne par an.",
+  dividende: "Critère : années de suite avec un dividende par action en hausse, contrôlé par le montant total versé.",
+  solides: "Critères : bénéficiaire à chaque exercice publié, dette nette inférieure à un an de résultat, puis marge d'exploitation." };
+function outClScore(k, x) { // le score seul, sans rien qui permette de reconnaître l'entreprise
+  const st = x.st, m = ratios(x.c);
+  if (k === "points") return `${outN(x.q.fort, "point fort", "points forts")}, ${outN(x.q.vig, "point de vigilance", "points de vigilance")}`;
+  if (k === "tete") return `Dans les 10 % les meilleures ${st.top} exercice${st.top > 1 ? "s" : ""} sur ${st.topN}`;
+  if (k === "croissance") return `Ventes en hausse ${outAns(st.caUp)}`;
+  if (k === "dividende") return `Dividende relevé ${outAns(st.divUp)}`;
+  if (k === "solides") return `Bénéficiaire ${st.netN} exercices sur ${st.netN}, marge de ${pct(m.marge, 0, false)}`;
+  return "";
+}
+function outClBlur(k, x, i) {
+  return `<div class="out-row out-blur" aria-label="Place ${i + 1} réservée à Premium"><span class="out-rk top">${i + 1}</span><span class="lgph" aria-hidden="true"></span><span class="out-rt"><b aria-hidden="true">Entreprise masquée</b><small aria-hidden="true">Secteur · Région</small><span class="out-why">${outClScore(k, x)}</span></span><span class="out-rv">${OUT_ICON.lock}</span></div>`;
+}
 async function pageClassements() {
   setTitle("Classements des entreprises"); setNav("ent");
   if (!R) return;
@@ -141,19 +158,25 @@ async function pageClassements() {
     <div class="out-tabs scroll-x" role="tablist">${Object.entries(OUT_CL).map(([k, v]) => `<button type="button" role="tab" data-k="${k}" aria-selected="${k === f.c}" class="${k === f.c ? "on" : ""}"><i>${v.icon}</i><b>${esc(v.t)}</b><small>${esc(v.s)}</small></button>`).join("")}</div>
     <section class="panel"><div class="pb out-filt">${outSelect("out-s", outSecOpts(), f.s, "Secteur")}${outSelect("out-r", OUT_REG, f.r, "Région")}${outSelect("out-t", OUT_TAILLE, f.t, "Taille en Bourse")}<label class="out-chk"><input type="checkbox" id="out-pea"${f.pea ? " checked" : ""}> Éligibles au PEA</label></div></section>
     <div id="out-cl"></div></div>`;
+  /* Aperçu sans Premium : les 3 premières places sont floutées (nom, logo et lien absents de la page, seul le score reste),
+     les places 4 à 15 sont visibles pour comprendre le classement. Ce n'est pas une restriction d'accès au sens strict :
+     les comptes de chaque entreprise sont publics et consultables gratuitement sur sa fiche, et le calcul est fait dans le
+     navigateur. Premium apporte la liste triée complète (50 places) ; la méthode, les critères et les limites restent visibles pour tous. */
   const draw = () => {
-    const k = f.c, D = OUT_CL[k], rows = outClRows(k, f), lim = prem ? 50 : 3;
-    const shown = rows.slice(0, lim), more = rows.length - shown.length;
+    const k = f.c, D = OUT_CL[k], rows = outClRows(k, f), lim = prem ? 50 : 15, flou = prem ? 0 : Math.min(3, Math.max(0, rows.length - 1));
+    const shown = rows.slice(0, lim), more = rows.length - shown.length, vis = shown.slice(flou);
     history.replaceState(null, "", "/classements" + outQS({ c: k === "points" ? "" : k, s: f.s, r: f.r, pea: f.pea, t: f.t }));
     $("#out-cl").innerHTML = `<section class="panel"><div class="ph"><h2>${esc(D.t)}</h2><span class="light" style="font-size:12.5px">${rows.length ? `${F0.format(rows.length)} entreprise${rows.length > 1 ? "s" : ""} retenue${rows.length > 1 ? "s" : ""}` : ""}</span></div>
-      <div class="pb" style="padding-top:6px">${OUT_NOADV}
-      ${rows.length ? `<div class="out-list">${shown.map((x, i) => outClRow(k, x, i)).join("")}</div>` : `<div class="empty">Aucune entreprise ne remplit ces conditions avec ces filtres. Élargissez le secteur ou la région.</div>`}
-      ${more > 0 && !prem ? `<div class="out-lock">${Array.from({ length: Math.min(3, more) }, (_, i) => `<div class="out-ghost"><span class="out-rk">${i + 4}</span><span class="lgph"></span><span class="out-rt"><b></b><small></small></span></div>`).join("")}
-        <div class="out-lockc">${OUT_ICON.lock}<b>Encore ${F0.format(more)} entreprise${more > 1 ? "s" : ""} dans ce classement</b><span>La liste complète (jusqu'à 50 par classement, avec tous les filtres) fait partie de Premium.</span><a class="btn" href="/premium">Découvrir Premium</a></div></div>` : ""}
+      <div class="pb" style="padding-top:6px">
+      <div class="out-crit"><div><em>Ce qui est mesuré</em><p>${esc(D.s)}. ${esc(OUT_CRIT[k])}</p></div><div><em>Ce que cela ne dit pas</em><p>Ni si l'action est chère, ni ce qu'elle fera. Les comptes passés ne garantissent rien, et une entreprise hors classement peut avoir simplement des comptes manquants.</p></div></div>
+      ${rows.length ? `<div class="out-list">${shown.slice(0, flou).map((x, i) => outClBlur(k, x, i)).join("")}${vis.map((x, i) => outClRow(k, x, i + flou)).join("")}</div>` : `<div class="empty">Aucune entreprise ne remplit ces conditions avec ces filtres. Élargissez le secteur ou la région.</div>`}
+      ${flou ? `<div class="out-apercu">${OUT_ICON.lock}<div><b>Aperçu : les ${flou} premières places sont réservées à Premium</b><span>Les places suivantes sont visibles pour que vous voyiez comment le classement fonctionne. Les comptes de chaque entreprise restent gratuits sur sa fiche : Premium vous donne la liste triée complète (jusqu'à 50 places), avec tous les filtres.</span></div><a class="btn" href="/premium">Voir le classement complet</a></div>` : ""}
       ${more > 0 && prem ? `<p class="note">${F0.format(more)} autres entreprises remplissent les conditions. Affinez avec les filtres pour les voir.</p>` : ""}
-      ${shown.length >= 2 ? `<p style="margin:14px 0 0"><a class="lnk" href="/comparer?ids=${shown.slice(0, prem ? 5 : 3).map(x => x.c.id).join(",")}">Comparer les ${Math.min(shown.length, prem ? 5 : 3)} premières critère par critère →</a></p>` : ""}</div></section>
+      ${vis.length >= 2 ? `<p style="margin:14px 0 0"><a class="lnk" href="/comparer?ids=${vis.slice(0, prem ? 5 : 3).map(x => x.c.id).join(",")}">Comparer les ${Math.min(vis.length, prem ? 5 : 3)} premières affichées critère par critère →</a></p>` : ""}
+      ${OUT_NOADV}</div></section>
       <section class="panel"><details class="acc"><summary><b>Comment ce classement est calculé</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px"><p>${esc(D.how)}</p>
         <p>Les comptes viennent des rapports annuels officiels (format ESEF en Europe, SEC aux États-Unis), lus par le site. Les entreprises dont les comptes ne sont pas disponibles n'apparaissent pas. ${medBtnSafe()}</p>
+        <p><b>Limites.</b> Un seul exercice peut être exceptionnel (cession, crise). Les ventes sont dans la devise des comptes, sans effet de change. Les petites entreprises ont souvent moins d'années publiées et entrent moins facilement dans les classements sur plusieurs exercices. L'éligibilité au PEA suit la règle du site : siège dans l'Union européenne ou l'EEE et impôt sur les sociétés (les foncières exonérées sont exclues).</p>
         <p class="muted">Une bonne place dit « ces comptes ressortent sur ce critère ». Elle ne dit ni que l'action est bon marché, ni qu'elle montera.</p></div></details></section>`;
   };
   draw();
@@ -278,30 +301,61 @@ async function pageDividendes() {
   if (!OUT_DOCCLICK) { OUT_DOCCLICK = true; document.addEventListener("click", e => { const g = $("#out-ss"); if (g && !e.target.closest(".out-q")) g.hidden = true; }); }
 }
 
-/* ---------- 3. Découvertes : une sélection quotidienne d'entreprises moins connues ---------- */
+/* ---------- 3. Découvertes : une sélection quotidienne, diversifiée, sans biais vers les grandes valeurs ----------
+   Chaque jour : 6 entreprises (une par « case » : petite valeur éligible au PEA, petite ou moyenne valeur européenne,
+   valeur hors d'Europe, profil rendement, croissance, redressement), de secteurs différents, au plus deux par région,
+   et 2 ETF éligibles au PEA de catégories différentes (hors ETF Monde, déjà partout).
+   Les grandes capitalisations (plus de 10 Md€) et les entreprises des comparaisons célèbres sont écartées.
+   Taille, profil, valorisation, risques et catalyseurs : fonctions recoTaille, recoStyle, recoValo, recoRisques, recoCatal de m/reco.js. */
 function outSeed(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 function outRand(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-let OUT_POOL = null;
-function outPool() { // candidates : comptes complets, plutôt solides, ni géantes ni minuscules, et absentes des comparaisons célèbres
-  if (OUT_POOL) return OUT_POOL;
-  const famous = new Set(OUT_PRESETS.flatMap(p => p.ids));
-  const l = R.companies.filter(c => {
-    if (c.missing || !c.desc || famous.has(c.id) || !(c.net > 0)) return false;
-    const ca = outCaEur(c); if (!(ca >= 150 && ca <= 8000)) return false;
-    const q = quick(c); return q && q.fort >= 3 && q.vig <= 1;
-  }).sort((a, b) => a.id.localeCompare(b.id));
-  const rnd = outRand(outSeed("bilan-decouvertes")); // ordre mélangé une fois pour toutes, puis lu jour après jour
+const OUT_SLOTS = [
+  { k: "pea", t: "Petite valeur éligible au PEA", f: x => (x.T.t === "small" || x.T.t === "micro") && x.pea === true },
+  { k: "eu", t: "Valeur européenne de taille moyenne ou petite", f: x => x.c.region === "EU" },
+  { k: "monde", t: "Hors d'Europe", f: x => x.c.region === "US" || x.c.region === "MONDE" },
+  { k: "rendement", t: "Profil rendement", f: x => x.style === "rendement" },
+  { k: "croissance", t: "Profil croissance", f: x => x.style === "croissance" },
+  { k: "redressement", t: "Profil redressement", f: x => x.style === "redressement" },
+];
+let OUT_POOL = null, OUT_POOLK = "";
+function outPool() {
+  const k = (typeof PXUP === "string" ? PXUP : "") + "|" + !!OUT_ST;
+  if (OUT_POOL && OUT_POOLK === k) return OUT_POOL;
+  const famous = new Set(OUT_PRESETS.flatMap(p => p.ids)), y = new Date().getFullYear(), l = [];
+  for (const c of R.companies) {
+    if (c.missing || !c.desc || famous.has(c.id) || !(c.year >= y - 2)) continue;
+    const q = quick(c); if (!q || q.fort + q.moyen + q.vig < 5 || q.fort < 2) continue;
+    const T = typeof recoTaille === "function" ? recoTaille(c) : null; if (!T || T.t === "large") continue;
+    const style = recoStyle(c);
+    if (q.vig > (style === "redressement" ? 3 : 2)) continue;
+    // microcapitalisations : seulement si les comptes sont récents et complets (données jugées fiables)
+    if (T.t === "micro" && (!(c.year >= y - 1) || [c.ca, c.net, c.equity, c.netDebt].some(v => v == null) || q.vig > 1)) continue;
+    l.push({ c, q, T, style, pea: recoPeaOk(c) });
+  }
+  l.sort((a, b) => a.c.id.localeCompare(b.c.id));
+  const rnd = outRand(outSeed("bilan-decouvertes-2")); // ordre mélangé une fois pour toutes, puis lu jour après jour
   for (let i = l.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [l[i], l[j]] = [l[j], l[i]]; }
-  return OUT_POOL = l;
+  OUT_POOLK = k; return OUT_POOL = l;
 }
 function outDayPicks(dateIso, n = 6) {
   const P = outPool(); if (!P.length) return [];
-  const day = Math.floor(Date.parse(dateIso + "T12:00:00Z") / 864e5), start = (day * n * 4) % P.length, out = [], sec = new Set(), reg = {};
-  for (let k = 0; k < P.length && out.length < n; k++) {
-    const c = P[(start + k) % P.length];
-    if (sec.has(c.sector) || (reg[c.region] || 0) >= 2) continue;
-    out.push(c); sec.add(c.sector); reg[c.region] = (reg[c.region] || 0) + 1;
+  const out = [], sec = new Set(), reg = {}, used = new Set();
+  for (const S of OUT_SLOTS) {
+    if (out.length >= n) break;
+    const start = outSeed(S.k + "|" + dateIso) % P.length; // point de départ tiré au hasard (le même pour tous) chaque jour
+    for (let k = 0; k < P.length; k++) {
+      const x = P[(start + k) % P.length];
+      if (used.has(x.c.id) || sec.has(x.c.sector) || (reg[x.c.region] || 0) >= 2 || !S.f(x)) continue;
+      out.push({ ...x, slot: S }); used.add(x.c.id); sec.add(x.c.sector); reg[x.c.region] = (reg[x.c.region] || 0) + 1; break;
+    }
   }
+  return out;
+}
+function outEtfPicks(dateIso, n = 2) { // ETF éligibles au PEA, hors ETF Monde, deux catégories différentes chaque jour
+  const L = (ETF.list || []).filter(e => e.pea === true && e.ter != null && !e.levier && (e.encours || 0) >= 50 && e.categorie !== "actions-monde" && !(typeof recoEtfSuspect === "function" && recoEtfSuspect(e))).sort((a, b) => a.id.localeCompare(b.id));
+  if (!L.length) return [];
+  const day = Math.floor(Date.parse(dateIso + "T12:00:00Z") / 864e5), out = [], cats = new Set();
+  for (let k = 0; k < L.length && out.length < n; k++) { const e = L[(day * 5 + k * 7) % L.length]; if (cats.has(e.categorie) || out.includes(e)) continue; out.push(e); cats.add(e.categorie); }
   return out;
 }
 function outFacts(c) { // ce qui ressort des comptes, en phrases courtes et sourcées (pas de jugement sur l'action)
@@ -309,6 +363,7 @@ function outFacts(c) { // ce qui ressort des comptes, en phrases courtes et sour
   if (st && st.top >= 3) F.push([5, `Dans les 10 % les plus rentables de son secteur ${st.top} exercices sur ${st.topN}`]);
   if (st && st.caUp >= 3) F.push([4, `Ventes en hausse ${st.caUp} années de suite${st.cagr != null ? ` (${sgn(st.cagr, 0)} par an)` : ""}`]);
   if (st && st.divUp >= 3) F.push([4, `Dividende relevé ${st.divUp} années de suite`]);
+  if (c.netPrev != null && c.netPrev < 0 && c.net > 0) F.push([4.5, `De nouveau bénéficiaire : ${big(c.net, c.currency)} après une perte de ${big(-c.netPrev, c.currency)} l'exercice précédent`]);
   if (!isBank(c) && m.marge != null && med.marge > 0 && m.marge > med.marge * 1.5) F.push([3, `Garde ${outE100(m.marge)} sur 100 € de ventes, contre ${outE100(med.marge)} pour la médiane de son secteur`]);
   if (m.roe != null && m.roe >= 0.15 && (med.roe == null || m.roe > med.roe)) F.push([2.5, `Rentabilité de ${pct(m.roe, 0, false)} des capitaux propres${med.roe != null ? ` (secteur : ${pct(med.roe, 0, false)})` : ""}`]);
   if (!isBank(c) && c.netDebt != null && c.netDebt <= 0) F.push([2, "Pas de dette nette : plus de trésorerie que d'emprunts"]);
@@ -316,41 +371,89 @@ function outFacts(c) { // ce qui ressort des comptes, en phrases courtes et sour
   if (m.payout != null && m.payout >= 0.2 && m.payout <= 0.7) F.push([1, `Dividende couvert : ${F0.format(m.payout * 100)} % du bénéfice reversé`]);
   return F.sort((a, b) => b[0] - a[0]).map(x => x[1]);
 }
-function outDecCard(c, lg) {
-  const F = outFacts(c).slice(0, lg ? 3 : 2), q = quick(c), fl = typeof FLAG === "object" && c.isin ? FLAG[c.isin.slice(0, 2)] || "" : "";
-  return `<a class="out-dc${lg ? " big" : ""}" href="/entreprise/${c.id}"><span class="out-dch">${logo(c, lg ? 44 : 36)}<span><b>${esc(c.name)}</b><small>${fl ? `<span class="out-fl2">${fl}</span>` : ""}${esc([secName(c), regName(c)].filter(Boolean).join(" · "))} ${outPea(c)}</small></span></span>
-    <span class="out-dcd">${esc(c.desc)}</span>${F.length ? `<span class="out-dcw"><em>Pourquoi la découvrir</em><ul>${F.map(x => `<li>${x}</li>`).join("")}</ul></span>` : ""}
-    <span class="out-dcf">${q ? pills(q) : ""}<span class="light">Ventes ${esc(c.year || "")} : ${big(c.ca, c.currency)}</span></span></a>`;
+function outDecKpis(c) {
+  const v = valo(c), med = MEDPE[c.sector], K = [];
+  K.push(["Valeur en Bourse", v && v.capE ? capFmt(v.capE) : "–"]);
+  K.push(["PER", v && v.pe ? `${F0.format(v.pe)}${med ? ` <small>secteur ${F0.format(med)}</small>` : ""}` : c.net > 0 ? "–" : "En perte"]);
+  K.push(["Rendement", v && v.yld ? pct(v.yld, 1, false) : "–"]);
+  K.push([`Ventes ${esc(String(c.year || ""))}`, big(c.ca, c.currency)]);
+  return `<div class="out-kp">${K.map(([l, x]) => `<div><span>${l}</span><b>${x}</b></div>`).join("")}</div>`;
+}
+function outDecCard(x, lg) {
+  const c = x.c, F = outFacts(c).slice(0, lg ? 3 : 2), fl = typeof FLAG === "object" && c.isin ? FLAG[c.isin.slice(0, 2)] || "" : "";
+  const risk = RECO.risqueAction({ taille: x.T.t, perte: !(c.net > 0), levier: isBank(c) ? null : ratios(c).lev, amp: recoAmp(c) });
+  const why = `${x.slot ? x.slot.t + " : " : ""}${outN(x.q.fort, "point fort", "points forts")} et ${outN(x.q.vig, "point de vigilance", "points de vigilance")} sur ${x.q.fort + x.q.moyen + x.q.vig} critères face à la médiane de son secteur.`;
+  const head = `<span class="out-dch">${logo(c, lg ? 44 : 36)}<span><b>${esc(c.name)}</b><small>${fl ? `<span class="out-fl2">${fl}</span>` : ""}${esc([secName(c), regName(c)].filter(Boolean).join(" · "))}</small></span></span>`;
+  const tags = `<span class="out-dtg"><span class="out-tl2">${esc(RECO_TAILLE[x.T.t])}${x.T.src === "ventes" ? "*" : ""}</span>${x.style ? `<span class="out-tl2">${RECO_STYLE[x.style]}</span>` : ""}${recoPeaTag(c)}${recoRisk(risk)}</span>`;
+  if (!lg) return `<a class="out-dc" href="/entreprise/${c.id}">${head}${tags}<span class="out-dcd">${esc(c.desc)}</span>${F.length ? `<span class="out-dcw"><em>Pourquoi la découvrir</em><ul>${F.map(f => `<li>${f}</li>`).join("")}</ul></span>` : ""}</a>`;
+  const Rk = recoRisques(c, x.T), V = recoValo(c);
+  return `<article class="out-dc big"><a class="out-dca" href="/entreprise/${c.id}">${head}</a>${tags}
+    <p class="out-dcd"><b>Activité</b> ${esc(c.desc)}</p>
+    <p class="out-dcr"><b>Raison de la sélection</b> ${esc(why)}</p>
+    ${outDecKpis(c)}
+    ${F.length ? `<div class="out-dcw"><em>Éléments financiers</em><ul>${F.map(f => `<li>${f}</li>`).join("")}</ul></div>` : ""}
+    <details class="rc-det"><summary>Valorisation, catalyseurs et risques</summary><div>
+      ${V.length ? `<p><b>Valorisation</b> ${V.join(" ")}</p>` : ""}
+      <p><b>Catalyseurs potentiels</b></p><div data-rc-cat="${esc(c.id)}"><p class="rc-mut">Chargement des annonces…</p></div>
+      <p><b>Risques</b></p>${Rk.length ? `<ul class="rc-rk">${Rk.map(([t, z]) => `<li><b>${t}</b> ${z}</li>`).join("")}</ul>` : `<p class="rc-mut">Aucun risque particulier relevé dans les chiffres ; les risques propres à toute action demeurent.</p>`}
+      <p><b>Éligibilité au PEA</b> ${esc(recoPeaInfo(c).why)}</p></div></details>
+    <a class="lnk out-dcl" href="/entreprise/${c.id}">Lire la fiche complète →</a></article>`;
+}
+function outEtfCard(e) {
+  const pe = RECO.peaEtf(e), C = e.compo || {}, r = RECO.risqueEtf(e);
+  const risques = [r >= 4 ? "Concentré sur une région, un pays ou un thème : plus variable qu'un ETF Monde." : "Suit un marché d'actions : des baisses de 30 % ou plus sont possibles.",
+    pe.swap ? "Réplication synthétique : le fonds dépend d'un contrat d'échange avec une banque (risque de contrepartie, encadré par la réglementation)." : null,
+    (e.encours || 0) < 100 ? "Encours inférieur à 100 M€ : un petit fonds risque davantage d'être fermé." : null,
+    e.devise && e.devise !== "EUR" ? `Fonds en ${esc(e.devise)} : le change joue.` : null].filter(Boolean);
+  return `<article class="out-dc big out-de"><a class="out-dca" href="/etf/${esc(e.id)}"><span class="out-dch"><span class="rc-ico">ETF</span><span><b>${esc(e.name)}</b><small>${esc([e.issuer, ECAT[e.categorie] || e.categorie].filter(Boolean).join(" · "))}</small></span></span></a>
+    <span class="out-dtg">${recoEtfPeaTag(e)}${recoRisk(r)}</span>
+    <p class="out-dcd"><b>Ce qu'il contient</b> ${esc((e.fiche && e.fiche.quoi) || `Il suit l'indice ${e.index || ""}.`)}</p>
+    <p class="out-dcr"><b>Raison de la sélection</b> ETF éligible au PEA hors ETF Monde, pour varier les catégories : ${esc(ECAT[e.categorie] || e.categorie)}.</p>
+    <div class="out-kp"><div><span>Frais par an</span><b>${pct(e.ter / 100, 2, false)}</b></div><div><span>Encours</span><b>${e.encours ? F0.format(e.encours) + " M€" : "–"}</b></div><div><span>Lignes</span><b>${C.n ? F0.format(C.n) : "–"}</b></div><div><span>1er pays</span><b>${pe.expo ? `${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)} ${F0.format(pe.expo.pct)} %` : "–"}</b></div></div>
+    <details class="rc-det"><summary>Éligibilité, exposition et risques</summary><div>
+      <p><b>Éligibilité au PEA</b> ${esc(pe.why)}</p>
+      <p><b>Exposition</b> ${pe.expo ? `Ce que le fonds suit : ${F0.format(pe.expo.pct)} % ${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)}${C.p1 && C.pays ? `, ${F0.format(C.pays)} pays au total` : ""}.` : "Composition non détaillée par l'émetteur."} L'éligibilité au PEA ne dit rien de cette exposition.</p>
+      <p><b>Risques</b></p><ul class="rc-rk">${risques.map(z => `<li>${z}</li>`).join("")}</ul>
+      <p class="rc-mut">Source : fiche de l'émetteur${C.asOf ? `, composition au ${esc(C.asOf)}` : ""}. Les performances passées ne préjugent pas des performances futures.</p></div></details>
+    <a class="lnk out-dcl" href="/etf/${esc(e.id)}">Lire la fiche du fonds →</a></article>`;
 }
 function outDateFr(iso, opt) { return new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", opt || { weekday: "long", day: "numeric", month: "long" }); }
 // Pour l'accueil : 3 entreprises du jour (l'orchestrateur place ce bloc). Rien ne bloque : les comptes de l'exercice suffisent.
 function outilsDecouverteHTML(n = 3) {
   if (!R) return "";
   const l = outDayPicks(TODAY, 6).slice(0, n); if (!l.length) return "";
-  if (!OUT_H) outHist().then(() => { outStats(); $$(".out-home[data-d='" + TODAY + "']").forEach(el => { el.querySelector(".out-dg").innerHTML = l.map(c => outDecCard(c, false)).join(""); }); });
+  if (!OUT_H) outHist().then(() => { outStats(); const l2 = outDayPicks(TODAY, 6).slice(0, n); $$(".out-home[data-d='" + TODAY + "']").forEach(el => { el.querySelector(".out-dg").innerHTML = l2.map(x => outDecCard(x, false)).join(""); }); });
   else outStats();
-  outCSS();
+  outCSS(); if (typeof recoCSS === "function") recoCSS();
   return `<section class="panel out-home" data-d="${TODAY}"><div class="ph"><h2>À découvrir aujourd'hui</h2><a href="/decouvertes">Toutes les découvertes</a></div><div class="pb" style="padding-top:6px">
-    <p class="muted out-hs">Des entreprises moins connues dont les comptes ressortent sur nos critères. Une nouvelle sélection chaque jour, sans conseil d'achat.</p><div class="out-dg">${l.map(c => outDecCard(c, false)).join("")}</div></div></section>`;
+    <p class="muted out-hs">Des petites et moyennes entreprises, d'Europe et d'ailleurs, dont les comptes ressortent sur nos critères. Une nouvelle sélection chaque jour, sans conseil d'achat.</p><div class="out-dg">${l.map(x => outDecCard(x, false)).join("")}</div></div></section>`;
 }
 async function pageDecouvertes() {
   setTitle("Découvertes du jour"); setNav("ent");
   if (!R) return;
+  if (typeof recoCSS === "function") recoCSS();
   app.innerHTML = `<div class="empty">Chargement…</div>`;
-  await Promise.all([PXP, outHist()]); outStats();
+  await Promise.all([PXP, outHist(), typeof recoDivLoad === "function" ? recoDivLoad() : null]); outStats();
   if (location.pathname !== "/decouvertes") return;
-  const today = outDayPicks(TODAY, 6), P = outPool();
+  const today = outDayPicks(TODAY, 6), etfs = outEtfPicks(TODAY, 2), P = outPool();
   const prev = [1, 2, 3, 4, 5, 6].map(k => { const d = new Date(Date.parse(TODAY + "T12:00:00Z") - k * 864e5).toISOString().slice(0, 10); return [d, outDayPicks(d, 6)]; });
+  const nT = t => P.filter(x => x.T.t === t).length;
   app.innerHTML = `<div class="out-page"><div class="crumbs"><a href="/entreprises">Entreprises</a> › Découvertes</div>
     <h1 class="pagetitle">À découvrir aujourd'hui</h1>
-    <p class="pagesub">${esc(outDateFr(TODAY).replace(/^./, x => x.toUpperCase()))} : six entreprises que l'on cite rarement, de secteurs et de pays différents, dont les comptes ressortent sur les critères du site. La sélection change chaque jour.</p>
-    <div class="out-dg big">${today.map(c => outDecCard(c, true)).join("")}</div>
+    <p class="pagesub">${esc(outDateFr(TODAY).replace(/^./, x => x.toUpperCase()))} : six entreprises peu citées, de tailles, de pays, de secteurs et de profils différents, et deux ETF éligibles au PEA. Pour chacune : activité, chiffres, valorisation, catalyseurs et risques.</p>
     ${OUT_NOADV}
-    <section class="panel"><div class="ph"><h2>Les jours précédents</h2></div><div class="pb" style="padding-top:4px">${prev.map(([d, l]) => `<div class="out-prev"><b>${esc(outDateFr(d, { weekday: "long", day: "numeric", month: "long" }))}</b><div>${l.map(c => `<a class="chip" href="/entreprise/${c.id}">${logo(c, 20)}${esc(c.name)}</a>`).join("")}</div></div>`).join("")}</div></section>
+    <h2 class="out-h2">Entreprises</h2>
+    <div class="out-dg big">${today.map(x => outDecCard(x, true)).join("")}</div>
+    ${etfs.length ? `<h2 class="out-h2">ETF éligibles au PEA</h2><div class="out-dg big out-dg2">${etfs.map(outEtfCard).join("")}</div>` : ""}
+    <section class="panel"><div class="ph"><h2>Les jours précédents</h2></div><div class="pb" style="padding-top:4px">${prev.map(([d, l]) => `<div class="out-prev"><b>${esc(outDateFr(d, { weekday: "long", day: "numeric", month: "long" }))}</b><div>${l.map(x => `<a class="chip" href="/entreprise/${x.c.id}">${logo(x.c, 20)}${esc(x.c.name)}</a>`).join("")}</div></div>`).join("")}</div></section>
     <section class="panel"><details class="acc"><summary><b>Comment la sélection est faite</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px">
-      <p>Parmi les entreprises suivies, le site retient celles dont les ventes annuelles se situent entre 150 millions et 8 milliards d'euros (ni les géantes que tout le monde connaît, ni les toutes petites), bénéficiaires au dernier exercice, avec au moins trois points forts et au plus un point de vigilance. Les entreprises des comparaisons célèbres sont écartées. Cela fait ${F0.format(P.length)} entreprises aujourd'hui.</p>
-      <p>Elles sont mélangées une fois pour toutes, puis lues six par six, jour après jour, avec au plus une entreprise par secteur et deux par région. Tout le monde voit donc la même sélection le même jour. « Pourquoi la découvrir » reprend les faits qui ressortent de ses comptes face à la médiane de son secteur.</p>
-      <p class="muted">Découvrir n'est pas acheter : lisez la fiche, ses points de vigilance et le prix de l'action avant toute décision.</p></div></details></section></div>`;
+      <p><b>Le vivier.</b> Les entreprises suivies dont les comptes ont moins de deux ans, avec au moins 5 critères mesurés, 2 points forts ou plus et au plus 2 points de vigilance (3 pour un redressement). Les grandes capitalisations (plus de 10 Md€) et les entreprises des comparaisons célèbres sont écartées. Une microcapitalisation n'entre que si ses comptes sont récents et complets. Cela fait ${F0.format(P.length)} entreprises aujourd'hui : ${F0.format(nT("mid"))} moyennes, ${F0.format(nT("small"))} petites, ${F0.format(nT("micro"))} micro.</p>
+      <p><b>Les six cases du jour.</b> Une petite valeur éligible au PEA, une valeur européenne, une valeur hors d'Europe, puis un profil rendement (dividende d'au moins 3,5 % couvert par le bénéfice), croissance (ventes en hausse 3 ans de suite à plus de 7 % par an, ou +15 % sur un an) et redressement (retour aux bénéfices après une perte). Au plus une entreprise par secteur et deux par région. Tout le monde voit la même sélection le même jour.</p>
+      <p><b>Tailles.</b> Capitalisation en euros : micro sous 300 M€, petite jusqu'à 2 Md€, moyenne jusqu'à 10 Md€. Sans cours disponible, la taille est estimée par les ventes (signalé par un astérisque).</p>
+      <p><b>PEA.</b> Une action cotée en Europe n'est pas forcément éligible : il faut un siège dans l'Union européenne ou l'EEE et une société soumise à l'impôt sur les sociétés (les foncières SIIC, SIR ou SOCIMI sont exclues). Le site lit le pays du code ISIN, le recoupe avec Wikidata et affiche « à vérifier » quand les sources se contredisent. Pour un ETF, l'éligibilité est celle déclarée par l'émetteur ; un ETF éligible peut suivre des actions américaines ou asiatiques.</p>
+      <p><b>Catalyseurs.</b> Annonces officielles importantes des 90 derniers jours (AMF, SEC et autres régulateurs) et dates publiées par l'entreprise, avec leur lien. Ce sont des événements à suivre, pas des prévisions.</p>
+      <p class="muted">Petites valeurs : moins d'échanges chaque jour, des cours plus variables, une information plus rare et parfois une activité concentrée. Découvrir n'est pas acheter : lisez la fiche, ses points de vigilance et le prix de l'action avant toute décision.</p></div></details></section></div>`;
+  if (typeof recoFillCatal === "function") recoFillCatal(app);
 }
 
 /* ---------- 4. Comparaisons toutes prêtes ---------- */
@@ -509,6 +612,13 @@ function outCSS() {
 .out-cv{display:inline-block;font-size:12px;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
 .out-cv-oui{background:#E3F2E9;color:#0F6B3E}.out-cv-juste{background:#F3EFE6;color:#6B5A2E}.out-cv-non{background:#FCE9D6;color:#9A4A0B}
 .out-cvd{display:block;color:var(--grey);font-size:11.5px;margin-top:2px}
+.out-crit{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:4px 0 12px}.out-crit>div{background:var(--soft);border-radius:12px;padding:9px 13px}
+.out-crit em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--grey)}.out-crit p{margin:3px 0 0;font-size:13px;line-height:1.45}
+.out-blur{cursor:default}.out-blur:hover{background:none}.out-blur .lgph{width:36px;height:36px;border-radius:10px;background:var(--soft);flex:none;filter:blur(2px)}
+.out-blur .out-rt b,.out-blur .out-rt>small{filter:blur(5px);user-select:none;color:var(--light)}.out-blur .out-rv{color:var(--light)}
+.out-apercu{display:flex;gap:12px;align-items:center;flex-wrap:wrap;border:1px solid var(--rule);border-radius:12px;padding:12px 14px;margin:10px 0 0;background:#FBFAF7}
+.out-apercu>div{flex:1;min-width:220px;display:flex;flex-direction:column;gap:3px}.out-apercu b{font-size:14.5px}.out-apercu span{font-size:13px;color:var(--grey);line-height:1.45}
+@media (max-width:720px){.out-crit{grid-template-columns:1fr}}
 .out-lock{position:relative;margin-top:2px}
 .out-ghost{display:flex;align-items:center;gap:12px;padding:12px 4px;border-top:1px solid var(--line2);opacity:.45;filter:blur(1.5px)}
 .out-ghost .lgph{width:36px;height:36px;border-radius:10px;background:var(--soft)}.out-ghost b{display:block;width:180px;height:12px;border-radius:4px;background:var(--rule)}.out-ghost small{display:block;width:120px;height:10px;border-radius:4px;background:var(--soft);margin-top:6px}
@@ -558,6 +668,15 @@ function outCSS() {
 .out-dcw ul{margin:4px 0 0;padding-left:16px;font-size:13.5px;line-height:1.45}
 .out-dcf{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:auto;font-size:12.5px;flex-wrap:wrap}
 .out-home .out-hs{margin:0 0 12px;font-size:13.5px}
+.out-h2{font:700 19px var(--serif);margin:22px 0 10px}
+.out-dc.big{gap:9px}.out-dca{color:var(--ink);text-decoration:none}.out-dca:hover b{text-decoration:underline}
+.out-dtg{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center}.out-tl2{font-size:11.5px;font-weight:600;border:1px solid var(--rule);border-radius:999px;padding:1px 8px;color:var(--grey);white-space:nowrap}
+.out-dc .out-dcd b,.out-dcr b{display:block;font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--grey);margin-bottom:1px}
+.out-dcr{margin:0;font-size:13.5px;line-height:1.45}
+.out-kp{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.out-kp>div{background:var(--soft);border-radius:9px;padding:6px 10px;display:flex;flex-direction:column;min-width:0}
+.out-kp span{font-size:11.5px;color:var(--grey)}.out-kp b{font:600 14.5px var(--mono,monospace);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.out-kp b small{font:400 11.5px var(--sans);color:var(--grey)}
+.out-dcl{font-size:13.5px;margin-top:auto}
+.out-dg2{grid-template-columns:repeat(2,1fr)}
 .out-prev{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line2);align-items:baseline}.out-prev:first-child{border-top:0}.out-prev>b{flex:none;width:170px;font-size:13.5px;font-weight:600}.out-prev>div{display:flex;flex-wrap:wrap;gap:6px}
 .out-prev .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px}
 .out-thc{margin:0 0 6px}

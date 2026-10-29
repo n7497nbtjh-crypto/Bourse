@@ -143,3 +143,18 @@ Côté navigateur (`cf/site/m/actu.js`) : `actuCo(id)` (promesse du fichier ci-d
 - Simulateur Livret A (communication.js) : mise à jour sur place (`commMaj`) avec animation des courbes, de l'échelle et des montants ;
   curseur continu (`step="any"`, année = entier le plus proche, calage au lâcher), flèches = une année. `commSimule` inchangé.
 - `main` a désormais `min-height: calc(100vh - 56px)` (index.html) : le pied de page ne saute plus au chargement (CLS).
+
+## Recommandations, classements et découvertes (agent « reco », module `cf/site/m/reco.js`, chargé juste avant orchestre.js)
+- Page `/pour-moi` (« Pistes pour vous ») : questionnaire de 11 questions (les 5 de /commencer, même clé `bilan.profil`, + perte, liquidite, objectif,
+  capital, versement, enveloppe), répartition indicative en fourchettes, points de vigilance du portefeuille (`pf3Rows`/`pf3Look` lus, jamais modifiés),
+  ETF, entreprises et secteurs à étudier, retours par piste (pertinente / trop risquée / redondante / inadaptée) qui modifient les pistes suivantes.
+- Calculs purs dans l'objet `RECO` (tests : `node tests/t_reco.mjs`) ; page testée par `python3 tests/t_reco.py [--shots dossier]`.
+- Pour l'accueil et Mon espace : `recoAccueilHTML()` / `recoEspaceHTML()` (= `recoCompactHTML({ titre })`) renvoient le bloc tout de suite, à placer par leurs auteurs.
+- Éligibilité au PEA, une seule règle pour tout le site : `peaOk(c)` de index.html appelle `recoPeaOk(c)` (siège UE/EEE d'après l'ISIN, recoupé avec
+  Wikidata via `cf/site/data/pea.json` fabriqué par `data/pea.mjs` au build ; foncières SIIC/SIR/SOCIMI/REIT exclues ; « à vérifier » = `null`).
+  Détail et motif : `recoPeaInfo(c)` ; ETF : `RECO.peaEtf(e)` (champ `pea` de l'émetteur, exposition gardée à part).
+- Compte : `POST /api/espace/reco` `{ reponses, retours }` fusionné dans `donnees.profil` (réponses au premier niveau, `profil.reco.retours`) ; `GET` idem.
+- `m/outils.js` : classements en aperçu (3 premières places floutées sans nom dans la page, places 4 à 15 visibles, 50 avec Premium : c'est un aperçu,
+  les données restent publiques sur les fiches) ; découvertes refaites (6 cases : petite valeur PEA, Europe, hors Europe, rendement, croissance,
+  redressement ; pas de grandes capitalisations ; 2 ETF éligibles PEA ; activité, chiffres, valorisation, catalyseurs sourcés, risques).
+- À signaler (agent « etf ») : dans `etf.json`, des ETF MSCI EMU (zone euro) sont rangés en `actions-emergents` ; `recoEtfSuspect(e)` les écarte des pistes.

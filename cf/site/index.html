@@ -2617,7 +2617,8 @@ function pageEnveloppes() {
       <div class="src">Règles en vigueur en ${RATES.year}, vérifiées le 28/10/2026 : <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2385" target="_blank" rel="noopener">Service-public.fr, fiche PEA</a> (mise à jour du 22/05/2026). Hausse des prélèvements sociaux à 18,6 % au 1er janvier 2026 (loi de financement de la Sécurité sociale pour 2026), l'assurance-vie restant à 17,2 %. Les règles fiscales changent souvent : vérifiez auprès de votre banque ou de votre courtier.</div></section>`;
 }
 const EEA = new Set(["FR", "DE", "NL", "BE", "LU", "IT", "ES", "PT", "IE", "AT", "FI", "SE", "DK", "NO", "IS", "LI", "PL", "CZ", "GR", "HU", "SK", "SI", "EE", "LV", "LT", "MT", "CY", "HR", "BG", "RO"]);
-const peaOk = c => c.isin ? EEA.has(c.isin.slice(0, 2)) : c.region === "FR" ? true : null;
+// Règle complète (siège UE/EEE et impôt sur les sociétés, foncières exonérées exclues) : recoPeaOk dans m/reco.js
+const peaOk = c => typeof recoPeaOk === "function" ? recoPeaOk(c) : c.isin ? EEA.has(c.isin.slice(0, 2)) : null;
 
 /* =====================================================================
    Refonte v2 : graphiques, cours, l'essentiel, dividende, prix, synthèses
@@ -4594,6 +4595,7 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
 <script src="/m/contexte.js"></script>
 <script src="/m/outils.js"></script>
 <script src="/m/parcours.js"></script>
+<script src="/m/reco.js"></script>
 <script src="/m/orchestre.js"></script>
 <script src="/m/accueil.js"></script>
 <script src="/m/iacle.js"></script>

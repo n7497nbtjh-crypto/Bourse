@@ -80,6 +80,21 @@ async function lire(request) {
 const parse = (s, d) => { try { const v = JSON.parse(s); return v === undefined ? d : v; } catch (e) { return d; } };
 const taille = v => new TextEncoder().encode(JSON.stringify(v)).length;
 
+// Profil d'investisseur et retours sur les pistes de /pour-moi (cf/site/m/reco.js) : réponses = index d'option (entiers 0 à 5),
+// retours = [{ id, v: ok|risque|redondant|inadapte|null, kind, tags, risk, at }] (100 au plus). Rangés dans donnees.profil.
+export const RECO_CLES = ["horizon", "baisse", "precaution", "connaissance", "choisir", "perte", "liquidite", "objectif", "capital", "versement", "enveloppe"];
+export function validerReco(b) {
+  if (!b || typeof b !== "object") return { error: "Requête illisible." };
+  const rep = {}, src = b.reponses && typeof b.reponses === "object" && !Array.isArray(b.reponses) ? b.reponses : {};
+  for (const k of RECO_CLES) { const v = src[k]; if (v === undefined || v === null) continue; if (!Number.isInteger(v) || v < 0 || v > 5) return { error: `Réponse invalide : ${k}.` }; rep[k] = v; }
+  if (b.retours !== undefined && !Array.isArray(b.retours)) return { error: "Les retours doivent être une liste." };
+  const txt = (s, n) => String(s == null ? "" : s).replace(/[\u0000-\u001f<>]/g, "").slice(0, n);
+  const retours = (b.retours || []).slice(-100).filter(r => r && typeof r === "object" && typeof r.id === "string" && r.id.length <= 80)
+    .map(r => ({ id: txt(r.id, 80), v: ["ok", "risque", "redondant", "inadapte"].includes(r.v) ? r.v : null, kind: ["ent", "etf", "sect", "alloc"].includes(r.kind) ? r.kind : "ent",
+      tags: (Array.isArray(r.tags) ? r.tags : []).slice(0, 6).map(t => txt(t, 40)), risk: Number.isInteger(r.risk) && r.risk >= 1 && r.risk <= 5 ? r.risk : null, at: Number.isFinite(r.at) ? Math.round(r.at) : 0 }));
+  return { reponses: rep, retours: b.retours === undefined ? undefined : retours };
+}
+
 // Données venues du navigateur : favoris, portefeuille, profil. strict = refuser (PUT) ; sinon on ignore ce qui ne va pas (import à l'inscription).
 function valider(b, strict) {
   const out = {}, ignores = [];
@@ -323,6 +338,18 @@ export async function espace(request, env) {
     if (typeof b.teaser !== "boolean") return json({ error: "Préférence invalide." }, 400);
     await env.DB.prepare(`UPDATE comptes SET teaser = ? WHERE id = ?`).bind(b.teaser ? 1 : 0, c.id).run();
     return json({ ok: true, teaser: b.teaser, mail: mailReady(env) });
+  }
+
+  // Profil d'investisseur et retours sur les pistes (/pour-moi), fusionnés dans donnees.profil sans toucher au reste (rapport…)
+  if (path === "/api/espace/reco" && (m === "GET" || m === "POST")) {
+    const row = await env.DB.prepare(`SELECT profil FROM donnees WHERE compte = ?`).bind(c.id).first(), p0 = parse(row && row.profil, null), profil = p0 && typeof p0 === "object" && !Array.isArray(p0) ? p0 : {};
+    if (m === "GET") return json({ reponses: Object.fromEntries(RECO_CLES.filter(k => Number.isInteger(profil[k])).map(k => [k, profil[k]])), retours: (profil.reco && Array.isArray(profil.reco.retours)) ? profil.reco.retours : [] });
+    const { b, err } = await lire(request); if (err) return err;
+    const v = validerReco(b); if (v.error) return json({ error: v.error }, 400);
+    const neuf = { ...profil, ...v.reponses, ...(v.retours ? { reco: { retours: v.retours, maj: Date.now() } } : {}) };
+    if (taille(neuf) > MAX_CHAMP) return json({ error: "Profil trop volumineux (60 Ko au plus)." }, 400);
+    await enregistrer(env, c.id, { profil: JSON.stringify(neuf) });
+    return json({ ok: true });
   }
 
   // Réglages du rapport de la semaine (ce qu'il contient, niveau de détail, sujets, jour, notification), gardés dans donnees.profil.rapport
