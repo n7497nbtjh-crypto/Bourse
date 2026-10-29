@@ -95,7 +95,7 @@ with sync_playwright() as pw:
         pg.goto("http://t.local/portefeuille"); pg.wait_for_timeout(400)
         for q, n, pru in (("LVMH", "5", "600"), ("MSCI World", "12", "85,40")):
             pg.fill("#pfq", q); pg.wait_for_timeout(150); pg.click("#pfs [role=option]"); pg.wait_for_timeout(200)
-            pg.fill("#pf3nq", n); pg.fill("#pf3npru", pru); pg.click("#pf3nok"); pg.wait_for_timeout(500)
+            pg.fill("#pf3nq", n); pg.fill("#pf3np", pru); pg.click("#pf3nok"); pg.wait_for_timeout(500)
         pg.wait_for_timeout(500)
         if "valeur totale" not in pg.inner_text("#pf3hero").lower() or "diversification" not in pg.inner_text("#pf3dash").lower(): probs["/portefeuille (tableau de bord)"] = ["le tableau de bord ne s'affiche pas"]
         pg.locator(".pf3rb").first.click(); pg.wait_for_timeout(300)

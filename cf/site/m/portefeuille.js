@@ -759,85 +759,118 @@ function pf3Search() {
   document.addEventListener("pointerdown", e => { if (!e.target.closest(".pf3add")) close(); });
 }
 
-/* ---------- Nouvelle ligne : « J'ai 12 parts achetées en moyenne à 85,40 € » ---------- */
+/* ---------- Nouvelle ligne, en quatre étapes : le titre, la quantité, le prix payé, les frais ; le PRU se calcule en direct ---------- */
 function pf3FormOpen(k) {
-  const P = pf3P(), cfg = P.cfg || {};
-  const last = P.l[P.l.length - 1] || {};
-  PF3S.form = { k, mode: "hold", q: "", pru: "", d: TODAY, p: "", f: "", env: last.env || (["pea", "cto", "av"].includes(cfg.env) ? cfg.env : ""), br: last.br || cfg.courtier || "", nm: "" };
-  if (k.startsWith("x:")) PF3S.form.nm = "";
+  const P = pf3P(), cfg = P.cfg || {}, last = P.l[P.l.length - 1] || {};
+  PF3S.form = { k, mode: "buy", q: "", p: "", f: "", d: "", env: last.env || (["pea", "cto", "av"].includes(cfg.env) ? cfg.env : ""), br: last.br || cfg.courtier || "", nm: "" };
   pf3DraftSave(PF3S.form); pf3Form();
-  const f = $("#pf3new"); if (f) { f.scrollIntoView({ block: "nearest", behavior: "smooth" }); const i = $("#pf3nq") || $("#pf3nnm"); if (i) setTimeout(() => i.focus({ preventScroll: true }), 60); }
+  const f = $("#pf3new"); if (f) { f.scrollIntoView({ block: "nearest", behavior: "smooth" }); const i = $("#pf3nnm") || $("#pf3nq"); if (i) setTimeout(() => i.focus({ preventScroll: true }), 60); }
+}
+function pf3FormCalc(F, P) { // ce que donnent les champs saisis : montant, frais, PRU, valeur
+  const info = pf3Info({ k: F.k, nm: F.nm }), exist = P.l.find(l => l.k === F.k && (l.env || "") === (F.env || "") && (l.br || "") === (F.br || ""));
+  const curQ = info.curQ || "EUR", cur = exist ? (exist.cur || curQ) : (F.cur || "EUR"), toCur = cur === "EUR" ? 1 : 1 / (pf3E(1, cur) || 1);
+  const q = pf3Num(F.q), p = pf3Num(F.p), b = F.br && BROKERS.list.find(x => x.id === F.br);
+  const amt = q > 0 && p > 0 ? q * p : null;
+  let f = F.mode === "pru" ? 0 : pf3Num(F.f), fAuto = false;
+  if (F.mode !== "pru" && f == null) { f = amt && b ? brokerFee(b, pf3E(amt, cur) || amt, (P.cfg || {}).perso) * toCur : 0; fAuto = !!(amt && b); }
+  const pru = amt ? (F.mode === "pru" ? p : (amt + f) / q) : null;
+  const pos = exist ? PF3.linePos(exist) : null;
+  const npos = exist && amt && F.mode !== "pru" ? PF3.position([...(exist.o && exist.o.length ? exist.o : exist.q > 0 ? [["", "r", exist.q, exist.pru, 0]] : []), [F.d || TODAY, "a", q, p, f]]) : null;
+  const vE = info.px && q > 0 ? pf3E(q * info.px.p, info.px.cur) : null, cE = amt ? pf3E(F.mode === "pru" ? amt : amt + f, cur) : null;
+  return { info, exist, curQ, cur, C: CUR[cur] || cur, q, p, f, fAuto, b, amt, pru, pos, npos, vE, cE };
 }
 function pf3Form() {
   const box = $("#pf3form"); if (!box) return;
   const F = PF3S.form; if (!F || !F.k) { box.innerHTML = ""; return; }
-  const P = pf3P(), l0 = { k: F.k, nm: F.nm, isin: F.k.startsWith("x:") ? F.k.slice(2) : "" }, info = pf3Info(l0);
-  const exist = P.l.find(l => l.k === F.k && (l.env || "") === (F.env || "") && (l.br || "") === (F.br || ""));
-  const curQ = info.curQ || "EUR", cur = exist ? (exist.cur || curQ) : (F.cur || "EUR");
-  const bF = F.br && BROKERS.list.find(b => b.id === F.br);
+  const P = pf3P(), X = pf3FormCalc(F, P), info = X.info, l0 = { k: F.k, nm: F.nm }, pxSame = info.px && info.px.cur === X.cur;
+  const step = (n, body) => `<li class="pf3st"><span class="pf3sn2" aria-hidden="true">${n}</span><div>${body}</div></li>`;
   box.innerHTML = `<div class="pf3new" id="pf3new" role="group" aria-label="Nouvelle ligne">
-    <div class="pf3nh">${pf3Logo(l0, 40)}<div><b>${esc(info.name || "Nouveau titre")}</b><small>${[info.ticker, info.type, info.isin, info.px ? "cours " + pf3Px(info.px.p, info.px.cur) : info.kind === "x" ? "pas de cours sur le site" : "cours indisponible"].filter(Boolean).map(esc).join(" · ")}</small></div><button type="button" class="pf3x" id="pf3nx" aria-label="Fermer">×</button></div>
-    ${info.kind === "x" ? `<label class="pf3f pf3wide"><span>Nom du titre</span><span class="pf3iw"><input id="pf3nnm" type="text" value="${esc(F.nm || "")}" placeholder="ex. iShares Core MSCI World"></span></label>` : ""}
-    ${pf3Chips("mode", [["hold", "Ce que je détiens"], ["buy", "Un achat daté"]], F.mode)}
-    <div class="pf3grid">${F.mode === "hold"
-      ? pf3In("pf3nq", "Nombre de parts", F.q, 'placeholder="12"') + pf3In("pf3npru", "Prix de revient unitaire (PRU)", F.pru, 'placeholder="85,40"', CUR[cur] || cur)
-      : `<label class="pf3f"><span>Date</span><span class="pf3iw"><input id="pf3nd" type="date" value="${esc(F.d || TODAY)}" max="${TODAY}"></span></label>` + pf3In("pf3nq", "Quantité", F.q, 'placeholder="10"') + pf3In("pf3np", "Prix unitaire", F.p, `placeholder="${info.px && info.px.cur === cur ? pf3Fmt(info.px.p) : ""}"`, CUR[cur] || cur) + pf3In("pf3nf", "Frais", F.f, `placeholder="${bF ? "auto" : "0"}"`, "€")}</div>
-    ${curQ !== "EUR" && !exist ? `<div class="pf3cur"><span>Prix en</span>${pf3Chips("cur", [["EUR", "euros"], [curQ, CUR[curQ] === "$" ? "dollars" : curQ]], cur)}<small>Le cours de ${esc(info.name)} est en ${esc(curQ)}. Indiquez la devise dans laquelle votre courtier affiche le prix.</small></div>` : ""}
-    <div class="pf3grid pf3g2"><div class="pf3f"><span>Compte</span>${pf3Chips("env", [["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"]], F.env)}</div>${pf3BrSel("pf3nbr", F.br)}</div>
-    <p class="pf3hint">${F.mode === "hold" ? `Le PRU figure dans l'application de votre courtier (« PRU », « prix moyen » ou « prix de revient »). Il inclut en général les frais d'achat.` : `Les frais sont calculés selon la grille du courtier choisi${bF ? ` (${esc(bF.name)})` : ""} ; vous pouvez les corriger.`}</p>
-    <div id="pf3nprev" class="pf3prev" aria-live="polite"></div>
-    <div class="pf3btns"><button type="button" class="btn" id="pf3nok">Ajouter au portefeuille</button><button type="button" class="linkbtn" id="pf3nno">Annuler</button></div></div>`;
+    <ol class="pf3steps">
+      ${step(1, `<div class="pf3nh">${pf3Logo(l0, 40)}<div><b>${esc(info.name || "Nouveau titre")}</b><small>${[info.ticker, info.type, info.isin, info.px ? "cours actuel " + pf3Px(info.px.p, info.px.cur) : info.kind === "x" ? "pas de cours sur le site" : "cours indisponible"].filter(Boolean).map(esc).join(" · ")}</small></div><button type="button" class="pf3x" id="pf3nx" aria-label="Annuler">×</button></div>
+        ${info.kind === "x" ? `<label class="pf3f"><span>Nom du titre</span><span class="pf3iw"><input id="pf3nnm" type="text" value="${esc(F.nm || "")}" placeholder="ex. iShares Core MSCI World"></span></label>` : ""}`)}
+      ${step(2, `${pf3In("pf3nq", "Nombre de parts", F.q, 'placeholder="ex. 12"')}<small class="pf3sh">Pour une fraction de part (plan d'investissement), écrivez par exemple 0,5.</small>`)}
+      ${step(3, `${pf3In("pf3np", F.mode === "pru" ? "Prix de revient unitaire (PRU) affiché par votre courtier" : "Prix payé par part", F.p, `placeholder="${pxSame ? "ex. " + pf3Fmt(info.px.p) : "ex. 85,40"}"`, X.C)}
+        <small class="pf3sh">${F.mode === "pru" ? "Le PRU inclut déjà les frais d'achat." : `Le cours auquel l'achat a été exécuté. Si vous avez acheté en plusieurs fois, indiquez le prix moyen.${pxSame && !F.p ? ` <button type="button" class="linkbtn" id="pf3usepx">Utiliser le cours actuel (${pf3Px(info.px.p, info.px.cur)})</button>` : ""}`}</small>
+        ${X.curQ !== "EUR" && !X.exist ? `<div class="pf3cur"><span>Prix en</span>${pf3Chips("cur", [["EUR", "euros"], [X.curQ, CUR[X.curQ] === "$" ? "dollars" : X.curQ]], X.cur)}<small>Le cours de ${esc(info.name)} est en ${esc(X.curQ)}. Choisissez la devise affichée par votre courtier.</small></div>` : ""}`)}
+      ${F.mode === "pru" ? "" : step(4, `<div class="pf3grid pf3g2" style="margin-top:0">${pf3In("pf3nf", "Frais de courtage", F.f, `placeholder="${X.fAuto ? pf3Fmt(Math.round(X.f * 100) / 100) : "0"}"`, X.C)}${pf3BrSel("pf3nbr", F.br)}</div>
+        <small class="pf3sh">${X.fAuto ? `Calculés selon la grille de ${esc(X.b.name)} : ${pf3Eu(pf3E(X.f, X.cur), 2)}. Modifiez si votre relevé indique autre chose.` : X.b ? "Saisissez d'abord la quantité et le prix : les frais seront calculés selon la grille du courtier." : "Choisissez votre courtier : les frais seront calculés selon sa grille. Ou saisissez-les (0 si aucun)."}</small>`)}
+    </ol>
+    <div class="pf3pru" id="pf3nprev" aria-live="polite"></div>
+    <div class="pf3opt"><div class="pf3f"><span>Compte</span>${pf3Chips("env", [["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"]], F.env)}</div>
+      ${F.mode === "pru" ? pf3BrSel("pf3nbr", F.br) : `<label class="pf3f"><span>Date de l'achat (facultatif)</span><span class="pf3iw"><input id="pf3nd" type="date" value="${esc(F.d || "")}" max="${TODAY}"></span></label>`}</div>
+    <p class="pf3hint">${F.mode === "pru" ? `<button type="button" class="linkbtn" id="pf3nmode">Revenir à la saisie du prix payé et des frais</button>` : `Votre courtier affiche déjà un PRU ? <button type="button" class="linkbtn" id="pf3nmode">Saisissez-le directement</button>.`}</p>
+    <div class="pf3btns"><button type="button" class="btn" id="pf3nok">${X.exist ? "Ajouter cet achat à la ligne" : "Ajouter au portefeuille"}</button><button type="button" class="linkbtn" id="pf3nno">Annuler</button></div></div>`;
   const read = () => { const g = id => { const el = $("#" + id); return el ? el.value : undefined; };
-    if (g("pf3nq") !== undefined) F.q = g("pf3nq"); if (g("pf3npru") !== undefined) F.pru = g("pf3npru"); if (g("pf3np") !== undefined) F.p = g("pf3np"); if (g("pf3nf") !== undefined) F.f = g("pf3nf"); if (g("pf3nd") !== undefined) F.d = g("pf3nd"); if (g("pf3nnm") !== undefined) F.nm = g("pf3nnm"); if (g("pf3nbr") !== undefined) F.br = g("pf3nbr"); F.cur = cur; };
+    for (const [id, k] of [["pf3nq", "q"], ["pf3np", "p"], ["pf3nf", "f"], ["pf3nd", "d"], ["pf3nnm", "nm"], ["pf3nbr", "br"]]) { const v = g(id); if (v !== undefined) F[k] = v; }
+    F.cur = pf3FormCalc(F, P).cur; };
   const prev = () => {
     read(); pf3DraftSave(F);
-    const q = pf3Num(F.q), el = $("#pf3nprev"), msgs = [];
-    const b = F.br && BROKERS.list.find(x => x.id === F.br);
-    let cost = null;
-    if (F.mode === "hold") { const pru = pf3Num(F.pru); if (q > 0 && pru > 0) cost = q * pru; }
-    else { const p = pf3Num(F.p) || (info.px && info.px.cur === cur ? info.px.p : null), amt = q > 0 && p > 0 ? q * p : null; let f = pf3Num(F.f); if (f == null && b && amt) { f = brokerFee(b, pf3E(amt, cur) || amt, (P.cfg || {}).perso); } if (amt) cost = amt + (f || 0) * (cur === "EUR" ? 1 : 1 / (pf3E(1, cur) || 1)); if (f != null && amt && pf3Num(F.f) == null) msgs.push(`Frais estimés : ${pf3Eu(f, 2)}${amt ? ` (${pct(f / (pf3E(amt, cur) || amt), 2, false)} du montant)` : ""}.`); }
-    if (cost) { const cE = pf3E(cost, cur), vE = info.px && q > 0 ? pf3E(q * info.px.p, info.px.cur) : null;
-      msgs.unshift(`Investi : <b>${pf3Eu(cE, 2)}</b>${vE ? ` · valeur aujourd'hui : <b>${pf3Eu(vE)}</b> <span class="${pf3Cls(vE - cE)}">(${pf3Pc(vE / cE - 1)})</span>` : ""}.`);
-      if (vE && Math.abs(vE / cE - 1) > 0.6) msgs.push(`<span class="pf3warn">Écart important avec le cours actuel : vérifiez le prix${curQ !== "EUR" ? " et sa devise" : ""}.</span>`); }
-    if (F.env === "pea" && info.pea === false) msgs.push(`<span class="pf3warn">${esc(info.name)} n'est pas éligible au PEA${info.kind === "c" ? " (siège hors de l'Union européenne)" : ""}.</span>`);
-    if (exist) msgs.push(F.mode === "hold" ? `Vous avez déjà cette ligne sur ce compte : la quantité et le PRU seront remplacés.` : `Vous avez déjà cette ligne sur ce compte : cet achat s'y ajoutera et le PRU sera recalculé.`);
-    if (!exist && pfFullQuiet(P)) msgs.push(`<span class="pf3warn">La version gratuite suit jusqu'à ${FREE.pf} lignes : <a class="lnk" href="/premium">Premium</a> les suit sans limite.</span>`);
-    el.innerHTML = msgs.map(m => `<p>${m}</p>`).join("");
+    const Y = pf3FormCalc(F, pf3P()), el = $("#pf3nprev"), msgs = [];
+    const nb = v => nf(v % 1 ? 4 : 0).format(v), fees = $("#pf3nf"); if (fees && Y.fAuto) fees.placeholder = pf3Fmt(Math.round(Y.f * 100) / 100);
+    if (Y.pru) {
+      const calc = F.mode === "pru" ? `${nb(Y.q)} parts × ${pf3Px(Y.p, Y.cur)}` : `(${nb(Y.q)} × ${pf3Px(Y.p, Y.cur)} + ${nf(2).format(Y.f)} ${Y.C} de frais) ÷ ${nb(Y.q)}`;
+      el.innerHTML = `<div class="pf3pk"><span class="kick">Votre prix de revient unitaire (PRU)</span><b>${pf3Px(Y.npos ? Y.npos.pru : Y.pru, Y.cur)}</b></div>
+        <p class="pf3pd"><b>PRU</b> : ce qu'une part vous a coûté en moyenne, frais d'achat compris. ${Y.npos ? `Avec vos ${nb(Y.pos.q)} parts déjà détenues à ${pf3Px(Y.pos.pru, Y.cur)}, votre PRU devient ${pf3Px(Y.npos.pru, Y.cur)} pour ${nb(Y.npos.q)} parts.` : F.mode === "pru" ? `Montant investi : ${calc} = ${pf3Eu(Y.cE, 2)}.` : `Ici : ${calc} = <b>${pf3Px(Y.pru, Y.cur)}</b> par part.`}</p>
+        <div class="pf3pv"><span>Montant investi<b>${pf3Eu(Y.cE, 2)}</b></span>${Y.vE ? `<span>Valeur actuelle<b>${pf3Eu(Y.vE)}</b></span><span>Plus ou moins-value latente<b class="${pf3Cls(Y.vE - Y.cE)}">${pf3Sg(Y.vE - Y.cE)} (${pf3Pc(Y.vE / Y.cE - 1)})</b></span>` : ""}</div>`;
+      if (Y.vE && Math.abs(Y.vE / Y.cE - 1) > 0.6) msgs.push(`<span class="pf3warn">Écart important avec le cours actuel : vérifiez le prix${Y.curQ !== "EUR" ? " et sa devise" : ""}.</span>`);
+      if (F.mode !== "pru" && Y.amt && Y.f / Y.amt > 0.01) msgs.push(`<span class="pf3warn">Les frais représentent ${pct(Y.f / Y.amt, 1, false)} de cet achat : le placement doit monter d'autant pour les couvrir.</span>`);
+    } else el.innerHTML = `<div class="pf3pk"><span class="kick">Votre prix de revient unitaire (PRU)</span><b class="light">–</b></div><p class="pf3pd"><b>PRU</b> : ce qu'une part vous a coûté en moyenne, frais d'achat compris. Exemple : 10 parts à 50 € + 2 € de frais = 50,20 € par part. Il se calcule dès que vous indiquez la quantité et le prix.</p>`;
+    if (F.env === "pea" && Y.info.pea === false) msgs.push(`<span class="pf3warn">${esc(Y.info.name)} n'est pas éligible au PEA${Y.info.kind === "c" ? " (siège hors de l'Union européenne)" : ""}.</span>`);
+    if (Y.exist && F.mode === "pru") msgs.push(`Vous avez déjà cette ligne sur ce compte : sa quantité et son PRU seront remplacés.`);
+    if (!Y.exist && pfFullQuiet(pf3P())) msgs.push(`<span class="pf3warn">La version gratuite suit jusqu'à ${FREE.pf} lignes : <a class="lnk" href="/premium">Premium</a> les suit sans limite.</span>`);
+    if (msgs.length) el.insertAdjacentHTML("beforeend", msgs.map(m => `<p class="pf3pm">${m}</p>`).join(""));
   };
-  $$(".pf3new input, .pf3new select", box).forEach(i => { i.oninput = prev; i.onchange = prev; i.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); $("#pf3nok").click(); } }; });
+  $$(".pf3new input, .pf3new select", box).forEach(i => { i.oninput = prev; i.onchange = i.tagName === "SELECT" ? () => { read(); pf3DraftSave(F); pf3Form(); } : prev; i.onkeydown = e => { if (e.key === "Enter") { e.preventDefault(); $("#pf3nok").click(); } }; });
   $$(".pf3new .pf3chips", box).forEach(g => g.onclick = e => { const b = e.target.closest("button"); if (!b) return; read(); F[g.dataset.g] = g.dataset.g === "env" && F.env === b.dataset.v ? "" : b.dataset.v; pf3DraftSave(F); pf3Form(); });
+  const up = $("#pf3usepx"); if (up) up.onclick = () => { $("#pf3np").value = pf3Fmt(info.px.p); prev(); up.remove(); };
+  $("#pf3nmode").onclick = () => { read(); F.mode = F.mode === "pru" ? "buy" : "pru"; pf3DraftSave(F); pf3Form(); };
   $("#pf3nx").onclick = $("#pf3nno").onclick = () => { PF3S.form = null; pf3DraftSave(null); pf3Form(); };
   $("#pf3nok").onclick = () => { read(); pf3FormSubmit(); };
   prev();
 }
 function pfFullQuiet(P) { return !isPrem() && P.l.length >= FREE.pf; }
 function pf3FormSubmit() {
-  const F = PF3S.form, P = pf3P(), prev = JSON.parse(JSON.stringify(P)), q = pf3Num(F.q), el = $("#pf3nprev");
-  const err = m => { el.innerHTML = `<p class="pf3err">${m}</p>`; };
+  const F = PF3S.form, P = pf3P(), prev = JSON.parse(JSON.stringify(P)), X = pf3FormCalc(F, P), el = $("#pf3nprev");
+  const err = m => { el.insertAdjacentHTML("afterbegin", `<p class="pf3err">${m}</p>`); };
+  $$(".pf3err", el).forEach(x => x.remove());
   if (F.k.startsWith("x:") && !(F.nm || "").trim()) return err("Indiquez le nom du titre.");
-  if (!(q > 0)) return err("Indiquez le nombre de parts (par exemple 12, ou 0,5 pour une fraction).");
-  const info = pf3Info({ k: F.k }), cur = F.cur || "EUR";
-  let line = P.l.find(l => l.k === F.k && (l.env || "") === (F.env || "") && (l.br || "") === (F.br || ""));
+  if (!(X.q > 0)) return err("Étape 2 : indiquez le nombre de parts (par exemple 12, ou 0,5 pour une fraction).");
+  if (!(X.p > 0)) return err(F.mode === "pru" ? "Étape 3 : indiquez le PRU affiché par votre courtier." : "Étape 3 : indiquez le prix payé par part.");
+  let line = X.exist;
+  if (F.mode === "pru" && line && line.o && line.o.length) return err(`Cette ligne a déjà ${line.o.length} opération${line.o.length > 1 ? "s" : ""} : saisissez le prix payé et les frais, ou ouvrez la ligne dans la liste pour la modifier.`);
   if (!line && pfFull(P)) return;
   const isNew = !line;
-  if (isNew) { line = { k: F.k, cur }; if (F.env) line.env = F.env; if (F.br) line.br = F.br; if (F.k.startsWith("x:")) { line.nm = F.nm.trim(); line.isin = F.k.slice(2); } }
-  if (F.mode === "hold" && line && line.o && line.o.length) return err(`Cette ligne a déjà ${line.o.length} opération${line.o.length > 1 ? "s" : ""} : choisissez « Un achat daté », ou ouvrez la ligne dans la liste pour la modifier.`);
-  if (F.mode === "hold") {
-    const pru = pf3Num(F.pru); if (!(pru > 0)) return err("Indiquez le prix de revient unitaire (le PRU affiché par votre courtier).");
-    delete line.o; line.q = q; line.pru = pru; line.cur = cur;
-  } else {
-    const p = pf3Num(F.p) || (info.px && info.px.cur === cur ? info.px.p : null); if (!(p > 0)) return err("Indiquez le prix unitaire de l'achat.");
-    let f = pf3Num(F.f); const b = F.br && BROKERS.list.find(x => x.id === F.br);
-    if (f == null) f = b ? brokerFee(b, pf3E(q * p, cur) || q * p, (P.cfg || {}).perso) / (cur === "EUR" ? 1 : (pf3E(1, cur) || 1)) : 0;
-    if (!line.o) { line.o = line.q > 0 && line.pru > 0 ? [["", "r", line.q, line.pru, 0]] : []; if (!isNew && line.cur && line.cur !== cur) line.o = []; }
-    line.cur = cur; line.o.push([F.d || TODAY, "a", q, p, Math.round(f * 100) / 100]);
-  }
+  if (isNew) { line = { k: F.k, cur: X.cur }; if (F.env) line.env = F.env; if (F.br) line.br = F.br; if (F.k.startsWith("x:")) { line.nm = F.nm.trim(); if (/^x:[A-Z0-9]{12}$/.test(F.k)) line.isin = F.k.slice(2); } }
+  if (F.mode === "pru") { delete line.o; line.q = X.q; line.pru = X.p; line.cur = X.cur; }
+  else { if (!line.o) line.o = line.q > 0 && line.pru > 0 ? [["", "r", line.q, line.pru, 0]] : []; line.cur = X.cur; line.o.push([F.d || "", "a", X.q, X.p, Math.round(X.f * 100) / 100]); }
   PF3.syncLine(line);
   if (isNew) P.l.push(line);
-  const cfg = P.cfg = P.cfg || {}; if (F.br) cfg.courtier = cfg.courtier || F.br;
-  pf3Save(P); PF3S.form = null; pf3DraftSave(null);
-  PF3S.open = -1; pf3Draw();
-  pf3Undo(`${esc(info.name || F.nm)} ${isNew ? "ajouté" : "mis à jour"}.`, prev);
+  if (F.br) { P.cfg = P.cfg || {}; P.cfg.courtier = P.cfg.courtier || F.br; }
+  pf3Save(P); PF3S.form = null; pf3DraftSave(null); PF3S.open = -1; pf3Draw();
+  pf3Undo(`${esc(X.info.name || F.nm)} ${isNew ? "ajouté" : "mis à jour"} : PRU ${pf3Px(line.pru, line.cur)}.`, prev);
+}
+
+/* ---------- Les notions, définies en une phrase avec un exemple chiffré (vos chiffres quand ils existent) ---------- */
+function pf3Defs(R0) {
+  const T = R0.T, r = R0.live.slice().sort((a, b) => b.valE - a.valE).find(x => x.price && x.price.src === "cours" && !x.mOnly) || null;
+  const e = R0.live.filter(x => x.info.kind === "e" && x.info.ter)[0] || null, nb = v => nf(v % 1 ? 2 : 0).format(v);
+  return [
+    ["valeur", "Valeur actuelle", "Ce que vaudraient vos titres si vous les vendiez au cours du jour.", r ? `${r.info.name} : ${nb(r.pos.q)} parts × ${pf3Px(r.price.p, r.price.cur)} = ${pf3Eu(r.valE)}.` : "10 parts cotées 55 € valent 550 €."],
+    ["investi", "Montant investi", "Ce que vous avez payé pour les titres que vous détenez encore, frais d'achat compris.", r ? `${r.info.name} : ${nb(r.pos.q)} parts × ${pf3Px(r.pos.pru, r.lcur)} de PRU = ${pf3Eu(r.costE)}.` : "10 parts à 50 € + 2 € de frais = 502 € investis."],
+    ["pru", "Prix de revient unitaire (PRU)", "Ce qu'une part vous a coûté en moyenne, frais d'achat compris.", "10 parts à 50 € + 2 € de frais = 50,20 € par part. Une vente ne change pas le PRU des parts restantes."],
+    ["latente", "Plus ou moins-value latente", "Le gain ou la perte si vous vendiez aujourd'hui, avant impôts : valeur actuelle moins montant investi.", r && r.gainE != null ? `${r.info.name} : ${pf3Eu(r.valE)} − ${pf3Eu(r.costE)} = ${pf3Sg(r.gainE)} (${pf3Pc(r.gainPct)}).` : "550 € de valeur − 502 € investis = +48 €, soit +9,6 %."],
+    ["poids", "Poids", "La part d'une ligne dans la valeur totale du portefeuille.", r && T.tot ? `${r.info.name} : ${pf3Eu(r.valE)} ÷ ${pf3Eu(T.tot)} = ${pct(r.w, 0, false)}.` : "Une ligne de 550 € dans un portefeuille de 2 200 € pèse 25 %."],
+    ["ter", "Frais courants d'un ETF", "Ce que l'ETF prélève chaque année sur votre argent, directement dans son cours.", e ? `${e.info.name} : ${pct(e.info.ter / 100, 2, false)} de ${pf3Eu(e.valE)} = ${pf3Eu(e.valE * e.info.ter / 100, 2)} par an.` : "0,20 % par an sur 1 000 € = 2 € par an."],
+  ];
+}
+if (typeof ALL === "object" && ALL) {
+  Object.assign(ALL, {
+    pf_pru: { name: "Prix de revient unitaire (PRU)", what: "Ce qu'une part vous a coûté en moyenne, frais d'achat compris.", calc: "(somme des montants achetés + frais d'achat) ÷ nombre de parts. Exemple : 10 parts à 50 € + 2 € de frais = 50,20 € par part.", read: "Au-dessus du PRU, la ligne est en plus-value ; en dessous, en moins-value. Une vente ne change pas le PRU des parts restantes." },
+    pf_latente: { name: "Plus ou moins-value latente", what: "Le gain ou la perte si vous vendiez aujourd'hui, avant impôts.", calc: "valeur actuelle − montant investi. Exemple : 550 € − 502 € = +48 €.", read: "« Latente » : tant que vous ne vendez pas, ce gain ou cette perte n'est pas réalisé." },
+    pf_poids: { name: "Poids d'une ligne", what: "La part d'une ligne dans la valeur totale du portefeuille.", calc: "valeur de la ligne ÷ valeur totale. Exemple : 550 € ÷ 2 200 € = 25 %.", read: "Beaucoup d'investisseurs limitent une action seule à 5 ou 10 % du portefeuille." },
+    pf_valeur: { name: "Valeur actuelle", what: "Ce que vaudraient vos titres si vous les vendiez au cours du jour.", calc: "nombre de parts × cours. Exemple : 10 parts × 55 € = 550 €.", read: "Les cours sont différés : la valeur exacte au moment d'une vente peut différer un peu." },
+    pf_investi: { name: "Montant investi", what: "Ce que vous avez payé pour les titres que vous détenez encore, frais d'achat compris.", calc: "nombre de parts × PRU. Exemple : 10 parts × 50,20 € = 502 €.", read: "Il sert de base au calcul de la plus ou moins-value." },
+  });
 }
 
 /* ---------- Les lignes : tableau sur ordinateur, cartes sur téléphone ---------- */
@@ -858,7 +891,7 @@ function pf3List(R0, P) {
         <span class="pf3chev" aria-hidden="true"></span></button>
       <div class="pf3det" id="pf3d${r.i}" ${open ? "" : "hidden"}>${open ? pf3Det(r, P) : ""}</div></div>`;
   };
-  box.innerHTML = `<div class="pf3l"><div class="pf3hd" aria-hidden="true"><span>Ligne</span><span>Quantité</span><span>PRU</span><span>Cours</span><span>Valeur</span><span>Plus ou moins-value</span><span>Poids</span><span></span></div>${live.map(row).join("")}</div>
+  box.innerHTML = `<div class="pf3l"><div class="pf3hd"><span>Ligne</span><span>Quantité</span><span>${def("pf_pru", "PRU")}</span><span>Cours</span><span>${def("pf_valeur", "Valeur")}</span><span>${def("pf_latente", "Plus ou moins-value")}</span><span>${def("pf_poids", "Poids")}</span><span></span></div>${live.map(row).join("")}</div>
     ${closed.length ? `<details class="pf3closed"><summary>${closed.length} ligne${closed.length > 1 ? "s" : ""} entièrement vendue${closed.length > 1 ? "s" : ""}</summary><div class="pf3l">${closed.map(row).join("")}</div></details>` : ""}`;
   $$(".pf3rb", box).forEach(b => b.onclick = () => { const i = +b.closest(".pf3r").dataset.i; PF3S.open = PF3S.open === i ? -1 : i; PF3S.op = null; pf3List(pf3Rows(pf3P()), pf3P()); if (PF3S.open >= 0) { const d = $("#pf3d" + i); if (d) d.scrollIntoView({ block: "nearest", behavior: "smooth" }); } });
   if (PF3S.open >= 0) pf3DetBind(R0.rows.find(r => r.i === PF3S.open), P);
@@ -987,6 +1020,7 @@ function pf3FeeChart(F) {
     </svg></div></div>`;
 }
 
+function pf3DefsOpen() { try { return localStorage.getItem("bilan.portefeuille.defs") !== "0"; } catch (e) { return true; } }
 /* ---------- Haut de page : la valeur, le gain, la journée ---------- */
 function pf3Hero(R0, P) {
   const el = $("#pf3hero"); if (!el) return;
@@ -996,14 +1030,17 @@ function pf3Hero(R0, P) {
   const upd = PXUP && PXUP !== "none" ? (/T/.test(PXUP) ? `cours du ${dLabel(PXUP.slice(0, 10))} à ${PXUP.slice(11, 16).replace(":", " h ")} (UTC)` : `cours du ${dLabel(PXUP)}`) : "cours indisponibles";
   const parts = R0.live.slice().sort((a, b) => b.valE - a.valE).map((r, i) => ({ label: r.info.name, w: r.w, c: i < PF3_PAL.length ? PF3_PAL[i] : PF3_OTHER, v: r.valE }));
   el.innerHTML = `${P.dem ? `<div class="pf3demo"><b>Exemple</b> : ce portefeuille fictif montre ce que calcule la page. Rien n'est enregistré. <button type="button" class="linkbtn" id="pf3dkeep">Partir de cet exemple</button> · <button type="button" class="linkbtn" id="pf3dquit">Revenir à mon portefeuille</button></div>` : ""}
-    <div class="pf3k"><div class="pf3k1"><span class="kick">Valeur totale</span><b class="pf3big">${pf3Eu(T.tot)}</b><small>${T.n} ligne${T.n > 1 ? "s" : ""} · ${upd}</small></div>
-      <div><span class="kick">Investi</span><b>${pf3Eu(T.cost)}</b><small>frais d'achat compris</small></div>
-      <div><span class="kick">Plus ou moins-value</span><b class="${pf3Cls(T.gain)}">${T.gainPct == null ? "–" : pf3Sg(T.gain)}</b><small class="${pf3Cls(T.gain)}">${T.gainPct == null ? "pas de cours" : pf3Pc(T.gainPct) + " avant impôts"}</small></div>
-      <div><span class="kick">Aujourd'hui</span><b class="${pf3Cls(T.day)}">${T.dayN ? pf3Sg(T.day) : "–"}</b><small class="${pf3Cls(T.day)}">${T.dayPct != null ? pf3Pc(T.dayPct, 2) : "variation inconnue"}</small></div></div>
+    <div class="pf3k"><div class="pf3k1"><span class="kick">Valeur actuelle</span><b class="pf3big">${pf3Eu(T.tot)}</b><small>vos ${T.n} ligne${T.n > 1 ? "s" : ""} au ${upd}</small></div>
+      <div><span class="kick">Montant investi</span><b>${pf3Eu(T.cost)}</b><small>ce que vous avez payé, frais d'achat compris</small></div>
+      <div><span class="kick">Plus ou moins-value latente</span><b class="${pf3Cls(T.gain)}">${T.gainPct == null ? "–" : pf3Sg(T.gain)}</b><small><span class="${pf3Cls(T.gain)}">${T.gainPct == null ? "pas de cours" : pf3Pc(T.gainPct)}</span> si vous vendiez aujourd'hui, avant impôts</small></div>
+      <div><span class="kick">Aujourd'hui</span><b class="${pf3Cls(T.day)}">${T.dayN ? pf3Sg(T.day) : "–"}</b><small><span class="${pf3Cls(T.day)}">${T.dayPct != null ? pf3Pc(T.dayPct, 2) : "variation inconnue"}</span> depuis la clôture d'hier</small></div></div>
+    <div class="pf3verd" id="pf3verd"></div>
     ${parts.length > 1 ? `<div class="pf3stk" role="img" aria-label="Poids de chaque ligne">${parts.map(p => `<span style="width:${(p.w * 100).toFixed(2)}%;background:${p.c}" tabindex="0" ${tipAttr({ h: p.label, r: [["Poids", pct(p.w, 1, false), p.c], ["Valeur", pf3Eu(p.v), ""]] })}></span>`).join("")}</div>` : ""}
+    <details class="pf3defs" id="pf3defs" ${pf3DefsOpen() ? "open" : ""}><summary>Comprendre ces chiffres</summary><div class="pf3dg">${pf3Defs(R0).map(([k, t, d, ex]) => `<div><b>${t}</b><p>${d}</p><p class="pf3dx"><span>Exemple</span> ${esc(ex)}</p></div>`).join("")}</div></details>
     ${T.real || T.divs ? `<p class="pf3kn">${T.real ? `Plus ou moins-value réalisée sur vos ventes : <b class="${pf3Cls(T.real)}">${pf3Sg(T.real)}</b>. ` : ""}${T.divs ? `Dividendes reçus enregistrés : <b>${pf3Eu(T.divs)}</b>.` : ""}</p>` : ""}`;
   const k = $("#pf3dkeep"); if (k) k.onclick = () => { const D = PF3S.demo; PF3S.demo = null; const cur = pf2Load(); if (cur.l.length && !confirm("Remplacer votre portefeuille actuel par l'exemple ?")) return; delete D.dem; pf2Save(D); pf3Draw(); };
   const q = $("#pf3dquit"); if (q) q.onclick = () => { PF3S.demo = null; pf3Draw(); };
+  const dd = $("#pf3defs"); if (dd) dd.ontoggle = () => { try { localStorage.setItem("bilan.portefeuille.defs", dd.open ? "1" : "0"); } catch (e) { } };
 }
 
 /* ---------- Tableau de bord : analyse, répartition, diversification, frais, dividendes ---------- */
@@ -1017,6 +1054,12 @@ async function pf3Dash(R0, P) {
   if (tok !== PF3_TOKEN) return;
   const S = pf3Score(X), F = pf3Fees(R0, P), D = pf3Divs(R0), A = pf3Alerts(R0, X, F, P, prof), cfg = P.cfg || {};
   PF3S.ctx = { R0, X, S, F, D, A, P, prof };
+  const vd = $("#pf3verd"); if (vd) { const att = A.filter(a => a.lv === "vig").length + A.filter(a => a.lv === "moyen").length;
+    vd.innerHTML = [S.score != null ? `<a href="#pf3-diversification"><span class="dot dot-${S.score >= 75 ? "fort" : S.score >= 50 ? "moyen" : "vig"}"></span>Diversification ${S.label} <b>${S.score}/100</b></a>` : "",
+      F.ter != null || F.orders.length ? `<a href="#pf3-frais"><span class="dot dot-${(F.ter || 0) > 0.004 || F.heavy.length ? "vig" : "fort"}"></span>Frais ${F.ter != null ? `des ETF <b>${pct(F.ter, 2, false)}/an</b>` : `de courtage <b>${pct(F.ratio, 2, false)}</b>`}</a>` : "",
+      D.total > 0 ? `<a href="#pf3-dividendes"><span class="dot dot-fort"></span>Dividendes attendus <b>≈ ${pf3Eu(D.total)}/an</b></a>` : "",
+      `<a href="#pf3-alertes"><span class="dot dot-${att ? "moyen" : "fort"}"></span>${att ? `<b>${att}</b> point${att > 1 ? "s" : ""} d'attention` : "Aucun point d'attention"}</a>`].filter(Boolean).join("");
+    $$("a", vd).forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); }); }
   const loc = pf3Local(R0, X, S, F, D, A, P, prof);
   const nAtt = A.filter(a => a.lv !== "info").length;
   const VIEWS = [["ligne", "Lignes"], ["sect", "Secteurs"], ["ctry", "Pays"], ["cur", "Devises"], ["type", "Types"], ["env", "Comptes"]];
@@ -1459,6 +1502,32 @@ function pf3Css() {
   .pf3 .tiles .tile:last-child:nth-child(odd){grid-column:1/-1}
   .pf3fc{min-width:600px}
 }
+.pf3steps{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:14px}
+.pf3st{display:grid;grid-template-columns:28px minmax(0,1fr);gap:12px;align-items:start}
+.pf3sn2{width:28px;height:28px;border-radius:50%;background:var(--ink);color:#fff;display:grid;place-items:center;font-family:var(--mono);font-size:13px;font-weight:600;margin-top:4px}
+.pf3st .pf3nh{margin:0}
+.pf3st .pf3iw{max-width:320px}
+.pf3st .pf3g2 .pf3iw{max-width:none}
+.pf3sh{display:block;font-size:12.5px;color:var(--grey);margin-top:5px;line-height:1.45}
+.pf3pru{margin:16px 0 4px;border:1.5px solid var(--ink);border-radius:14px;background:#fff;padding:12px 16px}
+.pf3pk{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pf3pk b{font-family:var(--mono);font-size:26px;font-weight:600;letter-spacing:-.02em}
+.pf3pd{margin:6px 0 0;font-size:13.5px;line-height:1.5}
+.pf3pv{display:flex;flex-wrap:wrap;gap:6px 24px;margin-top:10px;padding-top:10px;border-top:1px solid var(--line2)}
+.pf3pv span{display:flex;flex-direction:column;font-size:12px;color:var(--grey)}.pf3pv b{font-family:var(--mono);font-size:15px;color:var(--ink)}.pf3pv b.up{color:var(--up)}.pf3pv b.down{color:var(--down)}
+.pf3pm{margin:8px 0 0;font-size:13px}
+.pf3opt{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);gap:10px 12px;margin-top:14px}
+.pf3hd .def{font:inherit;letter-spacing:inherit;text-transform:inherit;color:inherit}
+.pf3verd{display:flex;flex-wrap:wrap;gap:8px;padding:0 22px 14px}
+.pf3verd a{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:99px;padding:5px 12px;font-size:13px;background:#fff}
+.pf3verd a:hover{border-color:var(--ink)}.pf3verd .dot{width:9px;height:9px}
+.pf3defs{border-top:1px solid var(--line2)}
+.pf3defs > summary{padding:11px 22px;cursor:pointer;font-weight:600;font-size:14px}
+.pf3dg{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1px;background:var(--line2);border-top:1px solid var(--line2)}
+.pf3dg > div{background:#FCFBF8;padding:12px 22px}
+.pf3dg b{font-size:14px}.pf3dg p{margin:4px 0 0;font-size:13px;line-height:1.45;color:var(--grey)}
+.pf3dx{color:var(--ink)!important}.pf3dx span{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--light);margin-right:4px}
+@media (max-width:760px){.pf3opt{grid-template-columns:1fr}.pf3verd{padding:0 16px 12px}.pf3defs > summary{padding:11px 16px}.pf3dg > div{padding:12px 16px}.pf3st .pf3iw{max-width:none}}
 </style>`);
 }
 
