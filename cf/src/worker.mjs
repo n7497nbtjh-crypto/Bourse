@@ -93,10 +93,13 @@ export function meta(path, q = null) {
 
 // Anciennes adresses de l'apprentissage, fusionnées dans l'Académie (même règle que parRedirection dans cf/site/m/parcours.js)
 export function redirectionParcours(p) {
-  const m = /^\/debuter(\/.*)?$/.exec(p || ""); if (m) return "/academie/express" + (m[1] || "");
-  if (p === "/premiers-pas") return "/academie/express";
+  const m = /^\/debuter\/(.+)$/.exec(p || ""); if (m) return "/academie/express/" + m[1];
   if (p === "/simulateurs/passe") return "/outils/si-javais"; // affichait le simulateur d'épargne sans le dire (audit P2-6)
   if (p === "/pour-moi") return "/repartitions"; // « Pistes pour vous » remplacé par les répartitions types, sans personnalisation (audit P0-6)
+  // Lot 2 (30/10) : quatre portes ; les anciennes pages d'entrée sont fusionnées dans /apprendre (les leçons gardent leur adresse)
+  if (p === "/commencer") return "/apprendre";
+  if (p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/") return "/apprendre";
+  if (p === "/debuter" || p === "/premiers-pas") return "/apprendre";
   return null;
 }
 // Anciennes routes de l'IA du serveur (retirée le 29 octobre 2026) : le site ne paie et n'appelle plus aucun modèle.

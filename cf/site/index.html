@@ -1964,7 +1964,7 @@ async function pageHomeV1() {
     <section class="hero2"><div><h1>Avant d'acheter une action, <em>lisez ses comptes.</em> On les a traduits.</h1>
       <p>${F0.format(n)} entreprises et ${ETF.list.length} ETF. Pour chacune : ce qu'elle fait, ses chiffres en clair, ses points forts et ses points de vigilance. Sans conseil, avec les sources.</p><p class="herolinks"><a href="/pea-cto">PEA ou compte-titres : par où commencer ?</a><a href="/comparer">Comparer des entreprises</a><a href="/favoris">Mes favoris</a></p></div>
       <div class="search big" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Chercher une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div></section>
-    <section class="panel newbie"><div class="pb"><div class="nbtop"><div><p class="kick">Vous débutez ? Trois étapes, dans l'ordre</p><p class="nbq">Vous ne savez pas sur quoi investir ? <a href="/commencer">Le guide du nouvel investisseur</a> : 7 étapes et un questionnaire de 5 questions pour trouver votre profil.</p></div><a class="btn" href="/commencer">Par où commencer</a></div><div class="nb3">
+    <section class="panel newbie"><div class="pb"><div class="nbtop"><div><p class="kick">Vous débutez ? Trois étapes, dans l'ordre</p><p class="nbq">Vous ne savez pas sur quoi investir ? <a href="/apprendre">Le guide du nouvel investisseur</a> : 7 étapes et un questionnaire de 5 questions pour trouver votre profil.</p></div><a class="btn" href="/apprendre">Par où commencer</a></div><div class="nb3">
       <a href="/debuter"><b>1. Comprendre les bases</b><span>Ce qu'est une action, un ETF, un indice, et ce que l'on risque. Six leçons de trois minutes, avec un quiz.</span></a>
       <a href="/entreprise/lvmh"><b>2. Lire une vraie fiche</b><span>Exemple avec LVMH : ce qu'elle vend, ce qu'elle garde, ses points forts et ses points de vigilance, comparés à ses concurrentes.</span></a>
       <a href="/pea-cto"><b>3. Choisir où investir</b><span>PEA, compte-titres ou assurance-vie : ce qu'on peut y mettre et ce qui reste après impôts.</span></a></div></div></section>
@@ -3035,7 +3035,7 @@ const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g
 /* ---------- Outils ---------- */
 const OUTILS = [
   ["/portefeuille", "Radiographie de portefeuille", "Ce que vous possédez vraiment une fois vos ETF ouverts : entreprises, pays, frais, dividendes."],
-  ["/commencer", "Par où commencer ?", "Sept étapes dans l'ordre et un questionnaire de cinq questions pour trouver votre profil d'investisseur."],
+  ["/apprendre", "Par où commencer ?", "Sept étapes dans l'ordre et un questionnaire de cinq questions pour trouver votre profil d'investisseur."],
   ["/comparer", "Comparer des entreprises", "Plusieurs entreprises côte à côte, avec une synthèse en phrases et leur place dans le secteur."],
   ["/outils/si-javais", "Et si j'avais investi ?", "Une somme placée il y a 1, 3 ou 5 ans dans une action ou un ETF, comparée à un indice, au Livret A et à la hausse des prix, sur une seule courbe."],
   ["/outils/recouvrement", "Mes ETF se recouvrent-ils ?", "2 à 4 ETF : positions communes, poids réellement en double, concentration, secteurs, pays et devises du portefeuille combiné."],
@@ -3159,7 +3159,15 @@ function moversHTML(region = moverRegion) {
 async function pageMarches() {
   setTitle("Les marchés aujourd'hui"); setNav("mkt");
   await Promise.all([PXP, loadAna()]);
-  app.innerHTML = `<h1 class="pagetitle">Les marchés aujourd'hui</h1><p class="pagesub">Les grands indices et les entreprises qui ont le plus bougé dans la journée, parmi les ${F0.format(R.companies.length)} suivies (valeur en Bourse supérieure à 2 milliards d'euros). Cours différés.</p>
+  const portes = [ // lot 2 (30/10) : la porte « Marchés », quatre entrées visuelles, puis les indices et les mouvements du jour
+    ["/entreprises", "Entreprises", `${F0.format(R.companies.length)} fiches`, "Chacune face à la médiane de son secteur.", "M4 20V9l8-5 8 5v11M9 20v-6h6v6"],
+    ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, "Frais, PEA, ce qu'ils contiennent vraiment.", "M4 18l5-6 4 3 7-9M4 4v16h16"],
+    ["/actualites", "Actualité et agenda", "chaque jour", "Annonces officielles lues et chiffrées, dates à venir.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
+    ["/classements", "Classements", "par critère", "Les mieux placées sur la marge, la dette, le prix, le dividende.", "M4 20h16M7 20V10M12 20V4M17 20v-8"],
+  ];
+  app.innerHTML = `<h1 class="pagetitle">Marchés</h1><p class="pagesub">Les entreprises, les ETF, l'actualité et les classements, puis ce que font les indices aujourd'hui.</p>
+    <div class="mk-portes">${portes.map(([h, t, n, d, ic]) => `<a class="mk-porte" href="${h}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ic}"/></svg><b>${t}</b><small>${n}</small><span>${d}</span></a>`).join("")}</div>
+    <h2 class="subh">Aujourd'hui</h2><p class="pagesub" style="margin-top:0">Les grands indices et les entreprises qui ont le plus bougé dans la journée, parmi les ${F0.format(R.companies.length)} suivies (valeur en Bourse supérieure à 2 milliards d'euros). Cours différés.</p>
     <section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section>
     <section class="panel"><div class="ph"><h2>Les plus forts mouvements du jour</h2><div class="chips" id="mvr">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"], ["MONDE", "Reste du monde"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === moverRegion ? "on" : ""}">${l}</button>`).join("")}</div></div><div class="pb" id="mvb">${moversHTML()}</div></section>`;
   $("#mvr").onclick = e => { const b = e.target.closest("button"); if (!b) return; moverRegion = b.dataset.r; $$("#mvr button").forEach(x => x.classList.toggle("on", x === b)); $("#mvb").innerHTML = moversHTML(); };
@@ -3496,24 +3504,28 @@ async function premiumMerci() {
 /* ---------- Nouvel investisseur : par où commencer ---------- */
 let COMM = null;
 const CKEY = "bilan.profil";
-async function pageCommencer() {
-  setTitle("Par où commencer en Bourse"); setNav("new");
-  if (!COMM) { try { COMM = await (await fetch("/data/commencer.json")).json(); } catch (e) { app.innerHTML = `<div class="empty">Le guide n'a pas pu être chargé.</div>`; return; } }
-  const C = COMM; let ans = {}; try { ans = JSON.parse(localStorage.getItem(CKEY) || "{}"); } catch (e) { }
-  // 30/10 (Romain) : trois écrans visuels d'abord, les sept étapes détaillées repliées derrière
+async function pageCommencer() { // 30/10 : fusionnée dans /apprendre (lot 2) ; l'adresse est redirigée par le Worker et par le routeur
+  return goR("/apprendre");
+}
+function commencerTrois() { // les trois décisions avant d'investir, en cartes (partagées par /apprendre)
   const ex3 = ["lvmh", "totalenergies", "air-liquide"].map(id => RBY[id]).filter(Boolean)[0];
   const trois = [
     { n: "1", t: "Une réserve d'abord", v: "3 à 6 mois", u: "de dépenses, sur un livret", d: "Avant d'investir, une somme disponible à tout moment. Le livret A rapporte 1,70 % par an net, plafonné à 22 950 €.", h: "#etapes", l: "Pourquoi, et combien" },
     { n: "2", t: "Un compte adapté", v: "PEA", u: "pour les actions européennes, 5 ans sans impôt sur les gains", d: "Le compte-titres pour le reste du monde. Le choix dépend de ce que vous voulez acheter et de votre horizon.", h: "/pea-cto", l: "PEA ou compte-titres" },
     { n: "3", t: "Une entreprise, lue", v: ex3 ? ex3.name : "Une fiche", u: "un verdict en trois mots, puis le détail", d: "Chaque fiche dit si l'entreprise gagne de l'argent, ce qu'elle doit et si son action est chère, face à son secteur.", h: ex3 ? `/entreprise/${ex3.id}` : "/entreprises", l: "Ouvrir une fiche" },
   ];
-  app.innerHTML = `<div class="hero-new"><p class="kick">Nouvel investisseur</p><h1 class="pagetitle" style="margin-top:4px">Trois choses avant de mettre un euro en Bourse.</h1><p class="pagesub">Pas de titre à acheter ici : les trois décisions qui viennent avant, puis une fiche pour voir à quoi ressemble une entreprise lue par le site.</p></div>
-    <div class="cm3">${trois.map(x => `<a class="cm3-c" href="${x.h}"><span class="cm3-n">${x.n}</span><b class="cm3-t">${esc(x.t)}</b><span class="cm3-v">${esc(x.v)}</span><span class="cm3-u">${esc(x.u)}</span><span class="cm3-d">${esc(x.d)}</span><span class="cm3-l">${esc(x.l)} →</span></a>`).join("")}</div>
-    <section class="panel" id="etapes"><div class="ph"><h2>Le détail, en sept étapes</h2><span class="light" style="font-size:12.5px">10 minutes, dans l'ordre</span></div><div class="steps7">${C.etapes.map((e, i) => `<details class="st7"><summary><span class="n">${i + 1}</span><span><b>${esc(e.titre)}</b><small>${esc(e.resume)}</small></span><span class="chev" aria-hidden="true"></span></summary><div class="st7b">${e.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}${e.repere ? `<p class="repere"><b>Repère</b> ${esc(e.repere)}</p>` : ""}${e.lien ? `<a class="more" href="${esc(e.lien.href)}">${esc(e.lien.texte)} →</a>` : ""}</div></details>`).join("")}</div></section>
-    <section class="panel" id="profil"><div class="ph"><h2>Quel type d'investisseur êtes-vous ?</h2><span class="light" style="font-size:12.5px">5 questions · réponses gardées sur cet appareil</span></div><div class="pb"><form id="qprof">${C.questions.map((q, i) => `<fieldset class="qf"><legend><span class="n">${i + 1}</span>${esc(q.q)}</legend>${q.options.map((o, j) => `<label class="qo"><input type="radio" name="${esc(q.id)}" value="${j}"${ans[q.id] === j ? " checked" : ""}><span>${esc(o.label)}</span></label>`).join("")}</fieldset>`).join("")}</form><div id="presult"></div></div></section>
-    <section class="panel" id="faq"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">${C.faq.map(f => acc(esc(f.q), `<p>${esc(f.a)}</p>`)).join("")}</div></section>
-    <section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Pour aller plus loin</b><div class="muted">Comprendre les actions et lire les comptes, avec des quiz.</div></div><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/debuter">Le parcours Premiers pas →</a><a class="more" href="/pea-cto">PEA ou compte-titres →</a><a class="more" href="/outils/verifier">Vérifier une offre →</a></div></div></section>
-    <p class="note">${esc(C.avertissement)}</p>`;
+  return `<div class="cm3">${trois.map(x => `<a class="cm3-c" href="${x.h}"><span class="cm3-n">${x.n}</span><b class="cm3-t">${esc(x.t)}</b><span class="cm3-v">${esc(x.v)}</span><span class="cm3-u">${esc(x.u)}</span><span class="cm3-d">${esc(x.d)}</span><span class="cm3-l">${esc(x.l)} →</span></a>`).join("")}</div>`;
+}
+async function commencerCharger() { if (!COMM) { try { COMM = await (await fetch("/data/commencer.json")).json(); } catch (e) { } } return COMM; }
+function commencerBlocsHTML(C) { // sept étapes, profil, questions : les blocs détaillés de l'ancienne page « Par où commencer »
+  return `<section class="panel" id="etapes"><div class="ph"><h2>Le détail, en sept étapes</h2><span class="light" style="font-size:12.5px">10 minutes, dans l'ordre</span></div><div class="steps7">${C.etapes.map((e, i) => `<details class="st7"><summary><span class="n">${i + 1}</span><span><b>${esc(e.titre)}</b><small>${esc(e.resume)}</small></span><span class="chev" aria-hidden="true"></span></summary><div class="st7b">${e.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}${e.repere ? `<p class="repere"><b>Repère</b> ${esc(e.repere)}</p>` : ""}${e.lien ? `<a class="more" href="${esc(e.lien.href)}">${esc(e.lien.texte)} →</a>` : ""}</div></details>`).join("")}</div></section>
+    <details class="panel pa-pli" id="profil"><summary class="ph"><h2>Quel type d'investisseur êtes-vous ?</h2><span class="light" style="font-size:12.5px">5 questions · réponses gardées sur cet appareil</span></summary><div class="pb"><form id="qprof">${C.questions.map((q, i) => `<fieldset class="qf"><legend><span class="n">${i + 1}</span>${esc(q.q)}</legend>${q.options.map((o, j) => `<label class="qo"><input type="radio" name="${esc(q.id)}" value="${j}"><span>${esc(o.label)}</span></label>`).join("")}</fieldset>`).join("")}</form><div id="presult"></div></div></details>
+    <details class="panel pa-pli" id="faq"><summary class="ph"><h2>Questions fréquentes</h2></summary><div class="pb">${C.faq.map(f => acc(esc(f.q), `<p>${esc(f.a)}</p>`)).join("")}</div></details>`;
+}
+function commencerLier(C) {
+  let ans = {}; try { ans = JSON.parse(localStorage.getItem(CKEY) || "{}"); } catch (e) { }
+  $$("#qprof input").forEach(i => { if (ans[i.name] === +i.value) i.checked = true; });
+  // 30/10 (Romain) : trois écrans visuels d'abord, les sept étapes détaillées repliées derrière
   const draw = () => {
     const done = C.questions.filter(q => ans[q.id] != null).length, el = $("#presult");
     if (done < C.questions.length) { el.innerHTML = `<p class="muted" style="margin:12px 0 0">${done ? `Encore ${C.questions.length - done} question${C.questions.length - done > 1 ? "s" : ""}.` : "Répondez aux questions : le profil qui vous ressemble le plus s'affiche ici."}</p>`; return; }
@@ -3521,7 +3533,7 @@ async function pageCommencer() {
     C.questions.forEach(q => { const o = q.options[ans[q.id]]; if (o) Object.entries(o.points).forEach(([k, v]) => sc[k] = (sc[k] || 0) + v); });
     const order = C.profils.map(p => p.id); // en cas d'égalité, le profil le plus prudent l'emporte
     const best = order.reduce((a, b) => sc[b] > sc[a] ? b : a, order[0]), P = C.profils.find(p => p.id === best);
-    const ex = (P.categories_etf || []).map(cat => [cat, ETF.list.filter(e => e.categorie === cat && e.ter != null).sort((a, b) => (b.pea - a.pea) || a.ter - b.ter).slice(0, 2)]).filter(([, l]) => l.length);
+    const ex = []; // 30/10 : plus d'exemples de fonds selon le profil (pas de profil + titres proposés)
     const cols = ["#0E6B4A", "#5E9C7F", "#B9B2A5", "#D9A35B"];
     el.innerHTML = `<div class="pres"><p class="kick">Votre profil</p><h3>${esc(P.titre)}</h3><p>${esc(P.pour_qui)}</p>
       <div class="two" style="margin-top:12px"><div><p class="cap">Ce qui guide ce profil</p><ul class="pl2">${P.principes.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
@@ -3736,9 +3748,9 @@ async function pageHome() {
       <p class="herosub">Ou cherchez directement une entreprise ou un ETF dans la barre en haut de la page.</p>${orcConfiance()}</section>
     ${band(1, "Aujourd'hui", "Les marchés du jour", ["/marches", "Tous les marchés"], `<div class="homegrid"><section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section><section class="panel"><div class="ph"><h2>Plus fortes hausses et baisses</h2></div><div class="pb">${moversHTML("all")}</div></section></div>`)}
     ${band(2, "Mon espace", "Votre semaine en 2 minutes", ["/espace", "Mon espace"], `<div id="homeesp"></div>`)}
-    ${band(3, "Débuter", "Vous ne savez pas par où commencer ?", ["/commencer", "Le guide du nouvel investisseur"], `<div class="nb3 nb4">
-      <a href="/commencer"><b>1. Trouver son profil</b><span>Sept étapes dans l'ordre et cinq questions pour savoir quel type d'investisseur vous êtes.</span></a>
-      <a href="/academie"><b>2. Suivre les cours</b><span>L'Académie : l'argent, la Bourse, les placements, les frais et les pièges, avec des quiz.</span></a>
+    ${band(3, "Débuter", "Vous ne savez pas par où commencer ?", ["/apprendre", "Le guide du nouvel investisseur"], `<div class="nb3 nb4">
+      <a href="/apprendre"><b>1. Trouver son profil</b><span>Sept étapes dans l'ordre et cinq questions pour savoir quel type d'investisseur vous êtes.</span></a>
+      <a href="/apprendre#academie"><b>2. Suivre les cours</b><span>L'Académie : l'argent, la Bourse, les placements, les frais et les pièges, avec des quiz.</span></a>
       <a href="/entreprise/lvmh"><b>3. Lire une vraie fiche</b><span>Exemple avec LVMH : ses chiffres comparés à la médiane de son secteur.</span></a>
       <a href="/pea-cto"><b>4. Choisir son compte</b><span>PEA, compte-titres ou assurance-vie : ce qui reste après impôts.</span></a></div>${typeof commComparaisonHTML === "function" ? `<section class="panel homecomm"><div class="ph"><h2>Livret A, inflation ou actions : ce que deviennent vos versements</h2><a href="/livret-a-ou-bourse">Le comparateur complet</a></div><div class="pb">${commComparaisonHTML({ compact: true })}</div></section>` : ""}${typeof commIdeesHTML === "function" ? `<div class="homecomm"><div class="bandsub" style="display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px"><h3 style="margin:0;font:600 18px var(--serif)">Trois idées reçues, démontées</h3><a class="lnk" href="/idees-recues">Les 12 idées reçues</a></div>${commIdeesHTML(3)}</div>` : ""}`)}
     ${band(4, "Explorer", "Les entreprises et les ETF", ["/entreprises", "Toutes les entreprises"], `
@@ -3998,7 +4010,7 @@ function pfAnalyseHabitudes(P, lines, tot, prof) {
     if (a.precaution === 0) W.push(["vig", "Vous avez indiqué ne pas avoir encore d'épargne de précaution.", "Sans réserve sur un livret, un imprévu peut obliger à vendre au pire moment. La pratique courante est de garder 3 à 6 mois de dépenses disponibles avant d'investir en Bourse."]);
     if (a.baisse === 0 && equity > 0.6) W.push(["moyen", `Vous avez indiqué que vous vendriez après une baisse de 30 %, avec ${F0.format(equity * 100)} % en actions.`, "Vendre après une forte baisse transforme une perte temporaire en perte définitive. Une part d'actions plus faible rend les baisses plus supportables."]);
     if (a.choisir === 0 && lines.filter(l => l.k.startsWith("c:")).length >= 5) W.push(["moyen", "Vous préférez une solution simple, et vous détenez plusieurs actions en direct.", "Suivre plusieurs entreprises demande du temps : lire leurs résultats deux à quatre fois par an. Un ETF large fait ce travail de diversification pour vous."]);
-  } else W.push(["moyen", "L'analyse ne connaît pas encore votre profil.", `Répondez aux <a class="lnk" href="/commencer#profil">5 questions du questionnaire</a> : l'analyse tiendra compte de votre horizon, de votre épargne de précaution et de votre réaction aux baisses.`]);
+  } else W.push(["moyen", "L'analyse ne connaît pas encore votre profil.", `Répondez aux <a class="lnk" href="/apprendre#profil">5 questions du questionnaire</a> : l'analyse tiendra compte de votre horizon, de votre épargne de précaution et de votre réaction aux baisses.`]);
   return W;
 }
 
@@ -4020,7 +4032,7 @@ function pageMethode() {
       <h2>Les limites à connaître</h2>
       <p>Les comptes ont souvent plusieurs mois de retard sur l'activité réelle. Un ratio d'une seule année peut être faussé par un élément exceptionnel. Les cours sont différés. L'IA peut se tromper : vérifiez toujours un chiffre important dans le document source, dont le lien est donné.</p>
     </div></section>
-    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/academie">L'Académie</a></p></div>`;
+    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/apprendre#academie">L'Académie</a></p></div>`;
 }
 
 /* ====================================================================================================
@@ -4062,7 +4074,7 @@ function acaAccueil() {
 function acaModule(m) {
   const st = acaSt(), p = acaProgress(m, st);
   setTitle(m.titre + " · L'Académie");
-  app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › ${esc(m.titre)}</div><h1 class="pagetitle">${esc(m.titre)}</h1><p class="pagesub">${esc(m.intro)}</p>
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › ${esc(m.titre)}</div><h1 class="pagetitle">${esc(m.titre)}</h1><p class="pagesub">${esc(m.intro)}</p>
     <div class="two"><section class="panel"><div class="ph"><h2>Les leçons</h2><span class="light" style="font-size:12.5px">${p.d} / ${p.n} lues</span></div>
       ${m.lecons.map((l, i) => `<a class="acal" href="/academie/${m.id}/${l.id}"><span class="n ${st[m.id + "/" + l.id] ? "ok" : ""}">${st[m.id + "/" + l.id] ? "✓" : i + 1}</span><span><b>${esc(l.titre)}</b><small class="light">${esc(l.resume)}</small></span><span class="light acam">${l.duree_min || 5} min${acaLocked(l) ? " · 🔒" : ""}</span></a>`).join("")}
       <a class="acal quiz" href="/academie/${m.id}/quiz"><span class="n">?</span><span><b>Le quiz du module</b><small class="light">${m.quiz.length} questions, avec l'explication de chaque réponse</small></span><span class="light acam">${p.q != null ? `${p.q}/${m.quiz.length}` : ""}</span></a></section>
@@ -4073,7 +4085,7 @@ function acaLeconV1(m, l) {
   setTitle(l.titre + " · L'Académie");
   const lock = acaLocked(l);
   if (!lock) { st[m.id + "/" + l.id] = 1; acaSave(st); }
-  app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
     <article class="acales"><p class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</p><h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead">${esc(l.resume)}</p>
     ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie et à la formation guidée de six semaines.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
       : `${l.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}
@@ -4090,11 +4102,11 @@ function acaQuiz(m) {
   let k = 0, score = 0;
   const draw = () => {
     if (k >= m.quiz.length) { const st = acaSt(); st["quiz/" + m.id] = score; acaSave(st);
-      app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Quiz</div><section class="panel" style="max-width:720px"><div class="pb"><p class="kick">Résultat</p><h1 class="pagetitle">${score} / ${m.quiz.length}</h1><p class="lead">${score / m.quiz.length >= 0.8 ? "Très bien : les notions de ce module sont acquises." : score / m.quiz.length >= 0.5 ? "C'est un bon début. Relisez les leçons où vous avez hésité." : "Relisez les leçons du module, puis refaites le quiz : c'est en répétant qu'on retient."}</p>
-        <div style="display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="again">Recommencer</button>${(() => { const nm = ACA.modules[ACA.modules.indexOf(m) + 1]; return nm ? `<a class="btn" href="/academie/${nm.id}">Module suivant : ${esc(nm.titre)}</a>` : `<a class="btn" href="/academie">Revenir à l'Académie</a>`; })()}</div></div></section>`;
+      app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Quiz</div><section class="panel" style="max-width:720px"><div class="pb"><p class="kick">Résultat</p><h1 class="pagetitle">${score} / ${m.quiz.length}</h1><p class="lead">${score / m.quiz.length >= 0.8 ? "Très bien : les notions de ce module sont acquises." : score / m.quiz.length >= 0.5 ? "C'est un bon début. Relisez les leçons où vous avez hésité." : "Relisez les leçons du module, puis refaites le quiz : c'est en répétant qu'on retient."}</p>
+        <div style="display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="again">Recommencer</button>${(() => { const nm = ACA.modules[ACA.modules.indexOf(m) + 1]; return nm ? `<a class="btn" href="/academie/${nm.id}">Module suivant : ${esc(nm.titre)}</a>` : `<a class="btn" href="/apprendre#academie">Revenir à l'Académie</a>`; })()}</div></div></section>`;
       $("#again").onclick = () => { k = 0; score = 0; draw(); }; return; }
     const q = m.quiz[k];
-    app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Quiz</div><section class="panel" style="max-width:720px"><div class="pb"><p class="kick">Question ${k + 1} sur ${m.quiz.length}</p><h2 class="acaq">${esc(q.q)}</h2>
+    app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Quiz</div><section class="panel" style="max-width:720px"><div class="pb"><p class="kick">Question ${k + 1} sur ${m.quiz.length}</p><h2 class="acaq">${esc(q.q)}</h2>
       <div class="acaopts">${q.options.map((o, i) => `<button type="button" class="acao" data-i="${i}">${esc(o)}</button>`).join("")}</div><div id="qexp"></div></div></section>`;
     $$(".acao").forEach(b => b.onclick = () => { const i = +b.dataset.i, ok = i === q.bonne; if (ok) score++;
       $$(".acao").forEach(x => { x.disabled = true; const j = +x.dataset.i; if (j === q.bonne) x.classList.add("good"); else if (j === i) x.classList.add("bad"); });
@@ -4145,7 +4157,7 @@ function pageFormation() {
       return `<li class="${i === sel ? "on" : ""}${full ? " full" : ""}" style="--wc:${COLS[i % COLS.length]}"><button type="button" data-sem="${i}"><span class="dot">${full ? "✓" : w.semaine}<i style="--p:${x.d / x.n * 360}deg"></i></span><span class="lb"><small>Semaine ${w.semaine}</small>${esc(w.titre)}</span></button></li>`; }).join("")}</ol>`;
   function heroR() { const d = doneN(), c = curW(); return `${ring(Math.round(d / total * 100))}<p><b>${d} / ${total}</b> étapes faites</p>${c >= 0 ? `<button type="button" class="btn" data-sem="${c}">${d ? "Reprendre" : "Commencer"} : semaine ${c + 1}</button>` : `<p class="note">Formation terminée. Bravo.</p>`}`; }
   const draw = () => { $("#frmroadw").innerHTML = road(); $("#frmweekw").innerHTML = weekHTML(sel); if (prem && $("#frmhr")) $("#frmhr").innerHTML = heroR(); };
-  app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › Formation guidée</div>
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › Formation guidée</div>
     <div class="frmhero"><div class="frmhl"><p class="kick">Formation guidée${prem ? "" : " · Premium"}</p><h1 class="pagetitle">${esc(F.titre)}</h1><p class="pagesub">${esc(F.intro)}</p>
       <div class="frmstats"><span><b>${F.semaines.length}</b>semaines</span><span><b>${cnt("lecon")}</b>leçons</span><span><b>${cnt("outil")}</b>outils</span><span><b>${cnt("action")}</b>actions</span><span><b>${Math.round(hMin / 60)} h</b>en tout</span></div></div>
       <div class="frmhr" id="frmhr">${prem ? heroR()
@@ -4241,7 +4253,7 @@ function acaLecon(m, l) {
   setTitle(l.titre + " · L'Académie");
   const lock = acaLocked(l), qi = lock ? null : questionDeLecon(m, l), q = qi != null ? m.quiz[qi] : null, deja = !!st[m.id + "/" + l.id];
   const cards = lock ? [] : l.paragraphes;
-  app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
     <article class="acales"><div class="acatopbar"><span class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</span>${lock ? "" : `<div class="acapb"><span id="acapb" style="width:0%"></span></div>`}</div>
     <h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead aca-lead">${esc(l.resume)}</p>
     ${!lock && l.exemple ? acaVisuel(l) : ""}
@@ -4318,6 +4330,7 @@ function route() {
   else pageNotFound();
 }
 // Routes ajoutées par les modules (cf/site/m/*.js) : ROUTES_EXTRA.push([/^\/chemin\/([a-z0-9-]+)$/, id => pageX(id)])
+function goR(url) { history.replaceState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); } // redirection sans entrée dans l'historique (anciennes adresses)
 function go(url) { history.pushState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); closePanels(); }
 document.addEventListener("click", e => {
   const a = e.target.closest("a[href]");

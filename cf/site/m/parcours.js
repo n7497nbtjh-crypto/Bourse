@@ -12,8 +12,8 @@
 
 /* ---------- Redirections des anciennes adresses (même règle que redirectionParcours dans cf/src/worker.mjs) ---------- */
 function parRedirection(p) {
-  const m = /^\/debuter(\/.*)?$/.exec(p || ""); if (m) return "/academie/express" + (m[1] || "");
-  if (p === "/premiers-pas") return "/academie/express";
+  const m = /^\/debuter\/(.+)$/.exec(p || ""); if (m) return "/academie/express/" + m[1];
+  if (p === "/debuter" || p === "/premiers-pas" || p === "/commencer" || p === "/academie" || p === "/academie/express") return "/apprendre";
   if (p === "/simulateurs/passe") return "/outils/si-javais";
   if (p === "/pour-moi") return "/repartitions";
   return null;
@@ -267,25 +267,26 @@ async function pageApprendre() {
       <p class="pagesub">Trois niveaux, des fondamentaux aux sujets avancés. Chaque niveau commence par un parcours court de quelques leçons de 3 minutes ; le cours complet est là pour approfondir, quand vous le souhaitez.</p>
       <div class="pa-go">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a>` : `<a class="btn" href="/lexique">Revoir le lexique</a>`}
         <span class="light">${lus ? `${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot} · ` : ""}progression gardée sur cet appareil</span></div>
-      ${profOk ? "" : `<p class="pa-prof">Vous débutez vraiment ? <a class="lnk" href="/commencer#profil">Trouvez votre profil en 5 questions</a>${nq ? ` (${nq} sur 5)` : ""}, puis lancez le niveau 1.</p>`}</header>
+      ${profOk ? "" : `<p class="pa-prof">Vous débutez vraiment ? <a class="lnk" href="/apprendre#profil">Trouvez votre profil en 5 questions</a>${nq ? ` (${nq} sur 5)` : ""}, puis lancez le niveau 1.</p>`}</header>
     <h2 class="subh" id="niveaux">Votre parcours</h2>
     ${parNiveauxHTML(NV)}
     ${parIdeesBloc()}
     <h2 class="subh">À garder sous la main</h2>
     <div class="pa-keep">
       <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
-      <a href="/commencer"><small>3 minutes</small><b>Par où commencer</b><span>Trois choses avant d'investir, puis le détail en sept étapes.</span></a>
+      <a href="/apprendre"><small>3 minutes</small><b>Par où commencer</b><span>Trois choses avant d'investir, puis le détail en sept étapes.</span></a>
       ${ACA && ACA.formation ? `<a href="/academie/formation"><small>Formation guidée${isPrem() ? "" : " · Premium"}</small><b>Six semaines, pas à pas</b><span>De l'épargne de précaution au premier portefeuille.</span></a>` : ""}
     </div>
     <details class="pa-tools" id="outils"><summary><span><b>Les outils pédagogiques</b> · ${outils.length} simulateurs et comparateurs, avec vos chiffres</span><span class="light">Afficher</span></summary>
       <div class="par-tools">${outils.map(([h, k, t, d]) => `<a href="${h}"><small>${k}</small><b>${t}</b><span>${d}</span></a>`).join("")}</div></details>
-    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. <a class="lnk" href="/academie">Le programme complet de l'Académie</a> · <a class="lnk" href="/methode">Méthode et sources</a></p>`;
+    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. <a class="lnk" href="/apprendre#academie">Le programme complet de l'Académie</a> · <a class="lnk" href="/methode">Méthode et sources</a></p>`;
   if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { if (t.tagName === "DETAILS") t.open = true; setTimeout(() => t.scrollIntoView({ block: "start" }), 30); } }
 }
 
 /* ---------- L'Académie : le programme complet, rangé par niveau ---------- */
 async function pageAcademie(mid, lid) {
   setTitle("L'Académie"); setNav("aca");
+  if (!mid || (mid === "express" && !lid)) return goR("/apprendre" + (mid ? "" : "#academie")); // lot 2 : la porte unique est /apprendre ; les modules et leçons gardent leur adresse
   if (mid === "express") return parExpress(lid);
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   await Promise.all([acaLoad(), premStatus()]);
@@ -340,8 +341,9 @@ function parApprofondirHTML(ni) { // les modules du cours complet rattachés à 
   return mods.length ? `<div class="par-deep"><span><b>Approfondir</b> le niveau ${ni + 1} dans le cours complet :</span><span class="pa-chips">${mods.map(m => `<a class="chip" href="/academie/${m.id}">${esc(m.titre)}</a>`).join("")}</span></div>` : "";
 }
 function pageDebuter(niv, lec) { // anciennes adresses : redirigées vers l'Académie
-  const u = parRedirection(location.pathname.replace(/\/+$/, "")) || "/academie/express";
+  const u = parRedirection(location.pathname.replace(/\/+$/, "")) || "/apprendre";
   history.replaceState({}, "", u + location.search + location.hash);
+  if (u === "/apprendre") return pageApprendre();
   return parExpress(niv, lec);
 }
 async function parExpress(niv, lec) {
@@ -354,7 +356,7 @@ async function parExpress(niv, lec) {
     await acaLoad();
     app.innerHTML = `${parCrumbs([[null, "Le parcours court"]])}<header class="pa-hero"><p class="kick">Parcours court</p><h1 class="pagetitle">L'essentiel, en trois niveaux</h1><p class="pagesub">La version courte de l'Académie. Chaque leçon se lit en trois minutes, avec un exemple chiffré ; un quiz de six questions termine chaque niveau. Votre progression reste sur cet appareil.</p></header>
       ${parNiveauxHTML(parNiveaux())}
-      <p class="note">Pour tout approfondir : <a class="lnk" href="/academie">le programme complet de l'Académie</a>. Pour passer à la pratique : <a class="lnk" href="/entreprises">les fiches des entreprises</a>.</p>`;
+      <p class="note">Pour tout approfondir : <a class="lnk" href="/apprendre#academie">le programme complet de l'Académie</a>. Pour passer à la pratique : <a class="lnk" href="/entreprises">les fiches des entreprises</a>.</p>`;
     return;
   }
   const n = N.find(x => x.id === niv); if (!n) return pageNotFound();
@@ -374,7 +376,7 @@ async function parExpress(niv, lec) {
     const draw = () => {
       const q = n.quiz[i];
       $("#qz").innerHTML = i >= n.quiz.length ? `<p class="lead">Score : <b>${score} / ${n.quiz.length}</b>. ${score >= 5 ? "Les notions de ce niveau sont acquises." : score >= 3 ? "Une ou deux notions méritent d'être relues." : "Relire les leçons de ce niveau vous aidera avant de passer à la suite."}</p>
-          <div style="display:flex;gap:16px;flex-wrap:wrap"><button type="button" class="btn" id="qre">Recommencer</button>${N[ni + 1] ? `<a class="more" href="${base}/${N[ni + 1].id}">Niveau suivant : ${esc(N[ni + 1].titre)} →</a>` : `<a class="more" href="/academie">Approfondir avec le cours complet →</a>`}</div>`
+          <div style="display:flex;gap:16px;flex-wrap:wrap"><button type="button" class="btn" id="qre">Recommencer</button>${N[ni + 1] ? `<a class="more" href="${base}/${N[ni + 1].id}">Niveau suivant : ${esc(N[ni + 1].titre)} →</a>` : `<a class="more" href="/apprendre#academie">Approfondir avec le cours complet →</a>`}</div>`
         : `<p class="kick">Question ${i + 1} sur ${n.quiz.length}</p><p class="lead" style="margin-top:4px">${esc(q.q)}</p>
           <div class="qopts">${q.options.map((o, k) => `<button type="button" class="qopt${ans != null ? (k === q.bonne ? " ok" : k === ans ? " ko" : "") : ""}" data-k="${k}" ${ans != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}</div>
           ${ans != null ? `<p class="${ans === q.bonne ? "up" : "down"}" style="font-weight:600;margin:12px 0 2px">${ans === q.bonne ? "Bonne réponse." : "Ce n'est pas la bonne réponse."}</p><p style="margin:0 0 12px">${esc(q.explication)}</p><button type="button" class="btn" id="qnx">${i + 1 < n.quiz.length ? "Question suivante" : "Voir le score"}</button>` : ""}`;
@@ -408,7 +410,7 @@ async function parExpress(niv, lec) {
   window.pageOutils = function (t) {
     const r = outils0.apply(this, arguments);
     if (!t) {
-      $$('#app .cards a[href="/commencer"], #app .cards a[href="/debuter"], #app .cards a[href="/academie/express"]').forEach(a => a.remove());
+      $$('#app .cards a[href="/apprendre"], #app .cards a[href="/debuter"], #app .cards a[href="/academie/express"]').forEach(a => a.remove());
       $$("#app .cards .tnum").forEach((n, i) => { n.textContent = String(i + 1).padStart(2, "0"); });
       if (!$("#parout")) app.insertAdjacentHTML("beforeend", `<section class="panel" id="parout" style="margin-top:16px"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Vous débutez ?</b><div class="muted">Le guide, les cours et le lexique sont réunis dans Apprendre.</div></div><a class="more" href="/apprendre">Apprendre →</a></div></section>`);
     }
@@ -579,7 +581,7 @@ function parLeconHTML(b) {
   const code = a0 && SYN_LECONS[a0.categorie] ? a0.categorie : fort && Math.abs(fort.variation_semaine_pct) >= 5 ? (fort.variation_semaine_pct < 0 ? "baisse" : "hausse") : (b.secteurs || []).length ? "mediane" : "indice";
   const l = synLecon(code); if (!l) return "";
   const pourquoi = { resultats: "Une de vos valeurs a publié ses résultats cette semaine.", ca: "Une de vos valeurs a publié son chiffre d'affaires.", dividende: "Un dividende a été annoncé dans votre liste.", ag: "Une assemblée générale est à l'ordre du jour.", baisse: "Une de vos valeurs a nettement baissé.", hausse: "Une de vos valeurs a nettement monté.", mediane: "Votre rapport compare des secteurs entiers.", indice: "Votre rapport compare vos valeurs aux indices." }[code] || "";
-  return `<section class="panel synsec" id="synlec"><div class="ph"><h2>La leçon de la semaine</h2><a href="/academie">L'Académie</a></div><div class="pb par-lec"><p><b>${esc(l.titre)}</b><br><span class="muted">${esc(pourquoi)} Cinq minutes pour comprendre ce qui se passe.</span></p><a class="btn ghost" href="${l.href}">Lire la leçon</a></div></section>`;
+  return `<section class="panel synsec" id="synlec"><div class="ph"><h2>La leçon de la semaine</h2><a href="/apprendre#academie">L'Académie</a></div><div class="pb par-lec"><p><b>${esc(l.titre)}</b><br><span class="muted">${esc(pourquoi)} Cinq minutes pour comprendre ce qui se passe.</span></p><a class="btn ghost" href="${l.href}">Lire la leçon</a></div></section>`;
 }
 function parAppliquer(el, b, J) {
   const R = (b && b.reglages) || (J && J.rapport) || PAR_DEFAUT, S = R.sujets || PAR_DEFAUT.sujets;
@@ -681,8 +683,8 @@ function parPitchHTML() {
   window.pageHome = async function () {
     await home0.apply(this, arguments);
     const band = $("#homeesp") && $("#homeesp").closest(".band");
-    const b3 = $$(".band").find(x => x.querySelector('.bandh a[href="/commencer"]'));
-    if (b3) { const a = b3.querySelector('.bandh a[href="/commencer"]'); a.setAttribute("href", "/apprendre"); a.textContent = "Tout pour apprendre →"; }
+    const b3 = $$(".band").find(x => x.querySelector('.bandh a[href="/apprendre"]'));
+    if (b3) { const a = b3.querySelector('.bandh a[href="/apprendre"]'); a.setAttribute("href", "/apprendre"); a.textContent = "Tout pour apprendre →"; }
     const m = await moi(); const el = $("#homeesp"); if (!el || m.connecte) return;
     if (band) { const h = band.querySelector(".bandh h2"); if (h) h.textContent = "Votre rapport de la semaine, sur mesure"; const l = band.querySelector(".bandh a.more"); if (l) l.textContent = "Créer mon rapport →"; }
     parAccueilVisiteur(el);
@@ -703,3 +705,34 @@ function parPitchHTML() {
     const offers = $(".offers"); if (offers && !$("#parprem")) offers.insertAdjacentHTML("afterend", `<section class="panel" id="parprem"><div class="pb par-lec"><p><b>Votre rapport de la semaine, sur mesure</b><br><span class="muted">Gratuit pour tous : vos favoris, votre portefeuille, deux secteurs, le niveau de détail, les sujets et le jour. Premium suit jusqu'à six secteurs, analyse huit lignes en détail et garde douze semaines d'historique.</span></p><a class="btn ghost" href="/espace/rapport">Régler mon rapport</a></div></section>`);
   };
 })();
+
+/* ---------- Lot 2 (30/10) : /apprendre, la porte unique pour apprendre ----------
+   Fusionne « Par où commencer » (trois décisions, sept étapes, profil, questions), l'Académie (niveaux) et le lexique.
+   /commencer, /academie et /academie/express redirigent ici. Les pages PEA/CTO, lexique, idées reçues, Livret A ou Bourse
+   gardent leur adresse : elles ne sont plus que dans cette porte. */
+pageApprendre = async function () {
+  setTitle("Apprendre la Bourse"); setNav("aca");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  await Promise.all([acaLoad(), parParcours(), premStatus().catch(() => null), typeof commencerCharger === "function" ? commencerCharger() : null]);
+  const C = typeof COMM !== "undefined" ? COMM : null;
+  const NV = parNiveaux(), nx = parProchaine(NV), lus = NV.reduce((a, v) => a + v.lus + v.dl, 0), tot = NV.reduce((a, v) => a + v.lec.length + v.dt, 0);
+  const ess = typeof ESSENTIEL !== "undefined" && typeof ALL !== "undefined" ? ESSENTIEL.filter(k => ALL[k]) : [];
+  app.innerHTML = `<header class="pa-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Trois décisions, puis l'Académie.</h1>
+      <p class="pagesub">Ce qui vient avant d'acheter un titre, en trois cartes. Ensuite des leçons de trois minutes, par niveau, avec des quiz.</p></header>
+    ${typeof commencerTrois === "function" ? commencerTrois() : ""}
+    <h2 class="subh" id="academie">L'Académie${lus ? ` <small class="light" style="font-weight:400;font-size:14px">${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot}</small>` : ""}</h2>
+    <div class="pa-go">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a>` : ""}${ACA && ACA.formation ? `<a class="more" href="/academie/formation">La formation guidée de six semaines${isPrem() ? "" : " · Premium"} →</a>` : ""}</div>
+    ${parNiveauxHTML(NV)}
+    <h2 class="subh">À garder sous la main</h2>
+    <div class="pa-keep">
+      <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
+      <a href="/pea-cto"><small>Le compte</small><b>PEA ou compte-titres</b><span>Ce qu'on peut y mettre, et l'impôt en 2026.</span></a>
+      <a href="/livret-a-ou-bourse"><small>Comparer</small><b>Livret A ou Bourse ?</b><span>100 € par mois sur 10, 20 ou 30 ans, inflation comprise.</span></a>
+      <a href="/idees-recues"><small>Quiz</small><b>Vrai ou faux ?</b><span>Les idées reçues sur la Bourse, passées au crible.</span></a>
+    </div>
+    ${C ? `<h2 class="subh" id="detail">Le détail, quand vous voulez</h2>${commencerBlocsHTML(C)}` : ""}
+    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. <a class="lnk" href="/methode">Méthode et sources</a>${C && C.avertissement ? ` · ${esc(C.avertissement)}` : ""}</p>`;
+  if (C && typeof commencerLier === "function") commencerLier(C);
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { if (t.tagName === "DETAILS") t.open = true; setTimeout(() => t.scrollIntoView({ block: "start" }), 30); } }
+};
+document.head.insertAdjacentHTML("beforeend", `<style>.pa-pli>summary{list-style:none;cursor:pointer}.pa-pli>summary::-webkit-details-marker{display:none}.pa-pli>summary h2{margin:0}.pa-pli[open]>summary{border-bottom:1px solid var(--rule)}.pa-hero .pa-go{margin:0}.cm3{margin-bottom:28px}</style>`);

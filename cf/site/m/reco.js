@@ -359,7 +359,7 @@ function recoExHTML() {
     <p class="rc-mut" style="margin:0 0 12px">Quatre exemples, du plus prudent au plus exposé, pour montrer ce que change la part d'actions. Le site ne désigne pas celui qui vous conviendrait : cela dépend de votre situation complète, qu'il ne connaît pas.</p>
     <label class="rc-lab">Ce que chaque compte accepte, pour <select id="rc-env">${RECO_ENV.map(([k, l]) => `<option value="${k}"${k === RECO_ST.env ? " selected" : ""}>${l}</option>`).join("")}</select></label>
     <div class="rc-exs" id="rc-exs">${RECO_EX.map(recoExCarte).join("")}</div>
-    <p class="rc-mut">Les trois grandes familles de placements et leurs règles (plafonds, impôt en 2026) sont détaillées dans <a class="lnk" href="/pea-cto">PEA, compte-titres ou assurance-vie</a> et dans <a class="lnk" href="/academie">l'Académie</a>.</p></div></section>`;
+    <p class="rc-mut">Les trois grandes familles de placements et leurs règles (plafonds, impôt en 2026) sont détaillées dans <a class="lnk" href="/pea-cto">PEA, compte-titres ou assurance-vie</a> et dans <a class="lnk" href="/apprendre#academie">l'Académie</a>.</p></div></section>`;
 }
 
 /* ---------- 2. Listes par critères ---------- */
@@ -471,7 +471,7 @@ async function pageRepartitions() {
     <p class="pagesub">Des exemples de répartition expliqués, et des listes d'ETF et d'entreprises construites sur les critères que vous choisissez. Le site n'établit pas de profil et ne désigne rien comme adapté à votre situation.</p>
     ${RECO_LEGAL}
     <div id="rc-ex">${recoExHTML()}</div>
-    <section class="panel"><div class="ph"><h2>Une liste à partir de vos critères</h2><span class="light" style="font-size:12.5px">vous choisissez, le site calcule</span></div><div class="pb">
+    <section class="panel" id="listes"><div class="ph"><h2>Une liste à partir de vos critères</h2><span class="light" style="font-size:12.5px">vous choisissez, le site calcule</span></div><div class="pb">
       <div id="rc-f">${recoFiltresHTML()}</div><div id="rc-l">${recoListeHTML()}</div></div></section>
     <section class="panel"><details class="acc"><summary><b>Comment ces listes sont calculées</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px">
       <p><b>Niveau de risque (1 à 5).</b> Il vient de la nature du placement, pas d'un jugement : ETF monétaire 1, obligations 2, ETF d'actions larges 3, pays émergents, thématiques et pays unique 4, matières premières 5. Une action seule vaut au moins 3 : 3 pour une grande ou moyenne entreprise, 4 pour une petite, 5 pour une microcapitalisation, un point de plus en cas de perte, de dette lourde ou de cours très variable.</p>

@@ -650,7 +650,7 @@ function pagePourquoiBilan() {
       ${A("06", "La liste noire de l'AMF, vérifiable en un clic", "Avant de confier de l'argent à un site inconnu, collez son adresse : le site la compare aux listes noires et mises en garde publiées par l'AMF.",
         `<div class="cm-mini3"><div><b class="cm-ln">…</b><span>sites et entités de la liste noire AMF</span></div><div><b>16 %</b><span>des Français estiment avoir été victimes d'une arnaque (AMF, mai 2026)</span></div></div><div class="cm-go"><a class="chip" href="/outils/verifier">Vérifier un site</a></div>`)}
       ${A("07", "Une Académie reliée aux vraies données", "55 leçons sourcées et 63 questions de quiz, de l'épargne de précaution à la lecture d'un bilan. Chaque notion renvoie vers une vraie entreprise : la leçon sur le PER mène au PER de TotalEnergies, calculé avec les derniers comptes.",
-        `<div class="cm-go"><a class="chip" href="/academie">Ouvrir l'Académie</a><a class="chip" href="/academie/valorisation/per">Leçon : le PER</a><a class="chip" href="/entreprise/totalenergies">Le PER de TotalEnergies</a><a class="chip" href="/idees-recues">Les idées reçues</a></div>`)}
+        `<div class="cm-go"><a class="chip" href="/apprendre#academie">Ouvrir l'Académie</a><a class="chip" href="/academie/valorisation/per">Leçon : le PER</a><a class="chip" href="/entreprise/totalenergies">Le PER de TotalEnergies</a><a class="chip" href="/idees-recues">Les idées reçues</a></div>`)}
       ${A("08", "Sans publicité, sans produit à vendre, sans conseil", "bilan. ne touche aucune commission de courtier, n'affiche aucune publicité et ne vend aucun placement. Il explique ; il ne dit jamais quoi acheter ou vendre. Boursorama, Investing.com et Zonebourse affichent de la publicité dans leur version gratuite.", "")}
     </div>
     <section class="panel"><div class="ph"><h2>Le tableau comparatif honnête</h2></div><div class="pb">
@@ -665,7 +665,7 @@ function pagePourquoiBilan() {
       <li><b>Pas de conseil personnalisé.</b> Pour cela, adressez-vous à un conseiller en investissements financiers enregistré à l'ORIAS.</li>
     </ul></div></section>
     <section class="panel cm-end"><div class="pb"><h2>Commencez par une question</h2><p>Le plus simple pour juger : posez une vraie question, ouvrez une fiche, ou faites le parcours du débutant.</p>
-      <div class="cm-go"><a class="btn cm-btn" href="/demander">Demander à l'IA</a><a class="chip" href="/commencer">Par où commencer</a><a class="chip" href="/entreprises">Les entreprises</a><a class="chip" href="/methode">Méthode et sources</a></div></div></section>
+      <div class="cm-go"><a class="btn cm-btn" href="/demander">Demander à l'IA</a><a class="chip" href="/apprendre">Par où commencer</a><a class="chip" href="/entreprises">Les entreprises</a><a class="chip" href="/methode">Méthode et sources</a></div></div></section>
   </div>`;
   commListeNoire().then(x => { $$(".cm-ln").forEach(el => el.textContent = x ? F0.format(x.n) : "plus de 3 000"); });
   if (typeof acaLoad === "function") acaLoad().then(a => { const el = $(".cm-nl"); if (a && el) el.textContent = a.modules.reduce((n, m) => n + m.lecons.length, 0); });

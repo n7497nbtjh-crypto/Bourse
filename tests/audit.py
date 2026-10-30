@@ -140,12 +140,13 @@ with sync_playwright() as pw:
             if p: probs["panneau ✦"] = p
             pg.evaluate("orcIaClose()")
         # Nouvel investisseur : 5 réponses donnent un profil
-        pg.goto("http://t.local/commencer"); pg.wait_for_timeout(400)
+        pg.goto("http://t.local/apprendre"); pg.wait_for_timeout(600)  # lot 2 : le questionnaire est dans /apprendre, replié
+        pg.evaluate("document.getElementById('profil').open = true")
         for q in pg.locator("#qprof fieldset").all(): q.locator("label.qo").first.click()
         pg.wait_for_timeout(200)
         if "votre profil" not in pg.inner_text("#presult").lower(): probs["questionnaire"] = ["aucun profil affiché"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
-        if p: probs["/commencer rempli"] = p
+        if p: probs["/apprendre rempli"] = p
         if shots and name != "petit":
             pg.screenshot(path=f"{shots}/{name}_commencer.png", full_page=True)
             for u, n in (("/premium", "premium"), ("/entreprise/lvmh", "assistant")):
