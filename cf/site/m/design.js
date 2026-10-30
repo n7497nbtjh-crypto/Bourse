@@ -137,6 +137,10 @@ details.ctx-in{border-top:1px solid var(--line2);padding:0 22px}details.ctx-in >
 details.ctx-in > summary::-webkit-details-marker{display:none}
 details.ctx-in > summary .ctx-ti{font-family:var(--serif);font-size:17px;font-weight:800}details.ctx-in > summary .ctx-ti:after{content:" +";font-family:var(--sans);color:var(--light)}details.ctx-in[open] > summary .ctx-ti:after{content:" −"}
 details.ctx-in > summary .ctx-sl{font-size:13.5px;color:var(--grey);line-height:1.5}details.ctx-in > .pb{padding-left:0;padding-right:0}
+/* Accueil, allégé (30/10, nuit) : l'accueil montre l'essentiel ; la suite est dans Actualités.
+   Plus de liste « autres sujets suivis », plus de liste « autres annonces », plus de colonne presse : l'agenda reste seul à côté des annonces. */
+.acc .acc-autres,.acc .acc-als,.acc .acc-als + *,.acc .acc-annside > section:nth-child(2){display:none}
+.acc .acc-annw .acc-annm .acc-ah{display:none}
 /* Comparer, apaisé (30/10) : la règle des couleurs n'est plus répétée sous chaque thème (une légende en tête suffit) */
 .cmpr-exp .cmpr-rule{display:none}
 /* Accessibilité (point 7, 29/10/2026) : sur téléphone, aucun texte sous 11 px, aucune cible tactile sous 24 px */
