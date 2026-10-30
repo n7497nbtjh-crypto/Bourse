@@ -1,0 +1,1 @@
+{"id":"radcom","updated":"2026-10-30","source":"https://data.sec.gov/api/xbrl/companyfacts/CIK0001016838.json","currency":"USD","q":[{"end":"2015-03-31","ca":6.4,"net":0.4,"eps":0.05,"filed":"2016-05-16","form":"6-K"},{"end":"2016-03-31","ca":6.5,"net":0.9,"eps":0.1,"filed":"2016-05-16","form":"6-K"}],"ttm":null}

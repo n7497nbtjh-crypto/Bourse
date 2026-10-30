@@ -1,0 +1,1 @@
+{"id":"nio","updated":"2026-10-30","source":"https://data.sec.gov/api/xbrl/companyfacts/CIK0001736541.json","currency":"USD","q":[{"end":"2020-12-31","ca":1075.2,"net":-283.2,"eps":null,"filed":"2021-04-06","form":"20-F"},{"end":"2021-12-31","ca":1598.9,"net":-1368.3,"eps":null,"filed":"2022-04-29","form":"20-F"}],"ttm":null}

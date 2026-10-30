@@ -1,0 +1,1 @@
+{"id":"daqo","updated":"2026-10-30","source":"https://data.sec.gov/api/xbrl/companyfacts/CIK0001477641.json","currency":"USD","q":[{"end":"2013-12-31","ca":37,"net":141.9,"eps":-0.05,"filed":"2014-04-14","form":"20-F"},{"end":"2014-12-31","ca":49.5,"net":3.6,"eps":0.01,"filed":"2015-04-17","form":"20-F"}],"ttm":null}

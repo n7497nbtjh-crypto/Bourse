@@ -203,3 +203,33 @@ export function estimatedAgenda(sub, today = new Date().toISOString().slice(0, 1
   }
   return out.sort((a, b) => a.date.localeCompare(b.date)).slice(0, 4);
 }
+
+/* ---------- Trimestres (30/10/2026) : les chiffres des rapports 10-Q, et le quatrième trimestre déduit du 10-K ----------
+   companyfacts contient chaque déclaration avec sa période. Un trimestre « simple » dure 80 à 100 jours ; les 10-Q donnent
+   aussi des cumuls (6 et 9 mois). Le 4e trimestre n'est jamais publié seul : exercice (10-K) moins cumul 9 mois.
+   Sortie : { currency, q: [{ end, ca, net, eps, filed, form }] } sur les 8 derniers trimestres, plus ttm (12 mois glissants). */
+export function extractSecTrim(doc, maxQ = 8) {
+  const facts = (doc && doc.facts) || {}, g = facts["us-gaap"] || facts["ifrs-full"] || null; if (!g) return null;
+  const CONC = facts["us-gaap"] ? US_CONCEPTS : IFRS_CONCEPTS, len = r => (day(r.end) - day(r.start)) / 864e5;
+  const rowsOf = (key, cur) => { const out = []; for (const c of CONC[key] || []) { const u = (g[c] || {}).units || {}; for (const r of (u[cur] || u[cur + "/shares"] || [])) if (r.start && r.end) out.push(r); } return out; };
+  // devise : celle des trimestres de ventes les plus récents
+  const stat = {};
+  for (const c of CONC.ca || []) for (const [u, rows] of Object.entries((g[c] || {}).units || {})) if (/^[A-Z]{3}$/.test(u)) for (const r of rows) if (r.start && len(r) >= 80 && len(r) <= 100) { stat[u] = stat[u] || { n: 0, fin: "" }; stat[u].n++; if (r.end > stat[u].fin) stat[u].fin = r.end; }
+  const cur = Object.entries(stat).sort((a, b) => (a[1].fin < b[1].fin ? 1 : a[1].fin > b[1].fin ? -1 : 0) || b[1].n - a[1].n).map(([u]) => u)[0] || "USD";
+  const serie = key => { // par date de fin : trimestre simple, sinon déduit (exercice − 9 mois, ou cumul − cumul précédent)
+    const R = rowsOf(key, cur), byEnd = {};
+    const keep = (end, v, r) => { if (!byEnd[end] || String(r.filed) > String(byEnd[end].filed)) byEnd[end] = { v, filed: r.filed, form: r.form }; };
+    for (const r of R) if (len(r) >= 80 && len(r) <= 100) keep(r.end, r.val, r);
+    const cum = {}; for (const r of R) { const d = len(r); if (d > 100) (cum[r.start] = cum[r.start] || []).push(r); }
+    for (const [start, L] of Object.entries(cum)) { L.sort((a, b) => len(a) - len(b)); for (let i = 0; i < L.length; i++) { const r = L[i]; if (byEnd[r.end]) continue; const prev = i ? L[i - 1] : null; if (prev && len(r) - len(prev) >= 80 && len(r) - len(prev) <= 100) keep(r.end, r.val - prev.val, r); } }
+    return byEnd;
+  };
+  const ca = serie("ca"), net = serie("net"), eps = serie("eps");
+  const ends = [...new Set([...Object.keys(ca), ...Object.keys(net)])].sort().slice(-maxQ);
+  if (!ends.length) return null;
+  const M = v => v == null ? null : Math.round(v / 1e6 * 10) / 10;
+  const q = ends.map(end => ({ end, ca: ca[end] ? M(ca[end].v) : null, net: net[end] ? M(net[end].v) : null, eps: eps[end] ? Math.round(eps[end].v * 100) / 100 : null, filed: (ca[end] || net[end]).filed, form: (ca[end] || net[end]).form }));
+  const last4 = q.slice(-4), full = last4.length === 4 && last4.every(x => x.ca != null);
+  const ttm = full ? { fin: last4[3].end, ca: Math.round(last4.reduce((s, x) => s + x.ca, 0) * 10) / 10, net: last4.every(x => x.net != null) ? Math.round(last4.reduce((s, x) => s + x.net, 0) * 10) / 10 : null } : null;
+  return { currency: cur, q, ttm };
+}

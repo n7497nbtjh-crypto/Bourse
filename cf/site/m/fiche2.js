@@ -674,8 +674,31 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 /* Depuis la clôture : la dernière publication de résultats (trimestre, semestre), avec ses chiffres quand le site les a relevés
    (rapports 10-Q de la SEC, communiqués lus). Les indicateurs restent ceux de l'exercice clos : un trimestre ne donne ni marge
    annuelle, ni dette comparable. Le visiteur voit ainsi ce qui a été publié depuis, et ce que le site en a ou non. */
+async function rfTrimestresSEC(s, c, box) { // trimestres lus à la SEC (10-Q) : le dernier trimestre et les 12 derniers mois, face au dernier exercice clos
+  if (!c || !c.cik) return false;
+  let t = null; try { const r = await fetch(`/data/trim/${s.id}.json`); t = r.ok ? await r.json() : null; } catch (e) { }
+  if (!t || !t.q || !t.q.length || !document.body.contains(box)) return false;
+  const fin = c.years && c.years.length ? `${c.years.at(-1)}-${typeof c.fyEnd === "string" && /^\d{2}-\d{2}$/.test(c.fyEnd) ? c.fyEnd : "12-31"}` : "";
+  const nouveaux = t.q.filter(x => !fin || x.end > fin); if (!nouveaux.length) return false;
+  const last = nouveaux.at(-1), B = v => big(v, t.currency), prevY = t.q.find(x => x.end < last.end && Math.abs((Date.parse(last.end) - Date.parse(x.end)) / 864e5 - 365) < 20);
+  const g = (a, b) => a != null && b ? (a / b - 1) : null;
+  const caFY = c.fin && c.fin.ca ? c.fin.ca.at(-1) : null, netFY = c.fin && c.fin.net ? c.fin.net.at(-1) : null, memeDevise = t.currency === c.currency;
+  const tuiles = [];
+  if (last.ca != null) tuiles.push(`<div><span>Ventes du trimestre</span><b>${B(last.ca)}</b>${prevY && prevY.ca ? `<small class="${g(last.ca, prevY.ca) >= 0 ? "up" : "dn"}">${sgn(g(last.ca, prevY.ca))} sur un an</small>` : ""}</div>`);
+  if (last.net != null) tuiles.push(`<div><span>Bénéfice net du trimestre</span><b>${B(last.net)}</b>${prevY && prevY.net ? `<small class="${g(last.net, prevY.net) >= 0 ? "up" : "dn"}">${sgn(g(last.net, prevY.net))} sur un an</small>` : ""}</div>`);
+  if (t.ttm && t.ttm.ca != null) tuiles.push(`<div><span>Ventes sur 12 mois glissants</span><b>${B(t.ttm.ca)}</b>${memeDevise && caFY ? `<small class="${t.ttm.ca >= caFY ? "up" : "dn"}">${sgn(g(t.ttm.ca, caFY))} vs exercice ${c.years.at(-1)}</small>` : ""}</div>`);
+  if (t.ttm && t.ttm.net != null) tuiles.push(`<div><span>Bénéfice sur 12 mois glissants</span><b>${B(t.ttm.net)}</b>${memeDevise && netFY ? `<small class="${t.ttm.net >= netFY ? "up" : "dn"}">${sgn(g(t.ttm.net, netFY))} vs exercice ${c.years.at(-1)}</small>` : ""}</div>`);
+  const lec = [];
+  if (prevY && prevY.ca && last.ca != null) { const v = g(last.ca, prevY.ca); lec.push(v >= 0.05 ? "Les ventes du trimestre progressent nettement sur un an." : v <= -0.05 ? "Les ventes du trimestre reculent nettement sur un an." : "Les ventes du trimestre sont stables sur un an."); }
+  if (memeDevise && caFY && t.ttm && t.ttm.ca != null) { const v = g(t.ttm.ca, caFY); lec.push(`Sur les douze derniers mois, l'activité est ${v >= 0.03 ? "en hausse" : v <= -0.03 ? "en baisse" : "au niveau"} ${v >= 0.03 || v <= -0.03 ? "par rapport au" : "du"} dernier exercice clos (${sgn(v)}).`); }
+  box.innerHTML = `<div class="rf-trimi"><div class="rf-trimh"><span class="kick">Depuis la clôture de l'exercice ${esc(c.years.at(-1))}</span><b>Trimestre clos le ${dLabel(last.end)}</b><span class="light">rapport ${esc(last.form)} déposé le ${dLabel(last.filed)} · ${nouveaux.length} trimestre${nouveaux.length > 1 ? "s" : ""} publié${nouveaux.length > 1 ? "s" : ""} depuis</span></div>
+    <div class="rf-trimc">${tuiles.join("")}</div>${lec.length ? `<p class="rf-triml">${lec.map(esc).join(" ")} Les indicateurs des six modules restent ceux de l'exercice clos, audité ; ces chiffres trimestriels ne sont pas audités.</p>` : ""}
+    <p class="rf-trimf"><a class="lnk" href="${esc(t.source)}" target="_blank" rel="noopener">Données SEC (companyfacts)</a> · <a class="lnk" href="/entreprise/${s.id}/actualite">Toutes ses annonces</a></p></div>`;
+  box.hidden = false; return true;
+}
 async function rfDernierTrimestre(s, c) {
   const box = document.getElementById("rf-trim"); if (!box || typeof actuGet !== "function") return;
+  if (await rfTrimestresSEC(s, c, box)) return;
   let j = null; try { j = await actuGet(`/data/actu/c/${s.id}.json`); } catch (e) { }
   if (!j || !document.body.contains(box)) return;
   const fin = c && c.years && c.years.length ? `${c.years.at(-1)}-${typeof c.fyEnd === "string" && /^\d{2}-\d{2}$/.test(c.fyEnd) ? c.fyEnd : "12-31"}` : ""; // clôture du dernier exercice (juin pour Microsoft, par exemple)
