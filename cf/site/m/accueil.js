@@ -304,9 +304,38 @@ function accCarteHTML(c) { // une fiche en carte : logo, cours du jour, points f
     ${p && p.p != null ? `<span class="acc-cp"><b>${F2.format(p.p)} ${esc(sym)}</b>${p.chg != null ? `<small class="${accCls(p.chg)}">${accPct(p.chg)}</small>` : ""}</span>` : ""}
     ${t ? `<span class="acc-ct"><i class="f">${t.fort}</i><i class="m">${t.moyen}</i><i class="v">${t.vig}</i><small>points forts · moyens · à surveiller</small></span>` : ""}</a>`;
 }
+
+// 30/10 (retour de Romain) : la page d'accueil s'organise par besoin, pas par rubrique ; chaque besoin mène droit à l'outil
+const ACC_BESOINS = [
+  ["Comprendre une entreprise", "Son métier, ses comptes, son verdict en trois mots.", "/entreprises"],
+  ["Savoir si son prix est élevé", "Son PER face à la médiane du secteur, et ses concurrents côte à côte.", "/comparer"],
+  ["Choisir un ETF", "Frais, éligibilité au PEA, ce qu'il contient vraiment.", "/etf"],
+  ["Comprendre mon portefeuille", "Concentration, chevauchements entre ETF, frais cumulés.", "/portefeuille"],
+  ["Suivre mes investissements", "Vos favoris et, chaque semaine, un rapport sur vos titres.", "/rapport-exemple"],
+  ["Apprendre", "L'Académie : des leçons courtes, un exemple chiffré pour chacune.", "/academie"],
+];
+function accBesoinsHTML() {
+  return `<section class="acc-sec acc-bes"><p class="acc-vh">Que voulez-vous faire ?</p><ul class="acc-besl">${ACC_BESOINS.map(([t, d, h]) => `<li><a href="${h}"><b>${t}</b><span>${d}</span><i aria-hidden="true">→</i></a></li>`).join("")}</ul></section>`;
+}
+function accExempleHTML(s, c) { // un vrai résultat du site, tel qu'il apparaît sur la fiche : verdict, trois jauges face au secteur
+  const f = figuresOf(c), m = ratios(f), v = valo(s), md = MED[s.sector] || {}, mp = MEDPE[s.sector], bank = isBank(s);
+  const vc = rfVerdictCourt(s, c);
+  const row = (l, val, med, g) => g ? `<div class="acc-exr"><span class="acc-exk">${l}</span><b>${val}</b><small>médiane du secteur : ${med}</small>${g}</div>` : "";
+  const lev = v2 => `${F1.format(v2)} an${v2 >= 2 ? "s" : ""} de résultat`;
+  return `<a class="acc-ex" href="/entreprise/${s.id}"><span class="acc-exh">${logo(s, 34)}<span><b>${esc(s.name)}</b><small>${esc(secName(s))} · comptes ${esc(String(s.year))}, document officiel</small></span></span>
+    ${vc ? `<p class="rf-vc acc-exv">${esc(vc)}</p>` : ""}
+    ${!bank && m.marge != null ? row("Marge nette", pct(m.marge, 0, false), md.marge != null ? pct(md.marge, 0, false) : "–", rf6Jauge(s, "marge", false, m.marge)) : ""}
+    ${!bank && m.lev != null && m.lev >= 0 ? row("Dette nette", lev(m.lev), md.lev != null ? lev(md.lev) : "–", rf6Jauge(s, "lev", true, m.lev)) : ""}
+    ${v && v.pe ? row("Prix payé (PER)", `${F0.format(v.pe)} fois le résultat`, mp ? `${F0.format(mp)} fois` : "–", rf6Jauge(s, "pe", true, v.pe)) : ""}
+    <span class="acc-exf">Voir la fiche complète →</span></a>`;
+}
+async function accExemple(id) { // charge les comptes de l'exemple et remplace l'attente
+  const box = $("#acc-exb"), s = RBY[id]; if (!box || !s) return;
+  try { const c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); const h = accExempleHTML(s, c); if (h && $("#acc-exb")) $("#acc-exb").innerHTML = h; } catch (e) { }
+}
 async function pageHome() {
   setTitle(""); setNav("home");
-  if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="acc-une"><div class="acc-une-l"><h1>Comprendre une entreprise cotée avant d'y mettre un euro.</h1></div></section></div>`; // affichage immédiat, même titre
+  if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="acc-une"><div class="acc-une-l"><h1>Comprenez les entreprises, évaluez leur prix et découvrez ce que vous détenez vraiment.</h1></div></section></div>`; // affichage immédiat, même titre
   await Promise.all([PXP, loadAna()]);
   await accAttendre(accCharge(), 300); // fichiers lancés au démarrage : en général déjà là ; sinon squelette de même taille
   if (location.pathname !== "/") return;
@@ -318,17 +347,18 @@ async function pageHome() {
     ${accDateline(date)}
     <section class="acc-une">
       <div class="acc-une-l">
-        <h1>Comprendre une entreprise cotée avant d'y mettre un euro.</h1>
-        <p class="acc-lede">Les comptes publiés de ${F0.format(R.companies.length)} entreprises et ${F0.format(ETF.list.length)} ETF, la place de chacune dans son secteur et son actualité, expliqués en langage clair. Information, pas conseil.</p>
+        <h1>Comprenez les entreprises, évaluez leur prix et découvrez ce que vous détenez vraiment.</h1>
+        <p class="acc-lede">Des chiffres vérifiables, expliqués simplement : les comptes publiés de ${F0.format(R.companies.length)} entreprises et ${F0.format(ETF.list.length)} ETF, chacun face à son secteur. Information, pas conseil.</p>
         <div class="search big acc-search" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div>
         <p class="acc-exl">Une question libre ? <a href="/demander">Demandez à l'IA du site</a>.</p>
         <ul class="acc-av"><li><b>Chaque chiffre est prouvé</b><span>Il vient d'un document officiel déposé par l'entreprise, que vous ouvrez d'un clic. Rien n'est généré.</span></li><li><b>Le verdict d'abord</b><span>Trois mots, puis le détail face à la médiane de son secteur. Gratuit, là où les autres font payer la comparaison.</span></li><li><b>Aucun conseil, aucune position</b><span>Pas de titres à acheter, pas de juste valeur inventée, pas de publicité. Le site n'est pas investi dans ce qu'il décrit.</span></li></ul>
       </div>
       <div class="acc-une-r">
-        <p class="acc-vh">Quatre entrées</p>
-        ${accVoiesHTML()}
+        <p class="acc-vh">Ce que vous obtenez, pour chaque entreprise</p>
+        <div id="acc-exb" class="acc-exw"><p class="rf-no">Chargement de l'exemple…</p></div>
       </div>
     </section>
+    ${accBesoinsHTML()}
 
     ${ex.length ? `<section class="acc-cards"><p class="acc-vh">Trois fiches pour voir</p><div class="acc-cardl">${ex.map(([id]) => accCarteHTML(RBY[id])).join("")}</div></section>` : ""}
 
@@ -350,6 +380,7 @@ async function pageHome() {
   </div>`;
   ACC.prem = prem; ACC.secs = secs;
   accLier(membre);
+  accExemple(ACC_EX[0][0]);
   if (typeof bindSearch === "function") { try { bindSearch($(".acc-search", app)); } catch (e) { } }
   if (!pret) accCharge().then(() => { if (location.pathname !== "/") return; const a = $("#acc-pointb"), b = $("#acc-annw"); if (a) a.innerHTML = accPointHTML(); if (b) b.innerHTML = accAnnoncesHTML(); if (!membre && !$("#acc-pourvous")) { const d = $("#acc-decouvrir"); const h = accPourVousHTML(false); if (d && h) d.insertAdjacentHTML("beforebegin", h); } });
   moi().then(m => {
@@ -584,6 +615,20 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .acc-vn{font-family:var(--mono);font-size:12px;color:var(--light)}
 .acc-vt{display:flex;flex-direction:column;gap:3px;min-width:0}.acc-vt b{font-family:var(--serif);font-weight:800;font-size:19px;line-height:1.15}.acc-vt span{font-size:13.5px;line-height:1.45;color:var(--grey)}
 .acc-va{color:var(--light);text-align:right}.acc-voies a:hover .acc-va{color:var(--ink)}
+.acc-exw{border:1px solid var(--rule);background:#fff;border-radius:6px;padding:16px 18px}
+.acc-ex{display:block;color:var(--ink);text-decoration:none}
+.acc-exh{display:flex;gap:12px;align-items:center;margin-bottom:10px}.acc-exh b{display:block;font-size:17px}.acc-exh small{display:block;font-size:12px;color:var(--grey)}
+.acc-exv{margin:0 0 12px;font-family:var(--serif);font-size:24px;line-height:1.1;font-weight:800}
+.acc-exr{padding:10px 0;border-top:1px solid var(--rule)}.acc-exr .acc-exk{display:block;font-size:12.5px;color:var(--grey)}.acc-exr b{font-family:var(--mono);font-size:19px;display:block;margin:2px 0 0}.acc-exr b+small{display:block;font-size:12px;color:var(--grey)}
+.acc-exr .rf6-jg small{display:block}
+.acc-exf{display:block;margin-top:10px;font-weight:600;font-size:14px}.acc-ex:hover .acc-exf{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+.acc-bes{margin:0 0 32px}.acc-besl{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0 28px;border-top:1px solid var(--ink)}
+.acc-besl li{border-bottom:1px solid var(--rule)}.acc-besl a{display:grid;grid-template-columns:minmax(0,1fr) 20px;grid-template-areas:"t a" "d a";gap:2px 10px;padding:14px 0;color:var(--ink);text-decoration:none}
+.acc-besl b{grid-area:t;font-size:16px}.acc-besl span{grid-area:d;font-size:13px;line-height:1.45;color:var(--grey)}.acc-besl i{grid-area:a;align-self:center;font-style:normal;color:var(--light)}
+.acc-besl a:hover b,.acc-besl a:focus-visible b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}.acc-besl a:hover i{color:var(--ink)}
+@media (max-width:900px){.acc-besl{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:900px){.acc-une{gap:14px}.acc-une-l{display:contents}.acc-une h1{order:1}.acc-lede{order:2}.acc-search{order:3}.acc-exl{order:4}.acc-une-r{order:5}.acc-av{order:6;margin-top:4px}}
+@media (max-width:600px){.acc-besl{grid-template-columns:minmax(0,1fr)}.acc-exw{padding:14px}.acc-exv{font-size:21px}}
 .acc .acc-h h2{font-size:26px}
 .acc-rap2{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:28px 56px;padding:28px 0 32px;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin-top:28px}
 .acc-rap2 h2{font-family:var(--serif);font-weight:800;font-size:28px;line-height:1.1;letter-spacing:-.015em;margin:0 0 10px}
