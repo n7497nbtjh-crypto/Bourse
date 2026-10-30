@@ -113,6 +113,7 @@ with sync_playwright() as pw:
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
         pg.goto("http://t.local/entreprise/lvmh/comptes"); pg.wait_for_timeout(300)
+        pg.evaluate("document.querySelectorAll('details.rf-thd').forEach(d => { d.open = true; })")  # le tableau est replié par défaut depuis le 30 octobre
         pg.locator(".def[data-def=marge]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(300)  # le défilement referme la bulle : on défile d'abord
         pg.click(".def[data-def=marge]"); pg.wait_for_timeout(150)
         if not pg.evaluate("document.getElementById('pop').classList.contains('open')"): probs["définition"] = ["la bulle ne s'ouvre pas"]

@@ -298,6 +298,12 @@ function accVoiesHTML() {
   return `<ol class="acc-voies" aria-label="Quatre entrées">${ACC_VOIES.map(([h, t, d], i) => `<li><a href="${h}"><span class="acc-vn">0${i + 1}</span><span class="acc-vt"><b>${t}</b><span>${d}</span></span><span class="acc-va" aria-hidden="true">→</span></a></li>`).join("")}</ol>`;
 }
 const ACC_EX = [["lvmh", "LVMH"], ["totalenergies", "TotalEnergies"], ["apple", "Apple"]];
+function accCarteHTML(c) { // une fiche en carte : logo, cours du jour, points forts et à surveiller, sans texte
+  const p = PX["c:" + c.id], t = typeof quick === "function" ? quick(c) : null, sym = CUR[c.currency] || c.currency || "";
+  return `<a class="acc-card" href="/entreprise/${c.id}">${logo(c, 36)}<span class="acc-cn"><b>${esc(c.name)}</b><small>${esc(secName(c))}</small></span>
+    ${p && p.p != null ? `<span class="acc-cp"><b>${F2.format(p.p)} ${esc(sym)}</b>${p.chg != null ? `<small class="${accCls(p.chg)}">${accPct(p.chg)}</small>` : ""}</span>` : ""}
+    ${t ? `<span class="acc-ct"><i class="f">${t.fort}</i><i class="m">${t.moyen}</i><i class="v">${t.vig}</i><small>points forts · moyens · à surveiller</small></span>` : ""}</a>`;
+}
 async function pageHome() {
   setTitle(""); setNav("home");
   if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="acc-une"><div class="acc-une-l"><h1>Comprendre une entreprise cotée avant d'y mettre un euro.</h1></div></section></div>`; // affichage immédiat, même titre
@@ -315,13 +321,16 @@ async function pageHome() {
         <h1>Comprendre une entreprise cotée avant d'y mettre un euro.</h1>
         <p class="acc-lede">Les comptes publiés de ${F0.format(R.companies.length)} entreprises et ${F0.format(ETF.list.length)} ETF, la place de chacune dans son secteur et son actualité, expliqués en langage clair. Information, pas conseil.</p>
         <div class="search big acc-search" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div>
-        <p class="acc-exl">${ex.length ? `Par exemple ${ex.map(([id, n]) => `<a href="/entreprise/${id}">${n}</a>`).join(", ")}.` : ""} Une question libre ? <a href="/ia">Demandez à l'IA du site</a>.</p>
+        <p class="acc-exl">Une question libre ? <a href="/demander">Demandez à l'IA du site</a>.</p>
+        <p class="acc-preuve">Rien n'est généré : chaque chiffre vient d'un dépôt officiel que vous pouvez ouvrir. Le site ne détient aucune position et ne vend aucune sélection de titres.</p>
       </div>
       <div class="acc-une-r">
         <p class="acc-vh">Quatre entrées</p>
         ${accVoiesHTML()}
       </div>
     </section>
+
+    ${ex.length ? `<section class="acc-cards"><p class="acc-vh">Trois fiches pour voir</p><div class="acc-cardl">${ex.map(([id]) => accCarteHTML(RBY[id])).join("")}</div></section>` : ""}
 
     <section class="acc-sec" id="acc-point">${accH(`Le point du jour`, "L'actualité économique et financière, en clair", ["/actualites", "Toute l'actualité"])}
       <div id="acc-pointb">${pret ? accPointHTML() : `<div class="acc-rep acc-wait" aria-busy="true"><div class="acc-kpis"><div class="acc-kpi"></div><div class="acc-kpi"></div><div class="acc-kpi"></div></div><div class="acc-sjs"><div class="acc-sj"></div><div class="acc-sj"></div><div class="acc-sj"></div></div></div>`}</div></section>
@@ -593,7 +602,14 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .acc .acc-sj{background:transparent;border:0;border-radius:0;border-right:1px solid var(--rule);padding:18px 22px 18px 0}.acc .acc-sj+.acc-sj{padding-left:22px}.acc .acc-sj:last-child{border-right:0;padding-right:0}
 .acc .acc-sj h4{font-size:19px;font-weight:700;line-height:1.15;letter-spacing:-.01em;margin:4px 0 12px}
 .acc .acc-theme{font-size:12.5px;font-weight:600;color:var(--grey);letter-spacing:0;text-transform:none;font-family:var(--sans)}
-.acc .acc-l{background:transparent;border:0;padding:0;margin:0 0 10px}.acc .acc-l p{font-size:14px;line-height:1.55;color:var(--ink)}
+.acc .acc-l{background:transparent;border:0;padding:0;margin:0 0 10px}.acc .acc-sj .acc-li,.acc .acc-sj .acc-lh{display:none}
+.acc-preuve{font-size:13px;color:var(--grey);margin:14px 0 0;padding-top:12px;border-top:1px solid var(--rule);max-width:560px}
+.acc-cards{margin:0 0 28px}.acc-cardl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.acc-card{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:14px 16px;border:1px solid var(--rule);border-radius:14px;background:#fff;color:var(--ink);text-decoration:none}.acc-card:hover{border-color:var(--ink)}
+.acc-cn{display:flex;flex-direction:column}.acc-cn b{font-size:16px}.acc-cn small{font-size:12px;color:var(--grey)}
+.acc-cp{display:flex;flex-direction:column;align-items:flex-end}.acc-cp b{font-family:var(--mono);font-weight:500;font-size:17px}.acc-cp small{font-family:var(--mono);font-size:12px}.acc-cp small.up{color:var(--g)}.acc-cp small.down{color:var(--down)}
+.acc-ct{grid-column:1/-1;display:flex;align-items:center;gap:6px;padding-top:8px;border-top:1px solid var(--rule)}.acc-ct i{font-style:normal;font-family:var(--mono);font-size:13px;font-weight:600;min-width:26px;height:24px;display:inline-flex;align-items:center;justify-content:center;border-radius:6px}.acc-ct i.f{background:#E6F3EB;color:var(--g)}.acc-ct i.m{background:var(--soft);color:var(--grey)}.acc-ct i.v{background:#FBEBE2;color:var(--down)}.acc-ct small{font-size:11.5px;color:var(--light);margin-left:4px}
+@media (max-width:760px){.acc-cardl{grid-template-columns:minmax(0,1fr)}}.acc .acc-l p{font-size:14px;line-height:1.55;color:var(--ink)}
 .acc .acc-more{border-color:var(--rule)}
 /* annonces : mêmes filets, plus de pavés teintés ni d'étiquettes en capitales */
 .acc .acc-fig{background:transparent;border:0;border-top:1px solid var(--rule);border-radius:0;padding:8px 0 2px}
