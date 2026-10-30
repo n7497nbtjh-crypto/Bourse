@@ -19,7 +19,7 @@ const x = chiffresEN("July – September 2026. Net sales amounted to SEK 228.2 m
 eq(x.ca.v, 228.2e6, "ventes"); eq(x.ca.cur, "SEK", "devise"); assert.ok(Math.abs(x.ca.g + 0.034) < 0.002, "variation des ventes");
 eq(x.net.v, -4.8e6, "perte"); eq(x.div.v, 2.5, "dividende par action");
 const p = presenter(chiffresEN("Revenue for the third quarter was €6.7 billion, up 5% compared with last year. Net income was €1.2bn, down 4%."));
-eq(p.f[0][1], "6,7 Md€ (+5,0 %)", "affichage"); assert.ok(p.r[0].includes("progressent"), "lecture");
+eq(p.f[0][1], "6,7 Md€ (+5,0 %)", "affichage"); assert.ok(/progresse/.test(p.r[0]) && /coûts pèsent/.test(p.r[0]) && !/\d/.test(p.r[0]), "lecture : interprète sans redonner les chiffres");
 eq(vraisemblable({ ca: { v: 5e9, cur: "€", q: "trimestre" } }, { ca: 100, cur: "EUR" }).ca, undefined, "garde-fou");
 const U = [{ id: "upm", name: "UPM", tv: "OMXHEX:UPM" }, { id: "volvo", name: "Volvo", tv: "OMXSTO:VOLV_B" }, { id: "lvmh", name: "LVMH", isin: "FR0000121014", tv: "EURONEXT:MC" }, { id: "apple", name: "Apple", tv: "NASDAQ:AAPL" }, { id: "blackrock", name: "BlackRock", tv: "NYSE:BLK" }];
 const ix = buildIndex(U);

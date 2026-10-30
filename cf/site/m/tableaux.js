@@ -99,7 +99,7 @@ function tblxSpark(vals, { w = 64, h = 22, q = 0, med = null, label = "" } = {})
 function tblxArrow(dir, q, txt = "", title = "") {
   if (dir == null) return `<span class="tbx-ar na">–</span>`;
   const g = dir > 0 ? "↑" : dir < 0 ? "↓" : "→", c = q > 0 ? "up" : q < 0 ? "dn" : "eq";
-  return `<span class="tbx-ar ${c}"${title ? ` title="${esc(title)}"` : ""}><b aria-hidden="true">${g}</b>${txt ? `<span>${esc(txt)}</span>` : ""}<span class="sr">${dir > 0 ? "en hausse" : dir < 0 ? "en baisse" : "stable"}${q > 0 ? ", bonne nouvelle" : q < 0 ? ", moins bonne nouvelle" : ""}</span></span>`;
+  return `<span class="tbx-ar ${c}"${title ? ` title="${esc(title)}"` : ""}><b aria-hidden="true">${g}</b>${txt ? `<span>${esc(txt)}</span>` : ""}<span class="sr">${dir > 0 ? "en hausse" : dir < 0 ? "en baisse" : "stable"}</span></span>`;
 }
 
 /* ---------- Lignes des comptes ---------- */
@@ -335,8 +335,8 @@ function tblxThemeHTML(T, s, c, P) {
   const gr = rows.filter(r => r.n >= 2);
   // 30/10 (Romain) : le visuel d'abord. Des tuiles (chiffre, sur un an, verdict), le graphique en pleine largeur, le tableau et l'explication au clic.
   const yl = Y.at(-1);
-  const tuiles = rows.slice(0, 4).map(r => { const one = tblxChange(r.kind, r.prev, r.last), ly = Y[r.li];
-    return `<button type="button" class="rf-kt ${tblxLvCls(r)}" data-g="${r.k}" title="Voir l'évolution en graphique"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}</small><b>${esc(r.full(r.last))}</b><span>${tblxArrow(r.dir, r.q, one, "Sur un an")}${r.lv ? `<em class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</em>` : ""}</span>${r.med != null ? `<i>médiane du secteur ${esc(r.full(r.med))}</i>` : ""}</button>`; }).join("");
+  const tuiles = rows.filter(r => r.k !== "g").slice(0, 4).map(r => { const one = tblxChange(r.kind, r.prev, r.last), ly = Y[r.li]; // 2.3 : la tuile « Croissance » redisait la variation des ventes
+    return `<button type="button" class="rf-kt ${tblxLvCls(r)}" data-g="${r.k}" title="Voir l'évolution en graphique"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}</small><b>${esc(r.full(r.last))}</b><span>${tblxArrow(r.dir, r.q, one, "Sur un an")}${r.lv ? `<em class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</em>` : ""}</span>${r.med != null ? `<i>médiane du secteur ${esc(r.full(r.med))}</i>` : r.k === "ca" && (rows.find(x => x.k === "g") || {}).med != null ? `<i>secteur : ${esc(sgn((rows.find(x => x.k === "g") || {}).med))} sur un an</i>` : ""}</button>`; }).join("");
   return `<section class="panel rf-th rf-th2" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
     <div class="rf-kts">${tuiles}</div>
     ${gr.length ? `<div class="rf-thc rf-thc2" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>` : ""}

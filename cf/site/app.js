@@ -10,7 +10,7 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const TODAY = new Date().toISOString().slice(0, 10);
 
 /* ---------- Formats ---------- */
-const nf = d => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const nf = d => { const f = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }); return { format: v => f.format(v).replace(/^-/, "\u2212"), formatToParts: f.formatToParts.bind(f) }; }; // signe moins typographique (−), jamais le tiret
 const F0 = nf(0), F1 = nf(1), F2 = nf(2);
 const CUR = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF" };
 const eur = (v, d = 2, cur = "EUR") => (v == null || !isFinite(v)) ? "–" : nf(d).format(v) + " " + (CUR[cur] || cur);

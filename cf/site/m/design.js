@@ -385,3 +385,49 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
 document.head.insertAdjacentHTML("beforeend", `<style>.etfhd .ids b,.fhero .tags .tag:first-child,.rf-trimt td:last-child{font-family:var(--code);font-size:.95em}</style>`);
 /* Lot 6 : un seul style de badge (vert, gris, rouge). Les catégories d'annonces (résultats, dividende…) sont grises ; seul « info privilégiée » reste signalé. */
 document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:var(--grey)!important;background:var(--soft)!important;border-color:var(--rule)!important}.ax-imp{color:var(--o)!important;background:color-mix(in srgb,var(--o) 10%,transparent)!important;border-color:transparent!important}</style>`);
+/* 3e passage (30/10), 2.1 : le comparateur, un chiffre une fois. Une ligne de verdict (avantages par entreprise), le tableau
+   (critères, entreprises, médiane), puis trois plis : « Comprendre chaque critère » (une jauge et une phrase par critère, sans les
+   chiffres du tableau), « Les indicateurs » (tableau complet), « Sources et dates ». Les six phrases de verdict et le détail thème par
+   thème disparaissent de la page : le tableau dit la même chose. */
+(function () {
+  const b0 = window.cmprRenderBody; if (typeof b0 !== "function") return;
+  window.cmprRenderBody = function (ids) {
+    const el = $("#cmpr-body"); if (!el) return b0.apply(this, arguments);
+    const cos = ids.map(id => RBY[id]);
+    if (cos.length < 2 || typeof cmprCtx !== "function" || typeof rfCmpTableHTML !== "function") return b0.apply(this, arguments);
+    if (CMPR_STATE) CMPR_STATE.stale = ids.some(id => !RBY[id].missing && !FULL[id]);
+    const X = cmprCtx(cos), V = cmprVerdict(X), notes = cmprNotes(X);
+    // une seule ligne de verdict : combien de critères chaque entreprise mène (le plus élevé n'est pas « le meilleur » : la taille et le dividende sont neutres)
+    const gagne = {}; let nb = 0;
+    V.lines.forEach(l => { if (l.T.neutral || !l.S || !l.S.best) return; nb++; const id = l.S.best.F.c.id; gagne[id] = (gagne[id] || 0) + 1; });
+    const ligne = nb ? cos.map(c => `<span><b>${esc(c.name)}</b> : ${gagne[c.id] || 0} critère${(gagne[c.id] || 0) > 1 ? "s" : ""} en tête</span>`).join(`<i aria-hidden="true">·</i>`) + ` <small>sur ${nb} comparés</small>` : "";
+    const crit = V.lines.map(l => { const T = l.T, d = typeof RF_CMP_DEF !== "undefined" && ALL && ALL[RF_CMP_DEF[T.k]]; const phr = d ? d.what : (typeof T.ind === "function" ? T.ind(X) : "");
+      const jauges = X.F.map(F => { const spec = typeof RF_CMP_KEY !== "undefined" && RF_CMP_KEY[T.k]; if (!spec || !F.ok) return ""; let val = null; try { val = spec[0] === "pe" || spec[0] === "yld" ? (F.v || {})[spec[0]] : spec[0] === "ca" ? caEur(F.c) : ratios(F.c)[spec[0]]; } catch (e) { } if (val == null) return "";
+        const inv = T.k === "solidite" || T.k === "prix" ? true : T.k === "dividende" || T.k === "taille" ? null : false; const g = typeof rf6Jauge === "function" ? rf6Jauge(F.c, spec[0], inv, val) : ""; return g ? `<div class="cmpr-jg"><span>${logo(F.c, 18)}${esc(F.c.name)}</span>${g}</div>` : ""; }).join("");
+      return `<div class="cmpr-crit"><h3>${esc(T.t)}</h3><p>${esc(phr || "")}</p>${jauges}</div>`; }).join("");
+    el.innerHTML = `
+      <section class="panel cmpr-vp" id="cmpr-verdict">
+        ${ligne ? `<p class="cmpr-ligne">${ligne}</p>` : ""}
+        <div class="cmpr-tbl">${tblxScrollBox(rfCmpTableHTML(cos[0], X), "Faites glisser pour voir toutes les entreprises")}</div>
+        ${notes.length ? `<ul class="cmpr-notes">${notes.map(n => `<li>${n}</li>`).join("")}</ul>` : ""}
+        ${cmprIABar(cos.length, null)}</section>
+      <details class="rf-pl rf-pl2" id="cmpr-crit"><summary><b>Comprendre chaque critère</b><span>Ce que mesure chaque ligne, et où chacune se place dans son secteur</span></summary><div class="rf-plb cmpr-crits">${crit}</div></details>
+      <details class="rf-pl rf-pl2" id="cmpr-tout"><summary><b>Les indicateurs, un par un</b><span>Marges, dette, trésorerie, dividende, côte à côte</span></summary><div class="rf-plb" id="cmpr-toutb"></div></details>
+      <details class="rf-pl rf-pl2" id="cmpr-src"><summary><b>Sources et dates</b><span>Les comptes officiels de chaque entreprise</span></summary><div class="rf-plb" style="padding:12px 22px">${cmprSources(X)}</div></details>`;
+    // le tableau complet est construit par l'ancien rendu, à l'ouverture du pli seulement
+    const tout = $("#cmpr-tout"); if (tout) tout.addEventListener("toggle", () => { const tb = $("#cmpr-toutb"); if (!tout.open || !tb || tb.dataset.on) return; tb.dataset.on = "1"; const tmp = document.createElement("div"); tmp.id = "cmpr-body"; const old = el; el.id = "cmpr-body-x"; document.body.appendChild(tmp); try { b0(ids); } catch (e) { } el.id = "cmpr-body"; const full = tmp.querySelector("#cmpr-tout .accb, #cmpr-tout > *:not(summary)"); tb.innerHTML = full ? full.innerHTML : "<p class='muted' style='padding:12px'>Indisponible</p>"; tmp.remove(); if (typeof tblxBindScroll === "function") tblxBindScroll(tb); }, { once: true });
+    if (typeof tblxBindScroll === "function") tblxBindScroll(el);
+    // ▲ ▼ par ligne et export CSV (lot 5), conservés
+    const t = $("#cmpr-body .rf-ctab-t"); if (t) { const num = x => { const m = String(x).replace(/\s/g, "").match(/-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; };
+      $$("tbody tr", t).forEach(tr => { if (tr.classList.contains("rf-q")) return; const cells = [...tr.querySelectorAll("td")].filter(td => !td.classList.contains("rf-medc") && !td.classList.contains("rf-q")), vals = cells.map(td => num(td.textContent)); const ok = vals.filter(v => v != null); if (ok.length < 2 || Math.max(...ok) === Math.min(...ok)) return; const hi = vals.indexOf(Math.max(...ok)), lo = vals.indexOf(Math.min(...ok)); cells[hi].classList.add("rf-hi"); cells[lo].classList.add("rf-lo"); });
+      const box = t.closest(".cmpr-tbl"); box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">▲ le plus élevé · ▼ le plus bas de la ligne · médiane : les entreprises du secteur de ${esc(cos[0].name)} suivies par le site</span></p>`);
+      $("[data-cmpr-csv]", box).onclick = () => { const rows = [...t.querySelectorAll("tr")].map(tr => [...tr.querySelectorAll("th,td")].map(c => `"${c.innerText.replace(/\s+/g, " ").trim().replace(/"/g, '""')}"`).join(";")); const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `comparaison-${ids.join("-")}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }; }
+  };
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.cmpr-ligne{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;margin:0;padding:16px 22px 6px;font-size:15px}.cmpr-ligne i{color:var(--light);font-style:normal}.cmpr-ligne small{color:var(--grey);font-size:12.5px}
+.cmpr-crits{padding:6px 22px 12px}.cmpr-crit{padding:12px 0;border-top:1px solid var(--rule)}.cmpr-crit:first-child{border-top:0}.cmpr-crit h3{margin:0 0 4px;font-size:15px}.cmpr-crit p{margin:0 0 8px;font-size:13.5px;color:var(--grey);max-width:720px}
+.cmpr-jg{display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 14px;align-items:center;padding:4px 0}.cmpr-jg>span{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}.cmpr-jg .rf6-jg small{font-size:11.5px}
+#cmpr-body .rf-ctab-t th.rf-medh:last-child,#cmpr-body .rf-ctab-t td.rf-q{display:none} /* la colonne « La moitié du secteur » n'est plus affichée : le tableau tient dans le cadre */
+@media (max-width:600px){.cmpr-jg{grid-template-columns:minmax(0,1fr)}}
+</style>`);
+})();

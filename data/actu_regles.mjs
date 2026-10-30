@@ -212,15 +212,19 @@ export function presenter(x, annual = null) {
   if (x.eps) f.push(["Bénéfice par action", NFS(2).format(x.eps.v) + " " + (CUR[String(x.eps.cur).toLowerCase()] || x.eps.cur || "")]);
   if (x.div) f.push(["Dividende par action", NFS(2).format(x.div.v) + " " + (x.div.cur || "")]);
   if (x.prevision) f.push([`Prévision de ventes${PER(x.prevision.q)}`, "environ " + montant(x.prevision.v, x.prevision.cur)]);
+  // 3e passage (30/10), 2.4 : la lecture interprète sans redonner les chiffres (ils sont affichés juste au-dessus)
   if (x.ca && x.ca.g != null) {
-    const g = x.ca.g; L.push(g > 0.15 ? `Les ventes progressent très vite (${pctS(g)}).` : g > 0.03 ? `Les ventes progressent (${pctS(g)}).` : g > -0.03 ? `Les ventes sont stables (${pctS(g)}).` : `Les ventes reculent (${pctS(g)}).`);
-    if (annual && annual.g1 != null && Math.abs(g - annual.g1) > 0.03) L.push(g > annual.g1 ? `C'est plus rapide que sur le dernier exercice complet (${pctS(annual.g1)}) : l'activité accélère.` : `C'est moins rapide que sur le dernier exercice complet (${pctS(annual.g1)}) : l'activité ralentit.`);
+    const g = x.ca.g, acc = annual && annual.g1 != null && Math.abs(g - annual.g1) > 0.03 ? (g > annual.g1 ? "accélère" : "ralentit") : null;
+    const cout = x.net && x.net.v >= 0 && x.net.g != null ? (x.net.g < g - 0.05 ? "lourd" : x.net.g > g + 0.05 ? "leger" : "egal") : null;
+    let t = g > 0.15 ? "L'activité progresse très vite" : g > 0.03 ? "L'activité progresse" : g > -0.03 ? "L'activité est stable" : "L'activité recule";
+    if (acc) t = `L'activité ${acc}`;
+    if (cout === "lourd") t += g > 0.03 ? ", et les coûts pèsent : le bénéfice monte moins vite que les ventes" : ", et les coûts pèsent : le bénéfice recule plus vite que les ventes";
+    else if (cout === "leger") t += g >= -0.03 ? ", et chaque vente rapporte davantage : le bénéfice monte plus vite que les ventes" : ", mais chaque vente rapporte davantage : le bénéfice résiste mieux que les ventes";
+    L.push(t + ".");
+    if (acc && !cout) L.push(acc === "accélère" ? "C'est plus rapide que sur le dernier exercice complet." : "C'est moins rapide que sur le dernier exercice complet.");
   }
   if (x.net && x.net.v < 0) L.push("L'entreprise est en perte sur la période.");
-  else if (x.net && x.net.g != null && x.ca && x.ca.g != null) {
-    if (x.net.g > x.ca.g + 0.05) L.push(`Le bénéfice progresse plus vite que les ventes (${pctS(x.net.g)}) : chaque vente rapporte davantage.`);
-    else if (x.net.g < x.ca.g - 0.05) L.push(`Le bénéfice progresse moins vite que les ventes (${pctS(x.net.g)}) : les coûts pèsent davantage, ou un élément exceptionnel joue.`);
-  }
+  else if (x.net && x.net.g != null && !(x.ca && x.ca.g != null)) L.push(x.net.g > 0.05 ? "Le bénéfice progresse." : x.net.g < -0.05 ? "Le bénéfice recule." : "Le bénéfice est stable.");
   if (x.objectif) L.push(x.objectif.sens > 0 ? "L'entreprise relève ses objectifs : elle s'attend à mieux que prévu." : x.objectif.sens < 0 ? "L'entreprise abaisse ses objectifs : elle s'attend à moins bien que prévu." : "L'entreprise confirme ses objectifs.");
   return { f, r: L.slice(0, 3) };
 }

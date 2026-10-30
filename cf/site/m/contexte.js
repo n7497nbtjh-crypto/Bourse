@@ -71,7 +71,7 @@ function ctxCible(ci, P) {
 const ctxSpec = (ci, P) => (ci.ids || []).includes(P.id) ? 3 : (ci.kw || []).some(k => P.kw.has(k)) || (ci.banque && P.bank) || (ci.dette && P.dette) ? 2 : (ci.sec || []).includes(P.sector) ? 1 : 0;
 
 /* ---------- Petits formats ---------- */
-const ctxP1 = v => (v > 0 ? "+" : v < 0 ? "−" : "") + F1.format(Math.abs(v * 100)) + " %";
+const ctxP1 = v => (v > 0 ? "+" : v < 0 ? "−" : "") + nf(Math.abs(v) < 0.1 ? 1 : 0).format(Math.abs(v) * 100) + " %"; // 2.3 : même arrondi que tblxRel (+26 %, jamais 25,8 % à côté)
 const ctxCap = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : t;
 const ctxMoisFin = c => { const m = /^(\d\d)-\d\d$/.exec(c && c.fyEnd || ""); return m ? +m[1] : 12; };
 const ctxAnCal = (c, y) => ctxMoisFin(c) <= 6 ? y - 1 : y; // un exercice clos fin janvier 2026 couvre surtout 2025
@@ -139,7 +139,7 @@ function ctxTendance(s, ser, R) {
   if (R.finHausse === R.n && R.n >= 2) return `Les ${L} ont progressé chaque année depuis ${yr(0)}.`;
   if (R.finHausse >= 2) return `Les ${L} progressent depuis ${R.finHausse} ans${R.creux.i > 0 && R.creux.i < R.n ? `, après un point bas en ${R.creux.y}` : ""}.`;
   if (R.pic.i === R.n) return `${yr(R.n)} est la meilleure année de la période pour ses ${L}${R.cum != null ? ` (${ctxP1(R.cum)} depuis ${yr(0)})` : ""}.`;
-  return `Sur la période, les ${L} ont ${R.cum >= 0 ? "progressé" : "reculé"} de ${F1.format(Math.abs(R.cum * 100))} % au total, avec des hauts et des bas.`;
+  return `Sur la période, les ${L} ont ${R.cum >= 0 ? "progressé" : "reculé"} de ${ctxP1(Math.abs(R.cum))} au total, avec des hauts et des bas.`;
 }
 // Ce qui se passe pour les autres chiffres sur la même période
 function ctxAutres(s, c, ser) {

@@ -370,7 +370,7 @@ function fiche2Voisines(s, r) { // l'entreprise et ses voisines de rang, dans la
 const fiche2Ord = n => n === 1 ? "1re" : n + "e";
 function fiche2RangBouton(s, cls = "f2-rk") {
   const r = fiche2Rang(s); if (!r) return "";
-  return `<button type="button" class="${cls}" data-f2-rang="${s.id}" aria-haspopup="dialog"><span>Taille dans son secteur : <b>${fiche2Ord(r.rank)}</b> sur ${r.n}</span><span class="f2-go">Classement<span class="f2-lg2"> et comparaison</span></span></button>`;
+  return `<button type="button" class="${cls}" data-f2-rang="${s.id}" aria-haspopup="dialog"><span>Taille dans son secteur : <b>${fiche2Ord(r.rank)}</b> sur ${r.n}</span><span class="f2-go">Classement</span></button>`;
 }
 function fiche2Classement(id) {
   const s = RBY[id], r = fiche2Rang(s); if (!r) return;
@@ -639,7 +639,7 @@ function ficheRetenirHTML(s, c, part) {
     ren: rf6Mod("03", "Rentabilité", rLv, renB, renF, rf6Jauge(s, bank ? "roe" : m.marge != null ? "marge" : "nm", false, bank ? m.roe : m.marge != null ? m.marge : m.nm), [base + "/comptes#rf-rentabilite", "Les chiffres"]),
     sol: rf6Mod("04", "Solidité financière", dLv, solB, solF, bank ? "" : m.lev != null || (f.netDebt != null && f.netDebt < 0) ? rf6Jauge(s, "lev", true, f.netDebt != null && f.netDebt < 0 ? -1 : m.lev) : rf6Jauge(s, "gear", true, m.gear), [base + "/comptes#rf-bilan", "Les chiffres"]),
     val: rf6Mod(part ? "01" : "05", "Valorisation", pLv, valB, valF, rf6Jauge(s, "pe", true, v.pe), [base + "/comptes#rf-valorisation", "Le prix en détail"]),
-    ris: rf6Mod(part ? "05" : "06", "Risques", null, risB, "", "", ["#rf-synth", "Points forts et à surveiller"], risX),
+    ris: rf6Mod(part ? "05" : "06", "Risques", null, risB, "", "", ["#rf-sources", "Points forts et à surveiller"], risX),
   };
   if (part === "entreprise") return `<section class="panel rf6" id="retenir"><div class="ph"><h2>Comprendre l'entreprise</h2><span class="light" style="font-size:12.5px">Exercice ${f.year} · comptes officiels</span></div>${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
     <p class="rf6-lede">${rfSituation(s, c)}</p>
@@ -831,7 +831,7 @@ const RF_CMP_SOUS = { taille: () => "ventes annuelles, en euros", croissance: ()
 function rfCmpCell(T, F, X) {
   const r = T.val(F, X);
   if (!r && T.k === "prix" && F.v && F.v.peNs) return `<td class="num na" data-v="" title="${esc(F.c.name + " : " + NS_PE + " (" + F0.format(F.v.peBrut) + " fois en brut)")}"><span class="rf-na">n.s.</span><small>bénéfice trop faible</small></td>`; // 1.3 : PER non significatif
-  if (r && T.k === "croissance" && typeof nsCrois === "function" && nsCrois(r.v)) return `<td class="num na" data-v="" title="${esc(F.c.name + " : " + NS_CROIS + " (" + sgn(r.v) + ")")}"><span class="rf-na">n.s.</span><small>base trop faible</small></td>`;
+  if (r && T.k === "croissance" && typeof nsCrois === "function" && F.ok && nsCrois(ratios(F.c).g1)) return `<td class="num na" data-v="" title="${esc(F.c.name + " : " + NS_CROIS + " (" + sgn(ratios(F.c).g1) + ")")}"><span class="rf-na">n.s.</span><small>base trop faible</small></td>`;
   if (!r) { const na = T.na(F, X); return `<td class="num na" data-v="" title="${esc(na)}"><span class="rf-na">–</span><small>${esc(na)}</small></td>`; }
   const lv = !T.neutral && r.lv && r.lv !== "na" ? r.lv : null, key = r.key != null ? r.key : r.v;
   const txt = r.cash ? "Aucune" : T.k === "dividende" && !(r.v > 0) ? "Aucun" : T.short && T.k !== "prix" ? T.short(r) : r.txt;
@@ -925,9 +925,10 @@ tabBref = (orig => function (s, c, el) {
   orig(s, c, el);
   const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }
   const sy = $("#rf-synth"); if (sy) sy.addEventListener("toggle", () => { const d = $("#discussion"); if (sy.open && d && !d.dataset.on && typeof tabCommu === "function") { d.dataset.on = "1"; try { tabCommu(s, FULL[s.id] || null, d); } catch (e) { } } });
-  if (location.hash && /^#rf-(metier|synth|faq)$/.test(location.hash)) rfOuvrir(location.hash.slice(1));
+  if (location.hash && /^#rf-(metier|synth|faq)$/.test(location.hash)) rfOuvrir(location.hash.slice(1) === "rf-metier" ? "rf-metier" : "rf-sources");
 })(tabBref);
-function rfOuvrir(id) { // ouvre un pli de la partie « Comprendre l'entreprise » et y va
+function rfOuvrir(id) { // ouvre un pli de la fiche et y va
+  if (id === "rf-synth" || id === "rf-faq") id = "rf-sources";
   const d = document.getElementById(id); if (!d) return;
   if (d.tagName === "DETAILS") d.open = true;
   d.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -975,17 +976,18 @@ function rfDetailSet(v) { try { localStorage.setItem(RF_DETAIL_CLE, v ? "1" : "0
 function rfPli2(id, titre, sous, corps, open) { return `<details class="rf-pl rf-pl2" id="${id}"${open ? " open" : ""}><summary><b>${titre}</b>${sous ? `<span>${sous}</span>` : ""}</summary><div class="rf-plb">${corps}</div></details>`; }
 function rfFaitHTML(s, c) { // « Ce qu'elle fait » : une phrase, puis ses concurrents cliquables
   let peers = []; try { peers = cmprFiche(s).peers.slice(0, 5); } catch (e) { }
-  const d = String(s.desc || "").trim();
+  const arg = s.fiche && s.fiche.argent ? String(s.fiche.argent).trim() : ""; // comment elle gagne de l'argent (texte de fiche), la description courte est déjà dans l'en-tête
   return `<section class="panel rf-l1" id="rf-fait"><div class="ph"><h2>Ce qu'elle fait</h2>${regName(s) ? `<span class="light" style="font-size:12.5px">${esc(regName(s))} · ${esc(secName(s))}</span>` : ""}</div><div class="pb">
-    <p class="rf-l1p">${esc(d)}${d && !/[.!?]$/.test(d) ? "." : ""}</p>
-    ${peers.length ? `<p class="rf-peers"><span>Concurrents</span>${peers.map(p => `<a class="chip" href="/entreprise/${p.id}">${logo(p, 18)}${esc(p.name)}</a>`).join("")}</p>` : ""}
-    <p class="rf-l1l"><a class="lnk" href="#rf-metier" data-rf-ouvre="rf-metier">Son métier en détail</a></p></div></section>`;
+    ${peers.length ? `<p class="rf-peers"><span>Concurrents</span>${peers.map(p => `<a class="chip" href="/entreprise/${p.id}">${logo(p, 24)}${esc(p.name)}</a>`).join("")}</p>` : ""}
+    ${arg ? `<p class="rf-l1p">${esc(arg)}</p>` : ""}</div>
+    ${rfPli2("rf-metier", "Activités, pays, dirigeants", "Son métier en détail, sa taille dans le secteur", ficheMetierHTML(s, c), false)}</section>`;
 }
 function rfChangeHTML(s, c) { // « Ce qui a changé » : la dernière publication (trimestre si disponible), la prochaine date
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 2);
-  return `<section class="panel rf-l1" id="rf-change"><div class="ph"><h2>Ce qui a changé</h2><a class="lnk" href="#rf-agenda" data-rf-ouvre="rf-agenda" style="font-size:13px">Annonces et agenda</a></div>
+  return `<section class="panel rf-l1" id="rf-change"><div class="ph"><h2>Ce qui a changé</h2></div>
     <div id="rf-trim"><p class="rf-no" style="padding:14px 22px">Aucune publication chiffrée relevée par le site depuis la clôture de l'exercice ${esc(String(s.year || ""))}.</p></div>
-    ${up.length ? `<p class="rf6-ev" style="padding:0 22px 14px;margin:0">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}</section>`;
+    ${up.length ? `<p class="rf6-ev" style="padding:0 22px 14px;margin:0">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}
+    ${rfPli2("rf-agenda", "Toutes ses annonces et ses dates", "Annonces officielles, presse, agenda", `<div class="rf-chev">${rfAVenir(s)}</div><div id="factu"></div>`, false)}</section>`;
 }
 function rfTrimTableHTML(t, c) { // tableau des trimestres lus à la SEC (10-Q / 10-K), du plus récent au plus ancien
   const Q = [...t.q].sort((a, b) => b.end.localeCompare(a.end)).slice(0, 8), B = v => v == null ? "–" : big(v, t.currency);
@@ -1022,21 +1024,14 @@ async function ficheUneSeulePage(s, c, el) {
     ${rfFaitHTML(s, c)}
     ${rfChangeHTML(s, c)}
     <section class="rf-l2" id="tous-les-chiffres"><div class="rf-l2h"><h2>Tous les chiffres</h2><label class="rf-l2t"><input type="checkbox" id="rf-detail"${auto ? " checked" : ""}> Afficher toujours le détail</label></div>
-      ${rfPli2("rf-resultats", "Résultats", `<span id="rf-res-sous">Ventes, bénéfice, par an</span> ${jg("g1", false, m.g1)}`, `<div class="rf-ta" id="rf-ta" hidden><button type="button" class="on" data-ta="a">Par an</button><button type="button" data-ta="t">Par trimestre</button></div><div id="rf-ta-a">${th("croissance")}</div><div id="rf-ta-t" hidden></div>`, auto)}
-      ${rfPli2("rf-rentab", bank ? "Rentabilité" : "Rentabilité", `Marges, rendement des capitaux propres, face à la médiane ${jg(bank ? "roe" : "marge", false, bank ? m.roe : m.marge)}`, th("rentabilite"), auto)}
-      ${th("bilan") ? rfPli2("rf-dette", "Bilan et dette", `Dette nette, fonds propres, trésorerie ${jg("lev", true, m.lev)}`, th("bilan"), auto) : ""}
-      ${th("flux") ? rfPli2("rf-flux", "Flux de trésorerie", "Ce que les bénéfices deviennent en argent disponible", th("flux"), auto) : ""}
-      ${th("valorisation") ? rfPli2("rf-valo", "Valorisation", `PER, rendement, capitalisation, face au secteur ${jg("pe", true, v.pe)}`, th("valorisation") + ficheGraphBox(s), auto) : ""}
+      ${rfPli2("rf-resultats", "Résultats", `<span id="rf-res-sous">Ventes, bénéfice, par an</span> ${jg("g1", false, m.g1)}`, `<div class="rf-ta" id="rf-ta" hidden><button type="button" class="on" data-ta="a">Par an</button><button type="button" data-ta="t">Par trimestre</button></div><div id="rf-ta-a">${th("croissance")}</div><div id="rf-ta-t" hidden></div>${top ? `<div class="rf-chgw">${top.outerHTML}</div>` : ""}`, auto)}
+      ${rfPli2("rf-rentab", "Rentabilité", `Marges, rendement des capitaux propres, face à la médiane ${jg(bank ? "roe" : "marge", false, bank ? m.roe : m.marge)}`, th("rentabilite"), auto)}
+      ${th("bilan") || th("flux") ? rfPli2("rf-dette", "Bilan, dette et trésorerie", `Dette nette, fonds propres, ce que les bénéfices deviennent en argent ${jg("lev", true, m.lev)}`, th("bilan") + th("flux"), auto) : ""}
+      ${th("valorisation") ? rfPli2("rf-valo", "Prix en Bourse", `PER, rendement, capitalisation, face au secteur ${jg("pe", true, v.pe)}`, th("valorisation") + ficheGraphBox(s), auto) : ""}
       ${th("dividende") ? rfPli2("rf-div", "Dividende", "Rendement, part du bénéfice versée, historique", th("dividende"), auto) : ""}
-      ${rfPli2("rf-agenda", "Agenda et annonces", "Prochaines dates, annonces officielles, presse", `<div class="rf-chev">${rfAVenir(s)}</div><div id="factu"></div>`, auto)}
-      ${rfPli2("rf-concurrents", "Concurrents", "Côte à côte, critère par critère, avec la médiane", concurrentsHTML(s), auto)}
-      ${rfPli2("rf-synth", "Pourquoi ces verdicts", "Points forts et à surveiller, chaque point relié à sa source, discussion", ficheSyntheseHTML(s, c), auto)}
-      ${rfPli2("rf-metier", "Son métier en détail", "Activités, pays, taille dans le secteur, dirigeants", ficheMetierHTML(s, c), auto)}
-      ${rfPli2("rf-faq", "Questions fréquentes", "", faqHTML(s, c), auto)}
-      ${top ? rfPli2("rf-chg", "Ce qui a le plus changé sur un an", "Et comment lire les montants", top.outerHTML, auto) : ""}
-      ${tout ? rfPli2("rf-tout-w", "Tous les comptes, année par année", `${c.years.length} exercices, compte de résultat, bilan, flux`, tout.outerHTML, auto) : ""}
-      ${srcs.length ? rfPli2("rf-sources", "Sources", "Chaque chiffre renvoie au document officiel", srcs.map(x => x.outerHTML).join(""), auto) : ""}
-      <div class="rf-l2a"><button type="button" class="btn" id="rf-csv">Exporter en CSV</button><a class="btn ghost" href="/comparer?ids=${s.id}">Ajouter au comparateur</a></div>
+      ${tout ? rfPli2("rf-tout-w", "Comptes complets", `${c.years.length} exercices, compte de résultat, bilan, flux · export CSV`, tout.outerHTML + `<p class="rf-l2a" style="padding:0 22px 14px"><button type="button" class="btn" id="rf-csv">Exporter en CSV</button></p>`, auto) : ""}
+      ${rfPli2("rf-sources", "Sources et méthode", "Les documents officiels, pourquoi ces verdicts, les questions fréquentes", (srcs.length ? srcs.map(x => x.outerHTML).join("") : "") + ficheSyntheseHTML(s, c).replace(/<form class="ffaqask"[\s\S]*?<\/form>/, "") + faqHTML(s, c).replace(/<form class="ffaqask"[\s\S]*?<\/form>/, ""), auto)}
+      
     </section></div></div>`;
   // réglage « toujours le détail »
   const cb = $("#rf-detail"); if (cb) cb.onchange = () => { rfDetailSet(cb.checked); $$("#tous-les-chiffres details.rf-pl2").forEach(d => d.open = cb.checked); };
@@ -1047,7 +1042,7 @@ async function ficheUneSeulePage(s, c, el) {
     $$("#rf-ta button").forEach(b => b.onclick = () => { $$("#rf-ta button").forEach(x => x.classList.toggle("on", x === b)); $("#rf-ta-a").hidden = b.dataset.ta !== "a"; $("#rf-ta-t").hidden = b.dataset.ta !== "t"; }); }).catch(() => { });
   const csv = $("#rf-csv"); if (csv) csv.onclick = () => { const blob = new Blob([rfCsv(s, c)], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${s.id}-comptes.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
   const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }
-  const sy = $("#rf-synth"); if (sy) { const init = () => { const d = $("#discussion"); if (sy.open && d && !d.dataset.on && typeof tabCommu === "function") { d.dataset.on = "1"; try { tabCommu(s, c, d); } catch (e) { } } }; sy.addEventListener("toggle", init); if (sy.open) init(); }
+  const sy = $("#rf-sources"); if (sy) { const init = () => { const d = $("#discussion"); if (sy.open && d && !d.dataset.on && typeof tabCommu === "function") { d.dataset.on = "1"; try { tabCommu(s, c, d); } catch (e) { } } }; sy.addEventListener("toggle", init); if (sy.open) init(); }
   if (typeof tblxSortable === "function") $$(".rf-ctab", el).forEach(t => tblxSortable(t));
   if (typeof tblxBindScroll === "function") tblxBindScroll(el);
   $$("table.cmpr-all, table.pcmp", el).forEach(t => { if (!t.closest(".scroll-x,.tbx-sc")) { const d = document.createElement("div"); d.className = "scroll-x"; d.style.overflowX = "auto"; t.replaceWith(d); d.appendChild(t); } }); // tableaux larges : défilement horizontal sur tablette
@@ -1073,7 +1068,7 @@ function rfLierChiffres(s, c, el) { // graphiques par thème et lignes dépliabl
     const gb = e.target.closest(".tbx-gb, .rf-kt");
     if (gb) { const th = gb.closest(".rf-th"), box = th && $(".rf-thc", th); if (box && $(`.rf-gsel button[data-g="${gb.dataset.g}"]`, box)) { setG(box, gb.dataset.g); } return; }
     const sel = e.target.closest(".rf-gsel button"); if (sel) { setG(sel.closest(".rf-thc"), sel.dataset.g); return; }
-    const a = e.target.closest(".rf-thnav a, a.rf-chg"); if (a) { e.preventDefault(); const id = a.getAttribute("href").slice(1); const M = { "rf-croissance": "rf-resultats", "rf-rentabilite": "rf-rentab", "rf-bilan": "rf-dette", "rf-flux": "rf-flux", "rf-valorisation": "rf-valo", "rf-dividende": "rf-div", "rf-tout": "rf-tout-w" }; rfOuvrir(M[id] || id); return; }
+    const a = e.target.closest(".rf-thnav a, a.rf-chg"); if (a) { e.preventDefault(); const id = a.getAttribute("href").slice(1); const M = { "rf-croissance": "rf-resultats", "rf-rentabilite": "rf-rentab", "rf-bilan": "rf-dette", "rf-flux": "rf-dette", "rf-valorisation": "rf-valo", "rf-dividende": "rf-div", "rf-tout": "rf-tout-w" }; rfOuvrir(M[id] || id); return; }
     if (e.target.closest(".def,a,button,summary")) return;
     const tr = e.target.closest(".tbx-full tbody tr[data-k], .rf-tht tbody tr[data-k]"); if (tr) toggleDet(tr);
   });
@@ -1088,7 +1083,7 @@ document.addEventListener("click", e => { // liens internes de la fiche (« Son 
 // Plus d'onglets : les anciennes adresses /comptes, /actualite, /agenda, /communaute ouvrent la fiche sur le bon pli
 pageCompany = (orig => function (id, tab) {
   const s = RBY[id];
-  if (s && tab) { const M = { comptes: "#tous-les-chiffres", actualite: "#rf-agenda", agenda: "#rf-agenda", communaute: "#rf-synth" }; const h = location.hash && /^#rf-/.test(location.hash) ? location.hash : (M[tab] || ""); history.replaceState(history.state, "", `/entreprise/${id}${h}`); tab = ""; }
+  if (s && tab) { const M = { comptes: "#tous-les-chiffres", actualite: "#rf-agenda", agenda: "#rf-agenda", communaute: "#rf-sources" }; const h = location.hash && /^#rf-/.test(location.hash) ? location.hash : (M[tab] || ""); history.replaceState(history.state, "", `/entreprise/${id}${h}`); tab = ""; }
   return orig(id, tab);
 })(pageCompany);
 fiche2Onglets = function () { return ""; }; // zéro onglet

@@ -99,7 +99,7 @@ export function redirectionParcours(p) {
   // Lot 2 (30/10) : quatre portes ; les anciennes pages d'entrée sont fusionnées dans /apprendre (les leçons gardent leur adresse)
   if (p === "/commencer") return "/apprendre";
   const mf = /^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)\/?$/.exec(p); // lot 4 : la fiche est une seule page
-  if (mf) return mf[1] + (mf[2] === "comptes" ? "#tous-les-chiffres" : mf[2] === "communaute" ? "#rf-synth" : /^comprendre/.test(mf[2]) ? "#tous-les-chiffres" : "#rf-agenda");
+  if (mf) return mf[1] + (mf[2] === "comptes" ? "#tous-les-chiffres" : mf[2] === "communaute" ? "#rf-sources" : /^comprendre/.test(mf[2]) ? "#tous-les-chiffres" : "#rf-agenda");
   if (p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/") return "/apprendre";
   if (p === "/debuter" || p === "/premiers-pas") return "/apprendre";
   return null;

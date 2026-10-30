@@ -329,6 +329,13 @@ function accExempleHTML(s, c) { // un vrai résultat du site, tel qu'il apparaî
     ${v && v.pe ? row("Prix payé (PER)", `${F0.format(v.pe)} fois le résultat`, mp ? `${F0.format(mp)} fois` : "–", rf6Jauge(s, "pe", true, v.pe)) : ""}
     <span class="acc-exf">Voir la fiche complète →</span></a>`;
 }
+async function accMinis() { // 2.5 : sous la recherche, trois fiches en petit (logo, nom, verdict en trois mots), chargées sur leurs comptes
+  const box = $("#acc-minis"); if (!box) return;
+  const ids = ACC_EX.map(([id]) => id).filter(id => RBY[id] && !RBY[id].missing);
+  const out = await Promise.all(ids.map(async id => { const s = RBY[id]; let c = FULL[id]; if (!c) { try { c = FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json(); } catch (e) { return ""; } }
+    const vc = typeof rfVerdictCourt === "function" ? rfVerdictCourt(s, c) : ""; return vc ? `<a class="acc-mini" href="/entreprise/${id}">${logo(s, 28)}<span><b>${esc(s.name)}</b><small>${esc(vc)}</small></span></a>` : ""; }));
+  if ($("#acc-minis")) $("#acc-minis").innerHTML = out.join("");
+}
 async function accExemple(id) { // charge les comptes de l'exemple et remplace l'attente
   const box = $("#acc-exb"), s = RBY[id]; if (!box || !s) return;
   try { const c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); const h = accExempleHTML(s, c); if (h && $("#acc-exb")) $("#acc-exb").innerHTML = h; } catch (e) { }
@@ -371,6 +378,7 @@ async function pageHome() {
       <h1>Comprenez une entreprise en 10 secondes.</h1>
       <div class="search big acc-search" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Apple, LVMH, MSCI World…" aria-label="Rechercher une entreprise ou un ETF" autocomplete="off"><div class="results"></div></div>
       <p class="acc-l1">${F0.format(R.companies.length)} entreprises · ${F0.format(ETF.list.length)} ETF · sans conseil</p>
+      <div class="acc-minis" id="acc-minis" aria-label="Trois fiches en exemple"></div>
     </section>
     <section class="acc-demo"><p class="acc-vh">Ce que vous obtenez, pour chaque entreprise</p><div id="acc-exb" class="acc-exw"><p class="rf-no">Chargement de l'exemple…</p></div></section></div>
     <section class="acc-sec" id="acc-pub"><div class="acc-h3"><h2>Ce que les entreprises ont publié</h2><a class="lnk" href="/actualites">Toutes les annonces →</a></div>
@@ -380,7 +388,7 @@ async function pageHome() {
   </div>`;
   ACC.prem = prem;
   accLier(membre);
-  accExemple(ACC_EX[0][0]);
+  accExemple(ACC_EX[0][0]); accMinis();
   if (typeof bindSearch === "function") { try { bindSearch($(".acc-search", app)); } catch (e) { } }
   if (!pret) accCharge().then(() => { if (location.pathname !== "/") return; const a = $("#acc-pubw"), b = $("#acc-semw"); if (a) a.innerHTML = accPubHTML(); if (b) b.innerHTML = accSemaineHTML(); });
   moi().then(m => {
@@ -398,6 +406,8 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 html.acc-home header .search[data-search]{visibility:hidden}
 .acc-une3{padding:34px 0 10px;max-width:720px}.acc-une3 h1{font-family:var(--serif);font-weight:800;font-size:44px;line-height:1.05;letter-spacing:-.018em;margin:0 0 18px}
 .acc-une3 .acc-search{margin:0}.acc-l1{margin:10px 0 0;font-size:14px;color:var(--grey)}
+.acc-minis{margin:26px 0 0;border-top:1px solid var(--rule)}.acc-mini{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--rule);color:var(--ink);text-decoration:none}.acc-mini b{display:block;font-size:15px}.acc-mini small{display:block;font-size:13px;color:var(--grey)}.acc-mini:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+@media (max-width:900px){.acc-minis{display:none}} /* sur téléphone, la carte LVMH suit directement la recherche */
 .acc-top{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:20px 56px;align-items:start;margin:0 0 34px}.acc-demo{margin:26px 0 0}
 .acc-h3{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin:0 0 12px;padding-top:12px;border-top:1px solid var(--ink)}.acc-h3 h2{font-family:var(--serif);font-weight:800;font-size:24px;margin:0}
 .acc-pubs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.acc-pub{display:flex;flex-direction:column;gap:8px;padding:14px 16px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none;min-height:150px}
