@@ -1,0 +1,17 @@
+# Test de la source Eulerpool (comptes trimestriels mondiaux) : affiche une comparaison, n'écrit rien dans le site.
+name: Test Eulerpool
+on:
+  workflow_dispatch: {}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Comparaison
+        env:
+          EULERPOOL_KEY: ${{ secrets.EULERPOOL_KEY }}
+        run: node data/eulerpool_test.mjs
