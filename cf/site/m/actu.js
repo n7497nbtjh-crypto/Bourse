@@ -31,7 +31,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .ax-imp{font-size:11px;font-weight:600;color:#B42318;border:1px solid color-mix(in srgb,#B42318 35%,transparent);border-radius:99px;padding:0 7px}
 .ax-tf{display:block;font-weight:600;font-size:15px;margin-top:3px;line-height:1.35}.ax-t{display:block;font-size:12.5px;color:var(--grey);margin-top:2px;overflow-wrap:anywhere}
 .ax-fig{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 4px}.ax-fig span{display:flex;flex-direction:column;min-width:0}.ax-fig small{font-size:11.5px;color:var(--light)}.ax-fig b{font-family:var(--mono);font-size:14px}
-.ax-cl{margin:8px 0 2px;padding:9px 12px;border-left:3px solid var(--lime);background:var(--soft);border-radius:0 8px 8px 0;font-size:13.5px}
+.ax-cl{margin:8px 0 2px;padding:9px 12px;border-left:3px solid var(--lime);background:var(--soft);border-radius:0 8px 8px 0;font-size:13.5px}details.ax-cl>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between}details.ax-cl>summary::after{content:"+";font-size:16px;color:var(--grey)}details.ax-cl[open]>summary::after{content:"–"}details.ax-cl>summary::-webkit-details-marker{display:none}
 .ax-cl p{margin:2px 0 6px}.ax-cl p:last-of-type{margin-bottom:2px}.ax-cl b{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey)}.ax-cl small{display:block;color:var(--light);font-size:11.5px}
 .ax-cl ul{margin:2px 0;padding-left:18px}.ax-src{display:inline-block;margin-top:6px;font-size:12.5px}
 .ax-why{font-size:12.5px;color:var(--grey);margin:4px 0 0}
@@ -73,8 +73,9 @@ function actuItemHTML(it, { showCo = true, detail = true } = {}) {
   const C = ACTU_CAT[it.c] || ACTU_CAT.autre, co = RBY[it.id];
   const figs = it.f && it.f.length ? `<div class="ax-fig">${it.f.slice(0, detail ? 5 : 3).map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(v)}</b></span>`).join("")}</div>` : "";
   let clair = "";
-  if (detail && it.x && it.x.c) clair = `<div class="ax-cl" style="--c:${C.c}"><b>En clair</b><p>${esc(it.x.c)}</p>${it.x.ch ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(it.x.ch)}</p>` : ""}<small>Rédigé par une IA à partir de l'annonce et des chiffres ci-dessus. La source fait foi.</small></div>`;
-  else if (detail && it.r && it.r.length) clair = `<div class="ax-cl" style="--c:${C.c}"><b>En clair</b><ul>${it.r.map(x => `<li>${esc(x)}</li>`).join("")}</ul><small>Calculé par le site à partir des chiffres de l'annonce.</small></div>`;
+  const clairTag = typeof matchMedia === "function" && matchMedia("(max-width:760px)").matches; // lot C : « En clair » replié sur téléphone
+  if (detail && it.x && it.x.c) clair = `<${clairTag ? "details" : "div"} class="ax-cl" style="--c:${C.c}"><${clairTag ? "summary" : "b"}><b>En clair</b></${clairTag ? "summary" : "b"}><p>${esc(it.x.c)}</p>${it.x.ch ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(it.x.ch)}</p>` : ""}<small>Rédigé par une IA à partir de l'annonce et des chiffres ci-dessus. La source fait foi.</small></${clairTag ? "details" : "div"}>`;
+  else if (detail && it.r && it.r.length) clair = `<${clairTag ? "details" : "div"} class="ax-cl" style="--c:${C.c}"><${clairTag ? "summary" : "b"}><b>En clair</b></${clairTag ? "summary" : "b"}><ul>${it.r.map(x => `<li>${esc(x)}</li>`).join("")}</ul><small>Calculé par le site à partir des chiffres de l'annonce.</small></${clairTag ? "details" : "div"}>`;
   const gen = !it.tf || /^(Communiqué|Information importante)$/.test(it.tf), main = gen && it.t ? it.t : (it.tf || C.l), sub = !gen && it.t && it.t !== it.tf ? it.t : "";
   return `<div class="ax-it">${showCo ? (co ? `<a href="/entreprise/${co.id}?etape=change" title="La fiche : ce qui change, ses chiffres" class="nlogo" aria-hidden="true" tabindex="-1">${logo(co, 36)}</a>` : "") : ""}
     <div class="ax-b"><div class="ax-m">${showCo && co ? `<a class="nco" href="/entreprise/${co.id}?etape=change" title="La fiche : ce qui change, ses chiffres">${esc(co.name)}</a>` : ""}<span class="ax-chip" style="--c:${C.c}" title="${esc(C.why)}">${C.l}</span>${it.p ? `<span class="ax-imp" title="Information privilégiée : un fait susceptible d'influencer le cours, que l'entreprise doit publier sans délai">Info. privilégiée</span>` : ""}<span>${hhmm(it.d) || dShort(it.d)}</span></div>
@@ -208,7 +209,7 @@ function actuStats(L) { // « Les chiffres à retenir », calculés sur les anno
 function pageActus() {
   setTitle("Actualité des entreprises"); setNav("news");
   const q = new URLSearchParams(location.search), old = q.get("src");
-  const st = { zone: q.get("zone") || (old === "us" ? "US" : old === "fr" || old === "toutes" ? "FR" : "tout"), type: q.get("type") || "imp", sect: q.get("secteur") || "", vue: q.get("vue") || (old === "monde" || old === "une" ? "presse" : "annonces"), qq: "", n: 40, jours: 0 };
+  const st = { zone: q.get("zone") || (old === "us" ? "US" : old === "fr" || old === "toutes" ? "FR" : "tout"), type: q.get("type") || "imp", sect: q.get("secteur") || "", vue: q.get("vue") || (old === "monde" || old === "une" ? "presse" : "annonces"), qq: "", n: matchMedia("(max-width:760px)").matches ? 10 : 40, jours: 0 };
   if (!ACTU_ZONES.some(z => z[0] === st.zone)) st.zone = "tout"; if (!ACTU_TYPES.some(t => t[0] === st.type)) st.type = "imp";
   app.innerHTML = `<h1 class="pagetitle">Actualité des entreprises</h1><p class="pagesub">Les annonces officielles des entreprises suivies, classées, chiffrées et expliquées, et les titres de la presse. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
     <div id="ax-tiles"></div>

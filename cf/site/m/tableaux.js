@@ -505,9 +505,9 @@ function pageEntreprises() {
     const view = innerWidth <= 760 ? "cartes" : listState.view;
     if (view === "cartes") {
       const sorted = [...list].sort((a, b) => (!!a.missing - !!b.missing) || (caEur(b) - caEur(a)) || a.name.localeCompare(b.name, "fr"));
-      const shown = sorted.slice(0, listState.max || 60);
-      $("#elist").innerHTML = `<p class="muted" style="margin:0 0 10px;font-size:13px">${F0.format(list.length)} entreprise${list.length > 1 ? "s" : ""}, des plus grosses aux plus petites.</p><div class="cards">${shown.map(coCard).join("")}</div>${sorted.length > shown.length ? `<div style="text-align:center;margin:-12px 0 28px"><button class="btn" id="emore" type="button">Voir ${Math.min(60, sorted.length - shown.length)} de plus</button></div>` : ""}`;
-      const mb = $("#emore"); if (mb) mb.onclick = () => { listState.max = (listState.max || 60) + 60; render(); };
+      const base = innerWidth <= 760 ? 20 : 60, shown = sorted.slice(0, listState.max || base); // lot C : 20 cartes sur téléphone, puis « Voir plus »
+      $("#elist").innerHTML = `<p class="muted" style="margin:0 0 10px;font-size:13px">${F0.format(list.length)} entreprise${list.length > 1 ? "s" : ""}, des plus grosses aux plus petites.</p><div class="cards">${shown.map(coCard).join("")}</div>${sorted.length > shown.length ? `<div style="text-align:center;margin:-12px 0 28px"><button class="btn" id="emore" type="button">Voir ${Math.min(base, sorted.length - shown.length)} de plus</button></div>` : ""}`;
+      const mb = $("#emore"); if (mb) mb.onclick = () => { listState.max = (listState.max || base) + base; render(); };
       return;
     }
     const k = listState.sort, dir = listState.dir, rows = list.map(c => ({ c, m: ratios(c), t: quick(c) }));

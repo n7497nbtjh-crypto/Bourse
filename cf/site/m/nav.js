@@ -100,7 +100,7 @@ function navBarreHTML() { // quatre portes en liens directs, l'étoile des favor
     + `<a href="/premium" data-nav="prem" class="navprem">Premium</a>`;
 }
 function navPanneauHTML() { // menu du téléphone : les quatre portes, Premium (la recherche a son bouton « Chercher » dans la barre)
-  return NAV.map(g => `<a href="${g.porte}" class="mporte"><b>${g.compte ? `Mon espace <span class="espn"></span>` : navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>`).join("")
+  return `<div class="mp-h"><span class="mp-t">Menu</span><button type="button" class="mp-x" aria-label="Fermer le menu">✕</button></div>` + NAV.map(g => `<a href="${g.porte}" class="mporte"><b>${g.compte ? `Mon espace <span class="espn"></span>` : navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>`).join("")
     + `<a href="/premium" class="mporte mprem"><b>Premium</b><span>Le rapport complet, toutes les alertes, sans limite</span></a>`;
 }
 function navPiedHTML() { // pied de page : les quatre portes, puis Méthode et sources et les pages légales
@@ -155,7 +155,10 @@ document.head.insertAdjacentHTML("beforeend", `<style id="nav-css">
 #nav .ddm{min-width:320px}
 #nav a.navporte{padding:18px 10px 16px;font-weight:600;white-space:nowrap}#nav a.navporte.on{box-shadow:inset 0 -3px 0 var(--lime)}
 #nav a.navfav .lb{display:none}#nav a.navfav{padding-left:6px;padding-right:6px}
-.mpanel a.mporte{display:flex;flex-direction:column;gap:2px;padding:12px 0}.mpanel a.mporte b{font-size:17px}.mpanel a.mporte span{font-size:13px;color:#B8B4AC}
+/* lot C : le menu du téléphone s'ouvre par-dessus la page (panneau plein écran), se ferme par ✕, Échap ou un lien */
+.mpanel.open{position:fixed;inset:0;z-index:80;overflow:auto;background:var(--page);padding:0 var(--gut,20px) calc(20px + env(safe-area-inset-bottom));border:0}
+.mp-h{display:flex;justify-content:space-between;align-items:center;min-height:56px;border-bottom:1px solid var(--ink);margin:0 0 4px}.mp-t{font-family:var(--serif);font-weight:800;font-size:22px}.mp-x{border:0;background:none;font-size:22px;width:44px;height:44px;cursor:pointer;color:var(--ink)}
+.mpanel a.mporte{display:flex;flex-direction:column;gap:2px;padding:14px 0;min-height:44px;color:var(--ink);border-bottom:1px solid var(--rule)}.mpanel a.mporte b{font-size:19px}.mpanel a.mporte span{font-size:14px;color:var(--grey)}
 footer .navpied4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 24px;margin:0 0 14px}footer .navpied4 a{display:flex;flex-direction:column;gap:2px;padding:0;margin:0;font-size:14px}footer .navpied4 a b{font-weight:600;display:block}footer .navpied4 a span{display:block;font-size:12.5px;color:var(--grey)}
 #nav .ddx{margin:6px 4px 2px;padding-top:8px;border-top:1px solid var(--line2,#EDE8DD);font-size:12.5px;color:var(--light);line-height:1.6}
 #nav .ddx a{display:inline;padding:0;border:0;font-size:12.5px;color:var(--grey);text-decoration:none;white-space:normal}
@@ -186,3 +189,5 @@ footer .navpied a,footer .navlg a{margin-left:0}
 @media (max-width:420px){.navpied{grid-template-columns:1fr;gap:14px}}
 </style>`);
 navRemplir();
+document.addEventListener("click", e => { if (e.target.closest(".mp-x") && typeof closePanels === "function") closePanels(); });
+document.addEventListener("keydown", e => { if (e.key === "Escape" && typeof closePanels === "function" && document.getElementById("mpanel") && document.getElementById("mpanel").classList.contains("open")) closePanels(); });

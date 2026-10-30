@@ -431,3 +431,66 @@ document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:va
 @media (max-width:600px){.cmpr-jg{grid-template-columns:minmax(0,1fr)}}
 </style>`);
 })();
+/* Lot C (30/10) : /etf sur téléphone. Recherche et filtres rapides visibles ; les menus déroulants et le tri derrière un bouton
+   « Filtres (n) » qui ouvre un panneau du bas (fermé par ✕, Échap ou un toucher à côté). Sur ordinateur, rien ne change. */
+(function () {
+  const e0 = window.pageEtfs; if (typeof e0 !== "function") return;
+  const tel = () => matchMedia("(max-width:760px)").matches;
+  const nActifs = () => $$(".etfflt select, #etri").filter(s => s.value && s.value !== "all" && s.value !== (s.id === "etri" ? s.options[0].value : "all")).length;
+  const maj = () => { const b = $("#etf-flt-btn"); if (b) { const n = nActifs(); b.textContent = `Filtres${n ? ` (${n})` : ""}`; } };
+  const fermer = () => { document.documentElement.classList.remove("etf-flt-open"); const b = $("#etf-flt-btn"); if (b) { b.setAttribute("aria-expanded", "false"); maj(); } };
+  window.pageEtfs = function () {
+    const r = e0.apply(this, arguments);
+    if (!tel() || $("#etf-flt-btn", app)) return r;
+    const flt = $(".etfflt", app), pre = $("#epre", app), tri = $("#etri", app); if (!flt || !pre) return r;
+    pre.insertAdjacentHTML("afterend", `<p class="etf-flt-p"><button type="button" class="btn ghost" id="etf-flt-btn" aria-expanded="false" aria-controls="etf-flt-panel">Filtres</button></p>`);
+    flt.id = "etf-flt-panel"; flt.insertAdjacentHTML("afterbegin", `<div class="etf-flt-h"><b>Filtres</b><button type="button" class="etf-flt-x" aria-label="Fermer">✕</button></div>`);
+    if (tri && tri.parentElement) { const w = document.createElement("div"); w.innerHTML = `<label for="etri">Trier par</label>`; w.appendChild(tri); flt.appendChild(w); }
+    flt.insertAdjacentHTML("beforeend", `<p class="etf-flt-ok"><button type="button" class="btn" id="etf-flt-ok">Voir les résultats</button></p>`);
+    document.body.insertAdjacentHTML("beforeend", `<div class="etf-flt-bg" id="etf-flt-bg"></div>`);
+    $("#etf-flt-btn").onclick = () => { const o = !document.documentElement.classList.contains("etf-flt-open"); document.documentElement.classList.toggle("etf-flt-open", o); $("#etf-flt-btn").setAttribute("aria-expanded", String(o)); };
+    $(".etf-flt-x", flt).onclick = fermer; $("#etf-flt-ok").onclick = fermer; $("#etf-flt-bg").onclick = fermer;
+    document.addEventListener("keydown", e => { if (e.key === "Escape") fermer(); });
+    flt.addEventListener("change", maj); maj();
+    return r;
+  };
+  document.head.insertAdjacentHTML("beforeend", `<style>
+@media (max-width:760px){
+  .etf-flt-p{margin:10px 0 0}#etf-flt-btn{min-height:44px}
+  #etf-flt-panel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:85vh;overflow:auto;background:#fff;border-top:1px solid var(--rule);border-radius:14px 14px 0 0;padding:12px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 32px -12px rgba(17,18,20,.35)}
+  html.etf-flt-open #etf-flt-panel{display:block}html.etf-flt-open .etf-flt-bg{display:block}
+  .etf-flt-bg{display:none;position:fixed;inset:0;z-index:69;background:rgba(17,18,20,.35)}
+  #etf-flt-panel>.etf-flt-h{display:flex;flex-direction:row;justify-content:space-between;align-items:center;margin:0 0 8px}.etf-flt-h b{font-size:17px}.etf-flt-x{border:0;background:none;font-size:20px;width:44px;height:44px;cursor:pointer}
+  #etf-flt-panel>div{display:flex;flex-direction:column;gap:4px;margin:0 0 10px}#etf-flt-panel select{min-height:44px;font-size:16px}
+  .etf-flt-ok{margin:6px 0 0}.etf-flt-ok .btn{width:100%;min-height:46px}
+  .etfcount>span:last-child{display:none}
+}
+</style>`);
+})();
+/* Lot C (30/10) : téléphone. Pied de page en deux colonnes sous 600 px ; aucun texte sous 12 px (13 px pour ce qui porte un
+   chiffre) ; cibles tactiles d'au moins 44 px. Les classes connues sont traitées en CSS ; un passage JS, après chaque page,
+   relève ce qui resterait en dessous (le site a des centaines de petits libellés hérités). */
+document.head.insertAdjacentHTML("beforeend", `<style>
+@media (max-width:600px){footer .navpied4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
+@media (max-width:760px){
+  small,.src,.note,.light,.muted,.kick,.sub,.acc-src,.rf-no,.tbx-unit,.f2-sub,.rf-trimf,.etfsrc,.pa2 small,.rf6-jg small,.rf-pq,.tbx-date small,.acc-pubh small,.acc-pubf small,.acc-sem b,.acc-sem span,.mk-porte small,.ot-k span,.rf-pl2>summary span,.acc-l1,.cmpr-ligne small,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.ax-annf,.acc-cat,.tag,.rf-coh .nm,.rf-ctab-t th[scope=row] small,.rf-ctab-t td.rf-q,.rf-lirel li{font-size:12px!important}
+  .num,.rf-kt b,.rf-cv,td.num,.tile .v,.acc-exr b,.acc-pubf b,.rf-trimc b,.rf6-fig b,.pxhead .p,.tbx-val{font-size:max(13px,1em)!important}
+  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.rf-ta button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.acc-pub,.ot-k,.mk-porte,.acc-mini,.rf-pl2>summary,.rf-pl>summary,details.acc>summary,.etfpre button,.cmpr-card .cmpr-cl,.cell-co,.navfav,.esptabs a{min-height:44px}
+  .chips button,.filters button,.chip,.pill,.nfil button,.o2-seg button,.etfpre button{display:inline-flex;align-items:center;padding-top:8px;padding-bottom:8px}
+  a.lnk,a.more{display:inline-block;padding:9px 0;line-height:1.4}
+  .rf-anf,.def{min-height:44px;display:inline-flex;align-items:center}
+}
+</style>`);
+(() => { // passage JS : tout texte encore sous 12 px est remonté (13 px s'il contient un chiffre) ; cibles tactiles sous 44 px rehaussées
+  if (!matchMedia("(max-width:760px)").matches) return;
+  let t = null;
+  const passe = () => { t = null; const main = document.querySelector("main"); if (!main) return;
+    main.querySelectorAll("*").forEach(e => { if (!e.childNodes.length || e.closest("svg,script,style,.sr")) return; const txt = [...e.childNodes].filter(x => x.nodeType === 3).map(x => x.textContent).join("").trim(); if (!txt) return;
+      const fs = parseFloat(getComputedStyle(e).fontSize), min = /\d/.test(txt) ? 13 : 12; if (fs < min) e.style.fontSize = min + "px"; });
+    main.querySelectorAll("a[href],button").forEach(e => { if (e.closest(".tbx-sc table,.rf-ctab,.pcmp") || getComputedStyle(e).display === "inline") return; const h = e.getBoundingClientRect().height; if (h > 0 && h < 44) { e.style.minHeight = "44px"; if (getComputedStyle(e).display === "inline-block") { e.style.display = "inline-flex"; e.style.alignItems = "center"; } } });
+  };
+  const plan = () => { if (t) return; t = setTimeout(passe, 400); };
+  new MutationObserver(plan).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });
+  plan();
+})();
