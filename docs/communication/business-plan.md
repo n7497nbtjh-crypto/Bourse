@@ -101,6 +101,21 @@ Finary, TradingView, Scalable Capital et Simply Wall St ont publié en 2026 des 
 
 ## 7. Coûts
 
+### Budget décidé le 30 octobre 2026 : 150 € par mois au plus, dépensés par paliers
+
+Règle : on n'engage un abonnement que lorsque le précédent est utilisé et que les abonnés Premium (ou le palier précédent) le justifient. Tout ce qui peut venir d'un registre officiel gratuit (SEC, AMF, EDINET au Japon, OpenDART en Corée) vient de là.
+
+| Palier | Quand | Dépense mensuelle | Ce que ça apporte |
+|---|---|---|---|
+| 0 | Aujourd'hui | 0 € (Cloudflare gratuit, Workers AI gratuit, SEC, AMF) | Comptes annuels monde, trimestres américains, annonces officielles |
+| 1 | Novembre 2026 | Marketstack Basic 9,99 $ + EDINET et OpenDART gratuits, soit environ 10 € | Cours propres sur 70 bourses, comptes et trimestres du Japon et de la Corée |
+| 2 | Dès 20 abonnés annuels (environ 60 € nets par mois) | + Cloudflare Workers Paid 5 $ + e-mails et domaine, soit environ 20 € au total | Marge de calcul et d'IA, envois d'alertes, nom de domaine |
+| 3 | Dès 50 abonnés annuels (environ 150 € nets par mois) | + EODHD Fundamentals 59,99 $ après accord écrit sur l'usage commercial, soit environ 80 € au total | Trimestres européens systématiques, calendrier des résultats, initiés |
+| 4 | Dès 100 abonnés | + relecture juridique ponctuelle, marque INPI, publicité d'essai, jusqu'au plafond de 150 € | Sécurité juridique et acquisition |
+
+Point mort : à 39 € par an (environ 35 € nets), **le plafond de 150 € par mois est couvert par 52 abonnés annuels** ; le palier 1 (10 €) l'est par 4 abonnés. Le site ne doit jamais dépenser le palier suivant avant d'avoir les abonnés du palier courant : c'est la garantie contre la faillite évoquée par Romain.
+
+
 | Poste | Coût vérifié | Commentaire |
 |---|---|---|
 | Hébergement Cloudflare (Pages, Workers, D1) | Plan Workers Paid à partir de **5 $ par mois** | Le site peut tourner sur l'offre gratuite au début ; le plan payant devient nécessaire avec le trafic ou certains modèles. |
