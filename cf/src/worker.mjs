@@ -11,7 +11,7 @@ import presse from "./presse.mjs";
 import { cours } from "./cours.mjs";
 import { veille } from "./veille.mjs";
 import { premium } from "./compte.mjs";
-import { espace } from "./espace.mjs";
+import { espace, rapportExemple } from "./espace.mjs";
 import { signaler } from "./signaler.mjs";
 import { push, pousser } from "./push.mjs";
 import { mcp } from "./mcp.mjs";
@@ -63,6 +63,7 @@ export function meta(path, q = null) {
   if (p === "/dividendes") return { title: `Dividendes : calendrier, rendements et simulateur · ${SITE}`, desc: "Les prochaines dates de détachement et de paiement, les plus hauts rendements avec leur garde-fou, les dividendes relevés chaque année et ce que vous toucheriez en PEA ou compte-titres." };
   if (p === "/classements") return { title: `Classements des entreprises · ${SITE}`, desc: "Les entreprises qui cumulent le plus de points forts, restent en tête de leur secteur, augmentent leurs ventes ou relèvent leur dividende chaque année, calculées sur leurs comptes officiels." };
   if (p === "/decouvertes") return { title: `Découvertes du jour · ${SITE}`, desc: "Chaque jour, des petites et moyennes entreprises d'Europe et du monde, et des ETF éligibles au PEA : activité, chiffres, valorisation, catalyseurs et risques, sources à l'appui. Sans conseil d'achat." };
+  if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple · ${SITE}`, desc: "Le vrai rapport hebdomadaire de bilan., calculé avec les chiffres de cette semaine pour un profil fictif : variations, annonces, dates à venir, et ce que vous pouvez y régler." };
   if (p === "/repartitions") return { title: `Répartitions types et listes par critères · ${SITE}`, desc: "Des exemples de répartition entre actions, obligations et placements sans risque de perte, expliqués avec leurs limites, et des listes d'ETF et d'entreprises triées sur les critères que vous choisissez. Information pédagogique, pas un conseil." };
   if (p === "/plan") return { title: `Plan du site · ${SITE}`, desc: "Toutes les pages de bilan., rangées en quatre rubriques : Découvrir, Explorer, Analyser et Mon espace." };
   if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre · ${SITE}`, desc: "Le chemin pour apprendre : par où commencer, les cours de l'Académie (l'essentiel en 3 étapes et le cours complet), le lexique et les outils pédagogiques, gratuits." };
@@ -116,6 +117,7 @@ export default {
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
+    if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });

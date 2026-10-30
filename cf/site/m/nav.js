@@ -65,6 +65,7 @@ const NAV = [
     k: "esp", label: "Mon espace", sous: "Ce que vous suivez", compte: true,
     items: [
       ["/espace", "@esp", "Votre bilan de la semaine : variations, annonces et dates de ce que vous suivez"],
+      ["/rapport-exemple", "Un rapport en exemple", "Le vrai rapport de la semaine, calculé aujourd'hui pour un profil fictif"],
       ["/favoris", "Mes favoris", "Les entreprises et ETF que vous suivez"],
       ["/portefeuille", "Mon portefeuille", "Vos lignes, leurs frais et leur diversification"],
       ["/espace/alertes", "Mes alertes", "Ce que le site vous signale, et les notifications"],

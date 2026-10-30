@@ -435,3 +435,25 @@ async function tache(request, env, url) {
   const reste = ((await env.DB.prepare(`SELECT COUNT(*) AS n ${FROM}`).bind(...B).first()) || {}).n || 0;
   return json({ traites: rows.length, reste, notifs, bilans, mails, mode: modeBilan ? "bilan" : "alertes" });
 }
+
+/* Rapport exemple, public (30/10/2026) : le vrai rapport de la semaine, calculé avec les chiffres du jour, pour un profil fictif
+   (quatre favoris, un petit portefeuille, deux secteurs suivis). Rien n'est enregistré ; le résultat est gardé une heure en cache. */
+export const EXEMPLE_PROFIL = {
+  favoris: ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple"],
+  portefeuille: { l: [{ k: "e:amundi-msci-world-pea", q: 120, pru: 5.2, env: "pea" }, { k: "c:totalenergies", q: 15, pru: 58, env: "pea" }, { k: "c:air-liquide", q: 4, pru: 160, env: "pea" }] },
+  rapport: { favoris: true, portefeuille: true, secteurs: ["energie", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] },
+};
+export async function rapportExemple(request, env) {
+  const url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + SYN_VERSION, url.origin));
+  const cache = typeof caches !== "undefined" ? caches.default : null;
+  if (cache) { const r = await cache.match(cle); if (r) return r; }
+  const d = await siteData(request, env), auj = jourParis(), semaine = semaineIso(auj);
+  const row = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) };
+  const s = suiviDe(row, d.names);
+  const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
+  const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
+  const corps = { ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: true, en_cours: true, historique: [] };
+  const res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  if (cache) { try { await cache.put(cle, res.clone()); } catch (e) { } }
+  return res;
+}

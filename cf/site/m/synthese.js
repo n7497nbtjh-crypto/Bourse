@@ -410,3 +410,35 @@ async function pageEspace(onglet) {
   if (onglet === "alertes") return espaceAlertes(el, m);
   return espaceReglages(el, m);
 }
+
+/* ---------- Le rapport exemple, public (30/10/2026) ----------
+   Le vrai rapport de la semaine, calculé ce jour avec les chiffres du site, pour un profil fictif. En tête : ce qui est suivi
+   dans cet exemple et ce que chacun peut régler dans le sien. Rien n'est enregistré. */
+const SYN_EX_REG = [
+  ["Ce qu'il suit", "Vos favoris, votre portefeuille, ou les deux. Ici : quatre favoris et un petit portefeuille PEA."],
+  ["Les secteurs", "Jusqu'à deux secteurs suivis gratuitement (six avec Premium), avec leur médiane de la semaine. Ici : énergie et technologie."],
+  ["Les indices", "Les indices de référence affichés en face de vos lignes. Ici : CAC 40, Euro Stoxx 50 et S&P 500."],
+  ["Les sujets", "Résultats, dividendes, actualité, leçons : vous gardez ceux qui vous intéressent."],
+  ["Le jour d'envoi", "Samedi, dimanche ou lundi matin, par e-mail ou dans votre espace. Le rapport se met à jour pendant la semaine."],
+];
+async function pageRapportExemple() {
+  setTitle("Un rapport de la semaine, en exemple"); if (typeof setNav === "function") setNav("espace");
+  app.innerHTML = `<div class="crumbs"><a href="/espace">Mon espace</a> › Rapport exemple</div><div class="empty">Calcul du rapport de cette semaine…</div>`;
+  let b = null; try { const r = await fetch("/api/rapport-exemple"); b = r.ok ? await r.json() : null; } catch (e) { }
+  if (!b) { app.innerHTML = `<section class="panel"><div class="pb">Le rapport exemple n'a pas pu être calculé pour le moment. <a class="lnk" href="/espace">Créer mon rapport</a></div></section>`; return; }
+  await Promise.all([typeof PXP !== "undefined" ? PXP : null, typeof acaLoad === "function" ? acaLoad() : null]);
+  b = synNormalise(b);
+  app.innerHTML = `<div class="crumbs"><a href="/espace">Mon espace</a> › Rapport exemple</div>
+    <h1 class="pagetitle">Le rapport de la semaine, en vrai</h1>
+    <p class="pagesub">Voici exactement ce que reçoit un membre, calculé aujourd'hui avec les chiffres du site, pour un profil d'exemple. Le vôtre suit vos propres titres.</p>
+    <section class="panel synx"><div class="ph"><h2>Ce que vous réglez dans le vôtre</h2><a class="btn" href="/espace" style="height:36px;display:inline-flex;align-items:center">Créer mon rapport, gratuit</a></div>
+      <div class="synx-g">${SYN_EX_REG.map(([t, d]) => `<div><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join("")}</div></section>
+    <div id="synex">${synPageHTML(b, { premium: false })}</div>
+    <section class="panel"><div class="pb" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between"><span>Gratuit, sans carte bancaire : il suffit d'une adresse e-mail.</span><a class="btn" href="/espace">Créer mon rapport</a></div></section>`;
+  const ex = document.getElementById("synex"); if (ex) ex.onclick = e => { const i = e.target.closest("[data-synics]"); if (i) { synIcs(b, i.dataset.synics); return; } const j = e.target.closest("[data-synjump]"); if (j) { const t = document.getElementById(j.dataset.synjump); if (t) { e.preventDefault(); t.scrollIntoView({ behavior: "smooth", block: "start" }); } } };
+}
+ROUTES_EXTRA.push([/^\/rapport-exemple\/?$/, () => pageRapportExemple()]);
+document.head.insertAdjacentHTML("beforeend", `<style>
+.synx-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border-top:1px solid var(--line2)}
+.synx-g > div{padding:14px 22px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2)}.synx-g b{font-size:14.5px}.synx-g p{margin:4px 0 0;font-size:13.5px;color:var(--grey);line-height:1.5}
+</style>`);

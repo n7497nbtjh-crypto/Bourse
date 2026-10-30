@@ -657,7 +657,7 @@ async function parDemoHTML() {
       return `<div class="par-demo"><span class="tag">Exemple réel</span><p class="kick">Aperçu d'un rapport</p><h3>Trois favoris et un secteur suivi</h3>
         ${rows.map(([c, v]) => `<a class="row" href="/entreprise/${c.id}" style="text-decoration:none;color:inherit">${logo(c, 26)}<span>${esc(c.name)}</span>${typeof synSpark === "function" ? synSpark(v.serie, 76, 24, "Cours de " + c.name) : ""}<b class="${synCls(v.pct)}">${synPct(v.pct)}</b></a>`).join("")}
         ${med != null ? `<div class="sec"><b>Secteur ${esc(PAR_SECTEURS[PAR_DEMO_SECT])}</b> : <b class="${synCls(med)}">${synPct(med)}</b> en médiane, sur ${sec.length} entreprises suivies par le site.</div>` : ""}
-        <p class="psrc">Calculé avec les cours de clôture du ${esc(dl(du))} au ${esc(dl(au))} (Google Finance). Votre rapport ajoute les annonces officielles, les dates à venir et ce que cela change.</p></div>`;
+        <p class="psrc">Calculé avec les cours de clôture du ${esc(dl(du))} au ${esc(dl(au))} (Google Finance). Votre rapport ajoute les annonces officielles, les dates à venir et ce que cela change. <a class="lnk" href="/rapport-exemple">Voir un rapport complet, en vrai</a></p></div>`;
     }
   }
   return `<div class="par-demo"><span class="tag">Aperçu</span><p class="kick">Votre rapport de la semaine</p><h3>Ce que vous y lirez</h3>
