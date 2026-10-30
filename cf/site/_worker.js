@@ -186,8 +186,8 @@ async function communaute(request, env) {
       let e = textOk(pseudo);
       if (e) return json({ error: e }, 400);
       if (b.website) return json({ ok: !0 });
-      let jour = await db.prepare("SELECT COUNT(*) AS n FROM messages WHERE who = ? AND created > ? AND meta != ''").bind(me, Date.now() - 864e5).first();
-      if (jour && jour.n >= 3) return json({ error: "Trois analyses par jour au plus : prenez le temps de les \xE9tayer." }, 429);
+      let jour2 = await db.prepare("SELECT COUNT(*) AS n FROM messages WHERE who = ? AND created > ? AND meta != ''").bind(me, Date.now() - 864e5).first();
+      if (jour2 && jour2.n >= 3) return json({ error: "Trois analyses par jour au plus : prenez le temps de les \xE9tayer." }, 429);
       meta2 = JSON.stringify(m);
     } else if (body.length < 3 || body.length > 1e3) return json({ error: "Le message doit faire entre 3 et 1 000 caract\xE8res." }, 400);
     if (LINK.test(body) || LINK.test(pseudo)) return json({ error: "Les liens ne sont pas autoris\xE9s." }, 400);
@@ -208,8 +208,8 @@ async function communaute(request, env) {
     if (e) return json({ error: e }, 400);
     if (CONSIGNE.test(titre) || CONSIGNE.test(note)) return json({ error: "Une liste de suivi d\xE9crit ce que vous suivez, pas ce qu'il faut acheter." }, 400);
     if (b.website) return json({ ok: !0 });
-    let jour = await db.prepare("SELECT COUNT(*) AS n FROM listes WHERE who = ? AND created > ?").bind(me, Date.now() - 864e5).first();
-    if (jour && jour.n >= 3) return json({ error: "Trois listes par jour au plus." }, 429);
+    let jour2 = await db.prepare("SELECT COUNT(*) AS n FROM listes WHERE who = ? AND created > ?").bind(me, Date.now() - 864e5).first();
+    if (jour2 && jour2.n >= 3) return json({ error: "Trois listes par jour au plus." }, 429);
     let cle = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, "0")).join(""), r = await db.prepare("INSERT INTO listes (pseudo, titre, note, items, created, who, cle) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(pseudo, titre, note, JSON.stringify(items), Date.now(), me, await hex(cle)).first();
     return json({ ok: !0, id: r.id, cle }, 201);
   }
@@ -532,7 +532,7 @@ var json3 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers
 async function veille(request, env) {
   if (!env || !env.DB) return json3({ error: "Bilan indisponible pour le moment." }, 503);
   let path = new URL(request.url).pathname;
-  return path === "/api/veille" ? json3({ error: "Le site ne r\xE9dige plus de texte avec une IA. Le bilan calcul\xE9 reste affich\xE9 ; pour un bilan r\xE9dig\xE9, connectez votre IA.", ia_serveur: !1 }, 410) : (await init2(env.DB), mails(request, env, path));
+  return path === "/api/veille" ? json3({ error: "Le site ne r\xE9dige plus de texte avec une IA. Le bilan calcul\xE9 reste affich\xE9 ; l'IA du site le r\xE9dige depuis votre navigateur.", ia_serveur: !1 }, 410) : (await init2(env.DB), mails(request, env, path));
 }
 var ALTERS2 = ["ALTER TABLE veille ADD COLUMN last_semaine INTEGER NOT NULL DEFAULT 0", "ALTER TABLE veille ADD COLUMN last_alerte INTEGER NOT NULL DEFAULT 0", "ALTER TABLE veille ADD COLUMN alertes INTEGER NOT NULL DEFAULT 1"], altered = !1;
 async function alter(db) {
@@ -1546,8 +1546,8 @@ async function espace(request, env) {
   }
   return path === "/api/espace/notifs/lu" && m === "POST" ? (await env.DB.prepare("UPDATE notifs SET lu = 1 WHERE compte = ? AND lu = 0").bind(c.id).run(), json2({ ok: !0 })) : json2({ error: "Introuvable." }, 404);
 }
-async function notifier(env, compteId, type, texte, lien2, jour, extra = "") {
-  let r = await env.DB.prepare("INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)").bind(compteId, Date.now(), type, texte.slice(0, 400), lien2, [type, lien2, jour, extra].join("|").slice(0, 500)).run();
+async function notifier(env, compteId, type, texte, lien2, jour2, extra = "") {
+  let r = await env.DB.prepare("INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)").bind(compteId, Date.now(), type, texte.slice(0, 400), lien2, [type, lien2, jour2, extra].join("|").slice(0, 500)).run();
   return r && r.meta && r.meta.changes || 0;
 }
 async function tache(request, env, url) {
@@ -1600,6 +1600,25 @@ bilan. Informations factuelles, sans conseil en investissement.`,
   }
   let reste = (await env.DB.prepare(`SELECT COUNT(*) AS n ${FROM}`).bind(...B).first() || {}).n || 0;
   return json2({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
+}
+var EXEMPLE_PROFIL = {
+  favoris: ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple"],
+  portefeuille: { l: [{ k: "e:amundi-msci-world-pea", q: 120, pru: 5.2, env: "pea" }, { k: "c:totalenergies", q: 15, pru: 58, env: "pea" }, { k: "c:air-liquide", q: 4, pru: 160, env: "pea" }] },
+  rapport: { favoris: !0, portefeuille: !0, secteurs: ["energie", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] }
+};
+async function rapportExemple(request, env) {
+  let url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + 2, url.origin)), cache = typeof caches < "u" ? caches.default : null;
+  if (cache) {
+    let r = await cache.match(cle);
+    if (r) return r;
+  }
+  let d = await siteData2(request, env), auj = jourParis(), semaine = semaineIso(auj), row = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) }, s = suiviDe(row, d.names), actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj }), corps = { ...publicBilan(n), exemple: !0, profil: EXEMPLE_PROFIL, provisoire: !0, en_cours: !0, historique: [] }, res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  if (cache)
+    try {
+      await cache.put(cle, res.clone());
+    } catch {
+    }
+  return res;
 }
 
 // cf/src/signaler.mjs
@@ -1888,7 +1907,7 @@ function base(env, origin) {
       optionnel(charger(env, origin, "/data/agenda.json"), { events: [] }),
       optionnel(charger(env, origin, "/data/agenda-auto.json"), { events: [] }),
       optionnel(charger(env, origin, "/data/academie.json"), { modules: [] })
-    ]), S = Object.fromEntries((soc.companies || []).map((c) => [c.id, c])), companies = (uni.companies || []).map((u) => ({ ...S[u.id] || { missing: !0 }, ...u })), BY2 = Object.fromEntries(companies.map((c) => [c.id, c])), manuel = new Set((ag.events || []).map((e) => e.id)), events = [...ag.events || [], ...(agAuto.events || []).filter((e) => !manuel.has(e.id)).map((e) => ({ ...e, estimee: !0 }))].filter((e) => e && BY2[e.id] && /^\d{4}-\d{2}-\d{2}$/.test(e.date));
+    ]), S2 = Object.fromEntries((soc.companies || []).map((c) => [c.id, c])), companies = (uni.companies || []).map((u) => ({ ...S2[u.id] || { missing: !0 }, ...u })), BY2 = Object.fromEntries(companies.map((c) => [c.id, c])), manuel = new Set((ag.events || []).map((e) => e.id)), events = [...ag.events || [], ...(agAuto.events || []).filter((e) => !manuel.has(e.id)).map((e) => ({ ...e, estimee: !0 }))].filter((e) => e && BY2[e.id] && /^\d{4}-\d{2}-\d{2}$/.test(e.date));
     return { companies, BY: BY2, sectors: soc.sectors || {}, regions: uni.regions || {}, updated: soc.updated, MED: medianes(companies), etfs: etf.list || [], etfMaj: etf.updated, events, aca };
   })();
   return BASE = { at: Date.now(), p }, p.catch(() => {
@@ -1995,7 +2014,7 @@ var nf = (d) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maxim
   payout: "Moins de 60 % du b\xE9n\xE9fice : point fort, il reste une marge si les b\xE9n\xE9fices baissent. De 60 \xE0 90 % : dans la moyenne. Plus de 90 % : point de vigilance."
 };
 function reperes(c, MED) {
-  let m = ratios(c), med = MED[c.sector] || {}, cur = c.currency, bank = isBank(c), medOk = med.n >= 3, out = [], B = (v) => big(v, cur), S = CUR[cur] || cur || "\u20AC", ans = (v) => F1.format(v) + (v >= 2 ? " ans" : " an"), ligne = (cle, libelle, valeur, valeur_texte, lv, mediane, mediane_texte, regle, explication) => out.push({
+  let m = ratios(c), med = MED[c.sector] || {}, cur = c.currency, bank = isBank(c), medOk = med.n >= 3, out = [], B = (v) => big(v, cur), S2 = CUR[cur] || cur || "\u20AC", ans = (v) => F1.format(v) + (v >= 2 ? " ans" : " an"), ligne = (cle, libelle, valeur, valeur_texte, lv, mediane, mediane_texte, regle, explication) => out.push({
     cle,
     libelle,
     valeur,
@@ -2028,7 +2047,7 @@ function reperes(c, MED) {
       r4(mm),
       pct(mm, 1, !1),
       RULES.marge,
-      m.marge >= 0 ? `Sur 100 ${S} de ventes, il reste ${F1.format(m.marge * 100)} ${S} une fois pay\xE9s les co\xFBts de l'activit\xE9.` : `L'activit\xE9 perd ${F1.format(-m.marge * 100)} ${S} pour 100 ${S} de ventes.`
+      m.marge >= 0 ? `Sur 100 ${S2} de ventes, il reste ${F1.format(m.marge * 100)} ${S2} une fois pay\xE9s les co\xFBts de l'activit\xE9.` : `L'activit\xE9 perd ${F1.format(-m.marge * 100)} ${S2} pour 100 ${S2} de ventes.`
     );
   }
   if (c.net != null) {
@@ -2044,7 +2063,7 @@ function reperes(c, MED) {
     r4(med.roe),
     pct(med.roe, 1, !1),
     RULES.roe,
-    `Pour 100 ${S} qui appartiennent aux actionnaires, l'entreprise a gagn\xE9 ${F1.format(m.roe * 100)} ${S} en un an.`
+    `Pour 100 ${S2} qui appartiennent aux actionnaires, l'entreprise a gagn\xE9 ${F1.format(m.roe * 100)} ${S2} en un an.`
   ) : c.equity != null && c.equity <= 0 && ligne("rentabilite", "Rentabilit\xE9 des capitaux propres", null, "\u2013", "na", null, null, RULES.roe, "Capitaux propres n\xE9gatifs : ce ratio ne se calcule pas."), bank ? ligne("dette", "Endettement", null, "\u2013", "na", null, null, RULES.lev, "Pour une banque ou un assureur, emprunter et pr\xEAter est le m\xE9tier lui-m\xEAme : ce rep\xE8re ne s'applique pas.") : c.netDebt != null && (c.netDebt < 0 ? ligne("dette", "Endettement", r23(c.netDebt), "Pas de dette nette", "fort", r23(med.lev), med.lev != null ? ans(med.lev) + " de r\xE9sultat" : null, RULES.lev, `${B(-c.netDebt)} de tr\xE9sorerie de plus que ses dettes financi\xE8res.`) : m.lev != null ? ligne(
     "dette",
     "Endettement (dette nette / EBITDA)",
@@ -2072,9 +2091,9 @@ function reperes(c, MED) {
     B(c.fcf),
     c.fcf < 0 ? "vig" : m.conv != null && m.conv >= 0.8 ? "fort" : "moyen",
     r4(med.conv),
-    med.conv != null ? F0.format(med.conv * 100) + ` ${S} pour 100 ${S} de b\xE9n\xE9fice` : null,
+    med.conv != null ? F0.format(med.conv * 100) + ` ${S2} pour 100 ${S2} de b\xE9n\xE9fice` : null,
     RULES.fcf,
-    c.fcf >= 0 ? `Apr\xE8s ses investissements, il lui reste ${B(c.fcf)}${m.conv != null ? `, soit ${F0.format(m.conv * 100)} ${S} pour 100 ${S} de b\xE9n\xE9fice` : ""}.` : `Ses investissements ont co\xFBt\xE9 plus que l'argent encaiss\xE9 gr\xE2ce \xE0 l'activit\xE9 : il manque ${B(-c.fcf)}.`
+    c.fcf >= 0 ? `Apr\xE8s ses investissements, il lui reste ${B(c.fcf)}${m.conv != null ? `, soit ${F0.format(m.conv * 100)} ${S2} pour 100 ${S2} de b\xE9n\xE9fice` : ""}.` : `Ses investissements ont co\xFBt\xE9 plus que l'argent encaiss\xE9 gr\xE2ce \xE0 l'activit\xE9 : il manque ${B(-c.fcf)}.`
   ), c.divPaid != null && (c.divPaid < 0.5 ? ligne("dividende", "Dividende", 0, "Aucun", "na", r4(med.payout), pct(med.payout, 0, !1) + " du b\xE9n\xE9fice", RULES.payout, "Pas de dividende vers\xE9 sur l'exercice.") : c.net > 0 ? ligne(
     "dividende",
     "Part du b\xE9n\xE9fice vers\xE9e en dividende",
@@ -2084,7 +2103,7 @@ function reperes(c, MED) {
     r4(med.payout),
     pct(med.payout, 0, !1),
     RULES.payout,
-    `Sur 100 ${S} de b\xE9n\xE9fice, ${F0.format(m.payout * 100)} ${S} ont \xE9t\xE9 vers\xE9s aux actionnaires${c.dps > 0 ? ` (${F2.format(c.dps)} ${S} par action)` : ""}.`
+    `Sur 100 ${S2} de b\xE9n\xE9fice, ${F0.format(m.payout * 100)} ${S2} ont \xE9t\xE9 vers\xE9s aux actionnaires${c.dps > 0 ? ` (${F2.format(c.dps)} ${S2} par action)` : ""}.`
   ) : ligne("dividende", "Dividende", c.divPaid, B(c.divPaid), "vig", r4(med.payout), pct(med.payout, 0, !1) + " du b\xE9n\xE9fice", RULES.payout, `${B(c.divPaid)} vers\xE9s alors que l'entreprise est en perte : le dividende est pay\xE9 avec sa tr\xE9sorerie ou sa dette.`)), out;
 }
 function scoreSociete(c, q, qn) {
@@ -2384,9 +2403,9 @@ async function debit(request, env) {
   else if (++w.n > PAR_MINUTE) return "Trop de requ\xEAtes en une minute. R\xE9essayez dans un instant.";
   if (MINUTE.size > 5e3 && MINUTE.clear(), !env.DB) return null;
   try {
-    let jour = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), who2 = "mcp:" + await visitor(request, env);
+    let jour2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), who2 = "mcp:" + await visitor(request, env);
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))").run();
-    let r = await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, 'mcp', 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1 RETURNING n").bind(who2, jour).first();
+    let r = await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, 'mcp', 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1 RETURNING n").bind(who2, jour2).first();
     if (r && r.n > PAR_JOUR) return "Limite du jour atteinte pour cette connexion. Elle revient demain.";
   } catch {
   }
@@ -2450,7 +2469,28 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "5e4bbba857cd4444", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"];
+var VERSION = "1546ca9d79fa0805", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+  "content-security-policy": [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: https:",
+    "connect-src 'self'",
+    "frame-src https://*.tradingview.com https://*.tradingview-widget.com",
+    "worker-src 'self'",
+    "manifest-src 'self'",
+    "base-uri 'self'",
+    "form-action 'self' https://buy.stripe.com https://billing.stripe.com",
+    "frame-ancestors 'self'",
+    "object-src 'none'"
+  ].join("; "),
+  "strict-transport-security": "max-age=31536000; includeSubDomains",
+  "x-content-type-options": "nosniff",
+  "x-frame-options": "SAMEORIGIN",
+  "referrer-policy": "strict-origin-when-cross-origin",
+  "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()"
+};
 function tete(html, { title, desc, url, statut }) {
   let canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/"), t = [
     `<meta name="bilan-version" content="${VERSION}">`,
@@ -2506,6 +2546,171 @@ async function etfMeta(id, env, url, SITE2) {
   }
 }
 
+// cf/src/regles.mjs
+var REGLES = `R\xE8gles d'objectivit\xE9, \xE0 respecter strictement :
+- S\xE9pare les faits (les chiffres fournis) de leur interpr\xE9tation, et dis quand une interpr\xE9tation est incertaine.
+- Pr\xE9sente toujours les deux c\xF4t\xE9s : ce qui est favorable et ce qui demande de la vigilance.
+- Ne donne pas plus de poids \xE0 la derni\xE8re nouvelle ou au dernier mouvement de cours qu'aux comptes de plusieurs ann\xE9es.
+- Compare \xE0 la m\xE9diane du secteur ou \xE0 des rep\xE8res chiffr\xE9s plut\xF4t que de juger dans l'absolu.
+- N'emploie aucun mot charg\xE9 ou d'emphase (\xAB p\xE9pite \xBB, \xAB incontournable \xBB, \xAB catastrophe \xBB, \xAB exceptionnel \xBB).
+- Ne pr\xE9dis jamais un cours, ne recommande jamais d'acheter, de vendre ou de conserver un titre pr\xE9cis.
+- Si une information manque, dis qu'elle manque au lieu de la deviner. N'invente aucune source.
+- Sois autocritique. Quand une donn\xE9e manque, est ancienne (comptes de plus de 16 mois), estim\xE9e par le site ou repose sur peu d'entreprises, ou quand la question d\xE9passe les faits fournis, dis-le clairement dans une phrase qui commence par \xAB Je ne suis pas s\xFBr : \xBB ou \xAB Ce que je ne sais pas : \xBB, puis indique ce qu'il faudrait v\xE9rifier et o\xF9 (rapport annuel, communiqu\xE9 de l'entreprise, AMF, service-public.fr, BCE\u2026).
+- Pour l'actualit\xE9 (guerre, prix de l'\xE9nergie, taux, droits de douane, Chine\u2026), ne cite que les faits dat\xE9s fournis, avec leur date, et d\xE9cris leurs effets au conditionnel : ce sont des m\xE9canismes possibles, jamais des certitudes ni des pr\xE9visions.`;
+
+// cf/src/consignes.mjs
+var REPERES = `Rep\xE8res exacts \xE0 respecter :
+- ETF capitalisant : les dividendes re\xE7us sont r\xE9investis automatiquement dans le fonds (rien n'est vers\xE9 \xE0 l'\xE9pargnant). ETF distribuant : les dividendes sont vers\xE9s \xE0 l'\xE9pargnant.
+- PER (price earning ratio) : prix de l'action divis\xE9 par le b\xE9n\xE9fice par action, ou valeur en Bourse divis\xE9e par le b\xE9n\xE9fice annuel. Ne pas confondre avec le PER plan d'\xE9pargne retraite.
+- PEA : actions europ\xE9ennes et ETF \xE9ligibles, versements plafonn\xE9s \xE0 150 000 \u20AC, gains impos\xE9s \xE0 18,6 % de pr\xE9l\xE8vements sociaux apr\xE8s 5 ans (2026). Compte-titres : tout titre, sans plafond, gains impos\xE9s \xE0 31,4 % (flat tax 2026 : 12,8 % d'imp\xF4t + 18,6 % de pr\xE9l\xE8vements sociaux).
+- Rendement d'un dividende : dividende annuel divis\xE9 par le cours. Marge d'exploitation : r\xE9sultat d'exploitation divis\xE9 par le chiffre d'affaires.
+- M\xE9diane d'un secteur : la valeur du milieu, la moiti\xE9 des entreprises fait mieux, l'autre moins bien.
+- Un indice (CAC 40, S&P 500, MSCI World) est un panier d'entreprises ; un ETF permet d'acheter tout le panier en une fois. Le MSCI World couvre environ 1 250 entreprises de 23 pays d\xE9velopp\xE9s, sans les pays \xE9mergents.
+- PEA-PME : plafond de 225 000 \u20AC, commun avec le PEA. Livret A : 1,7 % depuis le 1er ao\xFBt 2026, plafond de 22 950 \u20AC ; LDDS : plafond de 12 000 \u20AC. Assurance-vie : apr\xE8s 8 ans, abattement annuel de 4 600 \u20AC sur les gains retir\xE9s (9 200 \u20AC pour un couple), pr\xE9l\xE8vements sociaux de 17,2 % en 2026.
+- Si tu n'es pas s\xFBr d'un chiffre, ne le donne pas : dis \xAB Je ne suis pas s\xFBr de ce chiffre \xBB et o\xF9 le v\xE9rifier.`, DEMANDE = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
+
+Actions possibles :
+1. Chercher des entreprises selon des crit\xE8res :
+{"action":"filtre","titre":"phrase courte qui reformule la demande","secteur":null ou une cl\xE9 de ${JSON.stringify(SECTEURS)},"region":null ou "FR" (France), "EU" (Europe hors France), "US" (\xC9tats-Unis), "MONDE" (reste du monde),"pea":null ou true,"criteres":[{"indicateur":"\u2026","condition":"sup_mediane"|"inf_mediane"|"sup"|"inf","valeur":nombre ou null}],"tri":{"indicateur":"\u2026","ordre":"desc"|"asc"},"limite":10}
+Indicateurs : croissance (hausse des ventes sur un an, en %), marge (marge d'exploitation, %), marge_nette (%), rentabilite (b\xE9n\xE9fice / capitaux propres, %), dette (dette nette en ann\xE9es de r\xE9sultat avant amortissements ; n\xE9gative ou faible = peu endett\xE9e), per (prix de l'action / b\xE9n\xE9fice), rendement (dividende / cours, %), distribution (part du b\xE9n\xE9fice vers\xE9e en dividende, %), variation_1an (\xE9volution du cours sur un an, %), capitalisation (valeur en Bourse, milliards d'euros), taille (ventes annuelles, milliards d'euros).
+\xAB sup_mediane \xBB/\xAB inf_mediane \xBB comparent \xE0 la m\xE9diane du secteur de chaque entreprise ; \xAB sup \xBB/\xAB inf \xBB utilisent "valeur" (pourcentages en nombre : 5 pour 5 %).
+Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"inf","valeur":1} ; \xAB bon dividende \xBB \u2192 {"indicateur":"rendement","condition":"sup","valeur":3} ; \xAB pas ch\xE8res \xBB \u2192 {"indicateur":"per","condition":"inf_mediane","valeur":null} ; \xAB tr\xE8s rentables \xBB \u2192 {"indicateur":"marge","condition":"sup_mediane","valeur":null} ; \xAB les plus grosses \xBB \u2192 tri capitalisation desc.
+2. Comparer des entreprises nomm\xE9es : {"action":"comparer","noms":["LVMH","Herm\xE8s"]}. Noms courants : \xAB total \xBB = TotalEnergies, \xAB google \xBB = Alphabet, \xAB facebook \xBB = Meta, \xAB l'or\xE9al \xBB ou \xAB loreal \xBB = L'Or\xE9al, \xAB bnp \xBB = BNP Paribas, \xAB socgen \xBB = Soci\xE9t\xE9 G\xE9n\xE9rale, \xAB mcdo \xBB = McDonald's. Un ticker (NVDA, AAPL, TTE, MC) d\xE9signe l'entreprise.
+3. Ouvrir la fiche d'une entreprise ou d'un ETF nomm\xE9 : {"action":"fiche","nom":"Apple"}
+4. Chercher des ETF : {"action":"etf","titre":"\u2026","categorie":null ou "actions-monde"|"actions-usa"|"actions-europe"|"actions-france"|"actions-emergents"|"actions-asie"|"dividendes"|"obligations"|"monetaire"|"theme"|"immobilier"|"matieres"|"facteurs","pea":null ou true}. Inde, Chine, Cor\xE9e, Ta\xEFwan et Br\xE9sil sont dans "actions-emergents" ; le Japon dans "actions-asie" ; l'or dans "matieres" ; d\xE9fense, eau, semi-conducteurs, intelligence artificielle et sant\xE9 dans "theme".
+5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
+R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si la question demande une pr\xE9vision (\xAB va-t-elle monter \xBB, \xAB quel cours dans un an \xBB, \xAB quelle action va exploser \xBB) ou un conseil sans crit\xE8re (\xAB quoi acheter \xBB, \xAB la meilleure action \xBB), r\xE9ponds avec "repondre" : explique que personne ne peut pr\xE9voir les cours et donne la m\xE9thode (\xE9pargne de pr\xE9caution, horizon d'au moins 5 ans, diversification, versements r\xE9guliers). Si la demande contient des crit\xE8res (dividende, secteur, pays, dette, prix), choisis "filtre" ou "etf" avec un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). Si la question ne parle ni de Bourse, ni de placements, ni d'entreprises, r\xE9ponds avec "repondre" en une phrase : le site traite seulement de la Bourse et des placements. R\xE9ponds uniquement avec le JSON.
+${REPERES}
+${REGLES}`, EXPLIQUER = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas ; \xE9cris plut\xF4t \xAB Je ne suis pas s\xFBr : \u2026 \xBB et indique la source officielle o\xF9 le v\xE9rifier (service-public.fr, impots.gouv.fr, AMF, Banque de France). Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REPERES}
+${REGLES}`, ASSISTANT = `Tu es l'assistant du site d'information boursi\xE8re \xAB bilan. \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, \xE9volution sur plusieurs ann\xE9es avec son contexte dat\xE9 et sourc\xE9, comparaison au secteur, concurrents, cours, annonces r\xE9centes, actualit\xE9 qui la concerne, agenda, fiabilit\xE9 des donn\xE9es).
+R\xE8gles :
+- 60 \xE0 160 mots, phrases courtes, termes techniques expliqu\xE9s une fois.
+- Si les faits ne permettent pas de r\xE9pondre, dis-le simplement (\xAB Ce que je ne sais pas : \u2026 \xBB) et indique quelle rubrique du site ou quel document officiel regarder.
+- Si la liste \xAB fiabilite_des_donnees \xBB signale un point qui touche ta r\xE9ponse (comptes anciens, dividende estim\xE9, m\xE9diane sur peu d'entreprises), termine par une phrase \xAB Je ne suis pas s\xFBr : \u2026 \xBB qui le dit.
+- Pour une question d'actualit\xE9 ou sur l'\xE9volution des chiffres, utilise \xAB actualite_qui_la_concerne \xBB et \xAB evolution_pluriannuelle \xBB : cite la date de v\xE9rification, et rappelle que le site ne mesure pas la part exacte de ces \xE9v\xE9nements dans les r\xE9sultats.
+- N'invente aucun chiffre ni aucune information. Cite les chiffres avec leur ann\xE9e.
+- Aucun conseil d'achat ou de vente, aucune pr\xE9diction de cours, aucun objectif de prix. Si on te demande \xAB faut-il acheter ? \xBB, explique les \xE9l\xE9ments \xE0 regarder (points forts, points de vigilance, prix par rapport aux b\xE9n\xE9fices) sans trancher, et rappelle que ce n'est pas un conseil.
+- Vouvoie toujours le lecteur.
+- La dette se mesure en ann\xE9es de r\xE9sultat d'exploitation avant amortissements (pas de b\xE9n\xE9fice net) : reprends exactement l'unit\xE9 donn\xE9e dans les faits.
+- Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses onglets : \xAB Vue d'ensemble \xBB, \xAB Crit\xE8re par crit\xE8re \xBB, \xAB Tous les chiffres \xBB, \xAB Actualit\xE9s \xBB, ou le bouton \xAB Comparer \xE0 ses concurrents \xBB.
+- Pas de listes \xE0 puces, pas de tirets cadratins.
+${REGLES}`, COMPARAISON = `Tu expliques, en fran\xE7ais, la comparaison de plusieurs entreprises cot\xE9es \xE0 une personne qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : pour chaque entreprise, les chiffres de son dernier exercice publi\xE9 (ventes en euros, croissance, marges, rentabilit\xE9 des capitaux propres, dette, prix en Bourse rapport\xE9 au b\xE9n\xE9fice, dividende), la m\xE9diane de son secteur, et le verdict d\xE9j\xE0 calcul\xE9 par le site crit\xE8re par crit\xE8re.
+R\xE8gles :
+- N'utilise que ces faits. N'invente aucun chiffre, aucune cause, aucune actualit\xE9. Cite les chiffres avec l'ann\xE9e de leur exercice.
+- 150 \xE0 230 mots, en trois courts paragraphes pr\xE9c\xE9d\xE9s exactement de ces titres, chacun sur sa propre ligne : \xAB En r\xE9sum\xE9 \xBB, \xAB Ce qui les distingue \xBB, \xAB Ce qu'il faut regarder ensuite \xBB.
+- Explique ce que chaque \xE9cart veut dire concr\xE8tement (par exemple : une marge plus \xE9lev\xE9e signifie que l'entreprise garde plus d'argent sur chaque vente) et ce qui peut l'expliquer, en restant prudent (m\xE9tier diff\xE9rent, taille, pays, ann\xE9e d'exercice diff\xE9rente).
+- Signale quand les exercices ne portent pas sur la m\xEAme ann\xE9e, quand une entreprise est une banque ou un assureur (la marge et la dette ne s'y lisent pas pareil) ou quand des chiffres manquent.
+- Un prix bas par rapport au b\xE9n\xE9fice n'est pas une bonne affaire en soi ; un prix \xE9lev\xE9 traduit souvent des attentes de croissance plus fortes.
+- Aucun conseil d'achat ou de vente, aucun classement de la \xAB meilleure action \xBB, aucune pr\xE9diction de cours. Vouvoie toujours le lecteur.
+- Ne cite jamais le nom d'un champ JSON. Pas de listes \xE0 puces, pas de tirets cadratins.
+${REGLES}`, VEILLE = `Tu \xE9cris, en fran\xE7ais, le bilan d'une liste d'entreprises suivies par un particulier qui d\xE9bute en Bourse.
+Tu re\xE7ois des faits en JSON (variations de cours, annonces r\xE9centes r\xE9sum\xE9es, prochaines dates). R\xE8gles :
+- N'utilise que ces faits. N'invente aucun chiffre, aucune explication de mouvement de cours qui ne figure pas dans les faits ; si la cause d'un mouvement n'est pas connue, dis-le.
+- 150 \xE0 250 mots, en quatre courts paragraphes titr\xE9s : \xAB En r\xE9sum\xE9 \xBB, \xAB Ce qui a boug\xE9 \xBB, \xAB Ce qui a \xE9t\xE9 annonc\xE9 \xBB, \xAB \xC0 venir \xBB.
+- Explique ce que veut dire un mouvement (par exemple : une baisse de 8 % en une semaine est importante pour une grande entreprise).
+- Mets en garde, sans dramatiser, si une ligne concentre l'attention (forte baisse, r\xE9sultats imminents).
+- Aucun conseil d'achat ou de vente. Pas de tirets cadratins, pas de listes \xE0 puces.
+${REGLES}`, PORTEFEUILLE = `Tu expliques, en fran\xE7ais, le portefeuille d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON, tous d\xE9j\xE0 calcul\xE9s : lignes (poids, plus-values, compte PEA ou compte-titres, \xE9ligibilit\xE9 au PEA), score de diversification et ses rep\xE8res, premi\xE8res expositions une fois les ETF ouverts, pays, devises, secteurs, comptes, chevauchements d'ETF, frais (courtage pay\xE9 et sa part des achats, achats o\xF9 les frais d\xE9passent 1 %, frais annuels des ETF, co\xFBt sur 10 ans \xE0 valeur constante), dividendes estim\xE9s, versements, horizon et profil, remarques.
+R\xE8gles :
+- N'utilise que ces faits, n'invente aucun chiffre, ne refais aucun calcul.
+- 180 \xE0 260 mots, en quatre courts paragraphes titr\xE9s : \xAB En bref \xBB, \xAB Ce qui ressort \xBB, \xAB Points d'attention \xBB, \xAB \xC0 suivre \xBB. Vouvoiement, phrases courtes.
+- Explique simplement, quand c'est pertinent : la diversification, la concentration sur une ligne ou une entreprise, le poids d'un pays ou d'une devise (m\xEAme dans un ETF cot\xE9 en euros), le recouvrement de deux ETF, l'effet des frais fixes sur les petits ordres, le lien entre l'horizon et la part d'actions, l'int\xE9r\xEAt fiscal du PEA.
+- Aucun conseil d'achat ou de vente, aucune recommandation de ligne pr\xE9cise, aucune pr\xE9diction. Tu peux rappeler des rep\xE8res g\xE9n\xE9raux (par exemple : une action seule au-del\xE0 de 10 % du portefeuille augmente le risque).
+- Pas de tirets cadratins, pas de listes \xE0 puces.
+${REGLES}`, ANNONCE = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse une annonce officielle d'une entreprise cot\xE9e. Tu re\xE7ois des faits en JSON (type d'annonce, titre officiel, chiffres extraits du communiqu\xE9, phrases du communiqu\xE9, derniers comptes annuels).
+R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
+- "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annonc\xE9, avec les chiffres fournis et leur p\xE9riode, et expliquent chaque terme technique.
+- "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
+- Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
+- Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
+${REGLES}`, BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation m\xE9diane de secteurs entiers.
+R\xE8gles strictes :
+- Explique la semaine de fa\xE7on factuelle et p\xE9dagogique, en 120 \xE0 220 mots, en deux ou trois courts paragraphes de texte suivi.
+- Vouvoie le lecteur.
+- Cite uniquement des chiffres pr\xE9sents dans les faits. N'invente aucun chiffre et aucune cause \xE0 un mouvement de cours : si la cause n'est pas dans les faits, dis qu'elle n'est pas connue.
+- Explique simplement ce que repr\xE9sente un mouvement (par exemple : 8 % en une semaine, c'est beaucoup pour une grande entreprise).
+- Aucun conseil d'achat ou de vente, aucune recommandation, aucune pr\xE9diction sur les cours.
+- Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REGLES}`, SOURCES2 = "Sources : termine par une ligne qui commence exactement par \xAB Sources : \xBB et reprend, en peu de mots, les sources de la liste \xAB sources \xBB des faits que tu as utilis\xE9es (par exemple \xAB comptes annuels 2024 publi\xE9s par l'entreprise (ESEF), cours du 28 octobre 2026 \xBB). N'ajoute aucune source qui n'est pas dans cette liste.", S = (t) => t + `
+` + SOURCES2, CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN) };
+
+// cf/src/iasite.mjs
+var MODELES = [
+  ["@cf/qwen/qwen3-30b-a3b-fp8", 4625, 30475, "Qwen3 30B"],
+  ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488, "Mistral Small 3.1"]
+], jour = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), jetons = (s) => Math.ceil(String(s).length / 3.2), nettoie = (t) => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/g, "").replace(/—/g, ",").replace(/\*\*/g, "").trim(), json4 = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } }), pret = !1;
+async function init6(db) {
+  pret || !db || (await db.prepare("CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))").run(), pret = !0);
+}
+var NEURONES_GRATUITS_JOUR = 1e4, NEURONES_PAR_EURO = 99e3;
+async function niveau(request, env) {
+  let p = await premiumOf(request, env).catch(() => null), c = p ? null : await sessionCompte(request, env).catch(() => null);
+  return p ? { niveau: "premium", h: "p:" + String(p.token).slice(0, 24) } : c && c.id ? { niveau: "compte", h: "c:" + c.id } : { niveau: "visiteur", h: await visitor(request, env) };
+}
+async function compteurs(env, h) {
+  if (!env.DB) return { erreur: !0, neurones: 0, questions: 0 };
+  try {
+    await init6(env.DB);
+    let a = await env.DB.prepare("SELECT n FROM ia_neurones WHERE jour = ?").bind(jour()).first(), b = await env.DB.prepare("SELECT n FROM ia_visiteurs WHERE jour = ? AND h = ?").bind(jour(), h).first(), m = await env.DB.prepare("SELECT SUM(MAX(n - ?, 0)) AS p FROM ia_neurones WHERE jour LIKE ?").bind(NEURONES_GRATUITS_JOUR, jour().slice(0, 7) + "%").first();
+    return { neurones: a && a.n || 0, questions: b && b.n || 0, payes_mois: m && m.p || 0 };
+  } catch (e) {
+    return { erreur: !0, neurones: 0, questions: 0, detail: String(e && e.message || e) };
+  }
+}
+async function compter(env, h, neurones) {
+  env.DB && (await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(jour(), neurones, neurones).run(), await env.DB.prepare("INSERT INTO ia_visiteurs (jour, h, n) VALUES (?, ?, 1) ON CONFLICT (jour, h) DO UPDATE SET n = n + 1").bind(jour(), h).run(), Math.random() < 0.05 && await env.DB.prepare("DELETE FROM ia_visiteurs WHERE jour < ?").bind(jour()).run());
+}
+var plafonds = (env) => ({
+  neurones: +env.IA_NEURONES_JOUR || 9e3,
+  budget: Math.max(0, +env.IA_BUDGET_MOIS || 0) * NEURONES_PAR_EURO,
+  questions: { visiteur: +env.IA_QUESTIONS_JOUR || 3, compte: +env.IA_QUESTIONS_COMPTE || 10, premium: +env.IA_QUESTIONS_PREMIUM || 150 }
+}), siteOk = (c, P, marge) => c.neurones + marge < P.neurones || P.budget > 0 && c.payes_mois + marge < P.budget;
+async function iaSite(request, env) {
+  let url = new URL(request.url), P = plafonds(env), { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv];
+  if (url.pathname === "/api/ia/etat") {
+    if (!env.AI) return json4({ disponible: !1, raison: "absente", niveau: nv });
+    let c2 = await compteurs(env, h);
+    if (c2.erreur) return json4({ disponible: !1, raison: "compteur", detail: c2.detail, niveau: nv });
+    let epuise = nv !== "premium" && !siteOk(c2, P, 300);
+    return json4({ disponible: !epuise && c2.questions < plafond, reste_visiteur: Math.max(0, plafond - c2.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions });
+  }
+  if (url.pathname !== "/api/ia/rediger") return json4({ error: "Introuvable" }, 404);
+  if (request.method !== "POST") return json4({ error: "M\xE9thode non permise" }, 405);
+  if (!env.AI) return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment." }, 503);
+  let b;
+  try {
+    b = await request.json();
+  } catch {
+    return json4({ error: "Requ\xEAte illisible" }, 400);
+  }
+  let sys = CONSIGNES[b && b.tache];
+  if (!sys) return json4({ error: "T\xE2che inconnue" }, 400);
+  let user = String(b.user || "").slice(0, 15e3), max = Math.min(Math.max(+b.max || 600, 200), 900);
+  if (user.length < 3) return json4({ error: "Question vide" }, 400);
+  let c = await compteurs(env, h);
+  if (c.erreur) return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
+  if (c.questions >= plafond) return json4({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez pos\xE9 ${plafond} questions \xE0 l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.` : `Vous avez pos\xE9 vos ${plafond} questions r\xE9dig\xE9es du jour. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain.` }, 429);
+  let messages = [{ role: "system", content: sys }, { role: "user", content: user }];
+  for (let [model, cin, cout, nom] of MODELES) {
+    let estime = (jetons(sys + user) * cin + max * cout) / 1e6;
+    if (!(nv !== "premium" && !siteOk(c, P, estime)))
+      try {
+        let msgs = model.includes("qwen3") ? [messages[0], { role: "user", content: user + `
+/no_think` }] : messages, out = await env.AI.run(model, { messages: msgs, max_tokens: max, temperature: 0.2 }), raw = out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content), txt = nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+        try {
+          await compter(env, h, reel);
+        } catch {
+          return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment (compteur en panne)." }, 503);
+        }
+        if (txt.length > 15) return json4({ txt, modele: nom });
+      } catch {
+      }
+  }
+  return json4({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les r\xE9ponses calcul\xE9es restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain." }, 429);
+}
+
 // cf/src/worker.mjs
 var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS2 = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc3 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path, q = null) {
@@ -2544,7 +2749,9 @@ function meta(path, q = null) {
   if (p === "/dividendes") return { title: `Dividendes : calendrier, rendements et simulateur \xB7 ${SITE}`, desc: "Les prochaines dates de d\xE9tachement et de paiement, les plus hauts rendements avec leur garde-fou, les dividendes relev\xE9s chaque ann\xE9e et ce que vous toucheriez en PEA ou compte-titres." };
   if (p === "/classements") return { title: `Classements des entreprises \xB7 ${SITE}`, desc: "Les entreprises qui cumulent le plus de points forts, restent en t\xEAte de leur secteur, augmentent leurs ventes ou rel\xE8vent leur dividende chaque ann\xE9e, calcul\xE9es sur leurs comptes officiels." };
   if (p === "/decouvertes") return { title: `D\xE9couvertes du jour \xB7 ${SITE}`, desc: "Chaque jour, des petites et moyennes entreprises d'Europe et du monde, et des ETF \xE9ligibles au PEA : activit\xE9, chiffres, valorisation, catalyseurs et risques, sources \xE0 l'appui. Sans conseil d'achat." };
-  if (p === "/pour-moi") return { title: `Des pistes adapt\xE9es \xE0 votre profil \xB7 ${SITE}`, desc: "Une r\xE9partition indicative en fourchettes, des ETF et des entreprises \xE0 \xE9tudier selon votre horizon, votre tol\xE9rance au risque et votre compte (PEA, compte-titres). P\xE9dagogique, pas un conseil en investissement." };
+  if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple \xB7 ${SITE}`, desc: "Le vrai rapport hebdomadaire de bilan., calcul\xE9 avec les chiffres de cette semaine pour un profil fictif : variations, annonces, dates \xE0 venir, et ce que vous pouvez y r\xE9gler." };
+  if (p === "/repartitions") return { title: `R\xE9partitions types et listes par crit\xE8res \xB7 ${SITE}`, desc: "Des exemples de r\xE9partition entre actions, obligations et placements sans risque de perte, expliqu\xE9s avec leurs limites, et des listes d'ETF et d'entreprises tri\xE9es sur les crit\xE8res que vous choisissez. Information p\xE9dagogique, pas un conseil." };
+  if (p === "/plan") return { title: `Plan du site \xB7 ${SITE}`, desc: "Toutes les pages de bilan., rang\xE9es en quatre rubriques : D\xE9couvrir, Explorer, Analyser et Mon espace." };
   if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre \xB7 ${SITE}`, desc: "Le chemin pour apprendre : par o\xF9 commencer, les cours de l'Acad\xE9mie (l'essentiel en 3 \xE9tapes et le cours complet), le lexique et les outils p\xE9dagogiques, gratuits." };
   if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 \xE9tapes \xB7 L'Acad\xE9mie \xB7 ${SITE}`, desc: "La version courte de l'Acad\xE9mie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en le\xE7ons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
@@ -2554,13 +2761,13 @@ function meta(path, q = null) {
     let mi = p.match(/^\/indice\/([a-z0-9]+)$/);
     if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir \xB7 ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqu\xE9 simplement : sa r\xE8gle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, class\xE9s par frais.` };
   }
-  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/espace/ia" ? { title: `Mon IA \xB7 ${SITE}`, desc: "Les r\xE9ponses calcul\xE9es du site, gratuites et sans limite, et \xAB Connecter mon IA \xBB : votre compte OpenRouter, des mod\xE8les gratuits au choix, la cl\xE9 gard\xE9e dans votre navigateur." } : p === "/connecteur" ? { title: `Utiliser bilan. dans ChatGPT ou Claude \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/espace/ia" ? { title: `Mon IA \xB7 ${SITE}`, desc: "Les r\xE9ponses calcul\xE9es du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni cl\xE9." } : p === "/connecteur" ? { title: `Utiliser bilan. dans ChatGPT ou Claude \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 function redirectionParcours(p) {
   let m = /^\/debuter(\/.*)?$/.exec(p || "");
-  return m ? "/academie/express" + (m[1] || "") : p === "/premiers-pas" ? "/academie/express" : null;
+  return m ? "/academie/express" + (m[1] || "") : p === "/premiers-pas" ? "/academie/express" : p === "/simulateurs/passe" ? "/outils/si-javais" : p === "/pour-moi" ? "/repartitions" : null;
 }
-var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair|ia\/etat)\/?$/, iaRetiree = () => Response.json({ error: "Le site ne r\xE9dige plus de texte avec une IA. Les r\xE9ponses calcul\xE9es restent disponibles ; pour une r\xE9ponse r\xE9dig\xE9e, connectez votre IA (bouton \u2726).", ia_serveur: !1 }, { status: 410, headers: { "cache-control": "no-store" } }), worker_default = {
+var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree = () => Response.json({ error: "Cette adresse n'est plus utilis\xE9e. L'IA du site r\xE9pond dans le panneau \u2726 \xAB Demander \xE0 l'IA \xBB", ia_serveur: !1 }, { status: 410, headers: { "cache-control": "no-store" } }), worker_default = {
   async fetch(request, env, ctx) {
     let url = new URL(request.url);
     if (url.pathname === "/api/amf") return amf(request, index_gen_default.filter((c) => c.region === "FR").map((c) => c.isin));
@@ -2568,11 +2775,13 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair|ia\/etat)\/?$/, 
     if (url.pathname === "/api/presse") return presse(request, index_gen_default);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (IA_RETIREE.test(url.pathname)) return iaRetiree();
+    if (url.pathname.startsWith("/api/ia/")) return iaSite(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
+    if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
@@ -2597,9 +2806,22 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair|ia\/etat)\/?$/, 
       }
     return html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc3(t.title)}</title>`).replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc3(t.desc)}">
 <link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `
-<script type="application/ld+json">${t.ld}<\/script>` : ""}`), html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 }), new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION } });
+<script type="application/ld+json">${t.ld}<\/script>` : ""}`), html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url)}</div>`), html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 }), new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION, ...SECURITE } });
   }
-};
+}, fmtM = (v, cur) => v == null || !isFinite(v) ? null : (Math.abs(v) >= 1e3 ? (v / 1e3).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " Md" : v.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " M") + " " + (cur === "EUR" ? "\u20AC" : cur === "USD" ? "$" : cur || "");
+async function rendu(t, fq, env, url) {
+  let corps = "";
+  if (fq)
+    try {
+      let r = await env.ASSETS.fetch(new Request(new URL(`/data/societes/${fq[1]}.json`, url)));
+      if (r.ok && (r.headers.get("content-type") || "").includes("json")) {
+        let c = await r.json(), f = c.fin || {}, n = (c.years || []).length - 1, y = c.years ? c.years[n] : null, L = [], v = (k) => Array.isArray(f[k]) ? f[k][n] : null;
+        y != null && (v("ca") != null && L.push(["Chiffre d'affaires", fmtM(v("ca"), c.currency)]), v("ebit") != null && L.push(["R\xE9sultat d'exploitation", fmtM(v("ebit"), c.currency)]), v("net") != null && L.push(["R\xE9sultat net", fmtM(v("net"), c.currency)]), v("netDebt") != null && L.push([v("netDebt") < 0 ? "Tr\xE9sorerie nette" : "Dette nette", fmtM(Math.abs(v("netDebt")), c.currency)]), v("divPaid") != null && L.push(["Dividendes vers\xE9s", fmtM(v("divPaid"), c.currency)]), corps = `<h2>Comptes de l'exercice ${esc3(String(y))}</h2><ul>${L.map(([k, x]) => `<li>${esc3(k)} : ${esc3(x)}</li>`).join("")}</ul><p>Source : comptes annuels officiels (${c.cik ? "SEC" : "ESEF"}).</p>`);
+      }
+    } catch {
+    }
+  return `<div class="ssr"><h1>${esc3(t.title.replace(/ · .*$/, ""))}</h1><p>${esc3(t.desc)}</p>${corps}<p class="ssr-js">Le site a besoin de JavaScript pour afficher l'analyse compl\xE8te, les graphiques et les comparaisons. S'il ne s'affiche pas, rechargez la page.</p></div>`;
+}
 async function tacheEtPush(request, env, url) {
   let r = await espace(request, env);
   if (r.status !== 200) return r;
