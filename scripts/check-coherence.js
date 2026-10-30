@@ -14,13 +14,16 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
     if (c.prix && norm(c.prix) !== norm(f.prix)) err.push(`${c.id} : cours « ${norm(c.prix)} » sur l'accueil, « ${norm(f.prix)} » sur la fiche`);
     if (c.pts.length && c.pts.join("/") !== f.pts.join("/")) err.push(`${c.id} : points ${c.pts.join("/")} sur l'accueil, ${f.pts.join("/")} sur la fiche`);
   }
-  if (ex) {
-    await aller(p, "/entreprise/" + ex.id, 3000);
-    const figs = await p.$$eval("#retenir .rf6-fig", L => L.map(f => [f.querySelector("small").textContent, f.querySelector("b").textContent]));
-    const per = await p.$eval(".rf6-mods", () => { const f = [...document.querySelectorAll(".rf6-fig")].find(x => x.querySelector("small").textContent === "PER"); return f ? f.querySelector("b").textContent : null; }).catch(() => null);
+  if (ex) { // l'exemple de l'accueil contre la fiche : marge d'exploitation (tuile « marge ») et PER (section Valorisation), comparés en nombre
+    await aller(p, "/entreprise/" + ex.id, 3500);
+    const f = await p.evaluate(() => { document.querySelectorAll("#tous-les-chiffres details").forEach(d => d.open = true);
+      const k = document.querySelector('.rf-kt[data-g="marge"] b'), v = document.querySelector("#rf-valorisation");
+      const per = v && (v.innerText.match(/PER\s*\n?\s*i?\s*\n?\s*(\d+(?:[,.]\d+)?)/) || v.innerText.match(/coûte (\d+) fois/) || [])[1];
+      return { marge: k ? k.textContent : null, per: per || null }; });
+    const num = t => { const m = String(t || "").replace(/\s/g, "").match(/-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; };
     for (const [l, v] of ex.lignes) {
-      if (l === "Marge d'exploitation") { const f = figs.find(x => x[0] === l); if (!f) err.push(`${ex.id} : « ${l} » absent de la fiche`); else if (norm(f[1]) !== norm(v)) err.push(`${ex.id} : ${l} « ${norm(v)} » sur l'accueil, « ${norm(f[1])} » sur la fiche`); }
-      if (/PER/.test(l)) { const n = v.match(/\d+/); if (!per || !n || !per.startsWith(n[0])) err.push(`${ex.id} : PER « ${norm(v)} » sur l'accueil, « ${norm(per)} » sur la fiche`); }
+      if (l === "Marge d'exploitation") { if (f.marge == null) err.push(`${ex.id} : marge absente de la fiche`); else if (Math.round(num(f.marge)) !== Math.round(num(v))) err.push(`${ex.id} : ${l} « ${norm(v)} » sur l'accueil, « ${norm(f.marge)} » sur la fiche`); }
+      if (/PER/.test(l)) { if (f.per == null) err.push(`${ex.id} : PER absent de la fiche`); else if (Math.round(num(f.per)) !== Math.round(num(v))) err.push(`${ex.id} : PER « ${norm(v)} » sur l'accueil, « ${norm(f.per)} » sur la fiche`); }
     }
     if (!ex.lignes.some(([l]) => l === "Marge d'exploitation")) err.push(`${ex.id} : l'exemple n'affiche pas la marge d'exploitation`);
   }
