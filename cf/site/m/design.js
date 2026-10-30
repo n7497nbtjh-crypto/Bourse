@@ -222,3 +222,26 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .cm3-v{font-family:var(--mono);font-weight:500;font-size:34px;line-height:1;margin-top:10px}.cm3-u{font-size:13px;color:var(--grey)}.cm3-d{font-size:14px;line-height:1.5;color:var(--grey);margin-top:8px;flex:1}.cm3-l{font-size:13.5px;font-weight:600;margin-top:8px}
 @media (max-width:760px){.cm3{grid-template-columns:minmax(0,1fr)}.cm3-c{min-height:0}.cm3-v{font-size:28px}}
 </style>`);
+/* Page Outils : quatre groupes, descriptions entières (30/10, Romain : « trop d'outils ») */
+(function () {
+  const G = [
+    ["Mon argent", "Combien, à quel rythme, avec quels frais", [["/simulateurs", "Simulateur d'épargne", "Versements mensuels, frais réels, impôt PEA ou compte-titres, trois scénarios tirés de l'histoire."], ["/simulateurs/frais", "Le même plan chez chaque courtier", "Ce que coûtent le courtage et les frais du fonds sur toute la durée."], ["/outils/si-javais", "Et si j'avais investi ?", "Une somme placée il y a 1, 3 ou 5 ans, comparée à un indice, au livret A et à la hausse des prix."], ["/livret-a-ou-bourse", "Livret A ou Bourse", "Ce que chacun a rapporté, et ce que chacun fait perdre certaines années."]]],
+    ["Mon portefeuille", "Ce que vous possédez vraiment", [["/portefeuille", "Radiographie de portefeuille", "Vos ETF ouverts : entreprises, pays, frais, dividendes, concentration."], ["/outils/recouvrement", "Mes ETF se recouvrent-ils ?", "2 à 4 ETF : positions communes, poids en double, secteurs et devises combinés."], ["/dividendes", "Calendrier des dividendes", "Détachements et paiements à venir, à ajouter à votre agenda."], ["/repartitions", "Répartitions types", "Des exemples de répartition expliqués, sans conseil."]]],
+    ["Les entreprises", "Trouver, comparer, classer", [["/comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face à la médiane du secteur."], ["/classements", "Classements", "Celles qui cumulent le plus de points forts dans leur secteur."], ["/decouvertes", "Découvertes du jour", "Six entreprises moins connues dont les comptes ressortent."], ["/repartitions#listes", "Listes par critères", "Entreprises et ETF triés selon un critère : dividende, croissance, frais."]]],
+    ["Se protéger, apprendre", "Avant de signer quoi que ce soit", [["/outils/verifier", "Vérifier un site ou une offre", "Le nom comparé aux listes noires de l'AMF, mises à jour chaque jour."], ["/commencer", "Par où commencer", "Trois choses avant d'investir, puis le détail en sept étapes."], ["/pea-cto", "PEA ou compte-titres", "Ce qu'on peut y mettre et l'impôt, en 2026."], ["/apprendre", "L'Académie", "Des leçons courtes par niveau, avec des quiz."]]],
+  ];
+  const p0 = window.pageOutils;
+  if (typeof p0 !== "function") return;
+  window.pageOutils = function (t) {
+    if (t) return p0.apply(this, arguments);
+    setNav("sim"); setTitle("Outils");
+    app.innerHTML = `<h1 class="pagetitle">Les outils</h1><p class="pagesub">Des calculs et des comparaisons, hypothèses affichées, jamais de conseil. Quatre familles.</p>
+      ${G.map(([t, s, L]) => `<section class="ot-g"><div class="ot-h"><h2>${esc(t)}</h2><span>${esc(s)}</span></div><div class="ot-l">${L.map(([h, n, d]) => `<a class="ot-i" href="${h}"><b>${esc(n)}</b><span>${esc(d)}</span></a>`).join("")}</div></section>`).join("")}`;
+  };
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.ot-g{margin:22px 0 0;border-top:1px solid var(--ink);padding-top:10px}.ot-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 8px}.ot-h h2{font-family:var(--serif);font-weight:800;font-size:22px;margin:0}.ot-h span{font-size:13px;color:var(--grey)}
+.ot-l{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0}.ot-i{display:flex;flex-direction:column;gap:4px;padding:14px 18px 14px 0;border-top:1px solid var(--rule);border-right:1px solid var(--rule);color:var(--ink);text-decoration:none;min-width:0}.ot-i:nth-child(n+2){padding-left:18px}.ot-i:last-child{border-right:0}.ot-i b{font-size:15.5px}.ot-i span{font-size:13.5px;line-height:1.5;color:var(--grey)}.ot-i:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+@media (max-width:900px){.ot-l{grid-template-columns:repeat(2,minmax(0,1fr))}.ot-i:nth-child(2n){border-right:0}.ot-i:nth-child(2n+1){padding-left:0}.ot-i:nth-child(2n){padding-left:18px}}
+@media (max-width:560px){.ot-l{grid-template-columns:minmax(0,1fr)}.ot-i{border-right:0;padding-left:0!important}}
+</style>`);
+})();
