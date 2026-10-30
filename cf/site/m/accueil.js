@@ -289,10 +289,10 @@ function accDateline(date) { // ligne de une : la date et quatre indices, comme 
   return `<div class="acc-date"><span class="acc-dd">${esc(date)}</span>${rows.length ? `<span class="acc-didx">${rows.map(r => `<a href="/indice/${r.id}">${esc(r.name)} <b class="${accCls(r.p.chg)}">${accPct(r.p.chg)}</b></a>`).join("")}<a class="acc-dall" href="/marches">Tous les marchés →</a></span>` : ""}</div>`;
 }
 const ACC_VOIES = [
-  ["/apprendre", "Découvrir", "L'Académie en huit modules, le PEA et le compte-titres expliqués, par où commencer."],
-  ["/entreprises", "Explorer", "Les entreprises par secteur, les ETF, les médianes qui servent de repère."],
-  ["/comparer", "Analyser", "Une fiche par entreprise : le verdict d'abord, le détail ensuite, les sources affichées."],
-  ["/rapport-exemple", "Mon espace", "Vos favoris, votre portefeuille et, chaque semaine, un rapport sur vos titres."],
+  ["/commencer", "Découvrir", "Trois choses avant d'investir, puis l'Académie."],
+  ["/entreprises", "Explorer", "2 852 entreprises et 1 134 ETF, chacun face à son secteur."],
+  ["/outils", "Analyser", "Comparer, simuler, vérifier : les outils."],
+  ["/rapport-exemple", "Mon espace", "Vos favoris et, chaque semaine, un rapport sur vos titres."],
 ];
 function accVoiesHTML() {
   return `<ol class="acc-voies" aria-label="Quatre entrées">${ACC_VOIES.map(([h, t, d], i) => `<li><a href="${h}"><span class="acc-vn">0${i + 1}</span><span class="acc-vt"><b>${t}</b><span>${d}</span></span><span class="acc-va" aria-hidden="true">→</span></a></li>`).join("")}</ol>`;

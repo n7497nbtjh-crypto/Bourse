@@ -52,15 +52,15 @@ const NAV = [
     items: [
       ["/comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face au secteur"],
       ["/portefeuille", "Mon portefeuille", "Frais réels, doublons d'ETF, concentration"],
-      ["/simulateurs/epargne", "Simulateurs", "Épargne, frais du courtier, PEA ou compte-titres"],
+      ["/outils", "Les outils", "Simulateurs, vérification d'une offre, recouvrement d'ETF : tout au même endroit"],
       ["/demander", "Demander à l'IA", "Une question libre, une réponse calculée sur les comptes"],
     ],
     aussi: [
+      ["/simulateurs/epargne", "Simulateur d'épargne"],
       ["/outils/verifier", "Vérifier une offre (listes noires AMF)"],
       ["/outils/si-javais", "Et si j'avais investi ?"],
       ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?"],
       ["/repartitions", "Listes par critères"],
-      ["/outils", "Tous les outils"],
     ],
   },
   {
@@ -92,19 +92,18 @@ const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));
 const navLib = t => t === "@esp" ? `<span class="esplbl">Se connecter</span>` : navEsc(t); // « Se connecter » ou « Mon espace » selon la session (espaceBadge)
 function navMenuHTML(g) { // panneau déroulant d'une rubrique (ordinateur)
   return `<div class="ddm">${g.items.map(([h, t, d]) => `<a href="${h}"><b>${navLib(t)}</b><span>${navEsc(d)}</span></a>`).join("")}
-    ${g.aussi && g.aussi.length ? `<p class="ddx">Aussi : ${g.aussi.map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("")}</p>` : ""}</div>`;
+    </div>`; // 30/10 (Romain) : quatre choix par rubrique, rien d'autre ; le reste est dans le plan du site en bas de page
 }
 function navBarreHTML() {
   const esp = NAV.find(g => g.compte);
   return NAV.filter(g => !g.compte).map(g => `<div class="dd" data-g="${g.k}"><button type="button" aria-expanded="false">${navEsc(g.label)}</button>${navMenuHTML(g)}</div>`).join("")
-    + `<a href="/demander" data-nav="ia" class="navia" title="Poser une question : la réponse est calculée sur les comptes officiels">✦ Demander à l'IA</a>`
     + `<a href="/favoris" data-nav="fav" class="navfav" title="Mes favoris"><span class="st">★</span><span class="lb">Favoris</span><span class="favn"></span></a>`
     + (esp ? `<div class="dd" data-g="esp"><button type="button" aria-expanded="false">Mon espace<span class="espn"></span></button>${navMenuHTML(esp)}</div>` : "")
     + `<a href="/premium" data-nav="prem" class="navprem">Premium</a>`;
 }
 function navPanneauHTML() { // menu du téléphone
   return `<a href="/demander"><b>✦ Demander à l'IA</b></a><a href="/favoris"><b>★ Mes favoris</b> <span class="favn"></span></a><a href="/espace"><b class="esplbl">Se connecter</b> <span class="espn"></span></a>`
-    + NAV.map(g => `<p class="mg">${navEsc(g.label)}</p>${g.items.filter(([h, t]) => t !== "@esp" && h !== "/favoris").map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("")}${g.aussi && g.aussi.length ? `<p class="mx">${g.aussi.map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("")}</p>` : ""}`).join("");
+    + NAV.map(g => `<p class="mg">${navEsc(g.label)}</p>${g.items.filter(([h, t]) => t !== "@esp" && h !== "/favoris").map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("")}`).join("");
 }
 function navPiedHTML() { // pied de page : plan du site en quatre colonnes, puis les pages institutionnelles
   return `<nav class="navpied" aria-label="Plan du site">${NAV.map(g => `<div><p>${navEsc(g.label)}</p>${[...g.items, ...(g.aussi || [])].map(([h, t]) => `<a href="${h}">${navEsc(t === "@esp" ? "Mon espace" : t)}</a>`).join("")}</div>`).join("")}</nav>
