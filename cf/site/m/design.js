@@ -260,3 +260,13 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 @media (max-width:760px){.ent-plus{grid-template-columns:minmax(0,1fr)}.ent-plus a{border-right:0;border-bottom:1px solid var(--rule);padding-left:0!important}.ent-plus a:last-child{border-bottom:0}}
 </style>`);
 })();
+/* Page ETF : trois entrées en tête (30/10) */
+(function () {
+  const f0 = window.pageEtfs; if (typeof f0 !== "function") return;
+  window.pageEtfs = function () {
+    const r = f0.apply(this, arguments);
+    const sub = $(".pagesub", app);
+    if (sub && !$(".ent-plus", app)) sub.insertAdjacentHTML("afterend", `<div class="ent-plus"><a href="/academie/placements/etf"><b>Comprendre un ETF</b><span>Une leçon de trois minutes : ce que c'est, ce que ça coûte</span></a><a href="/etf?pea=1"><b>Éligibles au PEA</b><span>Ceux qu'un PEA peut contenir, avec leurs frais</span></a><a href="/outils/recouvrement"><b>Deux ETF se recouvrent-ils ?</b><span>Positions en double, secteurs et devises combinés</span></a></div>`);
+    return r;
+  };
+})();
