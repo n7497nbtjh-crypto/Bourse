@@ -531,7 +531,7 @@ function parAssistant(el, m, J, fin) {
         ${parGroupe(i, R, max)}
         <div class="par-act">${i ? `<button type="button" class="btn ghost" id="parprev">Retour</button>` : `<button type="button" class="linkbtn" id="parlater">Plus tard</button>`}<span class="sp"></span><button class="btn" id="parnext">${i < 2 ? "Continuer" : "Créer mon rapport"}</button></div>
         <p class="par-msg" id="parmsg" aria-live="polite"></p></form>
-      <aside class="par-card par-sum"><p class="kick">Votre rapport</p><div id="parsum">${parResumeHTML(R)}</div><p class="note" style="margin:10px 0 0">Modifiable à tout moment dans l'onglet « Mon rapport ». Information factuelle, sans conseil d'investissement.</p></aside></div>`;
+      <aside class="par-card par-sum"><p class="kick">Votre rapport</p><div id="parsum">${parResumeHTML(R)}</div><p class="note" style="margin:10px 0 0">Modifiable à tout moment dans Mon espace › Mon rapport. Information factuelle, sans conseil d'investissement.</p></aside></div>`;
     const f = $("#parwf");
     parLimiteSecteurs(f, max);
     f.onchange = () => { R = parLire(f, R); parLimiteSecteurs(f, max); $("#parsum").innerHTML = parResumeHTML(R); };

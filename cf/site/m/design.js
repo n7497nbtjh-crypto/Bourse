@@ -350,7 +350,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
   const r0 = window.cmprRender; if (typeof r0 !== "function") return;
   window.cmprRender = function (ids, cut, CMAX) {
     const r = r0.apply(this, arguments);
-    const sel = $(".cmpr-selp", app); if (sel && !ids.length) { sel.classList.add("cmpr-vide"); const lb = $(".cmpr-add label", sel); if (lb) lb.textContent = "Ajoutez 2 à 5 entreprises"; const q = $("#cmpq"); if (q) q.placeholder = "Nom ou code : LVMH, Kering, Hermès…"; }
+    const sel = $(".cmpr-selp", app); if (sel && !ids.length) { sel.classList.add("cmpr-vide"); const lb = $(".cmpr-add label", sel); if (lb) lb.textContent = CMAX >= 5 ? "Ajoutez 2 à 5 entreprises" : "Ajoutez 2 ou 3 entreprises"; const q = $("#cmpq"); if (q) q.placeholder = "Nom ou code : LVMH, Kering, Hermès…"; }
     return r;
   };
   const g0 = window.outGalleryHTML;

@@ -417,7 +417,7 @@ window.localAssist = function (s, c, raw) {
   }
   let t = FICHE_LA0(s, c, raw);
   const p = s && pxOf(s);
-  if (t && p && !p.p1y && p.h52 > p.l52 && /Dernier cours connu/.test(t) && !/Sur un an/.test(t)) {
+  if (t && p && !p.p1y && p.h52 > p.l52 && /Dernier cours connu/.test(t) && !/Sur un an/.test(t) && !/au plus bas/.test(t)) { // la fourchette n'est écrite qu'une fois (posTxt de ia.js la donne déjà)
     const x = v => eur(v, v >= 100 ? 0 : 2, p.cur);
     t = t.replace(/(Dernier cours connu[^\n]*\n?)/, `$1Sur un an, le cours a évolué entre ${x(p.l52)} (plus bas) et ${x(p.h52)} (plus haut).\n`);
   }

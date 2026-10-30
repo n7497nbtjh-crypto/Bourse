@@ -483,20 +483,70 @@ function IA_intent(q) {
   for (const [k, re] of IA_FI) { if (k === "defin") { if (IA_DEFM.test(q) && termeDe(q) && !/ (son|sa|ses|elle|cette) /.test(q.replace(/ c est quoi (le|la|les|l) /, " "))) return k; continue; } if (re.test(q)) return k; }
   return null;
 }
+function IA_autreEntreprise(q, s) { // une autre entreprise du site citée dans la question (nom d'au moins 4 lettres, ou code)
+  const t = " " + q + " ";
+  for (const c of R.companies) { if (c.id === s.id || c.missing) continue; const n = IA_txt(c.name).trim(), tk = IA_txt(c.ticker || "").trim();
+    if ((n.length >= 4 && t.includes(" " + n + " ")) || (n.split(" ")[0].length >= 5 && t.includes(" " + n.split(" ")[0] + " ")) || (tk.length >= 3 && t.includes(" " + tk + " "))) return c; }
+  return null;
+}
+function IA_compareDeux(s, f, o, q) { // réponse calculée pour « pourquoi la marge de X est-elle plus haute que celle de Y ? » et les questions voisines
+  const m = ratios(s), mo = ratios(o), md = MED[s.sector] || {}, medOk = (md.n || 0) >= 3, v = valo(s) || {}, vo = valo(o) || {}, mp = MEDPE[s.sector], P = [], e100 = x => `${F0.format(Math.round(x * 100))} €`;
+  const lien = `[[Comparer ${s.name} et ${o.name} →|/comparer?ids=${s.id},${o.id}]]`;
+  if (/marge|rentab|profit|benefice/.test(q) && m.marge != null && mo.marge != null && !isBank(o)) {
+    const hi = m.marge >= mo.marge ? s : o, lo = hi === s ? o : s, mh = Math.max(m.marge, mo.marge), ml = Math.min(m.marge, mo.marge);
+    P.push(`La marge d'exploitation de ${s.name} est de ${pct(m.marge, m.marge < 0.1 ? 1 : 0, false)}, contre ${pct(mo.marge, mo.marge < 0.1 ? 1 : 0, false)} pour ${o.name}${medOk && md.marge != null ? ` (médiane du secteur : ${pct(md.marge, 1, false)})` : ""}.`);
+    P.push(`Sur 100 € de ventes, ${hi.name} garde ${e100(mh)} après ses coûts, ${lo.name} ${e100(ml)}.`);
+    if (m.g1 != null && mo.g1 != null) P.push(`Les ventes de ${o.name} ont ${mo.g1 >= 0 ? "progressé" : "reculé"} de ${pct(Math.abs(mo.g1), 1, false)} sur un an, contre ${m.g1 >= 0 ? "une hausse" : "un recul"} de ${pct(Math.abs(m.g1), 1, false)} pour ${s.name}${(hi === s ? mo.g1 : m.g1) < 0 ? ", alors qu'une partie des coûts reste fixe" : ""}.`);
+    P.push(`Les comptes ne disent pas tout du « pourquoi » (métier, marques, prix de vente, taille). ${lien}`);
+    return P.join("\n");
+  }
+  if (/\bper\b|chere|cher\b|prix|valoris/.test(q)) {
+    const t = (x, vv, nm) => vv && vv.pe ? (vv.pe > 100 ? `le PER de ${nm} n'est pas significatif (bénéfice trop faible cette année pour comparer le prix)` : `l'action ${nm} coûte ${F0.format(vv.pe)} fois son bénéfice annuel`) : `le PER de ${nm} ne se calcule pas (bénéfice nul ou négatif)`;
+    P.push(`${t(s, v, s.name).charAt(0).toUpperCase() + t(s, v, s.name).slice(1)} ; ${t(o, vo, o.name)}${mp ? ` ; médiane du secteur : ${F0.format(mp)} fois` : ""}.`);
+    P.push(`Un PER plus élevé veut dire que le marché attend plus de croissance ; ce n'est ni un défaut ni une qualité en soi. ${lien}`);
+    return P.join("\n");
+  }
+  if (/dette|endett|solid/.test(q) && !isBank(o)) {
+    const d = (x, r, nm) => r.lev == null ? `la dette de ${nm} n'est pas lue dans ses comptes` : r.lev < 0 ? `${nm} n'a pas de dette nette (trésorerie supérieure aux dettes)` : `la dette nette de ${nm} représente ${F1.format(r.lev)} an${r.lev >= 2 ? "s" : ""} de résultat d'exploitation avant amortissements`;
+    P.push(`${d(s, m, s.name).charAt(0).toUpperCase() + d(s, m, s.name).slice(1)} ; ${d(o, mo, o.name)}${medOk && md.lev != null ? ` ; médiane du secteur : ${F1.format(md.lev)} an` : ""}.`);
+    P.push(`Moins d'années, c'est une dette plus facile à rembourser avec l'activité. ${lien}`);
+    return P.join("\n");
+  }
+  if (/croissance|ventes|chiffre d affaires/.test(q) && m.g1 != null && mo.g1 != null) {
+    P.push(`Sur un an, les ventes de ${s.name} ont ${m.g1 >= 0 ? "progressé" : "reculé"} de ${pct(Math.abs(m.g1), 1, false)}, celles de ${o.name} de ${pct(Math.abs(mo.g1), 1, false)} (${mo.g1 >= 0 ? "hausse" : "recul"})${medOk && md.g1 != null ? ` ; médiane du secteur : ${pct(md.g1, 1)}` : ""}.`);
+    P.push(`Une année ne fait pas une tendance : regardez cinq ans sur chaque fiche. ${lien}`);
+    return P.join("\n");
+  }
+  if (/dividende|rendement/.test(q)) {
+    const dv = (vv, nm) => vv && vv.yld != null ? `${nm} rapporte ${pct(vv.yld, 1, false)} par an au cours actuel` : `${nm} ne verse pas de dividende connu du site`;
+    P.push(`${dv(v, s.name)} ; ${dv(vo, o.name).charAt(0).toLowerCase() + dv(vo, o.name).slice(1)}${medOk && md.yld != null ? ` ; médiane du secteur : ${pct(md.yld, 1, false)}` : ""}.`);
+    P.push(`Un rendement élevé peut venir d'un cours qui a baissé : il se lit avec la part du bénéfice versée. ${lien}`);
+    return P.join("\n");
+  }
+  return null;
+}
 function localAssist(s, c, raw) {
   if (!s) return null;
   const q = IA_corrige(IA_txt(raw)), f = c ? figuresOf(c) : null, m = ratios(s), md = MED[s.sector] || {}, v = valo(s), mp = MEDPE[s.sector], bank = isBank(s), p = pxOf(s);
   const items = f ? lecture(s, f) : [], cur = s.currency || (f && f.currency) || "EUR", B = x => big(x, cur), yr = (f && f.year) || s.year;
-  const nom = s.name, P = [], it = IA_intent(q), pourquoi = /pourquoi/.test(q);
+  const nom = s.name, P = [], pourquoi = /pourquoi/.test(q);
   const medOk = (md.n || 0) >= 3;
+  // 3e passage (30/10), 1.2 : aiguillage. La réponse « mouvement de cours » ne part que si la question parle du cours, jamais si elle
+  // porte sur un indicateur ou cite une autre entreprise ; une question qui compare deux entreprises est calculée sur leurs deux comptes.
+  const autre = IA_autreEntreprise(q, s), surCours = /\bcours\b|action (monte|baisse|chute)|bourse aujourd hui|pourquoi.{0,30}(baisse|monte|chute)/.test(q), surIndic = /marge|rentab|dette|\bper\b|dividende|benefice|ventes|chiffre d affaires|croissance|endett|chere/.test(q);
+  let it = IA_intent(q);
+  if (it === "cours" && (!surCours || surIndic || autre)) it = surIndic ? (IA_FI.find(([k, re]) => k !== "cours" && k !== "defin" && re && re.test(q)) || [null])[0] : null;
+  if (autre && f && !bank) { const x = IA_compareDeux(s, f, autre, q); if (x) return x; }
+  if (!it) return null; // pas de réponse de remplissage : la main passe au modèle d'IA
   const cmp = (val, med, fmt, lowGood, mots) => !medOk || med == null || val == null ? "" : ` La médiane des ${md.n} entreprises de son secteur suivies par le site est de ${fmt(med)} : ${(lowGood ? val < med * 0.85 : val > med * 1.15) ? (mots ? mots[0] : "c'est nettement mieux que la plupart de ses concurrentes") : (lowGood ? val > med * 1.15 : val < med * 0.85) ? (mots ? mots[1] : "c'est nettement moins bien que la plupart de ses concurrentes") : (mots ? mots[2] : "c'est dans la moyenne")}.`;
   const ret = f ? retenir(s, f) : { forts: [], vig: [] }, list = a => lc(a.slice(0, 3).map(x => IA_pt(x)).join(" "));
   const pxS = x => eur(x, x >= 100 ? 0 : 2, p ? p.cur : cur);
   const dep = s.fiche && s.fiche.depend ? s.fiche.depend.charAt(0).toLowerCase() + s.fiche.depend.slice(1) : null, lc = x => x ? x.charAt(0).toLowerCase() + x.slice(1) : x;
   const AF = g => { try { return typeof analyseAssist === "function" ? analyseAssist(s, c, g) : []; } catch (e) { return []; } }; // facteurs du module « analyse » (m/analyse.js)
-  const ann = () => Object.values(ANA || {}).filter(x => x.id === s.id).sort((a, b) => b.date.localeCompare(a.date))[0];
+  const ann = () => { const d = typeof RF_DERNIERE !== "undefined" && RF_DERNIERE[s.id]; if (d) return { type: d.t, date: d.d, chiffres: [] }; return Object.values(ANA || {}).filter(x => x.id === s.id).sort((a, b) => b.date.localeCompare(a.date))[0]; };
   const tally = () => { if (!f) return ""; const t = { fort: 0, moyen: 0, vig: 0 }; items.forEach(i => { if (t[i.lv] != null) t[i.lv]++; }); return `Sur les ${t.fort + t.moyen + t.vig} critères que le site lit dans ses comptes ${yr} : ${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}, ${t.moyen} dans la moyenne et ${t.vig} point${t.vig > 1 ? "s" : ""} de vigilance.`; };
   const prixTxt = () => {
+    if (v && v.peNs) return `Le PER de ${nom} n'est pas significatif cette année : son bénéfice est très faible, le rapport entre le prix et ce qu'elle gagne (${F0.format(v.peBrut)} fois, en brut) ne veut plus rien dire. Pour juger son prix, regardez plutôt sa marge et l'évolution de ses ventes${mp ? ` ; la médiane du secteur est de ${F0.format(mp)} fois` : ""}.`;
     if (!v || !v.pe) return f && f.net != null && f.net <= 0 ? `${nom} a perdu de l'argent sur son exercice ${yr} : on ne peut pas comparer son prix à son bénéfice, le PER ne se calcule pas.` : p ? "Le PER ne peut pas être calculé avec les données disponibles." : "Le cours de l'action n'est pas disponible pour le moment : le PER ne peut pas être calculé.";
     return `Au cours actuel, l'action coûte ${F0.format(v.pe)} fois le bénéfice de l'exercice ${yr} (c'est son PER) : si ce bénéfice restait le même, il faudrait ${F0.format(v.pe)} ans pour « rembourser » le prix payé.` + cmp(v.pe, mp, x => F0.format(x) + " fois", true, ["elle est nettement moins chère que la plupart des entreprises de son secteur", "elle est nettement plus chère que la plupart des entreprises de son secteur", "son prix est dans la moyenne de son secteur"]);
   };
@@ -526,8 +576,8 @@ function localAssist(s, c, raw) {
         P.push("Les raisons exactes d'un mouvement de cours ne se lisent pas dans les comptes : le cours reflète ce que les investisseurs attendent des bénéfices futurs. Voici ce que montrent les chiffres du site.");
         if (m.g1 != null || m.ng != null) P.push(`Sur l'exercice ${yr}, ${[m.g1 != null ? `ses ventes ont ${m.g1 >= 0 ? "progressé" : "baissé"} de ${pct(Math.abs(m.g1), 1, false)}` : "", m.ng != null ? `son bénéfice a ${m.ng >= 0 ? "progressé" : "baissé"} de ${pct(Math.abs(m.ng), 0, false)}` : ""].filter(Boolean).join(" et ")}.`);
         if (dep) P.push(`Ce qui fait varier ses résultats : ${dep}`);
-        const a = ann(); if (a) P.push(`Dernière annonce officielle : ${String(a.type || "communiqué").toLowerCase()}, le ${dLabel(a.date)}${(a.chiffres || []).length ? ` (${a.chiffres.slice(0, 2).map(x => x.join(" : ")).join(" ; ")})` : ""}.`);
-        P.push("L'onglet « Actualités » de la fiche liste les annonces officielles et les articles de presse récents.");
+        const a = ann(); if (a) P.push(`Dernière annonce officielle : ${typeof RF_DERNIERE !== "undefined" && RF_DERNIERE[s.id] ? `« ${a.type} »` : String(a.type || "communiqué").toLowerCase()}, le ${dLabel(a.date)}${(a.chiffres || []).length ? ` (${a.chiffres.slice(0, 2).map(x => x.join(" : ")).join(" ; ")})` : ""}.`);
+        P.push("La rubrique « Ce qui a changé » de la fiche donne la dernière publication, les annonces officielles et la presse.");
       }
     }
   } else if (it === "prix") {
@@ -592,7 +642,7 @@ function localAssist(s, c, raw) {
     if (f && f.net != null) P.push(f.net >= 0 ? `Son bénéfice net est de ${B(f.net)}${m.ng != null ? `, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, false)} sur un an` : ""}${m.nm != null ? `. Sur 100 ${CUR[cur] || "€"} de ${bank ? "revenus" : "ventes"}, il reste ${F1.format(m.nm * 100)} ${CUR[cur] || "€"} de bénéfice final` : ""}.${m.marge == null || bank ? cmp(m.nm, md.nm, x => pct(x, 1, false), false) : ""}` : `L'entreprise a perdu ${B(-f.net)} sur l'exercice ${yr}.`);
     if (m.roe != null) P.push(`Sa rentabilité des capitaux propres : pour 100 ${CUR[cur] || "€"} qui appartiennent aux actionnaires, elle gagne ${F1.format(m.roe * 100)} ${CUR[cur] || "€"} par an.${cmp(m.roe, md.roe, x => pct(x, 1, false), false)}`);
     if (f && f.marges) { const ms = f.marges.filter(x => x != null); if (ms.length >= 3 && !bank) P.push(`Sa marge d'exploitation est passée de ${pct(ms.at(-3), 1, false)} à ${pct(ms.at(-1), 1, false)} sur ses trois derniers exercices${f.margeTrend === "baisse" ? " : elle baisse trois ans de suite" : f.margeTrend === "hausse" ? " : elle monte trois ans de suite" : ""}.`); }
-    if (pourquoi && dep) P.push(`Ce qui fait varier ses résultats : ${dep} Les raisons précises figurent dans son rapport annuel et ses annonces (onglet « Actualités »).`);
+    if (pourquoi && dep) P.push(`Ce qui fait varier ses résultats : ${dep} Les raisons précises figurent dans son rapport annuel et ses annonces (rubrique « Ce qui a changé » de la fiche).`);
   } else if (it === "concurrents") {
     const pr = peersOf(s, 4).list;
     if (pr.length) {

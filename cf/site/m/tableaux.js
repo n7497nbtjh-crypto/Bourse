@@ -31,8 +31,8 @@ function tblxFmt(row, cur) { // [format de cellule sans unité, format complet a
   const k = row.kind;
   if (k === "money") { const u = tblxMoneyUnit(row.vals, cur); return [v => nf(u.d).format(v / u.div), v => big(v, cur), u.u, u.long]; }
   if (k === "ps") return [v => F2.format(v), v => eur(v, 2, cur), tblxSym(cur) + " par action", (TBLX_CURN[cur] || cur) + " par action"];
-  if (k === "pctS") return [v => pct(v).replace(/\s*%$/, ""), v => pct(v), "%", "en %"];
-  if (k === "pct") return [v => pct(v, 1, false).replace(/\s*%$/, ""), v => pct(v, 1, false), "%", "en %"];
+  if (k === "pctS") { const ns = row.k === "g" && typeof nsCrois === "function"; return [v => ns && nsCrois(v) ? "n.s." : pct(v).replace(/\s*%$/, ""), v => ns && nsCrois(v) ? "n.s." : pct(v), "%", "en %"]; } // 1.3 : variation > ±200 % non significative
+  if (k === "pct") { const ns = row.k === "payout" && typeof nsPayout === "function"; return [v => ns && nsPayout(v) ? "plus que le bénéfice" : pct(v, 1, false).replace(/\s*%$/, ""), v => ns && nsPayout(v) ? "plus que le bénéfice" : pct(v, 1, false), "%", "en %"]; }
   if (k === "x") return [v => F1.format(v), v => v < 0 ? "pas de dette nette" : tblxAns(v), "années", "en années"];
   return [v => F1.format(v), v => F1.format(v), "", ""];
 }

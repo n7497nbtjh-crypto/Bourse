@@ -356,7 +356,7 @@ if (typeof window.analyseForcesFaiblesses === "function") {
       const ser = ctxSerie(s, c);
       if (ser && ser.ys.length >= 3 && !out.contexte.some(i => i.id === "ctx_evol")) {
         const R = ctxPhases(ser), P = ctxProfil(s, c), ev = [...new Set(R.phases.flatMap(p => ctxEvts(P, c, p).map(e => e.titre)))].slice(0, 3);
-        out.contexte.push({ id: "ctx_evol", poids: 2, titre: `Ce qui explique l'évolution de ses ${ser.lab}`, detail: `${ctxTendance(s, ser, R)} ${ev.length ? `Contexte connu sur la période : ${ev.join(" ; ")}.` : "Le site ne relie aucun grand événement de son secteur à ces variations."} Le détail année par année est dans l'onglet « Les chiffres en détail ».`, source: "bilan., comptes officiels et table d'événements datés", url: "/methode" });
+        out.contexte.push({ id: "ctx_evol", poids: 2, titre: `Ce qui explique l'évolution de ses ${ser.lab}`, detail: `${ctxTendance(s, ser, R)} ${ev.length ? `Contexte connu sur la période : ${ev.join(" ; ")}.` : "Le site ne relie aucun grand événement de son secteur à ces variations."} Le détail année par année est dans « Tous les chiffres ».`, source: "bilan., comptes officiels et table d'événements datés", url: "/methode" });
       }
       out.contexte.sort((a, b) => b.poids - a.poids);
     } catch (e) { console.warn("contexte : analyse", e); }
@@ -429,7 +429,7 @@ function ctxDoutes(s, c, q, it, t) {
   if ((!c || s.missing) && !has(/pas encore lu|n'a pas encore|pas encore les comptes/)) P.push(`Je ne suis pas sûr : le site n'a pas encore lu les comptes de ${nom}. À vérifier : son dernier rapport annuel, sur son site.`);
   if (c && c.years && c.years.length) {
     const L = c.years.length - 1, fy = /^\d\d-\d\d$/.test(c.fyEnd || "") ? c.fyEnd : "12-31", fin = `${c.years[L]}-${fy}`;
-    if ((new Date(TODAY) - new Date(fin)) / (30.44 * 864e5) > 16 && ["croissance", "marge", "dette", "dividende", "resume", "forts", "risques", "prix"].includes(it)) P.push(`Je ne suis pas sûr que ces chiffres soient encore à jour : ils viennent de l'exercice clos le ${dLabel(fin)}. Un exercice plus récent existe sans doute : regardez l'onglet « Actualités ».`);
+    if ((new Date(TODAY) - new Date(fin)) / (30.44 * 864e5) > 16 && ["croissance", "marge", "dette", "dividende", "resume", "forts", "risques", "prix"].includes(it)) P.push(`Je ne suis pas sûr que ces chiffres soient encore à jour : ils viennent de l'exercice clos le ${dLabel(fin)}. Un exercice plus récent existe sans doute : regardez « Ce qui a changé ».`);
     const f = typeof figuresOf === "function" ? figuresOf(c) : null;
     if (it === "dividende" && f && f.dpsEst && s.divPaid > 0.5) P.push("Je ne suis pas sûr du montant exact par action : le site l'estime à partir des dividendes versés et du nombre d'actions. Le communiqué de l'entreprise donne le chiffre officiel.");
   }

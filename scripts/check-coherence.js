@@ -27,7 +27,22 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
     }
     if (!ex.lignes.some(([l]) => l === "Marge d'exploitation")) err.push(`${ex.id} : l'exemple n'affiche pas la marge d'exploitation`);
   }
+  // 1.3 (30/10) : sur N fiches au hasard (50 par défaut), aucun PER > 100 ni taux de distribution > 150 % affiché en clair, plis ouverts compris
+  const N = +(process.argv[2] || 50), fs = require("fs"), path = require("path"), ROOT = require("./_site").ROOT;
+  const ids = fs.readdirSync(path.join(ROOT, "data", "societes")).filter(f => f.endsWith(".json")).map(f => f.slice(0, -5));
+  for (let i = ids.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [ids[i], ids[j]] = [ids[j], ids[i]]; }
+  let vus = 0;
+  for (const id of ids) { if (vus >= N) break;
+    await aller(p, "/entreprise/" + id, 3000);
+    const r = await p.evaluate(() => { if (!document.querySelector(".rf-vc")) return null; document.querySelectorAll("#tous-les-chiffres details").forEach(d => d.open = true); const num = e => { const m = e.textContent.replace(/\s/g, "").match(/^-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; }; // chiffres « en clair » : tuiles, cases, grands chiffres (les phrases d'explication peuvent citer la valeur avec son contexte)
+      const per = [...document.querySelectorAll('.rf-kt[data-g="per"] b, .tile .v, td.num, .acc-exr b, .rf-cv')].filter(e => /fois|^\d/.test(e.textContent) && /PER|fois/i.test((e.closest(".tile, td, .rf-kt, .acc-exr") || e).textContent)).map(num).filter(x => x != null && x > 100);
+      const pay = [...document.querySelectorAll('.rf-kt[data-g="payout"] b, .tile .v, td.num')].filter(e => /bénéfice|distribution|versée|Part/i.test((e.closest(".tile, tr, .rf-kt") || e).textContent) && /%/.test(e.textContent)).map(num).filter(x => x != null && x > 150);
+      return { per, pay, verdict: (document.querySelector(".rf-vc") || {}).textContent || "" }; });
+    if (!r) continue; vus++;
+    if (r.per.length) err.push(`${id} : PER affiché en clair ${r.per.join(", ")}`);
+    if (r.pay.length) err.push(`${id} : taux de distribution affiché en clair ${r.pay.join(", ")} %`);
+  }
   await b.close();
-  console.log(err.length ? "ÉCARTS :\n- " + err.join("\n- ") : `OK : ${cartes.length ? cartes.length + " cartes et " : ""}l'exemple ${ex && ex.id} concorde${cartes.length ? "nt" : ""} avec la fiche`);
+  console.log(err.length ? "ÉCARTS :\n- " + err.join("\n- ") : `OK : l'exemple ${ex && ex.id} concorde avec la fiche ; ${vus} fiches sans PER > 100 ni distribution > 150 % en clair`);
   process.exit(err.length ? 1 : 0);
 })();

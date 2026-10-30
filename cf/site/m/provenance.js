@@ -382,7 +382,8 @@ function valo(c) {
   if (yld != null && (yld > 0.25 || yld < 0)) yld = null;
   if (pe != null && (pe > 500 || pe < 2)) pe = null;
   if (vieux) { pe = null; yld = null; }
-  return { p, capE, pe, yld, vieux };
+  const peNs = pe != null && pe > 100, peBrut = pe; if (peNs) pe = null; // 1.3 (30/10) : PER > 100 non significatif, même règle que valo() d'app.js
+  return { p, capE, pe, yld, vieux, peNs, peBrut };
 }
 
 // Médianes du secteur : sans les entreprises dont les comptes ont plus de 15 mois (reprise de computeMedians et medInd d'index.html)

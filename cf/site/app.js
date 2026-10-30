@@ -1403,7 +1403,7 @@ async function pageComparer() {
       <section class="panel"><div class="ph"><h2>Comment lire cette comparaison</h2></div><div class="pb"><ol class="steps2">
         <li><b>Comparez des entreprises du même métier.</b> Une marge de 10 % est faible pour un éditeur de logiciels et élevée pour un supermarché.</li>
         <li><b>Regardez plusieurs lignes ensemble.</b> Une forte rentabilité avec beaucoup de dette ne vaut pas une forte rentabilité sans dette.</li>
-        <li><b>Un chiffre est une photo d'une année.</b> Sur chaque fiche, l'onglet « Approfondir » montre l'évolution sur plusieurs années.</li>
+        <li><b>Un chiffre est une photo d'une année.</b> Sur chaque fiche, « Tous les chiffres » montre l'évolution sur plusieurs années.</li>
         <li><b>Servez-vous de la médiane.</b> La ligne « secteur » donne la médiane : l'entreprise du milieu de son secteur. Au-dessus, mieux que la moitié des concurrentes ; en dessous, moins bien. ${medBtn("Qu'est-ce que la médiane ?")}</li>
         <li><b>Le prix de l'action n'est pas ici.</b> Une entreprise solide peut avoir une action chère : comparez aussi le prix aux bénéfices (rubrique « Prix de l'action » de chaque fiche).</li></ol></div></section>` : `<section class="panel"><div class="empty">Ajoutez une entreprise pour commencer.</div></section>`}`;
   const q = $("#cmpq"), box = $("#cmps");
@@ -1580,8 +1580,14 @@ function valo(c) { // capitalisation, PER, rendement, à partir du cours et des 
   if ((yld == null || yld > 0.15) && c.dps > 0 && (p.cur === c.currency || !sain)) yld = c.dps / p.p;
   if (yld != null && (yld > 0.25 || yld < 0)) yld = null;
   if (pe != null && (pe > 500 || pe < 2)) pe = null;
-  return { p, capE, pe, yld };
+  // 3e passage (30/10), 1.3 : un PER au-delà de 100 (bénéfice quasi nul) n'est pas significatif : il ne compte ni dans le verdict,
+  // ni dans les jauges, ni dans les médianes ; les écrans l'affichent « n.s. » avec la valeur brute en bulle (peBrut).
+  const peNs = pe != null && pe > 100, peBrut = pe;
+  if (peNs) pe = null;
+  return { p, capE, pe, yld, peNs, peBrut };
 }
+const NS_PE = "Bénéfice trop faible cette année pour comparer le prix (PER non significatif)", NS_PAYOUT = "Le dividende versé dépasse le bénéfice de l'année : il est pris sur la trésorerie ou les réserves", NS_CROIS = "Base de comparaison trop faible pour une variation significative";
+const nsPayout = x => x != null && x > 1.5, nsCrois = x => x != null && Math.abs(x) > 2; // part du bénéfice versée > 150 %, variation > ±200 %
 let MEDPE = {};
 function computePE() {
   const by = {}; R.companies.forEach(c => { if (c.missing) return; const v = valo(c); if (v && v.pe) (by[c.sector] = by[c.sector] || []).push(v.pe); });
@@ -1683,11 +1689,11 @@ function dividendeHTML(s, c) {
   const tiles = [
     f.dps > 0 ? ["Par action", eur(f.dps, 2, cur), `versé${f.dpsEst ? " (estimé)" : ""} pendant l'exercice ${f.year}`] : null,
     v && v.yld ? ["Rendement", pct(v.yld, 1, false), "dividende annuel ÷ prix actuel de l'action"] : null,
-    m.payout != null ? ["Part du bénéfice", pct(m.payout, 0, false), cov === "fort" ? "reversée : il reste de la marge si le bénéfice baisse" : cov === "moyen" ? "reversée : peu de marge si le bénéfice baisse" : "reversée : plus que ce que l'entreprise gagne"] : null,
+    m.payout != null ? ["Part du bénéfice", nsPayout(m.payout) ? "plus que le bénéfice" : pct(m.payout, 0, false), nsPayout(m.payout) ? `${NS_PAYOUT.toLowerCase()} (${pct(m.payout, 0, false)})` : cov === "fort" ? "reversée : il reste de la marge si le bénéfice baisse" : cov === "moyen" ? "reversée : peu de marge si le bénéfice baisse" : "reversée : plus que ce que l'entreprise gagne"] : null,
     next.length ? ["Prochaine date", dLabel(next[0].date), next[0].label] : null,
   ].filter(Boolean);
   return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant par action estimé à partir des comptes</span>` : ""}</div>
-    <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${esc(s.name)} a reversé ${big(f.divPaid, cur)} à ses actionnaires pendant l'exercice ${f.year}${m.payout != null ? `, soit ${partWords(m.payout)} de son bénéfice (${pct(m.payout, 0, false)})` : ""}.${per1000 != null ? ` Au cours actuel, <b>1 000 € d'actions rapporteraient environ ${F0.format(per1000)} € par an</b> avant impôts, si le dividende restait au même niveau.` : ""}${okv.length >= 3 ? ` Le total versé ${ups === okv.length - 1 ? "a progressé ou s'est maintenu chaque année" : `a progressé ou s'est maintenu ${ups} année${ups > 1 ? "s" : ""} sur ${okv.length - 1}`} depuis ${okv[0][1]}.` : ""}</p></div>
+    <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${esc(s.name)} a reversé ${big(f.divPaid, cur)} à ses actionnaires pendant l'exercice ${f.year}${m.payout != null ? (nsPayout(m.payout) ? `, soit plus que son bénéfice de l'année (${pct(m.payout, 0, false)}) : le dividende est pris sur la trésorerie ou les réserves` : `, soit ${partWords(m.payout)} de son bénéfice (${pct(m.payout, 0, false)})`) : ""}.${per1000 != null ? ` Au cours actuel, <b>1 000 € d'actions rapporteraient environ ${F0.format(per1000)} € par an</b> avant impôts, si le dividende restait au même niveau.` : ""}${okv.length >= 3 ? ` Le total versé ${ups === okv.length - 1 ? "a progressé ou s'est maintenu chaque année" : `a progressé ou s'est maintenu ${ups} année${ups > 1 ? "s" : ""} sur ${okv.length - 1}`} depuis ${okv[0][1]}.` : ""}</p></div>
     <div class="tiles">${tiles.map(([k, val, sub]) => `<div class="tile"><span class="kick">${k}</span><span class="v">${esc(val)}</span><small>${esc(sub)}</small></div>`).join("")}</div>
     <div class="pb">${colChart({ labels: c.years.map(String), series: [{ name: "Dividendes versés", values: vals }], fmt: v => big(v, cur), tickFmt: compact(cur), h: 160 })}<p class="note">Total versé chaque année, toutes actions confondues : contrairement au montant par action, il n'est pas faussé quand l'entreprise divise ses actions.</p>
     ${acc("Le dividende est-il solide ?", `<p>${m.payout == null ? "Impossible à dire sans bénéfice." : m.payout > 1 ? `Non : l'entreprise verse plus (${pct(m.payout, 0, false)}) que ce qu'elle gagne. Elle puise dans sa trésorerie ou s'endette pour payer.` : m.payout > 0.9 ? `Fragile : ${pct(m.payout, 0, false)} du bénéfice est versé. Si le bénéfice baisse, le dividende risque de baisser aussi.` : m.payout > 0.6 ? `Plutôt oui : ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une marge.` : `Oui : seulement ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une bonne marge si les bénéfices baissent.`}${f.fcf != null && f.divPaid > 0 ? ` La trésorerie disponible (${big(f.fcf, cur)}) ${f.fcf >= f.divPaid ? "couvre" : "ne couvre pas"} le dividende versé.` : ""}</p><p class="muted">Un dividende n'est jamais garanti : l'entreprise peut le réduire ou le supprimer.</p>`)}
@@ -1703,13 +1709,13 @@ function prixHTML(s, c) {
   const perf = (a, b) => a && b ? a / b - 1 : null;
   const prow = [["1 an", "p1y"], ["3 ans", "p3y"], ["5 ans", "p5y"]].map(([l, k]) => [l, perf(p.p, p[k]), idx ? perf(idx.p, idx[k]) : null]).filter(r => r[1] != null);
   const pos = p.h52 && p.l52 && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null;
-  const peTxt = v.pe ? `L'action coûte <b>${F0.format(v.pe)} fois</b> le bénéfice de la dernière année${mp ? `, contre ${F0.format(mp)} fois pour la médiane de son secteur` : ""}. ${mp ? (v.pe > mp * 1.3 ? "Le marché la paie plus cher que ses concurrentes : il attend plus de croissance, ou il est optimiste." : v.pe < mp * 0.75 ? "Le marché la paie moins cher que ses concurrentes : il attend moins de croissance, ou il est prudent." : "C'est dans la moyenne de son secteur.") : ""}` : f.net != null && f.net <= 0 ? "L'entreprise a perdu de l'argent sur le dernier exercice : le PER (prix ÷ bénéfice) ne se calcule pas." : "";
+  const peTxt = v.peNs ? `Le PER n'est pas significatif cette année : le bénéfice est trop faible pour comparer le prix de l'action à ce qu'elle gagne (${F0.format(v.peBrut)} fois, en brut). Regardez plutôt la marge et l'évolution des ventes.` : v.pe ? `L'action coûte <b>${F0.format(v.pe)} fois</b> le bénéfice de la dernière année${mp ? `, contre ${F0.format(mp)} fois pour la médiane de son secteur` : ""}. ${mp ? (v.pe > mp * 1.3 ? "Le marché la paie plus cher que ses concurrentes : il attend plus de croissance, ou il est optimiste." : v.pe < mp * 0.75 ? "Le marché la paie moins cher que ses concurrentes : il attend moins de croissance, ou il est prudent." : "C'est dans la moyenne de son secteur.") : ""}` : f.net != null && f.net <= 0 ? "L'entreprise a perdu de l'argent sur le dernier exercice : le PER (prix ÷ bénéfice) ne se calcule pas." : "";
   return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2><span class="light" style="font-size:12.5px">Cours différé · ${esc(p.s)}</span></div>
     <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${peTxt}</p></div>
     <div class="tiles">
       <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
       <div class="tile"><span class="kick">Valeur en Bourse</span><span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
-      <div class="tile"><span class="kick">PER</span><span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : "non calculable (perte ou donnée manquante)"}</small></div>
+      <div class="tile"><span class="kick">PER</span><span class="v">${v.pe ? F0.format(v.pe) : v.peNs ? `<abbr title="${NS_PE} : ${F0.format(v.peBrut)} fois le bénéfice" style="text-decoration:underline dotted">n.s.</abbr>` : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : v.peNs ? "bénéfice trop faible cette année pour comparer le prix" : "non calculable (perte ou donnée manquante)"}</small></div>
       <div class="tile"><span class="kick">Rendement</span><span class="v">${v.yld != null ? pct(v.yld, 1, false) : "–"}</span><small>${v.yld != null ? "dividende annuel ÷ valeur en Bourse" : "pas de dividende"}</small></div>
     </div>
     ${perExplique(s)}
@@ -2092,7 +2098,7 @@ function moneyCell(c, v) { if (v == null) return null; const e = eurM(v, c.curre
 /* ---------- Mise en forme d'un texte rédigé (titres de paragraphes reconnus) ---------- */
 function resumeHTML(txt) {
   const parts = String(txt).split(/\n+/).map(x => x.trim()).filter(Boolean);
-  return parts.map(p => /^(« ?)?(Ce qui est annoncé|Ce que ça veut dire|À surveiller|En résumé|Ce qui a bougé|Ce qui a été annoncé|À venir|Ce que l'analyse remarque|Points d'attention)( ?»)?\s*:?$/i.test(p.replace(/[*#]/g, "")) ? `<p class="kick" style="margin:10px 0 2px">${esc(p.replace(/[*#«»:]/g, "").trim())}</p>` : `<p style="margin:0 0 6px">${esc(p.replace(/[*#]/g, ""))}</p>`).join("");
+  return parts.map(p => /^(« ?)?(Ce qui est annoncé|Ce que ça veut dire|À surveiller|En résumé|Ce qui a bougé|Ce qui a été annoncé|À venir|Ce que l'analyse remarque|Points d'attention)( ?»)?\s*:?$/i.test(p.replace(/[*#]/g, "")) ? `<p class="kick" style="margin:10px 0 2px">${esc(p.replace(/[*#«»:]/g, "").trim())}</p>` : `<p style="margin:0 0 6px">${esc(p.replace(/[*#]/g, "")).replace(/\[\[([^\]|]+)\|(\/[^\]]+)\]\]/g, (m0, t, h) => `<a class="lnk" href="${h}">${t}</a>`)}</p>`).join(""); // [[texte|/lien]] : lien interne dans une réponse calculée
 }
 /* ---------- Favoris : présentation soignée et bilan rédigé de la liste ---------- */
 function favCard(c) {

@@ -466,7 +466,7 @@ function ficheSommaire(s, c) {
   const prof3 = prof.replace(/au-dessus de la médiane/g, "au-dessus").replace(/parmi les plus faibles/g, "parmi les dernières"); // libellés de trois mots au plus (lot 4)
   const md = MED[s.sector] || {};
   return `<div class="fh-sum rf-sum rf-hplace">${vc ? `<p class="rf-vc">${esc(vc)}<small id="rf-date">Derniers comptes : exercice ${esc(s.year)}${c.fyEnd ? `, clos le ${esc(String(c.fyEnd).split("-").reverse().join("/"))}` : ""}</small></p>` : ""}<div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><button type="button" class="rf-info" data-rf-info aria-label="Comment lire ces jauges" title="Comparé à la médiane de ${md.n || "?"} entreprises du secteur suivies par le site : à droite les mieux placées, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.">ⓘ</button></div>
-      ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof3}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
+      ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof3.replace(/<\/div>\s*$/, "")}${valo(s) && valo(s).peNs ? `<div class="pa2 pa2-ns" title="${NS_PE}" tabindex="0"><span class="pt"><b>Prix</b><small>n.s.</small></span><span class="pl"><i class="pm"></i></span></div>` : ""}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
       ${rk}</div>`;
 }
 function ficheSyntheseHTML(s, c) { // l'ancien « En bref » de l'en-tête, avec l'analyse détaillée (onglet Synthèse, 30/10)
@@ -726,15 +726,17 @@ async function rfDernierTrimestre(s, c) {
   let j = null; try { j = await actuGet(`/data/actu/c/${s.id}.json`); } catch (e) { }
   if (!j || !document.body.contains(box)) return;
   const fin = c && c.years && c.years.length ? `${c.years.at(-1)}-${typeof c.fyEnd === "string" && /^\d{2}-\d{2}$/.test(c.fyEnd) ? c.fyEnd : "12-31"}` : ""; // clôture du dernier exercice (juin pour Microsoft, par exemple)
-  const o = (j.o || []).filter(x => x.c === "resultats" && (!fin || x.d.slice(0, 10) > fin)).sort((a, b) => b.d.localeCompare(a.d))[0];
-  if (!o) return;
+  const tous = (j.o || []).filter(x => !(typeof ACTU_CAT !== "undefined" && (ACTU_CAT[x.c] || {}).routine)).sort((a, b) => b.d.localeCompare(a.d));
+  const o = tous.find(x => x.c === "resultats" && (!fin || x.d.slice(0, 10) > fin)) || null;
+  if (tous[0]) RF_DERNIERE[s.id] = { t: tous[0].tf || tous[0].t, d: tous[0].d.slice(0, 10), u: tous[0].u, c: tous[0].c }; // une seule source de vérité pour « dernière annonce » (fiche et IA)
+  if (!o) { if (tous[0]) { box.innerHTML = `<p class="rf-no" style="padding:14px 22px">Dernière annonce officielle : <b>${esc(tous[0].tf || tous[0].t)}</b>, le ${dLabel(tous[0].d.slice(0, 10))}. Aucune publication chiffrée relevée depuis la clôture de l'exercice ${esc(String(c.years.at(-1)))}.</p>`; box.hidden = false; } return; }
   let A = null; try { if (typeof loadAna === "function") { await loadAna(); A = ANA && o.u && ANA[o.u]; } } catch (e) { }
   const ch = (A && A.chiffres) || [], lec = (A && A.lecture) || [];
   const quand = dLabel(o.d.slice(0, 10));
   box.innerHTML = `<div class="rf-trimi"><div class="rf-trimh"><span class="kick">Depuis la clôture de l'exercice ${esc(c.years.at(-1))}</span><b>${esc(o.tf || o.t)}</b><span class="light">publié le ${quand}</span></div>
     ${ch.length ? `<div class="rf-trimc">${ch.slice(0, 4).map(([l, v]) => `<div><span>${esc(l)}</span><b>${esc(v)}</b></div>`).join("")}</div>${lec.length ? `<p class="rf-triml">${lec.slice(0, 2).map(esc).join(" ")}</p>` : ""}`
       : `<p class="rf-triml">Les chiffres de cette publication ne sont pas encore relevés par le site : les indicateurs ci-dessus portent sur le dernier exercice clos, audité et déposé.</p>`}
-    <p class="rf-trimf"><a class="lnk" href="${esc(o.u)}" target="_blank" rel="noopener">Lire la publication</a> · <a class="lnk" href="/entreprise/${s.id}/actualite">Toutes ses annonces</a></p></div>`;
+    <p class="rf-trimf"><a class="lnk" href="${esc(o.u)}" target="_blank" rel="noopener">Lire la publication</a> · <a class="lnk" href="#rf-agenda" data-rf-ouvre="rf-agenda">Toutes ses annonces</a>${tous[0] && tous[0] !== o ? ` · dernière annonce : ${esc(tous[0].tf || tous[0].t)}, le ${dLabel(tous[0].d.slice(0, 10))}` : ""}</p></div>`;
   box.hidden = false;
 }
 async function pageCompany(id, tab) {
@@ -828,6 +830,8 @@ const RF_CMP_COURT = { taille: "Taille", croissance: "Croissance", rentabilite: 
 const RF_CMP_SOUS = { taille: () => "ventes annuelles, en euros", croissance: () => "ventes sur un an", rentabilite: X => X.roe ? "rentabilité des capitaux propres" : "marge d'exploitation", solidite: () => "dette nette, en années de résultat", prix: () => "prix ÷ bénéfice (PER)", dividende: () => "rendement annuel" };
 function rfCmpCell(T, F, X) {
   const r = T.val(F, X);
+  if (!r && T.k === "prix" && F.v && F.v.peNs) return `<td class="num na" data-v="" title="${esc(F.c.name + " : " + NS_PE + " (" + F0.format(F.v.peBrut) + " fois en brut)")}"><span class="rf-na">n.s.</span><small>bénéfice trop faible</small></td>`; // 1.3 : PER non significatif
+  if (r && T.k === "croissance" && typeof nsCrois === "function" && nsCrois(r.v)) return `<td class="num na" data-v="" title="${esc(F.c.name + " : " + NS_CROIS + " (" + sgn(r.v) + ")")}"><span class="rf-na">n.s.</span><small>base trop faible</small></td>`;
   if (!r) { const na = T.na(F, X); return `<td class="num na" data-v="" title="${esc(na)}"><span class="rf-na">–</span><small>${esc(na)}</small></td>`; }
   const lv = !T.neutral && r.lv && r.lv !== "na" ? r.lv : null, key = r.key != null ? r.key : r.v;
   const txt = r.cash ? "Aucune" : T.k === "dividende" && !(r.v > 0) ? "Aucun" : T.short && T.k !== "prix" ? T.short(r) : r.txt;
@@ -963,6 +967,8 @@ document.head.insertAdjacentHTML("beforeend", `<style>
    ouvertes d'office si le réglage « Afficher toujours le détail » est coché. Export CSV, ajout au comparateur.
    /entreprise/x/comptes et /actualite redirigent vers la fiche (ancre). Rien n'est retiré.
    ==================================================================================== */
+document.head.insertAdjacentHTML("beforeend", `<style>.pa2.pa2-ns .pl{opacity:.45;filter:grayscale(1)}.pa2.pa2-ns .pt small{color:var(--grey)}</style>`);
+const RF_DERNIERE = {}; // dernière annonce par entreprise, lue par la fiche et reprise par l'IA (ia.js)
 const RF_DETAIL_CLE = "bilan.detail";
 function rfDetailToujours() { try { return localStorage.getItem(RF_DETAIL_CLE) === "1"; } catch (e) { return false; } }
 function rfDetailSet(v) { try { localStorage.setItem(RF_DETAIL_CLE, v ? "1" : "0"); } catch (e) { } }
@@ -992,8 +998,10 @@ function rfTrimTableHTML(t, c) { // tableau des trimestres lus à la SEC (10-Q /
 }
 function rfCsv(s, c) { // tous les comptes, année par année, en CSV (séparateur point-virgule, décimale virgule)
   const P = tblxRows(s, c), Y = c.years, q = v => `"${String(v).replace(/"/g, '""')}"`;
-  const lines = [[`Indicateur (${c.currency} ; montants en millions, ratios en nombre, pourcentages en fraction)`, ...Y].map(q).join(";")];
-  P.rows.forEach(r => lines.push([r.label || r.k, ...Y.map((y, i) => { const v = (r.vals || [])[i]; return v == null ? "" : String(Math.round(v * 1000) / 1000).replace(".", ","); })].map(q).join(";")));
+  const lines = [[`Indicateur (${c.currency} ; montants en millions, ratios en nombre, pourcentages en fraction)`, ...Y, "note"].map(q).join(";")];
+  const note = r => { const v = r.last; return (r.k === "g" && typeof nsCrois === "function" && nsCrois(v)) || (r.k === "payout" && typeof nsPayout === "function" && nsPayout(v)) ? "non significatif" : ""; };
+  P.rows.forEach(r => lines.push([r.label || r.k, ...Y.map((y, i) => { const v = (r.vals || [])[i]; return v == null ? "" : String(Math.round(v * 1000) / 1000).replace(".", ","); }), note(r)].map(q).join(";")));
+  const v0 = valo(s); if (v0 && (v0.pe || v0.peNs)) lines.push(["PER (cours actuel ÷ bénéfice par action)", ...Y.map((y, i) => i === Y.length - 1 ? String(Math.round((v0.pe || v0.peBrut) * 10) / 10).replace(".", ",") : ""), v0.peNs ? "non significatif" : ""].map(q).join(";"));
   return "﻿" + lines.join("\n");
 }
 async function ficheUneSeulePage(s, c, el) {
@@ -1014,7 +1022,7 @@ async function ficheUneSeulePage(s, c, el) {
     ${rfFaitHTML(s, c)}
     ${rfChangeHTML(s, c)}
     <section class="rf-l2" id="tous-les-chiffres"><div class="rf-l2h"><h2>Tous les chiffres</h2><label class="rf-l2t"><input type="checkbox" id="rf-detail"${auto ? " checked" : ""}> Afficher toujours le détail</label></div>
-      ${rfPli2("rf-resultats", "Résultats", `Ventes, bénéfice, par trimestre et par an ${jg("g1", false, m.g1)}`, `<div class="rf-ta" id="rf-ta" hidden><button type="button" class="on" data-ta="a">Par an</button><button type="button" data-ta="t">Par trimestre</button></div><div id="rf-ta-a">${th("croissance")}</div><div id="rf-ta-t" hidden></div>`, auto)}
+      ${rfPli2("rf-resultats", "Résultats", `<span id="rf-res-sous">Ventes, bénéfice, par an</span> ${jg("g1", false, m.g1)}`, `<div class="rf-ta" id="rf-ta" hidden><button type="button" class="on" data-ta="a">Par an</button><button type="button" data-ta="t">Par trimestre</button></div><div id="rf-ta-a">${th("croissance")}</div><div id="rf-ta-t" hidden></div>`, auto)}
       ${rfPli2("rf-rentab", bank ? "Rentabilité" : "Rentabilité", `Marges, rendement des capitaux propres, face à la médiane ${jg(bank ? "roe" : "marge", false, bank ? m.roe : m.marge)}`, th("rentabilite"), auto)}
       ${th("bilan") ? rfPli2("rf-dette", "Bilan et dette", `Dette nette, fonds propres, trésorerie ${jg("lev", true, m.lev)}`, th("bilan"), auto) : ""}
       ${th("flux") ? rfPli2("rf-flux", "Flux de trésorerie", "Ce que les bénéfices deviennent en argent disponible", th("flux"), auto) : ""}
@@ -1035,7 +1043,7 @@ async function ficheUneSeulePage(s, c, el) {
   // les comportements de l'ancien onglet « Les chiffres en détail » (graphiques, lignes dépliables) sont rattachés au conteneur
   rfLierChiffres(s, c, $("#tous-les-chiffres"));
   // trimestres : la bascule Par an / Par trimestre apparaît si le site a des trimestres pour cette entreprise
-  if (c.cik) fetch(`/data/trim/${s.id}.json`).then(r => r.ok ? r.json() : null).then(t => { if (!t || !t.q || !t.q.length || !$("#rf-ta")) return; $("#rf-ta").hidden = false; $("#rf-ta-t").innerHTML = rfTrimTableHTML(t, c);
+  if (c.cik) fetch(`/data/trim/${s.id}.json`).then(r => r.ok ? r.json() : null).then(t => { if (!t || !t.q || !t.q.length || !$("#rf-ta")) return; $("#rf-ta").hidden = false; const rs = $("#rf-res-sous"); if (rs) rs.textContent = "Ventes, bénéfice, par trimestre et par an"; $("#rf-ta-t").innerHTML = rfTrimTableHTML(t, c);
     $$("#rf-ta button").forEach(b => b.onclick = () => { $$("#rf-ta button").forEach(x => x.classList.toggle("on", x === b)); $("#rf-ta-a").hidden = b.dataset.ta !== "a"; $("#rf-ta-t").hidden = b.dataset.ta !== "t"; }); }).catch(() => { });
   const csv = $("#rf-csv"); if (csv) csv.onclick = () => { const blob = new Blob([rfCsv(s, c)], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${s.id}-comptes.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
   const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }
@@ -1097,3 +1105,5 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 #tous-les-chiffres .tbx-lv{display:none} /* niveau 2 sans mot de verdict : la position face au secteur est dans la ligne du pli */
 @media (max-width:760px){.rf-ta{padding:10px 16px 0}#rf-ta-t{padding:10px 16px 4px}}
 </style>`);
+/* 3e passage (30/10), 1.1 : sur téléphone, les cinq jauges restent visibles, empilées une par ligne (l'ancienne règle de fiche.js les masquait au profit d'un mini-profil qui n'existe plus) */
+document.head.insertAdjacentHTML("beforeend", `<style>@media (max-width:760px){.rf-hplace .fh-pl{display:block!important}.rf-hplace .prof{display:grid;grid-template-columns:1fr!important;gap:8px}.rf-hplace .prof .pa2{display:grid;grid-template-columns:92px minmax(0,1fr)!important;align-items:center;gap:2px 10px}.rf-hplace .prof .pa2 .pt b{font-size:13.5px}.rf-hplace .prof .pa2 .pt small{font-size:12px}}</style>`);
