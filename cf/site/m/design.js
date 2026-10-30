@@ -214,3 +214,11 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 .navpied p,table.t th,.tbx thead th,.par-sect,.par-tools small,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.o2-sc,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.fbt,.syncat,.synev,.synevol,.rc-exq,.rf-ctab th .rf-cth,.acc-agd{font-family:var(--sans)!important}
 .navpied p{font-weight:700;color:var(--ink);font-size:13px}
 </style>`);
+/* Par où commencer : trois écrans visuels (30/10) */
+document.head.insertAdjacentHTML("beforeend", `<style>
+.cm3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 18px}
+.cm3-c{display:flex;flex-direction:column;gap:6px;padding:20px 22px;border:1px solid var(--rule);border-radius:14px;background:#fff;color:var(--ink);text-decoration:none;min-height:230px}.cm3-c:hover{border-color:var(--ink)}
+.cm3-n{font-family:var(--mono);font-size:12px;color:var(--light)}.cm3-t{font-family:var(--serif)!important;font-weight:800;font-size:22px;line-height:1.1;letter-spacing:-.01em}
+.cm3-v{font-family:var(--mono);font-weight:500;font-size:34px;line-height:1;margin-top:10px}.cm3-u{font-size:13px;color:var(--grey)}.cm3-d{font-size:14px;line-height:1.5;color:var(--grey);margin-top:8px;flex:1}.cm3-l{font-size:13.5px;font-weight:600;margin-top:8px}
+@media (max-width:760px){.cm3{grid-template-columns:minmax(0,1fr)}.cm3-c{min-height:0}.cm3-v{font-size:28px}}
+</style>`);

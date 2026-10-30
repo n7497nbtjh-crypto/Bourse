@@ -274,7 +274,7 @@ async function pageApprendre() {
     <h2 class="subh">À garder sous la main</h2>
     <div class="pa-keep">
       <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
-      <a href="/commencer"><small>10 minutes</small><b>Par où commencer</b><span>Les sept étapes avant d'investir et les questions fréquentes.</span></a>
+      <a href="/commencer"><small>3 minutes</small><b>Par où commencer</b><span>Trois choses avant d'investir, puis le détail en sept étapes.</span></a>
       ${ACA && ACA.formation ? `<a href="/academie/formation"><small>Formation guidée${isPrem() ? "" : " · Premium"}</small><b>Six semaines, pas à pas</b><span>De l'épargne de précaution au premier portefeuille.</span></a>` : ""}
     </div>
     <details class="pa-tools" id="outils"><summary><span><b>Les outils pédagogiques</b> · ${outils.length} simulateurs et comparateurs, avec vos chiffres</span><span class="light">Afficher</span></summary>
