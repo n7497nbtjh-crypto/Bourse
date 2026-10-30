@@ -31,7 +31,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .ax-imp{font-size:11px;font-weight:600;color:#B42318;border:1px solid color-mix(in srgb,#B42318 35%,transparent);border-radius:99px;padding:0 7px}
 .ax-tf{display:block;font-weight:600;font-size:15px;margin-top:3px;line-height:1.35}.ax-t{display:block;font-size:12.5px;color:var(--grey);margin-top:2px;overflow-wrap:anywhere}
 .ax-fig{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 4px}.ax-fig span{display:flex;flex-direction:column;min-width:0}.ax-fig small{font-size:11.5px;color:var(--light)}.ax-fig b{font-family:var(--mono);font-size:14px}
-.ax-cl{margin:8px 0 2px;padding:9px 12px;border-left:3px solid var(--c,#1E6FD9);background:color-mix(in srgb,var(--c,#1E6FD9) 6%,transparent);border-radius:0 8px 8px 0;font-size:13.5px}
+.ax-cl{margin:8px 0 2px;padding:9px 12px;border-left:3px solid var(--lime);background:var(--soft);border-radius:0 8px 8px 0;font-size:13.5px}
 .ax-cl p{margin:2px 0 6px}.ax-cl p:last-of-type{margin-bottom:2px}.ax-cl b{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey)}.ax-cl small{display:block;color:var(--light);font-size:11.5px}
 .ax-cl ul{margin:2px 0;padding-left:18px}.ax-src{display:inline-block;margin-top:6px;font-size:12.5px}
 .ax-why{font-size:12.5px;color:var(--grey);margin:4px 0 0}
@@ -90,7 +90,9 @@ function actuListHTML(items, opts = {}) {
   }
   return `<div class="ax-list">${out}</div>`;
 }
-const actuImp = it => !(ACTU_CAT[it.c] || {}).routine && it.i >= 1;
+// L'essentiel (30/10) : jamais un dépôt sans contenu (« FORM 6-K », communiqué sans chiffres ni lecture), ni les votes d'assemblée
+const actuVide = it => /^FORM \d|^6-K$|^8-K$/i.test(String(it.t || "").trim()) || ((it.c === "communique" || it.c === "autre") && !(it.f || []).length && !(it.r || []).length && !(it.x && it.x.c) && (!it.t || /^(Communiqué|Information importante|FORM)/i.test(it.t)));
+const actuImp = it => !(ACTU_CAT[it.c] || {}).routine && it.i >= 1 && !actuVide(it) && it.c !== "assemblee";
 const actuType = (it, f) => f === "tout" ? true : f === "imp" ? actuImp(it) : f === "operation" ? it.c === "operation" || it.c === "contrat" : it.c === f;
 
 /* ---------- Presse ---------- */
