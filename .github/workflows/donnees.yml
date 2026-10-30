@@ -46,6 +46,7 @@ jobs:
       - name: Construction et tests
         run: |
           node build.mjs
+          node tests/t_coherence.mjs || echo "::warning::Contrôle de cohérence : des erreurs bloquantes subsistent (voir ci-dessus)"
           node tests/t_calc.mjs
           node tests/t_univers.mjs
           node tests/t_sec.mjs

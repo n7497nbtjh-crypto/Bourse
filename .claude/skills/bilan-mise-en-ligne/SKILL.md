@@ -8,6 +8,7 @@ description: Tester, committer et mettre en ligne une modification du site bilan
 ## Tests
 ```
 node build.mjs                    # construit _worker.js, prompts.json, sitemap.xml
+node tests/t_coherence.mjs        # cohérence des comptes de toutes les fiches : « aucune erreur bloquante » attendu
 python3 tests/audit.py            # toutes les pages, 3 largeurs : 0 problème, 0 erreur JS attendus
 python3 tests/t_ia.py             # réponses calculées : 100 % attendu
 node tests/t_worker.mjs           # + les tests t_*.mjs / t_*.py du périmètre touché

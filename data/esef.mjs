@@ -175,6 +175,11 @@ export function toSeries(merged, maxYears = 5) {
   for (const k of KEYS) { const s = ys.map(y => merged.years[y][k] ?? null); if (s.some(v => v != null)) fin[k] = s.map(v => v == null ? null : typeof v === "boolean" ? v : Math.round(v * 100) / 100); }
   const tags = {};
   for (const t of TAGS) { const s = ys.map(y => (merged.tags && merged.tags[t] && merged.tags[t][y]) ?? null); if (s.some(v => v != null)) tags[t] = s; }
+  // Garde-fou : un chiffre d'affaires à zéro entre deux années renseignées est un concept manquant, pas une activité nulle
+  if (fin.ca) fin.ca = fin.ca.map((v, i) => v === 0 && fin.ca.some((w, j) => j !== i && w > 50) ? null : v);
+  // Garde-fou : un bénéfice par action de signe opposé au bénéfice net vient d'un mauvais concept (perte diluée, part des minoritaires…) ; on l'efface plutôt que de l'afficher
+  if (fin.eps && fin.net) fin.eps = fin.eps.map((e, i) => { const n = fin.net[i]; return e != null && n != null && Math.abs(n) > 1 && Math.abs(e) > 0.01 && Math.sign(e) !== Math.sign(n) ? null : e; });
+  if (fin.eps && fin.eps.every(v => v == null)) delete fin.eps;
   const out = { years: ys, currency: merged.currency, fyEnd: merged.fyEnd, fin };
   if (Object.keys(tags).length) out.tags = tags;
   if (merged.norme) out.norme = merged.norme;
