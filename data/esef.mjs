@@ -4,7 +4,8 @@
 
 // Pour chaque indicateur : les étiquettes IFRS acceptées, dans l'ordre de préférence.
 export const CONCEPTS = {
-  ca: ["ifrs-full:Revenue", "ifrs-full:RevenueFromContractsWithCustomers", "ifrs-full:RevenueFromSaleOfGoods"],
+  ca: ["ifrs-full:Revenue", "ifrs-full:RevenueFromContractsWithCustomers", "ifrs-full:RevenueFromSaleOfGoods", "ifrs-full:RevenueFromRenderingOfServices", "ifrs-full:RentalIncomeFromInvestmentProperty", "ifrs-full:RevenueFromInsuranceContractsIssued", "ifrs-full:InsuranceRevenue"],
+  caBanqueA: ["ifrs-full:InterestIncome", "ifrs-full:RevenueFromInterest"], caBanqueB: ["ifrs-full:FeeAndCommissionIncome"],
   ebit: ["ifrs-full:ProfitLossFromOperatingActivities"],
   net: ["ifrs-full:ProfitLossAttributableToOwnersOfParent", "ifrs-full:ProfitLoss"],
   eps: ["ifrs-full:BasicEarningsLossPerShare", "ifrs-full:BasicEarningsLossPerShareFromContinuingOperations"],
@@ -39,7 +40,7 @@ const MONEY_PER_SHARE = new Set(["eps", "dps"]);
 // Étiquettes propres à une entreprise (« extensions ») : reconnues par leur nom, dans l'ordre de préférence.
 // Établi d'après le diagnostic de la collecte du 28/10/2026 (data/diagnostic.json).
 export const EXT = {
-  ca: [/^(RevenuesFromContinuingActivities|NetBankingIncome|ProduitNetBancaire|NetBankingRevenue)$/i],
+  ca: [/^(RevenuesFromContinuingActivities|NetBankingIncome|ProduitNetBancaire|NetBankingRevenue|NetRevenues?|NetIncomeBanking|TotalRevenues?|RentalIncome|GrossRentalIncome|GrossRentalRevenue|RevenuesFromOrdinaryActivities|Turnover|ChiffreDaffaires|Sales|TotalSales|NetSales|PremiumsWritten|GrossWrittenPremiums|ConsolidatedRevenue|RevenueNet)$/i],
   ebit: [/^ProfitLossFromOperatingActivities/, /^(RecurringOperatingIncome|ResultatOperationnelCourant|CurrentOperatingIncome|OperatingIncomeBeforeNonRecurringItems|OperatingProfitBeforeOtherIncomeAndExpenses|ProfitLossFromOrdinaryOperatingActivities|MargeOperationnelle)$/i,
     /^ResultatDexploitation/i, /^(ProfitLossFromOrdinaryActivities|ResultatOperationnel|NetOperatingResult|CurrentOperatingIncome)/i],
   ebitdaExt: [/ebitda/i, /^MargeOperationnelleAvantAmortissements$/i],
@@ -106,6 +107,7 @@ export function extract(doc) {
     }
   };
   fillFirst("ca", EXT.ca); fillFirst("ebit", EXT.ebit); fillFirst("ebitdaExt", EXT.ebitdaExt);
+  for (const r of Object.values(years)) { if (r.ca == null && r.caBanqueA != null && r.caBanqueB != null) { r.ca = r.caBanqueA + r.caBanqueB; r.caBanque = true; } delete r.caBanqueA; delete r.caBanqueB; } // banques, gestionnaires d'actifs : intérêts + commissions
   // Amortissements : plus grand total trouvé parmi les étiquettes d'amortissement (hors sous-totaux)
   for (const c of ext.filter(c => EXT.daExt[0].test(local(c)) && !DA_EXCLUDE.test(local(c))))
     for (const [y, v] of Object.entries(byYear(c, false))) { years[y] = years[y] || {}; if (years[y].da == null && (years[y].daExtMax == null || Math.abs(v) > years[y].daExtMax)) years[y].daExtMax = Math.abs(v); }

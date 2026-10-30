@@ -7,7 +7,9 @@
 // Les sociétés étrangères publient souvent en normes IFRS (taxonomie « ifrs-full ») et dans leur devise.
 
 export const US_CONCEPTS = {
-  ca: ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet", "RevenuesNetOfInterestExpense"],
+  ca: ["Revenues", "RevenueFromContractWithCustomerExcludingAssessedTax", "SalesRevenueNet", "RevenuesNetOfInterestExpense", "RevenueFromContractWithCustomerIncludingAssessedTax", "RegulatedAndUnregulatedOperatingRevenue", "OperatingLeaseLeaseIncome", "RealEstateRevenueNet", "InterestAndDividendIncomeOperating"],
+  // Banques : pas de chiffre d'affaires ; on reconstitue des « revenus » = marge d'intérêt nette + commissions et autres produits (produit net bancaire)
+  caBanqueA: ["InterestIncomeExpenseNet"], caBanqueB: ["NoninterestIncome"],
   ebit: ["OperatingIncomeLoss"],
   net: ["NetIncomeLoss", "NetIncomeLossAvailableToCommonStockholdersBasic", "ProfitLoss"],
   eps: ["EarningsPerShareBasic"],
@@ -30,7 +32,8 @@ export const US_CONCEPTS = {
 };
 // Mêmes indicateurs pour les sociétés en normes IFRS
 export const IFRS_CONCEPTS = {
-  ca: ["Revenue", "RevenueFromContractsWithCustomers"],
+  ca: ["Revenue", "RevenueFromContractsWithCustomers", "RevenueFromRenderingOfServices", "RentalIncomeFromInvestmentProperty", "RevenueFromSaleOfGoods"],
+  caBanqueA: ["InterestIncome", "RevenueFromInterest"], caBanqueB: ["FeeAndCommissionIncome"],
   ebit: ["ProfitLossFromOperatingActivities"],
   net: ["ProfitLossAttributableToOwnersOfParent", "ProfitLoss"],
   eps: ["BasicEarningsLossPerShare"],
@@ -78,7 +81,7 @@ function extractNs(g, CONC, ifrs) {
   if (devises.length > 1 && devises[0][1].n < 2) { const plus = devises.slice().sort((a, b) => b[1].n - a[1].n)[0]; if (plus[1].n >= 2) cur = plus[0]; }
   // Fins d'exercice : dates de fin des chiffres annuels de chiffre d'affaires ou de résultat
   const ends = new Set();
-  for (const k of ["ca", "net"]) for (const c of CONC[k]) for (const r of annual(((g[c] || {}).units || {})[cur] || [])) {
+  for (const k of ["ca", "net", "caBanqueA"]) for (const c of CONC[k] || []) for (const r of annual(((g[c] || {}).units || {})[cur] || [])) {
     if (r.start && len(r) >= 330 && len(r) <= 400) ends.add(r.end);
   }
   const years = {};
@@ -107,6 +110,8 @@ function extractNs(g, CONC, ifrs) {
   }
   const last = [...ends].sort().pop(); if (last) fyEnd = last.slice(5, 10);
   for (const [y, r] of Object.entries(years)) {
+    if (r.ca == null && r.caBanqueA != null && r.caBanqueB != null) { r.ca = r.caBanqueA + r.caBanqueB; r.caBanque = true; } // revenus d'une banque
+    delete r.caBanqueA; delete r.caBanqueB;
     if (r.capex != null) r.capex = Math.abs(r.capex);
     if (r.cfo != null && r.capex != null) r.fcf = r.cfo - r.capex;
     let debt = r.debtTotal != null ? r.debtTotal : (r.debtNC != null || r.debtC != null) ? (r.debtNC || 0) + (r.debtC || 0) : null;

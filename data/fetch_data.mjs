@@ -265,7 +265,8 @@ async function main() {
       const spread = (FRESH ? [...c.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 7, 0) * 864e5 : 0);
       const lastY = (old.years || [])[(old.years || []).length - 1];
       const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? (old.amfTried ? 20 : 0) : 70) * 3600e3; // France : premier essai AMF immédiat
-      if (old.v === VERSION && !deviseDouteuse && !late && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      const sansCA = !old.fin || !Array.isArray(old.fin.ca) || old.fin.ca[old.fin.ca.length - 1] == null; // chiffre d'affaires absent : relu (étiquettes élargies le 30/10 : foncières, banques, services publics)
+      if (old.v === VERSION && !deviseDouteuse && !late && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);
