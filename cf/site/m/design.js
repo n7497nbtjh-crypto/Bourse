@@ -206,3 +206,4 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .anf-sait h4,.ess .lbl,.cmpr-sug .h,.cmpr-badge,.cmpr-vl .th,.cmpr-all tr.grp th,.fbt,.pf3bdg,.pf3dx span,.cm-n,table.tbx .u,.pf3mq,.syncat,.synnews .cat,.acc-tag{font-family:var(--sans)!important;letter-spacing:.02em}
 .cmpr-all tr.grp th,.fbt,.anf-sait h4,.cmpr-sug .h{font-size:12.5px;font-weight:600;text-transform:none}
 </style>`);
+function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, nulle part
