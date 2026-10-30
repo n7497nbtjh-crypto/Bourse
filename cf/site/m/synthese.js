@@ -332,8 +332,9 @@ function synSujets(b) { // sujets du contexte dont au moins un impact vise une v
   return out.sort((x, y) => y.touches.length - x.touches.length).slice(0, 3);
 }
 function synFaitsIA(b, sujets) { // les faits transmis à l'IA du site : rien d'autre que ce que la page affiche
-  const f = { semaine: b.semaine, du: b.du, au: b.au, portefeuille: b.portefeuille && b.portefeuille.var_pct != null ? { variation_pct: b.portefeuille.var_pct, variation_eur: b.portefeuille.var_eur } : null, indices: b.indices,
-    valeurs: (b.lignes || []).map(l => ({ nom: l.nom, variation_semaine_pct: l.variation_semaine_pct, indice: l.indice ? { nom: l.indice.nom, pct: l.indice.pct } : null, poids_portefeuille_pct: l.portefeuille ? l.portefeuille.poids_pct : null })),
+  const r1 = v => v == null ? null : Math.round(v * 10) / 10, r0 = v => v == null ? null : Math.round(v);
+  const f = { semaine: b.semaine, du: b.du, au: b.au, portefeuille: b.portefeuille && b.portefeuille.var_pct != null ? { variation_pct: r1(b.portefeuille.var_pct), variation_eur: r0(b.portefeuille.var_eur) } : null, indices: (b.indices || []).map(i => ({ nom: i.nom, pct: r1(i.pct) })),
+    valeurs: (b.lignes || []).map(l => ({ nom: l.nom, variation_semaine_pct: r1(l.variation_semaine_pct), indice: l.indice ? { nom: l.indice.nom, pct: r1(l.indice.pct) } : null, poids_portefeuille_pct: l.portefeuille ? r0(l.portefeuille.poids_pct) : null })),
     annonces: (b.annonces || []).filter(a => a.origine !== "presse").slice(0, 8).map(a => ({ valeur: a.nom || a.k, titre: a.titre, date: a.date, lecture: (a.lecture || []).join(" "), chiffres: a.chiffres })),
     contexte: sujets.map(({ sj, touches }) => ({ sujet: sj.titre, fait: (sj.faits || []).slice(-1)[0], concerne: touches.map(t => `${t.c.name} (${(SYN_SENS[t.im.sens] || SYN_SENS["±"])[0]}) : ${t.im.mecanisme}`) })),
     a_venir: (b.a_venir || []).slice(0, 6).map(e => ({ valeur: e.nom || e.k, quoi: e.label, date: e.date })),
