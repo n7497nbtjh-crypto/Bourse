@@ -7,7 +7,7 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
   await aller(p, "/", 2500);
   const cartes = await p.$$eval(".acc-card", L => L.map(a => ({ id: a.getAttribute("href").split("/").pop(), prix: a.querySelector(".acc-cp b") ? a.querySelector(".acc-cp b").textContent : null, pts: [...a.querySelectorAll(".acc-ct i")].map(i => i.textContent) })));
   const ex = await p.$eval(".acc-ex", a => ({ id: a.getAttribute("href").split("/").pop(), lignes: [...a.querySelectorAll(".acc-exr")].map(r => [r.querySelector(".acc-exk").textContent, r.querySelector("b").textContent]) })).catch(() => null);
-  if (!cartes.length) err.push("accueil : aucune carte trouvée"); if (!ex) err.push("accueil : exemple absent");
+  if (!ex) err.push("accueil : exemple absent"); // les cartes « Trois fiches » ont disparu au lot 3 ; l'exemple reste contrôlé
   for (const c of cartes) {
     await aller(p, "/entreprise/" + c.id, 3000);
     const f = await p.evaluate(() => ({ prix: document.querySelector(".pxhead .p") && document.querySelector(".pxhead .p").textContent, pts: [...(document.querySelector(".rf-tally") ? document.querySelector(".rf-tally").querySelectorAll("span") : [])].map(s => (s.textContent.match(/\d+/) || [""])[0]) }));
@@ -25,6 +25,6 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
     if (!ex.lignes.some(([l]) => l === "Marge d'exploitation")) err.push(`${ex.id} : l'exemple n'affiche pas la marge d'exploitation`);
   }
   await b.close();
-  console.log(err.length ? "ÉCARTS :\n- " + err.join("\n- ") : `OK : ${cartes.length} cartes et l'exemple ${ex && ex.id} concordent avec les fiches`);
+  console.log(err.length ? "ÉCARTS :\n- " + err.join("\n- ") : `OK : ${cartes.length ? cartes.length + " cartes et " : ""}l'exemple ${ex && ex.id} concorde${cartes.length ? "nt" : ""} avec la fiche`);
   process.exit(err.length ? 1 : 0);
 })();
