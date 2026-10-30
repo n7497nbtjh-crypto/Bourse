@@ -73,18 +73,22 @@ if (document.readyState === "complete") setTimeout(pwaEnregistrer, 1500); else a
 /* ---------- Nouvelle version en ligne (application restée ouverte) ---------- */
 const PWA_VERSION = (document.querySelector('meta[name="bilan-version"]') || {}).content || null;
 let PWA_VU = Date.now();
-async function pwaVerifierVersion() {
-  if (!PWA_VERSION || document.hidden || Date.now() - PWA_VU < 30 * 6e4 || document.getElementById("pwamaj")) return;
+const PWA_T0 = Date.now();
+async function pwaVerifierVersion(auto) { // auto : au chargement, si une version plus récente est en ligne, la page se recharge d'elle-même (rien n'a encore été saisi)
+  if (!PWA_VERSION || document.hidden || (!auto && Date.now() - PWA_VU < 5 * 6e4) || document.getElementById("pwamaj")) return;
   PWA_VU = Date.now();
   try {
     const r = await fetch("/", { method: "HEAD", cache: "no-store", credentials: "same-origin" }), v = r.headers.get("x-bilan-version");
     if (v && v !== PWA_VERSION) {
+      const saisie = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) && document.activeElement.value;
+      if (auto === true && !saisie && Date.now() - PWA_T0 < 20000 && !sessionStorage.getItem("pwa-rechg:" + v)) { try { sessionStorage.setItem("pwa-rechg:" + v, "1"); } catch (e) { } location.reload(); return; }
       document.querySelector("header").insertAdjacentHTML("afterend", `<div class="pwa-maj" id="pwamaj" role="status"><div class="wrap"><span>Une nouvelle version de bilan. est en ligne.</span><button type="button" id="pwamajb">Mettre à jour</button></div></div>`);
       document.getElementById("pwamajb").onclick = () => location.reload();
     }
   } catch (e) { }
 }
-document.addEventListener("visibilitychange", pwaVerifierVersion);
+document.addEventListener("visibilitychange", () => pwaVerifierVersion(false));
+setTimeout(() => pwaVerifierVersion(true), 2500); // au chargement : la version en ligne est comparée à celle affichée
 setInterval(pwaVerifierVersion, 10 * 6e4);
 
 /* ---------- Hors ligne ---------- */

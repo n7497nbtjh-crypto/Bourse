@@ -190,6 +190,7 @@ async function orcIaAsk(q, o = {}) {
     const rediger = async box => {
       box.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA du site rédige à partir des données de la fiche…</div>`;
       const faits = { ...ficheFaits(s, full), ...(typeof ficheWd === "function" ? { identite: ficheWd(s.id) } : {}) };
+      const autres = await iaAutresEntreprises(q, s); if (autres.length) faits.autres_entreprises_citees_dans_la_question = autres; // « pourquoi la marge de LVMH est-elle plus haute que celle de Kering ? » : Kering est chargée aussi
       box.innerHTML = miaRendu(await iaRediger("assistant", faits, { question: q, max: 600 }));
     };
     let loc = null; try { loc = localAssist(s, full, q); } catch (e) { }
@@ -211,6 +212,7 @@ function orcIaVisibilite() {
   const b = $("#orciab"); if (!b) return;
   const p = location.pathname, cache = p === "/demander" || (p === "/" && scrollY < 520);
   b.classList.toggle("off", cache);
+  b.classList.toggle("mini", scrollY > 160 && matchMedia("(max-width:760px)").matches); // sur téléphone, le bouton devient une icône ronde en défilant pour ne rien cacher
 }
 (() => {
   const start = () => { orcIaShell(); orcIaVisibilite(); };
@@ -233,7 +235,7 @@ function orcIaVisibilite() {
 .orciaf{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);background:var(--card)}.orciaf input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit}
 .orciaft{margin:0;padding:0 18px 14px;background:var(--card);font-size:11.5px;color:var(--light)}
 html.orcia-on{overflow:hidden}
-@media (max-width:760px){.orciab{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));height:44px;padding:0 14px 0 12px}.orciab .lb{font-size:13px}
+@media (max-width:760px){.orciab{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));height:44px;padding:0 14px 0 12px}.orciab.mini{width:44px;padding:0;justify-content:center}.orciab.mini .lb{display:none}.orciab .lb{font-size:13px}
   .orciap{top:auto;height:88vh;width:100%;border-radius:18px 18px 0 0;animation:orcup .22s ease-out}@keyframes orcup{from{transform:translateY(40px)}to{transform:none}}}
 @media print{.orciab,.orcia{display:none!important}}
 </style>`);
@@ -369,3 +371,18 @@ document.head.insertAdjacentHTML("beforeend", `<style>
     }, 0);
   });
 })();
+
+/* Entreprises citées dans une question (nom ou code) : leurs chiffres principaux sont joints aux faits, sinon l'IA ne peut pas comparer. */
+async function iaAutresEntreprises(q, s) {
+  const t = " " + String(q || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") + " ", out = [];
+  const norm = x => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  for (const c of R.companies) {
+    if (c.id === s.id || c.missing || out.length >= 3) continue;
+    const n = norm(c.name), tk = norm(c.ticker || ""), ok = (n.length >= 4 && t.includes(" " + n + " ")) || (n.length >= 4 && t.includes(" " + n.split(" ")[0] + " ") && n.split(" ")[0].length >= 5) || (tk.length >= 3 && t.includes(" " + tk + " "));
+    if (!ok) continue;
+    let f = FULL[c.id]; if (!f) { try { f = FULL[c.id] = await (await fetch(`/data/societes/${c.id}.json`)).json(); } catch (e) { f = null; } }
+    const r = ratios(c), v = valo(c), R1 = x => x == null ? null : Math.round(x * 1000) / 10;
+    out.push({ entreprise: c.name, secteur: secName(c), exercice: c.year, devise: c.currency, ventes_millions: c.ca, benefice_net_millions: c.net, croissance_ventes_pct: R1(r.g1), marge_operationnelle_pct: R1(r.marge), marge_nette_pct: R1(r.nm), rentabilite_capitaux_propres_pct: R1(r.roe), dette_en_annees_de_resultat_avant_amortissements: r.lev == null ? null : Math.round(r.lev * 10) / 10, per: v && v.pe ? Math.round(v.pe * 10) / 10 : null, rendement_dividende_pct: v && v.yld != null ? R1(v.yld) : null, activite: c.desc });
+  }
+  return out;
+}

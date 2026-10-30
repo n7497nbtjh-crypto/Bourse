@@ -299,9 +299,9 @@ function accVoiesHTML() {
 }
 const ACC_EX = [["lvmh", "LVMH"], ["totalenergies", "TotalEnergies"], ["apple", "Apple"]];
 function accCarteHTML(c) { // une fiche en carte : logo, cours du jour, points forts et à surveiller, sans texte
-  const p = PX["c:" + c.id], t = typeof quick === "function" ? quick(c) : null, sym = CUR[c.currency] || c.currency || "";
+  const p = typeof pxOf === "function" ? pxOf(c) : PX["c:" + c.id], t = typeof rfTally === "function" ? rfTally(c, { ...c, cagr: null }) : null; // cours et devise de cotation (pxOf), points comptés comme sur la fiche (rfTally)
   return `<a class="acc-card" href="/entreprise/${c.id}">${logo(c, 36)}<span class="acc-cn"><b>${esc(c.name)}</b><small>${esc(secName(c))}</small></span>
-    ${p && p.p != null ? `<span class="acc-cp"><b>${F2.format(p.p)} ${esc(sym)}</b>${p.chg != null ? `<small class="${accCls(p.chg)}">${accPct(p.chg)}</small>` : ""}</span>` : ""}
+    ${p && p.p != null ? `<span class="acc-cp"><b>${pxFmt(p.p, p.cur)}</b>${p.chg != null ? `<small class="${accCls(p.chg)}">${accPct(p.chg)}</small>` : ""}</span>` : ""}
     ${t ? `<span class="acc-ct"><i class="f">${t.fort}</i><i class="m">${t.moyen}</i><i class="v">${t.vig}</i><small>points forts · moyens · à surveiller</small></span>` : ""}</a>`;
 }
 
@@ -324,7 +324,7 @@ function accExempleHTML(s, c) { // un vrai résultat du site, tel qu'il apparaî
   const lev = v2 => `${F1.format(v2)} an${v2 >= 2 ? "s" : ""} de résultat`;
   return `<a class="acc-ex" href="/entreprise/${s.id}"><span class="acc-exh">${logo(s, 34)}<span><b>${esc(s.name)}</b><small>${esc(secName(s))} · comptes ${esc(String(s.year))}, document officiel</small></span></span>
     ${vc ? `<p class="rf-vc acc-exv">${esc(vc)}</p>` : ""}
-    ${!bank && m.marge != null ? row("Marge nette", pct(m.marge, 0, false), md.marge != null ? pct(md.marge, 0, false) : "–", rf6Jauge(s, "marge", false, m.marge)) : ""}
+    ${!bank && m.marge != null ? row("Marge d'exploitation", pct(m.marge, 0, false), md.marge != null ? pct(md.marge, 0, false) : "–", rf6Jauge(s, "marge", false, m.marge)) : ""}
     ${!bank && m.lev != null && m.lev >= 0 ? row("Dette nette", lev(m.lev), md.lev != null ? lev(md.lev) : "–", rf6Jauge(s, "lev", true, m.lev)) : ""}
     ${v && v.pe ? row("Prix payé (PER)", `${F0.format(v.pe)} fois le résultat`, mp ? `${F0.format(mp)} fois` : "–", rf6Jauge(s, "pe", true, v.pe)) : ""}
     <span class="acc-exf">Voir la fiche complète →</span></a>`;

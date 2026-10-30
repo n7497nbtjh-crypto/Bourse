@@ -1297,7 +1297,7 @@ function croisements(co, f) { // ce qu'il faut regarder ensemble
 const lvTag = lv => `<span class="lv lv-${lv}">${LV[lv]}</span>`;
 function tally(items) { const t = { fort: 0, moyen: 0, vig: 0 }; items.forEach(i => { if (t[i.lv] != null) t[i.lv]++; }); return t; }
 function tallyTxt(t) { return [t.fort && `${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}`, t.moyen && `${t.moyen} dans la moyenne`, t.vig && `${t.vig} point${t.vig > 1 ? "s" : ""} de vigilance`].filter(Boolean).join(" · "); }
-const quick = c => c.missing ? null : tally(lecture(c, { ...c, cagr: null }));
+const quick = c => c.missing ? null : (typeof rfTally === "function" ? rfTally(c, { ...c, cagr: null }) : tally(lecture(c, { ...c, cagr: null }))); // 30/10 : même compte des points partout (rfNiveaux, fiche2.js)
 
 /* ---------- Définitions ---------- */
 const TERMS = {
@@ -3439,27 +3439,23 @@ async function pagePremium(sub) {
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
   PREM = null; const st = await premStatus();
-  const rows = [
-    ["Fiches, comptes expliqués, médianes, concurrentes, actualités, outils", "Oui", "Oui"],
-    ["Mon espace : favoris et portefeuille sur tous vos appareils", "Oui", "Oui"],
-    ["Bilan de la semaine calculé : variations, annonces, dates à venir", "Oui", "Oui"],
-    ["L'Académie : cours de culture financière et quiz", "Les essentiels", "Tous les cours"],
-    ["Formation guidée de 6 semaines, étape par étape", "–", "Oui"],
-    ["Historique des bilans", "2 semaines", "12 semaines"],
-    ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "Toutes"],
-    ["Réponses calculées par le site (recherches, comparaisons, définitions, questions sur une fiche)", "Sans limite", "Sans limite"],
-    ["Réponses rédigées par l'IA du site, pour vos questions libres", "3 par jour (10 avec un compte gratuit)", "Sans limite"],
-    ["Résultats d'une recherche par critères", "8", "30"],
-    ["Positions actives suivies dans le portefeuille", `${FREE.pf}`, "Sans limite"],
-    ["Entreprises comparées côte à côte", `${FREE.cmp}`, "5"],
+  const rows = [ // six lignes, ✓ et — (30/10) : fiches, médianes, outils, favoris et portefeuille restent gratuits, sans ligne pour le dire
+    ["Rapport de la semaine sur vos valeurs", "2 semaines d'historique", "12 semaines, lecture de l'IA"],
+    ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "✓ toutes"],
+    ["Questions libres rédigées par l'IA du site", "3 par jour", "✓ sans limite"],
+    ["L'Académie et la formation guidée de 6 semaines", "Les essentiels", "✓ tout"],
+    ["Portefeuille : positions suivies", `${FREE.pf}`, "✓ sans limite"],
+    ["Comparer côte à côte · recherche par critères", `${FREE.cmp} entreprises · 8 résultats`, "5 entreprises · 30 résultats"],
   ];
-  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<button class="btn" disabled>Ouverture prochaine</button>`}</div>`;
+  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<p class="prem-bientot">Ouverture prochaine</p>`}</div>`;
+  const attente = OFFRES.mensuel || OFFRES.unique ? "" : `<section class="panel prem-att"><div class="pb"><h2 class="f2-h">Soyez prévenu à l'ouverture</h2><p class="muted" style="margin:6px 0 12px">Les inscrits avant l'ouverture gardent le prix bloqué à <b>39 € par an</b>. Une adresse, rien d'autre ; aucun message en dehors de l'ouverture.</p>
+    <form id="attf" class="askf" novalidate><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email" required><button class="btn">Prévenez-moi</button></form><p id="attm" class="prem-attm" role="status" aria-live="polite"></p><p class="muted" id="attn" style="font-size:13px;margin:8px 0 0"></p></div></section>`;
   app.innerHTML = `<h1 class="pagetitle">Premium : vos valeurs suivies pour vous, chaque semaine.</h1><p class="pagesub">Tout l'essentiel reste gratuit : les fiches, les chiffres, les médianes, les outils, votre espace. Premium vend du temps et du suivi, jamais de l'information de base.</p>
     <ul class="acc-av prem-av"><li><b>Le rapport complet</b><span>Jusqu'à six secteurs suivis, huit valeurs analysées en détail, douze semaines d'historique, la lecture de l'IA du site.</span></li><li><b>Toutes les alertes, chaque soir</b><span>Publication, dividende, mouvement de plus de 5 % sur une valeur que vous suivez.</span></li><li><b>Sans limite</b><span>L'IA du site pour vos questions libres, toute l'Académie avec la formation guidée de six semaines, un portefeuille sans plafond.</span></li></ul>
     <p class="prem-preuve">Le prix finance les données et les serveurs, pas la publicité. Rien n'est généré : chaque chiffre vient d'un dépôt officiel que vous pouvez ouvrir ; le site ne détient aucune position et ne vend aucune sélection de titres.</p>
     ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
-    <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>`}
+    <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>${attente}`}
     <section class="panel"><div class="ph"><h2>Ce qui change avec Premium</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table></div></section>
     <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p class="muted" id="codem" style="font-size:13px"></p></div></section>
       <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p class="muted" id="lostm" style="font-size:13px"></p></div></section></div>
@@ -3473,6 +3469,17 @@ async function pagePremium(sub) {
     <p class="note">Paiement sécurisé par Stripe. <a class="lnk" href="/cgv">Conditions générales de vente</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/avertissement">Avertissement sur les risques</a></p>`;
   const P = $("#portail"); if (P) P.onclick = async () => { P.disabled = true; try { const j = await (await iaFetch("/api/premium/portail")).json(); if (j.url) location.href = j.url; else { toast(esc(j.error || "Portail indisponible.")); P.disabled = false; } } catch (e) { P.disabled = false; } };
   const U = $("#unprem"); if (U) U.onclick = () => { setPremTok(""); document.documentElement.classList.remove("is-prem"); pagePremium(); };
+  const AF = $("#attf"), AM = $("#attm"); if (AF) { // liste d'attente : succès, erreur, format vérifié avant l'envoi
+    AF.onsubmit = async e => { e.preventDefault(); const em = AF.querySelector("input").value.trim(), bt = AF.querySelector("button");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { AM.className = "prem-attm ko"; AM.textContent = "Cette adresse ne semble pas valide : vérifiez-la."; return; }
+      bt.disabled = true; AM.className = "prem-attm"; AM.textContent = "Envoi…";
+      try { const r = await fetch("/api/premium/attente", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: em }) }); const j = await r.json().catch(() => ({}));
+        if (r.ok && j.ok) { AM.className = "prem-attm ok"; AM.textContent = "C'est noté. Vous serez prévenu à l'ouverture, au prix bloqué."; AF.reset(); }
+        else { AM.className = "prem-attm ko"; AM.textContent = j.error || "Le site n'a pas pu enregistrer votre adresse. Réessayez dans un moment."; } }
+      catch (x) { AM.className = "prem-attm ko"; AM.textContent = "Le site est injoignable : vérifiez votre connexion et réessayez."; }
+      bt.disabled = false; };
+    fetch("/api/premium/attente").then(r => r.json()).then(j => { if (j && j.n >= 100) $("#attn").textContent = `${F0.format(j.n)} personnes déjà inscrites.`; }).catch(() => { });
+  }
   $("#codef").onsubmit = async e => { e.preventDefault(); const v = $("#codef input").value.trim().replace(/[^a-f0-9]/gi, "").toLowerCase(); if (v.length < 20) { $("#codem").textContent = "Ce code ne semble pas complet."; return; }
     setPremTok(v); const s = await premStatus(); if (s.premium) { toast("Premium est activé sur cet appareil."); pagePremium(); } else { setPremTok(""); $("#codem").textContent = "Ce code n'est pas reconnu ou l'accès a expiré."; } };
   $("#lostf").onsubmit = async e => { e.preventDefault(); const v = $("#lostf input").value.trim(); if (!/@/.test(v)) return; try { const j = await (await fetch("/api/premium/retrouver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: v }) })).json(); $("#lostm").textContent = j.error || "Si un accès actif correspond à cette adresse, le code vient d'y être envoyé."; } catch (x) { $("#lostm").textContent = "Indisponible pour le moment."; } };

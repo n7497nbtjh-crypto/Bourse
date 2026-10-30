@@ -12,6 +12,7 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)`,
   `CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))`,
+  `CREATE TABLE IF NOT EXISTS attente (email TEXT PRIMARY KEY, created INTEGER NOT NULL)`, // liste d'attente Premium (avant l'ouverture des paiements)
 ];
 let ready = false;
 export async function initCompte(db) { if (ready) return; for (const q of SCHEMA) await db.prepare(q).run(); ready = true; }
@@ -92,6 +93,19 @@ export async function premium(request, env) {
       await env.DB.prepare(`INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run();
       return json({ token, plan });
     } catch (e) { return json({ error: "Vérification du paiement impossible : " + String(e.message).slice(0, 100) }, 502); }
+  }
+  if (path === "/api/premium/attente" && request.method === "POST") { // liste d'attente : une adresse, rien d'autre ; prix bloqué pour les inscrits avant l'ouverture
+    const ip = request.headers.get("cf-connecting-ip") || "local";
+    if (await tropDEssais(env, "attente:" + ip, 5)) return json({ error: "Trop de demandes depuis cette connexion. Réessayez dans un quart d'heure." }, 429);
+    let b = {}; try { b = await request.json(); } catch (e) { }
+    const email = String(b.email || "").trim().toLowerCase().slice(0, 254);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) return json({ error: "Cette adresse ne semble pas valide." }, 400);
+    await env.DB.prepare(`INSERT OR IGNORE INTO attente (email, created) VALUES (?, ?)`).bind(email, Date.now()).run();
+    return json({ ok: true });
+  }
+  if (path === "/api/premium/attente" && request.method === "GET") { // nombre d'inscrits, affiché à partir de 100
+    const r = await env.DB.prepare(`SELECT COUNT(*) AS n FROM attente`).first().catch(() => null);
+    const n = r ? r.n : 0; return json({ n: n >= 100 ? n : 0 });
   }
   if (path === "/api/premium/retrouver" && request.method === "POST") { // renvoie le code d'accès à l'adresse utilisée pour payer
     const ip = request.headers.get("cf-connecting-ip") || "local";

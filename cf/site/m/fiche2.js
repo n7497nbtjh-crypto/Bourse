@@ -433,6 +433,12 @@ function rfAVenir(s) {
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3);
   return `<div class="rf-bl rf-ev"><h3>À venir</h3>${up.length ? `<ul>${up.map(e => `<li><b>${esc(RF_MOIS(e.date))}</b><span>${esc(e.label)}</span></li>`).join("")}</ul>` : `<p class="rf-no">Aucune date annoncée pour l'instant. Le site les ajoute dès que l'entreprise les publie.</p>`}<a class="rf-lk" href="/entreprise/${s.id}/actualite">Agenda et actualités →</a></div>`;
 }
+function rfNiveaux(s, f) { // les niveaux (point fort / moyen / à surveiller) : une seule source pour les blocs, le compte des points et les cartes de l'accueil
+  const bank = isBank(s), it = {}; lecture(s, f).forEach(i => { if (!it[i.term]) it[i.term] = i; });
+  const lv = k => it[k] && it[k].lv !== "na" ? it[k].lv : null, v = valo(s) || {}, mp = MEDPE[s.sector];
+  return { croissance: lv("croissance"), rentabilite: bank ? lv("roe") : (lv("marge") || lv("net")), solidite: bank ? null : (lv("lev") || lv("dettenette") || lv("gear")), valorisation: v.pe && mp ? (v.pe < mp * 0.75 ? "fort" : v.pe > mp * 1.3 ? "vig" : "moyen") : null };
+}
+function rfTally(s, f) { const t = { fort: 0, moyen: 0, vig: 0 }; Object.values(rfNiveaux(s, f)).forEach(l => { if (l && t[l] != null) t[l]++; }); return t; }
 function rfVerdictCourt(s, c) { // deux ou trois mots, lisibles sans lire : rentabilité, dette, prix
   const f = figuresOf(c), m = ratios(f), bank = isBank(s), it = {}; lecture(s, f).forEach(i => { if (!it[i.term]) it[i.term] = i; });
   const lv = k => it[k] && it[k].lv !== "na" ? it[k].lv : null, mots = [];
@@ -452,7 +458,7 @@ function ficheSommaire(s, c) {
       ${rfAVenir(s)}</div>`;
   }
   CURSYM = CUR[s.currency] || s.currency || "€";
-  const t = quick(s);
+  const t = rfTally(s, figuresOf(c)); // même compte que les blocs « Comprendre l'entreprise »
   // 30/10 (Romain) : l'en-tête montre sa place dans le secteur (jauges face à la médiane) ; le verdict « En bref » passe dans l'onglet Synthèse
   const prof = (profilHTML(s) || "").replace(/<p class="kick"[^>]*>Son profil dans le secteur[^<]*<\/p>/, "").replace(/<p class="note"[^>]*>[\s\S]*?<\/p>\s*<\/div>\s*$/, "</div>");
   const rk = fiche2RangBouton(s), n = (prof.match(/class="pa2"/g) || []).length;
@@ -608,24 +614,25 @@ function ficheRetenirHTML(s, c, part) {
   const conc = (() => { try { const { peers } = cmprFiche(s); return peers.slice(0, 3).map(p => `<a href="/entreprise/${p.id}">${esc(p.name)}</a>`); } catch (e) { return []; } })();
   const presA = `${esc(s.desc || "")}${s.desc && !/[.!?]$/.test(s.desc) ? "." : ""} ${esc(s.name)} est cotée ${regName(s) ? `en ${esc(regName(s))}` : ""} dans le secteur ${esc(secName(s)).toLowerCase()}${conc.length ? `, aux côtés de ${conc.join(", ")}` : ""}.`;
   // B. Croissance
-  const vt = bank ? "revenus" : "ventes", gLv = lv("croissance");
+  const NIV = rfNiveaux(s, f), vt = bank ? "revenus" : "ventes", gLv = NIV.croissance;
   const croB = m.g1 == null ? `Le site n'a pas deux exercices consécutifs pour mesurer l'évolution des ${vt}.` : `Les ${vt} ${m.g1 >= 0.05 ? "progressent" : m.g1 <= -0.03 ? "reculent" : "sont stables"} sur un an (${sgn(m.g1)})${f.cagr != null && f.first ? `, ${sgn(f.cagr)} par an en moyenne depuis ${f.first}` : ""}${medS(md.g1, sgn) ? ` ; ${medS(md.g1, sgn)}` : ""}.`;
   const croF = rf6Fig(bank ? "Revenus" : "Ventes", B(f.ca), f.caPrev != null ? `${B(f.caPrev)} un an plus tôt` : "") + rf6Fig("Bénéfice net", f.net != null ? B(f.net) : null, m.ng != null ? `${sgn(m.ng)} sur un an` : "", f.net < 0 ? "dn" : "");
   // C. Rentabilité
-  const rLv = bank ? lv("roe") : (lv("marge") || lv("net"));
+  const rLv = NIV.rentabilite;
   const renB = f.net != null && f.net < 0 ? `L'entreprise est en perte sur son dernier exercice (${B(f.net)}).` : bank ? (m.roe != null ? `L'argent des actionnaires rapporte ${pct(m.roe, 0, false)} par an${medS(md.roe, x => pct(x, 0, false)) ? ` ; ${medS(md.roe, x => pct(x, 0, false))}` : ""}.` : "Rentabilité non mesurable avec les comptes lus.") : m.marge != null ? `Sur 100 ${CURSYM} de ventes, il reste ${e100(m.marge)} une fois payés salaires, achats et autres coûts${medS(md.marge, e100) ? ` ; ${medS(md.marge, e100)}` : ""}.` : m.nm != null ? `Sur 100 ${CURSYM} de ventes, il reste ${e100(m.nm)} de bénéfice net, une fois tout payé, impôts compris${medS(md.nm, e100) ? ` ; ${medS(md.nm, e100)}` : ""}.` : "Marge non mesurable avec les comptes lus.";
   const renF = rf6Fig(bank ? "Rendement des fonds propres" : "Marge d'exploitation", bank ? (m.roe != null ? pct(m.roe, 0, false) : null) : (m.marge != null ? pct(m.marge, m.marge < 0.1 ? 1 : 0, false) : null)) + rf6Fig(bank ? "" : "Marge nette", bank ? null : (m.nm != null ? pct(m.nm, 1, false) : null)) + (!bank && m.roe != null ? rf6Fig("Rendement des fonds propres", pct(m.roe, 0, false)) : "");
   // D. Solidité
-  const dLv = bank ? null : (lv("lev") || lv("dettenette") || lv("gear"));
+  const dLv = NIV.solidite;
   const solB = bank ? "Pour une banque ou un assureur, la dette fait partie du métier : le site ne la juge pas avec les mêmes repères." : f.netDebt == null ? "Dette nette non lue dans les comptes." : f.netDebt < 0 ? `Pas de dette nette : la trésorerie dépasse les emprunts de ${B(-f.netDebt)}.` : m.lev != null ? `Il faudrait ${F1.format(m.lev)} an${m.lev >= 2 ? "s" : ""} de résultat d'exploitation (avant amortissements) pour rembourser la dette nette${medS(md.lev, x => `${F1.format(x)} an${x >= 2 ? "s" : ""}`) ? ` ; ${medS(md.lev, x => `${F1.format(x)} an${x >= 2 ? "s" : ""}`)}` : ""}.` : `Dette nette de ${B(f.netDebt)}${m.gear != null ? `, soit ${pct(m.gear, 0, false)} des fonds propres` : ""}.`;
   const solF = bank ? "" : rf6Fig(f.netDebt != null && f.netDebt < 0 ? "Trésorerie nette" : "Dette nette", f.netDebt != null ? B(Math.abs(f.netDebt)) : null) + rf6Fig("Trésorerie", f.cash != null ? B(f.cash) : null) + rf6Fig("Fonds propres", f.equity != null ? B(f.equity) : null);
   // E. Valorisation
-  const mp = MEDPE[s.sector], pLv = v.pe && mp ? (v.pe < mp * 0.75 ? "fort" : v.pe > mp * 1.3 ? "vig" : "moyen") : null;
+  const mp = MEDPE[s.sector], pLv = NIV.valorisation;
   const valB = v.pe ? `L'action vaut ${F0.format(v.pe)} fois le bénéfice par action${mp ? ` ; ${medS(mp, x => `${F0.format(x)} fois`)}` : ""}. ${v.pe < (mp || 15) * 0.75 ? "Moins cher que son secteur : le marché attend moins de cette entreprise, ou doute." : v.pe > (mp || 15) * 1.3 ? "Plus cher que son secteur : le marché attend une forte croissance, ou paie la qualité." : "Dans la norme de son secteur."}` : f.net != null && f.net <= 0 ? "En perte, le prix de l'action ne se compare pas à son bénéfice." : "Pas de cours récent pour calculer la valorisation.";
   const valF = rf6Fig("PER", v.pe ? `${F0.format(v.pe)} fois` : null) + rf6Fig("Rendement du dividende", v.yld != null ? pct(v.yld, 1, false) : null, f.divPaid >= 0.5 && f.net > 0 && m.payout != null ? `${pct(m.payout, 0, false)} du bénéfice versé` : "") + rf6Fig("Capitalisation", v.capE ? big(v.capE / 1e6, "EUR") : null);
   // F. Risques et événements
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 2);
-  const risB = pts && pts.d.length ? `À surveiller : ${pts.d.map(x => esc(typeof x === "string" ? x : x.t || x.titre || x.l || "")).filter(Boolean).join(" · ")}.` : pts && pts.v.length ? "Aucun point de vigilance ressorti des comptes lus." : "Le site n'a pas assez d'éléments pour relever des risques.";
+  const risNom = x => { let t = typeof x === "string" ? x : x.t || x.titre || x.l || ""; if (rLv === "fort" && /^marge en baisse/i.test(t)) t = "Marge élevée mais en baisse sur un an"; return esc(t); }; // pas de contradiction avec « Rentabilité : point fort »
+  const risB = pts && pts.d.length ? `À surveiller : ${pts.d.map(risNom).filter(Boolean).join(" · ")}.` : pts && pts.v.length ? "Aucun point de vigilance ressorti des comptes lus." : "Le site n'a pas assez d'éléments pour relever des risques.";
   const risX = part ? "" : `${up.length ? `<p class="rf6-ev">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}<div id="rf-trim" hidden></div>`;
   const MODS = {
     pres: rf6Mod("01", "Ce qu'elle fait", null, presA, "", "", ["#rf-metier", "Son métier en détail"]),
@@ -633,7 +640,7 @@ function ficheRetenirHTML(s, c, part) {
     ren: rf6Mod("03", "Rentabilité", rLv, renB, renF, rf6Jauge(s, bank ? "roe" : m.marge != null ? "marge" : "nm", false, bank ? m.roe : m.marge != null ? m.marge : m.nm), [base + "/comptes#rf-rentabilite", "Les chiffres"]),
     sol: rf6Mod("04", "Solidité financière", dLv, solB, solF, bank ? "" : m.lev != null || (f.netDebt != null && f.netDebt < 0) ? rf6Jauge(s, "lev", true, f.netDebt != null && f.netDebt < 0 ? -1 : m.lev) : rf6Jauge(s, "gear", true, m.gear), [base + "/comptes#rf-bilan", "Les chiffres"]),
     val: rf6Mod(part ? "01" : "05", "Valorisation", pLv, valB, valF, rf6Jauge(s, "pe", true, v.pe), [base + "/comptes#rf-valorisation", "Le prix en détail"]),
-    ris: rf6Mod(part ? "05" : "06", "Risques", pts && pts.d.length ? "vig" : null, risB, "", "", ["#rf-synth", "Points forts et à surveiller"], risX),
+    ris: rf6Mod(part ? "05" : "06", "Risques", null, risB, "", "", ["#rf-synth", "Points forts et à surveiller"], risX),
   };
   if (part === "entreprise") return `<section class="panel rf6" id="retenir"><div class="ph"><h2>Comprendre l'entreprise</h2><span class="light" style="font-size:12.5px">Exercice ${f.year} · comptes officiels</span></div>${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
     <p class="rf6-lede">${rfSituation(s, c)}</p>

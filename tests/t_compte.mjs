@@ -82,5 +82,11 @@ ok(sent.some(x => x[2] && /\+10,0 %/.test(x[2])), "objet avec la variation de la
 sql.prepare("INSERT OR REPLACE INTO mail_compte VALUES ('brevo', ?, 290)").run(new Date().toISOString().slice(0, 10));
 ok(await mailCapacity(env) === 95, "capacité restante");
 ok(await sendMail(env, "x@ex.fr", "s", "t") === "resend", "bascule sur Resend quand Brevo est plein");
+// Liste d'attente Premium
+[s, j] = await J(await premium(req("POST", "/api/premium/attente", { email: "pas-une-adresse" }), env)); ok(s === 400 && /valide/.test(j.error), "attente : adresse refusée " + JSON.stringify(j));
+[s, j] = await J(await premium(req("POST", "/api/premium/attente", { email: " Romain@Exemple.FR " }), env)); ok(s === 200 && j.ok, "attente : inscription " + JSON.stringify(j));
+[s, j] = await J(await premium(req("POST", "/api/premium/attente", { email: "romain@exemple.fr" }), env)); ok(s === 200 && j.ok, "attente : doublon accepté sans erreur");
+ok(sql.prepare("SELECT COUNT(*) AS n FROM attente").get().n === 1, "attente : une seule ligne pour la même adresse");
+[s, j] = await J(await premium(req("GET", "/api/premium/attente"), env)); ok(s === 200 && j.n === 0, "attente : compteur caché sous 100");
 console.log(fails ? fails + " échec(s)" : "compte : tout est bon");
 process.exit(fails ? 1 : 0);

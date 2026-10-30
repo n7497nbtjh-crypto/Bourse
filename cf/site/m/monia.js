@@ -112,7 +112,9 @@ miaEtat();
 async function miaPage(el) {
   const autonome = !el; if (autonome) { setTitle("L'IA du site"); setNav("esp"); el = app; }
   const tete = autonome ? `<p class="kick">Mon espace</p><h1 class="pagetitle">L'IA du site</h1><p class="pagesub">Gratuite, sans compte et sans clé. Elle répond à partir des chiffres et des sources du site.</p>` : "";
-  el.innerHTML = `${tete}<div class="mia-grid"><section class="panel"><div class="ph"><h2>Comment elle répond</h2><span data-mia-etat class="mia-etat"></span></div><div class="pb">
+  const champ = `<form class="mia-ask" id="miaask"><input type="search" name="q" placeholder="Posez une question : « La dette de TotalEnergies est-elle un problème ? »" aria-label="Votre question" autocomplete="off" maxlength="300"><button type="submit" class="btn">Demander</button></form>
+    <div class="chips mia-ex">${["Pourquoi la marge de LVMH est-elle plus haute que celle de Kering ?", "Apple est-elle chère ?", "Quelles entreprises françaises versent le plus de dividendes ?"].map(q => `<button type="button" class="chip" data-miaq="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
+  el.innerHTML = `${tete}${champ}<div class="mia-grid"><section class="panel"><div class="ph"><h2>Comment elle répond</h2><span data-mia-etat class="mia-etat"></span></div><div class="pb">
       <ol class="mia-etapes"><li><b>D'abord, le calcul.</b> Recherches par critères, comparaisons, définitions, questions courantes sur une fiche : le site calcule la réponse dans votre navigateur, sans limite.</li>
         <li><b>Ensuite, la rédaction.</b> Pour une question libre, un modèle ouvert (Qwen3 ou Mistral Small), hébergé par Cloudflare, rédige la réponse à partir des seuls chiffres et sources du site, avec des consignes strictes : pas de conseil, pas de prévision, les incertitudes dites.</li>
         <li><b>Chaque réponse rédigée est signalée</b> et cite ses sources. Vérifiez-la : une IA peut se tromper.</li></ol>
@@ -121,6 +123,9 @@ async function miaPage(el) {
     </div></section>
     <section class="panel"><div class="ph"><h2>Vous utilisez déjà ChatGPT ou Claude ?</h2></div><div class="pb"><p style="margin-top:0">Ajoutez bilan. à votre assistant : il pourra lire les données du site pour vous répondre.</p><a class="lnk" href="/connecteur">Utiliser bilan. dans ChatGPT ou Claude</a></div></section></div>`;
   miaMaj();
+  const poser = q => { if (typeof orcIaOpen !== "function") return; orcIaOpen(); orcIaAsk(q, { rediger: true }); };
+  const fm = $("#miaask", el); if (fm) fm.onsubmit = e => { e.preventDefault(); const q = fm.q.value.trim(); if (q.length >= 3) poser(q); };
+  $$("[data-miaq]", el).forEach(b => b.onclick = () => poser(b.dataset.miaq));
   const j = await miaEtat(), r = $("#miareste", el);
   if (r && j && j.plafonds) { const Q = j.plafonds, nv = { visiteur: "sans compte", compte: "avec votre compte gratuit", premium: "avec Premium" }[j.niveau] || "";
     r.innerHTML = `Pour rester gratuit, le site limite les questions rédigées par jour : ${Q.visiteur} sans compte, ${Q.compte} avec un <a class="lnk" href="/espace">compte gratuit</a>, sans limite avec <a class="lnk" href="/premium">Premium</a> (usage raisonnable : ${Q.premium}). Vous êtes ${esc(nv)} : ${j.disponible ? `il vous en reste ${j.reste_visiteur} aujourd'hui.` : j.site_epuise ? "la part gratuite du site est épuisée pour aujourd'hui, l'IA revient demain." : "vous les avez utilisées aujourd'hui, l'IA revient demain."}`; }
@@ -202,3 +207,5 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .mia-ctx{display:inline-flex;align-items:center;gap:6px;margin:6px 0 0;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);font:600 13px inherit;color:var(--ink);cursor:pointer;vertical-align:middle}
 .mia-ctx span{color:var(--g)}.mia-ctx:hover{border-color:var(--ink)}
 </style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>.mia-ask{display:flex;gap:10px;margin:0 0 10px}.mia-ask input{flex:1;min-width:0;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--ink);border-radius:6px;background:#fff}.mia-ex{margin:0 0 22px}@media (max-width:600px){.mia-ask{flex-direction:column}}</style>`);

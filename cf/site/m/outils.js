@@ -328,7 +328,7 @@ function outPool() {
   const famous = new Set(OUT_PRESETS.flatMap(p => p.ids)), y = new Date().getFullYear(), l = [];
   for (const c of R.companies) {
     if (c.missing || !c.desc || famous.has(c.id) || !(c.year >= y - 2) || outVieux(c)) continue;
-    const q = quick(c); if (!q || q.fort + q.moyen + q.vig < 5 || q.fort < 2) continue;
+    const q = quick(c); if (!q || q.fort + q.moyen + q.vig < 4 || q.fort < 2) continue;
     const T = typeof recoTaille === "function" ? recoTaille(c) : null; if (!T || T.t === "large") continue;
     const style = recoStyle(c);
     if (q.vig > (style === "redressement" ? 3 : 2)) continue;

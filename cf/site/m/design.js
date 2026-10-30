@@ -279,3 +279,5 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .acavis-p{margin:0;font-size:14.5px;line-height:1.55;color:var(--grey)}.acavis-p mark.nm{background:transparent;color:var(--ink);font-family:var(--mono);font-weight:500}
 @media (max-width:760px){.acavis-n b{font-size:24px}.acavis{padding:14px 16px}}
 </style>`);
+/* Premium : liste d'attente (30/10) */
+document.head.insertAdjacentHTML("beforeend", `<style>.prem-bientot{margin:0;font-weight:600;color:var(--grey)}.prem-att{margin-top:14px;border-left:3px solid var(--lime)}.prem-attm{margin:8px 0 0;font-size:14px;min-height:1.2em}.prem-attm.ok{color:var(--g)}.prem-attm.ko{color:var(--o)}.ptab td:nth-child(3) b{font-weight:600}</style>`);
