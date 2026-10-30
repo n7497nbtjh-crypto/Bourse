@@ -4223,6 +4223,12 @@ function questionDeLecon(m, l) {
 /* Points et niveau */
 function acaXP(st) { let xp = 0; Object.keys(st).forEach(k => { xp += k.startsWith("quiz/") ? (st[k] || 0) * 5 : k.startsWith("q/") ? 5 : 10; }); return xp; }
 const acaNiveau = xp => xp >= 600 ? ["Confirmé", 600, null] : xp >= 250 ? ["Intermédiaire", 250, 600] : ["Débutant", 0, 250];
+/* 30/10 (Romain) : un visuel par leçon. Les chiffres de l'exemple, en gros, avant le texte ; le texte en dessous. */
+function acaVisuel(l) {
+  const t = String(l.exemple || ""), nums = [...t.matchAll(/(\d[\d\s ]*(?:,\d+)?\s?(?:%|€|ans?\b|mois\b|fois\b))/g)].map(x => x[1].trim()).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4);
+  const phr = (t.match(/^.*?[.!?](\s|$)/) || [t])[0].trim();
+  return `<div class="acavis"><p class="acavis-k">L'exemple en chiffres</p>${nums.length ? `<div class="acavis-n">${nums.map(n => `<b>${esc(n)}</b>`).join("")}</div>` : ""}<p class="acavis-p">${numsMark(t)}</p></div>`;
+}
 function acaLecon(m, l) {
   const st = acaSt(), i = m.lecons.indexOf(l), prev = m.lecons[i - 1], next = m.lecons[i + 1], mi = ACA.modules.indexOf(m), nm = ACA.modules[mi + 1];
   setTitle(l.titre + " · L'Académie");
@@ -4230,12 +4236,12 @@ function acaLecon(m, l) {
   const cards = lock ? [] : l.paragraphes;
   app.innerHTML = `<div class="crumbs"><a href="/academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
     <article class="acales"><div class="acatopbar"><span class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</span>${lock ? "" : `<div class="acapb"><span id="acapb" style="width:0%"></span></div>`}</div>
-    <h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead">${esc(l.resume)}</p>
+    <h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead aca-lead">${esc(l.resume)}</p>
+    ${!lock && l.exemple ? acaVisuel(l) : ""}
     ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie et à la formation guidée de six semaines.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
       : `<div class="acacards">${cards.map((p, j) => `<div class="acacard2" data-c="${j}"${deja || j === 0 ? "" : " hidden"}><span class="acan">${j + 1}</span><p>${numsMark(p)}</p></div>`).join("")}</div>
       <div class="acamore"${deja ? " hidden" : ""}><button type="button" class="btn" id="acanext">Continuer</button><button type="button" class="linkbtn" id="acaall">Tout afficher</button></div>
       <div class="acarest"${deja ? "" : " hidden"}>
-        ${l.exemple ? `<div class="acaex"><p class="kick">Exemple chiffré</p><p>${numsMark(l.exemple)}</p></div>` : ""}
         ${WIDGETS[m.id + "/" + l.id] ? WIDGETS[m.id + "/" + l.id]() : ""}
         ${(l.a_retenir || []).length ? `<div class="acaret"><p class="kick">À retenir</p><ol>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
         ${l.erreur_frequente ? `<div class="acaerr"><p class="kick">L'erreur à éviter</p><p>${esc(l.erreur_frequente)}</p></div>` : ""}
