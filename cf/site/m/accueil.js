@@ -322,7 +322,7 @@ async function pageHome() {
         <p class="acc-lede">Les comptes publiés de ${F0.format(R.companies.length)} entreprises et ${F0.format(ETF.list.length)} ETF, la place de chacune dans son secteur et son actualité, expliqués en langage clair. Information, pas conseil.</p>
         <div class="search big acc-search" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div>
         <p class="acc-exl">Une question libre ? <a href="/demander">Demandez à l'IA du site</a>.</p>
-        <p class="acc-preuve">Rien n'est généré : chaque chiffre vient d'un dépôt officiel que vous pouvez ouvrir. Le site ne détient aucune position et ne vend aucune sélection de titres.</p>
+        <ul class="acc-av"><li><b>Chaque chiffre est prouvé</b><span>Il vient d'un document officiel déposé par l'entreprise, que vous ouvrez d'un clic. Rien n'est généré.</span></li><li><b>Le verdict d'abord</b><span>Trois mots, puis le détail face à la médiane de son secteur. Gratuit, là où les autres font payer la comparaison.</span></li><li><b>Aucun conseil, aucune position</b><span>Pas de titres à acheter, pas de juste valeur inventée, pas de publicité. Le site n'est pas investi dans ce qu'il décrit.</span></li></ul>
       </div>
       <div class="acc-une-r">
         <p class="acc-vh">Quatre entrées</p>
@@ -570,11 +570,11 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .acc-didx{display:flex;flex-wrap:wrap;gap:6px 18px;margin-left:auto}
 .acc-didx a{color:var(--grey);text-decoration:none;white-space:nowrap}.acc-didx a b{font-family:var(--mono);font-weight:500;margin-left:4px}.acc-didx a:hover{color:var(--ink)}
 .acc-dall{font-weight:600;color:var(--ink)!important}
-.acc-une{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px 56px;padding:40px 0 36px;border-bottom:1px solid var(--rule);margin-bottom:28px}
-.acc-une h1{font-family:var(--serif);font-weight:800;font-size:46px;line-height:1.04;letter-spacing:-.018em;margin:0 0 16px;max-width:620px}
+.acc-une{display:grid;grid-template-columns:minmax(0,8fr) minmax(0,4fr);gap:32px 56px;padding:40px 0 36px;border-bottom:1px solid var(--rule);margin-bottom:28px}
+.acc-une h1{font-family:var(--serif);font-weight:800;font-size:46px;line-height:1.04;letter-spacing:-.018em;margin:0 0 16px;max-width:700px}
 .acc-une h1 em{font-style:normal}
-.acc-lede{font-size:17px;line-height:1.55;color:var(--grey);margin:0 0 22px;max-width:560px}
-.acc-search.search{max-width:560px;margin:0}.acc-search.search input{height:48px;font-size:15.5px}
+.acc-lede{font-size:17px;line-height:1.55;color:var(--grey);margin:0 0 22px;max-width:640px}
+.acc-search.search{max-width:640px;margin:0}.acc-search.search input{height:48px;font-size:15.5px}
 .acc-exl{font-size:13.5px;color:var(--grey);margin:12px 0 0}.acc-exl a{color:var(--ink)}
 .acc-vh{font-size:12.5px;font-weight:600;color:var(--grey);margin:0 0 6px;letter-spacing:0;text-transform:none}
 .acc-voies{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
@@ -603,7 +603,9 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .acc .acc-sj h4{font-size:19px;font-weight:700;line-height:1.15;letter-spacing:-.01em;margin:4px 0 12px}
 .acc .acc-theme{font-size:12.5px;font-weight:600;color:var(--grey);letter-spacing:0;text-transform:none;font-family:var(--sans)}
 .acc .acc-l{background:transparent;border:0;padding:0;margin:0 0 10px}.acc .acc-sj .acc-li,.acc .acc-sj .acc-lh{display:none}
-.acc-preuve{font-size:13px;color:var(--grey);margin:14px 0 0;padding-top:12px;border-top:1px solid var(--rule);max-width:560px}
+.acc-av{list-style:none;margin:18px 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--ink)}
+.acc-av li{display:flex;flex-direction:column;gap:4px;padding:12px 16px 4px 0;border-right:1px solid var(--rule)}.acc-av li+li{padding-left:16px}.acc-av li:last-child{border-right:0}.acc-av b{font-size:14.5px}.acc-av span{font-size:12.5px;line-height:1.5;color:var(--grey)}
+@media (max-width:760px){.acc-av{grid-template-columns:minmax(0,1fr)}.acc-av li{border-right:0;border-bottom:1px solid var(--rule);padding:10px 0!important}.acc-av li:last-child{border-bottom:0}}
 .acc-cards{margin:0 0 28px}.acc-cardl{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
 .acc-card{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:6px 12px;align-items:center;padding:14px 16px;border:1px solid var(--rule);border-radius:14px;background:#fff;color:var(--ink);text-decoration:none}.acc-card:hover{border-color:var(--ink)}
 .acc-cn{display:flex;flex-direction:column}.acc-cn b{font-size:16px}.acc-cn small{font-size:12px;color:var(--grey)}

@@ -304,9 +304,14 @@ function ETF_bref(e, C, v) {
   const ess = [pea, e.distribution === "distribution" ? "Dividendes versés aux porteurs" : e.distribution ? "Dividendes réinvestis (capitalisant)" : null,
     e.replication === "synthétique" ? "Réplication synthétique : un contrat d'échange avec une banque" : e.replication ? (e.methode === "échantillonnée" ? "Réplication physique, sur un échantillon de l'indice" : "Réplication physique : le fonds achète les titres") : null,
     e.levier ? "Levier ou stratégie inverse" : null, e.couvert ? "Part couverte contre le change" : null].filter(Boolean);
+  // 30/10 (Romain) : le verdict en trois mots, comme sur la fiche entreprise, puis la jauge des frais dans sa catégorie
+  const t10 = C && C.top ? C.top.slice(0, 10).reduce((a, x) => a + (x.pct || 0), 0) : null;
+  const mots = [v ? (v.c === "g" ? "Frais bas" : v.c === "o" ? "Frais élevés" : "Frais dans la norme") : null, e.pea === true ? "éligible au PEA" : e.pea === false ? "hors PEA" : null, t10 != null ? (t10 > 40 ? "très concentré" : t10 > 25 ? "assez concentré" : "bien réparti") : null].filter(Boolean);
+  const rk = ETF_rank(e, x => x.ter, false), jauge = rk ? `<div class="rf6-jg" title="Parmi les ${rk.n} ETF de sa catégorie suivis par le site ; la médiane est au milieu, à droite les moins chers"><span class="fk-g"><em></em><i style="left:${Math.round(rk.p * 100)}%"></i></span><small>${rk.p >= 0.5 ? `moins cher que ${Math.round(rk.p * 100)} % de sa catégorie` : `plus cher que ${Math.round((1 - rk.p) * 100)} % de sa catégorie`}${v && v.m != null ? ` · médiane ${ETF_pctS(v.m, 2)}` : ""}</small></div>` : "";
   return `<div class="rf-sh"><h2 class="f2-h">En bref</h2><span class="f2-sub">${e.index ? `Indice ${esc(e.index)}` : esc(ECAT[e.categorie] || "")}</span></div>
-    <p class="fh-v" id="fverdict">${ETF_phrase(e, C)}</p>
-    <div class="rf-bl"><h3>Frais</h3><p class="rf-fr"><b>${e.ter != null ? ETF_pctS(e.ter, 2) : "non communiqués"}</b>${e.ter != null ? " par an" : ""}${v ? `<span class="etfvd vd-${v.c}"><i></i>${esc(v.w)} de sa catégorie</span>` : ""}</p></div>
+    ${mots.length ? `<p class="rf-vc">${esc(mots.join(", "))}<small>selon la fiche de l'émetteur, face aux ETF de sa catégorie</small></p>` : ""}
+    <p class="fh-v etf-v" id="fverdict">${ETF_phrase(e, C)}</p>
+    <div class="rf-bl"><h3>Frais</h3><p class="rf-fr"><b>${e.ter != null ? ETF_pctS(e.ter, 2) : "non communiqués"}</b>${e.ter != null ? " par an" : ""}${v ? `<span class="etfvd vd-${v.c}"><i></i>${esc(v.w)} de sa catégorie</span>` : ""}</p>${jauge}</div>
     <div class="rf-pts"><div class="rf-bl"><h3>L'essentiel pratique</h3><ul>${ess.map(t => `<li class="rf-n"><i></i>${esc(t)}</li>`).join("")}</ul></div>
       <div class="rf-bl"><h3>Risques principaux</h3><ul>${R.slice(0, 4).map(([k, t]) => `<li class="${k === "o" ? "rf-d" : "rf-n"}"><i></i>${esc(t)}</li>`).join("")}</ul></div></div>
     <div class="rf-foot"><a class="rf-lk" href="#ebuy" data-rf-go="ebuy">Sa composition</a><a class="rf-lk" href="#erisques" data-rf-go="erisques">Les risques en détail</a></div>`;
@@ -424,3 +429,4 @@ async function pageEtf(id) {
   $("#eask").onsubmit = ev => { ev.preventDefault(); const q = $("#eask input").value.trim(); if (!q) return; const full = /etf|fonds|il |-il|ce fonds/i.test(q) ? `${q} (${e.name})` : `${e.name} : ${q}`; if (typeof orcIaAsk === "function") { orcIaOpen(); orcIaAsk(full); } else go("/demander?q=" + encodeURIComponent(full)); };
   // La FAQ structurée (FAQPage) est ajoutée au HTML par le Worker (cf/src/etf_meta.mjs) : lisible par les moteurs sans JavaScript.
 }
+document.head.insertAdjacentHTML("beforeend", `<style>.etf-v{font-family:var(--sans)!important;font-size:15px!important;font-weight:400!important;line-height:1.5!important;color:var(--grey)!important;margin:0 0 14px!important}.etf-v b{color:var(--ink);font-family:var(--mono);font-weight:500}</style>`);
