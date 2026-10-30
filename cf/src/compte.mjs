@@ -28,7 +28,7 @@ export async function tropDEssais(env, cle, max = 5, fenetre = 9e5) { // vrai si
     const r = await env.DB.prepare(`SELECT COUNT(*) AS n FROM essais WHERE cle = ? AND at > ?`).bind(cle, Date.now() - fenetre).first();
     await env.DB.prepare(`INSERT INTO essais (cle, at) VALUES (?, ?)`).bind(cle, Date.now()).run();
     return !!(r && r.n >= max);
-  } catch (e) { return false; }
+  } catch (e) { globalThis.__rlErr = String(e && e.message || e); return false; }
 }
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -96,6 +96,7 @@ export async function premium(request, env) {
   if (path === "/api/premium/retrouver" && request.method === "POST") { // renvoie le code d'accès à l'adresse utilisée pour payer
     const ip = request.headers.get("cf-connecting-ip") || "local";
     if (await tropDEssais(env, "retrouver:" + ip, 3)) return json({ error: "Trop de demandes. Réessayez dans un quart d'heure." }, 429);
+    if (url.searchParams.get("diag") === "1") return json({ err: globalThis.__rlErr || null, ip: ip.slice(0, 6) });
     let b = {}; try { b = await request.json(); } catch (e) { }
     const email = String(b.email || "").trim().toLowerCase().slice(0, 254);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: true });
