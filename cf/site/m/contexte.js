@@ -237,9 +237,9 @@ function contexteChiffresHTML(s, c, inner) { // inner : bloc intégré au thème
     if (ser.k === "net") conf.push(`Le site n'a pas son chiffre d'affaires : le tableau suit son bénéfice net, plus irrégulier.`);
     if (ser.cur !== "EUR") conf.push(`Ses comptes sont publiés en ${ser.cur === "USD" ? "dollars" : ser.cur} : une partie des variations peut venir du change.`);
     conf.push("Le site ne mesure pas la part de chaque événement dans ses chiffres : il montre ce qui s'est passé au même moment. Les rachats, cessions et effets de change peuvent aussi jouer.");
-    const T = inner ? "div" : "section";
+    const T = inner ? "details" : "section"; // dans l'onglet Chiffres : replié, une ligne de lecture en résumé (30/10, la page était trop chargée)
     return `<${T} class="${inner ? "ctx ctx-in" : "panel ctx"}" id="contexte-chiffres" data-ctx-chiffres="${esc(s.id)}"${inner ? ' data-ctx-in="1"' : ""}${CTX_D ? ' data-ctxv="1"' : ""}>
-      <div class="ph"><${inner ? "h3" : "h2"} class="ctx-ti">Ce qui explique ces chiffres</${inner ? "h3" : "h2"}><span class="light" style="font-size:12.5px">${y0} à ${yN} · comptes officiels</span></div>
+      ${inner ? `<summary class="ctx-sum"><span class="ctx-ti">Ce qui explique ces chiffres</span><span class="ctx-sl">${esc(ctxTendance(s, ser, R))}</span></summary>` : `<div class="ph"><h2 class="ctx-ti">Ce qui explique ces chiffres</h2><span class="light" style="font-size:12.5px">${y0} à ${yN} · comptes officiels</span></div>`}
       <div class="pb">
         <p class="ctx-lead">${esc(ctxTendance(s, ser, R))}</p>
         <div class="ctx-kpis">

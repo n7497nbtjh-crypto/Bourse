@@ -130,6 +130,15 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .acc .pill.fort,.acc .badge.fort{background:#E6F3EB;color:#176B40}.acc .pill.vig,.acc .badge.vig{background:#FBEBE2;color:#A8481A}
 /* Sujets du jour : la carte garde le fait et l'interprétation ; hypothèse et entreprises à surveiller s'ouvrent avec « Approfondir » */
 .acc .acc-sj .acc-lh,.acc .acc-sj .acc-ls{display:none}
+/* Onglet Chiffres en détail, apaisé (30/10) : cartes « ce qui a le plus changé » blanches, seul le chiffre porte la couleur ;
+   « Ce qui explique ces chiffres » replié sous une phrase de lecture */
+.rf-chg{background:#fff!important;border:1px solid var(--line2)!important;border-left-width:1px!important}
+details.ctx-in{border-top:1px solid var(--line2);padding:0 22px}details.ctx-in > summary{list-style:none;cursor:pointer;padding:14px 0;display:flex;flex-direction:column;gap:3px}
+details.ctx-in > summary::-webkit-details-marker{display:none}
+details.ctx-in > summary .ctx-ti{font-family:var(--serif);font-size:17px;font-weight:800}details.ctx-in > summary .ctx-ti:after{content:" +";font-family:var(--sans);color:var(--light)}details.ctx-in[open] > summary .ctx-ti:after{content:" −"}
+details.ctx-in > summary .ctx-sl{font-size:13.5px;color:var(--grey);line-height:1.5}details.ctx-in > .pb{padding-left:0;padding-right:0}
+/* Comparer, apaisé (30/10) : la règle des couleurs n'est plus répétée sous chaque thème (une légende en tête suffit) */
+.cmpr-exp .cmpr-rule{display:none}
 /* Accessibilité (point 7, 29/10/2026) : sur téléphone, aucun texte sous 11 px, aucune cible tactile sous 24 px */
 .lg b{font-size:max(9px,calc(var(--s) * .36))}
 @media (max-width:760px){

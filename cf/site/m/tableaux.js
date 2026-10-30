@@ -336,7 +336,8 @@ function tblxThemeHTML(T, s, c, P) {
   return `<section class="panel rf-th" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
     <p class="rf-thx">${esc(T.ex)}</p>
     <div class="rf-thg${ctx || !gr.length ? " rf-th1" : ""}">
-      ${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Évolution ${Y[0]}-${Y.at(-1)}</th></tr></thead><tbody>${tblxThemeRows(rows, Y, s)}</tbody></table>`)}
+      <div class="rf-thtw">${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Évolution ${Y[0]}-${Y.at(-1)}</th></tr></thead><tbody>${tblxThemeRows(rows.slice(0, 4), Y, s)}</tbody>${rows.length > 4 ? `<tbody class="rf-more" hidden>${tblxThemeRows(rows.slice(4), Y, s)}</tbody>` : ""}</table>`)}
+      ${rows.length > 4 ? `<button type="button" class="linkbtn rf-moreb">Voir les ${rows.length - 4} autres indicateurs</button>` : ""}</div>
       ${ctx || !gr.length ? "" : `<div class="rf-thc" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>`}
     </div>${ctx}</section>`;
 }
@@ -699,7 +700,7 @@ table.tbx-ag tbody tr[data-href]{cursor:pointer}
 .rf-th{scroll-margin-top:130px}
 .rf-th .ph h2 small,#ctab .rf-th .ph h2 small{display:block;font-family:var(--sans);font-size:13.5px;font-weight:500;color:var(--grey);margin-top:3px;letter-spacing:0}
 .rf-thx{margin:0;padding:10px 22px 4px;font-size:13.5px;line-height:1.5;color:#55524C}
-.rf-thg{padding-bottom:10px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 8px;align-items:start}
+.rf-moreb{margin:8px 22px 4px}.rf-thg{padding-bottom:10px;display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:0 8px;align-items:start}
 .rf-thg.rf-th1{grid-template-columns:minmax(0,1fr)}
 .rf-thg .tbx-box{margin:0}
 .rf-thc{padding:12px 22px 14px;min-width:0}
@@ -728,3 +729,5 @@ table.tbx-ag tbody tr[data-href]{cursor:pointer}
 @media (max-width:1200px){.rf-thg{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:760px){.rf-thx{padding:10px 16px 4px}.rf-thc{padding:10px 12px 12px}.rf-thnav{padding:10px 12px 14px}.rf-all > summary{padding:14px 16px}.rf-all .tbx-sum{padding:0 12px 8px}.rf-th .ph h2 small{font-size:13px}}
 </style>`);
+
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".rf-moreb"); if (!b) return; const t = b.closest(".rf-thg").querySelector(".rf-more"); if (t) t.hidden = false; b.remove(); });
