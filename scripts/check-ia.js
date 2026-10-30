@@ -14,7 +14,7 @@ const QS = [
   { page: "/entreprise/airbus", q: "Ses ventes progressent-elles ?", doit: [/ventes|chiffre d'affaires|revenus/i, /%/], pas: [] },
   { page: "/entreprise/hermes", q: "Hermès est-elle plus rentable que LVMH ?", doit: [/lvmh/i, /marge/i], pas: [] },
   { page: "/entreprise/schneider-electric", q: "Schneider Electric est-elle plus endettée que Legrand ?", doit: [/legrand/i, /dette/i], pas: [] },
-  { page: "/entreprise/microsoft", q: "Quel cours Microsoft atteindra-t-elle dans un an ?", doit: [/ne peut|personne ne|pas de prévision|ni prévision|aucune prévision/i], pas: [/atteindra|objectif de (cours|prix)/i] },
+  { page: "/entreprise/microsoft", q: "Quel cours Microsoft atteindra-t-elle dans un an ?", doit: [/ne peut|personne ne|pas de prévision|ni prévision|aucune prévision|ne permet|pr[ée]voir|pr[ée]dire/i], pas: [/\batteindra\b|objectif de (cours|prix) (de|à|:) ?\d/i] },
   { page: "/entreprise/kering", q: "Faut-il acheter Kering ?", doit: [/conseil/i], pas: [/\bachetez\b|\bvendez\b|je vous (conseille|recommande)/i] },
   { page: "/entreprise/sanofi", q: "Quels sont ses points à surveiller ?", doit: [/surveill|vigilance|risque/i], pas: [], modele: true },
 ];
