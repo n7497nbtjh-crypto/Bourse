@@ -217,7 +217,7 @@ function contexteChiffresHTML(s, c, inner) { // inner : bloc intégré au thème
     const head = `<tr><th class="lab">Exercice</th><th>${esc(ser.Lab)}</th><th>Sur un an</th><th>Écart sur un an</th><th>Depuis ${y0}</th></tr>`;
     const rows = R.rows.map((r, i) => `<tr class="${i % 2 ? "z" : ""}${i === R.n ? " ctx-last" : ""}"><th class="lab">${r.y}${i === R.pic.i && R.pic.i > 0 && R.pic.i < R.n ? ` <span class="ctx-tag">sommet</span>` : ""}</th><td>${B(r.v)}</td>
       <td class="${r.g == null ? "" : r.g > CTX_SEUIL ? "ctx-up" : r.g < -CTX_SEUIL ? "ctx-dn" : ""}">${r.g == null ? `<span class="muted">départ</span>` : ctxP1(r.g)}</td>
-      <td>${r.d == null ? `<span class="muted">·</span>` : (r.d >= 0 ? "+" : "−") + B(Math.abs(r.d))}</td><td>${r.cum == null || i === 0 ? `<span class="muted">·</span>` : ctxP1(r.cum)}</td></tr>`).join("");
+      <td>${r.d == null ? `<span class="muted">·</span>` : (r.d >= 0 ? "+" : "−") + B(Math.abs(r.d))}</td><td>${r.cum == null || i === 0 ? `<span class="muted">·</span>` : ctxP1(r.cum)}</td></tr>`).reverse().join(""); // l'exercice le plus récent en premier (30/10)
     const table = `<table class="t tbx ctx-t">${head}${rows}</table>`;
     const chart = typeof colChart === "function" ? colChart({ labels: ser.ys.map(String), series: [{ name: ser.Lab, values: ser.vs }], fmt: B, tickFmt: typeof compact === "function" ? compact(ser.cur) : B, h: 150 }) : "";
     const vus = new Set();

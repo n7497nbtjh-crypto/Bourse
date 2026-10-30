@@ -244,7 +244,7 @@ function tblxEssHTML(s, c, P) {
 }
 function tblxFullHTML(s, c, P) {
   const Y = c.years, L = Y.length - 1, nc = Y.length + 3, ORD = Y.map((_, i) => i);
-  if (tblxMob()) ORD.reverse(); // sur téléphone : l'exercice le plus récent juste après le nom de la ligne
+  ORD.reverse(); // 30/10 (Romain) : on lit de gauche à droite, l'exercice le plus récent vient en premier, juste après le nom de la ligne
   let z = 0, out = "", g0 = "";
   P.rows.forEach(r => {
     if (r.grp !== g0) { g0 = r.grp; z = 0; out += `<tr class="grp"><th colspan="${nc}" scope="colgroup"><span>${TBLX_GRP[g0]}<small>${TBLX_GRPSUB[g0]}</small></span></th></tr>`; }
@@ -259,7 +259,7 @@ function tblxFullHTML(s, c, P) {
       <td class="tr"><span class="tbx-trw">${tblxSpark(r.vals, { w: 60, h: 20, q: r.q, med: r.med, label: "Évolution" })}${tblxArrow(r.dir, r.q, "", "Sur un an")}</span></td>
       <td class="md">${r.med != null ? `<span class="num">${esc(r.cell(r.med))}</span>` : `<span class="light">–</span>`}</td></tr>`;
   });
-  return `<table class="t tbx tbx-full"><caption class="sr">Tous les comptes publiés de ${esc(s.name)}, par exercice</caption><thead><tr><th class="l lab" scope="col">Indicateur <span class="u">unité</span></th>${ORD.map(i => [Y[i], i]).map(([y, i]) => `<th scope="col" class="${i === L ? "last" : ""}">${y}${i === L ? "<small>dernier</small>" : ""}</th>`).join("")}<th scope="col">Tendance</th><th scope="col">${def("mediane", "Médiane secteur")}</th></tr></thead><tbody>${out}</tbody></table>`;
+  return `<table class="t tbx tbx-full"><caption class="sr">Tous les comptes publiés de ${esc(s.name)}, par exercice</caption><thead><tr><th class="l lab" scope="col">Indicateur <span class="u">unité</span></th>${ORD.map(i => [Y[i], i]).map(([y, i]) => `<th scope="col" class="${i === L ? "last" : ""}">${y}${i === L ? "<small>dernier</small>" : ""}</th>`).join("")}<th scope="col">Sur un an</th><th scope="col">${def("mediane", "Médiane secteur")}</th></tr></thead><tbody>${out}</tbody></table>`;
 }
 function tblxDetail(r, Y) {
   const rule = RULES[r.term] || RULES[r.k];
@@ -336,7 +336,7 @@ function tblxThemeHTML(T, s, c, P) {
   return `<section class="panel rf-th" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
     <p class="rf-thx">${esc(T.ex)}</p>
     <div class="rf-thg${ctx || !gr.length ? " rf-th1" : ""}">
-      <div class="rf-thtw">${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Évolution ${Y[0]}-${Y.at(-1)}</th></tr></thead><tbody>${tblxThemeRows(rows.slice(0, 4), Y, s)}</tbody>${rows.length > 4 ? `<tbody class="rf-more" hidden>${tblxThemeRows(rows.slice(4), Y, s)}</tbody>` : ""}</table>`)}
+      <div class="rf-thtw">${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Sur un an</th></tr></thead><tbody>${tblxThemeRows(rows.slice(0, 4), Y, s)}</tbody>${rows.length > 4 ? `<tbody class="rf-more" hidden>${tblxThemeRows(rows.slice(4), Y, s)}</tbody>` : ""}</table>`)}
       ${rows.length > 4 ? `<button type="button" class="linkbtn rf-moreb">Voir les ${rows.length - 4} autres indicateurs</button>` : ""}</div>
       ${ctx || !gr.length ? "" : `<div class="rf-thc" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>`}
     </div>${ctx}</section>`;
@@ -398,7 +398,7 @@ function tabComptes(s, c, el) {
   const all = $(".rf-all", el); if (all) all.addEventListener("toggle", () => { tblxSetV(all.open ? "tout" : "ess"); tblxBindScroll(el); $$(".tbx-full", el).forEach(t => { const sc = t.closest(".tbx-sc"); if (sc) { sc.scrollLeft = tblxMob() ? 0 : sc.scrollWidth; sc.dispatchEvent(new Event("scroll")); } }); });
   $$(".lab .def", el).forEach(b => { const t = ALL[b.dataset.def]; if (t) b.title = t.what; });
   requestAnimationFrame(() => tblxBindScroll(el));
-  setTimeout(() => $$(".tbx-full", el).forEach(t => { const x = t.closest(".tbx-sc"); if (x) { x.scrollLeft = tblxMob() ? 0 : x.scrollWidth; x.dispatchEvent(new Event("scroll")); } }), 0);
+  setTimeout(() => $$(".tbx-full", el).forEach(t => { const x = t.closest(".tbx-sc"); if (x) { x.scrollLeft = 0; x.dispatchEvent(new Event("scroll")); } }), 0);
   if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0);
 }
 

@@ -400,7 +400,7 @@ function priceHead(c, isEtf = false) {
   const k = provCours(p), ch = p.chg;
   const quand = k.vieux ? `Cours du ${dLabel(k.d)} : pas de nouveau relevé depuis ${k.jo} jours ouvrés` : k.live ? `Cours différé${k.heure ? ` · relevé à ${k.heure}` : ""}` : k.d ? `Dernier cours relevé le ${dLabel(k.d)}` : "Cours différé";
   const jour = k.vieux ? "lors de la dernière séance relevée" : k.live || k.d === TODAY ? "aujourd'hui" : "lors de la dernière séance";
-  return `<div class="pxhead"><span class="kick">Cours${provBtn("cours", (isEtf ? "e:" : "c:") + c.id, "Cours de l'action")}</span><span class="p">${pxFmt(p.p, p.cur)}</span>${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % ${jour}</span>` : ""}<span class="d${k.vieux ? " prov-stale" : ""}">${quand} · ${esc(p.s)}</span></div>`;
+  return `<div class="pxhead"><span class="kick">Cours${provBtn("cours", (isEtf ? "e:" : "c:") + c.id, "Cours de l'action")}</span><span class="p">${pxFmt(p.p, p.cur)}</span>${p.cur && p.cur !== "EUR" && isFinite(toEur(p.p, p.cur)) ? `<span class="pxeur">soit ${pxFmt(toEur(p.p, p.cur), "EUR")}</span>` : ""}${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % ${jour}</span>` : ""}<span class="d${k.vieux ? " prov-stale" : ""}">${quand} · ${esc(p.s)}</span></div>`;
 }
 
 /* ---------- 7. Valorisation : PER, valeur d'entreprise ÷ EBITDA, rendement du flux de trésorerie disponible ---------- */

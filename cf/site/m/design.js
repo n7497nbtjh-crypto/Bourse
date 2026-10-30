@@ -185,3 +185,9 @@ details.ctx-in > summary .ctx-sl{font-size:13.5px;color:var(--grey);line-height:
 /* Les sources répétées sous chaque point : présentes, mais en retrait. */
 .srcline,.pt-src{font-size:12px;color:var(--light)}
 </style>`);
+
+/* 30/10 (demande de Romain) : plus de mini-courbes dans les tableaux de chiffres ; la colonne garde la variation sur un an.
+   Le graphique complet reste au-dessus du tableau de chaque thème. */
+function tblxSpark() { return ""; }
+document.head.insertAdjacentHTML("beforeend", `<style>.tbx-gb:empty,.tbx-trw:empty{display:none}</style>`);
+document.head.insertAdjacentHTML("beforeend", `<style>.pxhead .pxeur{display:block;font-size:13px;color:var(--grey);margin:-2px 0 4px}@media (max-width:760px){.pxhead .pxeur{display:inline;margin:0 0 0 8px}}</style>`);

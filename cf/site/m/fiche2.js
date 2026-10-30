@@ -274,6 +274,12 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 .rf-place .prof .pa2{grid-template-columns:1fr;gap:7px}
 .rf-place .prof .note{grid-column:1/-1}
 @media (max-width:1000px){.rf-place .prof{grid-template-columns:repeat(auto-fill,minmax(170px,1fr))}}
+/* En-tête : sa place dans le secteur (30/10) : une jauge par critère, l'une sous l'autre */
+.rf-hplace .prof{display:grid;grid-template-columns:1fr;gap:10px;margin-top:4px}.rf-hplace .prof .pa2{grid-template-columns:150px minmax(0,1fr);align-items:center;gap:4px 14px}
+.rf-hplace .prof .pa2 b{font-size:14px}.rf-hplace .prof .pa2 small{display:block;font-size:12px;color:var(--grey)}
+.rf-hplace .rf-tally{margin:0 0 12px}.rf-plnote{font-size:12px;color:var(--light);margin:10px 0 0;line-height:1.45}
+.rf-hplace .fh-rk{margin-top:12px}
+.rf-syn-in{display:block;padding:0}.rf-syn .rf-sum{border-left:0;padding:0}
 @media (max-width:1100px){.rf-pts{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:900px){
   .rf-mid,.rf-mid.f2-noc{grid-template-columns:minmax(0,1fr);grid-template-areas:"vl" "ch"}
@@ -323,9 +329,9 @@ document.head.insertAdjacentHTML("beforeend", `<style id="fiche2-css">${FICHE2_C
    Les étapes de la vue d'ensemble (boutons, sans rechargement) et les deux autres pages de la fiche
    (« Les chiffres en détail », « Actualités et discussion », liens) sont réunies dans une seule barre collante.
    Plus de seconde rangée « Comprendre … : 1, 2, 3 » ; l'ancienne étape « Actualité » est en tête de l'onglet Actualités. */
-const FICHE2_ORDRE = ["retenir", "metier", "prix", "@comptes", "concurrents", "@actualite", "faq"];
-const FICHE2_LIB = { retenir: ["L'essentiel", "Essentiel"], metier: ["Son métier", "Métier"], prix: ["Son prix", "Prix"], "@comptes": ["Les chiffres en détail", "Chiffres"], concurrents: ["Concurrents", "Concurrents"], "@actualite": ["Actualités et discussion", "Actualités"], faq: ["Questions", "Questions"] };
-function fiche2EtapesPrevues(s) { return (s.missing ? ["metier", "prix", "faq"] : ["retenir", "metier", "concurrents", "faq"]).map(k => [k, FICHE2_LIB[k][0]]); }
+const FICHE2_ORDRE = ["retenir", "metier", "prix", "@comptes", "concurrents", "@actualite", "faq", "synthese"];
+const FICHE2_LIB = { retenir: ["L'essentiel", "Essentiel"], metier: ["Son métier", "Métier"], prix: ["Son prix", "Prix"], "@comptes": ["Les chiffres en détail", "Chiffres"], concurrents: ["Concurrents", "Concurrents"], "@actualite": ["Actualités et discussion", "Actualités"], faq: ["Questions", "Questions"] , synthese: ["Synthèse", "Synthèse"] };
+function fiche2EtapesPrevues(s) { return (s.missing ? ["metier", "prix", "faq"] : ["retenir", "metier", "concurrents", "faq", "synthese"]).map(k => [k, FICHE2_LIB[k][0]]); }
 function fiche2Onglets(s, tab, L) {
   L = L || fiche2EtapesPrevues(s);
   const keys = new Set(L.map(x => x[0])), cur = tab ? null : etapeCourante(L);
@@ -438,16 +444,30 @@ function ficheSommaire(s, c) {
       ${rfAVenir(s)}</div>`;
   }
   CURSYM = CUR[s.currency] || s.currency || "€";
+  const t = quick(s);
+  // 30/10 (Romain) : l'en-tête montre sa place dans le secteur (jauges face à la médiane) ; le verdict « En bref » passe dans l'onglet Synthèse
+  const prof = (profilHTML(s) || "").replace(/<p class="kick"[^>]*>Son profil dans le secteur[^<]*<\/p>/, "").replace(/<p class="note"[^>]*>[\s\S]*?<\/p>\s*<\/div>\s*$/, "</div>");
+  const rk = fiche2RangBouton(s), n = (prof.match(/class="pa2"/g) || []).length;
+  return `<div class="fh-sum rf-sum rf-hplace"><div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><span class="f2-sub">Exercice ${esc(s.year)} · comptes officiels</span></div>
+      ${t ? `<p class="rf-tally" title="Selon les seuils de lecture du site et la médiane du secteur"><span class="f"><i></i>${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i>${t.moyen} dans la moyenne</span><span class="v"><i></i>${t.vig} à surveiller</span></p>` : ""}
+      ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
+      ${rk}
+      <p class="rf-plnote">À droite les mieux placées parmi les entreprises du secteur suivies par le site, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.</p>
+      <div class="rf-foot"><button type="button" class="linkbtn lnk" data-et="synthese">La synthèse : points forts, à surveiller, à venir</button></div></div>`;
+}
+function ficheSyntheseHTML(s, c) { // l'ancien « En bref » de l'en-tête, avec l'analyse détaillée (onglet Synthèse, 30/10)
+  CURSYM = CUR[s.currency] || s.currency || "€";
   const t = quick(s), sit = rfSituation(s, c), P = rfPoints(s, c);
   const li = (i, k) => `<li class="rf-${k}"><i></i><button type="button" class="rf-anf" data-rf-anf="${esc(i.id)}" title="Lire le détail et la source">${esc(i.titre)}</button></li>`;
-  return `<div class="fh-sum rf-sum"><div class="rf-sh"><h2 class="f2-h">En bref</h2><span class="f2-sub">Exercice ${esc(s.year)} · comptes officiels</span></div>
+  return `<section class="panel rf-syn" id="synthese-bilan"><div class="ph"><h2>En bref</h2><span class="light" style="font-size:12.5px">Exercice ${esc(s.year)} · comptes officiels</span></div><div class="pb"><div class="fh-sum rf-sum rf-syn-in">
       <p class="fh-v" id="fverdict">${sit || esc(s.desc || "")}</p>
       ${t ? `<p class="rf-tally" title="Selon les seuils de lecture du site et la médiane du secteur"><span class="f"><i></i>${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i>${t.moyen} dans la moyenne</span><span class="v"><i></i>${t.vig} à surveiller</span></p>` : ""}
       ${P && (P.v.length || P.d.length) ? `<div class="rf-pts">
         <div class="rf-bl"><h3>Atouts</h3>${P.v.length ? `<ul>${P.v.map(i => li(i, "v")).join("")}</ul>` : `<p class="rf-no">Aucun atout net dans ses comptes.</p>`}</div>
         <div class="rf-bl"><h3>À surveiller</h3>${P.d.length ? `<ul>${P.d.map(i => li(i, "d")).join("")}</ul>` : `<p class="rf-no">Rien d'inquiétant dans les derniers comptes.</p>`}</div></div>` : ""}
-      ${rfAVenir(s)}
-      <div class="rf-foot"><button type="button" class="linkbtn lnk" data-et="retenir">L'analyse complète</button></div></div>`;
+      ${rfAVenir(s)}</div></div></section>
+    ${ficheAnalyse(s, c)}
+    ${ficheConfiance(c)}`;
 }
 function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
   const pea = peaOk(s), place = String(s.tv || "").split(":")[0], bourse = (typeof IA_BOURSES !== "undefined" && IA_BOURSES[place]) || place;
@@ -514,6 +534,7 @@ function etapesListe(s, c) {
     ["metier", "Son métier", () => ficheMetierHTML(s, c)],
     ["concurrents", "Concurrents", () => concurrentsHTML(s)],
     ["faq", "Questions", () => faqHTML(s, c)],
+    ["synthese", "Synthèse", () => ficheSyntheseHTML(s, c)],
   ];
 }
 /* Étape 1 : les indicateurs principaux (une tuile chacun, reliée à son thème détaillé), puis l'analyse sur plusieurs années */
@@ -562,8 +583,6 @@ function ficheRetenirHTML(s, c) {
       return `<div class="fk fk-l${lv ? " fk-" + lv : ""}"><span class="kick"><span>${l}${pk && typeof provBtn === "function" ? provBtn(pk, "c:" + s.id) : ""}</span>${lv && lv !== "na" ? `<span class="vd vd-${lv}">${VERDICT[lv]}</span>` : ""}</span><a class="fk-a" href="/entreprise/${s.id}/comptes#rf-${th}" title="${esc(String(t).replace(/<[^>]+>/g, ""))}"><b>${k}</b>${rfRepere(s, f, l)}</a></div>`; }).join("")}</div>
     <p class="rf-keysn">Touchez un indicateur pour son évolution sur plusieurs années, dans l'onglet <a class="lnk" href="/entreprise/${s.id}/comptes">Les chiffres en détail</a>.</p>
     <div id="rf-trim" hidden></div>
-    ${ficheAnalyse(s, c)}
-    ${ficheConfiance(c)}
     <div class="src">Les couleurs comparent chaque chiffre à des seuils simples et à la médiane de son secteur. Un point de vigilance n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller. Rien ici ne dit s'il faut acheter.</div></section>`;
 }
 
@@ -613,7 +632,7 @@ async function pageCompany(id, tab) {
 }
 document.addEventListener("click", e => { // « En bref » → le point détaillé, avec son chiffre et sa source, dans « L'essentiel »
   const b = e.target.closest && e.target.closest("[data-rf-anf]"); if (!b) return;
-  e.preventDefault(); if (typeof ETAPE_SHOW === "function") ETAPE_SHOW("retenir");
+  e.preventDefault(); if (typeof ETAPE_SHOW === "function") ETAPE_SHOW("synthese");
   const t = document.querySelector(`#etapes-corps [data-anf="${CSS.escape(b.dataset.rfAnf)}"]`); if (!t) return;
   const d = t.closest("details"); if (d) d.open = true;
   t.scrollIntoView({ behavior: "smooth", block: "center" }); t.classList.add("rf-flash"); setTimeout(() => t.classList.remove("rf-flash"), 1800);
