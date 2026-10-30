@@ -191,3 +191,5 @@ details.ctx-in > summary .ctx-sl{font-size:13.5px;color:var(--grey);line-height:
 function tblxSpark() { return ""; }
 document.head.insertAdjacentHTML("beforeend", `<style>.tbx-gb:empty,.tbx-trw:empty{display:none}</style>`);
 document.head.insertAdjacentHTML("beforeend", `<style>.pxhead .pxeur{display:block;font-size:13px;color:var(--grey);margin:-2px 0 4px}@media (max-width:760px){.pxhead .pxeur{display:inline;margin:0 0 0 8px}}</style>`);
+/* Accueil (30/10) : sous-titres en police de texte, sans capitales espacées */
+document.head.insertAdjacentHTML("beforeend", `<style>.acc .acc-subh h3{font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:0}.acc .acc-ah{font:600 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--grey)}</style>`);

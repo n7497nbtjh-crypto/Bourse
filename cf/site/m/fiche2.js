@@ -467,7 +467,8 @@ function ficheSyntheseHTML(s, c) { // l'ancien « En bref » de l'en-tête, avec
         <div class="rf-bl"><h3>À surveiller</h3>${P.d.length ? `<ul>${P.d.map(i => li(i, "d")).join("")}</ul>` : `<p class="rf-no">Rien d'inquiétant dans les derniers comptes.</p>`}</div></div>` : ""}
       ${rfAVenir(s)}</div></div></section>
     ${ficheAnalyse(s, c)}
-    ${ficheConfiance(c)}`;
+    ${ficheConfiance(c)}
+    <div id="discussion" class="rf-disc"></div>`;
 }
 function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
   const pea = peaOk(s), place = String(s.tv || "").split(":")[0], bourse = (typeof IA_BOURSES !== "undefined" && IA_BOURSES[place]) || place;
@@ -510,6 +511,7 @@ function tabBref(s, c, el) {
   const nav = $("#etapes"); if (nav) { nav.outerHTML = fiche2Onglets(s, "", etapesListe(s, c)); fiche2Centrer(); }
   // Plus de colonne latérale (29/10, demande de Romain) : les annonces ont leur onglet, les concurrents leur étape
   el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">${etapesCorps(s, c)}</div></div>`;
+  if (new URLSearchParams(location.search).get("etape") === "synthese") { const d = $("#discussion"); if (d && !d.dataset.on && typeof tabCommu === "function") { d.dataset.on = "1"; try { tabCommu(s, c, d); } catch (e) { } } }
   etapesBind(s);
   if (typeof tblxSortable === "function") $$(".rf-ctab", el).forEach(t => tblxSortable(t));
   if (typeof tblxBindScroll === "function") tblxBindScroll(el);
@@ -625,7 +627,7 @@ async function pageCompany(id, tab) {
   if (!ficheMemeId(id)) return; // l'utilisateur a changé de page entre-temps
   const ph = $("#pxh"); if (ph) ph.innerHTML = ficheCours(s);
   const sm = $(".fh-sum"); if (sm) sm.outerHTML = ficheSommaire(s, c); // la situation et le prix ont besoin des comptes et du cours
-  ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); if (typeof contexteActuHTML === "function") { el.insertAdjacentHTML("afterbegin", contexteActuHTML(s, c)); if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0); } const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
+  ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); if (typeof contexteActuHTML === "function") { el.insertAdjacentHTML("afterbegin", contexteActuHTML(s, c)); if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0); } } })[tab](s, c, $("#ctab")); // la discussion et les avis des visiteurs sont dans l'onglet Synthèse (30/10)
   if (!tab && c) rfDernierTrimestre(s, c);
   if (tab === "comptes" && location.hash.startsWith("#rf-")) { const t = document.getElementById(location.hash.slice(1)); if (t) setTimeout(() => t.scrollIntoView({ block: "start" }), 30); }
   if (!tab) { fiche2Etapes(); premStatus().then(() => { if (ficheMemeId(id)) assistantPanel(s, c, $("#ctab")); }); }
@@ -669,6 +671,7 @@ function etapesBind(s) {
     else if (nav && nav.getBoundingClientRect().top > innerHeight * 0.6) nav.scrollIntoView({ block: "start", behavior: "smooth" });
     const b = $(`#etapes [data-et="${k}"]`); if (b && b.parentElement) { const p = b.parentElement; p.scrollLeft = Math.max(0, b.offsetLeft - (p.clientWidth - b.offsetWidth) / 2); }
     ficheGraphique(s); fiche2Etapes();
+    if (k === "synthese") { const d = $("#discussion"); if (d && !d.dataset.on && typeof tabCommu === "function") { d.dataset.on = "1"; try { tabCommu(s, FULL[s.id] || null, d); } catch (e) { } } }
     $$(".etape:not([hidden]) .tbx-sc").forEach(x => x.dispatchEvent(new Event("scroll")));
   };
   ETAPE_SHOW = show;

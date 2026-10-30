@@ -301,7 +301,7 @@ async function pageHome() {
       <div class="chips iaex">${IA_EX.slice(0, 4).map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>
       ${accConfiance()}</section>
 
-    ${membre ? "" : `<a class="acc-rapb" href="/rapport-exemple"><span class="acc-rapk">Gratuit · chaque semaine</span><b>Votre rapport de la semaine : vos titres, leurs annonces, leurs dates.</b><span class="acc-rapl">Voir un vrai rapport, calculé aujourd'hui →</span></a>`}
+    ${`<a class="acc-rapb" href="/rapport-exemple"><span class="acc-rapk">Gratuit · chaque semaine</span><b>Votre rapport de la semaine : vos titres, leurs annonces, leurs dates.</b><span class="acc-rapl">Voir un rapport exemple, calculé aujourd'hui →</span></a>`}
 
     <section class="acc-sec" id="acc-point">${accH(`Le point du jour · ${esc(date)}`, "L'actualité économique et financière, en clair", ["/actualites", "Toute l'actualité"])}
       <div id="acc-pointb">${pret ? accPointHTML() : `<div class="acc-rep acc-wait" aria-busy="true"><div class="acc-kpis"><div class="acc-kpi"></div><div class="acc-kpi"></div><div class="acc-kpi"></div></div><div class="acc-sjs"><div class="acc-sj"></div><div class="acc-sj"></div><div class="acc-sj"></div></div></div>`}</div></section>

@@ -133,7 +133,10 @@ const FICHE_CSS = `
 .ffaq .accb{padding:0 22px 16px}
 .ffaq .accb p{margin:0 0 8px;font-size:14.5px;line-height:1.6}
 .ffsrc{font-size:12px;color:var(--light);margin:6px 0 0}
-.ffaq .fq-ia{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--g);margin-bottom:6px}
+.ffaq .fq-ia{display:none}
+.fq-l{margin:0;display:grid;gap:6px}.fq-l > div{display:grid;grid-template-columns:190px minmax(0,1fr);gap:4px 14px;padding:8px 12px;background:#FBFAF7;border-radius:8px}.fq-l > div.fq-one{grid-template-columns:1fr}
+.fq-l dt{font-size:12.5px;font-weight:600;color:var(--grey)}.fq-l dd{margin:0;font-size:14.5px;line-height:1.5}
+@media (max-width:760px){.fq-l > div{grid-template-columns:1fr}}
 #fgraph .tv-chart{height:320px}
 @media (max-width:1100px){.fcols{grid-template-columns:minmax(0,1fr) 280px}.fkeys.n4{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media (max-width:560px){.ftiles.n3,.ftiles.n4,.ftiles.n5,.ftiles.n6{grid-template-columns:repeat(2,minmax(0,1fr))}.ftiles.n5 .ftile,.ftiles.n5 .ftile:nth-child(n+4){grid-column:auto}.ftiles.n3 .ftile:last-child,.ftiles.n5 .ftile:last-child{grid-column:span 2}.fkeys.n5 .fk,.fkeys.n5 .fk:nth-child(n+4){grid-column:auto}.fkeys.n2,.fkeys.n3,.fkeys.n4,.fkeys.n5,.fkeys.n6{grid-template-columns:1fr}}
@@ -368,11 +371,17 @@ function ficheSecteurTxt(s) { // repères du secteur, utiles surtout quand les c
 function ficheReponse(s, c, ask) {
   try { return localAssist(s, c, ask); } catch (e) { return null; }
 }
+/* Réponse d'une question fréquente : une ligne par fait, avec un intitulé quand la phrase en porte un (« Répartition de ses ventes en 2025 : … »)
+   au lieu d'un paragraphe compact (30/10, demande de Romain) */
+function faqLignes(txt) {
+  const parts = String(txt).split(/\n+/).map(x => x.trim()).filter(Boolean);
+  return `<dl class="fq-l">${parts.map(p => { const m = p.match(/^([^:]{3,60}?)\s*:\s+(.+)$/); return m ? `<div><dt>${esc(m[1])}</dt><dd>${esc(m[2])}</dd></div>` : `<div class="fq-one"><dd>${esc(p)}</dd></div>`; }).join("")}</dl>`;
+}
 function faqHTML(s, c) {
   const Q = ficheQuestions(s, c).map(x => ({ ...x, a: x.a || ficheReponse(s, c, x.ask) })).filter(x => x.a);
   return `<section class="panel ffaq" id="faq"><div class="ph"><h2>Questions fréquentes sur ${esc(s.name)}</h2><span class="light" style="font-size:12.5px">${Q.length} réponses calculées par le site</span></div>
     <form class="ffaqask" data-fiche-mini autocomplete="off"><label for="ffq">Posez votre propre question</label><div class="askf"><input id="ffq" type="text" maxlength="300" placeholder="Par exemple : pourquoi sa marge baisse-t-elle ?"><button class="btn" type="submit">Demander à l'IA</button></div></form>
-    ${Q.map((x, i) => acc(esc(x.q), `<p class="fq-ia">✦ Réponse instantanée de l'IA, calculée à partir des données</p>${resumeHTML(x.a)}<p class="ffsrc">Source des chiffres : ${esc(x.src)}.</p><button type="button" class="fapp" data-approf="${esc(x.q)}">✦ Approfondir avec l'IA</button>`, i === 0)).join("")}
+    ${Q.map((x, i) => acc(esc(x.q), `<div class="fq-a">${faqLignes(x.a)}</div><p class="ffsrc">Calculé par le site à partir des comptes officiels · ${esc(x.src)}.</p><button type="button" class="fapp" data-approf="${esc(x.q)}">✦ Une explication plus complète par l'IA</button>`, i === 0)).join("")}
     <div class="src">Les réponses sont calculées dans votre navigateur à partir des comptes officiels, des cours et des médianes du secteur : sans limite et sans invention. « Approfondir » ouvre le panneau ✦ : l'IA du site rédige une explication plus complète à partir des mêmes données. Aucune réponse n'est un conseil d'achat ou de vente.</div></section>`;
 }
 document.addEventListener("submit", e => {

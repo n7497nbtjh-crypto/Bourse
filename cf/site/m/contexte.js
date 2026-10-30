@@ -316,6 +316,7 @@ function ctxCoFill(el, s) {
   const pr = typeof actuCo === "function" ? actuCo(s.id) : fetch(`/data/actu/c/${s.id}.json`).then(r => r.ok ? r.json() : null);
   Promise.resolve(pr).catch(() => null).then(j => {
     if (!j || !document.body.contains(el)) return;
+    if (el.closest("#ctab")) { el.remove(); return; } // onglet Actualités de la fiche : les annonces et la presse ont déjà leurs blocs juste dessous (30/10, doublon retiré)
     const ROUT = new Set(["rachat", "capital", "initie", "agenda"]), lim = new Date(Date.now() - 90 * 864e5).toISOString();
     const o = (j.o || []).filter(a => !ROUT.has(a.c) && (a.i || 0) >= 1 && a.d >= lim).slice(0, 3);
     const sj = contexteSujets(s, FULL[s.id] || null), lie = t => { const n = norm(t || ""); const x = sj.find(({ sj }) => sj.mots && new RegExp(sj.mots).test(n)); return x ? x.sj : null; };
