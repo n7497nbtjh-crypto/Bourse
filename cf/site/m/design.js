@@ -193,3 +193,16 @@ document.head.insertAdjacentHTML("beforeend", `<style>.tbx-gb:empty,.tbx-trw:emp
 document.head.insertAdjacentHTML("beforeend", `<style>.pxhead .pxeur{display:block;font-size:13px;color:var(--grey);margin:-2px 0 4px}@media (max-width:760px){.pxhead .pxeur{display:inline;margin:0 0 0 8px}}</style>`);
 /* Accueil (30/10) : sous-titres en police de texte, sans capitales espacées */
 document.head.insertAdjacentHTML("beforeend", `<style>.acc .acc-subh h3{font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:0}.acc .acc-ah{font:600 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--grey)}</style>`);
+/* Règle de police, tout le site (30/10, demande de Romain) : la serif pour les titres de page et de bloc (h1, h2) ;
+   la police de texte pour tout le reste, sous-titres compris ; la chasse fixe uniquement pour les chiffres. */
+document.head.insertAdjacentHTML("beforeend", `<style>
+h3,h4,h5,.ctx-h,.rf-h3,.acc-sj h3,.acc-l b,.synk li b,summary,.anf-ctxd > summary,.cmpr-det > summary{font-family:var(--sans)!important;letter-spacing:0}
+h3,.rf-h3,.ctx-h{font-weight:700}
+.kick,.synhero .kick,.synhome .kick,.par-demo .kick,.par-demo .tag,.acc-sj .kick,.acc-sjk,.pxhead .kick,.tile .kick,.ftile .kick,.cmpr-ind,.ctx-k,.ctx-d,.rf-ctab th small,.tbx-unit,.acc-legend span,.synmeta span,.acc-tag{font-family:var(--sans)!important;letter-spacing:.02em}
+.ctx-d{font-variant-numeric:tabular-nums}
+</style>`);
+document.head.insertAdjacentHTML("beforeend", `<style>
+/* Étiquettes encore en chasse fixe (relevé du 30/10) : toutes en police de texte */
+.anf-sait h4,.ess .lbl,.cmpr-sug .h,.cmpr-badge,.cmpr-vl .th,.cmpr-all tr.grp th,.fbt,.pf3bdg,.pf3dx span,.cm-n,table.tbx .u,.pf3mq,.syncat,.synnews .cat,.acc-tag{font-family:var(--sans)!important;letter-spacing:.02em}
+.cmpr-all tr.grp th,.fbt,.anf-sait h4,.cmpr-sug .h{font-size:12.5px;font-weight:600;text-transform:none}
+</style>`);

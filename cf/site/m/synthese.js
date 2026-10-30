@@ -221,10 +221,9 @@ function synKpis(b) {
 }
 function synRowsHTML(b) {
   const L = (b.lignes || []).slice().sort((x, y) => (y.variation_semaine_pct ?? -1e9) - (x.variation_semaine_pct ?? -1e9)), pf = !!b.portefeuille;
-  return `<div class="synhead"><span>Valeur</span><span>Semaine</span><span>Variation</span><span>Face à son indice</span><span>${pf ? "En euros" : ""}</span></div><div class="synrows">${L.map(l => {
+  return `<div class="synhead syn-nosp"><span>Valeur</span><span>Sur la semaine</span><span>Face à son indice</span><span>${pf ? "En euros" : ""}</span></div><div class="synrows syn-nosp">${L.map(l => {
     const v = l.variation_semaine_pct, sub = [l.type === "etf" ? "ETF" : (RBY[l.k.slice(2)] ? secName(RBY[l.k.slice(2)]) : ""), l.en_portefeuille && l.portefeuille ? `${nf(0).format(l.portefeuille.poids_pct)} % du portefeuille` : l.en_portefeuille ? "dans le portefeuille" : "favori"].filter(Boolean).join(" · ");
     return `<a class="synrow" href="${synLien(l.k)}"><span class="nm">${synLogo(l.k, 30)}<span><b>${esc(l.nom)}</b><small>${esc(sub)}</small></span></span>
-      <span class="sp">${synSpark(l.serie, 88, 26, l.nom + " sur la semaine")}</span>
       <span class="v ${v == null ? "na" : synCls(v)}">${v == null ? "–" : synPct(v)}</span>
       <span class="vs">${l.indice && l.ecart_pts != null ? `<b class="${synCls(l.ecart_pts)}">${l.ecart_pts > 0 ? "+" : l.ecart_pts < 0 ? "−" : ""}${nf(1).format(Math.abs(l.ecart_pts))} pt${Math.abs(l.ecart_pts) >= 2 ? "s" : ""}</b> vs ${esc(l.indice.nom)}` : v == null ? "cours de la semaine manquant" : `<span class="light">pas d'indice équivalent</span>`}</span>
       <span class="eu ${l.portefeuille && l.portefeuille.var_eur != null ? synCls(l.portefeuille.var_eur) : ""}">${l.portefeuille && l.portefeuille.var_eur != null ? synEur(l.portefeuille.var_eur) : ""}</span></a>`; }).join("")}</div>`;
@@ -324,18 +323,18 @@ function synPageHTML(b, m) {
       <h2 id="synh">Semaine ${esc(sem)}${b.du ? `, ${esc(synDuAu(b))}` : ""}</h2>
       <div class="synmeta"><span class="on">${b.lecture_min || 2} min de lecture</span><span>${esc(statut)}</span>${b.genere ? `<span>Chiffres du ${esc(new Date(b.genere).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))} à ${esc(new Date(b.genere).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }))}</span>` : ""}${partiel ? `<span>${esc(partiel)}</span>` : ""}</div>
       ${ess.length ? `<ol class="synk">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
-      <nav class="synnav" aria-label="Aller à">${[["synvar", "Variations"], ["synact", `Actualités${(b.annonces || []).length ? " (" + b.annonces.length + ")" : ""}`], ["synav", `À venir${(b.a_venir || []).length ? " (" + b.a_venir.length + ")" : ""}`], ["synint", "Ce que ça change"]].map(([id, t]) => `<a href="#${id}" data-synjump="${id}">${t}</a>`).join("")}
+      <nav class="synnav" aria-label="Aller à">${[["synact", `Actualités${(b.annonces || []).length ? " (" + b.annonces.length + ")" : ""}`], ["synav", `À venir${(b.a_venir || []).length ? " (" + b.a_venir.length + ")" : ""}`], ["synvar", "Variations"], ["synint", "Ce que ça change"]].map(([id, t]) => `<a href="#${id}" data-synjump="${id}">${t}</a>`).join("")}
         ${(b.a_venir || []).length ? `<button type="button" class="pri" data-synics="all">+ Ajouter les dates à mon agenda</button>` : ""}${lecPrincipale ? `<a href="${lecPrincipale.href}">Leçon : ${esc(lecPrincipale.titre)}</a>` : ""}${synNotifHTML()}</nav></section>
+
+    <section class="panel synsec" id="synact"><div class="ph"><h2>Actualités de vos valeurs</h2><a href="/actualites">Toute l'actualité</a></div><div class="pb">${synNewsHTML(b, prem)}</div></section>
+
+    <section class="panel synsec" id="synav"><div class="ph"><h2>À venir sur deux semaines</h2></div><div class="pb">${synAgendaHTML(b)}</div></section>
 
     <section class="panel synsec" id="synvar"><div class="ph"><h2>Variations de la semaine</h2><a href="/favoris">Mes favoris</a></div><div class="pb">
       ${synKpis(b)}
       ${(b.indices || []).length ? `<div class="synidx"><span>Repères :</span>${b.indices.map(i => `<span>${esc(i.nom)} <b class="${synCls(i.pct)}">${synPct(i.pct)}</b></span>`).join("")}</div>` : ""}
       ${synRowsHTML(b)}
       <p class="synfoot">Variation entre la clôture précédant la semaine et le dernier cours connu (différé d'environ 20 minutes), dans la devise de cotation. ${b.portefeuille ? `Gains en euros à quantités constantes${b.portefeuille.estime ? " ; pour les lignes saisies en montant, la valeur est celle que vous avez indiquée" : ""}. ` : ""}Source des cours : Google Finance.</p></div></section>
-
-    <section class="panel synsec" id="synact"><div class="ph"><h2>Actualités de vos valeurs</h2><a href="/actualites">Toute l'actualité</a></div><div class="pb">${synNewsHTML(b, prem)}</div></section>
-
-    <section class="panel synsec" id="synav"><div class="ph"><h2>À venir sur deux semaines</h2></div><div class="pb">${synAgendaHTML(b)}</div></section>
 
     <section class="panel synsec" id="synint"><div class="ph"><h2>Ce que ça change</h2></div><div class="pb"><div class="syninter">
       ${synAlertesHTML(b)}
@@ -442,4 +441,11 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 #synex .synwrap{grid-template-columns:minmax(0,1fr)!important}#synex .synwrap > :not(:first-child){display:none}
 .synx-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border-top:1px solid var(--line2)}
 .synx-g > div{padding:14px 22px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2)}.synx-g b{font-size:14.5px}.synx-g p{margin:4px 0 0;font-size:13.5px;color:var(--grey);line-height:1.5}
+</style>`);
+
+/* 30/10 (Romain) : plus de mini-courbes dans le rapport ; la variation de la semaine en grand, en première colonne après le nom */
+document.head.insertAdjacentHTML("beforeend", `<style>
+.synhead.syn-nosp,.synrows.syn-nosp .synrow{grid-template-columns:minmax(0,1fr) 110px 150px 90px}
+.synrows.syn-nosp .synrow .v{font-size:18px;font-weight:700}
+@media (max-width:760px){.synrows.syn-nosp .synrow{grid-template-columns:minmax(0,1fr) 90px}.synrows.syn-nosp .synrow .vs{grid-row:2;grid-column:1/2;padding-left:40px}.synrows.syn-nosp .synrow .eu{grid-row:2;grid-column:2}}
 </style>`);

@@ -170,6 +170,9 @@ async function analyseSec(it) {
     const r = await fetch(url, { headers: { "user-agent": UA } }); if (r.ok) text = htmlText(await r.text());
   } catch (e) { }
   if (!text) return { ...res, lecture: [explication] };
+  // Seuls les communiqués de résultats portent des chiffres : une assemblée générale, un changement de dirigeant ou un accord
+  // citent parfois les ventes de l'année passée, et ces chiffres anciens se retrouvaient en tête de l'annonce (30/10)
+  if (["assemblee", "dirigeants", "accord", "acquisition", "incident", "autre"].includes(it.kind) && !/\b(quarterly results|financial results|results for the (first|second|third|fourth) quarter|fiscal (year|quarter) results|reports? (first|second|third|fourth)[- ]quarter)/i.test(text.slice(0, 3000))) return { ...res, lecture: [explication] };
   const x = plausible(extractEN(text), annual), per = q => q === "trimestre" ? " du trimestre" : q === "année" ? " de l'année" : "";
   if (x.ca) res.chiffres.push([`Ventes${per(x.ca.q)}`, money(x.ca.v, c.currency || "USD") + (x.ca.g != null ? ` (${pctS(x.ca.g)} sur un an)` : "")]);
   if (x.net) res.chiffres.push([`Bénéfice net${per(x.net.q)}`, money(x.net.v, c.currency || "USD") + (x.net.g != null ? ` (${pctS(x.net.g)} sur un an)` : "")]);
