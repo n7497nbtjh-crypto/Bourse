@@ -20,7 +20,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Son cahier d'audit fait référence : `docs/audit-2026-10.md` (plan P0/P1/P2). Navigation voulue : Découvrir / Explorer / Analyser / Mon espace. Accueil plus court, actions principales en premier.
 - Verdict d'abord, détail ensuite (« approfondir » au clic). Ne pas retirer d'information : la rendre plus compréhensible.
 - Il adore les **médianes du secteur** et les **zones vertes / rouges**. Toujours expliquer et interpréter pour un débutant, sans le prendre pour un enfant.
-- Direction artistique : papier crème + titres serif (style « journal ») et touches de vert acide (style « tableau de bord »), sans cadres sombres.
+- Direction artistique : `DESIGN.md` fait référence (papier crème, Fraunces pour h1/h2 seulement, Plex Sans partout ailleurs, Plex Mono pour les chiffres, vert acide seul accent, couleur seulement quand elle a un sens, aucune capitale espacée, pas de petites courbes décoratives).
+- **« La jeunesse ne lit pas »** (30/10) : capter l'attention par le visuel. Chiffre, jauge, pastille et verdict en deux mots visibles ; les phrases d'explication repliées (« Pourquoi ? », « Le détail »). Rien n'est retiré, tout reste au clic.
 - Favoris bien visibles. Concurrents affichés avec comparaison. PEA / compte-titres expliqués.
 - Simplicité et coût nul : aucune IA payée par le site. Réponses calculées pour tous ; pour les questions libres, l'IA du site (Cloudflare Workers AI, part gratuite quotidienne, plafonnée par le site et par visiteur), sans compte ni clé ; connecteur MCP. Romain ne veut ni clé, ni connexion à un compte d'IA, ni intermédiaire. Pas de services payants multiples.
 
@@ -35,3 +36,5 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - `docs/architecture.md` (fonctionnement et coûts), `docs/ia.md` (IA), `docs/audit-2026-10.md` (audit et plan).
 - Compétences du dépôt (`.claude/skills/`) : `bilan-module` (modifier le site), `bilan-mise-en-ligne` (tester et déployer), `bilan-sonde` (lire un site externe, collectes).
 - `CHANTIERS.md` : contrats entre modules (fonctions partagées, formats des fichiers de données).
+- Données (30/10) : `tests/t_coherence.mjs` (cohérence de toutes les fiches, à lancer avant chaque mise en ligne) ; `data/sec_trim.mjs` écrit les trimestres SEC dans `cf/site/data/trim/<id>.json` (affichés dans « Depuis la clôture » sur la fiche) ; Eulerpool (trimestriels Europe/Asie) en panne 502 depuis le 30/10 matin, test prêt dans `.github/workflows/eulerpool-test.yml` ; Marketstack attend le plan Basic.
+- Rapport de la semaine : `synPageHTML` dans `m/synthese.js` (grands chiffres, actualité avec le contexte de `contexte.json`, lecture de l'IA du site via la tâche « bilan », simulations du portefeuille, valeurs en liste dépliable).
