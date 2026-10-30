@@ -9,12 +9,12 @@ pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?
 pages += ["/academie", "/academie/bases", "/academie/bases/interets-composes", "/academie/frais-fiscalite", "/academie/bases/quiz", "/academie/formation", "/methode", "/demander", "/demander?q=entreprises+peu+endettees", "/espace", "/commencer", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement", "/connecteur"]
 pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes", "/pour-moi", "/repartitions", "/plan"]
 pages += ["/hier", "/simulateurs", "/outils/recouvrement?a=amundi-msci-world-pea&b=ishares-core-sp500&c=amundi-nasdaq100-pea", "/outils/si-javais?k=c:apple&ans=3"]
-pages += ["/entreprise/alibaba?etape=comptes", "/entreprise/klepierre?etape=comptes", "/entreprise/totalenergies?etape=comptes"]
+pages += ["/entreprise/alibaba", "/entreprise/klepierre", "/entreprise/totalenergies#tous-les-chiffres"]
 pages += ["/communaute?onglet=analyses", "/communaute?onglet=listes", "/communaute?onglet=listes&liste=1", "/communaute?onglet=analyses&a=1"]
 pages += ["/idees-recues", "/idees-recues#livret-a", "/livret-a-ou-bourse", "/pourquoi-bilan"]
 pages += ["/apprendre", "/apprendre#outils", "/academie/express", "/academie/express/lire", "/academie/express/lire/dette-nette", "/academie/express/prix/quiz", "/espace/rapport", "/espace/ia"]
-pages += ["/comparer?ids=bnp-paribas,societe-generale,sap", "/comparer?ids=apple,microsoft,alphabet", "/entreprise/bnp-paribas?etape=concurrents", "/entreprise/apple?etape=concurrents", "/entreprise/totalenergies?etape=concurrents", "/entreprise/siemens", "/entreprise/alibaba?etape=metier"]
-pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh/communaute", "/entreprise/lvmh/actualite", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
+pages += ["/comparer?ids=bnp-paribas,societe-generale,sap", "/comparer?ids=apple,microsoft,alphabet", "/entreprise/bnp-paribas#rf-concurrents", "/entreprise/apple#rf-concurrents", "/entreprise/totalenergies#rf-concurrents", "/entreprise/siemens", "/entreprise/alibaba#rf-metier"]
+pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/communaute", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh#rf-synth", "/entreprise/lvmh#rf-agenda", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
 AMF = {"items": [{"date": "2026-10-27T18:02:00", "company": "TOTALENERGIES SE", "title": "Communiqué : résultats du troisième trimestre 2026", "type": "Information financière trimestrielle", "url": "https://example.org/doc.pdf"},
                  {"date": "2026-10-27T17:45:00", "company": "LVMH MOET HENNESSY LOUIS VUITTON", "title": "Déclaration des transactions sur actions propres", "type": "Rachat d'actions", "url": ""}] * 4}
@@ -95,7 +95,7 @@ with sync_playwright() as pw:
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p and "page vide" in p: pg.wait_for_timeout(2500); p = pg.evaluate(CHECK, opts["viewport"]["width"])  # machine chargée : on laisse le temps au rendu
             if p: probs[path] = p
-            if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/lvmh", "/entreprise/lvmh/comptes", "/lexique", "/etf/amundi-msci-world-pea", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/communaute"):
+            if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/lvmh", "/lexique", "/etf/amundi-msci-world-pea", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/communaute"):
                 os.makedirs(shots, exist_ok=True)
                 pg.screenshot(path=f"{shots}/{name}{(path.replace('/', '_').replace('?', '_') if path != '/' else '_accueil')}.png", full_page=True)
         # Portefeuille : ajout d'une opération
@@ -112,8 +112,8 @@ with sync_playwright() as pw:
         if p: probs["/portefeuille rempli"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
-        pg.goto("http://t.local/entreprise/lvmh/comptes"); pg.wait_for_timeout(300)
-        pg.evaluate("document.querySelectorAll('details.rf-thd').forEach(d => { d.open = true; })")  # le tableau est replié par défaut depuis le 30 octobre
+        pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
+        pg.evaluate("document.querySelectorAll('#tous-les-chiffres details').forEach(d => { d.open = true; })")  # lot 4 : une seule page, les chiffres en plis
         pg.locator(".def[data-def=marge]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(300)  # le défilement referme la bulle : on défile d'abord
         pg.click(".def[data-def=marge]"); pg.wait_for_timeout(150)
         if not pg.evaluate("document.getElementById('pop').classList.contains('open')"): probs["définition"] = ["la bulle ne s'ouvre pas"]
@@ -121,7 +121,8 @@ with sync_playwright() as pw:
         if p: probs["chiffres + bulle"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_definition.png")
         # Fiche : PER calculé automatiquement avec le cours (thème « Valorisation » de l'onglet des chiffres)
-        pg.goto("http://t.local/entreprise/lvmh/comptes"); pg.wait_for_timeout(600)
+        pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
+        pg.evaluate("document.getElementById('rf-valo').open = true")
         if "PER" not in pg.inner_text("#rf-valorisation"): probs["PER"] = ["le PER n'est pas calculé"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["fiche + PER"] = p

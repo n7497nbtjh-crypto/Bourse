@@ -17,7 +17,7 @@ const check = async (path, status, titlePart) => {
 };
 await check("/", 200, "comptes à l'appui");
 await check("/entreprise/lvmh", 200, "LVMH");
-await check("/entreprise/totalenergies/comptes", 200, "TotalEnergies");
+await check("/entreprise/totalenergies", 200, "TotalEnergies");
 await check("/actualites", 200, "Actualité");
 await check("/entreprise/inconnue", 404, "introuvable");
 await check("/simulateurs/pea-cto", 200, "PEA");
@@ -29,7 +29,7 @@ await check("/nimporte.png", 404);
 await check("/apprendre", 200, "Apprendre");
 await check("/academie/express/lire/per", 200, "essentiel");
 await check("/espace/rapport", 200, "Mon espace");
-for (const [de, vers] of [["/debuter", "/academie/express"], ["/debuter/", "/academie/express"], ["/debuter/lire", "/academie/express/lire"], ["/debuter/prix/per?x=1", "/academie/express/prix/per?x=1"]]) {
+for (const [de, vers] of [["/debuter", "/apprendre"], ["/commencer", "/apprendre"], ["/academie", "/apprendre"], ["/academie/express", "/apprendre"], ["/debuter/lire", "/academie/express/lire"], ["/debuter/prix/per?x=1", "/academie/express/prix/per?x=1"], ["/entreprise/lvmh/comptes", "/entreprise/lvmh#tous-les-chiffres"], ["/entreprise/lvmh/actualite?x=1", "/entreprise/lvmh?x=1#rf-agenda"]]) {
   const r = await W.fetch(new Request("https://t.local" + de), env), ok = r.status === 301 && r.headers.get("location") === "https://t.local" + vers;
   if (!ok) bad++; console.log(ok ? "ok " : "ÉCART", de, "→", r.status, r.headers.get("location")); }
 { const h = await (await W.fetch(new Request("https://t.local/entreprise/lvmh"), env)).text(), m = h.match(/<script type="application\/ld\+json">([^<]*)<\/script>/);

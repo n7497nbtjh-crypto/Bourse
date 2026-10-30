@@ -98,6 +98,8 @@ export function redirectionParcours(p) {
   if (p === "/pour-moi") return "/repartitions"; // « Pistes pour vous » remplacé par les répartitions types, sans personnalisation (audit P0-6)
   // Lot 2 (30/10) : quatre portes ; les anciennes pages d'entrée sont fusionnées dans /apprendre (les leçons gardent leur adresse)
   if (p === "/commencer") return "/apprendre";
+  const mf = /^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)\/?$/.exec(p); // lot 4 : la fiche est une seule page
+  if (mf) return mf[1] + (mf[2] === "comptes" ? "#tous-les-chiffres" : mf[2] === "communaute" ? "#rf-synth" : /^comprendre/.test(mf[2]) ? "#tous-les-chiffres" : "#rf-agenda");
   if (p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/") return "/apprendre";
   if (p === "/debuter" || p === "/premiers-pas") return "/apprendre";
   return null;
@@ -125,7 +127,7 @@ export default {
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const redir = redirectionParcours(url.pathname.replace(/\/+$/, ""));
-    if (redir) return Response.redirect(url.origin + redir + url.search, 301);
+    if (redir) { const [rp, rh] = redir.split("#"); return Response.redirect(url.origin + rp + url.search + (rh ? "#" + rh : ""), 301); }
     let info = meta(url.pathname, url.searchParams);
     const etfId = (url.pathname.match(/^\/etf\/([a-z0-9-]+)\/?$/) || [])[1];
     if (etfId) info = await etfMeta(etfId, env, url, SITE) || info;

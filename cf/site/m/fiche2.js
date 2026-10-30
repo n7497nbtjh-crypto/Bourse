@@ -463,12 +463,11 @@ function ficheSommaire(s, c) {
   const prof = (profilHTML(s) || "").replace(/<p class="kick"[^>]*>Son profil dans le secteur[^<]*<\/p>/, "").replace(/<p class="note"[^>]*>[\s\S]*?<\/p>\s*<\/div>\s*$/, "</div>");
   const rk = fiche2RangBouton(s), n = (prof.match(/class="pa2"/g) || []).length;
   const vc = rfVerdictCourt(s, c);
-  return `<div class="fh-sum rf-sum rf-hplace">${vc ? `<p class="rf-vc">${esc(vc)}<small>sur ses comptes ${esc(s.year)}, face à son secteur</small></p>` : ""}<div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><span class="f2-sub">Exercice ${esc(s.year)} · comptes officiels</span></div>
-      ${t ? `<p class="rf-tally" title="Selon les seuils de lecture du site et la médiane du secteur"><span class="f"><i></i>${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i>${t.moyen} dans la moyenne</span><span class="v"><i></i>${t.vig} à surveiller</span></p>` : ""}
-      ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
-      ${rk}
-      <p class="rf-plnote">À droite les mieux placées parmi les entreprises du secteur suivies par le site, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.</p>
-      <div class="rf-foot"><a class="rf6-lk lnk" href="#rf-synth">Points forts, à surveiller, discussion</a></div></div>`;
+  const prof3 = prof.replace(/au-dessus de la médiane/g, "au-dessus").replace(/parmi les plus faibles/g, "parmi les dernières"); // libellés de trois mots au plus (lot 4)
+  const md = MED[s.sector] || {};
+  return `<div class="fh-sum rf-sum rf-hplace">${vc ? `<p class="rf-vc">${esc(vc)}<small id="rf-date">Derniers comptes : exercice ${esc(s.year)}${c.fyEnd ? `, clos le ${esc(String(c.fyEnd).split("-").reverse().join("/"))}` : ""}</small></p>` : ""}<div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><button type="button" class="rf-info" data-rf-info aria-label="Comment lire ces jauges" title="Comparé à la médiane de ${md.n || "?"} entreprises du secteur suivies par le site : à droite les mieux placées, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.">ⓘ</button></div>
+      ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof3}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
+      ${rk}</div>`;
 }
 function ficheSyntheseHTML(s, c) { // l'ancien « En bref » de l'en-tête, avec l'analyse détaillée (onglet Synthèse, 30/10)
   CURSYM = CUR[s.currency] || s.currency || "€";
@@ -717,7 +716,9 @@ async function rfTrimestresSEC(s, c, box) { // trimestres lus à la SEC (10-Q) :
   box.innerHTML = `<div class="rf-trimi"><div class="rf-trimh"><span class="kick">Depuis la clôture de l'exercice ${esc(c.years.at(-1))}</span><b>Trimestre clos le ${dLabel(last.end)}</b><span class="light">rapport ${esc(last.form)} déposé le ${dLabel(last.filed)} · ${nouveaux.length} trimestre${nouveaux.length > 1 ? "s" : ""} publié${nouveaux.length > 1 ? "s" : ""} depuis</span></div>
     <div class="rf-trimc">${tuiles.join("")}</div>${lec.length ? `<p class="rf-triml">${lec.map(esc).join(" ")} Les indicateurs des six modules restent ceux de l'exercice clos, audité ; ces chiffres trimestriels ne sont pas audités.</p>` : ""}
     <p class="rf-trimf"><a class="lnk" href="${esc(t.source)}" target="_blank" rel="noopener">Données SEC (companyfacts)</a> · <a class="lnk" href="/entreprise/${s.id}/actualite">Toutes ses annonces</a></p></div>`;
-  box.hidden = false; return true;
+  box.hidden = false;
+  const dt = document.getElementById("rf-date"); if (dt) { const d = new Date(last.end + "T00:00:00"); dt.textContent = `Derniers comptes : T${Math.ceil((d.getMonth() + 1) / 3)} ${d.getFullYear()} (${last.form || "10-Q"}${last.filed ? ", " + dLabel(last.filed) : ""}) · verdict sur l'exercice ${c.years.at(-1)}`; }
+  return true;
 }
 async function rfDernierTrimestre(s, c) {
   const box = document.getElementById("rf-trim"); if (!box || typeof actuGet !== "function") return;
@@ -952,4 +953,147 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .rf-vcp{padding:18px 22px 6px;margin:0}
 #rf-change #rf-trim{padding:14px 22px 18px}.rf-chev{padding:0 22px 16px}.rf-chev .rf-bl{margin:0}
 @media (max-width:760px){.rf-pl>summary{padding:12px 16px}.rf-vcp{padding:14px 16px 4px}#rf-change #rf-trim{padding:12px 16px 14px}}
+</style>`);
+
+/* ====================================================================================
+   Lot 4 (30/10, prompt de refonte) : la fiche en une seule page, zéro onglet.
+   Niveau 1 : en-tête (verdict, cinq jauges), la courbe, « Ce qu'elle fait », « Ce qui a changé ».
+   Niveau 2 « Tous les chiffres » : sections repliables sans phrase de verdict (résultats avec trimestres, rentabilité,
+   bilan et dette, valorisation, dividende, agenda et annonces, concurrents, pourquoi ces verdicts, tous les comptes, sources),
+   ouvertes d'office si le réglage « Afficher toujours le détail » est coché. Export CSV, ajout au comparateur.
+   /entreprise/x/comptes et /actualite redirigent vers la fiche (ancre). Rien n'est retiré.
+   ==================================================================================== */
+const RF_DETAIL_CLE = "bilan.detail";
+function rfDetailToujours() { try { return localStorage.getItem(RF_DETAIL_CLE) === "1"; } catch (e) { return false; } }
+function rfDetailSet(v) { try { localStorage.setItem(RF_DETAIL_CLE, v ? "1" : "0"); } catch (e) { } }
+function rfPli2(id, titre, sous, corps, open) { return `<details class="rf-pl rf-pl2" id="${id}"${open ? " open" : ""}><summary><b>${titre}</b>${sous ? `<span>${sous}</span>` : ""}</summary><div class="rf-plb">${corps}</div></details>`; }
+function rfFaitHTML(s, c) { // « Ce qu'elle fait » : une phrase, puis ses concurrents cliquables
+  let peers = []; try { peers = cmprFiche(s).peers.slice(0, 5); } catch (e) { }
+  const d = String(s.desc || "").trim();
+  return `<section class="panel rf-l1" id="rf-fait"><div class="ph"><h2>Ce qu'elle fait</h2>${regName(s) ? `<span class="light" style="font-size:12.5px">${esc(regName(s))} · ${esc(secName(s))}</span>` : ""}</div><div class="pb">
+    <p class="rf-l1p">${esc(d)}${d && !/[.!?]$/.test(d) ? "." : ""}</p>
+    ${peers.length ? `<p class="rf-peers"><span>Concurrents</span>${peers.map(p => `<a class="chip" href="/entreprise/${p.id}">${logo(p, 18)}${esc(p.name)}</a>`).join("")}</p>` : ""}
+    <p class="rf-l1l"><a class="lnk" href="#rf-metier" data-rf-ouvre="rf-metier">Son métier en détail</a></p></div></section>`;
+}
+function rfChangeHTML(s, c) { // « Ce qui a changé » : la dernière publication (trimestre si disponible), la prochaine date
+  const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 2);
+  return `<section class="panel rf-l1" id="rf-change"><div class="ph"><h2>Ce qui a changé</h2><a class="lnk" href="#rf-agenda" data-rf-ouvre="rf-agenda" style="font-size:13px">Annonces et agenda</a></div>
+    <div id="rf-trim"><p class="rf-no" style="padding:14px 22px">Aucune publication chiffrée relevée par le site depuis la clôture de l'exercice ${esc(String(s.year || ""))}.</p></div>
+    ${up.length ? `<p class="rf6-ev" style="padding:0 22px 14px;margin:0">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}</section>`;
+}
+function rfTrimTableHTML(t, c) { // tableau des trimestres lus à la SEC (10-Q / 10-K), du plus récent au plus ancien
+  const Q = [...t.q].sort((a, b) => b.end.localeCompare(a.end)).slice(0, 8), B = v => v == null ? "–" : big(v, t.currency);
+  const lab = q => { const d = new Date(q.end + "T00:00:00"); return `T${Math.ceil((d.getMonth() + 1) / 3)} ${d.getFullYear()}`; };
+  const prevY = q => t.q.find(x => x.end < q.end && Math.abs((Date.parse(q.end) - Date.parse(x.end)) / 864e5 - 365) < 20);
+  const g = (a, b) => a != null && b ? sgn(a / b - 1) : "";
+  return `<div class="tbx-sc scroll-x"><table class="t tbx rf-trimt"><thead><tr><th class="l">Trimestre clos le</th><th>Ventes</th><th>sur un an</th><th>Bénéfice net</th><th>sur un an</th><th>Bénéfice par action</th><th class="l">Document</th></tr></thead><tbody>
+    ${Q.map(q => { const p = prevY(q); return `<tr><td class="l"><b>${lab(q)}</b><small style="display:block;color:var(--grey)">${dLabel(q.end)}</small></td><td>${B(q.ca)}</td><td>${p ? g(q.ca, p.ca) : "–"}</td><td>${B(q.net)}</td><td>${p ? g(q.net, p.net) : "–"}</td><td>${q.eps != null ? F2.format(q.eps) : "–"}</td><td class="l">${esc(q.form || "")}${q.filed ? ` · ${dLabel(q.filed)}` : ""}</td></tr>`; }).join("")}</tbody></table></div>
+    <div class="src">Trimestres lus dans les données publiques de la SEC (companyfacts, XBRL) ; chaque ligne vient du 10-Q ou du 10-K déposé à la date indiquée. <a class="lnk" href="${esc(t.source)}" target="_blank" rel="noopener">Source</a>.</div>`;
+}
+function rfCsv(s, c) { // tous les comptes, année par année, en CSV (séparateur point-virgule, décimale virgule)
+  const P = tblxRows(s, c), Y = c.years, q = v => `"${String(v).replace(/"/g, '""')}"`;
+  const lines = [[`Indicateur (${c.currency} ; montants en millions, ratios en nombre, pourcentages en fraction)`, ...Y].map(q).join(";")];
+  P.rows.forEach(r => lines.push([r.label || r.k, ...Y.map((y, i) => { const v = (r.vals || [])[i]; return v == null ? "" : String(Math.round(v * 1000) / 1000).replace(".", ","); })].map(q).join(";")));
+  return "﻿" + lines.join("\n");
+}
+async function ficheUneSeulePage(s, c, el) {
+  const base = `/entreprise/${s.id}`, auto = rfDetailToujours();
+  const nav = $("#etapes"); if (nav) nav.remove();
+  if (!c) { // pas de comptes : métier, prix, questions, actualité, comme avant mais sans onglet
+    el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">${ficheMetierHTML(s, null)}<section class="panel"><div class="pb muted">${missingTxt(s, true)}</div></section>${ficheGraphBox(s)}${fichePrixSans(s)}${rfPli2("rf-agenda", "Annonces et agenda", "", `${rfAVenir(s)}<div id="factu"></div>`, true)}${rfPli2("rf-faq", "Questions fréquentes", "", faqHTML(s, null), false)}</div></div>`;
+    const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }
+    if (typeof dirigeantsHTML === "function") dirigeantsHTML(s, $("#fdirig")); ficheGraphique(s); return;
+  }
+  const chiffres = document.createElement("div"); chiffres.id = "rf-chiffres-src";
+  try { tabComptes(s, c, chiffres); } catch (e) { chiffres.innerHTML = ""; }
+  const th = k => { const x = chiffres.querySelector(`#rf-${k}`); if (!x) return ""; x.classList.add("rf-th-in"); return x.outerHTML; };
+  const top = chiffres.querySelector("#tbx"), tout = chiffres.querySelector("#rf-tout"), srcs = [...chiffres.querySelectorAll("section.panel")].filter(x => x.querySelector("h2") && /^Sources/.test(x.querySelector("h2").textContent));
+  const jg = (key, inv, val) => { const p = rfPosition(s, key, inv, val); return p ? `<span class="rf-pq">${inv === null ? "" : (Math.round(p.pos * 100) >= 50 ? "mieux placée que " + Math.round(p.pos * 100) : "moins bien placée que " + (100 - Math.round(p.pos * 100))) + " % du secteur"}</span>` : ""; };
+  const f = figuresOf(c), m = ratios(f), v = valo(s) || {}, bank = isBank(s);
+  el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">
+    ${rfFaitHTML(s, c)}
+    ${rfChangeHTML(s, c)}
+    <section class="rf-l2" id="tous-les-chiffres"><div class="rf-l2h"><h2>Tous les chiffres</h2><label class="rf-l2t"><input type="checkbox" id="rf-detail"${auto ? " checked" : ""}> Afficher toujours le détail</label></div>
+      ${rfPli2("rf-resultats", "Résultats", `Ventes, bénéfice, par trimestre et par an ${jg("g1", false, m.g1)}`, `<div class="rf-ta" id="rf-ta" hidden><button type="button" class="on" data-ta="a">Par an</button><button type="button" data-ta="t">Par trimestre</button></div><div id="rf-ta-a">${th("croissance")}</div><div id="rf-ta-t" hidden></div>`, auto)}
+      ${rfPli2("rf-rentab", bank ? "Rentabilité" : "Rentabilité", `Marges, rendement des capitaux propres, face à la médiane ${jg(bank ? "roe" : "marge", false, bank ? m.roe : m.marge)}`, th("rentabilite"), auto)}
+      ${th("bilan") ? rfPli2("rf-dette", "Bilan et dette", `Dette nette, fonds propres, trésorerie ${jg("lev", true, m.lev)}`, th("bilan"), auto) : ""}
+      ${th("flux") ? rfPli2("rf-flux", "Flux de trésorerie", "Ce que les bénéfices deviennent en argent disponible", th("flux"), auto) : ""}
+      ${th("valorisation") ? rfPli2("rf-valo", "Valorisation", `PER, rendement, capitalisation, face au secteur ${jg("pe", true, v.pe)}`, th("valorisation") + ficheGraphBox(s), auto) : ""}
+      ${th("dividende") ? rfPli2("rf-div", "Dividende", "Rendement, part du bénéfice versée, historique", th("dividende"), auto) : ""}
+      ${rfPli2("rf-agenda", "Agenda et annonces", "Prochaines dates, annonces officielles, presse", `<div class="rf-chev">${rfAVenir(s)}</div><div id="factu"></div>`, auto)}
+      ${rfPli2("rf-concurrents", "Concurrents", "Côte à côte, critère par critère, avec la médiane", concurrentsHTML(s), auto)}
+      ${rfPli2("rf-synth", "Pourquoi ces verdicts", "Points forts et à surveiller, chaque point relié à sa source, discussion", ficheSyntheseHTML(s, c), auto)}
+      ${rfPli2("rf-metier", "Son métier en détail", "Activités, pays, taille dans le secteur, dirigeants", ficheMetierHTML(s, c), auto)}
+      ${rfPli2("rf-faq", "Questions fréquentes", "", faqHTML(s, c), auto)}
+      ${top ? rfPli2("rf-chg", "Ce qui a le plus changé sur un an", "Et comment lire les montants", top.outerHTML, auto) : ""}
+      ${tout ? rfPli2("rf-tout-w", "Tous les comptes, année par année", `${c.years.length} exercices, compte de résultat, bilan, flux`, tout.outerHTML, auto) : ""}
+      ${srcs.length ? rfPli2("rf-sources", "Sources", "Chaque chiffre renvoie au document officiel", srcs.map(x => x.outerHTML).join(""), auto) : ""}
+      <div class="rf-l2a"><button type="button" class="btn" id="rf-csv">Exporter en CSV</button><a class="btn ghost" href="/comparer?ids=${s.id}">Ajouter au comparateur</a></div>
+    </section></div></div>`;
+  // réglage « toujours le détail »
+  const cb = $("#rf-detail"); if (cb) cb.onchange = () => { rfDetailSet(cb.checked); $$("#tous-les-chiffres details.rf-pl2").forEach(d => d.open = cb.checked); };
+  // les comportements de l'ancien onglet « Les chiffres en détail » (graphiques, lignes dépliables) sont rattachés au conteneur
+  rfLierChiffres(s, c, $("#tous-les-chiffres"));
+  // trimestres : la bascule Par an / Par trimestre apparaît si le site a des trimestres pour cette entreprise
+  if (c.cik) fetch(`/data/trim/${s.id}.json`).then(r => r.ok ? r.json() : null).then(t => { if (!t || !t.q || !t.q.length || !$("#rf-ta")) return; $("#rf-ta").hidden = false; $("#rf-ta-t").innerHTML = rfTrimTableHTML(t, c);
+    $$("#rf-ta button").forEach(b => b.onclick = () => { $$("#rf-ta button").forEach(x => x.classList.toggle("on", x === b)); $("#rf-ta-a").hidden = b.dataset.ta !== "a"; $("#rf-ta-t").hidden = b.dataset.ta !== "t"; }); }).catch(() => { });
+  const csv = $("#rf-csv"); if (csv) csv.onclick = () => { const blob = new Blob([rfCsv(s, c)], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${s.id}-comptes.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+  const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }
+  const sy = $("#rf-synth"); if (sy) { const init = () => { const d = $("#discussion"); if (sy.open && d && !d.dataset.on && typeof tabCommu === "function") { d.dataset.on = "1"; try { tabCommu(s, c, d); } catch (e) { } } }; sy.addEventListener("toggle", init); if (sy.open) init(); }
+  if (typeof tblxSortable === "function") $$(".rf-ctab", el).forEach(t => tblxSortable(t));
+  if (typeof tblxBindScroll === "function") tblxBindScroll(el);
+  $$("table.cmpr-all, table.pcmp", el).forEach(t => { if (!t.closest(".scroll-x,.tbx-sc")) { const d = document.createElement("div"); d.className = "scroll-x"; d.style.overflowX = "auto"; t.replaceWith(d); d.appendChild(t); } }); // tableaux larges : défilement horizontal sur tablette
+  if (typeof dirigeantsHTML === "function") dirigeantsHTML(s, $("#fdirig"));
+  ficheGraphique(s);
+  if (typeof ctxRafraichir === "function") setTimeout(() => { try { ctxRafraichir(); } catch (e) { } }, 0);
+  const h = location.hash; if (h && /^#rf-/.test(h)) setTimeout(() => rfOuvrir(h.slice(1)), 50);
+}
+function rfLierChiffres(s, c, el) { // graphiques par thème et lignes dépliables, comme dans tabComptes, mais sur la fiche
+  if (!el) return;
+  const P = tblxRows(s, c), Y = c.years, byK = k => P.rows.find(r => r.k === k);
+  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); };
+  $$(".rf-thc", el).forEach(box => { const b = $(".rf-gsel button", box); if (b) setG(box, b.dataset.g); });
+  const toggleDet = tr => {
+    const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("det");
+    if (open) { tr.nextElementSibling.remove(); tr.setAttribute("aria-expanded", "false"); return; }
+    const r = byK(tr.dataset.k); if (!r) return;
+    const sc = tr.closest(".tbx-sc"), w = sc ? sc.clientWidth : 320, n = tr.cells.length;
+    tr.insertAdjacentHTML("afterend", `<tr class="det"><td colspan="${n}"><div class="tbx-detw" style="width:${Math.max(240, w - 2)}px">${tblxDetail(r, Y)}</div></td></tr>`);
+    tr.setAttribute("aria-expanded", "true");
+  };
+  el.addEventListener("click", e => {
+    const gb = e.target.closest(".tbx-gb, .rf-kt");
+    if (gb) { const th = gb.closest(".rf-th"), box = th && $(".rf-thc", th); if (box && $(`.rf-gsel button[data-g="${gb.dataset.g}"]`, box)) { setG(box, gb.dataset.g); } return; }
+    const sel = e.target.closest(".rf-gsel button"); if (sel) { setG(sel.closest(".rf-thc"), sel.dataset.g); return; }
+    const a = e.target.closest(".rf-thnav a, a.rf-chg"); if (a) { e.preventDefault(); const id = a.getAttribute("href").slice(1); const M = { "rf-croissance": "rf-resultats", "rf-rentabilite": "rf-rentab", "rf-bilan": "rf-dette", "rf-flux": "rf-flux", "rf-valorisation": "rf-valo", "rf-dividende": "rf-div", "rf-tout": "rf-tout-w" }; rfOuvrir(M[id] || id); return; }
+    if (e.target.closest(".def,a,button,summary")) return;
+    const tr = e.target.closest(".tbx-full tbody tr[data-k], .rf-tht tbody tr[data-k]"); if (tr) toggleDet(tr);
+  });
+  el.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches(".tbx-full tbody tr[data-k], .rf-tht tbody tr[data-k]")) { e.preventDefault(); toggleDet(e.target); } });
+  $$(".lab .def", el).forEach(b => { const t = ALL[b.dataset.def]; if (t) b.title = t.what; });
+  el.querySelectorAll("details.rf-pl2").forEach(d => d.addEventListener("toggle", () => { if (d.open) { tblxBindScroll(d); $$(".tbx-sc", d).forEach(x => x.dispatchEvent(new Event("scroll"))); } }));
+}
+document.addEventListener("click", e => { // liens internes de la fiche (« Son métier en détail », « Annonces et agenda ») : ouvrir le pli
+  const a = e.target.closest && e.target.closest("[data-rf-ouvre]"); if (!a) return;
+  e.preventDefault(); e.stopImmediatePropagation(); rfOuvrir(a.dataset.rfOuvre);
+}, true);
+// Plus d'onglets : les anciennes adresses /comptes, /actualite, /agenda, /communaute ouvrent la fiche sur le bon pli
+pageCompany = (orig => function (id, tab) {
+  const s = RBY[id];
+  if (s && tab) { const M = { comptes: "#tous-les-chiffres", actualite: "#rf-agenda", agenda: "#rf-agenda", communaute: "#rf-synth" }; const h = location.hash && /^#rf-/.test(location.hash) ? location.hash : (M[tab] || ""); history.replaceState(history.state, "", `/entreprise/${id}${h}`); tab = ""; }
+  return orig(id, tab);
+})(pageCompany);
+fiche2Onglets = function () { return ""; }; // zéro onglet
+tabBref = function (s, c, el) { return ficheUneSeulePage(s, c, el); };
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rf-info{border:0;background:none;color:var(--grey);font-size:16px;cursor:help;padding:0 4px;line-height:1}
+.rf-l1 .rf-l1p{font-size:16.5px;line-height:1.55;margin:0 0 10px;max-width:760px}.rf-peers{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 10px}.rf-peers>span{font-size:12.5px;color:var(--grey);margin-right:4px}.rf-peers .chip{display:inline-flex;align-items:center;gap:6px;text-decoration:none}.rf-l1l{margin:0;font-size:13.5px}
+.rf-l2{margin:26px 0 0}.rf-l2h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-top:1px solid var(--ink);padding-top:12px;margin:0 0 10px}.rf-l2h h2{font-family:var(--serif);font-weight:800;font-size:26px;margin:0}.rf-l2t{font-size:13px;color:var(--grey);display:flex;gap:6px;align-items:center;cursor:pointer}
+.rf-pl2>summary span .rf-pq{font-family:var(--mono);font-size:12px;color:var(--ink);background:var(--soft);padding:1px 6px;border-radius:4px;margin-left:6px}
+.rf-th-in.panel,.rf-plb>#tbx.panel,.rf-plb>#rf-tout.panel{border:0;box-shadow:none;margin:0;border-radius:0}.rf-plb .rf-top .ph{display:none}
+.rf-ta{display:flex;gap:6px;padding:12px 22px 0}.rf-ta button{font:inherit;font-size:13px;padding:6px 12px;border:1px solid var(--ink);background:#fff;border-radius:999px;cursor:pointer}.rf-ta button.on{background:var(--ink);color:#fff}
+.rf-trimt td,.rf-trimt th{white-space:nowrap}#rf-ta-t{padding:12px 22px 4px}
+.rf-l2a{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 0}
+#tous-les-chiffres .tbx-lv{display:none} /* niveau 2 sans mot de verdict : la position face au secteur est dans la ligne du pli */
+@media (max-width:760px){.rf-ta{padding:10px 16px 0}#rf-ta-t{padding:10px 16px 4px}}
 </style>`);

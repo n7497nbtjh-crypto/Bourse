@@ -44,18 +44,19 @@ MESURE = r"""(W) => {
     if (b.left > a.left + 50 && b.height > a.height + 220) out.p.push(`colonne latérale plus longue que la principale de ${Math.round(b.height - a.height)} px`);
   }
   out.doc = document.documentElement.scrollHeight;
-  const v = document.querySelector('#fverdict'); out.verdict = v ? Math.round(v.getBoundingClientRect().bottom + scrollY) : null;
-  const et = document.querySelector('#etapes'); out.etapes = et ? Math.round(et.getBoundingClientRect().top + scrollY) : null;
+  const v = document.querySelector('.rf-vc') || document.querySelector('#fverdict'); out.verdict = v ? Math.round(v.getBoundingClientRect().bottom + scrollY) : null;
+  const et = document.querySelector('#tous-les-chiffres'); out.etapes = et ? Math.round(et.getBoundingClientRect().top + scrollY) : null;
   return out;
 }"""
 LOADING = r"""() => [...document.querySelectorAll('#app *')].filter(e => !e.children.length && /Chargement/.test(e.textContent) && e.offsetParent).map(e => (e.closest('section,[id]') || e).id || e.className).slice(0, 4)"""
-ETAPES = r"""async () => {
-  const out = [], btns = [...document.querySelectorAll('#etapes [data-et]')];
-  for (const b of btns) { b.click(); await new Promise(r => setTimeout(r, 60)); const d = document.querySelector(`.etape[data-etape="${b.dataset.et}"]`);
-    const t = d ? d.innerText : ''; if (!d || t.trim().length < 40) out.push('étape vide : ' + b.dataset.et); if (/NaN|undefined/.test(t)) out.push('NaN dans ' + b.dataset.et); }
+ETAPES = r"""async () => { // lot 4 : plus d'étapes ; chaque pli de « Tous les chiffres » doit s'ouvrir avec du contenu
+  const out = [], btns = [...document.querySelectorAll('#tous-les-chiffres details.rf-pl2')];
+  if (document.querySelector('#etapes')) out.push('barre d\'onglets présente');
+  for (const d of btns) { d.open = true; await new Promise(r => setTimeout(r, 40)); const t = d.querySelector('.rf-plb').innerText;
+    if (t.trim().length < 40) out.push('pli vide : ' + d.id); if (/NaN|undefined/.test(t)) out.push('NaN dans ' + d.id); }
   const faq = document.querySelectorAll('#faq details');
-  if (btns.some(b => b.dataset.et === 'faq')) { if (faq.length < 8 || faq.length > 12) out.push('FAQ : ' + faq.length + ' questions'); faq.forEach(d => { d.open = true; if ((d.querySelector('.accb') || d).innerText.trim().length < 20) out.push('FAQ sans réponse : ' + d.querySelector('summary').innerText.slice(0, 40)); }); }
-  if (btns.length) btns[0].click();
+  if (btns.some(b => b.id === 'rf-faq')) { if (faq.length < 8 || faq.length > 12) out.push('FAQ : ' + faq.length + ' questions'); faq.forEach(d => { d.open = true; if ((d.querySelector('.accb') || d).innerText.trim().length < 20) out.push('FAQ sans réponse : ' + d.querySelector('summary').innerText.slice(0, 40)); }); }
+  btns.forEach(d => d.open = false);
   return out;
 }"""
 bad = 0

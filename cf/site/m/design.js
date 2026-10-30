@@ -298,3 +298,49 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 document.head.insertAdjacentHTML("beforeend", `<style>.prem-bientot{margin:0;font-weight:600;color:var(--grey)}.prem-att{margin-top:14px;border-left:3px solid var(--lime)}.prem-attm{margin:8px 0 0;font-size:14px;min-height:1.2em}.prem-attm.ok{color:var(--g)}.prem-attm.ko{color:var(--o)}.ptab td:nth-child(3) b{font-weight:600}</style>`);
 /* Lot 2 : la porte Marchés */
 document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 30px}.mk-porte{display:grid;grid-template-columns:28px minmax(0,1fr);grid-template-areas:"i t" "i n" "d d";gap:2px 10px;padding:16px 18px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none}.mk-porte svg{grid-area:i;width:26px;height:26px;margin-top:2px}.mk-porte b{grid-area:t;font-size:17px}.mk-porte small{grid-area:n;font-family:var(--mono);font-size:12.5px;color:var(--grey)}.mk-porte span{grid-area:d;margin-top:8px;font-size:13.5px;line-height:1.45;color:var(--grey)}.mk-porte:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}@media (max-width:900px){.mk-portes{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:480px){.mk-portes{grid-template-columns:minmax(0,1fr)}}</style>`);
+/* Lot 4 : la fiche ETF sur le modèle de la fiche entreprise. Niveau 1 : en-tête (verdict, frais, risques), ce que vous achetez,
+   les dix plus grosses lignes. Niveau 2 (plis) : où va votre argent, les frais, les risques en détail, les questions, les ETF proches,
+   les avis, la discussion. Ouverts d'office si « Afficher toujours le détail » est coché. */
+(function () {
+  const e0 = window.pageEtf; if (typeof e0 !== "function") return;
+  const plier = (sec, titre, sous, open) => {
+    if (!sec || sec.closest("details.rf-pl2")) return;
+    const d = document.createElement("details"); d.className = "rf-pl rf-pl2"; d.open = !!open; d.id = sec.id ? "pli-" + sec.id : "";
+    d.innerHTML = `<summary><b>${titre}</b>${sous ? `<span>${sous}</span>` : ""}</summary><div class="rf-plb"></div>`;
+    sec.replaceWith(d); d.querySelector(".rf-plb").appendChild(sec); sec.classList.add("rf-th-in");
+  };
+  const appliquer = () => {
+    const auto = typeof rfDetailToujours === "function" && rfDetailToujours();
+    const h2 = s => { const h = s && s.querySelector("h2"); return h ? h.textContent.trim() : ""; };
+    plier($("#efrais"), "Ce que coûtent ses frais", "Sur 10 et 20 ans, face à sa catégorie", auto);
+    plier($("#erisques"), "Les risques en détail", "Marché, change, concentration, contrepartie", auto);
+    plier($("#equestions"), "Vos questions sur cet ETF", "Réponses calculées à partir de la fiche", auto);
+    $$("aside > section.panel").forEach(s => { const t = h2(s); if (/^ETF proches|^Avis|^Discussion/.test(t)) plier(s, t, "", auto); });
+    const comp = $("#ecomp"); if (comp) { const secs = $$("section.panel", comp); if (secs[1]) plier(secs[1], h2(secs[1]) || "Où va votre argent", "Par secteur et par pays", auto); }
+    const col = $(".rf-etf ~ .cols > div", app) || $(".cols > div", app), first = col && $("details.rf-pl2", col);
+    if (first) { let h = $(".rf-l2h", app); if (!h) { first.insertAdjacentHTML("beforebegin", `<div class="rf-l2h"><h2>Tout le détail</h2><label class="rf-l2t"><input type="checkbox" id="rf-detail"${auto ? " checked" : ""}> Afficher toujours le détail</label></div>`); } else if (h.nextElementSibling !== first) first.before(h); }
+    const cb = $("#rf-detail", app); if (cb && !cb.dataset.on) { cb.dataset.on = "1"; cb.onchange = () => { if (typeof rfDetailSet === "function") rfDetailSet(cb.checked); $$("details.rf-pl2", app).forEach(d => d.open = cb.checked); }; }
+  };
+  window.pageEtf = async function (id) {
+    const r = await e0.apply(this, arguments);
+    if (!location.pathname.startsWith("/etf/")) return r;
+    appliquer();
+    const comp = $("#ecomp"); if (comp && !$("details", comp)) new MutationObserver((m, o) => { if ($("section.panel", comp)) { appliquer(); o.disconnect(); } }).observe(comp, { childList: true });
+    return r;
+  };
+  document.head.insertAdjacentHTML("beforeend", `<style>.rf-etf ~ .cols .rf-l2h{margin:6px 0 10px}.cols details.rf-pl2{margin:0 0 12px}.cols details.rf-pl2 .rf-th-in.panel{border:0;box-shadow:none;margin:0;border-radius:0}</style>`);
+})();
+/* Lot 4 : réglage « Afficher toujours le détail » dans Mon espace › Réglages (mémorisé sur l'appareil) */
+(function () {
+  const r0 = window.espaceReglages; if (typeof r0 !== "function") return;
+  window.espaceReglages = function (el, m) {
+    const r = r0.apply(this, arguments);
+    if (el && !el.querySelector("#rg-detail")) {
+      const s = document.createElement("section"); s.className = "panel";
+      s.innerHTML = `<div class="ph"><h2>Lecture des fiches</h2></div><div class="pb"><label class="rf-l2t" style="font-size:14.5px;color:var(--ink)"><input type="checkbox" id="rg-detail"${typeof rfDetailToujours === "function" && rfDetailToujours() ? " checked" : ""}> Afficher toujours le détail (toutes les sections « Tous les chiffres » ouvertes sur les fiches)</label><p class="muted" style="margin:8px 0 0;font-size:13px">Par défaut, chaque fiche montre d'abord le verdict et les jauges ; le détail s'ouvre au clic. Ce choix est gardé sur cet appareil.</p></div>`;
+      el.insertBefore(s, el.firstElementChild ? el.firstElementChild.nextElementSibling : null);
+      s.querySelector("#rg-detail").onchange = e => { if (typeof rfDetailSet === "function") rfDetailSet(e.target.checked); };
+    }
+    return r;
+  };
+})();
