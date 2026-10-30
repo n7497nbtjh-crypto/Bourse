@@ -67,7 +67,7 @@ jobs:
       - name: Dates de résultats trouvées dans l'actualité
         run: node data/agenda_presse.mjs || echo "::warning::Recherche des dates dans la presse interrompue"
       - name: Site prêt à déposer sur Cloudflare
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: repere-site
           path: cf/site
