@@ -331,7 +331,7 @@ async function pageEtf(id) {
     <section class="panel fhero rf-hero rf-etf"><div class="etfhd rf-etfhd"><div class="top"><div class="rf-etfid">${logo({ name: e.issuer, domain: issuerDom(e) }, 52)}<div style="min-width:0">
       <h1>${esc(e.name)}</h1><div class="sub">${e.index ? `Indice <b style="color:var(--ink);font-weight:600">${esc(e.index)}</b> · ` : ""}${esc(e.issuer)}</div>
       <div class="ids">${e.ticker ? `<span>Ticker <b>${esc(e.ticker)}</b>${pl ? ` · ${esc(pl.place)}` : ""}</span>` : ""}<span>ISIN <b>${esc(e.isin)}</b> <button type="button" class="copy" id="ecopy" aria-label="Copier l'ISIN">copier</button></span></div>
-      <div class="acts">${favBtn("e:" + e.id)}<button type="button" class="linkbtn" id="epf">+ Ajouter à mon portefeuille</button>${voisin ? `<a class="pill" href="/outils/recouvrement?a=${e.id}&b=${voisin.id}">Comparer</a>` : ""}</div></div></div><div class="px tv rf-etfpx" id="tvinfo"></div></div></div>
+      <div class="acts">${favBtn("e:" + e.id)}<button type="button" class="linkbtn" id="epf">+ Ajouter à mon portefeuille</button><a class="pill" href="#ecomp" data-etf-comp>Sa composition</a><a class="pill" href="/outils/recouvrement?a=${e.id}${voisin ? `&b=${voisin.id}` : ""}">${voisin ? `Recouvrement avec ${esc(voisin.name.length > 28 ? voisin.name.slice(0, 26) + "…" : voisin.name)}` : "Se recouvre-t-il avec un autre ETF ?"}</a></div></div></div><div class="px tv rf-etfpx" id="tvinfo"></div></div></div>
       <div class="f2-mid rf-mid${e.tv ? "" : " f2-noc"}">${e.tv ? `<div class="f2-chart"><div class="f2-ch-h"><h2 class="f2-h">Le cours de la part</h2><span class="f2-note">Cours différé</span></div><div class="tv tv-chart f2-tv" id="tvchart" role="img" aria-label="Courbe du cours de ${esc(e.name)}"><div class="f2-tvph">Chargement de la courbe…</div></div></div>` : ""}<div class="fh-sum rf-sum" id="ebref">${ETF_bref(e, null, v)}</div></div>
     </section>
     <div class="cols"><div>
@@ -430,3 +430,8 @@ async function pageEtf(id) {
   // La FAQ structurée (FAQPage) est ajoutée au HTML par le Worker (cf/src/etf_meta.mjs) : lisible par les moteurs sans JavaScript.
 }
 document.head.insertAdjacentHTML("beforeend", `<style>.etf-v{font-family:var(--sans)!important;font-size:15px!important;font-weight:400!important;line-height:1.5!important;color:var(--grey)!important;margin:0 0 14px!important}.etf-v b{color:var(--ink);font-family:var(--mono);font-weight:500}</style>`);
+
+document.addEventListener("click", e => { // « Sa composition » : va à la composition de la fiche, sans passer par le routeur
+  const a = e.target.closest && e.target.closest("a[data-etf-comp]"); if (!a) return;
+  e.preventDefault(); e.stopImmediatePropagation(); const t = document.getElementById("ecomp"); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" });
+}, true);

@@ -273,6 +273,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 document.head.insertAdjacentHTML("beforeend", `<style>.prem-av{margin:6px 0 14px!important;max-width:none}.prem-av li{padding-top:14px!important;padding-bottom:12px!important}.prem-av b{font-size:16px!important}.prem-av span{font-size:13.5px!important}.prem-preuve{font-size:13px;color:var(--grey);margin:0 0 18px;max-width:820px}</style>`);
 document.head.insertAdjacentHTML("beforeend", `<style>
 .aca-lead{font-size:19px!important;line-height:1.45!important;color:var(--ink)!important;max-width:760px}
+.aca-outil{margin:-8px 0 20px}.acales .aca-outil a{display:inline-block;border:1px solid var(--ink);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;text-decoration:none;color:var(--ink)}.acales .aca-outil a:hover{background:var(--lime)}
 .acavis{margin:18px 0 22px;padding:18px 22px;border:1px solid var(--rule);border-radius:14px;background:#fff}.acavis-k{font-size:12.5px;font-weight:600;color:var(--grey);margin:0 0 10px}
 .acavis-n{display:flex;flex-wrap:wrap;gap:8px 28px;margin:0 0 12px}.acavis-n b{font-family:var(--mono);font-weight:500;font-size:30px;line-height:1;white-space:nowrap}
 .acavis-p{margin:0;font-size:14.5px;line-height:1.55;color:var(--grey)}.acavis-p mark.nm{background:transparent;color:var(--ink);font-family:var(--mono);font-weight:500}

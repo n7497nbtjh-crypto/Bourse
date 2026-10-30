@@ -4238,6 +4238,7 @@ function acaLecon(m, l) {
     <article class="acales"><div class="acatopbar"><span class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</span>${lock ? "" : `<div class="acapb"><span id="acapb" style="width:0%"></span></div>`}</div>
     <h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead aca-lead">${esc(l.resume)}</p>
     ${!lock && l.exemple ? acaVisuel(l) : ""}
+    ${!lock && l.lien_site ? `<p class="aca-outil"><a class="pill" href="${esc(l.lien_site.href)}">${esc(l.lien_site.texte)} →</a></p>` : ""}
     ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie et à la formation guidée de six semaines.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
       : `<div class="acacards">${cards.map((p, j) => `<div class="acacard2" data-c="${j}"${deja || j === 0 ? "" : " hidden"}><span class="acan">${j + 1}</span><p>${numsMark(p)}</p></div>`).join("")}</div>
       <div class="acamore"${deja ? " hidden" : ""}><button type="button" class="btn" id="acanext">Continuer</button><button type="button" class="linkbtn" id="acaall">Tout afficher</button></div>
@@ -4246,7 +4247,6 @@ function acaLecon(m, l) {
         ${(l.a_retenir || []).length ? `<div class="acaret"><p class="kick">À retenir</p><ol>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
         ${l.erreur_frequente ? `<div class="acaerr"><p class="kick">L'erreur à éviter</p><p>${esc(l.erreur_frequente)}</p></div>` : ""}
         ${q ? `<div class="acaqz" id="acaqz"><p class="kick">Testez-vous</p><p class="acaqq">${esc(q.q)}</p><div class="acaopts">${q.options.map((o, j) => `<button type="button" class="acao" data-i="${j}">${esc(o)}</button>`).join("")}</div><div class="acaqe"></div></div>` : ""}
-        ${l.lien_site ? `<p><a class="more" href="${esc(l.lien_site.href)}">${esc(l.lien_site.texte)} →</a></p>` : ""}
         ${(l.sources || []).length ? `<p class="note">Sources : ${l.sources.map(s => `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(" · ")}</p>` : ""}
       </div>`}
     <nav class="acanav">${prev ? `<a class="more" href="/academie/${m.id}/${prev.id}">← ${esc(prev.titre)}</a>` : "<span></span>"}${next ? `<a class="btn" href="/academie/${m.id}/${next.id}">Leçon suivante : ${esc(next.titre)}</a>` : `<a class="btn" href="/academie/${m.id}/quiz">Faire le quiz du module</a>`}</nav></article>
