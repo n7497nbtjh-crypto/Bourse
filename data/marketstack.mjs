@@ -41,7 +41,10 @@ async function api(path, params) {
   for (let t = 0; t < 8; t++) {
     nreq++;
     const r = await fetch(u);
-    if (r.status === 429) { const w = Math.min(60, 8 * (t + 1)); if (t >= 2) console.log(`Marketstack : cadence trop élevée, pause de ${w} s`); await new Promise(z => setTimeout(z, w * 1000)); continue; }
+    if (r.status === 429) {
+      const body = await r.text().catch(() => ""); // deux cas : cadence trop élevée (on attend) ou quota du mois atteint (on s'arrête net)
+      if (/usage_limit|monthly|quota|limit_reached/i.test(body) || t >= 3) throw new Error("quota ou cadence Marketstack : " + body.slice(0, 160));
+      const w = 10 * (t + 1); console.log(`Marketstack : réponse 429, pause de ${w} s : ${body.slice(0, 120)}`); await new Promise(z => setTimeout(z, w * 1000)); continue; }
     if (!r.ok) { const txt = await r.text().catch(() => ""); throw new Error(`Marketstack ${r.status} sur ${path} : ${txt.slice(0, 200)}`); }
     const j = await r.json(); await new Promise(z => setTimeout(z, 1100)); return j; // environ une requête par seconde : la cadence admise par l'abonnement
   }
