@@ -3085,6 +3085,8 @@ async function outilVerifier() {
     const hits = LN.items.filter(x => norm(x.t).includes(t)).slice(0, 12);
     $("#lnr").innerHTML = hits.length ? `<div class="lnwarn"><b>${hits.length >= 12 ? "Au moins 12" : hits.length} correspondance${hits.length > 1 ? "s" : ""} sur les listes noires de l'AMF.</b> L'AMF signale ces acteurs comme non autorisés à proposer des produits ou services financiers en France. Ne versez pas d'argent.</div>${hits.map(x => `<div class="lnit"><b>${esc(x.n || x.s)}</b>${x.s && x.n ? ` <span class="light">${esc(x.s)}</span>` : ""}<div class="light" style="font-size:12.5px">${esc(x.c)}${x.d ? ` · inscrit le ${esc(x.d)}` : ""}</div></div>`).join("")}`
       : `<div class="lnok">Aucune correspondance sur les listes noires de l'AMF. Ce n'est pas une garantie : vérifiez que l'acteur figure sur les registres officiels ci-dessous.</div>`; };
+  // Lot 5 (30/10) : un exemple déjà rempli, pour voir un résultat avant de taper quoi que ce soit (une entrée récente des listes)
+  if (!q.value && LN.items.length) { const ex = [...LN.items].sort((a, b) => String(b.d || "").localeCompare(String(a.d || "")))[0]; if (ex && (ex.n || ex.t)) { q.value = String(ex.n || ex.t).slice(0, 60); q.oninput(); $("#lnr").insertAdjacentHTML("afterbegin", `<p class="muted" style="margin:0 0 8px;font-size:13px">Exemple : une entrée récente des listes de l'AMF. Remplacez-la par le nom qui vous intéresse.</p>`); } }
 }
 
 /* ---------- Opérations des dirigeants (sociétés américaines) ---------- */

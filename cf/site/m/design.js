@@ -344,3 +344,40 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
     return r;
   };
 })();
+/* Lot 5 (30/10) : Comparer. Grand champ pleine largeur au départ, six comparaisons populaires (les autres derrière un bouton),
+   le plus élevé et le plus bas de chaque ligne mis en évidence (ce n'est pas « le meilleur »), export CSV du tableau. */
+(function () {
+  const r0 = window.cmprRender; if (typeof r0 !== "function") return;
+  window.cmprRender = function (ids, cut, CMAX) {
+    const r = r0.apply(this, arguments);
+    const sel = $(".cmpr-selp", app); if (sel && !ids.length) { sel.classList.add("cmpr-vide"); const lb = $(".cmpr-add label", sel); if (lb) lb.textContent = "Ajoutez 2 à 5 entreprises"; const q = $("#cmpq"); if (q) q.placeholder = "Nom ou code : LVMH, Kering, Hermès…"; }
+    return r;
+  };
+  const g0 = window.outGalleryHTML;
+  if (typeof g0 === "function") window.outGalleryHTML = function () {
+    const h = g0.apply(this, arguments), all = OUT_PRESETS.filter(p => p.ids.filter(id => RBY[id]).length >= 2).slice(0, 6), n = (h.match(/class="out-pc"/g) || []).length;
+    return `<section class="panel out-gal6"><div class="ph"><h2>Six comparaisons populaires</h2><span class="light" style="font-size:12.5px">En un clic, le verdict critère par critère</span></div><div class="pb" style="padding-top:8px"><div class="out-pg">${all.map(outPresetCard).join("")}</div>
+      <p style="margin:14px 0 0"><button type="button" class="btn ghost" data-out-toutes>Voir toutes les comparaisons (${n})</button></p></div></section><div class="out-galw" hidden>${h}</div>`;
+  };
+  document.addEventListener("click", e => { const b = e.target.closest("[data-out-toutes]"); if (!b) return; const w = $(".out-galw"); if (w) { w.hidden = false; b.closest("section").hidden = true; w.scrollIntoView({ block: "start", behavior: "smooth" }); } });
+  const b0 = window.cmprRenderBody;
+  if (typeof b0 === "function") window.cmprRenderBody = function (ids) {
+    const r = b0.apply(this, arguments);
+    const t = $("#cmpr-body .rf-ctab-t"); if (!t) return r;
+    const num = x => { const m = String(x).replace(/\s/g, "").match(/-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; };
+    $$("tbody tr", t).forEach(tr => { if (tr.classList.contains("rf-q")) return; const cells = [...tr.querySelectorAll("td")].filter(td => !td.classList.contains("rf-medc") && !td.classList.contains("rf-q")), vals = cells.map(td => num(td.textContent));
+      const ok = vals.filter(v => v != null); if (ok.length < 2 || Math.max(...ok) === Math.min(...ok)) return;
+      const hi = vals.indexOf(Math.max(...ok)), lo = vals.indexOf(Math.min(...ok));
+      cells[hi].classList.add("rf-hi"); cells[hi].title = (cells[hi].title ? cells[hi].title + " · " : "") + "Le plus élevé de la comparaison"; cells[lo].classList.add("rf-lo"); cells[lo].title = (cells[lo].title ? cells[lo].title + " · " : "") + "Le plus bas de la comparaison"; });
+    const box = t.closest(".cmpr-tbl"); if (box && !$("[data-cmpr-csv]", box)) { box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">▲ le plus élevé · ▼ le plus bas de la ligne</span></p>`);
+      $("[data-cmpr-csv]", box).onclick = () => { const rows = [...t.querySelectorAll("tr")].map(tr => [...tr.querySelectorAll("th,td")].map(c => `"${c.innerText.replace(/\s+/g, " ").trim().replace(/"/g, '""')}"`).join(";"));
+        const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `comparaison-${ids.join("-")}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }; }
+    return r;
+  };
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.cmpr-vide .cmpr-sel{display:block}.cmpr-vide .cmpr-add{padding:18px 22px;border-style:solid;border-color:var(--ink);background:#fff}.cmpr-vide .cmpr-add label{font-size:15px;color:var(--ink)}.cmpr-vide .cmpr-q input{font-size:18px;padding:12px 14px}
+.rf-ctab-t td.rf-hi::after{content:" ▲";font-size:10px}.rf-ctab-t td.rf-lo::after{content:" ▼";font-size:10px;color:var(--grey)}
+.cmpr-csvp{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:10px 18px 14px}
+.out-gal6 .out-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:900px){.out-gal6 .out-pg{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.out-gal6 .out-pg{grid-template-columns:minmax(0,1fr)}}
+</style>`);
+})();

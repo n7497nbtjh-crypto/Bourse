@@ -259,7 +259,8 @@ function O2_fx(ref, cur, iso, auj) {
 async function outilSiJavais() {
   O2_css(); setTitle("Et si j'avais investi ?"); setNav("sim"); await PXP;
   const q = new URLSearchParams(location.search);
-  const S = { k: q.get("k") && (PX[q.get("k")] || RBY[q.get("k").slice(2)]) ? q.get("k") : "c:lvmh", cmp: q.get("vs") === "aucun" ? "" : PX[q.get("vs")] ? q.get("vs") : null, amt: +q.get("m") > 0 ? +q.get("m") : 1000, ans: [1, 3, 5].includes(+q.get("ans")) ? +q.get("ans") : 5, bk: q.get("bk") || "trade-republic" };
+  const exk = ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple", "c:microsoft", "c:schneider-electric", "c:loreal"].find(k => PX[k] && (PX[k].p5y > 0 || PX[k].p1y > 0)) || Object.keys(PX).filter(k => k.startsWith("c:") && PX[k].p5y > 0 && RBY[k.slice(2)] && ["US", "FR"].includes(RBY[k.slice(2)].region)).sort((a, b) => (PX[b].cap || 0) - (PX[a].cap || 0))[0] || "c:lvmh"; // exemple déjà rempli : une valeur dont le site a le cours passé (lot 5)
+  const S = { k: q.get("k") && (PX[q.get("k")] || RBY[q.get("k").slice(2)]) ? q.get("k") : exk, cmp: q.get("vs") === "aucun" ? "" : PX[q.get("vs")] ? q.get("vs") : null, amt: +q.get("m") > 0 ? +q.get("m") : 1000, ans: [1, 3, 5].includes(+q.get("ans")) ? +q.get("ans") : (PX[exk] && PX[exk].p5y > 0 ? 5 : PX[exk] && PX[exk].p3y > 0 ? 3 : 1), bk: q.get("bk") || "trade-republic" };
   const defCmp = k => { const c = k.startsWith("c:") ? RBY[k.slice(2)] : null, e = k.startsWith("e:") ? ETFBY[k.slice(2)] : null;
     return c ? (c.region === "US" ? "i:sp500" : c.region === "FR" ? "i:cac40" : ["DE", "NL", "IT", "ES", "BE", "FI", "IE", "AT", "PT"].includes((c.isin || "").slice(0, 2)) ? "i:stoxx50" : "i:sp500") : e && /CAC|France/i.test(e.index || "") ? "i:stoxx50" : "i:cac40"; };
   if (S.cmp === null) S.cmp = defCmp(S.k);
