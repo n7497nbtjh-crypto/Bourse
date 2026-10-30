@@ -455,11 +455,11 @@ function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, ma
 function amfBlock(target, params, limit) { newsBlock(target, { params, max: limit, filters: false }); }
 /* ---------- Logos et cartes d'entreprise ---------- */
 const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
-let LOGO_ABS = new Set();
+let LOGO_ABS = new Set(), LOGOS = {}; // LOGOS : logos hébergés par le site (cf/site/logos, collectés sur Wikimedia Commons avec leur licence par data/logos_fetch.mjs)
 function logoTeinte(n) { let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; } // couleur déterministe à partir du nom
-function logo(c, size = 40) { // icône du site de l'entreprise ; sinon un rond coloré (couleur fixée par le nom) avec l'initiale
-  const dom = c.domain && !LOGO_ABS.has(c.domain) ? c.domain : null;
-  return `<span class="lg${dom ? "" : " lg-ini"}" style="--s:${size}px;--lgh:${logoTeinte(c.name)}"><b>${esc(initials(c.name))}</b>${dom ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(dom)}&sz=128" alt="" loading="lazy" onerror="this.parentNode.classList.add('lg-ini');this.remove()">` : ""}</span>`;
+function logo(c, size = 40) { // logo hébergé par le site ; sinon un rond coloré (couleur fixée par le nom) avec l'initiale. Plus aucune requête vers Google ou gstatic (3e passage, 1.5)
+  const l = c && c.id && LOGOS[c.id] && LOGOS[c.id].f ? `/logos/${LOGOS[c.id].f}` : null, sz = Math.max(size, 24);
+  return `<span class="lg${l ? "" : " lg-ini"}" style="--s:${sz}px;--lgh:${logoTeinte(c.name)}"><b>${esc(initials(c.name))}</b>${l ? `<img src="${l}" alt="" loading="lazy" width="${sz}" height="${sz}" onerror="this.parentNode.classList.add('lg-ini');this.remove()">` : ""}</span>`;
 }
 function caLine(c) {
   if (c.missing) return `<span class="light">${missingTxt(c)}</span>`;
@@ -3310,8 +3310,8 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 /* ---------- Démarrage ---------- */
 // Un fichier absent sous /data/ renvoyait la page d'accueil entière (516 ko) avec un code 200 : on refuse tout ce qui n'est pas du JSON (audit P0-3).
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok && /json/i.test(r.headers.get("content-type") || "") ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/data/logos-absents.json", { d: [] })]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc, labs]) => {
-  LOGO_ABS = new Set((labs && labs.d) || []); // domaines dont l'icône Google n'existe pas (relevés par data/logos_check.mjs) : on ne la demande pas, zéro 404
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/logos/index.json", { l: {} })]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc, lg]) => {
+  LOGOS = (lg && lg.l) || {};
   REP = rep || {}; CONC = conc || {};
   ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = segfr || {};
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }

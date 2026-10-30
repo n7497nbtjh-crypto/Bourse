@@ -48,7 +48,7 @@ jobs:
           node build.mjs
           node tests/t_coherence.mjs || echo "::warning::Contrôle de cohérence : des erreurs bloquantes subsistent (voir ci-dessus)"
           node data/sec_trim.mjs || echo "::warning::Trimestres SEC : lecture interrompue"
-          if [ "$(date +%u)" = "1" ]; then node data/logos_check.mjs || echo "::warning::Logos : contrôle interrompu"; fi
+          if [ "$(date +%u)" = "1" ]; then npm i --no-save --silent sharp@0.33.5 && node data/logos_fetch.mjs --max 300 || echo "::warning::Logos : collecte interrompue"; fi
           node tests/t_calc.mjs
           node tests/t_univers.mjs
           node tests/t_sec.mjs

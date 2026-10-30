@@ -427,7 +427,8 @@ document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:va
 .cmpr-ligne{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;margin:0;padding:16px 22px 6px;font-size:15px}.cmpr-ligne i{color:var(--light);font-style:normal}.cmpr-ligne small{color:var(--grey);font-size:12.5px}
 .cmpr-crits{padding:6px 22px 12px}.cmpr-crit{padding:12px 0;border-top:1px solid var(--rule)}.cmpr-crit:first-child{border-top:0}.cmpr-crit h3{margin:0 0 4px;font-size:15px}.cmpr-crit p{margin:0 0 8px;font-size:13.5px;color:var(--grey);max-width:720px}
 .cmpr-jg{display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 14px;align-items:center;padding:4px 0}.cmpr-jg>span{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}.cmpr-jg .rf6-jg small{font-size:11.5px}
-#cmpr-body .rf-ctab-t th.rf-medh:last-child,#cmpr-body .rf-ctab-t td.rf-q{display:none} /* la colonne « La moitié du secteur » n'est plus affichée : le tableau tient dans le cadre */
+#cmpr-body .rf-ctab-t th.rf-medh:last-child,#cmpr-body .rf-ctab-t td.rf-q{display:none}
+#cmpr-body .rf-ctab-t th[scope=row],#cmpr-body .rf-ctab-t thead th:first-child{position:sticky;left:0;z-index:1;background:#fff} /* 1.6 : première colonne fixe quand le tableau défile */ /* la colonne « La moitié du secteur » n'est plus affichée : le tableau tient dans le cadre */
 @media (max-width:600px){.cmpr-jg{grid-template-columns:minmax(0,1fr)}}
 </style>`);
 })();
