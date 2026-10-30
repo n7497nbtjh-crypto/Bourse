@@ -1,0 +1,3325 @@
+/* bilan. : le script principal du site, sorti de index.html le 30/10/2026 (lot 6 : la page ne porte plus que le HTML et le CSS ; ce fichier est mis en cache par le service worker). */
+"use strict";
+const SITE = "bilan.";
+const RATES = { pfu: 0.314, ps: 0.186, year: 2026 }; // taux en vigueur en 2026, à vérifier chaque année
+let R = null, AG = { events: [] }; // R : entreprises ; AG : agenda
+const RBY = {}, FULL = {};
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const TODAY = new Date().toISOString().slice(0, 10);
+
+/* ---------- Formats ---------- */
+const nf = d => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const F0 = nf(0), F1 = nf(1), F2 = nf(2);
+const CUR = { EUR: "€", USD: "$", GBP: "£", CHF: "CHF" };
+const eur = (v, d = 2, cur = "EUR") => (v == null || !isFinite(v)) ? "–" : nf(d).format(v) + " " + (CUR[cur] || cur);
+const pct = (v, d = 1, sign = true) => (v == null || !isFinite(v)) ? "–" : (sign && v > 0 ? "+" : "") + nf(d).format(v * 100) + " %";
+const cls = v => v > 0 ? "up" : v < 0 ? "down" : "";
+const big = (m, cur = "EUR") => m == null || !isFinite(m) ? "–" : (Math.abs(m) >= 1000 ? F1.format(m / 1000) + " Md" : F0.format(m) + " M") + (CUR[cur] || " " + cur);
+const MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+const MOISL = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
+const mLabel = ym => { const [y, m] = ym.split("-"); return MOIS[+m - 1] + " " + y; };
+const mLong = ym => { const [y, m] = ym.split("-"); return MOISL[+m - 1] + " " + y; };
+const dLabel = iso => { const [y, m, d] = iso.slice(0, 10).split("-"); return (+d) + " " + MOISL[+m - 1] + " " + y; };
+const PARIS = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", day: "2-digit", month: "2-digit", year: "2-digit", hour: "2-digit", minute: "2-digit" });
+function whenParis(iso) { // date et heure de Paris (l'AMF donne l'heure UTC)
+  const d = new Date(iso); if (!iso || isNaN(d)) return "";
+  const p = Object.fromEntries(PARIS.formatToParts(d).map(x => [x.type, x.value]));
+  return `<b>${p.day}/${p.month}/${p.year}</b>${p.hour}:${p.minute}`;
+}
+const dShort = iso => { const [y, m, d] = iso.slice(0, 10).split("-"); return `${d}/${m}/${y.slice(2)}`; };
+const lastDayOf = ym => { const [y, m] = ym.split("-").map(Number); return new Date(y, m, 0).getDate(); };
+const median = a => { const s = a.filter(v => v != null && isFinite(v)).sort((x, y) => x - y); if (!s.length) return null; const k = Math.floor(s.length / 2); return s.length % 2 ? s[k] : (s[k - 1] + s[k]) / 2; };
+
+/* ---------- Indicateurs à partir des comptes ---------- */
+const NOT_BANK = new Set(["visa", "mastercard"]); // classées en finance mais sans métier de prêteur
+const isBank = c => c.sector === "finance" && !NOT_BANK.has(c.id);
+const okn = x => x != null && isFinite(x);
+function ratios(s) { // s : chiffres du dernier exercice
+  return {
+    g1: okn(s.ca) && s.caPrev > 0 ? s.ca / s.caPrev - 1 : null,
+    marge: s.ca > 0 && okn(s.ebit) ? s.ebit / s.ca : null,
+    nm: s.ca > 0 && okn(s.net) ? s.net / s.ca : null,
+    ng: okn(s.net) && s.netPrev > 0 ? s.net / s.netPrev - 1 : null,
+    roe: s.equity > 0 && okn(s.net) ? s.net / s.equity : null,
+    lev: s.ebitda > 0 && okn(s.netDebt) ? s.netDebt / s.ebitda : null,
+    gear: s.equity > 0 && okn(s.netDebt) ? s.netDebt / s.equity : null,
+    conv: s.net > 0 && okn(s.fcf) ? s.fcf / s.net : null,
+    payout: okn(s.divPaid) && s.net > 0 ? s.divPaid / s.net : null,
+  };
+}
+const MKEYS = ["g1", "marge", "nm", "roe", "lev", "gear", "conv", "payout"];
+let MED = {};
+function computeMedians() { // médiane des entreprises suivies, par secteur (toutes régions)
+  const by = {};
+  R.companies.filter(c => !c.missing).forEach(c => { const r = ratios(c); if (isBank(c)) { r.lev = r.gear = r.conv = r.marge = null; } (by[c.sector] = by[c.sector] || []).push(r); });
+  MED = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, { n: l.length, ...Object.fromEntries(MKEYS.map(m => [m, median(l.map(x => x[m]))])) }]));
+}
+const regName = c => (R.regions && R.regions[c.region]) || "";
+const secName = c => R.sectors[c.sector] || c.sector;
+/* Les textes de fiche (ce qu'elle fait, d'où vient l'argent, ce qui fait varier ses résultats) pèsent la moitié de l'univers :
+   ils sont servis à part (/data/fiches.json) et rattachés aux entreprises à la première demande. */
+let FICHES = null, FICHESP = null;
+function fichesMerge() { if (!FICHES || !R) return; R.companies.forEach(c => { if (FICHES[c.id]) c.fiche = FICHES[c.id]; }); FICHES.__ok = true; }
+function loadFiches() {
+  if (!FICHESP) FICHESP = getJSON("/data/fiches.json", {}).then(F => { FICHES = F; fichesMerge(); return F; });
+  if (FICHES && R && !FICHES.__ok) fichesMerge(); // demandé avant l'univers, arrivé avant lui : rattachement au premier appel suivant
+  return FICHESP;
+}
+const eventsOf = id => AG.events.filter(e => e.id === id).sort((a, b) => a.date.localeCompare(b.date));
+const upcoming = () => AG.events.filter(e => e.date >= TODAY && RBY[e.id]).sort((a, b) => a.date.localeCompare(b.date));
+
+/* ---------- Lecture : chaque chiffre traduit en phrase, avec un repère ---------- */
+// Trois niveaux, décrits par des seuils affichés. Ce sont des repères de lecture des comptes, pas un avis sur l'action.
+const LV = { fort: "Point fort", moyen: "Dans la moyenne", vig: "Point de vigilance", na: "Ne s'applique pas" };
+const RULES = {
+  croissance: "Plus de 5 % sur un an : point fort. De 0 à 5 % : dans la moyenne. En baisse : point de vigilance.",
+  marge: "Comparée aux entreprises du même secteur : nettement au-dessus, point fort ; nettement en dessous, point de vigilance. Sans comparaison possible : plus de 15 % point fort, moins de 7 % point de vigilance.",
+  net: "Bénéfice en hausse : point fort. En baisse de moins de 30 % : dans la moyenne. Perte, ou bénéfice divisé par plus de 1,4 : point de vigilance.",
+  roe: "Plus de 15 % : point fort. De 8 à 15 % : dans la moyenne. Moins de 8 % : point de vigilance.",
+  lev: "Moins de 1,5 an : point fort. De 1,5 à 3 ans : dans la moyenne. Plus de 3 ans : point de vigilance. Plus de trésorerie que de dettes : point fort.",
+  gear: "Moins de 50 % : point fort. De 50 à 100 % : dans la moyenne. Plus de 100 % : point de vigilance.",
+  fcf: "Plus de 80 € d'argent disponible pour 100 € de bénéfice : point fort. Positif mais moins : dans la moyenne. Négatif : point de vigilance.",
+  payout: "Moins de 60 % du bénéfice : point fort, il reste une marge si les bénéfices baissent. De 60 à 90 % : dans la moyenne. Plus de 90 % : point de vigilance.",
+  per: "Moins de 10 : bas. De 10 à 20 : la zone la plus courante. De 20 à 30 : élevé. Plus de 30 : très élevé. Ni bon ni mauvais en soi : tout dépend de la croissance attendue.",
+  rdt: "La plupart des grandes entreprises versent entre 1 et 5 % par an. Au-delà de 6 %, vérifiez que le dividende est couvert par le bénéfice.",
+};
+let CURSYM = "€";
+const e100 = v => F1.format(v * 100).replace(/,0$/, "") + " " + CURSYM;
+function figuresOf(c) { // chiffres du dernier exercice à partir d'une fiche complète
+  CURSYM = CUR[c.currency] || c.currency || "€";
+  const L = c.years.length - 1, a = (k, i = L) => i >= 0 && c.fin[k] ? c.fin[k][i] : null;
+  const caF = a("ca", 0), ca = a("ca");
+  const ms = c.years.map((_, i) => a("ca", i) > 0 && a("ebit", i) != null ? a("ebit", i) / a("ca", i) : null);
+  const lastM = ms.slice(-3);
+  let margeTrend = null;
+  if (lastM.length === 3 && lastM.every(okn)) {
+    if (lastM[0] > lastM[1] && lastM[1] > lastM[2] && lastM[0] - lastM[2] > 0.02) margeTrend = "baisse";
+    if (lastM[0] < lastM[1] && lastM[1] < lastM[2] && lastM[2] - lastM[0] > 0.02) margeTrend = "hausse";
+  }
+  return { year: c.years[L], currency: c.currency, ca, caPrev: a("ca", L - 1), ebit: a("ebit"), net: a("net"), netPrev: a("net", L - 1), equity: a("equity"), netDebt: a("netDebt"), ebitda: a("ebitda"),
+    fcf: a("fcf"), cfo: a("cfo"), divPaid: a("divPaid"), eps: a("eps"), dps: a("dps") ?? a("dpsEst"), dpsEst: a("dps") == null && a("dpsEst") != null,
+    cagr: ca > 0 && caF > 0 && L >= 2 ? Math.pow(ca / caF, 1 / L) - 1 : null, span: L, first: c.years[0], margeTrend, marges: ms };
+}
+function lecture(co, f) {
+  const m = ratios(f), med = MED[co.sector] || {}, cur = f.currency || co.currency, bank = isBank(co), out = [];
+  const medOk = med.n >= 3;
+  const medTxt = (v, fm) => v != null && medOk ? ` Médiane des ${med.n} entreprises du secteur suivies ici : ${fm(v)}.` : "";
+  const B = v => big(v, cur);
+  if (m.g1 != null) out.push({ term: "croissance", q: bank ? "Les revenus progressent-ils ?" : "Les ventes progressent-elles ?", value: pct(m.g1), lv: m.g1 >= 0.05 ? "fort" : m.g1 >= 0 ? "moyen" : "vig",
+    text: `${bank ? "Les revenus sont passés" : "Les ventes sont passées"} de ${B(f.caPrev)} à ${B(f.ca)} en un an.${f.cagr != null ? ` Depuis ${f.first} : ${pct(f.cagr)} par an en moyenne.` : ""}` });
+  if (m.marge != null && !bank) {
+    const mm = medOk ? med.marge : null;
+    let lv = mm != null ? (m.marge >= mm + Math.max(0.03, Math.abs(mm) * 0.25) ? "fort" : m.marge <= mm - Math.max(0.03, Math.abs(mm) * 0.3) ? "vig" : "moyen") : (m.marge >= 0.15 ? "fort" : m.marge >= 0.07 ? "moyen" : "vig");
+    if (m.marge < 0) lv = "vig";
+    out.push({ term: "marge", q: "Que reste-t-il des ventes une fois les coûts payés ?", value: pct(m.marge, 1, false), lv,
+      text: (m.marge >= 0 ? `Sur 100 ${CURSYM} de ventes, il reste ${e100(m.marge)} une fois payés les salaires, les achats et les autres coûts de l'activité.` : `L'activité perd ${e100(-m.marge)} pour 100 ${CURSYM} de ventes.`) + medTxt(mm, e100) });
+  }
+  if (f.net != null) {
+    let lv, t;
+    if (f.net < 0) { lv = "vig"; t = `Perte de ${B(-f.net)} sur l'exercice ${f.year}.`; }
+    else if (f.netPrev != null && f.netPrev < 0) { lv = "fort"; t = `Bénéfice de ${B(f.net)}, après une perte l'année précédente.`; }
+    else { lv = m.ng == null ? "moyen" : m.ng >= 0 ? "fort" : m.ng > -0.3 ? "moyen" : "vig"; t = `Bénéfice de ${B(f.net)} sur l'exercice ${f.year}${m.ng != null ? `, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, false)} sur un an` : ""}.`; }
+    if (m.nm != null && f.net > 0) t += ` Sur 100 ${CURSYM} ${bank ? "de revenus" : "de ventes"}, ${e100(m.nm)} de bénéfice final.`;
+    out.push({ term: "net", q: "L'entreprise gagne-t-elle de l'argent ?", value: B(f.net), lv, text: t });
+  }
+  if (m.roe != null) out.push({ term: "roe", q: "L'argent des actionnaires rapporte-t-il ?", value: pct(m.roe, 1, false), lv: m.roe >= 0.15 ? "fort" : m.roe >= 0.08 ? "moyen" : "vig",
+    text: `Pour 100 ${CURSYM} qui appartiennent aux actionnaires, l'entreprise a gagné ${e100(m.roe)} en un an.` + medTxt(med.roe, e100) });
+  else if (f.equity != null && f.equity <= 0) out.push({ term: "roe", q: "L'argent des actionnaires rapporte-t-il ?", value: "–", lv: "na", text: "Capitaux propres négatifs : ce ratio ne se calcule pas. Voir l'explication plus bas." });
+  if (bank) out.push({ term: "lev", q: "La dette est-elle sous contrôle ?", value: "–", lv: "na", text: "Pour une banque ou un assureur, emprunter et prêter est le métier lui-même : ce repère ne s'applique pas." });
+  else if (f.netDebt != null) {
+    if (f.netDebt < 0) out.push({ term: "dettenette", q: "La dette est-elle sous contrôle ?", value: "Pas de dette nette", lv: "fort", text: `L'entreprise a ${B(-f.netDebt)} de trésorerie de plus que ses dettes financières.` });
+    else if (m.lev != null) out.push({ term: "lev", q: "La dette est-elle sous contrôle ?", value: F1.format(m.lev) + " an" + (m.lev >= 2 ? "s" : ""), lv: m.lev <= 1.5 ? "fort" : m.lev <= 3 ? "moyen" : "vig",
+      text: `Sa dette nette de ${B(f.netDebt)} équivaut à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} de l'argent dégagé par son activité avant investissements (EBITDA).` });
+    else if (m.gear != null) out.push({ term: "gear", q: "La dette est-elle sous contrôle ?", value: pct(m.gear, 0, false), lv: m.gear <= 0.5 ? "fort" : m.gear <= 1 ? "moyen" : "vig",
+      text: `Sa dette nette de ${B(f.netDebt)} représente ${pct(m.gear, 0, false)} de ce qui appartient aux actionnaires.` });
+  }
+  if (!bank && f.fcf != null) out.push({ term: "fcf", q: "Les bénéfices se transforment-ils en argent ?", value: B(f.fcf), lv: f.fcf < 0 ? "vig" : m.conv != null && m.conv >= 0.8 ? "fort" : "moyen",
+    text: f.fcf >= 0 ? `Après avoir payé ses investissements (usines, machines, logiciels), il lui reste ${B(f.fcf)}${m.conv != null ? `, soit ${F0.format(m.conv * 100)} € pour 100 € de bénéfice` : ""}.` : `Ses investissements ont coûté plus que l'argent encaissé grâce à l'activité : il manque ${B(-f.fcf)} sur l'exercice.` });
+  if (f.divPaid != null) {
+    if (f.divPaid < 0.5) out.push({ term: "payout", q: "Le dividende est-il couvert ?", value: "Aucun", lv: "na", text: "Pas de dividende versé sur l'exercice : l'entreprise garde ses bénéfices pour investir ou racheter ses actions." });
+    else if (!(f.net > 0)) out.push({ term: "payout", q: "Le dividende est-il couvert ?", value: B(f.divPaid), lv: "vig", text: `${B(f.divPaid)} versés aux actionnaires alors que l'entreprise est en perte : le dividende est payé avec sa trésorerie ou sa dette.` });
+    else out.push({ term: "payout", q: "Le dividende est-il couvert ?", value: pct(m.payout, 0, false), lv: m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig",
+      text: `Sur 100 € de bénéfice, ${F0.format(m.payout * 100)} € ont été versés aux actionnaires${f.dps != null ? ` (${eur(f.dps, 2, cur)} par action${f.dpsEst ? ", estimé" : ""})` : ""}.` });
+  }
+  return out;
+}
+// Une phrase concrète par repère, avec les chiffres de l'entreprise (titre de chaque ligne)
+const CAT = { croissance: "Croissance des ventes", marge: "Marge d'exploitation", net: "Bénéfice net", roe: "Rentabilité des capitaux propres", lev: "Endettement", gear: "Endettement", dettenette: "Endettement", fcf: "Trésorerie disponible", payout: "Dividende" };
+function concret(co, f, items) {
+  CURSYM = CUR[f.currency] || f.currency || "€";
+  const m = ratios(f), med = MED[co.sector] || {}, B = v => big(v, f.currency), bank = isBank(co), medOk = med.n >= 3;
+  const sect = (v, fm) => v != null && medOk ? ` (secteur : ${fm(v)})` : "";
+  for (const i of items) {
+    const t = i.term;
+    if (t === "croissance") i.say = `${bank ? "Revenus" : "Ventes"} ${m.g1 >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.g1), 0, false)} en un an, à ${B(f.ca)}`;
+    else if (t === "marge") i.say = m.marge < 0 ? `L'activité coûte plus qu'elle ne rapporte : −${e100(-m.marge)} pour 100 ${CURSYM} de ventes` : `Une fois payés salaires, achats et frais, il reste ${e100(m.marge)} sur 100 ${CURSYM} de ventes${sect(med.marge > 0 ? med.marge : null, e100)}`;
+    else if (t === "net") i.say = f.net < 0 ? `Perte de ${B(-f.net)} sur l'exercice ${f.year}` : `${B(f.net)} de bénéfice après impôts${m.ng != null ? `, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, false)} sur un an` : ""}`;
+    else if (t === "roe") i.say = i.lv === "na" ? "Ne se calcule pas : les capitaux propres sont négatifs" : `Gagne ${e100(m.roe)} par an pour 100 ${CURSYM} appartenant aux actionnaires${sect(med.roe, e100)}`;
+    else if (t === "lev" && i.lv === "na") i.say = "Emprunter et prêter est le métier d'une banque : ce critère ne s'applique pas";
+    else if (t === "dettenette") i.say = `Pas de dette nette : ${B(-f.netDebt)} de trésorerie de plus que ses emprunts`;
+    else if (t === "lev") i.say = `Il faudrait ${F1.format(m.lev)} an${m.lev >= 2 ? "s" : ""} de résultat d'exploitation pour rembourser sa dette nette (${B(f.netDebt)})`;
+    else if (t === "gear") i.say = `Dette nette de ${B(f.netDebt)}, soit ${pct(m.gear, 0, false)} de ce qui appartient aux actionnaires`;
+    else if (t === "fcf") i.say = f.fcf >= 0 ? `Une fois ses investissements payés, il lui reste ${B(f.fcf)} d'argent disponible` : `Ses investissements ont coûté ${B(-f.fcf)} de plus que ce que l'activité a rapporté`;
+    else if (t === "payout") i.say = i.lv === "na" ? "Aucun dividende versé : les bénéfices restent dans l'entreprise" : !(f.net > 0) ? `Verse ${B(f.divPaid)} de dividendes alors qu'elle est en perte` : `Reverse ${pct(m.payout, 0, false)} de son bénéfice aux actionnaires et garde le reste`;
+    i.cat = CAT[t] || "";
+  }
+  return items;
+}
+// Ce qu'il faut retenir : points forts et points de vigilance, en phrases
+const CROSS_POS = new Set(["Bonne rentabilité sans dette excessive", "Marge en hausse trois ans de suite", "Perte comptable, mais de l'argent encaissé"]);
+function retenir(co, f) {
+  const items = concret(co, f, lecture(co, f)), cross = croisements(co, f);
+  const forts = [...items.filter(i => i.lv === "fort").map(i => i.say), ...cross.filter(([h]) => CROSS_POS.has(h)).map(([h]) => h)];
+  const vig = [...items.filter(i => i.lv === "vig").map(i => i.say), ...cross.filter(([h]) => !CROSS_POS.has(h) && !/Secteur cyclique|Banque ou assurance/.test(h)).map(([h]) => h)];
+  return { forts, vig };
+}
+function retenirHTML(s, c) {
+  const { forts, vig } = retenir(s, figuresOf(c));
+  if (!forts.length && !vig.length) return "";
+  return `<section class="panel" id="retenir"><div class="ph"><h2>Ce qu'il faut retenir</h2></div><div class="ret">
+    <div class="ret-f"><h3><i></i>Points forts</h3>${forts.length ? `<ul>${forts.map(x => `<li>${x}</li>`).join("")}</ul>` : `<p class="muted">Aucun point fort net dans les comptes.</p>`}</div>
+    <div class="ret-v"><h3><i></i>Points de vigilance</h3>${vig.length ? `<ul>${vig.map(x => `<li>${x}</li>`).join("")}</ul>` : `<p class="muted">Rien d'inquiétant dans les derniers comptes.${s.fiche && s.fiche.depend ? ` À suivre tout de même : ${esc(s.fiche.depend.charAt(0).toLowerCase() + s.fiche.depend.slice(1))}` : ""}</p>`}</div></div>
+    <div class="src">Tiré du dernier rapport annuel. Un point de vigilance n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller.</div></section>`;
+}
+function croisements(co, f) { // ce qu'il faut regarder ensemble
+  const m = ratios(f), bank = isBank(co), out = [];
+  const hiDebt = !bank && ((m.lev != null && m.lev > 3) || (m.lev == null && m.gear != null && m.gear > 1));
+  if (m.roe >= 0.15 && hiDebt) out.push(["Bonne rentabilité, mais avec beaucoup de dette", "La rentabilité des capitaux propres est forte en partie parce que l'entreprise travaille avec de l'argent emprunté. Cela marche bien quand les bénéfices tiennent, moins quand ils baissent."]);
+  if (m.roe >= 0.15 && !hiDebt && !bank && f.netDebt != null) out.push(["Bonne rentabilité sans dette excessive", "Les bénéfices viennent de l'activité elle-même, pas d'un effet de la dette."]);
+  if (m.g1 >= 0.1 && f.fcf < 0) out.push(["Forte croissance, mais l'argent sort", "Les ventes montent vite, mais les investissements coûtent plus que ce que l'activité rapporte. La croissance est financée par la trésorerie, la dette ou de nouvelles actions."]);
+  if (m.g1 < 0 && m.ng > 0.05) out.push(["Bénéfice en hausse alors que les ventes baissent", "Cela peut venir d'économies, d'une baisse d'impôts ou d'un gain ponctuel (vente d'une activité). Le rapport annuel donne le détail."]);
+  if (m.g1 > 0.05 && m.ng != null && m.ng < -0.15) out.push(["Ventes en hausse, bénéfice en baisse", "L'entreprise vend plus mais gagne moins : coûts en hausse, prix sous pression ou charge exceptionnelle."]);
+  if (m.payout > 1 || (f.net <= 0 && f.divPaid > 0.5)) out.push(["Dividende plus élevé que le bénéfice", "L'entreprise verse plus qu'elle ne gagne. Cela ne peut pas durer sans hausse des bénéfices."]);
+  if (!bank && f.net > 0 && m.conv != null && m.conv >= 0 && m.conv < 0.5) out.push(["Bénéfice peu transformé en argent", `Pour 100 € de bénéfice, il ne reste que ${F0.format(m.conv * 100)} € une fois les investissements payés. Les investissements sont lourds, ou les clients paient tard.`]);
+  if (!bank && f.net < 0 && f.fcf > 0) out.push(["Perte comptable, mais de l'argent encaissé", "Le résultat est négatif, mais l'activité a quand même rapporté de l'argent. Souvent, une charge sans sortie d'argent (dépréciation d'une acquisition) pèse sur le résultat."]);
+  if (f.margeTrend === "baisse") out.push(["Marge en baisse trois ans de suite", `Elle est passée de ${pct(f.marges.at(-3), 1, false)} à ${pct(f.marges.at(-1), 1, false)}. L'entreprise garde moins sur chaque vente.`]);
+  if (f.margeTrend === "hausse") out.push(["Marge en hausse trois ans de suite", `Elle est passée de ${pct(f.marges.at(-3), 1, false)} à ${pct(f.marges.at(-1), 1, false)}. L'entreprise garde plus sur chaque vente.`]);
+  if (f.equity != null && f.equity <= 0) out.push(["Capitaux propres négatifs", "Les dettes dépassent la valeur comptable des actifs. Fréquent aux États-Unis chez des entreprises rentables qui rachètent beaucoup leurs actions ; plus préoccupant quand l'entreprise perd de l'argent."]);
+  if (["energie", "materiaux"].includes(co.sector)) out.push(["Secteur cyclique", "Les bénéfices suivent les prix du pétrole, du gaz ou des métaux. Une seule année dit peu : comparez plusieurs exercices dans l'onglet Comptes."]);
+  if (bank) out.push(["Banque ou assurance : d'autres repères", "La dette et l'argent disponible ne se lisent pas comme pour une entreprise industrielle. La rentabilité des capitaux propres et la régularité du bénéfice comptent davantage."]);
+  return out;
+}
+const lvTag = lv => `<span class="lv lv-${lv}">${LV[lv]}</span>`;
+function tally(items) { const t = { fort: 0, moyen: 0, vig: 0 }; items.forEach(i => { if (t[i.lv] != null) t[i.lv]++; }); return t; }
+function tallyTxt(t) { return [t.fort && `${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}`, t.moyen && `${t.moyen} dans la moyenne`, t.vig && `${t.vig} point${t.vig > 1 ? "s" : ""} de vigilance`].filter(Boolean).join(" · "); }
+const quick = c => c.missing ? null : (typeof rfTally === "function" ? rfTally(c, { ...c, cagr: null }) : tally(lecture(c, { ...c, cagr: null }))); // 30/10 : même compte des points partout (rfNiveaux, fiche2.js)
+
+/* ---------- Définitions ---------- */
+const TERMS = {
+  cours: { name: "Cours et performance", what: "L'évolution du prix de l'action.", calc: "Variation du cours sur la période.", read: "Avec les dividendes réinvestis, on voit ce qu'a réellement gagné un actionnaire qui a gardé ses titres.", limit: "Le passé ne dit rien de l'évolution future." },
+  cap: { name: "Capitalisation", what: "La valeur totale de l'entreprise en Bourse.", calc: "Cours × nombre d'actions.", read: "Plus de 10 Md€ : grande capitalisation. De 1 à 10 Md€ : moyenne. Moins de 1 Md€ : petite.", limit: "Elle change chaque jour avec le cours." },
+  ca: { name: "Chiffre d'affaires", ex: "Une boulangerie qui vend 500 pains à 2 € a un chiffre d'affaires de 1 000 €, quels que soient ses coûts.", what: "Ce que l'entreprise vend en un an.", calc: "Total des ventes de l'exercice.", read: "Sa croissance montre si l'activité grandit ou recule.", limit: "Le rachat d'une autre entreprise gonfle la croissance sans que l'activité d'origine progresse. Les banques et assureurs ne publient pas de chiffre d'affaires au sens habituel." },
+  croissance: { name: "Croissance du chiffre d'affaires", ex: "Ventes de 110 M€ cette année contre 100 M€ l'an dernier : croissance de 10 %.", what: "La variation des ventes d'une année sur l'autre.", calc: "(Chiffre d'affaires de l'année ÷ celui de l'année précédente) − 1.", read: "Une croissance régulière sur plusieurs années compte plus qu'une seule bonne année.", limit: "Les variations de change et les acquisitions la modifient." },
+  resexp: { name: "Résultat d'exploitation", what: "Ce que rapporte l'activité elle-même, avant les frais financiers et les impôts.", calc: "Chiffre d'affaires − coûts de l'activité.", read: "C'est la base de la marge d'exploitation.", limit: "Certaines entreprises le présentent sous un autre nom ou ne le publient pas sous la forme standard." },
+  marge: { name: "Marge d'exploitation", ex: "Ventes de 1 000 €, coûts de l'activité de 850 € : il reste 150 €, soit une marge de 15 %.", what: "Ce que l'activité rapporte sur 100 € vendus.", calc: "Résultat d'exploitation ÷ chiffre d'affaires.", read: "Se compare entre entreprises du même secteur.", limit: "Très différente d'un secteur à l'autre : 4 % peut être normal dans la distribution, faible dans le logiciel." },
+  net: { name: "Résultat net", ex: "Sur 150 € de résultat d'exploitation, l'entreprise paie 20 € d'intérêts et 35 € d'impôts : résultat net de 95 €.", what: "Le bénéfice final revenant aux actionnaires, après toutes les charges et les impôts.", calc: "Résultat d'exploitation − frais financiers − impôts ± éléments exceptionnels.", read: "Montre si l'entreprise gagne de l'argent.", limit: "Un élément exceptionnel (vente d'une filiale, dépréciation) peut le fausser une année." },
+  bnpa: { name: "BNPA", what: "Le bénéfice net par action.", calc: "Résultat net ÷ nombre moyen d'actions.", read: "C'est la base du calcul du PER.", limit: "Les rachats d'actions le font monter sans que le bénéfice total change." },
+  per: { name: "PER", ex: "Une action à 60 € d'une entreprise qui gagne 4 € par action : PER de 15.", what: "Combien d'années de bénéfices le prix de l'action représente.", calc: "Cours ÷ bénéfice net par action.", read: "La plupart des actions se situent entre 10 et 20. Une forte croissance attendue explique souvent un PER plus élevé.", limit: "Impossible à calculer quand l'entreprise perd de l'argent." },
+  dps: { name: "Dividende par action", what: "La somme versée à l'actionnaire pour chaque action détenue.", calc: "Montant voté en assemblée générale. Ici : dividende versé pendant l'exercice, tel que publié dans les comptes.", read: "Sa régularité sur plusieurs années compte autant que son montant.", limit: "L'entreprise peut le réduire ou le supprimer." },
+  rdt: { name: "Rendement du dividende", ex: "Une action à 50 € qui verse 2 € par an : rendement de 4 %.", what: "Ce que l'action verse chaque année par rapport à son prix.", calc: "Dividende par action ÷ cours.", read: "Les entreprises matures versent en général plus que les entreprises en forte croissance.", limit: "Un rendement très élevé vient souvent d'un cours en forte baisse." },
+  payout: { name: "Taux de distribution", ex: "Bénéfice de 100 M€, dividendes versés de 45 M€ : taux de distribution de 45 %.", what: "La part du bénéfice versée en dividende.", calc: "Dividendes versés ÷ résultat net.", read: "Au-delà de 90 %, le dividende devient difficile à maintenir.", limit: "Une année de bénéfice exceptionnellement bas fait grimper le taux." },
+  ebitda: { name: "EBITDA", what: "Le résultat de l'activité avant amortissements : une mesure de l'argent généré par l'exploitation.", calc: "Résultat d'exploitation + dotations aux amortissements. Ici estimé à partir des comptes publiés.", read: "Sert surtout à mesurer la capacité à rembourser la dette.", limit: "Ne tient pas compte des investissements nécessaires pour faire tourner l'activité." },
+  dette: { name: "Dette financière", what: "Les emprunts et obligations de l'entreprise.", calc: "Emprunts à long terme + emprunts à court terme, hors dettes de location.", read: "À rapporter à la taille de l'entreprise et à ce qu'elle génère.", limit: "Chaque entreprise présente sa dette un peu différemment." },
+  tresorerie: { name: "Trésorerie", what: "L'argent disponible immédiatement.", calc: "Trésorerie et équivalents de trésorerie à la clôture.", read: "Permet de faire face aux dépenses sans emprunter.", limit: "Une photo à la date de clôture des comptes." },
+  dettenette: { name: "Dette nette", ex: "Emprunts de 800 M€, trésorerie de 300 M€ : dette nette de 500 M€.", what: "Les dettes financières moins la trésorerie disponible.", calc: "Dette financière − trésorerie. Ici estimée à partir des comptes publiés.", read: "Négative : l'entreprise a plus de trésorerie que de dettes.", limit: "Peut différer de la dette nette annoncée par l'entreprise, qui inclut parfois d'autres éléments." },
+  lev: { name: "Dette nette ÷ EBITDA", ex: "Dette nette de 6 Md€, EBITDA de 3 Md€ : il faudrait 2 ans pour rembourser.", what: "En combien d'années l'entreprise pourrait rembourser sa dette avec ce que génère son activité.", calc: "Dette nette ÷ EBITDA.", read: "Moins de 2 : situation solide. De 2 à 4 : maîtrisée. Plus de 4 : endettement élevé.", limit: "Ne s'applique pas aux banques et assureurs, dont la dette fait partie du métier." },
+  gear: { name: "Dette nette ÷ capitaux propres", what: "Le poids de la dette par rapport à ce qui appartient aux actionnaires.", calc: "Dette nette ÷ capitaux propres.", read: "Moins de 50 % : endettement modéré. Au-delà de 100 % : la dette dépasse les capitaux propres.", limit: "Ne s'applique pas aux banques et assureurs." },
+  capitaux: { name: "Capitaux propres", what: "Ce qui appartient aux actionnaires dans le bilan.", calc: "Total des actifs − total des dettes, part du groupe.", read: "Sert au calcul de la rentabilité des capitaux propres.", limit: "Valeur comptable, souvent loin de la valeur en Bourse." },
+  roe: { name: "Rentabilité des capitaux propres (ROE)", ex: "Capitaux propres de 1 000 M€, bénéfice de 150 M€ : rentabilité de 15 %.", what: "Ce que l'entreprise gagne avec l'argent de ses actionnaires.", calc: "Résultat net ÷ capitaux propres.", read: "Se compare au secteur.", limit: "Une dette importante le gonfle artificiellement." },
+  cfo: { name: "Flux de trésorerie d'exploitation", what: "L'argent réellement encaissé grâce à l'activité.", calc: "Résultat corrigé des éléments sans effet sur la trésorerie et des variations du besoin en fonds de roulement.", read: "Proche du résultat net ou au-dessus : les bénéfices se transforment bien en argent.", limit: "Varie avec les délais de paiement des clients et des fournisseurs." },
+  fcf: { name: "Flux de trésorerie disponible", ex: "L'activité rapporte 500 M€ d'argent, les nouvelles usines en coûtent 300 M€ : flux disponible de 200 M€.", what: "L'argent réellement généré après les investissements.", calc: "Flux de trésorerie d'exploitation − investissements corporels et incorporels.", read: "Positif plusieurs années de suite : l'entreprise finance seule son développement et son dividende.", limit: "Un gros investissement ponctuel peut le rendre négatif une année." },
+};
+const PTERMS = {
+  gain: { name: "Gain ou perte", what: "Valeur finale − total versé, plus les dividendes encaissés.", read: "Le chiffre le plus concret : combien d'euros ont été gagnés ou perdus." },
+  annu: { name: "Rendement annualisé", what: "Le rendement moyen par an, intérêts composés compris.", calc: "(valeur finale ÷ valeur initiale)^(1 ÷ nombre d'années) − 1", read: "Permet de comparer des placements sur des durées différentes." },
+  tri: { name: "Rendement selon vos versements (TRI)", what: "Le rendement annuel réellement obtenu, en tenant compte du montant et de la date de chaque versement.", read: "C'est la mesure qui correspond à l'expérience de l'investisseur." },
+  twr: { name: "Rendement des placements", what: "La performance des placements eux-mêmes, sans l'effet des dates de versement.", read: "C'est la mesure utilisée par les fonds et les indices, pour comparer un portefeuille à un indice." },
+  dd: { name: "Perte maximale", what: "La plus forte baisse entre un sommet et le creux qui a suivi.", calc: "plus petite valeur de (valeur ÷ plus haut atteint avant − 1)", read: "Ce qu'il fallait supporter sans vendre." },
+  rec: { name: "Temps de récupération", what: "Le temps pour revenir au sommet après la perte maximale.", read: "Il peut durer plusieurs années." },
+  vol: { name: "Volatilité", what: "L'ampleur des variations habituelles, ramenée à un an.", calc: "écart-type des rendements mensuels × √12", read: "Plus elle est élevée, plus le parcours est agité." },
+  frais: { name: "Frais", what: "Les frais de courtage à chaque ordre et les frais annuels des fonds.", read: "Ils réduisent le rendement chaque année, et l'écart grandit avec le temps." },
+  rep: { name: "Répartition", what: "Le poids de chaque secteur et de la plus grosse ligne.", read: "Montre si le portefeuille dépend d'un seul secteur ou d'une seule action." },
+};
+const BASES = {
+  action: { name: "Action", what: "Une part du capital d'une entreprise. L'actionnaire possède une petite partie de l'entreprise et peut recevoir une part de ses bénéfices sous forme de dividende." },
+  fonds: { name: "Fonds indiciel (ETF)", what: "Un fonds coté qui reproduit un indice, par exemple les 40 plus grandes entreprises françaises. Une seule ligne donne accès à des dizaines ou des centaines d'entreprises." },
+  indice: { name: "Indice", what: "Un panier d'entreprises qui sert de référence pour mesurer l'évolution d'un marché, comme le CAC 40 ou le MSCI World." },
+  pea: { name: "PEA", what: "Le plan d'épargne en actions : une enveloppe réservée aux actions européennes et à certains fonds. Versements limités à 150 000 €. Après 5 ans, les gains ne paient plus d'impôt sur le revenu, seulement les prélèvements sociaux." },
+  cto: { name: "Compte-titres", what: "Un compte sans limite de montant ni de pays. Les dividendes et les plus-values sont imposés l'année où ils sont perçus ou réalisés." },
+  esef: { name: "Rapport annuel ESEF", what: "Le format électronique obligatoire des comptes annuels des sociétés cotées en Europe depuis 2021. Chaque chiffre y porte une étiquette standard, ce qui permet de le lire automatiquement." },
+  amf: { name: "Information réglementée (AMF)", what: "Les documents que les sociétés cotées doivent publier : résultats, rapports annuels, assemblées, opérations sur le capital. Ils sont déposés auprès de l'Autorité des marchés financiers et publiés sur info-financiere.gouv.fr." },
+  mediane: { name: "Médiane du secteur", what: "La valeur du milieu parmi les entreprises suivies du même secteur : la moitié fait mieux, l'autre moitié moins bien.", read: "Sert de repère. Elle dépend des entreprises suivies par le site." },
+};
+const ALL = { ...TERMS, ...PTERMS, ...BASES };
+const def = (key, label) => `<button type="button" class="def" data-def="${key}">${esc(label || ALL[key].name)}</button>`;
+const pop = document.getElementById("pop");
+let popFor = null;
+function openDef(btn) {
+  const t = ALL[btn.dataset.def]; if (!t) return;
+  pop.innerHTML = `<button class="x" type="button" aria-label="Fermer">×</button><h4>${esc(t.name)}</h4><p>${esc(t.what)}</p>
+    ${t.calc ? `<p><span class="k">Calcul :</span> ${esc(t.calc)}</p>` : ""}${t.read ? `<p><span class="k">Comment le lire :</span> ${esc(t.read)}</p>` : ""}${t.limit ? `<p><span class="k">Limite :</span> ${esc(t.limit)}</p>` : ""}
+    <p><a href="/lexique#${btn.dataset.def}">Voir dans le lexique</a></p>`;
+  pop.classList.add("open"); popFor = btn;
+  if (innerWidth > 760) {
+    const r = btn.getBoundingClientRect(), w = pop.offsetWidth;
+    pop.style.left = Math.max(12, Math.min(innerWidth - w - 12, r.left + scrollX)) + "px";
+    pop.style.top = (r.bottom + scrollY + 6) + "px";
+  }
+  pop.focus({ preventScroll: true });
+}
+function closeDef() { pop.classList.remove("open"); popFor = null; }
+document.addEventListener("click", e => {
+  const b = e.target.closest(".def");
+  if (b) { e.preventDefault(); if (popFor === b) closeDef(); else openDef(b); return; }
+  if (e.target.closest("#pop .x") || (!e.target.closest("#pop") && pop.classList.contains("open"))) closeDef();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") closeDef(); });
+
+/* ---------- Modules de cours TradingView (gratuits, avec mention de la source) ---------- */
+function tv(el, widget, cfg) {
+  if (!el) return;
+  el.innerHTML = `<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><div class="tradingview-widget-copyright">Cours fournis par TradingView</div></div>`;
+  const s = document.createElement("script");
+  s.src = `https://s3.tradingview.com/external-embedding/embed-widget-${widget}.js`;
+  s.async = true; s.type = "text/javascript";
+  // largeChartUrl : un clic sur le module reste sur le site (page /aller, qui ouvre la bonne fiche)
+  s.innerHTML = JSON.stringify({ locale: "fr", colorTheme: "light", isTransparent: true, largeChartUrl: location.origin + "/aller", ...cfg });
+  el.firstChild.appendChild(s);
+}
+const followed = () => R.companies;
+
+/* ---------- Graphiques des simulateurs ---------- */
+function niceTicks(min, max, n = 4) {
+  const span = max - min || Math.abs(max) || 1, step0 = span / n, p = Math.pow(10, Math.floor(Math.log10(step0)));
+  const step = [1, 2, 2.5, 5, 10].map(k => k * p).find(s => s >= step0);
+  const a = Math.floor(min / step) * step, b = Math.ceil(max / step) * step, t = [];
+  for (let v = a; v <= b + step / 2; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+function lineChart(el, { labels, series, fmt, area }) {
+  el.innerHTML = '<svg></svg><div class="tip"></div>'; el.style.touchAction = "pan-y";
+  const svg = el.firstChild, tip = el.lastChild;
+  const draw = () => {
+    const W = el.clientWidth, H = el.clientHeight; if (!W) return;
+    const padL = 4, padR = 56, padT = 10, padB = 24;
+    const all = series.flatMap(s => s.values).filter(v => v != null);
+    let min = Math.min(...all), max = Math.max(...all); if (area) min = Math.min(0, min);
+    const ticks = niceTicks(min, max), y0 = ticks[0], y1 = ticks[ticks.length - 1], n = labels.length;
+    const X = i => padL + (W - padL - padR) * (n === 1 ? 0 : i / (n - 1));
+    const Y = v => padT + (H - padT - padB) * (1 - (v - y0) / (y1 - y0 || 1));
+    let s = "";
+    ticks.forEach(t => { s += `<line x1="${padL}" x2="${W - padR}" y1="${Y(t)}" y2="${Y(t)}" stroke="#ECEAE5"/><text x="${W - padR + 8}" y="${Y(t) + 4}" font-size="11" fill="#8A857D">${esc(fmt(t, true))}</text>`; });
+    const maxT = W < 500 ? 4 : 8; let idxs = [];
+    if (labels[0].length === 4 || n <= 30) { const k = Math.max(1, Math.ceil(n / maxT)); for (let i = 0; i < n; i += k) idxs.push(i); }
+    else { const jan = labels.map((l, i) => l.endsWith("-01") ? i : -1).filter(i => i >= 0); const k = Math.max(1, Math.ceil(jan.length / maxT)); idxs = jan.filter((_, j) => j % k === 0); }
+    idxs.forEach(i => {
+      const lab = labels[i].length === 4 ? labels[i] : (n > 30 ? labels[i].slice(0, 4) : mLabel(labels[i]));
+      s += `<text x="${X(i)}" y="${H - 5}" font-size="11" fill="#8A857D" text-anchor="${X(i) < 20 ? "start" : X(i) > W - padR - 20 ? "end" : "middle"}">${esc(lab)}</text>`;
+    });
+    series.forEach((se, si) => {
+      const pts = se.values.map((v, i) => v == null ? null : `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).filter(Boolean);
+      if (area && si === 0) s += `<polygon points="${X(0)},${Y(Math.max(y0, 0))} ${pts.join(" ")} ${X(n - 1)},${Y(Math.max(y0, 0))}" fill="${se.color}" opacity=".06"/>`;
+      s += `<polyline points="${pts.join(" ")}" fill="none" stroke="${se.color}" stroke-width="${si === 0 ? 1.8 : 1.5}" ${se.dash ? 'stroke-dasharray="4 4"' : ""} stroke-linejoin="round"/>`;
+    });
+    s += `<line class="cur" x1="0" x2="0" y1="${padT}" y2="${H - padB}" stroke="#141414" opacity="0"/>`;
+    series.forEach(se => { s += `<circle class="dot" r="3.5" fill="${se.color}" opacity="0"/>`; });
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.innerHTML = s;
+    const cur = svg.querySelector(".cur"), dots = svg.querySelectorAll(".dot");
+    const move = cx => {
+      const x = cx - el.getBoundingClientRect().left;
+      const i = Math.max(0, Math.min(n - 1, Math.round((x - padL) / (W - padL - padR) * (n - 1))));
+      cur.setAttribute("x1", X(i)); cur.setAttribute("x2", X(i)); cur.setAttribute("opacity", ".2");
+      dots.forEach((d, si) => { const v = series[si].values[i]; if (v == null) return; d.setAttribute("cx", X(i)); d.setAttribute("cy", Y(v)); d.setAttribute("opacity", "1"); });
+      tip.innerHTML = `<div style="opacity:.7">${esc(labels[i].length === 4 ? labels[i] : mLong(labels[i]))}</div>` + series.map(se => `<div>${series.length > 1 ? esc(se.name) + " : " : ""}<b>${esc(fmt(se.values[i]))}</b></div>`).join("");
+      tip.style.display = "block";
+      const top = Math.min(...series.map(se => se.values[i] == null ? H : Y(se.values[i]))), tw = tip.offsetWidth;
+      tip.style.left = Math.max(tw / 2, Math.min(W - tw / 2, X(i))) + "px"; tip.style.top = (top - 8) + "px";
+    };
+    el.onpointermove = e => move(e.clientX); el.onpointerdown = e => move(e.clientX);
+    el.onpointerleave = () => { tip.style.display = "none"; cur.setAttribute("opacity", "0"); dots.forEach(d => d.setAttribute("opacity", "0")); };
+  };
+  draw();
+  if (el._ro) el._ro.disconnect();
+  let lastW = el.clientWidth;
+  el._ro = new ResizeObserver(() => { if (el.clientWidth !== lastW) { lastW = el.clientWidth; draw(); } });
+  el._ro.observe(el);
+}
+
+/* ---------- Pièces communes ---------- */
+const app = $("#app");
+function setTitle(t) { document.title = t ? `${t} · ${SITE}` : `${SITE} · La Bourse, comptes à l'appui`; }
+function setNav(k) { $$("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === k)); $$("#nav .dd").forEach(d => { d.classList.remove("open"); d.classList.toggle("on", d.dataset.g === (NAVG[k] || "-")); }); }
+function agendaHTML(list, showCo = true) {
+  if (!list.length) return `<div class="empty">Aucune date renseignée pour l'instant.</div>`;
+  return `<div class="ag">${list.map(e => { const [y, m, d] = e.date.split("-"); const c = RBY[e.id]; return `<div class="it"><div class="d"><b>${+d}</b>${MOIS[+m - 1]} ${y.slice(2)}</div><div>
+    ${showCo && c ? `<a class="co" href="/entreprise/${c.id}">${esc(c.name)}</a>` : ""}<div class="ev">${esc(e.label)}</div></div></div>`; }).join("")}</div>`;
+}
+/* ---------- Actualité : publications officielles classées et expliquées ---------- */
+const NCAT = {
+  resultats: { label: "Résultats", c: "#1E6FD9", why: "L'entreprise publie ses ventes et ses bénéfices de la période. C'est en général l'annonce qui fait le plus bouger le cours." },
+  rapport: { label: "Rapport annuel", c: "#5B4FC4", why: "Le document complet de l'année : comptes, risques, rémunérations des dirigeants. C'est la source des chiffres du site." },
+  dividende: { label: "Dividende", c: "#1E8A52", why: "Montant et dates de versement du dividende. Pour le recevoir, il faut détenir l'action la veille de la date de détachement." },
+  assemblee: { label: "Assemblée générale", c: "#8A6D1E", why: "Réunion annuelle des actionnaires : ils votent les comptes, le dividende et la nomination des administrateurs. Chaque actionnaire peut voter." },
+  operation: { label: "Opération", c: "#C2410C", why: "Achat ou vente d'une activité, levée d'argent ou emprunt. Peut changer la taille, la dette ou le nombre d'actions de l'entreprise." },
+  dirigeants: { label: "Direction", c: "#7C3A8F", why: "Changement à la tête de l'entreprise ou au conseil d'administration." },
+  incident: { label: "Incident", c: "#B42318", why: "La société signale un incident important, par exemple une attaque informatique." },
+  rachat: { label: "Rachat d'actions", c: "#8A857D", routine: true, why: "L'entreprise rachète ses propres actions. Moins d'actions en circulation : chaque action restante représente une part un peu plus grande des bénéfices. La déclaration est obligatoire et répétée chaque semaine : rarement une nouvelle en soi." },
+  capital: { label: "Nombre d'actions", c: "#8A857D", routine: true, why: "Publication mensuelle obligatoire du nombre d'actions et de droits de vote. Rarement importante." },
+  autre: { label: "Communiqué", c: "#5F5B55", why: "Communiqué officiel de la société." },
+};
+const normt = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function amfCat(i) {
+  const t = normt(i.type + " " + i.title);
+  if (/droits de vote|nombre total d.actions|nombre d.actions composant|total voting rights|total number of shares/.test(t)) return "capital";
+  if (/rachat|actions propres|contrat de liquidite|buyback|own shares|bilan semestriel du contrat/.test(t)) return "rachat";
+  if (/rapport financier annuel|document d.enregistrement universel|rapport annuel|annual financial report|universal registration/.test(t)) return "rapport";
+  if (/dividende|coupon|acompte sur dividende/.test(t)) return "dividende";
+  if (/assemblee|general meeting|modalites de mise a disposition/.test(t)) return "assemblee";
+  if (/resultat|chiffre d.affaires|information financiere (trimestrielle|semestrielle|annuelle)|rapport financier semestriel|trimestre|semestre|results|half-year|quarter|ventes/.test(t)) return "resultats";
+  if (/acquisition|cession|acquiert|rachete|fusion|offre publique|emprunt obligataire|emission|augmentation de capital|obligations|placement/.test(t)) return "operation";
+  if (/dirigeant|nomination|directeur general|conseil d.administration|gouvernance|president/.test(t)) return "dirigeants";
+  return "autre";
+}
+const SECKIND = { resultats: "resultats", "rapport-annuel": "rapport", "rapport-trimestriel": "resultats", dirigeants: "dirigeants", accord: "operation", acquisition: "operation", assemblee: "assemblee", incident: "incident", communique: "autre", autre: "autre" };
+const SECTITLE = { "8-K": "Communiqué officiel (formulaire 8-K)", "10-K": "Rapport annuel (formulaire 10-K)", "10-Q": "Rapport trimestriel (formulaire 10-Q)", "20-F": "Rapport annuel (formulaire 20-F)", "40-F": "Rapport annuel (formulaire 40-F)", "6-K": "Communiqué (formulaire 6-K)", "DEF 14A": "Convocation à l'assemblée générale (DEF 14A)" };
+function secTitle(f) {
+  if (f.form === "8-K" && f.kind === "resultats") return "Communiqué de résultats (formulaire 8-K)";
+  if (f.form === "8-K" && f.kind === "dirigeants") return "Changement de dirigeant ou d'administrateur (8-K)";
+  if (f.form === "8-K" && (f.kind === "accord" || f.kind === "acquisition")) return "Accord ou opération importante (8-K)";
+  if (f.form === "8-K" && f.kind === "assemblee") return "Résultat des votes de l'assemblée générale (8-K)";
+  return SECTITLE[f.form] || f.form;
+}
+// Publications de l'AMF (France), dédoublonnées FR/EN, au format commun
+async function loadAmf(params, limit) {
+  const r = await fetch(`/api/amf?limit=${Math.min(100, limit)}${params}`);
+  if (!r.ok) throw new Error("amf");
+  const j = await r.json(), seen = new Map();
+  for (const i of (j.items || []).filter(i => i.title)) {
+    const k = (i.isin || i.company) + "|" + String(i.date).slice(0, 16), prev = seen.get(k);
+    if (!prev || (prev.lang === "Anglais" && i.lang !== "Anglais")) seen.set(k, i);
+  }
+  return [...seen.values()].map(i => { const c = i.isin ? R.companies.find(x => x.isin === i.isin) : null; return { date: i.date, co: c, coName: i.company, cat: amfCat(i), title: i.title, url: i.url, src: "AMF" }; });
+}
+let SECN = null;
+async function loadSec(id) {
+  SECN = SECN || await getJSON("/data/actu-sec.json", { items: [] });
+  return SECN.items.filter(f => !id || f.id === id).map(f => ({ date: f.date, co: RBY[f.id], cat: SECKIND[f.kind] || "autre", title: secTitle(f), url: f.url, src: "SEC" }));
+}
+const dayKey = iso => { const d = new Date(iso); return isNaN(d) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
+function dayLabel(iso) {
+  const k = dayKey(iso), now = new Date();
+  if (k === dayKey(now.toISOString())) return "Aujourd'hui";
+  if (k === dayKey(new Date(now - 864e5).toISOString())) return "Hier";
+  const d = new Date(iso); return new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", weekday: "long", day: "numeric", month: "long" }).format(d).replace(/^./, c => c.toUpperCase());
+}
+const hhmm = iso => { const d = new Date(iso); return isNaN(d) || !/T\d/.test(iso) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).format(d); };
+let ANA = null, ANAP = null;
+const loadAna = () => ANAP || (ANAP = fetch("/data/actu-analyse.json").then(r => r.json()).then(j => { ANA = j.items || {}; }).catch(() => { ANA = {}; }));
+function anaHTML(i, C) { // l'annonce lue et résumée par le site, le document en source
+  const a = ANA && i.url ? ANA[i.url] : null, src = i.url ? `<a class="nsrc" href="${esc(i.url)}" target="_blank" rel="noopener">Document source${/sec\.gov/.test(i.url) ? " (SEC, en anglais)" : " (PDF)"}</a>` : "";
+  if (!a || (!a.chiffres?.length && !a.extraits?.length)) return `<span class="nti">${esc(a && a.titre || i.title)}</span><p class="nexp">${esc(a ? a.explication : C.why)}</p>${C.routine ? "" : iaBtn(i.url)}${src}`;
+  return `<span class="nti">${esc(a.titre || i.title)}</span>
+    ${a.chiffres?.length ? `<div class="nfig">${a.chiffres.map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(v)}</b></span>`).join("")}</div>` : ""}
+    ${a.lecture?.length ? `<ul class="nlec">${a.lecture.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
+    ${a.extraits?.length ? `<details class="nwhy"><summary>Ce que dit le communiqué</summary>${a.extraits.map(x => `<blockquote>${esc(x)}</blockquote>`).join("")}</details>` : ""}
+    <p class="nexp">${esc(a.explication || C.why)}</p>${iaBtn(i.url)}${src}`;
+}
+const iaBtn = u => ""; // ancien « résumé détaillé » rédigé par le serveur, retiré : chiffres et extraits restent affichés
+function newsHTML(items, { showCo = true, max = 40 } = {}) {
+  if (!items.length) return `<div class="empty">Aucune publication pour ce choix.</div>`;
+  let out = "", last = "";
+  for (const i of items.slice(0, max)) {
+    const dk = dayKey(i.date);
+    if (dk !== last) { out += `<div class="nday">${esc(dayLabel(i.date))}</div>`; last = dk; }
+    const C = NCAT[i.cat];
+    out += `<div class="nit">${showCo ? (i.co ? `<a href="/entreprise/${i.co.id}" class="nlogo">${logo(i.co, 36)}</a>` : `<span class="nlogo">${logo({ name: i.coName || "?" }, 36)}</span>`) : ""}
+      <div class="nbody"><div class="nmeta">${showCo ? (i.co ? `<a class="nco" href="/entreprise/${i.co.id}">${esc(i.co.name)}</a>` : `<span class="nco">${esc(i.coName || "")}</span>`) : ""}<span class="ncat" style="--c:${C.c}">${C.label}</span><span class="light">${hhmm(i.date)}</span></div>
+        ${anaHTML(i, C)}</div></div>`;
+  }
+  return `<div class="news">${out}</div>`;
+}
+const NFILTERS = [["imp", "L'essentiel"], ["resultats", "Résultats"], ["dividende", "Dividendes"], ["assemblee", "Assemblées"], ["operation", "Opérations"], ["tout", "Tout"]];
+const nfilter = (items, f) => items.filter(i => f === "tout" ? true : f === "imp" ? !NCAT[i.cat].routine : i.cat === f);
+// Bloc réutilisable : charge, filtre, affiche
+function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, max = 40, showCo = true, filters = true, f = "imp" } = {}) {
+  target.innerHTML = `${filters ? `<div class="chips nfil">${NFILTERS.map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>` : ""}<div class="nlist"><div class="empty">Chargement…</div></div>`;
+  const list = $(".nlist", target);
+  Promise.all([src === "US" ? loadSec(id) : loadAmf(params, limit), loadAna()]).then(([items]) => {
+    const draw = () => { list.innerHTML = newsHTML(nfilter(items, f), { showCo, max }); };
+    draw();
+    if (filters) $(".nfil", target).onclick = e => { const b = e.target.closest("button"); if (!b) return; f = b.dataset.f; $$(".nfil button", target).forEach(x => x.classList.toggle("on", x === b)); draw(); };
+  }).catch(() => { list.innerHTML = `<div class="empty">${src === "US" ? "Les publications de la SEC ne sont pas disponibles pour le moment." : "Le flux de l'AMF n'est pas disponible pour le moment."}</div>`; });
+}
+function amfBlock(target, params, limit) { newsBlock(target, { params, max: limit, filters: false }); }
+/* ---------- Logos et cartes d'entreprise ---------- */
+const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+let LOGO_ABS = new Set();
+function logoTeinte(n) { let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; } // couleur déterministe à partir du nom
+function logo(c, size = 40) { // icône du site de l'entreprise ; sinon un rond coloré (couleur fixée par le nom) avec l'initiale
+  const dom = c.domain && !LOGO_ABS.has(c.domain) ? c.domain : null;
+  return `<span class="lg${dom ? "" : " lg-ini"}" style="--s:${size}px;--lgh:${logoTeinte(c.name)}"><b>${esc(initials(c.name))}</b>${dom ? `<img src="https://www.google.com/s2/favicons?domain=${encodeURIComponent(dom)}&sz=128" alt="" loading="lazy" onerror="this.parentNode.classList.add('lg-ini');this.remove()">` : ""}</span>`;
+}
+function caLine(c) {
+  if (c.missing) return `<span class="light">${missingTxt(c)}</span>`;
+  const t = quick(c);
+  return `<span class="light">${c.ca != null ? `Ventes ${c.year} : <b class="num" style="color:var(--ink)">${big(c.ca, c.currency)}</b>` : `Exercice ${c.year ?? "–"}`}</span>${t ? pills(t) : ""}`;
+}
+function missingTxt(c, long) { // pourquoi les comptes manquent
+  if ((c.isin || "").startsWith("DE")) return long ? "Les sociétés allemandes déposent leurs comptes au registre fédéral allemand, qui ne propose pas de base ouverte réutilisable : leurs chiffres ne peuvent pas être affichés ici pour l'instant. La fiche et le cours restent disponibles." : "Comptes non disponibles en données ouvertes";
+  if (c.region === "MONDE" && !c.sec) return long ? `Le site n'a pas les comptes officiels de ${esc(c.name)} : sa place de cotation ne les publie pas dans un format ouvert que le site sait lire (le site lit les dépôts européens ESEF et américains SEC). Le cours, l'actualité et le métier restent disponibles.` : "Comptes non disponibles en données ouvertes";
+  return long ? `Les comptes de ${esc(c.name)} sont en cours de collecte. Ils apparaîtront après la prochaine mise à jour.` : "Comptes en cours de collecte";
+}
+const pills = t => `<span class="pills" title="${esc(tallyTxt(t))}"><span class="f"><i></i>${t.fort}</span><span class="m"><i></i>${t.moyen}</span><span class="v"><i></i>${t.vig}</span></span>`;
+function coCard(c) {
+  return `<a class="cocard" href="/entreprise/${c.id}"><div class="top">${logo(c, 44)}<div><div class="nm">${esc(c.name)}</div><div class="sec">${esc(regName(c))} · ${esc(secName(c))}</div></div></div>
+    <div class="d">${esc(c.desc || "")}</div><div class="f">${caLine(c)}</div></a>`;
+}
+const LEGEND = `<div class="dleg"><span class="f"><i></i>Points forts</span><span class="m"><i></i>Dans la moyenne</span><span class="v"><i></i>Points de vigilance</span><span class="light">Nombre de repères de chaque couleur dans les comptes de l'entreprise.</span></div>`;
+
+/* ---------- Petits graphiques (SVG et barres HTML) ---------- */
+const PAL = ["#111214", "#0E6B4A", "#D94F2B", "#8FB51E", "#C2410C", "#0E7490", "#8A6D1E", "#B42318", "#5B4FC4", "#5F5B55"];
+// Barres verticales par année, avec ligne de repère facultative (médiane du secteur)
+// Barres horizontales : une ligne par élément (classements, comparaisons, répartitions)
+function hbars(rows, fmt, { pctOfMax = true } = {}) {
+  const max = Math.max(...rows.map(r => Math.abs(r.v)).filter(okn), 1e-9);
+  return `<div class="hb">${rows.map(r => `<${r.href ? `a href="${r.href}"` : "div"} class="hbr${r.hl ? " hl" : ""}"><span class="hbl">${r.lg || ""}${esc(r.label)}</span><span class="hbb"><span style="width:${Math.max(1.5, Math.abs(r.v) / max * 100)}%;${r.c ? `background:${r.c}` : r.v < 0 ? "background:var(--o)" : ""}"></span></span><span class="hbv num">${esc(fmt(r.v))}</span></${r.href ? "a" : "div"}>`).join("")}</div>`;
+}
+// Barre empilée à 100 % avec légende (répartition du chiffre d'affaires)
+function stack(parts, fmt) {
+  const tot = parts.reduce((a, p) => a + p.v, 0) || 1;
+  return `<div class="stk">${parts.map((p, i) => `<span style="width:${p.v / tot * 100}%;background:${PAL[i % PAL.length]}" title="${esc(p.label)}"></span>`).join("")}</div>
+    <div class="stkl">${parts.map((p, i) => `<span><i style="background:${PAL[i % PAL.length]}"></i>${esc(p.label)} <b>${pct(p.v / tot, 0, false)}</b>${fmt ? ` <span class="light">${esc(fmt(p.v))}</span>` : ""}</span>`).join("")}</div>`;
+}
+
+/* ---------- « Comprendre » : une explication détaillée par idée, avec les chiffres de l'entreprise ---------- */
+const TERM2CT = { croissance: "croissance", marge: "marge", net: "net", roe: "roe", lev: "dette", gear: "dette", dettenette: "dette", fcf: "fcf", payout: "dividende" };
+const CT = {
+  argent: { t: "D'où viennent ses ventes : métiers et pays", short: "D'où viennent ses ventes" },
+  varier: { t: "Ce qui fait monter ou baisser ses résultats", short: "Ce qui fait varier ses résultats" },
+  croissance: { t: "Croissance : les ventes progressent-elles ?", short: "Croissance des ventes", term: "croissance", metric: "g1", fmt: v => pct(v), serie: c => c.years.map((_, i) => i && at(c, "ca", i) != null && at(c, "ca", i - 1) > 0 ? at(c, "ca", i) / at(c, "ca", i - 1) - 1 : null) },
+  marge: { t: "Marge d'exploitation : que reste-t-il des ventes une fois les coûts payés ?", short: "Marge d'exploitation", term: "marge", metric: "marge", fmt: v => pct(v, 1, false), serie: c => c.years.map((_, i) => at(c, "ca", i) > 0 && at(c, "ebit", i) != null ? at(c, "ebit", i) / at(c, "ca", i) : null) },
+  net: { t: "Bénéfice net : l'entreprise gagne-t-elle de l'argent ?", short: "Bénéfice net", term: "net", metric: "nm", money: true, serie: c => c.years.map((_, i) => at(c, "net", i)) },
+  roe: { t: "Rentabilité : que rapporte l'argent des actionnaires ?", short: "Rentabilité des capitaux propres", term: "roe", metric: "roe", fmt: v => pct(v, 1, false), serie: c => c.years.map((_, i) => at(c, "equity", i) > 0 && at(c, "net", i) != null ? at(c, "net", i) / at(c, "equity", i) : null) },
+  dette: { t: "Endettement : en combien d'années la dette serait-elle remboursée ?", short: "Endettement", term: "lev", metric: "lev", fmt: v => F1.format(v) + " an" + (Math.abs(v) >= 2 ? "s" : ""), serie: c => c.years.map((_, i) => at(c, "ebitda", i) > 0 && at(c, "netDebt", i) != null ? at(c, "netDebt", i) / at(c, "ebitda", i) : null) },
+  fcf: { t: "Trésorerie disponible : le bénéfice se retrouve-t-il en argent ?", short: "Trésorerie disponible", term: "fcf", metric: "conv", money: true, serie: c => c.years.map((_, i) => at(c, "fcf", i)) },
+  dividende: { t: "Dividende : quelle part du bénéfice est reversée ?", short: "Dividende", term: "payout", metric: "payout", fmt: v => pct(v, 0, false), serie: c => c.years.map((_, i) => at(c, "net", i) > 0 && at(c, "divPaid", i) != null ? at(c, "divPaid", i) / at(c, "net", i) : null) },
+  prix: { t: "Prix de l'action : est-il élevé par rapport aux bénéfices ?", short: "Prix de l'action" },
+};
+const CT_ORDER = ["argent", "varier", "croissance", "marge", "net", "roe", "dette", "fcf", "dividende", "prix"];
+const ctLink = (s, k, label) => `<a class="more" href="/entreprise/${s.id}/comprendre/${k}">${label || "Comprendre en détail"} →</a>`;
+let SEGFR = {}, REP = {};
+const segName = n => SEGFR[n] || n;
+function calcHTML(k, s, f) { // le calcul refait avec les chiffres de l'entreprise
+  const cur = f.currency, B = v => big(v, cur), m = ratios(f), row = (a, b) => `<div class="calc"><span>${a}</span><b>${b}</b></div>`;
+  switch (k) {
+    case "croissance": return m.g1 == null ? "" : row(`(${B(f.ca)} ÷ ${B(f.caPrev)}) − 1`, pct(m.g1));
+    case "marge": return m.marge == null ? "" : row(`Résultat d'exploitation ${B(f.ebit)} ÷ ventes ${B(f.ca)}`, pct(m.marge, 1, false));
+    case "net": return f.net == null ? "" : row(`Résultat net ${f.year}`, B(f.net)) + (m.nm != null ? row(`Résultat net ÷ ventes ${B(f.ca)}`, pct(m.nm, 1, false) + " de marge nette") : "");
+    case "roe": return m.roe == null ? "" : row(`Résultat net ${B(f.net)} ÷ capitaux propres ${B(f.equity)}`, pct(m.roe, 1, false));
+    case "dette": return f.netDebt == null ? "" : row(`Dette nette ${B(f.netDebt)}${m.lev != null ? ` ÷ EBITDA ${B(f.ebitda)}` : f.equity ? ` ÷ capitaux propres ${B(f.equity)}` : ""}`, m.lev != null ? F1.format(m.lev) + " an(s)" : m.gear != null ? pct(m.gear, 0, false) : "–");
+    case "fcf": return f.fcf == null ? "" : row(`Argent encaissé par l'activité ${B(f.cfo)} − investissements`, B(f.fcf)) + (m.conv != null ? row(`Argent disponible ÷ résultat net ${B(f.net)}`, F0.format(m.conv * 100) + " € pour 100 €") : "");
+    case "dividende": return m.payout == null ? "" : row(`Dividendes versés ${B(f.divPaid)} ÷ résultat net ${B(f.net)}`, pct(m.payout, 0, false));
+  }
+  return "";
+}
+function peersHTML(s, k) { // comparaison avec les entreprises du même secteur
+  const d = CT[k]; if (!d.metric) return "";
+  const list = R.companies.filter(c => c.sector === s.sector && !c.missing && !(isBank(c) && ["marge", "lev", "conv"].includes(d.metric))).map(c => ({ c, v: ratios(c)[d.metric] })).filter(x => okn(x.v) && (d.metric !== "lev" || x.v > -10));
+  if (list.length < 3) return "";
+  list.sort((a, b) => b.v - a.v);
+  let shown = list.slice(0, 10); if (!shown.some(x => x.c.id === s.id)) { const me = list.find(x => x.c.id === s.id); if (me) shown = [...shown.slice(0, 9), me]; }
+  const fmt = d.fmt || (v => pct(v, 1, false)), rank = list.findIndex(x => x.c.id === s.id) + 1;
+  return `<section class="panel"><div class="ph"><h2>Comparé au secteur ${esc(secName(s).toLowerCase())}</h2><span class="light" style="font-size:12.5px">${list.length} entreprises</span></div><div class="pb">
+    ${rank ? `<p class="lead" style="margin-bottom:10px">${esc(s.name)} est ${rank === 1 ? "en tête" : `${rank}e sur ${list.length}`} sur ce repère${d.metric === "nm" ? " (bénéfice pour 100 € de ventes)" : d.metric === "conv" ? " (argent disponible pour 100 € de bénéfice)" : ""}.</p>` : ""}
+    ${hbars(shown.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}/comprendre/${k}`, hl: x.c.id === s.id })), d.metric === "nm" || d.metric === "conv" ? (v => pct(v, 0, false)) : fmt)}</div></section>`;
+}
+
+function serieChart(s, c, k, h = 220) { // l'évolution d'un critère, avec la médiane du secteur quand elle a un sens
+  const d = CT[k], vals = d.serie(c), med = MED[s.sector] || {}, cur = c.currency;
+  if (d.money) {
+    const extra = k === "fcf" ? [{ name: "Bénéfice net", values: c.years.map((_, i) => at(c, "net", i)), color: SAND }] : [];
+    const main = { name: k === "fcf" ? "Trésorerie disponible" : d.short, values: vals, color: INK };
+    if (k === "fcf" && !vals.some(okn)) { const cfo = c.years.map((_, i) => at(c, "cfo", i)); return cfo.some(okn) ? colChart({ labels: c.years.map(String), series: [{ name: "Argent encaissé grâce à l'activité", values: cfo }], fmt: v => big(v, cur), tickFmt: compact(cur), h, note: `${esc(s.name)} ne publie pas ses investissements sous une forme lisible automatiquement : le graphique montre l'argent encaissé grâce à l'activité, avant investissements.` }) : `<p class="muted" style="margin:0">Chiffre non publié sous une forme lisible automatiquement.</p>`; }
+    return colChart({ labels: c.years.map(String), series: [main, ...extra], fmt: v => big(v, cur), tickFmt: compact(cur), h });
+  }
+  const ref = med.n >= 3 && med[d.metric] != null ? med[d.metric] : null;
+  if (!vals.some(okn)) return `<p class="muted" style="margin:0">Chiffre non publié sous une forme lisible automatiquement par ${esc(s.name)}.</p>`;
+  return colChart({ labels: c.years.map(String), series: [{ name: d.short, values: vals }], fmt: d.fmt, tickFmt: k === "dette" ? (v => F1.format(v)) : pctTick, ref, refLabel: "Médiane du secteur", h });
+}
+function serieHTML(s, c, k) {
+  const d = CT[k]; if (!d.serie) return "";
+  const vals = d.serie(c), med = MED[s.sector] || {};
+  const fmt = d.money ? (v => big(v, c.currency)) : d.fmt;
+  const ref = !d.money && med.n >= 3 && med[d.metric] != null ? med[d.metric] : null;
+  return `<section class="panel"><div class="ph"><h2>${esc(d.short)} de ${c.years[Math.max(0, vals.findIndex(okn))]} à ${c.years.at(-1)}</h2></div><div class="pb">${serieChart(s, c, k, 190)}</div></section>`;
+}
+function argentHTML(s, c) {
+  const segs = c && c.segments || {}, f = c ? figuresOf(c) : null, cur = c ? c.currency : "EUR";
+  const block = (seg, title) => {
+    const parts = seg.items.map(i => ({ label: segName(i.name), v: i.ca }));
+    const rows = seg.items.map(i => `<tr><td class="l wrap">${esc(segName(i.name))}</td><td class="num">${big(i.ca, cur)}</td><td class="num">${i.prev ? pct(i.ca / i.prev - 1) : "–"}</td><td class="num">${i.ebit != null && i.ca ? pct(i.ebit / i.ca, 1, false) : "–"}</td></tr>`).join("");
+    const top = seg.items[0], tot = seg.items.reduce((a, i) => a + i.ca, 0);
+    return `<section class="panel"><div class="ph"><h2>${title}</h2><span class="light" style="font-size:12.5px">Exercice ${seg.year}</span></div><div class="pb">
+      <p class="lead">${esc(segName(top.name))} pèse ${pct(top.ca / tot, 0, false)} des ventes de ${esc(s.name)}.${seg.items.length > 1 ? ` Viennent ensuite ${seg.items.slice(1, 3).map(i => `${esc(segName(i.name))} (${pct(i.ca / tot, 0, false)})`).join(" et ")}.` : ""}</p>
+      ${stack(parts)}
+      <div class="scroll-x" style="margin-top:14px"><table class="t"><thead><tr><th class="l">${title.startsWith("Par zone") ? "Zone" : "Activité"}</th><th>Ventes</th><th>Sur un an</th><th>Marge</th></tr></thead><tbody>${rows}</tbody></table></div></div>
+      <div class="src">Ventilation publiée dans le rapport annuel. Les noms viennent du rapport ; « Marge » : résultat d'exploitation de l'activité ÷ ses ventes, quand il est publié.</div></section>`;
+  };
+  let out = s.fiche ? `<section class="panel"><div class="pb"><p class="lead" style="margin:0">${esc(s.fiche.argent)}</p></div></section>` : "";
+  const rep = REP[s.id];
+  const repBlock = (list, title) => { const top = list[0]; return `<section class="panel"><div class="ph"><h2>${title}</h2><span class="light" style="font-size:12.5px">Exercice ${rep.annee}</span></div><div class="pb">
+      <p class="lead">${esc(top[0])} représente ${F0.format(top[1])} % des ventes de ${esc(s.name)}.${list.length > 1 ? ` Viennent ensuite ${list.slice(1, 3).map(x => `${esc(x[0])} (${F0.format(x[1])} %)`).join(" et ")}.` : ""}</p>
+      ${stack(list.map(([label, v]) => ({ label, v })))}
+      ${f && f.ca ? `<div style="margin-top:14px">${hbars(list.map(([label, v]) => ({ label, v: f.ca * v / 100 })), v => big(v, cur))}</div><p class="note">Montants calculés : part publiée × chiffre d'affaires ${f.year} (${big(f.ca, cur)}).</p>` : ""}</div>
+      <div class="src">Répartition relevée dans le rapport de l'entreprise : <a class="lnk" href="${esc(rep.source)}" target="_blank" rel="noopener">source</a>.</div></section>`; };
+  if (rep && !segs.activites && !segs.geo) { if (rep.activites) out += repBlock(rep.activites, "Par activité"); if (rep.zones) out += repBlock(rep.zones, "Par zone géographique"); if (rep.activites || rep.zones) { if (c) out += `<section class="panel"><div class="ph"><h2>Ventes sur ${c.years.length} ans</h2></div><div class="pb">${barsSVG({ labels: c.years.map(String), values: c.years.map((_, i) => at(c, "ca", i)), fmt: v => big(v, cur) })}</div></section>`; return out; } }
+  if (segs.activites) out += block(segs.activites, "Par activité");
+  if (segs.produits && !segs.activites) out += block(segs.produits, "Par produit");
+  if (segs.geo) out += block(segs.geo, "Par zone géographique");
+  if (!segs.activites && !segs.geo && !segs.produits) out += `<section class="panel"><div class="pb muted">La répartition détaillée des ventes de ${esc(s.name)} n'est pas encore relevée sur le site. Elle figure dans son rapport annuel${c && c.cik ? " (10-K, section « Segment information »)" : ", dans la note sur l'information sectorielle"}.</div></section>`;
+  if (c) out += `<section class="panel"><div class="ph"><h2>Ventes sur ${c.years.length} ans</h2></div><div class="pb">${barsSVG({ labels: c.years.map(String), values: c.years.map((_, i) => at(c, "ca", i)), fmt: v => big(v, cur) })}</div></section>`;
+  return out;
+}
+function varierHTML(s, c) {
+  let out = s.fiche ? `<section class="panel"><div class="pb"><p class="lead" style="margin:0">${esc(s.fiche.depend)}</p></div></section>` : "";
+  if (!c) return out;
+  const nets = c.years.map((_, i) => at(c, "net", i)).filter(okn);
+  const ups = nets.slice(1).filter((v, i) => v >= nets[i]).length, cyc = ["energie", "materiaux"].includes(s.sector);
+  const spread = nets.length > 2 ? (Math.max(...nets) - Math.min(...nets)) / Math.max(1, Math.abs(nets.reduce((a, v) => a + v, 0) / nets.length)) : null;
+  out += `<section class="panel"><div class="ph"><h2>Le bénéfice année après année</h2></div><div class="pb">
+    ${nets.length > 2 ? `<p class="lead">Le bénéfice a progressé ${ups} année${ups > 1 ? "s" : ""} sur ${nets.length - 1}. ${spread != null && spread > 1 ? "Il varie fortement d'une année à l'autre." : spread != null && spread < 0.35 ? "Il est plutôt régulier." : "Il varie de façon modérée."}${cyc ? " C'est fréquent dans ce secteur, qui suit les prix des matières premières." : ""}</p>` : ""}
+    ${barsSVG({ labels: c.years.map(String), values: c.years.map((_, i) => at(c, "net", i)), fmt: v => big(v, c.currency) })}</div></section>`;
+  return out;
+}
+async function pageComprendre(id, k) {
+  const s = RBY[id]; if (!s) return pageNotFound();
+  k = CT[k] ? k : "argent";
+  const d = CT[k];
+  setNav("ent"); setTitle(`${s.name} : ${d.short.toLowerCase()}`);
+  let c = null; if (!s.missing) { try { c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); } catch (e) { } }
+  await PXP;
+  if (location.pathname.split("/")[2] !== id) return;
+  const f = c ? figuresOf(c) : null, item = f && d.term ? lecture(s, f).find(i => TERM2CT[i.term] === k) : null;
+  const nav = `<nav class="ctnav">${CT_ORDER.map(x => `<a href="/entreprise/${s.id}/comprendre/${x}" class="${x === k ? "on" : ""}">${CT[x].short}</a>`).join("")}</nav>`;
+  let body = "";
+  if (k === "argent") body = argentHTML(s, c);
+  else if (k === "varier") body = varierHTML(s, c);
+  else if (k === "prix") body = c ? prixHTML(s, c) + `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Le prix d'une action ne dit rien seul : il faut le comparer à ce que l'entreprise gagne. Le PER fait cette comparaison. Un PER de 20 veut dire que l'entreprise coûte en Bourse 20 fois son bénéfice annuel.</p></div></section>` : "";
+  else if (!c) body = `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`;
+  else body = `${item ? `<section class="panel"><div class="pb"><div class="lvv"><span class="num big">${item.value}</span>${lvTag(item.lv)}</div><p class="lead">${item.text}</p>${calcHTML(k, s, f)}</div></section>` : `<section class="panel"><div class="pb muted">Ce repère ne peut pas être calculé avec les chiffres publiés par ${esc(s.name)}.</div></section>`}
+    ${serieHTML(s, c, k)}${peersHTML(s, k)}
+    <section class="panel"><div class="ph"><h2>Comment lire ce chiffre</h2></div><div class="pb">${ALL[d.term] ? `<p>${esc(ALL[d.term].what)}</p>${ALL[d.term].ex ? `<p class="muted">Exemple simple : ${esc(ALL[d.term].ex)}</p>` : ""}` : ""}${RULES[d.term] ? `<p><b>Bon ou moins bon ?</b> ${esc(RULES[d.term])}</p>` : ""}${ALL[d.term] && ALL[d.term].limit ? `<p class="muted">Limite : ${esc(ALL[d.term].limit)}</p>` : ""}${WITH[d.term] ? `<p>À lire avec : ${WITH[d.term].map(w => TERM2CT[w] ? `<a class="lnk" href="/entreprise/${s.id}/comprendre/${TERM2CT[w]}">${esc(ALL[w].name)}</a>` : esc(ALL[w].name)).join(", ")}</p>` : ""}</div></section>`;
+  app.innerHTML = companyHeader(s, "comprendre", false) + `<p style="margin:-4px 0 12px"><a class="more" href="/entreprise/${s.id}">← Retour à la vue d'ensemble de ${esc(s.name)}</a></p>
+    ${nav}<h2 class="pagetitle" style="font-size:24px;margin:14px 0 4px">${esc(d.t)}</h2><p class="pagesub">${esc(s.name)}${f ? ` · exercice ${f.year}` : ""}</p><div class="ctbody">${body}</div>
+    <p class="note">Explications tirées des comptes publiés. Elles décrivent ; elles ne recommandent pas.</p>`;
+}
+
+/* ---------- ETF ---------- */
+let ETF = { list: [] }, ETFBY = {};
+const ISSUERDOM = { Amundi: "amundi.com", iShares: "ishares.com", Vanguard: "vanguard.com", "BNP Paribas": "bnpparibas.com", "BNP Paribas Easy": "bnpparibas.com", Xtrackers: "xtrackers.com", SPDR: "ssga.com", Invesco: "invesco.com", Lyxor: "amundi.com" };
+const issuerDom = e => e.domain || ISSUERDOM[e.issuer] || ISSUERDOM[Object.keys(ISSUERDOM).find(k => (e.issuer || "").startsWith(k))] || "";
+const ECAT = { "actions-monde": "Monde", "actions-usa": "États-Unis", "actions-europe": "Europe", "actions-france": "France", "actions-emergents": "Pays émergents", "actions-asie": "Asie", theme: "Thématiques", dividendes: "Dividendes", facteurs: "Facteurs", immobilier: "Immobilier", obligations: "Obligations", monetaire: "Monétaire", matieres: "Matières premières" };
+const COUNTRY = { US: "États-Unis", JP: "Japon", GB: "Royaume-Uni", FR: "France", CA: "Canada", DE: "Allemagne", CH: "Suisse", NL: "Pays-Bas", AU: "Australie", TW: "Taïwan", CN: "Chine", IN: "Inde", KR: "Corée du Sud", IT: "Italie", ES: "Espagne", SE: "Suède", DK: "Danemark", IE: "Irlande", BR: "Brésil", HK: "Hong Kong", SG: "Singapour", BE: "Belgique", FI: "Finlande", NO: "Norvège", ZA: "Afrique du Sud", SA: "Arabie saoudite", MX: "Mexique", IL: "Israël", AT: "Autriche", PT: "Portugal", LU: "Luxembourg", JE: "Jersey", BM: "Bermudes", KY: "Îles Caïmans" };
+const etfCard = e => `<a class="cocard" href="/etf/${e.id}"><div class="top">${logo({ name: e.issuer, domain: issuerDom(e) }, 44)}<div><div class="nm">${esc(e.name)}</div><div class="sec">${esc(ECAT[e.categorie] || "")} · ${esc(e.index)}</div></div></div>
+  <div class="d">${esc(e.fiche ? e.fiche.quoi : "")}</div><div class="f"><span class="light">Frais <b class="num" style="color:var(--ink)">${pct((e.ter || 0) / 100, 2, false)}</b> par an</span><span class="tags">${e.pea ? `<span class="tag">PEA</span>` : ""}<span class="tag">${e.distribution === "distribution" ? "Distribue" : "Capitalise"}</span></span></div></a>`;
+let etfState = { cat: "all", pea: false };
+function pageEtfs() {
+  setTitle("Les ETF"); setNav("etf");
+  const cats = [...new Set(ETF.list.map(e => e.categorie))];
+  app.innerHTML = `<h1 class="pagetitle">Les ETF</h1><p class="pagesub">Un ETF (fonds indiciel coté) achète en une fois toutes les entreprises d'un indice. Voici les ${ETF.list.length} plus utilisés en France, avec leurs frais et leur composition.</p>
+    <section class="panel"><div class="filters" id="ecat"><button data-c="all">Tous</button>${cats.map(c => `<button data-c="${c}">${esc(ECAT[c] || c)}</button>`).join("")}</div>
+      <div class="pb" style="padding-top:10px;padding-bottom:10px"><label class="chk"><input type="checkbox" id="epea"> Seulement les ETF éligibles au PEA</label></div></section>
+    <div id="elist"></div>`;
+  const render = () => {
+    $$("#ecat button").forEach(b => b.classList.toggle("on", b.dataset.c === etfState.cat));
+    const l = ETF.list.filter(e => (etfState.cat === "all" || e.categorie === etfState.cat) && (!etfState.pea || e.pea)).sort((a, b) => (a.ter || 0) - (b.ter || 0));
+    $("#elist").innerHTML = l.length ? `<div class="cards">${l.map(etfCard).join("")}</div>` : `<section class="panel"><div class="empty">Aucun ETF pour ce choix.</div></section>`;
+  };
+  $("#ecat").onclick = e => { const b = e.target.closest("button"); if (b) { etfState.cat = b.dataset.c; render(); } };
+  $("#epea").checked = etfState.pea; $("#epea").onchange = e => { etfState.pea = e.target.checked; render(); };
+  render();
+}
+const ISINBY = {};
+async function pageEtf(id) {
+  const e = ETFBY[id]; if (!e) return pageNotFound();
+  setTitle(e.name); setNav("etf");
+  app.innerHTML = `<div class="crumbs"><a href="/etf">ETF</a> › ${esc(ECAT[e.categorie] || "")}</div>
+    <div class="panel" style="margin-bottom:16px"><div class="qhead"><div class="who">${logo({ name: e.issuer, domain: issuerDom(e) }, 56)}<div><h1>${esc(e.name)}</h1><div class="desc">${esc(e.index)} · ${esc(e.issuer)}</div><div class="id">${esc(e.ticker)} · ISIN ${esc(e.isin)}${e.pea ? " · Éligible au PEA" : ""}</div>${favBtn("e:" + e.id)}</div></div><div class="px tv" id="tvinfo"></div></div>
+      <div class="tv tv-chart tv-top" id="tvchart"></div></div>
+    <div class="cols"><div>
+      ${e.fiche ? `<section class="panel"><div class="ph"><h2>Ce que contient cet ETF</h2></div><div class="syn"><dl><dt>Ce qu'il permet d'acheter</dt><dd>${esc(e.fiche.quoi)}</dd><dt>Ce qu'il contient</dt><dd>${esc(e.fiche.contenu)}</dd><dt>Ce qui fait varier sa valeur</dt><dd>${esc(e.fiche.varie)}</dd></dl></div></section>` : ""}
+      <div id="ecomp"><section class="panel"><div class="empty">Chargement de la composition…</div></section></div>
+      <section class="panel"><div class="ph"><h2>Ce que coûtent ses frais</h2></div><div class="pb"><p class="lead" style="margin:0">Avec ${pct((e.ter || 0) / 100, 2, false)} de frais par an, 10 000 € placés 20 ans à 5 % par an deviennent environ <b>${eur(Calc.compound({ initial: 10000, monthly: 0, years: 20, rate: .05, fee: (e.ter || 0) / 100 }).final, 0)}</b>, contre ${eur(Calc.compound({ initial: 10000, monthly: 0, years: 20, rate: .05 }).final, 0)} sans frais.</p>${(() => { const peers = ETF.list.filter(x => x.categorie === e.categorie && x.ter != null), m = median(peers.map(x => x.ter)); if (peers.length < 3 || m == null) return ""; const r = e.ter / m; return `<p style="margin:10px 0 0">${r <= 0.8 ? `<b>Ses frais sont parmi les plus bas</b> de sa catégorie : la ${medBtn()} des ${peers.length} ETF « ${esc(ECAT[e.categorie] || "")} » suivis est de ${pct(m / 100, 2, false)} par an.` : r >= 1.25 ? `<b>Ses frais sont plus élevés que la plupart</b> des ETF de sa catégorie (${medBtn()} : ${pct(m / 100, 2, false)} par an). Un écart se justifie parfois (indice différent, PEA, réplication), sinon il coûte chaque année.` : `Ses frais sont <b>dans la norme</b> de sa catégorie (${medBtn()} : ${pct(m / 100, 2, false)} par an).`}</p>`; })()}</div></section>
+    </div><aside>
+      <section class="panel"><div class="ph"><h2>Fiche d'identité</h2></div><table class="kv">
+        <tr><td>Indice suivi</td><td>${esc(e.index)}</td></tr><tr><td>Frais courants<span class="s">prélevés chaque année</span></td><td class="num">${pct((e.ter || 0) / 100, 2, false)}</td></tr>
+        <tr><td>PEA</td><td>${e.pea ? "Oui" : "Non"}</td></tr><tr><td>Dividendes</td><td>${e.distribution === "distribution" ? "Versés" : "Réinvestis"}</td></tr>
+        <tr><td>Réplication<span class="s">${e.replication === "synthétique" ? "via un contrat d'échange" : "achète les titres"}</span></td><td>${esc(e.replication || "–")}</td></tr>
+        ${e.encours ? `<tr><td>Encours</td><td class="num">${big(e.encours)}</td></tr>` : ""}<tr><td>Émetteur</td><td>${esc(e.issuer)}</td></tr></table>
+        <div class="src">Frais et caractéristiques relevés sur les documents de l'émetteur. Vérifiez-les avant d'investir.</div></section>
+      <section class="panel"><div class="ph"><h2>Avis des visiteurs</h2></div><div class="pb" id="eavis"></div></section>
+      <section class="panel"><div class="ph"><h2>Discussion</h2><a href="/communaute?salon=etf-${e.id}">Ouvrir</a></div><div class="pb" id="cmini"></div></section>
+    </aside></div>`;
+  tv($("#tvinfo"), "single-quote", { symbol: e.tv, width: "100%" });
+  tvChart($("#tvchart"), e.tv, e.name);
+  chatBlock($("#cmini"), "etf-" + e.id, { compact: true });
+  avisBlock($("#eavis"), "etf-" + e.id, e.name);
+  const comp = $("#ecomp");
+  if (!e.proxy) { comp.innerHTML = `<section class="panel"><div class="pb muted">La composition détaillée de cet ETF n'est pas disponible en données ouvertes.</div></section>`; return; }
+  const p = await getJSON(`/data/etf/${e.proxy}.json`, null);
+  if (!p) { comp.innerHTML = `<section class="panel"><div class="pb muted">Composition en cours de collecte.</div></section>`; return; }
+  // Répartition par secteur : lignes reconnues parmi les entreprises du site
+  const sect = {}; let known = 0;
+  for (const [isin, w] of p.isins || []) { const c = ISINBY[isin]; if (c) { sect[c.sector] = (sect[c.sector] || 0) + w; known += w; } }
+  comp.innerHTML = `<section class="panel"><div class="ph"><h2>Les plus grosses lignes</h2><span class="light" style="font-size:12.5px">${F0.format(p.lines)} lignes au ${dLabel(p.asOf)}</span></div><div class="pb">
+      ${(() => { const t10 = p.top.slice(0, 10).reduce((a, t) => a + t.pct, 0), c1 = p.countries[0]; return `<p class="lead" style="margin:0 0 12px">Les 10 premières lignes pèsent <b>${F0.format(t10)} %</b> du fonds${t10 > 50 ? " : il dépend fortement de quelques entreprises, même s'il en contient " + F0.format(p.lines) : t10 < 20 ? " : le risque est très réparti entre ses " + F0.format(p.lines) + " lignes" : ", le reste est réparti entre " + F0.format(p.lines) + " lignes"}.${c1 ? ` Premier pays : ${esc(COUNTRY[c1[0]] || c1[0])} (${F0.format(c1[1])} %)${c1[1] > 60 ? ", ce qui expose aussi à sa devise et à son économie" : ""}.` : ""}</p>`; })()}
+      ${hbars(p.top.map(t => { const c = ISINBY[t.isin]; return { label: c ? c.name : titleCase(t.name), v: t.pct / 100, href: c ? `/entreprise/${c.id}` : null }; }), v => pct(v, 1, false))}</div></section>
+    <section class="panel"><div class="ph"><h2>Par pays</h2></div><div class="pb">${stack(p.countries.map(([k, v]) => ({ label: COUNTRY[k] || k, v })))}</div></section>
+    ${known > 20 ? `<section class="panel"><div class="ph"><h2>Par secteur</h2><span class="light" style="font-size:12.5px">${pct(known / 100, 0, false)} du fonds reconnu</span></div><div class="pb">${hbars(Object.entries(sect).sort((a, b) => b[1] - a[1]).map(([k, v]) => ({ label: R.sectors[k] || k, v: v / known })), v => pct(v, 0, false))}</div></section>` : ""}
+    <div class="note" style="margin:-8px 0 20px">Composition de l'indice ${esc(e.proxyIndex || e.index)} d'après le fonds américain ${esc(e.proxy)}, qui suit ${e.proxyIndex && e.proxyIndex !== e.index ? "un indice proche" : "le même indice"} (déclaration publique à la SEC, formulaire N-PORT). Celle de l'ETF européen peut différer légèrement.</div>`;
+}
+
+/* ---------- Presse (GDELT) : articles récents, lien vers l'éditeur ---------- */
+const LANGF = { French: "FR", English: "EN" };
+function presseHTML(items, max) {
+  if (!items.length) return `<div class="muted" style="font-size:13.5px">Aucun article récent trouvé.</div>`;
+  return `<div class="press">${items.slice(0, max).map(a => `<a class="pa" href="${esc(a.url)}" target="_blank" rel="noopener nofollow"><span class="pt">${esc(a.title)}</span><span class="pm">${esc(a.site)}${LANGF[a.lang] ? ` · ${LANGF[a.lang]}` : ""} · ${a.date ? dShort(a.date) : ""}</span></a>`).join("")}</div>`;
+}
+function presseBlock(el, { id = null, sujet = null, max = 8 } = {}) {
+  if (!el) return;
+  el.innerHTML = `<div class="muted" style="font-size:13px">Chargement…</div>`;
+  fetch(`/api/presse?${id ? "id=" + encodeURIComponent(id) : "sujet=" + sujet}`).then(r => r.json()).then(j => {
+    el.innerHTML = j.error && !(j.items || []).length ? `<div class="muted" style="font-size:13.5px">${esc(j.error)}</div>` : presseHTML(j.items || [], max) + `<p class="note" style="margin-top:6px">Articles de presse repérés par GDELT. Le site ne les a pas vérifiés.</p>`;
+  }).catch(() => { el.innerHTML = `<div class="muted" style="font-size:13.5px">La presse n'est pas disponible pour le moment.</div>`; });
+}
+
+/* ---------- Avis des visiteurs sur une entreprise ou un ETF ---------- */
+function avisBlock(el, room, name, { compact = false } = {}) {
+  if (!el) return;
+  const KEY = "repere.avis." + room; let mine = null; try { mine = localStorage.getItem(KEY); } catch (e) { }
+  const draw = d => {
+    const tot = (d.confiant || 0) + (d.neutre || 0) + (d.prudent || 0);
+    const bar = tot ? `<div class="feub av"><span class="f" style="width:${d.confiant / tot * 100}%"></span><span class="m" style="width:${d.neutre / tot * 100}%"></span><span class="v" style="width:${d.prudent / tot * 100}%"></span></div>
+      <div class="avl"><span class="f"><i></i>${d.confiant} plutôt confiant${d.confiant > 1 ? "s" : ""}</span><span class="m"><i></i>${d.neutre} neutre${d.neutre > 1 ? "s" : ""}</span><span class="v"><i></i>${d.prudent} plutôt prudent${d.prudent > 1 ? "s" : ""}</span></div>` : `<p class="muted" style="margin:0 0 8px;font-size:13.5px">Pas encore d'avis ce mois-ci.</p>`;
+    el.innerHTML = `<p style="margin:0 0 10px">Et vous, comment voyez-vous ${esc(name)} ?</p>
+      <div class="chips avb">${[["1", "Plutôt confiant"], ["0", "Neutre"], ["-1", "Plutôt prudent"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${mine === v ? "on" : ""}">${l}</button>`).join("")}</div>
+      <div style="margin-top:12px">${bar}</div>
+      <p class="note">Avis des visiteurs sur 30 jours. Ce n'est pas un conseil et ce n'est pas représentatif.${compact ? ` <a class="lnk" href="${roomHref(room)}${room.startsWith("etf-") ? "" : ""}">Lire la discussion</a>` : ""}</p>`;
+    $(".avb", el).onclick = e => { const b = e.target.closest("button"); if (!b) return; mine = b.dataset.v; try { localStorage.setItem(KEY, mine); } catch (er) { }
+      fetch("/api/communaute/avis", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ room, v: +mine }) }).then(() => load()).catch(() => { }); };
+  };
+  const load = () => fetch(`/api/communaute/avis?room=${encodeURIComponent(room)}`).then(r => r.json()).then(d => d.error ? (el.innerHTML = `<div class="muted" style="font-size:13.5px">${esc(d.error)}</div>`) : draw(d)).catch(() => { el.innerHTML = `<div class="muted" style="font-size:13.5px">Indisponible pour le moment.</div>`; });
+  load();
+}
+
+/* ---------- Communauté : mentions cliquables d'entreprises et d'ETF ---------- */
+const PSEUDO_KEY = "repere.pseudo";
+const KINDL = { idee: "Idée", question: "Question", avis: "Avis", analyse: "Analyse" };
+const roomName = r => r === "general" ? "Discussion générale" : r.startsWith("etf-") ? (ETFBY[r.slice(4)] ? ETFBY[r.slice(4)].name : r) : (RBY[r] ? RBY[r].name : r);
+const roomHref = r => r === "general" ? "/communaute" : r.startsWith("etf-") ? `/etf/${r.slice(4)}` : `/entreprise/${r}/communaute`;
+const ago = t => { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? "à l'instant" : m < 60 ? `il y a ${m} min` : m < 1440 ? `il y a ${Math.round(m / 60)} h` : dLabel(new Date(t).toISOString()); };
+// [[c:lvmh]] -> lien vers la fiche ; [[e:id]] -> lien vers l'ETF
+const bodyHTML = b => esc(b).replace(/\[\[([ce]):([a-z0-9-]{1,60})\]\]/g, (m, t, id) => { const o = t === "c" ? RBY[id] : ETFBY[id]; return o ? `<a class="mention" href="${t === "c" ? "/entreprise/" : "/etf/"}${id}">${esc(o.name)}</a>` : esc(m); }).replace(/\n/g, "<br>");
+const msgHTML = (m, showRoom) => `<div class="msg" data-id="${m.id}"><div class="mh"><b>${esc(m.pseudo)}</b><span class="mk mk-${m.kind}">${KINDL[m.kind] || "Avis"}</span>${showRoom ? `<a class="lnk" href="${roomHref(m.room)}">${esc(roomName(m.room))}</a>` : ""}<span class="light">${ago(m.created)}</span></div>
+  <p>${bodyHTML(m.body)}</p><div class="ma"><button type="button" class="linkbtn" data-a="aime">♥ ${m.likes || 0}</button><button type="button" class="linkbtn light" data-a="signaler">Signaler</button></div></div>`;
+// Suggestions pendant la frappe : les derniers mots tapés sont comparés aux noms d'entreprises et d'ETF
+function mentionSuggest(ta, box, picked) {
+  const all = () => [...R.companies.map(c => ({ t: "c", id: c.id, name: c.name, sub: c.ticker, o: c })), ...ETF.list.map(e => ({ t: "e", id: e.id, name: e.name, sub: "ETF " + e.ticker, o: { name: e.issuer, domain: issuerDom(e) } }))];
+  let sel = 0, cur = [], frag = null;
+  const close = () => { box.hidden = true; cur = []; frag = null; };
+  const find = () => {
+    const pos = ta.selectionStart, before = ta.value.slice(0, pos), m = before.match(/(?:^|[\s(,.;:!?])((?:@)?[\p{L}\d&'’.-]+(?: [\p{L}\d&'’.-]+){0,2})$/u);
+    if (!m) return close();
+    const words = m[1].replace(/^@/, "").split(" ");
+    for (let k = words.length; k >= 1; k--) {
+      const f = words.slice(-k).join(" "), q = norm(f); if (q.length < 3 && !m[1].startsWith("@")) continue; if (!q) continue;
+      const res = all().filter(x => norm(x.name).startsWith(q) || norm(x.sub) === q).slice(0, 6);
+      if (res.length) { frag = { start: pos - f.length - (m[1].startsWith("@") && k === words.length ? 1 : 0), end: pos }; cur = res; sel = 0;
+        box.innerHTML = `<div class="mshint">Citer :</div>` + res.map((x, i) => `<button type="button" data-i="${i}" class="${i ? "" : "on"}">${logo(x.o, 22)}<span>${esc(x.name)}</span><small>${esc(x.sub)}</small></button>`).join(""); box.hidden = false; return; }
+    }
+    close();
+  };
+  const choose = i => { const x = cur[i]; if (!x || !frag) return; const label = "@" + x.name; picked.set(label, `[[${x.t}:${x.id}]]`);
+    ta.value = ta.value.slice(0, frag.start) + label + " " + ta.value.slice(frag.end); const p = frag.start + label.length + 1; ta.focus(); ta.setSelectionRange(p, p); close(); };
+  ta.addEventListener("input", find);
+  ta.addEventListener("keydown", e => {
+    if (box.hidden || !cur.length) return;
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = (sel + (e.key === "ArrowDown" ? 1 : cur.length - 1)) % cur.length; $$("button", box).forEach((b, i) => b.classList.toggle("on", i === sel)); }
+    else if (e.key === "Enter" || e.key === "Tab") { e.preventDefault(); choose(sel); }
+    else if (e.key === "Escape") close();
+  });
+  box.addEventListener("pointerdown", e => { const b = e.target.closest("button[data-i]"); if (b) { e.preventDefault(); choose(+b.dataset.i); } });
+  ta.addEventListener("blur", () => setTimeout(close, 150));
+}
+function chatBlock(el, room, { compact = false } = {}) {
+  let pseudo = ""; try { pseudo = localStorage.getItem(PSEUDO_KEY) || ""; } catch (e) { }
+  el.innerHTML = `<div class="chat${compact ? " compact" : ""}">
+    <form class="cform" autocomplete="off"><div class="row2"><div class="field"><label>Pseudo</label><input name="pseudo" maxlength="30" value="${esc(pseudo)}" placeholder="Votre pseudo"></div>
+      <div class="field"><label>Type de message</label><select name="kind">${Object.entries(KINDL).map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></div></div>
+      <div class="field mwrap"><textarea name="body" rows="${compact ? 2 : 3}" maxlength="1000" placeholder="Écrivez votre message. Tapez le nom d'une entreprise ou d'un ETF pour le citer : il deviendra cliquable."></textarea><div class="msug" hidden></div></div>
+      <input name="website" class="hp" tabindex="-1" aria-hidden="true"><button class="btn" type="submit">Publier</button> <span class="muted cmsg" style="font-size:12.5px"></span></form>
+    <div class="clist"><div class="empty">Chargement…</div></div>
+    <p class="note">Messages écrits par les visiteurs, sans vérification. Ce ne sont pas des conseils en investissement. Pas de liens, pas d'informations personnelles. Un message signalé 3 fois est masqué.</p></div>`;
+  const list = $(".clist", el), form = $(".cform", el), msg = $(".cmsg", el), picked = new Map();
+  mentionSuggest(form.body, $(".msug", el), picked);
+  const load = () => fetch(`/api/communaute?room=${encodeURIComponent(room)}`).then(r => r.json()).then(j => {
+    if (j.error) { list.innerHTML = `<div class="empty">${esc(j.error)}</div>`; return; }
+    list.innerHTML = j.items.length ? j.items.slice(0, compact ? 5 : 50).map(m => msgHTML(m, m.room !== room)).join("") : `<div class="empty">Pas encore de message. Lancez la discussion.</div>`;
+  }).catch(() => { list.innerHTML = `<div class="empty">L'espace communauté n'est pas disponible pour le moment.</div>`; });
+  form.onsubmit = ev => {
+    ev.preventDefault();
+    const fd = Object.fromEntries(new FormData(form)); fd.room = room;
+    for (const [label, tok] of picked) fd.body = fd.body.split(label).join(tok); // les citations deviennent des liens
+    try { localStorage.setItem(PSEUDO_KEY, fd.pseudo || ""); } catch (e) { }
+    msg.textContent = "Envoi…";
+    fetch("/api/communaute", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(fd) }).then(r => r.json()).then(j => {
+      if (j.error) { msg.textContent = j.error; return; }
+      msg.textContent = "Publié."; form.body.value = ""; picked.clear(); load();
+    }).catch(() => { msg.textContent = "Envoi impossible pour le moment."; });
+  };
+  list.onclick = ev => {
+    const b = ev.target.closest("button[data-a]"); if (!b) return;
+    const id = +b.closest(".msg").dataset.id;
+    fetch(`/api/communaute/${b.dataset.a}`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ id }) }).then(() => { if (b.dataset.a === "aime") b.textContent = "♥ " + ((parseInt(b.textContent.replace(/\D/g, "")) || 0) + 1); else b.textContent = "Signalé"; b.disabled = true; });
+  };
+  load();
+}
+function tabCommu(s, c, el) {
+  el.innerHTML = `<div class="cols"><div><section class="panel"><div class="ph"><h2>Discussion sur ${esc(s.name)}</h2></div><div class="pb" id="chat"></div></section></div>
+    <aside><section class="panel"><div class="ph"><h2>Avis des visiteurs</h2></div><div class="pb" id="avisb"></div></section></aside></div>`;
+  chatBlock($("#chat"), s.id); avisBlock($("#avisb"), s.id, s.name);
+}
+function tabActu(s, c, el) {
+  const us = !!s.sec, fr = s.region === "FR", up = eventsOf(s.id).filter(e => e.date >= TODAY), past = eventsOf(s.id).filter(e => e.date < TODAY).reverse();
+  el.innerHTML = `<div class="cols"><div>
+      <section class="panel"><div class="ph"><h2>Dans la presse</h2><span class="light" style="font-size:12.5px">3 dernières semaines, France et monde</span></div><div class="pb" id="pres"></div></section>
+      <section class="panel"><div class="ph"><h2>Annonces officielles</h2></div><div class="pb" id="offi">${us || fr ? "" : `Cette société publie ses communiqués auprès du régulateur de son pays, sans flux ouvert. ${officielLink(s) ? `<a class="lnk" href="${esc(officielLink(s))}" target="_blank" rel="noopener">Site de l'entreprise</a>` : ""}`}</div>
+        ${us || fr ? `<div class="src">Source : ${us ? "SEC, EDGAR" : "AMF, info-financiere.gouv.fr"}.</div>` : ""}</section>
+    </div><aside>
+      <section class="panel"><div class="ph"><h2>À venir</h2></div>${up.length ? agendaHTML(up, false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant.</div>`}${up.find(e => e.source) ? `<div class="src">Sources : ${[...new Set(up.filter(e => e.source).map(e => e.source))].slice(0, 3).map(u => `<a class="lnk" href="${esc(u)}" target="_blank" rel="noopener">${esc(new URL(u).hostname.replace(/^www\./, ""))}</a>`).join(", ")}</div>` : ""}</section>
+      ${past.length ? `<section class="panel"><div class="ph"><h2>Passé</h2></div>${agendaHTML(past.slice(0, 6), false)}</section>` : ""}
+    </aside></div>`;
+  presseBlock($("#pres"), { id: s.id, max: 25 });
+  if (us) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false });
+  else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false });
+}
+function pageActus() {
+  setTitle("Actualité des entreprises"); setNav("news");
+  const q = new URLSearchParams(location.search), TABS = [["une", "À la une"], ["monde", "Monde"], ["fr", "Annonces France"], ["us", "Annonces États-Unis"], ["toutes", "Toutes les sociétés françaises"]];
+  const src = TABS.some(t => t[0] === q.get("src")) ? q.get("src") : "une";
+  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">La presse financière en France et dans le monde, et les annonces officielles des entreprises, classées et expliquées. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
+    <section class="panel"><div class="filters">${TABS.map(([k, l]) => `<a href="/actualites${k === "une" ? "" : "?src=" + k}" class="${src === k ? "on" : ""}">${l}</a>`).join("")}</div>
+    ${src === "toutes" ? `<div class="pb" style="border-bottom:1px solid var(--rule)"><div class="field" style="max-width:420px;margin:0"><input id="aq" type="search" placeholder="Filtrer par société" aria-label="Filtrer par société"></div></div>` : ""}
+    <div class="pb" id="nb"></div><div class="src">${src === "une" || src === "monde" ? "Articles repérés par GDELT dans la presse ; le site renvoie vers l'éditeur et ne vérifie pas leur contenu." : src === "us" ? "Source : SEC, EDGAR. Liste mise à jour chaque jour." : "Source : AMF, info-financiere.gouv.fr, en direct. Licence Ouverte."}</div></section>`;
+  if (src === "une") presseBlock($("#nb"), { sujet: "marches", max: 40 });
+  else if (src === "monde") presseBlock($("#nb"), { sujet: "monde", max: 40 });
+  else if (src === "toutes") {
+    let t = null; const run = () => newsBlock($("#nb"), { params: $("#aq").value.trim() ? "&q=" + encodeURIComponent($("#aq").value.trim()) : "" });
+    $("#aq").oninput = () => { clearTimeout(t); t = setTimeout(run, 400); }; run();
+  } else newsBlock($("#nb"), src === "us" ? { src: "US" } : { params: "&suivies=1" });
+}
+
+/* ---------- Graphique de cours : jour, semaine, mois, 3 mois, an, 5 ans, tout ---------- */
+function tvChart(el, symbol, name) {
+  tv(el, "symbol-overview", { symbols: [[name, symbol + "|1D"]], chartOnly: false, width: "100%", height: "100%", autosize: true, showVolume: false, hideDateRanges: false, scalePosition: "right", scaleMode: "Normal", fontFamily: "Inter, sans-serif", fontSize: "11", noTimeScale: false, valuesTracking: "1", changeMode: "price-and-percent", chartType: "area", lineColor: "#2B4C7E", topColor: "rgba(43,76,126,0.10)", bottomColor: "rgba(43,76,126,0)", lineWidth: 2, dateRanges: ["1d|1", "5d|5", "1m|30", "3m|60", "12m|1D", "60m|1W", "all|1M"], defaultRange: "12m" });
+}
+const VIEW_KEY = "repere.vue";
+const getView = () => { try { return localStorage.getItem(VIEW_KEY) || "simple"; } catch (e) { return "simple"; } };
+const setView = v => { try { localStorage.setItem(VIEW_KEY, v); } catch (e) { } };
+
+/* ---------- Accueil ---------- */
+const MARKETS = [
+  { title: "Indices", symbols: [["EURONEXT:PX1", "CAC 40"], ["TVC:SX5E", "Euro Stoxx 50"], ["SP:SPX", "S&P 500"], ["NASDAQ:NDX", "Nasdaq 100"], ["XETR:DAX", "DAX"], ["TVC:NI225", "Nikkei 225"]] },
+  { title: "France", symbols: [["EURONEXT:MC", "LVMH"], ["EURONEXT:TTE", "TotalEnergies"], ["EURONEXT:OR", "L'Oréal"], ["EURONEXT:AIR", "Airbus"], ["EURONEXT:SAN", "Sanofi"], ["EURONEXT:RMS", "Hermès"]] },
+  { title: "États-Unis", symbols: [["NASDAQ:AAPL", "Apple"], ["NASDAQ:MSFT", "Microsoft"], ["NASDAQ:NVDA", "Nvidia"], ["NASDAQ:AMZN", "Amazon"], ["NASDAQ:GOOGL", "Alphabet"], ["NASDAQ:META", "Meta"]] },
+  { title: "Taux et devises", symbols: [["FX:EURUSD", "Euro / dollar"], ["TVC:GOLD", "Or"], ["TVC:UKOIL", "Pétrole Brent"], ["TVC:DE10Y", "Taux allemand 10 ans"], ["TVC:FR10Y", "Taux français 10 ans"], ["TVC:US10Y", "Taux américain 10 ans"]] },
+];
+const RANKS = [
+  ["marge", "Marge d'exploitation la plus élevée", "Part des ventes qui reste une fois payés salaires, achats et frais. Hors banques et foncières (leurs comptes incluent la variation de valeur des immeubles)", c => !isBank(c) && c.sector !== "immo" && ratios(c).marge < 1 ? ratios(c).marge : null, v => pct(v, 1, false), "marge"],
+  ["g1", "Ventes en plus forte hausse", "Hausse des ventes sur le dernier exercice", c => ratios(c).g1, v => pct(v), "croissance"],
+  ["roe", "Meilleure rentabilité des capitaux propres", "Bénéfice annuel pour 100 € appartenant aux actionnaires", c => ratios(c).roe, v => pct(v, 1, false), "roe"],
+  ["cash", "Plus de trésorerie que de dettes", "Trésorerie nette rapportée aux ventes", c => !isBank(c) && c.netDebt < 0 && c.ca > 0 ? -c.netDebt / c.ca : null, v => pct(v, 0, false) + " des ventes", "dette"],
+  ["payout", "Dividendes les mieux couverts", "Part du bénéfice versée, entre 20 et 60 %", c => { const p = ratios(c).payout; return p >= 0.2 && p <= 0.6 && c.net > 0 ? 1 - p : null; }, v => pct(1 - v, 0, false) + " versés", "dividende"],
+];
+let rankState = { k: "marge", region: "all" };
+const ERANKS = [
+  ["monde", "Monde : les moins chers", e => e.categorie === "actions-monde"],
+  ["usa", "États-Unis : les moins chers", e => e.categorie === "actions-usa"],
+  ["europe", "Europe et France : les moins chers", e => e.categorie === "actions-europe" || e.categorie === "actions-france"],
+  ["pea", "Éligibles au PEA : les moins chers", e => e.pea],
+  ["gros", "Les plus gros fonds", e => e.encours > 0],
+];
+let erankK = "monde";
+function erankHTML() {
+  const [k, , fn] = ERANKS.find(r => r[0] === erankK);
+  const l = ETF.list.filter(fn);
+  const rows = k === "gros" ? l.sort((a, b) => b.encours - a.encours).slice(0, 10).map(e => ({ label: e.name, v: e.encours, href: `/etf/${e.id}`, lg: logo({ name: e.issuer, domain: issuerDom(e) }, 22) }))
+    : l.sort((a, b) => a.ter - b.ter).slice(0, 10).map(e => ({ label: e.name, v: e.ter / 100, href: `/etf/${e.id}`, lg: logo({ name: e.issuer, domain: issuerDom(e) }, 22) }));
+  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${k === "gros" ? "Encours : l'argent placé dans le fonds par l'ensemble des épargnants." : "Frais courants prélevés chaque année. Les plus bas en premier : une barre courte, c'est moins de frais."}</p>${rows.length ? hbars(rows, k === "gros" ? (v => big(v)) : (v => pct(v, 2, false) + " par an")) : `<div class="empty">Aucun ETF.</div>`}`;
+}
+function rankHTML() {
+  const [, , sub, fn, fmt, ct] = RANKS.find(r => r[0] === rankState.k);
+  const rows = R.companies.filter(c => !c.missing && (rankState.region === "all" || c.region === rankState.region) && (c.ca == null || caEur(c) > 500)).map(c => ({ c, v: fn(c) })).filter(x => okn(x.v)).sort((a, b) => b.v - a.v).slice(0, 10);
+  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
+}
+function dayPick() { const l = R.companies.filter(c => !c.missing && c.fiche && c.ca > 2000); if (!l.length) return null; const d = Math.floor(Date.now() / 864e5); return l[(d * 7919) % l.length]; }
+async function pageHomeV1() {
+  setTitle(""); setNav("home");
+  await Promise.all([PXP, loadAna()]);
+  const n = R.companies.length, nOk = R.companies.filter(c => !c.missing).length, day = dayPick();
+  const secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length, m: MED[k] })).filter(x => x.n).sort((a, b) => b.n - a.n);
+  app.innerHTML = `
+    <section class="hero2"><div><h1>Avant d'acheter une action, <em>lisez ses comptes.</em> On les a traduits.</h1>
+      <p>${F0.format(n)} entreprises et ${ETF.list.length} ETF. Pour chacune : ce qu'elle fait, ses chiffres en clair, ses points forts et ses points de vigilance. Sans conseil, avec les sources.</p><p class="herolinks"><a href="/pea-cto">PEA ou compte-titres : par où commencer ?</a><a href="/comparer">Comparer des entreprises</a><a href="/favoris">Mes favoris</a></p></div>
+      <div class="search big" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Chercher une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div></section>
+    <section class="panel newbie"><div class="pb"><div class="nbtop"><div><p class="kick">Vous débutez ? Trois étapes, dans l'ordre</p><p class="nbq">Vous ne savez pas sur quoi investir ? <a href="/apprendre">Le guide du nouvel investisseur</a> : 7 étapes et un questionnaire de 5 questions pour trouver votre profil.</p></div><a class="btn" href="/apprendre">Par où commencer</a></div><div class="nb3">
+      <a href="/debuter"><b>1. Comprendre les bases</b><span>Ce qu'est une action, un ETF, un indice, et ce que l'on risque. Six leçons de trois minutes, avec un quiz.</span></a>
+      <a href="/entreprise/lvmh"><b>2. Lire une vraie fiche</b><span>Exemple avec LVMH : ce qu'elle vend, ce qu'elle garde, ses points forts et ses points de vigilance, comparés à ses concurrentes.</span></a>
+      <a href="/pea-cto"><b>3. Choisir où investir</b><span>PEA, compte-titres ou assurance-vie : ce qu'on peut y mettre et ce qui reste après impôts.</span></a></div></div></section>
+    <div class="homegrid">
+      <section class="panel mktp"><div class="ph"><h2>Les grands indices aujourd'hui</h2><a href="/marches">Les marchés du jour</a></div><div class="pb">${indicesHTML()}</div></section>
+      ${day ? `<section class="panel dayc"><div class="ph"><h2>L'entreprise du jour</h2></div><div class="pb">
+        <a class="dayh" href="/entreprise/${day.id}">${logo(day, 48)}<div><div class="nm">${esc(day.name)}</div><div class="light">${esc(regName(day))} · ${esc(secName(day))}</div></div></a>
+        <p>${esc(day.fiche.fait)}</p><p class="muted">${esc(day.fiche.argent)}</p>${feu(quick(day))}
+        <a class="more" href="/entreprise/${day.id}">Lire la fiche →</a></div></section>` : ""}
+    </div>
+    <section class="panel"><div class="ph"><h2>Les plus forts mouvements du jour</h2><a href="/marches">Par région</a></div><div class="pb">${moversHTML("all")}</div></section>
+    <section class="panel"><div class="ph"><h2>Classements</h2><div class="chips" id="rreg">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === rankState.region ? "on" : ""}">${l}</button>`).join("")}</div></div>
+      <div class="filters" id="rk">${RANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === rankState.k ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="rkb">${rankHTML()}</div>
+      <div class="src">Calculé sur les derniers comptes annuels publiés (${F0.format(nOk)} entreprises). Cliquez sur une entreprise pour l'explication détaillée.</div></section>
+    <section class="panel"><div class="ph"><h2>Les ETF en classement</h2><a href="/etf">Tous les ETF</a></div>
+      <div class="filters" id="erk">${ERANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === erankK ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="erkb">${erankHTML()}</div>
+      <div class="src">Frais relevés sur les documents des émetteurs. Les frais ne sont pas le seul critère : indice suivi, PEA, taille du fonds.</div></section>
+    <div class="sect"><h2>Les secteurs</h2><a href="/entreprises">Toutes les entreprises</a></div>
+    <div class="secgrid">${secs.map(x => `<a class="sectile" href="/entreprises?secteur=${x.k}"><b>${esc(x.name)}</b><span>${x.n} entreprises</span>${x.m && x.m.marge != null ? `<span class="light">Marge médiane ${pct(x.m.marge, 1, false)}</span>` : ""}</a>`).join("")}</div>
+    <div class="trio">
+      <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Agenda</a></div>${agendaHTML(upcoming().slice(0, 5))}</section>
+      <section class="panel"><div class="ph"><h2>Annonces en France</h2><a href="/actualites">Actualité</a></div><div class="pb" id="amf"></div></section>
+      <section class="panel"><div class="ph"><h2>La communauté</h2><a href="/communaute">Participer</a></div><div class="pb" id="crec"></div></section>
+    </div>
+    <div class="sect"><h2>Débuter</h2></div>
+    <div class="steps">
+      <a class="step" href="/lexique"><div class="n">1</div><h3>Dix notions</h3><p>Avec des exemples réels.</p></a>
+      <a class="step" href="/entreprises"><div class="n">2</div><h3>Lire une entreprise</h3><p>Vert, gris, orange : ce que disent ses comptes.</p></a>
+      <a class="step" href="/etf"><div class="n">3</div><h3>Comprendre les ETF</h3><p>Ce qu'ils contiennent vraiment.</p></a>
+      <a class="step" href="/simulateurs"><div class="n">4</div><h3>Faire ses calculs</h3><p>Épargne, frais, PEA ou compte-titres.</p></a>
+    </div>`;
+  $("#rk").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.k = b.dataset.k; $$("#rk button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
+  $("#erk").onclick = e => { const b = e.target.closest("button"); if (!b) return; erankK = b.dataset.k; $$("#erk button").forEach(x => x.classList.toggle("on", x === b)); $("#erkb").innerHTML = erankHTML(); };
+  $("#rreg").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.region = b.dataset.r; $$("#rreg button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
+  amfBlock($("#amf"), "&suivies=1", 5);
+  fetch("/api/communaute/recent").then(r => r.json()).then(j => { $("#crec").innerHTML = (j.items || []).length ? j.items.slice(0, 4).map(m => msgHTML(m, true)).join("") : `<p class="muted" style="margin:0">Pas encore de message. <a class="lnk" href="/communaute">Lancer la discussion</a>.</p>`; }).catch(() => { $("#crec").innerHTML = `<p class="muted" style="margin:0">Bientôt disponible.</p>`; });
+  bindSearch(app);
+}
+
+/* ---------- Liste des entreprises ---------- */
+// Taille approximative en euros, seulement pour trier (taux arrondis)
+const FXE = { EUR: 1, USD: 0.92, GBP: 1.17, SEK: 0.087, DKK: 0.134, NOK: 0.085, CHF: 1.05, JPY: 0.0061, PLN: 0.23, CAD: 0.67, INR: 0.011, BRL: 0.17, TWD: 0.029, CNY: 0.13, HKD: 0.12, AUD: 0.6, MXN: 0.05, KRW: 0.00068 };
+const caEur = c => c.ca > 0 ? c.ca * (FXE[c.currency] ?? 0) : 0;
+let listState = { region: "all", sector: "all", view: "cartes", sort: "name", dir: 1 };
+function pageEntreprises() {
+  setTitle("Les entreprises"); setNav("ent");
+  const qs = new URLSearchParams(location.search); if (qs.get("secteur")) listState.sector = qs.get("secteur"); if (qs.get("region")) listState.region = qs.get("region");
+  const sectors = [...new Set(R.companies.map(c => c.sector))].sort((a, b) => secName({ sector: a }).localeCompare(secName({ sector: b }), "fr"));
+  const n = r => R.companies.filter(c => c.region === r).length;
+  app.innerHTML = `<h1 class="pagetitle">Les entreprises</h1><p class="pagesub">${R.companies.length} grandes entreprises de France, d'Europe et des États-Unis. Les points de couleur résument ce que disent leurs comptes.</p>
+    <section class="panel">
+      <div class="filters" id="regTabs"><button data-r="all">Toutes</button>${Object.entries(R.regions).map(([k, l]) => `<button data-r="${k}">${esc(l)} <span class="light">${n(k)}</span></button>`).join("")}</div>
+      <div class="ph" style="padding-top:0;padding-bottom:0;border-bottom:0">
+      <div class="filters" id="secTabs" style="border:0;padding:0;flex:1"><button data-s="all">Tous les secteurs</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
+      <div class="viewsw d-only" id="vsw"><button data-v="cartes">Cartes</button><button data-v="tableau">Tableau</button></div></div></section>
+    <div class="field" style="max-width:360px;margin:0 0 14px"><input id="eq" type="search" placeholder="Filtrer : nom, code, pays…" aria-label="Filtrer les entreprises"></div>
+    ${LEGEND}<div id="elist"></div>`;
+  const render = () => {
+    $$("#regTabs button").forEach(b => b.classList.toggle("on", b.dataset.r === listState.region));
+    $$("#secTabs button").forEach(b => b.classList.toggle("on", b.dataset.s === listState.sector));
+    $$("#vsw button").forEach(b => b.classList.toggle("on", b.dataset.v === listState.view));
+    const q = norm(($("#eq") || {}).value || "").trim();
+    const list = R.companies.filter(c => (listState.region === "all" || c.region === listState.region) && (listState.sector === "all" || c.sector === listState.sector) && (!q || norm(c.name + " " + c.ticker + " " + (c.desc || "")).includes(q)));
+    if (!list.length) { $("#elist").innerHTML = `<section class="panel"><div class="empty">Aucune entreprise pour ce choix.</div></section>`; return; }
+    const view = innerWidth <= 760 ? "cartes" : listState.view;
+    if (view === "cartes") {
+      const sorted = [...list].sort((a, b) => (!!a.missing - !!b.missing) || (caEur(b) - caEur(a)) || a.name.localeCompare(b.name, "fr"));
+      const shown = sorted.slice(0, listState.max || 60);
+      $("#elist").innerHTML = `<p class="muted" style="margin:0 0 10px;font-size:13px">${F0.format(list.length)} entreprise${list.length > 1 ? "s" : ""}, des plus grosses aux plus petites.</p><div class="cards">${shown.map(coCard).join("")}</div>${sorted.length > shown.length ? `<div style="text-align:center;margin:-12px 0 28px"><button class="btn" id="emore" type="button">Voir ${Math.min(60, sorted.length - shown.length)} de plus</button></div>` : ""}`;
+      const mb = $("#emore"); if (mb) mb.onclick = () => { listState.max = (listState.max || 60) + 60; render(); };
+      return;
+    }
+    const k = listState.sort, dir = listState.dir, rows = list.map(c => ({ c, m: ratios(c), t: quick(c) }));
+    const val = (r, k) => k === "ca" || k === "net" ? r.c[k] : k === "vig" ? (r.t ? r.t.fort - r.t.vig : null) : r.m[k];
+    rows.sort((a, b) => k === "name" ? dir * a.c.name.localeCompare(b.c.name, "fr") : dir * ((val(a, k) ?? -1e15) - (val(b, k) ?? -1e15)));
+    const th = (key, label) => `<th class="sort" data-k="${key}">${label}${key === k ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`;
+    $("#elist").innerHTML = `<section class="panel"><div class="scroll-x"><table class="t click"><thead><tr>${th("name", "Entreprise")}${th("ca", "Ventes")}${th("g1", "Croissance")}${th("marge", "Marge")}${th("net", "Bénéfice")}${th("vig", "Repères")}<th>Exercice</th></tr></thead><tbody>
+      ${rows.map(({ c, m, t }) => `<tr data-id="${c.id}"><td><div class="cell-co">${logo(c, 32)}<div><div class="nm">${esc(c.name)}</div><div class="sub">${esc(regName(c))} · ${esc(secName(c))}</div></div></div></td>
+      ${c.missing ? `<td colspan="6" class="light">${missingTxt(c)}</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td>${pills(t)}</td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
+      <div class="src">Chiffres du dernier rapport annuel publié, dans la devise de l'entreprise. Cliquez sur un en-tête pour trier, sur une ligne pour ouvrir la fiche.</div></section>`;
+    $("#elist thead").onclick = e => { const t = e.target.closest("th.sort"); if (!t) return; if (listState.sort === t.dataset.k) listState.dir *= -1; else { listState.sort = t.dataset.k; listState.dir = t.dataset.k === "name" ? 1 : -1; } render(); };
+  };
+  let qt = null; $("#eq").oninput = () => { clearTimeout(qt); qt = setTimeout(render, 200); };
+  $("#regTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.region = b.dataset.r; listState.max = 60; render(); } };
+  $("#secTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.sector = b.dataset.s; listState.max = 60; render(); } };
+  $("#vsw").onclick = e => { const b = e.target.closest("button"); if (b) { listState.view = b.dataset.v; render(); } };
+  render();
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("a,button,.def,input,select")) return;
+  const tr = e.target.closest("tr[data-id],tr[data-href]");
+  if (tr) go(tr.dataset.href || "/entreprise/" + tr.dataset.id);
+});
+
+/* ---------- Fiche entreprise ---------- */
+const CTABS = [["", "Vue d'ensemble"], ["comptes", "Les chiffres en détail"], ["actualite", "Actualités et discussion"]];
+function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les pages d'une entreprise
+  return `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a></div>
+    <div class="panel" style="margin-bottom:16px">
+      <div class="qhead">
+        <div class="who">${logo(s, 56)}<div><h1>${esc(s.name)}</h1>${s.desc ? `<div class="desc">${esc(s.desc)}</div>` : ""}<div class="id">${esc(s.ticker)}${s.isin ? " · ISIN " + esc(s.isin) : ""} · ${esc(regName(s))} · ${esc(secName(s))}</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">${favBtn("c:" + s.id)}<a class="favbtn" style="text-decoration:none" href="/comparer?ids=${[s, ...peersOf(s, 3).list].map(c => c.id).join(",")}">Comparer à ses concurrents</a></div></div></div>
+        <div class="px" id="pxh">${priceHead(s)}</div>
+      </div>
+      ${chart ? `<div class="tv tv-chart tv-top" id="tvchart"></div>` : ""}
+      <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k === "comprendre" ? "/comprendre/croissance" : k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
+    </div>`;
+}
+async function pageCompany(id, tab) {
+  const s = RBY[id];
+  if (!s) return pageNotFound();
+  setNav("ent");
+  if (tab === "agenda" || tab === "communaute") tab = "actualite";
+  tab = CTABS.some(t => t[0] === (tab || "")) ? (tab || "") : "";
+  setTitle(s.name + (tab ? " : " + CTABS.find(t => t[0] === tab)[1].toLowerCase() : ""));
+  app.innerHTML = companyHeader(s, tab) + `<div id="ctab"><div class="empty">Chargement…</div></div>`;
+  tvChart($("#tvchart"), s.tv, s.name);
+  let c = null;
+  const load = s.missing ? Promise.resolve(null) : (FULL[id] ? Promise.resolve(FULL[id]) : fetch(`/data/societes/${id}.json`).then(r => r.json()).then(j => FULL[id] = j).catch(() => null));
+  [c] = await Promise.all([load, PXP]);
+  if (location.pathname.split("/")[2] !== id) return; // l'utilisateur a changé de page entre-temps
+  const ph = $("#pxh"); if (ph) ph.innerHTML = priceHead(s);
+  ({ "": tabBref, comptes: tabComptes, actualite: (s, c, el) => { tabActu(s, c, el); const d = document.createElement("div"); d.id = "discussion"; el.appendChild(d); tabCommu(s, c, d); } })[tab](s, c, $("#ctab"));
+  if (tab === "comptes") $$("#ctab .scroll-x").forEach(x => { x.scrollLeft = x.scrollWidth; }); // les années les plus récentes d'abord visibles
+  if (!tab && !s.missing) premStatus().then(() => { if (location.pathname.split("/")[2] === id) assistantPanel(s, c, $("#ctab")); });
+}
+const lastIdx = c => c.years.length - 1;
+const at = (c, k, i) => c.fin[k] ? c.fin[k][i] : null;
+const acc = (summary, body, open = false, cls = "") => `<details class="acc ${cls}"${open ? " open" : ""}><summary>${summary}<span class="chev" aria-hidden="true"></span></summary><div class="accb">${body}</div></details>`;
+
+/* Ce que fait l'entreprise : trois cartes, avec la répartition des ventes et des liens pour approfondir */
+function ficheHTML(s, c) {
+  const f = s.fiche, rep = REP[s.id], fg = c ? figuresOf(c) : null;
+  const peers = R.companies.filter(x => x.sector === s.sector && !x.missing && x.ca > 0).sort((a, b) => caEur(b) - caEur(a));
+  const rank = peers.findIndex(x => x.id === s.id) + 1;
+  const id = [
+    ["Pays", regName(s)], ["Secteur", secName(s)], ["Code en Bourse", `${s.ticker} · ${String(s.tv || "").split(":")[0]}`],
+    fg && fg.ca != null ? [isBank(s) ? "Revenus" : "Ventes", `${big(fg.ca, fg.currency)} <span class="light">en ${fg.year}</span>`] : null,
+    fg && fg.net != null ? ["Bénéfice", `${big(fg.net, fg.currency)}`] : null,
+    peaOk(s) != null ? ["Compte possible", peaOk(s) ? `PEA ou compte-titres <a class="lnk" href="/pea-cto">?</a>` : `Compte-titres (pas de PEA) <a class="lnk" href="/pea-cto">?</a>`] : null,
+    rank ? ["Taille", `${rank}<sup>${rank === 1 ? "re" : "e"}</sup> sur ${peers.length} de son secteur sur le site`] : null,
+  ].filter(Boolean);
+  return `<section class="panel" id="metier"><div class="ph"><h2>Ce que fait ${esc(s.name)}</h2></div>
+    ${f ? `<div class="trois">
+      <div class="carte"><div class="n">1</div><h3>Ce qu'elle vend</h3><p>${esc(f.fait)}</p></div>
+      <div class="carte"><div class="n">2</div><h3>Comment elle gagne de l'argent</h3><p>${esc(f.argent)}</p>${rep && (rep.activites || rep.zones) ? `<div class="ministk">${stack((rep.activites || rep.zones).map(([label, v]) => ({ label, v })))}</div>` : ""}${ctLink(s, "argent", "Approfondir")}</div>
+      <div class="carte"><div class="n">3</div><h3>Ce qui fait bouger ses résultats</h3><p>${esc(f.depend)}</p>${ctLink(s, "varier", "Approfondir")}</div></div>` : ""}
+    <div class="ident">${id.map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("")}</div></section>`;
+}
+function enBref(s, f, items) { // une phrase qui résume, à partir des chiffres
+  const cur = f.currency, m = ratios(f), bank = isBank(s), parts = [];
+  if (f.ca != null) parts.push(`${bank ? "réalise" : "vend pour"} ${big(f.ca, cur)} par an${m.g1 != null ? ` (${m.g1 >= 0 ? "+" : "−"}${pct(Math.abs(m.g1), 0, false)} sur un an)` : ""}`);
+  if (m.marge != null && !bank && m.marge > 0) parts.push(`garde ${e100(m.marge)} sur 100 ${CURSYM} vendus`);
+  if (f.net != null) parts.push(f.net >= 0 ? `a gagné ${big(f.net, cur)}` : `a perdu ${big(-f.net, cur)}`);
+  if (!bank && f.netDebt != null) parts.push(f.netDebt < 0 ? "n'a pas de dette nette" : m.lev != null ? `a une dette équivalente à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} de résultats avant investissements` : "");
+  if (m.payout != null && f.divPaid > 0.5) parts.push(`verse ${pct(m.payout, 0, false)} de son bénéfice en dividende`);
+  const p = parts.filter(Boolean);
+  if (!p.length) return "";
+  return `En ${f.year}, ${esc(s.name)} ${p.length > 1 ? p.slice(0, -1).join(", ") + " et " + p.at(-1) : p[0]}.`;
+}
+function feu(t) { // les trois couleurs, avec leur nombre et une barre de proportion
+  const n = t.fort + t.moyen + t.vig || 1;
+  return `<div class="feu"><div class="feun"><span class="f"><i></i><b>${t.fort}</b> point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i><b>${t.moyen}</b> dans la moyenne</span><span class="v"><i></i><b>${t.vig}</b> point${t.vig > 1 ? "s" : ""} de vigilance</span></div>
+    <div class="feub"><span class="f" style="width:${t.fort / n * 100}%"></span><span class="m" style="width:${t.moyen / n * 100}%"></span><span class="v" style="width:${t.vig / n * 100}%"></span></div></div>`;
+}
+const VERDICT = { fort: "Point fort", moyen: "Dans la moyenne", vig: "Point de vigilance", na: "Ne s'applique pas" };
+/* Ses comptes en questions : une ligne simple par question, le détail en dépliant « Approfondir » */
+function lectureHTML(s, c) {
+  const f = figuresOf(c), items = concret(s, f, lecture(s, f)), cross = croisements(s, f);
+  const body = i => { const k = TERM2CT[i.term], d = CT[k];
+    return `<p class="lead">${i.text}</p>${k ? calcHTML(k, s, f) : ""}
+      ${d && d.serie ? `<div class="mini" style="margin-top:14px">${serieChart(s, c, k, 150)}</div>` : ""}
+      ${RULES[i.term] ? `<p class="rule"><b>Pourquoi ${i.lv === "fort" ? "vert" : i.lv === "vig" ? "orange" : i.lv === "na" ? "pas de couleur" : "gris"} ?</b> ${esc(RULES[i.term])}</p>` : ""}
+      <div class="links">${k ? ctLink(s, k, "Comparer avec les autres entreprises du secteur") : ""} ${ALL[i.term] ? `<button type="button" class="def linkbtn" data-def="${i.term}">Définition</button>` : ""}</div>`; };
+  const row = i => acc(`<span class="dot dot-${i.lv}"></span><span class="q"><small>${esc(i.cat)} · <span class="vd vd-${i.lv}">${VERDICT[i.lv]}</span></small>${i.say}</span>`, body(i), false, "qrow").replace("<details ", `<details data-term="${TERM2CT[i.term] || i.term}" `);
+  return `<section class="panel" id="comptes"><div class="ph"><h2>Ses comptes, critère par critère</h2><span class="light" style="font-size:12.5px">Exercice ${f.year}</span></div>
+      <div class="qrows">${items.map(row).join("")}</div>
+      ${MED_NOTE}<div class="src">Ouvrez une ligne pour voir le calcul, l'évolution sur plusieurs années et la règle qui donne la couleur. Les couleurs comparent l'entreprise à des seuils simples et à son secteur. Elles ne disent pas si l'action est chère ni s'il faut l'acheter.</div></section>
+    ${cross.length ? `<section class="panel"><div class="ph"><h2>Ce que les chiffres disent ensemble</h2></div><div class="cross">${cross.map(([h, p]) => `<div><h3>${esc(h)}</h3><p>${p}</p></div>`).join("")}</div></section>` : ""}`;
+}
+/* Le dividende, expliqué */
+function officielLink(s) {
+  if (s.region === "US" || s.sec) return `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${encodeURIComponent(s.sec || s.ticker)}&type=&dateb=&owner=include&count=40`;
+  return s.domain ? "https://www." + s.domain : "";
+}
+/* ---------- Fiche entreprise : un parcours en étapes, dans l'ordre où un débutant se pose les questions ---------- */
+function etapesListe(s, c) {
+  if (!c) return [["metier", "Son métier", () => ficheHTML(s, c) + `<section class="panel"><div class="empty">${missingTxt(s, true)}</div></section>`]];
+  const dv = dividendeHTML(s, c);
+  return [
+    ["retenir", "L'essentiel à retenir", () => retenirHTML(s, c)],
+    ["metier", "Son métier", () => ficheHTML(s, c)],
+    ["comptes", "Ses comptes", () => lectureHTML(s, c)],
+    ["prix", "Son prix", () => prixHTML(s, c)],
+    dv ? ["dividende", "Dividende", () => dv] : null,
+    ["concurrents", "Concurrents", () => concurrentsHTML(s)],
+    ["faq", "Questions", () => faqHTML(s, c)],
+  ].filter(Boolean);
+}
+function etapeCourante(L) { const k = new URLSearchParams(location.search).get("etape"); return L.some(x => x[0] === k) ? k : L[0][0]; }
+function etapesHTML(s, c) {
+  const L = etapesListe(s, c), cur = etapeCourante(L);
+  return `<nav class="etapes scroll-x" id="etapes" aria-label="Comprendre ${esc(s.name)} étape par étape"><span class="etl">Comprendre ${esc(s.name)} :</span>${L.map(([k, l], i) => `<button type="button" data-et="${k}" class="${k === cur ? "on" : ""}"><span>${i + 1}</span>${l}</button>`).join("")}</nav>`;
+}
+function etapesCorps(s, c) {
+  const L = etapesListe(s, c), cur = etapeCourante(L);
+  return L.map(([k, l, fn], i) => `<div class="etape" data-etape="${k}"${k === cur ? "" : " hidden"}>${fn()}
+    <div class="etnav">${i > 0 ? `<button type="button" class="linkbtn" data-et="${L[i - 1][0]}">← ${L[i - 1][1]}</button>` : "<span></span>"}${L[i + 1] ? `<button type="button" class="btn" data-et="${L[i + 1][0]}">Étape suivante : ${L[i + 1][1]} →</button>` : `<a class="more" href="/comparer?ids=${[s.id, ...peersOf(s, 3).list.map(x => x.id)].join(",")}">Comparer à ses concurrentes →</a>`}</div></div>`).join("");
+}
+function etapesBind(s) {
+  const show = k => {
+    $$("#etapes [data-et]").forEach(b => b.classList.toggle("on", b.dataset.et === k));
+    $$("#etapes-corps .etape").forEach(d => d.hidden = d.dataset.etape !== k);
+    const u = new URL(location.href); u.searchParams.set("etape", k); history.replaceState({}, "", u.pathname + u.search);
+    const nav = $("#etapes"); if (nav && nav.getBoundingClientRect().top < 0) nav.scrollIntoView({ block: "start" });
+    const b = $(`#etapes [data-et="${k}"]`); if (b) b.scrollIntoView({ block: "nearest", inline: "center" });
+  };
+  ETAPE_SHOW = show;
+  if (!etapesBind.on) { etapesBind.on = true; app.addEventListener("click", e => { const b = e.target.closest("[data-et]"); if (b && app.contains(b) && ETAPE_SHOW) { e.preventDefault(); ETAPE_SHOW(b.dataset.et); } }); }
+}
+let ETAPE_SHOW = null;
+
+function tabBref(s, c, el) {
+  const fr = s.region === "FR", f = c ? figuresOf(c) : null, items = f ? lecture(s, f) : [], phrase = f ? enBref(s, f, items) : "";
+  const up = eventsOf(s.id).filter(e => e.date >= TODAY);
+  el.innerHTML = `
+    ${c ? essentielHTML(s, c) : `<section class="panel"><div class="pb"><p class="lead" style="margin:0">${esc(s.fiche ? s.fiche.fait : s.desc || s.name)}</p></div></section>`}
+    ${etapesHTML(s, c)}
+    <div class="cols"><div id="etapes-corps">${etapesCorps(s, c)}</div>
+      <aside>
+        <section class="panel" id="agenda"><div class="ph"><h2>Agenda</h2></div>${up.length ? agendaHTML(up.slice(0, 5), false) : `<div class="pb muted" style="font-size:13.5px">Aucune date annoncée pour l'instant. Le site ajoute les dates dès qu'elles sont publiées par l'entreprise ou annoncées dans la presse.</div>`}</section>
+        <section class="panel" id="actus"><div class="ph"><h2>Actualités</h2><a href="/entreprise/${s.id}/actualite">Toutes</a></div>
+          ${fr || s.sec ? `<div class="pb"><div class="cap">Annonces officielles</div><div id="offi"></div></div>` : ""}
+          <div class="pb"><div class="cap">Dans la presse</div><div id="pres"></div></div></section>
+        ${s.sec ? `<section class="panel" id="dirig"></section>` : ""}
+        <section class="panel" id="avis"><div class="ph"><h2>Avis des visiteurs</h2><a href="/entreprise/${s.id}/communaute">Discussion</a></div><div class="pb" id="avisb"></div></section>
+      </aside>
+    </div>`;
+  etapesBind(s);
+  const voir = new URLSearchParams(location.search).get("voir");
+  if (voir) { const d = $(`details[data-term="${voir}"]`) || $("#" + voir); if (d && d.tagName === "DETAILS") d.open = true; }
+  if (s.sec) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false, filters: false, max: 3 });
+  else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false, filters: false, max: 3 });
+  presseBlock($("#pres"), { id: s.id, max: 5 });
+  dirigeantsHTML(s, $("#dirig"));
+  avisBlock($("#avisb"), s.id, s.name, { compact: true });
+}
+function tabComptes(s, c, el) {
+  if (!c) { el.innerHTML = `<section class="panel"><div class="empty">Les comptes de ${esc(s.name)} sont en cours de collecte.</div></section>`; return; }
+  const f = c.fin, Y = c.years, cur = c.currency, med = MED[s.sector] || {}, bank = isBank(s);
+  const has = k => f[k] && f[k].some(v => v != null);
+  const r = (key, label, vals, fmt, ref = "") => `<tr><td class="l">${def(key, label)}</td>${vals.map(v => `<td class="num">${v == null || !isFinite(v) ? "–" : fmt(v)}</td>`).join("")}<td class="num ref d-only">${ref}</td></tr>`;
+  const div = (a, b) => (a || []).map((v, i) => v != null && b && b[i] ? v / b[i] : null);
+  const g = Y.map((_, i) => i && f.ca && f.ca[i] != null && f.ca[i - 1] ? f.ca[i] / f.ca[i - 1] - 1 : null);
+  const mref = (v, fm) => v != null && med.n > 1 ? fm(v) : "";
+  const grp = t => `<tr class="grp"><td colspan="${Y.length + 2}">${t}</td></tr>`;
+  const money = v => big(v, cur), ps = v => eur(v, 2, cur);
+  const GR = [["ca", bank ? "Revenus" : "Ventes", f.ca, money], ["net", "Résultat net", f.net, money], ["marge", "Marge", div(f.ebit, f.ca), v => pct(v, 1, false)], ["fcf", "Argent disponible", f.fcf, money], ["netDebt", "Dette nette", f.netDebt, money], ["dps", "Dividende par action", f.dps || f.dpsEst, ps]].filter(g => g[2] && g[2].some(okn) && !(bank && ["marge", "fcf", "netDebt"].includes(g[0])));
+  el.innerHTML = `
+    <section class="panel"><div class="ph"><h2>Ses comptes en graphique, année par année</h2></div><div class="filters" id="gsel">${GR.map((g, i) => `<button data-i="${i}" class="${i ? "" : "on"}">${g[1]}</button>`).join("")}</div><div class="pb" id="gbox">${GR.length ? barsSVG({ labels: Y.map(String), values: GR[0][2], fmt: GR[0][3] }) : ""}</div></section>
+    <section class="panel"><div class="ph"><h2>Comptes annuels</h2><span class="light" style="font-size:12.5px">${cur === "EUR" ? "En euros" : "En " + cur} · clôture au ${c.fyEnd ? c.fyEnd.split("-").reverse().join("/") : "–"}</span></div>
+      <div class="scroll-x"><table class="t fin"><thead><tr><th class="l"></th>${Y.map(y => `<th>${y}</th>`).join("")}<th class="d-only">${def("mediane", "Médiane secteur")}</th></tr></thead><tbody>
+        ${grp("Activité")}
+        ${has("ca") ? r("ca", bank ? "Revenus (produit net bancaire)" : "Chiffre d'affaires", f.ca, money) : ""}
+        ${has("ca") ? r("croissance", "Croissance", g, v => pct(v), mref(med.g1, v => pct(v))) : ""}
+        ${grp("Rentabilité")}
+        ${has("ebit") ? r("resexp", "Résultat d'exploitation", f.ebit, money) : ""}
+        ${has("ebit") && has("ca") ? r("marge", "Marge d'exploitation", div(f.ebit, f.ca), v => pct(v, 1, false), mref(med.marge, v => pct(v, 1, false))) : ""}
+        ${has("net") ? r("net", "Résultat net", f.net, money) : ""}
+        ${has("net") && has("equity") ? r("roe", "Rentabilité des capitaux propres", div(f.net, f.equity), v => pct(v, 1, false), mref(med.roe, v => pct(v, 1, false))) : ""}
+        ${grp("Par action")}
+        ${has("eps") ? r("bnpa", "Bénéfice net par action", f.eps, ps) : ""}
+        ${has("dps") ? r("dps", "Dividende versé par action", f.dps, ps) : has("dpsEst") ? r("dps", "Dividende versé par action (estimé)", f.dpsEst, ps) : ""}
+        ${has("divPaid") && has("net") ? r("payout", "Taux de distribution", div(f.divPaid, f.net), v => pct(v, 0, false)) : ""}
+        ${grp("Bilan et trésorerie")}
+        ${has("equity") ? r("capitaux", "Capitaux propres", f.equity, money) : ""}
+        ${has("cash") ? r("tresorerie", "Trésorerie", f.cash, money) : ""}
+        ${has("debt") && !bank ? r("dette", "Dette financière", f.debt, money) : ""}
+        ${has("netDebt") && !bank ? r("dettenette", "Dette nette (estimée)", f.netDebt, money) : ""}
+        ${has("ebitda") && !bank ? r("ebitda", "EBITDA (estimé)", f.ebitda, money) : ""}
+        ${has("netDebt") && has("ebitda") && !bank ? r("lev", "Dette nette ÷ EBITDA", div(f.netDebt, f.ebitda), v => F1.format(v), mref(med.lev, v => F1.format(v))) : ""}
+        ${has("netDebt") && has("equity") && !bank ? r("gear", "Dette nette ÷ capitaux propres", div(f.netDebt, f.equity), v => pct(v, 0, false), mref(med.gear, v => pct(v, 0, false))) : ""}
+        ${has("cfo") ? r("cfo", "Flux de trésorerie d'exploitation", f.cfo, money) : ""}
+        ${has("fcf") ? r("fcf", "Flux de trésorerie disponible", f.fcf, money) : ""}
+      </tbody></table></div>
+      <div class="src">Un tiret signifie que le chiffre n'est pas publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes, peut différer du chiffre annoncé par l'entreprise.${bank ? " Banques et assurances : dette et EBITDA ne s'appliquent pas." : ""} Médiane calculée sur ${med.n || 0} entreprise${med.n > 1 ? "s" : ""} suivie${med.n > 1 ? "s" : ""} du secteur.</div></section>
+    <section class="panel"><div class="ph"><h2>Sources</h2></div>
+      <table class="t"><thead><tr><th class="l">Exercice clos le</th><th class="l">Document</th></tr></thead><tbody>
+      ${c.cik ? `<tr><td class="l wrap">Exercices ${c.years[0]} à ${c.years[lastIdx(c)]}</td><td class="l wrap"><a class="lnk" href="${esc(c.sources[0].report)}" target="_blank" rel="noopener">Rapports annuels 10-K déposés à la SEC</a></td></tr>`
+        : c.sources.map(x => `<tr><td class="l wrap">${dLabel(x.periodEnd)}</td><td class="l wrap">${x.report ? `<a class="lnk" href="${esc(x.report)}" target="_blank" rel="noopener">Rapport financier annuel (ESEF)</a>` : "Rapport financier annuel (ESEF)"}</td></tr>`).join("")}</tbody></table>
+      <div class="src">${c.cik ? "Comptes lus dans les données publiques de la SEC (EDGAR), au format XBRL." : `Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org.`} Mis à jour le ${dLabel(c.updated)}.</div></section>`;
+  $("#gsel").onclick = e => { const b = e.target.closest("button"); if (!b) return; const g = GR[+b.dataset.i]; $$("#gsel button").forEach(x => x.classList.toggle("on", x === b)); $("#gbox").innerHTML = barsSVG({ labels: Y.map(String), values: g[2], fmt: g[3] }); };
+}
+function tabAgenda(s, c, el) {
+  const ev = eventsOf(s.id), up = ev.filter(e => e.date >= TODAY), past = ev.filter(e => e.date < TODAY).reverse();
+  const tbl = list => `<table class="t"><thead><tr><th class="l">Date</th><th class="l">Événement</th><th class="l d-only">Type</th></tr></thead><tbody>${list.map(e => `<tr><td class="l">${dLabel(e.date)}</td><td class="l wrap">${esc(e.label)}</td><td class="l d-only">${esc(e.type)}</td></tr>`).join("")}</tbody></table>`;
+  const src = ev.find(e => e.source);
+  el.innerHTML = `<section class="panel"><div class="ph"><h2>À venir</h2></div>${up.length ? `<div class="scroll-x">${tbl(up)}</div>` : `<div class="empty">Aucune date renseignée pour ${esc(s.name)}.</div>`}
+    ${src ? `<div class="src">Source : <a href="${esc(src.source)}" target="_blank" rel="noopener">calendrier financier de ${esc(s.name)}</a>.</div>` : ""}</section>
+    ${past.length ? `<section class="panel"><div class="ph"><h2>Passés</h2></div><div class="scroll-x">${tbl(past)}</div></section>` : ""}`;
+}
+
+/* ---------- Actualité et agenda ---------- */
+
+/* ---------- Lexique : l'essentiel d'abord, avec des exemples réels ---------- */
+const ESSENTIEL = ["action", "pea", "ca", "croissance", "marge", "net", "lev", "fcf", "payout", "per"];
+const WITH = { // à lire avec
+  croissance: ["marge", "fcf"], marge: ["croissance", "net"], net: ["marge", "fcf"], roe: ["lev", "gear"], lev: ["roe", "fcf"], gear: ["roe", "lev"],
+  fcf: ["net", "croissance"], payout: ["fcf", "net"], per: ["croissance", "net"], rdt: ["payout", "per"], dettenette: ["lev", "gear"],
+};
+const EXM = { croissance: "g1", marge: "marge", net: "nm", roe: "roe", lev: "lev", gear: "gear", fcf: "conv", payout: "payout" };
+const EXFMT = { g1: v => pct(v), marge: v => pct(v, 1, false), nm: v => pct(v, 1, false) + " de marge nette", roe: v => pct(v, 1, false), lev: v => F1.format(v) + " an" + (v >= 2 ? "s" : ""), gear: v => pct(v, 0, false), conv: v => F0.format(v * 100) + " € pour 100 € de bénéfice", payout: v => pct(v, 0, false) };
+function examplesHTML(term) {
+  const k = EXM[term]; if (!k || !R) return "";
+  const list = R.companies.filter(c => !c.missing && !(isBank(c) && ["marge", "lev", "gear", "conv"].includes(k))).map(c => [c, ratios(c)[k]]).filter(([, v]) => okn(v) && (k !== "lev" || v >= 0)).sort((a, b) => b[1] - a[1]);
+  if (list.length < 5) return "";
+  const li = ([c, v]) => `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a> ${EXFMT[k](v)}`;
+  const mid = list[Math.floor(list.length / 2)];
+  return `<dt>Exemples réels</dt><dd>Les plus hauts : ${list.slice(0, 2).map(li).join(", ")}. Au milieu : ${li(mid)}. Les plus bas : ${list.slice(-2).reverse().map(li).join(", ")}.</dd>`;
+}
+function pageLexique() {
+  setTitle("Lexique"); setNav("lex");
+  const dl = (id, t) => `<dl>${t.calc ? `<dt>Calcul</dt><dd>${esc(t.calc)}</dd>` : ""}${t.ex ? `<dt>Exemple</dt><dd>${esc(t.ex)}</dd>` : ""}${RULES[id] ? `<dt>Bon ou moins bon ?</dt><dd>${esc(RULES[id])}</dd>` : t.read ? `<dt>Comment le lire</dt><dd>${esc(t.read)}</dd>` : ""}${examplesHTML(id)}${WITH[id] ? `<dt>À lire avec</dt><dd>${WITH[id].map(w => def(w)).join(", ")}</dd>` : ""}${t.limit ? `<dt>Limite</dt><dd>${esc(t.limit)}</dd>` : ""}</dl>`;
+  const term = (id, t, n) => `<div class="term" id="${id}">${n ? `<div class="tn">${n}</div>` : ""}<h3>${esc(t.name)}</h3><p>${esc(t.what)}</p>${dl(id, t)}</div>`;
+  const rest = [["Les bases", BASES], ["Lire une entreprise", TERMS], ["Portefeuille et simulations", PTERMS]]
+    .map(([g, o]) => [g, Object.entries(o).filter(([k]) => !ESSENTIEL.includes(k))]).filter(([, l]) => l.length);
+  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Dix notions suffisent pour lire une fiche. Pour chacune : ce que c'est, un exemple réel, et à partir de quand c'est bon ou moins bon.</p><section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Avant d'acheter une action : dans quel compte ?</b><div class="muted">PEA, compte-titres, assurance-vie : ce qu'on peut y mettre et l'impôt sur les gains.</div></div><a class="more" href="/pea-cto">Lire le guide →</a></div></section>
+    <section class="panel"><div class="ph"><h2>Les dix notions essentielles</h2><span class="light" style="font-size:12.5px">Dans l'ordre conseillé</span></div>
+      <div class="essgrid">${ESSENTIEL.map((k, i) => term(k, ALL[k], i + 1)).join("")}</div></section>
+    <h2 class="subh">Pour aller plus loin</h2>
+    ${rest.map(([g, l]) => `<details class="panel more"><summary>${g}<span class="light">${l.length} notions</span></summary>${l.map(([k, t]) => term(k, t)).join("")}</details>`).join("")}`;
+  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { const d = t.closest("details"); if (d) d.open = true; t.scrollIntoView(); } }
+}
+
+/* ---------- Courtiers ---------- */
+let BROKERS = { list: [], sources: [] };
+const brokerBy = id => BROKERS.list.find(b => b.id === id) || BROKERS.list[0];
+function brokerFee(b, amount, perso) { // même calcul que data/courtiers.mjs
+  if (!b || !(amount > 0)) return 0;
+  if (b.custom) return Math.max(0, (perso?.fixe || 0) + amount * (perso?.pct || 0) / 100);
+  const p = b.grille.find(g => g[0] == null || amount <= g[0]) || b.grille[b.grille.length - 1];
+  return Math.round(Math.max(b.min || 0, p[1] + amount * p[2] / 100) * 100) / 100;
+}
+const brokerOptions = sel => BROKERS.list.map(b => `<option value="${b.id}" ${b.id === sel ? "selected" : ""}>${esc(b.name)}</option>`).join("");
+const brokerSrc = () => `Grilles relevées le ${dLabel(BROKERS.updated || TODAY)} (offre de base, actions françaises). Sources : ${BROKERS.sources.map(s => `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(", ")}. Vérifiez la grille sur le site du courtier : elle peut changer.`;
+
+/* ---------- Simulateurs ---------- */
+const TOOLS = [["epargne", "Mon épargne"], ["frais", "Les frais du courtier"], ["pea-cto", "PEA ou compte-titres"]];
+const numIn = (id, label, val, hint = "", attrs = "") => `<div class="field"><label for="${id}">${label}</label><input id="${id}" type="number" inputmode="decimal" value="${val}" ${attrs}>${hint ? `<div class="hint">${hint}</div>` : ""}</div>`;
+const v = id => { const x = parseFloat(String($("#" + id).value).replace(",", ".")); return isFinite(x) ? x : 0; };
+function figs(items) { return `<div class="figs">${items.map(([k, val, s, c]) => `<div><div class="k">${k}</div><div class="v num ${c || ""}">${val}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`).join("")}</div>`; }
+function yearLabels(n) { const y0 = +TODAY.slice(0, 4); return Array.from({ length: n + 1 }, (_, i) => String(y0 + i)); }
+const chips = (id, list, cur) => `<div class="chips" id="${id}">${list.map(([v, l]) => `<button type="button" data-v="${v}" class="${String(v) === String(cur) ? "on" : ""}">${l}</button>`).join("")}</div>`;
+
+function repHTML(weights) { return `<div class="rep">${Object.entries(weights).sort((a, b) => b[1] - a[1]).map(([k, w]) => `<div class="r"><span>${esc(k)}</span><span class="bar_"><span style="width:${(w * 100).toFixed(1)}%"></span></span><span class="num" style="text-align:right">${pct(w, 0, false)}</span></div>`).join("")}</div>`; }
+
+/* ---------- Portefeuille : opérations saisies, frais du courtier calculés ---------- */
+const PF_KEY = "repere.pf.v2";
+function pfLoad() { try { const p = JSON.parse(localStorage.getItem(PF_KEY)); return p && p.ops ? { broker: "trade-republic", perso: { fixe: 0, pct: 0 }, ...p } : null; } catch (e) { return null; } }
+const PF_EMPTY = () => ({ ops: [], prix: {}, broker: "trade-republic", perso: { fixe: 0, pct: 0 } });
+function pfSave(p) { try { localStorage.setItem(PF_KEY, JSON.stringify(p)); return true; } catch (e) { return false; } }
+let PF = null;
+const pfName = id => RBY[id] ? RBY[id].name : id.replace(/^autre:/, "");
+function pfCompute(ops, prix) {
+  const pos = {}; let divs = 0, fees = 0, bought = 0; const flows = [];
+  const t0 = ops.length ? new Date(ops.reduce((a, o) => o.date < a ? o.date : a, ops[0].date)) : null;
+  const yrs = iso => (new Date(iso) - t0) / (365.25 * 864e5);
+  [...ops].sort((a, b) => a.date.localeCompare(b.date)).forEach(o => {
+    const p = pos[o.id] = pos[o.id] || { q: 0, cost: 0, last: o.px }, amt = o.q * o.px;
+    if (o.type === "achat") { p.cost += amt + o.fee; p.q += o.q; p.last = o.px; fees += o.fee; bought += amt; flows.push({ t: yrs(o.date), v: -(amt + o.fee) }); }
+    else if (o.type === "vente") { const pru = p.q ? p.cost / p.q : 0, qq = Math.min(o.q, p.q); p.cost -= pru * qq; p.q -= qq; p.last = o.px; fees += o.fee; flows.push({ t: yrs(o.date), v: qq * o.px - o.fee }); }
+    else if (o.type === "dividende") { divs += o.px; flows.push({ t: yrs(o.date), v: o.px }); }
+  });
+  let value = 0;
+  const lines = Object.entries(pos).filter(([, p]) => p.q > 1e-9).map(([id, p]) => { const px = prix[id] || p.last; const val = p.q * px; value += val; return { id, q: p.q, pru: p.cost / p.q, px, set: !!prix[id], val, gain: val - p.cost }; });
+  lines.forEach(l => l.w = value ? l.val / value : 0);
+  const gain = value + flows.reduce((a, f) => a + f.v, 0);
+  let tri = null; if (ops.length) { const T = yrs(TODAY); if (T > 0.08) tri = Calc.xirr([...flows, { t: T, v: value }]); }
+  return { lines, value, divs, fees, bought, gain, tri };
+}
+function pfFeedback(r) { // constats chiffrés, sans recommandation
+  const out = [];
+  if (!r.lines.length) return out;
+  const top = [...r.lines].sort((a, b) => b.w - a.w)[0];
+  out.push(`<b>${esc(pfName(top.id))}</b> pèse ${pct(top.w, 0, false)} du portefeuille : si son cours baisse de 20 %, le portefeuille baisse de ${pct(top.w * 0.2, 1, false)}.`);
+  const sec = new Set(r.lines.map(l => RBY[l.id] ? l.id && RBY[l.id].sector : "autre")), reg = new Set(r.lines.map(l => RBY[l.id] ? RBY[l.id].region : "autre"));
+  out.push(`${r.lines.length} ligne${r.lines.length > 1 ? "s" : ""}, ${sec.size} secteur${sec.size > 1 ? "s" : ""}, ${reg.size} zone${reg.size > 1 ? "s" : ""} géographique${reg.size > 1 ? "s" : ""}.${sec.size === 1 && r.lines.length > 1 ? " Toutes vos actions dépendent du même secteur." : ""}`);
+  if (r.bought > 0) out.push(`Frais de courtage payés : ${eur(r.fees)}, soit ${pct(r.fees / r.bought, 2, false)} des sommes investies.`);
+  const vig = r.lines.filter(l => RBY[l.id] && !RBY[l.id].missing).map(l => [l.id, tally(lecture(RBY[l.id], { ...RBY[l.id], cagr: null })).vig]).filter(([, n]) => n > 0);
+  if (vig.length) out.push(`Points de vigilance dans les comptes : ${vig.map(([id, n]) => `<a class="lnk" href="/entreprise/${id}">${esc(pfName(id))}</a> (${n})`).join(", ")}.`);
+  const unset = r.lines.filter(l => !l.set).length;
+  if (unset) out.push(`${unset} ligne${unset > 1 ? "s sont valorisées" : " est valorisée"} au dernier prix d'achat : indiquez le cours actuel dans le tableau des positions.`);
+  return out;
+}
+function renderPf() {
+  const ops = PF.ops, r = pfCompute(ops, PF.prix), body = $("#pfbody"), sectorW = {}, b = brokerBy(PF.broker);
+  r.lines.forEach(l => { const k = RBY[l.id] ? secName(RBY[l.id]) : "Autres placements"; sectorW[k] = (sectorW[k] || 0) + l.w; });
+  const fb = pfFeedback(r);
+  const opt = list => list.map(c => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  body.innerHTML = `<div class="brkbar"><div class="field" style="margin:0;min-width:220px"><label for="pfb">Mon courtier</label><select id="pfb">${brokerOptions(PF.broker)}</select></div>
+      ${b.custom ? `<div class="row2" style="max-width:300px">${numIn("pfx", "Frais fixes (€)", PF.perso.fixe, "", 'min="0" step="0.5"')}${numIn("ppc", "Pourcentage (%)", PF.perso.pct, "", 'min="0" step="0.05"')}</div>` : `<p class="muted" style="margin:0;font-size:13px;max-width:520px">${esc(b.note)}</p>`}</div>
+    ${ops.length ? figs([["Valeur actuelle", eur(r.value, 0), "selon les cours indiqués"], ["Gain ou perte", eur(r.gain, 0), "dividendes et frais compris", cls(r.gain)], ["Rendement par an", r.tri == null ? "–" : pct(r.tri), r.tri == null ? "Calculé après un mois" : "selon vos dates de versement", cls(r.tri)], ["Frais payés", eur(r.fees), `dividendes reçus : ${eur(r.divs, 0)}`]]) : ""}
+    ${fb.length ? `<div class="fb"><div class="cap">Ce que dit votre portefeuille</div><ul>${fb.map(x => `<li>${x}</li>`).join("")}</ul></div>` : ""}
+    <div class="two"><div><div class="cap">Ajouter une opération</div>
+        <div class="field">${chips("ot", [["achat", "J'ai acheté"], ["vente", "J'ai vendu"], ["dividende", "J'ai reçu un dividende"]], "achat")}</div>
+        <div class="field"><label for="oi">Quoi</label><select id="oi"><optgroup label="France">${opt(R.companies.filter(c => c.region === "FR"))}</optgroup><optgroup label="Europe">${opt(R.companies.filter(c => c.region === "EU"))}</optgroup><optgroup label="États-Unis">${opt(R.companies.filter(c => c.region === "US"))}</optgroup><option value="autre">Autre placement (fonds, ETF…)</option></select></div>
+        <div class="field" id="onameF" hidden><label for="oname">Nom du placement</label><input id="oname" type="text" placeholder="Ex. ETF MSCI World"></div>
+        <div class="row2" id="oqp">${numIn("oq", "Combien de titres", 10, "", 'min="0" step="1"')}${numIn("op", "Prix d'un titre (€)", "", "", 'min="0" step="0.01"')}</div>
+        <div class="row2">${numIn("of", "Frais (€)", "", "Calculés d'après la grille de votre courtier. Modifiables.", 'min="0" step="0.01"')}<div class="field"><label for="od">Date</label><input id="od" type="date" value="${TODAY}" max="${TODAY}"></div></div>
+        <button class="btn" id="oadd" type="button">Ajouter</button><span class="muted" id="omsg" style="font-size:12.5px;margin-left:10px"></span></div>
+      <div><div class="cap">${def("rep", "Répartition par secteur")}</div>${r.lines.length ? repHTML(sectorW) : `<p class="muted" style="margin:0">Ajoutez un premier achat pour voir la répartition.</p>`}</div></div>
+    ${r.lines.length ? `<div style="margin-top:20px"><div class="cap">Positions</div><div class="scroll-x"><table class="t ops"><thead><tr><th>Placement</th><th>Titres</th><th>Prix de revient</th><th>Cours actuel</th><th>Valeur</th><th>Gain ou perte</th></tr></thead>
+      <tbody>${r.lines.map(l => `<tr><td>${RBY[l.id] ? `<a class="lnk" href="/entreprise/${l.id}">${esc(pfName(l.id))}</a>` : esc(pfName(l.id))}</td><td>${F2.format(l.q).replace(",00", "")}</td><td>${eur(l.pru)}</td><td><input class="px" type="number" inputmode="decimal" step="0.01" min="0" data-px="${esc(l.id)}" value="${l.px}" aria-label="Cours actuel"></td><td>${eur(l.val, 0)}</td><td class="${cls(l.gain)}">${eur(l.gain, 0)}</td></tr>`).join("")}</tbody></table></div><p class="note" style="margin-top:6px">Prix de revient : prix moyen payé par titre, frais compris.</p></div>` : ""}
+    <div style="margin-top:20px"><div class="cap">Opérations</div>${ops.length ? `<div class="scroll-x"><table class="t ops"><thead><tr><th>Date</th><th>Type</th><th>Placement</th><th>Titres</th><th>Prix ou montant</th><th>Frais</th><th></th></tr></thead><tbody>
+      ${ops.map((o, i) => [o, i]).sort((a, b) => b[0].date.localeCompare(a[0].date)).map(([o, i]) => `<tr><td>${dShort(o.date)}</td><td>${o.type === "achat" ? "Achat" : o.type === "vente" ? "Vente" : "Dividende"}</td><td>${esc(pfName(o.id))}</td><td>${o.type === "dividende" ? "–" : F2.format(o.q).replace(",00", "")}</td><td>${eur(o.px)}</td><td>${o.type === "dividende" ? "–" : eur(o.fee)}</td><td><button class="del" data-i="${i}" aria-label="Supprimer">×</button></td></tr>`).join("")}</tbody></table></div>` : `<div class="empty">Aucune opération pour l'instant.</div>`}</div>`;
+  let type = "achat", feeTouched = false;
+  const autoFee = () => { if (feeTouched || type === "dividende") return; const amt = v("oq") * v("op"); $("#of").value = amt > 0 ? brokerFee(brokerBy(PF.broker), amt, PF.perso).toFixed(2) : ""; };
+  const sync = () => {
+    $("#op").previousElementSibling.textContent = type === "dividende" ? "Montant reçu (€)" : "Prix d'un titre (€)";
+    $("#oq").closest(".field").hidden = type === "dividende"; $("#of").closest(".field").hidden = type === "dividende";
+    $("#onameF").hidden = $("#oi").value !== "autre"; autoFee();
+  };
+  $("#ot").onclick = e => { const x = e.target.closest("button"); if (!x) return; type = x.dataset.v; $$("#ot button").forEach(y => y.classList.toggle("on", y === x)); sync(); };
+  $("#oi").onchange = sync; $("#oq").oninput = $("#op").oninput = autoFee; $("#of").oninput = () => { feeTouched = true; };
+  $("#pfb").onchange = () => { PF.broker = $("#pfb").value; pfSave(PF); renderPf(); };
+  if ($("#pfx")) $("#pfx").onchange = $("#ppc").onchange = () => { PF.perso = { fixe: v("pfx"), pct: v("ppc") }; pfSave(PF); renderPf(); };
+  sync();
+  $("#oadd").onclick = () => {
+    const date = $("#od").value || TODAY, msg = $("#omsg");
+    let id = $("#oi").value;
+    if (id === "autre") { const n = $("#oname").value.trim(); if (!n) { msg.textContent = "Indiquez le nom du placement."; return; } id = "autre:" + n.slice(0, 60); }
+    const q = type === "dividende" ? 0 : v("oq"), px = v("op"), fee = type === "dividende" ? 0 : v("of");
+    if (type !== "dividende" && (q <= 0 || px <= 0)) { msg.textContent = "Indiquez le nombre de titres et le prix."; return; }
+    if (type === "dividende" && px <= 0) { msg.textContent = "Indiquez le montant reçu."; return; }
+    if (type === "vente") { const held = (pfCompute(PF.ops, PF.prix).lines.find(l => l.id === id) || { q: 0 }).q; if (q > held + 1e-9) { msg.textContent = `Vous détenez ${F2.format(held).replace(",00", "")} titres.`; return; } }
+    if (date > TODAY) { msg.textContent = "La date ne peut pas être dans le futur."; return; }
+    PF.ops.push({ type, id, date, q, px, fee });
+    if (!pfSave(PF)) msg.textContent = "Enregistrement impossible dans ce navigateur.";
+    renderPf();
+  };
+  body.onclick = e => { const d = e.target.closest(".del"); if (d) { PF.ops.splice(+d.dataset.i, 1); pfSave(PF); renderPf(); } };
+  body.onchange = e => { const i = e.target.closest("input[data-px]"); if (i) { const x = parseFloat(i.value); if (x > 0) { PF.prix[i.dataset.px] = x; pfSave(PF); renderPf(); } } };
+}
+
+function pageNotFound() { setTitle("Page introuvable"); setNav(""); app.innerHTML = `<h1 class="pagetitle">Page introuvable</h1><p class="pagesub"><a class="lnk" href="/">Retour à l'accueil</a></p>`; }
+
+/* ---------- Navigation ---------- */
+/* ---------- Favoris : entreprises et ETF suivis, gardés sur l'appareil (sans compte) ---------- */
+const FKEY = "bilan.favoris"; let FAVMEM = [];
+function favs() { try { const x = JSON.parse(localStorage.getItem(FKEY) || "null"); if (Array.isArray(x)) return x; } catch (e) { } return FAVMEM; }
+function setFavs(a) { FAVMEM = a; try { localStorage.setItem(FKEY, JSON.stringify(a)); } catch (e) { } favCount(); if (typeof pushDonnees === "function") pushDonnees(); }
+const isFav = k => favs().includes(k);
+const favLbl = k => isFav(k) ? "★ Dans vos favoris" : "☆ Ajouter aux favoris";
+const favBtn = k => `<button type="button" class="favbtn${isFav(k) ? " on" : ""}" data-fav="${k}" aria-pressed="${isFav(k)}">${favLbl(k)}</button>`;
+function favCount() { const n = favs().filter(k => k.startsWith("c:") ? RBY[k.slice(2)] : ETFBY[k.slice(2)]).length; $$(".favn").forEach(el => el.textContent = n ? String(n) : ""); }
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-fav]"); if (!b) return;
+  const k = b.dataset.fav, a = favs().slice(), i = a.indexOf(k);
+  if (i >= 0) a.splice(i, 1); else a.unshift(k);
+  setFavs(a);
+  $$(`[data-fav="${k}"]`).forEach(x => { x.classList.toggle("on", isFav(k)); x.setAttribute("aria-pressed", isFav(k)); x.textContent = favLbl(k); });
+  if (location.pathname === "/favoris" && b.closest(".favlist")) pageFavoris();
+});
+
+/* ---------- Concurrents directs et comparateur ---------- */
+let CONC = {}, PXP = Promise.resolve();
+function peersOf(s, n = 4) {
+  const hand = (CONC[s.id] || []).map(id => RBY[id]).filter(Boolean);
+  if (hand.length >= 2) return { list: hand.slice(0, n), auto: false };
+  const size = caEur(s) || 1, same = R.companies.filter(x => x.id !== s.id && x.sector === s.sector && !x.missing && x.ca > 0 && !hand.includes(x));
+  const auto = same.sort((a, b) => Math.abs(Math.log((caEur(a) || 1) / size)) - Math.abs(Math.log((caEur(b) || 1) / size))).slice(0, n - hand.length);
+  return { list: [...hand, ...auto], auto: !hand.length };
+}
+const CMP_ROWS = [
+  ["ventes", "Ventes", "Ce que l'entreprise a facturé à ses clients sur l'année, en euros.", c => { const m = moneyCell(c, c.ca); return m ? { v: m.v, s: `exercice ${c.year}${m.s ? " · " + m.s : ""}` } : null; }],
+  ["croissance", "Croissance des ventes", "Évolution des ventes sur un an.", null],
+  ["marge", "Marge d'exploitation", "Ce qui reste sur 100 de ventes une fois payés salaires, achats et frais.", null],
+  ["net", "Bénéfice net", "Ce qui reste après tout, impôts compris.", null],
+  ["roe", "Rentabilité des capitaux propres", "Ce que rapporte en un an l'argent qui appartient aux actionnaires.", null],
+  [["dettenette", "lev", "gear"], "Endettement", "La dette nette, en années de résultat pour la rembourser, ou en part de ce que possèdent les actionnaires.", null],
+  ["fcf", "Trésorerie disponible", "L'argent qui reste une fois les investissements payés.", null],
+  ["payout", "Dividende", "Part du bénéfice reversée aux actionnaires.", null],
+  ["cap", "Valeur en Bourse", "Le prix de toutes ses actions (capitalisation), en euros.", c => { const v = valo(c); return v && v.capE ? { v: capFmt(v.capE), s: "au cours actuel" } : null; }],
+  ["pe", "Prix rapporté au bénéfice", "Combien d'années de bénéfice coûte l'entreprise en Bourse (PER).", c => { const v = valo(c); return v && v.pe ? { v: F0.format(v.pe) + " fois", s: MEDPE[c.sector] ? `secteur : ${F0.format(MEDPE[c.sector])} fois` : "" } : null; }],
+];
+function cmpCell(c, row, items) {
+  if (c.missing) return `<span class="light">–</span>`;
+  if (row[3]) { const x = row[3](c); return x ? `<b class="num">${x.v}</b><small>${esc(x.s)}</small>` : "–"; }
+  const keys = [].concat(row[0]), it = items.find(i => keys.includes(i.term));
+  if (it && ["net", "fcf"].includes(it.term) && c.currency !== "EUR") { const m = moneyCell(c, it.term === "net" ? c.net : c.fcf); if (m) return `<span class="dot dot-${it.lv}"></span><b class="num">${esc(m.v)}</b><small>${esc(m.s)}</small><small class="vd vd-${it.lv}">${VERDICT[it.lv]}</small>`; }
+  return it ? `<span class="dot dot-${it.lv}"></span><b class="num">${esc(String(it.value))}</b><small class="vd vd-${it.lv}">${VERDICT[it.lv]}</small>` : `<span class="light">–</span>`;
+}
+function cmpTable(list, hl) {
+  const items = list.map(c => c.missing ? [] : lecture(c, { ...c, cagr: null }));
+  return `<div class="scroll-x"><table class="t cmp"><thead><tr><th class="l"></th>${list.map(c => `<th class="l${c.id === hl ? " hl" : ""}"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 28)}<span class="nm">${esc(c.name)}</span></a></th>`).join("")}</tr></thead><tbody>
+    ${CMP_ROWS.map(r => `<tr><th class="l rowh">${r[1]}<small>${r[2]}</small></th>${list.map((c, i) => `<td class="l${c.id === hl ? " hl" : ""}">${cmpCell(c, r, items[i])}</td>`).join("")}</tr>`).join("")}
+    <tr><th class="l rowh">Bilan des comptes<small>Nombre de points forts, dans la moyenne et de vigilance.</small></th>${list.map(c => { const t = quick(c); return `<td class="l${c.id === hl ? " hl" : ""}">${t ? pills(t) : `<span class="light">${missingTxt(c)}</span>`}</td>`; }).join("")}</tr>
+  </tbody></table></div>`;
+}
+function concurrentsHTML(s) {
+  const { list, auto } = peersOf(s, 3); if (!list.length) return "";
+  const all = [s, ...list];
+  return `<section class="panel" id="concurrents"><div class="ph"><h2>${auto ? "Des entreprises comparables" : "Ses concurrents directs"}</h2><a href="/comparer?ids=${all.map(c => c.id).join(",")}">Comparer en détail →</a></div>
+    <div class="pb" style="padding-bottom:4px"><p class="muted" style="margin:0 0 6px">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services que ${esc(s.name)}, aux mêmes clients.`} Une marge ou une dette se juge mieux à côté de celles des concurrents.</p></div>
+    ${cmpTable(all, s.id)}${compareSynth(all, s)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise ; les montants restent dans la devise de chaque entreprise, les pourcentages se comparent directement.</div></section>`;
+}
+async function pageComparer() {
+  setTitle("Comparer des entreprises"); setNav("ent");
+  app.innerHTML = `<div class="empty">Chargement…</div>`; await PXP;
+  let ids = (new URLSearchParams(location.search).get("ids") || "").split(",").filter(id => RBY[id]);
+  await premStatus(); const CMAX = isPrem() ? 5 : FREE.cmp, cut = new Set(ids).size > CMAX;
+  ids = [...new Set(ids)].slice(0, CMAX);
+  const list = ids.map(id => RBY[id]);
+  const sug = list.length ? [...new Set(list.flatMap(c => peersOf(c, 5).list))].filter(c => !ids.includes(c.id)).slice(0, 8) : ["lvmh", "kering", "hermes", "apple", "microsoft", "nvidia", "amd", "totalenergies"].map(id => RBY[id]).filter(Boolean);
+  const url = a => "/comparer?ids=" + a.join(",");
+  app.innerHTML = `<div class="crumbs"><a href="/entreprises">Entreprises</a> › Comparer</div><h1 class="pagetitle">Comparer des entreprises</h1>
+    <p class="pagesub">Jusqu'à ${CMAX === 5 ? "cinq" : "trois"} entreprises côte à côte${CMAX === 5 ? "" : ` (cinq avec <a class="lnk" href="/premium">Premium</a>)`}, sur les mêmes critères. Les couleurs disent si chaque chiffre est un point fort, dans la moyenne ou un point de vigilance ; elles ne disent pas quelle action acheter.</p>
+    <section class="panel"><div class="pb">
+      <div class="chips cmpsel">${list.map(c => `<a class="chipx" href="${url(ids.filter(x => x !== c.id))}" title="Retirer">${esc(c.name)} <span aria-hidden="true">×</span></a>`).join("")}</div>
+      ${cut || (!isPrem() && ids.length >= CMAX) ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">La version gratuite compare ${FREE.cmp} entreprises à la fois. <a class="lnk" href="/premium">Premium</a> en compare cinq.</p>` : ""}
+      ${ids.length < CMAX ? `<div class="field" style="max-width:420px;margin-top:10px;position:relative"><label for="cmpq">Ajouter une entreprise</label><input id="cmpq" type="search" autocomplete="off" placeholder="Nom de l'entreprise"><div class="msug" id="cmps" hidden></div></div>
+      ${sug.length ? `<div class="chips" style="margin-top:10px"><span class="light" style="font-size:13px">${list.length ? "Ses concurrents :" : "Exemples :"}</span>${sug.map(c => `<a class="chip" href="${url([...ids, c.id])}">+ ${esc(c.name)}</a>`).join("")}</div>` : ""}` : ""}
+    </div></section>
+    ${list.length ? `<section class="panel">${list.some(c => c.currency !== list[0].currency) ? `<div class="pb" style="padding-bottom:0"><p class="muted" style="margin:0;font-size:13px">Les montants sont convertis en euros aux taux de la BCE pour être comparables ; le montant d'origine est indiqué dessous.</p></div>` : ""}${list.length > 1 ? compareSynth(list).replace('class="synth"', 'class="synth" style="border-top:0;border-bottom:1px solid var(--line2)"') : ""}${cmpTable(list, null)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise (rapports ESEF et SEC). Les montants restent dans la devise de chaque entreprise ; les pourcentages se comparent directement. Pour une banque ou un assureur, la marge et la dette ne se lisent pas de la même façon.</div></section>
+      ${profilsCompare(list)}
+      <section class="panel"><div class="ph"><h2>Comment lire cette comparaison</h2></div><div class="pb"><ol class="steps2">
+        <li><b>Comparez des entreprises du même métier.</b> Une marge de 10 % est faible pour un éditeur de logiciels et élevée pour un supermarché.</li>
+        <li><b>Regardez plusieurs lignes ensemble.</b> Une forte rentabilité avec beaucoup de dette ne vaut pas une forte rentabilité sans dette.</li>
+        <li><b>Un chiffre est une photo d'une année.</b> Sur chaque fiche, l'onglet « Approfondir » montre l'évolution sur plusieurs années.</li>
+        <li><b>Servez-vous de la médiane.</b> La ligne « secteur » donne la médiane : l'entreprise du milieu de son secteur. Au-dessus, mieux que la moitié des concurrentes ; en dessous, moins bien. ${medBtn("Qu'est-ce que la médiane ?")}</li>
+        <li><b>Le prix de l'action n'est pas ici.</b> Une entreprise solide peut avoir une action chère : comparez aussi le prix aux bénéfices (rubrique « Prix de l'action » de chaque fiche).</li></ol></div></section>` : `<section class="panel"><div class="empty">Ajoutez une entreprise pour commencer.</div></section>`}`;
+  const q = $("#cmpq"), box = $("#cmps");
+  if (q) q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
+    const hits = R.companies.filter(c => !ids.includes(c.id) && (norm(c.name).includes(t) || norm(c.ticker || "") === t)).slice(0, 7);
+    box.innerHTML = hits.map(c => `<button type="button" data-id="${c.id}">${esc(c.name)} <small>${esc(secName(c))}</small></button>`).join("") || `<div class="light" style="padding:8px 10px">Aucune entreprise trouvée</div>`; box.hidden = false;
+    $$("button", box).forEach(b => b.onclick = () => go(url([...ids, b.dataset.id]))); };
+}
+
+/* ---------- PEA, compte-titres, assurance-vie : où acheter des actions ---------- */
+const gain1000 = r => F0.format(1000 * (1 - r)) + " €";
+function pageEnveloppes() {
+  setTitle("PEA, compte-titres, assurance-vie : lequel choisir"); setNav("lex");
+  const rows = [
+    ["Ce qu'on peut y acheter", "Actions d'entreprises dont le siège est dans l'Union européenne (ou en Norvège, Islande, Liechtenstein) et ETF « éligibles PEA », y compris des ETF Monde ou S&P 500.", "Tout : actions du monde entier (Apple, Nvidia…), tous les ETF, obligations.", "Fonds proposés par l'assureur (fonds euros, ETF, fonds d'actions). Rarement des actions en direct."],
+    ["Combien on peut y verser", "150 000 € au maximum (20 000 € pour un jeune majeur rattaché au foyer de ses parents).", "Sans limite.", "Sans limite."],
+    ["Impôt sur les gains", `Aucun tant que l'argent reste dans le PEA. Au retrait après 5 ans : seulement ${pct(RATES.ps, 1, false)} de prélèvements sociaux. Avant 5 ans : ${pct(RATES.pfu, 1, false)}.`, `${pct(RATES.pfu, 1, false)} sur chaque dividende et chaque plus-value, l'année où on les touche (« flat tax »).`, "Rien tant qu'on ne retire pas. Après 8 ans : 4 600 € de gains par an sans impôt sur le revenu (9 200 € pour un couple), mais 17,2 % de prélèvements sociaux."],
+    ["Retirer son argent", "Possible à tout moment. Avant 5 ans, un retrait ferme le PEA (sauf exceptions : licenciement, invalidité, création d'entreprise).", "Possible à tout moment, sans conséquence sur le compte.", "Possible à tout moment ; l'avantage fiscal grandit avec les années."],
+    ["Combien par personne", "Un seul PEA par personne.", "Autant qu'on veut.", "Autant qu'on veut."],
+  ];
+  const ex = [["Compte-titres", RATES.pfu, `${pct(RATES.pfu, 1, false)} prélevés`], ["PEA, retrait avant 5 ans", RATES.pfu, `${pct(RATES.pfu, 1, false)} prélevés, et le PEA est fermé`], ["PEA, retrait après 5 ans", RATES.ps, `${pct(RATES.ps, 1, false)} de prélèvements sociaux`], ["Assurance-vie après 8 ans", 0.172, "17,2 % de prélèvements sociaux, si les gains retirés dans l'année restent sous 4 600 €"]];
+  app.innerHTML = `<div class="crumbs"><a href="/lexique">Apprendre</a> › PEA, compte-titres, assurance-vie</div>
+    <h1 class="pagetitle">PEA, compte-titres, assurance-vie : où acheter ses actions</h1>
+    <p class="pagesub">On n'achète pas une action « toute seule » : on l'achète dans un compte, ouvert chez une banque ou un courtier. En France, il en existe trois grands types. Ils ne changent rien à l'action elle-même, mais beaucoup aux impôts que vous paierez sur vos gains.</p>
+    <section class="panel"><div class="ph"><h2>L'essentiel en une phrase chacun</h2></div><div class="trois">
+      <div class="carte"><div class="n">1</div><h3>Le PEA (plan d'épargne en actions)</h3><p>Le compte pensé pour les actions européennes et les ETF éligibles : au bout de 5 ans, vos gains échappent à l'impôt sur le revenu.</p></div>
+      <div class="carte"><div class="n">2</div><h3>Le compte-titres ordinaire (CTO)</h3><p>Le compte sans limite ni condition : on y achète tout, partout dans le monde, mais chaque gain est taxé à ${pct(RATES.pfu, 1, false)}.</p></div>
+      <div class="carte"><div class="n">3</div><h3>L'assurance-vie</h3><p>Un contrat d'épargne qui peut contenir des fonds d'actions ; intéressant après 8 ans, et pour transmettre un capital.</p></div></div></section>
+    <section class="panel"><div class="ph"><h2>Les trois comptes, critère par critère</h2><span class="light" style="font-size:12.5px">Règles ${RATES.year}</span></div>
+      <div class="scroll-x"><table class="t cmp env"><thead><tr><th class="l"></th><th class="l">PEA</th><th class="l">Compte-titres</th><th class="l">Assurance-vie</th></tr></thead>
+      <tbody>${rows.map(r => `<tr><th class="l rowh">${r[0]}</th>${r.slice(1).map(x => `<td class="l wrap">${x}</td>`).join("")}</tr>`).join("")}</tbody></table></div></section>
+    <section class="panel"><div class="ph"><h2>Exemple : 1 000 € de gain, combien vous reste-t-il ?</h2></div><div class="pb">
+      ${hbars(ex.map(([l, r]) => ({ label: l, v: 1000 * (1 - r) })), v => F0.format(v) + " €")}
+      <ul style="margin:12px 0 0;padding-left:18px;font-size:14px;line-height:1.55">${ex.map(([l, r, t]) => `<li><b>${l}</b> : ${t}, il vous reste <b class="num">${gain1000(r)}</b>.</li>`).join("")}</ul>
+      <p class="muted" style="margin:10px 0 0">Calcul simplifié pour un gain retiré en une fois. Sur un compte-titres, on peut aussi choisir d'être imposé au barème de l'impôt sur le revenu, intéressant pour les foyers peu ou pas imposables.</p></div></section>
+    <section class="panel"><div class="ph"><h2>Les questions qu'on se pose au début</h2></div><div class="pb">
+      ${acc("Je débute : par lequel commencer ?", `<p>Beaucoup de débutants ouvrent d'abord un PEA, même avec peu d'argent : le délai de 5 ans commence au premier versement, alors l'ouvrir tôt fait gagner du temps. Un ETF Monde éligible au PEA permet d'y détenir des actions du monde entier, y compris américaines.</p><p>Le compte-titres devient utile pour acheter une action précise hors d'Europe (Apple, Nvidia, Microsoft…), qui ne peut pas aller dans un PEA.</p><p class="muted">Ce sont des pratiques courantes, pas un conseil : le bon choix dépend de votre situation et de votre horizon.</p>`)}
+      ${acc("Une action précise peut-elle aller dans mon PEA ?", `<p>Il faut que l'entreprise ait son siège dans l'Union européenne ou l'Espace économique européen. Sur chaque fiche, la ligne <b>« Compte possible »</b> l'indique d'après le pays de l'entreprise. LVMH, TotalEnergies ou ASML : oui. Apple, Nestlé (Suisse) ou Shell (Royaume-Uni) : non.</p>`)}
+      ${acc("Et les ETF ?", `<p>Un ETF est éligible au PEA s'il détient au moins 75 % d'actions européennes, ou s'il reproduit un indice étranger par un mécanisme d'échange (« réplication synthétique »). C'est ainsi qu'existent des ETF MSCI World ou S&P 500 éligibles au PEA. La page <a class="lnk" href="/etf">ETF</a> indique pour chacun s'il est éligible.</p>`)}
+      ${acc("Que se passe-t-il pour les dividendes ?", `<p>Dans un PEA, les dividendes arrivent sur le compte sans impôt et peuvent être réinvestis. Sur un compte-titres, ${pct(RATES.pfu, 1, false)} sont prélevés à chaque versement. Pour une action américaine, les États-Unis prélèvent en plus une retenue de 15 % (avec le formulaire W-8BEN, proposé par la plupart des courtiers), qui se déduit en partie de l'impôt français.</p>`)}
+      ${acc("Le PEA bloque-t-il mon argent 5 ans ?", `<p>Non, l'argent n'est pas bloqué : vous pouvez retirer à tout moment. Mais avant 5 ans, un retrait ferme le PEA et les gains sont imposés comme sur un compte-titres (${pct(RATES.pfu, 1, false)}), sauf cas prévus par la loi (licenciement, invalidité, création d'entreprise). Après 5 ans, on peut retirer une partie sans fermer le plan.</p>`)}
+      ${acc("Et le livret A, le PER ?", `<p>Le livret A ne contient pas d'actions : l'argent est disponible et garanti, ses intérêts sont exonérés d'impôt. Le PER (plan d'épargne retraite) peut contenir des fonds d'actions ; ses versements réduisent l'impôt sur le revenu, mais l'argent reste bloqué jusqu'à la retraite, sauf exceptions (achat de la résidence principale notamment).</p>`)}
+    </div></section>
+    <section class="panel"><div class="pb" style="display:flex;gap:18px;flex-wrap:wrap"><a class="more" href="/simulateurs/pea-cto">Simuler PEA ou compte-titres avec vos montants →</a><a class="more" href="/etf">Voir les ETF éligibles au PEA →</a></div>
+      <div class="src">Règles en vigueur en ${RATES.year}, vérifiées le 28/10/2026 : <a href="https://www.service-public.gouv.fr/particuliers/vosdroits/F2385" target="_blank" rel="noopener">Service-public.fr, fiche PEA</a> (mise à jour du 22/05/2026). Hausse des prélèvements sociaux à 18,6 % au 1er janvier 2026 (loi de financement de la Sécurité sociale pour 2026), l'assurance-vie restant à 17,2 %. Les règles fiscales changent souvent : vérifiez auprès de votre banque ou de votre courtier.</div></section>`;
+}
+const EEA = new Set(["FR", "DE", "NL", "BE", "LU", "IT", "ES", "PT", "IE", "AT", "FI", "SE", "DK", "NO", "IS", "LI", "PL", "CZ", "GR", "HU", "SK", "SI", "EE", "LV", "LT", "MT", "CY", "HR", "BG", "RO"]);
+// Règle complète (siège UE/EEE et impôt sur les sociétés, foncières exonérées exclues) : recoPeaOk dans m/reco.js
+const peaOk = c => typeof recoPeaOk === "function" ? recoPeaOk(c) : c.isin ? EEA.has(c.isin.slice(0, 2)) : null;
+
+/* =====================================================================
+   Refonte v2 : graphiques, cours, l'essentiel, dividende, prix, synthèses
+   ===================================================================== */
+
+/* ---------- Infobulles des graphiques (une seule, partagée) ---------- */
+const CTIP = document.createElement("div"); CTIP.className = "ctip"; document.body.appendChild(CTIP);
+function tipShow(el, x, y) {
+  let d; try { d = JSON.parse(el.getAttribute("data-tip")); } catch (e) { return; }
+  CTIP.textContent = "";
+  const h = document.createElement("div"); h.className = "h"; h.textContent = d.h || ""; CTIP.appendChild(h);
+  (d.r || []).forEach(([name, val, col]) => {
+    const r = document.createElement("div"); r.className = "r";
+    const sp = document.createElement("span"); if (col) { const i = document.createElement("i"); i.style.background = col; sp.appendChild(i); }
+    sp.appendChild(document.createTextNode(name)); const b = document.createElement("b"); b.textContent = val;
+    r.append(sp, b); CTIP.appendChild(r);
+  });
+  if (d.n) { const n = document.createElement("div"); n.style.cssText = "margin-top:4px;color:var(--light);font-size:11.5px"; n.textContent = d.n; CTIP.appendChild(n); }
+  CTIP.style.display = "block";
+  const w = CTIP.offsetWidth, hh = CTIP.offsetHeight;
+  CTIP.style.left = Math.min(innerWidth - w - 8, Math.max(8, x + 14)) + "px";
+  CTIP.style.top = Math.max(8, y - hh - 12) + "px";
+}
+document.addEventListener("pointermove", e => { const el = e.target.closest && e.target.closest("[data-tip]"); if (el) tipShow(el, e.clientX, e.clientY); else CTIP.style.display = "none"; });
+document.addEventListener("focusin", e => { const el = e.target.closest && e.target.closest("[data-tip]"); if (el) { const r = el.getBoundingClientRect(); tipShow(el, r.left + r.width / 2, r.top); } });
+document.addEventListener("focusout", () => { CTIP.style.display = "none"; });
+const tipAttr = o => `data-tip="${esc(JSON.stringify(o))}"`;
+
+/* ---------- Échelles « rondes » ---------- */
+function niceTicks(min, max, n = 4) {
+  if (min === max) { max = min + 1; }
+  const span = max - min, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0))), f = step0 / mag;
+  const step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * mag;
+  const lo = Math.floor(min / step) * step, hi = Math.ceil(max / step) * step, t = [];
+  for (let v = lo; v <= hi + step / 2; v += step) t.push(+v.toFixed(10));
+  return t;
+}
+const INK = "#111214", SAND = "#B9AE97", GREENC = "#0E6B4A", ORANGEC = "#D94F2B", GRIDC = "#ECE6DA", AXC = "#8A857D";
+const SERIES_COL = [INK, "#0E7490", "#B9AE97", "#7A5C99", "#8FB51E"];
+
+/* Colonnes par année : une ou deux séries, axe gradué, repère facultatif (médiane du secteur), infobulle par année */
+function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = "", h = 170, note = "" }) {
+  // On retire les années de début vides pour toutes les séries
+  let k = 0; while (k < labels.length - 1 && series.every(s => !okn(s.values[k]))) k++;
+  labels = labels.slice(k); series = series.map(s => ({ ...s, values: s.values.slice(k).map(v => okn(v) ? v : null) }));
+  const all = series.flatMap(s => s.values).filter(v => v != null).concat(ref != null ? [ref] : []);
+  if (!all.length) return `<p class="muted" style="margin:0">Pas de chiffres publiés pour ce graphique.</p>`;
+  const ticks = niceTicks(Math.min(0, ...all), Math.max(0, ...all)), tmin = ticks[0], tmax = ticks.at(-1);
+  const W = chartW(), H = h, pl = W < 420 ? 46 : 54, pr = 12, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / n;
+  const Y = v => pt + (H - pt - pb) * (tmax - v) / (tmax - tmin || 1), X = i => pl + band * (i + .5);
+  const ns = series.length, bw = Math.min(ns > 1 ? 14 : 20, band * 0.5 / ns), gap = 2, tf = tickFmt || fmt;
+  let g = ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#CFC6B4" : GRIDC}" stroke-width="1"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11" fill="${AXC}">${esc(tf(t))}</text>`).join("");
+  let bars = "", hits = "";
+  labels.forEach((lab, i) => {
+    const x0 = X(i) - (ns * bw + (ns - 1) * gap) / 2;
+    series.forEach((s, j) => {
+      const v = s.values[i]; if (v == null) { if (ns === 1) bars += `<text x="${X(i)}" y="${Y(0) - 6}" text-anchor="middle" font-size="11" fill="${AXC}">non publié</text>`; return; }
+      const x = x0 + j * (bw + gap), y0 = Y(Math.max(0, v)), y1 = Y(Math.min(0, v)), hh = Math.max(1.5, y1 - y0), r = Math.min(4, bw / 2, hh);
+      const col = v < 0 ? ORANGEC : (s.color || INK);
+      // extrémité arrondie côté valeur, carrée côté zéro
+      bars += v >= 0 ? `<path d="M${x},${y1} V${y0 + r} Q${x},${y0} ${x + r},${y0} H${x + bw - r} Q${x + bw},${y0} ${x + bw},${y0 + r} V${y1} Z" fill="${col}"/>`
+        : `<path d="M${x},${y0} V${y1 - r} Q${x},${y1} ${x + r},${y1} H${x + bw - r} Q${x + bw},${y1} ${x + bw},${y1 - r} V${y0} Z" fill="${col}"/>`;
+    });
+    if (i === n - 1 && ns === 1) { const v = series[0].values[i]; if (v != null) bars += `<text x="${X(i)}" y="${v >= 0 ? Y(v) - 7 : Y(v) + 15}" text-anchor="middle" font-size="12.5" font-weight="600" fill="${INK}">${esc(fmt(v))}</text>`; }
+    g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#55524C">${esc(lab)}</text>`;
+    const tip = { h: String(lab), r: series.map(s => [s.name, s.values[i] == null ? "non publié" : fmt(s.values[i]), s.color || INK]).concat(ref != null ? [[refLabel, fmt(ref), SAND]] : []) };
+    hits += `<rect x="${pl + band * i}" y="${pt}" width="${band}" height="${H - pt - pb}" fill="transparent" tabindex="0" ${tipAttr(tip)}/>`;
+  });
+  const refl = ref != null ? `<line x1="${pl}" x2="${W - pr}" y1="${Y(ref)}" y2="${Y(ref)}" stroke="${SAND}" stroke-width="2"/>` : "";
+  const leg = ns > 1 || ref != null ? `<div class="lg2">${series.map(s => `<span><i style="background:${s.color || INK}"></i>${esc(s.name)}</span>`).join("")}${ref != null ? `<span><i class="ln" style="background:${SAND}"></i>${esc(refLabel)} : ${esc(fmt(ref))}</span>` : ""}</div>` : "";
+  return `<div class="chart2">${leg}<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(s => s.name).join(", "))}">${g}${refl}${bars}${hits}</svg>${note ? `<p class="note">${note}</p>` : ""}</div>`;
+}
+/* Courbes (pourcentages au fil des années, comparaison à une référence) */
+function trendChart({ labels, series, fmt, h = 220 }) {
+  const all = series.flatMap(s => s.values).filter(okn);
+  if (all.length < 2) return `<p class="muted" style="margin:0">Pas assez d'années publiées pour tracer une évolution.</p>`;
+  const lo = Math.min(...all), hi = Math.max(...all), pad = (hi - lo) * 0.15 || Math.abs(hi) * 0.1 || 1;
+  const ticks = niceTicks(Math.min(lo - pad, lo >= 0 ? 0 : lo - pad), hi + pad), tmin = ticks[0], tmax = ticks.at(-1);
+  const W = chartW(), H = h, pl = W < 420 ? 46 : 54, pr = W < 420 ? 58 : 70, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / Math.max(1, n - 1);
+  const Y = v => pt + (H - pt - pb) * (tmax - v) / (tmax - tmin || 1), X = i => pl + band * i;
+  let g = ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#CFC6B4" : GRIDC}"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11.5" fill="${AXC}">${esc(fmt(t))}</text>`).join("");
+  labels.forEach((l, i) => { g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#55524C">${esc(l)}</text>`; });
+  let lines = "";
+  series.forEach((s, j) => {
+    const col = s.color || SERIES_COL[j], pts = s.values.map((v, i) => okn(v) ? [X(i), Y(v)] : null);
+    let d = "", on = false; pts.forEach(p => { if (p) { d += (on ? "L" : "M") + p[0].toFixed(1) + "," + p[1].toFixed(1); on = true; } else on = false; });
+    lines += `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+    const li = s.values.map(okn).lastIndexOf(true);
+    if (li >= 0) lines += `<circle cx="${X(li)}" cy="${Y(s.values[li])}" r="4.5" fill="${col}" stroke="#fff" stroke-width="2"/><text x="${X(li) + 9}" y="${Y(s.values[li]) + 4}" font-size="12" font-weight="600" fill="${INK}">${esc(fmt(s.values[li]))}</text>`;
+  });
+  let hits = ""; labels.forEach((l, i) => { hits += `<rect x="${X(i) - band / 2}" y="${pt}" width="${band}" height="${H - pt - pb}" fill="transparent" tabindex="0" ${tipAttr({ h: String(l), r: series.map((s, j) => [s.name, okn(s.values[i]) ? fmt(s.values[i]) : "–", s.color || SERIES_COL[j]]) })}/>`; });
+  const leg = `<div class="lg2">${series.map((s, j) => `<span><i class="ln" style="background:${s.color || SERIES_COL[j]}"></i>${esc(s.name)}</span>`).join("")}</div>`;
+  return `<div class="chart2">${series.length > 1 ? leg : ""}<svg viewBox="0 0 ${W} ${H}" role="img">${g}${lines}${hits}</svg></div>`;
+}
+// Ancienne fonction gardée pour les appels existants : redirige vers le nouveau graphique
+function barsSVG({ labels, values, fmt, ref = null, refLabel = "", h = 220, name = "" }) {
+  return colChart({ labels, series: [{ name: name || "Valeur", values }], fmt, ref, refLabel, h });
+}
+const compact = cur => v => { const a = Math.abs(v), s = CUR[cur] || cur || "", d1 = x => F1.format(x).replace(/,0$/, ""); return a >= 1000 ? d1(v / 1000) + " Md" + (s ? " " + s : "") : F0.format(v) + " M" + (s ? " " + s : ""); };
+const pctTick = v => F0.format(v * 100) + " %";
+
+/* ---------- Cours de Bourse (feuille Google publiée) et taux de change (BCE) ---------- */
+let PX = {}, PXUP = null, FX = null;
+async function loadPrices() {
+  if (PXUP) return;
+  try { const r = await fetch("/api/cours"); if (r.ok) { const j = await r.json(); PX = j.items || {}; PXUP = j.updated; } } catch (e) { }
+  if (!PXUP) { try { const j = await (await fetch("/data/cours.json")).json(); PX = j.items || {}; PXUP = j.updated; } catch (e) { PXUP = "none"; } }
+  try { FX = (await (await fetch("/data/fx.json")).json()).eur; } catch (e) { FX = null; }
+  computePE();
+}
+const toEur = (v, cur) => v == null || !cur ? null : v * ((FX && FX[cur]) || FXE[cur] || (cur === "EUR" ? 1 : NaN));
+const pxOf = c => PX["c:" + c.id] || null;
+const pxEtf = e => PX["e:" + e.id] || null;
+function valo(c) { // capitalisation, PER, rendement, à partir du cours et des derniers comptes
+  const p = pxOf(c); if (!p) return null;
+  let capE = p.cap ? toEur(p.cap, p.cur) : null; const netE = c.net != null ? toEur(c.net * 1e6, c.currency) : null;
+  let pe = capE && netE > 0 ? capE / netE : null, sain = true;
+  if (pe == null && c.eps > 0 && p.cur === c.currency) pe = p.p / c.eps;
+  // Garde-fou : devise des comptes mal lue ou capitalisation erronée dans la source des cours.
+  // Si le PER tiré de la capitalisation est invraisemblable, on le recalcule avec le cours et le bénéfice par action.
+  const peE = c.eps > 0 && p.p > 0 ? p.p / c.eps : null;
+  if (peE != null && peE >= 3 && peE <= 150 && (pe == null || pe < 3 || pe > 150)) { pe = peE; sain = false; if (c.net > 0) capE = toEur(p.p * c.net * 1e6 / c.eps, p.cur); }
+  let yld = null;
+  if (sain && c.divPaid > 0.5 && capE) yld = toEur(c.divPaid * 1e6, c.currency) / capE;
+  if ((yld == null || yld > 0.15) && c.dps > 0 && (p.cur === c.currency || !sain)) yld = c.dps / p.p;
+  if (yld != null && (yld > 0.25 || yld < 0)) yld = null;
+  if (pe != null && (pe > 500 || pe < 2)) pe = null;
+  return { p, capE, pe, yld };
+}
+let MEDPE = {};
+function computePE() {
+  const by = {}; R.companies.forEach(c => { if (c.missing) return; const v = valo(c); if (v && v.pe) (by[c.sector] = by[c.sector] || []).push(v.pe); });
+  MEDPE = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, l.length >= 5 ? median(l) : null]));
+}
+const pxFmt = (v, cur) => v == null ? "–" : nf(v >= 1000 ? 0 : 2).format(v) + " " + (CUR[cur] || cur || "");
+const capFmt = v => v == null ? "–" : v >= 1e12 ? F1.format(v / 1e12) + " 000 Md€".replace(" 000 Md€", " billions d'€") : v >= 1e9 ? F1.format(v / 1e9) + " Md€" : F0.format(v / 1e6) + " M€";
+function priceHead(c, isEtf = false) {
+  const p = isEtf ? pxEtf(c) : pxOf(c);
+  if (!p) return `<div class="pxhead"><span class="d">${PXUP && PXUP !== "none" ? "Cours non disponible pour ce titre" : "Chargement du cours…"}</span></div>`;
+  const ch = p.chg;
+  return `<div class="pxhead"><span class="kick">Cours</span><span class="p">${pxFmt(p.p, p.cur)}</span>${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % aujourd'hui</span>` : ""}<span class="d">Différé d'environ 20 min · ${esc(p.s)}</span></div>`;
+}
+
+/* ---------- Mots simples pour les tendances ---------- */
+const trendWords = g => g == null ? "" : g >= 0.25 ? "en très forte hausse" : g >= 0.08 ? "en forte hausse" : g >= 0.02 ? "en hausse" : g > -0.02 ? "stables" : g > -0.08 ? "en léger recul" : "en net recul";
+const trendWordsM = g => g == null ? "" : g >= 0.25 ? "en très forte hausse" : g >= 0.08 ? "en forte hausse" : g >= 0.02 ? "en hausse" : g > -0.02 ? "stable" : g > -0.08 ? "en léger recul" : "en net recul";
+function partWords(p) {
+  if (p == null) return "";
+  if (p >= 0.97) return "la quasi-totalité";
+  if (p >= 0.7) return "les trois quarts environ";
+  if (p >= 0.6) return "un peu plus de la moitié";
+  if (p >= 0.45) return "la moitié environ";
+  if (p >= 0.38) return "un peu moins de la moitié";
+  if (p >= 0.28) return "un tiers environ";
+  if (p >= 0.2) return "un quart environ";
+  if (p >= 0.08) return "une petite partie";
+  return "une très petite partie";
+}
+const sgn = (v, d = 0) => (v > 0 ? "+" : v < 0 ? "−" : "") + nf(d).format(Math.abs(v * 100)) + " %";
+
+/* ---------- L'essentiel : cinq faits, chacun avec son chiffre ---------- */
+function essentielFacts(s, f) {
+  const m = ratios(f), cur = f.currency, B = v => big(v, cur), med = MED[s.sector] || {}, bank = isBank(s), out = [];
+  CURSYM = CUR[cur] || "€";
+  if (f.ca != null) out.push(["Ventes", B(f.ca), `${bank ? "de revenus" : "de chiffre d'affaires"} sur l'exercice ${f.year}${m.g1 != null ? `, ${trendWords(m.g1)} sur un an (${sgn(m.g1)})` : ""}.`]);
+  if (!bank && m.marge != null) {
+    const mm = med.n >= 3 ? med.marge : null, cmp = mm != null && mm > 0 ? (m.marge > mm * 1.25 ? `, nettement plus que la ${medBtn()} de son secteur (${pct(mm, 0, false)}) : mieux que la grande majorité de ses concurrentes` : m.marge < mm * 0.75 ? `, moins que la ${medBtn()} de son secteur (${pct(mm, 0, false)}) : plus de la moitié de ses concurrentes font mieux` : `, proche de la ${medBtn()} de son secteur (${pct(mm, 0, false)})`) : "";
+    out.push(["Marge", pct(m.marge, m.marge < 0.1 ? 1 : 0, false), m.marge >= 0 ? `de marge d'exploitation : sur ${"100 " + CURSYM} de ventes, il reste ${e100(m.marge)} une fois payés salaires, achats et frais${cmp}.` : `de marge d'exploitation : l'activité coûte plus qu'elle ne rapporte.`]);
+  }
+  if (f.net != null) out.push(["Bénéfice", B(f.net), f.net >= 0 ? `de bénéfice net, après impôts${m.ng != null ? ` : ${trendWordsM(m.ng)} sur un an (${sgn(m.ng)})` : ""}.` : `de perte nette sur l'exercice.`]);
+  if (!bank && f.netDebt != null) {
+    if (f.netDebt < 0) out.push(["Dette", "aucune", `dette nette : l'entreprise a ${B(-f.netDebt)} de trésorerie de plus que ses emprunts.`]);
+    else if (m.lev != null) out.push(["Dette", `${F1.format(m.lev)} an${m.lev >= 2 ? "s" : ""}`, `de résultat d'exploitation (avant amortissements) suffiraient à rembourser sa dette nette de ${B(f.netDebt)} : un endettement ${m.lev <= 1.5 ? "faible" : m.lev <= 3 ? "modéré" : "élevé"}.`]);
+  }
+  if (f.divPaid != null) {
+    if (f.divPaid < 0.5) out.push(["Dividende", "aucun", "dividende versé : l'entreprise garde ses bénéfices."]);
+    else if (m.payout != null && f.net > 0) out.push(["Dividende", pct(m.payout, 0, false), `du bénéfice reversé aux actionnaires en dividendes, soit ${partWords(m.payout)}.`]);
+    else out.push(["Dividende", B(f.divPaid), "versés aux actionnaires alors que l'entreprise est en perte."]);
+  }
+  const v = valo(s);
+  if (v && v.pe) { const mp = MEDPE[s.sector]; out.push(["Prix", `${F0.format(v.pe)} fois`, `son bénéfice annuel : c'est ce que coûte l'entreprise en Bourse (PER)${mp ? `, contre ${F0.format(mp)} fois pour la médiane de son secteur` : ""}.`]); }
+  return out;
+}
+function essentielHTML(s, c) {
+  const f = figuresOf(c), facts = essentielFacts(s, f), t = tally(lecture(s, f));
+  return `<section class="panel" id="essentiel"><div class="ess">
+    <div class="ess-l"><p class="kick">L'essentiel · exercice ${f.year}</p><ul class="facts">${facts.map(([l, k, t]) => `<li><span class="lbl" style="padding-top:3px">${l}</span><span><b class="k">${k}</b> ${t}</span></li>`).join("")}</ul></div>
+    <div class="ess-r"><p class="kick">Ce qu'elle fait</p><p style="margin:2px 0 12px;font-size:15px;line-height:1.5">${esc(s.fiche ? s.fiche.fait : s.desc || "")}</p>
+      ${profilHTML(s) || feu(t)}</div>
+  </div></section>`;
+}
+
+/* ---------- Synthèse d'une comparaison ---------- */
+const listFr = a => a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + " et " + a.at(-1);
+function compareSynth(list, focus = null) {
+  const rows = list.filter(c => !c.missing).map(c => ({ c, m: ratios(c), v: valo(c), t: quick(c) }));
+  if (rows.length < 2) return "";
+  const nm = c => `<b>${esc(c.name)}</b>`, out = [];
+  const best = (key, dir = 1, filt = () => true) => { const l = rows.filter(r => okn(r.m[key]) && filt(r)).sort((a, b) => dir * (b.m[key] - a.m[key])); return l; };
+  const g = best("g1"); if (g.length >= 2) { const neg = g.filter(r => r.m.g1 < 0); out.push(`<b>Croissance.</b> ${nm(g[0].c)} progresse le plus vite (${sgn(g[0].m.g1)} sur un an)${g[1] ? `, devant ${esc(g[1].c.name)} (${sgn(g[1].m.g1)})` : ""}.${neg.length ? ` ${listFr(neg.map(r => esc(r.c.name)))} ${neg.length > 1 ? "voient leurs ventes reculer" : "voit ses ventes reculer"}.` : ""}`); }
+  const mg = best("marge", 1, r => !isBank(r.c)); if (mg.length >= 2) { const last = mg.at(-1); out.push(`<b>Marge.</b> ${nm(mg[0].c)} garde le plus sur chaque vente (${pct(mg[0].m.marge, 0, false)} de marge d'exploitation)${last.m.marge < 0 ? `, ${esc(last.c.name)} perd de l'argent sur son activité` : `, ${esc(last.c.name)} le moins (${pct(last.m.marge, 0, false)})`}. Un écart de marge vient souvent du métier exact, de la taille ou du pouvoir de fixer ses prix.`); }
+  const nodebt = rows.filter(r => !isBank(r.c) && r.c.netDebt != null && r.c.netDebt < 0), lev = best("lev", 1, r => !isBank(r.c) && r.c.netDebt > 0);
+  if (nodebt.length || lev.length) out.push(`<b>Dette.</b> ${nodebt.length ? `${listFr(nodebt.map(r => esc(r.c.name)))} ${nodebt.length > 1 ? "n'ont" : "n'a"} pas de dette nette` : ""}${nodebt.length && lev.length ? " ; " : ""}${lev.length ? `${nm(lev[0].c)} est la plus endettée (${F1.format(lev[0].m.lev)} années de résultat pour rembourser)` : ""}.`);
+  const pe = rows.filter(r => r.v && r.v.pe).sort((a, b) => a.v.pe - b.v.pe);
+  if (pe.length >= 2) out.push(`<b>Prix.</b> Rapportée à ses bénéfices, l'action la moins chère est ${nm(pe[0].c)} (${F0.format(pe[0].v.pe)} fois le bénéfice annuel), la plus chère ${nm(pe.at(-1).c)} (${F0.format(pe.at(-1).v.pe)} fois). Un prix élevé traduit souvent des attentes de croissance plus fortes.`);
+  const tt = rows.filter(r => r.t).sort((a, b) => (b.t.fort - b.t.vig) - (a.t.fort - a.t.vig));
+  if (tt.length >= 2) out.push(`<b>En résumé.</b> ${nm(tt[0].c)} a les comptes les plus solides du groupe (${tt[0].t.fort} points forts, ${tt[0].t.vig} de vigilance)${tt.at(-1).t.vig ? `, ${esc(tt.at(-1).c.name)} cumule le plus de points de vigilance (${tt.at(-1).t.vig})` : ""}. Cela décrit les derniers comptes, pas l'évolution future de l'action.`);
+  return `<div class="synth"><p class="kick" style="margin-bottom:6px">Synthèse</p>${out.map(p => `<p>${p}</p>`).join("")}</div>`;
+}
+
+/* ---------- Dividende, refait ---------- */
+function dividendeHTML(s, c) {
+  const f = figuresOf(c), cur = f.currency, m = ratios(f), v = valo(s);
+  const vals = c.years.map((_, i) => at(c, "divPaid", i)), next = eventsOf(s.id).filter(e => e.date >= TODAY && /ividende/.test(e.type + e.label));
+  const us = s.region === "US" || s.region === "MONDE";
+  const how = `<ol class="steps2">
+      <li><b>Le montant est décidé</b> par le conseil d'administration puis voté en assemblée générale.${us ? " Aux États-Unis, le dividende est le plus souvent versé chaque trimestre." : " En France, il est le plus souvent versé une fois par an, parfois en plusieurs acomptes."}</li>
+      <li><b>Le jour du détachement</b>, il faut déjà détenir l'action (l'avoir achetée au plus tard la veille). Ce jour-là, le cours baisse en général à peu près du montant du dividende.</li>
+      <li><b>Le jour du paiement</b>, quelques jours plus tard, l'argent arrive sur votre compte.</li>
+      <li><b>L'impôt</b> dépend du compte : rien dans un PEA tant que l'argent y reste, ${pct(RATES.pfu, 1, false)} sur un compte-titres. <a class="lnk" href="/pea-cto">Le détail par compte</a>.${us ? " Pour une société étrangère, son pays prélève souvent une retenue à la source (15 % aux États-Unis avec le formulaire W-8BEN)." : ""}</li></ol>`;
+  if (!(f.divPaid > 0.5) && !(f.dps > 0)) return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2></div><div class="pb">
+      <p class="lead" style="margin-top:0">${esc(s.name)} n'a pas versé de dividende sur l'exercice ${f.year}. Elle garde ses bénéfices pour investir, réduire sa dette ou racheter ses propres actions (ce qui augmente la part de chaque actionnaire).</p>
+      ${acc("Comment fonctionne un dividende ?", how)}</div></section>`;
+  const okv = vals.map((x, i) => [x, c.years[i]]).filter(([x]) => okn(x) && x > 0);
+  const ups = okv.slice(1).filter(([x], i) => x >= okv[i][0] * 0.98).length;
+  const cov = m.payout != null ? (m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig") : null;
+  const per1000 = v && v.yld ? 1000 * v.yld : null;
+  const tiles = [
+    f.dps > 0 ? ["Par action", eur(f.dps, 2, cur), `versé${f.dpsEst ? " (estimé)" : ""} pendant l'exercice ${f.year}`] : null,
+    v && v.yld ? ["Rendement", pct(v.yld, 1, false), "dividende annuel ÷ prix actuel de l'action"] : null,
+    m.payout != null ? ["Part du bénéfice", pct(m.payout, 0, false), cov === "fort" ? "reversée : il reste de la marge si le bénéfice baisse" : cov === "moyen" ? "reversée : peu de marge si le bénéfice baisse" : "reversée : plus que ce que l'entreprise gagne"] : null,
+    next.length ? ["Prochaine date", dLabel(next[0].date), next[0].label] : null,
+  ].filter(Boolean);
+  return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant par action estimé à partir des comptes</span>` : ""}</div>
+    <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${esc(s.name)} a reversé ${big(f.divPaid, cur)} à ses actionnaires pendant l'exercice ${f.year}${m.payout != null ? `, soit ${partWords(m.payout)} de son bénéfice (${pct(m.payout, 0, false)})` : ""}.${per1000 != null ? ` Au cours actuel, <b>1 000 € d'actions rapporteraient environ ${F0.format(per1000)} € par an</b> avant impôts, si le dividende restait au même niveau.` : ""}${okv.length >= 3 ? ` Le total versé ${ups === okv.length - 1 ? "a progressé ou s'est maintenu chaque année" : `a progressé ou s'est maintenu ${ups} année${ups > 1 ? "s" : ""} sur ${okv.length - 1}`} depuis ${okv[0][1]}.` : ""}</p></div>
+    <div class="tiles">${tiles.map(([k, val, sub]) => `<div class="tile"><span class="kick">${k}</span><span class="v">${esc(val)}</span><small>${esc(sub)}</small></div>`).join("")}</div>
+    <div class="pb">${colChart({ labels: c.years.map(String), series: [{ name: "Dividendes versés", values: vals }], fmt: v => big(v, cur), tickFmt: compact(cur), h: 160 })}<p class="note">Total versé chaque année, toutes actions confondues : contrairement au montant par action, il n'est pas faussé quand l'entreprise divise ses actions.</p>
+    ${acc("Le dividende est-il solide ?", `<p>${m.payout == null ? "Impossible à dire sans bénéfice." : m.payout > 1 ? `Non : l'entreprise verse plus (${pct(m.payout, 0, false)}) que ce qu'elle gagne. Elle puise dans sa trésorerie ou s'endette pour payer.` : m.payout > 0.9 ? `Fragile : ${pct(m.payout, 0, false)} du bénéfice est versé. Si le bénéfice baisse, le dividende risque de baisser aussi.` : m.payout > 0.6 ? `Plutôt oui : ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une marge.` : `Oui : seulement ${pct(m.payout, 0, false)} du bénéfice est versé, il reste une bonne marge si les bénéfices baissent.`}${f.fcf != null && f.divPaid > 0 ? ` La trésorerie disponible (${big(f.fcf, cur)}) ${f.fcf >= f.divPaid ? "couvre" : "ne couvre pas"} le dividende versé.` : ""}</p><p class="muted">Un dividende n'est jamais garanti : l'entreprise peut le réduire ou le supprimer.</p>`)}
+    ${acc("Comment fonctionne un dividende ?", how)}
+    <p style="margin:12px 0 0"><a class="more" href="/dividendes">Calendrier des dividendes à venir →</a></p></div></section>`;
+}
+
+/* ---------- Prix de l'action, calculé automatiquement ---------- */
+function prixHTML(s, c) {
+  const f = figuresOf(c), v = valo(s), idxId = s.region === "US" || s.region === "MONDE" ? "sp500" : "cac40", idx = PX["i:" + idxId], idxName = idxId === "sp500" ? "S&P 500" : "CAC 40";
+  if (!v) return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2></div><div class="pb muted">${PXUP && PXUP !== "none" ? "Le cours de cette action n'est pas disponible dans notre source pour le moment." : "Chargement du cours…"}</div></section>`;
+  const p = v.p, mp = MEDPE[s.sector];
+  const perf = (a, b) => a && b ? a / b - 1 : null;
+  const prow = [["1 an", "p1y"], ["3 ans", "p3y"], ["5 ans", "p5y"]].map(([l, k]) => [l, perf(p.p, p[k]), idx ? perf(idx.p, idx[k]) : null]).filter(r => r[1] != null);
+  const pos = p.h52 && p.l52 && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null;
+  const peTxt = v.pe ? `L'action coûte <b>${F0.format(v.pe)} fois</b> le bénéfice de la dernière année${mp ? `, contre ${F0.format(mp)} fois pour la médiane de son secteur` : ""}. ${mp ? (v.pe > mp * 1.3 ? "Le marché la paie plus cher que ses concurrentes : il attend plus de croissance, ou il est optimiste." : v.pe < mp * 0.75 ? "Le marché la paie moins cher que ses concurrentes : il attend moins de croissance, ou il est prudent." : "C'est dans la moyenne de son secteur.") : ""}` : f.net != null && f.net <= 0 ? "L'entreprise a perdu de l'argent sur le dernier exercice : le PER (prix ÷ bénéfice) ne se calcule pas." : "";
+  return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2><span class="light" style="font-size:12.5px">Cours différé · ${esc(p.s)}</span></div>
+    <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${peTxt}</p></div>
+    <div class="tiles">
+      <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
+      <div class="tile"><span class="kick">Valeur en Bourse</span><span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
+      <div class="tile"><span class="kick">PER</span><span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : "non calculable (perte ou donnée manquante)"}</small></div>
+      <div class="tile"><span class="kick">Rendement</span><span class="v">${v.yld != null ? pct(v.yld, 1, false) : "–"}</span><small>${v.yld != null ? "dividende annuel ÷ valeur en Bourse" : "pas de dividende"}</small></div>
+    </div>
+    ${perExplique(s)}
+    <div class="pb">
+      ${pos != null ? `<p class="kick" style="margin-top:4px">Sur un an : du plus bas au plus haut</p><div class="range"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>${pxFmt(p.l52, p.cur)}</span><span>${pos > 0.85 ? "proche de son plus haut de l'année" : pos < 0.15 ? "proche de son plus bas de l'année" : `à ${F0.format(pos * 100)} % entre le plus bas et le plus haut`}</span><span>${pxFmt(p.h52, p.cur)}</span></div>` : ""}
+      ${prow.length ? `<p class="kick" style="margin-top:18px">Évolution du cours, comparée au ${idxName}</p>
+        <div class="scroll-x"><table class="t"><thead><tr><th class="l">Sur</th><th>${esc(s.name)}</th>${idx ? `<th>${idxName}</th>` : ""}</tr></thead><tbody>${prow.map(([l, a, b]) => `<tr><td class="l">${l}</td><td class="num ${a >= 0 ? "up" : "down"}">${sgn(a, 0)}</td>${idx ? `<td class="num">${b != null ? sgn(b, 0) : "–"}</td>` : ""}</tr>`).join("")}</tbody></table></div>
+        <p class="note">Évolution du prix seul, dividendes non compris. ${prow.at(-1)[2] != null ? (prow.at(-1)[1] > prow.at(-1)[2] ? `Sur ${prow.at(-1)[0]}, l'action a fait mieux que le ${idxName}.` : `Sur ${prow.at(-1)[0]}, l'action a fait moins bien que le ${idxName}.`) : ""} Le passé ne dit rien de l'avenir.</p>` : ""}
+    </div>
+    <div class="src">PER et rendement calculés avec les derniers comptes annuels publiés (exercice ${f.year}) et la valeur en Bourse actuelle, convertie en euros aux taux de la BCE. Cours : Google Finance, différés.</div></section>`;
+}
+function prixRun() { }
+
+/* ---------- Questions fréquentes sur une entreprise (en bas de fiche) ---------- */
+function faqHTML(s, c) {
+  const f = figuresOf(c), m = ratios(f), v = valo(s), next = eventsOf(s.id).find(e => e.date >= TODAY && /ésultat/.test(e.type)), peers = peersOf(s, 4), pea = peaOk(s), cur = f.currency;
+  const qa = [];
+  if (s.fiche) qa.push([`Que fait ${s.name} ?`, `${esc(s.fiche.fait)} ${esc(s.fiche.argent)}`]);
+  qa.push([`${s.name} verse-t-elle un dividende ?`, f.divPaid > 0.5 ? `Oui. Sur l'exercice ${f.year}, elle a versé ${big(f.divPaid, cur)} à ses actionnaires${m.payout != null ? `, soit ${pct(m.payout, 0, false)} de son bénéfice` : ""}${f.dps > 0 ? ` (${eur(f.dps, 2, cur)} par action)` : ""}.${v && v.yld ? ` Au cours actuel, cela représente un rendement d'environ ${pct(v.yld, 1, false)} par an.` : ""}` : `Non, pas sur l'exercice ${f.year} : elle garde ses bénéfices pour investir ou racheter ses actions.`]);
+  if (pea != null) qa.push([`Peut-on mettre des actions ${s.name} dans un PEA ?`, pea ? `Oui : son siège est dans l'Union européenne (ou l'Espace économique européen), ce qui la rend éligible au PEA. Elle peut aussi être achetée sur un compte-titres. <a class="lnk" href="/pea-cto">Comparer les comptes</a>.` : `Non : son siège n'est pas dans l'Union européenne. Il faut un compte-titres. Un ETF éligible au PEA peut en revanche la contenir indirectement. <a class="lnk" href="/pea-cto">Comparer les comptes</a>.`]);
+  if (!isBank(s) && f.netDebt != null) qa.push([`${s.name} est-elle endettée ?`, f.netDebt < 0 ? `Non : elle a ${big(-f.netDebt, cur)} de trésorerie de plus que ses emprunts.` : m.lev != null ? `Sa dette nette est de ${big(f.netDebt, cur)}, soit ${F1.format(m.lev)} années de résultat d'exploitation : un endettement ${m.lev <= 1.5 ? "faible" : m.lev <= 3 ? "modéré" : "élevé"}.` : `Sa dette nette est de ${big(f.netDebt, cur)}.`]);
+  qa.push([`Quand ${s.name} publie-t-elle ses résultats ?`, next ? `La prochaine publication annoncée est le ${dLabel(next.date)} (${esc(next.label)}).` : `Aucune date n'est encore annoncée. Les grandes entreprises publient en général leurs résultats annuels un à trois mois après la fin de l'exercice, puis des résultats trimestriels ou semestriels.`]);
+  if (peers.list.length) qa.push([`Qui sont les concurrents de ${s.name} ?`, `${peers.auto ? "Parmi les entreprises suivies sur le site, les plus comparables sont" : "Ses principaux concurrents suivis sur le site sont"} ${peers.list.map(c => `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a>`).join(", ")}. <a class="lnk" href="/comparer?ids=${[s, ...peers.list].map(c => c.id).join(",")}">Les comparer</a>.`]);
+  if (v && v.pe) qa.push([`L'action ${s.name} est-elle chère ?`, `Le site ne dit pas si une action est une bonne affaire. Il donne un repère : l'entreprise vaut en Bourse ${F0.format(v.pe)} fois son bénéfice annuel${MEDPE[s.sector] ? `, contre ${F0.format(MEDPE[s.sector])} fois pour la médiane de son secteur` : ""}. Un multiple élevé traduit des attentes de croissance fortes ; si elles ne se réalisent pas, le cours peut baisser.`]);
+  return `<section class="panel" id="faq"><div class="ph"><h2>Questions fréquentes sur ${esc(s.name)}</h2></div><div class="pb" style="padding-top:4px">${qa.map(([q, a]) => acc(esc(q), `<p>${a}</p>`)).join("")}</div></section>`;
+}
+
+/* ---------- Calendrier des dividendes (avec export vers un agenda) ---------- */
+function icsFile(events, name) {
+  const d = x => x.replace(/-/g, ""), esc2 = t => String(t).replace(/[,;\\]/g, m => "\\" + m).replace(/\n/g, " ");
+  const lines = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//bilan//calendrier//FR", "CALSCALE:GREGORIAN", "X-WR-CALNAME:" + esc2(name)];
+  events.forEach((e, i) => { const co = RBY[e.id]; const next = new Date(e.date + "T00:00:00Z"); next.setUTCDate(next.getUTCDate() + 1);
+    lines.push("BEGIN:VEVENT", `UID:${d(e.date)}-${e.id}-${i}@bilan`, `DTSTAMP:${d(TODAY)}T000000Z`, `DTSTART;VALUE=DATE:${d(e.date)}`, `DTEND;VALUE=DATE:${d(next.toISOString().slice(0, 10))}`, `SUMMARY:${esc2((co ? co.name : e.id) + " : " + e.label)}`, e.source ? `URL:${e.source}` : "", "END:VEVENT"); });
+  lines.push("END:VCALENDAR");
+  return new Blob([lines.filter(Boolean).join("\r\n")], { type: "text/calendar" });
+}
+function pageDividendes() {
+  setTitle("Calendrier des dividendes"); setNav("news");
+  const favIds = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
+  const all = AG.events.filter(e => e.date >= TODAY && RBY[e.id] && /ividende|acompte|détachement|solde/i.test(e.type + " " + e.label)).sort((a, b) => a.date.localeCompare(b.date));
+  let only = false;
+  const render = () => {
+    const list = all.filter(e => !only || favIds.has(e.id));
+    const byM = {}; list.forEach(e => (byM[e.date.slice(0, 7)] = byM[e.date.slice(0, 7)] || []).push(e));
+    $("#dvl").innerHTML = list.length ? Object.entries(byM).map(([mk, l]) => `<section class="panel"><div class="ph"><h2>${MOISL[+mk.slice(5) - 1].replace(/^./, x => x.toUpperCase())} ${mk.slice(0, 4)}</h2><span class="light" style="font-size:12.5px">${l.length} date${l.length > 1 ? "s" : ""}</span></div>${agendaHTML(l, true)}</section>`).join("")
+      : `<section class="panel"><div class="empty">${only ? "Aucune date de dividende annoncée pour vos favoris." : "Aucune date de dividende annoncée pour l'instant."}</div></section>`;
+  };
+  app.innerHTML = `<h1 class="pagetitle">Calendrier des dividendes</h1>
+    <p class="pagesub">Les prochaines dates annoncées par les entreprises : détachement (il faut détenir l'action la veille au soir) et paiement. Chaque date vient du calendrier publié par l'entreprise ou d'un article de presse, avec sa source.</p>
+    <section class="panel"><div class="pb" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+      <div class="chips"><button type="button" data-o="0" class="on">Toutes les entreprises</button><button type="button" data-o="1">Mes favoris${favIds.size ? ` (${favIds.size})` : ""}</button></div>
+      <button type="button" class="btn" id="ics" style="margin-left:auto">Ajouter à mon agenda (.ics)</button></div>
+      <div class="src">Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook : les dates s'y ajoutent, rien n'est envoyé.</div></section>
+    <div id="dvl"></div>`;
+  render();
+  $(".chips", app).onclick = e => { const b = e.target.closest("button"); if (!b) return; only = b.dataset.o === "1"; $$(".chips button", app).forEach(x => x.classList.toggle("on", x === b)); render(); };
+  $("#ics").onclick = () => { const list = all.filter(e => !only || favIds.has(e.id)); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (bilan.)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+}
+
+/* ---------- Premiers pas : parcours en trois niveaux, avec quiz ---------- */
+let PARCOURS = null;
+const PKEY = "bilan.parcours";
+function pState() { try { return JSON.parse(localStorage.getItem(PKEY) || "{}"); } catch (e) { return {}; } }
+function pSave(st) { try { localStorage.setItem(PKEY, JSON.stringify(st)); } catch (e) { } }
+async function pageDebuter(niv, lec) {
+  setTitle("Premiers pas en Bourse"); setNav("lex");
+  if (!PARCOURS) { try { PARCOURS = await (await fetch("/data/parcours.json")).json(); } catch (e) { app.innerHTML = `<div class="empty">Le parcours n'a pas pu être chargé.</div>`; return; } }
+  const st = pState(), N = PARCOURS.niveaux;
+  if (!niv) {
+    app.innerHTML = `<h1 class="pagetitle">Premiers pas en Bourse</h1><p class="pagesub">Trois étapes, dans l'ordre. Chaque leçon se lit en trois minutes, avec un exemple chiffré ; un quiz de six questions termine chaque étape. Votre progression reste sur cet appareil.</p>
+      <div class="trois" style="padding:0;margin-bottom:20px">${N.map((n, i) => { const done = n.lecons.filter(l => st[n.id + "/" + l.id]).length, q = st["quiz/" + n.id];
+        return `<a class="carte" href="/debuter/${n.id}" style="text-decoration:none;color:inherit;background:#fff"><div class="n">${i + 1}</div><h3>${esc(n.titre)}</h3><p>${esc(n.intro)}</p><p class="light" style="font-size:13px;margin-top:6px">${done} / ${n.lecons.length} leçons lues${q != null ? ` · quiz : ${q} / ${n.quiz.length}` : ""}</p><div class="feub" style="margin-top:6px"><span class="f" style="width:${done / n.lecons.length * 100}%"></span></div></a>`; }).join("")}</div>
+      <section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Ensuite : passer à la pratique</b><div class="muted">Ouvrir une fiche, comparer deux entreprises, choisir son compte.</div></div><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/entreprises">Les entreprises →</a><a class="more" href="/comparer">Comparer →</a><a class="more" href="/pea-cto">PEA ou compte-titres →</a></div></div></section>`;
+    return;
+  }
+  const n = N.find(x => x.id === niv); if (!n) return pageNotFound();
+  const ni = N.indexOf(n);
+  const side = `<nav class="lexnav" style="display:flex;flex-direction:column;gap:2px">${n.lecons.map((l, i) => `<a href="/debuter/${n.id}/${l.id}" style="${l.id === lec ? "font-weight:700;color:var(--ink)" : ""}">${st[n.id + "/" + l.id] ? "✓ " : `${i + 1}. `}${esc(l.titre)}</a>`).join("")}<a href="/debuter/${n.id}/quiz" style="${lec === "quiz" ? "font-weight:700;color:var(--ink)" : ""}">Quiz${st["quiz/" + n.id] != null ? ` (${st["quiz/" + n.id]}/${n.quiz.length})` : ""}</a></nav>`;
+  const head = `<div class="crumbs"><a href="/debuter">Premiers pas</a> › ${esc(n.titre)}</div>`;
+  if (lec === "quiz") {
+    let i = 0, score = 0, ans = null;
+    const draw = () => {
+      const q = n.quiz[i];
+      $("#qz").innerHTML = i >= n.quiz.length ? `<p class="lead">Score : <b>${score} / ${n.quiz.length}</b>. ${score >= 5 ? "Les notions de cette étape sont acquises." : score >= 3 ? "Une ou deux notions méritent d'être relues." : "Relire les leçons de cette étape vous aidera avant de passer à la suite."}</p>
+          <div style="display:flex;gap:16px;flex-wrap:wrap"><button type="button" class="btn" id="qre">Recommencer</button>${N[ni + 1] ? `<a class="more" href="/debuter/${N[ni + 1].id}">Étape suivante : ${esc(N[ni + 1].titre)} →</a>` : `<a class="more" href="/entreprises">Passer aux fiches entreprises →</a>`}</div>`
+        : `<p class="kick">Question ${i + 1} sur ${n.quiz.length}</p><p class="lead" style="margin-top:4px">${esc(q.q)}</p>
+          <div class="qopts">${q.options.map((o, k) => `<button type="button" class="qopt${ans != null ? (k === q.bonne ? " ok" : k === ans ? " ko" : "") : ""}" data-k="${k}" ${ans != null ? "disabled" : ""}>${esc(o)}</button>`).join("")}</div>
+          ${ans != null ? `<p class="${ans === q.bonne ? "up" : "down"}" style="font-weight:600;margin:12px 0 2px">${ans === q.bonne ? "Bonne réponse." : "Ce n'est pas la bonne réponse."}</p><p style="margin:0 0 12px">${esc(q.explication)}</p><button type="button" class="btn" id="qnx">${i + 1 < n.quiz.length ? "Question suivante" : "Voir le score"}</button>` : ""}`;
+      $$(".qopt", $("#qz")).forEach(b => b.onclick = () => { ans = +b.dataset.k; if (ans === q.bonne) score++; draw(); });
+      const nx = $("#qnx"); if (nx) nx.onclick = () => { i++; ans = null; if (i >= n.quiz.length) { const s2 = pState(); s2["quiz/" + n.id] = score; pSave(s2); } draw(); };
+      const re = $("#qre"); if (re) re.onclick = () => { i = 0; score = 0; ans = null; draw(); };
+    };
+    app.innerHTML = head + `<div class="cols"><div><h1 class="pagetitle">Quiz : ${esc(n.titre)}</h1><section class="panel"><div class="pb" id="qz"></div></section></div><aside><section class="panel"><div class="ph"><h2>${esc(n.titre)}</h2></div><div class="pb">${side}</div></section></aside></div>`;
+    draw(); return;
+  }
+  const L = n.lecons.find(l => l.id === lec) || n.lecons[0], li = n.lecons.indexOf(L);
+  st[n.id + "/" + L.id] = 1; pSave(st);
+  const nextL = n.lecons[li + 1];
+  app.innerHTML = head + `<div class="cols"><div>
+      <p class="kick">Étape ${ni + 1} · leçon ${li + 1} sur ${n.lecons.length}</p><h1 class="pagetitle">${esc(L.titre)}</h1><p class="pagesub">${esc(L.resume)}</p>
+      <section class="panel"><div class="pb" style="font-size:15.5px;line-height:1.65">${L.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}
+        <div class="calc" style="display:block;margin:14px 0"><span class="kick">Exemple</span><p style="margin:4px 0 0;color:var(--ink)">${esc(L.exemple)}</p></div>
+        <p class="kick" style="margin-top:16px">À retenir</p><ul style="margin:4px 0 0;padding-left:18px">${L.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul>
+        ${L.voir ? `<p style="margin:14px 0 0"><a class="more" href="${esc(L.voir)}">Voir sur le site →</a></p>` : ""}</div></section>
+      <div style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap">${li > 0 ? `<a class="more" href="/debuter/${n.id}/${n.lecons[li - 1].id}">← ${esc(n.lecons[li - 1].titre)}</a>` : "<span></span>"}${nextL ? `<a class="more" href="/debuter/${n.id}/${nextL.id}">${esc(nextL.titre)} →</a>` : `<a class="more" href="/debuter/${n.id}/quiz">Faire le quiz de l'étape →</a>`}</div>
+    </div><aside><section class="panel"><div class="ph"><h2>${esc(n.titre)}</h2></div><div class="pb">${side}</div></section></aside></div>`;
+  scrollTo(0, 0);
+}
+
+/* =====================================================================
+   Communauté, Portefeuille et Outils : nouvelle version
+   ===================================================================== */
+const keyName = k => k.startsWith("c:") ? (RBY[k.slice(2)] || {}).name : (ETFBY[k.slice(2)] || {}).name;
+const keyHref = k => k.startsWith("c:") ? `/entreprise/${k.slice(2)}` : `/etf/${k.slice(2)}`;
+const keyLogo = (k, s = 28) => k.startsWith("c:") ? logo(RBY[k.slice(2)] || { name: "?" }, s) : logo({ name: (ETFBY[k.slice(2)] || {}).issuer || "E", domain: ETFBY[k.slice(2)] ? issuerDom(ETFBY[k.slice(2)]) : "" }, s);
+function pseudoGet() { try { return localStorage.getItem(PSEUDO_KEY) || ""; } catch (e) { return ""; } }
+function pseudoSet(v) { try { localStorage.setItem(PSEUDO_KEY, v || ""); } catch (e) { } }
+const post = (path, body) => fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
+
+/* ---------- Communauté : questions-réponses, pronostics, portefeuille des visiteurs, discussions ---------- */
+const CTAB = [["questions", "Questions et réponses"], ["pronostics", "Pronostics de résultats"], ["portefeuilles", "Ce que détiennent les visiteurs"], ["discussions", "Discussions"]];
+function pageCommunaute() {
+  setTitle("Communauté"); setNav("com");
+  const qs = new URLSearchParams(location.search), tab = CTAB.some(t => t[0] === qs.get("onglet")) ? qs.get("onglet") : qs.get("salon") ? "discussions" : "questions";
+  app.innerHTML = `<h1 class="pagetitle">Communauté</h1>
+    <p class="pagesub">Les visiteurs s'entraident : questions de débutants, pronostics sur les prochains résultats, portefeuilles partagés anonymement. Rien de tout cela n'est un conseil ; c'est un lieu pour apprendre ensemble.</p>
+    <nav class="qtabs" style="margin-bottom:16px;border-bottom:1px solid var(--line)">${CTAB.map(([k, n]) => `<a href="/communaute?onglet=${k}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
+    <div id="ctb"><div class="empty">Chargement…</div></div>`;
+  ({ questions: commQuestions, pronostics: commPronos, portefeuilles: commPf, discussions: commDiscussions })[tab]($("#ctb"), qs);
+}
+function composeHTML(placeholder, btn, withPseudo = true) {
+  return `<form class="cform qform" autocomplete="off">${withPseudo ? `<div class="field"><label>Pseudo</label><input name="pseudo" maxlength="30" value="${esc(pseudoGet())}" placeholder="Votre pseudo"></div>` : ""}
+    <div class="field mwrap"><textarea name="body" rows="3" maxlength="1000" placeholder="${esc(placeholder)}"></textarea><div class="msug" hidden></div></div>
+    <input name="website" class="hp" tabindex="-1" aria-hidden="true"><button class="btn" type="submit">${btn}</button> <span class="muted cmsg" style="font-size:12.5px"></span></form>`;
+}
+function bindCompose(root, extra, done) {
+  const form = $(".qform", root), msg = $(".cmsg", root), picked = new Map();
+  mentionSuggest(form.body, $(".msug", root), picked);
+  form.onsubmit = ev => {
+    ev.preventDefault();
+    const fd = { ...Object.fromEntries(new FormData(form)), ...extra };
+    for (const [label, tok] of picked) fd.body = fd.body.split(label).join(tok);
+    pseudoSet(fd.pseudo); msg.textContent = "Envoi…";
+    post("/api/communaute", fd).then(j => { if (j.error) { msg.textContent = j.error; return; } msg.textContent = "Publié."; form.body.value = ""; picked.clear(); done && done(j.item); }).catch(() => { msg.textContent = "Envoi impossible pour le moment."; });
+  };
+}
+function commQuestions(el, qs) {
+  const id = parseInt(qs.get("q") || "0", 10);
+  if (id) {
+    el.innerHTML = `<div class="cols"><div id="fil"><div class="empty">Chargement…</div></div><aside>${qGuide()}</aside></div>`;
+    const load = () => fetch(`/api/communaute/fil?id=${id}`).then(r => r.json()).then(j => {
+      if (j.error) { $("#fil").innerHTML = `<section class="panel"><div class="empty">${esc(j.error)}</div></section>`; return; }
+      $("#fil").innerHTML = `<p style="margin:0 0 10px"><a class="more" href="/communaute?onglet=questions">← Toutes les questions</a></p>
+        <section class="panel"><div class="pb"><p class="kick">Question de ${esc(j.question.pseudo)} · ${new Date(j.question.created).toLocaleDateString("fr-FR")}</p><div class="qbody">${msgBody(j.question.body)}</div></div></section>
+        <section class="panel"><div class="ph"><h2>${j.answers.length ? `${j.answers.length} réponse${j.answers.length > 1 ? "s" : ""}` : "Pas encore de réponse"}</h2><span class="light" style="font-size:12.5px">Les plus utiles en premier</span></div>
+          <div class="pb">${j.answers.map(a => msgHTML(a, false)).join("") || `<p class="muted" style="margin:0">Soyez le premier à répondre.</p>`}</div></section>
+        <section class="panel"><div class="ph"><h2>Répondre</h2></div><div class="pb" id="rep">${composeHTML("Votre réponse. Expliquez simplement, citez une entreprise en tapant son nom.", "Publier la réponse")}</div></section>`;
+      bindCompose($("#rep"), { room: "questions", kind: "avis", parent: id }, load);
+      bindVotes($("#fil"));
+    }).catch(() => { $("#fil").innerHTML = `<section class="panel"><div class="empty">Indisponible pour le moment.</div></section>`; });
+    load(); return;
+  }
+  el.innerHTML = `<div class="cols"><div>
+      <section class="panel"><div class="ph"><h2>Poser une question</h2></div><div class="pb" id="ask">${composeHTML("Par exemple : pourquoi l'action de Danone baisse-t-elle alors que ses ventes montent ? Tapez le nom d'une entreprise pour la citer.", "Poser la question")}</div></section>
+      <section class="panel"><div class="ph"><h2>Les dernières questions</h2></div><div id="qlist"><div class="empty">Chargement…</div></div></section>
+    </div><aside>${qGuide()}</aside></div>`;
+  const load = () => fetch("/api/communaute/questions").then(r => r.json()).then(j => {
+    $("#qlist").innerHTML = (j.items || []).length ? `<div class="qlist">${j.items.map(q => `<a class="qli" href="/communaute?onglet=questions&q=${q.id}"><span class="qn ${q.n ? "has" : ""}"><b>${q.n || 0}</b>réponse${q.n > 1 ? "s" : ""}</span><span><span class="qt">${esc(stripTok(q.body).slice(0, 160))}${q.body.length > 160 ? "…" : ""}</span><span class="light" style="font-size:12.5px">${esc(q.pseudo)} · ${new Date(q.created).toLocaleDateString("fr-FR")}${q.likes ? ` · ♥ ${q.likes}` : ""}</span></span></a>`).join("")}</div>`
+      : `<div class="empty">Pas encore de question. Lancez-vous : il n'y a pas de question naïve.</div>`;
+  }).catch(() => { $("#qlist").innerHTML = `<div class="empty">L'espace communauté n'est pas disponible pour le moment.</div>`; });
+  bindCompose($("#ask"), { room: "questions", kind: "question" }, item => go(`/communaute?onglet=questions&q=${item.id}`));
+  load();
+}
+const stripTok = b => String(b).replace(/\[\[[ce]:([a-z0-9-]+)\]\]/g, (m, id) => (RBY[id] || ETFBY[id] || { name: id }).name);
+function qGuide() { return `<section class="panel"><div class="ph"><h2>Comment ça marche</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Posez une question sur une entreprise, un ETF, un chiffre que vous ne comprenez pas. Les autres visiteurs répondent ; les réponses jugées utiles (♥) remontent en tête.</p><p>Avant de demander, le <a class="lnk" href="/debuter">parcours Premiers pas</a> et le <a class="lnk" href="/lexique">lexique</a> répondent peut-être déjà.</p><p class="muted" style="margin-bottom:0">Pas de liens, pas de conseils d'achat ou de vente, pas d'informations personnelles. Un message signalé trois fois est masqué.</p></div></section>`; }
+function msgBody(b) { return esc(b).replace(/\[\[([ce]):([a-z0-9-]+)\]\]/g, (m, t, id) => { const o = t === "c" ? RBY[id] : ETFBY[id]; return o ? `<a class="mention" href="${t === "c" ? "/entreprise/" : "/etf/"}${id}">${esc(o.name)}</a>` : esc(id); }).replace(/\n/g, "<br>"); }
+function bindVotes(root) {
+  root.onclick = ev => { const b = ev.target.closest("button[data-a]"); if (!b) return; const id = +b.closest(".msg").dataset.id;
+    post(`/api/communaute/${b.dataset.a}`, { id }).then(() => { if (b.dataset.a === "aime") b.textContent = "♥ " + ((parseInt(b.textContent.replace(/\D/g, ""), 10) || 0) + 1); else b.textContent = "Signalé"; b.disabled = true; }); };
+}
+function commPronos(el) {
+  const soon = AG.events.filter(e => RBY[e.id] && /ésultat|chiffre d'affaires/i.test(e.type + " " + e.label) && e.date >= TODAY && e.date <= addDays(TODAY, 30)).sort((a, b) => a.date.localeCompare(b.date));
+  const seen = new Set(), list = soon.filter(e => { const k = e.id + ":" + e.date; if (seen.has(k)) return false; seen.add(k); return true; }).slice(0, 40);
+  const past = AG.events.filter(e => RBY[e.id] && /ésultat|chiffre d'affaires/i.test(e.type + " " + e.label) && e.date < TODAY && e.date >= addDays(TODAY, -30)).slice(-20);
+  el.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Avant chaque publication de résultats, une seule question : <b>les ventes seront-elles en hausse ou en baisse par rapport à la même période de l'an dernier ?</b> Votez, puis revenez après la publication : le site affiche le résultat réel, lu dans le communiqué de l'entreprise.</p>
+      <p class="muted" style="margin:8px 0 0;font-size:13px">C'est un exercice pour apprendre à anticiper, pas un pari : il n'y a rien à gagner. Un vote par publication et par jour, modifiable jusqu'à la date.</p></div></section>
+    <div class="cards" id="pr">${list.map(e => { const c = RBY[e.id], k = e.id + ":" + e.date, f = c.missing ? null : ratios(c);
+      return `<div class="cocard prono" data-evt="${k}"><div class="top">${logo(c, 40)}<div><a class="nm" href="/entreprise/${c.id}">${esc(c.name)}</a><div class="sec">${dLabel(e.date)} · ${esc(e.label)}</div></div></div>
+        <p class="d" style="margin:6px 0">${f && f.g1 != null ? `Sur le dernier exercice complet, ses ventes ont évolué de ${sgn(f.g1)}.` : ""}</p>
+        <div class="pbtn"><button type="button" data-v="1">↑ En hausse</button><button type="button" data-v="-1">↓ En baisse</button></div><div class="pres light" style="font-size:12.5px;margin-top:6px"></div></div>`; }).join("") || `<section class="panel"><div class="empty">Aucune publication de résultats annoncée dans les 30 prochains jours.</div></section>`}</div>
+    ${past.length ? `<section class="panel"><div class="ph"><h2>Publiées ces 30 derniers jours</h2></div><div class="pb" id="pastp">${past.map(e => `<div class="pastp" data-id="${e.id}" data-date="${e.date}"><a class="lnk" href="/entreprise/${e.id}/actualite">${esc(RBY[e.id].name)}</a> <span class="light">· ${dLabel(e.date)}</span> <span class="pr2"></span></div>`).join("")}</div></section>` : ""}`;
+  const draw = items => $$(".prono", el).forEach(card => { const o = items[card.dataset.evt] || { hausse: 0, baisse: 0 }, n = o.hausse + o.baisse;
+    $$("button", card).forEach(b => b.classList.toggle("on", o.moi != null && +b.dataset.v === o.moi));
+    $(".pres", card).innerHTML = n ? `<div class="feub"><span class="f" style="width:${o.hausse / n * 100}%"></span><span class="v" style="width:${o.baisse / n * 100}%"></span></div>${F0.format(o.hausse / n * 100)} % des ${n} votant${n > 1 ? "s" : ""} attendent une hausse` : "Pas encore de vote."; });
+  const ids = list.map(e => e.id + ":" + e.date);
+  if (ids.length) fetch(`/api/communaute/pronos?evt=${encodeURIComponent(ids.join(","))}`).then(r => r.json()).then(j => draw(j.items || {})).catch(() => { });
+  el.onclick = ev => { const b = ev.target.closest(".pbtn button"); if (!b) return; const evt = b.closest(".prono").dataset.evt;
+    post("/api/communaute/prono", { evt, v: +b.dataset.v }).then(j => { if (j.error) return alertMsg(b, j.error); fetch(`/api/communaute/pronos?evt=${encodeURIComponent(ids.join(","))}`).then(r => r.json()).then(j => draw(j.items || {})); }); };
+  if (past.length) fetch("/data/actu-analyse.json").then(r => r.json()).then(j => { const A = Object.values(j.items || {});
+    $$(".pastp", el).forEach(d => { const a = A.filter(x => x.id === d.dataset.id && x.date >= d.dataset.date && x.chiffres && x.chiffres.length).sort((x, y) => x.date.localeCompare(y.date))[0];
+      $(".pr2", d).innerHTML = a ? `: ${a.chiffres.slice(0, 1).map(([l, v]) => `${esc(l)} ${esc(v)}`).join("")}` : `<span class="light">: résultat en cours de lecture</span>`; }); }).catch(() => { });
+}
+function alertMsg(el, t) { const s = document.createElement("div"); s.className = "muted"; s.style.fontSize = "12.5px"; s.textContent = t; el.parentElement.after(s); setTimeout(() => s.remove(), 4000); }
+const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+function commPf(el) {
+  el.innerHTML = `<div class="cols"><div><section class="panel"><div class="ph"><h2>Les lignes les plus détenues</h2><span class="light" id="pfn" style="font-size:12.5px"></span></div><div class="pb" id="pfl"><div class="empty">Chargement…</div></div>
+      <div class="src">Portefeuilles partagés anonymement depuis la page <a href="/portefeuille">Portefeuille</a> ces quatre derniers mois : seules les lignes et leur poids sont envoyés, jamais les montants. Ce que détiennent d'autres particuliers n'est pas une recommandation.</div></section></div>
+    <aside><section class="panel"><div class="ph"><h2>Partager le vôtre</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Saisissez vos lignes dans la page Portefeuille, puis cliquez sur « Partager anonymement ». Votre portefeuille rejoint ce classement ; vous pouvez le retirer à tout moment.</p><a class="more" href="/portefeuille">Ouvrir mon portefeuille →</a></div></section></aside></div>`;
+  fetch("/api/communaute/portefeuilles").then(r => r.json()).then(j => {
+    $("#pfn").textContent = j.n ? `${j.n} portefeuille${j.n > 1 ? "s" : ""} partagé${j.n > 1 ? "s" : ""}` : "";
+    const items = (j.items || []).filter(x => keyName(x.k));
+    $("#pfl").innerHTML = items.length ? `${hbars(items.map(x => ({ label: keyName(x.k), v: x.part, href: keyHref(x.k), lg: keyLogo(x.k, 22) })), v => F0.format(v * 100) + " %")}<p class="note">Part des portefeuilles partagés qui contiennent la ligne.</p>` : `<div class="empty">Personne n'a encore partagé son portefeuille.</div>`;
+  }).catch(() => { $("#pfl").innerHTML = `<div class="empty">Indisponible pour le moment.</div>`; });
+}
+function commDiscussions(el, qs) {
+  const room = qs.get("salon") || "general";
+  el.innerHTML = `<div class="cols"><div><section class="panel"><div class="ph"><h2>${esc(roomName(room))}</h2>${room !== "general" ? `<a href="${roomHref(room)}">Voir la fiche</a>` : ""}</div><div class="pb" id="chat"></div></section></div>
+    <aside><section class="panel"><div class="ph"><h2>Salons actifs cette semaine</h2></div><div id="rooms"><div class="empty">Chargement…</div></div></section></aside></div>`;
+  chatBlock($("#chat"), room);
+  fetch("/api/communaute/recent").then(r => r.json()).then(j => {
+    $("#rooms").innerHTML = (j.rooms || []).filter(r => r.room !== "questions").length ? `<div class="ag">${j.rooms.filter(r => r.room !== "questions").map(r => `<div class="it" style="grid-template-columns:1fr auto"><a class="co" href="/communaute?onglet=discussions&salon=${r.room}">${esc(roomName(r.room))}</a><span class="light">${r.n} message${r.n > 1 ? "s" : ""}</span></div>`).join("")}</div>` : `<div class="pb muted">Aucun salon actif cette semaine.</div>`;
+  }).catch(() => { $("#rooms").innerHTML = `<div class="empty">Indisponible.</div>`; });
+}
+
+/* ---------- Portefeuille : la radiographie de ce que vous possédez vraiment ---------- */
+const PF2 = "bilan.portefeuille";
+function pf2Load() { try { const x = JSON.parse(localStorage.getItem(PF2) || "null"); if (x && Array.isArray(x.l)) return x; } catch (e) { } return { l: [] }; }
+function pf2Save(p) { try { localStorage.setItem(PF2, JSON.stringify(p)); } catch (e) { } if (typeof pushDonnees === "function") pushDonnees(); }
+const ETFCOMP = {};
+async function etfComp(e) { if (!e || !e.proxy) return null; if (ETFCOMP[e.proxy] !== undefined) return ETFCOMP[e.proxy]; try { ETFCOMP[e.proxy] = await (await fetch(`/data/etf/${e.proxy}.json`)).json(); } catch (x) { ETFCOMP[e.proxy] = null; } return ETFCOMP[e.proxy]; }
+const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Inc|Corp|Corporation|Ltd|Plc|Sa|Se|Nv|Ag|Co)\b\.?/gi, m => m.toUpperCase() === "SA" || m.toUpperCase() === "SE" ? m.toUpperCase() : m);
+
+/* ---------- Outils ---------- */
+const OUTILS = [
+  ["/portefeuille", "Radiographie de portefeuille", "Ce que vous possédez vraiment une fois vos ETF ouverts : entreprises, pays, frais, dividendes."],
+  ["/apprendre", "Par où commencer ?", "Sept étapes dans l'ordre et un questionnaire de cinq questions pour trouver votre profil d'investisseur."],
+  ["/comparer", "Comparer des entreprises", "Plusieurs entreprises côte à côte, avec une synthèse en phrases et leur place dans le secteur."],
+  ["/outils/si-javais", "Et si j'avais investi ?", "Une somme placée il y a 1, 3 ou 5 ans dans une action ou un ETF, comparée à un indice, au Livret A et à la hausse des prix, sur une seule courbe."],
+  ["/outils/recouvrement", "Mes ETF se recouvrent-ils ?", "2 à 4 ETF : positions communes, poids réellement en double, concentration, secteurs, pays et devises du portefeuille combiné."],
+  ["/outils/verifier", "Vérifier un site ou une offre", "Le nom d'un site, d'une appli ou d'un « conseiller » comparé aux listes noires de l'AMF, mises à jour chaque jour."],
+  ["/simulateurs", "Simulateur d'épargne", "Versements mensuels, frais réels de votre courtier et du fonds, impôt PEA ou compte-titres, trois scénarios tirés de l'histoire."],
+  ["/simulateurs/frais", "Le même plan chez chaque courtier", "Ce que coûtent le courtage et les frais du fonds sur toute la durée, courtier par courtier."],
+  ["/dividendes", "Calendrier des dividendes", "Les prochaines dates de détachement et de paiement, à ajouter à votre agenda."],
+  ["/debuter", "Premiers pas, avec quiz", "Trois étapes pour comprendre les actions, lire une entreprise et juger son prix."],
+];
+function pageOutils(t) {
+  setNav("sim");
+  if (t === "si-javais") return outilSiJavais();
+  if (t === "recouvrement") return outilRecouvrement();
+  if (t === "verifier") return outilVerifier();
+  setTitle("Outils");
+  app.innerHTML = `<h1 class="pagetitle">Outils</h1><p class="pagesub">Des calculs et des comparaisons pour décider en connaissance de cause. Les hypothèses sont toujours affichées.</p>
+    <div class="cards">${OUTILS.map(([h, t, d], i) => `<a class="cocard tool" href="${h}"><div class="top"><span class="tnum">${String(i + 1).padStart(2, "0")}</span><div><div class="nm">${t}</div></div></div><div class="d">${d}</div></a>`).join("")}</div>`;
+}
+function pickerHTML(id, ph) { return `<div class="field" style="position:relative"><label for="${id}">${ph}</label><input id="${id}" type="search" autocomplete="off" placeholder="Nom d'une action ou d'un ETF"><div class="msug" hidden></div></div>`; }
+function bindPicker(id, onPick, etfOnly = false) {
+  const q = $("#" + id), box = q.nextElementSibling;
+  q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
+    const hits = [...ETF.list.filter(e => norm(e.name + " " + e.index).includes(t)).map(e => ["e:" + e.id, e.name, "ETF"]), ...(etfOnly ? [] : R.companies.filter(c => norm(c.name + " " + c.ticker).includes(t)).map(c => ["c:" + c.id, c.name, secName(c)]))].slice(0, 8);
+    box.innerHTML = hits.map(([k, n, s]) => `<button type="button" data-k="${k}">${esc(n)} <small>${esc(s)}</small></button>`).join(""); box.hidden = !hits.length;
+    $$("button", box).forEach(b => b.onclick = () => { q.value = keyName(b.dataset.k); box.hidden = true; onPick(b.dataset.k); }); };
+}
+
+
+/* ---------- Vérifier un site, une appli ou une offre (listes noires de l'AMF) ---------- */
+let LN = null;
+async function outilVerifier() {
+  setTitle("Vérifier un site ou une offre");
+  app.innerHTML = `<div class="crumbs"><a href="/outils">Outils</a> › Vérifier un site ou une offre</div><h1 class="pagetitle">Vérifier un site, une appli ou une offre</h1>
+    <p class="pagesub">Une publicité promet 10 % par mois, un « conseiller » vous contacte sur WhatsApp, un site propose du trading de cryptos ? Tapez son nom ou son adresse : le site cherche dans les listes noires publiées chaque jour par l'AMF.</p>
+    <section class="panel"><div class="pb"><div class="field" style="max-width:520px"><label for="lnq">Nom, site internet ou adresse e-mail</label><input id="lnq" type="search" autocomplete="off" placeholder="ex. invest-profit-plus.com"></div><div id="lnr" style="margin-top:12px"></div></div>
+      <div class="src" id="lns">Chargement des listes…</div></section>
+    <section class="panel"><div class="ph"><h2>Les signaux qui doivent alerter</h2></div><div class="pb"><ul style="margin:0;padding-left:18px;line-height:1.7">
+      <li>Un rendement élevé <b>et</b> garanti : en Bourse, un rendement élevé s'accompagne toujours d'un risque de perte.</li>
+      <li>Un contact que vous n'avez pas demandé (appel, message privé, réseau social) et une pression pour décider vite.</li>
+      <li>Un versement demandé par virement vers un compte à l'étranger, en cryptomonnaie ou par carte cadeau.</li>
+      <li>Une société introuvable dans les registres officiels, ou au nom proche d'une institution connue.</li></ul>
+      <p class="muted" style="margin:12px 0 0">Ne pas figurer sur une liste noire ne prouve pas qu'un acteur est autorisé : les listes ne recensent que les cas signalés. Vérifiez aussi qu'il figure sur les registres officiels : <a class="lnk" href="https://www.regafi.fr" target="_blank" rel="noopener">REGAFI</a> (banques, prestataires d'investissement), <a class="lnk" href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a> (conseillers, intermédiaires) et la liste des prestataires de crypto-actifs agréés sur le site de l'AMF. En cas de doute : AMF Épargne Info Service, 01 53 45 62 00.</p></div></section>`;
+  if (!LN) { try { LN = await (await fetch("/data/listes-noires.json")).json(); } catch (e) { LN = { items: [] }; } }
+  $("#lns").innerHTML = LN.items.length ? `${F0.format(LN.items.length)} entrées, mises à jour le ${dLabel(LN.updated)} · source : listes noires de l'AMF (data.gouv.fr).` : "Les listes noires ne sont pas disponibles pour le moment : consultez directement le site de l'AMF.";
+  const q = $("#lnq");
+  q.oninput = () => { const t = norm(q.value.trim()).replace(/^https?:\/\/|^www\./g, "").replace(/\/.*$/, ""); if (t.length < 3) { $("#lnr").innerHTML = ""; return; }
+    const hits = LN.items.filter(x => norm(x.t).includes(t)).slice(0, 12);
+    $("#lnr").innerHTML = hits.length ? `<div class="lnwarn"><b>${hits.length >= 12 ? "Au moins 12" : hits.length} correspondance${hits.length > 1 ? "s" : ""} sur les listes noires de l'AMF.</b> L'AMF signale ces acteurs comme non autorisés à proposer des produits ou services financiers en France. Ne versez pas d'argent.</div>${hits.map(x => `<div class="lnit"><b>${esc(x.n || x.s)}</b>${x.s && x.n ? ` <span class="light">${esc(x.s)}</span>` : ""}<div class="light" style="font-size:12.5px">${esc(x.c)}${x.d ? ` · inscrit le ${esc(x.d)}` : ""}</div></div>`).join("")}`
+      : `<div class="lnok">Aucune correspondance sur les listes noires de l'AMF. Ce n'est pas une garantie : vérifiez que l'acteur figure sur les registres officiels ci-dessous.</div>`; };
+  // Lot 5 (30/10) : un exemple déjà rempli, pour voir un résultat avant de taper quoi que ce soit (une entrée récente des listes)
+  if (!q.value && LN.items.length) { const ex = [...LN.items].sort((a, b) => String(b.d || "").localeCompare(String(a.d || "")))[0]; if (ex && (ex.n || ex.t)) { q.value = String(ex.n || ex.t).slice(0, 60); q.oninput(); $("#lnr").insertAdjacentHTML("afterbegin", `<p class="muted" style="margin:0 0 8px;font-size:13px">Exemple : une entrée récente des listes de l'AMF. Remplacez-la par le nom qui vous intéresse.</p>`); } }
+}
+
+/* ---------- Opérations des dirigeants (sociétés américaines) ---------- */
+let DIR = null;
+async function dirigeantsHTML(s, el) {
+  if (!s.sec || !el) return;
+  if (!DIR) { try { DIR = (await (await fetch("/data/dirigeants.json")).json()).items || {}; } catch (e) { DIR = {}; } }
+  const tx = DIR[s.id]; if (!tx || !tx.length) { el.remove(); return; }
+  const buy = tx.filter(t => t.code === "P"), sell = tx.filter(t => t.code === "S"), val = l => l.reduce((a, t) => a + (t.px || 0) * t.sh, 0);
+  el.innerHTML = `<div class="ph"><h2>Les dirigeants achètent-ils ou vendent-ils ?</h2></div><div class="pb" style="padding-top:2px">
+    <p class="lead" style="margin:0 0 8px">Ces quatre derniers mois : ${buy.length ? `<b>${buy.length} achat${buy.length > 1 ? "s" : ""}</b> (${big(val(buy) / 1e6, "USD")})` : "aucun achat"} et ${sell.length ? `<b>${sell.length} vente${sell.length > 1 ? "s" : ""}</b> (${big(val(sell) / 1e6, "USD")})` : "aucune vente"} d'actions en Bourse par des dirigeants ou administrateurs.</p>
+    <p class="muted" style="margin:0 0 10px;font-size:13px">Les ventes sont fréquentes et souvent programmées à l'avance (impôts, diversification) : elles disent peu. Les achats avec leur propre argent sont plus rares et plus parlants.</p>
+    <div class="scroll-x"><table class="t"><thead><tr><th class="l">Date</th><th class="l">Qui</th><th class="l">Opération</th><th>Actions</th><th>Prix</th></tr></thead><tbody>${tx.slice(0, 8).map(t => `<tr><td class="l">${dLabel(t.d)}</td><td class="l wrap">${esc(titleCase(t.owner))}<div class="sub">${esc(t.title)}</div></td><td class="l ${t.code === "P" ? "up" : ""}">${t.code === "P" ? "Achat" : "Vente"}</td><td class="num">${F0.format(t.sh)}</td><td class="num">${t.px ? F2.format(t.px) + " $" : "–"}</td></tr>`).join("")}</tbody></table></div></div>
+    <div class="src">Formulaires 4 déposés à la SEC. Achats et ventes en Bourse seulement (sans les attributions gratuites ni les levées d'options).</div>`;
+}
+
+/* =====================================================================
+   Lot v5 : indices, plus forts mouvements, médianes, comparaison en euros,
+   résumés IA des annonces, favoris et bilan de liste, portefeuille avec PRU et garde-fous
+   ===================================================================== */
+ALL.mediane = { name: "Médiane du secteur", what: "La valeur du milieu : si l'on range les entreprises d'un secteur de la moins bonne à la meilleure, la moitié fait mieux que la médiane et la moitié fait moins bien.", ex: "Cinq entreprises ont des marges de 4 %, 8 %, 10 %, 12 % et 60 %. La médiane est de 10 % : c'est l'entreprise du milieu. La moyenne serait de 19 %, tirée vers le haut par une seule entreprise exceptionnelle.", read: "Au-dessus de la médiane : l'entreprise fait mieux que la moitié de son secteur. Nettement au-dessus (plus d'un quart d'écart) : c'est un point fort. En dessous : moins bien que la moitié de ses concurrentes.", limit: "Elle compare à des entreprises du même grand secteur, qui n'ont pas toujours exactement le même métier : une marge de logiciel et une marge de matériel informatique ne se lisent pas pareil." };
+const medBtn = (label = "médiane") => `<button type="button" class="def linkbtn" data-def="mediane">${label}</button>`;
+const MED_NOTE = `<div class="mednote"><b>Comment lire la médiane ?</b> C'est l'entreprise « du milieu » de son secteur : la moitié fait mieux, la moitié moins bien. Elle sert de repère : nettement au-dessus, c'est un point fort ; nettement en dessous, un point à surveiller. Contrairement à la moyenne, elle n'est pas faussée par un ou deux géants. ${medBtn("En savoir plus")}</div>`;
+
+/* ---------- Indices : pastilles maison (drapeaux dessinés) ---------- */
+const FLAG = {
+  FR: `<svg viewBox="0 0 30 20"><rect width="10" height="20" fill="#1F3A93"/><rect x="10" width="10" height="20" fill="#fff"/><rect x="20" width="10" height="20" fill="#D9353B"/></svg>`,
+  DE: `<svg viewBox="0 0 30 20"><rect width="30" height="7" fill="#111"/><rect y="7" width="30" height="6" fill="#D9353B"/><rect y="13" width="30" height="7" fill="#F2C230"/></svg>`,
+  US: `<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/>${[0, 2, 4, 6, 8, 10].map(i => `<rect y="${i * 1.54 * 1.08}" width="30" height="1.6" fill="#C8352E"/>`).join("")}<rect width="13" height="10.8" fill="#24356F"/></svg>`,
+  EU: `<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#1F3A93"/>${Array.from({ length: 12 }, (_, i) => `<circle cx="${15 + 6 * Math.cos(i * Math.PI / 6)}" cy="${10 + 6 * Math.sin(i * Math.PI / 6)}" r="0.9" fill="#F2C230"/>`).join("")}</svg>`,
+  GB: `<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#24356F"/><path d="M0 0L30 20M30 0L0 20" stroke="#fff" stroke-width="4"/><path d="M15 0V20M0 10H30" stroke="#fff" stroke-width="6"/><path d="M15 0V20M0 10H30" stroke="#C8352E" stroke-width="3"/></svg>`,
+  JP: `<svg viewBox="0 0 30 20"><rect width="30" height="20" fill="#fff"/><circle cx="15" cy="10" r="5.5" fill="#C8352E"/></svg>`,
+};
+const INDEX_INFO = [
+  ["cac40", "CAC 40", "FR", "Les 40 plus grandes sociétés françaises cotées à Paris."],
+  ["stoxx50", "Euro Stoxx 50", "EU", "Les 50 plus grandes entreprises de la zone euro."],
+  ["dax", "DAX", "DE", "Les 40 plus grandes entreprises allemandes."],
+  ["sp500", "S&P 500", "US", "Les 500 plus grandes entreprises américaines : l'indice de référence mondial."],
+  ["nasdaq100", "Nasdaq 100", "US", "Les 100 plus grandes entreprises non financières du Nasdaq, très orienté technologie."],
+  ["ftse100", "FTSE 100", "GB", "Les 100 plus grandes entreprises cotées à Londres."],
+  ["nikkei", "Nikkei 225", "JP", "Les 225 grandes entreprises japonaises de référence."],
+];
+function indicesHTML() {
+  const rows = INDEX_INFO.map(([id, name, fl, what]) => ({ id, name, fl, what, p: PX["i:" + id] })).filter(r => r.p);
+  if (!rows.length) return `<div class="pb muted">Les indices ne sont pas disponibles pour le moment.</div>`;
+  const up = rows.filter(r => r.p.chg > 0).length;
+  return `<div class="idxs">${rows.map(r => { const y = r.p.p1y ? r.p.p / r.p.p1y - 1 : null;
+    return `<div class="idx" ${tipAttr({ h: r.name, r: [["Ce que c'est", r.what, ""]] })} tabindex="0"><span class="flag">${FLAG[r.fl]}</span><span class="in"><b>${esc(r.name)}</b><small>${F0.format(r.p.p)} points</small></span>
+      <span class="iv"><b class="${r.p.chg > 0 ? "up" : r.p.chg < 0 ? "down" : ""}">${r.p.chg != null ? (r.p.chg > 0 ? "+" : "") + F2.format(r.p.chg) + " %" : "–"}</b><small>${y != null ? `${sgn(y, 0)} sur un an` : ""}</small></span></div>`; }).join("")}</div>
+    <p class="note" style="margin:10px 0 0">${up === rows.length ? "Tous les grands indices montent aujourd'hui." : up === 0 ? "Tous les grands indices baissent aujourd'hui." : `${up} indice${up > 1 ? "s" : ""} sur ${rows.length} en hausse aujourd'hui.`} Un indice résume la tendance d'un marché : quand le CAC 40 gagne 1 %, ses 40 entreprises ont pris en moyenne 1 %, pondérée par leur taille. Variations sur la journée, cours différés.</p>`;
+}
+
+/* ---------- Plus forts mouvements du jour ---------- */
+let moverRegion = "all";
+function moversData(region = "all", n = 8) {
+  const l = R.companies.map(c => ({ c, p: pxOf(c), v: valo(c) })).filter(x => x.p && x.p.chg != null && x.v && x.v.capE > 2e9 && (region === "all" || x.c.region === region));
+  const up = l.filter(x => x.p.chg > 0).sort((a, b) => b.p.chg - a.p.chg).slice(0, n), dn = l.filter(x => x.p.chg < 0).sort((a, b) => a.p.chg - b.p.chg).slice(0, n);
+  return { up, dn, n: l.length };
+}
+function moverRow(x) {
+  const ev = eventsOf(x.c.id).find(e => e.date <= TODAY && e.date >= addDays(TODAY, -2)), big = Math.abs(x.p.chg) >= 5;
+  const an = ANA ? Object.values(ANA).filter(a => a.id === x.c.id && a.date >= addDays(TODAY, -3)).sort((a, b) => b.date.localeCompare(a.date))[0] : null;
+  const why = an ? `${an.type}${an.chiffres && an.chiffres[0] ? ` : ${an.chiffres[0][0].toLowerCase()} ${an.chiffres[0][1]}` : ""}` : ev ? `${ev.label} (${dLabel(ev.date)})` : big ? "Pas d'annonce officielle repérée : voir la presse" : secName(x.c);
+  return `<a class="mv" href="/entreprise/${x.c.id}/actualite">${logo(x.c, 28)}<span class="mn"><b>${esc(x.c.name)}</b><small>${esc(why)}</small></span><span class="mc ${x.p.chg > 0 ? "up" : "down"}">${x.p.chg > 0 ? "+" : ""}${F1.format(x.p.chg)} %</span></a>`;
+}
+function moversHTML(region = moverRegion) {
+  const { up, dn, n } = moversData(region);
+  if (!n) return `<div class="pb muted">Les cours ne sont pas disponibles pour le moment.</div>`;
+  return `<div class="mvs"><div><p class="kick">Les plus fortes hausses</p>${up.map(moverRow).join("") || `<p class="muted">Aucune hausse.</p>`}</div><div><p class="kick">Les plus fortes baisses</p>${dn.map(moverRow).join("") || `<p class="muted">Aucune baisse.</p>`}</div></div>
+    <div class="synth" style="margin-top:12px"><p><b>Comment lire ces mouvements ?</b> Pour une grande entreprise, une variation de plus de 5 % en une journée est importante : elle suit presque toujours une annonce (résultats, prévisions, rachat, changement de dirigeant) ou une nouvelle sur son secteur. Ouvrez la ligne pour voir l'actualité. Un mouvement d'une journée ne dit rien de la solidité de l'entreprise : ses comptes, eux, ne changent qu'à chaque publication.</p></div>`;
+}
+async function pageMarches() {
+  setTitle("Les marchés aujourd'hui"); setNav("mkt");
+  await Promise.all([PXP, loadAna()]);
+  const portes = [ // lot 2 (30/10) : la porte « Marchés », quatre entrées visuelles, puis les indices et les mouvements du jour
+    ["/entreprises", "Entreprises", `${F0.format(R.companies.length)} fiches`, "Chacune face à la médiane de son secteur.", "M4 20V9l8-5 8 5v11M9 20v-6h6v6"],
+    ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, "Frais, PEA, ce qu'ils contiennent vraiment.", "M4 18l5-6 4 3 7-9M4 4v16h16"],
+    ["/actualites", "Actualité et agenda", "chaque jour", "Annonces officielles lues et chiffrées, dates à venir.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
+    ["/classements", "Classements", "par critère", "Les mieux placées sur la marge, la dette, le prix, le dividende.", "M4 20h16M7 20V10M12 20V4M17 20v-8"],
+  ];
+  app.innerHTML = `<h1 class="pagetitle">Marchés</h1><p class="pagesub">Les entreprises, les ETF, l'actualité et les classements, puis ce que font les indices aujourd'hui.</p>
+    <div class="mk-portes">${portes.map(([h, t, n, d, ic]) => `<a class="mk-porte" href="${h}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ic}"/></svg><b>${t}</b><small>${n}</small><span>${d}</span></a>`).join("")}</div>
+    <h2 class="subh">Aujourd'hui</h2><p class="pagesub" style="margin-top:0">Les grands indices et les entreprises qui ont le plus bougé dans la journée, parmi les ${F0.format(R.companies.length)} suivies (valeur en Bourse supérieure à 2 milliards d'euros). Cours différés.</p>
+    <section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section>
+    <section class="panel"><div class="ph"><h2>Les plus forts mouvements du jour</h2><div class="chips" id="mvr">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"], ["MONDE", "Reste du monde"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === moverRegion ? "on" : ""}">${l}</button>`).join("")}</div></div><div class="pb" id="mvb">${moversHTML()}</div></section>`;
+  $("#mvr").onclick = e => { const b = e.target.closest("button"); if (!b) return; moverRegion = b.dataset.r; $$("#mvr button").forEach(x => x.classList.toggle("on", x === b)); $("#mvb").innerHTML = moversHTML(); };
+}
+
+/* ---------- Comparaison : montants convertis en euros ---------- */
+const eurM = (v, cur) => { const e = toEur(v, cur); return e == null || !isFinite(e) ? null : e; }; // en millions
+function moneyCell(c, v) { if (v == null) return null; const e = eurM(v, c.currency), same = c.currency === "EUR"; return { v: big(same ? v : e, "EUR"), s: same ? "" : `${big(v, c.currency)} converti en euros` }; }
+
+/* ---------- Mise en forme d'un texte rédigé (titres de paragraphes reconnus) ---------- */
+function resumeHTML(txt) {
+  const parts = String(txt).split(/\n+/).map(x => x.trim()).filter(Boolean);
+  return parts.map(p => /^(« ?)?(Ce qui est annoncé|Ce que ça veut dire|À surveiller|En résumé|Ce qui a bougé|Ce qui a été annoncé|À venir|Ce que l'analyse remarque|Points d'attention)( ?»)?\s*:?$/i.test(p.replace(/[*#]/g, "")) ? `<p class="kick" style="margin:10px 0 2px">${esc(p.replace(/[*#«»:]/g, "").trim())}</p>` : `<p style="margin:0 0 6px">${esc(p.replace(/[*#]/g, ""))}</p>`).join("");
+}
+/* ---------- Favoris : présentation soignée et bilan rédigé de la liste ---------- */
+function favCard(c) {
+  const p = pxOf(c), v = valo(c), t = quick(c), nx = eventsOf(c.id).find(e => e.date >= TODAY);
+  const pos = p && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null, y = p && p.p1y ? p.p / p.p1y - 1 : null;
+  return `<div class="fc"><div class="fct"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 40)}<span style="display:flex;flex-direction:column"><b class="nm">${esc(c.name)}</b><small class="light">${esc(secName(c))}</small></span></a>${favBtn("c:" + c.id).replace("☆ Ajouter aux favoris", "☆").replace("★ Dans vos favoris", "★ Suivie")}</div>
+    <div class="fcp">${p ? `<span class="p">${pxFmt(p.p, p.cur)}</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % aujourd'hui" : ""}</span>` : `<span class="muted">Cours indisponible</span>`}</div>
+    ${pos != null ? `<div class="range" style="margin:14px 0 4px"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>plus bas 1 an</span><span>plus haut 1 an</span></div>` : ""}
+    <div class="fcg">${y != null ? `<span><small>Sur 1 an</small><b class="${y >= 0 ? "up" : "down"}">${sgn(y, 0)}</b></span>` : ""}${v && v.pe ? `<span><small>PER</small><b>${F0.format(v.pe)}</b></span>` : ""}${v && v.yld >= 0.001 ? `<span><small>Rendement</small><b>${pct(v.yld, 1, false)}</b></span>` : ""}${t ? `<span><small>Comptes</small>${pills(t)}</span>` : ""}</div>
+    ${profilMini(c)}
+    <p class="fcn">${nx ? `<b>${dLabel(nx.date)}</b> · ${esc(nx.label)}` : `<span class="light">Aucune date annoncée</span>`}</p></div>`;
+}
+function listeFaits(cos) { // les faits transmis à l'IA : rien d'autre que les données du site
+  return { date: TODAY, lignes: cos.slice(0, 20).map(c => { const p = pxOf(c), a = Object.values(ANA || {}).filter(x => x.id === c.id && x.date >= addDays(TODAY, -10)).slice(0, 2);
+    return { nom: c.name, secteur: secName(c), variation_jour_pct: p ? p.chg : null, variation_1an_pct: p && p.p1y ? Math.round((p.p / p.p1y - 1) * 1000) / 10 : null,
+      position_sur_un_an: p && p.h52 > p.l52 ? Math.round((p.p - p.l52) / (p.h52 - p.l52) * 100) + " % entre le plus bas et le plus haut" : null,
+      annonces: a.map(x => ({ date: x.date, type: x.type, titre: x.titre || "", chiffres: x.chiffres, lecture: x.lecture })),
+      prochaines_dates: eventsOf(c.id).filter(e => e.date >= TODAY).slice(0, 2).map(e => ({ date: e.date, quoi: e.label })) }; }) };
+}
+async function veilleBilan(cos) {
+  const el = $("#vbil"); if (!el) return;
+  await loadAna();
+  const loc = listeLocale(cos);
+  el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">${miaConnectee() ? "L'IA du site rédige une lecture plus détaillée…" : "Résumé automatique de vos chiffres."}</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
+  const j = await iaRediger("veille", listeFaits(cos));
+  if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}${miaPied(j)}</div>`;
+  else if (loc) $("#vbilf").outerHTML = j.invite ? miaInvite("Résumé automatique de vos chiffres.") : `<p class="iafoot">Résumé automatique de vos chiffres. ${esc(j.error || "")}</p>`;
+  else el.innerHTML = miaRendu(j, "Les chiffres de votre liste sont affichés ci-dessus.");
+}
+async function pageFavorisV1() {
+  setTitle("Mes favoris"); setNav("fav");
+  await PXP;
+  const all = favs(), cos = all.filter(k => k.startsWith("c:")).map(k => RBY[k.slice(2)]).filter(Boolean), etfs = all.filter(k => k.startsWith("e:")).map(k => ETFBY[k.slice(2)]).filter(Boolean);
+  if (!cos.length && !etfs.length) {
+    const sug = ["lvmh", "totalenergies", "airbus", "apple", "nvidia", "microsoft", "air-liquide", "schneider-electric"].map(id => RBY[id]).filter(Boolean);
+    app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><p class="pagesub">Votre liste de surveillance : les entreprises et les ETF que vous voulez suivre, leurs cours, leurs prochaines dates et un bilan rédigé de ce qui s'est passé.</p>
+      <section class="panel"><div class="pb"><p class="lead" style="margin:0">Vous ne suivez encore rien. Sur chaque fiche, le bouton <b>☆ Ajouter aux favoris</b> ajoute l'entreprise ici. Pour commencer, quelques entreprises très suivies :</p></div>
+      <div class="pb favlist"><div class="fcs">${sug.map(favCard).join("")}</div></div></section>`;
+    return;
+  }
+  const up = AG.events.filter(e => e.date >= TODAY && cos.some(c => c.id === e.id)).sort((a, b) => a.date.localeCompare(b.date));
+  const withP = cos.filter(c => pxOf(c) && pxOf(c).chg != null), avg = withP.length ? withP.reduce((a, c) => a + pxOf(c).chg, 0) / withP.length : null;
+  const best = withP.slice().sort((a, b) => pxOf(b).chg - pxOf(a).chg)[0], worst = withP.slice().sort((a, b) => pxOf(a).chg - pxOf(b).chg)[0];
+  app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><p class="pagesub">${cos.length} entreprise${cos.length > 1 ? "s" : ""} et ${etfs.length} ETF suivis. Enregistrés dans ce navigateur, sans compte.</p>
+    ${withP.length ? `<section class="panel"><div class="tiles"><div class="tile"><span class="kick">Votre liste aujourd'hui</span><span class="v ${avg >= 0 ? "up" : "down"}">${avg >= 0 ? "+" : ""}${F2.format(avg)} %</span><small>variation moyenne des ${withP.length} actions</small></div>
+      ${best ? `<div class="tile"><span class="kick">Meilleure du jour</span><span class="v">${esc(best.name)}</span><small>${pxOf(best).chg > 0 ? "+" : ""}${F1.format(pxOf(best).chg)} %</small></div>` : ""}
+      ${worst && worst !== best ? `<div class="tile"><span class="kick">Moins bonne du jour</span><span class="v">${esc(worst.name)}</span><small>${F1.format(pxOf(worst).chg)} %</small></div>` : ""}
+      <div class="tile"><span class="kick">Prochaine date</span><span class="v" style="font-size:17px">${up[0] ? esc(RBY[up[0].id].name) : "–"}</span><small>${up[0] ? `${dLabel(up[0].date)} · ${esc(up[0].label)}` : "aucune annoncée"}</small></div></div></section>` : ""}
+    <section class="panel"><div class="ph"><h2>Le bilan de votre liste</h2><button type="button" class="btn" id="vgo">Rédiger le bilan</button></div><div class="pb" id="vbil"><p class="muted" style="margin:0">Un résumé rédigé de ce qui a bougé, de ce qui a été annoncé et de ce qui arrive pour les entreprises de votre liste. Il s'appuie uniquement sur les cours, les annonces officielles et l'agenda du site.</p></div>
+      <div class="src" id="vmail"><b>Recevoir ce bilan chaque semaine par e-mail</b> <span class="muted">· bientôt disponible</span></div></section>
+    ${cos.length ? `<div class="sect"><h2>Vos entreprises</h2>${cos.length > 1 ? `<a href="/comparer?ids=${cos.slice(0, 5).map(c => c.id).join(",")}">Les comparer →</a>` : ""}</div><div class="fcs favlist">${cos.map(favCard).join("")}</div>` : ""}
+    <div class="cols" style="margin-top:20px"><div>
+      ${up.length ? `<section class="panel"><div class="ph"><h2>Leurs prochaines dates</h2><a href="/dividendes">Calendrier des dividendes</a></div>${agendaHTML(up.slice(0, 12), true)}</section>` : ""}
+      ${etfs.length ? `<section class="panel favlist"><div class="ph"><h2>Vos ETF</h2></div><div class="pb"><div class="cards">${etfs.map(e => `<div class="favcard">${etfCard(e)}${favBtn("e:" + e.id)}</div>`).join("")}</div></div></section>` : ""}
+    </div><aside>${cos.length ? `<section class="panel"><div class="ph"><h2>Dans la presse</h2></div>${cos.slice(0, 5).map((c, i) => `<div class="pb"><div class="cap">${esc(c.name)}</div><div id="fp${i}"></div></div>`).join("")}<div class="src">Articles repérés par GDELT, non vérifiés par le site.</div></section>` : ""}</aside></div>`;
+  $("#vgo").onclick = () => veilleBilan(cos);
+  cos.slice(0, 5).forEach((c, i) => presseBlock($("#fp" + i), { id: c.id, max: 2 }));
+  fetch("/api/veille/inscription", { method: "POST", headers: { "content-type": "application/json" }, body: "{}" }).then(r => r.json()).then(j => {
+    if (j.error && /pas encore ouvert/.test(j.error)) return; // envoi non configuré : on laisse « bientôt disponible »
+    $("#vmail").innerHTML = `<form id="vmf" style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><b>Recevoir ce bilan chaque semaine par e-mail</b><input type="email" required placeholder="votre@adresse.fr" style="border:1px solid var(--line);border-radius:8px;padding:6px 10px"><button class="btn" type="submit">S'inscrire</button><span class="muted" id="vmm" style="font-size:12.5px">Un e-mail de confirmation vous sera envoyé. Désinscription en un clic.${isPrem() ? " Premium : vous recevrez aussi une alerte le soir d'une annonce officielle, d'une variation de plus de 5 % ou la veille de résultats." : ` Les alertes du soir (annonce, variation de plus de 5 %, résultats le lendemain) sont réservées à <a class="lnk" href="/premium">Premium</a>.`}</span></form>`;
+    $("#vmf").onsubmit = ev => { ev.preventDefault(); iaFetch("/api/veille/inscription", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: $("input", $("#vmf")).value, ids: favs() }) }).then(r => r.json()).then(r => { $("#vmm").textContent = r.error || "Vérifiez votre boîte : un lien de confirmation vient de partir."; }); };
+  }).catch(() => { });
+}
+
+/* ---------- Portefeuille : quantités, prix de revient, plus-values et garde-fous ---------- */
+const lineValue = l => { const p = PX[l.k]; if (p && l.q > 0) return toEur(p.p * l.q, p.cur); return l.m || 0; };
+const lineCost = l => { const p = PX[l.k]; if (p && l.q > 0 && l.pru > 0) return toEur(l.pru * l.q, p.cur); return l.m || null; };
+async function pagePortefeuille() {
+  setTitle("Mon portefeuille"); setNav("pf");
+  await PXP;
+  const P = pf2Load();
+  P.l.forEach(l => { if (l.mode === "qte" && l.q && l.pru == null) l.pru = 0; if (l.mode === "eur" && PX[l.k] && !l.q && l.m) { l.q = 0; } });
+  app.innerHTML = `<h1 class="pagetitle">Mon portefeuille</h1><p class="pagesub">Indiquez vos actions et vos ETF, le nombre de titres et votre prix de revient (le prix moyen auquel vous les avez achetés, frais compris). Le site calcule votre plus ou moins-value, montre ce que vous possédez vraiment une fois les ETF « ouverts », et signale ce qui mérite votre attention. Tout reste dans ce navigateur.</p>
+    <section class="panel"><div class="ph"><h2>Vos lignes</h2></div><div class="pb">
+      <div class="field" style="position:relative;max-width:460px"><label for="pfq">Ajouter une action ou un ETF</label><input id="pfq" type="search" autocomplete="off" placeholder="LVMH, MSCI World, Apple…"><div class="msug" id="pfs" hidden></div></div>
+      <div id="pflines"></div></div>
+      <div class="src">Le prix de revient se trouve dans l'application de votre courtier (souvent appelé « PRU » ou « prix moyen »). Sans cours disponible, saisissez simplement le montant investi.</div></section>
+    <div id="pfrx"></div>`;
+  const q = $("#pfq"), box = $("#pfs");
+  q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
+    const hits = [...ETF.list.filter(e => norm(e.name + " " + e.index + " " + (e.ticker || "")).includes(t)).map(e => ["e:" + e.id, e.name, "ETF · " + e.index]), ...R.companies.filter(c => norm(c.name + " " + c.ticker).includes(t)).map(c => ["c:" + c.id, c.name, secName(c)])].slice(0, 8);
+    box.innerHTML = hits.map(([k, n, s]) => `<button type="button" data-k="${k}">${esc(n)} <small>${esc(s)}</small></button>`).join("") || `<div class="light" style="padding:8px 10px">Rien trouvé</div>`; box.hidden = false;
+    $$("button", box).forEach(b => b.onclick = () => { const p = PX[b.dataset.k]; if (!P.l.some(l => l.k === b.dataset.k) && !pfFull(P)) P.l.push(p ? { k: b.dataset.k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k: b.dataset.k, m: 1000 }); pf2Save(P); q.value = ""; box.hidden = true; drawLines(); }); };
+  const drawLines = () => {
+    $("#pflines").innerHTML = P.l.length ? `<div class="scroll-x"><table class="t pft"><thead><tr><th class="l">Ligne</th><th>Nombre</th><th>Prix de revient</th><th>Cours</th><th>Valeur</th><th>Plus ou moins-value</th><th></th></tr></thead><tbody>${P.l.map((l, i) => { const p = PX[l.k], val = lineValue(l), cost = lineCost(l), g = cost ? val - cost : null;
+      return `<tr data-i="${i}"><td class="l"><a class="cell-co" href="${keyHref(l.k)}">${keyLogo(l.k, 26)}<span class="nm">${esc(keyName(l.k) || l.k)}</span></a></td>
+        ${p ? `<td><input data-f="q" type="number" min="0" step="any" value="${l.q || 0}" style="width:80px;text-align:right"></td><td><input data-f="pru" type="number" min="0" step="any" value="${l.pru || 0}" style="width:96px;text-align:right"> <small class="light">${esc(CUR[p.cur] || p.cur)}</small></td><td class="num">${pxFmt(p.p, p.cur)}</td>`
+          : `<td colspan="2"><input data-f="m" type="number" min="0" step="any" value="${l.m || 0}" style="width:110px;text-align:right"> <small class="light">€ investis</small></td><td class="num light">–</td>`}
+        <td class="num">${F0.format(val || 0)} €</td><td class="num ${g == null ? "" : g >= 0 ? "up" : "down"}">${g == null ? "–" : `${g >= 0 ? "+" : "−"}${F0.format(Math.abs(g))} € (${sgn(g / cost, 1)})`}</td><td><button type="button" class="linkbtn" data-x="${i}">Retirer</button></td></tr>`; }).join("")}</tbody></table></div>`
+      : `<p class="muted" style="margin:12px 0 0">Aucune ligne pour l'instant. ${favs().length ? `<button type="button" class="linkbtn" id="fromfav">Reprendre mes favoris</button>` : ""}</p>`;
+    const ff = $("#fromfav"); if (ff) ff.onclick = () => { favs().forEach(k => { if (!P.l.some(l => l.k === k) && !pfFull(P)) { const p = PX[k]; P.l.push(p ? { k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k, m: 1000 }); } }); pf2Save(P); drawLines(); };
+    $$("#pflines tr[data-i]").forEach(tr => { const l = P.l[+tr.dataset.i]; $$("[data-f]", tr).forEach(inp => inp.onchange = () => { l[inp.dataset.f] = parseFloat(inp.value) || 0; pf2Save(P); drawLines(); }); });
+    $$("[data-x]", $("#pflines")).forEach(b => b.onclick = () => { P.l.splice(+b.dataset.x, 1); pf2Save(P); drawLines(); });
+    radiographie(P);
+  };
+  drawLines();
+}
+function gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps, extra = []) { // ce qui mérite l'attention, avec la raison
+  const W = [], pctS2 = v => F0.format(v * 100) + " %";
+  const big = lines.slice().sort((a, b) => b.v - a.v);
+  if (big[0] && big[0].v / tot > 0.25 && big[0].k.startsWith("c:")) W.push(["vig", `Une seule action pèse ${pctS2(big[0].v / tot)} du portefeuille (${esc(keyName(big[0].k))}).`, "Si elle chute de 30 %, c'est près de " + pctS2(big[0].v / tot * 0.3) + " de votre portefeuille qui disparaît. Beaucoup d'investisseurs limitent une action seule à 5 ou 10 %."]);
+  const top3 = big.slice(0, 3).reduce((a, l) => a + l.v, 0) / tot;
+  if (lines.length >= 4 && top3 > 0.7 && big.slice(0, 3).some(l => l.k.startsWith("c:"))) W.push(["vig", `Trois lignes concentrent ${pctS2(top3)} de votre argent.`, "Votre résultat dépendra surtout d'elles. C'est un choix possible, mais il faut le faire en connaissance de cause."]);
+  const s1 = Object.entries(sect).filter(([k]) => !k.startsWith("ETF")).sort((a, b) => b[1] - a[1])[0];
+  if (s1 && s1[1] > 0.4) W.push(["vig", `Le secteur ${esc(s1[0].toLowerCase())} représente ${pctS2(s1[1])} du portefeuille en actions directes.`, "Les entreprises d'un même secteur montent et baissent souvent ensemble (même conjoncture, mêmes prix des matières premières, mêmes règles)."]);
+  const c1 = Object.entries(ctry).sort((a, b) => b[1] - a[1])[0];
+  if (c1 && c1[1] > 0.65) W.push(["moyen", `${pctS2(c1[1])} de votre argent est placé dans un seul pays (${esc(COUNTRY[c1[0]] || c1[0])}).`, c1[0] === "US" ? "C'est fréquent avec un ETF Monde, car les États-Unis pèsent environ 70 % des indices mondiaux. Vous êtes aussi exposé au dollar : s'il baisse face à l'euro, votre portefeuille baisse." : "Une crise propre à ce pays toucherait tout le portefeuille."]);
+  const directs = lines.filter(l => l.k.startsWith("c:")).length;
+  if (directs >= 1 && directs < 5 && !lines.some(l => l.k.startsWith("e:"))) W.push(["vig", `Seulement ${directs} action${directs > 1 ? "s" : ""} et aucun ETF.`, "Avec peu de lignes, une mauvaise nouvelle sur une seule entreprise pèse lourd. Un ETF permet de détenir des centaines d'entreprises en une seule ligne."]);
+  if (etfV && fees / etfV > 0.004) W.push(["moyen", `Vos ETF coûtent en moyenne ${pct(fees / etfV, 2, false)} par an.`, "Sur 20 ans, 0,3 point de frais en plus peut coûter environ 6 % du capital final. Des ETF équivalents existent souvent à 0,10-0,20 %."]);
+  overlaps.forEach(([a, b, ov]) => W.push(["moyen", `${esc(a)} et ${esc(b)} se recouvrent à ${F0.format(ov)} %.`, "Ils contiennent en bonne partie les mêmes entreprises : les deux réunis diversifient moins qu'il n'y paraît."]));
+  lines.filter(l => l.k.startsWith("c:")).forEach(l => { const c = RBY[l.k.slice(2)], t = c && quick(c); if (t && t.vig >= 3) W.push(["moyen", `${esc(c.name)} cumule ${t.vig} points de vigilance dans ses comptes.`, "Ce n'est pas une raison de vendre, mais une raison de lire sa fiche et de suivre ses prochains résultats."]); });
+  lines.forEach(l => { const cost = lineCost(l); if (cost && l.v / cost - 1 < -0.3) W.push(["moyen", `${esc(keyName(l.k))} est en baisse de ${F0.format((1 - l.v / cost) * 100)} % par rapport à votre prix de revient.`, "Une forte baisse est le moment de vérifier si les comptes de l'entreprise ont changé, ou seulement son cours."]); });
+  W.push(...extra);
+  if (!W.length) W.push(["fort", "Rien de particulier à signaler.", "Pas de ligne trop lourde, pas de secteur dominant, des frais raisonnables. Cela ne dit rien des performances futures."]);
+  return `<section class="panel"><div class="ph"><h2>Ce que l'analyse remarque</h2></div><div class="pb">${W.map(([lv, t, why]) => `<div class="gf"><span class="dot dot-${lv}"></span><div><b>${t}</b><p>${why}</p></div></div>`).join("")}
+    <p class="note">Repères de diversification généraux, calculés sur vos lignes. Ce ne sont pas des conseils personnalisés : votre situation, votre horizon et votre tolérance au risque comptent.</p></div></section>`;
+}
+async function radiographie(P) {
+  const el = $("#pfrx"); if (!el) return;
+  const lines = P.l.map(l => ({ ...l, v: lineValue(l) })).filter(l => l.v > 0), tot = lines.reduce((a, l) => a + l.v, 0);
+  if (!tot) { el.innerHTML = ""; return; }
+  const cost = lines.reduce((a, l) => a + (lineCost(l) || l.v), 0), gain = tot - cost;
+  const expo = {}, ctry = {}, sect = {}, comps = []; let fees = 0, divs = 0, etfV = 0, pea = 0, uncovered = 0;
+  for (const l of lines) {
+    const w = l.v / tot;
+    if (l.k.startsWith("c:")) { const c = RBY[l.k.slice(2)]; if (!c) continue;
+      expo[c.isin || c.id] = { name: c.name, href: "/entreprise/" + c.id, w: (expo[c.isin || c.id]?.w || 0) + w };
+      const cc = (c.isin || "").slice(0, 2) || (c.region === "US" ? "US" : "FR"); ctry[cc] = (ctry[cc] || 0) + w; sect[secName(c)] = (sect[secName(c)] || 0) + w;
+      const v = valo(c); if (v && v.yld) divs += l.v * v.yld; if (peaOk(c)) pea += l.v;
+    } else { const e = ETFBY[l.k.slice(2)]; if (!e) continue; etfV += l.v; fees += l.v * (e.ter || 0) / 100; if (e.pea) pea += l.v;
+      const comp = await etfComp(e);
+      if (comp) { comps.push([e.name, comp]); let covered = 0;
+        (comp.top || []).forEach(h => { const co = h.isin ? ISINBY[h.isin] : null, key = h.isin || h.name; covered += h.pct / 100; expo[key] = { name: co ? co.name : titleCase(h.name), href: co ? "/entreprise/" + co.id : null, w: (expo[key]?.w || 0) + w * h.pct / 100 }; });
+        uncovered += w * Math.max(0, 1 - covered);
+        (comp.countries || []).forEach(([k, p]) => { ctry[k] = (ctry[k] || 0) + w * p / 100; });
+      } else uncovered += w;
+      sect["ETF " + (ECAT[e.categorie] || "")] = (sect["ETF " + (ECAT[e.categorie] || "")] || 0) + w;
+    }
+  }
+  const overlaps = []; for (let i = 0; i < comps.length; i++) for (let j = i + 1; j < comps.length; j++) { const ma = new Map(comps[i][1].isins || []), mb = new Map(comps[j][1].isins || []); let ov = 0; for (const [k, w] of ma) if (mb.has(k)) ov += Math.min(w, mb.get(k)); if (ov > 50) overlaps.push([comps[i][0], comps[j][0], ov]); }
+  const top = Object.values(expo).sort((a, b) => b.w - a.w).slice(0, 15), cs = Object.entries(ctry).sort((a, b) => b[1] - a[1]).slice(0, 10), biggest = lines.slice().sort((a, b) => b.v - a.v)[0];
+  const cos = lines.filter(l => l.k.startsWith("c:")).map(l => RBY[l.k.slice(2)]).filter(Boolean);
+  const up = AG.events.filter(e => e.date >= TODAY && cos.some(c => c.id === e.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
+  const habHTML = await pfHabitudes(P), prof = await profilInvestisseur();
+  el.innerHTML = `<section class="panel"><div class="ph"><h2>Votre portefeuille en un coup d'œil</h2></div>
+    <div class="tiles">
+      <div class="tile"><span class="kick">Valeur actuelle</span><span class="v">${F0.format(tot)} €</span><small>${lines.length} ligne${lines.length > 1 ? "s" : ""}, aux cours du jour</small></div>
+      <div class="tile"><span class="kick">Plus ou moins-value</span><span class="v ${gain >= 0 ? "up" : "down"}">${gain >= 0 ? "+" : "−"}${F0.format(Math.abs(gain))} €</span><small>${sgn(gain / cost, 1)} par rapport à ce que vous avez investi (${F0.format(cost)} €), avant impôts</small></div>
+      <div class="tile"><span class="kick">Frais des ETF</span><span class="v">${F0.format(fees)} € / an</span><small>${etfV ? `soit ${pct(fees / etfV, 2, false)} par an` : "aucun ETF"}</small></div>
+      <div class="tile"><span class="kick">Dividendes</span><span class="v">≈ ${F0.format(divs)} € / an</span><small>actions en direct, avant impôts</small></div>
+      <div class="tile"><span class="kick">Éligible au PEA</span><span class="v">${F0.format(pea / tot * 100)} %</span><small>de la valeur</small></div>
+    </div></section>
+    ${habHTML}
+    ${gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps, pfAnalyseHabitudes(P, lines, tot, prof))}
+    <section class="panel"><div class="ph"><h2>Le commentaire de l'IA</h2><button type="button" class="btn" id="pfia">Analyser mon portefeuille</button></div><div class="pb" id="pfiab"><p class="muted" style="margin:0">Un commentaire rédigé à partir de vos lignes, de leurs poids et des remarques ci-dessus : ce qui ressort, ce qui est déséquilibré, ce qu'il faut suivre. Rien n'est conservé.</p></div></section>
+    <div class="two"><section class="panel"><div class="ph"><h2>Ce que vous possédez vraiment</h2></div><div class="pb">${hbars(top.map(x => ({ label: x.name, v: x.w, href: x.href })), v => pct(v, 1, false))}<p class="note">Les ETF sont « ouverts » : leurs principales lignes sont réparties selon leur poids${uncovered > 0.05 ? ` ; ${F0.format(uncovered * 100)} % correspond aux autres lignes, plus petites, des ETF` : ""}.</p></div></section>
+      <section class="panel"><div class="ph"><h2>Par pays</h2></div><div class="pb">${hbars(cs.map(([k, w]) => ({ label: COUNTRY[k] || k, v: w })), v => pct(v, 0, false))}</div></section></div>
+    <div class="two"><section class="panel"><div class="ph"><h2>Prochaines dates de vos entreprises</h2></div>${up.length ? agendaHTML(up, true) : `<div class="pb muted">Aucune date annoncée pour vos actions en direct.</div>`}</section>
+      <section class="panel"><div class="ph"><h2>Partager anonymement</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Ajoutez la composition de votre portefeuille (les lignes et leur poids, jamais les montants) au <a class="lnk" href="/communaute?onglet=portefeuilles">classement des visiteurs</a>.</p><button type="button" class="btn" id="pfsh">Partager anonymement</button> <button type="button" class="linkbtn" id="pfun">Retirer mon partage</button> <span class="muted" id="pfsm" style="font-size:12.5px"></span></div></section></div>`;
+  $("#pfsh").onclick = () => post("/api/communaute/portefeuille", { lignes: lines.map(l => [l.k, l.v / tot]) }).then(j => { $("#pfsm").textContent = j.error || "Partagé, merci."; }).catch(() => { $("#pfsm").textContent = "Indisponible pour le moment."; });
+  $("#pfun").onclick = () => post("/api/communaute/portefeuille", { retirer: true }).then(() => { $("#pfsm").textContent = "Partage retiré."; });
+  $$("[data-c]", el).forEach(inp => inp.onchange = () => { P.cfg = { ...(P.cfg || {}), [inp.dataset.c]: inp.value }; pf2Save(P); radiographie(P); });
+  $("#pfia").onclick = async () => {
+    $("#pfiab").innerHTML = `<p class="muted">Analyse en cours…</p>`;
+    const faits = { type: "portefeuille", valeur_eur: Math.round(tot), plus_value_pct: Math.round(gain / cost * 1000) / 10, lignes: lines.map(l => ({ nom: keyName(l.k), type: l.k.startsWith("e:") ? "ETF" : "action", poids_pct: Math.round(l.v / tot * 1000) / 10, plus_value_pct: lineCost(l) ? Math.round((l.v / lineCost(l) - 1) * 1000) / 10 : null })),
+      pays: cs.slice(0, 5).map(([k, w]) => [COUNTRY[k] || k, Math.round(w * 1000) / 10]), premieres_expositions: top.slice(0, 6).map(x => [x.name, Math.round(x.w * 1000) / 10]), frais_etf_eur_an: Math.round(fees), remarques: $$(".gf b", el).map(b => b.textContent),
+      habitudes: P.cfg ? { courtier: (BROKERS.list.find(b => b.id === P.cfg.courtier) || {}).name || null, compte: P.cfg.env || null, versement_mensuel_eur: +P.cfg.mensuel || null, achats_par_mois: +P.cfg.ordres || null } : null, profil_questionnaire: prof ? prof.titre : null };
+    const j = await iaRediger("portefeuille", faits);
+    $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}${miaPied(j)}</div>` : miaRendu(j, "L'analyse calculée ci-dessus reste complète.");
+  };
+}
+
+
+/* ---------- Profil en 5 axes : où se situe l'entreprise dans son secteur (sans verdict) ---------- */
+function rankIn(s, fn, higherBetter = true) { // position de 0 (dernière) à 1 (première) parmi les entreprises du secteur
+  const l = R.companies.filter(c => c.sector === s.sector && !c.missing && !(isBank(c) !== isBank(s))).map(c => ({ id: c.id, v: fn(c) })).filter(x => okn(x.v));
+  const me = l.find(x => x.id === s.id); if (!me || l.length < 5) return null;
+  const better = l.filter(x => higherBetter ? x.v > me.v : x.v < me.v).length;
+  return { p: 1 - better / (l.length - 1), n: l.length, rank: better + 1 };
+}
+function profilHTML(s) {
+  const bank = isBank(s), m = ratios(s);
+  const axes = [
+    ["Croissance", "Hausse des ventes sur un an", rankIn(s, c => ratios(c).g1)],
+    [bank ? "Rentabilité" : "Marge", bank ? "Bénéfice rapporté aux capitaux propres" : "Ce qui reste sur 100 de ventes", bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge)],
+    ["Solidité", bank ? "Régularité du bénéfice" : "Dette rapportée aux résultats (moins c'est mieux)", bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false)],
+    ["Dividende", "Part du bénéfice reversée (couverture)", m.payout != null && m.payout > 0 ? rankIn(s, c => { const p = ratios(c).payout; return p > 0 ? p : null; }, false) : null],
+    ["Prix", "PER : moins cher au regard du bénéfice", valo(s) && valo(s).pe ? rankIn(s, c => { const v = valo(c); return v && v.pe ? v.pe : null; }, false) : null],
+  ].filter(a => a[2]);
+  if (axes.length < 3) return "";
+  const word = p => p >= 0.75 ? "parmi les meilleures" : p >= 0.55 ? "au-dessus de la médiane" : p > 0.45 ? "dans la médiane" : p > 0.25 ? "sous la médiane" : "parmi les plus faibles";
+  return `<div class="prof"><p class="kick" style="margin-bottom:8px">Son profil dans le secteur ${esc(secName(s).toLowerCase())}</p>${axes.map(([t, d, r]) => `<div class="pa2" ${tipAttr({ h: t, r: [[d, `${r.rank}e sur ${r.n}`, ""]], n: "Le trait du milieu est la médiane du secteur." })} tabindex="0"><span class="pt"><b>${t}</b><small>${word(r.p)}</small></span><span class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${r.p >= 0.55 ? "var(--g)" : r.p > 0.45 ? "var(--n)" : "var(--o)"}"></i></span></div>`).join("")}
+    <p class="note" style="margin:6px 0 0">Chaque point place l'entreprise parmi les ${axes[0][2].n} entreprises du secteur suivies : à droite les mieux placées, au milieu la ${medBtn()}. Ce profil décrit les derniers comptes ; ce n'est pas une note d'achat.</p></div>`;
+}
+
+/* ---------- Premium : jeton gardé sur l'appareil, quotas, incitations ---------- */
+const TKEY = "bilan.premium", FREE = { pf: 10, cmp: 3 };
+function premTok() { try { return localStorage.getItem(TKEY) || ""; } catch (e) { return ""; } }
+function setPremTok(t) { try { t ? localStorage.setItem(TKEY, t) : localStorage.removeItem(TKEY); } catch (e) { } PREM = null; }
+let PREM = null, PREMP = null;
+function premStatus() {
+  if (PREM) return Promise.resolve(PREM);
+  if (PREMP) return PREMP;
+  const t = premTok(); if (!t) return Promise.resolve(PREM = { premium: false });
+  return PREMP = fetch("/api/premium/statut", { headers: { "x-bilan-token": t } }).then(r => r.json()).catch(() => ({ premium: false })).then(j => { PREMP = null; PREM = j; document.documentElement.classList.toggle("is-prem", !!j.premium); return j; });
+}
+const isPrem = () => !!(PREM && PREM.premium);
+function iaFetch(url, opts = {}) { const t = premTok(); return fetch(url, { ...opts, headers: { ...(opts.headers || {}), ...(t ? { "x-bilan-token": t } : {}) } }); }
+function iaErr(j, def) { return `<p class="muted" style="margin:6px 0">${esc((j && j.error) || def)}</p>${j && j.quota && !j.premium ? `<p style="margin:4px 0 8px"><a class="more" href="/premium">Découvrir Premium →</a></p>` : ""}`; }
+function toast(html) { let t = $("#toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; document.body.appendChild(t); } t.innerHTML = html; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 6000); }
+function pfFull(P) { if (isPrem() || P.l.length < FREE.pf) return false; toast(`La version gratuite suit jusqu'à ${FREE.pf} lignes. <a href="/premium">Premium</a> les suit sans limite.`); return true; }
+premStatus();
+
+/* ---------- Score visuel : le profil en 5 axes, en version compacte (cartes, comparaisons) ---------- */
+function profilAxes(s) {
+  if (s.missing) return [];
+  const bank = isBank(s), m = ratios(s);
+  return [
+    ["Croissance", rankIn(s, c => ratios(c).g1)],
+    [bank ? "Rentabilité" : "Marge", bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge)],
+    ["Solidité", bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false)],
+    ["Dividende", m.payout != null && m.payout > 0 ? rankIn(s, c => { const p = ratios(c).payout; return p > 0 ? p : null; }, false) : null],
+    ["Prix", valo(s) && valo(s).pe ? rankIn(s, c => { const v = valo(c); return v && v.pe ? v.pe : null; }, false) : null],
+  ].filter(a => a[1]);
+}
+const axCol = p => p >= 0.55 ? "var(--g)" : p > 0.45 ? "var(--n)" : "var(--o)";
+const axWord = p => p >= 0.75 ? "parmi les meilleures" : p >= 0.55 ? "au-dessus de la médiane" : p > 0.45 ? "dans la médiane" : p > 0.25 ? "sous la médiane" : "parmi les plus faibles";
+function profilMini(s) {
+  const ax = profilAxes(s); if (ax.length < 3) return "";
+  return `<div class="pmini" aria-label="Profil dans son secteur">${ax.map(([t, r]) => `<span ${tipAttr({ h: t, r: [["Place dans le secteur", `${r.rank}e sur ${r.n}`, ""]], n: axWord(r.p) + ". Le trait du milieu est la médiane." })} tabindex="0"><small>${t}</small><i class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${axCol(r.p)}"></i></i></span>`).join("")}</div>`;
+}
+function profilsCompare(list) {
+  const rows = list.map(c => [c, profilAxes(c)]).filter(([, a]) => a.length >= 3); if (rows.length < 2) return "";
+  const names = ["Croissance", "Marge", "Rentabilité", "Solidité", "Dividende", "Prix"].filter(n => rows.some(([, a]) => a.some(x => x[0] === n)));
+  return `<section class="panel"><div class="ph"><h2>Où chacune se place dans son secteur</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t pcmp"><thead><tr><th></th>${names.map(n => `<th>${n}</th>`).join("")}</tr></thead><tbody>${rows.map(([c, a]) => `<tr><td><b>${esc(c.name)}</b></td>${names.map(n => { const x = a.find(y => y[0] === n); return `<td>${x ? `<span class="pl" title="${esc(axWord(x[1].p))} (${x[1].rank}e sur ${x[1].n})"><i class="pm"></i><i class="pd" style="left:${x[1].p * 100}%;background:${axCol(x[1].p)}"></i></span><small class="light">${axWord(x[1].p)}</small>` : `<span class="light">–</span>`}</td>`; }).join("")}</tr>`).join("")}</tbody></table>
+    <p class="note" style="margin:8px 0 0">Chaque point place l'entreprise parmi celles de son propre secteur : à droite les mieux placées, au milieu la ${medBtn()}. Pour « Prix », à droite signifie une action moins chère au regard du bénéfice. Ce n'est pas une note d'achat.</p></div></section>`;
+}
+
+/* ---------- Assistant de fiche : questions sur l'entreprise, réponses tirées des données du site ---------- */
+const R1 = x => x == null || !isFinite(x) ? null : Math.round(x * 1000) / 10;
+function ficheFaits(s, c) {
+  const f = c ? figuresOf(c) : null, r = ratios(s), m = MED[s.sector] || {}, v = valo(s), p = pxOf(s);
+  return {
+    entreprise: s.name, secteur: secName(s), pays: regName(s), activite: s.fiche ? s.fiche.fait : s.desc, comment_elle_gagne_de_l_argent: s.fiche && s.fiche.argent, ce_qui_fait_varier_ses_resultats: s.fiche && s.fiche.depend,
+    compte_possible: peaOk(s) == null ? null : peaOk(s) ? "PEA ou compte-titres" : "compte-titres seulement",
+    comptes: f && { exercice: f.year, devise: s.currency, ventes_millions: s.ca, ventes_annee_precedente_millions: s.caPrev, benefice_net_millions: s.net, croissance_ventes_pct: R1(r.g1), marge_operationnelle_pct: R1(r.marge), marge_nette_pct: R1(r.nm), rentabilite_capitaux_propres_pct: R1(r.roe), dette_nette_en_annees_de_resultat_avant_amortissements: r.lev == null ? null : Math.round(r.lev * 10) / 10, tresorerie_superieure_a_la_dette: s.netDebt != null && s.netDebt < 0, part_du_benefice_versee_en_dividende_pct: R1(r.payout) },
+    mediane_du_secteur: { entreprises: m.n, croissance_ventes_pct: R1(m.g1), marge_operationnelle_pct: R1(m.marge), rentabilite_pct: R1(m.roe), dette_en_annees_de_resultat_avant_amortissements: m.lev == null ? null : Math.round(m.lev * 10) / 10, distribution_pct: R1(m.payout), per: MEDPE[s.sector] ? Math.round(MEDPE[s.sector]) : null },
+    jugement_du_site_critere_par_critere: f ? lecture(s, f).map(i => `${i.q} ${String(i.value || "").replace(/<[^>]+>/g, "")} (${i.lv === "fort" ? "point fort" : i.lv === "vig" ? "point de vigilance" : "dans la moyenne"})`) : [],
+    profil_dans_le_secteur: profilAxes(s).map(([t, x]) => `${t} : ${x.rank}e sur ${x.n}, ${axWord(x.p)}`),
+    action: p && { cours: p.p, devise: p.cur, variation_jour_pct: p.chg, variation_1an_pct: p.p1y ? R1(p.p / p.p1y - 1) : null, plus_haut_1an: p.h52, plus_bas_1an: p.l52, per: v && v.pe ? Math.round(v.pe * 10) / 10 : null, rendement_dividende_pct: v ? R1(v.yld) : null, capitalisation_milliards_eur: v && v.capE ? Math.round(v.capE / 1e8) / 10 : null },
+    concurrents: peersOf(s, 4).list.map(x => { const rr = ratios(x), vv = valo(x); return { nom: x.name, croissance_ventes_pct: R1(rr.g1), marge_pct: R1(rr.marge), per: vv && vv.pe ? Math.round(vv.pe) : null }; }),
+    annonces_recentes: Object.values(ANA || {}).filter(x => x.id === s.id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map(x => ({ date: x.date, type: x.type, chiffres: x.chiffres, lecture: x.lecture })),
+    prochaines_dates: eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3).map(e => ({ date: e.date, quoi: e.label })),
+    date_du_jour: TODAY,
+  };
+}
+const ASK = ["Comment gagne-t-elle de l'argent ?", "Que retenir de ses derniers comptes ?", "Est-elle chère par rapport à ses concurrentes ?", "Sa dette est-elle un problème ?", "Son dividende est-il solide ?", "Quels sont ses points de vigilance ?"];
+/* ---------- Page Premium ---------- */
+let OFFRES = null;
+async function pagePremium(sub) {
+  setTitle(sub === "merci" ? "Merci" : "Premium"); setNav("prem");
+  if (sub === "merci") return premiumMerci();
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
+  PREM = null; const st = await premStatus();
+  const rows = [ // six lignes, ✓ et — (30/10) : fiches, médianes, outils, favoris et portefeuille restent gratuits, sans ligne pour le dire
+    ["Rapport de la semaine sur vos valeurs", "2 semaines d'historique", "12 semaines, lecture de l'IA"],
+    ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "✓ toutes"],
+    ["Questions libres rédigées par l'IA du site", "3 par jour", "✓ sans limite"],
+    ["L'Académie et la formation guidée de 6 semaines", "Les essentiels", "✓ tout"],
+    ["Portefeuille : positions suivies", `${FREE.pf}`, "✓ sans limite"],
+    ["Comparer côte à côte · recherche par critères", `${FREE.cmp} entreprises · 8 résultats`, "5 entreprises · 30 résultats"],
+  ];
+  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<p class="prem-bientot">Ouverture prochaine</p>`}</div>`;
+  const attente = OFFRES.mensuel || OFFRES.unique ? "" : `<section class="panel prem-att"><div class="pb"><h2 class="f2-h">Soyez prévenu à l'ouverture</h2><p class="muted" style="margin:6px 0 12px">Les inscrits avant l'ouverture gardent le prix bloqué à <b>39 € par an</b>. Une adresse, rien d'autre ; aucun message en dehors de l'ouverture.</p>
+    <form id="attf" class="askf" novalidate><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email" required><button class="btn">Prévenez-moi</button></form><p id="attm" class="prem-attm" role="status" aria-live="polite"></p><p class="muted" id="attn" style="font-size:13px;margin:8px 0 0"></p></div></section>`;
+  app.innerHTML = `<h1 class="pagetitle">Premium : vos valeurs suivies pour vous, chaque semaine.</h1><p class="pagesub">Tout l'essentiel reste gratuit : les fiches, les chiffres, les médianes, les outils, votre espace. Premium vend du temps et du suivi, jamais de l'information de base.</p>
+    <ul class="acc-av prem-av"><li><b>Le rapport complet</b><span>Jusqu'à six secteurs suivis, huit valeurs analysées en détail, douze semaines d'historique, la lecture de l'IA du site.</span></li><li><b>Toutes les alertes, chaque soir</b><span>Publication, dividende, mouvement de plus de 5 % sur une valeur que vous suivez.</span></li><li><b>Sans limite</b><span>L'IA du site pour vos questions libres, toute l'Académie avec la formation guidée de six semaines, un portefeuille sans plafond.</span></li></ul>
+    <p class="prem-preuve">Le prix finance les données et les serveurs, pas la publicité. Rien n'est généré : chaque chiffre vient d'un dépôt officiel que vous pouvez ouvrir ; le site ne détient aucune position et ne vend aucune sélection de titres.</p>
+    ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
+    <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>${attente}`}
+    <section class="panel"><div class="ph"><h2>Ce qui change avec Premium</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table></div></section>
+    <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p class="muted" id="codem" style="font-size:13px"></p></div></section>
+      <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p class="muted" id="lostm" style="font-size:13px"></p></div></section></div>
+    <section class="panel"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">
+      ${acc("Premium donne-t-il des conseils pour acheter ?", "<p>Non. Premium donne plus d'explications et de suivi, jamais de recommandation d'achat ou de vente. bilan. n'est pas un conseiller en investissement.</p>")}
+      ${acc("Faut-il créer un compte ?", "<p>Non. Après le paiement, un code d'accès est enregistré sur votre appareil. Pour l'utiliser ailleurs, collez-le sur cette page. Le site ne demande ni mot de passe ni nom.</p>")}
+      ${acc("Comment résilier ?", "<p>L'abonnement mensuel se résilie à tout moment depuis cette page (« Gérer ou résilier mon abonnement »). L'accès reste ouvert jusqu'à la fin du mois payé. Le paiement unique ne se renouvelle pas.</p>")}
+      ${acc("Le paiement est-il sûr ?", "<p>Le paiement passe par Stripe, un prestataire de paiement agréé. bilan. ne voit jamais votre numéro de carte.</p>")}
+      ${acc("Puis-je changer d'avis ?", `<p>Les conditions de rétractation sont détaillées dans les <a class="lnk" href="/cgv">conditions générales de vente</a>.</p>`)}
+    </div></section>
+    <p class="note">Paiement sécurisé par Stripe. <a class="lnk" href="/cgv">Conditions générales de vente</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/avertissement">Avertissement sur les risques</a></p>`;
+  const P = $("#portail"); if (P) P.onclick = async () => { P.disabled = true; try { const j = await (await iaFetch("/api/premium/portail")).json(); if (j.url) location.href = j.url; else { toast(esc(j.error || "Portail indisponible.")); P.disabled = false; } } catch (e) { P.disabled = false; } };
+  const U = $("#unprem"); if (U) U.onclick = () => { setPremTok(""); document.documentElement.classList.remove("is-prem"); pagePremium(); };
+  const AF = $("#attf"), AM = $("#attm"); if (AF) { // liste d'attente : succès, erreur, format vérifié avant l'envoi
+    AF.onsubmit = async e => { e.preventDefault(); const em = AF.querySelector("input").value.trim(), bt = AF.querySelector("button");
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { AM.className = "prem-attm ko"; AM.textContent = "Cette adresse ne semble pas valide : vérifiez-la."; return; }
+      bt.disabled = true; AM.className = "prem-attm"; AM.textContent = "Envoi…";
+      try { const r = await fetch("/api/premium/attente", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: em }) }); const j = await r.json().catch(() => ({}));
+        if (r.ok && j.ok) { AM.className = "prem-attm ok"; AM.textContent = "C'est noté. Vous serez prévenu à l'ouverture, au prix bloqué."; AF.reset(); }
+        else { AM.className = "prem-attm ko"; AM.textContent = j.error || "Le site n'a pas pu enregistrer votre adresse. Réessayez dans un moment."; } }
+      catch (x) { AM.className = "prem-attm ko"; AM.textContent = "Le site est injoignable : vérifiez votre connexion et réessayez."; }
+      bt.disabled = false; };
+    fetch("/api/premium/attente").then(r => r.json()).then(j => { if (j && j.n >= 100) $("#attn").textContent = `${F0.format(j.n)} personnes déjà inscrites.`; }).catch(() => { });
+  }
+  $("#codef").onsubmit = async e => { e.preventDefault(); const v = $("#codef input").value.trim().replace(/[^a-f0-9]/gi, "").toLowerCase(); if (v.length < 20) { $("#codem").textContent = "Ce code ne semble pas complet."; return; }
+    setPremTok(v); const s = await premStatus(); if (s.premium) { toast("Premium est activé sur cet appareil."); pagePremium(); } else { setPremTok(""); $("#codem").textContent = "Ce code n'est pas reconnu ou l'accès a expiré."; } };
+  $("#lostf").onsubmit = async e => { e.preventDefault(); const v = $("#lostf input").value.trim(); if (!/@/.test(v)) return; try { const j = await (await fetch("/api/premium/retrouver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: v }) })).json(); $("#lostm").textContent = j.error || "Si un accès actif correspond à cette adresse, le code vient d'y être envoyé."; } catch (x) { $("#lostm").textContent = "Indisponible pour le moment."; } };
+}
+async function premiumMerci() {
+  const sid = new URLSearchParams(location.search).get("session_id") || "";
+  app.innerHTML = `<h1 class="pagetitle">Merci</h1><section class="panel"><div class="pb" id="merci"><p class="muted">Vérification du paiement…</p></div></section>`;
+  let j = {}; for (let i = 0; i < 4; i++) { try { j = await (await fetch("/api/premium/activer?session_id=" + encodeURIComponent(sid))).json(); } catch (e) { j = { error: "Vérification impossible pour le moment." }; } if (j.token || !/pas encore confirmé/.test(j.error || "")) break; await new Promise(r => setTimeout(r, 4000)); }
+  if (!j.token) { $("#merci").innerHTML = `<p>${esc(j.error || "Paiement introuvable.")}</p><p class="muted">Si vous avez été débité, écrivez-nous en indiquant l'adresse utilisée pour payer : votre accès sera ouvert à la main.</p>`; return; }
+  setPremTok(j.token); await premStatus();
+  $("#merci").innerHTML = `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Toute l'Académie et toutes vos alertes sont ouvertes sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/favoris">Activer les alertes sur mes favoris →</a><a class="more" href="/entreprises">Ouvrir une fiche →</a></div>`;
+}
+
+/* ---------- Nouvel investisseur : par où commencer ---------- */
+let COMM = null;
+const CKEY = "bilan.profil";
+async function pageCommencer() { // 30/10 : fusionnée dans /apprendre (lot 2) ; l'adresse est redirigée par le Worker et par le routeur
+  return goR("/apprendre");
+}
+function commencerTrois() { // les trois décisions avant d'investir, en cartes (partagées par /apprendre)
+  const ex3 = ["lvmh", "totalenergies", "air-liquide"].map(id => RBY[id]).filter(Boolean)[0];
+  const trois = [
+    { n: "1", t: "Une réserve d'abord", v: "3 à 6 mois", u: "de dépenses, sur un livret", d: "Avant d'investir, une somme disponible à tout moment. Le livret A rapporte 1,70 % par an net, plafonné à 22 950 €.", h: "#etapes", l: "Pourquoi, et combien" },
+    { n: "2", t: "Un compte adapté", v: "PEA", u: "pour les actions européennes, 5 ans sans impôt sur les gains", d: "Le compte-titres pour le reste du monde. Le choix dépend de ce que vous voulez acheter et de votre horizon.", h: "/pea-cto", l: "PEA ou compte-titres" },
+    { n: "3", t: "Une entreprise, lue", v: ex3 ? ex3.name : "Une fiche", u: "un verdict en trois mots, puis le détail", d: "Chaque fiche dit si l'entreprise gagne de l'argent, ce qu'elle doit et si son action est chère, face à son secteur.", h: ex3 ? `/entreprise/${ex3.id}` : "/entreprises", l: "Ouvrir une fiche" },
+  ];
+  return `<div class="cm3">${trois.map(x => `<a class="cm3-c" href="${x.h}"><span class="cm3-n">${x.n}</span><b class="cm3-t">${esc(x.t)}</b><span class="cm3-v">${esc(x.v)}</span><span class="cm3-u">${esc(x.u)}</span><span class="cm3-d">${esc(x.d)}</span><span class="cm3-l">${esc(x.l)} →</span></a>`).join("")}</div>`;
+}
+async function commencerCharger() { if (!COMM) { try { COMM = await (await fetch("/data/commencer.json")).json(); } catch (e) { } } return COMM; }
+function commencerBlocsHTML(C) { // sept étapes, profil, questions : les blocs détaillés de l'ancienne page « Par où commencer »
+  return `<section class="panel" id="etapes"><div class="ph"><h2>Le détail, en sept étapes</h2><span class="light" style="font-size:12.5px">10 minutes, dans l'ordre</span></div><div class="steps7">${C.etapes.map((e, i) => `<details class="st7"><summary><span class="n">${i + 1}</span><span><b>${esc(e.titre)}</b><small>${esc(e.resume)}</small></span><span class="chev" aria-hidden="true"></span></summary><div class="st7b">${e.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}${e.repere ? `<p class="repere"><b>Repère</b> ${esc(e.repere)}</p>` : ""}${e.lien ? `<a class="more" href="${esc(e.lien.href)}">${esc(e.lien.texte)} →</a>` : ""}</div></details>`).join("")}</div></section>
+    <details class="panel pa-pli" id="profil"><summary class="ph"><h2>Quel type d'investisseur êtes-vous ?</h2><span class="light" style="font-size:12.5px">5 questions · réponses gardées sur cet appareil</span></summary><div class="pb"><form id="qprof">${C.questions.map((q, i) => `<fieldset class="qf"><legend><span class="n">${i + 1}</span>${esc(q.q)}</legend>${q.options.map((o, j) => `<label class="qo"><input type="radio" name="${esc(q.id)}" value="${j}"><span>${esc(o.label)}</span></label>`).join("")}</fieldset>`).join("")}</form><div id="presult"></div></div></details>
+    <details class="panel pa-pli" id="faq"><summary class="ph"><h2>Questions fréquentes</h2></summary><div class="pb">${C.faq.map(f => acc(esc(f.q), `<p>${esc(f.a)}</p>`)).join("")}</div></details>`;
+}
+function commencerLier(C) {
+  let ans = {}; try { ans = JSON.parse(localStorage.getItem(CKEY) || "{}"); } catch (e) { }
+  $$("#qprof input").forEach(i => { if (ans[i.name] === +i.value) i.checked = true; });
+  // 30/10 (Romain) : trois écrans visuels d'abord, les sept étapes détaillées repliées derrière
+  const draw = () => {
+    const done = C.questions.filter(q => ans[q.id] != null).length, el = $("#presult");
+    if (done < C.questions.length) { el.innerHTML = `<p class="muted" style="margin:12px 0 0">${done ? `Encore ${C.questions.length - done} question${C.questions.length - done > 1 ? "s" : ""}.` : "Répondez aux questions : le profil qui vous ressemble le plus s'affiche ici."}</p>`; return; }
+    const sc = Object.fromEntries(C.profils.map(p => [p.id, 0]));
+    C.questions.forEach(q => { const o = q.options[ans[q.id]]; if (o) Object.entries(o.points).forEach(([k, v]) => sc[k] = (sc[k] || 0) + v); });
+    const order = C.profils.map(p => p.id); // en cas d'égalité, le profil le plus prudent l'emporte
+    const best = order.reduce((a, b) => sc[b] > sc[a] ? b : a, order[0]), P = C.profils.find(p => p.id === best);
+    const ex = []; // 30/10 : plus d'exemples de fonds selon le profil (pas de profil + titres proposés)
+    const cols = ["#0E6B4A", "#5E9C7F", "#B9B2A5", "#D9A35B"];
+    el.innerHTML = `<div class="pres"><p class="kick">Votre profil</p><h3>${esc(P.titre)}</h3><p>${esc(P.pour_qui)}</p>
+      <div class="two" style="margin-top:12px"><div><p class="cap">Ce qui guide ce profil</p><ul class="pl2">${P.principes.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>
+      <div><p class="cap">Exemple de répartition, à but pédagogique</p><div class="rbar">${P.exemple_repartition.map(([l, v], i) => `<span style="width:${v}%;background:${cols[i % 4]}" title="${esc(l)} : ${v} %"></span>`).join("")}</div><ul class="rleg">${P.exemple_repartition.map(([l, v], i) => `<li><i style="background:${cols[i % 4]}"></i>${esc(l)}<b>${v} %</b></li>`).join("")}</ul></div></div>
+      ${ex.length ? `<p class="cap" style="margin-top:14px">Des exemples de fonds pour chaque catégorie, classés par frais</p><div class="exetf">${ex.map(([cat, l]) => `<div><small>${esc(ECAT[cat] || cat)}</small>${l.map(e => `<a href="/etf/${e.id}">${esc(e.name)} <span class="light">${pct(e.ter / 100, 2, false)} par an${e.pea ? " · PEA" : ""}</span></a>`).join("")}</div>`).join("")}</div><p class="note" style="margin-top:6px">Ces fonds sont cités parce qu'ils sont parmi les moins chers de leur catégorie sur le site. Ce n'est pas une sélection personnalisée : comparez-les sur leur fiche.</p>` : ""}
+      <p class="repere" style="margin-top:12px"><b>À retenir</b> ${esc(P.a_retenir)}</p>
+      <p class="note">Ce questionnaire donne un repère général. Il ne remplace pas l'évaluation de votre situation par un conseiller en investissement, qui doit tenir compte de vos revenus, de votre patrimoine et de vos projets.</p></div>`;
+  };
+  $("#qprof").onchange = e => { const t = e.target; if (t.name) { ans[t.name] = +t.value; try { localStorage.setItem(CKEY, JSON.stringify(ans)); } catch (x) { } draw(); } };
+  draw();
+}
+
+/* ---------- Pages légales ---------- */
+let LEGAL = null;
+const LEGAL_PAGES = { "/mentions-legales": "mentions", "/cgv": "cgv", "/confidentialite": "confidentialite", "/avertissement": "avertissement" };
+async function pageLegal(p) {
+  const k = LEGAL_PAGES[p]; setNav("");
+  if (!LEGAL) { try { LEGAL = await (await fetch("/data/legal.json")).json(); } catch (e) { app.innerHTML = `<div class="empty">Page indisponible.</div>`; return; } }
+  const P = LEGAL.pages[k]; setTitle(P.titre);
+  const fill = s => esc(s).replace(/\[([^\]]{2,40})\]/g, `<mark class="todo" title="À compléter par l'éditeur">$1</mark>`);
+  app.innerHTML = `<div class="legal"><h1 class="pagetitle">${esc(P.titre)}</h1>${/\[[^\]]+\]/.test(JSON.stringify(P)) ? `<p class="note">Les passages surlignés sont en cours de complétion par l'éditeur.</p>` : ""}
+    <section class="panel"><div class="pb">${P.sections.map(s => `<h2>${esc(s.h)}</h2>${s.p.map(x => `<p>${fill(x)}</p>`).join("")}`).join("")}</div></section>
+    <p class="note">${Object.entries(LEGAL_PAGES).filter(([, v]) => v !== k).map(([u, v]) => `<a class="lnk" href="${u}">${esc(LEGAL.pages[v].titre)}</a>`).join(" · ")}</p></div>`;
+}
+
+/* ====================================================================================================
+   v8 : comptes clients (Mon espace), copilote IA « Demander à bilan. », accueil en bandeaux, favoris refaits
+   ==================================================================================================== */
+
+/* ---------- Compte : session par cookie, synchronisation des favoris et du portefeuille ---------- */
+let MOI = null, MOIP = null;
+function moi(force) {
+  if (MOI && !force) return Promise.resolve(MOI);
+  if (MOIP && !force) return MOIP;
+  return MOIP = fetch("/api/espace/moi", { credentials: "same-origin" }).then(r => r.ok ? r.json() : { connecte: false }).catch(() => ({ connecte: false })).then(j => {
+    MOIP = null; MOI = j; document.documentElement.classList.toggle("is-in", !!j.connecte);
+    if (j.connecte) { if (j.premium) { PREM = { premium: true, plan: j.plan }; document.documentElement.classList.add("is-prem"); } syncFromServer(j); }
+    espaceBadge(); return j;
+  });
+}
+const connecte = () => !!(MOI && MOI.connecte);
+let SYNCING = false;
+function syncFromServer(j) {
+  const d = j.donnees || {}; SYNCING = true;
+  try {
+    const local = favs(), srv = Array.isArray(d.favoris) ? d.favoris : [];
+    const union = [...new Set([...srv, ...local])];
+    setFavs(union);
+    const P = pf2Load();
+    if (d.portefeuille && Array.isArray(d.portefeuille.l) && (d.portefeuille.l.length || !P.l.length)) pf2Save(d.portefeuille);
+    SYNCING = false;
+    if (union.length !== srv.length || (!d.portefeuille && P.l.length)) pushDonnees();
+  } finally { SYNCING = false; }
+}
+let pushT = null;
+function pushDonnees() {
+  if (!connecte() || SYNCING) return;
+  clearTimeout(pushT);
+  pushT = setTimeout(() => fetch("/api/espace/donnees", { method: "PUT", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ favoris: favs(), portefeuille: pf2Load() }) }).catch(() => { }), 800);
+}
+function espaceBadge() {
+  const n = MOI && MOI.connecte ? MOI.nonlus || 0 : 0;
+  $$(".espn").forEach(el => el.textContent = n ? String(n) : "");
+  $$(".esplbl").forEach(el => el.textContent = MOI && MOI.connecte ? "Mon espace" : "Se connecter");
+}
+moi();
+
+/* ---------- Menu en rubriques ---------- */
+const NAVG = { home: "", aca: "deb", new: "deb", lex: "deb", mkt: "mkt", news: "mkt", ent: "ent", etf: "ent", sim: "out", com: "out", fav: "esp", pf: "esp", esp: "esp", ia: "ia", prem: "prem" };
+document.addEventListener("click", e => {
+  const b = e.target.closest(".dd > button");
+  $$(".dd.open").forEach(d => { if (!b || d !== b.parentElement) d.classList.remove("open"); });
+  if (b) { b.parentElement.classList.toggle("open"); b.setAttribute("aria-expanded", b.parentElement.classList.contains("open")); }
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape") $$(".dd.open").forEach(d => d.classList.remove("open")); });
+
+/* ---------- Jauge à zones : où se place un chiffre par rapport à la médiane de son secteur ---------- */
+// lowGood : true quand un chiffre bas est favorable (dette, PER)
+function zoneGauge({ v, med, lowGood = false, fmt = x => F1.format(x), lo = 0.75, hi = 1.3, labels }) {
+  if (v == null || med == null || !isFinite(v) || !isFinite(med) || med <= 0) return "";
+  const min = Math.min(v, med * 0.4), max = Math.max(v, med * 1.9), sc = x => Math.max(0, Math.min(100, (x - min) / (max - min) * 100));
+  const a = sc(med * lo), b = sc(med * hi), good = lowGood ? "var(--g)" : "var(--o)", bad = lowGood ? "var(--o)" : "var(--g)";
+  const L = labels || (lowGood ? ["moins que le secteur", "dans la moyenne", "plus que le secteur"] : ["sous le secteur", "dans la moyenne", "au-dessus du secteur"]);
+  const zone = v < med * lo ? 0 : v > med * hi ? 2 : 1;
+  return `<div class="zg"><div class="zgb"><span style="width:${a}%;background:${good};opacity:.18"></span><span style="width:${b - a}%;background:var(--n);opacity:.25"></span><span style="width:${100 - b}%;background:${bad};opacity:.18"></span>
+    <i class="zgm" style="left:${sc(med)}%" title="Médiane du secteur"></i><i class="zgv" style="left:${sc(v)}%;background:${zone === 1 ? "var(--ink)" : zone === 0 ? good : bad}"></i></div>
+    <div class="zgl"><span>${L[0]}</span><span>médiane : <b>${fmt(med)}</b></span><span>${L[2]}</span></div></div>`;
+}
+
+/* ---------- Le PER expliqué avec les chiffres de l'entreprise ---------- */
+function perExplique(s) {
+  const v = valo(s); if (!v || !v.pe) return "";
+  const mp = MEDPE[s.sector], netE = s.net != null ? toEur(s.net * 1e6, s.currency) : null, rb = 100 / v.pe;
+  return `<div class="perx"><p class="kick" style="margin:0 0 6px">Le PER, concrètement</p>
+    <p style="margin:0 0 8px">Imaginez que vous achetiez <b>toute l'entreprise</b> au prix de la Bourse : ${capFmt(v.capE)}. Elle a gagné ${netE ? capFmt(netE) : "son bénéfice"} sur sa dernière année. Si ce bénéfice restait le même, il faudrait <b>${F0.format(v.pe)} ans</b> de bénéfices pour retrouver votre mise : c'est son PER.</p>
+    <p style="margin:0 0 8px">Autre façon de le lire : pour <b>100 €</b> d'actions achetées, l'entreprise gagne environ <b>${F1.format(rb)} €</b> par an. Elle en reverse une partie en dividende et garde le reste pour investir.</p>
+    ${mp ? zoneGauge({ v: v.pe, med: mp, lowGood: true, fmt: x => F0.format(x) + " ans", labels: ["moins cher que le secteur", "", "plus cher que le secteur"] }) + `<p class="note" style="margin:6px 0 0">${v.pe > mp * 1.3 ? "Plus cher que la plupart de ses concurrentes : le marché parie sur une croissance plus forte. Si elle ne vient pas, ce prix peut baisser." : v.pe < mp * 0.75 ? "Moins cher que la plupart de ses concurrentes : le marché attend moins de croissance, ou voit un risque. Moins cher ne veut pas dire « bonne affaire »." : "Dans la moyenne de son secteur : ni plus cher, ni moins cher que ses concurrentes."}</p>` : ""}</div>`;
+}
+
+/* ---------- Copilote : « Demander à bilan. » ---------- */
+const IA_EX = ["Entreprises françaises peu endettées qui versent un bon dividende", "Les entreprises tech européennes les plus rentables", "Compare LVMH, Hermès et Kering", "C'est quoi un ETF capitalisant ?", "ETF monde éligibles au PEA les moins chers", "Actions américaines moins chères que leur secteur"];
+const INDI = {
+  croissance: ["Croissance des ventes", c => { const x = ratios(c).g1; return x == null ? null : x * 100; }, x => pct(x / 100), false],
+  marge: ["Marge d'exploitation", c => isBank(c) ? null : (x => x == null ? null : x * 100)(ratios(c).marge), x => pct(x / 100, 1, false), false],
+  marge_nette: ["Marge nette", c => { const x = ratios(c).nm; return x == null ? null : x * 100; }, x => pct(x / 100, 1, false), false],
+  rentabilite: ["Rentabilité des capitaux propres", c => { const x = ratios(c).roe; return x == null ? null : x * 100; }, x => pct(x / 100, 1, false), false],
+  dette: ["Dette (années de résultat)", c => isBank(c) ? null : c.netDebt != null && c.netDebt < 0 ? -0.1 : ratios(c).lev, x => x < 0 ? "plus de trésorerie que de dette" : F1.format(x) + " an" + (x >= 2 ? "s" : ""), true],
+  per: ["PER", c => { const v = valo(c); return v && v.pe ? v.pe : null; }, x => F0.format(x), true],
+  rendement: ["Rendement du dividende", c => { const v = valo(c); return v && v.yld != null ? v.yld * 100 : null; }, x => pct(x / 100, 1, false), false],
+  distribution: ["Part du bénéfice versée", c => { const x = ratios(c).payout; return x == null ? null : x * 100; }, x => pct(x / 100, 0, false), null],
+  variation_1an: ["Cours sur 1 an", c => { const p = pxOf(c); return p && p.p1y ? (p.p / p.p1y - 1) * 100 : null; }, x => pct(x / 100), null],
+  capitalisation: ["Valeur en Bourse", c => { const v = valo(c); return v && v.capE ? v.capE / 1e9 : null; }, x => capFmt(x * 1e9), null],
+  taille: ["Ventes annuelles", c => c.ca > 0 ? caEur(c) / 1000 : null, x => F1.format(x) + " Md€", null],
+};
+const MEDI = {};
+function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing).map(INDI[k][1])); return MEDI[key]; }
+// Thèmes repérés dans la question : filtre sur le nom et la description des entreprises, le nom et l'indice des ETF.
+const THEME_RE = { defense: [/d[ée]fense|armement|militaire|munitions|defense/i, "défense"], semi: [/semi.?conduct|puces|semiconductor/i, "semi-conducteurs"], eau: [/\beau\b|water/i, "eau"],
+  ia: [/intelligence artificielle|artificial intelligence|big data|\bIA\b/, "intelligence artificielle"], robot: [/robot|automation|automatisation/i, "robotique"], cyber: [/cyber/i, "cybersécurité"],
+  clean: [/clean|renouvelable|solaire|[ée]olien|transition [ée]nerg/i, "énergies renouvelables"], or: [/gold|\bor\b|aurif/i, "or"], mines: [/\bmines?\b|mini[eè]re?s?|cuivre|lithium|zinc|nickel|gold|\bor\b|uranium/i, "mines"],
+  luxe: [/luxe|luxury|maroquinerie|joaill|haute couture|montres/i, "luxe"], sante: [/health|sant[ée]|pharma|m[ée]dic|biotech/i, "santé"] };
+function runFiltre(a) {
+  let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region || (a.region === "EU" && c.region === "FR")) && (!a.pays || (c.isin || "").startsWith(a.pays)) && (!a.pea || peaOk(c)));
+  if (a.mot && THEME_RE[a.mot]) { const l2 = l.filter(c => THEME_RE[a.mot][0].test(c.name + " " + (c.desc || ""))); if (l2.length) l = l2; else a.mot = null; }
+  l = l.filter(c => a.criteres.every(k => { const f = INDI[k.indicateur]; if (!f) return true; const v = f[1](c); if (v == null) return false;
+    if (k.condition === "sup") return k.valeur == null || v > k.valeur; if (k.condition === "inf") return k.valeur == null || v < k.valeur;
+    const m = medInd(c.sector, k.indicateur); if (m == null) return false; return k.condition === "sup_mediane" ? v > m : v < m; }));
+  const t = a.tri || (a.criteres[0] ? { indicateur: a.criteres[0].indicateur, ordre: INDI[a.criteres[0].indicateur][3] ? "asc" : "desc" } : { indicateur: "capitalisation", ordre: "desc" });
+  if (INDI[t.indicateur] && INDI[t.indicateur][3] === true && a.criteres.some(k => k.indicateur === t.indicateur && /inf/.test(k.condition))) t.ordre = "asc";
+  const f = INDI[t.indicateur] ? INDI[t.indicateur][1] : INDI.capitalisation[1];
+  return { l: l.map(c => ({ c, v: f(c) })).sort((x, y) => (y.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1) - (x.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1)).map(x => x.c), tri: t };
+}
+function resoudre(nom) {
+  const q = norm(nom); if (!q) return null;
+  return R.companies.find(c => norm(c.name) === q) || R.companies.find(c => norm(c.name).startsWith(q)) || R.companies.find(c => norm(c.name).includes(q)) || R.companies.find(c => norm(c.ticker) === q)
+    || (ETF.list.find(e => norm(e.name).includes(q)) && { etf: ETF.list.find(e => norm(e.name).includes(q)) });
+}
+function cellInd(c, k) {
+  const f = INDI[k], v = f[1](c); if (v == null) return `<td class="num light">–</td>`;
+  const m = medInd(c.sector, k), good = f[3] == null || m == null ? null : (f[3] ? v < m * 0.85 : v > m * 1.15), bad = f[3] == null || m == null ? null : (f[3] ? v > m * 1.15 : v < m * 0.85);
+  return `<td class="num"><span class="${good ? "zgood" : bad ? "zbad" : ""}">${f[2](v)}</span>${m != null ? `<small class="light">secteur ${f[2](m)}</small>` : ""}</td>`;
+}
+function filtreHTML(a) {
+  const { l, tri } = runFiltre(a), lim = isPrem() ? 30 : 8, cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
+  const desc = [a.mot && THEME_RE[a.mot] && "thème " + THEME_RE[a.mot][1], a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
+  if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
+  return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
+    <p class="note" style="margin:0 0 10px">Vert : nettement mieux que la médiane de son secteur. Orange : nettement moins bien. Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</p>
+    <div class="scroll-x"><table class="t iat"><thead><tr><th class="l">Entreprise</th>${cols.map(k => `<th>${esc(INDI[k][0])}</th>`).join("")}<th class="l">Comptes</th></tr></thead><tbody>
+    ${l.slice(0, lim).map(c => `<tr><td class="l"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 26)}<span><b>${esc(c.name)}</b><small class="light">${esc(regName(c))} · ${esc(secName(c))}</small></span></a></td>${cols.map(k => cellInd(c, k)).join("")}<td class="l">${(t => t ? pills(t) : "")(quick(c))}</td></tr>`).join("")}</tbody></table></div>
+    ${l.length > lim ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">${l.length - lim} autres entreprises. ${isPrem() ? "" : `<a class="lnk" href="/premium">Premium</a> affiche jusqu'à 30 résultats.`}</p>` : ""}
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">${l.length > 1 ? `<a class="more" href="/comparer?ids=${l.slice(0, 3).map(c => c.id).join(",")}">Comparer les trois premières →</a>` : ""}<button type="button" class="linkbtn" data-favall="${l.slice(0, lim).map(c => "c:" + c.id).join(",")}">☆ Tout ajouter à mes favoris</button></div>`;
+}
+function etfIAHTML(a) {
+  let l0 = ETF.list.filter(e => (!a.categorie || e.categorie === a.categorie) && (!a.pea || e.pea) && e.ter != null);
+  if (a.mot && THEME_RE[a.mot]) { const l2 = l0.filter(e => THEME_RE[a.mot][0].test(e.name + " " + (e.index || ""))); if (l2.length) l0 = l2; else a.mot = null; }
+  const l = l0.sort((x, y) => x.ter - y.ter).slice(0, isPrem() ? 20 : 8);
+  if (!l.length) return `<p class="lead">Aucun ETF du site ne correspond.</p>`;
+  const m = median(l.map(e => e.ter));
+  return `<p class="lead" style="margin:0 0 10px"><b>${l.length} ETF</b>${a.mot && THEME_RE[a.mot] ? ` sur le thème « ${esc(THEME_RE[a.mot][1])} »` : a.categorie ? ` de la catégorie « ${esc(ECAT[a.categorie] || a.categorie)} »` : ""}${a.pea ? ", éligibles au PEA" : ""}, du moins cher au plus cher.</p>
+    <div class="hb">${l.map(e => `<a class="hbr" href="/etf/${e.id}"><span class="hbl">${logo({ name: e.issuer, domain: issuerDom(e) }, 22)}${esc(e.name)}</span><span class="hbb"><span style="width:${Math.max(4, e.ter / Math.max(...l.map(x => x.ter)) * 100)}%;background:${e.ter <= m * 0.8 ? "var(--g)" : e.ter >= m * 1.25 ? "var(--o)" : ""}"></span></span><span class="hbv num">${pct(e.ter / 100, 2, false)}${e.pea ? " · PEA" : ""}</span></a>`).join("")}</div>
+    <p class="note">Frais courants annuels. Vert : parmi les moins chers de la liste. Les frais ne sont pas le seul critère : regardez l'indice suivi sur chaque fiche.</p>`;
+}
+async function iaRun(q, out) {
+  out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA analyse votre question…</div>`;
+  await Promise.all([premStatus(), PXP, loadAna()]); // les cours servent au PER, au rendement et aux médianes
+  let a = localCopilot(q);
+  let hitsL = [];
+  if (!a) { await acaLoad(); hitsL = chercheLecons(q);
+    const ouverte = /pourquoi|comment|c.?est quoi|qu.?est|explique|difference|faut.?il|doit.?on|risque|definition|signifie|fonctionne|marche|vaut.?il|interet|quel|quelle|combien|est.?ce|peut.?on|^(le|la|les|un|une) /i.test(norm(q));
+    if (hitsL.length && (ouverte || hitsL[0].s >= 8)) a = { action: "lecons", hits: hitsL, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()) }; }
+  if (!a) a = await miaCopilote(q); // IA connectée par le visiteur (m/monia.js), sinon { invite: true }
+  if (a.error || a.invite) { await acaLoad(); const h = chercheLecons(q); if (h.length) a = { action: "lecons", hits: h, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()), invite: a.invite };
+    else { out.innerHTML = a.invite ? `<p class="lead" style="margin:0 0 6px">Les réponses calculées du site ne couvrent pas encore cette question.</p><p class="muted" style="margin:0">Essayez une recherche par critères (secteur, pays, dette, dividende, prix), une comparaison (« Compare LVMH et Hermès ») ou une notion (« C'est quoi le PER ? »).</p>${miaInvite()}` : `<p class="muted" style="margin:6px 0">${esc(a.error)}</p>`; return; } }
+  if (a.action === "fiche") { const x = a.id ? RBY[a.id] : resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
+  if (a.action === "comparer") { const ids = (a.ids ? a.ids.map(id => RBY[id]) : a.noms.map(resoudre)).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
+  if (a.action === "repondre" && !hitsL.length) { await acaLoad(); hitsL = chercheLecons(q); }
+  if (a.lien && !hitsL.some(h => "/academie/" + h.m.id + "/" + h.l.id === a.lien[0])) { const [mid, lid] = a.lien[0].split("/").slice(2); const m = ACA && ACA.modules.find(x => x.id === mid), l = m && m.lecons.find(x => x.id === lid); if (l) hitsL = [{ m, l }, ...hitsL]; }
+  const titre = a.titre || q;
+  out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
+    ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : a.action === "lecons" ? `<p class="lead" style="margin:0 0 10px">Les leçons de l'Académie qui répondent à votre question :</p>` + leconsHTML(a.hits) : resumeHTML(a.texte) + (a.action === "repondre" && hitsL.length ? `<div class="iaplus"><p class="kick">Pour aller plus loin dans l'Académie</p>${hitsL.slice(0, 2).map(({ m, l }) => `<a class="hbr" href="/academie/${m.id}/${l.id}"><b>${esc(l.titre)}</b><span>${esc(m.titre)}</span></a>`).join("")}</div>` : "")}
+    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.ia === "connectee" ? `Réponse rédigée par l'IA de bilan. (${esc(a.modele || "modèle choisi")}), à partir des données du site. À vérifier ; ce n'est pas un conseil.` : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p>${a.invite ? miaInvite() : ""}</div>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
+function iaBox(id, big = false) {
+  return `<form class="iabox2${big ? " big" : ""}" id="${id}" autocomplete="off"><span class="iaspark" aria-hidden="true">✦</span><input type="text" maxlength="300" placeholder="Demandez à bilan. : « entreprises françaises peu endettées avec un dividende »" aria-label="Posez votre question à l'IA"><button class="btn" type="submit">Demander</button></form>`;
+}
+function bindIaBox(form, out) { form.onsubmit = e => { e.preventDefault(); const q = $("input", form).value.trim(); if (q.length < 4) return; if (out) { history.replaceState({}, "", "/demander?q=" + encodeURIComponent(q)); iaRun(q, out); } else go("/demander?q=" + encodeURIComponent(q)); }; }
+function pageDemander() {
+  setTitle("Demander à l'IA"); setNav("ia");
+  const q = new URLSearchParams(location.search).get("q") || "";
+  app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à bilan.</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
+    ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div><p class="mia-etat" data-mia-etat>${miaEtatHTML()}</p></div>
+    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres reçoivent une réponse rédigée par <a class="lnk" href="/espace/ia">l'IA du site</a>, gratuite.</p></div></section>`;
+  const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
+  app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (!b) return; $("input", f).value = b.dataset.iaq; f.requestSubmit(); });
+  if (q) { $("input", f).value = q; iaRun(q, out); }
+}
+
+/* ---------- Accueil en bandeaux ---------- */
+const band = (n, kick, title, link, body) => `<section class="band"><div class="bandh"><span class="bandn">${n}</span><div><p class="kick">${kick}</p><h2>${title}</h2></div>${link ? `<a class="more" href="${link[0]}">${link[1]} →</a>` : ""}</div>${body}</section>`;
+function orcConfiance() { return ""; } // remplacée par cf/site/m/orchestre.js
+async function pageHome() {
+  setTitle(""); setNav("home");
+  await Promise.all([PXP, loadAna()]);
+  const day = dayPick(), secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length, m: MED[k] })).filter(x => x.n).sort((a, b) => b.n - a.n);
+  app.innerHTML = `
+    <section class="hero3"><p class="kick">${F0.format(R.companies.length)} entreprises · ${ETF.list.length} ETF · comptes officiels</p>
+      <h1>La Bourse, comptes à l'appui.<br><em>Posez votre question.</em></h1>
+      ${iaBox("hia", true)}
+      <div class="chips iaex">${IA_EX.slice(0, 4).map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>
+      <p class="herosub">Ou cherchez directement une entreprise ou un ETF dans la barre en haut de la page.</p>${orcConfiance()}</section>
+    ${band(1, "Aujourd'hui", "Les marchés du jour", ["/marches", "Tous les marchés"], `<div class="homegrid"><section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section><section class="panel"><div class="ph"><h2>Plus fortes hausses et baisses</h2></div><div class="pb">${moversHTML("all")}</div></section></div>`)}
+    ${band(2, "Mon espace", "Votre semaine en 2 minutes", ["/espace", "Mon espace"], `<div id="homeesp"></div>`)}
+    ${band(3, "Débuter", "Vous ne savez pas par où commencer ?", ["/apprendre", "Le guide du nouvel investisseur"], `<div class="nb3 nb4">
+      <a href="/apprendre"><b>1. Trouver son profil</b><span>Sept étapes dans l'ordre et cinq questions pour savoir quel type d'investisseur vous êtes.</span></a>
+      <a href="/apprendre#academie"><b>2. Suivre les cours</b><span>L'Académie : l'argent, la Bourse, les placements, les frais et les pièges, avec des quiz.</span></a>
+      <a href="/entreprise/lvmh"><b>3. Lire une vraie fiche</b><span>Exemple avec LVMH : ses chiffres comparés à la médiane de son secteur.</span></a>
+      <a href="/pea-cto"><b>4. Choisir son compte</b><span>PEA, compte-titres ou assurance-vie : ce qui reste après impôts.</span></a></div>${typeof commComparaisonHTML === "function" ? `<section class="panel homecomm"><div class="ph"><h2>Livret A, inflation ou actions : ce que deviennent vos versements</h2><a href="/livret-a-ou-bourse">Le comparateur complet</a></div><div class="pb">${commComparaisonHTML({ compact: true })}</div></section>` : ""}${typeof commIdeesHTML === "function" ? `<div class="homecomm"><div class="bandsub" style="display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px"><h3 style="margin:0;font:600 18px var(--serif)">Trois idées reçues, démontées</h3><a class="lnk" href="/idees-recues">Les 12 idées reçues</a></div>${commIdeesHTML(3)}</div>` : ""}`)}
+    ${band(4, "Explorer", "Les entreprises et les ETF", ["/entreprises", "Toutes les entreprises"], `
+      <section class="panel"><div class="ph"><h2>Classements des entreprises</h2><div class="chips" id="rreg">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === rankState.region ? "on" : ""}">${l}</button>`).join("")}</div></div>
+        <div class="filters" id="rk">${RANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === rankState.k ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="rkb">${rankHTML()}</div></section>
+      <div class="homegrid"><section class="panel"><div class="ph"><h2>Les ETF en classement</h2><a href="/etf">Tous les ETF</a></div>
+        <div class="filters" id="erk">${ERANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === erankK ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="erkb">${erankHTML()}</div></section>
+        ${day ? `<section class="panel dayc"><div class="ph"><h2>L'entreprise du jour</h2></div><div class="pb"><a class="dayh" href="/entreprise/${day.id}">${logo(day, 48)}<div><div class="nm">${esc(day.name)}</div><div class="light">${esc(regName(day))} · ${esc(secName(day))}</div></div></a><p>${esc(day.fiche.fait)}</p>${profilMini(day)}${feu(quick(day))}<a class="more" href="/entreprise/${day.id}">Lire la fiche →</a></div></section>` : ""}</div>
+      ${typeof outilsDecouverteHTML === "function" ? outilsDecouverteHTML(3) : ""}
+      <div class="secgrid">${secs.map(x => `<a class="sectile" href="/entreprises?secteur=${x.k}"><b>${esc(x.name)}</b><span>${x.n} entreprises</span>${x.m && x.m.marge != null ? `<span class="light">Marge médiane ${pct(x.m.marge, 1, false)}</span>` : ""}</a>`).join("")}</div>`)}
+    ${band(5, "Actualité", "Ce qui se passe dans les entreprises", ["/actualites", "Toute l'actualité"], `<div class="trio">
+      <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Agenda</a></div>${agendaHTML(upcoming().slice(0, 5))}</section>
+      <section class="panel"><div class="ph"><h2>Annonces des entreprises</h2><a href="/actualites">Toutes</a></div><div class="pb" id="amf"></div></section>
+      <section class="panel"><div class="ph"><h2>La communauté</h2><a href="/communaute">Participer</a></div><div class="pb" id="crec"></div></section></div>`)}
+    ${band(6, "Premium", "Aller plus loin, sans publicité", ["/premium", "Voir l'offre"], `<div class="premband"><ul>
+      <li><b>Toute l'Académie</b> et la formation guidée de six semaines</li><li><b>30 résultats</b> par recherche par critères, au lieu de 8</li><li><b>Alertes chaque soir</b> dans votre espace : annonces, mouvements de plus de 5 %, résultats du lendemain</li>
+      <li><b>12 semaines d'historique</b> de vos bilans, portefeuille sans limite, comparaisons à 5</li></ul><a class="btn" href="/premium">Découvrir Premium</a></div>`)}`;
+  $("#rk").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.k = b.dataset.k; $$("#rk button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
+  $("#erk").onclick = e => { const b = e.target.closest("button"); if (!b) return; erankK = b.dataset.k; $$("#erk button").forEach(x => x.classList.toggle("on", x === b)); $("#erkb").innerHTML = erankHTML(); };
+  $("#rreg").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.region = b.dataset.r; $$("#rreg button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
+  bindIaBox($("#hia"));
+  app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (b) go("/demander?q=" + encodeURIComponent(b.dataset.iaq)); });
+  if (typeof actuBandeau === "function") actuBandeau($("#amf")); else amfBlock($("#amf"), "&suivies=1", 5);
+  fetch("/api/communaute/recent").then(r => r.json()).then(j => { $("#crec").innerHTML = (j.items || []).length ? j.items.slice(0, 3).map(m => msgHTML(m, true)).join("") : `<p class="muted" style="margin:0">Pas encore de message. <a class="lnk" href="/communaute">Lancer la discussion</a>.</p>`; }).catch(() => { $("#crec").innerHTML = `<p class="muted" style="margin:0">Bientôt disponible.</p>`; });
+  moi().then(m => { const el = $("#homeesp"); if (!el) return; if (m.connecte && typeof synAccueil === "function") return synAccueil(el, m); // cf/site/m/synthese.js
+    el.innerHTML = m.connecte ? `<section class="panel"><div class="pb espteaser"><div><b>Votre bilan de la semaine est prêt.</b><div class="muted">Les mouvements de vos ${favs().length} favoris, les annonces et les dates à venir, commentés par l'IA.${m.nonlus ? ` ${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""} non lue${m.nonlus > 1 ? "s" : ""}.` : ""}</div></div><a class="btn" href="/espace">Ouvrir mon bilan</a></div></section>`
+      : `<section class="panel"><div class="pb espteaser"><div><b>Créez votre espace, c'est gratuit.</b><ul class="espben"><li>Chaque semaine, le bilan de vos entreprises rédigé par l'IA</li><li>Vos favoris et votre portefeuille sur tous vos appareils</li><li>Les alertes quand une de vos entreprises publie ou bouge fortement</li></ul></div><a class="btn" href="/espace">Créer mon espace</a></div></section>`; });
+}
+
+/* ---------- Mon espace : connexion, bilan de la semaine, alertes, réglages ---------- */
+const post2 = (u, b, m = "POST") => fetch(u, { method: m, credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(b || {}) }).then(async r => ({ status: r.status, ...(await r.json().catch(() => ({}))) }));
+async function pageEspace(onglet) {
+  setTitle("Mon espace"); setNav("esp");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  const m = await moi(true);
+  if (!m.connecte) return espaceConnexion();
+  onglet = onglet || "bilan";
+  const tabs = [["bilan", "Bilan de la semaine"], ["alertes", `Alertes${m.nonlus ? ` <span class="espn2">${m.nonlus}</span>` : ""}`], ["favoris", "Mes favoris"], ["portefeuille", "Mon portefeuille"], ["reglages", "Réglages"]];
+  app.innerHTML = `<div class="esphead"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ""}</p><h1 class="pagetitle" style="margin:2px 0 0">Bonjour</h1><p class="muted" style="margin:2px 0 0">${esc(m.email)}</p></div>${m.premium ? "" : `<a class="btn ghost" href="/premium">Passer à Premium</a>`}</div>
+    <nav class="esptabs scroll-x">${tabs.map(([k, l]) => `<a href="${k === "favoris" ? "/favoris" : k === "portefeuille" ? "/portefeuille" : "/espace/" + k}" class="${k === onglet ? "on" : ""}">${l}</a>`).join("")}</nav><div id="espb"></div>`;
+  const el = $("#espb");
+  if (onglet === "bilan") return espaceBilan(el, m);
+  if (onglet === "alertes") return espaceAlertes(el, m);
+  return espaceReglages(el, m);
+}
+function espaceConnexion() {
+  app.innerHTML = `<div class="esplog"><div class="esppitch"><p class="kick">Mon espace</p><h1 class="pagetitle">Votre Bourse, suivie pour vous.</h1>
+      <ul class="espben big"><li><b>Le bilan de la semaine</b> de vos entreprises et ETF, commenté par l'IA : ce qui a bougé, ce qui a été annoncé, ce qui arrive.</li><li><b>Des alertes</b> quand une de vos entreprises publie ses résultats ou bouge de plus de 5 %.</li><li><b>Vos favoris et votre portefeuille</b> sur votre téléphone et votre ordinateur.</li></ul>
+      <p class="note">Gratuit. Aucune donnée vendue. Vous pouvez supprimer votre compte à tout moment.</p></div>
+    <div><section class="panel"><div class="ph"><h2 id="lt">Créer mon espace</h2></div><div class="pb">
+      <form id="espf" class="espform"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>
+        <label class="chk" id="cgu"><input type="checkbox" name="cgu" required> J'accepte les <a class="lnk" href="/cgv" target="_blank">conditions</a> et la <a class="lnk" href="/confidentialite" target="_blank">politique de confidentialité</a>.</label>
+        <button class="btn" type="submit" id="espgo">Créer mon espace</button><p class="muted" id="espm" style="font-size:13.5px;margin:0"></p></form>
+      <p style="margin:14px 0 0;font-size:14px"><button type="button" class="linkbtn" id="swap">J'ai déjà un espace : me connecter</button> · <button type="button" class="linkbtn" id="lost">Mot de passe oublié</button></p></div></section></div></div>`;
+  let mode = "inscription";
+  const f = $("#espf"), setMode = md => { mode = md; $("#lt").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Retrouver mon accès";
+    $("#espgo").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Changer mon mot de passe"; $("#cgu").hidden = md !== "inscription"; $("input[name=cgu]", f).required = md === "inscription";
+    $("#swap").textContent = md === "inscription" ? "J'ai déjà un espace : me connecter" : "Créer un espace";
+    let c = $("input[name=code]", f); if (md === "secours" && !c) { $("label", f).insertAdjacentHTML("afterend", `<label>Code de secours <small class="light">(reçu à la création)</small><input name="code" required autocomplete="off"></label>`); } else if (md !== "secours" && c) c.parentElement.remove();
+    $("input[name=mdp]", f).autocomplete = md === "connexion" ? "current-password" : "new-password"; };
+  $("#swap").onclick = () => setMode(mode === "inscription" ? "connexion" : "inscription");
+  $("#lost").onclick = () => setMode("secours");
+  f.onsubmit = async e => { e.preventDefault(); const fd = new FormData(f), email = fd.get("email"), mdp = fd.get("mdp"); $("#espm").textContent = "Un instant…";
+    const r = mode === "inscription" ? await post2("/api/espace/inscription", { email, motdepasse: mdp, favoris: favs(), portefeuille: pf2Load() }) : mode === "connexion" ? await post2("/api/espace/connexion", { email, motdepasse: mdp }) : await post2("/api/espace/secours", { email, code: fd.get("code"), nouveau: mdp });
+    if (r.error) { $("#espm").textContent = r.error; return; }
+    if (r.code_secours) { app.innerHTML = `<section class="panel" style="max-width:640px;margin:20px auto"><div class="pb"><h1 class="pagetitle" style="margin-top:0">Votre espace est créé</h1><p>Gardez ce <b>code de secours</b> : il permet de changer de mot de passe si vous l'oubliez. Il ne sera plus affiché.</p><p class="code">${esc(r.code_secours)}</p><a class="btn" href="/espace">Voir mon espace</a></div></section>`; MOI = null; moi(true); return; }
+    MOI = null; await moi(true); pageEspace(); };
+}
+async function espaceBilan(el, m) {
+  el.innerHTML = `<div class="empty">Préparation de votre bilan…</div>`;
+  const sem = new URLSearchParams(location.search).get("semaine") || "";
+  const b = await fetch("/api/espace/bilan" + (sem ? "?semaine=" + encodeURIComponent(sem) : ""), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({ error: "Bilan indisponible." }));
+  if (b.error) { el.innerHTML = `<section class="panel"><div class="pb">${esc(b.error)}</div></section>`; return; }
+  const L = (b.lignes || []).filter(x => x.variation_semaine_pct != null).sort((x, y) => y.variation_semaine_pct - x.variation_semaine_pct), sansCours = (b.lignes || []).filter(x => x.variation_semaine_pct == null);
+  const mx = Math.max(1, ...L.map(x => Math.abs(x.variation_semaine_pct)));
+  const hist = (b.historique || []).slice(0, isPrem() ? 12 : 2);
+  if (b.vide || !(b.lignes || []).length) { el.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Votre bilan se construit à partir de vos favoris et de votre portefeuille.</p><p>Ajoutez des entreprises ou des ETF avec le bouton « ☆ Ajouter aux favoris » de leur fiche, ou <a class="lnk" href="/demander">demandez à l'IA</a> de vous en trouver.</p><a class="btn" href="/entreprises">Parcourir les entreprises</a></div></section>`; return; }
+  el.innerHTML = `<div class="cols"><div>
+    <section class="panel"><div class="ph"><h2>Semaine ${esc(String(b.semaine || "").replace(/^\d{4}-W/, ""))}</h2><span class="light" style="font-size:12.5px">${b.genere ? "préparé le " + new Date(b.genere).toLocaleDateString("fr-FR") : ""}</span></div>
+      <div class="pb"><div class="bigstat"><span class="${b.moyenne >= 0 ? "up" : "down"}">${b.moyenne != null ? pct(b.moyenne / 100) : "–"}</span><small>évolution moyenne de vos lignes sur la semaine</small></div>
+      ${b.texte ? `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des chiffres ci-dessous. Ce n'est pas un conseil.</p></div>` : bilanLocal(b) ? `<div class="iares">${resumeHTML(bilanLocal(b))}<p class="iafoot">Résumé automatique de vos chiffres. Le commentaire de l'IA s'ajoutera à votre prochaine visite.</p></div>` : ""}</div></section>
+    <section class="panel"><div class="ph"><h2>Ce qui a bougé</h2></div><div class="pb"><div class="hb">${L.map(x => `<a class="hbr" href="${x.k.startsWith("c:") ? "/entreprise/" : "/etf/"}${x.k.slice(2)}"><span class="hbl">${esc(x.nom)}</span><span class="hbb ctr"><span style="width:${Math.abs(x.variation_semaine_pct) / mx * 50}%;${x.variation_semaine_pct < 0 ? "right:50%;background:var(--o)" : "left:50%;background:var(--g)"}"></span></span><span class="hbv num ${x.variation_semaine_pct >= 0 ? "up" : "down"}">${pct(x.variation_semaine_pct / 100)}</span></a>`).join("")}</div>
+      ${sansCours.length ? `<p class="note">Sans cours de la semaine dernière : ${sansCours.map(x => esc(x.nom)).join(", ")}.</p>` : ""}</div></section>
+    ${(b.annonces || []).length ? `<section class="panel"><div class="ph"><h2>Ce qui a été annoncé</h2></div><div class="pb">${b.annonces.map(a => `<div class="espann"><p><b>${esc(a.nom || keyName("c:" + a.id) || "")}</b> <span class="light">· ${esc(a.date ? dLabel(a.date) : "")} · ${esc(a.type || "")}</span></p>${(a.chiffres || []).length ? `<p>${a.chiffres.map(c => `${esc(c[0])} : <b>${esc(c[1])}</b>`).join(" · ")}</p>` : ""}${(a.lecture || []).length ? `<p class="muted">${esc(a.lecture.join(" "))}</p>` : ""}</div>`).join("")}</div></section>` : ""}
+    </div><aside>
+      <section class="panel"><div class="ph"><h2>À venir</h2></div><div class="pb">${(b.a_venir || []).length ? b.a_venir.map(e => `<p class="espev"><b>${esc(e.date ? dLabel(e.date) : "")}</b><span>${esc(e.nom || keyName("c:" + e.id) || "")} : ${esc(e.label || e.quoi || "")}</span></p>`).join("") : `<p class="muted" style="margin:0">Aucune date annoncée dans les deux prochaines semaines.</p>`}</div></section>
+      <section class="panel"><div class="ph"><h2>Semaines précédentes</h2></div><div class="pb">${hist.length ? hist.map(h => `<a class="espweek" href="/espace/bilan?semaine=${esc(h.semaine)}"><span>Semaine ${esc(String(h.semaine).replace(/^\d{4}-W/, ""))}</span><b class="${h.moyenne >= 0 ? "up" : "down"}">${h.moyenne != null ? pct(h.moyenne / 100) : "–"}</b></a>`).join("") : `<p class="muted" style="margin:0">Votre premier bilan est celui-ci.</p>`}${!isPrem() && (b.historique || []).length > 2 ? `<p class="note"><a class="lnk" href="/premium">Premium</a> garde 12 semaines d'historique.</p>` : ""}</div></section>
+      <section class="panel"><div class="pb"><b>Votre liste</b><p class="muted" style="font-size:13.5px">${favs().length} favoris, ${pf2Load().l.length} lignes de portefeuille. Le bilan se met à jour chaque samedi.</p><a class="more" href="/favoris">Gérer mes favoris →</a></div></section>
+    </aside></div>`;
+}
+async function espaceAlertes(el, m) {
+  const j = await fetch("/api/espace/notifs", { credentials: "same-origin" }).then(r => r.json()).catch(() => ({ items: [] }));
+  const items = j.notifs || j.items || [];
+  fetch("/api/espace/notifs/lu", { method: "POST", credentials: "same-origin" }).then(() => { if (MOI) MOI.nonlus = 0; espaceBadge(); });
+  const ico = { annonce: "📄", mouvement: "↕", resultats: "📅", agenda: "📅", bilan: "✦" };
+  el.innerHTML = `<section class="panel"><div class="ph"><h2>Vos alertes</h2><span class="light" style="font-size:12.5px">mises à jour chaque soir de semaine</span></div>
+    ${items.length ? (m.premium ? items : items.slice(0, 3)).map(n => `<a class="notif${n.lu ? "" : " new"}" href="${esc(n.lien || "/espace")}"><span class="ni">${ico[n.type] || "•"}</span><span><b>${esc(n.texte)}</b><small class="light">${new Date(n.at).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</small></span></a>`).join("") : `<div class="pb muted">Aucune alerte pour l'instant. Vous serez prévenu ici quand une de vos entreprises publiera ses comptes ou bougera de plus de 5 % en une séance.</div>`}
+    ${!m.premium && items.length > 3 ? `<div class="pb upsell2"><b>${items.length - 3} autres alertes</b> vous attendent. <a class="btn" href="/premium">Les voir avec Premium</a></div>` : ""}</section>`;
+}
+function espaceReglages(el, m) {
+  el.innerHTML = `<div class="two"><section class="panel"><div class="ph"><h2>Mot de passe</h2></div><div class="pb"><form id="mdpf" class="espform"><label>Mot de passe actuel<input type="password" name="a" required autocomplete="current-password"></label><label>Nouveau mot de passe<input type="password" name="n" required minlength="10" autocomplete="new-password"></label><button class="btn">Changer</button><p class="muted" id="mdpm" style="font-size:13.5px;margin:0"></p></form></div></section>
+    <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail ? `<label class="chk"><input type="checkbox" id="teas"${m.teaser ? " checked" : ""}> Recevoir un court e-mail quand mon bilan de la semaine est prêt (sans son contenu).</label>` : `<p class="muted" style="margin-top:0">Votre bilan de la semaine vous attend ici chaque samedi matin.</p>`}
+      <p style="margin:16px 0 0"><a class="lnk" href="/espace/ia">L'IA du site</a> : réponses calculées, et réponses rédigées gratuites pour les questions libres.</p>
+      <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button>${m.premium ? `<a class="btn ghost" href="/premium">Mon abonnement</a>` : ""}</div></div></section></div>
+    <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte, vos favoris, votre portefeuille, vos bilans et vos alertes sont effacés définitivement. Un abonnement Premium se résilie à part, depuis la page Premium.</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
+  $("#mdpf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/motdepasse", { ancien: fd.get("a"), nouveau: fd.get("n") }); $("#mdpm").textContent = r.error || "Mot de passe changé."; };
+  if ($("#teas")) $("#teas").onchange = e => post2("/api/espace/preferences", { teaser: e.target.checked });
+  $("#logout").onclick = async () => { await post2("/api/espace/deconnexion"); MOI = { connecte: false }; document.documentElement.classList.remove("is-in"); espaceBadge(); go("/"); };
+  $("#delf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/supprimer", { motdepasse: fd.get("p") }); if (r.error) { $("#delm").textContent = r.error; return; } MOI = { connecte: false }; espaceBadge(); app.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Votre espace a été supprimé. Les favoris enregistrés sur cet appareil restent ici tant que vous ne videz pas votre navigateur.</p></div></section>`; };
+}
+
+/* ---------- Favoris, en liste lisible ---------- */
+let favTab = "actions";
+async function pageFavoris() {
+  setTitle("Mes favoris"); setNav("fav");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  await Promise.all([PXP, loadAna()]);
+  const keys = favs(), cos = keys.filter(k => k.startsWith("c:")).map(k => RBY[k.slice(2)]).filter(Boolean), etfs = keys.filter(k => k.startsWith("e:")).map(k => ETFBY[k.slice(2)]).filter(Boolean);
+  if (!cos.length && !etfs.length) { app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Vous ne suivez encore aucune entreprise.</p><p>Sur chaque fiche, le bouton « ☆ Ajouter aux favoris » l'ajoute ici. Vous pouvez aussi <a class="lnk" href="/demander">demander à l'IA</a> : « entreprises européennes rentables et peu endettées ».</p><a class="btn" href="/entreprises">Parcourir les entreprises</a></div></section>`; return; }
+  const withP = cos.map(c => ({ c, p: pxOf(c) })), chgs = withP.filter(x => x.p && x.p.chg != null).map(x => x.p.chg), avg = chgs.length ? chgs.reduce((a, b) => a + b, 0) / chgs.length : null;
+  const up = cos.flatMap(c => eventsOf(c.id).filter(e => e.date >= TODAY).map(e => ({ ...e, c }))).sort((a, b) => a.date.localeCompare(b.date));
+  const ups = withP.filter(x => x.p && x.p.chg > 0).length, downs = withP.filter(x => x.p && x.p.chg < 0).length;
+  if (favTab === "etf" && !etfs.length) favTab = "actions"; if (favTab === "actions" && !cos.length) favTab = "etf";
+  const row = c => { const p = pxOf(c), y = p && p.p1y ? p.p / p.p1y - 1 : null, pos = p && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null, nx = eventsOf(c.id).find(e => e.date >= TODAY), t = quick(c);
+    return `<div class="frow"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 34)}<span><b>${esc(c.name)}</b><small class="light">${esc(secName(c))}</small></span></a>
+      <div class="fpx">${p ? `<b class="num">${pxFmt(p.p, p.cur)}</b><span class="num ${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " %" : ""}</span>` : `<span class="light">–</span>`}</div>
+      <div class="f1y"><small class="light">1 an</small><b class="num ${y >= 0 ? "up" : "down"}">${y != null ? sgn(y, 0) : "–"}</b></div>
+      <div class="f52">${pos != null ? `<small class="light">${pos > 0.85 ? "près du plus haut" : pos < 0.15 ? "près du plus bas" : "sur un an"}</small><div class="range sm"><i style="left:${pos * 100}%"></i></div>` : ""}</div>
+      <div class="fpr">${t ? pills(t) : ""}</div>
+      <div class="fnx">${nx ? `<small class="light">${esc(dLabel(nx.date))}</small><span>${esc(nx.label)}</span>` : `<small class="light">pas de date annoncée</small>`}</div>
+      <button type="button" class="favx" data-fav="c:${c.id}" title="Retirer des favoris" aria-label="Retirer ${esc(c.name)} des favoris">★</button></div>`; };
+  const erow = e => { const p = pxEtf(e), y = p && p.p1y ? p.p / p.p1y - 1 : null;
+    return `<div class="frow"><a class="cell-co" href="/etf/${e.id}">${logo({ name: e.issuer, domain: issuerDom(e) }, 34)}<span><b>${esc(e.name)}</b><small class="light">${esc(ECAT[e.categorie] || "")}${e.pea ? " · PEA" : ""}</small></span></a>
+      <div class="fpx">${p ? `<b class="num">${pxFmt(p.p, p.cur)}</b><span class="num ${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " %" : ""}</span>` : `<span class="light">–</span>`}</div>
+      <div class="f1y"><small class="light">1 an</small><b class="num ${y >= 0 ? "up" : "down"}">${y != null ? sgn(y, 0) : "–"}</b></div>
+      <div class="f52"><small class="light">frais</small><b class="num">${e.ter != null ? pct(e.ter / 100, 2, false) : "–"}</b></div><div class="fpr"></div><div class="fnx"><small class="light">${esc(e.index || "")}</small></div>
+      <button type="button" class="favx" data-fav="e:${e.id}" title="Retirer des favoris" aria-label="Retirer ${esc(e.name)} des favoris">★</button></div>`; };
+  app.innerHTML = `<div class="favhead"><div><p class="kick">Mon espace</p><h1 class="pagetitle" style="margin:2px 0 4px">Mes favoris</h1>
+      <p class="muted" style="margin:0">${cos.length} entreprise${cos.length > 1 ? "s" : ""} et ${etfs.length} ETF suivis${connecte() ? ", enregistrés dans votre espace" : `, enregistrés sur cet appareil. <a class="lnk" href="/espace">Créez votre espace</a> pour les retrouver partout et recevoir votre bilan de la semaine`}.</p></div>
+      ${avg != null ? `<div class="favday"><small>Aujourd'hui, en moyenne</small><b class="${avg >= 0 ? "up" : "down"}">${(avg > 0 ? "+" : "") + F2.format(avg)} %</b><small>${ups} en hausse · ${downs} en baisse</small></div>` : ""}</div>
+    <div class="favact"><button type="button" class="btn" id="vgo">✦ Bilan de ma liste par l'IA</button><a class="btn ghost" href="/espace">Mon bilan de la semaine</a>${cos.length > 1 ? `<a class="btn ghost" href="/comparer?ids=${cos.slice(0, isPrem() ? 5 : 3).map(c => c.id).join(",")}">Les comparer</a>` : ""}</div>
+    <div id="vbil"></div>
+    <section class="panel"><div class="filters" id="ftab">${cos.length ? `<button data-t="actions" class="${favTab === "actions" ? "on" : ""}">Actions <span class="light">${cos.length}</span></button>` : ""}${etfs.length ? `<button data-t="etf" class="${favTab === "etf" ? "on" : ""}">ETF <span class="light">${etfs.length}</span></button>` : ""}</div>
+      <div class="flist">${favTab === "actions" ? cos.map(row).join("") : etfs.map(erow).join("")}</div>
+      ${favTab === "actions" ? `<div class="src">Points de couleur : ce que disent les comptes (vert : points forts, gris : dans la moyenne, orange : points de vigilance). Cours différés.</div>` : ""}</section>
+    <div class="two"><section class="panel"><div class="ph"><h2>Leurs prochaines dates</h2><a href="/dividendes">Dividendes</a></div>${up.length ? agendaHTML(up.slice(0, 8), true) : `<div class="pb muted">Aucune date annoncée.</div>`}</section>
+      <section class="panel"><div class="ph"><h2>Dans la presse</h2></div><div id="fpz">${cos.slice(0, 3).map((c, i) => `<div class="pb"><div class="cap">${esc(c.name)}</div><div id="fp${i}"></div></div>`).join("")}</div><div class="src">Articles repérés par GDELT, non vérifiés par le site.</div></section></div>`;
+  $("#ftab").onclick = e => { const b = e.target.closest("button"); if (!b) return; favTab = b.dataset.t; pageFavoris(); };
+  $("#vgo").onclick = () => veilleBilan(cos);
+  cos.slice(0, 3).forEach((c, i) => presseBlock($("#fp" + i), { id: c.id, max: 2 }));
+}
+
+document.addEventListener("click", e => { if (e.target.closest(".favx") && location.pathname === "/favoris") setTimeout(pageFavoris, 0); });
+
+/* ====================================================================================================
+   v9 : IA sans limite pour l'essentiel. Les questions courantes sont comprises et traitées dans le navigateur,
+   avec les données du site : réponse instantanée, aucun appel au modèle, aucun quota. Le modèle ne sert qu'aux
+   questions vraiment libres.
+   ==================================================================================================== */
+const strip = h => String(h || "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
+const has = (q, re) => re.test(q);
+
+/* Le moteur local (localCopilot, localAssist, termeDe, chercheLecons…) est dans /ia.js. */
+
+/* ---------- Textes de secours, toujours disponibles ---------- */
+function bilanLocal(b) {
+  const L = (b.lignes || []).filter(x => x.variation_semaine_pct != null); if (!L.length && !(b.annonces || []).length) return "";
+  const P = [];
+  if (L.length) { const up = L.filter(x => x.variation_semaine_pct > 0).length, best = L[0], worst = L[L.length - 1];
+    P.push(`Ce qui a bougé\nSur la semaine, vos lignes ont évolué de ${pct((b.moyenne || 0) / 100)} en moyenne : ${up} en hausse, ${L.length - up} en baisse. La plus forte hausse : ${best.nom} (${pct(best.variation_semaine_pct / 100)}). ${L.length > 1 ? `La plus forte baisse : ${worst.nom} (${pct(worst.variation_semaine_pct / 100)}).` : ""}${L.some(x => Math.abs(x.variation_semaine_pct) >= 8) ? " Une variation de plus de 8 % en une semaine est importante pour une grande entreprise : regardez son actualité." : ""}`); }
+  if ((b.annonces || []).length) P.push(`Ce qui a été annoncé\n${b.annonces.slice(0, 3).map(a => `${a.nom} a publié ${String(a.type || "une annonce").toLowerCase()}${(a.chiffres || []).length ? ` : ${a.chiffres.slice(0, 2).map(c => c.join(" ")).join(", ")}` : ""}.`).join(" ")}`);
+  if ((b.a_venir || []).length) P.push(`À venir\n${b.a_venir.slice(0, 3).map(e => `${dLabel(e.date)} : ${e.nom}, ${e.label || ""}`).join(" ; ")}.`);
+  return P.join("\n");
+}
+function listeLocale(cos) {
+  const l = cos.map(c => ({ c, p: pxOf(c) })).filter(x => x.p && x.p.chg != null).sort((a, b) => b.p.chg - a.p.chg); if (!l.length) return "";
+  const avg = l.reduce((a, x) => a + x.p.chg, 0) / l.length, up = cos.flatMap(c => eventsOf(c.id).filter(e => e.date >= TODAY && e.date <= addDays(TODAY, 14)).map(e => ({ ...e, c }))).sort((a, b) => a.date.localeCompare(b.date));
+  const ann = Object.values(ANA || {}).filter(a => cos.some(c => c.id === a.id) && a.date >= addDays(TODAY, -7) && a.chiffres && a.chiffres.length);
+  return [`Ce qui a bougé\nAujourd'hui, vos entreprises évoluent de ${(avg > 0 ? "+" : "") + F2.format(avg)} % en moyenne. En tête : ${l[0].c.name} (${(l[0].p.chg > 0 ? "+" : "") + F2.format(l[0].p.chg)} %)${l.length > 1 ? `, en dernier : ${l.at(-1).c.name} (${(l.at(-1).p.chg > 0 ? "+" : "") + F2.format(l.at(-1).p.chg)} %)` : ""}.`,
+    ann.length ? `Ce qui a été annoncé\n${ann.slice(0, 3).map(a => `${RBY[a.id].name} (${dLabel(a.date)}) : ${a.chiffres.slice(0, 2).map(x => x.join(" : ")).join(", ")}.`).join(" ")}` : "",
+    up.length ? `À venir\n${up.slice(0, 4).map(e => `${dLabel(e.date)} : ${e.c.name}, ${e.label}`).join(" ; ")}.` : ""].filter(Boolean).join("\n");
+}
+
+/* ====================================================================================================
+   v10 : graphiques tactiles, portefeuille analysé avec les habitudes et le profil, page Méthode.
+   ==================================================================================================== */
+
+/* Validation d'une action du copilote proposée par l'IA connectée (m/monia.js) : seules les actions et les champs connus passent */
+function iaValide(a) {
+  if (!a || typeof a !== "object") return null;
+  const IND = Object.keys(INDI), clean = s => String(s || "").replace(/\s+/g, " ").trim();
+  if (a.action === "filtre") return { action: "filtre", titre: clean(a.titre).slice(0, 120), secteur: R.sectors[a.secteur] ? a.secteur : null, region: ["FR", "EU", "US", "MONDE"].includes(a.region) ? a.region : null, pea: a.pea === true,
+    criteres: (Array.isArray(a.criteres) ? a.criteres : []).filter(c => c && IND.includes(c.indicateur) && ["sup_mediane", "inf_mediane", "sup", "inf"].includes(c.condition)).slice(0, 5).map(c => ({ indicateur: c.indicateur, condition: c.condition, valeur: typeof c.valeur === "number" ? c.valeur : null })),
+    tri: a.tri && IND.includes(a.tri.indicateur) ? { indicateur: a.tri.indicateur, ordre: a.tri.ordre === "asc" ? "asc" : "desc" } : null, limite: 12 };
+  if (a.action === "comparer" && Array.isArray(a.noms)) return { action: "comparer", noms: a.noms.map(clean).filter(Boolean).slice(0, 5) };
+  if (a.action === "fiche" && a.nom) return { action: "fiche", nom: clean(a.nom) };
+  if (a.action === "etf") return { action: "etf", titre: clean(a.titre), categorie: /^[a-z-]{3,30}$/.test(a.categorie || "") ? a.categorie : null, pea: a.pea === true };
+  if (a.action === "repondre" && clean(a.texte).length > 30) return { action: "repondre", texte: String(a.texte) };
+  return null;
+}
+const jsonFrom = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { return JSON.parse(t.slice(i, j + 1)); } catch (e) { return null; } };
+/* ---------- Graphiques : taille réelle de l'écran et infobulles au doigt ---------- */
+const chartW = () => Math.max(300, Math.min(640, (window.innerWidth || 640) - 44));
+let tipOn = null;
+function tipAt(x, y, show = true) {
+  const t = document.elementFromPoint(x, y), el = t && t.closest && t.closest("[data-tip]");
+  if (tipOn && tipOn !== el) tipOn.classList.remove("on");
+  if (el && show) { tipShow(el, x, y); el.classList.add("on"); tipOn = el; } else if (!el) { CTIP.style.display = "none"; tipOn = null; }
+}
+document.addEventListener("pointerdown", e => { if (e.pointerType !== "mouse") tipAt(e.clientX, e.clientY); }, { passive: true });
+document.addEventListener("pointermove", e => { if (e.pointerType !== "mouse" && e.buttons) tipAt(e.clientX, e.clientY); }, { passive: true });
+window.addEventListener("scroll", () => { if (CTIP.style.display === "block" && tipOn) { CTIP.style.display = "none"; tipOn.classList.remove("on"); tipOn = null; } }, { passive: true });
+
+/* ---------- Profil du questionnaire, utilisé par les analyses ---------- */
+let COMMP = null;
+async function profilInvestisseur() {
+  let ans = null; try { ans = JSON.parse(localStorage.getItem("bilan.profil") || "null"); } catch (e) { }
+  if ((!ans || !Object.keys(ans).length) && MOI && MOI.donnees && MOI.donnees.profil) ans = MOI.donnees.profil;
+  if (!ans || Object.keys(ans).length < 5) return null;
+  if (!COMMP) COMMP = await fetch("/data/commencer.json").then(r => r.json()).catch(() => null);
+  if (!COMMP) return null;
+  const sc = Object.fromEntries(COMMP.profils.map(p => [p.id, 0]));
+  COMMP.questions.forEach(q => { const o = q.options[ans[q.id]]; if (o) Object.entries(o.points).forEach(([k, v]) => sc[k] = (sc[k] || 0) + v); });
+  const order = COMMP.profils.map(p => p.id), best = order.reduce((a, b) => sc[b] > sc[a] ? b : a, order[0]);
+  return { id: best, titre: COMMP.profils.find(p => p.id === best).titre, ans };
+}
+
+/* ---------- Portefeuille : vos habitudes (courtier, enveloppe, versements) et le profil ---------- */
+async function pfHabitudes(P) {
+  if (!BROKERS.list.length) { try { BROKERS = await (await fetch("/data/courtiers.json")).json(); } catch (e) { } }
+  const c = P.cfg || {};
+  return `<section class="panel"><div class="ph"><h2>Vos habitudes d'achat</h2><span class="light" style="font-size:12.5px">pour calculer ce que vous coûtent vraiment vos achats</span></div><div class="pb pfhab">
+    <label>Votre courtier<select data-c="courtier"><option value="">Choisir…</option>${BROKERS.list.filter(b => !b.custom).map(b => `<option value="${b.id}" ${b.id === c.courtier ? "selected" : ""}>${esc(b.name)}</option>`).join("")}</select></label>
+    <label>Votre compte<select data-c="env"><option value="">Choisir…</option>${[["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"], ["mix", "Plusieurs comptes"]].map(([k, l]) => `<option value="${k}" ${k === c.env ? "selected" : ""}>${l}</option>`).join("")}</select></label>
+    <label>Versement par mois<input data-c="mensuel" type="number" min="0" step="10" value="${c.mensuel || ""}" placeholder="100"></label>
+    <label>Achats par mois<input data-c="ordres" type="number" min="1" step="1" value="${c.ordres || ""}" placeholder="1"></label></div></section>`;
+}
+function pfAnalyseHabitudes(P, lines, tot, prof) {
+  const c = P.cfg || {}, W = [], equity = lines.filter(l => !(l.k.startsWith("e:") && ["obligations", "monetaire"].includes((ETFBY[l.k.slice(2)] || {}).categorie))).reduce((a, l) => a + l.v, 0) / tot;
+  const b = c.courtier && BROKERS.list.find(x => x.id === c.courtier), m = +c.mensuel || 0, n = Math.max(1, +c.ordres || 1);
+  if (b && m > 0) {
+    const amt = m / n, fee = brokerFee(b, amt), r = fee / amt, an = fee * n * 12;
+    const best = BROKERS.list.filter(x => !x.custom && (c.env !== "pea" || x.pea)).map(x => ({ x, f: brokerFee(x, amt) })).sort((a, z) => a.f - z.f)[0];
+    if (r > 0.01) W.push(["vig", `Chaque achat de ${F0.format(amt)} € vous coûte ${eur(fee, 2)} chez ${esc(b.name)}, soit ${pct(r, 1, false)} du montant (${F0.format(an)} € par an).`, `Les frais fixes pèsent lourd sur les petits achats : à ${pct(r, 1, false)}, il faut que votre placement monte d'autant avant d'être rentable. Regrouper vos achats (par exemple un tous les deux mois) ou passer par un plan d'investissement programmé sans frais réduit ce coût.${best && best.x.id !== b.id && best.f < fee ? ` Pour un achat de ${F0.format(amt)} €, ${esc(best.x.name)} facture ${eur(best.f, 2)} (grille relevée le ${dLabel(BROKERS.updated || TODAY)}).` : ""}`]);
+    else if (r > 0.004) W.push(["moyen", `Vos frais de courtage représentent ${pct(r, 2, false)} de chaque achat (${F0.format(an)} € par an).`, "C'est acceptable. Au-delà de 1 %, les frais commencent à peser nettement sur le rendement."]);
+    else W.push(["fort", `Vos frais de courtage sont faibles : ${pct(r, 2, false)} de chaque achat.`, "Les frais par ordre ne grignotent presque pas vos versements."]);
+    const ter = lines.filter(l => l.k.startsWith("e:")).reduce((a, l) => a + l.v * ((ETFBY[l.k.slice(2)] || {}).ter || 0) / 100, 0);
+    const coutAn = an + ter, base = Calc.compound({ initial: tot, monthly: m, years: 20, rate: 0.06 }).final, net = Calc.compound({ initial: tot, monthly: m, years: 20, rate: 0.06, fee: Math.min(0.05, coutAn / Math.max(tot, 1)) }).final;
+    if (tot > 0) W.push(["moyen", `Tous frais compris (courtage et frais des ETF), vous payez environ ${F0.format(coutAn)} € par an, soit ${pct(coutAn / tot, 2, false)} de votre portefeuille.`, `Exemple illustratif : avec ${F0.format(m)} € par mois pendant 20 ans et un rendement hypothétique de 6 % par an avant frais, cet écart de frais représenterait environ ${F0.format(Math.max(0, base - net))} € à l'arrivée. Ce rendement n'est pas une prévision.`]);
+  } else W.push(["moyen", "Indiquez votre courtier et votre versement mensuel ci-dessus.", "L'analyse calculera alors ce que vous coûte chaque achat, et ce que représentent vos frais sur 20 ans."]);
+  if (c.env === "pea") { const hors = lines.filter(l => l.k.startsWith("c:") ? peaOk(RBY[l.k.slice(2)] || {}) === false : (ETFBY[l.k.slice(2)] || {}).pea === false); if (hors.length) W.push(["vig", `${hors.length} ligne${hors.length > 1 ? "s ne sont" : " n'est"} pas éligible${hors.length > 1 ? "s" : ""} au PEA : ${hors.slice(0, 4).map(l => esc(keyName(l.k))).join(", ")}.`, "Un PEA n'accepte que les actions européennes et les ETF éligibles. Ces lignes doivent être dans un compte-titres, ou remplacées par un ETF éligible au PEA qui suit le même marché."]); }
+  if (c.env === "cto") { const peaW = lines.filter(l => l.k.startsWith("c:") ? peaOk(RBY[l.k.slice(2)] || {}) : (ETFBY[l.k.slice(2)] || {}).pea).reduce((a, l) => a + l.v, 0) / tot; if (peaW > 0.4) W.push(["moyen", `${F0.format(peaW * 100)} % de vos lignes pourraient être détenues dans un PEA.`, "En 2026, les gains d'un PEA de plus de 5 ans sont imposés à 18,6 % (prélèvements sociaux seuls), contre 31,4 % dans un compte-titres. Les versements d'un PEA sont plafonnés à 150 000 €."]);
+    const dist = lines.filter(l => l.k.startsWith("e:") && /dist/i.test((ETFBY[l.k.slice(2)] || {}).distribution || "")); if (dist.length) W.push(["moyen", `${dist.length} ETF distribuant${dist.length > 1 ? "s" : ""} dans un compte-titres.`, "Chaque dividende versé est imposé l'année où vous le recevez. Un ETF capitalisant réinvestit les dividendes et ne crée pas d'impôt tant que vous ne vendez pas."]); }
+  if (prof) {
+    const a = prof.ans;
+    if (a.horizon === 0 && equity > 0.5) W.push(["vig", `Vous avez indiqué avoir besoin de cet argent dans moins de 5 ans, et ${F0.format(equity * 100)} % du portefeuille est en actions.`, "Sur moins de 5 ans, une baisse de 30 % ou plus est possible sans laisser le temps de remonter. C'est la règle la plus importante du guide « Par où commencer »."]);
+    if (a.precaution === 0) W.push(["vig", "Vous avez indiqué ne pas avoir encore d'épargne de précaution.", "Sans réserve sur un livret, un imprévu peut obliger à vendre au pire moment. La pratique courante est de garder 3 à 6 mois de dépenses disponibles avant d'investir en Bourse."]);
+    if (a.baisse === 0 && equity > 0.6) W.push(["moyen", `Vous avez indiqué que vous vendriez après une baisse de 30 %, avec ${F0.format(equity * 100)} % en actions.`, "Vendre après une forte baisse transforme une perte temporaire en perte définitive. Une part d'actions plus faible rend les baisses plus supportables."]);
+    if (a.choisir === 0 && lines.filter(l => l.k.startsWith("c:")).length >= 5) W.push(["moyen", "Vous préférez une solution simple, et vous détenez plusieurs actions en direct.", "Suivre plusieurs entreprises demande du temps : lire leurs résultats deux à quatre fois par an. Un ETF large fait ce travail de diversification pour vous."]);
+  } else W.push(["moyen", "L'analyse ne connaît pas encore votre profil.", `Répondez aux <a class="lnk" href="/apprendre#profil">5 questions du questionnaire</a> : l'analyse tiendra compte de votre horizon, de votre épargne de précaution et de votre réaction aux baisses.`]);
+  return W;
+}
+
+/* ---------- Méthode, sources et IA ---------- */
+function pageMethode() {
+  setTitle("Méthode, sources et IA"); setNav("new");
+  app.innerHTML = `<div class="legal"><p class="kick">Transparence</p><h1 class="pagetitle">Méthode, sources et intelligence artificielle</h1><p class="pagesub">Comment le site calcule ses chiffres, d'où ils viennent, et comment l'IA est encadrée pour rester factuelle.</p>
+    <section class="panel"><div class="pb">
+      <h2>D'où viennent les chiffres</h2>
+      <p>Les comptes des entreprises viennent des documents officiels : les rapports annuels au format européen ESEF (filings.xbrl.org) et les dépôts auprès de la SEC américaine (EDGAR). Les annonces françaises viennent de l'AMF (info-financiere.gouv.fr). Les cours sont différés (Google Finance) et les taux de change sont ceux de la Banque centrale européenne. Les listes de sites non autorisés viennent de l'AMF, via data.gouv.fr.</p>
+      <h2>Comment les chiffres sont jugés</h2>
+      <p>Chaque chiffre est comparé à la médiane des entreprises du même secteur suivies par le site : la moitié fait mieux, l'autre moins bien. Vert signifie nettement mieux que la médiane, orange nettement moins bien, gris dans la moyenne. Un point orange n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller.</p>
+      <h2>Ce que fait l'intelligence artificielle</h2>
+      <p>Les questions courantes (recherches par critères, comparaisons, définitions, questions sur une fiche) sont comprises et calculées directement par le site, sans modèle d'IA : la réponse est donc exacte par construction et sans limite. Pour les questions libres, l'IA du site reçoit uniquement les chiffres du site et des consignes strictes.</p>
+      <h2>Les règles données à l'IA contre les biais</h2>
+      <p>Séparer les faits de leur interprétation. Toujours présenter ce qui est favorable et ce qui demande de la vigilance. Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années. Comparer à la médiane du secteur plutôt que juger dans l'absolu. Aucun mot d'emphase. Aucune prédiction de cours, aucune recommandation d'acheter, de vendre ou de conserver un titre. Dire quand une information manque. Ne citer que les chiffres fournis.</p>
+      <h2>Ce que le site ne fait pas</h2>
+      <p>Il ne publie pas d'objectifs de cours ni de recommandations d'analystes : ces travaux sont payants, leur reprise est soumise à licence, et ils ne tiennent pas compte de votre situation. Il ne connaît pas votre patrimoine ni vos revenus : ses repères sont généraux. Pour un conseil adapté à votre situation, adressez-vous à un conseiller en investissements financiers (CIF) enregistré à l'ORIAS.</p>
+      <h2>Les limites à connaître</h2>
+      <p>Les comptes ont souvent plusieurs mois de retard sur l'activité réelle. Un ratio d'une seule année peut être faussé par un élément exceptionnel. Les cours sont différés. L'IA peut se tromper : vérifiez toujours un chiffre important dans le document source, dont le lien est donné.</p>
+    </div></section>
+    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/apprendre#academie">L'Académie</a></p></div>`;
+}
+
+/* ====================================================================================================
+   v11 : l'Académie (cours de culture financière, quiz, progression) et la formation guidée Premium
+   ==================================================================================================== */
+let ACA = null, ACAP = null;
+const AKEY = "bilan.academie";
+const acaLoad = () => ACA ? Promise.resolve(ACA) : (ACAP = ACAP || fetch("/data/academie.json").then(r => r.json()).then(j => ACA = j).catch(() => null));
+function acaSt() { try { return JSON.parse(localStorage.getItem(AKEY) || "{}"); } catch (e) { return {}; } }
+function acaSave(st) { try { localStorage.setItem(AKEY, JSON.stringify(st)); } catch (e) { } }
+const acaLocked = l => l.premium && !isPrem();
+const acaFind = (mid, lid) => { const m = ACA && ACA.modules.find(x => x.id === mid); return [m, m && lid ? m.lecons.find(x => x.id === lid) : null]; };
+function acaProgress(m, st) { const n = m.lecons.length, d = m.lecons.filter(l => st[m.id + "/" + l.id]).length; return { n, d, q: st["quiz/" + m.id] }; }
+const niveauCls = n => /avanc/i.test(n) ? "nv3" : /interm/i.test(n) ? "nv2" : "nv1";
+async function pageAcademie(mid, lid) {
+  setTitle("L'Académie"); setNav("aca");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  await Promise.all([acaLoad(), premStatus()]);
+  if (!ACA) { app.innerHTML = `<div class="empty">Les cours n'ont pas pu être chargés.</div>`; return; }
+  if (mid === "formation") return pageFormation();
+  if (!mid) return acaAccueil();
+  const [m, l] = acaFind(mid, lid); if (!m) return pageNotFound();
+  if (lid === "quiz") return acaQuiz(m);
+  if (lid && !l) return pageNotFound();
+  return l ? acaLecon(m, l) : acaModule(m);
+}
+function acaAccueil() {
+  const st = acaSt(), tot = ACA.modules.reduce((a, m) => a + m.lecons.length, 0), lus = ACA.modules.reduce((a, m) => a + acaProgress(m, st).d, 0), mins = ACA.modules.reduce((a, m) => a + m.lecons.reduce((b, l) => b + (l.duree_min || 5), 0), 0);
+  const next = ACA.modules.flatMap(m => m.lecons.map(l => [m, l])).find(([m, l]) => !st[m.id + "/" + l.id]);
+  app.innerHTML = `<div class="acahero"><p class="kick">L'Académie bilan.</p><h1 class="pagetitle">La culture financière, de zéro.</h1>
+      <p class="pagesub">${ACA.modules.length} modules, ${tot} leçons et des quiz pour comprendre l'argent, la Bourse et les placements, avec des exemples chiffrés et des sources officielles. Environ ${F0.format(mins / 60)} heures en tout, à votre rythme. Votre progression reste sur cet appareil.</p>
+      <div class="acaprog"><div class="feub"><span class="f" style="width:${lus / tot * 100}%"></span></div><span>${lus} / ${tot} leçons lues</span>${(() => { const xp = acaXP(st), [nv, a, b] = acaNiveau(xp); return `<span class="acaxp"><b>${xp} points</b> · niveau ${nv}${b ? ` · encore ${b - xp} pour le suivant` : ""}</span>`; })()}${next ? `<a class="btn" href="/academie/${next[0].id}/${next[1].id}">${lus ? "Reprendre" : "Commencer"} : ${esc(next[1].titre)}</a>` : ""}</div></div>
+    <div class="acagrid">${ACA.modules.map((m, i) => { const p = acaProgress(m, st), lk = m.lecons.filter(l => l.premium).length;
+      return `<a class="acacard" href="/academie/${m.id}"><div class="acatop"><span class="n">${i + 1}</span><span class="nv ${niveauCls(m.niveau)}">${esc(m.niveau || "")}</span></div><h3>${esc(m.titre)}</h3><p>${esc(m.intro)}</p>
+        <div class="acameta"><span>${m.lecons.length} leçons · ${m.duree_min || m.lecons.reduce((a, l) => a + (l.duree_min || 5), 0)} min${lk && !isPrem() ? ` · ${lk} Premium` : ""}</span><span>${p.d}/${p.n}${p.q != null ? ` · quiz ${p.q}/${m.quiz.length}` : ""}</span></div><div class="feub"><span class="f" style="width:${p.d / p.n * 100}%"></span></div></a>`; }).join("")}</div>
+    ${ACA.formation ? `<section class="panel formcard"><div class="pb"><div><p class="kick">Formation guidée${isPrem() ? "" : " · Premium"}</p><h2>${esc(ACA.formation.titre)}</h2><p>${esc(ACA.formation.intro)}</p></div><a class="btn" href="/academie/formation">${isPrem() ? "Suivre la formation" : "Découvrir la formation"}</a></div></section>` : ""}
+    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. Les chiffres (fiscalité, plafonds) sont ceux de 2026 et sont vérifiés à chaque mise à jour. <a class="lnk" href="/methode">Méthode et sources</a></p>`;
+}
+function acaModule(m) {
+  const st = acaSt(), p = acaProgress(m, st);
+  setTitle(m.titre + " · L'Académie");
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › ${esc(m.titre)}</div><h1 class="pagetitle">${esc(m.titre)}</h1><p class="pagesub">${esc(m.intro)}</p>
+    <div class="two"><section class="panel"><div class="ph"><h2>Les leçons</h2><span class="light" style="font-size:12.5px">${p.d} / ${p.n} lues</span></div>
+      ${m.lecons.map((l, i) => `<a class="acal" href="/academie/${m.id}/${l.id}"><span class="n ${st[m.id + "/" + l.id] ? "ok" : ""}">${st[m.id + "/" + l.id] ? "✓" : i + 1}</span><span><b>${esc(l.titre)}</b><small class="light">${esc(l.resume)}</small></span><span class="light acam">${l.duree_min || 5} min${acaLocked(l) ? " · 🔒" : ""}</span></a>`).join("")}
+      <a class="acal quiz" href="/academie/${m.id}/quiz"><span class="n">?</span><span><b>Le quiz du module</b><small class="light">${m.quiz.length} questions, avec l'explication de chaque réponse</small></span><span class="light acam">${p.q != null ? `${p.q}/${m.quiz.length}` : ""}</span></a></section>
+      <section class="panel"><div class="ph"><h2>À la fin de ce module, vous saurez</h2></div><div class="pb"><ul class="pl2">${(m.objectifs || []).map(o => `<li>${esc(o)}</li>`).join("")}</ul></div></section></div>`;
+}
+function acaLeconV1(m, l) {
+  const st = acaSt(), i = m.lecons.indexOf(l), prev = m.lecons[i - 1], next = m.lecons[i + 1], mi = ACA.modules.indexOf(m), nm = ACA.modules[mi + 1];
+  setTitle(l.titre + " · L'Académie");
+  const lock = acaLocked(l);
+  if (!lock) { st[m.id + "/" + l.id] = 1; acaSave(st); }
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
+    <article class="acales"><p class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</p><h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead">${esc(l.resume)}</p>
+    ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie et à la formation guidée de six semaines.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
+      : `${l.paragraphes.map(p => `<p>${esc(p)}</p>`).join("")}
+      ${l.exemple ? `<div class="acaex"><p class="kick">Exemple chiffré</p><p>${esc(l.exemple)}</p></div>` : ""}
+      ${(l.a_retenir || []).length ? `<div class="acaret"><p class="kick">À retenir</p><ul>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : ""}
+      ${l.erreur_frequente ? `<div class="acaerr"><p class="kick">Erreur fréquente</p><p>${esc(l.erreur_frequente)}</p></div>` : ""}
+      ${l.lien_site ? `<p><a class="more" href="${esc(l.lien_site.href)}">${esc(l.lien_site.texte)} →</a></p>` : ""}
+      ${(l.sources || []).length ? `<p class="note">Sources : ${l.sources.map(s => `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(" · ")}</p>` : ""}`}
+    <nav class="acanav">${prev ? `<a class="more" href="/academie/${m.id}/${prev.id}">← ${esc(prev.titre)}</a>` : "<span></span>"}${next ? `<a class="btn" href="/academie/${m.id}/${next.id}">Leçon suivante : ${esc(next.titre)}</a>` : `<a class="btn" href="/academie/${m.id}/quiz">Faire le quiz du module</a>`}</nav></article>
+    ${!next && nm ? `<p class="note" style="text-align:right">Ensuite : <a class="lnk" href="/academie/${nm.id}">${esc(nm.titre)}</a></p>` : ""}`;
+}
+function acaQuiz(m) {
+  setTitle("Quiz : " + m.titre);
+  let k = 0, score = 0;
+  const draw = () => {
+    if (k >= m.quiz.length) { const st = acaSt(); st["quiz/" + m.id] = score; acaSave(st);
+      app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Quiz</div><section class="panel" style="max-width:720px"><div class="pb"><p class="kick">Résultat</p><h1 class="pagetitle">${score} / ${m.quiz.length}</h1><p class="lead">${score / m.quiz.length >= 0.8 ? "Très bien : les notions de ce module sont acquises." : score / m.quiz.length >= 0.5 ? "C'est un bon début. Relisez les leçons où vous avez hésité." : "Relisez les leçons du module, puis refaites le quiz : c'est en répétant qu'on retient."}</p>
+        <div style="display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="again">Recommencer</button>${(() => { const nm = ACA.modules[ACA.modules.indexOf(m) + 1]; return nm ? `<a class="btn" href="/academie/${nm.id}">Module suivant : ${esc(nm.titre)}</a>` : `<a class="btn" href="/apprendre#academie">Revenir à l'Académie</a>`; })()}</div></div></section>`;
+      $("#again").onclick = () => { k = 0; score = 0; draw(); }; return; }
+    const q = m.quiz[k];
+    app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Quiz</div><section class="panel" style="max-width:720px"><div class="pb"><p class="kick">Question ${k + 1} sur ${m.quiz.length}</p><h2 class="acaq">${esc(q.q)}</h2>
+      <div class="acaopts">${q.options.map((o, i) => `<button type="button" class="acao" data-i="${i}">${esc(o)}</button>`).join("")}</div><div id="qexp"></div></div></section>`;
+    $$(".acao").forEach(b => b.onclick = () => { const i = +b.dataset.i, ok = i === q.bonne; if (ok) score++;
+      $$(".acao").forEach(x => { x.disabled = true; const j = +x.dataset.i; if (j === q.bonne) x.classList.add("good"); else if (j === i) x.classList.add("bad"); });
+      $("#qexp").innerHTML = `<div class="acaexp ${ok ? "good" : "bad"}"><b>${ok ? "Bonne réponse." : "Pas tout à fait."}</b> ${esc(q.explication)}</div><button class="btn" id="qnext">${k + 1 < m.quiz.length ? "Question suivante" : "Voir mon résultat"}</button>`;
+      $("#qnext").onclick = () => { k++; draw(); }; });
+  };
+  draw();
+}
+const FKEY2 = "bilan.formation";
+function pageFormation() {
+  const F = ACA.formation; if (!F) return pageNotFound();
+  setTitle(F.titre); setNav("aca");
+  let st = {}; try { st = JSON.parse(localStorage.getItem(FKEY2) || "{}"); } catch (e) { }
+  const prem = isPrem(), lus = acaSt();
+  const lesson = ref => { const [mi, li] = String(ref).split("/"), [m, l] = acaFind(mi, li); return m && l ? { m, l, mi: ACA.modules.indexOf(m) } : null; };
+  const COLS = ["#0E6B4A", "#2F5D8C", "#7A4E9C", "#B5651D", "#1E7A7A", "#8C2F4A", "#5A6B1E", "#B23A1E"];
+  const ICO = { lecon: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5C6.5 4 9.5 4 12 5.5v14C9.5 18 6.5 18 4 19.5zM20 5.5C17.5 4 14.5 4 12 5.5v14c2.5-1.5 5.5-1.5 8 0z"/></svg>`,
+    outil: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19h16M7 16V9M12 16V5M17 16v-4"/></svg>`, action: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l4-1 11-11-3-3L5 16zM14 6l3 3"/></svg>`,
+    flag: `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></svg>` };
+  const fait = (w, j, e) => e.type === "lecon" ? !!lus[e.ref] : !!st[w.semaine + "-" + j];
+  const semInfo = w => { const n = w.etapes.length, d = w.etapes.filter((e, j) => fait(w, j, e)).length;
+    const min = w.etapes.reduce((a, e) => a + (e.type === "lecon" ? ((lesson(e.ref) || {}).l || {}).duree_min || 6 : e.type === "outil" ? 10 : 15), 0);
+    const c = t => w.etapes.filter(e => e.type === t).length; return { n, d, min, le: c("lecon"), ou: c("outil"), ac: c("action") }; };
+  const infos = F.semaines.map(semInfo), total = infos.reduce((a, x) => a + x.n, 0);
+  const doneN = () => infos.reduce((a, x) => a + x.d, 0), curW = () => F.semaines.findIndex((w, i) => infos[i].d < infos[i].n), cur = curW();
+  const qs = +new URLSearchParams(location.search).get("semaine");
+  let sel = qs >= 1 && qs <= F.semaines.length ? qs - 1 : Math.max(0, cur);
+  const hMin = infos.reduce((a, x) => a + x.min, 0), cnt = t => F.semaines.reduce((a, w) => a + w.etapes.filter(e => e.type === t).length, 0);
+  const ring = (v, r = 30) => { const C = 2 * Math.PI * r; return `<svg class="frmring" viewBox="0 0 ${2 * r + 12} ${2 * r + 12}"><circle cx="${r + 6}" cy="${r + 6}" r="${r}" class="bg"/><circle cx="${r + 6}" cy="${r + 6}" r="${r}" class="fg" stroke-dasharray="${C * v / 100} ${C}" transform="rotate(-90 ${r + 6} ${r + 6})"/><text x="50%" y="53%">${v}%</text></svg>`; };
+  const weekHTML = i => { const w = F.semaines[i], x = infos[i], col = COLS[i % COLS.length];
+    const tile = (e, j) => { const ok = fait(w, j, e), id = w.semaine + "-" + j;
+      if (e.type === "lecon") { const L = lesson(e.ref); if (!L) return "";
+        return `<a class="frmtile lec${ok ? " ok" : ""}" href="/academie/${L.m.id}/${L.l.id}" style="--mc:${COLS[L.mi % COLS.length]}"><span class="st">${ok ? "✓" : ""}</span><span class="tx"><small>${esc(L.m.titre)} · ${L.l.duree_min || 6} min${acaLocked(L.l) ? " · Premium" : ""}</small><b>${esc(L.l.titre)}</b></span><span class="go">${ok ? "Relire" : "Lire"} →</span></a>`; }
+      const [t1, ...rest] = String(e.texte).split(/(?<=[.:?!])\s+/);
+      if (e.type === "outil") return `<div class="frmtile out${ok ? " ok" : ""}"><label class="ck"><input type="checkbox" data-step="${id}" ${ok ? "checked" : ""} ${prem ? "" : "disabled"}><span></span></label><span class="tx"><b>${esc(t1)}</b>${rest.length ? `<small>${esc(rest.join(" "))}</small>` : ""}</span><a class="go" href="${esc(e.href)}">Ouvrir l'outil →</a></div>`;
+      return `<div class="frmtile act${ok ? " ok" : ""}"><label class="ck"><input type="checkbox" data-step="${id}" ${ok ? "checked" : ""} ${prem ? "" : "disabled"}><span></span></label><span class="tx"><b>${esc(t1)}</b>${rest.length ? `<small>${esc(rest.join(" "))}</small>` : ""}</span></div>`; };
+    const grp = (t, titre, sous) => { const items = w.etapes.map((e, j) => e.type === t ? tile(e, j) : "").filter(Boolean); return items.length ? `<div class="frmgrp"><h3><span class="ic">${ICO[t]}</span>${titre}<small>${sous}</small></h3>${items.join("")}</div>` : ""; };
+    const firstL = w.etapes.map(e => e.type === "lecon" && lesson(e.ref)).find(Boolean);
+    return `<section class="frmweek" style="--wc:${col}"><div class="frmwh"><span class="frmwn">Semaine ${w.semaine}</span><h2>${esc(w.titre)}</h2><p>${esc(w.objectif)}</p>
+        <div class="frmchips"><span>${ICO.lecon}${x.le} leçon${x.le > 1 ? "s" : ""}</span>${x.ou ? `<span>${ICO.outil}${x.ou} outil${x.ou > 1 ? "s" : ""}</span>` : ""}<span>${ICO.action}${x.ac} action${x.ac > 1 ? "s" : ""}</span><span>≈ ${Math.round(x.min / 5) * 5} min</span></div>
+        <div class="frmwprog"><div class="feub"><span class="f" style="width:${x.d / x.n * 100}%"></span></div><span>${x.d} / ${x.n} étapes</span></div></div>
+      <div class="frmcols">${grp("lecon", "Comprendre", "les leçons se cochent dès que vous les avez lues")}${grp("outil", "Essayer sur le site", "sur votre propre cas")}${grp("action", "Passer à l'action", "chez vous, à votre rythme")}</div>
+      <div class="frmgoal"><span class="ic">${ICO.flag}</span><div><p class="kick">Objectif de la semaine</p><p>${esc(w.bilan)}</p></div></div>
+      <div class="frmnav">${i > 0 ? `<button type="button" class="linkbtn" data-sem="${i - 1}">← Semaine ${i}</button>` : "<span></span>"}
+        ${firstL && firstL.m.quiz && firstL.m.quiz.length ? `<a class="more" href="/academie/${firstL.m.id}/quiz">Testez-vous : quiz « ${esc(firstL.m.titre)} »</a>` : ""}
+        ${i < F.semaines.length - 1 ? `<button type="button" class="btn" data-sem="${i + 1}">Semaine ${i + 2} →</button>` : `<a class="btn" href="/portefeuille">Construire mon portefeuille fictif →</a>`}</div></section>`; };
+  const road = () => `<ol class="frmroad scroll-x">${F.semaines.map((w, i) => { const x = infos[i], full = x.d === x.n;
+      return `<li class="${i === sel ? "on" : ""}${full ? " full" : ""}" style="--wc:${COLS[i % COLS.length]}"><button type="button" data-sem="${i}"><span class="dot">${full ? "✓" : w.semaine}<i style="--p:${x.d / x.n * 360}deg"></i></span><span class="lb"><small>Semaine ${w.semaine}</small>${esc(w.titre)}</span></button></li>`; }).join("")}</ol>`;
+  function heroR() { const d = doneN(), c = curW(); return `${ring(Math.round(d / total * 100))}<p><b>${d} / ${total}</b> étapes faites</p>${c >= 0 ? `<button type="button" class="btn" data-sem="${c}">${d ? "Reprendre" : "Commencer"} : semaine ${c + 1}</button>` : `<p class="note">Formation terminée. Bravo.</p>`}`; }
+  const draw = () => { $("#frmroadw").innerHTML = road(); $("#frmweekw").innerHTML = weekHTML(sel); if (prem && $("#frmhr")) $("#frmhr").innerHTML = heroR(); };
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › Formation guidée</div>
+    <div class="frmhero"><div class="frmhl"><p class="kick">Formation guidée${prem ? "" : " · Premium"}</p><h1 class="pagetitle">${esc(F.titre)}</h1><p class="pagesub">${esc(F.intro)}</p>
+      <div class="frmstats"><span><b>${F.semaines.length}</b>semaines</span><span><b>${cnt("lecon")}</b>leçons</span><span><b>${cnt("outil")}</b>outils</span><span><b>${cnt("action")}</b>actions</span><span><b>${Math.round(hMin / 60)} h</b>en tout</span></div></div>
+      <div class="frmhr" id="frmhr">${prem ? heroR()
+        : `<div class="acalock" style="margin:0"><b>La formation guidée fait partie de Premium.</b><p>Le programme est visible et les leçons gratuites se lisent déjà. Premium débloque toutes les leçons et le suivi de vos étapes.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`}</div></div>
+    <div id="frmroadw"></div><div id="frmweekw"></div>`;
+  draw();
+  app.onclick = e => { const b = e.target.closest("[data-sem]"); if (!b || !app.contains(b) || !$("#frmweekw")) return; sel = +b.dataset.sem; history.replaceState({}, "", "/academie/formation?semaine=" + (sel + 1)); draw(); const r = $("#frmroadw"); if (r && r.getBoundingClientRect().top < 0) r.scrollIntoView({ behavior: "smooth" }); };
+  app.onchange = e => { const c = e.target.closest("[data-step]"); if (!c || !$("#frmweekw")) return; if (c.checked) st[c.dataset.step] = 1; else delete st[c.dataset.step]; try { localStorage.setItem(FKEY2, JSON.stringify(st)); } catch (er) { }
+    infos.splice(0, infos.length, ...F.semaines.map(semInfo)); draw(); if (c.checked) toast("Étape cochée ✓"); };
+}
+
+function leconsHTML(hits) {
+  return `<div class="acahits">${hits.map(({ m, l }, i) => `<div class="acahit${i ? "" : " top"}"><p class="kick">${esc(m.titre)}</p><h3><a href="/academie/${m.id}/${l.id}">${esc(l.titre)}</a></h3><p>${esc(l.resume)}</p>${i === 0 && !acaLocked(l) && (l.a_retenir || []).length ? `<ul>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}<a class="more" href="/academie/${m.id}/${l.id}">Lire la leçon${acaLocked(l) ? " (Premium)" : ""} →</a></div>`).join("")}</div>`;
+}
+
+/* ====================================================================================================
+   v12 : l'Académie devient interactive : leçons en cartes à dévoiler, chiffres mis en valeur,
+   manipulations (curseurs) intégrées, question d'auto-évaluation, points et niveau.
+   ==================================================================================================== */
+const fmtE = v => F0.format(Math.round(v)) + " €";
+const numsMark = t => esc(t).replace(/(\d[\d\s ]*(?:,\d+)?\s?(?:%|€|ans?\b|mois\b|fois\b))/g, '<mark class="nm">$1</mark>');
+// Un curseur : [clé, libellé, min, max, pas, valeur, format]
+function widgetHTML(id, titre, sliders, note = "") {
+  return `<div class="wdg" data-w="${id}"><p class="kick">À vous de jouer</p><h3>${titre}</h3><div class="wdgs">${sliders.map(([k, l, mn, mx, st, v, u]) => `<label><span>${l}<b data-v="${k}"></b>${u ? ` ${u}` : ""}</span><input type="range" min="${mn}" max="${mx}" step="${st}" value="${v}" data-k="${k}"></label>`).join("")}</div><div class="wdgo"></div>${note ? `<p class="note">${note}</p>` : ""}</div>`;
+}
+const barre2 = (a, b, la, lb) => { const t = a + b || 1; return `<div class="wb"><span style="width:${a / t * 100}%" class="wa"></span><span style="width:${b / t * 100}%" class="wbb"></span></div><div class="wbl"><span><i class="wa"></i>${la}</span><span><i class="wbb"></i>${lb}</span></div>`; };
+const WIDGETS = {
+  "bases/interets-composes": () => widgetHTML("compose", "Combien deviendrait votre épargne ?", [["m", "Versement par mois", 0, 1000, 10, 100, "€"], ["r", "Rendement annuel hypothétique", 0, 10, 0.5, 5, "%"], ["y", "Durée", 1, 40, 1, 20, "ans"]], "Rendement constant et hypothétique, avant impôts : la réalité varie chaque année."),
+  "bases/inflation": () => widgetHTML("inflation", "Ce que vaudront 1 000 € qui dorment", [["i", "Inflation moyenne", 0, 8, 0.5, 2, "%"], ["y", "Durée", 1, 30, 1, 10, "ans"]]),
+  "bases/epargne-precaution": () => widgetHTML("precaution", "Votre épargne de précaution", [["d", "Vos dépenses par mois", 300, 5000, 50, 1500, "€"]], "Fourchette courante : 3 à 6 mois de dépenses, sur un livret disponible à tout moment."),
+  "placements/livrets": () => widgetHTML("livret", "Ce que rapporte un livret A", [["a", "Somme placée", 100, 22950, 50, 5000, "€"]], "Taux du livret A et du LDDS : 1,7 % net d'impôt depuis le 1er août 2026 (révisé deux fois par an)."),
+  "valorisation/per": () => widgetHTML("per", "Calculez un PER", [["p", "Prix de l'action", 5, 500, 1, 60, "€"], ["b", "Bénéfice par action", 0.5, 30, 0.5, 4, "€"]]),
+  "valorisation/rendement-dividende": () => widgetHTML("rdt", "Calculez un rendement", [["p", "Prix de l'action", 5, 500, 1, 50, "€"], ["d", "Dividende annuel", 0, 25, 0.1, 2, "€"]]),
+  "bourse/dividendes": () => widgetHTML("detach", "Le jour du détachement", [["p", "Cours la veille", 10, 300, 1, 50, "€"], ["d", "Dividende versé", 0.1, 15, 0.1, 2, "€"]], "En pratique le cours varie aussi pour d'autres raisons ce jour-là."),
+  "portefeuille/diversification": () => widgetHTML("divers", "Une entreprise perd la moitié de sa valeur", [["n", "Nombre de lignes de même poids", 1, 50, 1, 5, ""]]),
+  "portefeuille/investissement-programme": () => widgetHTML("dca", "Investir 100 € par mois, trois mois de suite", [["a", "Prix de la part, mois 1", 5, 20, 0.5, 10, "€"], ["b", "Prix de la part, mois 2", 5, 20, 0.5, 5, "€"], ["c", "Prix de la part, mois 3", 5, 20, 0.5, 10, "€"]]),
+  "frais-fiscalite/frais-courtage": () => widgetHTML("courtage", "Ce que coûte un ordre", [["a", "Montant de l'achat", 25, 2000, 25, 100, "€"], ["f", "Frais fixes par ordre", 0, 10, 0.5, 2, "€"]]),
+  "frais-fiscalite/frais-courants": () => widgetHTML("ter", "Le poids des frais sur 25 ans", [["m", "Versement par mois", 50, 1000, 10, 200, "€"], ["f1", "Frais annuels, fonds A", 0.05, 1, 0.05, 0.2, "%"], ["f2", "Frais annuels, fonds B", 0.5, 3, 0.1, 1.8, "%"]], "Rendement hypothétique de 6 % par an avant frais, identique pour les deux fonds."),
+  "frais-fiscalite/flat-tax": () => widgetHTML("impot", "L'impôt sur un gain de compte-titres", [["g", "Plus-value réalisée", 100, 50000, 100, 5000, "€"]], "Taux 2026 : 12,8 % d'impôt sur le revenu et 18,6 % de prélèvements sociaux. L'option pour le barème progressif peut être plus favorable selon votre tranche."),
+  "frais-fiscalite/enveloppes-fiscales": () => widgetHTML("enveloppes", "Le même gain dans trois comptes", [["g", "Plus-value réalisée", 500, 50000, 100, 10000, "€"]], "Taux 2026, gain retiré après 5 ans pour le PEA et 8 ans pour l'assurance-vie (personne seule, abattement de 4 600 €, versements sous 150 000 €). Simplification : sans option pour le barème."),
+  "psychologie/levier-cfd": () => widgetHTML("levier", "L'effet de levier", [["l", "Levier", 1, 30, 1, 10, "×"], ["v", "Variation du marché", -20, 20, 1, -5, "%"]], "Une mise de 1 000 € ; au-delà de −100 %, la position est en général fermée de force."),
+  "psychologie/aversion-pertes": () => widgetHTML("perte", "Remonter après une baisse", [["b", "Baisse subie", 5, 80, 5, 30, "%"]]),
+  "bourse/krachs": () => widgetHTML("perte", "Remonter après une baisse", [["b", "Baisse subie", 5, 80, 5, 50, "%"]]),
+};
+function widgetCalc(w, v) {
+  switch (w) {
+    case "compose": { const r = Calc.compound({ initial: 0, monthly: v.m, years: v.y, rate: v.r / 100 }), verse = v.m * 12 * v.y, gain = r.final - verse;
+      return `<p class="wr"><b>${fmtE(r.final)}</b> au bout de ${v.y} ans</p>${barre2(verse, Math.max(0, gain), `vos versements : ${fmtE(verse)}`, `les intérêts : ${fmtE(Math.max(0, gain))}`)}`; }
+    case "inflation": { const x = 1000 / Math.pow(1 + v.i / 100, v.y); return `<p class="wr">Dans ${v.y} ans, 1 000 € n'achèteront plus que ce qui coûte aujourd'hui <b>${fmtE(x)}</b>.</p>${barre2(x, 1000 - x, "pouvoir d'achat restant", "perdu par l'inflation")}`; }
+    case "precaution": return `<p class="wr">Votre réserve : entre <b>${fmtE(v.d * 3)}</b> et <b>${fmtE(v.d * 6)}</b>.</p>`;
+    case "livret": return `<p class="wr"><b>${eur(v.a * 0.017, 2)}</b> d'intérêts par an, sans impôt ni prélèvements sociaux.</p>`;
+    case "per": { const pe = v.p / v.b; return `<p class="wr">PER : <b>${F1.format(pe)}</b>. Vous payez ${F1.format(pe)} années de bénéfice. Rendement bénéficiaire : <b>${pct(1 / pe, 1, false)}</b> par an.</p><p class="muted" style="margin:4px 0 0">${pe < 10 ? "Un PER bas : le marché attend peu de croissance, ou voit un risque." : pe > 25 ? "Un PER élevé : le marché parie sur une forte croissance des bénéfices." : "Un PER dans la zone la plus fréquente des grandes entreprises."}</p>`; }
+    case "rdt": return `<p class="wr">Rendement : <b>${pct(v.d / v.p, 2, false)}</b> par an. 1 000 € d'actions rapporteraient environ <b>${fmtE(v.d / v.p * 1000)}</b> avant impôts.</p>`;
+    case "detach": return `<p class="wr">Le jour du détachement, le cours ouvre en théorie vers <b>${eur(v.p - v.d, 2)}</b>. Votre richesse ne change pas : ${eur(v.d, 2)} passent du cours à votre compte (avant impôts).</p>`;
+    case "divers": { const w1 = 1 / v.n; return `<p class="wr">Avec ${v.n} ligne${v.n > 1 ? "s" : ""}, la chute de moitié d'une seule d'entre elles fait perdre <b>${pct(w1 * 0.5, 1, false)}</b> à votre portefeuille.</p>${barre2(1 - w1 * 0.5, w1 * 0.5, "ce qui reste", "la perte")}`; }
+    case "dca": { const parts = 100 / v.a + 100 / v.b + 100 / v.c, moy = 300 / parts, simple = (v.a + v.b + v.c) / 3; return `<p class="wr">Vous détenez <b>${F1.format(parts)} parts</b> pour 300 €, soit un prix moyen de <b>${eur(moy, 2)}</b>, contre ${eur(simple, 2)} de prix moyen sur les trois mois.</p><p class="muted" style="margin:4px 0 0">Les mois où le prix est bas, la même somme achète plus de parts.</p>`; }
+    case "courtage": { const r = v.f / v.a; return `<p class="wr">Frais : <b>${pct(r, 2, false)}</b> du montant.</p><p class="muted" style="margin:4px 0 0">${r > 0.01 ? "Au-delà de 1 %, votre placement doit d'abord monter d'autant pour couvrir les frais. Regrouper ses achats réduit ce coût." : "Des frais faibles par rapport au montant investi."}</p>`; }
+    case "ter": { const a = Calc.compound({ initial: 0, monthly: v.m, years: 25, rate: 0.06, fee: v.f1 / 100 }).final, b = Calc.compound({ initial: 0, monthly: v.m, years: 25, rate: 0.06, fee: v.f2 / 100 }).final;
+      return `<p class="wr">Fonds A : <b>${fmtE(a)}</b> · Fonds B : <b>${fmtE(b)}</b></p><p class="wr" style="margin-top:4px">Écart dû aux seuls frais : <b class="down">${fmtE(a - b)}</b> pour ${fmtE(v.m * 300)} versés.</p>`; }
+    case "impot": { const ir = v.g * 0.128, ps = v.g * 0.186; return `<p class="wr">Impôt : <b>${fmtE(ir + ps)}</b> (${fmtE(ir)} d'impôt sur le revenu et ${fmtE(ps)} de prélèvements sociaux). Il vous reste <b>${fmtE(v.g - ir - ps)}</b>.</p>`; }
+    case "enveloppes": { const cto = v.g * 0.314, pea = v.g * 0.186, av = v.g * 0.172 + Math.max(0, v.g - 4600) * 0.075;
+      const row = (n, t) => `<div class="wenv"><span>${n}</span><span class="wenvb"><i style="width:${t / cto * 100}%"></i></span><b>${fmtE(t)}</b></div>`;
+      return `<p class="wr">Impôt payé sur ${fmtE(v.g)} de gain :</p>${row("Compte-titres", cto)}${row("PEA (plus de 5 ans)", pea)}${row("Assurance-vie (plus de 8 ans)", av)}`; }
+    case "levier": { const r = v.l * v.v; return `<p class="wr">Le marché varie de ${v.v > 0 ? "+" : ""}${v.v} % ; votre mise varie de <b class="${r >= 0 ? "up" : "down"}">${r > 0 ? "+" : ""}${F0.format(Math.max(-100, r))} %</b>${r <= -100 ? " : la mise est entièrement perdue" : ""}.</p><p class="muted" style="margin:4px 0 0">1 000 € deviennent ${fmtE(Math.max(0, 1000 * (1 + r / 100)))}.</p>`; }
+    case "perte": { const up = 1 / (1 - v.b / 100) - 1; return `<p class="wr">Après une baisse de ${v.b} %, il faut une hausse de <b>${pct(up, 0, false)}</b> pour revenir au point de départ.</p>`; }
+  }
+  return "";
+}
+function widgetsBind(root) {
+  $$(".wdg", root).forEach(w => {
+    const run = () => { const v = {}; $$("input[data-k]", w).forEach(i => { v[i.dataset.k] = +i.value; const o = $(`[data-v="${i.dataset.k}"]`, w); if (o) o.textContent = " " + (Number.isInteger(+i.step) ? F0.format(+i.value) : F1.format(+i.value).replace(/,0$/, "")); }); $(".wdgo", w).innerHTML = widgetCalc(w.dataset.w, v); };
+    $$("input", w).forEach(i => i.oninput = run); run();
+  });
+}
+/* Une question du quiz du module, choisie parce qu'elle parle de la leçon */
+function questionDeLecon(m, l) {
+  const mots = t => new Set(norm(t).replace(/[^a-z0-9 ]/g, " ").split(/\s+/).filter(w => w.length > 4));
+  const L = mots(l.titre + " " + l.resume + " " + (l.a_retenir || []).join(" "));
+  let best = null, bs = 0; (m.quiz || []).forEach((q, i) => { const Q = mots(q.q + " " + q.explication); let s = 0; Q.forEach(w => { if (L.has(w)) s++; }); if (s > bs) { bs = s; best = i; } });
+  return bs >= 2 ? best : null;
+}
+/* Points et niveau */
+function acaXP(st) { let xp = 0; Object.keys(st).forEach(k => { xp += k.startsWith("quiz/") ? (st[k] || 0) * 5 : k.startsWith("q/") ? 5 : 10; }); return xp; }
+const acaNiveau = xp => xp >= 600 ? ["Confirmé", 600, null] : xp >= 250 ? ["Intermédiaire", 250, 600] : ["Débutant", 0, 250];
+/* 30/10 (Romain) : un visuel par leçon. Les chiffres de l'exemple, en gros, avant le texte ; le texte en dessous. */
+function acaVisuel(l) {
+  const t = String(l.exemple || ""), nums = [...t.matchAll(/(\d[\d\s ]*(?:,\d+)?\s?(?:%|€|ans?\b|mois\b|fois\b))/g)].map(x => x[1].trim()).filter((v, i, a) => a.indexOf(v) === i).slice(0, 4);
+  const phr = (t.match(/^.*?[.!?](\s|$)/) || [t])[0].trim();
+  return `<div class="acavis"><p class="acavis-k">L'exemple en chiffres</p>${nums.length ? `<div class="acavis-n">${nums.map(n => `<b>${esc(n)}</b>`).join("")}</div>` : ""}<p class="acavis-p">${numsMark(t)}</p></div>`;
+}
+function acaLecon(m, l) {
+  const st = acaSt(), i = m.lecons.indexOf(l), prev = m.lecons[i - 1], next = m.lecons[i + 1], mi = ACA.modules.indexOf(m), nm = ACA.modules[mi + 1];
+  setTitle(l.titre + " · L'Académie");
+  const lock = acaLocked(l), qi = lock ? null : questionDeLecon(m, l), q = qi != null ? m.quiz[qi] : null, deja = !!st[m.id + "/" + l.id];
+  const cards = lock ? [] : l.paragraphes;
+  app.innerHTML = `<div class="crumbs"><a href="/apprendre#academie">L'Académie</a> › <a href="/academie/${m.id}">${esc(m.titre)}</a> › Leçon ${i + 1}</div>
+    <article class="acales"><div class="acatopbar"><span class="kick">${esc(m.titre)} · leçon ${i + 1} sur ${m.lecons.length} · ${l.duree_min || 5} min</span>${lock ? "" : `<div class="acapb"><span id="acapb" style="width:0%"></span></div>`}</div>
+    <h1 class="pagetitle">${esc(l.titre)}</h1><p class="lead aca-lead">${esc(l.resume)}</p>
+    ${!lock && l.exemple ? acaVisuel(l) : ""}
+    ${!lock && l.lien_site ? `<p class="aca-outil"><a class="pill" href="${esc(l.lien_site.href)}">${esc(l.lien_site.texte)} →</a></p>` : ""}
+    ${lock ? `<p>${esc(l.paragraphes[0] || "")}</p><div class="acalock"><b>La suite de cette leçon fait partie de Premium.</b><p>Premium donne accès à toutes les leçons de l'Académie et à la formation guidée de six semaines.</p><a class="btn" href="/premium">Découvrir Premium</a></div>`
+      : `<div class="acacards">${cards.map((p, j) => `<div class="acacard2" data-c="${j}"${deja || j === 0 ? "" : " hidden"}><span class="acan">${j + 1}</span><p>${numsMark(p)}</p></div>`).join("")}</div>
+      <div class="acamore"${deja ? " hidden" : ""}><button type="button" class="btn" id="acanext">Continuer</button><button type="button" class="linkbtn" id="acaall">Tout afficher</button></div>
+      <div class="acarest"${deja ? "" : " hidden"}>
+        ${WIDGETS[m.id + "/" + l.id] ? WIDGETS[m.id + "/" + l.id]() : ""}
+        ${(l.a_retenir || []).length ? `<div class="acaret"><p class="kick">À retenir</p><ol>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ol></div>` : ""}
+        ${l.erreur_frequente ? `<div class="acaerr"><p class="kick">L'erreur à éviter</p><p>${esc(l.erreur_frequente)}</p></div>` : ""}
+        ${q ? `<div class="acaqz" id="acaqz"><p class="kick">Testez-vous</p><p class="acaqq">${esc(q.q)}</p><div class="acaopts">${q.options.map((o, j) => `<button type="button" class="acao" data-i="${j}">${esc(o)}</button>`).join("")}</div><div class="acaqe"></div></div>` : ""}
+        ${(l.sources || []).length ? `<p class="note">Sources : ${l.sources.map(s => `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(" · ")}</p>` : ""}
+      </div>`}
+    <nav class="acanav">${prev ? `<a class="more" href="/academie/${m.id}/${prev.id}">← ${esc(prev.titre)}</a>` : "<span></span>"}${next ? `<a class="btn" href="/academie/${m.id}/${next.id}">Leçon suivante : ${esc(next.titre)}</a>` : `<a class="btn" href="/academie/${m.id}/quiz">Faire le quiz du module</a>`}</nav></article>
+    ${!next && nm ? `<p class="note" style="text-align:right">Ensuite : <a class="lnk" href="/academie/${nm.id}">${esc(nm.titre)}</a></p>` : ""}`;
+  if (lock) return;
+  let shown = deja ? cards.length : 1;
+  const prog = () => { const b = $("#acapb"); if (b) b.style.width = Math.round(shown / cards.length * 100) + "%"; };
+  const finish = () => { $$(".acacard2").forEach(c => c.hidden = false); shown = cards.length; prog(); $(".acamore").hidden = true; $(".acarest").hidden = false; widgetsBind(app);
+    const s2 = acaSt(); if (!s2[m.id + "/" + l.id]) { s2[m.id + "/" + l.id] = 1; acaSave(s2); toast(`+10 points · leçon terminée. Niveau : ${acaNiveau(acaXP(s2))[0]}`); } };
+  prog();
+  if (deja) { widgetsBind(app); }
+  else {
+    $("#acanext").onclick = () => { const c = $(`.acacard2[data-c="${shown}"]`); if (c) { c.hidden = false; c.classList.add("in"); shown++; prog(); c.scrollIntoView({ block: "nearest", behavior: "smooth" }); } if (shown >= cards.length) finish(); };
+    $("#acaall").onclick = finish;
+  }
+  const qz = $("#acaqz"); if (qz) $$(".acao", qz).forEach(b => b.onclick = () => { const k = +b.dataset.i, ok = k === q.bonne;
+    $$(".acao", qz).forEach(x => { x.disabled = true; const j = +x.dataset.i; if (j === q.bonne) x.classList.add("good"); else if (j === k) x.classList.add("bad"); });
+    $(".acaqe", qz).innerHTML = `<div class="acaexp ${ok ? "good" : "bad"}"><b>${ok ? "Bonne réponse." : "Pas tout à fait."}</b> ${esc(q.explication)}</div>`;
+    if (ok) { const s2 = acaSt(); if (!s2["q/" + m.id + "/" + qi]) { s2["q/" + m.id + "/" + qi] = 1; acaSave(s2); toast("+5 points"); } } });
+}
+
+const ROUTES_EXTRA = [];
+function route() {
+  closeDef();
+  const p = location.pathname.replace(/\/+$/, "") || "/";
+  let m;
+  if (p === "/aller") { // clic sur un module de cours : on ouvre la fiche de l'entreprise ou de l'ETF
+    const sym = (new URLSearchParams(location.search).get("tvwidgetsymbol") || "").toUpperCase();
+    const c = R.companies.find(x => (x.tv || "").toUpperCase() === sym) || R.companies.find(x => sym.endsWith(":" + (x.ticker || "").toUpperCase()));
+    const e = ETF.list.find(x => (x.tv || "").toUpperCase() === sym);
+    history.replaceState({}, "", c ? "/entreprise/" + c.id : e ? "/etf/" + e.id : "/");
+    return route();
+  }
+  if (p === "/") pageHome();
+  else if (p === "/entreprises") pageEntreprises();
+  else if ((m = p.match(/^\/entreprise\/([a-z0-9-]+)\/comprendre(?:\/([a-z]+))?$/))) pageComprendre(m[1], m[2]);
+  else if ((m = p.match(/^\/entreprise\/([a-z0-9-]+)(?:\/([a-z]+))?$/))) pageCompany(m[1], m[2]);
+  else if (p === "/etf") pageEtfs();
+  else if ((m = p.match(/^\/etf\/([a-z0-9-]+)$/))) pageEtf(m[1]);
+  else if (p === "/communaute") pageCommunaute();
+  else if ((m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/))) pageSim(m[1]);
+  else if (p === "/actualites") pageActus();
+  else if (p === "/agenda") pageAgenda();
+  else if (p === "/portefeuille") pagePortefeuille();
+  else if (p === "/lexique") pageLexique();
+  else if (p === "/favoris") pageFavoris();
+  else if (p === "/comparer") pageComparer();
+  else if (p === "/pea-cto") pageEnveloppes();
+  else if (p === "/dividendes") pageDividendes();
+  else if (p === "/marches") pageMarches();
+  else if ((m = p.match(/^\/outils(?:\/([a-z-]+))?$/))) pageOutils(m[1]);
+  else if ((m = p.match(/^\/debuter(?:\/([a-z-]+))?(?:\/([a-z0-9-]+))?$/))) pageDebuter(m[1], m[2]);
+  else if (LEGAL_PAGES[p]) pageLegal(p);
+  else if (p === "/commencer") pageCommencer();
+  else if (p === "/demander") pageDemander();
+  else if (p === "/methode") pageMethode();
+  else if ((m = p.match(/^\/academie(?:\/([a-z0-9-]+))?(?:\/([a-z0-9-]+))?$/))) pageAcademie(m[1], m[2]);
+  else if (p === "/formation") { history.replaceState({}, "", "/academie/formation"); pageAcademie("formation"); }
+  else if ((m = p.match(/^\/espace(?:\/(bilan|alertes|reglages))?$/))) pageEspace(m[1]);
+  else if ((m = p.match(/^\/premium(?:\/(merci))?$/))) pagePremium(m[1]);
+  else if (ROUTES_EXTRA.some(([re, fn]) => { const mm = p.match(re); if (mm) fn(...mm.slice(1)); return !!mm; })) { }
+  else pageNotFound();
+}
+// Routes ajoutées par les modules (cf/site/m/*.js) : ROUTES_EXTRA.push([/^\/chemin\/([a-z0-9-]+)$/, id => pageX(id)])
+function goR(url) { history.replaceState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); } // redirection sans entrée dans l'historique (anciennes adresses)
+function go(url) { history.pushState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); closePanels(); }
+document.addEventListener("click", e => {
+  const a = e.target.closest("a[href]");
+  if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
+  const u = new URL(a.href, location.href);
+  if (u.origin !== location.origin) return;
+  if (u.pathname === location.pathname && u.search === location.search && u.hash) { closePanels(); closeDef(); return; }
+  e.preventDefault(); go(u.pathname + u.search + u.hash);
+});
+window.addEventListener("popstate", route);
+
+/* ---------- Barre : menu, recherche, masquage au défilement ---------- */
+const bar = $("#bar"), mpanel = $("#mpanel"), msearch = $("#msearch");
+function closePanels() { mpanel.classList.remove("open"); msearch.classList.remove("open"); $("#menuBtn").setAttribute("aria-expanded", "false"); $("#searchBtn").setAttribute("aria-expanded", "false"); $$(".results").forEach(r => r.classList.remove("open")); }
+$("#menuBtn").onclick = () => { const o = !mpanel.classList.contains("open"); closePanels(); if (o) { mpanel.classList.add("open"); $("#menuBtn").setAttribute("aria-expanded", "true"); } };
+$("#searchBtn").onclick = () => { const o = !msearch.classList.contains("open"); closePanels(); if (o) { msearch.classList.add("open"); $("#searchBtn").setAttribute("aria-expanded", "true"); $("input", msearch).focus({ preventScroll: true }); } };
+const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+function bindSearch(root) {
+ $$("[data-search]", root).forEach(box => {
+  if (box._bound) return; box._bound = true;
+  const inp = $("input", box), res = $(".results", box); let sel = -1;
+  const show = () => {
+    const q = norm(inp.value.trim());
+    if (!q || !R) { res.classList.remove("open"); return; }
+    const rk = c => norm(c.ticker) === q || (c.isin || "").toLowerCase() === q ? 0 : norm(c.name).startsWith(q) ? 1 : 2;
+    const cos = R.companies.filter(c => norm(c.name).includes(q) || norm(c.ticker) === q || (c.isin || "").toLowerCase() === q).sort((a, b) => rk(a) - rk(b) || (a.missing ? 1 : 0) - (b.missing ? 1 : 0)).slice(0, 7);
+    const etfs = ETF.list.filter(e => norm(e.name + " " + e.index + " " + e.ticker).includes(q) || e.isin.toLowerCase() === q).slice(0, 4);
+    sel = -1;
+    res.innerHTML = cos.length || etfs.length ? cos.map(c => `<a href="/entreprise/${c.id}" class="srow">${logo(c, 26)}<span class="st"><span>${esc(c.name)}</span><span class="light">${esc(c.ticker)} · ${esc(regName(c))} · ${esc(secName(c))}</span></span></a>`).join("") + etfs.map(e => `<a href="/etf/${e.id}" class="srow">${logo({ name: e.issuer, domain: issuerDom(e) }, 26)}<span class="st"><span>${esc(e.name)}</span><span class="light">ETF · ${esc(e.ticker)}${e.pea ? " · PEA" : ""}</span></span></a>`).join("") : `<div class="none">Aucun résultat</div>`;
+    if (inp.value.trim().length >= 3) res.insertAdjacentHTML(cos.length || etfs.length ? "beforeend" : "afterbegin", `<a class="iasug" href="/demander?q=${encodeURIComponent(inp.value.trim())}"><span>✦ Demander à l'IA : « ${esc(inp.value.trim().slice(0, 60))} »</span><span class="light">recherche par critères, explications</span></a>`);
+    $(".none", res) && $(".none", res).remove();
+    res.classList.add("open");
+  };
+  inp.addEventListener("input", show); inp.addEventListener("focus", show);
+  inp.addEventListener("keydown", e => {
+    const items = $$("a", res);
+    if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, Math.min(items.length - 1, sel + (e.key === "ArrowDown" ? 1 : -1))); items.forEach((a, i) => a.classList.toggle("sel", i === sel)); }
+    else if (e.key === "Enter" && items.length) { e.preventDefault(); const q = inp.value.trim(), ia = sel < 0 && (q.split(/\s+/).length >= 3 || /\?$/.test(q)); const a = ia ? $(".iasug", res) : items[Math.max(0, sel)]; inp.value = ""; const u = new URL(a.href); go(u.pathname + u.search); inp.blur(); }
+    else if (e.key === "Escape") { res.classList.remove("open"); inp.blur(); }
+  });
+  res.addEventListener("click", () => { inp.value = ""; });
+ });
+}
+bindSearch(document);
+document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-search]")) $$(".results").forEach(r => r.classList.remove("open")); });
+(() => { // téléphone : la barre se cache en descendant (seuil cumulé, rebond du bas ignoré)
+  let lastY = scrollY, acc = 0;
+  addEventListener("scroll", () => {
+    const y = scrollY, dy = y - lastY; lastY = y;
+    if (innerWidth > 760) { bar.classList.remove("hide"); return; }
+    if (y < 60) { bar.classList.remove("hide"); acc = 0; return; }
+    if (y + innerHeight >= document.documentElement.scrollHeight - 4 || mpanel.classList.contains("open") || msearch.classList.contains("open")) return;
+    if ((dy > 0) !== (acc > 0)) acc = 0;
+    acc += dy;
+    if (acc > 60) { bar.classList.add("hide"); closeDef(); } else if (acc < -30) bar.classList.remove("hide");
+  }, { passive: true });
+})();
+
+/* ---------- Démarrage ---------- */
+// Un fichier absent sous /data/ renvoyait la page d'accueil entière (516 ko) avec un code 200 : on refuse tout ce qui n'est pas du JSON (audit P0-3).
+const getJSON = (u, fallback) => fetch(u).then(r => r.ok && /json/i.test(r.headers.get("content-type") || "") ? r.json() : fallback).catch(() => fallback);
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/data/logos-absents.json", { d: [] })]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc, labs]) => {
+  LOGO_ABS = new Set((labs && labs.d) || []); // domaines dont l'icône Google n'existe pas (relevés par data/logos_check.mjs) : on ne la demande pas, zéro 404
+  REP = rep || {}; CONC = conc || {};
+  ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = segfr || {};
+  if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
+  // Agenda : dates officielles relevées à la main, puis dates estimées d'après l'an dernier pour les autres
+  const manual = new Set((ag?.events || []).map(e => e.id));
+  AG = { events: [...(ag?.events || []), ...(auto?.events || []).filter(e => !manual.has(e.id))] }; BROKERS = br;
+  const S = Object.fromEntries((r.companies || []).map(c => [c.id, c]));
+  // La liste des entreprises suivies fait foi ; les comptes collectés s'y ajoutent
+  R = { ...r, regions: uni.regions, companies: uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u })) };
+  R.companies.forEach(c => { RBY[c.id] = c; if (c.isin) ISINBY[c.isin] = c; });
+  fichesMerge(); // si les textes de fiche sont déjà arrivés (accueil)
+  computeMedians();
+  favCount();
+  PXP = loadPrices();
+  // Premier affichage seulement quand tous les modules (styles compris) sont chargés : sinon la page se redessine un instant plus tard et saute
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => route(), { once: true }); else route();
+});

@@ -129,7 +129,7 @@ function accPointHTML() {
     <div class="acc-sjs scroll-x">${top.map(x => accSujetCarte(x, evs)).join("")}</div>
     <div id="acc-det" class="acc-det" hidden></div>
     ${autres.length ? `<div class="acc-autres"><p class="acc-ah">Autres sujets suivis</p><div class="acc-chips scroll-x">${autres.map(x => `<button type="button" class="acc-chip" data-acc-open="${esc(x.s.id)}" aria-expanded="false" aria-controls="acc-det"><small>${esc(x.s.theme)}</small>${esc(x.s.titre)}</button>`).join("")}</div></div>` : ""}` : `<p class="muted" style="margin:14px 0 0">Les sujets d'actualité ne sont pas disponibles pour le moment.</p>`}
-    <p class="acc-src">Sujets choisis et vérifiés à la main dans des sources datées${maj ? `, revus le ${esc(maj)}` : ""} ; chacun disparaît à sa date de fin de pertinence s'il n'est pas revérifié. Annonces : AMF, SEC, Nasdaq Nordic, Oslo Børs, FCA. Cours différés. Information, pas conseil : <a href="/methode">la méthode</a>.</p>
+    <p class="acc-src">Vérifié le ${esc(maj || "")} · <a class="lnk" href="/methode#contexte">Sources et méthode →</a></p>
   </div>`;
 }
 function accExemples(v, n = 5) { // exemples pris dans les secteurs qui regroupent l'essentiel des entreprises visées (évite les correspondances de hasard)

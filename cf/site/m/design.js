@@ -381,3 +381,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
 .out-gal6 .out-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:900px){.out-gal6 .out-pg{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.out-gal6 .out-pg{grid-template-columns:minmax(0,1fr)}}
 </style>`);
 })();
+/* Lot 6 : finitions. Codes boursiers et ISIN en police à chasse fixe ; les chiffres sont en police normale (chasse tabulaire, index.html). */
+document.head.insertAdjacentHTML("beforeend", `<style>.etfhd .ids b,.fhero .tags .tag:first-child,.rf-trimt td:last-child{font-family:var(--code);font-size:.95em}</style>`);
+/* Lot 6 : un seul style de badge (vert, gris, rouge). Les catégories d'annonces (résultats, dividende…) sont grises ; seul « info privilégiée » reste signalé. */
+document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:var(--grey)!important;background:var(--soft)!important;border-color:var(--rule)!important}.ax-imp{color:var(--o)!important;background:color-mix(in srgb,var(--o) 10%,transparent)!important;border-color:transparent!important}</style>`);

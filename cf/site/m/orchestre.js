@@ -279,7 +279,7 @@ function pageMethode() {
       <li>Séparer les faits de leur interprétation</li><li>Présenter à la fois ce qui est favorable et ce qui demande de la vigilance</li><li>Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années</li>
       <li>Comparer à la médiane du secteur plutôt que juger dans l'absolu</li><li>Aucun mot d'emphase, aucune prédiction de cours</li><li>Aucune recommandation d'acheter, de vendre ou de conserver</li>
       <li>Dire quand une information manque</li><li>Ne citer que les chiffres fournis</li></ul></div></section>
-    <section class="panel"><div class="ph"><h2>Nos sources</h2></div><div class="pb"><div class="mtdsrc">${SRC.map(([t, d, n, u]) => `<div><b>${t}</b><span>${d}</span>${u ? `<a class="lnk" href="${u}" target="_blank" rel="noopener">${n}</a>` : `<span class="light">${n}</span>`}</div>`).join("")}</div>
+    <section class="panel" id="contexte"><div class="ph"><h2>Nos sources</h2></div><div class="pb"><div class="mtdsrc">${SRC.map(([t, d, n, u]) => `<div><b>${t}</b><span>${d}</span>${u ? `<a class="lnk" href="${u}" target="_blank" rel="noopener">${n}</a>` : `<span class="light">${n}</span>`}</div>`).join("")}</div>
       <p class="note" style="margin:12px 0 0">Les cours viennent d'une source gratuite et différée : ils sont indicatifs et peuvent avoir plusieurs minutes de retard.</p></div></section>
     <div class="mtdgrid">
       <section class="panel"><div class="ph"><h2>Ce que le site ne fait pas</h2></div><div class="pb"><ul class="mtdno">

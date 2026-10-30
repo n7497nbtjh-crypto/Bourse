@@ -304,7 +304,7 @@ function contexteActuHTML(s, c) {
         : `<p class="ctx-lead">Aucun des sujets d'actualité suivis par le site ne concerne directement son secteur, son pays ou son métier.</p>`}
       <div class="ctx-co" data-ctx-co="${esc(s.id)}"></div>
     </div>
-    <div class="src">Sujets choisis et vérifiés à la main dans des sources datées. Chacun a une date de fin de pertinence : passé cette date, il n'est plus affiché tant qu'il n'a pas été revérifié. Le site ne mesure pas l'effet exact sur les comptes de l'entreprise.</div>
+    <div class="src">Vérifié le ${dLabel(CTX_D.maj)} · <a class="lnk" href="/methode#contexte">Sources et méthode →</a></div>
   </section>`;
 }
 // Annonces officielles et presse récentes de l'entreprise (agent « actu »), croisées avec les sujets

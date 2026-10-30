@@ -12,7 +12,7 @@ Décidé le 30 octobre 2026 à partir de la charte existante du site et des reto
 | `--panel` | `#FFFFFF` | blocs de contenu (panneaux, cartes) |
 | `--ink` | `#111214` | texte courant, titres, boutons principaux |
 | `--grey` | `#55524C` | texte secondaire, étiquettes, légendes (contraste 7:1 sur blanc) |
-| `--light` | `#87827A` | notes, sources, texte tertiaire (4,5:1 sur blanc, jamais sous 12 px) |
+| `--light` | `#6F6A63` | notes, sources, texte tertiaire (≥ 4,5:1 sur le papier crème ; relevé le 30/10, l'ancien #87827A ne tenait que 3,4:1) |
 | `--rule` | `#E2DCCF` | filets, bordures de panneaux |
 | `--soft` | `#F1ECE1` | fonds discrets (cellules de tableau, puces grises) |
 | `--lime` | `#C6F432` | **seul accent** : soulignement des liens, surbrillance du titre d'accueil, bouton « demander à l'IA », focus clavier. Jamais comme fond de texte long. |
@@ -29,7 +29,7 @@ Pas de mode sombre.
 
 - **Titres de page et de bloc (h1, h2)** : Fraunces, 800, interlettrage −0,015 em. h1 40/44 px (28 px sur téléphone), h2 de panneau 20 à 22 px.
 - **Tout le reste** : IBM Plex Sans. Corps 14,5 px / 1,5 ; texte long 15 à 16 px ; sous-titres et h3 en Plex Sans 700, 15 à 17 px ; étiquettes 12 à 12,5 px, 600, gris, **sans capitales espacées**.
-- **Chiffres** : IBM Plex Mono, uniquement pour des valeurs (cours, montants, pourcentages, années dans un tableau) ; jamais pour des mots.
+- **Chiffres** : IBM Plex Sans en chasse tabulaire (`font-variant-numeric: tabular-nums`, `--mono` pointe sur la même famille). Plus de police à chasse fixe pour les chiffres (30/10 : « +25 % » en Plex Mono faisait terminal). Une police à chasse fixe système (`--code`) reste pour les codes boursiers et les ISIN seulement.
 - Échelle : 12 · 12,5 · 13,5 · 14,5 · 16 · 18 · 22 · 28 · 40.
 - Lignes de 60 à 75 caractères pour le texte courant (`max-width:760px` sur les paragraphes longs).
 
