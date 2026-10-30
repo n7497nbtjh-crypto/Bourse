@@ -284,26 +284,46 @@ function accGoHTML() {
    4. La page
    ==================================================================================== */
 const accH = (kick, titre, lien, id) => `<div class="acc-h"><div><p class="kick">${kick}</p><h2${id ? ` id="${id}"` : ""}>${titre}</h2></div>${lien ? `<a class="more" href="${lien[0]}">${lien[1]} →</a>` : ""}</div>`;
+function accDateline(date) { // ligne de une : la date et quatre indices, comme la manchette d'un journal
+  const ids = ["cac40", "stoxx50", "sp500", "dax"], rows = INDEX_INFO.filter(x => ids.includes(x[0])).map(([id, name]) => ({ id, name, p: PX["i:" + id] })).filter(r => r.p && r.p.chg != null);
+  return `<div class="acc-date"><span class="acc-dd">${esc(date)}</span>${rows.length ? `<span class="acc-didx">${rows.map(r => `<a href="/indice/${r.id}">${esc(r.name)} <b class="${accCls(r.p.chg)}">${accPct(r.p.chg)}</b></a>`).join("")}<a class="acc-dall" href="/marches">Tous les marchés →</a></span>` : ""}</div>`;
+}
+const ACC_VOIES = [
+  ["/apprendre", "Découvrir", "L'Académie en huit modules, le PEA et le compte-titres expliqués, par où commencer."],
+  ["/entreprises", "Explorer", "Les entreprises par secteur, les ETF, les médianes qui servent de repère."],
+  ["/comparer", "Analyser", "Une fiche par entreprise : le verdict d'abord, le détail ensuite, les sources affichées."],
+  ["/rapport-exemple", "Mon espace", "Vos favoris, votre portefeuille et, chaque semaine, un rapport sur vos titres."],
+];
+function accVoiesHTML() {
+  return `<ol class="acc-voies" aria-label="Quatre entrées">${ACC_VOIES.map(([h, t, d], i) => `<li><a href="${h}"><span class="acc-vn">0${i + 1}</span><span class="acc-vt"><b>${t}</b><span>${d}</span></span><span class="acc-va" aria-hidden="true">→</span></a></li>`).join("")}</ol>`;
+}
+const ACC_EX = [["lvmh", "LVMH"], ["totalenergies", "TotalEnergies"], ["apple", "Apple"]];
 async function pageHome() {
   setTitle(""); setNav("home");
-  if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="hero3 acc-hero"><p class="kick">Comptes officiels</p><h1>La Bourse, comptes à l'appui.<br><em>Que voulez-vous faire ?</em></h1></section></div>`; // affichage immédiat, même titre
+  if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="acc-une"><div class="acc-une-l"><h1>Comprendre une entreprise cotée avant d'y mettre un euro.</h1></div></section></div>`; // affichage immédiat, même titre
   await Promise.all([PXP, loadAna()]);
   await accAttendre(accCharge(), 300); // fichiers lancés au démarrage : en général déjà là ; sinon squelette de même taille
   if (location.pathname !== "/") return;
   const membre = accMembre(), prem = typeof isPrem === "function" && isPrem(), pret = !!ACC.fil;
   const secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length })).filter(x => x.n).sort((a, b) => b.n - a.n);
   const date = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" }).format(new Date());
+  const ex = ACC_EX.filter(([id]) => RBY[id]);
   app.innerHTML = `<div class="acc">
-    <section class="hero3 acc-hero"><p class="kick">${F0.format(R.companies.length)} entreprises · ${ETF.list.length} ETF · comptes officiels</p>
-      <h1>La Bourse, comptes à l'appui.<br><em>Que voulez-vous faire ?</em></h1>
-      ${accGoHTML()}
-      ${iaBox("hia", true)}
-      <div class="chips iaex">${IA_EX.slice(0, 4).map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>
-      ${accConfiance()}</section>
+    ${accDateline(date)}
+    <section class="acc-une">
+      <div class="acc-une-l">
+        <h1>Comprendre une entreprise cotée avant d'y mettre un euro.</h1>
+        <p class="acc-lede">Les comptes publiés de ${F0.format(R.companies.length)} entreprises et ${F0.format(ETF.list.length)} ETF, la place de chacune dans son secteur et son actualité, expliqués en langage clair. Information, pas conseil.</p>
+        <div class="search big acc-search" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Une entreprise ou un ETF : Apple, LVMH, MSCI World…" aria-label="Rechercher" autocomplete="off"><div class="results"></div></div>
+        <p class="acc-exl">${ex.length ? `Par exemple ${ex.map(([id, n]) => `<a href="/entreprise/${id}">${n}</a>`).join(", ")}.` : ""} Une question libre ? <a href="/ia">Demandez à l'IA du site</a>.</p>
+      </div>
+      <div class="acc-une-r">
+        <p class="acc-vh">Quatre entrées</p>
+        ${accVoiesHTML()}
+      </div>
+    </section>
 
-    ${`<a class="acc-rapb" href="/rapport-exemple"><span class="acc-rapk">Gratuit · chaque semaine</span><b>Votre rapport de la semaine : vos titres, leurs annonces, leurs dates.</b><span class="acc-rapl">Voir un rapport exemple, calculé aujourd'hui →</span></a>`}
-
-    <section class="acc-sec" id="acc-point">${accH(`Le point du jour · ${esc(date)}`, "L'actualité économique et financière, en clair", ["/actualites", "Toute l'actualité"])}
+    <section class="acc-sec" id="acc-point">${accH(`Le point du jour`, "L'actualité économique et financière, en clair", ["/actualites", "Toute l'actualité"])}
       <div id="acc-pointb">${pret ? accPointHTML() : `<div class="acc-rep acc-wait" aria-busy="true"><div class="acc-kpis"><div class="acc-kpi"></div><div class="acc-kpi"></div><div class="acc-kpi"></div></div><div class="acc-sjs"><div class="acc-sj"></div><div class="acc-sj"></div><div class="acc-sj"></div></div></div>`}</div></section>
 
     ${membre ? accPourVousHTML(true) : ""}
@@ -311,13 +331,17 @@ async function pageHome() {
     <section class="acc-sec" id="acc-annonces">${accH("Annonces des entreprises", "Ce que les entreprises ont publié", ["/actualites", "Toutes les annonces"])}
       <div id="acc-annw">${pret ? accAnnoncesHTML() : `<div class="acc-annw acc-wait"><div class="acc-annm panel"></div><aside class="acc-annside"><section class="panel"></section></aside></div>`}</div></section>
 
+    <section class="acc-sec acc-rap2"><div class="acc-rap2-l"><p class="acc-vh">Chaque semaine, gratuit</p><h2>Le rapport de la semaine sur vos titres</h2><p>Ce que vos entreprises ont publié, ce que cela change, les dates à venir. Calculé par le site, sans intervention humaine, relu par vous.</p><a class="btn" href="/rapport-exemple">Voir un rapport exemple, calculé aujourd'hui</a></div>
+      <div class="acc-rap2-r"><p class="acc-vh">D'où viennent les chiffres</p><ul class="acc-srcl"><li><b>Comptes</b> : rapports annuels déposés au format ESEF (filings.xbrl.org) et auprès de la SEC (EDGAR).</li><li><b>Annonces</b> : AMF, SEC, Nasdaq Nordic, Oslo Børs, FCA.</li><li><b>Cours</b> : différés, affichés avec leur heure.</li><li><b>Calculs</b> : faits par le site, jamais estimés à la main ; <a href="/methode">la méthode</a>.</li></ul></div></section>
+
     ${membre ? "" : accPourVousHTML(false)}
 
-    <button type="button" class="acc-plus" id="acc-plus" aria-expanded="false" aria-controls="acc-plusb">Voir plus : à découvrir, débuter, Premium<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
+    <button type="button" class="acc-plus" id="acc-plus" aria-expanded="false" aria-controls="acc-plusb">Voir aussi : à découvrir, débuter, Premium<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button>
     <div id="acc-plusb" hidden></div>
   </div>`;
   ACC.prem = prem; ACC.secs = secs;
   accLier(membre);
+  if (typeof bindSearch === "function") { try { bindSearch($(".acc-search", app)); } catch (e) { } }
   if (!pret) accCharge().then(() => { if (location.pathname !== "/") return; const a = $("#acc-pointb"), b = $("#acc-annw"); if (a) a.innerHTML = accPointHTML(); if (b) b.innerHTML = accAnnoncesHTML(); if (!membre && !$("#acc-pourvous")) { const d = $("#acc-decouvrir"); const h = accPourVousHTML(false); if (d && h) d.insertAdjacentHTML("beforebegin", h); } });
   moi().then(m => {
     if (location.pathname !== "/") return;
@@ -352,7 +376,7 @@ function accPlusHTML(membre, prem, secs) {
   `;
 }
 function accLier(membre) {
-  bindIaBox($("#hia"));
+  if ($("#hia")) bindIaBox($("#hia"));
   const root = $(".acc"); if (!root) return;
   const pl = $("#acc-plus"), plb = $("#acc-plusb");
   if (pl && plb) pl.onclick = () => { if (!plb.innerHTML) { plb.innerHTML = accPlusHTML(membre, ACC.prem, ACC.secs); accEspace(membre); } plb.hidden = false; pl.remove(); const dg = $("#acc-decouvrir .out-dg"); if (dg) dg.classList.add("scroll-x"); };
@@ -526,4 +550,58 @@ em.acc-sup{font-style:normal;color:var(--up)}em.acc-sdn{font-style:normal;color:
   .acc-det{padding:14px}.acc-prem{flex-wrap:wrap;gap:8px 12px}.acc-pt{flex-basis:100%;order:3;font-size:13.5px}.acc-trust{gap:4px 14px}.acc-wait .acc-sj{min-height:420px}}
 @media (max-width:520px){.acc-steps{grid-template-columns:minmax(0,1fr)}.acc-steps small{display:none}.acc-steps a{align-items:center}}
 @media (prefers-reduced-motion:reduce){.acc-det,.acc-annb.acc-in{animation:none}.acc-wait .acc-kpi,.acc-wait .acc-sj{animation:none}}
+</style>`);
+
+/* ====================================================================================
+   5. Présentation « journal » de la une (30 octobre 2026)
+   ==================================================================================== */
+document.head.insertAdjacentHTML("beforeend", `<style>
+.acc-date{display:flex;flex-wrap:wrap;gap:6px 22px;align-items:baseline;padding:10px 0;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);font-size:13px;color:var(--grey)}
+.acc-dd{font-weight:600;color:var(--ink)}.acc-dd::first-letter{text-transform:uppercase}
+.acc-didx{display:flex;flex-wrap:wrap;gap:6px 18px;margin-left:auto}
+.acc-didx a{color:var(--grey);text-decoration:none;white-space:nowrap}.acc-didx a b{font-family:var(--mono);font-weight:500;margin-left:4px}.acc-didx a:hover{color:var(--ink)}
+.acc-dall{font-weight:600;color:var(--ink)!important}
+.acc-une{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:32px 56px;padding:40px 0 36px;border-bottom:1px solid var(--rule);margin-bottom:28px}
+.acc-une h1{font-family:var(--serif);font-weight:800;font-size:46px;line-height:1.04;letter-spacing:-.018em;margin:0 0 16px;max-width:620px}
+.acc-une h1 em{font-style:normal}
+.acc-lede{font-size:17px;line-height:1.55;color:var(--grey);margin:0 0 22px;max-width:560px}
+.acc-search.search{max-width:560px;margin:0}.acc-search.search input{height:48px;font-size:15.5px}
+.acc-exl{font-size:13.5px;color:var(--grey);margin:12px 0 0}.acc-exl a{color:var(--ink)}
+.acc-vh{font-size:12.5px;font-weight:600;color:var(--grey);margin:0 0 6px;letter-spacing:0;text-transform:none}
+.acc-voies{list-style:none;margin:0;padding:0;border-top:1px solid var(--ink)}
+.acc-voies li{border-bottom:1px solid var(--rule)}
+.acc-voies a{display:grid;grid-template-columns:34px minmax(0,1fr) 20px;gap:12px;align-items:baseline;padding:14px 0;color:var(--ink);text-decoration:none}
+.acc-voies a:hover b,.acc-voies a:focus-visible b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+.acc-vn{font-family:var(--mono);font-size:12px;color:var(--light)}
+.acc-vt{display:flex;flex-direction:column;gap:3px;min-width:0}.acc-vt b{font-family:var(--serif);font-weight:800;font-size:19px;line-height:1.15}.acc-vt span{font-size:13.5px;line-height:1.45;color:var(--grey)}
+.acc-va{color:var(--light);text-align:right}.acc-voies a:hover .acc-va{color:var(--ink)}
+.acc .acc-h h2{font-size:26px}
+.acc-rap2{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:28px 56px;padding:28px 0 32px;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin-top:28px}
+.acc-rap2 h2{font-family:var(--serif);font-weight:800;font-size:28px;line-height:1.1;letter-spacing:-.015em;margin:0 0 10px}
+.acc-rap2-l p{font-size:15px;line-height:1.55;color:var(--grey);margin:0 0 18px;max-width:520px}
+.acc-srcl{list-style:none;margin:0;padding:0}.acc-srcl li{font-size:13.5px;line-height:1.5;color:var(--grey);padding:8px 0;border-bottom:1px solid var(--rule)}.acc-srcl li:first-child{border-top:1px solid var(--rule)}.acc-srcl b{color:var(--ink);font-weight:600}
+/* le point du jour : des colonnes et des filets, plus de boîtes teintées */
+.acc .acc-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--rule);border-bottom:1px solid var(--rule)}
+.acc .acc-kpi{background:transparent;border:0;border-radius:0;padding:16px 22px 16px 0;border-right:1px solid var(--rule)}.acc .acc-kpi+.acc-kpi{padding-left:22px}.acc .acc-kpi:last-child{border-right:0;padding-right:0}
+.acc .acc-kh{font-size:13px;font-weight:600;color:var(--ink);margin:0 0 10px}.acc .acc-kh .acc-tag{display:none}
+.acc .acc-idx a{background:transparent;border:0;border-bottom:1px solid var(--rule);border-radius:0;padding:5px 0}
+.acc .acc-kv>b:first-child{font-family:var(--serif);font-weight:800;font-size:34px}
+.acc .acc-subh h3{font-family:var(--serif);font-weight:800;font-size:22px}
+.acc .acc-legend .acc-tag,.acc .acc-sj .acc-tag{background:transparent!important;border:0!important;padding:0!important;color:var(--grey)!important;font:600 12px/1.5 var(--sans)!important;letter-spacing:0!important;text-transform:none!important}
+.acc .acc-sj .acc-tag::after{content:" ·";color:var(--light)}
+.acc .acc-sjs{gap:0;border-top:1px solid var(--rule)}
+.acc .acc-sj{background:transparent;border:0;border-radius:0;border-right:1px solid var(--rule);padding:18px 22px 18px 0}.acc .acc-sj+.acc-sj{padding-left:22px}.acc .acc-sj:last-child{border-right:0;padding-right:0}
+.acc .acc-sj h4{font-size:19px;font-weight:700;line-height:1.15;letter-spacing:-.01em;margin:4px 0 12px}
+.acc .acc-theme{font-size:12.5px;font-weight:600;color:var(--grey);letter-spacing:0;text-transform:none;font-family:var(--sans)}
+.acc .acc-l{background:transparent;border:0;padding:0;margin:0 0 10px}.acc .acc-l p{font-size:14px;line-height:1.55;color:var(--ink)}
+.acc .acc-more{border-color:var(--rule)}
+/* annonces : mêmes filets, plus de pavés teintés ni d'étiquettes en capitales */
+.acc .acc-fig{background:transparent;border:0;border-top:1px solid var(--rule);border-radius:0;padding:8px 0 2px}
+.acc .acc-fig small{font-family:var(--sans);font-size:12px;color:var(--grey);letter-spacing:0;text-transform:none}
+.acc .acc-lec .acc-tag{background:transparent!important;border:0!important;padding:0!important;color:var(--ink)!important;font:600 12.5px/1.5 var(--sans)!important;letter-spacing:0!important;text-transform:none!important}
+.acc .acc-agd{font:600 12.5px var(--sans);letter-spacing:0;text-transform:none;color:var(--grey)}.acc .acc-agd::first-letter{text-transform:uppercase}
+.acc .acc-annm.panel,.acc .acc-annside .panel{box-shadow:none}
+.acc .acc-rep{background:transparent;border:0;padding:0;box-shadow:none}
+@media (max-width:900px){.acc-une,.acc-rap2{grid-template-columns:minmax(0,1fr);gap:26px}.acc-une h1{font-size:34px}.acc .acc-kpis,.acc .acc-sjs{grid-template-columns:minmax(0,1fr);display:grid;margin:0;padding:0;overflow:visible}.acc .acc-kpi,.acc .acc-sj{border-right:0;padding:16px 0!important;border-bottom:1px solid var(--rule)}.acc .acc-kpi:last-child,.acc .acc-sj:last-child{border-bottom:0}}
+@media (max-width:600px){.acc-une{padding:26px 0 24px}.acc-une h1{font-size:30px}.acc-lede{font-size:15.5px}.acc-didx{margin-left:0}.acc-dall{display:none}.acc-rap2 h2{font-size:24px}}
 </style>`);
