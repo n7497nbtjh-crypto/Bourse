@@ -431,7 +431,7 @@ async function pageRapportExemple() {
   app.innerHTML = `<div class="crumbs"><a href="/espace">Mon espace</a> › Rapport exemple</div>
     <h1 class="pagetitle">Le rapport de la semaine, en vrai</h1>
     <p class="pagesub">Voici exactement ce que reçoit un membre, calculé aujourd'hui avec les chiffres du site, pour un profil d'exemple. Le vôtre suit vos propres titres.</p>
-    <section class="panel synx"><div class="ph"><h2>Ce que vous réglez dans le vôtre</h2><a class="btn" href="/espace" style="height:36px;display:inline-flex;align-items:center">Créer mon rapport, gratuit</a></div>
+    <section class="panel synx"><div class="ph"><h2>Ce que vous réglez dans le vôtre</h2></div>
       <div class="synx-g">${SYN_EX_REG.map(([t, d]) => `<div><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join("")}</div></section>
     <div id="synex">${synPageHTML(b, { premium: false })}</div>
     <section class="panel"><div class="pb" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between"><span>Gratuit, sans carte bancaire : il suffit d'une adresse e-mail.</span><a class="btn" href="/espace">Créer mon rapport</a></div></section>`;
@@ -439,6 +439,7 @@ async function pageRapportExemple() {
 }
 ROUTES_EXTRA.push([/^\/rapport-exemple\/?$/, () => pageRapportExemple()]);
 document.head.insertAdjacentHTML("beforeend", `<style>
+#synex .synwrap{grid-template-columns:minmax(0,1fr)!important}#synex .synwrap > :not(:first-child){display:none}
 .synx-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:0;border-top:1px solid var(--line2)}
 .synx-g > div{padding:14px 22px;border-right:1px solid var(--line2);border-bottom:1px solid var(--line2)}.synx-g b{font-size:14.5px}.synx-g p{margin:4px 0 0;font-size:13.5px;color:var(--grey);line-height:1.5}
 </style>`);
