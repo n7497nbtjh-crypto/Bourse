@@ -49,34 +49,205 @@ async function amf(request, followed = []) {
   return cache && status === 200 && await cache.put(key, res.clone()), res;
 }
 
+// cf/src/compte.mjs
+var json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA = [
+  "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
+  "CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)",
+  "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))"
+], ready = !1;
+async function initCompte(db) {
+  if (!ready) {
+    for (let q of SCHEMA) await db.prepare(q).run();
+    ready = !0;
+  }
+}
+function adminOk(request, env) {
+  let a = String(env && env.ADMIN_KEY || ""), b = String(request.headers.get("x-admin-key") || "");
+  if (!a || a.length !== b.length) return !1;
+  let d = 0;
+  for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+async function tropDEssais(env, cle, max = 5, fenetre = 9e5) {
+  try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS essais (cle TEXT NOT NULL, at INTEGER NOT NULL)").run();
+    let r = await env.DB.prepare("SELECT COUNT(*) AS n FROM essais WHERE cle = ? AND at > ?").bind(cle, Date.now() - fenetre).first();
+    return await env.DB.prepare("INSERT INTO essais (cle, at) VALUES (?, ?)").bind(cle, Date.now()).run(), !!(r && r.n >= max);
+  } catch {
+    return !1;
+  }
+}
+var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
+async function visitor(request, env = {}) {
+  let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + today() + "|" + (env.HASH_SALT || "bilan-sel-2026")));
+  return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+var sha256hex = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join(""), cookieSession = (request) => {
+  let m = (request.headers.get("cookie") || "").match(/(?:^|;\s*)bilan_s=([a-f0-9]{64})(?:;|$)/);
+  return m ? m[1] : null;
+}, SESS = /* @__PURE__ */ new WeakMap();
+function sessionCompte(request, env) {
+  return !env || !env.DB ? Promise.resolve(null) : (SESS.has(request) || SESS.set(request, (async () => {
+    let t = cookieSession(request);
+    if (!t) return null;
+    try {
+      return await env.DB.prepare("SELECT c.* FROM sessions s JOIN comptes c ON c.id = s.compte WHERE s.h = ? AND s.expires > ?").bind(await sha256hex(t), Date.now()).first() || null;
+    } catch {
+      return null;
+    }
+  })()), SESS.get(request));
+}
+async function premiumOf(request, env) {
+  if (!env || !env.DB) return null;
+  let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
+  if (!t) {
+    let c = await sessionCompte(request, env);
+    t = c && c.premium || "";
+  }
+  if (!t) return null;
+  await initCompte(env.DB);
+  let a = await env.DB.prepare("SELECT * FROM abonnes WHERE token = ?").bind(t).first();
+  if (!a) return null;
+  if (a.until < Date.now() && a.sub_id && env.STRIPE_SECRET)
+    try {
+      let s = await stripe(env, `subscriptions/${a.sub_id}`);
+      if (["active", "trialing", "past_due"].includes(s.status)) {
+        let until = s.current_period_end * 1e3 + 2592e5;
+        await env.DB.prepare("UPDATE abonnes SET until = ? WHERE token = ?").bind(until, t).run(), a = { ...a, until };
+      }
+    } catch {
+    }
+  return a.until > Date.now() ? a : null;
+}
+async function stripe(env, path) {
+  let r = await fetch("https://api.stripe.com/v1/" + path, { headers: { authorization: "Bearer " + env.STRIPE_SECRET } }), j = await r.json();
+  if (!r.ok) throw new Error(j.error && j.error.message || "Stripe " + r.status);
+  return j;
+}
+var newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+async function premium(request, env) {
+  if (!env || !env.DB) return json({ error: "Indisponible pour le moment." }, 503);
+  await initCompte(env.DB);
+  let url = new URL(request.url), path = url.pathname;
+  if (path === "/api/premium/offres") return json({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
+  if (path === "/api/premium/statut") {
+    let p = await premiumOf(request, env);
+    return json(p ? { premium: !0, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1\u2026$2") : null } : { premium: !1 });
+  }
+  if (path === "/api/premium/activer") {
+    if (!env.STRIPE_SECRET) return json({ error: "Le paiement n'est pas encore configur\xE9." }, 503);
+    let sid = (url.searchParams.get("session_id") || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 200);
+    if (!sid.startsWith("cs_")) return json({ error: "Paiement introuvable." }, 400);
+    let old = await env.DB.prepare("SELECT token FROM abonnes WHERE session = ?").bind(sid).first();
+    if (old) return json({ token: old.token });
+    try {
+      let s = await stripe(env, `checkout/sessions/${sid}`);
+      if (!(s.status === "complete" && (s.payment_status === "paid" || s.payment_status === "no_payment_required"))) return json({ error: "Le paiement n'est pas encore confirm\xE9. R\xE9essayez dans une minute." }, 402);
+      let plan = "unique", until = Date.now() + 368 * 864e5, sub = null;
+      if (s.mode === "subscription" && s.subscription) {
+        sub = typeof s.subscription == "string" ? s.subscription : s.subscription.id;
+        let so = await stripe(env, `subscriptions/${sub}`);
+        plan = "mensuel", until = so.current_period_end * 1e3 + 3 * 864e5;
+      }
+      let token = newToken(), email = s.customer_details && s.customer_details.email || s.customer_email || null;
+      return await env.DB.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run(), json({ token, plan });
+    } catch (e) {
+      return json({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 502);
+    }
+  }
+  if (path === "/api/premium/retrouver" && request.method === "POST") {
+    let ip = request.headers.get("cf-connecting-ip") || "local";
+    if (await tropDEssais(env, "retrouver:" + ip, 3)) return json({ error: "Trop de demandes. R\xE9essayez dans un quart d'heure." }, 429);
+    let b = {};
+    try {
+      b = await request.json();
+    } catch {
+    }
+    let email = String(b.email || "").trim().toLowerCase().slice(0, 254);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: !0 });
+    let rows = (await env.DB.prepare("SELECT token, plan FROM abonnes WHERE email = ? AND until > ?").bind(email, Date.now()).all()).results || [];
+    if (rows.length)
+      try {
+        await sendMail(env, email, "Votre code d'acc\xE8s bilan. Premium", `Bonjour,
+
+Voici votre code d'acc\xE8s Premium : ${rows[0].token}
+
+Sur le site, ouvrez la page Premium et collez ce code dans \xAB J'ai d\xE9j\xE0 un code \xBB.
+
+bilan.`);
+      } catch {
+        return json({ error: "L'envoi d'e-mail n'est pas encore disponible : \xE9crivez-nous pour retrouver votre acc\xE8s." }, 503);
+      }
+    return json({ ok: !0 });
+  }
+  if (path === "/api/premium/portail") {
+    let p = await premiumOf(request, env);
+    if (!p || !p.sub_id || !env.STRIPE_SECRET) return json({ error: "Aucun abonnement mensuel actif." }, 400);
+    try {
+      let sub = await stripe(env, `subscriptions/${p.sub_id}`), r = await fetch("https://api.stripe.com/v1/billing_portal/sessions", { method: "POST", headers: { authorization: "Bearer " + env.STRIPE_SECRET, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ customer: sub.customer, return_url: url.origin + "/premium" }) }), j = await r.json();
+      if (!r.ok) throw new Error(j.error && j.error.message);
+      return json({ url: j.url });
+    } catch (e) {
+      return json({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 502);
+    }
+  }
+  return json({ error: "Introuvable." }, 404);
+}
+var PROVIDERS = [
+  ["brevo", (env) => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text, htmlContent: html || void 0 }) })],
+  ["mailjet", (env) => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "bilan." }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || void 0 }] }) })],
+  ["resend", (env) => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `bilan. <${env.MAIL_FROM}>`, to, subject, text, html: html || void 0 }) })]
+], mailReady = (env) => !!(env.MAIL_FROM && PROVIDERS.some(([, on]) => on(env)));
+async function mailCapacity(env) {
+  await initCompte(env.DB);
+  let left = 0;
+  for (let [name, on, max] of PROVIDERS) {
+    if (!on(env)) continue;
+    let r = await env.DB.prepare("SELECT n FROM mail_compte WHERE fournisseur = ? AND jour = ?").bind(name, today()).first();
+    left += Math.max(0, max - (r ? r.n : 0));
+  }
+  return left;
+}
+async function sendMail(env, to, subject, text, html = "") {
+  if (!mailReady(env)) throw new Error("envoi non configur\xE9");
+  await initCompte(env.DB);
+  for (let [name, on, max, send] of PROVIDERS) {
+    if (!on(env)) continue;
+    let r = await env.DB.prepare("SELECT n FROM mail_compte WHERE fournisseur = ? AND jour = ?").bind(name, today()).first();
+    if (!(r && r.n >= max || !(await send(env, to, subject, text, html)).ok))
+      return await env.DB.prepare("INSERT INTO mail_compte (fournisseur, jour, n) VALUES (?, ?, 1) ON CONFLICT (fournisseur, jour) DO UPDATE SET n = n + 1").bind(name, today()).run(), name;
+  }
+  throw new Error("quota d'envoi du jour atteint");
+}
+
 // cf/src/communaute.mjs
-var SCHEMA = [
+var SCHEMA2 = [
   "CREATE TABLE IF NOT EXISTS messages (id INTEGER PRIMARY KEY AUTOINCREMENT, room TEXT NOT NULL, pseudo TEXT NOT NULL, body TEXT NOT NULL, kind TEXT NOT NULL DEFAULT 'avis', parent INTEGER, created INTEGER NOT NULL, who TEXT NOT NULL, likes INTEGER NOT NULL DEFAULT 0, reports INTEGER NOT NULL DEFAULT 0, hidden INTEGER NOT NULL DEFAULT 0)",
   "CREATE INDEX IF NOT EXISTS m_room ON messages (room, id)",
   "CREATE INDEX IF NOT EXISTS m_who ON messages (who, created)",
   "CREATE TABLE IF NOT EXISTS votes (msg INTEGER NOT NULL, who TEXT NOT NULL, kind TEXT NOT NULL, PRIMARY KEY (msg, who, kind))",
   "CREATE TABLE IF NOT EXISTS avis (room TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (room, who))"
 ];
-SCHEMA.push(
+SCHEMA2.push(
   "CREATE TABLE IF NOT EXISTS pronos (evt TEXT NOT NULL, who TEXT NOT NULL, v INTEGER NOT NULL, at INTEGER NOT NULL, PRIMARY KEY (evt, who))",
   "CREATE TABLE IF NOT EXISTS partages (who TEXT PRIMARY KEY, lignes TEXT NOT NULL, at INTEGER NOT NULL)",
   "CREATE TABLE IF NOT EXISTS listes (id INTEGER PRIMARY KEY AUTOINCREMENT, pseudo TEXT NOT NULL, titre TEXT NOT NULL, note TEXT NOT NULL DEFAULT '', items TEXT NOT NULL, created INTEGER NOT NULL, who TEXT NOT NULL, cle TEXT NOT NULL, likes INTEGER NOT NULL DEFAULT 0, reports INTEGER NOT NULL DEFAULT 0, hidden INTEGER NOT NULL DEFAULT 0)",
   "CREATE INDEX IF NOT EXISTS l_who ON listes (who, created)"
 );
-var ALTERS = ["ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''", "ALTER TABLE messages ADD COLUMN meta TEXT NOT NULL DEFAULT ''"], ready = !1;
+var ALTERS = ["ALTER TABLE messages ADD COLUMN tags TEXT NOT NULL DEFAULT ''", "ALTER TABLE messages ADD COLUMN meta TEXT NOT NULL DEFAULT ''"], ready2 = !1;
 async function init(db) {
-  if (!ready) {
-    for (let q of SCHEMA) await db.prepare(q).run();
+  if (!ready2) {
+    for (let q of SCHEMA2) await db.prepare(q).run();
     for (let q of ALTERS)
       try {
         await db.prepare(q).run();
       } catch {
       }
-    ready = !0;
+    ready2 = !0;
   }
 }
 var mentions = (body) => [...new Set([...String(body).matchAll(/\[\[([ce]):([a-z0-9-]{1,60})\]\]/g)].map((m) => (m[1] === "e" ? "etf-" : "") + m[2]))].slice(0, 5);
-var KINDS = ["idee", "question", "avis", "analyse"], json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
+var KINDS = ["idee", "question", "avis", "analyse"], json2 = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } });
 async function who(request) {
   let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", day = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + day + "|repere"));
   return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -98,58 +269,58 @@ function analyseOk(b) {
   return [null, { t, r, h, ...ex >= 2e3 && ex <= 2100 ? { ex } : {} }];
 }
 async function communaute(request, env) {
-  if (!env || !env.DB) return json({ error: "L'espace communaut\xE9 n'est pas encore activ\xE9." }, 503);
+  if (!env || !env.DB) return json2({ error: "L'espace communaut\xE9 n'est pas encore activ\xE9." }, 503);
   let db = env.DB, url = new URL(request.url), path = url.pathname.replace(/\/+$/, "");
   if (await init(db), request.method === "GET" && path === "/api/communaute") {
     let room = url.searchParams.get("room") || "general";
-    if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
+    if (!roomOk(room)) return json2({ error: "Salon inconnu." }, 400);
     let before = parseInt(url.searchParams.get("before") || "0", 10) || 2 ** 52, r = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes, meta FROM messages WHERE (room = ? OR tags LIKE ?) AND hidden = 0 AND id < ? ORDER BY id DESC LIMIT 50").bind(room, `%,${room},%`, before).all();
-    return json({ room, items: r.results || [] });
+    return json2({ room, items: r.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/avis") {
     let room = url.searchParams.get("room") || "";
-    if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
+    if (!roomOk(room)) return json2({ error: "Salon inconnu." }, 400);
     let r = await db.prepare("SELECT v, COUNT(*) AS n FROM avis WHERE room = ? AND at > ? GROUP BY v").bind(room, Date.now() - 30 * 864e5).all(), o = { confiant: 0, neutre: 0, prudent: 0 };
     for (let x of r.results || []) o[x.v > 0 ? "confiant" : x.v < 0 ? "prudent" : "neutre"] = x.n;
-    return json({ room, ...o });
+    return json2({ room, ...o });
   }
   if (request.method === "GET" && path === "/api/communaute/recent") {
     let r = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes, meta FROM messages WHERE hidden = 0 ORDER BY id DESC LIMIT 30").all(), t = await db.prepare("SELECT room, COUNT(*) AS n FROM messages WHERE hidden = 0 AND created > ? GROUP BY room ORDER BY n DESC LIMIT 10").bind(Date.now() - 7 * 864e5).all();
-    return json({ items: r.results || [], rooms: t.results || [] });
+    return json2({ items: r.results || [], rooms: t.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/questions") {
     let r = await db.prepare("SELECT q.id, q.pseudo, q.body, q.created, q.likes, q.tags, (SELECT COUNT(*) FROM messages a WHERE a.parent = q.id AND a.hidden = 0) AS n FROM messages q WHERE q.kind = 'question' AND q.parent IS NULL AND q.hidden = 0 ORDER BY q.id DESC LIMIT 60").all();
-    return json({ items: r.results || [] });
+    return json2({ items: r.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/fil") {
     let id = parseInt(url.searchParams.get("id") || "0", 10), q = await db.prepare("SELECT id, room, pseudo, body, kind, created, likes, meta FROM messages WHERE id = ? AND hidden = 0").bind(id).first();
-    if (!q) return json({ error: "Message introuvable." }, 404);
+    if (!q) return json2({ error: "Message introuvable." }, 404);
     let a = await db.prepare("SELECT id, room, pseudo, body, kind, parent, created, likes FROM messages WHERE parent = ? AND hidden = 0 ORDER BY likes DESC, id ASC LIMIT 100").bind(id).all();
-    return json({ question: q, answers: a.results || [] });
+    return json2({ question: q, answers: a.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/analyses") {
     let room = url.searchParams.get("room") || "", tri = url.searchParams.get("tri") === "recentes" ? "m.id DESC" : "m.likes DESC, m.id DESC";
-    if (room && !ficheOk(room)) return json({ error: "Salon inconnu." }, 400);
+    if (room && !ficheOk(room)) return json2({ error: "Salon inconnu." }, 400);
     let r = await db.prepare(`SELECT m.id, m.room, m.pseudo, m.body, m.kind, m.created, m.likes, m.meta, (SELECT COUNT(*) FROM messages a WHERE a.parent = m.id AND a.hidden = 0) AS n FROM messages m WHERE m.kind = 'analyse' AND m.meta != '' AND m.parent IS NULL AND m.hidden = 0${room ? " AND m.room = ?" : ""} ORDER BY ${tri} LIMIT 40`).bind(...room ? [room] : []).all();
-    return json({ items: r.results || [] });
+    return json2({ items: r.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/listes") {
     let tri = url.searchParams.get("tri") === "recentes" ? "id DESC" : "likes DESC, id DESC", r = await db.prepare(`SELECT id, pseudo, titre, note, items, created, likes FROM listes WHERE hidden = 0 ORDER BY ${tri} LIMIT 40`).all();
-    return json({ items: r.results || [] });
+    return json2({ items: r.results || [] });
   }
   if (request.method === "GET" && path === "/api/communaute/liste") {
     let x = await db.prepare("SELECT id, pseudo, titre, note, items, created, likes FROM listes WHERE id = ? AND hidden = 0").bind(parseInt(url.searchParams.get("id") || "0", 10)).first();
-    return x ? json({ item: x }) : json({ error: "Liste introuvable ou retir\xE9e." }, 404);
+    return x ? json2({ item: x }) : json2({ error: "Liste introuvable ou retir\xE9e." }, 404);
   }
   if (request.method === "GET" && path === "/api/communaute/pronos") {
     let ids = (url.searchParams.get("evt") || "").split(",").filter((x) => /^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(x)).slice(0, 80);
-    if (!ids.length) return json({ items: {} });
+    if (!ids.length) return json2({ items: {} });
     let r = await db.prepare(`SELECT evt, v, COUNT(*) AS n FROM pronos WHERE evt IN (${ids.map(() => "?").join(",")}) GROUP BY evt, v`).bind(...ids).all(), mine = await db.prepare(`SELECT evt, v FROM pronos WHERE who = ? AND evt IN (${ids.map(() => "?").join(",")})`).bind(await who(request), ...ids).all(), o = {};
     for (let x of r.results || [])
       o[x.evt] = o[x.evt] || { hausse: 0, baisse: 0 }, o[x.evt][x.v > 0 ? "hausse" : "baisse"] = x.n;
     for (let x of mine.results || [])
       o[x.evt] = o[x.evt] || { hausse: 0, baisse: 0 }, o[x.evt].moi = x.v;
-    return json({ items: o });
+    return json2({ items: o });
   }
   if (request.method === "GET" && path === "/api/communaute/portefeuilles") {
     let r = await db.prepare("SELECT lignes FROM partages WHERE at > ?").bind(Date.now() - 10368e6).all(), tot = {}, held = {}, n = 0;
@@ -165,87 +336,87 @@ async function communaute(request, env) {
         tot[k] = (tot[k] || 0) + w, held[k] = (held[k] || 0) + 1;
     }
     let items = Object.entries(tot).map(([k, w]) => ({ k, poids: n ? w / n : 0, part: n ? held[k] / n : 0 })).sort((a, b2) => b2.part - a.part || b2.poids - a.poids).slice(0, 25);
-    return json({ n, items });
+    return json2({ n, items });
   }
-  if (request.method !== "POST") return json({ error: "M\xE9thode non prise en charge." }, 405);
+  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
   let b = {};
   try {
     b = await request.json();
   } catch {
-    return json({ error: "Requ\xEAte illisible." }, 400);
+    return json2({ error: "Requ\xEAte illisible." }, 400);
   }
   let me = await who(request);
   if (path === "/api/communaute") {
     let room = String(b.room || "general"), pseudo = clean(b.pseudo).slice(0, 30), body = clean(b.body), kind = KINDS.includes(b.kind) ? b.kind : "avis";
-    if (!roomOk(room)) return json({ error: "Salon inconnu." }, 400);
-    if (pseudo.length < 2) return json({ error: "Choisissez un pseudo d'au moins 2 caract\xE8res." }, 400);
+    if (!roomOk(room)) return json2({ error: "Salon inconnu." }, 400);
+    if (pseudo.length < 2) return json2({ error: "Choisissez un pseudo d'au moins 2 caract\xE8res." }, 400);
     let meta2 = "";
     if (b.these != null) {
       let [err2, m] = analyseOk(b);
-      if (err2) return json({ error: err2 }, 400);
+      if (err2) return json2({ error: err2 }, 400);
       let e = textOk(pseudo);
-      if (e) return json({ error: e }, 400);
-      if (b.website) return json({ ok: !0 });
+      if (e) return json2({ error: e }, 400);
+      if (b.website) return json2({ ok: !0 });
       let jour2 = await db.prepare("SELECT COUNT(*) AS n FROM messages WHERE who = ? AND created > ? AND meta != ''").bind(me, Date.now() - 864e5).first();
-      if (jour2 && jour2.n >= 3) return json({ error: "Trois analyses par jour au plus : prenez le temps de les \xE9tayer." }, 429);
+      if (jour2 && jour2.n >= 3) return json2({ error: "Trois analyses par jour au plus : prenez le temps de les \xE9tayer." }, 429);
       meta2 = JSON.stringify(m);
-    } else if (body.length < 3 || body.length > 1e3) return json({ error: "Le message doit faire entre 3 et 1 000 caract\xE8res." }, 400);
-    if (LINK.test(body) || LINK.test(pseudo)) return json({ error: "Les liens ne sont pas autoris\xE9s." }, 400);
-    if (BAD.test(body) || BAD.test(pseudo)) return json({ error: "Merci de rester courtois." }, 400);
-    if (b.website) return json({ ok: !0 });
+    } else if (body.length < 3 || body.length > 1e3) return json2({ error: "Le message doit faire entre 3 et 1 000 caract\xE8res." }, 400);
+    if (LINK.test(body) || LINK.test(pseudo)) return json2({ error: "Les liens ne sont pas autoris\xE9s." }, 400);
+    if (BAD.test(body) || BAD.test(pseudo)) return json2({ error: "Merci de rester courtois." }, 400);
+    if (b.website) return json2({ ok: !0 });
     let recent = await db.prepare("SELECT COUNT(*) AS n FROM messages WHERE who = ? AND created > ?").bind(me, Date.now() - 10 * 6e4).first();
-    if (recent && recent.n >= 5) return json({ error: "Trop de messages d'affil\xE9e : r\xE9essayez dans quelques minutes." }, 429);
+    if (recent && recent.n >= 5) return json2({ error: "Trop de messages d'affil\xE9e : r\xE9essayez dans quelques minutes." }, 429);
     let parent = meta2 ? null : Number.isInteger(b.parent) ? b.parent : null, k = meta2 ? "analyse" : kind, now = Date.now(), tags = mentions(body), r = await db.prepare("INSERT INTO messages (room, pseudo, body, kind, parent, created, who, tags, meta) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(room, pseudo, body, k, parent, now, me, tags.length ? "," + tags.join(",") + "," : "", meta2).first();
-    return json({ ok: !0, item: { id: r.id, room, pseudo, body, kind: k, parent, created: now, likes: 0, meta: meta2 } }, 201);
+    return json2({ ok: !0, item: { id: r.id, room, pseudo, body, kind: k, parent, created: now, likes: 0, meta: meta2 } }, 201);
   }
   if (path === "/api/communaute/liste") {
     let pseudo = clean(b.pseudo).slice(0, 30), titre = clean(b.titre).replace(/\s+/g, " "), note = clean(b.note), items = [...new Set(Array.isArray(b.items) ? b.items.map(String).filter((x) => KEY.test(x)) : [])].slice(0, 30);
-    if (pseudo.length < 2) return json({ error: "Choisissez un pseudo d'au moins 2 caract\xE8res." }, 400);
-    if (titre.length < 3 || titre.length > 80) return json({ error: "Le titre fait entre 3 et 80 caract\xE8res." }, 400);
-    if (note.length > 400) return json({ error: "La note fait 400 caract\xE8res au plus." }, 400);
-    if (items.length < 2) return json({ error: "Une liste contient au moins 2 entreprises ou ETF." }, 400);
+    if (pseudo.length < 2) return json2({ error: "Choisissez un pseudo d'au moins 2 caract\xE8res." }, 400);
+    if (titre.length < 3 || titre.length > 80) return json2({ error: "Le titre fait entre 3 et 80 caract\xE8res." }, 400);
+    if (note.length > 400) return json2({ error: "La note fait 400 caract\xE8res au plus." }, 400);
+    if (items.length < 2) return json2({ error: "Une liste contient au moins 2 entreprises ou ETF." }, 400);
     let e = textOk(pseudo, titre, note);
-    if (e) return json({ error: e }, 400);
-    if (CONSIGNE.test(titre) || CONSIGNE.test(note)) return json({ error: "Une liste de suivi d\xE9crit ce que vous suivez, pas ce qu'il faut acheter." }, 400);
-    if (b.website) return json({ ok: !0 });
+    if (e) return json2({ error: e }, 400);
+    if (CONSIGNE.test(titre) || CONSIGNE.test(note)) return json2({ error: "Une liste de suivi d\xE9crit ce que vous suivez, pas ce qu'il faut acheter." }, 400);
+    if (b.website) return json2({ ok: !0 });
     let jour2 = await db.prepare("SELECT COUNT(*) AS n FROM listes WHERE who = ? AND created > ?").bind(me, Date.now() - 864e5).first();
-    if (jour2 && jour2.n >= 3) return json({ error: "Trois listes par jour au plus." }, 429);
+    if (jour2 && jour2.n >= 3) return json2({ error: "Trois listes par jour au plus." }, 429);
     let cle = [...crypto.getRandomValues(new Uint8Array(16))].map((x) => x.toString(16).padStart(2, "0")).join(""), r = await db.prepare("INSERT INTO listes (pseudo, titre, note, items, created, who, cle) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id").bind(pseudo, titre, note, JSON.stringify(items), Date.now(), me, await hex(cle)).first();
-    return json({ ok: !0, id: r.id, cle }, 201);
+    return json2({ ok: !0, id: r.id, cle }, 201);
   }
   if (path === "/api/communaute/liste/retirer") {
     let id = parseInt(b.id, 10) || 0, x = await db.prepare("SELECT cle FROM listes WHERE id = ?").bind(id).first();
-    return !x || !b.cle || x.cle !== await hex(String(b.cle)) ? json({ error: "Non autoris\xE9." }, 403) : (await db.prepare("UPDATE listes SET hidden = 1 WHERE id = ?").bind(id).run(), json({ ok: !0 }));
+    return !x || !b.cle || x.cle !== await hex(String(b.cle)) ? json2({ error: "Non autoris\xE9." }, 403) : (await db.prepare("UPDATE listes SET hidden = 1 WHERE id = ?").bind(id).run(), json2({ ok: !0 }));
   }
   if (path === "/api/communaute/liste/utile" || path === "/api/communaute/liste/signaler") {
     let id = parseInt(b.id, 10);
-    if (!id) return json({ error: "Liste inconnue." }, 400);
+    if (!id) return json2({ error: "Liste inconnue." }, 400);
     let kind = path.endsWith("utile") ? "l:like" : "l:report", ins = await db.prepare("INSERT OR IGNORE INTO votes (msg, who, kind) VALUES (?, ?, ?)").bind(id, me, kind).run();
-    return ins.meta && ins.meta.changes === 0 ? json({ ok: !0, deja: !0 }) : (kind === "l:like" ? await db.prepare("UPDATE listes SET likes = likes + 1 WHERE id = ?").bind(id).run() : await db.prepare("UPDATE listes SET reports = reports + 1, hidden = CASE WHEN reports + 1 >= 3 THEN 1 ELSE hidden END WHERE id = ?").bind(id).run(), json({ ok: !0 }));
+    return ins.meta && ins.meta.changes === 0 ? json2({ ok: !0, deja: !0 }) : (kind === "l:like" ? await db.prepare("UPDATE listes SET likes = likes + 1 WHERE id = ?").bind(id).run() : await db.prepare("UPDATE listes SET reports = reports + 1, hidden = CASE WHEN reports + 1 >= 3 THEN 1 ELSE hidden END WHERE id = ?").bind(id).run(), json2({ ok: !0 }));
   }
   if (path === "/api/communaute/prono") {
     let evt = String(b.evt || ""), v = Math.sign(parseInt(b.v, 10) || 0);
-    return !/^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) || !v ? json({ error: "Pronostic invalide." }, 400) : evt.slice(-10) < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? json({ error: "Les r\xE9sultats sont d\xE9j\xE0 publi\xE9s." }, 400) : (await db.prepare("INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(evt, me, v, Date.now()).run(), json({ ok: !0 }));
+    return !/^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) || !v ? json2({ error: "Pronostic invalide." }, 400) : evt.slice(-10) < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? json2({ error: "Les r\xE9sultats sont d\xE9j\xE0 publi\xE9s." }, 400) : (await db.prepare("INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(evt, me, v, Date.now()).run(), json2({ ok: !0 }));
   }
   if (path === "/api/communaute/portefeuille") {
     let l = Array.isArray(b.lignes) ? b.lignes.filter((x) => Array.isArray(x) && /^[ce]:[a-z0-9-]{1,60}$/.test(x[0]) && x[1] > 0).slice(0, 40) : [];
     if (b.retirer)
-      return await db.prepare("DELETE FROM partages WHERE who = ?").bind(me).run(), json({ ok: !0 });
-    if (!l.length) return json({ error: "Portefeuille vide." }, 400);
+      return await db.prepare("DELETE FROM partages WHERE who = ?").bind(me).run(), json2({ ok: !0 });
+    if (!l.length) return json2({ error: "Portefeuille vide." }, 400);
     let sum = l.reduce((a, x) => a + +x[1], 0), norm2 = l.map(([k, w]) => [k, Math.round(+w / sum * 1e3) / 1e3]);
-    return await db.prepare("INSERT INTO partages (who, lignes, at) VALUES (?, ?, ?) ON CONFLICT (who) DO UPDATE SET lignes = excluded.lignes, at = excluded.at").bind(me, JSON.stringify(norm2), Date.now()).run(), json({ ok: !0 });
+    return await db.prepare("INSERT INTO partages (who, lignes, at) VALUES (?, ?, ?) ON CONFLICT (who) DO UPDATE SET lignes = excluded.lignes, at = excluded.at").bind(me, JSON.stringify(norm2), Date.now()).run(), json2({ ok: !0 });
   }
   if (path === "/api/communaute/avis") {
     let room = String(b.room || ""), v = Math.sign(parseInt(b.v, 10) || 0);
-    return !roomOk(room) || room === "general" ? json({ error: "Salon inconnu." }, 400) : (await db.prepare("INSERT INTO avis (room, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (room, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(room, me, v, Date.now()).run(), json({ ok: !0 }));
+    return !roomOk(room) || room === "general" ? json2({ error: "Salon inconnu." }, 400) : (await db.prepare("INSERT INTO avis (room, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (room, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(room, me, v, Date.now()).run(), json2({ ok: !0 }));
   }
   if (path === "/api/communaute/aime" || path === "/api/communaute/signaler") {
     let id = parseInt(b.id, 10);
-    if (!id) return json({ error: "Message inconnu." }, 400);
+    if (!id) return json2({ error: "Message inconnu." }, 400);
     let kind = path.endsWith("aime") ? "like" : "report", ins = await db.prepare("INSERT OR IGNORE INTO votes (msg, who, kind) VALUES (?, ?, ?)").bind(id, me, kind).run();
-    return ins.meta && ins.meta.changes === 0 ? json({ ok: !0, deja: !0 }) : (kind === "like" ? await db.prepare("UPDATE messages SET likes = likes + 1 WHERE id = ?").bind(id).run() : await db.prepare("UPDATE messages SET reports = reports + 1, hidden = CASE WHEN reports + 1 >= 3 THEN 1 ELSE hidden END WHERE id = ?").bind(id).run(), json({ ok: !0 }));
+    return ins.meta && ins.meta.changes === 0 ? json2({ ok: !0, deja: !0 }) : (kind === "like" ? await db.prepare("UPDATE messages SET likes = likes + 1 WHERE id = ?").bind(id).run() : await db.prepare("UPDATE messages SET reports = reports + 1, hidden = CASE WHEN reports + 1 >= 3 THEN 1 ELSE hidden END WHERE id = ?").bind(id).run(), json2({ ok: !0 }));
   }
-  return path === "/api/communaute/masquer" ? !env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY ? json({ error: "Non autoris\xE9." }, 403) : (await db.prepare(`UPDATE ${b.type === "liste" ? "listes" : "messages"} SET hidden = 1 WHERE id = ?`).bind(parseInt(b.id, 10)).run(), json({ ok: !0 })) : json({ error: "Introuvable." }, 404);
+  return path === "/api/communaute/masquer" ? adminOk(request, env) ? (await db.prepare(`UPDATE ${b.type === "liste" ? "listes" : "messages"} SET hidden = 1 WHERE id = ?`).bind(parseInt(b.id, 10)).run(), json2({ ok: !0 })) : json2({ error: "Non autoris\xE9." }, 403) : json2({ error: "Introuvable." }, 404);
 }
 
 // cf/src/presse.mjs
@@ -388,157 +559,6 @@ async function cours(request, ctx, env) {
   return frais ? reponse2(frais, 0) : Response.json({ error: "Cours indisponibles pour le moment" }, { status: 503 });
 }
 
-// cf/src/compte.mjs
-var json2 = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA2 = [
-  "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
-  "CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)",
-  "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))"
-], ready2 = !1;
-async function initCompte(db) {
-  if (!ready2) {
-    for (let q of SCHEMA2) await db.prepare(q).run();
-    ready2 = !0;
-  }
-}
-var today = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-async function visitor(request, env = {}) {
-  let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + today() + "|" + (env.HASH_SALT || "bilan-sel-2026")));
-  return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
-}
-var sha256hex = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join(""), cookieSession = (request) => {
-  let m = (request.headers.get("cookie") || "").match(/(?:^|;\s*)bilan_s=([a-f0-9]{64})(?:;|$)/);
-  return m ? m[1] : null;
-}, SESS = /* @__PURE__ */ new WeakMap();
-function sessionCompte(request, env) {
-  return !env || !env.DB ? Promise.resolve(null) : (SESS.has(request) || SESS.set(request, (async () => {
-    let t = cookieSession(request);
-    if (!t) return null;
-    try {
-      return await env.DB.prepare("SELECT c.* FROM sessions s JOIN comptes c ON c.id = s.compte WHERE s.h = ? AND s.expires > ?").bind(await sha256hex(t), Date.now()).first() || null;
-    } catch {
-      return null;
-    }
-  })()), SESS.get(request));
-}
-async function premiumOf(request, env) {
-  if (!env || !env.DB) return null;
-  let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
-  if (!t) {
-    let c = await sessionCompte(request, env);
-    t = c && c.premium || "";
-  }
-  if (!t) return null;
-  await initCompte(env.DB);
-  let a = await env.DB.prepare("SELECT * FROM abonnes WHERE token = ?").bind(t).first();
-  if (!a) return null;
-  if (a.until < Date.now() && a.sub_id && env.STRIPE_SECRET)
-    try {
-      let s = await stripe(env, `subscriptions/${a.sub_id}`);
-      if (["active", "trialing", "past_due"].includes(s.status)) {
-        let until = s.current_period_end * 1e3 + 2592e5;
-        await env.DB.prepare("UPDATE abonnes SET until = ? WHERE token = ?").bind(until, t).run(), a = { ...a, until };
-      }
-    } catch {
-    }
-  return a.until > Date.now() ? a : null;
-}
-async function stripe(env, path) {
-  let r = await fetch("https://api.stripe.com/v1/" + path, { headers: { authorization: "Bearer " + env.STRIPE_SECRET } }), j = await r.json();
-  if (!r.ok) throw new Error(j.error && j.error.message || "Stripe " + r.status);
-  return j;
-}
-var newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
-async function premium(request, env) {
-  if (!env || !env.DB) return json2({ error: "Indisponible pour le moment." }, 503);
-  await initCompte(env.DB);
-  let url = new URL(request.url), path = url.pathname;
-  if (path === "/api/premium/offres") return json2({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)) });
-  if (path === "/api/premium/statut") {
-    let p = await premiumOf(request, env);
-    return json2(p ? { premium: !0, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1\u2026$2") : null } : { premium: !1 });
-  }
-  if (path === "/api/premium/activer") {
-    if (!env.STRIPE_SECRET) return json2({ error: "Le paiement n'est pas encore configur\xE9." }, 503);
-    let sid = (url.searchParams.get("session_id") || "").replace(/[^A-Za-z0-9_]/g, "").slice(0, 200);
-    if (!sid.startsWith("cs_")) return json2({ error: "Paiement introuvable." }, 400);
-    let old = await env.DB.prepare("SELECT token FROM abonnes WHERE session = ?").bind(sid).first();
-    if (old) return json2({ token: old.token });
-    try {
-      let s = await stripe(env, `checkout/sessions/${sid}`);
-      if (!(s.status === "complete" && (s.payment_status === "paid" || s.payment_status === "no_payment_required"))) return json2({ error: "Le paiement n'est pas encore confirm\xE9. R\xE9essayez dans une minute." }, 402);
-      let plan = "unique", until = Date.now() + 368 * 864e5, sub = null;
-      if (s.mode === "subscription" && s.subscription) {
-        sub = typeof s.subscription == "string" ? s.subscription : s.subscription.id;
-        let so = await stripe(env, `subscriptions/${sub}`);
-        plan = "mensuel", until = so.current_period_end * 1e3 + 3 * 864e5;
-      }
-      let token = newToken(), email = s.customer_details && s.customer_details.email || s.customer_email || null;
-      return await env.DB.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run(), json2({ token, plan });
-    } catch (e) {
-      return json2({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 502);
-    }
-  }
-  if (path === "/api/premium/retrouver" && request.method === "POST") {
-    let b = {};
-    try {
-      b = await request.json();
-    } catch {
-    }
-    let email = String(b.email || "").trim().toLowerCase(), rows = (await env.DB.prepare("SELECT token, plan FROM abonnes WHERE email = ? AND until > ?").bind(email, Date.now()).all()).results || [];
-    if (rows.length)
-      try {
-        await sendMail(env, email, "Votre code d'acc\xE8s bilan. Premium", `Bonjour,
-
-Voici votre code d'acc\xE8s Premium : ${rows[0].token}
-
-Sur le site, ouvrez la page Premium et collez ce code dans \xAB J'ai d\xE9j\xE0 un code \xBB.
-
-bilan.`);
-      } catch {
-        return json2({ error: "L'envoi d'e-mail n'est pas encore disponible : \xE9crivez-nous pour retrouver votre acc\xE8s." }, 503);
-      }
-    return json2({ ok: !0 });
-  }
-  if (path === "/api/premium/portail") {
-    let p = await premiumOf(request, env);
-    if (!p || !p.sub_id || !env.STRIPE_SECRET) return json2({ error: "Aucun abonnement mensuel actif." }, 400);
-    try {
-      let sub = await stripe(env, `subscriptions/${p.sub_id}`), r = await fetch("https://api.stripe.com/v1/billing_portal/sessions", { method: "POST", headers: { authorization: "Bearer " + env.STRIPE_SECRET, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ customer: sub.customer, return_url: url.origin + "/premium" }) }), j = await r.json();
-      if (!r.ok) throw new Error(j.error && j.error.message);
-      return json2({ url: j.url });
-    } catch (e) {
-      return json2({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 502);
-    }
-  }
-  return json2({ error: "Introuvable." }, 404);
-}
-var PROVIDERS = [
-  ["brevo", (env) => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text, htmlContent: html || void 0 }) })],
-  ["mailjet", (env) => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "bilan." }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || void 0 }] }) })],
-  ["resend", (env) => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `bilan. <${env.MAIL_FROM}>`, to, subject, text, html: html || void 0 }) })]
-], mailReady = (env) => !!(env.MAIL_FROM && PROVIDERS.some(([, on]) => on(env)));
-async function mailCapacity(env) {
-  await initCompte(env.DB);
-  let left = 0;
-  for (let [name, on, max] of PROVIDERS) {
-    if (!on(env)) continue;
-    let r = await env.DB.prepare("SELECT n FROM mail_compte WHERE fournisseur = ? AND jour = ?").bind(name, today()).first();
-    left += Math.max(0, max - (r ? r.n : 0));
-  }
-  return left;
-}
-async function sendMail(env, to, subject, text, html = "") {
-  if (!mailReady(env)) throw new Error("envoi non configur\xE9");
-  await initCompte(env.DB);
-  for (let [name, on, max, send] of PROVIDERS) {
-    if (!on(env)) continue;
-    let r = await env.DB.prepare("SELECT n FROM mail_compte WHERE fournisseur = ? AND jour = ?").bind(name, today()).first();
-    if (!(r && r.n >= max || !(await send(env, to, subject, text, html)).ok))
-      return await env.DB.prepare("INSERT INTO mail_compte (fournisseur, jour, n) VALUES (?, ?, 1) ON CONFLICT (fournisseur, jour) DO UPDATE SET n = n + 1").bind(name, today()).run(), name;
-  }
-  throw new Error("quota d'envoi du jour atteint");
-}
-
 // cf/src/veille.mjs
 var SCHEMA3 = ["CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)"], ready3 = !1;
 async function init2(db) {
@@ -606,7 +626,7 @@ bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en
     return await env.DB.prepare("DELETE FROM veille WHERE token = ?").bind(t).run(), page("C'est fait : vous ne recevrez plus d'e-mails de bilan. Votre adresse a \xE9t\xE9 supprim\xE9e.");
   }
   if ((path === "/api/veille/envoi" || path === "/api/veille/alertes") && request.method === "POST") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json3({ error: "Non autoris\xE9." }, 403);
+    if (!adminOk(request, env)) return json3({ error: "Non autoris\xE9." }, 403);
     if (!mailReady(env)) return json3({ error: "Envoi non configur\xE9." }, 503);
     let cap = Math.min(50, await mailCapacity(env));
     if (!cap) return json3({ envoyes: 0, reste: 0, info: "quota du jour atteint" });
@@ -1239,15 +1259,15 @@ async function limite(env, cles) {
 async function echec(env, cles) {
   for (let c of cles) await env.DB.prepare("INSERT INTO essais (cle, at) VALUES (?, ?)").bind(c, Date.now()).run();
 }
-var TROP = () => json2({ error: "Trop de tentatives. Par s\xE9curit\xE9, r\xE9essayez dans un quart d'heure." }, 429);
+var TROP = () => json({ error: "Trop de tentatives. Par s\xE9curit\xE9, r\xE9essayez dans un quart d'heure." }, 429);
 async function lire(request) {
   let t = await request.text();
-  if (t.length > 4e5) return { err: json2({ error: "Donn\xE9es trop volumineuses." }, 413) };
+  if (t.length > 4e5) return { err: json({ error: "Donn\xE9es trop volumineuses." }, 413) };
   try {
     let b = t ? JSON.parse(t) : {};
-    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json2({ error: "Requ\xEAte illisible." }, 400) };
+    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json({ error: "Requ\xEAte illisible." }, 400) };
   } catch {
-    return { err: json2({ error: "Requ\xEAte illisible." }, 400) };
+    return { err: json({ error: "Requ\xEAte illisible." }, 400) };
   }
 }
 var parse = (s, d) => {
@@ -1407,16 +1427,16 @@ var publicBilan = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k
   return l.setUTCDate(l.getUTCDate() - (l.getUTCDay() + 6) % 7 + (+m[2] - 1) * 7 - 7), semaineIso(l.toISOString().slice(0, 10));
 };
 async function espace(request, env) {
-  if (!env || !env.DB) return json2({ error: "L'espace personnel est indisponible pour le moment." }, 503);
+  if (!env || !env.DB) return json({ error: "L'espace personnel est indisponible pour le moment." }, 503);
   await init3(env.DB);
   let url = new URL(request.url), path = url.pathname.replace(/\/+$/, ""), m = request.method;
   if (m !== "GET" && m !== "HEAD" && path !== "/api/espace/tache") {
     let o = request.headers.get("origin");
     if (o && o !== "null")
       try {
-        if (new URL(o).host !== url.host) return json2({ error: "Origine refus\xE9e." }, 403);
+        if (new URL(o).host !== url.host) return json({ error: "Origine refus\xE9e." }, 403);
       } catch {
-        return json2({ error: "Origine refus\xE9e." }, 403);
+        return json({ error: "Origine refus\xE9e." }, 403);
       }
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
@@ -1424,19 +1444,19 @@ async function espace(request, env) {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let ip = "s:" + await visitor(request, env);
-    if (await limite(env, [ip])) return json2({ error: "Trop de comptes cr\xE9\xE9s depuis cette connexion. R\xE9essayez plus tard." }, 429);
+    if (await limite(env, [ip])) return json({ error: "Trop de comptes cr\xE9\xE9s depuis cette connexion. R\xE9essayez plus tard." }, 429);
     let email = String(b.email || "").trim().toLowerCase(), mdp = b.motdepasse;
-    if (!emailOk(email)) return json2({ error: "Adresse e-mail invalide." }, 400);
-    if (!mdpOk(mdp)) return json2({ error: "Le mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    if (!emailOk(email)) return json({ error: "Adresse e-mail invalide." }, 400);
+    if (!mdpOk(mdp)) return json({ error: "Le mot de passe doit faire au moins 10 caract\xE8res." }, 400);
     let v = valider(b, !1);
-    if (await echec(env, [ip]), await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE email = ?").bind(email).first()) return json2({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
+    if (await echec(env, [ip]), await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE email = ?").bind(email).first()) return json({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
     let id = alea(16), { sel, hash } = await nouveauHash(mdp), code = nouveauCode();
     try {
       await env.DB.prepare("INSERT INTO comptes (id, email, hash, sel, created, secours, teaser) VALUES (?, ?, ?, ?, ?, ?, 0)").bind(id, email, hash, sel, Date.now(), await hashCode(code)).run();
     } catch {
-      return json2({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
+      return json({ error: "Impossible de cr\xE9er un compte avec cette adresse. Si vous en avez d\xE9j\xE0 un, connectez-vous." }, 409);
     }
-    return await enregistrer(env, id, v.data), avecCookie(json2({ ok: !0, email, code_secours: code, ...v.ignores.length ? { ignores: v.ignores } : {} }), await ouvrirSession(env, id));
+    return await enregistrer(env, id, v.data), avecCookie(json({ ok: !0, email, code_secours: code, ...v.ignores.length ? { ignores: v.ignores } : {} }), await ouvrirSession(env, id));
   }
   if (path === "/api/espace/connexion" && m === "POST") {
     let { b, err: err2 } = await lire(request);
@@ -1444,32 +1464,32 @@ async function espace(request, env) {
     let email = String(b.email || "").trim().toLowerCase().slice(0, 254), cles = ["e:" + email, "i:" + await visitor(request, env)];
     if (await limite(env, cles)) return TROP();
     let c2 = emailOk(email) ? await env.DB.prepare("SELECT * FROM comptes WHERE email = ?").bind(email).first() : null;
-    return await verifie(String(b.motdepasse || "").slice(0, 200), c2) ? (await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json2({ ok: !0, email: c2.email }), await ouvrirSession(env, c2.id))) : (await echec(env, cles), json2({ error: "Adresse ou mot de passe incorrect." }, 401));
+    return await verifie(String(b.motdepasse || "").slice(0, 200), c2) ? (await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json({ ok: !0, email: c2.email }), await ouvrirSession(env, c2.id))) : (await echec(env, cles), json({ error: "Adresse ou mot de passe incorrect." }, 401));
   }
   if (path === "/api/espace/secours" && m === "POST") {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let email = String(b.email || "").trim().toLowerCase().slice(0, 254), cles = ["e:" + email, "i:" + await visitor(request, env)];
     if (await limite(env, cles)) return TROP();
-    if (!mdpOk(b.nouveau)) return json2({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    if (!mdpOk(b.nouveau)) return json({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
     let c2 = emailOk(email) ? await env.DB.prepare("SELECT * FROM comptes WHERE email = ?").bind(email).first() : null;
     if (!c2 || !await codeOk(b.code, c2.secours))
-      return await echec(env, cles), json2({ error: "Adresse ou code de secours incorrect." }, 401);
+      return await echec(env, cles), json({ error: "Adresse ou code de secours incorrect." }, 401);
     let { sel, hash } = await nouveauHash(b.nouveau), code = nouveauCode();
-    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ?, secours = ? WHERE id = ?").bind(hash, sel, await hashCode(code), c2.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ?").bind(c2.id).run(), await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json2({ ok: !0, email: c2.email, code_secours: code }), await ouvrirSession(env, c2.id));
+    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ?, secours = ? WHERE id = ?").bind(hash, sel, await hashCode(code), c2.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ?").bind(c2.id).run(), await env.DB.prepare("DELETE FROM essais WHERE cle = ?").bind(cles[0]).run(), avecCookie(json({ ok: !0, email: c2.email, code_secours: code }), await ouvrirSession(env, c2.id));
   }
   if (path === "/api/espace/deconnexion" && m === "POST") {
     let t = cookieSession(request);
-    return t && await env.DB.prepare("DELETE FROM sessions WHERE h = ?").bind(await sha256hex(t)).run(), avecCookie(json2({ ok: !0 }), EFFACE);
+    return t && await env.DB.prepare("DELETE FROM sessions WHERE h = ?").bind(await sha256hex(t)).run(), avecCookie(json({ ok: !0 }), EFFACE);
   }
   let c = await sessionCompte(request, env);
   if (path === "/api/espace/moi" && m === "GET") {
-    if (!c) return json2({ connecte: !1 });
+    if (!c) return json({ connecte: !1 });
     let [d, nl, sess] = await Promise.all([
       env.DB.prepare("SELECT favoris, portefeuille, profil, updated FROM donnees WHERE compte = ?").bind(c.id).first(),
       env.DB.prepare("SELECT COUNT(*) AS n FROM notifs WHERE compte = ? AND lu = 0").bind(c.id).first(),
       env.DB.prepare("SELECT h, expires FROM sessions WHERE h = ?").bind(await sha256hex(cookieSession(request))).first()
-    ]), p = await premiumDe(env, c.premium, url.origin), dernier = await env.DB.prepare("SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1").bind(c.id).first(), r = json2({
+    ]), p = await premiumDe(env, c.premium, url.origin), dernier = await env.DB.prepare("SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1").bind(c.id).first(), r = json({
       connecte: !0,
       email: c.email,
       premium: !!p,
@@ -1484,47 +1504,47 @@ async function espace(request, env) {
     });
     return sess && sess.expires - Date.now() < SESSION_MS - 7 * JOUR && (await env.DB.prepare("UPDATE sessions SET expires = ? WHERE h = ?").bind(Date.now() + SESSION_MS, sess.h).run(), avecCookie(r, `bilan_s=${cookieSession(request)}; ${COOKIE}; Max-Age=${SESSION_MS / 1e3}`)), r;
   }
-  if (!c) return json2({ error: "Connectez-vous pour acc\xE9der \xE0 votre espace.", connecte: !1 }, 401);
+  if (!c) return json({ error: "Connectez-vous pour acc\xE9der \xE0 votre espace.", connecte: !1 }, 401);
   if (path === "/api/espace/donnees" && (m === "PUT" || m === "POST")) {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let v = valider(b, !0);
-    return v.error ? json2({ error: v.error }, 400) : (await enregistrer(env, c.id, v.data), json2({ ok: !0 }));
+    return v.error ? json({ error: v.error }, 400) : (await enregistrer(env, c.id, v.data), json({ ok: !0 }));
   }
   if (path === "/api/espace/motdepasse" && m === "POST") {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let cles = ["e:" + c.email];
     if (await limite(env, cles)) return TROP();
-    if (!mdpOk(b.nouveau)) return json2({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
+    if (!mdpOk(b.nouveau)) return json({ error: "Le nouveau mot de passe doit faire au moins 10 caract\xE8res." }, 400);
     if (!await verifie(String(b.ancien || "").slice(0, 200), c))
-      return await echec(env, cles), json2({ error: "Mot de passe actuel incorrect." }, 401);
+      return await echec(env, cles), json({ error: "Mot de passe actuel incorrect." }, 401);
     let { sel, hash } = await nouveauHash(b.nouveau);
-    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ? WHERE id = ?").bind(hash, sel, c.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ? AND h <> ?").bind(c.id, await sha256hex(cookieSession(request))).run(), json2({ ok: !0 });
+    return await env.DB.prepare("UPDATE comptes SET hash = ?, sel = ? WHERE id = ?").bind(hash, sel, c.id).run(), await env.DB.prepare("DELETE FROM sessions WHERE compte = ? AND h <> ?").bind(c.id, await sha256hex(cookieSession(request))).run(), json({ ok: !0 });
   }
   if (path === "/api/espace/preferences" && m === "POST") {
     let { b, err: err2 } = await lire(request);
-    return err2 || (typeof b.teaser != "boolean" ? json2({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json2({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
+    return err2 || (typeof b.teaser != "boolean" ? json({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
   }
   if (path === "/api/espace/reco" && (m === "GET" || m === "POST")) {
     let row = await env.DB.prepare("SELECT profil FROM donnees WHERE compte = ?").bind(c.id).first(), p0 = parse(row && row.profil, null), profil = p0 && typeof p0 == "object" && !Array.isArray(p0) ? p0 : {};
-    if (m === "GET") return json2({ reponses: Object.fromEntries(RECO_CLES.filter((k) => Number.isInteger(profil[k])).map((k) => [k, profil[k]])), retours: profil.reco && Array.isArray(profil.reco.retours) ? profil.reco.retours : [] });
+    if (m === "GET") return json({ reponses: Object.fromEntries(RECO_CLES.filter((k) => Number.isInteger(profil[k])).map((k) => [k, profil[k]])), retours: profil.reco && Array.isArray(profil.reco.retours) ? profil.reco.retours : [] });
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let v = validerReco(b);
-    if (v.error) return json2({ error: v.error }, 400);
+    if (v.error) return json({ error: v.error }, 400);
     let neuf = { ...profil, ...v.reponses, ...v.retours ? { reco: { retours: v.retours, maj: Date.now() } } : {} };
-    return taille(neuf) > MAX_CHAMP ? json2({ error: "Profil trop volumineux (60 Ko au plus)." }, 400) : (await enregistrer(env, c.id, { profil: JSON.stringify(neuf) }), json2({ ok: !0 }));
+    return taille(neuf) > MAX_CHAMP ? json({ error: "Profil trop volumineux (60 Ko au plus)." }, 400) : (await enregistrer(env, c.id, { profil: JSON.stringify(neuf) }), json({ ok: !0 }));
   }
   if (path === "/api/espace/rapport" && (m === "GET" || m === "POST")) {
     let row = await env.DB.prepare("SELECT profil FROM donnees WHERE compte = ?").bind(c.id).first(), profil = parse(row && row.profil, null) || {}, p = await premiumDe(env, c.premium, url.origin), max = p ? RAPPORT_MAX_SECTEURS.premium : RAPPORT_MAX_SECTEURS.gratuit, out = (r) => ({ rapport: r, defaut: RAPPORT_DEFAUT, premium: !!p, max_secteurs: max, secteurs: SECTEURS2 });
-    if (m === "GET") return json2(out(normaliseRapport(profil.rapport, max)));
+    if (m === "GET") return json(out(normaliseRapport(profil.rapport, max)));
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let v = validerRapport(b, !!p);
-    if (v.error) return json2({ error: v.error }, 400);
+    if (v.error) return json({ error: v.error }, 400);
     let neuf = { ...typeof profil == "object" && !Array.isArray(profil) ? profil : {}, rapport: v.rapport };
-    return taille(neuf) > MAX_CHAMP ? json2({ error: "Profil trop volumineux (60 Ko au plus)." }, 400) : (await enregistrer(env, c.id, { profil: JSON.stringify(neuf) }), json2({ ok: !0, ...out(v.rapport), ...v.coupe ? { limite: `Sans Premium, le rapport suit ${max} secteurs au plus : les premiers choisis sont gard\xE9s.` } : {} }));
+    return taille(neuf) > MAX_CHAMP ? json({ error: "Profil trop volumineux (60 Ko au plus)." }, 400) : (await enregistrer(env, c.id, { profil: JSON.stringify(neuf) }), json({ ok: !0, ...out(v.rapport), ...v.coupe ? { limite: `Sans Premium, le rapport suit ${max} secteurs au plus : les premiers choisis sont gard\xE9s.` } : {} }));
   }
   if (path === "/api/espace/supprimer" && m === "POST") {
     let { b, err: err2 } = await lire(request);
@@ -1532,45 +1552,45 @@ async function espace(request, env) {
     let cles = ["e:" + c.email];
     if (await limite(env, cles)) return TROP();
     if (!await verifie(String(b.motdepasse || "").slice(0, 200), c))
-      return await echec(env, cles), json2({ error: "Mot de passe incorrect." }, 401);
+      return await echec(env, cles), json({ error: "Mot de passe incorrect." }, 401);
     for (let q of ["DELETE FROM notifs WHERE compte = ?", "DELETE FROM bilans WHERE compte = ?", "DELETE FROM donnees WHERE compte = ?", "DELETE FROM sessions WHERE compte = ?", "DELETE FROM comptes WHERE id = ?"]) await env.DB.prepare(q).bind(c.id).run();
-    return avecCookie(json2({ ok: !0 }), EFFACE);
+    return avecCookie(json({ ok: !0 }), EFFACE);
   }
   if (path === "/api/espace/premium" && m === "POST") {
     let { b, err: err2 } = await lire(request);
     if (err2) return err2;
     let token = String(b.token || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
-    if (!token) return json2({ error: "Collez votre code Premium." }, 400);
+    if (!token) return json({ error: "Collez votre code Premium." }, 400);
     let p = await premiumDe(env, token, url.origin);
-    return p ? await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE premium = ? AND id <> ?").bind(token, c.id).first() ? json2({ error: "Ce code Premium est d\xE9j\xE0 rattach\xE9 \xE0 un autre compte." }, 409) : (await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(token, c.id).run(), json2({ ok: !0, premium: !0, plan: p.plan, premium_jusqu_au: p.until })) : json2({ error: "Code Premium inconnu ou expir\xE9." }, 404);
+    return p ? await env.DB.prepare("SELECT 1 AS x FROM comptes WHERE premium = ? AND id <> ?").bind(token, c.id).first() ? json({ error: "Ce code Premium est d\xE9j\xE0 rattach\xE9 \xE0 un autre compte." }, 409) : (await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(token, c.id).run(), json({ ok: !0, premium: !0, plan: p.plan, premium_jusqu_au: p.until })) : json({ error: "Code Premium inconnu ou expir\xE9." }, 404);
   }
   if (path === "/api/espace/bilan" && m === "GET") {
     let auj = jourParis(), cur = semaineIso(auj), semaine = url.searchParams.get("semaine") || cur, apercu = url.searchParams.get("apercu") === "1";
-    if (!/^\d{4}-W\d{2}$/.test(semaine)) return json2({ error: "Semaine invalide (format 2026-W44)." }, 400);
+    if (!/^\d{4}-W\d{2}$/.test(semaine)) return json({ error: "Semaine invalide (format 2026-W44)." }, 400);
     let row = await env.DB.prepare("SELECT contenu, vu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, semaine).first(), b = row ? parse(row.contenu, null) : null;
     if (semaine === cur) {
       let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille, profil FROM donnees WHERE compte = ?").bind(c.id).first(), prec = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, precedenteDe(cur)).first(), r = await assurerBilan(env, d, c.id, don, cur, row, prec);
       b = r.c, r.change && !r.stocke && (b = { ...b, vide: !0 });
-    } else if (!b || semaine > cur) return json2({ error: "Aucun bilan pour cette semaine." }, 404);
+    } else if (!b || semaine > cur) return json({ error: "Aucun bilan pour cette semaine." }, 404);
     apercu || await env.DB.prepare("UPDATE bilans SET vu = 1 WHERE compte = ? AND semaine = ?").bind(c.id, semaine).run();
     let hist = apercu ? [] : ((await env.DB.prepare("SELECT semaine, contenu FROM bilans WHERE compte = ? AND semaine <> ? ORDER BY semaine DESC LIMIT 12").bind(c.id, semaine).all()).results || []).map((h) => {
       let x = parse(h.contenu, {}) || {};
       return { semaine: h.semaine, moyenne: x.moyenne ?? null, portefeuille_pct: (x.portefeuille && x.portefeuille.var_pct) ?? null, portefeuille_eur: (x.portefeuille && x.portefeuille.var_eur) ?? null };
     });
-    return json2({ ...publicBilan(b), provisoire: semaine === cur && !b._final, en_cours: semaine === cur, historique: hist });
+    return json({ ...publicBilan(b), provisoire: semaine === cur && !b._final, en_cours: semaine === cur, historique: hist });
   }
   if (path === "/api/espace/notifs" && m === "GET") {
     let rows = (await env.DB.prepare("SELECT id, at, type, texte, lien, lu FROM notifs WHERE compte = ? ORDER BY at DESC, id DESC LIMIT 50").bind(c.id).all()).results || [];
-    return json2({ notifs: rows.map((r) => ({ ...r, lu: !!r.lu })), nonlus: rows.filter((r) => !r.lu).length });
+    return json({ notifs: rows.map((r) => ({ ...r, lu: !!r.lu })), nonlus: rows.filter((r) => !r.lu).length });
   }
-  return path === "/api/espace/notifs/lu" && m === "POST" ? (await env.DB.prepare("UPDATE notifs SET lu = 1 WHERE compte = ? AND lu = 0").bind(c.id).run(), json2({ ok: !0 })) : json2({ error: "Introuvable." }, 404);
+  return path === "/api/espace/notifs/lu" && m === "POST" ? (await env.DB.prepare("UPDATE notifs SET lu = 1 WHERE compte = ? AND lu = 0").bind(c.id).run(), json({ ok: !0 })) : json({ error: "Introuvable." }, 404);
 }
 async function notifier(env, compteId, type, texte, lien2, jour2, extra = "") {
   let r = await env.DB.prepare("INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)").bind(compteId, Date.now(), type, texte.slice(0, 400), lien2, [type, lien2, jour2, extra].join("|").slice(0, 500)).run();
   return r && r.meta && r.meta.changes || 0;
 }
 async function tache(request, env, url) {
-  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Non autoris\xE9." }, 403);
+  if (!adminOk(request, env)) return json({ error: "Non autoris\xE9." }, 403);
   let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || quoi === "jour" || !quoi && wd === 6, cutoff = now - 6 * 36e5, parJour = (quoi === "jour" || !quoi && wd === 6) && [6, 0, 1].includes(wd), cible = parJour && wd === 1 ? precedenteDe(sem) : sem, W = modeBilan ? parJour ? "(c.last_tache < ? OR (c.last_semaine IS NOT ? AND COALESCE(json_extract(d.profil, '$.rapport.jour'), 6) = ?))" : "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? parJour ? [cutoff, cible, wd] : [cutoff, cible] : [cutoff], FROM = `FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W}`, rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
   if (rows.length) {
     let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre2 = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
@@ -1618,7 +1638,7 @@ bilan. Informations factuelles, sans conseil en investissement.`,
     await env.DB.prepare("DELETE FROM notifs WHERE at < ?").bind(now - 90 * JOUR).run(), await env.DB.prepare("DELETE FROM essais WHERE at < ?").bind(now - JOUR).run(), await env.DB.prepare("DELETE FROM sessions WHERE expires < ?").bind(now).run();
   }
   let reste = (await env.DB.prepare(`SELECT COUNT(*) AS n ${FROM}`).bind(...B).first() || {}).n || 0;
-  return json2({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
+  return json({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
 }
 var EXEMPLE_PROFIL = {
   favoris: ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple"],
@@ -1657,24 +1677,24 @@ async function empreinte(request) {
   return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 async function signaler(request, env) {
-  if (!env.DB) return json2({ error: "Service indisponible." }, 503);
+  if (!env.DB) return json({ error: "Service indisponible." }, 503);
   if (await init4(env.DB), request.method === "GET") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json2({ error: "Acc\xE8s r\xE9serv\xE9." }, 403);
+    if (!adminOk(request, env)) return json({ error: "Acc\xE8s r\xE9serv\xE9." }, 403);
     let r = await env.DB.prepare("SELECT id, page, quoi, texte, created, traite FROM signalements ORDER BY id DESC LIMIT 200").all();
-    return json2({ items: r.results || [] });
+    return json({ items: r.results || [] });
   }
-  if (request.method !== "POST") return json2({ error: "M\xE9thode non prise en charge." }, 405);
+  if (request.method !== "POST") return json({ error: "M\xE9thode non prise en charge." }, 405);
   let b;
   try {
     b = await request.json();
   } catch {
-    return json2({ error: "Requ\xEAte illisible." }, 400);
+    return json({ error: "Requ\xEAte illisible." }, 400);
   }
   let page2 = String(b.page || "").slice(0, 200), quoi = QUOI.includes(b.quoi) ? b.quoi : "autre", texte = String(b.texte || "").replace(/\s+/g, " ").trim().slice(0, 1e3);
-  if (!/^\/[a-z0-9/?=&%._-]*$/i.test(page2)) return json2({ error: "Page inconnue." }, 400);
-  if (texte.length < 10) return json2({ error: "D\xE9crivez l'erreur en quelques mots (10 caract\xE8res au moins)." }, 400);
+  if (!/^\/[a-z0-9/?=&%._-]*$/i.test(page2)) return json({ error: "Page inconnue." }, 400);
+  if (texte.length < 10) return json({ error: "D\xE9crivez l'erreur en quelques mots (10 caract\xE8res au moins)." }, 400);
   let who2 = await empreinte(request), depuis = Date.now() - 864e5, n = await env.DB.prepare("SELECT COUNT(*) AS n FROM signalements WHERE who = ? AND created > ?").bind(who2, depuis).first();
-  return n && n.n >= 5 ? json2({ error: "Merci : vous avez d\xE9j\xE0 envoy\xE9 5 signalements aujourd'hui." }, 429) : (await env.DB.prepare("INSERT INTO signalements (page, quoi, texte, who, created) VALUES (?, ?, ?, ?, ?)").bind(page2, quoi, texte, who2, Date.now()).run(), json2({ ok: !0 }));
+  return n && n.n >= 5 ? json({ error: "Merci : vous avez d\xE9j\xE0 envoy\xE9 5 signalements aujourd'hui." }, 429) : (await env.DB.prepare("INSERT INTO signalements (page, quoi, texte, who, created) VALUES (?, ?, ?, ?, ?)").bind(page2, quoi, texte, who2, Date.now()).run(), json({ ok: !0 }));
 }
 
 // cf/src/push.mjs
@@ -1837,59 +1857,59 @@ async function pousser(env, { origin, budget = 30 } = {}) {
 }
 async function lire2(request) {
   let t = await request.text();
-  if (t.length > 8e3) return { err: json2({ error: "Requ\xEAte trop volumineuse." }, 413) };
+  if (t.length > 8e3) return { err: json({ error: "Requ\xEAte trop volumineuse." }, 413) };
   try {
     let b = t ? JSON.parse(t) : {};
-    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json2({ error: "Requ\xEAte illisible." }, 400) };
+    return b && typeof b == "object" && !Array.isArray(b) ? { b } : { err: json({ error: "Requ\xEAte illisible." }, 400) };
   } catch {
-    return { err: json2({ error: "Requ\xEAte illisible." }, 400) };
+    return { err: json({ error: "Requ\xEAte illisible." }, 400) };
   }
 }
 async function push(request, env) {
-  if (!env || !env.DB) return json2({ error: "Les notifications sont indisponibles pour le moment." }, 503);
+  if (!env || !env.DB) return json({ error: "Les notifications sont indisponibles pour le moment." }, 503);
   await init5(env.DB);
   let url = new URL(request.url), path = url.pathname.replace(/\/+$/, ""), m = request.method;
-  if (path === "/api/push/cle" && m === "GET") return json2({ cle: (await clesVapid(env)).public });
-  if (m !== "POST") return json2({ error: "Introuvable." }, 404);
+  if (path === "/api/push/cle" && m === "GET") return json({ cle: (await clesVapid(env)).public });
+  if (m !== "POST") return json({ error: "Introuvable." }, 404);
   let o = request.headers.get("origin");
   if (o && o !== "null")
     try {
-      if (new URL(o).host !== url.host) return json2({ error: "Origine refus\xE9e." }, 403);
+      if (new URL(o).host !== url.host) return json({ error: "Origine refus\xE9e." }, 403);
     } catch {
-      return json2({ error: "Origine refus\xE9e." }, 403);
+      return json({ error: "Origine refus\xE9e." }, 403);
     }
   let { b, err: err2 } = await lire2(request);
   if (err2) return err2;
   if (path === "/api/push/desabonnement")
-    return typeof b.endpoint != "string" || b.endpoint.length > 1024 ? json2({ error: "Abonnement invalide." }, 400) : (await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ?").bind(b.endpoint).run(), json2({ ok: !0 }));
+    return typeof b.endpoint != "string" || b.endpoint.length > 1024 ? json({ error: "Abonnement invalide." }, 400) : (await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ?").bind(b.endpoint).run(), json({ ok: !0 }));
   if (path === "/api/push/etat") {
-    if (typeof b.endpoint != "string" || b.endpoint.length > 1024) return json2({ abonne: !1 });
+    if (typeof b.endpoint != "string" || b.endpoint.length > 1024) return json({ abonne: !1 });
     let [row, c] = await Promise.all([env.DB.prepare("SELECT compte, choix FROM push_abonnements WHERE endpoint = ?").bind(b.endpoint).first(), sessionCompte(request, env)]);
-    return row ? c && row.compte !== c.id ? json2({ abonne: !1, autre_compte: !0, choix: normChoix(null) }) : json2({ abonne: !0, choix: normChoix(parse2(row.choix, {})) }) : json2({ abonne: !1, choix: normChoix(null) });
+    return row ? c && row.compte !== c.id ? json({ abonne: !1, autre_compte: !0, choix: normChoix(null) }) : json({ abonne: !0, choix: normChoix(parse2(row.choix, {})) }) : json({ abonne: !1, choix: normChoix(null) });
   }
   if (path === "/api/push/abonnement") {
     let a = b.abonnement || {}, k = a.keys || {};
-    if (!endpointOk(a.endpoint)) return json2({ error: "Service de notification non reconnu." }, 400);
-    if (!cleOk(k.p256dh, 65) || !cleOk(k.auth, 16)) return json2({ error: "Cl\xE9s de l'abonnement invalides." }, 400);
+    if (!endpointOk(a.endpoint)) return json({ error: "Service de notification non reconnu." }, 400);
+    if (!cleOk(k.p256dh, 65) || !cleOk(k.auth, 16)) return json({ error: "Cl\xE9s de l'abonnement invalides." }, 400);
     let compte = null, base2 = null, c = await sessionCompte(request, env);
     if (c && (compte = c.id), typeof b.ancien == "string" && b.ancien !== a.endpoint) {
       let old = await env.DB.prepare("SELECT compte, choix FROM push_abonnements WHERE endpoint = ?").bind(b.ancien).first();
       old && (!compte || old.compte === compte) && (compte = old.compte, base2 = parse2(old.choix, null));
     }
-    if (!compte) return json2({ error: "Connectez-vous \xE0 votre espace pour activer les notifications.", connecte: !1 }, 401);
+    if (!compte) return json({ error: "Connectez-vous \xE0 votre espace pour activer les notifications.", connecte: !1 }, 401);
     let prev = await env.DB.prepare("SELECT compte, choix FROM push_abonnements WHERE endpoint = ?").bind(a.endpoint).first();
     prev && prev.compte === compte && !base2 && (base2 = parse2(prev.choix, null));
     let choix = normChoix(b.choix, base2), n = await env.DB.prepare("SELECT COUNT(*) AS n FROM push_abonnements WHERE compte = ? AND endpoint <> ?").bind(compte, a.endpoint).first();
     return n && n.n >= MAX_APPAREILS && await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint IN (SELECT endpoint FROM push_abonnements WHERE compte = ? AND endpoint <> ? ORDER BY COALESCE(last_ok, created) LIMIT ?)").bind(compte, a.endpoint, n.n - MAX_APPAREILS + 1).run(), await env.DB.prepare(`INSERT INTO push_abonnements (endpoint, compte, p256dh, auth, choix, appareil, created, echecs) VALUES (?, ?, ?, ?, ?, ?, ?, 0)
       ON CONFLICT (endpoint) DO UPDATE SET p256dh = excluded.p256dh, auth = excluded.auth, choix = excluded.choix, appareil = excluded.appareil, echecs = 0,
-      created = CASE WHEN push_abonnements.compte = excluded.compte THEN push_abonnements.created ELSE excluded.created END, compte = excluded.compte`).bind(a.endpoint, compte, k.p256dh, k.auth, JSON.stringify(choix), appareil(request.headers.get("user-agent") || "").slice(0, 60), Date.now()).run(), typeof b.ancien == "string" && b.ancien !== a.endpoint && await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ? AND compte = ?").bind(b.ancien, compte).run(), json2({ ok: !0, choix });
+      created = CASE WHEN push_abonnements.compte = excluded.compte THEN push_abonnements.created ELSE excluded.created END, compte = excluded.compte`).bind(a.endpoint, compte, k.p256dh, k.auth, JSON.stringify(choix), appareil(request.headers.get("user-agent") || "").slice(0, 60), Date.now()).run(), typeof b.ancien == "string" && b.ancien !== a.endpoint && await env.DB.prepare("DELETE FROM push_abonnements WHERE endpoint = ? AND compte = ?").bind(b.ancien, compte).run(), json({ ok: !0, choix });
   }
   if (path === "/api/push/essai") {
     let c = await sessionCompte(request, env);
-    if (!c) return json2({ error: "Connectez-vous \xE0 votre espace.", connecte: !1 }, 401);
+    if (!c) return json({ error: "Connectez-vous \xE0 votre espace.", connecte: !1 }, 401);
     let row = typeof b.endpoint == "string" ? await env.DB.prepare("SELECT * FROM push_abonnements WHERE endpoint = ? AND compte = ?").bind(b.endpoint, c.id).first() : null;
-    if (!row) return json2({ error: "Cet appareil n'est pas abonn\xE9." }, 404);
-    if (Date.now() - (row.essai || 0) < 6e4) return json2({ error: "Une notification d'essai vient d'\xEAtre envoy\xE9e. R\xE9essayez dans une minute." }, 429);
+    if (!row) return json({ error: "Cet appareil n'est pas abonn\xE9." }, 404);
+    if (Date.now() - (row.essai || 0) < 6e4) return json({ error: "Une notification d'essai vient d'\xEAtre envoy\xE9e. R\xE9essayez dans une minute." }, 429);
     await env.DB.prepare("UPDATE push_abonnements SET essai = ? WHERE endpoint = ?").bind(Date.now(), row.endpoint).run();
     let s = 0;
     try {
@@ -1897,9 +1917,9 @@ async function push(request, env) {
     } catch {
     }
     let r = await resultat(env, row, s);
-    return r === "ok" ? json2({ ok: !0 }) : json2({ error: r === "supprime" ? "Cet abonnement n'est plus valide : r\xE9activez les notifications." : "Le service de notification n'a pas accept\xE9 le message. R\xE9essayez plus tard.", statut: s }, 502);
+    return r === "ok" ? json({ ok: !0 }) : json({ error: r === "supprime" ? "Cet abonnement n'est plus valide : r\xE9activez les notifications." : "Le service de notification n'a pas accept\xE9 le message. R\xE9essayez plus tard.", statut: s }, 502);
   }
-  return json2({ error: "Introuvable." }, 404);
+  return json({ error: "Introuvable." }, 404);
 }
 
 // cf/src/mcp.mjs
@@ -2488,7 +2508,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "dd383892a404f09c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "2656c5f36e498c3e", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -2508,7 +2528,9 @@ var VERSION = "dd383892a404f09c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c)
   "x-content-type-options": "nosniff",
   "x-frame-options": "SAMEORIGIN",
   "referrer-policy": "strict-origin-when-cross-origin",
-  "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()"
+  "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+  "cross-origin-opener-policy": "same-origin",
+  "x-permitted-cross-domain-policies": "none"
 };
 function tete(html, { title, desc, url, statut }) {
   let canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/"), t = [
