@@ -822,6 +822,15 @@ function rfQuartiles(s, k) { // quart inférieur et quart supérieur du secteur,
   const q = p => { const i = (n - 1) * p, lo = Math.floor(i), hi = Math.ceil(i); return vals[lo] + (vals[hi] - vals[lo]) * (i - lo); };
   return [spec[1](q(0.25)), spec[1](q(0.75))];
 }
+/* Tableau transposé (30/10, Romain) : les critères en lignes, les entreprises en colonnes ; la médiane et la fourchette du secteur en dernières colonnes.
+   Réutilisé par la page Comparer. s = l'entreprise de référence (secteur des médianes), X = cmprCtx(...) */
+function rfCmpTableHTML(s, X) {
+  const T6 = RF_CMP_ORD.map(k => CMPR_T.find(T => T.k === k)).filter(Boolean), me0 = X.F[0];
+  const head = `<tr><th scope="col" class="l lab">Critère</th>${X.F.map((F, j) => `<th scope="col" class="rf-coh${j === 0 ? " rf-me" : ""}"><a class="rf-co" href="/entreprise/${F.c.id}">${logo(F.c, 24)}<span class="nm">${esc(F.c.name)}</span></a></th>`).join("")}<th scope="col" class="rf-medh"><span class="nm">Médiane</span><small>${esc(secName(s))}</small></th><th scope="col" class="rf-medh rf-qh"><span class="nm">La moitié du secteur</span><small>du quart inférieur au supérieur</small></th></tr>`;
+  const rows = T6.map(T => { const r0 = T.val(me0, X), q = rfQuartiles(s, T.k);
+    return `<tr><th scope="row" class="l lab"><span class="rf-cth">${esc(RF_CMP_COURT[T.k])}</span><small>${esc(RF_CMP_SOUS[T.k](X))}</small></th>${X.F.map((F, j) => rfCmpCell(T, F, X).replace('<td class="num', `<td class="num${j === 0 ? " rf-me" : ""}`)).join("")}<td class="num rf-medc">${r0 && r0.medTxt ? esc(r0.medTxt) : `<span class="rf-na">–</span>`}</td><td class="num rf-medc rf-q">${q ? `${esc(q[0])} à ${esc(q[1])}` : `<span class="rf-na">–</span>`}</td></tr>`; }).join("");
+  return `<table class="t tbx rf-ctab rf-ctab-t"><caption class="sr">${esc(s.name)} et les entreprises comparées, critère par critère</caption><thead>${head}</thead><tbody>${rows}</tbody></table>`;
+}
 function concurrentsHTML(s) {
   const { peers, auto, all } = cmprFiche(s); if (!peers.length) return rfPlaceHTML(s);
   const CMAX = isPrem() ? 5 : FREE.cmp, link = "/comparer?ids=" + all.slice(0, CMAX).map(c => c.id).join(",");
@@ -829,11 +838,6 @@ function concurrentsHTML(s) {
   const titre = auto ? "Face aux entreprises comparables" : "Face à ses concurrents directs";
   if (!me0.ok) return `<section class="panel" id="concurrents"><div class="ph"><h2>${titre}</h2><a href="${link}">Comparer en détail →</a></div><div class="pb"><p class="muted" style="margin:0 0 6px">${esc(missingTxt(s, true))}</p><div class="cmpr-peers">${peers.map(c => `<a href="/entreprise/${c.id}">${logo(c, 24)}${esc(c.name)}</a>`).join("")}</div>${fiche2RangBouton(s)}</div></section>` + rfPlaceHTML(s);
   const T6 = RF_CMP_ORD.map(k => CMPR_T.find(T => T.k === k)).filter(Boolean);
-  // Tableau transposé (30/10, Romain) : les critères en lignes, les entreprises en colonnes ; la médiane et la fourchette du secteur en dernières colonnes
-  const head = `<tr><th scope="col" class="l lab">Critère</th>${X.F.map((F, j) => `<th scope="col" class="rf-coh${j === 0 ? " rf-me" : ""}"><a class="rf-co" href="/entreprise/${F.c.id}">${logo(F.c, 24)}<span class="nm">${esc(F.c.name)}</span></a>${j === 0 ? `<small class="rf-tag">cette fiche</small>` : ""}</th>`).join("")}<th scope="col" class="rf-medh"><span class="nm">Médiane</span><small>${esc(secName(s))}</small></th><th scope="col" class="rf-medh rf-qh"><span class="nm">La moitié du secteur</span><small>du quart inférieur au supérieur</small></th></tr>`;
-  const rows = T6.map(T => { const r0 = T.val(me0, X), q = rfQuartiles(s, T.k);
-    return `<tr><th scope="row" class="l lab"><span class="rf-cth">${esc(RF_CMP_COURT[T.k])}</span><small>${esc(RF_CMP_SOUS[T.k](X))}</small></th>${X.F.map((F, j) => rfCmpCell(T, F, X).replace('<td class="num', `<td class="num${j === 0 ? " rf-me" : ""}`)).join("")}<td class="num rf-medc">${r0 && r0.medTxt ? esc(r0.medTxt) : `<span class="rf-na">–</span>`}</td><td class="num rf-medc rf-q">${q ? `${esc(q[0])} à ${esc(q[1])}` : `<span class="rf-na">–</span>`}</td></tr>`; }).join("");
-  const medRow = "";
   const lire = T6.map(T => { const d = ALL[RF_CMP_DEF[T.k]]; return d && d.limit ? `<li><b>${esc(RF_CMP_COURT[T.k])}</b> : ${esc(d.limit)}</li>` : ""; }).filter(Boolean).join("");
   const cartes = X.F.map((F, j) => {
     if (!F.ok) return `<div class="rf-card"><div class="rf-ch">${logo(F.c, 24)}<b>${esc(F.c.name)}</b></div><p class="rf-no">${esc(cmprNa(F))} : comparaison impossible sur les comptes.</p></div>`;
@@ -846,7 +850,7 @@ function concurrentsHTML(s) {
   const notes = cmprNotes(X);
   return `<section class="panel rf-cmp" id="concurrents"><div class="ph"><h2>${titre}</h2><a href="${link}">Comparer en détail →</a></div>
     <div class="pb rf-cmpi"><p class="rf-intro">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services, aux mêmes clients.`} Chaque case est comparée aux repères du site et à la médiane du secteur : <span class="rf-lg rf-lg-f">vert, point fort</span> <span class="rf-lg rf-lg-v">orange, à surveiller</span> <span class="rf-lg">sans couleur, dans la moyenne</span>. Survolez une case pour la phrase complète. La taille et le dividende ne sont pas colorés.</p></div>
-    ${tblxScrollBox(`<table class="t tbx rf-ctab rf-ctab-t"><caption class="sr">${esc(s.name)} et ses ${auto ? "voisines de secteur" : "concurrentes"}, critère par critère</caption><thead>${head}</thead><tbody>${rows}</tbody></table>`, "Faites glisser pour voir tous les critères")}
+    ${tblxScrollBox(rfCmpTableHTML(s, X).replace('<span class="nm">' + esc(s.name) + '</span></a>', '<span class="nm">' + esc(s.name) + '</span></a><small class="rf-tag">cette fiche</small>'), "Faites glisser pour voir toutes les entreprises")}
     <div class="pb"><details class="cmpr-det rf-cartes" style="margin:0"><summary>Atouts et faiblesses de chacune<small>le tableau, lu entreprise par entreprise</small></summary><p class="rf-sub">Le tableau ne désigne pas de gagnante : une action plus chère peut correspondre à une entreprise qui grandit plus vite, une forte dette à un métier très régulier.</p>
       <div class="rf-cards">${cartes}</div></details>
       ${lire ? `<details class="cmpr-det rf-lire" style="margin:10px 0 0"><summary>Comment lire chaque ligne<small>ce que le chiffre dit, et ce qu'il ne dit pas</small></summary><ul class="rf-lirel">${lire}</ul></details>` : ""}

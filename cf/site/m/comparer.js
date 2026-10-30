@@ -647,6 +647,7 @@ function cmprRenderBody(ids) {
         <ul class="cmpr-vl">${V.lines.map(l => `<li><a class="th" href="#cmpr-${l.T.k}">${CMPR_ICON[l.T.k]}${esc(l.T.t)}</a>${l.html ? `<p>${l.html}</p>` : `<p class="muted">${cmprNoCmp(l.T, X)}</p>`}</li>`).join("")}</ul>
         ${notes.length ? `<ul class="cmpr-notes">${notes.map(n => `<li>${n}</li>`).join("")}</ul>` : ""}
         <p class="note" style="margin:12px 0 0">Être en tête sur un critère n'est ni une recommandation ni une prédiction : ce sont les derniers comptes publiés, comparés entre eux.</p></div>
+      ${typeof rfCmpTableHTML === "function" && X.F.length && X.F[0].ok ? `<div class="cmpr-tbl">${tblxScrollBox(rfCmpTableHTML(cos[0], X), "Faites glisser pour voir toutes les entreprises")}<p class="note" style="margin:8px 18px 14px">Vert : point fort ; orange : à surveiller ; sans couleur : dans la moyenne. La médiane et la fourchette sont celles du secteur de ${esc(cos[0].name)}.</p></div>` : ""}
       ${cmprIABar(cos.length, null)}</section>
     <section class="panel cmpr-clip" id="cmpr-themes"><div class="ph"><h2>Le détail, thème par thème</h2></div>
       <div class="cmpr-legend"><span>Chaque point place l'entreprise parmi celles de son secteur suivies par le site : à droite les mieux placées.</span><span><i class="m"></i>médiane de son secteur</span><span><i style="background:var(--g)"></i>point fort</span><span><i style="background:var(--n)"></i>dans la moyenne</span><span><i style="background:var(--o)"></i>point de vigilance</span></div>
