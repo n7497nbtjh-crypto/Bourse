@@ -698,7 +698,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
    annuelle, ni dette comparable. Le visiteur voit ainsi ce qui a été publié depuis, et ce que le site en a ou non. */
 async function rfTrimestresSEC(s, c, box) { // trimestres lus à la SEC (10-Q) : le dernier trimestre et les 12 derniers mois, face au dernier exercice clos
   if (!c || !c.cik) return false;
-  let t = null; try { const r = await fetch(`/data/trim/${s.id}.json`); t = r.ok ? await r.json() : null; } catch (e) { }
+  let t = await rfTrimCharge(s.id);
   if (!t || !t.q || !t.q.length || !document.body.contains(box)) return false;
   const fin = c.years && c.years.length ? `${c.years.at(-1)}-${typeof c.fyEnd === "string" && /^\d{2}-\d{2}$/.test(c.fyEnd) ? c.fyEnd : "12-31"}` : "";
   const nouveaux = t.q.filter(x => !fin || x.end > fin); if (!nouveaux.length) return false;
@@ -969,6 +969,14 @@ document.head.insertAdjacentHTML("beforeend", `<style>
    /entreprise/x/comptes et /actualite redirigent vers la fiche (ancre). Rien n'est retiré.
    ==================================================================================== */
 document.head.insertAdjacentHTML("beforeend", `<style>.pa2.pa2-ns .pl{opacity:.45;filter:grayscale(1)}.pa2.pa2-ns .pt small{color:var(--grey)}</style>`);
+let RF_TRIM_IDX = null;
+async function rfTrimCharge(id) { // trimestres SEC : lus seulement si l'index les annonce (zéro 404), un seul chargement par fiche
+  if (!RF_TRIM_IDX) RF_TRIM_IDX = fetch("/data/trim/index.json").then(r => r.ok ? r.json() : null).then(j => new Set((j && j.ids) || [])).catch(() => new Set());
+  const idx = await RF_TRIM_IDX; if (!idx.has(id)) return null;
+  RF_TRIM_CACHE[id] = RF_TRIM_CACHE[id] || fetch(`/data/trim/${id}.json`).then(r => r.ok ? r.json() : null).catch(() => null);
+  return RF_TRIM_CACHE[id];
+}
+const RF_TRIM_CACHE = {};
 const RF_DERNIERE = {}; // dernière annonce par entreprise, lue par la fiche et reprise par l'IA (ia.js)
 const RF_DETAIL_CLE = "bilan.detail";
 function rfDetailToujours() { try { return localStorage.getItem(RF_DETAIL_CLE) === "1"; } catch (e) { return false; } }
@@ -1038,7 +1046,7 @@ async function ficheUneSeulePage(s, c, el) {
   // les comportements de l'ancien onglet « Les chiffres en détail » (graphiques, lignes dépliables) sont rattachés au conteneur
   rfLierChiffres(s, c, $("#tous-les-chiffres"));
   // trimestres : la bascule Par an / Par trimestre apparaît si le site a des trimestres pour cette entreprise
-  if (c.cik) fetch(`/data/trim/${s.id}.json`).then(r => r.ok ? r.json() : null).then(t => { if (!t || !t.q || !t.q.length || !$("#rf-ta")) return; $("#rf-ta").hidden = false; const rs = $("#rf-res-sous"); if (rs) rs.textContent = "Ventes, bénéfice, par trimestre et par an"; $("#rf-ta-t").innerHTML = rfTrimTableHTML(t, c);
+  if (c.cik) rfTrimCharge(s.id).then(t => { if (!t || !t.q || !t.q.length || !$("#rf-ta")) return; $("#rf-ta").hidden = false; const rs = $("#rf-res-sous"); if (rs) rs.textContent = "Ventes, bénéfice, par trimestre et par an"; $("#rf-ta-t").innerHTML = rfTrimTableHTML(t, c);
     $$("#rf-ta button").forEach(b => b.onclick = () => { $$("#rf-ta button").forEach(x => x.classList.toggle("on", x === b)); $("#rf-ta-a").hidden = b.dataset.ta !== "a"; $("#rf-ta-t").hidden = b.dataset.ta !== "t"; }); }).catch(() => { });
   const csv = $("#rf-csv"); if (csv) csv.onclick = () => { const blob = new Blob([rfCsv(s, c)], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `${s.id}-comptes.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
   const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }

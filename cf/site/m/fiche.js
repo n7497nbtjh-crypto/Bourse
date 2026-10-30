@@ -162,10 +162,12 @@ document.head.insertAdjacentHTML("beforeend", `<style id="fiche-css">${FICHE_CSS
 
 /* ---------- Données : faits Wikidata (CC0) ---------- */
 const FICHE_WD = {}; // faits Wikidata par entreprise (fichiers /data/wd/<id>.json fabriqués par build.mjs)
+let FICHE_WD_IDX = null;
 function ficheWDLoad(id) {
   if (!id) return Promise.resolve(null);
   if (FICHE_WD[id] !== undefined) return Promise.resolve(FICHE_WD[id]);
-  return fetch(`/data/wd/${id}.json`).then(r => r.ok ? r.json() : null).catch(() => null).then(j => { if (j && j.siege && /^(siège|si[eè]ge social|headquarters)/i.test(j.siege)) delete j.siege; return (FICHE_WD[id] = j); });
+  if (!FICHE_WD_IDX) FICHE_WD_IDX = fetch("/data/wd/index.json").then(r => r.ok ? r.json() : null).then(j => j ? new Set(j.ids || []) : null).catch(() => null); // zéro 404 : on ne demande la fiche Wikidata que si elle existe
+  return FICHE_WD_IDX.then(idx => idx && !idx.has(id) ? null : fetch(`/data/wd/${id}.json`).then(r => r.ok ? r.json() : null).catch(() => null)).then(j => { if (j && j.siege && /^(siège|si[eè]ge social|headquarters)/i.test(j.siege)) delete j.siege; return (FICHE_WD[id] = j); });
 }
 const ficheWd = id => FICHE_WD[id] || null;
 const ficheWikiUrl = w => { const [l, ...t] = String(w).split(":"); return `https://${l}.wikipedia.org/wiki/${encodeURIComponent(t.join(":").replace(/ /g, "_"))}`; };

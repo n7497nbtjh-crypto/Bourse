@@ -46,7 +46,8 @@ writeFileSync("cf/site/robots.txt", `User-agent: *\nDisallow: /api/\nSitemap: ${
 { const { historique } = await import("./data/outils_historique.mjs"); console.log(historique(), "entreprises dans historique.json (classements, dividendes)"); }
 if (existsSync("cf/site/data/wikidata.json")) { // faits Wikidata découpés par entreprise : une fiche ne charge que les siens
   const W = JSON.parse(readFileSync("cf/site/data/wikidata.json", "utf8")); (await import("node:fs")).mkdirSync("cf/site/data/wd", { recursive: true });
-  for (const [id, x] of Object.entries(W.items || {})) wfs(`cf/site/data/wd/${id}.json`, JSON.stringify({ ...x, maj: W.updated })); }
+  for (const [id, x] of Object.entries(W.items || {})) wfs(`cf/site/data/wd/${id}.json`, JSON.stringify({ ...x, maj: W.updated }));
+  wfs("cf/site/data/wd/index.json", JSON.stringify({ maj: W.updated, ids: Object.keys(W.items || {}) })); } // index léger : la fiche ne demande un fichier wd que s'il existe (zéro 404)
 if (existsSync("data/faq_seo.mjs")) { const { faqSeo } = await import("./data/faq_seo.mjs"); console.log(faqSeo(), "FAQ de fiches (JSON-LD)"); }
 // Version du site : empreinte des fichiers servis (hors données). Le service worker (cf/site/sw.js) la lit dans l'en-tête
 // x-bilan-version des pages et vide son cache dès qu'elle change : jamais un ancien script avec une nouvelle page.
