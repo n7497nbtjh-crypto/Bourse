@@ -1,3 +1,4 @@
+import { adminOk } from "./compte.mjs";
 // Espace communauté : analyses argumentées, questions-réponses, listes de suivi publiques, pronostics, avis.
 // Une analyse est liée à une fiche (entreprise ou ETF) et suit un format fixe : thèse, arguments, risques, horizon.
 // Les chiffres du site ne sont jamais saisis par le visiteur : la page les recalcule à l'affichage (exercice enregistré dans meta.ex).
@@ -216,7 +217,7 @@ export default async function communaute(request, env) {
     return json({ ok: true });
   }
   if (path === "/api/communaute/masquer") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json({ error: "Non autorisé." }, 403);
+    if (!adminOk(request, env)) return json({ error: "Non autorisé." }, 403);
     await db.prepare(`UPDATE ${b.type === "liste" ? "listes" : "messages"} SET hidden = 1 WHERE id = ?`).bind(parseInt(b.id, 10)).run();
     return json({ ok: true });
   }

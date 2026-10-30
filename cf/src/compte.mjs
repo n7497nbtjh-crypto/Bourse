@@ -15,6 +15,21 @@ const SCHEMA = [
 ];
 let ready = false;
 export async function initCompte(db) { if (ready) return; for (const q of SCHEMA) await db.prepare(q).run(); ready = true; }
+/* ---------- Clé d'administration : comparaison à temps constant (évite de deviner la clé caractère par caractère) ---------- */
+export function adminOk(request, env) {
+  const a = String((env && env.ADMIN_KEY) || ""), b = String(request.headers.get("x-admin-key") || "");
+  if (a.length < 16 || a.length !== b.length) return false;
+  let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return d === 0;
+}
+export async function tropDEssais(env, cle, max = 5, fenetre = 9e5) { // vrai si plus de `max` essais pour cette clé dans la fenêtre ; enregistre l'essai
+  try {
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS essais (cle TEXT NOT NULL, at INTEGER NOT NULL)`).run();
+    const r = await env.DB.prepare(`SELECT COUNT(*) AS n FROM essais WHERE cle = ? AND at > ?`).bind(cle, Date.now() - fenetre).first();
+    await env.DB.prepare(`INSERT INTO essais (cle, at) VALUES (?, ?)`).bind(cle, Date.now()).run();
+    return !!(r && r.n >= max);
+  } catch (e) { return false; }
+}
 const today = () => new Date().toISOString().slice(0, 10);
 
 /* ---------- Qui est le visiteur ? (empreinte anonyme du jour, ou abonné) ---------- */
@@ -79,8 +94,11 @@ export async function premium(request, env) {
     } catch (e) { return json({ error: "Vérification du paiement impossible : " + String(e.message).slice(0, 100) }, 502); }
   }
   if (path === "/api/premium/retrouver" && request.method === "POST") { // renvoie le code d'accès à l'adresse utilisée pour payer
+    const ip = request.headers.get("cf-connecting-ip") || "local";
+    if (await tropDEssais(env, "retrouver:" + ip, 3)) return json({ error: "Trop de demandes. Réessayez dans un quart d'heure." }, 429);
     let b = {}; try { b = await request.json(); } catch (e) { }
-    const email = String(b.email || "").trim().toLowerCase();
+    const email = String(b.email || "").trim().toLowerCase().slice(0, 254);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: true });
     const rows = (await env.DB.prepare(`SELECT token, plan FROM abonnes WHERE email = ? AND until > ?`).bind(email, Date.now()).all()).results || [];
     if (rows.length) { try { await sendMail(env, email, "Votre code d'accès bilan. Premium", `Bonjour,\n\nVoici votre code d'accès Premium : ${rows[0].token}\n\nSur le site, ouvrez la page Premium et collez ce code dans « J'ai déjà un code ».\n\nbilan.`); } catch (e) { return json({ error: "L'envoi d'e-mail n'est pas encore disponible : écrivez-nous pour retrouver votre accès." }, 503); } }
     return json({ ok: true }); // même réponse si l'adresse est inconnue : on ne révèle pas qui est abonné

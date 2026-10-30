@@ -1,7 +1,7 @@
 // « Signaler une erreur » : un visiteur indique un chiffre ou un texte faux sur une page.
 // Stockage D1 (table signalements, créée au premier appel). Pas d'adresse IP : une empreinte du jour seulement.
 // Limite : 5 signalements par jour et par visiteur. Lecture réservée au robot ou à l'administrateur (en-tête x-admin-key = ADMIN_KEY).
-import { json } from "./compte.mjs";
+import { json, adminOk } from "./compte.mjs";
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS signalements (id INTEGER PRIMARY KEY AUTOINCREMENT, page TEXT NOT NULL, quoi TEXT NOT NULL, texte TEXT NOT NULL, who TEXT NOT NULL, created INTEGER NOT NULL, traite INTEGER NOT NULL DEFAULT 0)`,
@@ -23,7 +23,7 @@ export async function signaler(request, env) {
   if (!env.DB) return json({ error: "Service indisponible." }, 503);
   await init(env.DB);
   if (request.method === "GET") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json({ error: "Accès réservé." }, 403);
+    if (!adminOk(request, env)) return json({ error: "Accès réservé." }, 403);
     const r = await env.DB.prepare(`SELECT id, page, quoi, texte, created, traite FROM signalements ORDER BY id DESC LIMIT 200`).all();
     return json({ items: r.results || [] });
   }

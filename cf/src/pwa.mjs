@@ -30,6 +30,8 @@ export const SECURITE = {
   "x-frame-options": "SAMEORIGIN",
   "referrer-policy": "strict-origin-when-cross-origin",
   "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+  "cross-origin-opener-policy": "same-origin",
+  "x-permitted-cross-domain-policies": "none",
 };
 export function tete(html, { title, desc, url, statut }) {
   const canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/");

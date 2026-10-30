@@ -7,7 +7,7 @@
 //  POST /api/espace/tache   robot quotidien (.github/workflows/espace.yml), protégé par ADMIN_KEY
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
-import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail } from "./compte.mjs";
+import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
 
@@ -384,7 +384,7 @@ async function notifier(env, compteId, type, texte, lien, jour, extra = "") {
   return (r && r.meta && r.meta.changes) || 0;
 }
 async function tache(request, env, url) {
-  if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json({ error: "Non autorisé." }, 403);
+  if (!adminOk(request, env)) return json({ error: "Non autorisé." }, 403);
   const quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now();
   const modeBilan = quoi === "bilan" || quoi === "jour" || (!quoi && wd === 6), cutoff = now - 6 * 36e5;
   // Jour de réception choisi dans les réglages du rapport (samedi par défaut, dimanche ou lundi) : le samedi, le dimanche et le lundi,

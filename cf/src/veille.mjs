@@ -2,7 +2,7 @@
 //  /api/veille/inscription, /confirmer, /desinscrire : bilan hebdomadaire par e-mail (actif quand MAIL_FROM et un service d'envoi sont définis)
 //  /api/veille/envoi, /alertes : envois groupés déclenchés par le robot (remplacés par les alertes de Mon espace : .github/workflows/espace.yml) avec ADMIN_KEY
 // Le site n'appelle aucun modèle d'IA : la rédaction se fait dans le navigateur avec l'IA que le visiteur a connectée (docs/ia.md).
-import { sendMail, mailReady, mailCapacity, premiumOf } from "./compte.mjs";
+import { sendMail, mailReady, mailCapacity, premiumOf, adminOk } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 const SCHEMA = [`CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)`];
 let ready = false;
@@ -50,7 +50,7 @@ async function mails(request, env, path) {
   }
   // Envois groupés, déclenchés par le robot (GitHub) avec la clé d'administration
   if ((path === "/api/veille/envoi" || path === "/api/veille/alertes") && request.method === "POST") {
-    if (!env.ADMIN_KEY || request.headers.get("x-admin-key") !== env.ADMIN_KEY) return json({ error: "Non autorisé." }, 403);
+    if (!adminOk(request, env)) return json({ error: "Non autorisé." }, 403);
     if (!mailReady(env)) return json({ error: "Envoi non configuré." }, 503);
     const cap = Math.min(50, await mailCapacity(env)); if (!cap) return json({ envoyes: 0, reste: 0, info: "quota du jour atteint" });
     const data = await siteData(request, env), weekly = path.endsWith("envoi");
