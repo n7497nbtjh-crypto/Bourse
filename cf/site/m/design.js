@@ -245,3 +245,18 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 @media (max-width:560px){.ot-l{grid-template-columns:minmax(0,1fr)}.ot-i{border-right:0;padding-left:0!important}}
 </style>`);
 })();
+/* Page Entreprises : classements et découvertes du jour intégrés en tête (30/10, Romain : moins de pages) */
+(function () {
+  const e0 = window.pageEntreprises; if (typeof e0 !== "function") return;
+  window.pageEntreprises = function () {
+    const r = e0.apply(this, arguments);
+    const sub = $(".pagesub", app);
+    if (sub && !$(".ent-plus", app)) sub.insertAdjacentHTML("afterend", `<div class="ent-plus"><a href="/decouvertes"><b>Découvertes du jour</b><span>Six entreprises moins connues dont les comptes ressortent</span></a><a href="/classements"><b>Classements</b><span>Celles qui cumulent le plus de points forts, secteur par secteur</span></a><a href="/comparer"><b>Comparer</b><span>Jusqu'à trois entreprises côte à côte, face à leur secteur</span></a></div>`);
+    return r;
+  };
+  document.head.insertAdjacentHTML("beforeend", `<style>
+.ent-plus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin:0 0 14px}
+.ent-plus a{display:flex;flex-direction:column;gap:2px;padding:12px 18px 12px 0;border-right:1px solid var(--rule);color:var(--ink);text-decoration:none}.ent-plus a+a{padding-left:18px}.ent-plus a:last-child{border-right:0}.ent-plus b{font-size:15px}.ent-plus span{font-size:13px;color:var(--grey)}.ent-plus a:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+@media (max-width:760px){.ent-plus{grid-template-columns:minmax(0,1fr)}.ent-plus a{border-right:0;border-bottom:1px solid var(--rule);padding-left:0!important}.ent-plus a:last-child{border-bottom:0}}
+</style>`);
+})();
