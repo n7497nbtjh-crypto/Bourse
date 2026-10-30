@@ -329,9 +329,9 @@ document.head.insertAdjacentHTML("beforeend", `<style id="fiche2-css">${FICHE2_C
    Les étapes de la vue d'ensemble (boutons, sans rechargement) et les deux autres pages de la fiche
    (« Les chiffres en détail », « Actualités et discussion », liens) sont réunies dans une seule barre collante.
    Plus de seconde rangée « Comprendre … : 1, 2, 3 » ; l'ancienne étape « Actualité » est en tête de l'onglet Actualités. */
-const FICHE2_ORDRE = ["retenir", "metier", "prix", "@comptes", "concurrents", "@actualite", "faq", "synthese"];
-const FICHE2_LIB = { retenir: ["L'essentiel", "Essentiel"], metier: ["Son métier", "Métier"], prix: ["Son prix", "Prix"], "@comptes": ["Les chiffres en détail", "Chiffres"], concurrents: ["Concurrents", "Concurrents"], "@actualite": ["Actualités et discussion", "Actualités"], faq: ["Questions", "Questions"] , synthese: ["Synthèse", "Synthèse"] };
-function fiche2EtapesPrevues(s) { return (s.missing ? ["metier", "prix", "faq"] : ["retenir", "metier", "concurrents", "faq", "synthese"]).map(k => [k, FICHE2_LIB[k][0]]); }
+const FICHE2_ORDRE = ["entreprise", "prix", "change", "metier", "faq", "@comptes", "@actualite"]; // 30/10 (retour de Romain) : trois parties, puis les pages de détail
+const FICHE2_LIB = { retenir: ["L'essentiel", "Essentiel"], metier: ["Son métier", "Métier"], prix: ["Son prix", "Prix"], "@comptes": ["Les chiffres en détail", "Chiffres"], concurrents: ["Concurrents", "Concurrents"], "@actualite": ["Actualités et discussion", "Actualités"], faq: ["Questions", "Questions"] , synthese: ["Synthèse", "Synthèse"], entreprise: ["Comprendre l'entreprise", "L'entreprise"], change: ["Comprendre ce qui change", "Ce qui change"] };
+function fiche2EtapesPrevues(s) { return (s.missing ? ["metier", "prix", "faq"] : ["entreprise", "prix", "change"]).map(k => [k, FICHE2_LIB[k][0]]); }
 function fiche2Onglets(s, tab, L) {
   L = L || fiche2EtapesPrevues(s);
   const keys = new Set(L.map(x => x[0])), cur = tab ? null : etapeCourante(L);
@@ -462,7 +462,7 @@ function ficheSommaire(s, c) {
       ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
       ${rk}
       <p class="rf-plnote">À droite les mieux placées parmi les entreprises du secteur suivies par le site, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.</p>
-      <div class="rf-foot"><button type="button" class="linkbtn lnk" data-et="synthese">La synthèse : points forts, à surveiller, à venir</button></div></div>`;
+      <div class="rf-foot"><a class="rf6-lk lnk" href="#rf-synth">Points forts, à surveiller, discussion</a></div></div>`;
 }
 function ficheSyntheseHTML(s, c) { // l'ancien « En bref » de l'en-tête, avec l'analyse détaillée (onglet Synthèse, 30/10)
   CURSYM = CUR[s.currency] || s.currency || "€";
@@ -541,11 +541,9 @@ function etapesListe(s, c) {
     ["faq", "Questions", () => faqHTML(s, null)],
   ];
   return [
-    ["retenir", "L'essentiel", () => ficheRetenirHTML(s, c)],
-    ["metier", "Son métier", () => ficheMetierHTML(s, c)],
-    ["concurrents", "Concurrents", () => concurrentsHTML(s)],
-    ["faq", "Questions", () => faqHTML(s, c)],
-    ["synthese", "Synthèse", () => ficheSyntheseHTML(s, c)],
+    ["entreprise", "Comprendre l'entreprise", () => rfPartieEntreprise(s, c)],
+    ["prix", "Comprendre son prix", () => rfPartiePrix(s, c)],
+    ["change", "Comprendre ce qui change", () => rfPartieChange(s, c)],
   ];
 }
 /* Étape 1 : les indicateurs principaux (une tuile chacun, reliée à son thème détaillé), puis l'analyse sur plusieurs années */
@@ -601,7 +599,7 @@ function rf6Mod(n, titre, lv, verdict, figs, jauge, lien, extra = "") {
     <div class="rf6-b">${figs ? `<div class="rf6-figs">${figs}</div><details class="rf6-why"><summary>Pourquoi ?</summary><p class="rf6-v">${verdict}</p></details>` : `<p class="rf6-v">${verdict}</p>`}${extra}</div>
     <div class="rf6-r">${jauge}${lien ? `<a class="rf6-lk" href="${lien[0]}">${lien[1]} →</a>` : ""}</div></li>`;
 }
-function ficheRetenirHTML(s, c) {
+function ficheRetenirHTML(s, c, part) {
   const f = figuresOf(c), m = ratios(f), bank = isBank(s), B = v => big(v, f.currency), md = MED[s.sector] || {}, medOk = md.n >= 3, it = {};
   lecture(s, f).forEach(i => { if (!it[i.term]) it[i.term] = i; });
   const lv = k => it[k] && it[k].lv !== "na" ? it[k].lv : null, v = valo(s) || {}, pts = rfPoints(s, c), base = `/entreprise/${s.id}`;
@@ -628,17 +626,35 @@ function ficheRetenirHTML(s, c) {
   // F. Risques et événements
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 2);
   const risB = pts && pts.d.length ? `À surveiller : ${pts.d.map(x => esc(typeof x === "string" ? x : x.t || x.titre || x.l || "")).filter(Boolean).join(" · ")}.` : pts && pts.v.length ? "Aucun point de vigilance ressorti des comptes lus." : "Le site n'a pas assez d'éléments pour relever des risques.";
-  const risX = `${up.length ? `<p class="rf6-ev">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}<div id="rf-trim" hidden></div>`;
+  const risX = part ? "" : `${up.length ? `<p class="rf6-ev">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}<div id="rf-trim" hidden></div>`;
+  const MODS = {
+    pres: rf6Mod("01", "Ce qu'elle fait", null, presA, "", "", ["#rf-metier", "Son métier en détail"]),
+    cro: rf6Mod("02", "Croissance", gLv, croB, croF, rf6Jauge(s, "g1", false, m.g1), [base + "/comptes#rf-croissance", "Les chiffres"]),
+    ren: rf6Mod("03", "Rentabilité", rLv, renB, renF, rf6Jauge(s, bank ? "roe" : m.marge != null ? "marge" : "nm", false, bank ? m.roe : m.marge != null ? m.marge : m.nm), [base + "/comptes#rf-rentabilite", "Les chiffres"]),
+    sol: rf6Mod("04", "Solidité financière", dLv, solB, solF, bank ? "" : m.lev != null || (f.netDebt != null && f.netDebt < 0) ? rf6Jauge(s, "lev", true, f.netDebt != null && f.netDebt < 0 ? -1 : m.lev) : rf6Jauge(s, "gear", true, m.gear), [base + "/comptes#rf-bilan", "Les chiffres"]),
+    val: rf6Mod(part ? "01" : "05", "Valorisation", pLv, valB, valF, rf6Jauge(s, "pe", true, v.pe), [base + "/comptes#rf-valorisation", "Le prix en détail"]),
+    ris: rf6Mod(part ? "05" : "06", "Risques", pts && pts.d.length ? "vig" : null, risB, "", "", ["#rf-synth", "Points forts et à surveiller"], risX),
+  };
+  if (part === "entreprise") return `<section class="panel rf6" id="retenir"><div class="ph"><h2>Comprendre l'entreprise</h2><span class="light" style="font-size:12.5px">Exercice ${f.year} · comptes officiels</span></div>${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
+    <p class="rf6-lede">${rfSituation(s, c)}</p>
+    <ol class="rf6-mods">${MODS.pres}${MODS.cro}${MODS.ren}${MODS.sol}${MODS.ris}</ol>
+    <div class="src">Les verdicts comparent chaque chiffre à des seuils simples et à la médiane des entreprises du secteur suivies par le site. « À surveiller » n'est pas une mauvaise nouvelle en soi : c'est un point à regarder avant de se décider.</div></section>`;
+  if (part === "prix") {
+    const mp2 = MEDPE[s.sector], mot = v.pe && mp2 ? (v.pe > mp2 * 1.3 ? "Chère" : v.pe < mp2 * 0.75 ? "Bon marché" : "Prix dans la norme") : null;
+    return `<section class="panel rf6" id="rf-prix"><div class="ph"><h2>Comprendre son prix</h2><span class="light" style="font-size:12.5px">Cours du jour · bénéfice ${f.year}</span></div>
+    ${mot ? `<p class="rf-vc rf-vcp">${mot}<small>${F0.format(v.pe)} fois le bénéfice, médiane du secteur ${F0.format(mp2)} fois</small></p>` : v.pe ? `<p class="rf-vc rf-vcp">${F0.format(v.pe)} fois le bénéfice<small>pas assez d'entreprises du secteur pour une médiane</small></p>` : `<p class="rf6-lede">Pas de PER calculable : l'entreprise est en perte ou son bénéfice par action n'est pas lu.</p>`}
+    <ol class="rf6-mods">${MODS.val}</ol></section>`;
+  }
   const place = typeof profilHTML === "function" ? "" : "";
   return `<section class="panel rf6" id="retenir"><div class="ph"><h2>L'essentiel</h2><span class="light" style="font-size:12.5px">Exercice ${f.year} · comptes officiels</span></div>${typeof provComptesVieux === "function" ? provComptesVieux(c, s) : ""}
     <p class="rf6-lede">${rfSituation(s, c)}</p>
     <ol class="rf6-mods">
-      ${rf6Mod("01", "Ce qu'elle fait", null, presA, "", "", [base + "/metier", "Son métier"])}
-      ${rf6Mod("02", "Croissance", gLv, croB, croF, rf6Jauge(s, "g1", false, m.g1), [base + "/comptes#rf-croissance", "Les chiffres"])}
-      ${rf6Mod("03", "Rentabilité", rLv, renB, renF, rf6Jauge(s, bank ? "roe" : m.marge != null ? "marge" : "nm", false, bank ? m.roe : m.marge != null ? m.marge : m.nm), [base + "/comptes#rf-rentabilite", "Les chiffres"])}
-      ${rf6Mod("04", "Solidité financière", dLv, solB, solF, bank ? "" : m.lev != null || (f.netDebt != null && f.netDebt < 0) ? rf6Jauge(s, "lev", true, f.netDebt != null && f.netDebt < 0 ? -1 : m.lev) : rf6Jauge(s, "gear", true, m.gear), [base + "/comptes#rf-bilan", "Les chiffres"])}
-      ${rf6Mod("05", "Valorisation", pLv, valB, valF, rf6Jauge(s, "pe", true, v.pe), [base + "/comptes#rf-valorisation", "Le prix en détail"])}
-      ${rf6Mod("06", "Risques et événements", pts && pts.d.length ? "vig" : null, risB, "", "", [base + "/synthese", "La synthèse"], risX)}
+      ${MODS.pres}
+      ${MODS.cro}
+      ${MODS.ren}
+      ${MODS.sol}
+      ${MODS.val}
+      ${MODS.ris}
     </ol>
     <div class="src">Les verdicts comparent chaque chiffre à des seuils simples et à la médiane des entreprises du secteur suivies par le site. « À surveiller » n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut regarder de près. Rien ici ne dit s'il faut acheter.</div></section>`;
 }
@@ -871,3 +887,62 @@ function rfPlaceHTML(s) { // sa place parmi toutes les entreprises du secteur su
 }
 /* La fiche a pu être affichée avant le chargement de ce module : on la refait avec la nouvelle version */
 if (typeof R !== "undefined" && R && R.companies && /^\/entreprise\/[^/]+(\/(comptes|actualite|agenda|communaute))?\/?$/.test(location.pathname)) { const [, , id, t] = location.pathname.split("/"); pageCompany(id, t); }
+
+/* ---------- 30/10 (retour de Romain) : la fiche en trois parties, chacune ouverte par une synthèse courte ----------
+   1. Comprendre l'entreprise (ce qu'elle fait, croissance, rentabilité, dette, risques), puis au clic : son métier en détail, points forts et à surveiller, questions.
+   2. Comprendre son prix (valorisation face au secteur, la courbe, les concurrents côte à côte).
+   3. Comprendre ce qui change (dernière publication, dates à venir, annonces et presse). Rien n'est retiré : tout reste au clic. */
+function rfPli(id, titre, sous, corps, ouvert) {
+  return `<details class="rf-pl" id="${id}"${ouvert ? " open" : ""}><summary><b>${titre}</b>${sous ? `<span>${sous}</span>` : ""}</summary><div class="rf-plb">${corps}</div></details>`;
+}
+function rfPartieEntreprise(s, c) {
+  return ficheRetenirHTML(s, c, "entreprise")
+    + rfPli("rf-metier", "Son métier en détail", "Activités, pays, taille dans le secteur, dirigeants", ficheMetierHTML(s, c))
+    + rfPli("rf-synth", "Points forts, à surveiller, discussion", "L'analyse détaillée, chaque point relié à sa source", ficheSyntheseHTML(s, c))
+    + rfPli("rf-faq", "Questions fréquentes", "", faqHTML(s, c));
+}
+function rfPartiePrix(s, c) {
+  return ficheRetenirHTML(s, c, "prix") + ficheGraphBox(s) + concurrentsHTML(s);
+}
+function rfPartieChange(s, c) {
+  return `<section class="panel rf6" id="rf-change"><div class="ph"><h2>Comprendre ce qui change</h2><span class="light" style="font-size:12.5px">Depuis la clôture de l'exercice ${esc(String(c.year || s.year || ""))}</span></div>
+    <div id="rf-trim"><p class="rf-no" style="padding:14px 22px">Aucune publication chiffrée relevée par le site depuis la clôture du dernier exercice. Les annonces officielles et la presse sont ci-dessous.</p></div><div class="rf-chev">${rfAVenir(s)}</div></section>
+    <div id="factu"></div>`;
+}
+tabBref = (orig => function (s, c, el) {
+  orig(s, c, el);
+  const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }
+  const sy = $("#rf-synth"); if (sy) sy.addEventListener("toggle", () => { const d = $("#discussion"); if (sy.open && d && !d.dataset.on && typeof tabCommu === "function") { d.dataset.on = "1"; try { tabCommu(s, FULL[s.id] || null, d); } catch (e) { } } });
+  if (location.hash && /^#rf-(metier|synth|faq)$/.test(location.hash)) rfOuvrir(location.hash.slice(1));
+})(tabBref);
+function rfOuvrir(id) { // ouvre un pli de la partie « Comprendre l'entreprise » et y va
+  const d = document.getElementById(id); if (!d) return;
+  if (d.tagName === "DETAILS") d.open = true;
+  d.scrollIntoView({ behavior: "smooth", block: "start" });
+  if (id === "rf-synth") d.dispatchEvent(new Event("toggle"));
+}
+document.addEventListener("click", e => {
+  const a = e.target.closest && e.target.closest('a.rf6-lk[href^="#rf-"]'); if (!a) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  const id = a.getAttribute("href").slice(1);
+  if (ETAPE_SHOW && !document.getElementById(id)) ETAPE_SHOW("entreprise");
+  rfOuvrir(id);
+}, true);
+// Anciens liens : ?etape=retenir|metier|synthese|faq → l'entreprise ; ?etape=concurrents → son prix ; ?etape=actualite → ce qui change
+pageCompany = (orig => function (id, tab) {
+  const q = new URLSearchParams(location.search), et = q.get("etape"), M = { retenir: "entreprise", metier: "entreprise", synthese: "entreprise", faq: "entreprise", concurrents: "prix", actualite: "change" };
+  const s = RBY[id];
+  if (!tab && et && M[et] && s && !s.missing) { const h = et === "metier" ? "#rf-metier" : et === "synthese" ? "#rf-synth" : et === "faq" ? "#rf-faq" : ""; q.set("etape", M[et]); history.replaceState(history.state, "", `${location.pathname}?${q}${h}`); }
+  return orig(id, tab);
+})(pageCompany);
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rf-pl{border:1px solid var(--rule);border-radius:6px;background:#fff;margin:12px 0}
+.rf-pl>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) 22px;gap:2px 12px;align-items:center;padding:14px 22px}
+.rf-pl>summary::-webkit-details-marker{display:none}.rf-pl>summary b{font-size:16px}.rf-pl>summary span{grid-column:1;font-size:13px;color:var(--grey)}
+.rf-pl>summary::after{content:"+";grid-column:2;grid-row:1/span 2;font-family:var(--mono);font-size:22px;color:var(--light);text-align:right}.rf-pl[open]>summary::after{content:"–"}
+.rf-pl>summary:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
+.rf-plb{border-top:1px solid var(--rule)}.rf-plb>.panel{border:0;box-shadow:none;margin:0;border-radius:0}
+.rf-vcp{padding:18px 22px 6px;margin:0}
+#rf-change #rf-trim{padding:14px 22px 18px}.rf-chev{padding:0 22px 16px}.rf-chev .rf-bl{margin:0}
+@media (max-width:760px){.rf-pl>summary{padding:12px 16px}.rf-vcp{padding:14px 16px 4px}#rf-change #rf-trim{padding:12px 16px 14px}}
+</style>`);
