@@ -18,7 +18,7 @@ export async function initCompte(db) { if (ready) return; for (const q of SCHEMA
 /* ---------- Clé d'administration : comparaison à temps constant (évite de deviner la clé caractère par caractère) ---------- */
 export function adminOk(request, env) {
   const a = String((env && env.ADMIN_KEY) || ""), b = String(request.headers.get("x-admin-key") || "");
-  if (a.length < 16 || a.length !== b.length) return false;
+  if (!a || a.length !== b.length) return false;
   let d = 0; for (let i = 0; i < a.length; i++) d |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return d === 0;
 }
