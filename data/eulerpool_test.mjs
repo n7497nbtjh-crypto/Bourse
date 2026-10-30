@@ -1,31 +1,31 @@
-// Test Eulerpool (30/10/2026) : lit les comptes annuels et trimestriels de quelques entreprises et les compare aux comptes
-// officiels que le site a déjà (ESEF, SEC). Rien n'est écrit dans le site : affichage seulement. Clé : secret EULERPOOL_KEY.
+// Test Eulerpool (30/10/2026) : comptes annuels, trimestriels et cours de quelques entreprises, comparés aux comptes officiels
+// que le site a déjà (ESEF, SEC). Rien n'est écrit dans le site : affichage seulement. Clé : secret EULERPOOL_KEY (paramètre token).
 import { readFileSync, existsSync } from "node:fs";
 const KEY = process.env.EULERPOOL_KEY; if (!KEY) { console.log("::error::EULERPOOL_KEY absent"); process.exit(1); }
-const H = { Authorization: "Bearer " + KEY, accept: "application/json" };
-const BASES = ["https://api.eulerpool.com/v1", "https://api.eulerpool.com/api/1"];
-const ESSAIS = { lvmh: ["MC.PA", "MC", "LVMH", "FR0000121014"], totalenergies: ["TTE.PA", "TTE", "FR0000120271"], sap: ["SAP.DE", "SAP", "DE0007164600"], "samsung-electronics": ["005930.KS", "005930", "KR7005930003", "SSNLF"], microsoft: ["MSFT"], "air-liquide": ["AI.PA", "AI", "FR0000120073"] };
+const B = "https://api.eulerpool.com/api/1";
+const ESSAIS = { lvmh: "FR0000121014", totalenergies: "FR0000120271", sap: "DE0007164600", "samsung-electronics": "KR7005930003", microsoft: "US5949181045", "air-liquide": "FR0000120073", "shinhan": "KR7055550008", "toyota": "JP3633400001" };
 async function get(path) {
-  for (const b of BASES) { const r = await fetch(b + path, { headers: H }); const t = await r.text(); if (r.ok) { try { return { base: b, j: JSON.parse(t) }; } catch (e) { return { base: b, raw: t.slice(0, 300) }; } } if (r.status !== 404) return { base: b, status: r.status, raw: t.slice(0, 300) }; }
-  return { status: 404 };
+  const u = B + path + (path.includes("?") ? "&" : "?") + "token=" + KEY;
+  const r = await fetch(u, { headers: { accept: "application/json" } }); const t = await r.text();
+  if (!r.ok) return { status: r.status, raw: t.replace(/\s+/g, " ").slice(0, 160) };
+  try { return { j: JSON.parse(t) }; } catch (e) { return { status: r.status, raw: t.slice(0, 160) }; }
 }
-const local = id => { const f = new URL(`../cf/site/data/societes/${id}.json`, import.meta.url); if (!existsSync(f)) return null; const c = JSON.parse(readFileSync(f, "utf8")); const n = c.years.length - 1; return { year: c.years[n], ca: c.fin.ca && c.fin.ca[n], net: c.fin.net && c.fin.net[n], cur: c.currency }; };
-const M = v => v == null ? "–" : (v / 1e6).toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " M";
-// 1. découverte : quel chemin de recherche existe ?
-for (const p of ["/search?q=LVMH", "/companies/search?q=LVMH", "/securities/search?query=LVMH", "/companies/MC.PA/profile", "/companies/MC.PA", "/companies/MSFT/income-statement?period=annual&limit=2"]) { const r = await get(p); console.log(p, "→", r.status || 200, r.base || "", JSON.stringify(r.j || r.raw || "").slice(0, 400)); }
-// 2. comparaison
-for (const [id, tks] of Object.entries(ESSAIS)) {
-  const loc = local(id); let ok = false;
-  for (const tk of tks) {
-    const a = await get(`/companies/${encodeURIComponent(tk)}/income-statement?period=annual&limit=3`);
-    if (!a.j || !Array.isArray(a.j.data)) continue;
-    const q = await get(`/companies/${encodeURIComponent(tk)}/income-statement?period=quarterly&limit=4`);
-    const last = a.j.data[0] || {}, keys = Object.keys(last).slice(0, 14);
-    console.log(`\n== ${id} (${tk}) champs : ${keys.join(", ")}`);
-    console.log("  Eulerpool annuel :", a.j.data.slice(0, 3).map(d => `${d.fiscalYear || d.date || d.period} ventes ${M(d.revenue)} net ${M(d.netIncome)} ${d.currency || d.reportedCurrency || ""}`).join(" | "));
-    if (loc) console.log("  Site (officiel)  :", `${loc.year} ventes ${loc.ca != null ? loc.ca.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " M" : "–"} net ${loc.net != null ? loc.net.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " M" : "–"} ${loc.cur}`);
-    if (q.j && Array.isArray(q.j.data)) console.log("  Trimestres       :", q.j.data.slice(0, 4).map(d => `${d.fiscalYear || ""} ${d.fiscalQuarter || d.period || d.date || ""} ventes ${M(d.revenue)} net ${M(d.netIncome)}`).join(" | ")); else console.log("  Trimestres       : non obtenus", q.status || "", (q.raw || "").slice(0, 120));
-    ok = true; break;
-  }
-  if (!ok) console.log(`\n== ${id} : aucun identifiant reconnu (${tks.join(", ")})`);
+const local = id => { const f = new URL(`../cf/site/data/societes/${id}.json`, import.meta.url); if (!existsSync(f)) return null; const c = JSON.parse(readFileSync(f, "utf8")); const n = c.years.length - 1; return { year: c.years[n], ca: c.fin.ca && c.fin.ca[n], net: c.fin.net && c.fin.net[n], ebit: c.fin.ebit && c.fin.ebit[n], cur: c.currency }; };
+const M = v => v == null ? "–" : Number(v).toLocaleString("fr-FR", { maximumFractionDigits: 0 });
+const d = ms => ms ? new Date(ms).toISOString().slice(0, 10) : "";
+let n = 0;
+for (const [id, isin] of Object.entries(ESSAIS)) {
+  const loc = local(id);
+  const [prof, inc, q, cd] = await Promise.all([get(`/equity/profile/${isin}`), get(`/equity/incomestatement/${isin}`), get(`/equity/income-statement-quarterly/${isin}`), get(`/equity/candles/${isin}?range=1y`)]); n += 4;
+  console.log(`\n== ${id} (${isin})`);
+  if (prof.j) { const p = prof.j; console.log("  profil :", [p.name || p.companyName, p.currency || p.reportedCurrency, p.exchange || p.exchangeShortName, p.sector || p.industry].filter(Boolean).join(" · "), "champs :", Object.keys(p).slice(0, 25).join(",")); } else console.log("  profil :", prof.status, prof.raw);
+  if (inc.j && Array.isArray(inc.j)) { const L = inc.j.slice().sort((a, b) => String(b.period).localeCompare(String(a.period))).slice(0, 3);
+    console.log("  Eulerpool annuel :", L.map(x => `${String(x.period).slice(0, 10)} ventes ${M(x.revenue)} ebit ${M(x.ebit)} net ${M(x.netIncome)} ${x.currency || ""}`).join(" | "));
+    if (L[0]) console.log("  champs annuels   :", Object.keys(L[0]).join(","));
+  } else console.log("  annuel :", inc.status, inc.raw);
+  if (loc) console.log("  Site (officiel)  :", `${loc.year} ventes ${M(loc.ca)} M ebit ${M(loc.ebit)} M net ${M(loc.net)} M ${loc.cur}`); else console.log("  Site : pas de comptes");
+  if (q.j && Array.isArray(q.j)) { const L = q.j.slice().sort((a, b) => String(b.period || b.date).localeCompare(String(a.period || a.date))).slice(0, 4);
+    console.log("  Trimestres       :", L.length ? L.map(x => `${String(x.period || x.date).slice(0, 10)} ventes ${M(x.revenue)} net ${M(x.netIncome)}`).join(" | ") : "liste vide"); if (L[0]) console.log("  champs trim.     :", Object.keys(L[0]).join(",")); } else console.log("  trimestres :", q.status, q.raw);
+  if (cd.j && Array.isArray(cd.j)) { const L = cd.j; console.log("  Cours 1 an       :", L.length, "points, du", d(L[0] && L[0].timestamp), "au", d(L.at(-1) && L.at(-1).timestamp), "dernier", L.at(-1) && L.at(-1).close); } else console.log("  cours :", cd.status, cd.raw);
 }
+console.log("\n", n, "requêtes utilisées");
