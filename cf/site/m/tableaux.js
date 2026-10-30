@@ -333,13 +333,17 @@ function tblxThemeHTML(T, s, c, P) {
   if (!rows.length) return "";
   const ctx = T.k === "croissance" && typeof contexteChiffresHTML === "function" ? contexteChiffresHTML(s, c, true) : "";
   const gr = rows.filter(r => r.n >= 2);
-  return `<section class="panel rf-th" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
-    <p class="rf-thx">${esc(T.ex)}</p>
-    <div class="rf-thg${ctx || !gr.length ? " rf-th1" : ""}">
-      <div class="rf-thtw">${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${Y.at(-1)}</th><th scope="col">Sur un an</th></tr></thead><tbody>${tblxThemeRows(rows.slice(0, 4), Y, s)}</tbody>${rows.length > 4 ? `<tbody class="rf-more" hidden>${tblxThemeRows(rows.slice(4), Y, s)}</tbody>` : ""}</table>`)}
-      ${rows.length > 4 ? `<button type="button" class="linkbtn rf-moreb">Voir les ${rows.length - 4} autres indicateurs</button>` : ""}</div>
-      ${ctx || !gr.length ? "" : `<div class="rf-thc" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>`}
-    </div>${ctx}</section>`;
+  // 30/10 (Romain) : le visuel d'abord. Des tuiles (chiffre, sur un an, verdict), le graphique en pleine largeur, le tableau et l'explication au clic.
+  const yl = Y.at(-1);
+  const tuiles = rows.slice(0, 4).map(r => { const one = tblxChange(r.kind, r.prev, r.last), ly = Y[r.li];
+    return `<button type="button" class="rf-kt ${tblxLvCls(r)}" data-g="${r.k}" title="Voir l'évolution en graphique"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}</small><b>${esc(r.full(r.last))}</b><span>${tblxArrow(r.dir, r.q, one, "Sur un an")}${r.lv ? `<em class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</em>` : ""}</span>${r.med != null ? `<i>médiane du secteur ${esc(r.full(r.med))}</i>` : ""}</button>`; }).join("");
+  return `<section class="panel rf-th rf-th2" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
+    <div class="rf-kts">${tuiles}</div>
+    ${gr.length ? `<div class="rf-thc rf-thc2" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>` : ""}
+    <details class="rf-thd"><summary>Le détail année par année<small>${rows.length} indicateur${rows.length > 1 ? "s" : ""}, de ${Y[0]} à ${yl}, et ce que chacun veut dire</small></summary>
+      <p class="rf-thx">${esc(T.ex)}</p>
+      <div class="rf-thtw">${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${yl}</th><th scope="col">Sur un an</th></tr></thead><tbody>${tblxThemeRows(rows, Y, s)}</tbody></table>`)}</div>
+    </details>${ctx}</section>`;
 }
 function tabComptes(s, c, el) {
   if (!c || !c.years || !c.years.length || !c.fin) {
@@ -387,7 +391,7 @@ function tabComptes(s, c, el) {
     tr.setAttribute("aria-expanded", "true");
   };
   el.addEventListener("click", e => {
-    const gb = e.target.closest(".tbx-gb");
+    const gb = e.target.closest(".tbx-gb, .rf-kt");
     if (gb) { const th = gb.closest(".rf-th"), box = th && $(".rf-thc", th); if (box && $(`.rf-gsel button[data-g="${gb.dataset.g}"]`, box)) { setG(box, gb.dataset.g); if (box.getBoundingClientRect().top > innerHeight || box.getBoundingClientRect().bottom < 0) box.scrollIntoView({ behavior: "smooth", block: "center" }); } else { const tr = gb.closest("tr[data-k]"); if (tr) toggleDet(tr); } return; }
     const sel = e.target.closest(".rf-gsel button"); if (sel) { setG(sel.closest(".rf-thc"), sel.dataset.g); return; }
     const a = e.target.closest(".rf-thnav a, a.rf-chg"); if (a) { const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) { e.preventDefault(); if (t.id === "rf-tout") $("details", t).open = true; t.scrollIntoView({ behavior: "smooth", block: "start" }); history.replaceState(history.state, "", a.getAttribute("href")); } return; }
@@ -731,3 +735,13 @@ table.tbx-ag tbody tr[data-href]{cursor:pointer}
 </style>`);
 
 document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".rf-moreb"); if (!b) return; const t = b.closest(".rf-thg").querySelector(".rf-more"); if (t) t.hidden = false; b.remove(); });
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rf-kts{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:0;border-bottom:1px solid var(--rule)}
+.rf-kt{appearance:none;background:transparent;border:0;border-right:1px solid var(--rule);text-align:left;padding:14px 18px;display:flex;flex-direction:column;gap:4px;cursor:pointer;font:inherit;color:var(--ink)}.rf-kt:last-child{border-right:0}.rf-kt:hover{background:#FDFCF7}
+.rf-kt small{font-size:12.5px;color:var(--grey);font-weight:600}.rf-kt b{font-family:var(--mono);font-weight:500;font-size:26px;line-height:1.05}.rf-kt.tz-fort b{color:var(--g)}.rf-kt.tz-vig b{color:var(--down)}
+.rf-kt span{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12.5px}.rf-kt em{font-style:normal;font-size:11.5px;font-weight:600}.rf-kt i{font-style:normal;font-size:12px;color:var(--light)}
+.rf-th2 .rf-thc2{padding:14px 18px 6px}.rf-th2 .rf-gbox svg{width:100%;height:auto;max-height:260px}
+.rf-thd{border-top:1px solid var(--rule)}.rf-thd summary{cursor:pointer;padding:12px 18px;font-weight:600;font-size:14px;list-style:none;display:flex;flex-direction:column;gap:2px}.rf-thd summary::-webkit-details-marker{display:none}.rf-thd summary small{font-weight:400;color:var(--grey);font-size:12.5px}.rf-thd summary::after{content:"+";position:absolute;right:18px;font-family:var(--mono);color:var(--grey)}.rf-thd summary{position:relative}.rf-thd[open] summary::after{content:"−"}
+.rf-thd .rf-thx{padding:0 18px}
+@media (max-width:760px){.rf-kts{grid-template-columns:repeat(2,minmax(0,1fr))}.rf-kt{border-bottom:1px solid var(--rule)}.rf-kt:nth-child(2n){border-right:0}.rf-kt b{font-size:22px}}
+</style>`);

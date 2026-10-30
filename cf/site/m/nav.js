@@ -9,73 +9,75 @@
 
 /* ---------- La table du menu ----------
    [chemin, libellé, explication]. « aussi » = pages de la rubrique qui ne sont pas dans les liens principaux. */
+/* 30/10 (Romain) : quatre entrées, quatre choix visibles par entrée au plus ; le reste en « aussi » et dans le plan du site en bas.
+   Rien n'est supprimé : toutes les adresses restent, seules les entrées de menu changent. */
 const NAV = [
   {
-    k: "dec", label: "Découvrir", sous: "Apprendre la Bourse, dans l'ordre",
+    k: "dec", label: "Découvrir", sous: "Comprendre la Bourse, dans l'ordre",
     items: [
-      ["/apprendre", "Apprendre pas à pas", "Trois niveaux, des bases aux sujets avancés"],
-      ["/commencer", "Par où commencer", "Le guide en sept étapes, dans l'ordre"],
-      ["/academie", "L'Académie", "Le programme complet, par niveau, avec des quiz"],
-      ["/idees-recues", "Vrai ou faux ?", "Les idées reçues, vérifiées avec des chiffres"],
+      ["/commencer", "Par où commencer", "Sept étapes, dans l'ordre, pour une première fois"],
+      ["/apprendre", "L'Académie", "Des leçons courtes par niveau, avec des quiz"],
+      ["/pea-cto", "PEA ou compte-titres", "Ce qu'on peut y mettre, et l'impôt en 2026"],
       ["/lexique", "Le lexique", "Chaque chiffre de la Bourse expliqué"],
-      ["/pea-cto", "PEA, compte-titres, assurance-vie", "Ce qu'on peut y mettre, et l'impôt en 2026"],
     ],
     aussi: [
+      ["/academie", "Le programme complet de l'Académie"],
       ["/academie/express", "L'essentiel en trois étapes"],
+      ["/idees-recues", "Vrai ou faux ?"],
       ["/livret-a-ou-bourse", "Livret A ou Bourse"],
       ["/repartitions", "Répartitions types"],
-      ["/pourquoi-bilan", "Pourquoi bilan."],
       ["/methode", "Méthode et sources"],
+      ["/pourquoi-bilan", "Pourquoi bilan."],
     ],
   },
   {
-    k: "exp", label: "Explorer", sous: "Les marchés, les entreprises, les ETF",
+    k: "exp", label: "Explorer", sous: "Les entreprises, les ETF, l'actualité",
     items: [
-      ["/marches", "Les marchés du jour", "Indices, plus fortes hausses et baisses"],
-      ["/entreprises", "Les entreprises", "Leurs comptes comparés à la médiane de leur secteur"],
-      ["/etf", "Les ETF", "Fonds indiciels : ce qu'ils contiennent, leurs frais"],
-      ["/actualites", "Actualités", "Annonces officielles lues, chiffrées et expliquées"],
-      ["/agenda", "Agenda et dividendes", "Résultats, assemblées et versements à venir"],
-      ["/communaute", "Communauté", "Questions et analyses des visiteurs"],
+      ["/entreprises", "Les entreprises", "2 852 fiches, chacune face à la médiane de son secteur"],
+      ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, le PEA"],
+      ["/actualites", "L'actualité", "Annonces officielles lues, chiffrées et expliquées"],
+      ["/agenda", "L'agenda", "Résultats, dividendes et assemblées à venir"],
     ],
     aussi: [
-      ["/classements", "Classements des entreprises"],
+      ["/marches", "Les marchés du jour"],
+      ["/classements", "Classements"],
       ["/decouvertes", "Découvertes du jour"],
       ["/dividendes", "Calendrier des dividendes"],
       ["/hier", "Ce qui s'est passé hier"],
+      ["/communaute", "Communauté"],
     ],
   },
   {
     k: "ana", label: "Analyser", sous: "Comparer, simuler, vérifier",
     items: [
-      ["/comparer", "Comparer des entreprises", "Plusieurs entreprises côte à côte, critère par critère"],
-      ["/portefeuille", "Mon portefeuille", "Ce que vous possédez vraiment : frais, doublons, dividendes"],
+      ["/comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face au secteur"],
+      ["/portefeuille", "Mon portefeuille", "Frais réels, doublons d'ETF, concentration"],
       ["/simulateurs/epargne", "Simulateurs", "Épargne, frais du courtier, PEA ou compte-titres"],
-      ["/outils/verifier", "Vérifier une offre", "Un nom comparé aux listes noires de l'AMF"],
+      ["/demander", "Demander à l'IA", "Une question libre, une réponse calculée sur les comptes"],
     ],
     aussi: [
+      ["/outils/verifier", "Vérifier une offre (listes noires AMF)"],
       ["/outils/si-javais", "Et si j'avais investi ?"],
       ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?"],
-      ["/repartitions", "Répartitions types et listes par critères"],
-      ["/demander", "Demander à l'IA"],
+      ["/repartitions", "Listes par critères"],
       ["/outils", "Tous les outils"],
     ],
   },
   {
     k: "esp", label: "Mon espace", sous: "Ce que vous suivez", compte: true,
     items: [
-      ["/espace", "@esp", "Votre bilan de la semaine : variations, annonces et dates de ce que vous suivez"],
-      ["/rapport-exemple", "Un rapport en exemple", "Le vrai rapport de la semaine, calculé aujourd'hui pour un profil fictif"],
+      ["/espace", "@esp", "Votre rapport de la semaine : vos valeurs, leur actualité, leurs dates"],
       ["/favoris", "Mes favoris", "Les entreprises et ETF que vous suivez"],
       ["/portefeuille", "Mon portefeuille", "Vos lignes, leurs frais et leur diversification"],
-      ["/espace/alertes", "Mes alertes", "Ce que le site vous signale, et les notifications"],
-      ["/espace/ia", "L'IA du site", "Gratuite, sans compte ni clé, à partir des données du site"],
-      ["/espace/reglages", "Réglages", "Compte, appareils, application"],
       ["/premium", "Premium", "Plus d'Académie, d'alertes et d'historique"],
     ],
     aussi: [
-      ["/espace/rapport", "Régler mon bilan de la semaine"],
-      ["/connecteur", "Utiliser bilan. dans ChatGPT ou Claude"],
+      ["/rapport-exemple", "Un rapport en exemple"],
+      ["/espace/rapport", "Régler mon rapport"],
+      ["/espace/alertes", "Mes alertes"],
+      ["/espace/ia", "L'IA du site"],
+      ["/espace/reglages", "Réglages"],
+      ["/connecteur", "bilan. dans ChatGPT ou Claude"],
     ],
   },
 ];

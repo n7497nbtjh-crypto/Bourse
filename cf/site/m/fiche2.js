@@ -433,6 +433,14 @@ function rfAVenir(s) {
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3);
   return `<div class="rf-bl rf-ev"><h3>À venir</h3>${up.length ? `<ul>${up.map(e => `<li><b>${esc(RF_MOIS(e.date))}</b><span>${esc(e.label)}</span></li>`).join("")}</ul>` : `<p class="rf-no">Aucune date annoncée pour l'instant. Le site les ajoute dès que l'entreprise les publie.</p>`}<a class="rf-lk" href="/entreprise/${s.id}/actualite">Agenda et actualités →</a></div>`;
 }
+function rfVerdictCourt(s, c) { // deux ou trois mots, lisibles sans lire : rentabilité, dette, prix
+  const f = figuresOf(c), m = ratios(f), bank = isBank(s), it = {}; lecture(s, f).forEach(i => { if (!it[i.term]) it[i.term] = i; });
+  const lv = k => it[k] && it[k].lv !== "na" ? it[k].lv : null, mots = [];
+  if (f.net != null && f.net < 0) mots.push("En perte"); else { const r = lv(bank ? "roe" : "marge") || lv("net"); mots.push(r === "fort" ? "Très rentable" : r === "vig" ? "Peu rentable" : "Rentable"); }
+  if (!bank) { if (f.netDebt != null && f.netDebt < 0) mots.push("sans dette"); else { const d = lv("lev") || lv("gear") || lv("dettenette"); if (d) mots.push({ fort: "peu endettée", moyen: "endettée", vig: "très endettée" }[d]); } }
+  const v = valo(s), mp = MEDPE[s.sector]; if (v && v.pe && mp) mots.push(v.pe > mp * 1.3 ? "chère" : v.pe < mp * 0.75 ? "bon marché" : "prix dans la norme");
+  return mots.join(", ");
+}
 function ficheSommaire(s, c) {
   const wait = c === undefined && !s.missing && !FULL[s.id]; // les comptes arrivent : on réserve la place du verdict (pas de saut sur téléphone)
   if (c === undefined) c = FULL[s.id] || null;
@@ -448,7 +456,8 @@ function ficheSommaire(s, c) {
   // 30/10 (Romain) : l'en-tête montre sa place dans le secteur (jauges face à la médiane) ; le verdict « En bref » passe dans l'onglet Synthèse
   const prof = (profilHTML(s) || "").replace(/<p class="kick"[^>]*>Son profil dans le secteur[^<]*<\/p>/, "").replace(/<p class="note"[^>]*>[\s\S]*?<\/p>\s*<\/div>\s*$/, "</div>");
   const rk = fiche2RangBouton(s), n = (prof.match(/class="pa2"/g) || []).length;
-  return `<div class="fh-sum rf-sum rf-hplace"><div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><span class="f2-sub">Exercice ${esc(s.year)} · comptes officiels</span></div>
+  const vc = rfVerdictCourt(s, c);
+  return `<div class="fh-sum rf-sum rf-hplace">${vc ? `<p class="rf-vc">${esc(vc)}<small>sur ses comptes ${esc(s.year)}, face à son secteur</small></p>` : ""}<div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><span class="f2-sub">Exercice ${esc(s.year)} · comptes officiels</span></div>
       ${t ? `<p class="rf-tally" title="Selon les seuils de lecture du site et la médiane du secteur"><span class="f"><i></i>${t.fort} point${t.fort > 1 ? "s" : ""} fort${t.fort > 1 ? "s" : ""}</span><span class="m"><i></i>${t.moyen} dans la moyenne</span><span class="v"><i></i>${t.vig} à surveiller</span></p>` : ""}
       ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
       ${rk}
@@ -589,7 +598,7 @@ function rf6Fig(l, v, sub, cls) { return v == null ? "" : `<div class="rf6-fig">
 function rf6Mod(n, titre, lv, verdict, figs, jauge, lien, extra = "") {
   const L = lv && RF6_LV[lv];
   return `<li class="rf6-mod${L ? " rf6-" + L[1] : ""}"><div class="rf6-h"><span class="rf6-n">${n}</span><h3>${titre}</h3>${L ? `<span class="vd vd-${L[1]}">${L[0]}</span>` : ""}</div>
-    <div class="rf6-b"><p class="rf6-v">${verdict}</p>${figs ? `<div class="rf6-figs">${figs}</div>` : ""}${extra}</div>
+    <div class="rf6-b">${figs ? `<div class="rf6-figs">${figs}</div><details class="rf6-why"><summary>Pourquoi ?</summary><p class="rf6-v">${verdict}</p></details>` : `<p class="rf6-v">${verdict}</p>`}${extra}</div>
     <div class="rf6-r">${jauge}${lien ? `<a class="rf6-lk" href="${lien[0]}">${lien[1]} →</a>` : ""}</div></li>`;
 }
 function ficheRetenirHTML(s, c) {
@@ -649,7 +658,9 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .rf6-n{font-family:var(--mono);font-size:12px;color:var(--light)}
 .rf6-h h3{font-size:17px;font-weight:700;margin:0;line-height:1.2}
 .rf6-v{margin:0;font-size:14.5px;line-height:1.55;max-width:600px}
-.rf6-figs{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:12px}
+.rf6-figs{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:2px}
+.rf6-why{margin-top:10px}.rf6-why summary{cursor:pointer;font-size:13px;font-weight:600;color:var(--grey);list-style:none;display:inline-flex;align-items:center;gap:6px}.rf6-why summary::-webkit-details-marker{display:none}.rf6-why summary::before{content:"+";font-family:var(--mono);width:16px;height:16px;border:1px solid var(--rule);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px}.rf6-why[open] summary::before{content:"−"}.rf6-why .rf6-v{margin-top:8px}
+.rf-vc{font-family:var(--serif);font-weight:800;font-size:30px;line-height:1.1;letter-spacing:-.015em;margin:0 0 12px;display:flex;flex-direction:column;gap:4px}.rf-vc small{font-family:var(--sans);font-weight:500;font-size:12.5px;color:var(--grey);letter-spacing:0}
 .rf6-fig{display:flex;flex-direction:column;gap:2px;min-width:110px}.rf6-fig small{font-size:12px;color:var(--grey)}.rf6-fig b{font-family:var(--mono);font-weight:500;font-size:20px;line-height:1.1}.rf6-fig b.dn{color:var(--down)}.rf6-fig span{font-size:12px;color:var(--light)}
 .rf6-ev{margin:10px 0 0;font-size:13.5px;color:var(--grey)}.rf6-ev b{color:var(--ink);font-weight:600}
 .rf6-r{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
