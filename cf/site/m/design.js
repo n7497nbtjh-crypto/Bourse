@@ -270,3 +270,4 @@ document.head.insertAdjacentHTML("beforeend", `<style>
     return r;
   };
 })();
+document.head.insertAdjacentHTML("beforeend", `<style>.prem-av{margin:6px 0 14px!important;max-width:none}.prem-av li{padding-top:14px!important;padding-bottom:12px!important}.prem-av b{font-size:16px!important}.prem-av span{font-size:13.5px!important}.prem-preuve{font-size:13px;color:var(--grey);margin:0 0 18px;max-width:820px}</style>`);
