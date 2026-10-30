@@ -25,13 +25,16 @@ concurrency:
 jobs:
   donnees:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    timeout-minutes: 200
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Collecte (GLEIF, filings.xbrl.org, SEC)
+        # Arrêt au bout de 110 minutes sans tout perdre : les comptes déjà lus sont enregistrés plus bas, la suite au passage suivant
+        timeout-minutes: 110
+        continue-on-error: true
         env:
           CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
         run: |
