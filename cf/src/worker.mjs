@@ -139,10 +139,38 @@ export default {
     }
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `\n<script type="application/ld+json">${t.ld}</script>` : ""}`);
+    html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url)}</div>`);
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 });
     return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION, ...SECURITE } });
   },
 };
+
+
+/* Contenu servi dans la page même (30/10/2026) : sans JavaScript (robots d'indexation, navigateur qui bloque les scripts,
+   fichier de données en panne), la page n'est plus blanche. Le titre, la description et, pour une entreprise, ses chiffres
+   du dernier exercice. Masqué dès que le site s'affiche (classe « js » posée en tête de page), donc sans saut visible. */
+const fmtM = (v, cur) => { if (v == null || !isFinite(v)) return null; const a = Math.abs(v); const t = a >= 1000 ? (v / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " Md" : v.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " M"; return t + " " + (cur === "EUR" ? "€" : cur === "USD" ? "$" : cur || ""); };
+async function rendu(t, fq, env, url) {
+  let corps = "";
+  if (fq) {
+    try {
+      const r = await env.ASSETS.fetch(new Request(new URL(`/data/societes/${fq[1]}.json`, url)));
+      if (r.ok && (r.headers.get("content-type") || "").includes("json")) {
+        const c = await r.json(), f = c.fin || {}, n = (c.years || []).length - 1, y = c.years ? c.years[n] : null, L = [];
+        const v = k => Array.isArray(f[k]) ? f[k][n] : null;
+        if (y != null) {
+          if (v("ca") != null) L.push(["Chiffre d'affaires", fmtM(v("ca"), c.currency)]);
+          if (v("ebit") != null) L.push(["Résultat d'exploitation", fmtM(v("ebit"), c.currency)]);
+          if (v("net") != null) L.push(["Résultat net", fmtM(v("net"), c.currency)]);
+          if (v("netDebt") != null) L.push([v("netDebt") < 0 ? "Trésorerie nette" : "Dette nette", fmtM(Math.abs(v("netDebt")), c.currency)]);
+          if (v("divPaid") != null) L.push(["Dividendes versés", fmtM(v("divPaid"), c.currency)]);
+          corps = `<h2>Comptes de l'exercice ${esc(String(y))}</h2><ul>${L.map(([k, x]) => `<li>${esc(k)} : ${esc(x)}</li>`).join("")}</ul><p>Source : comptes annuels officiels (${c.cik ? "SEC" : "ESEF"}).</p>`;
+        }
+      }
+    } catch (e) { }
+  }
+  return `<div class="ssr"><h1>${esc(t.title.replace(/ · .*$/, ""))}</h1><p>${esc(t.desc)}</p>${corps}<p class="ssr-js">Le site a besoin de JavaScript pour afficher l'analyse complète, les graphiques et les comparaisons. S'il ne s'affiche pas, rechargez la page.</p></div>`;
+}
 
 // Tâche du soir (.github/workflows/espace.yml) : alertes et bilans de l'espace, puis notifications push des appareils abonnés.
 // Les envois partent dans un appel où l'espace n'a plus de compte à traiter (limite de sous-requêtes par appel) ;
