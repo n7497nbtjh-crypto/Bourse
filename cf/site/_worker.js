@@ -53,7 +53,9 @@ async function amf(request, followed = []) {
 var json = (o, s = 200) => new Response(JSON.stringify(o), { status: s, headers: { "content-type": "application/json; charset=utf-8", "cache-control": "no-store" } }), SCHEMA = [
   "CREATE TABLE IF NOT EXISTS abonnes (token TEXT PRIMARY KEY, email TEXT, plan TEXT NOT NULL, sub_id TEXT, session TEXT UNIQUE, until INTEGER NOT NULL, created INTEGER NOT NULL)",
   "CREATE INDEX IF NOT EXISTS ab_email ON abonnes (email)",
-  "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))"
+  "CREATE TABLE IF NOT EXISTS mail_compte (fournisseur TEXT NOT NULL, jour TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (fournisseur, jour))",
+  "CREATE TABLE IF NOT EXISTS attente (email TEXT PRIMARY KEY, created INTEGER NOT NULL)"
+  // liste d'attente Premium (avant l'ouverture des paiements)
 ], ready = !1;
 async function initCompte(db) {
   if (!ready) {
@@ -154,6 +156,21 @@ async function premium(request, env) {
     } catch (e) {
       return json({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 502);
     }
+  }
+  if (path === "/api/premium/attente" && request.method === "POST") {
+    let ip = request.headers.get("cf-connecting-ip") || "local";
+    if (await tropDEssais(env, "attente:" + ip, 5)) return json({ error: "Trop de demandes depuis cette connexion. R\xE9essayez dans un quart d'heure." }, 429);
+    let b = {};
+    try {
+      b = await request.json();
+    } catch {
+    }
+    let email = String(b.email || "").trim().toLowerCase().slice(0, 254);
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email) ? (await env.DB.prepare("INSERT OR IGNORE INTO attente (email, created) VALUES (?, ?)").bind(email, Date.now()).run(), json({ ok: !0 })) : json({ error: "Cette adresse ne semble pas valide." }, 400);
+  }
+  if (path === "/api/premium/attente" && request.method === "GET") {
+    let r = await env.DB.prepare("SELECT COUNT(*) AS n FROM attente").first().catch(() => null), n = r ? r.n : 0;
+    return json({ n: n >= 100 ? n : 0 });
   }
   if (path === "/api/premium/retrouver" && request.method === "POST") {
     let ip = request.headers.get("cf-connecting-ip") || "local";
@@ -2508,7 +2525,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "f7f60d6cd9dbc66a", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "af24e1e7f2e2d3cc", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -2627,14 +2644,16 @@ ${REPERES}
 ${REGLES}`, ASSISTANT = `Tu es l'assistant du site d'information boursi\xE8re \xAB bilan. \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, \xE9volution sur plusieurs ann\xE9es avec son contexte dat\xE9 et sourc\xE9, comparaison au secteur, concurrents, cours, annonces r\xE9centes, actualit\xE9 qui la concerne, agenda, fiabilit\xE9 des donn\xE9es).
 R\xE8gles :
 - 60 \xE0 160 mots, phrases courtes, termes techniques expliqu\xE9s une fois.
-- Si les faits ne permettent pas de r\xE9pondre, dis-le simplement (\xAB Ce que je ne sais pas : \u2026 \xBB) et indique quelle rubrique du site ou quel document officiel regarder.
+- R\xE9ponds \xE0 la question pos\xE9e, et seulement \xE0 elle. N'\xE9num\xE8re jamais des chiffres sans rapport avec la question (par exemple le cours ou la fourchette sur un an quand on t'interroge sur la marge). Ne r\xE9p\xE8te jamais un m\xEAme chiffre deux fois.
+- Si la question compare l'entreprise \xE0 une autre, utilise \xAB autres_entreprises_citees_dans_la_question \xBB : donne les deux chiffres, leur \xE9cart, et ce qui peut l'expliquer (m\xE9tier, taille, ann\xE9e) avec prudence. Si cette entreprise n'est pas dans les faits, dis en une phrase que le site n'a pas ses chiffres sous la main et propose la page \xAB Comparer \xBB.
+- Si les faits ne permettent pas de r\xE9pondre, dis-le en une phrase (\xAB Ce que je ne sais pas : \u2026 \xBB) et indique quelle rubrique du site ou quel document officiel regarder.
 - Si la liste \xAB fiabilite_des_donnees \xBB signale un point qui touche ta r\xE9ponse (comptes anciens, dividende estim\xE9, m\xE9diane sur peu d'entreprises), termine par une phrase \xAB Je ne suis pas s\xFBr : \u2026 \xBB qui le dit.
 - Pour une question d'actualit\xE9 ou sur l'\xE9volution des chiffres, utilise \xAB actualite_qui_la_concerne \xBB et \xAB evolution_pluriannuelle \xBB : cite la date de v\xE9rification, et rappelle que le site ne mesure pas la part exacte de ces \xE9v\xE9nements dans les r\xE9sultats.
 - N'invente aucun chiffre ni aucune information. Cite les chiffres avec leur ann\xE9e.
 - Aucun conseil d'achat ou de vente, aucune pr\xE9diction de cours, aucun objectif de prix. Si on te demande \xAB faut-il acheter ? \xBB, explique les \xE9l\xE9ments \xE0 regarder (points forts, points de vigilance, prix par rapport aux b\xE9n\xE9fices) sans trancher, et rappelle que ce n'est pas un conseil.
 - Vouvoie toujours le lecteur.
 - La dette se mesure en ann\xE9es de r\xE9sultat d'exploitation avant amortissements (pas de b\xE9n\xE9fice net) : reprends exactement l'unit\xE9 donn\xE9e dans les faits.
-- Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses onglets : \xAB Vue d'ensemble \xBB, \xAB Crit\xE8re par crit\xE8re \xBB, \xAB Tous les chiffres \xBB, \xAB Actualit\xE9s \xBB, ou le bouton \xAB Comparer \xE0 ses concurrents \xBB.
+- Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses rubriques : \xAB Comprendre l'entreprise \xBB, \xAB Comprendre son prix \xBB, \xAB Comprendre ce qui change \xBB, \xAB Les chiffres en d\xE9tail \xBB, ou le bouton \xAB Comparer \xE0 ses concurrents \xBB.
 - Pas de listes \xE0 puces, pas de tirets cadratins.
 ${REGLES}`, COMPARAISON = `Tu expliques, en fran\xE7ais, la comparaison de plusieurs entreprises cot\xE9es \xE0 une personne qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : pour chaque entreprise, les chiffres de son dernier exercice publi\xE9 (ventes en euros, croissance, marges, rentabilit\xE9 des capitaux propres, dette, prix en Bourse rapport\xE9 au b\xE9n\xE9fice, dividende), la m\xE9diane de son secteur, et le verdict d\xE9j\xE0 calcul\xE9 par le site crit\xE8re par crit\xE8re.
 R\xE8gles :
@@ -2805,8 +2824,8 @@ function meta(path, q = null) {
   return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/espace/ia" ? { title: `Mon IA \xB7 ${SITE}`, desc: "Les r\xE9ponses calcul\xE9es du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni cl\xE9." } : p === "/connecteur" ? { title: `Utiliser bilan. dans ChatGPT ou Claude \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 function redirectionParcours(p) {
-  let m = /^\/debuter(\/.*)?$/.exec(p || "");
-  return m ? "/academie/express" + (m[1] || "") : p === "/premiers-pas" ? "/academie/express" : p === "/simulateurs/passe" ? "/outils/si-javais" : p === "/pour-moi" ? "/repartitions" : null;
+  let m = /^\/debuter\/(.+)$/.exec(p || "");
+  return m ? "/academie/express/" + m[1] : p === "/simulateurs/passe" ? "/outils/si-javais" : p === "/pour-moi" ? "/repartitions" : p === "/commencer" || p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/" || p === "/debuter" || p === "/premiers-pas" ? "/apprendre" : null;
 }
 var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree = () => Response.json({ error: "Cette adresse n'est plus utilis\xE9e. L'IA du site r\xE9pond dans le panneau \u2726 \xAB Demander \xE0 l'IA \xBB", ia_serveur: !1 }, { status: 410, headers: { "cache-control": "no-store" } }), worker_default = {
   async fetch(request, env, ctx) {
