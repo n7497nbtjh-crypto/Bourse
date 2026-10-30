@@ -331,42 +331,61 @@ function parseCours(txt) {
 }
 
 // cf/src/cours.mjs
-async function cours(request, ctx, env) {
-  let cache = caches.default, key = new Request(new URL("/api/cours", request.url).toString()), hit = await cache.match(key);
-  if (hit) return hit;
-  let body;
-  try {
-    let items = {};
-    for (let [i, u] of COURS_CSVS.entries()) {
-      let r = await fetch(u, { cf: { cacheTtl: 300 } }).catch(() => null);
-      if (!r || !r.ok) {
-        if (i === 0) throw new Error("feuille " + (r ? r.status : "injoignable"));
+var FRAIS_MS = 10 * 6e4;
+async function lireFeuille(request, env) {
+  let items = {};
+  for (let [i, u] of COURS_CSVS.entries()) {
+    let r = await fetch(u, { cf: { cacheTtl: 300 } }).catch(() => null);
+    if (!r || !r.ok) {
+      if (i === 0) throw new Error("feuille " + (r ? r.status : "injoignable"));
+      continue;
+    }
+    Object.assign(items, parseCours(await r.text()));
+  }
+  if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
+  let j = await fichierRobot(request, env);
+  if (j) {
+    let HF = ["h52", "l52", "p1y", "p3y", "p5y"];
+    for (let [k, v] of Object.entries(j.items || {})) {
+      let it = items[k];
+      if (!it) {
+        items[k] = j.updated ? { ...v, d: j.updated } : v;
         continue;
       }
-      Object.assign(items, parseCours(await r.text()));
+      for (let f of HF) it[f] == null && v[f] != null && (it[f] = v[f]);
     }
-    if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
-    try {
-      let f = env && env.ASSETS ? await env.ASSETS.fetch(new URL("/data/cours.json", request.url)) : await fetch(new URL("/data/cours.json", request.url));
-      if (f.ok) {
-        let j = await f.json(), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-        for (let [k, v] of Object.entries(j.items || {})) {
-          let it = items[k];
-          if (!it) {
-            items[k] = j.updated ? { ...v, d: j.updated } : v;
-            continue;
-          }
-          for (let h of HF) it[h] == null && v[h] != null && (it[h] = v[h]);
-        }
-      }
-    } catch {
-    }
-    body = JSON.stringify({ updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items });
-  } catch (e) {
-    return Response.json({ error: String(e.message || e) }, { status: 503 });
   }
-  let res = new Response(body, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=600" } });
-  return ctx && ctx.waitUntil ? ctx.waitUntil(cache.put(key, res.clone())) : await cache.put(key, res.clone()), res;
+  return { updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items };
+}
+async function fichierRobot(request, env) {
+  try {
+    let f = env && env.ASSETS ? await env.ASSETS.fetch(new URL("/data/cours.json", request.url)) : await fetch(new URL("/data/cours.json", request.url));
+    return f.ok ? await f.json() : null;
+  } catch {
+    return null;
+  }
+}
+var reponse2 = (corps, age) => new Response(typeof corps == "string" ? corps : JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300", "x-cours-age": String(age) } });
+async function cours(request, ctx, env) {
+  let cache = typeof caches < "u" ? caches.default : null, key = new Request(new URL("/api/cours?copie=1", request.url).toString()), rafraichir = async () => {
+    try {
+      let j2 = await lireFeuille(request, env);
+      return cache && await cache.put(key, new Response(JSON.stringify(j2), { headers: { "content-type": "application/json", "cache-control": "public, max-age=86400", "x-lu": String(Date.now()) } })), j2;
+    } catch {
+      return null;
+    }
+  }, enFond = (p) => {
+    ctx && ctx.waitUntil && ctx.waitUntil(p);
+  }, hit = cache ? await cache.match(key) : null;
+  if (hit) {
+    let lu = +(hit.headers.get("x-lu") || 0), age = Date.now() - lu;
+    return age > FRAIS_MS && enFond(rafraichir()), reponse2(await hit.text(), Math.round(age / 1e3));
+  }
+  let j = await fichierRobot(request, env);
+  if (j && j.items && Object.keys(j.items).length > 50)
+    return enFond(rafraichir()), reponse2({ ...j, source: (j.source || "Google Finance") + " (copie du matin, mise \xE0 jour en cours)" }, -1);
+  let frais = await rafraichir();
+  return frais ? reponse2(frais, 0) : Response.json({ error: "Cours indisponibles pour le moment" }, { status: 503 });
 }
 
 // cf/src/compte.mjs
@@ -625,7 +644,7 @@ async function siteData(request, env) {
     }
   }, [uni, etf, ana, ag, agAuto, sem] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json")]), px = {};
   try {
-    px = (await (await cours(new Request(new URL("/api/cours", request.url)))).json()).items || {};
+    px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {};
   } catch {
   }
   let names = {};
@@ -1321,7 +1340,7 @@ async function siteData2(request, env) {
     }
   }, [uni, etf, ana, ag, agAuto, sem, cs, fx] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json")]), px = {};
   try {
-    px = (await (await cours(new Request(new URL("/api/cours", request.url)))).json()).items || {};
+    px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {};
   } catch {
   }
   let names = {}, meta2 = {}, isin = {}, etfm = {};
@@ -2469,7 +2488,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "1546ca9d79fa0805", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "dd383892a404f09c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
