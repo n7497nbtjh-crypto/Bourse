@@ -1,12 +1,4 @@
 id,c1,c2,c3
-c:fresenius-se-and-co-kgaa,ETR:FRE,FRA:FRE,
-c:covestro,ETR:1COV,FRA:1COV,
-c:nyrstar,EBR:NYR,AMS:NYR,EPA:NYR
-c:sgl-carbon,ETR:SGL,FRA:SGL,
-c:united-internet,ETR:UTDI,FRA:UTDI,
-c:wacker-neuson,ETR:WAC,FRA:WAC,
-c:ceconomy,ETR:CEC,FRA:CEC,
-c:efg-international,SWX:EFGN,,
 c:ottobock,ETR:OBCK,FRA:OBCK,
 c:kernel,WSE:KER,,
 c:hamburger-hafen-und-logistik,ETR:HHFA,FRA:HHFA,
