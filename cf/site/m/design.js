@@ -207,3 +207,10 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .cmpr-all tr.grp th,.fbt,.anf-sait h4,.cmpr-sug .h{font-size:12.5px;font-weight:600;text-transform:none}
 </style>`);
 function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, nulle part
+/* 30/10 (Romain, DESIGN.md) : plus aucune capitale espacée nulle part ; les petites étiquettes en Plex Sans, pas en chasse fixe */
+document.head.insertAdjacentHTML("beforeend", `<style>
+body *{text-transform:none!important}
+small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.out-dc small,.o2-sc,.o2-tile small,.etft3 small,.etfcols small,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.pf3ipv,.rf-bl h3,.rf-card h4,.fbt,.syncat,.synev,.synevol,.rc-exq,.tbx thead th,.pop .kick{letter-spacing:0!important}
+.navpied p,table.t th,.tbx thead th,.par-sect,.par-tools small,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.o2-sc,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.fbt,.syncat,.synev,.synevol,.rc-exq,.rf-ctab th .rf-cth,.acc-agd{font-family:var(--sans)!important}
+.navpied p{font-weight:700;color:var(--ink);font-size:13px}
+</style>`);
