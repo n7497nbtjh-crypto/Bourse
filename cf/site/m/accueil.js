@@ -319,6 +319,7 @@ async function accRapportPanneau() { // le rapport en exemple dans un panneau la
     document.addEventListener("keydown", e => { if (e.key === "Escape" && pane.classList.contains("on")) accRapportFermer(); }); }
   pane.classList.add("on"); document.documentElement.classList.add("acc-pane-on");
   const body = $(".acc-paneb", pane); if (body.dataset.pret) return;
+  try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=rapport-exemple"); } catch (e) { }
   let b = null; try { const r = await fetch("/api/rapport-exemple"); b = r.ok ? await r.json() : null; } catch (e) { }
   if (!b || typeof synPageHTML !== "function") { body.innerHTML = `<p class="muted">Le rapport exemple n'a pas pu être calculé pour le moment. <a class="lnk" href="/rapport-exemple">Ouvrir la page</a></p>`; return; }
   await Promise.all([typeof acaLoad === "function" ? acaLoad() : null, typeof synContexte === "function" ? synContexte() : null, typeof loadFiches === "function" ? loadFiches() : null]);

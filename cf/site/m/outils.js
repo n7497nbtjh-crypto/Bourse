@@ -155,6 +155,7 @@ async function pageClassements() {
   app.innerHTML = `<div class="out-page"><div class="crumbs"><a href="/entreprises">Entreprises</a> › Classements</div>
     <h1 class="pagetitle">Les classements</h1>
     <p class="pagesub">Quelles entreprises cumulent le plus de points forts, restent en tête de leur secteur ou relèvent leur dividende chaque année ? Tout est calculé à partir des comptes officiels publiés, avec la méthode affichée.</p>
+    <div id="clQ" class="seoq-chips"></div>
     <div class="out-tabs scroll-x" role="tablist">${Object.entries(OUT_CL).map(([k, v]) => `<button type="button" role="tab" data-k="${k}" aria-selected="${k === f.c}" class="${k === f.c ? "on" : ""}"><i>${v.icon}</i><b>${esc(v.t)}</b><small>${esc(v.s)}</small></button>`).join("")}</div>
     <section class="panel"><div class="pb out-filt">${outSelect("out-s", outSecOpts(), f.s, "Secteur")}${outSelect("out-r", OUT_REG, f.r, "Région")}${outSelect("out-t", OUT_TAILLE, f.t, "Taille en Bourse")}<label class="out-chk"><input type="checkbox" id="out-pea"${f.pea ? " checked" : ""}> Éligibles au PEA</label></div></section>
     <div id="out-cl"></div></div>`;
@@ -179,7 +180,7 @@ async function pageClassements() {
         <p><b>Limites.</b> Un seul exercice peut être exceptionnel (cession, crise). Les ventes sont dans la devise des comptes, sans effet de change. Les petites entreprises ont souvent moins d'années publiées et entrent moins facilement dans les classements sur plusieurs exercices. L'éligibilité au PEA suit la règle du site : siège dans l'Union européenne ou l'EEE et impôt sur les sociétés (les foncières exonérées sont exclues).</p>
         <p class="muted">Une bonne place dit « ces comptes ressortent sur ce critère ». Elle ne dit ni que l'action est bon marché, ni qu'elle montera.</p></div></details></section>`;
   };
-  draw();
+  draw(); if (typeof seoLiens === "function") seoLiens(document.getElementById("clQ"));
   $$(".out-tabs button", app).forEach(b => b.onclick = () => { f.c = b.dataset.k; $$(".out-tabs button", app).forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-selected", x === b); }); draw(); });
   $("#out-s").onchange = e => { f.s = e.target.value; draw(); };
   $("#out-r").onchange = e => { f.r = e.target.value; draw(); };

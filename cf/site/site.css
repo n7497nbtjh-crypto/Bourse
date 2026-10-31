@@ -3286,3 +3286,15 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 .syn4-semr span.gris{background:var(--soft);opacity:.55}
 .pf3r11{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 22px;border-top:1px dashed var(--rule);background:var(--soft);color:var(--grey);text-decoration:none;font-size:13.5px}.pf3r11 span:first-child{font-weight:700;color:var(--ink)}.pf3r11 span:last-child{font-weight:600;color:var(--ink)}
 @media (max-width:700px){.pf3r11{grid-template-columns:1fr;gap:2px;padding:10px 14px}}
+/* 5e passage (E1) : pages de réponse /question/<id> */
+.seoq-rep{max-width:62ch}
+.seoq-f{margin:14px 0}
+.seoq-autres{margin-top:22px}.seoq-autres h2{font-size:20px;margin:0 0 8px}
+.seoq-chips{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 16px}.seoq-cl{font-size:14px;color:var(--light)}
+/* 5e passage (E2) : page privée /x */
+.x-k{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:8px 0}.x-k label{width:100%;font-weight:600}.x-k input{flex:1;min-width:200px;padding:10px 12px;border:1.5px solid var(--rule);border-radius:10px;font:inherit}
+.x-err{color:var(--down);font-weight:600}
+.x-post{margin-bottom:16px}.x-txt{white-space:pre-wrap;overflow-wrap:anywhere;font-family:var(--sans);font-size:16px;line-height:1.5;background:var(--soft);border-radius:10px;padding:12px 14px;margin:6px 0 12px}
+.x-cv{width:100%;height:auto;border:1px solid var(--rule);border-radius:10px;display:block}
+.x-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+.x-tun td,.x-tun th{padding:6px 10px}

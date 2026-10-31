@@ -428,7 +428,7 @@ async function tunnel(env) {
     const n = async (q, ...b) => (((await env.DB.prepare(q).bind(...b).first()) || {}).n) || 0;
     const base = async w => ({ comptes_crees: await n(`SELECT COUNT(*) AS n FROM comptes WHERE created > ? AND created <= ?`, now - (w === sem ? 7 : 14) * JOUR, now - (w === sem ? 0 : 7) * JOUR),
       rapports_ouverts: await n(`SELECT COUNT(*) AS n FROM bilans WHERE semaine = ? AND vu = 1`, w), essais: await n(`SELECT COUNT(*) AS n FROM essais_premium WHERE at > ? AND at <= ?`, now - (w === sem ? 7 : 14) * JOUR, now - (w === sem ? 0 : 7) * JOUR) });
-    const etapes = async w => { const c = await lire(w), b = await base(w); return { semaine: w, visites: c.visite || 0, depuis_moteurs: c["src:moteur"] || 0, depuis_x: c["src:x"] || 0, fiches: c.fiche || 0, suivre: c.suivre || 0, comptes: b.comptes_crees, rapports_ouverts: b.rapports_ouverts, apercus_alerte: c["apercu-alerte"] || 0, page_premium: c["premium-vue"] || 0, essais: b.essais }; };
+    const etapes = async w => { const c = await lire(w), b = await base(w); return { semaine: w, visites: c.visite || 0, depuis_moteurs: c["src:moteur"] || 0, depuis_x: c["src:x"] || 0, fiches: c.fiche || 0, suivre: c.suivre || 0, rapport_exemple: c["rapport-exemple"] || 0, comptes: b.comptes_crees, rapports_ouverts: b.rapports_ouverts, apercus_alerte: c["apercu-alerte"] || 0, page_premium: c["premium-vue"] || 0, essais: b.essais }; };
     return { cette_semaine: await etapes(sem), semaine_precedente: await etapes(prec), premium_actifs: await n(`SELECT COUNT(*) AS n FROM abonnes WHERE until > ?`, now).catch(() => 0) };
   } catch (e) { return { erreur: String(e && e.message || e) }; }
 }

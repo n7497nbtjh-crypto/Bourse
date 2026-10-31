@@ -1341,7 +1341,7 @@ function favCount() { const n = favs().filter(k => k.startsWith("c:") ? RBY[k.sl
 document.addEventListener("click", ev => {
   const b = ev.target.closest("[data-fav]"); if (!b) return;
   const k = b.dataset.fav, a = favs().slice(), i = a.indexOf(k);
-  if (i >= 0) a.splice(i, 1); else a.unshift(k);
+  if (i >= 0) a.splice(i, 1); else { a.unshift(k); try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=suivre"); } catch (e) { } } // tunnel (E4) : compteur anonyme
   setFavs(a);
   $$(`[data-fav="${k}"]`).forEach(x => { x.classList.toggle("on", isFav(k)); x.setAttribute("aria-pressed", isFav(k)); x.textContent = favLbl(k); });
   if (location.pathname === "/favoris" && b.closest(".favlist")) pageFavoris();
@@ -2665,6 +2665,8 @@ const THEME_RE = { defense: [/d[ée]fense|armement|militaire|munitions|defense/i
   luxe: [/luxe|luxury|maroquinerie|joaill|haute couture|montres/i, "luxe"], sante: [/health|sant[ée]|pharma|m[ée]dic|biotech/i, "santé"] };
 function runFiltre(a) {
   let l = R.companies.filter(c => !c.missing && (!a.secteur || c.sector === a.secteur) && (!a.region || c.region === a.region || (a.region === "EU" && c.region === "FR")) && (!a.pays || (c.isin || "").startsWith(a.pays)) && (!a.pea || peaOk(c)));
+  if (a.sauf) l = l.filter(c => !a.sauf.includes(c.sector)); // pages de réponse (m/seo.js) : secteurs écartés quand l'indicateur n'y a pas de sens
+  if (a.fiable) { const CH = { croissance: "ca", taille: "ca", marge: "marge", rentabilite: "equity" }, ch = [...a.criteres.map(k => k.indicateur), a.tri && a.tri.indicateur].map(k => CH[k]).filter(Boolean); l = l.filter(c => !ch.some(f => AVERIF[c.id] && AVERIF[c.id][f])); } // chiffre « à vérifier » : écarté du classement
   if (a.mot && THEME_RE[a.mot]) { const l2 = l.filter(c => THEME_RE[a.mot][0].test(c.name + " " + (c.desc || ""))); if (l2.length) l = l2; else a.mot = null; }
   l = l.filter(c => a.criteres.every(k => { const f = INDI[k.indicateur]; if (!f) return true; const v = f[1](c); if (v == null) return false;
     if (k.condition === "sup") return k.valeur == null || v > k.valeur; if (k.condition === "inf") return k.valeur == null || v < k.valeur;

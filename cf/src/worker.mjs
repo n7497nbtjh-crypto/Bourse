@@ -18,6 +18,7 @@ import { mcp } from "./mcp.mjs";
 import { tete, VERSION, SECURITE } from "./pwa.mjs";
 import { etfMeta } from "./etf_meta.mjs";
 import { iaSite } from "./iasite.mjs";
+import QUESTIONS from "../../data/questions.json" with { type: "json" };
 
 const SITE = "bilan.";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
@@ -33,7 +34,8 @@ export function meta(path, q = null) {
   if ((m = base.match(/^\/entreprise\/([a-z0-9-]+)$/))) {
     const c = BY[m[1]];
     if (!c) return null;
-    return { title: `${c.name} : cours, comptes et actualité · ${SITE}`, desc: `${c.name} (${c.sector}). ${c.desc} Cours de l'action, chiffre d'affaires, marge, résultat, dette et dividende tirés des rapports annuels, publications officielles AMF. Chaque chiffre est expliqué.` };
+    const sec = SECTEURS[c.sector] || c.sector; // 5e passage (E1) : le titre répond aux questions qu'on tape vraiment
+    return { title: `Action ${c.name} : résultats, dividende et dette, expliqués · ${SITE}`, desc: `${c.name} est-elle rentable, endettée, chère ? ${c.desc} Chiffre d'affaires, marge, résultat, dette et dividende tirés des comptes officiels, face à la médiane du secteur ${sec.toLowerCase()}. Sans conseil.`, fiche: c, sec };
   }
   if ((m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/))) {
     const t = TOOLS[m[1] || "epargne"] || TOOLS.epargne;
@@ -63,6 +65,8 @@ export function meta(path, q = null) {
   if (p === "/dividendes") return { title: `Dividendes : calendrier, rendements et simulateur · ${SITE}`, desc: "Les prochaines dates de détachement et de paiement, les plus hauts rendements avec leur garde-fou, les dividendes relevés chaque année et ce que vous toucheriez en PEA ou compte-titres." };
   if (p === "/classements") return { title: `Classements des entreprises · ${SITE}`, desc: "Les entreprises qui cumulent le plus de points forts, restent en tête de leur secteur, augmentent leurs ventes ou relèvent leur dividende chaque année, calculées sur leurs comptes officiels." };
   if (p === "/decouvertes") return { title: `Découvertes du jour · ${SITE}`, desc: "Chaque jour, des petites et moyennes entreprises d'Europe et du monde, et des ETF éligibles au PEA : activité, chiffres, valorisation, catalyseurs et risques, sources à l'appui. Sans conseil d'achat." };
+  if ((m = p.match(/^\/question\/([a-z0-9-]+)$/))) { const q = QUESTIONS.pages.find(x => x.id === m[1] && x.en_ligne); return q ? { title: `${q.q} · ${SITE}`, desc: q.desc } : null; }
+  if (p === "/x") return { title: `Page privée · ${SITE}`, desc: "Page réservée à l'éditeur du site." };
   if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple · ${SITE}`, desc: "Le vrai rapport hebdomadaire de bilan., calculé avec les chiffres de cette semaine pour un profil fictif : variations, annonces, dates à venir, et ce que vous pouvez y régler." };
   if (p === "/repartitions") return { title: `Répartitions types et listes par critères · ${SITE}`, desc: "Des exemples de répartition entre actions, obligations et placements sans risque de perte, expliqués avec leurs limites, et des listes d'ETF et d'entreprises triées sur les critères que vous choisissez. Information pédagogique, pas un conseil." };
   if (p === "/plan") return { title: `Plan du site · ${SITE}`, desc: "Toutes les pages de bilan., rangées en quatre rubriques : Découvrir, Explorer, Analyser et Mon espace." };
@@ -152,6 +156,12 @@ export default {
     if (fq) { // questions fréquentes de la fiche (JSON-LD FAQPage), fichier fabriqué par data/faq_seo.mjs
       try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/${fq[1]}.json`, url))); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { const ld = (await r.text()).replace(/</g, "\\u003c"); html = html.replace("</head>", `<script type="application/ld+json">${ld}</script>\n</head>`); } } catch (e) { }
     }
+    if (fq && t.fiche) { // chiffres réels dans la description + fil d'Ariane et organisation (schema.org)
+      try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/societes/${fq[1]}.json`, url))); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { t.desc = descFiche(t, await r.json()); } } catch (e) { }
+      const ld = [{ "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [["Entreprises", "/entreprises"], [t.fiche.name, url.pathname]].map(([n, u], i) => ({ "@type": "ListItem", position: i + 1, name: n, item: url.origin + u })) },
+        { "@context": "https://schema.org", "@type": "Organization", name: t.fiche.name, description: t.fiche.desc, ...(t.fiche.isin ? { identifier: t.fiche.isin } : {}) }];
+      html = html.replace("</head>", `<script type="application/ld+json">${JSON.stringify(ld).replace(/</g, "\\u003c")}</script>\n</head>`);
+    }
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `\n<script type="application/ld+json">${t.ld}</script>` : ""}`);
     html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url)}</div>`);
@@ -177,6 +187,16 @@ async function ogIds(env, url) { // identifiants des fiches qui ont une image de
   try { const r = await env.ASSETS.fetch(new Request(new URL("/og/index.json", url))); const j = r.ok && (r.headers.get("content-type") || "").includes("json") ? await r.json() : null; OG_IDS = new Set((j && j.ids) || []); } catch (e) { OG_IDS = new Set(); }
   OG_AT = Date.now(); return OG_IDS;
 }
+// Description d'une fiche avec ses derniers chiffres publiés (année indiquée) : répond à « LVMH chiffre d'affaires », « LVMH marge »
+function descFiche(t, c) {
+  const f = c.fin || {}, n = (c.years || []).length - 1, y = n >= 0 ? c.years[n] : null, v = k => Array.isArray(f[k]) ? f[k][n] : null;
+  if (y == null || v("ca") == null) return t.desc;
+  const ca = v("ca"), eb = v("ebit"), P = [`${t.fiche.name} en ${y} : ${fmtM(ca, c.currency)} de chiffre d'affaires`];
+  if (eb != null && ca > 0) P.push(`marge d'exploitation de ${(eb / ca * 100).toFixed(1).replace(".", ",")} %`);
+  if (v("netDebt") != null) P.push(`${v("netDebt") < 0 ? "trésorerie nette" : "dette nette"} de ${fmtM(Math.abs(v("netDebt")), c.currency)}`);
+  return `${P.join(", ")}. Rentable, endettée, chère ? Chaque chiffre face à la médiane du secteur ${t.sec.toLowerCase()}, tiré des comptes officiels. Sans conseil.`;
+}
+
 async function rendu(t, fq, env, url) {
   let corps = "";
   if (fq) {

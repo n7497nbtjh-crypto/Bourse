@@ -1,0 +1,235 @@
+{
+"note": "Pages de réponse fabriquées à partir des données (5e passage, E1). en_ligne=true : page publiée sur /question/<id> et dans le sitemap. Les autres sont la liste de la suite.",
+"pages": [
+{
+"id": "entreprises-francaises-meilleure-marge",
+"en_ligne": true,
+"q": "Quelles entreprises françaises ont la meilleure marge ?",
+"titre": "Les entreprises françaises classées par marge",
+"desc": "Les grandes entreprises françaises classées par marge d'exploitation, chacune face à la médiane de son secteur, d'après leurs derniers comptes annuels.",
+"a": {
+"region": "FR",
+"criteres": [
+{
+"indicateur": "marge",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "marge",
+"ordre": "desc"
+},
+"fiable": true,
+"sauf": [
+"immo"
+]
+},
+"pourquoi": "La marge d'exploitation dit combien il reste de 100 € de ventes une fois payés les salaires, les achats et les frais, avant les intérêts et l'impôt. Elle se compare d'abord au sein d'un même secteur : un éditeur de logiciels n'a pas les mêmes coûts qu'un supermarché. Les banques n'ont pas de marge d'exploitation comparable : elles sont absentes de ce classement. Les sociétés immobilières en sont aussi écartées : leur résultat inclut la variation de valeur de leurs immeubles, ce qui donne des marges sans rapport avec leur activité. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées."
+},
+{
+"id": "plus-gros-dividendes-france",
+"en_ligne": true,
+"q": "Quelles actions françaises versent le plus gros dividende ?",
+"titre": "Les rendements du dividende des entreprises françaises",
+"desc": "Les entreprises françaises classées par rendement du dividende (dividende annuel rapporté au cours), avec la part du bénéfice versée pour juger s'il est tenable.",
+"a": {
+"region": "FR",
+"criteres": [
+{
+"indicateur": "rendement",
+"condition": "sup",
+"valeur": 0
+},
+{
+"indicateur": "distribution",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "rendement",
+"ordre": "desc"
+},
+"fiable": true
+},
+"pourquoi": "Le rendement est le dernier dividende annuel divisé par le cours du jour. Un rendement très élevé vient souvent d'un cours qui a baissé, ou d'un dividende exceptionnel : regardez la part du bénéfice versée. Au-delà de 100 %, l'entreprise verse plus qu'elle ne gagne, ce qui ne peut pas durer. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées."
+},
+{
+"id": "entreprises-francaises-sans-dette",
+"q": "Quelles entreprises françaises n'ont pas de dette ? (en attente : la dette de certaines entreprises est mal relevée, Vinci par exemple)"
+},
+{
+"id": "plus-grosses-entreprises-france-bourse",
+"en_ligne": true,
+"q": "Quelles sont les plus grosses entreprises françaises en Bourse ?",
+"titre": "Les entreprises françaises classées par valeur en Bourse",
+"desc": "Les grandes entreprises françaises classées par valeur en Bourse (capitalisation) au cours du jour, avec leur marge et leur dividende face à la médiane du secteur.",
+"a": {
+"region": "FR",
+"fiable": true,
+"criteres": [
+{
+"indicateur": "capitalisation",
+"condition": "sup",
+"valeur": null
+},
+{
+"indicateur": "marge",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "capitalisation",
+"ordre": "desc"
+}
+},
+"pourquoi": "La valeur en Bourse (capitalisation) est le cours de l'action multiplié par le nombre d'actions : c'est le prix que le marché donne à toute l'entreprise ce jour-là. Elle bouge chaque jour avec le cours. Une grosse capitalisation ne dit rien de la santé de l'entreprise : regardez la marge et la dette à côté. Les banques et assurances, sans marge d'exploitation comparable, n'apparaissent pas ici."
+},
+{
+"id": "finance-europeenne-plus-rentable",
+"en_ligne": true,
+"q": "Quelles banques et financières européennes sont les plus rentables ?",
+"titre": "Banques, assurances et sociétés financières européennes classées par rentabilité",
+"desc": "Banques, assureurs et gestionnaires d'actifs d'Europe classés par rentabilité des capitaux propres (bénéfice rapporté à l'argent des actionnaires), face à la médiane du secteur.",
+"a": {
+"region": "EU",
+"secteur": "finance",
+"criteres": [
+{
+"indicateur": "rentabilite",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "rentabilite",
+"ordre": "desc"
+},
+"fiable": true
+},
+"pourquoi": "Pour une banque, la marge ne veut pas dire grand-chose : on regarde la rentabilité des capitaux propres, c'est-à-dire le bénéfice de l'année rapporté à l'argent apporté et laissé par les actionnaires. Le secteur mélange banques, assureurs et gestionnaires d'actifs : un gestionnaire d'actifs a peu de capitaux propres et affiche donc souvent une rentabilité bien plus haute qu'une banque. Le chiffre ne dit rien du risque pris pour l'obtenir. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées."
+},
+{
+"id": "tech-americaine-plus-forte-croissance",
+"en_ligne": true,
+"q": "Quelles entreprises tech américaines grandissent le plus vite ?",
+"titre": "La tech américaine classée par croissance des ventes",
+"desc": "Les entreprises technologiques américaines classées par croissance de leur chiffre d'affaires sur un an, d'après les comptes déposés à la SEC.",
+"a": {
+"region": "US",
+"secteur": "tech",
+"criteres": [
+{
+"indicateur": "croissance",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "croissance",
+"ordre": "desc"
+},
+"fiable": true
+},
+"pourquoi": "La croissance des ventes compare le chiffre d'affaires de la dernière année à celui de l'année d'avant. Une forte croissance peut venir d'un rachat d'entreprise et pas seulement des clients gagnés. Elle ne dit rien du bénéfice : regardez aussi la marge. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées."
+},
+{
+"id": "cac-40-classe-par-marge",
+"q": "Le CAC 40 classé par marge"
+},
+{
+"id": "dividendes-cac-40-2026",
+"q": "Les dividendes du CAC 40 en 2026"
+},
+{
+"id": "msci-world-contenu",
+"q": "Que contient un ETF MSCI World ?"
+},
+{
+"id": "msci-world-ou-sp-500",
+"q": "MSCI World ou S&P 500 : quelles différences ?"
+},
+{
+"id": "comparer-lvmh-hermes-kering",
+"q": "LVMH, Hermès ou Kering : qui gagne le plus ?"
+},
+{
+"id": "comparer-totalenergies-shell-bp",
+"q": "TotalEnergies, Shell, BP : comparer les pétrolières"
+},
+{
+"id": "comparer-airbus-safran-thales",
+"q": "Airbus, Safran, Thales : l'aéronautique française comparée"
+},
+{
+"id": "comparer-bnp-societe-generale-credit-agricole",
+"q": "BNP Paribas, Société Générale, Crédit Agricole : comparer les banques"
+},
+{
+"id": "comparer-apple-microsoft-alphabet",
+"q": "Apple, Microsoft, Alphabet : comparer les géants"
+},
+{
+"id": "etf-eligibles-pea-moins-chers",
+"q": "Les ETF éligibles au PEA les moins chers"
+},
+{
+"id": "etf-sp-500-pea",
+"q": "Quels ETF S&P 500 sont éligibles au PEA ?"
+},
+{
+"id": "dividende-releve-chaque-annee-france",
+"q": "Les entreprises françaises qui relèvent leur dividende chaque année"
+},
+{
+"id": "pharma-europeenne-marge",
+"q": "La pharmacie européenne classée par marge"
+},
+{
+"id": "luxe-europeen-croissance",
+"q": "Le luxe européen classé par croissance"
+},
+{
+"id": "defense-europeenne-chiffres",
+"q": "Les entreprises européennes de la défense en chiffres"
+},
+{
+"id": "semi-conducteurs-marge",
+"q": "Semi-conducteurs : qui a la meilleure marge ?"
+},
+{
+"id": "per-le-plus-bas-france",
+"q": "Les actions françaises au PER le plus bas, et pourquoi"
+},
+{
+"id": "entreprises-allemandes-dividende",
+"q": "Les dividendes des grandes entreprises allemandes"
+},
+{
+"id": "telecoms-europeens-dette",
+"q": "Les télécoms européens et leur dette"
+},
+{
+"id": "energie-europeenne-dividende",
+"q": "L'énergie européenne classée par dividende"
+},
+{
+"id": "resultats-de-la-semaine",
+"q": "Les résultats publiés cette semaine, chiffrés"
+},
+{
+"id": "pea-ou-compte-titres-exemple",
+"q": "PEA ou compte-titres : l'impôt sur un exemple chiffré"
+},
+{
+"id": "livret-a-ou-etf-10-ans",
+"q": "Livret A ou ETF sur 10 ans : ce qu'auraient donné 100 € par mois"
+},
+{
+"id": "krach-2008-msci-world",
+"q": "Combien a perdu un MSCI World en 2008, et en combien de temps il est remonté"
+}
+]
+}
