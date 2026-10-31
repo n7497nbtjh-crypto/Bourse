@@ -513,3 +513,51 @@ function cmprFiche(s) {
 
 /* La page a pu être affichée avant le chargement de ce module : on la refait avec la nouvelle version */
 if (typeof R !== "undefined" && R && location.pathname === "/comparer") pageComparer();
+
+
+/* ---------- 5e passage (B4) : l'évolution sur 5 ans dans chaque case, et une synthèse calculée en trois lignes ----------
+   Les séries viennent des comptes complets (FULL[id], cinq exercices au plus). Rien n'est rédigé : chaque phrase est un calcul.
+   Le prix (PER) n'a pas d'évolution : le site n'a pas l'historique des cours. */
+function cmprSerie(k, c, F) { // valeurs par exercice pour un critère, ou null
+  const f = c && c.fin, Y = c && c.years; if (!f || !Array.isArray(Y) || Y.length < 2) return null;
+  const n = Y.length, num = v => typeof v === "number" && isFinite(v), bank = typeof isBank === "function" && isBank(F.c);
+  let v = null, lab = "";
+  if (k === "croissance" || k === "taille") { v = f.ca; lab = bank ? "revenus" : "ventes"; }
+  else if (k === "rentabilite") { v = Y.map((_, i) => bank ? (num(f.net && f.net[i]) && num(f.equity && f.equity[i]) && f.equity[i] > 0 ? f.net[i] / f.equity[i] : null) : (num(f.ebit && f.ebit[i]) && num(f.ca && f.ca[i]) && f.ca[i] > 0 ? f.ebit[i] / f.ca[i] : null)); lab = bank ? "rentabilité des capitaux propres" : "marge d'exploitation"; }
+  else if (k === "solidite") { if (bank) return null; v = f.netDebt; lab = "dette nette"; }
+  else if (k === "dividende") { v = f.dpsEst || f.dps; lab = "dividende par action"; }
+  else return null;
+  if (!Array.isArray(v)) return null;
+  const pts = Y.map((y, i) => [y, v[i]]).filter(([, x]) => num(x)); if (pts.length < 2) return null;
+  return { pts, lab, pct: k === "rentabilite", inv: k === "solidite", cur: c.currency };
+}
+function cmprEvoSvg(S) { // une petite ligne : la couleur dit le sens (vert mieux, orange moins bien), le titre donne les chiffres
+  const w = 64, h = 18, xs = S.pts.map(p => p[1]), lo = Math.min(...xs), hi = Math.max(...xs), r = hi - lo || Math.abs(hi) || 1;
+  const P = S.pts.map(([, x], i) => [2 + i * (w - 4) / (S.pts.length - 1), h - 3 - (x - lo) / r * (h - 6)]);
+  const a = xs[0], z = xs[xs.length - 1], d = S.pct ? z - a : (z - a) / Math.max(Math.abs(a), 1e-9), mieux = S.inv ? d < 0 : d > 0, stable = Math.abs(d) < (S.pct ? 0.005 : 0.02);
+  const col = stable ? "var(--n)" : mieux ? "var(--g)" : "var(--o)";
+  const fmt = x => S.pct ? `${F1.format(x * 100)} %` : S.lab === "dividende par action" ? F2.format(x) : (typeof big === "function" ? big(x, S.cur) : F0.format(x));
+  const t = `${S.lab}, ${S.pts[0][0]} → ${S.pts.at(-1)[0]} : ${fmt(a)} → ${fmt(z)}`;
+  return `<span class="cmpr-evo" title="${esc(t)}" aria-label="${esc(t)}"><svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${P.map(p => p.map(n => n.toFixed(1)).join(",")).join(" ")}" fill="none" stroke="${col}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${P.at(-1)[0].toFixed(1)}" cy="${P.at(-1)[1].toFixed(1)}" r="2.2" fill="${col}"/></svg><small>${S.pts.length} ans</small></span>`;
+}
+function cmprEvoAjouter(t, X) { // ajoute la ligne d'évolution dans chaque case du tableau transposé (critères en lignes)
+  $$("tbody tr[data-k]", t).forEach(tr => {
+    const k = tr.dataset.k, cells = [...tr.querySelectorAll("td")].filter(td => !td.classList.contains("rf-medc") && !td.classList.contains("rf-q"));
+    X.F.forEach((F, j) => { const c = FULL[F.c.id], S = F.ok && c ? cmprSerie(k, c, F) : null, td = cells[j]; if (S && td && !td.querySelector(".cmpr-evo")) td.insertAdjacentHTML("beforeend", cmprEvoSvg(S)); });
+  });
+}
+function cmprSynthese(X, V) { // trois lignes calculées : qui mène le plus de critères, le plus grand écart, ce qui a changé sur 5 ans
+  const L = [], crit = V.lines.filter(l => !l.T.neutral && l.S && l.S.sorted && l.S.sorted.length >= 2), nb = crit.length;
+  if (!nb) return "";
+  const gagne = {}; crit.forEach(l => { if (l.S.best) { const id = l.S.best.F.c.id; gagne[id] = (gagne[id] || 0) + 1; } });
+  const G = Object.entries(gagne).sort((a, b) => b[1] - a[1]);
+  if (G.length) { const top = G.filter(g => g[1] === G[0][1]).map(g => RBY[g[0]].name); L.push(top.length > 1 ? `<b>${top.map(esc).join(" et ")}</b> mènent chacune ${G[0][1]} critère${G[0][1] > 1 ? "s" : ""} sur ${nb}.` : `<b>${esc(top[0])}</b> est en tête sur ${G[0][1]} critère${G[0][1] > 1 ? "s" : ""} sur ${nb}.`); }
+  // le plus grand écart entre la première et la dernière, en proportion
+  const ec = crit.map(l => { const a = l.S.sorted[0], z = l.S.sorted.at(-1), spec = typeof RF_CMP_KEY !== "undefined" && RF_CMP_KEY[l.T.k]; const va = a.r.v, vz = z.r.v; if (va == null || vz == null || !spec) return null; const rel = Math.abs(va - vz) / Math.max(Math.abs(va), Math.abs(vz), 1e-9); return { l, a, z, rel, fa: a.r.txt || spec[1](va), fz: z.r.txt || spec[1](vz) }; }).filter(Boolean).sort((p, q) => q.rel - p.rel)[0];
+  if (ec && ec.rel > 0.25) L.push(`Plus grand écart : ${esc((typeof RF_CMP_COURT !== "undefined" && RF_CMP_COURT[ec.l.T.k] || ec.l.T.t).toLowerCase())}, ${esc(ec.fa)} pour ${esc(ec.a.F.c.name)} contre ${esc(ec.fz)} pour ${esc(ec.z.F.c.name)}.`);
+  // sur 5 ans : la marge (ou la rentabilité pour une banque) de chacune, en points
+  const ev = X.F.map(F => { const c = FULL[F.c.id], S = F.ok && c ? cmprSerie("rentabilite", c, F) : null; return S ? { F, d: S.pts.at(-1)[1] - S.pts[0][1], n: S.pts.length, lab: S.lab } : null; }).filter(Boolean);
+  if (ev.length >= 2) { const pt = x => `${x.d >= 0 ? "+" : "−"}${F1.format(Math.abs(x.d * 100))} point${Math.abs(x.d * 100) >= 2 ? "s" : ""}`; const up = ev.filter(x => x.d >= 0.005), dn = ev.filter(x => x.d <= -0.005);
+    L.push(`Sur ${Math.max(...ev.map(x => x.n))} ans, ${esc(ev[0].lab)} : ${up.length ? `en hausse chez ${up.map(x => `${esc(x.F.c.name)} (${pt(x)})`).join(", ")}` : ""}${up.length && dn.length ? ", " : ""}${dn.length ? `en baisse chez ${dn.map(x => `${esc(x.F.c.name)} (${pt(x)})`).join(", ")}` : ""}${!up.length && !dn.length ? "stable pour toutes" : ""}.`); }
+  return L.length ? `<ol class="cmpr-syn">${L.slice(0, 3).map(x => `<li>${x}</li>`).join("")}</ol>` : "";
+}

@@ -292,7 +292,7 @@ function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, 
       return `<div class="cmpr-crit"><h3>${esc(T.t)}</h3><p>${esc(phr || "")}</p>${jauges}</div>`; }).join("");
     el.innerHTML = `
       <section class="panel cmpr-vp" id="cmpr-verdict">
-        ${ligne ? `<p class="cmpr-ligne">${ligne}</p>` : ""}
+        ${typeof cmprSynthese === "function" ? cmprSynthese(X, V) || (ligne ? `<p class="cmpr-ligne">${ligne}</p>` : "") : ligne ? `<p class="cmpr-ligne">${ligne}</p>` : ""}
         <div class="cmpr-tbl">${tblxScrollBox(rfCmpTableHTML(cos[0], X), "Faites glisser pour voir toutes les entreprises")}</div>
         ${notes.length ? `<ul class="cmpr-notes">${notes.map(n => `<li>${n}</li>`).join("")}</ul>` : ""}
         ${cmprIABar(cos.length, null)}</section>
@@ -309,6 +309,7 @@ function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, 
         const idx = F => X.F.indexOf(F), best = l.S.best, worst = l.S.sorted.at(-1);
         if (best && cells[idx(best.F)]) cells[idx(best.F)].classList.add("rf-hi");
         if (worst && worst !== best && cells[idx(worst.F)] && worst.r.key !== l.S.sorted[0].r.key) cells[idx(worst.F)].classList.add("rf-lo"); });
+      if (typeof cmprEvoAjouter === "function") cmprEvoAjouter(t, X); // 5e passage (B4) : l'évolution sur 5 ans dans chaque case
       // en tête : le nom de l'entreprise qui mène le plus de critères est souligné
       const lead = Object.entries(gagne).sort((a, b) => b[1] - a[1])[0]; if (lead && lead[1] > 0) $$(".cmpr-ligne span", el).forEach(sp => { if (sp.textContent.startsWith(RBY[lead[0]].name)) sp.classList.add("cmpr-lead"); });
       const box = t.closest(".cmpr-tbl"); box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">vert ▲ : en tête sur ce critère · rouge ▼ : en retrait · colonne « Secteur » : la valeur du milieu (médiane) des entreprises du secteur de ${esc(cos[0].name)} suivies par le site, c'est-à-dire ce qui est « normal » dans ce secteur</span></p>`);

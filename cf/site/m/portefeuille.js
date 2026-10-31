@@ -644,7 +644,7 @@ async function pf3Look(rows) {
   const X = { co: new Map(), sect: {}, ctry: {}, cur: {}, type: {}, env: {}, line: [], known: 0, sectKnown: 0, comps: [], noComp: [] };
   if (!tot) return X;
   const add = (o, k, w) => { o[k] = (o[k] || 0) + w; };
-  const coAdd = (key, name, href, w, extra) => { const x = X.co.get(key) || { name, href, w: 0, via: new Set() }; x.w += w; if (extra) x.via.add(extra); if (!x.href && href) x.href = href; X.co.set(key, x); };
+  const coAdd = (key, name, href, w, extra, pIn) => { const x = X.co.get(key) || { name, href, w: 0, via: new Set(), parts: {}, dans: {} }; x.w += w; if (extra) { x.via.add(extra); x.parts[extra] = (x.parts[extra] || 0) + w; if (pIn != null) x.dans[extra] = pIn; } if (!x.href && href) x.href = href; X.co.set(key, x); }; // 5e passage (B3) : parts (en direct, par ETF) et poids dans chaque ETF, pour la phrase « ce que vous possédez vraiment »
   for (const r of live) {
     const w = r.valE / tot, info = r.info;
     X.line.push({ label: info.name, w, v: r.valE, k: r.l.k });
@@ -666,7 +666,7 @@ async function pf3Look(rows) {
         let sk = 0;
         for (const [isin, p] of (comp.isins || [])) {
           const c = ISINBY[isin] || (names[isin] ? pf3ByName(names[isin]) : null), ww = w * p / 100;
-          coAdd(c ? "c:" + c.id : names[isin] ? "n:" + pf3Strip(names[isin]) : "i:" + isin, c ? c.name : names[isin] ? titleCase(names[isin]).replace(/,?\s+(Class|Cl\.?) [A-Z]\.?$/i, "") : isin, c ? "/entreprise/" + c.id : null, ww, e.name);
+          coAdd(c ? "c:" + c.id : names[isin] ? "n:" + pf3Strip(names[isin]) : "i:" + isin, c ? c.name : names[isin] ? titleCase(names[isin]).replace(/,?\s+(Class|Cl\.?) [A-Z]\.?$/i, "") : isin, c ? "/entreprise/" + c.id : null, ww, e.name, p);
           if (!secs && c) { add(X.sect, secName(c), ww); sk += ww; }
         }
         if (secs) { secs.forEach(([s, p]) => { add(X.sect, pfSecteurEtf(s), w * p / 100); sk += w * p / 100; }); }
@@ -1194,17 +1194,114 @@ function pf3Hero(R0, P) {
   const upd = PXUP && PXUP !== "none" ? (/T/.test(PXUP) ? `cours du ${dLabel(PXUP.slice(0, 10))} à ${PXUP.slice(11, 16).replace(":", " h ")} (UTC)` : `cours du ${dLabel(PXUP)}`) : "cours indisponibles";
   const parts = R0.live.slice().sort((a, b) => b.valE - a.valE).map((r, i) => ({ label: r.info.name, w: r.w, c: i < PF3_PAL.length ? PF3_PAL[i] : PF3_OTHER, v: r.valE }));
   el.innerHTML = `${P.dem ? `<div class="pf3demo"><b>Exemple</b> : ce portefeuille fictif montre ce que calcule la page. Rien n'est enregistré. <button type="button" class="linkbtn" id="pf3dkeep">Partir de cet exemple</button> · <button type="button" class="linkbtn" id="pf3dquit">Revenir à mon portefeuille</button></div>` : ""}
-    <div class="pf3k"><div class="pf3k1"><span class="kick">Valeur actuelle</span><b class="pf3big">${pf3Eu(T.tot)}</b><small>${T.n > 1 ? `vos ${T.n} lignes` : "votre ligne"} au ${upd}</small></div>
-      <div><span class="kick">Montant investi</span><b>${pf3Eu(T.cost)}</b><small>ce que vous avez payé, frais d'achat compris</small></div>
-      <div><span class="kick">Plus ou moins-value latente</span><b class="${pf3Cls(T.gain)}">${T.gainPct == null ? "–" : pf3Sg(T.gain)}</b><small><span class="${pf3Cls(T.gain)}">${T.gainPct == null ? "pas de cours" : pf3Pc(T.gainPct)}</span> si vous vendiez aujourd'hui, avant impôts</small></div>
-      <div><span class="kick">Aujourd'hui</span><b class="${pf3Cls(T.day)}">${T.dayN ? pf3Sg(T.day) : "–"}</b><small><span class="${pf3Cls(T.day)}">${T.dayPct != null ? pf3Pc(T.dayPct, 2) : "variation inconnue"}</span> depuis la clôture d'hier</small></div></div>
-    <div class="pf3verd" id="pf3verd"></div>
+    <div class="pf3k pf3k4"><div class="pf3k1"><span class="kick">Valeur actuelle</span><b class="pf3big">${pf3Eu(T.tot)}</b><small>${pf3Eu(T.cost)} investis${T.dayN ? ` · <span class="${pf3Cls(T.day)}">${pf3Sg(T.day)}</span> aujourd'hui` : ""}</small></div>
+      <div><span class="kick">Plus-value</span><b class="${pf3Cls(T.gain)}">${T.gainPct == null ? "–" : pf3Sg(T.gain)}</b><small>${T.gainPct == null ? "pas de cours" : `<span class="${pf3Cls(T.gain)}">${pf3Pc(T.gainPct)}</span> si vous vendiez aujourd'hui`}</small></div>
+      <div><span class="kick">Frais par an</span><b id="pf3tf">…</b><small id="pf3tfs">ETF et courtage</small></div>
+      <div><span class="kick">Dividendes par an</span><b id="pf3td">…</b><small>estimés, avant impôts</small></div></div>
+    <div class="pf3al" id="pf3al" aria-live="polite"></div>
     ${parts.length > 1 ? `<div class="pf3stk" role="img" aria-label="Poids de chaque ligne">${parts.map(p => `<span style="width:${(p.w * 100).toFixed(2)}%;background:${p.c}" tabindex="0" ${tipAttr({ h: p.label, r: [["Poids", pct(p.w, 1, false), p.c], ["Valeur", pf3Eu(p.v), ""]] })}></span>`).join("")}</div>` : ""}
     <details class="pf3defs" id="pf3defs" ${pf3DefsOpen() ? "open" : ""}><summary>Comprendre ces chiffres</summary><div class="pf3dg">${pf3Defs(R0).map(([k, t, d, ex]) => `<div><b>${t}</b><p>${d}</p><p class="pf3dx"><span>Exemple</span> ${esc(ex)}</p></div>`).join("")}</div></details>
     ${T.real || T.divs ? `<p class="pf3kn">${T.real ? `Plus ou moins-value réalisée sur vos ventes : <b class="${pf3Cls(T.real)}">${pf3Sg(T.real)}</b>. ` : ""}${T.divs ? `Dividendes reçus enregistrés : <b>${pf3Eu(T.divs)}</b>.` : ""}</p>` : ""}`;
   const k = $("#pf3dkeep"); if (k) k.onclick = () => { const D = PF3S.demo; PF3S.demo = null; const cur = pf2Load(); if (cur.l.length && !confirm("Remplacer votre portefeuille actuel par l'exemple ?")) return; delete D.dem; pf2Save(D); pf3Draw(); };
   const q = $("#pf3dquit"); if (q) q.onclick = () => { PF3S.demo = null; pf3Draw(); };
   const dd = $("#pf3defs"); if (dd) dd.ontoggle = () => { try { localStorage.setItem("bilan.portefeuille.defs", dd.open ? "1" : "0"); } catch (e) { } };
+}
+
+/* ---------- 5e passage (B3) : un écran de synthèse, le reste en plis ----------
+   En haut : quatre tuiles (valeur, plus-value, frais par an, dividendes par an) et trois alertes de diversification.
+   Plus bas, chaque bloc est un pli fermé dont le titre porte déjà le chiffre clé ; rien n'est retiré. */
+function pf3Synthese(R0, X, S, F, D, A) {
+  const an = (F.terE || 0) + (F.yearBrok || 0), tf = $("#pf3tf"), tfs = $("#pf3tfs"), td = $("#pf3td");
+  if (tf) { tf.textContent = an > 0 ? "≈ " + pf3Eu(an) : "0 €"; if (tfs) tfs.textContent = F.ten > 0 ? `≈ ${pf3Eu(F.ten)} sur 10 ans` : "ETF et courtage"; }
+  if (td) td.textContent = D.total > 0 ? "≈ " + pf3Eu(D.total) : "0 €";
+  const al = $("#pf3al"); if (!al) return;
+  const L = A.filter(a => a.lv === "vig").concat(A.filter(a => a.lv === "moyen")).slice(0, 3);
+  al.innerHTML = L.length ? `${L.map(a => `<a class="pf3a1 pf3a-${a.lv}" href="#pf3-alertes"><span class="dot dot-${a.lv}"></span><span>${a.t}</span></a>`).join("")}${A.length > L.length ? `<a class="pf3a1 pf3a-plus" href="#pf3-alertes">${A.length - L.length} autre${A.length - L.length > 1 ? "s" : ""} point${A.length - L.length > 1 ? "s" : ""} à regarder →</a>` : ""}`
+    : `<p class="pf3a1 pf3a-fort"><span class="dot dot-fort"></span><span>Pas de ligne trop lourde ni de secteur dominant.</span></p>`;
+  $$("a", al).forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById("pf3-alertes"); if (t) { t.open = true; t.scrollIntoView({ behavior: "smooth", block: "start" }); } });
+}
+function pf3Possede(X) { // la phrase : « votre MSCI World contient 4,8 % d'Apple : avec vos actions Apple, Apple pèse 9 % de votre argent »
+  const parEtf = y => (y.w || 0) - ((y.parts || {}).direct || 0); // la part qui vient des ETF
+  const x = (X.top || []).filter(y => y.via.has("direct") && parEtf(y) >= 0.005).sort((a, b) => parEtf(b) - parEtf(a))[0] || (X.top || []).filter(y => Object.keys(y.dans || {}).length).sort((a, b) => parEtf(b) - parEtf(a))[0];
+  if (!x) return "";
+  const etfs = Object.keys(x.dans || {}).filter(k => k !== "direct"), e0 = etfs.sort((a, b) => (x.parts[b] || 0) - (x.parts[a] || 0))[0];
+  if (!e0) return "";
+  const nom = esc(x.name), dir = x.parts.direct || 0;
+  const de = /^[aeiouyhâàéèêëîïôöûüAEIOUYHÂÀÉÈÊËÎÏÔÖÛÜ]/.test(x.name) ? `d'${nom}` : `de ${nom}`; // élision : « d'Apple »
+  return `<p class="pf3pos"><b>${esc(e0)}</b> contient ${pct(x.dans[e0] / 100, 1, false)} ${de}${dir > 0 ? ` : avec vos actions ${nom} en direct, ${nom} pèse <b>${pct(x.w, 0, false)}</b> de votre argent (${pct(dir, 0, false)} en direct, ${pct(x.w - dir, 0, false)} par ${etfs.length > 1 ? "vos ETF" : "l'ETF"}).` : ` : ${nom} pèse <b>${pct(x.w, 1, false)}</b> de votre argent sans que vous en ayez acheté une seule action.`}</p>`;
+}
+function pf3Devise(X, R0) { // un MSCI World en euros reste exposé au dollar : à dire simplement
+  const cote = R0.live.filter(r => (r.info.curQ || r.lcur || "EUR") === "EUR").reduce((a, r) => a + r.w, 0), usd = (X.cur || {}).USD || 0, horsEur = Object.entries(X.cur || {}).filter(([k]) => k !== "EUR" && k !== "Autres").reduce((a, [, w]) => a + w, 0);
+  if (!(usd > 0.05)) return "";
+  return `<p class="pf3pos">${cote > 0.5 ? `Vous achetez à ${pct(cote, 0, false)} en euros, mais` : "Votre portefeuille"} ${cote > 0.5 ? "votre argent" : ""} dépend à <b>${pct(usd, 0, false)} du dollar</b>${horsEur - usd > 0.03 ? ` (et à ${pct(horsEur - usd, 0, false)} d'autres devises)` : ""} : les entreprises gagnent leur argent en dollars. Si le dollar baisse de 10 % face à l'euro, cette part perd environ 10 % en euros, même si les entreprises n'ont pas bougé, et l'inverse s'il monte.</p>`;
+}
+function pf3Pea(R0, P) { // date des 5 ans, plafond restant (150 000 € de versements), à partir des lignes rangées dans un PEA
+  const cfg = P.cfg || {}, pea = R0.rows.filter(r => r.l.env === "pea");
+  if (!pea.length && !cfg.peaOuv) return { html: `<p class="muted">Aucune ligne n'est rangée dans un PEA. Indiquez « PEA » sur une ligne pour suivre la date des 5 ans et le plafond.</p>`, cle: "aucune ligne" };
+  const dates = pea.flatMap(r => (r.l.o || []).map(o => o[0])).filter(d => /^\d{4}-\d{2}-\d{2}$/.test(d)).sort();
+  const ouv = /^\d{4}-\d{2}-\d{2}$/.test(cfg.peaOuv || "") ? cfg.peaOuv : dates[0] || null, estimeO = !cfg.peaOuv;
+  const vers = +cfg.peaVers > 0 ? +cfg.peaVers : pea.reduce((a, r) => a + (r.costE || 0), 0), estimeV = !(+cfg.peaVers > 0);
+  const cinq = ouv ? (d => { d.setUTCFullYear(d.getUTCFullYear() + 5); return d.toISOString().slice(0, 10); })(new Date(ouv + "T12:00:00Z")) : null;
+  const jours = cinq ? Math.round((Date.parse(cinq) - Date.parse(TODAY)) / 864e5) : null, reste = Math.max(0, 150000 - vers);
+  const dl = d => new Date(d + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
+  const etat = jours == null ? "" : jours <= 0 ? `<span class="dot dot-fort"></span>Votre PEA a plus de 5 ans : un retrait ne le ferme plus, et les gains ne paient plus l'impôt sur le revenu (les prélèvements sociaux restent dus).` : jours <= 183 ? `<span class="dot dot-moyen"></span>Plus que ${F0.format(jours)} jours : avant cette date, un retrait ferme en principe le plan.` : `<span class="dot dot-n"></span>Avant cette date, un retrait ferme en principe le plan (quelques exceptions).`;
+  const html = `<div class="tiles"><div class="tile"><span class="kick">Les 5 ans</span><span class="v">${cinq ? dl(cinq) : "–"}</span><small>${ouv ? `ouvert le ${dl(ouv)}${estimeO ? " (estimé : votre premier achat enregistré)" : ""}` : "date d'ouverture inconnue"}</small></div>
+      <div class="tile"><span class="kick">Plafond restant</span><span class="v">${pf3Eu(reste)}</span><small>sur 150 000 € de versements, ${pf3Eu(vers)} ${estimeV ? "estimés d'après vos achats" : "déclarés"}</small></div></div>
+    <div class="pb">${etat ? `<p class="pf3pea">${etat}</p>` : ""}${vers > 135000 ? `<p class="pf3pea"><span class="dot dot-vig"></span>Vous approchez du plafond : au-delà de 150 000 € versés, vous ne pouvez plus alimenter ce PEA.</p>` : ""}
+      <div class="pf3par"><label class="pf3f"><span>Date d'ouverture réelle</span><input type="date" id="pf3po" value="${esc(cfg.peaOuv || "")}"></label>${pf3In("pf3pv", "Versements cumulés", cfg.peaVers || "", 'placeholder="' + Math.round(vers) + '"', "€")}</div>
+      <p class="note">La date d'ouverture et les versements figurent sur votre relevé de PEA. Règles : <a class="lnk" href="/pea-cto">PEA ou compte-titres</a> (source : service-public.fr).</p></div>`;
+  return { html, cle: cinq ? `5 ans le ${new Date(cinq + "T12:00:00Z").toLocaleDateString("fr-FR")}` : `${pf3Eu(reste)} de plafond` };
+}
+const PF3_MSCI = { dd: 0.5693, du: "juillet 2007", au: "mars 2009", src: "https://www.msci.com/documents/10199/ba7adc82-8a05-435d-831c-7e91c36606b3", nom: "fiche officielle MSCI World (couvert en euros)" }; // plus forte baisse publiée, depuis 2001
+function pf3Risque(R0) { // en euros : une baisse de 30 % du marché, et la plus forte baisse publiée du MSCI World, appliquées à la part en actions
+  const act = R0.live.filter(r => r.info.kind === "c" || (r.info.kind === "e" && (PF3_TYPE[r.info.e.categorie] || "ETF actions") === "ETF actions")).reduce((a, r) => a + r.valE, 0), tot = R0.T.tot;
+  if (!(act > 0)) return { html: `<p class="muted">Pas d'actions dans le portefeuille : ces scénarios ne s'appliquent pas.</p>`, cle: "" };
+  const html = `<div class="tiles"><div class="tile"><span class="kick">Si le marché baissait de 30 %</span><span class="v dn">−${pf3Eu(act * 0.3)}</span><small>sur vos ${pf3Eu(act)} en actions (${pct(act / tot, 0, false)} du portefeuille)</small></div>
+      <div class="tile"><span class="kick">Une baisse comme 2007-2009</span><span class="v dn">−${pf3Eu(act * PF3_MSCI.dd)}</span><small>le MSCI World a perdu ${pct(PF3_MSCI.dd, 0, false)} de ${PF3_MSCI.du} à ${PF3_MSCI.au}</small></div></div>
+    <div class="pb"><p class="note">Calculs arithmétiques, pas des prévisions : un portefeuille d'actions suit à peu près le marché lors des fortes baisses ; une action seule peut faire bien pire ou mieux. Plus forte baisse publiée du MSCI World depuis 2001 : <a class="lnk" href="${PF3_MSCI.src}" target="_blank" rel="noopener">${PF3_MSCI.nom}</a>. Le site n'a pas l'historique des cours de vos lignes : il n'affiche ni volatilité ni corrélations.</p></div>`;
+  return { html, cle: `−30 % : −${pf3Eu(act * 0.3)}` };
+}
+function pf3Plis(el, R0, X, S, F, D, A, P) {
+  // les blocs du tableau de bord, dans l'ordre voulu, chacun en pli fermé avec son chiffre clé
+  const sec = {}; $$("section.panel", el).forEach(x => { const h = $("h2", x); if (h) sec[h.textContent.trim()] = x; });
+  const cle = (txt, v) => v ? `<span class="pf3plk">${v}</span>` : "";
+  const top = (X.top || [])[0], cty = Object.entries(X.ctry || {}).filter(([k]) => !/^(Autres|Non détaillé)$/.test(k)).sort((a, b) => b[1] - a[1])[0], usd = (X.cur || {}).USD;
+  const nAtt = A.filter(a => a.lv !== "info").length, an = (F.terE || 0) + (F.yearBrok || 0), pea = pf3Pea(R0, P), rq = pf3Risque(R0);
+  const up = (sec["Prochaines dates de vos entreprises"] && $(".agd b, .ag-d, time", sec["Prochaines dates de vos entreprises"])) || null;
+  const ORD = [
+    ["Ce que vous possédez vraiment", "pf3-possede", top ? `${esc(top.name)} ${pct(top.w, 0, false)}` : "", pf3Possede(X)],
+    ["Répartition", "pf3-repartition", [cty ? `${esc(COUNTRY[cty[0]] || cty[0])} ${pct(cty[1], 0, false)}` : "", usd > 0.05 ? `dollar ${pct(usd, 0, false)}` : ""].filter(Boolean).join(" · "), pf3Devise(X, R0), "Vos expositions"],
+    ["Diversification", "pf3-diversification", S.score != null ? `${S.score}/100` : ""],
+    ["Les frais", "pf3-frais", an > 0 ? `≈ ${pf3Eu(an)}/an` : "", "", "Ce que vous payez vraiment"],
+    ["__pea", "pf3-pea", pea.cle, "", "Votre calendrier PEA"],
+    ["Dividendes attendus sur 12 mois", "pf3-dividendes", D.total > 0 ? `≈ ${pf3Eu(D.total)}` : "", "", "Vos dividendes à venir"],
+    ["__risque", "pf3-risque", rq.cle, "", "Le risque, en euros"],
+    ["Points d'attention", "pf3-alertes", ""], // le compte est déjà dans l'en-tête du bloc
+    ["L'analyse de votre portefeuille", "pf3-analyse", "", ""],
+    ["Prochaines dates de vos entreprises", "pf3-dates", "", ""],
+    ["Partager anonymement", "pf3-partage", "", ""],
+  ];
+  const frag = document.createDocumentFragment();
+  for (const [h, id, k, ajout, titre] of ORD) {
+    const d = document.createElement("details"); d.className = "panel pf3pl"; d.id = id;
+    let src = sec[h];
+    if (h === "__pea") { src = document.createElement("section"); src.innerHTML = `<div class="ph"><h2>Votre calendrier PEA</h2></div>${pea.html}`; }
+    if (h === "__risque") { src = document.createElement("section"); src.innerHTML = `<div class="ph"><h2>Le risque, en euros</h2></div>${rq.html}`; }
+    if (!src) continue;
+    const ph = $(":scope > .ph", src), sum = document.createElement("summary"); sum.className = "ph";
+    if (ph) { [...ph.childNodes].forEach(n => sum.appendChild(n)); ph.remove(); }
+    const h2 = $("h2", sum); if (h2 && titre) h2.textContent = titre;
+    sum.insertAdjacentHTML("beforeend", cle("", k));
+    d.appendChild(sum); if (ajout) d.insertAdjacentHTML("beforeend", `<div class="pb pf3plx">${ajout}</div>`);
+    [...src.childNodes].forEach(n => d.appendChild(n));
+    if (src.classList) [...src.classList].filter(c => c !== "panel").forEach(c => d.classList.add(c));
+    frag.appendChild(d);
+  }
+  el.innerHTML = ""; el.appendChild(frag);
+  // le calendrier PEA se règle sur place
+  const po = $("#pf3po", el), pv = $("#pf3pv", el), setCfg = (k, v) => { const Q = pf3P(); Q.cfg = { ...(Q.cfg || {}) }; if (v === "" || v == null) delete Q.cfg[k]; else Q.cfg[k] = String(v); pf3Save(Q); const R1 = pf3Rows(Q); pf3Dash(R1, Q).then(() => { const x = $("#pf3-pea"); if (x) x.open = true; }); };
+  if (po) po.onchange = () => setCfg("peaOuv", po.value);
+  if (pv) pv.onchange = () => { const v = pf3Num(pv.value); setCfg("peaVers", v > 0 ? Math.round(v) : ""); };
 }
 
 /* ---------- Tableau de bord : analyse, répartition, diversification, frais, dividendes ---------- */
@@ -1218,6 +1315,7 @@ async function pf3Dash(R0, P) {
   if (tok !== PF3_TOKEN) return;
   const S = pf3Score(X), F = pf3Fees(R0, P), D = pf3Divs(R0), A = pf3Alerts(R0, X, F, P, prof), cfg = P.cfg || {};
   PF3S.ctx = { R0, X, S, F, D, A, P, prof };
+  pf3Synthese(R0, X, S, F, D, A);
   const vd = $("#pf3verd"); if (vd) { const att = A.filter(a => a.lv === "vig").length + A.filter(a => a.lv === "moyen").length;
     vd.innerHTML = [S.score != null ? `<a href="#pf3-diversification"><span class="dot dot-${S.score >= 75 ? "fort" : S.score >= 50 ? "moyen" : "vig"}"></span>Diversification ${S.label} <b>${S.score}/100</b></a>` : "",
       F.ter != null || F.orders.length ? `<a href="#pf3-frais"><span class="dot dot-${(F.ter || 0) > 0.004 || F.heavy.length ? "vig" : "fort"}"></span>Frais ${F.ter != null ? `des ETF <b>${pct(F.ter, 2, false)}/an</b>` : `de courtage <b>${pct(F.ratio, 2, false)}</b>`}</a>` : "",
@@ -1265,6 +1363,7 @@ async function pf3Dash(R0, P) {
       <p class="note">Estimation : dernier dividende annuel publié dans les comptes (rapporté au cours du jour), multiplié par votre nombre de titres. Les mois viennent des dates annoncées par les entreprises (<a class="lnk" href="/dividendes">calendrier des dividendes</a>) ; sans date annoncée, le montant est compté à part. Un ETF capitalisant réinvestit ses dividendes ; pour un ETF distribuant, le site n'a pas encore le montant. Ce n'est pas une prévision : une entreprise peut réduire son dividende.</p></div></section>
   <div class="two"><section class="panel"><div class="ph"><h2>Prochaines dates de vos entreprises</h2></div>${up.length ? agendaHTML(up, true) : `<div class="pb muted">Aucune date annoncée pour vos actions en direct.</div>`}</section>
     <section class="panel"><div class="ph"><h2>Partager anonymement</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Ajoutez la composition de votre portefeuille (les lignes et leur poids, jamais les montants) au <a class="lnk" href="/communaute?onglet=portefeuilles">classement des visiteurs</a>.</p><button type="button" class="btn" id="pfsh" ${P.dem ? "disabled" : ""}>Partager anonymement</button> <button type="button" class="linkbtn" id="pfun">Retirer mon partage</button> <span class="muted" id="pfsm" style="font-size:12.5px"></span></div></section></div>`;
+  pf3Plis(el, R0, X, S, F, D, A, P);
   pf3Rep(X, R0);
   // Paramètres de l'analyse
   const setCfg = (k, v) => { const Q = pf3P(); Q.cfg = { ...(Q.cfg || {}) }; if (v === "" || v == null) delete Q.cfg[k]; else Q.cfg[k] = String(v); pf3Save(Q); pf3Dash(pf3Rows(Q), Q); };
@@ -1572,7 +1671,7 @@ async function pagePortefeuille() {
     <p class="pagesub">Vos actions et vos ETF, leur valeur aux cours du jour, votre plus ou moins-value, vos frais, vos dividendes et ce que vous possédez vraiment une fois les ETF ouverts. Tout est calculé dans ce navigateur${connecte() ? " et enregistré dans votre compte" : ""}.</p>
     <div id="pf3notice"></div>
     <section class="panel pf3hero" id="pf3hero" hidden></section>
-    <nav class="pf3nav scroll-x" id="pf3nav" aria-label="Sections du portefeuille" hidden>${[["pf3lines", "Lignes"], ["pf3-analyse", "Analyse"], ["pf3-repartition", "Répartition"], ["pf3-diversification", "Diversification"], ["pf3-frais", "Frais"], ["pf3-dividendes", "Dividendes"]].map(([id, l]) => `<a href="#${id}">${l}</a>`).join("")}</nav>
+    <nav class="pf3nav scroll-x" id="pf3nav" aria-label="Sections du portefeuille" hidden>${[["pf3lines", "Lignes"], ["pf3-possede", "Ce que vous possédez"], ["pf3-repartition", "Expositions"], ["pf3-frais", "Frais"], ["pf3-pea", "PEA"], ["pf3-dividendes", "Dividendes"], ["pf3-risque", "Risque"], ["pf3-analyse", "Analyse"]].map(([id, l]) => `<a href="#${id}">${l}</a>`).join("")}</nav>
     <section class="panel" id="pf3lines"><div class="ph"><h2>Mes lignes</h2><div class="pf3act"><button type="button" class="pf3ab" id="pf3imp">Importer un fichier</button><button type="button" class="pf3ab" id="pf3exp" hidden>Exporter</button></div></div>
       <div class="pb pf3add"><label for="pfq" class="pf3al">Ajouter une action ou un ETF</label><div class="pf3sw"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input id="pfq" type="search" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="pfs" autocomplete="off" spellcheck="false" placeholder="Tapez un nom, un ticker ou un ISIN"><div class="pf3sug" id="pfs" role="listbox" hidden></div></div>
         <div id="pf3form"></div><div id="pf3impbox"></div></div>
@@ -1582,7 +1681,7 @@ async function pagePortefeuille() {
   pf3Search();
   $("#pf3imp").onclick = () => pf3ImpOpen();
   $("#pf3exp").onclick = () => pf3Export();
-  $$("#pf3nav a").forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) t.scrollIntoView({ behavior: "smooth", block: "start" }); });
+  $$("#pf3nav a").forEach(a => a.onclick = e => { e.preventDefault(); const t = document.getElementById(a.getAttribute("href").slice(1)); if (t) { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ behavior: "smooth", block: "start" }); } }); // 5e passage (B3) : les blocs sont des plis, le raccourci ouvre le sien
   if (PF3S.form && PF3S.form.k && (PF3S.form.k.startsWith("x:") || (PF3S.form.k.startsWith("c:") ? RBY[PF3S.form.k.slice(2)] : ETFBY[PF3S.form.k.slice(2)]))) pf3Form(); else PF3S.form = null;
   pf3Draw();
 }
@@ -1855,6 +1954,17 @@ function pf3Css() {
   .pf3ip{grid-template-columns:26px minmax(0,1fr);padding:10px}
   .pf3ipv{grid-column:2/-1;grid-template-columns:repeat(3,minmax(0,1fr));text-align:left;gap:8px}
 }
+
+/* 5e passage (B3) : écran de synthèse et plis */
+.pf3k.pf3k4{grid-template-columns:1.4fr 1fr 1fr 1fr}
+.pf3al{display:grid;gap:6px;padding:12px 22px 4px}.pf3a1{display:flex;gap:8px;align-items:baseline;font-size:13.5px;line-height:1.4;color:var(--ink);text-decoration:none;margin:0}.pf3a1 .dot{flex:0 0 auto;transform:translateY(-1px)}.pf3a1:hover span:last-child{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}.pf3a-plus{color:var(--grey);font-size:13px;padding-left:16px}
+.pf3pl{margin-top:12px}.pf3pl>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap}.pf3pl>summary::-webkit-details-marker{display:none}.pf3pl>summary h2{flex:1 1 auto;min-width:0}.pf3pl>summary::after{content:"Ouvrir";font-size:12.5px;font-weight:600;color:var(--ink);text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px;margin-left:auto}.pf3pl[open]>summary::after{content:"Fermer"}
+.pf3plk{font-size:13px;font-weight:600;font-variant-numeric:tabular-nums;color:var(--ink);background:var(--soft);border-radius:99px;padding:3px 10px;white-space:nowrap}
+.pf3pl:not([open])>summary{border-bottom:0}
+.pf3pos{margin:0 0 4px;font-size:14px;line-height:1.5;max-width:760px}.pf3plx{padding-bottom:0}
+.pf3pea{display:flex;gap:8px;align-items:baseline;margin:0 0 10px;font-size:14px;line-height:1.45}.pf3pea .dot{flex:0 0 auto}
+.pf3pl .tile .v.dn{color:var(--o)}
+@media (max-width:760px){.pf3k.pf3k4{grid-template-columns:repeat(2,minmax(0,1fr))}.pf3k.pf3k4 .pf3k1{grid-column:auto}.pf3k.pf3k4>div{padding:10px 12px}.pf3k.pf3k4>div:nth-child(2n){border-right:0}.pf3k.pf3k4>div:nth-child(n+3){border-top:1px solid var(--line2)}.pf3k.pf3k4 b{font-size:18px}.pf3k.pf3k4 b.pf3big{font-size:22px}.pf3al{padding:10px 14px 2px}.pf3pl>summary .pf3plk{order:3;flex-basis:auto}}
 </style>`);
 }
 

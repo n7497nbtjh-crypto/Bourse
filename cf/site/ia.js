@@ -404,6 +404,15 @@ function IA_etf(q, raw) {
 /* ---------- 6. Le copilote « Demander à bilan. » ---------- */
 const IA_DEFM = / c est quoi | qu est ce qu| que veut dire | que signifie | ca veut dire | veut dire quoi | definition | definir | defini | expliquez? (moi )?(le |la |les |l |un |une |ce |ce que |ce qu )?| explication | comment (fonctionne|marche|fonctionnent|marchent) | a quoi (sert|servent) | ca sert a quoi | c est combien | combien (est|sont|c est) (la |les |le )?(flat|prelevements|taux|plafond)| difference | differences | signification | c est comment | definition de /;
 const IA_GAFAM = /\bgafam\b|\bgafa\b|\bmaang\b|\bfaang\b|7 magnifiques|sept magnifiques|magnificent 7|magnificent seven/;
+function IA_nomInconnu(raw) { // « les comptes de Zorglub Industries » → « Zorglub Industries » si ce nom propre n'est ni une entreprise, ni un ETF, ni un lieu, ni un indice
+  const m = String(raw || "").match(/\b(?:comptes?|actions?|cours|fiche|dette|marge|dividendes?|chiffre d'affaires|ventes|r[ée]sultats?|b[ée]n[ée]fices?|soci[ée]t[ée]|entreprise|groupe)\s+(?:de la |de l'|du |des |de |d'|d’)?((?:[A-Z][\w&'’.-]+)(?:\s+[A-Z][\w&'’.-]+){0,3})/);
+  if (!m) return null;
+  const nm = m[1].trim(), t = IA_txt(nm), t1 = IA_txt(nm.split(/\s+/)[0]); // le premier mot décide : « Zorglub Industries » n'est pas le secteur de l'industrie
+  if (/^(cac|dax|s&p|sp|nasdaq|msci|stoxx|euro|dow|ftse|nikkei|bourse|pea|cto|etf|europe|asie|france|etats|usa|chine|japon|allemagne|monde|bilan)/.test(t)) return null;
+  if (IA_PAYSW.some(([re]) => re.test(t1)) || IA_REGW.some(([re]) => re.test(t1)) || IA_SECW.some(([re]) => re.test(" " + t1 + " "))) return null;
+  const f = IA_trouve(t, nm); if (f.cos.length || f.etfs.length) return null;
+  return nm;
+}
 function localCopilot(raw) {
   if (!R || !R.companies) return null;
   IA_coIdx();
@@ -415,6 +424,8 @@ function localCopilot(raw) {
   if (IA_PRED.test(q)) { const x = IA_refus(q, f0.cos); return T(x.titre, x.texte); }
   // b. hors sujet, salutations, cours des cryptoactifs
   const h = IA_hors(q); if (h && !f0.cos.length) return T(h.titre, h.texte);
+  // b2. (5e passage, B4) une société nommée que le site ne suit pas : le dire, au lieu de répondre par un secteur entier
+  if (!f0.cos.length && !f0.etfs.length) { const nm = IA_nomInconnu(raw); if (nm) return T("Entreprise introuvable", `bilan. ne suit pas « ${nm} » : elle ne figure pas parmi les ${F0.format(R.companies.length)} entreprises dont le site lit les comptes. Vérifiez l'orthographe, cherchez son code ISIN dans la barre de recherche, ou demandez son ajout avec « Signaler une erreur » en bas de page.`); }
   // c. « quoi acheter », « meilleure action » : méthode, sauf si la question contient des critères (alors on cherche)
   const { crit, tri } = IA_criteres(q);
   if (IA_CONSEIL.test(q) && !IA_METH.some(m => m.re.test(q)) && !f0.cos.length && !/\betf\b|tracker/.test(q) && !crit.length && !(tri && tri.indicateur !== "capitalisation")) { const x = IA_refus(q, []); return T(x.titre, x.texte); }
@@ -526,6 +537,26 @@ function IA_compareDeux(s, f, o, q) { // réponse calculée pour « pourquoi la 
   }
   return null;
 }
+/* 5e passage (B4) : « pourquoi la marge baisse ? », expliqué avec les lignes de compte qui bougent (deux derniers exercices publiés).
+   Marge d'exploitation = résultat d'exploitation ÷ ventes ; les coûts d'exploitation = ventes − résultat d'exploitation. Chaque chiffre une fois. */
+function IA_margeBaisse(s, c) {
+  const f = c && c.fin, Y = c && c.years; if (!f || !Array.isArray(Y) || Y.length < 2 || isBank(s)) return null;
+  const L = Y.length - 1, P = L - 1, num = v => typeof v === "number" && isFinite(v);
+  const ca0 = f.ca && f.ca[P], ca1 = f.ca && f.ca[L], eb0 = f.ebit && f.ebit[P], eb1 = f.ebit && f.ebit[L];
+  if (![ca0, ca1, eb0, eb1].every(num) || !(ca0 > 0) || !(ca1 > 0)) return null;
+  const cur = c.currency || s.currency || "EUR", B = x => big(x, cur), m0 = eb0 / ca0, m1 = eb1 / ca1, co0 = ca0 - eb0, co1 = ca1 - eb1;
+  const ev = (a, b) => { const d = b / a - 1; return `${d >= 0 ? "+" : "−"}${F1.format(Math.abs(d * 100))} %`; }, dv = ca1 / ca0 - 1, dc = co1 / co0 - 1;
+  const T = [];
+  const e100 = x => `${F1.format(x * 100)} €`; // la marge dite en euros gardés sur 100 € de ventes
+  if (m1 >= m0 - 0.002) T.push(`La marge d'exploitation de ${s.name} n'a pas baissé sur le dernier exercice publié : sur 100 € de ventes, elle gardait ${e100(m0)} en ${Y[P]} et ${e100(m1)} en ${Y[L]}.`);
+  else T.push(`La marge d'exploitation de ${s.name} a baissé : sur 100 € de ventes, elle gardait ${e100(m0)} en ${Y[P]}, plus que ${e100(m1)} en ${Y[L]}.`);
+  T.push(`Ce qui a bougé dans ses comptes : les ventes ${dv >= 0 ? "progressent" : "reculent"} (${B(ca0)} → ${B(ca1)}, ${ev(ca0, ca1)}), les coûts d'exploitation ${dc >= 0 ? "augmentent" : "baissent"} de ${ev(co0, co1).replace(/^[+−]/, "")}, et le résultat d'exploitation passe de ${B(eb0)} à ${B(eb1)}.`);
+  if (m1 < m0 - 0.002) T.push(dv < 0 && dc > dv ? "Lecture : les ventes ont baissé plus vite que les coûts. Une partie des coûts est fixe (salaires, loyers, usines) : quand l'activité recule, ils pèsent plus lourd sur chaque euro vendu."
+    : dv >= 0 && dc > dv ? "Lecture : les coûts ont augmenté plus vite que les ventes : chaque euro vendu rapporte moins qu'avant."
+    : "Lecture : la baisse vient du rapport entre les ventes et les coûts ; le détail (salaires, achats, dépréciations) est dans le rapport annuel.");
+  T.push(`Source : comptes officiels ${Y[P]} et ${Y[L]} (Tous les chiffres, sur la fiche). Ce sont des faits passés, pas une prévision.`);
+  return T.join("\n");
+}
 function localAssist(s, c, raw) {
   if (!s) return null;
   const q = IA_corrige(IA_txt(raw)), f = c ? figuresOf(c) : null, m = ratios(s), md = MED[s.sector] || {}, v = valo(s), mp = MEDPE[s.sector], bank = isBank(s), p = pxOf(s);
@@ -538,6 +569,7 @@ function localAssist(s, c, raw) {
   let it = IA_intent(q);
   if (it === "cours" && (!surCours || surIndic || autre)) it = surIndic ? (IA_FI.find(([k, re]) => k !== "cours" && k !== "defin" && re && re.test(q)) || [null])[0] : null;
   if (autre && f && !bank) { const x = IA_compareDeux(s, f, autre, q); if (x) return x; }
+  if (pourquoi && /marge|rentab/.test(q) && /baiss|recul|diminu|chut|degrad|moins|plonge|fond/.test(q) && c) { const x = IA_margeBaisse(s, c); if (x) return x; } // 5e passage (B4)
   if (!it) return null; // pas de réponse de remplissage : la main passe au modèle d'IA
   const cmp = (val, med, fmt, lowGood, mots) => !medOk || med == null || val == null ? "" : ` La médiane des ${md.n} entreprises de son secteur suivies par le site est de ${fmt(med)} : ${(lowGood ? val < med * 0.85 : val > med * 1.15) ? (mots ? mots[0] : "c'est nettement mieux que la plupart de ses concurrentes") : (lowGood ? val > med * 1.15 : val < med * 0.85) ? (mots ? mots[1] : "c'est nettement moins bien que la plupart de ses concurrentes") : (mots ? mots[2] : "c'est dans la moyenne")}.`;
   const ret = f ? retenir(s, f) : { forts: [], vig: [] }, list = a => lc(a.slice(0, 3).map(x => IA_pt(x)).join(" "));

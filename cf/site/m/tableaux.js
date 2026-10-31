@@ -471,9 +471,47 @@ function cellInd(c, k) {
   const m = v == null ? null : medInd(c.sector, k), pctLike = ["croissance", "marge", "marge_nette", "rentabilite", "rendement", "distribution"].includes(k);
   return tblxZoneCell(v, f[2], m, f[3], pctLike && m != null ? Math.max(2, Math.abs(m) * 0.2) : null);
 }
+/* 5e passage (B4) : les critères compris, en pastilles modifiables (retirer, changer le seuil, ajouter), au-dessus de la liste.
+   Chaque modification relance le même calcul (runFiltre) sur la même demande : rien n'est rédigé, rien n'est estimé. */
+const FILT_A = []; // demandes affichées, retrouvées par leur numéro
+const FILT_COND = { sup_mediane: "au-dessus de la médiane", inf_mediane: "sous la médiane", sup: "plus de", inf: "moins de" };
+const FILT_AJOUT = [["croissance", "sup", 8, "Croissance > 8 %"], ["marge", "sup_mediane", null, "Marge > médiane"], ["dette", "inf", 2, "Dette < 2 ans"], ["rendement", "sup", 3, "Dividende > 3 %"], ["per", "inf_mediane", null, "PER < médiane"]];
+function filtPastilles(a, fid) {
+  const COURT = { croissance: "Croissance", marge: "Marge", marge_nette: "Marge nette", rentabilite: "Rentabilité", dette: "Dette", per: "PER", rendement: "Dividende", distribution: "Part versée", variation_1an: "Cours sur 1 an", capitalisation: "Valeur en Bourse", taille: "Ventes" };
+  const lab = k => { const I = INDI[k.indicateur]; if (!I) return ""; const n = COURT[k.indicateur] || I[0].replace(/ \(.*\)$/, ""); return k.condition === "sup_mediane" || k.condition === "inf_mediane" ? `${n} ${FILT_COND[k.condition]}` : `${n} : ${FILT_COND[k.condition]} ${k.valeur != null ? I[2](k.valeur) : ""}`; };
+  const P = [];
+  if (a.secteur) P.push(["secteur", R.sectors[a.secteur] || a.secteur]);
+  if (a.region) P.push(["region", R.regions[a.region] || a.region]);
+  if (a.pays) P.push(["pays", COUNTRY[a.pays] || a.pays]);
+  if (a.pea) P.push(["pea", "Éligibles au PEA"]);
+  if (a.mot && THEME_RE[a.mot]) P.push(["mot", "Thème " + THEME_RE[a.mot][1]]);
+  a.criteres.forEach((k, i) => P.push(["c" + i, lab(k), k]));
+  const libres = FILT_AJOUT.filter(([ind]) => !a.criteres.some(k => k.indicateur === ind));
+  return `<div class="filt-p" data-fid="${fid}" aria-label="Critères compris : touchez une pastille pour la retirer ou la modifier"><span class="filt-pt">Compris :</span>${P.map(([k, t, c]) => `<span class="filt-pi">${c && (c.condition === "sup" || c.condition === "inf") ? `<button type="button" class="filt-v" data-filt-moins="${k}" aria-label="Seuil plus bas">−</button>` : ""}<span>${esc(t)}</span>${c && (c.condition === "sup" || c.condition === "inf") ? `<button type="button" class="filt-v" data-filt-plus="${k}" aria-label="Seuil plus haut">+</button>` : ""}<button type="button" class="filt-x" data-filt-x="${k}" aria-label="Retirer : ${esc(t)}">×</button></span>`).join("")}
+    ${libres.length ? `<label class="filt-add"><span class="sr">Ajouter un critère</span><select data-filt-add><option value="">+ Ajouter un critère</option>${libres.map(([ind, , , t], i) => `<option value="${ind}">${esc(t)}</option>`).join("")}</select></label>` : ""}</div>`;
+}
+document.addEventListener("click", e => {
+  const b = e.target.closest && e.target.closest("[data-filt-x],[data-filt-plus],[data-filt-moins]"); if (!b) return;
+  const box = b.closest(".filt-p"), wrap = box && box.closest(".filt-w"), a = box && FILT_A[+box.dataset.fid]; if (!a || !wrap) return;
+  const k = b.dataset.filtX || b.dataset.filtPlus || b.dataset.filtMoins;
+  if (b.dataset.filtX) { if (k[0] === "c") a.criteres.splice(+k.slice(1), 1); else delete a[k]; }
+  else { const c = a.criteres[+k.slice(1)]; if (!c || c.valeur == null) return; const pas = Math.max(0.5, Math.abs(c.valeur) * 0.25); c.valeur = Math.round((c.valeur + (b.dataset.filtPlus ? pas : -pas)) * 10) / 10; }
+  a.titre = "Entreprises qui correspondent à vos critères"; wrap.outerHTML = filtreHTML(a);
+});
+document.addEventListener("change", e => {
+  const s = e.target.closest && e.target.closest("[data-filt-add]"); if (!s || !s.value) return;
+  const box = s.closest(".filt-p"), wrap = box && box.closest(".filt-w"), a = box && FILT_A[+box.dataset.fid]; if (!a || !wrap) return;
+  const x = FILT_AJOUT.find(([ind]) => ind === s.value); if (!x) return; a.criteres.push({ indicateur: x[0], condition: x[1], valeur: x[2] });
+  if (!a.tri || !INDI[a.tri.indicateur]) a.tri = { indicateur: x[0], ordre: "desc" }; wrap.outerHTML = filtreHTML(a);
+});
 function filtreHTML(a) {
+  const fid = FILT_A.indexOf(a) >= 0 ? FILT_A.indexOf(a) : FILT_A.push(a) - 1;
+  if (!a.tri || (a.criteres.length && !a.criteres.some(k => k.indicateur === a.tri.indicateur) && a.tri.indicateur !== "capitalisation" && a.tri.indicateur !== "taille" && a.tri.indicateur !== "variation_1an")) a.tri = a.criteres[0] ? { indicateur: a.criteres[0].indicateur, ordre: INDI[a.criteres[0].indicateur][3] === true ? "asc" : "desc" } : { indicateur: "capitalisation", ordre: "desc" };
+  return `<div class="filt-w">${filtPastilles(a, fid)}${filtreCorps(a)}</div>`;
+}
+function filtreCorps(a) {
   const { l, tri } = runFiltre(a), lim = isPrem() ? 30 : 8, cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
-  const desc = [a.mot && THEME_RE[a.mot] && "thème " + THEME_RE[a.mot][1], a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
+  const desc = [a.mot && THEME_RE[a.mot] && "thème " + THEME_RE[a.mot][1], a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? ": plus de " : ": moins de ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
   if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
   const tally = c => { const t = quick(c); return t ? t.fort - t.vig : ""; };
   return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
