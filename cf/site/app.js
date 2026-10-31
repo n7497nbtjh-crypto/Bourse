@@ -458,7 +458,8 @@ const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter
 let LOGO_ABS = new Set(), LOGOS = {}; // LOGOS : logos hébergés par le site (cf/site/logos, collectés sur Wikimedia Commons avec leur licence par data/logos_fetch.mjs)
 function logoTeinte(n) { let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; } // couleur déterministe à partir du nom
 function logo(c, size = 40) { // logo hébergé par le site ; sinon un rond coloré (couleur fixée par le nom) avec l'initiale. Plus aucune requête vers Google ou gstatic (3e passage, 1.5)
-  const l = c && c.id && LOGOS[c.id] && LOGOS[c.id].f ? `/logos/${LOGOS[c.id].f}` : null, sz = Math.max(size, 24);
+  // 31/10 (Romain) : les vrais logos d'abord. Logo hébergé par le site s'il existe, sinon l'icône du site de l'entreprise (Google), sinon le rond coloré avec l'initiale.
+  const l = c && c.id && LOGOS[c.id] && LOGOS[c.id].f ? `/logos/${LOGOS[c.id].f}` : c && c.domain && !LOGO_ABS.has(c.domain) ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(c.domain)}&sz=128` : null, sz = Math.max(size, 24);
   return `<span class="lg${l ? "" : " lg-ini"}" style="--s:${sz}px;--lgh:${logoTeinte(c.name)}"><b>${esc(initials(c.name))}</b>${l ? `<img src="${l}" alt="" loading="lazy" width="${sz}" height="${sz}" onerror="this.parentNode.classList.add('lg-ini');this.remove()">` : ""}</span>`;
 }
 function caLine(c) {

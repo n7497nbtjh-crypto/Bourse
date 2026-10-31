@@ -376,7 +376,9 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
   };
   document.head.insertAdjacentHTML("beforeend", `<style>
 .cmpr-vide .cmpr-sel{display:block}.cmpr-vide .cmpr-add{padding:18px 22px;border-style:solid;border-color:var(--ink);background:#fff}.cmpr-vide .cmpr-add label{font-size:15px;color:var(--ink)}.cmpr-vide .cmpr-q input{font-size:18px;padding:12px 14px}
-.rf-ctab-t td.rf-hi::after{content:" ▲";font-size:10px}.rf-ctab-t td.rf-lo::after{content:" ▼";font-size:10px;color:var(--grey)}
+#cmpr-body .rf-ctab-t td.num{background:#fff!important;color:var(--ink)!important}#cmpr-body .rf-ctab-t td.rf-hi{background:#E3F2E8!important;color:var(--g)!important;font-weight:700}#cmpr-body .rf-ctab-t td.rf-lo{background:#FBE9E4!important;color:var(--o)!important}
+#cmpr-body .rf-ctab-t td.rf-hi::after{content:" ▲";font-size:10px}#cmpr-body .rf-ctab-t td.rf-lo::after{content:" ▼";font-size:10px}
+.cmpr-ligne .cmpr-lead{background:var(--lime);padding:2px 8px;border-radius:4px}
 .cmpr-csvp{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:10px 18px 14px}
 .out-gal6 .out-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:900px){.out-gal6 .out-pg{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.out-gal6 .out-pg{grid-template-columns:minmax(0,1fr)}}
 </style>`);
@@ -417,10 +419,16 @@ document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:va
     // le tableau complet est construit par l'ancien rendu, à l'ouverture du pli seulement
     const tout = $("#cmpr-tout"); if (tout) tout.addEventListener("toggle", () => { const tb = $("#cmpr-toutb"); if (!tout.open || !tb || tb.dataset.on) return; tb.dataset.on = "1"; const tmp = document.createElement("div"); tmp.id = "cmpr-body"; const old = el; el.id = "cmpr-body-x"; document.body.appendChild(tmp); try { b0(ids); } catch (e) { } el.id = "cmpr-body"; const full = tmp.querySelector("#cmpr-tout .accb, #cmpr-tout > *:not(summary)"); tb.innerHTML = full ? full.innerHTML : "<p class='muted' style='padding:12px'>Indisponible</p>"; tmp.remove(); if (typeof tblxBindScroll === "function") tblxBindScroll(tb); }, { once: true });
     if (typeof tblxBindScroll === "function") tblxBindScroll(el);
-    // ▲ ▼ par ligne et export CSV (lot 5), conservés
-    const t = $("#cmpr-body .rf-ctab-t"); if (t) { const num = x => { const m = String(x).replace(/\s/g, "").match(/-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; };
-      $$("tbody tr", t).forEach(tr => { if (tr.classList.contains("rf-q")) return; const cells = [...tr.querySelectorAll("td")].filter(td => !td.classList.contains("rf-medc") && !td.classList.contains("rf-q")), vals = cells.map(td => num(td.textContent)); const ok = vals.filter(v => v != null); if (ok.length < 2 || Math.max(...ok) === Math.min(...ok)) return; const hi = vals.indexOf(Math.max(...ok)), lo = vals.indexOf(Math.min(...ok)); cells[hi].classList.add("rf-hi"); cells[lo].classList.add("rf-lo"); });
-      const box = t.closest(".cmpr-tbl"); box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">▲ le plus élevé · ▼ le plus bas de la ligne · médiane : les entreprises du secteur de ${esc(cos[0].name)} suivies par le site</span></p>`);
+    // 31/10 (Romain) : la meilleure valeur de chaque ligne en vert, la moins bonne en rouge, au sens du critère (une dette plus basse est en tête) ; le reste sans couleur
+    const t = $("#cmpr-body .rf-ctab-t"); if (t) {
+      $$("tbody tr[data-k]", t).forEach(tr => { const l = V.lines.find(x => x.T.k === tr.dataset.k); if (!l || !l.S || !l.S.sorted || l.S.sorted.length < 2 || l.T.neutral) return;
+        const cells = [...tr.querySelectorAll("td")].filter(td => !td.classList.contains("rf-medc") && !td.classList.contains("rf-q"));
+        const idx = F => X.F.indexOf(F), best = l.S.best, worst = l.S.sorted.at(-1);
+        if (best && cells[idx(best.F)]) cells[idx(best.F)].classList.add("rf-hi");
+        if (worst && worst !== best && cells[idx(worst.F)] && worst.r.key !== l.S.sorted[0].r.key) cells[idx(worst.F)].classList.add("rf-lo"); });
+      // en tête : le nom de l'entreprise qui mène le plus de critères est souligné
+      const lead = Object.entries(gagne).sort((a, b) => b[1] - a[1])[0]; if (lead && lead[1] > 0) $$(".cmpr-ligne span", el).forEach(sp => { if (sp.textContent.startsWith(RBY[lead[0]].name)) sp.classList.add("cmpr-lead"); });
+      const box = t.closest(".cmpr-tbl"); box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">vert ▲ : en tête sur ce critère · rouge ▼ : en retrait · médiane : les entreprises du secteur de ${esc(cos[0].name)} suivies par le site</span></p>`);
       $("[data-cmpr-csv]", box).onclick = () => { const rows = [...t.querySelectorAll("tr")].map(tr => [...tr.querySelectorAll("th,td")].map(c => `"${c.innerText.replace(/\s+/g, " ").trim().replace(/"/g, '""')}"`).join(";")); const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `comparaison-${ids.join("-")}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }; }
   };
   document.head.insertAdjacentHTML("beforeend", `<style>

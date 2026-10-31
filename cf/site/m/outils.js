@@ -101,7 +101,7 @@ function outClRows(k, f) {
   const val = [];
   for (const c of l) {
     const st = S[c.id], m = ratios(c), q = quick(c);
-    if (k === "points") { if (!q || q.fort + q.moyen + q.vig < 5) continue; val.push({ c, q, a: q.fort - q.vig, b: q.fort, d: st ? st.top * 2 + st.caUp + st.divUp : 0, e: m.marge || 0 }); }
+    if (k === "points") { if (!q || q.fort + q.moyen + q.vig < 3) continue; val.push({ c, q, a: q.fort - q.vig, b: q.fort, d: st ? st.top * 2 + st.caUp + st.divUp : 0, e: m.marge || 0 }); }
     else if (k === "tete") { if (!st || st.top < 2 || st.topN < 3) continue; val.push({ c, q, st, a: st.top / st.topN, b: st.top, d: st.best }); }
     else if (k === "croissance") { if (!st || st.caUp < 2 || st.cagr == null) continue; val.push({ c, q, st, a: st.caUp, b: st.cagr, d: 0 }); }
     else if (k === "dividende") { if (!st || st.divUp < 2) continue; val.push({ c, q, st, a: st.divUp, b: st.dCagr || 0, d: 0 }); }
@@ -163,7 +163,7 @@ async function pageClassements() {
      les comptes de chaque entreprise sont publics et consultables gratuitement sur sa fiche, et le calcul est fait dans le
      navigateur. Premium apporte la liste triée complète (50 places) ; la méthode, les critères et les limites restent visibles pour tous. */
   const draw = () => {
-    const k = f.c, D = OUT_CL[k], rows = outClRows(k, f), lim = prem ? 50 : 15, flou = prem ? 0 : Math.min(3, Math.max(0, rows.length - 1));
+    const k = f.c, D = OUT_CL[k], rows = outClRows(k, f), lim = prem ? 50 : 15, flou = prem ? 0 : Math.min(5, Math.max(0, rows.length - 1));
     const shown = rows.slice(0, lim), more = rows.length - shown.length, vis = shown.slice(flou);
     history.replaceState(null, "", "/classements" + outQS({ c: k === "points" ? "" : k, s: f.s, r: f.r, pea: f.pea, t: f.t }));
     $("#out-cl").innerHTML = `<section class="panel"><div class="ph"><h2>${esc(D.t)}</h2><span class="light" style="font-size:12.5px">${rows.length ? `${F0.format(rows.length)} entreprise${rows.length > 1 ? "s" : ""} retenue${rows.length > 1 ? "s" : ""}` : ""}</span></div>

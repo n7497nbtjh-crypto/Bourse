@@ -243,10 +243,11 @@ function synNewsHTML(b, prem) {
     <p class="synfoot">Classées par importance : offre publique, résultats, chiffre d'affaires, dividende, opérations, dirigeants. Résumés tirés des documents officiels${A.some(a => a.origine === "presse") ? " ; les articles de presse sont repérés automatiquement et non vérifiés par le site" : ""}.</p>`;
 }
 function synAgendaHTML(b) {
-  const E = b.a_venir || [];
+  const pfk = new Set((b.lignes || []).filter(l => l.portefeuille).map(l => l.k));
+  const E = (b.a_venir || []).slice().sort((x, y) => (pfk.has(y.k) - pfk.has(x.k)) || String(x.date).localeCompare(String(y.date)));
   if (!E.length) return `<p class="muted" style="margin:0">Aucune date de résultats, de dividende ou d'assemblée annoncée pour vos valeurs dans les deux prochaines semaines. <a class="lnk" href="/agenda">Voir l'agenda complet</a>.</p>`;
   return `${E.map((e, i) => { const d = new Date(e.date + "T12:00:00Z");
-    return `<div class="synev"><span class="d"><small>${SYN_JOURS[d.getUTCDay()]}</small><b>${d.getUTCDate()}</b><small>${SYN_MOIS[d.getUTCMonth()]}</small></span><span class="w"><b><a href="${esc(e.lien || "/entreprise/" + e.id + "/agenda")}">${esc(e.nom || "")}</a></b><span>${esc(e.label || "")}</span></span><button type="button" data-synics="${i}" aria-label="Ajouter ${esc(e.nom || "")} à mon agenda">+ Agenda</button></div>`; }).join("")}
+    return `<div class="synev"><span class="d"><small>${SYN_JOURS[d.getUTCDay()]}</small><b>${d.getUTCDate()}</b><small>${SYN_MOIS[d.getUTCMonth()]}</small></span><span class="w"><b><a href="${esc(e.lien || "/entreprise/" + e.id + "/agenda")}">${esc(e.nom || "")}</a>${pfk.has(e.k) ? ` <span class="syn4-pill">portefeuille</span>` : ""}</b><span>${esc(e.label || "")}</span></span><button type="button" data-synics="${i}" aria-label="Ajouter ${esc(e.nom || "")} à mon agenda">+ Agenda</button></div>`; }).join("")}
     <div class="synnav" style="border:0;padding-top:6px;margin-top:6px"><button type="button" data-synics="all">Tout ajouter à mon agenda (.ics)</button><a href="/agenda">Agenda complet</a></div>
     <p class="synfoot">Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook. Rien n'est envoyé.</p>`;
 }
@@ -359,7 +360,51 @@ async function synIA(b, el, auto) { // le commentaire de l'IA du site, une fois 
   const btn = el.querySelector("#syn4-iab"); if (btn) btn.onclick = lancer;
 }
 
+let SYN_ANN = []; // annonces affichées, pour le bouton « Expliquer » (31/10, Romain : l'IA explique l'annonce, à la place de « Lire la publication »)
+document.addEventListener("click", async e => {
+  const btn = e.target.closest("[data-syn-exp]"); if (!btn) return;
+  const a = SYN_ANN[+btn.dataset.synExp], box = btn.closest("article").querySelector(".syn4-cl"); if (!a || !box) return;
+  btn.disabled = true; btn.textContent = "Rédaction en cours…";
+  const co = a.k && a.k.startsWith("c:") ? RBY[a.k.slice(2)] : null, f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
+  let j; try { j = await iaRediger("annonce", { entreprise: a.nom || (co && co.name), secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: SYN_CAT[a.categorie] || a.type, titre_officiel: a.titre, date: a.date, chiffres: a.chiffres || [], lecture_calculee: a.lecture || [], dernier_exercice: f, lien: a.source }, { max: 420 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
+  btn.remove();
+  const x = j.txt && typeof jsonFrom === "function" ? jsonFrom(j.txt) : null;
+  box.innerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA de bilan. (${esc(j.modele || "")}) à partir de l'annonce. La source fait foi.</small></div>`
+    : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par l'IA de bilan. à partir de l'annonce. La source fait foi.</small></div>` : `<p class="muted">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
+});
+function synSecteursHTML(b) { // 31/10 (Romain) : la répartition du portefeuille par secteur, en camembert, à côté des valeurs
+  const L = (b.lignes || []).filter(l => l.portefeuille && l.portefeuille.poids_pct != null); if (L.length < 2) return "";
+  const G = {}; L.forEach(l => { const c = l.k.startsWith("c:") ? RBY[l.k.slice(2)] : null, k = l.type === "etf" ? "ETF" : c ? secName(c) : "Autre"; G[k] = (G[k] || 0) + l.portefeuille.poids_pct; });
+  const parts = Object.entries(G).sort((x, y) => y[1] - x[1]), tot = parts.reduce((a, [, v]) => a + v, 0) || 1;
+  const teintes = ["#1F1D1A", "#4A4640", "#79746C", "#A8A299", "#CBC5BA", "#E3DED5", "#F0ECE4"]; // une seule teinte, du foncé au clair, dans l'ordre des poids
+  let acc = 0; const R = 46, C = 2 * Math.PI * R;
+  const arcs = parts.map(([k, v], i) => { const f = v / tot, d = `<circle r="${R}" cx="60" cy="60" fill="none" stroke="${teintes[Math.min(i, teintes.length - 1)]}" stroke-width="20" stroke-dasharray="${(C * f - 2).toFixed(2)} ${(C - C * f + 2).toFixed(2)}" stroke-dashoffset="${(-C * acc).toFixed(2)}" transform="rotate(-90 60 60)"><title>${esc(k)} : ${nf(0).format(f * 100)} %</title></circle>`; acc += f; return d; }).join("");
+  const plus = parts[0], lecture = parts.length === 1 ? "" : plus[1] / tot > 0.5 ? `Plus de la moitié du portefeuille est dans un seul secteur (${plus[0]}) : ce qui arrive à ce secteur pèse sur l'ensemble.` : parts.length >= 4 ? `Quatre secteurs ou plus : les hausses et les baisses d'un secteur se compensent en partie.` : `Le portefeuille repose sur ${parts.length} secteur${parts.length > 1 ? "s" : ""}.`;
+  return `<div class="syn4-rep"><svg viewBox="0 0 120 120" width="120" height="120" role="img" aria-label="Répartition du portefeuille par secteur">${arcs}</svg>
+    <div class="syn4-repl"><p class="syn4-iak">Répartition par secteur</p><ul>${parts.map(([k, v], i) => `<li><i style="background:${teintes[Math.min(i, teintes.length - 1)]}"></i><span>${esc(k)}</span><b>${nf(0).format(v / tot * 100)} %</b></li>`).join("")}</ul>${lecture ? `<p class="syn4-ias">${esc(lecture)} Repère général de diversification, pas un conseil.</p>` : ""}</div></div>`;
+}
+function synFavorisHTML(b) { // 31/10 : la performance de vos favoris (hors portefeuille) sur la semaine, et pourquoi chaque valeur a bougé
+  const F = (b.lignes || []).filter(l => !l.portefeuille && l.variation_semaine_pct != null); if (!F.length) return "";
+  const moy = F.reduce((a, l) => a + l.variation_semaine_pct, 0) / F.length, h = F.filter(l => l.variation_semaine_pct > 0).length, idx = (b.indices || [])[0];
+  return `<div class="syn4-tuiles syn4-fav"><div class="syn4-t"><small>Vos favoris, en moyenne</small><b class="${synCls(moy)}">${synPct(moy)}</b><span>${h} sur ${F.length} en hausse cette semaine</span></div>${idx ? `<div class="syn4-t"><small>${esc(idx.nom)}, pour comparer</small><b class="${synCls(idx.pct)}">${synPct(idx.pct)}</b></div>` : ""}</div>`;
+}
+function synPourquoi(l, A, b) { // une raison factuelle du mouvement : annonce officielle, secteur entier, ou simple marché
+  const v = l.variation_semaine_pct; if (v == null) return "";
+  if (A.length) return `${v > 0 ? "Monte" : v < 0 ? "Baisse" : "Stable"} la semaine de sa publication « ${A[0].titre || SYN_CAT[A[0].categorie] || "annonce"} ».`;
+  const c = l.k.startsWith("c:") ? RBY[l.k.slice(2)] : null, sec = c && (b.secteurs || []).find(x => x.nom === secName(c) && x.mediane_pct != null);
+  if (sec && Math.abs(sec.mediane_pct) >= 1 && Math.sign(sec.mediane_pct) === Math.sign(v)) return `Tout son secteur ${sec.mediane_pct > 0 ? "monte" : "baisse"} (médiane ${synPct(sec.mediane_pct)}) : mouvement d'ensemble, pas propre à l'entreprise.`;
+  if (l.indice && l.ecart_pts != null && Math.abs(l.ecart_pts) < 1.5) return `Suit son marché (${l.indice.nom} ${synPct(l.indice.pct)}) : pas de publication officielle cette semaine.`;
+  return `Pas de publication officielle cette semaine : le mouvement vient du marché, pas d'une nouvelle de l'entreprise.`;
+}
+function synIdeeHTML(b) { // 31/10 : une piste à découvrir, factuelle : une entreprise du jour dans un secteur absent de la liste
+  if (typeof outDayPicks !== "function" || typeof outDecCard !== "function") return ""; if (typeof outCSS === "function") outCSS(); if (typeof recoCSS === "function") recoCSS();
+  const secs = new Set((b.lignes || []).map(l => { const c = l.k.startsWith("c:") ? RBY[l.k.slice(2)] : null; return c ? c.sector : null; }).filter(Boolean));
+  let picks = []; try { picks = outDayPicks(TODAY, 6); } catch (e) { return ""; }
+  const x = picks.find(p => p && p.c && !secs.has(p.c.sector)) || picks[0]; if (!x) return "";
+  return `<section class="syn4-sec"><h2>Une entreprise à découvrir</h2><p class="syn4-ias" style="margin:0 0 10px">Tirée des découvertes du jour, dans un secteur ${secs.has(x.c.sector) ? "que vous suivez déjà" : "absent de votre liste"}. Une information, pas une recommandation.</p><div class="out-dg syn4-idee">${outDecCard(x, false)}</div></section>`;
+}
 function synPageHTML(b, m) {
+  SYN_ANN = [];
   // 30/10 (Romain) : capter l'attention par le visuel, moins de texte ; l'actualité interprétée et son contexte ; le portefeuille simulé ; les valeurs en liste compacte
   const ess = synEssentiel(b), sem = String(b.semaine || "").replace(/^\d{4}-W/, ""), pf = b.portefeuille;
   const statut = b.en_cours === false || b.provisoire === false ? "Synthèse définitive" : "Semaine en cours, mise à jour à chaque visite";
@@ -380,7 +425,7 @@ function synPageHTML(b, m) {
       <p class="syn4-annt">${esc(a.titre || "")}</p>
       ${ch.length ? `<div class="syn4-ch">${ch.map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(String(v))}</b></span>`).join("")}</div>` : ""}
       ${corps ? `<p class="syn4-lec">${esc(corps)}</p>` : `<p class="syn4-lec muted">Chiffres pas encore relevés par le site ; ses indicateurs restent ceux du dernier exercice clos.</p>`}
-      ${a.source ? `<a class="lnk" href="${esc(a.source)}" target="_blank" rel="noopener">Lire la publication</a>` : ""}</article>`;
+      <div class="syn4-acts">${miaConnectee() ? `<button type="button" class="syn4-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button>` : ""}${a.source ? `<a class="lnk" href="${esc(a.source)}" target="_blank" rel="noopener">La publication</a>` : ""}</div><div class="syn4-cl"></div></article>`;
   }).filter(Boolean).slice(0, 4);
   const sujets = synSujets(b).map(({ sj, touches }) => `<article class="syn4-sj"><p class="syn4-theme">${esc(sj.theme)}</p><h4>${esc(sj.titre)}</h4><p class="syn4-fait">${esc((sj.faits || []).slice(-1)[0] || "")}</p>
       <ul class="syn4-touch">${(() => { const G = []; touches.forEach(t => { const g = G.find(x => x.im === t.im); if (g) g.cs.push(t.c); else G.push({ im: t.im, cs: [t.c] }); }); return G.slice(0, 4).map(g => { const [l, c] = SYN_SENS[g.im.sens] || SYN_SENS["±"]; return `<li>${g.cs.map(x => `<a href="/entreprise/${x.id}">${esc(x.name)}</a>`).join(", ")} <em class="syn4-s${c}">${l}</em><span>${esc(accPhraseCourte(g.im.mecanisme))}</span></li>`; }).join(""); })()}</ul></article>`);
@@ -393,7 +438,7 @@ function synPageHTML(b, m) {
     if (grosse) sim.push(`<div class="syn4-sim"><small>Si ${esc(grosse.nom)} (${nf(0).format(grosse.portefeuille.poids_pct)} % du portefeuille) baissait de 30 %</small><b class="dn">${synPct(-0.3 * grosse.portefeuille.poids_pct, 0)}</b><span>sur l'ensemble, toutes choses égales par ailleurs</span></div>`);
     const total = pf.valeur_eur || (pf.var_eur != null && pf.var_pct ? pf.var_eur / pf.var_pct * 100 : null);
     if (total) sim.push(`<div class="syn4-sim"><small>Si tout le marché baissait de 10 %</small><b class="dn">${synEur(-0.1 * total)}</b><span>environ, sur ${nf(0).format(Math.round(total))} € : un portefeuille d'actions suit le marché à court terme</span></div>`);
-    pfHTML = `<div class="syn4-sims">${sim.join("")}</div>${synAlertesHTML(b).replace('<h3>Votre portefeuille</h3>', "")}<p class="syn4-ias">Simulations arithmétiques sur vos lignes, pas des prévisions. Information, pas conseil.</p>`;
+    pfHTML = `${synSecteursHTML(b)}<div class="syn4-sims">${sim.join("")}</div>${synAlertesHTML(b).replace('<h3>Votre portefeuille</h3>', "")}<p class="syn4-ias">Simulations arithmétiques sur vos lignes, pas des prévisions. Information, pas conseil.</p>`;
   }
   // 4. Vos valeurs : une ligne par valeur, le détail au clic
   const L = (b.lignes || []).slice().sort((x, y) => Math.abs(y.variation_semaine_pct ?? 0) - Math.abs(x.variation_semaine_pct ?? 0));
@@ -403,7 +448,7 @@ function synPageHTML(b, m) {
     const { pts } = synPoints(l, b), rep = pts.find(p => p.zone && !/^Publié cette semaine|^Un mouvement|^C'est /.test(p.txt));
     return `<details class="syn4-l"><summary><span class="syn4-ln">${synLogo(l.k, 26)}<span><b>${esc(l.nom)}</b><small>${l.type === "etf" ? "ETF" : c ? esc(secName(c)) : ""}${l.portefeuille ? ` · ${nf(0).format(l.portefeuille.poids_pct)} %` : ""}</small></span></span>
         <span class="syn4-lv ${v == null ? "na" : synCls(v)}">${v == null ? "–" : synPct(v)}</span><span class="syn4-li">${l.indice && l.ecart_pts != null ? `${l.ecart_pts > 0 ? "+" : l.ecart_pts < 0 ? "−" : ""}${nf(1).format(Math.abs(l.ecart_pts))} pt vs ${esc(l.indice.nom)}` : ""}</span>
-        <span class="syn4-le">${ev ? `<span class="syn4-pill">${esc(ev)}</span>` : ""}${nx ? `<small>${esc(jour(nx.date))} : ${esc(nx.label)}</small>` : ""}</span></summary>
+        <span class="syn4-le">${ev ? `<span class="syn4-pill">${esc(ev)}</span>` : ""}${nx ? `<small>${esc(jour(nx.date))} : ${esc(nx.label)}</small>` : ""}</span><span class="syn4-why">${esc(synPourquoi(l, A, b))}</span></summary>
       <div class="syn4-ld">${A.slice(0, 2).map(a => `<p><b>${esc(a.titre || a.type)}</b> <small>${esc(jour(a.date))}</small>${(a.lecture || []).filter(t => !generique(t)).length ? `<br>${esc((a.lecture || []).filter(t => !generique(t)).join(" "))}` : ""}${a.source ? ` <a class="lnk" href="${esc(a.source)}" target="_blank" rel="noopener">Lire</a>` : ""}</p>`).join("")}
         ${rep ? `<p class="${rep.zone}">${c ? "Sur ses comptes : " : ""}${esc(rep.txt).replace(/(^|[\s(:])-(\d)/g, "$1−$2")}</p>` : ""}
         <p><a class="lnk" href="${synLien(l.k)}">Ouvrir la fiche →</a></p></div></details>`;
@@ -416,10 +461,11 @@ function synPageHTML(b, m) {
     <section class="syn4-sec"><h2>L'actualité qui touche vos valeurs</h2>
       ${annonces.length ? `<div class="syn4-anns">${annonces.join("")}</div>` : `<p class="muted">Aucune publication officielle de vos valeurs cette semaine.</p>`}
       ${sujets.length ? `<h3>Le contexte</h3><div class="syn4-sjs">${sujets.join("")}</div>` : ""}
-      <div id="syn4-ia" class="syn4-ia"></div></section>
+</section>
     ${pfHTML ? `<section class="syn4-sec"><h2>Votre portefeuille</h2>${pfHTML}</section>` : ""}
-    <section class="syn4-sec"><h2>Vos valeurs</h2><div class="syn4-ls">${lignes || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`}</div></section>
-    <section class="syn4-sec"><h2>À venir sur deux semaines</h2>${synAgendaHTML(b)}</section>
+    <section class="syn4-sec"><h2>Vos valeurs</h2>${synFavorisHTML(b)}<div class="syn4-ls">${lignes || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`}</div></section>
+    <section class="syn4-sec"><h2>À venir sur deux semaines</h2><p class="syn4-ias" style="margin:0 0 10px">Votre portefeuille d'abord, vos favoris ensuite.</p>${synAgendaHTML(b)}</section>
+    ${synIdeeHTML(b)}
     ${sect.length ? `<section class="syn4-sec"><h2>Les secteurs que vous suivez</h2><div class="syn4-tuiles">${sect.join("")}</div></section>` : ""}
     <p class="synfoot">Variations entre la clôture précédant la semaine et le dernier cours connu (différé), dans la devise de cotation. Annonces : documents officiels (AMF, SEC) lus par le site. Information, pas conseil.</p>
   </div>`;
@@ -567,7 +613,15 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .syn4-ln{display:flex;align-items:center;gap:10px;min-width:0}.syn4-ln span{display:flex;flex-direction:column;min-width:0}.syn4-ln b{font-size:15px}.syn4-ln small{font-size:12px;color:var(--grey)}
 .syn4-lv{font-family:var(--mono);font-size:19px;font-weight:500;text-align:right}.syn4-lv.na{color:var(--light)}.syn4-li{font-size:12px;color:var(--grey)}.syn4-le{display:flex;flex-direction:column;gap:3px;align-items:flex-start}.syn4-le small{font-size:12px;color:var(--grey)}
 .syn4-ld{padding:0 0 14px 36px}.syn4-ld p{margin:0 0 8px;font-size:14px;line-height:1.5}.syn4-ld p.vert{color:var(--g)}.syn4-ld p.rouge{color:var(--down)}.syn4-ld small{color:var(--grey)}
-@media (max-width:760px){.syn4-l summary{grid-template-columns:minmax(0,1fr) 80px;grid-template-areas:"n v" "e e"}.syn4-ln{grid-area:n}.syn4-lv{grid-area:v}.syn4-li{display:none}.syn4-le{grid-area:e;flex-direction:row;flex-wrap:wrap;gap:8px}.syn4-ld{padding-left:0}.syn4-t b{font-size:24px}}
+@media (max-width:760px){.syn4-l summary{grid-template-columns:minmax(0,1fr) 80px;grid-template-areas:"n v" "e e" "w w"}.syn4-why{grid-area:w;padding-left:0}.syn4-ln{grid-area:n}.syn4-lv{grid-area:v}.syn4-li{display:none}.syn4-le{grid-area:e;flex-direction:row;flex-wrap:wrap;gap:8px}.syn4-ld{padding-left:0}.syn4-t b{font-size:24px}}
 @media (max-width:760px){.syn3-b{margin-left:0}.syn3-v{font-size:19px}.syn3-head h2{font-size:26px}}
 @media (max-width:760px){.syn2-sec{padding:14px 14px}.syn2-l,.syn2-rien{margin-left:0}.syn2-v{font-size:19px}}
+</style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.syn4-acts{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin-top:8px}.syn4-exp{background:var(--ink);color:#fff;border:0;border-radius:999px;padding:8px 14px;font:600 13.5px var(--sans);cursor:pointer}.syn4-exp:disabled{opacity:.6}.syn4-acts .lnk{font-size:13px}
+.syn4-cl .ax-cl{margin-top:10px;padding:12px 14px;background:#F3F7E8;border-radius:8px;font-size:14px}.syn4-cl .ax-cl b{display:block;margin:8px 0 2px;font-size:12.5px;color:var(--grey)}.syn4-cl .ax-cl b:first-child{margin-top:0}.syn4-cl .ax-cl p{margin:0}.syn4-cl .ax-cl small{display:block;margin-top:8px;color:var(--grey);font-size:12px}
+.syn4-rep{display:grid;grid-template-columns:120px minmax(0,1fr);gap:18px 24px;align-items:center;padding:14px 16px;background:#fff;border:1px solid var(--rule);border-radius:8px;margin-bottom:12px}.syn4-repl ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px}.syn4-repl li{display:flex;align-items:center;gap:8px;font-size:14px}.syn4-repl li i{width:12px;height:12px;border-radius:3px;flex:none}.syn4-repl li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.syn4-repl li b{font-variant-numeric:tabular-nums}
+.syn4-fav{margin-bottom:12px}.syn4-why{grid-column:1 / -1;margin:-6px 0 0;padding-left:38px;font-size:13.5px;color:var(--grey)}.syn4-idee{display:grid;grid-template-columns:minmax(0,420px)}
+@media (max-width:600px){.syn4-rep{grid-template-columns:minmax(0,1fr);justify-items:center}.syn4-repl ul{grid-template-columns:minmax(0,1fr)}.syn4-why{padding-left:14px}}
 </style>`);

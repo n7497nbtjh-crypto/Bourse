@@ -252,11 +252,11 @@ function tblxFullHTML(s, c, P) {
       if (v == null) return `<td class="num na${i === L ? " last" : ""}" title="Non publié">–</td>`;
       const d = i > 0 ? tblxDir(r.kind, r.vals[i - 1], v) : null, q = d == null ? 0 : d * (r.sens || 0);
       const lvc = "";
-      return `<td class="num${q > 0 ? " hu" : q < 0 ? " hd" : ""}${i === L ? " last" : ""}${lvc}"${i > 0 && d != null ? ` title="${esc(Y[i] + " : " + r.full(v) + (tblxChange(r.kind, r.vals[i - 1], v) ? " (" + tblxChange(r.kind, r.vals[i - 1], v) + " sur un an)" : ""))}"` : ""}>${esc(r.cell(v))}</td>`;
+      return `<td class="num${i === L ? " last" : ""}${lvc}"${i > 0 && d != null ? ` title="${esc(Y[i] + " : " + r.full(v) + (tblxChange(r.kind, r.vals[i - 1], v) ? " (" + tblxChange(r.kind, r.vals[i - 1], v) + " sur un an)" : ""))}"` : ""}>${esc(r.cell(v))}</td>`;
     }).join("");
     out += `<tr data-k="${r.k}" class="${z++ % 2 ? "z" : ""}${r.ess ? " es" : ""}" tabindex="0" aria-expanded="false">
       <th scope="row" class="l lab"><span class="nm">${def(r.term, r.label)}${tblxProv(r.k, s)}</span><span class="u">${esc(r.unit)}</span></th>${cells}
-      <td class="tr"><span class="tbx-trw">${tblxSpark(r.vals, { w: 60, h: 20, q: r.q, med: r.med, label: "Évolution" })}${tblxArrow(r.dir, r.q, "", "Sur un an")}</span></td>
+      <td class="tr"><span class="tbx-trw">${tblxArrow(r.dir, r.q, tblxChange(r.kind, r.prev, r.last) || "", "Sur un an")}</span></td>
       <td class="md">${r.med != null ? `<span class="num">${esc(r.cell(r.med))}</span>` : `<span class="light">–</span>`}</td></tr>`;
   });
   return `<table class="t tbx tbx-full"><caption class="sr">Tous les comptes publiés de ${esc(s.name)}, par exercice</caption><thead><tr><th class="l lab" scope="col">Indicateur <span class="u">unité</span></th>${ORD.map(i => [Y[i], i]).map(([y, i]) => `<th scope="col" class="${i === L ? "last" : ""}">${y}${i === L ? "<small>dernier</small>" : ""}</th>`).join("")}<th scope="col">Sur un an</th><th scope="col">${def("mediane", "Médiane secteur")}</th></tr></thead><tbody>${out}</tbody></table>`;
@@ -270,7 +270,7 @@ function tblxChart(s, c, r) {
   if (!r) return "";
   const cur = c.currency, tick = r.kind === "money" ? compact(cur) : r.kind === "pct" || r.kind === "pctS" ? pctTick : r.kind === "ps" ? (v => F2.format(v)) : (v => F1.format(v));
   return colChart({ labels: c.years.map(String), series: [{ name: r.short || r.label, values: r.vals }], fmt: r.full, tickFmt: tick, ref: r.med, refLabel: "Médiane du secteur, dernier exercice", h: 210 })
-    + `<p class="tbx-gph"><b>${esc(r.short || r.label)}${r.unit && r.kind === "money" ? ` <span class="light">(${esc(r.ulong)})</span>` : ""}.</b> ${esc(r.phrase)}</p>`;
+    + (document.querySelector(".rf-gdef") ? "" : `<p class="tbx-gph"><b>${esc(r.short || r.label)}${r.unit && r.kind === "money" ? ` <span class="light">(${esc(r.ulong)})</span>` : ""}.</b> ${esc(r.phrase)}</p>`); // 31/10 : sur la fiche, la phrase vit dans le panneau de définition à droite
 }
 
 /* ---------- Onglet « Les chiffres en détail » : regroupé par thème (refonte du 29 octobre, 13 h 30) ----------
@@ -329,7 +329,7 @@ function tblxThemeHTML(T, s, c, P) {
       .replace(`<span class="kick">Rendement</span>`, `<span class="kick">Rendement${tblxProv("rendement", s)}</span>`)
       .replace(`<span class="kick">Part du bénéfice</span>`, `<span class="kick">Part du bénéfice${tblxProv("payout", s)}</span>`);
   }
-  const rows = T.rows.map(k => P.rows.find(r => r.k === k)).filter(Boolean);
+  const rows = T.rows.map(k => P.rows.find(r => r.k === k)).filter(Boolean).filter(r => !(T.k === "croissance" && r.k === "g")); // 31/10 : la ligne « Croissance » redisait la variation des ventes (le graphique la garde)
   if (!rows.length) return "";
   const ctx = T.k === "croissance" && typeof contexteChiffresHTML === "function" ? contexteChiffresHTML(s, c, true) : "";
   const gr = rows.filter(r => r.n >= 2);
@@ -339,7 +339,7 @@ function tblxThemeHTML(T, s, c, P) {
     return `<button type="button" class="rf-kt ${tblxLvCls(r)}" data-g="${r.k}" title="Voir l'évolution en graphique"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}</small><b>${esc(r.full(r.last))}</b><span>${tblxArrow(r.dir, r.q, one, "Sur un an")}${r.lv ? `<em class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</em>` : ""}</span>${r.med != null ? `<i>médiane du secteur ${esc(r.full(r.med))}</i>` : r.k === "ca" && (rows.find(x => x.k === "g") || {}).med != null ? `<i>secteur : ${esc(sgn((rows.find(x => x.k === "g") || {}).med))} sur un an</i>` : ""}</button>`; }).join("");
   return `<section class="panel rf-th rf-th2" id="rf-${T.k}"><div class="ph"><h2>${esc(T.t)} <small>${esc(T.q)}</small></h2></div>
     <div class="rf-kts">${tuiles}</div>
-    ${gr.length ? `<div class="rf-thc rf-thc2" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gbox"></div></div>` : ""}
+    ${gr.length ? `<div class="rf-thc rf-thc2" data-th="${T.k}"><div class="filters rf-gsel">${gr.map(r => `<button type="button" data-g="${r.k}">${esc(r.short || r.label)}</button>`).join("")}</div><div class="rf-gwrap"><div class="rf-gbox"></div><aside class="rf-gdef"></aside></div></div>` : ""}
     <details class="rf-thd"><summary>Le détail année par année<small>${rows.length} indicateur${rows.length > 1 ? "s" : ""}, de ${Y[0]} à ${yl}, et ce que chacun veut dire</small></summary>
       <p class="rf-thx">${esc(T.ex)}</p>
       <div class="rf-thtw">${tblxScrollBox(`<table class="t tbx tbx-ess rf-tht"><caption class="sr">${esc(T.t)} : les indicateurs de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${yl}</th><th scope="col">Sur un an</th></tr></thead><tbody>${tblxThemeRows(rows, Y, s)}</tbody></table>`)}</div>
@@ -371,16 +371,16 @@ function tabComptes(s, c, el) {
     </section>
     ${themes.map(x => x[1]).join("")}
     <section class="panel rf-th" id="rf-tout"><details class="rf-all"${tblxGetV() === "tout" ? " open" : ""}><summary><span><b>Tous les comptes, année par année</b><small>${P.rows.length} lignes, ${Y.length} exercices : compte de résultat, bilan, flux de trésorerie, actionnaire</small></span></summary>
-      <p class="tbx-sum">Chaque case est colorée selon l'évolution par rapport à l'année précédente. Touchez une ligne pour lire ce qu'elle dit.</p>
+      <p class="tbx-sum">Exercice le plus récent en premier. La colonne « Sur un an » dit si le chiffre monte ou baisse, en vert quand c'est plutôt bon pour l'entreprise, en rouge quand c'est plutôt moins bon. Touchez une ligne pour lire ce qu'elle dit.</p>
       ${tblxScrollBox(tblxFullHTML(s, c, P), tblxMob() ? "Faites glisser pour voir les années précédentes, la tendance et la médiane" : "Faites glisser pour voir les années précédentes")}</details>
-      <div class="src">Un tiret signifie que le chiffre n'est pas publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes, peut différer du chiffre annoncé par l'entreprise.${bank ? " Banques et assurances : marge d'exploitation, dette et EBITDA ne s'appliquent pas." : ""} Médiane calculée sur le dernier exercice de ${med.n || 0} entreprise${med.n > 1 ? "s" : ""} suivie${med.n > 1 ? "s" : ""} du secteur ${esc(secName(s).toLowerCase())}. Couleurs : seuils de lecture du site, pas un avis sur l'action.</div></section>
+      <div class="src">Un tiret signifie que le chiffre n'est pas publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes, peut différer du chiffre annoncé par l'entreprise.${bank ? " Banques et assurances : marge d'exploitation, dette et EBITDA ne s'appliquent pas." : ""} Médiane calculée sur le dernier exercice de ${med.n || 0} entreprise${med.n > 1 ? "s" : ""} suivie${med.n > 1 ? "s" : ""} du secteur ${esc(secName(s).toLowerCase())}. Vert et rouge : seuils de lecture du site, pas un avis sur l'action.</div></section>
     <section class="panel"><div class="ph"><h2>Sources</h2></div>
       <table class="t tbx tbx-src"><thead><tr><th class="l">Exercice clos le</th><th class="l">Document</th></tr></thead><tbody>
       ${c.cik ? `<tr><td class="l wrap">Exercices ${Y[0]} à ${yl}</td><td class="l wrap"><a class="lnk" href="${esc((c.sources[0] || {}).report || "")}" target="_blank" rel="noopener">Rapports annuels 10-K déposés à la SEC</a></td></tr>`
         : (c.sources || []).map(x => `<tr><td class="l wrap">${dLabel(x.periodEnd)}</td><td class="l wrap">${x.report ? `<a class="lnk" href="${esc(x.report)}" target="_blank" rel="noopener">Rapport financier annuel (ESEF)</a>` : "Rapport financier annuel (ESEF)"}</td></tr>`).join("")}</tbody></table>
       <div class="src">${c.cik ? "Comptes lus dans les données publiques de la SEC (EDGAR), au format XBRL." : `Comptes lus dans les rapports ${def("esef", "ESEF")} publiés sur filings.xbrl.org.`}${c.updated ? ` Mis à jour le ${dLabel(c.updated)}.` : ""} Cours : Google Finance, différés. Taux de change : BCE.</div></section>`;
   const byK = k => P.rows.find(r => r.k === k);
-  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); };
+  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); const d = $(".rf-gdef", box); if (d) d.innerHTML = tblxDefHTML(r); };
   $$(".rf-thc", el).forEach(box => { const b = $(".rf-gsel button", box); if (b) setG(box, b.dataset.g); });
   const toggleDet = tr => {
     const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("det");
@@ -407,6 +407,10 @@ function tabComptes(s, c, el) {
 }
 
 /* ---------- Graphique en colonnes par année : dernière année accentuée, valeurs affichées, repère médiane ---------- */
+function tblxDefHTML(r) { // à droite du graphique : ce que mesure l'indicateur choisi, et comment le lire (31/10, Romain)
+  const t = typeof ALL !== "undefined" && r && ALL[r.term]; if (!t) return "";
+  return `<p class="kick">${esc(r.short || r.label)}, c'est quoi ?</p><p>${esc(t.what || "")}</p>${t.limit ? `<p class="kick">Comment le lire</p><p>${esc(t.limit)}</p>` : ""}${r.phrase ? `<p class="kick">Pour cette entreprise${r.unit && r.kind === "money" ? ` (${esc(r.ulong)})` : ""}</p><p>${esc(r.phrase)}</p>` : ""}`;
+}
 function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = "", h = 170, note = "" }) {
   let k = 0; while (k < labels.length - 1 && series.every(s => !okn(s.values[k]))) k++;
   labels = labels.slice(k); series = series.map(s => ({ ...s, values: s.values.slice(k).map(v => okn(v) ? v : null) }));
@@ -607,8 +611,7 @@ table.tbx-full thead th small{display:block;font-size:10px;letter-spacing:.04em;
 table.tbx-full td.last{font-weight:700;box-shadow:inset 1.5px 0 0 var(--ink),inset -1.5px 0 0 var(--ink)}
 table.tbx-full tbody tr:last-child td.last{box-shadow:inset 1.5px 0 0 var(--ink),inset -1.5px 0 0 var(--ink),inset 0 -1.5px 0 var(--ink)}
 table.tbx-full tbody tr:not(.grp):not(.det):hover > td.last{box-shadow:inset 0 0 0 999px rgba(198,244,50,.16),inset 1.5px 0 0 var(--ink),inset -1.5px 0 0 var(--ink)}
-table.tbx-full td.hu{background:rgba(14,107,74,.075)}
-table.tbx-full td.hd{background:rgba(217,79,43,.085)}
+table.tbx-full td.tr .tbx-ar span{font-variant-numeric:tabular-nums;margin-left:4px}
 table.tbx-full td.last.tz-fort{color:#0B5A3E}table.tbx-full td.last.tz-vig{color:#A8361C}
 table.tbx-full td.na{color:#B5AFA4}
 table.tbx-full tbody tr[data-k]{cursor:pointer}

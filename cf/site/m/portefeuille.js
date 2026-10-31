@@ -78,6 +78,7 @@ const PF3 = (() => {
     if (t !== "d" && !(q > 0)) return null;
     const out = [d, t, Math.round(q * 1e8) / 1e8 || (t === "d" ? 1 : 0), Math.round(p * 1e6) / 1e6, Math.round(f * 100) / 100];
     if (fin(x) && x > 0 && x !== 1) out.push(Math.round(x * 1e6) / 1e6);
+    if (o[6] === "p") { if (out.length < 6) out.push(null); out.push("p"); } // « p » : achat programmé, prix relevé le jour de la visite
     return out;
   }
   function cleanLine(l, cfg) {
@@ -121,6 +122,10 @@ const PF3 = (() => {
     for (const [k, re] of [["courtier", /^[a-z0-9-]{1,40}$/], ["env", /^(pea|cto|av|mix)$/], ["horizon", /^[0-4]$/]]) if (typeof cfg[k] === "string" && re.test(cfg[k])) P.cfg[k] = cfg[k];
     for (const k of ["mensuel", "ordres"]) { const n = numOr(cfg[k], NaN); if (fin(n) && n > 0) P.cfg[k] = String(n); }
     if (typeof cfg.perso === "object" && cfg.perso) P.cfg.perso = { fixe: Math.max(0, numOr(cfg.perso.fixe)), pct: Math.max(0, numOr(cfg.perso.pct)) };
+    if (Array.isArray(cfg.prog)) { // 31/10 : achats programmés { k, jour (1 à 28), q (parts), depuis (AAAA-MM-JJ), dernier (AAAA-MM) }
+      const pr = cfg.prog.filter(x => x && typeof x.k === "string" && /^[cex]:[A-Za-z0-9._-]{1,60}$/.test(x.k) && numOr(x.q) > 0 && isoOk(x.depuis)).slice(0, 12)
+        .map(x => ({ k: x.k, jour: Math.min(28, Math.max(1, Math.round(numOr(x.jour, 1)))), q: rq(numOr(x.q)), depuis: x.depuis, dernier: /^\d{4}-\d{2}$/.test(x.dernier || "") ? x.dernier : "" }));
+      if (pr.length) P.cfg.prog = pr; }
     if (fin(x.maj)) P.maj = x.maj;
     if (x.dem === true) P.dem = true;
     const legacyEnv = x.v === 3 ? null : cfg; // les anciennes versions avaient un seul compte et un seul courtier pour tout
@@ -1085,7 +1090,7 @@ function pf3Det(r, P) {
     <div class="pf3grid pf3g2 pf3set"><div class="pf3f"><span>Compte</span>${pf3Chips("lenv", [["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"]], l.env || "")}</div>${pf3BrSel("pf3lbr", l.br || "")}</div>
     ${l.env === "pea" && i.pea === false ? `<p class="pf3warn">${esc(i.name)} n'est pas éligible au PEA : vérifiez le compte de cette ligne.</p>` : ""}
     ${hasOps ? `<div class="pf3ops"><p class="kick">Opérations</p><div class="scroll-x"><table class="t pf3ot"><thead><tr><th class="l">Date</th><th class="l">Opération</th><th>Quantité</th><th>Prix</th><th>Frais</th><th>Montant</th><th></th></tr></thead><tbody>
-      ${l.o.map((o, j) => [o, j]).sort((a, b) => (b[0][0] || "").localeCompare(a[0][0] || "")).map(([o, j]) => `<tr class="${o[1] === "d" ? "pf3od" : ""}"><td class="l">${o[0] ? dLabel(o[0]) : "–"}</td><td class="l">${T[o[1] === "r" && o[0] && !o[3] ? "s" : o[1]]}</td><td class="num">${o[1] === "d" ? "–" : nf(o[2] % 1 ? 4 : 0).format(o[2])}</td><td class="num">${o[1] === "d" ? "–" : pf3Px(o[3], cur)}</td><td class="num">${o[4] ? nf(2).format(o[4]) + " " + C : "–"}</td><td class="num">${nf(2).format(o[1] === "d" ? o[3] * (o[2] || 1) : o[2] * o[3] + (o[1] === "a" ? o[4] : -o[4])) + " " + C}</td><td><button type="button" class="pf3del" data-op="${j}" aria-label="Supprimer cette opération">×</button></td></tr>`).join("")}</tbody></table></div></div>`
+      ${l.o.map((o, j) => [o, j]).sort((a, b) => (b[0][0] || "").localeCompare(a[0][0] || "")).map(([o, j]) => `<tr class="${o[1] === "d" ? "pf3od" : ""}"><td class="l">${o[0] ? dLabel(o[0]) : "–"}${o[6] === "p" ? ` <span class="pf3pgm" title="Achat programmé : prix relevé le jour de l'ajout, pas celui de cette date">programmé</span>` : ""}</td><td class="l">${T[o[1] === "r" && o[0] && !o[3] ? "s" : o[1]]}</td><td class="num">${o[1] === "d" ? "–" : nf(o[2] % 1 ? 4 : 0).format(o[2])}</td><td class="num">${o[1] === "d" ? "–" : pf3Px(o[3], cur)}</td><td class="num">${o[4] ? nf(2).format(o[4]) + " " + C : "–"}</td><td class="num">${nf(2).format(o[1] === "d" ? o[3] * (o[2] || 1) : o[2] * o[3] + (o[1] === "a" ? o[4] : -o[4])) + " " + C}</td><td><button type="button" class="pf3del" data-op="${j}" aria-label="Supprimer cette opération">×</button></td></tr>`).join("")}</tbody></table></div></div>`
     : r.mOnly ? `<div class="pf3grid">${pf3In("pf3lq", "Nombre de parts", "", 'placeholder="12"')}${pf3In("pf3lpru", "Prix de revient unitaire", "", "", C)}</div><p class="pf3hint">Cette ligne n'a qu'un montant investi (${pf3Eu(l.m)}). Indiquez le nombre de parts et le PRU pour suivre sa valeur et sa plus-value.</p><div class="pf3btns"><button type="button" class="btn" id="pf3lsave">Enregistrer</button></div>`
     : `<div class="pf3grid">${pf3In("pf3lq", "Nombre de parts", pf3Fmt(l.q))}${pf3In("pf3lpru", "Prix de revient unitaire (PRU)", pf3Fmt(l.pru), "", C)}</div><div class="pf3btns"><button type="button" class="btn" id="pf3lsave">Enregistrer</button><span class="pf3saved light" id="pf3lmsg" aria-live="polite"></span></div>`}
     ${op ? pf3OpForm(r, op) : `<div class="pf3btns pf3addop"><button type="button" class="pf3opb" data-add="a">+ Achat</button><button type="button" class="pf3opb" data-add="v" ${pos.q > 0 ? "" : "disabled"}>+ Vente</button><button type="button" class="pf3opb" data-add="d">+ Dividende reçu</button>${!hasOps && !r.mOnly ? `<span class="pf3hint" style="margin:0">Ajouter une opération détaille la ligne : le PRU sera recalculé à chaque achat.</span>` : ""}</div>`}
@@ -1496,8 +1501,60 @@ function pf3Notice() {
 }
 
 /* ---------- La page ---------- */
+/* ---------- Achats programmés (31/10, Romain) : « une part de MSCI World chaque mois, le 5 ».
+   À chaque visite, les échéances passées depuis la dernière application sont ajoutées comme achats, au cours connu le jour de la visite
+   (le site n'a pas l'historique des cours) : l'opération est marquée « p » et le prix est présenté comme relevé à la visite. ---------- */
+function pf3ProgAppliquer(P) {
+  const L = (P.cfg && P.cfg.prog) || []; if (!L.length) return 0;
+  let n = 0; const ym = d => d.slice(0, 7);
+  for (const pr of L) {
+    const info = pf3Info({ k: pr.k }), px = pf3PxN(PX[pr.k]); if (!px || !(px.p > 0)) continue;
+    const cur = new Date((pr.dernier || ym(pr.depuis)) + "-01T12:00:00Z"); if (pr.dernier) cur.setUTCMonth(cur.getUTCMonth() + 1); // premier mois à examiner
+    const guard = 60;
+    for (let i = 0; i < guard; i++) {
+      const d = `${cur.getUTCFullYear()}-${String(cur.getUTCMonth() + 1).padStart(2, "0")}-${String(pr.jour).padStart(2, "0")}`;
+      if (d > TODAY) break;
+      if (d >= pr.depuis) {
+        let line = P.l.find(l => l.k === pr.k && (l.env || "") === ((P.cfg && P.cfg.env && P.cfg.env !== "mix" ? P.cfg.env : "") || ""));
+        if (!line) { if (pfFull(P)) break; line = { k: pr.k, cur: px.cur || info.curQ || "EUR" }; if (P.cfg && P.cfg.env && P.cfg.env !== "mix") line.env = P.cfg.env; P.l.push(line); }
+        if (!line.o) line.o = line.q > 0 && line.pru > 0 ? [["", "r", line.q, line.pru, 0]] : [];
+        line.o.push([d, "a", pr.q, px.p, 0, null, "p"]); PF3.syncLine(line); n++;
+      }
+      pr.dernier = d.slice(0, 7); cur.setUTCMonth(cur.getUTCMonth() + 1);
+    }
+  }
+  if (n) { pf3Save(P); PF3S.progN = n; }
+  return n;
+}
+function pf3ProgHTML(P) {
+  const L = (P.cfg && P.cfg.prog) || [];
+  const rows = L.map((pr, i) => { const info = pf3Info({ k: pr.k }), px = pf3PxN(PX[pr.k]); return `<li><span class="pf3pgn">${esc(info.name || pr.k)}</span><span class="pf3pgd">${!px || !(px.p > 0) ? `<span class="pf3pgm" style="background:#FBE9E4;color:#8A3A22">cours indisponible : les achats seront ajoutés quand le site l'aura</span> ` : ""}${nf(pr.q % 1 ? 2 : 0).format(pr.q)} part${pr.q > 1 ? "s" : ""} le ${pr.jour} de chaque mois, depuis le ${dLabel(pr.depuis)}${pr.dernier ? ` · dernier ajout : ${pr.dernier.split("-").reverse().join("/")}` : ""}</span><button type="button" class="pf3ab" data-pf3pgx="${i}">Arrêter</button></li>`; }).join("");
+  return `<section class="panel" id="pf3-prog"><div class="ph"><h2>Achats programmés</h2><span class="pf3bdg">Comme un versement automatique</span></div>
+    <div class="pb"><p class="pf3hint" style="margin-top:0">Vous achetez la même chose chaque mois (une part d'ETF, quelques actions) ? Indiquez-le une fois : à chaque visite, le site ajoute les achats arrivés à échéance dans vos lignes, au cours connu ce jour-là. Vous pouvez corriger le prix dans la ligne.</p>
+      ${rows ? `<ul class="pf3pg">${rows}</ul>` : ""}
+      <form class="pf3pgf" id="pf3pgf"><label><span>Titre</span><input type="text" id="pf3pgq" placeholder="MSCI World, LVMH…" autocomplete="off" required><input type="hidden" id="pf3pgk"><div class="pf3pgs" id="pf3pgs" hidden></div></label>
+        <label><span>Parts par mois</span><input type="number" id="pf3pgn" min="0.01" step="0.01" placeholder="1" required></label>
+        <label><span>Le jour</span><input type="number" id="pf3pgj" min="1" max="28" value="5" required></label>
+        <label><span>Depuis le</span><input type="date" id="pf3pgd" value="${TODAY}" max="${TODAY}" required></label>
+        <button type="submit" class="btn">Programmer</button></form>
+      <p class="pf3disc">Les achats ajoutés automatiquement sont marqués « programmé » dans la ligne : leur prix est celui connu le jour de l'ajout (cours différé), pas celui de la date d'achat. Rien n'est acheté pour vous : le site ne passe aucun ordre.</p></div></section>`;
+}
+function pf3ProgLier(el) {
+  const f = $("#pf3pgf", el); if (!f) return;
+  const q = $("#pf3pgq", el), k = $("#pf3pgk", el), box = $("#pf3pgs", el);
+  q.oninput = () => { k.value = ""; const h = pf3Find(q.value); box.hidden = !h.length; box.innerHTML = h.map(x => `<button type="button" data-k="${esc(x.k)}"><b>${esc(x.name)}</b> <small>${esc(x.type)} · ${esc(x.sub)}</small></button>`).join(""); };
+  box.onclick = e => { const b = e.target.closest("button[data-k]"); if (!b) return; k.value = b.dataset.k; q.value = b.querySelector("b").textContent; box.hidden = true; };
+  f.onsubmit = e => { e.preventDefault(); if (!k.value) { const h = pf3Find(q.value); if (h.length === 1) k.value = h[0].k; else { q.focus(); q.oninput(); return; } }
+    const P = pf3P(); P.cfg = P.cfg || {}; P.cfg.prog = P.cfg.prog || [];
+    if (P.cfg.prog.length >= 12) return;
+    P.cfg.prog.push({ k: k.value, jour: Math.min(28, Math.max(1, +$("#pf3pgj", el).value || 5)), q: +$("#pf3pgn", el).value, depuis: $("#pf3pgd", el).value || TODAY, dernier: "" });
+    pf3Save(P); pf3ProgAppliquer(pf3P()); pf3Draw(); };
+  el.querySelectorAll("[data-pf3pgx]").forEach(b => b.onclick = () => { const P = pf3P(); P.cfg.prog.splice(+b.dataset.pf3pgx, 1); if (!P.cfg.prog.length) delete P.cfg.prog; pf3Save(P); pf3Draw(); });
+}
 function pf3Draw() {
+  const P0 = pf3P(); if (pf3ProgAppliquer(P0)) { /* enregistré */ }
   const P = pf3P(), R0 = pf3Rows(P);
+  const pg = $("#pf3prog"); if (pg) { pg.innerHTML = pf3ProgHTML(P); pf3ProgLier(pg); }
   pf3Hero(R0, P); pf3List(R0, P); pf3Notice();
   const lst = $("#pf3list"); if (lst && !PF3S.imp) lst.hidden = false;
   const nav = $("#pf3nav"); if (nav) nav.hidden = !R0.live.length;
@@ -1521,7 +1578,7 @@ async function pagePortefeuille() {
         <div id="pf3form"></div><div id="pf3impbox"></div></div>
       <div id="pf3list"></div>
       <div class="src">Prix de revient (PRU) calculé comme le font les courtiers français : prix moyen pondéré des achats, frais d'achat inclus ; une vente ne le modifie pas. Cours différés (Google Finance), taux de change de la BCE.</div></section>
-    <div id="pf3dash"></div></div>`;
+    <div id="pf3dash"></div><div id="pf3prog"></div></div>`;
   pf3Search();
   $("#pf3imp").onclick = () => pf3ImpOpen();
   $("#pf3exp").onclick = () => pf3Export();
@@ -1535,6 +1592,10 @@ function pf3Css() {
   if (document.getElementById("pf3css")) return;
   document.head.insertAdjacentHTML("beforeend", `<style id="pf3css">
 .pf3 .pagesub{max-width:860px}
+.pf3pg{list-style:none;margin:0 0 14px;padding:0}.pf3pg li{display:flex;gap:12px;align-items:center;padding:8px 0;border-bottom:1px solid var(--rule)}.pf3pgn{font-weight:600;min-width:0}.pf3pgd{flex:1;font-size:13.5px;color:var(--grey)}
+.pf3pgf{display:grid;grid-template-columns:minmax(0,2fr) repeat(3,minmax(0,1fr)) auto;gap:10px;align-items:end}.pf3pgf label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--grey);position:relative}.pf3pgf input{padding:9px 10px;border:1px solid var(--rule);border-radius:6px;font:inherit;color:var(--ink);background:#fff}.pf3pgs{position:absolute;top:100%;left:0;right:0;z-index:5;background:#fff;border:1px solid var(--rule);border-radius:6px;box-shadow:0 8px 24px rgba(0,0,0,.08);max-height:260px;overflow:auto}.pf3pgs button{display:block;width:100%;text-align:left;padding:8px 10px;border:0;background:none;cursor:pointer;font:inherit}.pf3pgs button:hover{background:var(--hl)}.pf3pgs small{color:var(--grey)}
+.pf3pgm{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:999px;background:var(--hl);font-size:11px;color:var(--grey)}
+@media (max-width:760px){.pf3pgf{grid-template-columns:repeat(2,minmax(0,1fr))}.pf3pgf label:first-child{grid-column:1 / -1}}
 .pf3hero .pf3demo{background:var(--hl);padding:10px 22px;font-size:13.5px;border-bottom:1px solid var(--line2)}
 .pf3k{display:grid;grid-template-columns:1.5fr 1fr 1fr 1fr}
 .pf3k > div{padding:18px 22px;border-right:1px solid var(--line2);min-width:0}

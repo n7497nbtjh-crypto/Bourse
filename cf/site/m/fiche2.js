@@ -370,7 +370,7 @@ function fiche2Voisines(s, r) { // l'entreprise et ses voisines de rang, dans la
 const fiche2Ord = n => n === 1 ? "1re" : n + "e";
 function fiche2RangBouton(s, cls = "f2-rk") {
   const r = fiche2Rang(s); if (!r) return "";
-  return `<button type="button" class="${cls}" data-f2-rang="${s.id}" aria-haspopup="dialog"><span>Taille dans son secteur : <b>${fiche2Ord(r.rank)}</b> sur ${r.n}</span><span class="f2-go">Classement</span></button>`;
+  return `<button type="button" class="${cls}" data-f2-rang="${s.id}" aria-haspopup="dialog"><span>Taille dans son secteur (${esc(secName(s).toLowerCase())}) : <b>${fiche2Ord(r.rank)}</b> sur ${r.n}</span><span class="f2-go">Classement</span></button>`;
 }
 function fiche2Classement(id) {
   const s = RBY[id], r = fiche2Rang(s); if (!r) return;
@@ -856,7 +856,7 @@ function rfCmpTableHTML(s, X) {
   const T6 = RF_CMP_ORD.map(k => CMPR_T.find(T => T.k === k)).filter(Boolean), me0 = X.F[0];
   const head = `<tr><th scope="col" class="l lab">Critère</th>${X.F.map((F, j) => `<th scope="col" class="rf-coh${j === 0 ? " rf-me" : ""}"><a class="rf-co" href="/entreprise/${F.c.id}">${logo(F.c, 24)}<span class="nm">${esc(F.c.name)}</span></a></th>`).join("")}<th scope="col" class="rf-medh"><span class="nm">Médiane</span><small>${esc(secName(s))}</small></th><th scope="col" class="rf-medh rf-qh"><span class="nm">La moitié du secteur</span><small>du quart inférieur au supérieur</small></th></tr>`;
   const rows = T6.map(T => { const r0 = T.val(me0, X), q = rfQuartiles(s, T.k);
-    return `<tr><th scope="row" class="l lab"><span class="rf-cth">${esc(RF_CMP_COURT[T.k])}</span><small>${esc(RF_CMP_SOUS[T.k](X))}</small></th>${X.F.map((F, j) => rfCmpCell(T, F, X).replace('<td class="num', `<td class="num${j === 0 ? " rf-me" : ""}`)).join("")}<td class="num rf-medc">${r0 && r0.medTxt ? esc(r0.medTxt) : `<span class="rf-na">–</span>`}</td><td class="num rf-medc rf-q">${q ? `${esc(q[0])} à ${esc(q[1])}` : `<span class="rf-na">–</span>`}</td></tr>`; }).join("");
+    return `<tr data-k="${T.k}"><th scope="row" class="l lab"><span class="rf-cth">${esc(RF_CMP_COURT[T.k])}</span><small>${esc(RF_CMP_SOUS[T.k](X))}</small></th>${X.F.map((F, j) => rfCmpCell(T, F, X).replace('<td class="num', `<td class="num${j === 0 ? " rf-me" : ""}`)).join("")}<td class="num rf-medc">${r0 && r0.medTxt ? esc(r0.medTxt) : `<span class="rf-na">–</span>`}</td><td class="num rf-medc rf-q">${q ? `${esc(q[0])} à ${esc(q[1])}` : `<span class="rf-na">–</span>`}</td></tr>`; }).join("");
   return `<table class="t tbx rf-ctab rf-ctab-t"><caption class="sr">${esc(s.name)} et les entreprises comparées, critère par critère</caption><thead>${head}</thead><tbody>${rows}</tbody></table>`;
 }
 function concurrentsHTML(s) {
@@ -1062,7 +1062,7 @@ async function ficheUneSeulePage(s, c, el) {
 function rfLierChiffres(s, c, el) { // graphiques par thème et lignes dépliables, comme dans tabComptes, mais sur la fiche
   if (!el) return;
   const P = tblxRows(s, c), Y = c.years, byK = k => P.rows.find(r => r.k === k);
-  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); };
+  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); const d = $(".rf-gdef", box); if (d) d.innerHTML = tblxDefHTML(r); };
   $$(".rf-thc", el).forEach(box => { const b = $(".rf-gsel button", box); if (b) setG(box, b.dataset.g); });
   const toggleDet = tr => {
     const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("det");
@@ -1110,3 +1110,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 </style>`);
 /* 3e passage (30/10), 1.1 : sur téléphone, les cinq jauges restent visibles, empilées une par ligne (l'ancienne règle de fiche.js les masquait au profit d'un mini-profil qui n'existe plus) */
 document.head.insertAdjacentHTML("beforeend", `<style>@media (max-width:760px){.rf-hplace .fh-pl{display:block!important}.rf-hplace .prof{display:grid;grid-template-columns:1fr!important;gap:8px}.rf-hplace .prof .pa2{display:grid;grid-template-columns:92px minmax(0,1fr)!important;align-items:center;gap:2px 10px}.rf-hplace .prof .pa2 .pt b{font-size:13.5px}.rf-hplace .prof .pa2 .pt small{font-size:12px}}</style>`);
+
+/* 31/10 (Romain) : en-tête de la fiche. Les jauges respirent (plus de bande vide sous la taille dans le secteur), les libellés ne mordent plus sur le cadre, la taille cite le secteur. */
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rf-hplace{display:flex;flex-direction:column}.rf-hplace .fh-pl.rf-pl{flex:1;display:flex;flex-direction:column;justify-content:center;margin:14px 0 0;padding:18px 18px 16px}.rf-hplace .f2-rk{margin-top:16px}
+.rf-hplace .prof .pa2{align-items:start;gap:8px 14px}.rf-hplace .prof .pa2 .pt{min-height:44px}.rf-hplace .prof .pa2 .pt b{font-size:15px}.rf-hplace .prof .pa2 .pt small{font-size:13px}
+@media (min-width:761px){.rf-hplace .prof{gap:18px 26px}.rf-hplace .prof .pa2 .pl{transform:scaleY(1.35);transform-origin:left center}}
+</style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>.rf-gwrap{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:18px 32px;align-items:start}.rf-gdef{font-size:13.5px;line-height:1.55;color:var(--ink);border-left:3px solid var(--lime);padding:4px 0 4px 16px;margin-top:30px}.rf-gdef p{margin:0 0 8px}.rf-gdef .kick{margin:10px 0 2px;color:var(--grey)}.rf-gdef .kick:first-child{margin-top:0}@media (max-width:900px){.rf-gwrap{grid-template-columns:minmax(0,1fr)}.rf-gdef{margin-top:4px}}</style>`);
