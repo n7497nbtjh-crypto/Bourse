@@ -62,4 +62,4 @@ Pas de photo. Logos des entreprises via leur favicon (24 à 40 px, rond, initial
 
 ## Mise en œuvre
 
-Les valeurs vivent dans `:root` de `cf/site/index.html` (bloc de la ligne 632) ; les modules utilisent les noms, jamais des valeurs brutes. Les corrections globales de police et de couleur sont dans `cf/site/m/design.js`, chargé en dernier.
+Toutes les règles vivent dans `cf/site/site.css` (feuille unique depuis le 31/10/2026) : `:root` et les styles de base en tête, puis une section par module dans l'ordre de chargement ; les corrections globales (ancien `m/design.js`) en fin de fichier. On utilise les noms des jetons, jamais des valeurs brutes.

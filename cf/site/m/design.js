@@ -111,118 +111,24 @@ function tvChart(el, symbol, name) {
    dans l'en-tête de la fiche, avec son heure de relevé et sa source. */
 function tv(el) { if (el) el.innerHTML = ""; }
 
-document.head.insertAdjacentHTML("beforeend", `<style>
-/* Lisibilité (29/10/2026, demande de Romain) : les petites étiquettes (VENTES, BÉNÉFICE, DIVIDENDE…) étaient en police à chasse fixe,
-   11 px, gris clair : illisibles. Partout sur le site, elles passent en police de texte, 12 px, graisse 600, gris moyen. Les chiffres restent en chasse fixe. */
-.kick,.ess .lbl,.lbl,.pxhead .kick,.tile .kick,.ftile .kick,.rf-keys .fk .kick,.rf-trimh .kick,.pf3 .kick,.pf3hero .kick,.acc .kick,.cmpr .kick,.rf-sum .kick,.ctx .kick{font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--grey)}
-.rf-keys .fk .kick{font-size:12.5px}
-/* Apaisement (29/10/2026, soir) : Romain trouve le site « fatigant » : trop d'étiquettes colorées, de titres de couleurs.
-   Règle : la couleur ne sert qu'au sens (vert = favorable, orange = à surveiller, hausse / baisse). Tout le reste est gris ou encre.
-   Ici l'accueil ; la même règle sera appliquée page par page. */
-.acc{--accf:var(--grey);--acci:var(--grey);--acch:var(--grey);--accs:var(--grey)}
-.acc .acc-tag{font:600 11px/1 var(--sans);letter-spacing:.04em;background:transparent;color:var(--grey);border:1px solid var(--line);padding:3px 7px;border-radius:99px}
-.acc .acc-tag.acc-tf{background:var(--ink);color:#fff;border-color:var(--ink)}
-.acc .acc-tag.acc-th{border-style:dashed}
-.acc .acc-lf,.acc .acc-li,.acc .acc-lh,.acc .acc-ls{--c:var(--line)}
-.acc em.acc-smx{color:var(--ink)}
-.acc .acc-trust svg{stroke:var(--grey)}.acc .acc-dot{background:var(--grey)}
-.acc .acc-al.fav b,.acc .acc-age.fav b{color:var(--ink)}
-.acc .pill,.acc .badge{background:#F1EFEA;color:var(--grey);border:0}
-.acc .pill.fort,.acc .badge.fort{background:#E6F3EB;color:#176B40}.acc .pill.vig,.acc .badge.vig{background:#FBEBE2;color:#A8481A}
-/* Sujets du jour : la carte garde le fait et l'interprétation ; hypothèse et entreprises à surveiller s'ouvrent avec « Approfondir » */
-.acc .acc-sj .acc-lh,.acc .acc-sj .acc-ls{display:none}
-/* Onglet Chiffres en détail, apaisé (30/10) : cartes « ce qui a le plus changé » blanches, seul le chiffre porte la couleur ;
-   « Ce qui explique ces chiffres » replié sous une phrase de lecture */
-.rf-chg{background:#fff!important;border:1px solid var(--line2)!important;border-left-width:1px!important}
-details.ctx-in{border-top:1px solid var(--line2);padding:0 22px}details.ctx-in > summary{list-style:none;cursor:pointer;padding:14px 0;display:flex;flex-direction:column;gap:3px}
-details.ctx-in > summary::-webkit-details-marker{display:none}
-details.ctx-in > summary .ctx-ti{font-family:var(--serif);font-size:17px;font-weight:800}details.ctx-in > summary .ctx-ti:after{content:" +";font-family:var(--sans);color:var(--light)}details.ctx-in[open] > summary .ctx-ti:after{content:" −"}
-details.ctx-in > summary .ctx-sl{font-size:13.5px;color:var(--grey);line-height:1.5}details.ctx-in > .pb{padding-left:0;padding-right:0}
-/* Accueil, allégé (30/10, nuit) : l'accueil montre l'essentiel ; la suite est dans Actualités.
-   Plus de liste « autres sujets suivis », plus de liste « autres annonces », plus de colonne presse : l'agenda reste seul à côté des annonces. */
-.acc .acc-autres,.acc .acc-als,.acc .acc-als + *,.acc .acc-annside > section:nth-child(2){display:none}
-.acc .acc-annw .acc-annm .acc-ah{display:none}
-/* Comparer, apaisé (30/10) : la règle des couleurs n'est plus répétée sous chaque thème (une légende en tête suffit) */
-.cmpr-exp .cmpr-rule{display:none}
-/* Accessibilité (point 7, 29/10/2026) : sur téléphone, aucun texte sous 11 px, aucune cible tactile sous 24 px */
-.lg b{font-size:max(9px,calc(var(--s) * .36))}
-@media (max-width:760px){
-  table.t th,.cmpr-badge,.cmpr-all tr.grp th,.cmpr-sug .h,.ctx-tag,.ess .lbl,.rf-fct th[scope=row] small,table.tbx-full thead th small{font-size:11px}
-  .prov-i{width:24px;height:24px;font-size:12px;margin-left:4px}
-  .linkbtn,.crumbs a,a.more,button.more{padding-top:5px;padding-bottom:5px;min-height:28px;display:inline-flex;align-items:center}
-  .def,.lnk{padding-top:5px;padding-bottom:5px;line-height:1.3} /* restent en ligne : un mot défini peut passer à la ligne */
-  .cmpr-x{width:36px;height:36px}
-  span.ctx-tag{font-size:11px}
-  a.th,.cmpr-all a.th{display:inline-flex;align-items:center;min-height:28px}
-  .cmpr-co{min-height:28px}
-  .fh-act .favbtn{min-height:40px}
-  .tbx-gb{min-width:40px;min-height:36px}
-  /* Stabilité (point 7) : la place du cours et de la fiche est réservée avant leur arrivée, rien ne saute */
-  #pxh{min-height:112px}
-  .rf-mid .rf-sum.fh-wait{min-height:560px}
-}
-#ctab > .empty:only-child{min-height:70vh}
-.rf-mid .rf-sum.fh-wait{min-height:470px}
-.f2-chart{display:flex;flex-direction:column;overflow:hidden}.f2-chart #tvchart,.f2-chart .tradingview-widget-container{overflow:hidden}.f2-chart #tvchart.f2-tv{flex:1 1 auto;height:auto;min-height:300px}
-@media (max-width:760px){.f2-chart #tvchart.f2-tv{min-height:240px}}
-.dsg-tv{height:100%;display:flex;flex-direction:column}
-.dsg-tv .tradingview-widget-container__widget{flex:1 1 auto;min-height:0}
-.dsg-tv .tradingview-widget-copyright{font-size:11.5px;color:var(--grey);padding:6px 0 0;text-align:right}
-.dsg-tv .tradingview-widget-copyright a{color:var(--grey)}
-.dsgc{display:flex;flex-direction:column;height:100%;gap:8px}
-.dsgc svg{flex:1 1 auto;width:100%;min-height:200px}
-.dsgc-ax{font-size:11.5px;fill:var(--grey);font-family:var(--mono,inherit)}
-.dsgc-vl{font-size:13px;font-weight:700;fill:var(--ink)}
-.dsgc-dt{font-size:11.5px;fill:var(--grey)}
-.dsgc-lg{margin:0;font-size:12.5px;line-height:1.5;color:var(--grey)}
-.dsgc-vide{justify-content:center;align-items:center;text-align:center;color:var(--grey);font-size:14px;padding:20px}
-.dsgc-vide p{margin:0;max-width:34em}
-
-/* ---------- 2. Présentation ---------- */
-/* Gris trop clair pour être lu : contraste porté au seuil recommandé. */
-:root{--light:#6E6961}
-/* Un cadre dans un cadre : on garde un seul trait, l'air fait la séparation. */
-.panel .panel{border:0;box-shadow:none;background:transparent;padding:0}
-/* Les sources répétées sous chaque point : présentes, mais en retrait. */
-.srcline,.pt-src{font-size:12px;color:var(--light)}
-</style>`);
+/* styles : voir site.css */
 
 /* 30/10 (demande de Romain) : plus de mini-courbes dans les tableaux de chiffres ; la colonne garde la variation sur un an.
    Le graphique complet reste au-dessus du tableau de chaque thème. */
 function tblxSpark() { return ""; }
-document.head.insertAdjacentHTML("beforeend", `<style>.tbx-gb:empty,.tbx-trw:empty{display:none}</style>`);
-document.head.insertAdjacentHTML("beforeend", `<style>.pxhead .pxeur{display:block;font-size:13px;color:var(--grey);margin:-2px 0 4px}@media (max-width:760px){.pxhead .pxeur{display:inline;margin:0 0 0 8px}}</style>`);
+/* styles : voir site.css */
+/* styles : voir site.css */
 /* Accueil (30/10) : sous-titres en police de texte, sans capitales espacées */
-document.head.insertAdjacentHTML("beforeend", `<style>.acc .acc-subh h3{font-family:var(--sans);font-size:16px;font-weight:700;letter-spacing:0}.acc .acc-ah{font:600 13px var(--sans);letter-spacing:0;text-transform:none;color:var(--grey)}</style>`);
+/* styles : voir site.css */
 /* Règle de police, tout le site (30/10, demande de Romain) : la serif pour les titres de page et de bloc (h1, h2) ;
    la police de texte pour tout le reste, sous-titres compris ; la chasse fixe uniquement pour les chiffres. */
-document.head.insertAdjacentHTML("beforeend", `<style>
-h3,h4,h5,.ctx-h,.rf-h3,.acc-sj h3,.acc-l b,.synk li b,summary,.anf-ctxd > summary,.cmpr-det > summary{font-family:var(--sans)!important;letter-spacing:0}
-h3,.rf-h3,.ctx-h{font-weight:700}
-.kick,.synhero .kick,.synhome .kick,.par-demo .kick,.par-demo .tag,.acc-sj .kick,.acc-sjk,.pxhead .kick,.tile .kick,.ftile .kick,.cmpr-ind,.ctx-k,.ctx-d,.rf-ctab th small,.tbx-unit,.acc-legend span,.synmeta span,.acc-tag{font-family:var(--sans)!important;letter-spacing:.02em}
-.ctx-d{font-variant-numeric:tabular-nums}
-</style>`);
-document.head.insertAdjacentHTML("beforeend", `<style>
-/* Étiquettes encore en chasse fixe (relevé du 30/10) : toutes en police de texte */
-.anf-sait h4,.ess .lbl,.cmpr-sug .h,.cmpr-badge,.cmpr-vl .th,.cmpr-all tr.grp th,.fbt,.pf3bdg,.pf3dx span,.cm-n,table.tbx .u,.pf3mq,.syncat,.synnews .cat,.acc-tag{font-family:var(--sans)!important;letter-spacing:.02em}
-.cmpr-all tr.grp th,.fbt,.anf-sait h4,.cmpr-sug .h{font-size:12.5px;font-weight:600;text-transform:none}
-</style>`);
+/* styles : voir site.css */
+/* styles : voir site.css */
 function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, nulle part
 /* 30/10 (Romain, DESIGN.md) : plus aucune capitale espacée nulle part ; les petites étiquettes en Plex Sans, pas en chasse fixe */
-document.head.insertAdjacentHTML("beforeend", `<style>
-body *{text-transform:none!important}
-small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.out-dc small,.o2-sc,.o2-tile small,.etft3 small,.etfcols small,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.pf3ipv,.rf-bl h3,.rf-card h4,.fbt,.syncat,.synev,.synevol,.rc-exq,.tbx thead th,.pop .kick{letter-spacing:0!important}
-.navpied p,table.t th,.tbx thead th,.par-sect,.par-tools small,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.o2-sc,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.fbt,.syncat,.synev,.synevol,.rc-exq,.rf-ctab th .rf-cth,.acc-agd{font-family:var(--sans)!important}
-.navpied p{font-weight:700;color:var(--ink);font-size:13px}
-</style>`);
+/* styles : voir site.css */
 /* Par où commencer : trois écrans visuels (30/10) */
-document.head.insertAdjacentHTML("beforeend", `<style>
-.cm3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:0 0 18px}
-.cm3-c{display:flex;flex-direction:column;gap:6px;padding:20px 22px;border:1px solid var(--rule);border-radius:14px;background:#fff;color:var(--ink);text-decoration:none;min-height:230px}.cm3-c:hover{border-color:var(--ink)}
-.cm3-n{font-family:var(--mono);font-size:12px;color:var(--light)}.cm3-t{font-family:var(--serif)!important;font-weight:800;font-size:22px;line-height:1.1;letter-spacing:-.01em}
-.cm3-v{font-family:var(--mono);font-weight:500;font-size:34px;line-height:1;margin-top:10px}.cm3-u{font-size:13px;color:var(--grey)}.cm3-d{font-size:14px;line-height:1.5;color:var(--grey);margin-top:8px;flex:1}.cm3-l{font-size:13.5px;font-weight:600;margin-top:8px}
-@media (max-width:760px){.cm3{grid-template-columns:minmax(0,1fr)}.cm3-c{min-height:0}.cm3-v{font-size:28px}}
-</style>`);
+/* styles : voir site.css */
 /* Page Outils (lot 2 et 5, 30/10) : deux familles, des cartes visuelles (icône, nom, une ligne). Chaque outil n'est listé qu'ici. */
 (function () {
   const I = { idees: "M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.5 1 2.5h6c0-1 .4-1.9 1-2.5A6 6 0 0 0 12 3z", epargne: "M4 18l5-6 4 3 7-9M4 4v16h16", passe: "M12 8v4l3 2M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0", verif: "M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7zM9 12l2 2 4-4", repart: "M12 3v9h9a9 9 0 1 1-9-9zM14 3a9 9 0 0 1 7 7h-7z", listes: "M4 6h16M4 12h10M4 18h7", comparer: "M4 20V9M10 20V4M16 20v-8M22 20H2", recouv: "M9 12a5 5 0 1 0 0-.01M15 12a5 5 0 1 0 0-.01", pf: "M3 7h18v12H3zM3 11h18M8 7V4h8v3", frais: "M4 4h16v16H4zM8 9h8M8 13h5M8 17h3", impot: "M6 3h12v18H6zM9 7h6M9 11h6M9 15h3", livret: "M4 6h16v12H4zM4 10h16" };
@@ -253,14 +159,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
     app.innerHTML = `<h1 class="pagetitle">Outils</h1><p class="pagesub">Des calculs et des comparaisons, hypothèses affichées, jamais de conseil.</p>
       ${G.map(([t, s, L]) => `<section class="ot-g"><div class="ot-h"><h2>${esc(t)}</h2><span>${esc(s)}</span></div><div class="ot-c">${L.map(([h, k, n, d]) => `<a class="ot-k" href="${h}">${ic(k)}<b>${esc(n)}</b><span>${esc(d)}</span></a>`).join("")}</div></section>`).join("")}`;
   };
-  document.head.insertAdjacentHTML("beforeend", `<style>
-.ot-g{margin:22px 0 0}.ot-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 10px}.ot-h h2{font-family:var(--serif);font-weight:800;font-size:24px;margin:0}.ot-h span{font-size:13px;color:var(--grey)}
-.ot-c{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.ot-k{display:grid;grid-template-columns:28px minmax(0,1fr);grid-template-areas:"i t" "i d";gap:2px 10px;padding:16px 18px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none}
-.ot-k svg{grid-area:i;width:26px;height:26px;margin-top:1px}.ot-k b{grid-area:t;font-size:16px}.ot-k span{grid-area:d;font-size:13px;line-height:1.45;color:var(--grey)}
-.ot-k:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
-@media (max-width:900px){.ot-c{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:520px){.ot-c{grid-template-columns:minmax(0,1fr)}}
-</style>`);
+  /* styles : voir site.css */
 })();
 /* Page Entreprises : classements et découvertes du jour intégrés en tête (30/10, Romain : moins de pages) */
 (function () {
@@ -271,11 +170,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
     if (sub && !$(".ent-plus", app)) sub.insertAdjacentHTML("afterend", `<div class="ent-plus"><a href="/decouvertes"><b>Découvertes du jour</b><span>Six entreprises moins connues dont les comptes ressortent</span></a><a href="/classements"><b>Classements</b><span>Celles qui cumulent le plus de points forts, secteur par secteur</span></a><a href="/comparer"><b>Comparer</b><span>Jusqu'à trois entreprises côte à côte, face à leur secteur</span></a></div>`);
     return r;
   };
-  document.head.insertAdjacentHTML("beforeend", `<style>
-.ent-plus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin:0 0 14px}
-.ent-plus a{display:flex;flex-direction:column;gap:2px;padding:12px 18px 12px 0;border-right:1px solid var(--rule);color:var(--ink);text-decoration:none}.ent-plus a+a{padding-left:18px}.ent-plus a:last-child{border-right:0}.ent-plus b{font-size:15px}.ent-plus span{font-size:13px;color:var(--grey)}.ent-plus a:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
-@media (max-width:760px){.ent-plus{grid-template-columns:minmax(0,1fr)}.ent-plus a{border-right:0;border-bottom:1px solid var(--rule);padding-left:0!important}.ent-plus a:last-child{border-bottom:0}}
-</style>`);
+  /* styles : voir site.css */
 })();
 /* Page ETF : trois entrées en tête (30/10) */
 (function () {
@@ -287,19 +182,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>
     return r;
   };
 })();
-document.head.insertAdjacentHTML("beforeend", `<style>.prem-av{margin:6px 0 14px!important;max-width:none}.prem-av li{padding-top:14px!important;padding-bottom:12px!important}.prem-av b{font-size:16px!important}.prem-av span{font-size:13.5px!important}.prem-preuve{font-size:13px;color:var(--grey);margin:0 0 18px;max-width:820px}</style>`);
-document.head.insertAdjacentHTML("beforeend", `<style>
-.aca-lead{font-size:19px!important;line-height:1.45!important;color:var(--ink)!important;max-width:760px}
-.aca-outil{margin:-8px 0 20px}.acales .aca-outil a{display:inline-block;border:1px solid var(--ink);border-radius:999px;padding:7px 14px;font-weight:600;font-size:14px;text-decoration:none;color:var(--ink)}.acales .aca-outil a:hover{background:var(--lime)}
-.acavis{margin:18px 0 22px;padding:18px 22px;border:1px solid var(--rule);border-radius:14px;background:#fff}.acavis-k{font-size:12.5px;font-weight:600;color:var(--grey);margin:0 0 10px}
-.acavis-n{display:flex;flex-wrap:wrap;gap:8px 28px;margin:0 0 12px}.acavis-n b{font-family:var(--mono);font-weight:500;font-size:30px;line-height:1;white-space:nowrap}
-.acavis-p{margin:0;font-size:14.5px;line-height:1.55;color:var(--grey)}.acavis-p mark.nm{background:transparent;color:var(--ink);font-family:var(--mono);font-weight:500}
-@media (max-width:760px){.acavis-n b{font-size:24px}.acavis{padding:14px 16px}}
-</style>`);
+/* styles : voir site.css */
+/* styles : voir site.css */
 /* Premium : liste d'attente (30/10) */
-document.head.insertAdjacentHTML("beforeend", `<style>.prem-bientot{margin:0;font-weight:600;color:var(--grey)}.prem-att{margin-top:14px;border-left:3px solid var(--lime)}.prem-attm{margin:8px 0 0;font-size:14px;min-height:1.2em}.prem-attm.ok{color:var(--g)}.prem-attm.ko{color:var(--o)}.ptab td:nth-child(3) b{font-weight:600}</style>`);
+/* styles : voir site.css */
 /* Lot 2 : la porte Marchés */
-document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 30px}.mk-porte{display:grid;grid-template-columns:28px minmax(0,1fr);grid-template-areas:"i t" "i n" "d d";gap:2px 10px;padding:16px 18px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none}.mk-porte svg{grid-area:i;width:26px;height:26px;margin-top:2px}.mk-porte b{grid-area:t;font-size:17px}.mk-porte small{grid-area:n;font-family:var(--mono);font-size:12.5px;color:var(--grey)}.mk-porte span{grid-area:d;margin-top:8px;font-size:13.5px;line-height:1.45;color:var(--grey)}.mk-porte:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}@media (max-width:900px){.mk-portes{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:480px){.mk-portes{grid-template-columns:minmax(0,1fr)}}</style>`);
+/* styles : voir site.css */
 /* Lot 4 : la fiche ETF sur le modèle de la fiche entreprise. Niveau 1 : en-tête (verdict, frais, risques), ce que vous achetez,
    les dix plus grosses lignes. Niveau 2 (plis) : où va votre argent, les frais, les risques en détail, les questions, les ETF proches,
    les avis, la discussion. Ouverts d'office si « Afficher toujours le détail » est coché. */
@@ -330,7 +218,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
     const comp = $("#ecomp"); if (comp && !$("details", comp)) new MutationObserver((m, o) => { if ($("section.panel", comp)) { appliquer(); o.disconnect(); } }).observe(comp, { childList: true });
     return r;
   };
-  document.head.insertAdjacentHTML("beforeend", `<style>.rf-etf ~ .cols .rf-l2h{margin:6px 0 10px}.cols details.rf-pl2{margin:0 0 12px}.cols details.rf-pl2 .rf-th-in.panel{border:0;box-shadow:none;margin:0;border-radius:0}</style>`);
+  /* styles : voir site.css */
 })();
 /* Lot 4 : réglage « Afficher toujours le détail » dans Mon espace › Réglages (mémorisé sur l'appareil) */
 (function () {
@@ -376,19 +264,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
         const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `comparaison-${ids.join("-")}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }; }
     return r;
   };
-  document.head.insertAdjacentHTML("beforeend", `<style>
-.cmpr-vide .cmpr-sel{display:block}.cmpr-vide .cmpr-add{padding:18px 22px;border-style:solid;border-color:var(--ink);background:#fff}.cmpr-vide .cmpr-add label{font-size:15px;color:var(--ink)}.cmpr-vide .cmpr-q input{font-size:18px;padding:12px 14px}
-#cmpr-body .rf-ctab-t td.num{background:#fff!important;color:var(--ink)!important}#cmpr-body .rf-ctab-t td.num.rf-medc,#cmpr-body .rf-ctab-t th.rf-medh{background:var(--hl)!important}#cmpr-body .rf-ctab-t td.rf-hi{background:#E3F2E8!important;color:var(--g)!important;font-weight:700}#cmpr-body .rf-ctab-t td.rf-lo{background:#FBE9E4!important;color:var(--o)!important}
-#cmpr-body .rf-ctab-t td.rf-hi::after{content:" ▲";font-size:10px}#cmpr-body .rf-ctab-t td.rf-lo::after{content:" ▼";font-size:10px}
-.cmpr-ligne .cmpr-lead{background:var(--lime);padding:2px 8px;border-radius:4px}
-.cmpr-csvp{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:10px 18px 14px}
-.out-gal6 .out-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:900px){.out-gal6 .out-pg{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.out-gal6 .out-pg{grid-template-columns:minmax(0,1fr)}}
-</style>`);
+  /* styles : voir site.css */
 })();
 /* Lot 6 : finitions. Codes boursiers et ISIN en police à chasse fixe ; les chiffres sont en police normale (chasse tabulaire, index.html). */
-document.head.insertAdjacentHTML("beforeend", `<style>.etfhd .ids b,.fhero .tags .tag:first-child,.rf-trimt td:last-child{font-family:var(--code);font-size:.95em}</style>`);
+/* styles : voir site.css */
 /* Lot 6 : un seul style de badge (vert, gris, rouge). Les catégories d'annonces (résultats, dividende…) sont grises ; seul « info privilégiée » reste signalé. */
-document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:var(--grey)!important;background:var(--soft)!important;border-color:var(--rule)!important}.ax-imp{color:var(--o)!important;background:color-mix(in srgb,var(--o) 10%,transparent)!important;border-color:transparent!important}</style>`);
+/* styles : voir site.css */
 /* 3e passage (30/10), 2.1 : le comparateur, un chiffre une fois. Une ligne de verdict (avantages par entreprise), le tableau
    (critères, entreprises, médiane), puis trois plis : « Comprendre chaque critère » (une jauge et une phrase par critère, sans les
    chiffres du tableau), « Les indicateurs » (tableau complet), « Sources et dates ». Les six phrases de verdict et le détail thème par
@@ -433,14 +314,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:va
       const box = t.closest(".cmpr-tbl"); box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">vert ▲ : en tête sur ce critère · rouge ▼ : en retrait · colonne « Secteur » : la valeur du milieu (médiane) des entreprises du secteur de ${esc(cos[0].name)} suivies par le site, c'est-à-dire ce qui est « normal » dans ce secteur</span></p>`);
       $("[data-cmpr-csv]", box).onclick = () => { const rows = [...t.querySelectorAll("tr")].map(tr => [...tr.querySelectorAll("th,td")].map(c => `"${c.innerText.replace(/\s+/g, " ").trim().replace(/"/g, '""')}"`).join(";")); const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `comparaison-${ids.join("-")}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }; }
   };
-  document.head.insertAdjacentHTML("beforeend", `<style>
-.cmpr-ligne{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:baseline;margin:0;padding:16px 22px 6px;font-size:15px}.cmpr-ligne i{color:var(--light);font-style:normal}.cmpr-ligne small{color:var(--grey);font-size:12.5px}
-.cmpr-crits{padding:6px 22px 12px}.cmpr-crit{padding:12px 0;border-top:1px solid var(--rule)}.cmpr-crit:first-child{border-top:0}.cmpr-crit h3{margin:0 0 4px;font-size:15px}.cmpr-crit p{margin:0 0 8px;font-size:13.5px;color:var(--grey);max-width:720px}
-.cmpr-jg{display:grid;grid-template-columns:170px minmax(0,1fr);gap:4px 14px;align-items:center;padding:4px 0}.cmpr-jg>span{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600}.cmpr-jg .rf6-jg small{font-size:11.5px}
-#cmpr-body .rf-ctab-t th.rf-medh:last-child,#cmpr-body .rf-ctab-t td.rf-q{display:none}
-#cmpr-body .rf-ctab-t th[scope=row],#cmpr-body .rf-ctab-t thead th:first-child{position:sticky;left:0;z-index:1;background:#fff} /* 1.6 : première colonne fixe quand le tableau défile */ /* la colonne « La moitié du secteur » n'est plus affichée : le tableau tient dans le cadre */
-@media (max-width:600px){.cmpr-jg{grid-template-columns:minmax(0,1fr)}}
-</style>`);
+  /* styles : voir site.css */
 })();
 /* Lot C (30/10) : /etf sur téléphone. Recherche et filtres rapides visibles ; les menus déroulants et le tri derrière un bouton
    « Filtres (n) » qui ouvre un panneau du bas (fermé par ✕, Échap ou un toucher à côté). Sur ordinateur, rien ne change. */
@@ -465,34 +339,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:va
     flt.addEventListener("change", maj); maj();
     return r;
   };
-  document.head.insertAdjacentHTML("beforeend", `<style>
-@media (max-width:760px){
-  .etf-flt-p{margin:10px 0 0}#etf-flt-btn{min-height:44px}
-  #etf-flt-panel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:85vh;overflow:auto;background:#fff;border-top:1px solid var(--rule);border-radius:14px 14px 0 0;padding:12px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 32px -12px rgba(17,18,20,.35)}
-  html.etf-flt-open #etf-flt-panel{display:block}html.etf-flt-open .etf-flt-bg{display:block}
-  .etf-flt-bg{display:none;position:fixed;inset:0;z-index:69;background:rgba(17,18,20,.35)}
-  #etf-flt-panel>.etf-flt-h{display:flex;flex-direction:row;justify-content:space-between;align-items:center;margin:0 0 8px}.etf-flt-h b{font-size:17px}.etf-flt-x{border:0;background:none;font-size:20px;width:44px;height:44px;cursor:pointer}
-  #etf-flt-panel>div{display:flex;flex-direction:column;gap:4px;margin:0 0 10px}#etf-flt-panel select{min-height:44px;font-size:16px}
-  .etf-flt-ok{margin:6px 0 0}.etf-flt-ok .btn{width:100%;min-height:46px}
-  .etfcount>span:last-child{display:none}
-}
-</style>`);
+  /* styles : voir site.css */
 })();
 /* Lot C (30/10) : téléphone. Pied de page en deux colonnes sous 600 px ; aucun texte sous 12 px (13 px pour ce qui porte un
    chiffre) ; cibles tactiles d'au moins 44 px. Les classes connues sont traitées en CSS ; un passage JS, après chaque page,
    relève ce qui resterait en dessous (le site a des centaines de petits libellés hérités). */
-document.head.insertAdjacentHTML("beforeend", `<style>
-@media (max-width:600px){footer .navpied4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
-@media (max-width:760px){
-  small,.src,.note,.light,.muted,.kick,.sub,.acc-src,.rf-no,.tbx-unit,.f2-sub,.rf-trimf,.etfsrc,.pa2 small,.rf6-jg small,.rf-pq,.tbx-date small,.acc-pubh small,.acc-pubf small,.acc-sem b,.acc-sem span,.mk-porte small,.ot-k span,.rf-pl2>summary span,.acc-l1,.cmpr-ligne small,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.ax-annf,.acc-cat,.tag,.rf-coh .nm,.rf-ctab-t th[scope=row] small,.rf-ctab-t td.rf-q,.rf-lirel li{font-size:12px!important}
-  .num,.rf-kt b,.rf-cv,td.num,.tile .v,.acc-exr b,.acc-pubf b,.rf-trimc b,.rf6-fig b,.pxhead .p,.tbx-val{font-size:max(13px,1em)!important}
-  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.rf-ta button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.acc-pub,.ot-k,.mk-porte,.acc-mini,.rf-pl2>summary,.rf-pl>summary,details.acc>summary,.etfpre button,.cmpr-card .cmpr-cl,.cell-co,.navfav,.esptabs a{min-height:44px}
-  .chips button,.filters button,.chip,.pill,.nfil button,.o2-seg button,.etfpre button{display:inline-flex;align-items:center;padding-top:8px;padding-bottom:8px}
-  a.lnk,a.more{display:inline-block;padding:9px 0;line-height:1.4}
-  .rf-anf,.def{min-height:44px;display:inline-flex;align-items:center}
-}
-</style>`);
+/* styles : voir site.css */
 (() => { // passage JS : tout texte encore sous 12 px est remonté (13 px s'il contient un chiffre) ; cibles tactiles sous 44 px rehaussées
   if (!matchMedia("(max-width:760px)").matches) return;
   let t = null;

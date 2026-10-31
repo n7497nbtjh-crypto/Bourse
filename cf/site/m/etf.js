@@ -62,112 +62,7 @@ const ETF_badges = (e, big) => [
   e.levier ? `<span class="eb eb-o">Levier ou inverse</span>` : "", e.couvert ? `<span class="eb">Couvert en euros</span>` : ""].join("");
 
 /* ---------- Styles ---------- */
-document.head.insertAdjacentHTML("beforeend", `<style>
-.eb{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:99px;border:1px solid var(--line,#E6E2DA);font-size:11.5px;font-weight:600;color:var(--grey);background:#fff;white-space:nowrap}
-.eb-g{border-color:#BFDCCB;background:#EEF6F1;color:#0E6B4A}.eb-o{border-color:#F1C9BC;background:#FBEFEA;color:#B4441F}
-.etfhd{padding:20px 22px}
-.etfhd .top{display:flex;gap:14px;align-items:flex-start}
-.etfhd h1{font-family:var(--serif);font-weight:800;letter-spacing:-.015em;font-size:26px;line-height:1.15;margin:0}
-.etfhd .sub{color:var(--grey);margin-top:4px;font-size:14px}
-.etfhd .ids{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:var(--grey);align-items:center}
-.etfhd .ids b{font-family:var(--mono);color:var(--ink);font-weight:600}.etfhd .ids .fh-isin2{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-radius:999px;padding:4px 10px}.etfhd .ids .fh-isin2 b{color:#fff}.etfhd .ids .fh-isin2 small{font-size:10.5px;opacity:.75}.etfhd .ids .fh-isin2 .copy{color:#fff;border-color:rgba(255,255,255,.4)}
-.etfhd .copy{border:0;background:none;padding:0 2px;cursor:pointer;color:var(--grey);font:inherit;text-decoration:underline dotted}
-.etfhd .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.etfhd .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.etfhd .acts .linkbtn,.etfhd .acts a.pill{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--ink);border-radius:99px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;text-decoration:none;cursor:pointer}
-.etfhd .acts .favbtn{margin:0}
-.etfkv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 14px;margin:8px 0 0;font-size:14px;line-height:1.45}
-.etfkv dt{color:var(--grey);font-size:12.5px;padding:8px 0;border-bottom:1px dashed var(--line,#E6E2DA)}
-.etfkv dd{margin:0;padding:8px 0;border-bottom:1px dashed var(--line,#E6E2DA)}
-.etfkv dd b{font-family:var(--mono);font-weight:600}
-.etfkv dt:last-of-type,.etfkv dd:last-of-type{border-bottom:0}
-.etfgrid{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:0;border-top:1px solid var(--line2,#EFECE6)}
-.etfgrid>div{padding:18px 22px}.etfgrid>div+div{border-left:1px solid var(--line2,#EFECE6);background:#FCFBF8}
-.etfter{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
-.etfter .v{font-family:var(--mono);font-size:30px;font-weight:600;letter-spacing:-.02em}
-.etfter .u{color:var(--grey);font-size:13px}
-.etfvd{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-top:4px}
-.etfvd i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.vd-g{color:#0E6B4A}.vd-g i{background:var(--g,#0E6B4A)}.vd-o{color:#B4441F}.vd-o i{background:var(--o,#D94F2B)}.vd-n{color:var(--grey)}.vd-n i{background:var(--n,#B9B3A8)}
-.etfbuy{font-size:17px;line-height:1.45;margin:0 0 14px}
-.etfbuy b{font-family:var(--mono);font-weight:600}
-.etft3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:0 0 6px}
-.etft3 div{border:1px solid var(--line,#E6E2DA);border-radius:12px;padding:10px 12px;background:#fff}
-.etft3 span{display:block;font-size:11.5px;color:var(--grey);text-transform:uppercase;letter-spacing:.04em}
-.etft3 b{font-family:var(--mono);font-size:20px;font-weight:600}
-.etft3 small{display:block;font-size:12px;color:var(--grey);margin-top:2px}
-.etfcols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.etfcols h3,.etfh3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);margin:4px 0 8px;font-weight:600}
-.etfsrc{font-size:12px;color:var(--light,#8B867E);margin-top:10px}
-.etfsrc a{color:inherit}
-.etfnote{background:#FBF7EC;border:1px solid #EFE3C2;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.5;margin:0 0 12px}
-.etffees{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:6px 0 12px}
-.etffees div{border:1px solid var(--line,#E6E2DA);border-radius:12px;padding:12px;background:#fff}
-.etffees span{font-size:12.5px;color:var(--grey);display:block}
-.etffees b{font-family:var(--mono);font-size:22px;font-weight:600}
-.etfrisk{list-style:none;padding:0;margin:0}
-.etfrisk li{padding:9px 0 9px 22px;border-bottom:1px dashed var(--line,#E6E2DA);position:relative;font-size:14px;line-height:1.5}
-.etfrisk li:last-child{border-bottom:0}
-.etfrisk li:before{content:"";position:absolute;left:4px;top:15px;width:8px;height:8px;border-radius:50%;background:var(--n,#B9B3A8)}
-.etfrisk li.o:before{background:var(--o,#D94F2B)}.etfrisk li.g:before{background:var(--g,#0E6B4A)}
-.etfrows{display:flex;flex-direction:column}
-.etfrow{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line2,#EFECE6);color:inherit;text-decoration:none}
-.etfrow:first-child{border-top:0}
-.etfrow:hover{background:#FAF8F4}
-.etfrow .nm{display:block;font-weight:600;font-size:14.5px;line-height:1.3}
-.etfrow .sb{display:block;font-size:12.5px;color:var(--grey);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.etfrow .tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
-.etfrow .tg .eb{height:19px;font-size:10.5px;padding:0 7px}
-.etfrow .rt{text-align:right;white-space:nowrap}
-.etfrow .rt b{font-family:var(--mono);font-size:16px;font-weight:600;display:block}
-.etfrow .rt small{font-size:11.5px;color:var(--grey);display:block}
-.etfrow .rt i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
-.etfflt{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:12px 16px}
-.etfflt label{display:block;font-size:11.5px;color:var(--grey);margin-bottom:3px;font-weight:600}
-.etfflt select{width:100%;height:36px;border:1px solid var(--line,#E6E2DA);border-radius:10px;background:#fff;padding:0 8px;font:inherit;font-size:13.5px;color:var(--ink)}
-.etfq{display:flex;gap:8px;padding:14px 16px 4px}
-.etfq input{flex:1;min-width:0;height:42px;border:1px solid var(--line,#E6E2DA);border-radius:12px;padding:0 14px;font:inherit;font-size:15px;background:#fff}
-.etfpre{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 16px 14px}
-.etfpre::-webkit-scrollbar{display:none}
-.etfpre button{flex:none;height:30px;padding:0 12px;border-radius:99px;border:1px solid var(--line,#E6E2DA);background:#fff;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
-.etfpre button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.etfcount{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 10px;font-size:13.5px;color:var(--grey);flex-wrap:wrap}
-.etfmore{display:block;width:100%;height:46px;border:0;border-top:1px solid var(--line2,#EFECE6);background:#FCFBF8;font:inherit;font-weight:600;cursor:pointer;color:var(--ink)}
-.etfqa{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
-.etfqa button{height:auto;min-height:32px;padding:5px 12px;border-radius:99px;border:1px solid var(--line,#E6E2DA);background:#fff;font:inherit;font-size:13px;cursor:pointer;text-align:left;color:var(--ink)}
-.etfqa button.on{border-color:var(--ink);background:var(--ink);color:#fff}
-.etfans{border-left:3px solid var(--ink);background:#FAF8F4;border-radius:0 10px 10px 0;padding:10px 14px;font-size:14.5px;line-height:1.55;margin:0 0 12px}
-.etfans p{margin:0 0 6px}.etfans p:last-child{margin:0}
-.etfask{display:flex;gap:8px}
-.etfask input{flex:1;min-width:0;height:40px;border:1px solid var(--line,#E6E2DA);border-radius:10px;padding:0 12px;font:inherit;background:#fff}
-.etffaq details{border-top:1px solid var(--line2,#EFECE6);padding:12px 0}
-.etffaq details:first-child{border-top:0}
-.etffaq summary{cursor:pointer;font-weight:600;font-size:14.5px;list-style:none;display:flex;justify-content:space-between;gap:10px}
-.etffaq summary::-webkit-details-marker{display:none}
-.etffaq summary:after{content:"+";color:var(--grey);font-weight:400}
-.etffaq details[open] summary:after{content:"–"}
-.etffaq details p{margin:8px 0 0;font-size:14px;line-height:1.55;color:var(--ink)}
-.etfnb{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px dashed var(--line,#E6E2DA);color:inherit;text-decoration:none}
-.etfnb:first-child{border-top:0}
-.etfnb b{font-size:14px}.etfnb small{display:block;font-size:12px;color:var(--grey)}
-.etfnb .n{font-family:var(--mono);font-size:14px;text-align:right}
-.etfnb .ov{font-size:12px;color:var(--grey);text-align:right;min-width:74px}
-/* noms d'indice longs dans le classement de l'accueil (m/orchestre.js) : une ligne, coupée proprement */
-a.orcrow span.t small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;white-space:normal;overflow:hidden}
-@media (max-width:860px){
- .etfgrid{grid-template-columns:1fr}.etfgrid>div+div{border-left:0;border-top:1px solid var(--line2,#EFECE6)}
- .etfcols{grid-template-columns:1fr}
- .etfflt{grid-template-columns:1fr 1fr}
-}
-@media (max-width:520px){
- .etfhd{padding:16px}.etfhd h1{font-size:22px}.etfgrid>div{padding:16px}
- .etft3 b{font-size:17px}.etft3 div{padding:8px 10px}
- .etffees b{font-size:18px}
- .etfrow{padding:12px;grid-template-columns:30px minmax(0,1fr) auto;gap:10px}
- .etfrow .sb{white-space:normal}
- .etfnb{grid-template-columns:minmax(0,1fr) auto}.etfnb .ov{grid-column:1/-1;text-align:left}
-}
-</style>`);
+/* styles : voir site.css */
 
 /* ---------- Liste des ETF ---------- */
 let ETF_LS = null;
@@ -429,7 +324,7 @@ async function pageEtf(id) {
   $("#eask").onsubmit = ev => { ev.preventDefault(); const q = $("#eask input").value.trim(); if (!q) return; const full = /etf|fonds|il |-il|ce fonds/i.test(q) ? `${q} (${e.name})` : `${e.name} : ${q}`; if (typeof orcIaAsk === "function") { orcIaOpen(); orcIaAsk(full); } else go("/demander?q=" + encodeURIComponent(full)); };
   // La FAQ structurée (FAQPage) est ajoutée au HTML par le Worker (cf/src/etf_meta.mjs) : lisible par les moteurs sans JavaScript.
 }
-document.head.insertAdjacentHTML("beforeend", `<style>.etf-v{font-family:var(--sans)!important;font-size:15px!important;font-weight:400!important;line-height:1.5!important;color:var(--grey)!important;margin:0 0 14px!important}.etf-v b{color:var(--ink);font-family:var(--mono);font-weight:500}</style>`);
+/* styles : voir site.css */
 
 document.addEventListener("click", e => { // « Sa composition » : va à la composition de la fiche, sans passer par le routeur
   const a = e.target.closest && e.target.closest("a[data-etf-comp]"); if (!a) return;

@@ -114,7 +114,7 @@ a:hover>.orcchev{stroke:var(--ink)}
 .orcwarn{background:#FFF7E6;border:1px solid #F1DFB8;border-radius:10px;padding:10px 12px}
 @media (max-width:860px){.orcgrid{grid-template-columns:minmax(0,1fr)}.orcnum{align-items:flex-start;text-align:left}}
 `;
-  document.head.insertAdjacentHTML("beforeend", `<style id="orc-css">${css}</style>`);
+  /* styles : voir site.css */
 })();
 
 /* ---------- Accueil : bandeau de confiance ---------- */
@@ -129,16 +129,7 @@ function orcConfiance() {
   ];
   return `<ul class="orctrust">${items.map(([i, t, d, h]) => `<li><a href="${h}"><span class="ic">${i}</span><span><b>${t}</b><small>${d}</small></span></a></li>`).join("")}</ul>`;
 }
-document.head.insertAdjacentHTML("beforeend", `<style>
-.orctrust{list-style:none;margin:22px 0 0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-.orctrust a{display:flex;gap:10px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--card);color:inherit;text-decoration:none;height:100%;box-sizing:border-box;transition:border-color .15s}
-.orctrust a:hover{border-color:var(--ink)}
-.orctrust .ic{flex:none;width:30px;height:30px;border-radius:8px;background:#E4F1EA;color:#0E6B4A;display:grid;place-items:center}
-.orctrust svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.orctrust b{display:block;font-size:13.5px;margin-bottom:2px}.orctrust small{display:block;font-size:12px;line-height:1.4;color:var(--grey)}
-@media (max-width:980px){.orctrust{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:520px){.orctrust{gap:8px}.orctrust a{padding:10px;align-items:center}.orctrust small{display:none}.orctrust b{margin:0;font-size:13px}}
-</style>`);
+/* styles : voir site.css */
 
 /* ---------- L'IA sur toutes les pages : bouton et panneau contextuel (le seul point d'entrée de l'IA) ----------
    Sur une fiche, l'IA répond sur l'entreprise : réponse calculée d'abord, puis, si le visiteur a connecté son IA
@@ -224,25 +215,7 @@ function orcIaVisibilite() {
   addEventListener("scroll", orcIaVisibilite, { passive: true });
   addEventListener("popstate", () => setTimeout(orcIaVisibilite, 0));
   document.addEventListener("click", e => { if (e.target.closest("a[href^='/']")) setTimeout(orcIaVisibilite, 50); });
-  document.head.insertAdjacentHTML("beforeend", `<style>
-.orciab{position:fixed;right:20px;bottom:20px;z-index:60;display:flex;align-items:center;gap:8px;height:46px;padding:0 18px 0 14px;border-radius:999px;border:0;background:var(--ink);color:#fff;font:600 14px inherit;cursor:pointer;box-shadow:0 8px 24px -8px rgba(17,18,20,.45);transition:transform .2s,opacity .2s}
-.orciab .st{color:#D6F26B;font-size:17px}.orciab:hover{transform:translateY(-2px)}.orciab.off{opacity:0;pointer-events:none;transform:translateY(12px)}
-.orcia{position:fixed;inset:0;z-index:80}.orcia[hidden]{display:none}
-.orciabg{position:absolute;inset:0;background:rgba(17,18,20,.35)}
-.orciap{position:absolute;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--page);display:flex;flex-direction:column;box-shadow:-12px 0 40px -12px rgba(0,0,0,.3);animation:orcin .22s ease-out}
-@keyframes orcin{from{transform:translateX(30px);opacity:.4}to{transform:none;opacity:1}}
-.orciah{display:flex;justify-content:space-between;align-items:flex-start;padding:18px 18px 10px;border-bottom:1px solid var(--line)}.orciah h2{font:600 20px var(--serif);margin:2px 0 0}.orciah .orcia-etat{margin:4px 0 0}
-.orciax{border:0;background:none;font-size:26px;line-height:1;cursor:pointer;color:var(--grey);padding:0 4px}
-.orciab2{flex:1;overflow:auto;padding:14px 18px}.orciab2 .chips{margin-bottom:12px}
-.orcialog{display:flex;flex-direction:column;gap:14px}.orciait{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px}
-.orciait .askq{font-weight:600;margin:0 0 6px}.orciait .iares2 h2.iah{font-size:17px}.orciait table{font-size:12.5px}
-.orciaf{display:flex;gap:8px;padding:12px 18px;border-top:1px solid var(--line);background:var(--card)}.orciaf input{flex:1;min-width:0;height:40px;border:1px solid var(--line);border-radius:10px;padding:0 12px;font:inherit}
-.orciaft{margin:0;padding:0 18px 14px;background:var(--card);font-size:11.5px;color:var(--light)}
-html.orcia-on{overflow:hidden}
-@media (max-width:760px){.orciab{right:14px;bottom:calc(14px + env(safe-area-inset-bottom));height:44px;padding:0 14px 0 12px}.orciab.mini{width:44px;padding:0;justify-content:center}.orciab.mini .lb{display:none}.orciab .lb{font-size:13px}
-  .orciap{top:auto;height:88vh;width:100%;border-radius:18px 18px 0 0;animation:orcup .22s ease-out}@keyframes orcup{from{transform:translateY(40px)}to{transform:none}}}
-@media print{.orciab,.orcia{display:none!important}}
-</style>`);
+  /* styles : voir site.css */
 })();
 
 /* ---------- Méthode et sources : la fiabilité rendue visible ---------- */
@@ -325,30 +298,7 @@ function orcSignaler() {
 document.addEventListener("click", e => { if (e.target.closest("[data-signaler]")) { e.preventDefault(); orcSignaler(); } });
 (() => { const add = () => { const f = document.querySelector("footer .f > div:last-child"); if (f && !f.querySelector("[data-signaler]")) f.insertAdjacentHTML("beforeend", `<a href="#" data-signaler>Signaler une erreur</a>`); };
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", add); else add(); })();
-document.head.insertAdjacentHTML("beforeend", `<style>
-.mtdhero{margin:6px 0 18px}.mtdkpi{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-.mtdkpi span{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;font-size:12.5px;color:var(--grey);display:flex;flex-direction:column;min-width:120px}.mtdkpi b{font:600 22px var(--serif);color:var(--ink)}
-.mtdflow{list-style:none;margin:0 0 18px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:12px;counter-reset:none}
-.mtdflow li{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;position:relative}
-.mtdflow li:not(:last-child)::after{content:"";position:absolute;right:-12px;top:34px;width:12px;height:2px;background:var(--line)}
-.mtdflow .ic{width:36px;height:36px;border-radius:10px;background:#E4F1EA;color:#0E6B4A;display:grid;place-items:center;margin-bottom:10px}
-.mtdflow svg,.mtdno svg{width:19px;height:19px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.mtdflow b{display:block;margin-bottom:4px}.mtdflow p{margin:0;font-size:13.5px;color:var(--grey);line-height:1.5}
-.mtdgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
-.mtdleg{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}.mtdleg span{font-size:13px;font-weight:600;border-radius:999px;padding:5px 12px}
-.mtdleg .g{background:#E4F1EA;color:#0E6B4A}.mtdleg .n{background:var(--soft);color:var(--grey)}.mtdleg .o{background:#FBE9DF;color:#B5501D}
-.mtdia{display:flex;flex-direction:column;gap:12px}.mtdia>div{border-left:3px solid #0E6B4A;padding-left:12px}.mtdia p{margin:3px 0 0;font-size:13.5px;color:var(--grey)}
-.mtdcheck{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,1fr);gap:8px 20px}
-.mtdcheck li{position:relative;padding-left:26px;font-size:14px}.mtdcheck li::before{content:"✓";position:absolute;left:0;top:0;width:18px;height:18px;border-radius:50%;background:#E4F1EA;color:#0E6B4A;font-size:11px;display:grid;place-items:center;font-weight:700}
-.mtdno{margin:0;padding-left:18px}.mtdno li{margin:0 0 6px;font-size:14px}
-.mtdsrc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
-.mtdsrc>div{border:1px solid var(--line2);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}.mtdsrc span{font-size:13px;color:var(--grey)}.mtdsrc .lnk{font-size:13px;align-self:flex-start}
-.mtderr .pb{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
-.orcsigp{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(480px,calc(100% - 32px));background:var(--page);border-radius:16px;padding:18px;box-shadow:0 20px 60px -20px rgba(0,0,0,.4)}
-.orcsigl{display:flex;flex-direction:column;gap:5px;font-size:13.5px;font-weight:600;margin:0 0 10px}.orcsigl select,.orcsigl textarea{font:inherit;font-weight:400;border:1px solid var(--line);border-radius:10px;padding:9px 10px;background:var(--card)}
-@media (max-width:900px){.mtdflow{grid-template-columns:repeat(2,1fr)}.mtdflow li::after{display:none}.mtdgrid{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:560px){.mtdflow{grid-template-columns:1fr}.mtdcheck,.mtdsrc{grid-template-columns:1fr}}
-</style>`);
+/* styles : voir site.css */
 
 /* Barre de recherche : texte d'aide court quand la barre est étroite (tablette) */
 (() => { const fit = () => { const i = document.querySelector("header [data-search] input"); if (!i) return; i.dataset.ph = i.dataset.ph || i.placeholder; i.placeholder = innerWidth > 760 && innerWidth < 940 ? "Rechercher" : i.dataset.ph; };
@@ -356,11 +306,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 
 /* Favoris bien visibles : lien « ★ Favoris » avec compteur dans la barre (ordinateur), bouton étoile sur mobile,
    et un court message après chaque ajout pour dire où retrouver la liste. */
-document.head.insertAdjacentHTML("beforeend", `<style>
-.orcfavt{position:fixed;left:50%;bottom:22px;transform:translate(-50%,20px);opacity:0;z-index:90;background:var(--ink);color:#fff;border-radius:12px;padding:11px 16px;font-size:14px;box-shadow:0 12px 40px -12px rgba(0,0,0,.45);transition:opacity .2s,transform .2s;max-width:calc(100% - 32px);display:flex;gap:12px;align-items:center}
-.orcfavt.vis{opacity:1;transform:translate(-50%,0)}.orcfavt a{color:#fff;font-weight:700;text-decoration:underline;white-space:nowrap}
-@media (max-width:760px){.orcfavt{bottom:84px;width:calc(100% - 32px);justify-content:space-between}}
-</style>`);
+/* styles : voir site.css */
 (() => {
   // le lien « ★ Favoris » de la barre et l'étoile du téléphone sont construits par m/nav.js
   let tm;

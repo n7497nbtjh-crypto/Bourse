@@ -689,14 +689,4 @@ async function O2_hIA(b) {
     : typeof miaRendu === "function" ? miaRendu(j) : `<p class="muted">${esc((j && j.error) || "Synthèse indisponible.")}</p>`;
 }
 ROUTES_EXTRA.push([/^\/hier$/, () => pageHier()]);
-document.head.insertAdjacentHTML("beforeend", `<style id="o2h-css">
-.o2-hnav{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}.o2-hnav b{font-size:15px}
-.o2-hh{display:flex;justify-content:space-between;gap:10px 18px;flex-wrap:wrap;align-items:flex-start;margin:0 0 10px}.o2-hm{text-align:right}.o2-hm span{display:block;font-weight:600}.o2-hm small{color:var(--grey);font-size:12.5px}
-.o2-hg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:4px 0 6px}.o2-hf{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:3px 0;border-bottom:1px solid #F1EEE6}.o2-hf b{font-family:var(--mono,monospace);font-weight:600;text-align:right}
-.o2-hq{margin:10px 0 0;font-size:13.5px}.o2-hq blockquote,.o2-bq{margin:6px 0 0;padding:6px 10px;border-left:3px solid #C9C3B8;background:#FBF9F4;font-size:13.5px;line-height:1.5}
-.o2-hs{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:#F6F3EC}.o2-hpg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
-.o2-hp b{font-size:13px}.o2-hp ul{margin:4px 0 0;padding-left:18px;font-size:13px;line-height:1.45}.o2-hp.p b{color:#0B6B4A}.o2-hp.n b{color:#A63A1C}.o2-hp.r b{color:#7A5A12}
-.o2-ha{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin:12px 0 0}.o2-hia{margin:10px 0 0;padding:10px 12px;border:1px solid #E4DED2;border-radius:12px;font-size:14px;line-height:1.55}.o2-hia p{margin:0 0 6px}
-.o2-agh{margin-top:4px;font-size:12.5px}.o2-agh small{color:var(--grey)}
-@media(max-width:600px){.o2-hm{text-align:left}}
-</style>`);
+/* styles : voir site.css */

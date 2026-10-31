@@ -562,15 +562,7 @@ if (typeof OUTILS !== "undefined" && Array.isArray(OUTILS)) {
 if (typeof document !== "undefined" && document.querySelector) recoDivLoad();
 
 let RECO_CSS = false;
-document.head.insertAdjacentHTML("beforeend", `<style>
-.rc-sl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px 36px;align-items:start}.rc-slc label{display:flex;justify-content:space-between;align-items:baseline;margin:10px 0 4px}.rc-slc label:first-child{margin-top:0}.rc-slc output{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}.rc-slc input[type=range]{width:100%;accent-color:#111214}
-.rc-slx{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.rc-chip{border:1px solid var(--rule);background:#fff;border-radius:999px;padding:7px 12px;font:500 13px var(--sans);cursor:pointer;color:var(--ink)}.rc-chip.on{background:#111214;color:#fff;border-color:#111214}
-.rc-bar2{height:28px!important;display:flex!important;gap:2px;border-radius:6px;overflow:hidden}.rc-bar2 span{display:flex!important;align-items:center;justify-content:center;float:none!important;height:100%}.rc-bar2 i{font-style:normal;font-size:12px;color:#fff;mix-blend-mode:difference;font-variant-numeric:tabular-nums}
-.rc-leg{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 0 16px;font-size:13px;color:var(--grey)}.rc-leg span{display:inline-flex;align-items:center;gap:6px}.rc-leg i{width:10px;height:10px;border-radius:2px}
-.rc-big{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}.rc-big>div{padding:14px 16px;border:1px solid var(--rule);border-radius:8px;background:#fff}.rc-big small{display:block;font-size:12.5px;color:var(--grey);min-height:2.6em}.rc-big b{display:block;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums;margin:4px 0 2px}.rc-big b.dn{color:var(--down)}.rc-big span{font-size:12.5px;color:var(--grey)}
-.rc-where2{font-size:13px;color:var(--grey);margin:10px 0 0}.rc-where2 b{display:block;color:var(--ink);margin-bottom:4px}.rc-where2 span{display:block}
-@media (max-width:760px){.rc-sl{grid-template-columns:minmax(0,1fr)}.rc-big b{font-size:28px}}
-</style>`);
+/* styles : voir site.css */
 function recoCSS() {
   if (RECO_CSS || typeof document === "undefined") return; RECO_CSS = true;
   document.head.insertAdjacentHTML("beforeend", `<style id="rc-css">

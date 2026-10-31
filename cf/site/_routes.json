@@ -12,6 +12,7 @@
     "/m/*",
     "/sw.js",
     "/manifest.webmanifest",
-    "/icons/*"
+    "/icons/*",
+    "/site.css"
   ]
 }

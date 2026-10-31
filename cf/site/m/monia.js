@@ -178,34 +178,6 @@ document.addEventListener("click", e => { if (e.target.closest("[data-miactx]") 
   if (typeof etf0 === "function") window.pageEtfs = function () { const r = etf0.apply(this, arguments); const s = $(".pagesub", app); if (s && !$("[data-miactx]", app)) s.insertAdjacentHTML("beforeend", " " + bouton("Trouver un ETF avec l'IA")); return r; };
 })();
 
-document.head.insertAdjacentHTML("beforeend", `<style>
-.mia-grid{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:18px;align-items:start}
-@media (max-width:900px){.mia-grid{grid-template-columns:1fr}}
-.mia-etapes{margin:0 0 16px;padding-left:20px;display:flex;flex-direction:column;gap:8px;font-size:14.5px;line-height:1.5}
-.mia-garanties{margin:16px 0 0;padding:12px 14px 12px 30px;border:1px solid var(--line);border-radius:12px;background:var(--page);font-size:13.5px;color:var(--grey);display:flex;flex-direction:column;gap:5px}
-.mia-fs{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:0 0 10px}
-@media (max-width:620px){.mia-fs{grid-template-columns:repeat(2,minmax(0,1fr))}}
-.mia-f{display:flex;flex-direction:column;gap:1px;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer;min-height:44px}
-.mia-f input{position:absolute;opacity:0;pointer-events:none}.mia-f b{font-size:15px}.mia-f small{font-size:12px;color:var(--grey)}
-.mia-f.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}.mia-f:has(input:focus-visible){outline:2px solid var(--ink);outline-offset:2px}
-.mia-prix{margin:0 0 14px;padding:9px 12px;border-radius:10px;background:var(--page);font-size:13px;color:var(--grey);line-height:1.45}
-.mia-form{display:flex;gap:8px;flex-wrap:wrap}.mia-form input{flex:1 1 220px;min-height:44px;padding:0 12px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;background:var(--card)}
-.mia-sel{width:100%;min-height:44px;padding:0 10px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:15px;background:var(--card);margin:4px 0 12px}
-.mia-mods{display:flex;flex-direction:column;gap:8px}
-.mia-mod{display:grid;grid-template-columns:20px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 12px;border:1px solid var(--line);border-radius:12px;background:var(--card);cursor:pointer}
-.mia-mod.on{border-color:var(--ink);box-shadow:0 0 0 1px var(--ink)}
-.mia-mod span{display:flex;flex-direction:column;min-width:0}.mia-mod small{color:var(--grey);font-size:12.5px}
-.mia-mod em{font-style:normal;font-size:12.5px;color:var(--grey);text-align:right;max-width:150px}.mia-mod em.g{color:var(--g);font-weight:600}
-@media (max-width:520px){.mia-mod{grid-template-columns:20px minmax(0,1fr)}.mia-mod em{grid-column:2;text-align:left;max-width:none}}
-.mia-act{display:flex;gap:16px;flex-wrap:wrap;align-items:center;margin-top:14px}
-.mia-msg{margin:0 0 14px;padding:10px 14px;border-radius:12px;font-size:14px}.mia-msg.ok{background:#EAF4EE;color:var(--g)}.mia-msg.ko{background:#FBF0EA;color:#B4471F}
-.mia-etat,.orcia-etat{font-size:12.5px}.mia-on,.mia-off{display:inline-flex;align-items:center;gap:6px;font-weight:600}
-.mia-on i,.mia-off i{width:8px;height:8px;border-radius:50%;background:var(--g)}.mia-off i{background:var(--light)}.mia-off{color:var(--grey)}
-.mia-etat a,.orcia-etat a{color:inherit;text-decoration:underline;margin-left:4px}
-.mia-src{margin:8px 0 0;font-size:12.5px;color:var(--grey)}.mia-src b{font-weight:600;margin-right:4px;color:var(--ink)}
-.mia-inv{margin:8px 0 0;font-size:13px;color:var(--grey)}.mia-inv span{color:var(--g)}.mia-inv a{color:inherit;text-decoration:underline}
-.mia-ctx{display:inline-flex;align-items:center;gap:6px;margin:6px 0 0;padding:5px 12px;border:1px solid var(--line);border-radius:999px;background:var(--card);font:600 13px inherit;color:var(--ink);cursor:pointer;vertical-align:middle}
-.mia-ctx span{color:var(--g)}.mia-ctx:hover{border-color:var(--ink)}
-</style>`);
+/* styles : voir site.css */
 
-document.head.insertAdjacentHTML("beforeend", `<style>.mia-ask{display:flex;gap:10px;margin:0 0 10px}.mia-ask input{flex:1;min-width:0;font:inherit;font-size:16px;padding:12px 14px;border:1px solid var(--ink);border-radius:6px;background:#fff}.mia-ex{margin:0 0 22px}@media (max-width:600px){.mia-ask{flex-direction:column}}</style>`);
+/* styles : voir site.css */

@@ -151,43 +151,7 @@ if (navSimAvant) window.pageSim = function (tool) {
 };
 
 /* ---------- Style ---------- */
-document.head.insertAdjacentHTML("beforeend", `<style id="nav-css">
-#nav .ddm{min-width:320px}
-#nav a.navporte{padding:18px 10px 16px;font-weight:600;white-space:nowrap}#nav a.navporte.on{box-shadow:inset 0 -3px 0 var(--lime)}
-#nav a.navfav .lb{display:none}#nav a.navfav{padding-left:6px;padding-right:6px}
-/* lot C : le menu du téléphone s'ouvre par-dessus la page (panneau plein écran), se ferme par ✕, Échap ou un lien */
-.mpanel.open{position:fixed;inset:0;z-index:80;overflow:auto;background:var(--page);padding:0 var(--gut,20px) calc(20px + env(safe-area-inset-bottom));border:0}
-.mp-h{display:flex;justify-content:space-between;align-items:center;min-height:56px;border-bottom:1px solid var(--ink);margin:0 0 4px}.mp-t{font-family:var(--serif);font-weight:800;font-size:22px}.mp-x{border:0;background:none;font-size:22px;width:44px;height:44px;cursor:pointer;color:var(--ink)}
-.mpanel a.mporte{display:flex;flex-direction:column;gap:2px;padding:14px 0;min-height:44px;color:var(--ink);border-bottom:1px solid var(--rule)}.mpanel a.mporte b{font-size:19px}.mpanel a.mporte span{font-size:14px;color:var(--grey)}
-footer .navpied4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px 24px;margin:0 0 14px}footer .navpied4 a{display:flex;flex-direction:column;gap:2px;padding:0;margin:0;font-size:14px}footer .navpied4 a b{font-weight:600;display:block}footer .navpied4 a span{display:block;font-size:12.5px;color:var(--grey)}
-#nav .ddx{margin:6px 4px 2px;padding-top:8px;border-top:1px solid var(--line2,#EDE8DD);font-size:12.5px;color:var(--light);line-height:1.6}
-#nav .ddx a{display:inline;padding:0;border:0;font-size:12.5px;color:var(--grey);text-decoration:none;white-space:normal}
-#nav .ddx a:hover{color:var(--ink);text-decoration:underline;background:none}
-#nav .ddx a:not(:last-child)::after{content:" · ";color:var(--light);text-decoration:none}
-#nav a.navfav{padding:18px 8px 16px;display:flex;gap:5px;align-items:center;font-weight:700;white-space:nowrap}
-#nav a.navfav .st{color:#C98A00;font-size:15px;line-height:1}
-#nav a.navfav.on .st{color:inherit}
-#nav .dd[data-g="esp"]>button{font-weight:600}
-.mbtn.mfav{display:inline-flex;align-items:center;gap:4px;text-decoration:none;font-weight:700}
-.mbtn.mfav .st{color:#C98A00}
-.mpanel .mx{padding:2px 0 10px;margin:0;border:0!important;font-size:13px;line-height:1.8}
-.mpanel .mx a{display:inline;padding:0;border:0;color:var(--grey)}
-.mpanel .mx a:not(:last-child)::after{content:" · "}
-#footnav{flex:1 0 100%;order:-1;margin:0 0 18px;padding:0 0 16px;border-bottom:1px solid var(--rule)}
-footer .navpied a,footer .navlg a{margin-left:0}
-.navpied{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px 24px;margin:0 0 16px}
-.navpied p{margin:0 0 6px;font:600 11px var(--mono,monospace);letter-spacing:.06em;text-transform:uppercase;color:var(--light)}
-.navpied a{display:block;padding:3px 0;font-size:13px;min-height:0}
-.navlg{display:flex;flex-wrap:wrap;gap:4px 14px}
-.navplan{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 18px}
-.navplan a{display:flex;flex-direction:column;gap:1px;padding:9px 10px;margin:0 -10px;border-radius:9px;color:var(--ink);text-decoration:none}
-.navplan a:hover{background:var(--soft)}.navplan b{font-weight:600;font-size:14.5px}.navplan small{font-size:12.5px;color:var(--grey);line-height:1.4}
-@media (max-width:1240px){#nav .ddm{min-width:290px}}
-@media (max-width:1120px){#nav a.navia{display:none}}
-@media (min-width:761px) and (max-width:939px){#nav a.navfav{padding-left:5px!important;padding-right:5px!important;font-size:13px!important}#nav a.navfav .lb{display:none}}
-@media (max-width:760px){.navpied{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:420px){.navpied{grid-template-columns:1fr;gap:14px}}
-</style>`);
+/* styles : voir site.css */
 navRemplir();
 document.addEventListener("click", e => { if (e.target.closest(".mp-x") && typeof closePanels === "function") closePanels(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && typeof closePanels === "function" && document.getElementById("mpanel") && document.getElementById("mpanel").classList.contains("open")) closePanels(); });

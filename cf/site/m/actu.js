@@ -24,30 +24,7 @@ const ACTU_LANG = { en: "en anglais", sv: "en suédois", fi: "en finnois", da: "
 const ACTU_TYPES = [["imp", "L'essentiel"], ["resultats", "Résultats"], ["dividende", "Dividendes"], ["operation", "Acquisitions, OPA"], ["dirigeants", "Direction"], ["assemblee", "Assemblées"], ["emission", "Émissions"], ["tout", "Tout"]];
 const ACTU_ZONES = [["tout", "Toutes les zones"], ["fav", "Mes favoris"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"], ["MONDE", "Reste du monde"]];
 const ACTU_MEM = {};
-document.head.insertAdjacentHTML("beforeend", `<style>
-.ax-it{display:flex;gap:12px;padding:13px 0;border-bottom:1px solid var(--soft)}.ax-it:last-child{border-bottom:0}
-.ax-b{min-width:0;flex:1}.ax-m{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12.5px;color:var(--light)}
-.ax-m .nco{font-weight:600;color:var(--ink);font-size:13.5px}.ax-chip{font-size:11.5px;font-weight:600;color:var(--c);background:color-mix(in srgb,var(--c) 12%,transparent);border-radius:99px;padding:1px 8px;white-space:nowrap}
-.ax-imp{font-size:11px;font-weight:600;color:#B42318;border:1px solid color-mix(in srgb,#B42318 35%,transparent);border-radius:99px;padding:0 7px}
-.ax-tf{display:block;font-weight:600;font-size:15px;margin-top:3px;line-height:1.35}.ax-t{display:block;font-size:12.5px;color:var(--grey);margin-top:2px;overflow-wrap:anywhere}
-.ax-fig{display:flex;flex-wrap:wrap;gap:6px 18px;margin:8px 0 4px}.ax-fig span{display:flex;flex-direction:column;min-width:0}.ax-fig small{font-size:11.5px;color:var(--light)}.ax-fig b{font-family:var(--mono);font-size:14px}
-.ax-cl{margin:8px 0 2px;padding:9px 12px;border-left:3px solid var(--lime);background:var(--soft);border-radius:0 8px 8px 0;font-size:13.5px}details.ax-cl>summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between}details.ax-cl>summary::after{content:"+";font-size:16px;color:var(--grey)}details.ax-cl[open]>summary::after{content:"–"}details.ax-cl>summary::-webkit-details-marker{display:none}
-.ax-cl p{margin:2px 0 6px}.ax-cl p:last-of-type{margin-bottom:2px}.ax-cl b{font-size:12px;text-transform:uppercase;letter-spacing:.03em;color:var(--grey)}.ax-cl small{display:block;color:var(--light);font-size:11.5px}
-.ax-cl ul{margin:2px 0;padding-left:18px}.ax-src{display:inline-block;margin-top:6px;font-size:12.5px}
-.ax-why{font-size:12.5px;color:var(--grey);margin:4px 0 0}
-.ax-day{font-size:12px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.04em;padding:14px 0 6px;border-bottom:1px solid var(--soft)}.ax-day:first-child{padding-top:2px}
-.ax-tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 18px}.ax-tile{border:1px solid var(--rule);border-radius:10px;padding:10px 12px;min-width:0}
-.ax-tile b{display:block;font-family:var(--mono);font-size:21px;line-height:1.2}.ax-tile span{display:block;font-size:12.5px;color:var(--grey)}.ax-tile small{display:block;font-size:11.5px;color:var(--light);margin-top:2px}
-.ax-tile.up b{color:var(--up,#1E8A52)}.ax-tile.dn b{color:var(--down,#B42318)}
-.ax-bar{display:flex;flex-direction:column;gap:10px;padding:12px 16px;border-bottom:1px solid var(--rule)}.ax-bar .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}.ax-bar .chips::-webkit-scrollbar{display:none}.ax-bar .chips button{white-space:nowrap}
-.ax-row{display:flex;gap:10px;flex-wrap:wrap}.ax-row select,.ax-row input{min-width:0;flex:1 1 180px;max-width:320px;border:1px solid var(--rule);border-radius:8px;padding:7px 10px;font:inherit;font-size:13.5px;background:var(--bg,#fff);color:inherit}
-.ax-more{display:block;margin:14px auto 4px}.ax-empty{padding:18px 4px;color:var(--grey);font-size:13.5px}
-.ax-pr{display:flex;flex-direction:column;gap:2px;padding:9px 0;border-bottom:1px solid var(--soft)}.ax-pr:last-child{border-bottom:0}.ax-pr .pt{font-weight:500;font-size:14px;overflow-wrap:anywhere}.ax-pr .pm{font-size:12px;color:var(--light)}
-.ax-sources{font-size:12.5px;color:var(--grey);line-height:1.6}.ax-sources b{color:var(--ink)}
-.ax-side .ax-it{padding:10px 0}.ax-side .ax-tf{font-size:14px}.ax-side .ax-cap{font-size:12px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.04em;margin:4px 0 2px}
-.ax-band{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:20px}
-@media (max-width:900px){.ax-tiles{grid-template-columns:repeat(2,minmax(0,1fr))}.ax-band{grid-template-columns:minmax(0,1fr)}}
-</style>`);
+/* styles : voir site.css */
 
 /* ---------- Chargement (avec délai maximal : jamais de « Chargement… » sans fin) ---------- */
 // Titres de presse collectés avec des entités HTML (&#xE9;…) : décodés une fois, au chargement (le collecteur data/actu.mjs les décode désormais lui-même)
@@ -284,6 +261,6 @@ document.addEventListener("click", async e => {
     : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par l'IA de bilan. (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>` : `<p class="ax-why">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
 });
 
-document.head.insertAdjacentHTML("beforeend", `<style>.ax-bar2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;padding:12px 22px 14px;border-bottom:1px solid var(--rule)}.ax-bar2 label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--grey)}.ax-bar2 select,.ax-bar2 input{width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:6px;background:#fff;font:inherit;font-size:14px;color:var(--ink)}@media (max-width:760px){.ax-bar2{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 14px 12px}}</style>`);
+/* styles : voir site.css */
 
-document.head.insertAdjacentHTML("beforeend", `<style>.ax-une{margin:0 0 10px}.ax-une p{margin:0 0 8px;font-size:16px}.ax-une b{font-size:26px;font-variant-numeric:tabular-nums}.ax-une b.up{color:var(--up)}.ax-une b.dn{color:var(--down)}.ax-bar2{height:10px;border-radius:5px;background:var(--rule);overflow:hidden;max-width:520px}.ax-bar2 i{display:block;height:100%;background:var(--up);border-radius:5px}.ax-une small{display:block;margin-top:6px;color:var(--grey);font-size:12.5px}.ax-saison{margin:0 0 18px}.ax-saison>summary{cursor:pointer;font-size:13.5px;font-weight:600;list-style:none;color:var(--ink);text-decoration:underline;text-underline-offset:3px}.ax-saison>summary::-webkit-details-marker{display:none}.ax-saison .ax-tiles{margin-top:10px}</style>`);
+/* styles : voir site.css */

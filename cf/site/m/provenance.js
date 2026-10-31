@@ -369,26 +369,7 @@ document.addEventListener("focusin", e => {
 });
 addEventListener("scroll", () => { if (PROV_OPEN && PROV_MODE !== "clic" && innerWidth > 760) provClose(); }, { passive: true });
 
-document.head.insertAdjacentHTML("beforeend", `<style id="prov-css">
-.prov-i{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;margin:0 0 0 5px;padding:0;border:1px solid currentColor;border-radius:50%;background:transparent;color:var(--grey,#6B6B6B);font:italic 600 10.5px/1 Georgia,serif;cursor:pointer;vertical-align:1px;position:relative;opacity:.75;flex:none;text-transform:none;letter-spacing:0}
-.prov-i::before{content:"";position:absolute;inset:-8px}
-.prov-i:hover,.prov-i[aria-expanded=true]{opacity:1;color:var(--ink,#111);background:#F3F0E8}
-.prov-i:focus-visible{outline:2px solid var(--link,#1F4FD1);outline-offset:2px;opacity:1}
-.pop.prov{width:360px;z-index:1200}
-.pop.prov .prov-k{margin:0;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--grey)}
-.pop.prov h4{margin:2px 0 6px}
-.prov-nat{margin:0 0 8px!important;padding:6px 9px;border-radius:8px;background:#F3F0E8;font-size:12.5px;line-height:1.45}
-.prov-nat.prov-n-publie,.prov-nat.prov-n-emetteur{background:#EAF5EF}.prov-nat.prov-n-estime{background:#FFF4E0}.prov-nat.prov-n-marche{background:#EEF2FB}
-.prov-dl{display:grid;grid-template-columns:92px minmax(0,1fr);gap:5px 10px;margin:6px 0 0;font-size:12.5px;line-height:1.45}
-.prov-dl dt{color:var(--grey);font-weight:600}.prov-dl dd{margin:0;overflow-wrap:anywhere}
-.prov-ul{margin:0;padding-left:16px}.prov-ul li{margin:0 0 3px}
-.prov-old{margin:6px 0 0;padding:7px 10px;border-radius:8px;background:#FFF1E6;border:1px solid #F3C9A6;color:#7A3B0E;font-size:12.5px;line-height:1.45}
-.prov-ft{margin:10px 0 0!important;font-size:12.5px}
-.panel > .prov-old{margin:12px 20px}
-@media (max-width:560px){.panel > .prov-old{margin:10px 16px}}
-.pxhead .d.prov-stale{color:#9A4A12;font-weight:600}
-@media (max-width:760px){.pop.prov{max-height:72vh;overflow:auto}.prov-dl{grid-template-columns:84px minmax(0,1fr)}.prov-i{width:18px;height:18px;font-size:11.5px;position:relative}.prov-i::after{content:"";position:absolute;inset:-13px}}
-</style>`);
+/* styles : voir site.css */
 
 /* ---------- 5. Valorisation : jamais un PER ou un rendement calculé avec des comptes périmés ----------
    Reprise de valo() d'index.html (capitalisation, PER, rendement). Seul ajout : quand le dernier exercice lu a plus de 15 mois,
@@ -559,9 +540,4 @@ async function outilVerifier() {
   let tm = 0; q.oninput = () => { clearTimeout(tm); tm = setTimeout(run, 250); };
   $("#lnf").onsubmit = ev => { ev.preventDefault(); clearTimeout(tm); run(); };
 }
-document.head.insertAdjacentHTML("beforeend", `<style>
-.lnins{background:#FFF6E5;border:1px solid #F0D29A;border-radius:12px;padding:12px 14px;color:#6B4A0E}
-.lnnone{background:#F5F3EE;border:1px solid var(--line,#E6E2DA);border-radius:12px;padding:12px 14px;color:var(--ink,#111)}
-.lnnote{margin:8px 2px 0;font-size:12.5px;color:var(--grey)}
-.prov-stale{color:#9A4A12}
-</style>`);
+/* styles : voir site.css */

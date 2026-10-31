@@ -3379,11 +3379,6 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => route(), { once: true }); else route();
 });
 
-document.head.insertAdjacentHTML("beforeend", `<style>
-.p7{list-style:none;margin:4px 0 16px;padding:0;display:flex;align-items:center;justify-content:space-between;position:relative}.p7::before{content:"";position:absolute;left:18px;right:18px;top:50%;height:2px;background:var(--rule);z-index:0}.p7 li{position:relative;z-index:1}.p7b{width:36px;height:36px;border-radius:50%;border:2px solid var(--rule);background:#fff;font:700 14px var(--sans);color:var(--grey);cursor:pointer;display:grid;place-items:center}.p7b i{font-style:normal}.p7b.done{border-color:var(--ink);color:var(--ink)}.p7b.on{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:0 0 0 4px var(--lime)}
-.p7c{border:1px solid var(--rule);border-radius:10px;background:#fff;padding:18px 20px}.p7c h3{margin:2px 0 4px;font-size:20px}.p7c .p7r{color:var(--grey);margin:0 0 10px}.p7c p{max-width:70ch}.p7plus>summary{cursor:pointer;font-weight:600;font-size:14px;margin:4px 0 8px;list-style:none}.p7plus>summary::-webkit-details-marker{display:none}.p7plus>summary::before{content:"+ "}.p7plus[open]>summary::before{content:"− "}.p7nav{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:16px}
-.pa-quiz{display:block;text-decoration:none;color:var(--ink);border:1px solid var(--ink)!important}.pa-quiz .pb{display:flex;flex-direction:column;gap:4px}.pa-quiz b{font-size:18px}.pa-quiz:hover{background:var(--hl)}
-@media (max-width:600px){.p7b{width:30px;height:30px;font-size:12.5px}.p7::before{left:15px;right:15px}.p7c{padding:14px}}
-</style>`);
+/* styles : voir site.css */
 
-document.head.insertAdjacentHTML("beforeend", `<style>.prem3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:14px 0 18px}.prem3>div{display:flex;flex-direction:column;align-items:center;gap:8px;padding:16px 10px;border:1px solid var(--rule);border-radius:10px;background:#fff;text-align:center;font-size:14.5px}.prem3 .acc-ic{width:28px;height:28px;margin:0;color:var(--ink)}@media (max-width:600px){.prem3{gap:6px}.prem3>div{padding:10px 4px;font-size:12.5px}}</style>`);
+/* styles : voir site.css */

@@ -11,7 +11,7 @@ description: Ajouter ou modifier une page, une section ou une fonction du site b
 - Pour remplacer une fonction : la redéclarer avec `function nom() {}` dans un module. Avant, trouver TOUTES ses définitions :
   `grep -n "function NOM\|NOM = " cf/site/index.html cf/site/m/*.js` et modifier la dernière chargée.
 - Jamais `const` / `let` pour un nom déjà déclaré ailleurs (SyntaxError : tout le module tombe). Préfixer les nouvelles constantes par le nom du module.
-- CSS : l'injecter depuis le module (`document.head.insertAdjacentHTML("beforeend", "<style>…</style>")`).
+- CSS : **dans `cf/site/site.css`** (feuille unique depuis le 31/10/2026, 5e passage A2), dans la section du module concerné (en-têtes `/* ==== m/<module>.js ==== */`), en respectant l'ordre : une règle placée plus bas l'emporte. Ne plus injecter de `<style>` depuis un module (6 petits blocs paresseux subsistent : outils, reco, contexte, analyse, portefeuille, outils2).
 
 ## Nouvelle page
 1. `ROUTES_EXTRA.push([/^\/ma-page$/, () => pageMaPage()]);` (les groupes capturés passent en arguments).
