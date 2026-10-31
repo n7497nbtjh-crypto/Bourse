@@ -323,7 +323,12 @@ a.fk:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-de
 @media (max-width:900px){.rf-etfhd .top{flex-direction:column}.rf-etfpx{width:100%}}
 @media (max-width:760px){.rf-etfhd{padding:14px 16px 12px}.rf-etf .rf-mid #tvchart.f2-tv{height:230px}}
 `;
-document.head.insertAdjacentHTML("beforeend", `<style id="fiche2-css">${FICHE2_CSS}</style>`);
+document.head.insertAdjacentHTML("beforeend", `<style id="fiche2-css">${FICHE2_CSS}
+/* 5e passage (A3, tour téléphone) : fil d'Ariane sur une ligne (nom long coupé) ; sur téléphone, le bouton « Poser une question à l'IA » de l'en-tête disparaît (le bouton flottant ✦ fait la même chose) */
+.crumbs-fiche{white-space:nowrap;overflow:hidden}.crumbs-fiche .crumb-last{display:inline-block;max-width:45%;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
+.rf-doute{margin:0 0 12px;padding:10px 14px;border:1px solid var(--rule);border-left:3px solid var(--o);border-radius:10px;background:#fff;font-size:13.5px;color:var(--grey)}.rf-doute b{color:var(--ink)}
+td.doute{color:var(--light);font-style:italic}
+@media (max-width:700px){.fh-act .fh-ia{display:none}}</style>`);
 
 /* ---------- Une seule rangée d'onglets (29 octobre, 17 h) ----------
    Les étapes de la vue d'ensemble (boutons, sans rechargement) et les deux autres pages de la fiche
@@ -480,7 +485,7 @@ function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les 
   const pea = peaOk(s), place = String(s.tv || "").split(":")[0], bourse = (typeof IA_BOURSES !== "undefined" && IA_BOURSES[place]) || place;
   const cmp = `/comparer?ids=${[s, ...peersOf(s, 3).list].map(c => c.id).join(",")}`;
   const courbe = !tab && chart && s.tv;
-  return `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a></div>
+  return `<div class="crumbs crumbs-fiche"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}" class="crumb-last">${esc(s.name)}</a></div>
     <section class="panel fhero rf-hero"><div class="fh-top">
       <div class="fh-id">${logo(s, 48)}<div class="fh-t"><h1>${esc(s.name)}</h1>${s.desc ? `<p class="fh-desc">${esc(s.desc)}</p>` : ""}
         <p class="fh-ids"><span title="Code de l'action">${esc(s.ticker)}</span>${bourse ? ` · <span>${esc(bourse)}</span>` : ""}${s.isin ? ` · <span title="Code ISIN : l'identifiant international de l'action, le même chez tous les courtiers">ISIN ${esc(s.isin)}</span> <button type="button" class="fh-copy" data-copy="${esc(s.isin)}" aria-label="Copier l'ISIN" title="Copier l'ISIN">⧉</button>` : ""}</p>
@@ -1015,7 +1020,8 @@ async function ficheUneSeulePage(s, c, el) {
   const base = `/entreprise/${s.id}`, auto = rfDetailToujours();
   const nav = $("#etapes"); if (nav) nav.remove();
   if (!c) { // pas de comptes : métier, prix, questions, actualité, comme avant mais sans onglet
-    el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">${ficheMetierHTML(s, null)}<section class="panel"><div class="pb muted">${missingTxt(s, true)}</div></section>${ficheGraphBox(s)}${fichePrixSans(s)}${rfPli2("rf-agenda", "Annonces et agenda", "", `${rfAVenir(s)}<div id="factu"></div>`, true)}${rfPli2("rf-faq", "Questions fréquentes", "", faqHTML(s, null), false)}</div></div>`;
+    // 5e passage (A3) : même modèle que la fiche avec comptes : le métier et l'actualité derrière un pli, pas de second panneau « comptes manquants » (déjà dans l'en-tête)
+    el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">${ficheGraphBox(s)}${fichePrixSans(s)}${rfPli2("rf-metier", "Son métier", "Activités, marques, dirigeants, carte d'identité", ficheMetierHTML(s, null), false)}${rfPli2("rf-agenda", "Annonces et agenda", "Annonces officielles, presse, dates à venir", `${rfAVenir(s)}<div id="factu"></div>`, false)}${rfPli2("rf-faq", "Questions fréquentes", "", faqHTML(s, null), false)}</div></div>`;
     const fa = $("#factu"); if (fa && typeof actuFicheDetail === "function") { try { actuFicheDetail(fa, s); } catch (e) { } }
     if (typeof dirigeantsHTML === "function") dirigeantsHTML(s, $("#fdirig")); ficheGraphique(s); return;
   }
@@ -1026,6 +1032,7 @@ async function ficheUneSeulePage(s, c, el) {
   const jg = (key, inv, val) => { const p = rfPosition(s, key, inv, val); return p ? `<span class="rf-pq ${Math.round(p.pos * 100) >= 50 ? "ok" : "ko"}">${inv === null ? "" : (Math.round(p.pos * 100) >= 50 ? "mieux placée que " + Math.min(99, Math.round(p.pos * 100)) : "moins bien placée que " + Math.min(99, 100 - Math.round(p.pos * 100))) + " % du secteur"}</span>` : ""; };
   const f = figuresOf(c), m = ratios(f), v = valo(s) || {}, bank = isBank(s), A = Object.fromEntries(rfAxes(s).map(a => [a.k, a])), md = MED[s.sector] || {};
   el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">
+    ${typeof averifBandeau === "function" ? averifBandeau(s) : ""}
     ${rfFaitHTML(s, c)}
     ${rfChangeHTML(s, c)}
     <section class="rf-l2" id="tous-les-chiffres"><div class="rf-l2h"><h2>Tous les chiffres</h2><label class="rf-l2t"><input type="checkbox" id="rf-detail"${auto ? " checked" : ""}> Afficher toujours le détail</label></div>

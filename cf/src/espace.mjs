@@ -23,7 +23,11 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS notifs_at ON notifs (compte, at)`,
   `CREATE TABLE IF NOT EXISTS essais (cle TEXT NOT NULL, at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS essais_cle ON essais (cle, at)`,
+  `CREATE TABLE IF NOT EXISTS etat (cle TEXT PRIMARY KEY, val TEXT NOT NULL)`, // 5e passage : dernier passage du robot (alertes, bilans), pour que le site dise « bientôt » tant qu'il n'a jamais tourné
 ];
+async function robotEtat(env) { // { alertes: "2026-10-31" | null, bilans: ... } : date (Paris) du dernier passage réel du robot, lue par le site
+  try { const rows = (await env.DB.prepare(`SELECT cle, val FROM etat WHERE cle IN ('robot_alertes', 'robot_bilans')`).all()).results || []; const o = { alertes: null, bilans: null }; for (const r of rows) o[r.cle.slice(6)] = r.val; return o; } catch (e) { return { alertes: null, bilans: null }; }
+}
 let ready = false;
 async function init(db) { if (ready) return; await initCompte(db); for (const q of SCHEMA) await db.prepare(q).run(); ready = true; }
 
@@ -262,7 +266,7 @@ export async function espace(request, env) {
   // Tout le reste demande d'être connecté
   const c = await sessionCompte(request, env);
   if (path === "/api/espace/moi" && m === "GET") {
-    if (!c) return json({ connecte: false });
+    if (!c) return json({ connecte: false, robot: await robotEtat(env) });
     const [d, nl, sess] = await Promise.all([
       env.DB.prepare(`SELECT favoris, portefeuille, profil, updated FROM donnees WHERE compte = ?`).bind(c.id).first(),
       env.DB.prepare(`SELECT COUNT(*) AS n FROM notifs WHERE compte = ? AND lu = 0`).bind(c.id).first(),
@@ -272,7 +276,7 @@ export async function espace(request, env) {
     const r = json({ connecte: true, email: c.email, premium: !!p, plan: p ? p.plan : null, premium_jusqu_au: p ? p.until : null,
       donnees: { favoris: parse(d && d.favoris, []) || [], portefeuille: parse(d && d.portefeuille, null), profil: parse(d && d.profil, null), maj: d ? d.updated : null },
       nonlus: (nl && nl.n) || 0, teaser: !!c.teaser, mail: mailReady(env), cree: c.created,
-      bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null });
+      bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null, robot: await robotEtat(env) });
     if (sess && sess.expires - Date.now() < SESSION_MS - 7 * JOUR) { // session prolongée à chaque visite (au plus une fois par semaine)
       await env.DB.prepare(`UPDATE sessions SET expires = ? WHERE h = ?`).bind(Date.now() + SESSION_MS, sess.h).run();
       avecCookie(r, `bilan_s=${cookieSession(request)}; ${COOKIE}; Max-Age=${SESSION_MS / 1000}`);
@@ -433,6 +437,7 @@ async function tache(request, env, url) {
     await env.DB.prepare(`DELETE FROM sessions WHERE expires < ?`).bind(now).run();
   }
   const reste = ((await env.DB.prepare(`SELECT COUNT(*) AS n ${FROM}`).bind(...B).first()) || {}).n || 0;
+  try { await env.DB.prepare(`INSERT OR REPLACE INTO etat (cle, val) VALUES (?, ?)`).bind(modeBilan ? "robot_bilans" : "robot_alertes", auj).run(); } catch (e) { } // trace du passage réel (voir robotEtat)
   return json({ traites: rows.length, reste, notifs, bilans, mails, mode: modeBilan ? "bilan" : "alertes" });
 }
 

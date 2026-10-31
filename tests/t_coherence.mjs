@@ -4,11 +4,12 @@
 // avec dette et trésorerie, marges ou croissances aberrantes, exercice ancien non signalé.
 //   node tests/t_coherence.mjs            résumé et exemples ; code de sortie 1 si une erreur bloquante
 //   node tests/t_coherence.mjs --tout     liste complète
-import { readdirSync, readFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const DIR = "cf/site/data/societes", TOUT = process.argv.includes("--tout");
-const BANQUES = new Set(["banque", "assurance", "finance", "financier", "immobilier"]);
+const BANQUES = new Set(["banque", "assurance", "finance", "financier", "immobilier", "immo"]); // « immo » : clé réelle du secteur dans univers-min.json (5e passage)
 const E = {}; // code → [ { id, detail } ]
+const AVERIFIER = {}; // id → { ca: [années], marge: [années], … } (5e passage, A8)
 const note = (code, id, detail) => (E[code] = E[code] || []).push({ id, detail });
 const last = a => (Array.isArray(a) ? a.filter(v => v != null).slice(-1)[0] : undefined);
 const num = v => typeof v === "number" && isFinite(v);
@@ -46,10 +47,22 @@ for (const f of files) {
   if (src && years[n - 1] && Math.abs(+src.slice(0, 4) - years[n - 1]) > 1) note("source-annee", id, `dernière source ${src}, dernière année ${years[n - 1]}`);
   const clos = src && src.length >= 10 ? src : (years[n - 1] ? `${years[n - 1]}-${s.fyEnd || "12-31"}` : null);
   if (clos && (Date.now() - Date.parse(clos)) / 864e5 > 548) note("ancien", id, `clos le ${clos}`);
+  // 7. (5e passage, A8) valeurs aberrantes d'une année à l'autre : ventes × 3 (ou ÷ 3), marge d'exploitation qui saute de moins de 10 % à plus de 50 %
+  //    (ou l'inverse), fonds propres ou trésorerie × 8 : changement d'unité, de devise ou de périmètre probable. Ces fiches affichent
+  //    « chiffre à vérifier » (cf/site/data/a-verifier.json, lu par le site) au lieu du chiffre.
+  const doute = {};
+  const saut = (k, lim, lib) => { const a = fin[k]; if (!Array.isArray(a)) return; for (let i = 1; i < n; i++) { const x = a[i - 1], y = a[i]; if (num(x) && num(y) && Math.abs(x) > 50 && Math.abs(y) > 50 && years[i] === years[i - 1] + 1 && (Math.abs(y / x) > lim || Math.abs(y / x) < 1 / lim)) { (doute[k] = doute[k] || []).push(years[i]); note(lib, id, `${k} ${years[i - 1]} → ${years[i]} : ${Math.round(x)} → ${Math.round(y)} (×${(y / x).toFixed(1)})`); } } };
+  saut("ca", 3, "saut-ventes");
+  if (!BANQUES.has(s.sector)) saut("equity", 8, "saut-bilan"); // la trésorerie varie légitimement beaucoup : pas de test dessus
+  if (!BANQUES.has(s.sector) && Array.isArray(fin.ebit) && Array.isArray(fin.ca)) for (let i = 1; i < n; i++) {
+    const m0 = num(fin.ebit[i - 1]) && num(fin.ca[i - 1]) && fin.ca[i - 1] > 50 ? fin.ebit[i - 1] / fin.ca[i - 1] : null, m1 = num(fin.ebit[i]) && num(fin.ca[i]) && fin.ca[i] > 50 ? fin.ebit[i] / fin.ca[i] : null;
+    if (m0 != null && m1 != null && years[i] === years[i - 1] + 1 && ((m0 < 0.1 && m1 > 0.5) || (m1 < 0.1 && m0 > 0.5))) { (doute.marge = doute.marge || []).push(years[i]); note("saut-marge", id, `marge ${years[i - 1]} → ${years[i]} : ${(m0 * 100).toFixed(0)} % → ${(m1 * 100).toFixed(0)} %`); }
+  }
+  if (Object.keys(doute).length) AVERIFIER[id] = doute;
 }
 
 const BLOQUANT = new Set(["json", "devise", "fyEnd", "annees", "longueur", "unite", "ca-negatif", "signe-eps"]);
-const LIB = { json: "fichier illisible", devise: "comptes sans devise", fyEnd: "date de clôture invalide", annees: "années en désordre", longueur: "séries de longueurs différentes", unite: "unité probablement fausse", "ca-negatif": "ventes négatives", "signe-eps": "BPA de signe opposé au bénéfice", "dette-nette": "dette nette ≠ dette − trésorerie", marge: "marge nette invraisemblable", croissance: "saut de ventes ×5 ou ÷6 d'une année à l'autre", "source-annee": "source et dernière année décalées", ancien: "comptes clos depuis plus de 18 mois (affichés comme anciens)" };
+const LIB = { json: "fichier illisible", devise: "comptes sans devise", fyEnd: "date de clôture invalide", annees: "années en désordre", longueur: "séries de longueurs différentes", unite: "unité probablement fausse", "ca-negatif": "ventes négatives", "saut-ventes": "ventes × 3 ou ÷ 3 en un an (chiffre à vérifier)", "saut-marge": "marge qui saute (chiffre à vérifier)", "saut-bilan": "fonds propres × 8 en un an (chiffre à vérifier)", "signe-eps": "BPA de signe opposé au bénéfice", "dette-nette": "dette nette ≠ dette − trésorerie", marge: "marge nette invraisemblable", croissance: "saut de ventes ×5 ou ÷6 d'une année à l'autre", "source-annee": "source et dernière année décalées", ancien: "comptes clos depuis plus de 18 mois (affichés comme anciens)" };
 console.log(`${files.length} fiches, ${avecComptes} avec comptes`);
 let bloquants = 0;
 for (const code of Object.keys(LIB)) {
@@ -59,5 +72,6 @@ for (const code of Object.keys(LIB)) {
   for (const x of (TOUT ? l : l.slice(0, 4))) console.log(`     ${x.id} · ${x.detail}`);
   if (!TOUT && l.length > 4) console.log(`     … ${l.length - 4} autres (--tout)`);
 }
+try { writeFileSync("cf/site/data/a-verifier.json", JSON.stringify({ maj: new Date().toISOString().slice(0, 10), items: AVERIFIER })); console.log(`${Object.keys(AVERIFIER).length} fiche(s) avec un chiffre à vérifier → cf/site/data/a-verifier.json`); } catch (e) { console.log("a-verifier.json non écrit :", e.message); }
 console.log(bloquants ? `${bloquants} erreur(s) bloquante(s)` : "aucune erreur bloquante");
 process.exit(bloquants ? 1 : 0);

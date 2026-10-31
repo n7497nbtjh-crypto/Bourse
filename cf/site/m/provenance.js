@@ -184,6 +184,7 @@ function provSrcComptes(c) { // { label, url } du document officiel
   const x = c.sources[0];
   if (c.cik) return { label: "Rapports annuels (10-K ou 20-F) déposés à la SEC américaine, lus dans ses données publiques EDGAR", url: x.report || `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${c.cik}&type=10-K` };
   if (x.source === "AMF") return { label: "Rapport financier annuel au format ESEF déposé auprès de l'AMF (diffusé par la DILA)", url: x.report };
+  if (x.source === "EODHD") return { label: "Comptes publiés par l'entreprise, repris du fournisseur de données EODHD (pas lus par le site dans le document officiel)", url: x.report }; // 5e passage (A7)
   return { label: "Rapport financier annuel au format ESEF, publié sur filings.xbrl.org", url: x.report };
 }
 function provDetail(id) { // comptes complets d'une entreprise (sources, date de lecture), gardés dans FULL
@@ -421,7 +422,7 @@ function prixHTML(s, c) {
       <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
       <div class="tile">${kick("Valeur en Bourse", "cap")}<span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
       <div class="tile">${kick("PER", "per")}<span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : v.vieux ? "non calculé : comptes trop anciens" : "non calculable (perte ou donnée manquante)"}</small></div>
-      ${ev != null ? `<div class="tile">${kick("Valeur d'entreprise ÷ EBITDA", "evebitda")}<span class="v">${F1.format(ev)}</span><small>fois, dettes comprises${mev != null ? ` · secteur : ${F1.format(mev)}` : ""}</small></div>` : ""}
+      ${ev != null ? `<div class="tile">${kick("Valeur d'entreprise ÷ EBITDA", "evebitda")}<span class="v">${ev > 100 || ev < 0 ? "n.s." : F1.format(ev)}</span><small>${ev > 100 || ev < 0 ? "multiple non significatif (EBITDA trop faible ou négatif)" : "fois, dettes comprises"}${mev != null ? ` · secteur : ${F1.format(mev)}` : ""}</small></div>` : ""}
       ${fy != null ? `<div class="tile">${kick("Rendement de l'argent disponible", "rdtfcf")}<span class="v">${pct(fy, 1, false)}</span><small>flux de trésorerie disponible ÷ valeur en Bourse</small></div>` : ""}
       <div class="tile"><span class="kick">Rendement</span><span class="v">${v.yld != null ? pct(v.yld, 1, false) : "–"}</span><small>${v.yld != null ? "dividende annuel ÷ valeur en Bourse" : v.vieux ? "non calculé : comptes trop anciens" : "pas de dividende"}</small></div>
     </div>

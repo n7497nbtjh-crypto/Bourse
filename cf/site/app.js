@@ -455,6 +455,10 @@ function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, ma
 function amfBlock(target, params, limit) { newsBlock(target, { params, max: limit, filters: false }); }
 /* ---------- Logos et cartes d'entreprise ---------- */
 const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+let AVERIF = {}; // id → { ca: [années], marge: [années], equity: [années] } : chiffres à vérifier (5e passage, A8)
+const AVERIF_LIB = { ca: "ventes", marge: "marge d'exploitation", equity: "fonds propres" }, AVERIF_ROWS = { ca: ["ca", "g", "g1"], marge: ["marge", "ebit", "ebitm"], equity: ["equity", "roe"] };
+function averifDe(s, k, an) { const d = s && AVERIF[s.id]; if (!d) return false; for (const [f, rows] of Object.entries(AVERIF_ROWS)) if (rows.includes(k) && d[f] && (an == null || d[f].includes(an))) return f; return false; } // le champ en doute pour cette ligne et cette année, sinon false
+function averifBandeau(s) { const d = s && AVERIF[s.id]; if (!d) return ""; const l = Object.entries(d).map(([f, ans]) => `${AVERIF_LIB[f] || f} ${ans.join(", ")}`); return `<p class="rf-doute"><b>Chiffre à vérifier</b> : ${esc(l.join(" ; "))}. Le site a repéré un saut inhabituel d'une année à l'autre (unité, devise ou périmètre) : il affiche « à vérifier » plutôt que de faire passer ce chiffre pour sûr. <a class="lnk" href="/entreprise/${s.id}#rf-sources">Le document officiel</a></p>`; }
 let LOGO_ABS = new Set(), LOGOS = {}; // LOGOS : logos hébergés par le site (cf/site/logos, collectés sur Wikimedia Commons avec leur licence par data/logos_fetch.mjs)
 const LOGO_TEINTES = { tech: 215, finance: 150, sante: 350, conso: 25, industrie: 205, materiaux: 40, telecom: 265, immo: 95, energie: 10, services: 180 }; // 5e passage : une teinte par secteur pour la pastille à l'initiale
 function logoTeinte(n, sect) { if (sect && LOGO_TEINTES[sect] != null) return LOGO_TEINTES[sect]; let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; } // couleur du secteur, sinon déterministe à partir du nom
@@ -2288,12 +2292,12 @@ function rankIn(s, fn, higherBetter = true) { // position de 0 (dernière) à 1 
    Chaque axe place l'entreprise parmi celles de son secteur (0 = dernière, 1 = première, au sens « mieux »).
    Le libellé de la jauge, le verdict en deux mots, les niveaux (point fort / à surveiller) et la phrase « mieux placée
    que X % » des sections en dérivent tous : ils ne peuvent plus se contredire. scripts/check-contradictions.mjs le vérifie. */
-const AX_WORDS = {
-  croissance: ["parmi les plus rapides", "plus rapide que la médiane", "croissance dans la norme", "plus lente que la médiane", "parmi les plus lentes"],
-  marge: ["parmi les plus rentables", "plus rentable que la médiane", "rentabilité dans la norme", "moins rentable que la médiane", "parmi les moins rentables"],
-  solidite: ["parmi les moins endettées", "peu endettée", "endettement moyen", "endettée", "parmi les plus endettées"],
+const AX_WORDS = { // 5e passage (A4) : les libellés des jauges ne répètent plus les mots du verdict (rentable, endettée, chère, bon marché) : le verdict se lit une fois, la jauge dit la place
+  croissance: ["parmi les plus rapides", "plus rapide que la médiane", "dans la norme du secteur", "plus lente que la médiane", "parmi les plus lentes"],
+  marge: ["parmi les meilleures", "au-dessus de la médiane", "dans la norme du secteur", "sous la médiane", "parmi les plus faibles"],
+  solidite: ["parmi les plus solides", "plus solide que la médiane", "dans la norme du secteur", "moins solide que la médiane", "parmi les moins solides"],
   dividende: ["parmi les plus généreuses", "rendement au-dessus de la médiane", "rendement dans la norme", "rendement sous la médiane", "parmi les moins généreuses"],
-  prix: ["parmi les moins chères", "moins chère que la médiane", "prix dans la norme", "plus chère que la médiane", "parmi les plus chères"],
+  prix: ["parmi les moins chères", "sous la médiane du secteur", "dans la norme du secteur", "au-dessus de la médiane", "parmi les plus chères"],
 };
 const axBand = p => p >= 0.75 ? 0 : p >= 0.55 ? 1 : p > 0.45 ? 2 : p > 0.25 ? 3 : 4; // 0 = en tête … 4 = en queue
 const axWord = (p, k = "croissance") => (AX_WORDS[k] || AX_WORDS.croissance)[axBand(p)];
@@ -2312,15 +2316,17 @@ function rfAxes(s) { // [{ k, t (titre), d (ce qui est mesuré), r: { p, rank, n
   ];
   return A.filter(a => a.r || a.special === "nodiv" || a.special === "ns").map(a => ({ ...a, word: a.special === "nodiv" ? "pas de dividende" : a.special === "ns" ? "n.s." : a.special === "sansdette" && a.r && a.r.p >= 0.55 ? "sans dette" : axWord(a.r.p, a.k), lv: a.r ? axLevel(a.r.p) : null }));
 }
-function rfVerdictMots(s) { // le verdict en deux ou trois mots, déduit des mêmes positions que les jauges
+function rfVerdictMots(s) { // le verdict en deux ou trois éléments, déduits des mêmes positions que les jauges
+  // 5e passage (A4) : un mot aussi pour le milieu (« dette moyenne », « prix moyen ») ; toujours 2 ou 3 éléments quand les jauges existent
   const A = Object.fromEntries(rfAxes(s).map(a => [a.k, a])), mots = [], band = k => A[k] && A[k].r ? axBand(A[k].r.p) : null;
   if (s.net != null && s.net < 0) mots.push("En perte");
-  else { const b = band("marge"); if (b === 0) mots.push("Très rentable"); else if (b === 1) mots.push("Rentable"); else if (b === 4) mots.push("Peu rentable"); }
+  else { const b = band("marge"); if (b === 0) mots.push("Très rentable"); else if (b === 1) mots.push("Rentable"); else if (b === 2) mots.push("Rentabilité moyenne"); else if (b === 3) mots.push("Rentabilité sous la médiane"); else if (b === 4) mots.push("Peu rentable"); }
   if (A.solidite && A.solidite.special === "sansdette") mots.push("sans dette");
-  else { const b = band("solidite"); if (b === 0 || b === 1) mots.push("peu endettée"); else if (b === 4) mots.push("endettée"); }
-  { const b = band("prix"); if (b === 0 || b === 1) mots.push("bon marché"); else if (b === 4) mots.push("chère"); }
+  else { const b = band("solidite"); if (b === 0 || b === 1) mots.push("peu endettée"); else if (b === 2) mots.push("dette moyenne"); else if (b === 3) mots.push("dette assez élevée"); else if (b === 4) mots.push("endettée"); }
+  { const b = band("prix"); if (b === 0 || b === 1) mots.push("bon marché"); else if (b === 2) mots.push("prix moyen"); else if (b === 3) mots.push("un peu chère"); else if (b === 4) mots.push("chère"); }
+  if (mots.length < 2) { const b = band("croissance"); if (b === 0 || b === 1) mots.push("en croissance"); else if (b === 2) mots.push("croissance moyenne"); else if (b === 3) mots.push("croissance sous la médiane"); else if (b === 4) mots.push("croissance faible"); }
   if (!mots.length) mots.push("Dans la norme de son secteur");
-  return mots.map((m, i) => i ? m : m.replace(/^./, x => x.toUpperCase())).join(", ");
+  return mots.slice(0, 3).map((m, i) => i ? m.replace(/^./, x => x.toLowerCase()) : m.replace(/^./, x => x.toUpperCase())).join(", ");
 }
 const AX_ICON = { croissance: "M3 17l5-6 4 3 5-7 4 4", marge: "M5 19L19 5M7 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", solidite: "M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7z", dividende: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9 10h6M9 14h6M14 7c-3 0-4 2.5-4 5s1 5 4 5", prix: "M3 12l9-9h9v9l-9 9zM16 8h.01" }; // icônes SVG du site (4e passage 3.2), jamais d'émojis
 const axIcon = k => `<svg class="pa2-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${AX_ICON[k] || AX_ICON.croissance}"/></svg>`;
@@ -2392,7 +2398,7 @@ async function pagePremium(sub) {
   PREM = null; const st = await premStatus();
   const rows = [ // six lignes, ✓ et — (30/10) : fiches, médianes, outils, favoris et portefeuille restent gratuits, sans ligne pour le dire
     ["Rapport de la semaine sur vos valeurs", "2 semaines d'historique", "12 semaines, lecture de l'IA"],
-    ["Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)", "3 visibles", "✓ toutes"],
+    [`Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)${robotActif("alertes") ? "" : BIENTOT}`, "3 visibles", "✓ toutes"],
     ["Questions libres rédigées par l'IA du site", "3 par jour", "✓ sans limite"],
     ["L'Académie et la formation guidée de 6 semaines", "Les essentiels", "✓ tout"],
     ["Portefeuille : positions suivies", `${FREE.pf}`, "✓ sans limite"],
@@ -2402,7 +2408,7 @@ async function pagePremium(sub) {
   const attente = OFFRES.mensuel || OFFRES.unique ? "" : `<section class="panel prem-att"><div class="pb"><h2 class="f2-h">Soyez prévenu à l'ouverture</h2><p class="muted" style="margin:6px 0 12px">Les inscrits avant l'ouverture gardent le prix bloqué à <b>39 € par an</b>. Une adresse, rien d'autre ; aucun message en dehors de l'ouverture.</p>
     <form id="attf" class="askf" novalidate><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email" required><button class="btn">Prévenez-moi</button></form><p id="attm" class="prem-attm" role="status" aria-live="polite"></p><p class="muted" id="attn" style="font-size:13px;margin:8px 0 0"></p></div></section>`;
   app.innerHTML = `<h1 class="pagetitle">Premium : vos valeurs suivies pour vous, chaque semaine.</h1>
-    <div class="prem3"><div>${typeof accIc === "function" ? accIc("mk") : ""}<b>Rapport complet</b></div><div>${typeof accIc === "function" ? accIc("ag") : ""}<b>Alertes chaque soir</b></div><div>${typeof accIc === "function" ? accIc("pub") : ""}<b>IA sans limite</b></div></div>
+    <div class="prem3"><div>${typeof accIc === "function" ? accIc("mk") : ""}<b>Rapport complet</b></div><div>${typeof accIc === "function" ? accIc("ag") : ""}<b>Alertes chaque soir${robotActif("alertes") ? "" : BIENTOT}</b></div><div>${typeof accIc === "function" ? accIc("pub") : ""}<b>IA sans limite</b></div></div>
     ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
     <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>${attente}`}
@@ -2461,9 +2467,9 @@ function commencerTrois() { // les trois décisions avant d'investir, en cartes 
 async function commencerCharger() { if (!COMM) { try { COMM = await (await fetch("/data/commencer.json")).json(); } catch (e) { } } return COMM; }
 function commencerBlocsHTML(C) { // 4e passage 3.3 : un parcours visuel (7 pastilles reliées, une carte à la fois, Suivant), le questionnaire en carte-bouton, les questions repliées
   let cur = 0; try { cur = Math.min(C.etapes.length - 1, Math.max(0, +localStorage.getItem("bilan.etape7") || 0)); } catch (e) { }
-  return `<section class="panel" id="etapes"><div class="ph"><h2>Le parcours en sept étapes</h2><span class="light" style="font-size:12.5px">10 minutes, dans l'ordre · progression gardée sur cet appareil</span></div>
+  return `<details class="panel pa-pli" id="etapes"${cur > 0 ? " open" : ""}><summary class="ph"><h2>Le parcours en sept étapes</h2><span class="light" style="font-size:12.5px">10 minutes, dans l'ordre${cur > 0 ? ` · étape ${cur + 1} sur ${C.etapes.length}` : ""}</span></summary>
     <div class="pb"><ol class="p7" id="p7nav">${C.etapes.map((e, i) => `<li><button type="button" class="p7b${i === cur ? " on" : i < cur ? " done" : ""}" data-p7="${i}" aria-label="Étape ${i + 1} : ${esc(e.titre)}"><i>${i + 1}</i></button></li>`).join("")}</ol>
-      <div id="p7card"></div></div></section>
+      <div id="p7card"></div></div></details>
     <a class="panel pa-quiz" href="#profil" id="profil-btn"><div class="pb"><span class="kick">5 questions · 2 minutes</span><b>Quel type d'investisseur êtes-vous ?</b><span class="light">Vos réponses restent sur cet appareil. Ouvrir le questionnaire →</span></div></a>
     <details class="panel pa-pli" id="profil"><summary class="ph"><h2>Le questionnaire</h2><span class="light" style="font-size:12.5px">5 questions · réponses gardées sur cet appareil</span></summary><div class="pb"><form id="qprof">${C.questions.map((q, i) => `<fieldset class="qf"><legend><span class="n">${i + 1}</span>${esc(q.q)}</legend>${q.options.map((o, j) => `<label class="qo"><input type="radio" name="${esc(q.id)}" value="${j}"><span>${esc(o.label)}</span></label>`).join("")}</fieldset>`).join("")}</form><div id="presult"></div></div></details>
     <details class="panel pa-pli" id="faq"><summary class="ph"><h2>Questions fréquentes</h2></summary><div class="pb">${C.faq.map(f => acc(esc(f.q), `<p>${esc(f.a)}</p>`)).join("")}</div></details>`;
@@ -2479,7 +2485,8 @@ function commencerLier(C) {
   let ans = {}; try { ans = JSON.parse(localStorage.getItem(CKEY) || "{}"); } catch (e) { }
   let cur = 0; try { cur = Math.min(C.etapes.length - 1, Math.max(0, +localStorage.getItem("bilan.etape7") || 0)); } catch (e) { }
   commencerEtape(C, cur);
-  const et = $("#etapes"); if (et) et.addEventListener("click", ev => { const b = ev.target.closest("[data-p7]"); if (b) { commencerEtape(C, +b.dataset.p7); if (b.closest(".p7nav")) et.scrollIntoView({ block: "start", behavior: "smooth" }); } });
+  const et = $("#etapes"); if (et && /^#(etapes|parcours)$/.test(location.hash)) et.open = true; // 5e passage (A6) : le parcours est replié ; un lien direct l'ouvre
+  if (et) et.addEventListener("click", ev => { const b = ev.target.closest("[data-p7]"); if (b) { commencerEtape(C, +b.dataset.p7); if (b.closest(".p7nav")) et.scrollIntoView({ block: "start", behavior: "smooth" }); } });
   const pb = $("#profil-btn"); if (pb) pb.onclick = ev => { ev.preventDefault(); const d = $("#profil"); if (d) { d.open = true; d.scrollIntoView({ block: "start", behavior: "smooth" }); } };
   $$("#qprof input").forEach(i => { if (ans[i.name] === +i.value) i.checked = true; });
   // 30/10 (Romain) : trois écrans visuels d'abord, les sept étapes détaillées repliées derrière
@@ -2522,6 +2529,8 @@ async function pageLegal(p) {
 
 /* ---------- Compte : session par cookie, synchronisation des favoris et du portefeuille ---------- */
 let MOI = null, MOIP = null;
+function robotActif(k) { return !!(MOI && MOI.robot && MOI.robot[k]); } // 5e passage (A0) : vrai seulement si le robot des alertes (k = "alertes") ou des rapports (k = "bilans") a déjà tourné pour de vrai ; sinon le site dit « bientôt »
+const BIENTOT = ` <span class="muted" title="Ouvre dès que le robot du soir aura tourné une première fois">(bientôt)</span>`;
 function moi(force) {
   if (MOI && !force) return Promise.resolve(MOI);
   if (MOIP && !force) return MOIP;
@@ -2755,7 +2764,7 @@ async function pageEspace(onglet) {
 }
 function espaceConnexion() {
   app.innerHTML = `<div class="esplog"><div class="esppitch"><p class="kick">Mon espace</p><h1 class="pagetitle">Vos valeurs, suivies chaque semaine.</h1>
-      <ul class="espben big"><li><b>Un rapport chaque semaine</b> : ce que vos entreprises et ETF ont publié, leurs cours, leurs dates à venir, la répartition de votre portefeuille.</li><li><b>Une alerte</b> quand une de vos valeurs publie ses résultats ou bouge de plus de 5 %.</li><li><b>Vos favoris, votre portefeuille et vos achats programmés</b>, les mêmes sur votre téléphone et votre ordinateur.</li><li><b>Un agenda rien qu'à vous</b> : résultats et dividendes de vos valeurs, portefeuille d'abord.</li></ul>
+      <ul class="espben big"><li><b>Un rapport chaque semaine</b> : ce que vos entreprises et ETF ont publié, leurs cours, leurs dates à venir, la répartition de votre portefeuille.</li><li><b>Une alerte</b> quand une de vos valeurs publie ses résultats ou bouge de plus de 5 %${robotActif("alertes") ? "" : BIENTOT}.</li><li><b>Vos favoris, votre portefeuille et vos achats programmés</b>, les mêmes sur votre téléphone et votre ordinateur.</li><li><b>Un agenda rien qu'à vous</b> : résultats et dividendes de vos valeurs, portefeuille d'abord.</li></ul>
       <p class="note">Gratuit. Aucune donnée vendue. Vous pouvez supprimer votre compte à tout moment.</p></div>
     <div><section class="panel"><div class="ph"><h2 id="lt">Créer mon espace</h2></div><div class="pb">
       <form id="espf" class="espform"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>
@@ -3349,8 +3358,9 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 /* ---------- Démarrage ---------- */
 // Un fichier absent sous /data/ renvoyait la page d'accueil entière (516 ko) avec un code 200 : on refuse tout ce qui n'est pas du JSON (audit P0-3).
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok && /json/i.test(r.headers.get("content-type") || "") ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/logos/index.json", { l: {} })]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc, lg]) => {
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/logos/index.json", { l: {} }), getJSON("/data/a-verifier.json", { items: {} })]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc, lg, av]) => {
   LOGOS = (lg && lg.l) || {};
+  AVERIF = (av && av.items) || {}; // 5e passage (A8) : chiffres à vérifier (sauts d'une année à l'autre repérés par tests/t_coherence.mjs)
   REP = rep || {}; CONC = conc || {};
   ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = segfr || {};
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }

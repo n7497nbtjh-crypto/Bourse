@@ -42,12 +42,15 @@ jobs:
           # Node 22 plante parfois dans undici sur de longues séries de requêtes : on relance, les sociétés déjà lues sont gardées
           for i in 1 2 3; do node data/fetch_data.mjs && break; echo "::warning::Collecte interrompue, nouvelle tentative ($i)"; done
           node data/etf_fetch.mjs || echo "::warning::Composition des ETF non mise à jour"
+          # Comptes manquants (Samsung, Hyundai, TCS, Aramco, ICBC, sociétés allemandes…) : EODHD, seulement si le secret EODHD_KEY existe (5e passage, A7)
+          EODHD_KEY="${{ secrets.EODHD_KEY }}" node data/eodhd.mjs --max 100 || echo "::warning::Import EODHD interrompu"
           node data/cours_fetch.mjs || echo "::warning::Cours non mis à jour"
       - name: Construction et tests
         run: |
           node build.mjs
           node tests/t_coherence.mjs || echo "::warning::Contrôle de cohérence : des erreurs bloquantes subsistent (voir ci-dessus)"
           node data/sec_trim.mjs || echo "::warning::Trimestres SEC : lecture interrompue"
+          node data/historiser.mjs || echo "::warning::Historisation des comptes interrompue"
           # Logos : robot à part depuis le 31/10/2026 (.github/workflows/logos.yml), chaque nuit avant ce robot
           node tests/t_calc.mjs
           node tests/t_univers.mjs
@@ -59,6 +62,7 @@ jobs:
           node tests/t_actu.mjs
           node --no-warnings tests/t_communaute.mjs
           NO_SLEEP=1 node tests/t_esef.mjs
+          node tests/t_eodhd.mjs
       - name: Analyse des annonces officielles (SEC et AMF)
         env:
           CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}

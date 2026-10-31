@@ -250,6 +250,7 @@ function tblxFullHTML(s, c, P) {
     if (r.grp !== g0) { g0 = r.grp; z = 0; out += `<tr class="grp"><th colspan="${nc}" scope="colgroup"><span>${TBLX_GRP[g0]}<small>${TBLX_GRPSUB[g0]}</small></span></th></tr>`; }
     const cells = ORD.map(i => { const v = r.vals[i];
       if (v == null) return `<td class="num na${i === L ? " last" : ""}" title="Non publié">–</td>`;
+      if (typeof averifDe === "function" && averifDe(s, r.k, Y[i])) return `<td class="num na doute${i === L ? " last" : ""}" title="Chiffre à vérifier : saut inhabituel d'une année à l'autre (valeur publiée : ${esc(r.full(v))})">à vérifier</td>`; // 5e passage (A8)
       const d = i > 0 ? tblxDir(r.kind, r.vals[i - 1], v) : null, q = d == null ? 0 : d * (r.sens || 0);
       const lvc = "";
       return `<td class="num${i === L ? " last" : ""}${lvc}"${i > 0 && d != null ? ` title="${esc(Y[i] + " : " + r.full(v) + (tblxChange(r.kind, r.vals[i - 1], v) ? " (" + tblxChange(r.kind, r.vals[i - 1], v) + " sur un an)" : ""))}"` : ""}>${esc(r.cell(v))}</td>`;

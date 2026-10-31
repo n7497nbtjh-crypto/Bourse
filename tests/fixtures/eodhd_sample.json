@@ -1,0 +1,148 @@
+{
+ "__id": "samsung-electronics",
+ "General": {
+  "Code": "005930",
+  "Exchange": "KO",
+  "Name": "Samsung Electronics Co Ltd",
+  "CurrencyCode": "KRW",
+  "FiscalYearEnd": "December"
+ },
+ "Financials": {
+  "Income_Statement": {
+   "currency_symbol": "KRW",
+   "yearly": {
+    "2021-12-31": {
+     "totalRevenue": "279600000000000.0",
+     "operatingIncome": "51600000000000.0",
+     "netIncome": "39200000000000.0",
+     "epsDiluted": "5777",
+     "incomeTaxExpense": "13400000000000.0",
+     "filing_date": "2021-03-10"
+    },
+    "2022-12-31": {
+     "totalRevenue": "302200000000000.0",
+     "operatingIncome": "43400000000000.0",
+     "netIncome": "54700000000000.0",
+     "epsDiluted": "8057",
+     "incomeTaxExpense": "-4300000000000.0",
+     "filing_date": "2022-03-10"
+    },
+    "2023-12-31": {
+     "totalRevenue": "258900000000000.0",
+     "operatingIncome": "6600000000000.0",
+     "netIncome": "14500000000000.0",
+     "epsDiluted": "2131",
+     "incomeTaxExpense": "900000000000.0",
+     "filing_date": "2023-03-10"
+    },
+    "2024-12-31": {
+     "totalRevenue": "300900000000000.0",
+     "operatingIncome": "32700000000000.0",
+     "netIncome": "33600000000000.0",
+     "epsDiluted": "4950",
+     "incomeTaxExpense": "10100000000000.0",
+     "filing_date": "2024-03-10"
+    },
+    "2025-12-31": {
+     "totalRevenue": "311000000000000.0",
+     "operatingIncome": "35000000000000.0",
+     "netIncome": "36000000000000.0",
+     "epsDiluted": "5300",
+     "incomeTaxExpense": "9000000000000.0",
+     "filing_date": "2025-03-10"
+    }
+   },
+   "quarterly": {
+    "2025-03-31": {
+     "totalRevenue": "79000000000000.0",
+     "netIncome": "8000000000000.0",
+     "epsDiluted": "1200",
+     "filing_date": "2025-03-31"
+    },
+    "2025-06-30": {
+     "totalRevenue": "74000000000000.0",
+     "netIncome": "8000000000000.0",
+     "epsDiluted": "1200",
+     "filing_date": "2025-06-30"
+    },
+    "2025-09-30": {
+     "totalRevenue": "86000000000000.0",
+     "netIncome": "8000000000000.0",
+     "epsDiluted": "1200",
+     "filing_date": "2025-09-30"
+    },
+    "2025-12-31": {
+     "totalRevenue": "72000000000000.0",
+     "netIncome": "8000000000000.0",
+     "epsDiluted": "1200",
+     "filing_date": "2025-12-31"
+    }
+   }
+  },
+  "Balance_Sheet": {
+   "currency_symbol": "KRW",
+   "yearly": {
+    "2021-12-31": {
+     "totalStockholderEquity": "345000000000000.0",
+     "cashAndShortTermInvestments": "120000000000000.0",
+     "shortLongTermDebtTotal": "14000000000000.0"
+    },
+    "2022-12-31": {
+     "totalStockholderEquity": "345000000000000.0",
+     "cashAndShortTermInvestments": "120000000000000.0",
+     "shortLongTermDebtTotal": "14000000000000.0"
+    },
+    "2023-12-31": {
+     "totalStockholderEquity": "345000000000000.0",
+     "cashAndShortTermInvestments": "120000000000000.0",
+     "shortLongTermDebtTotal": "14000000000000.0"
+    },
+    "2024-12-31": {
+     "totalStockholderEquity": "345000000000000.0",
+     "cashAndShortTermInvestments": "120000000000000.0",
+     "shortLongTermDebtTotal": "14000000000000.0"
+    },
+    "2025-12-31": {
+     "totalStockholderEquity": "345000000000000.0",
+     "cashAndShortTermInvestments": "120000000000000.0",
+     "shortLongTermDebtTotal": "14000000000000.0"
+    }
+   }
+  },
+  "Cash_Flow": {
+   "currency_symbol": "KRW",
+   "yearly": {
+    "2021-12-31": {
+     "totalCashFromOperatingActivities": "62000000000000.0",
+     "capitalExpenditures": "-53000000000000.0",
+     "freeCashFlow": "9000000000000.0",
+     "dividendsPaid": "-9800000000000.0"
+    },
+    "2022-12-31": {
+     "totalCashFromOperatingActivities": "62000000000000.0",
+     "capitalExpenditures": "-53000000000000.0",
+     "freeCashFlow": "9000000000000.0",
+     "dividendsPaid": "-9800000000000.0"
+    },
+    "2023-12-31": {
+     "totalCashFromOperatingActivities": "62000000000000.0",
+     "capitalExpenditures": "-53000000000000.0",
+     "freeCashFlow": "9000000000000.0",
+     "dividendsPaid": "-9800000000000.0"
+    },
+    "2024-12-31": {
+     "totalCashFromOperatingActivities": "62000000000000.0",
+     "capitalExpenditures": "-53000000000000.0",
+     "freeCashFlow": "9000000000000.0",
+     "dividendsPaid": "-9800000000000.0"
+    },
+    "2025-12-31": {
+     "totalCashFromOperatingActivities": "62000000000000.0",
+     "capitalExpenditures": "-53000000000000.0",
+     "freeCashFlow": "9000000000000.0",
+     "dividendsPaid": "-9800000000000.0"
+    }
+   }
+  }
+ }
+}
