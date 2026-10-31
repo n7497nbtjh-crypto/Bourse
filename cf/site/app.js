@@ -456,11 +456,12 @@ function amfBlock(target, params, limit) { newsBlock(target, { params, max: limi
 /* ---------- Logos et cartes d'entreprise ---------- */
 const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
 let LOGO_ABS = new Set(), LOGOS = {}; // LOGOS : logos hébergés par le site (cf/site/logos, collectés sur Wikimedia Commons avec leur licence par data/logos_fetch.mjs)
-function logoTeinte(n) { let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; } // couleur déterministe à partir du nom
+const LOGO_TEINTES = { tech: 215, finance: 150, sante: 350, conso: 25, industrie: 205, materiaux: 40, telecom: 265, immo: 95, energie: 10, services: 180 }; // 5e passage : une teinte par secteur pour la pastille à l'initiale
+function logoTeinte(n, sect) { if (sect && LOGO_TEINTES[sect] != null) return LOGO_TEINTES[sect]; let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; } // couleur du secteur, sinon déterministe à partir du nom
 function logo(c, size = 40) { // logo hébergé par le site ; sinon un rond coloré (couleur fixée par le nom) avec l'initiale. Plus aucune requête vers Google ou gstatic (3e passage, 1.5)
   // 4e passage (31/10, 2.2) : logo hébergé par le site (Commons ou site officiel, collecté par le robot), sinon le rond coloré avec l'initiale. Aucune requête externe.
   const l = c && c.id && LOGOS[c.id] && LOGOS[c.id].f ? `/logos/${LOGOS[c.id].f}` : null, sz = Math.max(size, 24);
-  return `<span class="lg${l ? "" : " lg-ini"}" style="--s:${sz}px;--lgh:${logoTeinte(c.name)}"><b>${esc(initials(c.name))}</b>${l ? `<img src="${l}" alt="" loading="lazy" width="${sz}" height="${sz}" onerror="this.parentNode.classList.add('lg-ini');this.remove()">` : ""}</span>`;
+  return `<span class="lg${l ? "" : " lg-ini"}" style="--s:${sz}px;--lgh:${logoTeinte(c.name, c.sector)}"><b>${esc(initials(c.name))}</b>${l ? `<img src="${l}" alt="" loading="lazy" width="${sz}" height="${sz}" onerror="this.parentNode.classList.add('lg-ini');this.remove()">` : ""}</span>`;
 }
 function caLine(c) {
   if (c.missing) return `<span class="light">${missingTxt(c)}</span>`;

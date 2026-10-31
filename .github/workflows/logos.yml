@@ -1,0 +1,43 @@
+# Robot des logos (5e passage, 31/10/2026) : à part du robot des données, lent et groupé (voir data/logos_fetch.mjs).
+# Chaque nuit, il complète les logos manquants (300 plus grosses capitalisations d'abord) et enregistre cf/site/logos.
+# Les logos partent en ligne avec la mise en ligne suivante (robot des données du matin ou push du site).
+name: Logos des entreprises
+on:
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Nombre d'entreprises à traiter"
+        default: "400"
+  schedule:
+    - cron: "40 2 * * *"   # chaque nuit vers 3 h 40 (heure de Paris en hiver), avant le robot des données
+permissions:
+  contents: write
+concurrency:
+  group: logos
+  cancel-in-progress: false
+jobs:
+  logos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Collecte (Wikidata, Wikimedia Commons, sites officiels)
+        timeout-minutes: 80
+        env:
+          CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
+        run: |
+          if [ -z "$CONTACT" ]; then echo "::warning::Variable CONTACT absente : le User-Agent n'a pas d'adresse de contact (Wikimedia la demande)"; fi
+          npm i --no-save --silent sharp@0.33.5
+          node data/logos_fetch.mjs --max "${{ inputs.max || '150' }}"
+      - name: Bilan
+        run: node -e "const d=require('./data/diagnostic.json').logos;console.log(JSON.stringify(d))"
+      - name: Enregistrement dans le dépôt
+        run: |
+          git config user.name "repere-bot"
+          git config user.email "repere-bot@users.noreply.github.com"
+          git add cf/site/logos data/diagnostic.json
+          git diff --cached --quiet || git commit -m "Logos du $(date +%F)"
+          for i in 1 2 3; do git pull --rebase -X theirs -q && git push && break; sleep 5; done
