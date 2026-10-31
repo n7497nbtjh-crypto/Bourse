@@ -1,4 +1,9 @@
 id,c1,c2,c3
+c:emmi,SWX:EMMN,,
+c:nyrstar,EBR:NYR,AMS:NYR,EPA:NYR
+c:sgl-carbon,ETR:SGL,FRA:SGL,
+c:united-internet,ETR:UTDI,FRA:UTDI,
+c:wacker-neuson,ETR:WAC,FRA:WAC,
 c:ceconomy,ETR:CEC,FRA:CEC,
 c:polaris,NYSE:PII,,
 c:versant,NASDAQ:VSNT,,
