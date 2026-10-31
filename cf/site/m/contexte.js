@@ -429,7 +429,7 @@ function ctxDoutes(s, c, q, it, t) {
   if ((!c || s.missing) && !has(/pas encore lu|n'a pas encore|pas encore les comptes/)) P.push(`Je ne suis pas sûr : le site n'a pas encore lu les comptes de ${nom}. À vérifier : son dernier rapport annuel, sur son site.`);
   if (c && c.years && c.years.length) {
     const L = c.years.length - 1, fy = /^\d\d-\d\d$/.test(c.fyEnd || "") ? c.fyEnd : "12-31", fin = `${c.years[L]}-${fy}`;
-    if ((new Date(TODAY) - new Date(fin)) / (30.44 * 864e5) > 16 && ["croissance", "marge", "dette", "dividende", "resume", "forts", "risques", "prix"].includes(it)) P.push(`Je ne suis pas sûr que ces chiffres soient encore à jour : ils viennent de l'exercice clos le ${dLabel(fin)}. Un exercice plus récent existe sans doute : regardez « Ce qui a changé ».`);
+    if ((new Date(TODAY) - new Date(fin)) / (30.44 * 864e5) > 16 && ["croissance", "marge", "dette", "dividende", "resume", "forts", "risques", "prix"].includes(it)) P.push(`Je ne suis pas sûr que ces chiffres soient encore à jour : ils viennent de l'exercice clos le ${dLabel(fin)}. Un exercice plus récent existe sans doute : regardez « Ses derniers chiffres et ses prochaines dates ».`);
     const f = typeof figuresOf === "function" ? figuresOf(c) : null;
     if (it === "dividende" && f && f.dpsEst && s.divPaid > 0.5) P.push("Je ne suis pas sûr du montant exact par action : le site l'estime à partir des dividendes versés et du nombre d'actions. Le communiqué de l'entreprise donne le chiffre officiel.");
   }

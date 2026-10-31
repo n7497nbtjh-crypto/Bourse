@@ -294,7 +294,7 @@ function accMarchesHTML() { // 31/10 (Romain) : les marchés du jour en grand, a
   const ligne = x => `<a class="acc-mv" href="/entreprise/${x.c.id}">${logo(x.c, 24)}<span class="acc-mvt"><b>${esc(x.c.name)}</b><small>${esc(secName(x.c))}</small></span><b class="acc-mvv ${accCls(x.p.chg)}">${accPct(x.p.chg)}</b></a>`;
   const hs = grands.slice(0, 5), bs = grands.slice(-5).reverse();
   return `<div class="acc-mk">${rows.length ? `<div class="acc-idx2">${rows.map(r => `<a href="/indice/${r.id}" class="acc-idc"><small>${esc(r.name)}</small><b class="${accCls(r.p.chg)}">${accPct(r.p.chg)}</b><span>${F0.format(r.p.p)} pts</span></a>`).join("")}</div>` : ""}
-    ${hs.length ? `<div class="acc-mvs"><div><p class="acc-ah">Plus fortes hausses du jour</p>${hs.map(ligne).join("")}</div><div><p class="acc-ah">Plus fortes baisses du jour</p>${bs.map(ligne).join("")}</div></div><p class="acc-note">Parmi les entreprises de plus de 5 milliards d'euros suivies par le site, cours différés. Une variation d'un jour ne dit rien de la qualité d'une entreprise.</p>` : ""}</div>`;
+    ${hs.length ? `<div class="acc-mvs"><div><p class="acc-ah">Plus fortes hausses du jour</p>${hs.map(ligne).join("")}</div><div><p class="acc-ah">Plus fortes baisses du jour</p>${bs.map(ligne).join("")}</div></div><p class="acc-note">Variation sur la dernière séance, parmi les entreprises de plus de 5 milliards d'euros suivies par le site. Cours Google Finance différés${PXUP && PXUP !== "none" && /T\d/.test(PXUP) ? `, relevés le ${esc(new Date(PXUP).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Paris" }))} (heure de Paris)` : ""}. Une variation d'un jour ne dit rien de la qualité d'une entreprise.</p>` : ""}</div>`;
 }
 async function accRapportPanneau() { // le rapport en exemple dans un panneau latéral, sans quitter l'accueil
   let pane = $("#acc-pane");
@@ -313,12 +313,13 @@ async function accRapportPanneau() { // le rapport en exemple dans un panneau la
 function accRapportFermer() { const p = $("#acc-pane"); if (p) p.classList.remove("on"); document.documentElement.classList.remove("acc-pane-on"); }
 function accCompteHTML(membre) { // 31/10 : pourquoi créer un espace, et le rapport en exemple ouvert dans un panneau
   if (membre) return "";
-  return `<section class="acc-sec acc-cpt" id="acc-compte"><div class="acc-h3"><h2>Un espace gratuit, et le site travaille pour vous</h2></div>
+  return `<section class="acc-sec acc-cpt" id="acc-compte"><div class="acc-h3"><h2>Vous n'avez rien à surveiller : le site le fait pour vous</h2></div>
+    <p class="acc-sub">Entrez vos valeurs une fois. Ensuite, chaque semaine, le site va chercher ce qu'elles ont publié, lit les documents officiels, relève les cours et prépare votre rapport. Vous l'ouvrez quand vous voulez.</p>
     <div class="acc-cptg"><ul class="acc-cptl">
-      <li><b>Vos favoris et votre portefeuille</b><span>Vos valeurs suivies en un clic, leur performance, leur répartition par secteur.</span></li>
-      <li><b>Un rapport chaque semaine</b><span>Ce que vos entreprises ont publié, leurs cours, leurs dates à venir, les points d'attention.</span></li>
-      <li><b>Un agenda rien qu'à vous</b><span>Résultats et dividendes de vos valeurs, portefeuille d'abord, favoris ensuite.</span></li>
-      <li><b>Sans adresse revendue, sans conseil</b><span>Un e-mail, un mot de passe. Vous partez quand vous voulez.</span></li></ul>
+      <li><b>Il lit les publications à votre place</b><span>Résultats, dividendes, acquisitions : le site repère les annonces officielles de vos valeurs et les explique en clair.</span></li>
+      <li><b>Il prépare votre rapport chaque semaine</b><span>Ce qui a bougé et pourquoi, les chiffres publiés, les dates à venir, la répartition de votre portefeuille.</span></li>
+      <li><b>Il tient votre agenda</b><span>Résultats et dividendes de vos valeurs, portefeuille d'abord ; une publication manquée est signalée.</span></li>
+      <li><b>Il ne vous demande rien</b><span>Un e-mail, un mot de passe. Pas d'adresse revendue, pas de conseil, vous partez quand vous voulez.</span></li></ul>
       <div class="acc-cpta"><a class="btn" href="/espace">Créer mon espace</a><button type="button" class="acc-cptx" data-acc-rapport>Voir un rapport en exemple →</button></div></div></section>`;
 }
 const ACC_VOIES = [
@@ -400,7 +401,7 @@ function accPubHTML() {
 }
 function accSemaineHTML() { // 31/10 : les sept prochains jours, six dates au plus, favoris puis grandes entreprises
   const fav = accFavIds(), evs = accProchains(7).sort((a, b) => (fav.has(b.id) - fav.has(a.id)) || accTaille(RBY[b.id]) - accTaille(RBY[a.id])).slice(0, 6).sort((a, b) => a.date.localeCompare(b.date));
-  return evs.length ? `<ul class="acc-sem">${evs.map(e => `<li><b>${esc(accJourLong(e.date))}</b><a href="/entreprise/${e.id}?etape=change">${esc(RBY[e.id].name)}</a><span>${esc(e.label)}</span></li>`).join("")}</ul>` : `<p class="acc-vide">Aucune date annoncée dans les deux prochaines semaines.</p>`;
+  return evs.length ? `<ul class="acc-sem">${evs.map(e => `<li><b>${esc(accJourLong(e.date))}</b><a class="acc-semc" href="/entreprise/${e.id}?etape=change">${logo(RBY[e.id], 22)}${esc(RBY[e.id].name)}</a><span>${esc(e.label)}</span></li>`).join("")}</ul>` : `<p class="acc-vide">Aucune date annoncée dans les deux prochaines semaines.</p>`;
 }
 async function pageHome() {
   setTitle(""); setNav("home");
@@ -463,7 +464,7 @@ html.acc-home header .search[data-search]{visibility:hidden}
 .acc-rap3{display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin:34px 0 10px;padding:22px 24px;border:1px solid var(--rule);border-radius:6px;background:#fff}.acc-rap3 h2{font-family:var(--serif);font-weight:800;font-size:24px;margin:2px 0 6px}.acc-rap3 p{margin:0;font-size:14.5px;color:var(--grey);max-width:560px}
 .acc3 .acc-sec{margin:0 0 30px}
 @media (max-width:900px){.acc-pubs{grid-template-columns:repeat(2,minmax(0,1fr))}.acc-une3 h1{font-size:34px}.acc-top{grid-template-columns:minmax(0,1fr);gap:0}}
-@media (max-width:600px){.acc-une3{padding:22px 0 8px}.acc-une3 h1{font-size:30px}.acc-pubs{grid-template-columns:minmax(0,1fr)}.acc-pub{min-height:0}.acc-sem li{grid-template-columns:minmax(0,1fr)}.acc-sem span{grid-column:1}.acc-rap3{padding:18px}.acc-demo{margin:20px 0 26px}}
+@media (max-width:600px){.acc-une3{padding:22px 0 8px}.acc-une3 h1{font-size:30px}.acc-pubs{grid-template-columns:minmax(0,1fr)}.acc-pub{min-height:0}.acc-sem li{grid-template-columns:minmax(0,1fr);gap:2px;padding:10px 0}.acc-sem li b{font-size:12.5px;font-weight:600;color:var(--grey)}.acc-sem li a{font-size:16px;font-weight:700}.acc-semc{display:inline-flex;align-items:center;gap:8px}.acc-sem span{grid-column:1;font-size:13.5px}.acc-rap3{padding:18px}.acc-demo{margin:20px 0 26px}}
 </style>`);
 function accEspace(membre) { // le rapport de la semaine (bloc « Mon espace »), une fois le « Voir plus » ouvert
   moi().then(m => {

@@ -446,9 +446,8 @@ function commIrReponse(x, r) {
   const you = j === "oui" ? `<span class="ir-you ok">Bonne intuition</span>` : j === "non" ? `<span class="ir-you ko">Pas tout à fait</span>` : j === "nuance" && r !== "x" ? `<span class="ir-you nu">Les deux à la fois</span>` : "";
   return `<div class="ir-verdict"><span class="cm-v ${vc}">${vt}</span>${you}</div>
     <p class="ir-rep">${x.rep}</p>
-    <div class="ir-steps" role="tablist" aria-label="Déconstruire l'idée reçue">${COMM_IR_ETAPES.map(([k, t], i) => `<button type="button" role="tab" data-ir-tab="${k}" aria-selected="${i ? "false" : "true"}" class="${i ? "" : "on"}"><i>${i + 1}</i>${t}</button>`).join("")}</div>
-    <div class="ir-pane" role="tabpanel" data-k="credible">${commIrPane(x, "credible")}</div>
-    <div class="ir-ret"><p class="kick">Ce que l'on peut en retenir</p><p>${x.retenir}</p></div>
+    <div class="ir-ret"><p class="kick">À retenir</p><p>${x.retenir}</p></div>
+    <div class="ir-plis">${COMM_IR_ETAPES.map(([k, t]) => `<details class="ir-pli"><summary>${t}</summary><div class="ir-pane">${commIrPane(x, k)}</div></details>`).join("")}</div>
     <div class="cm-foot"><div class="cm-go">${x.liens.map(([l, h]) => `<a class="chip" href="${h}">${esc(l)}</a>`).join("")}</div>
       <details class="cm-src"><summary>Sources</summary>${commSrcHTML(x.src)}</details></div>`;
 }
@@ -544,7 +543,7 @@ document.head.insertAdjacentHTML("beforeend", `<style id="ir-css">
 .ir-steps button.on{border-color:var(--ink);color:var(--ink);box-shadow:inset 0 0 0 1px var(--ink)}
 .ir-steps button.on i{background:var(--ink);color:#fff}
 .ir-steps button:focus-visible{outline:2px solid var(--g);outline-offset:2px}
-.ir-pane{min-height:64px;font-size:15px;line-height:1.55}
+.ir-pane{font-size:14.5px;line-height:1.55;padding:4px 0 10px}.ir-plis{margin-top:12px;border-top:1px solid var(--rule)}.ir-pli{border-bottom:1px solid var(--rule)}.ir-pli>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;padding:10px 0;font:600 14px var(--sans)}.ir-pli>summary::-webkit-details-marker{display:none}.ir-pli>summary::after{content:"+";font-size:18px;color:var(--grey)}.ir-pli[open]>summary::after{content:"−"}
 .ir-pane>p{margin:0;max-width:780px}
 .ir-pane[data-k=nuance]{background:#FFF8EC;border-left:3px solid #E59A3A;border-radius:0 10px 10px 0;padding:10px 14px}
 .ir-pane[data-k=exemple]{background:var(--soft);border-radius:10px;padding:10px 14px}
@@ -806,4 +805,4 @@ table.cm-cmp .cm-me{background:#F3FAF6}
 }
 </style>`);
 
-document.head.insertAdjacentHTML("beforeend", `<style>.ir-som{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ir-som a{border:1px solid var(--rule);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink);text-decoration:none;background:#fff}.ir-som a:hover{border-color:var(--ink)}</style>`);
+document.head.insertAdjacentHTML("beforeend", `<style>.ir-som{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ir-som a{border:1px solid var(--rule);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink);text-decoration:none;background:#fff}.ir-som a:hover{border-color:var(--ink)}@media (max-width:760px){.ir-som{flex-wrap:nowrap;overflow-x:auto;margin:14px 0 0;padding:0 0 6px;scrollbar-width:none;max-width:100%}.ir-som a{flex:none;white-space:nowrap}}</style>`);

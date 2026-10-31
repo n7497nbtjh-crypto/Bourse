@@ -355,7 +355,7 @@ document.head.insertAdjacentHTML("beforeend", `<style id="prov-css">
 .panel > .prov-old{margin:12px 20px}
 @media (max-width:560px){.panel > .prov-old{margin:10px 16px}}
 .pxhead .d.prov-stale{color:#9A4A12;font-weight:600}
-@media (max-width:760px){.pop.prov{max-height:72vh;overflow:auto}.prov-dl{grid-template-columns:84px minmax(0,1fr)}.prov-i{width:18px;height:18px;font-size:11.5px}}
+@media (max-width:760px){.pop.prov{max-height:72vh;overflow:auto}.prov-dl{grid-template-columns:84px minmax(0,1fr)}.prov-i{width:18px;height:18px;font-size:11.5px;position:relative}.prov-i::after{content:"";position:absolute;inset:-13px}}
 </style>`);
 
 /* ---------- 5. Valorisation : jamais un PER ou un rendement calculé avec des comptes périmés ----------

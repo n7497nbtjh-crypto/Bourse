@@ -442,12 +442,13 @@ function synPageHTML(b, m) {
   }
   // 4. Vos valeurs : une ligne par valeur, le détail au clic
   const L = (b.lignes || []).slice().sort((x, y) => Math.abs(y.variation_semaine_pct ?? 0) - Math.abs(x.variation_semaine_pct ?? 0));
+  const vmax = Math.max(1, ...L.map(l => Math.abs(l.variation_semaine_pct || 0))); // 31/10 (Romain) : une barre par valeur, la variation se lit d'un coup d'œil
   const lignes = L.map(l => {
     const v = l.variation_semaine_pct, c = l.k.startsWith("c:") ? RBY[l.k.slice(2)] : null, A = (b.annonces || []).filter(a => a.k === l.k && a.origine !== "presse" && !ROUT.has(a.categorie));
     const ev = A[0] ? SYN_CAT[A[0].categorie] || A[0].type || "Annonce" : "", nx = (b.a_venir || []).find(e => e.k === l.k);
     const { pts } = synPoints(l, b), rep = pts.find(p => p.zone && !/^Publié cette semaine|^Un mouvement|^C'est /.test(p.txt));
     return `<details class="syn4-l"><summary><span class="syn4-ln">${synLogo(l.k, 26)}<span><b>${esc(l.nom)}</b><small>${l.type === "etf" ? "ETF" : c ? esc(secName(c)) : ""}${l.portefeuille ? ` · ${nf(0).format(l.portefeuille.poids_pct)} %` : ""}</small></span></span>
-        <span class="syn4-lv ${v == null ? "na" : synCls(v)}">${v == null ? "–" : synPct(v)}</span><span class="syn4-li">${l.indice && l.ecart_pts != null ? `${l.ecart_pts > 0 ? "+" : l.ecart_pts < 0 ? "−" : ""}${nf(1).format(Math.abs(l.ecart_pts))} pt vs ${esc(l.indice.nom)}` : ""}</span>
+        <span class="syn4-lv ${v == null ? "na" : synCls(v)}">${v == null ? "–" : synPct(v)}<i class="syn4-bar"><i style="width:${v == null ? 0 : (Math.abs(v) / vmax * 100).toFixed(0)}%"></i></i></span><span class="syn4-li">${l.indice && l.ecart_pts != null ? `${l.ecart_pts > 0 ? "+" : l.ecart_pts < 0 ? "−" : ""}${nf(1).format(Math.abs(l.ecart_pts))} pt vs ${esc(l.indice.nom)}` : ""}</span>
         <span class="syn4-le">${ev ? `<span class="syn4-pill">${esc(ev)}</span>` : ""}${nx ? `<small>${esc(jour(nx.date))} : ${esc(nx.label)}</small>` : ""}</span><span class="syn4-why">${esc(synPourquoi(l, A, b))}</span></summary>
       <div class="syn4-ld">${A.slice(0, 2).map(a => `<p><b>${esc(a.titre || a.type)}</b> <small>${esc(jour(a.date))}</small>${(a.lecture || []).filter(t => !generique(t)).length ? `<br>${esc((a.lecture || []).filter(t => !generique(t)).join(" "))}` : ""}${a.source ? ` <a class="lnk" href="${esc(a.source)}" target="_blank" rel="noopener">Lire</a>` : ""}</p>`).join("")}
         ${rep ? `<p class="${rep.zone}">${c ? "Sur ses comptes : " : ""}${esc(rep.txt).replace(/(^|[\s(:])-(\d)/g, "$1−$2")}</p>` : ""}
@@ -458,12 +459,12 @@ function synPageHTML(b, m) {
     <header class="syn4-head"><p class="syn4-date">Semaine ${esc(sem)}${b.du ? ` · ${esc(synDuAu(b))}` : ""}${b.genere ? ` · chiffres du ${esc(new Date(b.genere).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))}` : ""} · ${esc(statut).toLowerCase()}</p>
       ${tuiles.length ? `<div class="syn4-tuiles">${tuiles.join("")}</div>` : ""}
       ${ess.length ? `<ol class="synk syn4-ess">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}</header>
-    <section class="syn4-sec"><h2>L'actualité qui touche vos valeurs</h2>
+    <section class="syn4-sec"><h2>Vos valeurs cette semaine</h2>${synFavorisHTML(b)}<div class="syn4-ls">${lignes || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`}</div><p class="syn4-ias">Touchez une valeur pour le détail. Barre : l'ampleur du mouvement par rapport à la plus forte variation de votre liste.</p></section>
+    <section class="syn4-sec"><h2>Ce qu'elles ont publié</h2>
       ${annonces.length ? `<div class="syn4-anns">${annonces.join("")}</div>` : `<p class="muted">Aucune publication officielle de vos valeurs cette semaine.</p>`}
-      ${sujets.length ? `<h3>Le contexte</h3><div class="syn4-sjs">${sujets.join("")}</div>` : ""}
+      ${sujets.length ? `<details class="syn4-ctx"><summary><b>Le contexte qui les touche</b><span>${sujets.length} sujet${sujets.length > 1 ? "s" : ""} : ${esc(synSujets(b).map(x => x.sj.titre).slice(0, 3).join(" · "))}</span></summary><div class="syn4-sjs">${sujets.join("")}</div></details>` : ""}
 </section>
     ${pfHTML ? `<section class="syn4-sec"><h2>Votre portefeuille</h2>${pfHTML}</section>` : ""}
-    <section class="syn4-sec"><h2>Vos valeurs</h2>${synFavorisHTML(b)}<div class="syn4-ls">${lignes || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`}</div></section>
     <section class="syn4-sec"><h2>À venir sur deux semaines</h2><p class="syn4-ias" style="margin:0 0 10px">Votre portefeuille d'abord, vos favoris ensuite.</p>${synAgendaHTML(b)}</section>
     ${synIdeeHTML(b)}
     ${sect.length ? `<section class="syn4-sec"><h2>Les secteurs que vous suivez</h2><div class="syn4-tuiles">${sect.join("")}</div></section>` : ""}
@@ -624,4 +625,10 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .syn4-rep{display:grid;grid-template-columns:120px minmax(0,1fr);gap:18px 24px;align-items:center;padding:14px 16px;background:#fff;border:1px solid var(--rule);border-radius:8px;margin-bottom:12px}.syn4-repl ul{list-style:none;margin:6px 0 0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 18px}.syn4-repl li{display:flex;align-items:center;gap:8px;font-size:14px}.syn4-repl li i{width:12px;height:12px;border-radius:3px;flex:none}.syn4-repl li span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.syn4-repl li b{font-variant-numeric:tabular-nums}
 .syn4-fav{margin-bottom:12px}.syn4-why{grid-column:1 / -1;margin:-6px 0 0;padding-left:38px;font-size:13.5px;color:var(--grey)}.syn4-idee{display:grid;grid-template-columns:minmax(0,420px)}
 @media (max-width:600px){.syn4-rep{grid-template-columns:minmax(0,1fr);justify-items:center}.syn4-repl ul{grid-template-columns:minmax(0,1fr)}.syn4-why{padding-left:14px}}
+</style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.syn4-lv{position:relative;display:flex;flex-direction:column;align-items:flex-end;gap:3px}.syn4-bar{display:block;width:72px;height:5px;border-radius:3px;background:var(--rule);overflow:hidden}.syn4-bar>i{display:block;height:100%;background:currentColor;border-radius:3px}.syn4-lv.na .syn4-bar{display:none}
+.syn4-ctx{margin-top:14px;border:1px solid var(--rule);border-radius:8px;background:#fff}.syn4-ctx>summary{list-style:none;cursor:pointer;display:flex;flex-direction:column;gap:2px;padding:12px 16px}.syn4-ctx>summary::-webkit-details-marker{display:none}.syn4-ctx>summary b{font-size:15px}.syn4-ctx>summary span{font-size:13px;color:var(--grey)}.syn4-ctx>summary::after{content:"Ouvrir";font:600 12.5px var(--sans);color:var(--ink);text-decoration:underline;text-underline-offset:3px;margin-top:4px}.syn4-ctx[open]>summary::after{content:"Fermer"}.syn4-ctx .syn4-sjs{padding:0 16px 14px}
+@media (max-width:760px){.syn4-lv{align-items:flex-end}.syn4-bar{width:60px}}
 </style>`);

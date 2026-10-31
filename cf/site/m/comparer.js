@@ -212,10 +212,11 @@ details.cmpr-det > div{padding:0 14px 12px}
   .cmpr-all,.cmpr-all tbody,.cmpr-all tr,.cmpr-all th,.cmpr-all td{display:block}
   .cmpr-all tr{border-bottom:1px solid var(--line2);padding:4px 0 8px}
   .cmpr-all tr.grp{border:0;padding:0}
-  .cmpr-all tbody th{border:0;padding:8px 0 4px}
+  .cmpr-all tbody th{border:0;padding:10px 0 4px;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--grey);font-weight:600}.cmpr-all tbody th .prov-i{flex:none;align-self:center;width:18px!important;height:18px!important}
+  .cmpr-all tr:not(.grp){background:#fff;border:1px solid var(--line2);border-radius:10px;margin:0 0 8px;padding:2px 12px 6px}
   .cmpr-all tr.grp th{padding:8px 10px;border-radius:8px}
   .cmpr-all td{display:flex;justify-content:space-between;gap:12px;border:0;padding:4px 0}
-  .cmpr-all td::before{content:attr(data-co);font-weight:500;color:var(--ink);font-size:13px;flex:1;min-width:0}
+  .cmpr-all td::before{content:attr(data-co);font-weight:600;color:var(--ink);font-size:14px;flex:1;min-width:0}
   .cmpr-all td > div{text-align:right;max-width:62%}
   .cmpr-all .hl{background:none}
   .cmpr-pos li{grid-template-columns:1fr;gap:8px}

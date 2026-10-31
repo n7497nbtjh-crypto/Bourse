@@ -373,7 +373,7 @@ function recoSlHTML() {
   const ex = RECO_EX.slice().sort((x, y) => Math.abs((x.parts.etf || 0) - a) - Math.abs((y.parts.etf || 0) - a))[0], proche = Math.abs((ex.parts.etf || 0) - a) <= 12;
   return `<div class="rc-sl">
     <div class="rc-slc"><label for="rc-sla"><b>Part en actions</b><output id="rc-slao">${a} %</output></label><input type="range" id="rc-sla" min="0" max="100" step="5" value="${a}" aria-label="Part en actions">
-      <label for="rc-slo"><b>Part en obligations</b><output id="rc-sloo">${o} %</output></label><input type="range" id="rc-slo" min="0" max="${100 - a}" step="5" value="${o}" aria-label="Part en obligations"><p class="rc-mut">Le reste, <b id="rc-slg">${g} %</b>, sans risque de perte en capital (livret, fonds en euros, ETF monétaire).</p>
+      <label for="rc-slo"><b>Part en obligations</b><output id="rc-sloo">${o} %</output></label><input type="range" id="rc-slo" min="0" max="100" step="5" value="${o}" aria-label="Part en obligations"><p class="rc-mut">Le reste, <b id="rc-slg">${g} %</b>, sans risque de perte en capital (livret, fonds en euros, ETF monétaire).</p>
       <div class="rc-slx">${RECO_EX.map(x => `<button type="button" class="rc-chip${x.id === ex.id && proche ? " on" : ""}" data-rc-ex="${x.id}">${esc(x.nom)}</button>`).join("")}</div></div>
     <div class="rc-slv" id="rc-slv">${recoSlDroite()}</div></div>`;
 }
@@ -382,12 +382,12 @@ function recoSlLier(root) {
   const a = $("#rc-sla", root), o = $("#rc-slo", root);
   const vite = () => { // pendant le glissement : seuls les chiffres et la colonne de droite changent, le curseur reste sous le doigt
     const p = recoSlParts(); $("#rc-slao", root).textContent = p.etf + " %"; $("#rc-sloo", root).textContent = p.oblig + " %"; $("#rc-slg", root).textContent = p.garanti + " %";
-    o.max = 100 - p.etf; if (+o.value !== p.oblig) o.value = p.oblig; $("#rc-slv", root).innerHTML = recoSlDroite();
+    if (+o.value !== p.oblig) o.value = p.oblig; $("#rc-slv", root).innerHTML = recoSlDroite();
     const ex = RECO_EX.slice().sort((x, y) => Math.abs((x.parts.etf || 0) - p.etf) - Math.abs((y.parts.etf || 0) - p.etf))[0], proche = Math.abs((ex.parts.etf || 0) - p.etf) <= 12;
     $$("[data-rc-ex]", root).forEach(b => b.classList.toggle("on", proche && b.dataset.rcEx === ex.id));
   };
   if (a) a.oninput = () => { RECO_SL.etf = +a.value; RECO_SL.oblig = Math.min(RECO_SL.oblig, 100 - RECO_SL.etf); vite(); };
-  if (o) o.oninput = () => { RECO_SL.oblig = +o.value; vite(); };
+  if (o) o.oninput = () => { RECO_SL.oblig = Math.min(+o.value, 100 - RECO_SL.etf); vite(); }; // le curseur des obligations ne bouge jamais seul ; il est seulement borné par ce qui reste
   $$("[data-rc-ex]", root).forEach(b => b.onclick = () => { const x = RECO_EX.find(e => e.id === b.dataset.rcEx); RECO_SL.etf = x.parts.etf || 0; RECO_SL.oblig = x.parts.oblig || 0; tout(); });
 }
 function recoExHTML() {

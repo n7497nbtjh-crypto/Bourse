@@ -377,7 +377,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>.mk-portes{display:grid;gr
   };
   document.head.insertAdjacentHTML("beforeend", `<style>
 .cmpr-vide .cmpr-sel{display:block}.cmpr-vide .cmpr-add{padding:18px 22px;border-style:solid;border-color:var(--ink);background:#fff}.cmpr-vide .cmpr-add label{font-size:15px;color:var(--ink)}.cmpr-vide .cmpr-q input{font-size:18px;padding:12px 14px}
-#cmpr-body .rf-ctab-t td.num{background:#fff!important;color:var(--ink)!important}#cmpr-body .rf-ctab-t td.rf-hi{background:#E3F2E8!important;color:var(--g)!important;font-weight:700}#cmpr-body .rf-ctab-t td.rf-lo{background:#FBE9E4!important;color:var(--o)!important}
+#cmpr-body .rf-ctab-t td.num{background:#fff!important;color:var(--ink)!important}#cmpr-body .rf-ctab-t td.num.rf-medc,#cmpr-body .rf-ctab-t th.rf-medh{background:var(--hl)!important}#cmpr-body .rf-ctab-t td.rf-hi{background:#E3F2E8!important;color:var(--g)!important;font-weight:700}#cmpr-body .rf-ctab-t td.rf-lo{background:#FBE9E4!important;color:var(--o)!important}
 #cmpr-body .rf-ctab-t td.rf-hi::after{content:" ▲";font-size:10px}#cmpr-body .rf-ctab-t td.rf-lo::after{content:" ▼";font-size:10px}
 .cmpr-ligne .cmpr-lead{background:var(--lime);padding:2px 8px;border-radius:4px}
 .cmpr-csvp{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:10px 18px 14px}
@@ -429,7 +429,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>.ax-chip,.acc-cat{color:va
         if (worst && worst !== best && cells[idx(worst.F)] && worst.r.key !== l.S.sorted[0].r.key) cells[idx(worst.F)].classList.add("rf-lo"); });
       // en tête : le nom de l'entreprise qui mène le plus de critères est souligné
       const lead = Object.entries(gagne).sort((a, b) => b[1] - a[1])[0]; if (lead && lead[1] > 0) $$(".cmpr-ligne span", el).forEach(sp => { if (sp.textContent.startsWith(RBY[lead[0]].name)) sp.classList.add("cmpr-lead"); });
-      const box = t.closest(".cmpr-tbl"); box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">vert ▲ : en tête sur ce critère · rouge ▼ : en retrait · médiane : les entreprises du secteur de ${esc(cos[0].name)} suivies par le site</span></p>`);
+      const box = t.closest(".cmpr-tbl"); box.insertAdjacentHTML("beforeend", `<p class="cmpr-csvp"><button type="button" class="btn ghost" data-cmpr-csv>Exporter en CSV</button><span class="light" style="font-size:12.5px">vert ▲ : en tête sur ce critère · rouge ▼ : en retrait · colonne « Secteur » : la valeur du milieu (médiane) des entreprises du secteur de ${esc(cos[0].name)} suivies par le site, c'est-à-dire ce qui est « normal » dans ce secteur</span></p>`);
       $("[data-cmpr-csv]", box).onclick = () => { const rows = [...t.querySelectorAll("tr")].map(tr => [...tr.querySelectorAll("th,td")].map(c => `"${c.innerText.replace(/\s+/g, " ").trim().replace(/"/g, '""')}"`).join(";")); const blob = new Blob(["﻿" + rows.join("\n")], { type: "text/csv;charset=utf-8" }), a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `comparaison-${ids.join("-")}.csv`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }; }
   };
   document.head.insertAdjacentHTML("beforeend", `<style>
@@ -498,7 +498,7 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
   const passe = () => { t = null; const main = document.querySelector("main"); if (!main) return;
     main.querySelectorAll("*").forEach(e => { if (!e.childNodes.length || e.closest("svg,script,style,.sr")) return; const txt = [...e.childNodes].filter(x => x.nodeType === 3).map(x => x.textContent).join("").trim(); if (!txt) return;
       const fs = parseFloat(getComputedStyle(e).fontSize), min = /\d/.test(txt) ? 13 : 12; if (fs < min) e.style.fontSize = min + "px"; });
-    main.querySelectorAll("a[href],button").forEach(e => { if (e.closest(".tbx-sc table,.rf-ctab,.pcmp") || getComputedStyle(e).display === "inline") return; const h = e.getBoundingClientRect().height; if (h > 0 && h < 44) { e.style.minHeight = "44px"; if (getComputedStyle(e).display === "inline-block") { e.style.display = "inline-flex"; e.style.alignItems = "center"; } } });
+    main.querySelectorAll("a[href],button").forEach(e => { if (e.closest(".tbx-sc table,.rf-ctab,.pcmp") || e.classList.contains("prov-i") || getComputedStyle(e).display === "inline") return; /* .prov-i : zone tactile de 44 px par pseudo-élément, le rond reste petit */ const h = e.getBoundingClientRect().height; if (h > 0 && h < 44) { e.style.minHeight = "44px"; if (getComputedStyle(e).display === "inline-block") { e.style.display = "inline-flex"; e.style.alignItems = "center"; } } });
   };
   const plan = () => { if (t) return; t = setTimeout(passe, 400); };
   new MutationObserver(plan).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });

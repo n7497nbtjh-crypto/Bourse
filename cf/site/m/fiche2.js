@@ -634,7 +634,7 @@ function ficheRetenirHTML(s, c, part) {
   const risB = pts && pts.d.length ? `À surveiller : ${pts.d.map(risNom).filter(Boolean).join(" · ")}.` : pts && pts.v.length ? "Aucun point de vigilance ressorti des comptes lus." : "Le site n'a pas assez d'éléments pour relever des risques.";
   const risX = part ? "" : `${up.length ? `<p class="rf6-ev">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}<div id="rf-trim" hidden></div>`;
   const MODS = {
-    pres: rf6Mod("01", "Ce qu'elle fait", null, presA, "", "", ["#rf-metier", "Son métier en détail"]),
+    pres: rf6Mod("01", "Son métier et ses concurrents", null, presA, "", "", ["#rf-metier", "Son métier en détail"]),
     cro: rf6Mod("02", "Croissance", gLv, croB, croF, rf6Jauge(s, "g1", false, m.g1), [base + "/comptes#rf-croissance", "Les chiffres"]),
     ren: rf6Mod("03", "Rentabilité", rLv, renB, renF, rf6Jauge(s, bank ? "roe" : m.marge != null ? "marge" : "nm", false, bank ? m.roe : m.marge != null ? m.marge : m.nm), [base + "/comptes#rf-rentabilite", "Les chiffres"]),
     sol: rf6Mod("04", "Solidité financière", dLv, solB, solF, bank ? "" : m.lev != null || (f.netDebt != null && f.netDebt < 0) ? rf6Jauge(s, "lev", true, f.netDebt != null && f.netDebt < 0 ? -1 : m.lev) : rf6Jauge(s, "gear", true, m.gear), [base + "/comptes#rf-bilan", "Les chiffres"]),
@@ -854,7 +854,7 @@ function rfQuartiles(s, k) { // quart inférieur et quart supérieur du secteur,
    Réutilisé par la page Comparer. s = l'entreprise de référence (secteur des médianes), X = cmprCtx(...) */
 function rfCmpTableHTML(s, X) {
   const T6 = RF_CMP_ORD.map(k => CMPR_T.find(T => T.k === k)).filter(Boolean), me0 = X.F[0];
-  const head = `<tr><th scope="col" class="l lab">Critère</th>${X.F.map((F, j) => `<th scope="col" class="rf-coh${j === 0 ? " rf-me" : ""}"><a class="rf-co" href="/entreprise/${F.c.id}">${logo(F.c, 24)}<span class="nm">${esc(F.c.name)}</span></a></th>`).join("")}<th scope="col" class="rf-medh"><span class="nm">Médiane</span><small>${esc(secName(s))}</small></th><th scope="col" class="rf-medh rf-qh"><span class="nm">La moitié du secteur</span><small>du quart inférieur au supérieur</small></th></tr>`;
+  const head = `<tr><th scope="col" class="l lab">Critère</th>${X.F.map((F, j) => `<th scope="col" class="rf-coh${j === 0 ? " rf-me" : ""}"><a class="rf-co" href="/entreprise/${F.c.id}">${logo(F.c, 24)}<span class="nm">${esc(F.c.name)}</span></a></th>`).join("")}<th scope="col" class="rf-medh" title="La médiane : la moitié des entreprises du secteur font mieux, l'autre moitié moins bien. C'est le repère « normal » du secteur."><span class="nm">Secteur ${esc(secName(s).toLowerCase())}</span><small>valeur du milieu (médiane)</small></th><th scope="col" class="rf-medh rf-qh"><span class="nm">La moitié du secteur</span><small>du quart inférieur au supérieur</small></th></tr>`;
   const rows = T6.map(T => { const r0 = T.val(me0, X), q = rfQuartiles(s, T.k);
     return `<tr data-k="${T.k}"><th scope="row" class="l lab"><span class="rf-cth">${esc(RF_CMP_COURT[T.k])}</span><small>${esc(RF_CMP_SOUS[T.k](X))}</small></th>${X.F.map((F, j) => rfCmpCell(T, F, X).replace('<td class="num', `<td class="num${j === 0 ? " rf-me" : ""}`)).join("")}<td class="num rf-medc">${r0 && r0.medTxt ? esc(r0.medTxt) : `<span class="rf-na">–</span>`}</td><td class="num rf-medc rf-q">${q ? `${esc(q[0])} à ${esc(q[1])}` : `<span class="rf-na">–</span>`}</td></tr>`; }).join("");
   return `<table class="t tbx rf-ctab rf-ctab-t"><caption class="sr">${esc(s.name)} et les entreprises comparées, critère par critère</caption><thead>${head}</thead><tbody>${rows}</tbody></table>`;
@@ -987,14 +987,14 @@ function rfPli2(id, titre, sous, corps, open, cle) { // 31/10 (Romain) : un chif
 function rfFaitHTML(s, c) { // « Ce qu'elle fait » : une phrase, puis ses concurrents cliquables
   let peers = []; try { peers = cmprFiche(s).peers.slice(0, 5); } catch (e) { }
   const arg = s.fiche && s.fiche.argent ? String(s.fiche.argent).trim() : ""; // comment elle gagne de l'argent (texte de fiche), la description courte est déjà dans l'en-tête
-  return `<section class="panel rf-l1" id="rf-fait"><div class="ph"><h2>Ce qu'elle fait</h2>${regName(s) ? `<span class="light" style="font-size:12.5px">${esc(regName(s))} · ${esc(secName(s))}</span>` : ""}</div><div class="pb">
+  return `<section class="panel rf-l1" id="rf-fait"><div class="ph"><h2>Son métier et ses concurrents</h2>${regName(s) ? `<span class="light" style="font-size:12.5px">${esc(regName(s))} · ${esc(secName(s))}</span>` : ""}</div><div class="pb">
     ${peers.length ? `<p class="rf-peers"><span>Concurrents</span>${peers.map(p => `<a class="chip" href="/entreprise/${p.id}">${logo(p, 24)}${esc(p.name)}</a>`).join("")}</p>` : ""}
     ${arg ? `<p class="rf-l1p">${esc(arg)}</p>` : ""}</div>
     ${rfPli2("rf-metier", "Activités, pays, dirigeants", "Son métier en détail, sa taille dans le secteur", ficheMetierHTML(s, c), false)}</section>`;
 }
 function rfChangeHTML(s, c) { // « Ce qui a changé » : la dernière publication (trimestre si disponible), la prochaine date
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 2);
-  return `<section class="panel rf-l1" id="rf-change"><div class="ph"><h2>Ce qui a changé</h2></div>
+  return `<section class="panel rf-l1" id="rf-change"><div class="ph"><h2>Ses derniers chiffres et ses prochaines dates</h2></div>
     <div id="rf-trim"><p class="rf-no" style="padding:14px 22px">Aucune publication chiffrée relevée par le site depuis la clôture de l'exercice ${esc(String(s.year || ""))}.</p></div>
     ${up.length ? `<p class="rf6-ev" style="padding:0 22px 14px;margin:0">À venir : ${up.map(e => `<b>${esc(RF_MOIS(e.date))}</b> ${esc(e.label)}`).join(" · ")}</p>` : ""}
     ${rfPli2("rf-agenda", "Toutes ses annonces et ses dates", "Annonces officielles, presse, agenda", `<div class="rf-chev">${rfAVenir(s)}</div><div id="factu"></div>`, false)}</section>`;
