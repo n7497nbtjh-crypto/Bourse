@@ -412,9 +412,25 @@ function synPageHTML(b, m) {
   const anglais = t => /\b(the|and|of|billion|million|quarter|year|growth|guidance)\b/i.test(String(t || ""));
   const generique = t => /^(Une information publiée par l'entreprise|La publication des ventes de la période|Document déposé)/.test(String(t || ""));
   // 1. En un coup d'œil : trois ou quatre grands chiffres
-  const tuiles = [];
+  // 5e passage (B2) : quatre chiffres, pas plus : mon portefeuille, mes favoris, l'indice, mon secteur principal ; le reste derrière « Le détail »
+  const tuiles = [], favs = (b.lignes || []).filter(l => l.favori && !l.en_portefeuille && l.variation_semaine_pct != null), favMoy = favs.length ? favs.reduce((a, l) => a + l.variation_semaine_pct, 0) / favs.length : null;
   if (pf && pf.var_pct != null) tuiles.push(`<div class="syn4-t syn4-tp"><small>Mon portefeuille</small><b class="${synCls(pf.var_pct)}">${synPct(pf.var_pct)}</b>${pf.var_eur != null ? `<span>${synEur(pf.var_eur)} cette semaine</span>` : ""}</div>`);
-  (b.indices || []).slice(0, 3).forEach(i => tuiles.push(`<div class="syn4-t"><small>${esc(i.nom)}</small><b class="${synCls(i.pct)}">${synPct(i.pct)}</b></div>`));
+  if (favMoy != null) tuiles.push(`<div class="syn4-t"><small>Mes favoris</small><b class="${synCls(favMoy)}">${synPct(favMoy)}</b><span>${favs.length} valeur${favs.length > 1 ? "s" : ""}, en moyenne</span></div>`);
+  const idx0 = (b.indices || [])[0]; if (idx0) tuiles.push(`<div class="syn4-t"><small>${esc(idx0.nom)}</small><b class="${synCls(idx0.pct)}">${synPct(idx0.pct)}</b><span>l'indice, pour comparer</span></div>`);
+  const secPrincipal = (() => { const lourde = pf && pf.plus_lourde && synObj(pf.plus_lourde.k); const sk = lourde && lourde.sector; return (b.secteurs || []).find(x => x.id === sk) || (b.secteurs || [])[0]; })();
+  if (secPrincipal && secPrincipal.mediane_pct != null) tuiles.push(`<div class="syn4-t"><small>${esc(secPrincipal.nom)}</small><b class="${synCls(secPrincipal.mediane_pct)}">${synPct(secPrincipal.mediane_pct)}</b><span>médiane du secteur</span></div>`);
+  for (const i of (b.indices || []).slice(1)) { if (tuiles.length >= 4) break; if (tuiles.some(t => t.includes(`<small>${esc(i.nom)}</small>`))) continue; tuiles.push(`<div class="syn4-t"><small>${esc(i.nom)}</small><b class="${synCls(i.pct)}">${synPct(i.pct)}</b></div>`); } // complète à 4 avec les autres indices
+  // « Ce que ça change pour vous » : le poids de la valeur dans le portefeuille, en mots ; jamais « achetez » ni « vendez »
+  const poidsDe = k => { const l = (b.lignes || []).find(x => x.k === k); return l && l.portefeuille && l.portefeuille.poids_pct != null ? l.portefeuille.poids_pct : null; };
+  const part = p => p >= 60 ? "près des deux tiers" : p >= 45 ? "environ la moitié" : p >= 30 ? "environ un tiers" : p >= 20 ? "environ un cinquième" : p >= 10 ? "environ un dixième" : `une petite part (${nf(0).format(p)} %)`;
+  const pourVous = a => { const p = poidsDe(a.k), nom = a.nom || (synObj(a.k) || {}).name || ""; const quoi = a.categorie === "resultats" ? "ses résultats comptent" : /dividende/.test(a.categorie || "") ? "ce dividende compte" : /chiffre|vente/i.test(a.categorie + " " + (a.titre || "")) ? "ces ventes comptent" : "ce communiqué compte";
+    if (p != null && pf) return `${quoi.replace(/^ses |^ce |^ces /, m => m[0].toUpperCase() + m.slice(1)).replace("comptent", "pèsent").replace("compte", "pèse")} ${part(p)} de votre semaine (${nf(0).format(p)} % de votre portefeuille).`;
+    return `Dans vos favoris, pas dans votre portefeuille : aucun effet sur votre argent.`; };
+  const ROUT0 = new Set(["rachat", "capital", "initie", "agenda", "autre"]), vus0 = new Set();
+  const evs = (b.annonces || []).filter(a => a.origine !== "presse" && !ROUT0.has(a.categorie)).sort((x, y) => (poidsDe(y.k) || 0) - (poidsDe(x.k) || 0) || y.poids - x.poids).filter(a => !vus0.has(a.k) && vus0.add(a.k)).slice(0, 3); // une entreprise au plus une fois, la plus lourde dans le portefeuille d'abord
+  const evHTML = evs.map(a => `<li class="syn4-ev"><a href="${a.lien || synLien(a.k)}">${synLogo(a.k, 26)}<span><b>${esc(a.nom || (synObj(a.k) || {}).name || "")}</b> <span class="syn4-pill">${esc(SYN_CAT[a.categorie] || a.type || "Annonce")}</span><small>${esc(jour(a.date))}</small></span></a><p>${esc(pourVous(a))}</p></li>`).join("");
+  const next = (b.a_venir || [])[0], nextHTML = next ? `<p class="syn4-next"><b>${esc(jour(next.date))}</b> : ${esc(next.nom)}, ${esc((next.label || next.type || "").toLowerCase())}${poidsDe(next.k) != null ? ` (${nf(0).format(poidsDe(next.k))} % de votre portefeuille)` : ""}.</p>` : "";
+  const cp = b.compare, cmpHTML = cp ? `<p class="syn4-cmp">Depuis lundi dernier : ${cp.publications ? `${cp.publications} publication${cp.publications > 1 ? "s" : ""}` : "aucune publication"}, ${cp.dividendes ? `${cp.dividendes} dividende${cp.dividendes > 1 ? "s" : ""} annoncé${cp.dividendes > 1 ? "s" : ""}` : "aucun dividende annoncé"}, ${cp.alertes_nouvelles ? `${cp.alertes_nouvelles} alerte${cp.alertes_nouvelles > 1 ? "s" : ""} nouvelle${cp.alertes_nouvelles > 1 ? "s" : ""}` : "aucune alerte nouvelle"}${cp.precedente && cp.precedente.portefeuille_pct != null && pf && pf.var_pct != null ? `. Semaine d'avant : ${synPct(cp.precedente.portefeuille_pct)} (portefeuille)` : cp.precedente && cp.precedente.moyenne != null ? `. Semaine d'avant : ${synPct(cp.precedente.moyenne)} (vos valeurs, en moyenne)` : ""}.</p>` : "";
   // 2. L'actualité qui touche vos valeurs : annonces lues + sujets du contexte
   const ROUT = new Set(["rachat", "capital", "initie", "agenda", "autre"]), seen = new Set();
   const annonces = (b.annonces || []).filter(a => a.origine !== "presse" && !ROUT.has(a.categorie) && !seen.has(a.k + a.titre) && seen.add(a.k + a.titre)).sort((x, y) => y.poids - x.poids).map(a => {
@@ -456,9 +472,12 @@ function synPageHTML(b, m) {
   }).join("");
   const sect = (b.secteurs || []).filter(x => x.n).map(x => `<div class="syn4-t"><small>${esc(x.nom)}</small><b class="${synCls(x.mediane_pct)}">${synPct(x.mediane_pct)}</b><span>médiane de ${x.n} entreprises</span></div>`);
   return `<div class="syn4">
-    <header class="syn4-head"><p class="syn4-date">Semaine ${esc(sem)}${b.du ? ` · ${esc(synDuAu(b))}` : ""}${b.genere ? ` · chiffres du ${esc(new Date(b.genere).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))}` : ""} · ${esc(statut).toLowerCase()}</p>
-      ${tuiles.length ? `<div class="syn4-tuiles">${tuiles.join("")}</div>` : ""}
-      ${ess.length ? `<ol class="synk syn4-ess">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}</header>
+    <header class="syn4-head"><p class="syn4-date" title="${esc(statut)}${b.du ? ` · ${esc(synDuAu(b))}` : ""}">Semaine ${esc(sem)}${b.du && b.au ? ` · ${esc(SYN_MOIS[new Date(b.du + "T12:00:00Z").getUTCMonth()] === SYN_MOIS[new Date(b.au + "T12:00:00Z").getUTCMonth()] ? synDuAu(b) : `${new Date(b.du + "T12:00:00Z").getUTCDate()} ${SYN_MOIS[new Date(b.du + "T12:00:00Z").getUTCMonth()]} → ${new Date(b.au + "T12:00:00Z").getUTCDate() === 1 ? "1er" : new Date(b.au + "T12:00:00Z").getUTCDate()} ${SYN_MOIS[new Date(b.au + "T12:00:00Z").getUTCMonth()]}`)}` : ""}${b.genere ? ` · chiffres du ${esc(new Date(b.genere).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }))}` : ""}</p>
+      ${tuiles.length ? `<div class="syn4-tuiles syn4-4">${tuiles.slice(0, 4).join("")}</div>` : ""}
+      ${evHTML ? `<ol class="syn4-evs">${evHTML}</ol>` : ess.length ? `<ol class="synk syn4-ess">${ess.slice(0, 3).map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
+      ${nextHTML}${cmpHTML}</header>
+    <details class="syn4-detail" id="syn-detail"><summary><b>Le détail</b><span>vos valeurs une par une, ce qu'elles ont publié, votre portefeuille, l'agenda</span></summary>
+    ${ess.length && evHTML ? `<ol class="synk syn4-ess">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
     <section class="syn4-sec"><h2>Vos valeurs cette semaine</h2>${synFavorisHTML(b)}<div class="syn4-ls">${lignes || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`}</div><p class="syn4-ias">Touchez une valeur pour le détail. Barre : l'ampleur du mouvement par rapport à la plus forte variation de votre liste.</p></section>
     <section class="syn4-sec"><h2>Ce qu'elles ont publié</h2>
       ${annonces.length ? `<div class="syn4-anns">${annonces.join("")}</div>` : `<p class="muted">Aucune publication officielle de vos valeurs cette semaine.</p>`}
@@ -469,6 +488,7 @@ function synPageHTML(b, m) {
     ${synIdeeHTML(b)}
     ${sect.length ? `<section class="syn4-sec"><h2>Les secteurs que vous suivez</h2><div class="syn4-tuiles">${sect.join("")}</div></section>` : ""}
     <p class="synfoot">Variations entre la clôture précédant la semaine et le dernier cours connu (différé), dans la devise de cotation. Annonces : documents officiels (AMF, SEC) lus par le site. Information, pas conseil.</p>
+    </details>
   </div>`;
 }
 const accPhraseCourte = t => { const m = String(t || "").match(/^.*?[.!?](\s|$)/); return (m ? m[0] : String(t || "")).trim(); };
@@ -529,7 +549,8 @@ async function pageEspace(onglet) {
   if (!m.connecte) return espaceConnexion();
   onglet = onglet || "bilan";
   const tabs = [["bilan", "Rapport de la semaine"], ["alertes", `Alertes${m.nonlus ? ` <span class="espn2">${m.nonlus}</span>` : ""}`], ["favoris", "Mes favoris"], ["portefeuille", "Mon portefeuille"], ["reglages", "Réglages"]];
-  app.innerHTML = `<div class="esphead"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ""}</p><h1 class="pagetitle" style="margin:2px 0 0">${onglet === "alertes" ? "Ce que vos valeurs ont annoncé" : onglet === "reglages" ? "Votre compte et vos réglages" : "Votre semaine en Bourse"}</h1><p class="muted" style="margin:2px 0 0">${esc(m.email)}</p></div>${m.premium ? "" : `<a class="btn ghost" href="/premium">Passer à Premium</a>`}</div>
+  // 5e passage (B2) : en-tête compact (l'adresse est dans Réglages ; Premium en lien discret) pour que le rapport tienne dans le premier écran
+  app.innerHTML = `<div class="esphead esphead2"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ` · <a class="lnk" href="/premium">passer à Premium</a>`}</p><h1 class="pagetitle" style="margin:2px 0 0">${onglet === "alertes" ? "Ce que vos valeurs ont annoncé" : onglet === "reglages" ? "Votre compte et vos réglages" : "Votre semaine"}</h1>${onglet === "reglages" ? `<p class="muted" style="margin:2px 0 0">${esc(m.email)}</p>` : ""}</div></div>
     <nav class="esptabs scroll-x">${tabs.map(([k, l]) => `<a href="${k === "favoris" ? "/favoris" : k === "portefeuille" ? "/portefeuille" : "/espace/" + k}" class="${k === onglet ? "on" : ""}">${l}</a>`).join("")}</nav><div id="espb"></div>`;
   const el = $("#espb");
   if (onglet === "bilan") return espaceBilan(el, m);
@@ -555,8 +576,8 @@ async function pageRapportExemple() {
   await Promise.all([typeof PXP !== "undefined" ? PXP : null, typeof acaLoad === "function" ? acaLoad() : null, synContexte(), typeof loadFiches === "function" ? loadFiches() : null]);
   b = synNormalise(b);
   app.innerHTML = `<div class="crumbs"><a href="/espace">Mon espace</a> › Rapport exemple</div>
-    <h1 class="pagetitle">Le rapport de la semaine, en vrai</h1>
-    <p class="pagesub">Ce que reçoit un membre, calculé aujourd'hui avec les chiffres du site, pour un profil d'exemple (quatre favoris, un petit portefeuille PEA, deux secteurs). Le vôtre suit vos propres titres.</p>
+    <h1 class="pagetitle">Votre semaine</h1>
+    <p class="pagesub">Un vrai rapport, calculé aujourd'hui pour un profil d'exemple. Le vôtre suit vos titres.</p>
     <div id="synex">${synPageHTML(b, { premium: false })}</div>
     <section class="synx"><h2>Ce que vous réglez dans le vôtre</h2><ul class="synx-l">${SYN_EX_REG.map(([t, d]) => `<li><b>${esc(t)}</b> : ${esc(d)}</li>`).join("")}</ul></section>
     <section class="panel"><div class="pb" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between"><span>Gratuit, sans carte bancaire : il suffit d'une adresse e-mail.</span><a class="btn" href="/espace">Créer mon rapport</a></div></section>`;
@@ -593,8 +614,12 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .syn3-v{font-family:var(--mono);font-size:22px;font-weight:500;text-align:right;display:flex;flex-direction:column;align-items:flex-end;line-height:1.1}.syn3-v small{font-family:var(--sans);font-size:12px;font-weight:500;color:var(--grey);margin-top:3px}.syn3-v.na{color:var(--light)}
 .syn3-b{margin:10px 0 0 40px;display:grid;gap:8px}.syn3-b p{margin:0;font-size:14.5px;line-height:1.55}.syn3-fait small{color:var(--grey);font-size:12.5px;font-weight:400}.syn3-cours{color:var(--ink)}.syn3-rep{color:var(--grey)}.syn3-rep.vert{color:var(--g)}.syn3-rep.rouge{color:var(--down)}.syn3-nx{color:var(--grey)}
 .synx{margin:28px 0 18px}.synx h2{font-size:17px;font-weight:700;margin:0 0 8px}.synx-l{margin:0;padding-left:18px;font-size:14px;line-height:1.6;color:var(--grey)}.synx-l b{color:var(--ink);font-weight:600}
-.syn4{max-width:900px}.syn4-head{padding:0 0 18px;border-bottom:1px solid var(--ink)}.syn4-date{font-size:13px;color:var(--grey);margin:0 0 14px}
+.syn4{max-width:900px}.syn4-head{padding:0 0 18px;border-bottom:1px solid var(--ink)}.syn4-date{font-size:13px;color:var(--grey);margin:0 0 14px}.syn4-head .syn4-date{margin-bottom:8px}
 .syn4-tuiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:0;border:1px solid var(--rule);border-radius:12px;overflow:hidden;background:#fff}
+.syn4-4{grid-template-columns:repeat(4,minmax(0,1fr))}@media (max-width:700px){.syn4-4{grid-template-columns:repeat(2,minmax(0,1fr))}.syn4-4 .syn4-t{padding:7px 10px;gap:0}.syn4-4 .syn4-t b{font-size:21px}.syn4-4 .syn4-t:nth-child(n+3) span{display:none}.esphead2{margin-bottom:2px}.esphead2 .pagetitle{font-size:24px}.esptabs{margin-bottom:10px}.syn4-head{padding-bottom:12px}.syn4-4 .syn4-t:nth-child(2){border-right:0}.syn4-4 .syn4-t:nth-child(n+3){border-top:1px solid var(--rule)}}
+.syn4-evs{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:6px}.syn4-ev{border:1px solid var(--rule);border-radius:12px;background:#fff;padding:6px 10px}.syn4-ev a{display:flex;align-items:center;gap:8px;color:inherit;text-decoration:none}.syn4-ev a>span{display:flex;align-items:center;gap:6px;flex-wrap:wrap;min-width:0}.syn4-ev small{color:var(--light);font-size:12px}.syn4-ev p{margin:2px 0 0;font-size:13px;color:var(--grey);line-height:1.35}
+.syn4-next{margin:8px 0 0;font-size:14px}.syn4-next b{font-family:var(--serif)}.syn4-cmp{margin:4px 0 0;font-size:12.5px;color:var(--grey);line-height:1.4}
+.syn4-detail{margin-top:10px}.syn4-detail>summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:12px 14px;border:1px solid var(--rule);border-radius:12px;background:#fff}.syn4-detail>summary::-webkit-details-marker{display:none}.syn4-detail>summary b{font-family:var(--serif);font-size:16px}.syn4-detail>summary span{font-size:12.5px;color:var(--grey)}.syn4-detail>summary::after{content:"Ouvrir";margin-left:auto;font-size:12.5px;font-weight:600;text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}.syn4-detail[open]>summary::after{content:"Fermer"}.syn4-detail[open]>summary{margin-bottom:14px}
 .syn4-t{padding:14px 16px;border-right:1px solid var(--rule);display:flex;flex-direction:column;gap:4px}.syn4-t:last-child{border-right:0}.syn4-t small{font-size:12.5px;color:var(--grey)}.syn4-t b{font-family:var(--mono);font-weight:500;font-size:30px;line-height:1}.syn4-t span{font-size:12px;color:var(--light)}.syn4-tp{background:var(--soft)}
 .syn4-ess{margin:16px 0 0}
 .syn4-sec{padding:20px 0 8px;border-bottom:1px solid var(--rule)}.syn4-sec > h2{font-family:var(--serif);font-weight:800;font-size:24px;letter-spacing:-.01em;margin:0 0 12px}.syn4-sec h3{font-size:15px;font-weight:700;margin:18px 0 8px}

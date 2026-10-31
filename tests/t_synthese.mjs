@@ -57,6 +57,7 @@ const prec = { portefeuille: { alertes: [{ code: "ligne", niveau: "vig", valeur:
 const f = faitsSynthese(d, { favoris: ["c:b", "c:a", "c:inconnue"], pf }, "2026-W44", { auj: "2026-10-29", precedent: prec });
 const L = Object.fromEntries(f.lignes.map(l => [l.k, l]));
 ok(f.lignes.length === 4 && !L["c:inconnue"], "lignes suivies, inconnue écartée");
+ok(f.compare && typeof f.compare.publications === "number" && typeof f.compare.alertes_nouvelles === "number" && f.compare.precedente && f.compare.precedente.moyenne === null, "comparaison avec la semaine d'avant (5e passage) " + JSON.stringify(f.compare));
 ok(L["c:a"].variation_semaine_pct === 5 && L["c:a"].indice.id === "cac40" && L["c:a"].indice.pct === 2.5 && L["c:a"].ecart_pts === 2.5 && L["c:a"].favori && L["c:a"].en_portefeuille, "Alpha : +5 %, CAC 40 +2,5 %, écart +2,5 points " + JSON.stringify(L["c:a"]));
 ok(L["c:g"].variation_semaine_pct === 11.11 && L["c:g"].indice.id === "sp500" && L["e:w"].indice === null && L["c:b"].partiel, "Gamma contre le S&P 500, ETF Monde sans indice, Bêta partielle");
 ok(f.meilleure.k === "c:g" && f.pire.k === "e:w" && f.hausses === 3 && f.baisses === 0 && !f.partiel, "meilleure, pire, partiel " + JSON.stringify([f.meilleure, f.pire, f.hausses, f.baisses]));

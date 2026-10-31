@@ -121,6 +121,10 @@ ok(sent.length === 1 && sent[0].to === "a@ex.fr" && sent[0].subject === "Votre b
 [s, j] = await E("POST", "/api/espace/tache?quoi=bilan", null, null, { "x-admin-key": "k" }); ok(j.traites === 0 && j.reste === 0, "rien à refaire " + JSON.stringify(j));
 sql.prepare("UPDATE comptes SET last_tache = 0, teaser = 0").run();
 [s, j] = await E("POST", "/api/espace/tache?quoi=alertes", null, null, { "x-admin-key": "k" }); ok(j.traites === 2 && j.notifs === 0 && sent.length === 1, "alertes sans doublon " + JSON.stringify(j));
+// 5e passage (B2) : mesures d'administration et trace du robot
+[s] = await E("GET", "/api/espace/mesures"); ok(s === 403, "mesures protégées");
+[s, j] = await E("GET", "/api/espace/mesures", null, null, { "x-admin-key": "k" }); ok(s === 200 && j.comptes.total === 2 && j.rapport.semaine.rapports === 2 && j.robot && j.robot.alertes && j.robot.bilans, "mesures " + JSON.stringify(j));
+[s, j] = await E("GET", "/api/espace/moi"); ok(s === 200 && j.robot && j.robot.alertes, "robot visible dans /moi " + JSON.stringify(j.robot));
 
 // Code de secours
 [s] = await E("POST", "/api/espace/secours", { email: "a@ex.fr", code: "AAAA-BBBB-CCCC-DDDD", nouveau: "nouveau-mdp-tres-sur" }); ok(s === 401, "mauvais code");

@@ -216,6 +216,7 @@ export async function espace(request, env) {
     const o = request.headers.get("origin"); if (o && o !== "null") { try { if (new URL(o).host !== url.host) return json({ error: "Origine refusée." }, 403); } catch (e) { return json({ error: "Origine refusée." }, 403); } }
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
+  if (path === "/api/espace/mesures" && m === "GET") return mesures(request, env); // 5e passage (B2) : mesures d'administration, protégées par ADMIN_KEY
 
   if (path === "/api/espace/inscription" && m === "POST") {
     const { b, err } = await lire(request); if (err) return err;
@@ -387,6 +388,26 @@ async function notifier(env, compteId, type, texte, lien, jour, extra = "") {
   const r = await env.DB.prepare(`INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)`).bind(compteId, Date.now(), type, texte.slice(0, 400), lien, [type, lien, jour, extra].join("|").slice(0, 500)).run();
   return (r && r.meta && r.meta.changes) || 0;
 }
+/* Mesures d'administration (5e passage, B2) : GET /api/espace/mesures avec l'en-tête x-admin-key. Aucun traceur tiers : tout vient de la base.
+   - comptes : total, créés sur 7 et 30 jours ; actifs : sessions ouvertes ou prolongées sur 7 jours ;
+   - rapport : comptes ayant un rapport pour la semaine en cours, part qui l'a ouvert (bilans.vu = 1) ; même chose pour la semaine précédente ;
+   - premium : abonnés en cours, inscrits à la liste d'attente ; robot : dernier passage réel (alertes, bilans). */
+async function mesures(request, env) {
+  if (!adminOk(request, env)) return json({ error: "Non autorisé." }, 403);
+  await init(env.DB);
+  const now = Date.now(), sem = semaineIso(jourParis()), prec = precedenteDe(sem);
+  const n = async (q, ...b) => (((await env.DB.prepare(q).bind(...b).first()) || {}).n) || 0;
+  const ouverture = async (semaine) => { const tot = await n(`SELECT COUNT(*) AS n FROM bilans WHERE semaine = ?`, semaine), vus = await n(`SELECT COUNT(*) AS n FROM bilans WHERE semaine = ? AND vu = 1`, semaine); return { semaine, rapports: tot, ouverts: vus, part_pct: tot ? Math.round(vus / tot * 1000) / 10 : null }; };
+  return json({
+    jour: jourParis(),
+    comptes: { total: await n(`SELECT COUNT(*) AS n FROM comptes`), crees_7j: await n(`SELECT COUNT(*) AS n FROM comptes WHERE created > ?`, now - 7 * JOUR), crees_30j: await n(`SELECT COUNT(*) AS n FROM comptes WHERE created > ?`, now - 30 * JOUR),
+      actifs_7j: await n(`SELECT COUNT(DISTINCT compte) AS n FROM sessions WHERE expires > ?`, now + SESSION_MS - 7 * JOUR), avec_portefeuille: await n(`SELECT COUNT(*) AS n FROM donnees WHERE portefeuille IS NOT NULL AND portefeuille <> 'null'`), avec_favoris: await n(`SELECT COUNT(*) AS n FROM donnees WHERE favoris IS NOT NULL AND favoris <> '[]'`) },
+    rapport: { semaine: await ouverture(sem), precedente: await ouverture(prec) },
+    alertes_7j: await n(`SELECT COUNT(*) AS n FROM notifs WHERE at > ?`, now - 7 * JOUR),
+    premium: { abonnes: await n(`SELECT COUNT(*) AS n FROM abonnes WHERE until > ?`, now).catch(() => 0), attente: await n(`SELECT COUNT(*) AS n FROM attente`).catch(() => 0) },
+    robot: await robotEtat(env),
+  });
+}
 async function tache(request, env, url) {
   if (!adminOk(request, env)) return json({ error: "Non autorisé." }, 403);
   const quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now();
@@ -409,7 +430,7 @@ async function tache(request, env, url) {
       if (keys.length && r.last_tache < cutoff) {
         const depuis = jourParis(Math.max(r.last_tache || 0, now - 2 * JOUR));
         for (const [u, a] of Object.entries(d.ana)) if (a && ids.has(a.id) && a.date >= depuis && a.chiffres && a.chiffres.length)
-          notifs += await notifier(env, r.id, "annonce", `${d.names["c:" + a.id]} : ${a.type || "nouvelle publication"}. ${a.chiffres.slice(0, 3).map(x => x.join(" : ")).join(" ; ")}.`, "/entreprise/" + a.id + "/actualite", a.date, u);
+          notifs += await notifier(env, r.id, "annonce", `${d.names["c:" + a.id]} : ${a.type || "nouvelle publication"}. ${a.chiffres.slice(0, 3).map(x => x.join(" : ")).join(" ; ")}.${(a.lecture || [])[0] ? " " + a.lecture[0] : ""}`, "/entreprise/" + a.id + "/actualite", a.date, u); // 5e passage (B2) : 3 chiffres (déjà comparés au même trimestre de l'an dernier par actu_analyse) et la lecture en une ligne
         if (ouvre) for (const k of keys) { const p = d.px[k]; if (p && p.chg != null && Math.abs(p.chg) >= 5)
           notifs += await notifier(env, r.id, "mouvement", `${d.names[k]} : ${sgnP(p.chg)} aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualité.`, lienDe(k), auj); }
         for (const e of d.ev) if (e && ids.has(e.id) && e.date === demain)

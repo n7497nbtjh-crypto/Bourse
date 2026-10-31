@@ -331,7 +331,20 @@ export function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {
   };
   f.essentiel = essentielDe(f);
   f.lecture_min = lectureMin(f);
+  f.compare = compareDe(f, prec); // 5e passage (B2) : « depuis lundi dernier » et la semaine d'avant
   return f;
+}
+/* ---------- Comparaison avec la semaine d'avant (5e passage, B2) : seulement des comptages et les chiffres de la semaine précédente, jamais d'opinion ---------- */
+export function compareDe(f, prec) {
+  const ROUT = new Set(["rachat", "capital", "initie", "agenda", "autre"]);
+  const off = (f.annonces || []).filter(a => a.origine === "officiel" && !ROUT.has(a.categorie));
+  const vus = new Set(), pubs = off.filter(a => !vus.has(a.k + a.titre) && vus.add(a.k + a.titre));
+  const alertes = (f.portefeuille && f.portefeuille.alertes) || [];
+  return {
+    publications: pubs.length, resultats: pubs.filter(a => a.categorie === "resultats").length, dividendes: pubs.filter(a => /dividende/.test(a.categorie || "")).length,
+    alertes_nouvelles: alertes.filter(a => a.evol === "nouveau").length, alertes_levees: ((f.portefeuille && f.portefeuille.levees) || []).length,
+    precedente: prec ? { semaine: prec.semaine || null, moyenne: prec.moyenne ?? null, portefeuille_pct: prec.portefeuille && prec.portefeuille.var_pct != null ? prec.portefeuille.var_pct : null, publications: (prec.compare && prec.compare.publications) ?? null } : null,
+  };
 }
 
 /* ---------- L'essentiel en trois phrases, calculées ---------- */
