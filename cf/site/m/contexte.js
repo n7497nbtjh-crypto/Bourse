@@ -449,7 +449,7 @@ if (typeof window.localAssist === "function") {
       if (actuQ && CTX_D && (!t || !/(dividende|dette|marge|per\b)/.test(q))) {
         const a = ctxRepActu(s, c, q0);
         if (a) t = t && !["cours", "risques"].includes(it) ? a : (t ? t + "\n" + a : a);
-      } else if (CTX_D && t && (it === "cours" && /pourquoi|baisse|chute|monte|hausse|perdu/.test(q) || it === "risques")) {
+      } else if (CTX_D && t && (it === "cours" && /pourquoi|baisse|chute|monte|hausse|perdu/.test(q) && !/marge|rentab|dette|\bper\b|dividende|benefice|ventes|chiffre d affaires|croissance|endett/.test(q) || it === "risques")) { // 4e passage 2.4 : jamais sur une question d'indicateur
         const l = contexteSujets(s, c).filter(x => x.im.sens !== "+").slice(0, 2);
         if (l.length) t += `\nDans l'actualité suivie par le site : ${l.map(({ sj, im }) => `${sj.titre} (${(m => m.charAt(0).toLowerCase() + m.slice(1))(im.mecanisme.split(/(?<=[.])\s/)[0].replace(/\.$/, ""))})`).join(" ; ")}.\nJe ne suis pas sûr que cela explique ${it === "cours" ? "ce mouvement de cours" : "ses résultats"} : le site ne le mesure pas.`;
       } else if (CTX_D && t && it === "croissance" && c) {

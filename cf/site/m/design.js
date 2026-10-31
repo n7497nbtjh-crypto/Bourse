@@ -48,8 +48,9 @@ function dsgCourbe(el, symbol, name) { // dessin maison : secours quand le graph
     if (q[f] > 0) pts.push({ v: q[f], lib, an: now.getFullYear() - ans });
   }
   pts.push({ v: q.p, lib: "aujourd'hui", an: now.getFullYear(), last: true });
-  if (pts.length < 2) {
-    el.innerHTML = `<div class="dsgc dsgc-vide"><p>Un seul relevé de cours est disponible pour cette valeur : ${dsgFmt(q.p, q.cur)}. Il n'y a pas encore de quoi tracer une évolution.</p></div>`;
+  if (pts.length < 2) { // lot A 1.4 : pas de « un seul relevé » à côté d'une fourchette sur 1 an ; si la fourchette existe, elle suffit
+    const ok52 = q.l52 > 0 && q.h52 > q.l52 && q.h52 / q.l52 <= 3;
+    el.innerHTML = ok52 ? `<div class="dsgc dsgc-vide"><p>Cours du jour : <b>${dsgFmt(q.p, q.cur)}</b>, entre ${dsgFmt(q.l52, q.cur)} et ${dsgFmt(q.h52, q.cur)} sur un an. L'historique détaillé n'est pas encore relevé pour cette valeur.</p></div>` : `<div class="dsgc dsgc-vide"><p>Cours du jour : <b>${dsgFmt(q.p, q.cur)}</b>. L'historique n'est pas encore relevé pour cette valeur.</p></div>`;
     return;
   }
   const vals = pts.map(p => p.v), bas = Math.min(...vals, q.l52 > 0 ? q.l52 : Infinity), haut = Math.max(...vals, q.h52 > 0 ? q.h52 : -Infinity);
@@ -498,7 +499,7 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
   const passe = () => { t = null; const main = document.querySelector("main"); if (!main) return;
     main.querySelectorAll("*").forEach(e => { if (!e.childNodes.length || e.closest("svg,script,style,.sr")) return; const txt = [...e.childNodes].filter(x => x.nodeType === 3).map(x => x.textContent).join("").trim(); if (!txt) return;
       const fs = parseFloat(getComputedStyle(e).fontSize), min = /\d/.test(txt) ? 13 : 12; if (fs < min) e.style.fontSize = min + "px"; });
-    main.querySelectorAll("a[href],button").forEach(e => { if (e.closest(".tbx-sc table,.rf-ctab,.pcmp") || e.classList.contains("prov-i") || getComputedStyle(e).display === "inline") return; /* .prov-i : zone tactile de 44 px par pseudo-élément, le rond reste petit */ const h = e.getBoundingClientRect().height; if (h > 0 && h < 44) { e.style.minHeight = "44px"; if (getComputedStyle(e).display === "inline-block") { e.style.display = "inline-flex"; e.style.alignItems = "center"; } } });
+    main.querySelectorAll("a[href],button").forEach(e => { if (e.closest(".tbx-sc table,.rf-ctab,.pcmp,.fh-tags,.fh-ids,.tags,.ax-chips,.acc-cat") || e.classList.contains("prov-i") || e.classList.contains("tag") || e.classList.contains("ax-chip") || getComputedStyle(e).display === "inline") return; /* .prov-i : zone tactile de 44 px par pseudo-élément, le rond reste petit */ const h = e.getBoundingClientRect().height; if (h > 0 && h < 44) { e.style.minHeight = "44px"; if (getComputedStyle(e).display === "inline-block") { e.style.display = "inline-flex"; e.style.alignItems = "center"; } } });
   };
   const plan = () => { if (t) return; t = setTimeout(passe, 400); };
   new MutationObserver(plan).observe(document.getElementById("app") || document.body, { childList: true, subtree: true });

@@ -5692,5 +5692,12 @@
   "Toray Industries : l'ISIN JP3621000003 renvoie à « 東レ株式会社 »",
   "E.ON : l'ISIN DE000ENAG999 renvoie à « E.ON »",
   "K+S : l'ISIN DE000KSAG888 renvoie à « K+S »"
- ]
+ ],
+ "logos": {
+  "date": "2026-10-31",
+  "disponibles": 21,
+  "commons": 19,
+  "site_officiel": 2,
+  "note": "collecte locale partielle ; le robot complète"
+ }
 }

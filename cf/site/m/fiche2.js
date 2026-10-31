@@ -143,7 +143,7 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
 .rf-hero .fh-top{padding:16px 22px 14px;gap:20px}
 .rf-hero .fh-t h1{font-size:28px}
 .rf-hero .fh-desc{font-size:14.5px;margin-top:3px}
-.rf-hero .fh-tags{margin-top:8px}.fh-tags .fh-isin{display:inline-flex;align-items:center;gap:6px;background:var(--ink)!important;color:#fff!important;font-variant-numeric:tabular-nums;letter-spacing:.02em}.fh-tags .fh-isin small{font-size:10.5px;opacity:.75;letter-spacing:0}
+.rf-hero .fh-tags{margin-top:8px;align-items:center}.fh-ids{margin:4px 0 0;font-size:12.5px;color:var(--grey);font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}.fh-copy{border:0;background:none;color:var(--grey);cursor:pointer;font-size:14px;padding:0 4px;line-height:1;position:relative}.fh-copy::after{content:"";position:absolute;inset:-14px -10px}.fh-copy.ok{color:var(--g)}.fh-tags2>*{position:relative;line-height:1.6}.fh-tags2>a::after{content:"";position:absolute;inset:-10px 0}
 .rf-hero .fh-act{margin-top:10px}
 .rf-mid,.rf-mid.f2-noc{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"ch vl"}
 .rf-mid.f2-noc{grid-template-columns:minmax(0,1fr);grid-template-areas:"vl"}
@@ -433,27 +433,19 @@ function rfAVenir(s) {
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3);
   return `<div class="rf-bl rf-ev"><h3>À venir</h3>${up.length ? `<ul>${up.map(e => `<li><b>${esc(RF_MOIS(e.date))}</b><span>${esc(e.label)}</span></li>`).join("")}</ul>` : `<p class="rf-no">Aucune date annoncée pour l'instant. Le site les ajoute dès que l'entreprise les publie.</p>`}<a class="rf-lk" href="/entreprise/${s.id}/actualite">Agenda et actualités →</a></div>`;
 }
-function rfNiveaux(s, f) { // les niveaux (point fort / moyen / à surveiller) : une seule source pour les blocs, le compte des points et les cartes de l'accueil
-  const bank = isBank(s), it = {}; lecture(s, f).forEach(i => { if (!it[i.term]) it[i.term] = i; });
-  const lv = k => it[k] && it[k].lv !== "na" ? it[k].lv : null, v = valo(s) || {}, mp = MEDPE[s.sector];
-  return { croissance: lv("croissance"), rentabilite: bank ? lv("roe") : (lv("marge") || lv("net")), solidite: bank ? null : (lv("lev") || lv("dettenette") || lv("gear")), valorisation: v.pe && mp ? (v.pe < mp * 0.75 ? "fort" : v.pe > mp * 1.3 ? "vig" : "moyen") : null };
+function rfNiveaux(s, f) { // les niveaux (point fort / moyen / à surveiller) dérivent des positions des jauges (une seule source, lot A du 31/10)
+  const A = Object.fromEntries(rfAxes(s).map(a => [a.k, a])), lv = k => A[k] && A[k].lv ? A[k].lv : null;
+  return { croissance: lv("croissance"), rentabilite: lv("marge"), solidite: A.solidite && A.solidite.special === "sansdette" ? "fort" : lv("solidite"), valorisation: lv("prix") };
 }
 function rfTally(s, f) { const t = { fort: 0, moyen: 0, vig: 0 }; Object.values(rfNiveaux(s, f)).forEach(l => { if (l && t[l] != null) t[l]++; }); return t; }
-function rfVerdictCourt(s, c) { // deux ou trois mots, lisibles sans lire : rentabilité, dette, prix
-  const f = figuresOf(c), m = ratios(f), bank = isBank(s), it = {}; lecture(s, f).forEach(i => { if (!it[i.term]) it[i.term] = i; });
-  const lv = k => it[k] && it[k].lv !== "na" ? it[k].lv : null, mots = [];
-  if (f.net != null && f.net < 0) mots.push("En perte"); else { const r = lv(bank ? "roe" : "marge") || lv("net"); mots.push(r === "fort" ? "Très rentable" : r === "vig" ? "Peu rentable" : "Rentable"); }
-  if (!bank) { if (f.netDebt != null && f.netDebt < 0) mots.push("sans dette"); else { const d = lv("lev") || lv("gear") || lv("dettenette"); if (d) mots.push({ fort: "peu endettée", moyen: "endettée", vig: "très endettée" }[d]); } }
-  const v = valo(s), mp = MEDPE[s.sector]; if (v && v.pe && mp) mots.push(v.pe > mp * 1.3 ? "chère" : v.pe < mp * 0.75 ? "bon marché" : "prix dans la norme");
-  return mots.join(", ");
-}
+function rfVerdictCourt(s, c) { return rfVerdictMots(s); } // deux ou trois mots, déduits des mêmes positions que les jauges
 function ficheSommaire(s, c) {
   const wait = c === undefined && !s.missing && !FULL[s.id]; // les comptes arrivent : on réserve la place du verdict (pas de saut sur téléphone)
   if (c === undefined) c = FULL[s.id] || null;
   if (s.missing || !c) {
     const wd = ficheWd(s.id), md = MED[s.sector] || {}, faits = [wd && wd.fonde ? `créée en ${wd.fonde}` : "", wd && wd.siege ? `siège à ${esc(wd.siege)}` : "", wd && wd.effectif ? `${F0.format(wd.effectif[0])} salariés` : ""].filter(Boolean);
     return `<div class="fh-sum rf-sum${wait ? " fh-wait" : ""}"><h2 class="f2-h">En bref</h2><p class="fh-v" id="fverdict">${s.fiche && s.fiche.fait && s.fiche.fait !== s.desc ? esc(s.fiche.fait) + " " : ""}${faits.length ? `${esc(s.name)} : ${faits.join(", ")}.` : s.fiche && s.fiche.fait && s.fiche.fait !== s.desc ? "" : esc(s.desc || "")}</p>
-      ${s.missing ? `<p class="rf-no">${esc(missingTxt(s))}. Son métier, son cours, son actualité et les réponses de l'IA sont ci-dessous.</p>` : `<p class="rf-no">Chargement des comptes…</p>`}
+      ${s.missing ? `<details class="rf-bientot"><summary><b>Comptes bientôt disponibles</b><span>Le cours, le métier et l'actualité sont déjà là · pourquoi ?</span></summary><p>${esc(missingTxt(s, true))}</p></details>` : `<p class="rf-no">Chargement des comptes…</p>`}
       ${s.missing && md.n >= 3 ? `<div class="rf-bl"><h3>Son secteur en repères : ${esc(secName(s))}</h3><div class="fh-feu">${md.marge != null ? `<span>Marge médiane <b>${pct(md.marge, 1, false)}</b></span>` : ""}${md.g1 != null ? `<span>Croissance médiane <b>${pct(md.g1, 1)}</b></span>` : ""}${MEDPE[s.sector] ? `<span>PER médian <b>${F0.format(MEDPE[s.sector])}</b></span>` : ""}</div></div>` : ""}
       ${rfAVenir(s)}</div>`;
   }
@@ -461,12 +453,12 @@ function ficheSommaire(s, c) {
   const t = rfTally(s, figuresOf(c)); // même compte que les blocs « Comprendre l'entreprise »
   // 30/10 (Romain) : l'en-tête montre sa place dans le secteur (jauges face à la médiane) ; le verdict « En bref » passe dans l'onglet Synthèse
   const prof = (profilHTML(s) || "").replace(/<p class="kick"[^>]*>Son profil dans le secteur[^<]*<\/p>/, "").replace(/<p class="note"[^>]*>[\s\S]*?<\/p>\s*<\/div>\s*$/, "</div>");
-  const rk = fiche2RangBouton(s), n = (prof.match(/class="pa2"/g) || []).length;
+  const rk = fiche2RangBouton(s), n = (prof.match(/class="pa2/g) || []).length;
   const vc = rfVerdictCourt(s, c);
-  const prof3 = prof.replace(/au-dessus de la médiane/g, "au-dessus").replace(/parmi les plus faibles/g, "parmi les dernières"); // libellés de trois mots au plus (lot 4)
+  const prof3 = prof; // les libellés viennent de rfAxes (une seule source)
   const md = MED[s.sector] || {};
   return `<div class="fh-sum rf-sum rf-hplace">${vc ? `<p class="rf-vc">${esc(vc)}<small id="rf-date">Derniers comptes : exercice ${esc(s.year)}${c.fyEnd ? `, clos le ${esc(String(c.fyEnd).split("-").reverse().join("/"))}` : ""}</small></p>` : ""}<div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><button type="button" class="rf-info" data-rf-info aria-label="Comment lire ces jauges" title="Comparé à la médiane de ${md.n || "?"} entreprises du secteur suivies par le site : à droite les mieux placées, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.">ⓘ</button></div>
-      ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof3.replace(/<\/div>\s*$/, "")}${valo(s) && valo(s).peNs ? `<div class="pa2 pa2-ns" title="${NS_PE}" tabindex="0"><span class="pt"><b>Prix</b><small>n.s.</small></span><span class="pl"><i class="pm"></i></span></div>` : ""}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
+      ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof3.replace(/<\/div>\s*$/, "")}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
       ${rk}</div>`;
 }
 function ficheSyntheseHTML(s, c) { // l'ancien « En bref » de l'en-tête, avec l'analyse détaillée (onglet Synthèse, 30/10)
@@ -491,7 +483,8 @@ function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les 
   return `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a></div>
     <section class="panel fhero rf-hero"><div class="fh-top">
       <div class="fh-id">${logo(s, 48)}<div class="fh-t"><h1>${esc(s.name)}</h1>${s.desc ? `<p class="fh-desc">${esc(s.desc)}</p>` : ""}
-        <div class="fh-tags"><span class="fh-isin" title="Code ISIN : l'identifiant international de l'action, le même chez tous les courtiers"><small>Action · ISIN</small>${esc(s.isin || "")}</span><span title="Code de l'action">${esc(s.ticker)}</span>${bourse ? `<span>${esc(bourse)}</span>` : ""}<span>${esc(regName(s))}</span><a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a>${pea != null ? `<span class="${pea ? "ok" : ""}">${pea ? "Éligible au PEA" : "Hors PEA : compte-titres"}</span>` : ""}</div>
+        <p class="fh-ids"><span title="Code de l'action">${esc(s.ticker)}</span>${bourse ? ` · <span>${esc(bourse)}</span>` : ""}${s.isin ? ` · <span title="Code ISIN : l'identifiant international de l'action, le même chez tous les courtiers">ISIN ${esc(s.isin)}</span> <button type="button" class="fh-copy" data-copy="${esc(s.isin)}" aria-label="Copier l'ISIN" title="Copier l'ISIN">⧉</button>` : ""}</p>
+        <div class="fh-tags fh-tags2"><a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a>${pea != null ? `<span class="${pea ? "ok" : ""}">${pea ? "PEA ✓" : "Compte-titres"}</span>` : `<span>${esc(regName(s))}</span>`}</div>
         <div class="fh-act">${favBtn("c:" + s.id)}<a class="favbtn" href="${cmp}">Comparer<span class="f2-lg2">&nbsp;à ses concurrents</span></a>${tab === "comprendre" ? "" : `<button type="button" class="favbtn fh-ia" data-fiche-ia>✦ Poser une question à l'IA</button>`}</div></div></div>
       <div class="px" id="pxh">${ficheCours(s)}</div></div>
       ${!tab ? `<div class="f2-mid rf-mid${courbe ? "" : " f2-noc"}">${courbe ? `<div class="f2-chart"><div class="f2-ch-h"><h2 class="f2-h">Le cours de l'action</h2><span class="f2-note"><span class="f2-nd">Graphique TradingView · cours différé</span><span class="f2-nm">Cours différé</span></span></div><div class="tv tv-chart f2-tv" id="tvchart" role="img" aria-label="Courbe du cours de ${esc(s.name)}"><div class="f2-tvph">Chargement de la courbe…</div></div></div>` : ""}${ficheSommaire(s, s.missing ? null : FULL[s.id])}</div>` : ""}
@@ -564,7 +557,9 @@ function rfSecteurVals(s, key) {
     if (v != null && isFinite(v)) l.push(v); });
   return l;
 }
+const RF_POS_AXE = { g1: "croissance", marge: "marge", roe: "marge", lev: "solidite", pe: "prix", rendement: "dividende" };
 function rfPosition(s, key, inv, val) { // rang de l'entreprise (0 à 1) parmi son secteur pour un indicateur ; null si trop peu d'entreprises
+  if (RF_POS_AXE[key]) { const a = rfAxes(s).find(x => x.k === RF_POS_AXE[key]); if (a && a.r) return { pos: a.r.p, n: a.r.n }; } // même position que la jauge de l'en-tête
   if (val == null || !isFinite(val)) return null;
   const vals = rfSecteurVals(s, key), n = vals.length; if (n < 5) return null;
   const below = vals.filter(x => x < val).length, eq = vals.filter(x => x === val).length; let pos = (below + eq / 2) / n; if (inv) pos = 1 - pos;
@@ -713,7 +708,7 @@ async function rfTrimestresSEC(s, c, box) { // trimestres lus à la SEC (10-Q) :
   const lec = [];
   if (prevY && prevY.ca && last.ca != null) { const v = g(last.ca, prevY.ca); lec.push(v >= 0.05 ? "Les ventes du trimestre progressent nettement sur un an." : v <= -0.05 ? "Les ventes du trimestre reculent nettement sur un an." : "Les ventes du trimestre sont stables sur un an."); }
   if (memeDevise && caFY && t.ttm && t.ttm.ca != null) { const v = g(t.ttm.ca, caFY); lec.push(`Sur les douze derniers mois, l'activité est ${v >= 0.03 ? "en hausse" : v <= -0.03 ? "en baisse" : "au niveau"} ${v >= 0.03 || v <= -0.03 ? "par rapport au" : "du"} dernier exercice clos (${sgn(v)}).`); }
-  box.innerHTML = `<div class="rf-trimi"><div class="rf-trimh"><span class="kick">Depuis la clôture de l'exercice ${esc(c.years.at(-1))}</span><b>Trimestre clos le ${dLabel(last.end)}</b><span class="light">rapport ${esc(last.form)} déposé le ${dLabel(last.filed)} · ${nouveaux.length} trimestre${nouveaux.length > 1 ? "s" : ""} publié${nouveaux.length > 1 ? "s" : ""} depuis</span></div>
+  box.innerHTML = `<div class="rf-trimi"><div class="rf-trimh"><span class="kick">Depuis la clôture de l'exercice ${esc(c.years.at(-1))}</span><b>Trimestre clos le ${dLabel(last.end)}</b><span class="light">rapport ${esc(last.form)} déposé le ${dLabel(last.filed)} · ${nouveaux.length === 1 ? "1er" : nouveaux.length + "e"} trimestre publié depuis la clôture de l'exercice ${esc(c.years.at(-1))}</span></div>
     <div class="rf-trimc">${tuiles.join("")}</div>${lec.length ? `<p class="rf-triml">${lec.map(esc).join(" ")} Les indicateurs des six modules restent ceux de l'exercice clos, audité ; ces chiffres trimestriels ne sont pas audités.</p>` : ""}
     <p class="rf-trimf"><a class="lnk" href="${esc(t.source)}" target="_blank" rel="noopener">Données SEC (companyfacts)</a> · <a class="lnk" href="/entreprise/${s.id}/actualite">Toutes ses annonces</a></p></div>`;
   box.hidden = false;
@@ -892,7 +887,7 @@ function rfPlaceHTML(s) { // sa place parmi toutes les entreprises du secteur su
   const prof = s.missing ? "" : (profilHTML(s) || "").replace(/<p class="kick"[^>]*>Son profil dans le secteur[^<]*<\/p>/, "");
   const rk = fiche2RangBouton(s);
   if (!prof && !rk) return "";
-  const n = (prof.match(/class="pa2"/g) || []).length;
+  const n = (prof.match(/class="pa2/g) || []).length;
   return `<section class="panel rf-place" id="secteur-place"><div class="ph"><h2>Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2></div>
     <div class="pb"><p class="rf-sub" style="margin-top:0">Parmi toutes les entreprises du secteur suivies par le site, critère par critère.</p>${rk}
       ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof}</div><div class="fh-pm">${profilMini(s)}</div>` : ""}</div></section>`;
@@ -1130,3 +1125,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .rf-pl2>summary span .rf-pq.ok{background:#E3F2E8;color:#0E6B4A}.rf-pl2>summary span .rf-pq.ko{background:#FBE9E4;color:#8A3A22}
 @media (max-width:600px){.rf-pl2>summary{flex-wrap:wrap;gap:8px 12px}.rf-pl2>summary .rf-plt{flex-basis:100%}.rf-plk{align-items:flex-start;text-align:left;flex:1}.rf-plk b{font-size:19px}}
 </style>`);
+
+document.addEventListener("click", e => { const b = e.target.closest(".fh-copy"); if (!b) return; const t = b.dataset.copy; (navigator.clipboard ? navigator.clipboard.writeText(t) : Promise.reject()).then(() => { b.classList.add("ok"); b.textContent = "✓"; setTimeout(() => { b.classList.remove("ok"); b.textContent = "⧉"; }, 1500); }).catch(() => { prompt("ISIN à copier :", t); }); });
+
+document.head.insertAdjacentHTML("beforeend", `<style>.rf-bientot{margin:8px 0 12px;border:1px solid var(--rule);border-radius:8px;background:var(--hl)}.rf-bientot>summary{list-style:none;cursor:pointer;display:flex;flex-wrap:wrap;gap:4px 12px;align-items:baseline;padding:10px 14px;font-size:14px}.rf-bientot>summary::-webkit-details-marker{display:none}.rf-bientot>summary span{font-size:12.5px;color:var(--grey)}.rf-bientot>p{margin:0;padding:0 14px 12px;font-size:13.5px;color:var(--grey)}</style>`);

@@ -5,7 +5,7 @@
 //         node scripts/check-ia.js https://…  → contre une autre adresse
 const LOCAL = process.argv.includes("--local"), SITE = process.argv.find(a => /^https?:/.test(a)) || "https://repere-bourse.pages.dev";
 const QS = [
-  { page: "/entreprise/lvmh", q: "Pourquoi la marge de LVMH est-elle plus haute que celle de Kering ?", doit: [/kering/i, /\b22\b/, /7,1/], pas: [/Dernier cours connu/i] },
+  { page: "/entreprise/lvmh", q: "Pourquoi la marge de LVMH est-elle plus haute que celle de Kering ?", doit: [/kering/i, /\b22\b/, /7,1/], pas: [/Dernier cours connu/i, /mouvement de cours/i, /droits de douane/i] },
   { page: "/entreprise/lvmh", q: "Sa dette est-elle un problème ?", doit: [/dette/i, /0,5/], pas: [/Dernier cours connu/i] },
   { page: "/entreprise/lvmh", q: "Pourquoi l'action baisse ?", doit: [/cours/i], pas: [] },
   { page: "/entreprise/kering", q: "Est-elle chère ?", doit: [/non significatif|n'est pas significatif|bénéfice (très|trop) faible/i], pas: [/\bchère\b(?! )/i, /est chère\b/i] },

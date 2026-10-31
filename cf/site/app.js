@@ -458,8 +458,8 @@ const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter
 let LOGO_ABS = new Set(), LOGOS = {}; // LOGOS : logos hébergés par le site (cf/site/logos, collectés sur Wikimedia Commons avec leur licence par data/logos_fetch.mjs)
 function logoTeinte(n) { let h = 0; for (const ch of String(n || "")) h = (h * 31 + ch.charCodeAt(0)) % 360; return h; } // couleur déterministe à partir du nom
 function logo(c, size = 40) { // logo hébergé par le site ; sinon un rond coloré (couleur fixée par le nom) avec l'initiale. Plus aucune requête vers Google ou gstatic (3e passage, 1.5)
-  // 31/10 (Romain) : les vrais logos d'abord. Logo hébergé par le site s'il existe, sinon l'icône du site de l'entreprise (Google), sinon le rond coloré avec l'initiale.
-  const l = c && c.id && LOGOS[c.id] && LOGOS[c.id].f ? `/logos/${LOGOS[c.id].f}` : c && c.domain && !LOGO_ABS.has(c.domain) ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(c.domain)}&sz=128` : null, sz = Math.max(size, 24);
+  // 4e passage (31/10, 2.2) : logo hébergé par le site (Commons ou site officiel, collecté par le robot), sinon le rond coloré avec l'initiale. Aucune requête externe.
+  const l = c && c.id && LOGOS[c.id] && LOGOS[c.id].f ? `/logos/${LOGOS[c.id].f}` : null, sz = Math.max(size, 24);
   return `<span class="lg${l ? "" : " lg-ini"}" style="--s:${sz}px;--lgh:${logoTeinte(c.name)}"><b>${esc(initials(c.name))}</b>${l ? `<img src="${l}" alt="" loading="lazy" width="${sz}" height="${sz}" onerror="this.parentNode.classList.add('lg-ini');this.remove()">` : ""}</span>`;
 }
 function caLine(c) {
@@ -984,7 +984,9 @@ function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les 
       <nav class="qtabs">${CTABS.map(([k, n]) => `<a href="/entreprise/${s.id}${k === "comprendre" ? "/comprendre/croissance" : k ? "/" + k : ""}" class="${k === tab ? "on" : ""}">${n}</a>`).join("")}</nav>
     </div>`;
 }
+const ALIAS_ENTREPRISES = { samsung: "samsung-electronics", hyundai: "hyundai-motor", aramco: "saudi-aramco", tata: "tcs", "tata-consultancy": "tcs", lg: "lg-electronics", "taiwan-semiconductor": "tsmc", google: "alphabet", facebook: "meta", "louis-vuitton": "lvmh", total: "totalenergies", novo: "novo-nordisk" }; // 4e passage 2.5 : noms courts (même liste côté Worker)
 async function pageCompany(id, tab) {
+  if (!RBY[id] && ALIAS_ENTREPRISES[id] && RBY[ALIAS_ENTREPRISES[id]]) return goR("/entreprise/" + ALIAS_ENTREPRISES[id]);
   const s = RBY[id];
   if (!s) return pageNotFound();
   setNav("ent");
@@ -1690,7 +1692,7 @@ function dividendeHTML(s, c) {
   const tiles = [
     f.dps > 0 ? ["Par action", eur(f.dps, 2, cur), `versé${f.dpsEst ? " (estimé)" : ""} pendant l'exercice ${f.year}`] : null,
     v && v.yld ? ["Rendement", pct(v.yld, 1, false), "dividende annuel ÷ prix actuel de l'action"] : null,
-    m.payout != null ? ["Part du bénéfice", nsPayout(m.payout) ? "plus que le bénéfice" : pct(m.payout, 0, false), nsPayout(m.payout) ? `${NS_PAYOUT.toLowerCase()} (${pct(m.payout, 0, false)})` : cov === "fort" ? "reversée : il reste de la marge si le bénéfice baisse" : cov === "moyen" ? "reversée : peu de marge si le bénéfice baisse" : "reversée : plus que ce que l'entreprise gagne"] : null,
+    m.payout != null ? ["Part du bénéfice versée", m.payout > 1 ? `${pct(m.payout, 0, false)} ⚠` : pct(m.payout, 0, false), m.payout > 1 ? `verse plus qu'elle ne gagne : le dividende est pris sur la trésorerie ou les réserves` : cov === "fort" ? "il reste de la marge si le bénéfice baisse" : cov === "moyen" ? "peu de marge si le bénéfice baisse" : "presque tout le bénéfice est versé"] : null,
     next.length ? ["Prochaine date", dLabel(next[0].date), next[0].label] : null,
   ].filter(Boolean);
   return `<section class="panel" id="dividende"><div class="ph"><h2>Dividende</h2>${f.dpsEst ? `<span class="light" style="font-size:12.5px">Montant par action estimé à partir des comptes</span>` : ""}</div>
@@ -2281,19 +2283,50 @@ function rankIn(s, fn, higherBetter = true) { // position de 0 (dernière) à 1 
   const better = l.filter(x => higherBetter ? x.v > me.v : x.v < me.v).length;
   return { p: 1 - better / (l.length - 1), n: l.length, rank: better + 1 };
 }
+/* ---------- Les cinq axes du profil : UNE seule source (4e passage, 31/10, lot A) ----------
+   Chaque axe place l'entreprise parmi celles de son secteur (0 = dernière, 1 = première, au sens « mieux »).
+   Le libellé de la jauge, le verdict en deux mots, les niveaux (point fort / à surveiller) et la phrase « mieux placée
+   que X % » des sections en dérivent tous : ils ne peuvent plus se contredire. scripts/check-contradictions.mjs le vérifie. */
+const AX_WORDS = {
+  croissance: ["parmi les plus rapides", "plus rapide que la médiane", "croissance dans la norme", "plus lente que la médiane", "parmi les plus lentes"],
+  marge: ["parmi les plus rentables", "plus rentable que la médiane", "rentabilité dans la norme", "moins rentable que la médiane", "parmi les moins rentables"],
+  solidite: ["parmi les moins endettées", "peu endettée", "endettement moyen", "endettée", "parmi les plus endettées"],
+  dividende: ["parmi les plus généreuses", "rendement au-dessus de la médiane", "rendement dans la norme", "rendement sous la médiane", "parmi les moins généreuses"],
+  prix: ["parmi les moins chères", "moins chère que la médiane", "prix dans la norme", "plus chère que la médiane", "parmi les plus chères"],
+};
+const axBand = p => p >= 0.75 ? 0 : p >= 0.55 ? 1 : p > 0.45 ? 2 : p > 0.25 ? 3 : 4; // 0 = en tête … 4 = en queue
+const axWord = (p, k = "croissance") => (AX_WORDS[k] || AX_WORDS.croissance)[axBand(p)];
+const axCol = p => p >= 0.55 ? "var(--g)" : p > 0.45 ? "var(--n)" : "var(--o)";
+const axLevel = p => p >= 0.55 ? "fort" : p <= 0.25 ? "vig" : "moyen";
+function rfAxes(s) { // [{ k, t (titre), d (ce qui est mesuré), r: { p, rank, n } | null, special }] ; les axes sans rang sont omis, sauf « Pas de dividende »
+  if (!s || s.missing) return [];
+  const bank = isBank(s), v = valo(s), sd = !bank && s.netDebt != null && s.netDebt < 0;
+  const yld = v && v.yld != null ? v.yld : null, noDiv = ((s.dps === 0 || s.dps == null) && (s.divPaid == null || s.divPaid <= 0)) || (yld != null && yld < 0.001); // moins de 0,1 % : dividende symbolique, traité comme absent
+  const A = [
+    { k: "croissance", t: "Croissance", d: "Hausse des ventes sur un an", r: rankIn(s, c => ratios(c).g1) },
+    { k: "marge", t: bank ? "Rentabilité" : "Marge", d: bank ? "Bénéfice rapporté aux capitaux propres" : "Ce qui reste sur 100 de ventes", r: bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge) },
+    { k: "solidite", t: "Solidité", d: "Dette nette rapportée au résultat (moins, c'est mieux)", r: bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false), special: sd ? "sansdette" : null },
+    { k: "dividende", t: "Dividende", d: "Rendement : dividende rapporté au cours", r: yld != null && yld >= 0.001 ? rankIn(s, c => { const x = valo(c); return x && x.yld >= 0.001 ? x.yld : null; }) : null, special: noDiv ? "nodiv" : null },
+    { k: "prix", t: "Prix", d: "PER : à droite, moins chère au regard du bénéfice", r: v && v.pe ? rankIn(s, c => { const x = valo(c); return x && x.pe ? x.pe : null; }, false) : null, special: v && v.peNs ? "ns" : null },
+  ];
+  return A.filter(a => a.r || a.special === "nodiv" || a.special === "ns").map(a => ({ ...a, word: a.special === "nodiv" ? "pas de dividende" : a.special === "ns" ? "n.s." : a.special === "sansdette" && a.r && a.r.p >= 0.55 ? "sans dette" : axWord(a.r.p, a.k), lv: a.r ? axLevel(a.r.p) : null }));
+}
+function rfVerdictMots(s) { // le verdict en deux ou trois mots, déduit des mêmes positions que les jauges
+  const A = Object.fromEntries(rfAxes(s).map(a => [a.k, a])), mots = [], band = k => A[k] && A[k].r ? axBand(A[k].r.p) : null;
+  if (s.net != null && s.net < 0) mots.push("En perte");
+  else { const b = band("marge"); if (b === 0) mots.push("Très rentable"); else if (b === 1) mots.push("Rentable"); else if (b === 4) mots.push("Peu rentable"); }
+  if (A.solidite && A.solidite.special === "sansdette") mots.push("sans dette");
+  else { const b = band("solidite"); if (b === 0 || b === 1) mots.push("peu endettée"); else if (b === 4) mots.push("endettée"); }
+  { const b = band("prix"); if (b === 0 || b === 1) mots.push("bon marché"); else if (b === 4) mots.push("chère"); }
+  if (!mots.length) mots.push("Dans la norme de son secteur");
+  return mots.map((m, i) => i ? m : m.replace(/^./, x => x.toUpperCase())).join(", ");
+}
 function profilHTML(s) {
-  const bank = isBank(s), m = ratios(s);
-  const axes = [
-    ["Croissance", "Hausse des ventes sur un an", rankIn(s, c => ratios(c).g1)],
-    [bank ? "Rentabilité" : "Marge", bank ? "Bénéfice rapporté aux capitaux propres" : "Ce qui reste sur 100 de ventes", bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge)],
-    ["Solidité", bank ? "Régularité du bénéfice" : "Dette rapportée aux résultats (moins c'est mieux)", bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false)],
-    ["Dividende", "Part du bénéfice reversée (couverture)", m.payout != null && m.payout > 0 ? rankIn(s, c => { const p = ratios(c).payout; return p > 0 ? p : null; }, false) : null],
-    ["Prix", "PER : moins cher au regard du bénéfice", valo(s) && valo(s).pe ? rankIn(s, c => { const v = valo(c); return v && v.pe ? v.pe : null; }, false) : null],
-  ].filter(a => a[2]);
-  if (axes.length < 3) return "";
-  const word = p => p >= 0.75 ? "parmi les meilleures" : p >= 0.55 ? "au-dessus de la médiane" : p > 0.45 ? "dans la médiane" : p > 0.25 ? "sous la médiane" : "parmi les plus faibles";
-  return `<div class="prof"><p class="kick" style="margin-bottom:8px">Son profil dans le secteur ${esc(secName(s).toLowerCase())}</p>${axes.map(([t, d, r]) => `<div class="pa2" ${tipAttr({ h: t, r: [[d, `${r.rank}e sur ${r.n}`, ""]], n: "Le trait du milieu est la médiane du secteur." })} tabindex="0"><span class="pt"><b>${t}</b><small>${word(r.p)}</small></span><span class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${r.p >= 0.55 ? "var(--g)" : r.p > 0.45 ? "var(--n)" : "var(--o)"}"></i></span></div>`).join("")}
-    <p class="note" style="margin:6px 0 0">Chaque point place l'entreprise parmi les ${axes[0][2].n} entreprises du secteur suivies : à droite les mieux placées, au milieu la ${medBtn()}. Ce profil décrit les derniers comptes ; ce n'est pas une note d'achat.</p></div>`;
+  const axes = rfAxes(s); if (axes.filter(a => a.r).length < 3) return "";
+  const n = (axes.find(a => a.r) || {}).r.n;
+  return `<div class="prof"><p class="kick" style="margin-bottom:8px">Son profil dans le secteur ${esc(secName(s).toLowerCase())}</p>${axes.map(a => a.r ? `<div class="pa2" ${tipAttr({ h: a.t, r: [[a.d, `${a.r.rank}e sur ${a.r.n}`, ""]], n: "Le trait du milieu est la médiane du secteur." })} tabindex="0"><span class="pt"><b>${a.t}</b><small>${esc(a.word)}</small></span><span class="pl"><i class="pm"></i><i class="pd" style="left:${a.r.p * 100}%;background:${axCol(a.r.p)}"></i></span></div>`
+    : `<div class="pa2 pa2-ns" title="${a.special === "nodiv" ? "Cette entreprise ne verse pas de dividende." : NS_PE}" tabindex="0"><span class="pt"><b>${a.t}</b><small>${esc(a.word)}</small></span><span class="pl"><i class="pm"></i></span></div>`).join("")}
+    <p class="note" style="margin:6px 0 0">Chaque point place l'entreprise parmi les ${n} entreprises du secteur suivies : à droite les mieux placées, au milieu la ${medBtn()}. Ce profil décrit les derniers comptes ; ce n'est pas une note d'achat.</p></div>`;
 }
 
 /* ---------- Premium : jeton gardé sur l'appareil, quotas, incitations ---------- */
@@ -2315,22 +2348,10 @@ function pfFull(P) { if (isPrem() || P.l.length < FREE.pf) return false; toast(`
 premStatus();
 
 /* ---------- Score visuel : le profil en 5 axes, en version compacte (cartes, comparaisons) ---------- */
-function profilAxes(s) {
-  if (s.missing) return [];
-  const bank = isBank(s), m = ratios(s);
-  return [
-    ["Croissance", rankIn(s, c => ratios(c).g1)],
-    [bank ? "Rentabilité" : "Marge", bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge)],
-    ["Solidité", bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false)],
-    ["Dividende", m.payout != null && m.payout > 0 ? rankIn(s, c => { const p = ratios(c).payout; return p > 0 ? p : null; }, false) : null],
-    ["Prix", valo(s) && valo(s).pe ? rankIn(s, c => { const v = valo(c); return v && v.pe ? v.pe : null; }, false) : null],
-  ].filter(a => a[1]);
-}
-const axCol = p => p >= 0.55 ? "var(--g)" : p > 0.45 ? "var(--n)" : "var(--o)";
-const axWord = p => p >= 0.75 ? "parmi les meilleures" : p >= 0.55 ? "au-dessus de la médiane" : p > 0.45 ? "dans la médiane" : p > 0.25 ? "sous la médiane" : "parmi les plus faibles";
+function profilAxes(s) { return rfAxes(s).filter(a => a.r).map(a => [a.t, a.r, a.word, a.k]); } // forme compacte, gardée pour les appels existants
 function profilMini(s) {
   const ax = profilAxes(s); if (ax.length < 3) return "";
-  return `<div class="pmini" aria-label="Profil dans son secteur">${ax.map(([t, r]) => `<span ${tipAttr({ h: t, r: [["Place dans le secteur", `${r.rank}e sur ${r.n}`, ""]], n: axWord(r.p) + ". Le trait du milieu est la médiane." })} tabindex="0"><small>${t}</small><i class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${axCol(r.p)}"></i></i></span>`).join("")}</div>`;
+  return `<div class="pmini" aria-label="Profil dans son secteur">${ax.map(a => { const [t, r] = a; return `<span ${tipAttr({ h: t, r: [["Place dans le secteur", `${r.rank}e sur ${r.n}`, ""]], n: (a[2] || axWord(r.p)) + ". Le trait du milieu est la médiane." })} tabindex="0"><small>${t}</small><i class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${axCol(r.p)}"></i></i></span>`; }).join("")}</div>`;
 }
 function profilsCompare(list) {
   const rows = list.map(c => [c, profilAxes(c)]).filter(([, a]) => a.length >= 3); if (rows.length < 2) return "";
@@ -2349,7 +2370,7 @@ function ficheFaits(s, c) {
     comptes: f && { exercice: f.year, devise: s.currency, ventes_millions: s.ca, ventes_annee_precedente_millions: s.caPrev, benefice_net_millions: s.net, croissance_ventes_pct: R1(r.g1), marge_operationnelle_pct: R1(r.marge), marge_nette_pct: R1(r.nm), rentabilite_capitaux_propres_pct: R1(r.roe), dette_nette_en_annees_de_resultat_avant_amortissements: r.lev == null ? null : Math.round(r.lev * 10) / 10, tresorerie_superieure_a_la_dette: s.netDebt != null && s.netDebt < 0, part_du_benefice_versee_en_dividende_pct: R1(r.payout) },
     mediane_du_secteur: { entreprises: m.n, croissance_ventes_pct: R1(m.g1), marge_operationnelle_pct: R1(m.marge), rentabilite_pct: R1(m.roe), dette_en_annees_de_resultat_avant_amortissements: m.lev == null ? null : Math.round(m.lev * 10) / 10, distribution_pct: R1(m.payout), per: MEDPE[s.sector] ? Math.round(MEDPE[s.sector]) : null },
     jugement_du_site_critere_par_critere: f ? lecture(s, f).map(i => `${i.q} ${String(i.value || "").replace(/<[^>]+>/g, "")} (${i.lv === "fort" ? "point fort" : i.lv === "vig" ? "point de vigilance" : "dans la moyenne"})`) : [],
-    profil_dans_le_secteur: profilAxes(s).map(([t, x]) => `${t} : ${x.rank}e sur ${x.n}, ${axWord(x.p)}`),
+    profil_dans_le_secteur: profilAxes(s).map(([t, x, w]) => `${t} : ${x.rank}e sur ${x.n}, ${w}`),
     action: p && { cours: p.p, devise: p.cur, variation_jour_pct: p.chg, variation_1an_pct: p.p1y ? R1(p.p / p.p1y - 1) : null, plus_haut_1an: p.h52, plus_bas_1an: p.l52, per: v && v.pe ? Math.round(v.pe * 10) / 10 : null, rendement_dividende_pct: v ? R1(v.yld) : null, capitalisation_milliards_eur: v && v.capE ? Math.round(v.capE / 1e8) / 10 : null },
     concurrents: peersOf(s, 4).list.map(x => { const rr = ratios(x), vv = valo(x); return { nom: x.name, croissance_ventes_pct: R1(rr.g1), marge_pct: R1(rr.marge), per: vv && vv.pe ? Math.round(vv.pe) : null }; }),
     annonces_recentes: Object.values(ANA || {}).filter(x => x.id === s.id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map(x => ({ date: x.date, type: x.type, chiffres: x.chiffres, lecture: x.lecture })),

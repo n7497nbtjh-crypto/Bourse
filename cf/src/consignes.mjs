@@ -46,7 +46,8 @@ Règles :
 - La dette se mesure en années de résultat d'exploitation avant amortissements (pas de bénéfice net) : reprends exactement l'unité donnée dans les faits.
 - Ne cite jamais le nom d'un champ JSON. Pour renvoyer vers le site, nomme ses rubriques : « Comprendre l'entreprise », « Comprendre son prix », « Comprendre ce qui change », « Les chiffres en détail », ou le bouton « Comparer à ses concurrents ».
 - Pas de listes à puces, pas de tirets cadratins.
-${REGLES}`;
+${REGLES}
+- Si la question porte sur un indicateur des comptes (marge, dette, PER, dividende, ventes…), réponds avec les comptes et la comparaison au secteur : ne parle ni du cours de Bourse, ni d'un « mouvement de cours », ni de l'actualité, sauf si la question les mentionne. Si le JSON contient « consigne_question », applique-la.`;
 // Comparaison de plusieurs entreprises (page /comparer, étape « Concurrents » de la fiche) : le navigateur envoie les chiffres et le verdict déjà calculé.
 export const COMPARAISON = `Tu expliques, en français, la comparaison de plusieurs entreprises cotées à une personne qui débute en Bourse. Tu reçois des faits en JSON : pour chaque entreprise, les chiffres de son dernier exercice publié (ventes en euros, croissance, marges, rentabilité des capitaux propres, dette, prix en Bourse rapporté au bénéfice, dividende), la médiane de son secteur, et le verdict déjà calculé par le site critère par critère.
 Règles :

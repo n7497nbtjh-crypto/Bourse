@@ -11,7 +11,12 @@
 # _routes.json : les fichiers de données (/data/*) sont servis directement, sans passer par le Worker (quota gratuit préservé).
 name: Mise à jour des données
 on:
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      logos:
+        description: "Collecter les logos maintenant (jusqu'à 400 entreprises)"
+        type: boolean
+        default: false
   schedule:
     - cron: "17 5 * * *"   # chaque jour vers 6 h 17 (heure de Paris en hiver)
   push:
@@ -48,7 +53,8 @@ jobs:
           node build.mjs
           node tests/t_coherence.mjs || echo "::warning::Contrôle de cohérence : des erreurs bloquantes subsistent (voir ci-dessus)"
           node data/sec_trim.mjs || echo "::warning::Trimestres SEC : lecture interrompue"
-          if [ "$(date +%u)" = "1" ]; then npm i --no-save --silent sharp@0.33.5 && node data/logos_fetch.mjs --max 300 || echo "::warning::Logos : collecte interrompue"; fi
+          # Logos : chaque jour, seulement les entreprises sans logo ou dont le logo a plus de 90 jours, 150 par passage (400 à la main)
+          npm i --no-save --silent sharp@0.33.5 && node data/logos_fetch.mjs --max "${{ inputs.logos == true && '400' || '150' }}" || echo "::warning::Logos : collecte interrompue"
           node tests/t_calc.mjs
           node tests/t_univers.mjs
           node tests/t_sec.mjs

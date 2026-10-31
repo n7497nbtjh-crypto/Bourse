@@ -190,6 +190,10 @@ async function orcIaAsk(q, o = {}) {
     const rediger = async box => {
       box.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA du site rédige à partir des données de la fiche…</div>`;
       const faits = { ...ficheFaits(s, full), ...(typeof ficheWd === "function" ? { identite: ficheWd(s.id) } : {}) };
+      // 4e passage 2.4 : l'actualité suivie n'est jointe que si la question porte sur le cours, l'actualité, ou sur ce qui peut peser sur l'entreprise ;
+      // une question sur un indicateur (marge, dette, PER…) reçoit les comptes seuls, et la réponse ne parle pas de « mouvement de cours ».
+      const qn = typeof norm === "function" ? norm(q) : q.toLowerCase(), surCours = /\bcours\b|bourse|action (monte|baisse|chute)|actualite|nouvelle|contexte|risque|menace|peser|avenir|droits de douane|guerre|petrole/.test(qn), surIndic = /marge|rentab|dette|\bper\b|dividende|benefice|ventes|chiffre d affaires|croissance|endett|capitaux|tresorerie/.test(qn);
+      if (surIndic && !surCours) { delete faits.actualite_qui_la_concerne; delete faits.actualite_qui_la_concerne_note; delete faits.annonces_recentes; faits.consigne_question = "Question sur un indicateur des comptes : réponds avec les comptes et la comparaison au secteur seulement, sans parler du cours de Bourse ni de l'actualité."; }
       const autres = await iaAutresEntreprises(q, s); if (autres.length) faits.autres_entreprises_citees_dans_la_question = autres; // « pourquoi la marge de LVMH est-elle plus haute que celle de Kering ? » : Kering est chargée aussi
       box.innerHTML = miaRendu(await iaRediger("assistant", faits, { question: q, max: 600 }));
     };

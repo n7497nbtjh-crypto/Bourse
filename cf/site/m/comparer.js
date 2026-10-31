@@ -333,7 +333,7 @@ const CMPR_AXE = { croissance: ["Croissance"], rentabilite: ["Marge", "Rentabili
 function cmprMedSub(v, fm) { return v != null && isFinite(v) ? `secteur : ${fm(v)}` : ""; }
 function cmprAxis(F, names) {
   const a = profilAxes(F.c).find(x => names.includes(x[0])); if (!a) return null; const r = a[1];
-  return { html: `<div class="cmpr-rk"><span class="pl"><i class="pm"></i><i class="pd" style="left:${(r.p * 100).toFixed(1)}%;background:${axCol(r.p)}"></i></span><small>${esc(axWord(r.p))} · ${r.rank}e sur ${r.n}</small></div>` };
+  return { html: `<div class="cmpr-rk"><span class="pl"><i class="pm"></i><i class="pd" style="left:${(r.p * 100).toFixed(1)}%;background:${axCol(r.p)}"></i></span><small>${esc(a[2])} · ${r.rank}e sur ${r.n}</small></div>` };
 }
 function cmprCagr(F) {
   const c = F.full; if (!c || !c.fin || !c.fin.ca) return null;

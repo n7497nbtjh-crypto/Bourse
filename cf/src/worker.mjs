@@ -92,8 +92,10 @@ export function meta(path, q = null) {
 }
 
 // Anciennes adresses de l'apprentissage, fusionnées dans l'Académie (même règle que parRedirection dans cf/site/m/parcours.js)
+export const ALIAS_ENTREPRISES = { samsung: "samsung-electronics", hyundai: "hyundai-motor", aramco: "saudi-aramco", "saudi-aramco": null, tata: "tcs", "tata-consultancy": "tcs", lg: "lg-electronics", "taiwan-semiconductor": "tsmc", google: "alphabet", facebook: "meta", "louis-vuitton": "lvmh", total: "totalenergies", "air-liquide": null, novo: "novo-nordisk" }; // 4e passage 2.5 : noms courts courants
 export function redirectionParcours(p) {
   const m = /^\/debuter\/(.+)$/.exec(p || ""); if (m) return "/academie/express/" + m[1];
+  const ma = /^\/entreprise\/([a-z0-9-]+)\/?$/.exec(p || ""); if (ma && ALIAS_ENTREPRISES[ma[1]]) return "/entreprise/" + ALIAS_ENTREPRISES[ma[1]];
   if (p === "/simulateurs/passe") return "/outils/si-javais"; // affichait le simulateur d'épargne sans le dire (audit P2-6)
   if (p === "/pour-moi") return "/repartitions"; // « Pistes pour vous » remplacé par les répartitions types, sans personnalisation (audit P0-6)
   // Lot 2 (30/10) : quatre portes ; les anciennes pages d'entrée sont fusionnées dans /apprendre (les leçons gardent leur adresse)

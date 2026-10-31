@@ -43,6 +43,9 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
     if (r.pay.length) err.push(`${id} : taux de distribution affiché en clair ${r.pay.join(", ")} %`);
   }
   await b.close();
+  // 4e passage, 1.4 : fourchettes sur 1 an suspectes (plus haut / plus bas > 3) dans les cours : signalées, la fiche ne les affiche pas
+  try { const C = JSON.parse(require("fs").readFileSync("cf/site/data/cours.json", "utf8")).items || {}; const sus = Object.entries(C).filter(([k, v]) => k.startsWith("c:") && v.l52 > 0 && v.h52 / v.l52 > 3).map(([k, v]) => `${k.slice(2)} (${v.l52}–${v.h52})`);
+    if (sus.length) console.log(`Fourchettes sur 1 an suspectes (ratio > 3, masquées sur la fiche) : ${sus.length}. ${sus.slice(0, 8).join(", ")}${sus.length > 8 ? "…" : ""}`); } catch (e) { }
   console.log(err.length ? "ÉCARTS :\n- " + err.join("\n- ") : `OK : l'exemple ${ex && ex.id} concorde avec la fiche ; ${vus} fiches sans PER > 100 ni distribution > 150 % en clair`);
   process.exit(err.length ? 1 : 0);
 })();
