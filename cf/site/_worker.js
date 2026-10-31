@@ -2525,7 +2525,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "79a4e73eb9bf1e4e", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "6eb65973c9626cd9", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -2830,7 +2830,7 @@ function redirectionParcours(p) {
   if (p === "/pour-moi") return "/repartitions";
   if (p === "/commencer") return "/apprendre";
   let mf = /^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)\/?$/.exec(p);
-  return mf ? mf[1] + (mf[2] === "comptes" ? "#tous-les-chiffres" : mf[2] === "communaute" ? "#rf-synth" : /^comprendre/.test(mf[2]) ? "#tous-les-chiffres" : "#rf-agenda") : p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/" || p === "/debuter" || p === "/premiers-pas" ? "/apprendre" : null;
+  return mf ? mf[1] + (mf[2] === "comptes" ? "#tous-les-chiffres" : mf[2] === "communaute" ? "#rf-sources" : /^comprendre/.test(mf[2]) ? "#tous-les-chiffres" : "#rf-agenda") : p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/" || p === "/debuter" || p === "/premiers-pas" ? "/apprendre" : null;
 }
 var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree = () => Response.json({ error: "Cette adresse n'est plus utilis\xE9e. L'IA du site r\xE9pond dans le panneau \u2726 \xAB Demander \xE0 l'IA \xBB", ia_serveur: !1 }, { status: 410, headers: { "cache-control": "no-store" } }), worker_default = {
   async fetch(request, env, ctx) {
