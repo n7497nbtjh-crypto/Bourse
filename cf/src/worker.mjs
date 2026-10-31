@@ -11,7 +11,7 @@ import presse from "./presse.mjs";
 import { cours } from "./cours.mjs";
 import { veille } from "./veille.mjs";
 import { premium } from "./compte.mjs";
-import { espace, rapportExemple } from "./espace.mjs";
+import { espace, rapportExemple, compterEvt, COMPTEURS_OK } from "./espace.mjs";
 import { signaler } from "./signaler.mjs";
 import { push, pousser } from "./push.mjs";
 import { mcp } from "./mcp.mjs";
@@ -83,6 +83,7 @@ export function meta(path, q = null) {
   if (p === "/commencer") return { title: `Par où commencer en Bourse : le guide du nouvel investisseur · ${SITE}`, desc: "Épargne de précaution, horizon, choix du compte, diversification, frais, pièges à éviter : sept étapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalisé." };
   if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Plus de questions à l'assistant IA, de résumés détaillés et de bilans rédigés, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." };
   if (p === "/espace/ia") return { title: `Mon IA · ${SITE}`, desc: "Les réponses calculées du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni clé." };
+  if (p === "/ia/connecter") return { title: `Brancher Claude ou ChatGPT sur bilan. · ${SITE}`, desc: "Trois étapes pour que votre assistant IA lise les comptes officiels et les médianes de bilan. au lieu de répondre de mémoire. Adresse personnelle : 20 appels par jour gratuits, sans limite avec Premium." };
   if (p === "/connecteur") return { title: `Utiliser bilan. dans ChatGPT ou Claude · ${SITE}`, desc: "Ajoutez bilan. à Claude ou à ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda, sources à l'appui. Gratuit, en lecture seule, sans conseil." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
   if (p === "/cgv") return { title: `Conditions générales de vente · ${SITE}`, desc: BASE_DESC };
@@ -121,12 +122,17 @@ export default {
     if (url.pathname.startsWith("/api/ia/")) return iaSite(request, env); // l'IA du site (Workers AI, gratuite, plafonnée)
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
+    if (url.pathname === "/api/compteur" && request.method === "POST") { // 5e passage (E4) : un geste du tunnel, compté par semaine, sans identifiant
+      const e = url.searchParams.get("e") || ""; if (COMPTEURS_OK.has(e) && ["suivre", "apercu-alerte", "rapport-exemple", "premium-vue"].includes(e)) { const pr = compterEvt(env, [e]); if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(pr); else await pr; }
+      return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
+    }
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
+    { const mk = url.pathname.match(/^\/mcp\/([a-f0-9]{32})\/?$/); if (mk) return mcp(request, env, ctx, mk[1]); } // adresse personnelle (5e passage, C)
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const redir = redirectionParcours(url.pathname.replace(/\/+$/, ""));
     if (redir) { const [rp, rh] = redir.split("#"); return Response.redirect(url.origin + rp + url.search + (rh ? "#" + rh : ""), 301); }
@@ -152,6 +158,10 @@ export default {
     let image = null; // 5e passage (B1) : image de partage propre à la fiche (data/og.mjs), seulement si elle existe
     if (fq) { try { const ids = await ogIds(env, url); if (ids.has(fq[1])) image = { url: `${url.origin}/og/entreprise/${fq[1]}.png`, alt: `${t.title} : verdict et cinq jauges face à la médiane du secteur, d'après les comptes officiels.` }; } catch (e) { } }
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image });
+    if (info && ctx && typeof ctx.waitUntil === "function" && !/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless/i.test(request.headers.get("user-agent") || "")) { // 5e passage (E4) : page servie à un humain
+      const ref = request.headers.get("referer") || "", src = url.searchParams.get("utm_source") === "x" || /\/\/(t\.co|x\.com|twitter\.com)\//.test(ref) ? "src:x" : /\/\/(www\.)?(google|bing|duckduckgo|qwant|ecosia|yahoo|search\.brave)\./.test(ref) ? "src:moteur" : ref && !ref.includes(url.host) ? "src:autre" : null;
+      ctx.waitUntil(compterEvt(env, ["visite", ...(fq ? ["fiche"] : []), ...(src ? [src] : [])]));
+    }
     return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION, ...SECURITE } });
   },
 };

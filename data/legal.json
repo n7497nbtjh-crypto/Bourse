@@ -44,7 +44,8 @@
      "p": [
       "Envoi des e-mails : Brevo, marque de Sendinblue SAS, société française.",
       "Paiement en ligne : Stripe. bilan. ne voit ni ne conserve vos numéros de carte bancaire.",
-      "Intelligence artificielle : le site n'appelle aucun modèle d'IA. Si vous connectez votre propre IA (« Connecter mon IA »), vos questions sont traitées par OpenRouter (OpenRouter, Inc., États-Unis) et le modèle que vous choisissez, sous votre propre compte."
+      "Intelligence artificielle : les réponses rédigées par l'IA du site sont produites par un modèle hébergé par Cloudflare (Cloudflare Workers AI, Cloudflare, Inc.). Les réponses calculées le sont par le site lui-même, sans modèle d'IA.",
+      "Connecteur pour Claude ou ChatGPT : si vous branchez votre assistant sur bilan., c'est votre assistant (Anthropic, OpenAI ou autre) qui interroge le site, sous votre propre compte chez lui."
      ]
     },
     {
@@ -52,7 +53,7 @@
      "p": [
       "bilan. publie des informations factuelles et pédagogiques sur la bourse.",
       "bilan. ne fournit aucun conseil en investissement. Voir la page « Avertissement ».",
-      "Les réponses calculées sont produites par le site à partir des données. Les textes rédigés par une intelligence artificielle (votre IA connectée, ou d'anciens textes publiés avant le 29 octobre 2026) sont signalés comme tels."
+      "Les réponses calculées sont produites par le site à partir des données. Les textes rédigés par l'IA du site sont signalés comme tels, avec le nom du modèle."
      ]
     },
     {
@@ -108,10 +109,11 @@
      "h": "2. Offres",
      "p": [
       "Version gratuite : accès limité aux contenus et outils du site, sans paiement.",
+      "Essai gratuit : quand il est proposé, 14 jours de Premium, sans carte bancaire, une fois par adresse e-mail. Il prend fin seul au bout de 14 jours, sans prélèvement ni engagement.",
       "Abonnement mensuel : 4,90 € par mois, sans engagement.",
       "Accès 12 mois : paiement unique de 39 €, sans renouvellement automatique.",
       "Le détail de ce que comprend chaque offre est affiché sur la page [Page des offres] avant le paiement.",
-      "« À vie » signifie : pendant toute la durée d'exploitation du service bilan. par l'éditeur."
+      "Le connecteur pour assistants IA (Claude, ChatGPT…) est limité à 20 appels par jour avec la version gratuite, sans limite avec Premium (usage raisonnable : 240 appels par minute au plus)."
      ]
     },
     {
@@ -119,7 +121,7 @@
      "p": [
       "Les prix sont indiqués en euros, toutes taxes comprises.",
       "TVA non applicable, art. 293 B du CGI.",
-      "L'éditeur peut modifier le prix de l'abonnement mensuel. Il prévient les abonnés par e-mail au moins [30] jours avant. L'abonné qui refuse peut résilier avant la date du changement.",
+      "L'éditeur peut modifier le prix de l'abonnement mensuel. Il prévient les abonnés par e-mail au moins 30 jours avant. L'abonné qui refuse peut résilier avant la date du changement.",
       "Le prix de l'accès 12 mois déjà payé ne change pas."
      ]
     },
@@ -157,7 +159,7 @@
      "h": "7. Résiliation de l'abonnement",
      "p": [
       "L'abonnement mensuel est sans engagement. Il peut être résilié à tout moment.",
-      "Résiliation en ligne : le bouton « Résilier mon abonnement » est accessible depuis [emplacement du bouton, par exemple le pied de page et l'espace abonné]. Le client confirme son identité, voit un résumé de sa demande, puis la valide.",
+      "Résiliation en ligne : le bouton « Gérer ou résilier mon abonnement » est accessible sur la page Premium, depuis tout appareil où l'accès est activé. Il ouvre l'espace client sécurisé de Stripe, où le client confirme sa demande et voit la date de fin.",
       "Aucune création de compte n'est exigée pour résilier.",
       "Un accusé de réception est envoyé par e-mail. Il indique la date de fin de l'abonnement.",
       "La résiliation prend effet à la fin de la période mensuelle en cours. Le mois commencé n'est pas remboursé, sauf rétractation dans les 14 jours.",
@@ -194,7 +196,7 @@
     {
      "h": "11. Réclamations et médiation",
      "p": [
-      "En cas de problème, le client écrit d'abord à [E-mail de contact]. L'éditeur répond sous [15] jours.",
+      "En cas de problème, le client écrit d'abord à [E-mail de contact]. L'éditeur répond sous 15 jours.",
       "Si la réclamation écrite n'aboutit pas, le client peut saisir gratuitement le médiateur de la consommation : [Nom du médiateur], [Adresse postale du médiateur], [Site du médiateur].",
       "Le client doit saisir le médiateur dans un délai d'un an à compter de sa réclamation écrite à l'éditeur.",
       "Le recours au médiateur n'est pas obligatoire avant d'aller devant un juge."
@@ -260,6 +262,15 @@
      ]
     },
     {
+     "h": "Essai Premium de 14 jours",
+     "p": [
+      "Données : l'adresse e-mail de votre espace et la date de l'essai.",
+      "Finalité : ouvrir l'essai et éviter qu'il soit utilisé plusieurs fois avec la même adresse.",
+      "Base légale : l'exécution du service demandé, et l'intérêt légitime de l'éditeur à éviter les abus.",
+      "Durée : 12 mois après l'essai, puis suppression automatique."
+     ]
+    },
+    {
      "h": "Espace communauté",
      "p": [
       "Données : pseudo, texte des messages, date de publication.",
@@ -276,31 +287,43 @@
       "Cette empreinte est pseudonymisée. Elle ne permet pas de vous identifier directement.",
       "Finalité : limiter le spam, les votes multiples et les abus.",
       "Base légale : l'intérêt légitime de l'éditeur à protéger le site.",
-      "Durée : [7] jours, puis suppression automatique."
+      "Durée : les compteurs du jour sont remis à zéro chaque jour ; les traces de tentatives de connexion sont effacées après 24 heures."
      ]
     },
     {
-     "h": "Préférences dans votre navigateur",
+     "h": "Mon espace (compte gratuit)",
      "p": [
-      "Le site enregistre certaines préférences dans votre navigateur (localStorage) : par exemple le thème, la liste d'actions suivies ou votre portefeuille simulé.",
-      "Ces données restent sur votre appareil. Elles ne sont pas envoyées à bilan.",
-      "Voir la section « Cookies et stockage local »."
+      "Données : adresse e-mail, empreinte du mot de passe (le mot de passe lui-même n'est jamais conservé), vos favoris, votre portefeuille tel que vous le saisissez ou l'importez (lignes, quantités, prix de revient, opérations), vos réglages du rapport, vos rapports de la semaine et vos alertes.",
+      "Finalité : vous donner les mêmes favoris et le même portefeuille sur tous vos appareils, préparer votre rapport de la semaine et vos alertes.",
+      "Base légale : l'exécution du service que vous demandez en créant votre espace.",
+      "Où : dans la base de données du site, chez Cloudflare (D1). Seul l'éditeur y a accès. Le portefeuille n'est jamais montré à d'autres visiteurs, ni vendu, ni utilisé pour de la publicité.",
+      "Durée : tant que votre espace existe. Les rapports de la semaine sont gardés 26 semaines, les alertes 90 jours, les sessions de connexion 60 jours au plus. Vous pouvez supprimer votre espace à tout moment (Mon espace, Réglages) : le compte, les favoris, le portefeuille, les rapports, les alertes et l'adresse du connecteur sont effacés aussitôt.",
+      "Sans espace, vos favoris et votre portefeuille restent seulement dans votre navigateur (stockage local) : ils ne sont pas envoyés au site."
      ]
     },
     {
      "h": "Intelligence artificielle",
      "p": [
-      "Le site n'envoie aucune donnée à un modèle d'IA : ses réponses sont calculées dans votre navigateur.",
-      "Si vous choisissez « Connecter mon IA », votre navigateur se connecte à votre compte OpenRouter (OpenRouter, Inc., États-Unis). La clé obtenue est gardée dans votre navigateur et n'est jamais envoyée à bilan.",
-      "Quand vous demandez une réponse rédigée, votre question et les données du site utiles à la réponse partent directement de votre navigateur vers OpenRouter et le modèle choisi. Pour l'analyse de votre portefeuille, cela comprend les chiffres de vos lignes (sans votre nom ni votre adresse). Ces échanges relèvent des conditions d'OpenRouter et du fournisseur du modèle.",
-      "Vous pouvez déconnecter votre IA à tout moment depuis la page « Mon IA » : la clé est alors effacée de votre navigateur."
+      "Les réponses calculées sont produites par le site, dans votre navigateur, sans modèle d'IA.",
+      "Quand vous demandez une réponse rédigée, votre question et les chiffres du site utiles à la réponse (par exemple ceux d'une fiche, ou ceux de votre portefeuille si vous demandez son explication) sont envoyés au modèle d'IA du site, hébergé par Cloudflare (Workers AI). Ils servent uniquement à rédiger la réponse.",
+      "Une réponse identique peut être resservie pendant 24 heures à quiconque pose la même question avec les mêmes chiffres : elle est gardée au plus 48 heures, sans lien avec votre identité.",
+      "Le site compte les questions posées par jour (empreinte pseudonyme, voir « Protection contre les abus ») pour appliquer les limites gratuites.",
+      "Connecteur : si vous branchez Claude, ChatGPT ou un autre assistant sur bilan., c'est cet assistant qui lit les données publiques du site. Votre adresse personnelle de connecteur sert seulement à compter vos appels du jour ; le connecteur ne donne accès ni à votre compte ni à votre portefeuille."
+     ]
+    },
+    {
+     "h": "Mesure de fréquentation",
+     "p": [
+      "Le site compte, semaine par semaine, le nombre de pages vues, de fiches ouvertes, de comptes créés et de quelques gestes (suivre une entreprise, voir un aperçu Premium) pour savoir ce qui sert.",
+      "Ces compteurs ne contiennent aucune donnée personnelle : ni adresse IP, ni cookie, ni identifiant. Ils sont gardés deux ans.",
+      "Aucun outil de mesure d'audience tiers (Google Analytics ou autre) n'est utilisé."
      ]
     },
     {
      "h": "Destinataires et sous-traitants",
      "p": [
       "Seul l'éditeur a accès à vos données. Elles sont aussi traitées par ses prestataires, uniquement pour le service :",
-      "Cloudflare, Inc. (États-Unis) : hébergement, sécurité, base de données.",
+      "Cloudflare, Inc. (États-Unis) : hébergement, sécurité, base de données (comptes, favoris, portefeuilles, rapports) et modèle d'IA du site (Workers AI).",
       "Sendinblue SAS, marque Brevo (France) : envoi des e-mails.",
       "Stripe : paiement. Pour les clients européens, le prestataire contractant est [Entité Stripe, à vérifier dans votre contrat Stripe]."
      ]
@@ -326,11 +349,11 @@
     {
      "h": "Cookies et stockage local",
      "p": [
-      "bilan. n'utilise aucun cookie publicitaire ni outil de mesure d'audience.",
-      "Le site utilise seulement le stockage local du navigateur (localStorage) pour des besoins techniques : garder vos préférences d'affichage, vos listes de suivi, votre portefeuille simulé et, le cas échéant, votre session d'abonné.",
-      "Ces traceurs sont nécessaires au service que vous demandez. Selon les règles de la CNIL, ils ne demandent pas de consentement. C'est pourquoi le site n'affiche pas de bandeau cookies.",
-      "Vous pouvez effacer ces données à tout moment dans les réglages de votre navigateur. Certaines fonctions ne marcheront alors plus.",
-      "Cloudflare peut déposer un cookie technique de sécurité (protection contre les robots). [À vérifier selon la configuration Cloudflare.]",
+      "bilan. n'utilise aucun cookie publicitaire ni outil de mesure d'audience tiers.",
+      "Un seul cookie : « bilan_s », posé quand vous vous connectez à Mon espace. Il garde votre session (60 jours au plus) ; il est sécurisé (HttpOnly, Secure, SameSite=Lax) et strictement nécessaire au service que vous demandez.",
+      "Le site utilise aussi le stockage local du navigateur (localStorage) pour des besoins techniques : vos préférences d'affichage, vos favoris et votre portefeuille si vous n'avez pas d'espace, votre progression dans l'Académie et, le cas échéant, votre code Premium.",
+      "Ces traceurs sont nécessaires au service. Selon les règles de la CNIL, ils ne demandent pas de consentement : c'est pourquoi le site n'affiche pas de bandeau cookies.",
+      "Vous pouvez les effacer à tout moment dans les réglages de votre navigateur. Certaines fonctions ne marcheront alors plus.",
       "Si un outil de mesure ou un cookie non nécessaire est ajouté un jour, votre consentement sera demandé avant."
      ]
     },

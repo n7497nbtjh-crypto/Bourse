@@ -1056,6 +1056,7 @@ function pf3List(R0, P) {
       <div class="pf3det" id="pf3d${r.i}" ${open ? "" : "hidden"}>${open ? pf3Det(r, P) : ""}</div></div>`;
   };
   box.innerHTML = `<div class="pf3l"><div class="pf3hd"><span>Ligne</span><span>Quantité</span><span>${def("pf_pru", "PRU")}</span><span>Cours</span><span>${def("pf_valeur", "Valeur")}</span><span>${def("pf_latente", "Plus ou moins-value")}</span><span>${def("pf_poids", "Poids")}</span><span></span></div>${live.map(row).join("")}</div>
+    ${!isPrem() && P.l.filter(pf3IsActive).length >= FREE.pf ? `<a class="pf3r11" href="/premium"><span>${FREE.pf + 1}<sup>e</sup> ligne</span><span>Le portefeuille gratuit suit ${FREE.pf} lignes. Premium les suit toutes, avec les mêmes calculs.</span><span>Premium →</span></a>` : ""}
     ${closed.length ? `<details class="pf3closed"><summary>${closed.length} ligne${closed.length > 1 ? "s" : ""} entièrement vendue${closed.length > 1 ? "s" : ""}</summary><div class="pf3l">${closed.map(row).join("")}</div></details>` : ""}`;
   $$(".pf3rb", box).forEach(b => b.onclick = () => { const i = +b.closest(".pf3r").dataset.i; PF3S.open = PF3S.open === i ? -1 : i; PF3S.op = null; pf3List(pf3Rows(pf3P()), pf3P()); if (PF3S.open >= 0) { const d = $("#pf3d" + i); if (d) d.scrollIntoView({ block: "nearest", behavior: "smooth" }); } });
   if (PF3S.open >= 0) pf3DetBind(R0.rows.find(r => r.i === PF3S.open), P);

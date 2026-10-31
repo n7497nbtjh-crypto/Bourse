@@ -425,6 +425,25 @@ function lecon(B, { m, l }, origin, autres) {
 
 /* ---------- Débit ---------- */
 const MINUTE = new Map(), PAR_MINUTE = 240, PAR_JOUR = 30000;
+export const MCP_GRATUIT_JOUR = 20; // 5e passage (C) : adresse personnelle d'un compte gratuit ; Premium : sans limite par jour (débit par minute gardé)
+async function cleInfo(env, cle) { // { compte, premium } pour une adresse personnelle /mcp/<clé>, ou null si la clé est inconnue
+  if (!env.DB || !/^[a-f0-9]{32}$/.test(cle || "")) return null;
+  try {
+    const r = await env.DB.prepare(`SELECT k.compte, c.premium FROM mcp_cles k JOIN comptes c ON c.id = k.compte WHERE k.cle = ?`).bind(cle).first(); if (!r) return null;
+    let prem = false; if (r.premium) { const a = await env.DB.prepare(`SELECT until FROM abonnes WHERE token = ?`).bind(r.premium).first(); prem = !!(a && a.until > Date.now()); }
+    return { compte: r.compte, premium: prem };
+  } catch (e) { return null; }
+}
+async function debitCle(env, info) { // compteur du jour d'une adresse personnelle
+  if (info.premium) return null;
+  try {
+    const jour = new Date().toISOString().slice(0, 10);
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))`).run();
+    const r = await env.DB.prepare(`INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, 'mcp', 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1 RETURNING n`).bind("mcpc:" + info.compte, jour).first();
+    if (r && r.n > MCP_GRATUIT_JOUR) return `Les ${MCP_GRATUIT_JOUR} appels gratuits du jour sont utilisés pour ce compte bilan. Ils reviennent demain ; avec Premium, le connecteur est sans limite.`;
+  } catch (e) { }
+  return null;
+}
 async function debit(request, env) {
   const ip = request.headers.get("cf-connecting-ip") || "local", now = Date.now(), w = MINUTE.get(ip);
   if (!w || now - w.t > 6e4) MINUTE.set(ip, { t: now, n: 1 }); else if (++w.n > PAR_MINUTE) return "Trop de requêtes en une minute. Réessayez dans un instant.";
@@ -462,7 +481,7 @@ async function traiter(msg, request, env, origin, ctx) {
   if (msg.method === "tools/call") {
     const t = TOOLS.find(x => x.name === p.name);
     if (!t) return err(id, -32602, `Outil inconnu : ${p.name}`);
-    const lim = await debit(request, env);
+    const lim = (await debit(request, env)) || (ctx && ctx.cleMcp ? await debitCle(env, ctx.cleMcp) : null);
     if (lim) return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text: lim }], isError: true } };
     try {
       const r = await outil(t.name, p.arguments && typeof p.arguments === "object" ? p.arguments : {}, env, origin, ctx);
@@ -475,9 +494,13 @@ async function traiter(msg, request, env, origin, ctx) {
   return err(id, -32601, `Méthode inconnue : ${msg.method}`);
 }
 
-export async function mcp(request, env, ctx) {
+export async function mcp(request, env, ctx, cle = null) {
   const url = new URL(request.url), origin = (env.SITE_URL && /^https:\/\//.test(env.SITE_URL) ? env.SITE_URL : url.origin).replace(/\/+$/, "");
   const m = request.method;
+  if (cle) { // adresse personnelle : la clé doit exister (sinon 404, sans dire pourquoi)
+    const info = await cleInfo(env, cle); if (!info) return rep(err(null, -32600, "Adresse de connecteur inconnue. Copiez la vôtre depuis Mon espace, Réglages."), 404);
+    ctx = Object.assign(Object.create(ctx || null), { cleMcp: info });
+  }
   if (m === "OPTIONS") return rep(null, 204);
   if (m === "GET") {
     const acc = request.headers.get("accept") || "";

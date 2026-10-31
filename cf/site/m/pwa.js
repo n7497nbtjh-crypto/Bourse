@@ -191,7 +191,7 @@ function pageConnecteur() {
   app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › bilan. dans ChatGPT ou Claude</div>
     <section class="pwa-hero"><p class="kick">Connecteur IA · gratuit · lecture seule</p>
       <h1>Utiliser bilan. dans ChatGPT ou Claude</h1>
-      <p class="lead">Ajoutez bilan. à votre assistant IA. Il lit alors les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda. Il calcule à partir de ces données au lieu d'inventer, et il cite ses sources.</p>
+      <p class="lead">Ajoutez bilan. à votre assistant IA. Il lit alors les comptes officiels de plus de 2 400 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda. Il calcule à partir de ces données au lieu d'inventer, et il cite ses sources.</p>
       <div class="pwa-url"><code id="pwaurl">${esc(url)}</code><button type="button" class="btn" id="pwacopie">Copier l'adresse</button></div>
       <p class="note" style="margin:6px 0 0">Aucun compte ni clé nécessaire. Protocole ouvert MCP (Model Context Protocol), reconnu par Claude, ChatGPT et la plupart des assistants.</p></section>
 
@@ -244,3 +244,34 @@ function pageConnecteur() {
   };
 }
 if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/connecteur$/, () => pageConnecteur()]);
+
+/* ---------- /ia/connecter (5e passage, C) : brancher Claude ou ChatGPT sur bilan. en trois étapes ----------
+   L'adresse personnelle (/mcp/<clé>, compte gratuit) compte 20 appels par jour ; Premium : sans limite. Les illustrations sont
+   des schémas du site, pas des captures d'écran de Claude ou de ChatGPT (dont les écrans changent souvent). */
+const IAC_SCH = {
+  copier: `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="38" width="150" height="40" rx="10" fill="#fff" stroke="#E2DCCF"/><text x="22" y="63" font-size="12" fill="#55524C" font-family="monospace">…/mcp/a3f9…</text><rect x="166" y="38" width="44" height="40" rx="10" fill="#111214"/><path d="M180 52h10v12h-10zM184 48h10v12" fill="none" stroke="#fff" stroke-width="1.6"/></svg>`,
+  ajouter: `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="10" width="200" height="100" rx="12" fill="#fff" stroke="#E2DCCF"/><text x="24" y="34" font-size="12" font-weight="700" fill="#111214" font-family="sans-serif">Connecteurs</text><rect x="24" y="46" width="172" height="22" rx="6" fill="#F1ECE1"/><text x="32" y="61" font-size="11" fill="#55524C" font-family="sans-serif">Nom : bilan.</text><rect x="24" y="74" width="172" height="22" rx="6" fill="#F1ECE1"/><text x="32" y="89" font-size="11" fill="#55524C" font-family="sans-serif">Adresse : collée</text><circle cx="190" cy="30" r="9" fill="#C6F432"/><path d="M186 30h8M190 26v8" stroke="#111214" stroke-width="1.6"/></svg>`,
+  demander: `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="10" width="200" height="100" rx="12" fill="#fff" stroke="#E2DCCF"/><rect x="24" y="22" width="130" height="24" rx="12" fill="#F1ECE1"/><text x="34" y="38" font-size="10.5" fill="#111214" font-family="sans-serif">Marge LVMH ou Hermès ?</text><rect x="64" y="54" width="132" height="42" rx="10" fill="#E6F3EB"/><text x="74" y="72" font-size="10" fill="#0E6B4A" font-family="sans-serif">Hermès 41 %, LVMH 22 %</text><text x="74" y="87" font-size="9" fill="#55524C" font-family="sans-serif">source : comptes 2025</text></svg>`,
+};
+async function pageIaConnecter() {
+  setTitle("Brancher votre IA sur bilan."); setNav("");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  let me = null; try { const r = await fetch("/api/espace/mcp", { credentials: "same-origin" }); if (r.ok) me = await r.json(); } catch (e) { }
+  const dans = PWA_LS("onglet") === "chatgpt" ? "chatgpt" : "claude";
+  const adr = me && me.adresse;
+  const ETAPES = { claude: [["copier", "Copiez votre adresse", "Votre adresse personnelle de connecteur, ci-dessus."], ["ajouter", "Ajoutez bilan. dans Claude", "Personnaliser, puis Connecteurs, puis + et « Ajouter un connecteur personnalisé ». Nom : bilan. ; adresse : la vôtre ; pas d'authentification."], ["demander", "Posez votre question", "Dans une conversation : +, Connecteurs, activez bilan. Puis demandez, par exemple, « compare la marge de LVMH et d'Hermès »."]],
+    chatgpt: [["copier", "Copiez votre adresse", "Votre adresse personnelle de connecteur, ci-dessus."], ["ajouter", "Créez le connecteur dans ChatGPT", "Paramètres, Applications et connecteurs, Paramètres avancés : activez le mode développeur, puis « Créer ». Nom : bilan. ; adresse : la vôtre ; authentification : aucune."], ["demander", "Posez votre question", "Dans une conversation, choisissez bilan. dans le menu des outils, puis posez votre question."]] };
+  app.innerHTML = `<div class="crumbs"><a href="/premium">Premium</a> › Brancher votre IA</div>
+    <h1 class="pagetitle">Gardez votre IA : branchez-la sur bilan.</h1>
+    <p class="pagesub">Votre assistant lit alors les comptes officiels, les médianes du secteur et l'agenda de bilan. au lieu de répondre de mémoire, et cite ses sources. Lecture seule : il ne voit ni votre compte ni votre portefeuille.</p>
+    <section class="panel iac-adr"><div class="pb">${adr ? `<p class="kick">Votre adresse personnelle</p><div class="pwa-url"><code id="iacurl">${esc(adr)}</code><button type="button" class="btn" id="iaccopie">Copier</button></div>
+      <p class="note" style="margin:8px 0 0">${me.premium ? "Premium : sans limite d'appels par jour." : `Compte gratuit : ${me.limite_jour} appels par jour. <a class="lnk" href="/premium">Sans limite avec Premium</a>.`} Gardez cette adresse pour vous. <button type="button" class="linkbtn" id="iacnew">En changer</button></p>`
+      : `<p class="kick">Votre adresse personnelle</p><p style="margin:4px 0 10px">Elle s'obtient avec un espace gratuit (une adresse e-mail suffit) : 20 appels par jour, sans limite avec Premium.</p><a class="btn" href="/espace">Créer mon espace gratuit</a>`}</div></section>
+    <div class="pwa-tabs iac-tabs" role="tablist">${[["claude", "Claude"], ["chatgpt", "ChatGPT"]].map(([k, l]) => `<button type="button" role="tab" data-iac="${k}" aria-selected="${k === dans}" class="${k === dans ? "on" : ""}">${l}</button>`).join("")}</div>
+    ${Object.entries(ETAPES).map(([k, L]) => `<ol class="iac-st" data-iacp="${k}"${k === dans ? "" : " hidden"}>${L.map(([sch, t, d], i) => `<li><span class="iac-n">${i + 1}</span><div class="iac-sch">${IAC_SCH[sch]}</div><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>`).join("")}
+    <p class="note">Schémas du site, pas des captures d'écran : les intitulés de Claude et de ChatGPT changent d'une version à l'autre. Claude Code, Cursor et les autres clients : <a class="lnk" href="/connecteur">instructions détaillées</a>.</p>`;
+  $$("[data-iac]").forEach(b => b.onclick = () => { $$("[data-iac]").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-selected", x === b); }); $$("[data-iacp]").forEach(o => o.hidden = o.dataset.iacp !== b.dataset.iac); try { localStorage.setItem("bilan.pwa.onglet", b.dataset.iac); } catch (e) { } });
+  const cp = $("#iaccopie"); if (cp) cp.onclick = () => { try { navigator.clipboard.writeText($("#iacurl").textContent); toast("Adresse copiée."); } catch (e) { } };
+  const nw = $("#iacnew"); if (nw) nw.onclick = async () => { if (!confirm("Changer d'adresse ? L'ancienne cessera de fonctionner dans votre assistant.")) return; try { await fetch("/api/espace/mcp", { method: "POST", credentials: "same-origin" }); } catch (e) { } pageIaConnecter(); };
+}
+if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/ia\/connecter$/, () => pageIaConnecter()]);

@@ -26,6 +26,8 @@ async function init(db) {
   if (pret || !db) return;
   await db.prepare(`CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))`).run();
+  await db.prepare(`CREATE TABLE IF NOT EXISTS ia_cache (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0)`).run(); // 5e passage (C) : réponses identiques servies sans rappeler le modèle (24 h)
+  await db.prepare(`CREATE TABLE IF NOT EXISTS ia_niveaux (mois TEXT NOT NULL, niveau TEXT NOT NULL, n REAL NOT NULL, q INTEGER NOT NULL, PRIMARY KEY (mois, niveau))`).run(); // neurones et questions par niveau (visiteur, compte, premium) et par mois
   pret = true;
 }
 const NEURONES_GRATUITS_JOUR = 10000, NEURONES_PAR_EURO = 99000; // 1 € ≈ 1,09 $ ≈ 99 000 neurones à 0,011 $ les 1 000
@@ -60,6 +62,16 @@ const plafonds = env => ({ neurones: +env.IA_NEURONES_JOUR || 9000, budget: Math
 const siteOk = (c, P, marge) => c.neurones + marge < P.neurones || (P.budget > 0 && c.payes_mois + marge < P.budget);
 
 /** GET /api/ia/etat et POST /api/ia/rediger { tache, user, max }. */
+async function empreinte(t) { const d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)); return [...new Uint8Array(d)].slice(0, 16).map(x => x.toString(16).padStart(2, "0")).join(""); }
+async function parNiveau(env, nv, neurones) { await env.DB.prepare(`INSERT INTO ia_niveaux (mois, niveau, n, q) VALUES (?, ?, ?, 1) ON CONFLICT (mois, niveau) DO UPDATE SET n = n + ?, q = q + 1`).bind(jour().slice(0, 7), nv, neurones, neurones).run(); }
+export async function iaMesures(env) { // pour /api/espace/mesures : neurones et questions du mois par niveau, réponses servies par le cache, coût estimé au-delà de la part gratuite
+  try { await init(env.DB); const m = jour().slice(0, 7);
+    const L = (await env.DB.prepare(`SELECT niveau, n, q FROM ia_niveaux WHERE mois = ?`).bind(m).all()).results || [];
+    const c = await env.DB.prepare(`SELECT COUNT(*) AS n, SUM(n) AS servis FROM ia_cache WHERE at > ?`).bind(Date.now() - 30 * 864e5).first();
+    const p = await env.DB.prepare(`SELECT SUM(MAX(n - ?, 0)) AS p FROM ia_neurones WHERE jour LIKE ?`).bind(NEURONES_GRATUITS_JOUR, m + "%").first();
+    return { mois: m, par_niveau: L, cache: { reponses: (c && c.n) || 0, servies_sans_modele: (c && c.servis) || 0 }, neurones_payants_mois: (p && p.p) || 0, cout_estime_eur: Math.round(((p && p.p) || 0) / NEURONES_PAR_EURO * 100) / 100 };
+  } catch (e) { return { erreur: String(e && e.message || e) }; }
+}
 export async function iaSite(request, env) {
   const url = new URL(request.url), P = plafonds(env);
   const { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv];
@@ -83,6 +95,10 @@ export async function iaSite(request, env) {
   if (c.questions >= plafond) return json({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez posé ${plafond} questions à l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.`
     : `Vous avez posé vos ${plafond} questions rédigées du jour. Les réponses calculées restent disponibles, et l'IA revient demain.` }, 429);
   const messages = [{ role: "system", content: sys }, { role: "user", content: user }];
+  // Cache : même tâche, mêmes faits, même question → même réponse, sans coût ; la question compte quand même dans le quota du visiteur (pas de contournement)
+  const k = await empreinte(b.tache + "|" + max + "|" + user);
+  try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?`).bind(k, Date.now() - 864e5).first();
+    if (hit) { await compter(env, h, 0); await env.DB.prepare(`UPDATE ia_cache SET n = n + 1 WHERE k = ?`).bind(k).run(); await parNiveau(env, nv, 0); return json({ txt: hit.txt, modele: hit.modele, cache: true }); } } catch (e) { }
   for (const [model, cin, cout, nom] of MODELES) {
     const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
     if (nv !== "premium" && !siteOk(c, P, estime)) continue; // Premium passe toujours : son abonnement paie la réponse
@@ -93,7 +109,7 @@ export async function iaSite(request, env) {
       const txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw);
       const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
       try { await compter(env, h, reel); } catch (e) { return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur en panne)." }, 503); }
-      if (txt.length > 15) return json({ txt, modele: nom });
+      if (txt.length > 15) { try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_cache (k, txt, modele, at, n) VALUES (?, ?, ?, ?, 0)`).bind(k, txt, nom, Date.now()).run(); if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_cache WHERE at < ?`).bind(Date.now() - 2 * 864e5).run(); /* le cache ne garde rien au-delà de 48 h */ await parNiveau(env, nv, reel); } catch (e) { } return json({ txt, modele: nom }); }
     } catch (e) { /* modèle suivant */ }
   }
   return json({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les réponses calculées restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les réponses calculées restent disponibles, et l'IA revient demain." }, 429);

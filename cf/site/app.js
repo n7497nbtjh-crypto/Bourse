@@ -2391,38 +2391,62 @@ const ASK = ["Comment gagne-t-elle de l'argent ?", "Que retenir de ses derniers 
 /* ---------- Page Premium ---------- */
 let OFFRES = null;
 async function pagePremium(sub) {
+  // 5e passage (C) : « Votre IA répond. bilan. surveille. » Cinq arguments, chacun avec sa preuve tirée des données du site, puis les prix.
   setTitle(sub === "merci" ? "Merci" : "Premium"); setNav("prem");
   if (sub === "merci") return premiumMerci();
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
   PREM = null; const st = await premStatus();
-  const rows = [ // six lignes, ✓ et — (30/10) : fiches, médianes, outils, favoris et portefeuille restent gratuits, sans ligne pour le dire
-    ["Rapport de la semaine sur vos valeurs", "2 semaines d'historique", "12 semaines, lecture de l'IA"],
-    [`Alertes chaque soir (annonce, mouvement de plus de 5 %, résultats)${robotActif("alertes") ? "" : BIENTOT}`, "3 visibles", "✓ toutes"],
-    ["Questions libres rédigées par l'IA du site", "3 par jour", "✓ sans limite"],
-    ["L'Académie et la formation guidée de 6 semaines", "Les essentiels", "✓ tout"],
-    ["Portefeuille : positions suivies", `${FREE.pf}`, "✓ sans limite"],
-    ["Comparer côte à côte · recherche par critères", `${FREE.cmp} entreprises · 8 résultats`, "5 entreprises · 30 résultats"],
+  try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=premium-vue"); } catch (e) { }
+  const nCo = R && R.companies ? R.companies.filter(c => !c.missing).length : 0, ic = k => typeof accIc === "function" ? accIc(k) : "";
+  const ARG = [
+    ["ag", "Surveillé pendant votre sommeil", "Votre IA ne surveille rien. bilan. lit les publications officielles cinq fois par jour ouvré et vous prévient.", "prem-p1"],
+    ["mk", "Chaque chiffre est prouvé", "Une IA cite de mémoire ; ici, chaque chiffre renvoie au document officiel.", "prem-p2"],
+    ["pub", `La médiane de ${F0.format(nCo)} entreprises`, "Comparer à tout un secteur demande les comptes de tout le secteur : le site les a.", "prem-p3"],
+    ["cal", "bilan. se souvient", "12 semaines d'historique : ce qui a changé depuis la semaine dernière, sans rien noter.", "prem-p4"],
+    ["ia", "Gardez votre IA", "Branchez Claude ou ChatGPT sur bilan. : 20 appels par jour gratuits, sans limite avec Premium.", "prem-p5"],
   ];
-  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "mensuel" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<p class="prem-bientot">Ouverture prochaine</p>`}</div>`;
+  const rows = [ // ce qui reste gratuit pour toujours, et ce que Premium ajoute ; aucune information de base n'est cachée
+    ["Fiches, médianes du secteur, outils, simulateurs", "✓ toutes", "✓"],
+    [`Alertes du soir (publication, mouvement de plus de 5 %, résultats)${robotActif("alertes") ? "" : BIENTOT}`, "3 visibles", "✓ toutes"],
+    ["Rapport de la semaine", "court, 2 semaines d'historique", "complet, 12 semaines"],
+    ["Rapport sur mesure : secteurs suivis, lignes analysées en détail", "2 secteurs · 3 lignes", "6 secteurs · 8 lignes"],
+    ["Mon portefeuille : lignes suivies", `jusqu'à ${FREE.pf}`, "✓ sans limite"],
+    ["Questions libres rédigées par l'IA du site", "3 par jour", "✓ sans limite raisonnable"],
+    ["Connecteur pour Claude ou ChatGPT", "20 appels par jour", "✓ sans limite"],
+    ["Comparer · recherche par critères", `${FREE.cmp} entreprises · 8 résultats`, "5 entreprises · 30 résultats"],
+    ["L'Académie et la formation guidée de 6 semaines", "les essentiels", "✓ tout"],
+  ];
+  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "unique" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<p class="prem-bientot">Ouverture prochaine</p>`}</div>`;
+  const essai = OFFRES.essai && !st.premium ? `<div class="prem-essai"><button type="button" class="btn" id="essai14">Essayer 14 jours, sans carte</button><span class="muted">Un compte gratuit suffit. Rien ne se renouvelle tout seul.</span><p id="essaim" role="status" aria-live="polite"></p></div>` : "";
   const attente = OFFRES.mensuel || OFFRES.unique ? "" : `<section class="panel prem-att"><div class="pb"><h2 class="f2-h">Soyez prévenu à l'ouverture</h2><p class="muted" style="margin:6px 0 12px">Les inscrits avant l'ouverture gardent le prix bloqué à <b>39 € par an</b>. Une adresse, rien d'autre ; aucun message en dehors de l'ouverture.</p>
     <form id="attf" class="askf" novalidate><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email" required><button class="btn">Prévenez-moi</button></form><p id="attm" class="prem-attm" role="status" aria-live="polite"></p><p class="muted" id="attn" style="font-size:13px;margin:8px 0 0"></p></div></section>`;
-  app.innerHTML = `<h1 class="pagetitle">Premium : vos valeurs suivies pour vous, chaque semaine.</h1>
-    <div class="prem3"><div>${typeof accIc === "function" ? accIc("mk") : ""}<b>Rapport complet</b></div><div>${typeof accIc === "function" ? accIc("ag") : ""}<b>Alertes chaque soir${robotActif("alertes") ? "" : BIENTOT}</b></div><div>${typeof accIc === "function" ? accIc("pub") : ""}<b>IA sans limite</b></div></div>
-    ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
+  app.innerHTML = `<h1 class="pagetitle">Votre IA répond. bilan. surveille.</h1>
+    <p class="pagesub">Une IA personnelle répond quand vous lui posez la question. Premium suit vos valeurs à votre place, chiffres officiels à l'appui.</p>
+    <div class="prem5">${ARG.map(([k, t, d, id], i) => `<details class="prem-a" id="${id}"><summary>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span><em>La preuve</em></summary><div class="prem-pv" data-pv="${i}"><p class="muted">Chargement…</p></div></details>`).join("")}</div>
+    ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : st.plan === "essai" ? "Essai gratuit" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
       <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${st.plan === "mensuel" ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
-    <div class="offers">${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en deux clics.", OFFRES.mensuel)}${offer("unique", "Paiement unique", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}</div>${attente}`}
-    <section class="panel"><div class="ph"><h2>Ce qui change avec Premium</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${/^oui$/i.test(r[1]) ? "✓" : /^non$/i.test(r[1]) ? "—" : r[1]}</td><td><b>${/^oui$/i.test(r[2]) ? "✓" : r[2]}</b></td></tr>`).join("")}</tbody></table></div></section>
-    <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p class="muted" id="codem" style="font-size:13px"></p></div></section>
-      <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p class="muted" id="lostm" style="font-size:13px"></p></div></section></div>
+    <p class="prem-ancre"><b>39 € par an, soit 3,25 € par mois.</b> <span class="muted">Ou 4,90 € par mois, sans engagement.</span></p>
+    <div class="offers">${offer("unique", "Un an", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en ligne en deux clics.", OFFRES.mensuel)}</div>${essai}${attente}`}
+    <section class="panel"><div class="ph"><h2>Gratuit pour toujours, et ce que Premium ajoute</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table>
+      <p class="note" style="margin:10px 0 0">L'information de base n'est jamais cachée : toutes les fiches, les médianes et les outils restent gratuits.</p></div></section>
+    <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p id="codem" class="muted" style="font-size:13px"></p></div></section>
+      <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p id="lostm" class="muted" style="font-size:13px"></p></div></section></div>
     <section class="panel"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">
-      ${acc("Premium donne-t-il des conseils pour acheter ?", "<p>Non. Premium donne plus d'explications et de suivi, jamais de recommandation d'achat ou de vente. bilan. n'est pas un conseiller en investissement.</p>")}
-      ${acc("Faut-il créer un compte ?", "<p>Non. Après le paiement, un code d'accès est enregistré sur votre appareil. Pour l'utiliser ailleurs, collez-le sur cette page. Le site ne demande ni mot de passe ni nom.</p>")}
-      ${acc("Comment résilier ?", "<p>L'abonnement mensuel se résilie à tout moment depuis cette page (« Gérer ou résilier mon abonnement »). L'accès reste ouvert jusqu'à la fin du mois payé. Le paiement unique ne se renouvelle pas.</p>")}
+      ${acc("Premium donne-t-il des conseils pour acheter ?", "<p>Non. Premium donne plus de suivi et d'explications, jamais de recommandation d'achat ou de vente. bilan. n'est pas un conseiller en investissement.</p>")}
+      ${acc("Pourquoi payer si mon IA répond déjà ?", "<p>Votre IA répond quand vous pensez à lui demander, avec ce qu'elle a en mémoire. bilan. lit les publications officielles chaque jour, compare chaque entreprise aux comptes de tout son secteur, garde vos semaines en mémoire et vous prévient. Et vous pouvez brancher votre IA sur bilan.</p>")}
+      ${acc("Comment résilier ?", "<p>L'abonnement mensuel se résilie en ligne à tout moment depuis cette page (« Gérer ou résilier mon abonnement »), aussi simplement qu'il se souscrit. L'accès reste ouvert jusqu'à la fin du mois payé. Le paiement d'un an ne se renouvelle pas.</p>")}
       ${acc("Le paiement est-il sûr ?", "<p>Le paiement passe par Stripe, un prestataire de paiement agréé. bilan. ne voit jamais votre numéro de carte.</p>")}
       ${acc("Puis-je changer d'avis ?", `<p>Les conditions de rétractation sont détaillées dans les <a class="lnk" href="/cgv">conditions générales de vente</a>.</p>`)}
     </div></section>
     <p class="note">Paiement sécurisé par Stripe. <a class="lnk" href="/cgv">Conditions générales de vente</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/avertissement">Avertissement sur les risques</a></p>`;
+  premPreuves();
+  const E14 = $("#essai14"); if (E14) E14.onclick = async () => { E14.disabled = true; const m = $("#essaim");
+    try { const r = await fetch("/api/espace/essai", { method: "POST", credentials: "same-origin" }), j = await r.json().catch(() => ({}));
+      if (r.status === 401) { location.href = "/espace?essai=1"; return; }
+      if (r.ok && j.ok) { MOI = null; await moi(true); toast("Premium est ouvert pour 14 jours."); pagePremium(); return; }
+      m.textContent = j.error || "L'essai n'a pas pu démarrer."; } catch (e) { m.textContent = "Le site est injoignable : réessayez."; }
+    E14.disabled = false; };
   const P = $("#portail"); if (P) P.onclick = async () => { P.disabled = true; try { const j = await (await iaFetch("/api/premium/portail")).json(); if (j.url) location.href = j.url; else { toast(esc(j.error || "Portail indisponible.")); P.disabled = false; } } catch (e) { P.disabled = false; } };
   const U = $("#unprem"); if (U) U.onclick = () => { setPremTok(""); document.documentElement.classList.remove("is-prem"); pagePremium(); };
   const AF = $("#attf"), AM = $("#attm"); if (AF) { // liste d'attente : succès, erreur, format vérifié avant l'envoi
@@ -2438,7 +2462,25 @@ async function pagePremium(sub) {
   }
   $("#codef").onsubmit = async e => { e.preventDefault(); const v = $("#codef input").value.trim().replace(/[^a-f0-9]/gi, "").toLowerCase(); if (v.length < 20) { $("#codem").textContent = "Ce code ne semble pas complet."; return; }
     setPremTok(v); const s = await premStatus(); if (s.premium) { toast("Premium est activé sur cet appareil."); pagePremium(); } else { setPremTok(""); $("#codem").textContent = "Ce code n'est pas reconnu ou l'accès a expiré."; } };
-  $("#lostf").onsubmit = async e => { e.preventDefault(); const v = $("#lostf input").value.trim(); if (!/@/.test(v)) return; try { const j = await (await fetch("/api/premium/retrouver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: v }) })).json(); $("#lostm").textContent = j.error || "Si un accès actif correspond à cette adresse, le code vient d'y être envoyé."; } catch (x) { $("#lostm").textContent = "Indisponible pour le moment."; } };
+  $("#lostf").onsubmit = async e => { e.preventDefault(); const v = $("#lostf input").value.trim(); if (!/@/.test(v)) return; try { const j = await (await fetch("/api/premium/retrouver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: v }) })).json(); $("#lostm").textContent = j.error || "Si un accès actif correspond à cette adresse, le code vient de vous être envoyé."; } catch (x) { $("#lostm").textContent = "Le site est injoignable : réessayez."; } };
+}
+async function premPreuves() { // les cinq preuves, calculées avec les données du site (aucun exemple inventé)
+  const box = i => document.querySelector(`.prem-pv[data-pv="${i}"]`); if (!box(0)) return;
+  // 1. les 10 dernières publications de résultats déposées à la SEC, avec l'heure (Paris)
+  try { const j = await getJSON("/data/actu-sec.json", { items: [] }); const L = (j.items || []).filter(x => /resultats|rapport-trimestriel/.test(x.kind) && RBY[x.id]).slice(0, 10);
+    const h = d => new Date(d).toLocaleString("fr-FR", { timeZone: "Europe/Paris", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
+    if (box(0)) box(0).innerHTML = L.length ? `<ol class="prem-pub">${L.map(x => `<li><a href="/entreprise/${x.id}">${logo(RBY[x.id], 22)}<b>${esc(RBY[x.id].name)}</b></a><span>${esc(x.form)}</span><time>${esc(h(x.date))}</time></li>`).join("")}</ol><p class="note">Les 10 dernières publications de résultats lues par le site (dépôts officiels à la SEC, heure de Paris). Le robot du site les lit cinq fois par jour ouvré (le dernier passage à 21 h 47, heure de Paris) : une publication de la journée arrive le soir même, une publication américaine de la nuit au passage du matin.</p>` : `<p class="muted">Aucune publication récente.</p>`; } catch (e) { }
+  // 2. une vraie question, sa réponse calculée et sa source
+  try { const id = RBY.kering ? "kering" : "lvmh", s = RBY[id], c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()), q = `Pourquoi la marge de ${s.name} baisse ?`;
+    const t = typeof localAssist === "function" ? localAssist(s, c, q) : null, src = typeof provSrcComptes === "function" ? provSrcComptes(c) : null;
+    if (box(1)) box(1).innerHTML = t ? `<p class="prem-q">« ${esc(q)} »</p><div class="prem-r">${t.split("\n").map(x => `<p>${esc(x)}</p>`).join("")}</div>${src ? `<p class="note">Source : <a class="lnk" href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.label)}</a>. Réponse calculée à l'instant par le site, sans modèle d'IA.</p>` : ""}` : `<p class="muted">Réponse indisponible pour le moment.</p>`; } catch (e) { }
+  // 3. la médiane d'un secteur entier
+  try { const s = RBY.lvmh, md = s && MED[s.sector]; const m = s && typeof ratios === "function" ? ratios(s).marge : null;
+    if (box(2) && md && m != null) box(2).innerHTML = `<p class="prem-big"><b>${pct(m, 0, false)}</b> de marge pour ${esc(s.name)}, contre <b>${pct(md.marge, 1, false)}</b> pour la médiane des ${F0.format(md.n)} entreprises du secteur ${esc(secName(s).toLowerCase())} suivies par le site.</p><p class="note">Pour donner ce repère, il faut les comptes de tout le secteur : le site lit ceux de ${F0.format(R.companies.filter(c => !c.missing).length)} entreprises (ESEF et SEC).</p>`; } catch (e) { }
+  // 4. la mémoire : le rapport de la semaine et sa comparaison
+  if (box(3)) box(3).innerHTML = `<p>Chaque lundi, votre rapport compare la semaine à la précédente : publications, dividendes annoncés, alertes nouvelles, évolution de votre portefeuille. Premium garde 12 semaines.</p><p><a class="lnk" href="/rapport-exemple">Voir un vrai rapport, calculé aujourd'hui →</a></p>`;
+  // 5. le connecteur
+  if (box(4)) box(4).innerHTML = `<p>Votre assistant lit alors les comptes officiels et les médianes de bilan. au lieu de répondre de mémoire, et cite ses sources. Gratuit : 20 appels par jour avec votre adresse personnelle ; Premium : sans limite.</p><p><a class="lnk" href="/ia/connecter">Le brancher en trois étapes →</a></p>`;
 }
 async function premiumMerci() {
   const sid = new URLSearchParams(location.search).get("session_id") || "";

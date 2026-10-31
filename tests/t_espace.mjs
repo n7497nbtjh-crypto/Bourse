@@ -122,6 +122,18 @@ ok(sent.length === 1 && sent[0].to === "a@ex.fr" && sent[0].subject === "Votre b
 sql.prepare("UPDATE comptes SET last_tache = 0, teaser = 0").run();
 [s, j] = await E("POST", "/api/espace/tache?quoi=alertes", null, null, { "x-admin-key": "k" }); ok(j.traites === 2 && j.notifs === 0 && sent.length === 1, "alertes sans doublon " + JSON.stringify(j));
 // 5e passage (B2) : mesures d'administration et trace du robot
+// 5e passage (C) : essai de 14 jours (fermé par défaut, puis une seule fois par adresse) et adresse personnelle du connecteur
+[s, j] = await E("POST", "/api/espace/essai", {}, A); ok(s === 403, "essai fermé tant que ESSAI_14J n'est pas posé");
+env.ESSAI_14J = "1"; const premA = sql.prepare("SELECT premium FROM comptes WHERE email = 'a@ex.fr'").get().premium; sql.prepare("UPDATE comptes SET premium = NULL WHERE email = 'a@ex.fr'").run(); // A était Premium plus haut dans ce test
+[s, j] = await E("POST", "/api/espace/essai", {}); ok(s === 401, "essai : compte exigé");
+[s, j] = await E("POST", "/api/espace/essai", {}, A); ok(s === 200 && j.ok && j.jusqu_au > Date.now() + 13 * 864e5, "essai ouvert " + JSON.stringify(j));
+[s, j] = await E("GET", "/api/espace/moi", null, A); ok(j.premium === true, "Premium actif pendant l'essai");
+[s, j] = await E("POST", "/api/espace/essai", {}, A); ok(s === 409, "pas de second essai");
+delete env.ESSAI_14J; void premA;
+[s, j] = await E("GET", "/api/espace/mcp", null, A); ok(s === 200 && /\/mcp\/[a-f0-9]{32}$/.test(j.adresse) && j.premium === true && j.limite_jour === null, "adresse MCP personnelle " + JSON.stringify(j));
+const adr1 = j.adresse; [s, j] = await E("GET", "/api/espace/mcp", null, A); ok(j.adresse === adr1, "même adresse au second appel");
+[s, j] = await E("POST", "/api/espace/mcp", {}, A); ok(j.adresse !== adr1, "nouvelle adresse sur demande");
+[s] = await E("GET", "/api/espace/mcp"); ok(s === 401, "adresse MCP : compte exigé");
 [s] = await E("GET", "/api/espace/mesures"); ok(s === 403, "mesures protégées");
 [s, j] = await E("GET", "/api/espace/mesures", null, null, { "x-admin-key": "k" }); ok(s === 200 && j.comptes.total === 2 && j.rapport.semaine.rapports === 2 && j.robot && j.robot.alertes && j.robot.bilans, "mesures " + JSON.stringify(j));
 [s, j] = await E("GET", "/api/espace/moi"); ok(s === 200 && j.robot && j.robot.alertes, "robot visible dans /moi " + JSON.stringify(j.robot));

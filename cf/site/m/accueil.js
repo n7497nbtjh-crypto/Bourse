@@ -289,7 +289,7 @@ function accDateline(date) { // ligne de une : la date et quatre indices, comme 
   return `<div class="acc-date"><span class="acc-dd">${esc(date)}</span>${rows.length ? `<span class="acc-didx">${rows.map(r => `<a href="/indice/${r.id}">${esc(r.name)} <b class="${accCls(r.p.chg)}">${accPct(r.p.chg)}</b></a>`).join("")}<a class="acc-dall" href="/marches">Tous les marchés →</a></span>` : ""}</div>`;
 }
 /* 4e passage (31/10, lot C) : icônes SVG des blocs et des secteurs ; titres qui disent la réponse ; rythme crème / blanc */
-const ACC_I = {
+const ACC_I = { cal: "M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 13h3M8 16h6", ia: "M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5",
   pub: "M4 4h16v16H4zM8 9h8M8 13h8M8 17h5", mk: "M3 17l5-6 4 3 5-7 4 4", ag: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4", dec: "M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z", sec: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z", esp: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0",
   conso: "M6 7h12l-1 12H7zM9 7a3 3 0 0 1 6 0", industrie: "M3 21V9l6 4V9l6 4V5h6v16z", energie: "M13 2L4 14h7l-1 8 9-12h-7z", sante: "M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z", tech: "M4 5h16v11H4zM9 20h6M12 16v4", finance: "M3 10h18M5 10v8M9 10v8M15 10v8M19 10v8M2 20h20M12 3l9 7H3z", telecom: "M12 20V10M12 10a5 5 0 0 1 5-5M12 10a5 5 0 0 0-5-5M5 14a8 8 0 0 1 14 0", materiaux: "M12 3l9 6-9 6-9-6zM3 15l9 6 9-6", services: "M12 2v4M4.9 4.9l2.8 2.8M2 12h4M4.9 19.1l2.8-2.8M12 18v4M19.1 19.1l-2.8-2.8M22 12h-4M19.1 4.9l-2.8 2.8M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z", immo: "M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6",
 };

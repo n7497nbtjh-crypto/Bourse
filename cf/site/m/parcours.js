@@ -534,20 +534,7 @@ function parPitchHTML() {
   };
 })();
 
-/* ---------- Premium : la personnalisation dans le tableau (prix inchangés) ---------- */
-(function () {
-  const prem0 = window.pagePremium;
-  window.pagePremium = async function (sub) {
-    await prem0.apply(this, arguments);
-    if (sub === "merci") return;
-    const tb = $(".ptab tbody"); if (!tb || tb.querySelector(".par-row")) return;
-    const ref = [...tb.rows].find(r => /Bilan de la semaine/i.test(r.cells[0] && r.cells[0].textContent)) || tb.rows[2];
-    const rows = [["Rapport de la semaine sur mesure : contenu, détail, sujets, jour de réception", "✓", "✓"], ["Secteurs entiers suivis dans le rapport", "2", "6"], ["Lignes analysées en détail dans le rapport", "3", "8"]];
-    const html = rows.map(r => `<tr class="par-row">${r.map((c, i) => i === 2 ? `<td><b>${c}</b></td>` : `<td>${c}</td>`).join("")}</tr>`).join("");
-    if (ref) ref.insertAdjacentHTML("afterend", html); else tb.insertAdjacentHTML("beforeend", html);
-    const offers = $(".offers"); if (offers && !$("#parprem")) offers.insertAdjacentHTML("afterend", `<section class="panel" id="parprem"><div class="pb par-lec"><p><b>Votre rapport de la semaine, sur mesure</b><br><span class="muted">Gratuit pour tous : vos favoris, votre portefeuille, deux secteurs, le niveau de détail, les sujets et le jour. Premium suit jusqu'à six secteurs, analyse huit lignes en détail et garde douze semaines d'historique.</span></p><a class="btn ghost" href="/espace/rapport">Régler mon rapport</a></div></section>`);
-  };
-})();
+/* Premium : le tableau complet (dont le rapport sur mesure) est construit par pagePremium (app.js, 5e passage C) : plus de surcouche ici. */
 
 /* ---------- Lot 2 (30/10) : /apprendre, la porte unique pour apprendre ----------
    Fusionne « Par où commencer » (trois décisions, sept étapes, profil, questions), l'Académie (niveaux) et le lexique.

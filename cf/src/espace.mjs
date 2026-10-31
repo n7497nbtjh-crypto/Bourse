@@ -7,6 +7,7 @@
 //  POST /api/espace/tache   robot quotidien (.github/workflows/espace.yml), protégé par ADMIN_KEY
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
+import { iaMesures } from "./iasite.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
@@ -23,7 +24,10 @@ const SCHEMA = [
   `CREATE INDEX IF NOT EXISTS notifs_at ON notifs (compte, at)`,
   `CREATE TABLE IF NOT EXISTS essais (cle TEXT NOT NULL, at INTEGER NOT NULL)`,
   `CREATE INDEX IF NOT EXISTS essais_cle ON essais (cle, at)`,
-  `CREATE TABLE IF NOT EXISTS etat (cle TEXT PRIMARY KEY, val TEXT NOT NULL)`, // 5e passage : dernier passage du robot (alertes, bilans), pour que le site dise « bientôt » tant qu'il n'a jamais tourné
+  `CREATE TABLE IF NOT EXISTS etat (cle TEXT PRIMARY KEY, val TEXT NOT NULL)`,
+  `CREATE TABLE IF NOT EXISTS essais_premium (email TEXT PRIMARY KEY, compte TEXT NOT NULL, at INTEGER NOT NULL)`, // 5e passage (C) : un essai Premium de 14 jours par adresse, sans carte
+  `CREATE TABLE IF NOT EXISTS compteurs (semaine TEXT NOT NULL, cle TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (semaine, cle))`, // 5e passage (E4) : tunnel, sans traceur ni donnée personnelle
+  `CREATE TABLE IF NOT EXISTS mcp_cles (cle TEXT PRIMARY KEY, compte TEXT NOT NULL UNIQUE, created INTEGER NOT NULL)`, // 5e passage (C) : adresse personnelle du connecteur // 5e passage : dernier passage du robot (alertes, bilans), pour que le site dise « bientôt » tant qu'il n'a jamais tourné
 ];
 async function robotEtat(env) { // { alertes: "2026-10-31" | null, bilans: ... } : date (Paris) du dernier passage réel du robot, lue par le site
   try { const rows = (await env.DB.prepare(`SELECT cle, val FROM etat WHERE cle IN ('robot_alertes', 'robot_bilans')`).all()).results || []; const o = { alertes: null, bilans: null }; for (const r of rows) o[r.cle.slice(6)] = r.val; return o; } catch (e) { return { alertes: null, bilans: null }; }
@@ -216,7 +220,27 @@ export async function espace(request, env) {
     const o = request.headers.get("origin"); if (o && o !== "null") { try { if (new URL(o).host !== url.host) return json({ error: "Origine refusée." }, 403); } catch (e) { return json({ error: "Origine refusée." }, 403); } }
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
-  if (path === "/api/espace/mesures" && m === "GET") return mesures(request, env); // 5e passage (B2) : mesures d'administration, protégées par ADMIN_KEY
+  if (path === "/api/espace/mesures" && m === "GET") return mesures(request, env);
+  if (path === "/api/espace/essai" && m === "POST") { // essai Premium de 14 jours, sans carte : seulement si ESSAI_14J = "1" (Romain l'ouvre), une fois par adresse
+    if (env.ESSAI_14J !== "1") return json({ error: "L'essai gratuit n'est pas encore ouvert." }, 403);
+    const c = await compteDe(request, env); if (!c) return json({ error: "Créez votre espace gratuit (une adresse e-mail suffit), puis lancez l'essai." }, 401);
+    if (await premiumDe(env, c.premium, url.origin)) return json({ error: "Premium est déjà actif sur ce compte." }, 409);
+    if (await env.DB.prepare(`SELECT 1 FROM essais_premium WHERE email = ? OR compte = ?`).bind(c.email, c.id).first()) return json({ error: "L'essai gratuit a déjà été utilisé avec cette adresse." }, 409);
+    const token = alea(20), until = Date.now() + 14 * JOUR;
+    await initCompte(env.DB);
+    await env.DB.prepare(`INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, 'essai', NULL, NULL, ?, ?)`).bind(token, c.email, until, Date.now()).run();
+    await env.DB.prepare(`UPDATE comptes SET premium = ? WHERE id = ?`).bind(token, c.id).run();
+    await env.DB.prepare(`INSERT INTO essais_premium (email, compte, at) VALUES (?, ?, ?)`).bind(c.email, c.id, Date.now()).run();
+    return json({ ok: true, jusqu_au: until });
+  }
+  if (path === "/api/espace/mcp" && (m === "GET" || m === "POST")) { // l'adresse personnelle du connecteur : créée au premier besoin ; POST = en changer
+    const c = await compteDe(request, env);
+    if (!c) return json({ error: "Connectez-vous pour obtenir votre adresse." }, 401);
+    let r = await env.DB.prepare(`SELECT cle FROM mcp_cles WHERE compte = ?`).bind(c.id).first();
+    if (!r || m === "POST") { const cle = alea(16); await env.DB.prepare(`INSERT INTO mcp_cles (cle, compte, created) VALUES (?, ?, ?) ON CONFLICT (compte) DO UPDATE SET cle = excluded.cle, created = excluded.created`).bind(cle, c.id, Date.now()).run(); r = { cle }; }
+    const p = await premiumDe(env, c.premium, url.origin);
+    return json({ adresse: `${(env.SITE_URL || url.origin).replace(/\/+$/, "")}/mcp/${r.cle}`, premium: !!p, limite_jour: p ? null : 20 });
+  } // 5e passage (B2) : mesures d'administration, protégées par ADMIN_KEY
 
   if (path === "/api/espace/inscription" && m === "POST") {
     const { b, err } = await lire(request); if (err) return err;
@@ -341,7 +365,7 @@ export async function espace(request, env) {
     const { b, err } = await lire(request); if (err) return err;
     const cles = ["e:" + c.email]; if (await limite(env, cles)) return TROP();
     if (!(await verifie(String(b.motdepasse || "").slice(0, 200), c))) { await echec(env, cles); return json({ error: "Mot de passe incorrect." }, 401); }
-    for (const q of [`DELETE FROM notifs WHERE compte = ?`, `DELETE FROM bilans WHERE compte = ?`, `DELETE FROM donnees WHERE compte = ?`, `DELETE FROM sessions WHERE compte = ?`, `DELETE FROM comptes WHERE id = ?`]) await env.DB.prepare(q).bind(c.id).run();
+    for (const q of [`DELETE FROM notifs WHERE compte = ?`, `DELETE FROM bilans WHERE compte = ?`, `DELETE FROM donnees WHERE compte = ?`, `DELETE FROM sessions WHERE compte = ?`, `DELETE FROM comptes WHERE id = ?`, `DELETE FROM mcp_cles WHERE compte = ?`]) await env.DB.prepare(q).bind(c.id).run();
     return avecCookie(json({ ok: true }), EFFACE);
   }
 
@@ -388,6 +412,26 @@ async function notifier(env, compteId, type, texte, lien, jour, extra = "") {
   const r = await env.DB.prepare(`INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)`).bind(compteId, Date.now(), type, texte.slice(0, 400), lien, [type, lien, jour, extra].join("|").slice(0, 500)).run();
   return (r && r.meta && r.meta.changes) || 0;
 }
+/* ---------- Tunnel (5e passage, E4) : des compteurs par semaine, sans cookie ni identifiant. ----------
+   Le Worker compte les pages servies (visite, fiche, source : moteur ou X) ; le navigateur signale trois gestes (suivre une entreprise,
+   voir l'aperçu d'une alerte Premium, ouvrir le rapport exemple) par /api/compteur ; le reste vient de la base (comptes, rapports, essais, Premium). */
+export const COMPTEURS_OK = new Set(["visite", "fiche", "src:moteur", "src:x", "src:autre", "suivre", "apercu-alerte", "rapport-exemple", "premium-vue"]);
+export async function compterEvt(env, cles) {
+  if (!env || !env.DB) return; const sem = semaineIso(jourParis());
+  try { for (const c of cles) if (COMPTEURS_OK.has(c)) await env.DB.prepare(`INSERT INTO compteurs (semaine, cle, n) VALUES (?, ?, 1) ON CONFLICT (semaine, cle) DO UPDATE SET n = n + 1`).bind(sem, c).run(); }
+  catch (e) { try { await init(env.DB); } catch (x) { } }
+}
+async function tunnel(env) {
+  try {
+    const sem = semaineIso(jourParis()), prec = precedenteDe(sem), now = Date.now();
+    const lire = async w => Object.fromEntries(((await env.DB.prepare(`SELECT cle, n FROM compteurs WHERE semaine = ?`).bind(w).all()).results || []).map(r => [r.cle, r.n]));
+    const n = async (q, ...b) => (((await env.DB.prepare(q).bind(...b).first()) || {}).n) || 0;
+    const base = async w => ({ comptes_crees: await n(`SELECT COUNT(*) AS n FROM comptes WHERE created > ? AND created <= ?`, now - (w === sem ? 7 : 14) * JOUR, now - (w === sem ? 0 : 7) * JOUR),
+      rapports_ouverts: await n(`SELECT COUNT(*) AS n FROM bilans WHERE semaine = ? AND vu = 1`, w), essais: await n(`SELECT COUNT(*) AS n FROM essais_premium WHERE at > ? AND at <= ?`, now - (w === sem ? 7 : 14) * JOUR, now - (w === sem ? 0 : 7) * JOUR) });
+    const etapes = async w => { const c = await lire(w), b = await base(w); return { semaine: w, visites: c.visite || 0, depuis_moteurs: c["src:moteur"] || 0, depuis_x: c["src:x"] || 0, fiches: c.fiche || 0, suivre: c.suivre || 0, comptes: b.comptes_crees, rapports_ouverts: b.rapports_ouverts, apercus_alerte: c["apercu-alerte"] || 0, page_premium: c["premium-vue"] || 0, essais: b.essais }; };
+    return { cette_semaine: await etapes(sem), semaine_precedente: await etapes(prec), premium_actifs: await n(`SELECT COUNT(*) AS n FROM abonnes WHERE until > ?`, now).catch(() => 0) };
+  } catch (e) { return { erreur: String(e && e.message || e) }; }
+}
 /* Mesures d'administration (5e passage, B2) : GET /api/espace/mesures avec l'en-tête x-admin-key. Aucun traceur tiers : tout vient de la base.
    - comptes : total, créés sur 7 et 30 jours ; actifs : sessions ouvertes ou prolongées sur 7 jours ;
    - rapport : comptes ayant un rapport pour la semaine en cours, part qui l'a ouvert (bilans.vu = 1) ; même chose pour la semaine précédente ;
@@ -406,6 +450,8 @@ async function mesures(request, env) {
     alertes_7j: await n(`SELECT COUNT(*) AS n FROM notifs WHERE at > ?`, now - 7 * JOUR),
     premium: { abonnes: await n(`SELECT COUNT(*) AS n FROM abonnes WHERE until > ?`, now).catch(() => 0), attente: await n(`SELECT COUNT(*) AS n FROM attente`).catch(() => 0) },
     robot: await robotEtat(env),
+    ia: await iaMesures(env), // 5e passage (C) : coût réel de l'IA, par niveau ; coût par abonné = cout_estime_eur ÷ premium.abonnes
+    tunnel: await tunnel(env), // 5e passage (E4) : chaque étape du tunnel, par semaine
   });
 }
 async function tache(request, env, url) {
@@ -454,6 +500,8 @@ async function tache(request, env, url) {
       await env.DB.prepare(fait ? `UPDATE comptes SET last_tache = ?, last_semaine = ? WHERE id = ?` : `UPDATE comptes SET last_tache = ? WHERE id = ?`).bind(...(fait ? [now, cible, r.id] : [now, r.id])).run();
     }
     await env.DB.prepare(`DELETE FROM notifs WHERE at < ?`).bind(now - 90 * JOUR).run(); // ménage
+    await env.DB.prepare(`DELETE FROM bilans WHERE created < ?`).bind(now - 26 * 7 * JOUR).run(); // 5e passage (D) : rapports gardés 26 semaines (Premium en affiche 12), durée écrite dans la politique de confidentialité
+    try { await env.DB.prepare(`DELETE FROM essais_premium WHERE at < ?`).bind(now - 365 * JOUR).run(); await env.DB.prepare(`DELETE FROM compteurs WHERE semaine < ?`).bind(semaineIso(jourParis(now - 730 * JOUR))).run(); } catch (e) { }
     await env.DB.prepare(`DELETE FROM essais WHERE at < ?`).bind(now - JOUR).run();
     await env.DB.prepare(`DELETE FROM sessions WHERE expires < ?`).bind(now).run();
   }

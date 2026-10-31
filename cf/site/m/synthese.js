@@ -291,6 +291,20 @@ function synIdeeHTML(b) { // 31/10 : une piste à découvrir, factuelle : une en
   const x = picks.find(p => p && p.c && !secs.has(p.c.sector)) || picks[0]; if (!x) return "";
   return `<section class="syn4-sec"><h2>Une entreprise à découvrir</h2><p class="syn4-ias" style="margin:0 0 10px">Tirée des découvertes du jour, dans un secteur ${secs.has(x.c.sector) ? "que vous suivez déjà" : "absent de votre liste"}. Une information, pas une recommandation.</p><div class="out-dg syn4-idee">${outDecCard(x, false)}</div></section>`;
 }
+/* 5e passage (C) : Premium se montre au moment du besoin. L'alerte du soir floutée (une vraie publication de vos valeurs, ses chiffres
+   masqués) et les semaines d'historique au-delà de la limite gratuite, grisées. Rien d'inventé : sans publication chiffrée, pas d'aperçu. */
+function synApercuAlerte(b, m) {
+  if (m && m.premium) return "";
+  const a = (b.annonces || []).filter(x => x.origine !== "presse" && (x.chiffres || []).length).sort((x, y) => String(y.date).localeCompare(String(x.date)))[0]; if (!a) return "";
+  const nom = a.nom || (synObj(a.k) || {}).name || "", n = Math.min(3, a.chiffres.length);
+  setTimeout(() => { try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=apercu-alerte"); } catch (e) { } }, 0);
+  return `<a class="syn4-apa" href="/premium#prem-p1"><span class="syn4-apk">Alerte du soir · Premium</span><b>${esc(nom)} a publié le ${esc(synJour(a.date))} : ${n} chiffre${n > 1 ? "s" : ""}</b><span class="syn4-apf" aria-hidden="true">${a.chiffres.slice(0, 3).map(([l, v]) => `<span>${esc(l)} <b>${esc(String(v))}</b></span>`).join("")}</span><span class="syn4-apl">Recevoir ces alertes le soir même →</span></a>`;
+}
+function synSemaines(b, m) {
+  const H = (b.historique || []).filter(h => h && (h.portefeuille_pct != null || h.moyenne != null)); if (!H.length) return "";
+  const lim = m && m.premium ? 12 : 2, L = H.slice(0, 12);
+  return `<div class="syn4-sem"><p class="syn4-semt">Vos semaines précédentes</p><div class="syn4-semr">${L.map((h, i) => { const v = h.portefeuille_pct ?? h.moyenne, gris = i >= lim; return `<span class="${gris ? "gris" : ""}" title="${gris ? "Avec Premium : 12 semaines d'historique" : `Semaine ${esc(String(h.semaine).slice(-2))} : ${synPct(v)}`}"><small>S${esc(String(h.semaine).slice(-2))}</small><b class="${gris ? "" : synCls(v)}">${gris ? "··" : synPct(v)}</b></span>`; }).join("")}</div>${H.length > lim && !(m && m.premium) ? `<p class="note"><a class="lnk" href="/premium">Premium</a> garde 12 semaines.</p>` : ""}</div>`;
+}
 function synPageHTML(b, m) {
   SYN_ANN = [];
   // 30/10 (Romain) : capter l'attention par le visuel, moins de texte ; l'actualité interprétée et son contexte ; le portefeuille simulé ; les valeurs en liste compacte
@@ -364,8 +378,10 @@ function synPageHTML(b, m) {
       ${tuiles.length ? `<div class="syn4-tuiles syn4-4">${tuiles.slice(0, 4).join("")}</div>` : ""}
       ${evHTML ? `<ol class="syn4-evs">${evHTML}</ol>` : ess.length ? `<ol class="synk syn4-ess">${ess.slice(0, 3).map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
       ${nextHTML}${cmpHTML}</header>
+    ${synApercuAlerte(b, m)}
     <details class="syn4-detail" id="syn-detail"><summary><b>Le détail</b><span>vos valeurs une par une, ce qu'elles ont publié, votre portefeuille, l'agenda</span></summary>
     ${ess.length && evHTML ? `<ol class="synk syn4-ess">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
+    ${synSemaines(b, m)}
     <section class="syn4-sec"><h2>Vos valeurs cette semaine</h2>${synFavorisHTML(b)}<div class="syn4-ls">${lignes || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`}</div><p class="syn4-ias">Touchez une valeur pour le détail. Barre : l'ampleur du mouvement par rapport à la plus forte variation de votre liste.</p></section>
     <section class="syn4-sec"><h2>Ce qu'elles ont publié</h2>
       ${annonces.length ? `<div class="syn4-anns">${annonces.join("")}</div>` : `<p class="muted">Aucune publication officielle de vos valeurs cette semaine.</p>`}
