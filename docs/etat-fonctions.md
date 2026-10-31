@@ -13,9 +13,9 @@ Classes : **opérationnelle** · **partielle** · **annoncée mais pas disponibl
 | Exemple de fiche sur l'accueil (« Ce que vous obtenez ») | Accueil | **partielle** (lent) | « Chargement de l'exemple… » encore affiché après 2,5 s sur téléphone, rempli après 8 s | à surveiller (E1, vitesse) |
 | Logos des entreprises | partout | **partielle** | 33 logos sur 2 852 ; journal du robot (run 41184365749) : chaque appel Wikidata en délai dépassé | A1 : nouveau robot `logos.yml`, pastille à la couleur du secteur en attendant |
 | Mon espace : compte, favoris, portefeuille, agenda personnel | /espace | **opérationnelle** | `/api/espace/moi` répond ; création, connexion, code de secours (pas d'e-mail nécessaire) | rien |
-| Rapport de la semaine (compte gratuit) | /espace, accueil | **partielle** | la semaine en cours est calculée à l'ouverture de la page (`assurerBilan`) : OK ; **l'historique des semaines et la notification « votre rapport est prêt » dépendent du robot `espace.yml`, qui n'a jamais tourné** : journal des runs 41178501799, 41105522769 : « ADMIN_KEY absent : rien à faire. » | le secret `ADMIN_KEY` doit être ajouté dans GitHub (même valeur que dans Cloudflare) par Romain ; le site le détecte seul (voir ligne suivante) |
+| Rapport de la semaine (compte gratuit) | /espace, accueil | **opérationnelle depuis le 31/10 au soir** | `ADMIN_KEY` posé dans GitHub et Cloudflare par Romain ; run 41240329893 du robot `espace.yml` | rien |
 | Alertes du soir (annonce, mouvement > 5 %, résultats du lendemain) | /espace, Premium, accueil | **opérationnelle depuis le 31/10 au soir** (ADMIN_KEY posé par Romain dans Cloudflare et GitHub ; run 41240329893 : `{"traites":0,"reste":0,…,"mode":"alertes"}`) ; avant : **annoncée mais pas disponible** | même robot, jamais exécuté (`ADMIN_KEY` absent dans GitHub) | marquée « (bientôt) » sur /espace, /premium et l'accueil **tant que le robot n'a pas tourné une première fois** : le Worker enregistre chaque passage réel (table `etat`), `/api/espace/moi` renvoie `robot.alertes`, le site retire « bientôt » tout seul |
-| Notifications sur l'appareil (push) | Réglages de l'espace | **partielle** | `/api/push/cle` répond (clé VAPID) : l'abonnement marche ; l'envoi (`pousser`) est déclenché par le même robot, donc rien n'a jamais été envoyé | même cause : `ADMIN_KEY` |
+| Notifications sur l'appareil (push) | Réglages de l'espace | **partielle** | `/api/push/cle` répond (clé VAPID) : l'abonnement marche ; l'envoi (`pousser`) est déclenché par le même robot, donc rien n'avait été envoyé avant le 31/10 | robot en place depuis le 31/10 : à vérifier au premier soir avec une alerte réelle |
 | E-mail « votre rapport est prêt » | Réglages, /espace/rapport | **annoncée mais pas disponible** | `/api/premium/offres` → `mail: false` (aucun service d'envoi configuré) | déjà marqué « bientôt disponible » sur /espace/rapport ; rien de plus |
 | Rapport exemple public | Accueil, /espace | **opérationnelle** | `/api/rapport-exemple` → semaine 2026-W44, calculé | rien |
 | Premium : paiement mensuel et annuel | /premium | **annoncée mais pas disponible** (dit honnêtement) | `/api/premium/offres` → `mensuel: null, unique: null` ; la page affiche « Ouverture prochaine » | rien (lot C : essai 14 jours à préparer, Romain configure Stripe) |
@@ -43,3 +43,17 @@ Classes : **opérationnelle** · **partielle** · **annoncée mais pas disponibl
 ## Méthode
 
 Pages lues sur téléphone (375 px) : accueil, /premium, /espace, /espace/rapport, /espace/ia, /outils, /apprendre, /portefeuille, /connecteur, pages légales. API appelées : `/api/premium/offres`, `/api/premium/statut`, `/api/espace/moi`, `/api/rapport-exemple`, `/api/push/cle`, `/api/ia/etat`, `/mcp` (initialize, tools/list). Journaux lus : `espace.yml` (2 derniers runs), `donnees.yml` (run 41184365749, logos).
+
+## Ajouts des lots C à F (31/10 nuit)
+
+| Fonction | État | Preuve |
+|---|---|---|
+| Page Premium (5 arguments, preuves calculées, 9 lignes de comparaison) | **opérationnelle** | tests locaux 375 et 1440 px ; paiement toujours fermé tant que Stripe n'est pas configuré |
+| Essai 14 jours sans carte | **prêt, fermé** | `/api/espace/essai` répond 403 tant que `ESSAI_14J` ≠ 1 ; `tests/t_espace.mjs` couvre l'ouverture, le refus d'un second essai |
+| Adresse personnelle du connecteur (`/mcp/<cle>`, 20 appels par jour en gratuit) | **opérationnelle** | `tests/t_mcp.mjs` : 21e appel refusé ; adresse inconnue → 404 |
+| Page `/ia/connecter` | **opérationnelle** | trois étapes, schémas, lien vers l'adresse personnelle |
+| Cache des réponses de l'IA du site (48 h) | **opérationnelle** | `tests/t_compte.mjs` : la même question avec les mêmes chiffres est resservie sans appel au modèle |
+| Pages légales (mentions, confidentialité, CGV) | **partielle** | à jour avec le fonctionnement réel ; identité de l'éditeur et médiateur à remplir par Romain (`docs/conformite.md`) |
+| Pages de réponse `/question/<id>` | **opérationnelle (5 sur 30)** | dans le sitemap ; « sans dette » retirée : dette de Vinci mal relevée |
+| Page privée `/x` (3 messages, images 1200 × 675 et 1080 × 1920, tunnel) | **opérationnelle** | clé vérifiée par le Worker ; test local avec une réponse simulée |
+| Tunnel sans traceur | **opérationnelle** | compteurs posés le 31/10 : pas encore de semaine complète |
