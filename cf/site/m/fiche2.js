@@ -328,7 +328,21 @@ document.head.insertAdjacentHTML("beforeend", `<style id="fiche2-css">${FICHE2_C
 .crumbs-fiche{white-space:nowrap;overflow:hidden}.crumbs-fiche .crumb-last{display:inline-block;max-width:45%;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
 .rf-doute{margin:0 0 12px;padding:10px 14px;border:1px solid var(--rule);border-left:3px solid var(--o);border-radius:10px;background:#fff;font-size:13.5px;color:var(--grey)}.rf-doute b{color:var(--ink)}
 td.doute{color:var(--light);font-style:italic}
-@media (max-width:700px){.fh-act .fh-ia{display:none}}</style>`);
+@media (max-width:700px){.fh-act .fh-ia{display:none}}
+.rf-prouve{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--g);background:#E6F3EB;border-radius:99px;padding:2px 8px;vertical-align:middle;white-space:nowrap}.rf-prouve i{font-style:normal;font-weight:700}.rf-prouve-f{color:var(--grey);background:var(--soft)}@media (max-width:700px){.rf-prouve{font-size:12px}}
+.rf-risq{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:10px 0 0}.rf-risq>small{flex-basis:100%;font-size:12px;color:var(--light)}.rf-risq-b{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--rule);border-radius:99px;background:#fff;padding:5px 10px;font-size:12.5px;color:var(--ink);cursor:pointer;text-align:left}.rf-risq-b i{width:8px;height:8px;border-radius:50%;background:var(--o);flex:0 0 auto}.rf-risq-b:hover{border-color:var(--ink)}
+.rf-delta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:0 0 12px}.rf-delta>small{grid-column:1/-1;font-size:12px;color:var(--light)}
+.rf-dl{display:grid;grid-template-columns:20px minmax(0,1fr);gap:0 6px;align-items:center;border:1px solid var(--rule);border-radius:10px;padding:6px 8px;background:#fff;font-size:12.5px;min-width:0}.rf-dl i{grid-row:1/3;font-style:normal;font-weight:700;width:20px;height:20px;border-radius:50%;display:inline-grid;place-items:center;font-size:12px;background:var(--soft);color:var(--grey)}.rf-dl.g i{background:#E6F3EB;color:var(--g)}.rf-dl.o i{background:#FBEBE2;color:var(--o)}.rf-dl b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rf-dl small{color:var(--grey);font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-variant-numeric:tabular-nums}
+/* 5e passage (B1) : sur téléphone, verdict + « depuis l'an dernier » + 5 jauges dans le premier écran */
+@media (max-width:700px){
+  .rf-hero .fh-desc{display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .rf-hero .fh-tags{margin-top:6px}.rf-hero .fh-act{margin-top:6px}.rf-hero .fh-act .favbtn{height:34px;padding:0 10px;font-size:13px}
+  .rf-hero .px{padding-top:4px;min-height:0!important}.rf-hero .fh-rg{display:none}.rf-hero .fh-top{gap:8px;padding-bottom:8px}.rf-hero .fh-sum{padding-top:10px;gap:8px}
+  .rf-hero .rf-vc{font-size:24px;margin-bottom:8px}.rf-hero .rf-vc small{font-size:12px}
+  .rf-hero .rf-sh{margin:0 0 4px}.rf-hero .rf-sh .f2-h{font-size:14px;font-weight:600;font-family:var(--sans)}
+  .rf-hero .fh-pl .prof .pa2{grid-template-columns:1fr!important;gap:1px 10px!important;align-items:start!important}.rf-hero .fh-pl .prof .pa2 .pt{min-height:0!important;height:auto!important;display:flex;align-items:baseline;gap:6px;flex-wrap:wrap;line-height:1.25}.rf-hero .fh-pl .prof .pa2 .pt b{min-height:0!important;height:auto!important;line-height:1.25}.rf-hero .fh-pl .prof .pa2{padding:3px 0!important}.rf-hero .rf-sh{min-height:0;height:26px;align-items:center;overflow:visible}.rf-hero .rf-sh .rf-info{margin:-9px 0}.rf-hero .fh-pl{margin-top:4px!important;padding-top:0!important}.rf-hero .fh-pl .prof{padding-top:0!important;margin-top:0!important}.rf-hero .fh-pl .prof>.kick{display:none}.rf-hero .pa2-ic{width:14px;height:14px}.rf-hero .fh-pl .prof .pa2 .pt{font-size:13px;flex-wrap:nowrap!important;flex-direction:row!important}.rf-hero .fh-pl .prof .pa2 .pt b{display:inline-flex!important;align-items:center;gap:4px;width:auto!important;flex:0 0 auto!important;white-space:nowrap}.rf-hero .fh-pl .prof .pa2 .pt small{flex:1 1 auto;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block!important;margin:0!important}.rf-delta>small{margin-bottom:-2px}.rf-hero .fh-pl .prof .pa2 .pt b{font-size:13px}.rf-hero .fh-pl .prof .pa2 .pt small{font-size:12px}
+  .rf-hero .fh-pl .prof{gap:6px}.rf-delta{margin-bottom:8px;gap:4px}.rf-dl{display:block;padding:4px 5px}.rf-dl i{width:16px;height:16px;font-size:11px;display:inline-grid;vertical-align:-3px;margin-right:3px}.rf-dl b{font-size:12px;display:inline}.rf-dl small{font-size:12px;display:block;letter-spacing:-.02em}
+}</style>`);
 
 /* ---------- Une seule rangée d'onglets (29 octobre, 17 h) ----------
    Les étapes de la vue d'ensemble (boutons, sans rechargement) et les deux autres pages de la fiche
@@ -462,9 +476,15 @@ function ficheSommaire(s, c) {
   const vc = rfVerdictCourt(s, c);
   const prof3 = prof; // les libellés viennent de rfAxes (une seule source)
   const md = MED[s.sector] || {};
-  return `<div class="fh-sum rf-sum rf-hplace">${vc ? `<p class="rf-vc">${esc(vc)}<small id="rf-date">Derniers comptes : exercice ${esc(s.year)}${c.fyEnd ? `, clos le ${esc(String(c.fyEnd).split("-").reverse().join("/"))}` : ""}</small></p>` : ""}<div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><button type="button" class="rf-info" data-rf-info aria-label="Comment lire ces jauges" title="Comparé à la médiane de ${md.n || "?"} entreprises du secteur suivies par le site : à droite les mieux placées, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.">ⓘ</button></div>
+  return `<div class="fh-sum rf-sum rf-hplace">${vc ? `<p class="rf-vc">${esc(vc)}<small id="rf-date">Derniers comptes : exercice ${esc(s.year)}${c.fyEnd ? `, clos le ${esc(String(c.fyEnd).split("-").reverse().join("/"))}` : ""}${typeof provBadge === "function" ? " " + provBadge(s, c) : ""}</small></p>` : ""}${rfDeltaHTML(s, c)}<div class="rf-sh"><h2 class="f2-h">Sa place dans le secteur ${esc(secName(s).toLowerCase())}</h2><button type="button" class="rf-info" data-rf-info aria-label="Comment lire ces jauges" title="Comparé à la médiane de ${md.n || "?"} entreprises du secteur suivies par le site : à droite les mieux placées, au milieu la médiane. Pour le prix, à droite signifie moins cher au regard du bénéfice.">ⓘ</button></div>
       ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof3.replace(/<\/div>\s*$/, "")}</div>` : `<p class="rf-no">Pas assez d'entreprises comparables dans son secteur pour la situer.</p>`}
-      ${rk}</div>`;
+      ${rk}${rfRisquesHTML(s, c)}</div>`;
+}
+function rfRisquesHTML(s, c) { // 5e passage (B1) : les risques en clair, 3 points d'attention calculés sur les comptes (jamais d'opinion), le détail au clic
+  const P = rfPoints(s, c); if (!P || !P.d.length) return "";
+  const calc = P.d.filter(i => !i.regle).slice(0, 3); // seulement les points calculés sur les comptes (dette qui monte, marge qui baisse, dividende supérieur au bénéfice, dépendance à une activité)
+  if (!calc.length) return "";
+  return `<div class="rf-risq"><small>À surveiller dans ses comptes</small>${calc.map(i => `<button type="button" class="rf-risq-b" data-rf-anf="${esc(i.id)}" title="Lire le détail et la source"><i></i>${esc(i.titre)}</button>`).join("")}</div>`;
 }
 function ficheSyntheseHTML(s, c) { // l'ancien « En bref » de l'en-tête, avec l'analyse détaillée (onglet Synthèse, 30/10)
   CURSYM = CUR[s.currency] || s.currency || "€";
@@ -991,6 +1011,23 @@ function rfFaitHTML(s, c) { // « Ce qu'elle fait » : une phrase, puis ses conc
     ${peers.length ? `<p class="rf-peers"><span>Concurrents</span>${peers.map(p => `<a class="chip" href="/entreprise/${p.id}">${logo(p, 24)}${esc(p.name)}</a>`).join("")}</p>` : ""}
     ${arg ? `<p class="rf-l1p">${esc(arg)}</p>` : ""}</div>
     ${rfPli2("rf-metier", "Activités, pays, dirigeants", "Son métier en détail, sa taille dans le secteur", ficheMetierHTML(s, c), false)}</section>`;
+}
+function rfDeltaHTML(s, c) { // 5e passage (B1) : « ce qui a changé depuis l'an dernier » en trois repères visuels (↑ marge, ↓ dette, ↑ dividende), calculés sur les deux derniers exercices
+  if (!c || !c.fin || !Array.isArray(c.years) || c.years.length < 2) return "";
+  const f = c.fin, n = c.years.length, L = n - 1, P = n - 2, y0 = c.years[P], y1 = c.years[L], num = v => typeof v === "number" && isFinite(v);
+  const bank = typeof isBank === "function" && isBank(s), items = [];
+  const fl = (lab, a, b, fmt, inv, sens) => { if (!num(a) || !num(b)) return; const d = b - a; const z = Math.abs(sens === "pct" ? d : d / Math.max(Math.abs(a), 1e-9)) < 0.005 ? "n" : (d > 0) !== !!inv ? "g" : "o"; items.push(`<span class="rf-dl ${z}"><i>${d > 0 ? "↑" : d < 0 ? "↓" : "="}</i><b>${esc(lab)}</b><small>${esc(compact(fmt(a), fmt(b)))}</small></span>`); };
+  const sym = CUR[c.currency] || c.currency || "", pc = v => `${F1.format(v * 100)} %`;
+  const mo = v => { const a = Math.abs(v), x = a >= 1e3 ? v / 1e3 : v, u = a >= 1e3 ? "Md" : "M"; return `${(Math.abs(x) >= 10 ? F0 : F1).format(x)} ${u}${sym}`; }; // court : « 13→12 Md€ », « 9,7→9,9 Md€ » (millions en entrée)
+  const compact = (a, b) => { const u = x => (x.match(/\s*([^\d\s,.\-−]+)$/) || [])[1]; const ua = u(a), ub = u(b); return ua && ua === ub ? `${a.slice(0, a.length - ua.length).trim()}→${b}` : `${a}→${b}`; }; // « 23,1 → 22,0 % », « 13,3 → 11,5 Md€ » : l'unité une seule fois
+  if (!bank && num(f.ebit && f.ebit[P]) && num(f.ca && f.ca[P]) && f.ca[P] > 0 && num(f.ebit[L]) && num(f.ca[L]) && f.ca[L] > 0) fl("Marge", f.ebit[P] / f.ca[P], f.ebit[L] / f.ca[L], pc, false, "pct");
+  else if (num(f.ca && f.ca[P]) && num(f.ca && f.ca[L]) && f.ca[P] > 0) fl(bank ? "Revenus" : "Ventes", f.ca[P], f.ca[L], mo, false);
+  if (!bank && num(f.netDebt && f.netDebt[P]) && num(f.netDebt && f.netDebt[L])) fl("Dette nette", f.netDebt[P], f.netDebt[L], v => v < 0 ? "trésorerie nette" : mo(v), true);
+  else if (num(f.net && f.net[P]) && num(f.net && f.net[L])) fl("Bénéfice", f.net[P], f.net[L], mo, false);
+  const dps = f.dpsEst || f.dps; if (num(dps && dps[P]) && num(dps && dps[L]) && (dps[P] > 0 || dps[L] > 0)) fl("Dividende", dps[P], dps[L], v => `${(Math.abs(v) >= 10 ? F1 : F2).format(v)} ${sym}`.trim(), false);
+  else if (num(f.net && f.net[P]) && num(f.net && f.net[L]) && items.length < 3 && !items.some(x => x.includes("Bénéfice"))) fl("Bénéfice", f.net[P], f.net[L], mo, false);
+  if (!items.length) return "";
+  return `<div class="rf-delta" title="Comparaison des deux derniers exercices publiés (${y0} → ${y1}) ; vert : mieux, orange : moins bien, gris : stable"><small>Depuis l'an dernier (${y0} → ${y1})</small>${items.slice(0, 3).join("")}</div>`;
 }
 function rfChangeHTML(s, c) { // « Ce qui a changé » : la dernière publication (trimestre si disponible), la prochaine date
   const up = eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 2);

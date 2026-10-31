@@ -1,0 +1,40 @@
+# Images de partage des fiches (5e passage, B1) : /og/entreprise/<id>.png pour les 300 plus grosses capitalisations, refaites
+# seulement quand le verdict ou les jauges changent (data/og.mjs). Chaque semaine, le dimanche matin, et à la main.
+name: Images de partage
+on:
+  workflow_dispatch:
+    inputs:
+      max:
+        description: "Nombre de fiches (les plus grosses capitalisations d'abord)"
+        default: "300"
+  schedule:
+    - cron: "10 4 * * 0"   # dimanche 5 h 10 (heure de Paris en hiver)
+permissions:
+  contents: write
+concurrency:
+  group: og
+  cancel-in-progress: false
+jobs:
+  og:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Outils (Chromium hors ligne, sharp)
+        run: |
+          npm i --no-save --silent sharp@0.33.5 playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: Cartes
+        run: |
+          node build.mjs
+          node data/og.mjs --max "${{ inputs.max || '300' }}"
+      - name: Enregistrement dans le dépôt
+        run: |
+          git config user.name "repere-bot"
+          git config user.email "repere-bot@users.noreply.github.com"
+          git add cf/site/og
+          git diff --cached --quiet || git commit -m "Images de partage du $(date +%F)"
+          for i in 1 2 3; do git pull --rebase -X theirs -q && git push && break; sleep 5; done

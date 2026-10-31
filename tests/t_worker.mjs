@@ -17,6 +17,13 @@ const check = async (path, status, titlePart) => {
 };
 await check("/", 200, "comptes à l'appui");
 await check("/entreprise/lvmh", 200, "LVMH");
+{ // 5e passage (B1) : image de partage propre à la fiche quand elle existe (cf/site/og/index.json), image générale sinon
+  const h = await (await W.fetch(new Request("https://t.local/entreprise/lvmh"), env)).text(), og = (h.match(/property="og:image" content="([^"]+)"/) || [])[1] || "";
+  const attendu = existsSync(new URL("./og/index.json", root)) && JSON.parse(readFileSync(new URL("./og/index.json", root))).ids.includes("lvmh") ? "/og/entreprise/lvmh.png" : "/icons/partage.png";
+  if (!og.endsWith(attendu)) { bad++; console.log("ÉCART og:image", og, "attendu", attendu); } else console.log("ok  og:image", og);
+  const h2 = await (await W.fetch(new Request("https://t.local/entreprise/danone"), env)).text(), og2 = (h2.match(/property="og:image" content="([^"]+)"/) || [])[1] || "";
+  if (!/partage\.png$|\/og\/entreprise\/danone\.png$/.test(og2)) { bad++; console.log("ÉCART og:image danone", og2); }
+}
 await check("/entreprise/totalenergies", 200, "TotalEnergies");
 await check("/actualites", 200, "Actualité");
 await check("/entreprise/inconnue", 404, "introuvable");

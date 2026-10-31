@@ -33,7 +33,7 @@ export const SECURITE = {
   "cross-origin-opener-policy": "same-origin",
   "x-permitted-cross-domain-policies": "none",
 };
-export function tete(html, { title, desc, url, statut }) {
+export function tete(html, { title, desc, url, statut, image = null }) {
   const canon = url.origin + (url.pathname.replace(/\/+$/, "") || "/");
   const t = [
     `<meta name="bilan-version" content="${VERSION}">`,
@@ -52,10 +52,10 @@ export function tete(html, { title, desc, url, statut }) {
     `<meta property="og:title" content="${esc(title)}">`,
     `<meta property="og:description" content="${esc(desc)}">`,
     ...(statut === 200 ? [`<meta property="og:url" content="${esc(canon)}">`] : []),
-    `<meta property="og:image" content="${url.origin}/icons/partage.png">`,
+    `<meta property="og:image" content="${image && image.url ? esc(image.url) : url.origin + "/icons/partage.png"}">`,
     `<meta property="og:image:width" content="1200">`,
     `<meta property="og:image:height" content="630">`,
-    `<meta property="og:image:alt" content="bilan. La Bourse, comptes à l'appui : les comptes officiels des entreprises cotées, expliqués simplement.">`,
+    `<meta property="og:image:alt" content="${image && image.alt ? esc(image.alt) : "bilan. La Bourse, comptes à l'appui : les comptes officiels des entreprises cotées, expliqués simplement."}">`,
     `<meta name="twitter:card" content="summary_large_image">`,
     ...DONNEES.map(f => `<link rel="preload" href="/data/${f}.json" as="fetch" crossorigin>`),
     // Avant l'affichage de la page : la zone de contenu garde la hauteur de l'écran (le pied de page ne saute plus) et un trait discret indique le chargement

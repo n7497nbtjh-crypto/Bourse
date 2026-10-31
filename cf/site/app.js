@@ -2297,7 +2297,7 @@ const AX_WORDS = { // 5e passage (A4) : les libellés des jauges ne répètent p
   marge: ["parmi les meilleures", "au-dessus de la médiane", "dans la norme du secteur", "sous la médiane", "parmi les plus faibles"],
   solidite: ["parmi les plus solides", "plus solide que la médiane", "dans la norme du secteur", "moins solide que la médiane", "parmi les moins solides"],
   dividende: ["parmi les plus généreuses", "rendement au-dessus de la médiane", "rendement dans la norme", "rendement sous la médiane", "parmi les moins généreuses"],
-  prix: ["parmi les moins chères", "sous la médiane du secteur", "dans la norme du secteur", "au-dessus de la médiane", "parmi les plus chères"],
+  prix: ["parmi les moins chères", "prix plus bas que la médiane", "dans la norme du secteur", "prix plus élevé que la médiane", "parmi les plus chères"],
 };
 const axBand = p => p >= 0.75 ? 0 : p >= 0.55 ? 1 : p > 0.45 ? 2 : p > 0.25 ? 3 : 4; // 0 = en tête … 4 = en queue
 const axWord = (p, k = "croissance") => (AX_WORDS[k] || AX_WORDS.croissance)[axBand(p)];

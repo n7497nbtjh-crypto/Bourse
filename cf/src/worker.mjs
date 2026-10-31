@@ -149,7 +149,9 @@ export default {
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `\n<script type="application/ld+json">${t.ld}</script>` : ""}`);
     html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url)}</div>`);
-    html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404 });
+    let image = null; // 5e passage (B1) : image de partage propre à la fiche (data/og.mjs), seulement si elle existe
+    if (fq) { try { const ids = await ogIds(env, url); if (ids.has(fq[1])) image = { url: `${url.origin}/og/entreprise/${fq[1]}.png`, alt: `${t.title} : verdict et cinq jauges face à la médiane du secteur, d'après les comptes officiels.` }; } catch (e) { } }
+    html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image });
     return new Response(html, { status: info ? 200 : 404, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "public, max-age=0, must-revalidate", "x-bilan-version": VERSION, ...SECURITE } });
   },
 };
@@ -159,6 +161,12 @@ export default {
    fichier de données en panne), la page n'est plus blanche. Le titre, la description et, pour une entreprise, ses chiffres
    du dernier exercice. Masqué dès que le site s'affiche (classe « js » posée en tête de page), donc sans saut visible. */
 const fmtM = (v, cur) => { if (v == null || !isFinite(v)) return null; const a = Math.abs(v); const t = a >= 1000 ? (v / 1000).toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " Md" : v.toLocaleString("fr-FR", { maximumFractionDigits: 0 }) + " M"; return t + " " + (cur === "EUR" ? "€" : cur === "USD" ? "$" : cur || ""); };
+let OG_IDS = null, OG_AT = 0;
+async function ogIds(env, url) { // identifiants des fiches qui ont une image de partage (cf/site/og/index.json), gardés une heure par instance
+  if (OG_IDS && Date.now() - OG_AT < 36e5) return OG_IDS;
+  try { const r = await env.ASSETS.fetch(new Request(new URL("/og/index.json", url))); const j = r.ok && (r.headers.get("content-type") || "").includes("json") ? await r.json() : null; OG_IDS = new Set((j && j.ids) || []); } catch (e) { OG_IDS = new Set(); }
+  OG_AT = Date.now(); return OG_IDS;
+}
 async function rendu(t, fq, env, url) {
   let corps = "";
   if (fq) {

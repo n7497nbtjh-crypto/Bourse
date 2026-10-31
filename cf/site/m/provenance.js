@@ -267,6 +267,7 @@ async function provHTML(key, ids) {
     if (I.src === "cours" || I.src === "mixte") { const b = provBlocCours(pxOf(s)); rows += b.html; if (b.k && b.k.vieux) warn.push(`Cours ancien : pas de nouveau relevé depuis ${b.k.jo} jours ouvrés. Il n'est pas présenté comme actuel.`); }
     if (I.src === "mixte" || I.unite === "eur") { const d = await provFxDate(); if (s.currency && s.currency !== "EUR" || (pxOf(s) || {}).cur !== "EUR") rows += provRow("Change", `Taux de référence de la BCE${d ? ` du ${dLabel(d)}` : ""}.`); }
     rows = provRow("Devise", esc(provUnite(I, s.currency || (pxOf(s) || {}).cur))) + rows;
+    const calc = provCalcul(key, s, c); if (calc) rows = provRow("Calcul", esc(calc)) + rows; // 5e passage (B1) : les deux chiffres
   } else { // en-tête d'un tableau de nombreuses entreprises : la provenance générale, les dates détaillées sont sur chaque fiche
     rows += provRow("Source", I.src === "cours" ? "Google Finance, cours différés." : `Comptes annuels publiés : rapports ESEF (sociétés européennes, filings.xbrl.org et AMF) et rapports déposés à la SEC (EDGAR)${I.src === "mixte" ? ", avec les cours différés de Google Finance" : ""}.`);
     if (I.src !== "cours") rows += provRow("Période", `Dernier exercice annuel publié de chaque entreprise${I.deux ? ", comparé au précédent" : ""} : les exercices ne se terminent pas tous à la même date.`);
@@ -283,6 +284,36 @@ async function provHTML(key, ids) {
     <p class="prov-ft"><a href="/methode">Notre méthode</a>${I.term && ALL[I.term] ? ` · <a href="/lexique#${I.term}">Définition</a>` : ""}</p>`;
 }
 
+/* 5e passage (B1) : le calcul avec les deux chiffres, pour chaque ratio (« eux estiment, nous prouvons »). s : fiche courte, c : comptes complets. */
+function provCalcul(key, s, c) {
+  if (!c || !c.fin || !Array.isArray(c.years) || !c.years.length) return "";
+  const f = c.fin, L = c.years.length - 1, y = c.years[L], y0 = c.years[L - 1], cur = c.currency || s.currency || "", num = v => typeof v === "number" && isFinite(v);
+  const M = v => typeof big === "function" ? big(v, cur) : F0.format(v), P = v => `${F1.format(v * 100)} %`, X = v => `${F1.format(v)} fois`;
+  const px = typeof pxOf === "function" ? pxOf(s) : null, cap = px && px.cap ? px.cap : null, capM = cap != null ? cap / 1e6 : null; // capitalisation en devise de cotation (unités) → millions
+  const div = (a, b, la, lb, fmt, an = y) => num(a) && num(b) && b !== 0 ? `${la} ${M(a)} ÷ ${lb} ${M(b)} = ${fmt(a / b)} (exercice ${an})` : "";
+  switch (key) {
+    case "marge": return div(f.ebit && f.ebit[L], f.ca && f.ca[L], "résultat d'exploitation", "ventes", P);
+    case "nm": return div(f.net && f.net[L], f.ca && f.ca[L], "résultat net", "ventes", P);
+    case "roe": return div(f.net && f.net[L], f.equity && f.equity[L], "résultat net", "capitaux propres", P);
+    case "g": return num(f.ca && f.ca[L]) && num(f.ca && f.ca[L - 1]) && f.ca[L - 1] > 0 ? `ventes ${y} ${M(f.ca[L])} ÷ ventes ${y0} ${M(f.ca[L - 1])} − 1 = ${P(f.ca[L] / f.ca[L - 1] - 1)}` : "";
+    case "ng": return num(f.net && f.net[L]) && num(f.net && f.net[L - 1]) && f.net[L - 1] > 0 ? `résultat net ${y} ${M(f.net[L])} ÷ résultat net ${y0} ${M(f.net[L - 1])} − 1 = ${P(f.net[L] / f.net[L - 1] - 1)}` : "";
+    case "gear": return div(f.netDebt && f.netDebt[L], f.equity && f.equity[L], "dette nette", "capitaux propres", X);
+    case "payout": return div(f.divPaid && f.divPaid[L], f.net && f.net[L], "dividendes versés", "résultat net", P);
+    case "conv": return div(f.fcf && f.fcf[L], f.net && f.net[L], "flux de trésorerie disponible", "résultat net", X);
+    case "fcf": return num(f.cfo && f.cfo[L]) && num(f.capex && f.capex[L]) ? `flux d'exploitation ${M(f.cfo[L])} − investissements ${M(f.capex[L])} = ${M(f.cfo[L] - f.capex[L])} (exercice ${y})` : "";
+    case "netDebt": return num(f.debt && f.debt[L]) && num(f.cash && f.cash[L]) ? `dette ${M(f.debt[L])} − trésorerie ${M(f.cash[L])} = ${M(f.debt[L] - f.cash[L])} (exercice ${y})` : "";
+    case "per": return capM != null && num(f.net && f.net[L]) && f.net[L] > 0 && (px.cur || cur) === cur ? `valeur en Bourse ${M(capM)} ÷ résultat net ${y} ${M(f.net[L])} = ${X(capM / f.net[L])}` : "";
+    case "rendement": return capM != null && num(f.divPaid && f.divPaid[L]) && f.divPaid[L] > 0 && (px.cur || cur) === cur ? `dividendes versés ${y} ${M(f.divPaid[L])} ÷ valeur en Bourse ${M(capM)} = ${P(f.divPaid[L] / capM)}` : "";
+    case "rdtfcf": return capM != null && num(f.fcf && f.fcf[L]) && (px.cur || cur) === cur ? `flux disponible ${y} ${M(f.fcf[L])} ÷ valeur en Bourse ${M(capM)} = ${P(f.fcf[L] / capM)}` : "";
+    default: return "";
+  }
+}
+function provBadge(s, c) { // « Prouvé : N chiffres, N sources officielles » ; une estimation porte toujours le mot « estimé »
+  if (!c || !c.fin || s.missing) return "";
+  const n = Object.values(c.fin).filter(a => Array.isArray(a) && a.some(v => typeof v === "number")).length, src = (c.sources || []).filter(x => x.periodEnd).length, eodhd = (c.sources || []).some(x => x.source === "EODHD") || c.norme === "EODHD";
+  if (!n) return "";
+  return `<span class="rf-prouve ${eodhd ? "rf-prouve-f" : ""}" title="${eodhd ? "Comptes repris du fournisseur EODHD, pas lus par le site dans le document officiel" : "Chaque chiffre renvoie au document officiel (bouton i)"}"><i>${eodhd ? "Fournisseur" : "Prouvé"}</i> ${n} chiffre${n > 1 ? "s" : ""}, ${src} ${eodhd ? "exercice" : "document"}${src > 1 ? "s" : ""}${eodhd ? "" : " officiel" + (src > 1 ? "s" : "")}</span>`;
+}
 /* Ouverture : bulle partagée #pop (la même que les définitions). Survol (souris), focus clavier, toucher. */
 let PROV_OPEN = null, PROV_MODE = null, PROV_T = 0, PROV_SEQ = 0;
 const provHover = () => { try { return matchMedia("(hover: hover) and (pointer: fine)").matches; } catch (e) { return false; } };
