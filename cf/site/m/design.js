@@ -224,21 +224,22 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 </style>`);
 /* Page Outils (lot 2 et 5, 30/10) : deux familles, des cartes visuelles (icône, nom, une ligne). Chaque outil n'est listé qu'ici. */
 (function () {
-  const I = { epargne: "M4 18l5-6 4 3 7-9M4 4v16h16", passe: "M12 8v4l3 2M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0", verif: "M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7zM9 12l2 2 4-4", repart: "M12 3v9h9a9 9 0 1 1-9-9zM14 3a9 9 0 0 1 7 7h-7z", listes: "M4 6h16M4 12h10M4 18h7", comparer: "M4 20V9M10 20V4M16 20v-8M22 20H2", recouv: "M9 12a5 5 0 1 0 0-.01M15 12a5 5 0 1 0 0-.01", pf: "M3 7h18v12H3zM3 11h18M8 7V4h8v3", frais: "M4 4h16v16H4zM8 9h8M8 13h5M8 17h3", impot: "M6 3h12v18H6zM9 7h6M9 11h6M9 15h3", livret: "M4 6h16v12H4zM4 10h16" };
+  const I = { idees: "M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.5 1 2.5h6c0-1 .4-1.9 1-2.5A6 6 0 0 0 12 3z", epargne: "M4 18l5-6 4 3 7-9M4 4v16h16", passe: "M12 8v4l3 2M4 12a8 8 0 1 0 16 0 8 8 0 0 0-16 0", verif: "M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7zM9 12l2 2 4-4", repart: "M12 3v9h9a9 9 0 1 1-9-9zM14 3a9 9 0 0 1 7 7h-7z", listes: "M4 6h16M4 12h10M4 18h7", comparer: "M4 20V9M10 20V4M16 20v-8M22 20H2", recouv: "M9 12a5 5 0 1 0 0-.01M15 12a5 5 0 1 0 0-.01", pf: "M3 7h18v12H3zM3 11h18M8 7V4h8v3", frais: "M4 4h16v16H4zM8 9h8M8 13h5M8 17h3", impot: "M6 3h12v18H6zM9 7h6M9 11h6M9 15h3", livret: "M4 6h16v12H4zM4 10h16" };
   const ic = k => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${I[k]}"/></svg>`;
   const G = [
     ["Pour débuter", "Avec vos chiffres, hypothèses affichées", [
       ["/simulateurs/epargne", "epargne", "Simulateur d'épargne", "Ce que devient une somme placée chaque mois, frais et impôt compris."],
       ["/outils/si-javais", "passe", "Et si j'avais investi ?", "1 000 € placés il y a 1, 3 ou 5 ans, comparés au marché."],
       ["/outils/verifier", "verif", "Vérifier une offre", "Un site ou un conseiller face aux listes noires de l'AMF."],
-      ["/repartitions", "repart", "Répartitions types", "Des exemples de répartition expliqués, sans personnalisation."],
+      ["/repartitions", "repart", "Quelle part en actions ?", "Un curseur, et ce qu'une forte baisse ferait à l'ensemble."],
       ["/livret-a-ou-bourse", "livret", "Livret A ou Bourse ?", "100 € par mois sur 10, 20 ou 30 ans, inflation comprise."],
+      ["/idees-recues", "idees", "Les idées reçues face aux chiffres", "Dix phrases qu'on entend souvent, vérifiées avec des données sourcées."],
     ]],
     ["Pour aller plus loin", "Trier, comparer, radiographier", [
-      ["/repartitions#listes", "listes", "Listes par critères", "Les entreprises qui répondent aux critères que vous choisissez."],
+      ["/portefeuille", "pf", "Mon portefeuille", "Frais réels, doublons d'ETF, concentration, dividendes, achats programmés."],
       ["/comparer", "comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face à la médiane du secteur."],
       ["/outils/recouvrement", "recouv", "Deux ETF se recouvrent-ils ?", "Les entreprises que deux à quatre ETF ont en commun."],
-      ["/portefeuille", "pf", "Mon portefeuille", "Frais réels, doublons d'ETF, concentration, dividendes."],
+      ["/repartitions#listes", "listes", "Listes par critères", "Les entreprises qui répondent aux critères que vous choisissez."],
       ["/simulateurs/frais", "frais", "Le coût des frais", "Courtage et frais de gestion sur 10, 20 ou 30 ans."],
       ["/simulateurs/pea-cto", "impot", "L'impôt selon le compte", "PEA ou compte-titres, avec vos montants."],
     ]],

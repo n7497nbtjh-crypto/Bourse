@@ -70,7 +70,7 @@ document.head.insertAdjacentHTML("beforeend", `<style>
 .etfhd h1{font-family:var(--serif);font-weight:800;letter-spacing:-.015em;font-size:26px;line-height:1.15;margin:0}
 .etfhd .sub{color:var(--grey);margin-top:4px;font-size:14px}
 .etfhd .ids{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:var(--grey);align-items:center}
-.etfhd .ids b{font-family:var(--mono);color:var(--ink);font-weight:600}
+.etfhd .ids b{font-family:var(--mono);color:var(--ink);font-weight:600}.etfhd .ids .fh-isin2{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-radius:999px;padding:4px 10px}.etfhd .ids .fh-isin2 b{color:#fff}.etfhd .ids .fh-isin2 small{font-size:10.5px;opacity:.75}.etfhd .ids .fh-isin2 .copy{color:#fff;border-color:rgba(255,255,255,.4)}
 .etfhd .copy{border:0;background:none;padding:0 2px;cursor:pointer;color:var(--grey);font:inherit;text-decoration:underline dotted}
 .etfhd .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .etfhd .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
@@ -330,7 +330,7 @@ async function pageEtf(id) {
   app.innerHTML = `<div class="crumbs"><a href="/etf">ETF</a> › <a href="/etf?cat=${esc(e.categorie || "")}">${esc(ECAT[e.categorie] || "Autres")}</a></div>
     <section class="panel fhero rf-hero rf-etf"><div class="etfhd rf-etfhd"><div class="top"><div class="rf-etfid">${logo({ name: e.issuer, domain: issuerDom(e) }, 52)}<div style="min-width:0">
       <h1>${esc(e.name)}</h1><div class="sub">${e.index ? `Indice <b style="color:var(--ink);font-weight:600">${esc(e.index)}</b> · ` : ""}${esc(e.issuer)}</div>
-      <div class="ids">${e.ticker ? `<span>Ticker <b>${esc(e.ticker)}</b>${pl ? ` · ${esc(pl.place)}` : ""}</span>` : ""}<span>ISIN <b>${esc(e.isin)}</b> <button type="button" class="copy" id="ecopy" aria-label="Copier l'ISIN">copier</button></span></div>
+      <div class="ids">${e.ticker ? `<span>Ticker <b>${esc(e.ticker)}</b>${pl ? ` · ${esc(pl.place)}` : ""}</span>` : ""}<span class="fh-isin2" title="Code ISIN : l'identifiant international de l'ETF, le même chez tous les courtiers"><small>ETF · ISIN</small><b>${esc(e.isin)}</b> <button type="button" class="copy" id="ecopy" aria-label="Copier l'ISIN">copier</button></span></div>
       <div class="acts">${favBtn("e:" + e.id)}<button type="button" class="linkbtn" id="epf">+ Ajouter à mon portefeuille</button><a class="pill" href="#ecomp" data-etf-comp>Sa composition</a><a class="pill" href="/outils/recouvrement?a=${e.id}${voisin ? `&b=${voisin.id}` : ""}">${voisin ? `Recouvrement avec ${esc(voisin.name.length > 28 ? voisin.name.slice(0, 26) + "…" : voisin.name)}` : "Se recouvre-t-il avec un autre ETF ?"}</a></div></div></div><div class="px tv rf-etfpx" id="tvinfo"></div></div></div>
       <div class="f2-mid rf-mid${e.tv ? "" : " f2-noc"}">${e.tv ? `<div class="f2-chart"><div class="f2-ch-h"><h2 class="f2-h">Le cours de la part</h2><span class="f2-note">Cours différé</span></div><div class="tv tv-chart f2-tv" id="tvchart" role="img" aria-label="Courbe du cours de ${esc(e.name)}"><div class="f2-tvph">Chargement de la courbe…</div></div></div>` : ""}<div class="fh-sum rf-sum" id="ebref">${ETF_bref(e, null, v)}</div></div>
     </section>

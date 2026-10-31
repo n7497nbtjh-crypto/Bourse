@@ -454,7 +454,7 @@ function commIrReponse(x, r) {
 }
 // Une carte. opts.seule : affichage isolé (Apprendre, Académie) avec le bouton « Une autre idée reçue »
 function commIdeeCarte(x, i, opts = {}) {
-  const r = commIrEtat()[x.id], ouvert = !!r;
+  const r = commIrEtat()[x.id] || "x", ouvert = true; // 31/10 (Romain) : plus de quiz, la réponse et les données sont visibles d'emblée
   return `<article class="ir${ouvert ? " open" : ""}${opts.seule ? " ir-seule" : ""}" id="${x.id}" data-ir="${x.id}">
     <div class="ir-q"><span class="cm-n">${String(i + 1).padStart(2, "0")}</span><div class="ir-qb"><p class="cm-myth">« ${esc(x.mythe.replace(/\.$/, ""))} »</p>
       <div class="ir-ask"${ouvert ? " hidden" : ""}><span class="kick">Vrai ou faux ?</span><button type="button" class="btn ghost" data-ir-ans="v">Vrai</button><button type="button" class="btn ghost" data-ir-ans="f">Faux</button><button type="button" class="linkbtn" data-ir-ans="x">Voir la réponse</button></div></div></div>
@@ -491,12 +491,12 @@ document.addEventListener("click", e => {
   }
 });
 function pageIdeesRecues() {
-  setTitle("Idées reçues sur la Bourse : vrai ou faux ?"); setNav("aca");
+  setTitle("Les idées reçues sur la Bourse, face aux chiffres"); setNav("sim");
   const L = commIdees(), s = commIrEtat(), first = L.find(x => !s[x.id]);
-  app.innerHTML = `<div class="cm-page ir-page">
-    <header class="cm-hero"><p class="kick">Idées reçues déconstruites</p><h1 class="pagetitle">Vrai ou faux ? Les idées reçues sur la Bourse</h1>
-      <p class="pagesub">${L.length} phrases qu'on entend souvent. Répondez d'abord, puis retournez la carte : pourquoi on y croit, ce que montrent les données, les nuances, un exemple et ce qu'il faut en retenir. Chiffres officiels, sources à l'appui.</p>
-      <div class="ir-score"><span><b class="ir-sv">${commIrScoreHTML(L)}</b></span>${first ? `<a class="btn" href="#${first.id}">${Object.keys(s).length ? "Continuer" : "Commencer"}</a>` : `<button type="button" class="linkbtn" id="ir-raz">Tout recommencer</button>`}</div></header>
+  app.innerHTML = `<div class="cm-page ir-page"><div class="crumbs"><a href="/outils">Outils</a> › Les idées reçues</div>
+    <header class="cm-hero"><p class="kick">Idées reçues déconstruites</p><h1 class="pagetitle">Les idées reçues sur la Bourse</h1>
+      <p class="pagesub">${L.length} phrases qu'on entend souvent, chacune confrontée aux chiffres : pourquoi on y croit, ce que montrent les données, les nuances, un exemple et ce qu'il faut en retenir. Chiffres officiels, sources à l'appui.</p>
+      <nav class="ir-som" aria-label="Les idées reçues">${L.map((x, i) => `<a href="#${x.id}">${String(i + 1).padStart(2, "0")} ${esc(x.mythe.replace(/\.$/, ""))}</a>`).join("")}</nav></header>
     <div class="ir-list">${L.map((x, i) => commIdeeCarte(x, i)).join("")}</div>
     <section class="panel cm-end"><div class="pb"><h2>Pour aller plus loin</h2><p>Ces réponses sont générales. Elles ne tiennent pas compte de votre situation et ne sont pas des conseils d'investissement. Pour un conseil personnalisé, adressez-vous à un conseiller en investissements financiers enregistré auprès de l'ORIAS.</p>
       <div class="cm-go"><a class="chip" href="/apprendre">Le parcours pour apprendre</a><a class="chip" href="/livret-a-ou-bourse">Livret A ou Bourse : le comparateur</a><a class="chip" href="/academie/psychologie">Psychologie et pièges</a><a class="chip" href="/avertissement">Avertissement sur les risques</a></div></div></section>
@@ -805,3 +805,5 @@ table.cm-cmp .cm-me{background:#F3FAF6}
   .cm-bar{grid-template-columns:minmax(80px,40%) 1fr auto}
 }
 </style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>.ir-som{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.ir-som a{border:1px solid var(--rule);border-radius:999px;padding:6px 12px;font-size:13px;color:var(--ink);text-decoration:none;background:#fff}.ir-som a:hover{border-color:var(--ink)}</style>`);

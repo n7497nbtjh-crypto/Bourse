@@ -2716,8 +2716,8 @@ async function pageEspace(onglet) {
   return espaceReglages(el, m);
 }
 function espaceConnexion() {
-  app.innerHTML = `<div class="esplog"><div class="esppitch"><p class="kick">Mon espace</p><h1 class="pagetitle">Votre Bourse, suivie pour vous.</h1>
-      <ul class="espben big"><li><b>Le bilan de la semaine</b> de vos entreprises et ETF, commenté par l'IA : ce qui a bougé, ce qui a été annoncé, ce qui arrive.</li><li><b>Des alertes</b> quand une de vos entreprises publie ses résultats ou bouge de plus de 5 %.</li><li><b>Vos favoris et votre portefeuille</b> sur votre téléphone et votre ordinateur.</li></ul>
+  app.innerHTML = `<div class="esplog"><div class="esppitch"><p class="kick">Mon espace</p><h1 class="pagetitle">Vos valeurs, suivies chaque semaine.</h1>
+      <ul class="espben big"><li><b>Un rapport chaque semaine</b> : ce que vos entreprises et ETF ont publié, leurs cours, leurs dates à venir, la répartition de votre portefeuille.</li><li><b>Une alerte</b> quand une de vos valeurs publie ses résultats ou bouge de plus de 5 %.</li><li><b>Vos favoris, votre portefeuille et vos achats programmés</b>, les mêmes sur votre téléphone et votre ordinateur.</li><li><b>Un agenda rien qu'à vous</b> : résultats et dividendes de vos valeurs, portefeuille d'abord.</li></ul>
       <p class="note">Gratuit. Aucune donnée vendue. Vous pouvez supprimer votre compte à tout moment.</p></div>
     <div><section class="panel"><div class="ph"><h2 id="lt">Créer mon espace</h2></div><div class="pb">
       <form id="espf" class="espform"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>

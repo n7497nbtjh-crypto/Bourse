@@ -87,9 +87,9 @@ function O2_courbe(el, o) {
 }
 
 /* Petites barres horizontales comparées (une ligne = un libellé, plusieurs valeurs) */
-function O2_barres(rows, noms, couleurs, fmt = v => O2_p(v, 1, false)) {
-  const max = Math.max(1e-9, ...rows.flatMap(r => r.v.filter(x => x != null)));
-  return `<div class="o2-cb">${rows.map(r => `<div class="o2-cbr"><span class="o2-cbl">${r.href ? `<a class="lnk" href="${r.href}">${esc(r.label)}</a>` : esc(r.label)}</span><span class="o2-cbv">${r.v.map((x, i) => `<span class="o2-cbb" title="${esc(noms[i])} : ${esc(x == null ? "absent" : fmt(x))}"><i style="width:${x ? Math.max(1.5, x / max * 100) : 0}%;background:${couleurs[i]}"></i><b>${x == null ? "–" : fmt(x)}</b></span>`).join("")}</span></div>`).join("")}</div>`;
+function O2_barres(rows, noms, couleurs, fmt = v => O2_p(v, 1, false)) { // 31/10 (Romain) : une colonne par fonds, barre courte et chiffre côte à côte, au lieu de barres empilées illisibles
+  const max = Math.max(1e-9, ...rows.flatMap(r => r.v.filter(x => x != null))), n = noms.length;
+  return `<div class="o2-cb" style="--n:${n}"><div class="o2-cbh"><span></span>${noms.map((nm, i) => `<span><i style="background:${couleurs[i]}"></i>${esc(nm)}</span>`).join("")}</div>${rows.map(r => `<div class="o2-cbr"><span class="o2-cbl">${r.href ? `<a class="lnk" href="${r.href}">${esc(r.label)}</a>` : esc(r.label)}</span>${r.v.map((x, i) => `<span class="o2-cbb" title="${esc(noms[i])} : ${esc(x == null ? "absent" : fmt(x))}"><i style="width:${x ? Math.max(2, x / max * 100) : 0}%;background:${couleurs[i]}"></i><b>${x == null ? "–" : esc(fmt(x))}</b></span>`).join("")}</div>`).join("")}</div>`;
 }
 
 function O2_css() {
@@ -112,8 +112,9 @@ function O2_css() {
 .o2-form{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px 16px;align-items:start}
 .o2-seg{display:inline-flex;border:1.5px solid var(--ink);border-radius:10px;overflow:hidden;flex-wrap:wrap}.o2-seg button{background:#fff;border:0;padding:8px 12px;font:inherit;font-size:13.5px;font-weight:600;cursor:pointer;color:var(--ink)}.o2-seg button+button{border-left:1.5px solid var(--ink)}.o2-seg button.on{background:var(--ink);color:#fff}
 .o2-det{margin-top:12px;border-top:1px solid #EFEAE0;padding-top:10px}.o2-det>summary{cursor:pointer;font-weight:600;font-size:14px;padding:4px 0}.o2-det[open]>summary{margin-bottom:10px}
-.o2-cb{display:grid;gap:6px}.o2-cbr{display:grid;grid-template-columns:minmax(110px,190px) 1fr;gap:10px;align-items:center;font-size:13px}.o2-cbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.o2-cbv{display:grid;gap:2px}.o2-cbb{display:grid;grid-template-columns:1fr 54px;gap:6px;align-items:center}.o2-cbb i{display:block;height:8px;border-radius:0 4px 4px 0;min-width:0}.o2-cbb b{font:500 12px var(--mono,monospace);text-align:right}
+.o2-cb{display:grid;gap:0}.o2-cbh,.o2-cbr{display:grid;grid-template-columns:minmax(110px,180px) repeat(var(--n),minmax(0,1fr));gap:10px 16px;align-items:center;font-size:13px;padding:7px 0;border-bottom:1px solid var(--rule)}.o2-cbh{font-size:12.5px;color:var(--grey);padding-bottom:6px}.o2-cbh span{display:flex;align-items:center;gap:6px;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.o2-cbh i{width:10px;height:10px;border-radius:2px;flex:none}.o2-cbl{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.o2-cbb{display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:8px;align-items:center}.o2-cbb i{display:block;height:10px;border-radius:0 4px 4px 0;min-width:0;background-clip:padding-box}.o2-cbb b{font:500 13px var(--sans);font-variant-numeric:tabular-nums;text-align:right;white-space:nowrap}
+@media (max-width:600px){.o2-cbh,.o2-cbr{grid-template-columns:minmax(0,1fr);gap:4px}.o2-cbh span:first-child{display:none}.o2-cbh{display:flex;flex-wrap:wrap;gap:4px 14px}.o2-cbl{font-weight:600}}
 .o2-keys{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12.5px;color:var(--grey);margin:0 0 10px}.o2-keys i{display:inline-block;width:12px;height:8px;border-radius:2px;margin-right:5px;vertical-align:0}
 .o2-row{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:0 0 8px}.o2-row .field{flex:1 1 180px;margin:0;min-width:0}.o2-row .o2-w{flex:0 0 84px}.o2-x{border:1px solid #E4DED2;background:#fff;border-radius:8px;width:38px;height:38px;cursor:pointer;font-size:18px;line-height:1}
 .o2-tag{display:inline-block;font-size:11.5px;padding:2px 7px;border-radius:999px;background:#F1EEE6;color:#5C574E;font-weight:600;white-space:nowrap}.o2-tag.ok{background:rgba(14,138,95,.12);color:#0B6B4A}.o2-tag.no{background:rgba(217,79,43,.12);color:#A63A1C}.o2-tag.mu{background:#F1EEE6;color:#7A756B;font-weight:500}
@@ -222,12 +223,12 @@ async function O2_rcCalcul(S) {
       ${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Paire de fonds</th><th scope="col">Positions communes</th><th scope="col">Poids identique</th><th scope="col">Part du 1er dans le 2d</th><th scope="col">Part du 2d dans le 1er</th></tr></thead><tbody>
       ${paires.map(([i, j, p], z) => `<tr class="${z % 2 ? "z" : ""}"><th scope="row" class="l lab"><span class="nm">${esc(nm(i))}</span><span class="sub" style="display:block">et ${esc(nm(j))}</span></th><td class="num">${F0.format(p.communes)}<span class="sub" style="display:block">sur ${F0.format(p.lignesA)} et ${F0.format(p.lignesB)}</span></td><td class="num"><b>${O2_p(p.recouvrement, 0, false)}</b></td><td class="num">${O2_p(p.partAdansB, 0, false)}</td><td class="num">${O2_p(p.partBdansA, 0, false)}</td></tr>`).join("")}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}
       <p class="o2-note">« Part du 1er dans le 2d » : poids, dans le premier fonds, des entreprises que le second détient aussi (quel que soit leur poids dans le second). Proche de 100 % : le premier est presque inclus dans le second.</p></div></section>
-    <section class="panel"><div class="ph"><h2>Les plus grosses entreprises, fonds par fonds</h2></div><div class="pb">${keys}${O2_barres(top, nomsS, couleurs)}
+    <section class="panel"><div class="ph"><h2>Les plus grosses entreprises, fonds par fonds</h2></div><div class="pb">${O2_barres(top, nomsS, couleurs)}
       <p class="o2-note">Poids de chaque entreprise dans chaque fonds (« – » : le fonds ne la détient pas) puis dans votre portefeuille combiné, selon les parts choisies.</p></div></section>
     <section class="panel"><div class="ph"><h2>Ce que chaque fonds apporte en propre</h2></div><div class="pb">
       ${hbars(E.map((e, i) => ({ label: e.name, v: X.propre[i] / 100, c: O2_RC[i] })), x => pct(x, 0, false))}
       <p class="o2-note">Poids du fonds investi dans des entreprises qu'aucun de vos autres fonds ne détient. Plus c'est bas, moins ce fonds diversifie le reste.</p></div></section>
-    <section class="panel"><div class="ph"><h2>Exposition par secteur et par pays</h2></div><div class="pb">${keys}<div class="o2-split">
+    <section class="panel"><div class="ph"><h2>Exposition par secteur et par pays</h2></div><div class="pb"><div class="o2-split">
       <div><h3>Par secteur</h3>${X.secteurs.length ? O2_barres(expo("secteurs", lib, 8), nomsS, couleurs) : `<p class="muted">Répartition par secteur non disponible pour ces fonds.</p>`}</div>
       <div><h3>Par pays</h3>${X.pays.length ? O2_barres(expo("pays", k => COUNTRY[k] || k, 8), nomsS, couleurs) : `<p class="muted">Répartition par pays non disponible.</p>`}</div></div>
       <p class="o2-note">${emetteur ? "Secteurs publiés par les émetteurs (classification GICS)." : "Secteurs calculés par le site à partir des entreprises qu'il suit dans chaque fonds (classification du site), car au moins une source ne les publie pas."}</p></div></section>
@@ -532,7 +533,27 @@ function pageAgenda() {
   };
   $("#af").onclick = e => { const b = e.target.closest("button"); if (b) { ty = b.dataset.t; render(); } };
   $("#ap").onclick = e => { const b = e.target.closest("button"); if (b) { per = b.dataset.v; render(); } };
-  render(); O2_agRecents();
+  render(); O2_agRecents(); O2_agMiennes();
+}
+// 31/10 (Romain) : vos valeurs dans l'agenda, portefeuille puis favoris : prochaine date, dernière publication, et ce qui a été manqué
+async function O2_agMiennes() {
+  const pfIds = new Set((typeof pf2Load === "function" ? pf2Load().l || [] : []).map(l => l.k).filter(k => k && k.startsWith("c:")).map(k => k.slice(2)));
+  const favIds = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
+  const ids = [...pfIds, ...[...favIds].filter(id => !pfIds.has(id))].filter(id => RBY[id] && !RBY[id].missing); if (!ids.length) return;
+  const d30 = new Date(Date.parse(TODAY) - 30 * 864e5).toISOString().slice(0, 10);
+  const lire = id => typeof actuCo === "function" ? actuCo(id) : getJSON(`/data/actu/c/${id}.json`, { o: [] });
+  const rows = await Promise.all(ids.slice(0, 30).map(async id => { const E = AG.events.filter(e => e.id === id); const nx = E.filter(e => e.date >= TODAY).sort((a, b) => a.date.localeCompare(b.date))[0];
+    let last = E.filter(e => e.date < TODAY && e.type === "Résultats").sort((a, b) => b.date.localeCompare(a.date))[0];
+    if (!last) { try { const j = await lire(id), o = (j.o || []).filter(x => x.c === "resultats").sort((a, b) => String(b.d).localeCompare(String(a.d)))[0]; if (o) last = { date: String(o.d).slice(0, 10), label: o.t || "Résultats" }; } catch (e) { } }
+    return { id, co: RBY[id], pf: pfIds.has(id), nx, last, manque: last && last.date >= d30 }; }));
+  if (location.pathname !== "/agenda") return;
+  const el = document.createElement("section"); el.className = "panel"; el.id = "amoi";
+  el.innerHTML = `<div class="ph"><h2>Vos valeurs</h2><span class="light" style="font-size:12.5px">portefeuille d'abord, favoris ensuite</span></div>
+    ${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Entreprise</th><th class="l" scope="col">Prochaine date</th><th class="l" scope="col">Dernière publication</th></tr></thead><tbody>${rows.map((r, z) => `<tr class="${z % 2 ? "z" : ""}"><th scope="row" class="l lab"><a class="cell-co" href="/entreprise/${r.id}/agenda">${logo(r.co, 24)}<span><b>${esc(r.co.name)}</b>${r.pf ? ` <span class="tbx-tag">portefeuille</span>` : ""}</span></a></th>
+      <td class="l wrap">${r.nx ? `<b>${dLabel(r.nx.date)}</b><div class="sub">${esc(r.nx.label)}</div>` : `<span class="light">Aucune date annoncée</span>`}</td>
+      <td class="l wrap">${r.last ? `<b>${dLabel(r.last.date)}</b>${r.manque ? ` <span class="o2-tag ok">il y a moins d'un mois</span>` : ""}<div class="sub"><a class="lnk" href="/entreprise/${r.id}/actualite">${esc(r.last.label)}</a></div>` : `<span class="light">Pas de publication relevée</span>`}</td></tr>`).join("")}</tbody></table>`)}
+    <div class="src">Une publication de moins d'un mois que vous n'auriez pas vue : ouvrez l'actualité de l'entreprise, les chiffres et la lecture du site y sont.</div>`;
+  const first = $("#al") && $("#al").closest("section"); if (first) first.insertAdjacentElement("beforebegin", el);
 }
 // Résultats prévus ces 7 derniers jours : chiffres réellement publiés (annonces officielles collectées par le site)
 async function O2_agRecents() {

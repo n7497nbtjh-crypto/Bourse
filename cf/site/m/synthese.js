@@ -527,8 +527,8 @@ async function pageEspace(onglet) {
   const m = await moi(true);
   if (!m.connecte) return espaceConnexion();
   onglet = onglet || "bilan";
-  const tabs = [["bilan", "Ma semaine"], ["alertes", `Alertes${m.nonlus ? ` <span class="espn2">${m.nonlus}</span>` : ""}`], ["favoris", "Mes favoris"], ["portefeuille", "Mon portefeuille"], ["reglages", "Réglages"]];
-  app.innerHTML = `<div class="esphead"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ""}</p><h1 class="pagetitle" style="margin:2px 0 0">Bonjour</h1><p class="muted" style="margin:2px 0 0">${esc(m.email)}</p></div>${m.premium ? "" : `<a class="btn ghost" href="/premium">Passer à Premium</a>`}</div>
+  const tabs = [["bilan", "Rapport de la semaine"], ["alertes", `Alertes${m.nonlus ? ` <span class="espn2">${m.nonlus}</span>` : ""}`], ["favoris", "Mes favoris"], ["portefeuille", "Mon portefeuille"], ["reglages", "Réglages"]];
+  app.innerHTML = `<div class="esphead"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ""}</p><h1 class="pagetitle" style="margin:2px 0 0">${onglet === "alertes" ? "Ce que vos valeurs ont annoncé" : onglet === "reglages" ? "Votre compte et vos réglages" : "Votre semaine en Bourse"}</h1><p class="muted" style="margin:2px 0 0">${esc(m.email)}</p></div>${m.premium ? "" : `<a class="btn ghost" href="/premium">Passer à Premium</a>`}</div>
     <nav class="esptabs scroll-x">${tabs.map(([k, l]) => `<a href="${k === "favoris" ? "/favoris" : k === "portefeuille" ? "/portefeuille" : "/espace/" + k}" class="${k === onglet ? "on" : ""}">${l}</a>`).join("")}</nav><div id="espb"></div>`;
   const el = $("#espb");
   if (onglet === "bilan") return espaceBilan(el, m);

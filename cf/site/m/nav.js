@@ -16,16 +16,14 @@
    et à la rubrique soulignée. Aucune page n'est accessible par deux entrées. */
 const NAV = [
   {
-    k: "dec", label: "Apprendre", porte: "/apprendre", sous: "Trois décisions, l'Académie, le lexique",
+    k: "dec", label: "Apprendre", porte: "/apprendre", sous: "Trois décisions, l'Académie, le lexique, le compte",
     items: [
       ["/apprendre", "Apprendre", "Les trois décisions avant d'investir, puis l'Académie par niveau"],
       ["/lexique", "Le lexique", "Chaque chiffre de la Bourse expliqué"],
       ["/pea-cto", "PEA ou compte-titres", "Ce qu'on peut y mettre, et l'impôt en 2026"],
-      ["/idees-recues", "Vrai ou faux ?", "Les idées reçues passées au crible"],
+      ["/academie/formation", "Formation guidée de six semaines", "De l'épargne de précaution au premier portefeuille"],
     ],
     aussi: [
-      ["/livret-a-ou-bourse", "Livret A ou Bourse"],
-      ["/academie/formation", "Formation guidée de six semaines"],
       ["/methode", "Méthode et sources"],
       ["/pourquoi-bilan", "Pourquoi bilan."],
     ],
@@ -58,7 +56,9 @@ const NAV = [
     aussi: [
       ["/outils", "Tous les outils"],
       ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?"],
-      ["/repartitions", "Répartitions types et listes par critères"],
+      ["/repartitions", "Quelle part en actions ? Listes par critères"],
+      ["/idees-recues", "Les idées reçues face aux chiffres"],
+      ["/livret-a-ou-bourse", "Livret A ou Bourse ?"],
       ["/simulateurs/frais", "Le coût des frais"],
       ["/simulateurs/pea-cto", "L'impôt selon le compte"],
       ["/demander", "Demander à l'IA"],

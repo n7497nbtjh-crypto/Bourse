@@ -419,7 +419,7 @@ async function parExpress(niv, lec) {
 })();
 
 /* ---------- Liens et fils d'Ariane : les pages d'apprentissage se rattachent à « Apprendre » ---------- */
-const PAR_CRUMB_PAGES = { "/commencer": "Par où commencer", "/lexique": "Le lexique", "/idees-recues": "Les idées reçues", "/livret-a-ou-bourse": "Livret A ou Bourse" };
+const PAR_CRUMB_PAGES = { "/commencer": "Par où commencer", "/lexique": "Le lexique" }; // 31/10 : idées reçues et Livret A sont dans Outils
 function parLiens(root) {
   if (!root) return;
   $$('a[href^="/debuter"]', root).forEach(a => { const u = parRedirection(a.getAttribute("href").split(/[?#]/)[0].replace(/\/+$/, "")); if (!u) return; a.setAttribute("href", u);
@@ -717,8 +717,9 @@ pageApprendre = async function () {
   const C = typeof COMM !== "undefined" ? COMM : null;
   const NV = parNiveaux(), nx = parProchaine(NV), lus = NV.reduce((a, v) => a + v.lus + v.dl, 0), tot = NV.reduce((a, v) => a + v.lec.length + v.dt, 0);
   const ess = typeof ESSENTIEL !== "undefined" && typeof ALL !== "undefined" ? ESSENTIEL.filter(k => ALL[k]) : [];
-  app.innerHTML = `<header class="pa-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Trois décisions, puis l'Académie.</h1>
-      <p class="pagesub">Ce qui vient avant d'acheter un titre, en trois cartes. Ensuite des leçons de trois minutes, par niveau, avec des quiz.</p></header>
+  app.innerHTML = `<header class="pa-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Un objectif : savoir lire une entreprise et choisir son compte.</h1>
+      <p class="pagesub">Trois décisions à prendre avant d'acheter quoi que ce soit, puis trois niveaux de leçons de trois minutes. Commencez par la première carte.</p>
+      <div class="pa-go" style="margin-top:14px">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a><span class="light">${lus ? `${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot}` : `${tot} leçons en tout, progression gardée sur cet appareil`}</span>` : ""}</div></header>
     ${typeof commencerTrois === "function" ? commencerTrois() : ""}
     <h2 class="subh" id="academie">L'Académie${lus ? ` <small class="light" style="font-weight:400;font-size:14px">${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot}</small>` : ""}</h2>
     <div class="pa-go">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a>` : ""}${ACA && ACA.formation ? `<a class="more" href="/academie/formation">La formation guidée de six semaines${isPrem() ? "" : " · Premium"} →</a>` : ""}</div>
@@ -726,9 +727,8 @@ pageApprendre = async function () {
     <h2 class="subh">À garder sous la main</h2>
     <div class="pa-keep">
       <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
-      <a href="/pea-cto"><small>Le compte</small><b>PEA ou compte-titres</b><span>Ce qu'on peut y mettre, et l'impôt en 2026.</span></a>
-      <a href="/livret-a-ou-bourse"><small>Comparer</small><b>Livret A ou Bourse ?</b><span>100 € par mois sur 10, 20 ou 30 ans, inflation comprise.</span></a>
-      <a href="/idees-recues"><small>Quiz</small><b>Vrai ou faux ?</b><span>Les idées reçues sur la Bourse, passées au crible.</span></a>
+      <a href="/apprendre#detail"><small>10 minutes</small><b>Le détail en sept étapes</b><span>De l'épargne de précaution aux pièges à éviter, dans l'ordre.</span></a>
+      <a href="/outils"><small>Avec vos chiffres</small><b>Les outils</b><span>Simulateurs, comparateurs, idées reçues face aux chiffres.</span></a>
     </div>
     ${C ? `<h2 class="subh" id="detail">Le détail, quand vous voulez</h2>${commencerBlocsHTML(C)}` : ""}
     <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. <a class="lnk" href="/methode">Méthode et sources</a>${C && C.avertissement ? ` · ${esc(C.avertissement)}` : ""}</p>`;

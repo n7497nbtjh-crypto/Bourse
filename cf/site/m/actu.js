@@ -214,9 +214,10 @@ function pageActus() {
   app.innerHTML = `<h1 class="pagetitle">Actualité des entreprises</h1><p class="pagesub">Les annonces officielles des entreprises suivies, classées, chiffrées et expliquées, et les titres de la presse. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
     <div id="ax-tiles"></div>
     <section class="panel"><div class="filters" id="ax-vue"><button type="button" data-v="annonces">Annonces officielles</button><button type="button" data-v="presse">Dans la presse</button></div>
-      <div class="ax-bar"><div class="chips scroll-x" id="ax-zone">${ACTU_ZONES.map(([k, l]) => `<button type="button" data-z="${k}">${l}</button>`).join("")}</div>
-        <div class="chips scroll-x" id="ax-type">${ACTU_TYPES.map(([k, l]) => `<button type="button" data-t="${k}">${l}</button>`).join("")}</div>
-        <div class="ax-row"><select id="ax-sect" aria-label="Secteur"><option value="">Tous les secteurs</option>${Object.entries(R.sectors).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select><input id="ax-q" type="search" placeholder="Filtrer par entreprise" aria-label="Filtrer par entreprise"></div></div>
+      <div class="ax-bar ax-bar2"><label><span>Type</span><select id="ax-type">${ACTU_TYPES.map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>
+        <label><span>Zone</span><select id="ax-zone">${ACTU_ZONES.map(([k, l]) => `<option value="${k}">${l}</option>`).join("")}</select></label>
+        <label><span>Secteur</span><select id="ax-sect" aria-label="Secteur"><option value="">Tous les secteurs</option>${Object.entries(R.sectors).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select></label>
+        <label><span>Entreprise</span><input id="ax-q" type="search" placeholder="Nom ou ticker" aria-label="Filtrer par entreprise"></label></div>
       <div class="pb" id="ax-feed"><div class="ax-empty">Chargement…</div></div><div class="src" id="ax-srcs"></div></section>`;
   $("#ax-sect").value = st.sect;
   let FIL = null, EXTRA = [];
@@ -224,8 +225,8 @@ function pageActus() {
   const keep = (id) => { const c = RBY[id]; if (!c) return false; if (st.zone === "fav" && !fav().has(id)) return false; if (st.zone === "EU" && !(c.region === "EU" || c.region === "FR")) return false; if (/^(FR|US|MONDE)$/.test(st.zone) && c.region !== st.zone) return false; if (st.sect && c.sector !== st.sect) return false; if (st.qq && !norm(c.name).includes(norm(st.qq))) return false; return true; };
   const url = () => { const u = new URLSearchParams(); if (st.zone !== "tout") u.set("zone", st.zone); if (st.type !== "imp") u.set("type", st.type); if (st.sect) u.set("secteur", st.sect); if (st.vue !== "annonces") u.set("vue", st.vue); history.replaceState({}, "", "/actualites" + (u.toString() ? "?" + u : "")); };
   const draw = () => {
-    $$("#ax-vue button").forEach(b => b.classList.toggle("on", b.dataset.v === st.vue)); $$("#ax-zone button").forEach(b => b.classList.toggle("on", b.dataset.z === st.zone)); $$("#ax-type button").forEach(b => b.classList.toggle("on", b.dataset.t === st.type));
-    $("#ax-type").style.display = st.vue === "presse" ? "none" : "";
+    $$("#ax-vue button").forEach(b => b.classList.toggle("on", b.dataset.v === st.vue)); $("#ax-zone").value = st.zone; $("#ax-type").value = st.type;
+    $("#ax-type").closest("label").style.display = st.vue === "presse" ? "none" : "";
     url(); if (!FIL) return;
     const feed = $("#ax-feed");
     if (st.zone === "fav" && !fav().size) { feed.innerHTML = `<div class="ax-empty">Vous ne suivez encore aucune entreprise. Ajoutez-en depuis leur fiche avec le bouton « Ajouter aux favoris ».</div>`; $("#ax-tiles").innerHTML = ""; return; }
@@ -251,8 +252,8 @@ function pageActus() {
   };
   const day = d => String(d).slice(0, 10);
   $("#ax-vue").onclick = e => { const b = e.target.closest("button"); if (b) { st.vue = b.dataset.v; st.n = 40; draw(); } };
-  $("#ax-zone").onclick = e => { const b = e.target.closest("button"); if (b) { st.zone = b.dataset.z; st.n = 40; draw(); } };
-  $("#ax-type").onclick = e => { const b = e.target.closest("button"); if (b) { st.type = b.dataset.t; st.n = 40; draw(); } };
+  $("#ax-zone").onchange = () => { st.zone = $("#ax-zone").value; st.n = 40; draw(); };
+  $("#ax-type").onchange = () => { st.type = $("#ax-type").value; st.n = 40; draw(); };
   $("#ax-sect").onchange = e => { st.sect = e.target.value; st.n = 40; draw(); };
   let tq = null; $("#ax-q").oninput = e => { clearTimeout(tq); tq = setTimeout(() => { st.qq = e.target.value.trim(); st.n = 40; draw(); }, 250); };
   $("#ax-feed").onclick = e => { if (e.target.closest("[data-more]")) { if (st.vue === "presse") { st.n += 40; draw(); } else loadMore(); } };
@@ -279,3 +280,5 @@ document.addEventListener("click", async e => {
   box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA de bilan. (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>`
     : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par l'IA de bilan. (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>` : `<p class="ax-why">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
 });
+
+document.head.insertAdjacentHTML("beforeend", `<style>.ax-bar2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;padding:12px 22px 14px;border-bottom:1px solid var(--rule)}.ax-bar2 label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--grey)}.ax-bar2 select,.ax-bar2 input{width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:6px;background:#fff;font:inherit;font-size:14px;color:var(--ink)}@media (max-width:760px){.ax-bar2{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 14px 12px}}</style>`);

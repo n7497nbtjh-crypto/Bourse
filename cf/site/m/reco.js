@@ -354,7 +354,50 @@ function recoExCarte(x) {
     <p class="rc-exc">Calcul sur cet exemple : si les actions baissaient de 30 % et les obligations de 5 %, l'ensemble baisserait d'environ <b>${F0.format(Math.round(recoBaisse(x.parts)))} %</b>. C'est une multiplication, pas une prévision : la baisse réelle peut être plus forte ou plus faible.</p>
   </article>`;
 }
+/* 31/10 (Romain) : le but de la page n'était pas clair. Elle répond maintenant à une seule question, visible d'abord :
+   « quelle part en actions, et qu'est-ce que ça change ? ». Un curseur, une barre, deux grands chiffres ; les quatre exemples deviennent des réglages du curseur. */
+const RECO_SL = { etf: 50, oblig: 20 };
+function recoSlParts() { const a = RECO_SL.etf, o = Math.min(RECO_SL.oblig, 100 - a); return { etf: a, oblig: o, garanti: 100 - a - o }; }
+function recoSlDroite() {
+  const parts = recoSlParts(), a = parts.etf, baisse = recoBaisse(parts), reste = 1000 - 10 * baisse;
+  const ex = RECO_EX.slice().sort((x, y) => Math.abs((x.parts.etf || 0) - a) - Math.abs((y.parts.etf || 0) - a))[0], proche = Math.abs((ex.parts.etf || 0) - a) <= 12;
+  const cl = Object.keys(RECO_CLASSES).filter(k => parts[k] > 0);
+  return `<div class="rc-bar rc-bar2" role="img" aria-label="${cl.map(k => `${parts[k]} % ${RECO_CLASSES[k][0]}`).join(", ")}">${cl.map(k => `<span style="width:${parts[k]}%;background:${RECO_CLASSES[k][1]}"><i>${parts[k] >= 12 ? parts[k] + " %" : ""}</i></span>`).join("")}</div>
+      <div class="rc-leg">${cl.map(k => `<span><i style="background:${RECO_CLASSES[k][1]}"></i>${esc(RECO_CLASSES[k][0].replace(/,.*/, ""))} ${recoRisk(RECO_CLASSES[k][2])}</span>`).join("")}</div>
+      <div class="rc-big"><div><small>Si les actions chutaient de 30 % et les obligations de 5 %</small><b class="${baisse >= 15 ? "dn" : ""}">${baisse ? "−" : ""}${F0.format(Math.round(baisse))} %</b><span>sur l'ensemble</span></div><div><small>Sur 1 000 €, il resterait</small><b>${F0.format(Math.round(reste))} €</b><span>une multiplication, pas une prévision</span></div></div>
+      ${proche ? `<p class="rc-exq"><b>${esc(ex.nom)}.</b> ${esc(ex.quoi)}</p><p class="rc-exl"><b>Ses limites</b> ${esc(ex.lim)}</p>` : `<p class="rc-exq"><b>Entre deux exemples.</b> Plus la part d'actions est grande, plus les hausses et les baisses se voient sur vos relevés, et plus l'horizon doit être long.</p>`}
+      <p class="rc-where2"><b>Où ça se loge, pour ${esc((RECO_ENV.find(e => e[0] === RECO_ST.env) || RECO_ENV[0])[1])}</b> ${cl.map(k => `<span>${esc(RECO_CLASSES[k][0].replace(/,.*/, ""))} : ${esc(RECO.placement(RECO_ST.env, k))}</span>`).join("")}</p>`;
+}
+function recoSlHTML() {
+  const parts = recoSlParts(), a = parts.etf, o = parts.oblig, g = parts.garanti;
+  const ex = RECO_EX.slice().sort((x, y) => Math.abs((x.parts.etf || 0) - a) - Math.abs((y.parts.etf || 0) - a))[0], proche = Math.abs((ex.parts.etf || 0) - a) <= 12;
+  return `<div class="rc-sl">
+    <div class="rc-slc"><label for="rc-sla"><b>Part en actions</b><output id="rc-slao">${a} %</output></label><input type="range" id="rc-sla" min="0" max="100" step="5" value="${a}" aria-label="Part en actions">
+      <label for="rc-slo"><b>Part en obligations</b><output id="rc-sloo">${o} %</output></label><input type="range" id="rc-slo" min="0" max="${100 - a}" step="5" value="${o}" aria-label="Part en obligations"><p class="rc-mut">Le reste, <b id="rc-slg">${g} %</b>, sans risque de perte en capital (livret, fonds en euros, ETF monétaire).</p>
+      <div class="rc-slx">${RECO_EX.map(x => `<button type="button" class="rc-chip${x.id === ex.id && proche ? " on" : ""}" data-rc-ex="${x.id}">${esc(x.nom)}</button>`).join("")}</div></div>
+    <div class="rc-slv" id="rc-slv">${recoSlDroite()}</div></div>`;
+}
+function recoSlLier(root) {
+  const tout = () => { const b = $("#rc-slw", root); if (b) { b.innerHTML = recoSlHTML(); recoSlLier(root); } };
+  const a = $("#rc-sla", root), o = $("#rc-slo", root);
+  const vite = () => { // pendant le glissement : seuls les chiffres et la colonne de droite changent, le curseur reste sous le doigt
+    const p = recoSlParts(); $("#rc-slao", root).textContent = p.etf + " %"; $("#rc-sloo", root).textContent = p.oblig + " %"; $("#rc-slg", root).textContent = p.garanti + " %";
+    o.max = 100 - p.etf; if (+o.value !== p.oblig) o.value = p.oblig; $("#rc-slv", root).innerHTML = recoSlDroite();
+    const ex = RECO_EX.slice().sort((x, y) => Math.abs((x.parts.etf || 0) - p.etf) - Math.abs((y.parts.etf || 0) - p.etf))[0], proche = Math.abs((ex.parts.etf || 0) - p.etf) <= 12;
+    $$("[data-rc-ex]", root).forEach(b => b.classList.toggle("on", proche && b.dataset.rcEx === ex.id));
+  };
+  if (a) a.oninput = () => { RECO_SL.etf = +a.value; RECO_SL.oblig = Math.min(RECO_SL.oblig, 100 - RECO_SL.etf); vite(); };
+  if (o) o.oninput = () => { RECO_SL.oblig = +o.value; vite(); };
+  $$("[data-rc-ex]", root).forEach(b => b.onclick = () => { const x = RECO_EX.find(e => e.id === b.dataset.rcEx); RECO_SL.etf = x.parts.etf || 0; RECO_SL.oblig = x.parts.oblig || 0; tout(); });
+}
 function recoExHTML() {
+  return `<section class="panel"><div class="ph"><h2>Quelle part en actions ? Ce que ça change</h2><span class="light" style="font-size:12.5px">réglez, le site calcule</span></div><div class="pb">
+    <p class="rc-mut" style="margin:0 0 12px">Déplacez le curseur : la barre montre la répartition, les deux chiffres montrent ce qu'une forte baisse ferait à l'ensemble. Quatre exemples, du plus prudent au plus exposé, servent de repères. Le site ne désigne pas celui qui vous conviendrait : cela dépend de votre situation complète, qu'il ne connaît pas.</p>
+    <label class="rc-lab">Ce que chaque compte accepte, pour <select id="rc-env">${RECO_ENV.map(([k, l]) => `<option value="${k}"${k === RECO_ST.env ? " selected" : ""}>${l}</option>`).join("")}</select></label>
+    <div id="rc-slw">${recoSlHTML()}</div>
+    <p class="rc-mut">Les trois grandes familles de placements et leurs règles (plafonds, impôt en 2026) sont détaillées dans <a class="lnk" href="/pea-cto">PEA, compte-titres ou assurance-vie</a> et dans <a class="lnk" href="/apprendre#academie">l'Académie</a>.</p></div></section>`;
+}
+function recoExHTML_ancien() {
   return `<section class="panel"><div class="ph"><h2>Des répartitions en exemple</h2><span class="light" style="font-size:12.5px">les mêmes pour tout le monde</span></div><div class="pb">
     <p class="rc-mut" style="margin:0 0 12px">Quatre exemples, du plus prudent au plus exposé, pour montrer ce que change la part d'actions. Le site ne désigne pas celui qui vous conviendrait : cela dépend de votre situation complète, qu'il ne connaît pas.</p>
     <label class="rc-lab">Ce que chaque compte accepte, pour <select id="rc-env">${RECO_ENV.map(([k, l]) => `<option value="${k}"${k === RECO_ST.env ? " selected" : ""}>${l}</option>`).join("")}</select></label>
@@ -467,7 +510,7 @@ async function pageRepartitions() {
   await Promise.all([PXP, recoDivLoad()]);
   if (location.pathname !== "/repartitions") return;
   app.innerHTML = `<div class="rc-page"><div class="crumbs"><a href="/outils">Outils</a> › Répartitions et listes</div>
-    <h1 class="pagetitle">Répartitions types et listes par critères</h1>
+    <h1 class="pagetitle">Quelle part en actions ? Et quelles listes selon vos critères</h1>
     <p class="pagesub">Des exemples de répartition expliqués, et des listes d'ETF et d'entreprises construites sur les critères que vous choisissez. Le site n'établit pas de profil et ne désigne rien comme adapté à votre situation.</p>
     ${RECO_LEGAL}
     <div id="rc-ex">${recoExHTML()}</div>
@@ -503,7 +546,8 @@ function recoLier() {
     f.innerHTML = recoFiltresHTML(); maj();
   });
   const env = $("#rc-env");
-  if (env) env.onchange = () => { RECO_ST.env = env.value; const x = $("#rc-exs"); if (x) x.innerHTML = RECO_EX.map(recoExCarte).join(""); };
+  if (env) env.onchange = () => { RECO_ST.env = env.value; const x = $("#rc-slw"); if (x) { x.innerHTML = recoSlHTML(); recoSlLier(document); } };
+  recoSlLier(document);
 }
 
 /* ---------- Routes, menu ---------- */
@@ -518,6 +562,15 @@ if (typeof OUTILS !== "undefined" && Array.isArray(OUTILS)) {
 if (typeof document !== "undefined" && document.querySelector) recoDivLoad();
 
 let RECO_CSS = false;
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rc-sl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.3fr);gap:20px 36px;align-items:start}.rc-slc label{display:flex;justify-content:space-between;align-items:baseline;margin:10px 0 4px}.rc-slc label:first-child{margin-top:0}.rc-slc output{font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}.rc-slc input[type=range]{width:100%;accent-color:#111214}
+.rc-slx{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}.rc-chip{border:1px solid var(--rule);background:#fff;border-radius:999px;padding:7px 12px;font:500 13px var(--sans);cursor:pointer;color:var(--ink)}.rc-chip.on{background:#111214;color:#fff;border-color:#111214}
+.rc-bar2{height:28px!important;display:flex!important;gap:2px;border-radius:6px;overflow:hidden}.rc-bar2 span{display:flex!important;align-items:center;justify-content:center;float:none!important;height:100%}.rc-bar2 i{font-style:normal;font-size:12px;color:#fff;mix-blend-mode:difference;font-variant-numeric:tabular-nums}
+.rc-leg{display:flex;flex-wrap:wrap;gap:6px 18px;margin:10px 0 16px;font-size:13px;color:var(--grey)}.rc-leg span{display:inline-flex;align-items:center;gap:6px}.rc-leg i{width:10px;height:10px;border-radius:2px}
+.rc-big{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-bottom:14px}.rc-big>div{padding:14px 16px;border:1px solid var(--rule);border-radius:8px;background:#fff}.rc-big small{display:block;font-size:12.5px;color:var(--grey);min-height:2.6em}.rc-big b{display:block;font-size:34px;line-height:1.1;font-variant-numeric:tabular-nums;margin:4px 0 2px}.rc-big b.dn{color:var(--down)}.rc-big span{font-size:12.5px;color:var(--grey)}
+.rc-where2{font-size:13px;color:var(--grey);margin:10px 0 0}.rc-where2 b{display:block;color:var(--ink);margin-bottom:4px}.rc-where2 span{display:block}
+@media (max-width:760px){.rc-sl{grid-template-columns:minmax(0,1fr)}.rc-big b{font-size:28px}}
+</style>`);
 function recoCSS() {
   if (RECO_CSS || typeof document === "undefined") return; RECO_CSS = true;
   document.head.insertAdjacentHTML("beforeend", `<style id="rc-css">

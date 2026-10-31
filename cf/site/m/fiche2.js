@@ -143,7 +143,7 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
 .rf-hero .fh-top{padding:16px 22px 14px;gap:20px}
 .rf-hero .fh-t h1{font-size:28px}
 .rf-hero .fh-desc{font-size:14.5px;margin-top:3px}
-.rf-hero .fh-tags{margin-top:8px}
+.rf-hero .fh-tags{margin-top:8px}.fh-tags .fh-isin{display:inline-flex;align-items:center;gap:6px;background:var(--ink)!important;color:#fff!important;font-variant-numeric:tabular-nums;letter-spacing:.02em}.fh-tags .fh-isin small{font-size:10.5px;opacity:.75;letter-spacing:0}
 .rf-hero .fh-act{margin-top:10px}
 .rf-mid,.rf-mid.f2-noc{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"ch vl"}
 .rf-mid.f2-noc{grid-template-columns:minmax(0,1fr);grid-template-areas:"vl"}
@@ -491,7 +491,7 @@ function companyHeader(s, tab, chart = true) { // en-tête commun à toutes les 
   return `<div class="crumbs"><a href="/entreprises">Entreprises</a> › <a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a> › <a href="/entreprise/${s.id}">${esc(s.name)}</a></div>
     <section class="panel fhero rf-hero"><div class="fh-top">
       <div class="fh-id">${logo(s, 48)}<div class="fh-t"><h1>${esc(s.name)}</h1>${s.desc ? `<p class="fh-desc">${esc(s.desc)}</p>` : ""}
-        <div class="fh-tags"><span title="Code de l'action">${esc(s.ticker)}</span>${bourse ? `<span>${esc(bourse)}</span>` : ""}<span>${esc(regName(s))}</span><a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a>${pea != null ? `<span class="${pea ? "ok" : ""}">${pea ? "Éligible au PEA" : "Hors PEA : compte-titres"}</span>` : ""}</div>
+        <div class="fh-tags"><span class="fh-isin" title="Code ISIN : l'identifiant international de l'action, le même chez tous les courtiers"><small>Action · ISIN</small>${esc(s.isin || "")}</span><span title="Code de l'action">${esc(s.ticker)}</span>${bourse ? `<span>${esc(bourse)}</span>` : ""}<span>${esc(regName(s))}</span><a href="/entreprises?secteur=${s.sector}">${esc(secName(s))}</a>${pea != null ? `<span class="${pea ? "ok" : ""}">${pea ? "Éligible au PEA" : "Hors PEA : compte-titres"}</span>` : ""}</div>
         <div class="fh-act">${favBtn("c:" + s.id)}<a class="favbtn" href="${cmp}">Comparer<span class="f2-lg2">&nbsp;à ses concurrents</span></a>${tab === "comprendre" ? "" : `<button type="button" class="favbtn fh-ia" data-fiche-ia>✦ Poser une question à l'IA</button>`}</div></div></div>
       <div class="px" id="pxh">${ficheCours(s)}</div></div>
       ${!tab ? `<div class="f2-mid rf-mid${courbe ? "" : " f2-noc"}">${courbe ? `<div class="f2-chart"><div class="f2-ch-h"><h2 class="f2-h">Le cours de l'action</h2><span class="f2-note"><span class="f2-nd">Graphique TradingView · cours différé</span><span class="f2-nm">Cours différé</span></span></div><div class="tv tv-chart f2-tv" id="tvchart" role="img" aria-label="Courbe du cours de ${esc(s.name)}"><div class="f2-tvph">Chargement de la courbe…</div></div></div>` : ""}${ficheSommaire(s, s.missing ? null : FULL[s.id])}</div>` : ""}
@@ -981,7 +981,9 @@ const RF_DERNIERE = {}; // dernière annonce par entreprise, lue par la fiche et
 const RF_DETAIL_CLE = "bilan.detail";
 function rfDetailToujours() { try { return localStorage.getItem(RF_DETAIL_CLE) === "1"; } catch (e) { return false; } }
 function rfDetailSet(v) { try { localStorage.setItem(RF_DETAIL_CLE, v ? "1" : "0"); } catch (e) { } }
-function rfPli2(id, titre, sous, corps, open) { return `<details class="rf-pl rf-pl2" id="${id}"${open ? " open" : ""}><summary><b>${titre}</b>${sous ? `<span>${sous}</span>` : ""}</summary><div class="rf-plb">${corps}</div></details>`; }
+function rfPli2(id, titre, sous, corps, open, cle) { // 31/10 (Romain) : un chiffre clé visible avant d'ouvrir, et un vrai bouton « Ouvrir »
+  return `<details class="rf-pl rf-pl2" id="${id}"${open ? " open" : ""}><summary><span class="rf-plt"><b>${titre}</b>${sous ? `<span>${sous}</span>` : ""}</span>${cle && cle.val ? `<span class="rf-plk"><small>${esc(cle.lab)}</small><b>${esc(cle.val)}</b></span>` : ""}<span class="rf-plo" aria-hidden="true"><i>Ouvrir</i><i>Fermer</i></span></summary><div class="rf-plb">${corps}</div></details>`;
+}
 function rfFaitHTML(s, c) { // « Ce qu'elle fait » : une phrase, puis ses concurrents cliquables
   let peers = []; try { peers = cmprFiche(s).peers.slice(0, 5); } catch (e) { }
   const arg = s.fiche && s.fiche.argent ? String(s.fiche.argent).trim() : ""; // comment elle gagne de l'argent (texte de fiche), la description courte est déjà dans l'en-tête
@@ -1026,18 +1028,18 @@ async function ficheUneSeulePage(s, c, el) {
   try { tabComptes(s, c, chiffres); } catch (e) { chiffres.innerHTML = ""; }
   const th = k => { const x = chiffres.querySelector(`#rf-${k}`); if (!x) return ""; x.classList.add("rf-th-in"); return x.outerHTML; };
   const top = chiffres.querySelector("#tbx"), tout = chiffres.querySelector("#rf-tout"), srcs = [...chiffres.querySelectorAll("section.panel")].filter(x => x.querySelector("h2") && /^Sources/.test(x.querySelector("h2").textContent));
-  const jg = (key, inv, val) => { const p = rfPosition(s, key, inv, val); return p ? `<span class="rf-pq">${inv === null ? "" : (Math.round(p.pos * 100) >= 50 ? "mieux placée que " + Math.round(p.pos * 100) : "moins bien placée que " + (100 - Math.round(p.pos * 100))) + " % du secteur"}</span>` : ""; };
+  const jg = (key, inv, val) => { const p = rfPosition(s, key, inv, val); return p ? `<span class="rf-pq ${Math.round(p.pos * 100) >= 50 ? "ok" : "ko"}">${inv === null ? "" : (Math.round(p.pos * 100) >= 50 ? "mieux placée que " + Math.round(p.pos * 100) : "moins bien placée que " + (100 - Math.round(p.pos * 100))) + " % du secteur"}</span>` : ""; };
   const f = figuresOf(c), m = ratios(f), v = valo(s) || {}, bank = isBank(s);
   el.innerHTML = `<div class="fcols fcols-1"><div id="etapes-corps">
     ${rfFaitHTML(s, c)}
     ${rfChangeHTML(s, c)}
     <section class="rf-l2" id="tous-les-chiffres"><div class="rf-l2h"><h2>Tous les chiffres</h2><label class="rf-l2t"><input type="checkbox" id="rf-detail"${auto ? " checked" : ""}> Afficher toujours le détail</label></div>
-      ${rfPli2("rf-resultats", "Résultats", `<span id="rf-res-sous">Ventes, bénéfice, par an</span> ${jg("g1", false, m.g1)}`, `<div class="rf-ta" id="rf-ta" hidden><button type="button" class="on" data-ta="a">Par an</button><button type="button" data-ta="t">Par trimestre</button></div><div id="rf-ta-a">${th("croissance")}</div><div id="rf-ta-t" hidden></div>${top ? `<div class="rf-chgw">${top.outerHTML}</div>` : ""}`, auto)}
-      ${rfPli2("rf-rentab", "Rentabilité", `Marges, rendement des capitaux propres, face à la médiane ${jg(bank ? "roe" : "marge", false, bank ? m.roe : m.marge)}`, th("rentabilite"), auto)}
-      ${th("bilan") || th("flux") ? rfPli2("rf-dette", "Bilan, dette et trésorerie", `Dette nette, fonds propres, ce que les bénéfices deviennent en argent ${jg("lev", true, m.lev)}`, th("bilan") + th("flux"), auto) : ""}
-      ${th("valorisation") ? rfPli2("rf-valo", "Prix en Bourse", `PER, rendement, capitalisation, face au secteur ${jg("pe", true, v.pe)}`, th("valorisation") + ficheGraphBox(s), auto) : ""}
-      ${th("dividende") ? rfPli2("rf-div", "Dividende", "Rendement, part du bénéfice versée, historique", th("dividende"), auto) : ""}
-      ${tout ? rfPli2("rf-tout-w", "Comptes complets", `${c.years.length} exercices, compte de résultat, bilan, flux · export CSV`, tout.outerHTML + `<p class="rf-l2a" style="padding:0 22px 14px"><button type="button" class="btn" id="rf-csv">Exporter en CSV</button></p>`, auto) : ""}
+      ${rfPli2("rf-resultats", "Résultats", `<span id="rf-res-sous">Ventes, bénéfice, par an</span> ${jg("g1", false, m.g1)}`, `<div class="rf-ta" id="rf-ta" hidden><button type="button" class="on" data-ta="a">Par an</button><button type="button" data-ta="t">Par trimestre</button></div><div id="rf-ta-a">${th("croissance")}</div><div id="rf-ta-t" hidden></div>${top ? `<div class="rf-chgw">${top.outerHTML}</div>` : ""}`, auto, { lab: "Ventes " + (f.year || ""), val: f.ca != null ? compact(c.currency)(f.ca) + (m.g1 != null && !nsCrois(m.g1) ? " · " + pct(m.g1, 1) : "") : "" })}
+      ${rfPli2("rf-rentab", "Rentabilité", `Marges, rendement des capitaux propres, face à la médiane ${jg(bank ? "roe" : "marge", false, bank ? m.roe : m.marge)}`, th("rentabilite"), auto, { lab: bank ? "Rendement des capitaux propres" : "Marge d'exploitation", val: bank ? (m.roe != null ? pct(m.roe, 1, false) : "") : (m.marge != null ? pct(m.marge, 1, false) : "") })}
+      ${th("bilan") || th("flux") ? rfPli2("rf-dette", "Bilan, dette et trésorerie", `Dette nette, fonds propres, ce que les bénéfices deviennent en argent ${jg("lev", true, m.lev)}`, th("bilan") + th("flux"), auto, { lab: m.lev != null ? (m.lev < 0 ? "Trésorerie nette, en années d'EBITDA" : "Dette nette, en années d'EBITDA") : "Dette nette", val: m.lev != null ? nf(1).format(Math.abs(m.lev)) : f.netDebt != null ? compact(c.currency)(f.netDebt) : "" }) : ""}
+      ${th("valorisation") ? rfPli2("rf-valo", "Prix en Bourse", `PER, rendement, capitalisation, face au secteur ${jg("pe", true, v.pe)}`, th("valorisation") + ficheGraphBox(s), auto, { lab: "Prix payé (PER)", val: v.pe ? nf(0).format(v.pe) + " fois le résultat" : v.peNs ? "n.s." : "" }) : ""}
+      ${th("dividende") ? rfPli2("rf-div", "Dividende", "Rendement, part du bénéfice versée, historique", th("dividende"), auto, { lab: "Rendement", val: v.yld != null ? pct(v.yld, 1, false) : "" }) : ""}
+      ${tout ? rfPli2("rf-tout-w", "Comptes complets", `${c.years.length} exercices, compte de résultat, bilan, flux · export CSV`, tout.outerHTML + `<p class="rf-l2a" style="padding:0 22px 14px"><button type="button" class="btn" id="rf-csv">Exporter en CSV</button></p>`, auto, { lab: "Exercices", val: String(c.years.length) }) : ""}
       ${rfPli2("rf-sources", "Sources et méthode", "Les documents officiels, pourquoi ces verdicts, les questions fréquentes", (srcs.length ? srcs.map(x => x.outerHTML).join("") : "") + ficheSyntheseHTML(s, c).replace(/<form class="ffaqask"[\s\S]*?<\/form>/, "") + faqHTML(s, c).replace(/<form class="ffaqask"[\s\S]*?<\/form>/, ""), auto)}
       
     </section></div></div>`;
@@ -1115,7 +1117,16 @@ document.head.insertAdjacentHTML("beforeend", `<style>@media (max-width:760px){.
 document.head.insertAdjacentHTML("beforeend", `<style>
 .rf-hplace{display:flex;flex-direction:column}.rf-hplace .fh-pl.rf-pl{flex:1;display:flex;flex-direction:column;justify-content:center;margin:14px 0 0;padding:18px 18px 16px}.rf-hplace .f2-rk{margin-top:16px}
 .rf-hplace .prof .pa2{align-items:start;gap:8px 14px}.rf-hplace .prof .pa2 .pt{min-height:44px}.rf-hplace .prof .pa2 .pt b{font-size:15px}.rf-hplace .prof .pa2 .pt small{font-size:13px}
-@media (min-width:761px){.rf-hplace .prof{gap:18px 26px}.rf-hplace .prof .pa2 .pl{transform:scaleY(1.35);transform-origin:left center}}
+@media (min-width:761px){.rf-hplace .prof{gap:14px 26px}.rf-hplace .prof .pa2 .pl{height:9px;margin-top:4px}.rf-hplace .prof .pa2 .pm{top:-4px;height:17px}.rf-hplace .prof .pa2 .pd{top:-4px;width:17px;height:17px}}
+.rf-hplace .fh-pl.rf-pl{overflow:visible}
 </style>`);
 
 document.head.insertAdjacentHTML("beforeend", `<style>.rf-gwrap{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:18px 32px;align-items:start}.rf-gdef{font-size:13.5px;line-height:1.55;color:var(--ink);border-left:3px solid var(--lime);padding:4px 0 4px 16px;margin-top:30px}.rf-gdef p{margin:0 0 8px}.rf-gdef .kick{margin:10px 0 2px;color:var(--grey)}.rf-gdef .kick:first-child{margin-top:0}@media (max-width:900px){.rf-gwrap{grid-template-columns:minmax(0,1fr)}.rf-gdef{margin-top:4px}}</style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>
+.rf-pl2>summary{display:flex;align-items:center;gap:18px}.rf-pl2>summary .rf-plt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}.rf-pl2>summary::after{display:none!important}
+.rf-plk{display:flex;flex-direction:column;align-items:flex-end;text-align:right;min-width:0;flex:none}.rf-plk small{font-size:12px;color:var(--grey);white-space:nowrap}.rf-plk b{font-size:22px;line-height:1.1;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+.rf-plo{flex:none;border:1px solid var(--ink);border-radius:999px;padding:7px 14px;font:600 13px var(--sans);color:var(--ink);background:#fff}.rf-plo i{font-style:normal}.rf-plo i+i{display:none}.rf-pl2[open]>summary .rf-plo i{display:none}.rf-pl2[open]>summary .rf-plo i+i{display:inline}.rf-pl2>summary:hover .rf-plo{background:var(--ink);color:#fff}
+.rf-pl2>summary span .rf-pq.ok{background:#E3F2E8;color:#0E6B4A}.rf-pl2>summary span .rf-pq.ko{background:#FBE9E4;color:#8A3A22}
+@media (max-width:600px){.rf-pl2>summary{flex-wrap:wrap;gap:8px 12px}.rf-pl2>summary .rf-plt{flex-basis:100%}.rf-plk{align-items:flex-start;text-align:left;flex:1}.rf-plk b{font-size:19px}}
+</style>`);

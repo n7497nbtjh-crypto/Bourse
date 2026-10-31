@@ -27,7 +27,7 @@ Pas de mode sombre.
 
 ## Typographie
 
-- **Titres de page et de bloc (h1, h2)** : Fraunces, 800, interlettrage −0,015 em. h1 40/44 px (28 px sur téléphone), h2 de panneau 20 à 22 px.
+- **Titres de page et de bloc (h1, h2)** : Inter Tight (31/10 : remplace Fraunces, que Romain trouvait trop « éditorial »), 700 à 800, interlettrage −0,015 em. La variable `--serif` garde son nom mais pointe sur Inter Tight. h1 40/44 px (28 px sur téléphone), h2 de panneau 20 à 22 px.
 - **Tout le reste** : IBM Plex Sans. Corps 14,5 px / 1,5 ; texte long 15 à 16 px ; sous-titres et h3 en Plex Sans 700, 15 à 17 px ; étiquettes 12 à 12,5 px, 600, gris, **sans capitales espacées**.
 - **Chiffres** : IBM Plex Sans en chasse tabulaire (`font-variant-numeric: tabular-nums`, `--mono` pointe sur la même famille). Plus de police à chasse fixe pour les chiffres (30/10 : « +25 % » en Plex Mono faisait terminal). Une police à chasse fixe système (`--code`) reste pour les codes boursiers et les ISIN seulement.
 - Échelle : 12 · 12,5 · 13,5 · 14,5 · 16 · 18 · 22 · 28 · 40.
