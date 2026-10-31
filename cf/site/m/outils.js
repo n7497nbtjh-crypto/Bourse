@@ -368,7 +368,7 @@ function outFacts(c) { // ce qui ressort des comptes, en phrases courtes et sour
   if (st && st.caUp >= 3) F.push([4, `Ventes en hausse ${st.caUp} années de suite${st.cagr != null ? ` (${sgn(st.cagr, 0)} par an)` : ""}`]);
   if (st && st.divUp >= 3) F.push([4, `Dividende relevé ${st.divUp} années de suite`]);
   if (c.netPrev != null && c.netPrev < 0 && c.net > 0) F.push([4.5, `De nouveau bénéficiaire : ${big(c.net, c.currency)} après une perte de ${big(-c.netPrev, c.currency)} l'exercice précédent`]);
-  if (!isBank(c) && m.marge != null && med.marge > 0 && m.marge > med.marge * 1.5) F.push([3, `Garde ${outE100(m.marge)} sur 100 € de ventes, contre ${outE100(med.marge)} pour la médiane de son secteur`]);
+  if (!isBank(c) && m.marge != null && m.marge <= 1 && med.marge > 0 && m.marge > med.marge * 1.5) F.push([3, `Garde ${outE100(m.marge)} sur 100 € de ventes, contre ${outE100(med.marge)} pour la médiane de son secteur`]);
   if (m.roe != null && m.roe >= 0.15 && (med.roe == null || m.roe > med.roe)) F.push([2.5, `Rentabilité de ${pct(m.roe, 0, false)} des capitaux propres${med.roe != null ? ` (secteur : ${pct(med.roe, 0, false)})` : ""}`]);
   if (!isBank(c) && c.netDebt != null && c.netDebt <= 0) F.push([2, "Pas de dette nette : plus de trésorerie que d'emprunts"]);
   if (m.g1 != null && m.g1 >= 0.08) F.push([2, `Ventes en hausse de ${pct(m.g1, 0, false)} sur le dernier exercice`]);

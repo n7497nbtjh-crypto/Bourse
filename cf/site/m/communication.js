@@ -495,7 +495,7 @@ function pageIdeesRecues() {
   app.innerHTML = `<div class="cm-page ir-page"><div class="crumbs"><a href="/outils">Outils</a> › Les idées reçues</div>
     <header class="cm-hero"><p class="kick">Idées reçues déconstruites</p><h1 class="pagetitle">Les idées reçues sur la Bourse</h1>
       <p class="pagesub">${L.length} phrases qu'on entend souvent, chacune confrontée aux chiffres : pourquoi on y croit, ce que montrent les données, les nuances, un exemple et ce qu'il faut en retenir. Chiffres officiels, sources à l'appui.</p>
-      <nav class="ir-som" aria-label="Les idées reçues">${L.map((x, i) => `<a href="#${x.id}">${String(i + 1).padStart(2, "0")} ${esc(x.mythe.replace(/\.$/, ""))}</a>`).join("")}</nav></header>
+      <nav class="ir-som scroll-x" aria-label="Les idées reçues">${L.map((x, i) => `<a href="#${x.id}">${String(i + 1).padStart(2, "0")} ${esc(x.mythe.replace(/\.$/, ""))}</a>`).join("")}</nav></header>
     <div class="ir-list">${L.map((x, i) => commIdeeCarte(x, i)).join("")}</div>
     <section class="panel cm-end"><div class="pb"><h2>Pour aller plus loin</h2><p>Ces réponses sont générales. Elles ne tiennent pas compte de votre situation et ne sont pas des conseils d'investissement. Pour un conseil personnalisé, adressez-vous à un conseiller en investissements financiers enregistré auprès de l'ORIAS.</p>
       <div class="cm-go"><a class="chip" href="/apprendre">Le parcours pour apprendre</a><a class="chip" href="/livret-a-ou-bourse">Livret A ou Bourse : le comparateur</a><a class="chip" href="/academie/psychologie">Psychologie et pièges</a><a class="chip" href="/avertissement">Avertissement sur les risques</a></div></div></section>

@@ -238,7 +238,7 @@ function parNiveauHTML(v, cur) {
 }
 function parNiveauxHTML(NV) {
   const nx = parProchaine(NV), cur = nx && nx.v ? nx.v.n : 0;
-  return `<div class="pa-lad">${NV.map(v => parNiveauHTML(v, v.n === cur)).join("")}</div>`;
+  return `<div class="pa-lad scroll-x">${NV.map(v => parNiveauHTML(v, v.n === cur)).join("")}</div>`;
 }
 function parIdeesBloc(titre = "Vrai ou faux ?") {
   if (typeof commIdeeSeuleHTML !== "function") return "";
@@ -699,7 +699,7 @@ function parPitchHTML() {
     if (sub === "merci") return;
     const tb = $(".ptab tbody"); if (!tb || tb.querySelector(".par-row")) return;
     const ref = [...tb.rows].find(r => /Bilan de la semaine/i.test(r.cells[0] && r.cells[0].textContent)) || tb.rows[2];
-    const rows = [["Rapport de la semaine sur mesure : contenu, détail, sujets, jour de réception", "Oui", "Oui"], ["Secteurs entiers suivis dans le rapport", "2", "6"], ["Lignes analysées en détail dans le rapport", "3", "8"]];
+    const rows = [["Rapport de la semaine sur mesure : contenu, détail, sujets, jour de réception", "✓", "✓"], ["Secteurs entiers suivis dans le rapport", "2", "6"], ["Lignes analysées en détail dans le rapport", "3", "8"]];
     const html = rows.map(r => `<tr class="par-row">${r.map((c, i) => i === 2 ? `<td><b>${c}</b></td>` : `<td>${c}</td>`).join("")}</tr>`).join("");
     if (ref) ref.insertAdjacentHTML("afterend", html); else tb.insertAdjacentHTML("beforeend", html);
     const offers = $(".offers"); if (offers && !$("#parprem")) offers.insertAdjacentHTML("afterend", `<section class="panel" id="parprem"><div class="pb par-lec"><p><b>Votre rapport de la semaine, sur mesure</b><br><span class="muted">Gratuit pour tous : vos favoris, votre portefeuille, deux secteurs, le niveau de détail, les sujets et le jour. Premium suit jusqu'à six secteurs, analyse huit lignes en détail et garde douze semaines d'historique.</span></p><a class="btn ghost" href="/espace/rapport">Régler mon rapport</a></div></section>`);
@@ -718,21 +718,24 @@ pageApprendre = async function () {
   const NV = parNiveaux(), nx = parProchaine(NV), lus = NV.reduce((a, v) => a + v.lus + v.dl, 0), tot = NV.reduce((a, v) => a + v.lec.length + v.dt, 0);
   const ess = typeof ESSENTIEL !== "undefined" && typeof ALL !== "undefined" ? ESSENTIEL.filter(k => ALL[k]) : [];
   app.innerHTML = `<header class="pa-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Un objectif : savoir lire une entreprise et choisir son compte.</h1>
-      <p class="pagesub">Trois décisions à prendre avant d'acheter quoi que ce soit, puis trois niveaux de leçons de trois minutes. Commencez par la première carte.</p>
+      <p class="pagesub">Trois décisions avant d'acheter, puis trois niveaux de leçons de trois minutes.</p>
       <div class="pa-go" style="margin-top:14px">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a><span class="light">${lus ? `${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot}` : `${tot} leçons en tout, progression gardée sur cet appareil`}</span>` : ""}</div></header>
     ${typeof commencerTrois === "function" ? commencerTrois() : ""}
     <h2 class="subh" id="academie">L'Académie${lus ? ` <small class="light" style="font-weight:400;font-size:14px">${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot}</small>` : ""}</h2>
-    <div class="pa-go">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a>` : ""}${ACA && ACA.formation ? `<a class="more" href="/academie/formation">La formation guidée de six semaines${isPrem() ? "" : " · Premium"} →</a>` : ""}</div>
+    <div class="pa-go">${ACA && ACA.formation ? `<a class="more" href="/academie/formation">La formation guidée de six semaines${isPrem() ? "" : " · Premium"} →</a>` : ""}</div>
     ${parNiveauxHTML(NV)}
     <h2 class="subh">À garder sous la main</h2>
-    <div class="pa-keep">
+    <div class="pa-keep scroll-x">
       <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
       <a href="/apprendre#detail"><small>10 minutes</small><b>Le détail en sept étapes</b><span>De l'épargne de précaution aux pièges à éviter, dans l'ordre.</span></a>
       <a href="/outils"><small>Avec vos chiffres</small><b>Les outils</b><span>Simulateurs, comparateurs, idées reçues face aux chiffres.</span></a>
     </div>
     ${C ? `<h2 class="subh" id="detail">Le détail, quand vous voulez</h2>${commencerBlocsHTML(C)}` : ""}
-    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. <a class="lnk" href="/methode">Méthode et sources</a>${C && C.avertissement ? ` · ${esc(C.avertissement)}` : ""}</p>`;
+    <p class="note">Contenu pédagogique et général, pas un conseil en investissement : pour un conseil adapté à votre situation, adressez-vous à un conseiller en investissements financiers (CIF) enregistré à l'ORIAS. <a class="lnk" href="/methode">Méthode et sources</a></p>`;
   if (C && typeof commencerLier === "function") commencerLier(C);
   if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { if (t.tagName === "DETAILS") t.open = true; setTimeout(() => t.scrollIntoView({ block: "start" }), 30); } }
 };
 document.head.insertAdjacentHTML("beforeend", `<style>.pa-pli>summary{list-style:none;cursor:pointer}.pa-pli>summary::-webkit-details-marker{display:none}.pa-pli>summary h2{margin:0}.pa-pli[open]>summary{border-bottom:1px solid var(--rule)}.pa-hero .pa-go{margin:0}.cm3{margin-bottom:28px}</style>`);
+
+/* 4e passage 3.3 : sur téléphone, les trois décisions et les trois niveaux défilent à l'horizontal (une carte visible, les autres à portée de pouce) */
+document.head.insertAdjacentHTML("beforeend", `<style>@media (min-width:761px){.cm3.scroll-x,.pa-lad.scroll-x,.pa-keep.scroll-x{overflow:visible}}@media (max-width:760px){.cm3{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:0 0 14px;padding:0 0 8px;scrollbar-width:none;max-width:100%}.cm3>*{flex:0 0 84%;scroll-snap-align:start;min-width:0}.pa-lad{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;margin:6px 0 18px;padding:0 0 8px;scrollbar-width:none;max-width:100%}.pa-keep{display:flex!important;overflow-x:auto;scroll-snap-type:x mandatory;gap:10px;padding:0 0 8px;scrollbar-width:none;max-width:100%}.pa-keep>*{flex:0 0 72%;scroll-snap-align:start;min-width:0}.pa-lad>*{flex:0 0 86%;scroll-snap-align:start;min-width:0}.pa-niv:not(:last-child)::after{display:none}}</style>`);

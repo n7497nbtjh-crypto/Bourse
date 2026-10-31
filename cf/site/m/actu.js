@@ -237,7 +237,10 @@ function pageActus() {
     }
     const all = [...(FIL.o || []), ...EXTRA].filter(it => keep(it.id) && actuType(it, st.type));
     const tiles = actuStats(all);
-    $("#ax-tiles").innerHTML = `<p class="kick" style="margin:0 0 8px">Les chiffres à retenir</p><div class="ax-tiles">${tiles.map(([v, l, s, c]) => `<div class="ax-tile ${c || ""}"><b>${v}</b><span>${esc(l)}</span><small>${esc(s)}</small></div>`).join("")}</div>`;
+    // 4e passage 3.4 : une phrase visuelle (part des entreprises dont les ventes montent) avec sa barre ; les chiffres de contrôle derrière un pli
+    const pc = tiles.find(t => /ventes en hausse/.test(t[1])), pcv = pc ? parseInt(pc[0]) : null;
+    $("#ax-tiles").innerHTML = `${pcv != null ? `<div class="ax-une"><p>Sur la période : <b class="${pcv >= 50 ? "up" : "dn"}">${pcv} %</b> des entreprises qui ont publié ont vendu plus qu'il y a un an</p><div class="ax-bar2"><i style="width:${pcv}%"></i></div><small>${esc(pc[2])}</small></div>` : ""}
+      <details class="ax-saison"><summary>Les chiffres de la saison</summary><div class="ax-tiles">${tiles.map(([v, l, s, c]) => `<div class="ax-tile ${c || ""}"><b>${v}</b><span>${esc(l)}</span><small>${esc(s)}</small></div>`).join("")}</div></details>`;
     const more = all.length > st.n || st.jours < (FIL.jours || []).length;
     feed.innerHTML = actuListHTML(all.slice(0, st.n), { vide: "Aucune annonce pour ce choix sur les derniers jours." }) + (more ? `<button type="button" class="btn ghost ax-more" data-more>Afficher plus</button>` : "");
   };
@@ -282,3 +285,5 @@ document.addEventListener("click", async e => {
 });
 
 document.head.insertAdjacentHTML("beforeend", `<style>.ax-bar2{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px 14px;padding:12px 22px 14px;border-bottom:1px solid var(--rule)}.ax-bar2 label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--grey)}.ax-bar2 select,.ax-bar2 input{width:100%;padding:9px 10px;border:1px solid var(--rule);border-radius:6px;background:#fff;font:inherit;font-size:14px;color:var(--ink)}@media (max-width:760px){.ax-bar2{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 14px 12px}}</style>`);
+
+document.head.insertAdjacentHTML("beforeend", `<style>.ax-une{margin:0 0 10px}.ax-une p{margin:0 0 8px;font-size:16px}.ax-une b{font-size:26px;font-variant-numeric:tabular-nums}.ax-une b.up{color:var(--up)}.ax-une b.dn{color:var(--down)}.ax-bar2{height:10px;border-radius:5px;background:var(--rule);overflow:hidden;max-width:520px}.ax-bar2 i{display:block;height:100%;background:var(--up);border-radius:5px}.ax-une small{display:block;margin-top:6px;color:var(--grey);font-size:12.5px}.ax-saison{margin:0 0 18px}.ax-saison>summary{cursor:pointer;font-size:13.5px;font-weight:600;list-style:none;color:var(--ink);text-decoration:underline;text-underline-offset:3px}.ax-saison>summary::-webkit-details-marker{display:none}.ax-saison .ax-tiles{margin-top:10px}</style>`);
