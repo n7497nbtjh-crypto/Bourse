@@ -1222,8 +1222,20 @@ var SCHEMA4 = [
   "CREATE UNIQUE INDEX IF NOT EXISTS notifs_cle ON notifs (compte, cle)",
   "CREATE INDEX IF NOT EXISTS notifs_at ON notifs (compte, at)",
   "CREATE TABLE IF NOT EXISTS essais (cle TEXT NOT NULL, at INTEGER NOT NULL)",
-  "CREATE INDEX IF NOT EXISTS essais_cle ON essais (cle, at)"
-], ready4 = !1;
+  "CREATE INDEX IF NOT EXISTS essais_cle ON essais (cle, at)",
+  "CREATE TABLE IF NOT EXISTS etat (cle TEXT PRIMARY KEY, val TEXT NOT NULL)"
+  // 5e passage : dernier passage du robot (alertes, bilans), pour que le site dise « bientôt » tant qu'il n'a jamais tourné
+];
+async function robotEtat(env) {
+  try {
+    let rows = (await env.DB.prepare("SELECT cle, val FROM etat WHERE cle IN ('robot_alertes', 'robot_bilans')").all()).results || [], o = { alertes: null, bilans: null };
+    for (let r of rows) o[r.cle.slice(6)] = r.val;
+    return o;
+  } catch {
+    return { alertes: null, bilans: null };
+  }
+}
+var ready4 = !1;
 async function init3(db) {
   if (!ready4) {
     await initCompte(db);
@@ -1501,7 +1513,7 @@ async function espace(request, env) {
   }
   let c = await sessionCompte(request, env);
   if (path === "/api/espace/moi" && m === "GET") {
-    if (!c) return json({ connecte: !1 });
+    if (!c) return json({ connecte: !1, robot: await robotEtat(env) });
     let [d, nl, sess] = await Promise.all([
       env.DB.prepare("SELECT favoris, portefeuille, profil, updated FROM donnees WHERE compte = ?").bind(c.id).first(),
       env.DB.prepare("SELECT COUNT(*) AS n FROM notifs WHERE compte = ? AND lu = 0").bind(c.id).first(),
@@ -1517,7 +1529,8 @@ async function espace(request, env) {
       teaser: !!c.teaser,
       mail: mailReady(env),
       cree: c.created,
-      bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null
+      bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null,
+      robot: await robotEtat(env)
     });
     return sess && sess.expires - Date.now() < SESSION_MS - 7 * JOUR && (await env.DB.prepare("UPDATE sessions SET expires = ? WHERE h = ?").bind(Date.now() + SESSION_MS, sess.h).run(), avecCookie(r, `bilan_s=${cookieSession(request)}; ${COOKIE}; Max-Age=${SESSION_MS / 1e3}`)), r;
   }
@@ -1655,6 +1668,10 @@ bilan. Informations factuelles, sans conseil en investissement.`,
     await env.DB.prepare("DELETE FROM notifs WHERE at < ?").bind(now - 90 * JOUR).run(), await env.DB.prepare("DELETE FROM essais WHERE at < ?").bind(now - JOUR).run(), await env.DB.prepare("DELETE FROM sessions WHERE expires < ?").bind(now).run();
   }
   let reste = (await env.DB.prepare(`SELECT COUNT(*) AS n ${FROM}`).bind(...B).first() || {}).n || 0;
+  try {
+    await env.DB.prepare("INSERT OR REPLACE INTO etat (cle, val) VALUES (?, ?)").bind(modeBilan ? "robot_bilans" : "robot_alertes", auj).run();
+  } catch {
+  }
   return json({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
 }
 var EXEMPLE_PROFIL = {
@@ -2525,7 +2542,7 @@ async function mcp(request, env, ctx) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "f41b221228ec01f6", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "3df2c211eb02fd92", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
