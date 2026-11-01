@@ -42,7 +42,7 @@ Principe : faire venir des débutants par des réponses chiffrées, sans traceur
 | 29 | Livret A ou ETF sur 10 ans : ce qu'auraient donné 100 € par mois | à faire |
 | 30 | Combien a perdu un MSCI World en 2008, et en combien de temps il est remonté | à faire |
 
-Page retirée avant publication : « entreprises françaises sans dette ». La dette relevée est incomplète pour certaines entreprises (Vinci : 6,7 Md€ d'emprunts relevés pour 17,3 Md€ de trésorerie, donc une « trésorerie nette » fausse). À corriger dans `data/esef.mjs` avant de la publier.
+Page retirée avant publication : « entreprises françaises sans dette ». La dette relevée est incomplète pour certaines entreprises (Vinci : 6,7 Md€ d'emprunts relevés pour 17,3 Md€ de trésorerie, donc une « trésorerie nette » fausse). Corrigé le 1/11 dans `data/esef.mjs` (emprunts lus aussi par nature : Vinci passe à 19,5 Md€ de dette nette) ; 405 entreprises restent en trésorerie nette après relecture : à contrôler par échantillon avant de publier la page.
 
 ## E2. X (page privée /x)
 
