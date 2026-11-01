@@ -8,6 +8,16 @@ const $ = (s, el = document) => el.querySelector(s);
 const $$ = (s, el = document) => [...el.querySelectorAll(s)];
 const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const TODAY = new Date().toISOString().slice(0, 10);
+// 1/11/2026 : quand la Bourse est fermée (week-end, avant 9 h), la variation affichée est celle de la dernière séance : on la nomme
+// (« vendredi ») au lieu d'écrire « aujourd'hui ». Jours fériés non gérés.
+function jourSeance() {
+  try { const P = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })), d = P.getDay(), h = P.getHours();
+    if (d >= 1 && d <= 5 && h >= 9) return "aujourd'hui";
+    const s = new Date(P); do { s.setDate(s.getDate() - 1); } while (s.getDay() === 0 || s.getDay() === 6);
+    const veille = new Date(P); veille.setDate(veille.getDate() - 1);
+    return s.toDateString() === veille.toDateString() ? "hier" : ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][s.getDay()];
+  } catch (e) { return "aujourd'hui"; }
+}
 
 /* ---------- Formats ---------- */
 const nf = d => { const f = new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }); return { format: v => f.format(v).replace(/^-/, "\u2212"), formatToParts: f.formatToParts.bind(f) }; }; // signe moins typographique (−), jamais le tiret
@@ -1566,9 +1576,10 @@ const pctTick = v => F0.format(v * 100) + " %";
 let PX = {}, PXUP = null, FX = null;
 async function loadPrices() {
   if (PXUP) return;
+  const fxP = fetch("/data/fx.json").then(r => r.json()).then(j => j.eur).catch(() => null); // 1/11 : en parallèle des cours (un aller-retour de moins)
   try { const r = await fetch("/api/cours"); if (r.ok) { const j = await r.json(); PX = j.items || {}; PXUP = j.updated; } } catch (e) { }
   if (!PXUP) { try { const j = await (await fetch("/data/cours.json")).json(); PX = j.items || {}; PXUP = j.updated; } catch (e) { PXUP = "none"; } }
-  try { FX = (await (await fetch("/data/fx.json")).json()).eur; } catch (e) { FX = null; }
+  FX = await fxP;
   computePE();
 }
 const toEur = (v, cur) => v == null || !cur ? null : v * ((FX && FX[cur]) || FXE[cur] || (cur === "EUR" ? 1 : NaN));
@@ -1607,7 +1618,7 @@ function priceHead(c, isEtf = false) {
   const p = isEtf ? pxEtf(c) : pxOf(c);
   if (!p) return `<div class="pxhead"><span class="d">${PXUP && PXUP !== "none" ? "Cours non disponible pour ce titre" : "Chargement du cours…"}</span></div>`;
   const ch = p.chg;
-  return `<div class="pxhead"><span class="kick">Cours</span><span class="p">${pxFmt(p.p, p.cur)}</span>${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % aujourd'hui</span>` : ""}<span class="d">Différé d'environ 20 min · ${esc(p.s)}</span></div>`;
+  return `<div class="pxhead"><span class="kick">Cours</span><span class="p">${pxFmt(p.p, p.cur)}</span>${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % ${jourSeance()}</span>` : ""}<span class="d">Différé d'environ 20 min · ${esc(p.s)}</span></div>`;
 }
 
 /* ---------- Mots simples pour les tendances ---------- */
@@ -1721,7 +1732,7 @@ function prixHTML(s, c) {
   return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2><span class="light" style="font-size:12.5px">Cours différé · ${esc(p.s)}</span></div>
     <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${peTxt}</p></div>
     <div class="tiles">
-      <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
+      <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % ${jourSeance()}` : "dernier cours connu"}</small></div>
       <div class="tile"><span class="kick">Valeur en Bourse</span><span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
       <div class="tile"><span class="kick">PER</span><span class="v">${v.pe ? F0.format(v.pe) : v.peNs ? `<abbr title="${NS_PE} : ${F0.format(v.peBrut)} fois le bénéfice" style="text-decoration:underline dotted">n.s.</abbr>` : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : v.peNs ? "bénéfice trop faible cette année pour comparer le prix" : "non calculable (perte ou donnée manquante)"}</small></div>
       <div class="tile"><span class="kick">Rendement</span><span class="v">${v.yld != null ? pct(v.yld, 1, false) : "–"}</span><small>${v.yld != null ? "dividende annuel ÷ valeur en Bourse" : "pas de dividende"}</small></div>
@@ -2113,7 +2124,7 @@ function favCard(c) {
   const p = pxOf(c), v = valo(c), t = quick(c), nx = eventsOf(c.id).find(e => e.date >= TODAY);
   const pos = p && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null, y = p && p.p1y ? p.p / p.p1y - 1 : null;
   return `<div class="fc"><div class="fct"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 40)}<span style="display:flex;flex-direction:column"><b class="nm">${esc(c.name)}</b><small class="light">${esc(secName(c))}</small></span></a>${favBtn("c:" + c.id).replace("☆ Ajouter aux favoris", "☆").replace("★ Dans vos favoris", "★ Suivie")}</div>
-    <div class="fcp">${p ? `<span class="p">${pxFmt(p.p, p.cur)}</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % aujourd'hui" : ""}</span>` : `<span class="muted">Cours indisponible</span>`}</div>
+    <div class="fcp">${p ? `<span class="p">${pxFmt(p.p, p.cur)}</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : "muted"}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % " + jourSeance() : ""}</span>` : `<span class="muted">Cours indisponible</span>`}</div>
     ${pos != null ? `<div class="range" style="margin:14px 0 4px"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>plus bas 1 an</span><span>plus haut 1 an</span></div>` : ""}
     <div class="fcg">${y != null ? `<span><small>Sur 1 an</small><b class="${y >= 0 ? "up" : "down"}">${sgn(y, 0)}</b></span>` : ""}${v && v.pe ? `<span><small>PER</small><b>${F0.format(v.pe)}</b></span>` : ""}${v && v.yld >= 0.001 ? `<span><small>Rendement</small><b>${pct(v.yld, 1, false)}</b></span>` : ""}${t ? `<span><small>Comptes</small>${pills(t)}</span>` : ""}</div>
     ${profilMini(c)}

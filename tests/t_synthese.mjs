@@ -9,9 +9,9 @@ let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log("ÉCHEC", m
 ok(lundiDe("2026-W44") === "2026-10-26" && lundiDe("2026-W01") === "2025-12-29" && lundiDe("2020-W53") === "2020-12-28" && lundiDe("x") === null, "lundi d'une semaine ISO");
 ok(seancePrecedente("2026-10-26") === "2026-10-23" && seancePrecedente("2026-10-28") === "2026-10-27" && seancePrecedente("2026-11-01") === "2026-10-30", "séance précédente");
 
-// Clôtures : la copie du matin porte la clôture de la veille ; samedi, dimanche et lundi portent celle du vendredi
-const hist = { "2026-10-23": { "c:a": 99 }, "2026-10-24": { "c:a": 100, "i:cac40": 8000 }, "2026-10-25": { "c:a": 100, "i:cac40": 8000 }, "2026-10-26": { "c:a": 100, "i:cac40": 8000 },
-  "2026-10-27": { "c:a": 104, "i:cac40": 8040 }, "2026-10-28": { "c:a": 106, "i:cac40": 8080, "c:b": "x" }, "2026-10-29": { "c:a": 103, "i:cac40": 8120, "c:b": 50 } };
+// Clôtures : chaque copie est rangée à la date de sa séance ; une copie datée du week-end compte pour le vendredi (1/11/2026)
+const hist = { "2026-10-22": { "c:a": 99 }, "2026-10-23": { "c:a": 100, "i:cac40": 8000 }, "2026-10-24": { "c:a": 100, "i:cac40": 8000 },
+  "2026-10-26": { "c:a": 104, "i:cac40": 8040 }, "2026-10-27": { "c:a": 106, "i:cac40": 8080, "c:b": "x" }, "2026-10-28": { "c:a": 103, "i:cac40": 8120, "c:b": 50 } };
 const cs = clotures(hist);
 ok(JSON.stringify(cs.dates) === JSON.stringify(["2026-10-22", "2026-10-23", "2026-10-26", "2026-10-27", "2026-10-28"]), "dates de clôture " + cs.dates);
 ok(JSON.stringify(cs.items["c:a"]) === "[99,100,104,106,103]" && cs.items["c:b"].filter(v => v != null).length === 1 && cs.items["c:b"][4] === 50, "séries de clôture " + JSON.stringify(cs.items));

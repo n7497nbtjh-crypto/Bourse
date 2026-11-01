@@ -413,7 +413,7 @@ function priceHead(c, isEtf = false) {
   if (!p) return `<div class="pxhead"><span class="d">${PXUP && PXUP !== "none" ? "Cours non disponible pour ce titre" : "Chargement du cours…"}</span></div>`;
   const k = provCours(p), ch = p.chg;
   const quand = k.vieux ? `Cours du ${dLabel(k.d)} : pas de nouveau relevé depuis ${k.jo} jours ouvrés` : k.live ? `Cours différé${k.heure ? ` · relevé à ${k.heure}` : ""}` : k.d ? `Dernier cours relevé le ${dLabel(k.d)}` : "Cours différé";
-  const jour = k.vieux ? "lors de la dernière séance relevée" : k.live || k.d === TODAY ? "aujourd'hui" : "lors de la dernière séance";
+  const jour = k.vieux ? "lors de la dernière séance relevée" : (k.live || k.d === TODAY) && jourSeance() === "aujourd'hui" ? "aujourd'hui" : jourSeance() !== "aujourd'hui" ? jourSeance() : "lors de la dernière séance"; // 1/11 : le week-end, « vendredi »
   return `<div class="pxhead"><span class="kick">Cours${provBtn("cours", (isEtf ? "e:" : "c:") + c.id, "Cours de l'action")}</span><span class="p">${pxFmt(p.p, p.cur)}</span>${p.cur && p.cur !== "EUR" && isFinite(toEur(p.p, p.cur)) ? `<span class="pxeur">soit ${pxFmt(toEur(p.p, p.cur), "EUR")}</span>` : ""}${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % ${jour}</span>` : ""}<span class="d${k.vieux ? " prov-stale" : ""}">${quand} · ${esc(p.s)}</span></div>`;
 }
 
@@ -431,7 +431,7 @@ function prixHTML(s, c) {
   return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2><span class="light" style="font-size:12.5px">${k.vieux ? `Cours du ${dLabel(k.d)}` : "Cours différé"} · ${esc(p.s)}</span></div>
     <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${peTxt}</p>${k.vieux ? `<p class="prov-old" style="margin:10px 0 0">Cours ancien : pas de nouveau relevé depuis ${k.jo} jours ouvrés. Les ratios ci-dessous reposent sur ce cours.</p>` : ""}</div>
     <div class="tiles">
-      <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
+      <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % ${jourSeance()}` : "dernier cours connu"}</small></div>
       <div class="tile">${kick("Valeur en Bourse", "cap")}<span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
       <div class="tile">${kick("PER", "per")}<span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : v.vieux ? "non calculé : comptes trop anciens" : "non calculable (perte ou donnée manquante)"}</small></div>
       ${ev != null ? `<div class="tile">${kick("Valeur d'entreprise ÷ EBITDA", "evebitda")}<span class="v">${ev > 100 || ev < 0 ? "n.s." : F1.format(ev)}</span><small>${ev > 100 || ev < 0 ? "multiple non significatif (EBITDA trop faible ou négatif)" : "fois, dettes comprises"}${mev != null ? ` · secteur : ${F1.format(mev)}` : ""}</small></div>` : ""}

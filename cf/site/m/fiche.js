@@ -89,7 +89,7 @@ function fichePrixSans(s) {
   if (!p) return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2></div><div class="pb muted">${PXUP && PXUP !== "none" ? "Le cours de cette action n'est pas disponible dans notre source pour le moment." : "Chargement du cours…"}</div></section>`;
   const capE = p.cap ? toEur(p.cap, p.cur) : null;
   return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2><span class="light" style="font-size:12.5px">Cours différé · ${esc(p.s)}</span></div>
-    <div class="tiles"><div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % aujourd'hui` : "dernier cours connu"}</small></div>
+    <div class="tiles"><div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % ${jourSeance()}` : "dernier cours connu"}</small></div>
       ${capE ? `<div class="tile"><span class="kick">Valeur en Bourse</span><span class="v">${capFmt(capE)}</span><small>prix de toutes ses actions</small></div>` : ""}
       ${p.p1y ? `<div class="tile"><span class="kick">Sur un an</span><span class="v ${p.p >= p.p1y ? "up" : "down"}">${sgn(p.p / p.p1y - 1)}</span><small>évolution du cours</small></div>` : ""}</div>
     <div class="pb"><p class="muted" style="margin:0">Sans comptes publiés lisibles, le prix ne peut pas être comparé au bénéfice (PER).</p></div></section>`;

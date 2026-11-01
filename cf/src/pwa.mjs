@@ -58,6 +58,7 @@ export function tete(html, { title, desc, url, statut, image = null }) {
     `<meta property="og:image:alt" content="${image && image.alt ? esc(image.alt) : "bilan. La Bourse, comptes à l'appui : les comptes officiels des entreprises cotées, expliqués simplement."}">`,
     `<meta name="twitter:card" content="summary_large_image">`,
     ...DONNEES.map(f => `<link rel="preload" href="/data/${f}.json" as="fetch" crossorigin>`),
+    ...["/api/cours", "/data/fx.json", "/data/a-verifier.json", "/logos/index.json"].map(u => `<link rel="preload" href="${u}" as="fetch" crossorigin>`), // 1/11 : demandés au démarrage, auparavant seulement après le script principal (une seconde de plus sur téléphone)
     // Avant l'affichage de la page : la zone de contenu garde la hauteur de l'écran (le pied de page ne saute plus) et un trait discret indique le chargement
     `<style>#app:empty{min-height:calc(100vh - 56px);padding-top:30vh;box-sizing:border-box}#app:empty::after{content:"";display:block;width:64px;height:3px;margin:0 auto;border-radius:3px;background:#111214;opacity:.22;animation:bilanCharge .9s ease-in-out infinite alternate}@keyframes bilanCharge{from{transform:scaleX(.25)}to{transform:scaleX(1)}}@media (prefers-reduced-motion:reduce){#app:empty::after{animation:none}}</style>`,
   ].join("\n");

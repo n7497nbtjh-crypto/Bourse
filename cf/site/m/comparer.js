@@ -165,7 +165,7 @@ const CMPR_D = {
     ["Valeur d'entreprise ÷ EBITDA", "evebitda", F => { if (F.ok && F.bank) return { txt: "–", sub: "ne s'applique pas", plain: true }; const x = typeof provEvEbitda === "function" ? provEvEbitda(F.c) : null; if (x == null) return null;
       const md = medInd(F.c.sector, "ev_ebitda"); return { txt: F1.format(x) + " fois", sub: cmprMedSub(md, v => F1.format(v) + " fois") || "dettes comprises", plain: true }; }, true],
     ["Valeur en Bourse", "cap", F => F.v && F.v.capE ? { txt: capFmt(F.v.capE), sub: "capitalisation, en euros" } : null, true],
-    ["Cours de l'action", "cours", F => F.v ? { txt: pxFmt(F.v.p.p, F.v.p.cur), sub: F.v.p.chg != null ? `${F.v.p.chg > 0 ? "+" : ""}${F2.format(F.v.p.chg)} % aujourd'hui` : "", plain: true } : null, true],
+    ["Cours de l'action", "cours", F => F.v ? { txt: pxFmt(F.v.p.p, F.v.p.cur), sub: F.v.p.chg != null ? `${F.v.p.chg > 0 ? "+" : ""}${F2.format(F.v.p.chg)} % ${jourSeance()}` : "", plain: true } : null, true],
     ["Sur un an", null, F => cmprRange(F), true],
     ["Place dans son secteur", "mediane", F => cmprAxis(F, CMPR_AXE.prix)],
   ],

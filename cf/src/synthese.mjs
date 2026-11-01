@@ -31,7 +31,8 @@ export function lundiDe(semaine) {
 // hist : { "2026-10-29": { "c:lvmh": 612.4, … } } (copies prises chaque matin, donc clôture de la séance précédente).
 export function clotures(hist, n = 15) {
   const parSeance = {};
-  for (const d of Object.keys(hist || {}).sort()) if (/^\d{4}-\d{2}-\d{2}$/.test(d)) parSeance[seancePrecedente(d)] = hist[d];
+  // Depuis le 1/11/2026, chaque copie est rangée à la date de la séance qu'elle contient (data/cours_fetch.mjs) ; une date de week-end éventuelle compte pour le vendredi
+  for (const d of Object.keys(hist || {}).sort()) if (/^\d{4}-\d{2}-\d{2}$/.test(d)) parSeance[ouvre(d) ? d : seancePrecedente(d)] = hist[d];
   const dates = Object.keys(parSeance).sort().slice(-n), keys = new Set();
   dates.forEach(d => Object.keys(parSeance[d] || {}).forEach(k => keys.add(k)));
   const items = {};

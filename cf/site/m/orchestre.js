@@ -60,7 +60,7 @@ async function pageIndice(id) {
   const qs = [`C'est quoi le ${name} ?`, `Comment investir dans le ${name} ?`, `ETF ${name} éligible PEA`];
   app.innerHTML = `<div class="crumbs"><a href="/marches">Marchés</a> › ${esc(name)}</div>
     <section class="panel orchead"><div class="pb"><div class="orcid"><span class="flag">${FLAG[fl]}</span><div><p class="kick">Indice boursier · ${esc(F.fournisseur)}</p><h1 class="pagetitle" style="margin:0">${esc(name)}</h1><p class="pagesub" style="margin:4px 0 0">${esc(what)}</p></div></div>
-      ${p ? `<div class="orcnum"><b class="num">${F0.format(p.p)}</b><span>points</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : ""}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % aujourd'hui" : ""}</span>${y != null ? `<span class="${y >= 0 ? "up" : "down"}">${sgn(y, 1)} sur un an</span>` : ""}<small class="light">Cours différés</small></div>` : ""}</div></section>
+      ${p ? `<div class="orcnum"><b class="num">${F0.format(p.p)}</b><span>points</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : ""}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % " + jourSeance() : ""}</span>${y != null ? `<span class="${y >= 0 ? "up" : "down"}">${sgn(y, 1)} sur un an</span>` : ""}<small class="light">Cours différés</small></div>` : ""}</div></section>
     <div class="orcgrid"><div>
       <section class="panel"><div class="ph"><h2>Comment il est construit</h2></div><div class="pb orcfacts">
         <div><span class="kick">Contenu</span><p>${F.n} entreprises cotées sur ${esc(F.place)}.</p></div>

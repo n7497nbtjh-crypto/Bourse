@@ -3298,3 +3298,5 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 .x-cv{width:100%;height:auto;border:1px solid var(--rule);border-radius:10px;display:block}
 .x-act{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
 .x-tun td,.x-tun th{padding:6px 10px}
+/* 1/11 : pourquoi la variation diffère de celle du courtier (accueil) */
+.acc-pq{margin:8px 0 0;font-size:14px;color:var(--grey)}.acc-pq summary{cursor:pointer;color:var(--ink);font-weight:600}.acc-pq p{margin:6px 0 0;max-width:68ch}

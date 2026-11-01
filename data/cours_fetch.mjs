@@ -1,7 +1,7 @@
 // Le bot garde chaque jour une copie des cours (secours si la feuille ne répond pas) et les taux de change de la BCE.
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { COURS_CSVS, parseCours } from "./cours_config.mjs";
-import { clotures } from "../cf/src/synthese.mjs";
+import { clotures, seancePrecedente } from "../cf/src/synthese.mjs";
 const OUT = new URL("../cf/site/data/", import.meta.url);
 const today = new Date().toISOString().slice(0, 10);
 try {
@@ -24,9 +24,18 @@ try {
     writeFileSync(new URL("cours.json", OUT), JSON.stringify({ updated: today, source: "Google Finance, cours de clôture ou différés", items }));
     // Historique quotidien (un fichier par mois) pour tracer nos propres courbes au fil du temps
     const dir = new URL("../data/historique/", import.meta.url); if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-    const f = new URL(today.slice(0, 7) + ".json", dir), h = existsSync(f) ? JSON.parse(readFileSync(f)) : {};
-    h[today] = Object.fromEntries(Object.entries(items).map(([k, v]) => [k, v.p]));
-    writeFileSync(f, JSON.stringify(h));
+    // 1/11/2026 : chaque copie est rangée à la date de la SÉANCE qu'elle contient (et non du jour du passage du robot).
+    // Le robot passe le matin (clôture de la veille) mais aussi à chaque mise en ligne, parfois le soir : avant, la copie du
+    // vendredi soir était prise pour celle du jeudi, et les cours du week-end recopiaient le vendredi (courbe décalée d'un jour).
+    // En séance (9 h - 22 h 30 à Paris, jours ouvrés), les cours ne sont pas des clôtures : rien n'est écrit.
+    const paris = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })), jourP = `${paris.getFullYear()}-${String(paris.getMonth() + 1).padStart(2, "0")}-${String(paris.getDate()).padStart(2, "0")}`;
+    const hP = paris.getHours() + paris.getMinutes() / 60, ouvreP = paris.getDay() >= 1 && paris.getDay() <= 5;
+    const seance = ouvreP && hP >= 22.5 ? jourP : (!ouvreP || hP < 9) ? seancePrecedente(jourP) : null;
+    if (seance) {
+      const f = new URL(seance.slice(0, 7) + ".json", dir), h = existsSync(f) ? JSON.parse(readFileSync(f)) : {};
+      h[seance] = Object.fromEntries(Object.entries(items).map(([k, v]) => [k, v.p]));
+      writeFileSync(f, JSON.stringify(h));
+    } else console.log("En séance : pas de copie dans l'historique des clôtures");
     // Cours d'il y a une semaine (jour de Bourse le plus proche, 6 à 9 jours avant) : sert au bilan hebdomadaire par e-mail
     const all = {}; for (const m of new Set([today.slice(0, 7), new Date(Date.now() - 12 * 864e5).toISOString().slice(0, 7), new Date(Date.now() - 22 * 864e5).toISOString().slice(0, 7)])) { const g = new URL(m + ".json", dir); if (existsSync(g)) Object.assign(all, JSON.parse(readFileSync(g))); }
     const ref = Object.keys(all).filter(d => d <= new Date(Date.now() - 6 * 864e5).toISOString().slice(0, 10)).sort().pop();
