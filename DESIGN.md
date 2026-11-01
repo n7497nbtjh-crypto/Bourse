@@ -10,7 +10,8 @@ Choisi par Romain après dix maquettes (`docs/maquettes/accueil-v3.html` à `acc
 - **Visualiser plutôt qu'écrire** : un verdict = mot en couleur + jauge face à la médiane du secteur (rouge pâle à gauche, vert pâle à droite, trait noir au milieu, point noir) + le chiffre qui le justifie. Jamais de pastilles de mots seules (« gadget », Romain 1/11). La croissance suit la même jauge que la dette et le prix.
 - **Sens et lien** : chaque rubrique répond à une question ; les étapes s'enchaînent (« Elle seule » puis « Face aux autres ») ; la preuve est une garantie transversale, pas une étape.
 - **Ton** : direct, oral, vouvoiement ; pas d'emphase sur un cours ; aucun conseil.
-- Le bloc CSS « Système v3 » est en fin de `cf/site/site.css` ; l'accueil est dans `cf/site/m/accueil4.js`. Étapes suivantes : la fiche entreprise, puis les autres pages, dans ce système.
+- Le bloc CSS « Système v3 » est en fin de `cf/site/site.css` ; l'accueil est dans `cf/site/m/accueil4.js`.
+- **Partout (2/11, Romain : « absolument partout »)** : bloc « Système v3 partout » en fin de site.css. Cartes (`.panel`, `.cocard`, `.ot-k`, `.cm3-c`…) à contour noir 2 px et rayon 24 px, cartes imbriquées sans contour sur fond `#F7F6F2`, cartes d'outils et de leçons en teintes pâles alternées, boutons et puces en pilule, champs à contour noir, `.kick` en autocollant jaune, toutes les jauges (`.pl/.pm/.pd`) comme celles de l'accueil. Un nouveau composant doit reprendre ces règles.
 
 ---
 

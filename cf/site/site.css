@@ -3571,3 +3571,56 @@ html #app .a4 .a4-tabs button{border-radius:999px!important}
 .a4-tick.scroll-x{overflow:hidden!important;scrollbar-width:none}
 .a4 .a4-n small{font-size:46px!important;font-weight:800;letter-spacing:-.03em}
 @media (max-width:760px){.a4 .a4-n small{font-size:38px!important}}
+
+/* ================= Système v3 partout (2/11/2026, Romain : « la DA de l'accueil absolument partout ») =================
+   Habillage commun de tous les composants : cartes à contour noir 2 px et grands rayons, titres Bricolage,
+   boutons en pilule, jauges rouge pâle / vert pâle avec médiane noire et point noir, étiquettes. */
+#app{--v3b:2px solid #111}
+#app h1{font:800 clamp(34px,4.2vw,58px)/1 var(--serif);letter-spacing:-.05em}
+#app .ph h2,#app h2{font-family:var(--serif);font-weight:800;letter-spacing:-.04em}
+#app .ph h2{font-size:clamp(22px,2.3vw,30px);line-height:1.05}
+/* cartes */
+html #app .panel,html #app details.panel,html #app .cocard,html #app .cmpr-card,html #app .out-dc,html #app .cm3-c,html #app .pa-niv,html #app .prem-a,html #app .offer,html #app .rf-pl,html #app .rf-trimi,html #app .ev,html #app .fcard,html #app .ot-k{
+  border:var(--v3b)!important;border-radius:24px!important;background:#fff;box-shadow:none!important}
+html #app .panel,html #app details.panel{padding:20px 24px;margin-bottom:22px}
+html #app .panel>.ph,html #app .panel>.pb{padding-left:0;padding-right:0}
+html #app .panel>.ph{border-bottom:0}
+html #app a.panel:hover,html #app a.cm3-c:hover,html #app a.ot-k:hover,html #app a.cocard:hover{box-shadow:5px 5px 0 #111!important;transform:translate(-2px,-2px);transition:transform .12s,box-shadow .12s}
+html #app .ftile,html #app .tile,html #app .rf-dl,html #app .tbx-dv,html #app .rf-kt{border:var(--v3b)!important;border-radius:16px!important;background:#FCFBF7}
+/* rubriques en couleur pâle, en alternance, comme l'accueil */
+html #app .rf-plb{border-radius:20px!important}
+/* boutons */
+html #app .btn,html #app a.btn,html #app button.btn{border-radius:999px!important;background:#111;color:#fff;border:2px solid #111;font:700 14.5px var(--sans);padding:0 20px;min-height:42px;box-shadow:none}
+html #app .btn:hover{box-shadow:3px 3px 0 var(--a4y)!important}
+html #app .btn.ghost,html #app .btn.sec,html #app .btn2,html #app .rf-plo,html #app .favbtn,html #app .fapp,html #app a.chip,html #app .chip,html #app button.chip{border-radius:999px!important;border:var(--v3b)!important;background:#fff;color:#111;font-weight:700}
+html #app .favbtn.on{background:var(--a4y)!important}
+html #app .iabtn{border-radius:999px!important;background:#111;color:#fff;border:var(--v3b)!important;font-weight:700}
+html #app button.on:not(.favbtn):not(.prov-i){background:#111;color:#fff;border-radius:999px!important}
+/* étiquettes « kick » en autocollant */
+#app .kick{display:inline-block;font:800 13px var(--serif);letter-spacing:-.01em;text-transform:none;color:#111;background:var(--a4y);border:var(--v3b);border-radius:8px;padding:3px 10px;box-shadow:2px 2px 0 #111;transform:rotate(-2deg)}
+/* jauges : la même que l'accueil */
+#app .prof .pl,#app .pmini .pl,#app .pcmp .pl{height:8px!important;border-radius:4px;background:linear-gradient(90deg,#FFD0C4 50%,#BFF0DA 50%)!important}
+#app .prof .pm,#app .pmini .pm,#app .pcmp .pm{width:2px!important;height:14px!important;top:-3px!important;background:#111!important}
+#app .prof .pd,#app .pmini .pd,#app .pcmp .pd{width:16px!important;height:16px!important;top:-4px!important;border:3px solid #fff!important;box-shadow:0 0 0 1.5px #111!important}
+/* verdict de la fiche */
+#app .rf-vc{font:800 clamp(28px,3.2vw,44px)/1.02 var(--serif)!important;letter-spacing:-.045em}
+/* tableaux */
+#app table th{font-weight:700;color:#111;border-bottom:2px solid #111}
+#app .tbl,#app .tablewrap{border:var(--v3b);border-radius:18px;overflow:hidden}
+/* fil d'Ariane et liens */
+#app a.lnk,#app .ph a,#app .src a,#app a.more{text-decoration-color:var(--a4y);text-decoration-thickness:3px}
+/* quiz et parcours */
+html #app label.qo{border:var(--v3b)!important;border-radius:14px!important}
+html #app .p7b{border:var(--v3b)!important}
+html #app .p7b.on{box-shadow:0 0 0 4px var(--a4y)!important}
+@media (max-width:760px){html #app .panel,html #app details.panel{padding:16px 16px;border-radius:20px!important}}
+html #app .panel .panel,html #app .panel details.panel{border:0!important;background:#F7F6F2;border-radius:18px!important}
+html body .orciab{border:2px solid #111!important;border-radius:999px!important;background:var(--a4y)!important;color:#111!important;font-weight:700!important;box-shadow:3px 3px 0 #111!important}
+#app .kick{width:max-content;max-width:100%}
+html #app .ot-k:nth-child(4n+1),html #app .cm3-c:nth-child(4n+1){background:#FFF6CC}
+html #app .ot-k:nth-child(4n+2),html #app .cm3-c:nth-child(4n+2){background:#FFE9F2}
+html #app .ot-k:nth-child(4n+3),html #app .cm3-c:nth-child(4n+3){background:#E7ECFF}
+html #app .ot-k:nth-child(4n+4),html #app .cm3-c:nth-child(4n+4){background:#DDF6EA}
+html #app .ot-k b,html #app .ot-k strong{font-family:var(--serif);font-weight:800;font-size:17px;letter-spacing:-.02em}
+html body #app button:not(.prov-i):not(.def):not(.p7b):not(.linkbtn){border-radius:999px!important}
+html #app input[type=text],html #app input[type=search],html #app input[type=number],html #app input[type=date],html #app select{border:2px solid #111!important;border-radius:12px!important}
