@@ -19,10 +19,11 @@ const TBLX_GRP = { res: "Compte de résultat", bil: "Bilan", flx: "Flux de trés
 const TBLX_GRPSUB = { res: "Ce que l'entreprise vend et ce qu'elle gagne", bil: "Ce qu'elle possède et ce qu'elle doit, à la clôture", flx: "L'argent réellement encaissé et dépensé", act: "Ce qui revient à chaque action" };
 const tblxSym = cur => CUR[cur] || cur || "";
 const tblxSp = cur => CUR[cur] && CUR[cur].length === 1 ? "" : " "; // « Md€ » mais « Md CHF »
+const tblxDe = (q, n) => `${q} ${/^[aeiouyéè]/i.test(n) ? "d'" : "de "}${n}`; // « milliards d'euros », « millions de dollars »
 function tblxMoneyUnit(vals, cur) { // une seule unité par ligne : tout en Md ou tout en M
   const m = Math.max(0, ...vals.filter(okn).map(Math.abs)), s = tblxSym(cur);
-  if (m >= 1000) return { div: 1000, d: m >= 10000 ? 1 : 2, u: "Md" + tblxSp(cur) + s, long: "milliards de " + (TBLX_CURN[cur] || cur) };
-  return { div: 1, d: m >= 100 ? 0 : m >= 10 ? 1 : 2, u: "M" + tblxSp(cur) + s, long: "millions de " + (TBLX_CURN[cur] || cur) };
+  if (m >= 1000) return { div: 1000, d: m >= 10000 ? 1 : 2, u: "Md" + tblxSp(cur) + s, long: tblxDe("milliards", TBLX_CURN[cur] || cur) };
+  return { div: 1, d: m >= 100 ? 0 : m >= 10 ? 1 : 2, u: "M" + tblxSp(cur) + s, long: tblxDe("millions", TBLX_CURN[cur] || cur) };
 }
 const tblxPts = d => { const x = Math.abs(d * 100); return (d > 0 ? "+" : d < 0 ? "−" : "") + nf(x < 10 ? 1 : 0).format(x) + " pt" + (x >= 2 ? "s" : ""); };
 const tblxRel = r => (r > 0 ? "+" : r < 0 ? "−" : "") + nf(Math.abs(r) < 0.1 ? 1 : 0).format(Math.abs(r) * 100) + " %";
@@ -173,8 +174,8 @@ function tblxPhrase(r, Y, cur) {
       let st = 0; for (let i = r.li; i > r.fi; i--) { const d = tblxDir(r.kind, r.vals[i - 1], r.vals[i]); if (d == null || d === 0 || d !== r.dir) break; st++; }
       const tot = r.first > 0 && r.last > 0 ? tblxRel(r.last / r.first - 1) : "";
       const w = d => d > 0 ? "En hausse" : d < 0 ? "En baisse" : "Stable";
-      if (r.dir && st >= 2 && st === r.n - 1) t = `${w(r.dir)} chaque année depuis ${yf}${tot ? ` : ${tot} au total` : ""}.`;
-      else if (r.dir && st >= 2) t = `${w(r.dir)} depuis ${Y[r.li - st]} (${st} ans de suite)${tot && r.n >= 3 ? `, ${tot} depuis ${yf}` : ""}.`;
+      if (r.dir && st >= 2 && st === r.n - 1) t = `${w(r.dir)} chaque année depuis ${yf} : de ${F(r.first)} à ${F(r.last)}${tot ? `, soit ${tot}` : ""}.`; // 1/11 : on dit d'où l'on part et où l'on arrive
+      else if (r.dir && st >= 2) t = `${w(r.dir)} ${st} ans de suite, depuis ${Y[r.li - st]} : ${F(r.vals[r.li - st])} puis ${F(r.last)}${tot && r.n >= 3 ? ` (${tot} depuis ${yf})` : ""}.`;
       else {
         const one = tblxChange(r.kind, r.prev, r.last), totDir = tblxDir(r.kind, r.first, r.last);
         t = r.prev == null ? `${F(r.last)} en ${yl}.` : `${w(r.dir)} sur un an${one && r.dir ? ` (${one})` : ""}${tot && r.n >= 3 ? `${totDir && r.dir && totDir !== r.dir ? ", mais" : ","} ${tot} depuis ${yf}` : ""}.`;
@@ -408,9 +409,16 @@ function tabComptes(s, c, el) {
 }
 
 /* ---------- Graphique en colonnes par année : dernière année accentuée, valeurs affichées, repère médiane ---------- */
-function tblxDefHTML(r) { // à droite du graphique : ce que mesure l'indicateur choisi, et comment le lire (31/10, Romain)
+function tblxDefHTML(r) { // à droite du graphique : 1/11 (Romain : « pas très utile et compréhensible ») — l'entreprise d'abord, en grand, puis l'idée, un exemple, et le piège replié
   const t = typeof ALL !== "undefined" && r && ALL[r.term]; if (!t) return "";
-  return `<p class="kick">${esc(r.short || r.label)}, c'est quoi ?</p><p>${esc(t.what || "")}</p>${t.limit ? `<p class="kick">Comment le lire</p><p>${esc(t.limit)}</p>` : ""}${r.phrase ? `<p class="kick">Pour cette entreprise${r.unit && r.kind === "money" ? ` (${esc(r.ulong)})` : ""}</p><p>${esc(r.phrase)}</p>` : ""}`;
+  const sens = r.dir > 0 ? [r.q < 0 ? "down" : r.q > 0 ? "up" : "", "▲", "En hausse sur un an"] : r.dir < 0 ? [r.q > 0 ? "up" : r.q < 0 ? "down" : "", "▼", "En baisse sur un an"] : null; // la couleur suit le sens du critère (une dette qui monte est en rouge)
+  let ph = String(r.phrase || "");
+  if (sens) ph = ph.replace(/^En (hausse|baisse) sur un an \(([^)]+)\)/, "$2 sur un an"); // la pastille dit déjà « en hausse » : la phrase garde le chiffre
+  ph = ph.charAt(0).toUpperCase() + ph.slice(1);
+  return `${ph ? `<div class="tbx-dv${sens ? " " + sens[0] : ""}">${sens ? `<b class="tbx-dvb">${sens[1]} ${sens[2]}</b>` : ""}<p>${esc(ph)}</p></div>` : ""}
+    <p class="tbx-dk">${esc(r.short || r.label)}, c'est quoi ?</p><p class="tbx-dw">${esc(t.what || "")}</p>${t.ex ? `<p class="tbx-dex"><span>Exemple</span>${esc(t.ex)}</p>` : ""}
+    ${t.read ? `<p class="tbx-dk">Pourquoi ça compte</p><p>${esc(t.read)}</p>` : ""}
+    ${t.limit ? `<details class="tbx-dpi"><summary>Le piège à éviter</summary><p>${esc(t.limit)}</p></details>` : ""}`;
 }
 function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = "", h = 170, note = "" }) {
   let k = 0; while (k < labels.length - 1 && series.every(s => !okn(s.values[k]))) k++;

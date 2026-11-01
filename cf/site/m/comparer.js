@@ -290,7 +290,7 @@ function cmprThemeHTML(T, X, S) {
   const jauge = cmprJaugeHTML(T, X, S);
   const D = CMPR_D[T.k] || [];
   const det = `<details class="cmpr-det"><summary><span style="white-space:nowrap">Tous les chiffres</span><small>${esc(D.map(d => d[0].toLowerCase()).join(", "))}</small></summary><div>${cmprDetTable(D, X)}<p class="cmpr-tnote">${esc(T.rule(X))}</p></div></details>`;
-  return `<section class="cmpr-th" id="cmpr-${T.k}"><div class="cmpr-thh">${CMPR_ICON[T.k]}<h3>${T.t}</h3><span class="cmpr-ind">${term && ALL[term] ? def(term, ind) : esc(ind)}${typeof provBtn === "function" ? provBtn({ taille: "ca", croissance: "g", solidite: "lev", prix: "per", dividende: "rendement" }[T.k] || term, X.F.map(F => "c:" + F.c.id).join(","), ind) : ""}</span>${S.best ? `<span class="cmpr-win">${esc(cmprWinLabel(T, S.best.r))} : ${esc(S.best.F.c.name)}</span>` : ""}</div>
+  return `<section class="cmpr-th" id="cmpr-${T.k}"><div class="cmpr-thh">${CMPR_ICON[T.k]}<h3>${T.t}</h3><span class="cmpr-ind">${term && ALL[term] ? def(term, ind) : esc(ind)}${typeof provBtn === "function" ? provBtn({ taille: "ca", croissance: "g", solidite: "lev", prix: "per", dividende: "rendement" }[T.k] || term, X.F.map(F => "c:" + F.c.id).join(","), ind) : ""}</span>${S.best ? `<span class="cmpr-mene">${esc(cmprWinLabel(T, S.best.r))} : ${esc(S.best.F.c.name)}</span>` : ""}</div>
     <div class="cmpr-thb"><div>${jauge}<div class="cmpr-rows${jauge ? " cmpr-rows-j" : ""}">${rows}</div>${axis}</div>
       <div class="cmpr-exp"><p>${esc(T.ex(X))}</p>${S.ok.length < 2 ? `<p class="cmpr-na">${cmprNoCmp(T, X)}</p>` : ""}<p class="cmpr-rule">${esc(T.k === "taille" || T.k === "dividende" ? T.rule(X) : "Couleurs : " + (T.k === "prix" ? "vert, nettement moins cher que la médiane de son secteur ; orange, nettement plus cher." : "vert, point fort ; gris, dans la moyenne ; orange, point de vigilance. Le détail des seuils est dans « Tous les chiffres »."))}</p></div></div>
     ${det}</section>`;
@@ -560,4 +560,25 @@ function cmprSynthese(X, V) { // trois lignes calculées : qui mène le plus de 
   if (ev.length >= 2) { const pt = x => `${x.d >= 0 ? "+" : "−"}${F1.format(Math.abs(x.d * 100))} point${Math.abs(x.d * 100) >= 2 ? "s" : ""}`; const up = ev.filter(x => x.d >= 0.005), dn = ev.filter(x => x.d <= -0.005);
     L.push(`Sur ${Math.max(...ev.map(x => x.n))} ans, ${esc(ev[0].lab)} : ${up.length ? `en hausse chez ${up.map(x => `${esc(x.F.c.name)} (${pt(x)})`).join(", ")}` : ""}${up.length && dn.length ? ", " : ""}${dn.length ? `en baisse chez ${dn.map(x => `${esc(x.F.c.name)} (${pt(x)})`).join(", ")}` : ""}${!up.length && !dn.length ? "stable pour toutes" : ""}.`); }
   return L.length ? `<ol class="cmpr-syn">${L.slice(0, 3).map(x => `<li>${x}</li>`).join("")}</ol>` : "";
+}
+
+/* 1/11 (Romain : « retire les petites courbes, pas très visuel ») : dans chaque case, une barre proportionnelle à la valeur,
+   sur la même échelle pour toute la ligne, et le trait noir de la médiane du secteur. On voit d'un coup d'œil qui a la plus longue
+   barre et qui dépasse la médiane. En tête de colonne : le nombre de critères où l'entreprise mène. */
+function cmprBarres(t, X, ref, gagne) {
+  const val = (k, c, F) => { const sp = RF_CMP_KEY[k]; if (!sp) return null; try { const f = sp[0]; const v = f === "pe" || f === "yld" ? ((F && F.v) || valo(c) || {})[f] : f === "ca" ? (c.ca > 0 ? caEur(c) : null) : (isBank(c) && (f === "lev" || f === "marge")) ? null : ratios(c)[f]; return v != null && isFinite(v) ? v : null; } catch (e) { return null; } };
+  $$("tbody tr[data-k]", t).forEach(tr => {
+    const k = tr.dataset.k, sp = RF_CMP_KEY[k]; if (!sp) return;
+    const tds = [...tr.querySelectorAll("td")], cells = tds.filter(td => !td.classList.contains("rf-medc") && !td.classList.contains("rf-q")), medTd = tds.find(td => td.classList.contains("rf-medc"));
+    const vs = X.F.map((F, j) => F.ok && cells[j] && !cells[j].classList.contains("na") ? val(k, F.c, F) : null);
+    const sv = typeof rfSecteurVals === "function" ? rfSecteurVals(ref, sp[0]) : [], med = sv.length >= 5 && !(medTd && medTd.querySelector(".rf-na")) ? median(sv) : null; // pas de trait quand le tableau n'affiche pas de médiane
+    const tous = [...vs, med].filter(v => v != null); if (tous.length < 2) return;
+    const lo = Math.min(0, ...tous), hi = Math.max(0, ...tous); if (!(hi > lo)) return;
+    const pos = v => ((v - lo) / (hi - lo) * 100), z = pos(0);
+    const barre = (v, cls) => { const a = Math.min(z, pos(v)), b = Math.max(z, pos(v)); return `<span class="cmpr-bar${cls ? " " + cls : ""}" aria-hidden="true"><i style="left:${a.toFixed(1)}%;width:${Math.max(1.5, b - a).toFixed(1)}%"></i>${med != null ? `<b style="left:${pos(med).toFixed(1)}%"></b>` : ""}</span>`; };
+    vs.forEach((v, j) => { if (v != null && cells[j]) cells[j].insertAdjacentHTML("beforeend", barre(v)); });
+    if (medTd && med != null) medTd.insertAdjacentHTML("beforeend", barre(med, "cmpr-bar-med"));
+  });
+  const ths = [...t.querySelectorAll("thead th.rf-coh")];
+  X.F.forEach((F, j) => { const n = (gagne && gagne[F.c.id]) || 0, th = ths[j]; if (th && !th.querySelector(".cmpr-mene")) th.insertAdjacentHTML("beforeend", `<span class="cmpr-mene${n ? " on" : ""}">${n ? `en tête sur ${n} critère${n > 1 ? "s" : ""}` : "en tête sur aucun critère"}</span>`); });
 }

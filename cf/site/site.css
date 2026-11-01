@@ -3300,3 +3300,54 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 .x-tun td,.x-tun th{padding:6px 10px}
 /* 1/11 : pourquoi la variation diffère de celle du courtier (accueil) */
 .acc-pq{margin:8px 0 0;font-size:14px;color:var(--grey)}.acc-pq summary{cursor:pointer;color:var(--ink);font-weight:600}.acc-pq p{margin:6px 0 0;max-width:68ch}
+/* 1/11 (Romain) : comparateur, des barres à la place des petites courbes */
+.cmpr-bar{position:relative;display:block;height:10px;margin:8px 0 2px;min-width:110px;background:var(--soft);border-radius:5px}
+.cmpr-bar i{position:absolute;top:0;bottom:0;border-radius:5px;background:#B9B2A5}
+.rf-hi .cmpr-bar i{background:var(--g)}.rf-lo .cmpr-bar i{background:var(--o)}.cmpr-bar-med i{background:var(--ink);opacity:.55}
+.cmpr-bar b{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--ink);border-radius:1px}
+.cmpr-tbl .rf-coh .lg{--s:36px!important;width:36px!important;height:36px!important}.cmpr-tbl .rf-coh .lg img{width:100%;height:100%}
+.cmpr-tbl .rf-coh .nm{font-size:17px;font-weight:700}
+.cmpr-mene{display:block;margin-top:6px;font-size:12.5px;font-weight:600;color:var(--light)}.cmpr-mene.on{display:inline-block;padding:2px 9px;border-radius:99px;background:var(--lime);color:var(--ink)}
+.cmpr-tbl .rf-cv{font-size:20px}
+@media (max-width:600px){.cmpr-tbl .cmpr-bar{min-width:64px}.cmpr-tbl .rf-cv{font-size:17px}.cmpr-tbl .rf-coh .nm{font-size:14.5px}.cmpr-tbl td.num,.cmpr-tbl th.rf-coh{min-width:0!important;width:auto;padding-left:8px;padding-right:8px}.cmpr-tbl th.lab{min-width:96px!important;max-width:110px}.cmpr-tbl .rf-coh .lg{--s:28px!important;width:28px!important;height:28px!important}.cmpr-mene{font-size:11.5px}}
+@media (max-width:600px){.cmpr-mene{white-space:normal;line-height:1.25}.cmpr-tbl th.rf-coh,.cmpr-tbl td.num{max-width:138px}.cmpr-tbl .rf-coh .rf-co{white-space:normal}}
+/* ====== 1/11 (Romain) : le rapport de la semaine a sa propre identité, différente du site ======
+   Nuit bleu marine, chiffres en très grand, menthe pour la hausse, corail pour la baisse, soleil pour ce qu'il faut regarder.
+   Les variables du site sont redéfinies dans .syn4 : tout ce qui est dedans change de couleur sans toucher au reste. */
+.syn4{--page:#0F1A2E;--panel:#17243D;--soft:#1E2D4A;--rule:#2B3C5E;--line:#2B3C5E;--line2:#2B3C5E;--ink:#F6F2EA;--grey:#C3CBDA;--light:#93A0B8;
+  --up:#5BE3A8;--g:#5BE3A8;--link:#FFC857;--down:#FF7F6E;--o:#FF7F6E;--n:#5C6B88;--lime:#FFC857;--sun:#FFC857;
+  background:var(--page);color:var(--ink);border-radius:26px;padding:22px 18px 26px;max-width:900px;box-shadow:0 18px 50px rgba(15,26,46,.18)}
+.syn4 a{color:var(--ink)}.syn4 .lnk{color:var(--sun);text-decoration-color:var(--sun)}
+.syn4 .up{color:var(--up)!important}.syn4 .down,.syn4 .dn{color:var(--down)!important}.syn4 .muted{color:var(--light)}
+.syn4-mast{display:flex;align-items:baseline;gap:8px;margin:0 0 6px;font-family:"Inter Tight",var(--sans)}
+.syn4-mast b{font-size:26px;font-weight:800;letter-spacing:-.02em}.syn4-mast span{font-size:26px;font-weight:300;color:var(--sun)}
+.syn4-mast i{margin-left:auto;font-style:normal;font-size:13px;font-weight:600;padding:3px 10px;border:1px solid var(--rule);border-radius:99px;color:var(--grey)}
+.syn4 .syn4-head{border-bottom:0;padding-bottom:6px}
+.syn4 .syn4-date{color:var(--grey)}
+.syn4 .syn4-tuiles{background:transparent;border:0;gap:10px;overflow:visible}
+.syn4 .syn4-4 .syn4-t,.syn4 .syn4-t{background:var(--panel);border:0!important;border-radius:18px;padding:14px 14px 12px}
+.syn4 .syn4-t small{color:var(--grey);font-size:12.5px}
+.syn4 .syn4-t b{font-family:"Inter Tight",var(--sans);font-size:34px;font-weight:800;letter-spacing:-.02em;line-height:1.05}
+.syn4 .syn4-t span{color:var(--light);font-size:12px}
+.syn4 .syn4-tp{background:var(--sun)!important;color:#0F1A2E}.syn4 .syn4-tp small,.syn4 .syn4-tp span{color:#3A3320}.syn4 .syn4-tp b{color:#0F1A2E!important}
+.syn4 .syn4-ev,.syn4 .syn4-detail>summary,.syn4 .syn4-ann,.syn4 .syn4-ia,.syn4 .syn4-sim,.syn4 .syn4-rep,.syn4 .syn4-ctx,.syn4 .syn4-apa,.syn4 .syn4-semr span{background:var(--panel);border-color:var(--rule);border-radius:16px}
+.syn4 .syn4-apa{border:1px dashed var(--sun)}
+.syn4 .syn4-pill{background:var(--soft);color:var(--grey);border:0}
+.syn4 .syn4-next{background:var(--soft);border-radius:14px;padding:10px 14px}.syn4 .syn4-next b{color:var(--sun)}
+.syn4 .syn4-sec h2{font-family:"Inter Tight",var(--sans);font-size:24px;font-weight:800;color:var(--ink)}
+.syn4 .syn4-exp{background:var(--sun);color:#0F1A2E}
+.syn4 .synk li::before{background:var(--sun);color:#0F1A2E}
+.syn4 .syn4-cl .ax-cl{background:var(--soft)}
+.syn4 .syn4-l{border-color:var(--rule)}
+.syn4 details>summary{color:var(--ink)}
+.syn4 .synfoot,.syn4 .syn4-ias{color:var(--light)}
+.syn4 .lg{border-color:transparent}
+@media (max-width:600px){.syn4{margin:0 -10px;border-radius:22px;padding:18px 14px 22px}.syn4 .syn4-t b{font-size:28px}}
+/* 1/11 (Romain) : explication d'un indicateur, l'entreprise d'abord */
+.tbx-dv{border-radius:14px;padding:12px 14px;margin:0 0 14px;background:var(--soft)}
+.tbx-dv.up{background:#E7F3EC}.tbx-dv.down{background:#FBEAE4}
+.tbx-dvb{display:block;font-family:"Inter Tight",var(--sans);font-size:19px;font-weight:800;margin:0 0 4px}.tbx-dv.up .tbx-dvb{color:var(--g)}.tbx-dv.down .tbx-dvb{color:var(--o)}
+.tbx-dv p{margin:0;font-size:15.5px;line-height:1.45;font-weight:500;color:var(--ink)}.tbx-dv small{color:var(--light);font-weight:400}
+.tbx-dk{font-weight:700;font-size:14px;margin:12px 0 2px}.tbx-dw{font-size:16px;margin:0}
+.tbx-dex{margin:8px 0 0;padding:8px 12px;border-left:3px solid var(--lime);font-size:14px;color:var(--grey)}.tbx-dex span{display:block;font-weight:700;color:var(--ink);font-size:12.5px}
+.tbx-dpi{margin-top:12px;font-size:14px}.tbx-dpi summary{cursor:pointer;font-weight:600}.tbx-dpi p{margin:6px 0 0;color:var(--grey)}
