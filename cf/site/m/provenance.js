@@ -126,7 +126,11 @@ function provJoursOuvres(iso, today = TODAY) { // jours de semaine écoulés dep
   let n = 0; for (const d = new Date(a); d < b;) { d.setUTCDate(d.getUTCDate() + 1); const w = d.getUTCDay(); if (w && w < 6) n++; }
   return n;
 }
+const PROV_MOIS_M = new Map(); // 1/11 : mémorisé (appelé des milliers de fois à l'accueil)
 function provMoisDepuis(iso, today = TODAY) {
+  const k = iso + "|" + today; if (PROV_MOIS_M.has(k)) return PROV_MOIS_M.get(k); const r = provMoisDepuis0(iso, today); PROV_MOIS_M.set(k, r); return r;
+}
+function provMoisDepuis0(iso, today) {
   if (!iso || !/^\d{4}-\d{2}-\d{2}/.test(iso)) return null;
   const a = new Date(iso.slice(0, 10) + "T12:00:00Z"), b = new Date(String(today).slice(0, 10) + "T12:00:00Z");
   return Math.floor((b - a) / (30.44 * 864e5));

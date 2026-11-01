@@ -417,7 +417,8 @@ async function loadSec(id) {
   SECN = SECN || await getJSON("/data/actu-sec.json", { items: [] });
   return SECN.items.filter(f => !id || f.id === id).map(f => ({ date: f.date, co: RBY[f.id], cat: SECKIND[f.kind] || "autre", title: secTitle(f), url: f.url, src: "SEC" }));
 }
-const dayKey = iso => { const d = new Date(iso); return isNaN(d) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }).format(d); };
+const DAYKEY_F = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }), DAYKEY_M = new Map(); // 1/11 : un seul formateur (en créer un par appel coûtait 0,6 s à l'accueil)
+const dayKey = iso => { let k = DAYKEY_M.get(iso); if (k === undefined) { const d = new Date(iso); k = isNaN(d) ? "" : DAYKEY_F.format(d); DAYKEY_M.set(iso, k); } return k; };
 function dayLabel(iso) {
   const k = dayKey(iso), now = new Date();
   if (k === dayKey(now.toISOString())) return "Aujourd'hui";
@@ -2293,8 +2294,10 @@ async function radiographie(P) {
 
 
 /* ---------- Profil en 5 axes : où se situe l'entreprise dans son secteur (sans verdict) ---------- */
-function rankIn(s, fn, higherBetter = true) { // position de 0 (dernière) à 1 (première) parmi les entreprises du secteur
-  const l = R.companies.filter(c => c.sector === s.sector && !c.missing && !(isBank(c) !== isBank(s))).map(c => ({ id: c.id, v: fn(c) })).filter(x => okn(x.v));
+const RANK_M = new Map(); // 1/11 : valeurs du secteur calculées une fois par indicateur (avant : recalculées pour chaque entreprise, 2,3 s à l'accueil)
+function rankIn(s, fn, higherBetter = true, cle = null) { // position de 0 (dernière) à 1 (première) parmi les entreprises du secteur
+  const calc = () => R.companies.filter(c => c.sector === s.sector && !c.missing && !(isBank(c) !== isBank(s))).map(c => ({ id: c.id, v: fn(c) })).filter(x => okn(x.v));
+  let l; if (cle) { const k = `${cle}|${s.sector}|${isBank(s)}|${PXUP || ""}|${R.companies.length}`; l = RANK_M.get(k); if (!l) { l = calc(); RANK_M.set(k, l); } } else l = calc();
   const me = l.find(x => x.id === s.id); if (!me || l.length < 5) return null;
   const better = l.filter(x => higherBetter ? x.v > me.v : x.v < me.v).length, eq = l.filter(x => x.v === me.v && x.id !== s.id).length; // ex æquo (sans dette, par exemple) : au milieu du groupe
   return { p: Math.max(0, Math.min(1, 1 - (better + eq / 2) / (l.length - 1))), n: l.length, rank: better + 1 };
@@ -2319,11 +2322,11 @@ function rfAxes(s) { // [{ k, t (titre), d (ce qui est mesuré), r: { p, rank, n
   const bank = isBank(s), v = valo(s), sd = !bank && s.netDebt != null && s.netDebt < 0;
   const yld = v && v.yld != null ? v.yld : null, noDiv = ((s.dps === 0 || s.dps == null) && (s.divPaid == null || s.divPaid <= 0)) || (yld != null && yld < 0.001); // moins de 0,1 % : dividende symbolique, traité comme absent
   const A = [
-    { k: "croissance", t: "Croissance", d: "Hausse des ventes sur un an", r: rankIn(s, c => ratios(c).g1) },
-    { k: "marge", t: bank ? "Rentabilité" : "Marge", d: bank ? "Bénéfice rapporté aux capitaux propres" : "Ce qui reste sur 100 de ventes", r: bank ? rankIn(s, c => ratios(c).roe) : rankIn(s, c => ratios(c).marge) },
-    { k: "solidite", t: "Solidité", d: "Dette nette rapportée au résultat (moins, c'est mieux)", r: bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false), special: sd ? "sansdette" : null },
-    { k: "dividende", t: "Dividende", d: "Rendement : dividende rapporté au cours", r: yld != null && yld >= 0.001 ? rankIn(s, c => { const x = valo(c); return x && x.yld >= 0.001 ? x.yld : null; }) : null, special: noDiv ? "nodiv" : null },
-    { k: "prix", t: "Prix", d: "PER : à droite, moins chère au regard du bénéfice", r: v && v.pe ? rankIn(s, c => { const x = valo(c); return x && x.pe ? x.pe : null; }, false) : null, special: v && v.peNs ? "ns" : null },
+    { k: "croissance", t: "Croissance", d: "Hausse des ventes sur un an", r: rankIn(s, c => ratios(c).g1, true, "g1") },
+    { k: "marge", t: bank ? "Rentabilité" : "Marge", d: bank ? "Bénéfice rapporté aux capitaux propres" : "Ce qui reste sur 100 de ventes", r: bank ? rankIn(s, c => ratios(c).roe, true, "roe") : rankIn(s, c => ratios(c).marge, true, "marge") },
+    { k: "solidite", t: "Solidité", d: "Dette nette rapportée au résultat (moins, c'est mieux)", r: bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false, "lev"), special: sd ? "sansdette" : null },
+    { k: "dividende", t: "Dividende", d: "Rendement : dividende rapporté au cours", r: yld != null && yld >= 0.001 ? rankIn(s, c => { const x = valo(c); return x && x.yld >= 0.001 ? x.yld : null; }, true, "yld") : null, special: noDiv ? "nodiv" : null },
+    { k: "prix", t: "Prix", d: "PER : à droite, moins chère au regard du bénéfice", r: v && v.pe ? rankIn(s, c => { const x = valo(c); return x && x.pe ? x.pe : null; }, false, "pe") : null, special: v && v.peNs ? "ns" : null },
   ];
   return A.filter(a => a.r || a.special === "nodiv" || a.special === "ns").map(a => ({ ...a, word: a.special === "nodiv" ? "pas de dividende" : a.special === "ns" ? "n.s." : a.special === "sansdette" && a.r && a.r.p >= 0.55 ? "sans dette" : axWord(a.r.p, a.k), lv: a.r ? axLevel(a.r.p) : null }));
 }
