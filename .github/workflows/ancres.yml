@@ -28,7 +28,10 @@ jobs:
         env:
           CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
           DUREE_MIN: "60"
-        run: node data/ancres.mjs --max "${{ inputs.max || '400' }}"
+        run: |
+          # Node 22 plante parfois dans undici sur de longues séries de téléchargements : on relance, les entreprises déjà lues sont gardées
+          export FIN=$(( $(date +%s) + 3600 ))
+          for i in 1 2 3 4 5 6 7 8; do node data/ancres.mjs --max "${{ inputs.max || '400' }}" && break; [ $(date +%s) -ge $FIN ] && break; echo "::warning::Relance ($i)"; done
       - name: Enregistrement dans le dépôt
         if: always()
         run: |

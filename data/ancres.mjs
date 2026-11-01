@@ -9,7 +9,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { extract } from "./esef.mjs";
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? +process.argv[i + 1] || d : d; };
-const MAX = arg("--max", 300), DUREE = (+process.env.DUREE_MIN || 60) * 60000, t0 = Date.now();
+const MAX = arg("--max", 300), DUREE = (+process.env.DUREE_MIN || 60) * 60000, t0 = Date.now(), FIN = +process.env.FIN || 0; // FIN : heure limite commune aux relances (secondes)
 const UA = `bilan-ancres/1.0 (https://repere-bourse.pages.dev${process.env.CONTACT ? "; " + process.env.CONTACT : ""})`;
 const OUT = "cf/site/data/ancres"; mkdirSync(OUT, { recursive: true });
 // Indicateurs affichés par le site dont la valeur vient directement d'un chiffre du document
@@ -25,7 +25,7 @@ const ordre = U.slice().sort((a, b) => cap(b) - cap(a)).map(c => ({ c, s: lire(c
 console.log(`${ordre.length} entreprises à relire`);
 let ok = 0, vides = 0, pannes = 0, k = 0;
 for (const { c, s } of ordre) {
-  if (Date.now() - t0 > DUREE) { console.log(`Temps écoulé : arrêt propre après ${k} entreprises`); break; }
+  if (Date.now() - t0 > DUREE || (FIN && Date.now() / 1000 > FIN)) { console.log(`Temps écoulé : arrêt propre après ${k} entreprises`); break; }
   k++;
   const src = s.sources[0];
   try {
