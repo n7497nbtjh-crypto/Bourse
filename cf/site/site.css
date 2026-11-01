@@ -3391,3 +3391,6 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 @media (max-width:600px){.s5-ts{grid-template-columns:repeat(2,minmax(0,1fr))}.s5-ts .s5-tp{grid-column:1/-1}.s5-r{grid-template-columns:auto minmax(0,1fr) 92px;gap:10px}.s5-rv b{font-size:19px}.s5-f{grid-template-columns:auto minmax(0,1fr) 64px}.s5-f>span:not(.lg){display:none}}
 .s5 .synev button{background:var(--soft);color:var(--ink);border-color:var(--rule)}
 
+/* 1/11 : dans un pli, le titre du thème répète le titre du pli ; la médiane est déjà le trait pointillé du graphique */
+.rf-plb .rf-th-in > .ph{display:none}
+.rf-plb .rf-kt > i{display:none}
