@@ -3394,3 +3394,6 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 /* 1/11 : dans un pli, le titre du thème répète le titre du pli ; la médiane est déjà le trait pointillé du graphique */
 .rf-plb .rf-th-in > .ph{display:none}
 .rf-plb .rf-kt > i{display:none}
+/* 1/11 : la preuve à la ligne près (ancres ESEF) */
+.anc-ls{display:flex;flex-direction:column;gap:4px}.anc-l{font-weight:600;color:var(--g);text-decoration:underline;text-underline-offset:3px}.anc-n{display:block;color:var(--light);font-size:12px;margin-top:4px}
+.anc-p{margin:10px 0 0;font-size:14px}

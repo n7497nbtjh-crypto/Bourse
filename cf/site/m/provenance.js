@@ -164,6 +164,18 @@ let PROV_FX = null; // date des taux de change de la BCE
 function provFxDate() { if (PROV_FX === null) { PROV_FX = fetch("/data/fx.json").then(r => r.ok ? r.json() : null).then(j => (PROV_FX = j && j.updated || "")).catch(() => (PROV_FX = "")); } return PROV_FX; }
 
 /* ---------- 4. Le bouton « i » et sa bulle ---------- */
+
+/* 1/11 (Romain) : la preuve à la ligne près. data/ancres.mjs garde l'identifiant de chaque chiffre dans le rapport ESEF officiel ;
+   l'adresse « rapport#identifiant » ouvre le document exactement sur ce chiffre. Pas d'ancre (SEC, AMF, autre source) : pas de lien. */
+const ANC = {}, ANC_LBL = { ca: "Chiffre d'affaires", ebit: "Résultat d'exploitation", net: "Résultat net", eps: "Bénéfice par action", dps: "Dividende par action", equity: "Capitaux propres", cash: "Trésorerie", cfo: "Flux de trésorerie d'exploitation", divPaid: "Dividendes versés", tax: "Impôt", pretax: "Résultat avant impôt" };
+const PROV_ANCRE = { ca: ["ca"], g: ["ca"], cagr: ["ca"], ng: ["net"], ebit: ["ebit"], marge: ["ebit", "ca"], net: ["net"], nm: ["net", "ca"], equity: ["equity"], cash: ["cash"], roe: ["net", "equity"], cfo: ["cfo"], fcf: ["cfo"], conv: ["cfo", "net"], eps: ["eps"], dps: ["dps"], payout: ["divPaid", "net"], per: ["eps"], rendement: ["dps"], lev: ["cash"], debt: ["cash"], gear: ["equity"] };
+function ancres(id) { return ANC[id] || (ANC[id] = fetch(`/data/ancres/${id}.json`).then(r => r.ok && /json/.test(r.headers.get("content-type") || "") ? r.json() : null).catch(() => null)); }
+async function ancreLiens(id, keys, annee) { // [{ lbl, an, url }] pour les indicateurs demandés, exercice donné (sinon le plus récent)
+  const a = await ancres(id); if (!a || !a.y || !a.report) return [];
+  const ans = Object.keys(a.y).sort(), an = annee && a.y[annee] ? String(annee) : ans[ans.length - 1]; if (!an) return [];
+  return keys.filter(k => a.y[an][k]).map(k => ({ lbl: ANC_LBL[k] || k, an, url: `${a.report}#${a.y[an][k]}` }));
+}
+const ancreHTML = L => L.map(x => `<a class="anc-l" href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${esc(x.lbl)} ${esc(x.an)} dans le rapport officiel ↗</a>`).join("");
 function provBtn(k, ids, label) {
   const key = provKey(k); if (!key) return "";
   const I = PROV_IND[key];
@@ -272,6 +284,8 @@ async function provHTML(key, ids) {
     if (I.src === "mixte" || I.unite === "eur") { const d = await provFxDate(); if (s.currency && s.currency !== "EUR" || (pxOf(s) || {}).cur !== "EUR") rows += provRow("Change", `Taux de référence de la BCE${d ? ` du ${dLabel(d)}` : ""}.`); }
     rows = provRow("Devise", esc(provUnite(I, s.currency || (pxOf(s) || {}).cur))) + rows;
     const calc = provCalcul(key, s, c); if (calc) rows = provRow("Calcul", esc(calc)) + rows; // 5e passage (B1) : les deux chiffres
+    const L = PROV_ANCRE[key] ? await ancreLiens(s.id, PROV_ANCRE[key], c && c.years ? c.years.at(-1) : null) : [];
+    if (L.length) rows = provRow("Preuve", `<span class="anc-ls">${ancreHTML(L)}</span><small class="anc-n">Le lien ouvre le rapport annuel déposé par l'entreprise, exactement sur ce chiffre (document lourd : quelques secondes).</small>`) + rows;
   } else { // en-tête d'un tableau de nombreuses entreprises : la provenance générale, les dates détaillées sont sur chaque fiche
     rows += provRow("Source", I.src === "cours" ? "Google Finance, cours différés." : `Comptes annuels publiés : rapports ESEF (sociétés européennes, filings.xbrl.org et AMF) et rapports déposés à la SEC (EDGAR)${I.src === "mixte" ? ", avec les cours différés de Google Finance" : ""}.`);
     if (I.src !== "cours") rows += provRow("Période", `Dernier exercice annuel publié de chaque entreprise${I.deux ? ", comparé au précédent" : ""} : les exercices ne se terminent pas tous à la même date.`);

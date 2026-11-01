@@ -64,7 +64,7 @@ function parsePeriod(p) {
 const fiscalYear = end => new Date(end.getTime() - 1000).getUTCFullYear();
 
 export function extract(doc) {
-  const facts = doc && doc.facts ? Object.values(doc.facts) : [];
+  const facts = doc && doc.facts ? Object.entries(doc.facts).map(([id, f]) => ({ ...f, _id: id })) : []; // 1/11 : l'identifiant du chiffre est aussi son repère dans le document officiel (ancre #id)
   const byConcept = {};
   for (const f of facts) {
     const d = f.dimensions || {};
@@ -72,13 +72,14 @@ export function extract(doc) {
     if (Object.keys(d).some(k => !BASE_DIMS.has(k))) continue; // chiffre ventilé (par secteur, etc.) : ignoré
     const v = Number(f.value);
     if (!isFinite(v)) continue;
-    (byConcept[d.concept] = byConcept[d.concept] || []).push({ v, unit: d.unit || "", ...parsePeriod(d.period) });
+    (byConcept[d.concept] = byConcept[d.concept] || []).push({ v, unit: d.unit || "", id: f._id, ...parsePeriod(d.period) });
   }
   const years = {};
   let currency = null, fyEnd = null, anyCur = null;
   // Étiquettes réellement retenues, par exercice : permet de dire au lecteur ce que recouvre le chiffre.
   const tags = { net: {}, debt: {}, norme: {} };
-  const put = (key, y, v) => { (years[y] = years[y] || {}); if (years[y][key] == null) { years[y][key] = v; return true; } return false; };
+  const ids = {}; // exercice → indicateur → identifiant du chiffre retenu dans le document
+  const put = (key, y, v, id) => { (years[y] = years[y] || {}); if (years[y][key] == null) { years[y][key] = v; if (id) (ids[y] = ids[y] || {})[key] = id; return true; } return false; };
   for (const [key, concepts] of Object.entries(CONCEPTS)) {
     for (const c of concepts) {
       for (const f of byConcept[c] || []) {
@@ -90,7 +91,7 @@ export function extract(doc) {
         if (key === "ca" && /^iso4217:/.test(f.unit)) { currency = currency || f.unit.slice(8, 11); }
         if ((key === "net" || key === "equity") && /^iso4217:/.test(f.unit)) anyCur = anyCur || f.unit.slice(8, 11); // banques et assureurs : pas de « chiffre d'affaires »
         if (key === "ca" || key === "net") { const e = new Date(f.end.getTime() - 1000).toISOString().slice(5, 10); fyEnd = fyEnd || e; }
-        const neuf = put(key, y, MONEY_PER_SHARE.has(key) ? f.v : f.v / 1e6);
+        const neuf = put(key, y, MONEY_PER_SHARE.has(key) ? f.v : f.v / 1e6, f.id);
         if (neuf && key === "net") tags.net[y] = c === "ifrs-full:ProfitLossAttributableToOwnersOfParent" ? "part du groupe" : "résultat total, intérêts minoritaires compris";
       }
     }
@@ -154,7 +155,7 @@ export function extract(doc) {
     if (r.dps == null && r.divPaid != null && r.eps && r.net) { const shares = r.net / r.eps; if (shares > 0) r.dpsEst = r.divPaid / shares; }
     for (const k of ["dNcBonds", "dNcOther", "dNcBank", "dCBonds", "dCOther", "dCBank", "capexPpe", "capexInt", "debtTotal", "debtLong", "debtShortAll", "debtShort", "debtCurLong", "debtInstrNC", "debtInstrC", "debtFinNC", "debtFinC", "debtExtSum", "daExtMax", "ebitdaExt", "ebitdaExtExt", "da", "leaseNC", "leaseC", "leaseAll"]) delete r[k];
   }
-  return { currency: currency || anyCur || "EUR", fyEnd, years, tags, norme: "IFRS" };
+  return { currency: currency || anyCur || "EUR", fyEnd, years, tags, norme: "IFRS", ids };
 }
 
 // Fusionne plusieurs rapports : le plus récent l'emporte pour une même année.

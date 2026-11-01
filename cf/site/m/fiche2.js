@@ -737,7 +737,7 @@ async function ficheUneSeulePage(s, c, el) {
 function rfLierChiffres(s, c, el) { // graphiques par thème et lignes dépliables, comme dans tabComptes, mais sur la fiche
   if (!el) return;
   const P = tblxRows(s, c), Y = c.years, byK = k => P.rows.find(r => r.k === k);
-  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); const th0 = box.closest(".rf-th"); if (th0) $$(".rf-kt", th0).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); const d = $(".rf-gdef", box); if (d) d.innerHTML = tblxDefHTML(r); };
+  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); const th0 = box.closest(".rf-th"); if (th0) $$(".rf-kt", th0).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); const d = $(".rf-gdef", box); if (d) { d.innerHTML = tblxDefHTML(r); if (typeof ancreLiens === "function" && ANC_LBL[r.k]) ancreLiens(s.id, [r.k]).then(L => { if (L.length && d.isConnected && !d.querySelector(".anc-l")) d.insertAdjacentHTML("beforeend", `<p class="anc-p">${ancreHTML(L)}</p>`); }); } };
   $$(".rf-thc", el).forEach(box => { const b = $(".rf-gsel button", box); if (b) setG(box, b.dataset.g); });
   const toggleDet = tr => {
     const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("det");
