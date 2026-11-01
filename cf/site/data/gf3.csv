@@ -1,4 +1,12 @@
 id,c1,c2,c3
+c:haier,ETR:690D,FRA:690D,
+c:covestro,ETR:1COV,FRA:1COV,
+c:hensoldt,ETR:HAG,FRA:HAG,
+c:amica,WSE:AMC,,
+c:fielmann,ETR:FIE,FRA:FIE,
+c:gea-group,ETR:G1A,FRA:G1A,
+c:wawel,WSE:WWL,,
+c:efg-international,SWX:EFGN,,
 c:ottobock,ETR:OBCK,FRA:OBCK,
 c:kernel,WSE:KER,,
 c:hamburger-hafen-und-logistik,ETR:HHFA,FRA:HHFA,

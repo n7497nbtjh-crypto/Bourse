@@ -2602,7 +2602,13 @@ async function ficheSociete(env, origin, ctx, B, c) {
   }
   out.pea = peaSociete(c);
   let today2 = jourParis2();
-  out.prochaines_dates = B.events.filter((e) => e.id === c.id && e.date >= today2).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6).map((e) => ({ date: e.date, type: e.type || null, libelle: e.label || null, estimee: !!e.estimee, source: e.source || null })), out.sources = sourcesSite(origin, "/entreprise/" + c.id + (c.missing ? "" : "/comptes"), sources), out.avertissement = AVERT;
+  out.prochaines_dates = B.events.filter((e) => e.id === c.id && e.date >= today2).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6).map((e) => ({ date: e.date, type: e.type || null, libelle: e.label || null, estimee: !!e.estimee, source: e.source || null }));
+  let anc = c.missing ? null : await optionnel(charger(env, origin, `/data/ancres/${c.id}.json`, 18e5), null);
+  if (anc && anc.y && anc.report) {
+    let an = Object.keys(anc.y).sort().pop(), LB = { ca: "chiffre d'affaires", ebit: "r\xE9sultat d'exploitation", net: "b\xE9n\xE9fice net", eps: "b\xE9n\xE9fice par action", dps: "dividende par action", equity: "capitaux propres", cash: "tr\xE9sorerie", cfo: "flux de tr\xE9sorerie d'exploitation", divPaid: "dividendes vers\xE9s" };
+    out.preuves = Object.entries(anc.y[an] || {}).filter(([k]) => LB[k]).map(([k, id]) => ({ chiffre: LB[k], exercice: +an, lien_document: `${anc.report}#${id}` }));
+  }
+  out.sources = sourcesSite(origin, "/entreprise/" + c.id + (c.missing ? "" : "/comptes"), sources), out.avertissement = AVERT;
   let L = [`${c.name} (${c.ticker}${c.isin ? ", ISIN " + c.isin : ""}) \xB7 ${out.secteur} \xB7 ${out.region}`];
   if (c.desc && L.push(c.desc), out.presentation && out.presentation.ce_qu_elle_fait && L.push(`Ce qu'elle fait : ${out.presentation.ce_qu_elle_fait} ${out.presentation.comment_elle_gagne_de_l_argent || ""}`.trim()), c.missing) L.push(out.note_comptes);
   else {
@@ -2612,7 +2618,8 @@ Derniers comptes annuels : exercice ${c.year}, en ${c.currency}. Comparaison ave
     out.historique && L.push(`
 Historique (${c.currency}, millions) : ` + out.historique.map((h) => `${h.annee} : ventes ${h.chiffre_affaires != null ? F0.format(h.chiffre_affaires) : "\u2013"}, b\xE9n\xE9fice ${h.benefice_net != null ? F0.format(h.benefice_net) : "\u2013"}${h.marge_exploitation != null ? `, marge ${pct(h.marge_exploitation, 1, !1)}` : ""}`).join(" ; ") + ".");
   }
-  return out.bourse && L.push(`
+  return out.preuves && out.preuves.length && L.push(`
+Preuves (chaque lien ouvre le rapport annuel officiel exactement sur le chiffre ; citez-les) : ` + out.preuves.map((p) => `${p.chiffre} ${p.exercice} : ${p.lien_document}`).join(" ; ")), out.bourse && L.push(`
 Cours : ${pxFmt(out.bourse.cours, out.bourse.devise)}${out.bourse.variation_du_jour_pct != null ? ` (${out.bourse.variation_du_jour_pct > 0 ? "+" : ""}${F2.format(out.bourse.variation_du_jour_pct)} % sur la s\xE9ance)` : ""}, ${P.source}${P.updated ? ", relev\xE9 du " + dLabel(String(P.updated)) : ""}.${out.bourse.capitalisation_eur ? ` Valeur en Bourse : ${capFmt(out.bourse.capitalisation_eur)}.` : ""}${out.bourse.per ? ` PER : ${F1.format(out.bourse.per)}${out.bourse.per_median_secteur ? ` (m\xE9diane du secteur : ${F1.format(out.bourse.per_median_secteur)}, ${out.bourse.per_position})` : ""}.` : ""}${out.bourse.rendement_dividende != null ? ` Rendement du dividende : ${pct(out.bourse.rendement_dividende, 1, !1)}.` : ""}`), L.push(`
 PEA : ${out.pea.raison}`), out.prochaines_dates.length && L.push("Prochaines dates : " + out.prochaines_dates.map((e) => `${dLabel(e.date)}, ${e.libelle || e.type}${e.estimee ? " (date estim\xE9e)" : ""}`).join(" ; ") + "."), L.push(`
 R\xE8gle de lecture des rep\xE8res : vert = point fort, gris = dans la moyenne, orange = point de vigilance, selon des seuils publi\xE9s sur ${lien(origin, "/methode")}. Ce sont des rep\xE8res de lecture des comptes pass\xE9s, pas une note de l'action.`), { texte: L.join(`
@@ -2869,7 +2876,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "8d075d864d3422fb", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "83d8a2784e989be8", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
