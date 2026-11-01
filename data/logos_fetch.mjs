@@ -113,7 +113,12 @@ async function siteOfficiel(c) {
   return null;
 }
 let n = 0, nc = 0, ns = 0;
+// 1/11 : le passage du 1/11 a trouvé 816 logos puis a dépassé les 80 minutes de GitHub avant d'enregistrer : tout était perdu.
+// Désormais l'index est enregistré toutes les 25 entreprises, et le robot s'arrête de lui-même après DUREE_MIN minutes (65 par défaut).
+const t0 = Date.now(), DUREE = (+process.env.DUREE_MIN || 65) * 60000; let k = 0;
 for (const c of ordre) {
+  if (Date.now() - t0 > DUREE) { console.log(`Temps écoulé : arrêt propre après ${k} entreprises, la suite au prochain passage`); break; }
+  if (++k % 25 === 0) { idx.maj = jour; writeFileSync("cf/site/logos/index.json", JSON.stringify(idx)); }
   let r = null, refus = "", panne = false, f = fichier[c.id], i = f && (info[f] || info[f.replace(/ /g, "_")]);
   if (i) {
     if (!OK.test(i.lic)) refus = i.lic;

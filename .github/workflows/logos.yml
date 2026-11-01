@@ -33,8 +33,10 @@ jobs:
           npm i --no-save --silent sharp@0.33.5
           node data/logos_fetch.mjs --max "${{ inputs.max || '600' }}"
       - name: Bilan
+        if: always()
         run: node -e "const d=require('./data/diagnostic.json').logos;console.log(JSON.stringify(d))"
       - name: Enregistrement dans le dépôt
+        if: always()
         run: |
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
