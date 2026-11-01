@@ -28,7 +28,8 @@ mkdirSync("cf/site/logos", { recursive: true });
 const idx = existsSync("cf/site/logos/index.json") ? JSON.parse(readFileSync("cf/site/logos/index.json", "utf8")) : { maj: null, l: {} };
 idx.l = idx.l || {};
 const jour = new Date().toISOString().slice(0, 10), FRAIS = 90 * 864e5;
-const aRevoir = c => !(idx.l[c.id] && idx.l[c.id].maj && (Date.now() - Date.parse(idx.l[c.id].maj)) < FRAIS && (idx.l[c.id].f || idx.l[c.id].absent));
+const aRevoir = c => { const x = idx.l[c.id]; if (!x || !x.maj) return true; const age = Date.now() - Date.parse(x.maj); // 1/11 : sans logo, on réessaie après 30 jours, et tout de suite si le passage précédent n'avait pas les essais « www. »
+  return x.f ? age >= FRAIS : !(x.absent && x.v2 && age < 30 * 864e5); };
 const FX = (() => { try { return JSON.parse(readFileSync("cf/site/data/fx.json", "utf8")).eur || {}; } catch (e) { return {}; } })();
 const capE = c => { const p = px["c:" + c.id]; return p && p.cap ? p.cap * (p.cur === "EUR" ? 1 : FX[p.cur] || 0) : 0; };
 const parCap = (a, b) => capE(b) - capE(a);
@@ -96,14 +97,16 @@ for (const p of paquets(fichiers, 50)) {
 // 3 et 4. Image par entreprise : Commons (upload.wikimedia.org) puis site officiel
 async function siteOfficiel(c) {
   const dom = (c.domain || "").replace(/^https?:\/\//, "").replace(/\/.*$/, ""); if (!dom) return null;
-  const base = `https://${dom}`;
-  const essais = [`${base}/apple-touch-icon.png`, `${base}/apple-touch-icon-precomposed.png`];
-  try { // la balise <link rel="icon"> la plus grande de la page d'accueil
+  const bases = [`https://${dom}`, ...(dom.startsWith("www.") ? [] : [`https://www.${dom}`])]; // 1/11 : beaucoup de sites ne répondent qu'avec « www. »
+  const essais = bases.flatMap(b => [`${b}/apple-touch-icon.png`, `${b}/apple-touch-icon-precomposed.png`]);
+  for (const base of bases) try { // la balise <link rel="icon"> (ou l'icône de tuile Windows) la plus grande de la page d'accueil
     const r = await fetchR(base, { headers: { "user-agent": UA_NAV, accept: "text/html,application/xhtml+xml", "accept-language": "fr,en;q=0.8" }, timeout: 20000 }, 1);
     if (r.ok) {
       const html = (await r.text()).slice(0, 300000), links = [...html.matchAll(/<link\b[^>]*>/gi)].map(m => m[0]).filter(l => /rel=["'][^"']*(apple-touch-icon|icon)[^"']*["']/i.test(l));
       const cand = links.map(l => { const href = (l.match(/href=["']([^"']+)["']/i) || [])[1], sizes = (l.match(/sizes=["'](\d+)x\d+["']/i) || [])[1], svg = /svg/i.test(l) || /\.svg(\?|$)/i.test(href || ""); return href ? { href: new URL(href, r.url).href, taille: svg ? 999 : +sizes || 0 } : null; }).filter(Boolean).sort((a, b) => b.taille - a.taille);
-      for (const x of cand) if (x.taille >= 64 || x.taille === 0) essais.push(x.href);
+      for (const x of cand) if (x.taille >= 64 || x.taille === 0) essais.unshift(x.href); // la balise déclarée passe avant les noms devinés
+      const tuile = (html.match(/<meta[^>]+name=["']msapplication-TileImage["'][^>]+content=["']([^"']+)["']/i) || [])[1]; if (tuile) essais.push(new URL(tuile, r.url).href);
+      break;
     }
   } catch (e) { }
   for (const u of essais) { try { const buf = await image(u, true); await ecrire(c, buf); return { maj: jour, f: `${c.id}.png`, licence: "site officiel", source: u, src: "site" }; } catch (e) { } }
@@ -122,7 +125,7 @@ for (const c of ordre) {
   }
   if (!r) { try { r = await siteOfficiel(c); } catch (e) { panne = true; console.error(c.id, "site :", String(e).slice(0, 90)); } await sleep(PAUSE_SITE); }
   if (r) { idx.l[c.id] = r; n++; if (r.src === "commons") nc++; else ns++; console.log(`${c.id} : ${r.src === "commons" ? "Commons (" + r.licence + ")" : "site officiel"}`); }
-  else if (!panne && wikidataOK) { idx.l[c.id] = { maj: jour, absent: true, ...(refus ? { licence: refus } : {}) }; console.log(`${c.id} : aucun logo utilisable${refus ? " (licence " + refus + ")" : ""}`); }
+  else if (!panne && wikidataOK) { idx.l[c.id] = { maj: jour, absent: true, v2: true, ...(refus ? { licence: refus } : {}) }; console.log(`${c.id} : aucun logo utilisable${refus ? " (licence " + refus + ")" : ""}`); }
   else { pannes++; console.log(`${c.id} : panne réseau, à réessayer`); }
 }
 idx.maj = jour;

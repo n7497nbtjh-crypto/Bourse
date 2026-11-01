@@ -7,7 +7,7 @@ on:
     inputs:
       max:
         description: "Nombre d'entreprises à traiter"
-        default: "400"
+        default: "1300"
   schedule:
     - cron: "40 2 * * *"   # chaque nuit vers 3 h 40 (heure de Paris en hiver), avant le robot des données
 permissions:
@@ -31,7 +31,7 @@ jobs:
         run: |
           if [ -z "$CONTACT" ]; then echo "::warning::Variable CONTACT absente : le User-Agent n'a pas d'adresse de contact (Wikimedia la demande)"; fi
           npm i --no-save --silent sharp@0.33.5
-          node data/logos_fetch.mjs --max "${{ inputs.max || '150' }}"
+          node data/logos_fetch.mjs --max "${{ inputs.max || '600' }}"
       - name: Bilan
         run: node -e "const d=require('./data/diagnostic.json').logos;console.log(JSON.stringify(d))"
       - name: Enregistrement dans le dépôt
