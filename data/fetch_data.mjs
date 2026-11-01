@@ -115,7 +115,7 @@ export async function collectSec(fetchFn, c) {
   const s = toSeries(extractSec(doc));
   if (!s.years.length) throw new Error("aucun exercice annuel lisible");
   if (!nameMatches(c.legal || c.name, doc.entityName)) VERIF.push(`${c.name} : le code ${c.sec} renvoie à « ${doc.entityName} »`);
-  return { v: VERSION, devise2: true,
+  return { v: VERSION, devise2: true, dette3: true,
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, region: c.region, domain: c.domain, desc: c.desc, cik, legalName: doc.entityName || c.name,
     sector: c.sector, ...s,
     sources: [{ periodEnd: s.years[s.years.length - 1] + "", report: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=10-K`, json: factsUrl(cik) }],
@@ -188,7 +188,7 @@ export async function collectOne(fetchFn, c) {
   if (!reports.length) throw new Error(id ? "aucun rapport ESEF pour " + id.lei : "LEI introuvable pour " + c.isin);
   const merged = merge(reports), s = toSeries(merged);
   const caByYear = Object.fromEntries(Object.entries(merged.years).map(([y, r]) => [y, r.ca]));
-  return { v: VERSION, devise2: true, dette2: true, segments: bestSegments(segs, caByYear),
+  return { v: VERSION, devise2: true, dette2: true, dette3: true, segments: bestSegments(segs, caByYear),
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id ? id.lei : null, legalName: (id && id.legalName) || c.name,
     sector: c.sector, ...s,
     sources: used.map(u => ({ periodEnd: u.periodEnd, report: u.report, json: u.json, ...(u.amf ? { source: "AMF" } : {}) })), ...(amfTried ? { amfTried: true } : {}),
@@ -260,7 +260,7 @@ async function main() {
     if (!only && existsSync(file)) { // comptes récents : on garde (les comptes ne changent qu'une fois par an)
       const old = JSON.parse(readFileSync(file));
       const nd = old.fin && Array.isArray(old.fin.netDebt) ? old.fin.netDebt[old.fin.netDebt.length - 1] : null;
-      const detteDouteuse = !old.cik && !old.dette2 && nd != null && nd < 0; // 1/11 : « trésorerie nette » lue avant la lecture des emprunts par nature (Vinci) : relue une fois
+      const detteDouteuse = !old.dette3 && (nd == null || nd < 0); // 1/11 : dette absente ou « trésorerie nette » lue avant les étiquettes élargies (Vinci, Coca-Cola, Airbus) : relue une fois
       const deviseDouteuse = !old.devise2 && old.currency === "EUR" && /^(SE|DK|NO|GB|CH|PL|CZ|HU|IS)/.test(old.isin || c.isin || ""); // comptes non européens lus à tort en euros
       // Relecture étalée sur une semaine (selon l'identifiant) pour ne pas tout relire le même jour ;
       // comptes en retard d'un exercice (rapport attendu mais absent) : nouvel essai chaque jour pour la France (rapports AMF), tous les trois jours ailleurs.

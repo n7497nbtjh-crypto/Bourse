@@ -49,7 +49,7 @@ export const EXT = {
     /^ResultatDexploitation/i, /^(ProfitLossFromOrdinaryActivities|ResultatOperationnel|NetOperatingResult|CurrentOperatingIncome)/i],
   ebitdaExt: [/ebitda/i, /^MargeOperationnelleAvantAmortissements$/i],
   daExt: [/(depreciat|amortis|amortiz|amortissement)/i],
-  debtExt: [/(InterestBearingFinancialLiab|FinancialLiabilitiesIncludingDebtsExcludingObligations|^BorrowingsExcluding)/i],
+  debtExt: [/(InterestBearingFinancialLiab|FinancialLiabilitiesIncludingDebtsExcludingObligations|^BorrowingsExcluding|^(Long|Short)termFinancingLiabilities$)/i], // 1/11 : Airbus déclare ses emprunts en « financing liabilities » à long et court terme
 };
 const DA_EXCLUDE = /(RightOfUse|OfTangibleAssets|OfIntangibleAssets|CapitalizedDevelopment|Investment|Financed|Acquisition|Associates|Cost|Revenue|Other$|OnDisposal|Deferred|Reversal$)/i;
 const BASE_DIMS = new Set(["concept", "entity", "period", "unit", "language", "noteId"]);

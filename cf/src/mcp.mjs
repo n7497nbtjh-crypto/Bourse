@@ -280,6 +280,10 @@ async function ficheSociete(env, origin, ctx, B, c) {
   out.pea = peaSociete(c);
   const today = jourParis();
   out.prochaines_dates = B.events.filter(e => e.id === c.id && e.date >= today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 6).map(e => ({ date: e.date, type: e.type || null, libelle: e.label || null, estimee: !!e.estimee, source: e.source || null }));
+  // 1/11 : la preuve à la ligne près — chaque chiffre du dernier exercice relié à son emplacement exact dans le rapport officiel (data/ancres.mjs)
+  const anc = !c.missing ? await optionnel(charger(env, origin, `/data/ancres/${c.id}.json`, 18e5), null) : null;
+  if (anc && anc.y && anc.report) { const an = Object.keys(anc.y).sort().pop(), LB = { ca: "chiffre d'affaires", ebit: "résultat d'exploitation", net: "bénéfice net", eps: "bénéfice par action", dps: "dividende par action", equity: "capitaux propres", cash: "trésorerie", cfo: "flux de trésorerie d'exploitation", divPaid: "dividendes versés" };
+    out.preuves = Object.entries(anc.y[an] || {}).filter(([k]) => LB[k]).map(([k, id]) => ({ chiffre: LB[k], exercice: +an, lien_document: `${anc.report}#${id}` })); }
   out.sources = sourcesSite(origin, "/entreprise/" + c.id + (c.missing ? "" : "/comptes"), sources);
   out.avertissement = AVERT;
   // Texte lisible pour le modèle
@@ -292,6 +296,7 @@ async function ficheSociete(env, origin, ctx, B, c) {
     for (const r of out.reperes) L.push(`- ${r.libelle} : ${r.valeur_texte} · repère ${r.verdict} (${r.verdict_texte})${r.mediane_texte ? ` · médiane du secteur : ${r.mediane_texte}` : ""}. ${r.explication}`);
     if (out.historique) L.push(`\nHistorique (${c.currency}, millions) : ` + out.historique.map(h => `${h.annee} : ventes ${h.chiffre_affaires != null ? F0.format(h.chiffre_affaires) : "–"}, bénéfice ${h.benefice_net != null ? F0.format(h.benefice_net) : "–"}${h.marge_exploitation != null ? `, marge ${pct(h.marge_exploitation, 1, false)}` : ""}`).join(" ; ") + ".");
   }
+  if (out.preuves && out.preuves.length) L.push(`\nPreuves (chaque lien ouvre le rapport annuel officiel exactement sur le chiffre ; citez-les) : ` + out.preuves.map(p => `${p.chiffre} ${p.exercice} : ${p.lien_document}`).join(" ; "));
   if (out.bourse) L.push(`\nCours : ${pxFmt(out.bourse.cours, out.bourse.devise)}${out.bourse.variation_du_jour_pct != null ? ` (${out.bourse.variation_du_jour_pct > 0 ? "+" : ""}${F2.format(out.bourse.variation_du_jour_pct)} % sur la séance)` : ""}, ${P.source}${P.updated ? ", relevé du " + dLabel(String(P.updated)) : ""}.${out.bourse.capitalisation_eur ? ` Valeur en Bourse : ${capFmt(out.bourse.capitalisation_eur)}.` : ""}${out.bourse.per ? ` PER : ${F1.format(out.bourse.per)}${out.bourse.per_median_secteur ? ` (médiane du secteur : ${F1.format(out.bourse.per_median_secteur)}, ${out.bourse.per_position})` : ""}.` : ""}${out.bourse.rendement_dividende != null ? ` Rendement du dividende : ${pct(out.bourse.rendement_dividende, 1, false)}.` : ""}`);
   L.push(`\nPEA : ${out.pea.raison}`);
   if (out.prochaines_dates.length) L.push("Prochaines dates : " + out.prochaines_dates.map(e => `${dLabel(e.date)}, ${e.libelle || e.type}${e.estimee ? " (date estimée)" : ""}`).join(" ; ") + ".");

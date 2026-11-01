@@ -20,9 +20,9 @@ export const US_CONCEPTS = {
   cfo: ["NetCashProvidedByUsedInOperatingActivities"],
   capex: ["PaymentsToAcquirePropertyPlantAndEquipment", "PaymentsToAcquireProductiveAssets", "PaymentsToAcquireOilAndGasPropertyAndEquipment", "PaymentsForCapitalImprovements", "PaymentsToAcquireOtherPropertyPlantAndEquipment", "PaymentsToAcquireAndDevelopRealEstate"],
   da: ["DepreciationDepletionAndAmortization", "DepreciationAmortizationAndAccretionNet", "DepreciationAndAmortization"],
-  debtTotal: ["LongTermDebt", "DebtLongtermAndShorttermCombinedAmount"],
-  debtNC: ["LongTermDebtNoncurrent"],
-  debtC: ["LongTermDebtCurrent"],
+  debtTotal: ["LongTermDebt", "DebtLongtermAndShorttermCombinedAmount", "LongTermDebtAndCapitalLeaseObligationsIncludingCurrentMaturities"], // 1/11 : Coca-Cola et d'autres ne publient que l'étiquette « avec contrats de location-financement »
+  debtNC: ["LongTermDebtNoncurrent", "LongTermDebtAndCapitalLeaseObligations"],
+  debtC: ["LongTermDebtCurrent", "LongTermDebtAndCapitalLeaseObligationsCurrent"],
   debtShort: ["ShortTermBorrowings", "CommercialPaper"],
   leaseOp: ["OperatingLeaseLiability"],
   leaseFinNC: ["FinanceLeaseLiabilityNoncurrent"],

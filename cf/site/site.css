@@ -3397,3 +3397,12 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 /* 1/11 : la preuve à la ligne près (ancres ESEF) */
 .anc-ls{display:flex;flex-direction:column;gap:4px}.anc-l{font-weight:600;color:var(--g);text-decoration:underline;text-underline-offset:3px}.anc-n{display:block;color:var(--light);font-size:12px;margin-top:4px}
 .anc-p{margin:10px 0 0;font-size:14px}
+/* 1/11 : fiabilité des données */
+.fiab{display:inline-block;margin-left:6px;font-size:12.5px;vertical-align:middle}
+.fiab summary{display:inline-flex;align-items:center;gap:6px;cursor:pointer;list-style:none;padding:2px 10px;border-radius:99px;font-weight:600;background:var(--soft)}.fiab summary::-webkit-details-marker{display:none}
+.fiab summary i{width:8px;height:8px;border-radius:50%;background:var(--n)}
+.fiab-elevee summary{background:#E7F3EC;color:var(--g)}.fiab-elevee summary i{background:var(--g)}
+.fiab-moyenne summary{background:#FBF1DC;color:#8A5A00}.fiab-moyenne summary i{background:#E9B23C}
+.fiab-faible summary{background:#FBEAE4;color:var(--o)}.fiab-faible summary i{background:var(--o)}
+.fiab ul{margin:8px 0 0;padding:10px 12px 10px 28px;background:#fff;border:1px solid var(--rule);border-radius:12px;font-weight:400;color:var(--ink);display:block;max-width:420px}
+.fiab li{margin:3px 0}.fiab li.ok::marker{content:"✓  ";color:var(--g)}.fiab li.ko::marker{content:"!  ";color:var(--o);font-weight:700}

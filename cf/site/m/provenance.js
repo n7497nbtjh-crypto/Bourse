@@ -299,7 +299,7 @@ async function provHTML(key, ids) {
     <p class="prov-nat prov-n-${natN}"><b>${esc(nl[0])}.</b> ${esc(nl[1])}</p>
     ${warn.map(w => `<p class="prov-old">${esc(w)}</p>`).join("")}
     <dl class="prov-dl">${provRow("Formule", esc(I.formule))}${rows}${natNote ? provRow("À noter", esc(natNote)) : ""}${I.limite ? provRow("Limite", esc(I.limite)) : ""}</dl>
-    <p class="prov-ft"><a href="/methode">Notre méthode</a>${I.term && ALL[I.term] ? ` · <a href="/lexique#${I.term}">Définition</a>` : ""}</p>`;
+    <p class="prov-ft"><a href="/methode">Notre méthode</a> · <a href="/ia/connecter">Ces chiffres dans votre IA</a>${I.term && ALL[I.term] ? ` · <a href="/lexique#${I.term}">Définition</a>` : ""}</p>`;
 }
 
 /* 5e passage (B1) : le calcul avec les deux chiffres, pour chaque ratio (« eux estiment, nous prouvons »). s : fiche courte, c : comptes complets. */
@@ -326,12 +326,27 @@ function provCalcul(key, s, c) {
     default: return "";
   }
 }
-function provBadge(s, c) { // « Prouvé : N chiffres, N sources officielles » ; une estimation porte toujours le mot « estimé »
-  if (!c || !c.fin || s.missing) return "";
-  const n = Object.values(c.fin).filter(a => Array.isArray(a) && a.some(v => typeof v === "number")).length, src = (c.sources || []).filter(x => x.periodEnd).length, eodhd = (c.sources || []).some(x => x.source === "EODHD") || c.norme === "EODHD";
-  if (!n) return "";
-  return `<span class="rf-prouve ${eodhd ? "rf-prouve-f" : ""}" title="${eodhd ? "Comptes repris du fournisseur EODHD, pas lus par le site dans le document officiel" : "Chaque chiffre renvoie au document officiel (bouton i)"}"><i>${eodhd ? "Fournisseur" : "Prouvé"}</i> ${n} chiffre${n > 1 ? "s" : ""}, ${src} ${eodhd ? "exercice" : "document"}${src > 1 ? "s" : ""}${eodhd ? "" : " officiel" + (src > 1 ? "s" : "")}</span>`;
+function provBadge(s, c) { // 1/11 (Romain) : fiabilité des données de la fiche, en un mot, et le détail au toucher
+  const F = fiabilite(s, c); if (!F) return "";
+  return `<details class="fiab fiab-${F.niv}" data-fiab="${esc(s.id)}"><summary><i aria-hidden="true"></i>Données : fiabilité ${F.mot}</summary><ul>${F.L.map(([ok, t]) => `<li class="${ok ? "ok" : "ko"}">${esc(t)}</li>`).join("")}<li class="fiab-anc" hidden></li></ul></details>`;
 }
+// Le niveau dit à quel point le lecteur peut se fier aux chiffres affichés : source lue par le site, comptes récents, complets, sans saut suspect
+function fiabilite(s, c) {
+  if (!c || !c.fin || s.missing) return null;
+  const L = [], src = (c.sources || [])[0] || {}, eodhd = (c.sources || []).some(x => x.source === "EODHD") || c.norme === "EODHD";
+  const off = !eodhd; L.push([off, off ? (c.cik ? "Comptes lus par le site dans les rapports déposés à la SEC" : "Comptes lus par le site dans le rapport annuel officiel (ESEF)") : "Comptes repris d'un fournisseur de données, pas lus dans le document officiel"]);
+  const age = provComptesAge(c, s); L.push([!age.vieux, age.mois == null ? "Date de clôture inconnue" : age.vieux ? `Derniers comptes clos il y a ${age.mois} mois : des comptes plus récents existent peut-être` : `Derniers comptes clos il y a ${age.mois} mois`]);
+  const n = c.years ? c.years.length - 1 : -1, CLES = isBank(s) ? ["net", "equity", "eps", "dps"] : ["ca", "ebit", "net", "equity", "cash", "debt", "cfo", "eps"];
+  const pres = CLES.filter(k => c.fin[k] && c.fin[k][n] != null).length; L.push([pres >= CLES.length - 1, `${pres} indicateurs clés sur ${CLES.length} publiés sous la forme standard`]);
+  const av = AVERIF && AVERIF[s.id] ? Object.keys(AVERIF[s.id]).length : 0; L.push([!av, av ? `${av} chiffre${av > 1 ? "s" : ""} « à vérifier » (saut inhabituel d'une année à l'autre)` : "Aucun saut suspect d'une année à l'autre"]);
+  const ko = L.filter(x => !x[0]).length, niv = !off || ko >= 2 ? "faible" : ko === 1 ? "moyenne" : "elevee";
+  return { niv, mot: { elevee: "élevée", moyenne: "moyenne", faible: "faible" }[niv], L };
+}
+document.addEventListener("toggle", e => { // à l'ouverture : combien de chiffres sont reliés à leur ligne dans le document
+  const d = e.target; if (!d.matches || !d.matches("details.fiab") || !d.open || typeof ancres !== "function") return;
+  const li = d.querySelector(".fiab-anc"); if (!li || li.dataset.on) return; li.dataset.on = "1";
+  ancres(d.dataset.fiab).then(a => { const an = a && a.y ? Object.keys(a.y).sort().pop() : null, n = an ? Object.keys(a.y[an]).length : 0; if (n) { li.hidden = false; li.className = "ok"; li.textContent = `${n} chiffres de ${an} reliés à leur ligne exacte dans le rapport officiel (bouton i)`; } });
+}, true);
 /* Ouverture : bulle partagée #pop (la même que les définitions). Survol (souris), focus clavier, toucher. */
 let PROV_OPEN = null, PROV_MODE = null, PROV_T = 0, PROV_SEQ = 0;
 const provHover = () => { try { return matchMedia("(hover: hover) and (pointer: fine)").matches; } catch (e) { return false; } };
