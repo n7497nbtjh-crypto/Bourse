@@ -2869,7 +2869,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "fb0d65e6a9043038", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "9f6812dab72a4de5", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -2917,6 +2917,8 @@ function tete(html, { title, desc, url, statut, image = null }) {
     `<meta property="og:image:alt" content="${image && image.alt ? esc2(image.alt) : "bilan. La Bourse, comptes \xE0 l'appui : les comptes officiels des entreprises cot\xE9es, expliqu\xE9s simplement."}">`,
     '<meta name="twitter:card" content="summary_large_image">',
     ...DONNEES.map((f) => `<link rel="preload" href="/data/${f}.json" as="fetch" crossorigin>`),
+    ...["/api/cours", "/data/fx.json", "/data/a-verifier.json", "/logos/index.json"].map((u) => `<link rel="preload" href="${u}" as="fetch" crossorigin>`),
+    // 1/11 : demandés au démarrage, auparavant seulement après le script principal (une seconde de plus sur téléphone)
     // Avant l'affichage de la page : la zone de contenu garde la hauteur de l'écran (le pied de page ne saute plus) et un trait discret indique le chargement
     '<style>#app:empty{min-height:calc(100vh - 56px);padding-top:30vh;box-sizing:border-box}#app:empty::after{content:"";display:block;width:64px;height:3px;margin:0 auto;border-radius:3px;background:#111214;opacity:.22;animation:bilanCharge .9s ease-in-out infinite alternate}@keyframes bilanCharge{from{transform:scaleX(.25)}to{transform:scaleX(1)}}@media (prefers-reduced-motion:reduce){#app:empty::after{animation:none}}</style>'
   ].join(`
