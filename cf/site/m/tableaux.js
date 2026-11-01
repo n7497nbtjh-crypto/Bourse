@@ -175,7 +175,7 @@ function tblxPhrase(r, Y, cur) {
       const tot = r.first > 0 && r.last > 0 ? tblxRel(r.last / r.first - 1) : "";
       const w = d => d > 0 ? "En hausse" : d < 0 ? "En baisse" : "Stable";
       if (r.dir && st >= 2 && st === r.n - 1) t = `${w(r.dir)} chaque année depuis ${yf} : de ${F(r.first)} à ${F(r.last)}${tot ? `, soit ${tot}` : ""}.`; // 1/11 : on dit d'où l'on part et où l'on arrive
-      else if (r.dir && st >= 2) t = `${w(r.dir)} ${st} ans de suite, depuis ${Y[r.li - st]} : ${F(r.vals[r.li - st])} puis ${F(r.last)}${tot && r.n >= 3 ? ` (${tot} depuis ${yf})` : ""}.`;
+      else if (r.dir && st >= 2) { const v0 = r.vals[r.li - st], tt = v0 > 0 && r.last > 0 ? tblxRel(r.last / v0 - 1) : ""; t = `${w(r.dir)} ${st} ans de suite : ${F(v0)} en ${Y[r.li - st]}, ${F(r.last)} en ${yl}${tt ? ` (${tt})` : ""}.`; } // 1/11 : l'écart sur la même période, plus de comparaison avec une année plus ancienne (trompeuse)
       else {
         const one = tblxChange(r.kind, r.prev, r.last), totDir = tblxDir(r.kind, r.first, r.last);
         t = r.prev == null ? `${F(r.last)} en ${yl}.` : `${w(r.dir)} sur un an${one && r.dir ? ` (${one})` : ""}${tot && r.n >= 3 ? `${totDir && r.dir && totDir !== r.dir ? ", mais" : ","} ${tot} depuis ${yf}` : ""}.`;

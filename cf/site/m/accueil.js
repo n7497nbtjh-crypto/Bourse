@@ -347,7 +347,7 @@ const ACC_VOIES = [
 function accVoiesHTML() {
   return `<ol class="acc-voies" aria-label="Quatre entrées">${ACC_VOIES.map(([h, t, d], i) => `<li><a href="${h}"><span class="acc-vn">0${i + 1}</span><span class="acc-vt"><b>${t}</b><span>${d}</span></span><span class="acc-va" aria-hidden="true">→</span></a></li>`).join("")}</ol>`;
 }
-const ACC_EX_TOUS = [["lvmh", "LVMH"], ["totalenergies", "TotalEnergies"], ["apple", "Apple"], ["loreal", "L'Oréal"], ["microsoft", "Microsoft"], ["asml", "ASML"], ["sanofi", "Sanofi"], ["hermes", "Hermès"], ["alphabet", "Alphabet"], ["danone", "Danone"], ["airbus", "Airbus"], ["novo-nordisk", "Novo Nordisk"], ["amazon", "Amazon"], ["michelin", "Michelin"], ["bnp-paribas", "BNP Paribas"]];
+const ACC_EX_TOUS = [["lvmh", "LVMH"], ["apple", "Apple"], ["loreal", "L'Oréal"], ["microsoft", "Microsoft"], ["asml", "ASML"], ["sanofi", "Sanofi"], ["hermes", "Hermès"], ["alphabet", "Alphabet"], ["danone", "Danone"], ["novo-nordisk", "Novo Nordisk"], ["amazon", "Amazon"], ["michelin", "Michelin"], ["bnp-paribas", "BNP Paribas"]]; // 1/11 : TotalEnergies et Airbus retirés : leur résultat d'exploitation n'est pas publié sous la forme standard, l'exemple n'aurait pas de marge
 const ACC_EX = (() => { // 31/10 (Romain) : l'exemple de l'accueil change chaque jour ; trois entreprises connues, tirées de la liste selon la date
   const j = Math.floor(Date.now() / 864e5), n = ACC_EX_TOUS.length, out = [];
   for (let i = 0; i < 3; i++) out.push(ACC_EX_TOUS[(j * 7 + i * 5) % n]);

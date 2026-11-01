@@ -575,7 +575,7 @@ function cmprBarres(t, X, ref, gagne) {
     const tous = [...vs, med].filter(v => v != null); if (tous.length < 2) return;
     const lo = Math.min(0, ...tous), hi = Math.max(0, ...tous); if (!(hi > lo)) return;
     const pos = v => ((v - lo) / (hi - lo) * 100), z = pos(0);
-    const barre = (v, cls) => { const a = Math.min(z, pos(v)), b = Math.max(z, pos(v)); return `<span class="cmpr-bar${cls ? " " + cls : ""}" aria-hidden="true"><i style="left:${a.toFixed(1)}%;width:${Math.max(1.5, b - a).toFixed(1)}%"></i>${med != null ? `<b style="left:${pos(med).toFixed(1)}%"></b>` : ""}</span>`; };
+    const barre = (v, cls) => { const a = Math.min(z, pos(v)), b = Math.max(z, pos(v)); return `<span class="cmpr-bar${cls ? " " + cls : ""}" aria-hidden="true">${lo < 0 ? `<em style="left:${z.toFixed(1)}%" title="zéro"></em>` : ""}<i style="left:${a.toFixed(1)}%;width:${Math.max(1.5, b - a).toFixed(1)}%"></i>${med != null ? `<b style="left:${pos(med).toFixed(1)}%"></b>` : ""}</span>`; };
     vs.forEach((v, j) => { if (v != null && cells[j]) cells[j].insertAdjacentHTML("beforeend", barre(v)); });
     if (medTd && med != null) medTd.insertAdjacentHTML("beforeend", barre(med, "cmpr-bar-med"));
   });

@@ -26,6 +26,10 @@ export const CONCEPTS = {
   debtInstrC: ["ifrs-full:CurrentDebtInstrumentsIssued"],
   debtFinNC: ["ifrs-full:NoncurrentFinancialLiabilities"],
   debtFinC: ["ifrs-full:CurrentFinancialLiabilities"],
+  // 1/11 : emprunts déclarés par nature (obligations, autres emprunts, prêts bancaires) sans le total « Borrowings ».
+  // Vinci 2025 : 24,8 Md€ d'obligations et 5,2 Md€ d'autres emprunts à long terme n'étaient pas lus (dette sous-estimée, « trésorerie nette » fausse).
+  dNcBonds: ["ifrs-full:NoncurrentPortionOfNoncurrentBondsIssued"], dNcOther: ["ifrs-full:NoncurrentPortionOfOtherNoncurrentBorrowings"], dNcBank: ["ifrs-full:NoncurrentPortionOfNoncurrentBankLoans", "ifrs-full:NoncurrentPortionOfNoncurrentLoansReceived"],
+  dCBonds: ["ifrs-full:CurrentPortionOfNoncurrentBondsIssued"], dCOther: ["ifrs-full:CurrentPortionOfOtherNoncurrentBorrowings"], dCBank: ["ifrs-full:CurrentPortionOfNoncurrentBankLoans", "ifrs-full:CurrentPortionOfNoncurrentLoansReceived"],
   // Dettes locatives (IFRS 16) : exclues de « Borrowings » par la plupart des sociétés, alors que
   // leur propre définition de la dette nette les inclut. Collectées à part pour pouvoir le dire.
   leaseNC: ["ifrs-full:NoncurrentLeaseLiabilities"],
@@ -121,6 +125,9 @@ export function extract(doc) {
     if (r.capexPpe != null || r.capexInt != null) r.capex = Math.abs(r.capexPpe || 0) + Math.abs(r.capexInt || 0);
     if (r.cfo != null && r.capex != null) r.fcf = r.cfo - r.capex;
     // Dette financière : total publié, sinon part à long terme + part à court terme
+    const somme = ks => ks.some(k => r[k] != null) ? ks.reduce((a, k) => a + (r[k] || 0), 0) : null;
+    if (r.debtLong == null) r.debtLong = somme(["dNcBonds", "dNcOther", "dNcBank"]); // emprunts déclarés par nature
+    if (r.debtCurLong == null) r.debtCurLong = somme(["dCBonds", "dCOther", "dCBank"]);
     const short = r.debtShortAll != null ? r.debtShortAll : (r.debtShort != null || r.debtCurLong != null) ? (r.debtShort || 0) + (r.debtCurLong || 0) : null;
     let debt = r.debtTotal != null ? r.debtTotal : null, def = debt != null ? "emprunts, total publié" : null;
     if (debt == null && (r.debtLong != null || short != null)) { debt = (r.debtLong || 0) + (short || 0); def = "emprunts à long terme + part à moins d'un an"; }
@@ -145,7 +152,7 @@ export function extract(doc) {
     if (r.tax != null) r.tax = Math.abs(r.tax);
     // Dividende par action estimé quand il n'est pas publié : dividendes versés ÷ nombre d'actions (résultat net ÷ BNPA)
     if (r.dps == null && r.divPaid != null && r.eps && r.net) { const shares = r.net / r.eps; if (shares > 0) r.dpsEst = r.divPaid / shares; }
-    for (const k of ["capexPpe", "capexInt", "debtTotal", "debtLong", "debtShortAll", "debtShort", "debtCurLong", "debtInstrNC", "debtInstrC", "debtFinNC", "debtFinC", "debtExtSum", "daExtMax", "ebitdaExt", "ebitdaExtExt", "da", "leaseNC", "leaseC", "leaseAll"]) delete r[k];
+    for (const k of ["dNcBonds", "dNcOther", "dNcBank", "dCBonds", "dCOther", "dCBank", "capexPpe", "capexInt", "debtTotal", "debtLong", "debtShortAll", "debtShort", "debtCurLong", "debtInstrNC", "debtInstrC", "debtFinNC", "debtFinC", "debtExtSum", "daExtMax", "ebitdaExt", "ebitdaExtExt", "da", "leaseNC", "leaseC", "leaseAll"]) delete r[k];
   }
   return { currency: currency || anyCur || "EUR", fyEnd, years, tags, norme: "IFRS" };
 }

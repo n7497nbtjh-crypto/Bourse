@@ -188,7 +188,7 @@ export async function collectOne(fetchFn, c) {
   if (!reports.length) throw new Error(id ? "aucun rapport ESEF pour " + id.lei : "LEI introuvable pour " + c.isin);
   const merged = merge(reports), s = toSeries(merged);
   const caByYear = Object.fromEntries(Object.entries(merged.years).map(([y, r]) => [y, r.ca]));
-  return { v: VERSION, devise2: true, segments: bestSegments(segs, caByYear),
+  return { v: VERSION, devise2: true, dette2: true, segments: bestSegments(segs, caByYear),
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: id ? id.lei : null, legalName: (id && id.legalName) || c.name,
     sector: c.sector, ...s,
     sources: used.map(u => ({ periodEnd: u.periodEnd, report: u.report, json: u.json, ...(u.amf ? { source: "AMF" } : {}) })), ...(amfTried ? { amfTried: true } : {}),
@@ -259,6 +259,8 @@ async function main() {
     const file = new URL(`societes/${c.id}.json`, OUT);
     if (!only && existsSync(file)) { // comptes récents : on garde (les comptes ne changent qu'une fois par an)
       const old = JSON.parse(readFileSync(file));
+      const nd = old.fin && Array.isArray(old.fin.netDebt) ? old.fin.netDebt[old.fin.netDebt.length - 1] : null;
+      const detteDouteuse = !old.cik && !old.dette2 && nd != null && nd < 0; // 1/11 : « trésorerie nette » lue avant la lecture des emprunts par nature (Vinci) : relue une fois
       const deviseDouteuse = !old.devise2 && old.currency === "EUR" && /^(SE|DK|NO|GB|CH|PL|CZ|HU|IS)/.test(old.isin || c.isin || ""); // comptes non européens lus à tort en euros
       // Relecture étalée sur une semaine (selon l'identifiant) pour ne pas tout relire le même jour ;
       // comptes en retard d'un exercice (rapport attendu mais absent) : nouvel essai chaque jour pour la France (rapports AMF), tous les trois jours ailleurs.
@@ -266,7 +268,7 @@ async function main() {
       const lastY = (old.years || [])[(old.years || []).length - 1];
       const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? (old.amfTried ? 20 : 0) : 70) * 3600e3; // France : premier essai AMF immédiat
       const sansCA = !old.fin || !Array.isArray(old.fin.ca) || old.fin.ca[old.fin.ca.length - 1] == null; // chiffre d'affaires absent : relu (étiquettes élargies le 30/10 : foncières, banques, services publics)
-      if (old.v === VERSION && !deviseDouteuse && !late && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      if (old.v === VERSION && !deviseDouteuse && !detteDouteuse && !late && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);
