@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>bilan. maquette fiche Hermès</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@600&display=swap">
+<style>
+:root{--ink:#111;--y:#FFE14D;--p:#FF7EB3;--b:#9DB0FF;--g:#00B37A;--r:#FF4B2B}
+*{box-sizing:border-box;margin:0;padding:0}a{color:inherit;text-decoration:none}
+body{background:#fff;color:var(--ink);font:400 16px/1.5 Inter,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.B{font-family:"Bricolage Grotesque"}
+.w{max-width:1180px;margin:0 auto;padding:0 32px}
+.stk{display:inline-block;font:800 14px "Bricolage Grotesque";padding:5px 13px;border-radius:9px;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transform:rotate(-3deg)}
+.hand{font:600 25px/1 Caveat,cursive;color:#B3261E}
+header .w{display:flex;align-items:center;gap:30px;height:70px}
+.logo{font:800 28px "Bricolage Grotesque";letter-spacing:-.07em;background:var(--y);padding:0 9px 4px;border-radius:9px;transform:rotate(-2deg)}
+nav{display:flex;gap:24px;font:600 15px Inter;margin-left:auto}
+.srch{display:flex;align-items:center;gap:10px;border:2px solid var(--ink);border-radius:999px;height:42px;padding:0 18px;width:260px;color:#777;font:600 14px Inter}
+.crumb{font:600 13px Inter;color:#666;padding:6px 0 14px}
+/* en-tête */
+.hero{background:var(--y);border-radius:30px;margin:0 20px;padding:36px 0 40px}
+.top{display:grid;grid-template-columns:1fr auto;gap:30px;align-items:start}
+.id{display:flex;gap:18px;align-items:center}
+.id .lg{width:72px;height:72px;border-radius:50%;background:#fff;border:2px solid var(--ink);display:grid;place-items:center;overflow:hidden}
+.id .lg img{width:60px}
+.id h1{font:800 72px/.9 "Bricolage Grotesque";letter-spacing:-.06em}
+.id p{font:600 16px Inter;margin-top:8px}
+.tags{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+.tags span,.tags a{font:700 13.5px Inter;border:2px solid var(--ink);border-radius:999px;padding:5px 13px;background:#fff}
+.tags a.k{background:var(--ink);color:#fff}
+.price{background:#fff;border:3px solid var(--ink);border-radius:22px;padding:18px 22px;box-shadow:6px 6px 0 var(--ink);min-width:300px}
+.price b{display:block;font:800 40px/1 "Bricolage Grotesque";letter-spacing:-.04em}
+.price .chg{font:800 15px Inter;color:#00875A;margin-top:4px}
+.price small{display:block;font:600 12px Inter;color:#666;margin-top:2px}
+.rng{margin-top:14px;font:600 12px Inter;color:#555}
+.rng .t{position:relative;height:8px;border-radius:4px;background:#eee;margin:6px 0 4px}
+.rng .t b{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--ink);border:3px solid #fff}
+.rng div.l{display:flex;justify-content:space-between}
+.verdict{margin-top:30px;display:flex;align-items:baseline;gap:20px;flex-wrap:wrap}
+.verdict h2{font:800 54px/1 "Bricolage Grotesque";letter-spacing:-.05em}
+.verdict h2 span{color:#C2260E}
+.verdict .hand{transform:rotate(-3deg)}
+.five{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:22px}
+.five>div{background:#fff;border:2px solid var(--ink);border-radius:18px;padding:14px 14px 14px}
+.five small{display:block;font:700 13px Inter;color:#555}
+.five strong{display:block;font:800 30px/1 "Bricolage Grotesque";letter-spacing:-.04em;margin:6px 0 2px}
+.five .q{font:600 12.5px Inter;color:#444}
+.g{color:#00875A}.o{color:#D23A1C}.n{color:#555}
+.ms{height:8px;border-radius:4px;background:linear-gradient(90deg,#FFD0C4 50%,#BFF0DA 50%);position:relative;margin:14px 0 8px}
+.ms:before{content:"";position:absolute;left:50%;top:-3px;width:2px;height:14px;background:var(--ink)}
+.ms b{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:var(--ink);border:3px solid #fff}
+.five em{display:block;font:600 11.5px Inter;color:#666;font-style:normal}
+.five .lnk{display:block;margin-top:10px;font:700 12px Inter;border-top:1px solid #ddd;padding-top:8px}
+.acts{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}
+.acts a{font:800 14.5px Inter;border:2px solid var(--ink);border-radius:999px;padding:10px 18px;background:#fff}
+.acts a.k{background:var(--ink);color:#fff}
+/* sections */
+.sec{padding-top:70px}
+.sec h2{font:800 46px/1 "Bricolage Grotesque";letter-spacing:-.05em;margin-top:14px}
+.sec .lead{font:500 16px Inter;color:#444;margin-top:8px;max-width:60ch}
+.tri{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+.ch{border:2px solid var(--ink);border-radius:24px;padding:22px 22px 18px}
+.ch h3{font:800 22px "Bricolage Grotesque";letter-spacing:-.03em}
+.ch .big{font:800 40px/1 "Bricolage Grotesque";letter-spacing:-.05em;margin-top:8px}
+.ch .big small{font:700 14px Inter;letter-spacing:0;margin-left:6px}
+.bars{display:flex;gap:10px;align-items:flex-end;height:130px;margin-top:16px}
+.bars div{flex:1;text-align:center;font:700 12px Inter;color:#555}
+.bars i{display:block;border-radius:10px 10px 4px 4px;border:2px solid var(--ink);background:#fff;margin:4px 0 6px}
+.bars div:last-child i{background:var(--y)}
+.bars b{display:block;font:800 14px "Bricolage Grotesque";color:var(--ink)}
+.ch .pv{display:block;margin-top:12px;font:700 12.5px Inter;border-top:2px solid var(--ink);padding-top:10px}
+.ch p.note{font:600 13px Inter;color:#444;margin-top:8px}
+/* face aux autres */
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+.cmp .ch{background:#FFF6CC}
+.cmp .ch:nth-child(2){background:#E7ECFF}.cmp .ch:nth-child(3){background:#FFE9F2}
+.rows{display:grid;gap:8px;margin-top:14px;position:relative}
+.row{display:grid;grid-template-columns:96px 1fr;align-items:center;gap:8px;font:700 13px Inter}
+.row i{display:flex;align-items:center;justify-content:flex-end;height:24px;border-radius:7px;border:2px solid var(--ink);background:#fff;padding:0 8px;font:800 12.5px Inter;font-style:normal;min-width:44px}
+.row.me i{background:var(--ink);color:#fff}
+.row.md i{background:transparent;border-style:dashed}
+.row.na span{color:#999}
+.row.na i{border:0;background:none;color:#999;justify-content:flex-start;font-weight:600}
+.cta2{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-top:18px;border:2px solid var(--ink);border-radius:20px;padding:14px 20px;font:700 15px Inter}
+.cta2 a{background:var(--ink);color:#fff;border-radius:999px;padding:10px 18px;font-weight:800}
+/* métier */
+.met{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:28px}
+.met div{border-radius:24px;padding:24px}
+.met div:nth-child(1){background:#DDF6EA}.met div:nth-child(2){background:#FFF6CC}.met div:nth-child(3){background:#FFE9F2}
+.met small{font:800 13px Inter}
+.met p{font:700 19px/1.35 "Bricolage Grotesque";letter-spacing:-.02em;margin-top:10px}
+/* agenda */
+.tl{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:28px;border:2px solid var(--ink);border-radius:24px;overflow:hidden}
+.tl div{padding:20px 22px}.tl div+div{border-left:2px solid var(--ink)}
+.tl .d{font:800 30px/1 "Bricolage Grotesque";letter-spacing:-.04em}
+.tl small{display:block;font:700 12.5px Inter;color:#555;margin-bottom:8px}
+.tl p{font:600 15px Inter;margin-top:6px}
+.tl .past{background:#F4F3EF}
+.tl a{display:inline-block;margin-top:8px;font:800 13px Inter;text-decoration:underline;text-decoration-color:var(--y);text-decoration-thickness:3px}
+.warn{font:600 13px Inter;color:#555;margin-top:12px}
+/* preuve */
+.proof{margin-top:70px;display:flex;align-items:center;gap:22px;background:var(--ink);color:#fff;border-radius:24px;padding:22px 28px}
+.proof p{font:600 16.5px/1.4 Inter;flex:1}.proof p b{color:var(--y)}
+.proof a{flex:none;font:800 14.5px Inter;background:var(--y);color:var(--ink);padding:12px 18px;border-radius:999px}
+/* tous les chiffres */
+.all{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.all a{display:flex;align-items:center;gap:10px;border:2px solid var(--ink);border-radius:999px;padding:10px 18px;font:800 15px Inter}
+.all a span{font:600 12.5px Inter;color:#666}
+.all a:after{content:"+";font:800 18px Inter;margin-left:4px}
+/* question */
+.ask{margin:70px 20px 0;background:#3D5BFF;color:#fff;border-radius:30px;padding:44px 0}
+.ask h2{font:800 42px/1 "Bricolage Grotesque";letter-spacing:-.05em}
+.ask .qs{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.ask .qs a{background:#fff;color:var(--ink);border:2px solid var(--ink);border-radius:999px;padding:10px 18px;font:700 15px Inter;box-shadow:3px 3px 0 var(--ink)}
+.ask p{font:600 13px Inter;margin-top:16px;opacity:.85}
+footer{padding:30px 32px 50px;text-align:center;font:500 12.5px Inter;color:#777}
+@media (max-width:760px){
+  .w{padding:0 16px}nav,.srch{display:none}
+  .hero{margin:0 8px;border-radius:24px;padding:26px 0 28px}
+  .top{grid-template-columns:1fr}.id .lg{width:56px;height:56px}.id h1{font-size:52px}
+  .price{min-width:0}
+  .verdict h2{font-size:38px}
+  .five{grid-template-columns:1fr 1fr}.five>div:last-child{grid-column:1/-1}
+  .five strong{font-size:26px}
+  .sec h2{font-size:34px}
+  .tri,.cmp,.met{grid-template-columns:1fr}
+  .tl{grid-template-columns:1fr}.tl div+div{border-left:0;border-top:2px solid var(--ink)}
+  .proof{flex-direction:column;align-items:flex-start}
+  .ask{margin:56px 8px 0;border-radius:24px;padding:32px 0}.ask h2{font-size:32px}
+  .cta2{flex-direction:column;align-items:flex-start}
+}
+.five small{display:block;font:800 16px "Bricolage Grotesque";letter-spacing:-.02em;color:#111}
+.ms i{position:absolute;left:50%;top:-19px;transform:translateX(-50%);font:700 10px Inter;font-style:normal;color:#555;white-space:nowrap}
+.ms{margin-top:24px}
+.five>div{cursor:pointer;transition:transform .12s,box-shadow .12s}
+.five>div.on{box-shadow:5px 5px 0 var(--ink);transform:translate(-2px,-2px)}
+.five .lnk{cursor:pointer}.five>div.on .lnk{color:#111}
+.why{margin-top:14px;background:#fff;border:2px solid var(--ink);border-radius:20px;padding:20px 24px;display:grid;grid-template-columns:200px 1fr;gap:20px;align-items:start}
+.why h4{font:800 24px/1.05 "Bricolage Grotesque";letter-spacing:-.03em}
+.why p{font:500 16px/1.55 Inter;margin:0 0 8px}.why p b{font-weight:800}
+.why small{display:block;font:600 12.5px Inter;color:#666;margin-top:4px}
+.svgc{width:100%;height:auto;display:block;margin-top:14px;overflow:visible}
+.mdl{position:absolute;top:-6px;bottom:-6px;border-left:2px dashed var(--ink);z-index:2}
+.mdl span{position:absolute;top:-24px;left:50%;transform:translateX(-50%);background:var(--ink);color:#fff;font:800 11px Inter;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.rows{margin-top:36px}
+.row{grid-template-columns:96px 1fr}
+.row .bw{display:flex;align-items:center;gap:6px}
+.row .bw i{min-width:0;padding:0}
+.row .bw b{font:800 12.5px Inter;white-space:nowrap}
+.track{position:relative}
+@media (max-width:760px){.why{grid-template-columns:1fr;gap:8px}}
+.cr{display:grid;gap:9px;margin-top:40px;position:relative}
+.cr .rw{display:grid;grid-template-columns:78px 1fr 64px;align-items:center;gap:8px;font:700 13px Inter}
+.cr .tk{position:relative;height:24px}
+.cr .tk i{position:absolute;top:0;height:24px;border:2px solid var(--ink);border-radius:7px;background:#fff}
+.cr .rw.me i{background:var(--ink)}.cr .rw.neg i{background:#FFD0C4}
+.cr .rw b{font:800 12.5px Inter;white-space:nowrap}
+.cr .rw.na{color:#999}.cr .rw.na b{font-weight:600;color:#999}
+.cr .md{position:absolute;top:-8px;bottom:-6px;border-left:2px dashed var(--ink);z-index:2}
+.cr .md span{position:absolute;top:-22px;left:0;transform:translateX(-50%);background:var(--ink);color:#fff;font:800 11px Inter;padding:2px 8px;border-radius:6px;white-space:nowrap}
+.cr .z{position:absolute;top:-4px;bottom:-4px;border-left:1.5px solid #999}
+</style></head><body>
+<header><div class="w"><a class="logo">bilan.</a><nav><a>Apprendre</a><a>Marchés</a><a>Outils</a><a>Mon espace</a></nav><div class="srch">Une entreprise ?</div></div></header>
+<div class="w crumb">Entreprises › Consommation › Hermès</div>
+
+<section class="hero"><div class="w">
+  <div class="top">
+    <div>
+      <div class="id"><span class="lg"><img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAACXBIWXMAAAsTAAALEwEAmpwYAAAD50lEQVR4nO2W64+fUxDHP/tb1jVtxCUioXF7Qyuo3QjRNiRuFcQlbpEKEQka6p5NQ1AvJBIi27omLgmv1BJaZYUSW7csWrVlaTURl7Rki1CqXXLkc2Ty5PEPMN/kye935sycZ+Y7c2YeSCQSiUQikUgkEolEIpFIJBKJRCKRSPx/0AVs59PVkG8PdDf0O8o76tSnyprnxjPjXpsP3S17neBfU17QBzwHDAFzlO3Q8q5ivzcwKaw75c/nwPvAp8CycOh6YIW/Dyu/GfgWGAbWAF9ov8bnXPUuAb5WbxQY8yn/7wZ2CY7dBnzlu94GDgoO1rOK3TvAl8BhOl58Xu07VvkUXz4DBhsknKGvvwE/Aw8BS4G5ZfN+YKOB9WtwMPAUMAF8BFyq/DSZ/lPWB4AHgUeUzVNvJvCyskH1HgCeVLYwOHcW8Aawzb1CCFZDCXRE+SbgMWCKewuAb4DvgUXAo8B9wHvABkkuOFz7EvCpxjKq7PbqxAc6GpmfDGwNQVVGj9F4egiix+xdFGS96vUGnYK7gO8aZTwb2Cy5Jcs7B/kvytd7zaKPS60Mwt75wFvATq6v0489g2/lKvwEzK+CkuXlwF5mv7B8pIbXNwKYpfxCy3W6B9aAalBHqzfD9a6e8apkxUDOVPdsSb9A+ZD6862AnobdMq/ugWZ6qonqCr3rRM9epL+VmLK/YyXgTZX+sBTLs0XZ3EYFzFS+NehUJmMj7Aul+4Olus2rNrWRtdnqTjGrJeg9lJX7e4MZ624Q8Iw6v/v7I7BPSEbFrcHXcs67NsyuqjDiNZhlNspdOa9xrysBM5RfDRxrX9jfvch8JeBe4Cr1Sw/41b02AvYFTrFRLZY4vKubWggoZK3Tj5OA4xvNL2I34+oPCb+zbn4MPN/SAyZkv+0K9Iagy94VwLTwwnoF+hrkjNuF45mnq1srY6XrMjHwd7zlCgw5DQjkHAFcHnQL8Ve2XNHSlEvF/1MBpasTGJyswrX/0gSPCsFOajTMtiZY7UuTe6JBwMnqHur6JteHuF7gpOo0CFgSmmBPsN0S5v1Lln2JJ1bdLb7j79Gx0ZFSjAsO0MlSAR86i2upvqLhYm0HzGiRXaPeccCLypZIWsUnToF5IfuvhdFaqmh34DL352iz2ffsZ7bv0OcN+lEyeo9jcDwEPOjZI06pE4AblT1dHRq27F4I2RtzMozZQfE6lHH0uvqj2q/0Q+Qc9S4G1trM1jbG44AfLM+67g+662x6MVMLfc9yO/40K2HYoFa4v1pfVklkmTo1weUb4XEresKmWWSVpEQikUgkEolEIpFIJBKJRCKRSCQSiUSC/zj+AmpvFI/MC42TAAAAAElFTkSuQmCC" alt=""></span><div><h1>Hermès</h1><p>Maroquinerie (sacs Birkin, Kelly), soie, prêt-à-porter, parfums.</p></div></div>
+      <div class="tags"><span>Consommation</span><span>France · Euronext · RMS</span><span>Éligible au PEA ✓</span></div>
+    </div>
+    <div class="price"><b>1 293,50 €</b><div class="chg">+2,17 % vendredi</div><small>Cours différé, clôture du vendredi 30 octobre</small>
+      <div class="rng">Sur un an<div class="t"><b style="left:6%"></b></div><div class="l"><span>1 228 €</span><span>2 300 €</span></div></div></div>
+  </div>
+
+  <div class="verdict"><span class="stk" style="background:#fff">Le verdict</span><h2>Très rentable, sans dette, <span>chère.</span></h2></div>
+
+  <div class="five">
+    <div><small>Croissance</small><strong class="g">+5,5 %</strong><span class="q">ventes 2025</span><div class="ms"><i>médiane</i><b style="left:64%"></b></div><em>secteur : +3,5 % · 155e sur 428</em><a class="lnk">Pourquoi ?</a></div>
+    <div><small>Marge</small><strong class="g">41 €</strong><span class="q">gardés sur 100 € de ventes</span><div class="ms"><i>médiane</i><b style="left:99%"></b></div><em>secteur : 8 € · 5e sur 404</em><a class="lnk">Pourquoi ?</a></div>
+    <div><small>Dette</small><strong class="g">Aucune</strong><span class="q">12,2 Md€ de trésorerie nette</span><div class="ms"><i>médiane</i><b style="left:87%"></b></div><em>1re sur 270, ex æquo</em><a class="lnk">Pourquoi ?</a></div>
+    <div><small>Dividende</small><strong class="o">2,0 %</strong><span class="q">16 € par action</span><div class="ms"><i>médiane</i><b style="left:31%"></b></div><em>secteur : 2,8 % · 135e sur 196</em><a class="lnk">Pourquoi ?</a></div>
+    <div><small>Prix de l'action</small><strong class="o">30 fois</strong><span class="q">son bénéfice annuel</span><div class="ms"><i>médiane</i><b style="left:22%"></b></div><em>secteur : 20 fois · 194e sur 247</em><a class="lnk">Pourquoi ?</a></div>
+  </div>
+  <div class="why" id="why"></div>
+  <div class="acts"><a class="k">☆ Suivre Hermès</a><a>Comparer à ses rivales</a><a>✦ Poser une question</a><a>Voir le graphique du cours</a></div>
+</div></section>
+
+<main class="w">
+<section class="sec">
+  <span class="stk" style="background:var(--y)">1 · Elle seule</span>
+  <h2>Quatre ans de comptes en trois images.</h2>
+  <div class="tri">
+    <div class="ch"><h3>Ses ventes</h3><div class="big">16,0 Md€<small class="g">+38 % depuis 2022</small></div>
+      <svg class="svgc" data-v="11.602,13.427,15.17,16.002" data-y="2022,2023,2024,2025" viewBox="0 0 320 190"></svg>
+      <a class="pv" href="https://filings.xbrl.org/969500Y4IJGHJE2MTJ13/2026-12-31/ESEF/FR/0/hermes-2025-12-31-1/reports/hermes-2025-12-31-1-fr.html#fc_174269" target="_blank">16 002 M€ dans le rapport officiel ↗</a></div>
+    <div class="ch"><h3>Son bénéfice</h3><div class="big">4,5 Md€<small class="o">−1,7 % en 2025</small></div>
+      <svg class="svgc" data-v="3.367,4.311,4.603,4.524" data-y="2022,2023,2024,2025" viewBox="0 0 320 190"></svg>
+      <a class="pv" href="https://filings.xbrl.org/969500Y4IJGHJE2MTJ13/2026-12-31/ESEF/FR/0/hermes-2025-12-31-1/reports/hermes-2025-12-31-1-fr.html#fc_174297" target="_blank">4 524 M€ dans le rapport officiel ↗</a></div>
+    <div class="ch"><h3>Sa trésorerie nette</h3><div class="big">12,2 Md€<small class="g">aucune dette nette</small></div>
+      <svg class="svgc" data-v="9.188,10.574,11.581,12.205" data-y="2022,2023,2024,2025" viewBox="0 0 320 190"></svg>
+      <a class="pv" href="https://filings.xbrl.org/969500Y4IJGHJE2MTJ13/2026-12-31/ESEF/FR/0/hermes-2025-12-31-1/reports/hermes-2025-12-31-1-fr.html#fc_174351" target="_blank">Trésorerie dans le rapport officiel ↗</a></div>
+  </div>
+</section>
+
+<section class="sec">
+  <span class="stk" style="background:var(--b)">2 · Face aux autres</span>
+  <h2>Hermès contre ses rivales du luxe.</h2>
+  <div class="cmp"><div class="ch"><h3>Ce qu'elles gardent sur 100 € de ventes</h3><div class="cr" data-r='[["Hermès", 41.05, "41 €"], ["Moncler", 29.16, "29 €"], ["LVMH", 21.97, "22 €"], ["Kering", 7.13, "7 €"]]' data-m='[7.74, "médiane 8 €"]'></div></div><div class="ch"><h3>Leurs ventes sur un an</h3><div class="cr" data-r='[["Hermès", 5.48, "+5,5 %"], ["Moncler", 0.75, "+0,7 %"], ["LVMH", -4.58, "−4,6 %"], ["Kering", -13.03, "−13,0 %"]]' data-m='[3.46, "médiane +3,5 %"]'></div></div><div class="ch"><h3>Combien de fois leur bénéfice</h3><div class="cr" data-r='[["Hermès", 30.18, "30 fois"], ["Moncler", 18.79, "19 fois"], ["LVMH", 17.62, "18 fois"], ["Kering", null, "non calculable"]]' data-m='[19.65, "médiane 20 fois"]'></div></div></div>
+  <div class="cta2"><span>Brunello Cucinelli, autre rivale, n'a pas toutes ses données sur le site.</span><a>Comparer en détail →</a></div>
+</section>
+
+<section class="sec">
+  <span class="stk" style="background:var(--g);color:#fff">3 · Son métier</span>
+  <h2>Ce qu'il faut savoir en trois phrases.</h2>
+  <div class="met">
+    <div><small>Ce qu'elle fait</small><p>Maroquinerie (sacs Birkin, Kelly), soie, prêt-à-porter, parfums.</p></div>
+    <div><small>Comment elle gagne de l'argent</small><p>La vente de produits de luxe à prix très élevés, fabriqués surtout en France.</p></div>
+    <div><small>Ce dont elle dépend</small><p>La demande des clients fortunés, surtout en Asie et aux États-Unis.</p></div>
+  </div>
+</section>
+
+<section class="sec">
+  <span class="stk" style="background:var(--p)">4 · Son actualité</span>
+  <h2>Ce qui vient de tomber, ce qui arrive.</h2>
+  <div class="tl">
+    <div class="past"><small>Publié le 22 octobre 2026</small><div class="d">22 oct.</div><p>Chiffre d'affaires du 3e trimestre 2026</p><a>Lire la publication</a></div>
+    <div><small>À venir</small><div class="d">12 févr.</div><p>Résultats annuels 2026</p></div>
+    <div><small>À venir</small><div class="d">22 avr.</div><p>Chiffre d'affaires du 1er trimestre 2027</p></div>
+  </div>
+  <p class="warn">Les chiffres de la publication d'octobre ne sont pas encore relevés : tout ce qui est au-dessus porte sur l'exercice 2025, audité et déposé.</p>
+</section>
+
+<div class="proof"><span class="stk" style="background:var(--y);color:var(--ink)">Prouvé</span><p>Les chiffres de cette page viennent du <b>rapport annuel 2025 d'Hermès</b>, déposé au format officiel européen. Fiabilité des données : élevée.</p><a>Ouvrir le rapport ↗</a></div>
+
+<section class="sec">
+  <span class="stk" style="background:#fff">Pour aller plus loin</span>
+  <h2>Tous les chiffres, quand vous voulez.</h2>
+  <div class="all"><a>Résultats <span>ventes, bénéfice, par an</span></a><a>Rentabilité <span>marges, capitaux propres</span></a><a>Bilan et trésorerie <span>dette, fonds propres</span></a><a>Prix en Bourse <span>PER, rendement, capitalisation</span></a><a>Dividende <span>historique, part du bénéfice</span></a><a>Le cours <span>graphique sur 1 an</span></a></div>
+</section>
+</main>
+
+<section class="ask"><div class="w">
+  <h2>Une question sur Hermès ?</h2>
+  <div class="qs"><a>Pourquoi est-elle si chère ?</a><a>Pourquoi le bénéfice a baissé en 2025 ?</a><a>Que fait-elle de sa trésorerie ?</a></div>
+  <p>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</p>
+</div></section>
+<footer>bilan. Des faits, jamais de conseil d'investissement. Comptes : rapport annuel officiel (ESEF). Cours : Google Finance, différés.</footer>
+<script>
+const WHY={
+"Croissance":["+5,5 % de ventes","Les ventes d'Hermès sont passées de <b>15,2 à 16,0 milliards d'euros</b> en 2025, soit +5,5 %. La moitié des entreprises de la consommation ont progressé de moins de 3,5 % : Hermès fait mieux que 64 % d'entre elles.","La croissance ralentit pourtant : +15,7 % en 2023, +13,0 % en 2024, +5,5 % en 2025.","Comptes 2025, 428 entreprises du secteur consommation."],
+"Marge":["41 € gardés sur 100 €","Sur 100 € de ventes, il reste <b>41 €</b> à Hermès une fois payés la fabrication, les salaires, les boutiques et la publicité (résultat d'exploitation : 6,6 milliards d'euros). La médiane du secteur est de <b>8 €</b>.","Seules 4 des 404 entreprises de la consommation suivies font mieux. Une marge aussi haute veut dire que ses clients acceptent des prix très élevés.","Résultat d'exploitation divisé par les ventes, exercice 2025."],
+"Dette":["Aucune dette nette","Hermès a plus d'argent en caisse que de dettes : <b>12,2 milliards d'euros de trésorerie nette</b> fin 2025. Elle pourrait rembourser toutes ses dettes du jour au lendemain.","Même en comptant les loyers de ses boutiques (2,3 milliards), il lui resterait 9,9 milliards.","Trésorerie moins dettes financières, au 31 décembre 2025."],
+"Dividende":["2,0 % par an","Hermès verse <b>16 € par action</b> au titre de 2025. Au cours de 1 293,50 €, cela fait 2,0 % par an, moins que la médiane du secteur (2,8 %).","Ce n'est pas qu'elle distribue peu : 62 % de son bénéfice part en dividendes. C'est surtout que l'action coûte cher.","Dividende par action divisé par le cours."],
+"Prix de l'action":["30 fois le bénéfice","En Bourse, Hermès vaut <b>136,5 milliards d'euros</b>, soit 30 fois son bénéfice annuel (4,5 milliards). La médiane du secteur est de <b>20 fois</b>.","Les investisseurs paient plus cher pour sa rentabilité et sa régularité. Ce n'est ni un signal d'achat ni un signal de vente : c'est ce que le marché paie aujourd'hui.","Capitalisation divisée par le bénéfice net (PER)."]};
+function why(k){const w=WHY[k],el=document.getElementById("why");el.innerHTML=`<div><h4>${w[0]}</h4><small>${k}</small></div><div><p>${w[1]}</p><p>${w[2]}</p><small>${w[3]}</small></div>`;document.querySelectorAll(".five>div").forEach(d=>d.classList.toggle("on",d.querySelector("small").textContent===k));}
+document.querySelectorAll(".five>div").forEach(d=>d.onclick=()=>why(d.querySelector("small").textContent));
+why("Marge");
+document.querySelectorAll(".cr").forEach(c=>{const R=JSON.parse(c.dataset.r),[mv,ml]=JSON.parse(c.dataset.m),vs=[...R.map(r=>r[1]).filter(v=>v!=null),mv,0],lo=Math.min(...vs),hi=Math.max(...vs),f=v=>(v-lo)/(hi-lo)*100,z=f(0);
+ c.innerHTML=R.map(([n,v,l],i)=>v==null?`<div class="rw na"><span>${n}</span><span>${l}</span><b></b></div>`:`<div class="rw${i?"":" me"}${v<0?" neg":""}"><span>${n}</span><div class="tk">${lo<0?`<em class="z" style="left:${z}%"></em>`:""}<i style="left:${Math.min(f(v),z)}%;width:${Math.max(Math.abs(f(v)-z),2)}%"></i></div><b>${l}</b></div>`).join("")+`<div class="md" style="left:calc(86px + (100% - 158px) * ${f(mv)/100})"><span>${ml}</span></div>`;});
+document.querySelectorAll("svg.svgc").forEach(sv=>{const v=sv.dataset.v.split(",").map(Number),y=sv.dataset.y.split(","),W=320,H=190,L=34,T=26,B=150,mx=Math.ceil(Math.max(...v)/4)*4,step=mx/4,bw=44,gap=(W-L-bw*v.length)/(v.length);let o="";
+ for(let k=0;k<=4;k++){const yy=B-(B-T)*k/4;o+=`<line x1="${L}" x2="${W}" y1="${yy}" y2="${yy}" stroke="#E6E3DA" stroke-dasharray="${k?"3 4":"0"}"/><text x="${L-6}" y="${yy+4}" text-anchor="end" font-size="10" fill="#888" font-family="Inter">${(step*k).toFixed(0)}</text>`}
+ const xs=v.map((_,i)=>L+gap/2+i*(bw+gap)+bw/2),ys=v.map(x=>B-(B-T)*x/mx);
+ v.forEach((x,i)=>{const last=i===v.length-1;o+=`<rect x="${xs[i]-bw/2}" y="${ys[i]}" width="${bw}" height="${B-ys[i]}" rx="8" fill="${last?"#FFE14D":"#F2F0EA"}" stroke="#111" stroke-width="2"/><text x="${xs[i]}" y="${ys[i]-7}" text-anchor="middle" font-size="12.5" font-weight="800" fill="#111" font-family="Inter">${x.toFixed(1).replace(".",",")}</text><text x="${xs[i]}" y="${B+16}" text-anchor="middle" font-size="11" font-weight="700" fill="#555" font-family="Inter">${y[i]}</text>`;
+  if(i){const c=(x/v[i-1]-1)*100,t=(c>0?"+":"−")+Math.abs(c).toFixed(1).replace(".",",")+" %",cx=(xs[i]+xs[i-1])/2;o+=`<rect x="${cx-24}" y="${B+24}" width="48" height="18" rx="9" fill="${c>=0?"#C9F6E3":"#FFD9D1"}"/><text x="${cx}" y="${B+37}" text-anchor="middle" font-size="10.5" font-weight="800" fill="${c>=0?"#006B48":"#C2260E"}" font-family="Inter">${t}</text>`}});
+ o+=`<polyline points="${xs.map((x,i)=>x+","+(ys[i]-22)).join(" ")}" fill="none" stroke="#111" stroke-width="0" />`;
+ sv.innerHTML=o;});
+</script></body></html>

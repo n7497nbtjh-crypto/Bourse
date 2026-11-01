@@ -1,4 +1,4 @@
-// Contrôle téléphone (375 × 812) : sur 10 fiches au hasard avec comptes, les cinq jauges « Sa place dans le secteur » sont visibles
+// Contrôle téléphone (375 × 812) : sur 10 fiches au hasard avec comptes, les jauges des cinq repères (fiche v3, en-tête jaune) sont visibles
 // (hauteur > 0) dans les deux premiers écrans (y < 1624 px) ; aucun débordement horizontal ; pas de signe « - » devant un chiffre ;
 // aucun texte sous 12 px. Usage : node scripts/check-mobile.js [n]
 const { ouvrir, aller, ROOT } = require("./_site"), fs = require("fs"), path = require("path");
@@ -10,7 +10,7 @@ const { ouvrir, aller, ROOT } = require("./_site"), fs = require("fs"), path = r
     if (vus >= n) break;
     await aller(p, "/entreprise/" + id, 3500);
     const r = await p.evaluate(() => {
-      const J = [...document.querySelectorAll(".rf-hplace .prof .pa2")].map(e => { const r = e.getBoundingClientRect(); return { h: r.height, y: r.top + scrollY }; });
+      const J = [...document.querySelectorAll(".f3-five .f3-ms")].map(e => { const r = e.getBoundingClientRect(); return { h: r.height, y: r.top + scrollY }; });
       const txt = (document.querySelector("main") || document.body).innerText;
       const petits = [...document.querySelectorAll("main *")].filter(e => e.offsetParent && e.childNodes.length && [...e.childNodes].some(x => x.nodeType === 3 && x.textContent.trim()) && parseFloat(getComputedStyle(e).fontSize) < 12).length;
       return { verdict: !!document.querySelector(".rf-vc"), J, large: document.documentElement.scrollWidth > 376, moins: (txt.match(/(^|[\s(])-\d/g) || []).length, petits };
