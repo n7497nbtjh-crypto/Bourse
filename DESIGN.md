@@ -1,5 +1,21 @@
 # DESIGN.md · bilan.
 
+## Système v3 « Quotidien » (1-2 novembre 2026) : fait référence, remplace les directions plus bas
+
+Choisi par Romain après dix maquettes (`docs/maquettes/accueil-v3.html` à `accueil-v12.html`, la v12 est la référence). Esprit : l'habillage de l'émission Quotidien, jeune et assumé, mais au service du sens. Un curieux doit comprendre en quelques secondes ce que fait le site.
+
+- **Polices** : Bricolage Grotesque 800 pour les titres et les grands chiffres (`--serif`), Inter pour le texte (`--sans`), Caveat seulement pour une annotation « à la main » par écran au plus.
+- **Couleurs** : fond blanc ; encre `#111` ; accent jaune `#FFE14D` (`--lime` pointe dessus, remplace le vert acide) ; aplats de rubrique rose `#FF7EB3`, bleu `#9DB0FF` / `#3D5BFF`, vert `#00B37A`, rouge `#FF4B2B` ; teintes pâles `#FFF2B3`, `#FFE0EC`, `#DCE3FF`, `#CDF5E4`. Vert et rouge gardent leur sens (hausse, baisse, favorable, à surveiller).
+- **Formes** : contours noirs de 2 à 3 px, grands rayons (18 à 30 px), ombre décalée pleine (`5px 5px 0 #111`), étiquettes de rubrique penchées de 3° (`.a4-stk`).
+- **Visualiser plutôt qu'écrire** : un verdict = mot en couleur + jauge face à la médiane du secteur (rouge pâle à gauche, vert pâle à droite, trait noir au milieu, point noir) + le chiffre qui le justifie. Jamais de pastilles de mots seules (« gadget », Romain 1/11). La croissance suit la même jauge que la dette et le prix.
+- **Sens et lien** : chaque rubrique répond à une question ; les étapes s'enchaînent (« Elle seule » puis « Face aux autres ») ; la preuve est une garantie transversale, pas une étape.
+- **Ton** : direct, oral, vouvoiement ; pas d'emphase sur un cours ; aucun conseil.
+- Le bloc CSS « Système v3 » est en fin de `cf/site/site.css` ; l'accueil est dans `cf/site/m/accueil4.js`. Étapes suivantes : la fiche entreprise, puis les autres pages, dans ce système.
+
+---
+
+## Historique (avant le 1/11/2026)
+
 Direction : **un journal financier, pas un tableau de bord de trading**. Papier crème, titres en serif, chiffres en chasse fixe, une seule couleur vive (vert acide) pour ce qui se clique, et la couleur réservée au sens (favorable / à surveiller / hausse / baisse). Calme, dense sans être chargé, lisible par un débutant, précis pour un investisseur confirmé.
 
 Décidé le 30 octobre 2026 à partir de la charte existante du site et des retours de Romain (« professionnel, inspirer confiance », « pas fatigant »). Aucune comparaison avec des sites réels via UXKIN (non connecté) : la direction s'appuie sur la charte en place et des références de presse économique papier.

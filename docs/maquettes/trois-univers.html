@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>bilan. trois univers</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Jost:wght@300;400;500&family=Space+Grotesk:wght@300;400;500&family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,700;12..96,800&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}a{color:inherit;text-decoration:none}
+section{width:1366px;height:780px;position:relative;overflow:hidden}
+
+/* 1. MAISON */
+.m{background:#F5F0E6;color:#1C1915;font-family:Jost,sans-serif}
+.m header{display:flex;align-items:center;justify-content:space-between;padding:30px 72px;border-bottom:1px solid #D9D0BF}
+.m .logo{font:500 34px "Bodoni Moda";letter-spacing:-.01em}
+.m nav{display:flex;gap:34px;font:400 15px Jost;color:#5B5348}
+.m .in{display:grid;grid-template-columns:560px 1fr;gap:70px;padding:64px 72px 0}
+.m .kick{font:italic 400 19px "Bodoni Moda";color:#7A6F60}
+.m .num{font:400 230px/0.85 "Bodoni Moda";letter-spacing:-.04em;margin:18px 0 0 -10px;font-variant-numeric:lining-nums}
+.m .num i{font-style:italic;font-size:120px;margin-left:8px}
+.m .cap{font:300 22px/1.45 Jost;margin-top:26px;max-width:24em}
+.m .cap b{font-weight:500}
+.m .link{display:inline-block;margin-top:30px;font:400 15px Jost;border-bottom:1px solid #1C1915;padding-bottom:3px}
+.m .chart{padding-top:30px}
+.m .chart svg{width:100%;overflow:visible}
+.m .note{font:italic 400 17px "Bodoni Moda";fill:#1C1915}
+.m .foot{position:absolute;left:72px;right:72px;bottom:34px;display:flex;justify-content:space-between;font:400 13px Jost;color:#7A6F60;border-top:1px solid #D9D0BF;padding-top:16px}
+
+/* 2. INSTRUMENT */
+.i{background:#0E1013;color:#E8E4DC;font-family:"Space Grotesk",sans-serif}
+.i header{display:flex;align-items:center;gap:40px;padding:28px 64px;border-bottom:1px solid #23262C}
+.i .logo{font:500 24px "Space Grotesk";letter-spacing:-.03em}.i .logo b{color:#D8B46A}
+.i nav{display:flex;gap:30px;font-size:14px;color:#8E8A82}
+.i .co{display:flex;align-items:flex-end;justify-content:space-between;padding:44px 64px 0}
+.i .co h1{font:300 64px/1 "Space Grotesk";letter-spacing:-.04em}
+.i .co p{font-size:15px;color:#8E8A82;margin-top:12px}
+.i .co .px{text-align:right}.i .co .px b{font:300 44px "Space Grotesk";display:block;letter-spacing:-.03em}
+.i .co .px span{color:#8FCFA6;font-size:15px}
+.i .dials{display:grid;grid-template-columns:repeat(5,1fr);gap:0;margin:44px 64px 0;border-top:1px solid #23262C;border-bottom:1px solid #23262C}
+.i .d{padding:26px 10px 22px;text-align:center;border-right:1px solid #23262C}.i .d:last-child{border:0}
+.i .d svg{width:190px;height:150px}
+.i .d h3{font:400 15px "Space Grotesk";margin-top:6px}
+.i .d small{display:block;font-size:13px;color:#8E8A82}
+.i .verd{padding:26px 64px;font:300 26px "Space Grotesk";letter-spacing:-.02em}
+.i .verd span{color:#8E8A82}
+
+/* 3. MAGAZINE */
+.g{background:#FFFDF8;color:#121212;font-family:"Bricolage Grotesque",sans-serif}
+.g header{display:flex;align-items:center;gap:36px;padding:22px 40px}
+.g .logo{font:800 30px "Bricolage Grotesque";letter-spacing:-.05em}
+.g nav{display:flex;gap:26px;font:500 15px "Bricolage Grotesque"}
+.g .grid{display:grid;grid-template-columns:1.55fr 1fr;grid-template-rows:1fr 1fr;gap:12px;padding:6px 40px 40px;height:700px}
+.g .a{grid-row:1/3;background:#2340D8;color:#FFFDF8;padding:40px 44px;display:flex;flex-direction:column;justify-content:space-between}
+.g .a .t{font:500 18px "Bricolage Grotesque";opacity:.85}
+.g .a .big{font:800 290px/0.8 "Bricolage Grotesque";letter-spacing:-.07em}
+.g .a .big small{font-size:110px;letter-spacing:-.04em}
+.g .a p{font:400 26px/1.25 "Bricolage Grotesque";max-width:20em;letter-spacing:-.01em}
+.g .a p b{font-weight:700}
+.g .b{background:#FF5A36;color:#121212;padding:30px 34px;display:flex;flex-direction:column;justify-content:space-between}
+.g .c{background:#FFE08A;padding:30px 34px;display:flex;flex-direction:column;justify-content:space-between}
+.g .t2{font:600 16px "Bricolage Grotesque"}
+.g .mid{font:800 120px/0.85 "Bricolage Grotesque";letter-spacing:-.06em}
+.g .low{font:400 19px/1.3 "Bricolage Grotesque";max-width:18em}
+.lab{position:absolute;top:18px;right:24px;font:600 12px Jost;background:#fff;color:#111;padding:5px 10px;border:1px solid #111;z-index:5}
+</style></head><body>
+
+<section class="m"><span class="lab">1. La maison</span>
+<header><a class="logo">bilan.</a><nav><a>Apprendre</a><a>Marchés</a><a>Outils</a><a>Mon espace</a></nav></header>
+<div class="in">
+  <div>
+    <p class="kick">Hermès, comptes 2025</p>
+    <div class="num">41<i>€</i></div>
+    <p class="cap">gardés sur chaque <b>100 € de ventes</b>. La moitié des 404 entreprises de son secteur en gardent moins de 8.</p>
+    <a class="link">Lire la fiche d'Hermès</a>
+  </div>
+  <div class="chart"><svg id="h1" viewBox="0 0 640 420"></svg></div>
+</div>
+<div class="foot"><span>Les comptes de 2 456 entreprises cotées, comparés à leur secteur et reliés au rapport officiel.</span><span>Sans conseil, sans publicité</span></div>
+</section>
+
+<section class="i"><span class="lab">2. L'instrument</span>
+<header><a class="logo">bilan<b>.</b></a><nav><a>Apprendre</a><a>Marchés</a><a>Outils</a><a>Mon espace</a></nav></header>
+<div class="co"><div><h1>Hermès</h1><p>Luxe · Paris · PEA · comptes 2025 face aux 404 entreprises de la consommation</p></div>
+<div class="px"><b>1 293,50 €</b><span>+2,17 % vendredi</span></div></div>
+<div class="dials" id="dials"></div>
+<p class="verd">Très rentable, sans dette, <span>chère.</span></p><p style="padding:0 64px;color:#8E8A82;font-size:14px">L'aiguille à midi : la médiane du secteur. Vers la droite, mieux que la plupart ; vers la gauche, moins bien.</p>
+</section>
+
+<section class="g"><span class="lab">3. Le magazine</span>
+<header><a class="logo">bilan.</a><nav><a>Apprendre</a><a>Marchés</a><a>Outils</a><a>Mon espace</a></nav></header>
+<div class="grid">
+  <div class="a"><span class="t">Hermès · comptes 2025</span><div class="big">41<small>€</small></div><p>gardés sur 100 € de ventes. <b>Son secteur&nbsp;: 8&nbsp;€.</b> Seules 4 entreprises de la consommation font mieux.</p></div>
+  <div class="b"><span class="t2">Vendredi · Nasdaq 100</span><div class="mid">−3,46%</div><p class="low">La technologie a reculé. ASML a perdu 6,11 %.</p></div>
+  <div class="c"><span class="t2">Hermès · ventes</span><div class="mid">+38%</div><p class="low">de 2022 à 2025, en hausse chaque année. 16 milliards d'euros l'an dernier.</p></div>
+</div>
+</section>
+
+<script>
+const H=[17, 0, 1, 1, 1, 2, 1, 0, 0, 5, 5, 3, 5, 5, 13, 10, 21, 21, 36, 20, 20, 21, 17, 14, 23, 13, 16, 10, 9, 10, 13, 6, 5, 9, 5, 5, 5, 7, 1, 6, 4, 1, 3, 4, 0, 2, 1, 0, 0, 0, 1, 0, 0, 1, 0, 1, 2, 0, 0, 0, 1, 0, 0, 1];
+(function(){ // gravure : histogramme en traits fins
+  const s=document.getElementById("h1"),W=640,base=330,bw=W/63;let o="";
+  H.slice(1).forEach((c,i)=>{const x=i*bw+bw/2,h=c*7.2;o+=`<line x1="${x}" x2="${x}" y1="${base}" y2="${base-h}" stroke="#1C1915" stroke-width="${i===54?3:1.1}" ${i===54?'':'stroke-opacity=".55"'}/>`});
+  const mx=(21.74-1)*bw+bw/2,hx=54*bw+bw/2;
+  o+=`<line x1="0" x2="${W}" y1="${base}" y2="${base}" stroke="#1C1915"/>`;
+  [0,10,20,30,40].forEach(v=>{const x=(v+13)*bw+bw/2;o+=`<line x1="${x}" x2="${x}" y1="${base}" y2="${base+7}" stroke="#1C1915"/><text x="${x}" y="${base+28}" text-anchor="middle" font-family="Jost" font-size="13" fill="#7A6F60">${v} €</text>`});
+  o+=`<line x1="${mx}" x2="${mx}" y1="40" y2="${base}" stroke="#1C1915" stroke-dasharray="2 4"/><text class="note" x="${mx+10}" y="52">la médiane du secteur, 8 €</text>`;
+  o+=`<circle cx="${hx}" cy="${base-30}" r="6" fill="#1C1915"/><path d="M${hx} ${base-42} C ${hx} 200, ${hx-40} 170, ${hx-70} 160" fill="none" stroke="#1C1915" stroke-width="1"/><text class="note" x="${hx-78}" y="150" text-anchor="end">Hermès, 41 €</text>`;
+  o+=`<text x="0" y="${base+60}" font-family="Jost" font-size="13" fill="#7A6F60">Chaque trait : le nombre d'entreprises de la consommation qui gardent autant sur 100 € de ventes.</text>`;
+  s.innerHTML=o;
+})();
+(function(){ // cadrans
+  const D=[["Marge",99,"5e sur 404"],["Solidité",85,"1re sur 241"],["Croissance",64,"155e sur 428"],["Dividende",31,"137e sur 198"],["Prix",21,"199e sur 251"]];
+  const pol=(cx,cy,r,a)=>[cx+r*Math.cos(a),cy+r*Math.sin(a)];
+  document.getElementById("dials").innerHTML=D.map(([t,p,r])=>{
+    const cx=95,cy=88,R=68,a0=Math.PI*0.75,span=Math.PI*1.5,ang=v=>a0+span*v/100;let o="";
+    for(let k=0;k<=50;k++){const v=k*2,a=ang(v),big=k%5===0,[x1,y1]=pol(cx,cy,R,a),[x2,y2]=pol(cx,cy,R-(big?10:5),a);o+=`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${v<50?'#C98B73':'#8FCFA6'}" stroke-opacity="${big?1:.5}" stroke-width="${big?1.6:1}"/>`}
+    const [mx1,my1]=pol(cx,cy,R+6,ang(50)),[mx2,my2]=pol(cx,cy,R-16,ang(50));o+=`<line x1="${mx1}" y1="${my1}" x2="${mx2}" y2="${my2}" stroke="#E8E4DC" stroke-width="2"/>`;
+    const [nx,ny]=pol(cx,cy,R-8,ang(p)),[tx,ty]=pol(cx,cy,-12,ang(p));o+=`<line x1="${tx}" y1="${ty}" x2="${nx}" y2="${ny}" stroke="#D8B46A" stroke-width="2.4" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="5" fill="#0E1013" stroke="#D8B46A" stroke-width="2"/>`;
+    
+    return `<div class="d"><svg viewBox="0 0 190 150">${o}</svg><h3>${t}</h3><small>${r}</small></div>`}).join("");
+})();
+</script>
+</body></html>

@@ -6,7 +6,7 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
   const { b, p } = await ouvrir(); const err = [];
   await aller(p, "/", 2500);
   const cartes = await p.$$eval(".acc-card", L => L.map(a => ({ id: a.getAttribute("href").split("/").pop(), prix: a.querySelector(".acc-cp b") ? a.querySelector(".acc-cp b").textContent : null, pts: [...a.querySelectorAll(".acc-ct i")].map(i => i.textContent) })));
-  const ex = await p.$eval(".acc-ex", a => ({ id: a.getAttribute("href").split("/").pop(), lignes: [...a.querySelectorAll(".acc-exr")].map(r => [r.querySelector(".acc-exk").textContent, r.querySelector("b").textContent]) })).catch(() => null);
+  const ex = await p.$eval("#a4-ex", a => ({ id: a.querySelector(".a4-go").getAttribute("href").split("/").pop(), lignes: [["Marge d'exploitation", a.querySelector(".a4-n").textContent]] })).catch(() => null); // 2/11 : accueil v4, la carte d'exemple (marge en grand)
   if (!ex) err.push("accueil : exemple absent"); // les cartes « Trois fiches » ont disparu au lot 3 ; l'exemple reste contrôlé
   for (const c of cartes) {
     await aller(p, "/entreprise/" + c.id, 3000);
