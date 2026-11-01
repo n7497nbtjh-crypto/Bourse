@@ -709,9 +709,13 @@ async function ficheUneSeulePage(s, c, el) {
       ${th("valorisation") ? rfPli2("rf-valo", "Prix en Bourse", `PER, rendement, capitalisation, face au secteur ${jg("pe", true, v.pe)}`, th("valorisation") + ficheGraphBox(s), auto, { lab: "Prix payé (PER)", val: v.pe ? nf(0).format(v.pe) + " fois le résultat" : v.peNs ? "n.s." : "", p: (A.prix && A.prix.r || {}).p, med: MEDPE[s.sector] ? nf(0).format(MEDPE[s.sector]) + " fois" : "" }) : ""}
       ${th("dividende") ? rfPli2("rf-div", "Dividende", "Rendement, part du bénéfice versée, historique", th("dividende"), auto, { lab: "Rendement", val: v.yld != null ? pct(v.yld, 1, false) : "", p: (A.dividende && A.dividende.r || {}).p }) : ""}
       ${tout ? rfPli2("rf-tout-w", "Comptes complets", `${c.years.length} exercices, compte de résultat, bilan, flux · export CSV`, tout.outerHTML + `<p class="rf-l2a" style="padding:0 22px 14px"><button type="button" class="btn" id="rf-csv">Exporter en CSV</button></p>`, auto, { lab: "Exercices", val: String(c.years.length) }) : ""}
-      ${rfPli2("rf-sources", "Sources et méthode", "Les documents officiels, pourquoi ces verdicts, les questions fréquentes", (srcs.length ? srcs.map(x => x.outerHTML).join("") : "") + ficheSyntheseHTML(s, c).replace(/<form class="ffaqask"[\s\S]*?<\/form>/, "") + faqHTML(s, c).replace(/<form class="ffaqask"[\s\S]*?<\/form>/, ""), auto)}
+      ${rfPli2("rf-sources", "Sources et méthode", "Les documents officiels et leur date", (srcs.length ? srcs.map(x => x.outerHTML).join("") : "")  , auto)}
       
     </section></div></div>`;
+  // 1/11 (Romain : « enlève toutes les infos qu'on retrouve deux fois ») : « Ce qui a le plus changé », « À lire ensemble », le sommaire des thèmes
+  // et les analyses de contexte numérotées répètent les chiffres des tuiles et du graphique : retirés de la fiche.
+  $$(".rf-chgw, .rf-thnav, .ctx-in, #contexte-chiffres", el).forEach(x => x.remove());
+  const dsc = $(".fh-desc"), f1 = $("#rf-metier .f1p", el); if (dsc && f1 && f1.textContent.trim() === dsc.textContent.trim()) f1.remove(); // la phrase du métier est déjà sous le nom
   // réglage « toujours le détail »
   const cb = $("#rf-detail"); if (cb) cb.onchange = () => { rfDetailSet(cb.checked); $$("#tous-les-chiffres details.rf-pl2").forEach(d => d.open = cb.checked); };
   // les comportements de l'ancien onglet « Les chiffres en détail » (graphiques, lignes dépliables) sont rattachés au conteneur
@@ -733,7 +737,7 @@ async function ficheUneSeulePage(s, c, el) {
 function rfLierChiffres(s, c, el) { // graphiques par thème et lignes dépliables, comme dans tabComptes, mais sur la fiche
   if (!el) return;
   const P = tblxRows(s, c), Y = c.years, byK = k => P.rows.find(r => r.k === k);
-  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); const d = $(".rf-gdef", box); if (d) d.innerHTML = tblxDefHTML(r); };
+  const setG = (box, k) => { const r = byK(k); if (!r || !box) return; $$(".rf-gsel button", box).forEach(b => b.classList.toggle("on", b.dataset.g === k)); const th0 = box.closest(".rf-th"); if (th0) $$(".rf-kt", th0).forEach(b => b.classList.toggle("on", b.dataset.g === k)); $(".rf-gbox", box).innerHTML = tblxChart(s, c, r); const d = $(".rf-gdef", box); if (d) d.innerHTML = tblxDefHTML(r); };
   $$(".rf-thc", el).forEach(box => { const b = $(".rf-gsel button", box); if (b) setG(box, b.dataset.g); });
   const toggleDet = tr => {
     const open = tr.nextElementSibling && tr.nextElementSibling.classList.contains("det");

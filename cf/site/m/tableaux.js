@@ -409,16 +409,11 @@ function tabComptes(s, c, el) {
 }
 
 /* ---------- Graphique en colonnes par année : dernière année accentuée, valeurs affichées, repère médiane ---------- */
-function tblxDefHTML(r) { // à droite du graphique : 1/11 (Romain : « pas très utile et compréhensible ») — l'entreprise d'abord, en grand, puis l'idée, un exemple, et le piège replié
-  const t = typeof ALL !== "undefined" && r && ALL[r.term]; if (!t) return "";
-  const sens = r.dir > 0 ? [r.q < 0 ? "down" : r.q > 0 ? "up" : "", "▲", "En hausse sur un an"] : r.dir < 0 ? [r.q > 0 ? "up" : r.q < 0 ? "down" : "", "▼", "En baisse sur un an"] : null; // la couleur suit le sens du critère (une dette qui monte est en rouge)
-  let ph = String(r.phrase || "");
-  if (sens) ph = ph.replace(/^En (hausse|baisse) sur un an \(([^)]+)\)/, "$2 sur un an"); // la pastille dit déjà « en hausse » : la phrase garde le chiffre
-  ph = ph.charAt(0).toUpperCase() + ph.slice(1);
-  return `${ph ? `<div class="tbx-dv${sens ? " " + sens[0] : ""}">${sens ? `<b class="tbx-dvb">${sens[1]} ${sens[2]}</b>` : ""}<p>${esc(ph)}</p></div>` : ""}
-    <p class="tbx-dk">${esc(r.short || r.label)}, c'est quoi ?</p><p class="tbx-dw">${esc(t.what || "")}</p>${t.ex ? `<p class="tbx-dex"><span>Exemple</span>${esc(t.ex)}</p>` : ""}
-    ${t.read ? `<p class="tbx-dk">Pourquoi ça compte</p><p>${esc(t.read)}</p>` : ""}
-    ${t.limit ? `<details class="tbx-dpi"><summary>Le piège à éviter</summary><p>${esc(t.limit)}</p></details>` : ""}`;
+function tblxDefHTML(r) { // à droite du graphique. 1/11 (Romain : « les phrases explicatives font très IA ») : le fait chiffré, en une ligne,
+  // et la définition seulement au toucher (« ? »). Plus de « c'est quoi », d'exemple ni de « pourquoi ça compte » affichés d'office.
+  const t = typeof ALL !== "undefined" && r && ALL[r.term]; if (!r || !r.phrase) return "";
+  const cls = r.q > 0 ? " up" : r.q < 0 ? " down" : "";
+  return `<div class="tbx-dv${cls}"><p>${esc(r.phrase)}</p></div>${t ? `<p class="tbx-dq">${def(r.term, "C'est quoi ?")}</p>` : ""}`;
 }
 function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = "", h = 170, note = "" }) {
   let k = 0; while (k < labels.length - 1 && series.every(s => !okn(s.values[k]))) k++;

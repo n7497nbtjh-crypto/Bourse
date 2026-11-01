@@ -498,3 +498,58 @@ ROUTES_EXTRA.push([/^\/rapport-exemple\/?$/, () => pageRapportExemple()]);
 /* styles : voir site.css */
 
 /* styles : voir site.css */
+
+/* ====== 1/11 (Romain : « le rapport d'exemple est nullissime ») : rapport refait, dans un ordre fixe et concret ======
+   1. La semaine en trois chiffres (portefeuille, favoris, indice) et l'écart avec l'indice, en une ligne calculée.
+   2. Pourquoi chaque valeur a bougé : la variation, l'annonce de la semaine qui va avec (et son chiffre), sinon le marché ; l'effet en euros.
+   3. L'actualité de vos entreprises : chaque annonce officielle, ses chiffres, « Expliquer » (IA du site) et la source.
+   4. La lecture de l'IA du site (à la demande).  5. Vos favoris.  6. L'agenda des deux semaines.  7. Les points de vigilance du portefeuille.
+   Aucune phrase générique : chaque ligne vient des données de la semaine. */
+function synPageV5(b, m) {
+  SYN_ANN = [];
+  const sem = String(b.semaine || "").replace(/^\d{4}-W/, ""), pf = b.portefeuille, L = b.lignes || [];
+  const jour = iso => { const d = new Date(iso + "T12:00:00Z"); return `${SYN_JOURS[d.getUTCDay()]} ${d.getUTCDate()} ${SYN_MOIS[d.getUTCMonth()]}`; };
+  const ROUT = new Set(["rachat", "capital", "initie", "agenda", "autre"]);
+  const annDe = k => (b.annonces || []).filter(a => a.k === k && a.origine !== "presse" && !ROUT.has(a.categorie));
+  const idx0 = (b.indices || [])[0];
+  // 1. trois chiffres
+  const favs = L.filter(l => l.favori && l.variation_semaine_pct != null), favMoy = favs.length ? favs.reduce((a, l) => a + l.variation_semaine_pct, 0) / favs.length : null;
+  const T = [];
+  if (pf && pf.var_pct != null) T.push(`<div class="s5-t s5-tp"><small>Mon portefeuille</small><b>${synPct(pf.var_pct)}</b><span>${synEur(pf.var_eur)}${pf.valeur_eur ? ` · ${F0.format(Math.round(pf.valeur_eur))} € au total` : ""}</span></div>`);
+  if (favMoy != null) T.push(`<div class="s5-t"><small>Mes favoris</small><b class="${synCls(favMoy)}">${synPct(favMoy)}</b><span>moyenne de ${favs.length} valeur${favs.length > 1 ? "s" : ""}</span></div>`);
+  if (idx0) T.push(`<div class="s5-t"><small>${esc(idx0.nom)}</small><b class="${synCls(idx0.pct)}">${synPct(idx0.pct)}</b><span>pour comparer</span></div>`);
+  const ref = pf && pf.var_pct != null ? pf.var_pct : favMoy, ecart = ref != null && idx0 && idx0.pct != null ? ref - idx0.pct : null;
+  const verdict = ecart == null ? "" : `<p class="s5-vs">${pf && pf.var_pct != null ? "Votre portefeuille" : "Vos favoris"} ${Math.abs(ecart) < 0.3 ? `a fait comme le ${esc(idx0.nom)}` : `fait <b class="${ecart > 0 ? "up" : "down"}">${ecart > 0 ? "+" : "−"}${nf(1).format(Math.abs(ecart))} point${Math.abs(ecart) >= 2 ? "s" : ""}</b> ${ecart > 0 ? "de mieux" : "de moins"} que le ${esc(idx0.nom)}`} cette semaine.</p>`;
+  // 2. pourquoi ça a bougé
+  const Ls = L.filter(l => l.variation_semaine_pct != null).sort((x, y) => (!!y.portefeuille - !!x.portefeuille) || Math.abs(y.variation_semaine_pct) - Math.abs(x.variation_semaine_pct));
+  const vmax = Math.max(1, ...Ls.map(l => Math.abs(l.variation_semaine_pct)));
+  const raison = l => { const a = annDe(l.k)[0];
+    if (a) { const ch = (a.chiffres || [])[0]; return `<span class="s5-pill">${esc(SYN_CAT[a.categorie] || a.type || "Annonce")}</span> ${esc(jour(a.date))}${ch ? ` · ${esc(ch[0])} ${esc(String(ch[1]))}` : ""}`; }
+    if (l.indice && l.indice.pct != null && l.ecart_pts != null) return Math.abs(l.ecart_pts) < 1.5 ? `Sans annonce : a suivi le ${esc(l.indice.nom)} (${synPct(l.indice.pct)})` : `Sans annonce officielle : ${l.ecart_pts > 0 ? "a fait mieux" : "a fait moins bien"} que le ${esc(l.indice.nom)} (${synPct(l.indice.pct)})`;
+    return "Sans annonce officielle cette semaine"; };
+  const rows = Ls.map(l => { const v = l.variation_semaine_pct, w = Math.round(Math.abs(v) / vmax * 100), e = l.portefeuille && l.portefeuille.var_eur != null ? synEur(l.portefeuille.var_eur) : "";
+    return `<a class="s5-r" href="${synLien(l.k)}">${synLogo(l.k, 34)}<span class="s5-rn"><b>${esc(l.nom)}</b><small>${raison(l)}</small></span><span class="s5-rv"><b class="${synCls(v)}">${synPct(v)}</b><i class="s5-bar ${synCls(v)}"><em style="width:${w}%"></em></i>${e ? `<small>${e} · ${nf(0).format(l.portefeuille.poids_pct)} % du portefeuille</small>` : `<small>${l.favori ? "favori" : ""}</small>`}</span></a>`; }).join("");
+  // 3. l'actualité de vos entreprises
+  const vus = new Set(), poidsDe = k => { const l = L.find(x => x.k === k); return l && l.portefeuille ? l.portefeuille.poids_pct : 0; };
+  const anns = (b.annonces || []).filter(a => a.origine !== "presse" && !ROUT.has(a.categorie) && !vus.has(a.k + a.titre) && vus.add(a.k + a.titre)).sort((x, y) => poidsDe(y.k) - poidsDe(x.k) || y.poids - x.poids).slice(0, 6);
+  const annHTML = anns.map(a => { const ch = (a.chiffres || []).slice(0, 3), i = SYN_ANN.push(a) - 1, lec = (a.lecture || []).filter(t => t && !/^(Une information publiée|La publication des ventes|Document déposé)/.test(t)).join(" ");
+    return `<article class="s5-a"><div class="s5-ah">${synLogo(a.k, 30)}<b>${esc(a.nom || (synObj(a.k) || {}).name || "")}</b><span class="s5-pill">${esc(SYN_CAT[a.categorie] || a.type || "Annonce")}</span><small>${esc(jour(a.date))}</small></div>
+      <p class="s5-at">${esc(a.titre || "")}</p>${ch.length ? `<div class="s5-ch">${ch.map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(String(v))}</b></span>`).join("")}</div>` : ""}${lec ? `<p class="s5-al">${esc(lec)}</p>` : ""}
+      <div class="s5-aa"><button type="button" class="s5-exp" data-syn-exp="${i}">✦ Expliquer</button>${a.source ? `<a class="lnk" href="${esc(a.source)}" target="_blank" rel="noopener">Le document (${esc(a.source_nom || "source")})</a>` : ""}</div><div class="syn4-cl"></div></article>`; }).join("");
+  // 5. favoris
+  const fl = L.filter(l => l.favori).map(l => { const nx = (b.a_venir || []).find(e => e.k === l.k);
+    return `<a class="s5-f" href="${synLien(l.k)}">${synLogo(l.k, 26)}<b>${esc(l.nom)}</b><span>${l.cours != null ? `${nf(2).format(l.cours)} ${esc(l.devise === "EUR" ? "€" : l.devise || "")}` : ""}</span><b class="${synCls(l.variation_semaine_pct)}">${synPct(l.variation_semaine_pct)}</b><small>${nx ? `${esc(jour(nx.date))} : ${esc((nx.type || "").toLowerCase())}` : ""}</small></a>`; }).join("");
+  return `<div class="syn4 s5">
+    <header class="s5-head"><p class="syn4-mast"><b>bilan.</b><span>hebdo</span><i>n° ${esc(sem)}</i></p><p class="s5-date">${b.du ? esc(synDuAu(b)) : ""}${b.en_cours === false ? " · semaine close" : " · semaine en cours, mise à jour à chaque visite"}</p>
+      <div class="s5-ts">${T.join("")}</div>${verdict}</header>
+    <section class="s5-s"><h2><i>1</i>Pourquoi ça a bougé</h2><div class="s5-rs">${rows || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille.</p>`}</div></section>
+    <section class="s5-s"><h2><i>2</i>L'actualité de vos entreprises</h2>${annHTML ? `<div class="s5-as">${annHTML}</div>` : `<p class="muted">Aucune publication officielle de vos entreprises cette semaine.</p>`}</section>
+    <section class="s5-s" id="syn4-ia"></section>
+    ${fl ? `<section class="s5-s"><h2><i>3</i>Vos favoris</h2><div class="s5-fs">${fl}</div></section>` : ""}
+    <section class="s5-s"><h2><i>${fl ? 4 : 3}</i>À venir sur deux semaines</h2>${synAgendaHTML(b)}</section>
+    ${synApercuAlerte(b, m)}
+    ${pf ? `<section class="s5-s"><h2><i>${fl ? 5 : 4}</i>Points de vigilance du portefeuille</h2>${synAlertesHTML(b).replace("<h3>Votre portefeuille</h3>", "") || `<p class="muted">Rien à signaler.</p>`}</section>` : ""}
+    <p class="synfoot">Variations entre la clôture précédant la semaine et le dernier cours connu (différé), dans la devise de cotation. Annonces : documents officiels (AMF, SEC). Information, pas conseil.</p>
+  </div>`;
+}
+synPageHTML = synPageV5;

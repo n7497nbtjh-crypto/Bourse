@@ -336,7 +336,7 @@ function accCompteHTML(membre) { // 4e passage (lot C) : trois icônes, quatre m
   return `<section class="acc-sec acc-cpt" id="acc-compte"><div class="acc-h3"><h2>${accIc("esp")}Vous n'avez rien à surveiller</h2></div>
     <p class="acc-sub">Entrez vos valeurs une fois : le site les suit pour vous, chaque semaine.</p>
     <div class="acc-cpt3"><div>${accIc("pub")}<b>Il lit les publications</b></div><div>${accIc("ag")}<b>Il tient votre agenda</b></div><div>${accIc("mk")}<b>Il fait votre rapport</b></div></div>
-    <div class="acc-cpta"><a class="btn" href="/espace">Créer mon espace</a><button type="button" class="acc-cptx" data-acc-rapport>Voir un rapport en exemple →</button></div></section>`;
+    <div class="acc-cpta"><a class="btn" href="/espace">Créer mon espace</a><a class="acc-cptx" href="/rapport-exemple">Voir un rapport en exemple →</a></div></section>`;
 }
 const ACC_VOIES = [
   ["/apprendre", "Découvrir", "Trois choses avant d'investir, puis l'Académie."],
@@ -498,7 +498,7 @@ function accPlusHTML(membre, prem, secs) {
 function accLier(membre) {
   if ($("#hia")) bindIaBox($("#hia"));
   const root = $(".acc"); if (!root) return;
-  root.addEventListener("click", e => { if (e.target.closest("[data-acc-rapport]")) accRapportPanneau();
+  root.addEventListener("click", e => { if (e.target.closest("[data-acc-rapport]")) { e.preventDefault(); go("/rapport-exemple"); } // 1/11 (Romain) : le rapport en exemple s'ouvre en pleine page
     const ev = e.target.closest("[data-acc-ev]"); if (ev) { const [id, lab] = ev.dataset.accEv.split("|"); const x = $("#acc-fjx"); $$(".acc-fje.on", root).forEach(b => b.classList.remove("on")); ev.classList.add("on"); if (x) x.innerHTML = `<b>${esc(RBY[id] ? RBY[id].name : id)}</b> : ${esc(lab)} · <a class="lnk" href="/entreprise/${id}/agenda">la fiche →</a>`; } });
   root.addEventListener("click", e => { const b = e.target.closest("[data-acc-pubd]"); if (!b) return; const sc = $(".acc-pubs", root), card = sc && sc.querySelector(".acc-pub"); if (sc && card) sc.scrollBy({ left: +b.dataset.accPubd * (card.getBoundingClientRect().width + 12), behavior: "smooth" }); });
   const sc0 = $(".acc-pubs", root); if (sc0) sc0.addEventListener("scroll", () => { const card = sc0.querySelector(".acc-pub"), n = sc0.querySelectorAll(".acc-pub").length, t = $(".acc-pubn", root); if (card && t) t.textContent = `${Math.min(n, Math.round(sc0.scrollLeft / (card.getBoundingClientRect().width + 12)) + 1)}/${n}`; }, { passive: true });
