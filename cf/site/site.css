@@ -3569,3 +3569,5 @@ h1,h2,.ph h2{font-family:var(--serif);letter-spacing:-.035em}
 .a4 .a4-srch input{padding:0!important;text-indent:0!important}
 html #app .a4 .a4-tabs button{border-radius:999px!important}
 .a4-tick.scroll-x{overflow:hidden!important;scrollbar-width:none}
+.a4 .a4-n small{font-size:46px!important;font-weight:800;letter-spacing:-.03em}
+@media (max-width:760px){.a4 .a4-n small{font-size:38px!important}}
