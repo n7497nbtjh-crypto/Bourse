@@ -39,8 +39,9 @@ Base 4 px : 4 · 8 · 12 · 16 · 22 · 32 · 48. Panneau : en-tête 14/22 px, c
 
 ## Forme et relief
 
-- Rayons : 10 px (cartes internes, champs), 14 px (panneaux), 99 px (pastilles et boutons ronds).
-- Une seule ombre : `0 1px 2px rgba(17,18,20,.04), 0 6px 24px -12px rgba(17,18,20,.10)`. Pas de relief sur les tableaux ni les lignes.
+- **Système v2 (1/11/2026, refonte « publication économique », docs/refonte-2026-11.md)** : pas de cartes. Le contenu est posé sur le papier et séparé par des filets ; une rubrique (panneau avec titre) commence par un filet encre de 2 px. Rayons : 0 pour les panneaux et blocs, 4 px pour les boutons, champs et pastilles. Aucune ombre. Pas d'icône devant les titres de section. Exception : le rapport de la semaine (.syn4) garde son identité de nuit.
+- (Avant le 1/11 : rayons 10 / 14 / 99 px, ombre unique : remplacés par le système v2.)
+- Plus d'ombre (système v2).
 - Filets 1 px `--rule` ; pas de bordure colorée sauf le filet gauche vert/orange d'une carte de point d'analyse.
 
 ## Composants

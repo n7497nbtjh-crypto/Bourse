@@ -147,7 +147,7 @@ function orcIaCtx() {
 }
 function orcIaShell() {
   if ($("#orcia")) return;
-  document.body.insertAdjacentHTML("beforeend", `<button type="button" id="orciab" class="orciab" aria-haspopup="dialog" aria-controls="orcia"><span class="st">✦</span><span class="lb">Demander à l'IA</span></button>
+  document.body.insertAdjacentHTML("beforeend", `<button type="button" id="orciab" class="orciab" aria-haspopup="dialog" aria-controls="orcia"><span class="st">✦</span><span class="lb">Une question sur cette page</span></button>
     <div id="orcia" class="orcia" role="dialog" aria-modal="true" aria-labelledby="orciat" hidden><div class="orciabg" data-orcclose></div>
       <div class="orciap"><div class="orciah"><div><p class="kick" id="orciactx"></p><h2 id="orciat">✦ L'IA de bilan.</h2><p class="orcia-etat" data-mia-etat></p></div><button type="button" class="orciax" data-orcclose aria-label="Fermer">×</button></div>
         <div class="orciab2"><div class="chips" id="orciaq"></div><div id="orcialog" class="orcialog"></div></div>

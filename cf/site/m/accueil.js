@@ -427,7 +427,7 @@ function accSemaineHTML() { // 4e passage (lot C) : frise des 7 prochains jours,
 async function pageHome() {
   setTitle(""); setNav("home");
   document.documentElement.classList.add("acc-home");
-  if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="acc-une3"><h1>Comprenez une entreprise en 10 secondes.</h1></section></div>`; // affichage immédiat, même titre
+  if (!$(".acc", app)) app.innerHTML = `<div class="acc"><section class="acc-une3"><h1>Les comptes des entreprises cotées, vérifiés et comparés.</h1></section></div>`; // affichage immédiat, même titre
   await PXP; // 1/11 : les analyses d'actualité (1,2 Mo) ne servent pas à l'accueil : chargées après l'affichage
   await accAttendre(accCharge(), 300);
   if (location.pathname !== "/") return;
@@ -437,9 +437,11 @@ async function pageHome() {
   app.innerHTML = `<div class="acc acc3">
     <div class="acc-date"><span class="acc-dd">${esc(date)}</span></div>
     <div class="acc-top"><section class="acc-une3">
-      <h1>Comprenez une entreprise en 10 secondes.</h1>
+      <h1>Les comptes des entreprises cotées, vérifiés et comparés.</h1>
+      <p class="acc-promesse">Pour les particuliers qui investissent en actions ou en ETF : chaque entreprise face à la médiane de son secteur, chaque chiffre relié au rapport officiel d'où il vient. Sans conseil, sans publicité.</p>
       <div class="search big acc-search" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Apple, LVMH, MSCI World…" aria-label="Rechercher une entreprise ou un ETF" autocomplete="off"><div class="results"></div></div>
-      <p class="acc-l1">${F0.format(R.companies.length)} entreprises · ${F0.format(ETF.list.length)} ETF · sans conseil</p>
+      <ul class="acc-preuves"><li><b>${F0.format(R.companies.length)}</b> entreprises et <b>${F0.format(ETF.list.length)}</b> ETF</li><li><b>Comptes officiels</b> lus dans les rapports déposés (ESEF, SEC)</li><li><b>Médiane du secteur</b> pour chaque indicateur</li></ul>
+      <nav class="acc-usages" aria-label="Ce que vous pouvez faire"><a href="/entreprises"><b>Analyser une entreprise</b><span>Verdict, cinq repères face au secteur, comptes sur 5 ans</span></a><a href="/comparer"><b>Comparer à ses concurrents</b><span>Un tableau, critère par critère, avec la médiane</span></a><a href="/portefeuille"><b>Radiographier mon portefeuille</b><span>Concentration, frais, PEA, ce que contiennent vos ETF</span></a></nav>
       <div class="acc-minis" id="acc-minis" aria-label="Trois fiches en exemple"></div>
     </section>
     <section class="acc-demo"><p class="acc-vh">Ce que vous obtenez, pour chaque entreprise</p><div id="acc-exb" class="acc-exw"><p class="rf-no">Chargement de l'exemple…</p></div></section></div>
