@@ -13,6 +13,15 @@ python3 tests/audit.py            # toutes les pages, 3 largeurs : 0 problème, 
 python3 tests/t_ia.py             # réponses calculées : 100 % attendu
 node tests/t_worker.mjs           # + les tests t_*.mjs / t_*.py du périmètre touché
 ```
+
+## Relecture des textes générés (obligatoire dès qu'on touche une fiche, m/fiche4.js ou m/composants.js)
+```
+node scripts/relire-fiches.js 120   # 0 faute attendue ; puis LIRE /tmp/relecture-fiches.txt (tous les modèles de phrases)
+```
+Les phrases des fiches sont calculées pour plus de 2 000 sociétés : une faute d'accord ou une phrase creuse se répète partout.
+Relire chaque modèle avant de pousser : accords, sens, pas de redite du graphique ou du titre, pas de renvoi à une autre étape,
+pas de comparaison aux rivales si le graphique ne les montre pas, « rivales » ou « secteur » selon la comparaison réelle.
+Toute nouvelle faute trouvée à la main devient une règle dans `REGLES` de scripts/relire-fiches.js.
 Regarder vraiment les captures (390 px et 1440 px) : pas de NaN, pas de « undefined », pas de débordement horizontal.
 
 ## Committer
