@@ -15,7 +15,7 @@ const check = async (path, status, titlePart) => {
   if (!ok) bad++;
   console.log(ok ? "ok " : "ÉCART", path, r.status, t ? t[1] : "");
 };
-await check("/", 200, "comptes à l'appui");
+await check("/", 200, "ENKLAIR");
 await check("/entreprise/lvmh", 200, "LVMH");
 { // 5e passage (B1) : image de partage propre à la fiche quand elle existe (cf/site/og/index.json), image générale sinon
   const h = await (await W.fetch(new Request("https://t.local/entreprise/lvmh"), env)).text(), og = (h.match(/property="og:image" content="([^"]+)"/) || [])[1] || "";
