@@ -185,7 +185,7 @@ async function premium(request, env) {
     let rows = (await env.DB.prepare("SELECT token, plan FROM abonnes WHERE email = ? AND until > ?").bind(email, Date.now()).all()).results || [];
     if (rows.length)
       try {
-        await sendMail(env, email, "Votre code d'acc\xE8s bilan. Premium", `Bonjour,
+        await sendMail(env, email, "Votre code d'acc\xE8s ENKLAIR Premium", `Bonjour,
 
 Voici votre code d'acc\xE8s Premium : ${rows[0].token}
 
@@ -211,9 +211,9 @@ bilan.`);
   return json({ error: "Introuvable." }, 404);
 }
 var PROVIDERS = [
-  ["brevo", (env) => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text, htmlContent: html || void 0 }) })],
-  ["mailjet", (env) => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "bilan." }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || void 0 }] }) })],
-  ["resend", (env) => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `bilan. <${env.MAIL_FROM}>`, to, subject, text, html: html || void 0 }) })]
+  ["brevo", (env) => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "ENKLAIR" }, to: [{ email: to }], subject, textContent: text, htmlContent: html || void 0 }) })],
+  ["mailjet", (env) => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "ENKLAIR" }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || void 0 }] }) })],
+  ["resend", (env) => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `ENKLAIR <${env.MAIL_FROM}>`, to, subject, text, html: html || void 0 }) })]
 ], mailReady = (env) => !!(env.MAIL_FROM && PROVIDERS.some(([, on]) => on(env)));
 async function mailCapacity(env) {
   await initCompte(env.DB);
@@ -601,7 +601,7 @@ async function alter(db) {
     altered = !0;
   }
 }
-var page = (msg) => new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>bilan.</title><body style="background:#F8F5EE;font:16px/1.5 system-ui,sans-serif;color:#111"><div style="max-width:520px;margin:60px auto;padding:0 16px"><p style="font:900 28px Georgia,serif">bilan<span style="color:#0E6B4A">.</span></p><p>${msg}</p><p><a href="/favoris" style="color:#0E6B4A">Revenir au site</a></p></div>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+var page = (msg) => new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ENKLAIR</title><body style="background:#F8F5EE;font:16px/1.5 system-ui,sans-serif;color:#111"><div style="max-width:520px;margin:60px auto;padding:0 16px"><p style="font:900 28px Georgia,serif">bilan<span style="color:#0E6B4A">.</span></p><p>${msg}</p><p><a href="/favoris" style="color:#0E6B4A">Revenir au site</a></p></div>`, { headers: { "content-type": "text/html; charset=utf-8" } });
 async function mails(request, env, path) {
   await alter(env.DB);
   let url = new URL(request.url);
@@ -621,7 +621,7 @@ async function mails(request, env, path) {
     let token = crypto.randomUUID().replace(/-/g, "");
     await env.DB.prepare("INSERT INTO veille (token, email, ids, ok, at, alertes) VALUES (?, ?, ?, 0, ?, ?)").bind(token, email, JSON.stringify(ids), Date.now(), p ? 1 : 0).run();
     try {
-      await sendMail(env, email, "Confirmez votre bilan hebdomadaire bilan.", `Bonjour,
+      await sendMail(env, email, "Confirmez votre bilan hebdomadaire ENKLAIR", `Bonjour,
 
 Pour recevoir chaque samedi le bilan de votre liste (${ids.length} ligne${ids.length > 1 ? "s" : ""}), confirmez votre adresse en ouvrant ce lien :
 ${url.origin}/api/veille/confirmer?t=${token}
@@ -640,7 +640,7 @@ bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en
       let r = await env.DB.prepare("SELECT email FROM veille WHERE token = ?").bind(t).first();
       return r ? (await env.DB.prepare("DELETE FROM veille WHERE email = ? AND ok = 1 AND token <> ?").bind(r.email, t).run(), await env.DB.prepare("UPDATE veille SET ok = 1 WHERE token = ?").bind(t).run(), page("Adresse confirm\xE9e. Vous recevrez le bilan de votre liste chaque samedi matin. Chaque e-mail contient un lien pour vous d\xE9sinscrire.")) : page("Lien expir\xE9 ou d\xE9j\xE0 utilis\xE9.");
     }
-    return await env.DB.prepare("DELETE FROM veille WHERE token = ?").bind(t).run(), page("C'est fait : vous ne recevrez plus d'e-mails de bilan. Votre adresse a \xE9t\xE9 supprim\xE9e.");
+    return await env.DB.prepare("DELETE FROM veille WHERE token = ?").bind(t).run(), page("C'est fait : vous ne recevrez plus d'e-mails d'ENKLAIR Votre adresse a \xE9t\xE9 supprim\xE9e.");
   }
   if ((path === "/api/veille/envoi" || path === "/api/veille/alertes") && request.method === "POST") {
     if (!adminOk(request, env)) return json3({ error: "Non autoris\xE9." }, 403);
@@ -699,7 +699,7 @@ Voir sur le site : ${origin}/favoris
 Se d\xE9sinscrire : ${origin}/api/veille/desinscrire?t=${token}
 
 bilan. La Bourse, comptes \xE0 l'appui. Informations factuelles, sans conseil en investissement. Les performances pass\xE9es ne pr\xE9jugent pas des performances futures.`, html = `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px">
-    <p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><h1 style="font:800 20px Georgia,serif;margin:14px 0 6px">${esc(title)}</h1>
+    <p style="font:900 26px Georgia,serif;margin:0">ENKLAIR</p><h1 style="font:800 20px Georgia,serif;margin:14px 0 6px">${esc(title)}</h1>
     ${blocks.map((b) => b.h).join("")}
     <p style="margin:22px 0 0"><a href="${origin}/favoris" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir ma liste sur le site</a></p>
     <p style="font-size:12px;color:#87827A;margin-top:22px">Informations factuelles, sans conseil en investissement. <a href="${origin}/api/veille/desinscrire?t=${token}" style="color:#87827A">Se d\xE9sinscrire</a></p></div></div>`;
@@ -741,7 +741,7 @@ function alertes(d, ids, origin, token, last) {
   if (d.ev.filter((e) => idset.has(e.id) && e.date === tom).forEach((e) => out.push(`${d.names["c:" + e.id]} : demain, ${e.label}.`)), !out.length) return null;
   let w = mailWrap("Alerte sur votre liste", [{ t: out.map((x) => "- " + x).join(`
 `), h: out.map((x) => `<p style="margin:0 0 8px">${esc(x)}</p>`).join("") }], origin, token);
-  return { subject: `Alerte bilan. : ${out[0].slice(0, 70)}`, ...w };
+  return { subject: `Alerte ENKLAIR : ${out[0].slice(0, 70)}`, ...w };
 }
 
 // cf/src/regles.mjs
@@ -765,7 +765,7 @@ var REPERES = `Rep\xE8res exacts \xE0 respecter :
 - M\xE9diane d'un secteur : la valeur du milieu, la moiti\xE9 des entreprises fait mieux, l'autre moins bien.
 - Un indice (CAC 40, S&P 500, MSCI World) est un panier d'entreprises ; un ETF permet d'acheter tout le panier en une fois. Le MSCI World couvre environ 1 250 entreprises de 23 pays d\xE9velopp\xE9s, sans les pays \xE9mergents.
 - PEA-PME : plafond de 225 000 \u20AC, commun avec le PEA. Livret A : 1,7 % depuis le 1er ao\xFBt 2026, plafond de 22 950 \u20AC ; LDDS : plafond de 12 000 \u20AC. Assurance-vie : apr\xE8s 8 ans, abattement annuel de 4 600 \u20AC sur les gains retir\xE9s (9 200 \u20AC pour un couple), pr\xE9l\xE8vements sociaux de 17,2 % en 2026.
-- Si tu n'es pas s\xFBr d'un chiffre, ne le donne pas : dis \xAB Je ne suis pas s\xFBr de ce chiffre \xBB et o\xF9 le v\xE9rifier.`, DEMANDE = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB bilan. \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
+- Si tu n'es pas s\xFBr d'un chiffre, ne le donne pas : dis \xAB Je ne suis pas s\xFBr de ce chiffre \xBB et o\xF9 le v\xE9rifier.`, DEMANDE = `Tu es le moteur de recherche du site d'information boursi\xE8re \xAB ENKLAIR \xBB, destin\xE9 \xE0 des d\xE9butants. Tu transformes la question de l'utilisateur en UNE action JSON, sans aucun texte autour.
 
 Actions possibles :
 1. Chercher des entreprises selon des crit\xE8res :
@@ -779,9 +779,9 @@ Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"
 5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
 R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si la question demande une pr\xE9vision (\xAB va-t-elle monter \xBB, \xAB quel cours dans un an \xBB, \xAB quelle action va exploser \xBB) ou un conseil sans crit\xE8re (\xAB quoi acheter \xBB, \xAB la meilleure action \xBB), r\xE9ponds avec "repondre" : explique que personne ne peut pr\xE9voir les cours et donne la m\xE9thode (\xE9pargne de pr\xE9caution, horizon d'au moins 5 ans, diversification, versements r\xE9guliers). Si la demande contient des crit\xE8res (dividende, secteur, pays, dette, prix), choisis "filtre" ou "etf" avec un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). Si la question ne parle ni de Bourse, ni de placements, ni d'entreprises, r\xE9ponds avec "repondre" en une phrase : le site traite seulement de la Bourse et des placements. R\xE9ponds uniquement avec le JSON.
 ${REPERES}
-${REGLES}`, EXPLIQUER = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB bilan. \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas ; \xE9cris plut\xF4t \xAB Je ne suis pas s\xFBr : \u2026 \xBB et indique la source officielle o\xF9 le v\xE9rifier (service-public.fr, impots.gouv.fr, AMF, Banque de France). Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REGLES}`, EXPLIQUER = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB ENKLAIR \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas ; \xE9cris plut\xF4t \xAB Je ne suis pas s\xFBr : \u2026 \xBB et indique la source officielle o\xF9 le v\xE9rifier (service-public.fr, impots.gouv.fr, AMF, Banque de France). Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
 ${REPERES}
-${REGLES}`, ASSISTANT = `Tu es l'assistant du site d'information boursi\xE8re \xAB bilan. \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, \xE9volution sur plusieurs ann\xE9es avec son contexte dat\xE9 et sourc\xE9, comparaison au secteur, concurrents, cours, annonces r\xE9centes, actualit\xE9 qui la concerne, agenda, fiabilit\xE9 des donn\xE9es).
+${REGLES}`, ASSISTANT = `Tu es l'assistant du site d'information boursi\xE8re \xAB ENKLAIR \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, \xE9volution sur plusieurs ann\xE9es avec son contexte dat\xE9 et sourc\xE9, comparaison au secteur, concurrents, cours, annonces r\xE9centes, actualit\xE9 qui la concerne, agenda, fiabilit\xE9 des donn\xE9es).
 R\xE8gles :
 - 60 \xE0 160 mots, phrases courtes, termes techniques expliqu\xE9s une fois.
 - R\xE9ponds \xE0 la question pos\xE9e, et seulement \xE0 elle. N'\xE9num\xE8re jamais des chiffres sans rapport avec la question (par exemple le cours ou la fourchette sur un an quand on t'interroge sur la marge). Ne r\xE9p\xE8te jamais un m\xEAme chiffre deux fois.
@@ -1940,7 +1940,7 @@ async function tache(request, env, url) {
                 "Votre bilan de la semaine est pr\xEAt",
                 `Bonjour,
 
-Votre bilan de la semaine est pr\xEAt sur bilan. :
+Votre bilan de la semaine est pr\xEAt sur ENKLAIR :
 ${origin}/espace
 
 Vous recevez ce message parce que vous l'avez demand\xE9 dans votre espace. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.
@@ -2131,7 +2131,7 @@ function message(ns) {
       let r = t.replace(/^Votre (bilan de la semaine est prêt|semaine en 2 minutes est prête)\.?\s*/, "");
       return { t: "Votre semaine en 2 minutes est pr\xEAte", b: court(r || "Les variations, les annonces et les dates \xE0 venir de ce que vous suivez, en une page.", 240), u: n.lien || "/espace", tag: "bilan-semaine", ts: n.at };
     }
-    let nom = i > 0 && i < 80 ? t.slice(0, i) : "bilan.", reste = i > 0 && i < 80 ? t.slice(i + 3) : t, quoi = { annonce: "nouvelle publication", resultats: "r\xE9sultats demain", mouvement: "mouvement du jour" }[n.type] || (categorie2(n) === "dividendes" ? "dividende demain" : "demain");
+    let nom = i > 0 && i < 80 ? t.slice(0, i) : "ENKLAIR", reste = i > 0 && i < 80 ? t.slice(i + 3) : t, quoi = { annonce: "nouvelle publication", resultats: "r\xE9sultats demain", mouvement: "mouvement du jour" }[n.type] || (categorie2(n) === "dividendes" ? "dividende demain" : "demain");
     return { t: court(`${nom} \xB7 ${quoi}`, 90), b: court(reste, 240), u: n.lien || "/espace/alertes", tag: "bilan-" + n.id, ts: n.at };
   }
   return { t: `${ns.length} nouvelles alertes sur vos entreprises`, b: court(ns.slice(0, 3).map((n) => n.texte).join(`
@@ -2243,7 +2243,7 @@ async function push(request, env) {
     await env.DB.prepare("UPDATE push_abonnements SET essai = ? WHERE endpoint = ?").bind(Date.now(), row.endpoint).run();
     let s = 0;
     try {
-      s = await envoyer(env, row, { t: "bilan. \xB7 notification d'essai", b: "Les notifications fonctionnent sur cet appareil. Vous serez pr\xE9venu selon vos choix, le soir apr\xE8s la cl\xF4ture.", u: "/espace/alertes", tag: "bilan-essai", ts: Date.now() }, { origin: url.origin, ttl: 600 });
+      s = await envoyer(env, row, { t: "ENKLAIR \xB7 notification d'essai", b: "Les notifications fonctionnent sur cet appareil. Vous serez pr\xE9venu selon vos choix, le soir apr\xE8s la cl\xF4ture.", u: "/espace/alertes", tag: "bilan-essai", ts: Date.now() }, { origin: url.origin, ttl: 600 });
     } catch {
     }
     let r = await resultat(env, row, s);
@@ -2253,8 +2253,8 @@ async function push(request, env) {
 }
 
 // cf/src/mcp.mjs
-var VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"], INFO = { name: "bilan", title: "bilan. : la Bourse, comptes \xE0 l'appui", version: "1.0.0" }, AVERT = "Information factuelle et p\xE9dagogique tir\xE9e des comptes officiels, pas un conseil en investissement : aucune recommandation d'achat ou de vente.", INSTRUCTIONS = `Donn\xE9es de bilan. (site fran\xE7ais d'information boursi\xE8re pour d\xE9butants) : comptes annuels officiels de plus de 1 000 entreprises cot\xE9es (rapports ESEF via filings.xbrl.org, SEC EDGAR), m\xE9diane de chaque chiffre dans le secteur, rep\xE8res de lecture vert / gris / orange, \xE9ligibilit\xE9 au PEA, ETF (frais, indice, composition), agenda des r\xE9sultats et dividendes, cours de l'Acad\xE9mie.
-R\xE8gles : r\xE9pondez en citant les chiffres et les sources fournis, avec le lien vers la page bilan. correspondante. Un rep\xE8re vert (point fort), gris (dans la moyenne) ou orange (point de vigilance) d\xE9crit les comptes pass\xE9s selon des seuils publi\xE9s : ce n'est ni une note de l'action ni une recommandation. Ne transformez jamais ces donn\xE9es en conseil d'achat ou de vente, ni en pr\xE9diction de cours.`, MEMO = /* @__PURE__ */ new Map();
+var VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"], INFO = { name: "bilan", title: "ENKLAIR : la Bourse, comptes \xE0 l'appui", version: "1.0.0" }, AVERT = "Information factuelle et p\xE9dagogique tir\xE9e des comptes officiels, pas un conseil en investissement : aucune recommandation d'achat ou de vente.", INSTRUCTIONS = `Donn\xE9es d'ENKLAIR (site fran\xE7ais d'information boursi\xE8re pour d\xE9butants) : comptes annuels officiels de plus de 1 000 entreprises cot\xE9es (rapports ESEF via filings.xbrl.org, SEC EDGAR), m\xE9diane de chaque chiffre dans le secteur, rep\xE8res de lecture vert / gris / orange, \xE9ligibilit\xE9 au PEA, ETF (frais, indice, composition), agenda des r\xE9sultats et dividendes, cours de l'Acad\xE9mie.
+R\xE8gles : r\xE9pondez en citant les chiffres et les sources fournis, avec le lien vers la page ENKLAIR correspondante. Un rep\xE8re vert (point fort), gris (dans la moyenne) ou orange (point de vigilance) d\xE9crit les comptes pass\xE9s selon des seuils publi\xE9s : ce n'est ni une note de l'action ni une recommandation. Ne transformez jamais ces donn\xE9es en conseil d'achat ou de vente, ni en pr\xE9diction de cours.`, MEMO = /* @__PURE__ */ new Map();
 function charger(env, origin, path, ttl = 6e5) {
   let h = MEMO.get(path);
   if (h && Date.now() - h.at < ttl) return h.p;
@@ -2340,7 +2340,10 @@ function valo(c, P) {
   if (!p) return null;
   let toEur = (v, cur) => v == null || !cur ? null : v * (P.fx && P.fx[cur] || FXE[cur] || (cur === "EUR" ? 1 : NaN)), capE = p.cap ? toEur(p.cap, p.cur) : null, netE = c.net != null ? toEur(c.net * 1e6, c.currency) : null, pe = capE && netE > 0 ? capE / netE : null, sain = !0;
   pe == null && c.eps > 0 && p.cur === c.currency && (pe = p.p / c.eps);
-  let peE = c.eps > 0 && p.p > 0 ? p.p / c.eps : null;
+  let meme = p.cur === c.currency, peE = c.eps > 0 && p.p > 0 ? meme ? p.p / c.eps : (() => {
+    let a = toEur(p.p, p.cur), e = toEur(c.eps, c.currency);
+    return a > 0 && e > 0 && isFinite(a / e) ? a / e : null;
+  })() : null;
   peE != null && peE >= 3 && peE <= 150 && (pe == null || pe < 3 || pe > 150) && (pe = peE, sain = !1, c.net > 0 && (capE = toEur(p.p * c.net * 1e6 / c.eps, p.cur)));
   let yld = null;
   return sain && c.divPaid > 0.5 && capE && (yld = toEur(c.divPaid * 1e6, c.currency) / capE), (yld == null || yld > 0.15) && c.dps > 0 && (p.cur === c.currency || !sain) && (yld = c.dps / p.p), yld != null && (yld > 0.25 || yld < 0) && (yld = null), pe != null && (pe > 500 || pe < 2) && (pe = null), capE != null && !isFinite(capE) && (capE = null), { p, capE, pe, yld };
@@ -2511,7 +2514,7 @@ var lien = (origin, p) => origin + p, resumeSociete = (B, c, origin) => ({ id: c
   {
     name: "rechercher_entreprise",
     title: "Rechercher une entreprise",
-    description: "Trouve une entreprise cot\xE9e suivie par bilan. (plus de 1 000 en France, en Europe, aux \xC9tats-Unis et dans le monde) par son nom, son ticker, son code ISIN ou un mot de son activit\xE9. Renvoie l'identifiant \xE0 passer aux autres outils, le secteur, la r\xE9gion et le lien vers sa fiche. Signale aussi les ETF dont le nom correspond.",
+    description: "Trouve une entreprise cot\xE9e suivie par ENKLAIR (plus de 1 000 en France, en Europe, aux \xC9tats-Unis et dans le monde) par son nom, son ticker, son code ISIN ou un mot de son activit\xE9. Renvoie l'identifiant \xE0 passer aux autres outils, le secteur, la r\xE9gion et le lien vers sa fiche. Signale aussi les ETF dont le nom correspond.",
     inputSchema: { type: "object", properties: { requete: { ...TXT, description: "Nom, ticker, ISIN ou mot-cl\xE9, par exemple \xAB LVMH \xBB, \xAB MC \xBB, \xAB FR0000121014 \xBB ou \xAB semi-conducteurs \xBB" }, region: { type: "string", enum: ["FR", "EU", "US", "MONDE"], description: "Facultatif : FR France, EU Europe, US \xC9tats-Unis, MONDE reste du monde" }, limite: { type: "integer", minimum: 1, maximum: 25, description: "Nombre de r\xE9sultats (10 par d\xE9faut)" } }, required: ["requete"] }
   },
   {
@@ -2547,13 +2550,13 @@ var lien = (origin, p) => origin + p, resumeSociete = (B, c, origin) => ({ id: c
   {
     name: "lecon",
     title: "Le\xE7on de l'Acad\xE9mie",
-    description: "Cherche dans l'Acad\xE9mie de bilan. (cours gratuits de culture financi\xE8re : \xE9pargne, PEA, ETF, lecture des comptes, valorisation, frais, fiscalit\xE9, psychologie de l'investisseur) la le\xE7on qui r\xE9pond \xE0 un sujet, et renvoie son contenu, un exemple chiffr\xE9, ce qu'il faut retenir et ses sources.",
+    description: "Cherche dans l'Acad\xE9mie d'ENKLAIR (cours gratuits de culture financi\xE8re : \xE9pargne, PEA, ETF, lecture des comptes, valorisation, frais, fiscalit\xE9, psychologie de l'investisseur) la le\xE7on qui r\xE9pond \xE0 un sujet, et renvoie son contenu, un exemple chiffr\xE9, ce qu'il faut retenir et ses sources.",
     inputSchema: { type: "object", properties: { sujet: { ...TXT, description: "Le sujet, par exemple \xAB int\xE9r\xEAts compos\xE9s \xBB, \xAB PER \xBB, \xAB fiscalit\xE9 du PEA \xBB" } }, required: ["sujet"] }
   },
   {
     name: "search",
     title: "Recherche (compatibilit\xE9 ChatGPT)",
-    description: "Recherche g\xE9n\xE9rale dans bilan. : entreprises, ETF et le\xE7ons de l'Acad\xE9mie. Renvoie des identifiants \xE0 lire avec l'outil fetch.",
+    description: "Recherche g\xE9n\xE9rale dans ENKLAIR : entreprises, ETF et le\xE7ons de l'Acad\xE9mie. Renvoie des identifiants \xE0 lire avec l'outil fetch.",
     inputSchema: { type: "object", properties: { query: { ...TXT, description: "Ce que vous cherchez" } }, required: ["query"] }
   },
   {
@@ -2563,7 +2566,7 @@ var lien = (origin, p) => origin + p, resumeSociete = (B, c, origin) => ({ id: c
     inputSchema: { type: "object", properties: { id: { ...TXT, description: "Identifiant renvoy\xE9 par search" } }, required: ["id"] }
   }
 ].map((t) => ({ ...t, annotations: { title: t.title, ...RO } })), Erreur = class extends Error {
-}, sourcesSite = (origin, p, extra = []) => [...extra, { titre: "bilan.", url: lien(origin, p) }], pied = (sources) => `
+}, sourcesSite = (origin, p, extra = []) => [...extra, { titre: "ENKLAIR", url: lien(origin, p) }], pied = (sources) => `
 
 Sources : ${sources.map((s) => `${s.titre} (${s.url})`).join(" ; ")}.
 ${AVERT}`;
@@ -2572,10 +2575,10 @@ async function ficheSociete(env, origin, ctx, B, c) {
   c.fiche && (out.presentation = { ce_qu_elle_fait: c.fiche.fait || null, comment_elle_gagne_de_l_argent: c.fiche.argent || null, de_quoi_elle_depend: c.fiche.depend || null });
   let sources = [];
   if (c.missing)
-    out.comptes = null, out.note_comptes = "Les comptes de cette entreprise ne sont pas encore lus par bilan.";
+    out.comptes = null, out.note_comptes = "Les comptes de cette entreprise ne sont pas encore lus par ENKLAIR";
   else {
     let med = B.MED[c.sector] || {};
-    if (out.secteur_compare = { nom: B.sectors[c.sector] || c.sector, entreprises: med.n || 0, note: (med.n || 0) >= 3 ? "M\xE9dianes calcul\xE9es sur les entreprises du m\xEAme secteur suivies par bilan., toutes r\xE9gions." : "Trop peu d'entreprises du secteur pour une m\xE9diane fiable." }, out.chiffres_cles = { chiffre_affaires: c.ca, chiffre_affaires_precedent: c.caPrev, resultat_exploitation: c.ebit, benefice_net: c.net, benefice_net_precedent: c.netPrev, capitaux_propres: c.equity, dette_nette: c.netDebt, ebitda: c.ebitda, tresorerie_disponible: c.fcf, dividendes_verses: c.divPaid, dividende_par_action: c.dps, benefice_par_action: c.eps, unite: `millions de ${c.currency || "\u20AC"} (par action : ${c.currency || "\u20AC"})` }, out.reperes = reperes(c, B.MED), det && Array.isArray(det.years) && det.fin) {
+    if (out.secteur_compare = { nom: B.sectors[c.sector] || c.sector, entreprises: med.n || 0, note: (med.n || 0) >= 3 ? "M\xE9dianes calcul\xE9es sur les entreprises du m\xEAme secteur suivies par ENKLAIR, toutes r\xE9gions." : "Trop peu d'entreprises du secteur pour une m\xE9diane fiable." }, out.chiffres_cles = { chiffre_affaires: c.ca, chiffre_affaires_precedent: c.caPrev, resultat_exploitation: c.ebit, benefice_net: c.net, benefice_net_precedent: c.netPrev, capitaux_propres: c.equity, dette_nette: c.netDebt, ebitda: c.ebitda, tresorerie_disponible: c.fcf, dividendes_verses: c.divPaid, dividende_par_action: c.dps, benefice_par_action: c.eps, unite: `millions de ${c.currency || "\u20AC"} (par action : ${c.currency || "\u20AC"})` }, out.reperes = reperes(c, B.MED), det && Array.isArray(det.years) && det.fin) {
       let a = (k) => det.fin[k] || [];
       out.historique = det.years.map((y, i) => ({ annee: y, chiffre_affaires: a("ca")[i] ?? null, resultat_exploitation: a("ebit")[i] ?? null, benefice_net: a("net")[i] ?? null, marge_exploitation: a("ca")[i] > 0 && a("ebit")[i] != null ? r4(a("ebit")[i] / a("ca")[i]) : null, dette_nette: a("netDebt")[i] ?? null, dividende_par_action: a("dps")[i] ?? null }));
       for (let s of (det.sources || []).slice(0, 3)) s && s.report && sources.push({ titre: `${/sec\.gov/.test(s.report) ? "Rapport annuel d\xE9pos\xE9 \xE0 la SEC (EDGAR)" : "Rapport financier annuel ESEF (filings.xbrl.org)"}${s.periodEnd ? ", exercice clos " + s.periodEnd : ""}`, url: s.report });
@@ -2677,9 +2680,9 @@ ${T.join(`
     else if (c) d = { type: "action", nom: c.name, isin: c.isin || null, ...peaSociete(c), lien: lien(origin, "/entreprise/" + c.id) };
     else if (/^[A-Z]{2}[A-Z0-9]{9}\d$/i.test(q)) {
       let pays = q.slice(0, 2).toUpperCase(), ok = EEA.has(pays);
-      d = { type: "inconnu", nom: null, isin: q.toUpperCase(), eligible: null, raison: `Ce code ISIN n'est pas suivi par bilan. Il commence par ${pays} : ${ok ? "si c'est l'action d'une soci\xE9t\xE9 de ce pays, elle rel\xE8ve en principe du PEA" : "si c'est l'action d'une soci\xE9t\xE9 de ce pays, elle n'est pas \xE9ligible au PEA"}. Pour un fonds, le pays de l'ISIN ne suffit pas : v\xE9rifiez la mention \xAB \xE9ligible PEA \xBB dans son document d'informations cl\xE9s.` };
+      d = { type: "inconnu", nom: null, isin: q.toUpperCase(), eligible: null, raison: `Ce code ISIN n'est pas suivi par ENKLAIR Il commence par ${pays} : ${ok ? "si c'est l'action d'une soci\xE9t\xE9 de ce pays, elle rel\xE8ve en principe du PEA" : "si c'est l'action d'une soci\xE9t\xE9 de ce pays, elle n'est pas \xE9ligible au PEA"}. Pour un fonds, le pays de l'ISIN ne suffit pas : v\xE9rifiez la mention \xAB \xE9ligible PEA \xBB dans son document d'informations cl\xE9s.` };
     } else throw new Erreur(`Titre introuvable : \xAB ${q} \xBB. Essayez son code ISIN, ou rechercher_entreprise et etf.`);
-    let src = [PEA_SRC, { titre: "bilan., PEA ou compte-titres", url: lien(origin, "/pea-cto") }];
+    let src = [PEA_SRC, { titre: "ENKLAIR, PEA ou compte-titres", url: lien(origin, "/pea-cto") }];
     return { texte: `${d.nom || d.isin} : ${d.raison}
 
 La r\xE8gle : ${PEA_REGLE}` + pied(src), donnees: { ...d, regle: PEA_REGLE, sources: src, avertissement: AVERT } };
@@ -2689,7 +2692,7 @@ La r\xE8gle : ${PEA_REGLE}` + pied(src), donnees: { ...d, regle: PEA_REGLE, sour
     if (a.pea === !0 && (l = l.filter((e) => e.pea)), a.categorie && cats.has(a.categorie) && (l = l.filter((e) => e.categorie === a.categorie)), !l.length) throw new Erreur("Aucun ETF suivi ne correspond. Essayez un indice (\xAB MSCI World \xBB, \xAB S&P 500 \xBB, \xAB CAC 40 \xBB) ou retirez un filtre.");
     let q = String(a.requete || "").trim().toLowerCase(), precis = a.requete && (l.length === 1 || l[0].id === q || l[0].isin.toLowerCase() === q || norm(l[0].ticker) === norm(q) || norm(l[0].name) === norm(q)), fmtE = (e) => ({ id: e.id, nom: e.name, isin: e.isin, ticker: e.ticker, emetteur: e.issuer, indice: e.index, categorie: e.categorie, frais_courants_pct: e.ter ?? null, pea: !!e.pea, distribution: e.distribution || null, replication: e.replication || null, devise: e.devise || null, encours_millions_eur: e.encours ?? null, lien: lien(origin, "/etf/" + e.id) });
     if (precis) {
-      let e = l[0], d = fmtE(e), src2 = [{ titre: `bilan., ${e.name}`, url: d.lien }];
+      let e = l[0], d = fmtE(e), src2 = [{ titre: `ENKLAIR, ${e.name}`, url: d.lien }];
       e.fiche && (d.presentation = { ce_que_c_est: e.fiche.quoi || null, ce_qu_il_contient: e.fiche.contenu || null, ce_qui_le_fait_varier: e.fiche.varie || null });
       let comp = e.proxy ? await optionnel(charger(env, origin, `/data/etf/${e.proxy}.json`, 36e5), null) : null;
       comp && (d.composition = {
@@ -2745,7 +2748,7 @@ Les dates sont relev\xE9es sur les calendriers financiers officiels des entrepri
       if (!l) throw new Erreur("Document introuvable : " + id);
       r = lecon(B, { m, l }, origin, []), r.titre = l.titre, r.url = lien(origin, `/academie/${m.id}/${l.id}`);
     } else throw new Erreur("Identifiant inconnu : " + id);
-    let doc = { id, title: r.titre, text: r.texte, url: r.url, metadata: { source: "bilan.", avertissement: AVERT } };
+    let doc = { id, title: r.titre, text: r.texte, url: r.url, metadata: { source: "ENKLAIR", avertissement: AVERT } };
     return { texte: JSON.stringify(doc), donnees: doc };
   }
   throw new Erreur("inconnu");
@@ -2763,10 +2766,10 @@ function chercherLecons(B, sujet, n) {
   return out.sort((a, b) => b.s - a.s).slice(0, n);
 }
 function lecon(B, { m, l }, origin, autres) {
-  let url = lien(origin, `/academie/${m.id}/${l.id}`), src = [...(l.sources || []).map((s) => ({ titre: s.label, url: s.url })), { titre: "bilan., l'Acad\xE9mie", url }], d = { module: m.titre, titre: l.titre, duree_min: l.duree_min || null, premium: !!l.premium, resume: l.resume || null, a_retenir: l.a_retenir || [], lien: url, sources: src, avertissement: AVERT };
+  let url = lien(origin, `/academie/${m.id}/${l.id}`), src = [...(l.sources || []).map((s) => ({ titre: s.label, url: s.url })), { titre: "ENKLAIR, l'Acad\xE9mie", url }], d = { module: m.titre, titre: l.titre, duree_min: l.duree_min || null, premium: !!l.premium, resume: l.resume || null, a_retenir: l.a_retenir || [], lien: url, sources: src, avertissement: AVERT };
   l.premium || Object.assign(d, { contenu: l.paragraphes || [], exemple: l.exemple || null, erreur_frequente: l.erreur_frequente || null }), d.autres_lecons = autres.map((x) => ({ titre: x.l.titre, lien: lien(origin, `/academie/${x.m.id}/${x.l.id}`) }));
   let T = [`Le\xE7on \xAB ${l.titre} \xBB (module \xAB ${m.titre} \xBB${l.duree_min ? `, ${l.duree_min} min` : ""})`, l.resume || ""];
-  return l.premium ? T.push(`Le texte complet de cette le\xE7on est r\xE9serv\xE9 aux membres Premium de bilan. : ${url}`) : (T.push(...l.paragraphes || []), l.exemple && T.push("Exemple : " + l.exemple), l.erreur_frequente && T.push("Erreur fr\xE9quente : " + l.erreur_frequente)), (l.a_retenir || []).length && T.push(`\xC0 retenir :
+  return l.premium ? T.push(`Le texte complet de cette le\xE7on est r\xE9serv\xE9 aux membres Premium d'ENKLAIR : ${url}`) : (T.push(...l.paragraphes || []), l.exemple && T.push("Exemple : " + l.exemple), l.erreur_frequente && T.push("Erreur fr\xE9quente : " + l.erreur_frequente)), (l.a_retenir || []).length && T.push(`\xC0 retenir :
 ` + l.a_retenir.map((x) => "- " + x).join(`
 `)), d.autres_lecons.length && T.push("Autres le\xE7ons proches : " + d.autres_lecons.map((x) => `${x.titre} (${x.lien})`).join(" ; ")), { texte: T.filter(Boolean).join(`
 
@@ -2794,7 +2797,7 @@ async function debitCle(env, info) {
     let jour2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))").run();
     let r = await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, 'mcp', 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1 RETURNING n").bind("mcpc:" + info.compte, jour2).first();
-    if (r && r.n > MCP_GRATUIT_JOUR) return `Les ${MCP_GRATUIT_JOUR} appels gratuits du jour sont utilis\xE9s pour ce compte bilan. Ils reviennent demain ; avec Premium, le connecteur est sans limite.`;
+    if (r && r.n > MCP_GRATUIT_JOUR) return `Les ${MCP_GRATUIT_JOUR} appels gratuits du jour sont utilis\xE9s pour ce compte ENKLAIR Ils reviennent demain ; avec Premium, le connecteur est sans limite.`;
   } catch {
   }
   return null;
@@ -2876,7 +2879,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "83d8a2784e989be8", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "8bcbc5e14f6dff88", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -2908,12 +2911,12 @@ function tete(html, { title, desc, url, statut, image = null }) {
     '<link rel="icon" href="/icons/favicon.svg" type="image/svg+xml">',
     '<link rel="icon" href="/icons/favicon-32.png" sizes="32x32" type="image/png">',
     '<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">',
-    '<meta name="apple-mobile-web-app-title" content="bilan.">',
+    '<meta name="apple-mobile-web-app-title" content="ENKLAIR">',
     '<meta name="mobile-web-app-capable" content="yes">',
     '<meta name="apple-mobile-web-app-capable" content="yes">',
     '<meta name="apple-mobile-web-app-status-bar-style" content="default">',
     '<meta property="og:type" content="website">',
-    '<meta property="og:site_name" content="bilan.">',
+    '<meta property="og:site_name" content="ENKLAIR">',
     '<meta property="og:locale" content="fr_FR">',
     `<meta property="og:title" content="${esc2(title)}">`,
     `<meta property="og:description" content="${esc2(desc)}">`,
@@ -2921,7 +2924,7 @@ function tete(html, { title, desc, url, statut, image = null }) {
     `<meta property="og:image" content="${image && image.url ? esc2(image.url) : url.origin + "/icons/partage.png"}">`,
     '<meta property="og:image:width" content="1200">',
     '<meta property="og:image:height" content="630">',
-    `<meta property="og:image:alt" content="${image && image.alt ? esc2(image.alt) : "bilan. La Bourse, comptes \xE0 l'appui : les comptes officiels des entreprises cot\xE9es, expliqu\xE9s simplement."}">`,
+    `<meta property="og:image:alt" content="${image && image.alt ? esc2(image.alt) : "ENKLAIR La Bourse, comptes \xE0 l'appui : les comptes officiels des entreprises cot\xE9es, expliqu\xE9s simplement."}">`,
     '<meta name="twitter:card" content="summary_large_image">',
     ...DONNEES.map((f) => `<link rel="preload" href="/data/${f}.json" as="fetch" crossorigin>`),
     ...["/api/cours", "/data/fx.json", "/data/a-verifier.json", "/logos/index.json"].map((u) => `<link rel="preload" href="${u}" as="fetch" crossorigin>`),
@@ -3195,7 +3198,7 @@ var questions_default = {
 };
 
 // cf/src/worker.mjs
-var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "bilan.", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS2 = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc3 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "ENKLAIR", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS2 = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc3 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path, q = null) {
   let p = path.replace(/\/+$/, "") || "/", base2 = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1"), m;
   if (p === "/" || p === "/aller") return { title: `${SITE} \xB7 La Bourse, comptes \xE0 l'appui`, desc: BASE_DESC };
@@ -3239,9 +3242,9 @@ function meta(path, q = null) {
     return q2 ? { title: `${q2.q} \xB7 ${SITE}`, desc: q2.desc } : null;
   }
   if (p === "/x") return { title: `Page priv\xE9e \xB7 ${SITE}`, desc: "Page r\xE9serv\xE9e \xE0 l'\xE9diteur du site." };
-  if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple \xB7 ${SITE}`, desc: "Le vrai rapport hebdomadaire de bilan., calcul\xE9 avec les chiffres de cette semaine pour un profil fictif : variations, annonces, dates \xE0 venir, et ce que vous pouvez y r\xE9gler." };
+  if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple \xB7 ${SITE}`, desc: "Le vrai rapport hebdomadaire d'ENKLAIR, calcul\xE9 avec les chiffres de cette semaine pour un profil fictif : variations, annonces, dates \xE0 venir, et ce que vous pouvez y r\xE9gler." };
   if (p === "/repartitions") return { title: `R\xE9partitions types et listes par crit\xE8res \xB7 ${SITE}`, desc: "Des exemples de r\xE9partition entre actions, obligations et placements sans risque de perte, expliqu\xE9s avec leurs limites, et des listes d'ETF et d'entreprises tri\xE9es sur les crit\xE8res que vous choisissez. Information p\xE9dagogique, pas un conseil." };
-  if (p === "/plan") return { title: `Plan du site \xB7 ${SITE}`, desc: "Toutes les pages de bilan., rang\xE9es en quatre rubriques : D\xE9couvrir, Explorer, Analyser et Mon espace." };
+  if (p === "/plan") return { title: `Plan du site \xB7 ${SITE}`, desc: "Toutes les pages d'ENKLAIR, rang\xE9es en quatre rubriques : D\xE9couvrir, Explorer, Analyser et Mon espace." };
   if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre \xB7 ${SITE}`, desc: "Le chemin pour apprendre : par o\xF9 commencer, les cours de l'Acad\xE9mie (l'essentiel en 3 \xE9tapes et le cours complet), le lexique et les outils p\xE9dagogiques, gratuits." };
   if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 \xE9tapes \xB7 L'Acad\xE9mie \xB7 ${SITE}`, desc: "La version courte de l'Acad\xE9mie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en le\xE7ons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
@@ -3251,7 +3254,7 @@ function meta(path, q = null) {
     let mi = p.match(/^\/indice\/([a-z0-9]+)$/);
     if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir \xB7 ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqu\xE9 simplement : sa r\xE8gle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, class\xE9s par frais.` };
   }
-  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que bilan. fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 bilan. : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/espace/ia" ? { title: `Mon IA \xB7 ${SITE}`, desc: "Les r\xE9ponses calcul\xE9es du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni cl\xE9." } : p === "/ia/connecter" ? { title: `Brancher Claude ou ChatGPT sur bilan. \xB7 ${SITE}`, desc: "Trois \xE9tapes pour que votre assistant IA lise les comptes officiels et les m\xE9dianes de bilan. au lieu de r\xE9pondre de m\xE9moire. Adresse personnelle : 20 appels par jour gratuits, sans limite avec Premium." } : p === "/connecteur" ? { title: `Utiliser bilan. dans ChatGPT ou Claude \xB7 ${SITE}`, desc: "Ajoutez bilan. \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
+  return p === "/marches" ? { title: `Les march\xE9s aujourd'hui \xB7 ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliqu\xE9es." } : p === "/idees-recues" ? { title: `Les id\xE9es re\xE7ues sur la Bourse \xB7 ${SITE}`, desc: "\xAB La Bourse, c'est un casino \xBB, \xAB il faut beaucoup d'argent \xBB, \xAB le Livret A suffit \xBB : 12 id\xE9es re\xE7ues v\xE9rifi\xE9es avec des chiffres officiels et sourc\xE9s, et leurs nuances honn\xEAtes." } : p === "/livret-a-ou-bourse" ? { title: `Livret A ou Bourse : 100 \u20AC par mois sur 10, 20 ou 30 ans \xB7 ${SITE}`, desc: "Ce qu'auraient donn\xE9 100 \u20AC par mois sur un Livret A ou en actions du monde entier, compar\xE9 \xE0 l'inflation. Chiffres historiques Banque de France, Insee et MSCI, ann\xE9e par ann\xE9e. Pas une promesse." } : p === "/pourquoi-bilan" ? { title: `Ce que ENKLAIR fait que les autres ne font pas \xB7 ${SITE}`, desc: "Comptes officiels expliqu\xE9s avec la m\xE9diane du secteur, IA qui calcule et cite ses sources, PEA et fiscalit\xE9 fran\xE7aise, liste noire AMF, sans publicit\xE9 ni conseil. Avec un tableau comparatif honn\xEAte." } : p === "/methode" ? { title: `M\xE9thode, sources et IA \xB7 ${SITE}`, desc: "D'o\xF9 viennent les chiffres du site, comment ils sont jug\xE9s par rapport \xE0 la m\xE9diane du secteur, et les r\xE8gles donn\xE9es \xE0 l'IA pour rester factuelle et sans biais." } : p.startsWith("/academie") ? { title: `L'Acad\xE9mie : cours de culture financi\xE8re \xB7 ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : \xE9pargne, PEA, ETF, comptes des entreprises, frais, fiscalit\xE9, pi\xE8ges. Avec quiz et exemples chiffr\xE9s." } : p === "/demander" ? { title: `Demandez \xE0 ENKLAIR : la recherche d'entreprises par l'IA \xB7 ${SITE}`, desc: "D\xE9crivez ce que vous cherchez avec vos mots : l'IA le traduit en crit\xE8res et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." } : p.startsWith("/espace") ? { title: `Mon espace \xB7 ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, comment\xE9 par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." } : p === "/commencer" ? { title: `Par o\xF9 commencer en Bourse : le guide du nouvel investisseur \xB7 ${SITE}`, desc: "\xC9pargne de pr\xE9caution, horizon, choix du compte, diversification, frais, pi\xE8ges \xE0 \xE9viter : sept \xE9tapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalis\xE9." } : p === "/premium" || p === "/premium/merci" ? { title: `Premium \xB7 ${SITE}`, desc: "Plus de questions \xE0 l'assistant IA, de r\xE9sum\xE9s d\xE9taill\xE9s et de bilans r\xE9dig\xE9s, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." } : p === "/espace/ia" ? { title: `Mon IA \xB7 ${SITE}`, desc: "Les r\xE9ponses calcul\xE9es du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni cl\xE9." } : p === "/ia/connecter" ? { title: `Brancher Claude ou ChatGPT sur ENKLAIR \xB7 ${SITE}`, desc: "Trois \xE9tapes pour que votre assistant IA lise les comptes officiels et les m\xE9dianes d'ENKLAIR au lieu de r\xE9pondre de m\xE9moire. Adresse personnelle : 20 appels par jour gratuits, sans limite avec Premium." } : p === "/connecteur" ? { title: `Utiliser ENKLAIR dans ChatGPT ou Claude \xB7 ${SITE}`, desc: "Ajoutez ENKLAIR \xE0 Claude ou \xE0 ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la m\xE9diane de leur secteur, l'\xE9ligibilit\xE9 au PEA, les ETF et l'agenda, sources \xE0 l'appui. Gratuit, en lecture seule, sans conseil." } : p === "/mentions-legales" ? { title: `Mentions l\xE9gales \xB7 ${SITE}`, desc: BASE_DESC } : p === "/cgv" ? { title: `Conditions g\xE9n\xE9rales de vente \xB7 ${SITE}`, desc: BASE_DESC } : p === "/confidentialite" ? { title: `Politique de confidentialit\xE9 \xB7 ${SITE}`, desc: BASE_DESC } : p === "/avertissement" ? { title: `Avertissement sur les risques \xB7 ${SITE}`, desc: BASE_DESC } : null;
 }
 var ALIAS_ENTREPRISES = { samsung: "samsung-electronics", hyundai: "hyundai-motor", aramco: "saudi-aramco", "saudi-aramco": null, tata: "tcs", "tata-consultancy": "tcs", lg: "lg-electronics", "taiwan-semiconductor": "tsmc", google: "alphabet", facebook: "meta", "louis-vuitton": "lvmh", total: "totalenergies", "air-liquide": null, novo: "novo-nordisk" };
 function redirectionParcours(p) {
@@ -3339,7 +3342,12 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
         (await ogIds(env, url)).has(fq[1]) && (image = { url: `${url.origin}/og/entreprise/${fq[1]}.png`, alt: `${t.title} : verdict et cinq jauges face \xE0 la m\xE9diane du secteur, d'apr\xE8s les comptes officiels.` });
       } catch {
       }
-    if (html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image }), info && ctx && typeof ctx.waitUntil == "function" && !/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless/i.test(request.headers.get("user-agent") || "")) {
+    html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image });
+    {
+      let pip = String(request.cf && request.cf.country || "").toLowerCase();
+      /^(fr|be|ch|lu)$/.test(pip) && (html = html.replace(/<html\b/, `<html data-pays-ip="${pip}"`));
+    }
+    if (info && ctx && typeof ctx.waitUntil == "function" && !/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless/i.test(request.headers.get("user-agent") || "")) {
       let ref = request.headers.get("referer") || "", src = url.searchParams.get("utm_source") === "x" || /\/\/(t\.co|x\.com|twitter\.com)\//.test(ref) ? "src:x" : /\/\/(www\.)?(google|bing|duckduckgo|qwant|ecosia|yahoo|search\.brave)\./.test(ref) ? "src:moteur" : ref && !ref.includes(url.host) ? "src:autre" : null;
       ctx.waitUntil(compterEvt(env, ["visite", ...fq ? ["fiche"] : [], ...src ? [src] : []]));
     }
