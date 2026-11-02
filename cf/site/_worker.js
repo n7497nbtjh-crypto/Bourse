@@ -2879,7 +2879,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "aef92e12f6e88798", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "b1576d44c4aa927c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3201,7 +3201,7 @@ var questions_default = {
 var INDEX = index_gen_default.map((c) => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })), SITE = "ENKLAIR", BASE_DESC = "Les chiffres cl\xE9s des entreprises cot\xE9es, expliqu\xE9s simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.", TOOLS2 = { epargne: "Simulateur d'\xE9pargne", interets: "Simulateur d'\xE9pargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" }, BY = Object.fromEntries(INDEX.map((c) => [c.id, c])), esc3 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function meta(path, q = null) {
   let p = path.replace(/\/+$/, "") || "/", base2 = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1"), m;
-  if (p === "/" || p === "/aller") return { title: `${SITE} \xB7 La Bourse, comptes \xE0 l'appui`, desc: BASE_DESC };
+  if (p === "/" || p === "/aller") return { title: SITE, desc: BASE_DESC };
   if (m = base2.match(/^\/entreprise\/([a-z0-9-]+)$/)) {
     let c = BY[m[1]];
     if (!c) return null;
@@ -3344,7 +3344,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
         (await ogIds(env, url)).has(fq[1]) && (image = { url: `${url.origin}/og/entreprise/${fq[1]}.png`, alt: `${t.title} : verdict et cinq jauges face \xE0 la m\xE9diane du secteur, d'apr\xE8s les comptes officiels.` });
       } catch {
       }
-    html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image });
+    html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image }), html = html.replace(/(src|href)="(\/(?:m\/[a-z0-9_-]+\.js|app\.js|site\.css|composants\.css|calc\.js))"/gi, `$1="$2?v=${VERSION}"`);
     {
       let pip = String(request.cf && request.cf.country || "").toLowerCase();
       /^(fr|be|ch|lu)$/.test(pip) && (html = html.replace(/<html\b/, `<html data-pays-ip="${pip}"`));

@@ -39,15 +39,16 @@ const REGLES = [
       const page = document.querySelector(".ek-page"); if (!page || !document.querySelector(".ek-fil")) return null;
       const nom = (document.querySelector(".ek-hero h1") || {}).textContent || "", med = (document.querySelector(".ek-medl") || {}).textContent || "";
       const rivales = ((med.match(/\(([^)]+)\)/) || [])[1] || "").split(",").map(x => x.trim()).filter(Boolean);
-      const T = [], add = (zone, el) => { const t = (el.innerText || el.textContent || "").replace(/\s+/g, " ").trim(); if (t) T.push([zone, t]); };
+      const T = [], add = (zone, el) => { if (!el) return; const c = el.cloneNode(true); c.querySelectorAll(".ek-hc i, .ek-def i").forEach(i => i.remove()); const t = (c.textContent || "").replace(/\s+/g, " ").trim(); if (t) T.push([zone, t]); };
       document.querySelectorAll(".ek-vrd h2").forEach(e => add("verdict", e));
       document.querySelectorAll(".ek-rp").forEach(e => { add("repère : titre", e.querySelector(".ek-st")); add("repère : texte", e.querySelector(".ek-s")); add("repère : rivales", e.querySelector(".ek-ml")); });
       document.querySelectorAll(".ek-medl > span").forEach(e => add("repères : légende", e));
       document.querySelectorAll(".ek-sec > h2").forEach(e => add("titre de section", e));
       document.querySelectorAll(".ek-step").forEach(st => {
         const k = st.id, sur = (st.querySelector(".ek-q") || {}).textContent || "", vis = st.querySelector(".ek-box");
-        const aRivales = !!(vis && vis.querySelector(".ek-cmpl, svg rect[fill='#E2F8EE'], svg rect[fill='#FFE9E3']"));
-        const h = st.querySelector(".ek-h"); if (h) { add(`${sur} : titre`, h); if (/rivales|secteur/.test(h.textContent) && !aRivales) T.push(["!!", `${k} : titre comparé aux rivales sans rivales à l'écran : ${h.textContent}`]); if (!/[.?!]$/.test(h.textContent.trim())) T.push(["!!", `${k} : titre sans ponctuation finale : ${h.textContent}`]); }
+        const aRivales = !!(vis && vis.querySelector(".ek-cmpl, .ek-cbar em, svg rect[fill='#E2F8EE'], svg rect[fill='#FFE9E3']"));
+        const h0 = st.querySelector(".ek-h"), h = h0 && h0.cloneNode(true); if (h) h.querySelectorAll(".ek-hc i").forEach(i => i.remove()); if (h) { add(`${sur} : titre`, h); if (/rivales|secteur/.test(h.textContent) && !aRivales) T.push(["!!", `${k} : titre comparé aux rivales sans rivales à l'écran : ${h.textContent}`]); if (!/[.?!]$/.test(h.textContent.trim())) T.push(["!!", `${k} : titre sans ponctuation finale : ${h.textContent}`]); }
+        st.querySelectorAll(".ek-cmp").forEach(e => { add(`${sur} : pastille`, e); if (/rivales|secteur/.test(e.textContent) && !aRivales) T.push(["!!", `${k} : pastille comparée aux rivales sans rivales à l'écran : ${e.textContent}`]); });
         st.querySelectorAll(".ek-bt").forEach(e => add(`${sur} : titre du graphique`, e));
         st.querySelectorAll(".ek-cz strong").forEach(e => add(`${sur} : cause (titre)`, e));
         st.querySelectorAll(".ek-cz p").forEach(e => add(`${sur} : cause (texte)`, e));

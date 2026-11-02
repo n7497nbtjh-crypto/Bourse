@@ -62,8 +62,11 @@ function ekPoints(o) {
 // Partage « sur 100 € » : une seule barre en deux blocs dont la largeur suit la part, la comparaison aux rivales en une ligne.
 // o = { titre, unite, verse (0-100), verseTexte, garde (0-100), gardeTexte, comparaison (HTML court), indice, source }
 function ekPartage(o) {
-  const v = Math.max(0, Math.min(100, o.verse)), g = Math.max(0, 100 - v);
-  return ekBox(o, `<div class="ek-cent">${v > 0 ? `<div class="v" style="flex:${Math.max(v, 18)}"><b>${ekEsc(o.verseValeur)}</b><span>${ekEsc(o.verseTexte)}</span></div>` : ""}${g > 0 ? `<div style="flex:${Math.max(g, 18)}"><b>${ekEsc(o.gardeValeur)}</b><span>${ekEsc(o.gardeTexte)}</span></div>` : ""}</div>${o.comparaison ? `<p class="ek-cmpl">${o.comparaison}</p>` : ""}`);
+  // Barre sur 100 : la part versée colorée (ton g / r), la médiane en trait sur la barre, les deux montants dessous.
+  const v = Math.max(0, Math.min(100, o.verse)), g = Math.max(0, 100 - v), m = o.mediane != null ? Math.max(0, Math.min(100, o.mediane)) : null;
+  const al = m == null ? "" : m < 18 ? " d" : m > 82 ? " f" : "";
+  return ekBox(o, `<div class="ek-cbar${m != null ? " ek-cbar-m" : ""}"><i class="${o.ton === "r" ? "r" : o.ton === "n" ? "n" : "g"}" style="width:${v}%"></i>${m != null ? `<em class="${al.trim()}" style="left:${m}%"><span>${ekEsc(o.medianeLabel || "médiane")}</span></em>` : ""}</div>
+<div class="ek-cleg">${v > 0 ? `<div class="v ${o.ton === "r" ? "r" : o.ton === "n" ? "n" : "g"}"><b>${ekEsc(o.verseValeur)}</b><span>${ekEsc(o.verseTexte)}</span></div>` : ""}${g > 0 ? `<div><b>${ekEsc(o.gardeValeur)}</b><span>${ekEsc(o.gardeTexte)}</span></div>` : ""}</div>${o.comparaison ? `<p class="ek-cmpl">${o.comparaison}</p>` : ""}`);
 }
 
 // « Ce qui l'explique » : des causes numérotées, chacune avec sa preuve, puis « À surveiller ».
@@ -82,10 +85,16 @@ function ekTransition(t) { return t ? `<div class="ek-trans"><i>↓</i><p><span>
 
 // Une étape du fil. o = { id, n, sur, titre, mots:[{ cle, ex, calc }], visuel, explique, plus, suite, haut (visuel court : pas d'étirement) }
 function ekEtape(o) {
+  // o.concept = { cle, texte, ex, calc, nom } : le terme exact en tête du titre, cliquable. o.cmp = { texte, ton: g | r | n } : pastille de comparaison.
+  const c = o.concept, d = c && EK_DEF[c.cle];
+  const tete = d ? `<span class="ek-hc" role="button" tabindex="0" data-ek-def="${ekEsc(c.cle)}" data-ek-ex="${ekEsc(c.ex || "")}" data-ek-calc="${ekEsc(c.calc || "")}" data-ek-nom="${ekEsc(c.nom || "")}">${ekEsc(c.texte || d.t)}<i>?</i></span> : ` : "";
+  const cmp = o.cmp && o.cmp.texte ? `<p class="ek-cmp ${o.cmp.ton || "n"}">${/^(Comme|Même)/.test(o.cmp.texte) ? "" : o.cmp.ton === "g" ? "▲ " : o.cmp.ton === "r" ? "▼ " : ""}${ekEsc(o.cmp.texte)}</p>` : "";
+  const mots = (o.mots || []).filter(m => !c || m.cle !== c.cle);
+  const seul = !o.explique, trDroite = seul && o.visuel && o.suite;
   return `<div class="ek-step" id="${ekEsc(o.id)}"><div class="ek-rail"><b>${o.n}</b></div><div class="ek-sc">
-  <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${ekEsc(o.titre)}</h3>
-  ${o.mots && o.mots.length ? `<div class="ek-defs">Les mots de l'étape : ${o.mots.map(m => ekDefBouton(m.cle, m)).join("")}</div>` : ""}
-  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${o.explique ? "" : " ek-row-1"}">${o.visuel || ""}${o.explique || ""}</div>` : ""}${o.plus || ""}${ekTransition(o.suite)}</div></div>`;
+  <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${tete}${ekEsc(o.titre)}</h3>${cmp}
+  ${mots.length ? `<div class="ek-defs">${c ? "Autre mot" + (mots.length > 1 ? "s" : "") : "Les mots de l'étape"} : ${mots.map(m => ekDefBouton(m.cle, m)).join("")}</div>` : ""}
+  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${seul ? (trDroite ? " ek-row-tr" : " ek-row-1") : ""}">${o.visuel || ""}${o.explique || ""}${trDroite ? ekTransition(o.suite) : ""}</div>` : ""}${o.plus || ""}${trDroite ? "" : ekTransition(o.suite)}</div></div>`;
 }
 function ekFil(etapes) { return `<div class="ek ek-fil">${etapes.map(ekEtape).join("")}</div>`; }
 
