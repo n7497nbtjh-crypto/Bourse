@@ -109,7 +109,7 @@ export async function envoyer(env, ab, message, { origin, ttl = 43200, urgence =
 }
 
 /* ---------- Ce qu'affiche la notification ---------- */
-// Types des notifications du site (espace.mjs) : annonce, resultats, agenda, mouvement, bilan.
+// Types des notifications du site (espace.mjs) : annonce, resultats, agenda, mouvement, ENKLAIR
 export const categorie = n => n.type === "mouvement" ? "mouvements" : n.type === "bilan" ? "bilan" : n.type === "agenda" && /dividende/i.test(n.texte || "") ? "dividendes" : "annonces";
 const court = (s, n) => { s = String(s || "").replace(/\s+/g, " ").trim(); return s.length > n ? s.slice(0, n - 1).replace(/\s+\S*$/, "") + "…" : s; };
 export function message(ns) {
@@ -119,7 +119,7 @@ export function message(ns) {
       const r = t.replace(/^Votre (bilan de la semaine est prêt|semaine en 2 minutes est prête)\.?\s*/, "");
       return { t: "Votre semaine en 2 minutes est prête", b: court(r || "Les variations, les annonces et les dates à venir de ce que vous suivez, en une page.", 240), u: n.lien || "/espace", tag: "bilan-semaine", ts: n.at };
     }
-    const nom = i > 0 && i < 80 ? t.slice(0, i) : "bilan.", reste = i > 0 && i < 80 ? t.slice(i + 3) : t;
+    const nom = i > 0 && i < 80 ? t.slice(0, i) : "ENKLAIR", reste = i > 0 && i < 80 ? t.slice(i + 3) : t;
     const quoi = { annonce: "nouvelle publication", resultats: "résultats demain", mouvement: "mouvement du jour" }[n.type] || (categorie(n) === "dividendes" ? "dividende demain" : "demain");
     return { t: court(`${nom} · ${quoi}`, 90), b: court(reste, 240), u: n.lien || "/espace/alertes", tag: "bilan-" + n.id, ts: n.at };
   }
@@ -227,7 +227,7 @@ export async function push(request, env) {
     if (Date.now() - (row.essai || 0) < 60000) return json({ error: "Une notification d'essai vient d'être envoyée. Réessayez dans une minute." }, 429);
     await env.DB.prepare(`UPDATE push_abonnements SET essai = ? WHERE endpoint = ?`).bind(Date.now(), row.endpoint).run();
     let s = 0;
-    try { s = await envoyer(env, row, { t: "bilan. · notification d'essai", b: "Les notifications fonctionnent sur cet appareil. Vous serez prévenu selon vos choix, le soir après la clôture.", u: "/espace/alertes", tag: "bilan-essai", ts: Date.now() }, { origin: url.origin, ttl: 600 }); } catch (e) { }
+    try { s = await envoyer(env, row, { t: "ENKLAIR · notification d'essai", b: "Les notifications fonctionnent sur cet appareil. Vous serez prévenu selon vos choix, le soir après la clôture.", u: "/espace/alertes", tag: "bilan-essai", ts: Date.now() }, { origin: url.origin, ttl: 600 }); } catch (e) { }
     const r = await resultat(env, row, s);
     if (r === "ok") return json({ ok: true });
     return json({ error: r === "supprime" ? "Cet abonnement n'est plus valide : réactivez les notifications." : "Le service de notification n'a pas accepté le message. Réessayez plus tard.", statut: s }, 502);

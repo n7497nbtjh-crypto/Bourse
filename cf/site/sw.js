@@ -125,7 +125,7 @@ async function styleGoogle(e) {
 async function avertir(msg) { for (const c of await self.clients.matchAll({ type: "window" })) c.postMessage(msg); }
 
 function horsLigne() {
-  return new Response(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#F8F5EE"><title>Hors ligne · bilan.</title>
+  return new Response(`<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#F8F5EE"><title>Hors ligne · ENKLAIR</title>
 <style>body{margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;background:#F8F5EE;color:#111214;font:16px/1.5 "IBM Plex Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:24px;box-sizing:border-box}
 main{max-width:440px;background:#fff;border:1px solid #E6E0D4;border-radius:16px;padding:28px 26px;box-shadow:0 6px 24px -12px rgba(17,18,20,.12)}
 .l{font-weight:700;font-size:24px;letter-spacing:-.02em;margin:0 0 18px}.l i{color:#0E6B4A;font-style:normal}h1{font:800 22px/1.2 Fraunces,Georgia,serif;margin:0 0 8px}p{margin:0 0 16px;color:#55524C}
@@ -139,7 +139,7 @@ self.addEventListener("push", e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (x) { d = { b: e.data ? e.data.text() : "" }; }
   const url = typeof d.u === "string" && d.u.startsWith("/") ? d.u : "/espace/alertes";
-  e.waitUntil(self.registration.showNotification(d.t || "bilan.", {
+  e.waitUntil(self.registration.showNotification(d.t || "ENKLAIR", {
     body: d.b || "Du nouveau sur vos entreprises.", icon: "/icons/icon-192.png", badge: "/icons/badge-96.png", lang: "fr", dir: "ltr",
     tag: d.tag || undefined, renotify: !!d.tag, timestamp: d.ts || Date.now(), data: { url } }));
 });

@@ -243,7 +243,7 @@ const PF3 = (() => {
     if (any(/libell/) && any(/^(operation|sens|nature)$/) && any(/^(qte|quantite)$/) && any(/courtage|commission/)) return "fortuneo";
     return "generic";
   }
-  const FORMATS = { traderepublic: "Trade Republic (export des transactions)", boursobank: "BoursoBank (export des positions)", degiro: "Degiro (export des transactions)", "degiro-pf": "Degiro (export du portefeuille)", fortuneo: "Fortuneo (historique des opérations)", "fortuneo-pf": "Fortuneo (export du portefeuille)", pytr: "Trade Republic (fichier pytr)", bilan: "bilan. (export de ce site)", generic: "Fichier CSV" };
+  const FORMATS = { traderepublic: "Trade Republic (export des transactions)", boursobank: "BoursoBank (export des positions)", degiro: "Degiro (export des transactions)", "degiro-pf": "Degiro (export du portefeuille)", fortuneo: "Fortuneo (historique des opérations)", "fortuneo-pf": "Fortuneo (export du portefeuille)", pytr: "Trade Republic (fichier pytr)", bilan: "ENKLAIR (export de ce site)", generic: "Fichier CSV" };
   const BROKER_OF = { traderepublic: "trade-republic", pytr: "trade-republic", boursobank: "boursobank", degiro: "degiro", "degiro-pf": "degiro", fortuneo: "fortuneo", "fortuneo-pf": "fortuneo" };
   /* Type d'opération lu dans une cellule :
      a achat · v vente · d dividende · s division ou regroupement (quantité ajoutée ou retirée) · ti titres reçus (transfert)

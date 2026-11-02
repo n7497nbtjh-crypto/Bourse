@@ -18,7 +18,7 @@
     {
      "h": "Éditeur du site",
      "p": [
-      "Le site [Nom de domaine] (ci-après « bilan. ») est édité par [Nom Prénom], entrepreneur individuel (EI), sous le régime de la micro-entreprise.",
+      "Le site [Nom de domaine] (ci-après « ENKLAIR ») est édité par [Nom Prénom], entrepreneur individuel (EI), sous le régime de la micro-entreprise.",
       "Adresse : [Adresse].",
       "E-mail : [E-mail de contact]. Téléphone : [Téléphone].",
       "Immatriculation : SIREN [SIREN], SIRET [SIRET], inscrit au Registre national des entreprises (RNE).",
@@ -43,16 +43,16 @@
      "h": "Prestataires techniques",
      "p": [
       "Envoi des e-mails : Brevo, marque de Sendinblue SAS, société française.",
-      "Paiement en ligne : Stripe. bilan. ne voit ni ne conserve vos numéros de carte bancaire.",
+      "Paiement en ligne : Stripe. ENKLAIR ne voit ni ne conserve vos numéros de carte bancaire.",
       "Intelligence artificielle : les réponses rédigées par l'IA du site sont produites par un modèle hébergé par Cloudflare (Cloudflare Workers AI, Cloudflare, Inc.). Les réponses calculées le sont par le site lui-même, sans modèle d'IA.",
-      "Connecteur pour Claude ou ChatGPT : si vous branchez votre assistant sur bilan., c'est votre assistant (Anthropic, OpenAI ou autre) qui interroge le site, sous votre propre compte chez lui."
+      "Connecteur pour Claude ou ChatGPT : si vous branchez votre assistant sur ENKLAIR, c'est votre assistant (Anthropic, OpenAI ou autre) qui interroge le site, sous votre propre compte chez lui."
      ]
     },
     {
      "h": "Nature du site",
      "p": [
-      "bilan. publie des informations factuelles et pédagogiques sur la bourse.",
-      "bilan. ne fournit aucun conseil en investissement. Voir la page « Avertissement ».",
+      "ENKLAIR publie des informations factuelles et pédagogiques sur la bourse.",
+      "ENKLAIR ne fournit aucun conseil en investissement. Voir la page « Avertissement ».",
       "Les réponses calculées sont produites par le site à partir des données. Les textes rédigés par l'IA du site sont signalés comme tels, avec le nom du modèle."
      ]
     },
@@ -169,7 +169,7 @@
     {
      "h": "8. Arrêt du service",
      "p": [
-      "Si l'éditeur arrête définitivement bilan., il prévient les clients par e-mail au moins [3] mois avant.",
+      "Si l'éditeur arrête définitivement ENKLAIR, il prévient les clients par e-mail au moins [3] mois avant.",
       "Les abonnements mensuels prennent fin sans nouveau prélèvement.",
       "[Option à décider : remboursement partiel de l'accès 12 mois si l'arrêt intervient moins de [X] mois après l'achat.]"
      ]
@@ -187,7 +187,7 @@
     {
      "h": "10. Responsabilité",
      "p": [
-      "bilan. fournit de l'information générale et pédagogique, pas de conseil en investissement.",
+      "ENKLAIR fournit de l'information générale et pédagogique, pas de conseil en investissement.",
       "Les décisions d'investissement restent celles du client. L'éditeur n'est pas responsable des pertes liées à ces décisions.",
       "Les données de tiers et les textes générés par IA peuvent contenir des erreurs. Le client doit vérifier les informations importantes à la source.",
       "Rien dans ces CGV ne limite les droits que la loi accorde au consommateur."
@@ -236,7 +236,7 @@
     {
      "h": "Principe",
      "p": [
-      "bilan. collecte le moins de données possible.",
+      "ENKLAIR collecte le moins de données possible.",
       "Aucune donnée n'est vendue ni utilisée pour de la publicité ciblée."
      ]
     },
@@ -258,7 +258,7 @@
       "Finalité : gérer la commande, l'accès payant, la résiliation et la facturation.",
       "Base légale : l'exécution du contrat. Pour les pièces comptables, une obligation légale.",
       "Durée : pendant l'abonnement, puis [3] ans pour gérer les éventuelles réclamations. Les pièces comptables sont gardées 10 ans (Code de commerce).",
-      "Les données de carte bancaire sont traitées par Stripe. bilan. n'y a jamais accès."
+      "Les données de carte bancaire sont traitées par Stripe. ENKLAIR n'y a jamais accès."
      ]
     },
     {
@@ -308,7 +308,7 @@
       "Quand vous demandez une réponse rédigée, votre question et les chiffres du site utiles à la réponse (par exemple ceux d'une fiche, ou ceux de votre portefeuille si vous demandez son explication) sont envoyés au modèle d'IA du site, hébergé par Cloudflare (Workers AI). Ils servent uniquement à rédiger la réponse.",
       "Une réponse identique peut être resservie pendant 24 heures à quiconque pose la même question avec les mêmes chiffres : elle est gardée au plus 48 heures, sans lien avec votre identité.",
       "Le site compte les questions posées par jour (empreinte pseudonyme, voir « Protection contre les abus ») pour appliquer les limites gratuites.",
-      "Connecteur : si vous branchez Claude, ChatGPT ou un autre assistant sur bilan., c'est cet assistant qui lit les données publiques du site. Votre adresse personnelle de connecteur sert seulement à compter vos appels du jour ; le connecteur ne donne accès ni à votre compte ni à votre portefeuille."
+      "Connecteur : si vous branchez Claude, ChatGPT ou un autre assistant sur ENKLAIR, c'est cet assistant qui lit les données publiques du site. Votre adresse personnelle de connecteur sert seulement à compter vos appels du jour ; le connecteur ne donne accès ni à votre compte ni à votre portefeuille."
      ]
     },
     {
@@ -349,7 +349,7 @@
     {
      "h": "Cookies et stockage local",
      "p": [
-      "bilan. n'utilise aucun cookie publicitaire ni outil de mesure d'audience tiers.",
+      "ENKLAIR n'utilise aucun cookie publicitaire ni outil de mesure d'audience tiers.",
       "Un seul cookie : « bilan_s », posé quand vous vous connectez à Mon espace. Il garde votre session (60 jours au plus) ; il est sécurisé (HttpOnly, Secure, SameSite=Lax) et strictement nécessaire au service que vous demandez.",
       "Le site utilise aussi le stockage local du navigateur (localStorage) pour des besoins techniques : vos préférences d'affichage, vos favoris et votre portefeuille si vous n'avez pas d'espace, votre progression dans l'Académie et, le cas échéant, votre code Premium.",
       "Ces traceurs sont nécessaires au service. Selon les règles de la CNIL, ils ne demandent pas de consentement : c'est pourquoi le site n'affiche pas de bandeau cookies.",
@@ -378,9 +378,9 @@
     {
      "h": "Pas de conseil en investissement",
      "p": [
-      "bilan. publie de l'information générale, factuelle et pédagogique.",
-      "bilan. ne fournit pas de conseil en investissement au sens de l'article L. 541-1 du Code monétaire et financier. Aucun contenu ne tient compte de votre situation personnelle.",
-      "bilan. ne publie pas de recommandation d'acheter, de vendre ou de conserver un titre, ni d'objectif de cours.",
+      "ENKLAIR publie de l'information générale, factuelle et pédagogique.",
+      "ENKLAIR ne fournit pas de conseil en investissement au sens de l'article L. 541-1 du Code monétaire et financier. Aucun contenu ne tient compte de votre situation personnelle.",
+      "ENKLAIR ne publie pas de recommandation d'acheter, de vendre ou de conserver un titre, ni d'objectif de cours.",
       "L'éditeur n'est ni conseiller en investissements financiers (CIF), ni prestataire de services d'investissement."
      ]
     },
@@ -428,7 +428,7 @@
      "p": [
       "L'éditeur peut détenir à titre personnel des titres ou des fonds présentés sur le site.",
       "[Indiquer ici les positions détenues sur les titres présentés, ou « Aucun lien d'intérêts à déclarer ».]",
-      "bilan. ne reçoit aucune rémunération des sociétés présentées. [Modifier si des liens affiliés ou partenariats sont ajoutés.]"
+      "ENKLAIR ne reçoit aucune rémunération des sociétés présentées. [Modifier si des liens affiliés ou partenariats sont ajoutés.]"
      ]
     },
     {

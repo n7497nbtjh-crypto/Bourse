@@ -3,7 +3,7 @@
    1. La promesse + la recherche, à côté d'un exemple réel interactif (4 entreprises) : marge face à la médiane, puis
       croissance, dette et prix, chacun en jauge face à la médiane du secteur (mêmes rangs que la fiche : rfAxes).
    2. Un bandeau de preuves. 3. Deux outils liés (elle seule, face aux autres) + la preuve en garantie.
-   4. Le portefeuille. 5. Pourquoi bilan. 6. La dernière séance. 7. Appel final.
+   4. Le portefeuille. 5. Pourquoi ENKLAIR 6. La dernière séance. 7. Appel final.
    Aucun chiffre écrit en dur : tout est calculé à partir des comptes et des cours chargés par le site.
    Styles : site.css, bloc « Accueil v4 ». Remplace pageHome (m/accueil.js), dont les fonctions restent utilisées. */
 const A4_EX = ["hermes", "lvmh", "asml", "sanofi"];
@@ -86,7 +86,7 @@ async function pageHome() {
     <div class="a4-l">
       <span class="a4-stk a4-wh">Sans inscription · sans publicité</span>
       <h1>Comprenez n'importe quelle action en 30&nbsp;secondes.</h1>
-      <p class="a4-sub">bilan. lit les <b>comptes officiels</b> de ${F0.format(ok)} entreprises et vous dit, en clair, si elles sont rentables, endettées ou chères <b>par rapport à leurs concurrentes</b>.</p>
+      <p class="a4-sub">ENKLAIR lit les <b>comptes officiels</b> de ${F0.format(ok)} entreprises et vous dit, en clair, si elles sont rentables, endettées ou chères <b>par rapport à leurs concurrentes</b>.</p>
       <div class="search big a4-srch" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Hermès, Apple, ASML…" aria-label="Rechercher une entreprise ou un ETF" autocomplete="off"><div class="results"></div></div>
       <p class="a4-hint">Changez d'entreprise dans l'exemple pour voir le site en action.</p>
     </div>
@@ -119,7 +119,7 @@ async function pageHome() {
   </section>
 
   <section class="a4-sec">
-    <span class="a4-stk a4-gr">Pourquoi bilan.</span>
+    <span class="a4-stk a4-gr">Pourquoi ENKLAIR</span>
     <h2>Ce qui fait la différence.</h2>
     <div class="a4-why"><div class="y"><b>Comparé</b><p>Un chiffre seul ne dit rien. Ici, chacun est placé face à la médiane du secteur.</p></div><div class="p"><b>Prouvé</b><p>Les chiffres viennent des rapports déposés par les entreprises, et vous pouvez les vérifier.</p></div><div class="b"><b>Expliqué</b><p>Chaque notion a sa définition en une phrase. Pas besoin d'être expert.</p></div><div class="g"><b>Neutre</b><p>Aucun conseil d'acheter ou de vendre, aucune publicité, aucun courtier derrière.</p></div></div>
   </section>

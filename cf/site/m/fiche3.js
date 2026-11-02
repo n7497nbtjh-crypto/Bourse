@@ -169,7 +169,8 @@ function f3Recomposer(s, c) {
   const mw = $("#f3-metw", wrap), mt = metier && metier.querySelector("#metier"), fms = mt ? $$(".fm", mt) : [], fi = s.fiche && typeof s.fiche === "object" ? s.fiche : null;
   if (fms[0]) mw.appendChild(fms[0]);
   if (fi && (fi.fait || fi.argent || fi.depend)) mw.insertAdjacentHTML("beforeend", `<div class="f3-met">${[["Ce qu'elle fait", fi.fait], ["Comment elle gagne de l'argent", fi.argent], ["Ce dont elle dépend", fi.depend]].filter(x => x[1]).map(([t, v]) => `<div><small>${t}</small><p>${esc(v)}</p></div>`).join("")}</div>`);
-  if (fms[1]) { const p0 = fms[1].querySelector(":scope > p"); if (p0 && fi && fi.argent && p0.textContent.trim() === fi.argent.trim()) p0.remove(); const h = fms[1].querySelector("h3"); if (h) h.textContent = "D'où viennent ses ventes"; mw.appendChild(fms[1]); }
+  if (fms[1]) { const p0 = fms[1].querySelector(":scope > p"); if (p0 && fi && fi.argent && p0.textContent.trim() === fi.argent.trim()) p0.remove(); const h = fms[1].querySelector("h3"); if (h) h.textContent = s.ca > 0 ? `D'où viennent ses ${f3Montant(s.ca, s.currency).replace(/\u00a0Md(.*)$/, " milliards de ventes").replace(/\u00a0M(.*)$/, " millions de ventes")}` : "D'où viennent ses ventes"; mw.appendChild(fms[1]); }
+  f3Repartitions(mw);
   if (!mw.children.length && mt) { const p1 = mt.querySelector(".f1p"); if (p1) mw.appendChild(p1); }
   if (!mw.children.length) $("#f3-metier", wrap).remove();
   const aw = $("#f3-actw", wrap); if (change) { const pb = change.querySelector(".ph"); if (pb) pb.remove(); while (change.firstChild) aw.appendChild(change.firstChild); } else $("#f3-actu", wrap).remove();
@@ -195,6 +196,20 @@ function f3Recomposer(s, c) {
   if (typeof ancreLiens === "function") $$("[data-f3anc]", wrap).forEach(async a => { try { const k = a.dataset.f3anc, l = await ancreLiens(s.id, [k === "debt" ? "cash" : k], a.dataset.an); if (l && l[0]) { a.href = l[0].url; a.target = "_blank"; a.rel = "noopener"; a.textContent = `${l[0].lbl} ${l[0].an} dans le rapport officiel ↗`; } } catch (e) { } });
   const src = typeof provSrcComptes === "function" ? provSrcComptes(c) : null, fb = typeof fiabilite === "function" ? fiabilite(s, c) : null;
   if (src) { $("#f3-prt").innerHTML = `Les chiffres de cette page viennent des <b>comptes officiels</b> de ${esc(s.name)} : ${esc(src.label.charAt(0).toLowerCase() + src.label.slice(1))}.${fb ? ` Fiabilité des données : ${esc(fb.mot)}.` : ""}`; if (src.url) { const a = $("#f3-pra"); a.href = src.url; a.target = "_blank"; a.rel = "noopener"; a.removeAttribute("data-f3go"); a.textContent = "Ouvrir le rapport ↗"; } }
+}
+const F3_COUL = ["#FFE14D", "#FF9EC6", "#9DB0FF", "#7FE0B9", "#FFB98A", "#C9B8FF", "#E6E3DA", "#B9E6F5"];
+function f3Repartitions(root) { // « D'où viennent ses ventes » : chaque liste de barres devient une barre empilée en couleurs + sa légende (maquette v3)
+  const cartes = []; let hote = null;
+  $$(".fbt", root).forEach(t => { if (!/activit|zone|g[ée]ograph|pays|r[ée]gion/i.test(t.textContent)) return; hote = hote || t.parentElement; const bars = t.nextElementSibling; if (!bars || !bars.classList.contains("fbars")) return;
+    const L = $$(".fbar", bars).map(r => ({ n: (r.querySelector(".l") || {}).textContent || "", w: parseFloat(((r.querySelector(".b i") || {}).style || {}).width) || 0, p: (r.querySelector(".p") || {}).textContent || "", a: (r.querySelector(".a") || {}).textContent || "" })).filter(x => x.w > 0);
+    if (!L.length) return;
+    const tot = L.reduce((a, x) => a + x.w, 0) || 1;
+    cartes.push(`<div class="f3-ch f3-mix"><h3>${esc(t.textContent)}</h3><div class="f3-stack">${L.map((x, i) => `<i style="width:${(x.w / tot * 100).toFixed(2)}%;background:${F3_COUL[i % F3_COUL.length]}" title="${esc(x.n)} ${esc(x.p)}">${x.w / tot >= 0.08 ? esc(x.p) : ""}</i>`).join("")}</div><ul class="f3-mx">${L.map((x, i) => `<li><i style="background:${F3_COUL[i % F3_COUL.length]}"></i><span>${esc(x.n)}</span><b>${esc(x.p)}</b><em>${esc(x.a)}</em></li>`).join("")}</ul></div>`);
+    t.remove(); bars.remove(); });
+  if (!cartes.length) return;
+  const fm = hote || root, w = document.createElement("div"); w.className = "f3-mixes"; w.innerHTML = cartes.join("");
+  const ps = $$(":scope > p:not(.fbt)", fm), apres = ps.length ? ps[ps.length - 1] : fm.querySelector("h3");
+  if (apres && apres.nextSibling) fm.insertBefore(w, apres.nextSibling); else fm.appendChild(w);
 }
 const F3_IA = `<svg class="f3-iai" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z" fill="currentColor"/><path d="M19 2l.8 2.2L22 5l-2.2.8L19 8l-.8-2.2L16 5l2.2-.8z" fill="currentColor"/></svg>`;
 (() => { // branchement : après la construction habituelle de la fiche (vue principale seulement)

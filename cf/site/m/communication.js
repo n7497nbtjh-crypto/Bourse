@@ -3,14 +3,14 @@
    Contenu :
    - /idees-recues : les idées reçues sur la Bourse, déconstruites avec des chiffres sourcés et leurs nuances ;
    - /livret-a-ou-bourse : comparateur historique « 100 € par mois » Livret A, actions monde et inflation ;
-   - /pourquoi-bilan : ce que bilan. fait que les autres ne font pas, avec démonstrations et tableau comparatif ;
+   - /pourquoi-bilan : ce que ENKLAIR fait que les autres ne font pas, avec démonstrations et tableau comparatif ;
    - fonctions de rendu réutilisables par l'accueil : commComparaisonHTML(), commIdeesHTML(), commPourquoiHTML(). */
 
 /* ====================================================================================
    1. Données historiques (toutes sourcées, voir COMM_SRC)
    ==================================================================================== */
 // Livret A : taux moyen de chaque année civile, en %. 1996-2014 et 2015-2025 : historique publié par Toutsurmesfinances
-// (taux moyens d'après la Banque de France). 2006-2025 recalculés par bilan. à partir des dates officielles de changement de taux.
+// (taux moyens d'après la Banque de France). 2006-2025 recalculés par ENKLAIR à partir des dates officielles de changement de taux.
 const COMM_LA = { 1996: 3.70, 1997: 3.50, 1998: 3.20, 1999: 2.70, 2000: 2.60, 2001: 3.00, 2002: 3.00, 2003: 2.70, 2004: 2.25, 2005: 2.15,
   2006: 2.45, 2007: 2.85, 2008: 3.70, 2009: 1.90, 2010: 1.45, 2011: 2.10, 2012: 2.25, 2013: 1.60, 2014: 1.15, 2015: 0.90,
   2016: 0.75, 2017: 0.75, 2018: 0.75, 2019: 0.75, 2020: 0.52, 2021: 0.50, 2022: 1.38, 2023: 2.92, 2024: 3.00, 2025: 2.16 };
@@ -20,7 +20,7 @@ const COMM_IPC = { 1995: 75.88, 1996: 77.14, 1997: 78.02, 1998: 78.19, 1999: 79.
   2016: 100.65, 2017: 101.85, 2018: 103.47, 2019: 104.98, 2020: 104.96, 2021: 107.85, 2022: 114.16, 2023: 118.39, 2024: 119.95, 2025: 120.90 };
 // Actions monde : MSCI World en euros, performance de l'année civile en %, dividendes réinvestis.
 // 2012-2025 : chiffres officiels MSCI (dividendes nets, fiche EUR). 1996-2011 : performance MSCI en dollars (dividendes bruts)
-// convertie en euros par bilan. au taux de fin d'année (BCE depuis 1999 ; avant, moyenne de décembre du mark, Réserve fédérale, au taux fixe de 1,95583 DEM pour 1 €).
+// convertie en euros par ENKLAIR au taux de fin d'année (BCE depuis 1999 ; avant, moyenne de décembre du mark, Réserve fédérale, au taux fixe de 1,95583 DEM pour 1 €).
 const COMM_MW = { 1996: 22.86, 1997: 33.17, 1998: 17.15, 1999: 46.14, 2000: -5.99, 2001: -11.86, 2002: -32.38, 2003: 11.06, 2004: 6.86, 2005: 27.03,
   2006: 8.07, 2007: -1.97, 2008: -36.88, 2009: 26.35, 2010: 21.12, 2011: -1.91,
   2012: 14.05, 2013: 21.20, 2014: 19.50, 2015: 10.42, 2016: 10.73, 2017: 7.51, 2018: -4.11, 2019: 30.02, 2020: 6.33, 2021: 31.07, 2022: -12.78, 2023: 19.60, 2024: 26.60, 2025: 6.77 };
@@ -139,7 +139,7 @@ function commComparaisonHTML(opts = {}) {
     <p class="cm-warn"><b>Historique, pas une promesse.</b> Les performances passées ne préjugent pas des performances futures. Un placement en actions peut perdre plus de la moitié de sa valeur, parfois pendant des années. Calcul avant frais et impôts ; le Livret A n'est pas imposé. Ce n'est pas un conseil.</p>
     ${compact ? `<p class="cm-more"><a class="lnk" href="/livret-a-ou-bourse">Méthode, sources et chiffres année par année</a> · <a class="lnk" href="/idees-recues">Les idées reçues sur la Bourse</a></p>` : `<details class="cm-meth"><summary>Méthode et sources</summary>
       <p>Versement le premier de chaque mois. Le rendement de chaque année est réparti de façon régulière sur ses douze mois : en réalité, les actions montent et baissent en cours d'année. Livret A : taux moyen de chaque année. Seuil inflation : chaque versement revalorisé de la hausse des prix de décembre à décembre (Insee).</p>
-      <p>Actions monde : indice MSCI World en euros, dividendes réinvestis. De 2012 à 2025, chiffres officiels de MSCI (dividendes nets d'impôts). De 1996 à 2011, MSCI ne publie pas gratuitement la série en euros : bilan. convertit la performance en dollars (dividendes bruts) au taux de change de fin d'année. Contrôle : de fin 2000 à septembre 2026, cette série donne 6,9 % par an contre 6,67 % pour l'indice officiel net. Elle est donc légèrement optimiste pour les années anciennes. Un ETF réel coûte aussi des frais courants (environ 0,1 % à 0,4 % par an).</p>
+      <p>Actions monde : indice MSCI World en euros, dividendes réinvestis. De 2012 à 2025, chiffres officiels de MSCI (dividendes nets d'impôts). De 1996 à 2011, MSCI ne publie pas gratuitement la série en euros : ENKLAIR convertit la performance en dollars (dividendes bruts) au taux de change de fin d'année. Contrôle : de fin 2000 à septembre 2026, cette série donne 6,9 % par an contre 6,67 % pour l'indice officiel net. Elle est donc légèrement optimiste pour les années anciennes. Un ETF réel coûte aussi des frais courants (environ 0,1 % à 0,4 % par an).</p>
       ${commSrcHTML(["msciEur", "msciUsd", "wikiMsci", "bce", "fredDem", "livretHist", "livret", "ipc"])}</details>`}
   </div>`;
 }
@@ -344,7 +344,7 @@ function commIdees() {
       src: ["motley", "vanguard"], liens: [["Le coût du market timing", "/academie/psychologie/trading-timing"], ["Comparateur Livret A ou Bourse", "/livret-a-ou-bourse"]] },
     { id: "economie", mythe: "La Bourse n'a rien à voir avec l'économie réelle.", v: "faux",
       rep: "Une action est une part d'entreprise. Sur longue durée, son prix suit les ventes, les bénéfices et les dividendes que publient les comptes officiels.",
-      faits: S.n ? [`Sur les <b>${F0.format(S.n)}</b> entreprises dont bilan. a lu les derniers comptes annuels, <b>${pc(S.benef, S.n)} %</b> ont fait un bénéfice et ${pc(S.div, S.n)} % ont versé un dividende.`,
+      faits: S.n ? [`Sur les <b>${F0.format(S.n)}</b> entreprises dont ENKLAIR a lu les derniers comptes annuels, <b>${pc(S.benef, S.n)} %</b> ont fait un bénéfice et ${pc(S.div, S.n)} % ont versé un dividende.`,
         "Ces chiffres sont calculés par le site à partir des rapports déposés aux autorités : format ESEF en Europe, SEC aux États-Unis."] : ["Les comptes des entreprises n'ont pas pu être chargés."],
       viz: () => S.n ? commBars([["Ont fait un bénéfice", pc(S.benef, S.n), pc(S.benef, S.n) + " %", COMM_C.act], ["Ont versé un dividende", pc(S.div, S.n), pc(S.div, S.n) + " %", "#5E9C7C"]], 100, `Calcul de bilan. sur ${F0.format(S.n)} entreprises, dernier exercice publié.`) : "",
       credible: "Un cours réagit parfois fortement à une rumeur ou à une déclaration, sans que l'entreprise ait changé. La Bourse semble vivre dans son propre monde.",
@@ -523,7 +523,7 @@ function pageLivretBourse() {
     <section class="panel"><div class="ph"><h2>Les chiffres utilisés, année par année</h2></div><div class="pb">
       <p class="note" style="margin-top:0">Chaque ligne est un chiffre publié par une source officielle ou reconnue. Vous pouvez refaire le calcul.</p>
       <div class="scroll-x"><table class="t cm-tab"><thead><tr><th>Année</th><th class="r">Livret A (taux moyen)</th><th class="r">Hausse des prix (déc. à déc.)</th><th class="r">Actions monde en €</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
-      <p class="note">* Années ${COMM_DEB} à ${COMM_MW_OFF - 1} : performance MSCI World en dollars (dividendes bruts) convertie en euros par bilan. au taux de change de fin d'année. À partir de ${COMM_MW_OFF} : chiffres officiels MSCI en euros, dividendes nets.</p>
+      <p class="note">* Années ${COMM_DEB} à ${COMM_MW_OFF - 1} : performance MSCI World en dollars (dividendes bruts) convertie en euros par ENKLAIR au taux de change de fin d'année. À partir de ${COMM_MW_OFF} : chiffres officiels MSCI en euros, dividendes nets.</p>
     </div><div class="src">${commSrcHTML(["msciEur", "msciUsd", "wikiMsci", "bce", "fredDem", "livretHist", "livret", "livretAout", "ipc", "ipcSept"])}</div></section>
     <section class="panel cm-end"><div class="pb"><h2>Avant de vous lancer</h2><p>Gardez d'abord une épargne de précaution sur un livret. N'investissez en actions que l'argent dont vous n'aurez pas besoin avant plusieurs années. Ce comparateur est pédagogique : ce n'est pas un conseil d'investissement.</p>
       <div class="cm-go"><a class="chip" href="/idees-recues">Les idées reçues sur la Bourse</a><a class="chip" href="/academie/bases/epargne-precaution">L'épargne de précaution</a><a class="chip" href="/academie/bases/interets-composes">Les intérêts composés</a><a class="chip" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/epargne">Simulateur d'épargne</a></div></div></section>
@@ -531,7 +531,7 @@ function pageLivretBourse() {
 }
 
 /* ====================================================================================
-   6. Page « Pourquoi bilan. »
+   6. Page « Pourquoi ENKLAIR »
    ==================================================================================== */
 const COMM_DEMO_IDS = ["totalenergies", "lvmh", "airbus", "loreal", "apple", "nvidia"];
 function commDemoFiche(id) {
@@ -555,7 +555,7 @@ function commDemoCalcul() { // une vraie question, calculée à l'instant sur le
   return { n: fr.length, cash: cash.length, div: div.length, ex: div.slice().sort((a, b) => (b.ca || 0) - (a.ca || 0)).slice(0, 4).map(c => c.name) };
 }
 function pagePourquoiBilan() {
-  setTitle("Ce que bilan. fait que les autres ne font pas"); setNav("new");
+  setTitle("Ce que ENKLAIR fait que les autres ne font pas"); setNav("new");
   const S = commStats(), etf = (ETF && ETF.list || []).length, peaN = R.companies.filter(c => peaOk(c)).length, brok = (typeof BROKERS !== "undefined" && BROKERS && BROKERS.list || []).length, D = commDemoCalcul();
   const A = (n, t, txt, preuve) => `<article class="cm-av panel"><div class="pb"><span class="cm-n">${n}</span><h3>${t}</h3><p>${txt}</p>${preuve ? `<div class="cm-pv"><p class="kick">La preuve</p>${preuve}</div>` : ""}</div></article>`;
   const Y = `<span class="cm-y">✓</span>`, N = `<span class="cm-x">✗</span>`, P = `<span class="cm-p">~</span>`, U = `<span class="cm-u">–</span>`;
@@ -572,10 +572,10 @@ function pagePourquoiBilan() {
     ["Consensus des analystes", [N, "choix : payant, proche du conseil"], [P, ""], [Y, "Euronext Paris"], [Y, ""], [U, ""], [U, ""]],
     ["Prix de l'offre payante", ["", "gratuit pour l'essentiel ; Premium prévu à 4,90 €/mois ou 39 €/an"], ["", "gratuit"], ["", "gratuit (site)"], ["", "Access : 29 €/mois ou 288 €/an"], ["", "Lite 54,99 €/an ; Plus 149,99 €/an"], ["", "Standard : 96 $/an"]],
   ];
-  const cols = ["bilan.", "Google Finance", "Boursorama", "Zonebourse", "Finary", "Simply Wall St"];
+  const cols = ["ENKLAIR", "Google Finance", "Boursorama", "Zonebourse", "Finary", "Simply Wall St"];
   const opts = COMM_DEMO_IDS.filter(id => RBY[id] && !RBY[id].missing);
   app.innerHTML = `<div class="cm-page">
-    <header class="cm-hero cm-hero-b"><p class="kick">Pourquoi bilan.</p><h1 class="pagetitle">Ce que bilan. fait que les autres ne font pas</h1>
+    <header class="cm-hero cm-hero-b"><p class="kick">Pourquoi ENKLAIR</p><h1 class="pagetitle">Ce que ENKLAIR fait que les autres ne font pas</h1>
       <p class="pagesub">Un site pour comprendre la Bourse à partir des comptes officiels, en français, avec une IA qui calcule au lieu d'inventer. Sans publicité, sans produit à vendre, sans conseil.</p>
       <div class="cm-stats"><div><b>${F0.format(S.tot)}</b><span>entreprises suivies</span></div><div><b>${F0.format(etf)}</b><span>ETF analysés</span></div><div><b class="cm-nl">55</b><span>leçons sourcées</span></div><div><b>0</b><span>publicité</span></div></div></header>
     <div class="cm-avs">
@@ -585,22 +585,22 @@ function pagePourquoiBilan() {
         `<div class="cm-calc"><p class="cm-q">« Quelles entreprises françaises ont plus de trésorerie que de dettes et versent un dividende ? »</p><p class="cm-a">Réponse calculée à l'instant : <b>${D.div}</b> sur les ${D.n} entreprises françaises dont le site a les comptes${D.ex.length ? `, par exemple ${D.ex.map(esc).join(", ")}` : ""}.</p><small>Source : derniers rapports annuels ESEF. Calcul fait dans votre navigateur, sans modèle d'IA.</small>
         <div class="cm-go"><a class="chip" href="/demander?q=${encodeURIComponent("entreprises françaises sans dette qui versent un dividende")}">Poser cette question</a><a class="chip" href="/demander?q=${encodeURIComponent("Compare LVMH, Hermès et Kering")}">Comparer LVMH, Hermès et Kering</a><a class="chip" href="/methode">Comment l'IA est encadrée</a></div></div>`)}
       ${A("03", "Illimitée et gratuite pour l'essentiel", "Comme les calculs se font en grande partie dans votre navigateur, ils ne coûtent presque rien au site : ils restent gratuits et sans quota. Ailleurs, l'IA est souvent payante ou plafonnée.",
-        `<div class="cm-quota"><div class="cm-me2"><b>bilan.</b><span>questions calculées sur les comptes</span><em class="up">illimité, gratuit</em></div><div><b>Investing.com, WarrenAI</b><span>dans l'offre payante InvestingPro</span><em>jusqu'à 500 crédits par mois</em></div><div><b>TradingView, AI Copilot</b><span>en plus d'un abonnement payant</span><em>option payante</em></div></div><p class="cm-vnote">D'après les offres publiées, relevées en octobre 2026.</p>`)}
-      ${A("04", "Une IA sur le site, gratuite", "Pour les questions libres, l'IA du site rédige une réponse appuyée sur les chiffres et les sources du site, sans compte ni clé. Vous utilisez déjà ChatGPT ou Claude ? Le connecteur bilan. s'y ajoute en une minute.", "")}
+        `<div class="cm-quota"><div class="cm-me2"><b>ENKLAIR</b><span>questions calculées sur les comptes</span><em class="up">illimité, gratuit</em></div><div><b>Investing.com, WarrenAI</b><span>dans l'offre payante InvestingPro</span><em>jusqu'à 500 crédits par mois</em></div><div><b>TradingView, AI Copilot</b><span>en plus d'un abonnement payant</span><em>option payante</em></div></div><p class="cm-vnote">D'après les offres publiées, relevées en octobre 2026.</p>`)}
+      ${A("04", "Une IA sur le site, gratuite", "Pour les questions libres, l'IA du site rédige une réponse appuyée sur les chiffres et les sources du site, sans compte ni clé. Vous utilisez déjà ChatGPT ou Claude ? Le connecteur ENKLAIR s'y ajoute en une minute.", "")}
       ${A("05", "Pensé pour un épargnant français", "L'éligibilité au PEA sur chaque fiche, les frais de courtage rapportés au montant de votre ordre, la comparaison PEA ou compte-titres, la fiscalité à 31,4 % ou 18,6 % : ce que Google Finance, Yahoo ou Simply Wall St ne traitent pas.",
         `<div class="cm-mini3"><div><b>${F0.format(peaN)}</b><span>entreprises signalées éligibles au PEA</span></div>${brok ? `<div><b>${brok}</b><span>courtiers comparés sur leurs frais</span></div>` : ""}<div><b>2</b><span>simulateurs : frais et PEA ou compte-titres</span></div></div><div class="cm-go"><a class="chip" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/frais">Frais de courtage</a></div>`)}
       ${A("06", "La liste noire de l'AMF, vérifiable en un clic", "Avant de confier de l'argent à un site inconnu, collez son adresse : le site la compare aux listes noires et mises en garde publiées par l'AMF.",
         `<div class="cm-mini3"><div><b class="cm-ln">…</b><span>sites et entités de la liste noire AMF</span></div><div><b>16 %</b><span>des Français estiment avoir été victimes d'une arnaque (AMF, mai 2026)</span></div></div><div class="cm-go"><a class="chip" href="/outils/verifier">Vérifier un site</a></div>`)}
       ${A("07", "Une Académie reliée aux vraies données", "55 leçons sourcées et 63 questions de quiz, de l'épargne de précaution à la lecture d'un bilan. Chaque notion renvoie vers une vraie entreprise : la leçon sur le PER mène au PER de TotalEnergies, calculé avec les derniers comptes.",
         `<div class="cm-go"><a class="chip" href="/apprendre#academie">Ouvrir l'Académie</a><a class="chip" href="/academie/valorisation/per">Leçon : le PER</a><a class="chip" href="/entreprise/totalenergies">Le PER de TotalEnergies</a><a class="chip" href="/idees-recues">Les idées reçues</a></div>`)}
-      ${A("08", "Sans publicité, sans produit à vendre, sans conseil", "bilan. ne touche aucune commission de courtier, n'affiche aucune publicité et ne vend aucun placement. Il explique ; il ne dit jamais quoi acheter ou vendre. Boursorama, Investing.com et Zonebourse affichent de la publicité dans leur version gratuite.", "")}
+      ${A("08", "Sans publicité, sans produit à vendre, sans conseil", "ENKLAIR ne touche aucune commission de courtier, n'affiche aucune publicité et ne vend aucun placement. Il explique ; il ne dit jamais quoi acheter ou vendre. Boursorama, Investing.com et Zonebourse affichent de la publicité dans leur version gratuite.", "")}
     </div>
     <section class="panel"><div class="ph"><h2>Le tableau comparatif honnête</h2></div><div class="pb">
-      <p class="note" style="margin-top:0">D'après notre revue des offres publiques au 28 octobre 2026. ✓ oui · ~ partiel · ✗ non · – non évalué. Les cases où bilan. fait moins bien sont laissées telles quelles.</p>
+      <p class="note" style="margin-top:0">D'après notre revue des offres publiques au 28 octobre 2026. ✓ oui · ~ partiel · ✗ non · – non évalué. Les cases où ENKLAIR fait moins bien sont laissées telles quelles.</p>
       <div class="scroll-x"><table class="t cm-cmp"><thead><tr><th></th>${cols.map((c, i) => `<th class="${i ? "" : "cm-me"}">${esc(c)}</th>`).join("")}</tr></thead>
       <tbody>${T.map(([l, ...cs]) => `<tr><th scope="row">${esc(l)}</th>${cs.map(([m, t], i) => `<td class="${i ? "" : "cm-me"}">${m}${t ? `<small>${esc(t)}</small>` : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
     </div><div class="src"><ul class="cm-srcs"><li><a class="lnk" href="https://blog.google/intl/fr-fr/nouveautes-produits/explorez-obtenez-des-reponses/le-nouveau-google-finance-est-disponible-en-france/" target="_blank" rel="noopener">Google, le nouveau Google Finance en France (septembre 2026)</a></li><li><a class="lnk" href="https://letraderdudimanche.com/meilleur-site-analyse-bourse" target="_blank" rel="noopener">Le Trader du Dimanche, prix de Zonebourse et InvestingPro (août 2026)</a></li><li><a class="lnk" href="https://signal-alpha.fr/avis-finary/" target="_blank" rel="noopener">Signal Alpha, prix de Finary (juillet 2026)</a></li><li><a class="lnk" href="https://freenance.io/products/simply-wall-st-review-2026-stock-analysis-charts-fair-value/" target="_blank" rel="noopener">Freenance, test de Simply Wall St (2026)</a></li><li><a class="lnk" href="https://www.investing.com/pro/pricing" target="_blank" rel="noopener">Investing.com, offres InvestingPro</a></li><li><a class="lnk" href="https://chartwisehub.com/tradingview-ai-chart-copilot-guide/" target="_blank" rel="noopener">ChartWiseHub, AI Copilot de TradingView</a></li></ul></div></section>
-    <section class="panel"><div class="ph"><h2>Ce que bilan. ne fait pas (encore)</h2></div><div class="pb"><ul class="cm-faits">
+    <section class="panel"><div class="ph"><h2>Ce que ENKLAIR ne fait pas (encore)</h2></div><div class="pb"><ul class="cm-faits">
       <li><b>Pas de cours en temps réel.</b> Les cours sont différés : le site sert à comprendre, pas à passer des ordres à la seconde.</li>
       <li><b>Pas de consensus d'analystes ni d'objectif de cours.</b> Ces travaux sont payants et proches du conseil : le site préfère les comptes.</li>
       <li><b>Pas de synchronisation avec votre courtier.</b> Vous saisissez votre portefeuille vous-même ; il reste dans votre navigateur ou votre espace.</li>
@@ -621,7 +621,7 @@ document.addEventListener("click", e => {
 function commPourquoiHTML() {
   const S = commStats();
   const it = [["Comptes officiels", `${F0.format(S.tot)} entreprises, chaque chiffre comparé à la médiane de son secteur.`], ["IA qui calcule", "Les réponses sont calculées sur les comptes, avec leur source. Gratuit et illimité."], ["Pensé pour la France", "PEA, frais de courtage, fiscalité, liste noire de l'AMF."], ["Indépendant", "Aucune publicité, aucun produit vendu, aucun conseil d'achat."]];
-  return `<div class="cm-teaser">${it.map(([t, d]) => `<a class="cm-tz" href="/pourquoi-bilan"><b>${t}</b><span>${d}</span></a>`).join("")}</div><p class="cm-more"><a class="lnk" href="/pourquoi-bilan">Ce que bilan. fait que les autres ne font pas</a></p>`;
+  return `<div class="cm-teaser">${it.map(([t, d]) => `<a class="cm-tz" href="/pourquoi-bilan"><b>${t}</b><span>${d}</span></a>`).join("")}</div><p class="cm-more"><a class="lnk" href="/pourquoi-bilan">Ce que ENKLAIR fait que les autres ne font pas</a></p>`;
 }
 
 /* ====================================================================================

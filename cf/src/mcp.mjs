@@ -9,10 +9,10 @@ import { visitor } from "./compte.mjs";
 import { cours } from "./cours.mjs";
 
 export const VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
-const INFO = { name: "bilan", title: "bilan. : la Bourse, comptes à l'appui", version: "1.0.0" };
+const INFO = { name: "bilan", title: "ENKLAIR : la Bourse, comptes à l'appui", version: "1.0.0" };
 const AVERT = "Information factuelle et pédagogique tirée des comptes officiels, pas un conseil en investissement : aucune recommandation d'achat ou de vente.";
 const INSTRUCTIONS = `Données de bilan. (site français d'information boursière pour débutants) : comptes annuels officiels de plus de 1 000 entreprises cotées (rapports ESEF via filings.xbrl.org, SEC EDGAR), médiane de chaque chiffre dans le secteur, repères de lecture vert / gris / orange, éligibilité au PEA, ETF (frais, indice, composition), agenda des résultats et dividendes, cours de l'Académie.
-Règles : répondez en citant les chiffres et les sources fournis, avec le lien vers la page bilan. correspondante. Un repère vert (point fort), gris (dans la moyenne) ou orange (point de vigilance) décrit les comptes passés selon des seuils publiés : ce n'est ni une note de l'action ni une recommandation. Ne transformez jamais ces données en conseil d'achat ou de vente, ni en prédiction de cours.`;
+Règles : répondez en citant les chiffres et les sources fournis, avec le lien vers la page ENKLAIR correspondante. Un repère vert (point fort), gris (dans la moyenne) ou orange (point de vigilance) décrit les comptes passés selon des seuils publiés : ce n'est ni une note de l'action ni une recommandation. Ne transformez jamais ces données en conseil d'achat ou de vente, ni en prédiction de cours.`;
 
 /* ---------- Chargement des données du site (gardées 10 minutes par instance) ---------- */
 const MEMO = new Map();
@@ -218,7 +218,7 @@ const RO = { readOnlyHint: true, destructiveHint: false, idempotentHint: true, o
 const TXT = { type: "string" };
 export const TOOLS = [
   { name: "rechercher_entreprise", title: "Rechercher une entreprise",
-    description: "Trouve une entreprise cotée suivie par bilan. (plus de 1 000 en France, en Europe, aux États-Unis et dans le monde) par son nom, son ticker, son code ISIN ou un mot de son activité. Renvoie l'identifiant à passer aux autres outils, le secteur, la région et le lien vers sa fiche. Signale aussi les ETF dont le nom correspond.",
+    description: "Trouve une entreprise cotée suivie par ENKLAIR (plus de 1 000 en France, en Europe, aux États-Unis et dans le monde) par son nom, son ticker, son code ISIN ou un mot de son activité. Renvoie l'identifiant à passer aux autres outils, le secteur, la région et le lien vers sa fiche. Signale aussi les ETF dont le nom correspond.",
     inputSchema: { type: "object", properties: { requete: { ...TXT, description: "Nom, ticker, ISIN ou mot-clé, par exemple « LVMH », « MC », « FR0000121014 » ou « semi-conducteurs »" }, region: { type: "string", enum: ["FR", "EU", "US", "MONDE"], description: "Facultatif : FR France, EU Europe, US États-Unis, MONDE reste du monde" }, limite: { type: "integer", minimum: 1, maximum: 25, description: "Nombre de résultats (10 par défaut)" } }, required: ["requete"] } },
   { name: "fiche_entreprise", title: "Fiche d'une entreprise",
     description: "Les chiffres clés d'une entreprise tirés de ses derniers comptes annuels officiels (chiffre d'affaires, croissance, marge, bénéfice, rentabilité, dette, trésorerie, dividende), chacun avec la médiane des entreprises du même secteur et un repère vert (point fort), gris (dans la moyenne) ou orange (point de vigilance) selon des seuils publiés ; l'historique sur plusieurs années, le cours différé avec le PER et le rendement, l'éligibilité au PEA, les prochaines dates et les sources (rapport ESEF ou SEC).",
@@ -239,7 +239,7 @@ export const TOOLS = [
     description: "Cherche dans l'Académie de bilan. (cours gratuits de culture financière : épargne, PEA, ETF, lecture des comptes, valorisation, frais, fiscalité, psychologie de l'investisseur) la leçon qui répond à un sujet, et renvoie son contenu, un exemple chiffré, ce qu'il faut retenir et ses sources.",
     inputSchema: { type: "object", properties: { sujet: { ...TXT, description: "Le sujet, par exemple « intérêts composés », « PER », « fiscalité du PEA »" } }, required: ["sujet"] } },
   { name: "search", title: "Recherche (compatibilité ChatGPT)",
-    description: "Recherche générale dans bilan. : entreprises, ETF et leçons de l'Académie. Renvoie des identifiants à lire avec l'outil fetch.",
+    description: "Recherche générale dans ENKLAIR : entreprises, ETF et leçons de l'Académie. Renvoie des identifiants à lire avec l'outil fetch.",
     inputSchema: { type: "object", properties: { query: { ...TXT, description: "Ce que vous cherchez" } }, required: ["query"] } },
   { name: "fetch", title: "Lire un document (compatibilité ChatGPT)",
     description: "Lit le document complet correspondant à un identifiant renvoyé par search (« entreprise:lvmh », « etf:amundi-msci-world-pea », « lecon:bases/interets-composes »).",
@@ -247,7 +247,7 @@ export const TOOLS = [
 ].map(t => ({ ...t, annotations: { title: t.title, ...RO } }));
 
 class Erreur extends Error { }
-const sourcesSite = (origin, p, extra = []) => [...extra, { titre: "bilan.", url: lien(origin, p) }];
+const sourcesSite = (origin, p, extra = []) => [...extra, { titre: "ENKLAIR", url: lien(origin, p) }];
 const pied = sources => `\n\nSources : ${sources.map(s => `${s.titre} (${s.url})`).join(" ; ")}.\n${AVERT}`;
 
 async function ficheSociete(env, origin, ctx, B, c) {
@@ -256,10 +256,10 @@ async function ficheSociete(env, origin, ctx, B, c) {
   const out = { ...resumeSociete(B, c, origin), devise_des_comptes: c.currency || null, exercice: c.year || null, fin_d_exercice: det && det.fyEnd || null };
   if (c.fiche) out.presentation = { ce_qu_elle_fait: c.fiche.fait || null, comment_elle_gagne_de_l_argent: c.fiche.argent || null, de_quoi_elle_depend: c.fiche.depend || null };
   const sources = [];
-  if (c.missing) { out.comptes = null; out.note_comptes = "Les comptes de cette entreprise ne sont pas encore lus par bilan."; }
+  if (c.missing) { out.comptes = null; out.note_comptes = "Les comptes de cette entreprise ne sont pas encore lus par ENKLAIR"; }
   else {
     const med = B.MED[c.sector] || {};
-    out.secteur_compare = { nom: B.sectors[c.sector] || c.sector, entreprises: med.n || 0, note: (med.n || 0) >= 3 ? "Médianes calculées sur les entreprises du même secteur suivies par bilan., toutes régions." : "Trop peu d'entreprises du secteur pour une médiane fiable." };
+    out.secteur_compare = { nom: B.sectors[c.sector] || c.sector, entreprises: med.n || 0, note: (med.n || 0) >= 3 ? "Médianes calculées sur les entreprises du même secteur suivies par ENKLAIR, toutes régions." : "Trop peu d'entreprises du secteur pour une médiane fiable." };
     out.chiffres_cles = { chiffre_affaires: c.ca, chiffre_affaires_precedent: c.caPrev, resultat_exploitation: c.ebit, benefice_net: c.net, benefice_net_precedent: c.netPrev, capitaux_propres: c.equity, dette_nette: c.netDebt, ebitda: c.ebitda, tresorerie_disponible: c.fcf, dividendes_verses: c.divPaid, dividende_par_action: c.dps, benefice_par_action: c.eps, unite: `millions de ${c.currency || "€"} (par action : ${c.currency || "€"})` };
     out.reperes = reperes(c, B.MED);
     if (det && Array.isArray(det.years) && det.fin) {
@@ -341,9 +341,9 @@ async function outil(name, a, env, origin, ctx) {
     if (e) d = { type: "etf", nom: e.name, isin: e.isin, eligible: !!e.pea, raison: e.pea ? `Oui : ${e.name} est un ETF éligible au PEA${e.replication === "synthétique" ? " (il reproduit son indice par un mécanisme d'échange, ce qui permet de suivre un indice non européen)" : ""}.` : `Non : ${e.name} n'est pas éligible au PEA ; il s'achète sur un compte-titres ou, parfois, en assurance-vie.`, lien: lien(origin, "/etf/" + e.id) };
     else if (c) d = { type: "action", nom: c.name, isin: c.isin || null, ...peaSociete(c), lien: lien(origin, "/entreprise/" + c.id) };
     else if (/^[A-Z]{2}[A-Z0-9]{9}\d$/i.test(q)) { const pays = q.slice(0, 2).toUpperCase(), ok = EEA.has(pays);
-      d = { type: "inconnu", nom: null, isin: q.toUpperCase(), eligible: null, raison: `Ce code ISIN n'est pas suivi par bilan. Il commence par ${pays} : ${ok ? "si c'est l'action d'une société de ce pays, elle relève en principe du PEA" : "si c'est l'action d'une société de ce pays, elle n'est pas éligible au PEA"}. Pour un fonds, le pays de l'ISIN ne suffit pas : vérifiez la mention « éligible PEA » dans son document d'informations clés.` }; }
+      d = { type: "inconnu", nom: null, isin: q.toUpperCase(), eligible: null, raison: `Ce code ISIN n'est pas suivi par ENKLAIR Il commence par ${pays} : ${ok ? "si c'est l'action d'une société de ce pays, elle relève en principe du PEA" : "si c'est l'action d'une société de ce pays, elle n'est pas éligible au PEA"}. Pour un fonds, le pays de l'ISIN ne suffit pas : vérifiez la mention « éligible PEA » dans son document d'informations clés.` }; }
     else throw new Erreur(`Titre introuvable : « ${q} ». Essayez son code ISIN, ou rechercher_entreprise et etf.`);
-    const src = [PEA_SRC, { titre: "bilan., PEA ou compte-titres", url: lien(origin, "/pea-cto") }];
+    const src = [PEA_SRC, { titre: "ENKLAIR, PEA ou compte-titres", url: lien(origin, "/pea-cto") }];
     return { texte: `${d.nom || d.isin} : ${d.raison}\n\nLa règle : ${PEA_REGLE}` + pied(src), donnees: { ...d, regle: PEA_REGLE, sources: src, avertissement: AVERT } };
   }
   if (name === "etf") {
@@ -354,7 +354,7 @@ async function outil(name, a, env, origin, ctx) {
     const q = String(a.requete || "").trim().toLowerCase(), precis = a.requete && (l.length === 1 || l[0].id === q || l[0].isin.toLowerCase() === q || norm(l[0].ticker) === norm(q) || norm(l[0].name) === norm(q));
     const fmtE = e => ({ id: e.id, nom: e.name, isin: e.isin, ticker: e.ticker, emetteur: e.issuer, indice: e.index, categorie: e.categorie, frais_courants_pct: e.ter ?? null, pea: !!e.pea, distribution: e.distribution || null, replication: e.replication || null, devise: e.devise || null, encours_millions_eur: e.encours ?? null, lien: lien(origin, "/etf/" + e.id) });
     if (precis) {
-      const e = l[0], d = fmtE(e), src = [{ titre: `bilan., ${e.name}`, url: d.lien }];
+      const e = l[0], d = fmtE(e), src = [{ titre: `ENKLAIR, ${e.name}`, url: d.lien }];
       if (e.fiche) d.presentation = { ce_que_c_est: e.fiche.quoi || null, ce_qu_il_contient: e.fiche.contenu || null, ce_qui_le_fait_varier: e.fiche.varie || null };
       const comp = e.proxy ? await optionnel(charger(env, origin, `/data/etf/${e.proxy}.json`, 36e5), null) : null;
       if (comp) {
@@ -398,7 +398,7 @@ async function outil(name, a, env, origin, ctx) {
     else if (k === "etf") { if (!B.etfs.find(e => e.id === v)) throw new Erreur("Document introuvable : " + id); r = await outil("etf", { requete: v }, env, origin, ctx); r.titre = "ETF " + B.etfs.find(e => e.id === v).name; r.url = lien(origin, "/etf/" + v); }
     else if (k === "lecon") { const [mid, lid] = v.split("/"), m = (B.aca.modules || []).find(x => x.id === mid), l = m && m.lecons.find(x => x.id === lid); if (!l) throw new Erreur("Document introuvable : " + id); r = lecon(B, { m, l }, origin, []); r.titre = l.titre; r.url = lien(origin, `/academie/${m.id}/${l.id}`); }
     else throw new Erreur("Identifiant inconnu : " + id);
-    const doc = { id, title: r.titre, text: r.texte, url: r.url, metadata: { source: "bilan.", avertissement: AVERT } };
+    const doc = { id, title: r.titre, text: r.texte, url: r.url, metadata: { source: "ENKLAIR", avertissement: AVERT } };
     return { texte: JSON.stringify(doc), donnees: doc };
   }
   throw new Erreur("inconnu");
@@ -416,7 +416,7 @@ function chercherLecons(B, sujet, n) {
   return out.sort((a, b) => b.s - a.s).slice(0, n);
 }
 function lecon(B, { m, l }, origin, autres) {
-  const url = lien(origin, `/academie/${m.id}/${l.id}`), src = [...(l.sources || []).map(s => ({ titre: s.label, url: s.url })), { titre: "bilan., l'Académie", url }];
+  const url = lien(origin, `/academie/${m.id}/${l.id}`), src = [...(l.sources || []).map(s => ({ titre: s.label, url: s.url })), { titre: "ENKLAIR, l'Académie", url }];
   const d = { module: m.titre, titre: l.titre, duree_min: l.duree_min || null, premium: !!l.premium, resume: l.resume || null, a_retenir: l.a_retenir || [], lien: url, sources: src, avertissement: AVERT };
   if (!l.premium) Object.assign(d, { contenu: l.paragraphes || [], exemple: l.exemple || null, erreur_frequente: l.erreur_frequente || null });
   d.autres_lecons = autres.map(x => ({ titre: x.l.titre, lien: lien(origin, `/academie/${x.m.id}/${x.l.id}`) }));
@@ -445,7 +445,7 @@ async function debitCle(env, info) { // compteur du jour d'une adresse personnel
     const jour = new Date().toISOString().slice(0, 10);
     await env.DB.prepare(`CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))`).run();
     const r = await env.DB.prepare(`INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, 'mcp', 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1 RETURNING n`).bind("mcpc:" + info.compte, jour).first();
-    if (r && r.n > MCP_GRATUIT_JOUR) return `Les ${MCP_GRATUIT_JOUR} appels gratuits du jour sont utilisés pour ce compte bilan. Ils reviennent demain ; avec Premium, le connecteur est sans limite.`;
+    if (r && r.n > MCP_GRATUIT_JOUR) return `Les ${MCP_GRATUIT_JOUR} appels gratuits du jour sont utilisés pour ce compte ENKLAIR Ils reviennent demain ; avec Premium, le connecteur est sans limite.`;
   } catch (e) { }
   return null;
 }

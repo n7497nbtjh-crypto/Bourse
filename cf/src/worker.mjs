@@ -1,4 +1,4 @@
-// bilan. : site statique + pages indexables (Cloudflare Pages, mode _worker.js).
+// ENKLAIR : site statique + pages indexables (Cloudflare Pages, mode _worker.js).
 // Le Worker renvoie index.html pour chaque page du site, avec le titre et la description propres à la page
 // (Google lit ainsi un vrai titre pour chaque entreprise). Le reste (données, scripts) est servi tel quel.
 // Plus tard : routes /api/* pour interroger le fournisseur de données. Sa clé (DATA_API_KEY) sera saisie
@@ -20,7 +20,7 @@ import { etfMeta } from "./etf_meta.mjs";
 import { iaSite } from "./iasite.mjs";
 import QUESTIONS from "../../data/questions.json" with { type: "json" };
 
-const SITE = "bilan.";
+const SITE = "ENKLAIR";
 const BASE_DESC = "Les chiffres clés des entreprises cotées, expliqués simplement, et des simulateurs pour comprendre l'investissement. Informations factuelles, sans conseil.";
 const TOOLS = { epargne: "Simulateur d'épargne", interets: "Simulateur d'épargne", frais: "Frais des courtiers", "pea-cto": "Simulateur PEA ou compte-titres" };
 const BY = Object.fromEntries(INDEX.map(c => [c.id, c]));
@@ -79,16 +79,16 @@ export function meta(path, q = null) {
   if (p === "/marches") return { title: `Les marchés aujourd'hui · ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliquées." };
   if (p === "/idees-recues") return { title: `Les idées reçues sur la Bourse · ${SITE}`, desc: "« La Bourse, c'est un casino », « il faut beaucoup d'argent », « le Livret A suffit » : 12 idées reçues vérifiées avec des chiffres officiels et sourcés, et leurs nuances honnêtes." };
   if (p === "/livret-a-ou-bourse") return { title: `Livret A ou Bourse : 100 € par mois sur 10, 20 ou 30 ans · ${SITE}`, desc: "Ce qu'auraient donné 100 € par mois sur un Livret A ou en actions du monde entier, comparé à l'inflation. Chiffres historiques Banque de France, Insee et MSCI, année par année. Pas une promesse." };
-  if (p === "/pourquoi-bilan") return { title: `Ce que bilan. fait que les autres ne font pas · ${SITE}`, desc: "Comptes officiels expliqués avec la médiane du secteur, IA qui calcule et cite ses sources, PEA et fiscalité française, liste noire AMF, sans publicité ni conseil. Avec un tableau comparatif honnête." };
+  if (p === "/pourquoi-bilan") return { title: `Ce que ENKLAIR fait que les autres ne font pas · ${SITE}`, desc: "Comptes officiels expliqués avec la médiane du secteur, IA qui calcule et cite ses sources, PEA et fiscalité française, liste noire AMF, sans publicité ni conseil. Avec un tableau comparatif honnête." };
   if (p === "/methode") return { title: `Méthode, sources et IA · ${SITE}`, desc: "D'où viennent les chiffres du site, comment ils sont jugés par rapport à la médiane du secteur, et les règles données à l'IA pour rester factuelle et sans biais." };
   if (p.startsWith("/academie")) return { title: `L'Académie : cours de culture financière · ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : épargne, PEA, ETF, comptes des entreprises, frais, fiscalité, pièges. Avec quiz et exemples chiffrés." };
-  if (p === "/demander") return { title: `Demandez à bilan. : la recherche d'entreprises par l'IA · ${SITE}`, desc: "Décrivez ce que vous cherchez avec vos mots : l'IA le traduit en critères et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." };
+  if (p === "/demander") return { title: `Demandez à ENKLAIR : la recherche d'entreprises par l'IA · ${SITE}`, desc: "Décrivez ce que vous cherchez avec vos mots : l'IA le traduit en critères et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." };
   if (p.startsWith("/espace")) return { title: `Mon espace · ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, commenté par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." };
   if (p === "/commencer") return { title: `Par où commencer en Bourse : le guide du nouvel investisseur · ${SITE}`, desc: "Épargne de précaution, horizon, choix du compte, diversification, frais, pièges à éviter : sept étapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalisé." };
   if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Plus de questions à l'assistant IA, de résumés détaillés et de bilans rédigés, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." };
   if (p === "/espace/ia") return { title: `Mon IA · ${SITE}`, desc: "Les réponses calculées du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni clé." };
-  if (p === "/ia/connecter") return { title: `Brancher Claude ou ChatGPT sur bilan. · ${SITE}`, desc: "Trois étapes pour que votre assistant IA lise les comptes officiels et les médianes de bilan. au lieu de répondre de mémoire. Adresse personnelle : 20 appels par jour gratuits, sans limite avec Premium." };
-  if (p === "/connecteur") return { title: `Utiliser bilan. dans ChatGPT ou Claude · ${SITE}`, desc: "Ajoutez bilan. à Claude ou à ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda, sources à l'appui. Gratuit, en lecture seule, sans conseil." };
+  if (p === "/ia/connecter") return { title: `Brancher Claude ou ChatGPT sur ENKLAIR · ${SITE}`, desc: "Trois étapes pour que votre assistant IA lise les comptes officiels et les médianes de bilan. au lieu de répondre de mémoire. Adresse personnelle : 20 appels par jour gratuits, sans limite avec Premium." };
+  if (p === "/connecteur") return { title: `Utiliser ENKLAIR dans ChatGPT ou Claude · ${SITE}`, desc: "Ajoutez ENKLAIR à Claude ou à ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda, sources à l'appui. Gratuit, en lecture seule, sans conseil." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
   if (p === "/cgv") return { title: `Conditions générales de vente · ${SITE}`, desc: BASE_DESC };
   if (p === "/confidentialite") return { title: `Politique de confidentialité · ${SITE}`, desc: BASE_DESC };

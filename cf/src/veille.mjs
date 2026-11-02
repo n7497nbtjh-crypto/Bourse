@@ -21,7 +21,7 @@ export async function veille(request, env) {
 const ALTERS = [`ALTER TABLE veille ADD COLUMN last_semaine INTEGER NOT NULL DEFAULT 0`, `ALTER TABLE veille ADD COLUMN last_alerte INTEGER NOT NULL DEFAULT 0`, `ALTER TABLE veille ADD COLUMN alertes INTEGER NOT NULL DEFAULT 1`];
 let altered = false;
 async function alter(db) { if (altered) return; for (const q of ALTERS) { try { await db.prepare(q).run(); } catch (e) { } } altered = true; }
-const page = (msg) => new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>bilan.</title><body style="background:#F8F5EE;font:16px/1.5 system-ui,sans-serif;color:#111"><div style="max-width:520px;margin:60px auto;padding:0 16px"><p style="font:900 28px Georgia,serif">bilan<span style="color:#0E6B4A">.</span></p><p>${msg}</p><p><a href="/favoris" style="color:#0E6B4A">Revenir au site</a></p></div>`, { headers: { "content-type": "text/html; charset=utf-8" } });
+const page = (msg) => new Response(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ENKLAIR</title><body style="background:#F8F5EE;font:16px/1.5 system-ui,sans-serif;color:#111"><div style="max-width:520px;margin:60px auto;padding:0 16px"><p style="font:900 28px Georgia,serif">bilan<span style="color:#0E6B4A">.</span></p><p>${msg}</p><p><a href="/favoris" style="color:#0E6B4A">Revenir au site</a></p></div>`, { headers: { "content-type": "text/html; charset=utf-8" } });
 async function mails(request, env, path) {
   await alter(env.DB);
   const url = new URL(request.url);
@@ -36,7 +36,7 @@ async function mails(request, env, path) {
     await env.DB.prepare(`DELETE FROM veille WHERE email = ? AND ok = 0`).bind(email).run();
     const token = crypto.randomUUID().replace(/-/g, "");
     await env.DB.prepare(`INSERT INTO veille (token, email, ids, ok, at, alertes) VALUES (?, ?, ?, 0, ?, ?)`).bind(token, email, JSON.stringify(ids), Date.now(), p ? 1 : 0).run();
-    try { await sendMail(env, email, "Confirmez votre bilan hebdomadaire bilan.", `Bonjour,\n\nPour recevoir chaque samedi le bilan de votre liste (${ids.length} ligne${ids.length > 1 ? "s" : ""}), confirmez votre adresse en ouvrant ce lien :\n${url.origin}/api/veille/confirmer?t=${token}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien ne sera envoyé.\n\nbilan. La Bourse, comptes à l'appui. Informations factuelles, sans conseil en investissement.`); }
+    try { await sendMail(env, email, "Confirmez votre bilan hebdomadaire ENKLAIR", `Bonjour,\n\nPour recevoir chaque samedi le bilan de votre liste (${ids.length} ligne${ids.length > 1 ? "s" : ""}), confirmez votre adresse en ouvrant ce lien :\n${url.origin}/api/veille/confirmer?t=${token}\n\nSi vous n'êtes pas à l'origine de cette demande, ignorez ce message : rien ne sera envoyé.\n\nbilan. La Bourse, comptes à l'appui. Informations factuelles, sans conseil en investissement.`); }
     catch (e) { return json({ error: "L'e-mail de confirmation n'a pas pu partir aujourd'hui. Réessayez demain." }, 503); }
     return json({ ok: true });
   }
@@ -83,7 +83,7 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "
 function mailWrap(title, blocks, origin, token) {
   const text = `${title}\n\n${blocks.map(b => b.t).join("\n\n")}\n\nVoir sur le site : ${origin}/favoris\nSe désinscrire : ${origin}/api/veille/desinscrire?t=${token}\n\nbilan. La Bourse, comptes à l'appui. Informations factuelles, sans conseil en investissement. Les performances passées ne préjugent pas des performances futures.`;
   const html = `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:600px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px">
-    <p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><h1 style="font:800 20px Georgia,serif;margin:14px 0 6px">${esc(title)}</h1>
+    <p style="font:900 26px Georgia,serif;margin:0">ENKLAIR</p><h1 style="font:800 20px Georgia,serif;margin:14px 0 6px">${esc(title)}</h1>
     ${blocks.map(b => b.h).join("")}
     <p style="margin:22px 0 0"><a href="${origin}/favoris" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir ma liste sur le site</a></p>
     <p style="font-size:12px;color:#87827A;margin-top:22px">Informations factuelles, sans conseil en investissement. <a href="${origin}/api/veille/desinscrire?t=${token}" style="color:#87827A">Se désinscrire</a></p></div></div>`;
@@ -116,5 +116,5 @@ function alertes(d, ids, origin, token, last) {
   d.ev.filter(e => idset.has(e.id) && e.date === tom).forEach(e => out.push(`${d.names["c:" + e.id]} : demain, ${e.label}.`));
   if (!out.length) return null;
   const w = mailWrap("Alerte sur votre liste", [{ t: out.map(x => "- " + x).join("\n"), h: out.map(x => `<p style="margin:0 0 8px">${esc(x)}</p>`).join("") }], origin, token);
-  return { subject: `Alerte bilan. : ${out[0].slice(0, 70)}`, ...w };
+  return { subject: `Alerte ENKLAIR : ${out[0].slice(0, 70)}`, ...w };
 }

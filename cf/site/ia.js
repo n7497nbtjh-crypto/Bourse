@@ -1,5 +1,5 @@
 /* ====================================================================================================
-   bilan. : IA locale, version 2 (cf/site/ia.js)
+   ENKLAIR : IA locale, version 2 (cf/site/ia.js)
    Redéfinit localCopilot, localAssist, termeDe, termeTexte, trouveEntreprises et chercheLecons
    (déclarations de fonction au niveau du script : elles remplacent les anciennes).
    Rien ne s'exécute au chargement : les données (R, ETF, ACA, PX, MED…) sont lues au moment de l'appel.
@@ -401,7 +401,7 @@ function IA_etf(q, raw) {
   return { action: "etf", titre: /meilleur/.test(q) ? "ETF classés par frais" : IA_cap(raw), categorie: mot && mot !== "or" ? (cat === "matieres" ? cat : "theme") : cat, pea: /\bpea\b/.test(q), mot, local: true };
 }
 
-/* ---------- 6. Le copilote « Demander à bilan. » ---------- */
+/* ---------- 6. Le copilote « Demander à ENKLAIR » ---------- */
 const IA_DEFM = / c est quoi | qu est ce qu| que veut dire | que signifie | ca veut dire | veut dire quoi | definition | definir | defini | expliquez? (moi )?(le |la |les |l |un |une |ce |ce que |ce qu )?| explication | comment (fonctionne|marche|fonctionnent|marchent) | a quoi (sert|servent) | ca sert a quoi | c est combien | combien (est|sont|c est) (la |les |le )?(flat|prelevements|taux|plafond)| difference | differences | signification | c est comment | definition de /;
 const IA_GAFAM = /\bgafam\b|\bgafa\b|\bmaang\b|\bfaang\b|7 magnifiques|sept magnifiques|magnificent 7|magnificent seven/;
 function IA_nomInconnu(raw) { // « les comptes de Zorglub Industries » → « Zorglub Industries » si ce nom propre n'est ni une entreprise, ni un ETF, ni un lieu, ni un indice
@@ -425,7 +425,7 @@ function localCopilot(raw) {
   // b. hors sujet, salutations, cours des cryptoactifs
   const h = IA_hors(q); if (h && !f0.cos.length) return T(h.titre, h.texte);
   // b2. (5e passage, B4) une société nommée que le site ne suit pas : le dire, au lieu de répondre par un secteur entier
-  if (!f0.cos.length && !f0.etfs.length) { const nm = IA_nomInconnu(raw); if (nm) return T("Entreprise introuvable", `bilan. ne suit pas « ${nm} » : elle ne figure pas parmi les ${F0.format(R.companies.length)} entreprises dont le site lit les comptes. Vérifiez l'orthographe, cherchez son code ISIN dans la barre de recherche, ou demandez son ajout avec « Signaler une erreur » en bas de page.`); }
+  if (!f0.cos.length && !f0.etfs.length) { const nm = IA_nomInconnu(raw); if (nm) return T("Entreprise introuvable", `ENKLAIR ne suit pas « ${nm} » : elle ne figure pas parmi les ${F0.format(R.companies.length)} entreprises dont le site lit les comptes. Vérifiez l'orthographe, cherchez son code ISIN dans la barre de recherche, ou demandez son ajout avec « Signaler une erreur » en bas de page.`); }
   // c. « quoi acheter », « meilleure action » : méthode, sauf si la question contient des critères (alors on cherche)
   const { crit, tri } = IA_criteres(q);
   if (IA_CONSEIL.test(q) && !IA_METH.some(m => m.re.test(q)) && !f0.cos.length && !/\betf\b|tracker/.test(q) && !crit.length && !(tri && tri.indicateur !== "capitalisation")) { const x = IA_refus(q, []); return T(x.titre, x.texte); }

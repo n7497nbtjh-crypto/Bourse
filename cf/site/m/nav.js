@@ -25,7 +25,7 @@ const NAV = [
     ],
     aussi: [
       ["/methode", "Méthode et sources"],
-      ["/pourquoi-bilan", "Pourquoi bilan."],
+      ["/pourquoi-bilan", "Pourquoi ENKLAIR"],
     ],
   },
   {
@@ -77,7 +77,7 @@ const NAV = [
       ["/rapport-exemple", "Un rapport en exemple"],
       ["/espace/ia", "L'IA du site"],
       ["/espace/reglages", "Réglages"],
-      ["/connecteur", "bilan. dans ChatGPT ou Claude"],
+      ["/connecteur", "ENKLAIR dans ChatGPT ou Claude"],
       ["/premium", "Premium"],
     ],
   },

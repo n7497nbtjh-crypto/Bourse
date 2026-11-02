@@ -152,7 +152,7 @@ function acaAccueil() {
     return `<a class="pa-mod" href="/academie/${m.id}"><span class="pa-mn">${i + 1}</span><span class="pa-mt"><b>${esc(m.titre)}</b><small>${esc(intro)}</small></span>
       <span class="pa-mm">${m.lecons.length} leçons · ${m.duree_min || m.lecons.reduce((a, l) => a + (l.duree_min || 5), 0)} min${lk && !isPrem() ? ` · ${lk} Premium` : ""}<span>${p.d ? `${p.d} / ${p.n}` : "à commencer"}${p.q != null ? ` · quiz ${p.q}/${m.quiz.length}` : ""}</span>${parBar(p.d, p.n)}</span></a>`; };
   const autres = ordre.filter(m => !PAR_NIVEAUX.some(v => v.mods.includes(m.id)));
-  app.innerHTML = `${parCrumbs([[null, "L'Académie"]])}<header class="pa-hero"><p class="kick">L'Académie bilan.</p><h1 class="pagetitle">Le programme complet</h1>
+  app.innerHTML = `${parCrumbs([[null, "L'Académie"]])}<header class="pa-hero"><p class="kick">L'Académie ENKLAIR</p><h1 class="pagetitle">Le programme complet</h1>
       <p class="pagesub">${ACA.modules.length} modules et ${tot} leçons, rangés en trois niveaux. Environ ${F0.format(Math.round(mins / 60))} heures en tout. Si vous débutez, commencez par le parcours court de chaque niveau : quelques leçons de 3 minutes et un quiz.</p>
       <div class="acaprog"><div class="feub"><span class="f" style="width:${tot ? lus / tot * 100 : 0}%"></span></div><span>${lus} / ${tot} leçons lues</span><span class="acaxp"><b>${xp} points</b> · niveau ${nv}${b ? ` · encore ${b - xp} pour le suivant` : ""}</span>${next ? `<a class="btn" href="/academie/${next[0].id}/${next[1].id}">${lus ? "Reprendre" : "Commencer"} : ${esc(next[1].titre)}</a>` : ""}</div>
       <p class="pa-prog-court light"></p></header>

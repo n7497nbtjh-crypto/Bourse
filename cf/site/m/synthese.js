@@ -194,7 +194,7 @@ function synEssentiel(b) {
 function synIcs(b, which) {
   const E = (b.a_venir || []).filter(e => e.id || (e.k || "").startsWith("c:")).map(e => ({ id: e.id || e.k.slice(2), date: e.date, label: e.label || e.type || "", source: e.source || "" }));
   const list = which === "all" ? E : [E[+which]].filter(Boolean); if (!list.length) return;
-  const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Mes rendez-vous (bilan.)")); a.download = list.length > 1 ? "bilan-semaine.ics" : `bilan-${list[0].id}.ics`;
+  const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Mes rendez-vous (ENKLAIR)")); a.download = list.length > 1 ? "bilan-semaine.ics" : `bilan-${list[0].id}.ics`;
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1500); // lien hors de la page : le routeur ne l'intercepte pas
   toast(list.length > 1 ? `${list.length} dates ajoutées au fichier d'agenda.` : "Date ajoutée au fichier d'agenda.");
 }
@@ -374,7 +374,7 @@ function synPageHTML(b, m) {
   }).join("");
   const sect = (b.secteurs || []).filter(x => x.n).map(x => `<div class="syn4-t"><small>${esc(x.nom)}</small><b class="${synCls(x.mediane_pct)}">${synPct(x.mediane_pct)}</b><span>médiane de ${x.n} entreprises</span></div>`);
   return `<div class="syn4">
-    <header class="syn4-head"><p class="syn4-mast"><b>bilan.</b><span>hebdo</span><i>n° ${esc(sem)}</i></p><p class="syn4-date" title="${esc(statut)}${b.du ? ` · ${esc(synDuAu(b))}` : ""}">Semaine ${esc(sem)}${b.du && b.au ? ` · ${esc(SYN_MOIS[new Date(b.du + "T12:00:00Z").getUTCMonth()] === SYN_MOIS[new Date(b.au + "T12:00:00Z").getUTCMonth()] ? synDuAu(b) : `${new Date(b.du + "T12:00:00Z").getUTCDate()} ${SYN_MOIS[new Date(b.du + "T12:00:00Z").getUTCMonth()]} → ${new Date(b.au + "T12:00:00Z").getUTCDate() === 1 ? "1er" : new Date(b.au + "T12:00:00Z").getUTCDate()} ${SYN_MOIS[new Date(b.au + "T12:00:00Z").getUTCMonth()]}`)}` : ""}${b.genere ? ` · chiffres du ${esc(new Date(b.genere).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }))}` : ""}</p>
+    <header class="syn4-head"><p class="syn4-mast"><b>ENKLAIR</b><span>hebdo</span><i>n° ${esc(sem)}</i></p><p class="syn4-date" title="${esc(statut)}${b.du ? ` · ${esc(synDuAu(b))}` : ""}">Semaine ${esc(sem)}${b.du && b.au ? ` · ${esc(SYN_MOIS[new Date(b.du + "T12:00:00Z").getUTCMonth()] === SYN_MOIS[new Date(b.au + "T12:00:00Z").getUTCMonth()] ? synDuAu(b) : `${new Date(b.du + "T12:00:00Z").getUTCDate()} ${SYN_MOIS[new Date(b.du + "T12:00:00Z").getUTCMonth()]} → ${new Date(b.au + "T12:00:00Z").getUTCDate() === 1 ? "1er" : new Date(b.au + "T12:00:00Z").getUTCDate()} ${SYN_MOIS[new Date(b.au + "T12:00:00Z").getUTCMonth()]}`)}` : ""}${b.genere ? ` · chiffres du ${esc(new Date(b.genere).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }))}` : ""}</p>
       ${tuiles.length ? `<div class="syn4-tuiles syn4-4">${tuiles.slice(0, 4).join("")}</div>` : ""}
       ${evHTML ? `<ol class="syn4-evs">${evHTML}</ol>` : ess.length ? `<ol class="synk syn4-ess">${ess.slice(0, 3).map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
       ${nextHTML}${cmpHTML}</header>
@@ -540,7 +540,7 @@ function synPageV5(b, m) {
   const fl = L.filter(l => l.favori).map(l => { const nx = (b.a_venir || []).find(e => e.k === l.k);
     return `<a class="s5-f" href="${synLien(l.k)}">${synLogo(l.k, 26)}<b>${esc(l.nom)}</b><span>${l.cours != null ? `${nf(2).format(l.cours)} ${esc(l.devise === "EUR" ? "€" : l.devise || "")}` : ""}</span><b class="${synCls(l.variation_semaine_pct)}">${synPct(l.variation_semaine_pct)}</b><small>${nx ? `${esc(jour(nx.date))} : ${esc((nx.type || "").toLowerCase())}` : ""}</small></a>`; }).join("");
   return `<div class="syn4 s5">
-    <header class="s5-head"><p class="syn4-mast"><b>bilan.</b><span>hebdo</span><i>n° ${esc(sem)}</i></p><p class="s5-date">${b.du ? esc(synDuAu(b)) : ""}${b.en_cours === false ? " · semaine close" : " · semaine en cours, mise à jour à chaque visite"}</p>
+    <header class="s5-head"><p class="syn4-mast"><b>ENKLAIR</b><span>hebdo</span><i>n° ${esc(sem)}</i></p><p class="s5-date">${b.du ? esc(synDuAu(b)) : ""}${b.en_cours === false ? " · semaine close" : " · semaine en cours, mise à jour à chaque visite"}</p>
       <div class="s5-ts">${T.join("")}</div>${verdict}</header>
     <section class="s5-s"><h2><i>1</i>Pourquoi ça a bougé</h2><div class="s5-rs">${rows || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille.</p>`}</div></section>
     <section class="s5-s"><h2><i>2</i>L'actualité de vos entreprises</h2>${annHTML ? `<div class="s5-as">${annHTML}</div>` : `<p class="muted">Aucune publication officielle de vos entreprises cette semaine.</p>`}</section>

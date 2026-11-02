@@ -13,7 +13,7 @@
 
    Cadre : information factuelle à but pédagogique. La page n'établit pas de profil, n'enregistre aucune réponse
    et ne désigne aucune répartition ni aucun titre comme adapté à une personne : ce serait du conseil en
-   investissement (MIF 2), et bilan. n'est pas conseiller en investissements financiers (CIF).
+   investissement (MIF 2), et ENKLAIR n'est pas conseiller en investissements financiers (CIF).
    Aucun chiffre n'est inventé : tout vient des comptes publiés (ESEF/SEC), des cours du site et des fiches
    des émetteurs d'ETF, avec leur source. */
 
@@ -500,7 +500,7 @@ function recoListeHTML() {
     <div class="rc-rows">${vus.map(etf ? recoEtfLigne : recoEntLigne).join("")}</div>
     <p class="rc-mut">Liste calculée sur les données du site : ${etf ? "fiches des émetteurs d'ETF (frais, encours, composition, éligibilité au PEA déclarée)" : "comptes annuels publiés (ESEF en Europe, SEC aux États-Unis) et cours différés du site"}. Un chiffre élevé n'est pas une bonne nouvelle en soi, un chiffre bas n'est pas une mauvaise nouvelle : la fiche donne le détail et la médiane du secteur. <a class="lnk" href="${lien}">La liste complète et tous les filtres</a></p>`;
 }
-const RECO_LEGAL = `<div class="rc-legal"><b>Information factuelle à but pédagogique, pas un conseil en investissement.</b> Cette page ne tient pas compte de votre situation et ne désigne aucune répartition ni aucun titre comme adapté à qui que ce soit : elle montre des exemples et des listes triées sur des critères que vous choisissez. bilan. n'est pas conseiller en investissements financiers (CIF). Pour un conseil adapté à votre situation, adressez-vous à un CIF immatriculé à l'<a href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a>. Investir en Bourse comporte un risque de perte en capital.</div>`;
+const RECO_LEGAL = `<div class="rc-legal"><b>Information factuelle à but pédagogique, pas un conseil en investissement.</b> Cette page ne tient pas compte de votre situation et ne désigne aucune répartition ni aucun titre comme adapté à qui que ce soit : elle montre des exemples et des listes triées sur des critères que vous choisissez. ENKLAIR n'est pas conseiller en investissements financiers (CIF). Pour un conseil adapté à votre situation, adressez-vous à un CIF immatriculé à l'<a href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a>. Investir en Bourse comporte un risque de perte en capital.</div>`;
 
 /* ---------- La page ---------- */
 async function pageRepartitions() {

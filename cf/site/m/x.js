@@ -44,7 +44,7 @@ async function xMessages() {
 function xCanvas(w, h) { const c = document.createElement("canvas"); c.width = w; c.height = h; return c; }
 function xLignes(ctx, t, x, y, maxW, lh) { const mots = String(t).split(/\s+/); let l = "", n = 0; for (const m of mots) { const e = l ? l + " " + m : m; if (ctx.measureText(e).width > maxW && l) { ctx.fillText(l, x, y + n * lh); n++; l = m; } else l = e; } if (l) { ctx.fillText(l, x, y + n * lh); n++; } return n; }
 function xFond(ctx, w, h) { ctx.fillStyle = "#F8F5EE"; ctx.fillRect(0, 0, w, h); }
-function xMarque(ctx, x, y, s) { ctx.fillStyle = "#111214"; ctx.font = `800 ${s}px "Inter Tight", Inter, Arial, sans-serif`; ctx.fillText("bilan", x, y); const w = ctx.measureText("bilan").width; ctx.fillStyle = "#0E6B4A"; ctx.fillText(".", x + w, y); }
+function xMarque(ctx, x, y, s) { ctx.fillStyle = "#111214"; ctx.font = `800 ${s}px "Inter Tight", Inter, Arial, sans-serif`; ctx.fillText("ENKLAIR", x, y); const w = ctx.measureText("bilan").width; ctx.fillStyle = "#0E6B4A"; ctx.fillText(".", x + w, y); }
 function xBarre(ctx, x, y, w, m) { // valeur et médiane sur une même règle
   if (m.v == null || m.med == null) return; const max = Math.max(m.v, m.med) * 1.15 || 1, X = v => x + Math.max(0, Math.min(1, v / max)) * w;
   ctx.fillStyle = "#E2DCCF"; ctx.fillRect(x, y, w, 14); ctx.fillStyle = m.v >= m.med ? "#C6F432" : "#F2C6B8"; ctx.fillRect(x, y, X(m.v) - x, 14);

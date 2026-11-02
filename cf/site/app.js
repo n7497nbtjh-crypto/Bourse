@@ -1,6 +1,6 @@
-/* bilan. : le script principal du site, sorti de index.html le 30/10/2026 (lot 6 : la page ne porte plus que le HTML et le CSS ; ce fichier est mis en cache par le service worker). */
+/* ENKLAIR : le script principal du site, sorti de index.html le 30/10/2026 (lot 6 : la page ne porte plus que le HTML et le CSS ; ce fichier est mis en cache par le service worker). */
 "use strict";
-const SITE = "bilan.";
+const SITE = "ENKLAIR";
 const RATES = { pfu: 0.314, ps: 0.186, year: 2026 }; // taux en vigueur en 2026, à vérifier chaque année
 let R = null, AG = { events: [] }; // R : entreprises ; AG : agenda
 const RBY = {}, FULL = {};
@@ -1792,7 +1792,7 @@ function pageDividendes() {
     <div id="dvl"></div>`;
   render();
   $(".chips", app).onclick = e => { const b = e.target.closest("button"); if (!b) return; only = b.dataset.o === "1"; $$(".chips button", app).forEach(x => x.classList.toggle("on", x === b)); render(); };
-  $("#ics").onclick = () => { const list = all.filter(e => !only || favIds.has(e.id)); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (bilan.)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+  $("#ics").onclick = () => { const list = all.filter(e => !only || favIds.has(e.id)); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (ENKLAIR)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
 }
 
 /* ---------- Premiers pas : parcours en trois niveaux, avec quiz ---------- */
@@ -2405,7 +2405,7 @@ const ASK = ["Comment gagne-t-elle de l'argent ?", "Que retenir de ses derniers 
 /* ---------- Page Premium ---------- */
 let OFFRES = null;
 async function pagePremium(sub) {
-  // 5e passage (C) : « Votre IA répond. bilan. surveille. » Cinq arguments, chacun avec sa preuve tirée des données du site, puis les prix.
+  // 5e passage (C) : « Votre IA répond. ENKLAIR surveille. » Cinq arguments, chacun avec sa preuve tirée des données du site, puis les prix.
   setTitle(sub === "merci" ? "Merci" : "Premium"); setNav("prem");
   if (sub === "merci") return premiumMerci();
   app.innerHTML = `<div class="empty">Chargement…</div>`;
@@ -2414,11 +2414,11 @@ async function pagePremium(sub) {
   try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=premium-vue"); } catch (e) { }
   const nCo = R && R.companies ? R.companies.filter(c => !c.missing).length : 0, ic = k => typeof accIc === "function" ? accIc(k) : "";
   const ARG = [
-    ["ag", "Surveillé pendant votre sommeil", "Votre IA ne surveille rien. bilan. lit les publications officielles cinq fois par jour ouvré et vous prévient.", "prem-p1"],
+    ["ag", "Surveillé pendant votre sommeil", "Votre IA ne surveille rien. ENKLAIR lit les publications officielles cinq fois par jour ouvré et vous prévient.", "prem-p1"],
     ["mk", "Chaque chiffre est prouvé", "Une IA cite de mémoire ; ici, chaque chiffre renvoie au document officiel.", "prem-p2"],
     ["pub", `La médiane de ${F0.format(nCo)} entreprises`, "Comparer à tout un secteur demande les comptes de tout le secteur : le site les a.", "prem-p3"],
-    ["cal", "bilan. se souvient", "12 semaines d'historique : ce qui a changé depuis la semaine dernière, sans rien noter.", "prem-p4"],
-    ["ia", "Gardez votre IA", "Branchez Claude ou ChatGPT sur bilan. : 20 appels par jour gratuits, sans limite avec Premium.", "prem-p5"],
+    ["cal", "ENKLAIR se souvient", "12 semaines d'historique : ce qui a changé depuis la semaine dernière, sans rien noter.", "prem-p4"],
+    ["ia", "Gardez votre IA", "Branchez Claude ou ChatGPT sur ENKLAIR : 20 appels par jour gratuits, sans limite avec Premium.", "prem-p5"],
   ];
   const rows = [ // ce qui reste gratuit pour toujours, et ce que Premium ajoute ; aucune information de base n'est cachée
     ["Fiches, médianes du secteur, outils, simulateurs", "✓ toutes", "✓"],
@@ -2435,7 +2435,7 @@ async function pagePremium(sub) {
   const essai = OFFRES.essai && !st.premium ? `<div class="prem-essai"><button type="button" class="btn" id="essai14">Essayer 14 jours, sans carte</button><span class="muted">Un compte gratuit suffit. Rien ne se renouvelle tout seul.</span><p id="essaim" role="status" aria-live="polite"></p></div>` : "";
   const attente = OFFRES.mensuel || OFFRES.unique ? "" : `<section class="panel prem-att"><div class="pb"><h2 class="f2-h">Soyez prévenu à l'ouverture</h2><p class="muted" style="margin:6px 0 12px">Les inscrits avant l'ouverture gardent le prix bloqué à <b>39 € par an</b>. Une adresse, rien d'autre ; aucun message en dehors de l'ouverture.</p>
     <form id="attf" class="askf" novalidate><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email" required><button class="btn">Prévenez-moi</button></form><p id="attm" class="prem-attm" role="status" aria-live="polite"></p><p class="muted" id="attn" style="font-size:13px;margin:8px 0 0"></p></div></section>`;
-  app.innerHTML = `<h1 class="pagetitle">Votre IA répond. bilan. surveille.</h1>
+  app.innerHTML = `<h1 class="pagetitle">Votre IA répond. ENKLAIR surveille.</h1>
     <p class="pagesub">Une IA personnelle répond quand vous lui posez la question. Premium suit vos valeurs à votre place, chiffres officiels à l'appui.</p>
     <div class="prem5">${ARG.map(([k, t, d, id], i) => `<details class="prem-a" id="${id}"><summary>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span><em>La preuve</em></summary><div class="prem-pv" data-pv="${i}"><p class="muted">Chargement…</p></div></details>`).join("")}</div>
     ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : st.plan === "essai" ? "Essai gratuit" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
@@ -2447,10 +2447,10 @@ async function pagePremium(sub) {
     <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p id="codem" class="muted" style="font-size:13px"></p></div></section>
       <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p id="lostm" class="muted" style="font-size:13px"></p></div></section></div>
     <section class="panel"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">
-      ${acc("Premium donne-t-il des conseils pour acheter ?", "<p>Non. Premium donne plus de suivi et d'explications, jamais de recommandation d'achat ou de vente. bilan. n'est pas un conseiller en investissement.</p>")}
-      ${acc("Pourquoi payer si mon IA répond déjà ?", "<p>Votre IA répond quand vous pensez à lui demander, avec ce qu'elle a en mémoire. bilan. lit les publications officielles chaque jour, compare chaque entreprise aux comptes de tout son secteur, garde vos semaines en mémoire et vous prévient. Et vous pouvez brancher votre IA sur bilan.</p>")}
+      ${acc("Premium donne-t-il des conseils pour acheter ?", "<p>Non. Premium donne plus de suivi et d'explications, jamais de recommandation d'achat ou de vente. ENKLAIR n'est pas un conseiller en investissement.</p>")}
+      ${acc("Pourquoi payer si mon IA répond déjà ?", "<p>Votre IA répond quand vous pensez à lui demander, avec ce qu'elle a en mémoire. ENKLAIR lit les publications officielles chaque jour, compare chaque entreprise aux comptes de tout son secteur, garde vos semaines en mémoire et vous prévient. Et vous pouvez brancher votre IA sur ENKLAIR</p>")}
       ${acc("Comment résilier ?", "<p>L'abonnement mensuel se résilie en ligne à tout moment depuis cette page (« Gérer ou résilier mon abonnement »), aussi simplement qu'il se souscrit. L'accès reste ouvert jusqu'à la fin du mois payé. Le paiement d'un an ne se renouvelle pas.</p>")}
-      ${acc("Le paiement est-il sûr ?", "<p>Le paiement passe par Stripe, un prestataire de paiement agréé. bilan. ne voit jamais votre numéro de carte.</p>")}
+      ${acc("Le paiement est-il sûr ?", "<p>Le paiement passe par Stripe, un prestataire de paiement agréé. ENKLAIR ne voit jamais votre numéro de carte.</p>")}
       ${acc("Puis-je changer d'avis ?", `<p>Les conditions de rétractation sont détaillées dans les <a class="lnk" href="/cgv">conditions générales de vente</a>.</p>`)}
     </div></section>
     <p class="note">Paiement sécurisé par Stripe. <a class="lnk" href="/cgv">Conditions générales de vente</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/avertissement">Avertissement sur les risques</a></p>`;
@@ -2580,7 +2580,7 @@ async function pageLegal(p) {
 }
 
 /* ====================================================================================================
-   v8 : comptes clients (Mon espace), copilote IA « Demander à bilan. », accueil en bandeaux, favoris refaits
+   v8 : comptes clients (Mon espace), copilote IA « Demander à ENKLAIR », accueil en bandeaux, favoris refaits
    ==================================================================================================== */
 
 /* ---------- Compte : session par cookie, synchronisation des favoris et du portefeuille ---------- */
@@ -2655,7 +2655,7 @@ function perExplique(s) {
     ${mp ? zoneGauge({ v: v.pe, med: mp, lowGood: true, fmt: x => F0.format(x) + " ans", labels: ["moins cher que le secteur", "", "plus cher que le secteur"] }) + `<p class="note" style="margin:6px 0 0">${v.pe > mp * 1.3 ? "Plus cher que la plupart de ses concurrentes : le marché parie sur une croissance plus forte. Si elle ne vient pas, ce prix peut baisser." : v.pe < mp * 0.75 ? "Moins cher que la plupart de ses concurrentes : le marché attend moins de croissance, ou voit un risque. Moins cher ne veut pas dire « bonne affaire »." : "Dans la moyenne de son secteur : ni plus cher, ni moins cher que ses concurrentes."}</p>` : ""}</div>`;
 }
 
-/* ---------- Copilote : « Demander à bilan. » ---------- */
+/* ---------- Copilote : « Demander à ENKLAIR » ---------- */
 const IA_EX = ["Entreprises françaises peu endettées qui versent un bon dividende", "Les entreprises tech européennes les plus rentables", "Compare LVMH, Hermès et Kering", "C'est quoi un ETF capitalisant ?", "ETF monde éligibles au PEA les moins chers", "Actions américaines moins chères que leur secteur"];
 const INDI = {
   croissance: ["Croissance des ventes", c => { const x = ratios(c).g1; return x == null ? null : x * 100; }, x => pct(x / 100), false],
@@ -2743,13 +2743,13 @@ async function iaRun(q, out) {
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
 function iaBox(id, big = false) {
-  return `<form class="iabox2${big ? " big" : ""}" id="${id}" autocomplete="off"><span class="iaspark" aria-hidden="true">✦</span><input type="text" maxlength="300" placeholder="Demandez à bilan. : « entreprises françaises peu endettées avec un dividende »" aria-label="Posez votre question à l'IA"><button class="btn" type="submit">Demander</button></form>`;
+  return `<form class="iabox2${big ? " big" : ""}" id="${id}" autocomplete="off"><span class="iaspark" aria-hidden="true">✦</span><input type="text" maxlength="300" placeholder="Demandez à ENKLAIR : « entreprises françaises peu endettées avec un dividende »" aria-label="Posez votre question à l'IA"><button class="btn" type="submit">Demander</button></form>`;
 }
 function bindIaBox(form, out) { form.onsubmit = e => { e.preventDefault(); const q = $("input", form).value.trim(); if (q.length < 4) return; if (out) { history.replaceState({}, "", "/demander?q=" + encodeURIComponent(q)); iaRun(q, out); } else go("/demander?q=" + encodeURIComponent(q)); }; }
 function pageDemander() {
   setTitle("Demander à l'IA"); setNav("ia");
   const q = new URLSearchParams(location.search).get("q") || "";
-  app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à bilan.</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
+  app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à ENKLAIR</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
     ${iaBox("iaf", true)}<div class="chips iaex">${IA_EX.map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div><p class="mia-etat" data-mia-etat>${miaEtatHTML()}</p></div>
     <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres reçoivent une réponse rédigée par <a class="lnk" href="/espace/ia">l'IA du site</a>, gratuite.</p></div></section>`;
   const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
@@ -3086,7 +3086,7 @@ async function pageAcademie(mid, lid) {
 function acaAccueil() {
   const st = acaSt(), tot = ACA.modules.reduce((a, m) => a + m.lecons.length, 0), lus = ACA.modules.reduce((a, m) => a + acaProgress(m, st).d, 0), mins = ACA.modules.reduce((a, m) => a + m.lecons.reduce((b, l) => b + (l.duree_min || 5), 0), 0);
   const next = ACA.modules.flatMap(m => m.lecons.map(l => [m, l])).find(([m, l]) => !st[m.id + "/" + l.id]);
-  app.innerHTML = `<div class="acahero"><p class="kick">L'Académie bilan.</p><h1 class="pagetitle">La culture financière, de zéro.</h1>
+  app.innerHTML = `<div class="acahero"><p class="kick">L'Académie ENKLAIR</p><h1 class="pagetitle">La culture financière, de zéro.</h1>
       <p class="pagesub">${ACA.modules.length} modules, ${tot} leçons et des quiz pour comprendre l'argent, la Bourse et les placements, avec des exemples chiffrés et des sources officielles. Environ ${F0.format(mins / 60)} heures en tout, à votre rythme. Votre progression reste sur cet appareil.</p>
       <div class="acaprog"><div class="feub"><span class="f" style="width:${lus / tot * 100}%"></span></div><span>${lus} / ${tot} leçons lues</span>${(() => { const xp = acaXP(st), [nv, a, b] = acaNiveau(xp); return `<span class="acaxp"><b>${xp} points</b> · niveau ${nv}${b ? ` · encore ${b - xp} pour le suivant` : ""}</span>`; })()}${next ? `<a class="btn" href="/academie/${next[0].id}/${next[1].id}">${lus ? "Reprendre" : "Commencer"} : ${esc(next[1].titre)}</a>` : ""}</div></div>
     <div class="acagrid">${ACA.modules.map((m, i) => { const p = acaProgress(m, st), lk = m.lecons.filter(l => l.premium).length;

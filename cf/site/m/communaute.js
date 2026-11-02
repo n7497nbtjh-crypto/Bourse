@@ -13,7 +13,7 @@
 const CMU_TABS = [["analyses", "Analyses"], ["questions", "Questions"], ["listes", "Listes de suivi"], ["pronostics", "Pronostics"]];
 const CMU_HZ = { court: ["Court terme", "moins d'un an"], moyen: ["Moyen terme", "1 à 5 ans"], long: ["Long terme", "plus de 5 ans"] };
 const CMU_CLES = "bilan.listes.cles";
-const CMU_RAPPEL = "Contributions de visiteurs, non vérifiées par bilan. Ce ne sont pas des conseils en investissement : vérifiez toujours sur la fiche et dans les comptes officiels.";
+const CMU_RAPPEL = "Contributions de visiteurs, non vérifiées par ENKLAIR Ce ne sont pas des conseils en investissement : vérifiez toujours sur la fiche et dans les comptes officiels.";
 const cmuMeta = m => { try { return m && m.meta ? JSON.parse(m.meta) : null; } catch (e) { return null; } };
 const cmuDate = t => new Date(t).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" });
 const cmuNom = r => r.startsWith("etf-") ? (ETFBY[r.slice(4)] || {}).name : (RBY[r] || {}).name;
@@ -42,7 +42,7 @@ function cmuChiffres(room) {
     const m = medInd(c.sector, k), z = f[3] == null || m == null ? "" : (f[3] ? v < m * 0.85 : v > m * 1.15) ? "up" : (f[3] ? v > m * 1.15 : v < m * 0.85) ? "dn" : "";
     return { l: f[0], v: f[2](v), m: m != null ? f[2](m) : null, z };
   }).filter(Boolean);
-  return items.length ? { k: "c", year: c.year, items, src: `Calculés par bilan. sur les comptes annuels ${c.year || ""} (ESEF ou SEC) et le cours différé, médiane du secteur ${esc(secName(c).toLowerCase())}.` } : null;
+  return items.length ? { k: "c", year: c.year, items, src: `Calculés par ENKLAIR sur les comptes annuels ${c.year || ""} (ESEF ou SEC) et le cours différé, médiane du secteur ${esc(secName(c).toLowerCase())}.` } : null;
 }
 function cmuChiffresHTML(room, ex) {
   const C = cmuChiffres(room); if (!C) return "";
@@ -219,7 +219,7 @@ function cmuListeTable(it) {
   return `${cos.length ? tblxScrollBox(`<table class="t tbx tbx-sort"><thead><tr><th class="l lab" scope="col" data-sk="0">Entreprise<i class="tbx-so"></i></th>${["croissance", "marge", "dette", "per"].map((k, i) => tblxTh(esc(INDI[k][0]), i + 1)).join("")}</tr></thead><tbody>
       ${cos.map((k, j) => { const c = RBY[k.slice(2)]; return `<tr class="${j % 2 ? "z" : ""}"><th scope="row" class="l lab" data-v="${esc(c.name)}"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 24)}<span><b>${esc(c.name)}</b><small class="light">${esc(secName(c))}</small></span></a></th>${c.missing ? `<td class="num light" colspan="4">comptes non disponibles</td>` : ["croissance", "marge", "dette", "per"].map(x => cell(c, x)).join("")}</tr>`; }).join("")}</tbody></table>`, "Faites glisser pour voir les colonnes") : ""}
     ${etfs.length ? `<div class="cmu-etfs">${etfs.map(k => { const e = ETFBY[k.slice(2)]; return `<a href="/etf/${e.id}">${keyLogo(k, 24)}<span><b>${esc(e.name)}</b><small class="light">${e.ter != null ? `frais ${nf(2).format(e.ter)} % par an` : ""}${e.pea ? " · PEA" : ""}</small></span></a>`; }).join("")}</div>` : ""}
-    <p class="cmu-fsrc">Chiffres calculés par bilan. sur les derniers comptes annuels et le cours différé ; couleur : nettement mieux (vert) ou moins bien (orange) que la médiane du secteur. Ajoutés automatiquement, pas par l'auteur.</p>`;
+    <p class="cmu-fsrc">Chiffres calculés par ENKLAIR sur les derniers comptes annuels et le cours différé ; couleur : nettement mieux (vert) ou moins bien (orange) que la médiane du secteur. Ajoutés automatiquement, pas par l'auteur.</p>`;
 }
 function cmuListes(el, qs) {
   const id = parseInt(qs.get("liste") || "0", 10);

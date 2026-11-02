@@ -68,7 +68,7 @@ async function pageIndice(id) {
         <div><span class="kick">Depuis</span><p>${esc(F.histoire)}</p></div>
         <div class="orcwarn"><span class="kick">À savoir</span><p>${esc(F.nuance)}</p></div>
         <p class="note" style="margin:0">Un indice ne s'achète pas directement : on passe par un fonds qui le reproduit, en général un ETF. <a class="lnk" href="/academie/bourse/indices">La leçon sur les indices</a></p></div></section>
-      <section class="panel"><div class="ph"><h2>Les plus grandes entreprises de ce marché sur bilan.</h2></div><div class="pb">
+      <section class="panel"><div class="ph"><h2>Les plus grandes entreprises de ce marché sur ENKLAIR</h2></div><div class="pb">
         ${cos.length ? `<div class="orclist">${cos.map(({ c, v }) => `<a class="orcrow" href="/entreprise/${c.id}">${logo(c, 30)}<span class="t"><b>${esc(c.name)}</b><small>${esc(secName(c))}</small></span><span class="v"><b>${big(v.capE / 1e6)}</b><small>en Bourse</small></span>${ORC_CHEV}</a>`).join("")}</div>
           <p class="note" style="margin:10px 0 0">Classées par valeur en Bourse parmi les entreprises suivies par le site. Ce n'est pas la composition officielle de l'indice, publiée par ${esc(F.fournisseur)}.</p>` : `<p class="muted" style="margin:0">Le site ne suit pas encore d'entreprises de ce marché.</p>`}</div></section>
     </div><div>
@@ -133,7 +133,7 @@ function orcConfiance() {
 
 /* ---------- L'IA sur toutes les pages : bouton et panneau contextuel (le seul point d'entrée de l'IA) ----------
    Sur une fiche, l'IA répond sur l'entreprise : réponse calculée d'abord, puis, si le visiteur a connecté son IA
-   (m/monia.js, appel direct à l'éditeur choisi), réponse rédigée à partir des faits de la fiche. Ailleurs, c'est le copilote « Demander à bilan. »
+   (m/monia.js, appel direct à l'éditeur choisi), réponse rédigée à partir des faits de la fiche. Ailleurs, c'est le copilote « Demander à ENKLAIR »
    (critères, comparaisons, notions, leçons). En tête du panneau : « IA connectée : <modèle> » ou « Réponses calculées ». */
 const ORC_IA = { open: false };
 function orcIaCtx() {
@@ -233,7 +233,7 @@ function pageMethode() {
     ["ETF", "Fiches, documents d'informations clés et compositions publiés par les émetteurs", "Sites des émetteurs", null],
   ];
   app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › Méthode et sources</div>
-    <div class="mtdhero"><p class="kick">Transparence</p><h1 class="pagetitle">Comment bilan. fabrique ses chiffres</h1>
+    <div class="mtdhero"><p class="kick">Transparence</p><h1 class="pagetitle">Comment ENKLAIR fabrique ses chiffres</h1>
       <p class="pagesub">Des documents officiels, des calculs vérifiables, une IA encadrée. Voici, étape par étape, ce qui se passe entre le rapport annuel d'une entreprise et ce que vous lisez.</p>
       <div class="mtdkpi"><span><b>${F0.format(nCo)}</b>entreprises avec leurs comptes</span><span><b>${ETF.list.length}</b>ETF suivis</span><span><b>0</b>publicité</span><span><b>0</b>conseil d'achat ou de vente</span></div></div>
     <ol class="mtdflow">

@@ -34,11 +34,11 @@ async function miaAppel(tache, user, max = 600) {
 }
 // Sources jointes aux faits : la réponse doit citer celles qu'elle utilise (consigne « Sources : »).
 const MIA_SOURCES = {
-  assistant: ["Comptes annuels publiés par l'entreprise (ESEF ou SEC), exercice indiqué dans les faits", "Médianes du secteur calculées par bilan. sur ces comptes", "Cours de Bourse relevés par le site", "Annonces officielles (AMF, SEC) et agenda de l'entreprise"],
-  comparaison: ["Comptes annuels publiés par les entreprises (ESEF ou SEC)", "Médianes du secteur calculées par bilan.", "Cours de Bourse relevés par le site"],
+  assistant: ["Comptes annuels publiés par l'entreprise (ESEF ou SEC), exercice indiqué dans les faits", "Médianes du secteur calculées par ENKLAIR sur ces comptes", "Cours de Bourse relevés par le site", "Annonces officielles (AMF, SEC) et agenda de l'entreprise"],
+  comparaison: ["Comptes annuels publiés par les entreprises (ESEF ou SEC)", "Médianes du secteur calculées par ENKLAIR", "Cours de Bourse relevés par le site"],
   veille: ["Cours de Bourse relevés par le site", "Annonces officielles (AMF, SEC)", "Agenda publié par les entreprises"],
   portefeuille: ["Vos lignes, enregistrées dans votre navigateur", "Cours de Bourse relevés par le site", "Compositions publiées par les émetteurs d'ETF", "Grilles tarifaires publiées par les courtiers"],
-  bilan: ["Synthèse de la semaine calculée par bilan. à partir des cours", "Annonces officielles de la semaine (AMF, SEC)", "Agenda publié par les entreprises"],
+  bilan: ["Synthèse de la semaine calculée par ENKLAIR à partir des cours", "Annonces officielles de la semaine (AMF, SEC)", "Agenda publié par les entreprises"],
   annonce: ["Annonce officielle publiée par l'entreprise", "Derniers comptes annuels publiés"],
   expliquer: ["Cours de l'Académie de bilan."],
 };
@@ -121,7 +121,7 @@ async function miaPage(el) {
       <p class="mia-prix" id="miareste">Pour rester gratuit, le site limite le nombre de questions rédigées par jour : 3 sans compte, 10 avec un compte gratuit, sans limite avec Premium.</p>
       <ul class="mia-garanties"><li>Aucun compte, aucune clé à fournir.</li><li>Vos questions sont envoyées à Cloudflare, qui héberge déjà le site, pour être traitées ; elles ne servent pas à entraîner le modèle. Le site ne garde pas leur texte, seulement un compteur anonyme du jour.</li></ul>
     </div></section>
-    <section class="panel"><div class="ph"><h2>Vous utilisez déjà ChatGPT ou Claude ?</h2></div><div class="pb"><p style="margin-top:0">Ajoutez bilan. à votre assistant : il pourra lire les données du site pour vous répondre.</p><a class="lnk" href="/connecteur">Utiliser bilan. dans ChatGPT ou Claude</a></div></section></div>`;
+    <section class="panel"><div class="ph"><h2>Vous utilisez déjà ChatGPT ou Claude ?</h2></div><div class="pb"><p style="margin-top:0">Ajoutez ENKLAIR à votre assistant : il pourra lire les données du site pour vous répondre.</p><a class="lnk" href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a></div></section></div>`;
   miaMaj();
   const poser = q => { if (typeof orcIaOpen !== "function") return; orcIaOpen(); orcIaAsk(q, { rediger: true }); };
   const fm = $("#miaask", el); if (fm) fm.onsubmit = e => { e.preventDefault(); const q = fm.q.value.trim(); if (q.length >= 3) poser(q); };

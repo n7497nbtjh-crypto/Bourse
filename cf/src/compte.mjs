@@ -114,7 +114,7 @@ export async function premium(request, env) {
     const email = String(b.email || "").trim().toLowerCase().slice(0, 254);
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return json({ ok: true });
     const rows = (await env.DB.prepare(`SELECT token, plan FROM abonnes WHERE email = ? AND until > ?`).bind(email, Date.now()).all()).results || [];
-    if (rows.length) { try { await sendMail(env, email, "Votre code d'accès bilan. Premium", `Bonjour,\n\nVoici votre code d'accès Premium : ${rows[0].token}\n\nSur le site, ouvrez la page Premium et collez ce code dans « J'ai déjà un code ».\n\nbilan.`); } catch (e) { return json({ error: "L'envoi d'e-mail n'est pas encore disponible : écrivez-nous pour retrouver votre accès." }, 503); } }
+    if (rows.length) { try { await sendMail(env, email, "Votre code d'accès ENKLAIR Premium", `Bonjour,\n\nVoici votre code d'accès Premium : ${rows[0].token}\n\nSur le site, ouvrez la page Premium et collez ce code dans « J'ai déjà un code ».\n\nbilan.`); } catch (e) { return json({ error: "L'envoi d'e-mail n'est pas encore disponible : écrivez-nous pour retrouver votre accès." }, 503); } }
     return json({ ok: true }); // même réponse si l'adresse est inconnue : on ne révèle pas qui est abonné
   }
   if (path === "/api/premium/portail") { // gérer ou résilier son abonnement (portail client Stripe)
@@ -130,9 +130,9 @@ export async function premium(request, env) {
 /* ---------- E-mails : plusieurs services gratuits utilisés à tour de rôle ---------- */
 // Brevo 300/jour, Mailjet 200/jour, Resend 100/jour : environ 600 e-mails par jour sans payer, soit plus de 4 000 bilans par semaine.
 const PROVIDERS = [
-  ["brevo", env => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "bilan." }, to: [{ email: to }], subject, textContent: text, htmlContent: html || undefined }) })],
-  ["mailjet", env => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "bilan." }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || undefined }] }) })],
-  ["resend", env => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `bilan. <${env.MAIL_FROM}>`, to, subject, text, html: html || undefined }) })],
+  ["brevo", env => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "ENKLAIR" }, to: [{ email: to }], subject, textContent: text, htmlContent: html || undefined }) })],
+  ["mailjet", env => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "ENKLAIR" }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || undefined }] }) })],
+  ["resend", env => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `ENKLAIR <${env.MAIL_FROM}>`, to, subject, text, html: html || undefined }) })],
 ];
 export const mailReady = env => !!(env.MAIL_FROM && PROVIDERS.some(([, on]) => on(env)));
 export async function mailCapacity(env) {

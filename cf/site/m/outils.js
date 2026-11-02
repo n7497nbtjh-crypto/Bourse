@@ -289,7 +289,7 @@ async function pageDividendes() {
   $("#out-pea").onchange = e => { f.pea = e.target.checked ? "1" : ""; draw(); };
   $("#out-cv").onchange = e => { f.cv = e.target.checked; draw(); };
   $("#out-fav").onchange = e => { f.fav = e.target.checked; draw(); };
-  $("#ics").onclick = () => { const list = outDivEvents(f); if (!list.length) return toast("Aucune date à exporter avec ces filtres."); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (bilan.)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
+  $("#ics").onclick = () => { const list = outDivEvents(f); if (!list.length) return toast("Aucune date à exporter avec ces filtres."); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (ENKLAIR)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
   $("#out-sm").oninput = e => { sim.m = e.target.value; drawSim(); };
   $$(".out-acct button", app).forEach(b => b.onclick = () => { sim.a = b.dataset.a; $$(".out-acct button", app).forEach(x => x.classList.toggle("on", x === b)); drawSim(); });
   const q = $("#out-sq"), sg = $("#out-ss");
