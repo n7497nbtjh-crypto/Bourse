@@ -17,7 +17,7 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
   if (ex) { // l'exemple de l'accueil contre la fiche : marge d'exploitation (tuile « marge ») et PER (section Valorisation), comparés en nombre
     await aller(p, "/entreprise/" + ex.id, 3500);
     const f = await p.evaluate(() => { document.querySelectorAll("#tous-les-chiffres details").forEach(d => d.open = true);
-      const k = document.querySelector('.rf-kt[data-g="marge"] b'), v = document.querySelector("#rf-valorisation");
+      const k = document.querySelector('.f3-kt[data-f3k="marge"] b, .rf-kt[data-g="marge"] b'), v = document.querySelector("#rf-valorisation");
       const per = v && (v.innerText.match(/PER\s*\n?\s*i?\s*\n?\s*(\d+(?:[,.]\d+)?)/) || v.innerText.match(/coûte (\d+) fois/) || [])[1];
       return { marge: k ? k.textContent : null, per: per || null }; });
     const num = t => { const m = String(t || "").replace(/\s/g, "").match(/-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; };

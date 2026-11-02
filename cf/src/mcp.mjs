@@ -283,7 +283,7 @@ async function ficheSociete(env, origin, ctx, B, c) {
   // 1/11 : la preuve à la ligne près — chaque chiffre du dernier exercice relié à son emplacement exact dans le rapport officiel (data/ancres.mjs)
   const anc = !c.missing ? await optionnel(charger(env, origin, `/data/ancres/${c.id}.json`, 18e5), null) : null;
   if (anc && anc.y && anc.report) { const an = Object.keys(anc.y).sort().pop(), LB = { ca: "chiffre d'affaires", ebit: "résultat d'exploitation", net: "bénéfice net", eps: "bénéfice par action", dps: "dividende par action", equity: "capitaux propres", cash: "trésorerie", cfo: "flux de trésorerie d'exploitation", divPaid: "dividendes versés" };
-    out.preuves = Object.entries(anc.y[an] || {}).filter(([k]) => LB[k]).map(([k, id]) => ({ chiffre: LB[k], exercice: +an, lien_document: `${anc.report}#${id}` })); }
+    out.preuves = Object.entries(anc.y[an] || {}).filter(([k]) => LB[k]).map(([k, id]) => ({ chiffre: LB[k], exercice: +an, lien_document: `${anc.report.replace(/[^/]+$/, "ixbrlviewer.html")}#f-${id}` })); }
   out.sources = sourcesSite(origin, "/entreprise/" + c.id + (c.missing ? "" : "/comptes"), sources);
   out.avertissement = AVERT;
   // Texte lisible pour le modèle

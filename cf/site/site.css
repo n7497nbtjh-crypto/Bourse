@@ -3925,3 +3925,59 @@ html #app .pwa-hero h1{font:800 clamp(34px,4.6vw,58px)/.98 var(--serif)!importan
 html #app .pwa-hero .lead{font:500 16.5px/1.5 var(--sans);color:#222;max-width:68ch}
 html #app .pwa-hero .pwa-url code{background:#fff;border:2px solid #111;border-radius:999px}
 @media (max-width:760px){html #app .pwa-hero{padding:22px 18px 20px;border-radius:24px}html #app .pwa-hero h1{font-size:32px!important}}
+/* 2/11 matin (captures de Romain) */
+html body #app .a4-srch input,html body #app .a4-srch input:focus{border:0!important;box-shadow:none!important;background:transparent!important;outline:0!important;border-radius:0!important;padding:0!important;height:auto!important}
+html body #app .a4-srch:focus-within{outline:3px solid #111;outline-offset:3px}
+html #app .a4-plus{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px}
+html #app .a4-plus a{display:flex!important;align-items:center;justify-content:space-between;gap:10px;border:2px solid #111;border-radius:18px;padding:16px 18px;background:#fff;color:#111!important;font:800 17px/1.2 var(--serif)!important;letter-spacing:-.02em;text-decoration:none!important;box-shadow:4px 4px 0 #111;transition:transform .12s}
+html #app .a4-plus a:hover{transform:translate(-2px,-2px);box-shadow:6px 6px 0 #111;background:var(--a4y)}
+html #app .a4-plus a:nth-child(1){background:#FFF2B3}html #app .a4-plus a:nth-child(2){background:#FFE0EC}html #app .a4-plus a:nth-child(3){background:#DCE3FF}
+@media (max-width:760px){html #app .a4-plus{grid-template-columns:1fr}}
+/* ---------- Plis thématiques reconstruits en v3 (f3Themes, 2/11) ---------- */
+html #app .f3-th-host{border:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0!important}
+html #app .f3-th-host>*:not(.f3-th){margin-top:16px}
+html #app .f3-thq{font:800 20px/1.1 var(--serif);letter-spacing:-.03em;margin:0 0 14px;color:#111}
+html #app .f3-kts{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:0 0 16px}
+html body #app .f3-kt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;border:2px solid #111!important;border-radius:16px!important;background:#fff!important;color:#111!important;padding:11px 13px!important;height:auto!important;width:auto!important;min-height:0!important;box-shadow:none!important;cursor:pointer;font:inherit}
+html body #app .f3-kt.on{background:var(--a4y)!important;box-shadow:4px 4px 0 #111!important;transform:translate(-2px,-2px)}
+html #app .f3-kt small{display:flex;align-items:center;gap:5px;font:800 12.5px/1.2 var(--sans);color:#333}
+html #app .f3-kt small .prov-i{width:16px;height:16px;font-size:10px;flex:none}
+html #app .f3-kt b{font:800 23px/1 var(--serif);letter-spacing:-.04em;color:#111;margin-top:2px}
+html #app .f3-kt>span{font:800 12px var(--sans);padding:1px 7px;border-radius:7px;background:#EEE;color:#444}html #app .f3-kt>span.u{background:#C9F6E3;color:#006B48}html #app .f3-kt>span.d{background:#FFD9D1;color:#C2260E}
+html #app .f3-kt em{font:600 11px var(--sans);color:#666;font-style:normal;min-height:13px}
+html #app .f3-thg{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:14px 24px;align-items:start}
+html #app .f3-thn{margin:0 0 4px;font:800 14px var(--sans)}html #app .f3-thn span{font-weight:600;color:#666}
+html #app .f3-th .f3-svg{width:100%;max-width:420px;height:auto;display:block}
+html #app .f3-lec{background:var(--a4y);border-radius:16px;padding:12px 14px;font:700 15.5px/1.4 var(--sans);margin:0 0 10px;color:#111}
+html #app .f3-def{margin:0 0 8px;font:600 13.5px var(--sans)}html #app .f3-def button.def,html #app .f3-def .def{font:inherit!important;color:#111;text-decoration:underline;text-decoration-color:var(--a4y);text-decoration-thickness:3px;text-underline-offset:3px;background:none!important;border:0!important;padding:0!important;box-shadow:none!important}
+html #app .f3-anc{margin:0;font:600 13.5px var(--sans)}html #app .f3-anc a{color:#00875A;font-weight:700}
+html #app .f3-th .f3-cq{margin-top:14px}
+@media (max-width:760px){html #app .f3-kts{grid-template-columns:1fr 1fr;gap:8px}html #app .f3-kt b{font-size:21px}html #app .f3-thg{grid-template-columns:1fr}}
+/* Pli « Son métier » : filiales, dirigeants, carte d'identité (anciennement un pli à part, en doublon) */
+html #app .f3-idg{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:14px}
+html #app .f3-idc{border:2px solid #111;border-radius:20px;padding:14px 16px;background:#fff}
+html #app .f3-idc>small{display:block;font:800 16px var(--serif);letter-spacing:-.02em;margin:0 0 10px;color:#111}
+html #app .f3-chips{display:flex;flex-wrap:wrap;gap:6px}html #app .f3-chips span{border:2px solid #111;border-radius:999px;padding:4px 11px;font:700 12.5px var(--sans);background:#FFF2B3}
+html #app .f3-dir{list-style:none;margin:0;padding:0;display:grid;gap:8px}html #app .f3-dir li{display:flex;flex-direction:column}html #app .f3-dir span{font:600 11.5px var(--sans);color:#666}html #app .f3-dir b{font:800 15px var(--sans)}
+html #app .f3-fid{margin:0;display:grid;gap:0}html #app .f3-fid>div{display:flex;justify-content:space-between;gap:12px;padding:7px 0;border-top:1px solid #E6E3DA;font:600 13.5px var(--sans)}html #app .f3-fid>div:first-child{border-top:0}html #app .f3-fid dt{color:#666;font-weight:600;margin:0}html #app .f3-fid dd{margin:0;text-align:right;font-weight:800;min-width:0;overflow-wrap:anywhere}
+html #app .f3-src{margin:10px 0 0;font:500 11.5px var(--sans);color:#777}
+/* Les tuiles des plis Prix et Dividende (tableaux.js) : même tuile que les thèmes */
+html #app #f3-tousw .ftile,html #app #f3-tousw .tile{border:2px solid #111!important;border-radius:16px!important;background:#fff!important;box-shadow:none!important;padding:11px 13px!important}
+html #app #f3-tousw .tile .kick,html #app #f3-tousw .ftile .kick{font:800 12.5px var(--sans)!important;color:#333!important;text-transform:none!important;letter-spacing:0!important;background:none!important;border:0!important;padding:0!important;transform:none!important;box-shadow:none!important}
+html #app #f3-tousw .tile .v,html #app #f3-tousw .ftile .v{font:800 23px/1 var(--serif)!important;letter-spacing:-.04em}
+html #app .f3-th{padding:14px 22px 6px}@media (max-width:760px){html #app .f3-th{padding:12px 14px 4px}}
+html #app #f3-tousw .f3-divg svg{max-width:420px;width:100%;height:auto}
+html #app #f3-tousw .perx{border:2px solid #111;border-radius:20px;padding:14px 16px;background:#fff}
+html #app #f3-tousw .perx .kick{display:inline-block;font:800 13px var(--serif)!important;background:var(--a4y);border:2px solid #111;border-radius:8px;padding:3px 10px;transform:rotate(-2deg);box-shadow:2px 2px 0 #111;color:#111!important;text-transform:none!important;letter-spacing:0!important;margin:0 0 10px}
+html #app #f3-tousw .zg .zgb{height:12px;border:2px solid #111;border-radius:6px}
+html #app #f3-tousw .rf-th-in>.pb>p.lead{font:700 16px/1.45 var(--sans);background:var(--a4y);border-radius:16px;padding:12px 14px}
+html #app #f3-tousw .acc summary{font:800 15px var(--sans)}html #app #f3-tousw .acc{border:2px solid #111;border-radius:16px;padding:10px 14px;margin-top:10px}
+html #app #f3-tousw .tbx-box{border:2px solid #111;border-radius:18px;overflow:hidden}
+html #app #f3-tousw table.tbx thead th{background:#111!important;color:#fff!important;font:800 12px var(--sans)!important;border:0!important}
+html #app #f3-tousw table.tbx thead th.on,html #app #f3-tousw table.tbx thead th[aria-sort]{background:var(--a4y)!important;color:#111!important}
+html #app #f3-tousw table.tbx tr.grp th,html #app #f3-tousw table.tbx tr.grp td,html #app #f3-tousw table.tbx .tbx-grp{background:#FFF2B3!important;font-weight:800}
+html #app #f3-tousw table.tbx td.v span.tbx-val{font:800 14px var(--sans)}
+html body #app #f3-tousw .tbx-gb{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font-weight:800}
+html body #app .a4-srch input{min-width:0!important;width:100%!important;flex:1 1 0!important}html #app .a4-hero .a4-l,html #app .a4-hero .a4-w{min-width:0}
+@media (max-width:760px){html #app .a4-hero .a4-w{grid-template-columns:minmax(0,1fr)!important}html #app .a4-hero .a4-card,html #app .a4-hero .a4-l{min-width:0;max-width:100%}}
+html #app .a4-px{flex-wrap:wrap;min-width:0}html #app .a4-px small{white-space:normal}

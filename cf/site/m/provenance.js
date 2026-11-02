@@ -173,7 +173,7 @@ function ancres(id) { return ANC[id] || (ANC[id] = fetch(`/data/ancres/${id}.jso
 async function ancreLiens(id, keys, annee) { // [{ lbl, an, url }] pour les indicateurs demandés, exercice donné (sinon le plus récent)
   const a = await ancres(id); if (!a || !a.y || !a.report) return [];
   const ans = Object.keys(a.y).sort(), an = annee && a.y[annee] ? String(annee) : ans[ans.length - 1]; if (!an) return [];
-  return keys.filter(k => a.y[an][k]).map(k => ({ lbl: ANC_LBL[k] || k, an, url: `${a.report}#${a.y[an][k]}` }));
+  return keys.filter(k => a.y[an][k]).map(k => ({ lbl: ANC_LBL[k] || k, an, url: `${a.report.replace(/[^/]+$/, "ixbrlviewer.html")}#f-${a.y[an][k]}` })); // 2/11 : la visionneuse officielle de filings.xbrl.org ouvre le document sur le chiffre et le surligne (le simple #id ne défilait pas sur téléphone, document de 25 Mo)
 }
 const ancreHTML = L => L.map(x => `<a class="anc-l" href="${esc(x.url)}" target="_blank" rel="noopener nofollow">${esc(x.lbl)} ${esc(x.an)} dans le rapport officiel ↗</a>`).join("");
 function provBtn(k, ids, label) {

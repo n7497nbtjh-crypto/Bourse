@@ -176,8 +176,9 @@ function f3Recomposer(s, c) {
   const aw = $("#f3-actw", wrap); if (change) { const pb = change.querySelector(".ph"); if (pb) pb.remove(); while (change.firstChild) aw.appendChild(change.firstChild); } else $("#f3-actu", wrap).remove();
   const tw = $("#f3-tousw", wrap); const head = tous.querySelector(".rf-l2h"); if (head) head.remove();
   if (tvch) { const d = document.createElement("details"); d.className = "rf-pl rf-pl2"; d.id = "rf-cours"; d.innerHTML = `<summary><span class="rf-plt"><b>Le cours de l'action</b><span>Graphique sur un an, cours différé</span></span><span class="rf-plo" aria-hidden="true"><i>Ouvrir</i><i>Fermer</i></span></summary><div class="rf-plb"></div>`; d.querySelector(".rf-plb").appendChild(tvch); tous.insertBefore(d, tous.firstChild); }
-  if (metier) tous.insertBefore(metier, tous.querySelector("#rf-tout-w") || null); // le reste du bloc métier (dirigeants…) reste consultable
+  if (metier) { try { f3Identite(mw, metier, s); } catch (e) { console.error("f3 identité", e); } metier.remove(); } // 2/11 : plus de pli « Activités, pays, dirigeants » (doublon) : ce qui manquait rejoint « Son métier »
   tw.appendChild(tous);
+  try { f3Themes(tw, s, c); } catch (e) { console.error("f3 thèmes", e); }
   // remplacer la page
   const old = [...root.children]; root.innerHTML = ""; if (crumbs) root.appendChild(crumbs); root.appendChild(wrap);
   const rest = document.createElement("div"); rest.className = "f3-rest"; old.forEach(n => { if (n !== crumbs && n.id !== "ctab") rest.appendChild(n); }); // conservé hors de la vue : rien n'est détruit
@@ -204,7 +205,7 @@ function f3Repartitions(root) { // « D'où viennent ses ventes » : chaque list
     const L = $$(".fbar", bars).map(r => ({ n: (r.querySelector(".l") || {}).textContent || "", w: parseFloat(((r.querySelector(".b i") || {}).style || {}).width) || 0, p: (r.querySelector(".p") || {}).textContent || "", a: (r.querySelector(".a") || {}).textContent || "" })).filter(x => x.w > 0);
     if (!L.length) return;
     const tot = L.reduce((a, x) => a + x.w, 0) || 1;
-    cartes.push(`<div class="f3-ch f3-mix"><h3>${esc(t.textContent)}</h3><div class="f3-stack">${L.map((x, i) => `<i style="width:${(x.w / tot * 100).toFixed(2)}%;background:${F3_COUL[i % F3_COUL.length]}" title="${esc(x.n)} ${esc(x.p)}">${x.w / tot >= 0.08 ? esc(x.p) : ""}</i>`).join("")}</div><ul class="f3-mx">${L.map((x, i) => `<li><i style="background:${F3_COUL[i % F3_COUL.length]}"></i><span>${esc(x.n)}</span><b>${esc(x.p)}</b><em>${esc(x.a)}</em></li>`).join("")}</ul></div>`);
+    cartes.push(`<div class="f3-ch f3-mix"><h3>${esc(t.textContent)}</h3><div class="f3-stack">${L.map((x, i) => `<i style="width:${(x.w / tot * 100).toFixed(2)}%;background:${F3_COUL[i % F3_COUL.length]}" title="${esc(x.n)} ${esc(x.p)}"></i>`).join("")}</div><ul class="f3-mx">${L.map((x, i) => `<li><i style="background:${F3_COUL[i % F3_COUL.length]}"></i><span>${esc(x.n)}</span><b>${esc(x.p)}</b><em>${esc(x.a)}</em></li>`).join("")}</ul></div>`);
     t.remove(); bars.remove(); });
   if (!cartes.length) return;
   const fm = hote || root, w = document.createElement("div"); w.className = "f3-mixes"; w.innerHTML = cartes.join("");
@@ -221,3 +222,72 @@ const F3_IA = `<svg class="f3-iai" viewBox="0 0 24 24" aria-hidden="true"><path 
     try { f3Recomposer(s, FULL[id] || null); } catch (e) { console.error("fiche v3", e); }
   };
 })();
+
+/* ---------- 2/11 (Romain : « chaque section doit suivre la DA, supprime les doublons ») ----------
+   Les plis thématiques de « Tous les chiffres » (Résultats, Rentabilité, Bilan, Flux) sont reconstruits dans le style v3 à partir des
+   lignes de tableaux.js (tblxRows) : une tuile par indicateur (chiffre, variation, médiane, bouton i), un seul graphique en colonnes
+   (même dessin qu'en haut de la fiche, médiane en pointillé), la lecture en jaune et « C'est quoi ? ». Plus de rangée de pastilles
+   ni de liste « Le détail année par année » : elles répétaient les tuiles. Le tableau complet reste dans « Comptes complets ». */
+function f3Cols(vals, yrs, fmt, med, inv, kind) { // colonnes v3 pour n'importe quelle grandeur (montant, %, ratio)
+  const V = vals.map(v => v == null ? 0 : v), all = med != null ? [...V, med] : V, lo = Math.min(0, ...all), hi = Math.max(0, ...all);
+  const W = 320, H = 200, Lx = 44, T = 26, B = 150, span = (hi - lo) || 1, stepRaw = span / 4, mag = Math.pow(10, Math.floor(Math.log10(stepRaw))), step = [1, 2, 2.5, 5, 10].map(m => m * mag).find(m => m >= stepRaw) || stepRaw;
+  const top = Math.ceil(hi / step) * step, bot = Math.floor(lo / step) * step, sy = v => B - (B - T) * (v - bot) / ((top - bot) || 1);
+  const tick = v => kind === "money" ? f3Nb(v >= 1000 || v <= -1000 ? v / 1000 : v, Math.abs(v) >= 100 ? 0 : 1) + (Math.abs(v) >= 1000 ? " Md" : " M") : kind === "pct" || kind === "pctS" ? f3Nb(v * 100, 0) + " %" : f3Nb(v, step < 1 ? 1 : 0);
+  let o = "";
+  for (let t = bot; t <= top + 1e-9; t += step) { const yy = sy(t); o += `<line x1="${Lx}" x2="${W}" y1="${yy}" y2="${yy}" stroke="#E6E3DA" ${Math.abs(t) > 1e-9 ? 'stroke-dasharray="3 4"' : 'stroke="#999"'}/><text x="${Lx - 6}" y="${yy + 4}" text-anchor="end" font-size="10" fill="#888">${tick(t)}</text>`; }
+  const n = vals.length, bw = Math.min(46, (W - Lx) / n * 0.62), gap = (W - Lx - bw * n) / n;
+  vals.forEach((v, i) => {
+    const x = Lx + gap / 2 + i * (bw + gap), last = i === n - 1;
+    o += `<text x="${x + bw / 2}" y="${B + 17}" text-anchor="middle" font-size="11" font-weight="${last ? 800 : 700}" fill="${last ? "#111" : "#555"}">${yrs[i]}</text>`;
+    if (v == null) { o += `<text x="${x + bw / 2}" y="${B - 8}" text-anchor="middle" font-size="11" fill="#999">–</text>`; return; }
+    const y0 = sy(0), y1 = sy(v);
+    o += `<rect x="${x}" y="${Math.min(y0, y1)}" width="${bw}" height="${Math.max(2, Math.abs(y1 - y0))}" rx="7" fill="${last ? "#FFE14D" : v < 0 ? "#FFD0C4" : "#F2F0EA"}" stroke="#111" stroke-width="2"/>`;
+    o += `<text x="${x + bw / 2}" y="${(v >= 0 ? y1 - 7 : y1 + 15)}" text-anchor="middle" font-size="12" font-weight="800" fill="#111">${esc(fmt(v))}</text>`;
+    const p = vals[i - 1]; if (i && p != null && ((kind === "money" || kind === "ps") ? p > 0 && v > 0 : true)) {
+      const c = (kind === "money" || kind === "ps") ? (v / p - 1) * 100 : (v - p) * (kind === "pct" || kind === "pctS" ? 100 : 1), good = inv ? c <= 0 : c >= 0, txt = (kind === "money" || kind === "ps") ? f3Pct(c, 1) : (c > 0 ? "+" : c < 0 ? "−" : "") + f3Nb(Math.abs(c), 1) + (kind === "x" ? "" : " pt");
+      o += `<rect x="${x + bw / 2 - 27}" y="${B + 25}" width="54" height="17" rx="8.5" fill="${good ? "#C9F6E3" : "#FFD9D1"}"/><text x="${x + bw / 2}" y="${B + 37.5}" text-anchor="middle" font-size="10" font-weight="800" fill="${good ? "#006B48" : "#C2260E"}">${txt}</text>`; }
+  });
+  if (med != null && med >= bot && med <= top) { const ym = sy(med); o += `<line x1="${Lx}" x2="${W}" y1="${ym}" y2="${ym}" stroke="#111" stroke-width="2" stroke-dasharray="6 5"/><rect x="${W - 92}" y="${ym - 19}" width="92" height="16" rx="6" fill="#111"/><text x="${W - 46}" y="${ym - 7.5}" text-anchor="middle" font-size="9.5" font-weight="800" fill="#fff">médiane ${esc(fmt(med))}</text>`; }
+  return `<svg class="f3-svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="Évolution par exercice">${o}</svg>`;
+}
+const F3_INV = { lev: 1, gear: 1, debt: 1, netDebt: 1, capex: 0 }; // moins, c'est mieux
+function f3Themes(tw, s, c) {
+  if (typeof tblxRows !== "function" || !c || !c.years) return;
+  const P = tblxRows(s, c), Y = c.years;
+  $$("section.rf-th2", tw).forEach(sec => {
+    const keys = $$(".rf-kts .rf-kt, .rf-gsel button", sec).map(b => b.dataset.g).filter(Boolean), rows = [...new Set(keys)].map(k => P.rows.find(r => r.k === k)).filter(Boolean);
+    if (!rows.length) return;
+    const q = sec.querySelector(".ph h2 small"), ex = sec.querySelector(".rf-thx"), ctx = sec.querySelector(".rf-ctx, .ctx-chiffres");
+    const tile = r => { const chg = tblxChange(r.kind, r.prev, r.last), cls = r.q > 0 ? "u" : r.q < 0 ? "d" : "n", ly = Y[r.li], yl = Y.at(-1);
+      return `<div class="f3-kt" role="button" tabindex="0" data-f3k="${r.k}"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}${tblxProv(r.k, s)}</small><b>${esc(r.full(r.last))}</b>${chg ? `<span class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)}</span>` : `<span class="n">–</span>`}${r.med != null ? `<em>médiane du secteur ${esc(r.full(r.med))}</em>` : "<em></em>"}</div>`; }; // div et non button : la tuile contient le bouton « i »
+    const w = document.createElement("div"); w.className = "f3-th"; w.dataset.th = sec.id;
+    w.innerHTML = `${q ? `<p class="f3-thq">${esc(q.textContent)}</p>` : ""}<div class="f3-kts">${rows.map(tile).join("")}</div>
+      <div class="f3-thg"><div class="f3-thc"></div><div class="f3-thl"></div></div>
+      ${ex ? `<details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex.textContent)}</p></details>` : ""}`;
+    const show = k => { const r = rows.find(x => x.k === k); if (!r) return; $$(".f3-kt", w).forEach(b => b.classList.toggle("on", b.dataset.f3k === k));
+      const inv = !!F3_INV[r.k] || (r.sens < 0), vals = r.vals.map(v => v == null || !isFinite(v) ? null : v);
+      $(".f3-thc", w).innerHTML = `<p class="f3-thn"><b>${esc(r.label)}</b>${r.unit && r.kind === "money" ? ` <span>en ${esc(r.ulong || r.unit)}</span>` : ""}</p>` + f3Cols(vals, Y, v => r.full(v), r.med, inv, r.kind);
+      $(".f3-thl", w).innerHTML = (r.phrase ? `<p class="f3-lec">${esc(r.phrase)}</p>` : "") + (typeof ALL !== "undefined" && ALL[r.term] && typeof def === "function" ? `<p class="f3-def">${def(r.term, "Définition de « " + (r.short || r.label) + " »")}</p>` : "") + `<p class="f3-anc"><a data-f3anc="${esc(r.k)}" data-an="${Y[r.li]}" hidden></a></p>`;
+      if (typeof ancreLiens === "function") { const a = $(".f3-anc a", w); ancreLiens(s.id, [r.k === "marge" ? "ebit" : r.k === "nm" ? "net" : r.k], Y[r.li]).then(l => { if (l && l[0]) { a.href = l[0].url; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = `${l[0].lbl} ${l[0].an} dans le rapport officiel ↗`; a.hidden = false; } }).catch(() => { }); } };
+    w.addEventListener("click", e => { const b = e.target.closest(".f3-kt"); if (b && !e.target.closest(".prov-i")) show(b.dataset.f3k); });
+    w.addEventListener("keydown", e => { const b = e.target.closest(".f3-kt"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); show(b.dataset.f3k); } });
+    const first = rows.find(r => r.ess) || rows[0]; show(first.k);
+    // ce qui est remplacé : rangée de pastilles, graphique ancien, « détail année par année » (doublons) ; le contexte des ventes est gardé
+    $$(".rf-kts, .rf-thc, details.rf-thd, .ph", sec).forEach(x => x.remove());
+    sec.insertBefore(w, sec.firstChild); sec.classList.add("f3-th-host");
+  });
+  // Dividende : le graphique des dividendes versés passe au même dessin ; le « 1 an : du plus bas au plus haut » est déjà dans l'en-tête de la fiche
+  const dv = $("#rf-dividende .chart2", tw), rd = P.rows.find(r => r.k === "divPaid"); if (dv && rd) { dv.innerHTML = `<p class="f3-thn"><b>Dividendes versés</b> <span>en ${esc(rd.ulong || rd.unit || "")}</span></p>` + f3Cols(rd.vals.map(v => v == null || !isFinite(v) ? null : v), Y, v => rd.full(v), null, false, "money"); dv.classList.add("f3-divg"); }
+  const rg = $("#rf-valorisation .pb .range", tw); if (rg) rg.closest(".pb").remove();
+  $$("#rf-valorisation .ph, #rf-dividende .ph", tw).forEach(x => x.remove());
+}
+function f3Identite(mw, metier, s) { // ce qui restait dans le pli « Activités, pays, dirigeants » et qui n'est pas déjà sur la fiche
+  if (!metier) return;
+  const fms = $$(".fm", metier), chips = fms.map(f => f.querySelector(".fchips")).find(Boolean), dir = fms.map(f => f.querySelector(".fdir")).find(Boolean), fid = fms.map(f => f.querySelector(".fid2")).find(Boolean);
+  const cards = [];
+  if (chips && chips.children.length) cards.push(`<div class="f3-idc"><small>Filiales et marques connues</small><div class="f3-chips">${[...chips.children].map(x => `<span>${esc(x.textContent)}</span>`).join("")}</div><p class="f3-src">Wikidata (CC0), liste peut-être incomplète.</p></div>`);
+  if (dir && dir.children.length) cards.push(`<div class="f3-idc"><small>Qui la dirige</small><ul class="f3-dir">${[...dir.children].map(x => `<li><span>${esc((x.querySelector("small") || {}).textContent || "")}</span><b>${esc((x.querySelector("b") || x).textContent)}</b></li>`).join("")}</ul><p class="f3-src">Wikidata (CC0) : le rapport annuel fait foi.</p></div>`);
+  if (fid) { const rows = [...fid.children].filter(x => !/^(Pays|Secteur)$/.test((x.querySelector("span") || {}).textContent || "")); // pays et secteur sont déjà dans l'en-tête
+    if (rows.length) cards.push(`<div class="f3-idc"><small>Carte d'identité</small><dl class="f3-fid">${rows.map(x => `<div><dt>${esc(x.querySelector("span").textContent)}</dt><dd>${x.querySelector("b").innerHTML}</dd></div>`).join("")}</dl></div>`); }
+  if (cards.length) mw.insertAdjacentHTML("beforeend", `<div class="f3-idg">${cards.join("")}</div>`);
+}
