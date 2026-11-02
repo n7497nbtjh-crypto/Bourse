@@ -48,7 +48,7 @@ function ekColonnes(o) {
 // o = { titre, unite, lignes:[{ nom, v, texte, moi }], mediane, mediane_label, basEstMieux, max, graduations, fmtAxe, indice, source }
 // Une ligne sans valeur (v null) n'est pas placée : elle est listée sous l'échelle avec sa raison (texte).
 function ekPoints(o) {
-  const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 22 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 28, rh = 34, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), L = Math.round(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18))), coupe = t => { t = String(t); const mx = Math.floor((L - 18) / 8.6); return t.length > mx ? t.slice(0, mx - 1).trim() + "…" : t; },
+  const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 30 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 28, rh = 34, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), L = Math.round(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18))), coupe = (t, moi) => { t = String(t); const k = moi ? 8.2 : 7.4, mx = Math.floor((L - 18) / k); return t.length * k + 18 > L ? t.slice(0, mx - 1).trim() + "…" : t; },
     hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 18, 3 * rh), x = v => L + (W - L - R) * Math.max(0, Math.min(v, o.max)) / o.max, m = x(o.mediane), bas = !!o.basEstMieux;
   if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
   let g = `<svg viewBox="0 0 ${W} ${T + H + 26}" role="img" aria-label="${ekEsc(o.titre)}">`;
@@ -59,11 +59,13 @@ function ekPoints(o) {
   g += `<line x1="${m}" x2="${m}" y1="${T - 14}" y2="${T + H - 6}" stroke="#111" stroke-width="2" stroke-dasharray="5 4"/><rect x="${m - 52}" y="${T - 30}" width="104" height="18" rx="5" fill="#111"/>` + ekTx(m, T - 17, ekEsc(o.mediane_label), { a: "middle", c: "#fff", fw: 800, fs: 11 });
   rows.forEach((r, i) => {
     const cy = T + i * rh + 10, mieux = bas ? r.v < o.mediane : r.v > o.mediane;
-    g += ekTx(L - 12, cy + 4, ekEsc(coupe(r.nom)), { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: r.moi ? 14 : 13 });
-    g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/><circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"/>`
-      + ekTx(W - R + 12, cy + 4, ekEsc(r.texte), { fw: 800, c: Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R, fs: r.moi ? 14 : 13 });
+    g += ekTx(L - 12, cy + 4, ekEsc(coupe(r.nom, r.moi)), { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: r.moi ? 14 : 13 });
+    // Valeur hors échelle : le point est posé au bout de l'axe avec une flèche, et une note sous le graphique doit dire le vrai chiffre (r.note)
+    const hx = r.v > o.max, col = r.ton === "r" ? EK_R : r.ton === "g" ? EK_G : r.ton === "n" ? "#111" : Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R;
+    g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/>${hx ? `<path d="M${x(r.v) + 8} ${cy - 6} L${x(r.v) + 16} ${cy} L${x(r.v) + 8} ${cy + 6} Z" fill="${col}"/>` : ""}<circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"${hx ? ` data-hors="${ekEsc(r.nom)}"` : ""}/>`
+      + ekTx(W - R + 20, cy + 4, ekEsc(r.texte), { fw: 800, c: col, fs: r.moi ? 14 : 13 });
   });
-  g += "</svg>" + hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join("");
+  g += "</svg>" + rows.filter(r => r.note).map(r => `<p class="ek-out ek-out-h"><b>${ekEsc(r.nom)}</b> ${ekEsc(r.note)}</p>`).join("") + hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join("");
   return ekBox(o, g);
 }
 

@@ -39,6 +39,12 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
             F.forEach(f => { if (inter(a.r, f.r, 3)) P.push(["texte sur une barre ou un point", nomEtape(svg), a.s]); });
           }
         });
+        // Valeur hors échelle : point posé au bout de l'axe ; le vrai chiffre doit être écrit sous le graphique
+        document.querySelectorAll(".ek-page circle[data-hors]").forEach(c => { const box = c.closest(".ek-box"), nom = c.getAttribute("data-hors");
+          if (!box || ![...box.querySelectorAll(".ek-out-h")].some(p => p.textContent.includes(nom))) P.push(["valeur hors échelle sans explication", nomEtape(c), nom]); });
+        // Vraisemblance : un chiffre « sur 100 » au-delà de 150 affiché tel quel dans un graphique (ex. « 1 022 € » versés sur 100 € de bénéfice)
+        document.querySelectorAll(".ek-page .ek-box").forEach(b => { const t = (b.querySelector(".ek-bt") || {}).textContent || ""; if (!/sur 100/.test(t)) return;
+          b.querySelectorAll("svg text[font-weight=\"800\"]").forEach(x => { const m = x.textContent.replace(/\s/g, "").match(/^(-?\d+)(€|\$|£|%|[A-Z]{3})$/); if (m && Math.abs(+m[1]) > 150) P.push(["chiffre « sur 100 » invraisemblable affiché tel quel", nomEtape(b), x.textContent]); }); });
         document.querySelectorAll(".ek-page *").forEach(e => {
           const r = e.getBoundingClientRect(); if (!r.width || e.closest(".scroll-x, svg")) return;
           if (r.right > W + 1) P.push(["dépasse de l'écran", nomEtape(e), (e.className && e.className.baseVal == null ? e.className : e.tagName) + " : " + (e.textContent || "").trim().slice(0, 40)]);
