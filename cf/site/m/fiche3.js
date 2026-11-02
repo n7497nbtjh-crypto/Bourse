@@ -172,7 +172,7 @@ function f3Recomposer(s, c) {
   const mw = $("#f3-metw", wrap), mt = metier && metier.querySelector("#metier"), fms = mt ? $$(".fm", mt) : [], fi = s.fiche && typeof s.fiche === "object" ? s.fiche : null;
   if (fms[0]) mw.appendChild(fms[0]);
   if (fi && (fi.fait || fi.argent || fi.depend)) mw.insertAdjacentHTML("beforeend", `<div class="f3-met">${[["Ce qu'elle fait", fi.fait], ["Comment elle gagne de l'argent", fi.argent], ["Ce dont elle dépend", fi.depend]].filter(x => x[1]).map(([t, v]) => `<div><small>${t}</small><p>${esc(v)}</p></div>`).join("")}</div>`);
-  if (fms[1]) { const p0 = fms[1].querySelector(":scope > p"); if (p0 && fi && fi.argent && p0.textContent.trim() === fi.argent.trim()) p0.remove(); const h = fms[1].querySelector("h3"); if (h) h.textContent = s.ca > 0 ? `D'où viennent ses ${f3Montant(s.ca, s.currency).replace(/\u00a0Md(.*)$/, " milliards de ventes").replace(/\u00a0M(.*)$/, " millions de ventes")}` : "D'où viennent ses ventes"; mw.appendChild(fms[1]); }
+  if (fms[1]) { const p0 = fms[1].querySelector(":scope > p"); if (p0 && fi && fi.argent && p0.textContent.trim() === fi.argent.trim()) p0.remove(); const h = fms[1].querySelector("h3"); if (h) h.textContent = false ? `D'où viennent ses ${f3Montant(s.ca, s.currency).replace(/\u00a0Md(.*)$/, " milliards de ventes").replace(/\u00a0M(.*)$/, " millions de ventes")}` : "D'où viennent ses ventes"; mw.appendChild(fms[1]); }
   f3Repartitions(mw);
   if (!mw.children.length && mt) { const p1 = mt.querySelector(".f1p"); if (p1) mw.appendChild(p1); }
   if (!mw.children.length) $("#f3-metier", wrap).remove();
@@ -266,7 +266,7 @@ function f3Themes(tw, s, c) {
     const tile = r => { const chg = tblxChange(r.kind, r.prev, r.last), cls = r.q > 0 ? "u" : r.q < 0 ? "d" : "n", ly = Y[r.li], yl = Y.at(-1);
       return `<div class="f3-kt" role="button" tabindex="0" data-f3k="${r.k}"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}${tblxProv(r.k, s)}</small><b>${esc(r.full(r.last))}</b>${chg ? `<span class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)}</span>` : `<span class="n">–</span>`}${r.med != null ? `<em>médiane du secteur ${esc(r.full(r.med))}</em>` : "<em></em>"}</div>`; }; // div et non button : la tuile contient le bouton « i »
     const w = document.createElement("div"); w.className = "f3-th"; w.dataset.th = sec.id;
-    w.innerHTML = `${q ? `<p class="f3-thq">${esc(q.textContent)}</p>` : ""}<div class="f3-kts">${rows.map(tile).join("")}</div>
+    w.innerHTML = `<div class="f3-kts">${rows.map(tile).join("")}</div>
       <div class="f3-thg"><div class="f3-thc"></div><div class="f3-thl"><div class="f3-thl2"></div></div></div>`;
     const show = k => { const r = rows.find(x => x.k === k); if (!r) return; $$(".f3-kt", w).forEach(b => b.classList.toggle("on", b.dataset.f3k === k));
       const inv = !!F3_INV[r.k] || (r.sens < 0), vals = r.vals.map(v => v == null || !isFinite(v) ? null : v);
@@ -295,7 +295,8 @@ function f3Themes(tw, s, c) {
   const tout = $("#rf-tout", tw); if (tout) { const yrs = Y.slice(-4), i0 = Y.length - yrs.length, G = typeof TBLX_GRP !== "undefined" ? TBLX_GRP : {}, GS = typeof TBLX_GRPSUB !== "undefined" ? TBLX_GRPSUB : {};
     const grps = [...new Set(P.rows.map(r => r.grp))];
     const html = grps.map(g => { const rs = P.rows.filter(r => r.grp === g); if (!rs.length) return "";
-      return `<div class="f3-cc"><h3>${esc(G[g] || g)}<small>${esc(GS[g] || "")}</small></h3><div class="f3-ccg" style="--n:${yrs.length}"><div class="f3-cch"><span></span>${yrs.map((y, i) => `<b class="${i === yrs.length - 1 ? "last" : ""}">${y}</b>`).join("")}</div>
+      const CH = { res: ["Ce qu'elle vend et ce qu'elle en garde", "Compte de résultat", "rf-resultats", "étapes 1 et 2"], bil: ["Ce qu'elle possède et ce qu'elle doit", "Bilan, à la clôture", "rf-dette", "étape 3"], flx: ["L'argent réellement encaissé", "Flux de trésorerie", "rf-dette", "étape 3"], act: ["Ce qui revient à chaque action", "Bénéfice et dividende par action", "rf-div", "étape 4"] }[g] || [G[g] || g, GS[g] || "", null, ""];
+      return `<div class="f3-cpt"><h3>${esc(CH[0])}<small>${esc(CH[1])}${CH[2] ? ` · <a href="#" data-f3st="${CH[2]}">voir l'${esc(CH[3])} ↑</a>` : ""}</small></h3><div class="f3-ccg" style="--n:${yrs.length}"><div class="f3-cch"><span></span>${yrs.map((y, i) => `<b class="${i === yrs.length - 1 ? "last" : ""}">${y}</b>`).join("")}</div>
         ${rs.map(r => { const chg = tblxChange(r.kind, r.prev, r.last), cls = r.q > 0 ? "u" : r.q < 0 ? "d" : "n";
           return `<div class="f3-ccr"><span><b class="f3-lb">${esc(r.label)}</b><b class="f3-sb">${esc(r.short || r.label)}</b>${tblxProv(r.k, s)}<small>${esc(r.unit || "")}${chg ? ` · <i class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)} sur un an</i>` : ""}</small></span>${yrs.map((y, i) => { const v = r.vals[i0 + i]; return `<em class="${i === yrs.length - 1 ? "last" : ""}">${v == null || !isFinite(v) ? "–" : esc(r.cell ? r.cell(v) : r.full(v))}</em>`; }).join("")}</div>`; }).join("")}</div></div>`; }).join("");
     tout.insertAdjacentHTML("afterbegin", `<div class="f3-ccw">${html}<p class="f3-src">Un tiret : chiffre non publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes. Vert et rouge : seuils de lecture du site, pas un avis.</p></div>`);
@@ -338,9 +339,12 @@ function f3Actu(aw) {
   pr.filter(a => /·\s*FR\s*·/.test((a.querySelector(".pm") || {}).textContent || "")).forEach(a => { const pm = (a.querySelector(".pm") || {}).textContent || "", dm = pm.match(/(\d\d)\/(\d\d)\/(\d\d)/), d = dm ? `${+dm[1]} ${mois[+dm[2] - 1]}` : "";
     const card = document.createElement("div"); card.className = "f3-tlc";
     card.innerHTML = `<span class="f3-dt">${esc(d)}</span><div class="f3-tlb"><span class="f3-tag p">Presse</span><b><a href="${a.getAttribute("href")}" target="_blank" rel="noopener nofollow">${esc((a.querySelector(".pt") || a).textContent)} ↗</a></b><small>${esc(pm.split("·")[0].trim())}</small></div>`; items.push(card); });
-  const avenir = ev.map(li => `<div class="f3-tlc avenir"><span class="f3-dt k">${esc((li.querySelector("b") || {}).textContent || "")}</span><div class="f3-tlb"><span class="f3-tag k">À venir</span><b>${esc((li.querySelector("span") || {}).textContent || "")}</b></div></div>`).join("");
+  const avenir = ev.length ? `<div class="f3-av1"><span class="f3-tag k">À venir</span>${ev.map(li => `<span class="f3-av"><b>${esc((li.querySelector("b") || {}).textContent || "")}</b>${esc((li.querySelector("span") || {}).textContent || "")}</span>`).join("")}</div>` : "";
   if (!items.length && !avenir) return;
-  const w = document.createElement("div"); w.className = "f3-tl"; items.forEach(c => w.appendChild(c)); if (avenir) w.insertAdjacentHTML("beforeend", `<div class="f3-avs">${avenir}</div>`);
+  const w = document.createElement("div"); w.className = "f3-tl"; items.forEach(c => w.appendChild(c)); if (avenir) w.insertAdjacentHTML("beforeend", avenir);
+  // dans le pli : plus de bloc « À venir » ni de presse vide (déjà au-dessus ou rien à montrer)
+  const pli = $("#rf-agenda", aw); if (pli) { const ch = $(".rf-chev", pli); if (ch) ch.hidden = true; const sm = $("summary .rf-plt b", pli), sp = $("summary .rf-plt span", pli); if (sm) sm.textContent = "Toutes ses annonces des 90 derniers jours"; if (sp) sp.textContent = "Filtrer par type, lire l'original, explication par l'IA";
+    const pp = $("#ax-p", pli); if (pp && !$$(".ax-pr", pp).some(a => !a.hidden)) { const sec = pp.closest("section"); if (sec) sec.hidden = true; } }
   if (trim) trim.remove(); const ev0 = $(".rf6-ev", aw); if (ev0) ev0.remove();
   aw.insertBefore(w, aw.firstChild);
 }
@@ -353,7 +357,7 @@ const F3_CHAIN = [["rf-resultats", "Ce qu'elle vend", "ca"], ["rf-rentab", "Ce q
 const F3_AUSSI = [["rf-cours", "Le cours"], ["rf-tout-w", "Comptes complets"], ["rf-sources", "Sources"]];
 function f3ChaineChiffres(s, c) { // le chiffre clé de chaque étape, affiché dans la chaîne
   const o = {}; try { const P = tblxRows(s, c), r = k => P.rows.find(x => x.k === k), ca = r("ca"), mg = r("marge"), roe = r("roe"), nd = r("netDebt"), v = valo(s);
-    if (ca && ca.last != null) o.ca = `${ca.full(ca.last)} en ${c.years[ca.li]}`;
+    const g = r("g"); if (g && g.last != null) o.ca = `${g.full(g.last)} de ventes sur un an`; else if (ca && ca.last != null) o.ca = `exercice ${c.years[ca.li]}`;
     if (mg && mg.last != null) o.marge = `${f3Nb(Math.round(mg.last * 100), 0)} € sur 100 € de ventes`; else if (roe && roe.last != null) o.marge = `${roe.full(roe.last)} de rentabilité`;
     if (nd && nd.last != null) o.netDebt = nd.last < 0 ? `${nd.full(-nd.last)} de trésorerie nette` : `${nd.full(nd.last)} de dette nette`;
     if (v && v.yld != null) o.yld = `${f3Nb(v.yld * 100, 1)} % de rendement`; else if (s.dps === 0 || s.dps == null) o.yld = "pas de dividende";
@@ -363,7 +367,7 @@ function f3ChaineChiffres(s, c) { // le chiffre clé de chaque étape, affiché 
 function f3Leads(s, c) { // une phrase de lecture par étape, comme celle du PER
   const L = {}; try { const P = tblxRows(s, c), r = k => P.rows.find(x => x.k === k), ca = r("ca"), g = r("g"), mg = r("marge"), roe = r("roe"), nd = r("netDebt"), lev = r("lev"), fcf = r("fcf"), nm = s.name, bank = isBank(s);
     if (ca && ca.last != null) { const yl = c.years[ca.li], gv = g && g.last != null ? g.last : null, gm = g && g.med != null ? g.med : null;
-      L["rf-resultats"] = `${esc(nm)} a ${bank ? "encaissé" : "vendu pour"} <b>${esc(ca.full(ca.last))}</b> en ${yl}${gv != null ? `, soit <b>${esc(g.full(gv))}</b> sur un an` : ""}${gm != null ? `, contre ${esc(g.full(gm))} pour la médiane de son secteur` : ""}. ${gv != null && gm != null ? (gv > gm ? "Elle grandit plus vite que ses concurrentes." : gv < gm ? "Elle grandit moins vite que ses concurrentes." : "Elle grandit au rythme de son secteur.") : ""}`; }
+      L["rf-resultats"] = `${gv != null ? `Ses ventes ont progressé de <b>${esc(g.full(gv))}</b> en ${yl}${gm != null ? `, contre ${esc(g.full(gm))} pour la médiane de son secteur` : ""}. ` : ""}${gv != null && gm != null ? (gv > gm ? "Elle grandit plus vite que ses concurrentes." : gv < gm ? "Elle grandit moins vite que ses concurrentes." : "Elle grandit au rythme de son secteur.") : ""}`; }
     if (mg && mg.last != null) L["rf-rentab"] = `Sur 100 € de ventes, il lui reste <b>${f3Nb(Math.round(mg.last * 100), 0)} €</b> une fois payés salaires, achats et frais${mg.med != null ? `, contre ${f3Nb(Math.round(mg.med * 100), 0)} € pour la médiane de son secteur` : ""}. ${mg.med != null ? (mg.last > mg.med * 1.2 ? "Chaque vente lui rapporte nettement plus qu'à ses concurrentes." : mg.last < mg.med * 0.8 ? "Chaque vente lui rapporte moins qu'à ses concurrentes." : "Chaque vente lui rapporte à peu près autant qu'à ses concurrentes.") : ""}`;
     else if (roe && roe.last != null) L["rf-rentab"] = `Pour 100 € apportés par ses actionnaires, ${esc(nm)} gagne <b>${esc(roe.full(roe.last))}</b> par an${roe.med != null ? `, contre ${esc(roe.full(roe.med))} pour la médiane de son secteur` : ""}.`;
     if (nd && nd.last != null) L["rf-dette"] = nd.last < 0 ? `Une fois ses dettes remboursées, il lui resterait encore <b>${esc(nd.full(-nd.last))}</b> de trésorerie : elle n'a pas de dette nette.${fcf && fcf.last != null ? ` Ses bénéfices se transforment en argent : ${esc(fcf.full(fcf.last))} d'argent disponible sur l'exercice.` : ""}` : `Elle doit <b>${esc(nd.full(nd.last))}</b> de plus qu'elle n'a de trésorerie${lev && lev.last != null ? `, soit <b>${f3Nb(lev.last, 1)} an${lev.last >= 2 ? "s" : ""}</b> de résultat pour rembourser${lev.med != null ? ` (médiane du secteur : ${f3Nb(lev.med, 1)})` : ""}` : ""}.`;
@@ -380,7 +384,7 @@ function f3Chaine(tw) {
   tw.insertBefore(nav, tw.firstChild); tw.classList.add("f3-chained");
   Object.entries(LD).forEach(([id, h]) => { const th = tw.querySelector("#" + id + " .f3-th"); if (th && !th.querySelector(".f3-lead0")) th.insertAdjacentHTML("afterbegin", `<p class="f3-lec f3-lead0">${h}</p>`); });
   const show = id => { $$("details.rf-pl", tw).forEach(d => { d.open = d.id === id; }); $$("[data-f3st]", nav).forEach(b => b.classList.toggle("on", b.dataset.f3st === id)); };
-  nav.addEventListener("click", e => { const b = e.target.closest("[data-f3st]"); if (!b) return; show(b.dataset.f3st); if (b.dataset.f3st === "rf-cours" && typeof ficheGraphique === "function") { try { const sid = location.pathname.split("/")[2]; if (RBY[sid]) ficheGraphique(RBY[sid]); } catch (x) { } } });
+  tw.addEventListener("click", e => { const b = e.target.closest("[data-f3st]"); if (!b) return; e.preventDefault(); show(b.dataset.f3st); if (!nav.contains(b)) nav.scrollIntoView({ behavior: "smooth", block: "start" }); if (b.dataset.f3st === "rf-cours" && typeof ficheGraphique === "function") { try { const sid = location.pathname.split("/")[2]; if (RBY[sid]) ficheGraphique(RBY[sid]); } catch (x) { } } });
   show((location.hash && has(location.hash.slice(1)) && $$("details.rf-pl", tw).some(d => d.id === location.hash.slice(1))) ? location.hash.slice(1) : steps[0][0]);
   tw.addEventListener("toggle", e => { const d = e.target; if (d.matches("details.rf-pl") && d.open) { $$("details.rf-pl", tw).forEach(x => { if (x !== d) x.open = false; }); $$("[data-f3st]", nav).forEach(b => b.classList.toggle("on", b.dataset.f3st === d.id)); } }, true);
 }
