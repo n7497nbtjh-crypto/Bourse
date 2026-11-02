@@ -172,6 +172,8 @@ export default {
     let image = null; // 5e passage (B1) : image de partage propre à la fiche (data/og.mjs), seulement si elle existe
     if (fq) { try { const ids = await ogIds(env, url); if (ids.has(fq[1])) image = { url: `${url.origin}/og/entreprise/${fq[1]}.png`, alt: `${t.title} : verdict et cinq jauges face à la médiane du secteur, d'après les comptes officiels.` }; } catch (e) { } }
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image });
+    // 2/11 : sur enklair.com, Cloudflare garde scripts et styles 4 h dans le navigateur ; chaque version du site les appelle avec ?v=<version>
+    html = html.replace(/(src|href)="(\/(?:m\/[a-z0-9_-]+\.js|app\.js|site\.css|calc\.js))"/gi, `$1="$2?v=${VERSION}"`);
     { const pip = String((request.cf && request.cf.country) || "").toLowerCase(); // 2/11 : pays du visiteur (Belgique, Suisse, Luxembourg) proposé par défaut pour les leçons ; rien n'est enregistré
       if (/^(fr|be|ch|lu)$/.test(pip)) html = html.replace(/<html\b/, `<html data-pays-ip="${pip}"`); }
     if (info && ctx && typeof ctx.waitUntil === "function" && !/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless/i.test(request.headers.get("user-agent") || "")) { // 5e passage (E4) : page servie à un humain
