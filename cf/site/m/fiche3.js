@@ -215,7 +215,7 @@ function f3Repartitions(root) { // « D'où viennent ses ventes » : chaque list
   const fm = hote || root, w = document.createElement("div"); w.className = "f3-mixes"; w.innerHTML = cartes.join("");
   const ps = $$(":scope > p:not(.fbt)", fm), apres = ps.length ? ps[ps.length - 1] : fm.querySelector("h3");
   if (apres && apres.nextSibling) fm.insertBefore(w, apres.nextSibling); else fm.appendChild(w);
-  $$(":scope > p, :scope > a, :scope > .src", fm).forEach(x => { const ia = x.querySelector("button"); if (ia) { ia.classList.add("f3-iab"); x.replaceWith(ia); } else x.remove(); }); // 2/11 : sous le titre, seulement le bouton IA
+  $$(":scope > p, :scope > a, :scope > .src", fm).forEach(x => { const ia = x.querySelector("button"); if (ia) { ia.classList.add("f3-iam"); x.replaceWith(ia); } else x.remove(); }); // 2/11 : sous le titre, seulement le bouton IA
 }
 const F3_IA = `<svg class="f3-iai" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z" fill="currentColor"/><path d="M19 2l.8 2.2L22 5l-2.2.8L19 8l-.8-2.2L16 5l2.2-.8z" fill="currentColor"/></svg>`;
 (() => { // branchement : après la construction habituelle de la fiche (vue principale seulement)
@@ -324,6 +324,7 @@ window.pageComprendre = function (id, k) { goR(`/entreprise/${id}#${F3_CT[k] || 
 function f3Actu(aw) {
   if (!aw) return;
   if (!aw.dataset.f3obs) { aw.dataset.f3obs = "1"; const fa = $("#factu", aw); if (fa) { let t = 0; new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; const old = $(".f3-tl", aw); if (old) old.remove(); try { f3Actu(aw); } catch (e) { } }, 300); }).observe(fa, { childList: true, subtree: true }); } } // les annonces arrivent après (fetch)
+  $$("#ax-p .ax-pr", aw).forEach(a => { if (!/·\s*FR\s*·/.test((a.querySelector(".pm") || {}).textContent || "")) a.hidden = true; }); // presse : français seulement, aussi dans le pli
   if ($(".f3-tl", aw)) return;
   const trim = $("#rf-trim", aw), ev = $$(".rf-ev li", aw), ann = $$("#ax-o .ax-it", aw).slice(0, 3), pr = $$("#ax-p .ax-pr", aw).slice(0, 2);
   const mois = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
@@ -348,16 +349,36 @@ function f3Actu(aw) {
    Les plis sont présentés en ligne, dans l'ordre de la causalité : ce qu'elle vend → ce qu'elle en garde → ce qu'elle possède
    et doit → ce que vaut l'action → ce qu'elle reverse. Une étape ouverte à la fois ; le cours, les comptes complets et les
    sources sont en « Et aussi ». Les résumés des plis (titre, chiffre clé) disparaissent : la chaîne les remplace. */
-const F3_CHAIN = [["rf-resultats", "Ventes", "ce qu'elle vend"], ["rf-rentab", "Rentabilité", "ce qu'elle en garde"], ["rf-dette", "Bilan", "ce qu'elle possède et doit"], ["rf-valo", "Prix", "ce que vaut l'action"], ["rf-div", "Dividende", "ce qu'elle reverse"]];
+const F3_CHAIN = [["rf-resultats", "Ce qu'elle vend", "ca"], ["rf-rentab", "Ce qu'elle en garde", "marge"], ["rf-dette", "Ce qu'il lui reste", "netDebt"], ["rf-div", "Ce qu'elle reverse", "yld"], ["rf-valo", "Ce que ça coûte en Bourse", "pe"]];
 const F3_AUSSI = [["rf-cours", "Le cours"], ["rf-tout-w", "Comptes complets"], ["rf-sources", "Sources"]];
+function f3ChaineChiffres(s, c) { // le chiffre clé de chaque étape, affiché dans la chaîne
+  const o = {}; try { const P = tblxRows(s, c), r = k => P.rows.find(x => x.k === k), ca = r("ca"), mg = r("marge"), roe = r("roe"), nd = r("netDebt"), v = valo(s);
+    if (ca && ca.last != null) o.ca = `${ca.full(ca.last)} en ${c.years[ca.li]}`;
+    if (mg && mg.last != null) o.marge = `${f3Nb(Math.round(mg.last * 100), 0)} € sur 100 € de ventes`; else if (roe && roe.last != null) o.marge = `${roe.full(roe.last)} de rentabilité`;
+    if (nd && nd.last != null) o.netDebt = nd.last < 0 ? `${nd.full(-nd.last)} de trésorerie nette` : `${nd.full(nd.last)} de dette nette`;
+    if (v && v.yld != null) o.yld = `${f3Nb(v.yld * 100, 1)} % de rendement`; else if (s.dps === 0 || s.dps == null) o.yld = "pas de dividende";
+    if (v && v.pe) o.pe = `${f3Nb(Math.round(v.pe), 0)} fois son bénéfice`; else if (v && v.peNs) o.pe = "PER non significatif";
+  } catch (e) { } return o;
+}
+function f3Leads(s, c) { // une phrase de lecture par étape, comme celle du PER
+  const L = {}; try { const P = tblxRows(s, c), r = k => P.rows.find(x => x.k === k), ca = r("ca"), g = r("g"), mg = r("marge"), roe = r("roe"), nd = r("netDebt"), lev = r("lev"), fcf = r("fcf"), nm = s.name, bank = isBank(s);
+    if (ca && ca.last != null) { const yl = c.years[ca.li], gv = g && g.last != null ? g.last : null, gm = g && g.med != null ? g.med : null;
+      L["rf-resultats"] = `${esc(nm)} a ${bank ? "encaissé" : "vendu pour"} <b>${esc(ca.full(ca.last))}</b> en ${yl}${gv != null ? `, soit <b>${esc(g.full(gv))}</b> sur un an` : ""}${gm != null ? `, contre ${esc(g.full(gm))} pour la médiane de son secteur` : ""}. ${gv != null && gm != null ? (gv > gm ? "Elle grandit plus vite que ses concurrentes." : gv < gm ? "Elle grandit moins vite que ses concurrentes." : "Elle grandit au rythme de son secteur.") : ""}`; }
+    if (mg && mg.last != null) L["rf-rentab"] = `Sur 100 € de ventes, il lui reste <b>${f3Nb(Math.round(mg.last * 100), 0)} €</b> une fois payés salaires, achats et frais${mg.med != null ? `, contre ${f3Nb(Math.round(mg.med * 100), 0)} € pour la médiane de son secteur` : ""}. ${mg.med != null ? (mg.last > mg.med * 1.2 ? "Chaque vente lui rapporte nettement plus qu'à ses concurrentes." : mg.last < mg.med * 0.8 ? "Chaque vente lui rapporte moins qu'à ses concurrentes." : "Chaque vente lui rapporte à peu près autant qu'à ses concurrentes.") : ""}`;
+    else if (roe && roe.last != null) L["rf-rentab"] = `Pour 100 € apportés par ses actionnaires, ${esc(nm)} gagne <b>${esc(roe.full(roe.last))}</b> par an${roe.med != null ? `, contre ${esc(roe.full(roe.med))} pour la médiane de son secteur` : ""}.`;
+    if (nd && nd.last != null) L["rf-dette"] = nd.last < 0 ? `Une fois ses dettes remboursées, il lui resterait encore <b>${esc(nd.full(-nd.last))}</b> de trésorerie : elle n'a pas de dette nette.${fcf && fcf.last != null ? ` Ses bénéfices se transforment en argent : ${esc(fcf.full(fcf.last))} d'argent disponible sur l'exercice.` : ""}` : `Elle doit <b>${esc(nd.full(nd.last))}</b> de plus qu'elle n'a de trésorerie${lev && lev.last != null ? `, soit <b>${f3Nb(lev.last, 1)} an${lev.last >= 2 ? "s" : ""}</b> de résultat pour rembourser${lev.med != null ? ` (médiane du secteur : ${f3Nb(lev.med, 1)})` : ""}` : ""}.`;
+  } catch (e) { } return L;
+}
 function f3Chaine(tw) {
   if (!tw || $(".f3-chain", tw)) return;
   const has = id => !!tw.querySelector("#" + id);
   const steps = F3_CHAIN.filter(([id]) => has(id)), aussi = F3_AUSSI.filter(([id]) => has(id)); if (!steps.length) return;
   const nav = document.createElement("div"); nav.className = "f3-chain";
-  nav.innerHTML = `<div class="f3-steps">${steps.map(([id, t, q], i) => `<button type="button" data-f3st="${id}"><i>${i + 1}</i><b>${t}</b><small>${q}</small></button>`).join('<span class="f3-arr" aria-hidden="true">→</span>')}</div>
+  const sid = location.pathname.split("/")[2], s = RBY[sid], c = s && FULL[sid], K = s && c ? f3ChaineChiffres(s, c) : {}, LD = s && c ? f3Leads(s, c) : {};
+  nav.innerHTML = `<div class="f3-steps">${steps.map(([id, t, k], i) => `<button type="button" data-f3st="${id}"><i>${i + 1}</i><b>${t}</b><small>${esc(K[k] || "")}</small></button>`).join('<span class="f3-arr" aria-hidden="true">→</span>')}</div>
     ${aussi.length ? `<div class="f3-aussi"><span>Et aussi :</span>${aussi.map(([id, t]) => `<button type="button" data-f3st="${id}">${t}</button>`).join("")}</div>` : ""}`;
   tw.insertBefore(nav, tw.firstChild); tw.classList.add("f3-chained");
+  Object.entries(LD).forEach(([id, h]) => { const th = tw.querySelector("#" + id + " .f3-th"); if (th && !th.querySelector(".f3-lead0")) th.insertAdjacentHTML("afterbegin", `<p class="f3-lec f3-lead0">${h}</p>`); });
   const show = id => { $$("details.rf-pl", tw).forEach(d => { d.open = d.id === id; }); $$("[data-f3st]", nav).forEach(b => b.classList.toggle("on", b.dataset.f3st === id)); };
   nav.addEventListener("click", e => { const b = e.target.closest("[data-f3st]"); if (!b) return; show(b.dataset.f3st); if (b.dataset.f3st === "rf-cours" && typeof ficheGraphique === "function") { try { const sid = location.pathname.split("/")[2]; if (RBY[sid]) ficheGraphique(RBY[sid]); } catch (x) { } } });
   show((location.hash && has(location.hash.slice(1)) && $$("details.rf-pl", tw).some(d => d.id === location.hash.slice(1))) ? location.hash.slice(1) : steps[0][0]);
