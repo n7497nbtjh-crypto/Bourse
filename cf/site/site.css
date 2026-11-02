@@ -3906,3 +3906,17 @@ html .syn4 .synnav a,html .syn4 .synnav button,html .syn4 .synev button{backgrou
 html .syn4 .lnk{color:#111;text-decoration-color:var(--sun);text-decoration-thickness:3px}
 html .syn4 .s5-bar{background:#ECE8DE}
 @media (max-width:600px){html .syn4{margin:0;border-width:2px;box-shadow:5px 5px 0 #111;padding:18px 14px 22px}}
+/* Sélecteurs à deux ou trois choix (.o2-seg : PEA / Compte-titres, 7 jours / 30 jours…) : pastilles côte à côte */
+html body #app .o2-seg{display:inline-flex!important;flex-wrap:wrap!important;gap:6px;border:0!important;border-radius:0!important;overflow:visible!important;background:none!important}
+html body #app .o2-seg button:not(.x){border:2px solid #111!important;border-radius:999px!important;padding:7px 14px!important;background:#fff!important;color:#111!important;font:700 14px var(--sans)!important;white-space:nowrap;height:auto!important;width:auto!important;margin:0!important}
+html body #app .o2-seg button.on:not(.x){background:#111!important;color:#fff!important}
+/* Actualité : la barre « ont vendu plus » portait le même nom que la grille de filtres */
+html #app .ax-une .ax-bar2{display:block!important;height:12px;border-radius:6px;background:#FFD0C4;border:2px solid #111;padding:0!important;max-width:520px}
+html #app .ax-une .ax-bar2 i{background:#00B37A!important;border-radius:0}
+html #app .ax-bar.ax-bar2{height:auto!important;background:none!important;overflow:visible!important;border-radius:0!important;max-width:none!important;border:0!important;padding:12px 0 14px!important}
+@media (max-width:760px){html #app .ax-bar.ax-bar2{grid-template-columns:1fr 1fr}}
+/* Fiche ETF : l'en-tête prend le jaune de la fiche entreprise */
+html #app .rf-etf .rf-etfhd{background:var(--a4y);border-radius:24px;padding:22px 24px;margin:-4px -4px 18px}
+html #app .rf-etf .rf-etfhd h1{font:800 clamp(30px,4vw,48px)/1 var(--serif)!important;letter-spacing:-.05em!important}
+html #app .rf-etf .rf-etfhd .btn,html #app .rf-etf .rf-etfhd button:not(.prov-i){background:#fff;color:#111;border:2px solid #111!important}
+@media (max-width:760px){html #app .rf-etf .rf-etfhd{padding:18px 16px;margin:-2px -2px 14px;border-radius:20px}}
