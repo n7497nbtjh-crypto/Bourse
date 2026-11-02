@@ -19,7 +19,7 @@ function ekBox(o, inner) { return `<div class="ek-box"><div class="ek-bt">${ekEs
 // Colonnes : axe gradué, valeur exacte, variation sur un an sous chaque année, ligne de contexte facultative.
 // o = { titre, unite, annees:[2022…], valeurs:[…], fmt(v), max, graduations:[…], fmtAxe(v), ligne:{ nom, valeurs:[texte…], alerte:index }, indice, source }
 function ekColonnes(o) {
-  const M = ekMob(), s = o.valeurs, n = s.length, W = M ? 340 : 470, L = M ? 52 : 64, H = 150, T = 26, bw = M ? 34 : 44, gap = (W - L - 6) / n, y = v => T + H - v / o.max * H;
+  const M = ekMob(), s = o.valeurs, n = s.length, W = M ? 340 : 500, L = M ? 52 : 64, H = M ? 120 : 105, T = 26, bw = M ? 30 : 36, gap = (W - L - 6) / n, y = v => T + H - v / o.max * H;
   let g = `<svg viewBox="0 0 ${W} ${T + H + (o.ligne ? 58 : 40)}" role="img" aria-label="${ekEsc(o.titre)}">`;
   o.graduations.forEach(t => g += `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="${t ? "#E2E0DA" : "#111"}" stroke-width="${t ? 1 : 2}"/>` + ekTx(L - 8, y(t) + 4, o.fmtAxe(t), { a: "end" }));
   s.forEach((v, i) => {
@@ -59,11 +59,11 @@ function ekPoints(o) {
   return ekBox(o, g);
 }
 
-// Partage : la part versée par l'entreprise, puis la même part chez la rivale du milieu, sur deux barres alignées.
-// o = { titre, unite, nom, part (0-100), partTexte, mediane (0-100 ou null), mediane_nom, mediane_texte, indice, source }
+// Partage « sur 100 € » : une seule barre en deux blocs dont la largeur suit la part, la comparaison aux rivales en une ligne.
+// o = { titre, unite, verse (0-100), verseTexte, garde (0-100), gardeTexte, comparaison (HTML court), indice, source }
 function ekPartage(o) {
-  const barre = (nom, p, txt, moi) => `<div class="ek-pt${moi ? " moi" : ""}"><span class="ek-ptn">${ekEsc(nom)}</span><span class="ek-ptb"><i style="width:${Math.max(0, Math.min(100, p))}%"></i></span><span class="ek-ptv">${ekEsc(txt)}</span></div>`;
-  return ekBox(o, `<div class="ek-pts">${barre(o.nom, o.part, o.partTexte, true)}${o.mediane != null ? barre(o.mediane_nom, o.mediane, o.mediane_texte) : ""}</div>`);
+  const v = Math.max(0, Math.min(100, o.verse)), g = Math.max(0, 100 - v);
+  return ekBox(o, `<div class="ek-cent">${v > 0 ? `<div class="v" style="flex:${Math.max(v, 18)}"><b>${ekEsc(o.verseValeur)}</b><span>${ekEsc(o.verseTexte)}</span></div>` : ""}${g > 0 ? `<div style="flex:${Math.max(g, 18)}"><b>${ekEsc(o.gardeValeur)}</b><span>${ekEsc(o.gardeTexte)}</span></div>` : ""}</div>${o.comparaison ? `<p class="ek-cmpl">${o.comparaison}</p>` : ""}`);
 }
 
 // « Ce qui l'explique » : des causes numérotées, chacune avec sa preuve, puis « À surveiller ».

@@ -11,7 +11,7 @@
 
 /* ——— fil : étapes numérotées sur une ligne verticale ——— */
 .ek-fil{margin-top:30px}
-.ek-step{display:grid;grid-template-columns:64px minmax(0,1fr);gap:22px;scroll-margin-top:20px}
+.ek-step{display:grid;grid-template-columns:64px minmax(0,1fr);gap:22px;scroll-margin-top:96px}
 .ek-rail{position:relative;display:flex;justify-content:center}
 .ek-rail:before{content:"";position:absolute;top:0;bottom:0;width:3px;background:var(--ek-ink);left:50%;transform:translateX(-50%)}
 .ek-step:first-child .ek-rail:before{top:28px}
@@ -22,7 +22,7 @@
 .ek-h{font:800 clamp(26px,3vw,36px)/1.05 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.045em;margin:4px 0 0;max-width:26ch}
 .ek-row{display:grid;grid-template-columns:1.25fr 1fr;gap:20px;margin-top:18px;align-items:start}
 .ek-row-top{align-items:start}
-.ek-row-1{grid-template-columns:minmax(0,720px)}
+.ek-row-1{grid-template-columns:minmax(0,640px)}
 .ek-sw{display:inline-block;width:12px;height:12px;border-radius:3px;border:1.5px solid var(--ek-ink);background:#fff;margin-right:6px;vertical-align:-1px}.ek-sw.g{background:#6EE3B5}
 .ek-tbl .ek-grp th{text-align:left;padding:14px 6px 4px;font:800 13px "Bricolage Grotesque",Inter,sans-serif;border-top:2px solid var(--ek-ink)}
 
@@ -146,9 +146,9 @@
 .ek-vrd .ek-stk2{display:inline-block;font:800 14px "Bricolage Grotesque",Inter,sans-serif;padding:5px 12px;border-radius:10px;border:2px solid var(--ek-ink);box-shadow:3px 3px 0 var(--ek-ink);transform:rotate(-3deg);background:#fff}
 .ek-vrd h2{font:800 clamp(28px,3.8vw,48px)/1 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.05em;margin:0}
 .ek-vrd h2 em{font-style:normal;color:var(--ek-r)}.ek-vrd h2 i{font-style:normal;color:var(--ek-g)}
-.ek-chain{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:22px;margin-top:22px}
+.ek-chain{display:grid;grid-template-columns:repeat(var(--n,5),minmax(0,1fr));gap:14px;margin-top:22px}
 .ek-rp{background:#fff;border:2px solid var(--ek-ink);border-radius:20px;padding:14px 16px 12px;position:relative;display:flex;flex-direction:column}
-.ek-rp+.ek-rp:before{content:"→";position:absolute;left:-19px;top:50%;transform:translateY(-50%);font:800 18px Inter}
+
 .ek-rp .ek-st{font:800 12.5px Inter;display:flex;gap:6px;align-items:center}
 .ek-rp .ek-st i{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--ek-ink);color:#fff;font:800 11px Inter;font-style:normal;flex:none}
 .ek-rp .ek-v{font:800 30px/1.05 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.04em;margin-top:8px}
@@ -184,7 +184,7 @@
 .ek .ek-end .ek-qs button{background:#fff;color:var(--ek-ink);border:2px solid var(--ek-ink);border-radius:999px;padding:9px 16px;font:800 14px Inter;box-shadow:4px 4px 0 var(--ek-ink)}
 .ek-end small{display:block;margin-top:16px;font:600 13px Inter;opacity:.85}
 .ek-facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:2px solid var(--ek-ink);border-radius:16px;overflow:hidden}
-.ek-facts div{padding:10px 14px;border-left:2px solid var(--ek-ink)}.ek-facts div:first-child{border-left:0}
+.ek-facts>*{padding:10px 14px;border-left:2px solid var(--ek-ink)}.ek-facts>*:first-child{border-left:0}
 .ek-facts small{font:700 12px Inter;color:var(--ek-mut)}.ek-facts b{display:block;font:800 22px "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.03em}.ek-facts span{font:500 12px Inter;color:#555}
 .ek-three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-top:12px}
 .ek-three div{border-radius:14px;padding:12px 14px;font:700 14.5px/1.35 Inter}
@@ -204,11 +204,10 @@
   .ek-rp{display:grid;grid-template-columns:1fr auto;column-gap:12px}
   .ek-rp .ek-st{grid-column:1/-1}.ek-rp .ek-v{grid-row:2;grid-column:2;font-size:24px;margin:0;align-self:center}.ek-rp .ek-s{grid-row:2;grid-column:1;min-height:0;margin-top:6px}
   .ek-rp .ek-mg,.ek-rp .ek-ml{grid-column:1/-1}.ek-rp .ek-go{display:none}
-  .ek-rp+.ek-rp:before{content:"↓";left:50%;top:-14px;transform:translate(-50%,-50%);font-size:14px}
   .ek-agenda{grid-template-columns:1fr}.ek-agenda div{border-left:0;border-top:2px solid var(--ek-ink)}.ek-agenda div:first-child{border-top:0}
   .ek-proof{flex-direction:column;align-items:flex-start}
   .ek-end{padding:30px 18px;border-radius:24px}
-  .ek-facts{grid-template-columns:1fr 1fr}.ek-facts div:nth-child(3){border-left:0}.ek-facts div:nth-child(n+3){border-top:2px solid var(--ek-ink)}
+  .ek-facts{grid-template-columns:1fr 1fr}.ek-facts>*:nth-child(3){border-left:0}.ek-facts>*:nth-child(n+3){border-top:2px solid var(--ek-ink)}
   .ek-three,.ek-rep{grid-template-columns:1fr}
 }
 
@@ -223,3 +222,21 @@
 .ek-ptax span:nth-child(1){grid-column:2;justify-self:start}.ek-ptax span:nth-child(2){grid-column:2;justify-self:center;grid-row:1}.ek-ptax span:nth-child(3){grid-column:2;justify-self:end;grid-row:1}
 .ek-metier{margin-top:22px}
 @media (max-width:900px){.ek-pt,.ek-ptax{grid-template-columns:84px 1fr}.ek-pt .ek-ptv{grid-column:2;font-size:13px;margin-top:-6px}.ek-ptax{display:none}}
+
+/* Partage « sur 100 € » (v3) */
+.ek-cent{display:flex;margin-top:16px;border:2px solid var(--ek-ink);border-radius:14px;overflow:hidden}
+.ek-cent>div{padding:12px 14px;min-width:0;background:#fff}
+.ek-cent>div+div{border-left:2px solid var(--ek-ink)}
+.ek-cent>div.v{background:#6EE3B5}
+.ek-cent b{display:block;font:800 28px "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.04em}
+.ek-cent span{font:600 13px/1.25 Inter}
+.ek-cmpl{font:600 14px Inter;margin:12px 0 0}.ek-cmpl b{font-weight:800}
+/* Métier (v2) : faits, la taille dans le secteur en avant et cliquable, deux encadrés, répartitions en cartes */
+.ek-facts a.hl{background:var(--ek-y);display:block;color:var(--ek-ink)}
+.ek-facts a.hl:hover{background:#FFD21F}
+.ek-facts a.hl em{display:block;font:800 12px Inter;font-style:normal;margin-top:2px;border-bottom:2px solid var(--ek-ink);width:max-content}
+.ek-two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.ek-two div{border-radius:16px;padding:14px 16px;font:700 15px/1.4 Inter}
+.ek-two small{display:block;font:800 12px Inter;margin-bottom:4px}
+.ek-rep>div{border:2px solid var(--ek-ink);border-radius:18px;padding:14px 16px}
+@media (max-width:900px){.ek-two{grid-template-columns:1fr}.ek-cent b{font-size:22px}}

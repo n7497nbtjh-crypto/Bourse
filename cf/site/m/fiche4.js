@@ -189,13 +189,14 @@ function f4Metier(x) {
   if (wd && wd.siege) facts.push(["Siège", wd.siege, wd.pays || ""]);
   if (wd && wd.effectif && wd.effectif[0]) facts.push(["Salariés", ekFr(wd.effectif[0], 0), wd.effectif[1] ? "chiffre de " + wd.effectif[1] : ""]);
   try { const sec = R.companies.filter(c => c.sector === s.sector && f4Valide(c)).map(c => [c.id, typeof caEur === "function" ? caEur(c) : c.ca]).sort((p, q) => q[1] - p[1]), k = sec.findIndex(z => z[0] === s.id);
-    if (k >= 0 && sec.length > 5) facts.push(["Taille dans son secteur", `${k + 1}${k ? "e" : "re"} sur ${sec.length}`, "par les ventes"]); } catch (e) { }
-  if (facts.length) h += `<div class="ek-facts">${facts.map(f => `<div><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span></div>`).join("")}</div>`;
-  if (fi) h += `<div class="ek-three">${[["Comment elle gagne de l'argent", fi.argent, "#FFF6C7"], ["Ce dont elle dépend", fi.depend, "#E2F8EE"]].filter(t => t[1]).map(t => `<div style="background:${t[2]}"><small>${esc(t[0])}</small>${esc(t[1])}</div>`).join("")}</div>`;
+    if (k >= 0 && sec.length > 5) facts.push(["Taille dans son secteur", `${k + 1}${k ? "e" : "re"} sur ${sec.length}`, "par les ventes", `/entreprises?secteur=${encodeURIComponent(s.sector)}`]); } catch (e) { }
+  if (facts.length) h += `<div class="ek-facts">${facts.map(f => f[3] ? `<a class="hl" href="${esc(f[3])}"><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span><em>Voir le classement →</em></a>` : `<div><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span></div>`).join("")}</div>`;
+  if (fi) h += `<div class="ek-two">${[["Comment elle gagne de l'argent", fi.argent, "#FFF6C7"], ["Ce dont elle dépend", fi.depend, "#E2F8EE"]].filter(t => t[1]).map(t => `<div style="background:${t[2]}"><small>${esc(t[0])}</small>${esc(t[1])}</div>`).join("")}</div>`;
   if (rep && (rep.activites || rep.zones)) {
     const COL = ["#FFE14D", "#FF7EB3", "#A9B6FF", "#6EE3B5", "#FFB27A", "#C8A2FF", "#E6E4DE", "#BDE0FE"];
-    const bloc = (t, L) => !L || !L.length ? "" : `<div><h4>${esc(t)} · ${esc(rep.annee || "")}</h4><div class="ek-bar">${L.map((l, i) => `<i style="width:${l[1]}%;background:${COL[i % COL.length]}">${l[1] >= 8 ? ekFr(l[1], 0) + " %" : ""}</i>`).join("")}</div>
-      <div class="ek-leg">${L.map((l, i) => `<div><b style="background:${COL[i % COL.length]}"></b>${esc(l[0])}<span>${ekFr(l[1], 0)} % · ${esc(f4Md(x.s.ca * l[1] / 100, x.s.currency))}</span></div>`).join("")}</div></div>`;
+    const resserre = L => { if (!L || L.length <= 5) return L; const t = L.slice(0, 4), r = L.slice(4).reduce((a, x) => a + x[1], 0); return [...t, ["Autres", r]]; };
+    const bloc = (t, L0) => { const L = resserre(L0); return !L || !L.length ? "" : `<div><h4>${esc(t)} · ${esc(rep.annee || "")}</h4><div class="ek-bar">${L.map((l, i) => `<i style="width:${l[1]}%;background:${COL[i % COL.length]}">${l[1] >= 8 ? ekFr(l[1], 0) + " %" : ""}</i>`).join("")}</div>
+      <div class="ek-leg">${L.map((l, i) => `<div><b style="background:${COL[i % COL.length]}"></b>${esc(l[0])}<span>${ekFr(l[1], 0)} % · ${esc(f4Md(x.s.ca * l[1] / 100, x.s.currency))}</span></div>`).join("")}</div></div>` };
     h += `<div class="ek-rep">${bloc("Par activité", rep.activites)}${bloc("Par zone géographique", rep.zones)}</div>${rep.source ? `<p class="ek-note">Répartition relevée dans la <a href="${esc(rep.source)}" target="_blank" rel="noopener">publication de l'entreprise</a> ; montants calculés sur les ventes ${esc(x.s.year)}.</p>` : ""}`;
   }
   return h || `<p class="ek-note">Pas encore de description détaillée pour cette entreprise.</p>`;
@@ -276,9 +277,10 @@ function f4E4(x) {
   const part = rien ? 0 : Math.max(0, Math.min(100, (pay != null ? pay : 1) * 100));
   return { id: "e4", n: 4, sur: "Son dividende", titre, haut: true,
     mots: [{ cle: "distrib", ex: pay != null && pay <= 1.5 ? f4Pc(pay, 0) : "", calc: s.divPaid && s.net ? `${ekFr(s.divPaid, 0)} ÷ ${ekFr(s.net, 0)}` : parAction && s.eps ? `${ekFr(s.dps, 2)} ÷ ${ekFr(s.eps, 2)} par action` : "", nom: s.name }, ...(s.dps ? [{ cle: "dpa", ex: `${ekFr(s.dps, 2)} ${sym}`, calc: `exercice ${s.year}`, nom: s.name }] : []), ...(M.yld != null ? [{ cle: "rendement", ex: f4Pc(M.yld, 1), calc: "au cours actuel", nom: s.name }] : [])],
-    visuel: ekPartage({ titre: `Part du bénéfice ${s.year} versée aux actionnaires`, unite: "", nom: s.name, part, partTexte: rien ? "rien n'est versé" : pay > 1.5 ? "plus que son bénéfice" : `${f4Pc(pay, 0)}${parAction ? "" : ` · ${f4Md(s.divPaid, cur)}`}`,
-      mediane: MED.pay != null ? Math.min(100, MED.pay * 100) : null, mediane_nom: P.mode === "rivales" ? "Ses rivales" : "Son secteur", mediane_texte: MED.pay != null ? `${f4Pc(MED.pay, 0)}, médiane` : "",
-      indice: `Chaque barre représente tout le bénéfice : la partie verte est versée aux actionnaires, le reste est gardé par l'entreprise.`, source: f4Src(x, `Versements de ${s.year}`) }),
+    visuel: rien ? "" : ekPartage({ titre: `Ce que devient son bénéfice ${s.year}`, unite: "sur 100 " + sym, verse: Math.min(100, (pay || 0) * 100), verseValeur: pay > 1 ? "Plus de 100 " + sym : ekFr(Math.min(100, pay * 100), 0) + " " + sym, verseTexte: "versés aux actionnaires",
+      garde: 0, gardeValeur: ekFr(Math.max(0, 100 - pay * 100), 0) + " " + sym, gardeTexte: "gardés par l'entreprise",
+      comparaison: MED.pay != null ? `${P.mode === "rivales" ? "Ses rivales versent" : "Son secteur verse"} <b>${ekFr(Math.min(150, MED.pay * 100), 0)} ${sym}</b> sur 100 ${sym} (médiane).` : "",
+      indice: `Sur 100 ${sym} de bénéfice, la partie verte est versée aux actionnaires en dividendes ; le reste reste dans l'entreprise.`, source: f4Src(x, `Versements de ${s.year}`) }),
     explique: causes.length ? ekExplique({ causes, surveiller: M.yld != null ? `Rendement : ${f4Pc(M.yld, 1)} par an au cours actuel${MED.yld != null ? `, contre ${f4Pc(MED.yld, 1)} chez les rivales` : ""}.` : "" }) : "",
     suite: "Avec ces chiffres, combien coûte l'action ?" };
 }
@@ -368,6 +370,13 @@ function f4Ancres(x) {
     ancreLiens(x.s.id, [k], x.s.year).then(l => { if (l && l[0] && l[0].url) a.href = l[0].url; }).catch(() => { }); });
 }
 
+document.addEventListener("click", e => { // repères de l'en-tête : aller à l'étape, juste sous l'en-tête collant du site
+  const r = e.target.closest && e.target.closest("a.ek-rp"); if (!r) return;
+  const t = document.getElementById(r.getAttribute("href").slice(1)); if (!t) return;
+  e.preventDefault(); e.stopPropagation();
+  const bar = document.querySelector(".bar, header"), off = (bar && getComputedStyle(bar).position === "sticky" ? bar.getBoundingClientRect().height : 0) + 16;
+  scrollTo({ top: t.getBoundingClientRect().top + scrollY - off, behavior: "smooth" });
+}, true);
 document.addEventListener("click", e => {
   const t = e.target.closest && e.target.closest("[data-f4-tv],[data-f4-ia],[data-f4-q]"); if (!t) return;
   const m = location.pathname.match(/^\/entreprise\/([^/]+)/), s = m && RBY[m[1]];
