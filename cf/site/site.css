@@ -3831,3 +3831,4 @@ html #app .e3~.panel #regTabs,html #app .e3~.panel #secTabs{display:flex;flex-wr
 html #app .e3~.panel #regTabs button,html #app .e3~.panel #secTabs button,html #app .e3~.panel #vsw button{border:2px solid #111!important;border-radius:999px!important;padding:6px 13px!important;font:700 13.5px var(--sans)!important;background:#fff!important;color:#111!important;height:auto!important;min-height:0!important;width:auto!important}
 html #app .e3~.panel #regTabs button.on,html #app .e3~.panel #secTabs button.on,html #app .e3~.panel #vsw button.on{background:#111!important;color:#fff!important}
 html #app .e3~.field input#eq{border:2px solid #111!important;border-radius:999px!important;padding:10px 18px!important}
+html body #app .e3 .e3-secs button[data-e3s]:not(.x){border-radius:20px!important}
