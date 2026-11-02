@@ -4202,3 +4202,51 @@ html #app .cmpr-jg .fk-g.fk-gn{background:linear-gradient(90deg,#E9E6DE 50%,#D6D
 html #app .cmpr-jg .fk-g em{position:absolute;left:50%;top:-3px;width:2px;height:14px;background:#111;border:0}
 html #app .cmpr-jg .fk-g i{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#111!important;border:3px solid #fff!important;box-shadow:none!important}
 html body .pop .anc-n{display:none}
+/* ---------- 2/11 soir : étape refaite (graphique à gauche, liste de chiffres à droite, une seule boîte) ---------- */
+html body #app .f3-chained .f3-th{display:grid!important;grid-template-columns:minmax(0,1.35fr) minmax(260px,1fr)!important;grid-template-areas:"l0 l0" "g s"!important;gap:0 32px!important;align-items:start!important;padding:24px 28px!important}
+html body #app .f3-chained .f3-th .f3-lead0{grid-area:l0;margin:0 0 22px!important;font:700 17px/1.45 var(--sans)!important;padding:14px 18px!important}
+html body #app .f3-th .f3-thc{grid-area:g;min-width:0}html body #app .f3-th .f3-side{grid-area:s;min-width:0}
+html #app .f3-thh h3{display:flex;align-items:center;gap:8px;font:800 19px/1.15 var(--serif);letter-spacing:-.02em;margin:0}
+html #app .f3-thh p{font:600 14px/1.45 var(--sans);color:#333;margin:6px 0 10px}
+html body #app .f3-th .f3-svg{max-width:560px!important;width:100%}
+html #app .f3-sideh{font:800 12px var(--sans);color:#666;margin:2px 0 8px;text-transform:none}
+html body #app .f3-th .f3-kts{display:block!important;margin:0!important;border:2px solid #111;border-radius:16px;overflow:hidden;background:#fff}
+html body #app .f3-th .f3-kt{display:grid!important;grid-template-columns:minmax(0,1fr) auto 74px!important;align-items:center!important;gap:10px!important;padding:10px 14px!important;border:0!important;border-top:1px solid #E6E3DA!important;border-radius:0!important;box-shadow:none!important;transform:none!important;background:#fff!important;cursor:pointer;min-height:0!important;height:auto!important}
+html body #app .f3-th .f3-kt:first-child{border-top:0!important}
+html body #app .f3-th .f3-kt.on{background:var(--a4y)!important;box-shadow:inset 4px 0 0 #111!important}
+html body #app .f3-th .f3-kt:hover:not(.on){background:#FFFBE6!important}
+html #app .f3-ktn{font:700 14px var(--sans);color:#111;min-width:0}
+html body #app .f3-th .f3-kt b{font:800 17px var(--serif)!important;letter-spacing:-.03em;margin:0!important;white-space:nowrap}
+html #app .f3-ktc{justify-self:end;font:800 12px var(--sans);padding:2px 7px;border-radius:7px;background:#EEE;color:#444;white-space:nowrap}html #app .f3-ktc.u{background:#C9F6E3;color:#006B48}html #app .f3-ktc.d{background:#FFD9D1;color:#C2260E}
+html #app .f3-def2{font:500 13.5px/1.5 var(--sans);color:#333;margin:14px 0 0}html #app .f3-def2 b{color:#111}
+html #app .f3-th .f3-anc{margin:8px 0 0}html #app .f3-th .f3-anc a{font:700 13px var(--sans);color:#111;text-decoration:underline;text-decoration-color:var(--a4y);text-decoration-thickness:3px;text-underline-offset:3px}
+html #app .f3-th .f3-thl,html #app .f3-th .f3-thg{display:none}
+@media (max-width:760px){html body #app .f3-chained .f3-th{grid-template-columns:1fr!important;grid-template-areas:"l0" "s" "g"!important;padding:14px!important}html #app .f3-side{margin-bottom:14px}}
+/* chaîne : boutons de même hauteur, contenu centré */
+html body #app .f3-steps button{display:flex!important;align-items:center!important;gap:10px!important;min-height:64px!important;padding:10px 14px!important}
+html body #app .f3-steps button b{font:800 15px/1.15 var(--serif)!important}
+/* pli des annonces : DA du site, sans titres ni filets gris */
+html #app #rf-agenda>summary .rf-plt>span{display:none!important}
+html #app #rf-agenda .rf-plb{border-top:0!important;background:none!important}
+html #app #rf-agenda .rf-plb .panel>.ph{display:none!important}
+html #app #rf-agenda #factu>section:first-child .pb{padding:0!important}
+html body #app #rf-agenda .nfil{margin:0 0 10px!important;border:0!important}
+html body #app #rf-agenda .nfil button{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font:700 13px var(--sans)!important;padding:5px 13px!important}
+html body #app #rf-agenda .nfil button.on{background:#111!important;color:#fff!important}
+html #app #rf-agenda .src{border:0!important;background:none!important;padding:8px 2px 0!important;font:500 11.5px var(--sans)!important;color:#777!important}
+html #app #rf-agenda .ax-chip{background:#DCE3FF!important;color:#111!important;font:800 11px var(--sans)!important;border-radius:6px!important;padding:2px 7px!important}
+html body #app .f3-th .f3-kt>span.f3-ktn{background:none!important;padding:0!important;border-radius:0!important;font:700 14px var(--sans)!important;color:#111!important}
+/* cartes de comparaison : titre simple, « ? » discret */
+html body #app .f3-cc h3{display:flex!important;align-items:flex-start;justify-content:space-between;gap:10px;background:none!important;border:0!important;padding:0!important;margin:0 0 4px!important;font:800 17px/1.2 var(--serif)!important;letter-spacing:-.02em}
+html body #app .f3-cc .f3-q{flex:none;width:24px!important;height:24px!important;min-height:0!important;padding:0!important;border:2px solid #111!important;border-radius:50%!important;background:#fff!important;color:#111!important;font:800 13px var(--sans)!important;line-height:1!important;box-shadow:none!important;cursor:pointer}
+html body #app .f3-cc.qo .f3-q{background:#111!important;color:#fff!important}
+html #app .f3-qx{display:none;font:500 13px/1.45 var(--sans);color:#333;background:#F6F3EA;border-radius:12px;padding:9px 11px;margin:6px 0 4px}html #app .f3-cc.qo .f3-qx{display:block}html #app .f3-qx a{color:#111;font-weight:800}
+html #app .f3-cc>.f3-cq{display:none!important}
+/* Comparer : constats en trois lignes simples, sans encadré */
+html #app .c3-syn{list-style:none;margin:0 0 6px;padding:0;display:grid;gap:6px}html #app .c3-syn li{font:600 15px/1.4 var(--sans);padding-left:18px;position:relative}html #app .c3-syn li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;border-radius:50%;background:#111}
+html #app .cmpr-card.cmpr-lim{font:600 13px var(--sans)!important}
+html #app:has(.c3) .v3-hero .pagesub{display:none!important}
+html #app .c3-syn li::before{width:8px!important;height:8px!important;min-width:8px;transform:none!important;border-radius:50%!important;display:block}
+html #app .cmpr-selp .pb{padding:12px 16px!important}html #app .cmpr-selp{margin-bottom:18px!important}
+html #app .f3-md2 .f3-tk2{background:none!important;border-top:2px dashed #CFCAC0;height:0!important;margin-top:8px}html #app .f3-md2 .f3-tk2 i{top:-9px!important;height:16px!important}
+html #app #rf-agenda .ax-chip{font-size:12px!important}html #app #rf-agenda .src{font-size:12px!important}

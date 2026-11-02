@@ -17,14 +17,17 @@ function c3Recomposer(ids) {
   const cards = f3CritCards(crit, L, s, false); if (!cards.length) return;
   const syn = $(".cmpr-syn, .cmpr-ligne", vp), lead = null, lines = syn ? $$("li, span", syn).filter(x => x.closest(".cmpr-syn") || x.parentElement === syn).map(x => x.innerHTML) : [], csv = $("#cmpr-csv, [data-cmpr-csv]", vp), ia = $(".cmpr-ia", vp);
   const w = document.createElement("div"); w.className = "c3";
-  w.innerHTML = `<span class="a4-stk a4-bl">Le verdict</span><h2 class="c3-h">${esc(s.name)} contre ${esc(listFr(L.slice(1).map(c => c.name)))}.</h2>
-    ${syn ? `<div class="f3-lec c3-lec">${syn.tagName === "OL" || syn.tagName === "UL" ? `<ol>${lines.map(l => `<li>${l}</li>`).join("")}</ol>` : syn.innerHTML}</div>` : ""}
+  w.innerHTML = `${syn ? `<ul class="c3-syn">${(syn.tagName === "OL" || syn.tagName === "UL" ? lines : [syn.innerHTML]).map(l => `<li>${l}</li>`).join("")}</ul>` : ""}
     <div class="f3-cmp c3-cards">${cards.join("")}</div>
     <div class="f3-leg"><span><i class="b"></i>la mieux placée</span><span><i class="w"></i>la moins bien placée</span><span>Trait pointillé : médiane du secteur de ${esc(s.name)} (${esc(secName(s).toLowerCase())}). Pour le prix et la dette, la mieux placée est la plus basse.</span></div>
     <p class="c3-note">Être en tête sur un critère n'est ni une recommandation ni une prédiction : ce sont les derniers comptes publiés, comparés entre eux.</p><div class="c3-acts"></div>`;
   const acts = $(".c3-acts", w); if (ia) acts.appendChild(ia); if (csv) acts.appendChild(csv);
   vp.innerHTML = ""; vp.appendChild(w); vp.dataset.v3 = "1"; vp.classList.add("c3-host");
   const dbl = $("#cmpr-tout"); if (dbl) dbl.remove(); // « Les indicateurs, un par un » redisait les cartes
+  // 2/11 soir (Romain : limiter les répétitions et la lecture) : pas de phrase sous le titre, message de limite en une ligne
+  const sub = $(".v3-hero .pagesub"); if (sub) sub.remove();
+  $$(".cmpr-selp .pb > p").forEach(p => { if (/version gratuite/i.test(p.textContent)) p.remove(); });
+  const lim = $(".cmpr-lim"); if (lim) lim.innerHTML = `3 au maximum en version gratuite, 5 avec <a class="lnk" href="/premium">Premium</a>.`;
 }
 (() => { const r0 = window.cmprRenderBody; if (typeof r0 !== "function") return;
   window.cmprRenderBody = function (ids) { const r = r0.apply(this, arguments); try { c3Recomposer(ids); } catch (e) { console.error("comparer v3", e); } return r; }; })();

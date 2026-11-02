@@ -123,7 +123,7 @@ function f3CritCards(crit, L, s, lien = true) { // une carte par critère : clas
     const rows = L.map(c => ({ c, v: f(c) })), ok = rows.filter(r => r.v != null && isFinite(r.v)); if (ok.length < 2) return "";
     const med = mf ? mf(s) : null, vs = [...ok.map(r => Math.abs(r.v)), med != null ? Math.abs(med) : 0], max = Math.max(...vs) || 1, wid = v => Math.max(3, Math.abs(v) / max * 100);
     const tri = [...ok].sort((a, b) => sens === "hi" ? b.v - a.v : a.v - b.v), na = rows.filter(r => !(r.v != null && isFinite(r.v)));
-    return `<div class="f3-ch f3-cc"><h3>${esc(t)}</h3><details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex)}${lien && pli ? ` <a href="#${pli}" data-f3go="${pli}">Tout le détail dans « ${esc(plil)} » ↓</a>` : ""}</p></details>
+    return `<div class="f3-ch f3-cc"><h3>${esc(t)}<button type="button" class="f3-q" aria-label="C'est quoi ?" onclick="this.closest('.f3-cc').classList.toggle('qo')">?</button></h3><p class="f3-qx">${esc(ex)}${lien && pli ? ` <a href="#${pli}" data-f3go="${pli}">Le détail ↓</a>` : ""}</p>
       <div class="f3-cr2">${tri.map(({ c, v }, i) => `<div class="f3-rw2${c === s ? " me" : ""}${i === 0 ? " best" : i === tri.length - 1 ? " worst" : ""}"><span class="f3-rg">${i + 1}</span><a href="/entreprise/${c.id}">${esc(c.name)}</a><b>${fmt(v)}</b><div class="f3-tk2">${v < 0 ? "" : `<i style="width:${wid(v).toFixed(1)}%"></i>`}</div></div>`).join("")}
       ${na.map(({ c }) => `<div class="f3-rw2 na"><span class="f3-rg">–</span><a href="/entreprise/${c.id}">${esc(c.name)}</a><b>non calculable</b><div class="f3-tk2"></div></div>`).join("")}
       ${med != null ? `<div class="f3-md2"><div class="f3-tk2"><i style="left:${wid(med).toFixed(1)}%"></i></div><span>médiane du secteur : <b>${fmt(med)}</b> (repère noir)</span></div>` : ""}</div></div>`; }).filter(Boolean);
@@ -266,17 +266,16 @@ function f3Themes(tw, s, c) {
     if (!rows.length) return;
     const q = sec.querySelector(".ph h2 small"), ex = sec.querySelector(".rf-thx"), ctx = sec.querySelector(".rf-ctx, .ctx-chiffres");
     const tile = r => { const chg = tblxChange(r.kind, r.prev, r.last), cls = r.q > 0 ? "u" : r.q < 0 ? "d" : "n", ly = Y[r.li], yl = Y.at(-1);
-      return `<div class="f3-kt" role="button" tabindex="0" data-f3k="${r.k}"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}${tblxProv(r.k, s)}</small><b>${esc(r.full(r.last))}</b>${chg ? `<span class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)}</span>` : `<span class="n">–</span>`}${r.med != null ? `<em>médiane du secteur ${esc(r.full(r.med))}</em>` : "<em></em>"}</div>`; }; // div et non button : la tuile contient le bouton « i »
+      return `<div class="f3-kt" role="button" tabindex="0" data-f3k="${r.k}"><span class="f3-ktn">${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}</span><b>${esc(r.full(r.last))}</b><span class="f3-ktc ${cls}">${chg ? esc(chg) : "–"}</span></div>`; }; // 2/11 soir : une ligne par indicateur (liste), la médiane est sur le graphique
     const w = document.createElement("div"); w.className = "f3-th"; w.dataset.th = sec.id;
-    w.innerHTML = `<div class="f3-kts">${rows.map(tile).join("")}</div>
-      <div class="f3-thg"><div class="f3-thc"></div><div class="f3-thl"><div class="f3-thl2"></div></div></div>`;
+    w.innerHTML = `<div class="f3-thc"></div><div class="f3-side"><p class="f3-sideh">Choisir un chiffre</p><div class="f3-kts">${rows.map(tile).join("")}</div><div class="f3-thl2"></div></div>`;
     const show = k => { const r = rows.find(x => x.k === k); if (!r) return; $$(".f3-kt", w).forEach(b => b.classList.toggle("on", b.dataset.f3k === k));
       const inv = !!F3_INV[r.k] || (r.sens < 0), vals = r.vals.map(v => v == null || !isFinite(v) ? null : v);
-      $(".f3-thc", w).innerHTML = `<p class="f3-thn"><b>${esc(r.label)}</b>${r.unit && r.kind === "money" ? ` <span>en ${esc(r.ulong || r.unit)}</span>` : ""}</p>` + f3Cols(vals, Y, v => r.full(v), r.med, inv, r.kind);
+      $(".f3-thc", w).innerHTML = `<div class="f3-thh"><h3>${esc(r.label)}${tblxProv(r.k, s)}</h3>${r.phrase ? `<p>${esc(r.phrase)}</p>` : ""}</div>` + f3Cols(vals, Y, v => r.full(v), r.med, inv, r.kind);
       const d = typeof ALL !== "undefined" && ALL[r.term];
-      $(".f3-thl2", w).innerHTML = (r.phrase ? `<p class="f3-lec">${esc(r.phrase)}</p>` : "") + `<p class="f3-anc"><a data-f3anc="${esc(r.k)}" data-an="${Y[r.li]}" hidden></a></p>` + (d && d.what ? `<p class="f3-cq2"><b>${esc(r.short || r.label)}, c'est quoi ?</b> ${esc(d.what)}${d.read ? " " + esc(d.read) : ""}</p>` : (ex ? `<p class="f3-cq2"><b>C'est quoi ?</b> ${esc(ex.textContent)}</p>` : ""));
-      if (typeof ancreLiens === "function") { const a = $(".f3-anc a", w); ancreLiens(s.id, [r.k === "marge" ? "ebit" : r.k === "nm" ? "net" : r.k], Y[r.li]).then(l => { if (l && l[0]) { a.href = l[0].url; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = `${l[0].lbl} ${l[0].an} dans le rapport officiel ↗`; a.hidden = false; } }).catch(() => { }); } };
-    w.addEventListener("click", e => { const b = e.target.closest(".f3-kt"); if (b && !e.target.closest(".prov-i")) show(b.dataset.f3k); });
+      $(".f3-thl2", w).innerHTML = (d && d.what ? `<p class="f3-def2"><b>C'est quoi ?</b> ${esc(d.what)}${d.read ? " " + esc(d.read) : ""}</p>` : (ex ? `<p class="f3-def2"><b>C'est quoi ?</b> ${esc(ex.textContent)}</p>` : "")) + `<p class="f3-anc"><a data-f3anc="${esc(r.k)}" data-an="${Y[r.li]}" hidden></a></p>`;
+      if (typeof ancreLiens === "function") { const a = $(".f3-anc a", w); ancreLiens(s.id, [r.k === "marge" ? "ebit" : r.k === "nm" ? "net" : r.k], Y[r.li]).then(l => { if (l && l[0]) { a.href = l[0].url; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = `Voir ce chiffre dans le rapport officiel ↗`; a.hidden = false; } }).catch(() => { }); } };
+    w.addEventListener("click", e => { const b = e.target.closest(".f3-kt"); if (b) show(b.dataset.f3k); });
     w.addEventListener("keydown", e => { const b = e.target.closest(".f3-kt"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); show(b.dataset.f3k); } });
     const first = rows.find(r => r.ess) || rows[0]; show(first.k);
     // ce qui est remplacé : rangée de pastilles, graphique ancien, « détail année par année » (doublons) ; le contexte des ventes est gardé
