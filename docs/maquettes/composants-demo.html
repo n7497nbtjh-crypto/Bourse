@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ENKLAIR · composants partagés (démonstration)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../cf/site/composants.css">
+<style>body{margin:0;background:#fff;font-family:Inter,sans-serif}.w{max-width:1200px;margin:0 auto;padding:30px 36px}@media(max-width:900px){.w{padding:20px 18px}}h1{font:800 40px "Bricolage Grotesque";letter-spacing:-.05em;margin:0}p.n{font:500 15px Inter;color:#555}</style>
+</head><body><div class="w">
+<h1>Composants partagés</h1>
+<p class="n">Rendu par <code>cf/site/m/composants.js</code> et <code>cf/site/composants.css</code>, avec les vrais chiffres d'Hermès. Doit être identique à la maquette validée (fiche-hermes-v14.html).</p>
+<div id="demo"></div>
+</div>
+<script src="../../cf/site/m/composants.js"></script>
+<script>
+const AN=[2022,2023,2024,2025],RAP="https://filings.xbrl.org/969500Y4IJGHJE2MTJ13/2026-12-31/ESEF/FR/0/hermes-2025-12-31-1/reports/hermes-2025-12-31-1-fr.html";
+const SRC={texte:"Comptes officiels, exercices clos le 31/12",lien:RAP};
+document.getElementById("demo").innerHTML=ekFil([
+ {id:"e1",n:1,sur:"Ce qu'elle vend",titre:"16 milliards d'€ de ventes, en hausse bien plus forte que ses rivales.",
+  mots:[{cle:"ventes",ex:"16,0 Md€",calc:"ventes 2025",nom:"Hermès"},{cle:"croissance",ex:"+5,5 %",calc:"16 002 ÷ 15 170 − 1",nom:"Hermès"}],
+  visuel:ekColonnes({titre:"Ses ventes",unite:"en milliards d'€",annees:AN,valeurs:[11602,13427,15170,16002],fmt:v=>ekFr(v/1000),max:20000,graduations:[0,5000,10000,15000,20000],fmtAxe:t=>t/1000,
+    indice:"Chaque barre est plus haute que la précédente : les ventes montent depuis 2022 (+38 %). Mais l'écart entre deux barres rétrécit : la croissance ralentit.",source:SRC}),
+  explique:ekExplique({causes:[{titre:"Une clientèle très fortunée",texte:"Elle réduit moins ses achats quand l'économie ralentit. Kering, à l'inverse, a perdu 13 % de ventes en 2025.",lien:{href:"#m1",label:"son métier ↓"}},
+    {titre:"La maroquinerie fait 44 % des ventes",texte:"Sacs Birkin et Kelly : le cœur de la maison.",lien:{href:"#m1",label:"son métier ↓"}}],surveiller:"Le rythme : +5,5 % en 2025, contre +13 % en 2024."}),
+  plus:ekPlus({id:"m1",icone:"◎",titre:"Son métier et d'où viennent ses ventes",html:"<p>Contenu de la carte (métier, répartition des ventes).</p>"}),
+  suite:"Sur ces 16 milliards, combien lui reste-t-il une fois l'activité payée ?"},
+ {id:"e2",n:2,sur:"Ce qu'elle en garde",titre:"Sur 100 € vendus, elle en garde 41. Presque deux fois plus que ses rivales.",
+  mots:[{cle:"marge",ex:"41,1 %",calc:"6 569 ÷ 16 002 M€",nom:"Hermès"},{cle:"mediane",ex:"22 €",calc:"marge médiane des rivales",nom:"Hermès"}],
+  visuel:ekPoints({titre:"Gardés sur 100 € de ventes",unite:"marge d'exploitation 2025",lignes:[{nom:"Hermès",v:41.1,texte:"41 €",moi:1},{nom:"Moncler",v:29.2,texte:"29 €"},{nom:"LVMH",v:22,texte:"22 €"},{nom:"Kering",v:7.1,texte:"7 €"},{nom:"Brunello C.",v:null,texte:"ses comptes 2025 sont incomplets sur le site"}],
+    mediane:22,mediane_label:"médiane 22 €",max:50,graduations:[0,10,20,30,40,50],fmtAxe:t=>t+" €",indice:"À droite du pointillé (zone verte), plus que la rivale du milieu ; à gauche (zone rouge), moins.",source:{texte:"Comptes 2025 des 5 maisons",lien:RAP}}),
+  explique:ekExplique({causes:[{titre:"Des prix très élevés, jamais soldés",texte:"Chaque sac rapporte beaucoup plus qu'il ne coûte à fabriquer."}],surveiller:"Si les ventes ralentissent encore, la marge peut baisser."}),
+  plus:ekPlus({id:"m2",icone:"%",titre:"Sa marge, année par année",html:ekTableau(AN,[["Gardés sur 100 € vendus",["40,5 €","42,1 €","40,5 €","41,1 €"]]])}),
+  suite:"Et une fois l'impôt payé, que reste-t-il ?"},
+ {id:"e3",n:3,sur:"Ce qu'il lui reste",titre:"4,5 milliards de bénéfice, et aucune dette. Mais le bénéfice baisse un peu.",mots:[{cle:"benefice"},{cle:"impot",ex:"33,4 %",calc:"2 263 ÷ 6 775 M€",nom:"Hermès"}],
+  visuel:ekColonnes({titre:"Son bénéfice net",unite:"en milliards d'€",annees:AN,valeurs:[3367,4311,4603,4524],fmt:v=>ekFr(v/1000,2),max:6000,graduations:[0,2000,4000,6000],fmtAxe:t=>t/1000,ligne:{nom:"impôt",valeurs:["28 %","28 %","29 %","33 %"],alerte:3},source:SRC}),
+  explique:ekExplique({causes:[{titre:"L'impôt prend 33 %, contre 29 %",texte:"Contribution exceptionnelle des grandes entreprises en France en 2025."}]}),
+  suite:"Que fait-elle de ce bénéfice ?"},
+ {id:"e4",n:4,sur:"Ce qu'elle reverse",titre:"Elle reverse 62 % de son bénéfice à ses actionnaires : 16 € par action.",mots:[{cle:"distrib"}],
+  visuel:ekPartage({titre:"Partage du bénéfice 2025",unite:"4,5 Md€",part:62,partTexte:"Versé : 2,8 Md€",resteTexte:"Gardé : 1,7 Md€",mediane:56,mediane_label:"médiane 56 %",source:{texte:"Versements de 2025",lien:RAP}}),
+  explique:ekExplique({causes:[{titre:"Elle n'a pas besoin de cet argent",texte:"Son activité lui laisse 5,4 Md€ ; ses investissements n'en prennent que 1,2."}]})},
+ {id:"e5",n:5,sur:"Ce que ça coûte en Bourse",titre:"L'action coûte 30 fois son bénéfice annuel. Ses rivales, 20 fois.",mots:[{cle:"per",ex:"30 fois",calc:"136,6 ÷ 4,52 Md€",nom:"Hermès"}],
+  visuel:ekPoints({titre:"Années de bénéfice pour payer l'action",unite:"PER au cours du 30/10",basEstMieux:true,motBas:"moins chère",motHaut:"plus chère",lignes:[{nom:"Brunello C.",v:42.3,texte:"42 fois"},{nom:"Hermès",v:30.2,texte:"30 fois",moi:1},{nom:"LVMH",v:19.7,texte:"20 fois"},{nom:"Moncler",v:19,texte:"19 fois"},{nom:"Kering",v:null,texte:"son bénéfice 2025 est presque nul, le PER n'aurait pas de sens"}],
+    mediane:19.7,mediane_label:"médiane 20 fois",max:50,graduations:[0,10,20,30,40,50],fmtAxe:t=>t,source:{texte:"Cours du 30/10, comptes 2025"}}),
+  explique:ekExplique({causes:[{titre:"Le marché paie la régularité",texte:"Les étapes 1 à 3 sont meilleures que chez les rivales.",lien:{href:"#e1",label:"étape 1 ↑"}}],surveiller:"À 30 ans de bénéfice, le cours dépend des attentes."})},
+]);
+</script></body></html>
