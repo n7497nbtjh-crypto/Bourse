@@ -3789,3 +3789,45 @@ html[data-pays]:not([data-pays="fr"]) .fh-tags > span:first-of-type{display:none
 .f3-mx li i{width:14px;height:14px;border-radius:4px;border:2px solid #111;box-sizing:border-box}.f3-mx li b{font-weight:800;text-align:right}.f3-mx li em{font-style:normal;color:#666;font-size:12.5px;text-align:right;white-space:nowrap}
 @media (max-width:760px){.f3-mixes{grid-template-columns:1fr}.f3-stack i{font-size:0}.f3-mx li{grid-template-columns:12px minmax(0,1fr) 40px 70px;font-size:13.5px}}
 .f3 .f3-mix h3{font-size:20px!important;margin:0!important}
+/* ---------- Entreprises v3 (2/11, maquette docs/maquettes/entreprises-v1.html, module m/entreprises3.js) ---------- */
+html #app .e3{margin:0 0 24px}
+html #app .e3-hero{background:var(--a4y);border-radius:30px;padding:40px 36px 36px;margin:0 0 8px}
+html #app .e3-hero h1{font:800 clamp(36px,5vw,62px)/.95 var(--serif)!important;letter-spacing:-.055em;margin:16px 0 0;max-width:16ch;color:#111}
+html #app .e3 .a4-srch{margin-top:24px;max-width:640px}
+html #app .e3-fil,html #app .e3-sort{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:20px;font:800 14px var(--sans)}
+html #app .e3-fil button,html #app .e3-sort button{border:2px solid #111!important;border-radius:999px!important;padding:7px 14px;font:700 14px var(--sans);background:#fff;color:#111;cursor:pointer}
+html #app .e3-fil button.on{background:#111;color:#fff}html #app .e3-sort button.on{background:var(--a4y)}
+html #app .e3-sec{padding-top:52px}html #app .e3-sec h2{font:800 clamp(28px,3.4vw,42px)/1 var(--serif)!important;letter-spacing:-.05em;margin:14px 0 0}
+html #app .e3-secs{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:22px}
+html #app .e3-secs button{border-radius:20px!important;padding:16px 18px;border:2px solid #111!important;text-align:left;cursor:pointer;color:#111}
+html #app .e3-secs button.on{box-shadow:4px 4px 0 #111;transform:translate(-2px,-2px)}
+html #app .e3-secs b{display:block;font:800 18px/1.1 var(--serif);letter-spacing:-.02em}html #app .e3-secs span{font:600 13px var(--sans);color:#444}
+html #app .e3-tbl{margin-top:16px;border:2px solid #111;border-radius:24px;overflow:hidden}
+html #app .e3-tbl table{width:100%;border-collapse:collapse;margin:0}
+html #app .e3-tbl th{text-align:left;font:800 12.5px var(--sans);color:#444;padding:12px 14px;border-bottom:2px solid #111;background:#FBFAF7}html #app .e3-tbl th small{display:block;font-weight:600;color:#777}
+html #app .e3-tbl td{padding:12px 14px;border-bottom:1px solid #EAE7DF;vertical-align:middle}html #app .e3-tbl tr:last-child td{border-bottom:0}
+html #app .e3-tbl tbody tr{cursor:pointer}html #app .e3-tbl tbody tr:hover td{background:#FFFBE6}
+html #app .e3-co{display:flex;gap:10px;align-items:center;color:#111;text-decoration:none}html #app .e3-co img{width:36px;height:36px;border-radius:50%;object-fit:contain;background:#fff;flex:none}
+html #app .e3-co b{display:block;font:800 15px var(--sans)}html #app .e3-co small{font:600 12px var(--sans);color:#666}
+html #app .e3-num b{display:block;font:800 15px var(--sans);white-space:nowrap}html #app .e3-num span{font:800 12.5px var(--sans);padding:1px 7px;border-radius:7px;white-space:nowrap}
+html #app .e3-num .u{background:#C9F6E3;color:#006B48}html #app .e3-num .d{background:#FFD9D1;color:#C2260E}
+html #app .e3-ms{height:8px;border-radius:4px;background:linear-gradient(90deg,#FFD0C4 50%,#BFF0DA 50%);position:relative;min-width:80px}
+html #app .e3-ms:before{content:"";position:absolute;left:50%;top:-3px;width:2px;height:14px;background:#111}
+html #app .e3-ms b{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#111;border:3px solid #fff}
+html #app .e3-g0{color:#aaa;font-weight:700;text-align:center}html #app .e3-v{font:600 13px var(--sans);color:#333;max-width:190px}
+html #app .e3-more{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px;font:600 13.5px var(--sans);color:#555}
+html #app .e3-more button{background:#111;color:#fff;border-radius:999px!important;padding:10px 18px;font:800 14px var(--sans);border:0;cursor:pointer}
+html #app .e3-lg{font:600 12.5px var(--sans);color:#555;margin-top:10px}html #app .e3-vide{margin-top:16px;font:600 15px var(--sans)}
+@media (max-width:760px){html #app .e3-hero{padding:28px 18px;border-radius:24px}html #app .e3-hero h1{font-size:36px!important}
+ html #app .e3-secs{grid-template-columns:1fr 1fr}
+ html #app .e3-tbl table,html #app .e3-tbl tbody,html #app .e3-tbl tr,html #app .e3-tbl td{display:block}html #app .e3-tbl thead{display:none}
+ html #app .e3-tbl tr{display:grid;grid-template-columns:1fr auto;grid-template-areas:"co num" "v v";gap:8px 10px;padding:12px 14px;border-bottom:1px solid #EAE7DF}
+ html #app .e3-tbl td{padding:0;border:0!important}html #app .e3-tbl td:first-child{grid-area:co;min-width:0}html #app .e3-tbl td.e3-num{grid-area:num;text-align:right}
+ html #app .e3-tbl td:nth-child(3),html #app .e3-tbl td:nth-child(4),html #app .e3-tbl td:nth-child(5),html #app .e3-tbl td:nth-child(6){display:none}html #app .e3-tbl td.e3-v{grid-area:v;max-width:none}}
+html #app .e3 .e3-secs button{border-radius:20px!important}html #app .e3 .e3-sort button.on{background:var(--a4y)!important;color:#111!important}html #app .e3 .e3-fil button.on{background:#111!important;color:#fff!important}
+html #app .e3 .e3-plus{margin-top:52px}
+html #app .e3~.panel{border:0!important;box-shadow:none!important;padding:0!important;background:none!important;margin-top:18px}
+html #app .e3~.panel #regTabs,html #app .e3~.panel #secTabs{display:flex;flex-wrap:wrap;gap:8px;border:0!important;padding:0 0 12px!important;margin:0!important}
+html #app .e3~.panel #regTabs button,html #app .e3~.panel #secTabs button,html #app .e3~.panel #vsw button{border:2px solid #111!important;border-radius:999px!important;padding:6px 13px!important;font:700 13.5px var(--sans)!important;background:#fff!important;color:#111!important;height:auto!important;min-height:0!important;width:auto!important}
+html #app .e3~.panel #regTabs button.on,html #app .e3~.panel #secTabs button.on,html #app .e3~.panel #vsw button.on{background:#111!important;color:#fff!important}
+html #app .e3~.field input#eq{border:2px solid #111!important;border-radius:999px!important;padding:10px 18px!important}
