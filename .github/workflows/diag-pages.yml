@@ -1,0 +1,13 @@
+# Diagnostic ponctuel (2/11) : état du projet Cloudflare Pages (branche de production, derniers déploiements). Ne modifie rien.
+name: Diagnostic Pages
+on: workflow_dispatch
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          npx --yes wrangler@3.112.0 pages project list || true
+          npx --yes wrangler@3.112.0 pages deployment list --project-name=repere-bourse 2>&1 | head -40 || true
