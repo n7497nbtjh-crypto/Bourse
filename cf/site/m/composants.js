@@ -42,9 +42,11 @@ function ekColonnes(o) {
 function ekPoints(o) {
   const M = ekMob(), W = M ? 380 : 560, L = M ? 88 : 110, R = M ? 60 : 70, T = 28, rh = 34,
     hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = rows.length * rh + 18, x = v => L + (W - L - R) * Math.min(v, o.max) / o.max, m = x(o.mediane), bas = !!o.basEstMieux;
+  if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
   let g = `<svg viewBox="0 0 ${W} ${T + H + 26}" role="img" aria-label="${ekEsc(o.titre)}">`;
   g += `<rect x="${L}" y="${T - 6}" width="${m - L}" height="${H}" fill="${bas ? "#E2F8EE" : "#FFE9E3"}"/><rect x="${m}" y="${T - 6}" width="${W - R - m}" height="${H}" fill="${bas ? "#FFE9E3" : "#E2F8EE"}"/>`;
-  g += ekTx(L + 6, T + H - 12, bas ? (o.motBas || "moins cher") : "moins bien", { fw: 800, c: bas ? EK_G : EK_R, fs: 11 }) + ekTx(W - R - 6, T + H - 12, bas ? (o.motHaut || "plus cher") : "mieux", { a: "end", fw: 800, c: bas ? EK_R : EK_G, fs: 11 });
+  if (m - L >= 84) g += ekTx(L + 6, T + H - 12, bas ? (o.motBas || "moins cher") : "moins bien", { fw: 800, c: bas ? EK_G : EK_R, fs: 11 });
+  if (W - R - m >= 84) g += ekTx(W - R - 6, T + H - 12, bas ? (o.motHaut || "plus cher") : "mieux", { a: "end", fw: 800, c: bas ? EK_R : EK_G, fs: 11 });
   o.graduations.forEach(t => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + ekTx(x(t), T + H + 12, o.fmtAxe(t), { a: "middle" }));
   g += `<line x1="${m}" x2="${m}" y1="${T - 14}" y2="${T + H - 6}" stroke="#111" stroke-width="2" stroke-dasharray="5 4"/><rect x="${m - 52}" y="${T - 30}" width="104" height="18" rx="5" fill="#111"/>` + ekTx(m, T - 17, ekEsc(o.mediane_label), { a: "middle", c: "#fff", fw: 800, fs: 11 });
   rows.forEach((r, i) => {
@@ -60,7 +62,8 @@ function ekPoints(o) {
 // Partage d'un total en deux parts, avec la médiane des rivales en pointillé.
 // o = { titre, unite, part (0-100), partTexte, resteTexte, mediane (0-100), mediane_label, indice, source }
 function ekPartage(o) {
-  return ekBox(o, `<div class="ek-split"><span style="left:${Math.max(0, Math.min(100, o.mediane))}%"><em style="transform:translateX(${o.mediane > 80 ? -100 : o.mediane < 20 ? 0 : -50}%)">${ekEsc(o.mediane_label)}</em></span><div style="width:${o.part}%">${ekEsc(o.partTexte)}</div><div style="width:${100 - o.part}%">${ekEsc(o.resteTexte)}</div></div><div class="ek-splitl"><span>0 %</span><span>100 %</span></div>`);
+  const dedans = o.part >= 30 && o.part <= 70; // les deux textes tiennent dans la barre ; sinon ils passent dessous
+  return ekBox(o, `<div class="ek-split"><span style="left:${Math.max(0, Math.min(100, o.mediane))}%"><em style="transform:translateX(${o.mediane > 80 ? -100 : o.mediane < 20 ? 0 : -50}%)">${ekEsc(o.mediane_label)}</em></span><div style="width:${o.part}%">${dedans ? ekEsc(o.partTexte) : ""}</div><div style="width:${100 - o.part}%">${dedans ? ekEsc(o.resteTexte) : ""}</div></div><div class="ek-splitl">${dedans ? "<span>0 %</span><span>100 %</span>" : `<span><i class="ek-sw g"></i>${ekEsc(o.partTexte)}</span><span><i class="ek-sw"></i>${ekEsc(o.resteTexte)}</span>`}</div>`);
 }
 
 // « Ce qui l'explique » : des causes numérotées, chacune avec sa preuve, puis « À surveiller ».
@@ -72,7 +75,7 @@ function ekExplique(o) {
 // Carte « en savoir plus » mise en avant (repliée). Un lien vers #id l'ouvre et la montre.
 function ekPlus(o) { return `<details class="ek-more" id="${ekEsc(o.id)}"><summary><span class="ek-ic">${ekEsc(o.icone || "+")}</span><span class="ek-tt">${ekEsc(o.titre)}</span><span class="ek-op"></span></summary><div class="ek-in scroll-x">${o.html}</div></details>`; }
 // Petit tableau année par année pour les cartes : lignes = [[libellé, [valeurs déjà formatées]]].
-function ekTableau(annees, lignes) { return `<table class="ek-tbl"><tr><th></th>${annees.map(a => `<th>${a}</th>`).join("")}</tr>${lignes.map(([l, v]) => `<tr><td>${ekEsc(l)}</td>${v.map(x => `<td>${ekEsc(x)}</td>`).join("")}</tr>`).join("")}</table>`; }
+function ekTableau(annees, lignes) { return `<table class="ek-tbl"><tr><th></th>${annees.map(a => `<th>${a}</th>`).join("")}</tr>${lignes.map(([l, v]) => v == null ? `<tr class="ek-grp"><th colspan="${annees.length + 1}">${ekEsc(l)}</th></tr>` : `<tr><td>${ekEsc(l)}</td>${v.map(x => `<td>${ekEsc(x)}</td>`).join("")}</tr>`).join("")}</table>`; }
 
 // Transition vers l'étape suivante : une phrase, pas un bouton.
 function ekTransition(t) { return t ? `<div class="ek-trans"><i>↓</i><p><span>${ekEsc(t)}</span></p></div>` : ""; }
@@ -82,7 +85,7 @@ function ekEtape(o) {
   return `<div class="ek-step" id="${ekEsc(o.id)}"><div class="ek-rail"><b>${o.n}</b></div><div class="ek-sc">
   <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${ekEsc(o.titre)}</h3>
   ${o.mots && o.mots.length ? `<div class="ek-defs">Les mots de l'étape : ${o.mots.map(m => ekDefBouton(m.cle, m)).join("")}</div>` : ""}
-  <div class="ek-row${o.haut ? " ek-row-top" : ""}">${o.visuel}${o.explique || ""}</div>${o.plus || ""}${ekTransition(o.suite)}</div></div>`;
+  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${o.explique ? "" : " ek-row-1"}">${o.visuel || ""}${o.explique || ""}</div>` : ""}${o.plus || ""}${ekTransition(o.suite)}</div></div>`;
 }
 function ekFil(etapes) { return `<div class="ek ek-fil">${etapes.map(ekEtape).join("")}</div>`; }
 
