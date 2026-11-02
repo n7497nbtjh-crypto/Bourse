@@ -211,3 +211,15 @@
   .ek-facts{grid-template-columns:1fr 1fr}.ek-facts div:nth-child(3){border-left:0}.ek-facts div:nth-child(n+3){border-top:2px solid var(--ek-ink)}
   .ek-three,.ek-rep{grid-template-columns:1fr}
 }
+
+/* Partage (v2, 2/11 soir) : deux barres alignées, l'entreprise puis la médiane des rivales */
+.ek-pts{margin-top:18px;display:grid;gap:12px}
+.ek-pt{display:grid;grid-template-columns:120px 1fr 150px;gap:12px;align-items:center;font:600 14px Inter}
+.ek-pt .ek-ptb{height:26px;border:2px solid var(--ek-ink);border-radius:8px;background:#fff;overflow:hidden;display:block}
+.ek-pt .ek-ptb i{display:block;height:100%;background:#CFCDC6}
+.ek-pt.moi{font-weight:800}.ek-pt.moi .ek-ptb i{background:#6EE3B5}
+.ek-ptv{font:800 14px Inter}
+.ek-ptax{display:grid;grid-template-columns:120px 1fr 150px;gap:12px;font:600 11px Inter;color:#777}
+.ek-ptax span:nth-child(1){grid-column:2;justify-self:start}.ek-ptax span:nth-child(2){grid-column:2;justify-self:center;grid-row:1}.ek-ptax span:nth-child(3){grid-column:2;justify-self:end;grid-row:1}
+.ek-metier{margin-top:22px}
+@media (max-width:900px){.ek-pt,.ek-ptax{grid-template-columns:84px 1fr}.ek-pt .ek-ptv{grid-column:2;font-size:13px;margin-top:-6px}.ek-ptax{display:none}}

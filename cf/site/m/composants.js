@@ -31,7 +31,7 @@ function ekColonnes(o) {
     if (i && s[i - 1] > 0) { const c = (v / s[i - 1] - 1) * 100; g += ekTx(x + bw / 2, T + H + 34, (c > 0 ? "+" : "") + ekFr(c) + " %", { a: "middle", c: c >= 0 ? EK_G : EK_R, fw: 800 }); }
     if (o.ligne) g += ekTx(x + bw / 2, T + H + 52, ekEsc(o.ligne.valeurs[i] || ""), { a: "middle", c: o.ligne.alerte === i ? EK_R : "#555", fw: o.ligne.alerte === i ? 800 : 600 });
   });
-  g += ekTx(L - 8, T + H + 34, "sur 1 an", { a: "end", c: "#555", fw: 700, fs: 11 });
+  g += ekTx(L - 8, T + H + 34, "variation", { a: "end", c: "#555", fw: 700, fs: 11 });
   if (o.ligne) g += ekTx(L - 8, T + H + 52, ekEsc(o.ligne.nom), { a: "end", c: "#555", fw: 700, fs: 11 });
   return ekBox(o, g + "</svg>");
 }
@@ -59,11 +59,11 @@ function ekPoints(o) {
   return ekBox(o, g);
 }
 
-// Partage d'un total en deux parts, avec la médiane des rivales en pointillé.
-// o = { titre, unite, part (0-100), partTexte, resteTexte, mediane (0-100), mediane_label, indice, source }
+// Partage : la part versée par l'entreprise, puis la même part chez la rivale du milieu, sur deux barres alignées.
+// o = { titre, unite, nom, part (0-100), partTexte, mediane (0-100 ou null), mediane_nom, mediane_texte, indice, source }
 function ekPartage(o) {
-  const dedans = o.part >= 30 && o.part <= 70; // les deux textes tiennent dans la barre ; sinon ils passent dessous
-  return ekBox(o, `<div class="ek-split"><span style="left:${Math.max(0, Math.min(100, o.mediane))}%"><em style="transform:translateX(${o.mediane > 80 ? -100 : o.mediane < 20 ? 0 : -50}%)">${ekEsc(o.mediane_label)}</em></span><div style="width:${o.part}%">${dedans ? ekEsc(o.partTexte) : ""}</div><div style="width:${100 - o.part}%">${dedans ? ekEsc(o.resteTexte) : ""}</div></div><div class="ek-splitl">${dedans ? "<span>0 %</span><span>100 %</span>" : `<span><i class="ek-sw g"></i>${ekEsc(o.partTexte)}</span><span><i class="ek-sw"></i>${ekEsc(o.resteTexte)}</span>`}</div>`);
+  const barre = (nom, p, txt, moi) => `<div class="ek-pt${moi ? " moi" : ""}"><span class="ek-ptn">${ekEsc(nom)}</span><span class="ek-ptb"><i style="width:${Math.max(0, Math.min(100, p))}%"></i></span><span class="ek-ptv">${ekEsc(txt)}</span></div>`;
+  return ekBox(o, `<div class="ek-pts">${barre(o.nom, o.part, o.partTexte, true)}${o.mediane != null ? barre(o.mediane_nom, o.mediane, o.mediane_texte) : ""}</div>`);
 }
 
 // « Ce qui l'explique » : des causes numérotées, chacune avec sa preuve, puis « À surveiller ».
