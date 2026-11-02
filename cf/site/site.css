@@ -3764,3 +3764,20 @@ html #app .f3 .f3-price b.p{display:block;font:800 40px/1 var(--serif)!important
 @media (max-width:760px){html #app .f3 .f3-price b.p{display:inline;font-size:32px!important}}
 html #app .f3-qs button{white-space:normal;text-align:left;max-width:100%;line-height:1.3}
 #f3-metw,#f3-actw{min-width:0;max-width:100%}#f3-metw .fm{max-width:100%;overflow-x:auto}#f3-metw .fbar{min-width:0}
+
+/* ================= Pays (Europe francophone, 2/11/2026) ================= */
+.pays-bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:14px 0 18px;padding:12px 14px;border:2px solid #111;border-radius:18px;background:#FFF6CC}
+.pays-bar>span{font:800 14px var(--sans);margin-right:4px}
+html #app .pays-bar button{display:inline-flex;align-items:center;gap:6px;border:2px solid #111!important;border-radius:999px!important;background:#fff;color:#111;font:700 14px var(--sans);padding:6px 14px;cursor:pointer}
+html #app .pays-bar button.on{background:#111;color:#fff}
+.pays-bar button i{font-style:normal}
+.pays-bar small{flex-basis:100%;font:600 12.5px var(--sans);color:#444}
+html[data-pays]:not([data-pays="fr"]) .fh-tags > span:first-of-type{display:none}
+.pays-info{margin:12px 0 18px;padding:14px 18px;border:2px solid #111;border-radius:18px;background:#E7ECFF;font:500 15px/1.5 var(--sans)}
+.pays-in{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.pays-in label{display:flex;flex-direction:column;gap:6px;font:700 13.5px var(--sans)}
+.pays-in input,.pays-in select{height:44px;padding:0 12px;font:600 15px var(--sans)}
+.pays-out{margin-top:20px;border-top:2px solid #111;padding-top:14px}
+.pays-tot{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}.pays-tot small{font:800 14px var(--sans)}.pays-tot b{font:800 38px var(--serif);letter-spacing:-.04em}
+.pays-l{display:flex;justify-content:space-between;gap:16px;padding:10px 0;border-top:1px solid #E6E3DA;font:700 15px var(--sans)}.pays-l small{display:block;font:500 12.5px var(--sans);color:#555}.pays-l b{white-space:nowrap}
+.pays-note,.pays-src,.pays-chg{font:500 13px/1.5 var(--sans);color:#444;margin-top:12px}
