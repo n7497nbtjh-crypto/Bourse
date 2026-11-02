@@ -359,7 +359,7 @@ function lineChart(el, { labels, series, fmt, area }) {
 
 /* ---------- Pièces communes ---------- */
 const app = $("#app");
-function setTitle(t) { document.title = t ? `${t} · ${SITE}` : `${SITE} · La Bourse, comptes à l'appui`; }
+function setTitle(t) { document.title = t ? `${t} · ${SITE}` : SITE; }
 function setNav(k) { $$("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === k)); $$("#nav .dd").forEach(d => { d.classList.remove("open"); d.classList.toggle("on", d.dataset.g === (NAVG[k] || "-")); }); }
 function agendaHTML(list, showCo = true) {
   if (!list.length) return `<div class="empty">Aucune date renseignée pour l'instant.</div>`;

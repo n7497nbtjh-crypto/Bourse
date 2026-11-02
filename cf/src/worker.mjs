@@ -30,7 +30,7 @@ export function meta(path, q = null) {
   const p = path.replace(/\/+$/, "") || "/";
   const base = p.replace(/^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)$/, "$1");
   let m;
-  if (p === "/" || p === "/aller") return { title: `${SITE} · La Bourse, comptes à l'appui`, desc: BASE_DESC };
+  if (p === "/" || p === "/aller") return { title: SITE, desc: BASE_DESC }; // 2/11 (Romain) : onglet « ENKLAIR » seul
   if ((m = base.match(/^\/entreprise\/([a-z0-9-]+)$/))) {
     const c = BY[m[1]];
     if (!c) return null;
