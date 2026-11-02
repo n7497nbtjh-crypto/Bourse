@@ -4035,8 +4035,8 @@ html body #app #f3-tousw details.acc>summary{padding:12px 16px!important;font:80
 html body #app #f3-tousw details.acc .accb{padding:0 16px 14px!important;border:0!important}
 html #app #f3-tousw .rf-th-in p.note{font:600 13px var(--sans);color:#555;margin:10px 0}
 html #app #f3-tousw .rf-th-in a.more{display:inline-block;border:2px solid #111;border-radius:999px;padding:8px 16px;font:800 14px var(--sans);color:#111;text-decoration:none;background:#fff;box-shadow:3px 3px 0 #111;margin-top:8px}
-@media (min-width:761px){html #app .f3-th{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"q q" "k k" "g l" "g c";gap:0 24px;align-items:start}html #app .f3-thq{grid-area:q}html #app .f3-kts{grid-area:k}
- html #app .f3-thg{display:contents}html #app .f3-th .f3-thc{grid-area:g}html #app .f3-th .f3-thl{grid-area:l;align-self:start}html #app .f3-th .f3-cq{grid-area:c;margin-top:4px;align-self:start}html #app .f3-th .f3-cq summary{display:none}html #app .f3-th .f3-cq p{margin:0;background:#F6F3EA;border-radius:12px;padding:10px 12px;font:500 13.5px/1.5 var(--sans)}html #app .f3-th .f3-cq p::before{content:"C'est quoi ? ";font-weight:800}}
+@media (min-width:761px){html #app .f3-th{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"q q" "k k" "g l";gap:0 24px;align-items:start}html #app .f3-thq{grid-area:q}html #app .f3-kts{grid-area:k}
+ html #app .f3-thg{display:contents}html #app .f3-th .f3-thc{grid-area:g}html #app .f3-th .f3-thl{grid-area:l;align-self:start}html #app .f3-th .f3-cq{margin-top:12px}html #app .f3-th .f3-cq summary{display:none}html #app .f3-th .f3-cq p{margin:0;background:#F6F3EA;border-radius:12px;padding:10px 12px;font:500 13.5px/1.5 var(--sans)}html #app .f3-th .f3-cq p::before{content:"C'est quoi ? ";font-weight:800}}
 @media (min-width:761px){html #app #f3-tousw .rf-th-in>.pb,html #app #f3-tousw .rf-th-in>.tiles,html #app #f3-tousw .rf-th-in>.perx,html #app #f3-tousw .rf-th-in>.src,html #app #f3-tousw .rf-th-in>.f3-per{margin-left:22px!important;margin-right:22px!important}}
 /* ---------- Comparer v3 (m/comparer3.js) ---------- */
 html #app .c3-host.panel{border:0!important;box-shadow:none!important;background:none!important;padding:0!important}
@@ -4048,3 +4048,43 @@ html body #app .c3-acts [data-cmpr-csv]{border:2px solid #111!important;border-r
 html #app .c3-acts .cmpr-csvp{margin:0}html #app .c3-acts .cmpr-csvp .light{display:none}
 html #app .cmpr-selp.panel{border:2px solid #111!important;border-radius:24px!important}
 html #app .cmpr-selp .cmpr-pick{border:2px solid #111!important;border-radius:18px!important}
+/* ---------- 2/11 (Romain) : fenêtres « i » et définitions au style v3 ---------- */
+html body .pop{border:3px solid #111!important;border-radius:22px!important;box-shadow:8px 8px 0 #111!important;padding:18px 20px 16px!important;font-family:var(--sans)!important;width:360px}
+html body .pop .x{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;width:32px;height:32px;font-weight:800;color:#111}
+html body .pop .prov-k,html body .pop .kick{display:inline-block;font:800 12px var(--serif)!important;background:var(--a4y);border:2px solid #111;border-radius:7px;padding:2px 9px;transform:rotate(-2deg);box-shadow:2px 2px 0 #111;color:#111!important;text-transform:none!important;letter-spacing:0!important;margin:0 0 10px}
+html body .pop h4{font:800 22px/1.05 var(--serif)!important;letter-spacing:-.04em;margin:0 0 10px;color:#111}
+html body .pop .prov-nat{background:#F6F3EA;border-radius:12px;padding:9px 12px;font:500 13.5px/1.45 var(--sans);margin:0 0 10px;border:0!important}
+html body .pop .prov-dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:5px 12px;margin:0;font:500 13px/1.4 var(--sans)}html body .pop .prov-dl dt{font-weight:800;color:#111}html body .pop .prov-dl dd{margin:0;color:#333}
+html body .pop a{color:#111;text-decoration:underline;text-decoration-color:var(--a4y);text-decoration-thickness:3px;text-underline-offset:3px;font-weight:700}
+html body .pop .prov-ft{margin:12px 0 0;padding-top:10px;border-top:2px solid #111;font:700 12.5px var(--sans)}
+html body .pop p{font:500 14px/1.5 var(--sans)}
+/* répartitions : plus de défilement latéral (la zone se déplaçait au pavé tactile) */
+#f3-metw .fm{overflow:visible!important}#f3-metw .f3-mixes,#f3-metw .f3-mix{min-width:0;max-width:100%}
+/* Cartes de comparaison v3 bis (2/11, Romain : « des lignes sur des courbes, pas clair ») : classement, barres depuis zéro, médiane en repère */
+html #app .f3-cr2{display:grid;gap:8px;margin-top:14px}
+html #app .f3-rw2{display:grid;grid-template-columns:22px minmax(0,1fr) auto;grid-template-areas:"r n v" "r b b";gap:2px 8px;align-items:center;font:700 13.5px var(--sans)}
+html #app .f3-rg{grid-area:r;width:22px;height:22px;border-radius:50%;border:2px solid #111;display:grid;place-items:center;font:800 11px var(--sans);background:#fff}
+html #app .f3-rw2.best .f3-rg{background:#00B37A;color:#fff}html #app .f3-rw2.worst .f3-rg{background:#FF6B4F;color:#fff}
+html #app .f3-rw2 a{grid-area:n;color:#111;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}html #app .f3-rw2.me a{font-weight:800}html #app .f3-rw2.me a::after{content:" ●"}
+html #app .f3-rw2 b{grid-area:v;font:800 13.5px var(--sans);white-space:nowrap}html #app .f3-rw2.best b{color:#00875A}html #app .f3-rw2.worst b{color:#C2260E}
+html #app .f3-tk2{grid-area:b;height:14px;border-radius:7px;background:#F2F0EA;overflow:hidden}html #app .f3-tk2 i{display:block;height:100%;border-radius:7px;background:#111}
+html #app .f3-rw2.best .f3-tk2 i{background:#00B37A}html #app .f3-rw2.worst .f3-tk2 i{background:#FF6B4F}html #app .f3-tk2 i.neg{background:repeating-linear-gradient(135deg,#FF6B4F 0 4px,#fff 4px 7px)}
+html #app .f3-rw2.na{color:#999}html #app .f3-rw2.na a,html #app .f3-rw2.na b{color:#999;font-weight:600}html #app .f3-rw2.na .f3-tk2{background:#F6F3EA}
+html #app .f3-md2{margin-top:10px;padding-top:10px;border-top:1px solid #E6E3DA;display:grid;grid-template-columns:22px minmax(0,1fr);grid-template-areas:". b" ". s";gap:4px 8px}html #app .f3-md2 .f3-tk2{grid-area:b;position:relative;overflow:visible}html #app .f3-md2 .f3-tk2 i{position:absolute;top:-4px;height:22px;width:5px;margin-left:-2px;background:#111;border-radius:3px}
+html #app .f3-md2 span{grid-area:s;font:600 12px var(--sans);color:#444}html #app .f3-md2 span b{color:#111}
+html #app .f3-cmp .f3-cr{display:none}html #app .f3-leg{font:600 12.5px var(--sans)}
+/* Son actualité : fil chronologique v3 */
+html #app .f3-tl{display:grid;gap:10px;margin:0 0 16px}
+html #app .f3-tlc{display:grid;grid-template-columns:78px minmax(0,1fr);gap:12px;align-items:start;border:2px solid #111;border-radius:18px;padding:12px 14px;background:#fff}
+html #app .f3-tlc.avenir{background:#F6F3EA;border-style:dashed}html #app .f3-tl .f3-avs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}@media (max-width:760px){html #app .f3-tl .f3-avs{grid-template-columns:1fr}}
+html #app .f3-dt{display:inline-grid;place-items:center;text-align:center;font:800 13px/1.1 var(--serif);border:2px solid #111;border-radius:10px;padding:8px 4px;background:#fff;min-height:44px}html #app .f3-dt.y{background:var(--a4y)}html #app .f3-dt.k{background:#111;color:#fff;border-color:#111}
+html #app .f3-tlb{display:flex;flex-direction:column;gap:4px;min-width:0}html #app .f3-tlb>b{font:800 16px/1.25 var(--sans)}html #app .f3-tlb>b a{color:#111;text-decoration:none}html #app .f3-tlb>b a:hover{text-decoration:underline;text-decoration-color:var(--a4y);text-decoration-thickness:3px}
+html #app .f3-tlb>small{font:600 12.5px var(--sans);color:#666}
+html #app .f3-tag{align-self:flex-start;font:800 11px var(--sans);padding:2px 8px;border-radius:6px;background:#DCE3FF;color:#111}html #app .f3-tag.p{background:#FFE0EC}html #app .f3-tag.k{background:#fff;border:1.5px solid #111}
+html #app .f3-tla{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;align-items:center}
+html body #app .f3-ia2{background:#3D5BFF!important;color:#fff!important;border:2px solid #111!important;border-radius:999px!important;font:800 13px var(--sans)!important;padding:7px 14px!important;box-shadow:3px 3px 0 #111!important}
+html #app .f3-tla .f3-pv{font:800 13px var(--sans);text-decoration:none;border:2px solid #111;border-radius:999px;padding:6px 12px;color:#111;background:#fff}
+html #app .f3-tla .iabox:empty{display:none}html #app .f3-tla .ax-cl,html #app .f3-tla .ax-why,html #app .f3-tla .mia-inv{flex-basis:100%;margin-top:8px;background:var(--a4y);border-radius:14px;padding:12px 14px}
+@media (max-width:760px){html #app .f3-tlc{grid-template-columns:64px minmax(0,1fr);gap:10px;padding:10px 12px}html #app .f3-dt{font-size:12px;min-height:40px}}
+/* 2/11 (Romain) : plus de bulle flottante « Une question » sur l'accueil et la fiche (elles ont déjà leur entrée vers l'IA) */
+html:has(#app>.a4) #orciab,html:has(#app .f3) #orciab{display:none!important}

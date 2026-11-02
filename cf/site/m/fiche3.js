@@ -118,15 +118,15 @@ function f3SeuleHTML(s, c) {
   const na = Math.max(...[ca, net, nd].filter(Boolean).map(x => x.length)), mots = ["", "", "deux", "trois"];
   return `<section class="f3-sec"><span class="a4-stk a4-ye">1 · Elle seule</span><h2>${na} ans de comptes en ${mots[out.length] || out.length} image${out.length > 1 ? "s" : ""}.</h2><div class="f3-tri">${out.join("")}</div></section>`;
 }
-function f3CritCards(crit, L, s, lien = true) { // une carte par critère : barres horizontales, la mieux placée en vert, la moins bien en rouge, médiane du secteur en pointillé
+function f3CritCards(crit, L, s, lien = true) { // une carte par critère : classement de la mieux placée à la moins bien, barres depuis zéro, médiane du secteur en repère sous l'axe
   return crit.map(([t, f, fmt, mf, sens, ex, pli, plil]) => {
     const rows = L.map(c => ({ c, v: f(c) })), ok = rows.filter(r => r.v != null && isFinite(r.v)); if (ok.length < 2) return "";
-    const med = mf ? mf(s) : null, vs = [...ok.map(r => r.v), med != null ? med : 0, 0], lo = Math.min(...vs), hi = Math.max(...vs), pos = v => (v - lo) / ((hi - lo) || 1) * 100, z = pos(0);
-    const best = sens === "hi" ? Math.max(...ok.map(r => r.v)) : Math.min(...ok.map(r => r.v)), worst = sens === "hi" ? Math.min(...ok.map(r => r.v)) : Math.max(...ok.map(r => r.v));
+    const med = mf ? mf(s) : null, vs = [...ok.map(r => Math.abs(r.v)), med != null ? Math.abs(med) : 0], max = Math.max(...vs) || 1, wid = v => Math.max(3, Math.abs(v) / max * 100);
+    const tri = [...ok].sort((a, b) => sens === "hi" ? b.v - a.v : a.v - b.v), na = rows.filter(r => !(r.v != null && isFinite(r.v)));
     return `<div class="f3-ch f3-cc"><h3>${esc(t)}</h3><details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex)}${lien && pli ? ` <a href="#${pli}" data-f3go="${pli}">Tout le détail dans « ${esc(plil)} » ↓</a>` : ""}</p></details>
-      <div class="f3-cr">${rows.map(({ c, v }) => v == null || !isFinite(v) ? `<div class="f3-rw na"><a href="/entreprise/${c.id}">${esc(c.name)}</a><span></span><b>non calculable</b></div>`
-        : `<div class="f3-rw${c === s ? " me" : ""}${v === best ? " best" : v === worst ? " worst" : ""}"><a href="/entreprise/${c.id}">${esc(c.name)}</a><div class="f3-tk">${lo < 0 ? `<em style="left:${z}%"></em>` : ""}<i style="left:${Math.min(pos(v), z).toFixed(1)}%;width:${Math.max(Math.abs(pos(v) - z), 1.5).toFixed(1)}%"></i></div><b>${fmt(v)}</b></div>`).join("")}
-      ${med != null ? `<div class="f3-md" style="--f:${(pos(med) / 100).toFixed(4)}"><span>médiane ${fmt(med)}</span></div>` : ""}</div></div>`; }).filter(Boolean);
+      <div class="f3-cr2">${tri.map(({ c, v }, i) => `<div class="f3-rw2${c === s ? " me" : ""}${i === 0 ? " best" : i === tri.length - 1 ? " worst" : ""}"><span class="f3-rg">${i + 1}</span><a href="/entreprise/${c.id}">${esc(c.name)}</a><b>${fmt(v)}</b><div class="f3-tk2"><i class="${v < 0 ? "neg" : ""}" style="width:${wid(v).toFixed(1)}%"></i></div></div>`).join("")}
+      ${na.map(({ c }) => `<div class="f3-rw2 na"><span class="f3-rg">–</span><a href="/entreprise/${c.id}">${esc(c.name)}</a><b>non calculable</b><div class="f3-tk2"></div></div>`).join("")}
+      ${med != null ? `<div class="f3-md2"><div class="f3-tk2"><i style="left:${wid(med).toFixed(1)}%"></i></div><span>médiane du secteur : <b>${fmt(med)}</b> (repère noir)</span></div>` : ""}</div></div>`; }).filter(Boolean);
 }
 function f3AutresHTML(s) {
   const pr = peersOf(s, 4).list.filter(c => !c.missing).slice(0, 4); if (pr.length < 2) return "";
@@ -176,7 +176,7 @@ function f3Recomposer(s, c) {
   f3Repartitions(mw);
   if (!mw.children.length && mt) { const p1 = mt.querySelector(".f1p"); if (p1) mw.appendChild(p1); }
   if (!mw.children.length) $("#f3-metier", wrap).remove();
-  const aw = $("#f3-actw", wrap); if (change) { const pb = change.querySelector(".ph"); if (pb) pb.remove(); while (change.firstChild) aw.appendChild(change.firstChild); } else $("#f3-actu", wrap).remove();
+  const aw = $("#f3-actw", wrap); if (change) { const pb = change.querySelector(".ph"); if (pb) pb.remove(); while (change.firstChild) aw.appendChild(change.firstChild); } else $("#f3-actu", wrap).remove(); try { f3Actu(aw); } catch (e) { console.error("f3 actu", e); }
   const tw = $("#f3-tousw", wrap); const head = tous.querySelector(".rf-l2h"); if (head) head.remove();
   if (tvch) { const d = document.createElement("details"); d.className = "rf-pl rf-pl2"; d.id = "rf-cours"; d.innerHTML = `<summary><span class="rf-plt"><b>Le cours de l'action</b><span>Graphique sur un an, cours différé</span></span><span class="rf-plo" aria-hidden="true"><i>Ouvrir</i><i>Fermer</i></span></summary><div class="rf-plb"></div>`; d.querySelector(".rf-plb").appendChild(tvch); tous.insertBefore(d, tous.firstChild); }
   if (metier) { try { f3Identite(mw, metier, s); } catch (e) { console.error("f3 identité", e); } metier.remove(); } // 2/11 : plus de pli « Activités, pays, dirigeants » (doublon) : ce qui manquait rejoint « Son métier »
@@ -265,12 +265,11 @@ function f3Themes(tw, s, c) {
       return `<div class="f3-kt" role="button" tabindex="0" data-f3k="${r.k}"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}${tblxProv(r.k, s)}</small><b>${esc(r.full(r.last))}</b>${chg ? `<span class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)}</span>` : `<span class="n">–</span>`}${r.med != null ? `<em>médiane du secteur ${esc(r.full(r.med))}</em>` : "<em></em>"}</div>`; }; // div et non button : la tuile contient le bouton « i »
     const w = document.createElement("div"); w.className = "f3-th"; w.dataset.th = sec.id;
     w.innerHTML = `${q ? `<p class="f3-thq">${esc(q.textContent)}</p>` : ""}<div class="f3-kts">${rows.map(tile).join("")}</div>
-      <div class="f3-thg"><div class="f3-thc"></div><div class="f3-thl"></div></div>
-      ${ex ? `<details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex.textContent)}</p></details>` : ""}`;
+      <div class="f3-thg"><div class="f3-thc"></div><div class="f3-thl"><div class="f3-thl2"></div>${ex ? `<details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex.textContent)}</p></details>` : ""}</div></div>`;
     const show = k => { const r = rows.find(x => x.k === k); if (!r) return; $$(".f3-kt", w).forEach(b => b.classList.toggle("on", b.dataset.f3k === k));
       const inv = !!F3_INV[r.k] || (r.sens < 0), vals = r.vals.map(v => v == null || !isFinite(v) ? null : v);
       $(".f3-thc", w).innerHTML = `<p class="f3-thn"><b>${esc(r.label)}</b>${r.unit && r.kind === "money" ? ` <span>en ${esc(r.ulong || r.unit)}</span>` : ""}</p>` + f3Cols(vals, Y, v => r.full(v), r.med, inv, r.kind);
-      $(".f3-thl", w).innerHTML = (r.phrase ? `<p class="f3-lec">${esc(r.phrase)}</p>` : "") + (typeof ALL !== "undefined" && ALL[r.term] && typeof def === "function" ? `<p class="f3-def">${def(r.term, "Définition de « " + (r.short || r.label) + " »")}</p>` : "") + `<p class="f3-anc"><a data-f3anc="${esc(r.k)}" data-an="${Y[r.li]}" hidden></a></p>`;
+      $(".f3-thl2", w).innerHTML = (r.phrase ? `<p class="f3-lec">${esc(r.phrase)}</p>` : "") + (typeof ALL !== "undefined" && ALL[r.term] && typeof def === "function" ? `<p class="f3-def">${def(r.term, "Définition de « " + (r.short || r.label) + " »")}</p>` : "") + `<p class="f3-anc"><a data-f3anc="${esc(r.k)}" data-an="${Y[r.li]}" hidden></a></p>`;
       if (typeof ancreLiens === "function") { const a = $(".f3-anc a", w); ancreLiens(s.id, [r.k === "marge" ? "ebit" : r.k === "nm" ? "net" : r.k], Y[r.li]).then(l => { if (l && l[0]) { a.href = l[0].url; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = `${l[0].lbl} ${l[0].an} dans le rapport officiel ↗`; a.hidden = false; } }).catch(() => { }); } };
     w.addEventListener("click", e => { const b = e.target.closest(".f3-kt"); if (b && !e.target.closest(".prov-i")) show(b.dataset.f3k); });
     w.addEventListener("keydown", e => { const b = e.target.closest(".f3-kt"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); show(b.dataset.f3k); } });
@@ -316,3 +315,29 @@ function f3Identite(mw, metier, s) { // ce qui restait dans le pli « Activités
    correspondante de la fiche (comme le serveur le fait déjà pour un lien direct). */
 const F3_CT = { argent: "f3-metier", varier: "f3-metier", croissance: "rf-resultats", marge: "rf-rentab", net: "rf-rentab", roe: "rf-rentab", dette: "rf-dette", fcf: "rf-dette", dividende: "rf-div", prix: "rf-valo" };
 window.pageComprendre = function (id, k) { goR(`/entreprise/${id}#${F3_CT[k] || "tous-les-chiffres"}`); setTimeout(() => { const t = document.getElementById(F3_CT[k] || "tous-les-chiffres"); if (t) { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ block: "start" }); } }, 600); };
+
+/* ---------- 2/11 (Romain) : « Son actualité » en fil chronologique v3 ----------
+   Une seule liste : dernières annonces officielles (avec « Expliquer en clair »), presse récente, dates à venir. Le pli
+   « Toutes ses annonces et ses dates » garde tout (filtres, agenda complet). */
+function f3Actu(aw) {
+  if (!aw) return;
+  if (!aw.dataset.f3obs) { aw.dataset.f3obs = "1"; const fa = $("#factu", aw); if (fa) { let t = 0; new MutationObserver(() => { if (t) return; t = setTimeout(() => { t = 0; const old = $(".f3-tl", aw); if (old) old.remove(); try { f3Actu(aw); } catch (e) { } }, 300); }).observe(fa, { childList: true, subtree: true }); } } // les annonces arrivent après (fetch)
+  if ($(".f3-tl", aw)) return;
+  const trim = $("#rf-trim", aw), ev = $$(".rf-ev li", aw), ann = $$("#ax-o .ax-it", aw).slice(0, 3), pr = $$("#ax-p .ax-pr", aw).slice(0, 2);
+  const mois = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+  const items = [];
+  let jour = ""; $$("#ax-o .ax-list > *", aw).forEach(n => { if (n.classList.contains("ax-day")) jour = n.textContent.trim(); else if (n.classList.contains("ax-it") && ann.includes(n)) { const m = jour.match(/(\d+)\s+([a-zéû]+)/i), d = m ? `${m[1]} ${(mois.find(x => x.startsWith(m[2].slice(0, 3).toLowerCase())) || m[2])}` : jour;
+    const chip = n.querySelector(".ax-chip"), tf = n.querySelector(".ax-tf"), t = n.querySelector(".ax-t"), btn = n.querySelector(".iabtn"), box = n.querySelector(".iabox"), src = n.querySelector(".ax-src");
+    const card = document.createElement("div"); card.className = "f3-tlc";
+    card.innerHTML = `<span class="f3-dt y">${esc(d)}</span><div class="f3-tlb">${chip ? `<span class="f3-tag">${esc(chip.textContent)}</span>` : ""}<b>${esc((tf || t || {}).textContent || "")}</b>${tf && t && t.textContent.trim() !== tf.textContent.trim() ? `<small>${esc(t.textContent)}</small>` : ""}<div class="f3-tla"></div></div>`;
+    const a = card.querySelector(".f3-tla"); if (btn) { const b2 = btn.cloneNode(true); b2.classList.add("f3-ia2"); a.appendChild(b2); a.insertAdjacentHTML("beforeend", `<div class="iabox"></div>`); } if (src) { const s2 = src.cloneNode(true); s2.className = "f3-pv"; s2.textContent = "Lire l'annonce ↗"; a.appendChild(s2); }
+    items.push(card); } });
+  pr.forEach(a => { const pm = (a.querySelector(".pm") || {}).textContent || "", dm = pm.match(/(\d\d)\/(\d\d)\/(\d\d)/), d = dm ? `${+dm[1]} ${mois[+dm[2] - 1]}` : "";
+    const card = document.createElement("div"); card.className = "f3-tlc";
+    card.innerHTML = `<span class="f3-dt">${esc(d)}</span><div class="f3-tlb"><span class="f3-tag p">Presse</span><b><a href="${a.getAttribute("href")}" target="_blank" rel="noopener nofollow">${esc((a.querySelector(".pt") || a).textContent)} ↗</a></b><small>${esc(pm.split("·")[0].trim())}</small></div>`; items.push(card); });
+  const avenir = ev.map(li => `<div class="f3-tlc avenir"><span class="f3-dt k">${esc((li.querySelector("b") || {}).textContent || "")}</span><div class="f3-tlb"><span class="f3-tag k">À venir</span><b>${esc((li.querySelector("span") || {}).textContent || "")}</b></div></div>`).join("");
+  if (!items.length && !avenir) return;
+  const w = document.createElement("div"); w.className = "f3-tl"; items.forEach(c => w.appendChild(c)); if (avenir) w.insertAdjacentHTML("beforeend", `<div class="f3-avs">${avenir}</div>`);
+  if (trim) trim.remove(); const ev0 = $(".rf6-ev", aw); if (ev0) ev0.remove();
+  aw.insertBefore(w, aw.firstChild);
+}
