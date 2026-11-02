@@ -126,17 +126,17 @@ function f4Verdict(x) {
 function f4Chaine(x) {
   const { M, MED, s, sym } = x, bank = isBank(s), k2 = bank ? "nm" : "m";
   const R5 = x.bk ? [
-    ["Ce qu'elle gagne", f4Pc(M.ng, 1, true), f4Ton(M.ng, MED.ng, false, 0.02), `de bénéfice en ${s.year} : ${f4Md(s.net, s.currency)}`, f4Jauge(M.ng, MED.ng, false, 0.3), MED.ng != null ? `rivales : ${f4Pc(MED.ng, 1, true)}` : ""],
-    ["Ce que rapporte son capital", M.roe != null ? ekFr(M.roe * 100, 1) + " %" : "–", f4Ton(M.roe, MED.roe), `gagnés sur 100 ${sym} de fonds propres`, f4Jauge(M.roe, MED.roe), MED.roe != null ? `rivales : ${ekFr(MED.roe * 100, 1)} %` : ""],
+    ["Son bénéfice", f4Pc(M.ng, 1, true), f4Ton(M.ng, MED.ng, false, 0.02), `sur un an : ${f4Md(s.net, s.currency)} en ${s.year}`, f4Jauge(M.ng, MED.ng, false, 0.3), MED.ng != null ? `rivales : ${f4Pc(MED.ng, 1, true)}` : ""],
+    ["Sa rentabilité", M.roe != null ? ekFr(M.roe * 100, 1) + " %" : "–", f4Ton(M.roe, MED.roe), `gagnés sur 100 ${sym} de fonds propres`, f4Jauge(M.roe, MED.roe), MED.roe != null ? `rivales : ${ekFr(MED.roe * 100, 1)} %` : ""],
   ] : [
-    ["Ce qu'elle vend", f4Pc(M.g, 1, true), f4Ton(M.g, MED.g, false, 0.02), `de ventes en ${s.year} : ${f4Md(s.ca, s.currency)}`, f4Jauge(M.g, MED.g, false, 0.2), MED.g != null ? `rivales : ${f4Pc(MED.g, 1, true)}` : ""],
-    ["Ce qu'elle en garde", M[k2] != null ? ekFr(M[k2] * 100, 0) + " " + sym : "–", f4Ton(M[k2], MED[k2]), `gardés sur 100 ${sym} de ventes`, f4Jauge(M[k2], MED[k2]), MED[k2] != null ? `rivales : ${ekFr(MED[k2] * 100, 0)} ${sym}` : ""],
+    ["Ses ventes", f4Pc(M.g, 1, true), f4Ton(M.g, MED.g, false, 0.02), `sur un an : ${f4Md(s.ca, s.currency)} de ventes en ${s.year}`, f4Jauge(M.g, MED.g, false, 0.2), MED.g != null ? `rivales : ${f4Pc(MED.g, 1, true)}` : ""],
+    ["Sa marge", M[k2] != null ? ekFr(M[k2] * 100, 0) + " " + sym : "–", f4Ton(M[k2], MED[k2]), `gardés sur 100 ${sym} de ventes`, f4Jauge(M[k2], MED[k2]), MED[k2] != null ? `rivales : ${ekFr(MED[k2] * 100, 0)} ${sym}` : ""],
   ];
   if (!x.bk) R5.push(
-    ["Ce qu'il lui reste", M.nm != null ? ekFr(M.nm * 100, 0) + " " + sym : "–", f4Ton(M.nm, MED.nm), `de bénéfice sur 100 ${sym}${s.netDebt != null && s.netDebt <= 0 && !bank ? ", et aucune dette" : ""}`, f4Jauge(M.nm, MED.nm), MED.nm != null ? `rivales : ${ekFr(MED.nm * 100, 1)} ${sym}` : ""]);
+    ["Son bénéfice", M.nm != null ? ekFr(M.nm * 100, 0) + " " + sym : "–", f4Ton(M.nm, MED.nm), `de bénéfice sur 100 ${sym}${s.netDebt != null && s.netDebt <= 0 && !bank ? ", et aucune dette" : ""}`, f4Jauge(M.nm, MED.nm), MED.nm != null ? `rivales : ${ekFr(MED.nm * 100, 1)} ${sym}` : ""]);
   R5.push(
-    ["Ce qu'elle reverse", M.pay != null ? (M.pay > 1.5 ? "> 100 %" : f4Pc(M.pay, 0)) : s.divPaid || s.dps ? "–" : "0 %", "", M.pay > 1.5 ? "le dividende dépasse le bénéfice de l'année" : s.dps ? `du bénéfice versé : ${ekFr(s.dps, s.dps >= 10 ? 0 : 2)} ${sym} par action` : "du bénéfice versé", f4Jauge(M.pay, MED.pay), MED.pay != null ? `rivales : ${f4Pc(MED.pay, 0)}` : ""],
-    ["Ce que ça coûte", M.pe != null ? ekFr(M.pe, 0) + " fois" : "–", M.pe != null ? f4Ton(M.pe, MED.pe, true) : "", M.pe != null ? "son bénéfice annuel (PER)" : "PER non significatif", f4Jauge(M.pe, MED.pe, true), MED.pe != null ? `rivales : ${ekFr(MED.pe, 0)} fois` : ""]);
+    ["Son dividende", M.pay != null ? (M.pay > 1.5 ? "> 100 %" : f4Pc(M.pay, 0)) : s.divPaid || s.dps ? "–" : "0 %", "", M.pay > 1.5 ? "le dividende dépasse le bénéfice de l'année" : s.dps ? `du bénéfice versé : ${ekFr(s.dps, s.dps >= 10 ? 0 : 2)} ${sym} par action` : "du bénéfice versé", f4Jauge(M.pay, MED.pay), MED.pay != null ? `rivales : ${f4Pc(MED.pay, 0)}` : ""],
+    ["Son prix en Bourse", M.pe != null ? ekFr(M.pe, 0) + " fois" : "–", M.pe != null ? f4Ton(M.pe, MED.pe, true) : "", M.pe != null ? "son bénéfice annuel (PER)" : "PER non significatif", f4Jauge(M.pe, MED.pe, true), MED.pe != null ? `rivales : ${ekFr(MED.pe, 0)} fois` : ""]);
   return `<div class="ek-chain" style="--n:${R5.length}">${R5.map((r, i) => `<a class="ek-rp" href="#e${i + 1}"><span class="ek-st"><i>${i + 1}</i>${esc(r[0])}</span><span class="ek-v ${r[2]}">${esc(r[1])}</span><span class="ek-s">${esc(r[3])}</span>${r[4]}<span class="ek-ml">${esc(r[5])}</span><span class="ek-go">Comprendre <span>↓</span></span></a>`).join("")}</div>`;
 }
 
@@ -151,13 +151,12 @@ const f4Prochain = id => { const e = typeof eventsOf === "function" ? eventsOf(i
 function f4E1(x) {
   const { s, c, M, MED, P } = x, se = f4Serie(c, "ca"), cur = s.currency;
   const gs = []; if (se) for (let i = 1; i < se.v.length; i++) if (se.v[i] != null && se.v[i - 1] > 0) gs.push([se.y[i], se.v[i] / se.v[i - 1] - 1]);
-  const qui = P.mode === "rivales" ? "ses rivales" : "son secteur", cmp = MED.g == null || M.g == null ? "" : M.g > MED.g + 0.02 ? ` Mieux que ${qui}.` : M.g < MED.g - 0.02 ? ` Moins bien que ${qui}.` : ` Comme ${qui}.`;
   const causes = [];
   const rep = typeof REP !== "undefined" && REP[s.id];
   if (rep && rep.activites && rep.activites.length) { const a = rep.activites[0], z = rep.zones && rep.zones[0];
     causes.push({ titre: `${a[0]} : ${ekFr(a[1], 0)} % des ventes`, texte: `Son premier métier${z ? `. Premier marché : ${z[0]} (${ekFr(z[1], 0)} %)` : ""}. Répartition ${rep.annee || ""}.`, lien: { href: "#m1", label: "son métier ↓" } }); }
   const last = gs.length ? gs[gs.length - 1] : null, prev = gs.length > 1 ? gs[gs.length - 2] : null;
-  return { id: "e1", n: 1, sur: "Ce qu'elle vend", titre: `${f4Md(s.ca, cur)} de ventes en ${s.year}, ${f4Pc(M.g, 1, true)} sur un an.${cmp}`,
+  return { id: "e1", n: 1, sur: "Ses ventes", titre: `${f4Md(s.ca, cur)} de ventes en ${s.year}, ${f4Pc(M.g, 1, true)} sur un an.`,
     mots: [{ cle: "ventes", ex: f4Md(s.ca, cur), calc: `ventes ${s.year}`, nom: s.name }, { cle: "croissance", ex: f4Pc(M.g, 1, true), calc: `${ekFr(s.ca, 0)} ÷ ${ekFr(s.caPrev, 0)} − 1`, nom: s.name }],
     visuel: se ? f4Cols(x, se, "Ses ventes", null, `Chaque barre donne les ventes d'un exercice ; sous l'année, la variation par rapport à l'année d'avant.${gs.length >= 2 ? ` Depuis ${se.y[0]} : ${f4Pc(se.v[se.v.length - 1] / se.v.find(v => v > 0) - 1, 0, true)}.` : ""}`) : "",
     explique: causes.length ? ekExplique({ causes, surveiller: f4Prochain(s.id) }) : "",
@@ -215,7 +214,7 @@ function f4E2(x) {
     causes.push({ titre: `La moins rentable : ${pire.nom}`, texte: `${ekFr(pire.v, 0)} ${sym} gardés sur 100 ${sym}${g != null ? `, avec des ventes ${f4Pc(g, 1, true)} sur un an` : ""}. Quand les ventes baissent, les coûts fixes (boutiques, salaires) pèsent plus.` }); }
   const gs = f4Serie(c, "ca"); let ralentit = false; if (gs && gs.v.length >= 3) { const n = gs.v.length, a = gs.v[n - 1] / gs.v[n - 2] - 1, b = gs.v[n - 2] / gs.v[n - 3] - 1; ralentit = a < b - 0.01; }
   const mt = ca && eb ? ekTableau(ca.y, [[bank ? `Bénéfice sur 100 ${sym} de revenus` : `Gardés sur 100 ${sym} vendus`, ca.v.map((z, i) => z > 0 && eb.v[i] != null ? ekFr(eb.v[i] / z * 100, 1) + " " + sym : "–")], [bank ? "Bénéfice" : "Résultat d'exploitation", eb.v.map(z => f4Md(z, s.currency))]]) : "";
-  return { id: "e2", n: 2, sur: "Ce qu'elle en garde", titre,
+  return { id: "e2", n: 2, sur: "Sa marge", titre,
     mots: [{ cle: bank ? "benefice" : "marge", ex: v != null ? f4Pc(v, 1) : "", calc: !bank && s.ebit != null ? `${ekFr(s.ebit, 0)} ÷ ${ekFr(s.ca, 0)}` : "", nom: s.name }, { cle: "mediane", ex: med != null ? ekFr(med * 100, 0) + " " + sym : "", calc: `${lib} médiane de ${P.lib}`, nom: s.name }],
     visuel: v != null && pl.length ? ekPoints({ titre: `Gardés sur 100 ${sym} de ventes`, unite: `${lib} ${s.year}`, lignes: pts, mediane: med != null ? med * 100 : 0, mediane_label: med != null ? `médiane ${ekFr(med * 100, 0)} ${sym}` : "", max: nn.max, graduations: nn.ticks, fmtAxe: t => ekFr(t, 0) + " " + sym,
       indice: `Chaque point place une entreprise sur l'échelle. À droite du pointillé (zone verte), elle garde plus que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; à gauche (zone rouge), moins.${mn < 0 ? " Une marge négative est placée sur zéro." : ""}`, source: f4Src(x, `Comptes ${s.year}`) }) : "",
@@ -247,7 +246,7 @@ function f4E3(x) {
     : { titre: `Une dette de ${f4Md(s.netDebt, cur)}`, texte: s.ebit > 0 ? `Soit ${ekFr(s.netDebt / s.ebit, 1)} années de résultat d'exploitation.` : "Son résultat d'exploitation ne la couvre pas cette année.", lien: { href: "#m3", label: "année par année ↓" } });
   const cash = f4Serie(c, "netDebt");
   const tb = ns ? ekTableau(ns.y, [["Bénéfice net", ns.v.map(z => f4Md(z, cur))], ...(cash ? [[cash.v.some(z => z != null && z > 0) ? "Dette nette (négatif : trésorerie)" : "Trésorerie nette", cash.v.map(z => z == null ? "–" : cash.v.some(q => q != null && q > 0) ? f4Md(z, cur) : f4Md(-z, cur))]] : []), ["Bénéfice sur 100 " + sym + " vendus", ns.v.map((z, i) => { const ca = f4Serie(c, "ca"); return ca && ca.v[i] > 0 && z != null ? ekFr(z / ca.v[i] * 100, 1) + " " + sym : "–"; })]]) : "";
-  return { id: "e3", n: 3, sur: "Ce qu'il lui reste", titre,
+  return { id: "e3", n: 3, sur: "Son bénéfice", titre,
     mots: [{ cle: "benefice", ex: f4Md(s.net, cur), calc: `exercice ${s.year}`, nom: s.name }, ...(t1 != null ? [{ cle: "impot", ex: f4Pc(t1, 1), calc: `${ekFr(v("tax", n), 0)} ÷ ${ekFr(v("pretax", n), 0)}`, nom: s.name }] : []), ...(!bank && s.netDebt != null ? [{ cle: s.netDebt <= 0 ? "treso" : "dette", ex: f4Md(Math.abs(s.netDebt), cur), calc: `fin ${s.year}`, nom: s.name }] : [])],
     visuel: ns ? f4Cols(x, ns, "Son bénéfice net", ligne, ligne ? `La ligne « impôt » donne la part du résultat payée en impôt chaque année.${alerte ? ` Elle monte en ${c.years[n]} (${ekFr(t1 * 100, 0)} %, contre ${ekFr(t0 * 100, 0)} %) : à elle seule, elle retire une partie du bénéfice.` : ""}` : "Chaque barre donne le bénéfice net d'un exercice.") : "",
     explique: causes.length ? ekExplique({ causes, surveiller: alerte ? "Le taux d'impôt du prochain exercice." : !bank && s.netDebt > 0 && s.ebit > 0 && s.netDebt / s.ebit > 3 ? "Le poids de la dette, au-delà de 3 années de résultat." : f4Prochain(s.id) || "Le bénéfice du prochain exercice." }) : "",
@@ -263,7 +262,7 @@ function f4E4(x) {
   if (s.fcf != null && s.divPaid) causes.push(s.fcf >= s.divPaid ? { titre: "Ses liquidités couvrent le dividende", texte: `Investissements payés, son activité lui laisse ${f4Md(s.fcf, cur)} ; le dividende en prend ${f4Md(s.divPaid, cur)}.` } : { titre: "Le dividende dépasse ce que l'activité laisse", texte: `Investissements payés, il reste ${f4Md(s.fcf, cur)} ; le dividende en prend ${f4Md(s.divPaid, cur)}. La différence vient de sa trésorerie ou de nouveaux emprunts.` });
   const cash = f4Serie(c, "netDebt"); if (!isBank(s) && cash) { const L = cash.v.map((z, i) => [cash.y[i], z]).filter(z => z[1] != null); if (L.length >= 2 && L.every(z => z[1] <= 0)) causes.push({ titre: L[L.length - 1][1] < L[0][1] ? "Ce qu'elle garde s'accumule" : "Sa trésorerie diminue", texte: `Trésorerie nette : ${f4Md(-L[0][1], cur)} fin ${L[0][0]}, ${f4Md(-L[L.length - 1][1], cur)} fin ${L[L.length - 1][0]}.` }); }
   const part = rien ? 0 : Math.max(0, Math.min(100, (pay != null ? pay : 1) * 100));
-  return { id: "e4", n: 4, sur: "Ce qu'elle reverse", titre, haut: true,
+  return { id: "e4", n: 4, sur: "Son dividende", titre, haut: true,
     mots: [{ cle: "distrib", ex: pay != null && pay <= 1.5 ? f4Pc(pay, 0) : "", calc: s.divPaid && s.net ? `${ekFr(s.divPaid, 0)} ÷ ${ekFr(s.net, 0)}` : parAction && s.eps ? `${ekFr(s.dps, 2)} ÷ ${ekFr(s.eps, 2)} par action` : "", nom: s.name }, ...(s.dps ? [{ cle: "dpa", ex: `${ekFr(s.dps, 2)} ${sym}`, calc: `exercice ${s.year}`, nom: s.name }] : []), ...(M.yld != null ? [{ cle: "rendement", ex: f4Pc(M.yld, 1), calc: "au cours actuel", nom: s.name }] : [])],
     visuel: ekPartage({ titre: `Partage du bénéfice ${s.year}`, unite: f4Md(s.net, cur), part, partTexte: rien ? "" : parAction ? `Versé : ${f4Pc(pay, 0)}` : `Versé : ${f4Md(s.divPaid, cur)}`, resteTexte: part >= 100 ? "" : parAction ? `Gardé : ${f4Pc(1 - pay, 0)}` : `Gardé : ${f4Md(Math.max(0, s.net - (s.divPaid || 0)), cur)}`, mediane: MED.pay != null ? Math.min(100, MED.pay * 100) : 50, mediane_label: MED.pay != null ? `médiane ${f4Pc(MED.pay, 0)}` : "",
       indice: `La barre représente tout le bénéfice ${s.year}. En vert, la part versée aux actionnaires ; en blanc, ce qui reste dans l'entreprise.${MED.pay != null ? ` Les rivales versent ${f4Pc(MED.pay, 0)} (médiane).` : ""}${pay > 1 ? " Le dividende dépasse le bénéfice : la barre est pleine." : ""}`, source: f4Src(x, `Versements de ${s.year}`) }),
@@ -291,7 +290,7 @@ function f4E5(x) {
     const mr = f4Med(rv.map(z => z[1]));
     if (dd < -0.1 && rv.length && mr != null) causes.push(mr < -0.1 ? { titre: "Tout le secteur a reculé, pas seulement elle", texte: `Depuis leur plus haut de l'année : ${rv.slice(0, 3).map(z => `${z[0]} ${f4Pc(z[1], 0, true)}`).join(", ")}.` } : { titre: "Une baisse qui lui est propre", texte: `Ses rivales sont restées près de leur plus haut : ${rv.slice(0, 3).map(z => `${z[0]} ${f4Pc(z[1], 0, true)}`).join(", ")}.` });
   }
-  return { id: "e5", n: 5, sur: "Ce que ça coûte en Bourse", titre,
+  return { id: "e5", n: 5, sur: "Son prix en Bourse", titre,
     mots: [{ cle: "per", ex: pe != null ? ekFr(pe, 0) + " fois" : "", calc: v && v.capE && s.net ? `${f4Md(v.capE / 1e6, "EUR")} ÷ ${f4Md(s.net, s.currency)}` : "", nom: s.name }, ...(v && v.capE ? [{ cle: "capi", ex: f4Md(v.capE / 1e6, "EUR"), calc: "au cours actuel", nom: s.name }] : [])],
     visuel: pe == null ? "" : ekPoints({ titre: "Années de bénéfice pour payer l'action", unite: `PER, cours du ${typeof PXUP === "string" && PXUP !== "none" ? new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" }) : "jour"}`, basEstMieux: true, motBas: "moins chère", motHaut: "plus chère", lignes: [...pl, ...P.out.map(o => ({ nom: o.nom, v: null, texte: o.raison }))], mediane: med != null ? med : 0, mediane_label: med != null ? `médiane ${ekFr(med, 0)} fois` : "", max: mx.max, graduations: mx.ticks, fmtAxe: t => ekFr(t, 0),
       indice: `Chaque point place une entreprise sur l'échelle du PER. À gauche du pointillé (zone verte), moins chère que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; à droite (zone rouge), plus chère. Ici, plus le point est à droite, plus l'action est chère.`, source: { texte: `Cours du jour, comptes ${s.year}` } }),
@@ -303,9 +302,8 @@ function f4E5(x) {
 function f4B1(x) {
   const { s, c, M, MED, P } = x, cur = s.currency, se = f4Serie(c, "net"), qui = P.mode === "rivales" ? "ses rivales" : "son secteur";
   const gs = []; if (se) for (let i = 1; i < se.v.length; i++) if (se.v[i] != null && se.v[i - 1] > 0) gs.push([se.y[i], se.v[i] / se.v[i - 1] - 1]);
-  const cmp = MED.ng == null || M.ng == null ? "" : M.ng > MED.ng + 0.02 ? ` Mieux que ${qui}.` : M.ng < MED.ng - 0.02 ? ` Moins bien que ${qui}.` : ` Comme ${qui}.`;
   const causes = [];
-  return { sur: "Ce qu'elle gagne", titre: `${f4Md(s.net, cur)} de bénéfice en ${s.year}${M.ng != null ? `, ${f4Pc(M.ng, 1, true)} sur un an` : ""}.${cmp}`,
+  return { sur: "Son bénéfice", titre: `${f4Md(s.net, cur)} de bénéfice en ${s.year}${M.ng != null ? `, ${f4Pc(M.ng, 1, true)} sur un an` : ""}.`,
     mots: [{ cle: "benefice", ex: f4Md(s.net, cur), calc: `exercice ${s.year}`, nom: s.name }],
     visuel: se ? f4Cols(x, se, "Son bénéfice net", null, "Chaque barre donne le bénéfice net d'un exercice ; sous l'année, la variation par rapport à l'année d'avant.") : "",
     explique: causes.length ? ekExplique({ causes, surveiller: f4Prochain(s.id) || "Le bénéfice du prochain exercice." }) : "",
@@ -323,7 +321,7 @@ function f4B2(x) {
       const i0 = ne.v.findIndex((z, i) => z > 0 && eq.v[i] > 0), gn = ne.v[ne.v.length - 1] / ne.v[i0] - 1, ge = eq.v[eq.v.length - 1] / eq.v[i0] - 1;
       if (isFinite(gn) && isFinite(ge)) causes.push({ titre: gn > ge + 0.02 ? "Le bénéfice grandit plus vite que les fonds propres" : gn < ge - 0.02 ? "Les fonds propres grandissent plus vite que le bénéfice" : "Bénéfice et fonds propres avancent ensemble", texte: `Depuis ${ne.y[i0]} : bénéfice ${f4Pc(gn, 0, true)}, fonds propres ${f4Pc(ge, 0, true)}.` }); } }
   const tb = ne && eq ? ekTableau(ne.y, [["Rentabilité des fonds propres", ne.v.map((z, i) => z != null && eq.v[i] > 0 ? ekFr(z / eq.v[i] * 100, 1) + " %" : "–")], ["Bénéfice net", ne.v.map(z => f4Md(z, s.currency))], ["Capitaux propres", eq.v.map(z => f4Md(z, s.currency))]]) : "";
-  return { sur: "Ce que rapporte son capital", titre: v == null ? "Ses fonds propres ne sont pas publiés sous une forme comparable." : `Sur 100 ${sym} de fonds propres, elle gagne ${ekFr(v * 100, 1)} ${sym} par an.${med != null ? (v > med * 1.15 ? ` Plus que ${qui} (${ekFr(med * 100, 1)} ${sym}).` : v < med * 0.85 ? ` Moins que ${qui} (${ekFr(med * 100, 1)} ${sym}).` : ` Comme ${qui}.`) : ""}`,
+  return { sur: "Sa rentabilité", titre: v == null ? "Ses fonds propres ne sont pas publiés sous une forme comparable." : `Sur 100 ${sym} de fonds propres, elle gagne ${ekFr(v * 100, 1)} ${sym} par an.${med != null ? (v > med * 1.15 ? ` Plus que ${qui} (${ekFr(med * 100, 1)} ${sym}).` : v < med * 0.85 ? ` Moins que ${qui} (${ekFr(med * 100, 1)} ${sym}).` : ` Comme ${qui}.`) : ""}`,
     mots: [{ cle: "roe", ex: v != null ? ekFr(v * 100, 1) + " %" : "", calc: s.equity ? `${ekFr(s.net, 0)} ÷ ${ekFr(s.equity, 0)}` : "", nom: s.name }, { cle: "mediane", ex: med != null ? ekFr(med * 100, 1) + " %" : "", calc: `rentabilité médiane de ${P.lib}`, nom: s.name }],
     visuel: v != null && pl.length ? ekPoints({ titre: `Gagnés sur 100 ${sym} de fonds propres`, unite: `rentabilité des capitaux propres ${s.year}`, lignes: pts, mediane: med != null ? med * 100 : 0, mediane_label: med != null ? `médiane ${ekFr(med * 100, 1)} %` : "", max: nn.max, graduations: nn.ticks, fmtAxe: t => ekFr(t, 0) + " %",
       indice: `Chaque point place une entreprise sur l'échelle. À droite du pointillé (zone verte), elle rapporte plus que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; à gauche (zone rouge), moins.`, source: f4Src(x, `Comptes ${s.year}`) }) : "",
