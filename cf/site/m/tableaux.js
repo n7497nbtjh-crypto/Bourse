@@ -1,4 +1,4 @@
-/* Module « tableaux » de bilan. : chargé après le script principal de index.html.
+/* Module « tableaux » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
    Composant de tableau commun (classe .tbx), tendances, mini-courbes, phrases de lecture,
    onglet « Les chiffres en détail » (tabComptes), graphiques par année (colChart), liste des entreprises,

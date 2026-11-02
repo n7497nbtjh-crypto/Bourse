@@ -1,7 +1,7 @@
 /* Les compositions d'ETF classent par code (it, fin, conso_disc…) : on les ramène aux dix secteurs du site, pour une seule liste lisible */
 const PF_SECT_ETF = { it: "tech", fin: "finance", sante: "sante", conso_disc: "conso", conso_base: "conso", indus: "industrie", comm: "telecom", energie: "energie", materiaux: "materiaux", services_pub: "services", immo: "immo", liquidites: "Liquidités et dérivés", autre: "Autres" };
 function pfSecteurEtf(code) { const k = PF_SECT_ETF[code]; if (!k) return (typeof ETF_SECT !== "undefined" && ETF_SECT[code]) || code; return (R && R.sectors && R.sectors[k]) || k; }
-/* Module « portefeuille » de bilan. : chargé après le script principal de index.html.
+/* Module « portefeuille » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
 
    Contenu :
@@ -1404,7 +1404,7 @@ async function pf3Explain() {
   box.innerHTML = `<div class="pf3wait"><span></span>Rédaction en cours à partir de vos chiffres…</div>`; btn.disabled = true;
   const done = (txt, foot) => { const html = `<div class="iares pf3res">${pf3Txt(txt)}<p class="iafoot">${foot}</p></div>`; box.innerHTML = html; PF3S.ia = { key, html }; btn.disabled = false; };
   const j = await iaRediger("portefeuille", faits, { max: 750 });
-  if (j.txt) return done(j.txt, `${j.sources ? `Sources : ${esc(j.sources)}. ` : ""}Rédigé par l'IA de bilan. (${esc(j.modele)}) à partir des seuls chiffres calculés sur cette page. Vérifiez-les ci-dessus. Ce n'est pas un conseil en investissement.`);
+  if (j.txt) return done(j.txt, `${j.sources ? `Sources : ${esc(j.sources)}. ` : ""}Rédigé par l'IA d'ENKLAIR (${esc(j.modele)}) à partir des seuls chiffres calculés sur cette page. Vérifiez-les ci-dessus. Ce n'est pas un conseil en investissement.`);
   box.innerHTML = j.invite ? miaInvite("L'analyse calculée ci-dessus est complète.") : `<p class="muted">${esc(j.error || "La rédaction n'est pas disponible pour le moment.")}</p><p class="pf3hint">L'analyse calculée ci-dessus reste complète et à jour.</p>`;
   btn.disabled = false;
 }

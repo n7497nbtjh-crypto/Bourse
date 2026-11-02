@@ -3832,3 +3832,77 @@ html #app .e3~.panel #regTabs button,html #app .e3~.panel #secTabs button,html #
 html #app .e3~.panel #regTabs button.on,html #app .e3~.panel #secTabs button.on,html #app .e3~.panel #vsw button.on{background:#111!important;color:#fff!important}
 html #app .e3~.field input#eq{border:2px solid #111!important;border-radius:999px!important;padding:10px 18px!important}
 html body #app .e3 .e3-secs button[data-e3s]:not(.x){border-radius:20px!important}
+/* 2/11 nuit : corrections signalées par Romain (fiche sur téléphone) */
+html #app .f3-rw.na b{font:600 11px/1.15 var(--sans);white-space:normal;color:#999}
+html body #app .f3 .f3-five .f3-r button.f3-lnk:not(.x){display:block;width:100%;text-align:left;margin-top:10px;font:800 12.5px var(--sans);border:0!important;border-top:1px solid #ddd!important;border-radius:0!important;padding:8px 0 0!important;background:none!important;color:#111;cursor:pointer;height:auto!important;box-shadow:none!important}
+html body .orciab{white-space:nowrap!important}
+@media (max-width:760px){html body .orciab.mini{width:50px!important;height:50px!important;padding:0!important;justify-content:center!important}html body .orciab.mini::after{content:none!important}html body .orciab.mini .st{font-size:20px;display:inline!important}}
+/* Fenêtre de l'IA du site au style v3 */
+html body .orcia .orciap{border:2px solid #111!important;border-radius:24px 24px 0 0;font-family:var(--sans)}
+@media (min-width:761px){html body .orcia .orciap{border-radius:24px!important;box-shadow:6px 6px 0 #111}}
+html body .orcia .orciah{border-bottom:2px solid #111!important;background:var(--a4y,#FFE14D)}
+html body .orcia #orciat{font:800 26px/1.05 var(--serif)!important;letter-spacing:-.04em;color:#111}
+html body .orcia .orciah .kick{font:700 13px var(--sans)!important;color:#333!important;text-transform:none;letter-spacing:0}
+html body .orcia #orciaq button,html body .orcia #orciaq a{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font:700 14.5px var(--sans)!important;box-shadow:3px 3px 0 #111;padding:9px 16px!important;text-align:left}
+html body .orcia #orciaq button:hover{background:var(--a4y,#FFE14D)!important}
+html body .orcia .orciaf{border-top:2px solid #111!important}
+html body .orcia .orciaf input{border:2px solid #111!important;border-radius:999px!important;padding:12px 18px!important;font:500 16px var(--sans)!important}
+html body .orcia .orciaf button{background:#111!important;color:#fff!important;border-radius:999px!important;font:800 15px var(--sans)!important;border:2px solid #111!important}
+html body .orcia .orciax{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;width:40px;height:40px}
+/* « Tous les chiffres » au style v3 : titres en Bricolage, jauges comme les repères, onglets en tuiles, pas de cadres imbriqués */
+html #app #f3-tousw .rf-plt b{font:800 22px/1.05 var(--serif)!important;letter-spacing:-.03em;color:#111}
+html #app #f3-tousw .rf-plk small{font:700 13px var(--sans);color:#333}
+html #app #f3-tousw .rf-plk b,html #app #f3-tousw .rf-plk strong{font:800 24px var(--serif)!important;letter-spacing:-.03em}
+html #app #f3-tousw .rf-plm>.pl{width:96px;height:8px;border-radius:4px;background:linear-gradient(90deg,#FFD0C4 50%,#BFF0DA 50%)}
+html #app #f3-tousw .rf-plm .pm{top:-3px;height:14px;width:2px;background:#111}
+html #app #f3-tousw .rf-plm .pd{top:-4px;width:16px;height:16px;border:3px solid #fff;background:#111!important;box-shadow:none}
+html #app #f3-tousw .rf-plm small{font:600 12.5px var(--sans);color:#444}
+html #app #f3-tousw .rf-pq{border-radius:7px;font-weight:700}
+html #app #f3-tousw .rf-plb .panel{border:0!important;box-shadow:none!important;background:none!important;margin:0!important;padding:0!important}
+html #app #f3-tousw .rf-kts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;border:0!important;padding:4px 0 14px}
+html body #app #f3-tousw button.rf-kt:not(.x){border:2px solid #111!important;border-radius:16px!important;background:#fff!important;color:#111!important;padding:10px 14px!important;box-shadow:none!important;height:auto!important}
+html body #app #f3-tousw button.rf-kt.on:not(.x){background:var(--a4y)!important;box-shadow:3px 3px 0 #111!important}
+html #app #f3-tousw .rf-kt small{color:#333!important;font:800 13px var(--sans)!important}
+html #app #f3-tousw .rf-kt b{font:800 22px var(--serif)!important;letter-spacing:-.03em;color:#111!important}
+html #app #f3-tousw .rf-gdef{border-left:0!important;padding:0!important}
+html #app #f3-tousw .tbx-dv{border:0!important;background:var(--a4y)!important;border-radius:16px!important}
+html #app #f3-tousw .tbx-dv p{font:700 16px/1.4 var(--sans)!important}
+html #app #f3-tousw .chart2 rect{rx:6px}
+@media (max-width:760px){html #app #f3-tousw .rf-kts{grid-template-columns:1fr 1fr}html #app #f3-tousw .rf-gwrap{grid-template-columns:1fr}}
+/* ---------- Pages v3 (m/v3pages.js) : bandeau jaune sur toutes les pages à titre classique ---------- */
+html #app .v3-hero{background:var(--a4y);border-radius:30px;padding:30px 36px 28px;margin:0 0 30px;color:#111}
+html #app .v3-hero h1.pagetitle{font:800 clamp(34px,4.6vw,58px)/.98 var(--serif)!important;letter-spacing:-.05em!important;margin:16px 0 0!important;max-width:20ch;color:#111}
+html #app .v3-hero .crumbs{font:700 13.5px var(--sans);color:#111;margin:0}html #app .v3-hero .crumbs a{color:#111;text-decoration:underline;text-underline-offset:3px}
+html #app .v3-hero .crumbs+h1.pagetitle{margin-top:10px!important}
+html #app .v3-hero .pagesub{font:500 16.5px/1.5 var(--sans)!important;color:#222!important;max-width:68ch;margin:14px 0 0!important}
+html #app .v3-hero .pagesub a{color:#111;text-decoration:underline;text-decoration-thickness:2px}
+@media (max-width:760px){html #app .v3-hero{padding:22px 18px 20px;border-radius:24px;margin:0 0 22px}html #app .v3-hero h1.pagetitle{font-size:34px!important}html #app .v3-hero .pagesub{font-size:15px!important}}
+/* Onglets « filters » partout : pastilles à contour noir (l'ancien style souligné donnait des ronds écrasés une fois actifs) */
+html body #app .filters{display:flex;flex-wrap:wrap;gap:8px;border-bottom:0!important}
+html body #app .filters button:not(.x){padding:7px 14px!important;border:2px solid #111!important;border-radius:999px!important;background:#fff;color:#111;font:700 14px var(--sans)!important;height:auto!important;line-height:1.2!important;box-shadow:none!important;margin:0!important}
+html body #app .filters button.on:not(.x){background:#111!important;color:#fff!important}
+html body #app .filters button:not(.x)::after{display:none!important}
+/* ---------- Rapport de la semaine au style v3 (2/11, Romain : « les rapports hebdomadaires également ») ----------
+   Remplace la nuit bleu marine du 1/11 : fond blanc, contours noirs, jaune pour ce qu'il faut regarder, titres en Bricolage. */
+html .syn4{--page:#fff;--panel:#fff;--soft:#F6F3EA;--rule:#111;--line:#E5E1D8;--line2:#ECE8DE;--ink:#111;--grey:#3D3D3D;--light:#6B6B6B;
+  --up:#00875A;--g:#00875A;--link:#111;--down:#C2260E;--o:#C2260E;--n:#B5B0A5;--lime:var(--a4y,#FFE14D);--sun:var(--a4y,#FFE14D);
+  background:#fff;color:#111;border:3px solid #111;box-shadow:8px 8px 0 #111;border-radius:28px;padding:26px 24px 28px}
+html .syn4 .syn4-mast{font-family:var(--serif)}html .syn4 .syn4-mast b{font:800 30px var(--serif);letter-spacing:-.05em}
+html .syn4 .syn4-mast span{display:inline-block;font:800 15px var(--serif);color:#111;background:var(--sun);border:2px solid #111;border-radius:9px;padding:3px 10px;transform:rotate(-3deg);box-shadow:2px 2px 0 #111}
+html .syn4 .syn4-mast i{border:2px solid #111;color:#111;font-weight:800}
+html .syn4 .s5-t,html .syn4 .syn4-t{border:2px solid #111!important;border-radius:18px}
+html .syn4 .s5-t b,html .syn4 .syn4-t b{font-family:var(--serif)!important;letter-spacing:-.04em}
+html .syn4 .s5-tp,html .syn4 .syn4-tp{background:var(--sun)!important;box-shadow:4px 4px 0 #111}html .syn4 .s5-tp small,html .syn4 .s5-tp span{color:#222}html .syn4 .s5-tp b{color:#111}
+html .syn4 .s5-s h2,html .syn4 .syn4-sec>h2{font:800 25px var(--serif)!important;letter-spacing:-.04em}
+html .syn4 .s5-s h2 i{background:var(--sun);color:#111;border:2px solid #111;font-family:var(--sans);font-weight:800}
+html .syn4 .s5-r,html .syn4 .s5-a,html .syn4 .s5-fs,html .syn4 #syn4-ia,html .syn4 .syn4-ev,html .syn4 .syn4-ann,html .syn4 .syn4-sim,html .syn4 .syn4-ctx,html .syn4 .syncard{border:2px solid #111!important;background:#fff}
+html .syn4 .s5-r:hover{background:#FFFBE6}
+html .syn4 #syn4-ia{border-left:2px solid #111!important;background:var(--soft)}html .syn4 #syn4-ia .syn4-iak{font-family:var(--serif)!important;letter-spacing:-.03em}
+html .syn4 .s5-exp,html .syn4 #syn4-ia button,html .syn4 .syn4-exp{background:#111!important;color:#fff!important;font-weight:800}
+html .syn4 .s5-ch span{background:var(--soft)}html .syn4 .s5-pill{background:var(--soft);color:#111}
+html .syn4 .s5-f small{color:#8A6D00;font-weight:700}
+html .syn4 .synev .d{background:var(--sun)!important;border:2px solid #111!important;color:#111}
+html .syn4 .synnav a,html .syn4 .synnav button,html .syn4 .synev button{background:#fff!important;color:#111!important;border:2px solid #111!important;font-weight:700}
+html .syn4 .lnk{color:#111;text-decoration-color:var(--sun);text-decoration-thickness:3px}
+html .syn4 .s5-bar{background:#ECE8DE}
+@media (max-width:600px){html .syn4{margin:0;border-width:2px;box-shadow:5px 5px 0 #111;padding:18px 14px 22px}}

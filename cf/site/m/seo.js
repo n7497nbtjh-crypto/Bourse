@@ -1,4 +1,4 @@
-/* Module « seo » de bilan. (5e passage, E1) : pages de réponse fabriquées à partir des données.
+/* Module « seo » d'ENKLAIR (5e passage, E1) : pages de réponse fabriquées à partir des données.
    Liste dans data/questions.json (copiée dans cf/site/data/questions.json). Route : /question/<id>. */
 let SEO_Q = null;
 function seoQuestions() { return SEO_Q || (SEO_Q = fetch("/data/questions.json").then(r => r.json()).catch(() => ({ pages: [] }))); }

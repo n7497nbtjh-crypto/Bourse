@@ -1,4 +1,4 @@
-/* Module « x » de bilan. (5e passage, E2, E3, E4) : page privée /x pour Romain.
+/* Module « x » d'ENKLAIR (5e passage, E2, E3, E4) : page privée /x pour Romain.
    Protégée comme l'administration : la clé ADMIN_KEY est saisie par Romain dans cette page, gardée seulement le temps de l'onglet
    (sessionStorage), et vérifiée par le Worker (GET /api/espace/mesures, en-tête x-admin-key). Le site ne l'écrit nulle part ailleurs.
    Contenu : 3 messages du jour (≤ 270 caractères, liens utm), image 1200 × 675 par message, suite verticale 1080 × 1920 (3 images),

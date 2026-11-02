@@ -1,4 +1,4 @@
-/* Module « analyse » de bilan. : chargé après le script principal de index.html.
+/* Module « analyse » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
 
    Ce qui la valorise, ce qui lui fait défaut, le contexte à connaître :
@@ -456,8 +456,8 @@ function analyseForcesFaiblesses(s, c) {
   const peu = !c || !c.years || c.years.length < 2 || s.missing;
   if (peu) {
     if (!c || s.missing) out.contexte.push({ id: "collecte", poids: 3, titre: "Comptes pas encore lus par le site", detail: IA_strip_analyse(missingTxt(s, true)) + " Les points ci-dessous viennent de son pays, de son secteur, de sa devise et de sa cotation : ils restent valables sans les comptes.", source: "ENKLAIR, état de la collecte des comptes", url: "/methode" });
-    if (s.fiche && s.fiche.depend) out.contexte.push({ id: "depend", poids: 2, titre: "Ce qui fait varier ses résultats", detail: s.fiche.depend, source: "Fiche métier de bilan., écrite d'après le rapport annuel", url: officielLink(s) || "" });
-    if (s.fiche && s.fiche.argent) out.contexte.push({ id: "argent", poids: 1, titre: "D'où vient son chiffre d'affaires", detail: s.fiche.argent, source: "Fiche métier de bilan., écrite d'après le rapport annuel", url: officielLink(s) || "" });
+    if (s.fiche && s.fiche.depend) out.contexte.push({ id: "depend", poids: 2, titre: "Ce qui fait varier ses résultats", detail: s.fiche.depend, source: "Fiche métier d'ENKLAIR, écrite d'après le rapport annuel", url: officielLink(s) || "" });
+    if (s.fiche && s.fiche.argent) out.contexte.push({ id: "argent", poids: 1, titre: "D'où vient son chiffre d'affaires", detail: s.fiche.argent, source: "Fiche métier d'ENKLAIR, écrite d'après le rapport annuel", url: officielLink(s) || "" });
     try { const po = peersOf(s, 4), pr = po.auto ? [] : po.list; if (pr.length) out.contexte.push({ id: "pairs", poids: 1, titre: "Concurrentes suivies par le site", detail: `${pr.map(y => y.name).join(", ")}. Leurs comptes donnent un ordre de grandeur de ce qui est habituel dans ce métier (étape « Concurrents » de la fiche).`, source: "ENKLAIR, liste des concurrentes", url: "/comparer?ids=" + [s.id, ...pr.map(y => y.id)].join(",") }); } catch (e) { }
   }
   // Doublons : une même idée ne figure qu'une fois (la règle « dette tolérée » laisse la place à la règle de secteur)

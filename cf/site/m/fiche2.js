@@ -1,4 +1,4 @@
-/* Module « fiche2 » de bilan. : chargé après fiche.js, comparer.js, tableaux.js et analyse.js.
+/* Module « fiche2 » d'ENKLAIR : chargé après fiche.js, comparer.js, tableaux.js et analyse.js.
    Présentation de la fiche entreprise /entreprise/:id (demandes de Romain du 29 octobre) :
    - la courbe du cours s'affiche tout de suite dans l'en-tête de la vue d'ensemble (widget chargé en différé) ;
    - hiérarchie typographique : vrais titres de section, petites capitales grises réservées aux étiquettes ;

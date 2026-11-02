@@ -1,4 +1,4 @@
-/* Module « synthese » de bilan. : chargé après le script principal de index.html.
+/* Module « synthese » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
 
    « Votre semaine en 2 minutes » : la synthèse hebdomadaire de ce que la personne suit (favoris et portefeuille),
@@ -257,8 +257,8 @@ document.addEventListener("click", async e => {
   let j; try { j = await iaRediger("annonce", { entreprise: a.nom || (co && co.name), secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: SYN_CAT[a.categorie] || a.type, titre_officiel: a.titre, date: a.date, chiffres: a.chiffres || [], lecture_calculee: a.lecture || [], dernier_exercice: f, lien: a.source }, { max: 420 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
   btn.remove();
   const x = j.txt && typeof jsonFrom === "function" ? jsonFrom(j.txt) : null;
-  box.innerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA de bilan. (${esc(j.modele || "")}) à partir de l'annonce. La source fait foi.</small></div>`
-    : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par l'IA de bilan. à partir de l'annonce. La source fait foi.</small></div>` : `<p class="muted">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
+  box.innerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA d'ENKLAIR (${esc(j.modele || "")}) à partir de l'annonce. La source fait foi.</small></div>`
+    : j.txt ? `<div class="ax-cl"><b>En clair</b>${resumeHTML(j.txt)}<small>Rédigé par l'IA d'ENKLAIR à partir de l'annonce. La source fait foi.</small></div>` : `<p class="muted">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
 });
 function synSecteursHTML(b) { // 31/10 (Romain) : la répartition du portefeuille par secteur, en camembert, à côté des valeurs
   const L = (b.lignes || []).filter(l => l.portefeuille && l.portefeuille.poids_pct != null); if (L.length < 2) return "";

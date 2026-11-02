@@ -1,4 +1,4 @@
-/* Module « monia » de bilan. : l'IA du site (voir docs/ia.md). Chargé en dernier.
+/* Module « monia » d'ENKLAIR : l'IA du site (voir docs/ia.md). Chargé en dernier.
    - Pour tout le monde, d'abord : les réponses calculées (cf/site/ia.js, leçons de l'Académie, données). Gratuites, illimitées.
    - Pour les questions libres et les textes rédigés : l'IA du site (29 octobre 2026, demande de Romain : sur le site, gratuite,
      sans compte ni clé). Le navigateur envoie la tâche, les faits calculés et la question à /api/ia/rediger ; le serveur
@@ -15,7 +15,7 @@ function miaEtat() {
     .then(j => { if (j) MIA.niveau = j.niveau || "visiteur"; if (j && !j.disponible) MIA.coupee = j.site_epuise ? "site" : j.raison === "absente" ? "absente" : "visiteur"; miaMaj(); return j; });
 }
 const miaConnectee = () => !MIA.coupee; // nom gardé : « une IA répond » (les autres modules l'utilisent)
-const miaNomModele = () => "l'IA de bilan.";
+const miaNomModele = () => "l'IA d'ENKLAIR";
 function miaDeconnecter() { } // plus rien à déconnecter : gardé pour les anciens appels
 
 /* ---------- Appel de l'IA du site ---------- */
@@ -40,7 +40,7 @@ const MIA_SOURCES = {
   portefeuille: ["Vos lignes, enregistrées dans votre navigateur", "Cours de Bourse relevés par le site", "Compositions publiées par les émetteurs d'ETF", "Grilles tarifaires publiées par les courtiers"],
   bilan: ["Synthèse de la semaine calculée par ENKLAIR à partir des cours", "Annonces officielles de la semaine (AMF, SEC)", "Agenda publié par les entreprises"],
   annonce: ["Annonce officielle publiée par l'entreprise", "Derniers comptes annuels publiés"],
-  expliquer: ["Cours de l'Académie de bilan."],
+  expliquer: ["Cours de l'Académie d'ENKLAIR"],
 };
 /** Rédaction par l'IA du site. Renvoie { txt, sources, modele } ; { invite: true, message } si l'IA n'est pas disponible ; { error } si elle échoue. */
 async function iaRediger(tache, faits, o = {}) {
@@ -80,7 +80,7 @@ async function miaCopilote(q) {
 /* ---------- Petits morceaux d'interface ---------- */
 /** Pied d'une réponse rédigée. */
 function miaPied(j) {
-  if (j && j.ia === "connectee") return `${j.sources ? `<p class="mia-src"><b>Sources</b> ${esc(j.sources)}</p>` : ""}<p class="iafoot">Rédigé par l'IA de bilan. (${esc(j.modele || "modèle ouvert")}, hébergé par Cloudflare) à partir des seules données du site. À vérifier ; ce n'est pas un conseil.</p>`;
+  if (j && j.ia === "connectee") return `${j.sources ? `<p class="mia-src"><b>Sources</b> ${esc(j.sources)}</p>` : ""}<p class="iafoot">Rédigé par l'IA d'ENKLAIR (${esc(j.modele || "modèle ouvert")}, hébergé par Cloudflare) à partir des seules données du site. À vérifier ; ce n'est pas un conseil.</p>`;
   return "";
 }
 /** Quand l'IA ne peut pas rédiger : la réponse calculée reste, avec une ligne d'explication. */

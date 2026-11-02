@@ -1,4 +1,4 @@
-/* Module « pwa » de bilan. : chargé après le script principal de index.html.
+/* Module « pwa » d'ENKLAIR : chargé après le script principal de index.html.
    Contenu : application installable (service worker /sw.js, invitation discrète à installer), bandeau hors ligne,
    avis de nouvelle version, notifications push depuis « Mon espace », page /connecteur (ENKLAIR dans Claude et ChatGPT).
    Les fonctions de index.html complétées ici (espaceAlertes, espaceReglages) sont enveloppées, pas réécrites :
@@ -39,7 +39,7 @@ async function pwaVerifierVersion(auto) { // auto : au chargement, si une versio
     if (v && v !== PWA_VERSION) {
       const saisie = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) && document.activeElement.value;
       if (auto === true && !saisie && Date.now() - PWA_T0 < 20000 && !sessionStorage.getItem("pwa-rechg:" + v)) { try { sessionStorage.setItem("pwa-rechg:" + v, "1"); } catch (e) { } location.reload(); return; }
-      document.querySelector("header").insertAdjacentHTML("afterend", `<div class="pwa-maj" id="pwamaj" role="status"><div class="wrap"><span>Une nouvelle version de bilan. est en ligne.</span><button type="button" id="pwamajb">Mettre à jour</button></div></div>`);
+      document.querySelector("header").insertAdjacentHTML("afterend", `<div class="pwa-maj" id="pwamaj" role="status"><div class="wrap"><span>Une nouvelle version d'ENKLAIR est en ligne.</span><button type="button" id="pwamajb">Mettre à jour</button></div></div>`);
       document.getElementById("pwamajb").onclick = () => location.reload();
     }
   } catch (e) { }
@@ -263,7 +263,7 @@ async function pageIaConnecter() {
     chatgpt: [["copier", "Copiez votre adresse", "Votre adresse personnelle de connecteur, ci-dessus."], ["ajouter", "Créez le connecteur dans ChatGPT", "Paramètres, Applications et connecteurs, Paramètres avancés : activez le mode développeur, puis « Créer ». Nom : ENKLAIR ; adresse : la vôtre ; authentification : aucune."], ["demander", "Posez votre question", "Dans une conversation, choisissez ENKLAIR dans le menu des outils, puis posez votre question."]] };
   app.innerHTML = `<div class="crumbs"><a href="/premium">Premium</a> › Brancher votre IA</div>
     <h1 class="pagetitle">Gardez votre IA : branchez-la sur ENKLAIR</h1>
-    <p class="pagesub">Votre assistant lit alors les comptes officiels, les médianes du secteur et l'agenda de bilan. au lieu de répondre de mémoire, et cite ses sources. Lecture seule : il ne voit ni votre compte ni votre portefeuille.</p>
+    <p class="pagesub">Votre assistant lit alors les comptes officiels, les médianes du secteur et l'agenda d'ENKLAIR au lieu de répondre de mémoire, et cite ses sources. Lecture seule : il ne voit ni votre compte ni votre portefeuille.</p>
     <section class="panel iac-adr"><div class="pb">${adr ? `<p class="kick">Votre adresse personnelle</p><div class="pwa-url"><code id="iacurl">${esc(adr)}</code><button type="button" class="btn" id="iaccopie">Copier</button></div>
       <p class="note" style="margin:8px 0 0">${me.premium ? "Premium : sans limite d'appels par jour." : `Compte gratuit : ${me.limite_jour} appels par jour. <a class="lnk" href="/premium">Sans limite avec Premium</a>.`} Gardez cette adresse pour vous. <button type="button" class="linkbtn" id="iacnew">En changer</button></p>`
       : `<p class="kick">Votre adresse personnelle</p><p style="margin:4px 0 10px">Elle s'obtient avec un espace gratuit (une adresse e-mail suffit) : 20 appels par jour, sans limite avec Premium.</p><a class="btn" href="/espace">Créer mon espace gratuit</a>`}</div></section>

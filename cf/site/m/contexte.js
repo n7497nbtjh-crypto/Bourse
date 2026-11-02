@@ -1,4 +1,4 @@
-/* Module « contexte » de bilan. : chargé après le script principal de index.html (et après fiche.js et analyse.js).
+/* Module « contexte » d'ENKLAIR : chargé après le script principal de index.html (et après fiche.js et analyse.js).
    1. « Ce qui explique ces chiffres » : l'évolution des ventes année par année, les phases calculées
       (forte hausse, retournement, baisse prolongée…) et le contexte daté et sourcé qui les accompagne.
    2. « L'actualité qui la concerne » : sujets d'actualité vérifiés à la main (data/contexte.mjs → /data/contexte.json),

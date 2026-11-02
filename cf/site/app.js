@@ -1593,7 +1593,9 @@ function valo(c) { // capitalisation, PER, rendement, à partir du cours et des 
   if (pe == null && c.eps > 0 && p.cur === c.currency) pe = p.p / c.eps;
   // Garde-fou : devise des comptes mal lue ou capitalisation erronée dans la source des cours.
   // Si le PER tiré de la capitalisation est invraisemblable, on le recalcule avec le cours et le bénéfice par action.
-  const peE = c.eps > 0 && p.p > 0 ? p.p / c.eps : null;
+  // 2/11 : cours et comptes dans deux devises (Hong Kong, certificats américains) : les deux ramenés en euros ; la capitalisation publiée n'est
+  // garde-fou ne mélange plus les devises (Banco Santander-Chile ressortait plus grosse qu'Apple).
+  const meme = p.cur === c.currency, peE = c.eps > 0 && p.p > 0 ? (meme ? p.p / c.eps : (() => { const a = toEur(p.p, p.cur), e = toEur(c.eps, c.currency); return a > 0 && e > 0 && isFinite(a / e) ? a / e : null; })()) : null;
   if (peE != null && peE >= 3 && peE <= 150 && (pe == null || pe < 3 || pe > 150)) { pe = peE; sain = false; if (c.net > 0) capE = toEur(p.p * c.net * 1e6 / c.eps, p.cur); }
   let yld = null;
   if (sain && c.divPaid > 0.5 && capE) yld = toEur(c.divPaid * 1e6, c.currency) / capE;
@@ -2494,7 +2496,7 @@ async function premPreuves() { // les cinq preuves, calculées avec les données
   // 4. la mémoire : le rapport de la semaine et sa comparaison
   if (box(3)) box(3).innerHTML = `<p>Chaque lundi, votre rapport compare la semaine à la précédente : publications, dividendes annoncés, alertes nouvelles, évolution de votre portefeuille. Premium garde 12 semaines.</p><p><a class="lnk" href="/rapport-exemple">Voir un vrai rapport, calculé aujourd'hui →</a></p>`;
   // 5. le connecteur
-  if (box(4)) box(4).innerHTML = `<p>Votre assistant lit alors les comptes officiels et les médianes de bilan. au lieu de répondre de mémoire, et cite ses sources. Gratuit : 20 appels par jour avec votre adresse personnelle ; Premium : sans limite.</p><p><a class="lnk" href="/ia/connecter">Le brancher en trois étapes →</a></p>`;
+  if (box(4)) box(4).innerHTML = `<p>Votre assistant lit alors les comptes officiels et les médianes d'ENKLAIR au lieu de répondre de mémoire, et cite ses sources. Gratuit : 20 appels par jour avec votre adresse personnelle ; Premium : sans limite.</p><p><a class="lnk" href="/ia/connecter">Le brancher en trois étapes →</a></p>`;
 }
 async function premiumMerci() {
   const sid = new URLSearchParams(location.search).get("session_id") || "";
@@ -2739,7 +2741,7 @@ async function iaRun(q, out) {
   const titre = a.titre || q;
   out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
     ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : a.action === "lecons" ? `<p class="lead" style="margin:0 0 10px">Les leçons de l'Académie qui répondent à votre question :</p>` + leconsHTML(a.hits) : resumeHTML(a.texte) + (a.action === "repondre" && hitsL.length ? `<div class="iaplus"><p class="kick">Pour aller plus loin dans l'Académie</p>${hitsL.slice(0, 2).map(({ m, l }) => `<a class="hbr" href="/academie/${m.id}/${l.id}"><b>${esc(l.titre)}</b><span>${esc(m.titre)}</span></a>`).join("")}</div>` : "")}
-    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.ia === "connectee" ? `Réponse rédigée par l'IA de bilan. (${esc(a.modele || "modèle choisi")}), à partir des données du site. À vérifier ; ce n'est pas un conseil.` : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p>${a.invite ? miaInvite() : ""}</div>`;
+    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.ia === "connectee" ? `Réponse rédigée par l'IA d'ENKLAIR (${esc(a.modele || "modèle choisi")}), à partir des données du site. À vérifier ; ce n'est pas un conseil.` : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p>${a.invite ? miaInvite() : ""}</div>`;
 }
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
 function iaBox(id, big = false) {

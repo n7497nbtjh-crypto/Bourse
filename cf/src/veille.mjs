@@ -46,7 +46,7 @@ async function mails(request, env, path) {
       await env.DB.prepare(`DELETE FROM veille WHERE email = ? AND ok = 1 AND token <> ?`).bind(r.email, t).run(); await env.DB.prepare(`UPDATE veille SET ok = 1 WHERE token = ?`).bind(t).run();
       return page("Adresse confirmée. Vous recevrez le bilan de votre liste chaque samedi matin. Chaque e-mail contient un lien pour vous désinscrire."); }
     await env.DB.prepare(`DELETE FROM veille WHERE token = ?`).bind(t).run();
-    return page("C'est fait : vous ne recevrez plus d'e-mails de bilan. Votre adresse a été supprimée.");
+    return page("C'est fait : vous ne recevrez plus d'e-mails d'ENKLAIR Votre adresse a été supprimée.");
   }
   // Envois groupés, déclenchés par le robot (GitHub) avec la clé d'administration
   if ((path === "/api/veille/envoi" || path === "/api/veille/alertes") && request.method === "POST") {

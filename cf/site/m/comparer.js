@@ -1,4 +1,4 @@
-/* Module « comparer » de bilan. : chargé après le script principal de index.html.
+/* Module « comparer » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
 
    Remplace :
@@ -370,7 +370,7 @@ async function cmprAsk(X, focus, out, btn) {
   if (btn) { btn.disabled = false; if (txt) btn.hidden = true; }
 }
 function cmprIABar(n, focus) {
-  return `<div class="cmpr-ia"><button type="button" class="btn" data-cmpr-ia${focus ? ` data-focus="${esc(focus.id)}"` : ""}><span class="s" aria-hidden="true">✦</span>Approfondir avec l'IA</button><p>Une explication rédigée de ${focus ? "sa position" : n > 2 ? "ces écarts" : "cet écart"}, à partir des seuls chiffres de cette page, sans conseil. ${miaConnectee() ? `Rédigée par l'IA de bilan.` : `<a class="lnk" href="/espace/ia">L'IA du site</a> n'est pas disponible pour le moment.`}</p></div><div class="cmpr-iaout" aria-live="polite"></div>`;
+  return `<div class="cmpr-ia"><button type="button" class="btn" data-cmpr-ia${focus ? ` data-focus="${esc(focus.id)}"` : ""}><span class="s" aria-hidden="true">✦</span>Approfondir avec l'IA</button><p>Une explication rédigée de ${focus ? "sa position" : n > 2 ? "ces écarts" : "cet écart"}, à partir des seuls chiffres de cette page, sans conseil. ${miaConnectee() ? `Rédigée par l'IA d'ENKLAIR` : `<a class="lnk" href="/espace/ia">L'IA du site</a> n'est pas disponible pour le moment.`}</p></div><div class="cmpr-iaout" aria-live="polite"></div>`;
 }
 
 /* ---------- Page /comparer ---------- */

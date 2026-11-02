@@ -1,4 +1,4 @@
-/* Module « outils » de bilan. : chargé après le script principal de index.html (et après m/comparer.js).
+/* Module « outils » d'ENKLAIR : chargé après le script principal de index.html (et après m/comparer.js).
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
    Contenu :
    - /classements : classements calculés sur les comptes (points forts, en tête de son secteur, croissance régulière,

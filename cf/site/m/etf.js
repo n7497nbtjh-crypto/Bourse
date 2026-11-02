@@ -1,4 +1,4 @@
-/* Module « etf » de bilan. : chargé après le script principal de index.html.
+/* Module « etf » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
    Pages : liste des ETF (pageEtfs) et fiche d'un ETF (pageEtf). Composition : cf/site/data/etf/<id>.json (format dans CHANTIERS.md). */
 

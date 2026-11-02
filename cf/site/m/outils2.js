@@ -1,4 +1,4 @@
-/* Module « outils2 » de bilan. (vague « refonte » du 29 octobre) : chargé après parcours.js, avant orchestre.js.
+/* Module « outils2 » d'ENKLAIR (vague « refonte » du 29 octobre) : chargé après parcours.js, avant orchestre.js.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
    Contenu :
    1. Outils communs : courbe SVG à axe de temps (O2_courbe), heures et fuseaux, chargement des séries de référence ;
@@ -685,7 +685,7 @@ async function O2_hIA(b) {
   let j; try { j = await iaRediger("annonce", faits, { max: 420 }); } catch (e) { j = { error: "L'IA est indisponible pour le moment." }; }
   b.remove();
   const x = j && j.txt ? (typeof jsonFrom === "function" ? jsonFrom(j.txt) : null) : null;
-  out.innerHTML = x && x.clair ? `<p><b>En clair :</b> ${esc(x.clair)}</p>${x.change ? `<p><b>Ce que cela change :</b> ${esc(x.change)}</p>` : ""}<p class="o2-note">Rédigé par l'IA de bilan. (${esc(j.modele || "modèle choisi")}) à partir des seuls faits extraits du communiqué. Le communiqué fait foi ; ce n'est pas un conseil.</p>`
+  out.innerHTML = x && x.clair ? `<p><b>En clair :</b> ${esc(x.clair)}</p>${x.change ? `<p><b>Ce que cela change :</b> ${esc(x.change)}</p>` : ""}<p class="o2-note">Rédigé par l'IA d'ENKLAIR (${esc(j.modele || "modèle choisi")}) à partir des seuls faits extraits du communiqué. Le communiqué fait foi ; ce n'est pas un conseil.</p>`
     : typeof miaRendu === "function" ? miaRendu(j) : `<p class="muted">${esc((j && j.error) || "Synthèse indisponible.")}</p>`;
 }
 ROUTES_EXTRA.push([/^\/hier$/, () => pageHier()]);

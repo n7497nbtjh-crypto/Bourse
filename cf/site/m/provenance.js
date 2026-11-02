@@ -420,7 +420,7 @@ function valo(c) {
   let pe = capE && netE > 0 ? capE / netE : null, sain = true;
   if (pe == null && c.eps > 0 && p.cur === c.currency) pe = p.p / c.eps;
   // Garde-fou : devise des comptes mal lue ou capitalisation erronée dans la source des cours.
-  const peE = c.eps > 0 && p.p > 0 ? p.p / c.eps : null;
+  const meme = p.cur === c.currency, peE = c.eps > 0 && p.p > 0 ? (meme ? p.p / c.eps : (() => { const a = toEur(p.p, p.cur), e = toEur(c.eps, c.currency); return a > 0 && e > 0 && isFinite(a / e) ? a / e : null; })()) : null; // 2/11 : deux devises → cours et bénéfice par action ramenés en euros
   if (!vieux && peE != null && peE >= 3 && peE <= 150 && (pe == null || pe < 3 || pe > 150)) { pe = peE; sain = false; if (c.net > 0) capE = toEur(p.p * c.net * 1e6 / c.eps, p.cur); }
   let yld = null;
   if (sain && c.divPaid > 0.5 && capE) yld = toEur(c.divPaid * 1e6, c.currency) / capE;

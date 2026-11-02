@@ -1,4 +1,4 @@
-/* Module « nav » de bilan. : la navigation du site, définie une seule fois.
+/* Module « nav » d'ENKLAIR : la navigation du site, définie une seule fois.
    Chargé en dernier (après monia.js), il remplit lui-même les quatre zones qui montrent le menu :
    la barre du haut (#nav), le menu du téléphone (#mpanel), le pied de page (#footnav) et le plan du site (/plan).
    Avant, le menu était écrit dans index.html puis complété par m/outils.js, m/reco.js et m/orchestre.js (26 entrées,

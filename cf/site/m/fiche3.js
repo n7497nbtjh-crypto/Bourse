@@ -131,7 +131,7 @@ function f3AutresHTML(s) {
     const med = mf(s), vs = [...ok.map(r => r.v), med != null ? med : 0, 0], lo = Math.min(...vs), hi = Math.max(...vs), pos = v => (v - lo) / ((hi - lo) || 1) * 100, z = pos(0);
     const best = sens === "hi" ? Math.max(...ok.map(r => r.v)) : Math.min(...ok.map(r => r.v)), worst = sens === "hi" ? Math.min(...ok.map(r => r.v)) : Math.max(...ok.map(r => r.v));
     return `<div class="f3-ch f3-cc"><h3>${esc(t)}</h3><details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex)} <a href="#${pli}" data-f3go="${pli}">Tout le détail dans « ${esc(plil)} » ↓</a></p></details>
-      <div class="f3-cr">${rows.map(({ c, v }) => v == null || !isFinite(v) ? `<div class="f3-rw na"><a href="/entreprise/${c.id}">${esc(c.name)}</a><span>non calculable</span><b></b></div>`
+      <div class="f3-cr">${rows.map(({ c, v }) => v == null || !isFinite(v) ? `<div class="f3-rw na"><a href="/entreprise/${c.id}">${esc(c.name)}</a><span></span><b>non calculable</b></div>`
         : `<div class="f3-rw${c === s ? " me" : ""}${v === best ? " best" : v === worst ? " worst" : ""}"><a href="/entreprise/${c.id}">${esc(c.name)}</a><div class="f3-tk">${lo < 0 ? `<em style="left:${z}%"></em>` : ""}<i style="left:${Math.min(pos(v), z).toFixed(1)}%;width:${Math.max(Math.abs(pos(v) - z), 1.5).toFixed(1)}%"></i></div><b>${fmt(v)}</b></div>`).join("")}
       ${med != null ? `<div class="f3-md" style="--f:${(pos(med) / 100).toFixed(4)}"><span>médiane ${fmt(med)}</span></div>` : ""}</div></div>`; }).filter(Boolean);
   if (!cards.length) return "";

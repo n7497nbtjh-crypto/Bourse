@@ -269,8 +269,8 @@ function parLiens(root) {
     if (/Premiers pas|parcours Premiers/i.test(a.textContent)) a.textContent = a.textContent.replace(/Le parcours Premiers pas|Premiers pas, avec quiz|Premiers pas/i, "L'essentiel en 3 étapes"); });
   $$('.crumbs a[href="/lexique"]', root).forEach(a => { if (a.textContent.trim() === "Apprendre") a.setAttribute("href", "/apprendre"); });
   const p = location.pathname.replace(/\/+$/, ""), t = PAR_CRUMB_PAGES[p];
-  if (t && root === app && app.firstElementChild && !app.querySelector(":scope > .crumbs") && !app.querySelector(".empty")) app.insertAdjacentHTML("afterbegin", parCrumbs([[null, t]]));
-  if (/^\/academie\/./.test(p) && !/^\/academie\/express/.test(p)) { const c = app.querySelector(":scope > .crumbs"); if (c && !c.querySelector('a[href="/apprendre"]')) c.insertAdjacentHTML("afterbegin", `<a href="/apprendre">Apprendre</a> › `); }
+  if (t && root === app && app.firstElementChild && !app.querySelector(".crumbs") && !app.querySelector(".empty")) app.insertAdjacentHTML("afterbegin", parCrumbs([[null, t]]));
+  if (/^\/academie\/./.test(p) && !/^\/academie\/express/.test(p)) { const c = app.querySelector(".crumbs"); if (c && !c.querySelector('a[href="/apprendre"]')) c.insertAdjacentHTML("afterbegin", `<a href="/apprendre">Apprendre</a> › `); }
 }
 const PAR_OBS = new MutationObserver(() => { PAR_OBS.disconnect(); try { parLiens(app); } finally { PAR_OBS.observe(app, { childList: true, subtree: true }); } });
 if (typeof app !== "undefined" && app) PAR_OBS.observe(app, { childList: true, subtree: true });

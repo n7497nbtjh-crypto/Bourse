@@ -1,4 +1,4 @@
-/* Module « orchestre » de bilan. : chargé après le script principal de index.html.
+/* Module « orchestre » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
    Contenu : indices cliquables et pages d'indice, bloc ETF de l'accueil, bandeau de confiance. */
 
@@ -149,7 +149,7 @@ function orcIaShell() {
   if ($("#orcia")) return;
   document.body.insertAdjacentHTML("beforeend", `<button type="button" id="orciab" class="orciab" aria-haspopup="dialog" aria-controls="orcia"><span class="st">✦</span><span class="lb">Une question sur cette page</span></button>
     <div id="orcia" class="orcia" role="dialog" aria-modal="true" aria-labelledby="orciat" hidden><div class="orciabg" data-orcclose></div>
-      <div class="orciap"><div class="orciah"><div><p class="kick" id="orciactx"></p><h2 id="orciat">✦ L'IA de bilan.</h2><p class="orcia-etat" data-mia-etat></p></div><button type="button" class="orciax" data-orcclose aria-label="Fermer">×</button></div>
+      <div class="orciap"><div class="orciah"><div><p class="kick" id="orciactx"></p><h2 id="orciat">✦ L'IA d'ENKLAIR</h2><p class="orcia-etat" data-mia-etat></p></div><button type="button" class="orciax" data-orcclose aria-label="Fermer">×</button></div>
         <div class="orciab2"><div class="chips" id="orciaq"></div><div id="orcialog" class="orcialog"></div></div>
         <form id="orciaf" class="orciaf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question…" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
         <p class="orciaft">Chiffres calculés sur les comptes officiels et les données du site, avec leur source. Information, pas conseil.</p></div></div>`);

@@ -368,7 +368,7 @@ const ACC_BESOINS = [
   ["Comprendre mon portefeuille", "Concentration, chevauchements entre ETF, frais cumulés.", "/portefeuille"],
   ["Suivre mes investissements", "Vos favoris et, chaque semaine, un rapport sur vos titres.", "/rapport-exemple"],
   ["Apprendre", "L'Académie : des leçons courtes, un exemple chiffré pour chacune.", "/academie"],
-  ["Donner des chiffres vérifiés à mon IA", "Claude ou ChatGPT répondent avec les comptes officiels de bilan., sources à l'appui, au lieu d'inventer.", "/ia/connecter"],
+  ["Donner des chiffres vérifiés à mon IA", "Claude ou ChatGPT répondent avec les comptes officiels d'ENKLAIR, sources à l'appui, au lieu d'inventer.", "/ia/connecter"],
 ];
 function accBesoinsHTML() {
   return `<section class="acc-sec acc-bes"><p class="acc-vh">Que voulez-vous faire ?</p><ul class="acc-besl">${ACC_BESOINS.map(([t, d, h]) => `<li><a href="${h}"><b>${t}</b><span>${d}</span><i aria-hidden="true">→</i></a></li>`).join("")}</ul></section>`;

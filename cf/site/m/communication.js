@@ -1,4 +1,4 @@
-/* Module « communication » de bilan. : chargé après le script principal de index.html.
+/* Module « communication » d'ENKLAIR : chargé après le script principal de index.html.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
    Contenu :
    - /idees-recues : les idées reçues sur la Bourse, déconstruites avec des chiffres sourcés et leurs nuances ;
@@ -346,7 +346,7 @@ function commIdees() {
       rep: "Une action est une part d'entreprise. Sur longue durée, son prix suit les ventes, les bénéfices et les dividendes que publient les comptes officiels.",
       faits: S.n ? [`Sur les <b>${F0.format(S.n)}</b> entreprises dont ENKLAIR a lu les derniers comptes annuels, <b>${pc(S.benef, S.n)} %</b> ont fait un bénéfice et ${pc(S.div, S.n)} % ont versé un dividende.`,
         "Ces chiffres sont calculés par le site à partir des rapports déposés aux autorités : format ESEF en Europe, SEC aux États-Unis."] : ["Les comptes des entreprises n'ont pas pu être chargés."],
-      viz: () => S.n ? commBars([["Ont fait un bénéfice", pc(S.benef, S.n), pc(S.benef, S.n) + " %", COMM_C.act], ["Ont versé un dividende", pc(S.div, S.n), pc(S.div, S.n) + " %", "#5E9C7C"]], 100, `Calcul de bilan. sur ${F0.format(S.n)} entreprises, dernier exercice publié.`) : "",
+      viz: () => S.n ? commBars([["Ont fait un bénéfice", pc(S.benef, S.n), pc(S.benef, S.n) + " %", COMM_C.act], ["Ont versé un dividende", pc(S.div, S.n), pc(S.div, S.n) + " %", "#5E9C7C"]], 100, `Calcul d'ENKLAIR sur ${F0.format(S.n)} entreprises, dernier exercice publié.`) : "",
       credible: "Un cours réagit parfois fortement à une rumeur ou à une déclaration, sans que l'entreprise ait changé. La Bourse semble vivre dans son propre monde.",
       nuance: "À court terme, le cours peut s'éloigner beaucoup des comptes, dans les deux sens : c'est l'effet des émotions et des anticipations. Et les comptes ont plusieurs mois de retard sur l'activité.",
       exemple: commExempleComptes(),

@@ -1,4 +1,4 @@
-/* Module « reco » de bilan. : chargé après m/parcours.js et avant m/orchestre.js.
+/* Module « reco » d'ENKLAIR : chargé après m/parcours.js et avant m/orchestre.js.
    Les fonctions déclarées ici remplacent celles du même nom (déclarations function, jamais const/let pour un nom existant).
 
    Contenu :

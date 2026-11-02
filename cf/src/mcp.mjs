@@ -1,4 +1,4 @@
-// Connecteur MCP public de bilan., en lecture seule : /mcp (Model Context Protocol, transport « Streamable HTTP », JSON-RPC 2.0).
+// Connecteur MCP public d'ENKLAIR, en lecture seule : /mcp (Model Context Protocol, transport « Streamable HTTP », JSON-RPC 2.0).
 // Méthodes : initialize, ping, tools/list, tools/call (et les notifications, acquittées par 202). Sans session ni compte.
 // Les données sont celles du site (fichiers /data/*.json lus par env.ASSETS) : comptes annuels officiels (ESEF, SEC),
 // médianes par secteur et repères vert / gris / orange calculés comme sur les fiches, ETF, agenda, cours de l'Académie.
@@ -11,7 +11,7 @@ import { cours } from "./cours.mjs";
 export const VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 const INFO = { name: "bilan", title: "ENKLAIR : la Bourse, comptes à l'appui", version: "1.0.0" };
 const AVERT = "Information factuelle et pédagogique tirée des comptes officiels, pas un conseil en investissement : aucune recommandation d'achat ou de vente.";
-const INSTRUCTIONS = `Données de bilan. (site français d'information boursière pour débutants) : comptes annuels officiels de plus de 1 000 entreprises cotées (rapports ESEF via filings.xbrl.org, SEC EDGAR), médiane de chaque chiffre dans le secteur, repères de lecture vert / gris / orange, éligibilité au PEA, ETF (frais, indice, composition), agenda des résultats et dividendes, cours de l'Académie.
+const INSTRUCTIONS = `Données d'ENKLAIR (site français d'information boursière pour débutants) : comptes annuels officiels de plus de 1 000 entreprises cotées (rapports ESEF via filings.xbrl.org, SEC EDGAR), médiane de chaque chiffre dans le secteur, repères de lecture vert / gris / orange, éligibilité au PEA, ETF (frais, indice, composition), agenda des résultats et dividendes, cours de l'Académie.
 Règles : répondez en citant les chiffres et les sources fournis, avec le lien vers la page ENKLAIR correspondante. Un repère vert (point fort), gris (dans la moyenne) ou orange (point de vigilance) décrit les comptes passés selon des seuils publiés : ce n'est ni une note de l'action ni une recommandation. Ne transformez jamais ces données en conseil d'achat ou de vente, ni en prédiction de cours.`;
 
 /* ---------- Chargement des données du site (gardées 10 minutes par instance) ---------- */
@@ -86,7 +86,7 @@ function valo(c, P) {
   let capE = p.cap ? toEur(p.cap, p.cur) : null; const netE = c.net != null ? toEur(c.net * 1e6, c.currency) : null;
   let pe = capE && netE > 0 ? capE / netE : null, sain = true;
   if (pe == null && c.eps > 0 && p.cur === c.currency) pe = p.p / c.eps;
-  const peE = c.eps > 0 && p.p > 0 ? p.p / c.eps : null;
+  const meme = p.cur === c.currency, peE = c.eps > 0 && p.p > 0 ? (meme ? p.p / c.eps : (() => { const a = toEur(p.p, p.cur), e = toEur(c.eps, c.currency); return a > 0 && e > 0 && isFinite(a / e) ? a / e : null; })()) : null; // 2/11 : deux devises → cours et bénéfice par action ramenés en euros
   if (peE != null && peE >= 3 && peE <= 150 && (pe == null || pe < 3 || pe > 150)) { pe = peE; sain = false; if (c.net > 0) capE = toEur(p.p * c.net * 1e6 / c.eps, p.cur); }
   let yld = null;
   if (sain && c.divPaid > 0.5 && capE) yld = toEur(c.divPaid * 1e6, c.currency) / capE;
@@ -236,7 +236,7 @@ export const TOOLS = [
     description: "Les prochaines dates officielles des entreprises suivies : publications de résultats, détachements de dividende, assemblées générales, avec la source de chaque date. Filtrable par entreprise et par type.",
     inputSchema: { type: "object", properties: { entreprise: { ...TXT, description: "Facultatif : identifiant, nom, ticker ou ISIN" }, type: { type: "string", enum: ["resultats", "dividende", "assemblee"] }, jours: { type: "integer", minimum: 1, maximum: 366, description: "Horizon en jours (60 par défaut)" }, limite: { type: "integer", minimum: 1, maximum: 100 } } } },
   { name: "lecon", title: "Leçon de l'Académie",
-    description: "Cherche dans l'Académie de bilan. (cours gratuits de culture financière : épargne, PEA, ETF, lecture des comptes, valorisation, frais, fiscalité, psychologie de l'investisseur) la leçon qui répond à un sujet, et renvoie son contenu, un exemple chiffré, ce qu'il faut retenir et ses sources.",
+    description: "Cherche dans l'Académie d'ENKLAIR (cours gratuits de culture financière : épargne, PEA, ETF, lecture des comptes, valorisation, frais, fiscalité, psychologie de l'investisseur) la leçon qui répond à un sujet, et renvoie son contenu, un exemple chiffré, ce qu'il faut retenir et ses sources.",
     inputSchema: { type: "object", properties: { sujet: { ...TXT, description: "Le sujet, par exemple « intérêts composés », « PER », « fiscalité du PEA »" } }, required: ["sujet"] } },
   { name: "search", title: "Recherche (compatibilité ChatGPT)",
     description: "Recherche générale dans ENKLAIR : entreprises, ETF et leçons de l'Académie. Renvoie des identifiants à lire avec l'outil fetch.",
@@ -422,7 +422,7 @@ function lecon(B, { m, l }, origin, autres) {
   d.autres_lecons = autres.map(x => ({ titre: x.l.titre, lien: lien(origin, `/academie/${x.m.id}/${x.l.id}`) }));
   const T = [`Leçon « ${l.titre} » (module « ${m.titre} »${l.duree_min ? `, ${l.duree_min} min` : ""})`, l.resume || ""];
   if (!l.premium) { T.push(...(l.paragraphes || [])); if (l.exemple) T.push("Exemple : " + l.exemple); if (l.erreur_frequente) T.push("Erreur fréquente : " + l.erreur_frequente); }
-  else T.push(`Le texte complet de cette leçon est réservé aux membres Premium de bilan. : ${url}`);
+  else T.push(`Le texte complet de cette leçon est réservé aux membres Premium d'ENKLAIR : ${url}`);
   if ((l.a_retenir || []).length) T.push("À retenir :\n" + l.a_retenir.map(x => "- " + x).join("\n"));
   if (d.autres_lecons.length) T.push("Autres leçons proches : " + d.autres_lecons.map(x => `${x.titre} (${x.lien})`).join(" ; "));
   return { texte: T.filter(Boolean).join("\n\n") + pied(src), donnees: d };
