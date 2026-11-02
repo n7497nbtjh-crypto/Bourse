@@ -558,7 +558,7 @@ function rfPlaceHTML(s) { // sa place parmi toutes les entreprises du secteur su
       ${prof ? `<div class="fh-pl rf-pl" style="--n:${Math.max(3, n)}">${prof}</div><div class="fh-pm">${profilMini(s)}</div>` : ""}</div></section>`;
 }
 /* La fiche a pu être affichée avant le chargement de ce module : on la refait avec la nouvelle version */
-if (typeof R !== "undefined" && R && R.companies && /^\/entreprise\/[^/]+(\/(comptes|actualite|agenda|communaute))?\/?$/.test(location.pathname)) { const [, , id, t] = location.pathname.split("/"); pageCompany(id, t); }
+// 2/11 soir : plus de réaffichage ici, la fiche v4 (m/fiche4.js, chargée en dernier) s'en charge. Module retiré au lot 3.
 
 /* ---------- 30/10 (retour de Romain) : la fiche en trois parties, chacune ouverte par une synthèse courte ----------
    1. Comprendre l'entreprise (ce qu'elle fait, croissance, rentabilité, dette, risques), puis au clic : son métier en détail, points forts et à surveiller, questions.

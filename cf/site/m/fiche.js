@@ -298,4 +298,4 @@ function tabActu(s, c, el) {
 }
 
 /* Le module peut se charger après le premier affichage : on redessine alors la fiche avec la nouvelle mise en page. */
-if (typeof R !== "undefined" && R && /^\/entreprise\/[a-z0-9-]+(\/(comptes|actualite|agenda|communaute))?\/?$/.test(location.pathname)) route();
+// 2/11 soir : plus de réaffichage ici, la fiche v4 (m/fiche4.js, chargée en dernier) s'en charge. Module retiré au lot 3.
