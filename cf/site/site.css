@@ -3981,3 +3981,43 @@ html body #app #f3-tousw .tbx-gb{border:2px solid #111!important;border-radius:9
 html body #app .a4-srch input{min-width:0!important;width:100%!important;flex:1 1 0!important}html #app .a4-hero .a4-l,html #app .a4-hero .a4-w{min-width:0}
 @media (max-width:760px){html #app .a4-hero .a4-w{grid-template-columns:minmax(0,1fr)!important}html #app .a4-hero .a4-card,html #app .a4-hero .a4-l{min-width:0;max-width:100%}}
 html #app .a4-px{flex-wrap:wrap;min-width:0}html #app .a4-px small{white-space:normal}
+/* Comptes complets en v3 (f3Themes) */
+html #app .f3-ccw{padding:12px 22px 6px}html #app .f3-cc{border:2px solid #111;border-radius:20px;overflow:hidden;margin:0 0 14px;background:#fff}
+html #app .f3-cc h3{margin:0;padding:12px 16px;background:var(--a4y);border-bottom:2px solid #111;font:800 19px/1.1 var(--serif);letter-spacing:-.03em}html #app .f3-cc h3 small{display:block;font:600 12.5px var(--sans);color:#333;margin-top:3px;letter-spacing:0}
+html #app .f3-ccg{display:grid}html #app .f3-cch,html #app .f3-ccr{display:grid;grid-template-columns:minmax(0,1.6fr) repeat(var(--n),minmax(60px,1fr));gap:6px 8px;align-items:center;padding:9px 16px;border-top:1px solid #E6E3DA}
+html #app .f3-cch{border-top:0;background:#F6F3EA;padding:7px 16px}html #app .f3-cch b{font:800 12.5px var(--sans);text-align:right;color:#555}html #app .f3-cch b.last{color:#111}
+html #app .f3-ccr>span{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;min-width:0}html #app .f3-ccr>span>b{font:700 13.5px/1.2 var(--sans)}html #app .f3-ccr>span>small{flex-basis:100%;font:600 11.5px var(--sans);color:#666}
+html #app .f3-ccr small i{font-style:normal;font-weight:800}html #app .f3-ccr small i.u{color:#00875A}html #app .f3-ccr small i.d{color:#C2260E}
+html #app .f3-ccr .prov-i{width:16px;height:16px;font-size:10px}
+html #app .f3-ccr em{font:600 13.5px var(--sans);font-style:normal;text-align:right;color:#444;white-space:nowrap}html #app .f3-ccr em.last{font:800 15px var(--sans);color:#111;background:var(--a4y);border-radius:8px;padding:3px 6px}
+html #app #rf-tout.panel{border:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0!important}
+@media (max-width:760px){html #app .f3-ccw{padding:10px 14px 4px}html #app .f3-cch,html #app .f3-ccr{grid-template-columns:minmax(0,1fr) repeat(var(--n),auto);padding:8px 12px;gap:4px 8px}html #app .f3-ccr em{font-size:12px}html #app .f3-ccr em.last{font-size:13px;padding:2px 4px}html #app .f3-ccr>span>b{font-size:12.5px}}
+html #app .f3-ccr em.last{justify-self:end}html #app .f3-ccr>span>b.sm{display:none}
+@media (max-width:760px){html #app .f3-ccr>span>b.lg{display:none}html #app .f3-ccr>span>b.sm{display:block}
+ html #app .f3-ccg[style*="--n:4"] .f3-cch>b:first-of-type,html #app .f3-ccg[style*="--n:4"] .f3-ccr>em:first-of-type{display:none}
+ html #app .f3-ccg[style*="--n:4"] .f3-cch,html #app .f3-ccg[style*="--n:4"] .f3-ccr{grid-template-columns:minmax(0,1fr) repeat(3,auto)}
+ html #app .f3-ccr>span>small{font-size:11px}}
+html #app .f3-per{margin-top:16px}html #app .f3-per>.a4-stk{margin-bottom:14px}
+html #app .f3-perc{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 14px}
+html #app .f3-perk{border:2px solid #111;border-radius:20px;padding:14px 16px;background:#fff}html #app .f3-perk b{display:block;font:800 34px/1 var(--serif);letter-spacing:-.05em;margin-bottom:8px}html #app .f3-perk p{margin:0;font:500 14px/1.45 var(--sans)}html #app .f3-perk p b{display:inline;font:800 14px var(--sans);letter-spacing:0;margin:0}
+html #app .f3-perg{margin:0 0 12px;padding:22px 0 0}html #app .f3-ms-l{height:12px;background:linear-gradient(90deg,#BFF0DA 50%,#FFD0C4 50%)!important;border-radius:6px;position:relative}
+html #app .f3-ms-l i{position:absolute;top:-6px;width:2px;height:24px;background:#111}html #app .f3-ms-l em{position:absolute;top:-24px;transform:translateX(-50%);font:800 11px var(--sans);font-style:normal;color:#fff;background:#111;border-radius:6px;padding:2px 7px;white-space:nowrap}
+html #app .f3-ms-l b{position:absolute;top:-6px;width:24px;height:24px;margin-left:-12px;border-radius:50%;background:#111;border:4px solid #fff;box-shadow:0 0 0 2px #111}
+html #app .f3-perl{display:flex;justify-content:space-between;font:700 12px var(--sans);color:#444;margin-top:6px}
+@media (max-width:760px){html #app .f3-perc{grid-template-columns:1fr}}
+/* ---------- Fiche ETF v3 (m/etf3.js) ---------- */
+html #app .rf-etf #ebref{display:block}
+html #app .e3f-v{font:800 clamp(26px,3.2vw,36px)/1.02 var(--serif)!important;letter-spacing:-.05em;margin:14px 0 4px;color:#111}html #app .e3f-sub{font:600 13px var(--sans);color:#555;margin:0 0 12px}
+html #app #ebref .f3-lec{font-size:15px}
+html #app .e3f-frais{border:2px solid #111;border-radius:20px;padding:14px 16px;margin:12px 0;background:#fff;display:grid;gap:6px}
+html #app .e3f-frais small{font:800 13px var(--sans);color:#333}html #app .e3f-frais b{font:800 34px/1 var(--serif);letter-spacing:-.05em}
+html #app .e3f-vd{display:inline-block;justify-self:start;font:800 12.5px var(--sans);padding:2px 9px;border-radius:7px;background:#EEE}html #app .e3f-vd.vd-g{background:#C9F6E3;color:#006B48}html #app .e3f-vd.vd-r{background:#FFD9D1;color:#C2260E}
+html #app .e3f-frais .f3-ms{margin-top:22px}html #app .e3f-frais em{font:600 12px var(--sans);color:#555;font-style:normal}
+html #app .e3f-pts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}html #app .e3f-card{border:2px solid #111;border-radius:18px;padding:12px 14px;background:#fff}html #app .e3f-card>small{display:block;font:800 15px var(--serif);letter-spacing:-.02em;margin-bottom:8px}
+html #app .e3f-card .f3-chips span{background:#fff}html #app .e3f-card .f3-chips span.warn{background:#FFD9D1}
+html #app .e3f-hb .hbr{display:grid;grid-template-columns:minmax(0,1fr) 2fr auto;align-items:center;gap:10px;padding:5px 0}html #app .e3f-hb .hbl{font:700 13.5px var(--sans)}
+html #app .e3f-hb .hbb{height:16px;border:2px solid #111;border-radius:8px;overflow:hidden;background:#fff}html #app .e3f-hb .hbb>span{display:block;height:100%}html #app .e3f-hb .hbv{font:800 13.5px var(--sans)}
+@media (max-width:760px){html #app .e3f-pts{grid-template-columns:1fr}}
+html #app .e3f-frais{grid-template-columns:1fr!important}html #app .e3f-frais .f3-ms{width:100%}
+html #app .f2-mid #ebref.fh-sum{display:block!important;padding:18px 0 0}html #app .f2-mid #ebref>*{grid-column:auto!important}
+html #app .e3f-frais>*{grid-area:auto!important;grid-column:1!important}

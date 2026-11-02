@@ -279,6 +279,22 @@ function f3Themes(tw, s, c) {
   // Dividende : le graphique des dividendes versés passe au même dessin ; le « 1 an : du plus bas au plus haut » est déjà dans l'en-tête de la fiche
   const dv = $("#rf-dividende .chart2", tw), rd = P.rows.find(r => r.k === "divPaid"); if (dv && rd) { dv.innerHTML = `<p class="f3-thn"><b>Dividendes versés</b> <span>en ${esc(rd.ulong || rd.unit || "")}</span></p>` + f3Cols(rd.vals.map(v => v == null || !isFinite(v) ? null : v), Y, v => rd.full(v), null, false, "money"); dv.classList.add("f3-divg"); }
   const rg = $("#rf-valorisation .pb .range", tw); if (rg) rg.closest(".pb").remove();
+  // « Le PER, concrètement » : les deux phrases deviennent deux cartes à grand chiffre, la zone verte / rouge garde la jauge v3
+  const px = $("#rf-valorisation .perx", tw); if (px) { const ps = $$(":scope > p:not(.kick):not(.note)", px), zg = $(".zg", px), note = $("p.note", px);
+    const ans = ps[0] && (ps[0].innerHTML.match(/<b>(\d+) ans<\/b>/) || [])[1], cent = ps[1] && (ps[1].innerHTML.match(/<b>([\d,]+ €)<\/b> par an/) || [])[1];
+    const m = zg && zg.querySelector(".zgm"), v = zg && zg.querySelector(".zgv"), pm = m ? parseFloat(m.style.left) : null, pv = v ? parseFloat(v.style.left) : null, medT = zg && (zg.querySelector(".zgl b") || {}).textContent;
+    px.outerHTML = `<div class="f3-per"><span class="a4-stk a4-ye">Le PER, concrètement</span><div class="f3-perc">${ans ? `<div class="f3-perk"><b>${esc(ans)} ans</b><p>${ps[0].innerHTML}</p></div>` : ""}${cent ? `<div class="f3-perk"><b>${esc(cent)}</b><p>${ps[1].innerHTML}</p></div>` : ""}</div>
+      ${pv != null ? `<div class="f3-perg"><div class="f3-ms f3-ms-l"><i style="left:${pm != null ? pm : 50}%"></i><em style="left:${pm != null ? pm : 50}%">médiane${medT ? " " + esc(medT) : ""}</em><b style="left:${pv}%"></b></div><div class="f3-perl"><span>moins chère que le secteur</span><span>plus chère</span></div></div>` : ""}
+      ${note ? `<p class="f3-lec">${esc(note.textContent)}</p>` : ""}</div>`; }
+  // Comptes complets : un bloc par famille (compte de résultat, bilan, flux, actionnaire), les quatre derniers exercices, le dernier en jaune.
+  const tout = $("#rf-tout", tw); if (tout) { const yrs = Y.slice(-4), i0 = Y.length - yrs.length, G = typeof TBLX_GRP !== "undefined" ? TBLX_GRP : {}, GS = typeof TBLX_GRPSUB !== "undefined" ? TBLX_GRPSUB : {};
+    const grps = [...new Set(P.rows.map(r => r.grp))];
+    const html = grps.map(g => { const rs = P.rows.filter(r => r.grp === g); if (!rs.length) return "";
+      return `<div class="f3-cc"><h3>${esc(G[g] || g)}<small>${esc(GS[g] || "")}</small></h3><div class="f3-ccg" style="--n:${yrs.length}"><div class="f3-cch"><span></span>${yrs.map((y, i) => `<b class="${i === yrs.length - 1 ? "last" : ""}">${y}</b>`).join("")}</div>
+        ${rs.map(r => { const chg = tblxChange(r.kind, r.prev, r.last), cls = r.q > 0 ? "u" : r.q < 0 ? "d" : "n";
+          return `<div class="f3-ccr"><span><b class="lg">${esc(r.label)}</b><b class="sm">${esc(r.short || r.label)}</b>${tblxProv(r.k, s)}<small>${esc(r.unit || "")}${chg ? ` · <i class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)} sur un an</i>` : ""}</small></span>${yrs.map((y, i) => { const v = r.vals[i0 + i]; return `<em class="${i === yrs.length - 1 ? "last" : ""}">${v == null || !isFinite(v) ? "–" : esc(r.cell ? r.cell(v) : r.full(v))}</em>`; }).join("")}</div>`; }).join("")}</div></div>`; }).join("");
+    tout.insertAdjacentHTML("afterbegin", `<div class="f3-ccw">${html}<p class="f3-src">Un tiret : chiffre non publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes. Vert et rouge : seuils de lecture du site, pas un avis.</p></div>`);
+    $$(".rf-all, .src, .ph", tout).forEach(x => x.remove()); }
   $$("#rf-valorisation .ph, #rf-dividende .ph", tw).forEach(x => x.remove());
 }
 function f3Identite(mw, metier, s) { // ce qui restait dans le pli « Activités, pays, dirigeants » et qui n'est pas déjà sur la fiche
