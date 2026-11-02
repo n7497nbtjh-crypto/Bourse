@@ -118,6 +118,16 @@ function f3SeuleHTML(s, c) {
   const na = Math.max(...[ca, net, nd].filter(Boolean).map(x => x.length)), mots = ["", "", "deux", "trois"];
   return `<section class="f3-sec"><span class="a4-stk a4-ye">1 · Elle seule</span><h2>${na} ans de comptes en ${mots[out.length] || out.length} image${out.length > 1 ? "s" : ""}.</h2><div class="f3-tri">${out.join("")}</div></section>`;
 }
+function f3CritCards(crit, L, s, lien = true) { // une carte par critère : barres horizontales, la mieux placée en vert, la moins bien en rouge, médiane du secteur en pointillé
+  return crit.map(([t, f, fmt, mf, sens, ex, pli, plil]) => {
+    const rows = L.map(c => ({ c, v: f(c) })), ok = rows.filter(r => r.v != null && isFinite(r.v)); if (ok.length < 2) return "";
+    const med = mf ? mf(s) : null, vs = [...ok.map(r => r.v), med != null ? med : 0, 0], lo = Math.min(...vs), hi = Math.max(...vs), pos = v => (v - lo) / ((hi - lo) || 1) * 100, z = pos(0);
+    const best = sens === "hi" ? Math.max(...ok.map(r => r.v)) : Math.min(...ok.map(r => r.v)), worst = sens === "hi" ? Math.min(...ok.map(r => r.v)) : Math.max(...ok.map(r => r.v));
+    return `<div class="f3-ch f3-cc"><h3>${esc(t)}</h3><details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex)}${lien && pli ? ` <a href="#${pli}" data-f3go="${pli}">Tout le détail dans « ${esc(plil)} » ↓</a>` : ""}</p></details>
+      <div class="f3-cr">${rows.map(({ c, v }) => v == null || !isFinite(v) ? `<div class="f3-rw na"><a href="/entreprise/${c.id}">${esc(c.name)}</a><span></span><b>non calculable</b></div>`
+        : `<div class="f3-rw${c === s ? " me" : ""}${v === best ? " best" : v === worst ? " worst" : ""}"><a href="/entreprise/${c.id}">${esc(c.name)}</a><div class="f3-tk">${lo < 0 ? `<em style="left:${z}%"></em>` : ""}<i style="left:${Math.min(pos(v), z).toFixed(1)}%;width:${Math.max(Math.abs(pos(v) - z), 1.5).toFixed(1)}%"></i></div><b>${fmt(v)}</b></div>`).join("")}
+      ${med != null ? `<div class="f3-md" style="--f:${(pos(med) / 100).toFixed(4)}"><span>médiane ${fmt(med)}</span></div>` : ""}</div></div>`; }).filter(Boolean);
+}
 function f3AutresHTML(s) {
   const pr = peersOf(s, 4).list.filter(c => !c.missing).slice(0, 4); if (pr.length < 2) return "";
   const bank = isBank(s), L = [s, ...pr];
@@ -126,14 +136,7 @@ function f3AutresHTML(s) {
       : ["Marge : ce qu'il leur reste sur 100 € de ventes", c => ratios(c).marge, v => f3Nb(Math.round(v * 100), 0) + " €", s => f3Med(s, x => ratios(x).marge), "hi", "La marge d'exploitation : ce qui reste des ventes une fois payés la fabrication, les salaires, les loyers et la publicité, avant les impôts et les intérêts. Plus elle est haute, plus l'entreprise gagne d'argent sur ce qu'elle vend.", "rf-rentab", "Rentabilité"],
     ["Croissance : l'évolution de leurs ventes sur un an", c => ratios(c).g1, v => f3Pct(v * 100), s => f3Med(s, x => ratios(x).g1), "hi", "La hausse (ou la baisse) du chiffre d'affaires sur le dernier exercice. Elle dit si l'entreprise vend de plus en plus, ou de moins en moins.", "rf-resultats", "Résultats"],
     ["Prix : combien d'années de bénéfice coûte l'action", f3Pe, v => f3Nb(Math.round(v), 0) + " fois", s => f3Med(s, f3Pe), "lo", "Le PER compare la valeur de l'entreprise en Bourse à son bénéfice annuel. 30 fois veut dire qu'il faudrait 30 ans de bénéfice actuel pour atteindre le prix payé. Plus il est bas, moins l'action est chère au regard de ce qu'elle gagne.", "rf-valo", "Prix en Bourse"]];
-  const cards = crit.map(([t, f, fmt, mf, sens, ex, pli, plil]) => {
-    const rows = L.map(c => ({ c, v: f(c) })), ok = rows.filter(r => r.v != null && isFinite(r.v)); if (ok.length < 2) return "";
-    const med = mf(s), vs = [...ok.map(r => r.v), med != null ? med : 0, 0], lo = Math.min(...vs), hi = Math.max(...vs), pos = v => (v - lo) / ((hi - lo) || 1) * 100, z = pos(0);
-    const best = sens === "hi" ? Math.max(...ok.map(r => r.v)) : Math.min(...ok.map(r => r.v)), worst = sens === "hi" ? Math.min(...ok.map(r => r.v)) : Math.max(...ok.map(r => r.v));
-    return `<div class="f3-ch f3-cc"><h3>${esc(t)}</h3><details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex)} <a href="#${pli}" data-f3go="${pli}">Tout le détail dans « ${esc(plil)} » ↓</a></p></details>
-      <div class="f3-cr">${rows.map(({ c, v }) => v == null || !isFinite(v) ? `<div class="f3-rw na"><a href="/entreprise/${c.id}">${esc(c.name)}</a><span></span><b>non calculable</b></div>`
-        : `<div class="f3-rw${c === s ? " me" : ""}${v === best ? " best" : v === worst ? " worst" : ""}"><a href="/entreprise/${c.id}">${esc(c.name)}</a><div class="f3-tk">${lo < 0 ? `<em style="left:${z}%"></em>` : ""}<i style="left:${Math.min(pos(v), z).toFixed(1)}%;width:${Math.max(Math.abs(pos(v) - z), 1.5).toFixed(1)}%"></i></div><b>${fmt(v)}</b></div>`).join("")}
-      ${med != null ? `<div class="f3-md" style="--f:${(pos(med) / 100).toFixed(4)}"><span>médiane ${fmt(med)}</span></div>` : ""}</div></div>`; }).filter(Boolean);
+  const cards = f3CritCards(crit, L, s);
   if (!cards.length) return "";
   const absents = peersOf(s, 4).list.filter(c => c.missing).map(c => c.name);
   return `<section class="f3-sec"><span class="a4-stk a4-bl">2 · Face aux autres</span><h2>${esc(s.name)} contre ses rivales.</h2><div class="f3-cmp">${cards.join("")}</div>
@@ -272,6 +275,7 @@ function f3Themes(tw, s, c) {
     w.addEventListener("click", e => { const b = e.target.closest(".f3-kt"); if (b && !e.target.closest(".prov-i")) show(b.dataset.f3k); });
     w.addEventListener("keydown", e => { const b = e.target.closest(".f3-kt"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); show(b.dataset.f3k); } });
     const first = rows.find(r => r.ess) || rows[0]; show(first.k);
+    const cq = $(".f3-cq", w); if (cq && matchMedia("(min-width:761px)").matches) cq.open = true; // sur ordinateur, « C'est quoi ? » est lisible à côté du graphique
     // ce qui est remplacé : rangée de pastilles, graphique ancien, « détail année par année » (doublons) ; le contexte des ventes est gardé
     $$(".rf-kts, .rf-thc, details.rf-thd, .ph", sec).forEach(x => x.remove());
     sec.insertBefore(w, sec.firstChild); sec.classList.add("f3-th-host");
@@ -292,7 +296,7 @@ function f3Themes(tw, s, c) {
     const html = grps.map(g => { const rs = P.rows.filter(r => r.grp === g); if (!rs.length) return "";
       return `<div class="f3-cc"><h3>${esc(G[g] || g)}<small>${esc(GS[g] || "")}</small></h3><div class="f3-ccg" style="--n:${yrs.length}"><div class="f3-cch"><span></span>${yrs.map((y, i) => `<b class="${i === yrs.length - 1 ? "last" : ""}">${y}</b>`).join("")}</div>
         ${rs.map(r => { const chg = tblxChange(r.kind, r.prev, r.last), cls = r.q > 0 ? "u" : r.q < 0 ? "d" : "n";
-          return `<div class="f3-ccr"><span><b class="lg">${esc(r.label)}</b><b class="sm">${esc(r.short || r.label)}</b>${tblxProv(r.k, s)}<small>${esc(r.unit || "")}${chg ? ` · <i class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)} sur un an</i>` : ""}</small></span>${yrs.map((y, i) => { const v = r.vals[i0 + i]; return `<em class="${i === yrs.length - 1 ? "last" : ""}">${v == null || !isFinite(v) ? "–" : esc(r.cell ? r.cell(v) : r.full(v))}</em>`; }).join("")}</div>`; }).join("")}</div></div>`; }).join("");
+          return `<div class="f3-ccr"><span><b class="f3-lb">${esc(r.label)}</b><b class="f3-sb">${esc(r.short || r.label)}</b>${tblxProv(r.k, s)}<small>${esc(r.unit || "")}${chg ? ` · <i class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)} sur un an</i>` : ""}</small></span>${yrs.map((y, i) => { const v = r.vals[i0 + i]; return `<em class="${i === yrs.length - 1 ? "last" : ""}">${v == null || !isFinite(v) ? "–" : esc(r.cell ? r.cell(v) : r.full(v))}</em>`; }).join("")}</div>`; }).join("")}</div></div>`; }).join("");
     tout.insertAdjacentHTML("afterbegin", `<div class="f3-ccw">${html}<p class="f3-src">Un tiret : chiffre non publié sous l'étiquette standard. « Estimé » : calculé à partir des comptes. Vert et rouge : seuils de lecture du site, pas un avis.</p></div>`);
     $$(".rf-all, .src, .ph", tout).forEach(x => x.remove()); }
   $$("#rf-valorisation .ph, #rf-dividende .ph", tw).forEach(x => x.remove());
@@ -307,3 +311,8 @@ function f3Identite(mw, metier, s) { // ce qui restait dans le pli « Activités
     if (rows.length) cards.push(`<div class="f3-idc"><small>Carte d'identité</small><dl class="f3-fid">${rows.map(x => `<div><dt>${esc(x.querySelector("span").textContent)}</dt><dd>${x.querySelector("b").innerHTML}</dd></div>`).join("")}</dl></div>`); }
   if (cards.length) mw.insertAdjacentHTML("beforeend", `<div class="f3-idg">${cards.join("")}</div>`);
 }
+
+/* 2/11 (Romain) : les pages « comprendre » (/entreprise/<id>/comprendre/<k>) redisaient les chiffres de la fiche : elles renvoient vers la section
+   correspondante de la fiche (comme le serveur le fait déjà pour un lien direct). */
+const F3_CT = { argent: "f3-metier", varier: "f3-metier", croissance: "rf-resultats", marge: "rf-rentab", net: "rf-rentab", roe: "rf-rentab", dette: "rf-dette", fcf: "rf-dette", dividende: "rf-div", prix: "rf-valo" };
+window.pageComprendre = function (id, k) { goR(`/entreprise/${id}#${F3_CT[k] || "tous-les-chiffres"}`); setTimeout(() => { const t = document.getElementById(F3_CT[k] || "tous-les-chiffres"); if (t) { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ block: "start" }); } }, 600); };

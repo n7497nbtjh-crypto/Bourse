@@ -3992,8 +3992,8 @@ html #app .f3-ccr .prov-i{width:16px;height:16px;font-size:10px}
 html #app .f3-ccr em{font:600 13.5px var(--sans);font-style:normal;text-align:right;color:#444;white-space:nowrap}html #app .f3-ccr em.last{font:800 15px var(--sans);color:#111;background:var(--a4y);border-radius:8px;padding:3px 6px}
 html #app #rf-tout.panel{border:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0!important}
 @media (max-width:760px){html #app .f3-ccw{padding:10px 14px 4px}html #app .f3-cch,html #app .f3-ccr{grid-template-columns:minmax(0,1fr) repeat(var(--n),auto);padding:8px 12px;gap:4px 8px}html #app .f3-ccr em{font-size:12px}html #app .f3-ccr em.last{font-size:13px;padding:2px 4px}html #app .f3-ccr>span>b{font-size:12.5px}}
-html #app .f3-ccr em.last{justify-self:end}html #app .f3-ccr>span>b.sm{display:none}
-@media (max-width:760px){html #app .f3-ccr>span>b.lg{display:none}html #app .f3-ccr>span>b.sm{display:block}
+html #app .f3-ccr em.last{justify-self:end}html #app .f3-ccr>span>b.f3-sb{display:none}
+@media (max-width:760px){html #app .f3-ccr>span>b.f3-lb{display:none}html #app .f3-ccr>span>b.f3-sb{display:block}
  html #app .f3-ccg[style*="--n:4"] .f3-cch>b:first-of-type,html #app .f3-ccg[style*="--n:4"] .f3-ccr>em:first-of-type{display:none}
  html #app .f3-ccg[style*="--n:4"] .f3-cch,html #app .f3-ccg[style*="--n:4"] .f3-ccr{grid-template-columns:minmax(0,1fr) repeat(3,auto)}
  html #app .f3-ccr>span>small{font-size:11px}}
@@ -4021,3 +4021,30 @@ html #app .e3f-hb .hbb{height:16px;border:2px solid #111;border-radius:8px;overf
 html #app .e3f-frais{grid-template-columns:1fr!important}html #app .e3f-frais .f3-ms{width:100%}
 html #app .f2-mid #ebref.fh-sum{display:block!important;padding:18px 0 0}html #app .f2-mid #ebref>*{grid-column:auto!important}
 html #app .e3f-frais>*{grid-area:auto!important;grid-column:1!important}
+/* 2/11 (Romain : espace vide à droite du verdict) : sur ordinateur, l'en-tête en deux colonnes ; les actions sous la carte du cours */
+@media (min-width:761px){html #app .f3-hero .f3-w{display:grid;grid-template-columns:minmax(0,1fr) 380px;grid-template-areas:"id price" "verdict price" "verdict acts" "five five" "why why";gap:0 30px;align-items:start}
+ html #app .f3-hero .f3-top{display:contents}html #app .f3-hero .f3-top>div:first-child{grid-area:id}html #app .f3-hero .f3-price{grid-area:price;max-width:none;min-width:0;margin:0}
+ html #app .f3-hero .f3-verdict{grid-area:verdict;margin-top:26px;align-self:center}html #app .f3-hero .f3-acts{grid-area:acts;margin-top:16px;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+ html #app .f3-hero .f3-acts .favbtn{justify-content:center;text-align:center;padding:10px 12px!important;font-size:13.5px!important}html #app .f3-hero .f3-acts .f3-ia{grid-column:1/-1}
+ html #app .f3-hero .f3-five{grid-area:five}html #app .f3-hero .f3-why{grid-area:why}}
+/* 2/11 (Romain) : plus de mini-jauge dans l'en-tête des plis ; lecture du dividende sans chevauchement ; accordéons du dividende ; définitions à côté du graphique sur ordinateur */
+html #app #f3-tousw .rf-plk .rf-plm{display:none!important}
+html #app #f3-tousw .rf-th-in>.pb>p.lead{margin:0 0 16px!important}html #app #f3-tousw .rf-th-in .tiles{gap:10px;border:0!important;margin:0 0 16px}
+html body #app #f3-tousw details.acc{border:2px solid #111!important;border-radius:16px!important;padding:0!important;margin:10px 0 0!important;background:#fff;box-shadow:none!important}
+html body #app #f3-tousw details.acc>summary{padding:12px 16px!important;font:800 15px var(--sans)!important;border:0!important;background:none!important;list-style:none}html body #app #f3-tousw details.acc>summary::-webkit-details-marker{display:none}
+html body #app #f3-tousw details.acc .accb{padding:0 16px 14px!important;border:0!important}
+html #app #f3-tousw .rf-th-in p.note{font:600 13px var(--sans);color:#555;margin:10px 0}
+html #app #f3-tousw .rf-th-in a.more{display:inline-block;border:2px solid #111;border-radius:999px;padding:8px 16px;font:800 14px var(--sans);color:#111;text-decoration:none;background:#fff;box-shadow:3px 3px 0 #111;margin-top:8px}
+@media (min-width:761px){html #app .f3-th{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"q q" "k k" "g l" "g c";gap:0 24px;align-items:start}html #app .f3-thq{grid-area:q}html #app .f3-kts{grid-area:k}
+ html #app .f3-thg{display:contents}html #app .f3-th .f3-thc{grid-area:g}html #app .f3-th .f3-thl{grid-area:l;align-self:start}html #app .f3-th .f3-cq{grid-area:c;margin-top:4px;align-self:start}html #app .f3-th .f3-cq summary{display:none}html #app .f3-th .f3-cq p{margin:0;background:#F6F3EA;border-radius:12px;padding:10px 12px;font:500 13.5px/1.5 var(--sans)}html #app .f3-th .f3-cq p::before{content:"C'est quoi ? ";font-weight:800}}
+@media (min-width:761px){html #app #f3-tousw .rf-th-in>.pb,html #app #f3-tousw .rf-th-in>.tiles,html #app #f3-tousw .rf-th-in>.perx,html #app #f3-tousw .rf-th-in>.src,html #app #f3-tousw .rf-th-in>.f3-per{margin-left:22px!important;margin-right:22px!important}}
+/* ---------- Comparer v3 (m/comparer3.js) ---------- */
+html #app .c3-host.panel{border:0!important;box-shadow:none!important;background:none!important;padding:0!important}
+html #app .c3-h{font:800 clamp(26px,3.4vw,40px)/1 var(--serif)!important;letter-spacing:-.05em;margin:14px 0 16px}
+html #app .c3-lec{font-size:15.5px}html #app .c3-lec p{margin:0 0 8px}html #app .c3-lec ol{margin:0;padding-left:20px}html #app .c3-lec li{margin:4px 0}
+html #app .c3-cards{margin-top:18px}html #app .c3-note{font:600 13px var(--sans);color:#555;margin:12px 0 0}
+html #app .c3-acts{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px}html #app .c3-acts .cmpr-ia{margin:0;flex:1 1 320px}
+html body #app .c3-acts [data-cmpr-csv]{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font-weight:800!important;box-shadow:3px 3px 0 #111!important;padding:10px 18px!important}
+html #app .c3-acts .cmpr-csvp{margin:0}html #app .c3-acts .cmpr-csvp .light{display:none}
+html #app .cmpr-selp.panel{border:2px solid #111!important;border-radius:24px!important}
+html #app .cmpr-selp .cmpr-pick{border:2px solid #111!important;border-radius:18px!important}
