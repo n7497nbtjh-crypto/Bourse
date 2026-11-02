@@ -83,7 +83,9 @@ Dépôt : `n7497nbtjh-crypto/Bourse` (dossier local `/home/claude/bourse`). Héb
 - **Données** : relancer Eulerpool quand il revient ; décider EODHD / Marketstack (payants) ; trouver une meilleure source de logos.
 
 ## 6. Corrections et priorités de Romain
-_(à compléter)_
--
--
--
+- **Continuer dans la DA de la page d'accueil**, partout : c'est la référence, pas un point de départ à réinterpréter.
+- **Le visiteur doit comprendre tout de suite ce que le site lui apporte**, dès le premier écran de chaque page.
+- **Peu de lecture, du visuel** : un chiffre, une jauge, un verdict. Le texte seulement là où il aide vraiment, court, et replié s'il est long.
+- **De l'ergonomie entre les sections** : on doit savoir où l'on est, d'où l'on vient et où aller ensuite. La navigation d'une section à l'autre est évidente, sans retour en arrière ni chemins en double.
+- **Un vrai sens dans la construction des fiches entreprises et des outils** : chaque page raconte une histoire dans un ordre logique. Pour une entreprise, ce qu'elle vend, puis ce qu'elle en garde, ce qu'il lui reste, ce qu'elle reverse et ce que ça coûte en Bourse. Chaque section découle de la précédente.
+- **Recherche de cause** : expliquer le pourquoi, pas seulement le chiffre. Par exemple, pourquoi la marge est haute, pourquoi l'action est chère, ce qui fait bouger les résultats. Il faut relier chaque chiffre à sa cause et aux autres sections (« sa marge est haute parce que… », « elle est chère parce que le marché attend… »).
