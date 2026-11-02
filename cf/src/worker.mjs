@@ -118,6 +118,10 @@ export const iaRetiree = () => Response.json({ error: "Cette adresse n'est plus 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    // 2/11 : le site s'appelle enklair.com ; l'ancienne adresse renvoie les pages vers le nouveau domaine (l'API, le connecteur MCP
+    // et les fichiers de données restent servis tels quels pour ne rien casser chez ceux qui les utilisent déjà)
+    if ((url.hostname === "repere-bourse.pages.dev" || url.hostname === "www.enklair.com") && request.method === "GET" && !/^\/(api|mcp|data|og|icons|logos)\b/.test(url.pathname) && !/\.(js|css|json|png|jpg|svg|webmanifest|txt|xml)$/i.test(url.pathname))
+      return Response.redirect("https://enklair.com" + url.pathname + url.search, 301);
     if (url.pathname === "/api/amf") return amf(request, U.filter(c => c.region === "FR").map(c => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, U);

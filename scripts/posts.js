@@ -4,7 +4,7 @@
 // Les chiffres viennent du site lui-même (mêmes fonctions que la fiche : rfAxes, rfVerdictMots), chargé en local.
 const { ouvrir, aller } = require("./_site");
 const { chromium } = require("playwright"), fs = require("fs"), path = require("path");
-const SITE = "repere-bourse.pages.dev";
+const SITE = "enklair.com";
 
 (async () => {
   const jour = process.argv[2] || new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Paris" });

@@ -18,7 +18,7 @@ jobs:
       - name: Préparer alertes et bilans
         env:
           ADMIN_KEY: ${{ secrets.ADMIN_KEY }}
-          SITE: https://repere-bourse.pages.dev
+          SITE: https://enklair.com
           QUOI: ${{ github.event.inputs.quoi }}
           PLANNING: ${{ github.event.schedule }}
         run: |

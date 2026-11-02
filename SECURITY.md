@@ -1,6 +1,6 @@
 # Signaler une faille de sécurité
 
-Si vous découvrez une faille sur le site bilan. (repere-bourse.pages.dev) ou dans ce dépôt,
+Si vous découvrez une faille sur le site ENKLAIR (enklair.com) ou dans ce dépôt,
 merci de la signaler en privé plutôt que dans une issue publique :
 
 - par le formulaire de signalement du site (page « Signaler »), en indiquant « sécurité » ;

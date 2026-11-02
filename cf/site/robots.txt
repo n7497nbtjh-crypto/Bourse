@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: /api/
 Disallow: /x
-Sitemap: https://repere-bourse.pages.dev/sitemap.xml
+Sitemap: https://enklair.com/sitemap.xml

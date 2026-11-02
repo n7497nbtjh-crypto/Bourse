@@ -4,8 +4,8 @@
   "title": "bilan. : comptes officiels des entreprises cotées",
   "description": "Official annual accounts (ESEF, SEC) of 2,400+ listed companies with sector medians, every figure linked to its source document. French-language. Information only, no investment advice.",
   "version": "1.0.0",
-  "websiteUrl": "https://repere-bourse.pages.dev/ia/connecter",
+  "websiteUrl": "https://enklair.com/ia/connecter",
   "remotes": [
-    { "type": "streamable-http", "url": "https://repere-bourse.pages.dev/mcp" }
+    { "type": "streamable-http", "url": "https://enklair.com/mcp" }
   ]
 }

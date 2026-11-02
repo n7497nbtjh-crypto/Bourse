@@ -98,7 +98,7 @@ function appareil(ua = "") {
 /* ---------- Envoi d'un message à un appareil ---------- */
 let envoi = (u, o) => fetch(u, o); // remplaçable dans les tests
 export function _envoi(f) { envoi = f || ((u, o) => fetch(u, o)); }
-const contact = (env, origin) => { const s = String(env.SITE_URL || origin || "https://repere-bourse.pages.dev").replace(/\/+$/, ""); return /^https:\/\//.test(s) ? s : "https://repere-bourse.pages.dev"; };
+const contact = (env, origin) => { const s = String(env.SITE_URL || origin || "https://enklair.com").replace(/\/+$/, ""); return /^https:\/\//.test(s) ? s : "https://enklair.com"; };
 export async function envoyer(env, ab, message, { origin, ttl = 43200, urgence = "normal" } = {}) {
   const v = await clesVapid(env), aud = new URL(ab.endpoint).origin, now = Math.floor(Date.now() / 1000);
   let j = JETONS.get(aud);

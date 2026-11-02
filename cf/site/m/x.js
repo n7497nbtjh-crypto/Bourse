@@ -3,7 +3,7 @@
    (sessionStorage), et vérifiée par le Worker (GET /api/espace/mesures, en-tête x-admin-key). Le site ne l'écrit nulle part ailleurs.
    Contenu : 3 messages du jour (≤ 270 caractères, liens utm), image 1200 × 675 par message, suite verticale 1080 × 1920 (3 images),
    et le tunnel de la semaine (visites → fiche → suivre → compte → rapport ouvert → aperçu → page Premium → essai). */
-const X_ORIG = "https://repere-bourse.pages.dev";
+const X_ORIG = "https://enklair.com";
 const xJour = () => Math.floor(Date.now() / 864e5);
 const xUtm = (path, camp) => `${X_ORIG}${path}?utm_source=x&utm_medium=social&utm_campaign=${camp}-${TODAY}`;
 const xLen = t => t.replace(/https?:\/\/\S+/g, "x".repeat(23)).length; // X compte chaque lien pour 23 caractères
@@ -70,7 +70,7 @@ function xVertical(m) { // 3 images 1080 × 1920 : l'accroche, le chiffre, où l
       k.font = `500 50px "IBM Plex Sans", Arial, sans-serif`; xLignes(k, m.libelle, 90, 1000, 900, 64); xBarre(k, 90, 1160, 900, m);
       k.fillStyle = "#55524C"; k.font = `500 40px "IBM Plex Sans", Arial, sans-serif`; if (m.repere) k.fillText(m.repere, 90, 1260); }
     if (i === 2) { k.fillStyle = "#111214"; k.font = `600 64px "Inter Tight", Inter, Arial, sans-serif`; const n = xLignes(k, m.conclusion || "", 90, 760, 900, 80);
-      k.fillStyle = "#55524C"; k.font = `500 44px "IBM Plex Sans", Arial, sans-serif`; xLignes(k, "Le détail, chiffres et sources : repere-bourse.pages.dev", 90, 820 + n * 80, 900, 58);
+      k.fillStyle = "#55524C"; k.font = `500 44px "IBM Plex Sans", Arial, sans-serif`; xLignes(k, "Le détail, chiffres et sources : enklair.com", 90, 820 + n * 80, 900, 58);
       k.fillStyle = "#6F6A63"; k.font = `400 32px "IBM Plex Sans", Arial, sans-serif`; k.fillText("Information, pas un conseil d'investissement.", 90, 1780); }
     V.push(c);
   }

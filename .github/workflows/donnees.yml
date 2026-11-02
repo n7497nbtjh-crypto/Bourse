@@ -96,4 +96,4 @@ jobs:
             echo "Secrets Cloudflare absents : publication à faire à la main avec le fichier repere-site."
             exit 0
           fi
-          npx --yes wrangler@3.114.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true
+          npx --yes wrangler@3.112.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true

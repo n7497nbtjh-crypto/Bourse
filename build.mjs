@@ -2,7 +2,7 @@
 // Usage : node build.mjs [https://adresse-du-site]
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
-const ORIGIN = process.argv[2] || process.env.SITE_ORIGIN || "https://repere-bourse.pages.dev"; // domaine propre : définir SITE_ORIGIN
+const ORIGIN = process.argv[2] || process.env.SITE_ORIGIN || "https://enklair.com"; // domaine propre : définir SITE_ORIGIN
 import { copyFileSync, existsSync, readFileSync, writeFileSync as wfs } from "node:fs";
 { // Agenda : dates officielles relevées sur les calendriers des entreprises (data/agenda.json et data/agenda/*.mjs)
   const base = JSON.parse((await import("node:fs")).readFileSync("data/agenda.json", "utf8"));

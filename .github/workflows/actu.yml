@@ -51,4 +51,4 @@ jobs:
         run: |
           if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then echo "Secrets Cloudflare absents."; exit 0; fi
           node build.mjs
-          npx --yes wrangler@3.114.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true
+          npx --yes wrangler@3.112.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true

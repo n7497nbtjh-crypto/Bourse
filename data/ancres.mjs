@@ -10,7 +10,7 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import { extract } from "./esef.mjs";
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? +process.argv[i + 1] || d : d; };
 const MAX = arg("--max", 300), DUREE = (+process.env.DUREE_MIN || 60) * 60000, t0 = Date.now(), FIN = +process.env.FIN || 0; // FIN : heure limite commune aux relances (secondes)
-const UA = `bilan-ancres/1.0 (https://repere-bourse.pages.dev${process.env.CONTACT ? "; " + process.env.CONTACT : ""})`;
+const UA = `bilan-ancres/1.0 (https://enklair.com${process.env.CONTACT ? "; " + process.env.CONTACT : ""})`;
 const OUT = "cf/site/data/ancres"; mkdirSync(OUT, { recursive: true });
 // Indicateurs affichés par le site dont la valeur vient directement d'un chiffre du document
 const CLES = ["ca", "ebit", "net", "eps", "dps", "equity", "cash", "cfo", "divPaid", "tax", "pretax"];

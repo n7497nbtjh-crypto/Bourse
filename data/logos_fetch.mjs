@@ -16,7 +16,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import sharp from "sharp";
 const CONTACT = process.env.CONTACT || "";
-const UA = `bilan-logos/2.0 (https://repere-bourse.pages.dev${CONTACT ? "; " + CONTACT : ""}) node-fetch`;
+const UA = `bilan-logos/2.0 (https://enklair.com${CONTACT ? "; " + CONTACT : ""}) node-fetch`;
 const UA_NAV = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36";
 const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? +process.argv[i + 1] || d : d; };
 const max = arg("--max", 150), TOP = arg("--top", 300);

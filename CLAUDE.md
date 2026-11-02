@@ -1,9 +1,9 @@
 # ENKLAIR (anciennement bilan. / Repère Bourse)
 
-Nom du site depuis le 2/11/2026 : **ENKLAIR** (réseaux : enklair_ sur X, Instagram, TikTok). L'adresse reste repere-bourse.pages.dev tant que Romain n'a pas de domaine. Les clés de stockage du navigateur gardent le préfixe `bilan.` (ne pas renommer : les visiteurs perdraient leurs favoris).
+Nom du site depuis le 2/11/2026 : **ENKLAIR** (réseaux : enklair_ sur X, Instagram, TikTok). Adresse : **https://enklair.com** depuis le 2/11 (l'ancienne repere-bourse.pages.dev renvoie les pages vers le nouveau domaine ; API, MCP et données restent servis sur les deux). Mise en ligne avec wrangler 3.112.0 : la 3.114.0 publiait un Worker cassé (accueil en 404, la production restait sur l'ancienne version). Les clés de stockage du navigateur gardent le préfixe `bilan.` (ne pas renommer : les visiteurs perdraient leurs favoris).
 
 Site d'information boursière pour débutants : factuel, sans conseil d'investissement, sources affichées.
-En ligne : https://repere-bourse.pages.dev (Cloudflare Pages + Worker + D1, déployé par GitHub Actions).
+En ligne : https://enklair.com (Cloudflare Pages + Worker + D1, déployé par GitHub Actions).
 Propriétaire : Romain. Répondre en français, simplement, sans jargon technique inutile.
 
 ## Façon de travailler (règles de Romain, à respecter dans chaque session)
