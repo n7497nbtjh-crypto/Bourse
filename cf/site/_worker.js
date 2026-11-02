@@ -2114,8 +2114,8 @@ function appareil(ua = "") {
 }
 var envoi = (u, o) => fetch(u, o);
 var contact = (env, origin) => {
-  let s = String(env.SITE_URL || origin || "https://repere-bourse.pages.dev").replace(/\/+$/, "");
-  return /^https:\/\//.test(s) ? s : "https://repere-bourse.pages.dev";
+  let s = String(env.SITE_URL || origin || "https://enklair.com").replace(/\/+$/, "");
+  return /^https:\/\//.test(s) ? s : "https://enklair.com";
 };
 async function envoyer(env, ab, message2, { origin, ttl = 43200, urgence = "normal" } = {}) {
   let v = await clesVapid(env), aud = new URL(ab.endpoint).origin, now = Math.floor(Date.now() / 1e3), j = JETONS.get(aud);
@@ -2609,7 +2609,7 @@ async function ficheSociete(env, origin, ctx, B, c) {
   let anc = c.missing ? null : await optionnel(charger(env, origin, `/data/ancres/${c.id}.json`, 18e5), null);
   if (anc && anc.y && anc.report) {
     let an = Object.keys(anc.y).sort().pop(), LB = { ca: "chiffre d'affaires", ebit: "r\xE9sultat d'exploitation", net: "b\xE9n\xE9fice net", eps: "b\xE9n\xE9fice par action", dps: "dividende par action", equity: "capitaux propres", cash: "tr\xE9sorerie", cfo: "flux de tr\xE9sorerie d'exploitation", divPaid: "dividendes vers\xE9s" };
-    out.preuves = Object.entries(anc.y[an] || {}).filter(([k]) => LB[k]).map(([k, id]) => ({ chiffre: LB[k], exercice: +an, lien_document: `${anc.report}#${id}` }));
+    out.preuves = Object.entries(anc.y[an] || {}).filter(([k]) => LB[k]).map(([k, id]) => ({ chiffre: LB[k], exercice: +an, lien_document: `${anc.report.replace(/[^/]+$/, "ixbrlviewer.html")}#f-${id}` }));
   }
   out.sources = sourcesSite(origin, "/entreprise/" + c.id + (c.missing ? "" : "/comptes"), sources), out.avertissement = AVERT;
   let L = [`${c.name} (${c.ticker}${c.isin ? ", ISIN " + c.isin : ""}) \xB7 ${out.secteur} \xB7 ${out.region}`];
@@ -2879,7 +2879,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "8bcbc5e14f6dff88", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "aef92e12f6e88798", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3266,11 +3266,13 @@ function redirectionParcours(p) {
   if (p === "/pour-moi") return "/repartitions";
   if (p === "/commencer") return "/apprendre";
   let mf = /^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)\/?$/.exec(p);
-  return mf ? mf[1] + (mf[2] === "comptes" ? "#tous-les-chiffres" : mf[2] === "communaute" ? "#rf-sources" : /^comprendre/.test(mf[2]) ? "#tous-les-chiffres" : "#rf-agenda") : p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/" || p === "/debuter" || p === "/premiers-pas" ? "/apprendre" : null;
+  return mf ? mf[1] + (mf[2] === "comptes" ? "#tous-les-chiffres" : mf[2] === "communaute" ? "#rf-sources" : /^comprendre/.test(mf[2]) ? "#" + ({ argent: "f3-metier", varier: "f3-metier", croissance: "rf-resultats", marge: "rf-rentab", net: "rf-rentab", roe: "rf-rentab", dette: "rf-dette", fcf: "rf-dette", dividende: "rf-div", prix: "rf-valo" }[mf[2].split("/")[1]] || "tous-les-chiffres") : "#rf-agenda") : p === "/academie" || p === "/academie/" || p === "/academie/express" || p === "/academie/express/" || p === "/debuter" || p === "/premiers-pas" ? "/apprendre" : null;
 }
 var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree = () => Response.json({ error: "Cette adresse n'est plus utilis\xE9e. L'IA du site r\xE9pond dans le panneau \u2726 \xAB Demander \xE0 l'IA \xBB", ia_serveur: !1 }, { status: 410, headers: { "cache-control": "no-store" } }), worker_default = {
   async fetch(request, env, ctx) {
     let url = new URL(request.url);
+    if ((url.hostname === "repere-bourse.pages.dev" || url.hostname === "www.enklair.com") && request.method === "GET" && !/^\/(api|mcp|data|og|icons|logos)\b/.test(url.pathname) && !/\.(js|css|json|png|jpg|svg|webmanifest|txt|xml)$/i.test(url.pathname))
+      return Response.redirect("https://enklair.com" + url.pathname + url.search, 301);
     if (url.pathname === "/api/amf") return amf(request, index_gen_default.filter((c) => c.region === "FR").map((c) => c.isin));
     if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, index_gen_default);
