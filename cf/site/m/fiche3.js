@@ -344,6 +344,7 @@ function f3Actu(aw) {
   const w = document.createElement("div"); w.className = "f3-tl"; items.forEach(c => w.appendChild(c)); if (avenir) w.insertAdjacentHTML("beforeend", avenir);
   // dans le pli : plus de bloc « À venir » ni de presse vide (déjà au-dessus ou rien à montrer)
   const pli = $("#rf-agenda", aw); if (pli) { const ch = $(".rf-chev", pli); if (ch) ch.hidden = true; const sm = $("summary .rf-plt b", pli), sp = $("summary .rf-plt span", pli); if (sm) sm.textContent = "Toutes ses annonces des 90 derniers jours"; if (sp) sp.textContent = "Filtrer par type, lire l'original, explication par l'IA";
+    $$(".ax-it", pli).forEach((it, i) => { if (i >= 5) it.classList.add("f3-plus"); }); const lst = $(".ax-list", pli); if (lst && $$(".f3-plus", lst).length && !$(".f3-plusb", pli)) lst.insertAdjacentHTML("afterend", `<button type="button" class="f3-plusb" onclick="this.closest('#rf-agenda').classList.add('f3-tout');this.remove()">Voir les ${$$(".f3-plus", lst).length} autres annonces</button>`);
     const pp = $("#ax-p", pli); if (pp && !$$(".ax-pr", pp).some(a => !a.hidden)) { const sec = pp.closest("section"); if (sec) sec.hidden = true; } }
   if (trim) trim.remove(); const ev0 = $(".rf6-ev", aw); if (ev0) ev0.remove();
   aw.insertBefore(w, aw.firstChild);

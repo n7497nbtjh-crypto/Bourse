@@ -4163,3 +4163,41 @@ html #app .f3-cpt h3{margin:0;padding:12px 16px;background:var(--a4y);border-bot
 html #app .f3-cpt h3 small a{color:#111;font-weight:800;text-decoration:underline;text-decoration-thickness:2px;text-underline-offset:2px}
 html #app #rf-agenda .rf-chev[hidden]{display:none!important}html #app #rf-agenda .src{padding-left:2px!important;text-indent:0}
 html #app #rf-agenda .rf-plb .panel{overflow:visible!important;border-radius:0!important}
+/* ---------- 2/11 fin de journée (Romain) ---------- */
+/* annonces : une ligne par annonce */
+html #app #rf-agenda .ax-list{display:grid;gap:0;border:2px solid #111;border-radius:16px;overflow:hidden;background:#fff}
+html #app #rf-agenda .ax-day{display:none!important}
+html body #app #rf-agenda .ax-it{display:grid!important;grid-template-columns:auto minmax(0,1fr) auto auto!important;gap:4px 12px!important;align-items:center!important;border:0!important;border-top:1px solid #E6E3DA!important;border-radius:0!important;margin:0!important;padding:8px 12px!important;box-shadow:none!important}
+html #app #rf-agenda .ax-it:first-child{border-top:0!important}
+html #app #rf-agenda .ax-it .ax-b{display:contents!important}
+html #app #rf-agenda .ax-m{grid-column:1;display:flex;gap:6px;align-items:center;font:700 11.5px var(--sans)!important;white-space:nowrap}html #app #rf-agenda .ax-m>span:not(.ax-chip){display:none}
+html #app #rf-agenda .ax-tf{grid-column:2;font:700 13.5px/1.3 var(--sans)!important;margin:0!important}
+html #app #rf-agenda .ax-src{grid-column:3;grid-row:1;font:700 12px var(--sans)!important;white-space:nowrap;margin:0!important}
+html body #app #rf-agenda .iabtn{grid-column:4!important;grid-row:1!important;font-size:12px!important;padding:5px 11px!important;box-shadow:2px 2px 0 #111!important;margin:0!important}
+html #app #rf-agenda .ax-it .iabox,html #app #rf-agenda .ax-it .ax-cl{grid-column:1/-1}
+html #app #rf-agenda .f3-plus{display:none!important}html #app #rf-agenda.f3-tout .f3-plus{display:grid!important}
+html body #app .f3-plusb{margin:8px 0 0;border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font:800 13px var(--sans)!important;padding:6px 14px!important}
+html #app #rf-agenda .rf-plb .ph{margin:0 0 8px!important}html #app #rf-agenda .rf-plb .ph .light{font-size:12px!important}
+@media (max-width:760px){html body #app #rf-agenda .ax-it{grid-template-columns:auto minmax(0,1fr)!important}html #app #rf-agenda .ax-src{grid-column:2;grid-row:auto}html body #app #rf-agenda .iabtn{grid-column:2!important;grid-row:auto!important;justify-self:start}}
+/* fenêtre « i » : jamais hors de l'écran, texte qui passe à la ligne */
+html body .pop{overflow:auto;max-height:min(70vh,560px);overflow-wrap:anywhere}html body .pop .prov-dl dd{min-width:0}
+/* Comparer : sélection en pastilles, sans points de couleur */
+html #app .cmpr-sel{display:flex!important;flex-wrap:wrap;gap:10px;align-items:center}
+html #app .cmpr-card{display:flex!important;align-items:center;gap:6px;border:2px solid #111!important;border-radius:999px!important;padding:5px 6px 5px 6px!important;background:#fff!important;box-shadow:none!important;min-height:0!important;width:auto!important;flex:0 0 auto!important}
+html #app .cmpr-card .cmpr-cl{display:flex;align-items:center;gap:8px;text-decoration:none;color:#111}html #app .cmpr-card .cmpr-cl small{display:none!important}html #app .cmpr-card .cmpr-cl b{font:800 15px var(--sans)}
+html #app .cmpr-card .lg{--s:30px!important;border-radius:50%!important}
+html body #app .cmpr-card .cmpr-x{position:static!important;width:26px!important;height:26px!important;border:0!important;background:#F2F0EA!important;border-radius:50%!important;font-weight:800;color:#111;margin-left:2px}
+html #app .cmpr-card.cmpr-lim{border:0!important;background:none!important;padding:0 6px!important;flex:1 1 260px!important;display:block!important;font:600 13px var(--sans);color:#555;border-radius:0!important}html #app .cmpr-card.cmpr-lim b{font:700 13px var(--sans)!important;color:#333}html #app .cmpr-card.cmpr-lim span{display:inline}
+html #app .cmpr-card.cmpr-add{border-radius:18px!important;padding:8px 12px!important;flex:1 1 280px!important;display:block!important}
+html #app .cmpr-selp .pb{padding:14px 18px!important}html #app .cmpr-selp .pb>p{font:600 12.5px var(--sans);color:#555;margin:10px 0 0}
+html #app .cmpr-acts{margin-top:10px!important}
+/* Comparer : « Comprendre chaque critère » avec les jauges de la fiche */
+html #app .cmpr-crits{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px}
+html #app .cmpr-crit{border:2px solid #111;border-radius:20px;padding:14px 16px;background:#fff;margin:0!important}
+html #app .cmpr-crit h3{font:800 18px var(--serif)!important;letter-spacing:-.02em;margin:0 0 4px}html #app .cmpr-crit>p{font:500 13px var(--sans);color:#444;margin:0 0 12px}
+html #app .cmpr-jg{display:grid;grid-template-columns:110px minmax(0,1fr);gap:4px 10px;align-items:center;margin:8px 0}html #app .cmpr-jg>span{display:flex;align-items:center;gap:6px;font:800 13px var(--sans)}
+html #app .cmpr-jg .rf6-jg{display:grid;gap:4px}html #app .cmpr-jg .rf6-jg small{font:600 11.5px var(--sans)!important;color:#555}
+html #app .cmpr-jg .fk-g{position:relative;display:block;height:8px;border-radius:4px;background:linear-gradient(90deg,#FFD0C4 50%,#BFF0DA 50%)!important;margin-top:4px}
+html #app .cmpr-jg .fk-g.fk-gn{background:linear-gradient(90deg,#E9E6DE 50%,#D6D2C8 50%)!important}
+html #app .cmpr-jg .fk-g em{position:absolute;left:50%;top:-3px;width:2px;height:14px;background:#111;border:0}
+html #app .cmpr-jg .fk-g i{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#111!important;border:3px solid #fff!important;box-shadow:none!important}
