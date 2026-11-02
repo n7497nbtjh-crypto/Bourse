@@ -1,0 +1,28 @@
+# Images du jour pour les réseaux d'ENKLAIR (enklair_), dans la DA du site. Rien n'est publié : les images et les légendes
+# sont déposées en « artefact » de l'exécution (onglet Actions → Images pour les réseaux → posts-AAAA-MM-JJ), à relire avant publication.
+name: Images pour les réseaux
+on:
+  schedule:
+    - cron: "17 6 * * 1-5"   # 7 h 17 (hiver) / 8 h 17 (été), heure de Paris, les jours de Bourse
+  workflow_dispatch: {}
+permissions:
+  contents: read
+jobs:
+  posts:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Préparer le navigateur
+        run: |
+          npm i --no-save --silent playwright@1.49.1
+          npx playwright install --with-deps chromium
+      - name: Fabriquer les images
+        run: node scripts/posts.js "$(TZ=Europe/Paris date +%F)"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: posts-${{ github.run_number }}
+          path: posts/
+          retention-days: 14

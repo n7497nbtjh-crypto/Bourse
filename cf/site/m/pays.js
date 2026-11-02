@@ -8,7 +8,7 @@
    Styles : site.css, bloc « Pays ». */
 const PAYS = { fr: ["France", "🇫🇷"], be: ["Belgique", "🇧🇪"], ch: ["Suisse", "🇨🇭"], lu: ["Luxembourg", "🇱🇺"] };
 let PAYS_DATA = null;
-const paysGet = () => { try { const p = localStorage.getItem("bilan.pays"); return PAYS[p] ? p : "fr"; } catch (e) { return "fr"; } };
+const paysGet = () => { const ip = document.documentElement.dataset.paysIp; const d = PAYS[ip] ? ip : "fr"; try { const p = localStorage.getItem("bilan.pays"); return PAYS[p] ? p : d; } catch (e) { return d; } }; // choix mémorisé, sinon le pays d'où l'on visite (Cloudflare), sinon la France
 function paysCharger() { return PAYS_DATA ? Promise.resolve(PAYS_DATA) : fetch("/data/academie-pays.json").then(r => r.json()).then(j => PAYS_DATA = j).catch(() => null); }
 function paysAppliquer(aca, pd, p) { // remplace, dans l'Académie chargée, les leçons propres à la France par celles du pays
   if (!aca || !pd || p === "fr" || !pd.pays[p] || aca._pays === p) return aca;
