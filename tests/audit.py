@@ -114,17 +114,15 @@ with sync_playwright() as pw:
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
         pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
-        pg.evaluate("document.querySelector('[data-f3st=rf-rentab]') ? document.querySelector('[data-f3st=rf-rentab]').click() : document.querySelectorAll('#tous-les-chiffres details').forEach(d => { d.open = true; })")  # 2/11 : chaîne des sections, une à la fois
-        pg.wait_for_timeout(300); pg.locator("#rf-rentab .f3-thh .prov-i").first.scroll_into_view_if_needed(); pg.wait_for_timeout(300)  # 2/11 : la bulle « i » (provenance + définition) remplace le bouton « def »
-        pg.click("#rf-rentab .f3-thh .prov-i"); pg.wait_for_timeout(150)
-        if not pg.evaluate("document.getElementById('pop').classList.contains('open')"): probs["définition"] = ["la bulle ne s'ouvre pas"]
+        pg.locator("#e2 [data-ek-def]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(200)  # 2/11 soir : fiche v4, fenêtre de définition partagée (m/composants.js)
+        pg.locator("#e2 [data-ek-def]").first.click(); pg.wait_for_timeout(150)
+        if not pg.evaluate("!!document.querySelector('#ek-dlg.on')"): probs["définition"] = ["la fenêtre de définition ne s'ouvre pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["chiffres + bulle"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_definition.png")
         # Fiche : PER calculé automatiquement avec le cours (thème « Valorisation » de l'onglet des chiffres)
         pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
-        pg.evaluate("document.getElementById('rf-valo').open = true")
-        if "PER" not in pg.inner_text("#rf-valorisation"): probs["PER"] = ["le PER n'est pas calculé"]
+        if "PER" not in pg.inner_text(".ek-fil") or "fois" not in pg.inner_text(".ek-chain"): probs["PER"] = ["le PER n'est pas calculé"]  # fiche v4 : 5e repère et dernière étape
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["fiche + PER"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_fiche_per.png", full_page=True)

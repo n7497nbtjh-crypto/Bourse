@@ -10,14 +10,14 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
   if (!ex) err.push("accueil : exemple absent"); // les cartes « Trois fiches » ont disparu au lot 3 ; l'exemple reste contrôlé
   for (const c of cartes) {
     await aller(p, "/entreprise/" + c.id, 3000);
-    const f = await p.evaluate(() => ({ prix: document.querySelector(".pxhead .p") && document.querySelector(".pxhead .p").textContent, pts: [...(document.querySelector(".rf-tally") ? document.querySelector(".rf-tally").querySelectorAll("span") : [])].map(s => (s.textContent.match(/\d+/) || [""])[0]) }));
+    const f = await p.evaluate(() => ({ prix: document.querySelector(".pxhead .p, .ek-pcard .ek-p b") && document.querySelector(".pxhead .p, .ek-pcard .ek-p b").textContent, pts: [...(document.querySelector(".rf-tally") ? document.querySelector(".rf-tally").querySelectorAll("span") : [])].map(s => (s.textContent.match(/\d+/) || [""])[0]) }));
     if (c.prix && norm(c.prix) !== norm(f.prix)) err.push(`${c.id} : cours « ${norm(c.prix)} » sur l'accueil, « ${norm(f.prix)} » sur la fiche`);
     if (c.pts.length && c.pts.join("/") !== f.pts.join("/")) err.push(`${c.id} : points ${c.pts.join("/")} sur l'accueil, ${f.pts.join("/")} sur la fiche`);
   }
   if (ex) { // l'exemple de l'accueil contre la fiche : marge d'exploitation (tuile « marge ») et PER (section Valorisation), comparés en nombre
     await aller(p, "/entreprise/" + ex.id, 3500);
     const f = await p.evaluate(() => { document.querySelectorAll("#tous-les-chiffres details").forEach(d => d.open = true);
-      const k = document.querySelector('.f3-kt[data-f3k="marge"] b, .rf-kt[data-g="marge"] b'), v = document.querySelector("#rf-valorisation");
+      const k = document.querySelector('.f3-kt[data-f3k="marge"] b, .rf-kt[data-g="marge"] b, .ek-chain .ek-rp:nth-child(2) .ek-v'), v = document.querySelector("#rf-valorisation, .ek-chain .ek-rp:last-child");
       const per = v && (v.innerText.match(/PER\s*\n?\s*i?\s*\n?\s*(\d+(?:[,.]\d+)?)/) || v.innerText.match(/coûte (\d+) fois/) || [])[1];
       return { marge: k ? k.textContent : null, per: per || null }; });
     const num = t => { const m = String(t || "").replace(/\s/g, "").match(/-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; };
@@ -34,10 +34,11 @@ const norm = t => (t || "").replace(/\s+/g, " ").trim();
   let vus = 0;
   for (const id of ids) { if (vus >= N) break;
     await aller(p, "/entreprise/" + id, 3000);
-    const r = await p.evaluate(() => { if (!document.querySelector(".rf-vc")) return null; document.querySelectorAll("#tous-les-chiffres details").forEach(d => d.open = true); const num = e => { const m = e.textContent.replace(/\s/g, "").match(/^-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; }; // chiffres « en clair » : tuiles, cases, grands chiffres (les phrases d'explication peuvent citer la valeur avec son contexte)
-      const per = [...document.querySelectorAll('.rf-kt[data-g="per"] b, .tile .v, td.num, .acc-exr b, .rf-cv')].filter(e => /fois|^\d/.test(e.textContent) && /PER|fois/i.test((e.closest(".tile, td, .rf-kt, .acc-exr") || e).textContent)).map(num).filter(x => x != null && x > 100);
-      const pay = [...document.querySelectorAll('.rf-kt[data-g="payout"] b, .tile .v, td.num')].filter(e => !/⚠/.test(e.textContent) && !/verse plus/.test((e.closest(".tile, tr, .rf-kt") || e).textContent)).filter(e => /bénéfice|distribution|versée|Part/i.test((e.closest(".tile, tr, .rf-kt") || e).textContent) && /%/.test(e.textContent)).map(num).filter(x => x != null && x > 150);
-      return { per, pay, verdict: (document.querySelector(".rf-vc") || {}).textContent || "" }; });
+    const r = await p.evaluate(() => { if (!document.querySelector(".rf-vc, .ek-vrd")) return null; document.querySelectorAll("#tous-les-chiffres details, #tout details, .ek-more").forEach(d => d.open = true); const num = e => { const m = e.textContent.replace(/\s/g, "").match(/^-?\d+(?:[,.]\d+)?/); return m ? parseFloat(m[0].replace(",", ".")) : null; }; // chiffres « en clair » : tuiles, cases, grands chiffres (les phrases d'explication peuvent citer la valeur avec son contexte)
+      const per = [...document.querySelectorAll('.rf-kt[data-g="per"] b, .tile .v, td.num, .acc-exr b, .rf-cv, .ek-chain .ek-rp:last-child .ek-v, .ek-tbl td')].filter(e => /fois|^\d/.test(e.textContent) && /PER|fois/i.test((e.closest(".tile, tr, .rf-kt, .acc-exr, .ek-rp") || e).textContent)).map(num).filter(x => x != null && x > 100);
+      const pay = [...document.querySelectorAll('.rf-kt[data-g="payout"] b, .tile .v, td.num, .ek-chain .ek-rp:nth-last-child(2) .ek-v')].filter(e => !/⚠/.test(e.textContent) && !/verse plus/.test((e.closest(".tile, tr, .rf-kt") || e).textContent)).filter(e => /bénéfice|distribution|versée|Part/i.test((e.closest(".tile, tr, .rf-kt, .ek-rp") || e).textContent) && /%/.test(e.textContent)).map(num).filter(x => x != null && x > 150);
+      const h4 = [...document.querySelectorAll(".ek-h")].map(e => (e.textContent.match(/reverse (\d+) %/) || [])[1]).filter(Boolean).map(Number).filter(x => x > 150); pay.push(...h4);
+      return { per, pay, verdict: (document.querySelector(".rf-vc, .ek-vrd") || {}).textContent || "" }; });
     if (!r) continue; vus++;
     if (r.per.length) err.push(`${id} : PER affiché en clair ${r.per.join(", ")}`);
     if (r.pay.length) err.push(`${id} : taux de distribution affiché en clair ${r.pay.join(", ")} %`);

@@ -51,7 +51,7 @@ function ekPoints(o) {
     const cy = T + i * rh + 10, mieux = bas ? r.v < o.mediane : r.v > o.mediane;
     g += ekTx(L - 12, cy + 4, ekEsc(r.nom), { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: r.moi ? 14 : 13 });
     g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/><circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"/>`
-      + ekTx(W - R + 12, cy + 4, ekEsc(r.texte), { fw: 800, c: r.v === o.mediane ? "#111" : mieux ? EK_G : EK_R, fs: r.moi ? 14 : 13 });
+      + ekTx(W - R + 12, cy + 4, ekEsc(r.texte), { fw: 800, c: Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R, fs: r.moi ? 14 : 13 });
   });
   g += "</svg>" + hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join("");
   return ekBox(o, g);
@@ -60,7 +60,7 @@ function ekPoints(o) {
 // Partage d'un total en deux parts, avec la médiane des rivales en pointillé.
 // o = { titre, unite, part (0-100), partTexte, resteTexte, mediane (0-100), mediane_label, indice, source }
 function ekPartage(o) {
-  return ekBox(o, `<div class="ek-split"><span style="left:${o.mediane}%"><em>${ekEsc(o.mediane_label)}</em></span><div style="width:${o.part}%">${ekEsc(o.partTexte)}</div><div style="width:${100 - o.part}%">${ekEsc(o.resteTexte)}</div></div><div class="ek-splitl"><span>0 %</span><span>100 %</span></div>`);
+  return ekBox(o, `<div class="ek-split"><span style="left:${Math.max(0, Math.min(100, o.mediane))}%"><em style="transform:translateX(${o.mediane > 80 ? -100 : o.mediane < 20 ? 0 : -50}%)">${ekEsc(o.mediane_label)}</em></span><div style="width:${o.part}%">${ekEsc(o.partTexte)}</div><div style="width:${100 - o.part}%">${ekEsc(o.resteTexte)}</div></div><div class="ek-splitl"><span>0 %</span><span>100 %</span></div>`);
 }
 
 // « Ce qui l'explique » : des causes numérotées, chacune avec sa preuve, puis « À surveiller ».
@@ -70,19 +70,19 @@ function ekExplique(o) {
 }
 
 // Carte « en savoir plus » mise en avant (repliée). Un lien vers #id l'ouvre et la montre.
-function ekPlus(o) { return `<details class="ek-more" id="${ekEsc(o.id)}"><summary><span class="ek-ic">${ekEsc(o.icone || "+")}</span><span class="ek-tt">${ekEsc(o.titre)}</span><span class="ek-op"></span></summary><div class="ek-in">${o.html}</div></details>`; }
+function ekPlus(o) { return `<details class="ek-more" id="${ekEsc(o.id)}"><summary><span class="ek-ic">${ekEsc(o.icone || "+")}</span><span class="ek-tt">${ekEsc(o.titre)}</span><span class="ek-op"></span></summary><div class="ek-in scroll-x">${o.html}</div></details>`; }
 // Petit tableau année par année pour les cartes : lignes = [[libellé, [valeurs déjà formatées]]].
 function ekTableau(annees, lignes) { return `<table class="ek-tbl"><tr><th></th>${annees.map(a => `<th>${a}</th>`).join("")}</tr>${lignes.map(([l, v]) => `<tr><td>${ekEsc(l)}</td>${v.map(x => `<td>${ekEsc(x)}</td>`).join("")}</tr>`).join("")}</table>`; }
 
 // Transition vers l'étape suivante : une phrase, pas un bouton.
 function ekTransition(t) { return t ? `<div class="ek-trans"><i>↓</i><p><span>${ekEsc(t)}</span></p></div>` : ""; }
 
-// Une étape du fil. o = { id, n, sur, titre, mots:[{ cle, ex, calc }], visuel, explique, plus, suite }
+// Une étape du fil. o = { id, n, sur, titre, mots:[{ cle, ex, calc }], visuel, explique, plus, suite, haut (visuel court : pas d'étirement) }
 function ekEtape(o) {
   return `<div class="ek-step" id="${ekEsc(o.id)}"><div class="ek-rail"><b>${o.n}</b></div><div class="ek-sc">
   <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${ekEsc(o.titre)}</h3>
   ${o.mots && o.mots.length ? `<div class="ek-defs">Les mots de l'étape : ${o.mots.map(m => ekDefBouton(m.cle, m)).join("")}</div>` : ""}
-  <div class="ek-row">${o.visuel}${o.explique || ""}</div>${o.plus || ""}${ekTransition(o.suite)}</div></div>`;
+  <div class="ek-row${o.haut ? " ek-row-top" : ""}">${o.visuel}${o.explique || ""}</div>${o.plus || ""}${ekTransition(o.suite)}</div></div>`;
 }
 function ekFil(etapes) { return `<div class="ek ek-fil">${etapes.map(ekEtape).join("")}</div>`; }
 
@@ -101,6 +101,7 @@ var EK_DEF = {
   rendement: { t: "Rendement du dividende", aka: "", c: "Ce que rapporte le dividende chaque année, en pourcentage du prix de l'action.", calc: "Dividende par action ÷ cours de l'action", lire: "Il baisse quand l'action est chère, même si le dividende monte. Un rendement très élevé peut annoncer une baisse du dividende : à vérifier." },
   per: { t: "PER", aka: "Price Earnings Ratio, ou « multiple de bénéfice »", c: "Combien d'années du bénéfice actuel il faudrait pour payer l'entreprise au prix de la Bourse.", calc: "Valeur en Bourse ÷ bénéfice net (ou cours ÷ bénéfice par action)", lire: "Élevé : le marché paie cher, car il attend une croissance ou une grande régularité. Bas : il doute, ou l'action est délaissée. Sans sens si le bénéfice est presque nul." },
   capi: { t: "Valeur en Bourse", aka: "capitalisation boursière", c: "Le prix de toute l'entreprise, selon le cours du jour.", calc: "Cours de l'action × nombre d'actions", lire: "Elle change chaque jour avec le cours. Elle ne dit pas si l'action est chère : pour ça, on la compare au bénéfice (PER)." },
+  roe: { t: "Rentabilité des capitaux propres", aka: "ROE (Return on Equity)", c: "Sur 100 € apportés et laissés par les actionnaires, combien l'entreprise gagne en un an.", calc: "Bénéfice net ÷ capitaux propres", lire: "C'est la mesure de référence pour une banque ou un assureur, dont les « ventes » ne se comparent pas à celles d'une industrie. Au-dessus de 10 %, une banque européenne rapporte plus que son coût du capital habituel." },
   mediane: { t: "Médiane", aka: "", c: "La valeur du milieu : quand on range les entreprises de la meilleure à la moins bonne, la moitié fait mieux, la moitié moins bien.", calc: "Valeur centrale de la liste triée (moyenne des deux du milieu si leur nombre est pair)", lire: "Contrairement à la moyenne, un seul chiffre extrême ne la fausse pas. Sur ENKLAIR, elle est calculée sur les rivales du même métier, sans l'entreprise de la page." },
 };
 // Pastille cliquable. m = { ex: "41,1 %", calc: "6 569 ÷ 16 002 M€", nom: "Hermès" } (exemple chiffré facultatif).
