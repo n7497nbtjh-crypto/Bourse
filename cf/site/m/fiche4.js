@@ -150,21 +150,23 @@ const f4Prochain = id => { const e = typeof eventsOf === "function" ? eventsOf(i
 
 
 // Titre d'une série annuelle : la variation de l'année et ce qu'elle a de particulier (sans redire chaque barre)
-function f4TitreSerie(gs, an, quoi) {
+// Fin de titre après le terme exact (« Chiffre d'affaires : … ») : en minuscule, sans sujet.
+function f4TitreSerie(gs, an) {
   if (!gs.length) return "";
   const [y1, g1] = gs[gs.length - 1], av = gs.slice(0, -1).map(z => z[1]), y0 = gs[0][0] - 1;
-  if (g1 < 0) return `${quoi[0].toUpperCase() + quoi.slice(1)} en baisse de ${ekFr(-g1 * 100, 1)} % en ${y1}${av.length && av[av.length - 1] < 0 ? ", deuxième année de recul" : av.length && av.every(v => v > 0) ? `, premier recul depuis ${y0}` : ""}.`;
-  const base = `${f4Pc(g1, 1, true)} de ${quoi} en ${y1}`;
-  if (av.length >= 2 && g1 < Math.min(...av)) return `${base} : la plus faible hausse depuis ${y0}.`;
-  if (av.length >= 2 && g1 > Math.max(...av)) return `${base} : la plus forte hausse depuis ${y0}.`;
+  if (g1 < 0) return `en baisse de ${ekFr(-g1 * 100, 1)} % en ${y1}${av.length && av[av.length - 1] < 0 ? ", deuxième année de recul" : av.length && av.every(v => v > 0) ? `, premier recul depuis ${y0}` : ""}.`;
+  const base = `en hausse de ${ekFr(g1 * 100, 1)} % en ${y1}`;
+  if (av.length >= 2 && g1 < Math.min(...av)) return `${base}, sa plus faible progression depuis ${y0}.`;
+  if (av.length >= 2 && g1 > Math.max(...av)) return `${base}, sa plus forte progression depuis ${y0}.`;
   return base + ".";
 }
+function f4Montant(v, cur, an) { return v == null ? "" : v < 0 ? `une perte de ${f4Md(-v, cur)} en ${an}.` : `${f4Md(v, cur)} en ${an}.`; }
 function f4E1(x) {
   const { s, c, M, MED, P } = x, se = f4Serie(c, "ca"), cur = s.currency;
   const gs = []; if (se) for (let i = 1; i < se.v.length; i++) if (se.v[i] != null && se.v[i - 1] > 0) gs.push([se.y[i], se.v[i] / se.v[i - 1] - 1]);
   const causes = [];
   const last = gs.length ? gs[gs.length - 1] : null, prev = gs.length > 1 ? gs[gs.length - 2] : null;
-  return { id: "e1", n: 1, sur: "Ses ventes", titre: f4TitreSerie(gs, s.year, "ventes") || `${f4Md(s.ca, cur)} de ventes en ${s.year}.`,
+  return { id: "e1", n: 1, sur: "Ses ventes", titre: f4TitreSerie(gs, s.year) || f4Montant(s.ca, cur, s.year), concept: s.ca != null ? { cle: "ventes", ex: f4Md(s.ca, cur), calc: `ventes ${s.year}`, nom: s.name } : null,
     mots: [{ cle: "ventes", ex: f4Md(s.ca, cur), calc: `ventes ${s.year}`, nom: s.name }, { cle: "croissance", ex: f4Pc(M.g, 1, true), calc: `${ekFr(s.ca, 0)} ÷ ${ekFr(s.caPrev, 0)} − 1`, nom: s.name }],
     visuel: se ? f4Cols(x, se, "Ses ventes", null, `Chaque barre donne les ventes d'un exercice ; sous l'année, la variation par rapport à l'année d'avant.${gs.length >= 2 ? ` Depuis ${se.y[0]} : ${f4Pc(se.v[se.v.length - 1] / se.v.find(v => v > 0) - 1, 0, true)}.` : ""}`) : "",
     explique: causes.length ? ekExplique({ causes, surveiller: f4Prochain(s.id) }) : "",
@@ -240,7 +242,7 @@ function f4E2(x) {
 function f4E3(x) {
   const { s, c, M, sym } = x, cur = s.currency, ns = f4Serie(c, "net"), n = c.years.length - 1, bank = isBank(s);
   const ng = s.net != null && s.netPrev > 0 ? s.net / s.netPrev - 1 : null;
-  let titre = `${f4Md(s.net, cur)} de bénéfice en ${s.year}.`;
+  let titre = f4Montant(s.net, cur, s.year);
   const nY = Math.min(4, c.years.length), tx = Array.from({ length: nY }, (_, j) => f4Taux(c, c.years.length - nY + j));
   const t1 = f4Taux(c, n), t0 = n > 0 ? f4Taux(c, n - 1) : null, alerte = t1 != null && t0 != null && t1 > t0 + 0.02;
   const ligne = tx.some(t => t != null) ? { nom: "taux d'impôt", valeurs: tx.map(t => t == null ? "" : ekFr(t * 100, 0) + " %"), alerte: alerte ? tx.length - 1 : -1 } : null;
@@ -257,13 +259,13 @@ function f4E3(x) {
     if (ng != null) { // la cause principale, dans le sens de la variation
       const K = [["act", dE], ["imp", dT], ["fin", fin1 != null && fin0 != null ? fin1 - fin0 : null]].filter(z => z[1] != null && (ng < 0 ? z[1] < 0 : z[1] > 0)).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
       const pq = ng < 0 ? { act: "l'activité rapporte moins", imp: "l'impôt a pris plus", fin: "les intérêts et divers pèsent plus" } : { act: "grâce à l'activité", imp: "l'impôt a pris moins", fin: "grâce aux intérêts et divers" };
-      titre = `Bénéfice ${ng < 0 ? "en baisse" : "en hausse"} de ${ekFr(Math.abs(ng) * 100, 1)} % en ${y1}${K ? (ng < 0 || K[0] === "imp" ? " : " : " ") + pq[K[0]] : ""}.`; }
+      titre = `${ng < 0 ? "en baisse" : "en hausse"} de ${ekFr(Math.abs(ng) * 100, 1)} % en ${y1}${K ? (ng < 0 || K[0] === "imp" ? ", car " : " ") + pq[K[0]] : ""}.`; }
   }
   if (!bank && s.netDebt != null) causes.push(s.netDebt <= 0 ? { titre: "Plus d'argent en caisse que de dettes", texte: `Même en remboursant tous ses emprunts, il lui resterait ${f4Md(-s.netDebt, cur)} : elle ne dépend pas des banques.` }
     : { titre: s.ebit > 0 && s.netDebt / s.ebit < 2 ? "Une dette légère" : s.ebit > 0 && s.netDebt / s.ebit <= 3 ? "Une dette à surveiller" : "Une dette lourde", texte: s.ebit > 0 ? `Elle doit ${f4Md(s.netDebt, cur)} : ${s.netDebt / s.ebit < 1.5 ? (s.netDebt / s.ebit < 1 ? "moins d'une année" : "environ une année") + " de ce que rapporte son activité suffirait" : `environ ${ekFr(s.netDebt / s.ebit, 0)} années de ce que rapporte son activité suffiraient`} à la rembourser.` : `Elle doit ${f4Md(s.netDebt, cur)}, alors que son activité ne rapporte rien cette année.` });
   const cash = f4Serie(c, "netDebt");
   const tb = ns ? ekTableau(ns.y, [["Bénéfice net", ns.v.map(z => f4Md(z, cur))], ...(cash ? [[cash.v.some(z => z != null && z > 0) ? "Dette nette (négatif : trésorerie)" : "Trésorerie nette", cash.v.map(z => z == null ? "–" : cash.v.some(q => q != null && q > 0) ? f4Md(z, cur) : f4Md(-z, cur))]] : []), ["Bénéfice sur 100 " + sym + " vendus", ns.v.map((z, i) => { const ca = f4Serie(c, "ca"); return ca && ca.v[i] > 0 && z != null ? ekFr(z / ca.v[i] * 100, 1) + " " + sym : "–"; })]]) : "";
-  return { id: "e3", n: 3, sur: "Son bénéfice", titre,
+  return { id: "e3", n: 3, sur: "Son bénéfice", titre, concept: s.net != null ? { cle: "benefice", ex: f4Md(s.net, cur), calc: `exercice ${s.year}`, nom: s.name } : null,
     mots: [{ cle: "benefice", ex: f4Md(s.net, cur), calc: `exercice ${s.year}`, nom: s.name }, ...(t1 != null ? [{ cle: "impot", ex: f4Pc(t1, 1), calc: `${ekFr(v("tax", n), 0)} ÷ ${ekFr(v("pretax", n), 0)}`, nom: s.name }] : []), ...(!bank && s.netDebt != null ? [{ cle: s.netDebt <= 0 ? "treso" : "dette", ex: f4Md(Math.abs(s.netDebt), cur), calc: `fin ${s.year}`, nom: s.name }] : [])],
     visuel: ns ? f4Cols(x, ns, "Son bénéfice net", ligne, ligne ? `La ligne « taux d'impôt » donne la part du résultat payée en impôt chaque année.${alerte ? ` Elle monte en ${c.years[n]} (${ekFr(t1 * 100, 0)} %, contre ${ekFr(t0 * 100, 0)} %) : à elle seule, elle retire une partie du bénéfice.` : ""}` : "Chaque barre donne le bénéfice net d'un exercice.") : "",
     explique: causes.length ? ekExplique({ causes, surveiller: alerte ? "Le taux d'impôt du prochain exercice." : !bank && s.netDebt > 0 && s.ebit > 0 && s.netDebt / s.ebit > 3 ? "Le poids de la dette, au-delà de 3 années de résultat." : f4Prochain(s.id) }) : "",
@@ -325,7 +327,7 @@ function f4B1(x) {
   const { s, c, M, MED, P } = x, cur = s.currency, se = f4Serie(c, "net"), qui = P.mode === "rivales" ? "ses rivales" : "son secteur";
   const gs = []; if (se) for (let i = 1; i < se.v.length; i++) if (se.v[i] != null && se.v[i - 1] > 0) gs.push([se.y[i], se.v[i] / se.v[i - 1] - 1]);
   const causes = [];
-  return { sur: "Son bénéfice", titre: f4TitreSerie(gs, s.year, "bénéfice") || (s.net != null && s.year ? `${f4Md(s.net, cur)} de bénéfice en ${s.year}.` : "Son bénéfice n'est pas publié sous une forme comparable."),
+  return { sur: "Son bénéfice", titre: f4TitreSerie(gs, s.year) || (s.net != null && s.year ? f4Montant(s.net, cur, s.year) : "Son bénéfice n'est pas publié sous une forme comparable."), concept: s.net != null && s.year ? { cle: "benefice", ex: f4Md(s.net, cur), calc: `exercice ${s.year}`, nom: s.name } : null,
     mots: [{ cle: "benefice", ex: f4Md(s.net, cur), calc: `exercice ${s.year}`, nom: s.name }],
     visuel: se ? f4Cols(x, se, "Son bénéfice net", null, "Chaque barre donne le bénéfice net d'un exercice ; sous l'année, la variation par rapport à l'année d'avant.") : "",
     explique: causes.length ? ekExplique({ causes, surveiller: f4Prochain(s.id) }) : "",

@@ -39,7 +39,7 @@ const REGLES = [
       const page = document.querySelector(".ek-page"); if (!page || !document.querySelector(".ek-fil")) return null;
       const nom = (document.querySelector(".ek-hero h1") || {}).textContent || "", med = (document.querySelector(".ek-medl") || {}).textContent || "";
       const rivales = ((med.match(/\(([^)]+)\)/) || [])[1] || "").split(",").map(x => x.trim()).filter(Boolean);
-      const T = [], add = (zone, el) => { if (!el) return; const c = el.cloneNode(true); c.querySelectorAll(".ek-hc i, .ek-def i").forEach(i => i.remove()); const t = (c.textContent || "").replace(/\s+/g, " ").trim(); if (t) T.push([zone, t]); };
+      const T = [], add = (zone, el) => { if (!el) return; const t = (el.innerText || el.textContent || "").replace(/(\S)\s*\?(\s*:)/g, "$1$2").replace(/\s+/g, " ").trim(); if (t) T.push([zone, t]); };
       document.querySelectorAll(".ek-vrd h2").forEach(e => add("verdict", e));
       document.querySelectorAll(".ek-rp").forEach(e => { add("repère : titre", e.querySelector(".ek-st")); add("repère : texte", e.querySelector(".ek-s")); add("repère : rivales", e.querySelector(".ek-ml")); });
       document.querySelectorAll(".ek-medl > span").forEach(e => add("repères : légende", e));

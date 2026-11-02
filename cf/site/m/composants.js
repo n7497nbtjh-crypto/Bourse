@@ -64,7 +64,7 @@ function ekPoints(o) {
 function ekPartage(o) {
   // Barre sur 100 : la part versée colorée (ton g / r), la médiane en trait sur la barre, les deux montants dessous.
   const v = Math.max(0, Math.min(100, o.verse)), g = Math.max(0, 100 - v), m = o.mediane != null ? Math.max(0, Math.min(100, o.mediane)) : null;
-  const al = m == null ? "" : m < 18 ? " d" : m > 82 ? " f" : "";
+  const al = m == null ? "" : m < 32 ? " d" : m > 68 ? " f" : "";
   return ekBox(o, `<div class="ek-cbar${m != null ? " ek-cbar-m" : ""}"><i class="${o.ton === "r" ? "r" : o.ton === "n" ? "n" : "g"}" style="width:${v}%"></i>${m != null ? `<em class="${al.trim()}" style="left:${m}%"><span>${ekEsc(o.medianeLabel || "médiane")}</span></em>` : ""}</div>
 <div class="ek-cleg">${v > 0 ? `<div class="v ${o.ton === "r" ? "r" : o.ton === "n" ? "n" : "g"}"><b>${ekEsc(o.verseValeur)}</b><span>${ekEsc(o.verseTexte)}</span></div>` : ""}${g > 0 ? `<div><b>${ekEsc(o.gardeValeur)}</b><span>${ekEsc(o.gardeTexte)}</span></div>` : ""}</div>${o.comparaison ? `<p class="ek-cmpl">${o.comparaison}</p>` : ""}`);
 }
@@ -90,11 +90,13 @@ function ekEtape(o) {
   const tete = d ? `<span class="ek-hc" role="button" tabindex="0" data-ek-def="${ekEsc(c.cle)}" data-ek-ex="${ekEsc(c.ex || "")}" data-ek-calc="${ekEsc(c.calc || "")}" data-ek-nom="${ekEsc(c.nom || "")}">${ekEsc(c.texte || d.t)}<i>?</i></span> : ` : "";
   const cmp = o.cmp && o.cmp.texte ? `<p class="ek-cmp ${o.cmp.ton || "n"}">${/^(Comme|Même)/.test(o.cmp.texte) ? "" : o.cmp.ton === "g" ? "▲ " : o.cmp.ton === "r" ? "▼ " : ""}${ekEsc(o.cmp.texte)}</p>` : "";
   const mots = (o.mots || []).filter(m => !c || m.cle !== c.cle);
-  const seul = !o.explique, trDroite = seul && o.visuel && o.suite;
+  const titre = d ? o.titre : String(o.titre || "").replace(/^./, x => x.toUpperCase());
+  const cote = o.visuel && (o.explique || o.suite); // la question suivante va toujours dans la colonne de droite, sous l'explication
+  const droite = cote ? `<div class="ek-side${o.explique ? "" : " ek-side-seul"}">${o.explique || ""}${ekTransition(o.suite)}</div>` : (o.explique || "");
   return `<div class="ek-step" id="${ekEsc(o.id)}"><div class="ek-rail"><b>${o.n}</b></div><div class="ek-sc">
-  <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${tete}${ekEsc(o.titre)}</h3>${cmp}
+  <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${tete}${ekEsc(titre)}</h3>${cmp}
   ${mots.length ? `<div class="ek-defs">${c ? "Autre mot" + (mots.length > 1 ? "s" : "") : "Les mots de l'étape"} : ${mots.map(m => ekDefBouton(m.cle, m)).join("")}</div>` : ""}
-  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${seul ? (trDroite ? " ek-row-tr" : " ek-row-1") : ""}">${o.visuel || ""}${o.explique || ""}${trDroite ? ekTransition(o.suite) : ""}</div>` : ""}${o.plus || ""}${trDroite ? "" : ekTransition(o.suite)}</div></div>`;
+  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${o.visuel && !cote ? " ek-row-1" : ""}">${o.visuel || ""}${droite}</div>` : ""}${o.plus || ""}${cote ? "" : ekTransition(o.suite)}</div></div>`;
 }
 function ekFil(etapes) { return `<div class="ek ek-fil">${etapes.map(ekEtape).join("")}</div>`; }
 
