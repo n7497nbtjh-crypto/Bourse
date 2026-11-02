@@ -368,7 +368,12 @@ async function provOpen(btn, mode) {
   pop.classList.add("open"); provPlace(btn);
   let html = ""; try { html = await provHTML(key, btn.dataset.provIds); } catch (e) { html = `<p>${esc(PROV_IND[key].formule)}</p>`; }
   if (seq !== PROV_SEQ || PROV_OPEN !== btn) return;
-  pop.innerHTML = html; provPlace(btn);
+  pop.innerHTML = html;
+  // 2/11 (Romain) : la bulle garde six lignes au plus : calcul, source, preuve, récupéré le, période, limite
+  try { const KEEP = /^(Formule|Calcul|Source|Preuve|Récupéré le|Période|Limite)$/; $$(".prov-nat, .prov-ft", pop).forEach(x => x.remove());
+    $$(".prov-dl dt", pop).forEach(dt => { const dd = dt.nextElementSibling; if (!KEEP.test(dt.textContent.trim())) { dt.remove(); if (dd && dd.tagName === "DD") dd.remove(); } else if (dt.textContent.trim() === "Formule") dt.textContent = "Calcul"; });
+    const vus = new Set(); $$(".prov-dl dt", pop).forEach(dt => { const t = dt.textContent.trim(), dd = dt.nextElementSibling; if (vus.has(t)) { dt.remove(); if (dd && dd.tagName === "DD") dd.remove(); } else vus.add(t); }); } catch (e) { }
+  provPlace(btn);
   try { popFor = btn; } catch (e) { }
   if (mode === "clic") pop.focus({ preventScroll: true });
 }

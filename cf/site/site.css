@@ -4201,3 +4201,4 @@ html #app .cmpr-jg .fk-g{position:relative;display:block;height:8px;border-radiu
 html #app .cmpr-jg .fk-g.fk-gn{background:linear-gradient(90deg,#E9E6DE 50%,#D6D2C8 50%)!important}
 html #app .cmpr-jg .fk-g em{position:absolute;left:50%;top:-3px;width:2px;height:14px;background:#111;border:0}
 html #app .cmpr-jg .fk-g i{position:absolute;top:-4px;width:16px;height:16px;margin-left:-8px;border-radius:50%;background:#111!important;border:3px solid #fff!important;box-shadow:none!important}
+html body .pop .anc-n{display:none}

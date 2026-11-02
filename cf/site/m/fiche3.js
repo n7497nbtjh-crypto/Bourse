@@ -160,7 +160,7 @@ function f3Recomposer(s, c) {
     <section class="f3-sec" id="f3-metier"><span class="a4-stk a4-gr">3 · Son métier</span><h2>${esc(s.name)} en chiffres.</h2><div id="f3-metw"></div></section>
     <section class="f3-sec" id="f3-actu"><span class="a4-stk a4-pk">4 · Son actualité</span><h2>Ce qui vient de tomber, ce qui arrive.</h2><div id="f3-actw"></div></section>
     <div class="f3-proof"><span class="a4-stk a4-ye">Prouvé</span><p id="f3-prt">Les chiffres de cette page viennent des <b>comptes officiels</b> de ${esc(s.name)}.</p><a id="f3-pra" href="#rf-sources" data-f3go="rf-sources">Voir les sources ↓</a></div>
-    <section class="f3-sec" id="f3-tous"><span class="a4-stk a4-wh">Pour aller plus loin</span><h2>Tous les chiffres, en détail.</h2><p class="f3-lead">Les cinq repères du haut de page, chiffre par chiffre et année par année, avec leurs explications.</p><div id="f3-tousw"></div></section>
+    <section class="f3-sec" id="f3-tous"><span class="a4-stk a4-wh">Pour aller plus loin</span><h2>Tous les chiffres, en détail.</h2><div id="f3-tousw"></div></section>
   </div>
   <section class="f3-ask"><div class="f3-w"><div class="f3-iah"><span class="f3-iab">${F3_IA}</span><h2>Une question sur ${esc(s.name)} ?</h2></div><div class="f3-qs">${f3Questions(s).map(q => `<button type="button" data-f3q="${esc(q)}">${esc(q)}</button>`).join("")}</div><p>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</p></div></section>`;
   // déplacer les blocs existants (leurs boutons gardent leur fonctionnement)
@@ -193,6 +193,8 @@ function f3Recomposer(s, c) {
     const b = e.target.closest("[data-f3x], .f3-r"); if (b && wrap.contains(b) && !e.target.closest("a")) { const i = +(b.dataset.f3x || b.dataset.f3r), r = R5[i]; if (!r || !r[7]) return; const w = $("#f3-why"), on = w.dataset.i === String(i) && !w.hidden;
       $$(".f3-r", wrap).forEach(x => x.classList.toggle("on", !on && x.dataset.f3r === String(i)));
       if (on) { w.hidden = true; w.dataset.i = ""; return; }
+      if (matchMedia("(max-width:760px)").matches) { const tile = $(`.f3-r[data-f3r="${i}"]`, wrap); if (tile) tile.after(w); } else { const fv = $(".f3-five", wrap); if (fv && w.previousElementSibling !== fv) fv.after(w); }
+      setTimeout(() => { try { const r = w.getBoundingClientRect(); if (r.bottom > innerHeight - 10 || r.top < 70) scrollBy({ top: r.top - 90, behavior: "smooth" }); } catch (x) { } }, 30);
       w.dataset.i = i; w.hidden = false; w.innerHTML = `<p class="f3-wk">Explication · ${esc(r[1])}</p>${r[7].filter(Boolean).slice(0, 2).map(x => `<p>${x}</p>`).join("")}${r[7][2] ? `<small>${esc(r[7][2])}</small>` : ""}<a class="f3-det" href="#${r[8]}" data-f3go="${r[8]}">Tout le détail dans « ${esc(r[9])} » ↓</a>`; return; }
     const g = e.target.closest("[data-f3go]"); if (g) { e.preventDefault(); const t = document.getElementById(g.dataset.f3go); if (t) { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ behavior: "smooth", block: "start" }); if (g.dataset.f3go === "rf-cours" && typeof ficheGraphique === "function") ficheGraphique(s); } return; }
     const q = e.target.closest("[data-f3q]"); if (q && typeof orcIaOpen === "function") { orcIaOpen(); if (typeof orcIaAsk === "function") orcIaAsk(q.dataset.f3q); }
@@ -380,7 +382,7 @@ function f3Chaine(tw) {
   const steps = F3_CHAIN.filter(([id]) => has(id)), aussi = F3_AUSSI.filter(([id]) => has(id)); if (!steps.length) return;
   const nav = document.createElement("div"); nav.className = "f3-chain";
   const sid = location.pathname.split("/")[2], s = RBY[sid], c = s && FULL[sid], K = s && c ? f3ChaineChiffres(s, c) : {}, LD = s && c ? f3Leads(s, c) : {};
-  nav.innerHTML = `<div class="f3-steps">${steps.map(([id, t, k], i) => `<button type="button" data-f3st="${id}"><i>${i + 1}</i><b>${t}</b><small>${esc(K[k] || "")}</small></button>`).join('<span class="f3-arr" aria-hidden="true">→</span>')}</div>
+  nav.innerHTML = `<div class="f3-steps">${steps.map(([id, t, k], i) => `<button type="button" data-f3st="${id}"><i>${i + 1}</i><b>${t}</b></button>`).join('<span class="f3-arr" aria-hidden="true">→</span>')}</div>
     ${aussi.length ? `<div class="f3-aussi"><span>Et aussi :</span>${aussi.map(([id, t]) => `<button type="button" data-f3st="${id}">${t}</button>`).join("")}</div>` : ""}`;
   tw.insertBefore(nav, tw.firstChild); tw.classList.add("f3-chained");
   Object.entries(LD).forEach(([id, h]) => { const th = tw.querySelector("#" + id + " .f3-th"); if (th && !th.querySelector(".f3-lead0")) th.insertAdjacentHTML("afterbegin", `<p class="f3-lec f3-lead0">${h}</p>`); });
