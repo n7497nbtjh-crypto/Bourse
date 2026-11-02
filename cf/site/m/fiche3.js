@@ -69,7 +69,7 @@ function f3HeroHTML(s, c) {
   let rng = "";
   if (p && p.h52 > 0 && p.l52 > 0 && p.h52 / p.l52 <= 3 && p.p) {
     const pos = Math.max(0, Math.min(100, (p.p - p.l52) / (p.h52 - p.l52) * 100)), sous = (1 - p.p / p.h52) * 100;
-    rng = `<div class="f3-rng"><p>Sur un an, l'action a valu <b>entre ${f3Px0(p.l52, cur)} et ${f3Px0(p.h52, cur)}</b>.${sous >= 1 ? ` Elle est aujourd'hui <b>${f3Nb(Math.round(sous), 0)} % sous son plus haut</b>.` : " Elle est aujourd'hui à son plus haut."}</p><div class="f3-t"><b style="left:${pos.toFixed(0)}%"><em style="transform:translateX(-${Math.round(10 + pos * 0.8)}%)">aujourd'hui</em></b></div><div class="f3-l"><span>plus bas · ${f3Px0(p.l52, cur)}</span><span>plus haut · ${f3Px0(p.h52, cur)}</span></div></div>`;
+    rng = `<div class="f3-rng"><div class="f3-t"><b style="left:${pos.toFixed(0)}%"></b></div><div class="f3-tl2"><span>1 an · plus bas ${f3Px0(p.l52, cur)}</span><span>${sous >= 1 ? `${f3Nb(Math.round(sous), 0)} % sous le plus haut` : "au plus haut"}</span><span>${f3Px0(p.h52, cur)}</span></div></div>`;
   }
   const fiche = s.fiche && typeof s.fiche === "object" ? s.fiche : null;
   return `<section class="f3-hero"><div class="f3-w">
@@ -124,7 +124,7 @@ function f3CritCards(crit, L, s, lien = true) { // une carte par critère : clas
     const med = mf ? mf(s) : null, vs = [...ok.map(r => Math.abs(r.v)), med != null ? Math.abs(med) : 0], max = Math.max(...vs) || 1, wid = v => Math.max(3, Math.abs(v) / max * 100);
     const tri = [...ok].sort((a, b) => sens === "hi" ? b.v - a.v : a.v - b.v), na = rows.filter(r => !(r.v != null && isFinite(r.v)));
     return `<div class="f3-ch f3-cc"><h3>${esc(t)}</h3><details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex)}${lien && pli ? ` <a href="#${pli}" data-f3go="${pli}">Tout le détail dans « ${esc(plil)} » ↓</a>` : ""}</p></details>
-      <div class="f3-cr2">${tri.map(({ c, v }, i) => `<div class="f3-rw2${c === s ? " me" : ""}${i === 0 ? " best" : i === tri.length - 1 ? " worst" : ""}"><span class="f3-rg">${i + 1}</span><a href="/entreprise/${c.id}">${esc(c.name)}</a><b>${fmt(v)}</b><div class="f3-tk2"><i class="${v < 0 ? "neg" : ""}" style="width:${wid(v).toFixed(1)}%"></i></div></div>`).join("")}
+      <div class="f3-cr2">${tri.map(({ c, v }, i) => `<div class="f3-rw2${c === s ? " me" : ""}${i === 0 ? " best" : i === tri.length - 1 ? " worst" : ""}"><span class="f3-rg">${i + 1}</span><a href="/entreprise/${c.id}">${esc(c.name)}</a><b>${fmt(v)}</b><div class="f3-tk2">${v < 0 ? "" : `<i style="width:${wid(v).toFixed(1)}%"></i>`}</div></div>`).join("")}
       ${na.map(({ c }) => `<div class="f3-rw2 na"><span class="f3-rg">–</span><a href="/entreprise/${c.id}">${esc(c.name)}</a><b>non calculable</b><div class="f3-tk2"></div></div>`).join("")}
       ${med != null ? `<div class="f3-md2"><div class="f3-tk2"><i style="left:${wid(med).toFixed(1)}%"></i></div><span>médiane du secteur : <b>${fmt(med)}</b> (repère noir)</span></div>` : ""}</div></div>`; }).filter(Boolean);
 }
@@ -186,6 +186,7 @@ function f3Recomposer(s, c) {
   const old = [...root.children]; root.innerHTML = ""; if (crumbs) root.appendChild(crumbs); root.appendChild(wrap);
   const rest = document.createElement("div"); rest.className = "f3-rest"; old.forEach(n => { if (n !== crumbs && n.id !== "ctab") rest.appendChild(n); }); // conservé hors de la vue : rien n'est détruit
   rest.hidden = true; root.appendChild(rest);
+  try { f3Chaine(tw); } catch (e) { console.error("f3 chaîne", e); }
   const ctab = old.find(n => n.id === "ctab"); if (ctab) { $$("#etapes-corps > section", ctab).forEach(x => { if (!x.contains(tous)) x.remove(); }); ctab.hidden = true; root.appendChild(ctab); }
   // explications
   wrap.addEventListener("click", e => {
@@ -214,6 +215,7 @@ function f3Repartitions(root) { // « D'où viennent ses ventes » : chaque list
   const fm = hote || root, w = document.createElement("div"); w.className = "f3-mixes"; w.innerHTML = cartes.join("");
   const ps = $$(":scope > p:not(.fbt)", fm), apres = ps.length ? ps[ps.length - 1] : fm.querySelector("h3");
   if (apres && apres.nextSibling) fm.insertBefore(w, apres.nextSibling); else fm.appendChild(w);
+  $$(":scope > p, :scope > a, :scope > .src", fm).forEach(x => { const ia = x.querySelector("button"); if (ia) { ia.classList.add("f3-iab"); x.replaceWith(ia); } else x.remove(); }); // 2/11 : sous le titre, seulement le bouton IA
 }
 const F3_IA = `<svg class="f3-iai" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2l2.2 6.6L21 11l-6.8 2.4L12 20l-2.2-6.6L3 11l6.8-2.4z" fill="currentColor"/><path d="M19 2l.8 2.2L22 5l-2.2.8L19 8l-.8-2.2L16 5l2.2-.8z" fill="currentColor"/></svg>`;
 (() => { // branchement : après la construction habituelle de la fiche (vue principale seulement)
@@ -265,16 +267,16 @@ function f3Themes(tw, s, c) {
       return `<div class="f3-kt" role="button" tabindex="0" data-f3k="${r.k}"><small>${esc(r.short || r.label)}${ly !== yl ? ` (${ly})` : ""}${tblxProv(r.k, s)}</small><b>${esc(r.full(r.last))}</b>${chg ? `<span class="${cls}">${r.dir > 0 ? "↑" : r.dir < 0 ? "↓" : "→"} ${esc(chg)}</span>` : `<span class="n">–</span>`}${r.med != null ? `<em>médiane du secteur ${esc(r.full(r.med))}</em>` : "<em></em>"}</div>`; }; // div et non button : la tuile contient le bouton « i »
     const w = document.createElement("div"); w.className = "f3-th"; w.dataset.th = sec.id;
     w.innerHTML = `${q ? `<p class="f3-thq">${esc(q.textContent)}</p>` : ""}<div class="f3-kts">${rows.map(tile).join("")}</div>
-      <div class="f3-thg"><div class="f3-thc"></div><div class="f3-thl"><div class="f3-thl2"></div>${ex ? `<details class="f3-cq"><summary>C'est quoi ?</summary><p>${esc(ex.textContent)}</p></details>` : ""}</div></div>`;
+      <div class="f3-thg"><div class="f3-thc"></div><div class="f3-thl"><div class="f3-thl2"></div></div></div>`;
     const show = k => { const r = rows.find(x => x.k === k); if (!r) return; $$(".f3-kt", w).forEach(b => b.classList.toggle("on", b.dataset.f3k === k));
       const inv = !!F3_INV[r.k] || (r.sens < 0), vals = r.vals.map(v => v == null || !isFinite(v) ? null : v);
       $(".f3-thc", w).innerHTML = `<p class="f3-thn"><b>${esc(r.label)}</b>${r.unit && r.kind === "money" ? ` <span>en ${esc(r.ulong || r.unit)}</span>` : ""}</p>` + f3Cols(vals, Y, v => r.full(v), r.med, inv, r.kind);
-      $(".f3-thl2", w).innerHTML = (r.phrase ? `<p class="f3-lec">${esc(r.phrase)}</p>` : "") + (typeof ALL !== "undefined" && ALL[r.term] && typeof def === "function" ? `<p class="f3-def">${def(r.term, "Définition de « " + (r.short || r.label) + " »")}</p>` : "") + `<p class="f3-anc"><a data-f3anc="${esc(r.k)}" data-an="${Y[r.li]}" hidden></a></p>`;
+      const d = typeof ALL !== "undefined" && ALL[r.term];
+      $(".f3-thl2", w).innerHTML = (r.phrase ? `<p class="f3-lec">${esc(r.phrase)}</p>` : "") + `<p class="f3-anc"><a data-f3anc="${esc(r.k)}" data-an="${Y[r.li]}" hidden></a></p>` + (d && d.what ? `<p class="f3-cq2"><b>${esc(r.short || r.label)}, c'est quoi ?</b> ${esc(d.what)}${d.read ? " " + esc(d.read) : ""}</p>` : (ex ? `<p class="f3-cq2"><b>C'est quoi ?</b> ${esc(ex.textContent)}</p>` : ""));
       if (typeof ancreLiens === "function") { const a = $(".f3-anc a", w); ancreLiens(s.id, [r.k === "marge" ? "ebit" : r.k === "nm" ? "net" : r.k], Y[r.li]).then(l => { if (l && l[0]) { a.href = l[0].url; a.target = "_blank"; a.rel = "noopener nofollow"; a.textContent = `${l[0].lbl} ${l[0].an} dans le rapport officiel ↗`; a.hidden = false; } }).catch(() => { }); } };
     w.addEventListener("click", e => { const b = e.target.closest(".f3-kt"); if (b && !e.target.closest(".prov-i")) show(b.dataset.f3k); });
     w.addEventListener("keydown", e => { const b = e.target.closest(".f3-kt"); if (b && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); show(b.dataset.f3k); } });
     const first = rows.find(r => r.ess) || rows[0]; show(first.k);
-    const cq = $(".f3-cq", w); if (cq && matchMedia("(min-width:761px)").matches) cq.open = true; // sur ordinateur, « C'est quoi ? » est lisible à côté du graphique
     // ce qui est remplacé : rangée de pastilles, graphique ancien, « détail année par année » (doublons) ; le contexte des ventes est gardé
     $$(".rf-kts, .rf-thc, details.rf-thd, .ph", sec).forEach(x => x.remove());
     sec.insertBefore(w, sec.firstChild); sec.classList.add("f3-th-host");
@@ -306,9 +308,9 @@ function f3Identite(mw, metier, s) { // ce qui restait dans le pli « Activités
   const cards = [];
   if (chips && chips.children.length) cards.push(`<div class="f3-idc"><small>Filiales et marques connues</small><div class="f3-chips">${[...chips.children].map(x => `<span>${esc(x.textContent)}</span>`).join("")}</div><p class="f3-src">Wikidata (CC0), liste peut-être incomplète.</p></div>`);
   if (dir && dir.children.length) cards.push(`<div class="f3-idc"><small>Qui la dirige</small><ul class="f3-dir">${[...dir.children].map(x => `<li><span>${esc((x.querySelector("small") || {}).textContent || "")}</span><b>${esc((x.querySelector("b") || x).textContent)}</b></li>`).join("")}</ul><p class="f3-src">Wikidata (CC0) : le rapport annuel fait foi.</p></div>`);
-  if (fid) { const rows = [...fid.children].filter(x => !/^(Pays|Secteur)$/.test((x.querySelector("span") || {}).textContent || "")); // pays et secteur sont déjà dans l'en-tête
+  if (fid) { const rows = [...fid.children].filter(x => !/^(Pays|Secteur|Encyclopédie)$/.test((x.querySelector("span") || {}).textContent || "")); // pays et secteur sont dans l'en-tête ; Wikipédia retiré (2/11)
     if (rows.length) cards.push(`<div class="f3-idc"><small>Carte d'identité</small><dl class="f3-fid">${rows.map(x => `<div><dt>${esc(x.querySelector("span").textContent)}</dt><dd>${x.querySelector("b").innerHTML}</dd></div>`).join("")}</dl></div>`); }
-  if (cards.length) mw.insertAdjacentHTML("beforeend", `<div class="f3-idg">${cards.join("")}</div>`);
+  if (cards.length) mw.insertAdjacentHTML("beforeend", `<div class="f3-idg n${cards.length}">${cards.join("")}</div>`);
 }
 
 /* 2/11 (Romain) : les pages « comprendre » (/entreprise/<id>/comprendre/<k>) redisaient les chiffres de la fiche : elles renvoient vers la section
@@ -332,7 +334,7 @@ function f3Actu(aw) {
     card.innerHTML = `<span class="f3-dt y">${esc(d)}</span><div class="f3-tlb">${chip ? `<span class="f3-tag">${esc(chip.textContent)}</span>` : ""}<b>${esc((tf || t || {}).textContent || "")}</b>${tf && t && t.textContent.trim() !== tf.textContent.trim() ? `<small>${esc(t.textContent)}</small>` : ""}<div class="f3-tla"></div></div>`;
     const a = card.querySelector(".f3-tla"); if (btn) { const b2 = btn.cloneNode(true); b2.classList.add("f3-ia2"); a.appendChild(b2); a.insertAdjacentHTML("beforeend", `<div class="iabox"></div>`); } if (src) { const s2 = src.cloneNode(true); s2.className = "f3-pv"; s2.textContent = "Lire l'annonce ↗"; a.appendChild(s2); }
     items.push(card); } });
-  pr.forEach(a => { const pm = (a.querySelector(".pm") || {}).textContent || "", dm = pm.match(/(\d\d)\/(\d\d)\/(\d\d)/), d = dm ? `${+dm[1]} ${mois[+dm[2] - 1]}` : "";
+  pr.filter(a => /·\s*FR\s*·/.test((a.querySelector(".pm") || {}).textContent || "")).forEach(a => { const pm = (a.querySelector(".pm") || {}).textContent || "", dm = pm.match(/(\d\d)\/(\d\d)\/(\d\d)/), d = dm ? `${+dm[1]} ${mois[+dm[2] - 1]}` : "";
     const card = document.createElement("div"); card.className = "f3-tlc";
     card.innerHTML = `<span class="f3-dt">${esc(d)}</span><div class="f3-tlb"><span class="f3-tag p">Presse</span><b><a href="${a.getAttribute("href")}" target="_blank" rel="noopener nofollow">${esc((a.querySelector(".pt") || a).textContent)} ↗</a></b><small>${esc(pm.split("·")[0].trim())}</small></div>`; items.push(card); });
   const avenir = ev.map(li => `<div class="f3-tlc avenir"><span class="f3-dt k">${esc((li.querySelector("b") || {}).textContent || "")}</span><div class="f3-tlb"><span class="f3-tag k">À venir</span><b>${esc((li.querySelector("span") || {}).textContent || "")}</b></div></div>`).join("");
@@ -340,4 +342,24 @@ function f3Actu(aw) {
   const w = document.createElement("div"); w.className = "f3-tl"; items.forEach(c => w.appendChild(c)); if (avenir) w.insertAdjacentHTML("beforeend", `<div class="f3-avs">${avenir}</div>`);
   if (trim) trim.remove(); const ev0 = $(".rf6-ev", aw); if (ev0) ev0.remove();
   aw.insertBefore(w, aw.firstChild);
+}
+
+/* ---------- 2/11 (Romain) : « Tous les chiffres » en chaîne, une étape à la fois ----------
+   Les plis sont présentés en ligne, dans l'ordre de la causalité : ce qu'elle vend → ce qu'elle en garde → ce qu'elle possède
+   et doit → ce que vaut l'action → ce qu'elle reverse. Une étape ouverte à la fois ; le cours, les comptes complets et les
+   sources sont en « Et aussi ». Les résumés des plis (titre, chiffre clé) disparaissent : la chaîne les remplace. */
+const F3_CHAIN = [["rf-resultats", "Ventes", "ce qu'elle vend"], ["rf-rentab", "Rentabilité", "ce qu'elle en garde"], ["rf-dette", "Bilan", "ce qu'elle possède et doit"], ["rf-valo", "Prix", "ce que vaut l'action"], ["rf-div", "Dividende", "ce qu'elle reverse"]];
+const F3_AUSSI = [["rf-cours", "Le cours"], ["rf-tout-w", "Comptes complets"], ["rf-sources", "Sources"]];
+function f3Chaine(tw) {
+  if (!tw || $(".f3-chain", tw)) return;
+  const has = id => !!tw.querySelector("#" + id);
+  const steps = F3_CHAIN.filter(([id]) => has(id)), aussi = F3_AUSSI.filter(([id]) => has(id)); if (!steps.length) return;
+  const nav = document.createElement("div"); nav.className = "f3-chain";
+  nav.innerHTML = `<div class="f3-steps">${steps.map(([id, t, q], i) => `<button type="button" data-f3st="${id}"><i>${i + 1}</i><b>${t}</b><small>${q}</small></button>`).join('<span class="f3-arr" aria-hidden="true">→</span>')}</div>
+    ${aussi.length ? `<div class="f3-aussi"><span>Et aussi :</span>${aussi.map(([id, t]) => `<button type="button" data-f3st="${id}">${t}</button>`).join("")}</div>` : ""}`;
+  tw.insertBefore(nav, tw.firstChild); tw.classList.add("f3-chained");
+  const show = id => { $$("details.rf-pl", tw).forEach(d => { d.open = d.id === id; }); $$("[data-f3st]", nav).forEach(b => b.classList.toggle("on", b.dataset.f3st === id)); };
+  nav.addEventListener("click", e => { const b = e.target.closest("[data-f3st]"); if (!b) return; show(b.dataset.f3st); if (b.dataset.f3st === "rf-cours" && typeof ficheGraphique === "function") { try { const sid = location.pathname.split("/")[2]; if (RBY[sid]) ficheGraphique(RBY[sid]); } catch (x) { } } });
+  show((location.hash && has(location.hash.slice(1)) && $$("details.rf-pl", tw).some(d => d.id === location.hash.slice(1))) ? location.hash.slice(1) : steps[0][0]);
+  tw.addEventListener("toggle", e => { const d = e.target; if (d.matches("details.rf-pl") && d.open) { $$("details.rf-pl", tw).forEach(x => { if (x !== d) x.open = false; }); $$("[data-f3st]", nav).forEach(b => b.classList.toggle("on", b.dataset.f3st === d.id)); } }, true);
 }

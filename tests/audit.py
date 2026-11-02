@@ -114,9 +114,9 @@ with sync_playwright() as pw:
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
         pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
-        pg.evaluate("document.querySelectorAll('#tous-les-chiffres details').forEach(d => { d.open = true; })")  # lot 4 : une seule page, les chiffres en plis
-        pg.locator(".def[data-def=marge]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(300)  # le défilement referme la bulle : on défile d'abord
-        pg.click(".def[data-def=marge]"); pg.wait_for_timeout(150)
+        pg.evaluate("document.querySelector('[data-f3st=rf-rentab]') ? document.querySelector('[data-f3st=rf-rentab]').click() : document.querySelectorAll('#tous-les-chiffres details').forEach(d => { d.open = true; })")  # 2/11 : chaîne des sections, une à la fois
+        pg.wait_for_timeout(300); pg.locator(".f3-kt[data-f3k=marge] .prov-i").first.scroll_into_view_if_needed(); pg.wait_for_timeout(300)  # 2/11 : la bulle « i » (provenance + définition) remplace le bouton « def »
+        pg.click(".f3-kt[data-f3k=marge] .prov-i"); pg.wait_for_timeout(150)
         if not pg.evaluate("document.getElementById('pop').classList.contains('open')"): probs["définition"] = ["la bulle ne s'ouvre pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["chiffres + bulle"] = p

@@ -4088,3 +4088,40 @@ html #app .f3-tla .iabox:empty{display:none}html #app .f3-tla .ax-cl,html #app .
 @media (max-width:760px){html #app .f3-tlc{grid-template-columns:64px minmax(0,1fr);gap:10px;padding:10px 12px}html #app .f3-dt{font-size:12px;min-height:40px}}
 /* 2/11 (Romain) : plus de bulle flottante « Une question » sur l'accueil et la fiche (elles ont déjà leur entrée vers l'IA) */
 html:has(#app>.a4) #orciab,html:has(#app .f3) #orciab{display:none!important}
+/* ---------- 2/11 après-midi (Romain) ---------- */
+/* en-tête : carte du cours compacte, actions à gauche */
+@media (min-width:761px){html #app .f3-hero .f3-w{grid-template-columns:minmax(0,1fr) 300px;grid-template-areas:"id price" "verdict price" "acts price" "five five" "why why";gap:0 36px}
+ html #app .f3-hero .f3-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}html #app .f3-hero .f3-acts .f3-ia{grid-column:auto}html #app .f3-hero .f3-acts .favbtn{padding:10px 16px!important}}
+html #app .f3-price{padding:16px 18px!important}html #app .f3 .f3-price b.p{font-size:34px}html #app .f3-rng{margin-top:12px;padding-top:0;border-top:0}
+html #app .f3-tl2{display:flex;justify-content:space-between;gap:6px;font:700 11px var(--sans);color:#555;margin-top:8px}html #app .f3-tl2 span:nth-child(2){color:#111}
+/* comparaison : pas de barre quand la valeur est négative */
+html #app .f3-tk2:empty{background:repeating-linear-gradient(135deg,#F2F0EA 0 5px,#fff 5px 9px)}
+/* identité : cartes compactes */
+html #app .f3-idg{grid-template-columns:repeat(3,minmax(0,1fr));align-items:start}html #app .f3-idc{padding:12px 14px}html #app .f3-idc>small{font-size:15px;margin-bottom:8px}html #app .f3-fid>div{padding:5px 0;font-size:13px}html #app .f3-src{margin-top:8px}
+@media (max-width:760px){html #app .f3-idg{grid-template-columns:1fr}}
+/* définition unique dans la colonne de droite */
+html #app .f3-cq2{margin:10px 0 0;background:#F6F3EA;border-radius:12px;padding:10px 12px;font:500 13.5px/1.5 var(--sans)}html #app .f3-cq2 b{font-weight:800}
+html #app .f3-th .f3-cq{display:none!important}
+/* chaîne des sections */
+html #app .f3-chain{margin:0 0 18px}
+html #app .f3-steps{display:flex;align-items:stretch;gap:6px;flex-wrap:wrap}
+html body #app .f3-steps button{flex:1 1 150px;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"n t" "n q";column-gap:10px;align-items:center;text-align:left;border:2px solid #111!important;border-radius:16px!important;background:#fff!important;color:#111!important;padding:10px 12px!important;height:auto!important;cursor:pointer;box-shadow:none!important}
+html body #app .f3-steps button.on{background:var(--a4y)!important;box-shadow:4px 4px 0 #111!important;transform:translate(-2px,-2px)}
+html #app .f3-steps button i{grid-area:n;width:26px;height:26px;border-radius:50%;background:#111;color:#fff;display:grid;place-items:center;font:800 12px var(--sans);font-style:normal}
+html #app .f3-steps button b{grid-area:t;font:800 15px var(--serif);letter-spacing:-.02em}html #app .f3-steps button small{grid-area:q;font:600 11.5px var(--sans);color:#444}
+html #app .f3-arr{align-self:center;font:800 18px var(--sans);color:#111}
+html #app .f3-aussi{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:10px;font:700 13px var(--sans);color:#444}
+html body #app .f3-aussi button{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;padding:6px 13px!important;font:700 13px var(--sans)!important;height:auto!important;box-shadow:none!important}html body #app .f3-aussi button.on{background:#111!important;color:#fff!important}
+html #app .f3-chained details.rf-pl>summary{display:none!important}html #app .f3-chained details.rf-pl{border:0!important;box-shadow:none!important;background:none!important;margin:0!important;padding:0!important}
+html #app .f3-chained details.rf-pl:not([open]){display:none}html #app .f3-chained .rf-plb{padding:0!important}
+html #app .f3-chained .f3-th,html #app .f3-chained .f3-ccw,html #app .f3-chained #rf-valorisation,html #app .f3-chained #rf-dividende,html #app .f3-chained #rf-cours .rf-plb,html #app .f3-chained #rf-sources .rf-plb{border:2px solid #111;border-radius:24px;padding:18px 22px}
+@media (max-width:760px){html #app .f3-arr{display:none}html body #app .f3-steps button{flex:1 1 calc(50% - 6px)}html #app .f3-chained .f3-th,html #app .f3-chained .f3-ccw{padding:14px}}
+/* pli « Toutes ses annonces et ses dates » : contenu au style du site */
+html #app #rf-agenda .rf-plb .panel{border:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0 0 18px!important}
+html #app #rf-agenda .rf-plb .ph h2{font:800 22px var(--serif)!important;letter-spacing:-.03em}
+html #app #rf-agenda .ax-it{border:2px solid #111;border-radius:16px;padding:12px 14px;margin:8px 0;background:#fff}html #app #rf-agenda .ax-day{font:800 13px var(--serif);margin:14px 0 4px}
+html #app #rf-agenda .ax-chip{border-radius:6px;font-weight:800}html #app #rf-agenda .ax-tf{font:800 15px var(--sans)}
+html body #app #rf-agenda .iabtn{background:#3D5BFF!important;color:#fff!important;border:2px solid #111!important;border-radius:999px!important;font-weight:800!important;box-shadow:3px 3px 0 #111!important}
+html #app #rf-agenda .ax-pr{display:block;border:2px solid #111;border-radius:16px;padding:10px 14px;margin:8px 0;text-decoration:none;color:#111}html #app #rf-agenda .ax-pr .pt{font:800 14.5px var(--sans);display:block}html #app #rf-agenda .ax-pr .pm{font:600 12px var(--sans);color:#666}
+html #app #rf-agenda .rf-chev .rf-ev{border:2px dashed #111;border-radius:16px;padding:12px 14px;margin-bottom:18px}html #app #rf-agenda .rf-ev h3{font:800 16px var(--serif);margin:0 0 8px}
+html body #app .f3-iab{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font:800 13.5px var(--sans)!important;padding:8px 16px!important;box-shadow:3px 3px 0 #111!important;margin:0 0 14px!important;height:auto!important}
