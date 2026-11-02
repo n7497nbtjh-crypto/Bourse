@@ -22,6 +22,10 @@ const REGLES = [
   [/—/, "tiret cadratin (interdit sur le site)"],
   [/\b(étape|étapes) \d/, "renvoi à une autre étape (refusé par Romain)"],
   [/\b(tu|ton|ta|tes)\b/i, "tutoiement (le site vouvoie)"],
+  [/\b(progressé|reculé) de 0 %/, "variation nulle dite comme une hausse ou une baisse"],
+  [/\breculé de (1\d\d|[2-9]\d\d) %/, "recul de plus de 100 % (perte à dire autrement)"],
+  [/il lui reste −/, "montant négatif présenté comme un reste"],
+  [/années de [^.]* suffirait\b|une année de [^.]* suffiraient\b/, "accord : suffire"],
 ];
 (async () => {
   const n = +process.argv[2] || 60, dir = path.join(ROOT, "data", "societes");
