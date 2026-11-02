@@ -19,20 +19,28 @@ function ekBox(o, inner) { return `<div class="ek-box"><div class="ek-bt">${ekEs
 // Colonnes : axe gradué, valeur exacte, variation sur un an sous chaque année, ligne de contexte facultative.
 // o = { titre, unite, annees:[2022…], valeurs:[…], fmt(v), max, graduations:[…], fmtAxe(v), ligne:{ nom, valeurs:[texte…], alerte:index }, indice, source }
 function ekColonnes(o) {
-  const M = ekMob(), s = o.valeurs, n = s.length, W = M ? 340 : 500, L = M ? 52 : 64, H = M ? 120 : 105, T = 26, bw = M ? 30 : 36, gap = (W - L - 6) / n, y = v => T + H - v / o.max * H;
-  let g = `<svg viewBox="0 0 ${W} ${T + H + (o.ligne ? 58 : 40)}" role="img" aria-label="${ekEsc(o.titre)}">`;
-  o.graduations.forEach(t => g += `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="${t ? "#E2E0DA" : "#111"}" stroke-width="${t ? 1 : 2}"/>` + ekTx(L - 8, y(t) + 4, o.fmtAxe(t), { a: "end" }));
+  // Accepte les valeurs négatives (pertes) : l'axe descend sous zéro, la valeur s'écrit sous la barre, les années restent en bas du graphique.
+  const M = ekMob(), s = o.valeurs, n = s.length, W = M ? 340 : 500, L = o.ligne ? (M ? 80 : 84) : (M ? 64 : 68), T = 26, bw = M ? 30 : 36, gap = (W - L - 6) / n;
+  const vals = s.filter(v => v != null), bas0 = Math.min(0, ...vals), pas = o.pas || (o.graduations.length > 1 ? o.graduations[1] - o.graduations[0] : o.max) || 1;
+  const mn = bas0 < 0 ? -Math.ceil(-bas0 * 1.15 / pas) * pas : 0, top = Math.max(o.max, mn < 0 ? 0 : o.max), grads = o.graduations.slice();
+  for (let t = -pas; t >= mn - 1e-9; t -= pas) grads.unshift(+t.toFixed(10));
+  const Hp = M ? 120 : 105, H = mn < 0 ? Math.round(Hp * Math.min(1.8, Math.max(1, (o.max - mn) / Math.max(o.max, pas)))) : Hp, Bm = mn < 0 ? 22 : 0;
+  const y = v => T + (o.max - v) / (o.max - mn) * H, yb = T + H + Bm;
+  let g = `<svg viewBox="0 0 ${W} ${yb + (o.ligne ? 58 : 40)}" role="img" aria-label="${ekEsc(o.titre)}">`;
+  grads.forEach(t => g += `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="${t ? "#E2E0DA" : "#111"}" stroke-width="${t ? 1 : 2}"/>` + ekTx(L - 8, y(t) + 4, o.fmtAxe(t), { a: "end" }));
   s.forEach((v, i) => {
-    if (v == null) return;
     const x = L + gap * i + gap / 2 - bw / 2, der = i === n - 1;
-    g += `<rect x="${x}" y="${y(Math.max(v, 0))}" width="${bw}" height="${Math.abs(v) / o.max * H}" rx="8" fill="${der ? "#FFE14D" : "#fff"}" stroke="#111" stroke-width="2"/>`
-      + `<text x="${x + bw / 2}" y="${y(Math.max(v, 0)) - 8}" text-anchor="middle" font-family="Bricolage Grotesque,Inter" font-size="${der ? 18 : 16}" font-weight="800">${o.fmt(v)}</text>`
-      + ekTx(x + bw / 2, T + H + 18, o.annees[i], { a: "middle", c: "#111", fw: 800, fs: 13 });
-    if (i && s[i - 1] > 0) { const c = (v / s[i - 1] - 1) * 100; g += ekTx(x + bw / 2, T + H + 34, (c > 0 ? "+" : "") + ekFr(c) + " %", { a: "middle", c: c >= 0 ? EK_G : EK_R, fw: 800 }); }
-    if (o.ligne) g += ekTx(x + bw / 2, T + H + 52, ekEsc(o.ligne.valeurs[i] || ""), { a: "middle", c: o.ligne.alerte === i ? EK_R : "#555", fw: o.ligne.alerte === i ? 800 : 600 });
+    g += ekTx(x + bw / 2, yb + 18, o.annees[i], { a: "middle", c: "#111", fw: 800, fs: 13 });
+    if (o.ligne) g += ekTx(x + bw / 2, yb + 52, ekEsc(o.ligne.valeurs[i] || ""), { a: "middle", c: o.ligne.alerte === i ? EK_R : "#555", fw: o.ligne.alerte === i ? 800 : 600 });
+    if (v == null) return;
+    const neg = v < 0, h = Math.max(2, Math.abs(v) / (o.max - mn) * H);
+    g += `<rect x="${x}" y="${neg ? y(0) : y(v)}" width="${bw}" height="${h}" rx="8" fill="${neg ? "#FFDCD3" : der ? "#FFE14D" : "#fff"}" stroke="${neg ? EK_R : "#111"}" stroke-width="2"/>`
+      + `<text x="${x + bw / 2}" y="${neg ? y(v) + 18 : y(v) - 8}" text-anchor="middle" font-family="Bricolage Grotesque,Inter" font-size="${der ? 18 : 16}" font-weight="800" fill="${neg ? EK_R : "#111"}">${o.fmt(v)}</text>`;
+    if (i && s[i - 1] > 0) { const c = (v / s[i - 1] - 1) * 100; g += ekTx(x + bw / 2, yb + 34, neg ? "perte" : (c > 0 ? "+" : "") + ekFr(c) + " %", { a: "middle", c: c >= 0 ? EK_G : EK_R, fw: 800 }); }
+    else if (i && s[i - 1] != null && s[i - 1] < 0) g += ekTx(x + bw / 2, yb + 34, neg ? "perte" : "bénéfice", { a: "middle", c: neg ? EK_R : EK_G, fw: 800 });
   });
-  g += ekTx(L - 8, T + H + 34, "variation", { a: "end", c: "#555", fw: 700, fs: 11 });
-  if (o.ligne) g += ekTx(L - 8, T + H + 52, ekEsc(o.ligne.nom), { a: "end", c: "#555", fw: 700, fs: 11 });
+  g += ekTx(L - 8, yb + 34, "variation", { a: "end", c: "#555", fw: 700, fs: 11 });
+  if (o.ligne) g += ekTx(L - 8, yb + 52, ekEsc(o.ligne.nom), { a: "end", c: "#555", fw: 700, fs: 11 });
   return ekBox(o, g + "</svg>");
 }
 
@@ -40,18 +48,18 @@ function ekColonnes(o) {
 // o = { titre, unite, lignes:[{ nom, v, texte, moi }], mediane, mediane_label, basEstMieux, max, graduations, fmtAxe, indice, source }
 // Une ligne sans valeur (v null) n'est pas placée : elle est listée sous l'échelle avec sa raison (texte).
 function ekPoints(o) {
-  const M = ekMob(), W = M ? 380 : 560, L = M ? 88 : 110, R = M ? 60 : 70, T = 28, rh = 34,
-    hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = rows.length * rh + 18, x = v => L + (W - L - R) * Math.min(v, o.max) / o.max, m = x(o.mediane), bas = !!o.basEstMieux;
+  const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 22 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 28, rh = 34, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), L = Math.round(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18))), coupe = t => { t = String(t); const mx = Math.floor((L - 18) / 8.6); return t.length > mx ? t.slice(0, mx - 1).trim() + "…" : t; },
+    hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 18, 3 * rh), x = v => L + (W - L - R) * Math.max(0, Math.min(v, o.max)) / o.max, m = x(o.mediane), bas = !!o.basEstMieux;
   if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
   let g = `<svg viewBox="0 0 ${W} ${T + H + 26}" role="img" aria-label="${ekEsc(o.titre)}">`;
   g += `<rect x="${L}" y="${T - 6}" width="${m - L}" height="${H}" fill="${bas ? "#E2F8EE" : "#FFE9E3"}"/><rect x="${m}" y="${T - 6}" width="${W - R - m}" height="${H}" fill="${bas ? "#FFE9E3" : "#E2F8EE"}"/>`;
-  if (m - L >= 84) g += ekTx(L + 6, T + H - 12, bas ? (o.motBas || "moins cher") : "moins bien", { fw: 800, c: bas ? EK_G : EK_R, fs: 11 });
-  if (W - R - m >= 84) g += ekTx(W - R - 6, T + H - 12, bas ? (o.motHaut || "plus cher") : "mieux", { a: "end", fw: 800, c: bas ? EK_R : EK_G, fs: 11 });
+  if (m - L >= 84) g += ekTx(L + 6, T + H - 12, o.motBas || (bas ? "moins cher" : "moins bien"), { fw: 800, c: bas ? EK_G : EK_R, fs: 11 });
+  if (W - R - m >= 84) g += ekTx(W - R - 6, T + H - 12, o.motHaut || (bas ? "plus cher" : "mieux"), { a: "end", fw: 800, c: bas ? EK_R : EK_G, fs: 11 });
   o.graduations.forEach(t => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + ekTx(x(t), T + H + 12, o.fmtAxe(t), { a: "middle" }));
   g += `<line x1="${m}" x2="${m}" y1="${T - 14}" y2="${T + H - 6}" stroke="#111" stroke-width="2" stroke-dasharray="5 4"/><rect x="${m - 52}" y="${T - 30}" width="104" height="18" rx="5" fill="#111"/>` + ekTx(m, T - 17, ekEsc(o.mediane_label), { a: "middle", c: "#fff", fw: 800, fs: 11 });
   rows.forEach((r, i) => {
     const cy = T + i * rh + 10, mieux = bas ? r.v < o.mediane : r.v > o.mediane;
-    g += ekTx(L - 12, cy + 4, ekEsc(r.nom), { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: r.moi ? 14 : 13 });
+    g += ekTx(L - 12, cy + 4, ekEsc(coupe(r.nom)), { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: r.moi ? 14 : 13 });
     g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/><circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"/>`
       + ekTx(W - R + 12, cy + 4, ekEsc(r.texte), { fw: 800, c: Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R, fs: r.moi ? 14 : 13 });
   });
@@ -96,7 +104,7 @@ function ekEtape(o) {
   return `<div class="ek-step" id="${ekEsc(o.id)}"><div class="ek-rail"><b>${o.n}</b></div><div class="ek-sc">
   <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${tete}${ekEsc(titre)}</h3>${cmp}
   ${mots.length ? `<div class="ek-defs">${c ? "Autre mot" + (mots.length > 1 ? "s" : "") : "Les mots de l'étape"} : ${mots.map(m => ekDefBouton(m.cle, m)).join("")}</div>` : ""}
-  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${o.visuel && !cote ? " ek-row-1" : ""}">${o.visuel || ""}${droite}</div>` : ""}${o.plus || ""}${cote ? "" : ekTransition(o.suite)}</div></div>`;
+  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${o.visuel && !cote ? " ek-row-1" : ""}">${o.visuel ? `<div class="ek-main">${o.visuel}</div>` : ""}${droite}</div>` : ""}${o.plus || ""}${cote ? "" : ekTransition(o.suite)}</div></div>`;
 }
 function ekFil(etapes) { return `<div class="ek ek-fil">${etapes.map(ekEtape).join("")}</div>`; }
 
@@ -145,4 +153,21 @@ if (typeof document !== "undefined" && !window.ekEcoute) {
     if (e.key === "Escape") ekDefFermer();
     if ((e.key === "Enter" || e.key === " ") && e.target.classList && e.target.classList.contains("ek-dw")) { e.preventDefault(); e.target.click(); }
   });
+}
+
+// La question de l'étape suivante se met là où il reste de la place : à droite si l'explication est plus courte que le graphique, sinon sous le graphique.
+function ekPlacer(root) {
+  if (ekMob()) return;
+  (root || document).querySelectorAll(".ek-step .ek-row").forEach(row => {
+    const main = row.querySelector(".ek-main"), side = row.querySelector(".ek-side"); if (!main || !side) return;
+    const tr = row.querySelector(".ek-trans"); if (!tr) return;
+    side.appendChild(tr); side.classList.toggle("ek-side-seul", !side.querySelector(".ek-why"));
+    const hs = side.getBoundingClientRect().height, hm = main.getBoundingClientRect().height;
+    if (hs > hm + 16 && side.children.length > 1) { main.appendChild(tr); side.classList.remove("ek-side-seul"); }
+  });
+}
+if (typeof window !== "undefined") {
+  let ekT; const ekGo = () => { clearTimeout(ekT); ekT = setTimeout(() => ekPlacer(), 60); };
+  window.addEventListener("resize", ekGo);
+  new MutationObserver(m => { if (m.some(r => [...r.addedNodes].some(n => n.nodeType === 1 && (n.matches(".ek-step, .ek-fil") || n.querySelector && n.querySelector(".ek-step"))))) ekGo(); }).observe(document.documentElement, { childList: true, subtree: true });
 }

@@ -17,11 +17,12 @@ node tests/t_worker.mjs           # + les tests t_*.mjs / t_*.py du périmètre 
 ## Relecture des textes générés (obligatoire dès qu'on touche une fiche, m/fiche4.js ou m/composants.js)
 ```
 node scripts/relire-fiches.js 120   # 0 faute attendue ; puis LIRE /tmp/relecture-fiches.txt (tous les modèles de phrases)
+node scripts/relire-visuel.js 60    # 0 problème attendu : textes superposés, texte sur une barre, hors du graphique, dépasse de l'écran (ordinateur + téléphone)
 ```
 Les phrases des fiches sont calculées pour plus de 2 000 sociétés : une faute d'accord ou une phrase creuse se répète partout.
 Relire chaque modèle avant de pousser : accords, sens, pas de redite du graphique ou du titre, pas de renvoi à une autre étape,
 pas de comparaison aux rivales si le graphique ne les montre pas, « rivales » ou « secteur » selon la comparaison réelle.
-Toute nouvelle faute trouvée à la main devient une règle dans `REGLES` de scripts/relire-fiches.js.
+Toute nouvelle faute trouvée à la main devient une règle dans `REGLES` de scripts/relire-fiches.js ; tout nouveau défaut visuel vu par Romain devient un contrôle dans scripts/relire-visuel.js.
 Regarder vraiment les captures (390 px et 1440 px) : pas de NaN, pas de « undefined », pas de débordement horizontal.
 
 ## Committer

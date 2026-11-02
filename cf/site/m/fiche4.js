@@ -85,7 +85,7 @@ async function pageCompany4(id, tab) {
   try { html = f4Tete(s, c, ctx) + f4MetierSec(ctx) + f4Fil(ctx) + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
-  f4Ancres(ctx);
+  f4Ancres(ctx); f4Trim(ctx); window.F4X = ctx;
   const cible = tab === "comptes" ? "tout" : (tab === "actualite" || tab === "agenda" || tab === "communaute") ? "actu" : location.hash.slice(1);
   if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ block: "start" }); }, 30); }
 }
@@ -175,8 +175,11 @@ function f4E1(x) {
 
 function f4Cols(x, se, titre, ligne, indice, fmtD) {
   const cur = x.s.currency, md = Math.max(...se.v.filter(v => v != null).map(Math.abs)) >= 1000, f = v => md ? ekFr(v / 1000, fmtD != null ? fmtD : (Math.abs(v) >= 100000 ? 0 : v >= 10000 ? 1 : 2)) : ekFr(v, 0);
-  const nm = f4Nice(Math.max(...se.v.filter(v => v != null)));
-  return ekColonnes({ titre, unite: `en ${md ? "milliards" : "millions"} ${cur === "EUR" ? "d'€" : "de " + x.sym}`, annees: se.y, valeurs: se.v, fmt: f, max: nm.max, graduations: nm.ticks, fmtAxe: t => md ? ekFr(t / 1000, t / 1000 < 10 && t % 1000 ? 1 : 0) : ekFr(t, 0), ligne, indice, source: f4Src(x, "Comptes officiels, exercices clos") });
+  // Échelle commune aux gains et aux pertes : le pas vient de l'écart total, le haut de l'axe du plus grand gain (0 s'il n'y a que des pertes)
+  const vv = se.v.filter(v => v != null), hi = Math.max(0, ...vv), lo = Math.min(0, ...vv), base = f4Nice(lo < 0 ? hi - lo : hi), pas = base.ticks.length > 1 ? base.ticks[1] - base.ticks[0] : base.max;
+  const top = lo < 0 ? Math.ceil(hi * 1.12 / pas) * pas : base.max, tk = []; for (let t = 0; t <= top + 1e-9; t += pas) tk.push(+t.toFixed(10));
+  const nm = lo < 0 ? { max: top, ticks: tk, pas } : base;
+  return ekColonnes({ titre, unite: `en ${md ? "milliards" : "millions"} ${cur === "EUR" ? "d'€" : "de " + x.sym}`, annees: se.y, valeurs: se.v, fmt: f, max: nm.max, pas: nm.pas, graduations: nm.ticks, fmtAxe: t => md ? ekFr(t / 1000, t / 1000 < 10 && t % 1000 ? 1 : 0) : ekFr(t, 0), ligne, indice, source: f4Src(x, "Comptes officiels, exercices clos") });
 }
 
 function f4MetierSec(x) { // avant les étapes : à quoi correspondent les chiffres qui suivent
@@ -286,10 +289,14 @@ function f4E4(x) {
   return { id: "e4", n: 4, sur: "Son dividende", titre, haut: true, cmp: { texte: cmpD, ton: tonD },
     concept: !rien && pay != null && pay <= 1.5 ? { cle: "distrib", ex: f4Pc(pay, 0), calc: s.divPaid && s.net ? `${ekFr(s.divPaid, 0)} ÷ ${ekFr(s.net, 0)}` : parAction && s.eps ? `${ekFr(s.dps, 2)} ÷ ${ekFr(s.eps, 2)} par action` : "", nom: s.name } : null,
     mots: [{ cle: "distrib", ex: pay != null && pay <= 1.5 ? f4Pc(pay, 0) : "", calc: s.divPaid && s.net ? `${ekFr(s.divPaid, 0)} ÷ ${ekFr(s.net, 0)}` : parAction && s.eps ? `${ekFr(s.dps, 2)} ÷ ${ekFr(s.eps, 2)} par action` : "", nom: s.name }, ...(s.dps ? [{ cle: "dpa", ex: `${ekFr(s.dps, 2)} ${sym}`, calc: `exercice ${s.year}`, nom: s.name }] : []), ...(M.yld != null ? [{ cle: "rendement", ex: f4Pc(M.yld, 1), calc: "au cours actuel", nom: s.name }] : [])],
-    visuel: rien ? "" : ekPartage({ titre: `Ce que devient son bénéfice ${s.year}`, unite: "sur 100 " + sym, verse: Math.min(100, (pay || 0) * 100), verseValeur: pay > 1 ? "Plus de 100 " + sym : ekFr(Math.min(100, pay * 100), 0) + " " + sym, verseTexte: "versés aux actionnaires",
-      garde: 0, gardeValeur: ekFr(Math.max(0, 100 - pay * 100), 0) + " " + sym, gardeTexte: "gardés par l'entreprise",
-      ton: tonD, mediane: MED.pay != null ? Math.min(100, MED.pay * 100) : null, medianeLabel: MED.pay != null ? `${P.mode === "rivales" ? "médiane des rivales" : "médiane du secteur"} : ${MED.pay > 1 ? "plus de 100" : ekFr(MED.pay * 100, 0)} ${sym}` : "",
-      indice: `Sur 100 ${sym} de bénéfice, la partie colorée est versée aux actionnaires en dividendes ; le reste est gardé par l'entreprise. Le trait pointillé marque ${P.mode === "rivales" ? "la rivale du milieu" : "la société du milieu de son secteur"} : en vert, elle verse autant ou plus ; en rouge, moins, ou plus que son bénéfice.`, source: f4Src(x, `Versements de ${s.year}`) }),
+    visuel: (() => { // Points face à la médiane, comme pour le prix : sur 100 de bénéfice, combien sont versés
+      const vp = rien ? 0 : pay != null ? pay * 100 : null; if (vp == null) return "";
+      const lig = [{ nom: s.name, v: vp, texte: ekFr(vp, 0) + " " + sym, moi: 1 }, ...(P.mode === "rivales" ? P.L.map(r => { const m = f4M(r); return { nom: r.name, v: m.pay != null ? m.pay * 100 : null, texte: m.pay != null ? ekFr(m.pay * 100, 0) + " " + sym : r.missing ? "comptes non relevés" : "dividende non relevé" }; }) : [])];
+      const pl = lig.filter(r => r.v != null).sort((a, b) => b.v - a.v), nn = f4Nice(Math.min(150, Math.max(100, ...pl.map(r => r.v))));
+      return ekPoints({ titre: `Versés sur 100 ${sym} de bénéfice`, unite: `dividendes ${s.year}`, lignes: [...pl.map(r => ({ ...r, v: Math.min(r.v, nn.max) })), ...lig.filter(r => r.v == null), ...(P.mode === "rivales" ? P.out.map(o => ({ nom: o.nom, v: null, texte: o.raison })) : [])],
+        mediane: MED.pay != null ? Math.min(nn.max, MED.pay * 100) : 0, mediane_label: MED.pay != null ? `médiane ${ekFr(MED.pay * 100, 0)} ${sym}` : "", max: nn.max, graduations: nn.ticks, fmtAxe: t => ekFr(t, 0) + " " + sym, motBas: "verse moins", motHaut: "verse plus",
+        indice: `Chaque point place une entreprise : combien elle verse à ses actionnaires sur 100 ${sym} de bénéfice. À droite du pointillé (zone verte), elle verse plus que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; à gauche (zone rouge), moins. Au-delà de 100 ${sym}, elle verse plus que son bénéfice de l'année.`, source: f4Src(x, `Versements de ${s.year}`) });
+    })(),
     explique: causes.length ? ekExplique({ causes, surveiller: M.yld != null ? `Rendement : ${f4Pc(M.yld, 1)} par an au cours actuel${MED.yld != null ? `, contre ${f4Pc(MED.yld, 1)} ${P.chez}` : ""}.` : "" }) : "",
     suite: "Avec ces chiffres, combien coûte l'action ?" };
 }
@@ -372,18 +379,51 @@ function f4Fin(x) {
   const dl = d => new Date(d + "T12:00:00"), cl = c.clos || s.clos || null;
   const ag = L.length ? `<div class="ek-agenda">${L.map(e => `<div class="${e.date < TODAY ? "pass" : ""}"><small>${e.date < TODAY ? "Publié le " + dl(e.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "À venir"}</small><b>${esc(dl(e.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }))}</b><p>${esc(e.label || e.type || "")}</p>${e.source ? `<a href="${esc(e.source)}" target="_blank" rel="noopener">${e.date < TODAY ? "Lire la publication" : "Agenda de l'entreprise"}</a>` : ""}</div>`).join("")}</div>` : `<p class="ek-note">Aucune date de publication relevée pour l'instant.</p>`;
   const fb = typeof fiabilite === "function" ? fiabilite(s, c) : null;
-  // Tous les comptes : une seule carte, un seul tableau, groupé par famille (une famille sans chiffre n'apparaît pas)
-  const yy = c.years.slice(-4), i0 = c.years.length - yy.length, G = [["Compte de résultat", ["ca", "ebit", "pretax", "tax", "net", "eps"]], ["Bilan, à la clôture", ["equity", "cash", "debt", "netDebt", "leases"]], ["L'argent réellement encaissé", ["cfo", "capex", "fcf"]], ["Pour l'actionnaire", ["divPaid", "dps"]]];
-  const lignes = []; G.forEach(([t, keys]) => { const ks = keys.filter(k => c.fin[k] && c.fin[k].slice(i0).some(v => v != null)); if (!ks.length) return; lignes.push([t, null]);
-    ks.forEach(k => lignes.push([F4_LIB[k] || k, c.fin[k].slice(i0).map(v => v == null ? "–" : /^(eps|dps|dpsEst)$/.test(k) ? ekFr(v, 2) + " " + x.sym : f4Md(v, s.currency))])); });
-  const tout = lignes.length ? ekPlus({ id: "t-comptes", icone: "≡", titre: `Tous ses comptes, ${yy[0]} à ${yy[yy.length - 1]}`, html: ekTableau(yy, lignes) }) : "";
+  const tout = f4Tout(x);
   const qs = [s.net != null && s.netPrev > 0 ? `Pourquoi le bénéfice de ${s.name} a ${s.net >= s.netPrev ? "augmenté" : "baissé"} en ${s.year} ?` : `Que fait ${s.name} ?`, x.M.pe != null ? `Pourquoi l'action ${s.name} vaut-elle ${ekFr(x.M.pe, 0)} fois son bénéfice ?` : `Comment ${s.name} gagne-t-elle de l'argent ?`, `Quels sont les principaux risques pour ${s.name} ?`];
   return `<section class="ek-sec" id="actu"><span class="ek-stk2 p">Son actualité</span><h2>Ce qui vient de tomber, ce qui arrive.</h2>${ag}
       <p class="ek-note">Tout ce qui est au-dessus porte sur l'exercice ${esc(s.year)}, audité et déposé. Une publication plus récente n'est reprise qu'une fois relevée.</p>
       ${x.rap ? `<div class="ek-proof"><span class="ek-stk2">Prouvé</span><p>Les chiffres de cette page viennent du <b>rapport annuel ${esc(s.year)} de ${esc(s.name)}</b>${fb ? `. Fiabilité des données : ${esc(fb.mot)}` : ""}.</p><a href="${esc(x.rap)}" target="_blank" rel="noopener">Ouvrir le rapport ↗</a></div>` : ""}</section>
     <section class="ek-sec" id="tout"><span class="ek-stk2 b">Pour aller plus loin</span><h2>Tous les chiffres, en détail.</h2>
       ${tout}</section>
-    <section class="ek-end"><h2>✦ Une question sur ${esc(s.name)} ?</h2><div class="ek-qs">${qs.map(q => `<button type="button" data-f4-q="${esc(q)}">${esc(q)}</button>`).join("")}</div><small>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</small></section>`;
+    <section class="ek-end"><h2>✦ Une question sur ${esc(s.name)} ?</h2><div class="ek-qs">${qs.slice(0, 2).map(q => `<button type="button" data-f4-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
+      <form class="ek-ask" data-f4-ask><input type="text" name="q" maxlength="300" placeholder="Posez votre question sur ${esc(s.name)}…" aria-label="Votre question sur ${esc(s.name)}" autocomplete="off"><button type="submit">Demander</button></form>
+      <small>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</small></section>`;
+}
+// « Tous les chiffres » : quatre cartes (résultats, bilan, argent encaissé, actionnaire), puis face aux rivales et depuis la clôture.
+// Chaque ligne : le mot (cliquable s'il a une définition), quatre années, la dernière en jaune, la variation sur un an en couleur, la médiane du secteur.
+const F4_DEFK = { ca: "ventes", g: "croissance", marge: "marge", net: "benefice", roe: "roe", netDebt: "dette", dps: "dpa", payout: "distrib" };
+function f4Tout(x) {
+  const { s, c, P } = x; let R; try { R = tblxRows(s, c); } catch (e) { return ""; }
+  const Y = c.years, n = Y.length, k0 = Math.max(0, n - 4), yy = Y.slice(k0), G = [["res", "Ses résultats"], ["bil", "Son bilan et sa dette"], ["flx", "L'argent réellement encaissé"], ["act", "Pour l'actionnaire"]];
+  const ton = q => q > 0 ? "g" : q < 0 ? "r" : "";
+  const carte = ([g, t]) => { const L = R.rows.filter(r => r.grp === g); if (!L.length) return "";
+    return `<div class="ek-tc"><h3>${t}</h3><div class="scroll-x"><table class="ek-tt"><thead><tr><th></th>${yy.map((y, i) => `<th${i === yy.length - 1 ? ' class="d"' : ""}>${esc(y)}</th>`).join("")}<th>sur 1 an</th><th>médiane secteur</th></tr></thead><tbody>${L.map(r => {
+      const ch = typeof tblxChange === "function" ? tblxChange(r.kind, r.prev, r.last) : "", vm = r.med != null ? tblxVsMed(r) : null, lab = F4_DEFK[r.k] && EK_DEF[F4_DEFK[r.k]] ? ekDefMot(F4_DEFK[r.k], r.label, { nom: s.name }) : esc(r.label);
+      return `<tr><th>${lab}<small>${esc(r.unit || "")}</small></th>${yy.map((y, i) => { const v = r.vals[k0 + i]; return `<td${i === yy.length - 1 ? ` class="d${vm ? " " + ton(vm.q) : ""}"` : ""}>${v == null ? '<i class="nr">non relevé</i>' : esc(r.cell(v))}</td>`; }).join("")}<td class="v ${r.li === n - 1 ? ton(r.q) : ""}">${r.li === n - 1 && ch ? esc(ch) : ""}</td><td class="m">${r.med != null ? esc(r.full(r.med)) : ""}</td></tr>`; }).join("")}</tbody></table></div></div>`; };
+  // Face aux rivales (celles des graphiques)
+  const riv = P.mode === "rivales" ? [{ ...s, moi: 1 }, ...P.L] : [];
+  const cols = [["Ventes", r => r.ca != null ? f4Md(r.ca, r.currency) : "–"], ["Croissance", r => { const m = f4M(r); return m.g != null ? f4Pc(m.g, 1, true) : "–"; }], ["Marge", r => { const m = f4M(r); return m.m != null ? f4Pc(m.m, 0) : "–"; }], ["Bénéfice net", r => r.net != null ? f4Md(r.net, r.currency) : "–"], ["PER", r => { const m = f4M(r); return m.pe != null ? ekFr(m.pe, 0) + " fois" : "–"; }], ["Rendement", r => { const m = f4M(r); return m.yld != null ? f4Pc(m.yld, 1) : "–"; }]];
+  const ids = riv.map(r => r.id).filter(Boolean);
+  const rivH = riv.length ? `<div class="ek-tc ek-tc-l"><h3>Face à ses rivales</h3><div class="scroll-x"><table class="ek-tt ek-tt-r"><thead><tr><th></th>${cols.map(k => `<th>${k[0]}</th>`).join("")}</tr></thead><tbody>${riv.map(r => `<tr${r.moi ? ' class="moi"' : ""}><th>${r.moi || !r.id ? esc(r.name) : `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`}</th>${cols.map(k => `<td>${esc(k[1](r))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${ids.length > 1 ? `<a class="ek-lk" href="/comparer?ids=${ids.slice(0, 4).map(encodeURIComponent).join(",")}">Comparer en détail ↗</a>` : ""}</div>` : "";
+  const csv = `<button type="button" class="ek-lk" data-f4-csv>Télécharger tous les chiffres (CSV)</button>`;
+  return `<div class="ek-tg">${G.map(carte).join("")}</div>${rivH}<div id="f4-trim"></div><p class="ek-tn">Exercices clos, en ${esc(c.currency || s.currency || "")}. « Médiane secteur » : la valeur du milieu parmi les entreprises du secteur ${esc((secName(s) || "").toLowerCase())}. En vert ou rouge, la dernière année face à cette médiane. ${csv}</p>`;
+}
+async function f4Trim(x) { // « Depuis la clôture » : trimestres publiés après le dernier exercice (sociétés américaines, SEC)
+  const el = document.getElementById("f4-trim"); if (!el) return;
+  try {
+    const ix = await fetch("/data/trim/index.json").then(r => r.ok ? r.json() : null); if (!ix || !(ix.ids || []).includes(x.s.id)) return;
+    const j = await fetch(`/data/trim/${x.s.id}.json`).then(r => r.ok ? r.json() : null); if (!j || !j.q) return;
+    const Q = j.q.slice(-4); if (!Q.length) return;
+    const d = e => new Date(e + "T12:00:00").toLocaleDateString("fr-FR", { month: "short", year: "numeric" }), m = v => v == null ? "–" : f4Md(v, j.currency || x.s.currency);
+    el.innerHTML = `<div class="ek-tc ek-tc-l"><h3>Ses quatre derniers trimestres</h3><div class="scroll-x"><table class="ek-tt"><thead><tr><th>Trimestre clos fin</th>${Q.map((q, i) => `<th${i === Q.length - 1 ? ' class="d"' : ""}>${esc(d(q.end))}</th>`).join("")}</tr></thead><tbody><tr><th>Ventes</th>${Q.map((q, i) => `<td${i === Q.length - 1 ? ' class="d"' : ""}>${esc(m(q.ca))}</td>`).join("")}</tr><tr><th>Bénéfice net</th>${Q.map((q, i) => `<td${i === Q.length - 1 ? ' class="d"' : ""}>${esc(m(q.net))}</td>`).join("")}</tr></tbody></table></div><p class="ek-tn">Comptes trimestriels déposés à la SEC (non audités pour les trimestres 10-Q). <a href="${esc(j.source || "#")}" target="_blank" rel="noopener">Source ↗</a></p></div>`;
+  } catch (e) { }
+}
+function f4Csv(x) {
+  let R; try { R = tblxRows(x.s, x.c); } catch (e) { return; }
+  const Y = x.c.years, q = v => `"${String(v).replace(/"/g, '""')}"`;
+  const lines = [["Indicateur", "Unité", ...Y].map(q).join(";"), ...R.rows.map(r => [r.label, r.unit || "", ...r.vals.map(v => v == null ? "" : r.cell(v))].map(q).join(";"))];
+  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" })); a.download = `${x.s.id}-chiffres.csv`; document.body.appendChild(a); a.click(); a.remove();
 }
 const F4_LIB = { ca: "Ventes (chiffre d'affaires)", ebit: "Résultat d'exploitation", pretax: "Résultat avant impôt", tax: "Impôt sur les résultats", net: "Bénéfice net", eps: "Bénéfice par action", equity: "Capitaux propres", cash: "Trésorerie", debt: "Emprunts", netDebt: "Dette nette (négatif : trésorerie)", leases: "Dettes de loyers", cfo: "Liquidités tirées de l'activité", capex: "Investissements", fcf: "Flux de trésorerie disponible", divPaid: "Dividendes versés", dps: "Dividende par action" };
 
@@ -402,7 +442,13 @@ document.addEventListener("click", e => { // repères de l'en-tête : aller à l
   const bar = document.querySelector(".bar, header"), off = (bar && getComputedStyle(bar).position === "sticky" ? bar.getBoundingClientRect().height : 0) + 16;
   scrollTo({ top: t.getBoundingClientRect().top + scrollY - off, behavior: "smooth" });
 }, true);
+document.addEventListener("submit", e => {
+  const f = e.target.closest && e.target.closest("[data-f4-ask]"); if (!f) return; e.preventDefault();
+  const q = (f.q.value || "").trim(); if (!q || typeof orcIaOpen !== "function") return;
+  orcIaOpen(); if (typeof orcIaAsk === "function") orcIaAsk(q); f.q.value = "";
+});
 document.addEventListener("click", e => {
+  if (e.target.closest && e.target.closest("[data-f4-csv]")) { if (window.F4X) f4Csv(window.F4X); return; }
   const t = e.target.closest && e.target.closest("[data-f4-tv],[data-f4-ia],[data-f4-q]"); if (!t) return;
   const m = location.pathname.match(/^\/entreprise\/([^/]+)/), s = m && RBY[m[1]];
   if (t.dataset.f4Tv !== undefined && s) { const box = document.getElementById("f4tv"); if (!box) return; box.hidden = !box.hidden;

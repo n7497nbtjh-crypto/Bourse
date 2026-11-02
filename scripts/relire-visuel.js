@@ -1,0 +1,63 @@
+// Contrôle des visuels des fiches entreprise (fiche v4), créé le 3/11/2026 après des graphiques cassés vus par Romain
+// (barres de perte posées sur les années, étiquettes qui sortent de l'écran, surlignage décalé…).
+// Même principe que relire-fiches.js pour les textes : on ouvre beaucoup de fiches, en grand écran ET en téléphone, et on mesure.
+// Repère :
+//  - deux textes d'un graphique qui se chevauchent ;
+//  - un texte posé sur une barre ou un point (hors étiquettes prévues pour être dessus) ;
+//  - un texte qui sort du cadre du graphique ;
+//  - un élément de la page qui dépasse de l'écran (téléphone) ;
+//  - un bloc dont le contenu déborde sans barre de défilement.
+// Usage : node scripts/relire-visuel.js [n] ; rapport dans /tmp/relecture-visuel.txt ; code de sortie 1 s'il reste un problème.
+const { ouvrir, aller, ROOT } = require("./_site"), fs = require("fs"), path = require("path");
+const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml", "kering", "apple", "intel", "atos", "eutelsat", "moderna", "axa", "baker-hughes"];
+(async () => {
+  const n = +process.argv[2] || 40, dir = path.join(ROOT, "data", "societes");
+  const tous = fs.readdirSync(dir).filter(f => f.endsWith(".json")).map(f => f.slice(0, -5)).filter(id => !FIXES.includes(id));
+  for (let i = tous.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [tous[i], tous[j]] = [tous[j], tous[i]]; }
+  const ids = [...FIXES, ...tous.slice(0, Math.max(0, n - FIXES.length))].filter(id => fs.existsSync(path.join(dir, id + ".json")) || FIXES.includes(id));
+  const out = [], tailles = [["ordinateur", { width: 1280, height: 900 }], ["téléphone", { width: 360, height: 800 }]];
+  let vues = 0;
+  for (const [nomT, vp] of tailles) {
+    const { b, p } = await ouvrir({ viewport: vp });
+    for (const id of ids) {
+      try { await aller(p, "/entreprise/" + id, 1800); } catch (e) { continue; }
+      const r = await p.evaluate(() => {
+        const P = [], W = document.documentElement.clientWidth;
+        const inter = (a, b, m = 1) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > m && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > m;
+        const nomEtape = el => { const st = el.closest(".ek-step"); return st ? st.id : (el.closest("section") || {}).id || "page"; };
+        document.querySelectorAll(".ek-page svg").forEach(svg => {
+          const box = svg.getBoundingClientRect(); if (!box.width) return;
+          const T = [...svg.querySelectorAll("text")].filter(t => t.textContent.trim()).map(t => ({ t, r: t.getBoundingClientRect(), s: t.textContent.trim() }));
+          // formes « pleines » : barres et points (pas les zones de fond, les quadrillages, ni le fond noir de l'étiquette de médiane)
+          const F = [...svg.querySelectorAll("rect, circle")].map(e => ({ e, r: e.getBoundingClientRect() })).filter(o => {
+            const f = (o.e.getAttribute("fill") || "").toLowerCase(); if (o.e.tagName === "rect" && (o.r.width > box.width * 0.3 || ["#e2f8ee", "#ffe9e3"].includes(f) && o.r.height > 40 || f === "#111")) return false;
+            return o.r.width > 2 && o.r.height > 2; });
+          for (let i = 0; i < T.length; i++) {
+            const a = T[i];
+            if (a.r.left < box.left - 2 || a.r.right > box.right + 2 || a.r.top < box.top - 2 || a.r.bottom > box.bottom + 2) P.push(["sort du graphique", nomEtape(svg), a.s]);
+            for (let j = i + 1; j < T.length; j++) if (inter(a.r, T[j].r, 2)) P.push(["textes superposés", nomEtape(svg), a.s + " / " + T[j].s]);
+            F.forEach(f => { if (inter(a.r, f.r, 3)) P.push(["texte sur une barre ou un point", nomEtape(svg), a.s]); });
+          }
+        });
+        document.querySelectorAll(".ek-page *").forEach(e => {
+          const r = e.getBoundingClientRect(); if (!r.width || e.closest(".scroll-x, svg")) return;
+          if (r.right > W + 1) P.push(["dépasse de l'écran", nomEtape(e), (e.className && e.className.baseVal == null ? e.className : e.tagName) + " : " + (e.textContent || "").trim().slice(0, 40)]);
+        });
+        document.querySelectorAll(".ek-page .ek-box, .ek-page .ek-tc, .ek-page .ek-why, .ek-page .ek-cmp, .ek-page .ek-h").forEach(e => {
+          if (e.scrollWidth > e.clientWidth + 2 && getComputedStyle(e).overflowX === "visible") P.push(["contenu qui déborde", nomEtape(e), e.className]);
+        });
+        // l'icône « ? » du terme du titre doit rester sur la même ligne que le terme
+        document.querySelectorAll(".ek-hc").forEach(h => { const i = h.querySelector("i"); if (!i) return; const rs = [...h.getClientRects()], ri = i.getBoundingClientRect(); if (!rs.some(r => ri.top >= r.top - 6 && ri.bottom <= r.bottom + 6)) P.push(["icône « ? » décalée", nomEtape(h), h.textContent]); });
+        const vus = new Set(); return P.filter(x => { const k = x.join("|"); if (vus.has(k)) return false; vus.add(k); return true; });
+      });
+      vues++;
+      r.forEach(x => out.push([nomT, id, ...x]));
+    }
+    await b.close();
+  }
+  const par = new Map(); out.forEach(([t, id, type, ou, quoi]) => { const k = `${type} · ${ou} · ${t}`; if (!par.has(k)) par.set(k, []); par.get(k).push(`${id} : ${quoi}`); });
+  const txt = [...par].sort((a, b) => b[1].length - a[1].length).map(([k, L]) => `${L.length} × ${k}\n   ${L.slice(0, 6).join("\n   ")}`).join("\n");
+  fs.writeFileSync("/tmp/relecture-visuel.txt", txt + "\n");
+  console.log(`${vues} pages vues (${ids.length} fiches × ${tailles.length} tailles), ${out.length} problème(s) en ${par.size} type(s). Rapport : /tmp/relecture-visuel.txt`);
+  process.exit(out.length ? 1 : 0);
+})();
