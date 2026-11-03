@@ -1677,28 +1677,7 @@ function icsFile(events, name) {
   lines.push("END:VCALENDAR");
   return new Blob([lines.filter(Boolean).join("\r\n")], { type: "text/calendar" });
 }
-function pageDividendes() {
-  setTitle("Calendrier des dividendes"); setNav("news");
-  const favIds = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
-  const all = AG.events.filter(e => e.date >= TODAY && RBY[e.id] && /ividende|acompte|détachement|solde/i.test(e.type + " " + e.label)).sort((a, b) => a.date.localeCompare(b.date));
-  let only = false;
-  const render = () => {
-    const list = all.filter(e => !only || favIds.has(e.id));
-    const byM = {}; list.forEach(e => (byM[e.date.slice(0, 7)] = byM[e.date.slice(0, 7)] || []).push(e));
-    $("#dvl").innerHTML = list.length ? Object.entries(byM).map(([mk, l]) => `<section class="panel"><div class="ph"><h2>${MOISL[+mk.slice(5) - 1].replace(/^./, x => x.toUpperCase())} ${mk.slice(0, 4)}</h2><span class="light" style="font-size:12.5px">${l.length} date${l.length > 1 ? "s" : ""}</span></div>${agendaHTML(l, true)}</section>`).join("")
-      : `<section class="panel"><div class="empty">${only ? "Aucune date de dividende annoncée pour vos favoris." : "Aucune date de dividende annoncée pour l'instant."}</div></section>`;
-  };
-  app.innerHTML = `<h1 class="pagetitle">Calendrier des dividendes</h1>
-    <p class="pagesub">Les prochaines dates annoncées par les entreprises : détachement (il faut détenir l'action la veille au soir) et paiement. Chaque date vient du calendrier publié par l'entreprise ou d'un article de presse, avec sa source.</p>
-    <section class="panel"><div class="pb" style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
-      <div class="chips"><button type="button" data-o="0" class="on">Toutes les entreprises</button><button type="button" data-o="1">Mes favoris${favIds.size ? ` (${favIds.size})` : ""}</button></div>
-      <button type="button" class="btn" id="ics" style="margin-left:auto">Ajouter à mon agenda (.ics)</button></div>
-      <div class="src">Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook : les dates s'y ajoutent, rien n'est envoyé.</div></section>
-    <div id="dvl"></div>`;
-  render();
-  $(".chips", app).onclick = e => { const b = e.target.closest("button"); if (!b) return; only = b.dataset.o === "1"; $$(".chips button", app).forEach(x => x.classList.toggle("on", x === b)); render(); };
-  $("#ics").onclick = () => { const list = all.filter(e => !only || favIds.has(e.id)); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (ENKLAIR)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
-}
+// pageDividendes : m/dividendes4.js
 
 /* ---------- Premiers pas : parcours en trois niveaux, avec quiz ---------- */
 let PARCOURS = null;

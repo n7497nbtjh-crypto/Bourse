@@ -147,21 +147,9 @@ function outDivEvents(f) {
     .filter(e => { const c = RBY[e.id]; return (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)) && (!f.fav || f.favIds.has(c.id)); })
     .sort((a, b) => a.date.localeCompare(b.date) || a.id.localeCompare(b.id));
 }
-function outDivCal(list0, all) {
-  if (!list0.length) return `<div class="empty">Aucune date de dividende annoncée avec ces filtres pour l'instant.</div>`;
-  const list = all ? list0 : list0.slice(0, 20), rest = list0.length - list.length;
-  const byM = {}; list.forEach(e => (byM[e.date.slice(0, 7)] = byM[e.date.slice(0, 7)] || []).push(e));
-  return Object.entries(byM).map(([mk, l]) => `<h3 class="out-mh">${MOISL[+mk.slice(5) - 1].replace(/^./, x => x.toUpperCase())} ${mk.slice(0, 4)} <span>${outN(l.length, "date", "dates")}</span></h3><div class="out-cal">${l.map(e => {
-    const c = RBY[e.id], k = outDivKind(e), [y, m, d] = e.date.split("-"), v = valo(c), amt = outDivAmt(e);
-    return `<div class="out-ev"><div class="out-d"><b>${+d}</b>${MOIS[+m - 1]}</div><a class="out-evc" href="/entreprise/${c.id}">${logo(c, 30)}<span><b>${esc(c.name)}</b><small>${esc(e.label)}</small></span></a><span class="out-k out-k-${k}" title="${esc(OUT_DK[k][1])}">${OUT_DK[k][0]}</span><span class="out-evv">${amt ? `<b class="num">${esc(amt)}</b>` : ""}${v && v.yld ? `<small>rend. ${pct(v.yld, 1, false)}</small>` : ""}</span>${e.source ? `<a class="out-src" href="${esc(e.source)}" target="_blank" rel="noopener" title="Source : ${esc(e.source.replace(/^https?:\/\/(www\.)?/, "").split("/")[0])}">source</a>` : ""}</div>`; }).join("")}</div>`).join("") + (rest > 0 ? `<button type="button" class="btn ghost out-more" id="out-more">Voir les ${rest} autres dates</button>` : "");
-}
 function outDivTop(f) {
   return R.companies.filter(c => !c.missing && !outVieux(c) && (!f.cv || (outCouv(c) || {}).k === "oui") && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)))
     .map(c => ({ c, v: valo(c) })).filter(x => x.v && x.v.yld > 0.001 && x.v.capE > 2e8).sort((a, b) => b.v.yld - a.v.yld);
-}
-function outDivRow(x, i, S) {
-  const c = x.c, st = S[c.id], cv = outCouv(c);
-  return `<tr><td class="out-n">${i + 1}</td><td><a class="out-tc" href="/entreprise/${c.id}">${logo(c, 26)}<span><b>${esc(c.name)}</b><small>${esc(secName(c))} ${outPea(c)}</small></span></a></td><td class="num"><b>${pct(x.v.yld, 1, false)}</b></td><td>${cv ? `<span class="out-cv out-cv-${cv.k}">${cv.t}</span><small class="out-cvd">${esc(cv.d)}</small>` : `<span class="light">–</span>`}</td><td class="num">${st && st.divUp >= 1 ? `${st.divUp} an${st.divUp > 1 ? "s" : ""}` : `<span class="light">–</span>`}</td></tr>`;
 }
 function outDivSim(c, m, acct) {
   const v = valo(c);
@@ -183,73 +171,7 @@ function outDivSim(c, m, acct) {
     <ul class="out-tax">${lines.map(([a, b, d]) => `<li><span><b>${a}</b><small>${d}</small></span><em>${b}</em></li>`).join("")}</ul>
     <p class="note">Calcul : montant investi × rendement (dernier dividende annuel ÷ cours actuel${nb != null ? `, soit environ ${F0.format(nb)} action${nb > 1 ? "s" : ""}` : ""}). Le dividende peut baisser, être supprimé ou augmenter : ce n'est pas une promesse de revenu. Taux ${RATES.year} hors cas particuliers (option pour le barème, abattement de 40 %).</p>`;
 }
-let OUT_DOCCLICK = false;
-async function pageDividendes() {
-  setTitle("Dividendes : calendrier, rendements et simulateur"); setNav("news");
-  if (!R) return; outCSS();
-  app.innerHTML = `<div class="empty">Chargement…</div>`;
-  await Promise.all([PXP, outHist()]);
-  if (location.pathname !== "/dividendes") return;
-  const favIds = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
-  const f = { s: "", r: "", pea: "", fav: false, favIds, cv: true, all: false };
-  const S = outStats();
-  const upcoming = outDivEvents({ ...f }).filter(e => outDivKind(e) === "det"), nx = upcoming[0];
-  const defC = RBY["totalenergies"] && valo(RBY["totalenergies"]) ? RBY["totalenergies"] : outDivTop(f)[0] && outDivTop(f)[0].c;
-  const sim = { c: defC, m: 5000, a: "pea" };
-  app.innerHTML = `<div class="out-page"><div class="crumbs"><a href="/marches">Marchés</a> › Dividendes</div>
-    <h1 class="pagetitle">Les dividendes</h1>
-    <p class="pagesub">Les prochaines dates de détachement et de paiement, les plus hauts rendements avec leur garde-fou, les dividendes relevés chaque année, et ce que vous toucheriez vraiment après impôts.</p>
-    <div class="out-kpis"><div><span>Prochain détachement</span><b>${nx ? `${esc(RBY[nx.id].name)}` : "–"}</b><small>${nx ? new Date(nx.date + "T12:00:00Z").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : "aucune date annoncée"}</small></div>
-      <div><span>Dates annoncées</span><b class="num">${F0.format(outDivEvents(f).length)}</b><small>détachements et paiements à venir</small></div>
-      <div><span>Dividende relevé 4 ans de suite</span><b class="num">${F0.format(Object.values(S).filter(s => s.divUp >= 4).length)}</b><small>entreprises suivies</small></div></div>
-    <nav class="out-anc"><a href="#out-sim">Combien je toucherais</a><a href="#out-cal">Calendrier</a><a href="#out-top">Plus hauts rendements</a><a href="#out-up">Dividendes relevés</a><a href="#out-det">Le détachement expliqué</a></nav>
-    <section class="panel" id="out-sim"><div class="ph"><h2>Combien je toucherais ?</h2></div><div class="pb">
-      <div class="out-simf"><label class="out-sel out-q"><span>Entreprise</span><input id="out-sq" type="search" autocomplete="off" placeholder="Nom de l'entreprise" value="${sim.c ? esc(sim.c.name) : ""}"><div class="out-sug" id="out-ss" hidden></div></label>
-        <label class="out-sel"><span>Montant investi</span><input id="out-sm" type="number" min="100" step="100" value="${sim.m}" inputmode="numeric"></label>
-        <div class="out-sel"><span>Compte</span><div class="chips out-acct"><button type="button" data-a="pea" class="on">PEA</button><button type="button" data-a="cto">Compte-titres</button></div></div></div>
-      <div id="out-sr"></div></div></section>
-    <section class="panel"><div class="pb out-filt"><b class="out-fl">Filtrer les listes</b>${outSelect("out-s", outSecOpts(), "", "Secteur")}${outSelect("out-r", OUT_REG, "", "Région")}<label class="out-chk"><input type="checkbox" id="out-pea"> Éligibles au PEA</label><label class="out-chk"><input type="checkbox" id="out-fav"> Mes favoris${favIds.size ? ` (${favIds.size})` : ""}</label></div></section>
-    <section class="panel" id="out-cal"><div class="ph"><h2>Le calendrier</h2><button type="button" class="btn ghost out-ics" id="ics">${OUT_ICON.dl}Ajouter à mon agenda (.ics)</button></div><div class="pb" style="padding-top:6px" id="out-calb"></div>
-      <div class="src">Chaque date vient du calendrier publié par l'entreprise ou d'un communiqué, avec son lien. Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook : rien n'est envoyé.</div></section>
-    <div class="out-two"><section class="panel" id="out-top"><div class="ph"><h2>Les plus hauts rendements</h2><label class="out-chk out-cvchk"><input type="checkbox" id="out-cv" checked> Dividende couvert seulement</label></div><div class="pb" style="padding-top:4px" id="out-topb"></div>
-      <div class="src">Rendement = dernier dividende annuel ÷ cours (cours différés). Garde-fou : « Couvert » si le dividende versé est inférieur à 90 % du bénéfice du dernier exercice.</div></section>
-      <section class="panel" id="out-up"><div class="ph"><h2>Dividendes relevés</h2><a href="/classements?c=dividende">Le classement</a></div><div class="pb" style="padding-top:4px" id="out-upb"></div>
-      <div class="src">Années de suite où le dividende par action a augmenté, d'après les rapports annuels (jusqu'à cinq exercices), puis rendement actuel. Rendements inférieurs à 1 % écartés.</div></section></div>
-    <section class="panel" id="out-det"><div class="ph"><h2>Le détachement, en trois dates</h2></div><div class="pb">
-      <ol class="out-tl"><li><b>La veille</b><span>Vous devez détenir l'action à la clôture de la Bourse. Acheter le jour même ne donne plus droit au dividende.</span></li>
-        <li><b>Le jour du détachement</b><span>Le dividende « se détache » de l'action : le cours baisse mécaniquement d'environ son montant. Exemple : une action à 50 € qui verse 2 € ouvre vers 48 €.</span></li>
-        <li><b>Le jour du paiement</b><span>Quelques jours plus tard, l'argent arrive sur votre compte. Dans un PEA, il y reste sans impôt ; sur un compte-titres, ${pct(RATES.pfu, 1, false)} sont prélevés.</span></li></ol>
-      <p class="note">Le dividende n'est donc pas un « cadeau » : la valeur sort de l'entreprise pour arriver chez l'actionnaire. Ce qui compte sur la durée, c'est que l'entreprise puisse le payer avec ses bénéfices. <a class="lnk" href="/lexique">Le lexique</a> explique le taux de distribution et le rendement.</p></div></section>
-    ${OUT_NOADV}</div>`;
-  const drawSim = () => { const el = $("#out-sr"); if (!el) return; el.innerHTML = sim.c ? outDivSim(sim.c, Math.max(0, +sim.m || 0), sim.a) : `<p class="muted">Choisissez une entreprise.</p>`; };
-  const draw = () => {
-    $("#out-calb").innerHTML = outDivCal(outDivEvents(f), f.all);
-    const mo = $("#out-more"); if (mo) mo.onclick = () => { f.all = true; $("#out-calb").innerHTML = outDivCal(outDivEvents(f), true); };
-    const top = outDivTop(f);
-    $("#out-topb").innerHTML = top.length ? `<div class="out-tw"><table class="out-tb"><thead><tr><th></th><th>Entreprise</th><th>Rendement</th><th>Couvert ?</th><th>Relevé</th></tr></thead><tbody>${top.slice(0, 12).map((x, i) => outDivRow(x, i, S)).join("")}</tbody></table></div>
-      <p class="out-warn">${f.cv ? "Seuls les dividendes payés avec moins de 90 % du bénéfice sont listés. Décochez la case pour voir tous les rendements, y compris ceux qui dépassent le bénéfice." : "Un rendement très élevé vient souvent d'un cours qui a beaucoup baissé ou d'un dividende exceptionnel. Regardez s'il est couvert par le bénéfice."}</p>` : `<div class="empty">Aucune entreprise avec ces filtres.</div>`;
-    const up = R.companies.filter(c => !c.missing && !outVieux(c) && S[c.id] && S[c.id].divUp >= 2 && (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)) && (!f.fav || favIds.has(c.id)))
-      .map(c => ({ c, y: (valo(c) || {}).yld || 0 })).filter(x => x.y >= 0.01).sort((a, b) => S[b.c.id].divUp - S[a.c.id].divUp || b.y - a.y).map(x => x.c).slice(0, 12);
-    $("#out-upb").innerHTML = up.length ? `<div class="out-list out-list-s">${up.map((c, i) => { const st = S[c.id], v = valo(c); return `<a class="out-row" href="/entreprise/${c.id}"><span class="out-rk">${i + 1}</span>${logo(c, 30)}<span class="out-rt"><b>${esc(c.name)}</b><small>Relevé ${outAns(st.divUp)}${st.dCagr != null ? ` · ${sgn(st.dCagr, 1)} par an` : ""}${v && v.yld ? ` · rend. ${pct(v.yld, 1, false)}` : ""}</small></span><span class="out-rv">${outCouvTag(c)}</span></a>`; }).join("")}</div>` : `<div class="empty">Aucune entreprise avec ces filtres.</div>`;
-  };
-  drawSim(); draw();
-  $("#out-s").onchange = e => { f.s = e.target.value; draw(); };
-  $("#out-r").onchange = e => { f.r = e.target.value; draw(); };
-  $("#out-pea").onchange = e => { f.pea = e.target.checked ? "1" : ""; draw(); };
-  $("#out-cv").onchange = e => { f.cv = e.target.checked; draw(); };
-  $("#out-fav").onchange = e => { f.fav = e.target.checked; draw(); };
-  $("#ics").onclick = () => { const list = outDivEvents(f); if (!list.length) return toast("Aucune date à exporter avec ces filtres."); const a = document.createElement("a"); a.href = URL.createObjectURL(icsFile(list, "Dividendes (ENKLAIR)")); a.download = "dividendes-bilan.ics"; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); };
-  $("#out-sm").oninput = e => { sim.m = e.target.value; drawSim(); };
-  $$(".out-acct button", app).forEach(b => b.onclick = () => { sim.a = b.dataset.a; $$(".out-acct button", app).forEach(x => x.classList.toggle("on", x === b)); drawSim(); });
-  const q = $("#out-sq"), sg = $("#out-ss");
-  const pool = R.companies.filter(c => !c.missing && !outVieux(c) && c.divPaid > 0.5);
-  q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { sg.hidden = true; return; }
-    const l = pool.filter(c => norm(c.name).includes(t) || norm(c.ticker || "") === t).slice(0, 6);
-    sg.innerHTML = l.length ? l.map(c => `<button type="button" data-id="${c.id}">${logo(c, 22)}<span>${esc(c.name)}</span><small>${(() => { const v = valo(c); return v && v.yld ? pct(v.yld, 1, false) : ""; })()}</small></button>`).join("") : `<p class="muted">Aucune entreprise versant un dividende ne correspond.</p>`; sg.hidden = false; };
-  q.onfocus = () => q.select();
-  sg.onclick = e => { const b = e.target.closest("button[data-id]"); if (!b) return; sim.c = RBY[b.dataset.id]; q.value = sim.c.name; sg.hidden = true; drawSim(); };
-  if (!OUT_DOCCLICK) { OUT_DOCCLICK = true; document.addEventListener("click", e => { const g = $("#out-ss"); if (g && !e.target.closest(".out-q")) g.hidden = true; }); }
-}
+// pageDividendes : m/dividendes4.js (Dividendes v4, 3/11/2026)
 
 // Comptes anciens (plus de 15 mois) : jamais dans un classement, une découverte ni une comparaison
 // recalculée. La règle est celle de m/donnees.js (donVieux), chargé après ce module.
