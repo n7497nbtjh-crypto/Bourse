@@ -1131,7 +1131,7 @@ function tabAgenda(s, c, el) {
 
 /* ---------- Actualité et agenda ---------- */
 
-/* ---------- Lexique : l'essentiel d'abord, avec des exemples réels ---------- */
+/* ---------- Lexique : la page est construite par m/lexique4.js (3/11/2026) ; ESSENTIEL, WITH, EXM, EXFMT servent encore ---------- */
 const ESSENTIEL = ["action", "pea", "ca", "croissance", "marge", "net", "lev", "fcf", "payout", "per"];
 const WITH = { // à lire avec
   croissance: ["marge", "fcf"], marge: ["croissance", "net"], net: ["marge", "fcf"], roe: ["lev", "gear"], lev: ["roe", "fcf"], gear: ["roe", "lev"],
@@ -1139,27 +1139,6 @@ const WITH = { // à lire avec
 };
 const EXM = { croissance: "g1", marge: "marge", net: "nm", roe: "roe", lev: "lev", gear: "gear", fcf: "conv", payout: "payout" };
 const EXFMT = { g1: v => pct(v), marge: v => pct(v, 1, false), nm: v => pct(v, 1, false) + " de marge nette", roe: v => pct(v, 1, false), lev: v => F1.format(v) + " an" + (v >= 2 ? "s" : ""), gear: v => pct(v, 0, false), conv: v => F0.format(v * 100) + " € pour 100 € de bénéfice", payout: v => pct(v, 0, false) };
-function examplesHTML(term) {
-  const k = EXM[term]; if (!k || !R) return "";
-  const list = R.companies.filter(c => !c.missing && !(isBank(c) && ["marge", "lev", "gear", "conv"].includes(k))).map(c => [c, ratios(c)[k]]).filter(([, v]) => okn(v) && (k !== "lev" || v >= 0)).sort((a, b) => b[1] - a[1]);
-  if (list.length < 5) return "";
-  const li = ([c, v]) => `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a> ${EXFMT[k](v)}`;
-  const mid = list[Math.floor(list.length / 2)];
-  return `<dt>Exemples réels</dt><dd>Les plus hauts : ${list.slice(0, 2).map(li).join(", ")}. Au milieu : ${li(mid)}. Les plus bas : ${list.slice(-2).reverse().map(li).join(", ")}.</dd>`;
-}
-function pageLexique() {
-  setTitle("Lexique"); setNav("lex");
-  const dl = (id, t) => `<dl>${t.calc ? `<dt>Calcul</dt><dd>${esc(t.calc)}</dd>` : ""}${t.ex ? `<dt>Exemple</dt><dd>${esc(t.ex)}</dd>` : ""}${RULES[id] ? `<dt>Bon ou moins bon ?</dt><dd>${esc(RULES[id])}</dd>` : t.read ? `<dt>Comment le lire</dt><dd>${esc(t.read)}</dd>` : ""}${examplesHTML(id)}${WITH[id] ? `<dt>À lire avec</dt><dd>${WITH[id].map(w => def(w)).join(", ")}</dd>` : ""}${t.limit ? `<dt>Limite</dt><dd>${esc(t.limit)}</dd>` : ""}</dl>`;
-  const term = (id, t, n) => `<div class="term" id="${id}">${n ? `<div class="tn">${n}</div>` : ""}<h3>${esc(t.name)}</h3><p>${esc(t.what)}</p>${dl(id, t)}</div>`;
-  const rest = [["Les bases", BASES], ["Lire une entreprise", TERMS], ["Portefeuille et simulations", PTERMS]]
-    .map(([g, o]) => [g, Object.entries(o).filter(([k]) => !ESSENTIEL.includes(k))]).filter(([, l]) => l.length);
-  app.innerHTML = `<h1 class="pagetitle">Lexique</h1><p class="pagesub">Dix notions suffisent pour lire une fiche. Pour chacune : ce que c'est, un exemple réel, et à partir de quand c'est bon ou moins bon.</p><section class="panel"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Avant d'acheter une action : dans quel compte ?</b><div class="muted">PEA, compte-titres, assurance-vie : ce qu'on peut y mettre et l'impôt sur les gains.</div></div><a class="more" href="/pea-cto">Lire le guide →</a></div></section>
-    <section class="panel"><div class="ph"><h2>Les dix notions essentielles</h2><span class="light" style="font-size:12.5px">Dans l'ordre conseillé</span></div>
-      <div class="essgrid">${ESSENTIEL.map((k, i) => term(k, ALL[k], i + 1)).join("")}</div></section>
-    <h2 class="subh">Pour aller plus loin</h2>
-    ${rest.map(([g, l]) => `<details class="panel more"><summary>${g}<span class="light">${l.length} notions</span></summary>${l.map(([k, t]) => term(k, t)).join("")}</details>`).join("")}`;
-  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { const d = t.closest("details"); if (d) d.open = true; t.scrollIntoView(); } }
-}
 
 /* ---------- Courtiers ---------- */
 let BROKERS = { list: [], sources: [] };
