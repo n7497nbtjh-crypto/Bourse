@@ -644,3 +644,15 @@ html #app .ek.ek-page .cl4-page .ax4-ch button.on{background:var(--ek-y);color:v
 .ek .cl4-prem b{font:800 14px Inter}.ek .cl4-prem span{font:600 13px/1.4 Inter;flex:1 1 320px}.ek .cl4-prem a{font:800 13.5px Inter;color:var(--ek-ink)}
 .ek .cl4-how div{font:600 13.5px/1.5 Inter}
 @media(max-width:900px){.ek .cl4-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}.ek .cl4-tabs small{display:none}.ek .cl4-crit{grid-template-columns:1fr}.ek .cl4-r{grid-template-columns:26px 34px minmax(0,1fr) auto;gap:10px;padding:12px}.ek .cl4-r>i{display:none}.ek .cl4-w{display:none}.ek .cl4-v strong{font-size:19px}}
+
+/* ——— Outils v4 (m/outils4.js) ——— */
+.ek .ou4-une{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px}
+.ek .ou4-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:12px}
+.ek .ou4-c{display:flex;flex-direction:column;gap:6px;background:#fff;border:2px solid var(--ek-ink);border-radius:18px;padding:16px;color:var(--ek-ink);text-decoration:none;box-shadow:3px 3px 0 var(--ek-ink);transition:transform .12s}
+.ek .ou4-c:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ek-ink)}
+.ek .ou4-c svg{width:38px;height:38px;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:11px;padding:6px;box-sizing:border-box;margin-bottom:4px}
+.ek .ou4-c b{font:800 18px/1.15 "Bricolage Grotesque",Inter;letter-spacing:-.02em}.ek .ou4-c span{font:600 13px/1.4 Inter;color:#444;flex:1}.ek .ou4-c em{font:800 13px Inter;font-style:normal;border-bottom:3px solid var(--ek-y);align-self:flex-start}
+.ek .ou4-une .ou4-c em{border-color:var(--ek-ink)}
+.ek .ou4-deb{display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;border:2px solid var(--ek-ink);border-radius:18px;padding:16px 18px;background:#E2F8EE;color:var(--ek-ink);text-decoration:none}
+.ek .ou4-deb b{font:800 18px "Bricolage Grotesque",Inter}.ek .ou4-deb span{font:600 13.5px Inter;flex:1 1 280px}.ek .ou4-deb em{font:800 14px Inter;font-style:normal}
+@media(max-width:900px){.ek .ou4-une{grid-template-columns:1fr}}

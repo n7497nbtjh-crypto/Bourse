@@ -246,19 +246,7 @@ async function parExpress(niv, lec) {
   scrollTo(0, 0);
 }
 
-/* ---------- Outils : la page ne mélange plus outils et cours (enveloppe : le module « outils » garde la main sur la page) ---------- */
-(function () {
-  const outils0 = window.pageOutils;
-  window.pageOutils = function (t) {
-    const r = outils0.apply(this, arguments);
-    if (!t) {
-      $$('#app .cards a[href="/apprendre"], #app .cards a[href="/debuter"], #app .cards a[href="/academie/express"]').forEach(a => a.remove());
-      $$("#app .cards .tnum").forEach((n, i) => { n.textContent = String(i + 1).padStart(2, "0"); });
-      if (!$("#parout")) app.insertAdjacentHTML("beforeend", `<section class="panel" id="parout" style="margin-top:16px"><div class="pb" style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:center"><div><b>Vous débutez ?</b><div class="muted">Le guide, les cours et le lexique sont réunis dans Apprendre.</div></div><a class="more" href="/apprendre">Apprendre →</a></div></section>`);
-    }
-    return r;
-  };
-})();
+/* ---------- Outils : page refaite dans m/outils4.js (3/11/2026) ---------- */
 
 /* ---------- Liens et fils d'Ariane : les pages d'apprentissage se rattachent à « Apprendre » ---------- */
 const PAR_CRUMB_PAGES = { "/commencer": "Par où commencer", "/lexique": "Le lexique" }; // 31/10 : idées reçues et Livret A sont dans Outils

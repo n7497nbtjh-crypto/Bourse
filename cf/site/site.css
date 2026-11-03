@@ -3094,12 +3094,12 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 @media (max-width:760px){.cm3{grid-template-columns:minmax(0,1fr)}.cm3-c{min-height:0}.cm3-v{font-size:28px}}
 
 /* ==== m/design.js (ligne 256 avant le 31/10) ==== */
-.ot-g{margin:22px 0 0}.ot-h{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;margin:0 0 10px}.ot-h h2{font-family:var(--serif);font-weight:800;font-size:24px;margin:0}.ot-h span{font-size:13px;color:var(--grey)}
-.ot-c{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.ot-k{display:grid;grid-template-columns:28px minmax(0,1fr);grid-template-areas:"i t" "i d";gap:2px 10px;padding:16px 18px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none}
-.ot-k svg{grid-area:i;width:26px;height:26px;margin-top:1px}.ot-k b{grid-area:t;font-size:16px}.ot-k span{grid-area:d;font-size:13px;line-height:1.45;color:var(--grey)}
-.ot-k:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
-@media (max-width:900px){.ot-c{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:520px){.ot-c{grid-template-columns:minmax(0,1fr)}}
+
+
+
+
+
+
 
 /* ==== m/design.js (ligne 274 avant le 31/10) ==== */
 .ent-plus{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;border-top:1px solid var(--ink);border-bottom:1px solid var(--rule);margin:0 0 14px}
@@ -3163,9 +3163,9 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 @media (max-width:600px){footer .navpied4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 body:has(.mpanel.open) #orciab{display:none}
 @media (max-width:760px){
-  small,.src,.note,.light,.muted,.kick,.sub,.rf-no,.tbx-unit,.f2-sub,.pa2 small,.rf6-jg small,.tbx-date small,.ot-k span,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.acc-cat,.tag{font-size:12px!important}
+  small,.src,.note,.light,.muted,.kick,.sub,.rf-no,.tbx-unit,.f2-sub,.pa2 small,.rf6-jg small,.tbx-date small,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.acc-cat,.tag{font-size:12px!important}
   .num,.rf-kt b,td.num,.tile .v,.pxhead .p,.tbx-val{font-size:max(13px,1em)!important}
-  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.ot-k,details.acc>summary,.cell-co,.navfav,.esptabs a{min-height:44px}
+  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,details.acc>summary,.cell-co,.navfav,.esptabs a{min-height:44px}
   .chips button,.filters button,.chip,.pill,.nfil button,.o2-seg button{display:inline-flex;align-items:center;padding-top:8px;padding-bottom:8px}
   a.lnk,a.more{display:inline-block;padding:9px 0;line-height:1.4}
   .def{min-height:44px;display:inline-flex;align-items:center}
@@ -3514,12 +3514,12 @@ html #app .a4 .a4-tabs button{border-radius:999px!important}
 #app .ph h2,#app h2{font-family:var(--serif);font-weight:800;letter-spacing:-.04em}
 #app .ph h2{font-size:clamp(22px,2.3vw,30px);line-height:1.05}
 /* cartes */
-html #app .panel,html #app details.panel,html #app .cocard,html #app .out-dc,html #app .cm3-c,html #app .pa-niv,html #app .prem-a,html #app .offer,html #app .ev,html #app .fcard,html #app .ot-k{
+html #app .panel,html #app details.panel,html #app .cocard,html #app .out-dc,html #app .cm3-c,html #app .pa-niv,html #app .prem-a,html #app .offer,html #app .ev,html #app .fcard{
   border:var(--v3b)!important;border-radius:24px!important;background:#fff;box-shadow:none!important}
 html #app .panel,html #app details.panel{padding:20px 24px;margin-bottom:22px}
 html #app .panel>.ph,html #app .panel>.pb{padding-left:0;padding-right:0}
 html #app .panel>.ph{border-bottom:0}
-html #app a.panel:hover,html #app a.cm3-c:hover,html #app a.ot-k:hover,html #app a.cocard:hover{box-shadow:5px 5px 0 #111!important;transform:translate(-2px,-2px);transition:transform .12s,box-shadow .12s}
+html #app a.panel:hover,html #app a.cm3-c:hover,html #app a.cocard:hover{box-shadow:5px 5px 0 #111!important;transform:translate(-2px,-2px);transition:transform .12s,box-shadow .12s}
 html #app .ftile,html #app .tile,html #app .tbx-dv,html #app .rf-kt{border:var(--v3b)!important;border-radius:16px!important;background:#FCFBF7}
 /* rubriques en couleur pâle, en alternance, comme l'accueil */
 
@@ -3551,11 +3551,11 @@ html #app .p7b.on{box-shadow:0 0 0 4px var(--a4y)!important}
 html #app .panel .panel,html #app .panel details.panel{border:0!important;background:#F7F6F2;border-radius:18px!important}
 html body .orciab{border:2px solid #111!important;border-radius:999px!important;background:var(--a4y)!important;color:#111!important;font-weight:700!important;box-shadow:3px 3px 0 #111!important}
 #app .kick{width:max-content;max-width:100%}
-html #app .ot-k:nth-child(4n+1),html #app .cm3-c:nth-child(4n+1){background:#FFF6CC}
-html #app .ot-k:nth-child(4n+2),html #app .cm3-c:nth-child(4n+2){background:#FFE9F2}
-html #app .ot-k:nth-child(4n+3),html #app .cm3-c:nth-child(4n+3){background:#E7ECFF}
-html #app .ot-k:nth-child(4n+4),html #app .cm3-c:nth-child(4n+4){background:#DDF6EA}
-html #app .ot-k b,html #app .ot-k strong{font-family:var(--serif);font-weight:800;font-size:17px;letter-spacing:-.02em}
+html #app .cm3-c:nth-child(4n+1){background:#FFF6CC}
+html #app .cm3-c:nth-child(4n+2){background:#FFE9F2}
+html #app .cm3-c:nth-child(4n+3){background:#E7ECFF}
+html #app .cm3-c:nth-child(4n+4){background:#DDF6EA}
+
 html body #app button:not(.prov-i):not(.def):not(.p7b):not(.linkbtn){border-radius:999px!important}
 html #app input[type=text]:not(.el-in),html #app input[type=search]:not(.el-in),html #app input[type=number],html #app input[type=date],html #app select{border:2px solid #111!important;border-radius:12px!important}
 
