@@ -128,7 +128,10 @@ function e4Etapes(x) {
     const tronque = (L, nom, nb) => { const t = L.slice(0, nb), r = L.slice(nb).reduce((a, k) => a + k[1], 0); return r >= 0.5 ? [...t, [nom, r]] : t; };
     const PA = tronque(x.ctry.map(([k, w]) => [COUNTRY[k] || k, w]), "Autres pays", 6), SE = tronque(x.secs.filter(s => s[0] !== "liquidites").map(([k, w]) => [k[0] === "§" ? (R.sectors[k.slice(1)] || k.slice(1)) : (E4_SECT[k] || ETF_SECT[k] || k), w]), "Autres", 6);
     const vis = ekBox({ titre: "Où va votre argent", unite: "part de l'ETF", indice: `Le poids de chaque pays${SE.length ? " et de chaque secteur" : ""} dans l'ETF.`, source: { texte: e4SrcCompo(x), lien: x.C && x.C.source && x.C.source.url, label: "voir la source ↗" } },
-      `<div class="et-two${SE.length ? "" : " un"}"><div><h4>Par pays</h4>${hb(PA)}</div>${SE.length ? `<div><h4>Par secteur</h4>${hb(SE, "#7FE0B9")}</div>` : ""}</div>`);
+      (PA.length === 1 && SE.length
+        // Un seul pays : la colonne « Par pays » n'aurait qu'une barre ; le pays est écrit en tête, les secteurs prennent toute la largeur
+        ? `<p class="et-1p"><b>${ekFr(PA[0][1], 0)} %</b> ${esc(e4Dans(x.ctry[0][0]))} : un seul pays</p><div class="et-two un"><div><h4>Par secteur</h4>${hb(SE, "#7FE0B9")}</div></div>`
+        : `<div class="et-two${SE.length ? "" : " un"}"><div><h4>Par pays</h4>${hb(PA)}</div>${SE.length ? `<div><h4>Par secteur</h4>${hb(SE, "#7FE0B9")}</div>` : ""}</div>`));
     const p1 = x.ctry[0], hors = x.hors;
     const R2 = [];
     if (hors != null && hors > 20 && !e.couvert) R2.push(["r", "change", `${ekFr(hors, 0)} % hors zone euro : si ces devises baissent face à l'euro, l'ETF baisse aussi, même si les cours ne bougent pas.`]);

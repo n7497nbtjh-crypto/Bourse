@@ -478,3 +478,4 @@
 @media(max-width:900px){.ek .et-hero,.ek .et-two,.ek .et-com{grid-template-columns:1fr}.ek .et-sch{grid-template-columns:1fr}.ek .et-sch>i{transform:rotate(90deg);justify-self:center}.ek .et-top>div{grid-template-columns:120px minmax(0,1fr) 46px}.ek .et-hb>div{grid-template-columns:105px minmax(0,1fr) 52px}}
 .ek .et-top .ek-lg{box-sizing:border-box;overflow:hidden}.ek .et-top .ek-lg img{width:100%;height:100%;object-fit:contain;display:block}
 .ek .et-top .nm>a{display:inline;min-height:0;height:auto}
+.ek .et-1p{display:inline-flex;width:fit-content;align-self:flex-start;align-items:baseline;gap:8px;margin:10px 0 4px;padding:6px 12px;border:2px solid var(--ek-ink);border-radius:999px;background:#E9EDFF;font:700 14px Inter}.ek .et-1p b{font:800 18px "Bricolage Grotesque",Inter}
