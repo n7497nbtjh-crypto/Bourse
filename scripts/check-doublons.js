@@ -9,8 +9,8 @@ const TERMES = [/\brentable\b/g, /\bendettée\b/g, /\bchère\b/g, /\bbon marché
   for (const id of ids) {
     if (vus >= n || ++essais > n * 4) break;
     await aller(p, "/entreprise/" + id, 3500);
-    const r = await p.evaluate(() => { // fiche v4 (2/11) : on lit la page sans « Ce qui l'explique » (comparaisons nommées aux rivales) ni les plis fermés
-      const m = (document.querySelector("main") || document.body).cloneNode(true); m.querySelectorAll(".ek-why, svg, details:not([open]) > :not(summary)").forEach(x => x.remove());
+    const r = await p.evaluate(() => { // fiche v4 (2/11) : on lit la page sans « Ce qui l'explique » (comparaisons nommées aux rivales) ni les plis fermés ni le contexte (textes de contexte.json, pas des verdicts)
+      const m = (document.querySelector("main") || document.body).cloneNode(true); m.querySelectorAll(".ek-why, .f4sx, .f4cy, svg, details:not([open]) > :not(summary)").forEach(x => x.remove());
       document.body.appendChild(m); m.style.cssText = "position:absolute;left:-99999px;width:1200px"; const txt = m.innerText; m.remove();
       return { txt, tabs: document.querySelectorAll("#etapes, .f2tabs, .qtabs").length, verdict: !!document.querySelector(".ek-vrd, .rf-vc") }; });
     if (!r.verdict) continue; // fiche sans comptes : pas de verdict, pas de doublon possible

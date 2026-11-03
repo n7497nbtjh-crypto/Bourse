@@ -86,6 +86,7 @@ async function pageCompany4(id, tab) {
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
   f4Ancres(ctx); f4Trim(ctx); window.F4X = ctx;
+  if (typeof ctxCharge === "function") ctxCharge().then(() => { if (window.F4X === ctx) f4Contexte(ctx); });
   const ANC = { "rf-resultats": "e1", "rf-rentab": "e2", "rf-dette": "e3", "rf-div": "e4", "rf-valo": "e5", "f3-metier": "metier", "tous-les-chiffres": "tout", "rf-concurrents": "tout", "concurrents": "tout" }; // anciennes ancres (liens déjà partagés)
   const h0 = location.hash.slice(1), cible = tab === "comptes" ? "tout" : (tab === "actualite" || tab === "agenda" || tab === "communaute") ? "actu" : (ANC[h0] || h0);
   if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ block: "start" }); }, 30); }
@@ -386,15 +387,51 @@ function f4Groupe(mots, mieux) {
   return liste[0].toUpperCase() + liste.slice(1) + (pl ? " sont " : " est ") + adj;
 }
 
+// ——— Contexte (m/contexte.js, data/contexte.json) : sujets d'actualité qui touchent le secteur (bloc « Son actualité »)
+// et événements des années passées sous le graphique de l'étape 1. Rien n'est écrit pour une société : sujets et événements
+// sont rattachés par secteur, pays et métier (ctxProfil / ctxCible). 3/11, maquette validée par Romain.
+const F4_SENS = { "+": ["Plutôt favorable", "up"], "-": ["Plutôt défavorable", "dn"], "±": ["À double tranchant", "mx"] };
+function f4Contexte(x) {
+  const { s, c } = x; if (typeof CTX_D === "undefined" || !CTX_D) return;
+  try {
+    const box = document.getElementById("f4sx"), l = contexteSujets(s, c).slice(0, 3);
+    const mois = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+    const srcN = n => esc(String(n).split(",")[0].split(" : ")[0]);
+    if (box && l.length) {
+      box.innerHTML = `<span class="ek-stk2">Son secteur</span><h3 class="f4sx-t">Ce qui touche son secteur en ce moment.</h3>
+        <div class="f4sx-g">${l.map(({ sj, im }) => { const [lab, cl] = F4_SENS[im.sens] || F4_SENS["±"];
+          return `<article class="f4sx-c"><div class="f4sx-top"><span class="f4sx-th">${esc(sj.theme)}</span><span class="f4sx-s ${cl}">${lab}</span></div>
+            <h4>${esc(sj.titre)}</h4><p class="f4sx-p"><b>Pour les ${esc(im.qui.charAt(0).toLowerCase() + im.qui.slice(1))}</b> : ${esc(im.mecanisme)}</p>
+            <details><summary>Les faits datés, depuis ${esc(mois(sj.depuis))}</summary><ul>${(sj.faits || []).map(f => `<li>${esc(f)}</li>`).join("")}</ul>
+            ${(sj.src || []).length ? `<p class="f4sx-src">Sources : ${sj.src.map(o => o.url ? `<a href="${esc(o.url)}" target="_blank" rel="noopener">${srcN(o.nom)}</a>` : srcN(o.nom)).join(" · ")}</p>` : ""}</details></article>`; }).join("")}</div>
+        <p class="f4sx-n">Vérifié le ${esc(dLabel(CTX_D.maj))}. Les effets décrits sont possibles, pas certains. <a href="/methode#contexte">Sources et méthode</a></p>`;
+      box.hidden = false; box.className = "f4sx";
+    }
+    const ser = ctxSerie(s, c), e1 = document.querySelector("#e1 .ek-row");
+    if (!ser || ser.ys.length < 3 || !e1 || document.querySelector("#e1 .f4cy")) return;
+    const R = ctxPhases(ser), P = ctxProfil(s, c), vus = new Set();
+    const items = R.phases.map(ph => ({ ph, ev: ctxEvts(P, c, ph).filter(e => !vus.has(e.id) && vus.add(e.id))[0] })).filter(o => o.ev);
+    if (!items.length) return;
+    const pc = g => (g > 0 ? "+" : "−") + ekFr(Math.abs(g * 100), 1) + " %", an = ys => ys.length > 1 ? ys[0] + "-" + ys[ys.length - 1] : ys[0];
+    e1.insertAdjacentHTML("afterend", `<div class="f4cy"><h4>Ce qui se passait autour, année par année.</h4><ul>${items.map(({ ph, ev }) => `<li><div class="f4cy-y"><b>${esc(an(ph.ys))}</b>${ph.gs.map(g => `<span class="${g >= 0 ? "up" : "dn"}">${pc(g)}</span>`).join(" ")}</div>
+      <p>${esc(ev.titre)}.</p><details><summary>Le détail</summary><p>${esc(ev.texte)}</p></details></li>`).join("")}</ul>
+      <p class="f4cy-n">Variation de ${esc(ser.k === "net" ? "son bénéfice" : "ses ventes")} par rapport à l'année d'avant. Le site montre ce qui s'est passé au même moment ; il ne mesure pas la part de chaque événement.</p></div>`);
+  } catch (e) { console.error("fiche v4 contexte", e); }
+}
+
 // ——— Après le fil : actualité, preuve, tous les chiffres, questions ———
 function f4Fin(x) {
   const { s, c } = x, ev = typeof eventsOf === "function" ? eventsOf(s.id) : [], pass = ev.filter(e => e.date < TODAY).slice(-1), next = ev.filter(e => e.date >= TODAY).slice(0, 3 - pass.length), L = [...pass, ...next];
   const dl = d => new Date(d + "T12:00:00"), cl = c.clos || s.clos || null;
-  const ag = L.length ? `<div class="ek-agenda">${L.map(e => `<div class="${e.date < TODAY ? "pass" : ""}"><small>${e.date < TODAY ? "Publié le " + dl(e.date).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "À venir"}</small><b>${esc(dl(e.date).toLocaleDateString("fr-FR", { day: "numeric", month: "short" }))}</b><p>${esc(e.label || e.type || "")}</p>${e.source ? `<a href="${esc(e.source)}" target="_blank" rel="noopener">${e.date < TODAY ? "Lire la publication" : "Agenda de l'entreprise"}</a>` : ""}</div>`).join("")}</div>` : `<p class="ek-note">Aucune date de publication relevée pour l'instant.</p>`;
+  const nj = d => Math.round((dl(d) - dl(TODAY)) / 864e5), st = d => { const n = nj(d); return n < 0 ? "Publié" : n === 0 ? "Aujourd'hui" : n === 1 ? "Demain" : "Dans " + n + " jours"; };
+  const ag = L.length ? `<ul class="f4ag">${L.map(e => `<li class="${e.date < TODAY ? "pass" : "fut"}"><span class="f4ag-d"><b>${dl(e.date).getDate()}</b><small>${esc(dl(e.date).toLocaleDateString("fr-FR", { month: "short" }))}</small></span>
+      <span class="f4ag-t"><b>${esc(e.label || e.type || "")}</b><small>${esc(dl(e.date).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long", year: "numeric" }))}${e.source ? `<a href="${esc(e.source)}" target="_blank" rel="noopener">${e.date < TODAY ? "Lire la publication" : "Agenda de l'entreprise"} ↗</a>` : ""}</small></span>
+      <span class="f4ag-s">${st(e.date)}</span></li>`).join("")}</ul>` : `<p class="ek-note">Aucune date de publication relevée pour l'instant.</p>`;
+  const secteur = `<div id="f4sx" hidden></div>`; // rempli par f4Contexte une fois contexte.json chargé
   const fb = typeof fiabilite === "function" ? fiabilite(s, c) : null;
   const tout = f4Tout(x);
   const qs = [s.net != null && s.netPrev > 0 ? `Pourquoi le bénéfice de ${s.name} a ${s.net >= s.netPrev ? "augmenté" : "baissé"} en ${s.year} ?` : `Que fait ${s.name} ?`, x.M.pe != null ? `Pourquoi l'action ${s.name} vaut-elle ${ekFr(x.M.pe, 0)} fois son bénéfice ?` : `Comment ${s.name} gagne-t-elle de l'argent ?`, `Quels sont les principaux risques pour ${s.name} ?`];
-  return `<section class="ek-sec" id="actu"><span class="ek-stk2 p">Son actualité</span><h2>Ce qui vient de tomber, ce qui arrive.</h2>${ag}
+  return `<section class="ek-sec" id="actu"><span class="ek-stk2 p">Son actualité</span><h2>Ce qui vient de tomber, ce qui arrive.</h2>${ag}${secteur}
       <p class="ek-note">Tout ce qui est au-dessus porte sur l'exercice ${esc(s.year)}, audité et déposé. Une publication plus récente n'est reprise qu'une fois relevée.</p>
       ${x.rap ? `<div class="ek-proof"><span class="ek-stk2">Prouvé</span><p>Les chiffres de cette page viennent du <b>rapport annuel ${esc(s.year)} de ${esc(s.name)}</b>${fb ? `. Fiabilité des données : ${esc(fb.mot)}` : ""}.</p><a href="${esc(x.rap)}" target="_blank" rel="noopener">Ouvrir le rapport ↗</a></div>` : ""}</section>
     <section class="ek-sec" id="tout"><span class="ek-stk2 b">Pour aller plus loin</span><h2>Tous les chiffres, en détail.</h2>
