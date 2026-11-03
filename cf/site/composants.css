@@ -1052,3 +1052,23 @@ html #app .ek.mt4 .mtdflow .ic svg{width:22px;height:22px;fill:none;stroke:var(-
 html #app .ek.mt4 .panel{border:2px solid var(--ek-ink);border-radius:20px;box-shadow:none}
 .ek.mt4 .mtdgrid{margin-top:18px}
 @media(max-width:900px){.ek.mt4 .mtdflow,.ek.mt4 .mtdkpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+/* ---------- Pages secondaires (3/11 soir) : bandeau v3 et leçons au style v4 ---------- */
+html #app .v3-hero .pays-bar{background:#fff;margin:18px 0 0;max-width:max-content;box-shadow:none}
+html #app .v3-hero .pays-bar button.on{background:#FFE14D;color:#111}
+html #app .v3-hero p.lead{font:600 17px/1.5 Inter;color:#111;max-width:68ch;margin:14px 0 0}
+/* leçon : barre de progression collante, étiquette sobre au-dessus, barre jaune épaisse */
+html #app .acatopbar{flex-direction:row;align-items:center;gap:12px}
+html #app .acatopbar .kick{flex:none;font:800 12.5px Inter;background:#fff;border:2px solid #111;border-radius:999px;padding:4px 10px;transform:none;box-shadow:none;margin:0}
+html #app .acatopbar .acapb{flex:1;height:10px;border:2px solid #111;background:#fff}
+html #app .acatopbar .acapb span{background:#FFE14D}
+@media(max-width:560px){html #app .acatopbar .kick{max-width:60%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}
+html #app .v3-hero .pays-bar{gap:6px;padding:8px 10px}
+html #app .v3-hero .pays-bar>span{font-size:12.5px}
+html #app .v3-hero .pays-bar button{padding:4px 10px;font-size:13px}
+html #app .acales{max-width:860px;margin-left:auto;margin-right:auto}
+@media(max-width:640px){html #app .v3-hero .pays-bar{flex-wrap:wrap;max-width:100%}html #app .v3-hero .pays-bar>span{display:none}html #app .v3-hero .pays-bar button{min-height:34px;padding:3px 9px;font-size:12.5px}}
+html #app .acales .acavis{border:2px solid #111;border-radius:18px;background:#fff}
+html #app .acales .acavis-n b{font:800 clamp(24px,3vw,34px)/1.1 "Bricolage Grotesque",Inter;letter-spacing:-.03em}
+html #app .acales .acavis-k{font:800 12.5px Inter;color:#111}
+html #app .acales .acacard2{border:2px solid #111;border-radius:18px;background:#fff}

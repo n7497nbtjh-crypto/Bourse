@@ -15,7 +15,7 @@ function v3Hero() {
   if (stk0) sec.appendChild(stk0);
   else if (!cr) { let k = null; try { k = navRubrique(location.pathname); } catch (e) { } const s = V3_STK[k]; if (s) sec.insertAdjacentHTML("beforeend", `<span class="a4-stk ${s[1]}">${s[0]}</span>`); }
   sec.appendChild(h);
-  while (sec.nextElementSibling && sec.nextElementSibling.matches(".pagesub,p.lead,.pagesub2")) sec.appendChild(sec.nextElementSibling);
+  while (sec.nextElementSibling && sec.nextElementSibling.matches(".pagesub,p.lead,.pagesub2,.pays-bar")) sec.appendChild(sec.nextElementSibling); // 3/11 : le choix du pays passe aussi dans le bandeau
 }
 (() => { const a = document.getElementById("app"); if (!a) return; let t = 0;
   new MutationObserver(() => { if (t) return; t = requestAnimationFrame(() => { t = 0; try { v3Hero(); } catch (e) { console.error("v3", e); } }); }).observe(a, { childList: true, subtree: true }); })();
