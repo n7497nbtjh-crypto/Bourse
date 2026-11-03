@@ -53,18 +53,20 @@ function sj4Calcul(S, ref, H) {
   const livret = T ? xs.map((x, i) => [x, O2C.livretA(S.amt, deb, dates[i], T)]) : null;
   const m0 = ipc && O2C.moisProche(ipc, deb), prix = m0 ? xs.map((x, i) => { const m1 = O2C.moisProche(ipc, dates[i]); return [x, O2C.inflation(S.amt, ipc[m0], ipc[m1])]; }) : null;
   const mFin = ipc && O2C.moisProche(ipc, TODAY);
-  const series = [{ nom: A.nom + (A.div ? " (cours seul)" : ""), couleur: O2_C.ink, pts: A.pts, points: true, epais: 2.5 }];
-  if (A.div) series.push({ nom: A.nom + " avec dividendes perçus", couleur: O2_C.ink, tirets: true, pts: A.div, points: true });
+  const series = [{ nom: A.nom + (A.div ? " sans les dividendes" : ""), couleur: O2_C.ink, pts: A.pts, points: true, epais: 2.5 }];
+  if (A.div) series.push({ nom: A.nom + " dividendes non réinvestis", couleur: O2_C.ink, tirets: true, pts: A.div, points: true });
   if (I && !I.err) series.push({ nom: I.nom + " (indice, sans dividendes)", couleur: O2_C.bleu, pts: I.pts, points: true });
   if (livret) series.push({ nom: "Livret A", couleur: O2_C.vert, pts: livret, points: true });
   if (prix) series.push({ nom: "Hausse des prix (même pouvoir d'achat)", couleur: O2_C.orange, tirets: true, pts: prix, epais: 1.5 });
+  const RI = A.div ? sj4Reinv(A, S, ref, H) : null;
+  if (RI) series.splice(2, 0, { nom: A.nom + " dividendes réinvestis (estimation)", couleur: O2_C.vert, tirets: true, pts: RI, points: true });
   const fin = s => s && s.pts ? s.pts[s.pts.length - 1][1] : null, vA = A.div ? A.div.at(-1)[1] : fin(A), vI = I && !I.err ? fin(I) : null, vL = livret ? livret.at(-1)[1] : null, vP = prix ? prix.at(-1)[1] : null;
   const pc = x => x != null ? O2_p((x / S.amt - 1) * 100, 0) : "–";
   // En-tête : le résultat
   titre.textContent = sjNb(`${O2_e(S.amt)} dans ${A.nom} en ${O2_dCourt(deb)} : ${O2_e(vA)} aujourd'hui.`);
-  sous.innerHTML = `Soit <b>${pc(vA)}</b>${A.div ? ", dividendes perçus compris" : ""}${frais ? `, après ${eur(frais)} de frais d'achat` : ""}.${vP != null ? (vA >= vP ? " Mieux que la hausse des prix : le pouvoir d'achat a été préservé." : " Moins que la hausse des prix : ce placement a perdu du pouvoir d'achat.") : ""} Le passé ne dit rien de l'avenir.`;
+  sous.innerHTML = `Soit <b>${pc(vA)}</b>${A.div ? `, dividendes perçus et gardés de côté${RI ? ` (environ ${sjNb(O2_e(RI.at(-1)[1]))} s'ils avaient été réinvestis)` : ""}` : ""}${frais ? `, après ${eur(frais)} de frais d'achat` : ""}.${vP != null ? (vA >= vP ? " Mieux que la hausse des prix : le pouvoir d'achat a été préservé." : " Moins que la hausse des prix : ce placement a perdu du pouvoir d'achat.") : ""} Le passé ne dit rien de l'avenir.`;
   // Cartes : chaque placement face au montant de départ, la hausse des prix comme repère
-  const cartes = [[A.nom + (A.div ? ", dividendes compris" : ""), vA, "a"], ...(vI != null ? [[I.nom, vI, "i", "indice, sans dividendes"]] : []), ...(vL != null ? [["Livret A", vL, "l", "taux officiels successifs"]] : [])];
+  const cartes = [[A.nom + (A.div ? ", dividendes non réinvestis" : ""), vA, "a", A.div ? "dividendes gardés de côté" : ""], ...(RI ? [[A.nom + ", dividendes réinvestis", RI.at(-1)[1], "r", "estimation : chaque dividende rachète des actions"]] : []), ...(vI != null ? [[I.nom, vI, "i", "indice, sans dividendes"]] : []), ...(vL != null ? [["Livret A", vL, "l", "taux officiels successifs"]] : [])];
   const carte = ([n, x, k, sub]) => { const g = x >= S.amt, bat = vP != null ? x >= vP : null;
     return `<div class="sj-c${k === "a" ? " a" : ""}"><span class="s4-k">${esc(n)}</span><b>${sjNb(O2_e(x))}</b><span class="sj-p ${g ? "g" : "r"}">${pc(x)}</span>
       ${bat != null ? `<small class="${bat ? "g" : "r"}">${bat ? "▲ au-dessus" : "▼ en dessous"} de la hausse des prix</small>` : ""}${sub ? `<small>${esc(sub)}</small>` : ""}</div>`; };
@@ -72,7 +74,7 @@ function sj4Calcul(S, ref, H) {
   const hyp = [
     `Montant : ${O2_e(S.amt)} placés en une seule fois le ${dLabel(deb)}, sans versement ensuite. Les versements mensuels demanderaient les cours mois par mois, que le site ne conserve pas encore.`,
     `Frais d'achat : ${frais ? `${eur(frais)} (grille ${esc(b.name)}), déduits du montant placé` : "aucun"}. ${e ? `Les frais courants de l'ETF (${e.ter != null ? pct(e.ter / 100, 2, false) + " par an" : "non indiqués"}) sont déjà déduits de son cours.` : ""} Pas de frais de revente ni d'impôt : c'est la valeur avant revente.`,
-    A.div ? `Dividendes : dividende par action publié dans les comptes annuels des exercices ${A.div.exos.join(", ")}, supposé versé le 1er juin de l'année suivante et gardé en liquidités (ni réinvesti ni imposé). Estimation : les dates et acomptes réels varient.`
+    A.div ? `Dividendes : dividende par action publié dans les comptes annuels des exercices ${A.div.exos.join(", ")}, supposé versé le 1er juin de l'année suivante. « Non réinvestis » : gardés en liquidités, sans intérêt. « Réinvestis » : chaque dividende rachète des actions au cours de ce jour-là, estimé en ligne droite entre les deux cours relevés les plus proches. Ni impôt ni frais sur les dividendes. Estimation : les dates et acomptes réels varient.`
       : e ? (e.distribution === "distribution" ? "Dividendes : cet ETF les distribue ; ils ne sont pas comptés ici (montants versés non disponibles)." : "Dividendes : cet ETF les réinvestit ; ils sont déjà dans son cours.") : "Dividendes : non comptés (dividendes par action non disponibles ou dans une autre devise que le cours).",
     `Devise : ${A.cur && A.cur !== "EUR" ? `cours en ${esc(A.cur)}, convertis en euros au taux moyen du mois (BCE) pour le passé et au taux du jour pour aujourd'hui. La variation du ${esc(A.cur)} face à l'euro est donc comprise.` : "cours en euros."}`,
     I && !I.err ? `Indice : ${esc(I.nom)}, indice de prix (dividendes non réinvestis), sans frais : il ne s'achète pas directement.` : I && I.err ? `Indice ${esc(O2_nomK(S.cmp))} : ${esc(I.err)}.` : "",
@@ -84,7 +86,7 @@ function sj4Calcul(S, ref, H) {
   el.innerHTML = `
     <section class="ek-sec"><span class="ek-stk2 b">Face aux autres placements</span><h2>Pour ${sjNb(O2_e(S.amt))} placés en ${O2_dCourt(deb)}.</h2>
       <div class="sj-cs">${cartes.map(carte).join("")}${vP != null ? `<div class="sj-c ref"><span class="s4-k">Hausse des prix</span><b>${sjNb(O2_e(vP))}</b><span class="sj-p">${pc(vP)}</span><small>ce qu'il fallait pour garder le même pouvoir d'achat (Insee)</small></div>` : ""}</div>
-      ${sj4Barres(S, [[A.nom + (A.div ? ", dividendes compris" : ""), vA, true], ...(A.div ? [[A.nom + ", cours seul", fin(A)]] : []), ...(vI != null ? [[I.nom, vI]] : []), ...(vL != null ? [["Livret A", vL]] : [])], vP)}</section>
+      ${sj4Barres(S, [...(RI ? [[A.nom + ", dividendes réinvestis", RI.at(-1)[1]]] : []), [A.nom + (A.div ? ", dividendes non réinvestis" : ""), vA, true], ...(A.div ? [[A.nom + ", sans les dividendes", fin(A)]] : []), ...(vI != null ? [[I.nom, vI]] : []), ...(vL != null ? [["Livret A", vL]] : [])], vP)}</section>
     <section class="ek-sec">
       <details class="s4-pl"><summary>Le parcours, date par date</summary><div class="s4-ch" id="sjc"></div>${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Placement</th>${dates.map(d => `<th scope="col">${O2_dCourt(d)}</th>`).join("")}<th scope="col">Évolution</th></tr></thead><tbody>${lignes}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}</details>
       <details class="s4-pl"><summary>Hypothèses du calcul</summary><ul>${hyp.map(x => `<li>${x}</li>`).join("")}</ul></details>
@@ -95,13 +97,25 @@ function sj4Calcul(S, ref, H) {
   tblxBindScroll(el);
 }
 // Barres horizontales : la valeur d'aujourd'hui de chaque placement, face au montant placé (trait noir) et à la hausse des prix (pointillé orange)
+// Dividendes réinvestis (estimation) : chaque dividende annuel, supposé versé le 1er juin, rachète des actions au cours de ce jour,
+// estimé en ligne droite entre les deux cours relevés les plus proches (en euros). Renvoie [[x, valeur], …] aux dates relevées.
+function sj4Reinv(A, S, ref, H) {
+  const c = RBY[S.k.slice(2)], h = c && H && H.h && H.h[c.id]; if (!h || !h.d) return null;
+  const deb = O2_moinsAns(TODAY, S.ans), an = iso => (Date.parse(iso) - Date.parse(TODAY)) / (365.25 * 864e5);
+  const P = A.pts.filter(p => p[1] != null).map(([x, v_]) => [x, v_ / A.parts]); // cours en euros aux dates relevées
+  const prixA = t => { for (let i = 0; i < P.length - 1; i++) if (t >= P[i][0] && t <= P[i + 1][0]) { const [x0, y0] = P[i], [x1, y1] = P[i + 1]; return y0 + (y1 - y0) * (t - x0) / (x1 - x0); } return null; };
+  const V = h.d.map((x, i) => [h.y + i, x]).filter(([y, x]) => x > 0 && `${y + 1}-06-01` > deb && `${y + 1}-06-01` <= TODAY).map(([y, x]) => { const iso = `${y + 1}-06-01`, fx = O2_fx(ref, A.cur, iso); return { t: an(iso), d: fx ? x / fx : null }; });
+  if (!V.length || V.some(v_ => v_.d == null)) return null;
+  return P.map(([x, px]) => { let n = A.parts; V.filter(v_ => v_.t <= x).forEach(v_ => { const pa = prixA(v_.t); if (pa > 0) n += n * v_.d / pa; }); return [x, n * px]; });
+}
+// Barres horizontales : la valeur d'aujourd'hui de chaque placement, face au montant placé (trait noir) et à la hausse des prix (pointillé orange)
 function sj4Barres(S, L, vP) {
-  const max = Math.max(S.amt, vP || 0, ...L.map(x => x[1] || 0)) * 1.12, X = v_ => (v_ / max * 100).toFixed(2) + "%", fin = v_ => v_ / max > .7 ? " fin" : "";
+  const max = Math.max(S.amt, vP || 0, ...L.map(x => x[1] || 0)) * 1.04, X = v_ => (v_ / max * 100).toFixed(2) + "%", fin = v_ => v_ / max > .7 ? " fin" : "";
   const traits = `<em class="m" style="left:${X(S.amt)}"></em>${vP != null ? `<em class="p" style="left:${X(vP)}"></em>` : ""}`;
   return `<div class="sj-bars" role="img" aria-label="Valeur aujourd'hui de chaque placement">
-    <div class="sj-br sj-ax"><span></span><div class="sj-bt"><u class="m${fin(S.amt)}" style="left:${X(S.amt)}">${sjNb(O2_e(S.amt))} placés</u></div></div>
-    ${L.filter(x => x[1] != null).map(([n, v_, a]) => `<div class="sj-br${a ? " a" : ""}"><span class="sj-bn">${esc(n)}</span><div class="sj-bt">${traits}<i class="${v_ >= S.amt ? "g" : "r"}" style="width:${X(v_)}"></i><b class="${v_ / max > .78 ? "in" : ""}" style="left:${X(v_)}">${sjNb(O2_e(v_))}</b></div></div>`).join("")}
-    ${vP != null ? `<div class="sj-br sj-ax"><span></span><div class="sj-bt"><u class="p${fin(vP)}" style="left:${X(vP)}">hausse des prix : ${sjNb(O2_e(vP))}</u></div></div>` : ""}
+    <div class="sj-br sj-ax"><span></span><div class="sj-bt"><u class="m${fin(S.amt)}" style="left:${X(S.amt)}">${sjNb(O2_e(S.amt))} placés</u></div><span></span></div>
+    ${L.filter(x => x[1] != null).map(([n, v_, a]) => `<div class="sj-br${a ? " a" : ""}"><span class="sj-bn">${esc(n)}</span><div class="sj-bt">${traits}<i class="${v_ >= S.amt ? "g" : "r"}" style="width:${X(v_)}"></i></div><b class="sj-bv ${v_ >= S.amt ? "g" : "r"}">${sjNb(O2_e(v_))}</b></div>`).join("")}
+    ${vP != null ? `<div class="sj-br sj-ax"><span></span><div class="sj-bt"><u class="p${fin(vP)}" style="left:${X(vP)}">hausse des prix : ${sjNb(O2_e(vP))}</u></div><span></span></div>` : ""}
   </div><p class="ek-note">Barre verte : plus que le montant placé ; rouge : moins. Trait noir : le montant placé. Pointillé orange : ce qu'il fallait pour garder le même pouvoir d'achat. La courbe date par date est dans le pli plus bas.</p>`;
 }
 window.outilSiJavais = outilSiJavais4;
