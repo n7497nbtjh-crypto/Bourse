@@ -139,7 +139,6 @@ function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, 
       ["/outils/si-javais", "passe", "Et si j'avais investi ?", "1 000 € placés il y a 1, 3 ou 5 ans, comparés au marché."],
       ["/outils/verifier", "verif", "Vérifier une offre", "Un site ou un conseiller face aux listes noires de l'AMF."],
       ["/repartitions", "repart", "Quelle part en actions ?", "Un curseur, et ce qu'une forte baisse ferait à l'ensemble."],
-      ["/livret-a-ou-bourse", "livret", "Livret A ou Bourse ?", "100 € par mois sur 10, 20 ou 30 ans, inflation comprise."],
       ["/idees-recues", "idees", "Les idées reçues face aux chiffres", "Dix phrases qu'on entend souvent, vérifiées avec des données sourcées."],
     ]],
     ["Pour aller plus loin", "Trier, comparer, radiographier", [

@@ -318,7 +318,7 @@ table.t th:last-child,table.t td:last-child{padding-right:18px}
 .lg{position:relative;flex:none;width:var(--s,40px);height:var(--s,40px);border-radius:12px;background:#fff;border:1px solid var(--rule);display:inline-grid;place-items:center;overflow:hidden}
 .lg.lg-ini{background:hsl(var(--lgh,30) 38% 88%);border-color:hsl(var(--lgh,30) 30% 78%)}.lg.lg-ini b{color:hsl(var(--lgh,30) 45% 28%)}
 .lg b{font-size:calc(var(--s,40px) * .32);font-weight:600;color:var(--grey)}
-.lg img{position:absolute;inset:18%;width:64%;height:64%;object-fit:contain;background:#fff}
+.lg img{position:absolute;inset:8%;width:84%;height:84%;object-fit:contain;background:#fff}
 .cell-co{display:flex;align-items:center;gap:10px}
 .viewsw{display:flex;gap:16px;white-space:nowrap}
 .viewsw button{background:none;border:0;color:var(--grey);cursor:pointer;padding:12px 0;font-size:13.5px}
@@ -4065,7 +4065,7 @@ html #app .f3-cr2{display:grid;gap:8px;margin-top:14px}
 html #app .f3-rw2{display:grid;grid-template-columns:22px minmax(0,1fr) auto;grid-template-areas:"r n v" "r b b";gap:2px 8px;align-items:center;font:700 13.5px var(--sans)}
 html #app .f3-rg{grid-area:r;width:22px;height:22px;border-radius:50%;border:2px solid #111;display:grid;place-items:center;font:800 11px var(--sans);background:#fff}
 html #app .f3-rw2.best .f3-rg{background:#00B37A;color:#fff}html #app .f3-rw2.worst .f3-rg{background:#FF6B4F;color:#fff}
-html #app .f3-rw2 a{grid-area:n;color:#111;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}html #app .f3-rw2.me a{font-weight:800}html #app .f3-rw2.me a::after{content:" ●"}
+html #app .f3-rw2 a{grid-area:n;color:#111;text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}html #app .f3-rw2 a{display:flex;align-items:center;gap:7px;min-width:0}html #app .f3-rw2 a>span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}html #app .f3-rw2 a .lg{border-radius:6px}html #app .f3-rw2.me a{font-weight:800}html #app .f3-rw2.me a::after{content:" ●"}
 html #app .f3-rw2 b{grid-area:v;font:800 13.5px var(--sans);white-space:nowrap}html #app .f3-rw2.best b{color:#00875A}html #app .f3-rw2.worst b{color:#C2260E}
 html #app .f3-tk2{grid-area:b;height:14px;border-radius:7px;background:#F2F0EA;overflow:hidden}html #app .f3-tk2 i{display:block;height:100%;border-radius:7px;background:#111}
 html #app .f3-rw2.best .f3-tk2 i{background:#00B37A}html #app .f3-rw2.worst .f3-tk2 i{background:#FF6B4F}html #app .f3-tk2 i.neg{background:repeating-linear-gradient(135deg,#FF6B4F 0 4px,#fff 4px 7px)}

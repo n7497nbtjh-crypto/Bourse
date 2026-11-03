@@ -96,7 +96,6 @@ async function pageApprendre() {
   const prof = parSt(typeof CKEY !== "undefined" ? CKEY : "bilan.profil"), nq = Object.keys(prof).length, profOk = nq >= 5;
   const NV = parNiveaux(), nx = parProchaine(NV), lus = NV.reduce((a, v) => a + v.lus + v.dl, 0), tot = NV.reduce((a, v) => a + v.lec.length + v.dt, 0);
   const outils = [
-    ["/livret-a-ou-bourse", "Comparer", "Livret A ou Bourse ?", "100 € par mois sur 10, 20 ou 30 ans, inflation comprise."],
     ["/pea-cto", "Choisir", "PEA, compte-titres, assurance-vie", "Ce que chaque compte change à vos impôts."],
     ["/simulateurs/epargne", "Simuler", "Épargner chaque mois", "Ce que devient une somme placée tous les mois."],
     ["/simulateurs/frais", "Simuler", "Le coût des frais", "Courtage et frais de gestion sur 10, 20 ou 30 ans."],

@@ -292,3 +292,10 @@
 .ek-ask button{font:800 16px Inter;padding:0 22px;border:2px solid var(--ek-ink);border-radius:999px;background:var(--ek-y);color:var(--ek-ink);box-shadow:3px 3px 0 var(--ek-ink);cursor:pointer}
 @media (max-width:1100px){.ek-tg{grid-template-columns:1fr}}
 @media (max-width:600px){.ek-ask{flex-direction:column}.ek-ask button{padding:12px}}
+
+/* Logos officiels */
+.ek-mono.ek-logo{border-radius:16px;padding:7px;background:#fff}
+.ek-logo img{width:100%;height:100%;object-fit:contain;display:block}
+.ek-lg{display:inline-grid;place-items:center;flex:none;background:#fff;border:1.5px solid var(--ek-line);border-radius:7px;font:800 10px Inter;color:#555}
+.ek-lg-s{width:24px;height:24px}.ek-lg-s.ek-logo{padding:2px}
+.ek-nm{display:inline-flex;align-items:center;gap:8px}

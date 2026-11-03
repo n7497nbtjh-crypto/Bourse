@@ -90,6 +90,13 @@ async function pageCompany4(id, tab) {
   if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ block: "start" }); }, 30); }
 }
 
+// Logo officiel (collecté par le robot logos.yml dans /logos/<id>.png) ; sinon les initiales dans le même cadre
+function f4LogoSrc(c) { return typeof LOGOS !== "undefined" && c && c.id && LOGOS[c.id] && LOGOS[c.id].f ? "/logos/" + LOGOS[c.id].f : null; }
+function f4Logo(c, ini, petit) {
+  const src = f4LogoSrc(c), cl = petit ? "ek-lg ek-lg-s" : "ek-mono";
+  if (!ini) ini = String(c.name || "").replace(/[^A-Za-zÀ-ÿ0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
+  return src ? `<span class="${cl} ek-logo"><img src="${src}" alt="" loading="lazy" onerror="this.parentNode.classList.remove('ek-logo');this.parentNode.textContent='${esc(ini).replace(/'/g, "")}'"></span>` : `<span class="${cl}" aria-hidden="true">${esc(ini)}</span>`;
+}
 function f4Tete(s, c, x) {
   const p = typeof pxOf === "function" ? pxOf(s) : null, fi = (typeof FICHES !== "undefined" && FICHES && FICHES[s.id]) || null;
   const pea = typeof peaOk === "function" ? peaOk(s) : null, ini = s.name.replace(/[^A-Za-zÀ-ÿ0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
@@ -105,7 +112,7 @@ function f4Tete(s, c, x) {
   const chips = [secName(s), [typeof regName === "function" ? regName(s) : "", s.ticker].filter(Boolean).join(" · "), pea === true ? "Éligible au PEA ✓" : pea === false ? "Hors PEA" : ""].filter(Boolean);
   return `<section class="ek-hero">
     <div class="ek-crumb"><a href="/entreprises">Entreprises</a><span>›</span>${esc(secName(s))}<span>›</span>${esc(s.name)}</div>
-    <div class="ek-top"><div><div class="ek-idt"><span class="ek-mono" aria-hidden="true">${esc(ini)}</span><h1>${esc(s.name)}</h1></div>
+    <div class="ek-top"><div><div class="ek-idt">${f4Logo(s, ini)}<h1>${esc(s.name)}</h1></div>
       <p class="ek-desc">${esc((fi && fi.fait) || s.desc || "")}</p><div class="ek-chips">${chips.map(t => `<span class="ek-chip">${esc(t)}</span>`).join("")}</div></div>${pc}</div>
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
@@ -410,7 +417,7 @@ function f4Tout(x) {
   const riv = P.mode === "rivales" ? [{ ...s, moi: 1 }, ...P.L] : [];
   const cols = [["Ventes", r => r.ca != null ? f4Md(r.ca, r.currency) : "–"], ["Croissance", r => { const m = f4M(r); return m.g != null ? f4Pc(m.g, 1, true) : "–"; }], ["Marge", r => { const m = f4M(r); return m.m != null ? f4Pc(m.m, 0) : "–"; }], ["Bénéfice net", r => r.net != null ? f4Md(r.net, r.currency) : "–"], ["PER", r => { const m = f4M(r); return m.pe != null ? ekFr(m.pe, 0) + " fois" : "–"; }], ["Rendement", r => { const m = f4M(r); return m.yld != null ? f4Pc(m.yld, 1) : "–"; }]];
   const ids = riv.map(r => r.id).filter(Boolean);
-  const rivH = riv.length ? `<div class="ek-tc ek-tc-l"><h3>Face à ses rivales</h3><div class="scroll-x"><table class="ek-tt ek-tt-r"><thead><tr><th></th>${cols.map(k => `<th>${k[0]}</th>`).join("")}</tr></thead><tbody>${riv.map(r => `<tr${r.moi ? ' class="moi"' : ""}><th>${r.moi || !r.id ? esc(r.name) : `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`}</th>${cols.map(k => `<td>${esc(k[1](r))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${ids.length > 1 ? `<a class="ek-lk" href="/comparer?ids=${ids.slice(0, 4).map(encodeURIComponent).join(",")}">Comparer en détail ↗</a>` : ""}</div>` : "";
+  const rivH = riv.length ? `<div class="ek-tc ek-tc-l"><h3>Face à ses rivales</h3><div class="scroll-x"><table class="ek-tt ek-tt-r"><thead><tr><th></th>${cols.map(k => `<th>${k[0]}</th>`).join("")}</tr></thead><tbody>${riv.map(r => `<tr${r.moi ? ' class="moi"' : ""}><th><span class="ek-nm">${f4Logo(r, null, 1)}${r.moi || !r.id ? esc(r.name) : `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`}</span></th>${cols.map(k => `<td>${esc(k[1](r))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${ids.length > 1 ? `<a class="ek-lk" href="/comparer?ids=${ids.slice(0, 4).map(encodeURIComponent).join(",")}">Comparer en détail ↗</a>` : ""}</div>` : "";
   const csv = `<button type="button" class="ek-lk" data-f4-csv>Télécharger tous les chiffres (CSV)</button>`;
   return `<div class="ek-tg">${G.map(carte).join("")}</div>${rivH}<div id="f4-trim"></div><p class="ek-tn">Exercices clos, en ${esc(c.currency || s.currency || "")}. « Médiane secteur » : la valeur du milieu parmi les entreprises du secteur ${esc((secName(s) || "").toLowerCase())}. En vert ou rouge, la dernière année face à cette médiane. ${csv}</p>`;
 }

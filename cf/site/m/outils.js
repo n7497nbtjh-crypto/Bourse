@@ -563,7 +563,8 @@ if (typeof cmprRenderBody === "function") { // enveloppe : la page de m/comparer
     if (ids.length < 2) {
       const pre = el.querySelector(".cmpr-pre"), sec = pre && pre.closest("section");
       const box = document.createElement("div"); box.innerHTML = outGalleryHTML();
-      if (sec) sec.replaceWith(box.firstElementChild); else el.appendChild(box.firstElementChild);
+      const parts = [...box.children]; // la galerie peut compter deux blocs (six populaires + toutes, cachées) : on les insère tous
+      if (sec) sec.replaceWith(...parts); else el.append(...parts);
       outGalleryBind(el);
     } else {
       const rel = outRelated(ids);
