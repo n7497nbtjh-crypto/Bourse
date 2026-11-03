@@ -245,7 +245,10 @@ async function pageComparer4() {
       <tfoot><tr><th><span class="cx-mk">médiane</span>du secteur</th>${CX_K.filter(k => have.has(k.k)).map(k => `<td>${!k.neutre && MD[k.k] != null ? `<span class="cx-med">${esc(k.f(MD[k.k]))}</span>` : ""}</td>`).join("")}</tr></tfoot></table></div>
       <div class="cx-leg"><span><i class="cx-lb"></i>en tête sur ce critère</span><span><i class="cx-lw"></i>dernière ${F.length === 2 ? "des deux" : F.length === 3 ? "des trois" : "du groupe"}</span><span>▲ ▼ mieux ou moins bien que la médiane du secteur</span><span>La taille n'est pas comptée : vendre plus ne veut pas dire faire mieux. Être en tête n'est ni une recommandation ni une prédiction.</span></div>`;
     const proches = cxProches(ids), qs = cxQuestions(F);
-    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>
+    // Titre de la comparaison : celui de la comparaison toute prête quand les entreprises sont les mêmes, sinon le ou les secteurs
+    const cle = l => l.slice().sort().join(","), pre = cxPresets().find(p => cle(p.ids.filter(id => RBY[id])) === cle(ids));
+    const secs = [...new Set(F.map(x => secName(x.s)))], titreC = pre ? pre.t : secs.length === 1 ? `Comparaison · ${secs[0]}` : `Comparaison · ${listFr(secs.map(t => t.toLowerCase())).replace(/^./, c => c.toUpperCase())}`;
+    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><span class="cx-titre">${esc(titreC)}</span><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>${pre && pre.d ? `<p class="cx-lead">${esc(pre.d)}</p>` : ""}
         <div class="cx-sel">${F.map(x => cxCarte(x, ids)).join("")}${cxAjout(ids, CMAX)}</div>${sugTxt}${cutTxt}
         <div class="cx-bar"><button type="button" data-cx-share>🔗 Partager cette comparaison</button><a href="/comparer">Tout retirer</a></div></section>
       <div class="ek-vrd"><span class="ek-stk2" style="background:#fff">Le verdict</span><h2>${cxVerdict(F, R5)}</h2></div>${score}

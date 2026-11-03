@@ -132,6 +132,21 @@ export const VERSION = 4; // à augmenter quand la lecture des comptes change : 
 // dettes locatives, investissements, impôt et étiquettes retenues collectés en plus.
 
 
+// Date de clôture d'un exercice (3/11/2026). L'index de filings.xbrl.org donne parfois une date fausse : un an trop tard
+// (Hermès « 2026-12-31 » pour le rapport 2025), la date de dépôt (Tenaris, Standard Chartered) ou la date d'un rapport
+// intermédiaire (sociétés danoises « 2026-06-30 »). On garde la date fournie seulement si elle correspond à l'exercice lu (ny)
+// et à la fin d'exercice (fyEnd, « MM-JJ ») ; sinon on prend ny + fyEnd.
+export function finExercice(periodEnd, ny, fyEnd) {
+  const fy = /^\d{2}-\d{2}$/.test(fyEnd || "") ? fyEnd : "12-31";
+  if (!isFinite(ny)) return /^\d{4}-\d{2}-\d{2}$/.test(periodEnd || "") ? periodEnd : null;
+  const attendu = `${ny}-${fy}`;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(periodEnd || "")) return attendu;
+  const jours = (a, b) => Math.abs(new Date(a + "T12:00:00Z") - new Date(b + "T12:00:00Z")) / 864e5;
+  if (jours(periodEnd, attendu) <= 10) return periodEnd; // même fin d'exercice (à quelques jours près : 52-53 semaines)
+  const debut = `${ny + 1}-${fy}`; // exercice nommé par son année de début (ex. clos fin mars de l'année suivante)
+  if (Number(fy.slice(0, 2)) <= 6 && jours(periodEnd, debut) <= 10) return periodEnd;
+  return attendu;
+}
 // Dernier exercice dont les comptes devraient être publiés : clos depuis plus de quatre mois (fyEnd = "MM-JJ")
 export function expectedYear(fyEnd = "12-31", now = new Date()) {
   const [m, d] = String(fyEnd || "12-31").split("-").map(Number);
@@ -160,7 +175,7 @@ export async function collectOne(fetchFn, c) {
     const ex = extract(doc), ny = newestYear(ex);
     if (spare.length < 3) spare.push([ex, doc, f]);
     if (!isFinite(ny) || seen.has(ny)) continue;
-    seen.add(ny); reports.push(ex); segs.push(extractSegments(doc)); used.push({ periodEnd: f.period_end, report: f.report, json: f.json, ny });
+    seen.add(ny); reports.push(ex); segs.push(extractSegments(doc)); used.push({ periodEnd: finExercice(f.period_end, ny, ex.fyEnd), report: f.report, json: f.json, ny });
     if (first) { DIAGNOSTIC[c.id] = { periods: fl.map(x => x.period_end), concepts: candidates(doc) }; first = false; }
   }
   // Aucun exercice complet reconnu (étiquettes inhabituelles) : on garde les rapports tels quels, comme avant
@@ -213,7 +228,7 @@ export function summary(c) {
     netDebt: at("netDebt"), ebitda: at("ebitda"), fcf: at("fcf"), divPaid: at("divPaid"), dps: at("dps") ?? at("dpsEst"), eps: at("eps"),
     // Provenance : dividende par action estimé, date de clôture du dernier exercice lu, date de lecture du document
     ...(at("dps") == null && at("dpsEst") != null ? { dpsE: 1 } : {}),
-    clos: (c.sources && c.sources[0] && /^\d{4}-\d{2}-\d{2}$/.test(c.sources[0].periodEnd || "") ? c.sources[0].periodEnd : c.years[L] != null && /^\d{2}-\d{2}$/.test(c.fyEnd || "") ? `${c.years[L]}-${c.fyEnd}` : null),
+    clos: c.years[L] != null ? finExercice(c.sources && c.sources[0] && c.sources[0].periodEnd, c.years[L], c.fyEnd) : null,
     maj: c.updated || null,
     yearPrev: L >= 1 ? c.years[L - 1] ?? null : null,
     ...(at("netDebtBaux") != null ? { netDebtBaux: at("netDebtBaux") } : {}), ...(at("leases") != null ? { leases: at("leases") } : {}),

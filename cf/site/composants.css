@@ -402,3 +402,4 @@
 .cx-leg i.cx-lb{background:#E2F8EE;outline:2px solid #00A06B}.cx-leg i.cx-lw{background:#FFE9E3}
 .cx-pc[hidden]{display:none}
 .cx-gal .cx-pc{min-width:0}
+.cx-titre{display:inline-block;margin-top:14px;background:#fff;border:2px solid var(--ek-ink);border-radius:10px;padding:5px 12px;font:800 15px "Bricolage Grotesque",Inter,sans-serif;box-shadow:3px 3px 0 var(--ek-ink);transform:rotate(-2deg)}
