@@ -122,10 +122,6 @@ function outClWhy(k, x) {
   if (k === "solides") return `Bénéficiaire ${st.netN} exercices sur ${st.netN} · ${c.netDebt <= 0 ? "pas de dette nette" : "dette nette inférieure à un an de résultat"} · marge ${pct(m.marge, 0, false)}${med.marge != null ? ` (secteur : ${pct(med.marge, 0, false)})` : ""}`;
   return "";
 }
-function outClRow(k, x, i) {
-  const c = x.c;
-  return `<a class="out-row" href="/entreprise/${c.id}"><span class="out-rk${i < 3 ? " top" : ""}">${i + 1}</span>${logo(c, 36)}<span class="out-rt"><b>${esc(c.name)}</b><small>${esc([secName(c), regName(c)].filter(Boolean).join(" · "))} ${outPea(c)}</small><span class="out-why">${outClWhy(k, x)}</span></span><span class="out-rv">${x.q ? pills(x.q) : ""}${k === "dividende" ? outCouvTag(c) : ""}</span></a>`;
-}
 const OUT_CRIT = { points: "Critères : croissance, marge, bénéfice, rentabilité, dette, argent disponible et dividende, chacun face à la médiane du secteur.",
   tete: "Critère : marge d'exploitation (rentabilité des capitaux propres pour les banques), rang dans le secteur sur cinq exercices au plus.",
   croissance: "Critère : années de suite avec des ventes en hausse, puis croissance moyenne par an.",
@@ -140,54 +136,7 @@ function outClScore(k, x) { // le score seul, sans rien qui permette de reconna�
   if (k === "solides") return `Bénéficiaire ${st.netN} exercices sur ${st.netN}, marge de ${pct(m.marge, 0, false)}`;
   return "";
 }
-function outClBlur(k, x, i) {
-  return `<div class="out-row out-blur" aria-label="Place ${i + 1} réservée à Premium"><span class="out-rk top">${i + 1}</span><span class="lgph" aria-hidden="true"></span><span class="out-rt"><b aria-hidden="true">Entreprise masquée</b><small aria-hidden="true">Secteur · Région</small><span class="out-why">${outClScore(k, x)}</span></span><span class="out-rv">${OUT_ICON.lock}</span></div>`;
-}
-async function pageClassements() {
-  setTitle("Classements des entreprises"); setNav("ent");
-  if (!R) return;
-  app.innerHTML = `<div class="empty">Chargement des comptes de plusieurs années…</div>`;
-  await Promise.all([PXP, outHist(), premStatus()]);
-  if (location.pathname !== "/classements") return;
-  const P = new URLSearchParams(location.search);
-  const f = { c: OUT_CL[P.get("c")] ? P.get("c") : "points", s: R.sectors[P.get("s")] ? P.get("s") : "", r: OUT_REG.some(([v]) => v && v === P.get("r")) ? P.get("r") : "", pea: P.get("pea") === "1" ? "1" : "", t: OUT_TAILLE.some(([v]) => v && v === P.get("t")) ? P.get("t") : "" };
-  const prem = isPrem();
-  app.innerHTML = `<div class="out-page"><div class="crumbs"><a href="/entreprises">Entreprises</a> › Classements</div>
-    <h1 class="pagetitle">Les classements</h1>
-    <p class="pagesub">Quelles entreprises cumulent le plus de points forts, restent en tête de leur secteur ou relèvent leur dividende chaque année ? Tout est calculé à partir des comptes officiels publiés, avec la méthode affichée.</p>
-    <div id="clQ" class="seoq-chips"></div>
-    <div class="out-tabs scroll-x" role="tablist">${Object.entries(OUT_CL).map(([k, v]) => `<button type="button" role="tab" data-k="${k}" aria-selected="${k === f.c}" class="${k === f.c ? "on" : ""}"><i>${v.icon}</i><b>${esc(v.t)}</b><small>${esc(v.s)}</small></button>`).join("")}</div>
-    <section class="panel"><div class="pb out-filt">${outSelect("out-s", outSecOpts(), f.s, "Secteur")}${outSelect("out-r", OUT_REG, f.r, "Région")}${outSelect("out-t", OUT_TAILLE, f.t, "Taille en Bourse")}<label class="out-chk"><input type="checkbox" id="out-pea"${f.pea ? " checked" : ""}> Éligibles au PEA</label></div></section>
-    <div id="out-cl"></div></div>`;
-  /* Aperçu sans Premium : les 3 premières places sont floutées (nom, logo et lien absents de la page, seul le score reste),
-     les places 4 à 15 sont visibles pour comprendre le classement. Ce n'est pas une restriction d'accès au sens strict :
-     les comptes de chaque entreprise sont publics et consultables gratuitement sur sa fiche, et le calcul est fait dans le
-     navigateur. Premium apporte la liste triée complète (50 places) ; la méthode, les critères et les limites restent visibles pour tous. */
-  const draw = () => {
-    const k = f.c, D = OUT_CL[k], rows = outClRows(k, f), lim = prem ? 50 : 15, flou = prem ? 0 : Math.min(5, Math.max(0, rows.length - 1));
-    const shown = rows.slice(0, lim), more = rows.length - shown.length, vis = shown.slice(flou);
-    history.replaceState(null, "", "/classements" + outQS({ c: k === "points" ? "" : k, s: f.s, r: f.r, pea: f.pea, t: f.t }));
-    $("#out-cl").innerHTML = `<section class="panel"><div class="ph"><h2>${esc(D.t)}</h2><span class="light" style="font-size:12.5px">${rows.length ? `${F0.format(rows.length)} entreprise${rows.length > 1 ? "s" : ""} retenue${rows.length > 1 ? "s" : ""}` : ""}</span></div>
-      <div class="pb" style="padding-top:6px">
-      <div class="out-crit"><div><em>Ce qui est mesuré</em><p>${esc(D.s)}. ${esc(OUT_CRIT[k])}</p></div><div><em>Ce que cela ne dit pas</em><p>Ni si l'action est chère, ni ce qu'elle fera. Les comptes passés ne garantissent rien, et une entreprise hors classement peut avoir simplement des comptes manquants.</p></div></div>
-      ${rows.length ? `<div class="out-list">${shown.slice(0, flou).map((x, i) => outClBlur(k, x, i)).join("")}${vis.map((x, i) => outClRow(k, x, i + flou)).join("")}</div>` : `<div class="empty">Aucune entreprise ne remplit ces conditions avec ces filtres. Élargissez le secteur ou la région.</div>`}
-      ${flou ? `<div class="out-apercu">${OUT_ICON.lock}<div><b>Aperçu : les ${flou} premières places sont réservées à Premium</b><span>Les places suivantes sont visibles pour que vous voyiez comment le classement fonctionne. Les comptes de chaque entreprise restent gratuits sur sa fiche : Premium vous donne la liste triée complète (jusqu'à 50 places), avec tous les filtres.</span></div><a class="btn" href="/premium">Voir le classement complet</a></div>` : ""}
-      ${more > 0 && prem ? `<p class="note">${F0.format(more)} autres entreprises remplissent les conditions. Affinez avec les filtres pour les voir.</p>` : ""}
-      ${vis.length >= 2 ? `<p style="margin:14px 0 0"><a class="lnk" href="/comparer?ids=${vis.slice(0, prem ? 5 : 3).map(x => x.c.id).join(",")}">Comparer les ${Math.min(vis.length, prem ? 5 : 3)} premières affichées critère par critère →</a></p>` : ""}
-      ${OUT_NOADV}</div></section>
-      <section class="panel"><details class="acc"><summary><b>Comment ce classement est calculé</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px"><p>${esc(D.how)}</p>
-        <p>Les comptes viennent des rapports annuels officiels (format ESEF en Europe, SEC aux États-Unis), lus par le site. Les entreprises dont les comptes ne sont pas disponibles n'apparaissent pas. ${medBtnSafe()}</p>
-        <p><b>Limites.</b> Un seul exercice peut être exceptionnel (cession, crise). Les ventes sont dans la devise des comptes, sans effet de change. Les petites entreprises ont souvent moins d'années publiées et entrent moins facilement dans les classements sur plusieurs exercices. L'éligibilité au PEA suit la règle du site : siège dans l'Union européenne ou l'EEE et impôt sur les sociétés (les foncières exonérées sont exclues).</p>
-        <p class="muted">Une bonne place dit « ces comptes ressortent sur ce critère ». Elle ne dit ni que l'action est bon marché, ni qu'elle montera.</p></div></details></section>`;
-  };
-  draw(); if (typeof seoLiens === "function") seoLiens(document.getElementById("clQ"));
-  $$(".out-tabs button", app).forEach(b => b.onclick = () => { f.c = b.dataset.k; $$(".out-tabs button", app).forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-selected", x === b); }); draw(); });
-  $("#out-s").onchange = e => { f.s = e.target.value; draw(); };
-  $("#out-r").onchange = e => { f.r = e.target.value; draw(); };
-  $("#out-t").onchange = e => { f.t = e.target.value; draw(); };
-  $("#out-pea").onchange = e => { f.pea = e.target.checked ? "1" : ""; draw(); };
-}
-function medBtnSafe() { return typeof medBtn === "function" ? medBtn("Qu'est-ce que la médiane ?") : ""; }
+// pageClassements : m/classements4.js (Classements v4, 3/11/2026)
 
 /* ---------- 2. Dividendes ---------- */
 function outDivKind(e) { const l = e.label || ""; return /enregistrement/i.test(l) ? "rec" : /paiement|versement|mise en paiement/i.test(l) ? "pay" : /détach|dernier jour|ex-div/i.test(l) ? "det" : "autre"; }

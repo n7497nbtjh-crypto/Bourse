@@ -3131,7 +3131,7 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 
 
 
-.out-gal6 .out-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:900px){.out-gal6 .out-pg{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.out-gal6 .out-pg{grid-template-columns:minmax(0,1fr)}}
+
 
 /* ==== m/design.js (ligne 389 avant le 31/10) ==== */
 .fhero .tags .tag:first-child{font-family:var(--code);font-size:.95em}
