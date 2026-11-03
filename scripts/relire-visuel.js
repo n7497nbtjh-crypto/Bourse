@@ -79,6 +79,9 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
           if (e.scrollWidth > e.clientWidth + 2 && getComputedStyle(e).overflowX === "visible") P.push(["contenu qui déborde", nomEtape(e), e.className]);
         });
         // l'icône « ? » du terme du titre doit rester sur la même ligne que le terme
+        // libellé coupé (« … » dans un graphique, ou texte tronqué par le style) : le lecteur ne peut pas le lire en entier (3/11, vu par Romain)
+        document.querySelectorAll(":is(.ek-page,.a4) .ek-box :is(text,span,a,b,th,td)").forEach(e => { if (e.children.length && e.tagName !== "text") return; const t = (e.textContent || "").trim(); const cs = e.tagName === "text" ? null : getComputedStyle(e);
+          if (/…$/.test(t) || (cs && cs.textOverflow === "ellipsis" && e.scrollWidth > e.clientWidth + 1)) P.push(["libellé coupé", nomEtape(e), t.slice(0, 40)]); });
         document.querySelectorAll(".ek-hc").forEach(h => { const i = h.querySelector("i"); if (!i) return; const rs = [...h.getClientRects()], ri = i.getBoundingClientRect(); if (!rs.some(r => ri.top >= r.top - 6 && ri.bottom <= r.bottom + 6)) P.push(["icône « ? » décalée", nomEtape(h), h.textContent]); });
         const vus = new Set(); return P.filter(x => { const k = x.join("|"); if (vus.has(k)) return false; vus.add(k); return true; });
       });

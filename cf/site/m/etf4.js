@@ -15,12 +15,14 @@ function e4Dans(code) { // « aux États-Unis », « en France », « au Japon �
   return "au " + n;
 }
 // Nom court : sans la parenthèse finale (indice ou type de part), « · distrib. » gardé pour distinguer les parts distribuantes
-const e4Court = r => { const n = String(r.name || ""), b = n.replace(/\s*\([^)]*\)\s*$/, ""); return b === n ? n : b + (/distrib/i.test(n) ? " · distrib." : ""); };
+const e4Court = r => { const n = String(r.name || ""), b = n.replace(/\s*\([^)]*\)/g, " ").replace(/\s+/g, " ").trim(); return b === n || b.length < 4 ? n : b + (/\(distrib/i.test(n) ? " · distrib." : ""); };
 // ETF du même indice, sans les fonds gérés activement qui ne font que s'y comparer (« Enhanced », « Active », ESG…), une part par nom court
 function e4Memes0(x) {
   const act = /enhanced|active|esg|isr|sri|defensive|paris.aligned|climate|screened/i, moiAct = act.test(x.e.name), vus = new Set([e4Court(x.e)]);
   return x.same.filter(r => r.ter != null && (moiAct || !act.test(r.name))).sort((a, b) => (b.encours || 0) - (a.encours || 0)).filter(r => { const k = e4Court(r); if (vus.has(k)) return false; vus.add(k); return true; });
 }
+const E4_SECT = { it: "Technologie", fin: "Finance", sante: "Santé", conso_disc: "Consommation", indus: "Industrie", comm: "Communication", conso_base: "Produits courants", energie: "Énergie", materiaux: "Matériaux", services_pub: "Eau, gaz, électricité", immo: "Immobilier", liquidites: "Liquidités", autre: "Autres" };
+const e4SansIdx = (r, idx) => { const n = e4Court(r); if (!idx) return n; const t = n.replace(new RegExp("\\s*" + idx.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*", "i"), " ").replace(/\s+/g, " ").trim(); return t.length >= 3 ? t : n; };
 const e4Fr = () => !document.documentElement.dataset.pays || document.documentElement.dataset.pays === "fr";
 const e4Bond = e => ["obligations", "monetaire"].includes(e.categorie);
 
@@ -124,7 +126,7 @@ function e4Etapes(x) {
   if (x.ctry.length) {
     const hb = (L, c) => { const mx = Math.max(...L.map(k => k[1])); return `<div class="et-hb">${L.map(k => `<div><span>${esc(k[0])}</span><i style="width:${k[1] / mx * 100}%;${c ? `background:${c}` : ""}"></i><b>${ekFr(k[1], 1)} %</b></div>`).join("")}</div>`; };
     const tronque = (L, nom, nb) => { const t = L.slice(0, nb), r = L.slice(nb).reduce((a, k) => a + k[1], 0); return r >= 0.5 ? [...t, [nom, r]] : t; };
-    const PA = tronque(x.ctry.map(([k, w]) => [COUNTRY[k] || k, w]), "Autres pays", 6), SE = tronque(x.secs.filter(s => s[0] !== "liquidites").map(([k, w]) => [k[0] === "§" ? (R.sectors[k.slice(1)] || k.slice(1)) : (ETF_SECT[k] || k), w]), "Autres", 6);
+    const PA = tronque(x.ctry.map(([k, w]) => [COUNTRY[k] || k, w]), "Autres pays", 6), SE = tronque(x.secs.filter(s => s[0] !== "liquidites").map(([k, w]) => [k[0] === "§" ? (R.sectors[k.slice(1)] || k.slice(1)) : (E4_SECT[k] || ETF_SECT[k] || k), w]), "Autres", 6);
     const vis = ekBox({ titre: "Où va votre argent", unite: "part de l'ETF", indice: `Le poids de chaque pays${SE.length ? " et de chaque secteur" : ""} dans l'ETF.`, source: { texte: e4SrcCompo(x), lien: x.C && x.C.source && x.C.source.url, label: "voir la source ↗" } },
       `<div class="et-two${SE.length ? "" : " un"}"><div><h4>Par pays</h4>${hb(PA)}</div>${SE.length ? `<div><h4>Par secteur</h4>${hb(SE, "#7FE0B9")}</div>` : ""}</div>`);
     const p1 = x.ctry[0], hors = x.hors;
@@ -190,7 +192,7 @@ function e4Frais(x) {
   const parTer = [...x.same].sort((a, b) => a.ter - b.ter), L0 = cmpSame ? [...new Set([parTer[0], parTer[parTer.length - 1], ...x.same.slice(0, 5)])] : x.cat.slice(0, 6), L = [e, ...L0].sort((a, b) => a.ter - b.ter);
   const mx = Math.max(...L.map(r => r.ter), v ? v.m : 0) * 1.15, nice = f4Nice(mx);
   const vis = ekPoints({ titre: "Frais courants par an", unite: cmpSame ? `ETF qui suivent le ${e.index}` : "ETF de la même catégorie", basEstMieux: true, motBas: "moins cher", motHaut: "plus cher",
-    lignes: L.map(r => ({ nom: e4Court(r), v: r.ter, texte: e4P(r.ter, 2), moi: r.id === e.id })), mediane: v ? v.m : f4Med(L.map(r => r.ter)), mediane_label: `médiane ${e4P(v ? v.m : f4Med(L.map(r => r.ter)), 2)}`,
+    lignes: L.map(r => ({ nom: e4SansIdx(r, cmpSame && e.index), v: r.ter, texte: e4P(r.ter, 2), moi: r.id === e.id })), mediane: v ? v.m : f4Med(L.map(r => r.ter)), mediane_label: `médiane ${e4P(v ? v.m : f4Med(L.map(r => r.ter)), 2)}`,
     max: nice.max, graduations: [0, nice.max / 2, nice.max], fmtAxe: t => ekFr(t, 2) + " %", indice: `À gauche du pointillé (zone verte), l'ETF coûte moins que la médiane des ${F0.format(ETF_peers(e).length)} ETF « ${esc(ECAT[e.categorie] || "de sa catégorie")} » suivis par le site.`, source: { texte: "Fiches des émetteurs" } });
   const same = x.same.filter(s => s.ter != null), bas = same.length ? same.reduce((a, b) => b.ter < a.ter ? b : a) : null, haut = same.length ? same.reduce((a, b) => b.ter > a.ter ? b : a) : null;
   const cout = t => ETF_cout(t, 20).cout, ligne = (t, s, val, cl) => `<div><span><b>${t}</b><small>${s}</small></span><em class="${cl}">${eur(val, 0)}</em></div>`;
