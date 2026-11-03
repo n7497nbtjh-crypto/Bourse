@@ -258,36 +258,7 @@ function O2_fx(ref, cur, iso, auj) {
   const m = ref && ref.fx && ref.fx.mois, k = m && O2C.moisProche(m, iso);
   return k && m[k][cur] ? m[k][cur] : null;
 }
-async function outilSiJavais() {
-  O2_css(); setTitle("Et si j'avais investi ?"); setNav("sim"); await PXP;
-  const q = new URLSearchParams(location.search);
-  const exk = ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple", "c:microsoft", "c:schneider-electric", "c:loreal"].find(k => PX[k] && (PX[k].p5y > 0 || PX[k].p1y > 0)) || Object.keys(PX).filter(k => k.startsWith("c:") && PX[k].p5y > 0 && RBY[k.slice(2)] && ["US", "FR"].includes(RBY[k.slice(2)].region)).sort((a, b) => (PX[b].cap || 0) - (PX[a].cap || 0))[0] || "c:lvmh"; // exemple déjà rempli : une valeur dont le site a le cours passé (lot 5)
-  const S = { k: q.get("k") && (PX[q.get("k")] || RBY[q.get("k").slice(2)]) ? q.get("k") : exk, cmp: q.get("vs") === "aucun" ? "" : PX[q.get("vs")] ? q.get("vs") : null, amt: +q.get("m") > 0 ? +q.get("m") : 1000, ans: [1, 3, 5].includes(+q.get("ans")) ? +q.get("ans") : (PX[exk] && PX[exk].p5y > 0 ? 5 : PX[exk] && PX[exk].p3y > 0 ? 3 : 1), bk: q.get("bk") || "trade-republic" };
-  const defCmp = k => { const c = k.startsWith("c:") ? RBY[k.slice(2)] : null, e = k.startsWith("e:") ? ETFBY[k.slice(2)] : null;
-    return c ? (c.region === "US" ? "i:sp500" : c.region === "FR" ? "i:cac40" : ["DE", "NL", "IT", "ES", "BE", "FI", "IE", "AT", "PT"].includes((c.isin || "").slice(0, 2)) ? "i:stoxx50" : "i:sp500") : e && /CAC|France/i.test(e.index || "") ? "i:stoxx50" : "i:cac40"; };
-  if (S.cmp === null) S.cmp = defCmp(S.k);
-  app.innerHTML = `<div class="crumbs"><a href="/outils">Outils</a> › Et si j'avais investi ?</div><h1 class="pagetitle">Et si j'avais investi ?</h1>
-    <p class="pagesub">Ce que serait devenue une somme placée en une fois il y a 1, 3 ou 5 ans, comparée à un indice, au Livret A et à la hausse des prix. Cours réellement relevés, sources en bas de page.</p>
-    <section class="panel"><div class="pb"><div class="o2-form">
-      ${pickerHTML("o2sq", "Action ou ETF")}
-      ${numIn("o2sm", "Montant placé (€)", S.amt, "", 'min="10" step="100"')}
-      <div class="field"><label>Il y a</label><div class="o2-seg" id="o2sa">${[5, 3, 1].map(a => `<button type="button" data-a="${a}">${a} an${a > 1 ? "s" : ""}</button>`).join("")}</div></div>
-      <div class="field"><label for="o2sbk">Courtier (frais d'achat)</label><select id="o2sbk">${brokerOptions(S.bk)}</select></div></div>
-      <div class="field" style="margin-top:10px"><label>Comparer avec</label><div class="chips" id="o2sv">${["i:cac40", "i:stoxx50", "i:sp500", "i:nasdaq100"].map(k => `<button type="button" data-k="${k}">${O2_IDXNOM[k.slice(2)]}</button>`).join("")}<button type="button" data-k="">Aucun indice</button></div></div></div></section>
-    <div id="o2sr"><div class="pb muted">Calcul…</div></div>`;
-  const ref = await O2_ref(), H = await O2_json("/data/historique.json");
-  const go_ = () => {
-    const u = new URLSearchParams({ k: S.k, vs: S.cmp || "aucun", m: S.amt, ans: S.ans, bk: S.bk }); history.replaceState({}, "", "/outils/si-javais?" + u);
-    $$("#o2sa button").forEach(b => b.classList.toggle("on", +b.dataset.a === S.ans)); $$("#o2sv button").forEach(b => b.classList.toggle("on", b.dataset.k === (S.cmp || "")));
-    O2_sjCalcul(S, ref, H);
-  };
-  bindPicker("o2sq", k => { S.k = k; S.cmp = defCmp(k); go_(); }); $("#o2sq").value = O2_nomK(S.k);
-  $("#o2sm").oninput = () => { S.amt = Math.max(0, v("o2sm")); clearTimeout(S.t); S.t = setTimeout(go_, 200); };
-  $("#o2sa").onclick = e => { const b = e.target.closest("button"); if (b) { S.ans = +b.dataset.a; go_(); } };
-  $("#o2sv").onclick = e => { const b = e.target.closest("button"); if (b) { S.cmp = b.dataset.k || null; go_(); } };
-  $("#o2sbk").onchange = () => { S.bk = $("#o2sbk").value; go_(); };
-  go_();
-}
+function outilSiJavais() { return outilSiJavais4(); } // page construite par m/sijavais4.js (3/11/2026)
 // Série d'un titre : points aux dates relevées (il y a 5, 3, 1 an, aujourd'hui), en euros
 function O2_sjSerie(k, S, ref, H, frais) {
   const p = PX[k], cur = O2_curK(k); if (!p || !(p.p > 0)) return { k, err: "pas de cours" };
@@ -305,51 +276,6 @@ function O2_sjSerie(k, S, ref, H, frais) {
     div.exos = exos; if (!exos.length) div = null;
   }
   return { k, nom: O2_nomK(k), cur, pts, div, parts, net, frais, depart: p[champs[0][1]] };
-}
-function O2_sjCalcul(S, ref, H) {
-  const el = $("#o2sr"); if (!el) return;
-  const deb = O2_moinsAns(TODAY, S.ans), b = brokerBy(S.bk), frais = S.k.startsWith("i:") ? 0 : brokerFee(b, S.amt, { fixe: 0, pct: 0 });
-  const A = O2_sjSerie(S.k, S, ref, H, frais), I = S.cmp && S.cmp !== S.k ? O2_sjSerie(S.cmp, S, ref, H, 0) : null;
-  if (A.err) { el.innerHTML = `<section class="panel"><div class="pb"><div class="o2-verdict"><p>Calcul impossible pour <b>${esc(O2_nomK(S.k))}</b> : ${esc(A.err)}. ${S.ans > 1 ? "Essayez une période plus courte." : ""}</p></div><p class="o2-note">Le site n'invente aucun cours : il n'affiche que ceux réellement relevés (Google Finance) et convertis avec les taux de la BCE.</p></div></section>`; return; }
-  const xs = A.pts.map(p => p[0]), dates = xs.map(x => O2_moinsAns(TODAY, -x));
-  const T = ref && ref.livretA ? ref.livretA.taux : null, ipc = ref && ref.ipc ? ref.ipc.mois : null;
-  const livret = T ? xs.map((x, i) => [x, O2C.livretA(S.amt, deb, dates[i], T)]) : null;
-  const m0 = ipc && O2C.moisProche(ipc, deb), prix = m0 ? xs.map((x, i) => { const m1 = O2C.moisProche(ipc, dates[i]); return [x, O2C.inflation(S.amt, ipc[m0], ipc[m1])]; }) : null;
-  const mFin = ipc && O2C.moisProche(ipc, TODAY);
-  const series = [{ nom: A.nom + (A.div ? " (cours seul)" : ""), couleur: O2_C.ink, pts: A.pts, points: true, epais: 2.5 }];
-  if (A.div) series.push({ nom: A.nom + " avec dividendes perçus", couleur: O2_C.ink, tirets: true, pts: A.div, points: true });
-  if (I && !I.err) series.push({ nom: I.nom + " (indice, sans dividendes)", couleur: O2_C.bleu, pts: I.pts, points: true });
-  if (livret) series.push({ nom: "Livret A", couleur: O2_C.vert, pts: livret, points: true });
-  if (prix) series.push({ nom: "Hausse des prix (même pouvoir d'achat)", couleur: O2_C.orange, tirets: true, pts: prix, epais: 1.5 });
-  const fin = s => s && s.pts ? s.pts[s.pts.length - 1][1] : null, vA = A.div ? A.div.at(-1)[1] : fin(A), vI = I && !I.err ? fin(I) : null, vL = livret ? livret.at(-1)[1] : null, vP = prix ? prix.at(-1)[1] : null;
-  const perf = x => x != null ? O2_p((x / S.amt - 1) * 100, 0) : "–";
-  const phr = `${O2_e(S.amt)} placés dans <b>${esc(A.nom)}</b> en ${O2_dCourt(deb)} vaudraient aujourd'hui environ <b>${O2_e(vA)}</b> (${perf(vA)})${A.div ? ", dividendes perçus compris" : ""}.`
-    + (vI != null ? ` Placés dans le ${esc(I.nom)}, ils vaudraient ${O2_e(vI)} (${perf(vI)}).` : "")
-    + (vL != null ? ` Sur un Livret A : ${O2_e(vL)}.` : "")
-    + (vP != null ? ` Pour garder le même pouvoir d'achat, il fallait ${O2_e(vP)}${vA < vP ? " : ce placement a perdu du pouvoir d'achat." : "."}` : "");
-  const lignes = series.map(s => `<tr><th scope="row" class="l lab"><span class="nm">${esc(s.nom)}</span></th>${xs.map(x => { const p = s.pts.find(z => z[0] === x); return `<td class="num">${p && p[1] != null ? O2_e(p[1]) : "–"}</td>`; }).join("")}<td class="num"><b>${perf(fin(s))}</b></td></tr>`).join("");
-  const e = S.k.startsWith("e:") ? ETFBY[S.k.slice(2)] : null;
-  const hyp = [
-    `Montant : ${O2_e(S.amt)} placés en une seule fois le ${dLabel(deb)}, sans versement ensuite. Les versements mensuels demanderaient les cours mois par mois, que le site ne conserve pas encore.`,
-    `Frais d'achat : ${frais ? `${eur(frais)} (grille ${esc(b.name)}), déduits du montant placé` : "aucun"}. ${e ? `Les frais courants de l'ETF (${e.ter != null ? pct(e.ter / 100, 2, false) + " par an" : "non indiqués"}) sont déjà déduits de son cours.` : ""} Pas de frais de revente ni d'impôt : c'est la valeur avant revente.`,
-    A.div ? `Dividendes : dividende par action publié dans les comptes annuels des exercices ${A.div.exos.join(", ")}, supposé versé le 1er juin de l'année suivante et gardé en liquidités (ni réinvesti ni imposé). Estimation : les dates et acomptes réels varient.`
-      : e ? (e.distribution === "distribution" ? "Dividendes : cet ETF les distribue ; ils ne sont pas comptés ici (montants versés non disponibles)." : "Dividendes : cet ETF les réinvestit ; ils sont déjà dans son cours.") : "Dividendes : non comptés (dividendes par action non disponibles ou dans une autre devise que le cours).",
-    `Devise : ${A.cur && A.cur !== "EUR" ? `cours en ${esc(A.cur)}, convertis en euros au taux moyen du mois (BCE) pour le passé et au taux du jour pour aujourd'hui. La variation du ${esc(A.cur)} face à l'euro est donc comprise.` : "cours en euros."}`,
-    I && !I.err ? `Indice : ${esc(I.nom)}, indice de prix (dividendes non réinvestis), sans frais : il ne s'achète pas directement.` : I && I.err ? `Indice ${esc(O2_nomK(S.cmp))} : ${esc(I.err)}.` : "",
-    livret ? `Livret A : taux officiels successifs (${T.filter(t => t[0] >= deb.slice(0, 7)).map(t => `${F1.format(t[1])} % au ${dLabel(t[0])}`).slice(-4).join(", ") || "taux en vigueur"}), intérêts par quinzaine capitalisés au 31 décembre, sans plafond ni impôt (le Livret A n'est pas imposé).` : "Livret A : taux historiques indisponibles.",
-    prix ? `Hausse des prix : indice des prix à la consommation de l'Insee, de ${O2_moisL(m0)} à ${O2_moisL(mFin)} (dernier mois publié).` : "Hausse des prix : indice de l'Insee indisponible.",
-  ].filter(Boolean);
-  el.innerHTML = `<section class="panel"><div class="pb">
-      <div class="o2-verdict"><p class="kick">En bref</p><p>${phr}</p></div>
-      <div id="o2sc"></div>
-      <p class="o2-note">${xs.length} cours relevés (${dates.map(dLabel).join(", ")}) : entre deux points, la courbe est tracée en ligne droite, alors que le cours a varié davantage. Touchez ou survolez la courbe pour lire les valeurs ; touchez un nom de la légende pour masquer une série.</p>
-      ${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Placement</th>${dates.map(d => `<th scope="col">${O2_dCourt(d)}</th>`).join("")}<th scope="col">Évolution</th></tr></thead><tbody>${lignes}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}
-      <div class="o2-hyp"><b>Hypothèses du calcul</b><ul>${hyp.map(x => `<li>${x}</li>`).join("")}</ul></div>
-      <p class="o2-note"><b>Le passé ne dit rien de l'avenir.</b> Un autre point de départ, quelques semaines plus tôt ou plus tard, donnerait un autre résultat. Ce n'est pas un conseil d'achat ou de vente.</p></div>
-    <div class="src">Cours : Google Finance (cours de clôture ou différés relevés par le site, mise à jour du ${PXUP && PXUP !== "none" ? dLabel(String(PXUP).slice(0, 10)) : "jour"}). Taux de change : ${ref && ref.fx ? O2_src("BCE, taux de référence", ref.fx.url) : "BCE"}. ${prix ? `Prix : ${O2_src(ref.ipc.source, ref.ipc.url)}.` : ""} ${livret ? `Livret A : ${O2_src("Service-public.gouv.fr", ref.livretA.url)}.` : ""} Frais : ${brokerSrc()} ${A.div ? "Dividendes : comptes annuels officiels (ESEF, SEC) lus par le site." : ""}</div></section>`;
-  const ticks = xs.map((x, i) => [x, O2_dCourt(dates[i])]);
-  O2_courbe($("#o2sc"), { series, xTicks: ticks, yFmt: (v, ax) => ax ? F0.format(v) + " €" : O2_e(v), tipX: x => dLabel(O2_moinsAns(TODAY, -x)), refY: S.amt, titre: "Valeur du placement au fil du temps" });
-  tblxBindScroll(el);
 }
 
 /* ====================================================================================

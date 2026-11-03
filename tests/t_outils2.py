@@ -40,20 +40,20 @@ with sync_playwright() as pw:
         if "poids réellement en double" not in t.lower() or "%" not in t: bad += 1; print(nom, "recouvrement", t[:200])
         # Et si : le montant change la phrase
         pg.goto("http://t.local/outils/si-javais?k=c:lvmh&ans=5"); pg.wait_for_timeout(1500)
-        t1 = pg.inner_text("#o2sr .o2-verdict"); pg.fill("#o2sm", "2000"); pg.wait_for_timeout(500); t2 = pg.inner_text("#o2sr .o2-verdict").replace("\u202f", " ").replace("\xa0", " ")
+        t1 = pg.inner_text("#sjt"); pg.fill("#sjm", "2000"); pg.wait_for_timeout(500); t2 = pg.inner_text("#sjt").replace("\u202f", " ").replace("\xa0", " ")
         if t1 == t2 or "2 000 €" not in t2.replace("\u202f", " ").replace("\xa0", " "): bad += 1; print(nom, "si-javais", t1[:120], "|", t2[:120])
-        if "Livret A" not in pg.inner_text("#o2sr") or "Hypothèses" not in pg.inner_text("#o2sr"): bad += 1; print(nom, "si-javais : séries ou hypothèses manquantes")
+        if "Livret A" not in pg.inner_text("#sjr") or "Hypothèses" not in pg.inner_text("#sjr"): bad += 1; print(nom, "si-javais : séries ou hypothèses manquantes")
         # Simulateur : PEA puis compte-titres, la valeur nette change ; frais de change modifiables
         pg.goto("http://t.local/simulateurs"); pg.wait_for_timeout(1200)
-        a = pg.inner_text("#o2res .o2-verdict"); pg.click("#o2env button[data-v=cto]"); pg.wait_for_timeout(300); c = pg.inner_text("#o2res .o2-verdict")
+        a = pg.inner_text("#s4s"); pg.click("#s4env [data-v=cto]"); pg.wait_for_timeout(300); c = pg.inner_text("#s4s")
         if a == c or "compte-titres" not in c: bad += 1; print(nom, "simulateur PEA/CTO", a[:100], "|", c[:100])
-        pg.click("#o2det summary"); pg.fill("#o2chg", "0.5"); pg.wait_for_timeout(400)
-        if "Frais de change" not in pg.inner_text("#o2res"): bad += 1; print(nom, "frais de change absents")
+        pg.click("#s4det summary"); pg.fill("#s4chg", "0.5"); pg.wait_for_timeout(400)
+        if "Frais de change" not in pg.inner_text("#s4res"): bad += 1; print(nom, "frais de change absents")
         # Hier : la synthèse IA s'ouvre
         pg.goto("http://t.local/hier?d=2026-10-28"); pg.wait_for_timeout(2000)
         if pg.locator("[data-ia]").count():
             pg.locator("[data-ia]").first.click(); pg.wait_for_timeout(500)
-            if "Connectez votre IA" not in pg.inner_text(".o2-hia >> nth=0"): bad += 1; print(nom, "invitation à connecter son IA absente")
+            if not pg.locator(".o2-hia >> nth=0").is_visible(): bad += 1; print(nom, "la synthèse IA ne s'ouvre pas")  # 3/11 : l'IA du site répond, plus d'invitation à connecter la sienne
         else: bad += 1; print(nom, "pas de bouton IA sur /hier")
         if errs: bad += len(errs); print(nom, "erreurs JS :", errs[:5])
         ctx.close()

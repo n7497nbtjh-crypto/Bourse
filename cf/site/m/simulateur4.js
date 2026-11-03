@@ -8,7 +8,7 @@
    Hors France, /simulateurs/pea-cto reste le calcul du pays (m/pays.js). Remplace window.pageSim. */
 const SIM4_0 = window.pageSim;
 const s4Hc = (cle, t) => `<span class="ek-hc" role="button" tabindex="0" data-ek-def="${cle}">${t}<i>?</i></span>`;
-const s4E = x => O2_e(Math.round(x));
+const s4E = x => O2_e(Math.round(x)).replace(/\u202f/g, "\u00a0"); // espace insécable normale : la fine disparaît dans les grands titres serrés
 function pageSim4(tool) {
   if (tool === "passe" || (tool === "pea-cto" && typeof e4Fr === "function" && !e4Fr())) return SIM4_0.apply(this, arguments);
   if (typeof O2_css === "function") O2_css(); setNav("sim");
@@ -78,7 +78,7 @@ function s4Resultat(S, hist, fr) {
   const pertes = sc ? (sc.negatives ? `Sur l'historique utilisé, ${F0.format(sc.negatives)} période${sc.negatives > 1 ? "s" : ""} de ${sc.N} ans sur ${F0.format(sc.nb)} ${sc.negatives > 1 ? "ont" : "a"} fini en perte.` : `Sur l'historique utilisé, aucune des ${F0.format(sc.nb)} périodes de ${sc.N} ans n'a fini en perte.`) + " L'avenir peut faire pire que le scénario prudent." : "Vos propres hypothèses de rendement : le site ne les vérifie pas.";
   // Où part l'argent
   const fonds = Math.max(0, C.coutFrais - C.courtage - C.change), gainsNets = Math.max(0, C.net - C.verse);
-  const parts = [["Vos versements", C.verse, "#A39C8E"], ["Gains qui vous restent", gainsNets, "#1E8A52"], ["Frais du fonds", fonds, "#D94F2B"], ["Courtage", C.courtage, "#F0A23B"], ...(C.change > 0 ? [["Change", C.change, "#B0702A"]] : []), ["Impôt", C.impot, "#6B4FBB"]].filter(x => x[1] > 0);
+  const parts = [["Vos versements", C.verse, "#A39C8E"], ["Gains qui vous restent", gainsNets, "#1E8A52"], ["Frais du fonds", fonds, "#D94F2B"], ["Courtage", C.courtage, "#F0A23B"], ...(C.change > 0 ? [["Frais de change", C.change, "#B0702A"]] : []), ["Impôt", C.impot, "#6B4FBB"]].filter(x => x[1] > 0);
   const tot = parts.reduce((a, x) => a + x[1], 0) || 1;
   // PEA ou compte-titres
   const autre = O2C.simule(O2_simParams(S, b, taux.c, S.env === "pea" ? "cto" : "pea"));

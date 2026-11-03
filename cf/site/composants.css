@@ -786,3 +786,20 @@ html #app .ek.ek-page .s4-f input,html #app .ek.ek-page .s4-3 input,html #app .e
 @media(max-width:1000px){.ek .s4-form{grid-template-columns:repeat(2,minmax(0,1fr))}.ek .s4-dg{grid-template-columns:repeat(2,minmax(0,1fr))}
   .ek .s4-bkr{grid-template-columns:30px minmax(0,1fr) auto;grid-template-areas:none}.ek .s4-bkr .s4-bv:not(.s4-bt){display:none}}
 @media(max-width:640px){.ek .s4-form,.ek .s4-dg,.ek .s4-sc,.ek .s4-fi{grid-template-columns:minmax(0,1fr)}.ek .s4-pea{grid-column:2/-1;justify-self:start}}
+
+/* ---------- « Et si j'avais investi ? » v4 (m/sijavais4.js), réutilise les classes s4- du simulateur ---------- */
+.ek .sj-form{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr) minmax(0,1.1fr) minmax(0,1.2fr)}
+.ek .sj-vs{grid-column:1/-1}.ek .sj-vs .s4-seg{max-width:640px}
+.ek .sj-pkw{position:relative}
+.ek .sj-cs{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(220px,100%),1fr));gap:12px}
+.ek .sj-c{border:2px solid var(--ek-ink);border-radius:18px;padding:16px;background:#fff;display:flex;flex-direction:column;gap:4px}
+.ek .sj-c.a{background:var(--ek-y);box-shadow:4px 4px 0 var(--ek-ink)}
+.ek .sj-c.ref{background:#F2EFE8;border-style:dashed}
+.ek .sj-c>b{font:800 clamp(28px,3.4vw,40px)/1.05 "Bricolage Grotesque",Inter;letter-spacing:-.04em}
+.ek .sj-p{align-self:flex-start;font:800 14px Inter;border-radius:999px;padding:3px 10px;border:2px solid var(--ek-ink);background:#fff}
+.ek .sj-p.g{background:#E2F8EE;color:#11663D}.ek .sj-p.r{background:#FFE4DC;color:#A32A12}
+.ek .sj-c small{font:600 12.5px/1.4 Inter;color:#555}.ek .sj-c small.g{color:#11663D}.ek .sj-c small.r{color:#A32A12}
+.ek .s4-pl .tbx-scroll,.ek .s4-pl table{margin-top:12px}
+@media(max-width:1000px){.ek .sj-form{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.ek .sj-form{grid-template-columns:minmax(0,1fr)}.ek .sj-vs .s4-seg{flex-wrap:wrap}.ek .sj-vs .s4-seg a{flex:1 0 40%}}
+.ek.s4 .ag4-t,.ek.s4 .ek-sec>h2{word-spacing:.08em}
