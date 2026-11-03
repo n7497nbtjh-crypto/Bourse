@@ -112,7 +112,8 @@
 .ek-cleg b{display:block;font:800 28px "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.04em}
 .ek-cleg .g b{color:var(--ek-g)}.ek-cleg .r b{color:var(--ek-r)}
 .ek-cleg span{font:600 13px/1.25 Inter}
-.ek-dw{border-bottom:2px dotted var(--ek-ink);cursor:help;font-weight:800}
+.ek-dw{border-bottom:2px dotted var(--ek-ink,#111);cursor:pointer;font-weight:800}
+.ek-dw:hover,.ek-dw:focus-visible{background:var(--ek-yl,#FFF6C7)}
 .ek-dlg{position:fixed;inset:0;background:rgba(17,17,17,.45);display:none;align-items:center;justify-content:center;padding:20px;z-index:1000}
 .ek-dlg.on{display:flex}
 .ek-dc{background:#fff;border:3px solid var(--ek-ink);border-radius:26px;box-shadow:8px 8px 0 var(--ek-ink);max-width:540px;width:100%;padding:24px 28px 22px;position:relative;max-height:90vh;overflow:auto}

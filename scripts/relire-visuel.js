@@ -25,18 +25,21 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
     while (tir.length < Math.max(0, n - fix.length)) { const sc = par[secs[Math.floor(Math.random() * secs.length)]], t = new Set(); while (t.size < 3) t.add(sc[Math.floor(Math.random() * sc.length)]); tir.push([...t].join(",")); }
     ids = [...fix, ...tir];
   }
-  const url = id => MODE === "comparer" ? "/comparer?ids=" + id : "/entreprise/" + id;
+  // Mode « accueil » (node scripts/relire-visuel.js 4 accueil) : la page d'accueil, avec chacun des quatre exemples affiché
+  if (MODE === "accueil") ids = ["hermes", "lvmh", "asml", "sanofi"];
+  const url = id => MODE === "accueil" ? "/" : MODE === "comparer" ? "/comparer?ids=" + id : "/entreprise/" + id;
   const out = [], tailles = [["ordinateur", { width: 1280, height: 900 }], ["téléphone", { width: 360, height: 800 }]];
   let vues = 0;
   for (const [nomT, vp] of tailles) {
     const { b, p } = await ouvrir({ viewport: vp });
     for (const id of ids) {
       try { await aller(p, url(id), MODE === "comparer" ? 2600 : 1800); } catch (e) { continue; }
+      if (MODE === "accueil") { await p.evaluate(id => { if (typeof a4Montrer === "function") a4Montrer(id); }, id); await p.waitForTimeout(400); }
       const r = await p.evaluate(() => {
         const P = [], W = document.documentElement.clientWidth;
         const inter = (a, b, m = 1) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > m && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > m;
         const nomEtape = el => { const st = el.closest(".ek-step"); return st ? st.id : (el.closest("section") || {}).id || "page"; };
-        document.querySelectorAll(".ek-page svg").forEach(svg => {
+        document.querySelectorAll(":is(.ek-page,.a4) svg").forEach(svg => {
           const box = svg.getBoundingClientRect(); if (!box.width) return;
           const T = [...svg.querySelectorAll("text")].filter(t => t.textContent.trim()).map(t => ({ t, r: t.getBoundingClientRect(), s: t.textContent.trim() }));
           // formes « pleines » : barres et points (pas les zones de fond, les quadrillages, ni le fond noir de l'étiquette de médiane)
@@ -51,20 +54,20 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
           }
         });
         // Code ou valeur technique affiché à la place d'un texte (ex. « g=>` », « undefined », « NaN »)
-        { const t = (document.querySelector(".ek-page") || document.body).innerText, m = t.match(/.{0,25}(\$\{|=>|\bundefined\b|\bNaN\b|\bnull\b|\[object).{0,15}/); if (m) P.push(["code ou valeur technique affiché", "page", m[0]]); }
+        { const t = (document.querySelector(".ek-page,.a4") || document.body).innerText, m = t.match(/.{0,25}(\$\{|=>|\bundefined\b|\bNaN\b|\bnull\b|\[object).{0,15}/); if (m) P.push(["code ou valeur technique affiché", "page", m[0]]); }
         // Cases de tableau qui se superposent
-        document.querySelectorAll(".ek-page table tr").forEach(tr => { const c = [...tr.children].map(x => x.getBoundingClientRect()); for (let i = 1; i < c.length; i++) if (c[i].width && c[i - 1].width && c[i].left < c[i - 1].right - 1) { P.push(["cases de tableau superposées", nomEtape(tr), tr.textContent.trim().slice(0, 40)]); break; } });
+        document.querySelectorAll(":is(.ek-page,.a4) table tr").forEach(tr => { const c = [...tr.children].map(x => x.getBoundingClientRect()); for (let i = 1; i < c.length; i++) if (c[i].width && c[i - 1].width && c[i].left < c[i - 1].right - 1) { P.push(["cases de tableau superposées", nomEtape(tr), tr.textContent.trim().slice(0, 40)]); break; } });
         // Valeur hors échelle : point posé au bout de l'axe ; le vrai chiffre doit être écrit sous le graphique
         document.querySelectorAll(".ek-page circle[data-hors]").forEach(c => { const box = c.closest(".ek-box"), nom = c.getAttribute("data-hors");
           if (!box || ![...box.querySelectorAll(".ek-out-h")].some(p => p.textContent.includes(nom))) P.push(["valeur hors échelle sans explication", nomEtape(c), nom]); });
         // Vraisemblance : un chiffre « sur 100 » au-delà de 150 affiché tel quel dans un graphique (ex. « 1 022 € » versés sur 100 € de bénéfice)
         document.querySelectorAll(".ek-page .ek-box").forEach(b => { const t = (b.querySelector(".ek-bt") || {}).textContent || ""; if (!/sur 100/.test(t)) return;
           b.querySelectorAll("svg text[font-weight=\"800\"]").forEach(x => { const m = x.textContent.replace(/\s/g, "").match(/^(-?\d+)(€|\$|£|%|[A-Z]{3})$/); if (m && Math.abs(+m[1]) > 150) P.push(["chiffre « sur 100 » invraisemblable affiché tel quel", nomEtape(b), x.textContent]); }); });
-        document.querySelectorAll(".ek-page *").forEach(e => {
+        document.querySelectorAll(":is(.ek-page,.a4) *").forEach(e => {
           const r = e.getBoundingClientRect(); if (!r.width || e.closest(".scroll-x, svg")) return;
           if (r.right > W + 1) P.push(["dépasse de l'écran", nomEtape(e), (e.className && e.className.baseVal == null ? e.className : e.tagName) + " : " + (e.textContent || "").trim().slice(0, 40)]);
         });
-        document.querySelectorAll(".ek-page .ek-box, .ek-page .ek-tc, .ek-page .ek-why, .ek-page .ek-cmp, .ek-page .ek-h").forEach(e => {
+        document.querySelectorAll(":is(.ek-page,.a4) :is(.ek-box,.ek-tc,.ek-why,.ek-cmp,.ek-h,.a4-tri>div,.a4-duo>div)").forEach(e => {
           if (e.scrollWidth > e.clientWidth + 2 && getComputedStyle(e).overflowX === "visible") P.push(["contenu qui déborde", nomEtape(e), e.className]);
         });
         // l'icône « ? » du terme du titre doit rester sur la même ligne que le terme

@@ -5,7 +5,21 @@
    2. Un bandeau de preuves. 3. Deux outils liés (elle seule, face aux autres) + la preuve en garantie.
    4. Le portefeuille. 5. Pourquoi ENKLAIR 6. La dernière séance. 7. Appel final.
    Aucun chiffre écrit en dur : tout est calculé à partir des comptes et des cours chargés par le site.
-   Styles : site.css, bloc « Accueil v4 ». Remplace pageHome (m/accueil.js), dont les fonctions restent utilisées. */
+   Styles : site.css, bloc « Accueil v4 ». Remplace l'ancien pageHome (m/accueil.js, supprimé le 3/11/2026). */
+// Petites fonctions reprises de l'ancien accueil (m/accueil.js, supprimé le 3/11/2026) : utilisées ici, par app.js (accIc) et m/entreprises3.js (accPct).
+const accTaille = c => { try { const v = valo(c); if (v && v.capE) return v.capE; } catch (e) { } const e = typeof eurM === "function" ? eurM(c.ca, c.currency) : c.ca; return e ? e * 1e6 : 0; };
+const accPct = v => v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + F2.format(Math.abs(v)) + " %";
+const accCls = v => v > 0 ? "up" : v < 0 ? "down" : "";
+const accMembre = () => (MOI && MOI.connecte) || (() => { try { return localStorage.getItem("bilan.acc.membre") === "1"; } catch (e) { return false; } })();
+const ACC_I = { cal: "M7 3v3M17 3v3M4 8h16M5 5h14a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zM8 13h3M8 16h6", ia: "M9 3v5M15 3v5M7 8h10v3a5 5 0 0 1-10 0zM12 16v5",
+  pub: "M4 4h16v16H4zM8 9h8M8 13h8M8 17h5", mk: "M3 17l5-6 4 3 5-7 4 4", ag: "M4 6h16v14H4zM4 10h16M8 3v4M16 3v4", dec: "M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z", sec: "M4 4h7v7H4zM13 4h7v7h-7zM4 13h7v7H4zM13 13h7v7h-7z", esp: "M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM4 21a8 8 0 0 1 16 0",
+  conso: "M6 7h12l-1 12H7zM9 7a3 3 0 0 1 6 0", industrie: "M3 21V9l6 4V9l6 4V5h6v16z", energie: "M13 2L4 14h7l-1 8 9-12h-7z", sante: "M12 21s-7-4.5-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 11c0 5.5-7 10-7 10z", tech: "M4 5h16v11H4zM9 20h6M12 16v4", finance: "M3 10h18M5 10v8M9 10v8M15 10v8M19 10v8M2 20h20M12 3l9 7H3z", telecom: "M12 20V10M12 10a5 5 0 0 1 5-5M12 10a5 5 0 0 0-5-5M5 14a8 8 0 0 1 14 0", materiaux: "M12 3l9 6-9 6-9-6zM3 15l9 6 9-6", services: "M12 2v4M4.9 4.9l2.8 2.8M2 12h4M4.9 19.1l2.8-2.8M12 18v4M19.1 19.1l-2.8-2.8M22 12h-4M19.1 4.9l-2.8 2.8M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8z", immo: "M3 11l9-7 9 7M5 10v10h14V10M10 20v-6h4v6",
+};
+const accIc = k => `<svg class="acc-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ACC_I[k] || ACC_I.sec}"/></svg>`;
+function accMarchesTitre() { const ids = ["cac40", "stoxx50", "sp500", "dax"], rows = ids.map(id => PX["i:" + id]).filter(p => p && p.chg != null); const j = jourSeance(), ouvert = j === "aujourd'hui", J = j.charAt(0).toUpperCase() + j.slice(1);
+  if (!rows.length) return ouvert ? "Les marchés aujourd'hui" : `Les marchés, séance de ${j}`; const up = rows.filter(p => p.chg > 0).length; // 1/11 : le week-end, on nomme la dernière séance
+  const sens = up === rows.length ? ["montent", "ont monté"] : up === 0 ? ["reculent", "ont reculé"] : up >= rows.length / 2 ? ["montent plutôt", "ont plutôt monté"] : ["reculent plutôt", "ont plutôt reculé"];
+  return ouvert ? `Les marchés ${sens[0]} aujourd'hui` : `${J}, les marchés ${sens[1]}`; }
 const A4_EX = ["hermes", "lvmh", "asml", "sanofi"];
 const A4 = { id: null };
 const a4Med = (s, f) => median(R.companies.filter(c => c.sector === s.sector && !c.missing && !(isBank(c) !== isBank(s))).map(f).filter(v => v != null && isFinite(v)));
@@ -27,20 +41,21 @@ function a4Fiche(id) { // tout ce que montre la carte d'exemple, calculé
   const px = ax.prix;
   return { s, m, med, rk, main, p,
     tri: [
-      ["Croissance", g == null ? "–" : (g > 0 ? "+" : g < 0 ? "−" : "") + a4Nb(Math.abs(g)) + " %", ax.croissance, gm == null ? "" : `secteur : ${gm > 0 ? "+" : gm < 0 ? "−" : ""}${a4Nb(Math.abs(gm * 100))} %`],
-      ["Dette", dette, sd, detteN],
-      ["Prix", !px ? "–" : px.p >= 0.6 ? "Bon marché" : px.p <= 0.4 ? "Chère" : "Dans la norme", px, px ? `${px.rank}e sur ${px.n}` : ""]] };
+      [["croissance", "Croissance"], g == null ? "–" : (g > 0 ? "+" : g < 0 ? "−" : "") + a4Nb(Math.abs(g)) + " %", ax.croissance, gm == null ? "" : `secteur : ${gm > 0 ? "+" : gm < 0 ? "−" : ""}${a4Nb(Math.abs(gm * 100))} %`],
+      [["dette", "Dette"], dette, sd, detteN],
+      [["per", "Prix"], !px ? "–" : px.p >= 0.6 ? "Bon marché" : px.p <= 0.4 ? "Chère" : "Dans la norme", px, px ? `${px.rank}e sur ${px.n}` : ""]] };
 }
+const a4Def = (cle, txt, f) => typeof ekDefMot === "function" ? ekDefMot(cle, txt, f || {}) : esc(txt); // mot souligné qui ouvre la définition (même fenêtre que la fiche)
 function a4CarteHTML(id) {
   const f = a4Fiche(id); if (!f) return `<p class="rf-no">Exemple indisponible.</p>`;
   const { s, m, med, rk, main, p } = f, maxv = Math.max(m, med, 1);
   return `<div class="a4-hd">${logo(s, 46)}<div><strong>${esc(s.name)}</strong><small>${esc(secName(s))} · ${esc(COUNTRY[s.region] || s.region || "")}</small></div>
     ${p ? `<div class="a4-px">${a4Px(p.p, p.cur || s.currency)}<small class="${accCls(p.chg)}">${accPct(p.chg)} ${esc(jourSeance())}</small></div>` : ""}</div>
     <div class="a4-n">${a4Nb(Math.round(m))}<small>€</small></div>
-    <p class="a4-cap">gardés sur 100 € de ventes.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
+    <p class="a4-cap">${a4Def("marge", "Marge d'exploitation", { ex: a4Nb(Math.round(m)) + " €", nom: s.name })} : gardés sur 100 € de ventes.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
     ${main ? `<span class="a4-hand">${esc(main)}</span>` : ""}
-    <div class="a4-duo"><div>${esc(s.name)}<i style="width:${(Math.max(m, 0) / maxv * 100).toFixed(0)}%;background:var(--a4y)"></i></div><div>Médiane ${a4Nb(Math.round(med))} €<i style="width:${(Math.max(med, 0) / maxv * 100).toFixed(0)}%"></i></div></div>
-    <div class="a4-tri">${f.tri.map(([l, v, r, n]) => `<div><small>${l}</small><strong class="${a4Ton(r && r.p)}">${esc(v)}</strong>${r ? `<div class="a4-ms" title="Le trait : la médiane du secteur"><b style="left:${(r.p * 100).toFixed(0)}%"></b></div>` : ""}<em>${esc(n)}</em></div>`).join("")}</div>
+    <div class="a4-duo"><div>${esc(s.name)}<i style="width:${(Math.max(m, 0) / maxv * 100).toFixed(0)}%;background:var(--a4y)"></i></div><div><span>${a4Def("mediane", "Médiane")} ${a4Nb(Math.round(med))} €</span><i style="width:${(Math.max(med, 0) / maxv * 100).toFixed(0)}%"></i></div></div>
+    <div class="a4-tri">${f.tri.map(([l, v, r, n]) => `<div><small>${a4Def(l[0], l[1], { nom: s.name })}</small><strong class="${a4Ton(r && r.p)}">${esc(v)}</strong>${r ? `<div class="a4-ms" title="Le trait : la médiane du secteur"><b style="left:${(r.p * 100).toFixed(0)}%"></b></div>` : ""}<em>${esc(n)}</em></div>`).join("")}</div>
     <a class="a4-go" href="/entreprise/${s.id}">Voir la fiche ${esc(s.name)} →</a>`;
 }
 function a4Montrer(id) {
@@ -143,3 +158,10 @@ async function pageHome() {
   a4Preuve();
   if (typeof bindSearch === "function") { try { bindSearch(app); } catch (e) { } }
 }
+
+// La barre de recherche du menu est masquée sur l'accueil (une seule barre visible) ; la classe suit la navigation (repris de m/accueil.js)
+(() => {
+  const r0 = window.route; if (typeof r0 !== "function") return;
+  window.route = function () { document.documentElement.classList.toggle("acc-home", location.pathname === "/"); return r0.apply(this, arguments); };
+  document.documentElement.classList.toggle("acc-home", location.pathname === "/");
+})();
