@@ -2669,14 +2669,21 @@ async function pageEspace(onglet) {
   return espaceReglages(el, m);
 }
 function espaceConnexion() {
-  app.innerHTML = `<div class="esplog"><div class="esppitch"><p class="kick">Mon espace</p><h1 class="pagetitle">Vos valeurs, suivies chaque semaine.</h1>
-      <ul class="espben big"><li><b>Un rapport chaque semaine</b> : ce que vos entreprises et ETF ont publié, leurs cours, leurs dates à venir, la répartition de votre portefeuille.</li><li><b>Une alerte</b> quand une de vos valeurs publie ses résultats ou bouge de plus de 5 %${robotActif("alertes") ? "" : BIENTOT}.</li><li><b>Vos favoris, votre portefeuille et vos achats programmés</b>, les mêmes sur votre téléphone et votre ordinateur.</li><li><b>Un agenda rien qu'à vous</b> : résultats et dividendes de vos valeurs, portefeuille d'abord.</li></ul>
-      <p class="note">Gratuit. Aucune donnée vendue. Vous pouvez supprimer votre compte à tout moment.</p></div>
-    <div><section class="panel"><div class="ph"><h2 id="lt">Créer mon espace</h2></div><div class="pb">
-      <form id="espf" class="espform"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>
-        <label class="chk" id="cgu"><input type="checkbox" name="cgu" required> J'accepte les <a class="lnk" href="/cgv" target="_blank">conditions</a> et la <a class="lnk" href="/confidentialite" target="_blank">politique de confidentialité</a>.</label>
+  // 3/11 (v4) : bandeau jaune, avantages en cartes à icône, formulaire en carte blanche (mêmes identifiants : espf, lt, espgo, espm, swap, lost, cgu)
+  const ic = k => typeof ou4Ic === "function" ? ou4Ic(k) : "";
+  const BEN = [["listes", "Un rapport chaque semaine", "Ce que vos entreprises et ETF ont publié, leurs cours, leurs dates à venir, la répartition de votre portefeuille."],
+    ["alerte", "Une alerte" + (robotActif("alertes") ? "" : " (bientôt)"), "Quand une de vos valeurs publie ses résultats ou bouge de plus de 5 %."],
+    ["pf", "Partout pareil", "Vos favoris, votre portefeuille et vos achats programmés, sur votre téléphone et votre ordinateur."],
+    ["agenda", "Votre agenda", "Les résultats et dividendes de vos valeurs, portefeuille d'abord."]];
+  app.innerHTML = `<div class="ek ek-page es4"><section class="ek-hero es4-hero"><div class="es4-l"><span class="mc-stk">Mon espace</span><h1 class="ag4-t">Vos valeurs, suivies chaque semaine.</h1>
+      <p class="mc-sub">Gratuit, avec une adresse e-mail. Aucune donnée vendue ; vous pouvez supprimer votre compte à tout moment.</p>
+      <div class="es4-ben">${BEN.map(([k, t, d]) => `<div>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
+      <p id="parexlk" class="es4-ex"><a href="/rapport-exemple">Voir un rapport exemple avant de créer le vôtre →</a></p></div>
+    <div class="es4-r"><h2 id="lt">Créer mon espace</h2>
+      <form id="espf" class="espform es4-form"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>
+        <label class="es4-chk" id="cgu"><input type="checkbox" name="cgu" required> J'accepte les <a class="lnk" href="/cgv" target="_blank">conditions</a> et la <a class="lnk" href="/confidentialite" target="_blank">politique de confidentialité</a>.</label>
         <button class="btn" type="submit" id="espgo">Créer mon espace</button><p class="muted" id="espm" style="font-size:13.5px;margin:0"></p></form>
-      <p style="margin:14px 0 0;font-size:14px"><button type="button" class="linkbtn" id="swap">J'ai déjà un espace : me connecter</button> · <button type="button" class="linkbtn" id="lost">Mot de passe oublié</button></p></div></section></div></div>`;
+      <p class="es4-alt"><button type="button" class="linkbtn" id="swap">J'ai déjà un espace : me connecter</button> · <button type="button" class="linkbtn" id="lost">Mot de passe oublié</button></p></div></section></div>`;
   let mode = "inscription";
   const f = $("#espf"), setMode = md => { mode = md; $("#lt").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Retrouver mon accès";
     $("#espgo").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Changer mon mot de passe"; $("#cgu").hidden = md !== "inscription"; $("input[name=cgu]", f).required = md === "inscription";

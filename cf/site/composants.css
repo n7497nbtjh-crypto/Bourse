@@ -992,3 +992,31 @@ html #app .ek.pf4 .pf3k>div{border:2px solid var(--ek-ink);border-radius:18px;pa
 @media(max-width:560px){.ek.pf4 .pf3k.pf3k4{gap:6px}html #app .ek.pf4 .pf3k>div{padding:10px;border-radius:14px}.ek.pf4 .pf3k b,.ek.pf4 .pf3k b.pf3big{font-size:21px}.ek.pf4 .pf3k .kick{font-size:11px}.ek.pf4 .pf3k small{font-size:11px}}
 html #app .ek.pf4 .pf3ab{border:2px solid var(--ek-ink);border-radius:12px;background:#fff;font:800 13.5px Inter;padding:7px 12px;color:var(--ek-ink)}
 .ek.pf4 #pf3hero{margin-bottom:18px}
+
+/* ---------- Mon espace v4, connexion (espaceConnexion d'app.js) ---------- */
+.ek .es4-hero{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:28px;align-items:start}
+.ek .es4-ben{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:20px}
+.ek .es4-ben>div{background:#fff;border:2px solid var(--ek-ink);border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:4px}
+.ek .es4-ben svg{width:34px;height:34px;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:10px;padding:5px;box-sizing:border-box}
+.ek .es4-ben b{font:800 15.5px/1.2 "Bricolage Grotesque",Inter}.ek .es4-ben span{font:500 13px/1.4 Inter;color:#333}
+.ek .es4-ex{margin:16px 0 0}.ek .es4-ex a{font:800 14px Inter;color:var(--ek-ink);text-decoration:underline;text-decoration-thickness:3px;text-underline-offset:3px}
+.ek .es4-r{background:#fff;border:3px solid var(--ek-ink);border-radius:20px;padding:20px 22px;box-shadow:5px 5px 0 var(--ek-ink)}
+.ek .es4-r h2{margin:0 0 12px;font:800 26px/1.1 "Bricolage Grotesque",Inter;letter-spacing:-.03em}
+.ek .es4-form{display:flex;flex-direction:column;gap:12px}
+.ek .es4-form>label{display:flex;flex-direction:column;gap:6px;font:700 13.5px Inter}
+html #app .ek.ek-page .es4-form input[type=email],html #app .ek.ek-page .es4-form input[type=password],html #app .ek.ek-page .es4-form input[name=code]{border:2px solid var(--ek-ink);border-radius:12px;padding:11px 12px;font:600 16px Inter;background:#fff}
+.ek .es4-form .chk{display:block;font-weight:500;line-height:1.5}.ek .es4-form .chk input{margin-right:6px;vertical-align:-2px}
+html #app .ek.ek-page .es4-form .btn{background:var(--ek-ink);color:#fff;border-radius:14px;font:800 16px Inter;padding:13px}
+.ek .es4-alt{margin:14px 0 0;font:600 13.5px Inter}
+@media(max-width:900px){.ek .es4-hero{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:560px){.ek .es4-ben{grid-template-columns:minmax(0,1fr)}}
+/* Mon espace v4, connecté : en-tête jaune sur toute la largeur, onglets en pastilles (pageEspace de synthese.js, inchangée) */
+html #app .esphead2{display:block}
+html #app .esphead2>div{width:100%}
+html #app .esphead2 .v3-hero{width:auto;max-width:none;box-sizing:border-box}
+html #app .esptabs{display:flex;gap:6px;flex-wrap:nowrap;overflow-x:auto;border:0;margin:16px 0 18px;padding:2px}
+html #app .esptabs a{flex:none;display:inline-flex;align-items:center;border:2px solid #111;border-radius:999px;padding:7px 14px;font:800 13.5px Inter;color:#111;background:#fff;text-decoration:none}
+html #app .esptabs a.on{background:#FFE14D;box-shadow:2px 2px 0 #111}
+html #app .esptabs .espn2{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:#D9361B;color:#fff;font:800 11px Inter;margin-left:4px}
+html #app .ek.ek-page .es4-form .chk{white-space:normal}html #app .ek.ek-page .es4-form .chk a{display:inline;min-height:0;white-space:normal}
+html #app .ek.ek-page .es4-form label.es4-chk{display:block;font:500 13.5px/1.5 Inter}html #app .ek.ek-page .es4-form label.es4-chk[hidden]{display:none}.ek .es4-chk input{margin-right:6px;vertical-align:-2px}
