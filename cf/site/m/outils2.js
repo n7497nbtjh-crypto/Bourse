@@ -146,38 +146,12 @@ function O2_rcEtat() {
   }
   return { ids, w: ids.map((_, i) => w[i] > 0 ? w[i] : Math.round(100 / ids.length)) };
 }
-async function outilRecouvrement() {
-  O2_css(); setTitle("Recouvrement des ETF"); setNav("sim");
-  const S = O2_rcEtat();
-  const trouve = re => ETF.list.find(e => re.test(e.index || "") && e.compo && e.pea) || ETF.list.find(e => re.test(e.index || "") && e.compo) || ETF.list.find(e => re.test(e.index || ""));
-  const presets = [["Monde + S&P 500", /^MSCI World$/i, /^S&P 500$/i], ["Monde + Nasdaq 100", /^MSCI World$/i, /^Nasdaq.?100$/i], ["Monde + Europe", /^MSCI World$/i, /^(MSCI Europe|Stoxx Europe 600)$/i], ["CAC 40 + Euro Stoxx 50", /^CAC 40$/i, /^Euro Stoxx 50$/i]]
-    .map(([l, a, b]) => { const ea = trouve(a), eb = trouve(b); return ea && eb ? [l, ea.id, eb.id] : null; }).filter(Boolean);
-  app.innerHTML = `<div class="crumbs"><a href="/outils">Outils</a> › Recouvrement des ETF</div><h1 class="pagetitle">Mes ETF se recouvrent-ils ?</h1>
-    <p class="pagesub">Beaucoup d'ETF contiennent les mêmes grandes entreprises. Choisissez 2 à 4 fonds et la part de chacun : le site ouvre leurs compositions officielles et calcule ce que vous détenez vraiment.</p>
-    <section class="panel"><div class="pb"><div id="o2rl"></div>
-      <div style="display:flex;gap:8px 10px;flex-wrap:wrap;align-items:center;margin-top:6px"><button type="button" class="linkbtn" id="o2radd">+ Ajouter un ETF</button><span class="light" style="font-size:12.5px">Exemples :</span>${presets.map(([l, a, b]) => `<button type="button" class="chip" data-a="${a}" data-b="${b}">${esc(l)}</button>`).join("")}</div></div></section>
-    <div id="o2rr"><div class="pb muted">Lecture des compositions…</div></div>`;
-  const lignes = () => {
-    $("#o2rl").innerHTML = S.ids.map((id, i) => `<div class="o2-row">${pickerHTML("o2rq" + i, `ETF n° ${i + 1}`)}<div class="field o2-w"><label for="o2rw${i}">Part (%)</label><input id="o2rw${i}" type="number" inputmode="decimal" min="0" max="100" step="5" value="${S.w[i]}"></div>${S.ids.length > 2 ? `<button type="button" class="o2-x" data-x="${i}" aria-label="Retirer ce fonds">×</button>` : ""}</div>`).join("");
-    S.ids.forEach((id, i) => {
-      $("#o2rq" + i).value = ETFBY[id].name; bindPicker("o2rq" + i, k => { S.ids[i] = k.slice(2); maj(); }, true);
-      $("#o2rw" + i).oninput = () => { S.w[i] = Math.max(0, parseFloat(String($("#o2rw" + i).value).replace(",", ".")) || 0); clearTimeout(S.t); S.t = setTimeout(maj, 250, false); };
-    });
-    $$("#o2rl [data-x]").forEach(b => b.onclick = () => { const i = +b.dataset.x; S.ids.splice(i, 1); S.w.splice(i, 1); maj(); });
-    $("#o2radd").hidden = S.ids.length >= 4;
-  };
-  const maj = (redessine = true) => {
-    const q = new URLSearchParams(); S.ids.forEach((id, i) => q.set("abcd"[i], id)); q.set("w", S.w.join(","));
-    history.replaceState({}, "", "/outils/recouvrement?" + q); if (redessine) lignes(); O2_rcCalcul(S);
-  };
-  $("#o2radd").onclick = () => { const e = ETF.list.find(x => x.compo && !S.ids.includes(x.id) && /Emerging|Europe/i.test(x.index || "")) || ETF.list.find(x => !S.ids.includes(x.id)); if (!e) return; S.ids.push(e.id); S.w = S.ids.map(() => Math.round(100 / S.ids.length)); maj(); };
-  $$("#app .chip[data-a]").forEach(b => b.onclick = () => { S.ids = [b.dataset.a, b.dataset.b]; S.w = [50, 50]; maj(); });
-  lignes(); O2_rcCalcul(S);
-}
+function outilRecouvrement() { return outilRecouvrement4(); } // page construite par m/recouv4.js (3/11/2026)
 async function O2_rcCalcul(S) {
   const jeton = S.jeton = {}, E = S.ids.map(id => ETFBY[id]), comps = await Promise.all(E.map(e => etfComp(e)));
   if (jeton !== S.jeton || !$("#o2rr")) return;
   const manque = E.filter((e, i) => !comps[i] || !(comps[i].isins || []).length);
+  if ((manque.length || !(S.w.reduce((a, b) => a + b, 0) > 0)) && $("#rct")) $("#rct").textContent = manque.length ? "Composition indisponible." : "Indiquez la part d'au moins un fonds.";
   if (manque.length) { $("#o2rr").innerHTML = `<section class="panel"><div class="pb muted">La composition détaillée n'est pas disponible pour ${manque.map(e => `<b>${esc(e.name)}</b>`).join(", ")}. Elle est relevée chaque mois sur le site de l'émetteur : choisissez un autre fonds sur le même indice.</div></section>`; return; }
   if (!(S.w.reduce((a, b) => a + b, 0) > 0)) { $("#o2rr").innerHTML = `<section class="panel"><div class="pb muted">Indiquez la part d'au moins un fonds.</div></section>`; return; }
   const noms = {}; comps.forEach(c => (c.top || []).forEach(t => { if (t.isin && t.name) noms[t.isin] = noms[t.isin] || t.name; }));
@@ -213,33 +187,7 @@ async function O2_rcCalcul(S) {
   if (swap.length) csq.push(`${swap.map(e => esc(e.name)).join(", ")} ${swap.length > 1 ? "sont des fonds synthétiques : ils détiennent d'autres titres et reçoivent" : "est un fonds synthétique : il détient d'autres titres et reçoit"} la performance de l'indice par un contrat d'échange. Le calcul porte sur la composition de l'indice suivi, qui est l'exposition réelle.`);
   const sources = E.map((e, i) => { const c = comps[i], s = typeof c.source === "object" && c.source ? c.source : { nom: c.source, url: c.url }, couv = X.seuls[i].couverture;
     return `<li><b>${esc(e.name)}</b> : ${c.niveau === "indice" ? "composition de l'indice suivi" : c.niveau === "panier" ? "panier détenu par le fonds" : c.proxy ? `fonds américain de référence sur le même indice (${esc(c.proxy)})` : "composition du fonds"}, ${F0.format(c.lines || (c.isins || []).length)} lignes${c.asOf ? ` au ${dLabel(c.asOf)}` : ""}, ${O2_p(couv, 0, false)} du fonds identifié ligne à ligne. Source : ${O2_src(s.nom || "émetteur", s.url)}.</li>`; }).join("");
-  $("#o2rr").innerHTML = `<section class="panel"><div class="pb">
-      <div class="o2-verdict"><p class="kick">En bref</p><p>${verdict}</p></div>
-      <div class="o2-tiles">${tile("Poids réellement en double", O2_p(X.doublon, 0, false), "de votre argent placé dans des titres présents dans au moins deux fonds")}
-        ${tile("Positions communes", F0.format(N === 2 ? p0[2].communes : X.communesToutes), N === 2 ? `sur ${F0.format(p0[2].lignesA)} et ${F0.format(p0[2].lignesB)} lignes` : "présentes dans tous vos fonds")}
-        ${tile("10 premières lignes", O2_p(X.conc.top10, 0, false), "du portefeuille combiné (concentration)")}
-        ${tile("Diversification effective", "≈ " + F0.format(X.conc.nEq) + " lignes", `équivalent en lignes de même poids (fonds le plus diversifié seul : ≈ ${F0.format(best)})`)}</div>
-      <p class="o2-note">Le <b>nombre</b> de positions communes ne suffit pas : deux fonds peuvent partager des centaines de petites lignes et peu de poids. Le <b>poids économique réel</b> en commun additionne, pour chaque entreprise, le plus petit des deux poids.</p></div></section>
-    <section class="panel"><div class="ph"><h2>Positions communes : nombre et poids réel</h2></div><div class="pb">
-      ${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Paire de fonds</th><th scope="col">Positions communes</th><th scope="col">Poids identique</th><th scope="col">Part du 1er dans le 2d</th><th scope="col">Part du 2d dans le 1er</th></tr></thead><tbody>
-      ${paires.map(([i, j, p], z) => `<tr class="${z % 2 ? "z" : ""}"><th scope="row" class="l lab"><span class="nm">${esc(nm(i))}</span><span class="sub" style="display:block">et ${esc(nm(j))}</span></th><td class="num">${F0.format(p.communes)}<span class="sub" style="display:block">sur ${F0.format(p.lignesA)} et ${F0.format(p.lignesB)}</span></td><td class="num"><b>${O2_p(p.recouvrement, 0, false)}</b></td><td class="num">${O2_p(p.partAdansB, 0, false)}</td><td class="num">${O2_p(p.partBdansA, 0, false)}</td></tr>`).join("")}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}
-      <p class="o2-note">« Part du 1er dans le 2d » : poids, dans le premier fonds, des entreprises que le second détient aussi (quel que soit leur poids dans le second). Proche de 100 % : le premier est presque inclus dans le second.</p></div></section>
-    <section class="panel"><div class="ph"><h2>Les plus grosses entreprises, fonds par fonds</h2></div><div class="pb">${O2_barres(top, nomsS, couleurs)}
-      <p class="o2-note">Poids de chaque entreprise dans chaque fonds (« – » : le fonds ne la détient pas) puis dans votre portefeuille combiné, selon les parts choisies.</p></div></section>
-    <section class="panel"><div class="ph"><h2>Ce que chaque fonds apporte en propre</h2></div><div class="pb">
-      ${hbars(E.map((e, i) => ({ label: e.name, v: X.propre[i] / 100, c: O2_RC[i] })), x => pct(x, 0, false))}
-      <p class="o2-note">Poids du fonds investi dans des entreprises qu'aucun de vos autres fonds ne détient. Plus c'est bas, moins ce fonds diversifie le reste.</p></div></section>
-    <section class="panel"><div class="ph"><h2>Exposition par secteur et par pays</h2></div><div class="pb"><div class="o2-split">
-      <div><h3>Par secteur</h3>${X.secteurs.length ? O2_barres(expo("secteurs", lib, 8), nomsS, couleurs) : `<p class="muted">Répartition par secteur non disponible pour ces fonds.</p>`}</div>
-      <div><h3>Par pays</h3>${X.pays.length ? O2_barres(expo("pays", k => COUNTRY[k] || k, 8), nomsS, couleurs) : `<p class="muted">Répartition par pays non disponible.</p>`}</div></div>
-      <p class="o2-note">${emetteur ? "Secteurs publiés par les émetteurs (classification GICS)." : "Secteurs calculés par le site à partir des entreprises qu'il suit dans chaque fonds (classification du site), car au moins une source ne les publie pas."}</p></div></section>
-    <section class="panel"><div class="ph"><h2>Expositions indirectes</h2></div><div class="pb">
-      <ul class="o2-pts">${E.map((e, i) => `<li><b>${esc(e.name)}</b> suit l'indice <b>${esc(e.index || "non indiqué")}</b>${e.devise ? `, coté en ${esc(e.devise)}` : ""}${e.couvert ? ", couvert contre le risque de change" : ""}. Premier pays : ${F[i].countries[0] ? `${esc(COUNTRY[F[i].countries[0][0]] || F[i].countries[0][0])} (${O2_p(F[i].countries[0][1], 0, false)})` : "non indiqué"}.</li>`).join("")}
-        ${devs.length ? `<li>Devises des entreprises détenues (d'après leur pays) : ${devs.slice(0, 5).map(([d, w]) => `${esc(d === "autres" ? "autres devises" : d)} ${O2_p(w, 0, false)}`).join(", ")}.</li>` : ""}</ul></div></section>
-    <section class="panel"><div class="ph"><h2>Ce que cela change pour la diversification</h2></div><div class="pb"><ul class="o2-pts">${csq.map(x => `<li>${x}</li>`).join("")}</ul>
-      <p class="o2-note">Constats calculés sur les compositions publiées, pas une recommandation : un recouvrement peut être voulu (renforcer les États-Unis, par exemple).</p></div>
-      <div class="src"><ul style="margin:0 0 6px;padding-left:18px">${sources}</ul>Méthode : poids des lignes en % de chaque fonds ; portefeuille combiné = poids de chaque fonds multipliés par sa part ; « diversification effective » = 1 ÷ somme des carrés des poids (indice de Herfindahl).</div></section>`;
-  tblxBindScroll($("#o2rr"));
+  O2_rcAfficher({ S, E, F, X, N, nm, paires, p0, best, ov, verdict, couleurs, nomsS, top, lib, expo, devs, horsEur, csq, sources, emetteur, comps });
 }
 
 /* ====================================================================================

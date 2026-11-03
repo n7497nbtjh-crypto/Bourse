@@ -839,3 +839,31 @@ html #app .ek.ek-page .vf-f button{flex:none;background:var(--ek-ink);color:#fff
 .ek .vf-lead{font:600 15px/1.5 Inter;margin:-8px 0 16px;max-width:760px}
 .ek .vf-tel{background:#E2F8EE}
 .ek .vf-s b{font:inherit;font-weight:800}@media(max-width:640px){.ek .vf-v{flex-direction:column;gap:8px}.ek .vf-i{width:34px;height:34px;font-size:17px}}
+
+/* ---------- « Mes ETF se recouvrent-ils ? » v4 (m/recouv4.js), réutilise s4- et sj- ---------- */
+.ek .rc-form{display:block}
+.ek .rc-l{display:flex;flex-direction:column;gap:10px}
+.ek .rc-row{display:grid;grid-template-columns:14px minmax(0,1fr) 110px 34px;gap:12px;align-items:end}
+.ek .rc-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ek-ink);margin-bottom:16px}
+.ek .rc-x{width:34px;height:34px;margin-bottom:6px;border:2px solid var(--ek-ink);border-radius:10px;display:grid;place-items:center;font:800 18px Inter;color:var(--ek-ink);text-decoration:none;background:#fff}
+.ek .rc-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:14px;border-top:2px dashed #D9D4C7;padding-top:12px}
+.ek .rc-act>span{font:700 12.5px Inter;color:#444}
+.ek .rc-add{font:800 14px Inter;color:var(--ek-ink);text-decoration:none;border-bottom:3px solid var(--ek-y)}.ek .rc-add[hidden]{display:none}
+.ek .rc-ex{flex-wrap:wrap}.ek .rc-ex a{flex:0 1 auto;padding:7px 12px}
+.ek .rc-bar{display:flex;height:40px;border:2px solid var(--ek-ink);border-radius:12px;overflow:hidden}
+.ek .rc-bar i{display:block;min-width:3px;border-right:2px solid var(--ek-ink)}.ek .rc-bar i:last-child{border-right:0}
+.ek .rc-bar i.d{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 6px,transparent 6px 12px)}
+.ek .rc-cs{margin-top:16px}.ek .sj-c.w{background:#FFE4DC}
+.ek .rc-csq{display:flex;flex-direction:column;gap:8px}
+.ek .rc-csq>div{border:2px solid var(--ek-ink);border-left-width:8px;border-radius:14px;padding:12px 16px;background:#fff;font:500 15px/1.5 Inter}
+.ek .rc-box{border:2px solid var(--ek-ink);border-radius:18px;padding:14px 16px;background:#fff}
+.ek .rc-box h3{font:800 16px "Bricolage Grotesque",Inter;margin:0 0 10px}
+@media(max-width:640px){.ek .rc-row{grid-template-columns:10px minmax(0,1fr) 78px 30px;gap:8px}.ek .rc-dot{width:10px;height:10px}}
+.ek .rc-ex{background:none;border:0;padding:0;gap:6px}.ek .rc-ex a{border:2px solid var(--ek-ink);background:#fff;font-size:13px}
+.ek .rc-ex a.on{box-shadow:none;background:var(--ek-y)}
+@media(max-width:640px){html #app .ek.ek-page .rc-row input{font-size:15px;padding:9px 10px}.ek .rc-act>span{display:none}}
+.ek .rc-add{display:inline-block;border-bottom:0;text-decoration:underline;text-decoration-color:var(--ek-y);text-decoration-thickness:3px;text-underline-offset:3px}
+@media(max-width:640px){.ek .rc-ex a{padding:6px 9px;font-size:12.5px}}
+.ek .rc-ex a{display:inline-flex;align-items:center;line-height:1.2;height:34px;box-sizing:border-box;white-space:nowrap}
+@media(max-width:640px){.ek .rc-row{grid-template-columns:10px minmax(0,1fr) 30px;grid-template-areas:"d n x" ". w .";row-gap:6px}.ek .rc-dot{grid-area:d}.ek .rc-pk{grid-area:n}.ek .rc-w{grid-area:w;flex-direction:row;align-items:center;gap:10px}.ek .rc-w input{max-width:90px}.ek .rc-x{grid-area:x}
+  html #app .ek.ek-page .rc-row .rc-pk input{font-size:14px}}

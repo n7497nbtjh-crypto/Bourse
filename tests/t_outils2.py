@@ -37,7 +37,7 @@ with sync_playwright() as pw:
         # Recouvrement : un preset met deux fonds, le verdict et le tableau des paires s'affichent
         pg.goto("http://t.local/outils/recouvrement"); pg.wait_for_timeout(1500)
         t = pg.inner_text("#o2rr")
-        if "poids réellement en double" not in t.lower() or "%" not in t: bad += 1; print(nom, "recouvrement", t[:200])
+        if "en double" not in t.lower() or "%" not in t: bad += 1; print(nom, "recouvrement", t[:200])
         # Et si : le montant change la phrase
         pg.goto("http://t.local/outils/si-javais?k=c:lvmh&ans=5"); pg.wait_for_timeout(1500)
         t1 = pg.inner_text("#sjt"); pg.fill("#sjm", "2000"); pg.wait_for_timeout(500); t2 = pg.inner_text("#sjt").replace("\u202f", " ").replace("\xa0", " ")
