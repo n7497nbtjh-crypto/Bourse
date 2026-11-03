@@ -1,0 +1,44 @@
+{
+ "l": {
+  "SPDR": {
+   "f": "spdr.png",
+   "source": "https://www.ssga.com/apple-touch-icon.png",
+   "maj": "2026-11-03"
+  },
+  "Invesco": {
+   "f": "invesco.png",
+   "source": "https://www.invesco.com/etc.clientlibs/invesco/clientlibs/main/resources/images/apple-touch-icon.png",
+   "maj": "2026-11-03"
+  },
+  "BNP Paribas Easy": {
+   "f": "bnp-paribas-easy.png",
+   "source": "https://www.bnpparibas-am.com/fr-fr/wp-content/themes/bnpp-global-theme/assets/images/android-chrome-512x512.png",
+   "maj": "2026-11-03"
+  },
+  "KraneShares": {
+   "f": "kraneshares.png",
+   "source": "https://kraneshares.eu/safari-pinned-tab.svg",
+   "maj": "2026-11-03"
+  },
+  "Amundi": {
+   "f": "amundi.png",
+   "source": "https://amundiprodcdn2.azureedge.net/ui-kit/2026-10-21-20ae11de/resources/img/favicon.ico",
+   "maj": "2026-11-03"
+  },
+  "iShares": {
+   "f": "ishares.png",
+   "source": "https://www.ishares.com/favicon.ico",
+   "maj": "2026-11-03"
+  },
+  "Vanguard": {
+   "f": "vanguard.png",
+   "source": "https://www.vanguard.co.uk/favicon.ico",
+   "maj": "2026-11-03"
+  },
+  "L&G": {
+   "f": "l-g.png",
+   "source": "https://www.lgim.com/favicon.ico",
+   "maj": "2026-11-03"
+  }
+ }
+}

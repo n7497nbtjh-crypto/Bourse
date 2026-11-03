@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ENKLAIR · Les ETF (maquette v3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../cf/site/composants.css">
+<style>
+body{margin:0;background:#fff;font-family:Inter,sans-serif;color:#111}
+.w{max-width:1200px;margin:0 auto;padding:24px 36px 80px}@media(max-width:900px){.w{padding:14px 14px 60px}}
+/* ——— éléments propres à la liste des ETF (iront dans composants.css, préfixe el-) ——— */
+.el-stk{display:inline-block;font:800 14px "Bricolage Grotesque",Inter,sans-serif;padding:5px 12px;border-radius:10px;border:2px solid #111;box-shadow:3px 3px 0 #111;transform:rotate(-3deg);background:#fff}
+.el-h h1{font:800 clamp(40px,6vw,76px)/.92 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.06em;margin:14px 0 0;max-width:820px}
+.el-sub{font:600 17px/1.4 Inter;margin:14px 0 0;max-width:640px}
+.el-q{display:flex;align-items:center;gap:10px;background:#fff;border:2px solid #111;border-radius:999px;padding:12px 18px;margin-top:20px;max-width:640px;box-shadow:4px 4px 0 #111}
+.el-q input{border:0;outline:0;font:600 16px Inter;flex:1;min-width:0;background:none}
+.el-f{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;align-items:center;font:800 13px Inter}
+.el-f button{border:2px solid #111;background:#fff;border-radius:999px;padding:6px 13px;font:800 13px Inter;cursor:pointer}.el-f button.on{background:#111;color:#fff}
+.el-learn{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px}
+.el-learn a{background:#fff;border:2px solid #111;border-radius:16px;padding:12px 14px;color:#111;text-decoration:none}.el-learn b{display:block;font:800 15px "Bricolage Grotesque",Inter}.el-learn span{font:600 12.5px/1.35 Inter;color:#444}
+.el-tiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+.el-t{border:2px solid #111;border-radius:16px;padding:12px 14px;color:#111;text-decoration:none;box-shadow:3px 3px 0 #111;display:flex;flex-direction:column;gap:2px}
+.el-t b{font:800 17px/1.1 "Bricolage Grotesque",Inter}.el-t span{font:700 13px Inter}.el-t small{font:600 12px Inter;color:#444}
+.el-idx{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:14px}
+.el-i{border:2px solid #111;border-radius:20px;padding:16px 18px;background:#fff}
+.el-i h3{font:800 22px "Bricolage Grotesque",Inter;letter-spacing:-.03em;margin:0}.el-i>small{font:700 12.5px Inter;color:#555}
+.el-i dl{display:grid;grid-template-columns:1fr auto;gap:6px 10px;margin:12px 0 10px;font:600 13.5px Inter}.el-i dd{margin:0;font-weight:800;text-align:right}.el-i dd.g{color:#00A06B}.el-i dd.r{color:#D92D12}
+.el-i a{font:800 13.5px Inter;color:#111;border-bottom:3px solid #FFE14D;text-decoration:none}
+.el-sort{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 12px;font:800 13px Inter;align-items:center}
+.el-sort button{border:2px solid #111;background:#fff;border-radius:999px;padding:5px 12px;font:800 13px Inter}.el-sort button.on{background:#FFE14D}
+.el-tb{border:2px solid #111;border-radius:22px;overflow:hidden;box-shadow:5px 5px 0 #111}
+.el-tb table{width:100%;border-collapse:collapse;font:600 13.5px Inter}
+.el-tb thead th{font:800 12px Inter;color:#555;text-align:left;padding:12px 12px;border-bottom:2px solid #111;background:#fff;white-space:nowrap}
+.el-tb td,.el-tb tbody th{padding:11px 12px;border-bottom:1px solid #E6E4DE;vertical-align:middle;text-align:left}
+.el-tb tbody tr:hover{background:#FFFBE6}
+.el-tb th a{display:flex;gap:10px;align-items:center;color:#111;text-decoration:none}.el-tb th b{display:block;font:800 14px Inter}.el-tb th small{display:block;font:600 12px Inter;color:#555;margin-top:2px}
+.el-lg{flex:none;width:34px;height:34px;border-radius:10px;border:2px solid #111;display:grid;place-items:center;font:800 12px Inter;background:#F2F0EA}
+.el-tb td small{display:block;font:600 11.5px Inter;color:#666;margin-top:3px;white-space:nowrap}
+.el-tb td b.g{color:#00A06B}.el-tb td b.r{color:#D92D12}
+.el-g{position:relative;width:110px;height:8px;border-radius:99px;border:1.5px solid #111;margin-top:6px}
+.el-g i{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed #111}.el-g b{position:absolute;top:-4px;width:12px;height:12px;border-radius:50%;background:#FFE14D;border:2px solid #111;transform:translateX(-50%)}
+.el-pea{background:#E2F8EE;color:#00714C;border-radius:99px;padding:3px 9px;font:800 12px Inter;white-space:nowrap}
+.el-v{min-width:150px}.el-v span{display:inline-block;margin:2px 4px 2px 0;border-radius:99px;padding:3px 9px;font:800 12px Inter;background:#F2F0EA}.el-v span.g{background:#E2F8EE;color:#00714C}.el-v span.r{background:#FFE9E3;color:#A3200B}
+.ek .el-more{display:block;cursor:pointer;margin:18px auto 0;border:2px solid #111;background:#fff;border-radius:999px;padding:10px 20px;font:800 14px Inter}
+.el-lgi{background:#fff;padding:3px;overflow:hidden}.el-lgi img{width:100%;height:100%;object-fit:contain;display:block}
+.el-var{font:800 13px Inter;background:#111;color:#fff;display:inline-block;border-radius:8px;padding:4px 10px;margin:22px 0 12px}
+.el-cs{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.el-c{border:2px solid #111;border-radius:20px;padding:16px 18px;background:#fff;color:#111;text-decoration:none;display:flex;flex-direction:column;gap:14px;transition:transform .12s}.el-c:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 #111}
+.el-ch{display:flex;gap:10px;align-items:center}.el-ch b{display:block;font:800 16px/1.15 "Bricolage Grotesque",Inter}.el-ch small{display:block;font:600 12px Inter;color:#555;margin-top:2px}
+.el-cn{display:grid;grid-template-columns:1fr 1fr;gap:12px;border-top:1.5px dashed #111;padding-top:12px}
+.el-cn small,.el-cn em{display:block;font:700 11.5px Inter;color:#555;font-style:normal}.el-cn strong{display:block;font:800 28px/1.1 "Bricolage Grotesque",Inter;letter-spacing:-.03em;margin:2px 0}
+strong.g{color:#00A06B}strong.r{color:#D92D12}
+.el-cn .el-g{width:100%;margin:4px 0 6px}
+.el-cc{display:flex;flex-wrap:wrap;gap:6px}.el-cc span{border-radius:99px;padding:3px 9px;font:800 12px Inter;background:#F2F0EA}.el-cc span.g{background:#E2F8EE;color:#00714C}.el-cc span.r{background:#FFE9E3;color:#A3200B}
+.el-rs{border:2px solid #111;border-radius:22px;overflow:hidden}
+.el-r{display:grid;grid-template-columns:28px 34px minmax(0,1fr) 140px 90px 210px 16px;gap:14px;align-items:center;padding:13px 18px;border-bottom:1px solid #E6E4DE;color:#111;text-decoration:none}.el-r:last-child{border-bottom:0}.el-r:hover{background:#FFFBE6}
+.el-rk{font:800 18px "Bricolage Grotesque",Inter;color:#999;text-align:right}
+.el-rn b{display:block;font:800 15px Inter}.el-rn small{display:block;font:600 12px Inter;color:#555;margin-top:2px}
+.el-rf strong,.el-rp strong{display:block;font:800 20px/1 "Bricolage Grotesque",Inter}.el-rf .el-g{width:110px}.el-rp small{font:600 11.5px Inter;color:#666}
+.el-rv span{display:inline-block;margin:2px 4px 2px 0;border-radius:99px;padding:3px 9px;font:800 12px Inter;background:#F2F0EA}.el-rv span.g{background:#E2F8EE;color:#00714C}.el-rv span.r{background:#FFE9E3;color:#A3200B}
+.el-r>i{font:800 20px Inter;font-style:normal}
+@media(max-width:900px){.el-r{grid-template-columns:34px minmax(0,1fr) auto;row-gap:8px}.el-rk,.el-rv,.el-r>i{display:none}.el-rf{grid-column:2}.el-rp{grid-column:3;grid-row:1/3;text-align:right}}
+.el-note{font:600 12.5px/1.5 Inter;color:#555;margin-top:14px;max-width:820px}
+@media(max-width:900px){.el-learn{grid-template-columns:1fr}.el-tb{overflow-x:auto}.el-tb table{min-width:860px}}
+</style></head><body><div class="w ek ek-page">
+
+<!-- 1. En-tête : chercher, filtrer, apprendre -->
+<section class="ek-hero el-h"><span class="el-stk">Les ETF</span>
+  <h1>1 134 ETF, lus et comparés.</h1>
+  <p class="el-sub">Frais, contenu et performance relevés chez les émetteurs. 147 sont éligibles au PEA.</p>
+  <div class="el-q">🔍<input placeholder="MSCI World, CW8, IE00B4L5Y983…"></div>
+  <div class="el-f">Filtrer : <button class="on">Éligibles au PEA</button><button>Capitalisant</button><button>Frais ≤ 0,20 %</button><button>Plus de 1 Md€</button><button>Réplication physique</button></div>
+  <div class="el-learn"><a href="#"><b>Comprendre un ETF</b><span>Trois minutes : ce que c'est, ce que ça coûte.</span></a><a href="#"><b>ETF et PEA</b><span>Ce qu'un PEA peut contenir, et pourquoi le « swap ».</span></a><a href="#"><b>Deux ETF se recouvrent-ils ?</b><span>Les entreprises en double, en un calcul.</span></a></div>
+</section>
+
+<!-- 2. Par famille -->
+<section class="ek-sec"><span class="ek-stk2 b">Par famille</span><h2>Choisissez ce que vous voulez détenir.</h2><div class="el-tiles"><a class="el-t" style="background:#FFF2B3" href="#"><b>Monde</b><span>101 ETF</span><small>frais médians 0,20 %</small></a><a class="el-t" style="background:#FFE0EC" href="#"><b>États-Unis</b><span>128 ETF</span><small>frais médians 0,15 %</small></a><a class="el-t" style="background:#DCE3FF" href="#"><b>Europe</b><span>147 ETF</span><small>frais médians 0,20 %</small></a><a class="el-t" style="background:#CDF5E4" href="#"><b>France</b><span>10 ETF</span><small>frais médians 0,25 %</small></a><a class="el-t" style="background:#FFE3D1" href="#"><b>Pays émergents</b><span>89 ETF</span><small>frais médians 0,29 %</small></a><a class="el-t" style="background:#EDE3FF" href="#"><b>Asie</b><span>42 ETF</span><small>frais médians 0,20 %</small></a><a class="el-t" style="background:#FFF2B3" href="#"><b>Thématiques</b><span>177 ETF</span><small>frais médians 0,30 %</small></a><a class="el-t" style="background:#FFE0EC" href="#"><b>Dividendes</b><span>31 ETF</span><small>frais médians 0,31 %</small></a><a class="el-t" style="background:#DCE3FF" href="#"><b>Facteurs</b><span>52 ETF</span><small>frais médians 0,25 %</small></a><a class="el-t" style="background:#CDF5E4" href="#"><b>Immobilier</b><span>16 ETF</span><small>frais médians 0,40 %</small></a><a class="el-t" style="background:#FFE3D1" href="#"><b>Obligations</b><span>312 ETF</span><small>frais médians 0,15 %</small></a><a class="el-t" style="background:#EDE3FF" href="#"><b>Monétaire</b><span>10 ETF</span><small>frais médians 0,10 %</small></a><a class="el-t" style="background:#FFF2B3" href="#"><b>Matières premières</b><span>19 ETF</span><small>frais médians 0,19 %</small></a></div></section>
+
+<!-- 3. Les grands indices -->
+<section class="ek-sec"><span class="ek-stk2 p">Les grands indices</span><h2>Même indice, mêmes titres : seuls les frais changent.</h2>
+  <div class="el-idx"><div class="el-i"><h3>MSCI World</h3><small>18 ETF le suivent, dont 5 éligibles au PEA</small>
+    <dl><dt>Frais par an</dt><dd>0,05 à 0,50 %</dd><dt>Sur 1 an</dt><dd class="g">+16,2 %</dd><dt>Sur 5 ans</dt><dd class="g">+71 %</dd></dl>
+    <a href="#">Les 18 ETF, du moins cher au plus cher →</a></div><div class="el-i"><h3>S&P 500</h3><small>17 ETF le suivent, dont 2 éligibles au PEA</small>
+    <dl><dt>Frais par an</dt><dd>0,03 à 0,15 %</dd><dt>Sur 1 an</dt><dd class="g">+16,1 %</dd><dt>Sur 5 ans</dt><dd class="g">+82 %</dd></dl>
+    <a href="#">Les 17 ETF, du moins cher au plus cher →</a></div><div class="el-i"><h3>Nasdaq-100</h3><small>15 ETF le suivent, dont 2 éligibles au PEA</small>
+    <dl><dt>Frais par an</dt><dd>0,20 à 0,35 %</dd><dt>Sur 1 an</dt><dd class="g">+14,5 %</dd><dt>Sur 5 ans</dt><dd class="g">+91 %</dd></dl>
+    <a href="#">Les 15 ETF, du moins cher au plus cher →</a></div><div class="el-i"><h3>Stoxx Europe 600</h3><small>4 ETF le suivent, dont 1 éligible au PEA</small>
+    <dl><dt>Frais par an</dt><dd>0,07 à 0,20 %</dd><dt>Sur 1 an</dt><dd class="g">+15,6 %</dd><dt>Sur 5 ans</dt><dd class="g">+57 %</dd></dl>
+    <a href="#">Les 4 ETF, du moins cher au plus cher →</a></div><div class="el-i"><h3>CAC 40</h3><small>3 ETF le suivent, dont 3 éligibles au PEA</small>
+    <dl><dt>Frais par an</dt><dd>0,25 %</dd><dt>Sur 1 an</dt><dd class="g">+0,7 %</dd><dt>Sur 5 ans</dt><dd class="g">+35 %</dd></dl>
+    <a href="#">Les 3 ETF, du moins cher au plus cher →</a></div><div class="el-i"><h3>MSCI Emerging Markets</h3><small>13 ETF le suivent</small>
+    <dl><dt>Frais par an</dt><dd>0,09 à 0,55 %</dd><dt>Sur 1 an</dt><dd class="g">+17,0 %</dd><dt>Sur 5 ans</dt><dd class="g">+45 %</dd></dl>
+    <a href="#">Les 13 ETF, du moins cher au plus cher →</a></div></div>
+  <p class="el-note">Performance médiane des ETF de l'indice, en euros, dividendes réinvestis. Les performances passées ne préjugent pas des performances futures.</p></section>
+
+<!-- 4. Le tableau -->
+<section class="ek-sec"><span class="ek-stk2">Tous les ETF</span><h2>Chaque ligne, face à sa famille.</h2>
+  <div class="el-sort">Trier par : <button class="on">Taille</button><button>Frais</button><button>Sur 1 an</button><button>Nom</button><span style="margin-left:auto;font:700 13px Inter;color:#555">1 134 ETF · Émetteur ▾ · Dividendes ▾</span></div>
+  <div class="el-cs"><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/ishares.png" alt="iShares"></span><span><b>iShares Core S&P 500</b><small>S&P 500 · SXR8</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,07 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:18.666666666666668%"></b></div><em>médiane 0,15 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">+15,9 %</strong><em>médiane +15,6 %</em></div></div>
+    <div class="el-cc"><span>143,5 Md€</span><span>2 parts</span><span class="">assez concentré</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/ishares.png" alt="iShares"></span><span><b>iShares Core MSCI World</b><small>MSCI World · EUNL</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="">0,20 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:40%"></b></div><em>médiane 0,20 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">+16,2 %</strong><em>médiane +16,2 %</em></div></div>
+    <div class="el-cc"><span>137,1 Md€</span><span>2 parts</span><span class="g">très diversifié</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/vanguard.png" alt="Vanguard"></span><span><b>Vanguard FTSE All-World</b><small>FTSE All-World · VWCE</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,14 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:28.000000000000004%"></b></div><em>médiane 0,20 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">–</strong><em>pas encore suivi</em></div></div>
+    <div class="el-cc"><span>55,0 Md€</span><span>2 parts</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/invesco.png" alt="Invesco"></span><span><b>Invesco S&P 500</b><small>S&P 500 · P500</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,05 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:13.333333333333334%"></b></div><em>médiane 0,15 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">–</strong><em>pas encore suivi</em></div></div>
+    <div class="el-cc"><span>52,3 Md€</span><span>2 parts</span><span class="">assez concentré</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/invesco.png" alt="Invesco"></span><span><b>Invesco S&P 500 EUR Hdg</b><small>S&P 500 (couvert en euros) · E500</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,05 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:13.333333333333334%"></b></div><em>médiane 0,15 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">–</strong><em>pas encore suivi</em></div></div>
+    <div class="el-cc"><span>52,3 Md€</span><span>capitalisant</span><span class="">assez concentré</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/vanguard.png" alt="Vanguard"></span><span><b>Vanguard S&P 500</b><small>S&P 500 · VUSA</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,07 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:18.666666666666668%"></b></div><em>médiane 0,15 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">–</strong><em>pas encore suivi</em></div></div>
+    <div class="el-cc"><span>48,0 Md€</span><span>distribuant</span><span class="">assez concentré</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/spdr.png" alt="SPDR"></span><span><b>SPDR S&P 500</b><small>S&P 500 · SPY5</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,03 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:8%"></b></div><em>médiane 0,15 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">–</strong><em>pas encore suivi</em></div></div>
+    <div class="el-cc"><span>40,4 Md€</span><span>2 parts</span><span class="">assez concentré</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/spdr.png" alt="SPDR"></span><span><b>SPDR S&P 500 EUR Hdg</b><small>S&P 500 Dynamic (couvert) · SPPE</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,05 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:13.333333333333334%"></b></div><em>médiane 0,15 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">–</strong><em>pas encore suivi</em></div></div>
+    <div class="el-cc"><span>40,4 Md€</span><span>capitalisant</span></div></a><a class="el-c" href="#"><div class="el-ch"><span class="el-lg el-lgi"><img src="../../cf/site/logos/emetteurs/ishares.png" alt="iShares"></span><span><b>iShares Core MSCI Emerging Markets IMI</b><small>MSCI Emerging Markets IMI · IS3N</small></span></div>
+    <div class="el-cn"><div><small>Frais par an</small><strong class="g">0,18 %</strong><div class="el-g" style="background:linear-gradient(90deg,#E2F8EE 0 40%,#FFE9E3 40% 100%)"><i style="left:40%"></i><b style="left:24.82758620689655%"></b></div><em>médiane 0,29 %</em></div>
+    <div><small>Sur 1 an</small><strong class="">+15,6 %</strong><em>médiane +15,5 %</em></div></div>
+    <div class="el-cc"><span>39,3 Md€</span><span>capitalisant</span><span class="">assez concentré</span></div></a></div>
+
+  <button class="el-more">Afficher 30 ETF de plus</button>
+  <p class="el-note">Point jaune : les frais de l'ETF ; pointillé : la médiane de sa famille (zone verte, moins cher). Frais, taille, PEA et cotations relevés chaque mois chez les émetteurs ; performance en euros, dividendes réinvestis. Rien ici n'est un conseil d'achat.</p></section>
+</div></body></html>

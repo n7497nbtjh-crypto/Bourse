@@ -173,9 +173,8 @@ if (typeof MIA_CTX0 === "function") window.orcIaCtx = function () {
 document.addEventListener("click", e => { if (e.target.closest("[data-miactx]") && typeof orcIaOpen === "function") orcIaOpen(); });
 (() => {
   const bouton = t => `<button type="button" class="mia-ctx" data-miactx><span aria-hidden="true">✦</span> ${esc(t)}</button>`;
-  const ent0 = window.pageEntreprises, etf0 = window.pageEtfs;
+  const ent0 = window.pageEntreprises;
   if (typeof ent0 === "function") window.pageEntreprises = function () { const r = ent0.apply(this, arguments); const s = $(".pagesub", app); if (s && !$("[data-miactx]", app)) s.insertAdjacentHTML("beforeend", " " + bouton("Chercher par critères avec l'IA")); return r; };
-  if (typeof etf0 === "function") window.pageEtfs = function () { const r = etf0.apply(this, arguments); const s = $(".pagesub", app); if (s && !$("[data-miactx]", app)) s.insertAdjacentHTML("beforeend", " " + bouton("Trouver un ETF avec l'IA")); return r; };
 })();
 
 /* styles : voir site.css */

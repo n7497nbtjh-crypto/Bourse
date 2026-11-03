@@ -50,73 +50,12 @@ function ETF_rank(e, f, higherBetter = true) {
   return { p: Math.max(0, Math.min(1, p)), n: vals.length };
 }
 const ETF_cout = (ter, years, monthly = 100, rate = 0.05) => { const a = Calc.compound({ initial: 0, monthly, years, rate }).final, b = Calc.compound({ initial: 0, monthly, years, rate, fee: (ter || 0) / 100 }).final; return { brut: a, net: b, cout: a - b }; };
-const ETF_pctS = (v, d = 1) => v == null ? "–" : nf(d).format(v) + " %";
 const ETF_nomLigne = t => { const c = t.isin && ISINBY[t.isin]; if (c) return c.name; let s = String(t.name || ""); for (let i = 0; i < 3; i++) s = s.replace(/[\s,]+(INC|CORP|CORPORATION|LTD|PLC|SA|SE|NV|AG|CO|CLASS [A-Z]|CL [A-Z]|REG|ORD|NAMEN|-REG|USD[\d.]+|EUR[\d.]+)\.?\s*$/i, ""); s = s.replace(/\s*-?\s*(INC|CORP)?-?\s*CL(ASS)?\s+[A-Z]$/i, "").replace(/\s*&\s*(CO\.?)?$/i, ""); return titleCase(s.replace(/[\s,.&-]+$/, "")).replace(/\.Com\b/g, ".com"); };
 const ETF_place = e => (e.cotations || []).find(c => c.ticker === e.ticker) || null;
-const ETF_badges = (e, big) => [
-  e.pea === true ? `<span class="eb eb-g">PEA</span>` : e.pea === false && big ? `<span class="eb">Hors PEA</span>` : "",
-  e.distribution ? `<span class="eb">${e.distribution === "distribution" ? "Distribuant" : "Capitalisant"}</span>` : "",
-  big && e.replication ? `<span class="eb">${e.replication === "synthétique" ? "Synthétique" : e.methode === "échantillonnée" ? "Physique (échantillon)" : "Physique"}</span>` : (e.replication === "synthétique" ? `<span class="eb">Synthétique</span>` : ""),
-  e.levier ? `<span class="eb eb-o">Levier ou inverse</span>` : "", e.couvert ? `<span class="eb">Couvert en euros</span>` : ""].join("");
-
 /* ---------- Styles ---------- */
 /* styles : voir site.css */
 
 /* ---------- Liste des ETF ---------- */
-let ETF_LS = null;
-const ETF_PRESETS = [["Tous", {}], ["Monde · PEA", { cat: "actions-monde", env: "pea" }], ["S&P 500", { q: "s&p 500" }], ["Nasdaq-100", { q: "nasdaq" }], ["Europe", { cat: "actions-europe" }], ["France", { cat: "actions-france" }], ["Émergents", { cat: "actions-emergents" }], ["Dividendes", { cat: "dividendes" }], ["Obligations", { cat: "obligations" }], ["Monétaire", { cat: "monetaire" }], ["Or et matières", { cat: "matieres" }], ["Thématiques", { cat: "theme" }]];
-function ETF_lsInit() {
-  if (ETF_LS) return ETF_LS;
-  const u = new URLSearchParams(location.search);
-  ETF_LS = { q: u.get("q") || "", cat: u.get("cat") || "all", env: u.get("env") || (u.get("pea") ? "pea" : "all"), dist: u.get("dist") || "all", em: u.get("em") || "all", fr: u.get("fr") || "all", tri: u.get("tri") || "frais", n: 40 };
-  if (typeof etfState === "object" && etfState && etfState.pea && ETF_LS.env === "all") ETF_LS.env = "pea";
-  return ETF_LS;
-}
-function ETF_row(e) {
-  const v = ETF_terVerdict(e), pl = ETF_place(e);
-  return `<a class="etfrow" href="/etf/${e.id}">${logo({ name: e.issuer, domain: issuerDom(e) }, 34)}<span><span class="nm">${esc(e.name)}</span><span class="sb">${esc(e.index || ECAT[e.categorie] || "")}${e.ticker ? ` · ${esc(e.ticker)}${pl ? " " + esc(pl.place.replace("Euronext ", "")) : ""}` : ""}</span><span class="tg">${ETF_badges(e)}</span></span>
-    <span class="rt"><b>${e.ter != null ? ETF_pctS(e.ter, 2) : "–"}</b><small>${v ? `<i style="background:var(--${v.c === "n" ? "n" : v.c})"></i>` : ""}par an</small><small>${e.encours ? big(e.encours) : ""}</small></span></a>`;
-}
-function pageEtfs() {
-  setTitle("Les ETF : frais, composition, PEA"); setNav("etf");
-  const S = ETF_lsInit(), L = ETF.list;
-  const nPea = L.filter(e => e.pea === true).length, ems = [...new Set(L.map(e => e.issuer))].sort((a, b) => L.filter(e => e.issuer === b).length - L.filter(e => e.issuer === a).length);
-  const cats = Object.keys(ECAT).filter(c => L.some(e => e.categorie === c));
-  const opt = (v, l, cur) => `<option value="${v}"${v === cur ? " selected" : ""}>${esc(l)}</option>`;
-  app.innerHTML = `<h1 class="pagetitle">Les ETF</h1><p class="pagesub">Un ETF (fonds indiciel coté) achète en une fois toutes les entreprises d'un indice. Voici ${F0.format(L.length)} ETF cotés à Paris, Francfort ou Amsterdam, dont ${F0.format(nPea)} éligibles au PEA, avec leurs frais, leur contenu et leur émetteur.</p>
-    <section class="panel"><div class="etfq"><input type="search" id="eq" placeholder="Nom, indice, ticker ou ISIN : MSCI World, CW8, IE00B4L5Y983…" aria-label="Chercher un ETF" value="${esc(S.q)}" autocomplete="off"></div>
-      <div class="etfpre scroll-x" id="epre">${ETF_PRESETS.map(([l], i) => `<button type="button" data-i="${i}">${esc(l)}</button>`).join("")}</div>
-      <div class="etfflt" style="border-top:1px solid var(--line2,#EFECE6)">
-        <div><label for="ecat">Catégorie</label><select id="ecat">${opt("all", "Toutes", S.cat)}${cats.map(c => opt(c, ECAT[c], S.cat)).join("")}</select></div>
-        <div><label for="eenv">Compte</label><select id="eenv">${opt("all", "PEA ou compte-titres", S.env)}${opt("pea", "Éligibles au PEA", S.env)}${opt("cto", "Compte-titres seulement", S.env)}</select></div>
-        <div><label for="edist">Dividendes</label><select id="edist">${opt("all", "Peu importe", S.dist)}${opt("capitalisation", "Réinvestis (capitalisant)", S.dist)}${opt("distribution", "Versés (distribuant)", S.dist)}</select></div>
-        <div><label for="eem">Émetteur</label><select id="eem">${opt("all", "Tous", S.em)}${ems.map(m => opt(m, m, S.em)).join("")}</select></div>
-        <div><label for="efr">Frais par an</label><select id="efr">${opt("all", "Tous", S.fr)}${["0.1", "0.2", "0.3", "0.5"].map(x => opt(x, "Jusqu'à " + ETF_pctS(+x, 2), S.fr)).join("")}</select></div>
-      </div></section>
-    <div class="etfcount"><span id="ecount"></span><span><label for="etri" class="light" style="font-size:12.5px">Trier par </label><select id="etri" style="height:32px;border:1px solid var(--line,#E6E2DA);border-radius:8px;background:#fff;font:inherit;font-size:13px">${opt("frais", "Frais les plus bas", S.tri)}${opt("encours", "Encours le plus élevé", S.tri)}${opt("nom", "Nom", S.tri)}${opt("recent", "Plus récents", S.tri)}${opt("ancien", "Plus anciens", S.tri)}</select></span></div>
-    <section class="panel" id="elist"></section>
-    <p class="note">Frais courants, encours, éligibilité au PEA et cotations relevés chaque mois sur les sites des émetteurs (Amundi, iShares, SPDR, Invesco…). Le point de couleur compare les frais à la ${medBtn()} de la catégorie : vert parmi les moins chers, rouge plus cher que la plupart. Rien ici n'est un conseil d'achat.</p>`;
-  const render = () => {
-    const t = norm(S.q.trim()), tk = S.q.trim().toUpperCase();
-    let l = L.filter(e => (S.cat === "all" || e.categorie === S.cat) && (S.env === "all" || (S.env === "pea" ? e.pea === true : e.pea !== true)) && (S.dist === "all" || e.distribution === S.dist) && (S.em === "all" || e.issuer === S.em) && (S.fr === "all" || (e.ter != null && e.ter <= +S.fr + 1e-9)));
-    if (t) l = l.filter(e => e.isin === tk || (e.cotations || []).some(c => c.ticker === tk) || e.ticker === tk || t.split(/\s+/).every(w => norm(e.name + " " + (e.index || "") + " " + e.issuer + " " + (ECAT[e.categorie] || "") + " " + (e.ticker || "")).includes(w)));
-    const by = { frais: (a, b) => (a.ter ?? 9) - (b.ter ?? 9) || (b.encours || 0) - (a.encours || 0), encours: (a, b) => (b.encours || 0) - (a.encours || 0), nom: (a, b) => a.name.localeCompare(b.name, "fr"), recent: (a, b) => (b.creation || "").localeCompare(a.creation || ""), ancien: (a, b) => (a.creation || "9").localeCompare(b.creation || "9") }[S.tri] || (() => 0);
-    l.sort(by);
-    $("#ecount").textContent = l.length ? `${F0.format(l.length)} ETF${l.length > 1 ? "" : ""} trouvé${l.length > 1 ? "s" : ""}` : "";
-    $("#elist").innerHTML = l.length ? `<div class="etfrows">${l.slice(0, S.n).map(ETF_row).join("")}</div>${l.length > S.n ? `<button type="button" class="etfmore" id="emore">Afficher ${F0.format(Math.min(40, l.length - S.n))} ETF de plus (${F0.format(l.length - S.n)} restants)</button>` : ""}` : `<div class="empty">Aucun ETF ne correspond. Essayez un autre mot, ou retirez un filtre.</div>`;
-    const mo = $("#emore"); if (mo) mo.onclick = () => { S.n += 40; render(); };
-    $$("#epre button").forEach(b => { const p = ETF_PRESETS[+b.dataset.i][1]; b.classList.toggle("on", +b.dataset.i ? Object.entries(p).every(([k, v]) => S[k] === v) && (p.q ? true : !S.q) : !S.q && S.cat === "all" && S.env === "all"); });
-    const qs = new URLSearchParams(); for (const k of ["q", "cat", "env", "dist", "em", "fr", "tri"]) if (S[k] && S[k] !== "all" && !(k === "tri" && S[k] === "frais")) qs.set(k, S[k]);
-    try { history.replaceState(history.state, "", "/etf" + (qs.toString() ? "?" + qs : "")); } catch (e) { }
-  };
-  const set = (k, v) => { S[k] = v; S.n = 40; render(); };
-  let tm; $("#eq").oninput = ev => { clearTimeout(tm); tm = setTimeout(() => set("q", ev.target.value), 120); };
-  $("#ecat").onchange = ev => set("cat", ev.target.value); $("#eenv").onchange = ev => set("env", ev.target.value); $("#edist").onchange = ev => set("dist", ev.target.value);
-  $("#eem").onchange = ev => set("em", ev.target.value); $("#efr").onchange = ev => set("fr", ev.target.value); $("#etri").onchange = ev => set("tri", ev.target.value);
-  $("#epre").onclick = ev => { const b = ev.target.closest("button"); if (!b) return; const p = ETF_PRESETS[+b.dataset.i][1]; Object.assign(S, { q: "", cat: "all", env: "all", dist: "all", em: "all", fr: "all" }, p, { n: 40 }); $("#eq").value = S.q; ["cat", "env", "dist", "em", "fr"].forEach(k => { const el = $("#e" + (k === "cat" ? "cat" : k)); if (el) el.value = S[k]; }); render(); };
-  render();
-}
-
 /* ---------- Fiche d'un ETF ---------- */
 function ETF_phrase(e, c) {
   if (c && c.lines) {

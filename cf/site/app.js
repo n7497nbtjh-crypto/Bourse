@@ -641,23 +641,7 @@ const ECAT = { "actions-monde": "Monde", "actions-usa": "États-Unis", "actions-
 const COUNTRY = { US: "États-Unis", JP: "Japon", GB: "Royaume-Uni", FR: "France", CA: "Canada", DE: "Allemagne", CH: "Suisse", NL: "Pays-Bas", AU: "Australie", TW: "Taïwan", CN: "Chine", IN: "Inde", KR: "Corée du Sud", IT: "Italie", ES: "Espagne", SE: "Suède", DK: "Danemark", IE: "Irlande", BR: "Brésil", HK: "Hong Kong", SG: "Singapour", BE: "Belgique", FI: "Finlande", NO: "Norvège", ZA: "Afrique du Sud", SA: "Arabie saoudite", MX: "Mexique", IL: "Israël", AT: "Autriche", PT: "Portugal", LU: "Luxembourg", JE: "Jersey", BM: "Bermudes", KY: "Îles Caïmans" };
 const etfCard = e => `<a class="cocard" href="/etf/${e.id}"><div class="top">${logo({ name: e.issuer, domain: issuerDom(e) }, 44)}<div><div class="nm">${esc(e.name)}</div><div class="sec">${esc(ECAT[e.categorie] || "")} · ${esc(e.index)}</div></div></div>
   <div class="d">${esc(e.fiche ? e.fiche.quoi : "")}</div><div class="f"><span class="light">Frais <b class="num" style="color:var(--ink)">${pct((e.ter || 0) / 100, 2, false)}</b> par an</span><span class="tags">${e.pea ? `<span class="tag">PEA</span>` : ""}<span class="tag">${e.distribution === "distribution" ? "Distribue" : "Capitalise"}</span></span></div></a>`;
-let etfState = { cat: "all", pea: false };
-function pageEtfs() {
-  setTitle("Les ETF"); setNav("etf");
-  const cats = [...new Set(ETF.list.map(e => e.categorie))];
-  app.innerHTML = `<h1 class="pagetitle">Les ETF</h1><p class="pagesub">Un ETF (fonds indiciel coté) achète en une fois toutes les entreprises d'un indice. Voici les ${ETF.list.length} plus utilisés en France, avec leurs frais et leur composition.</p>
-    <section class="panel"><div class="filters" id="ecat"><button data-c="all">Tous</button>${cats.map(c => `<button data-c="${c}">${esc(ECAT[c] || c)}</button>`).join("")}</div>
-      <div class="pb" style="padding-top:10px;padding-bottom:10px"><label class="chk"><input type="checkbox" id="epea"> Seulement les ETF éligibles au PEA</label></div></section>
-    <div id="elist"></div>`;
-  const render = () => {
-    $$("#ecat button").forEach(b => b.classList.toggle("on", b.dataset.c === etfState.cat));
-    const l = ETF.list.filter(e => (etfState.cat === "all" || e.categorie === etfState.cat) && (!etfState.pea || e.pea)).sort((a, b) => (a.ter || 0) - (b.ter || 0));
-    $("#elist").innerHTML = l.length ? `<div class="cards">${l.map(etfCard).join("")}</div>` : `<section class="panel"><div class="empty">Aucun ETF pour ce choix.</div></section>`;
-  };
-  $("#ecat").onclick = e => { const b = e.target.closest("button"); if (b) { etfState.cat = b.dataset.c; render(); } };
-  $("#epea").checked = etfState.pea; $("#epea").onchange = e => { etfState.pea = e.target.checked; render(); };
-  render();
-}
+// pageEtfs : m/etfs4.js (liste des ETF v4, 3/11/2026)
 const ISINBY = {};
 // pageEtf : m/etf4.js (fiche ETF v4, 3/11/2026)
 

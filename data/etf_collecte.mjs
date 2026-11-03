@@ -42,7 +42,8 @@ function normalise(r) {
   const index = indexLisible(r.indexOfficiel || "", r.name);
   const listings = (r.listings || []).filter(l => l && l.ticker);
   const pick = PLACES_FR.map(p => listings.find(l => l.place === p && (!l.devise || /EUR/i.test(l.devise))) || listings.find(l => l.place === p)).find(Boolean);
-  const encours = r1(enEuros(r.aumM, r.aumCur || r.devise)) ?? r1(r.fondsM);
+  let encours = r1(enEuros(r.aumM, r.aumCur || r.devise)) ?? r1(r.fondsM);
+  if (encours > 160000) encours = null; // plus que le plus gros ETF européen (≈ 145 Md€) : devise mal lue chez l'émetteur (ex. SPDR MSCI Japan, 3/11), taille laissée vide
   return { isin: r.isin, name: nomCourt(r.name), nomOfficiel: r.name, issuer: r.issuer, index: index || null, indexOfficiel: r.indexOfficiel || null, categorie: categorie({ classe: r.classe, index: r.indexOfficiel || "", name: r.name }),
     ter: r.ter != null ? r2(r.ter) : null, pea: r.pea ?? null, distribution: r.distribution || null, replication: r.replication || null, methode: r.methode || null, devise: r.devise || null, encours, creation: r.creation || null,
     domicile: r.domicile ? ({ Ireland: "Irlande", France: "France", Luxembourg: "Luxembourg", Germany: "Allemagne", IE: "Irlande", LU: "Luxembourg", FR: "France", DE: "Allemagne" }[r.domicile] || r.domicile) : null,

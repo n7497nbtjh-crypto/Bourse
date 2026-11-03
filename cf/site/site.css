@@ -998,7 +998,6 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
 
 /* ==== m/etf.js (ligne 65 avant le 31/10) ==== */
 .eb{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:99px;border:1px solid var(--line,#E6E2DA);font-size:11.5px;font-weight:600;color:var(--grey);background:#fff;white-space:nowrap}
-.eb-g{border-color:#BFDCCB;background:#EEF6F1;color:#0E6B4A}.eb-o{border-color:#F1C9BC;background:#FBEFEA;color:#B4441F}
 
 
 
@@ -1034,29 +1033,30 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
 
 
 
-.etfrows{display:flex;flex-direction:column}
-.etfrow{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line2,#EFECE6);color:inherit;text-decoration:none}
-.etfrow:first-child{border-top:0}
-.etfrow:hover{background:#FAF8F4}
-.etfrow .nm{display:block;font-weight:600;font-size:14.5px;line-height:1.3}
-.etfrow .sb{display:block;font-size:12.5px;color:var(--grey);margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.etfrow .tg{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
-.etfrow .tg .eb{height:19px;font-size:10.5px;padding:0 7px}
-.etfrow .rt{text-align:right;white-space:nowrap}
-.etfrow .rt b{font-family:var(--mono);font-size:16px;font-weight:600;display:block}
-.etfrow .rt small{font-size:11.5px;color:var(--grey);display:block}
-.etfrow .rt i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:1px}
-.etfflt{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;padding:12px 16px}
-.etfflt label{display:block;font-size:11.5px;color:var(--grey);margin-bottom:3px;font-weight:600}
-.etfflt select{width:100%;height:36px;border:1px solid var(--line,#E6E2DA);border-radius:10px;background:#fff;padding:0 8px;font:inherit;font-size:13.5px;color:var(--ink)}
-.etfq{display:flex;gap:8px;padding:14px 16px 4px}
-.etfq input{flex:1;min-width:0;height:42px;border:1px solid var(--line,#E6E2DA);border-radius:12px;padding:0 14px;font:inherit;font-size:15px;background:#fff}
-.etfpre{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:8px 16px 14px}
-.etfpre::-webkit-scrollbar{display:none}
-.etfpre button{flex:none;height:30px;padding:0 12px;border-radius:99px;border:1px solid var(--line,#E6E2DA);background:#fff;font:inherit;font-size:13px;cursor:pointer;color:var(--ink)}
-.etfpre button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.etfcount{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 10px;font-size:13.5px;color:var(--grey);flex-wrap:wrap}
-.etfmore{display:block;width:100%;height:46px;border:0;border-top:1px solid var(--line2,#EFECE6);background:#FCFBF8;font:inherit;font-weight:600;cursor:pointer;color:var(--ink)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1073,17 +1073,8 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
 
 /* noms d'indice longs dans le classement de l'accueil (m/orchestre.js) : une ligne, coupée proprement */
 a.orcrow span.t small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;white-space:normal;overflow:hidden}
-@media (max-width:860px){
- 
- .etfflt{grid-template-columns:1fr 1fr}
-}
-@media (max-width:520px){
- 
- 
- .etfrow{padding:12px;grid-template-columns:30px minmax(0,1fr) auto;gap:10px}
- .etfrow .sb{white-space:normal}
- 
-}
+
+
 
 /* ==== m/etf.js (ligne 432 avant le 31/10) ==== */
 
@@ -3158,24 +3149,24 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 
 /* ==== m/design.js (ligne 468 avant le 31/10) ==== */
 @media (max-width:760px){
-  .etf-flt-p{margin:10px 0 0}#etf-flt-btn{min-height:44px}
+  #etf-flt-btn{min-height:44px}
   #etf-flt-panel{display:none;position:fixed;left:0;right:0;bottom:0;z-index:70;max-height:85vh;overflow:auto;background:#fff;border-top:1px solid var(--rule);border-radius:14px 14px 0 0;padding:12px 16px calc(16px + env(safe-area-inset-bottom));box-shadow:0 -12px 32px -12px rgba(17,18,20,.35)}
-  html.etf-flt-open #etf-flt-panel{display:block}html.etf-flt-open .etf-flt-bg{display:block}
-  .etf-flt-bg{display:none;position:fixed;inset:0;z-index:69;background:rgba(17,18,20,.35)}
-  #etf-flt-panel>.etf-flt-h{display:flex;flex-direction:row;justify-content:space-between;align-items:center;margin:0 0 8px}.etf-flt-h b{font-size:17px}.etf-flt-x{border:0;background:none;font-size:20px;width:44px;height:44px;cursor:pointer}
+  
+  
+  
   #etf-flt-panel>div{display:flex;flex-direction:column;gap:4px;margin:0 0 10px}#etf-flt-panel select{min-height:44px;font-size:16px}
-  .etf-flt-ok{margin:6px 0 0}.etf-flt-ok .btn{width:100%;min-height:46px}
-  .etfcount>span:last-child{display:none}
+  
+  
 }
 
 /* ==== m/design.js (ligne 484 avant le 31/10) ==== */
 @media (max-width:600px){footer .navpied4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
-body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
+body:has(.mpanel.open) #orciab{display:none}
 @media (max-width:760px){
   small,.src,.note,.light,.muted,.kick,.sub,.rf-no,.tbx-unit,.f2-sub,.pa2 small,.rf6-jg small,.tbx-date small,.mk-porte small,.ot-k span,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.acc-cat,.tag{font-size:12px!important}
   .num,.rf-kt b,td.num,.tile .v,.pxhead .p,.tbx-val{font-size:max(13px,1em)!important}
-  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.ot-k,.mk-porte,details.acc>summary,.etfpre button,.cell-co,.navfav,.esptabs a{min-height:44px}
-  .chips button,.filters button,.chip,.pill,.nfil button,.o2-seg button,.etfpre button{display:inline-flex;align-items:center;padding-top:8px;padding-bottom:8px}
+  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.ot-k,.mk-porte,details.acc>summary,.cell-co,.navfav,.esptabs a{min-height:44px}
+  .chips button,.filters button,.chip,.pill,.nfil button,.o2-seg button{display:inline-flex;align-items:center;padding-top:8px;padding-bottom:8px}
   a.lnk,a.more{display:inline-block;padding:9px 0;line-height:1.4}
   .def{min-height:44px;display:inline-flex;align-items:center}
 }

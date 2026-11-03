@@ -171,16 +171,7 @@ function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, 
   };
   /* styles : voir site.css */
 })();
-/* Page ETF : trois entrées en tête (30/10) */
-(function () {
-  const f0 = window.pageEtfs; if (typeof f0 !== "function") return;
-  window.pageEtfs = function () {
-    const r = f0.apply(this, arguments);
-    const sub = $(".pagesub", app);
-    if (sub && !$(".ent-plus", app)) sub.insertAdjacentHTML("afterend", `<div class="ent-plus"><a href="/academie/placements/etf"><b>Comprendre un ETF</b><span>Une leçon de trois minutes : ce que c'est, ce que ça coûte</span></a><a href="/etf?pea=1"><b>Éligibles au PEA</b><span>Ceux qu'un PEA peut contenir, avec leurs frais</span></a><a href="/outils/recouvrement"><b>Deux ETF se recouvrent-ils ?</b><span>Positions en double, secteurs et devises combinés</span></a></div>`);
-    return r;
-  };
-})();
+/* Liste des ETF : retouches retirées le 3/11/2026, la page est refaite dans m/etfs4.js. */
 /* styles : voir site.css */
 /* styles : voir site.css */
 /* Premium : liste d'attente (30/10) */
@@ -194,31 +185,6 @@ function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, 
 /* Lot 6 : un seul style de badge (vert, gris, rouge). Les catégories d'annonces (résultats, dividende…) sont grises ; seul « info privilégiée » reste signalé. */
 /* styles : voir site.css */
 
-/* Lot C (30/10) : /etf sur téléphone. Recherche et filtres rapides visibles ; les menus déroulants et le tri derrière un bouton
-   « Filtres (n) » qui ouvre un panneau du bas (fermé par ✕, Échap ou un toucher à côté). Sur ordinateur, rien ne change. */
-(function () {
-  const e0 = window.pageEtfs; if (typeof e0 !== "function") return;
-  const tel = () => matchMedia("(max-width:760px)").matches;
-  const nActifs = () => $$(".etfflt select, #etri").filter(s => s.value && s.value !== "all" && s.value !== (s.id === "etri" ? s.options[0].value : "all")).length;
-  const maj = () => { const b = $("#etf-flt-btn"); if (b) { const n = nActifs(); b.textContent = `Filtres${n ? ` (${n})` : ""}`; } };
-  const fermer = () => { document.documentElement.classList.remove("etf-flt-open"); const b = $("#etf-flt-btn"); if (b) { b.setAttribute("aria-expanded", "false"); maj(); } };
-  window.pageEtfs = function () {
-    const r = e0.apply(this, arguments);
-    if (!tel() || $("#etf-flt-btn", app)) return r;
-    const flt = $(".etfflt", app), pre = $("#epre", app), tri = $("#etri", app); if (!flt || !pre) return r;
-    pre.insertAdjacentHTML("afterend", `<p class="etf-flt-p"><button type="button" class="btn ghost" id="etf-flt-btn" aria-expanded="false" aria-controls="etf-flt-panel">Filtres</button></p>`);
-    flt.id = "etf-flt-panel"; flt.insertAdjacentHTML("afterbegin", `<div class="etf-flt-h"><b>Filtres</b><button type="button" class="etf-flt-x" aria-label="Fermer">✕</button></div>`);
-    if (tri && tri.parentElement) { const w = document.createElement("div"); w.innerHTML = `<label for="etri">Trier par</label>`; w.appendChild(tri); flt.appendChild(w); }
-    flt.insertAdjacentHTML("beforeend", `<p class="etf-flt-ok"><button type="button" class="btn" id="etf-flt-ok">Voir les résultats</button></p>`);
-    document.body.insertAdjacentHTML("beforeend", `<div class="etf-flt-bg" id="etf-flt-bg"></div>`);
-    $("#etf-flt-btn").onclick = () => { const o = !document.documentElement.classList.contains("etf-flt-open"); document.documentElement.classList.toggle("etf-flt-open", o); $("#etf-flt-btn").setAttribute("aria-expanded", String(o)); };
-    $(".etf-flt-x", flt).onclick = fermer; $("#etf-flt-ok").onclick = fermer; $("#etf-flt-bg").onclick = fermer;
-    document.addEventListener("keydown", e => { if (e.key === "Escape") fermer(); });
-    flt.addEventListener("change", maj); maj();
-    return r;
-  };
-  /* styles : voir site.css */
-})();
 /* Lot C (30/10) : téléphone. Pied de page en deux colonnes sous 600 px ; aucun texte sous 12 px (13 px pour ce qui porte un
    chiffre) ; cibles tactiles d'au moins 44 px. Les classes connues sont traitées en CSS ; un passage JS, après chaque page,
    relève ce qui resterait en dessous (le site a des centaines de petits libellés hérités). */
