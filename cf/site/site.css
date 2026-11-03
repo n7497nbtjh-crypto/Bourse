@@ -490,7 +490,7 @@ svg.bars{width:100%;height:auto;display:block;max-height:260px;max-width:760px;m
 .msg p{margin:4px 0 2px;overflow-wrap:anywhere}
 .mh{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px}
 .mk{font-size:11px;font-weight:600;border-radius:99px;padding:1px 8px;background:var(--soft)}
-.mk-idee{background:#E3F2E9;color:#0F6B3E}.mk-question{background:#EEF1F6;color:#2B4C7E}.mk-analyse{background:#F3EAF7;color:#7C3A8F}
+
 .ma{display:flex;gap:14px;font-size:12.5px}
 .ma .linkbtn{font-size:12.5px}
 .chat textarea{width:100%;border:1px solid var(--rule);border-radius:10px;padding:9px;font:inherit;resize:vertical}
@@ -3120,7 +3120,7 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 .prem-bientot{margin:0;font-weight:600;color:var(--grey)}.prem-att{margin-top:14px;border-left:3px solid var(--lime)}.prem-attm{margin:8px 0 0;font-size:14px;min-height:1.2em}.prem-attm.ok{color:var(--g)}.prem-attm.ko{color:var(--o)}.ptab td:nth-child(3) b{font-weight:600}
 
 /* ==== m/design.js (ligne 302 avant le 31/10) ==== */
-.mk-portes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 30px}.mk-porte{display:grid;grid-template-columns:28px minmax(0,1fr);grid-template-areas:"i t" "i n" "d d";gap:2px 10px;padding:16px 18px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none}.mk-porte svg{grid-area:i;width:26px;height:26px;margin-top:2px}.mk-porte b{grid-area:t;font-size:17px}.mk-porte small{grid-area:n;font-family:var(--mono);font-size:12.5px;color:var(--grey)}.mk-porte span{grid-area:d;margin-top:8px;font-size:13.5px;line-height:1.45;color:var(--grey)}.mk-porte:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}@media (max-width:900px){.mk-portes{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:480px){.mk-portes{grid-template-columns:minmax(0,1fr)}}
+
 
 /* ==== m/design.js (ligne 333 avant le 31/10) ==== */
 
@@ -3163,9 +3163,9 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 @media (max-width:600px){footer .navpied4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 body:has(.mpanel.open) #orciab{display:none}
 @media (max-width:760px){
-  small,.src,.note,.light,.muted,.kick,.sub,.rf-no,.tbx-unit,.f2-sub,.pa2 small,.rf6-jg small,.tbx-date small,.mk-porte small,.ot-k span,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.acc-cat,.tag{font-size:12px!important}
+  small,.src,.note,.light,.muted,.kick,.sub,.rf-no,.tbx-unit,.f2-sub,.pa2 small,.rf6-jg small,.tbx-date small,.ot-k span,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.acc-cat,.tag{font-size:12px!important}
   .num,.rf-kt b,td.num,.tile .v,.pxhead .p,.tbx-val{font-size:max(13px,1em)!important}
-  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.ot-k,.mk-porte,details.acc>summary,.cell-co,.navfav,.esptabs a{min-height:44px}
+  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.ot-k,details.acc>summary,.cell-co,.navfav,.esptabs a{min-height:44px}
   .chips button,.filters button,.chip,.pill,.nfil button,.o2-seg button{display:inline-flex;align-items:center;padding-top:8px;padding-bottom:8px}
   a.lnk,a.more{display:inline-block;padding:9px 0;line-height:1.4}
   .def{min-height:44px;display:inline-flex;align-items:center}

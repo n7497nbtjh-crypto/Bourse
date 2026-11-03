@@ -2013,22 +2013,7 @@ function moversHTML(region = moverRegion) {
   return `<div class="mvs"><div><p class="kick">Les plus fortes hausses</p>${up.map(moverRow).join("") || `<p class="muted">Aucune hausse.</p>`}</div><div><p class="kick">Les plus fortes baisses</p>${dn.map(moverRow).join("") || `<p class="muted">Aucune baisse.</p>`}</div></div>
     <div class="synth" style="margin-top:12px"><p><b>Comment lire ces mouvements ?</b> Pour une grande entreprise, une variation de plus de 5 % en une journée est importante : elle suit presque toujours une annonce (résultats, prévisions, rachat, changement de dirigeant) ou une nouvelle sur son secteur. Ouvrez la ligne pour voir l'actualité. Un mouvement d'une journée ne dit rien de la solidité de l'entreprise : ses comptes, eux, ne changent qu'à chaque publication.</p></div>`;
 }
-async function pageMarches() {
-  setTitle("Les marchés aujourd'hui"); setNav("mkt");
-  await Promise.all([PXP, loadAna()]);
-  const portes = [ // lot 2 (30/10) : la porte « Marchés », quatre entrées visuelles, puis les indices et les mouvements du jour
-    ["/entreprises", "Entreprises", `${F0.format(R.companies.length)} fiches`, "Chacune face à la médiane de son secteur.", "M4 20V9l8-5 8 5v11M9 20v-6h6v6"],
-    ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, "Frais, PEA, ce qu'ils contiennent vraiment.", "M4 18l5-6 4 3 7-9M4 4v16h16"],
-    ["/actualites", "Actualité et agenda", "chaque jour", "Annonces officielles lues et chiffrées, dates à venir.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
-    ["/classements", "Classements", "par critère", "Les mieux placées sur la marge, la dette, le prix, le dividende.", "M4 20h16M7 20V10M12 20V4M17 20v-8"],
-  ];
-  app.innerHTML = `<h1 class="pagetitle">Marchés</h1><p class="pagesub">Les entreprises, les ETF, l'actualité et les classements, puis ce que font les indices aujourd'hui.</p>
-    <div class="mk-portes">${portes.map(([h, t, n, d, ic]) => `<a class="mk-porte" href="${h}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${ic}"/></svg><b>${t}</b><small>${n}</small><span>${d}</span></a>`).join("")}</div>
-    <h2 class="subh">Aujourd'hui</h2><p class="pagesub" style="margin-top:0">Les grands indices et les entreprises qui ont le plus bougé dans la journée, parmi les ${F0.format(R.companies.length)} suivies (valeur en Bourse supérieure à 2 milliards d'euros). Cours différés.</p>
-    <section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section>
-    <section class="panel"><div class="ph"><h2>Les plus forts mouvements du jour</h2><div class="chips" id="mvr">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"], ["MONDE", "Reste du monde"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === moverRegion ? "on" : ""}">${l}</button>`).join("")}</div></div><div class="pb" id="mvb">${moversHTML()}</div></section>`;
-  $("#mvr").onclick = e => { const b = e.target.closest("button"); if (!b) return; moverRegion = b.dataset.r; $$("#mvr button").forEach(x => x.classList.toggle("on", x === b)); $("#mvb").innerHTML = moversHTML(); };
-}
+// pageMarches : m/marches4.js (Marchés v4, 3/11/2026)
 
 /* ---------- Comparaison : montants convertis en euros ---------- */
 const eurM = (v, cur) => { const e = toEur(v, cur); return e == null || !isFinite(e) ? null : e; }; // en millions
