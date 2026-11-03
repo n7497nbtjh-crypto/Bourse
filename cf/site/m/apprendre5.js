@@ -11,14 +11,10 @@ const AP5_P = (v, d = 1) => (v > 0 ? "+" : v < 0 ? "−" : "") + ekFr(Math.abs(v
 function ap5Etat() { try { return JSON.parse(localStorage.getItem("bilan.apprendre5") || "{}"); } catch (e) { return {}; } }
 function ap5Note(k) { const s = ap5Etat(); s[k] = 1; try { localStorage.setItem("bilan.apprendre5", JSON.stringify(s)); } catch (e) { } }
 function ap5Chips(nom, ids, on) { return `<div class="ap5-chips scroll-x" data-ap5-chips="${nom}">${ids.map(id => RBY[id] ? `<button type="button" data-id="${id}" class="${id === on ? "on" : ""}">${f4Logo(RBY[id], null, true)}${esc(RBY[id].name)}</button>` : "").join("")}</div>`; }
-function ap5Quiz(k, q, bon, oui, non) { // vrai ou faux, corrigé tout de suite
-  return `<div class="ap5-q" data-ap5-q="${k}" data-bon="${bon}"><span class="ap5-qk">Vrai ou faux ?</span><p>${q}</p><div><button type="button" data-r="v">Vrai</button><button type="button" data-r="f">Faux</button></div>
-    <p class="ap5-qr" hidden data-oui="${esc(oui)}" data-non="${esc(non)}"></p></div>`;
-}
 function ap5Chap(n, k, titre, corps, retenir, quiz, plus) {
   return `<section class="ap5-ch" id="c${n}" data-k="${k}"><div class="ap5-n"><b>${n}</b></div><div class="ap5-c">
     <span class="ap5-kick">Idée ${n} sur 7</span><h2>${titre}</h2>${corps}
-    <div class="ap5-ret"><span class="ek-stk2">À retenir</span><p>${retenir}</p></div>${quiz}
+    <div class="ap5-ret"><span class="ek-stk2">À retenir</span><p>${retenir}</p></div>
     ${plus ? `<a class="ap5-plus" href="${plus[0]}">${plus[1]} →</a>` : ""}</div></section>`;
 }
 async function pageApprendre5() {
@@ -33,52 +29,53 @@ async function pageApprendre5() {
   const fait = Object.keys(S).length;
   app.innerHTML = `<div class="ek ek-page ap5">
     <section class="ek-hero"><span class="mc-stk">Apprendre</span><h1 class="ag4-t">La Bourse en 7 idées, avec de vraies entreprises.</h1>
-      <p class="mc-sub">Un quart d'heure, dans l'ordre. Vous manipulez les chiffres, vous vérifiez ce que vous avez compris. Les comptes sont ceux publiés par les entreprises.</p>
-      <div class="ap4-go"><a class="ap4-btn" href="#c${Math.min(7, fait + 1)}">${fait ? `Continuer : idée ${Math.min(7, fait + 1)}` : "Commencer"} →</a><span>${fait ? `${fait} idée${fait > 1 ? "s" : ""} sur 7 comprise${fait > 1 ? "s" : ""}` : "Sans inscription, progression gardée sur cet appareil"}</span></div></section>
-    <nav class="ap5-prog" aria-label="Les 7 idées">${["Réserve", "Action", "Lire", "Prix", "Diversifier", "Frais", "Temps"].map((t, i) => `<a href="#c${i + 1}" data-c="${i + 1}"><i>${i + 1}</i><span>${t}</span></a>`).join("")}</nav>
+      <p class="mc-sub">Un quart d'heure, dans l'ordre. Vous manipulez les chiffres ; les comptes sont ceux publiés par les entreprises.</p>
+      <div class="ap4-go"><a class="ap4-btn" href="#c${Math.min(7, fait + 1)}">${fait ? `Continuer : idée ${Math.min(7, fait + 1)}` : "Commencer"} →</a><span>${fait ? `${fait} idée${fait > 1 ? "s" : ""} sur 7 lue${fait > 1 ? "s" : ""}` : "Sans inscription, progression gardée sur cet appareil"}</span></div></section>
+    <nav class="ap5-prog" aria-label="Les 7 idées">${["Réserve", "Action", "Diversifier", "Frais", "Temps", "Lire", "Prix"].map((t, i) => `<a href="#c${i + 1}" data-c="${i + 1}"><i>${i + 1}</i><span>${t}</span></a>`).join("")}</nav>
     ${ap5Chap(1, "reserve", "D'abord, une réserve.", `<p class="ap5-lead">Avant d'acheter une action, gardez de côté de quoi faire face à un imprévu, sur une épargne disponible à tout moment.</p>
       <div class="ap5-box"><label class="ap5-sl"><span>Vos dépenses par mois</span><input type="range" id="ap5dep" min="500" max="5000" step="100" value="1500"><b id="ap5depv"></b></label>
         <div class="ap5-mois" id="ap5mois">${[1, 2, 3, 4, 5, 6].map(m => `<span class="${m <= 3 ? "a" : "b"}"><small>mois ${m}</small></span>`).join("")}</div>
         <p class="ap5-big" id="ap5res"></p></div>`,
       "Trois à six mois de dépenses, à part. L'argent placé en Bourse est celui dont vous n'aurez pas besoin avant plusieurs années.",
-      ap5Quiz("reserve", "Votre voiture tombe en panne : 1 200 € de réparation. C'est le moment de vendre vos actions.", "f", "Exact : c'est le rôle de la réserve. Vendre dans l'urgence oblige parfois à vendre au mauvais moment.", "Non : c'est le rôle de la réserve. Vendre dans l'urgence oblige parfois à vendre au mauvais moment."),
+      "",
       ["/academie/bases/epargne-precaution", "L'épargne de précaution en détail"])}
     ${ap5Chap(2, "action", "Une action, c'est un morceau d'entreprise.", `<p class="ap5-lead">Chaque action donne droit à une part du bénéfice. L'entreprise en verse une partie (le dividende) et garde le reste pour investir.</p>
       <div class="ap5-box">${ap5Chips("act", ids, ex)}<label class="ap5-sl"><span>Nombre d'actions</span><input type="range" id="ap5n" min="1" max="50" value="10"><b id="ap5nv"></b></label>
         <div id="ap5act"></div></div>`,
       "Acheter une action, c'est devenir copropriétaire : vous profitez des bénéfices, et vous subissez les pertes.",
-      ap5Quiz("action", "Si l'entreprise ne verse pas de dividende, votre action ne vous rapporte rien.", "f", "Exact : le bénéfice gardé est réinvesti dans l'entreprise. S'il la fait grandir, la valeur de votre part peut monter.", "Non : le bénéfice gardé est réinvesti dans l'entreprise. S'il la fait grandir, la valeur de votre part peut monter."),
+      "",
       ["/lexique#action", "L'action dans le lexique"])}
-    ${ap5Chap(3, "lire", "Lire une entreprise : trois questions.", `<p class="ap5-lead">Vend-elle plus qu'avant ? Combien garde-t-elle sur ce qu'elle vend ? Que doit-elle ? Chaque réponse se lit face à ses concurrentes.</p>
-      <div class="ap5-box">${ap5Chips("lire", ids, ex)}<div class="ap5-trois" id="ap5lire"></div><p class="ap5-src" id="ap5lires"></p></div>`,
-      "Un chiffre seul ne dit rien : 10 % de marge, c'est beaucoup dans la grande distribution et peu dans le luxe. Comparez toujours au même métier.",
-      ap5Quiz("lire", "Une marge de 10 % peut être bonne dans un métier et faible dans un autre.", "v", "Exact : c'est pour cela que chaque chiffre du site est placé face à la médiane des entreprises du même métier.", "Si : c'est pour cela que chaque chiffre du site est placé face à la médiane des entreprises du même métier."),
-      ex ? [`/entreprise/${ex}`, `La fiche complète de ${RBY[ex].name}`] : null)}
-    ${ap5Chap(4, "prix", "Le prix : combien d'années de bénéfices ?", `<p class="ap5-lead">Le PER divise le prix de l'action par le bénéfice d'une action. Il dit combien d'années du bénéfice actuel vous payez d'avance.</p>
-      <div class="ap5-box">${ap5Chips("prix", ids, ex)}<div id="ap5prix"></div></div>`,
-      "Un PER élevé n'est pas une erreur : les acheteurs parient sur un bénéfice qui va grandir. S'il ne grandit pas, le prix peut baisser.",
-      ap5Quiz("prix", "Un PER de 30 veut dire que l'action va monter de 30 %.", "f", "Exact : c'est un prix, pas une prévision. Il dit combien vous payez pour un euro de bénéfice d'aujourd'hui.", "Non : c'est un prix, pas une prévision. Il dit combien vous payez pour un euro de bénéfice d'aujourd'hui."),
-      ["/lexique#per", "Le PER dans le lexique"])}
-    ${ap5Chap(5, "divers", "Ne pas tout miser sur une seule.", `<p class="ap5-lead">Une entreprise peut faire faillite. Plus vous en détenez, moins une mauvaise surprise pèse sur votre argent.</p>
+    ${ap5Chap(3, "divers", "Ne pas tout miser sur une seule.", `<p class="ap5-lead">Une entreprise peut faire faillite. Plus vous en détenez, moins une mauvaise surprise pèse sur votre argent.</p>
       <div class="ap5-box"><div class="ap5-seg" id="ap5div">${[1, 10, 100, mw && mw.compo && mw.compo.n || 1000].map((n, i) => `<button type="button" data-n="${n}" class="${i === 1 ? "on" : ""}">${F0.format(n)} entreprise${n > 1 ? "s" : ""}</button>`).join("")}</div>
         <div class="ap5-dots" id="ap5dots"></div><p class="ap5-big" id="ap5divr"></p>
         ${mw ? `<p class="ap5-etf">Un ETF qui suit l'indice MSCI World, comme <a href="/etf/${esc(mw.id)}">${esc(mw.name)}</a>, en détient <b>${F0.format(mw.compo.n)}</b> en une seule ligne, pour <b>${ekFr(mw.ter, 2)} %</b> de frais par an.</p>` : ""}</div>`,
       "Diversifier ne supprime pas le risque que tout le marché baisse ensemble. Cela supprime celui qu'une seule entreprise vous coûte tout.",
-      ap5Quiz("divers", "Un ETF de plus de 1 000 entreprises peut quand même baisser fortement.", "v", "Exact : quand toute la Bourse baisse, l'ETF baisse aussi. En 2008, le MSCI World a perdu 36,9 % en euros.", "Si : quand toute la Bourse baisse, l'ETF baisse aussi. En 2008, le MSCI World a perdu 36,9 % en euros."),
+      "",
       ["/academie/placements/etf", "Comprendre un ETF"])}
-    ${ap5Chap(6, "frais", "Les frais, discrets mais têtus.", `<p class="ap5-lead">Un pour cent par an semble peu. Mais les frais se prélèvent chaque année, sur une somme qui grandit.</p>
+    ${ap5Chap(4, "frais", "Les frais, discrets mais têtus.", `<p class="ap5-lead">Un pour cent par an semble peu. Mais les frais se prélèvent chaque année, sur une somme qui grandit.</p>
       <div class="ap5-box"><label class="ap5-sl"><span>Frais par an</span><input type="range" id="ap5f" min="0" max="2.5" step="0.05" value="1.5"><b id="ap5fv"></b></label>
         <div id="ap5frais"></div><p class="ap5-src">Exemple : 200 € par mois pendant 20 ans, avec l'hypothèse d'une hausse de 5 % par an avant frais. Ce n'est pas une prévision.${ter.n ? ` Repère : la médiane des frais de ${ter.n} ETF actions monde suivis par le site est de ${ekFr(ter.v, 2)} % par an.` : ""}</p></div>`,
       "À rendement égal, les frais font la différence sur la durée. Regardez les frais du fonds et ceux du courtier avant d'acheter.",
-      ap5Quiz("frais", "Sur l'exemple, passer de 1,5 % à 0,2 % de frais par an laisse plus de 10 000 € de plus au bout de 20 ans.", "v", "Exact : 10 556 € d'écart, pour les mêmes 48 000 € versés.", "Si : 10 556 € d'écart, pour les mêmes 48 000 € versés."),
+      "",
       ["/simulateurs/frais", "Calculer avec vos frais"])}
-    ${ap5Chap(7, "temps", "Le temps fait le travail, les baisses font partie du voyage.", `<p class="ap5-lead">Sur ${ans.length} années, les actions du monde ont monté ${hausse} fois et baissé ${ans.length - hausse} fois. Choisissez une année de départ.</p>
+    ${ap5Chap(5, "temps", "Le temps fait le travail, les baisses font partie du voyage.", `<p class="ap5-lead">Sur ${ans.length} années, les actions du monde ont monté ${hausse} fois et baissé ${ans.length - hausse} fois. Choisissez une année de départ.</p>
       <div class="ap5-box"><div class="ap5-ans" id="ap5ans">${ans.map(y => `<button type="button" data-y="${y}" class="${COMM_MW[y] >= 0 ? "g" : "r"}" title="${y} : ${AP5_P(COMM_MW[y])}" style="--h:${Math.min(100, Math.abs(COMM_MW[y]) * 2)}%"><i></i><small>${String(y).slice(2)}</small></button>`).join("")}</div>
         <div id="ap5tps"></div><p class="ap5-src">MSCI World en euros, dividendes réinvestis, année par année (fiches MSCI ; avant 2012, converti depuis le dollar par ENKLAIR). 100 € investis chaque mois. Les performances passées ne préjugent pas des performances futures.</p></div>`,
       "Personne ne sait quand viendra la prochaine baisse. Ce qui a compté, c'est de rester investi assez longtemps pour la traverser.",
-      ap5Quiz("temps", "Il faut attendre le bon moment pour commencer à investir.", "f", "Exact : personne ne le connaît à l'avance. Investir un peu chaque mois évite de tout miser sur un seul moment.", "Non : personne ne le connaît à l'avance. Investir un peu chaque mois évite de tout miser sur un seul moment."),
+      "",
       ["/outils/si-javais", "Et si j'avais investi ?"])}
-    <section class="ek-sec ap5-fin" id="fin"><span class="ek-stk2 b">Et maintenant</span><h2>Vous avez l'essentiel. À vous de lire.</h2>
+    ${ap5Chap(6, "lire", "Lire une entreprise : trois premières questions.", `<p class="ap5-lead">Pour qui veut choisir ses entreprises lui-même. Vend-elle plus qu'avant ? Combien garde-t-elle sur ce qu'elle vend ? Que doit-elle ? Chaque réponse se lit face à ses concurrentes.</p>
+      <div class="ap5-box">${ap5Chips("lire", ids, ex)}<div class="ap5-trois" id="ap5lire"></div><p class="ap5-src" id="ap5lires"></p></div>
+      <div class="ap5-lim"><b>Ce que ces chiffres ne disent pas</b><ul><li>S'ils vont durer : ce sont les comptes d'une année passée, pas ceux des prochaines.</li><li>Pourquoi ils sont là : un produit qui se vend bien, une année exceptionnelle, une acquisition.</li><li>Ce qui menace l'entreprise : concurrents, réglementation, dépendance à un client ou à un pays.</li><li>Qui la dirige, et comment.</li></ul><p>Trois chiffres servent à comprendre une entreprise, pas à décider seuls d'un achat. La fiche de chaque entreprise ajoute son métier, son actualité et tous ses comptes.</p></div>`,
+      "Un chiffre seul ne dit rien : 10 % de marge, c'est beaucoup dans la grande distribution et peu dans le luxe. Comparez toujours au même métier.",
+      "",
+      ex ? [`/entreprise/${ex}`, `La fiche complète de ${RBY[ex].name}`] : null)}
+    ${ap5Chap(7, "prix", "Le prix : combien d'années de bénéfices ?", `<p class="ap5-lead">Le PER divise le prix de l'action par le bénéfice d'une action. Il dit combien d'années du bénéfice actuel vous payez d'avance.</p>
+      <div class="ap5-box">${ap5Chips("prix", ids, ex)}<div id="ap5prix"></div></div>`,
+      "Un PER élevé n'est pas une erreur : les acheteurs parient sur un bénéfice qui va grandir. S'il ne grandit pas, le prix peut baisser.",
+      "",
+      ["/lexique#per", "Le PER dans le lexique"])}
+    <section class="ek-sec ap5-fin" id="fin"><span class="ek-stk2 b">Et maintenant</span><h2>Vous avez les bases. La suite se lit sur le site.</h2>
       <div class="ou4-g">${[[ex ? `/entreprise/${ex}` : "/entreprises", "listes", "Lire une vraie fiche", "Le verdict, les cinq étapes, face aux concurrentes."], ["/etf", "epargne", "Trouver un ETF", "Frais, contenu et performance, face à la médiane."], ["/simulateurs/epargne", "impot", "Simuler votre épargne", "Vos montants, trois scénarios tirés de l'histoire."]].map(([h, k, n, d]) => `<a class="ou4-c" href="${h}">${ou4Ic(k)}<b>${esc(n)}</b><span>${esc(d)}</span><em>Ouvrir →</em></a>`).join("")}</div></section>
     <section class="ek-sec"><span class="ek-stk2 b">À garder sous la main</span><h2>Les repères, vous en aurez besoin.</h2><div class="ou4-g">${garder.map(([h, k, n, d]) => `<a class="ou4-c" href="${h}">${ou4Ic(k)}<b>${esc(n)}</b><span>${esc(d)}</span><em>Ouvrir →</em></a>`).join("")}</div></section>
     <p class="ek-note">Contenu pédagogique et général, pas un conseil en investissement. Les entreprises citées sont des exemples, pas une sélection.</p></div>`;
@@ -124,10 +121,10 @@ function ap5Brancher(ids, ex, mw) {
     const c = e.target.closest("[data-ap5-chips] button"); if (c) { const k = c.parentNode.dataset.ap5Chips; st[k] = c.dataset.id; $$("button", c.parentNode).forEach(b => b.classList.toggle("on", b === c)); ({ act: rAct, lire: rLire, prix: rPrix })[k](); return; }
     const d = e.target.closest("#ap5div button"); if (d) { $$("#ap5div button").forEach(b => b.classList.toggle("on", b === d)); rDiv(+d.dataset.n); return; }
     const y = e.target.closest("#ap5ans button"); if (y) { rTps(Math.min(+y.dataset.y, COMM_FIN - 4)); return; }
-    const q = e.target.closest(".ap5-q button"); if (q) { const box = q.closest(".ap5-q"), ok = q.dataset.r === box.dataset.bon, r = $(".ap5-qr", box);
-      $$("button", box).forEach(b => { b.disabled = true; b.classList.toggle("bon", b.dataset.r === box.dataset.bon); b.classList.toggle("faux", b === q && !ok); });
-      r.hidden = false; r.className = "ap5-qr " + (ok ? "g" : "r"); r.textContent = ok ? r.dataset.oui : r.dataset.non; if (ok) { ap5Note(box.dataset.ap5Q); ap5Prog(); } }
+
   };
+  if ("IntersectionObserver" in window) { const io = new IntersectionObserver(L => L.forEach(x => { if (x.isIntersecting) { ap5Note(x.target.dataset.k); ap5Prog(); } }), { threshold: 0.6 });
+    $$(".ap5-ch .ap5-ret").forEach(r => { r.dataset.k = r.closest(".ap5-ch").dataset.k; io.observe(r); }); } // une idée est comptée lue quand sa phrase « À retenir » est à l'écran
   ap5Prog();
 }
 function ap5Prog() { const S = ap5Etat(); $$(".ap5-prog a").forEach(a => { const ch = document.getElementById("c" + a.dataset.c); a.classList.toggle("ok", !!(ch && S[ch.dataset.k])); }); }

@@ -1169,13 +1169,10 @@ html #app .ek.ap5 .ap5-ans button{position:relative;height:100%;padding:0;border
 .ek.ap5 .ap5-ret{display:flex;gap:14px;align-items:flex-start;margin:20px 0 0;max-width:900px}
 .ek.ap5 .ap5-ret .ek-stk2{flex:none;display:inline-block;font:800 13px "Bricolage Grotesque",Inter,sans-serif;padding:4px 10px;border-radius:9px;border:2px solid var(--ek-ink);box-shadow:2px 2px 0 var(--ek-ink);transform:rotate(-3deg);background:var(--ek-y)}
 .ek.ap5 .ap5-ret p{font:700 16px/1.45 Inter;margin:0}
-.ek.ap5 .ap5-q{margin-top:18px;max-width:900px;border:2px dashed var(--ek-ink);border-radius:18px;padding:14px 18px}
-.ek.ap5 .ap5-qk{font:800 12.5px Inter;color:var(--ek-mut)}.ek.ap5 .ap5-q>p{font:600 15.5px/1.45 Inter;margin:4px 0 10px}
-.ek.ap5 .ap5-q>div{display:flex;gap:8px}
-html #app .ek.ap5 .ap5-q button{border:2px solid var(--ek-ink);border-radius:999px;background:#fff;color:var(--ek-ink);font:800 14px Inter;padding:6px 20px;cursor:pointer}
-html #app .ek.ap5 .ap5-q button.bon{background:#C9F6E3}html #app .ek.ap5 .ap5-q button.faux{background:#FFD9D1}
-.ek.ap5 .ap5-q button:disabled{cursor:default}
-.ek.ap5 .ap5-qr{font:600 14.5px/1.45 Inter;margin:10px 0 0}.ek.ap5 .ap5-qr.g{color:#0B6B46}.ek.ap5 .ap5-qr.r{color:#A12510}
+.ek.ap5 .ap5-lim{max-width:900px;margin-top:16px;padding:16px 20px;border-radius:18px;background:var(--ek-soft);border-left:6px solid var(--ek-ink)}
+.ek.ap5 .ap5-lim b{font:800 17px "Bricolage Grotesque",Inter,sans-serif}
+.ek.ap5 .ap5-lim ul{margin:8px 0 8px 18px;font:500 14.5px/1.5 Inter}.ek.ap5 .ap5-lim li{margin-bottom:3px}
+.ek.ap5 .ap5-lim p{font:600 14.5px/1.5 Inter;margin:0}
 .ek.ap5 .ap5-plus{display:inline-block;margin-top:14px;font:800 14px Inter;color:var(--ek-ink);border-bottom:2px solid var(--ek-y)}
 .ek.ap5 .ap5-fin{margin-top:64px}
 @media(max-width:700px){
