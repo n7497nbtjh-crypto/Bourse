@@ -37,6 +37,7 @@ async function pwaVerifierVersion(auto) { // auto : au chargement, si une versio
   try {
     const r = await fetch("/", { method: "HEAD", cache: "no-store", credentials: "same-origin" }), v = r.headers.get("x-bilan-version");
     if (v && v !== PWA_VERSION) {
+      PWA_NOUVELLE = v;
       const saisie = document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName) && document.activeElement.value;
       if (auto === true && !saisie && Date.now() - PWA_T0 < 20000 && !sessionStorage.getItem("pwa-rechg:" + v)) { try { sessionStorage.setItem("pwa-rechg:" + v, "1"); } catch (e) { } location.reload(); return; }
       document.querySelector("header").insertAdjacentHTML("afterend", `<div class="pwa-maj" id="pwamaj" role="status"><div class="wrap"><span>Une nouvelle version d'ENKLAIR est en ligne.</span><button type="button" id="pwamajb">Mettre à jour</button></div></div>`);
@@ -44,7 +45,19 @@ async function pwaVerifierVersion(auto) { // auto : au chargement, si une versio
     }
   } catch (e) { }
 }
+let PWA_NOUVELLE = null;
 document.addEventListener("visibilitychange", () => pwaVerifierVersion(false));
+// Changement de page dans le site : si une version plus récente est en ligne, la page suivante est chargée en entier
+// (sinon l'onglet resté ouvert garderait les anciens scripts). Vérification au plus une fois par minute.
+(() => {
+  const go0 = window.go; if (typeof go0 !== "function") return;
+  let vu = 0;
+  window.go = function (url) {
+    if (PWA_NOUVELLE) { location.href = url; return; }
+    if (Date.now() - vu > 6e4) { vu = Date.now(); PWA_VU = 0; pwaVerifierVersion(false); }
+    return go0.apply(this, arguments);
+  };
+})();
 setTimeout(() => pwaVerifierVersion(true), 2500); // au chargement : la version en ligne est comparée à celle affichée
 setInterval(pwaVerifierVersion, 10 * 6e4);
 
