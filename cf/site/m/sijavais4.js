@@ -84,14 +84,24 @@ function sj4Calcul(S, ref, H) {
   el.innerHTML = `
     <section class="ek-sec"><span class="ek-stk2 b">Face aux autres placements</span><h2>Pour ${sjNb(O2_e(S.amt))} placés en ${O2_dCourt(deb)}.</h2>
       <div class="sj-cs">${cartes.map(carte).join("")}${vP != null ? `<div class="sj-c ref"><span class="s4-k">Hausse des prix</span><b>${sjNb(O2_e(vP))}</b><span class="sj-p">${pc(vP)}</span><small>ce qu'il fallait pour garder le même pouvoir d'achat (Insee)</small></div>` : ""}</div>
-      <div class="s4-ch" id="sjc"></div>
-      <p class="ek-note">Touchez ou survolez la courbe pour lire les valeurs ; touchez un nom de la légende pour masquer une série.</p></section>
+      ${sj4Barres(S, [[A.nom + (A.div ? ", dividendes compris" : ""), vA, true], ...(A.div ? [[A.nom + ", cours seul", fin(A)]] : []), ...(vI != null ? [[I.nom, vI]] : []), ...(vL != null ? [["Livret A", vL]] : [])], vP)}</section>
     <section class="ek-sec">
-      <details class="s4-pl"><summary>Les chiffres, date par date</summary>${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Placement</th>${dates.map(d => `<th scope="col">${O2_dCourt(d)}</th>`).join("")}<th scope="col">Évolution</th></tr></thead><tbody>${lignes}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}</details>
+      <details class="s4-pl"><summary>Le parcours, date par date</summary><div class="s4-ch" id="sjc"></div>${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Placement</th>${dates.map(d => `<th scope="col">${O2_dCourt(d)}</th>`).join("")}<th scope="col">Évolution</th></tr></thead><tbody>${lignes}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}</details>
       <details class="s4-pl"><summary>Hypothèses du calcul</summary><ul>${hyp.map(x => `<li>${x}</li>`).join("")}</ul></details>
       <p class="ek-note"><b>Le passé ne dit rien de l'avenir.</b> Ce n'est pas un conseil d'achat ou de vente. Cours : Google Finance (cours de clôture ou différés relevés par le site, mise à jour du ${PXUP && PXUP !== "none" ? dLabel(String(PXUP).slice(0, 10)) : "jour"}). Taux de change : ${ref && ref.fx ? O2_src("BCE, taux de référence", ref.fx.url) : "BCE"}.${prix ? ` Prix : ${O2_src(ref.ipc.source, ref.ipc.url)}.` : ""}${livret ? ` Livret A : ${O2_src("Service-public.gouv.fr", ref.livretA.url)}.` : ""} Frais : ${brokerSrc()}${A.div ? " Dividendes : comptes annuels officiels (ESEF, SEC) lus par le site." : ""}</p></section>`;
-  const ticks = xs.map((x, i) => [x, O2_dCourt(dates[i])]);
-  O2_courbe($("#sjc"), { series, xTicks: ticks, yFmt: (v_, ax) => ax ? F0.format(v_) + " €" : O2_e(v_), tipX: x => dLabel(O2_moinsAns(TODAY, -x)), refY: S.amt, titre: "Valeur du placement au fil du temps" });
+  const ticks = xs.map((x, i) => [x, O2_dCourt(dates[i])]), pli = $("#sjc").closest("details");
+  const dessine = () => { if (pli.dataset.ok) return; pli.dataset.ok = "1"; O2_courbe($("#sjc"), { series, xTicks: ticks, yFmt: (v_, ax) => ax ? F0.format(v_) + " €" : O2_e(v_), tipX: x => dLabel(O2_moinsAns(TODAY, -x)), refY: S.amt, titre: "Valeur du placement au fil du temps" }); };
+  pli.addEventListener("toggle", () => { if (pli.open) dessine(); });
   tblxBindScroll(el);
+}
+// Barres horizontales : la valeur d'aujourd'hui de chaque placement, face au montant placé (trait noir) et à la hausse des prix (pointillé orange)
+function sj4Barres(S, L, vP) {
+  const max = Math.max(S.amt, vP || 0, ...L.map(x => x[1] || 0)) * 1.12, X = v_ => (v_ / max * 100).toFixed(2) + "%", fin = v_ => v_ / max > .7 ? " fin" : "";
+  const traits = `<em class="m" style="left:${X(S.amt)}"></em>${vP != null ? `<em class="p" style="left:${X(vP)}"></em>` : ""}`;
+  return `<div class="sj-bars" role="img" aria-label="Valeur aujourd'hui de chaque placement">
+    <div class="sj-br sj-ax"><span></span><div class="sj-bt"><u class="m${fin(S.amt)}" style="left:${X(S.amt)}">${sjNb(O2_e(S.amt))} placés</u></div></div>
+    ${L.filter(x => x[1] != null).map(([n, v_, a]) => `<div class="sj-br${a ? " a" : ""}"><span class="sj-bn">${esc(n)}</span><div class="sj-bt">${traits}<i class="${v_ >= S.amt ? "g" : "r"}" style="width:${X(v_)}"></i><b class="${v_ / max > .78 ? "in" : ""}" style="left:${X(v_)}">${sjNb(O2_e(v_))}</b></div></div>`).join("")}
+    ${vP != null ? `<div class="sj-br sj-ax"><span></span><div class="sj-bt"><u class="p${fin(vP)}" style="left:${X(vP)}">hausse des prix : ${sjNb(O2_e(vP))}</u></div></div>` : ""}
+  </div><p class="ek-note">Barre verte : plus que le montant placé ; rouge : moins. Trait noir : le montant placé. Pointillé orange : ce qu'il fallait pour garder le même pouvoir d'achat. La courbe date par date est dans le pli plus bas.</p>`;
 }
 window.outilSiJavais = outilSiJavais4;
