@@ -45,7 +45,7 @@ function e3Poser() {
   const h = $("h1.pagetitle", app), sub = $(".pagesub", app);
   const w = document.createElement("div"); w.className = "e3";
   w.innerHTML = `<section class="e3-hero"><span class="a4-stk a4-wh">Les entreprises</span><h1>${F0.format(ok)} entreprises, lues et comparées.</h1>
-      <div class="search big a4-srch" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Hermès, Apple, un ISIN…" aria-label="Rechercher une entreprise" autocomplete="off"><div class="results"></div></div>
+      <div class="search big a4-srch" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="el-in" type="search" placeholder="Hermès, Apple, un ISIN…" aria-label="Rechercher une entreprise" autocomplete="off"><div class="results"></div></div>
       <div class="e3-fil"><span>Filtrer :</span>${E3_FILTRES.map(([k, l]) => `<button type="button" data-e3f="${k}">${esc(l)}</button>`).join("")}</div></section>
     <section class="e3-sec"><span class="a4-stk" style="background:var(--a4b)">Par secteur</span><h2>Choisissez un terrain de jeu.</h2>
       <div class="e3-secs">${secs.map(([k, n, c], i) => `<button type="button" data-e3s="${k}" style="background:${E3_COUL[i % E3_COUL.length]}"><b>${esc(n)}</b><span>${F0.format(c)} entreprises</span></button>`).join("")}</div></section>

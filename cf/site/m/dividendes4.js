@@ -6,15 +6,37 @@
    Remplace window.pageDividendes. */
 const DV4_REG = [["", "Toutes"], ["fr", "France"], ["eu", "Europe"], ["us", "États-Unis"], ["monde", "Reste du monde"]];
 const DV4_COUL = { det: "#1E8A52", pay: "#1E6FD9", rec: "#8A6D1E", autre: "#5F5B55" };
+// Veille ouvrée (samedi et dimanche sautés) : pour toucher le dividende, il faut détenir l'action à la clôture de ce jour
+function dv4Veille(d) { const t = new Date(d + "T12:00:00Z"); do { t.setUTCDate(t.getUTCDate() - 1); } while (t.getUTCDay() === 0 || t.getUTCDay() === 6); return t.toISOString().slice(0, 10); }
+// Un dividende = la date pour acheter (détachement, ou enregistrement aux États-Unis) et la date de versement qui suit
+function dv4Groupes(L) {
+  const par = {}; L.forEach(e => (par[e.id] = par[e.id] || []).push(e));
+  const G = [];
+  for (const id in par) {
+    const E = par[id].sort((a, b) => a.date.localeCompare(b.date)), pris = new Set();
+    E.forEach((e, i) => { if (pris.has(i) || outDivKind(e) === "pay") return; pris.add(i);
+      const j = E.findIndex((x, k) => k > i && !pris.has(k) && outDivKind(x) === "pay" && (Date.parse(x.date) - Date.parse(e.date)) / 864e5 <= 75);
+      if (j >= 0) pris.add(j); G.push({ id, achat: e, verse: j >= 0 ? E[j] : null }); });
+    E.forEach((e, i) => { if (!pris.has(i)) G.push({ id, achat: null, verse: e }); });
+  }
+  return G.map(g => ({ ...g, cle: (g.achat || g.verse).date })).sort((a, b) => a.cle.localeCompare(b.cle));
+}
+function dv4Quoi(e) { return String(e.label || "").replace(/^(Détachement|Paiement|Date d'enregistrement|Dernier jour pour acheter avec droit à|Mise en paiement|Versement)\s*(du|de la|de l'|des|à l')?\s*/i, "").replace(/\s*\([\d\s,.]+\s*(€|\$|£|CHF|kr|NOK)\)\s*/, " ").replace(/^./, x => x.toUpperCase()).trim(); }
+function dv4Carte(g) {
+  const c = RBY[g.id], v = valo(c), cv = outCouv(c), e0 = g.achat || g.verse, amt = outDivAmt(g.achat || {}) || outDivAmt(g.verse || {});
+  const jour = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+  const dern = g.achat ? (/dernier jour/i.test(g.achat.label || "") ? g.achat.date : dv4Veille(g.achat.date)) : null;
+  return `<a class="dv5-c" href="/entreprise/${esc(c.id)}"><div class="dv5-h">${mcLogo(c)}<span><b>${esc(c.name)}</b><small>${esc(dv4Quoi(e0) || "Dividende")}</small></span>${amt ? `<strong>${esc(amt)}<small>par action</small></strong>` : ""}</div>
+    <div class="dv5-t">${dern ? `<div class="a"><i></i><span><small>Acheter au plus tard le</small><b>${esc(jour(dern))}</b></span></div>` : ""}${g.verse ? `<div class="p"><i></i><span><small>Versé le</small><b>${esc(jour(g.verse.date))}</b></span></div>` : ""}</div>
+    <div class="dv5-f">${v && v.yld ? `<span>Rendement <b>${esc(pct(v.yld, 1, false))}</b></span>` : ""}${cv ? `<span class="${cv.k === "oui" ? "g" : cv.k === "non" ? "r" : ""}" title="${esc(cv.d)}">${esc(cv.t)}</span>` : ""}${typeof peaOk === "function" && peaOk(c) && e4Fr() ? `<span class="g">PEA ✓</span>` : ""}</div></a>`;
+}
 function dv4Cal(L, tout) {
-  if (!L.length) return `<p class="ek-note">Aucune date de dividende annoncée avec ces filtres pour l'instant.</p>`;
-  const vis = tout ? L : L.slice(0, 18), par = {};
-  vis.forEach(e => (par[e.date.slice(0, 7)] = par[e.date.slice(0, 7)] || []).push(e));
-  return Object.entries(par).map(([mk, l]) => `<h3 class="ax4-day">${esc(MOISL[+mk.slice(5) - 1].replace(/^./, x => x.toUpperCase()))} ${mk.slice(0, 4)} <small>${l.length} date${l.length > 1 ? "s" : ""}</small></h3><div class="ag4-g">${l.map(e => {
-    const c = RBY[e.id], k = outDivKind(e), v = valo(c), amt = outDivAmt(e), d = new Date(e.date + "T12:00:00");
-    return `<a class="ag4-c" href="/entreprise/${esc(c.id)}" style="--c:${DV4_COUL[k]}"><div class="ag4-ch">${mcLogo(c)}<span><b>${esc(c.name)}</b><small>${esc(d.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }))}</small></span><em title="${esc(OUT_DK[k][1])}">${esc(OUT_DK[k][0])}</em></div>
-      <p>${esc(e.label || "")}</p><div class="dv4-n">${amt ? `<span><small>Montant</small><b>${esc(amt)}</b></span>` : ""}${v && v.yld ? `<span><small>Rendement</small><b>${esc(pct(v.yld, 1, false))}</b></span>` : ""}${outCouv(c) ? `<span><small>Couvert ?</small><b class="${outCouv(c).k === "oui" ? "g" : outCouv(c).k === "non" ? "r" : ""}">${esc(outCouv(c).t)}</b></span>` : ""}</div></a>`; }).join("")}</div>`).join("")
-    + (L.length > vis.length ? `<button type="button" class="el-more" data-tout>Afficher les ${F0.format(L.length - vis.length)} autres dates</button>` : "");
+  const G = dv4Groupes(L);
+  if (!G.length) return `<p class="ek-note">Aucun dividende annoncé avec ces filtres pour l'instant.</p>`;
+  const vis = tout ? G : G.slice(0, 12), par = {};
+  vis.forEach(g => (par[g.cle.slice(0, 7)] = par[g.cle.slice(0, 7)] || []).push(g));
+  return Object.entries(par).map(([mk, l]) => `<h3 class="ax4-day">${esc(MOISL[+mk.slice(5) - 1].replace(/^./, x => x.toUpperCase()))} ${mk.slice(0, 4)} <small>${l.length} dividende${l.length > 1 ? "s" : ""}</small></h3><div class="dv5-g">${l.map(dv4Carte).join("")}</div>`).join("")
+    + (G.length > vis.length ? `<button type="button" class="el-more" data-tout>Afficher les ${F0.format(G.length - vis.length)} autres dividendes</button>` : "");
 }
 function dv4Rang(c, i, grand, petit, sous, ton) {
   return `<a class="cl4-r dv4-r" href="/entreprise/${esc(c.id)}"><span class="cl4-rk${i < 3 ? " top" : ""}">${i + 1}</span>${mcLogo(c)}<span class="cl4-n"><b>${esc(c.name)}</b><small>${esc(secName(c))}${typeof peaOk === "function" && peaOk(c) && e4Fr() ? " · PEA ✓" : ""}</small></span><span class="cl4-v"><strong class="${ton || ""}">${esc(grand)}</strong><small>${esc(petit)}</small><em>${esc(sous || "")}</em></span></a>`;
@@ -32,29 +54,25 @@ async function pageDividendes4() {
   const sim = { c: defC, m: 5000, a: fr ? "pea" : "cto" };
   const jour = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
   app.innerHTML = `<div class="ek ek-page dv4-page">
-    <section class="ek-hero"><span class="mc-stk">Dividendes</span><h1 class="ag4-t">${nx ? `Prochain détachement : ${esc(RBY[nx.id].name)}, le ${esc(jour(nx.date))}.` : "Les dividendes à venir."}</h1>
-      <p class="mc-sub">Les dates annoncées par les entreprises, les plus hauts rendements avec leur garde-fou, et ce que vous toucheriez vraiment.</p>
-      <div class="ax4-k"><div><b>${F0.format(tous.length)}</b><span>dates annoncées</span><small>détachements et paiements à venir</small></div><div><b>${F0.format(det.length)}</b><span>détachements</span><small>il faut détenir l'action la veille</small></div><div><b>${F0.format(n4)}</b><span>entreprises</span><small>dividende relevé 4 ans de suite</small></div></div></section>
+    <section class="ek-hero"><span class="mc-stk">Dividendes</span><h1 class="ag4-t">Qui verse un dividende, et quand.</h1>
+      <p class="mc-sub">${F0.format(dv4Groupes(tous).length)} dividendes annoncés par les entreprises suivies.${nx ? ` Le prochain détachement : ${esc(RBY[nx.id].name)}, le ${esc(jour(nx.date))}.` : ""}</p>
+      <div class="dv5-steps"><div><i>1</i><b>Acheter avant</b><span>Détenir l'action à la clôture, la veille du détachement.</span></div><div><i>2</i><b>Le détachement</b><span>Le cours baisse d'environ le montant du dividende.</span></div><div><i>3</i><b>Le versement</b><span>Quelques jours ou semaines plus tard, l'argent arrive.</span></div></div></section>
+    <section class="ek-sec" id="dv4cal"><span class="ek-stk2 b">Calendrier</span><h2>Les prochains dividendes.</h2>
+      <div class="el-f ax4-ch" id="dv4f"><span>Région :</span>${DV4_REG.map(([k, l]) => `<button type="button" data-r="${k}">${l}</button>`).join("")}${fr ? `<button type="button" data-pea>Éligibles au PEA</button>` : ""}<button type="button" data-fav>Mes favoris</button>
+        <select id="dv4s" aria-label="Secteur">${outSecOpts().map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select><button type="button" class="dv4-ics" id="dv4ics">Ajouter à mon agenda (.ics)</button></div>
+      <div id="dv4c"></div>
+      <p class="mc-note">Chaque date vient du calendrier publié par l'entreprise ou d'un communiqué. « Acheter au plus tard » : la veille ouvrée du détachement (aux États-Unis, de la date d'enregistrement) ; votre courtier peut avoir ses propres délais. Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook : rien n'est envoyé.</p></section>
     <section class="ek-sec" id="dv4sim"><span class="ek-stk2">Simulateur</span><h2>Combien je toucherais ?</h2>
       <div class="dv4-sim"><div class="dv4-f"><label class="dv4-q"><span>Entreprise</span><input id="dv4q" class="el-in" type="search" autocomplete="off" placeholder="Nom de l'entreprise" value="${sim.c ? esc(sim.c.name) : ""}"><div class="dv4-sug" id="dv4sug" hidden></div></label>
         <label><span>Montant investi</span><input id="dv4m" type="number" min="100" step="100" value="${sim.m}" inputmode="numeric"></label>
         <div><span>Compte</span><div class="ax4-vue dv4-acct" id="dv4a">${fr ? `<button type="button" data-a="pea">PEA</button>` : ""}<button type="button" data-a="cto">Compte-titres</button></div></div></div>
         <div id="dv4r"></div></div></section>
-    <section class="ek-sec" id="dv4cal"><span class="ek-stk2 b">Calendrier</span><h2>Les prochaines dates.</h2>
-      <div class="el-f ax4-ch" id="dv4f"><span>Région :</span>${DV4_REG.map(([k, l]) => `<button type="button" data-r="${k}">${l}</button>`).join("")}${fr ? `<button type="button" data-pea>Éligibles au PEA</button>` : ""}<button type="button" data-fav>Mes favoris</button>
-        <select id="dv4s" aria-label="Secteur">${outSecOpts().map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select><button type="button" class="dv4-ics" id="dv4ics">Ajouter à mon agenda (.ics)</button></div>
-      <div id="dv4c"></div>
-      <p class="mc-note">Chaque date vient du calendrier publié par l'entreprise ou d'un communiqué. Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook : rien n'est envoyé.</p></section>
     <div class="dv4-two"><section class="ek-sec"><span class="ek-stk2 p">Rendement</span><h2>Les plus hauts rendements.</h2>
         <div class="el-f ax4-ch"><button type="button" data-cv class="on">Dividende couvert seulement</button></div><div id="dv4top"></div>
         <p class="mc-note">Rendement = dernier dividende annuel ÷ cours (différé). « Couvert » : le dividende versé est inférieur à 90 % du bénéfice du dernier exercice. Un rendement très élevé vient souvent d'un cours qui a beaucoup baissé.</p></section>
       <section class="ek-sec"><span class="ek-stk2 b">Régularité</span><h2>Dividendes relevés.</h2><div id="dv4up"></div>
         <p class="mc-note">Années de suite où le dividende par action a augmenté (rapports annuels, cinq exercices au plus). <a href="/classements?c=dividende">Le classement complet →</a></p></section></div>
-    <section class="ek-sec"><span class="ek-stk2">Comprendre</span><h2>Le détachement, en trois dates.</h2>
-      <div class="dv4-tl"><div><i>1</i><b>La veille</b><p>Vous devez détenir l'action à la clôture de la Bourse. L'acheter le jour même ne donne plus droit au dividende.</p></div>
-        <div><i>2</i><b>Le jour du détachement</b><p>Le dividende « se détache » : le cours baisse mécaniquement d'environ son montant. Une action à 50 € qui verse 2 € ouvre vers 48 €.</p></div>
-        <div><i>3</i><b>Le jour du paiement</b><p>Quelques jours plus tard, l'argent arrive sur votre compte.${fr ? ` Dans un PEA, il y reste sans impôt ; sur un compte-titres, ${esc(pct(RATES.pfu, 1, false))} sont prélevés.` : ""}</p></div></div>
-      <p class="mc-note">Le dividende n'est pas un cadeau : la valeur sort de l'entreprise pour arriver chez l'actionnaire. Ce qui compte, c'est qu'elle puisse le payer avec ses bénéfices. Ces listes trient des faits ; ce n'est pas une recommandation d'achat.</p></section></div>`;
+    <section class="ek-sec"><p class="mc-note">Le dividende n'est pas un cadeau : la valeur sort de l'entreprise pour arriver chez l'actionnaire (une action à 50 € qui verse 2 € ouvre vers 48 €). Ce qui compte, c'est qu'elle puisse le payer avec ses bénéfices.${fr ? ` Dans un PEA, il reste sans impôt ; sur un compte-titres, ${esc(pct(RATES.pfu, 1, false))} sont prélevés.` : ""} Ces listes trient des faits ; ce n'est pas une recommandation d'achat.</p></section></div>`;
   const drawSim = () => { $$("#dv4a button").forEach(b => b.classList.toggle("on", b.dataset.a === sim.a)); $("#dv4r").innerHTML = sim.c ? outDivSim(sim.c, Math.max(0, +sim.m || 0), sim.a) : `<p class="ek-note">Choisissez une entreprise.</p>`; };
   const draw = () => {
     $$("#dv4f [data-r]").forEach(b => b.classList.toggle("on", b.dataset.r === f.r)); const bp = $("#dv4f [data-pea]"); if (bp) bp.classList.toggle("on", !!f.pea); $("#dv4f [data-fav]").classList.toggle("on", f.fav); $(".dv4-page [data-cv]").classList.toggle("on", f.cv);

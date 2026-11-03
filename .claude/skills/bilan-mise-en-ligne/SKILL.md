@@ -18,12 +18,13 @@ node tests/t_worker.mjs           # + les tests t_*.mjs / t_*.py du périmètre 
 ```
 node scripts/relire-fiches.js 120   # 0 faute attendue ; puis LIRE /tmp/relecture-fiches.txt (tous les modèles de phrases)
 node scripts/relire-visuel.js 30 comparer   # si la page Comparer est touchée
+node scripts/relire-pages.js        # TOUJOURS : 32 grandes pages × 2 tailles (texte coupé, bouton dont le texte touche le bord, icône sur un champ, débordement, boutons superposés), 0 problème attendu
 node scripts/relire-visuel.js 60    # 0 problème attendu : textes superposés, texte sur une barre, hors du graphique, dépasse de l'écran (ordinateur + téléphone)
 ```
 Les phrases des fiches sont calculées pour plus de 2 000 sociétés : une faute d'accord ou une phrase creuse se répète partout.
 Relire chaque modèle avant de pousser : accords, sens, pas de redite du graphique ou du titre, pas de renvoi à une autre étape,
 pas de comparaison aux rivales si le graphique ne les montre pas, « rivales » ou « secteur » selon la comparaison réelle.
-Toute nouvelle faute trouvée à la main devient une règle dans `REGLES` de scripts/relire-fiches.js ; tout nouveau défaut visuel vu par Romain devient un contrôle dans scripts/relire-visuel.js.
+Toute nouvelle faute trouvée à la main devient une règle dans `REGLES` de scripts/relire-fiches.js ; tout nouveau défaut visuel vu par Romain devient un contrôle dans scripts/relire-visuel.js (graphiques des fiches) ou scripts/relire-pages.js (toutes les pages).
 Regarder vraiment les captures (390 px et 1440 px) : pas de NaN, pas de « undefined », pas de débordement horizontal.
 
 ## Committer

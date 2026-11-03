@@ -40,7 +40,7 @@ function mcAgenda() {
   const j = d => new Date(d + "T12:00:00");
   return `<section class="ek-sec"><span class="ek-stk2">À venir</span><h2>Les prochaines dates à suivre.</h2><div class="mc-es">${ev.map(e => { const c = RBY[e.id];
     return `<a class="mc-e" href="/entreprise/${esc(c.id)}"><span class="d"><b>${j(e.date).getDate()}</b><small>${esc(j(e.date).toLocaleDateString("fr-FR", { month: "short" }))}</small></span>${mcLogo(c)}<span><b>${esc(c.name)}</b><small>${esc(e.label || "")}</small></span><em class="${e.type === "Dividende" ? "dv" : ""}">${esc(e.type || "Date")}</em></a>`; }).join("")}</div>
-    <p class="mc-note"><a href="/actualites">Tout l'agenda et l'actualité →</a></p></section>`;
+    <p class="mc-note"><a href="/agenda">Tout l'agenda →</a></p></section>`;
 }
 
 async function pageMarches4() {
@@ -53,7 +53,8 @@ async function pageMarches4() {
   const sous = !ix.length ? "Les cours ne sont pas disponibles pour le moment." : `${up === 0 ? `Les ${ix.length} grands indices baissent.` : up === ix.length ? `Les ${ix.length} grands indices montent.` : `${up} grand${up > 1 ? "s" : ""} indice${up > 1 ? "s" : ""} sur ${ix.length} en hausse.`} Cours différés${typeof PXUP === "string" && PXUP !== "none" ? ", relevés le " + esc(new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : ""}.`;
   const portes = [["/entreprises", "Entreprises", `${F0.format(R.companies.length)} fiches`, "Chacune face à la médiane de son secteur.", "M4 20V9l8-5 8 5v11M9 20v-6h6v6"],
     ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, "Frais, PEA, ce qu'ils contiennent vraiment.", "M4 18l5-6 4 3 7-9M4 4v16h16"],
-    ["/actualites", "Actualité et agenda", "chaque jour", "Annonces officielles lues et chiffrées.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
+    ["/actualites", "Actualité", "chaque jour", "Annonces officielles lues et chiffrées.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
+    ["/agenda", "Agenda", "jour par jour", "Résultats et dividendes à venir.", "M4 5h16v15H4zM4 9h16M8 3v4M16 3v4"],
     ["/classements", "Classements", "par critère", "Les mieux placées sur la marge, la dette, le prix.", "M4 20h16M7 20V10M12 20V4M17 20v-8"]];
   const secteurs = mcSecteurs(G);
   app.innerHTML = `<div class="ek ek-page mc-page">

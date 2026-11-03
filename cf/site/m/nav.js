@@ -29,16 +29,16 @@ const NAV = [
     ],
   },
   {
-    k: "exp", label: "Marchés", porte: "/marches", sous: "Entreprises, ETF, actualité, classements",
+    k: "exp", label: "Marchés", porte: "/marches", sous: "Entreprises, ETF, actualité, agenda",
     items: [
       ["/entreprises", "Les entreprises", "2 852 fiches, chacune face à la médiane de son secteur"],
       ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, le PEA"],
       ["/actualites", "L'actualité", "Annonces officielles lues, chiffrées et expliquées"],
+      ["/agenda", "L'agenda", "Résultats et dividendes à venir, jour par jour"],
       ["/classements", "Classements", "Les mieux placées, critère par critère"],
     ],
     aussi: [
       ["/marches", "Les marchés du jour"],
-      ["/agenda", "L'agenda"],
       ["/decouvertes", "Découvertes du jour"],
       ["/dividendes", "Calendrier des dividendes"],
       ["/hier", "Ce qui s'est passé hier"],

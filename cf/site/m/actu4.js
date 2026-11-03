@@ -20,7 +20,7 @@ function axCarte(it) {
       <span class="ax4-t" title="${esc(C.why)}">${esc(C.l)}</span>${it.p ? `<span class="ax4-p" title="Information privilégiée : un fait susceptible d'influencer le cours, que l'entreprise doit publier sans délai">Info. privilégiée</span>` : ""}</div>
     <h3>${esc(main)}</h3>${sub ? `<p class="ax4-s">${esc(sub)}</p>` : ""}
     ${it.f && it.f.length ? `<div class="ax4-fs">${it.f.slice(0, 4).map(axFig).join("")}</div>` : ""}
-    <div class="ax4-b">${lect ? `<details class="ax4-l"><summary>Ce que ça veut dire</summary>${lect}</details>` : it.i >= 2 && !C.routine ? `<button type="button" class="iabtn ax4-ia" data-clair="${esc(it.id)}|${esc(it.k)}">✦ Expliquer en clair</button><div class="iabox"></div>` : ""}
+    <div class="ax4-b">${lect ? `<details class="ax4-l"><summary>Ce que ça veut dire</summary>${lect}</details>` : it.i >= 2 && !C.routine ? `<button type="button" class="ax4-ia" data-clair="${esc(it.id)}|${esc(it.k)}">✦ Expliquer en clair</button><div class="iabox"></div>` : ""}
       <a class="ax4-src" href="${esc(it.u)}" target="_blank" rel="noopener">Lire l'annonce (${esc(src)}${esc(lg)}) ↗</a></div></article>`;
 }
 function axFil(items) {
@@ -49,7 +49,7 @@ function pageActus4() {
     <section class="ek-hero ax4-hero"><span class="mc-stk">Actualité</span><h1 id="ax4h">Ce que les entreprises annoncent.</h1><p class="mc-sub" id="ax4sub">Les annonces officielles des entreprises suivies, chiffrées et expliquées, et les titres de la presse.</p>
       <div class="ax4-k" id="ax4k"></div>
       <label class="el-q"><span aria-hidden="true">🔍</span><input class="el-in" type="search" id="ax4q" placeholder="Une entreprise : LVMH, Apple, Novo Nordisk…" aria-label="Filtrer par entreprise" autocomplete="off"></label>
-      <div class="ax4-vue" id="ax4vue"><button type="button" data-v="annonces">Annonces officielles</button><button type="button" data-v="presse">Dans la presse</button></div></section>
+      <div class="ax4-bar"><div class="ax4-vue" id="ax4vue"><button type="button" data-v="annonces">Annonces officielles</button><button type="button" data-v="presse">Dans la presse</button></div><a class="ax4-ag" href="/agenda">📅 L'agenda de la semaine →</a></div></section>
     <div class="ax4-cols"><div>
       <div class="el-f ax4-ch" id="ax4type"><span>Type :</span>${AX_TYPES.map(([k, l]) => `<button type="button" data-t="${k}">${l}</button>`).join("")}</div>
       <div class="el-f ax4-ch" id="ax4zone"><span>Zone :</span>${AX_ZONES.map(([k, l]) => `<button type="button" data-z="${k}">${l}</button>`).join("")}
@@ -66,7 +66,7 @@ function pageActus4() {
   const tete = () => { // la saison en une phrase, calculée sur toutes les annonces chiffrées (sans les filtres)
     const L = [...(FIL.o || []), ...EXTRA].filter(it => RBY[it.id] && actuImp(it)), T = actuStats(L), pc = T.find(t => /ventes en hausse/.test(t[1])), v = pc ? parseInt(pc[0]) : null;
     $("#ax4h").innerHTML = v != null ? `<span class="${v >= 50 ? "g" : "r"}">${v} %</span> des entreprises vendent plus qu'il y a un an.` : `${F0.format(L.length)} annonces importantes ces derniers jours.`;
-    $("#ax4sub").textContent = v != null ? `Parmi les entreprises qui ont publié leurs résultats ces derniers jours (${pc[2]}).` : "Les annonces officielles des entreprises suivies, chiffrées et expliquées.";
+    $("#ax4sub").textContent = v != null ? `Parmi les entreprises qui ont publié leurs résultats ces derniers jours : ${pc[2]}.` : "Les annonces officielles des entreprises suivies, chiffrées et expliquées.";
     $("#ax4k").innerHTML = T.filter(t => !/ventes en hausse/.test(t[1])).slice(0, 3).map(([n, l, s]) => `<div><b>${esc(n)}</b><span>${esc(l)}</span><small>${esc(s)}</small></div>`).join("");
   };
   const draw = () => {
