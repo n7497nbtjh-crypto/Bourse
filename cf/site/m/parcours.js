@@ -89,41 +89,7 @@ function parIdeesBloc(titre = "Vrai ou faux ?") {
       <p class="muted">Une phrase qu'on entend souvent. Répondez, puis retournez la carte : pourquoi on y croit, ce que disent les données, les nuances, un exemple.</p></div></div>
     ${commIdeeSeuleHTML()}</section>`;
 }
-async function pageApprendre() {
-  setTitle("Apprendre la Bourse"); setNav("aca");
-  app.innerHTML = `<div class="empty">Chargement…</div>`;
-  await Promise.all([acaLoad(), parParcours(), premStatus().catch(() => null)]);
-  const prof = parSt(typeof CKEY !== "undefined" ? CKEY : "bilan.profil"), nq = Object.keys(prof).length, profOk = nq >= 5;
-  const NV = parNiveaux(), nx = parProchaine(NV), lus = NV.reduce((a, v) => a + v.lus + v.dl, 0), tot = NV.reduce((a, v) => a + v.lec.length + v.dt, 0);
-  const outils = [
-    ["/pea-cto", "Choisir", "PEA, compte-titres, assurance-vie", "Ce que chaque compte change à vos impôts."],
-    ["/simulateurs/epargne", "Simuler", "Épargner chaque mois", "Ce que devient une somme placée tous les mois."],
-    ["/simulateurs/frais", "Simuler", "Le coût des frais", "Courtage et frais de gestion sur 10, 20 ou 30 ans."],
-    ["/simulateurs/pea-cto", "Simuler", "L'impôt selon le compte", "PEA ou compte-titres, avec vos montants."],
-    ["/outils/si-javais", "Revoir le passé", "Et si j'avais investi…", "1 000 € placés il y a 1, 3 ou 5 ans, comparés au marché."],
-    ["/outils/verifier", "Se protéger", "Vérifier une offre", "Un site ou un « conseiller » comparé aux listes noires de l'AMF."],
-    ["/portefeuille", "S'entraîner", "Un portefeuille d'essai", "Composer un portefeuille fictif et voir ce qu'il contient vraiment."],
-  ];
-  const ess = typeof ESSENTIEL !== "undefined" && typeof ALL !== "undefined" ? ESSENTIEL.filter(k => ALL[k]) : [];
-  app.innerHTML = `<header class="pa-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Apprendre la Bourse, pas à pas.</h1>
-      <p class="pagesub">Trois niveaux, des fondamentaux aux sujets avancés. Chaque niveau commence par un parcours court de quelques leçons de 3 minutes ; le cours complet est là pour approfondir, quand vous le souhaitez.</p>
-      <div class="pa-go">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a>` : `<a class="btn" href="/lexique">Revoir le lexique</a>`}
-        <span class="light">${lus ? `${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot} · ` : ""}progression gardée sur cet appareil</span></div>
-      ${profOk ? "" : `<p class="pa-prof">Vous débutez vraiment ? <a class="lnk" href="/apprendre#profil">Trouvez votre profil en 5 questions</a>${nq ? ` (${nq} sur 5)` : ""}, puis lancez le niveau 1.</p>`}</header>
-    <h2 class="subh" id="niveaux">Votre parcours</h2>
-    ${parNiveauxHTML(NV)}
-    ${parIdeesBloc()}
-    <h2 class="subh">À garder sous la main</h2>
-    <div class="pa-keep">
-      <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
-      <a href="/apprendre"><small>3 minutes</small><b>Par où commencer</b><span>Trois choses avant d'investir, puis le détail en sept étapes.</span></a>
-      ${ACA && ACA.formation ? `<a href="/academie/formation"><small>Formation guidée${isPrem() ? "" : " · Premium"}</small><b>Six semaines, pas à pas</b><span>De l'épargne de précaution au premier portefeuille.</span></a>` : ""}
-    </div>
-    <details class="pa-tools" id="outils"><summary><span><b>Les outils pédagogiques</b> · ${outils.length} simulateurs et comparateurs, avec vos chiffres</span><span class="light">Afficher</span></summary>
-      <div class="par-tools">${outils.map(([h, k, t, d]) => `<a href="${h}"><small>${k}</small><b>${t}</b><span>${d}</span></a>`).join("")}</div></details>
-    <p class="note">Contenu pédagogique et général : il ne tient pas compte de votre situation et ne constitue pas un conseil en investissement. <a class="lnk" href="/apprendre#academie">Le programme complet de l'Académie</a> · <a class="lnk" href="/methode">Méthode et sources</a></p>`;
-  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { if (t.tagName === "DETAILS") t.open = true; setTimeout(() => t.scrollIntoView({ block: "start" }), 30); } }
-}
+/* /apprendre : voir m/apprendre4.js (3/11/2026) */
 
 /* ---------- L'Académie : le programme complet, rangé par niveau ---------- */
 async function pageAcademie(mid, lid) {
@@ -527,31 +493,7 @@ function parPitchHTML() {
    Fusionne « Par où commencer » (trois décisions, sept étapes, profil, questions), l'Académie (niveaux) et le lexique.
    /commencer, /academie et /academie/express redirigent ici. Les pages PEA/CTO, lexique, idées reçues, Livret A ou Bourse
    gardent leur adresse : elles ne sont plus que dans cette porte. */
-pageApprendre = async function () {
-  setTitle("Apprendre la Bourse"); setNav("aca");
-  app.innerHTML = `<div class="empty">Chargement…</div>`;
-  await Promise.all([acaLoad(), parParcours(), premStatus().catch(() => null), typeof commencerCharger === "function" ? commencerCharger() : null]);
-  const C = typeof COMM !== "undefined" ? COMM : null;
-  const NV = parNiveaux(), nx = parProchaine(NV), lus = NV.reduce((a, v) => a + v.lus + v.dl, 0), tot = NV.reduce((a, v) => a + v.lec.length + v.dt, 0);
-  const ess = typeof ESSENTIEL !== "undefined" && typeof ALL !== "undefined" ? ESSENTIEL.filter(k => ALL[k]) : [];
-  app.innerHTML = `<header class="pa-hero"><p class="kick">Apprendre</p><h1 class="pagetitle">Un objectif : savoir lire une entreprise et choisir son compte.</h1>
-      <p class="pagesub">Trois décisions avant d'acheter, puis trois niveaux de leçons de trois minutes.</p>
-      <div class="pa-go" style="margin-top:14px">${nx ? `<a class="btn" href="${nx.h}">${lus ? "Continuer" : "Commencer"} : ${esc(nx.t)}</a><span class="light">${lus ? `${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot}` : `${tot} leçons en tout, progression gardée sur cet appareil`}</span>` : ""}</div></header>
-    ${typeof commencerTrois === "function" ? commencerTrois() : ""}
-    <h2 class="subh" id="academie">L'Académie${lus ? ` <small class="light" style="font-weight:400;font-size:14px">${lus} leçon${lus > 1 ? "s" : ""} lue${lus > 1 ? "s" : ""} sur ${tot}</small>` : ""}</h2>
-    <div class="pa-go">${ACA && ACA.formation ? `<a class="more" href="/academie/formation">La formation guidée de six semaines${isPrem() ? "" : " · Premium"} →</a>` : ""}</div>
-    ${parNiveauxHTML(NV)}
-    <h2 class="subh">À garder sous la main</h2>
-    <div class="pa-keep scroll-x">
-      <a href="/lexique"><small>${ess.length || ""} notions essentielles</small><b>Le lexique</b><span>Chaque chiffre expliqué, avec un exemple réel et des repères.</span></a>
-      <a href="/apprendre#detail"><small>10 minutes</small><b>Le détail en sept étapes</b><span>De l'épargne de précaution aux pièges à éviter, dans l'ordre.</span></a>
-      <a href="/outils"><small>Avec vos chiffres</small><b>Les outils</b><span>Simulateurs, comparateurs, idées reçues face aux chiffres.</span></a>
-    </div>
-    ${C ? `<h2 class="subh" id="detail">Le détail, quand vous voulez</h2>${commencerBlocsHTML(C)}` : ""}
-    <p class="note">Contenu pédagogique et général, pas un conseil en investissement : pour un conseil adapté à votre situation, adressez-vous à un conseiller en investissements financiers (CIF) enregistré à l'ORIAS. <a class="lnk" href="/methode">Méthode et sources</a></p>`;
-  if (C && typeof commencerLier === "function") commencerLier(C);
-  if (location.hash) { const t = document.getElementById(location.hash.slice(1)); if (t) { if (t.tagName === "DETAILS") t.open = true; setTimeout(() => t.scrollIntoView({ block: "start" }), 30); } }
-};
+/* page construite par m/apprendre4.js (3/11/2026) */
 /* styles : voir site.css */
 
 /* 4e passage 3.3 : sur téléphone, les trois décisions et les trois niveaux défilent à l'horizontal (une carte visible, les autres à portée de pouce) */

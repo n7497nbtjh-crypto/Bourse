@@ -718,3 +718,22 @@ html #app .e3 .a4-srch .results{top:64px}
 .ek .dv5-f{display:flex;flex-wrap:wrap;gap:6px}.ek .dv5-f span{font:700 12px Inter;background:#F2F0EA;border-radius:999px;padding:3px 10px}.ek .dv5-f span.g{background:#E2F8EE;color:#00714C}.ek .dv5-f span.r{background:#FFE9E3;color:#A3200B}
 @media(max-width:900px){.ek .dv5-steps{grid-template-columns:1fr}}
 .ek .dv4-two .ek-sec>h2{font-size:clamp(26px,3vw,38px)}
+
+/* ---------- Apprendre v4 (m/apprendre4.js) ---------- */
+.ek .ap4-go{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px;margin-top:22px}
+.ek .ap4-btn{display:inline-block;background:var(--ek-ink);color:#fff;font:800 16px Inter;padding:13px 20px;border-radius:14px;text-decoration:none;box-shadow:3px 3px 0 #fff}
+.ek .ap4-btn:hover{transform:translate(-1px,-1px)}
+.ek .ap4-go>span{font:600 13.5px Inter;color:#333}
+.ek .ek-hero .pays-bar{background:#fff;margin:18px 0 0;max-width:max-content}
+html #app .ek.ek-page .ek-hero .pays-bar button.on{background:var(--ek-y);color:var(--ek-ink)}
+.ek .ap4-form{margin-top:16px}
+html #app .ek.ek-page .ap4-det .pa-pli,html #app .ek.ek-page .ap4-det .pa-quiz{border:2px solid var(--ek-ink);border-radius:18px;box-shadow:none;margin:0 0 10px;background:#fff}
+html #app .ek.ek-page .ap4-det .pa-pli>summary{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 18px;cursor:pointer}
+html #app .ek.ek-page .ap4-det .pa-pli>summary h2{font:800 20px/1.2 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.02em;margin:0}
+html #app .ek.ek-page .ap4-det .pa-quiz{display:block;text-align:left;text-decoration:none;color:var(--ek-ink);background:#E2F8EE}
+html #app .ek.ek-page .ap4-det .pa-quiz .pb{padding:14px 18px;display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:6px 14px}
+html #app .ek.ek-page .ap4-det .pa-quiz b{font:800 20px/1.2 "Bricolage Grotesque",Inter,sans-serif}
+html #app .ek.ek-page .ap4-det .pa-pli>summary.ph{padding:14px 18px}
+html #app .ek.ek-page .ap4-det .pa-quiz .pb{padding:14px 18px}
+html #app .ek.ek-page .ap4-det #profil:not([open]){display:none}
+html #app .ek.ek-page .ap4-det .pa-quiz:has(+ #profil[open]){display:none}
