@@ -33,6 +33,7 @@ body{margin:0;background:#fff;font-family:Inter,sans-serif;color:#111}
 .cx-score th,.cx-score td{padding:12px 10px;text-align:center;border-top:1.5px solid #E6E4DE}
 .cx-score thead th{border-top:0;font:800 12.5px Inter;color:#111;vertical-align:bottom;background:#FFF6C7}
 .cx-score thead th a{color:#111;text-decoration:none;display:block}
+.cx-go{border-radius:12px;padding:6px 4px;cursor:pointer}.cx-go span{display:block;font:800 13px Inter;margin-top:2px}.cx-go:hover,.cx-go:focus-visible{background:#FFE14D;outline:2px solid #111}
 .cx-score thead th i{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:#111;color:#fff;font:800 11px Inter;font-style:normal;margin-bottom:4px}
 .cx-score tbody th{text-align:left;font:800 15px Inter;white-space:nowrap}
 .cx-score tbody th span.lg{display:inline-grid;vertical-align:middle;width:28px;height:28px;border:1.5px solid #E6E4DE;border-radius:8px;padding:3px;box-sizing:border-box;margin-right:8px;background:#fff}
@@ -129,17 +130,10 @@ body{margin:0;background:#fff;font-family:Inter,sans-serif;color:#111}
 
 <!-- 7. D'autres comparaisons : trois proches, la galerie complète est sur la page de départ -->
 <section class="ek-sec" id="autres"><span class="ek-stk2 p">Dans le même esprit</span><h2>D'autres comparaisons du luxe.</h2>
-  <div class="cx-gal" id="gal"></div><p style="margin-top:14px"><a class="ek-lk" href="#depart">Toutes les comparaisons toutes prêtes (63) →</a></p>
+  <div class="cx-gal" id="gal"></div>
 </section>
 
-<span class="demo-tag" id="depart">Page de départ, sans entreprise choisie</span>
-<section class="ek-hero cx-hero" style="margin-top:12px">
-  <div class="ek-crumb" style="font:700 13px Inter;color:#333">Outils › Comparer</div>
-  <h1>Qui fait mieux ?</h1>
-  <p style="font:600 18px/1.4 Inter;max-width:640px;margin:12px 0 0">Choisissez deux ou trois entreprises : le site les classe sur cinq critères, à partir de leurs comptes officiels.</p>
-  <div class="cx-sel" style="grid-template-columns:minmax(0,560px)"><div class="cx-add"><b>Ajouter une entreprise</b><input placeholder="Nom ou code : LVMH, Apple, TotalEnergies…"><small>Ou commencez par une comparaison toute prête, juste en dessous.</small></div></div>
-</section>
-<section class="ek-sec"><span class="ek-stk2 p">Toutes prêtes</span><h2>63 comparaisons, en un clic.</h2><div class="cx-th" id="th"></div><div class="cx-gal" id="gal2"></div></section>
+
 
 </div>
 <script src="../../cf/site/m/composants.js"></script>
@@ -174,7 +168,7 @@ document.getElementById("sel").innerHTML=C.map(c=>`<div class="cx-co"><button cl
 
 // 2. Verdict + tableau des scores
 document.getElementById("vrd").innerHTML=`<i>Hermès</i> devant sur 3 critères sur 5, <em>Kering</em> dernière sur 3.`;
-document.getElementById("score").innerHTML=`<table><thead><tr><th></th>${K.map((k,i)=>`<th><a href="#c-${k.k}"><i>${i+1}</i><br>${k.n}</a></th>`).join("")}</tr></thead><tbody>${C.map((c,j)=>`<tr><th>${img(c)}${c.nom}</th>${K.map((k,i)=>{ const v=c[k.k], up=k.med!=null&&v!=null?(k.haut?v>k.med:v<k.med):null; return `<td><b class="${R[i](c)}">${v==null?"pas de sens cette année":k.f(v)}${up==null?"":`<span class="ar" title="${up?"mieux":"moins bien"} que la médiane du secteur">${up?"▲":"▼"}</span>`}</b></td>`; }).join("")}</tr>`).join("")}</tbody>
+document.getElementById("score").innerHTML=`<table><thead><tr><th></th>${K.map((k,i)=>`<th><a class="cx-go" href="#c-${k.k}" data-go="c-${k.k}"><i>${i+1}</i><br>${k.n}<span>↓</span></a></th>`).join("")}</tr></thead><tbody>${C.map((c,j)=>`<tr><th>${img(c)}${c.nom}</th>${K.map((k,i)=>{ const v=c[k.k], up=k.med!=null&&v!=null?(k.haut?v>k.med:v<k.med):null; return `<td><b class="${R[i](c)}">${v==null?"pas de sens cette année":k.f(v)}${up==null?"":`<span class="ar" title="${up?"mieux":"moins bien"} que la médiane du secteur">${up?"▲":"▼"}</span>`}</b></td>`; }).join("")}</tr>`).join("")}</tbody>
 <tfoot><tr><th><span class="cx-mk">médiane</span>du secteur</th>${K.map(k=>`<td>${k.med!=null?`<span class="cx-med">${k.f(k.med)}</span>`:""}</td>`).join("")}</tr></tfoot></table>`;
 
 // 3. Le fil : un ekPoints par critère (les trois entreprises face à la médiane du secteur) + « Ce qui a changé »
@@ -222,10 +216,10 @@ document.getElementById("tableau").innerHTML=`<div class="ek-tc ek-tc-l"><p clas
 
 // 7. Galerie : thèmes en pastilles, six cartes visibles
 const TH=["Tout","Consommation et luxe","Technologie","Banque et finance","Énergie","Industrie et transport","Santé","Immobilier et télécoms"];
-document.getElementById("th").innerHTML=TH.map((t,i)=>`<button class="${i===0?"on":""}">${t}${i===0?" (63)":""}</button>`).join("");
 const G=[["Le luxe européen","LVMH, Moncler et Burberry",["lvmh.png","moncler.png","burberry.png"],"Moncler en tête sur 3 critères"],["Les géants de la tech","Apple, Microsoft et Alphabet",["apple.png","microsoft.png","alphabet.png"],"Microsoft en tête sur 4 critères"],["Les pétrolières","TotalEnergies, Shell et BP",["totalenergies.png","shell.png","bp.png"],"TotalEnergies en tête sur 3 critères"],["Les fabricants de puces","Nvidia, AMD et Intel",["amd.png","intel.png","asml.png"],"calculé sur les comptes 2025"],["Les banques françaises","BNP Paribas, Société Générale, Crédit Agricole",["bnp-paribas.png","societe-generale.png","credit-agricole.png"],"calculé sur les comptes 2025"],["La beauté","L'Oréal, Estée Lauder et Coty",["loreal.png","estee-lauder.png","coty.png"],"calculé sur les comptes 2025"]];
 const carte=g=>`<a class="cx-pc" href="#"><span class="lgs">${g[2].map(f=>`<span><img src="${L+f}" alt="" onerror="this.parentNode.style.display='none'"></span>`).join("")}</span><b>${g[0]}</b><small>${g[1]}</small><em>${g[3]}</em></a>`;
 document.getElementById("gal").innerHTML=[["Le luxe européen","LVMH, Moncler et Burberry",["lvmh.png","moncler.png","burberry.png"],"Moncler en tête sur 3 critères"],["La beauté","L'Oréal, Estée Lauder et Coty",["loreal.png","estee-lauder.png","coty.png"],"calculé sur les comptes 2025"],["La mode","Inditex, H&M et Kering",["inditex.png","kering.png"],"calculé sur les comptes 2025"]].map(carte).join("");
-document.getElementById("gal2").innerHTML=G.map(carte).join("");
+
+document.addEventListener("click",e=>{const a=e.target.closest("[data-go]");if(!a)return;e.preventDefault();const t=document.getElementById(a.dataset.go);if(t)t.scrollIntoView({behavior:"smooth",block:"start"});});
 </script>
 </body></html>
