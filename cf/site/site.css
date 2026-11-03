@@ -537,7 +537,7 @@ details.acc[open] > summary .chev{transform:rotate(-135deg)}
 .dot{width:12px;height:12px;border-radius:50%;flex:none;background:#C9D3E3}
 .dot-fort{background:var(--g)} .dot-moyen{background:var(--n)} .dot-vig{background:var(--o)}
 .vd{font-size:11.5px;font-weight:600}
-.vd-fort{color:#0F6B3E} .vd-moyen{color:var(--grey)} .vd-vig{color:#9A4A0B} .vd-na{color:#3E5272}
+   
 .accb .lead{font-size:14.5px;margin:0 0 6px}
 .accb .rule{font-size:13.5px;color:var(--grey);margin:10px 0 4px}
 .accb .links{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
@@ -602,7 +602,7 @@ table.t.click tbody tr:hover td{background:var(--hl)}
 .tag,.pills > span{border-radius:6px}
 .hbb span{background:var(--ink)}
 .hbr.hl .hbb span{background:var(--g)}
-.vd-fort{color:var(--g)} .vd-vig{color:#B23A1E}
+ 
 .carte{background:var(--page);border:1px solid var(--rule)}
 .carte .n{background:var(--lime);color:var(--ink);font-family:var(--mono)}
 .notice{background:var(--hl);border-color:#DCEBA6;color:#3B4A12}
@@ -999,41 +999,41 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
 /* ==== m/etf.js (ligne 65 avant le 31/10) ==== */
 .eb{display:inline-flex;align-items:center;height:22px;padding:0 9px;border-radius:99px;border:1px solid var(--line,#E6E2DA);font-size:11.5px;font-weight:600;color:var(--grey);background:#fff;white-space:nowrap}
 .eb-g{border-color:#BFDCCB;background:#EEF6F1;color:#0E6B4A}.eb-o{border-color:#F1C9BC;background:#FBEFEA;color:#B4441F}
-.etfhd{padding:20px 22px}
-.etfhd .top{display:flex;gap:14px;align-items:flex-start}
-.etfhd h1{font-family:var(--serif);font-weight:800;letter-spacing:-.015em;font-size:26px;line-height:1.15;margin:0}
-.etfhd .sub{color:var(--grey);margin-top:4px;font-size:14px}
-.etfhd .ids{display:flex;flex-wrap:wrap;gap:6px 14px;margin-top:8px;font-size:12.5px;color:var(--grey);align-items:center}
-.etfhd .ids b{font-family:var(--mono);color:var(--ink);font-weight:600}.etfhd .ids .fh-isin2{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:#fff;border-radius:999px;padding:4px 10px}.etfhd .ids .fh-isin2 b{color:#fff}.etfhd .ids .fh-isin2 small{font-size:10.5px;opacity:.75}.etfhd .ids .fh-isin2 .copy{color:#fff;border-color:rgba(255,255,255,.4)}
-.etfhd .copy{border:0;background:none;padding:0 2px;cursor:pointer;color:var(--grey);font:inherit;text-decoration:underline dotted}
-.etfhd .badges{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-.etfhd .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
-.etfhd .acts .linkbtn,.etfhd .acts a.pill{display:inline-flex;align-items:center;height:30px;padding:0 12px;border:1px solid var(--ink);border-radius:99px;font-size:13px;font-weight:600;color:var(--ink);background:#fff;text-decoration:none;cursor:pointer}
-.etfhd .acts .favbtn{margin:0}
-.etfkv{display:grid;grid-template-columns:auto minmax(0,1fr);gap:0 14px;margin:8px 0 0;font-size:14px;line-height:1.45}
-.etfkv dt{color:var(--grey);font-size:12.5px;padding:8px 0;border-bottom:1px dashed var(--line,#E6E2DA)}
-.etfkv dd{margin:0;padding:8px 0;border-bottom:1px dashed var(--line,#E6E2DA)}
-.etfkv dd b{font-family:var(--mono);font-weight:600}
-.etfkv dt:last-of-type,.etfkv dd:last-of-type{border-bottom:0}
-.etfvd{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;margin-top:4px}
-.etfvd i{width:9px;height:9px;border-radius:50%;display:inline-block}
-.vd-g{color:#0E6B4A}.vd-g i{background:var(--g,#0E6B4A)}.vd-o{color:#B4441F}.vd-o i{background:var(--o,#D94F2B)}.vd-n{color:var(--grey)}.vd-n i{background:var(--n,#B9B3A8)}
-.etfbuy{font-size:17px;line-height:1.45;margin:0 0 14px}
-.etfbuy b{font-family:var(--mono);font-weight:600}
-.etfcols{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-.etfcols h3{font-size:13px;text-transform:uppercase;letter-spacing:.05em;color:var(--grey);margin:4px 0 8px;font-weight:600}
-.etfsrc{font-size:12px;color:var(--light,#8B867E);margin-top:10px}
-.etfsrc a{color:inherit}
-.etfnote{background:#FBF7EC;border:1px solid #EFE3C2;border-radius:10px;padding:10px 12px;font-size:13.5px;line-height:1.5;margin:0 0 12px}
-.etffees{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:6px 0 12px}
-.etffees div{border:1px solid var(--line,#E6E2DA);border-radius:12px;padding:12px;background:#fff}
-.etffees span{font-size:12.5px;color:var(--grey);display:block}
-.etffees b{font-family:var(--mono);font-size:22px;font-weight:600}
-.etfrisk{list-style:none;padding:0;margin:0}
-.etfrisk li{padding:9px 0 9px 22px;border-bottom:1px dashed var(--line,#E6E2DA);position:relative;font-size:14px;line-height:1.5}
-.etfrisk li:last-child{border-bottom:0}
-.etfrisk li:before{content:"";position:absolute;left:4px;top:15px;width:8px;height:8px;border-radius:50%;background:var(--n,#B9B3A8)}
-.etfrisk li.o:before{background:var(--o,#D94F2B)}.etfrisk li.g:before{background:var(--g,#0E6B4A)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 .etfrows{display:flex;flex-direction:column}
 .etfrow{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 16px;border-top:1px solid var(--line2,#EFECE6);color:inherit;text-decoration:none}
 .etfrow:first-child{border-top:0}
@@ -1057,36 +1057,36 @@ a.frmtile:hover{border-color:var(--ink);transform:translateY(-1px)}
 .etfpre button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .etfcount{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:2px 2px 10px;font-size:13.5px;color:var(--grey);flex-wrap:wrap}
 .etfmore{display:block;width:100%;height:46px;border:0;border-top:1px solid var(--line2,#EFECE6);background:#FCFBF8;font:inherit;font-weight:600;cursor:pointer;color:var(--ink)}
-.etfask{display:flex;gap:8px}
-.etfask input{flex:1;min-width:0;height:40px;border:1px solid var(--line,#E6E2DA);border-radius:10px;padding:0 12px;font:inherit;background:#fff}
-.etffaq details{border-top:1px solid var(--line2,#EFECE6);padding:12px 0}
-.etffaq details:first-child{border-top:0}
-.etffaq summary{cursor:pointer;font-weight:600;font-size:14.5px;list-style:none;display:flex;justify-content:space-between;gap:10px}
-.etffaq summary::-webkit-details-marker{display:none}
-.etffaq summary:after{content:"+";color:var(--grey);font-weight:400}
-.etffaq details[open] summary:after{content:"–"}
-.etffaq details p{margin:8px 0 0;font-size:14px;line-height:1.55;color:var(--ink)}
-.etfnb{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:10px;align-items:center;padding:10px 0;border-top:1px dashed var(--line,#E6E2DA);color:inherit;text-decoration:none}
-.etfnb:first-child{border-top:0}
-.etfnb b{font-size:14px}.etfnb small{display:block;font-size:12px;color:var(--grey)}
-.etfnb .n{font-family:var(--mono);font-size:14px;text-align:right}
-.etfnb .ov{font-size:12px;color:var(--grey);text-align:right;min-width:74px}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /* noms d'indice longs dans le classement de l'accueil (m/orchestre.js) : une ligne, coupée proprement */
 a.orcrow span.t small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;white-space:normal;overflow:hidden}
 @media (max-width:860px){
- .etfcols{grid-template-columns:1fr}
+ 
  .etfflt{grid-template-columns:1fr 1fr}
 }
 @media (max-width:520px){
- .etfhd{padding:16px}.etfhd h1{font-size:22px}
- .etffees b{font-size:18px}
+ 
+ 
  .etfrow{padding:12px;grid-template-columns:30px minmax(0,1fr) auto;gap:10px}
  .etfrow .sb{white-space:normal}
- .etfnb{grid-template-columns:minmax(0,1fr) auto}.etfnb .ov{grid-column:1/-1;text-align:left}
+ 
 }
 
 /* ==== m/etf.js (ligne 432 avant le 31/10) ==== */
-.etf-v{font-family:var(--sans)!important;font-size:15px!important;font-weight:400!important;line-height:1.5!important;color:var(--grey)!important;margin:0 0 14px!important}.etf-v b{color:var(--ink);font-family:var(--mono);font-weight:500}
+
 
 /* ==== m/fiche.js (ligne 161 avant le 31/10) ==== */
 .fhero{margin-bottom:14px}
@@ -2082,31 +2082,31 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
 
 
 
-.rf-hero .fh-tags{margin-top:8px;align-items:center}.fh-ids{margin:4px 0 0;font-size:12.5px;color:var(--grey);font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}
-
-.rf-mid,.rf-mid.f2-noc{grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);grid-template-areas:"ch vl"}
-.rf-mid.f2-noc{grid-template-columns:minmax(0,1fr);grid-template-areas:"vl"}
-.rf-mid #tvchart.f2-tv{height:316px}
-.rf-sum{grid-area:vl;display:flex!important;flex-direction:column;gap:12px;padding:16px 22px 16px;border-left:1px solid var(--line2);min-width:0}
-.rf-mid.f2-noc .rf-sum{border-left:0}
-.rf-sh{display:flex;align-items:baseline;justify-content:space-between;gap:4px 12px;flex-wrap:wrap}
-.rf-sum .f2-sub{font-size:12.5px;color:var(--grey);margin:0}
-.rf-sum .fh-v{margin:0;font-size:16px;line-height:1.5}
-.rf-pts{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px 18px}
-.rf-bl h3{font-family:var(--sans);font-size:12px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#6E6A63;margin:0 0 6px}
-.rf-bl ul{list-style:none;margin:0;padding:0;display:grid;gap:5px}
-.rf-bl li{display:flex;gap:8px;align-items:baseline;font-size:13.5px;line-height:1.4}
-.rf-bl li i{flex:none;width:8px;height:8px;border-radius:50%;transform:translateY(-1px)}
+.fh-ids{margin:4px 0 0;font-size:12.5px;color:var(--grey);font-variant-numeric:tabular-nums;display:flex;flex-wrap:wrap;gap:0 4px;align-items:center}
 
 
 
- .rf-bl li.rf-d i{background:var(--o)}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
 
 
 
 .rf-no{margin:0;font-size:13px;color:var(--grey);line-height:1.45}
-.rf-lk{display:inline-block;margin-top:6px;font-size:13px;font-weight:600;color:var(--ink);text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
-.rf-foot{display:flex;justify-content:space-between;align-items:center;gap:8px 14px;flex-wrap:wrap;margin-top:auto;padding-top:10px;border-top:1px solid var(--line2);font-size:13px}
+
+
 
 
 
@@ -2133,14 +2133,11 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
 
 
 /* 1d : verdict d'abord. « En bref » à gauche et en premier, la courbe à droite ; la phrase de synthèse en grand */
-@media (min-width:901px){
-  .rf-hero:not(.rf-etf) .rf-mid:not(.f2-noc){grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);grid-template-areas:"vl ch"}
-  .rf-hero:not(.rf-etf) .rf-mid:not(.f2-noc) .rf-sum{border-left:0;border-right:1px solid var(--line2)}
-}
-.rf-hero .rf-sum .fh-v{font-family:var(--serif);font-size:20px;font-weight:500;line-height:1.4;letter-spacing:-.01em}
 
 
-@media (max-width:760px){.rf-hero .rf-sum .fh-v{font-size:18px}}
+
+
+
 
 
 /* Étape « Concurrents » : tableau côte à côte */
@@ -2191,40 +2188,35 @@ dialog.f2dlg::backdrop{background:rgba(17,18,20,.45)}
 
 
 
-@media (max-width:1100px){.rf-pts{grid-template-columns:minmax(0,1fr)}}
-@media (max-width:900px){
-  .rf-mid,.rf-mid.f2-noc{grid-template-columns:minmax(0,1fr);grid-template-areas:"vl" "ch"}
-  .rf-sum{border-left:0;border-bottom:1px solid var(--line2)}
-  .rf-mid .f2-chart{border-top:0}
-  .rf-pts{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
-}
+
+
 @media (max-width:760px){
   
   
-  .rf-sum{padding:14px 16px}
-  .rf-mid #tvchart.f2-tv{height:230px;min-height:230px}
+  
+  
   
   .rf-ctab th.lab{width:140px;min-width:140px}
   .rf-ctab{min-width:720px}
   
 }
-@media (max-width:480px){.rf-pts{grid-template-columns:minmax(0,1fr)}}
+
 /* Fiche ETF : même hiérarchie que la fiche entreprise */
-.rf-bl li.rf-n i{background:var(--n)}
-.rf-etfhd{padding:16px 22px 14px}
-.rf-etfhd .top{display:flex;gap:20px;align-items:flex-start;justify-content:space-between}
-.rf-etfid{display:flex;gap:14px;align-items:flex-start;min-width:0;flex:1}
-.rf-etfpx{flex:none;width:280px;min-height:0}
-.rf-etf .rf-mid #tvchart.f2-tv{height:300px}
-.rf-fr{margin:0;font-size:14px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
-.rf-fr b{font-family:var(--mono);font-size:18px}
-.rf-fr .etfvd{margin:0}
-.rf-etfprof{border-top:1px solid var(--line2)}
-.etfter-l{margin:0;font-size:14px;display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
-.etfter-l b{font-family:var(--mono);font-size:18px}
-#ecarac .etfkv{margin:0}
-@media (max-width:900px){.rf-etfhd .top{flex-direction:column}.rf-etfpx{width:100%}}
-@media (max-width:760px){.rf-etfhd{padding:14px 16px 12px}.rf-etf .rf-mid #tvchart.f2-tv{height:230px}}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /* 5e passage (A3, tour téléphone) : fil d'Ariane sur une ligne (nom long coupé) ; sur téléphone, le bouton « Poser une question à l'IA » de l'en-tête disparaît (le bouton flottant ✦ fait la même chose) */
 .crumbs-fiche{white-space:nowrap;overflow:hidden}.crumbs-fiche .crumb-last{display:inline-block;max-width:45%;overflow:hidden;text-overflow:ellipsis;vertical-align:bottom}
@@ -2236,15 +2228,7 @@ td.doute{color:var(--light);font-style:italic}
 
 
 /* 5e passage (B1) : sur téléphone, verdict + « depuis l'an dernier » + 5 jauges dans le premier écran */
-@media (max-width:700px){
-  
-  .rf-hero .fh-tags{margin-top:6px}
-  .rf-hero .px{padding-top:4px;min-height:0!important}.rf-hero .fh-sum{padding-top:10px;gap:8px}
-  .rf-hero .rf-vc{font-size:24px;margin-bottom:8px}.rf-hero .rf-vc small{font-size:12px}
-  .rf-hero .rf-sh{margin:0 0 4px}.rf-hero .rf-sh .f2-h{font-size:14px;font-weight:600;font-family:var(--sans)}
-  .rf-hero .rf-sh{min-height:0;height:26px;align-items:center;overflow:visible}.rf-hero .pa2-ic{width:14px;height:14px}
-  
-}
+
 
 /* ==== m/fiche2.js (ligne 687 avant le 31/10) ==== */
 .rf6 .ph{border-bottom:1px solid var(--ink)}
@@ -2264,7 +2248,7 @@ td.doute{color:var(--light);font-style:italic}
 
 
 
-.rf-vc{font-family:var(--serif);font-weight:800;font-size:30px;line-height:1.1;letter-spacing:-.015em;margin:0 0 12px;display:flex;flex-direction:column;gap:4px}.rf-vc small{font-family:var(--sans);font-weight:500;font-size:12.5px;color:var(--grey);letter-spacing:0}
+
 
 
 
@@ -2276,15 +2260,15 @@ td.doute{color:var(--light);font-style:italic}
 @media (max-width:900px){.rf6 .src{padding:12px 16px 16px}}
 
 /* ==== m/fiche2.js (ligne 971 avant le 31/10) ==== */
-.rf-pl{border:1px solid var(--rule);border-radius:6px;background:#fff;margin:12px 0}
-.rf-pl>summary{list-style:none;cursor:pointer;display:grid;grid-template-columns:minmax(0,1fr) 22px;gap:2px 12px;align-items:center;padding:14px 22px}
-.rf-pl>summary::-webkit-details-marker{display:none}.rf-pl>summary b{font-size:16px}.rf-pl>summary span{grid-column:1;font-size:13px;color:var(--grey)}
-.rf-pl>summary::after{content:"+";grid-column:2;grid-row:1/span 2;font-family:var(--mono);font-size:22px;color:var(--light);text-align:right}.rf-pl[open]>summary::after{content:"–"}
-.rf-pl>summary:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}
-.rf-plb{border-top:1px solid var(--rule)}.rf-plb>.panel{border:0;box-shadow:none;margin:0;border-radius:0}
+
+
+
+
+
+
 
 #rf-change #rf-trim{padding:14px 22px 18px}
-@media (max-width:760px){.rf-pl>summary{padding:12px 16px}#rf-change #rf-trim{padding:12px 16px 14px}}
+@media (max-width:760px){#rf-change #rf-trim{padding:12px 16px 14px}}
 
 /* ==== m/fiche2.js (ligne 991 avant le 31/10) ==== */
 .pa2.pa2-ns .pl{opacity:.45;filter:grayscale(1)}.pa2.pa2-ns .pt small{color:var(--grey)}
@@ -2292,9 +2276,9 @@ td.doute{color:var(--light);font-style:italic}
 /* ==== m/fiche2.js (ligne 1140 avant le 31/10) ==== */
 
 
-.rf-l2h{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;border-top:1px solid var(--ink);padding-top:12px;margin:0 0 10px}.rf-l2h h2{font-family:var(--serif);font-weight:800;font-size:26px;margin:0}.rf-l2t{font-size:13px;color:var(--grey);display:flex;gap:6px;align-items:center;cursor:pointer}
 
-.rf-th-in.panel,.rf-plb>#tbx.panel,.rf-plb>#rf-tout.panel{border:0;box-shadow:none;margin:0;border-radius:0}.rf-plb .rf-top .ph{display:none}
+
+
 
 #rf-ta-t{padding:12px 22px 4px}
 
@@ -2314,11 +2298,11 @@ td.doute{color:var(--light);font-style:italic}
 .rf-gwrap{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,2fr);gap:18px 32px;align-items:start}.rf-gdef{font-size:13.5px;line-height:1.55;color:var(--ink);border-left:3px solid var(--lime);padding:4px 0 4px 16px;margin-top:30px}.rf-gdef p{margin:0 0 8px}.rf-gdef .kick{margin:10px 0 2px;color:var(--grey)}.rf-gdef .kick:first-child{margin-top:0}@media (max-width:900px){.rf-gwrap{grid-template-columns:minmax(0,1fr)}.rf-gdef{margin-top:4px}}
 
 /* ==== m/fiche2.js (ligne 1165 avant le 31/10) ==== */
-.rf-pl2>summary{display:flex;align-items:center;gap:18px}.rf-pl2>summary::after{display:none!important}
 
 
 
-@media (max-width:600px){.rf-pl2>summary{flex-wrap:wrap;gap:8px 12px}}
+
+
 
 /* ==== m/fiche2.js (ligne 1175 avant le 31/10) ==== */
 
@@ -3018,7 +3002,7 @@ footer .navpied a,footer .navlg a{margin-left:0}
 /* ==== m/design.js (ligne 114 avant le 31/10) ==== */
 /* Lisibilité (29/10/2026, demande de Romain) : les petites étiquettes (VENTES, BÉNÉFICE, DIVIDENDE…) étaient en police à chasse fixe,
    11 px, gris clair : illisibles. Partout sur le site, elles passent en police de texte, 12 px, graisse 600, gris moyen. Les chiffres restent en chasse fixe. */
-.kick,.ess .lbl,.lbl,.pxhead .kick,.tile .kick,.ftile .kick,.pf3 .kick,.pf3hero .kick,.acc .kick,.rf-sum .kick,.ctx .kick{font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--grey)}
+.kick,.ess .lbl,.lbl,.pxhead .kick,.tile .kick,.ftile .kick,.pf3 .kick,.pf3hero .kick,.acc .kick,.ctx .kick{font-family:var(--sans);font-size:12.5px;font-weight:600;letter-spacing:0;text-transform:none;color:var(--grey)}
 /* Apaisement (29/10/2026, soir) : Romain trouve le site « fatigant » : trop d'étiquettes colorées, de titres de couleurs.
    Règle : la couleur ne sert qu'au sens (vert = favorable, orange = à surveiller, hausse / baisse). Tout le reste est gris ou encre.
    Ici l'accueil ; la même règle sera appliquée page par page. */
@@ -3107,7 +3091,7 @@ h3,.rf-h3,.ctx-h{font-weight:700}
 
 /* ==== m/design.js (ligne 212 avant le 31/10) ==== */
 body *{text-transform:none!important}
-small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.out-dc small,.o2-sc,.o2-tile small,.etfcols small,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.pf3ipv,.rf-bl h3,.fbt,.syncat,.synev,.synevol,.rc-exq,.tbx thead th,.pop .kick{letter-spacing:0!important}
+small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.out-dc small,.o2-sc,.o2-tile small,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.pf3ipv,.fbt,.syncat,.synev,.synevol,.rc-exq,.tbx thead th,.pop .kick{letter-spacing:0!important}
 .navpied p,table.t th,.tbx thead th,.par-sect,.par-tools small,.pa-keep small,.ctx-k,.ctx-th,.out-crit,.o2-sc,.pf3hd,.pf3bd,.pf3bdg,.pf3dx,.fbt,.syncat,.synev,.synevol,.rc-exq{font-family:var(--sans)!important}
 .navpied p{font-weight:700;color:var(--ink);font-size:13px}
 
@@ -3148,7 +3132,7 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 .mk-portes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 30px}.mk-porte{display:grid;grid-template-columns:28px minmax(0,1fr);grid-template-areas:"i t" "i n" "d d";gap:2px 10px;padding:16px 18px;border:1px solid var(--rule);border-radius:6px;background:#fff;color:var(--ink);text-decoration:none}.mk-porte svg{grid-area:i;width:26px;height:26px;margin-top:2px}.mk-porte b{grid-area:t;font-size:17px}.mk-porte small{grid-area:n;font-family:var(--mono);font-size:12.5px;color:var(--grey)}.mk-porte span{grid-area:d;margin-top:8px;font-size:13.5px;line-height:1.45;color:var(--grey)}.mk-porte:hover b{text-decoration:underline;text-decoration-color:var(--lime);text-decoration-thickness:3px;text-underline-offset:3px}@media (max-width:900px){.mk-portes{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:480px){.mk-portes{grid-template-columns:minmax(0,1fr)}}
 
 /* ==== m/design.js (ligne 333 avant le 31/10) ==== */
-.rf-etf ~ .cols .rf-l2h{margin:6px 0 10px}.cols details.rf-pl2{margin:0 0 12px}.cols details.rf-pl2 .rf-th-in.panel{border:0;box-shadow:none;margin:0;border-radius:0}
+
 
 /* ==== m/design.js (ligne 379 avant le 31/10) ==== */
 
@@ -3159,7 +3143,7 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 .out-gal6 .out-pg{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}@media (max-width:900px){.out-gal6 .out-pg{grid-template-columns:repeat(2,minmax(0,1fr))}}@media (max-width:560px){.out-gal6 .out-pg{grid-template-columns:minmax(0,1fr)}}
 
 /* ==== m/design.js (ligne 389 avant le 31/10) ==== */
-.etfhd .ids b,.fhero .tags .tag:first-child{font-family:var(--code);font-size:.95em}
+.fhero .tags .tag:first-child{font-family:var(--code);font-size:.95em}
 
 /* ==== m/design.js (ligne 391 avant le 31/10) ==== */
 .ax-chip,.acc-cat{color:var(--grey)!important;background:var(--soft)!important;border-color:var(--rule)!important}.ax-imp{color:var(--o)!important;background:color-mix(in srgb,var(--o) 10%,transparent)!important;border-color:transparent!important}
@@ -3188,9 +3172,9 @@ small,th,.kick,.navpied p,.par-sect,.par-tools small,.par-demo .kick,.pa-keep sm
 @media (max-width:600px){footer .navpied4{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 @media (max-width:760px){
-  small,.src,.note,.light,.muted,.kick,.sub,.rf-no,.tbx-unit,.f2-sub,.etfsrc,.pa2 small,.rf6-jg small,.tbx-date small,.mk-porte small,.ot-k span,.rf-pl2>summary span,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.acc-cat,.tag{font-size:12px!important}
+  small,.src,.note,.light,.muted,.kick,.sub,.rf-no,.tbx-unit,.f2-sub,.pa2 small,.rf6-jg small,.tbx-date small,.mk-porte small,.ot-k span,.tbx-lv,.tbx-ar span,.tbx-vm,.rf-kt small,.rf-kt i,.ax-chip,.ax-m,.acc-cat,.tag{font-size:12px!important}
   .num,.rf-kt b,td.num,.tile .v,.pxhead .p,.tbx-val{font-size:max(13px,1em)!important}
-  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.ot-k,.mk-porte,.rf-pl2>summary,.rf-pl>summary,details.acc>summary,.etfpre button,.cell-co,.navfav,.esptabs a{min-height:44px}
+  .btn,.linkbtn,.chip,.pill,.chips button,.filters button,.qtabs a,.qtabs button,.nfil button,.o2-seg button,.favbtn,.mbtn,.tbx-gb,.rf-kt,.rf-gsel button,.ot-k,.mk-porte,details.acc>summary,.etfpre button,.cell-co,.navfav,.esptabs a{min-height:44px}
   .chips button,.filters button,.chip,.pill,.nfil button,.o2-seg button,.etfpre button{display:inline-flex;align-items:center;padding-top:8px;padding-bottom:8px}
   a.lnk,a.more{display:inline-block;padding:9px 0;line-height:1.4}
   .def{min-height:44px;display:inline-flex;align-items:center}
@@ -3352,8 +3336,8 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
 .s5 .synev button{background:var(--soft);color:var(--ink);border-color:var(--rule)}
 
 /* 1/11 : dans un pli, le titre du thème répète le titre du pli ; la médiane est déjà le trait pointillé du graphique */
-.rf-plb .rf-th-in > .ph{display:none}
-.rf-plb .rf-kt > i{display:none}
+
+
 /* 1/11 : la preuve à la ligne près (ancres ESEF) */
 .anc-ls{display:flex;flex-direction:column;gap:4px}.anc-l{font-weight:600;color:var(--g);text-decoration:underline;text-underline-offset:3px}.anc-n{display:block;color:var(--light);font-size:12px;margin-top:4px}
 .anc-p{margin:10px 0 0;font-size:14px}
@@ -3371,13 +3355,13 @@ body:has(.mpanel.open) #orciab,html.etf-flt-open #orciab{display:none}
    Le contenu est posé sur le papier et séparé par des filets ; la hiérarchie vient de la typographie, pas des cartes.
    Rayons : 0 pour les panneaux et les blocs, 4 px pour les boutons, champs et pastilles. Aucune ombre. Le rapport (.syn4) garde son identité. */
 :root{--radius:4px}
-#app .panel,#app details.panel,#app .cocard,#app .out-dc,#app .ftile,#app .cm3-c,#app .pa-niv,#app .prem-a,#app .offer,#app details.acc,#app .rf-pl,#app .tbx-dv,#app .ev,#app .fcard{
+#app .panel,#app details.panel,#app .cocard,#app .out-dc,#app .ftile,#app .cm3-c,#app .pa-niv,#app .prem-a,#app .offer,#app details.acc,#app .tbx-dv,#app .ev,#app .fcard{
   border-radius:0!important;box-shadow:none!important}
 #app .panel,#app details.panel{background:transparent;border:0;border-top:1px solid var(--rule)}
 #app .panel:has(> .ph){border-top:2px solid var(--ink)}
 #app .panel>.ph,#app .panel>.pb{padding-left:0;padding-right:0}
 #app .cocard,#app .out-dc,#app .cm3-c,#app .pa-niv{background:transparent;border:0;border-top:1px solid var(--rule)}
-#app .rf-pl,#app details.acc,#app .prem-a{background:transparent;border:0;border-bottom:1px solid var(--rule)}
+#app details.acc,#app .prem-a{background:transparent;border:0;border-bottom:1px solid var(--rule)}
 #app .btn,#app .chip,#app input,#app select,#app textarea,#app button.on,#app .pf3ab,#app .mia-ctx,#app label.qo{border-radius:4px!important}
 .syn4 .btn,.syn4 .s5-exp{border-radius:99px!important}
 /* titres de rubrique : plus d'icône décorative devant */
@@ -3539,7 +3523,7 @@ html #app .a4 .a4-tabs button{border-radius:999px!important}
 #app .ph h2,#app h2{font-family:var(--serif);font-weight:800;letter-spacing:-.04em}
 #app .ph h2{font-size:clamp(22px,2.3vw,30px);line-height:1.05}
 /* cartes */
-html #app .panel,html #app details.panel,html #app .cocard,html #app .out-dc,html #app .cm3-c,html #app .pa-niv,html #app .prem-a,html #app .offer,html #app .rf-pl,html #app .ev,html #app .fcard,html #app .ot-k{
+html #app .panel,html #app details.panel,html #app .cocard,html #app .out-dc,html #app .cm3-c,html #app .pa-niv,html #app .prem-a,html #app .offer,html #app .ev,html #app .fcard,html #app .ot-k{
   border:var(--v3b)!important;border-radius:24px!important;background:#fff;box-shadow:none!important}
 html #app .panel,html #app details.panel{padding:20px 24px;margin-bottom:22px}
 html #app .panel>.ph,html #app .panel>.pb{padding-left:0;padding-right:0}
@@ -3547,7 +3531,7 @@ html #app .panel>.ph{border-bottom:0}
 html #app a.panel:hover,html #app a.cm3-c:hover,html #app a.ot-k:hover,html #app a.cocard:hover{box-shadow:5px 5px 0 #111!important;transform:translate(-2px,-2px);transition:transform .12s,box-shadow .12s}
 html #app .ftile,html #app .tile,html #app .tbx-dv,html #app .rf-kt{border:var(--v3b)!important;border-radius:16px!important;background:#FCFBF7}
 /* rubriques en couleur pâle, en alternance, comme l'accueil */
-html #app .rf-plb{border-radius:20px!important}
+
 /* boutons */
 html #app .btn,html #app a.btn,html #app button.btn{border-radius:999px!important;background:#111;color:#fff;border:2px solid #111;font:700 14.5px var(--sans);padding:0 20px;min-height:42px;box-shadow:none}
 html #app .btn:hover{box-shadow:3px 3px 0 var(--a4y)!important}
@@ -3562,7 +3546,7 @@ html #app button.on:not(.favbtn):not(.prov-i){background:#111;color:#fff;border-
 #app .prof .pm,#app .pmini .pm,#app .pcmp .pm{width:2px!important;height:14px!important;top:-3px!important;background:#111!important}
 #app .prof .pd,#app .pmini .pd,#app .pcmp .pd{width:16px!important;height:16px!important;top:-4px!important;border:3px solid #fff!important;box-shadow:0 0 0 1.5px #111!important}
 /* verdict de la fiche */
-#app .rf-vc{font:800 clamp(28px,3.2vw,44px)/1.02 var(--serif)!important;letter-spacing:-.045em}
+
 /* tableaux */
 #app table th{font-weight:700;color:#111;border-bottom:2px solid #111}
 #app .tbl,#app .tablewrap{border:var(--v3b);border-radius:18px;overflow:hidden}
@@ -3679,7 +3663,7 @@ html #app #f3-metw .ftile+.ftile{border-left:2px solid #111!important}
 
 
 #f3-tousw{margin-top:22px}
-html #app #f3-tousw .rf-pl{margin-bottom:12px}
+
 
 
 
@@ -3817,7 +3801,7 @@ html body .orcia .orciax{border:2px solid #111!important;border-radius:999px!imp
 
 
 
-html #app #f3-tousw .rf-plb .panel{border:0!important;box-shadow:none!important;background:none!important;margin:0!important;padding:0!important}
+
 html #app #f3-tousw .rf-kts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;border:0!important;padding:4px 0 14px}
 html body #app #f3-tousw button.rf-kt:not(.x){border:2px solid #111!important;border-radius:16px!important;background:#fff!important;color:#111!important;padding:10px 14px!important;box-shadow:none!important;height:auto!important}
 html body #app #f3-tousw button.rf-kt.on:not(.x){background:var(--a4y)!important;box-shadow:3px 3px 0 #111!important}
@@ -3875,10 +3859,10 @@ html #app .ax-une .ax-bar2 i{background:#00B37A!important;border-radius:0}
 html #app .ax-bar.ax-bar2{height:auto!important;background:none!important;overflow:visible!important;border-radius:0!important;max-width:none!important;border:0!important;padding:12px 0 14px!important}
 @media (max-width:760px){html #app .ax-bar.ax-bar2{grid-template-columns:1fr 1fr}}
 /* Fiche ETF : l'en-tête prend le jaune de la fiche entreprise */
-html #app .rf-etf .rf-etfhd{background:var(--a4y);border-radius:24px;padding:22px 24px;margin:-4px -4px 18px}
-html #app .rf-etf .rf-etfhd h1{font:800 clamp(30px,4vw,48px)/1 var(--serif)!important;letter-spacing:-.05em!important}
-html #app .rf-etf .rf-etfhd .btn,html #app .rf-etf .rf-etfhd button:not(.prov-i){background:#fff;color:#111;border:2px solid #111!important}
-@media (max-width:760px){html #app .rf-etf .rf-etfhd{padding:18px 16px;margin:-2px -2px 14px;border-radius:20px}}
+
+
+
+
 html #app .pwa-hero{background:var(--a4y);border-radius:30px;padding:30px 36px 28px;margin:0 0 30px}
 html #app .pwa-hero h1{font:800 clamp(34px,4.6vw,58px)/.98 var(--serif)!important;letter-spacing:-.05em!important;max-width:20ch}
 html #app .pwa-hero .lead{font:500 16.5px/1.5 var(--sans);color:#222;max-width:68ch}
@@ -3929,7 +3913,7 @@ html #app #f3-tousw .tile .v,html #app #f3-tousw .ftile .v{font:800 23px/1 var(-
 html #app #f3-tousw .perx{border:2px solid #111;border-radius:20px;padding:14px 16px;background:#fff}
 html #app #f3-tousw .perx .kick{display:inline-block;font:800 13px var(--serif)!important;background:var(--a4y);border:2px solid #111;border-radius:8px;padding:3px 10px;transform:rotate(-2deg);box-shadow:2px 2px 0 #111;color:#111!important;text-transform:none!important;letter-spacing:0!important;margin:0 0 10px}
 html #app #f3-tousw .zg .zgb{height:12px;border:2px solid #111;border-radius:6px}
-html #app #f3-tousw .rf-th-in>.pb>p.lead{font:700 16px/1.45 var(--sans);background:var(--a4y);border-radius:16px;padding:12px 14px}
+
 html #app #f3-tousw .acc summary{font:800 15px var(--sans)}html #app #f3-tousw .acc{border:2px solid #111;border-radius:16px;padding:10px 14px;margin-top:10px}
 html #app #f3-tousw .tbx-box{border:2px solid #111;border-radius:18px;overflow:hidden}
 html #app #f3-tousw table.tbx thead th{background:#111!important;color:#fff!important;font:800 12px var(--sans)!important;border:0!important}
@@ -3962,33 +3946,33 @@ html #app #rf-tout.panel{border:0!important;box-shadow:none!important;background
 
 
 /* ---------- Fiche ETF v3 (m/etf3.js) ---------- */
-html #app .rf-etf #ebref{display:block}
-html #app .e3f-v{font:800 clamp(26px,3.2vw,36px)/1.02 var(--serif)!important;letter-spacing:-.05em;margin:14px 0 4px;color:#111}html #app .e3f-sub{font:600 13px var(--sans);color:#555;margin:0 0 12px}
+
+
 html #app #ebref .f3-lec{font-size:15px}
-html #app .e3f-frais{border:2px solid #111;border-radius:20px;padding:14px 16px;margin:12px 0;background:#fff;display:grid;gap:6px}
-html #app .e3f-frais small{font:800 13px var(--sans);color:#333}html #app .e3f-frais b{font:800 34px/1 var(--serif);letter-spacing:-.05em}
-html #app .e3f-vd{display:inline-block;justify-self:start;font:800 12.5px var(--sans);padding:2px 9px;border-radius:7px;background:#EEE}html #app .e3f-vd.vd-g{background:#C9F6E3;color:#006B48}html #app .e3f-vd.vd-r{background:#FFD9D1;color:#C2260E}
-html #app .e3f-frais .f3-ms{margin-top:22px}html #app .e3f-frais em{font:600 12px var(--sans);color:#555;font-style:normal}
-html #app .e3f-pts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px}html #app .e3f-card{border:2px solid #111;border-radius:18px;padding:12px 14px;background:#fff}html #app .e3f-card>small{display:block;font:800 15px var(--serif);letter-spacing:-.02em;margin-bottom:8px}
-html #app .e3f-card .f3-chips span{background:#fff}html #app .e3f-card .f3-chips span.warn{background:#FFD9D1}
-html #app .e3f-hb .hbr{display:grid;grid-template-columns:minmax(0,1fr) 2fr auto;align-items:center;gap:10px;padding:5px 0}html #app .e3f-hb .hbl{font:700 13.5px var(--sans)}
-html #app .e3f-hb .hbb{height:16px;border:2px solid #111;border-radius:8px;overflow:hidden;background:#fff}html #app .e3f-hb .hbb>span{display:block;height:100%}html #app .e3f-hb .hbv{font:800 13.5px var(--sans)}
-@media (max-width:760px){html #app .e3f-pts{grid-template-columns:1fr}}
-html #app .e3f-frais{grid-template-columns:1fr!important}html #app .e3f-frais .f3-ms{width:100%}
+
+
+
+
+
+
+
+
+
+
 html #app .f2-mid #ebref.fh-sum{display:block!important;padding:18px 0 0}html #app .f2-mid #ebref>*{grid-column:auto!important}
-html #app .e3f-frais>*{grid-area:auto!important;grid-column:1!important}
+
 /* 2/11 (Romain : espace vide à droite du verdict) : sur ordinateur, l'en-tête en deux colonnes ; les actions sous la carte du cours */
 
 /* 2/11 (Romain) : plus de mini-jauge dans l'en-tête des plis ; lecture du dividende sans chevauchement ; accordéons du dividende ; définitions à côté du graphique sur ordinateur */
 
-html #app #f3-tousw .rf-th-in>.pb>p.lead{margin:0 0 16px!important}html #app #f3-tousw .rf-th-in .tiles{gap:10px;border:0!important;margin:0 0 16px}
+
 html body #app #f3-tousw details.acc{border:2px solid #111!important;border-radius:16px!important;padding:0!important;margin:10px 0 0!important;background:#fff;box-shadow:none!important}
 html body #app #f3-tousw details.acc>summary{padding:12px 16px!important;font:800 15px var(--sans)!important;border:0!important;background:none!important;list-style:none}html body #app #f3-tousw details.acc>summary::-webkit-details-marker{display:none}
 html body #app #f3-tousw details.acc .accb{padding:0 16px 14px!important;border:0!important}
-html #app #f3-tousw .rf-th-in p.note{font:600 13px var(--sans);color:#555;margin:10px 0}
-html #app #f3-tousw .rf-th-in a.more{display:inline-block;border:2px solid #111;border-radius:999px;padding:8px 16px;font:800 14px var(--sans);color:#111;text-decoration:none;background:#fff;box-shadow:3px 3px 0 #111;margin-top:8px}
 
-@media (min-width:761px){html #app #f3-tousw .rf-th-in>.pb,html #app #f3-tousw .rf-th-in>.tiles,html #app #f3-tousw .rf-th-in>.perx,html #app #f3-tousw .rf-th-in>.src{margin-left:22px!important;margin-right:22px!important}}
+
+
+
 /* ---------- Comparer v3 (m/comparer3.js) ---------- */
 
 
@@ -4060,8 +4044,8 @@ html:has(#app>.a4) #orciab,html:has(#app .f3) #orciab{display:none!important}
 
 
 /* pli « Toutes ses annonces et ses dates » : contenu au style du site */
-html #app #rf-agenda .rf-plb .panel{border:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0 0 18px!important}
-html #app #rf-agenda .rf-plb .ph h2{font:800 22px var(--serif)!important;letter-spacing:-.03em}
+
+
 html #app #rf-agenda .ax-it{border:2px solid #111;border-radius:16px;padding:12px 14px;margin:8px 0;background:#fff}html #app #rf-agenda .ax-day{font:800 13px var(--serif);margin:14px 0 4px}
 html #app #rf-agenda .ax-chip{border-radius:6px;font-weight:800}html #app #rf-agenda .ax-tf{font:800 15px var(--sans)}
 html body #app #rf-agenda .iabtn{background:#3D5BFF!important;color:#fff!important;border:2px solid #111!important;border-radius:999px!important;font-weight:800!important;box-shadow:3px 3px 0 #111!important}
@@ -4073,7 +4057,7 @@ html #app #rf-agenda .ax-pr{display:block;border:2px solid #111;border-radius:16
 
 
 /* pli « Toutes ses annonces et ses dates » : compact */
-html #app #rf-agenda .rf-plb{display:grid;gap:4px}html #app #rf-agenda .rf-plb .panel{margin:0 0 6px!important}html #app #rf-agenda .rf-plb .ph{margin:0 0 6px;display:flex;align-items:baseline;gap:10px}html #app #rf-agenda .rf-plb .ph h2{font-size:18px!important;margin:0}
+
 html body #app #rf-agenda .nfil button{padding:5px 12px!important;font-size:13px!important}
 html #app #rf-agenda .ax-day{font:800 12px var(--sans);color:#555;margin:8px 0 2px}
 html #app #rf-agenda .ax-it{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 14px;align-items:center;padding:9px 12px;margin:4px 0;border-radius:14px}html #app #rf-agenda .ax-it .ax-b{display:contents}
@@ -4082,8 +4066,8 @@ html body #app #rf-agenda .iabtn{grid-column:2;grid-row:1/3;font-size:12.5px!imp
 html #app #rf-agenda .src,html #app #rf-agenda p.note{font:500 11.5px var(--sans);color:#777;margin:6px 0 0;background:none;padding:0}
 html #app #rf-agenda .ax-pr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 12px;margin:4px 0;border-radius:14px}html #app #rf-agenda .ax-pr .pt{font-size:13.5px}html #app #rf-agenda .ax-pr .pm{font-size:11.5px;white-space:normal;min-width:0}
 
-html #app #rf-agenda .rf-plb{padding:14px 18px!important}html #app #rf-agenda .src{overflow:visible}html #app #rf-agenda .ax-pr[hidden]{display:none}
-html #app #rf-agenda .rf-plb>*,html #app #rf-agenda .rf-plb .panel>*{min-width:0;max-width:100%}html #app #rf-agenda .rf-plb .ph{flex-wrap:wrap}
+html #app #rf-agenda .src{overflow:visible}html #app #rf-agenda .ax-pr[hidden]{display:none}
+
 html #app #rf-agenda .nfil{flex-wrap:wrap!important;overflow:visible}
 @media (max-width:600px){html #app #rf-agenda .ax-pr{grid-template-columns:1fr}}
 /* 2/11 fin d'après-midi (Romain) */
@@ -4103,7 +4087,7 @@ html #app #rf-agenda .nfil{flex-wrap:wrap!important;overflow:visible}
 
 
 html #app #rf-agenda .src{padding-left:2px!important;text-indent:0}
-html #app #rf-agenda .rf-plb .panel{overflow:visible!important;border-radius:0!important}
+
 /* ---------- 2/11 fin de journée (Romain) ---------- */
 /* annonces : une ligne par annonce */
 html #app #rf-agenda .ax-list{display:grid;gap:0;border:2px solid #111;border-radius:16px;overflow:hidden;background:#fff}
@@ -4118,7 +4102,7 @@ html body #app #rf-agenda .iabtn{grid-column:4!important;grid-row:1!important;fo
 html #app #rf-agenda .ax-it .iabox,html #app #rf-agenda .ax-it .ax-cl{grid-column:1/-1}
 
 
-html #app #rf-agenda .rf-plb .ph{margin:0 0 8px!important}html #app #rf-agenda .rf-plb .ph .light{font-size:12px!important}
+
 @media (max-width:760px){html body #app #rf-agenda .ax-it{grid-template-columns:auto minmax(0,1fr)!important}html #app #rf-agenda .ax-src{grid-column:2;grid-row:auto}html body #app #rf-agenda .iabtn{grid-column:2!important;grid-row:auto!important;justify-self:start}}
 /* fenêtre « i » : jamais hors de l'écran, texte qui passe à la ligne */
 html body .pop{overflow:auto;max-height:min(70vh,560px);overflow-wrap:anywhere}html body .pop .prov-dl dd{min-width:0}
@@ -4168,8 +4152,8 @@ html body .pop .anc-n{display:none}
 
 /* pli des annonces : DA du site, sans titres ni filets gris */
 
-html #app #rf-agenda .rf-plb{border-top:0!important;background:none!important}
-html #app #rf-agenda .rf-plb .panel>.ph{display:none!important}
+
+
 html #app #rf-agenda #factu>section:first-child .pb{padding:0!important}
 html body #app #rf-agenda .nfil{margin:0 0 10px!important;border:0!important}
 html body #app #rf-agenda .nfil button{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font:700 13px var(--sans)!important;padding:5px 13px!important}

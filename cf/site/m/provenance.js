@@ -486,24 +486,7 @@ function prixHTML(s, c) {
     <div class="src">PER, valeur d'entreprise ÷ EBITDA et rendements calculés par le site avec les derniers comptes annuels publiés (exercice ${f.year}) et la valeur en Bourse ${k.vieux ? `du ${dLabel(k.d)}` : "actuelle"}, convertie en euros aux taux de la BCE. Cours : Google Finance, différés. Touchez « i » pour la formule et les dates.</div></section>`;
 }
 
-/* ---------- 8. ETF : provenance des frais, de l'encours et de la composition ---------- */
-(function () {
-  const pageEtf0 = window.pageEtf;
-  if (typeof pageEtf0 !== "function") return;
-  window.pageEtf = async function (id) {
-    const r = await pageEtf0.apply(this, arguments);
-    try { provEtf(id); } catch (e) { }
-    return r;
-  };
-})();
-function provEtf(id) {
-  const e = ETFBY[id]; if (!e || location.pathname !== "/etf/" + id) return;
-  const ids = "e:" + id;
-  const ter = $("#efrais .etfter-l b"); if (ter && !ter.parentNode.querySelector(".prov-i")) ter.insertAdjacentHTML("afterend", provBtn("etf_ter", ids));
-  const dt = [...document.querySelectorAll("#ecarac dt")].find(x => /^Encours/.test(x.textContent)); if (dt && !dt.querySelector(".prov-i")) dt.insertAdjacentHTML("beforeend", provBtn("etf_encours", ids));
-  const addCompo = () => { const h = $("#ecomp .ph h2"); if (h && !h.querySelector(".prov-i")) h.insertAdjacentHTML("beforeend", provBtn("etf_compo", ids)); return !!h; };
-  if (!addCompo()) { let n = 0; const t = setInterval(() => { if (addCompo() || ++n > 20 || location.pathname !== "/etf/" + id) clearInterval(t); }, 250); }
-}
+/* ---------- 8. ETF : retiré le 3/11/2026 (fiche ETF v4, m/etf4.js : sources dans chaque graphique et dans « Prouvé ») ---------- */
 
 /* ---------- 9. « Vérifier une offre » : trois issues distinctes, jamais de « feu vert » ---------- */
 // Mots trop courants pour identifier un acteur : une recherche faite seulement de ces mots est jugée insuffisante.

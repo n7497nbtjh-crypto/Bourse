@@ -27,7 +27,15 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
   }
   // Mode « accueil » (node scripts/relire-visuel.js 4 accueil) : la page d'accueil, avec chacun des quatre exemples affiché
   if (MODE === "accueil") ids = ["hermes", "lvmh", "asml", "sanofi"];
-  const url = id => MODE === "accueil" ? "/" : MODE === "comparer" ? "/comparer?ids=" + id : "/entreprise/" + id;
+  // Mode « etf » (node scripts/relire-visuel.js 30 etf) : des fiches ETF fixes (avec et sans historique, obligations, or, levier) + tirage au hasard
+  if (MODE === "etf") {
+    const L = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "etf.json"), "utf8")).list.map(e => e.id);
+    const fix = ["amundi-msci-world-pea", "amundi-msci-world-swap", "ishares-core-msci-world", "ishares-msci-world-swap-pea", "spdr-sp500"].filter(i => L.includes(i));
+    const autres = ["obligations", "matieres", "monetaire"].map(c => (JSON.parse(fs.readFileSync(path.join(ROOT, "data", "etf.json"), "utf8")).list.find(e => e.categorie === c) || {}).id).filter(Boolean);
+    const lev = (JSON.parse(fs.readFileSync(path.join(ROOT, "data", "etf.json"), "utf8")).list.find(e => e.levier) || {}).id;
+    ids = [...fix, ...autres, ...(lev ? [lev] : [])]; while (ids.length < n) { const i = L[Math.floor(Math.random() * L.length)]; if (!ids.includes(i)) ids.push(i); }
+  }
+  const url = id => MODE === "accueil" ? "/" : MODE === "etf" ? "/etf/" + id : MODE === "comparer" ? "/comparer?ids=" + id : "/entreprise/" + id;
   const out = [], tailles = [["ordinateur", { width: 1280, height: 900 }], ["téléphone", { width: 360, height: 800 }]];
   let vues = 0;
   for (const [nomT, vp] of tailles) {

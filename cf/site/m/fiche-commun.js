@@ -3,7 +3,6 @@
    - faits Wikidata (siège, création, effectifs) : ficheWDLoad, ficheWd ; garde de navigation : ficheMemeId (lus par m/fiche4.js et m/orchestre.js) ;
    - réponses locales de l'IA sur l'identité d'une entreprise (enveloppe de localAssist, ia.js) ;
    - niveaux point fort / moyen / à surveiller (rfNiveaux, rfTally) : lus par quick() dans app.js, donc par toutes les listes du site ;
-   - palette F3_COUL (m/etf3.js) ;
    - anciennes adresses /entreprise/<id>/comprendre/<k> : ouvrent la fiche sur l'étape correspondante.
    ==================================================================================== */
 const FICHE_WD = {}; // faits Wikidata par entreprise (fichiers /data/wd/<id>.json fabriqués par build.mjs)
@@ -47,7 +46,6 @@ function rfNiveaux(s, f) { // les niveaux (point fort / moyen / à surveiller) d
   return { croissance: lv("croissance"), rentabilite: lv("marge"), solidite: A.solidite && A.solidite.special === "sansdette" ? "fort" : lv("solidite"), valorisation: lv("prix") };
 }
 function rfTally(s, f) { const t = { fort: 0, moyen: 0, vig: 0 }; Object.values(rfNiveaux(s, f)).forEach(l => { if (l && t[l] != null) t[l]++; }); return t; }
-const F3_COUL = ["#FFE14D", "#FF9EC6", "#9DB0FF", "#7FE0B9", "#FFB98A", "#C9B8FF", "#E6E3DA", "#B9E6F5"];
 
 // Anciennes adresses « comprendre » : la fiche v4 (m/fiche4.js) sur la bonne étape
 const FICHE_CT = { argent: "metier", varier: "metier", croissance: "e1", marge: "e2", net: "e3", roe: "e2", dette: "e3", fcf: "tout", dividende: "e4", prix: "e5" };

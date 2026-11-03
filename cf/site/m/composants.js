@@ -26,7 +26,7 @@ function ekColonnes(o) {
   for (let t = -pas; t >= mn - 1e-9; t -= pas) grads.unshift(+t.toFixed(10));
   const Hp = M ? 120 : 105, H = mn < 0 ? Math.round(Hp * Math.min(1.8, Math.max(1, (o.max - mn) / Math.max(o.max, pas)))) : Hp, Bm = mn < 0 ? 22 : 0;
   const y = v => T + (o.max - v) / (o.max - mn) * H, yb = T + H + Bm;
-  let g = `<svg viewBox="0 0 ${W} ${yb + (o.ligne ? 58 : 40)}" role="img" aria-label="${ekEsc(o.titre)}">`;
+  let g = `<svg viewBox="0 0 ${W} ${yb + (o.ligne ? 58 : o.sansVar ? 26 : 40)}" role="img" aria-label="${ekEsc(o.titre)}">`;
   grads.forEach(t => g += `<line x1="${L}" x2="${W}" y1="${y(t)}" y2="${y(t)}" stroke="${t ? "#E2E0DA" : "#111"}" stroke-width="${t ? 1 : 2}"/>` + ekTx(L - 8, y(t) + 4, o.fmtAxe(t), { a: "end" }));
   s.forEach((v, i) => {
     const x = L + gap * i + gap / 2 - bw / 2, der = i === n - 1;
@@ -36,10 +36,11 @@ function ekColonnes(o) {
     const neg = v < 0, h = Math.max(2, Math.abs(v) / (o.max - mn) * H);
     g += `<rect x="${x}" y="${neg ? y(0) : y(v)}" width="${bw}" height="${h}" rx="8" fill="${neg ? "#FFDCD3" : der ? "#FFE14D" : "#fff"}" stroke="${neg ? EK_R : "#111"}" stroke-width="2"/>`
       + `<text x="${x + bw / 2}" y="${neg ? y(v) + 18 : y(v) - 8}" text-anchor="middle" font-family="Bricolage Grotesque,Inter" font-size="${der ? 18 : 16}" font-weight="800" fill="${neg ? EK_R : "#111"}">${o.fmt(v)}</text>`;
+    if (o.sansVar) return; // valeurs déjà en variation (performances annuelles) : pas de ligne « variation »
     if (i && s[i - 1] > 0) { const c = (v / s[i - 1] - 1) * 100; g += ekTx(x + bw / 2, yb + 34, neg ? "perte" : (c > 0 ? "+" : "") + ekFr(c) + " %", { a: "middle", c: c >= 0 ? EK_G : EK_R, fw: 800 }); }
     else if (i && s[i - 1] != null && s[i - 1] < 0) g += ekTx(x + bw / 2, yb + 34, neg ? "perte" : "bénéfice", { a: "middle", c: neg ? EK_R : EK_G, fw: 800 });
   });
-  g += ekTx(L - 8, yb + 34, "variation", { a: "end", c: "#555", fw: 700, fs: 11 });
+  if (!o.sansVar) g += ekTx(L - 8, yb + 34, "variation", { a: "end", c: "#555", fw: 700, fs: 11 });
   if (o.ligne) g += ekTx(L - 8, yb + 52, ekEsc(o.ligne.nom), { a: "end", c: "#555", fw: 700, fs: 11 });
   return ekBox(o, g + "</svg>");
 }
@@ -126,6 +127,15 @@ var EK_DEF = {
   per: { t: "PER", aka: "Price Earnings Ratio, ou « multiple de bénéfice »", c: "Combien d'années du bénéfice actuel il faudrait pour payer l'entreprise au prix de la Bourse.", calc: "Valeur en Bourse ÷ bénéfice net (ou cours ÷ bénéfice par action)", lire: "Élevé : le marché paie cher, car il attend une croissance ou une grande régularité. Bas : il doute, ou l'action est délaissée. Sans sens si le bénéfice est presque nul." },
   capi: { t: "Valeur en Bourse", aka: "capitalisation boursière", c: "Le prix de toute l'entreprise, selon le cours du jour.", calc: "Cours de l'action × nombre d'actions", lire: "Elle change chaque jour avec le cours. Elle ne dit pas si l'action est chère : pour ça, on la compare au bénéfice (PER)." },
   roe: { t: "Rentabilité des capitaux propres", aka: "ROE (Return on Equity)", c: "Sur 100 € apportés et laissés par les actionnaires, combien l'entreprise gagne en un an.", calc: "Bénéfice net ÷ capitaux propres", lire: "C'est la mesure de référence pour une banque ou un assureur, dont les « ventes » ne se comparent pas à celles d'une industrie. Au-dessus de 10 %, une banque européenne rapporte plus que son coût du capital habituel." },
+  diversification: { t: "Diversification", c: "Répartir son argent sur beaucoup de titres pour qu'aucun ne pèse trop.", calc: "Nombre de lignes du fonds et poids des plus grosses", lire: "Plus il y a de lignes, et moins les premières pèsent, plus le risque propre à une entreprise est dilué." },
+  change: { t: "Risque de change", c: "Quand l'ETF détient des titres en dollars ou en yens, sa valeur en euros bouge aussi avec le cours de ces devises.", calc: "Part du fonds investie hors de la zone euro", lire: "Sur le long terme, l'effet est souvent faible, mais il peut être fort sur une année. Une part « couverte » neutralise le change, contre un coût." },
+  perf: { t: "Performance", aka: "dividendes réinvestis", c: "De combien la valeur d'une part a monté ou baissé sur la période, dividendes compris et frais déjà déduits.", calc: "Valeur liquidative en fin de période ÷ valeur en début de période − 1", lire: "Elle dépend d'abord de l'indice suivi : entre ETF du même indice, l'écart vient surtout des frais. Les performances passées ne préjugent pas des performances futures." },
+  baisse: { t: "Pire baisse", aka: "perte maximale", c: "La plus forte chute de la part entre un plus haut et le plus bas qui a suivi.", calc: "Plus bas ÷ plus haut précédent − 1, sur la période", lire: "Elle montre ce qu'il fallait pouvoir supporter sans vendre. Les actions peuvent perdre 30 % ou plus en quelques mois." },
+  ter: { t: "Frais courants", aka: "TER (Total Expense Ratio)", c: "Ce que le fonds prélève chaque année, directement dans sa valeur : vous ne le payez pas à part.", calc: "Frais annuels du fonds ÷ encours du fonds", lire: "À comparer entre ETF du même indice : c'est l'écart le plus sûr d'une année sur l'autre. Les frais de courtage s'y ajoutent." },
+  swap: { t: "Réplication synthétique", aka: "ou par swap", c: "L'ETF ne détient pas les titres de l'indice : un contrat avec une banque lui verse la performance de l'indice.", calc: "Contrat d'échange (swap) avec une contrepartie", lire: "Permet de loger des indices étrangers dans un PEA. La réglementation européenne limite l'exposition à la banque à 10 % du fonds." },
+  physique: { t: "Réplication physique", c: "L'ETF achète réellement les titres de l'indice, dans les mêmes proportions (ou un échantillon représentatif).", calc: "Titres détenus par le fonds, conservés par une banque dépositaire", lire: "Le plus simple à comprendre : ce que vous voyez dans la composition est ce que le fonds possède." },
+  capitalisant: { t: "ETF capitalisant", c: "Les dividendes des entreprises sont réinvestis dans le fonds au lieu de vous être versés.", calc: "Politique de distribution du fonds", lire: "Pratique pour faire grossir un placement sans rien déclarer chaque année ; un ETF « distribuant » vous verse les dividendes." },
+  distribuant: { t: "ETF distribuant", c: "Les dividendes reçus par le fonds vous sont versés en argent, en général une à quatre fois par an.", calc: "Politique de distribution du fonds", lire: "Utile pour un revenu régulier. Hors PEA, ces versements sont imposés l'année où vous les recevez." },
   mediane: { t: "Médiane", aka: "", c: "La valeur du milieu : quand on range les entreprises de la meilleure à la moins bonne, la moitié fait mieux, la moitié moins bien.", calc: "Valeur centrale de la liste triée (moyenne des deux du milieu si leur nombre est pair)", lire: "Contrairement à la moyenne, un seul chiffre extrême ne la fausse pas. Sur ENKLAIR, elle est calculée sur les rivales du même métier, sans l'entreprise de la page." },
 };
 // Pastille cliquable. m = { ex: "41,1 %", calc: "6 569 ÷ 16 002 M€", nom: "Hermès" } (exemple chiffré facultatif).

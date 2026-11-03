@@ -36,7 +36,7 @@ await lire("invesco", () => EM.invesco(log));
 
 const nomCourt = n => String(n || "").replace(/[®™]/g, "").replace(/^State Street\s+SPDR\b/, "SPDR").replace(/\bUCITS\b/g, "").replace(/\bETF\b/g, "").replace(/\s+-\s+/g, " ").replace(/\b(USD|EUR|GBP|CHF|JPY)\b(?=\s*(\(|Acc|Dist|$))/g, "").replace(/\(\s*\)/g, "").replace(/\s{2,}/g, " ").trim()
   .replace(/\s*\(Acc\)$|\s+Acc$/i, " (capitalisation)").replace(/\s*\(Dist\)$|\s+Dist$/i, " (distribution)").replace(/\s+/g, " ").trim();
-const LEVIER = /leveraged|levier|\(-?\d(\.\d)?x\)|daily \(-?\d|inverse|short strategy|\bshort\b|bear|ultra/i;
+const LEVIER = /leveraged|levier|\(-?\d(\.\d)?x\)|daily \(-?\d|inverse|short strategy|daily short|\bbear\b/i; // « short » seul et « ultra » retirés le 3/11 : ils classaient les obligations courtes (ultrashort, short duration) en levier
 
 function normalise(r) {
   const index = indexLisible(r.indexOfficiel || "", r.name);
