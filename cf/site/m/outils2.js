@@ -5,7 +5,7 @@
    2. /outils/recouvrement : recouvrement de 2 à 4 ETF (outilRecouvrement) ;
    3. /outils/si-javais : « Et si j'avais investi ? », une seule courbe (outilSiJavais) ;
    4. /simulateurs[/epargne|frais|pea-cto] : simulateur d'épargne refait (pageSim, simFrais, simEpargne, simPeaCto) ;
-   5. /agenda : heures vérifiées, chiffres publiés (pageAgenda, remplace celle de m/tableaux.js) ;
+   5. /agenda : heures vérifiées (O2_heure, lue par m/agenda4.js, la page Agenda v4) ;
    6. /hier : « Ce qui s'est passé hier » (pageHier).
    Calculs purs dans m/outils2_calc.js (O2C), testés par tests/t_outils2.mjs. */
 
@@ -496,95 +496,6 @@ function O2_heure(e) {
   const m = h.moment === "avant-ouverture" ? (O2_US(h.tz) ? "Avant l'ouverture de Wall Street" : "Avant l'ouverture de la Bourse") : h.moment === "apres-cloture" ? (O2_US(h.tz) ? "Après la clôture de Wall Street" : "Après la clôture de la Bourse") : null;
   const conf = h.conf ? `Conférence ou webcast à ${O2_hParis(O2_instant(e.date, h.conf, h.tz))} à Paris${loc(h.conf, h.tz)}.` : "";
   return { ok: !!m, court: m ? m.replace("Avant l'ouverture de", "Avant").replace("Après la clôture de", "Après") : "Heure non communiquée", txt: `${m ? m + " : heure exacte non communiquée." : "Heure de publication non communiquée."} ${conf}${lien}` };
-}
-function pageAgenda() {
-  O2_css(); setTitle("Agenda financier"); setNav("news");
-  const q = new URLSearchParams(location.search);
-  let ty = ["Résultats", "Assemblée", "Dividende"].includes(q.get("type")) ? q.get("type") : "Tous", per = ["semaine", "mois", "tout"].includes(q.get("p")) ? q.get("p") : "semaine"; // lot C (30/10) : « 7 jours » par défaut
-  let agMax = 15; // 15 lignes, puis « Voir plus »
-  const nE = new Set(AG.events.map(e => e.id)).size, nH = AG.events.filter(e => e.h && e.date >= TODAY).length;
-  app.innerHTML = `<h1 class="pagetitle">Agenda</h1><p class="pagesub">Les prochaines publications de résultats, assemblées et dividendes des entreprises suivies, relevées sur leurs calendriers officiels. Ce qui a été publié hier est dans <a class="lnk" href="/hier">Ce qui s'est passé hier</a>.</p>
-    <section class="panel"><div class="tbx-bar"><div class="filters" id="af" style="padding:0;border:0">${[["Tous", "Tous"], ["Résultats", "Résultats"], ["Assemblée", "Assemblées"], ["Dividende", "Dividendes"]].map(([t, l]) => `<button data-t="${t}">${l}</button>`).join("")}</div>
-      <div class="o2-seg" id="ap">${[["semaine", "7 jours"], ["mois", "30 jours"], ["tout", "Tout"]].map(([p, l]) => `<button type="button" data-v="${p}">${l}</button>`).join("")}</div></div>
-      <div id="al"></div>
-      <div class="src">Dates relevées sur les calendriers financiers officiels de ${F0.format(nE)} entreprise${nE > 1 ? "s" : ""} (lien « source » sur chaque fiche). Heure : affichée seulement si la société l'a annoncée (${F0.format(nH)} événement${nH > 1 ? "s" : ""} à venir pour l'instant), convertie à l'heure de Paris ; sinon « heure non communiquée ». Attentes des analystes : le site n'a pas de source de consensus fiable et autorisée, il n'en affiche donc pas.</div></section>
-    <section class="panel" id="arec"><div class="ph"><h2>Publié ces derniers jours</h2><a href="/hier">Ce qui s'est passé hier</a></div><div class="pb muted">Recherche des communiqués…</div></section>`;
-  const T0 = new Date(TODAY + "T00:00:00Z");
-  const delai = d => { const n = Math.round((new Date(d + "T00:00:00Z") - T0) / 864e5); return n === 0 ? "aujourd'hui" : n === 1 ? "demain" : `dans ${n} jours`; };
-  const render = () => {
-    $$("#af button").forEach(b => b.classList.toggle("on", b.dataset.t === ty)); $$("#ap button").forEach(b => b.classList.toggle("on", b.dataset.v === per));
-    const u = new URLSearchParams(); if (ty !== "Tous") u.set("type", ty); if (per !== "semaine") u.set("p", per); history.replaceState({}, "", "/agenda" + (u.toString() ? "?" + u : ""));
-    const lim = per === "semaine" ? 7 : per === "mois" ? 30 : 1e4;
-    const list = upcoming().filter(e => (ty === "Tous" || e.type === ty) && (new Date(e.date + "T00:00:00Z") - T0) / 864e5 < lim);
-    if (!list.length) { $("#al").innerHTML = `<div class="empty">Aucun événement sur cette période.</div>`; return; }
-    let mk = "", z = 0, body = "";
-    const total = list.length, vis = list.slice(0, agMax);
-    vis.forEach(e => {
-      const m = e.date.slice(0, 7); if (m !== mk) { mk = m; z = 0; body += `<tr class="grp"><th colspan="4" scope="colgroup"><span>${MOISL[+m.slice(5) - 1].replace(/^./, x => x.toUpperCase())} ${m.slice(0, 4)}</span></th></tr>`; }
-      const co = RBY[e.id], d = new Date(e.date + "T00:00:00Z"), H = e.type === "Résultats" ? O2_heure(e) : null;
-      body += `<tr class="${z++ % 2 ? "z" : ""}"><td class="l tbx-date"><b>${d.getUTCDate()}</b> ${O2_JOURS[d.getUTCDay()]}<small>${delai(e.date)}</small></td>
-        <th scope="row" class="l"><a class="cell-co" href="/entreprise/${e.id}/agenda">${logo(co, 24)}<span><b>${esc(co.name)}</b></span></a><div class="m-only tbx-agl" ${H ? `data-ag="${e.id}|${e.date}"` : ""}>${esc(e.label)}${H ? `<div class="o2-agh">${H.ok ? `<b>${esc(H.court)}</b>` : `<span class="o2-tag mu">${esc(H.court)}</span>`}</div>` : ""}</div></th>
-        <td class="l wrap d-only">${esc(e.label)}${H && H.txt ? `<div class="sub">${H.txt}</div>` : ""}${e.source ? `<div class="sub"><a class="lnk" href="${esc(e.source)}" target="_blank" rel="noopener">Calendrier officiel</a></div>` : ""}</td>
-        <td class="l d-only" ${H ? `data-ag="${e.id}|${e.date}"` : ""}><span class="tbx-tag">${esc(e.type || "")}</span>${H ? `<div class="o2-agh">${H.ok ? `<b>${esc(H.court)}</b>${/^\d|^vers|^au plus/.test(H.court) ? "<small> heure de Paris</small>" : ""}` : `<span class="o2-tag mu">${esc(H.court)}</span>`}</div>` : ""}</td></tr>`;
-    });
-    $("#al").innerHTML = tblxScrollBox(`<table class="t tbx tbx-ag"><thead><tr><th class="l" scope="col">Date</th><th class="l" scope="col">Entreprise</th><th class="l d-only" scope="col">Événement</th><th class="l d-only" scope="col">Type et heure</th></tr></thead><tbody>${body}</tbody></table>`);
-    if (total > vis.length) $("#al").insertAdjacentHTML("beforeend", `<p class="o2-plus"><button type="button" class="btn ghost" id="ag-plus">Voir plus (${total - vis.length} autres)</button></p>`);
-    const bp = $("#ag-plus"); if (bp) bp.onclick = () => { agMax += 30; render(); };
-    tblxBindScroll($("#al"));
-  };
-  $("#af").onclick = e => { const b = e.target.closest("button"); if (b) { ty = b.dataset.t; render(); } };
-  $("#ap").onclick = e => { const b = e.target.closest("button"); if (b) { per = b.dataset.v; render(); } };
-  render(); O2_agRecents(); O2_agMiennes();
-}
-// 31/10 (Romain) : vos valeurs dans l'agenda, portefeuille puis favoris : prochaine date, dernière publication, et ce qui a été manqué
-async function O2_agMiennes() {
-  const pfIds = new Set((typeof pf2Load === "function" ? pf2Load().l || [] : []).map(l => l.k).filter(k => k && k.startsWith("c:")).map(k => k.slice(2)));
-  const favIds = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
-  const ids = [...pfIds, ...[...favIds].filter(id => !pfIds.has(id))].filter(id => RBY[id] && !RBY[id].missing); if (!ids.length) return;
-  const d30 = new Date(Date.parse(TODAY) - 30 * 864e5).toISOString().slice(0, 10);
-  const lire = id => typeof actuCo === "function" ? actuCo(id) : getJSON(`/data/actu/c/${id}.json`, { o: [] });
-  const rows = await Promise.all(ids.slice(0, 30).map(async id => { const E = AG.events.filter(e => e.id === id); const nx = E.filter(e => e.date >= TODAY).sort((a, b) => a.date.localeCompare(b.date))[0];
-    let last = E.filter(e => e.date < TODAY && e.type === "Résultats").sort((a, b) => b.date.localeCompare(a.date))[0];
-    if (!last) { try { const j = await lire(id), o = (j.o || []).filter(x => x.c === "resultats").sort((a, b) => String(b.d).localeCompare(String(a.d)))[0]; if (o) last = { date: String(o.d).slice(0, 10), label: o.t || "Résultats" }; } catch (e) { } }
-    return { id, co: RBY[id], pf: pfIds.has(id), nx, last, manque: last && last.date >= d30 }; }));
-  if (location.pathname !== "/agenda") return;
-  const el = document.createElement("section"); el.className = "panel"; el.id = "amoi";
-  el.innerHTML = `<div class="ph"><h2>Vos valeurs</h2><span class="light" style="font-size:12.5px">portefeuille d'abord, favoris ensuite</span></div>
-    ${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Entreprise</th><th class="l" scope="col">Prochaine date</th><th class="l" scope="col">Dernière publication</th></tr></thead><tbody>${rows.map((r, z) => `<tr class="${z % 2 ? "z" : ""}"><th scope="row" class="l lab"><a class="cell-co" href="/entreprise/${r.id}/agenda">${logo(r.co, 24)}<span><b>${esc(r.co.name)}</b>${r.pf ? ` <span class="tbx-tag">portefeuille</span>` : ""}</span></a></th>
-      <td class="l wrap">${r.nx ? `<b>${dLabel(r.nx.date)}</b><div class="sub">${esc(r.nx.label)}</div>` : `<span class="light">Aucune date annoncée</span>`}</td>
-      <td class="l wrap">${r.last ? `<b>${dLabel(r.last.date)}</b>${r.manque ? ` <span class="o2-tag ok">il y a moins d'un mois</span>` : ""}<div class="sub"><a class="lnk" href="/entreprise/${r.id}/actualite">${esc(r.last.label)}</a></div>` : `<span class="light">Pas de publication relevée</span>`}</td></tr>`).join("")}</tbody></table>`)}
-    <div class="src">Une publication de moins d'un mois que vous n'auriez pas vue : ouvrez l'actualité de l'entreprise, les chiffres et la lecture du site y sont.</div>`;
-  const first = $("#al") && $("#al").closest("section"); if (first) first.insertAdjacentElement("beforebegin", el);
-}
-// Résultats prévus ces 7 derniers jours : chiffres réellement publiés (annonces officielles collectées par le site)
-async function O2_agRecents() {
-  const el = $("#arec"); if (!el) return;
-  const d7 = new Date(Date.parse(TODAY) - 7 * 864e5).toISOString().slice(0, 10);
-  const ev = AG.events.filter(e => e.type === "Résultats" && e.date >= d7 && e.date <= TODAY && RBY[e.id]).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 40);
-  const lire = id => typeof actuCo === "function" ? actuCo(id) : getJSON(`/data/actu/c/${id}.json`, { o: [] });
-  const res = await Promise.all(ev.map(async e => { const j = await lire(e.id), t0 = Date.parse(e.date) - 864e5, t1 = Date.parse(e.date) + 2 * 864e5;
-    const o = (j.o || []).filter(x => x.c === "resultats" && Date.parse(x.d) >= t0 && Date.parse(x.d) < t1).sort((a, b) => (b.f || []).length - (a.f || []).length || a.d.localeCompare(b.d));
-    return [e, o[0] || null]; }));
-  if (!$("#arec")) return;
-  // Événements du jour déjà publiés : l'heure réelle du dépôt remplace « heure non communiquée » dans la liste à venir
-  res.forEach(([e, x]) => { if (!x) return; document.querySelectorAll(`[data-ag="${e.id}|${e.date}"] .o2-agh`).forEach(td => { td.innerHTML = `<span class="o2-tag ok">Publié à ${O2_hParis(new Date(x.d))}</span>`; }); });
-  for (let i = res.length - 1; i >= 0; i--) if (!res[i][1] && res[i][0].date >= TODAY) res.splice(i, 1);
-  if (!res.length) { el.querySelector(".pb").textContent = "Aucune publication de résultats prévue ces 7 derniers jours."; return; }
-  const tel = matchMedia("(max-width:760px)").matches, resAll = res; let resN = tel ? 8 : 40; // lot C : 8 publications sur téléphone, puis « Voir plus »
-  const dessiner = () => { const res = resAll.slice(0, resN);
-  const cartes = res.map(([e, x]) => { const co = RBY[e.id], dt = x ? new Date(x.d) : null, F = x ? (x.f || []).slice(0, 3) : []; // 4e passage 2.3 : sur téléphone, des cartes empilées, rien ne sort de l'écran
-    return `<article class="o2-pubc"><div class="o2-pubh"><a class="cell-co" href="/entreprise/${e.id}/actualite">${logo(co, 26)}<b>${esc(co.name)}</b></a><small>${+e.date.slice(8)} ${O2_MOIS[+e.date.slice(5, 7) - 1]}${dt ? ` · ${O2_hParis(dt)}` : ""}</small></div><p class="o2-pubt">${esc(e.label)}</p>
-      ${F.length ? `<div class="o2-pubf">${F.map(([l, v_]) => { const m = String(v_).match(/^(.*?)\s*\(([+−-]\s?[\d.,]+\s?%)[^)]*\)\s*$/); const val = m ? m[1] : v_, va = m ? m[2].replace("-", "−") : ""; return `<span><small>${esc(l)}</small><b>${esc(val)}</b>${va ? `<em class="${/^\+/.test(va) ? "up" : "down"}">${/^\+/.test(va) ? "↑" : "↓"} ${esc(va)}</em>` : ""}</span>`; }).join("")}</div>` : x ? `<p class="light" style="margin:0;font-size:13px">Communiqué publié, chiffres non extraits automatiquement.</p>` : `<p class="light" style="margin:0;font-size:13px">${e.date >= TODAY ? "Pas encore publié." : "Communiqué non trouvé dans les sources officielles suivies."}</p>`}
-      ${x ? `<p class="o2-publ"><a class="lnk" href="${esc(x.u)}" target="_blank" rel="noopener">Communiqué →</a>${dt && Date.now() - dt < 5 * 864e5 ? `<a class="lnk" href="/hier?d=${O2_jourParis(dt)}#h-${e.id}">Lecture détaillée →</a>` : ""}</p>` : ""}</article>`; }).join("");
-  el.innerHTML = `<div class="ph"><h2>Publié ces derniers jours</h2><a href="/hier">Ce qui s'est passé hier</a></div>
-    ${tel ? `<div class="o2-pubs">${cartes}</div>` : tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l" scope="col">Date</th><th class="l lab" scope="col">Entreprise</th><th class="l" scope="col">Chiffres publiés</th></tr></thead><tbody>${res.map(([e, x], z) => { const co = RBY[e.id], dt = x ? new Date(x.d) : null;
-      return `<tr class="${z % 2 ? "z" : ""}"><td class="l tbx-date"><b>${+e.date.slice(8)}</b> ${O2_MOIS[+e.date.slice(5, 7) - 1]}${dt ? `<small>publié à ${O2_hParis(dt)}</small>` : ""}</td><th scope="row" class="l lab"><a class="cell-co" href="/entreprise/${e.id}/actualite">${logo(co, 22)}<span><b>${esc(co.name)}</b><span class="sub" style="display:block">${esc(e.label)}</span></span></a></th>
-        <td class="l wrap">${x ? `${(x.f || []).slice(0, 3).map(([l, v_]) => `<span style="display:block"><span class="light">${esc(l)} :</span> <b>${esc(v_)}</b></span>`).join("") || `<span class="light">Communiqué publié, chiffres non extraits automatiquement.</span>`} <a class="lnk" href="${esc(x.u)}" target="_blank" rel="noopener">Communiqué</a>${dt && Date.now() - dt < 5 * 864e5 ? ` · <a class="lnk" href="/hier?d=${O2_jourParis(dt)}#h-${e.id}">Lecture détaillée</a>` : ""}` : `<span class="light">${e.date >= TODAY ? "Pas encore publié." : "Communiqué non trouvé dans les sources officielles suivies (AMF, SEC, bourses nordiques)."}</span>`}</td></tr>`; }).join("")}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}
-    ${resAll.length > resN ? `<p class="o2-plus" style="padding:0 18px 14px"><button type="button" class="btn ghost" id="arec-plus">Voir plus (${resAll.length - resN} autres)</button></p>` : ""}
-    <div class="src">Chiffres extraits automatiquement des communiqués officiels (AMF, SEC, Nasdaq Nordic, Oslo Børs, FCA) : vérifiez-les dans le communiqué. Heure de publication : celle du dépôt dans la source, à l'heure de Paris.</div>`;
-  const bp = $("#arec-plus"); if (bp) bp.onclick = () => { resN += 20; dessiner(); };
-  tblxBindScroll(el); };
-  dessiner();
 }
 
 /* ====================================================================================

@@ -1701,8 +1701,8 @@ table.tbx.iat th.lab{min-width:200px}
 .tbx-tag.g{background:rgba(14,107,74,.12);color:#0B5A3E}.tbx-tag.on{background:var(--ink);color:#fff}
 table.tbx.brk tr.sel > *{background:#F3FBD3}
 .tbx-date{white-space:nowrap}.tbx-date b{font-family:var(--mono);font-size:16px}.tbx-date small{display:block;font-size:11.5px;color:var(--light)}
-table.tbx-ag tbody tr[data-href]{cursor:pointer}
-.tbx-agl{font-size:13px;color:var(--grey);margin-top:3px;white-space:normal}table.tbx-ag tbody th{white-space:normal}
+
+
 @media (max-width:760px){ table.tbx-list th.lab,table.tbx.iat th.lab{min-width:150px} }
 @media (max-width:760px){
   .tbx-bar{padding:10px 12px 2px}.tbx-legend{padding:6px 12px 8px}.tbx-sum{padding:0 12px 8px}.tbx-hint{padding:6px 12px 0}
