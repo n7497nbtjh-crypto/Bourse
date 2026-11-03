@@ -165,7 +165,7 @@ if (typeof MIA_CTX0 === "function") window.orcIaCtx = function () {
     if (p === "/etf") {
       const u = new URLSearchParams(location.search), cat = u.get("cat"), pea = u.get("env") === "pea", cl = cat && typeof ECAT !== "undefined" && ECAT[cat] ? ECAT[cat] : null;
       return { type: "gen", label: ["Les ETF", cl, pea ? "PEA" : null].filter(Boolean).join(" · "),
-        qs: [`ETF ${cl ? cl.toLowerCase() : "monde"}${pea ? " éligibles au PEA" : " éligible PEA"} les moins chers`, "C'est quoi un ETF capitalisant ?", "Comment choisir un ETF ?", "Pourquoi les frais d'un ETF comptent ?"] };
+        qs: [`ETF ${cl ? cl.toLowerCase() : "monde"}${typeof frSeul === "function" && !frSeul() ? "" : pea ? " éligibles au PEA" : " éligible PEA"} les moins chers`, "C'est quoi un ETF capitalisant ?", "Comment choisir un ETF ?", "Pourquoi les frais d'un ETF comptent ?"] };
     }
   } catch (e) { }
   return MIA_CTX0();

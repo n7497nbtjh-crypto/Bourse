@@ -16,7 +16,7 @@
    et à la rubrique soulignée. Aucune page n'est accessible par deux entrées. */
 const NAV = [
   {
-    k: "dec", label: "Apprendre", porte: "/apprendre", sous: "Trois décisions, l'Académie, le lexique, le compte",
+    k: "dec", label: "Apprendre", porte: "/apprendre", sous: "Trois décisions, l'Académie, le lexique",
     items: [
       ["/apprendre", "Apprendre", "Les trois décisions avant d'investir, puis l'Académie par niveau"],
       ["/lexique", "Le lexique", "Chaque chiffre de la Bourse expliqué"],
@@ -32,7 +32,7 @@ const NAV = [
     k: "exp", label: "Marchés", porte: "/marches", sous: "Entreprises, ETF, actualité, agenda",
     items: [
       ["/entreprises", "Les entreprises", "2 852 fiches, chacune face à la médiane de son secteur"],
-      ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, le PEA"],
+      ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, leur performance"],
       ["/actualites", "L'actualité", "Annonces officielles lues, chiffrées et expliquées"],
       ["/agenda", "L'agenda", "Résultats et dividendes à venir, jour par jour"],
       ["/classements", "Classements", "Les mieux placées, critère par critère"],
@@ -90,7 +90,7 @@ const NAV_G = { home: "", aca: "dec", new: "dec", lex: "dec", mkt: "exp", news: 
 const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));
 const navLib = t => t === "@esp" ? `<span class="esplbl">Se connecter</span>` : navEsc(t); // « Se connecter » ou « Mon espace » selon la session (espaceBadge)
 function navMenuHTML(g) { // panneau déroulant d'une rubrique (ordinateur)
-  return `<div class="ddm">${g.items.map(([h, t, d]) => `<a href="${h}"><b>${navLib(t)}</b><span>${navEsc(d)}</span></a>`).join("")}
+  return `<div class="ddm">${g.items.map(([h, t, d]) => `<a href="${h}"${h === "/pea-cto" ? ' class="fr-seul"' : ""}><b>${navLib(t)}</b><span>${navEsc(d)}</span></a>`).join("")}
     </div>`; // 30/10 (Romain) : quatre choix par rubrique, rien d'autre ; le reste est dans le plan du site en bas de page
 }
 function navBarreHTML() { // quatre portes en liens directs, l'étoile des favoris (compteur), Premium
@@ -134,7 +134,7 @@ function pagePlan() {
   app.innerHTML = `<div class="legal"><p class="kick">Toutes les pages</p><h1 class="pagetitle">Plan du site</h1>
     <p class="pagesub">Les quatre rubriques du site et toutes leurs pages. Les fiches d'entreprises et d'ETF s'ouvrent depuis la recherche, en haut de chaque page.</p>
     ${NAV.map(g => `<section class="panel"><div class="ph"><h2>${navEsc(g.label)}</h2><span class="light" style="font-size:12.5px">${navEsc(g.sous)}</span></div><div class="pb"><div class="navplan">
-      ${g.items.map(([h, t, d]) => `<a href="${h}"><b>${navEsc(t === "@esp" ? "Mon espace" : t)}</b><small>${navEsc(d)}</small></a>`).join("")}
+      ${g.items.map(([h, t, d]) => `<a href="${h}"${h === "/pea-cto" ? ' class="fr-seul"' : ""}><b>${navEsc(t === "@esp" ? "Mon espace" : t)}</b><small>${navEsc(d)}</small></a>`).join("")}
       ${(g.aussi || []).map(([h, t]) => `<a href="${h}"><b>${navEsc(t)}</b></a>`).join("")}</div></div></section>`).join("")}
     <section class="panel"><div class="ph"><h2>Le site</h2></div><div class="pb"><div class="navplan">${NAV_PIED.map(([h, t]) => `<a href="${h}"><b>${navEsc(t)}</b></a>`).join("")}</div></div></section></div>`;
 }

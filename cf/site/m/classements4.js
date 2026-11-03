@@ -28,7 +28,7 @@ async function pageClassements4() {
   await Promise.all([PXP, outHist(), typeof premStatus === "function" ? premStatus() : null]);
   if (location.pathname !== "/classements") return;
   const P = new URLSearchParams(location.search);
-  const f = { c: OUT_CL[P.get("c")] ? P.get("c") : "points", s: R.sectors[P.get("s")] ? P.get("s") : "", r: OUT_REG.some(([v]) => v && v === P.get("r")) ? P.get("r") : "", pea: P.get("pea") === "1" ? "1" : "", t: OUT_TAILLE.some(([v]) => v && v === P.get("t")) ? P.get("t") : "" };
+  const f = { c: OUT_CL[P.get("c")] ? P.get("c") : "points", s: R.sectors[P.get("s")] ? P.get("s") : "", r: OUT_REG.some(([v]) => v && v === P.get("r")) ? P.get("r") : "", pea: P.get("pea") === "1" && e4Fr() ? "1" : "", t: OUT_TAILLE.some(([v]) => v && v === P.get("t")) ? P.get("t") : "" };
   const prem = typeof isPrem === "function" && isPrem(), fr = e4Fr();
   app.innerHTML = `<div class="ek ek-page cl4-page">
     <section class="ek-hero"><span class="mc-stk">Classements</span><h1 class="ag4-t" id="cl4t"></h1><p class="mc-sub" id="cl4s"></p>

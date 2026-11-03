@@ -23,7 +23,7 @@ function e4Memes0(x) {
 }
 const E4_SECT = { it: "Technologie", fin: "Finance", sante: "Santé", conso_disc: "Consommation", indus: "Industrie", comm: "Communication", conso_base: "Produits courants", energie: "Énergie", materiaux: "Matériaux", services_pub: "Eau, gaz, électricité", immo: "Immobilier", liquidites: "Liquidités", autre: "Autres" };
 const e4SansIdx = (r, idx) => { const n = e4Court(r); if (!idx) return n; const t = n.replace(new RegExp("\\s*" + idx.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\s*", "i"), " ").replace(/\s+/g, " ").trim(); return t.length >= 3 ? t : n; };
-const e4Fr = () => !document.documentElement.dataset.pays || document.documentElement.dataset.pays === "fr";
+const e4Fr = () => typeof frSeul === "function" ? frSeul() : true; // 3/11 : visiteur en France (choix ou détection, m/pays.js)
 const e4Bond = e => ["obligations", "monetaire"].includes(e.categorie);
 
 async function pageEtf4(id) {
@@ -67,7 +67,7 @@ function e4Ctx(e, C, H, P) {
 // ——— En-tête ———
 function e4Tete(x) {
   const { e, v, rk } = x, pl = ETF_place(e);
-  const sub = e.fiche ? esc(e.fiche.quoi) : `${x.n ? `${F0.format(x.n)} ${x.mot}${x.pays > 1 ? ` de ${F0.format(x.pays)} pays` : ""} en une seule ligne.` : ""} `;
+  const sub = e.fiche ? esc(typeof sansPea === "function" ? sansPea(e.fiche.quoi) : e.fiche.quoi) : `${x.n ? `${F0.format(x.n)} ${x.mot}${x.pays > 1 ? ` de ${F0.format(x.pays)} pays` : ""} en une seule ligne.` : ""} `;
   const tags = [e.pea === true && x.fr ? `<span class="g">Éligible au PEA ✓</span>` : e.pea === false && x.fr ? `<span>Hors PEA</span>` : "",
     e.distribution ? `<span>${e.distribution === "distribution" ? "Distribuant" : "Capitalisant"}</span>` : "",
     e.replication ? `<span>Réplication ${esc(e.replication)}${e.methode === "échantillonnée" ? " (échantillon)" : ""}</span>` : "",
@@ -212,9 +212,9 @@ function e4Frais(x) {
 function e4Fonct(x) {
   const { e } = x, idx = e.index ? esc(e.index) : "l'indice", cp = e.contrepartie ? esc(e.contrepartie) : "une banque";
   const sch = x.synth
-    ? `<div class="et-sch"><div><b>Votre argent</b>Vous achetez des parts de l'ETF en Bourse.</div><i>→</i><div class="y"><b>Le fonds</b>${e.pea === true ? "Il détient surtout des actions européennes, pour rester éligible au PEA." : "Il détient un panier d'autres titres."}</div><i>→</i><div><b>Le contrat (swap)</b>${cp} lui verse la performance de ${idx}, en échange de celle de son panier.</div></div>`
+    ? `<div class="et-sch"><div><b>Votre argent</b>Vous achetez des parts de l'ETF en Bourse.</div><i>→</i><div class="y"><b>Le fonds</b>${e.pea === true ? (x.fr ? "Il détient surtout des actions européennes, pour rester éligible au PEA." : "Il détient surtout des actions européennes.") : "Il détient un panier d'autres titres."}</div><i>→</i><div><b>Le contrat (swap)</b>${cp} lui verse la performance de ${idx}, en échange de celle de son panier.</div></div>`
     : `<div class="et-sch"><div><b>Votre argent</b>Vous achetez des parts de l'ETF en Bourse.</div><i>→</i><div class="y"><b>Le fonds</b>Il achète ${e.methode === "échantillonnée" ? "un échantillon représentatif des" : "les"} titres de ${idx}.</div><i>→</i><div><b>Les titres</b>Ils sont conservés par une banque dépositaire, au nom du fonds, séparés des comptes de ${esc(e.issuer)}.</div></div>`;
-  const vis = ekBox({ titre: "Comment il suit l'indice", unite: `réplication ${e.replication}`, indice: x.synth ? "Un ETF « synthétique » ne détient pas forcément les titres de l'indice : il détient d'autres titres et un contrat (swap) qui lui verse la performance de l'indice. C'est ce qui permet de loger un indice mondial dans un PEA." : "Un ETF « physique » achète réellement les titres de l'indice, dans les mêmes proportions.", source: { texte: `Fiche ${e.issuer}`, lien: e.url, label: "fiche de l'émetteur ↗" } }, sch);
+  const vis = ekBox({ titre: "Comment il suit l'indice", unite: `réplication ${e.replication}`, indice: x.synth ? "Un ETF « synthétique » ne détient pas forcément les titres de l'indice : il détient d'autres titres et un contrat (swap) qui lui verse la performance de l'indice." + (x.fr ? " C'est ce qui permet de loger un indice mondial dans un PEA." : "") : "Un ETF « physique » achète réellement les titres de l'indice, dans les mêmes proportions.", source: { texte: `Fiche ${e.issuer}`, lien: e.url, label: "fiche de l'émetteur ↗" } }, sch);
   const R = [];
   R.push(["r", "marché", e.categorie === "obligations" ? "Si les taux d'intérêt montent, le prix des obligations baisse, et l'ETF avec." : e.categorie === "monetaire" ? "Variations faibles ; le rendement suit les taux de la BCE." : `Si ${idx} baisse, l'ETF baisse. Le capital n'est pas garanti.`]);
   if (x.hors != null && x.hors > 20 && !e.couvert) R.push(["r", "change", `${ekFr(x.hors, 0)} % du fonds est hors zone euro.`]);
@@ -231,7 +231,7 @@ function e4Detenir(x) {
   const ageT = age == null ? "–" : age < 1 ? "moins d'un an" : age < 1.75 ? (age < 1.25 ? "1 an" : "1 an et demi") : F0.format(Math.floor(age)) + " ans";
   const env = x.fr ? (e.pea === true ? ["g", "PEA ✓", "Aussi en compte-titres. Dans un PEA, les gains sont exonérés d'impôt sur le revenu après 5 ans (les prélèvements sociaux restent dus)."] : e.pea === false ? ["", "Compte-titres", "Non éligible au PEA. Certaines assurances vie le proposent aussi."] : ["", "À vérifier", "L'émetteur n'indique pas son éligibilité au PEA."]) : ["", "Compte-titres", "Le régime fiscal dépend de votre pays de résidence."];
   const cards = `<div class="et-hold"><div class="${env[0]}"><small>Enveloppe</small><b>${env[1]}</b><p>${env[2]}</p></div>
-    ${e.distribution ? `<div><small>Dividendes</small><b>${capi ? "Capitalisant" : "Distribuant"}</b><p>${capi ? "Les dividendes sont réinvestis dans le fonds : rien n'est versé, rien à déclarer chaque année." : "Les dividendes vous sont versés, en général une à quatre fois par an, et sont imposés l'année où vous les recevez (hors PEA)."}</p></div>` : ""}
+    ${e.distribution ? `<div><small>Dividendes</small><b>${capi ? "Capitalisant" : "Distribuant"}</b><p>${capi ? "Les dividendes sont réinvestis dans le fonds : rien n'est versé, rien à déclarer chaque année." : "Les dividendes vous sont versés, en général une à quatre fois par an, et sont imposés l'année où vous les recevez" + (x.fr ? " (hors PEA)." : ".")}</p></div>` : ""}
     <div class="${age != null && age < 3 ? "r" : ""}"><small>Âge du fonds</small><b>${ageT}</b><p>${deb ? `Créé le ${deb.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}${age < 3 ? " : peu d'historique" : ""}. ` : ""}${e.encours ? `Taille du fonds : ${big(e.encours)}${x.medEnc ? `, médiane de sa catégorie ${big(x.medEnc)}` : ""}.` : ""}</p></div></div>`;
   const pl = ETF_place(e), cots = (e.cotations || []).filter(c => c.ticker);
   const em = typeof ETF_EMET === "object" ? (ETF_EMET[e.issuer] || ETF_EMET[Object.keys(ETF_EMET).find(k => (e.issuer || "").startsWith(k))]) : null;

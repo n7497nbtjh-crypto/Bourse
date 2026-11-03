@@ -215,10 +215,12 @@ function recoDivLoad() {
 function recoPeaOk(c) { return RECO.peaAction(c, RECO_DIV).ok; }
 function recoPeaInfo(c) { return RECO.peaAction(c, RECO_DIV); }
 function recoPeaTag(c) {
+  if (!recoFr()) return "";
   const p = recoPeaInfo(c), t = p.ok === true ? ["ok", "Éligible PEA"] : p.ok === false ? ["non", "Hors PEA"] : ["av", "PEA à vérifier"];
   return `<span class="rc-pea rc-pea-${t[0]}" title="${esc(p.why)}">${t[1]}</span>`;
 }
 function recoEtfPeaTag(e) {
+  if (!recoFr()) return "";
   const p = RECO.peaEtf(e), t = p.ok === true ? ["ok", "Éligible PEA"] : p.ok === false ? ["non", "Hors PEA"] : ["av", "PEA non indiqué"];
   return `<span class="rc-pea rc-pea-${t[0]}" title="${esc(p.why)}">${t[1]}</span>`;
 }
@@ -337,6 +339,8 @@ const RECO_EX = [
     quoi: "Une part d'actions forte, qui suppose un horizon long (dix ans et plus) et de ne pas avoir besoin de cette somme entre-temps.",
     lim: "Historiquement, les marchés d'actions ont connu des baisses de plus de 40 % suivies de plusieurs années de remontée. Il faut pouvoir attendre sans vendre." },
 ];
+const recoFr = () => typeof frSeul === "function" ? frSeul() : true; // 3/11 : PEA seulement pour un visiteur en France (m/pays.js)
+const recoEnvs = () => recoFr() ? RECO_ENV : RECO_ENV.filter(([k]) => k === "cto" || k === "av");
 const RECO_ENV = [["pea", "un PEA"], ["cto", "un compte-titres"], ["both", "un PEA et un compte-titres"], ["av", "une assurance-vie"], ["none", "pas encore de compte"]];
 const RECO_ST = { env: "pea", type: "etf" };
 function recoBaisse(parts) { // arithmétique sur l'exemple : actions −30 %, obligations −5 %, garanti 0 %
@@ -403,7 +407,7 @@ function recoFiltresHTML() {
   return `<div class="rc-tabs" role="tablist" aria-label="Type de liste">${[["etf", "Des ETF"], ["ent", "Des entreprises"]].map(([k, l]) => `<button type="button" role="tab" data-rc-type="${k}" aria-selected="${k === t}" class="${k === t ? "on" : ""}">${l}</button>`).join("")}</div>
     <div class="rc-filt" id="rc-filt">${t === "etf"
       ? sel("f-cat", "Catégorie", [["", "toutes"], ...Object.entries(ECAT)], RECO_ST.cat || "")
-        + sel("f-pea", "Éligibilité au PEA", [["", "peu importe"], ["oui", "éligible au PEA"], ["non", "non éligible"]], RECO_ST.pea || "")
+        + (recoFr() ? sel("f-pea", "Éligibilité au PEA", [["", "peu importe"], ["oui", "éligible au PEA"], ["non", "non éligible"]], RECO_ST.pea || "") : "")
         + sel("f-ter", "Frais annuels", [["", "peu importe"], ["0.15", "0,15 % au plus"], ["0.25", "0,25 % au plus"], ["0.5", "0,50 % au plus"]], RECO_ST.ter || "")
         + sel("f-enc", "Encours", [["", "peu importe"], ["100", "100 M€ au moins"], ["1000", "1 Md€ au moins"]], RECO_ST.enc || "")
         + sel("f-dist", "Dividendes du fonds", [["", "peu importe"], ["capi", "réinvestis (capitalisant)"], ["dist", "versés (distribuant)"]], RECO_ST.dist || "")
@@ -411,7 +415,7 @@ function recoFiltresHTML() {
       : sel("f-sect", "Secteur", [["", "tous"], ...secs], RECO_ST.sect || "")
         + sel("f-reg", "Région", [["", "toutes"], ...regs], RECO_ST.reg || "")
         + sel("f-taille", "Taille", RECO_TAILLES, RECO_ST.taille || "")
-        + sel("f-pea", "Éligibilité au PEA", [["", "peu importe"], ["oui", "éligible au PEA"], ["non", "non éligible"]], RECO_ST.pea || "")
+        + (recoFr() ? sel("f-pea", "Éligibilité au PEA", [["", "peu importe"], ["oui", "éligible au PEA"], ["non", "non éligible"]], RECO_ST.pea || "") : "")
         + sel("f-tri", "Trier par", RECO_TRI_ENT, RECO_ST.tri || "q")}</div>`;
 }
 function recoEtfListe() {
@@ -484,7 +488,7 @@ function recoListeHTML() {
   if (!L.length) return `<p class="rc-mut">Aucun ${etf ? "ETF" : "titre"} suivi par le site ne réunit ces critères. Élargissez-en un.</p>`;
   return `<p class="rc-cnt2"><b>${F0.format(L.length)}</b> ${etf ? (L.length > 1 ? "ETF réunissent" : "ETF réunit") : (L.length > 1 ? "entreprises réunissent" : "entreprise réunit")} ces critères${L.length > 12 ? `, les 12 premiers du tri sont affichés` : ""}.</p>
     <div class="rc-rows">${vus.map(etf ? recoEtfLigne : recoEntLigne).join("")}</div>
-    <p class="rc-mut">Liste calculée sur les données du site : ${etf ? "fiches des émetteurs d'ETF (frais, encours, composition, éligibilité au PEA déclarée)" : "comptes annuels publiés (ESEF en Europe, SEC aux États-Unis) et cours différés du site"}. Un chiffre élevé n'est pas une bonne nouvelle en soi, un chiffre bas n'est pas une mauvaise nouvelle : la fiche donne le détail et la médiane du secteur. <a class="lnk" href="${lien}">La liste complète et tous les filtres</a></p>`;
+    <p class="rc-mut">Liste calculée sur les données du site : ${etf ? "fiches des émetteurs d'ETF (frais, encours, composition" + (recoFr() ? ", éligibilité au PEA déclarée" : "") + ")" : "comptes annuels publiés (ESEF en Europe, SEC aux États-Unis) et cours différés du site"}. Un chiffre élevé n'est pas une bonne nouvelle en soi, un chiffre bas n'est pas une mauvaise nouvelle : la fiche donne le détail et la médiane du secteur. <a class="lnk" href="${lien}">La liste complète et tous les filtres</a></p>`;
 }
 const RECO_LEGAL = `<div class="rc-legal"><b>Information factuelle à but pédagogique, pas un conseil en investissement.</b> Cette page ne tient pas compte de votre situation et ne désigne aucune répartition ni aucun titre comme adapté à qui que ce soit : elle montre des exemples et des listes triées sur des critères que vous choisissez. ENKLAIR n'est pas conseiller en investissements financiers (CIF). Pour un conseil adapté à votre situation, adressez-vous à un CIF immatriculé à l'<a href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a>. Investir en Bourse comporte un risque de perte en capital.</div>`;
 

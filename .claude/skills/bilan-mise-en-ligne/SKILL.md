@@ -19,6 +19,7 @@ node tests/t_worker.mjs           # + les tests t_*.mjs / t_*.py du périmètre 
 node scripts/relire-fiches.js 120   # 0 faute attendue ; puis LIRE /tmp/relecture-fiches.txt (tous les modèles de phrases)
 node scripts/relire-visuel.js 30 comparer   # si la page Comparer est touchée
 node scripts/relire-pages.js        # TOUJOURS : 32 grandes pages × 2 tailles (texte coupé, bouton dont le texte touche le bord, icône sur un champ, débordement, boutons superposés), 0 problème attendu
+node scripts/check-pays.js          # TOUJOURS : 32 pages vues de Belgique et d'Allemagne, aucun « PEA » visible (noms de fonds admis) ; PEA visible de France
 node scripts/relire-visuel.js 60    # 0 problème attendu : textes superposés, texte sur une barre, hors du graphique, dépasse de l'écran (ordinateur + téléphone)
 ```
 Les phrases des fiches sont calculées pour plus de 2 000 sociétés : une faute d'accord ou une phrase creuse se répète partout.

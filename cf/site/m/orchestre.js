@@ -56,8 +56,8 @@ async function pageIndice(id) {
   const etfs = ETF.list.filter(e => F.etf.test(e.index || "") && e.ter != null).sort((a, b) => a.ter - b.ter);
   const proches = etfs.length ? [] : ETF.list.filter(e => e.ter != null && (id === "cac40" ? e.categorie === "actions-france" : id === "sp500" || id === "nasdaq100" ? e.categorie === "actions-usa" : id === "nikkei" ? e.categorie === "actions-asie" : e.categorie === "actions-europe")).sort((a, b) => a.ter - b.ter).slice(0, 5);
   const cos = R.companies.filter(c => !c.missing && F.pays(c)).map(c => ({ c, v: valo(c) })).filter(x => x.v && x.v.capE > 0).sort((a, b) => b.v.capE - a.v.capE).slice(0, 10);
-  const etfRow = e => `<a class="orcrow" href="/etf/${e.id}">${logo({ name: e.issuer, domain: issuerDom(e) }, 30)}<span class="t"><b>${esc(e.name)}</b><small>${esc(e.issuer || "")}${e.pea ? ` · <span class="orcpea">PEA</span>` : ""}${e.distribution ? ` · ${/dist/i.test(e.distribution) ? "distribuant" : "capitalisant"}` : ""}</small></span><span class="v"><b>${pct(e.ter / 100, 2, false)}</b><small>par an</small></span>${ORC_CHEV}</a>`;
-  const qs = [`C'est quoi le ${name} ?`, `Comment investir dans le ${name} ?`, `ETF ${name} éligible PEA`];
+  const etfRow = e => `<a class="orcrow" href="/etf/${e.id}">${logo({ name: e.issuer, domain: issuerDom(e) }, 30)}<span class="t"><b>${esc(e.name)}</b><small>${esc(e.issuer || "")}${e.pea && (typeof frSeul !== "function" || frSeul()) ? ` · <span class="orcpea">PEA</span>` : ""}${e.distribution ? ` · ${/dist/i.test(e.distribution) ? "distribuant" : "capitalisant"}` : ""}</small></span><span class="v"><b>${pct(e.ter / 100, 2, false)}</b><small>par an</small></span>${ORC_CHEV}</a>`;
+  const qs = [`C'est quoi le ${name} ?`, `Comment investir dans le ${name} ?`, ...((typeof frSeul !== "function" || frSeul()) ? [`ETF ${name} éligible PEA`] : [])];
   app.innerHTML = `<div class="crumbs"><a href="/marches">Marchés</a> › ${esc(name)}</div>
     <section class="panel orchead"><div class="pb"><div class="orcid"><span class="flag">${FLAG[fl]}</span><div><p class="kick">Indice boursier · ${esc(F.fournisseur)}</p><h1 class="pagetitle" style="margin:0">${esc(name)}</h1><p class="pagesub" style="margin:4px 0 0">${esc(what)}</p></div></div>
       ${p ? `<div class="orcnum"><b class="num">${F0.format(p.p)}</b><span>points</span><span class="${p.chg > 0 ? "up" : p.chg < 0 ? "down" : ""}">${p.chg != null ? (p.chg > 0 ? "+" : "") + F2.format(p.chg) + " % " + jourSeance() : ""}</span>${y != null ? `<span class="${y >= 0 ? "up" : "down"}">${sgn(y, 1)} sur un an</span>` : ""}<small class="light">Cours différés</small></div>` : ""}</div></section>
@@ -89,7 +89,7 @@ function erankHTML() {
   const rows = (k === "gros" ? l.sort((a, b) => b.encours - a.encours) : l.filter(e => e.ter != null).sort((a, b) => a.ter - b.ter)).slice(0, 8);
   if (!rows.length) return `<div class="empty">Aucun ETF dans cette catégorie.</div>`;
   return `<p class="muted" style="margin:0 0 8px;font-size:13px">${k === "gros" ? "Encours : l'argent placé dans le fonds par l'ensemble des épargnants." : "Frais courants prélevés chaque année : les moins chers en premier."} Cliquez sur un ETF pour voir sa composition, ses frais et son émetteur.</p>
-    <div class="orclist">${rows.map((e, i) => `<a class="orcrow" href="/etf/${e.id}"><span class="rk">${i + 1}</span>${logo({ name: e.issuer, domain: issuerDom(e) }, 28)}<span class="t"><b>${esc(e.name)}</b><small>${esc(e.index || e.issuer || "")}${e.pea ? ` · <span class="orcpea">PEA</span>` : ""}</small></span><span class="v"><b>${k === "gros" ? big(e.encours) : pct(e.ter / 100, 2, false)}</b><small>${k === "gros" ? "encours" : "par an"}</small></span>${ORC_CHEV}</a>`).join("")}</div>`;
+    <div class="orclist">${rows.map((e, i) => `<a class="orcrow" href="/etf/${e.id}"><span class="rk">${i + 1}</span>${logo({ name: e.issuer, domain: issuerDom(e) }, 28)}<span class="t"><b>${esc(e.name)}</b><small>${esc(e.index || e.issuer || "")}${e.pea && (typeof frSeul !== "function" || frSeul()) ? ` · <span class="orcpea">PEA</span>` : ""}</small></span><span class="v"><b>${k === "gros" ? big(e.encours) : pct(e.ter / 100, 2, false)}</b><small>${k === "gros" ? "encours" : "par an"}</small></span>${ORC_CHEV}</a>`).join("")}</div>`;
 }
 
 (() => {
@@ -139,11 +139,11 @@ const ORC_IA = { open: false };
 function orcIaCtx() {
   const p = location.pathname, m = p.match(/^\/entreprise\/([a-z0-9-]+)/), e = p.match(/^\/etf\/([a-z0-9-]+)/), i = p.match(/^\/indice\/([a-z0-9]+)/);
   if (m && RBY[m[1]] && !RBY[m[1]].missing) return { type: "co", s: RBY[m[1]], label: RBY[m[1]].name, qs: ASK.slice(0, 4) };
-  if (e && ETFBY[e[1]]) { const x = ETFBY[e[1]]; return { type: "etf", label: x.name, qs: [`${x.name} est-il éligible au PEA ?`, "C'est quoi un ETF capitalisant ?", "Comment choisir un ETF ?", "ETF monde PEA pas cher"] }; }
+  if (e && ETFBY[e[1]]) { const x = ETFBY[e[1]]; return { type: "etf", label: x.name, qs: [(typeof frSeul !== "function" || frSeul()) ? `${x.name} est-il éligible au PEA ?` : `Que contient ${x.name} ?`, "C'est quoi un ETF capitalisant ?", "Comment choisir un ETF ?", "ETF monde PEA pas cher"] }; }
   if (i) { const I = INDEX_INFO.find(x => x[0] === i[1]); if (I) return { type: "gen", label: I[1], qs: [`C'est quoi le ${I[1]} ?`, `Comment investir dans le ${I[1]} ?`, "Pourquoi diversifier ?"] }; }
-  if (/^\/portefeuille/.test(p)) return { type: "gen", label: "Votre portefeuille", qs: ["Combien de lignes dans un portefeuille ?", "Les frais de courtage c'est combien ?", "PEA ou compte-titres ?", "Que faire quand ça baisse ?"] };
-  if (/^\/academie/.test(p)) return { type: "gen", label: "L'Académie", qs: ["C'est quoi le PER ?", "Comment fonctionne le PEA ?", "C'est quoi un ETF ?", "Pourquoi les intérêts composés comptent ?"] };
-  return { type: "gen", label: null, qs: ["Entreprises françaises peu endettées qui versent un dividende", "Compare LVMH et Hermès", "ETF monde éligible PEA", "C'est quoi le PER ?"] };
+  if (/^\/portefeuille/.test(p)) return { type: "gen", label: "Votre portefeuille", qs: ["Combien de lignes dans un portefeuille ?", "Les frais de courtage c'est combien ?", ((typeof frSeul !== "function" || frSeul()) ? "PEA ou compte-titres ?" : "C'est quoi un compte-titres ?"), "Que faire quand ça baisse ?"] };
+  if (/^\/academie/.test(p)) return { type: "gen", label: "L'Académie", qs: ["C'est quoi le PER ?", ((typeof frSeul !== "function" || frSeul()) ? "Comment fonctionne le PEA ?" : "C'est quoi un dividende ?"), "C'est quoi un ETF ?", "Pourquoi les intérêts composés comptent ?"] };
+  return { type: "gen", label: null, qs: ["Entreprises françaises peu endettées qui versent un dividende", "Compare LVMH et Hermès", ((typeof frSeul !== "function" || frSeul()) ? "ETF monde éligible PEA" : "ETF monde les moins chers"), "C'est quoi le PER ?"] };
 }
 function orcIaShell() {
   if ($("#orcia")) return;

@@ -174,8 +174,8 @@ export default {
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image });
     // 2/11 : sur enklair.com, Cloudflare garde scripts et styles 4 h dans le navigateur ; chaque version du site les appelle avec ?v=<version>
     html = html.replace(/(src|href)="(\/(?:m\/[a-z0-9_-]+\.js|app\.js|site\.css|composants\.css|calc\.js))"/gi, `$1="$2?v=${VERSION}"`);
-    { const pip = String((request.cf && request.cf.country) || "").toLowerCase(); // 2/11 : pays du visiteur (Belgique, Suisse, Luxembourg) proposé par défaut pour les leçons ; rien n'est enregistré
-      if (/^(fr|be|ch|lu)$/.test(pip)) html = html.replace(/<html\b/, `<html data-pays-ip="${pip}"`); }
+    { const pip = String((request.cf && request.cf.country) || "").toLowerCase(); // 2/11 : pays du visiteur, proposé par défaut (leçons, PEA) ; rien n'est enregistré
+      if (/^[a-z]{2}$/.test(pip) && pip !== "xx" && pip !== "t1") html = html.replace(/<html\b/, `<html data-pays-ip="${pip}"`); } // 3/11 : tous les pays (le PEA n'est montré qu'en France)
     if (info && ctx && typeof ctx.waitUntil === "function" && !/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless/i.test(request.headers.get("user-agent") || "")) { // 5e passage (E4) : page servie à un humain
       const ref = request.headers.get("referer") || "", src = url.searchParams.get("utm_source") === "x" || /\/\/(t\.co|x\.com|twitter\.com)\//.test(ref) ? "src:x" : /\/\/(www\.)?(google|bing|duckduckgo|qwant|ecosia|yahoo|search\.brave)\./.test(ref) ? "src:moteur" : ref && !ref.includes(url.host) ? "src:autre" : null;
       ctx.waitUntil(compterEvt(env, ["visite", ...(fq ? ["fiche"] : []), ...(src ? [src] : [])]));

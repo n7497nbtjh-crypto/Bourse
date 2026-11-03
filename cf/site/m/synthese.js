@@ -466,7 +466,7 @@ async function pageEspace(onglet) {
    Le vrai rapport de la semaine, calculé ce jour avec les chiffres du site, pour un profil fictif. En tête : ce qui est suivi
    dans cet exemple et ce que chacun peut régler dans le sien. Rien n'est enregistré. */
 const SYN_EX_REG = [
-  ["Ce qu'il suit", "Vos favoris, votre portefeuille, ou les deux. Ici : quatre favoris et un petit portefeuille PEA."],
+  ["Ce qu'il suit", "Vos favoris, votre portefeuille, ou les deux. Ici : quatre favoris et un petit portefeuille."],
   ["Les secteurs", "Jusqu'à deux secteurs suivis gratuitement (six avec Premium), avec leur médiane de la semaine. Ici : énergie et technologie."],
   ["Les indices", "Les indices de référence affichés en face de vos lignes. Ici : CAC 40, Euro Stoxx 50 et S&P 500."],
   ["Les sujets", "Résultats, dividendes, actualité, leçons : vous gardez ceux qui vous intéressent."],

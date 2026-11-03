@@ -7,8 +7,16 @@
      le Livret A est français et renvoie à l'équivalent ; la pastille PEA des fiches est masquée.
    Styles : site.css, bloc « Pays ». */
 const PAYS = { fr: ["France", "🇫🇷"], be: ["Belgique", "🇧🇪"], ch: ["Suisse", "🇨🇭"], lu: ["Luxembourg", "🇱🇺"] };
+// 3/11 : le PEA n'existe que pour les personnes domiciliées en France. frSeul() vaut vrai si le visiteur a choisi la France,
+// ou, sans choix, si Cloudflare le situe en France (ou pays inconnu). Choix « autre » : pays hors de la liste.
+// html[data-fr="0"] masque tout élément .fr-seul (site.css, bloc « Pays ») ; posé dès le <head> (index.html) pour éviter un clignement.
+const frSeul = () => { let p = null; try { p = localStorage.getItem("bilan.pays"); } catch (e) { } const ip = document.documentElement.dataset.paysIp; return p ? p === "fr" : (!ip || ip === "fr"); };
+const paysPose = () => document.documentElement.setAttribute("data-fr", frSeul() ? "1" : "0");
+paysPose();
+// Texte écrit pour un Français (« …, dans un PEA. ») : hors de France, la proposition qui parle du PEA est retirée.
+const sansPea = t => !t || frSeul() ? t : String(t).replace(/,[^,.]*\bPEA\b[^,.]*(?=\.)/g, "").replace(/[^.]*\bPEA\b[^.]*\.\s*/g, "").trim();
 let PAYS_DATA = null;
-const paysGet = () => { const ip = document.documentElement.dataset.paysIp; const d = PAYS[ip] ? ip : "fr"; try { const p = localStorage.getItem("bilan.pays"); return PAYS[p] ? p : d; } catch (e) { return d; } }; // choix mémorisé, sinon le pays d'où l'on visite (Cloudflare), sinon la France
+const paysGet = () => { const ip = document.documentElement.dataset.paysIp; const d = PAYS[ip] ? ip : "fr"; try { const p = localStorage.getItem("bilan.pays"); return PAYS[p] ? p : p === "autre" ? "fr" : d; } catch (e) { return d; } }; // « autre » : leçons générales (françaises), PEA masqué // choix mémorisé, sinon le pays d'où l'on visite (Cloudflare), sinon la France
 function paysCharger() { return PAYS_DATA ? Promise.resolve(PAYS_DATA) : fetch("/data/academie-pays.json").then(r => r.json()).then(j => PAYS_DATA = j).catch(() => null); }
 function paysAppliquer(aca, pd, p) { // remplace, dans l'Académie chargée, les leçons propres à la France par celles du pays
   if (!aca || !pd || p === "fr" || !pd.pays[p] || aca._pays === p) return aca;
@@ -32,15 +40,24 @@ function paysInitAcademie() { // branché sur le chargement de l'Académie (ACA 
   ACAP = Promise.all([base, paysCharger()]).then(([a, pd]) => { ACA = paysAppliquer(a, pd, p); return ACA; });
 }
 function paysChoisir(p) {
-  if (!PAYS[p]) return; try { localStorage.setItem("bilan.pays", p); } catch (e) { }
-  ACA = null; ACAP = null; paysInitAcademie();
+  if (!PAYS[p] && p !== "autre") return; try { localStorage.setItem("bilan.pays", p); } catch (e) { }
+  paysPose(); paysPied(); ACA = null; ACAP = null; paysInitAcademie();
   if (typeof route === "function") route(); else location.reload();
 }
+const paysChoix = () => { let p = null; try { p = localStorage.getItem("bilan.pays"); } catch (e) { } if (PAYS[p] || p === "autre") return p; const ip = document.documentElement.dataset.paysIp; return PAYS[ip] ? ip : ip && ip !== "fr" ? "autre" : "fr"; };
 function paysBarreHTML() {
-  const p = paysGet();
-  return `<div class="pays-bar" role="group" aria-label="Votre pays"><span>Vous investissez depuis :</span>${Object.entries(PAYS).map(([k, [n, d]]) => `<button type="button" data-pays="${k}" class="${k === p ? "on" : ""}" aria-pressed="${k === p}"><i aria-hidden="true">${d}</i>${n}</button>`).join("")}${p !== "fr" ? `<small>Les leçons sur l'épargne, les comptes et l'impôt sont adaptées à la ${p === "lu" ? "situation au Luxembourg" : p === "ch" ? "situation en Suisse" : "situation en Belgique"}. Montants 2026, sources officielles en bas de chaque leçon.</small>` : ""}</div>`;
+  const p = paysChoix(), L = [...Object.entries(PAYS), ["autre", ["Autre pays", "🌍"]]];
+  const note = p === "autre" ? `<small>Les leçons sur l'épargne, les comptes et l'impôt décrivent la France : les règles de votre pays peuvent être différentes. Le PEA, réservé aux personnes domiciliées en France, n'est pas affiché.</small>`
+    : p !== "fr" ? `<small>Les leçons sur l'épargne, les comptes et l'impôt sont adaptées à la ${p === "lu" ? "situation au Luxembourg" : p === "ch" ? "situation en Suisse" : "situation en Belgique"}. Montants 2026, sources officielles en bas de chaque leçon.</small>` : "";
+  return `<div class="pays-bar" role="group" aria-label="Votre pays"><span>Vous investissez depuis :</span>${L.map(([k, [n, d]]) => `<button type="button" data-pays="${k}" class="${k === p ? "on" : ""}" aria-pressed="${k === p}"><i aria-hidden="true">${d}</i>${n}</button>`).join("")}${note}</div>`;
 }
-document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".pays-bar [data-pays]"); if (b) { e.preventDefault(); paysChoisir(b.dataset.pays); } });
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest(".pays-bar [data-pays],.pays-pied [data-pays]"); if (b) { e.preventDefault(); paysChoisir(b.dataset.pays); } });
+function paysPied() { // pied de page, sur toutes les pages : le pays détecté, modifiable en un clic
+  const f = document.querySelector("footer .f"); if (!f) return; const p = paysChoix(), L = [...Object.entries(PAYS), ["autre", ["Autre pays", "🌍"]]];
+  let el = f.querySelector(".pays-pied"); if (!el) { el = document.createElement("div"); el.className = "pays-pied"; el.setAttribute("role", "group"); el.setAttribute("aria-label", "Votre pays"); f.appendChild(el); }
+  el.innerHTML = `<span>Vous investissez depuis :</span>${L.map(([k, [n, d]]) => `<button type="button" data-pays="${k}" class="${k === p ? "on" : ""}" aria-pressed="${k === p}"><i aria-hidden="true">${d}</i>${n}</button>`).join("")}`;
+}
+if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", paysPied); else paysPied();
 const PAYS_CARTES = { // les deux premières cartes d'« Apprendre » (réserve, compte), hors France
   be: [["sur un compte d'épargne réglementé", "Intérêts exonérés jusqu'à 1 020 € par personne en 2026, puis taxés à 15 %.", "/academie/bases/epargne-precaution"], ["Compte-titres", "et l'épargne-pension pour la retraite", "Pas d'équivalent du PEA en Belgique. Chaque achat ou vente paie la taxe de Bourse ; depuis 2026, les plus-values sont taxées à 10 % au-delà de 10 000 € par an.", "/academie/placements/compte-titres", "Le compte-titres et la TOB →"]],
   ch: [["sur un compte épargne", "Intérêts imposables comme revenu ; dépôts garantis jusqu'à 100 000 francs par banque.", "/academie/bases/epargne-precaution"], ["Pilier 3a", "puis un dépôt-titres", "Jusqu'à 7 258 francs déductibles en 2026 pour un salarié. Sur un dépôt-titres, les gains en capital privés ne sont pas imposés.", "/academie/placements/pilier-3a", "Le pilier 3a →"]],
@@ -91,10 +108,12 @@ paysInitAcademie();
   wrap("pageAcademie", (mid, lid) => { paysPoser(); const p = paysGet(); if (p === "fr" || !lid) return; });
   const sim0 = window.pageSim;
   if (typeof sim0 === "function") window.pageSim = function (tool) { const p = paysGet(); if (tool === "pea-cto" && p !== "fr" && PAYS_FISC[p]) return pageFiscPays(p); return sim0.apply(this, arguments); };
-  wrap("pageEnveloppes", () => { const p = paysGet(); if (p === "fr") return; const h = $("#app h1"); if (!h) return;
+  wrap("pageEnveloppes", () => { if (frSeul()) return; const p = paysGet(), h = $("#app h1"); if (!h) return;
+    if (p === "fr") { h.insertAdjacentHTML("afterend", `<div class="pays-info"><b>🌍 Cette page décrit les comptes français</b> (PEA, compte-titres, assurance-vie). Le PEA est réservé aux personnes domiciliées en France ; les règles de votre pays peuvent être différentes.</div>`); return; }
     const L = { be: ["/academie/placements/compte-titres", "Le compte-titres et la taxe de Bourse en Belgique"], ch: ["/academie/placements/pilier-3a", "Le pilier 3a et le dépôt-titres en Suisse"], lu: ["/academie/placements/compte-titres", "Le compte-titres au Luxembourg"] }[p];
     h.insertAdjacentHTML("afterend", `<div class="pays-info"><b>${PAYS[p][1]} Cette page décrit les comptes français</b> (PEA, compte-titres, assurance-vie), réservés aux personnes domiciliées en France pour le PEA. Pour votre pays : <a class="lnk" href="${L[0]}">${L[1]}</a> · <a class="lnk" href="/simulateurs/pea-cto">l'impôt sur vos placements</a></div>`); });
-  wrap("pageLivretBourse", () => { const p = paysGet(); if (p === "fr") return; const h = $("#app h1"); if (!h) return;
+  wrap("pageLivretBourse", () => { if (frSeul()) return; const p = paysGet(), h = $("#app h1"); if (!h) return;
+    if (p === "fr") { h.insertAdjacentHTML("afterend", `<div class="pays-info"><b>🌍 Le Livret A est un placement français.</b> Ce comparateur reste utile comme repère : comparez avec le compte d'épargne de votre pays.</div>`); return; }
     const eq = { be: "le compte d'épargne réglementé (intérêts exonérés jusqu'à 1 020 € en 2026)", ch: "le compte épargne bancaire, et le pilier 3a pour la retraite", lu: "le compte d'épargne (retenue libératoire de 20 % sur les intérêts)" }[p];
     h.insertAdjacentHTML("afterend", `<div class="pays-info"><b>${PAYS[p][1]} Vous investissez depuis ${p === "lu" ? "le Luxembourg" : p === "ch" ? "la Suisse" : "la Belgique"}.</b> Le Livret A est un placement français. Ce comparateur reste utile comme repère : chez vous, l'équivalent est ${eq}. <a class="lnk" href="/academie/bases/epargne-precaution">L'épargne de précaution ${p === "lu" ? "au" : "en"} ${PAYS[p][0]}</a></div>`); });
 })();

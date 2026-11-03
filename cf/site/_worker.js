@@ -2879,7 +2879,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "02f8900b9cc55fb9", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "8f7c0faa0310c0ad", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3347,7 +3347,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image }), html = html.replace(/(src|href)="(\/(?:m\/[a-z0-9_-]+\.js|app\.js|site\.css|composants\.css|calc\.js))"/gi, `$1="$2?v=${VERSION}"`);
     {
       let pip = String(request.cf && request.cf.country || "").toLowerCase();
-      /^(fr|be|ch|lu)$/.test(pip) && (html = html.replace(/<html\b/, `<html data-pays-ip="${pip}"`));
+      /^[a-z]{2}$/.test(pip) && pip !== "xx" && pip !== "t1" && (html = html.replace(/<html\b/, `<html data-pays-ip="${pip}"`));
     }
     if (info && ctx && typeof ctx.waitUntil == "function" && !/bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|headless/i.test(request.headers.get("user-agent") || "")) {
       let ref = request.headers.get("referer") || "", src = url.searchParams.get("utm_source") === "x" || /\/\/(t\.co|x\.com|twitter\.com)\//.test(ref) ? "src:x" : /\/\/(www\.)?(google|bing|duckduckgo|qwant|ecosia|yahoo|search\.brave)\./.test(ref) ? "src:moteur" : ref && !ref.includes(url.host) ? "src:autre" : null;

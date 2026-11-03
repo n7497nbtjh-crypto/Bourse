@@ -52,7 +52,7 @@ async function pageMarches4() {
   const titre = !ix.length ? "Les marchés." : up === 0 ? "Une journée de baisse." : up === ix.length ? "Une journée de hausse." : up > ix.length / 2 ? "Une journée plutôt en hausse." : up < ix.length / 2 ? "Une journée plutôt en baisse." : "Une journée partagée.";
   const sous = !ix.length ? "Les cours ne sont pas disponibles pour le moment." : `${up === 0 ? `Les ${ix.length} grands indices baissent.` : up === ix.length ? `Les ${ix.length} grands indices montent.` : `${up} grand${up > 1 ? "s" : ""} indice${up > 1 ? "s" : ""} sur ${ix.length} en hausse.`} Cours différés${typeof PXUP === "string" && PXUP !== "none" ? ", relevés le " + esc(new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : ""}.`;
   const portes = [["/entreprises", "Entreprises", `${F0.format(R.companies.length)} fiches`, "Chacune face à la médiane de son secteur.", "M4 20V9l8-5 8 5v11M9 20v-6h6v6"],
-    ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, "Frais, PEA, ce qu'ils contiennent vraiment.", "M4 18l5-6 4 3 7-9M4 4v16h16"],
+    ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, (typeof frSeul !== "function" || frSeul() ? "Frais, PEA, ce qu'ils contiennent vraiment." : "Frais, performance, ce qu'ils contiennent vraiment."), "M4 18l5-6 4 3 7-9M4 4v16h16"],
     ["/actualites", "Actualité", "chaque jour", "Annonces officielles lues et chiffrées.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
     ["/agenda", "Agenda", "jour par jour", "Résultats et dividendes à venir.", "M4 5h16v15H4zM4 9h16M8 3v4M16 3v4"],
     ["/classements", "Classements", "par critère", "Les mieux placées sur la marge, la dette, le prix.", "M4 20h16M7 20V10M12 20V4M17 20v-8"]];

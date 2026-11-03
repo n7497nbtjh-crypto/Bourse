@@ -2368,6 +2368,10 @@ function commencerTrois() { // les trois décisions avant d'investir, en cartes 
     { n: "2", t: "Un compte adapté", v: "PEA", u: "pour les actions européennes, 5 ans sans impôt sur les gains", d: "Le compte-titres pour le reste du monde. Le choix dépend de ce que vous voulez acheter et de votre horizon.", h: "/pea-cto", l: "PEA ou compte-titres" },
     { n: "3", t: "Une entreprise, lue", v: ex3 ? ex3.name : "Une fiche", u: "un verdict en trois mots, puis le détail", d: "Chaque fiche dit si l'entreprise gagne de l'argent, ce qu'elle doit et si son action est chère, face à son secteur.", h: ex3 ? `/entreprise/${ex3.id}` : "/entreprises", l: "Ouvrir une fiche" },
   ];
+  if (typeof frSeul === "function" && !frSeul() && typeof paysGet === "function" && paysGet() === "fr") { // 3/11 : autre pays que la France, la Belgique, la Suisse ou le Luxembourg
+    trois[0] = { ...trois[0], u: "de dépenses, sur un compte d'épargne", d: "Avant d'investir, une somme disponible à tout moment, sur un compte d'épargne de votre banque." };
+    trois[1] = { ...trois[1], v: "Compte-titres", u: "pour les actions et les ETF du monde entier", d: "L'impôt sur les gains et les dividendes dépend de votre pays : les règles françaises décrites sur le site ne s'appliquent pas forcément à vous.", h: "/academie/placements/etf", l: "Comprendre un ETF" };
+  }
   return `<div class="cm3 scroll-x">${trois.map(x => `<a class="cm3-c" href="${x.h}"><span class="cm3-n">${x.n}</span><b class="cm3-t">${esc(x.t)}</b><span class="cm3-v">${esc(x.v)}</span><span class="cm3-u">${esc(x.u)}</span><span class="cm3-d">${esc(x.d)}</span><span class="cm3-l">${esc(x.l)} →</span></a>`).join("")}</div>`;
 }
 async function commencerCharger() { if (!COMM) { try { COMM = await (await fetch("/data/commencer.json")).json(); } catch (e) { } } return COMM; }

@@ -186,7 +186,7 @@ function outVieux(c) { try { return typeof donVieux === "function" ? donVieux(c)
 function outSeed(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; }
 function outRand(seed) { let a = seed; return () => { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 const OUT_SLOTS = [
-  { k: "pea", t: "Petite valeur éligible au PEA", f: x => (x.T.t === "small" || x.T.t === "micro") && x.pea === true },
+  { k: "pea", get t() { return (typeof frSeul !== "function" || frSeul()) ? "Petite valeur éligible au PEA" : "Petite valeur européenne"; }, f: x => (x.T.t === "small" || x.T.t === "micro") && x.pea === true },
   { k: "eu", t: "Valeur européenne de taille moyenne ou petite", f: x => x.c.region === "EU" },
   { k: "monde", t: "Hors d'Europe", f: x => x.c.region === "US" || x.c.region === "MONDE" },
   { k: "rendement", t: "Profil rendement", f: x => x.style === "rendement" },
@@ -272,7 +272,7 @@ function outDecCard(x, lg) {
       ${V.length ? `<p><b>Valorisation</b> ${V.join(" ")}</p>` : ""}
       <p><b>Catalyseurs potentiels</b></p><div data-rc-cat="${esc(c.id)}"><p class="rc-mut">Chargement des annonces…</p></div>
       <p><b>Risques</b></p>${Rk.length ? `<ul class="rc-rk">${Rk.map(([t, z]) => `<li><b>${t}</b> ${z}</li>`).join("")}</ul>` : `<p class="rc-mut">Aucun risque particulier relevé dans les chiffres ; les risques propres à toute action demeurent.</p>`}
-      <p><b>Éligibilité au PEA</b> ${esc(recoPeaInfo(c).why)}</p></div></details>
+      <p class="fr-seul"><b>Éligibilité au PEA</b> ${esc(recoPeaInfo(c).why)}</p></div></details>
     <a class="lnk out-dcl" href="/entreprise/${c.id}">Lire la fiche complète →</a></article>`;
 }
 function outEtfCard(e) {
@@ -283,12 +283,12 @@ function outEtfCard(e) {
     e.devise && e.devise !== "EUR" ? `Fonds en ${esc(e.devise)} : le change joue.` : null].filter(Boolean);
   return `<article class="out-dc big out-de"><a class="out-dca" href="/etf/${esc(e.id)}"><span class="out-dch"><span class="rc-ico">ETF</span><span><b>${esc(e.name)}</b><small>${esc([e.issuer, ECAT[e.categorie] || e.categorie].filter(Boolean).join(" · "))}</small></span></span></a>
     <span class="out-dtg">${recoEtfPeaTag(e)}${recoRisk(r)}</span>
-    <p class="out-dcd"><b>Ce qu'il contient</b> ${esc((e.fiche && e.fiche.quoi) || `Il suit l'indice ${e.index || ""}.`)}</p>
-    <p class="out-dcr"><b>Raison de la sélection</b> ETF éligible au PEA hors ETF Monde, pour varier les catégories : ${esc(ECAT[e.categorie] || e.categorie)}.</p>
+    <p class="out-dcd"><b>Ce qu'il contient</b> ${esc((e.fiche && (typeof sansPea === "function" ? sansPea(e.fiche.quoi) : e.fiche.quoi)) || `Il suit l'indice ${e.index || ""}.`)}</p>
+    <p class="out-dcr"><b>Raison de la sélection</b> ETF${(typeof frSeul !== "function" || frSeul()) ? " éligible au PEA" : ""} hors ETF Monde, pour varier les catégories : ${esc(ECAT[e.categorie] || e.categorie)}.</p>
     <div class="out-kp"><div><span>Frais par an</span><b>${pct(e.ter / 100, 2, false)}</b></div><div><span>Encours</span><b>${e.encours ? F0.format(e.encours) + " M€" : "–"}</b></div><div><span>Lignes</span><b>${C.n ? F0.format(C.n) : "–"}</b></div><div><span>1er pays</span><b>${pe.expo ? `${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)} ${F0.format(pe.expo.pct)} %` : "–"}</b></div></div>
     <details class="rc-det"><summary>Éligibilité, exposition et risques</summary><div>
-      <p><b>Éligibilité au PEA</b> ${esc(pe.why)}</p>
-      <p><b>Exposition</b> ${pe.expo ? `Ce que le fonds suit : ${F0.format(pe.expo.pct)} % ${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)}${C.p1 && C.pays ? `, ${F0.format(C.pays)} pays au total` : ""}.` : "Composition non détaillée par l'émetteur."} L'éligibilité au PEA ne dit rien de cette exposition.</p>
+      <p class="fr-seul"><b>Éligibilité au PEA</b> ${esc(pe.why)}</p>
+      <p><b>Exposition</b> ${pe.expo ? `Ce que le fonds suit : ${F0.format(pe.expo.pct)} % ${esc(COUNTRY[pe.expo.pays] || pe.expo.pays)}${C.p1 && C.pays ? `, ${F0.format(C.pays)} pays au total` : ""}.` : "Composition non détaillée par l'émetteur."}<span class="fr-seul"> L'éligibilité au PEA ne dit rien de cette exposition.</span></p>
       <p><b>Risques</b></p><ul class="rc-rk">${risques.map(z => `<li>${z}</li>`).join("")}</ul>
       <p class="rc-mut">Source : fiche de l'émetteur${C.asOf ? `, composition au ${esc(C.asOf)}` : ""}. Les performances passées ne préjugent pas des performances futures.</p></div></details>
     <a class="lnk out-dcl" href="/etf/${esc(e.id)}">Lire la fiche du fonds →</a></article>`;
@@ -316,17 +316,17 @@ async function pageDecouvertes() {
   const nT = t => P.filter(x => x.T.t === t).length;
   app.innerHTML = `<div class="out-page"><div class="crumbs"><a href="/entreprises">Entreprises</a> › Découvertes</div>
     <h1 class="pagetitle">À découvrir aujourd'hui</h1>
-    <p class="pagesub">${esc(outDateFr(TODAY).replace(/^./, x => x.toUpperCase()))} : six entreprises peu citées, de tailles, de pays, de secteurs et de profils différents, et deux ETF éligibles au PEA. Pour chacune : activité, chiffres, valorisation, catalyseurs et risques.</p>
+    <p class="pagesub">${esc(outDateFr(TODAY).replace(/^./, x => x.toUpperCase()))} : six entreprises peu citées, de tailles, de pays, de secteurs et de profils différents, et deux ETF${(typeof frSeul !== "function" || frSeul()) ? " éligibles au PEA" : ""}. Pour chacune : activité, chiffres, valorisation, catalyseurs et risques.</p>
     ${OUT_NOADV}
     <h2 class="out-h2">Entreprises</h2>
     <div class="out-dg big">${today.map(x => outDecCard(x, true)).join("")}</div>
-    ${etfs.length ? `<h2 class="out-h2">ETF éligibles au PEA</h2><div class="out-dg big out-dg2">${etfs.map(outEtfCard).join("")}</div>` : ""}
+    ${etfs.length ? `<h2 class="out-h2">${(typeof frSeul !== "function" || frSeul()) ? "ETF éligibles au PEA" : "ETF"}</h2><div class="out-dg big out-dg2">${etfs.map(outEtfCard).join("")}</div>` : ""}
     <section class="panel"><div class="ph"><h2>Les jours précédents</h2></div><div class="pb" style="padding-top:4px">${prev.map(([d, l]) => `<div class="out-prev"><b>${esc(outDateFr(d, { weekday: "long", day: "numeric", month: "long" }))}</b><div>${l.map(x => `<a class="chip" href="/entreprise/${x.c.id}">${logo(x.c, 20)}${esc(x.c.name)}</a>`).join("")}</div></div>`).join("")}</div></section>
     <section class="panel"><details class="acc"><summary><b>Comment la sélection est faite</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px">
       <p><b>Le vivier.</b> Les entreprises suivies dont les comptes ont moins de deux ans, avec au moins 5 critères mesurés, 2 points forts ou plus et au plus 2 points de vigilance (3 pour un redressement). Les grandes capitalisations (plus de 10 Md€) et les entreprises des comparaisons célèbres sont écartées. Une microcapitalisation n'entre que si ses comptes sont récents et complets. Cela fait ${F0.format(P.length)} entreprises aujourd'hui : ${F0.format(nT("mid"))} moyennes, ${F0.format(nT("small"))} petites, ${F0.format(nT("micro"))} micro.</p>
-      <p><b>Les six cases du jour.</b> Une petite valeur éligible au PEA, une valeur européenne, une valeur hors d'Europe, puis un profil rendement (dividende d'au moins 3,5 % couvert par le bénéfice), croissance (ventes en hausse 3 ans de suite à plus de 7 % par an, ou +15 % sur un an) et redressement (retour aux bénéfices après une perte). Au plus une entreprise par secteur et deux par région. Tout le monde voit la même sélection le même jour.</p>
+      <p><b>Les six cases du jour.</b> Une petite valeur ${(typeof frSeul !== "function" || frSeul()) ? "éligible au PEA" : "européenne"}, une valeur européenne, une valeur hors d'Europe, puis un profil rendement (dividende d'au moins 3,5 % couvert par le bénéfice), croissance (ventes en hausse 3 ans de suite à plus de 7 % par an, ou +15 % sur un an) et redressement (retour aux bénéfices après une perte). Au plus une entreprise par secteur et deux par région. Tout le monde voit la même sélection le même jour.</p>
       <p><b>Tailles.</b> Capitalisation en euros : micro sous 300 M€, petite jusqu'à 2 Md€, moyenne jusqu'à 10 Md€. Sans cours disponible, la taille est estimée par les ventes (signalé par un astérisque).</p>
-      <p><b>PEA.</b> Une action cotée en Europe n'est pas forcément éligible : il faut un siège dans l'Union européenne ou l'EEE et une société soumise à l'impôt sur les sociétés (les foncières SIIC, SIR ou SOCIMI sont exclues). Le site lit le pays du code ISIN, le recoupe avec Wikidata et affiche « à vérifier » quand les sources se contredisent. Pour un ETF, l'éligibilité est celle déclarée par l'émetteur ; un ETF éligible peut suivre des actions américaines ou asiatiques.</p>
+      <p class="fr-seul"><b>PEA.</b> Une action cotée en Europe n'est pas forcément éligible : il faut un siège dans l'Union européenne ou l'EEE et une société soumise à l'impôt sur les sociétés (les foncières SIIC, SIR ou SOCIMI sont exclues). Le site lit le pays du code ISIN, le recoupe avec Wikidata et affiche « à vérifier » quand les sources se contredisent. Pour un ETF, l'éligibilité est celle déclarée par l'émetteur ; un ETF éligible peut suivre des actions américaines ou asiatiques.</p>
       <p><b>Catalyseurs.</b> Annonces officielles importantes des 90 derniers jours (AMF, SEC et autres régulateurs) et dates publiées par l'entreprise, avec leur lien. Ce sont des événements à suivre, pas des prévisions.</p>
       <p class="muted">Petites valeurs : moins d'échanges chaque jour, des cours plus variables, une information plus rare et parfois une activité concentrée. Découvrir n'est pas acheter : lisez la fiche, ses points de vigilance et le prix de l'action avant toute décision.</p></div></details></section></div>`;
   if (typeof recoFillCatal === "function") recoFillCatal(app);

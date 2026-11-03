@@ -31,7 +31,7 @@ function cmuChiffres(room) {
     const pairs = ETF.list.filter(x => x.categorie === e.categorie && x.ter != null).map(x => x.ter), mt = pairs.length >= 3 ? median(pairs) : null;
     const out = [];
     if (e.ter != null) out.push({ l: "Frais courants", v: nf(2).format(e.ter) + " %", m: mt != null ? nf(2).format(mt) + " %" : null, z: mt == null ? "" : e.ter < mt * 0.85 ? "up" : e.ter > mt * 1.15 ? "dn" : "" });
-    if (e.pea != null) out.push({ l: "Éligible au PEA", v: e.pea ? "Oui" : "Non" });
+    if (e.pea != null && (typeof frSeul !== "function" || frSeul())) out.push({ l: "Éligible au PEA", v: e.pea ? "Oui" : "Non" });
     if (e.compo && e.compo.n) out.push({ l: "Lignes détenues", v: F0.format(e.compo.n) });
     if (e.encours) out.push({ l: "Encours", v: capFmt(e.encours * 1e6) });
     return out.length ? { k: "etf", items: out, src: `Données de l'émetteur (${esc(e.issuer)}) reprises sur la fiche de l'ETF.` } : null;
@@ -218,7 +218,7 @@ function cmuListeTable(it) {
   const cell = (c, k) => { const f = INDI[k]; let v = null; try { v = f[1](c); } catch (e) { } return tblxZoneCell(v, f[2], v == null ? null : medInd(c.sector, k), f[3], ["croissance", "marge"].includes(k) && medInd(c.sector, k) != null ? Math.max(2, Math.abs(medInd(c.sector, k)) * 0.2) : null); };
   return `${cos.length ? tblxScrollBox(`<table class="t tbx tbx-sort"><thead><tr><th class="l lab" scope="col" data-sk="0">Entreprise<i class="tbx-so"></i></th>${["croissance", "marge", "dette", "per"].map((k, i) => tblxTh(esc(INDI[k][0]), i + 1)).join("")}</tr></thead><tbody>
       ${cos.map((k, j) => { const c = RBY[k.slice(2)]; return `<tr class="${j % 2 ? "z" : ""}"><th scope="row" class="l lab" data-v="${esc(c.name)}"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 24)}<span><b>${esc(c.name)}</b><small class="light">${esc(secName(c))}</small></span></a></th>${c.missing ? `<td class="num light" colspan="4">comptes non disponibles</td>` : ["croissance", "marge", "dette", "per"].map(x => cell(c, x)).join("")}</tr>`; }).join("")}</tbody></table>`, "Faites glisser pour voir les colonnes") : ""}
-    ${etfs.length ? `<div class="cmu-etfs">${etfs.map(k => { const e = ETFBY[k.slice(2)]; return `<a href="/etf/${e.id}">${keyLogo(k, 24)}<span><b>${esc(e.name)}</b><small class="light">${e.ter != null ? `frais ${nf(2).format(e.ter)} % par an` : ""}${e.pea ? " · PEA" : ""}</small></span></a>`; }).join("")}</div>` : ""}
+    ${etfs.length ? `<div class="cmu-etfs">${etfs.map(k => { const e = ETFBY[k.slice(2)]; return `<a href="/etf/${e.id}">${keyLogo(k, 24)}<span><b>${esc(e.name)}</b><small class="light">${e.ter != null ? `frais ${nf(2).format(e.ter)} % par an` : ""}${e.pea && (typeof frSeul !== "function" || frSeul()) ? " · PEA" : ""}</small></span></a>`; }).join("")}</div>` : ""}
     <p class="cmu-fsrc">Chiffres calculés par ENKLAIR sur les derniers comptes annuels et le cours différé ; couleur : nettement mieux (vert) ou moins bien (orange) que la médiane du secteur. Ajoutés automatiquement, pas par l'auteur.</p>`;
 }
 function cmuListes(el, qs) {
@@ -230,7 +230,7 @@ function cmuListes(el, qs) {
       <section class="panel cmu-new" id="cmu-lnew" hidden><div class="ph"><h2>Partager une liste de suivi</h2><button type="button" class="linkbtn" id="cmu-lfermer">Fermer</button></div><div class="pb">
         <form class="cmu-form" id="cmu-lform" autocomplete="off" novalidate>
           <p class="cmu-rappel">Une liste dit ce que vous suivez et pourquoi, pas ce qu'il faut acheter. Les chiffres de chaque ligne s'ajoutent tout seuls.</p>
-          <div class="field"><label for="cmu-lt">Titre</label><input id="cmu-lt" name="titre" maxlength="80" placeholder="Par exemple : les ETF monde éligibles au PEA"></div>
+          <div class="field"><label for="cmu-lt">Titre</label><input id="cmu-lt" name="titre" maxlength="80" placeholder="Par exemple : les ETF monde les moins chers"></div>
           <div class="field"><label for="cmu-ln">Pourquoi cette liste ? <span class="light">facultatif</span></label><textarea id="cmu-ln" name="note" rows="2" maxlength="400" placeholder="Ce que vous comparez, ce que vous surveillez."></textarea></div>
           <fieldset class="field"><legend>Les lignes <span class="light" id="cmu-lnb"></span></legend><div class="cmu-pick" id="cmu-pick">${mes.map(k => `<label><input type="checkbox" value="${k}" checked>${keyLogo(k, 18)}<span>${esc(keyName(k))}</span></label>`).join("")}</div>
             <div class="mwrap"><input id="cmu-ladd" placeholder="Ajouter une entreprise ou un ETF"><div class="msug" hidden></div></div>${mes.length ? "" : `<p class="muted" style="margin:6px 0 0;font-size:13px">Vos favoris apparaîtront ici. Vous pouvez aussi ajouter les lignes une par une.</p>`}</fieldset>

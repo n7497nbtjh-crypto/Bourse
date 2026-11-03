@@ -29,18 +29,19 @@ function lx4Carte(id, t, n) {
 }
 function pageLexique4() {
   setTitle("Lexique"); setNav("lex");
+  const fr = typeof frSeul !== "function" || frSeul(), ESS = fr ? ESSENTIEL : ESSENTIEL.filter(k => k !== "pea").flatMap(k => k === "payout" ? ["rdt", k] : [k]); // hors de France : le PEA laisse sa place au rendement
   const rest = [["b", "Les bases", BASES], ["p", "Lire une entreprise", TERMS], ["b", "Portefeuille et simulations", PTERMS]]
-    .map(([cl, g, o]) => [cl, g, Object.entries(o).filter(([k]) => !ESSENTIEL.includes(k))]).filter(([, , l]) => l.length);
-  const tot = ESSENTIEL.length + rest.reduce((a, [, , l]) => a + l.length, 0);
+    .map(([cl, g, o]) => [cl, g, Object.entries(o).filter(([k]) => !ESS.includes(k) && (fr || k !== "pea"))]).filter(([, , l]) => l.length);
+  const tot = ESS.length + rest.reduce((a, [, , l]) => a + l.length, 0);
   app.innerHTML = `<div class="ek ek-page lx4">
     <section class="ek-hero"><span class="mc-stk">Lexique</span><h1 class="ag4-t">Dix mots pour lire une entreprise.</h1>
       <p class="mc-sub">Pour chacun : ce que c'est, comment on le calcule, à partir de quand c'est bon ou moins bon, et des entreprises réelles en exemple. ${F0.format(tot)} notions en tout.</p>
       <form class="vf-f lx4-f" role="search" onsubmit="return false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
         <input id="lx4q" class="el-in" type="search" autocomplete="off" placeholder="Chercher un mot : PER, dividende, ETF…" aria-label="Chercher une notion"></form>
-      <div class="lx4-pills">${ESSENTIEL.map((k, i) => `<a href="#${k}"><i>${i + 1}</i>${esc(ALL[k].name)}</a>`).join("")}</div>
-      <a class="ou4-deb lx4-guide" href="/pea-cto"><b>Avant d'acheter une action : dans quel compte ?</b><span>PEA, compte-titres, assurance-vie : ce qu'on peut y mettre et l'impôt sur les gains.</span><em>Lire le guide →</em></a></section>
+      <div class="lx4-pills">${ESS.map((k, i) => `<a href="#${k}"><i>${i + 1}</i>${esc(ALL[k].name)}</a>`).join("")}</div>
+      <a class="ou4-deb lx4-guide fr-seul" href="/pea-cto"><b>Avant d'acheter une action : dans quel compte ?</b><span>PEA, compte-titres, assurance-vie : ce qu'on peut y mettre et l'impôt sur les gains.</span><em>Lire le guide →</em></a></section>
     <section class="ek-sec" id="lx4-ess"><span class="ek-stk2 b">Les dix essentielles</span><h2>Dans l'ordre conseillé.</h2>
-      <div class="lx4-g">${ESSENTIEL.map((k, i) => lx4Carte(k, ALL[k], i + 1)).join("")}</div></section>
+      <div class="lx4-g">${ESS.map((k, i) => lx4Carte(k, ALL[k], i + 1)).join("")}</div></section>
     ${rest.map(([cl, g, l]) => `<section class="ek-sec lx4-grp"><span class="ek-stk2 ${cl}">${esc(g)}</span><h2>${F0.format(l.length)} notions.</h2><div class="lx4-g lx4-g2">${l.map(([k, t]) => lx4Carte(k, t)).join("")}</div></section>`).join("")}
     <p class="ek-note" id="lx4-rien" hidden>Aucune notion ne correspond. Essayez un autre mot, ou posez la question à l'IA du site.</p></div>`;
   const q = $("#lx4q");

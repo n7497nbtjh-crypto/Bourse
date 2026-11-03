@@ -207,9 +207,9 @@ const ANALYSE_REGLES = [
   { id: "defense", col: "contexte", poids: 1, si: x => ANALYSE_KW.defense.test(x.txt) && ["industrie", "tech"].includes(x.sector), titre: "Défense : clients publics, exportations encadrées",
     detail: x => "Ses clients sont surtout des États : les commandes suivent les budgets militaires, et chaque exportation d'armement exige une autorisation du gouvernement, selon des critères communs à l'Union européenne.", src: "armes" },
   // Cotation
-  { id: "pea_oui", col: "contexte", poids: 2, si: x => x.pea === true, titre: "Éligible au PEA",
+  { id: "pea_oui", col: "contexte", poids: 2, si: x => x.pea === true && (typeof frSeul !== "function" || frSeul()), titre: "Éligible au PEA",
     detail: x => "Société dont le siège est dans l'Union européenne ou l'Espace économique européen : ses actions peuvent aller dans un PEA. Après 5 ans, les gains d'un PEA ne paient que les prélèvements sociaux (18,6 % en 2026), au lieu de 31,4 % sur un compte-titres.", src: "pea" },
-  { id: "pea_non", col: "contexte", poids: 2, si: x => x.pea === false, titre: "Pas de PEA : compte-titres seulement",
+  { id: "pea_non", col: "contexte", poids: 2, si: x => x.pea === false && (typeof frSeul !== "function" || frSeul()), titre: "Pas de PEA : compte-titres seulement",
     detail: x => `Son siège ${x.legal ? `(${analysePaysNom(x.legal)}, d'après son code ISIN)` : ""} est hors de l'Union européenne et de l'Espace économique européen : ses actions vont dans un compte-titres. Un ETF éligible au PEA peut en revanche la contenir indirectement.`.replace("  ", " "), src: "pea" },
   { id: "us_etr", col: "contexte", poids: 1, si: x => (x.bx === "NYSE" || x.bx === "NASDAQ") && x.pays && x.pays !== "US" && x.legal !== "US", titre: "Société étrangère cotée aux États-Unis",
     detail: x => `Société ${x.pays ? `basée ${analysePaysDe(x.pays)}` : "étrangère"} cotée à New York. Les sociétés étrangères y publient un rapport annuel (formulaire 20-F ou 40-F), mais ne sont pas obligées de publier des comptes trimestriels aussi détaillés que les sociétés américaines.`, src: "sec_fpi" },
@@ -468,7 +468,7 @@ function analyseForcesFaiblesses(s, c) {
   if (x.pays) out.connu.push(`Pays : ${analysePaysNom(x.pays)}${x.paysSrc === "wikidata" ? " (siège, d'après Wikidata)" : x.paysSrc === "isin" ? " (d'après son code ISIN)" : x.paysSrc === "bourse" ? " (d'après sa place de cotation)" : ""}`);
   if (x.offshore) out.connu.push(`Société immatriculée ${analysePaysDe(x.legal)}`);
   out.connu.push(`Cotation : ${ANALYSE_PLACE[x.bx] || x.bx || "inconnue"}${x.tk ? `, code ${x.tk}` : ""}${x.curCot ? `, en ${analyseDevNom(x.curCot)[1]}` : ""}`);
-  if (x.pea != null) out.connu.push(x.pea ? "Éligible au PEA" : "Hors PEA (compte-titres)");
+  if (x.pea != null && (typeof frSeul !== "function" || frSeul())) out.connu.push(x.pea ? "Éligible au PEA" : "Hors PEA (compte-titres)");
   if (f) out.connu.push(`Comptes lus : ${analyseN(f.years.length, "exercice")}, de ${f.years[0]} à ${f.years[L]} (clos le ${dLabel(analyseDateFin(f))})`);
   if (x.p) out.connu.push(`Cours différé${x.v && x.v.capE ? ` et valeur en Bourse (${capFmt(x.v.capE)})` : ""}`);
   if (x.wd && x.wd.creation) out.connu.push(`Création : ${x.wd.creation} (Wikidata)`);
@@ -483,7 +483,7 @@ function analyseForcesFaiblesses(s, c) {
   }
   if (!x.p) out.manque.push("Cours de l'action (prix, PER et rendement ne se calculent pas)");
   if (!(typeof REP !== "undefined" && REP && REP[s.id])) out.manque.push("Répartition des ventes par activité et par zone");
-  if (x.pea == null) out.manque.push("Éligibilité au PEA (pas de code ISIN connu)");
+  if (x.pea == null && (typeof frSeul !== "function" || frSeul())) out.manque.push("Éligibilité au PEA (pas de code ISIN connu)");
   if (!x.wd) out.manque.push("Actionnaires principaux et places de cotation (absents de Wikidata ou pas encore reliés)");
   if (f && !isBank(s)) out.manque.push("Frais financiers : la couverture des intérêts par le résultat n'est pas encore calculée");
   if (f) out.manque.push("Historique du cours : la comparaison avec ses propres prix passés n'est pas encore faite");

@@ -14,7 +14,7 @@ const elPc = (r, d = 1) => r == null || !isFinite(r) ? "–" : (r > 0 ? "+" : r 
 
 function elEtat() {
   const u = new URLSearchParams(location.search), f = new Set((u.get("f") || "").split(",").filter(Boolean));
-  if (u.get("pea") || u.get("env") === "pea") f.add("pea");
+  if ((u.get("pea") || u.get("env") === "pea") && e4Fr()) f.add("pea");
   if (u.get("dist") === "capitalisation") f.add("capi");
   if (u.get("fr") && +u.get("fr") <= 0.2) f.add("fr20");
   return { q: u.get("q") || "", cat: u.get("cat") || "", em: u.get("em") || "", dist: u.get("dist") === "distribution" ? "distribution" : "", fr: u.get("fr") && +u.get("fr") > 0.2 ? +u.get("fr") : null, f, tri: EL_TRI[u.get("tri")] ? u.get("tri") : "taille", n: 9 };
@@ -78,7 +78,7 @@ function pageEtfs4() {
         <span class="el-sel"><span id="eln"></span><select id="elem" aria-label="Émetteur"><option value="">Tous les émetteurs</option>${ems.map(m => `<option${m === S.em ? " selected" : ""}>${esc(m)}</option>`).join("")}</select>
         <select id="eldist" aria-label="Dividendes"><option value="">Dividendes : tous</option><option value="capitalisation"${S.f.has("capi") ? " selected" : ""}>Capitalisant</option><option value="distribution"${S.dist ? " selected" : ""}>Distribuant</option></select></span></div>
       <div class="el-cs" id="elcs"></div><div id="elplus"></div>
-      <p class="el-note">Point jaune : les frais de l'ETF ; pointillé : la médiane de sa famille (zone verte, moins cher). Frais, taille, PEA et cotations relevés chaque mois chez les émetteurs ; performance en euros, dividendes réinvestis (Amundi et iShares pour l'instant). Les performances passées ne préjugent pas des performances futures. Rien ici n'est un conseil d'achat.</p></section></div>`;
+      <p class="el-note">Point jaune : les frais de l'ETF ; pointillé : la médiane de sa famille (zone verte, moins cher). Frais, taille, ${fr ? "PEA et " : ""}cotations relevés chaque mois chez les émetteurs ; performance en euros, dividendes réinvestis (Amundi et iShares pour l'instant). Les performances passées ne préjugent pas des performances futures. Rien ici n'est un conseil d'achat.</p></section></div>`;
   const rendre = () => {
     const actif = !!(S.q || S.cat || S.em || S.dist || S.fr != null || S.f.size);
     $("#elintro").innerHTML = actif ? "" : elIntro();

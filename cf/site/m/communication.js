@@ -277,7 +277,8 @@ function commExempleComptes() {
   const g = c.ca / c.caPrev - 1;
   return `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a> a publié pour ${c.year} des ventes de <b>${big(c.ca, c.currency)}</b> (${sgn(g, 1)} sur un an) et un bénéfice net de <b>${big(c.net, c.currency)}</b>, d'après ses comptes officiels. Ce sont ces chiffres que sa fiche compare à la médiane de son secteur.`;
 }
-function commIdees() {
+function commIdees() { return commIdees0().filter(x => x.id !== "impots" || typeof frSeul !== "function" || frSeul()); } // 3/11 : l'idée reçue sur la fiscalité (PEA, flat tax) est française
+function commIdees0() {
   const S = commStats(), pc = (a, b) => b ? Math.round(a / b * 100) : 0;
   const pos = COMM_MWUSD.filter(v => v > 0).length, neg = COMM_MWUSD.length - pos;
   const s20 = commSimule(COMM_FIN - 9, COMM_FIN, 100).fin;
@@ -512,7 +513,7 @@ function pageLivretBourse() {
       <p class="note">* Années ${COMM_DEB} à ${COMM_MW_OFF - 1} : performance MSCI World en dollars (dividendes bruts) convertie en euros par ENKLAIR au taux de change de fin d'année. À partir de ${COMM_MW_OFF} : chiffres officiels MSCI en euros, dividendes nets.</p>
     </div><div class="src">${commSrcHTML(["msciEur", "msciUsd", "wikiMsci", "bce", "fredDem", "livretHist", "livret", "livretAout", "ipc", "ipcSept"])}</div></section>
     <section class="panel cm-end"><div class="pb"><h2>Avant de vous lancer</h2><p>Gardez d'abord une épargne de précaution sur un livret. N'investissez en actions que l'argent dont vous n'aurez pas besoin avant plusieurs années. Ce comparateur est pédagogique : ce n'est pas un conseil d'investissement.</p>
-      <div class="cm-go"><a class="chip" href="/idees-recues">Les idées reçues sur la Bourse</a><a class="chip" href="/academie/bases/epargne-precaution">L'épargne de précaution</a><a class="chip" href="/academie/bases/interets-composes">Les intérêts composés</a><a class="chip" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/epargne">Simulateur d'épargne</a></div></div></section>
+      <div class="cm-go"><a class="chip" href="/idees-recues">Les idées reçues sur la Bourse</a><a class="chip" href="/academie/bases/epargne-precaution">L'épargne de précaution</a><a class="chip" href="/academie/bases/interets-composes">Les intérêts composés</a><a class="chip fr-seul" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/epargne">Simulateur d'épargne</a></div></div></section>
   </div>`;
 }
 
@@ -574,7 +575,7 @@ function pagePourquoiBilan() {
         `<div class="cm-quota"><div class="cm-me2"><b>ENKLAIR</b><span>questions calculées sur les comptes</span><em class="up">illimité, gratuit</em></div><div><b>Investing.com, WarrenAI</b><span>dans l'offre payante InvestingPro</span><em>jusqu'à 500 crédits par mois</em></div><div><b>TradingView, AI Copilot</b><span>en plus d'un abonnement payant</span><em>option payante</em></div></div><p class="cm-vnote">D'après les offres publiées, relevées en octobre 2026.</p>`)}
       ${A("04", "Une IA sur le site, gratuite", "Pour les questions libres, l'IA du site rédige une réponse appuyée sur les chiffres et les sources du site, sans compte ni clé. Vous utilisez déjà ChatGPT ou Claude ? Le connecteur ENKLAIR s'y ajoute en une minute.", "")}
       ${A("05", "Pensé pour un épargnant français", "L'éligibilité au PEA sur chaque fiche, les frais de courtage rapportés au montant de votre ordre, la comparaison PEA ou compte-titres, la fiscalité à 31,4 % ou 18,6 % : ce que Google Finance, Yahoo ou Simply Wall St ne traitent pas.",
-        `<div class="cm-mini3"><div><b>${F0.format(peaN)}</b><span>entreprises signalées éligibles au PEA</span></div>${brok ? `<div><b>${brok}</b><span>courtiers comparés sur leurs frais</span></div>` : ""}<div><b>2</b><span>simulateurs : frais et PEA ou compte-titres</span></div></div><div class="cm-go"><a class="chip" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/frais">Frais de courtage</a></div>`)}
+        `<div class="cm-mini3"><div><b>${F0.format(peaN)}</b><span>entreprises signalées éligibles au PEA</span></div>${brok ? `<div><b>${brok}</b><span>courtiers comparés sur leurs frais</span></div>` : ""}<div><b>2</b><span>simulateurs : frais et PEA ou compte-titres</span></div></div><div class="cm-go"><a class="chip fr-seul" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/frais">Frais de courtage</a></div>`)}
       ${A("06", "La liste noire de l'AMF, vérifiable en un clic", "Avant de confier de l'argent à un site inconnu, collez son adresse : le site la compare aux listes noires et mises en garde publiées par l'AMF.",
         `<div class="cm-mini3"><div><b class="cm-ln">…</b><span>sites et entités de la liste noire AMF</span></div><div><b>16 %</b><span>des Français estiment avoir été victimes d'une arnaque (AMF, mai 2026)</span></div></div><div class="cm-go"><a class="chip" href="/outils/verifier">Vérifier un site</a></div>`)}
       ${A("07", "Une Académie reliée aux vraies données", "55 leçons sourcées et 63 questions de quiz, de l'épargne de précaution à la lecture d'un bilan. Chaque notion renvoie vers une vraie entreprise : la leçon sur le PER mène au PER de TotalEnergies, calculé avec les derniers comptes.",

@@ -111,7 +111,7 @@ function f4Tete(s, c, x) {
       <p>Sur un an, l'action a valu entre ${esc(pxFmt(p.l52, p.cur))} et ${esc(pxFmt(p.h52, p.cur))}.${dd != null && dd < -0.03 ? ` Elle est aujourd'hui <b>${ekFr(-dd * 100, 0)} % sous son plus haut</b>.` : " Elle est proche de son plus haut."}</p>` : ""}
       ${s.tv ? `<button type="button" class="ek-lk" data-f4-tv>Voir le graphique du cours ↗</button>` : ""}</div>`;
   } else pc = `<div class="ek-pcard"><small>Cours non disponible pour ce titre.</small></div>`;
-  const chips = [secName(s), [typeof regName === "function" ? regName(s) : "", s.ticker].filter(Boolean).join(" · "), pea === true ? "Éligible au PEA ✓" : pea === false ? "Hors PEA" : ""].filter(Boolean);
+  const chips = [secName(s), [typeof regName === "function" ? regName(s) : "", s.ticker].filter(Boolean).join(" · "), !e4FrF() ? "" : pea === true ? "Éligible au PEA ✓" : pea === false ? "Hors PEA" : ""].filter(Boolean);
   return `<section class="ek-hero">
     <div class="ek-crumb"><a href="/entreprises">Entreprises</a><span>›</span>${esc(secName(s))}<span>›</span>${esc(s.name)}</div>
     <div class="ek-top"><div><div class="ek-idt">${f4Logo(s, ini)}<h1>${esc(s.name)}</h1></div>
@@ -509,6 +509,7 @@ document.addEventListener("click", e => {
   if (t.dataset.f4Q && typeof orcIaAsk === "function") orcIaAsk(t.dataset.f4Q);
 });
 
+const e4FrF = () => typeof frSeul === "function" ? frSeul() : true; // PEA : seulement pour un visiteur en France (m/pays.js)
 // Branchement : remplace la fiche (toutes les anciennes adresses /comptes, /actualite… ouvrent la même page, sur le bon bloc)
 if (F4.on) {
   window.pageCompany = pageCompany4;

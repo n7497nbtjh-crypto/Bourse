@@ -4,6 +4,7 @@
    Les filtres et les secteurs s'appliquent à ce tableau ; la liste complète existante (tableaux.js) reste dessous,
    sous « Toutes les entreprises ». Styles : site.css, bloc « Entreprises v3 ». */
 const E3 = { f: new Set(), sec: null, tri: "taille", n: 20 };
+const e3Fr = () => typeof frSeul === "function" ? frSeul() : true; // PEA : seulement pour un visiteur en France (m/pays.js)
 const E3_FILTRES = [
   ["pea", "Éligibles au PEA", c => typeof peaOk === "function" && peaOk(c) === true],
   ["sansdette", "Sans dette", c => c.netDebt != null && c.netDebt < 0 && !isBank(c)],
@@ -16,7 +17,7 @@ const e3Cap = c => { const x = pxOf(c); const v = x && x.cap ? toEur(x.cap, x.cu
 const E3_COUL = ["#FFF2B3", "#FFE0EC", "#DCE3FF", "#CDF5E4", "#FFE3D1", "#EDE3FF"];
 function e3Liste() {
   let L = R.companies.filter(c => !c.missing && (!E3.sec || c.sector === E3.sec));
-  E3_FILTRES.forEach(([k, , f]) => { if (E3.f.has(k)) L = L.filter(f); });
+  E3_FILTRES.forEach(([k, , f]) => { if (E3.f.has(k) && (k !== "pea" || e3Fr())) L = L.filter(f); });
   const cle = { taille: e3Cap, marge: c => (e3Ax(c).marge || {}).p ?? -1, croissance: c => (e3Ax(c).croissance || {}).p ?? -1, solidite: c => (e3Ax(c).solidite || {}).p ?? -1, prix: c => (e3Ax(c).prix || {}).p ?? -1 }[E3.tri];
   return { tot: L.length, rows: L.map(c => [cle(c), e3Cap(c), c]).sort((a, b) => b[0] - a[0] || b[1] - a[1]).map(x => x[2]).slice(0, E3.n) };
 }
@@ -46,7 +47,7 @@ function e3Poser() {
   const w = document.createElement("div"); w.className = "e3";
   w.innerHTML = `<section class="e3-hero"><span class="a4-stk a4-wh">Les entreprises</span><h1>${F0.format(ok)} entreprises, lues et comparées.</h1>
       <div class="search big a4-srch" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input class="el-in" type="search" placeholder="Hermès, Apple, un ISIN…" aria-label="Rechercher une entreprise" autocomplete="off"><div class="results"></div></div>
-      <div class="e3-fil"><span>Filtrer :</span>${E3_FILTRES.map(([k, l]) => `<button type="button" data-e3f="${k}">${esc(l)}</button>`).join("")}</div></section>
+      <div class="e3-fil"><span>Filtrer :</span>${E3_FILTRES.filter(([k]) => k !== "pea" || e3Fr()).map(([k, l]) => `<button type="button" data-e3f="${k}">${esc(l)}</button>`).join("")}</div></section>
     <section class="e3-sec"><span class="a4-stk" style="background:var(--a4b)">Par secteur</span><h2>Choisissez un terrain de jeu.</h2>
       <div class="e3-secs">${secs.map(([k, n, c], i) => `<button type="button" data-e3s="${k}" style="background:${E3_COUL[i % E3_COUL.length]}"><b>${esc(n)}</b><span>${F0.format(c)} entreprises</span></button>`).join("")}</div></section>
     <section class="e3-sec"><span class="a4-stk a4-pk" id="e3-sectit">Les plus grandes</span><h2>Chaque ligne, face à son secteur.</h2>
