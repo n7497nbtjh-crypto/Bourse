@@ -104,4 +104,7 @@ jobs:
             echo "Secrets Cloudflare absents : publication à faire à la main avec le fichier repere-site."
             exit 0
           fi
+          # Le dépôt vient d'être mis à jour (git pull) : le code du site a pu changer pendant la collecte. On reconstruit
+          # avant de publier, sinon le robot remettrait en ligne une version plus ancienne du site (vu le 3/11/2026).
+          node build.mjs > /dev/null
           npx --yes wrangler@3.112.0 pages deploy cf/site --project-name=repere-bourse --branch=main --commit-dirty=true
