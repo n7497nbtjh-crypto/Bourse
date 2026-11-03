@@ -956,3 +956,39 @@ html #app .ek.ek-page.rp4 .rc-tabs button.on{background:var(--ek-y);color:var(--
 .ek .lx4-ex span{min-width:0}.ek .lx4-ex b{display:block;font:800 13.5px Inter;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ek .lx4-ex small{font:600 12px Inter;color:#555}
 .ek .lx4-plus>summary{cursor:pointer;font:800 13px Inter;color:#333}.ek .lx4-plus p{font:500 13.5px/1.5 Inter;margin:6px 0 0}
 @media(max-width:760px){.ek .lx4-g{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Mon portefeuille v4 (m/portefeuille4.js) : habille m/portefeuille.js ---------- */
+.ek.pf4 .pf3nav{display:none}
+.ek.pf4>.panel,.ek.pf4 #pf3dash>.panel,.ek.pf4 #pf3prog>.panel{border:2px solid var(--ek-ink);border-radius:20px;box-shadow:none;background:#fff}
+html #app .ek.pf4 #pf3hero{border:0;background:none;padding:0;box-shadow:none}
+.ek.pf4 .pf3hero .pf3demo{border:2px solid var(--ek-ink);border-radius:14px;background:#FFF6CC;margin:0 0 12px}
+.ek.pf4 .pf3k{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+html #app .ek.pf4 .pf3k>div{border:2px solid var(--ek-ink);border-radius:18px;padding:14px 16px;background:#fff}
+.ek.pf4 .pf3k>div.pf3k1{background:var(--ek-y);box-shadow:4px 4px 0 var(--ek-ink)}
+.ek.pf4 .pf3k .kick{font:800 12.5px Inter;background:none;border:0;box-shadow:none;padding:0;transform:none}
+.ek.pf4 .pf3k b,.ek.pf4 .pf3k b.pf3big{font:800 clamp(26px,3vw,36px)/1.1 "Bricolage Grotesque",Inter;letter-spacing:-.03em;margin:4px 0}
+.ek.pf4 .pf3stk{height:16px;margin:14px 0 6px;border:2px solid var(--ek-ink);border-radius:10px;gap:0}
+.ek.pf4 .pf3stk span{border-right:2px solid var(--ek-ink)}.ek.pf4 .pf3stk span:last-child{border-right:0}
+.ek.pf4 .pf3al{margin:12px 0 0}
+.ek.pf4 .pf3defs{margin-top:10px}
+.ek.pf4 #pf3dash{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:18px}
+.ek.pf4 #pf3dash>details.pf3pl{margin:0;min-width:0}
+.ek.pf4 #pf3dash>details.pf3pl[open]{grid-column:1/-1}
+.ek.pf4 #pf3dash>details.pf3pl:not([open]){box-shadow:3px 3px 0 var(--ek-ink)}
+.ek.pf4 #pf3dash>details.pf3pl:not([open]):hover{transform:translate(-1px,-1px)}
+.ek.pf4 #pf3dash>details.pf3pl>summary{display:flex;flex-direction:column;align-items:flex-start;gap:8px;padding:16px 18px;cursor:pointer}
+.ek.pf4 #pf3dash>details.pf3pl[open]>summary{flex-direction:row;align-items:center;flex-wrap:wrap}
+.ek.pf4 #pf3dash>details.pf3pl>summary h2{font:800 19px/1.2 "Bricolage Grotesque",Inter;letter-spacing:-.02em;margin:0}
+.ek.pf4 #pf3dash>details.pf3pl[open]>summary h2{font-size:clamp(24px,2.6vw,32px)}
+.ek.pf4 .pf3plk{font:800 14px Inter;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:999px;padding:3px 10px}
+@media(max-width:900px){.ek.pf4 .pf3k{grid-template-columns:repeat(2,minmax(0,1fr))}.ek.pf4 #pf3dash{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.ek.pf4 #pf3dash{grid-template-columns:minmax(0,1fr)}}
+.ek.pf4 .pf3k>div.pf3k1{display:none}.ek.pf4 .pf3k.pf3k4{grid-template-columns:repeat(3,minmax(0,1fr))}
+.ek.pf4 #pf3dash>details.pf3pl>summary h2{flex:none}
+.ek.pf4 #pf3dash>details.pf3pl:not([open])>summary::after{content:"Voir le détail →";margin:auto 0 0;font:800 13px Inter;text-decoration-color:var(--ek-y)}
+.ek.pf4 #pf3dash>details.pf3pl:not([open])>summary{min-height:120px;box-sizing:border-box}
+.ek.pf4 #pf3dash>details.pf3pl[open]>summary::after{content:"Fermer";margin-left:auto;font:800 13px Inter}
+.ek.pf4 #pf3dash>details.pf3pl>summary .pf3tog{order:3}
+@media(max-width:560px){.ek.pf4 .pf3k.pf3k4{gap:6px}html #app .ek.pf4 .pf3k>div{padding:10px;border-radius:14px}.ek.pf4 .pf3k b,.ek.pf4 .pf3k b.pf3big{font-size:21px}.ek.pf4 .pf3k .kick{font-size:11px}.ek.pf4 .pf3k small{font-size:11px}}
+html #app .ek.pf4 .pf3ab{border:2px solid var(--ek-ink);border-radius:12px;background:#fff;font:800 13.5px Inter;padding:7px 12px;color:var(--ek-ink)}
+.ek.pf4 #pf3hero{margin-bottom:18px}
