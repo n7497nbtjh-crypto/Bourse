@@ -1020,3 +1020,22 @@ html #app .esptabs a.on{background:#FFE14D;box-shadow:2px 2px 0 #111}
 html #app .esptabs .espn2{display:inline-grid;place-items:center;min-width:18px;height:18px;border-radius:9px;background:#D9361B;color:#fff;font:800 11px Inter;margin-left:4px}
 html #app .ek.ek-page .es4-form .chk{white-space:normal}html #app .ek.ek-page .es4-form .chk a{display:inline;min-height:0;white-space:normal}
 html #app .ek.ek-page .es4-form label.es4-chk{display:block;font:500 13.5px/1.5 Inter}html #app .ek.ek-page .es4-form label.es4-chk[hidden]{display:none}.ek .es4-chk input{margin-right:6px;vertical-align:-2px}
+
+/* ---------- Premium v4 (pagePremium d'app.js) ---------- */
+.ek.pr4 .pr4-offre{margin-top:20px}
+.ek.pr4 .prem-ancre{font:600 15px Inter;margin:0 0 10px}
+.ek.pr4 .offers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;max-width:820px}
+html #app .ek.pr4 .offer{background:#fff;border:2px solid var(--ek-ink);border-radius:18px;padding:16px 18px;box-shadow:none}
+html #app .ek.pr4 .offer.main{box-shadow:5px 5px 0 var(--ek-ink)}
+.ek.pr4 .offer .price{font:800 clamp(26px,3vw,34px)/1.1 "Bricolage Grotesque",Inter;letter-spacing:-.03em;margin:6px 0}
+html #app .ek.pr4 .prem-att{max-width:820px;margin-top:12px;border:2px solid var(--ek-ink);border-radius:18px;background:#fff}
+.ek.pr4 .prem5{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(330px,100%),1fr));gap:12px}
+html #app .ek.pr4 .prem-a{border:2px solid var(--ek-ink);border-radius:18px;background:#fff;margin:0}
+html #app .ek.pr4 .prem-a[open]{grid-column:1/-1}
+.ek.pr4 .prem-a>summary{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-areas:"i b" "i s" "i e";gap:2px 12px;padding:14px 16px;cursor:pointer;list-style:none}
+.ek.pr4 .prem-a>summary::-webkit-details-marker{display:none}
+.ek.pr4 .prem-a>summary svg{grid-area:i;width:40px;height:40px;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:12px;padding:6px;box-sizing:border-box}
+.ek.pr4 .prem-a>summary b{grid-area:b;font:800 17px/1.2 "Bricolage Grotesque",Inter}.ek.pr4 .prem-a>summary span{grid-area:s;font:500 13.5px/1.45 Inter;color:#333}
+.ek.pr4 .prem-a>summary em{grid-area:e;font:800 13px Inter;font-style:normal;text-decoration:underline;text-decoration-color:var(--ek-y);text-decoration-thickness:3px;text-underline-offset:3px;margin-top:4px}
+html #app .ek.pr4>.panel,html #app .ek.pr4 .two>.panel{border:2px solid var(--ek-ink);border-radius:20px}
+@media(max-width:640px){.ek.pr4 .offers{grid-template-columns:minmax(0,1fr)}}
