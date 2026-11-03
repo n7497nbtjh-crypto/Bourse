@@ -17,6 +17,7 @@ node tests/t_worker.mjs           # + les tests t_*.mjs / t_*.py du périmètre 
 ## Relecture des textes générés (obligatoire dès qu'on touche une fiche, m/fiche4.js ou m/composants.js)
 ```
 node scripts/relire-fiches.js 120   # 0 faute attendue ; puis LIRE /tmp/relecture-fiches.txt (tous les modèles de phrases)
+node scripts/relire-visuel.js 30 comparer   # si la page Comparer est touchée
 node scripts/relire-visuel.js 60    # 0 problème attendu : textes superposés, texte sur une barre, hors du graphique, dépasse de l'écran (ordinateur + téléphone)
 ```
 Les phrases des fiches sont calculées pour plus de 2 000 sociétés : une faute d'accord ou une phrase creuse se répète partout.

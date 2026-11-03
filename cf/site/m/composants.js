@@ -48,7 +48,7 @@ function ekColonnes(o) {
 // o = { titre, unite, lignes:[{ nom, v, texte, moi }], mediane, mediane_label, basEstMieux, max, graduations, fmtAxe, indice, source }
 // Une ligne sans valeur (v null) n'est pas placée : elle est listée sous l'échelle avec sa raison (texte).
 function ekPoints(o) {
-  const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 30 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 28, rh = 34, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), L = Math.round(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18))), coupe = (t, moi) => { t = String(t); const k = moi ? 8.2 : 7.4, mx = Math.floor((L - 18) / k); return t.length * k + 18 > L ? t.slice(0, mx - 1).trim() + "…" : t; },
+  const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 30 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 28, rh = 34, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), L = Math.round(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18))), coupe = (t, moi) => { t = String(t); const k = moi ? 9 : 7.8, mx = Math.floor((L - 18) / k); return t.length * k + 18 > L ? t.slice(0, mx - 1).trim() + "…" : t; },
     hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 18, 3 * rh), mn0 = o.min || 0, x = v => L + (W - L - R) * (Math.max(mn0, Math.min(v, o.max)) - mn0) / (o.max - mn0), m = x(o.mediane), bas = !!o.basEstMieux;
   if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
   let g = `<svg viewBox="0 0 ${W} ${T + H + 26}" role="img" aria-label="${ekEsc(o.titre)}">`;
@@ -163,7 +163,7 @@ function ekPlacer(root) {
   (root || document).querySelectorAll(".ek-step .ek-row").forEach(row => {
     const main = row.querySelector(".ek-main"), side = row.querySelector(".ek-side"); if (!main || !side) return;
     const tr = row.querySelector(".ek-trans"); if (!tr) return;
-    side.appendChild(tr); side.classList.toggle("ek-side-seul", !side.querySelector(".ek-why"));
+    side.appendChild(tr); side.classList.toggle("ek-side-seul", !side.querySelector(".ek-why, .cx-ev"));
     const hs = side.getBoundingClientRect().height, hm = main.getBoundingClientRect().height;
     if (hs > hm + 16 && side.children.length > 1) { main.appendChild(tr); side.classList.remove("ek-side-seul"); }
   });

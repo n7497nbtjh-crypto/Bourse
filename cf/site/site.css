@@ -4039,13 +4039,6 @@ html #app #f3-tousw .rf-th-in a.more{display:inline-block;border:2px solid #111;
  html #app .f3-thg{display:contents}html #app .f3-th .f3-thc{grid-area:g}html #app .f3-th .f3-thl{grid-area:l;align-self:start}html #app .f3-th .f3-cq{margin-top:12px}html #app .f3-th .f3-cq summary{display:none}html #app .f3-th .f3-cq p{margin:0;background:#F6F3EA;border-radius:12px;padding:10px 12px;font:500 13.5px/1.5 var(--sans)}html #app .f3-th .f3-cq p::before{content:"C'est quoi ? ";font-weight:800}}
 @media (min-width:761px){html #app #f3-tousw .rf-th-in>.pb,html #app #f3-tousw .rf-th-in>.tiles,html #app #f3-tousw .rf-th-in>.perx,html #app #f3-tousw .rf-th-in>.src,html #app #f3-tousw .rf-th-in>.f3-per{margin-left:22px!important;margin-right:22px!important}}
 /* ---------- Comparer v3 (m/comparer3.js) ---------- */
-html #app .c3-host.panel{border:0!important;box-shadow:none!important;background:none!important;padding:0!important}
-html #app .c3-h{font:800 clamp(26px,3.4vw,40px)/1 var(--serif)!important;letter-spacing:-.05em;margin:14px 0 16px}
-html #app .c3-lec{font-size:15.5px}html #app .c3-lec p{margin:0 0 8px}html #app .c3-lec ol{margin:0;padding-left:20px}html #app .c3-lec li{margin:4px 0}
-html #app .c3-cards{margin-top:18px}html #app .c3-note{font:600 13px var(--sans);color:#555;margin:12px 0 0}
-html #app .c3-acts{display:flex;gap:12px;flex-wrap:wrap;align-items:center;margin-top:16px}html #app .c3-acts .cmpr-ia{margin:0;flex:1 1 320px}
-html body #app .c3-acts [data-cmpr-csv]{border:2px solid #111!important;border-radius:999px!important;background:#fff!important;color:#111!important;font-weight:800!important;box-shadow:3px 3px 0 #111!important;padding:10px 18px!important}
-html #app .c3-acts .cmpr-csvp{margin:0}html #app .c3-acts .cmpr-csvp .light{display:none}
 html #app .cmpr-selp.panel{border:2px solid #111!important;border-radius:24px!important}
 html #app .cmpr-selp .cmpr-pick{border:2px solid #111!important;border-radius:18px!important}
 /* ---------- 2/11 (Romain) : fenêtres « i » et définitions au style v3 ---------- */
@@ -4243,10 +4236,7 @@ html body #app .f3-cc.qo .f3-q{background:#111!important;color:#fff!important}
 html #app .f3-qx{display:none;font:500 13px/1.45 var(--sans);color:#333;background:#F6F3EA;border-radius:12px;padding:9px 11px;margin:6px 0 4px}html #app .f3-cc.qo .f3-qx{display:block}html #app .f3-qx a{color:#111;font-weight:800}
 html #app .f3-cc>.f3-cq{display:none!important}
 /* Comparer : constats en trois lignes simples, sans encadré */
-html #app .c3-syn{list-style:none;margin:0 0 6px;padding:0;display:grid;gap:6px}html #app .c3-syn li{font:600 15px/1.4 var(--sans);padding-left:18px;position:relative}html #app .c3-syn li::before{content:"";position:absolute;left:0;top:.5em;width:8px;height:8px;border-radius:50%;background:#111}
 html #app .cmpr-card.cmpr-lim{font:600 13px var(--sans)!important}
-html #app:has(.c3) .v3-hero .pagesub{display:none!important}
-html #app .c3-syn li::before{width:8px!important;height:8px!important;min-width:8px;transform:none!important;border-radius:50%!important;display:block}
 html #app .cmpr-selp .pb{padding:12px 16px!important}html #app .cmpr-selp{margin-bottom:18px!important}
 html #app .f3-md2 .f3-tk2{background:none!important;border-top:2px dashed #CFCAC0;height:0!important;margin-top:8px}html #app .f3-md2 .f3-tk2 i{top:-9px!important;height:16px!important}
 html #app #rf-agenda .ax-chip{font-size:12px!important}html #app #rf-agenda .src{font-size:12px!important}

@@ -1400,37 +1400,7 @@ function concurrentsHTML(s) {
     <div class="pb" style="padding-bottom:4px"><p class="muted" style="margin:0 0 6px">${auto ? `Aucun concurrent direct de ${esc(s.name)} n'est encore suivi sur le site : voici les entreprises de son secteur dont la taille est la plus proche.` : `Les entreprises qui vendent les mêmes produits ou services que ${esc(s.name)}, aux mêmes clients.`} Une marge ou une dette se juge mieux à côté de celles des concurrents.</p></div>
     ${cmpTable(all, s.id)}${compareSynth(all, s)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise ; les montants restent dans la devise de chaque entreprise, les pourcentages se comparent directement.</div></section>`;
 }
-async function pageComparer() {
-  setTitle("Comparer des entreprises"); setNav("ent");
-  app.innerHTML = `<div class="empty">Chargement…</div>`; await PXP;
-  let ids = (new URLSearchParams(location.search).get("ids") || "").split(",").filter(id => RBY[id]);
-  await premStatus(); const CMAX = isPrem() ? 5 : FREE.cmp, cut = new Set(ids).size > CMAX;
-  ids = [...new Set(ids)].slice(0, CMAX);
-  const list = ids.map(id => RBY[id]);
-  const sug = list.length ? [...new Set(list.flatMap(c => peersOf(c, 5).list))].filter(c => !ids.includes(c.id)).slice(0, 8) : ["lvmh", "kering", "hermes", "apple", "microsoft", "nvidia", "amd", "totalenergies"].map(id => RBY[id]).filter(Boolean);
-  const url = a => "/comparer?ids=" + a.join(",");
-  app.innerHTML = `<div class="crumbs"><a href="/entreprises">Entreprises</a> › Comparer</div><h1 class="pagetitle">Comparer des entreprises</h1>
-    <p class="pagesub">Jusqu'à ${CMAX === 5 ? "cinq" : "trois"} entreprises côte à côte${CMAX === 5 ? "" : ` (cinq avec <a class="lnk" href="/premium">Premium</a>)`}, sur les mêmes critères. Les couleurs disent si chaque chiffre est un point fort, dans la moyenne ou un point de vigilance ; elles ne disent pas quelle action acheter.</p>
-    <section class="panel"><div class="pb">
-      <div class="chips cmpsel">${list.map(c => `<a class="chipx" href="${url(ids.filter(x => x !== c.id))}" title="Retirer">${esc(c.name)} <span aria-hidden="true">×</span></a>`).join("")}</div>
-      ${cut || (!isPrem() && ids.length >= CMAX) ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">La version gratuite compare ${FREE.cmp} entreprises à la fois. <a class="lnk" href="/premium">Premium</a> en compare cinq.</p>` : ""}
-      ${ids.length < CMAX ? `<div class="field" style="max-width:420px;margin-top:10px;position:relative"><label for="cmpq">Ajouter une entreprise</label><input id="cmpq" type="search" autocomplete="off" placeholder="Nom de l'entreprise"><div class="msug" id="cmps" hidden></div></div>
-      ${sug.length ? `<div class="chips" style="margin-top:10px"><span class="light" style="font-size:13px">${list.length ? "Ses concurrents :" : "Exemples :"}</span>${sug.map(c => `<a class="chip" href="${url([...ids, c.id])}">+ ${esc(c.name)}</a>`).join("")}</div>` : ""}` : ""}
-    </div></section>
-    ${list.length ? `<section class="panel">${list.some(c => c.currency !== list[0].currency) ? `<div class="pb" style="padding-bottom:0"><p class="muted" style="margin:0;font-size:13px">Les montants sont convertis en euros aux taux de la BCE pour être comparables ; le montant d'origine est indiqué dessous.</p></div>` : ""}${list.length > 1 ? compareSynth(list).replace('class="synth"', 'class="synth" style="border-top:0;border-bottom:1px solid var(--line2)"') : ""}${cmpTable(list, null)}<div class="src">Chiffres du dernier exercice publié par chaque entreprise (rapports ESEF et SEC). Les montants restent dans la devise de chaque entreprise ; les pourcentages se comparent directement. Pour une banque ou un assureur, la marge et la dette ne se lisent pas de la même façon.</div></section>
-      ${profilsCompare(list)}
-      <section class="panel"><div class="ph"><h2>Comment lire cette comparaison</h2></div><div class="pb"><ol class="steps2">
-        <li><b>Comparez des entreprises du même métier.</b> Une marge de 10 % est faible pour un éditeur de logiciels et élevée pour un supermarché.</li>
-        <li><b>Regardez plusieurs lignes ensemble.</b> Une forte rentabilité avec beaucoup de dette ne vaut pas une forte rentabilité sans dette.</li>
-        <li><b>Un chiffre est une photo d'une année.</b> Sur chaque fiche, « Tous les chiffres » montre l'évolution sur plusieurs années.</li>
-        <li><b>Servez-vous de la médiane.</b> La ligne « secteur » donne la médiane : l'entreprise du milieu de son secteur. Au-dessus, mieux que la moitié des concurrentes ; en dessous, moins bien. ${medBtn("Qu'est-ce que la médiane ?")}</li>
-        <li><b>Le prix de l'action n'est pas ici.</b> Une entreprise solide peut avoir une action chère : comparez aussi le prix aux bénéfices (rubrique « Prix de l'action » de chaque fiche).</li></ol></div></section>` : `<section class="panel"><div class="empty">Ajoutez une entreprise pour commencer.</div></section>`}`;
-  const q = $("#cmpq"), box = $("#cmps");
-  if (q) q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
-    const hits = R.companies.filter(c => !ids.includes(c.id) && (norm(c.name).includes(t) || norm(c.ticker || "") === t)).slice(0, 7);
-    box.innerHTML = hits.map(c => `<button type="button" data-id="${c.id}">${esc(c.name)} <small>${esc(secName(c))}</small></button>`).join("") || `<div class="light" style="padding:8px 10px">Aucune entreprise trouvée</div>`; box.hidden = false;
-    $$("button", box).forEach(b => b.onclick = () => go(url([...ids, b.dataset.id]))); };
-}
+// pageComparer : définie dans m/comparer4.js (3/11/2026).
 
 /* ---------- PEA, compte-titres, assurance-vie : où acheter des actions ---------- */
 const gain1000 = r => F0.format(1000 * (1 - r)) + " €";

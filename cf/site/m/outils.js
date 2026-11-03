@@ -6,7 +6,7 @@
    - /dividendes (pageDividendes remplacée) : calendrier, plus hauts rendements avec garde-fou, dividendes relevés,
      simulateur « combien je toucherais » en PEA ou compte-titres, export .ics, explication du détachement ;
    - /decouvertes et outilsDecouverteHTML() (pour l'accueil) : une sélection quotidienne d'entreprises moins connues ;
-   - /comparer : galerie de comparaisons toutes prêtes, classées par thème (cmprRenderBody enveloppée, m/comparer.js intact).
+   - /comparer : la page est dans m/comparer4.js ; ce module fournit OUT_PRESETS et outCalcPresets (comparaisons toutes prêtes).
    Données : R.companies (dernier exercice), cours (PX via valo), agenda (AG) et /data/historique.json
    (plusieurs exercices, fabriqué par data/outils_historique.mjs au moment de la construction). */
 
@@ -535,43 +535,7 @@ function outCalcPresets() { // comparaisons recalculées à chaque visite, à pa
   add(big.filter(x => x.v.pe).sort((a, b) => a.v.pe - b.v.pe), "Les grandes françaises les moins chères", "Les plus petits rapports cours / bénéfice : souvent des secteurs dont on attend peu de croissance.");
   return P;
 }
-function outPresetCard(p) {
-  const l = p.ids.filter(id => RBY[id]);
-  return `<a class="out-pc" href="/comparer?ids=${l.join(",")}" data-th="${p.th}"><span class="lgs">${l.map(id => logo(RBY[id], 32)).join("")}</span><b>${esc(p.t)}</b><small>${esc(listFr(l.map(id => RBY[id].name)))}</small><span class="out-pcd">${esc(p.d)}</span>${p.calc ? `<em>Mis à jour avec les cours du jour</em>` : ""}</a>`;
-}
-function outGalleryHTML() {
-  const all = [...outCalcPresets(), ...OUT_PRESETS].filter(p => p.ids.filter(id => RBY[id]).length >= 2);
-  const th = Object.keys(OUT_THEMES).filter(k => all.some(p => p.th === k));
-  return `<section class="panel out-gal"><div class="ph"><h2>${F0.format(all.length)} comparaisons toutes prêtes</h2><span class="light" style="font-size:12.5px">En un clic, le verdict critère par critère</span></div>
-    <div class="pb" style="padding-top:8px"><div class="chips out-thc"><button type="button" class="on" data-th="">Toutes</button>${th.map(k => `<button type="button" data-th="${k}">${esc(OUT_THEMES[k])}</button>`).join("")}</div>
-    ${th.map(k => `<div class="out-gth" data-th="${k}"><h3>${esc(OUT_THEMES[k])}</h3><div class="out-pg">${all.filter(p => p.th === k).map(outPresetCard).join("")}</div></div>`).join("")}</div></section>`;
-}
-function outGalleryBind(root) {
-  const c = root.querySelector(".out-thc"); if (!c) return;
-  c.onclick = e => { const b = e.target.closest("button"); if (!b) return; $$("button", c).forEach(x => x.classList.toggle("on", x === b)); $$(".out-gth", root).forEach(g => { g.hidden = !!b.dataset.th && g.dataset.th !== b.dataset.th; }); };
-}
-function outRelated(ids) { // d'autres comparaisons du même secteur, sous une comparaison en cours
-  const sec = new Set(ids.map(id => RBY[id] && RBY[id].sector)), cur = ids.join(",");
-  return OUT_PRESETS.filter(p => p.ids.join(",") !== cur && p.ids.some(id => RBY[id] && sec.has(RBY[id].sector)) && p.ids.filter(id => RBY[id]).length >= 2).slice(0, 6);
-}
-if (typeof cmprRenderBody === "function") { // enveloppe : la page de m/comparer.js reste identique, la galerie s'ajoute
-  const OUT_cmprBody0 = cmprRenderBody;
-  window.cmprRenderBody = function (ids) {
-    OUT_cmprBody0(ids);
-    const el = $("#cmpr-body"); if (!el) return;
-    outCSS();
-    if (ids.length < 2) {
-      const pre = el.querySelector(".cmpr-pre"), sec = pre && pre.closest("section");
-      const box = document.createElement("div"); box.innerHTML = outGalleryHTML();
-      const parts = [...box.children]; // la galerie peut compter deux blocs (six populaires + toutes, cachées) : on les insère tous
-      if (sec) sec.replaceWith(...parts); else el.append(...parts);
-      outGalleryBind(el);
-    } else {
-      const rel = outRelated(ids);
-      if (rel.length) el.insertAdjacentHTML("beforeend", `<section class="panel out-gal"><div class="ph"><h2>D'autres comparaisons du même secteur</h2><a href="/comparer">Toutes les comparaisons</a></div><div class="pb" style="padding-top:8px"><div class="out-pg">${rel.map(outPresetCard).join("")}</div></div></section>`);
-    }
-  };
-}
+// La galerie des comparaisons est affichée par m/comparer4.js (cxGalerie) à partir de OUT_PRESETS et outCalcPresets.
 
 /* ---------- Routes, menu, styles ---------- */
 ROUTES_EXTRA.push([/^\/classements$/, () => { outCSS(); pageClassements(); }]);
@@ -677,15 +641,6 @@ function outCSS() {
 .out-dg2{grid-template-columns:repeat(2,1fr)}
 .out-prev{display:flex;gap:12px;padding:10px 0;border-top:1px solid var(--line2);align-items:baseline}.out-prev:first-child{border-top:0}.out-prev>b{flex:none;width:170px;font-size:13.5px;font-weight:600}.out-prev>div{display:flex;flex-wrap:wrap;gap:6px}
 .out-prev .chip{display:inline-flex;align-items:center;gap:6px;font-size:13px}
-.out-thc{margin:0 0 6px}
-.out-gth h3{font:600 15px var(--sans);margin:16px 0 8px}
-.out-pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
-.out-pc{display:flex;flex-direction:column;gap:6px;border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:#fff;color:var(--ink);text-decoration:none;min-width:0}
-.out-pc:hover{border-color:var(--ink)}
-.out-pc .lgs{display:flex}.out-pc .lgs .lg{margin-right:-6px;box-shadow:0 0 0 2px #fff}
-.out-pc b{font:700 15.5px var(--serif)}.out-pc small{color:var(--ink);font-size:12.5px}.out-pcd{color:var(--grey);font-size:13px;line-height:1.4}
-.out-pc em{font-style:normal;font-size:11.5px;color:#0F6B3E;font-weight:600}
-.out-gal{margin-top:16px}
 @media (max-width:1000px){.out-tabs{grid-template-columns:repeat(3,1fr)}.out-dg{grid-template-columns:1fr 1fr}.out-two{grid-template-columns:1fr}}
 @media (max-width:640px){
   .out-tabs{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;margin-left:calc(-1 * var(--gut,16px));margin-right:calc(-1 * var(--gut,16px));padding:0 var(--gut,16px) 4px}

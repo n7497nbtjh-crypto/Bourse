@@ -14,13 +14,24 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
   const n = +process.argv[2] || 40, dir = path.join(ROOT, "data", "societes");
   const tous = fs.readdirSync(dir).filter(f => f.endsWith(".json")).map(f => f.slice(0, -5)).filter(id => !FIXES.includes(id));
   for (let i = tous.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [tous[i], tous[j]] = [tous[j], tous[i]]; }
-  const ids = [...FIXES, ...tous.slice(0, Math.max(0, n - FIXES.length))].filter(id => fs.existsSync(path.join(dir, id + ".json")) || FIXES.includes(id));
+  let ids = [...FIXES, ...tous.slice(0, Math.max(0, n - FIXES.length))].filter(id => fs.existsSync(path.join(dir, id + ".json")) || FIXES.includes(id));
+  // Mode « comparer » (node scripts/relire-visuel.js 30 comparer) : des comparaisons fixes + des trios tirés au hasard dans un même secteur
+  const MODE = process.argv[3] || "fiche";
+  if (MODE === "comparer") {
+    const idx = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "societes.json"), "utf8")), L = (idx.companies || idx).filter(c => !c.missing && c.ca > 0), par = {};
+    L.forEach(c => (par[c.sector] = par[c.sector] || []).push(c.id));
+    const fix = ["lvmh,hermes,kering", "apple,microsoft,alphabet", "bnp-paribas,societe-generale,axa", "totalenergies,shell,bp", "apple,lvmh", "intel,amd,asml", "kering,atos", "alstom,airbus,safran"];
+    const tir = []; const secs = Object.keys(par).filter(k => par[k].length >= 3);
+    while (tir.length < Math.max(0, n - fix.length)) { const sc = par[secs[Math.floor(Math.random() * secs.length)]], t = new Set(); while (t.size < 3) t.add(sc[Math.floor(Math.random() * sc.length)]); tir.push([...t].join(",")); }
+    ids = [...fix, ...tir];
+  }
+  const url = id => MODE === "comparer" ? "/comparer?ids=" + id : "/entreprise/" + id;
   const out = [], tailles = [["ordinateur", { width: 1280, height: 900 }], ["téléphone", { width: 360, height: 800 }]];
   let vues = 0;
   for (const [nomT, vp] of tailles) {
     const { b, p } = await ouvrir({ viewport: vp });
     for (const id of ids) {
-      try { await aller(p, "/entreprise/" + id, 1800); } catch (e) { continue; }
+      try { await aller(p, url(id), MODE === "comparer" ? 2600 : 1800); } catch (e) { continue; }
       const r = await p.evaluate(() => {
         const P = [], W = document.documentElement.clientWidth;
         const inter = (a, b, m = 1) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > m && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > m;
@@ -39,6 +50,10 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
             F.forEach(f => { if (inter(a.r, f.r, 3)) P.push(["texte sur une barre ou un point", nomEtape(svg), a.s]); });
           }
         });
+        // Code ou valeur technique affiché à la place d'un texte (ex. « g=>` », « undefined », « NaN »)
+        { const t = (document.querySelector(".ek-page") || document.body).innerText, m = t.match(/.{0,25}(\$\{|=>|\bundefined\b|\bNaN\b|\bnull\b|\[object).{0,15}/); if (m) P.push(["code ou valeur technique affiché", "page", m[0]]); }
+        // Cases de tableau qui se superposent
+        document.querySelectorAll(".ek-page table tr").forEach(tr => { const c = [...tr.children].map(x => x.getBoundingClientRect()); for (let i = 1; i < c.length; i++) if (c[i].width && c[i - 1].width && c[i].left < c[i - 1].right - 1) { P.push(["cases de tableau superposées", nomEtape(tr), tr.textContent.trim().slice(0, 40)]); break; } });
         // Valeur hors échelle : point posé au bout de l'axe ; le vrai chiffre doit être écrit sous le graphique
         document.querySelectorAll(".ek-page circle[data-hors]").forEach(c => { const box = c.closest(".ek-box"), nom = c.getAttribute("data-hors");
           if (!box || ![...box.querySelectorAll(".ek-out-h")].some(p => p.textContent.includes(nom))) P.push(["valeur hors échelle sans explication", nomEtape(c), nom]); });
