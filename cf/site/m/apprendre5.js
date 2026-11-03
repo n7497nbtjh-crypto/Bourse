@@ -1,4 +1,4 @@
-/* ---------- Apprendre v5 (3/11/2026, maquette en ligne sur /apprendre/nouveau) ----------
+/* ---------- Apprendre v5 (4/11/2026), page /apprendre ----------
    Demande de Romain : un seul module d'apprentissage, clair, ordonné, pas trop long, visuel et interactif, dans la DA du
    site ; garder « Les repères, vous en aurez besoin ». Sept idées, chacune : une question en titre, un visuel qu'on manipule
    (curseur ou choix), la phrase à retenir, un vrai ou faux corrigé tout de suite, un lien pour aller plus loin.
@@ -34,7 +34,7 @@ async function pageApprendre5() {
     <nav class="ap5-prog" aria-label="Les 7 idées">${["Réserve", "Action", "Diversifier", "Frais", "Temps", "Lire", "Prix"].map((t, i) => `<a href="#c${i + 1}" data-c="${i + 1}"><i>${i + 1}</i><span>${t}</span></a>`).join("")}</nav>
     ${ap5Chap(1, "reserve", "D'abord, une réserve.", `<p class="ap5-lead">Avant d'acheter une action, gardez de côté de quoi faire face à un imprévu, sur une épargne disponible à tout moment.</p>
       <div class="ap5-box"><label class="ap5-sl"><span>Vos dépenses par mois</span><input type="range" id="ap5dep" min="500" max="5000" step="100" value="1500"><b id="ap5depv"></b></label>
-        <div class="ap5-mois" id="ap5mois">${[1, 2, 3, 4, 5, 6].map(m => `<span class="${m <= 3 ? "a" : "b"}"><small>mois ${m}</small></span>`).join("")}</div>
+        <div class="ap5-mois" id="ap5mois">${[1, 2, 3, 4, 5, 6].map(m => `<span class="${m <= 3 ? "a" : "b"}"><small><em>mois </em>${m}</small></span>`).join("")}</div>
         <p class="ap5-big" id="ap5res"></p></div>`,
       "Trois à six mois de dépenses, à part. L'argent placé en Bourse est celui dont vous n'aurez pas besoin avant plusieurs années.",
       "",
@@ -106,7 +106,7 @@ function ap5Brancher(ids, ex, mw) {
       <div class="ap5-annees" aria-hidden="true">${Array.from({ length: Math.min(60, Math.max(n, md ? Math.round(md) : 0)) }, (_, i) => `<i class="${i < n ? "on" : ""}${md && i === Math.round(md) - 1 ? " md" : ""}"></i>`).join("")}</div>
       <p class="ap5-src">Un carré = une année du bénéfice ${esc(s.year)}. ${md ? "Le carré cerclé marque la médiane des concurrentes." : ""}</p>` : `<p class="ek-note">Pas de PER calculable pour ${esc(s.name)} (bénéfice négatif ou cours absent).</p>`; };
   const rDiv = n => { const k = Math.min(n, 100); $("#ap5dots").innerHTML = Array.from({ length: k }, (_, i) => `<i class="${i === 0 ? "r" : ""}"></i>`).join("") + (n > 100 ? `<em>… et ${F0.format(n - 100)} autres</em>` : "");
-    $("#ap5divr").innerHTML = `Si l'une fait faillite, vous perdez <b>${ekFr(100 / n, n >= 100 ? 2 : 0)} %</b> de votre argent.`; };
+    $("#ap5divr").innerHTML = `Si l'une fait faillite, vous perdez <b>${ekFr(100 / n, n > 100 ? 2 : 0)} %</b> de votre argent.`; };
   const rFrais = () => { const f = +$("#ap5f").value, fin = t => { let v = 0; const r = Math.pow(1 + (0.05 - t / 100), 1 / 12) - 1; for (let i = 0; i < 240; i++) v = (v + 200) * (1 + r); return v; };
     const a = fin(f), b0 = fin(0.2), mx = Math.max(a, b0); $("#ap5fv").textContent = ekFr(f, 2) + " %";
     $("#ap5frais").innerHTML = `<div class="ap5-bars ap5-bars2"><div><span>Avec ${ekFr(f, 2)} %</span><i class="me" style="width:${a / mx * 100}%"></i><b>${AP5_E(a)}</b></div><div><span>Avec 0,20 %</span><i style="width:${b0 / mx * 100}%"></i><b>${AP5_E(b0)}</b></div></div>
@@ -128,4 +128,5 @@ function ap5Brancher(ids, ex, mw) {
   ap5Prog();
 }
 function ap5Prog() { const S = ap5Etat(); $$(".ap5-prog a").forEach(a => { const ch = document.getElementById("c" + a.dataset.c); a.classList.toggle("ok", !!(ch && S[ch.dataset.k])); }); }
-ROUTES_EXTRA.push([/^\/apprendre\/nouveau$/, () => pageApprendre5()]);
+window.pageApprendre = pageApprendre5; // 4/11 : remplace Apprendre v4 (l'Académie reste accessible par ses adresses, sans être mise en avant)
+ROUTES_EXTRA.push([/^\/apprendre\/nouveau$/, () => { history.replaceState({}, "", "/apprendre"); pageApprendre5(); }]);

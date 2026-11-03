@@ -139,12 +139,11 @@ with sync_playwright() as pw:
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p: probs["panneau ✦"] = p
             pg.evaluate("orcIaClose()")
-        # Nouvel investisseur : 5 réponses donnent un profil
-        pg.goto("http://t.local/apprendre"); pg.wait_for_timeout(600)  # lot 2 : le questionnaire est dans /apprendre, replié
-        pg.evaluate("document.getElementById('profil').open = true")
-        for q in pg.locator("#qprof fieldset").all(): q.locator("label.qo").first.click()
-        pg.wait_for_timeout(200)
-        if "votre profil" not in pg.inner_text("#presult").lower(): probs["questionnaire"] = ["aucun profil affiché"]
+        # Apprendre : les choix recalculent les exemples
+        pg.goto("http://t.local/apprendre"); pg.wait_for_timeout(900)  # 4/11 : Apprendre v5, sept idées à manipuler (le questionnaire de profil n'y est plus)
+        for k in ("act", "lire", "prix"): pg.click(f"[data-ap5-chips={k}] button[data-id=lvmh]")
+        pg.fill("#ap5f", "0.5"); pg.dispatch_event("#ap5f", "input"); pg.click("#ap5ans button[data-y='2000']"); pg.wait_for_timeout(200)
+        if "LVMH" not in pg.inner_text("#ap5prix") or "2000" not in pg.inner_text("#ap5tps") or "0,50" not in pg.inner_text("#ap5frais"): probs["Apprendre"] = ["les choix ne recalculent pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["/apprendre rempli"] = p
         if shots and name != "petit":

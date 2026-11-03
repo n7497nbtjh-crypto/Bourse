@@ -1179,7 +1179,7 @@ html #app .ek.ap5 .ap5-ans button{position:relative;height:100%;padding:0;border
   .ek.ap5 .ap5-ch{grid-template-columns:40px minmax(0,1fr);gap:0 12px}.ek.ap5 .ap5-n b{width:38px;height:38px;font-size:18px}
   .ek.ap5 .ap5-prog{top:56px}.ek.ap5 .ap5-prog a span{display:none}.ek.ap5 .ap5-prog a{flex:1 0 auto;justify-content:center;padding:4px}
   .ek.ap5 .ap5-box{padding:16px}.ek.ap5 .ap5-sl{grid-template-columns:1fr auto}.ek.ap5 .ap5-sl input{grid-column:1/-1;grid-row:2}
-  .ek.ap5 .ap5-mois span{height:48px;padding:4px}.ek.ap5 .ap5-mois small{font-size:10px}
+  .ek.ap5 .ap5-mois{gap:5px}.ek.ap5 .ap5-mois span{height:48px;padding:4px 6px;min-width:0}.ek.ap5 .ap5-mois small{font-size:11px}.ek.ap5 .ap5-mois em{display:none}
   .ek.ap5 .ap5-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin-right:-16px}.ek.ap5 .ap5-chips button{flex:none}
   .ek.ap5 .ap5-tri{gap:8px}.ek.ap5 .ap5-tri>div{padding:10px 12px;flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:10px}.ek.ap5 .ap5-tri small{flex-basis:100%}.ek.ap5 .ap5-tri b{font-size:22px}
   .ek.ap5 .ap5-ans{gap:1px;height:120px}.ek.ap5 .ap5-ans small{display:none}.ek.ap5 .ap5-ret{flex-direction:column;gap:8px}

@@ -16,12 +16,11 @@
    et à la rubrique soulignée. Aucune page n'est accessible par deux entrées. */
 const NAV = [
   {
-    k: "dec", label: "Apprendre", porte: "/apprendre", sous: "Trois décisions, l'Académie, le lexique",
+    k: "dec", label: "Apprendre", porte: "/apprendre", sous: "La Bourse en 7 idées, le lexique",
     items: [
-      ["/apprendre", "Apprendre", "Les trois décisions avant d'investir, puis l'Académie par niveau"],
+      ["/apprendre", "La Bourse en 7 idées", "Un quart d'heure, avec de vraies entreprises"],
       ["/lexique", "Le lexique", "Chaque chiffre de la Bourse expliqué"],
       ["/pea-cto", "PEA ou compte-titres", "Ce qu'on peut y mettre, et l'impôt en 2026"],
-      ["/academie/formation", "Formation guidée de six semaines", "De l'épargne de précaution au premier portefeuille"],
     ],
     aussi: [
       ["/methode", "Méthode et sources"],

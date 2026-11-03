@@ -67,13 +67,16 @@ with sync_playwright() as pw:
         STATE.update({"in": False, "rapport": dict(DEF), "posts": []})
         # Apprendre : un seul point d'entrée
         look("/apprendre", "apprendre")
-        pb(name, pg.locator(".pa-niv").count() == 3 and pg.locator(".pa-niv.cur").count() == 1 and pg.locator(".ap4 a.ou4-c").count() >= 3, "les 3 niveaux et les repères")  # 3/11 : Apprendre v4 (apprendre4.js)
-        pb(name, pg.locator(".pa-deep .pa-mods a").count() == 8, "« Approfondir » (8 modules)")
-        look("/academie", "academie"); pb(name, pg.evaluate("location.pathname") == "/apprendre" and pg.locator(".pa-niv").count() == 3, "/academie ouvre Apprendre et ses 3 niveaux")  # 3/11 : la porte unique est /apprendre
+        pb(name, pg.locator(".ap5 .ap5-ch").count() == 7 and pg.locator(".ap5-prog a").count() == 7 and pg.locator(".ap5 a.ou4-c").count() >= 6, "les 7 idées et les repères")  # 4/11 : Apprendre v5 (apprendre5.js)
+        t0 = pg.inner_text("#ap5res"); pg.fill("#ap5dep", "3000"); pg.dispatch_event("#ap5dep", "input"); pg.wait_for_timeout(100)
+        a0 = pg.inner_text("#ap5act"); pg.click("[data-ap5-chips=act] button[data-id=lvmh]"); pg.wait_for_timeout(100)
+        pg.click("#ap5div button[data-n='100']"); pg.wait_for_timeout(100)
+        pb(name, t0 != pg.inner_text("#ap5res") and "18" in pg.inner_text("#ap5res") and a0 != pg.inner_text("#ap5act") and "1 %" in pg.inner_text("#ap5divr").replace("\u202f", " ").replace("\xa0", " "), "Apprendre : curseurs et choix recalculent")
+        look("/academie", "academie"); pb(name, pg.evaluate("location.pathname") == "/apprendre" and pg.locator(".ap5-ch").count() == 7, "/academie ouvre Apprendre")  # la porte unique est /apprendre
         look("/idees-recues", "idees"); pb(name, pg.locator(".ir").count() == 12, "les 12 idées reçues")
         pg.click("#trader .ir4-pli:nth-child(2) summary"); pg.wait_for_timeout(300)  # 3/11 : idées reçues v4 (idees4.js), plus de quiz
         pb(name, pg.locator("#trader .cm-viz").count() == 1 and pg.locator("#casino .ir4-ret").count() == 1 and pg.locator(".ir4-som a").count() == 12, "idées reçues : sommaire, données dépliées, à retenir")
-        look("/academie/express", "express"); pb(name, pg.locator(".pa-niv").count() == 3, "les 3 niveaux du parcours court")
+        look("/academie/express", "express"); pb(name, pg.evaluate("location.pathname") == "/apprendre", "le parcours court ouvre Apprendre")
         look("/academie/express/lire"); pb(name, pg.locator(".acal").count() >= 6, "liste des leçons du niveau")
         look("/academie/express/lire/dette-nette", "express_lecon"); pb(name, pg.locator(".par-deep a[href='/academie/comptes/bilan']").count() == 1, "lien Approfondir")
         look("/academie/bases/inflation"); pb(name, pg.locator(".pa-irl[href='/idees-recues#livret-a']").count() == 1, "idée reçue liée en fin de leçon")
