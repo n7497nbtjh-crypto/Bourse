@@ -23,11 +23,12 @@ function dv4Groupes(L) {
   }
   return G.map(g => ({ ...g, cle: (g.achat || g.verse).date })).sort((a, b) => a.cle.localeCompare(b.cle));
 }
-function dv4Quoi(e) { return String(e.label || "").replace(/^(Détachement|Paiement|Date d'enregistrement|Dernier jour pour acheter avec droit à|Mise en paiement|Versement)\s*(du|de la|de l'|des|à l')?\s*/i, "").replace(/\s*\([\d\s,.]+\s*(€|\$|£|CHF|kr|NOK)\)\s*/, " ").replace(/^./, x => x.toUpperCase()).trim(); }
+function dv4Quoi(e) { return String(e.label || "").replace(/^(Détachement|Paiement|Date d'enregistrement|Dernier jour pour acheter avec droit à|Mise en paiement|Versement)\s*(du|de la|de l'|des|à l')?\s*/i, "").replace(/\s*\([\d\s,.]+\s*(€|\$|£|CHF|kr|NOK|SEK|DKK|pence)\)\s*/, " ").replace(/^./, x => x.toUpperCase()).trim(); }
 function dv4Carte(g) {
   const c = RBY[g.id], v = valo(c), cv = outCouv(c), e0 = g.achat || g.verse, amt = outDivAmt(g.achat || {}) || outDivAmt(g.verse || {});
   const jour = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
-  const dern = g.achat ? (/dernier jour/i.test(g.achat.label || "") ? g.achat.date : dv4Veille(g.achat.date)) : null;
+  // Europe (règlement en J+2) : le dernier jour pour acheter tombe deux jours de Bourse avant la date d'enregistrement
+  const dern = g.achat ? (/dernier jour/i.test(g.achat.label || "") ? g.achat.date : /enregistrement/i.test(g.achat.label || "") && c.region !== "US" ? dv4Veille(dv4Veille(g.achat.date)) : dv4Veille(g.achat.date)) : null;
   return `<a class="dv5-c" href="/entreprise/${esc(c.id)}"><div class="dv5-h">${mcLogo(c)}<span><b>${esc(c.name)}</b><small>${esc(dv4Quoi(e0) || "Dividende")}</small></span>${amt ? `<strong>${esc(amt)}<small>par action</small></strong>` : ""}</div>
     <div class="dv5-t">${dern ? `<div class="a"><i></i><span><small>Acheter au plus tard le</small><b>${esc(jour(dern))}</b></span></div>` : ""}${g.verse ? `<div class="p"><i></i><span><small>Versé le</small><b>${esc(jour(g.verse.date))}</b></span></div>` : ""}</div>
     <div class="dv5-f">${v && v.yld ? `<span>Rendement <b>${esc(pct(v.yld, 1, false))}</b></span>` : ""}${cv ? `<span class="${cv.k === "oui" ? "g" : cv.k === "non" ? "r" : ""}" title="${esc(cv.d)}">${esc(cv.t)}</span>` : ""}${typeof peaOk === "function" && peaOk(c) && e4Fr() ? `<span class="g">PEA ✓</span>` : ""}</div></a>`;

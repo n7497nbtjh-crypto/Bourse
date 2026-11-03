@@ -140,8 +140,8 @@ function outClScore(k, x) { // le score seul, sans rien qui permette de reconna�
 
 /* ---------- 2. Dividendes ---------- */
 function outDivKind(e) { const l = e.label || ""; return /enregistrement/i.test(l) ? "rec" : /paiement|versement|mise en paiement/i.test(l) ? "pay" : /détach|dernier jour|ex-div/i.test(l) ? "det" : "autre"; }
-const OUT_DK = { det: ["Détachement", "Pour recevoir ce dividende, il faut détenir l'action la veille au soir de cette date (ou à la date indiquée)."], pay: ["Paiement", "Le jour où l'argent arrive sur le compte des actionnaires."], rec: ["Enregistrement", "Aux États-Unis : il faut être inscrit comme actionnaire à cette date. En pratique, acheter au moins un jour de Bourse avant."], autre: ["Dividende", ""] };
-function outDivAmt(e) { const m = (e.label || "").match(/\(([\d\s,.]+)\s*(€|\$|£|CHF|kr|NOK)\)/); return m ? m[1].trim() + " " + m[2] : ""; }
+const OUT_DK = { det: ["Détachement", "Pour recevoir ce dividende, il faut détenir l'action la veille au soir de cette date (ou à la date indiquée)."], pay: ["Paiement", "Le jour où l'argent arrive sur le compte des actionnaires."], rec: ["Enregistrement", "Il faut être inscrit comme actionnaire à cette date. En pratique, acheter au moins un jour de Bourse avant aux États-Unis, deux en Europe."], autre: ["Dividende", ""] };
+function outDivAmt(e) { const m = (e.label || "").match(/\(([\d\s,.]+)\s*(€|\$|£|CHF|kr|NOK|SEK|DKK|pence)\)/); return m ? m[1].trim() + " " + m[2] : ""; }
 function outDivEvents(f) {
   return AG.events.filter(e => e.date >= TODAY && RBY[e.id] && /ividende|acompte|détachement|solde/i.test(e.type + " " + e.label))
     .filter(e => { const c = RBY[e.id]; return (!f.s || c.sector === f.s) && outRegOk(c, f.r) && (!f.pea || peaOk(c)) && (!f.fav || f.favIds.has(c.id)); })

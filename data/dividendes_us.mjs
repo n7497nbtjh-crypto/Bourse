@@ -1,8 +1,8 @@
 // Dividendes annoncés des entreprises américaines suivies (3/11/2026, Romain : « 27 dividendes sur le site, c'est ridicule »).
 // Source : calendrier des dividendes publié par Nasdaq (api.nasdaq.com/api/calendar/dividends?date=…), qui liste chaque jour
 // les dividendes déclarés par les sociétés cotées aux États-Unis : date de détachement (ex-date), date de versement, montant.
-// Seules les entreprises suivies par le site, cotées aux États-Unis (région US, même ticker) sont gardées : les certificats
-// américains (ADR) d'entreprises étrangères sont écartés (montant et dates différents de la Bourse d'origine).
+// Seules les entreprises suivies par le site dont le cours affiché est coté aux États-Unis sont gardées : les certificats
+// américains (ADR) d'entreprises suivies sur leur Bourse d'origine sont écartés (montant et dates différents).
 // Aux États-Unis le règlement se fait en J+1 : la date d'enregistrement tombe le jour du détachement ; on garde donc
 // le détachement et le versement. Les entreprises dont le calendrier officiel est déjà relevé (data/agenda) sont laissées de côté.
 // Résultat : cf/site/data/agenda-dividendes.json ({ updated, source, events: [{ id, date, type, label, source }] }).
@@ -13,7 +13,10 @@ const JOURS = arg("--jours", 75), UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64
 const SRC = "https://www.nasdaq.com/market-activity/dividends";
 const S = JSON.parse(readFileSync("cf/site/data/societes.json", "utf8")), C = S.companies || S;
 const officiel = new Set(JSON.parse(readFileSync("cf/site/data/agenda.json", "utf8")).events.filter(e => e.type === "Dividende").map(e => e.id));
-const parTicker = new Map(C.filter(c => c.region === "US" && c.ticker && !officiel.has(c.id)).map(c => [String(c.ticker).toUpperCase().replace(/\./g, "-"), c]));
+// Cotée aux États-Unis : région US, ou cours suivi par le site sur une Bourse américaine (tv « NYSE:… », « NASDAQ:… ») ;
+// dans ce cas le dividende de cette cotation est celui que touche l'acheteur au cours affiché (montant par certificat).
+const usa = c => c.region === "US" ? c.ticker : /^(NYSE|NASDAQ|AMEX):/.test(c.tv || "") ? String(c.tv).split(":")[1] : null;
+const parTicker = new Map(C.filter(c => usa(c) && !officiel.has(c.id)).map(c => [String(usa(c)).toUpperCase().replace(/\./g, "-"), c]));
 const iso = d => { const m = String(d || "").match(/^(\d{2})\/(\d{2})\/(\d{4})$/); return m ? `${m[3]}-${m[1]}-${m[2]}` : null; };
 const montant = v => (+v).toLocaleString("fr-FR", { minimumFractionDigits: 2, maximumFractionDigits: 4 }) + " $";
 const pause = ms => new Promise(r => setTimeout(r, ms));
