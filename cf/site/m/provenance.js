@@ -517,48 +517,5 @@ function provLnCherche(q, IDX) {
   return hits.length ? { issue: "trouve", hits: hits.map(h => h.x) } : { issue: "aucun", hits: [] };
 }
 const provLnCat = c => String(c || "").split("|").map(x => x.replace(/^Biens_divers\//, "Biens divers : ").replace(/_/g, " ").replace("Usurpation AMF", "Usurpation de l'identité de l'AMF")).join(", ");
-async function outilVerifier() {
-  setTitle("Vérifier un site ou une offre");
-  app.innerHTML = `<div class="crumbs"><a href="/outils">Outils</a> › Vérifier un site ou une offre</div><h1 class="pagetitle">Vérifier un site, une appli ou une offre</h1>
-    <p class="pagesub">Une publicité promet 10 % par mois, un « conseiller » vous contacte sur WhatsApp, un site propose du trading de cryptos ? Tapez son nom, son adresse internet ou son adresse e-mail : le site cherche dans les listes noires publiées par l'AMF.</p>
-    <section class="panel"><div class="pb"><form id="lnf" class="field" style="max-width:560px" role="search"><label for="lnq">Nom exact, site internet ou adresse e-mail</label><div style="display:flex;gap:8px"><input id="lnq" type="search" autocomplete="off" placeholder="ex. invest-profit-plus.com" style="flex:1;min-width:0"><button class="btn" type="submit">Vérifier</button></div></form>
-      <div id="lnr" style="margin-top:12px" aria-live="polite"></div></div>
-      <div class="src" id="lns">Chargement des listes…</div></section>
-    <section class="panel"><div class="ph"><h2>Les bons réflexes, même sans alerte</h2></div><div class="pb">
-      <p style="margin:0 0 10px"><b>Ne pas figurer sur une liste noire ne prouve pas qu'une offre est fiable.</b> Les listes ne recensent que les acteurs déjà signalés ; un site frauduleux change souvent de nom. Avant de verser de l'argent, vérifiez que l'acteur est autorisé :</p>
-      <ul style="margin:0;padding-left:18px;line-height:1.7">
-        <li><a class="lnk" href="https://www.regafi.fr" target="_blank" rel="noopener">REGAFI</a> : banques, entreprises d'investissement et prestataires de paiement autorisés en France.</li>
-        <li><a class="lnk" href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a> : conseillers en investissements financiers et intermédiaires immatriculés.</li>
-        <li>Les listes blanches de l'<a class="lnk" href="https://www.amf-france.org" target="_blank" rel="noopener">AMF</a> : prestataires de services sur crypto-actifs agréés, sociétés de gestion, offres de financement participatif autorisées.</li>
-        <li>En cas de doute, AMF Épargne Info Service : 01 53 45 62 00 (du lundi au vendredi).</li></ul></div></section>
-    <section class="panel"><div class="ph"><h2>Les signaux qui doivent alerter</h2></div><div class="pb"><ul style="margin:0;padding-left:18px;line-height:1.7">
-      <li>Un rendement élevé <b>et</b> garanti : en Bourse, un rendement élevé s'accompagne toujours d'un risque de perte.</li>
-      <li>Un contact que vous n'avez pas demandé (appel, message privé, réseau social) et une pression pour décider vite.</li>
-      <li>Un versement demandé par virement vers un compte à l'étranger, en cryptomonnaie ou par carte cadeau.</li>
-      <li>Une société introuvable dans les registres officiels, ou au nom proche d'une institution connue.</li></ul></div></section>`;
-  if (!LN) { try { LN = await (await fetch("/data/listes-noires.json")).json(); } catch (e) { LN = { items: [] }; } }
-  if (!$("#lnq")) return;
-  const IDX = provLnIndex(LN.items || []), jo = LN.updated ? provJoursOuvres(LN.updated) : null, vieux = jo != null && jo > 3;
-  const maj = LN.updated ? `Liste mise à jour le ${dLabel(LN.updated)}` : "Date de mise à jour inconnue";
-  $("#lns").innerHTML = IDX.length ? `${F0.format(IDX.length)} entrées. ${maj}${vieux ? ` <b class="prov-stale">(pas de mise à jour depuis ${jo} jours ouvrés : les inscriptions récentes peuvent manquer)</b>` : ""} · source : ${LN.source ? `<a class="lnk" href="${esc(LN.source)}" target="_blank" rel="noopener">listes noires de l'AMF</a>` : "listes noires de l'AMF"}, jeu de données ouvert publié sur data.gouv.fr.`
-    : "Les listes noires ne sont pas disponibles pour le moment : consultez directement le site de l'AMF.";
-  const rappel = `<p class="lnnote">L'absence de la liste ne prouve pas qu'une offre est fiable. ${maj.replace("Liste mise", "Liste noire mise")}.</p>`;
-  const q = $("#lnq");
-  const run = () => {
-    const v = q.value.trim(); if (!v) { $("#lnr").innerHTML = ""; return; }
-    if (!IDX.length) { $("#lnr").innerHTML = `<div class="lnins"><b>Recherche impossible pour le moment.</b> Les listes n'ont pas pu être chargées : consultez le site de l'AMF.</div>`; return; }
-    const R0 = provLnCherche(v, IDX);
-    if (R0.issue === "trouve") {
-      const h = R0.hits, n = h.length;
-      $("#lnr").innerHTML = `<div class="lnwarn" role="alert"><b>Correspondance trouvée dans les listes noires de l'AMF${n > 1 ? ` (${n > 12 ? "au moins 12 affichées sur " + n : n} entrées)` : ""}.</b> L'AMF signale ces acteurs comme non autorisés à proposer des produits ou services financiers en France. Ne versez pas d'argent. Vérifiez que le nom correspond exactement à celui de l'offre.</div>
-        ${h.slice(0, 12).map(x => `<div class="lnit"><b>${esc(x.n || x.s)}</b>${x.s && x.n ? ` <span class="light">${esc(x.s)}</span>` : ""}<div class="light" style="font-size:12.5px">${esc(provLnCat(x.c))}${x.d ? ` · inscrit le ${esc(/^\d{4}-\d{2}-\d{2}$/.test(x.d) ? dLabel(x.d) : x.d)}` : ""}</div></div>`).join("")}${rappel.replace("L'absence de la liste ne prouve pas qu'une offre est fiable. ", "")}`;
-    } else if (R0.issue === "insuffisant") {
-      $("#lnr").innerHTML = `<div class="lnins"><b>Recherche insuffisante.</b> ${R0.raison === "court" ? "La saisie est trop courte pour identifier un acteur : tapez au moins 4 caractères." : R0.raison === "trop" ? `Ce terme apparaît dans ${F0.format(R0.n)} entrées : il est trop général pour conclure.` : "Ces mots sont trop courants (par exemple « invest », « trading », « crypto ») pour identifier un acteur."} Tapez le nom exact de la société, l'adresse du site (ex. nom-du-site.com) ou l'adresse e-mail de votre contact.</div>${rappel}`;
-    } else {
-      $("#lnr").innerHTML = `<div class="lnnone"><b>Aucune correspondance dans les listes noires de l'AMF.</b> Cela ne prouve pas que l'offre est fiable : les listes ne contiennent que les acteurs déjà signalés, et les escrocs changent souvent de nom. Vérifiez que l'acteur figure sur REGAFI, sur l'ORIAS ou sur une liste blanche de l'AMF (voir ci-dessous) avant de verser de l'argent.</div>${rappel.replace("L'absence de la liste ne prouve pas qu'une offre est fiable. ", "")}`;
-    }
-  };
-  let tm = 0; q.oninput = () => { clearTimeout(tm); tm = setTimeout(run, 250); };
-  $("#lnf").onsubmit = ev => { ev.preventDefault(); clearTimeout(tm); run(); };
-}
+function outilVerifier() { return outilVerifier4(); } // page construite par m/verifier4.js (3/11/2026)
 /* styles : voir site.css */

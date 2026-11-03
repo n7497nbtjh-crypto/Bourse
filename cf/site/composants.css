@@ -819,3 +819,23 @@ html #app .ek.ek-page .s4-f input,html #app .ek.ek-page .s4-3 input,html #app .e
 .ek .sj-ax u.fin{transform:translateX(calc(-100% + 2px))}
 @media(max-width:640px){.ek .sj-bt{height:32px}.ek .sj-bt>i{top:2px}.ek .sj-ax .sj-bt{height:22px}
   .ek .sj-cs{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.ek .sj-c{padding:12px}.ek .sj-c>b{font-size:26px}.ek .sj-c small:not(.g):not(.r){display:none}}
+
+/* ---------- « Vérifier une offre » v4 (m/verifier4.js) ---------- */
+.ek .vf-f{display:flex;align-items:center;gap:10px;background:#fff;border:3px solid var(--ek-ink);border-radius:18px;padding:8px 8px 8px 16px;margin-top:22px;max-width:760px;box-shadow:4px 4px 0 var(--ek-ink)}
+.ek .vf-f svg{width:22px;height:22px;flex:none}
+html #app .ek.ek-page .vf-f input{flex:1;min-width:0;border:0;outline:0;font:700 18px Inter;background:transparent;padding:8px 0}
+html #app .ek.ek-page .vf-f button{flex:none;background:var(--ek-ink);color:#fff;border:0;border-radius:12px;font:800 16px Inter;padding:12px 20px;cursor:pointer}
+.ek .vf-s{font:600 13.5px/1.45 Inter;margin:12px 0 0;max-width:760px}
+.ek .vf-v{display:flex;gap:14px;align-items:flex-start;margin-top:16px;max-width:760px;border:3px solid var(--ek-ink);border-radius:18px;padding:16px 18px;background:#fff}
+.ek .vf-v.r{background:#FFE4DC}.ek .vf-v.n{background:#fff}.ek .vf-v.i{background:#FFF6CC}
+.ek .vf-i{flex:none;width:40px;height:40px;border-radius:50%;border:3px solid var(--ek-ink);display:grid;place-items:center;font:900 20px Inter;background:#fff}
+.ek .vf-v.r .vf-i{background:#D9361B;color:#fff}
+.ek .vf-t{display:block;font:800 clamp(19px,2.2vw,24px)/1.15 "Bricolage Grotesque",Inter;letter-spacing:-.02em}
+.ek .vf-v p{font:500 14.5px/1.5 Inter;margin:6px 0 0}
+.ek .vf-hits{display:flex;flex-direction:column;gap:6px;margin-top:10px;max-height:340px;overflow:auto}
+.ek .vf-hits>div{background:#fff;border:2px solid var(--ek-ink);border-radius:12px;padding:8px 12px;font:700 14px Inter;overflow-wrap:anywhere}
+.ek .vf-hits span{font-weight:500;color:#555}.ek .vf-hits small{display:block;font:500 12.5px Inter;color:#666;margin-top:2px}
+.ek .vf-c span{flex:none}
+.ek .vf-lead{font:600 15px/1.5 Inter;margin:-8px 0 16px;max-width:760px}
+.ek .vf-tel{background:#E2F8EE}
+.ek .vf-s b{font:inherit;font-weight:800}@media(max-width:640px){.ek .vf-v{flex-direction:column;gap:8px}.ek .vf-i{width:34px;height:34px;font-size:17px}}
