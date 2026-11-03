@@ -232,16 +232,15 @@ function pageMethode() {
     ["Cours de Bourse", "Cours de clôture ou différés, à titre indicatif", "Google Finance", "https://www.google.com/finance"],
     ["ETF", "Fiches, documents d'informations clés et compositions publiés par les émetteurs", "Sites des émetteurs", null],
   ];
-  app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › Méthode et sources</div>
-    <div class="mtdhero"><p class="kick">Transparence</p><h1 class="pagetitle">Comment ENKLAIR fabrique ses chiffres</h1>
-      <p class="pagesub">Des documents officiels, des calculs vérifiables, une IA encadrée. Voici, étape par étape, ce qui se passe entre le rapport annuel d'une entreprise et ce que vous lisez.</p>
-      <div class="mtdkpi"><span><b>${F0.format(nCo)}</b>entreprises avec leurs comptes</span><span><b>${ETF.list.length}</b>ETF suivis</span><span><b>0</b>publicité</span><span><b>0</b>conseil d'achat ou de vente</span></div></div>
-    <ol class="mtdflow">
+  app.innerHTML = `<div class="ek ek-page mt4"><section class="ek-hero"><span class="mc-stk">Méthode et sources</span><h1 class="ag4-t">Comment ENKLAIR fabrique ses chiffres</h1>
+      <p class="mc-sub">Des documents officiels, des calculs vérifiables, une IA encadrée. Voici, étape par étape, ce qui se passe entre le rapport annuel d'une entreprise et ce que vous lisez.</p>
+      <div class="mtdkpi"><span><b>${F0.format(nCo)}</b>entreprises avec leurs comptes</span><span><b>${F0.format(ETF.list.length)}</b>ETF suivis</span><span><b>0</b>publicité</span><span><b>0</b>conseil d'achat ou de vente</span></div></section>
+    <section class="ek-sec"><span class="ek-stk2 b">Étape par étape</span><h2>Du rapport annuel à votre écran.</h2><ol class="mtdflow">
       <li><span class="ic">${ico("M6 3h9l3 3v15H6zM9 9h6M9 13h6M9 17h4")}</span><b>1. Les sources officielles</b><p>Rapports annuels déposés auprès des autorités (ESEF en Europe, SEC aux États-Unis), annonces réglementées, taux de la BCE.</p></li>
       <li><span class="ic">${ico("M4 19V5M4 19h16M8 15l3-4 3 2 4-6")}</span><b>2. Le calcul</b><p>Le site lit les chiffres (ventes, résultats, dette, dividendes) et calcule les ratios lui-même. Des contrôles écartent les valeurs incohérentes.</p></li>
       <li><span class="ic">${ico("M12 3v18M5 8h14M5 16h14")}</span><b>3. La comparaison</b><p>Chaque chiffre est situé par rapport à la médiane des entreprises du même secteur : vert nettement mieux, orange nettement moins bien, gris dans la moyenne.</p></li>
       <li><span class="ic">${ico("M12 3l2.5 5.5L20 9l-4 4 1 6-5-3-5 3 1-6-4-4 5.5-.5z")}</span><b>4. L'explication</b><p>Des phrases simples, construites à partir des chiffres. L'IA traduit vos questions en calculs ; elle ne fabrique pas les chiffres.</p></li>
-    </ol>
+    </ol></section>
     <div class="mtdgrid">
       <section class="panel"><div class="ph"><h2>Comment lire les couleurs</h2></div><div class="pb">
         <div class="mtdleg"><span class="g">Point fort</span><span class="n">Dans la moyenne</span><span class="o">Point de vigilance</span></div>
@@ -268,7 +267,7 @@ function pageMethode() {
         <li>Les cours sont différés.</li><li>L'IA peut se tromper : vérifiez un chiffre important dans le document source, dont le lien est donné.</li></ul></div></section>
     </div>
     <section class="panel mtderr"><div class="pb"><div><h2 style="margin:0 0 4px">Vous voyez une erreur ?</h2><p class="muted" style="margin:0">Un chiffre faux, une explication trompeuse, un lien cassé : dites-le nous, chaque signalement est relu.</p></div><button type="button" class="btn" data-signaler>Signaler une erreur</button></div></section>
-    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/mentions-legales">Mentions légales</a> · <a class="lnk" href="/apprendre#academie">L'Académie</a></p>`;
+    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/mentions-legales">Mentions légales</a> · <a class="lnk" href="/apprendre#academie">L'Académie</a></p></div>`;
 }
 
 /* ---------- Signaler une erreur (pied de page et page Méthode) ---------- */

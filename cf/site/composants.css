@@ -1039,3 +1039,16 @@ html #app .ek.pr4 .prem-a[open]{grid-column:1/-1}
 .ek.pr4 .prem-a>summary em{grid-area:e;font:800 13px Inter;font-style:normal;text-decoration:underline;text-decoration-color:var(--ek-y);text-decoration-thickness:3px;text-underline-offset:3px;margin-top:4px}
 html #app .ek.pr4>.panel,html #app .ek.pr4 .two>.panel{border:2px solid var(--ek-ink);border-radius:20px}
 @media(max-width:640px){.ek.pr4 .offers{grid-template-columns:minmax(0,1fr)}}
+
+/* ---------- Méthode et sources v4 (pageMethode de m/orchestre.js) ---------- */
+.ek.mt4 .mtdkpi{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:20px;max-width:860px}
+html #app .ek.mt4 .mtdkpi span{background:#fff;border:2px solid var(--ek-ink);border-radius:16px;padding:12px 14px;font:600 12.5px/1.35 Inter;display:flex;flex-direction:column;gap:2px}
+html #app .ek.mt4 .mtdkpi b{font:800 clamp(26px,3vw,36px)/1.05 "Bricolage Grotesque",Inter;letter-spacing:-.03em}
+.ek.mt4 .mtdflow{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;list-style:none;margin:0;padding:0;counter-reset:none}
+html #app .ek.mt4 .mtdflow li{background:#fff;border:2px solid var(--ek-ink);border-radius:18px;padding:16px;box-shadow:3px 3px 0 var(--ek-ink);margin:0}
+html #app .ek.mt4 .mtdflow .ic{display:grid;place-items:center;width:40px;height:40px;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:12px;margin-bottom:8px}
+html #app .ek.mt4 .mtdflow .ic svg{width:22px;height:22px;fill:none;stroke:var(--ek-ink);stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ek.mt4 .mtdflow b{font:800 16.5px/1.2 "Bricolage Grotesque",Inter}.ek.mt4 .mtdflow p{font:500 13.5px/1.5 Inter;margin:6px 0 0;color:#333}
+html #app .ek.mt4 .panel{border:2px solid var(--ek-ink);border-radius:20px;box-shadow:none}
+.ek.mt4 .mtdgrid{margin-top:18px}
+@media(max-width:900px){.ek.mt4 .mtdflow,.ek.mt4 .mtdkpi{grid-template-columns:repeat(2,minmax(0,1fr))}}
