@@ -769,21 +769,7 @@ function tabActu(s, c, el) {
   if (us) newsBlock($("#offi"), { src: "US", id: s.id, showCo: false });
   else if (fr) newsBlock($("#offi"), { params: "&isin=" + s.isin, showCo: false });
 }
-function pageActus() {
-  setTitle("Actualité des entreprises"); setNav("news");
-  const q = new URLSearchParams(location.search), TABS = [["une", "À la une"], ["monde", "Monde"], ["fr", "Annonces France"], ["us", "Annonces États-Unis"], ["toutes", "Toutes les sociétés françaises"]];
-  const src = TABS.some(t => t[0] === q.get("src")) ? q.get("src") : "une";
-  app.innerHTML = `<h1 class="pagetitle">Actualité</h1><p class="pagesub">La presse financière en France et dans le monde, et les annonces officielles des entreprises, classées et expliquées. Les dates à venir sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p>
-    <section class="panel"><div class="filters">${TABS.map(([k, l]) => `<a href="/actualites${k === "une" ? "" : "?src=" + k}" class="${src === k ? "on" : ""}">${l}</a>`).join("")}</div>
-    ${src === "toutes" ? `<div class="pb" style="border-bottom:1px solid var(--rule)"><div class="field" style="max-width:420px;margin:0"><input id="aq" type="search" placeholder="Filtrer par société" aria-label="Filtrer par société"></div></div>` : ""}
-    <div class="pb" id="nb"></div><div class="src">${src === "une" || src === "monde" ? "Articles repérés par GDELT dans la presse ; le site renvoie vers l'éditeur et ne vérifie pas leur contenu." : src === "us" ? "Source : SEC, EDGAR. Liste mise à jour chaque jour." : "Source : AMF, info-financiere.gouv.fr, en direct. Licence Ouverte."}</div></section>`;
-  if (src === "une") presseBlock($("#nb"), { sujet: "marches", max: 40 });
-  else if (src === "monde") presseBlock($("#nb"), { sujet: "monde", max: 40 });
-  else if (src === "toutes") {
-    let t = null; const run = () => newsBlock($("#nb"), { params: $("#aq").value.trim() ? "&q=" + encodeURIComponent($("#aq").value.trim()) : "" });
-    $("#aq").oninput = () => { clearTimeout(t); t = setTimeout(run, 400); }; run();
-  } else newsBlock($("#nb"), src === "us" ? { src: "US" } : { params: "&suivies=1" });
-}
+// pageActus : m/actu4.js
 
 /* ---------- Graphique de cours : jour, semaine, mois, 3 mois, an, 5 ans, tout ---------- */
 function tvChart(el, symbol, name) {

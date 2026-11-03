@@ -519,7 +519,7 @@
 .ek .el-lien{background:none;border:0;padding:0;font:inherit;text-decoration:underline;cursor:pointer}
 .ek .el-sel{margin-left:auto;display:flex;gap:8px;align-items:center;font:700 13px Inter;color:#555;flex-wrap:wrap}.ek .el-sel select{border:2px solid var(--ek-ink);border-radius:999px;padding:5px 10px;font:700 13px Inter;background:#fff}
 .ek .el-q span{font-size:16px}
-#app .ek .el-q input{border:0;box-shadow:none;padding:0;height:auto;min-height:0;background:none;border-radius:0}
+html #app .ek.ek-page .el-q input{border:0;box-shadow:none;padding:0;height:auto;min-height:0;background:none;border-radius:0}
 html #app .ek.ek-page .el-sort button.on{background:var(--ek-y);color:var(--ek-ink)}#app .ek .el-f button.on{background:var(--ek-ink);color:#fff}
 
 /* ——— Marchés v4 (m/marches4.js, maquette docs/maquettes/marches-v1.html) ——— */
@@ -562,3 +562,45 @@ html #app .ek.ek-page .el-sort button.on{background:var(--ek-y);color:var(--ek-i
 
 .ek .mc-note a{color:var(--ek-ink);font-weight:800}
 html #app .ek.ek-page .mc-reg button.on{background:var(--ek-y);color:var(--ek-ink)}
+
+/* ——— Actualité v4 (m/actu4.js) ——— */
+.ek .ax4-hero h1{font:800 clamp(36px,5.4vw,68px)/.95 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.055em;margin:14px 0 0;max-width:900px}
+.ek .ax4-hero h1 .g{color:#00714C}.ek .ax4-hero h1 .r{color:#A3200B}
+.ek .ax4-k{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:20px;max-width:900px}
+.ek .ax4-k>div{background:#fff;border:2px solid var(--ek-ink);border-radius:16px;padding:12px 14px;box-shadow:3px 3px 0 var(--ek-ink)}
+.ek .ax4-k b{display:block;font:800 30px/1 "Bricolage Grotesque",Inter;letter-spacing:-.03em}.ek .ax4-k span{display:block;font:800 13px/1.25 Inter;margin-top:4px}.ek .ax4-k small{display:block;font:600 12px/1.3 Inter;color:#555;margin-top:2px}
+.ek .ax4-vue{display:inline-flex;margin-top:18px;border:2px solid var(--ek-ink);border-radius:999px;background:#fff;padding:3px}
+.ek .ax4-vue button{border:0;background:none;border-radius:999px;padding:8px 16px;font:800 14px Inter;cursor:pointer;color:var(--ek-ink)}
+html #app .ek.ek-page .ax4-vue button.on{background:var(--ek-ink);color:#fff}
+.ek .ax4-cols{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:28px;margin-top:30px;align-items:start}
+.ek .ax4-ch{margin:0 0 10px}.ek .ax4-ch>span{font:800 13px Inter;margin-right:2px}
+.ek .ax4-ch select{border:2px solid var(--ek-ink);border-radius:999px;padding:5px 10px;font:700 13px Inter;background:#fff}
+html #app .ek.ek-page .ax4-ch button.on{background:var(--ek-y);color:var(--ek-ink)}
+.ek .ax4-day{font:800 22px "Bricolage Grotesque",Inter;letter-spacing:-.03em;margin:26px 0 10px;text-transform:none}
+.ek .ax4-day:first-child{margin-top:12px}
+.ek .ax4-c{border:2px solid var(--ek-ink);border-radius:20px;padding:14px 16px;margin-bottom:12px;background:#fff;border-left:8px solid var(--c)}
+.ek .ax4-h{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ek .ax4-co{display:flex;flex-direction:column;min-width:0;flex:1;overflow-wrap:anywhere}.ek .ax4-co a{font:800 15px Inter;color:var(--ek-ink);text-decoration:none}.ek .ax4-co small{font:600 12px Inter;color:#555}
+.ek .ax4-t{font:800 12px Inter;color:#fff;background:var(--c);border-radius:999px;padding:4px 10px;white-space:nowrap}
+.ek .ax4-p{font:800 12px Inter;color:#A3200B;background:#FFE9E3;border-radius:999px;padding:4px 10px;white-space:nowrap}
+.ek .ax4-c h3{font:800 19px/1.25 "Bricolage Grotesque",Inter;letter-spacing:-.02em;margin:10px 0 0}
+.ek .ax4-s{font:600 13px/1.4 Inter;color:#555;margin:4px 0 0}
+.ek .ax4-fs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:12px}
+.ek .ax4-f{background:#F7F6F2;border-radius:12px;padding:8px 10px}.ek .ax4-f small{display:block;font:700 11.5px Inter;color:#555}
+.ek .ax4-f b{display:block;font:800 18px/1.15 "Bricolage Grotesque",Inter;margin-top:2px}.ek .ax4-f em{display:block;font:800 12px Inter;font-style:normal;margin-top:2px}.ek .ax4-f em.g{color:#00A06B}.ek .ax4-f em.r{color:#D92D12}
+.ek .ax4-b{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:flex-start;justify-content:space-between;margin-top:12px}
+.ek .ax4-l{flex:1;min-width:220px}.ek .ax4-l summary{font:800 13.5px Inter;cursor:pointer;color:var(--ek-ink)}
+.ek .ax4-l ul{margin:8px 0 4px;padding-left:18px;font:600 13.5px/1.45 Inter}.ek .ax4-l p{font:600 13.5px/1.45 Inter;margin:8px 0 4px}.ek .ax4-l small{font:600 11.5px Inter;color:#666}
+.ek .ax4-src{font:800 13px Inter;color:var(--ek-ink);border-bottom:3px solid var(--ek-y);text-decoration:none;white-space:nowrap}
+.ek .ax4-ia{font:800 13px Inter}
+.ek .ax4-aside{position:sticky;top:80px}
+.ek .ax4-side{border:2px solid var(--ek-ink);border-radius:20px;padding:16px 18px;background:#fff}
+.ek .ax4-side p.h{font:800 20px "Bricolage Grotesque",Inter;letter-spacing:-.03em;margin:0 0 10px}
+.ek .ax4-ev{display:grid;grid-template-columns:46px minmax(0,1fr);gap:10px;align-items:center;padding:8px 0;border-top:1px solid #E6E4DE;color:var(--ek-ink);text-decoration:none}.ek .ax4-ev:first-of-type{border-top:0}
+.ek .ax4-ev .d{background:var(--ek-ink);color:#fff;border-radius:10px;text-align:center;padding:4px 0}.ek .ax4-ev .d b{display:block;font:800 18px/1 "Bricolage Grotesque",Inter}.ek .ax4-ev .d small{font:700 10.5px Inter}
+.ek .ax4-ev b{display:block;font:800 13.5px Inter}.ek .ax4-ev small{display:block;font:600 12px/1.3 Inter;color:#555}
+.ek .ax4-more{display:inline-block;margin-top:10px;font:800 13.5px Inter;color:var(--ek-ink);border-bottom:3px solid var(--ek-y);text-decoration:none}
+.ek .ax4-ps{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.ek .ax4-pr{display:grid;grid-template-columns:34px minmax(0,1fr) 16px;gap:12px;align-items:center;border:2px solid var(--ek-ink);border-radius:16px;padding:10px 14px;color:var(--ek-ink);text-decoration:none}
+.ek .ax4-pr small{display:block;font:600 12px Inter;color:#555}.ek .ax4-pr>span>b{display:block;font:700 15px/1.35 Inter;margin-top:2px}.ek .ax4-pr i{font-style:normal;font-weight:800}
+@media(max-width:900px){.ek .ax4-cols{grid-template-columns:1fr}.ek .ax4-aside{position:static}.ek .ax4-k{grid-template-columns:1fr}.ek .ax4-k>div{display:grid;grid-template-columns:auto 1fr;gap:0 12px;align-items:center}.ek .ax4-k b{grid-row:1/3;font-size:26px}.ek .ax4-k span{margin:0}.ek .ax4-c{padding:12px}}

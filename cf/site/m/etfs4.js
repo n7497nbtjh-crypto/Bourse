@@ -68,7 +68,7 @@ function pageEtfs4() {
     <section class="ek-hero el-h"><span class="el-stk">Les ETF</span>
       <h1>${F0.format(L.length)} ETF, lus et comparés.</h1>
       <p class="el-sub">Frais, contenu et performance relevés chez les émetteurs.${fr ? ` ${F0.format(nPea)} sont éligibles au PEA.` : ""}</p>
-      <label class="el-q"><span aria-hidden="true">🔍</span><input type="search" id="elq" placeholder="MSCI World, CW8, IE00B4L5Y983…" aria-label="Chercher un ETF" value="${esc(S.q)}" autocomplete="off"></label>
+      <label class="el-q"><span aria-hidden="true">🔍</span><input class="el-in" type="search" id="elq" placeholder="MSCI World, CW8, IE00B4L5Y983…" aria-label="Chercher un ETF" value="${esc(S.q)}" autocomplete="off"></label>
       <div class="el-f" id="elf">Filtrer : ${EL_FILTRES.filter(([k]) => fr || k !== "pea").map(([k, t]) => `<button type="button" data-f="${k}" aria-pressed="false">${t}</button>`).join("")}</div>
       <div class="el-learn"><a href="/academie/placements/etf"><b>Comprendre un ETF</b><span>Trois minutes : ce que c'est, ce que ça coûte.</span></a>${fr ? `<a href="/pea-cto"><b>ETF et PEA</b><span>Ce qu'un PEA peut contenir, et pourquoi le « swap ».</span></a>` : ""}<a href="/outils/recouvrement"><b>Deux ETF se recouvrent-ils ?</b><span>Les entreprises en double, en un calcul.</span></a></div>
     </section>
