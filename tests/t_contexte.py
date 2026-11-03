@@ -1,6 +1,7 @@
 # Module « contexte » (cf/site/m/contexte.js) : « Ce qui explique ces chiffres », « L'actualité qui la concerne »,
 # marqueurs de doute de l'IA locale. Vérifie 20 fiches à 390 et 1280 px : pas d'erreur JS, pas de NaN/undefined,
-# pas de débordement horizontal, contenu attendu présent.
+# pas de débordement horizontal, contenu attendu présent. Depuis la fiche v4 (3/11), les deux blocs du module ne sont plus
+# affichés sur la fiche : le test les construit dans la page et vérifie leur contenu, et vérifie le bloc #actu de la fiche.
 # Usage : python3 tests/t_contexte.py [--shots dossier]
 import os, sys, json
 exec(open("tests/audit.py").read().split("CHECK = ")[0])  # route() et sync_playwright
@@ -12,12 +13,20 @@ IDS = ["totalenergies", "alibaba", "lvmh", "bnp-paribas", "stellantis", "nvidia"
 SANS = {"sap", "tencent"}  # entreprises sans comptes lus : pas de bloc « chiffres », bloc actualité dans « Son métier »
 ATTENDU = {"totalenergies": ["Moyen-Orient", "Gaz européen", "retournement"], "alibaba": ["plateformes", "Trêve"], "lvmh": ["Chine"], "bnp-paribas": ["BCE"],
            "stellantis": ["Droits de douane"], "nvidia": ["licence"], "klepierre": ["foncières"], "air-france-klm": ["Compagnies aériennes"], "pfizer": ["Covid"]}
-J = r"""() => {
+J = r"""async () => {
+  // Fiche v4 : bloc #actu. Les blocs du module (contexteChiffresHTML, contexteActuHTML) ne sont plus posés sur la fiche (3/11) :
+  // on les construit ici dans un cadre de la page pour vérifier leur contenu (ils servent aussi à l'IA locale).
   const t = document.body.innerText, ov = document.documentElement.scrollWidth - document.documentElement.clientWidth;
-  const ch = document.querySelector('#contexte-chiffres'), ac = document.querySelector('#contexte-actu');
-  const bad = [...document.querySelectorAll('#contexte-chiffres, #contexte-actu')].map(e => e.innerText).join(' ').match(/NaN|undefined|null|\[object|Infinity|—/g);
-  const wide = [...document.querySelectorAll('#contexte-chiffres *, #contexte-actu *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > innerWidth + 1 && !e.closest('.scroll-x, .tbx-sc'); }).map(e => e.tagName + '.' + e.className).slice(0, 3);
-  return { ov, ch: ch ? ch.innerText : null, ac: ac ? ac.innerText : null, bad, wide };
+  await ctxCharge(); const id = location.pathname.split('/')[2], s = RBY[id];
+  let c = null; if (!s.missing) c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json());
+  let box = document.getElementById('t-ctx'); if (!box) { box = document.createElement('div'); box.id = 't-ctx'; document.querySelector('#app').appendChild(box); }
+  box.innerHTML = (c ? contexteChiffresHTML(s, c, false) : '') + contexteActuHTML(s, c);
+  box.querySelectorAll('details').forEach(d => d.open = true);
+  const ch = document.querySelector('#contexte-chiffres'), ac = document.querySelector('#contexte-actu'), fa = document.querySelector('#actu');
+  const bad = [...document.querySelectorAll('#contexte-chiffres, #contexte-actu, #actu')].map(e => e.innerText).join(' ').match(/NaN|undefined|null|\[object|Infinity|—/g);
+  const wide = [...document.querySelectorAll('#contexte-chiffres *, #contexte-actu *, #actu *')].filter(e => { const r = e.getBoundingClientRect(); return r.width && r.right > innerWidth + 1 && !e.closest('.scroll-x, .tbx-sc'); }).map(e => e.tagName + '.' + e.className).slice(0, 3);
+  box.remove();
+  return { ov, ch: ch ? ch.innerText : null, ac: ac ? ac.innerText : null, fa: !!fa, bad, wide };
 }"""
 ok, ko = 0, []
 ACTU = {}
@@ -29,24 +38,19 @@ with sync_playwright() as pw:
         pg.route("**/*", route)
         for i in IDS:
             errs.clear()
-            for et in (["actualite"] if i in SANS else ["comptes", "actualite"]):
-                pg.goto(f"http://t.local/entreprise/{i}?etape={et}"); pg.wait_for_timeout(1300)  # ?etape=comptes renvoie vers l'onglet des chiffres
-                pg.evaluate("document.querySelectorAll('#contexte-chiffres details').forEach(d => d.open = true)")
+            for et in ["fiche"]:
+                pg.goto(f"http://t.local/entreprise/{i}"); pg.wait_for_timeout(1300)
                 r = pg.evaluate(J); pb = []
                 if errs: pb.append("erreurs JS : " + "; ".join(errs[:2]))
                 if r["ov"] > 1: pb.append(f"débordement {r['ov']} px")
                 if r["bad"]: pb.append("texte suspect : " + ",".join(set(r["bad"])))
                 if r["wide"]: pb.append("élément trop large : " + ",".join(r["wide"]))
-                if et != "comptes" and not r["ac"]: pb.append("bloc actualité absent")
-                if et == "comptes" and not r["ch"]: pb.append("bloc chiffres absent")
-                if et == "comptes": ACTU[i] = r["ch"] or ""  # « Ce qui explique ces chiffres » (onglet des chiffres)
-                allt = (r["ch"] or "") + (r["ac"] or "") + (ACTU.get(i, "") if et == "actualite" else "")
-                for m in (ATTENDU.get(i, []) if W == 1280 and et == "actualite" else []):
+                if i not in SANS and not r["fa"]: pb.append("bloc #actu de la fiche absent")  # sans comptes : fiche réduite à l'en-tête
+                if not r["ac"]: pb.append("contexte d'actualité vide")
+                if i not in SANS and not r["ch"]: pb.append("contexte des chiffres vide")
+                allt = (r["ch"] or "") + (r["ac"] or "")
+                for m in (ATTENDU.get(i, []) if W == 1280 else []):
                     if m.lower() not in allt.lower(): pb.append(f"« {m} » absent")
-                if shots and i in ("totalenergies", "alibaba", "bnp-paribas", "sap", "klepierre", "nvidia"):
-                    for sel, nm in (("#contexte-chiffres", "chiffres"), ("#contexte-actu", "actu")):
-                        el = pg.locator(sel)
-                        if el.count() and el.first.is_visible(): el.first.screenshot(path=f"{shots}/{i}_{nm}_{W}.png")
                 if pb: ko.append(f"{i} {et} {W}px : " + " | ".join(pb))
                 else: ok += 1
         pg.close()

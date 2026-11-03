@@ -34,62 +34,16 @@ with sync_playwright() as pw:
             el.click() if W > 800 else el.tap(); pg.wait_for_timeout(700)
             t = pg.inner_text("#pop") if pg.evaluate("document.getElementById('pop').classList.contains('open')") else ""
             return t, all(a.lower() in t.lower() for a in attendu)
-        # Fiche : tuiles de l'essentiel
-        pg.goto(BASE + "/entreprise/lvmh"); pg.wait_for_timeout(1800)
-        try: pg.wait_for_selector("#retenir .prov-i", timeout=15000)
-        except Exception: pass
-        n = pg.locator("#retenir .prov-i").count(); ok(n >= 5, tag + f"fiche : {n} boutons « i » sur les indicateurs principaux")
-        t, good = bulle("#retenir .prov-i[data-prov=marge]", ("D'où vient", "Formule", "Période", "Source", "Récupéré le", "Calculé par le site"))
-        ok(good, tag + "bulle de la marge : nature, formule, période, source, date de récupération")
-        ok("Exercice annuel 2025, clos le 31 décembre 2025" in t, tag + "date de référence de l'exercice")
-        if SHOTS and W > 800: os.makedirs(SHOTS, exist_ok=True); pg.screenshot(path=f"{SHOTS}/{W}_bulle_tuile.png")
-        if SHOTS and W <= 800: os.makedirs(SHOTS, exist_ok=True); pg.screenshot(path=f"{SHOTS}/{W}_bulle_tuile.png")
-        pg.keyboard.press("Escape"); pg.wait_for_timeout(150)
-        ok(not pg.evaluate("document.getElementById('pop').classList.contains('open')"), tag + "Échap referme la bulle")
-        href = pg.evaluate("location.pathname"); ok(href == "/entreprise/lvmh", tag + "le « i » n'ouvre pas le lien de la tuile")
-        # la tuile reste un lien
-        ok(pg.locator("#retenir a.fk-a").count() >= 5, tag + "les tuiles restent cliquables")
-        if W > 800:  # survol et clavier
-            pg.mouse.move(0, 0); pg.locator("#retenir .prov-i").nth(1).hover(); pg.wait_for_timeout(900)
-            ok("Résultat net" in pg.inner_text("#pop") or "Marge" in pg.inner_text("#pop"), tag + "la bulle s'ouvre au survol")
-            pg.mouse.move(5, 5); pg.wait_for_timeout(700)
-            ok(not pg.evaluate("document.getElementById('pop').classList.contains('open')"), tag + "elle se referme quand la souris s'éloigne")
-            pg.evaluate("document.querySelectorAll('#retenir .prov-i')[0].blur()")
-            pg.keyboard.press("Tab"); pg.evaluate("document.querySelectorAll('#retenir .prov-i')[2].focus()"); pg.wait_for_timeout(800)
-            ok(pg.evaluate("document.getElementById('pop').classList.contains('open')"), tag + "elle s'ouvre au clavier (focus)")
-            pg.keyboard.press("Escape")
-        p = pg.evaluate(CHECK, W); ok(not p, tag + f"fiche sans débordement ni NaN {p}")
-        # Chiffres en détail : thèmes, ROCE, valorisation, tableau complet
-        pg.goto(BASE + "/entreprise/lvmh/comptes"); pg.wait_for_timeout(1800)
-        ok(pg.locator("#rf-rentabilite tr[data-k=roce]").count() == 1, tag + "ligne ROCE dans le thème Rentabilité")
-        ok(pg.locator("#rf-croissance .prov-i").count() >= 2, tag + "boutons « i » dans les thèmes")
-        ok("valeur d'entreprise" in pg.inner_text("#rf-valorisation").lower(), tag + "valeur d'entreprise ÷ EBITDA dans la valorisation")
-        t, good = bulle("#rf-valorisation .prov-i[data-prov=evebitda]", ("Estimé", "Cours", "Récupéré le", "Change") if False else ("Estimé", "Cours", "Récupéré le"))
-        ok(good, tag + "bulle EV/EBITDA : comptes et cours, nature « estimé »")
-        if SHOTS: pg.screenshot(path=f"{SHOTS}/{W}_bulle_evebitda.png")
-        pg.keyboard.press("Escape")
-        ok(pg.locator("#rf-dividende .prov-i").count() >= 2, tag + "boutons « i » dans le dividende")
-        p = pg.evaluate(CHECK, W); ok(not p, tag + f"chiffres sans débordement ni NaN {p}")
-        # Comptes anciens : signalés (Alibaba, exercice clos en mars)
-        # Comparateur
-        pg.goto(BASE + "/comparer?ids=lvmh,kering,hermes"); pg.wait_for_timeout(2000)
-        n = pg.locator("#app .prov-i:visible").count(); ok(n >= 5, tag + f"comparateur : {n} boutons « i »")
-        if n:
-            t, good = bulle("#app .prov-i:visible", ("D'où vient", "Formule"))
-            ok(good and ("LVMH" in t or "Kering" in t or "Source" in t), tag + "bulle du comparateur : une ligne par entreprise")
-            pg.keyboard.press("Escape")
+        # 3/11 : pages v4 : la provenance n'est plus dans des bulles « i » mais dans le bloc « Prouvé » et les liens vers les documents
+        for u, attendu in (("/entreprise/lvmh", "rapport annuel"), ("/entreprise/totalenergies", "rapport annuel"), ("/etf/amundi-msci-world-pea", "émetteur")):
+            pg.goto(BASE + u); pg.wait_for_timeout(2500)
+            ok(pg.locator(".ek-proof").count() == 1, tag + f"{u} : bloc « Prouvé »")
+            t = pg.inner_text(".ek-proof") if pg.locator(".ek-proof").count() else ""
+            ok(attendu in t.lower() and pg.locator(".ek-proof a[href^=http]").count() >= 1, tag + f"{u} : source nommée et lien vers le document")
+            p = pg.evaluate(CHECK, W); ok(not p, tag + f"{u} sans débordement ni NaN {p}")
+        pg.goto(BASE + "/comparer?ids=lvmh,kering,hermes"); pg.wait_for_timeout(2500)
+        ok(pg.locator("#app a[href^=http]").count() >= 3, tag + "comparateur : liens vers les sources")
         p = pg.evaluate(CHECK, W); ok(not p, tag + f"comparateur sans débordement ni NaN {p}")
-        # ETF
-        pg.goto(BASE + "/etf/amundi-msci-world-pea"); pg.wait_for_timeout(2500)
-        ok(pg.locator("#efrais .prov-i").count() == 1 and pg.locator("#ecarac .prov-i").count() == 1, tag + "ETF : frais et encours")
-        t, good = bulle("#efrais .prov-i", ("Publié par l'émetteur", "Source", "Récupéré le"))
-        ok(good, tag + "bulle des frais de l'ETF")
-        pg.keyboard.press("Escape")
-        if pg.locator("#ecomp .prov-i").count():
-            t, good = bulle("#ecomp .prov-i", ("Date de référence", "Source"))
-            ok(good, tag + "bulle de la composition (date de référence)")
-            pg.keyboard.press("Escape")
-        p = pg.evaluate(CHECK, W); ok(not p, tag + f"ETF sans débordement ni NaN {p}")
         # Vérifier une offre : trois issues
         pg.goto(BASE + "/outils/verifier"); pg.wait_for_timeout(1500)
         def cherche(q):

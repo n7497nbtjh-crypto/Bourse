@@ -33,23 +33,23 @@ with sync_playwright() as pw:
             if p: bad += 1; print(nom, path, p)
             if SHOTS := (sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None):
                 os.makedirs(SHOTS, exist_ok=True); pg.screenshot(path=f"{SHOTS}/{nom}_{n}.png", full_page=True)
-        # simulateur de dividendes : recherche, montant, compte
+        # simulateur de dividendes v4 : recherche, montant, compte
         pg.goto("http://t.local/dividendes"); pg.wait_for_timeout(1000)
-        pg.fill("#out-sq", "sanofi"); pg.wait_for_timeout(200); pg.click("#out-ss button[data-id]"); pg.fill("#out-sm", "10000"); pg.wait_for_timeout(150)
-        t1 = pg.inner_text("#out-sr"); pg.click(".out-acct button[data-a=cto]"); pg.wait_for_timeout(150); t2 = pg.inner_text("#out-sr")
-        if "€" not in t1 or "Prélèvement" not in t2: bad += 1; print(nom, "simulateur", t1[:120], "|", t2[:120])
-        pg.check("#out-pea"); pg.wait_for_timeout(150)
-        # classements : changement d'onglet et de filtre
+        pg.fill("#dv4q", "sanofi"); pg.wait_for_timeout(250); pg.click("#dv4sug button[data-id]"); pg.fill("#dv4m", "10000"); pg.wait_for_timeout(150)
+        pg.click("#dv4a button[data-a=pea]"); pg.wait_for_timeout(150); t1 = pg.inner_text("#dv4r"); pg.click("#dv4a button[data-a=cto]"); pg.wait_for_timeout(150); t2 = pg.inner_text("#dv4r")
+        if "€" not in t1 or "Prélèvement" not in t2 or t1 == t2: bad += 1; print(nom, "simulateur", t1[:120], "|", t2[:120])
+        # classements v4 : changement de classement (lien), adresse, places Premium floutées
         pg.goto("http://t.local/classements"); pg.wait_for_timeout(1000)
-        pg.click(".out-tabs button[data-k=dividende]"); pg.wait_for_timeout(200)
-        n = pg.locator(".out-list .out-row").count(); lock = pg.locator(".out-lockc").count()
-        if (not PREM and (n != 3 or lock != 1)) or (PREM and n < 10): bad += 1; print(nom, "classement", n, lock)
+        pg.click(".cl4-tabs a[data-k=dividende]"); pg.wait_for_timeout(250)
+        n = pg.locator(".cl4-list a.cl4-r").count(); lock = pg.locator(".cl4-list .cl4-flou").count()
+        if (not PREM and (lock != 5 or n < 3 or pg.locator(".cl4-prem").count() != 1)) or (PREM and (lock or n < 10)): bad += 1; print(nom, "classement", n, lock)
         if "c=dividende" not in pg.url: bad += 1; print(nom, "adresse", pg.url)
-        # comparer : galerie et filtre par thème
+        # comparer v4 : comparaisons toutes prêtes et filtre par thème
         pg.goto("http://t.local/comparer"); pg.wait_for_timeout(1000)
-        k = pg.locator(".out-pc").count()
-        pg.click(".out-thc button[data-th=fin]"); pg.wait_for_timeout(100); vis = pg.locator(".out-gth:not([hidden])").count()
-        if k < 30 or vis != 1: bad += 1; print(nom, "galerie", k, vis)
+        k = pg.locator("#cx-gal .cx-pc").count()
+        th = pg.locator(".cx-th button[data-cx-th]:not([data-cx-th=''])").first; tk = th.get_attribute("data-cx-th"); th.click(); pg.wait_for_timeout(100)
+        vis = pg.locator("#cx-gal .cx-pc:not([hidden])"); nv = vis.count(); autres = pg.locator(f"#cx-gal .cx-pc:not([hidden]):not([data-th='{tk}'])").count()
+        if k < 30 or not (0 < nv < k) or autres: bad += 1; print(nom, "galerie", k, nv, autres)
         print(nom, "galerie :", k, "comparaisons ; classement dividende :", n, "lignes")
         if errs: bad += 1; print(nom, "erreurs JS :", errs[:5])
         ctx.close()

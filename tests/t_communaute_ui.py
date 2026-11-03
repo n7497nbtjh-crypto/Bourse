@@ -106,11 +106,8 @@ with sync_playwright() as pw:
         look("/communaute?onglet=portefeuilles"); pb(name, pg.locator(".cmu-tabs a.on").inner_text() == "Listes de suivi" and pg.locator("#portefeuilles").count() == 1, "ancien onglet portefeuilles")
         look("/communaute?onglet=questions"); pb(name, pg.locator(".qform textarea").count() == 1, "questions")
         look("/communaute?onglet=pronostics")
-        # Fiche entreprise et ETF : bloc d'analyses
-        look("/entreprise/lvmh/actualite", "fiche", 1500)
-        pb(name, pg.locator("#discussion .cmu-an").count() == 1 and pg.locator("#discussion .cmu-blo .cmu-old").count() == 1 and pg.locator("#avisb .avb").count() == 1, "fiche : analyses, anciens messages, avis")
-        pg.click("#discussion [data-cmu-ecrire]"); pb(name, pg.locator("#discussion .cmu-blf input[name=room]").get_attribute("value") == "lvmh", "formulaire lié à la fiche")
-        look("/etf/amundi-msci-world-pea", "etf", 1800); pb(name, pg.locator("#cmini .cmu-bloc").count() == 1, "fiche ETF : bloc d'analyses")
+        # Fiche ETF v4 : avis et discussion (la fiche entreprise v4 n'a plus de bloc communauté, 3/11)
+        look("/etf/amundi-msci-world-pea", "etf", 1800); pb(name, pg.locator("#e4com #e4avis").count() == 1 and pg.locator("#e4com #e4chat").count() == 1 and pg.locator("#e4com a[href='/communaute?salon=etf-amundi-msci-world-pea']").count() == 1, "fiche ETF : avis et discussion")
         print(f"== {name} : {bad} problème(s), erreurs JS : {len(errs)}"); [print("  JS", e[:200]) for e in errs[:5]]; bad += len(errs)
         ctx.close()
     b.close()

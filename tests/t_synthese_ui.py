@@ -46,38 +46,31 @@ with sync_playwright() as pw:
         pg.route("**/*", route)
         probs = {}
         W = opts["viewport"]["width"]
+        # 3/11 : rapport v5 (synPageV5 de m/synthese.js) : trois chiffres, pourquoi ça a bougé, actualité, IA, favoris, agenda
         for prem in (False, True):
             STATE["prem"] = prem
-            pg.goto("http://t.local/espace"); pg.wait_for_selector(".synhero", timeout=8000); pg.wait_for_timeout(300)
-            txt = pg.inner_text("#app").replace("\xa0", " ")
-            for need in ("Votre semaine en 2 minutes", "min de lecture", "Votre portefeuille a perdu 95 €", "LVMH signe la plus forte baisse", "À venir : TotalEnergies", "Variations de la semaine", "Actualités de vos valeurs", "Ce que ça change", "Face à son indice" if W > 700 else "vs CAC 40", "Document officiel", "Ma semaine"):
+            pg.goto("http://t.local/espace"); pg.wait_for_selector(".s5", timeout=8000); pg.wait_for_timeout(300)
+            txt = pg.inner_text("#app").replace("\xa0", " ").replace("\u202f", " ")
+            for need in ("Mon portefeuille", "Mes favoris", "Pourquoi ça a bougé", "L'actualité de vos entreprises", "Vos favoris", "À venir sur deux semaines", "LVMH", "TotalEnergies"):
                 if need.lower() not in txt.lower(): probs.setdefault(f"/espace prem={prem}", []).append("manque : " + need)
-            if pg.locator(".synrow").count() != 6: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.synrow').count()} lignes au lieu de 6")
-            if pg.locator(".synrow svg polyline").count() < 6: probs.setdefault(f"/espace prem={prem}", []).append("mini-graphiques manquants")
-            if "médiane de son secteur" not in txt: probs.setdefault(f"/espace prem={prem}", []).append("pas de repère de médiane")
-            if not pg.locator(".syncard .les a").count(): probs.setdefault(f"/espace prem={prem}", []).append("pas de leçon")
-            if (pg.locator(".syncard").count() > 3 + 1) != prem: probs.setdefault(f"/espace prem={prem}", []).append(f"cartes d'analyse : {pg.locator('.syncard').count()}")
+            if pg.locator(".s5-t").count() != 3: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s5-t').count()} chiffres en tête au lieu de 3")
+            if pg.locator(".s5-r").count() != 6: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s5-r').count()} lignes « pourquoi » au lieu de 6")
+            if pg.locator(".s5-a").count() < 1: probs.setdefault(f"/espace prem={prem}", []).append("aucune annonce")
             p = pg.evaluate(CHECK, W)
             if p: probs.setdefault(f"/espace prem={prem}", []).extend(p)
             if shots: os.makedirs(shots, exist_ok=True); pg.screenshot(path=f"{shots}/{name}_espace{'_prem' if prem else ''}.png", full_page=True)
         STATE["prem"] = False
         # Ajout à l'agenda : un fichier .ics est proposé
-        with pg.expect_download() as dl: pg.locator("button[data-synics='all']").first.click()
+        with pg.expect_download() as dl: pg.locator("[data-synics]").first.click()
         d = dl.value; ics = open(d.path()).read()
-        if "BEGIN:VCALENDAR" not in ics or ics.count("BEGIN:VEVENT") != 3 or "TotalEnergies" not in ics: probs["ics"] = ["fichier d'agenda incorrect"]
-        # Sommaire : aller aux actualités
-        pg.click("[data-synjump=synact]"); pg.wait_for_timeout(700)
-        if pg.evaluate("document.getElementById('synact').getBoundingClientRect().top") > 200: probs["sommaire"] = ["le lien ne descend pas à la section"]
-        # Accueil connecté
-        pg.goto("http://t.local/"); pg.wait_for_selector(".synhome", timeout=8000); pg.wait_for_timeout(300)
-        h = pg.inner_text("#homeesp").replace("\xa0", " ")
-        if "Votre portefeuille a perdu 95 €" not in h or "Lire ma semaine (2 min)" not in h: probs["accueil"] = ["synthèse absente de l'accueil : " + h[:120]]
+        if "BEGIN:VCALENDAR" not in ics or "BEGIN:VEVENT" not in ics: probs["ics"] = ["fichier d'agenda incorrect"]
+        # Accueil connecté : page d'accueil v4 sans erreur
+        pg.goto("http://t.local/"); pg.wait_for_timeout(1500)
         p = pg.evaluate(CHECK, W)
         if p: probs["/ connecté"] = p
-        if shots: pg.locator("#homeesp").screenshot(path=f"{shots}/{name}_accueil_syn.png")
         # Rien à suivre
         STATE["vide"] = True
-        pg.goto("http://t.local/espace"); pg.wait_for_selector(".synhero", timeout=8000)
+        pg.goto("http://t.local/espace"); pg.wait_for_timeout(2000)
         if "se construit avec ce que vous suivez" not in pg.inner_text("#app"): probs["vide"] = ["message d'accueil absent"]
         p = pg.evaluate(CHECK, W)
         if p: probs["/espace vide"] = p

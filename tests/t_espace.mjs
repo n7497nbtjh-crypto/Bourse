@@ -180,18 +180,21 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
   // Jour de réception : samedi (A, par défaut), dimanche (B), puis lundi (B) qui reçoit la semaine écoulée
   const vrai = Date.now, at = iso => { Date.now = () => Date.parse(iso); }, bil = id => sql.prepare("SELECT lien, cle FROM notifs WHERE compte = ? AND type = 'bilan' ORDER BY id").all(id);
   const idA = sql.prepare("SELECT id FROM comptes WHERE email = 'a@ex.fr'").get().id, idB = rowB.id, nA = bil(idA).length, nB = bil(idB).length;
+  // Dates calculées à partir d'aujourd'hui (samedi de la semaine prochaine), sinon le test dépend du jour où il tourne
+  const J = n => { const d = new Date(vrai()); d.setUTCHours(0, 0, 0, 0); d.setUTCDate(d.getUTCDate() + ((6 - d.getUTCDay() + 7) % 7) + 7 + n); return d.toISOString().slice(0, 10); };
+  const SEM_L = semaineIso(J(2));
   try {
-    at("2026-11-07T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    at(J(0) + "T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
     ok(s === 200 && j.bilans === 1 && j.reste === 0 && bil(idA).length === nA + 1 && bil(idB).length === nB, "samedi : seul le compte du samedi " + JSON.stringify(j));
-    at("2026-11-08T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    at(J(1) + "T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
     ok(j.bilans === 1 && j.reste === 0 && bil(idB).length === nB + 1 && bil(idA).length === nA + 1, "dimanche : le compte du dimanche " + JSON.stringify(j));
     [s] = await E("POST", "/api/espace/rapport", { secteurs: ["energie"], jour: 1, notif: true }, B);
-    const f0 = env.ASSETS.fetch, cs = { dates: ["2026-11-06", "2026-11-09", "2026-11-10", "2026-11-11", "2026-11-12", "2026-11-13", "2026-11-16", "2026-11-17"], items: { "c:totalenergies": [60, 61, 59, 60, 62, 63, 64, 62], "c:lvmh": [500, 505, 510, 508, 512, 515, 511, 509] } };
+    const f0 = env.ASSETS.fetch, cs = { dates: [-1, 2, 3, 4, 5, 6, 9, 10].map(J), items: { "c:totalenergies": [60, 61, 59, 60, 62, 63, 64, 62], "c:lvmh": [500, 505, 510, 508, 512, 515, 511, 509] } };
     env.ASSETS.fetch = async r => new URL(r.url).pathname === "/data/cours-semaine.json" ? new Response(JSON.stringify(cs)) : f0(r);
-    at("2026-11-16T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
-    const lb = bil(idB).pop(); ok(j.bilans === 1 && j.reste === 0 && lb.lien === "/espace?semaine=2026-W46" && bil(idA).length === nA + 1, "lundi : la semaine écoulée " + JSON.stringify([j, lb]));
+    at(J(9) + "T07:00:00Z"); [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    const lb = bil(idB).pop(); ok(j.bilans === 1 && j.reste === 0 && lb.lien === "/espace?semaine=" + SEM_L && bil(idA).length === nA + 1, "lundi : la semaine écoulée " + JSON.stringify([j, lb]));
     [s] = await E("POST", "/api/espace/rapport", { secteurs: ["energie"], jour: 1, notif: false }, B);
-    at("2026-11-23T07:00:00Z"); const avant = bil(idB).length; [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
+    at(J(16) + "T07:00:00Z"); const avant = bil(idB).length; [s, j] = await E("POST", "/api/espace/tache?quoi=jour", null, null, { "x-admin-key": "k" });
     ok(j.bilans === 1 && bil(idB).length === avant, "notification désactivée : rapport préparé sans alerte " + JSON.stringify(j));
     env.ASSETS.fetch = f0;
   } finally { Date.now = vrai; }

@@ -69,7 +69,7 @@ with sync_playwright() as pw:
         look("/apprendre", "apprendre")
         pb(name, pg.locator(".pa-niv").count() == 3 and pg.locator(".pa-niv.cur").count() == 1 and pg.locator(".ap4 a.ou4-c").count() >= 3, "les 3 niveaux et les repères")  # 3/11 : Apprendre v4 (apprendre4.js)
         pb(name, pg.locator(".pa-deep .pa-mods a").count() == 8, "« Approfondir » (8 modules)")
-        look("/academie", "academie"); pb(name, pg.locator(".pa-lv").count() == 3 and pg.locator(".pa-mod").count() == 8 and "Apprendre" in pg.inner_text(".crumbs"), "le programme complet en 3 niveaux")
+        look("/academie", "academie"); pb(name, pg.evaluate("location.pathname") == "/apprendre" and pg.locator(".pa-niv").count() == 3, "/academie ouvre Apprendre et ses 3 niveaux")  # 3/11 : la porte unique est /apprendre
         look("/idees-recues", "idees"); pb(name, pg.locator(".ir").count() == 12, "les 12 idées reçues")
         pg.click("#trader .ir4-pli:nth-child(2) summary"); pg.wait_for_timeout(300)  # 3/11 : idées reçues v4 (idees4.js), plus de quiz
         pb(name, pg.locator("#trader .cm-viz").count() == 1 and pg.locator("#casino .ir4-ret").count() == 1 and pg.locator(".ir4-som a").count() == 12, "idées reçues : sommaire, données dépliées, à retenir")
@@ -78,18 +78,18 @@ with sync_playwright() as pw:
         look("/academie/express/lire/dette-nette", "express_lecon"); pb(name, pg.locator(".par-deep a[href='/academie/comptes/bilan']").count() == 1, "lien Approfondir")
         look("/academie/bases/inflation"); pb(name, pg.locator(".pa-irl[href='/idees-recues#livret-a']").count() == 1, "idée reçue liée en fin de leçon")
         look("/academie/express/prix/quiz")
-        for de, vers in (("/debuter", "/academie/express"), ("/debuter/bases", "/academie/express/bases"), ("/debuter/lire/per", "/academie/express/lire/per"), ("/premiers-pas", "/academie/express")):
+        for de, vers in (("/debuter", "/apprendre"), ("/debuter/bases", "/academie/express/bases"), ("/debuter/lire/per", "/academie/express/lire/per"), ("/premiers-pas", "/academie/express")):  # 3/11 : /debuter mène à /apprendre
             pg.goto("http://t.local" + de); pg.wait_for_timeout(400); pb(name, pg.url.endswith(vers), f"{de} redirigé vers {pg.url}")
         look("/academie/comptes/bilan"); pb(name, pg.locator('.crumbs a[href="/apprendre"]').count() == 1, "fil d'Ariane Apprendre sur une leçon")
-        look("/lexique"); pb(name, pg.locator('#app > .crumbs a[href="/apprendre"]').count() == 1, "fil d'Ariane du lexique")
+        look("/lexique"); pb(name, pg.locator(".lx4 .lx4-c").count() >= 40 and pg.locator(".lx4-pills a").count() == 10, "lexique : les notions et les dix essentielles")  # 3/11 : lexique v4
         look("/commencer", "commencer"); look("/pea-cto"); look("/outils")
         pb(name, pg.locator('.cards a[href="/debuter"], .cards a[href="/commencer"]').count() == 0, "page Outils sans les cours")
         menu = pg.evaluate("[...document.querySelectorAll('#nav [data-g=deb] a, #mpanel a')].map(a => a.getAttribute('href'))")
         pb(name, "/apprendre" in menu and not any(h.startswith("/debuter") for h in menu), "menu Apprendre " + str(menu))
         # Accueil d'un visiteur : aperçu calculé et invitation
         look("/", "accueil_visiteur", 1200)
-        pb(name, pg.locator("#homeesp .par-pitch").count() == 1 and "exemple réel" in pg.inner_text("#homeesp").lower() and "Créez votre rapport" in pg.inner_text("#homeesp"), "aperçu du rapport sur l'accueil")
-        look("/premium", "premium"); pb(name, pg.locator(".ptab .par-row").count() == 3 and pg.locator("#parprem").count() == 1, "personnalisation dans Premium")
+        pb(name, pg.locator("#app a[href^='/espace'], #app a[href^='/rapport-exemple']").count() >= 1, "l'accueil mène à Mon espace ou au rapport exemple")  # 3/11 : accueil v4
+        look("/premium", "premium"); pb(name, pg.locator(".pr4 .prem-a").count() == 5 and "rapport sur mesure" in pg.inner_text(".ptab").lower(), "Premium : cinq arguments et le rapport sur mesure dans le tableau")  # 3/11 : Premium v4
         # Mon espace : assistant au premier passage
         STATE.update({"in": True, "syn": "complet"})
         pg.goto("http://t.local/espace"); pg.wait_for_timeout(900)
@@ -108,13 +108,12 @@ with sync_playwright() as pw:
         pg.click("#parnext"); pg.wait_for_timeout(1200)
         post = STATE["posts"][-1] if STATE["posts"] else {}
         pb(name, post.get("secteurs") == ["conso", "energie"] and post.get("detail") == "court" and post.get("jour") == 1 and post.get("configure") is True, "réglages envoyés " + json.dumps(post))
-        pb(name, pg.locator(".par-bar").count() == 1 and pg.locator("#synsect .par-sect").count() == 2, "synthèse avec les secteurs")
+        pb(name, pg.locator("#espb .s5").count() == 1, "rapport de la semaine affiché après les réglages")  # 3/11 : rapport v5 (synPageV5)
         if shots: pg.screenshot(path=f"{shots}/{name}_espace_rapport.png", full_page=True)
         p = pg.evaluate(CHECK, W); pb(name + " synthèse", not p, p)
         # Version courte
         STATE["syn"] = "court"; pg.goto("http://t.local/espace"); pg.wait_for_timeout(900)
-        pb(name, pg.locator("#synint.par-hidden").count() == 1 and pg.locator("#parcourt").count() == 1 and pg.locator("#synlec").count() == 1, "version courte et leçon de la semaine")
-        pg.click("#parplus"); pg.wait_for_timeout(200); pb(name, pg.locator("#synint.par-hidden").count() == 0, "analyse complète affichée à la demande")
+        pb(name, pg.locator("#espb .s5").count() == 1, "rapport de la semaine, version courte")  # 3/11 : rapport v5 ; l'ancien découpage court/complet (#synint, #parplus) n'existe plus
         if shots: pg.screenshot(path=f"{shots}/{name}_espace_court.png", full_page=True)
         # Rapport des seuls secteurs
         STATE["syn"] = "secteurs"; pg.goto("http://t.local/espace"); pg.wait_for_timeout(900)
@@ -126,7 +125,7 @@ with sync_playwright() as pw:
         pb(name, pg.locator("#parrf").count() == 1 and pg.locator('.esptabs a.on[href="/espace/rapport"]').count() == 1, "onglet Mon rapport")
         pg.locator("#parrf input[name=suj][value=dividendes]").uncheck(force=True); pg.click("#parsave"); pg.wait_for_timeout(500)
         pb(name, STATE["posts"][-1]["sujets"]["dividendes"] is False and "Enregistré" in pg.inner_text("#parmsg"), "enregistrement depuis l'onglet")
-        look("/", "accueil_membre", 1200); pb(name, pg.locator('#homeesp a[href="/espace/rapport"]').count() >= 1, "lien Régler mon rapport sur l'accueil d'un membre")
+        look("/", "accueil_membre", 1200); pb(name, pg.locator("#app a[href^='/espace']").count() >= 1, "lien vers Mon espace sur l'accueil d'un membre")  # 3/11 : accueil v4
         pb(name, not errs, errs[:4])
         print(f"== {name} : {bad} problème(s), erreurs JS : {len(errs)}")
         ctx.close()

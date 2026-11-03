@@ -46,7 +46,7 @@ with sync_playwright() as pw:
         ok("IA du site : gratuite" in pg.inner_text("#orcia"), tag + "panneau ✦ : « IA du site : gratuite »")
         pg.evaluate("orcIaAsk('Expliquez concrètement le métier de LVMH', { rediger: true })")
         pg.wait_for_function("document.querySelector('#orcialog').innerText.includes('Rédigé par')", timeout=15000)
-        t = pg.inner_text("#orcialog"); ok("Réponse rédigée de test" in t and "Sources" in t and "IA de bilan." in t and "Qwen3" in t, tag + "réponse rédigée affichée, signalée, avec ses sources")
+        t = pg.inner_text("#orcialog"); ok("Réponse rédigée de test" in t and "Sources" in t and "IA d'ENKLAIR" in t and "Qwen3" in t, tag + "réponse rédigée affichée, signalée, avec ses sources")
         a = ST["appels"][-1]
         ok(a["tache"] == "assistant" and "Faits :" in a["user"] and "mediane_du_secteur" in a["user"] and "Question : Expliquez" in a["user"], tag + "tâche, faits et question envoyés au serveur")
         ok("Règles d'objectivité" not in json.dumps(a) and set(a) <= {"tache", "user", "max"}, tag + "aucune consigne envoyée par le navigateur (le serveur garde les siennes)")

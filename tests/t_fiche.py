@@ -1,11 +1,11 @@
 # Fiches entreprise : mise en page équilibrée à toutes les largeurs, rien de bloqué sur « Chargement… ».
 # Usage : python3 tests/t_fiche.py [--shots dossier] [--ids lvmh,apple] [--largeurs 1440,390] [--presse-bloquee]
-# Mesures, pour chaque fiche et chaque largeur :
-#  - la colonne latérale ne dépasse pas la colonne principale (sinon un grand vide à gauche en bas de page) ;
+# Fiche v4 (m/fiche4.js, 3/11). Mesures, pour chaque fiche et chaque largeur :
 #  - pas de débordement horizontal, pas de NaN / undefined, pas d'erreur JavaScript ;
-#  - l'en-tête (identité, cours, verdict, profil) tient dans le premier écran sur ordinateur ;
+#  - le verdict tient dans le premier écran sur ordinateur ;
+#  - le fil a 5 étapes (4 pour banques et assurances), les blocs Actualité et Tous les chiffres sont là, avec des tableaux remplis ;
 #  - aucun « Chargement… » ne reste affiché (la presse peut être bloquée avec --presse-bloquee) ;
-#  - les étapes s'ouvrent toutes sans erreur, la FAQ a entre 8 et 12 questions avec une réponse.
+#  - les anciennes adresses /comptes et /actualite ouvrent la même page.
 import os, sys, json
 exec(open("tests/audit.py").read().split("CHECK = ")[0])  # route() et sync_playwright
 STATE = {}
@@ -32,31 +32,26 @@ def route3(r):
     return route(r)
 
 MESURE = r"""(W) => {
-  const p = [], app = document.querySelector('#app'), H = innerHeight;
+  const p = [], app = document.querySelector('#app');
   if (document.documentElement.scrollWidth > W + 1) p.push('page plus large que l\'écran : ' + document.documentElement.scrollWidth);
-  document.querySelectorAll('main *').forEach(e => { if (e.closest('.scroll-x,.tabs,.chart,.bars,.filters,.qtabs,.etapes')) return; const r = e.getBoundingClientRect(); if (r.width && r.right > W + 1) p.push('dépasse : ' + e.tagName + '.' + String(e.className).slice(0, 30)); });
+  document.querySelectorAll('#app *').forEach(e => { if (e.closest('.scroll-x,.ek-tvbox')) return; const r = e.getBoundingClientRect(); if (r.width && r.right > W + 1) p.push('dépasse : ' + e.tagName + '.' + String(e.className).slice(0, 30)); });
   if (/NaN|undefined|\[object/.test(app.textContent)) p.push('NaN ou undefined affiché');
   const out = { p: [...new Set(p)].slice(0, 6) };
-  const cols = document.querySelector('#ctab .fcols') || document.querySelector('#ctab .cols');
-  if (cols && cols.children.length > 1) {
-    const a = cols.children[0].getBoundingClientRect(), b = cols.children[1].getBoundingClientRect();
-    out.main = Math.round(a.height); out.side = Math.round(b.height);
-    if (b.left > a.left + 50 && b.height > a.height + 220) out.p.push(`colonne latérale plus longue que la principale de ${Math.round(b.height - a.height)} px`);
-  }
   out.doc = document.documentElement.scrollHeight;
-  const v = document.querySelector('.rf-vc') || document.querySelector('#fverdict'); out.verdict = v ? Math.round(v.getBoundingClientRect().bottom + scrollY) : null;
-  const et = document.querySelector('#tous-les-chiffres'); out.etapes = et ? Math.round(et.getBoundingClientRect().top + scrollY) : null;
+  const v = document.querySelector('.ek-vrd'); out.verdict = v ? Math.round(v.getBoundingClientRect().bottom + scrollY) : null;
+  out.etapes = document.querySelectorAll('.ek-step').length;
   return out;
 }"""
 LOADING = r"""() => [...document.querySelectorAll('#app *')].filter(e => !e.children.length && /Chargement/.test(e.textContent) && e.offsetParent).map(e => (e.closest('section,[id]') || e).id || e.className).slice(0, 4)"""
-ETAPES = r"""async () => { // lot 4 : plus d'étapes ; chaque pli de « Tous les chiffres » doit s'ouvrir avec du contenu
-  const out = [], btns = [...document.querySelectorAll('#tous-les-chiffres details.rf-pl2')];
-  if (document.querySelector('#etapes')) out.push('barre d\'onglets présente');
-  for (const d of btns) { d.open = true; await new Promise(r => setTimeout(r, 40)); const t = d.querySelector('.rf-plb').innerText;
-    if (t.trim().length < 40) out.push('pli vide : ' + d.id); if (/NaN|undefined/.test(t)) out.push('NaN dans ' + d.id); }
-  const faq = document.querySelectorAll('#faq details');
-  if (btns.some(b => b.id === 'rf-faq')) { if (faq.length < 8 || faq.length > 12) out.push('FAQ : ' + faq.length + ' questions'); faq.forEach(d => { d.open = true; if ((d.querySelector('.accb') || d).innerText.trim().length < 20) out.push('FAQ sans réponse : ' + d.querySelector('summary').innerText.slice(0, 40)); }); }
-  btns.forEach(d => d.open = false);
+ETAPES = r"""() => {
+  const out = [], n = document.querySelectorAll('.ek-step').length, sans = /pas encore relevés|incomplets/.test(document.querySelector('#app').innerText);
+  if (sans) return out; // fiche réduite à l'en-tête : rien d'autre à vérifier
+  if (!document.querySelector('.ek-vrd')) out.push('verdict absent');
+  if (n !== 5 && n !== 4) out.push('fil : ' + n + ' étapes');
+  if (!document.querySelector('#actu')) out.push('bloc Actualité absent');
+  const t = document.querySelector('#tout'); if (!t) out.push('bloc Tous les chiffres absent');
+  else { const tc = t.querySelectorAll('.ek-tc'); if (tc.length < 2) out.push('Tous les chiffres : ' + tc.length + ' tableau(x)');
+    tc.forEach(c => { if (c.querySelectorAll('tbody tr').length < 1 && !c.id) out.push('tableau vide : ' + (c.querySelector('h3') || c).innerText.slice(0, 30)); }); }
   return out;
 }"""
 bad = 0
@@ -84,8 +79,9 @@ with sync_playwright() as pw:
                 if W in (WS[0], WS[-1]):
                     pg.goto(f"{BASE}/entreprise/{i}/{t}"); pg.wait_for_timeout(500)
                     x = pg.evaluate(MESURE, W); m["p"] += [f"[{t}] " + y for y in x["p"]]
+                    if x["etapes"] != m["etapes"]: m["p"].append(f"[{t}] pas la même page ({x['etapes']} étapes au lieu de {m['etapes']})")
             if m["p"]: probs[i] = m["p"]
-            print(f"  {W:>4} {i:<28} doc {m['doc']:>5}  principale {m.get('main', '-'):>5}  latérale {m.get('side', '-'):>5}  verdict {m['verdict']}  étapes {m['etapes']}" + ("  !" if m["p"] else ""))
+            print(f"  {W:>4} {i:<28} doc {m['doc']:>5}  verdict {m['verdict']}  étapes {m['etapes']}" + ("  !" if m["p"] else ""))
             if SHOTS:
                 os.makedirs(SHOTS, exist_ok=True)
                 pg.goto(f"{BASE}/entreprise/{i}"); pg.wait_for_timeout(900 if BASE == "http://t.local" else 3500)
