@@ -1,9 +1,9 @@
-// Usage : node scripts/check-maquette.js (vérifie docs/maquettes/comparer-v1.html ; changer le nom du fichier pour une autre maquette)
+// Usage : node scripts/check-maquette.js [fichier dans docs/maquettes, par défaut comparer-v1.html]
 // Contrôle de la maquette : code affiché, débordement de l'écran, textes qui se chevauchent dans les tableaux
 const { chromium } = require("playwright");
 (async () => { const b = await chromium.launch();
   for (const w of [1280, 390]) { const p = await b.newPage({ viewport: { width: w, height: 900 } }); const errs = []; p.on("pageerror", e => errs.push(e.message));
-    await p.goto("file:///home/claude/bourse/docs/maquettes/comparer-v1.html"); await p.waitForTimeout(1500);
+    await p.goto("file:///home/claude/bourse/docs/maquettes/" + (process.argv[2] || "comparer-v1.html")); await p.waitForTimeout(1500);
     const r = await p.evaluate(() => { const P = [], W = document.documentElement.clientWidth, txt = document.body.innerText;
       if (/\$\{|=>|undefined|NaN/.test(txt)) P.push("code ou valeur technique affiché : " + (txt.match(/.{0,30}(\$\{|=>|undefined|NaN).{0,20}/) || [""])[0]);
       if (document.documentElement.scrollWidth > W) P.push("page plus large que l'écran");

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ENKLAIR · Fiche ETF (maquette v1)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap">
+<link rel="stylesheet" href="../../cf/site/composants.css">
+<style>
+body{margin:0;background:#fff;font-family:Inter,sans-serif;color:#111}
+.scroll-x{overflow-x:auto}
+.w{max-width:1200px;margin:0 auto;padding:24px 36px 80px}
+@media(max-width:900px){.w{padding:14px 14px 60px}}
+/* ——— éléments propres à la fiche ETF (deviendront des composants) ——— */
+.et-hero{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:28px;align-items:start}
+.et-crumb{font:700 13px Inter;color:#333}
+.et-hero h1{font:800 clamp(38px,5vw,64px)/.95 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.055em;margin:12px 0 0}
+.et-sub{font:600 17px/1.4 Inter;margin:12px 0 0;max-width:560px}
+.et-tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.et-tags span{background:#fff;border:2px solid #111;border-radius:999px;padding:5px 12px;font:800 13px Inter}
+.et-tags span.g{background:#E2F8EE;border-color:#00A06B;color:#00714C}
+.et-id{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px;font:600 13px Inter;color:#333}
+.et-id code{background:#111;color:#fff;border-radius:8px;padding:4px 8px;font:700 12.5px ui-monospace,monospace}
+.et-card{background:#fff;border:2px solid #111;border-radius:22px;padding:18px 20px;box-shadow:5px 5px 0 #111}
+.et-card .k{font:800 13px Inter;color:#555}
+.et-card .v{font:800 46px/1 "Bricolage Grotesque",Inter;letter-spacing:-.05em;margin-top:6px}
+.et-card .v small{font:800 16px Inter;letter-spacing:0;margin-left:6px}
+.et-card .eu{font:600 14px Inter;margin-top:6px}
+.et-gauge{position:relative;height:14px;border-radius:999px;background:linear-gradient(90deg,#E2F8EE 0 50%,#FFE9E3 50% 100%);border:2px solid #111;margin:40px 0 8px}
+.et-gauge b{position:absolute;top:-6px;width:22px;height:22px;border-radius:50%;background:#FFE14D;border:2px solid #111;transform:translateX(-50%)}
+.et-gauge i{position:absolute;top:-10px;bottom:-10px;border-left:3px dashed #111}
+.et-gauge em{position:absolute;bottom:calc(100% + 8px);transform:translateX(-50%);font:800 11px Inter;font-style:normal;background:#111;color:#fff;border-radius:6px;padding:2px 6px;white-space:nowrap}
+.et-gl{display:flex;justify-content:space-between;font:700 12px Inter;color:#555}
+.et-card .tv{display:inline-block;margin-top:14px;font:800 13.5px Inter;color:#111;border-bottom:3px solid #FFE14D;text-decoration:none}
+/* Top 10 : barres avec logos */
+.et-top{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.et-top>div{display:grid;grid-template-columns:150px minmax(0,1fr) 52px;gap:10px;align-items:center}
+.et-top .nm{display:flex;gap:8px;align-items:center;font:700 13.5px Inter;min-width:0}.et-top .nm span:last-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.et-lg{flex:none;width:24px;height:24px;border:1.5px solid #E6E4DE;border-radius:7px;padding:2px;box-sizing:border-box;display:inline-grid;place-items:center;background:#fff;font:800 9px Inter;color:#555}
+.et-lg img{width:100%;height:100%;object-fit:contain}
+.et-top i{height:14px;border-radius:5px;background:#FFE14D;border:2px solid #111;display:block;min-width:4px}
+.et-top i.rest{background:#F2F0EA}
+.et-top b{font:800 13.5px Inter;text-align:right}
+.et-top .sep{grid-template-columns:1fr;border-top:1.5px dashed #111;margin-top:4px;padding-top:8px;font:700 12.5px Inter;color:#555}
+/* Pays et secteurs */
+.et-two{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:10px}
+.et-two h4{font:800 14px Inter;margin:0 0 8px}
+.et-hb{display:flex;flex-direction:column;gap:7px}
+.et-hb>div{display:grid;grid-template-columns:120px minmax(0,1fr) 58px;gap:8px;align-items:center;font:600 13px Inter}
+.et-hb i{height:12px;border-radius:4px;background:#A9B6FF;border:1.5px solid #111;display:block;min-width:3px}
+.et-hb b{text-align:right;font-weight:800;white-space:nowrap}
+/* Schéma de fonctionnement */
+.et-sch{display:grid;grid-template-columns:1fr auto 1fr auto 1fr;gap:10px;align-items:center;margin-top:14px}
+.et-sch>div{border:2px solid #111;border-radius:16px;padding:12px;font:600 13px/1.35 Inter;background:#fff}
+.et-sch>div b{display:block;font:800 15px "Bricolage Grotesque",Inter;margin-bottom:4px}
+.et-sch>i{font:800 22px Inter;font-style:normal}
+.et-sch>div.y{background:#FFF6C7}
+/* Comment le détenir */
+.et-hold{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:14px}
+.et-hold>div{border:2px solid #111;border-radius:16px;padding:12px 14px;background:#fff}
+.et-hold small{display:block;font:800 12px Inter;color:#555}
+.et-hold b{display:block;font:800 22px/1.1 "Bricolage Grotesque",Inter;margin-top:4px}
+.et-hold p{font:600 12.5px/1.4 Inter;color:#333;margin:6px 0 0}
+.et-hold .g b{color:#00A06B}.et-hold .r b{color:#D92D12}
+/* Frais : coût sur 20 ans */
+.et-cout{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.et-cout>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;border-top:1px solid #E6E4DE;padding-top:9px}
+.et-cout>div:first-child{border-top:0;padding-top:0}
+.et-cout b{font:800 14px Inter}.et-cout small{display:block;font:600 12.5px Inter;color:#555}
+.et-cout em{font:800 18px "Bricolage Grotesque",Inter;font-style:normal}
+.et-cout em.g{color:#00A06B}.et-cout em.r{color:#D92D12}
+.et-hyp{font:600 12px/1.4 Inter;color:#666;margin:12px 0 0}
+.et-side{border:2px solid #111;border-radius:20px;padding:16px 18px;background:#fff}
+.et-side p.h{font:800 19px "Bricolage Grotesque",Inter;letter-spacing:-.03em;margin:0 0 10px}
+.et-risk{display:flex;flex-direction:column;gap:10px}
+.et-risk>div{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:start}
+.et-risk span{font:800 12px Inter;border-radius:999px;padding:3px 10px;white-space:nowrap}
+.et-risk span.r{background:#FFE9E3;color:#A3200B}.et-risk span.o{background:#FFF6C7;color:#7A5B00}.et-risk span.g{background:#E2F8EE;color:#00714C}
+.et-risk p{margin:0;font:600 13px/1.4 Inter}
+@media(max-width:900px){.et-hero{grid-template-columns:1fr}.et-two{grid-template-columns:1fr}.et-sch{grid-template-columns:1fr}.et-sch>i{transform:rotate(90deg);justify-self:center}.et-hold{grid-template-columns:1fr}.et-top>div{grid-template-columns:110px minmax(0,1fr) 46px}}
+</style>
+</head><body><div class="w ek ek-page">
+
+<!-- 1. En-tête -->
+<section class="ek-hero"><div class="et-hero">
+  <div>
+    <div class="et-crumb">ETF › Actions monde</div>
+    <h1>Amundi PEA Monde</h1>
+    <p class="et-sub">Une seule ligne pour détenir les grandes entreprises de 23 pays développés, logée dans un PEA. Il suit l'indice <b>MSCI World</b>.</p>
+    <div class="et-tags"><span class="g">Éligible au PEA ✓</span><span>Capitalisant</span><span>Réplication synthétique</span><span>Amundi · fonds français</span></div>
+    <div class="et-id">Ticker <b>DCAM</b> · Euronext Paris <code>FR001400U5Q4</code><a href="#" style="color:#111;font-weight:800">copier</a></div>
+  </div>
+  <div class="et-card">
+    <div class="k">Frais courants</div>
+    <div class="v">0,20 %<small>par an</small></div>
+    <div class="eu">soit 2 € par an pour 1 000 € placés</div>
+    <div class="et-gauge"><i style="left:38%"><em>médiane 0,20 %</em></i><b style="left:38%"></b></div>
+    <div class="et-gl"><span>moins cher</span><span>plus cher</span></div>
+    <a class="tv" href="#">Voir le graphique du cours ↗</a>
+  </div>
+</div>
+<div class="ek-vrd"><span class="ek-stk2" style="background:#fff">Le verdict</span><h2><i>Très diversifié</i>, frais dans la norme, <em>surtout américain</em>.</h2></div>
+<div class="ek-chain" style="--n:5" id="chain"></div>
+</section>
+
+<!-- 2. Le fil -->
+<section class="ek-sec" id="fil"><span class="ek-stk2">En cinq questions</span><h2>Ce que vous achetez vraiment.</h2><div id="etapes"></div></section>
+
+<!-- 3. Les ETF du même indice -->
+<section class="ek-sec" id="memes"><span class="ek-stk2 b">Pour choisir</span><h2>Le même indice, chez d'autres émetteurs.</h2><div id="tableau"></div></section>
+
+<!-- 4. IA -->
+<section class="ek-end" style="margin-top:50px"><h2>✦ Une question sur cet ETF ?</h2>
+  <div class="ek-qs"><button type="button">Quelle différence avec l'Amundi MSCI World Swap (CW8) ?</button><button type="button">Que se passe-t-il si Société Générale fait défaut ?</button></div>
+  <form class="ek-ask" onsubmit="return false"><input type="text" placeholder="Posez votre question sur Amundi PEA Monde…"><button type="submit">Demander</button></form>
+  <small>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</small></section>
+
+<!-- 5. Prouvé -->
+<section class="ek-sec"><span class="ek-stk2" style="background:#FFE14D">Prouvé</span><h2>D'où viennent ces chiffres.</h2>
+  <div class="ek-proof"><span class="ek-stk2">Prouvé</span><p>Frais, encours et caractéristiques relevés sur <b>la fiche de l'émetteur (amundietf.fr)</b>. Composition de l'indice MSCI World. Vérifiez-les dans le document d'informations clés (DIC) avant d'investir.</p><a href="#">Ouvrir la fiche Amundi ↗</a></div>
+</section>
+
+<!-- 6. Avis et discussion (repris tels quels) -->
+<section class="ek-sec"><span class="ek-stk2 p">Communauté</span><h2>Avis et discussion.</h2><p style="font:600 14px Inter;color:#555">Les avis des visiteurs et la discussion restent ici, sans changement.</p></section>
+
+</div>
+<script src="../../cf/site/m/composants.js"></script>
+<script>
+const L = "../../cf/site/logos/";
+const fr=(v,d=0)=>v.toLocaleString("fr-FR",{minimumFractionDigits:d,maximumFractionDigits:d});
+const lg=(f,ini)=>`<span class="et-lg">${f?`<img src="${L+f}" alt="">`:ini}</span>`;
+// La chaîne des cinq repères (comme sur la fiche entreprise)
+const R=[["1","Ce qu'il contient","1 248","entreprises dans 23 pays","g","10 premières : 27 %"],["2","Où va l'argent","73 %","aux États-Unis","r","le premier pays"],["3","Ses frais","0,20 %","par an","n","médiane : 0,20 %"],["4","Son fonctionnement","Swap","il ne détient pas les actions","n","contrat avec Société Générale"],["5","Le détenir","PEA ✓","capitalisant","g","dividendes réinvestis"]];
+document.getElementById("chain").innerHTML=R.map(r=>`<a class="ek-rp" href="#t${r[0]}"><div class="ek-st"><i>${r[0]}</i>${r[1]}</div><div class="ek-v ${r[4]==="g"?"g":r[4]==="r"?"r":""}">${r[2]}</div><div class="ek-s">${r[3]}</div><div class="ek-ml">${r[5]}</div><div class="ek-go"><span>Comprendre</span><span>↓</span></div></a>`).join("");
+
+// 1. Ce qu'il contient
+const TOP=[["Apple","apple.png",5.59],["Nvidia",null,5.5,"NV"],["Microsoft","microsoft.png",4.16],["Amazon","amazon.png",2.67],["Alphabet (A)","alphabet.png",2.06],["Broadcom","broadcom.png",1.65],["Alphabet (C)","alphabet.png",1.63],["Meta Platforms","meta.png",1.53],["Tesla","tesla.png",1.24],["Eli Lilly","eli-lilly.png",1.13]];
+const t10=TOP.reduce((a,t)=>a+t[2],0), mx=TOP[0][2];
+const topBox=ekBox({titre:"Les 10 plus grosses lignes",unite:"part de l'ETF",indice:"Chaque barre est la part de l'ETF placée dans une entreprise. Les 1 238 autres lignes pèsent ensemble le reste.",source:{texte:"Composition de l'indice MSCI World (Amundi)"}},
+ `<div class="et-top">${TOP.map(t=>`<div><span class="nm">${lg(t[1],t[3]||t[0][0])}<span>${t[0]}</span></span><i style="width:${t[2]/mx*100}%"></i><b>${fr(t[2],1)} %</b></div>`).join("")}<div class="sep">Les 1 238 autres entreprises : ${fr(100-t10,1)} % de l'ETF</div></div>`);
+const droite1=`<div class="et-side"><p class="h">À retenir</p><div class="et-risk"><div><span class="g">diversifié</span><p>1 248 entreprises : la faillite de l'une d'elles pèse très peu.</p></div><div><span class="o">mais</span><p>Les 10 premières font ${fr(t10,0)} % de l'ETF, dont 15 % pour Apple, Nvidia et Microsoft.</p></div></div></div>`;
+
+// 2. Où va l'argent
+const PAYS=[["États-Unis",73.1],["Japon",5.7],["Royaume-Uni",3.5],["Canada",3.4],["Suisse",2.3],["France",2.2],["Autres pays",9.8]];
+const SECT=[["Technologie",30.5],["Finance",15.9],["Industrie",10.7],["Santé",9.8],["Conso. non essentielle",8.6],["Communication",7.6],["Autres",16.9]];
+const hb=(L2,c)=>`<div class="et-hb">${L2.map(x=>`<div><span>${x[0]}</span><i style="width:${x[1]/L2[0][1]*100}%;${c?`background:${c}`:""}"></i><b>${fr(x[1],1)} %</b></div>`).join("")}</div>`;
+const geo=ekBox({titre:"Où va votre argent",unite:"part de l'ETF",indice:"Le poids de chaque pays et de chaque secteur dans l'ETF.",source:{texte:"Composition de l'indice MSCI World (Amundi)"}},`<div class="et-two"><div><h4>Par pays</h4>${hb(PAYS)}</div><div><h4>Par secteur</h4>${hb(SECT,"#7FE0B9")}</div></div>`);
+const droite2=`<div class="et-side"><p class="h">Ce que ça change pour vous</p><div class="et-risk"><div><span class="r">change</span><p>73 % en dollars : si le dollar baisse face à l'euro, l'ETF baisse aussi, même si les actions ne bougent pas.</p></div><div><span class="o">un pays</span><p>Les États-Unis pèsent près des trois quarts : un « monde » très américain.</p></div></div></div>`;
+
+// 3. Les frais face aux ETF du même indice
+const MEME=[["Amundi PEA Monde",0.2,1],["iShares MSCI World Swap PEA",0.2],["Amundi MSCI World Swap (CW8)",0.38],["iShares Core MSCI World",0.2],["Amundi Core MSCI World",0.12],["SPDR MSCI World",0.12],["Invesco MSCI World",0.05]];
+const frais=ekPoints({titre:"Frais courants par an",unite:"ETF qui suivent le MSCI World",basEstMieux:true,motBas:"moins cher",motHaut:"plus cher",lignes:MEME.map(m=>({nom:m[0],v:m[1],texte:fr(m[1],2)+" %",moi:m[2]})),mediane:0.2,mediane_label:"médiane 0,20 %",max:0.4,graduations:[0,0.2,0.4],fmtAxe:t=>fr(t,1)+" %",indice:"À gauche du pointillé (zone verte), l'ETF coûte moins que la médiane des ETF actions monde. Les ETF hors PEA peuvent être moins chers.",source:{texte:"Fiches des émetteurs"}});
+const fv=(f)=>{let v=0;const r=(0.05-f/100)/12;for(let i=0;i<240;i++)v=v*(1+r)+100;return v;}, base=fv(0);
+const cout=f=>Math.round(base-fv(f));
+const droite3=`<div class="et-side"><p class="h">Ce que coûtent les frais en 20 ans</p><div class="et-cout">
+  <div><span><b>Cet ETF</b><small>0,20 % par an</small></span><em>${fr(cout(0.2))} €</em></div>
+  <div><span><b>Le moins cher du même indice</b><small>0,05 % par an, hors PEA</small></span><em class="g">${fr(cout(0.05))} €</em></div>
+  <div><span><b>Le plus cher du même indice</b><small>0,38 % par an, CW8</small></span><em class="r">${fr(cout(0.38))} €</em></div></div>
+  <p class="et-hyp">Pour 100 € placés chaque mois pendant 20 ans, avec une hausse illustrative de 5 % par an avant frais. Ce n'est pas une prévision.</p></div>`;
+
+// 4. Son fonctionnement
+const sch=ekBox({titre:"Comment il suit le MSCI World",unite:"réplication synthétique",indice:"Un ETF « synthétique » ne détient pas forcément les actions de l'indice. Il détient d'autres titres et un contrat (swap) qui lui verse la performance de l'indice. C'est ce qui permet de loger un indice mondial dans un PEA.",source:{texte:"Fiche Amundi"}},
+ `<div class="et-sch"><div><b>Votre argent</b>Vous achetez des parts de l'ETF en Bourse.</div><i>→</i><div class="y"><b>Le fonds</b>Il détient surtout des actions européennes, pour rester éligible au PEA.</div><i>→</i><div><b>Le contrat (swap)</b>Société Générale lui verse la performance du MSCI World, en échange de celle de ses actions.</div></div>`);
+const droite4=`<div class="et-side"><p class="h">Les risques</p><div class="et-risk"><div><span class="r">marché</span><p>Si les actions mondiales baissent, l'ETF baisse.</p></div><div><span class="r">change</span><p>73 % de l'indice est en dollars.</p></div><div><span class="g">contrepartie</span><p>Si Société Générale faisait défaut, la loi limite l'exposition au contrat à 10 % du fonds.</p></div></div></div>`;
+
+// 5. Le détenir
+const hold=`<div class="et-hold"><div class="g"><small>Enveloppe</small><b>PEA ✓</b><p>Aussi en compte-titres. Dans un PEA, les gains sont exonérés d'impôt sur le revenu après 5 ans.</p></div><div><small>Dividendes</small><b>Capitalisant</b><p>Les dividendes sont réinvestis dans le fonds : rien n'est versé, rien à déclarer chaque année.</p></div><div class="r"><small>Âge du fonds</small><b>1 an et demi</b><p>Créé le 4 mars 2025 : peu d'historique. Taille du fonds : 1,8 Md€, médiane de sa catégorie 1,7 Md€.</p></div></div>`;
+
+const E=[
+ {id:"t1",n:1,sur:"Ce qu'il contient",concept:{cle:"diversification"},titre:"1 248 entreprises en une seule ligne.",visuel:topBox,explique:droite1,suite:"Mais dans quels pays et quels métiers ?"},
+ {id:"t2",n:2,sur:"Où va l'argent",concept:{cle:"change"},titre:"un monde très américain.",visuel:geo,explique:droite2,suite:"Combien coûte-t-il chaque année ?"},
+ {id:"t3",n:3,sur:"Ses frais",concept:{cle:"ter"},titre:"dans la norme.",visuel:frais,explique:droite3,suite:"Comment fait-il pour suivre l'indice ?"},
+ {id:"t4",n:4,sur:"Son fonctionnement",concept:{cle:"swap"},titre:"il ne détient pas les actions du MSCI World.",visuel:sch,explique:droite4,suite:"Et pour le détenir ?"},
+ {id:"t5",n:5,sur:"Le détenir",concept:{cle:"capitalisant"},titre:"logeable en PEA, rien à déclarer chaque année.",visuel:hold,explique:`<div class="et-side"><p class="h">Où le trouver</p><div class="et-risk"><div><span class="g">Bourse</span><p>Coté sur Euronext Paris sous le code DCAM : il s'achète comme une action, chez un courtier qui donne accès à Euronext Paris.</p></div><div><span class="o">à vérifier</span><p>Les frais de courtage de votre banque ou courtier s'ajoutent aux frais courants.</p></div></div></div>`,suite:""}];
+// Définitions propres aux ETF (seront ajoutées à EK_DEF)
+Object.assign(EK_DEF,{diversification:{t:"Diversification",c:"Répartir son argent sur beaucoup d'entreprises pour qu'aucune ne pèse trop.",calc:"Nombre de lignes et poids des plus grosses",lire:"Plus il y a de lignes, et moins les premières pèsent, plus le risque propre à une entreprise est dilué."},
+ change:{t:"Risque de change",c:"Quand l'ETF détient des actions en dollars, la valeur en euros bouge aussi avec le cours euro-dollar.",calc:"Part de l'ETF hors zone euro",lire:"Sur le long terme, l'effet est souvent faible, mais il peut être fort sur une année."},
+ ter:{t:"Frais courants (TER)",aka:"Total Expense Ratio",c:"Ce que le fonds prélève chaque année, directement dans sa valeur : vous ne le payez pas à part.",calc:"Frais annuels ÷ encours du fonds",lire:"À comparer entre ETF du même indice : c'est l'écart le plus sûr d'une année sur l'autre."},
+ swap:{t:"Réplication synthétique",aka:"ou par swap",c:"L'ETF ne détient pas les actions de l'indice : un contrat avec une banque lui verse la performance de l'indice.",calc:"Contrat d'échange (swap) avec une contrepartie",lire:"Permet de loger des indices étrangers dans un PEA. La loi limite l'exposition à la banque à 10 % du fonds."},
+ capitalisant:{t:"ETF capitalisant",c:"Les dividendes des entreprises sont réinvestis dans le fonds au lieu de vous être versés.",calc:"Politique de distribution du fonds",lire:"Pratique pour faire grossir un placement sans rien déclarer chaque année ; un ETF « distribuant » vous verse les dividendes."}});
+document.getElementById("etapes").innerHTML=ekFil(E);
+
+// Tableau : le même indice
+const T=[["Amundi PEA Monde (MSCI World)",0.2,1753,true,"capitalisation","synthétique",1],["iShares MSCI World Swap PEA",0.2,2393,true,"capitalisation","synthétique"],["Amundi MSCI World Swap (CW8)",0.38,6940,true,"capitalisation","synthétique"],["iShares Core MSCI World",0.2,137063,false,"capitalisation","physique"],["Amundi Core MSCI World",0.12,15783,false,"capitalisation","physique"],["SPDR MSCI World",0.12,20380,false,"capitalisation","physique"],["Invesco MSCI World",0.05,9558,false,"capitalisation","synthétique"]];
+const mn=Math.min(...T.map(t=>t[1])), mxx=Math.max(...T.map(t=>t[1]));
+document.getElementById("tableau").innerHTML=`<div class="ek-tc ek-tc-l"><div class="scroll-x"><table class="ek-tt ek-tt-r"><thead><tr><th></th><th>Frais par an</th><th>Taille du fonds</th><th>PEA</th><th>Dividendes</th><th>Réplication</th></tr></thead><tbody>${T.map(t=>`<tr class="${t[6]?"moi":""}"><th>${t[6]?t[0]:`<a href="#">${t[0]}</a>`}</th><td style="${t[1]===mn?"background:#E2F8EE;color:#00714C;font-weight:800":t[1]===mxx?"background:#FFE9E3;color:#A3200B;font-weight:800":""}">${t[1]===mn?"▲ ":t[1]===mxx?"▼ ":""}${fr(t[1],2)} %</td><td>${t[2]>=1000?fr(t[2]/1000,1)+" Md€":fr(t[2])+" M€"}</td><td>${t[3]?"✓":"–"}</td><td>${t[4]}</td><td>${t[5]}</td></tr>`).join("")}</tbody></table></div><p class="ek-tn">Même indice, mêmes entreprises : l'écart se joue sur les frais, l'enveloppe (PEA ou non) et la taille du fonds. ▲ le moins cher · ▼ le plus cher.</p></div>`;
+</script>
+</body></html>
