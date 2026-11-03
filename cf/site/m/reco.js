@@ -390,20 +390,6 @@ function recoSlLier(root) {
   if (o) o.oninput = () => { RECO_SL.oblig = Math.min(+o.value, 100 - RECO_SL.etf); vite(); }; // le curseur des obligations ne bouge jamais seul ; il est seulement borné par ce qui reste
   $$("[data-rc-ex]", root).forEach(b => b.onclick = () => { const x = RECO_EX.find(e => e.id === b.dataset.rcEx); RECO_SL.etf = x.parts.etf || 0; RECO_SL.oblig = x.parts.oblig || 0; tout(); });
 }
-function recoExHTML() {
-  return `<section class="panel"><div class="ph"><h2>Quelle part en actions ? Ce que ça change</h2><span class="light" style="font-size:12.5px">réglez, le site calcule</span></div><div class="pb">
-    <p class="rc-mut" style="margin:0 0 12px">Déplacez le curseur : la barre montre la répartition, les deux chiffres montrent ce qu'une forte baisse ferait à l'ensemble. Quatre exemples, du plus prudent au plus exposé, servent de repères. Le site ne désigne pas celui qui vous conviendrait : cela dépend de votre situation complète, qu'il ne connaît pas.</p>
-    <label class="rc-lab">Ce que chaque compte accepte, pour <select id="rc-env">${RECO_ENV.map(([k, l]) => `<option value="${k}"${k === RECO_ST.env ? " selected" : ""}>${l}</option>`).join("")}</select></label>
-    <div id="rc-slw">${recoSlHTML()}</div>
-    <p class="rc-mut">Les trois grandes familles de placements et leurs règles (plafonds, impôt en 2026) sont détaillées dans <a class="lnk" href="/pea-cto">PEA, compte-titres ou assurance-vie</a> et dans <a class="lnk" href="/apprendre#academie">l'Académie</a>.</p></div></section>`;
-}
-function recoExHTML_ancien() {
-  return `<section class="panel"><div class="ph"><h2>Des répartitions en exemple</h2><span class="light" style="font-size:12.5px">les mêmes pour tout le monde</span></div><div class="pb">
-    <p class="rc-mut" style="margin:0 0 12px">Quatre exemples, du plus prudent au plus exposé, pour montrer ce que change la part d'actions. Le site ne désigne pas celui qui vous conviendrait : cela dépend de votre situation complète, qu'il ne connaît pas.</p>
-    <label class="rc-lab">Ce que chaque compte accepte, pour <select id="rc-env">${RECO_ENV.map(([k, l]) => `<option value="${k}"${k === RECO_ST.env ? " selected" : ""}>${l}</option>`).join("")}</select></label>
-    <div class="rc-exs" id="rc-exs">${RECO_EX.map(recoExCarte).join("")}</div>
-    <p class="rc-mut">Les trois grandes familles de placements et leurs règles (plafonds, impôt en 2026) sont détaillées dans <a class="lnk" href="/pea-cto">PEA, compte-titres ou assurance-vie</a> et dans <a class="lnk" href="/apprendre#academie">l'Académie</a>.</p></div></section>`;
-}
 
 /* ---------- 2. Listes par critères ---------- */
 const RECO_TRI_ETF = [["ter", "Frais les plus bas"], ["encours", "Encours le plus élevé"], ["lignes", "Le plus de lignes détenues"], ["nom", "Nom"]];
@@ -503,27 +489,7 @@ function recoListeHTML() {
 const RECO_LEGAL = `<div class="rc-legal"><b>Information factuelle à but pédagogique, pas un conseil en investissement.</b> Cette page ne tient pas compte de votre situation et ne désigne aucune répartition ni aucun titre comme adapté à qui que ce soit : elle montre des exemples et des listes triées sur des critères que vous choisissez. ENKLAIR n'est pas conseiller en investissements financiers (CIF). Pour un conseil adapté à votre situation, adressez-vous à un CIF immatriculé à l'<a href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a>. Investir en Bourse comporte un risque de perte en capital.</div>`;
 
 /* ---------- La page ---------- */
-async function pageRepartitions() {
-  setTitle("Répartitions types et listes par critères"); setNav("sim"); recoCSS();
-  if (!R) return;
-  app.innerHTML = `<div class="empty">Chargement…</div>`;
-  await Promise.all([PXP, recoDivLoad()]);
-  if (location.pathname !== "/repartitions") return;
-  app.innerHTML = `<div class="rc-page"><div class="crumbs"><a href="/outils">Outils</a> › Répartitions et listes</div>
-    <h1 class="pagetitle">Quelle part en actions ? Et quelles listes selon vos critères</h1>
-    <p class="pagesub">Des exemples de répartition expliqués, et des listes d'ETF et d'entreprises construites sur les critères que vous choisissez. Le site n'établit pas de profil et ne désigne rien comme adapté à votre situation.</p>
-    ${RECO_LEGAL}
-    <div id="rc-ex">${recoExHTML()}</div>
-    <section class="panel" id="listes"><div class="ph"><h2>Une liste à partir de vos critères</h2><span class="light" style="font-size:12.5px">vous choisissez, le site calcule</span></div><div class="pb">
-      <div id="rc-f">${recoFiltresHTML()}</div><div id="rc-l">${recoListeHTML()}</div></div></section>
-    <section class="panel"><details class="acc"><summary><b>Comment ces listes sont calculées</b><span class="chev" aria-hidden="true"></span></summary><div class="accb" style="padding:0 22px 16px">
-      <p><b>Niveau de risque (1 à 5).</b> Il vient de la nature du placement, pas d'un jugement : ETF monétaire 1, obligations 2, ETF d'actions larges 3, pays émergents, thématiques et pays unique 4, matières premières 5. Une action seule vaut au moins 3 : 3 pour une grande ou moyenne entreprise, 4 pour une petite, 5 pour une microcapitalisation, un point de plus en cas de perte, de dette lourde ou de cours très variable.</p>
-      <p><b>Éligibilité au PEA.</b> Pour une action : siège dans l'Union européenne ou l'EEE (pays du code ISIN, recoupé avec Wikidata) et société soumise à l'impôt sur les sociétés ; les foncières exonérées (SIIC, SIR, SOCIMI, REIT) sont exclues. Pour un ETF : l'éligibilité déclarée par l'émetteur, qui ne dit rien de ce que le fonds suit. Votre courtier fait foi au moment de l'achat.</p>
-      <p><b>Chiffres des entreprises.</b> Ventes, marge, croissance et dette viennent du dernier exercice publié ; le PER et le rendement rapportent un cours du jour (différé) à un résultat déjà clos. Les deux ne portent donc pas sur la même période.</p>
-      <p><b>Exemples de répartition.</b> Les pourcentages sont fixes, identiques pour tous, et choisis pour échelonner la part d'actions de 0 à 80 %. L'effet d'une baisse est une multiplication sur l'exemple (actions −30 %, obligations −5 %), pas une prévision.</p>
-      <p class="rc-mut">Sources : comptes annuels ESEF (Europe) et SEC (États-Unis), cours différés du site, fiches des émetteurs d'ETF, Wikidata (CC0). Les performances passées ne préjugent pas des performances futures.</p></div></details></section></div>`;
-  recoLier();
-}
+function pageRepartitions() { return pageRepartitions4(); } // page construite par m/repart4.js (3/11/2026)
 function recoLier() {
   const maj = () => { const l = $("#rc-l"); if (l) l.innerHTML = recoListeHTML(); };
   const f = $("#rc-f");

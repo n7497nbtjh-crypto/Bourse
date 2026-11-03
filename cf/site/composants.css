@@ -841,29 +841,67 @@ html #app .ek.ek-page .vf-f button{flex:none;background:var(--ek-ink);color:#fff
 .ek .vf-s b{font:inherit;font-weight:800}@media(max-width:640px){.ek .vf-v{flex-direction:column;gap:8px}.ek .vf-i{width:34px;height:34px;font-size:17px}}
 
 /* ---------- « Mes ETF se recouvrent-ils ? » v4 (m/recouv4.js), réutilise s4- et sj- ---------- */
-.ek .rc-form{display:block}
-.ek .rc-l{display:flex;flex-direction:column;gap:10px}
-.ek .rc-row{display:grid;grid-template-columns:14px minmax(0,1fr) 110px 34px;gap:12px;align-items:end}
-.ek .rc-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ek-ink);margin-bottom:16px}
-.ek .rc-x{width:34px;height:34px;margin-bottom:6px;border:2px solid var(--ek-ink);border-radius:10px;display:grid;place-items:center;font:800 18px Inter;color:var(--ek-ink);text-decoration:none;background:#fff}
-.ek .rc-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:14px;border-top:2px dashed #D9D4C7;padding-top:12px}
-.ek .rc-act>span{font:700 12.5px Inter;color:#444}
-.ek .rc-add{font:800 14px Inter;color:var(--ek-ink);text-decoration:none;border-bottom:3px solid var(--ek-y)}.ek .rc-add[hidden]{display:none}
-.ek .rc-ex{flex-wrap:wrap}.ek .rc-ex a{flex:0 1 auto;padding:7px 12px}
-.ek .rc-bar{display:flex;height:40px;border:2px solid var(--ek-ink);border-radius:12px;overflow:hidden}
-.ek .rc-bar i{display:block;min-width:3px;border-right:2px solid var(--ek-ink)}.ek .rc-bar i:last-child{border-right:0}
-.ek .rc-bar i.d{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 6px,transparent 6px 12px)}
-.ek .rc-cs{margin-top:16px}.ek .sj-c.w{background:#FFE4DC}
-.ek .rc-csq{display:flex;flex-direction:column;gap:8px}
-.ek .rc-csq>div{border:2px solid var(--ek-ink);border-left-width:8px;border-radius:14px;padding:12px 16px;background:#fff;font:500 15px/1.5 Inter}
-.ek .rc-box{border:2px solid var(--ek-ink);border-radius:18px;padding:14px 16px;background:#fff}
-.ek .rc-box h3{font:800 16px "Bricolage Grotesque",Inter;margin:0 0 10px}
-@media(max-width:640px){.ek .rc-row{grid-template-columns:10px minmax(0,1fr) 78px 30px;gap:8px}.ek .rc-dot{width:10px;height:10px}}
-.ek .rc-ex{background:none;border:0;padding:0;gap:6px}.ek .rc-ex a{border:2px solid var(--ek-ink);background:#fff;font-size:13px}
-.ek .rc-ex a.on{box-shadow:none;background:var(--ek-y)}
-@media(max-width:640px){html #app .ek.ek-page .rc-row input{font-size:15px;padding:9px 10px}.ek .rc-act>span{display:none}}
-.ek .rc-add{display:inline-block;border-bottom:0;text-decoration:underline;text-decoration-color:var(--ek-y);text-decoration-thickness:3px;text-underline-offset:3px}
-@media(max-width:640px){.ek .rc-ex a{padding:6px 9px;font-size:12.5px}}
-.ek .rc-ex a{display:inline-flex;align-items:center;line-height:1.2;height:34px;box-sizing:border-box;white-space:nowrap}
-@media(max-width:640px){.ek .rc-row{grid-template-columns:10px minmax(0,1fr) 30px;grid-template-areas:"d n x" ". w .";row-gap:6px}.ek .rc-dot{grid-area:d}.ek .rc-pk{grid-area:n}.ek .rc-w{grid-area:w;flex-direction:row;align-items:center;gap:10px}.ek .rc-w input{max-width:90px}.ek .rc-x{grid-area:x}
-  html #app .ek.ek-page .rc-row .rc-pk input{font-size:14px}}
+.ek .rv-form{display:block}
+.ek .rv-l{display:flex;flex-direction:column;gap:10px}
+.ek .rv-row{display:grid;grid-template-columns:14px minmax(0,1fr) 110px 34px;gap:12px;align-items:end}
+.ek .rv-dot{width:14px;height:14px;border-radius:50%;border:2px solid var(--ek-ink);margin-bottom:16px}
+.ek .rv-x{width:34px;height:34px;margin-bottom:6px;border:2px solid var(--ek-ink);border-radius:10px;display:grid;place-items:center;font:800 18px Inter;color:var(--ek-ink);text-decoration:none;background:#fff}
+.ek .rv-act{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:14px;border-top:2px dashed #D9D4C7;padding-top:12px}
+.ek .rv-act>span{font:700 12.5px Inter;color:#444}
+.ek .rv-add{font:800 14px Inter;color:var(--ek-ink);text-decoration:none;border-bottom:3px solid var(--ek-y)}.ek .rv-add[hidden]{display:none}
+.ek .rv-ex{flex-wrap:wrap}.ek .rv-ex a{flex:0 1 auto;padding:7px 12px}
+.ek .rv-bar{display:flex;height:40px;border:2px solid var(--ek-ink);border-radius:12px;overflow:hidden}
+.ek .rv-bar i{display:block;min-width:3px;border-right:2px solid var(--ek-ink)}.ek .rv-bar i:last-child{border-right:0}
+.ek .rv-bar i.d{background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.25) 0 6px,transparent 6px 12px)}
+.ek .rv-cs{margin-top:16px}.ek .sj-c.w{background:#FFE4DC}
+.ek .rv-csq{display:flex;flex-direction:column;gap:8px}
+.ek .rv-csq>div{border:2px solid var(--ek-ink);border-left-width:8px;border-radius:14px;padding:12px 16px;background:#fff;font:500 15px/1.5 Inter}
+.ek .rv-box{border:2px solid var(--ek-ink);border-radius:18px;padding:14px 16px;background:#fff}
+.ek .rv-box h3{font:800 16px "Bricolage Grotesque",Inter;margin:0 0 10px}
+@media(max-width:640px){.ek .rv-row{grid-template-columns:10px minmax(0,1fr) 78px 30px;gap:8px}.ek .rv-dot{width:10px;height:10px}}
+.ek .rv-ex{background:none;border:0;padding:0;gap:6px}.ek .rv-ex a{border:2px solid var(--ek-ink);background:#fff;font-size:13px}
+.ek .rv-ex a.on{box-shadow:none;background:var(--ek-y)}
+@media(max-width:640px){html #app .ek.ek-page .rv-row input{font-size:15px;padding:9px 10px}.ek .rv-act>span{display:none}}
+.ek .rv-add{display:inline-block;border-bottom:0;text-decoration:underline;text-decoration-color:var(--ek-y);text-decoration-thickness:3px;text-underline-offset:3px}
+@media(max-width:640px){.ek .rv-ex a{padding:6px 9px;font-size:12.5px}}
+.ek .rv-ex a{display:inline-flex;align-items:center;line-height:1.2;height:34px;box-sizing:border-box;white-space:nowrap}
+@media(max-width:640px){.ek .rv-row{grid-template-columns:10px minmax(0,1fr) 30px;grid-template-areas:"d n x" ". w .";row-gap:6px}.ek .rv-dot{grid-area:d}.ek .rv-pk{grid-area:n}.ek .rv-w{grid-area:w;flex-direction:row;align-items:center;gap:10px}.ek .rv-w input{max-width:90px}.ek .rv-x{grid-area:x}
+  html #app .ek.ek-page .rv-row .rv-pk input{font-size:14px}}
+
+/* ---------- « Quelle part en actions ? » v4 (m/repart4.js) : habille les blocs rc- de reco.js ---------- */
+.ek.rp4 .rp4-form{display:block}
+.ek.rp4 .rc-lab{display:flex;align-items:center;gap:10px;font:700 13.5px Inter;margin:0 0 14px;flex-wrap:wrap}
+html #app .ek.ek-page.rp4 select{border:2px solid var(--ek-ink);border-radius:12px;padding:8px 12px;font:700 14px Inter;background:#fff;color:var(--ek-ink)}
+.ek.rp4 .rc-sl{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.25fr);gap:24px}
+.ek.rp4 .rc-slc label{display:flex;justify-content:space-between;align-items:baseline;font:700 14px Inter;margin-top:6px}
+.ek.rp4 .rc-slc output{font:800 26px "Bricolage Grotesque",Inter}
+.ek.rp4 input[type=range]{width:100%;accent-color:#111;margin:6px 0 12px}
+.ek.rp4 .rc-slx{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+html #app .ek.ek-page.rp4 .rc-chip{border:2px solid var(--ek-ink);border-radius:10px;background:#fff;color:var(--ek-ink);font:800 13px Inter;padding:7px 11px;cursor:pointer}
+html #app .ek.ek-page.rp4 .rc-chip.on{background:var(--ek-y);color:var(--ek-ink)}
+.ek.rp4 .rc-bar2{display:flex;height:38px;border:2px solid var(--ek-ink);border-radius:12px;overflow:hidden}
+.ek.rp4 .rc-bar2 span{display:flex;align-items:center;justify-content:center;border-right:2px solid var(--ek-ink)}.ek.rp4 .rc-bar2 span:last-child{border-right:0}
+.ek.rp4 .rc-bar2 i{font:800 13px Inter;font-style:normal;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.4)}
+.ek.rp4 .rc-big{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:14px 0}
+.ek.rp4 .rc-big>div{border:2px solid var(--ek-ink);border-radius:16px;padding:12px 14px;background:#fff;display:flex;flex-direction:column;gap:2px}
+.ek.rp4 .rc-big>div:first-child{background:#FFE4DC}
+.ek.rp4 .rc-big small{font:700 12px Inter;color:#444}.ek.rp4 .rc-big b{font:800 clamp(28px,3vw,36px)/1.05 "Bricolage Grotesque",Inter;letter-spacing:-.03em}.ek.rp4 .rc-big b.dn{color:#A32A12}.ek.rp4 .rc-big span{font:600 12px Inter;color:#555}
+.ek.rp4 .rc-exq,.ek.rp4 .rc-exl,.ek.rp4 .rc-where2{font:500 13.5px/1.5 Inter;margin:6px 0}
+.ek.rp4 .rc-where2 span{display:block}
+.ek .rp4-legal{font:600 12.5px/1.5 Inter;margin:14px 0 0;max-width:760px;color:#3A3A3A}
+.ek.rp4 .rc-tabs{display:inline-flex;gap:4px;background:#F2EFE8;border:2px solid var(--ek-ink);border-radius:12px;padding:4px;margin-bottom:12px}
+html #app .ek.ek-page.rp4 .rc-tabs button{border:0;border-radius:9px;background:none;font:800 14px Inter;padding:8px 14px;color:var(--ek-ink);cursor:pointer}
+html #app .ek.ek-page.rp4 .rc-tabs button.on{background:var(--ek-y);color:var(--ek-ink);box-shadow:0 0 0 2px var(--ek-ink)}
+.ek.rp4 .rc-filt{display:flex;flex-wrap:wrap;gap:10px 14px;margin-bottom:12px}
+.ek.rp4 .rc-sel{display:flex;flex-direction:column;gap:4px;font:700 12px Inter;color:#444}
+.ek.rp4 .rc-rows{display:flex;flex-direction:column;gap:8px}
+.ek.rp4 a.rc-row{display:grid;grid-template-columns:40px minmax(0,1.3fr) auto minmax(0,1.5fr);gap:12px;align-items:center;border:2px solid var(--ek-ink);border-radius:16px;padding:12px 14px;background:#fff;color:var(--ek-ink);text-decoration:none}
+.ek.rp4 a.rc-row:hover{box-shadow:3px 3px 0 var(--ek-ink)}
+.ek.rp4 .rc-rh b{display:block;font:800 15.5px Inter}.ek.rp4 .rc-rh small{font:500 12.5px Inter;color:#666}
+.ek.rp4 .rc-rf{display:flex;flex-wrap:wrap;gap:4px 10px;font:600 12.5px Inter;color:#333}.ek.rp4 .rc-rf em{font-style:normal}
+.ek.rp4 .rc-mut{font:500 12.5px/1.5 Inter;color:#555}
+.ek.rp4 .s4-pl p{font:500 14px/1.55 Inter}
+@media(max-width:900px){.ek.rp4 .rc-sl{grid-template-columns:minmax(0,1fr)}.ek.rp4 a.rc-row{grid-template-columns:36px minmax(0,1fr) auto}.ek.rp4 .rc-rf{grid-column:2/-1}}
+.ek.rp4 a.rc-row{grid-template-columns:40px minmax(0,1fr) minmax(0,1.3fr);grid-template-areas:"l h f" "l t f";gap:4px 14px;box-sizing:border-box;width:100%}
+.ek.rp4 a.rc-row>:first-child{grid-area:l;align-self:center}.ek.rp4 .rc-rh{grid-area:h}.ek.rp4 .rc-rt{grid-area:t;display:flex;align-items:center;gap:8px;flex-wrap:wrap}.ek.rp4 .rc-rf{grid-area:f;align-self:center}
+@media(max-width:900px){.ek.rp4 a.rc-row{grid-template-columns:36px minmax(0,1fr);grid-template-areas:"l h" "l t" "f f"}.ek.rp4 .rc-rf{grid-column:auto;margin-top:6px}}

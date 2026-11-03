@@ -40,9 +40,9 @@ with sync_playwright() as pw:
         # 1. La page : quatre exemples de répartition, expliqués, sans questionnaire ni profil
         pg.goto("http://t.local/repartitions"); pg.wait_for_timeout(1500)
         if pg.locator("#rc-form").count(): fail(nom, "un questionnaire de profil est encore affiché")
-        if pg.locator(".rc-ex").count() != 4: fail(nom, "4 exemples de répartition attendus", pg.locator(".rc-ex").count())
+        if pg.locator("[data-rc-ex]").count() != 4: fail(nom, "4 exemples de répartition attendus", pg.locator("[data-rc-ex]").count())  # 3/11 : curseurs + 4 exemples (repart4.js)
         t = pg.inner_text("#app")
-        for s2 in ["À quoi cet exemple correspond", "Ses limites", "Calcul sur cet exemple", "pas un conseil en investissement"]:
+        for s2 in ["Ses limites", "une forte baisse coûterait", "pas un conseil en investissement"]:
             if s2.lower() not in t.lower(): fail(nom, "texte manquant", s2)
         for s2 in ["pour vous", "votre profil", "selon votre profil", "à étudier"]:  # « conseil adapté à votre situation » reste : c'est le renvoi vers un CIF
             if s2 in t.lower(): fail(nom, "ton personnalisé", s2)
@@ -80,12 +80,12 @@ with sync_playwright() as pw:
         if pg.evaluate("location.pathname") != "/repartitions": fail(nom, "/pour-moi non redirigé", pg.evaluate("location.pathname"))
         # 6. Classements : aperçu flouté sans Premium
         pg.goto("http://t.local/classements"); pg.wait_for_timeout(1500)
-        nb = pg.locator(".out-blur").count(); nv = pg.locator("a.out-row").count()
-        if nb != 3 or nv < 5: fail(nom, "aperçu du classement", nb, nv)
-        blur_txt = pg.evaluate("[...document.querySelectorAll('.out-blur')].map(e => e.textContent).join(' ')")
+        nb = pg.locator(".cl4-flou").count(); nv = pg.locator("a.cl4-r").count()  # 3/11 : classements v4 (classements4.js), 5 places floutées
+        if nb != 5 or nv < 5: fail(nom, "aperçu du classement", nb, nv)
+        blur_txt = pg.evaluate("[...document.querySelectorAll('.cl4-flou')].map(e => e.textContent).join(' ')")
         top = pg.evaluate("outClRows('points', {}).slice(0, 3).map(x => x.c.name)")
-        if any(n in blur_txt for n in top) or pg.evaluate("[...document.querySelectorAll('.out-blur a, .out-blur img')].length"): fail(nom, "nom d'une entreprise floutée présent dans la page")
-        if pg.locator(".out-crit").count() != 1: fail(nom, "critères et limites non affichés")
+        if any(n in blur_txt for n in top) or pg.evaluate("[...document.querySelectorAll('.cl4-flou a, .cl4-flou img')].length"): fail(nom, "nom d'une entreprise floutée présent dans la page")
+        if pg.locator("#cl4crit").count() != 1: fail(nom, "critères et limites non affichés")
         p = pg.evaluate(CHK, W); p and fail(nom, "/classements", p)
         shot("classements")
         PREM["on"] = True; pg.evaluate("localStorage.setItem('bilan.premium', 'tok')")
@@ -93,7 +93,7 @@ with sync_playwright() as pw:
         pg2.add_init_script("try{localStorage.setItem('bilan.premium.token','x');localStorage.setItem('bilan.premium','x')}catch(e){}")
         pg2.goto("http://t.local/classements"); pg2.wait_for_timeout(1200)
         pg2.evaluate("PREM = { premium: true }"); pg2.evaluate("pageClassements()"); pg2.wait_for_timeout(1200)
-        if pg2.locator(".out-blur").count() or pg2.locator("a.out-row").count() < 15: fail(nom, "Premium : liste complète attendue", pg2.locator(".out-blur").count(), pg2.locator("a.out-row").count())
+        if pg2.locator(".cl4-flou").count() or pg2.locator("a.cl4-r").count() < 15: fail(nom, "Premium : liste complète attendue", pg2.locator(".cl4-flou").count(), pg2.locator("a.cl4-r").count())
         ctx2.close(); PREM["on"] = False
         # 7. Découvertes : diversité, ETF PEA, justifications
         pg.goto("http://t.local/decouvertes"); pg.wait_for_timeout(1800)
