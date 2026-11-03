@@ -219,20 +219,6 @@ function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, 
   };
   /* styles : voir site.css */
 })();
-/* Lot 4 : réglage « Afficher toujours le détail » dans Mon espace › Réglages (mémorisé sur l'appareil) */
-(function () {
-  const r0 = window.espaceReglages; if (typeof r0 !== "function") return;
-  window.espaceReglages = function (el, m) {
-    const r = r0.apply(this, arguments);
-    if (el && !el.querySelector("#rg-detail")) {
-      const s = document.createElement("section"); s.className = "panel";
-      s.innerHTML = `<div class="ph"><h2>Lecture des fiches</h2></div><div class="pb"><label class="rf-l2t" style="font-size:14.5px;color:var(--ink)"><input type="checkbox" id="rg-detail"${typeof rfDetailToujours === "function" && rfDetailToujours() ? " checked" : ""}> Afficher toujours le détail (toutes les sections « Tous les chiffres » ouvertes sur les fiches)</label><p class="muted" style="margin:8px 0 0;font-size:13px">Par défaut, chaque fiche montre d'abord le verdict et les jauges ; le détail s'ouvre au clic. Ce choix est gardé sur cet appareil.</p></div>`;
-      el.insertBefore(s, el.firstElementChild ? el.firstElementChild.nextElementSibling : null);
-      s.querySelector("#rg-detail").onchange = e => { if (typeof rfDetailSet === "function") rfDetailSet(e.target.checked); };
-    }
-    return r;
-  };
-})();
 /* Comparer : retouches retirées le 3/11/2026, la page est refaite dans m/comparer4.js. */
 /* Lot 6 : finitions. Codes boursiers et ISIN en police à chasse fixe ; les chiffres sont en police normale (chasse tabulaire, index.html). */
 /* styles : voir site.css */

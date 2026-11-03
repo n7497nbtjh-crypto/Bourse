@@ -86,7 +86,8 @@ async function pageCompany4(id, tab) {
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
   f4Ancres(ctx); f4Trim(ctx); window.F4X = ctx;
-  const cible = tab === "comptes" ? "tout" : (tab === "actualite" || tab === "agenda" || tab === "communaute") ? "actu" : location.hash.slice(1);
+  const ANC = { "rf-resultats": "e1", "rf-rentab": "e2", "rf-dette": "e3", "rf-div": "e4", "rf-valo": "e5", "f3-metier": "metier", "tous-les-chiffres": "tout", "rf-concurrents": "tout", "concurrents": "tout" }; // anciennes ancres (liens déjà partagés)
+  const h0 = location.hash.slice(1), cible = tab === "comptes" ? "tout" : (tab === "actualite" || tab === "agenda" || tab === "communaute") ? "actu" : (ANC[h0] || h0);
   if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ block: "start" }); }, 30); }
 }
 
