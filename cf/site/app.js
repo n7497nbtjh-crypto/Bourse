@@ -3294,6 +3294,8 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   // Agenda : dates officielles relevées à la main, puis dates estimées d'après l'an dernier pour les autres
   const manual = new Set((ag?.events || []).map(e => e.id));
   AG = { events: [...(ag?.events || []), ...(auto?.events || []).filter(e => !manual.has(e.id))] }; BROKERS = br;
+  // Dividendes des entreprises américaines (calendrier Nasdaq, data/dividendes_us.mjs) : seulement celles sans calendrier officiel relevé
+  window.AG_DIVP = getJSON("/data/agenda-dividendes.json", { events: [] }).then(d => { const off = new Set(AG.events.filter(e => e.type === "Dividende").map(e => e.id)); AG.events.push(...(d.events || []).filter(e => !off.has(e.id))); });
   const S = Object.fromEntries((r.companies || []).map(c => [c.id, c]));
   // La liste des entreprises suivies fait foi ; les comptes collectés s'y ajoutent
   R = { ...r, regions: uni.regions, companies: uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u })) };

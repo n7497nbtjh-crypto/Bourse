@@ -4,6 +4,8 @@
    garde-fou (couvert par le bénéfice ?), dividendes relevés plusieurs années de suite, le détachement en trois dates.
    Calculs inchangés (m/outils.js : outDivEvents, outDivKind, OUT_DK, outDivAmt, outDivTop, outCouv, outDivSim, outStats).
    Remplace window.pageDividendes. */
+// Le terme exact en surbrillance, cliquable vers sa définition (comme les titres d'étapes des fiches)
+const dv4Hc = (cle, t) => `<span class="ek-hc" role="button" tabindex="0" data-ek-def="${cle}">${t}<i>?</i></span>`;
 const DV4_REG = [["", "Toutes"], ["fr", "France"], ["eu", "Europe"], ["us", "États-Unis"], ["monde", "Reste du monde"]];
 const DV4_COUL = { det: "#1E8A52", pay: "#1E6FD9", rec: "#8A6D1E", autre: "#5F5B55" };
 // Veille ouvrée (samedi et dimanche sautés) : pour toucher le dividende, il faut détenir l'action à la clôture de ce jour
@@ -45,32 +47,32 @@ async function pageDividendes4() {
   setTitle("Dividendes : calendrier, rendements et simulateur"); setNav("news");
   if (!R) return;
   app.innerHTML = `<div class="ek ek-page"><div class="empty">Chargement…</div></div>`;
-  await Promise.all([PXP, outHist()]);
+  await Promise.all([PXP, outHist(), window.AG_DIVP]);
   if (location.pathname !== "/dividendes") return;
   const favIds = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
   const f = { s: "", r: "", pea: "", fav: false, favIds, cv: true, all: false }, S = outStats(), fr = e4Fr();
   const tous = outDivEvents({ ...f }), det = tous.filter(e => outDivKind(e) === "det"), nx = det[0], n4 = Object.values(S).filter(s => s.divUp >= 4).length;
   const defC = RBY["totalenergies"] && valo(RBY["totalenergies"]) ? RBY["totalenergies"] : outDivTop(f)[0] && outDivTop(f)[0].c;
   const sim = { c: defC, m: 5000, a: fr ? "pea" : "cto" };
-  const jour = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
+  const jour = d => d === TODAY ? "aujourd'hui" : "le " + new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
   app.innerHTML = `<div class="ek ek-page dv4-page">
     <section class="ek-hero"><span class="mc-stk">Dividendes</span><h1 class="ag4-t">Qui verse un dividende, et quand.</h1>
-      <p class="mc-sub">${F0.format(dv4Groupes(tous).length)} dividendes annoncés par les entreprises suivies.${nx ? ` Le prochain détachement : ${esc(RBY[nx.id].name)}, le ${esc(jour(nx.date))}.` : ""}</p>
+      <p class="mc-sub">${F0.format(dv4Groupes(tous).length)} dividendes annoncés par les entreprises suivies.${nx ? ` Le prochain détachement : ${esc(RBY[nx.id].name)}, ${esc(jour(nx.date))}.` : ""}</p>
       <div class="dv5-steps"><div><i>1</i><b>Acheter avant</b><span>Détenir l'action à la clôture, la veille du détachement.</span></div><div><i>2</i><b>Le détachement</b><span>Le cours baisse d'environ le montant du dividende.</span></div><div><i>3</i><b>Le versement</b><span>Quelques jours ou semaines plus tard, l'argent arrive.</span></div></div></section>
-    <section class="ek-sec" id="dv4cal"><span class="ek-stk2 b">Calendrier</span><h2>Les prochains dividendes.</h2>
+    <section class="ek-sec" id="dv4cal"><span class="ek-stk2 b">Calendrier</span><h2>${dv4Hc("detachement", "Détachement")} : les prochains dividendes.</h2>
       <div class="el-f ax4-ch" id="dv4f"><span>Région :</span>${DV4_REG.map(([k, l]) => `<button type="button" data-r="${k}">${l}</button>`).join("")}${fr ? `<button type="button" data-pea>Éligibles au PEA</button>` : ""}<button type="button" data-fav>Mes favoris</button>
         <select id="dv4s" aria-label="Secteur">${outSecOpts().map(([v, l]) => `<option value="${v}">${esc(l)}</option>`).join("")}</select><button type="button" class="dv4-ics" id="dv4ics">Ajouter à mon agenda (.ics)</button></div>
       <div id="dv4c"></div>
       <p class="mc-note">Chaque date vient du calendrier publié par l'entreprise ou d'un communiqué. « Acheter au plus tard » : la veille ouvrée du détachement (aux États-Unis, de la date d'enregistrement) ; votre courtier peut avoir ses propres délais. Le fichier .ics s'ouvre dans Google Agenda, Apple Calendrier ou Outlook : rien n'est envoyé.</p></section>
-    <section class="ek-sec" id="dv4sim"><span class="ek-stk2">Simulateur</span><h2>Combien je toucherais ?</h2>
+    <section class="ek-sec" id="dv4sim"><span class="ek-stk2">Simulateur</span><h2>Combien je toucherais, ${dv4Hc("brutnet", "brut et net")} ?</h2>
       <div class="dv4-sim"><div class="dv4-f"><label class="dv4-q"><span>Entreprise</span><input id="dv4q" class="el-in" type="search" autocomplete="off" placeholder="Nom de l'entreprise" value="${sim.c ? esc(sim.c.name) : ""}"><div class="dv4-sug" id="dv4sug" hidden></div></label>
         <label><span>Montant investi</span><input id="dv4m" type="number" min="100" step="100" value="${sim.m}" inputmode="numeric"></label>
         <div><span>Compte</span><div class="ax4-vue dv4-acct" id="dv4a">${fr ? `<button type="button" data-a="pea">PEA</button>` : ""}<button type="button" data-a="cto">Compte-titres</button></div></div></div>
         <div id="dv4r"></div></div></section>
-    <div class="dv4-two"><section class="ek-sec"><span class="ek-stk2 p">Rendement</span><h2>Les plus hauts rendements.</h2>
+    <div class="dv4-two"><section class="ek-sec"><span class="ek-stk2 p">Rendement</span><h2>${dv4Hc("rendement", "Rendement")} : les plus hauts.</h2>
         <div class="el-f ax4-ch"><button type="button" data-cv class="on">Dividende couvert seulement</button></div><div id="dv4top"></div>
         <p class="mc-note">Rendement = dernier dividende annuel ÷ cours (différé). « Couvert » : le dividende versé est inférieur à 90 % du bénéfice du dernier exercice. Un rendement très élevé vient souvent d'un cours qui a beaucoup baissé.</p></section>
-      <section class="ek-sec"><span class="ek-stk2 b">Régularité</span><h2>Dividendes relevés.</h2><div id="dv4up"></div>
+      <section class="ek-sec"><span class="ek-stk2 b">Régularité</span><h2>${dv4Hc("dpa", "Dividende par action")} : relevé chaque année.</h2><div id="dv4up"></div>
         <p class="mc-note">Années de suite où le dividende par action a augmenté (rapports annuels, cinq exercices au plus). <a href="/classements?c=dividende">Le classement complet →</a></p></section></div>
     <section class="ek-sec"><p class="mc-note">Le dividende n'est pas un cadeau : la valeur sort de l'entreprise pour arriver chez l'actionnaire (une action à 50 € qui verse 2 € ouvre vers 48 €). Ce qui compte, c'est qu'elle puisse le payer avec ses bénéfices.${fr ? ` Dans un PEA, il reste sans impôt ; sur un compte-titres, ${esc(pct(RATES.pfu, 1, false))} sont prélevés.` : ""} Ces listes trient des faits ; ce n'est pas une recommandation d'achat.</p></section></div>`;
   const drawSim = () => { $$("#dv4a button").forEach(b => b.classList.toggle("on", b.dataset.a === sim.a)); $("#dv4r").innerHTML = sim.c ? outDivSim(sim.c, Math.max(0, +sim.m || 0), sim.a) : `<p class="ek-note">Choisissez une entreprise.</p>`; };

@@ -717,3 +717,4 @@ html #app .e3 .a4-srch .results{top:64px}
 .ek .dv5-t small{display:block;font:700 11.5px Inter;color:#555}.ek .dv5-t b{font:800 14px Inter;text-transform:capitalize}
 .ek .dv5-f{display:flex;flex-wrap:wrap;gap:6px}.ek .dv5-f span{font:700 12px Inter;background:#F2F0EA;border-radius:999px;padding:3px 10px}.ek .dv5-f span.g{background:#E2F8EE;color:#00714C}.ek .dv5-f span.r{background:#FFE9E3;color:#A3200B}
 @media(max-width:900px){.ek .dv5-steps{grid-template-columns:1fr}}
+.ek .dv4-two .ek-sec>h2{font-size:clamp(26px,3vw,38px)}
