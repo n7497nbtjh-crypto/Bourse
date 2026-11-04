@@ -17,6 +17,7 @@ import U, { SECTEURS } from "./univers.mjs";
 import { extract, merge, toSeries, extractSegments, bestSegments } from "./esef.mjs";
 import { extractSec, cikMap, factsUrl, subsUrl, recentFilings, estimatedAgenda, completer20F } from "./sec.mjs";
 import { amfAnnualFilings, amfDoc } from "./amf.mjs";
+const ESEF_SITES = (() => { try { return JSON.parse(readFileSync(new URL("./esef_sites.json", import.meta.url), "utf8")); } catch (e) { return {}; } })(); // data/esef_sites.mjs
 
 const OUT = new URL("../cf/site/data/", import.meta.url);
 export const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse");
@@ -211,6 +212,13 @@ export async function collectOne(fetchFn, c) {
       }
     } catch (e) { console.log("AMF", c.name, e.message); }
   }
+  // 5/11 : paquet ESEF plus récent publié sur le site de la société (repéré par data/esef_sites.mjs quand filings.xbrl.org est en retard)
+  { const have2 = reports.length ? Math.max(...used.map(u => u.ny)) : -Infinity, es = ESEF_SITES[c.id];
+    if (es && es.url && es.ny > have2) try {
+      const doc = await amfDoc(fetchFn, UA, { url: es.url }); await sleep(300);
+      const ex = doc && extract(doc), ny = ex ? newestYear(ex) : -Infinity;
+      if (ex && ny > have2) { reports.unshift(ex); segs.unshift(extractSegments(doc)); used.unshift({ periodEnd: `${ny}-${ex.fyEnd || "12-31"}`, report: es.url, json: null, ny, site: true }); }
+    } catch (e) { console.log("ESEF du site", c.name, e.message); } }
   if (!reports.length) throw new Error(id ? "aucun rapport ESEF pour " + id.lei : "LEI introuvable pour " + c.isin);
   const merged = merge(reports), s = toSeries(merged);
   const caByYear = Object.fromEntries(Object.entries(merged.years).map(([y, r]) => [y, r.ca]));
@@ -294,8 +302,9 @@ async function main() {
       const lastY = (old.years || [])[(old.years || []).length - 1];
       const sec20 = old.cik && !old.sec20 && lastY != null && lastY < expectedYear(old.fyEnd); // 4/11 : comptes SEC en retard, relus une fois avec la lecture directe des 20-F
       const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? (old.amfTried ? 20 : 0) : 70) * 3600e3; // France : premier essai AMF immédiat
+      const esefSite = ESEF_SITES[c.id] && ESEF_SITES[c.id].ny > (lastY || 0); // 5/11 : paquet ESEF plus récent trouvé sur le site : relu tout de suite
       const sansCA = !old.fin || !Array.isArray(old.fin.ca) || old.fin.ca[old.fin.ca.length - 1] == null; // chiffre d'affaires absent : relu (étiquettes élargies le 30/10 : foncières, banques, services publics)
-      if ((old.sourcePdf && old.v === VERSION) || old.v === VERSION && !sec20 && !deviseDouteuse && !detteDouteuse && !late && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      if ((old.sourcePdf && old.v === VERSION) || old.v === VERSION && !sec20 && !deviseDouteuse && !detteDouteuse && !late && !esefSite && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);

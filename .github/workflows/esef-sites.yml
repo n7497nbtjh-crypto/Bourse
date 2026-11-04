@@ -1,0 +1,46 @@
+# Comptes en retard (5/11/2026) : paquet ESEF le plus récent publié sur le site de la société, quand filings.xbrl.org
+# ne l'a pas encore indexé (data/esef_sites.mjs). Écrit seulement data/esef_sites.json (adresses des paquets) ;
+# la collecte des comptes (donnees.yml, data/fetch_data.mjs) les lit ensuite.
+name: Rapports ESEF des sites
+on:
+  workflow_dispatch:
+    inputs:
+      minutes:
+        description: "Durée de la recherche (minutes)"
+        default: "60"
+      ids:
+        description: "Seulement ces sociétés (identifiants séparés par des virgules)"
+        default: ""
+  schedule:
+    - cron: "40 2 * * 2,5"   # mardi et vendredi
+permissions:
+  contents: write
+concurrency:
+  group: esef-sites
+  cancel-in-progress: false
+jobs:
+  esef:
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Navigateur (pages dont les liens sont écrits par un programme)
+        run: |
+          npm install --no-save --no-audit --no-fund playwright@1 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
+      - name: Recherche des paquets ESEF
+        timeout-minutes: 85
+        run: |
+          timeout -k 60 $(( ${{ inputs.minutes || '60' }} * 60 + 300 )) node --max-old-space-size=4096 data/esef_sites.mjs --minutes ${{ inputs.minutes || '60' }} ${{ inputs.ids && format('--ids {0}', inputs.ids) || '' }} || echo "::warning::recherche interrompue"
+          free -m | head -2
+      - name: Enregistrement
+        if: always()
+        run: |
+          git config user.name "repere-bot"
+          git config user.email "repere-bot@users.noreply.github.com"
+          git add data/esef_sites.json 2>/dev/null || true
+          git diff --cached --quiet || git commit -q -m "Paquets ESEF des sites du $(date +%F)"
+          for i in 1 2 3; do git pull --rebase -X theirs -q && git push -q && break; sleep 5; done
