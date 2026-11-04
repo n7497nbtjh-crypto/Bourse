@@ -33,17 +33,14 @@ Ensuite, dans l'ordre :
 
 Avant toute pub sur la Bourse : l'avis d'un avocat sur la frontière information / recommandation (voir `docs/strategie-2027.md`, risque 1). Les règles de publicité financière de l'AMF et des plateformes s'appliquent.
 
-## 3. Leçons pour le Canada, l'Allemagne, l'Italie et l'Espagne
+## 3. Leçons pour le Canada, l'Allemagne, l'Italie et l'Espagne : FAIT (4/11)
 
-Le site est en français. Le **Canada francophone** est donc le seul de ces quatre pays atteignable sans traduction. Pour l'Allemagne, l'Italie et l'Espagne, il faut d'abord savoir pour qui on écrit : des francophones qui y vivent (petit public) ou le site traduit (gros chantier, voir `docs/international.md`). **Décision proposée** : faire le Canada maintenant, et pour les trois autres pays seulement une leçon « l'impôt chez vous » par pays, pour les francophones qui y vivent, en attendant une décision sur la traduction.
-
-Ce qu'il faudrait écrire (chiffres trouvés le 4/11/2026, à revérifier sur les sources officielles avant publication) :
-- **Canada (Québec)** : CELI (plafond annuel 7 000 $ en 2026) et REER (18 % du revenu gagné, plafonné). Prévoir quatre ou cinq leçons, un simulateur CELI / REER simplifié et l'Autorité des marchés financiers du Québec pour les arnaques. Détail dans `docs/international.md`.
-- **Allemagne** : compte-titres (Depot). Les revenus du capital au-delà de l'abattement (Sparer-Pauschbetrag : 1 000 € par personne, 2 000 € pour un couple) sont taxés à 25 % (Abgeltungsteuer), plus 5,5 % de cette taxe au titre du Solidaritätszuschlag.
-- **Italie** : les plus-values et dividendes sont imposés à 26 % (12,5 % pour les titres d'État). Les PIR (plans d'épargne en actions surtout italiennes) sont exonérés après 5 ans de détention, avec des règles de contenu strictes et des frais souvent élevés.
-- **Espagne** : les gains et dividendes entrent dans la « base del ahorro », imposée par tranches de 19 % à 30 %. La tranche la plus haute passe de 28 % à 30 % pour 2026, au-delà de 300 000 € de gains.
-
-Travail : une entrée par pays dans `cf/site/data/academie-pays.json` (même mécanisme que la Belgique), le pays ajouté au choix du pays, et le PEA déjà masqué. Coût : environ une session par pays, plus la vérification des chiffres sur les sources officielles (ARC, Bundesfinanzministerium, Agenzia delle Entrate, Agencia Tributaria).
+Aucun de ces pays n'a de PEA : chacun a désormais ses leçons (épargne de précaution, comptes, impôt, arnaques, quiz), dans `cf/site/data/academie-pays.json`, et son calcul simplifié de l'impôt sur `/simulateurs/pea-cto` (`PAYS_FISC` de `m/pays.js`). Le pays est détecté automatiquement (Cloudflare) ou choisi en bas de page.
+- Canada : CELI (7 000 $ en 2026), REER (18 % du revenu, 33 810 $ au plus), gain en capital imposé à 50 %, AMF du Québec.
+- Allemagne : Depot et Sparplan, forfait de 1 000 €, 26,375 %, exonération partielle de 30 % des ETF d'actions, Vorabpauschale (taux de base 3,20 % en 2026), BaFin.
+- Italie : 26 % (12,5 % titres d'État), PIR (40 000 € par an, 200 000 € au total, cinq ans), droit de timbre 0,20 %, taxe de 0,20 % sur les actions italiennes depuis 2026, CONSOB.
+- Espagne : barème de l'épargne de 19 % à 30 %, traspaso des fonds (pas des ETF), plan de pension 1 500 €, CNMV.
+Les leçons sont en français : pour toucher les habitants de ces pays au-delà des francophones, il faudra traduire le site (`docs/international.md`). Montants à revoir chaque année.
 
 ## 4. Les cours de Bourse
 

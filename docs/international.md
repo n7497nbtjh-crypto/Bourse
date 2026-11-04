@@ -17,7 +17,7 @@ Même langue et même public de débutants. Il faut cependant y écrire les comp
 - **CELI** : plafond annuel de 7 000 $ en 2026, comme en 2024 et 2025 (Agence du revenu du Canada) ;
 - **REER** : 18 % du revenu gagné, plafonné à 33 810 $ en 2026 et 35 390 $ en 2027 (ARC, tableau des plafonds).
 
-Travail : 4 ou 5 leçons propres au Canada dans `academie-pays.json` (réserve, CELI, REER, fiscalité, arnaques avec l'AMF du Québec), un simulateur CELI / REER simplifié, et le Canada ajouté au choix du pays. La liste des entreprises contient déjà des sociétés canadiennes, en CAD. Coût estimé : une session de travail.
+Fait le 4/11 (avec l'Allemagne, l'Italie et l'Espagne). Travail prévu : 4 ou 5 leçons propres au Canada dans `academie-pays.json` (réserve, CELI, REER, fiscalité, arnaques avec l'AMF du Québec), un simulateur CELI / REER simplifié, et le Canada ajouté au choix du pays. La liste des entreprises contient déjà des sociétés canadiennes, en CAD. Coût estimé : une session de travail.
 
 ### 2. Afrique francophone : à étudier, pas tout de suite
 - **Maroc** : sur les actions cotées, les plus-values des particuliers sont imposées à 15 % (20 % pour les non cotées). Les dividendes de sociétés marocaines sont aussi imposés à 15 % (sources : cabinets marocains, CGI 2026 ; à confirmer sur le site de la DGI).

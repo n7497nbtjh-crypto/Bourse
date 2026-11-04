@@ -15,7 +15,11 @@ function axFig([l, v]) {
 const AX_TR = (() => { try { return JSON.parse(localStorage.getItem("bilan.trad") || "{}"); } catch (e) { return {}; } })();
 let axTrT = 0;
 const AX_DE = { en: "de l'anglais", sv: "du suédois", fi: "du finnois", da: "du danois", no: "du norvégien", de: "de l'allemand", nl: "du néerlandais", it: "de l'italien", es: "de l'espagnol" };
-function axTrPoser(el, fr) { const o = el.textContent, lg = AX_DE[el.getAttribute("data-tr")] || "d'une autre langue"; el.textContent = fr; el.lang = "fr"; el.removeAttribute("data-tr"); el.title = "Titre d'origine : " + o;
+const axNorm = t => String(t || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
+function axTrPoser(el, fr) { const o = el.textContent, lg = AX_DE[el.getAttribute("data-tr")] || "d'une autre langue";
+  const h = el.classList.contains("ax4-s") && el.previousElementSibling; // sous-titre traduit identique au titre en français : retiré
+  if (h && h.tagName === "H3" && axNorm(h.textContent) === axNorm(fr)) { h.title = "Titre d'origine : " + o; el.outerHTML = `<small class="ax4-tr">Titre traduit ${lg}</small>`; return; }
+  el.textContent = fr; el.lang = "fr"; el.removeAttribute("data-tr"); el.title = "Titre d'origine : " + o;
   if (!el.nextElementSibling || !el.nextElementSibling.classList.contains("ax4-tr")) el.insertAdjacentHTML("afterend", `<small class="ax4-tr">Titre traduit ${lg}</small>`); }
 async function axTraduire() {
   const L = [...document.querySelectorAll("#app [data-tr]")]; if (!L.length) return;

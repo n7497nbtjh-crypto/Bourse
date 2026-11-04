@@ -26,6 +26,8 @@ async function pageApprendre5() {
   const mw = ETF.list.find(e => e.id === "ishares-core-msci-world") || ETF.list.find(e => /MSCI World/i.test(e.index || "") && e.compo && e.compo.n);
   const ans = Object.keys(COMM_MW).map(Number).sort((a, z) => a - z), hausse = ans.filter(y => COMM_MW[y] > 0).length;
   const garder = (typeof AP4_GARDER !== "undefined" ? AP4_GARDER : []).filter(x => x[4] !== "fr" || (typeof frSeul !== "function" || frSeul()));
+  const pp = typeof paysGet === "function" && typeof frSeul === "function" && !frSeul() ? paysGet() : "fr"; // 4/11 : hors de France, les comptes et l'impôt du pays
+  if (pp !== "fr" && typeof PAYS !== "undefined" && PAYS[pp]) garder.push(["/academie/placements", "impot", `Vos comptes ${PAYS[pp][2]}`, "Les comptes, l'impôt et les arnaques à éviter, avec les règles 2026 et leurs sources."]);
   const fait = Object.keys(S).length;
   app.innerHTML = `<div class="ek ek-page ap5">
     <section class="ek-hero"><span class="mc-stk">Apprendre</span><h1 class="ag4-t">La Bourse en 7 idées, avec de vraies entreprises.</h1>

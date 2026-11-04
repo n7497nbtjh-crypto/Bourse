@@ -1,599 +1,1280 @@
 {
-"maj": "2026-11-02",
-"note": "Leçons propres à chaque pays (hors France). Montants 2026, vérifiés sur les sources indiquées le 2 novembre 2026.",
-"fr_seul": {
-"bases": [
-"epargne-precaution"
-],
-"placements": [
-"livrets",
-"assurance-vie",
-"pea",
-"compte-titres",
-"per",
-"immobilier",
-"crypto"
-],
-"frais-fiscalite": [
-"flat-tax",
-"enveloppes-fiscales",
-"dividendes-etrangers",
-"declarer"
-],
-"psychologie": [
-"arnaques"
-]
-},
-"pays": {
-"be": {
-"nom": "Belgique",
-"de": "de Belgique",
-"en": "en Belgique",
-"drap": "🇧🇪",
-"regulateur": [
-"FSMA",
-"https://www.fsma.be/fr/mises-en-garde"
-],
-"lecons": {
-"epargne-precaution": {
-"id": "epargne-precaution",
-"titre": "L'épargne de précaution en Belgique",
-"duree_min": 5,
-"resume": "Avant d'investir, gardez trois à six mois de dépenses sur un compte d'épargne réglementé, disponible à tout moment.",
-"paragraphes": [
-"L'épargne de précaution sert à faire face à une dépense imprévue sans devoir vendre des placements au mauvais moment. On compte en général trois à six mois de dépenses courantes, davantage si vos revenus sont irréguliers.",
-"En Belgique, elle se place le plus souvent sur un compte d'épargne réglementé. Sa rémunération se compose de deux parties : un intérêt de base et une prime de fidélité, acquise si l'argent reste au moins douze mois sur le compte.",
-"Les intérêts d'un compte réglementé sont exonérés d'impôt jusqu'à 1 020 € par personne en 2026 (2 040 € pour un couple marié ou cohabitant légal). Au-delà, ils sont taxés à 15 %. Sur un compte d'épargne non réglementé, chaque euro d'intérêt est taxé à 30 %.",
-"Comme partout dans l'Union européenne, les dépôts sont protégés jusqu'à 100 000 € par personne et par banque si celle-ci fait faillite."
-],
-"exemple": "Sophie a 12 000 € sur deux comptes d'épargne réglementés. Ensemble, ils lui rapportent 260 € d'intérêts sur l'année. C'est sous le plafond de 1 020 € : elle ne paie aucun impôt sur ces intérêts.",
-"a_retenir": [
-"Trois à six mois de dépenses, disponibles à tout moment.",
-"Intérêts exonérés jusqu'à 1 020 € par personne en 2026, puis 15 %.",
-"Le plafond vaut pour l'ensemble de vos comptes réglementés, pas compte par compte."
-],
-"erreur_frequente": "Croire que le plafond s'applique banque par banque. Il vaut par personne : si vous avez plusieurs comptes, additionnez les intérêts.",
-"sources": [
-{
-"label": "Wikifin (FSMA), Que vous rapporte votre compte d'épargne ?",
-"url": "https://www.wikifin.be/fr/epargner-et-investir/compte-depargne/que-vous-rapporte-votre-compte-depargne"
-},
-{
-"label": "KBC Brussels, Impôts sur les revenus de l'épargne",
-"url": "https://www.kbcbrussels.be/particuliers/fr/epargner/comptes-epargne/impots-sur-les-revenus-de-l-epargne.html"
-}
-]
-},
-"epargne-pension": {
-"id": "epargne-pension",
-"titre": "L'épargne-pension (troisième pilier)",
-"duree_min": 5,
-"resume": "Une épargne pour la retraite qui donne droit à une réduction d'impôt de 30 % jusqu'à 1 050 € par an, ou de 25 % jusqu'à 1 350 €.",
-"paragraphes": [
-"L'épargne-pension est un placement de long terme pour compléter la pension légale. On la souscrit auprès d'une banque (fonds d'épargne-pension) ou d'un assureur (assurance épargne-pension), entre 18 et 64 ans.",
-"L'État accorde une réduction d'impôt sur les versements. En 2026, deux formules existent : jusqu'à 1 050 € par an avec une réduction de 30 % (315 € au maximum), ou jusqu'à 1 350 € avec une réduction de 25 % (337,50 € au maximum).",
-"Attention à la zone entre 1 050 € et 1 260 € : si vous choisissez le plafond majoré et versez dans cet intervalle, votre réduction est plus faible qu'avec 1 050 € versés à 30 %.",
-"La réduction ne s'applique que si vous payez de l'impôt. Elle vient en déduction de l'impôt dû et n'est pas remboursée en argent si vous ne devez rien."
-],
-"exemple": "Karim verse 1 050 € par an : il récupère 315 € via sa déclaration. Son épargne lui coûte donc 735 € par an.",
-"a_retenir": [
-"1 050 € à 30 % ou 1 350 € à 25 % en 2026.",
-"Évitez de verser entre 1 050 € et 1 260 € avec le plafond majoré.",
-"Une réduction d'impôt, pas un remboursement."
-],
-"erreur_frequente": "Opter pour le plafond de 1 350 € et verser 1 100 € : l'avantage tombe à 275 €, moins que 315 € avec 1 050 €.",
-"sources": [
-{
-"label": "Wikifin (FSMA), L'épargne-pension",
-"url": "https://www.wikifin.be/fr/impots-emploi-et-revenus/declaration-dimpots/reductions-fiscales/lepargne-pension"
-},
-{
-"label": "BNP Paribas Fortis, Montant maximum de l'épargne-pension",
-"url": "https://www.bnpparibasfortis.be/fr/public/particuliers/epargner-et-placer/epargne-pension/montant-maximum"
-}
-]
-},
-"compte-titres": {
-"id": "compte-titres",
-"titre": "Le compte-titres et la taxe de Bourse",
-"duree_min": 6,
-"resume": "En Belgique, actions et ETF se logent sur un compte-titres. Chaque achat et chaque vente paie la taxe sur les opérations de Bourse (TOB).",
-"paragraphes": [
-"Il n'existe pas en Belgique d'enveloppe fiscale comparable au PEA français. On investit en actions et en ETF depuis un compte-titres, ouvert dans une banque ou chez un courtier en ligne.",
-"Chaque achat et chaque vente supporte la TOB. Pour une action cotée, le taux est de 0,35 % (au maximum 1 600 € par opération). Pour la plupart des ETF enregistrés dans un autre pays de l'Espace économique européen, il est de 0,12 % (maximum 1 300 €).",
-"Un taux de 1,32 % (maximum 4 000 €) s'applique aux ETF de capitalisation enregistrés auprès de la FSMA. Vérifiez donc le statut d'un ETF avant de l'acheter : la différence pèse sur les petits montants réguliers.",
-"Un courtier belge retient la TOB automatiquement. Avec un courtier étranger, c'est souvent à vous de la déclarer et de la payer, au moyen d'un formulaire du SPF Finances."
-],
-"exemple": "Lucas achète pour 2 000 € d'actions d'une entreprise cotée. La TOB est de 0,35 %, soit 7 €. S'il les revend 2 400 €, il paie à nouveau 0,35 %, soit 8,40 €.",
-"a_retenir": [
-"Pas d'équivalent du PEA en Belgique.",
-"TOB : 0,35 % pour une action, 0,12 % pour la plupart des ETF européens, 1,32 % pour certains ETF de capitalisation.",
-"Avec un courtier étranger, la TOB se déclare souvent soi-même."
-],
-"erreur_frequente": "Oublier la TOB chez un courtier étranger. La taxe reste due, même si le courtier ne la retient pas.",
-"sources": [
-{
-"label": "Test-Achats, Taxe sur les opérations de Bourse",
-"url": "https://www.test-achats.be/invest/fiscalite-et-droits/taxation/dossiers/taxe-de-bourse/taxe-operation-bourse"
-},
-{
-"label": "KBC, Aperçu des taxes boursières (juillet 2026)",
-"url": "https://wcmassets.kbc.be/content/dam/securities-services/documentation/Overview%20Stock%20Market%20Fees_FR_vJuly2026.pdf"
-}
-]
-},
-"fiscalite": {
-"id": "fiscalite",
-"titre": "Dividendes et plus-values : l'impôt en Belgique",
-"duree_min": 8,
-"resume": "Dividendes taxés à 30 % avec 833 € exonérés par an ; depuis 2026, plus-values taxées à 10 % au-delà de 10 000 € par an.",
-"paragraphes": [
-"Les dividendes subissent un précompte mobilier de 30 %, retenu à la source par la banque belge. Pour une action étrangère, l'impôt du pays d'origine est en plus prélevé avant.",
-"Chaque contribuable peut récupérer le précompte sur les premiers 833 € de dividendes ordinaires (revenus 2026), via sa déclaration d'impôt, aux codes 1437/2437. Cela représente au maximum 249,90 € par an.",
-"Depuis le 1er janvier 2026, les plus-values réalisées sur des actifs financiers (actions, ETF, obligations, cryptoactifs) sont taxées à 10 %. Une première tranche de 10 000 € par an et par contribuable est exonérée, indexée chaque année. Si vous ne l'utilisez pas, 1 000 € s'ajoutent l'année suivante, jusqu'à 15 000 € après cinq ans.",
-"Les plus-values constituées avant 2026 restent exonérées : pour un titre acheté plus tôt, la valeur de départ est celle du 31 décembre 2025. La banque retient en principe la taxe à la vente ; vous pouvez aussi choisir de tout déclarer vous-même."
-],
-"exemple": "Claire achète des actions pour 20 000 € en 2026 et les revend 26 000 € en 2028. Sa plus-value de 6 000 € est sous la franchise de 10 000 € : elle ne paie rien, à condition de la déclarer pour récupérer la retenue éventuelle de la banque.",
-"a_retenir": [
-"Dividendes : 30 %, avec 833 € de dividendes exonérés par an (à réclamer dans la déclaration).",
-"Plus-values : 10 % au-delà de 10 000 € par an, depuis 2026.",
-"Plus-values antérieures à 2026 : exonérées (valeur au 31 décembre 2025)."
-],
-"erreur_frequente": "Ne pas réclamer l'exonération des dividendes dans sa déclaration. Elle n'est pas automatique : sans les codes 1437/2437, les 249,90 € sont perdus.",
-"sources": [
-{
-"label": "SPF Finances, Exonération des dividendes",
-"url": "https://fin.belgium.be/fr/particuliers/avantages-fiscaux/exoneration-dividendes"
-},
-{
-"label": "SPF Finances, Revenus de l'épargne et des placements",
-"url": "https://fin.belgium.be/fr/particuliers/declaration-impot/revenus/epargne-placements"
-},
-{
-"label": "Test-Achats, Comment la nouvelle taxe sur les plus-values change la donne",
-"url": "https://www.test-achats.be/argent/impots/news/taxe-plus-values"
-},
-{
-"label": "BNP Paribas Fortis, La taxe sur les plus-values en 10 questions",
-"url": "https://www.bnpparibasfortis.be/fr/public/article/taxe-plus-value"
-}
-]
-},
-"arnaques": {
-"id": "arnaques",
-"titre": "Reconnaître et éviter les arnaques (Belgique)",
-"duree_min": 5,
-"resume": "Avant de confier de l'argent, vérifiez que l'intermédiaire est autorisé par la FSMA et qu'il ne figure pas sur ses mises en garde.",
-"paragraphes": [
-"Les arnaques à l'investissement promettent souvent un rendement élevé sans risque, pressent la décision et passent par les réseaux sociaux, un appel non sollicité ou une fausse publicité avec une personnalité connue.",
-"En Belgique, la FSMA autorise et contrôle les intermédiaires financiers. Elle publie une liste de sociétés qui opèrent illégalement, dont celles qui proposent de « récupérer » l'argent déjà perdu (recovery rooms).",
-"Un professionnel sérieux ne vous demande jamais d'installer un logiciel de prise de contrôle à distance ni de virer de l'argent sur un compte à l'étranger au nom d'un tiers."
-],
-"exemple": "Un « conseiller » contacte Marc par messagerie et lui promet 3 % par semaine sur des cryptoactifs. Marc cherche le nom de la société sur le site de la FSMA : elle figure dans les mises en garde.",
-"a_retenir": [
-"Rendement élevé sans risque : signal d'alarme.",
-"Vérifiez l'autorisation et les mises en garde de la FSMA.",
-"Méfiez-vous de qui propose de récupérer vos pertes."
-],
-"erreur_frequente": "Faire confiance à une publicité qui utilise l'image d'une personnalité. Ces publicités sont presque toujours fausses.",
-"sources": [
-{
-"label": "FSMA, Mises en garde",
-"url": "https://www.fsma.be/fr/mises-en-garde"
-},
-{
-"label": "Wikifin (FSMA)",
-"url": "https://www.wikifin.be/fr"
-}
-]
-}
-},
-"quiz": [
-{
-"q": "Jusqu'à quel montant les intérêts d'un compte d'épargne réglementé sont-ils exonérés en 2026, par personne ?",
-"options": [
-"833 €",
-"1 020 €",
-"10 000 €",
-"100 000 €"
-],
-"bonne": 1,
-"explication": "1 020 € par personne en 2026, 2 040 € pour un couple marié ou cohabitant légal."
-},
-{
-"q": "Quel est le taux de la taxe sur les plus-values instaurée en 2026 ?",
-"options": [
-"10 %",
-"15 %",
-"30 %",
-"0,35 %"
-],
-"bonne": 0,
-"explication": "10 % au-delà d'une franchise annuelle de 10 000 € par contribuable."
-},
-{
-"q": "Quelle taxe paie-t-on à l'achat et à la vente d'une action cotée ?",
-"options": [
-"Le précompte mobilier",
-"La TOB de 0,35 %",
-"Aucune",
-"La TOB de 1,32 %"
-],
-"bonne": 1,
-"explication": "La taxe sur les opérations de Bourse est de 0,35 % pour une action cotée, plafonnée à 1 600 € par opération."
-}
-]
-},
-"ch": {
-"nom": "Suisse",
-"de": "de Suisse",
-"en": "en Suisse",
-"drap": "🇨🇭",
-"regulateur": [
-"FINMA",
-"https://www.finma.ch/fr/finma-public/warnungen/liste-d'alerte/"
-],
-"lecons": {
-"epargne-precaution": {
-"id": "epargne-precaution",
-"titre": "L'épargne de précaution en Suisse",
-"duree_min": 5,
-"resume": "Gardez trois à six mois de dépenses sur un compte épargne, disponible à tout moment, avant d'investir en Bourse.",
-"paragraphes": [
-"L'épargne de précaution évite de vendre des placements au mauvais moment pour faire face à un imprévu. On compte en général trois à six mois de dépenses courantes.",
-"En Suisse, elle se place sur un compte épargne bancaire. Les intérêts sont un revenu imposable, à déclarer avec le reste de vos revenus. Le compte compte aussi dans la fortune imposable.",
-"Les intérêts de source suisse peuvent subir l'impôt anticipé de 35 %, que vous récupérez entièrement en les déclarant.",
-"Les dépôts bancaires sont protégés par la garantie des dépôts (esisuisse) jusqu'à 100 000 francs par client et par banque."
-],
-"exemple": "Nadia garde 15 000 francs sur un compte épargne pour les imprévus. Le reste de son épargne mensuelle part dans son pilier 3a et un ETF.",
-"a_retenir": [
-"Trois à six mois de dépenses sur un compte épargne.",
-"Les intérêts sont imposables comme revenu.",
-"L'impôt anticipé de 35 % se récupère via la déclaration."
-],
-"erreur_frequente": "Oublier de déclarer un compte épargne : l'impôt anticipé retenu n'est alors pas remboursé.",
-"sources": [
-{
-"label": "UBS, Investissements et impôts",
-"url": "https://www.ubs.com/ch/fr/services/guide/investments/articles/investment-and-taxes-guide.html"
-},
-{
-"label": "PostFinance, Déclarer les actions en Suisse",
-"url": "https://www.postfinance.ch/fr/blog/placer-de-largent-mode-demploi/declarer-les-actions-en-suisse.html"
-}
-]
-},
-"pilier-3a": {
-"id": "pilier-3a",
-"titre": "Le pilier 3a",
-"duree_min": 6,
-"resume": "Une épargne retraite déductible du revenu imposable : jusqu'à 7 258 francs par an en 2026 pour un salarié affilié à une caisse de pension.",
-"paragraphes": [
-"Le pilier 3a est la prévoyance individuelle liée. Les versements sont déductibles du revenu imposable, dans la limite d'un plafond fixé par la Confédération.",
-"En 2026, le plafond est de 7 258 francs pour une personne affiliée à une caisse de pension (deuxième pilier). Sans caisse de pension, il est de 20 % du revenu de l'activité lucrative, au maximum 36 288 francs.",
-"L'argent peut rester sur un compte 3a ou être investi en fonds, y compris en actions. Il est bloqué jusqu'à la retraite, sauf exceptions prévues par la loi (achat du logement principal, départ définitif de Suisse, activité indépendante).",
-"Pendant toute la durée, les intérêts et les gains ne sont pas imposés. Le capital est imposé au retrait, à un taux réduit et séparé du reste du revenu."
-],
-"exemple": "Luca, salarié, verse 7 258 francs dans son pilier 3a. Avec un taux marginal d'environ 25 %, il économise près de 1 800 francs d'impôts cette année-là.",
-"a_retenir": [
-"7 258 francs en 2026 avec caisse de pension, jusqu'à 36 288 francs sans.",
-"Versements déductibles du revenu imposable.",
-"Argent bloqué jusqu'à la retraite, sauf exceptions."
-],
-"erreur_frequente": "Verser plus que le plafond : la part au-dessus n'est pas déductible.",
-"sources": [
-{
-"label": "OFAS, Chiffres repères de la prévoyance professionnelle 2025-2026",
-"url": "https://www.bsv.admin.ch/dam/bsv/fr/dokumente/bv/anleitungen/masszahlen-2025-2026.pdf.download.pdf/masszahlen-2025-2026.pdf"
-},
-{
-"label": "UBS, Montant maximal du pilier 3a en 2026",
-"url": "https://www.ubs.com/ch/fr/help/pension/maximal-contribution-2026.html"
-}
-]
-},
-"compte-titres": {
-"id": "compte-titres",
-"titre": "Le compte-titres et le droit de timbre",
-"duree_min": 5,
-"resume": "Actions et ETF se logent sur un dépôt-titres. Chez un courtier suisse, chaque opération paie un droit de timbre de 0,075 % (titre suisse) ou 0,15 % (titre étranger).",
-"paragraphes": [
-"En Suisse, on investit en actions et en ETF depuis un dépôt-titres, ouvert dans une banque ou chez un courtier en ligne. Les titres font partie de votre fortune imposable, à leur valeur au 31 décembre.",
-"Quand un courtier suisse intervient, la Confédération prélève un droit de timbre de négociation : 0,075 % pour un titre suisse et 0,15 % pour un titre étranger, à l'achat comme à la vente.",
-"Ce droit n'est pas dû quand le courtier est étranger. C'est une des raisons pour lesquelles certains investisseurs passent par un courtier hors de Suisse ; les frais de change et la déclaration fiscale restent alors à surveiller."
-],
-"exemple": "Mia achète pour 8 000 francs d'actions Nestlé chez un courtier suisse : le droit de timbre est de 0,075 %, soit 6 francs. Pour 8 000 francs d'un ETF étranger, il serait de 12 francs.",
-"a_retenir": [
-"Droit de timbre : 0,075 % (suisse) ou 0,15 % (étranger) par opération chez un courtier suisse.",
-"Pas de droit de timbre chez un courtier étranger.",
-"Les titres comptent dans la fortune imposable."
-],
-"erreur_frequente": "Comparer les courtiers sur le seul courtage, sans le droit de timbre ni les frais de change.",
-"sources": [
-{
-"label": "PostFinance, Courtages et autres frais",
-"url": "https://www.postfinance.ch/fr/particuliers/placements/solutions/trading-en-ligne/e-trading/courtages-et-autres-frais.html"
-},
-{
-"label": "Sénat français, Le droit de timbre en Suisse",
-"url": "https://www.senat.fr/rap/r12-259/r12-2592.html"
-}
-]
-},
-"fiscalite": {
-"id": "fiscalite",
-"titre": "Dividendes et gains : l'impôt en Suisse",
-"duree_min": 7,
-"resume": "Les gains en capital d'un investisseur privé ne sont pas imposés ; les dividendes sont un revenu imposable, avec un impôt anticipé de 35 % récupérable.",
-"paragraphes": [
-"Pour un particulier qui gère sa fortune privée, les gains réalisés en vendant des actions ou des ETF ne sont pas imposés (loi fédérale sur l'impôt fédéral direct, article 16).",
-"Cette exonération ne vaut pas si l'administration vous considère comme un commerçant professionnel de titres, par exemple en cas d'opérations très fréquentes, de courte durée ou financées à crédit.",
-"Les dividendes, eux, s'ajoutent à votre revenu imposable. Sur les dividendes de sociétés suisses, l'impôt anticipé de 35 % est retenu à la source ; vous le récupérez entièrement en déclarant les titres.",
-"Pour une action étrangère, le pays d'origine retient souvent un impôt à la source, dont une partie peut être récupérée ou imputée selon la convention fiscale."
-],
-"exemple": "Anna reçoit 1 000 francs de dividende d'une société suisse. Elle touche 650 francs, et les 350 francs d'impôt anticipé lui sont rendus après sa déclaration. Le dividende est ensuite imposé avec ses autres revenus.",
-"a_retenir": [
-"Gains en capital privés : pas d'impôt.",
-"Dividendes : revenu imposable.",
-"Impôt anticipé de 35 % : récupérable si les titres sont déclarés."
-],
-"erreur_frequente": "Ne pas déclarer ses titres : l'impôt anticipé de 35 % est alors définitivement perdu.",
-"sources": [
-{
-"label": "PostFinance, Déclarer les actions en Suisse",
-"url": "https://www.postfinance.ch/fr/blog/placer-de-largent-mode-demploi/declarer-les-actions-en-suisse.html"
-},
-{
-"label": "UBS, Quels revenus du capital sont imposables ?",
-"url": "https://www.ubs.com/ch/fr/services/guide/investments/articles/investment-and-taxes-guide.html"
-},
-{
-"label": "Fedlex, LIFD article 16",
-"url": "https://www.fedlex.admin.ch/eli/cc/1991/1184_1184_1184/fr#art_16"
-}
-]
-},
-"arnaques": {
-"id": "arnaques",
-"titre": "Reconnaître et éviter les arnaques (Suisse)",
-"duree_min": 5,
-"resume": "Avant de confier de l'argent, vérifiez que le prestataire est autorisé par la FINMA et qu'il ne figure pas sur sa liste d'alerte.",
-"paragraphes": [
-"Les arnaques à l'investissement promettent un rendement élevé sans risque, pressent la décision et passent souvent par les réseaux sociaux ou un appel non sollicité.",
-"En Suisse, la FINMA autorise et surveille banques, négociants et gestionnaires. Elle publie une liste d'alerte des prestataires susceptibles d'exercer sans autorisation, et une liste des établissements autorisés.",
-"La liste d'alerte n'est jamais exhaustive : un nom absent n'est pas une garantie. Vérifiez plutôt que le prestataire figure parmi les établissements autorisés."
-],
-"exemple": "Une plateforme propose à Tom de doubler sa mise en un mois. Le nom ne figure pas parmi les établissements autorisés par la FINMA : il renonce.",
-"a_retenir": [
-"Rendement élevé sans risque : signal d'alarme.",
-"Vérifiez l'autorisation FINMA, pas seulement la liste d'alerte.",
-"Aucun professionnel ne demande d'accès à distance à votre ordinateur."
-],
-"erreur_frequente": "Se rassurer parce qu'une société n'est pas sur la liste d'alerte.",
-"sources": [
-{
-"label": "FINMA, Liste d'alerte",
-"url": "https://www.finma.ch/fr/finma-public/warnungen/liste-d'alerte/"
-}
-]
-}
-},
-"quiz": [
-{
-"q": "Quel est le plafond du pilier 3a en 2026 pour un salarié affilié à une caisse de pension ?",
-"options": [
-"3 200 francs",
-"7 258 francs",
-"36 288 francs",
-"100 000 francs"
-],
-"bonne": 1,
-"explication": "7 258 francs ; sans caisse de pension, 20 % du revenu, au maximum 36 288 francs."
-},
-{
-"q": "Un investisseur privé vend des actions avec un gain. Que paie-t-il en impôt sur ce gain ?",
-"options": [
-"35 %",
-"10 %",
-"Rien, en principe",
-"Son taux marginal"
-],
-"bonne": 2,
-"explication": "Les gains en capital sur la fortune privée ne sont pas imposés, sauf si l'on est considéré comme commerçant professionnel de titres."
-},
-{
-"q": "Comment récupère-t-on l'impôt anticipé de 35 % prélevé sur un dividende suisse ?",
-"options": [
-"Il est perdu",
-"En déclarant les titres",
-"En vendant l'action",
-"Auprès de la banque"
-],
-"bonne": 1,
-"explication": "Il est entièrement remboursé ou imputé si les titres et les revenus sont déclarés."
-}
-]
-},
-"lu": {
-"nom": "Luxembourg",
-"de": "du Luxembourg",
-"en": "au Luxembourg",
-"drap": "🇱🇺",
-"regulateur": [
-"CSSF",
-"https://www.cssf.lu/fr/"
-],
-"lecons": {
-"epargne-precaution": {
-"id": "epargne-precaution",
-"titre": "L'épargne de précaution au Luxembourg",
-"duree_min": 5,
-"resume": "Gardez trois à six mois de dépenses sur un compte d'épargne avant d'investir. Les intérêts versés par une banque luxembourgeoise subissent une retenue libératoire de 20 %.",
-"paragraphes": [
-"L'épargne de précaution évite de vendre des placements au mauvais moment pour faire face à un imprévu. On compte en général trois à six mois de dépenses courantes.",
-"Au Luxembourg, elle se place le plus souvent sur un compte d'épargne bancaire. Les intérêts versés à un résident par une banque luxembourgeoise subissent une retenue à la source libératoire de 20 % : il n'y a rien d'autre à payer ni à déclarer.",
-"Pour des intérêts versés par une banque étrangère, vous pouvez choisir ce même prélèvement libératoire de 20 % en le déclarant vous-même.",
-"Comme partout dans l'Union européenne, les dépôts sont protégés jusqu'à 100 000 € par personne et par banque."
-],
-"exemple": "Paul touche 300 € d'intérêts sur son compte d'épargne dans une banque luxembourgeoise. La banque retient 60 € : il reçoit 240 € et n'a rien à déclarer.",
-"a_retenir": [
-"Trois à six mois de dépenses, disponibles à tout moment.",
-"Intérêts : retenue libératoire de 20 %.",
-"Dépôts garantis jusqu'à 100 000 € par banque."
-],
-"erreur_frequente": "Croire que la retenue de 20 % est remboursable. Elle est libératoire : ni remboursable, ni imputable.",
-"sources": [
-{
-"label": "Guichet.lu, Déclarer les intérêts perçus",
-"url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/banque-luxembourgeoise.html"
-},
-{
-"label": "Administration des contributions directes, RELIBI",
-"url": "https://impotsdirects.public.lu/fr/az/f/fiscalite-epargne.html"
-}
-]
-},
-"prevoyance-vieillesse": {
-"id": "prevoyance-vieillesse",
-"titre": "La prévoyance-vieillesse (article 111bis)",
-"duree_min": 5,
-"resume": "Une épargne retraite déductible jusqu'à 4 500 € par an et par contribuable depuis 2026.",
-"paragraphes": [
-"Le contrat de prévoyance-vieillesse est une épargne de long terme pour la retraite, proposée par les banques et les assureurs. Il relève de l'article 111bis de la loi sur l'impôt sur le revenu.",
-"Les versements sont déductibles du revenu imposable, jusqu'à 4 500 € par an et par contribuable à partir de l'année d'imposition 2026. Le plafond était de 3 200 € de 2017 à 2025.",
-"Le contrat doit durer au moins dix ans et prendre fin entre 60 et 75 ans. Le plafond est individuel : dans un couple, chacun a le sien, avec son propre contrat. Un plafond non utilisé est perdu."
-],
-"exemple": "Sarah verse 375 € par mois, soit 4 500 € par an. Avec un taux marginal de 39 %, elle réduit son impôt d'environ 1 750 € cette année-là.",
-"a_retenir": [
-"Jusqu'à 4 500 € déductibles par an depuis 2026.",
-"Contrat d'au moins dix ans, échéance entre 60 et 75 ans.",
-"Plafond individuel, perdu s'il n'est pas utilisé."
-],
-"erreur_frequente": "Souscrire un seul contrat pour un couple : chaque conjoint doit avoir le sien pour déduire 4 500 €.",
-"sources": [
-{
-"label": "Administration des contributions directes, Prévoyance-vieillesse",
-"url": "https://impotsdirects.public.lu/fr/az/p/prevoyance_vieillesse.html"
-}
-]
-},
-"fiscalite": {
-"id": "fiscalite",
-"titre": "Dividendes et plus-values : l'impôt au Luxembourg",
-"duree_min": 7,
-"resume": "Plus-values exonérées après six mois de détention pour une participation de 10 % au plus ; dividendes imposés au barème, souvent après une exonération de 50 %.",
-"paragraphes": [
-"Pour un particulier, la plus-value tirée de la vente d'actions ou d'ETF détenus depuis plus de six mois n'est pas imposée, si la participation ne dépasse pas 10 % du capital de la société.",
-"Une vente dans les six mois après l'achat est une plus-value spéculative, imposée au barème progressif, sauf si l'ensemble de ces gains reste sous 500 € sur l'année. Le gouvernement a annoncé en 2026 vouloir porter ce délai à douze mois à partir de 2027 : vérifiez la règle en vigueur avant de vendre.",
-"Les dividendes sont imposés au barème progressif. Ceux d'une société de capitaux pleinement imposable, luxembourgeoise ou d'un autre pays de l'Union européenne notamment, sont exonérés à 50 %.",
-"Les dividendes de sociétés luxembourgeoises subissent une retenue à la source de 15 %, imputable sur l'impôt dû."
-],
-"exemple": "Emma touche 100 € de dividende d'une société luxembourgeoise. La retenue est de 15 €. Seuls 50 € sont imposables : avec un taux marginal de 39 %, l'impôt total est de 19,50 €, dont 15 € déjà retenus.",
-"a_retenir": [
-"Plus-values : exonérées après six mois si la participation est de 10 % au plus.",
-"Gains spéculatifs sous 500 € par an : exonérés.",
-"Dividendes : barème progressif, souvent sur 50 % seulement."
-],
-"erreur_frequente": "Revendre au bout de cinq mois en pensant être exonéré : la plus-value est alors imposée au barème.",
-"sources": [
-{
-"label": "Guichet.lu, Achat et vente d'actions",
-"url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/achat-vente-actions.html"
-},
-{
-"label": "Guichet.lu, Identifier et déclarer les dividendes",
-"url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/identifier-declarer-dividendes.html"
-},
-{
-"label": "Paperjam, La nouvelle règle fiscale qui inquiète les petits investisseurs",
-"url": "https://paperjam.lu/article/la-nouvelle-regle-fiscale-qui-inquiete-les-petits-investisseurs"
-}
-]
-},
-"compte-titres": {
-"id": "compte-titres",
-"titre": "Le compte-titres au Luxembourg",
-"duree_min": 4,
-"resume": "Actions et ETF se logent sur un compte-titres. Il n'existe pas d'enveloppe fiscale de type PEA, mais les plus-values sont souvent exonérées après six mois.",
-"paragraphes": [
-"Au Luxembourg, on investit depuis un compte-titres ouvert dans une banque ou chez un courtier en ligne. Il n'existe pas d'enveloppe fiscale comparable au PEA français.",
-"L'avantage vient de la règle des six mois : pour un investisseur privé, la plupart des plus-values sur actions et ETF détenus plus longtemps ne sont pas imposées.",
-"Certains pays prélèvent une taxe à l'achat de leurs propres actions, quel que soit le pays de l'investisseur : c'est le cas de la France pour les grandes sociétés françaises. Elle figure sur l'avis d'opéré."
-],
-"exemple": "Jules achète un ETF monde et le garde huit ans. À la revente, sa plus-value n'est pas imposée au Luxembourg.",
-"a_retenir": [
-"Pas d'enveloppe de type PEA.",
-"Plus-values souvent exonérées après six mois.",
-"Une taxe étrangère peut s'appliquer à l'achat de certaines actions."
-],
-"erreur_frequente": "Ignorer les frais de garde et de change, qui pèsent plus que l'impôt pour un investisseur de long terme.",
-"sources": [
-{
-"label": "Guichet.lu, Achat et vente d'actions",
-"url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/achat-vente-actions.html"
-}
-]
-},
-"arnaques": {
-"id": "arnaques",
-"titre": "Reconnaître et éviter les arnaques (Luxembourg)",
-"duree_min": 5,
-"resume": "Avant de confier de l'argent, vérifiez que l'intermédiaire est autorisé par la CSSF et qu'il ne fait pas l'objet d'un avertissement.",
-"paragraphes": [
-"Les arnaques à l'investissement promettent un rendement élevé sans risque, pressent la décision et passent souvent par les réseaux sociaux ou un appel non sollicité.",
-"Au Luxembourg, la CSSF autorise et surveille les banques et les professionnels du secteur financier. Elle publie régulièrement des avertissements sur des entités qui proposent des services sans autorisation.",
-"Vérifiez qu'une société figure parmi les entités autorisées, et méfiez-vous des noms qui imitent ceux de vraies banques."
-],
-"exemple": "Une société présentée comme « luxembourgeoise » propose à Léa un placement garanti à 12 %. La CSSF a publié un avertissement à son sujet : elle n'investit pas.",
-"a_retenir": [
-"Rendement élevé sans risque : signal d'alarme.",
-"Vérifiez l'autorisation et les avertissements de la CSSF.",
-"Méfiez-vous des noms proches de vraies banques."
-],
-"erreur_frequente": "Se fier à une adresse au Luxembourg : elle ne prouve aucune autorisation.",
-"sources": [
-{
-"label": "CSSF, site officiel",
-"url": "https://www.cssf.lu/fr/"
-}
-]
-}
-},
-"quiz": [
-{
-"q": "Au bout de combien de temps de détention une plus-value sur actions est-elle en principe exonérée (participation de 10 % au plus) ?",
-"options": [
-"Un jour",
-"Six mois",
-"Cinq ans",
-"Jamais"
-],
-"bonne": 1,
-"explication": "Après six mois. Un allongement à douze mois a été annoncé pour 2027 : vérifiez la règle en vigueur."
-},
-{
-"q": "Quel est le plafond de déduction de la prévoyance-vieillesse en 2026 ?",
-"options": [
-"3 200 €",
-"4 500 €",
-"7 258 €",
-"1 050 €"
-],
-"bonne": 1,
-"explication": "4 500 € par an et par contribuable depuis l'année d'imposition 2026."
-},
-{
-"q": "Quel est le taux de la retenue libératoire sur les intérêts d'une banque luxembourgeoise ?",
-"options": [
-"10 %",
-"15 %",
-"20 %",
-"30 %"
-],
-"bonne": 2,
-"explication": "20 %, libératoire : rien d'autre à payer ni à déclarer pour ces intérêts."
-}
-]
-}
-}
+ "maj": "2026-11-04",
+ "note": "Leçons propres à chaque pays (hors France). Montants 2026, vérifiés sur les sources indiquées le 2 novembre 2026.",
+ "fr_seul": {
+  "bases": [
+   "epargne-precaution"
+  ],
+  "placements": [
+   "livrets",
+   "assurance-vie",
+   "pea",
+   "compte-titres",
+   "per",
+   "immobilier",
+   "crypto"
+  ],
+  "frais-fiscalite": [
+   "flat-tax",
+   "enveloppes-fiscales",
+   "dividendes-etrangers",
+   "declarer"
+  ],
+  "psychologie": [
+   "arnaques"
+  ]
+ },
+ "pays": {
+  "be": {
+   "nom": "Belgique",
+   "de": "de Belgique",
+   "en": "en Belgique",
+   "drap": "🇧🇪",
+   "regulateur": [
+    "FSMA",
+    "https://www.fsma.be/fr/mises-en-garde"
+   ],
+   "lecons": {
+    "epargne-precaution": {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution en Belgique",
+     "duree_min": 5,
+     "resume": "Avant d'investir, gardez trois à six mois de dépenses sur un compte d'épargne réglementé, disponible à tout moment.",
+     "paragraphes": [
+      "L'épargne de précaution sert à faire face à une dépense imprévue sans devoir vendre des placements au mauvais moment. On compte en général trois à six mois de dépenses courantes, davantage si vos revenus sont irréguliers.",
+      "En Belgique, elle se place le plus souvent sur un compte d'épargne réglementé. Sa rémunération se compose de deux parties : un intérêt de base et une prime de fidélité, acquise si l'argent reste au moins douze mois sur le compte.",
+      "Les intérêts d'un compte réglementé sont exonérés d'impôt jusqu'à 1 020 € par personne en 2026 (2 040 € pour un couple marié ou cohabitant légal). Au-delà, ils sont taxés à 15 %. Sur un compte d'épargne non réglementé, chaque euro d'intérêt est taxé à 30 %.",
+      "Comme partout dans l'Union européenne, les dépôts sont protégés jusqu'à 100 000 € par personne et par banque si celle-ci fait faillite."
+     ],
+     "exemple": "Sophie a 12 000 € sur deux comptes d'épargne réglementés. Ensemble, ils lui rapportent 260 € d'intérêts sur l'année. C'est sous le plafond de 1 020 € : elle ne paie aucun impôt sur ces intérêts.",
+     "a_retenir": [
+      "Trois à six mois de dépenses, disponibles à tout moment.",
+      "Intérêts exonérés jusqu'à 1 020 € par personne en 2026, puis 15 %.",
+      "Le plafond vaut pour l'ensemble de vos comptes réglementés, pas compte par compte."
+     ],
+     "erreur_frequente": "Croire que le plafond s'applique banque par banque. Il vaut par personne : si vous avez plusieurs comptes, additionnez les intérêts.",
+     "sources": [
+      {
+       "label": "Wikifin (FSMA), Que vous rapporte votre compte d'épargne ?",
+       "url": "https://www.wikifin.be/fr/epargner-et-investir/compte-depargne/que-vous-rapporte-votre-compte-depargne"
+      },
+      {
+       "label": "KBC Brussels, Impôts sur les revenus de l'épargne",
+       "url": "https://www.kbcbrussels.be/particuliers/fr/epargner/comptes-epargne/impots-sur-les-revenus-de-l-epargne.html"
+      }
+     ]
+    },
+    "epargne-pension": {
+     "id": "epargne-pension",
+     "titre": "L'épargne-pension (troisième pilier)",
+     "duree_min": 5,
+     "resume": "Une épargne pour la retraite qui donne droit à une réduction d'impôt de 30 % jusqu'à 1 050 € par an, ou de 25 % jusqu'à 1 350 €.",
+     "paragraphes": [
+      "L'épargne-pension est un placement de long terme pour compléter la pension légale. On la souscrit auprès d'une banque (fonds d'épargne-pension) ou d'un assureur (assurance épargne-pension), entre 18 et 64 ans.",
+      "L'État accorde une réduction d'impôt sur les versements. En 2026, deux formules existent : jusqu'à 1 050 € par an avec une réduction de 30 % (315 € au maximum), ou jusqu'à 1 350 € avec une réduction de 25 % (337,50 € au maximum).",
+      "Attention à la zone entre 1 050 € et 1 260 € : si vous choisissez le plafond majoré et versez dans cet intervalle, votre réduction est plus faible qu'avec 1 050 € versés à 30 %.",
+      "La réduction ne s'applique que si vous payez de l'impôt. Elle vient en déduction de l'impôt dû et n'est pas remboursée en argent si vous ne devez rien."
+     ],
+     "exemple": "Karim verse 1 050 € par an : il récupère 315 € via sa déclaration. Son épargne lui coûte donc 735 € par an.",
+     "a_retenir": [
+      "1 050 € à 30 % ou 1 350 € à 25 % en 2026.",
+      "Évitez de verser entre 1 050 € et 1 260 € avec le plafond majoré.",
+      "Une réduction d'impôt, pas un remboursement."
+     ],
+     "erreur_frequente": "Opter pour le plafond de 1 350 € et verser 1 100 € : l'avantage tombe à 275 €, moins que 315 € avec 1 050 €.",
+     "sources": [
+      {
+       "label": "Wikifin (FSMA), L'épargne-pension",
+       "url": "https://www.wikifin.be/fr/impots-emploi-et-revenus/declaration-dimpots/reductions-fiscales/lepargne-pension"
+      },
+      {
+       "label": "BNP Paribas Fortis, Montant maximum de l'épargne-pension",
+       "url": "https://www.bnpparibasfortis.be/fr/public/particuliers/epargner-et-placer/epargne-pension/montant-maximum"
+      }
+     ]
+    },
+    "compte-titres": {
+     "id": "compte-titres",
+     "titre": "Le compte-titres et la taxe de Bourse",
+     "duree_min": 6,
+     "resume": "En Belgique, actions et ETF se logent sur un compte-titres. Chaque achat et chaque vente paie la taxe sur les opérations de Bourse (TOB).",
+     "paragraphes": [
+      "Il n'existe pas en Belgique d'enveloppe fiscale comparable au PEA français. On investit en actions et en ETF depuis un compte-titres, ouvert dans une banque ou chez un courtier en ligne.",
+      "Chaque achat et chaque vente supporte la TOB. Pour une action cotée, le taux est de 0,35 % (au maximum 1 600 € par opération). Pour la plupart des ETF enregistrés dans un autre pays de l'Espace économique européen, il est de 0,12 % (maximum 1 300 €).",
+      "Un taux de 1,32 % (maximum 4 000 €) s'applique aux ETF de capitalisation enregistrés auprès de la FSMA. Vérifiez donc le statut d'un ETF avant de l'acheter : la différence pèse sur les petits montants réguliers.",
+      "Un courtier belge retient la TOB automatiquement. Avec un courtier étranger, c'est souvent à vous de la déclarer et de la payer, au moyen d'un formulaire du SPF Finances."
+     ],
+     "exemple": "Lucas achète pour 2 000 € d'actions d'une entreprise cotée. La TOB est de 0,35 %, soit 7 €. S'il les revend 2 400 €, il paie à nouveau 0,35 %, soit 8,40 €.",
+     "a_retenir": [
+      "Pas d'équivalent du PEA en Belgique.",
+      "TOB : 0,35 % pour une action, 0,12 % pour la plupart des ETF européens, 1,32 % pour certains ETF de capitalisation.",
+      "Avec un courtier étranger, la TOB se déclare souvent soi-même."
+     ],
+     "erreur_frequente": "Oublier la TOB chez un courtier étranger. La taxe reste due, même si le courtier ne la retient pas.",
+     "sources": [
+      {
+       "label": "Test-Achats, Taxe sur les opérations de Bourse",
+       "url": "https://www.test-achats.be/invest/fiscalite-et-droits/taxation/dossiers/taxe-de-bourse/taxe-operation-bourse"
+      },
+      {
+       "label": "KBC, Aperçu des taxes boursières (juillet 2026)",
+       "url": "https://wcmassets.kbc.be/content/dam/securities-services/documentation/Overview%20Stock%20Market%20Fees_FR_vJuly2026.pdf"
+      }
+     ]
+    },
+    "fiscalite": {
+     "id": "fiscalite",
+     "titre": "Dividendes et plus-values : l'impôt en Belgique",
+     "duree_min": 8,
+     "resume": "Dividendes taxés à 30 % avec 833 € exonérés par an ; depuis 2026, plus-values taxées à 10 % au-delà de 10 000 € par an.",
+     "paragraphes": [
+      "Les dividendes subissent un précompte mobilier de 30 %, retenu à la source par la banque belge. Pour une action étrangère, l'impôt du pays d'origine est en plus prélevé avant.",
+      "Chaque contribuable peut récupérer le précompte sur les premiers 833 € de dividendes ordinaires (revenus 2026), via sa déclaration d'impôt, aux codes 1437/2437. Cela représente au maximum 249,90 € par an.",
+      "Depuis le 1er janvier 2026, les plus-values réalisées sur des actifs financiers (actions, ETF, obligations, cryptoactifs) sont taxées à 10 %. Une première tranche de 10 000 € par an et par contribuable est exonérée, indexée chaque année. Si vous ne l'utilisez pas, 1 000 € s'ajoutent l'année suivante, jusqu'à 15 000 € après cinq ans.",
+      "Les plus-values constituées avant 2026 restent exonérées : pour un titre acheté plus tôt, la valeur de départ est celle du 31 décembre 2025. La banque retient en principe la taxe à la vente ; vous pouvez aussi choisir de tout déclarer vous-même."
+     ],
+     "exemple": "Claire achète des actions pour 20 000 € en 2026 et les revend 26 000 € en 2028. Sa plus-value de 6 000 € est sous la franchise de 10 000 € : elle ne paie rien, à condition de la déclarer pour récupérer la retenue éventuelle de la banque.",
+     "a_retenir": [
+      "Dividendes : 30 %, avec 833 € de dividendes exonérés par an (à réclamer dans la déclaration).",
+      "Plus-values : 10 % au-delà de 10 000 € par an, depuis 2026.",
+      "Plus-values antérieures à 2026 : exonérées (valeur au 31 décembre 2025)."
+     ],
+     "erreur_frequente": "Ne pas réclamer l'exonération des dividendes dans sa déclaration. Elle n'est pas automatique : sans les codes 1437/2437, les 249,90 € sont perdus.",
+     "sources": [
+      {
+       "label": "SPF Finances, Exonération des dividendes",
+       "url": "https://fin.belgium.be/fr/particuliers/avantages-fiscaux/exoneration-dividendes"
+      },
+      {
+       "label": "SPF Finances, Revenus de l'épargne et des placements",
+       "url": "https://fin.belgium.be/fr/particuliers/declaration-impot/revenus/epargne-placements"
+      },
+      {
+       "label": "Test-Achats, Comment la nouvelle taxe sur les plus-values change la donne",
+       "url": "https://www.test-achats.be/argent/impots/news/taxe-plus-values"
+      },
+      {
+       "label": "BNP Paribas Fortis, La taxe sur les plus-values en 10 questions",
+       "url": "https://www.bnpparibasfortis.be/fr/public/article/taxe-plus-value"
+      }
+     ]
+    },
+    "arnaques": {
+     "id": "arnaques",
+     "titre": "Reconnaître et éviter les arnaques (Belgique)",
+     "duree_min": 5,
+     "resume": "Avant de confier de l'argent, vérifiez que l'intermédiaire est autorisé par la FSMA et qu'il ne figure pas sur ses mises en garde.",
+     "paragraphes": [
+      "Les arnaques à l'investissement promettent souvent un rendement élevé sans risque, pressent la décision et passent par les réseaux sociaux, un appel non sollicité ou une fausse publicité avec une personnalité connue.",
+      "En Belgique, la FSMA autorise et contrôle les intermédiaires financiers. Elle publie une liste de sociétés qui opèrent illégalement, dont celles qui proposent de « récupérer » l'argent déjà perdu (recovery rooms).",
+      "Un professionnel sérieux ne vous demande jamais d'installer un logiciel de prise de contrôle à distance ni de virer de l'argent sur un compte à l'étranger au nom d'un tiers."
+     ],
+     "exemple": "Un « conseiller » contacte Marc par messagerie et lui promet 3 % par semaine sur des cryptoactifs. Marc cherche le nom de la société sur le site de la FSMA : elle figure dans les mises en garde.",
+     "a_retenir": [
+      "Rendement élevé sans risque : signal d'alarme.",
+      "Vérifiez l'autorisation et les mises en garde de la FSMA.",
+      "Méfiez-vous de qui propose de récupérer vos pertes."
+     ],
+     "erreur_frequente": "Faire confiance à une publicité qui utilise l'image d'une personnalité. Ces publicités sont presque toujours fausses.",
+     "sources": [
+      {
+       "label": "FSMA, Mises en garde",
+       "url": "https://www.fsma.be/fr/mises-en-garde"
+      },
+      {
+       "label": "Wikifin (FSMA)",
+       "url": "https://www.wikifin.be/fr"
+      }
+     ]
+    }
+   },
+   "quiz": [
+    {
+     "q": "Jusqu'à quel montant les intérêts d'un compte d'épargne réglementé sont-ils exonérés en 2026, par personne ?",
+     "options": [
+      "833 €",
+      "1 020 €",
+      "10 000 €",
+      "100 000 €"
+     ],
+     "bonne": 1,
+     "explication": "1 020 € par personne en 2026, 2 040 € pour un couple marié ou cohabitant légal."
+    },
+    {
+     "q": "Quel est le taux de la taxe sur les plus-values instaurée en 2026 ?",
+     "options": [
+      "10 %",
+      "15 %",
+      "30 %",
+      "0,35 %"
+     ],
+     "bonne": 0,
+     "explication": "10 % au-delà d'une franchise annuelle de 10 000 € par contribuable."
+    },
+    {
+     "q": "Quelle taxe paie-t-on à l'achat et à la vente d'une action cotée ?",
+     "options": [
+      "Le précompte mobilier",
+      "La TOB de 0,35 %",
+      "Aucune",
+      "La TOB de 1,32 %"
+     ],
+     "bonne": 1,
+     "explication": "La taxe sur les opérations de Bourse est de 0,35 % pour une action cotée, plafonnée à 1 600 € par opération."
+    }
+   ]
+  },
+  "ch": {
+   "nom": "Suisse",
+   "de": "de Suisse",
+   "en": "en Suisse",
+   "drap": "🇨🇭",
+   "regulateur": [
+    "FINMA",
+    "https://www.finma.ch/fr/finma-public/warnungen/liste-d'alerte/"
+   ],
+   "lecons": {
+    "epargne-precaution": {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution en Suisse",
+     "duree_min": 5,
+     "resume": "Gardez trois à six mois de dépenses sur un compte épargne, disponible à tout moment, avant d'investir en Bourse.",
+     "paragraphes": [
+      "L'épargne de précaution évite de vendre des placements au mauvais moment pour faire face à un imprévu. On compte en général trois à six mois de dépenses courantes.",
+      "En Suisse, elle se place sur un compte épargne bancaire. Les intérêts sont un revenu imposable, à déclarer avec le reste de vos revenus. Le compte compte aussi dans la fortune imposable.",
+      "Les intérêts de source suisse peuvent subir l'impôt anticipé de 35 %, que vous récupérez entièrement en les déclarant.",
+      "Les dépôts bancaires sont protégés par la garantie des dépôts (esisuisse) jusqu'à 100 000 francs par client et par banque."
+     ],
+     "exemple": "Nadia garde 15 000 francs sur un compte épargne pour les imprévus. Le reste de son épargne mensuelle part dans son pilier 3a et un ETF.",
+     "a_retenir": [
+      "Trois à six mois de dépenses sur un compte épargne.",
+      "Les intérêts sont imposables comme revenu.",
+      "L'impôt anticipé de 35 % se récupère via la déclaration."
+     ],
+     "erreur_frequente": "Oublier de déclarer un compte épargne : l'impôt anticipé retenu n'est alors pas remboursé.",
+     "sources": [
+      {
+       "label": "UBS, Investissements et impôts",
+       "url": "https://www.ubs.com/ch/fr/services/guide/investments/articles/investment-and-taxes-guide.html"
+      },
+      {
+       "label": "PostFinance, Déclarer les actions en Suisse",
+       "url": "https://www.postfinance.ch/fr/blog/placer-de-largent-mode-demploi/declarer-les-actions-en-suisse.html"
+      }
+     ]
+    },
+    "pilier-3a": {
+     "id": "pilier-3a",
+     "titre": "Le pilier 3a",
+     "duree_min": 6,
+     "resume": "Une épargne retraite déductible du revenu imposable : jusqu'à 7 258 francs par an en 2026 pour un salarié affilié à une caisse de pension.",
+     "paragraphes": [
+      "Le pilier 3a est la prévoyance individuelle liée. Les versements sont déductibles du revenu imposable, dans la limite d'un plafond fixé par la Confédération.",
+      "En 2026, le plafond est de 7 258 francs pour une personne affiliée à une caisse de pension (deuxième pilier). Sans caisse de pension, il est de 20 % du revenu de l'activité lucrative, au maximum 36 288 francs.",
+      "L'argent peut rester sur un compte 3a ou être investi en fonds, y compris en actions. Il est bloqué jusqu'à la retraite, sauf exceptions prévues par la loi (achat du logement principal, départ définitif de Suisse, activité indépendante).",
+      "Pendant toute la durée, les intérêts et les gains ne sont pas imposés. Le capital est imposé au retrait, à un taux réduit et séparé du reste du revenu."
+     ],
+     "exemple": "Luca, salarié, verse 7 258 francs dans son pilier 3a. Avec un taux marginal d'environ 25 %, il économise près de 1 800 francs d'impôts cette année-là.",
+     "a_retenir": [
+      "7 258 francs en 2026 avec caisse de pension, jusqu'à 36 288 francs sans.",
+      "Versements déductibles du revenu imposable.",
+      "Argent bloqué jusqu'à la retraite, sauf exceptions."
+     ],
+     "erreur_frequente": "Verser plus que le plafond : la part au-dessus n'est pas déductible.",
+     "sources": [
+      {
+       "label": "OFAS, Chiffres repères de la prévoyance professionnelle 2025-2026",
+       "url": "https://www.bsv.admin.ch/dam/bsv/fr/dokumente/bv/anleitungen/masszahlen-2025-2026.pdf.download.pdf/masszahlen-2025-2026.pdf"
+      },
+      {
+       "label": "UBS, Montant maximal du pilier 3a en 2026",
+       "url": "https://www.ubs.com/ch/fr/help/pension/maximal-contribution-2026.html"
+      }
+     ]
+    },
+    "compte-titres": {
+     "id": "compte-titres",
+     "titre": "Le compte-titres et le droit de timbre",
+     "duree_min": 5,
+     "resume": "Actions et ETF se logent sur un dépôt-titres. Chez un courtier suisse, chaque opération paie un droit de timbre de 0,075 % (titre suisse) ou 0,15 % (titre étranger).",
+     "paragraphes": [
+      "En Suisse, on investit en actions et en ETF depuis un dépôt-titres, ouvert dans une banque ou chez un courtier en ligne. Les titres font partie de votre fortune imposable, à leur valeur au 31 décembre.",
+      "Quand un courtier suisse intervient, la Confédération prélève un droit de timbre de négociation : 0,075 % pour un titre suisse et 0,15 % pour un titre étranger, à l'achat comme à la vente.",
+      "Ce droit n'est pas dû quand le courtier est étranger. C'est une des raisons pour lesquelles certains investisseurs passent par un courtier hors de Suisse ; les frais de change et la déclaration fiscale restent alors à surveiller."
+     ],
+     "exemple": "Mia achète pour 8 000 francs d'actions Nestlé chez un courtier suisse : le droit de timbre est de 0,075 %, soit 6 francs. Pour 8 000 francs d'un ETF étranger, il serait de 12 francs.",
+     "a_retenir": [
+      "Droit de timbre : 0,075 % (suisse) ou 0,15 % (étranger) par opération chez un courtier suisse.",
+      "Pas de droit de timbre chez un courtier étranger.",
+      "Les titres comptent dans la fortune imposable."
+     ],
+     "erreur_frequente": "Comparer les courtiers sur le seul courtage, sans le droit de timbre ni les frais de change.",
+     "sources": [
+      {
+       "label": "PostFinance, Courtages et autres frais",
+       "url": "https://www.postfinance.ch/fr/particuliers/placements/solutions/trading-en-ligne/e-trading/courtages-et-autres-frais.html"
+      },
+      {
+       "label": "Sénat français, Le droit de timbre en Suisse",
+       "url": "https://www.senat.fr/rap/r12-259/r12-2592.html"
+      }
+     ]
+    },
+    "fiscalite": {
+     "id": "fiscalite",
+     "titre": "Dividendes et gains : l'impôt en Suisse",
+     "duree_min": 7,
+     "resume": "Les gains en capital d'un investisseur privé ne sont pas imposés ; les dividendes sont un revenu imposable, avec un impôt anticipé de 35 % récupérable.",
+     "paragraphes": [
+      "Pour un particulier qui gère sa fortune privée, les gains réalisés en vendant des actions ou des ETF ne sont pas imposés (loi fédérale sur l'impôt fédéral direct, article 16).",
+      "Cette exonération ne vaut pas si l'administration vous considère comme un commerçant professionnel de titres, par exemple en cas d'opérations très fréquentes, de courte durée ou financées à crédit.",
+      "Les dividendes, eux, s'ajoutent à votre revenu imposable. Sur les dividendes de sociétés suisses, l'impôt anticipé de 35 % est retenu à la source ; vous le récupérez entièrement en déclarant les titres.",
+      "Pour une action étrangère, le pays d'origine retient souvent un impôt à la source, dont une partie peut être récupérée ou imputée selon la convention fiscale."
+     ],
+     "exemple": "Anna reçoit 1 000 francs de dividende d'une société suisse. Elle touche 650 francs, et les 350 francs d'impôt anticipé lui sont rendus après sa déclaration. Le dividende est ensuite imposé avec ses autres revenus.",
+     "a_retenir": [
+      "Gains en capital privés : pas d'impôt.",
+      "Dividendes : revenu imposable.",
+      "Impôt anticipé de 35 % : récupérable si les titres sont déclarés."
+     ],
+     "erreur_frequente": "Ne pas déclarer ses titres : l'impôt anticipé de 35 % est alors définitivement perdu.",
+     "sources": [
+      {
+       "label": "PostFinance, Déclarer les actions en Suisse",
+       "url": "https://www.postfinance.ch/fr/blog/placer-de-largent-mode-demploi/declarer-les-actions-en-suisse.html"
+      },
+      {
+       "label": "UBS, Quels revenus du capital sont imposables ?",
+       "url": "https://www.ubs.com/ch/fr/services/guide/investments/articles/investment-and-taxes-guide.html"
+      },
+      {
+       "label": "Fedlex, LIFD article 16",
+       "url": "https://www.fedlex.admin.ch/eli/cc/1991/1184_1184_1184/fr#art_16"
+      }
+     ]
+    },
+    "arnaques": {
+     "id": "arnaques",
+     "titre": "Reconnaître et éviter les arnaques (Suisse)",
+     "duree_min": 5,
+     "resume": "Avant de confier de l'argent, vérifiez que le prestataire est autorisé par la FINMA et qu'il ne figure pas sur sa liste d'alerte.",
+     "paragraphes": [
+      "Les arnaques à l'investissement promettent un rendement élevé sans risque, pressent la décision et passent souvent par les réseaux sociaux ou un appel non sollicité.",
+      "En Suisse, la FINMA autorise et surveille banques, négociants et gestionnaires. Elle publie une liste d'alerte des prestataires susceptibles d'exercer sans autorisation, et une liste des établissements autorisés.",
+      "La liste d'alerte n'est jamais exhaustive : un nom absent n'est pas une garantie. Vérifiez plutôt que le prestataire figure parmi les établissements autorisés."
+     ],
+     "exemple": "Une plateforme propose à Tom de doubler sa mise en un mois. Le nom ne figure pas parmi les établissements autorisés par la FINMA : il renonce.",
+     "a_retenir": [
+      "Rendement élevé sans risque : signal d'alarme.",
+      "Vérifiez l'autorisation FINMA, pas seulement la liste d'alerte.",
+      "Aucun professionnel ne demande d'accès à distance à votre ordinateur."
+     ],
+     "erreur_frequente": "Se rassurer parce qu'une société n'est pas sur la liste d'alerte.",
+     "sources": [
+      {
+       "label": "FINMA, Liste d'alerte",
+       "url": "https://www.finma.ch/fr/finma-public/warnungen/liste-d'alerte/"
+      }
+     ]
+    }
+   },
+   "quiz": [
+    {
+     "q": "Quel est le plafond du pilier 3a en 2026 pour un salarié affilié à une caisse de pension ?",
+     "options": [
+      "3 200 francs",
+      "7 258 francs",
+      "36 288 francs",
+      "100 000 francs"
+     ],
+     "bonne": 1,
+     "explication": "7 258 francs ; sans caisse de pension, 20 % du revenu, au maximum 36 288 francs."
+    },
+    {
+     "q": "Un investisseur privé vend des actions avec un gain. Que paie-t-il en impôt sur ce gain ?",
+     "options": [
+      "35 %",
+      "10 %",
+      "Rien, en principe",
+      "Son taux marginal"
+     ],
+     "bonne": 2,
+     "explication": "Les gains en capital sur la fortune privée ne sont pas imposés, sauf si l'on est considéré comme commerçant professionnel de titres."
+    },
+    {
+     "q": "Comment récupère-t-on l'impôt anticipé de 35 % prélevé sur un dividende suisse ?",
+     "options": [
+      "Il est perdu",
+      "En déclarant les titres",
+      "En vendant l'action",
+      "Auprès de la banque"
+     ],
+     "bonne": 1,
+     "explication": "Il est entièrement remboursé ou imputé si les titres et les revenus sont déclarés."
+    }
+   ]
+  },
+  "lu": {
+   "nom": "Luxembourg",
+   "de": "du Luxembourg",
+   "en": "au Luxembourg",
+   "drap": "🇱🇺",
+   "regulateur": [
+    "CSSF",
+    "https://www.cssf.lu/fr/"
+   ],
+   "lecons": {
+    "epargne-precaution": {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution au Luxembourg",
+     "duree_min": 5,
+     "resume": "Gardez trois à six mois de dépenses sur un compte d'épargne avant d'investir. Les intérêts versés par une banque luxembourgeoise subissent une retenue libératoire de 20 %.",
+     "paragraphes": [
+      "L'épargne de précaution évite de vendre des placements au mauvais moment pour faire face à un imprévu. On compte en général trois à six mois de dépenses courantes.",
+      "Au Luxembourg, elle se place le plus souvent sur un compte d'épargne bancaire. Les intérêts versés à un résident par une banque luxembourgeoise subissent une retenue à la source libératoire de 20 % : il n'y a rien d'autre à payer ni à déclarer.",
+      "Pour des intérêts versés par une banque étrangère, vous pouvez choisir ce même prélèvement libératoire de 20 % en le déclarant vous-même.",
+      "Comme partout dans l'Union européenne, les dépôts sont protégés jusqu'à 100 000 € par personne et par banque."
+     ],
+     "exemple": "Paul touche 300 € d'intérêts sur son compte d'épargne dans une banque luxembourgeoise. La banque retient 60 € : il reçoit 240 € et n'a rien à déclarer.",
+     "a_retenir": [
+      "Trois à six mois de dépenses, disponibles à tout moment.",
+      "Intérêts : retenue libératoire de 20 %.",
+      "Dépôts garantis jusqu'à 100 000 € par banque."
+     ],
+     "erreur_frequente": "Croire que la retenue de 20 % est remboursable. Elle est libératoire : ni remboursable, ni imputable.",
+     "sources": [
+      {
+       "label": "Guichet.lu, Déclarer les intérêts perçus",
+       "url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/banque-luxembourgeoise.html"
+      },
+      {
+       "label": "Administration des contributions directes, RELIBI",
+       "url": "https://impotsdirects.public.lu/fr/az/f/fiscalite-epargne.html"
+      }
+     ]
+    },
+    "prevoyance-vieillesse": {
+     "id": "prevoyance-vieillesse",
+     "titre": "La prévoyance-vieillesse (article 111bis)",
+     "duree_min": 5,
+     "resume": "Une épargne retraite déductible jusqu'à 4 500 € par an et par contribuable depuis 2026.",
+     "paragraphes": [
+      "Le contrat de prévoyance-vieillesse est une épargne de long terme pour la retraite, proposée par les banques et les assureurs. Il relève de l'article 111bis de la loi sur l'impôt sur le revenu.",
+      "Les versements sont déductibles du revenu imposable, jusqu'à 4 500 € par an et par contribuable à partir de l'année d'imposition 2026. Le plafond était de 3 200 € de 2017 à 2025.",
+      "Le contrat doit durer au moins dix ans et prendre fin entre 60 et 75 ans. Le plafond est individuel : dans un couple, chacun a le sien, avec son propre contrat. Un plafond non utilisé est perdu."
+     ],
+     "exemple": "Sarah verse 375 € par mois, soit 4 500 € par an. Avec un taux marginal de 39 %, elle réduit son impôt d'environ 1 750 € cette année-là.",
+     "a_retenir": [
+      "Jusqu'à 4 500 € déductibles par an depuis 2026.",
+      "Contrat d'au moins dix ans, échéance entre 60 et 75 ans.",
+      "Plafond individuel, perdu s'il n'est pas utilisé."
+     ],
+     "erreur_frequente": "Souscrire un seul contrat pour un couple : chaque conjoint doit avoir le sien pour déduire 4 500 €.",
+     "sources": [
+      {
+       "label": "Administration des contributions directes, Prévoyance-vieillesse",
+       "url": "https://impotsdirects.public.lu/fr/az/p/prevoyance_vieillesse.html"
+      }
+     ]
+    },
+    "fiscalite": {
+     "id": "fiscalite",
+     "titre": "Dividendes et plus-values : l'impôt au Luxembourg",
+     "duree_min": 7,
+     "resume": "Plus-values exonérées après six mois de détention pour une participation de 10 % au plus ; dividendes imposés au barème, souvent après une exonération de 50 %.",
+     "paragraphes": [
+      "Pour un particulier, la plus-value tirée de la vente d'actions ou d'ETF détenus depuis plus de six mois n'est pas imposée, si la participation ne dépasse pas 10 % du capital de la société.",
+      "Une vente dans les six mois après l'achat est une plus-value spéculative, imposée au barème progressif, sauf si l'ensemble de ces gains reste sous 500 € sur l'année. Le gouvernement a annoncé en 2026 vouloir porter ce délai à douze mois à partir de 2027 : vérifiez la règle en vigueur avant de vendre.",
+      "Les dividendes sont imposés au barème progressif. Ceux d'une société de capitaux pleinement imposable, luxembourgeoise ou d'un autre pays de l'Union européenne notamment, sont exonérés à 50 %.",
+      "Les dividendes de sociétés luxembourgeoises subissent une retenue à la source de 15 %, imputable sur l'impôt dû."
+     ],
+     "exemple": "Emma touche 100 € de dividende d'une société luxembourgeoise. La retenue est de 15 €. Seuls 50 € sont imposables : avec un taux marginal de 39 %, l'impôt total est de 19,50 €, dont 15 € déjà retenus.",
+     "a_retenir": [
+      "Plus-values : exonérées après six mois si la participation est de 10 % au plus.",
+      "Gains spéculatifs sous 500 € par an : exonérés.",
+      "Dividendes : barème progressif, souvent sur 50 % seulement."
+     ],
+     "erreur_frequente": "Revendre au bout de cinq mois en pensant être exonéré : la plus-value est alors imposée au barème.",
+     "sources": [
+      {
+       "label": "Guichet.lu, Achat et vente d'actions",
+       "url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/achat-vente-actions.html"
+      },
+      {
+       "label": "Guichet.lu, Identifier et déclarer les dividendes",
+       "url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/identifier-declarer-dividendes.html"
+      },
+      {
+       "label": "Paperjam, La nouvelle règle fiscale qui inquiète les petits investisseurs",
+       "url": "https://paperjam.lu/article/la-nouvelle-regle-fiscale-qui-inquiete-les-petits-investisseurs"
+      }
+     ]
+    },
+    "compte-titres": {
+     "id": "compte-titres",
+     "titre": "Le compte-titres au Luxembourg",
+     "duree_min": 4,
+     "resume": "Actions et ETF se logent sur un compte-titres. Il n'existe pas d'enveloppe fiscale de type PEA, mais les plus-values sont souvent exonérées après six mois.",
+     "paragraphes": [
+      "Au Luxembourg, on investit depuis un compte-titres ouvert dans une banque ou chez un courtier en ligne. Il n'existe pas d'enveloppe fiscale comparable au PEA français.",
+      "L'avantage vient de la règle des six mois : pour un investisseur privé, la plupart des plus-values sur actions et ETF détenus plus longtemps ne sont pas imposées.",
+      "Certains pays prélèvent une taxe à l'achat de leurs propres actions, quel que soit le pays de l'investisseur : c'est le cas de la France pour les grandes sociétés françaises. Elle figure sur l'avis d'opéré."
+     ],
+     "exemple": "Jules achète un ETF monde et le garde huit ans. À la revente, sa plus-value n'est pas imposée au Luxembourg.",
+     "a_retenir": [
+      "Pas d'enveloppe de type PEA.",
+      "Plus-values souvent exonérées après six mois.",
+      "Une taxe étrangère peut s'appliquer à l'achat de certaines actions."
+     ],
+     "erreur_frequente": "Ignorer les frais de garde et de change, qui pèsent plus que l'impôt pour un investisseur de long terme.",
+     "sources": [
+      {
+       "label": "Guichet.lu, Achat et vente d'actions",
+       "url": "https://guichet.public.lu/fr/citoyens/fiscalite/declaration-impot-decompte/capitaux-mobiliers/banque-dividende-interets/achat-vente-actions.html"
+      }
+     ]
+    },
+    "arnaques": {
+     "id": "arnaques",
+     "titre": "Reconnaître et éviter les arnaques (Luxembourg)",
+     "duree_min": 5,
+     "resume": "Avant de confier de l'argent, vérifiez que l'intermédiaire est autorisé par la CSSF et qu'il ne fait pas l'objet d'un avertissement.",
+     "paragraphes": [
+      "Les arnaques à l'investissement promettent un rendement élevé sans risque, pressent la décision et passent souvent par les réseaux sociaux ou un appel non sollicité.",
+      "Au Luxembourg, la CSSF autorise et surveille les banques et les professionnels du secteur financier. Elle publie régulièrement des avertissements sur des entités qui proposent des services sans autorisation.",
+      "Vérifiez qu'une société figure parmi les entités autorisées, et méfiez-vous des noms qui imitent ceux de vraies banques."
+     ],
+     "exemple": "Une société présentée comme « luxembourgeoise » propose à Léa un placement garanti à 12 %. La CSSF a publié un avertissement à son sujet : elle n'investit pas.",
+     "a_retenir": [
+      "Rendement élevé sans risque : signal d'alarme.",
+      "Vérifiez l'autorisation et les avertissements de la CSSF.",
+      "Méfiez-vous des noms proches de vraies banques."
+     ],
+     "erreur_frequente": "Se fier à une adresse au Luxembourg : elle ne prouve aucune autorisation.",
+     "sources": [
+      {
+       "label": "CSSF, site officiel",
+       "url": "https://www.cssf.lu/fr/"
+      }
+     ]
+    }
+   },
+   "quiz": [
+    {
+     "q": "Au bout de combien de temps de détention une plus-value sur actions est-elle en principe exonérée (participation de 10 % au plus) ?",
+     "options": [
+      "Un jour",
+      "Six mois",
+      "Cinq ans",
+      "Jamais"
+     ],
+     "bonne": 1,
+     "explication": "Après six mois. Un allongement à douze mois a été annoncé pour 2027 : vérifiez la règle en vigueur."
+    },
+    {
+     "q": "Quel est le plafond de déduction de la prévoyance-vieillesse en 2026 ?",
+     "options": [
+      "3 200 €",
+      "4 500 €",
+      "7 258 €",
+      "1 050 €"
+     ],
+     "bonne": 1,
+     "explication": "4 500 € par an et par contribuable depuis l'année d'imposition 2026."
+    },
+    {
+     "q": "Quel est le taux de la retenue libératoire sur les intérêts d'une banque luxembourgeoise ?",
+     "options": [
+      "10 %",
+      "15 %",
+      "20 %",
+      "30 %"
+     ],
+     "bonne": 2,
+     "explication": "20 %, libératoire : rien d'autre à payer ni à déclarer pour ces intérêts."
+    }
+   ]
+  },
+  "ca": {
+   "nom": "Canada",
+   "de": "du Canada",
+   "en": "au Canada",
+   "drap": "🇨🇦",
+   "regulateur": [
+    "Autorité des marchés financiers (Québec)",
+    "https://lautorite.qc.ca"
+   ],
+   "lecons": {
+    "epargne-precaution": {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution au Canada",
+     "duree_min": 5,
+     "resume": "Trois à six mois de dépenses sur un compte disponible à tout moment, avant d'investir en Bourse. Au Canada, le CELI peut aussi l'accueillir.",
+     "paragraphes": [
+      "Avant d'acheter des actions, gardez de côté de quoi faire face à une dépense imprévue : trois à six mois de dépenses courantes, sur un compte d'épargne où l'argent reste disponible.",
+      "Les dépôts sont protégés jusqu'à 100 000 $ par catégorie de dépôts et par institution : par la Société d'assurance-dépôts du Canada pour les banques fédérales, par l'Autorité des marchés financiers pour les institutions autorisées au Québec (dont les caisses).",
+      "Les intérêts d'un compte d'épargne ordinaire sont imposés comme un revenu. Placés dans un CELI, ils ne le sont pas, et un retrait ne coûte rien : beaucoup de Canadiens y gardent leur réserve.",
+      "Les actions et les FNB (le nom canadien des ETF) ne sont pas protégés par l'assurance-dépôts : leur valeur peut baisser."
+     ],
+     "exemple": "Sophie dépense 3 000 $ par mois. Elle garde 12 000 $ dans un CELI placé en compte d'épargne à intérêt élevé, et n'investit en Bourse que ce qui dépasse.",
+     "a_retenir": [
+      "Trois à six mois de dépenses, disponibles.",
+      "Dépôts protégés jusqu'à 100 000 $ par catégorie et par institution.",
+      "Dans un CELI, les intérêts ne sont pas imposés."
+     ],
+     "erreur_frequente": "Placer sa réserve en actions : en cas de baisse, il faudrait vendre au mauvais moment.",
+     "sources": [
+      {
+       "label": "Autorité des marchés financiers du Québec, protection des dépôts",
+       "url": "https://lautorite.qc.ca/grand-public/publications/pour-le-grand-public/protection-des-depots"
+      },
+      {
+       "label": "Agence du revenu du Canada, avant de cotiser à un CELI",
+       "url": "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/compte-epargne-libre-impot/types-placements.html"
+      }
+     ]
+    },
+    "celi": {
+     "id": "celi",
+     "titre": "Le CELI (compte d'épargne libre d'impôt)",
+     "duree_min": 6,
+     "resume": "7 000 $ de droits de cotisation en 2026. Les gains, intérêts et dividendes ne sont jamais imposés, même au retrait.",
+     "paragraphes": [
+      "Le CELI est ouvert à tout résident du Canada de 18 ans et plus. On y place de l'épargne, des actions, des FNB ou des obligations ; tout ce qu'il rapporte est exempt d'impôt, y compris au retrait.",
+      "Le plafond annuel est de 7 000 $ en 2026. Les droits inutilisés se reportent d'une année à l'autre : une personne admissible depuis 2009 qui n'a jamais cotisé dispose de 109 000 $ de droits en 2026.",
+      "Un retrait est possible à tout moment. Le montant retiré redevient disponible, mais seulement le 1er janvier de l'année suivante.",
+      "Une cotisation au-delà de vos droits est pénalisée (1 % par mois sur l'excédent). Vos droits exacts figurent dans votre dossier en ligne de l'Agence du revenu du Canada.",
+      "Les dividendes d'actions américaines y subissent une retenue de 15 % aux États-Unis, qui n'est pas récupérable dans un CELI."
+     ],
+     "exemple": "Karim, 30 ans, verse 7 000 $ en 2026 dans un FNB. Dix ans plus tard, son placement vaut 13 000 $ : il peut tout retirer sans payer d'impôt sur les 6 000 $ de gain.",
+     "a_retenir": [
+      "7 000 $ en 2026 ; droits inutilisés reportés.",
+      "Aucun impôt sur les gains, même au retrait.",
+      "Un retrait redonne des droits l'année suivante seulement."
+     ],
+     "erreur_frequente": "Recotiser la même année le montant retiré : cela peut créer un excédent pénalisé.",
+     "sources": [
+      {
+       "label": "Agence du revenu du Canada, calculer vos droits de cotisation au CELI",
+       "url": "https://www.canada.ca/fr/agence-revenu/services/impot/particuliers/sujets/compte-epargne-libre-impot/cotiser/calculer-droits.html"
+      },
+      {
+       "label": "TD, plafond de cotisation au CELI et règles de retrait",
+       "url": "https://www.td.com/ca/fr/services-bancaires-personnels/placements-personnels/apprendre/plafond-cotisation-celi-regles-retrait"
+      }
+     ]
+    },
+    "reer": {
+     "id": "reer",
+     "titre": "Le REER (régime enregistré d'épargne-retraite)",
+     "duree_min": 6,
+     "resume": "Des cotisations déductibles du revenu, dans la limite de 18 % du revenu gagné l'année précédente (33 810 $ au plus pour 2026). L'impôt est payé au retrait.",
+     "paragraphes": [
+      "Les sommes versées dans un REER sont déduites de votre revenu imposable : vous payez moins d'impôt l'année de la cotisation.",
+      "Le plafond est de 18 % du revenu gagné l'année précédente, au maximum 33 810 $ pour 2026 et 35 390 $ pour 2027. Les droits inutilisés se reportent.",
+      "À l'intérieur, les gains ne sont pas imposés. Au retrait, tout l'argent retiré est imposé comme un revenu ; une retenue est prélevée par l'institution.",
+      "Les dividendes américains versés dans un REER échappent en principe à la retenue des États-Unis, contrairement au CELI.",
+      "CELI ou REER ? Le REER est plus intéressant si votre taux d'imposition à la retraite sera plus bas qu'aujourd'hui ; le CELI laisse l'argent disponible sans impôt. Beaucoup utilisent les deux."
+     ],
+     "exemple": "Julie gagne 60 000 $. Elle verse 5 000 $ dans son REER et réduit son revenu imposable à 55 000 $. Elle paiera l'impôt sur ces sommes quand elle les retirera, à la retraite.",
+     "a_retenir": [
+      "Cotisations déductibles, jusqu'à 18 % du revenu gagné.",
+      "33 810 $ au plus pour 2026.",
+      "Tout retrait est imposé comme un revenu."
+     ],
+     "erreur_frequente": "Retirer de son REER avant la retraite pour une dépense courante : le retrait est imposé et les droits utilisés ne reviennent pas.",
+     "sources": [
+      {
+       "label": "Chaire en fiscalité et en finances publiques (Université de Sherbrooke), CELI et REER",
+       "url": "https://cffp.recherche.usherbrooke.ca/outils-ressources/guide-mesures-fiscales/compte-epargne-libre-impot/"
+      }
+     ]
+    },
+    "fiscalite": {
+     "id": "fiscalite",
+     "titre": "L'impôt sur vos placements au Canada",
+     "duree_min": 6,
+     "resume": "Hors CELI et REER, la moitié d'un gain en capital est imposée, à votre taux marginal. Les dividendes de sociétés canadiennes ont un crédit d'impôt.",
+     "paragraphes": [
+      "Dans un compte non enregistré (un compte de courtage ordinaire), seule la moitié d'un gain en capital s'ajoute à votre revenu imposable : c'est le taux d'inclusion de 50 %. La hausse aux deux tiers annoncée en 2024 a été annulée le 21 mars 2025.",
+      "Une perte en capital peut réduire vos gains en capital de l'année, des trois années précédentes ou des années suivantes.",
+      "Les dividendes de sociétés canadiennes bénéficient du crédit d'impôt pour dividendes, qui réduit l'impôt à payer. Les dividendes étrangers et les intérêts sont imposés entièrement à votre taux marginal.",
+      "Au Québec, vous remplissez deux déclarations : une fédérale et une provinciale. Les taux dépendent de votre province."
+     ],
+     "exemple": "Marc vend en 2026, dans un compte ordinaire, des actions achetées 10 000 $ pour 14 000 $. Le gain est de 4 000 $ : 2 000 $ s'ajoutent à son revenu imposable.",
+     "a_retenir": [
+      "Gain en capital : 50 % imposé, hors CELI et REER.",
+      "Dividendes canadiens : crédit d'impôt.",
+      "Intérêts et dividendes étrangers : imposés en entier."
+     ],
+     "erreur_frequente": "Investir d'abord dans un compte ordinaire alors que les droits CELI ne sont pas utilisés.",
+     "sources": [
+      {
+       "label": "Cabinet du premier ministre (21 mars 2025), annulation de la hausse du taux d'inclusion",
+       "url": "https://newswire.ca/fr/news-releases/le-premier-ministre-carney-annule-la-hausse-proposee-de-l-impot-sur-les-gains-en-capital-884263449.html"
+      },
+      {
+       "label": "Chaire en fiscalité et en finances publiques (Université de Sherbrooke), CELI et REER",
+       "url": "https://cffp.recherche.usherbrooke.ca/outils-ressources/guide-mesures-fiscales/compte-epargne-libre-impot/"
+      }
+     ]
+    },
+    "arnaques": {
+     "id": "arnaques",
+     "titre": "Reconnaître une arnaque au Canada",
+     "duree_min": 5,
+     "resume": "Avant d'investir, vérifiez que la personne ou l'entreprise est inscrite auprès des autorités en valeurs mobilières de votre province.",
+     "paragraphes": [
+      "Au Canada, toute personne qui vend des placements doit être inscrite auprès de l'autorité en valeurs mobilières de sa province (au Québec : l'Autorité des marchés financiers). Les autorités publient des mises en garde contre les sites non inscrits.",
+      "Signaux d'alerte : un rendement élevé « garanti », une pression pour décider vite, un paiement en cryptomonnaie ou par virement à l'étranger, une célébrité qui recommande un placement sur les réseaux sociaux.",
+      "Méfiez-vous des offres de récupération de l'argent perdu : c'est souvent une seconde arnaque visant les mêmes victimes.",
+      "En cas de doute, ne versez rien et contactez l'autorité de votre province."
+     ],
+     "exemple": "Un site promet 3 % par mois « sans risque » et presse Nadia de virer 5 000 $ en cryptomonnaie. Elle ne trouve pas l'entreprise dans le registre : elle ne verse rien.",
+     "a_retenir": [
+      "Vérifiez l'inscription avant de verser un dollar.",
+      "Rendement garanti et élevé : signal d'alerte.",
+      "Aucune autorité ne vous contacte pour récupérer votre argent contre paiement."
+     ],
+     "erreur_frequente": "Croire qu'un site bien fait ou une publicité avec une célébrité prouve le sérieux de l'offre.",
+     "sources": [
+      {
+       "label": "Autorité des marchés financiers du Québec",
+       "url": "https://lautorite.qc.ca"
+      }
+     ]
+    }
+   },
+   "quiz": [
+    {
+     "q": "Quel est le plafond de cotisation au CELI pour 2026 ?",
+     "options": [
+      "3 000 $",
+      "7 000 $",
+      "18 % du revenu",
+      "33 810 $"
+     ],
+     "bonne": 1,
+     "explication": "7 000 $ ; les droits inutilisés des années précédentes s'y ajoutent."
+    },
+    {
+     "q": "Hors CELI et REER, quelle part d'un gain en capital est imposée ?",
+     "options": [
+      "Tout le gain",
+      "La moitié",
+      "Les deux tiers",
+      "Rien"
+     ],
+     "bonne": 1,
+     "explication": "Le taux d'inclusion est de 50 % ; la hausse aux deux tiers a été annulée en mars 2025."
+    },
+    {
+     "q": "Quand paie-t-on l'impôt sur l'argent d'un REER ?",
+     "options": [
+      "Au versement",
+      "Chaque année",
+      "Au retrait",
+      "Jamais"
+     ],
+     "bonne": 2,
+     "explication": "Les cotisations sont déductibles ; les retraits sont imposés comme un revenu."
+    }
+   ]
+  },
+  "de": {
+   "nom": "Allemagne",
+   "de": "d'Allemagne",
+   "en": "en Allemagne",
+   "drap": "🇩🇪",
+   "regulateur": [
+    "BaFin",
+    "https://www.bafin.de"
+   ],
+   "lecons": {
+    "epargne-precaution": {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution en Allemagne",
+     "duree_min": 5,
+     "resume": "Trois à six mois de dépenses sur un compte disponible (Tagesgeld), avant d'investir en Bourse. Dépôts garantis jusqu'à 100 000 € par banque.",
+     "paragraphes": [
+      "Avant d'acheter des actions, gardez trois à six mois de dépenses courantes sur un compte rémunéré disponible à tout moment, le Tagesgeldkonto.",
+      "Comme dans toute l'Union européenne, les dépôts sont garantis jusqu'à 100 000 € par personne et par banque.",
+      "Les intérêts sont des revenus de capitaux : ils entrent dans le forfait d'épargnant de 1 000 € par an (2 000 € pour un couple marié), puis sont imposés à 25 % plus la contribution de solidarité.",
+      "Pour profiter du forfait sans démarche, donnez à chaque banque un ordre d'exonération (Freistellungsauftrag), dont la somme ne doit pas dépasser 1 000 €."
+     ],
+     "exemple": "Lena dépense 2 000 € par mois. Elle garde 9 000 € sur un Tagesgeldkonto et investit le reste chaque mois dans un ETF.",
+     "a_retenir": [
+      "Trois à six mois de dépenses, disponibles.",
+      "Dépôts garantis jusqu'à 100 000 € par banque.",
+      "Forfait d'épargnant : 1 000 € de revenus exonérés par an."
+     ],
+     "erreur_frequente": "Oublier le Freistellungsauftrag : la banque prélève alors l'impôt dès le premier euro (récupérable seulement par la déclaration).",
+     "sources": [
+      {
+       "label": "Entschädigungseinrichtung deutscher Banken (garantie des dépôts)",
+       "url": "https://www.edb-banken.de"
+      },
+      {
+       "label": "Steuer-Berater.de, imposition des fonds (Teilfreistellung, Vorabpauschale 2026)",
+       "url": "https://www.steuer-berater.de/lexikon/investmentfonds"
+      }
+     ]
+    },
+    "compte-titres": {
+     "id": "compte-titres",
+     "titre": "Le dépôt-titres (Depot) et le plan d'épargne",
+     "duree_min": 6,
+     "resume": "En Allemagne, on investit dans un Depot, souvent par un plan d'épargne mensuel en ETF (Sparplan). Il n'existe pas d'équivalent du PEA.",
+     "paragraphes": [
+      "Le Depot est le compte qui conserve vos actions et vos ETF. Il s'ouvre auprès d'une banque ou d'un courtier en ligne ; la banque calcule et prélève l'impôt pour vous.",
+      "Le plan d'épargne (Sparplan) investit automatiquement un montant fixe chaque mois, souvent dès 25 ou 50 €, dans un ETF ou une action. Beaucoup de courtiers le proposent sans frais d'achat.",
+      "Il n'existe pas de compte qui exonère les placements en actions comme le PEA français. L'avantage fiscal principal est le forfait d'épargnant de 1 000 € et, pour les ETF d'actions, l'exonération partielle de 30 %.",
+      "Les dividendes étrangers subissent un impôt dans leur pays d'origine, imputable en partie sur l'impôt allemand."
+     ],
+     "exemple": "Jonas place 100 € par mois dans un ETF monde via un Sparplan. La banque ne prélève rien tant que ses revenus imposables restent sous son Freistellungsauftrag.",
+     "a_retenir": [
+      "Depot : le compte qui conserve les titres.",
+      "Sparplan : un achat automatique chaque mois.",
+      "Pas d'équivalent du PEA en Allemagne."
+     ],
+     "erreur_frequente": "Multiplier les Depots sans répartir le Freistellungsauftrag : une banque prélève alors l'impôt alors qu'une autre a du forfait inutilisé.",
+     "sources": [
+      {
+       "label": "Steuer-Berater.de, imposition des fonds (Teilfreistellung, Vorabpauschale 2026)",
+       "url": "https://www.steuer-berater.de/lexikon/investmentfonds"
+      }
+     ]
+    },
+    "fiscalite": {
+     "id": "fiscalite",
+     "titre": "L'impôt sur vos placements en Allemagne",
+     "duree_min": 7,
+     "resume": "Gains, dividendes et intérêts : 25 % plus la contribution de solidarité (26,375 %) au-delà de 1 000 € par an. Les ETF d'actions sont exonérés à 30 %.",
+     "paragraphes": [
+      "L'Abgeltungsteuer (impôt libératoire) est de 25 %, plus 5,5 % de contribution de solidarité sur cet impôt : 26,375 % au total. Si vous êtes membre d'une Église qui lève l'impôt d'Église, il s'y ajoute.",
+      "Les 1 000 premiers euros de revenus de capitaux par an sont exonérés (2 000 € pour un couple marié) : c'est le Sparer-Pauschbetrag.",
+      "Pour un ETF d'actions (plus de 50 % d'actions), 30 % des gains et des dividendes sont exonérés : c'est la Teilfreistellung. Elle compense l'impôt déjà payé au niveau du fonds.",
+      "Un ETF de capitalisation, qui ne verse rien, est imposé chaque année sur un montant forfaitaire, la Vorabpauschale : 70 % du taux de base (3,20 % pour 2026) appliqué à la valeur du début d'année, dans la limite de la hausse réelle. Ce montant est déduit de l'impôt dû à la vente.",
+      "Les pertes sur actions ne compensent que des gains sur actions ; les autres pertes compensent tous les revenus de capitaux."
+     ],
+     "exemple": "Anna vend des parts d'un ETF d'actions avec 3 000 € de gain. 30 % sont exonérés : 2 100 € restent. Après le forfait de 1 000 €, 1 100 € sont imposés à 26,375 %, soit environ 290 €.",
+     "a_retenir": [
+      "26,375 % au-delà du forfait de 1 000 €.",
+      "ETF d'actions : 30 % des revenus exonérés.",
+      "ETF de capitalisation : Vorabpauschale chaque année."
+     ],
+     "erreur_frequente": "Ne pas prévoir de liquidités sur le compte en janvier : la banque prélève l'impôt sur la Vorabpauschale à ce moment-là.",
+     "sources": [
+      {
+       "label": "Steuer-Berater.de, imposition des fonds (Teilfreistellung, Vorabpauschale 2026)",
+       "url": "https://www.steuer-berater.de/lexikon/investmentfonds"
+      },
+      {
+       "label": "Stiftung Warentest, calculateur de la Vorabpauschale",
+       "url": "https://www.test.de/vorabpauschale-rechner-6123332-0/"
+      }
+     ]
+    },
+    "arnaques": {
+     "id": "arnaques",
+     "titre": "Reconnaître une arnaque en Allemagne",
+     "duree_min": 5,
+     "resume": "Toute entreprise qui propose des services financiers en Allemagne a besoin d'une autorisation de la BaFin. Vérifiez-la avant de verser quoi que ce soit.",
+     "paragraphes": [
+      "La BaFin tient une base de données des entreprises autorisées et publie des mises en garde contre les sites qui proposent des placements sans autorisation, ou qui usurpent le nom d'une vraie banque.",
+      "Signaux d'alerte : un rendement élevé « garanti », un dépôt à terme bien plus rémunéré que partout ailleurs, une pression pour décider vite, un paiement en cryptomonnaie, une célébrité qui recommande un placement.",
+      "Certains escrocs copient le nom et l'adresse d'une vraie société : vérifiez l'adresse du site et les coordonnées sur le registre de la BaFin, pas sur le site lui-même.",
+      "En cas de doute, ne versez rien et contactez la BaFin ou un centre de consommateurs (Verbraucherzentrale)."
+     ],
+     "exemple": "Un site propose un compte à terme à 6 % au nom d'une banque connue. Tim compare l'adresse avec la base de la BaFin : elle ne correspond pas. Il ne verse rien.",
+     "a_retenir": [
+      "Autorisation de la BaFin obligatoire.",
+      "Vérifiez sur le registre, pas sur le site.",
+      "Rendement nettement au-dessus du marché : signal d'alerte."
+     ],
+     "erreur_frequente": "Faire confiance à un site parce qu'il affiche un logo ou un numéro d'autorisation : vérifiez-les auprès de la BaFin.",
+     "sources": [
+      {
+       "label": "BaFin, autorité de surveillance financière",
+       "url": "https://www.bafin.de"
+      }
+     ]
+    }
+   },
+   "quiz": [
+    {
+     "q": "Quel montant de revenus de capitaux est exonéré chaque année pour une personne seule ?",
+     "options": [
+      "801 €",
+      "1 000 €",
+      "2 000 €",
+      "Aucun"
+     ],
+     "bonne": 1,
+     "explication": "Le Sparer-Pauschbetrag est de 1 000 € (2 000 € pour un couple marié)."
+    },
+    {
+     "q": "Quelle part des gains d'un ETF d'actions est exonérée ?",
+     "options": [
+      "0 %",
+      "15 %",
+      "30 %",
+      "50 %"
+     ],
+     "bonne": 2,
+     "explication": "La Teilfreistellung est de 30 % pour un fonds investi à plus de 50 % en actions."
+    },
+    {
+     "q": "Quel est le taux de l'impôt libératoire, solidarité comprise ?",
+     "options": [
+      "19 %",
+      "25 %",
+      "26,375 %",
+      "30 %"
+     ],
+     "bonne": 2,
+     "explication": "25 % plus 5,5 % de solidarité sur cet impôt, hors impôt d'Église."
+    }
+   ]
+  },
+  "it": {
+   "nom": "Italie",
+   "de": "d'Italie",
+   "en": "en Italie",
+   "drap": "🇮🇹",
+   "regulateur": [
+    "CONSOB",
+    "https://www.consob.it/web/area-pubblica/occhio-alle-truffe"
+   ],
+   "lecons": {
+    "epargne-precaution": {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution en Italie",
+     "duree_min": 5,
+     "resume": "Trois à six mois de dépenses sur un compte disponible, avant d'investir en Bourse. Dépôts garantis jusqu'à 100 000 € par banque.",
+     "paragraphes": [
+      "Avant d'acheter des actions, gardez trois à six mois de dépenses courantes sur un compte disponible : un compte courant ou un conto deposito libre (sans durée bloquée).",
+      "Les dépôts sont garantis jusqu'à 100 000 € par personne et par banque, par le Fonds interbancaire de garantie des dépôts (FITD) ou le fonds des banques coopératives.",
+      "Les intérêts sont imposés à 26 %, prélevés par la banque. Un droit de timbre (imposta di bollo) s'applique aussi aux comptes : 0,20 % par an sur un conto deposito.",
+      "Les actions et les ETF ne sont pas couverts par cette garantie : leur valeur peut baisser."
+     ],
+     "exemple": "Giulia dépense 2 000 € par mois. Elle garde 10 000 € sur un conto deposito libre et investit en Bourse ce qui dépasse.",
+     "a_retenir": [
+      "Trois à six mois de dépenses, disponibles.",
+      "Dépôts garantis jusqu'à 100 000 € par banque.",
+      "Intérêts imposés à 26 %."
+     ],
+     "erreur_frequente": "Bloquer toute sa réserve sur un conto deposito à durée fixe : un retrait anticipé peut faire perdre les intérêts.",
+     "sources": [
+      {
+       "label": "Fondo Interbancario di Tutela dei Depositi",
+       "url": "https://www.fitd.it"
+      }
+     ]
+    },
+    "pir": {
+     "id": "pir",
+     "titre": "Le PIR (plan individuel d'épargne)",
+     "duree_min": 6,
+     "resume": "Jusqu'à 40 000 € par an et 200 000 € au total, exonérés d'impôt sur les gains après cinq ans de détention, s'ils sont investis surtout dans des entreprises italiennes.",
+     "paragraphes": [
+      "Le PIR ordinaire est réservé aux personnes résidant en Italie : un seul par personne. Il est investi pour au moins 70 % dans des entreprises italiennes ou ayant un établissement en Italie, dont une part dans des sociétés hors du FTSE MIB.",
+      "Les versements sont limités à 40 000 € par an et 200 000 € au total.",
+      "Si les titres sont gardés au moins cinq ans, les gains et les dividendes sont exonérés de l'impôt de 26 %. Vendus avant, ils sont imposés normalement.",
+      "Le droit de timbre de 0,20 % par an reste dû. Les fonds PIR ont souvent des frais élevés, qui peuvent effacer l'avantage fiscal : comparez avec un ETF ordinaire.",
+      "Le PIR concentre l'argent sur l'Italie : il ne remplace pas un placement diversifié dans le monde."
+     ],
+     "exemple": "Marco verse 10 000 € par an dans un fonds PIR. Au bout de cinq ans, il vend avec 8 000 € de gain : il évite les 2 080 € d'impôt dus hors PIR, mais ses frais annuels (souvent plus de 1 % pour un fonds PIR) ont aussi réduit son gain.",
+     "a_retenir": [
+      "40 000 € par an, 200 000 € au total.",
+      "Exonération après cinq ans de détention.",
+      "Placement concentré sur l'Italie, frais à comparer."
+     ],
+     "erreur_frequente": "Choisir un PIR seulement pour l'avantage fiscal sans regarder ses frais ni sa concentration sur un seul pays.",
+     "sources": [
+      {
+       "label": "Selectra, le PIR en 2026",
+       "url": "https://selectra.net/conti/attualita/investire-senza-tasse-plusvalenze-pir-2026"
+      },
+      {
+       "label": "Agenzia delle Entrate, circulaire n° 10/E du 4 mai 2022 (plafonds du PIR)",
+       "url": "https://www.informazionefiscale.it/IMG/pdf/circolare_pir_n._10_del_4_maggio_2022.pdf"
+      }
+     ]
+    },
+    "compte-titres": {
+     "id": "compte-titres",
+     "titre": "Le dossier titres et les ETF",
+     "duree_min": 6,
+     "resume": "Le dossier titres conserve vos actions et ETF. Avec une banque italienne (régime administré), l'impôt est prélevé pour vous.",
+     "paragraphes": [
+      "Le dossier titres (deposito titoli) est le compte qui conserve vos actions, obligations et ETF.",
+      "Chez un intermédiaire italien, choisissez le régime administré (regime amministrato) : la banque calcule et prélève l'impôt à chaque vente et à chaque dividende. Chez un courtier étranger, vous déclarez vous-même vos gains et vos titres détenus à l'étranger.",
+      "Un droit de timbre de 0,20 % par an s'applique sur la valeur des titres.",
+      "Depuis 2026, l'achat d'actions de sociétés italiennes valant plus de 500 millions d'euros en Bourse paie une taxe sur les transactions de 0,20 % (0,10 % auparavant). Les ETF n'y sont pas soumis."
+     ],
+     "exemple": "Sara détient 20 000 € d'ETF dans un dossier titres en régime administré. Elle paie chaque année 40 € de droit de timbre ; la banque prélève l'impôt quand elle vend.",
+     "a_retenir": [
+      "Régime administré : la banque prélève l'impôt.",
+      "Droit de timbre : 0,20 % par an.",
+      "Taxe de 0,20 % sur l'achat d'actions italiennes depuis 2026."
+     ],
+     "erreur_frequente": "Ouvrir un compte chez un courtier étranger sans savoir qu'il faudra déclarer soi-même les titres et les gains.",
+     "sources": [
+      {
+       "label": "Euroconference News, loi de finances 2026 : doublement de la taxe sur les transactions",
+       "url": "https://www.ecnews.it/fiscale/fisco-e-patrimonio/imposte-indirette/legge-di-bilancio-2026-raddoppio-delle-aliquote-di-applicazione-della-tobin-tax/"
+      }
+     ]
+    },
+    "fiscalite": {
+     "id": "fiscalite",
+     "titre": "L'impôt sur vos placements en Italie",
+     "duree_min": 6,
+     "resume": "26 % sur les gains et les dividendes, 12,5 % sur les intérêts des titres d'État. Attention aux pertes : elles ne compensent pas les gains sur ETF.",
+     "paragraphes": [
+      "Les plus-values et les dividendes sont imposés à 26 %. Les intérêts et gains des titres d'État italiens et de certains pays sont imposés à 12,5 %.",
+      "Une moins-value sur une action peut compenser une plus-value sur une action pendant les quatre années suivantes.",
+      "Les gains sur ETF et fonds sont des revenus de capitaux : ils ne peuvent pas être compensés par des pertes passées. À l'inverse, une perte sur un ETF peut compenser des gains sur actions.",
+      "Le droit de timbre de 0,20 % par an s'ajoute, que vous gagniez ou non."
+     ],
+     "exemple": "Paolo a une perte de 1 000 € sur une action et vend un ETF avec 1 000 € de gain : il paie quand même 260 € d'impôt sur l'ETF.",
+     "a_retenir": [
+      "26 % sur gains et dividendes.",
+      "12,5 % sur les titres d'État.",
+      "Les gains sur ETF ne se compensent pas avec des pertes passées."
+     ],
+     "erreur_frequente": "Vendre un ETF en gain en pensant le compenser avec une perte sur action.",
+     "sources": [
+      {
+       "label": "Selectra, le PIR en 2026",
+       "url": "https://selectra.net/conti/attualita/investire-senza-tasse-plusvalenze-pir-2026"
+      },
+      {
+       "label": "Euroconference News, loi de finances 2026 : doublement de la taxe sur les transactions",
+       "url": "https://www.ecnews.it/fiscale/fisco-e-patrimonio/imposte-indirette/legge-di-bilancio-2026-raddoppio-delle-aliquote-di-applicazione-della-tobin-tax/"
+      }
+     ]
+    },
+    "arnaques": {
+     "id": "arnaques",
+     "titre": "Reconnaître une arnaque en Italie",
+     "duree_min": 5,
+     "resume": "Avant d'investir, vérifiez que l'intermédiaire est autorisé : la CONSOB publie ses mises en garde et fait bloquer les sites illégaux.",
+     "paragraphes": [
+      "Toute société qui propose des placements en Italie doit être autorisée et inscrite dans les registres de la CONSOB ou de la Banque d'Italie. La CONSOB publie des avertissements et ordonne le blocage de centaines de sites chaque année.",
+      "Signaux d'alerte : un rendement élevé « garanti », une pression pour décider vite, un paiement en cryptomonnaie, une célébrité ou un homme politique qui recommande un placement (souvent une fausse vidéo).",
+      "Méfiez-vous des offres de récupération de l'argent perdu, parfois au nom de la CONSOB : c'est une seconde arnaque.",
+      "En cas de doute, ne versez rien et consultez la rubrique « Occhio alle truffe ! » de la CONSOB."
+     ],
+     "exemple": "Une vidéo montre une personnalité connue vantant une plateforme à 30 % par mois. Luca cherche le nom dans les avis de la CONSOB : le site vient d'être bloqué.",
+     "a_retenir": [
+      "Vérifiez l'autorisation avant de verser un euro.",
+      "Les fausses vidéos de célébrités sont fréquentes.",
+      "Aucune autorité ne demande de payer pour récupérer de l'argent."
+     ],
+     "erreur_frequente": "Croire qu'une vidéo avec une personnalité connue prouve le sérieux d'une offre.",
+     "sources": [
+      {
+       "label": "CONSOB, Occhio alle truffe",
+       "url": "https://www.consob.it/web/area-pubblica/occhio-alle-truffe"
+      }
+     ]
+    }
+   },
+   "quiz": [
+    {
+     "q": "Quel est le taux de l'impôt sur les plus-values d'actions en Italie ?",
+     "options": [
+      "12,5 %",
+      "19 %",
+      "26 %",
+      "30 %"
+     ],
+     "bonne": 2,
+     "explication": "26 % ; 12,5 % pour les titres d'État."
+    },
+    {
+     "q": "Combien d'années faut-il garder un PIR pour l'exonération ?",
+     "options": [
+      "Deux",
+      "Cinq",
+      "Huit",
+      "Dix"
+     ],
+     "bonne": 1,
+     "explication": "Cinq ans ; vendus avant, les gains sont imposés à 26 %."
+    },
+    {
+     "q": "Quel droit de timbre s'applique chaque année à un dossier titres ?",
+     "options": [
+      "0,10 %",
+      "0,20 %",
+      "0,50 %",
+      "Aucun"
+     ],
+     "bonne": 1,
+     "explication": "0,20 % par an de la valeur des titres."
+    }
+   ]
+  },
+  "es": {
+   "nom": "Espagne",
+   "de": "d'Espagne",
+   "en": "en Espagne",
+   "drap": "🇪🇸",
+   "regulateur": [
+    "CNMV",
+    "https://www.cnmv.es/PORTAL/Advertencias.aspx"
+   ],
+   "lecons": {
+    "epargne-precaution": {
+     "id": "epargne-precaution",
+     "titre": "L'épargne de précaution en Espagne",
+     "duree_min": 5,
+     "resume": "Trois à six mois de dépenses sur un compte disponible, avant d'investir en Bourse. Dépôts garantis jusqu'à 100 000 € par banque.",
+     "paragraphes": [
+      "Avant d'acheter des actions, gardez trois à six mois de dépenses courantes sur un compte rémunéré disponible (cuenta remunerada) ou un dépôt sans pénalité de retrait.",
+      "Les dépôts sont garantis jusqu'à 100 000 € par personne et par banque par le Fonds de garantie des dépôts (FGD).",
+      "Les intérêts entrent dans la base de l'épargne : la banque retient 19 % à leur versement, puis l'impôt définitif est calculé dans la déclaration (19 % jusqu'à 6 000 € de revenus de l'épargne)."
+     ],
+     "exemple": "Lucía dépense 1 800 € par mois. Elle garde 8 000 € sur une cuenta remunerada et investit en Bourse ce qui dépasse.",
+     "a_retenir": [
+      "Trois à six mois de dépenses, disponibles.",
+      "Dépôts garantis jusqu'à 100 000 € par banque.",
+      "Retenue de 19 % sur les intérêts."
+     ],
+     "erreur_frequente": "Placer sa réserve dans un dépôt à terme dont le retrait anticipé est pénalisé.",
+     "sources": [
+      {
+       "label": "Fondo de Garantía de Depósitos",
+       "url": "https://www.fgd.es"
+      },
+      {
+       "label": "BBVA, échelle d'imposition de l'épargne en 2026",
+       "url": "https://www.bbvamijubilacion.es/blog/examen-al-tratamiento-fiscal-de-los-principales-productos-de-ahorro"
+      }
+     ]
+    },
+    "plan-pensiones": {
+     "id": "plan-pensiones",
+     "titre": "Fonds, ETF et plan de pension",
+     "duree_min": 6,
+     "resume": "Un fonds d'investissement peut être changé contre un autre sans payer d'impôt (traspaso) ; pas un ETF. Le plan de pension individuel est limité à 1 500 € déductibles par an.",
+     "paragraphes": [
+      "Les fonds d'investissement (fondos de inversión) ont un avantage propre à l'Espagne : le traspaso. Vous pouvez passer d'un fonds à un autre sans payer d'impôt ; l'impôt n'est dû que lorsque vous récupérez l'argent.",
+      "Les ETF (fondos cotizados) sont exclus de ce régime : chaque vente est imposée. Beaucoup d'épargnants espagnols préfèrent donc des fonds indiciels classiques aux ETF.",
+      "Le plan de pension individuel permet de déduire jusqu'à 1 500 € par an de son revenu imposable (davantage avec un plan d'entreprise). L'argent est bloqué jusqu'à la retraite, sauf exceptions, et imposé comme un revenu du travail au retrait.",
+      "Le compte-titres (cuenta de valores) conserve actions et ETF ; il n'existe pas d'équivalent du PEA."
+     ],
+     "exemple": "Pablo détient un fonds indiciel américain avec 5 000 € de gain. Il le transfère vers un fonds monde par traspaso : il ne paie rien aujourd'hui, l'impôt sera calculé quand il retirera l'argent.",
+     "a_retenir": [
+      "Traspaso : changer de fonds sans impôt.",
+      "Les ETF n'en bénéficient pas.",
+      "Plan de pension : 1 500 € déductibles par an."
+     ],
+     "erreur_frequente": "Croire qu'un ETF peut être transféré sans impôt comme un fonds classique.",
+     "sources": [
+      {
+       "label": "Guía Fiscal, fonds et ETF dans l'IRPF 2026",
+       "url": "https://guiafiscal.es/inversiones/"
+      },
+      {
+       "label": "Bankinter, limites des plans de pension en 2026",
+       "url": "https://www.bankinter.com/blog/finanzas-personales/planes-pensiones-cambios-fiscalidad"
+      }
+     ]
+    },
+    "fiscalite": {
+     "id": "fiscalite",
+     "titre": "L'impôt sur vos placements en Espagne",
+     "duree_min": 6,
+     "resume": "Gains, dividendes et intérêts forment la base de l'épargne, imposée de 19 % à 30 % selon le montant.",
+     "paragraphes": [
+      "Les revenus de l'épargne (intérêts, dividendes, plus-values) sont imposés selon un barème qui leur est propre en 2026 : 19 % jusqu'à 6 000 €, 21 % jusqu'à 50 000 €, 23 % jusqu'à 200 000 €, 27 % jusqu'à 300 000 €, 30 % au-delà.",
+      "Sur les dividendes et les intérêts, la banque retient 19 % à l'avance ; la vente d'actions ou d'ETF ne subit pas de retenue. Le solde est calculé dans la déclaration (la Renta).",
+      "Les pertes compensent les gains de l'année ; le reste peut être reporté pendant quatre ans.",
+      "Le barème est le même dans tout le pays, sauf au Pays basque et en Navarre, qui ont leurs propres règles."
+     ],
+     "exemple": "Elena encaisse 2 000 € de dividendes et 6 000 € de plus-value : 8 000 € de revenus de l'épargne. Elle paie 19 % sur 6 000 € et 21 % sur 2 000 €, soit 1 560 €.",
+     "a_retenir": [
+      "19 % jusqu'à 6 000 €, puis 21 % à 30 %.",
+      "Retenue de 19 % sur dividendes et intérêts.",
+      "Pertes reportables quatre ans."
+     ],
+     "erreur_frequente": "Oublier que la retenue de 19 % n'est qu'un acompte : au-delà de 6 000 € de revenus, il reste à payer.",
+     "sources": [
+      {
+       "label": "BBVA, échelle d'imposition de l'épargne en 2026",
+       "url": "https://www.bbvamijubilacion.es/blog/examen-al-tratamiento-fiscal-de-los-principales-productos-de-ahorro"
+      },
+      {
+       "label": "Guía Fiscal, fonds et ETF dans l'IRPF 2026",
+       "url": "https://guiafiscal.es/inversiones/"
+      }
+     ]
+    },
+    "arnaques": {
+     "id": "arnaques",
+     "titre": "Reconnaître une arnaque en Espagne",
+     "duree_min": 5,
+     "resume": "Avant d'investir, vérifiez que l'entité est enregistrée auprès de la CNMV. Ses avertissements recensent les « chiringuitos financieros ».",
+     "paragraphes": [
+      "Toute société qui propose des services d'investissement en Espagne doit être enregistrée auprès de la CNMV (ou de la Banque d'Espagne). La CNMV publie des avertissements sur les entités non autorisées, appelées « chiringuitos financieros », et relaie ceux des autres pays européens.",
+      "Signaux d'alerte : un rendement élevé « garanti », une pression pour décider vite, un paiement en cryptomonnaie, une célébrité qui recommande un placement.",
+      "Méfiez-vous des offres de récupération de l'argent perdu : c'est souvent une seconde arnaque.",
+      "En cas de doute, ne versez rien et utilisez le moteur de recherche d'entités de la CNMV."
+     ],
+     "exemple": "Un courtier contacte Javier par téléphone et lui promet 20 % par an. Javier cherche son nom dans les avertissements de la CNMV : il y figure.",
+     "a_retenir": [
+      "Vérifiez l'enregistrement auprès de la CNMV.",
+      "Rendement garanti et élevé : signal d'alerte.",
+      "Ne payez jamais pour récupérer de l'argent perdu."
+     ],
+     "erreur_frequente": "Croire un démarchage téléphonique parce que l'interlocuteur connaît votre nom et vos placements.",
+     "sources": [
+      {
+       "label": "CNMV, avertissements au public",
+       "url": "https://www.cnmv.es/PORTAL/Advertencias.aspx"
+      }
+     ]
+    }
+   },
+   "quiz": [
+    {
+     "q": "Quel est le taux sur les 6 000 premiers euros de revenus de l'épargne ?",
+     "options": [
+      "15 %",
+      "19 %",
+      "21 %",
+      "26 %"
+     ],
+     "bonne": 1,
+     "explication": "19 %, puis 21 % jusqu'à 50 000 €."
+    },
+    {
+     "q": "Lequel peut être changé contre un autre sans payer d'impôt ?",
+     "options": [
+      "Une action",
+      "Un ETF",
+      "Un fonds d'investissement",
+      "Une obligation"
+     ],
+     "bonne": 2,
+     "explication": "Le traspaso vaut pour les fonds d'investissement, pas pour les ETF."
+    },
+    {
+     "q": "Combien peut-on déduire par an avec un plan de pension individuel ?",
+     "options": [
+      "1 500 €",
+      "5 000 €",
+      "8 000 €",
+      "10 000 €"
+     ],
+     "bonne": 0,
+     "explication": "1 500 € (davantage avec un plan d'entreprise)."
+    }
+   ]
+  }
+ }
 }
