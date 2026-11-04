@@ -19,7 +19,7 @@ const FX = (() => { try { return JSON.parse(readFileSync(ROOT + "cf/site/data/fx
 const enEuros = (v, cur) => v == null ? null : v * (FX[(cur || "EUR").toUpperCase().replace("GBX", "GBP")] || (cur ? null : 1) || 1);
 const { CHOISIS: CURATED } = await import("./etf.mjs");
 const PLACES_FR = ["Euronext Paris", "Xetra", "Euronext Amsterdam"];
-const ISSUER_DOM = { Amundi: "amundi.com", iShares: "ishares.com", SPDR: "ssga.com", Invesco: "invesco.com" };
+const ISSUER_DOM = { Amundi: "amundi.com", iShares: "ishares.com", SPDR: "ssga.com", Invesco: "invesco.com", HSBC: "hsbc.com" };
 
 // ---------------------------------------------------------------- 1. Catalogue
 const avant = existsSync(OUTC) ? JSON.parse(readFileSync(OUTC, "utf8")) : { list: [], brut: {} };
@@ -33,6 +33,7 @@ await lire("amundi", () => EM.amundi(log));
 await lire("ishares", () => EM.ishares(log, { detail: cible }));
 await lire("spdr", () => EM.spdr(log, { detail: () => true }));
 await lire("invesco", () => EM.invesco(log));
+await lire("hsbc", () => EM.hsbc(log, { minutes: 40 })); // 4/11 : fiches officielles en français, lecture lente (robots.txt)
 
 const nomCourt = n => String(n || "").replace(/[®™]/g, "").replace(/^State Street\s+SPDR\b/, "SPDR").replace(/\bUCITS\b/g, "").replace(/\bETF\b/g, "").replace(/\s+-\s+/g, " ").replace(/\b(USD|EUR|GBP|CHF|JPY)\b(?=\s*(\(|Acc|Dist|$))/g, "").replace(/\(\s*\)/g, "").replace(/\s{2,}/g, " ").trim()
   .replace(/\s*\(Acc\)$|\s+Acc$/i, " (capitalisation)").replace(/\s*\(Dist\)$|\s+Dist$/i, " (distribution)").replace(/\s+/g, " ").trim();
@@ -49,7 +50,7 @@ function normalise(r) {
     domicile: r.domicile ? ({ Ireland: "Irlande", France: "France", Luxembourg: "Luxembourg", Germany: "Allemagne", IE: "Irlande", LU: "Luxembourg", FR: "France", DE: "Allemagne" }[r.domicile] || r.domicile) : null,
     ticker: pick ? pick.ticker : null, tv: pick ? (pick.place === "Xetra" ? "XETR:" : "EURONEXT:") + pick.ticker : null, cotations: listings.filter(l => PLACES_FR.includes(l.place)).map(l => ({ place: l.place, ticker: l.ticker, devise: l.devise || null })),
     couvert: !!r.couvert || /hedged|couvert/i.test(r.name || "") || undefined, levier: LEVIER.test((r.name || "") + " " + (r.indexOfficiel || "")) || undefined, contrepartie: r.contrepartie || undefined,
-    nIndex: r.nIndex || undefined, url: r.url || null, releve: new Date().toISOString().slice(0, 10), // date du relevé sur le site de l'émetteur (une ancienne liste garde la sienne) src: { amundi: "amundietf.fr", ishares: "blackrock.com/fr", spdr: "ssga.com", invesco: "invesco.com/fr" }[r.ref && r.ref.type] || null, _r: r };
+    nIndex: r.nIndex || undefined, url: r.url || null, releve: new Date().toISOString().slice(0, 10), /* date du relevé sur le site de l'émetteur (une ancienne liste garde la sienne) */ src: { amundi: "amundietf.fr", ishares: "blackrock.com/fr", spdr: "ssga.com", invesco: "invesco.com/fr", hsbc: "assetmanagement.hsbc.fr" }[r.ref && r.ref.type] || null, _r: r };
 }
 let all = [];
 for (const [nom, l] of Object.entries(brut)) {

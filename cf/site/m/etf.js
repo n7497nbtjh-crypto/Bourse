@@ -13,6 +13,7 @@ const ETF_EMET = {
   iShares: ["Gamme d'ETF de BlackRock, société de gestion américaine cotée à New York.", "C'est la plus grande gamme d'ETF au monde. Ses ETF européens sont surtout de droit irlandais."],
   SPDR: ["Gamme d'ETF de State Street, groupe bancaire américain installé à Boston.", "Ses ETF européens sont de droit irlandais et cotés sur plusieurs Bourses d'Europe."],
   Invesco: ["Société de gestion américaine cotée à New York.", "Elle gère notamment l'un des plus anciens ETF sur le Nasdaq-100, coté en Europe depuis 2002."],
+  HSBC: ["Gamme d'ETF de HSBC Asset Management, filiale du groupe bancaire britannique HSBC, coté à Londres.", "Ses ETF européens sont de droit irlandais (HSBC ETFs PLC)."],
   Vanguard: ["Société de gestion américaine dont les propriétaires sont ses propres fonds, donc leurs porteurs de parts.", "Ses ETF européens sont de droit irlandais."],
   Xtrackers: ["Gamme d'ETF de DWS, société de gestion allemande contrôlée par Deutsche Bank et cotée à Francfort.", "Ses ETF européens sont de droit irlandais ou luxembourgeois."],
   "BNP Paribas Easy": ["Gamme d'ETF de BNP Paribas Asset Management, filiale du groupe bancaire français BNP Paribas.", "Plusieurs de ses ETF sont éligibles au PEA."],

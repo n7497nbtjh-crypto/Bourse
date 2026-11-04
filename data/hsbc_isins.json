@@ -1,0 +1,106 @@
+{
+ "IE000389GTC0": {
+  "etf": true,
+  "nom": "HSBC GLOBAL FUNDS ICAV - GLOBAL ESG GOVERNMENT BOND UCITS ETF"
+ },
+ "IE000XFORJ80": {
+  "etf": true,
+  "nom": "HSBC MSCI AC ASIA PACIFIC EX JAPAN CLIMATE PARIS ALIGNED UCITS ETF"
+ },
+ "LU0234594009": {
+  "etf": false,
+  "nom": "HSBC GIF Global Emerging Markets Local Debt"
+ },
+ "LU0551371700": {
+  "etf": false,
+  "nom": "HSBC GIF Global Emerging Markets Local Debt"
+ },
+ "LU1436995523": {
+  "etf": false,
+  "nom": "HSBC GIF Asia Bond"
+ },
+ "LU1436996174": {
+  "etf": false,
+  "nom": "HSBC GIF Asia Bond"
+ },
+ "IE00BP2C0316": {
+  "etf": true,
+  "nom": "HSBC MSCI EUROPE CLIMATE PARIS ALIGNED UCITS ETF"
+ },
+ "IE00BP2C1S34": {
+  "etf": true,
+  "nom": "HSBC MSCI USA CLIMATE PARIS ALIGNED UCITS ETF"
+ },
+ "LU1436996257": {
+  "etf": false,
+  "nom": "HSBC GIF Asia Bond"
+ },
+ "LU2092166128": {
+  "etf": false,
+  "nom": "HSBC ISLAMIC FUNDS - HSBC ISLAMIC GLOBAL EQUITY INDEX FUND"
+ },
+ "LU2233257695": {
+  "etf": false,
+  "nom": "HSBC ISLAMIC FUNDS - HSBC ISLAMIC GLOBAL EQUITY INDEX FUND"
+ },
+ "IE000J4HXHK1": {
+  "etf": false,
+  "nom": "HSBC Sterling Liquidity Fund"
+ },
+ "LU0954274642": {
+  "etf": false,
+  "nom": "HSBC GIF Global Emerging Markets Local Debt"
+ },
+ "LU0164902883": {
+  "etf": false,
+  "nom": "HSBC GIF Economic Scale US Equity"
+ },
+ "LU0149725441": {
+  "etf": false,
+  "nom": "HSBC GIF Economic Scale US Equity"
+ },
+ "LU2233258073": {
+  "etf": false,
+  "nom": "HSBC ISLAMIC FUNDS - HSBC ISLAMIC GLOBAL EQUITY INDEX FUND"
+ },
+ "LU0196698236": {
+  "etf": false,
+  "nom": "HSBC GIF Brazil Equity"
+ },
+ "LU0954277744": {
+  "etf": false,
+  "nom": "HSBC GIF Economic Scale US Equity"
+ },
+ "LU3306530786": {
+  "etf": false,
+  "nom": "HSBC Portfolios – World Selection 3"
+ },
+ "IE000QW9E395": {
+  "etf": true,
+  "nom": "HSBC EURO STOXX 50 UCITS ETF"
+ },
+ "IE000WMRNBB0": {
+  "etf": true,
+  "nom": "HSBC MSCI WORLD UCITS ETF"
+ },
+ "IE00BKY59G90": {
+  "etf": true,
+  "nom": "HSBC EMERGING MARKET SCREENED EQUITY UCITS ETF"
+ },
+ "IE00042BZ1C2": {
+  "etf": true,
+  "nom": "HSBC EUROPE EX UK SCREENED EQUITY UCITS ETF"
+ },
+ "IE000CU6K156": {
+  "etf": true,
+  "nom": "HSBC UK SCREENED EQUITY UCITS ETF"
+ },
+ "LU0213961922": {
+  "etf": false,
+  "nom": "HSBC GIF Turkey Equity"
+ },
+ "IE0000LWQBF2": {
+  "etf": true,
+  "nom": "HSBC Global Funds ICAV - Global Sukuk UCITS ETF"
+ }
+}

@@ -198,3 +198,61 @@ export async function invescoPositions(rec) {
   }
   return null;
 }
+
+// ---------------------------------------------------------------- HSBC (4/11/2026)
+// Liste : plan du site HSBC Asset Management (Royaume-Uni), une page par part (/funds/<isin>) ; le titre de la page dit si c'est un ETF.
+// Les parts déjà reconnues sont gardées dans data/hsbc_isins.json (chaque page n'est lue qu'une fois). Données : fiche mensuelle
+// officielle en français (assetmanagement.hsbc.fr, document « factsheet » par ISIN), lue avec pdftotext ; pas de fiche française = fonds
+// non commercialisé en France, écarté. robots.txt de HSBC : « Crawl-delay: 2 », d'où 2,2 s entre deux visites.
+const HS_PAUSE = 2200, HS_ISINS = new URL("./hsbc_isins.json", import.meta.url);
+export function hsbcFiche(tx) { // texte de la fiche (pdftotext -layout), en français
+  const L = tx.split("\n"), droite = L.map(l => l.length > 90 ? l.slice(90) : "").join("\n"), tout = tx;
+  const g = (re, s = droite) => { const m = s.match(re); return m ? m[1].replace(/\s+/g, " ").trim() : null; };
+  const lignes = L.map(l => l.trim()).filter(Boolean), kc = lignes.findIndex(l => /^Communication commerciale/i.test(l));
+  const nom = kc > 1 ? lignes.slice(1, kc).join(" ").replace(/\s+/g, " ") : (lignes.find(l => /UCITS ETF/i.test(l)) || null); // le nom peut tenir sur deux lignes
+  const tete = (tout.match(/\|\s*([A-Z0-9]{2,8} [A-Z]{2})\s*\|\s*([A-Z]{3})/) || []);
+  const encours = (droite.match(/Encours du fonds\s+([A-Z]{3})\s+([\d.]+)/) || []);
+  const im = droite.match(/Indice de\s+(.+)\n\s*r[ée]f[ée]rence[ \t]*([^\n]*)/), indice = im ? (im[1] + " " + (im[2] || "")).trim() : null; // « 100% MSCI Emerging » / « Markets Net »
+  const repl0 = (droite.match(/M[ée]thode de r[ée]plication\s+(.+)(?:\n\s+(physique|synth[ée]tique)\b)?/) || []);
+  const DEV = /^(USD|EUR|GBP|CHF|JPY|HKD|CNY|INR|AUD|CAD)$/, dev = DEV.test(tete[2] || "") ? tete[2] : g(/Devise de base de la Cat[ée]gorie[\s\S]{0,40}?\b(USD|EUR|GBP|CHF|JPY|HKD|CNY|INR)\b/);
+  const ACR = /^(HSBC|MSCI|ESG|AC|S&P|ETF|UCITS|USA|US|UK|EM|FTSE|ACWI|SRI|ICAV|PLC|II|III|500|DJ)$/;
+  const casse = t => String(t || "").split(" ").map(w => ACR.test(w) ? w : w === "EX" ? "ex" : /^[A-ZÀ-Ý&.\-]+$/.test(w) ? w[0] + w.slice(1).toLowerCase() : w).join(" "); // « HSBC MSCI EUROPE » → « HSBC MSCI Europe »
+  return { name: nom ? casse(nom) : null, bbg: tete[1] || null, devise: dev || null,
+    ter: num(g(/Montant des frais courants[¹²³]?\s+([\d,]+)\s*%/)), distribution: g(/Traitement des\s+(Distribution|Capitalisation)/i),
+    creation: g(/Date de cr[ée]ation\s+(\d{1,2} \S+ \d{4})/), aumCur: encours[1] || null, aumM: encours[2] ? +encours[2].replace(/\./g, "") / 1e6 : null,
+    indexOfficiel: indice ? indice.replace(/^100\s?%\s*/, "").trim() : null, replication: repl0[1] ? (repl0[1] + " " + (repl0[2] || "")).trim() : null,
+    domicile: g(/Domicile\s+(\S+)/), isin: g(/ISIN\s+([A-Z]{2}[A-Z0-9]{10})/) };
+}
+export async function hsbc(log, { minutes = 40 } = {}) {
+  const { execFileSync } = await import("node:child_process"), fs = await import("node:fs");
+  const fin = Date.now() + minutes * 60e3, connus = fs.existsSync(HS_ISINS) ? JSON.parse(fs.readFileSync(HS_ISINS, "utf8")) : {};
+  const sm = await http("https://www.assetmanagement.hsbc.co.uk/sitemap.xml", { pause: HS_PAUSE });
+  const isins = [...new Set([...String(sm || "").matchAll(/individual-investor\/funds\/((?:ie|lu)[0-9a-z]{10})</g)].map(m => m[1].toUpperCase()))];
+  log("hsbc : " + isins.length + " parts dans le plan du site, " + Object.keys(connus).length + " déjà reconnues");
+  for (const isin of isins) { // repérage des ETF (une fois par part)
+    if (connus[isin] || Date.now() > fin) continue;
+    const h = await http(`https://www.assetmanagement.hsbc.co.uk/en/individual-investor/funds/${isin.toLowerCase()}`, { pause: HS_PAUSE }).catch(() => null);
+    const t = h && (h.match(/<title>([^<]*)/) || [])[1]; if (!t) continue;
+    connus[isin] = { etf: /\bETF\b/i.test(t), nom: unesc(t).trim() };
+  }
+  fs.writeFileSync(HS_ISINS, JSON.stringify(connus, null, 1));
+  const etfs = Object.entries(connus).filter(([, v]) => v.etf).map(([k]) => k); log("hsbc : " + etfs.length + " ETF");
+  const out = [], f = "/tmp/hsbc_fiche.pdf";
+  for (const isin of etfs) {
+    if (Date.now() > fin + 15 * 60e3) break;
+    const url = `https://www.assetmanagement.hsbc.fr/api/v1/download/document/${isin.toLowerCase()}/fr/fr/factsheet`;
+    const b = await http(url, { pause: HS_PAUSE, type: "buf" }).catch(() => null); if (!b || b.length < 5000 || String(b.slice(0, 5)) !== "%PDF-") continue; // pas de fiche française
+    try {
+      fs.writeFileSync(f, b); const x = hsbcFiche(execFileSync("pdftotext", ["-layout", "-l", "2", f, "-"], { maxBuffer: 5e7, stdio: ["ignore", "pipe", "ignore"] }).toString());
+      if (!x.name || (x.isin && x.isin !== isin)) continue;
+      const [replication, methode] = repl(x.replication), b2 = placeDeBbg(x.bbg);
+      const mois = { janvier: "01", février: "02", mars: "03", avril: "04", mai: "05", juin: "06", juillet: "07", août: "08", septembre: "09", octobre: "10", novembre: "11", décembre: "12" };
+      const cr = x.creation && x.creation.match(/(\d{1,2}) (\S+) (\d{4})/), creation = cr && mois[cr[2].toLowerCase()] ? `${cr[3]}-${mois[cr[2].toLowerCase()]}-${cr[1].padStart(2, "0")}` : null;
+      out.push({ isin, name: x.name, issuer: "HSBC", ter: x.ter, aumM: x.aumM, aumCur: x.aumCur, devise: x.devise, creation, domicile: x.domicile, distribution: distrib(x.distribution), replication, methode,
+        indexOfficiel: x.indexOfficiel, pea: false, classe: /bond|treasury|obligat|money market|mon[ée]taire|aggregate/i.test(x.name + " " + (x.indexOfficiel || "")) ? "Fixed Income" : "Equity",
+        listings: b2 ? [{ place: b2.place, ticker: b2.ticker, devise: x.devise }] : [], url, ref: { type: "hsbc", fiche: url } }); // la fiche officielle en français
+    } catch (e) { log("hsbc " + isin + " : " + e.message); }
+  }
+  log("hsbc : " + out.length + " ETF avec une fiche française");
+  return out;
+}

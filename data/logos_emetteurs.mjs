@@ -9,7 +9,7 @@ const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML,
 export const EMETTEURS = {
   Amundi: "https://www.amundietf.fr/fr/particuliers", iShares: "https://www.ishares.com/uk/individual/en", SPDR: "https://www.ssga.com/uk/en_gb/intermediary/etfs",
   Invesco: "https://www.invesco.com/uk/en/", Vanguard: "https://www.vanguard.co.uk/", Xtrackers: "https://etf.dws.com/fr-fr/", "BNP Paribas Easy": "https://www.bnpparibas-am.com/fr-fr/",
-  "Franklin Templeton": "https://www.franklintempleton.co.uk/", KraneShares: "https://kraneshares.eu/", VanEck: "https://www.vaneck.com/fr/fr/", "L&G": "https://www.lgim.com/uk/en/", WisdomTree: "https://www.wisdomtree.eu/fr-fr",
+  "Franklin Templeton": "https://www.franklintempleton.co.uk/", KraneShares: "https://kraneshares.eu/", VanEck: "https://www.vaneck.com/fr/fr/", "L&G": "https://www.lgim.com/uk/en/", HSBC: "https://www.assetmanagement.hsbc.fr/", WisdomTree: "https://www.wisdomtree.eu/fr-fr",
 };
 export const slugEm = n => n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/&/g, "-").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const DIR = "cf/site/logos/emetteurs"; mkdirSync(DIR, { recursive: true });
