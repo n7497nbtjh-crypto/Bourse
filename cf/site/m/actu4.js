@@ -10,15 +10,36 @@ function axFig([l, v]) {
   const m = String(v).match(/\(([+−-])\s?(\d+(?:,\d+)?)\s?%/), s = m ? (m[1] === "+" ? "g" : "r") : "", val = String(v).replace(/\s*\([^)]*\)\s*$/, ""), ev = m ? `${m[1] === "+" ? "+" : "−"}${m[2]} % sur un an` : (String(v).match(/\(([^)]*)\)\s*$/) || [])[1] || "";
   return `<div class="ax4-f"><small>${esc(l)}</small><b>${esc(val)}</b>${ev ? `<em class="${s}">${esc(ev)}</em>` : ""}</div>`;
 }
+// 4/11 : titres publiés en anglais (Oslo, Nasdaq Nordic, FCA) traduits en français par l'IA du site (/api/ia/traduire,
+// traduction gardée pour tous et sur l'appareil) ; le titre d'origine reste au survol, avec la mention « traduit de l'anglais ».
+const AX_TR = (() => { try { return JSON.parse(localStorage.getItem("bilan.trad") || "{}"); } catch (e) { return {}; } })();
+let axTrT = 0;
+const AX_DE = { en: "de l'anglais", sv: "du suédois", fi: "du finnois", da: "du danois", no: "du norvégien", de: "de l'allemand", nl: "du néerlandais", it: "de l'italien", es: "de l'espagnol" };
+function axTrPoser(el, fr) { const o = el.textContent, lg = AX_DE[el.getAttribute("data-tr")] || "d'une autre langue"; el.textContent = fr; el.lang = "fr"; el.removeAttribute("data-tr"); el.title = "Titre d'origine : " + o;
+  if (!el.nextElementSibling || !el.nextElementSibling.classList.contains("ax4-tr")) el.insertAdjacentHTML("afterend", `<small class="ax4-tr">Titre traduit ${lg}</small>`); }
+async function axTraduire() {
+  const L = [...document.querySelectorAll("#app [data-tr]")]; if (!L.length) return;
+  L.forEach(el => { const f = AX_TR[el.textContent.trim()]; if (f) axTrPoser(el, f); });
+  const reste = [...new Set([...document.querySelectorAll("#app [data-tr]")].map(el => el.textContent.trim()))].slice(0, 30);
+  if (!reste.length) return;
+  let r = null; try { r = await (await fetch("/api/ia/traduire", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ t: reste }) })).json(); } catch (e) { }
+  if (!r || !Array.isArray(r.fr)) return;
+  reste.forEach((t, i) => { if (r.fr[i]) AX_TR[t] = r.fr[i]; });
+  try { const k = Object.keys(AX_TR); if (k.length > 600) k.slice(0, k.length - 600).forEach(x => delete AX_TR[x]); localStorage.setItem("bilan.trad", JSON.stringify(AX_TR)); } catch (e) { }
+  document.querySelectorAll("#app [data-tr]").forEach(el => { const f = AX_TR[el.textContent.trim()]; if (f) axTrPoser(el, f); else el.removeAttribute("data-tr"); });
+}
+(() => { const a = document.getElementById("app"); if (!a) return;
+  new MutationObserver(() => { if (axTrT) return; axTrT = setTimeout(() => { axTrT = 0; if (document.querySelector("#app [data-tr]")) axTraduire(); }, 250); }).observe(a, { childList: true, subtree: true }); })();
 function axCarte(it) {
   const C = ACTU_CAT[it.c] || ACTU_CAT.autre, co = RBY[it.id]; if (!co) return "";
   const gen = !it.tf || /^(Communiqué|Information importante)$/.test(it.tf), main = gen && it.t ? it.t : (it.tf || C.l), sub = !gen && it.t && it.t !== it.tf ? it.t : "";
   const lect = it.x && it.x.c ? `<p>${esc(it.x.c)}</p>${it.x.ch ? `<p><b>Ce que cela change :</b> ${esc(it.x.ch)}</p>` : ""}<small>Rédigé par une IA à partir de l'annonce. La source fait foi.</small>`
     : it.r && it.r.length ? `<ul>${it.r.map(x => `<li>${esc(x)}</li>`).join("")}</ul><small>Calculé par le site à partir des chiffres de l'annonce.</small>` : "";
+  const en = it.l && it.l !== "fr" && it.s !== "sec" ? it.l : ""; // titre publié dans une autre langue (les titres SEC sont déjà écrits en français par le site) : traduit par axTraduire (IA du site, une fois pour tous)
   const src = ACTU_SRC[it.s] || "source officielle", lg = it.l && it.l !== "fr" && ACTU_LANG[it.l] ? `, ${ACTU_LANG[it.l]}` : "";
   return `<article class="ax4-c" style="--c:${C.c}"><div class="ax4-h">${mcLogo(co)}<span class="ax4-co"><a href="/entreprise/${esc(co.id)}">${esc(co.name)}</a><small>${esc(secName(co))}${hhmm(it.d) ? " · " + esc(hhmm(it.d)) : ""}</small></span>
       <span class="ax4-t" title="${esc(C.why)}">${esc(C.l)}</span>${it.p ? `<span class="ax4-p" title="Information privilégiée : un fait susceptible d'influencer le cours, que l'entreprise doit publier sans délai">Info. privilégiée</span>` : ""}</div>
-    <h3>${esc(main)}</h3>${sub ? `<p class="ax4-s">${esc(sub)}</p>` : ""}
+    <h3${en && main === it.t ? ` data-tr="${en}" lang="${en}"` : ""}>${esc(main)}</h3>${sub ? `<p class="ax4-s"${en ? ` data-tr="${en}" lang="${en}"` : ""}>${esc(sub)}</p>` : ""}
     ${it.f && it.f.length ? `<div class="ax4-fs">${it.f.slice(0, 4).map(axFig).join("")}</div>` : ""}
     <div class="ax4-b">${lect ? `<details class="ax4-l"><summary>Ce que ça veut dire</summary>${lect}</details>` : it.i >= 2 && !C.routine ? `<button type="button" class="ax4-ia" data-clair="${esc(it.id)}|${esc(it.k)}">✦ Expliquer en clair</button><div class="iabox"></div>` : ""}
       <a class="ax4-src" href="${esc(it.u)}" target="_blank" rel="noopener">Lire l'annonce (${esc(src)}${esc(lg)}) ↗</a></div></article>`;

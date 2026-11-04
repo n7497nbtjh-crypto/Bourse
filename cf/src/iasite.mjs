@@ -28,6 +28,7 @@ async function init(db) {
   await db.prepare(`CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))`).run();
   await db.prepare(`CREATE TABLE IF NOT EXISTS ia_cache (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0)`).run(); // 5e passage (C) : réponses identiques servies sans rappeler le modèle (24 h)
   await db.prepare(`CREATE TABLE IF NOT EXISTS ia_niveaux (mois TEXT NOT NULL, niveau TEXT NOT NULL, n REAL NOT NULL, q INTEGER NOT NULL, PRIMARY KEY (mois, niveau))`).run(); // neurones et questions par niveau (visiteur, compte, premium) et par mois
+  await db.prepare(`CREATE TABLE IF NOT EXISTS ia_trad (h TEXT PRIMARY KEY, fr TEXT NOT NULL, at INTEGER NOT NULL)`).run(); // 4/11 : titres d'annonces traduits, partagés par tous
   pret = true;
 }
 const NEURONES_GRATUITS_JOUR = 10000, NEURONES_PAR_EURO = 99000; // 1 € ≈ 1,09 $ ≈ 99 000 neurones à 0,011 $ les 1 000
@@ -72,8 +73,40 @@ export async function iaMesures(env) { // pour /api/espace/mesures : neurones et
     return { mois: m, par_niveau: L, cache: { reponses: (c && c.n) || 0, servies_sans_modele: (c && c.servis) || 0 }, neurones_payants_mois: (p && p.p) || 0, cout_estime_eur: Math.round(((p && p.p) || 0) / NEURONES_PAR_EURO * 100) / 100 };
   } catch (e) { return { erreur: String(e && e.message || e) }; }
 }
+/** POST /api/ia/traduire { t: [titres en anglais] } → { fr: [titres en français ou null] }.
+ * 4/11 (Romain : « corrige les actualités qui se mettent en anglais ») : titres des annonces officielles publiées en anglais
+ * (Oslo, Nasdaq Nordic, FCA). Traduits une fois pour tous et gardés (table ia_trad) ; payés sur la même part gratuite du jour
+ * que l'IA du site, sans entamer les questions des visiteurs ; au-delà du plafond, le titre reste en anglais. */
+async function traduire(request, env) {
+  if (request.method !== "POST") return json({ error: "Méthode non permise" }, 405);
+  let b; try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible" }, 400); }
+  const T = (Array.isArray(b && b.t) ? b.t : []).slice(0, 30).map(x => String(x || "").replace(/\s+/g, " ").trim().slice(0, 300));
+  if (!T.length || !env.DB) return json({ fr: T.map(() => null) });
+  await init(env.DB);
+  const H = await Promise.all(T.map(t => empreinte("trad|" + t))), fr = T.map(() => null), manque = [];
+  for (let i = 0; i < T.length; i++) { const r = await env.DB.prepare(`SELECT fr FROM ia_trad WHERE h = ?`).bind(H[i]).first().catch(() => null); if (r) fr[i] = r.fr; else if (T[i].length > 2) manque.push(i); }
+  if (!manque.length || !env.AI) return json({ fr });
+  const P = plafonds(env), c = await compteurs(env, "trad");
+  if (c.erreur) return json({ fr });
+  const [model, cin, cout] = MODELES.find(m => m[0].includes("mistral")) || MODELES[0];
+  const user = manque.map((i, n) => `${n + 1}. ${T[i]}`).join("\n"), max = Math.min(900, 40 + manque.length * 45);
+  const estime = (jetons(user) * cin + max * cout) / 1e6 + 30;
+  if (!siteOk(c, P, estime)) return json({ fr });
+  const sys = "Tu traduis en français des titres d'annonces officielles de sociétés cotées, écrits en anglais ou dans une langue nordique. Réponds uniquement par les traductions, une par ligne, numérotées comme les titres reçus (« 1. … »). Garde les noms de sociétés, les sigles et les montants tels quels. Style sobre et factuel, pas de point final, pas de tiret cadratin.";
+  try {
+    const out = await env.AI.run(model, { messages: [{ role: "system", content: sys }, { role: "user", content: user }], max_tokens: max, temperature: 0.1 });
+    const raw = nettoie(out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content)));
+    const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+    await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), reel, reel).run();
+    const L = {}; for (const l of String(raw || "").split("\n")) { const m = l.match(/^\s*(\d+)[.)]\s*(.+)$/); if (m) L[+m[1]] = m[2].replace(/^[«"]\s*|\s*[»"]$/g, "").replace(/\.$/, "").trim(); }
+    for (let n = 0; n < manque.length; n++) { const i = manque[n], t = L[n + 1];
+      if (t && t.length > 2 && t.length < 400) { fr[i] = t; await env.DB.prepare(`INSERT OR REPLACE INTO ia_trad (h, fr, at) VALUES (?, ?, ?)`).bind(H[i], t, Date.now()).run(); } }
+  } catch (e) { }
+  return json({ fr });
+}
 export async function iaSite(request, env) {
   const url = new URL(request.url), P = plafonds(env);
+  if (url.pathname === "/api/ia/traduire") return traduire(request, env);
   const { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv];
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json({ disponible: false, raison: "absente", niveau: nv });

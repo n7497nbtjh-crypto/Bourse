@@ -843,7 +843,7 @@ var MODELES = [
   ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488, "Mistral Small 3.1"]
 ], jour = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), jetons = (s) => Math.ceil(String(s).length / 3.2), nettoie = (t) => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/g, "").replace(/—/g, ",").replace(/\*\*/g, "").trim(), json4 = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } }), pret = !1;
 async function init3(db) {
-  pret || !db || (await db.prepare("CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_cache (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0)").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_niveaux (mois TEXT NOT NULL, niveau TEXT NOT NULL, n REAL NOT NULL, q INTEGER NOT NULL, PRIMARY KEY (mois, niveau))").run(), pret = !0);
+  pret || !db || (await db.prepare("CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_cache (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0)").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_niveaux (mois TEXT NOT NULL, niveau TEXT NOT NULL, n REAL NOT NULL, q INTEGER NOT NULL, PRIMARY KEY (mois, niveau))").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_trad (h TEXT PRIMARY KEY, fr TEXT NOT NULL, at INTEGER NOT NULL)").run(), pret = !0);
 }
 var NEURONES_GRATUITS_JOUR = 1e4, NEURONES_PAR_EURO = 99e3;
 async function niveau(request, env) {
@@ -884,8 +884,50 @@ async function iaMesures(env) {
     return { erreur: String(e && e.message || e) };
   }
 }
+async function traduire(request, env) {
+  if (request.method !== "POST") return json4({ error: "M\xE9thode non permise" }, 405);
+  let b;
+  try {
+    b = await request.json();
+  } catch {
+    return json4({ error: "Requ\xEAte illisible" }, 400);
+  }
+  let T = (Array.isArray(b && b.t) ? b.t : []).slice(0, 30).map((x) => String(x || "").replace(/\s+/g, " ").trim().slice(0, 300));
+  if (!T.length || !env.DB) return json4({ fr: T.map(() => null) });
+  await init3(env.DB);
+  let H = await Promise.all(T.map((t) => empreinte("trad|" + t))), fr = T.map(() => null), manque = [];
+  for (let i = 0; i < T.length; i++) {
+    let r = await env.DB.prepare("SELECT fr FROM ia_trad WHERE h = ?").bind(H[i]).first().catch(() => null);
+    r ? fr[i] = r.fr : T[i].length > 2 && manque.push(i);
+  }
+  if (!manque.length || !env.AI) return json4({ fr });
+  let P = plafonds(env), c = await compteurs(env, "trad");
+  if (c.erreur) return json4({ fr });
+  let [model, cin, cout] = MODELES.find((m) => m[0].includes("mistral")) || MODELES[0], user = manque.map((i, n) => `${n + 1}. ${T[i]}`).join(`
+`), max = Math.min(900, 40 + manque.length * 45), estime = (jetons(user) * cin + max * cout) / 1e6 + 30;
+  if (!siteOk(c, P, estime)) return json4({ fr });
+  let sys = "Tu traduis en fran\xE7ais des titres d'annonces officielles de soci\xE9t\xE9s cot\xE9es, \xE9crits en anglais ou dans une langue nordique. R\xE9ponds uniquement par les traductions, une par ligne, num\xE9rot\xE9es comme les titres re\xE7us (\xAB 1. \u2026 \xBB). Garde les noms de soci\xE9t\xE9s, les sigles et les montants tels quels. Style sobre et factuel, pas de point final, pas de tiret cadratin.";
+  try {
+    let out = await env.AI.run(model, { messages: [{ role: "system", content: sys }, { role: "user", content: user }], max_tokens: max, temperature: 0.1 }), raw = nettoie(out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content)), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+    await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(jour(), reel, reel).run();
+    let L = {};
+    for (let l of String(raw || "").split(`
+`)) {
+      let m = l.match(/^\s*(\d+)[.)]\s*(.+)$/);
+      m && (L[+m[1]] = m[2].replace(/^[«"]\s*|\s*[»"]$/g, "").replace(/\.$/, "").trim());
+    }
+    for (let n = 0; n < manque.length; n++) {
+      let i = manque[n], t = L[n + 1];
+      t && t.length > 2 && t.length < 400 && (fr[i] = t, await env.DB.prepare("INSERT OR REPLACE INTO ia_trad (h, fr, at) VALUES (?, ?, ?)").bind(H[i], t, Date.now()).run());
+    }
+  } catch {
+  }
+  return json4({ fr });
+}
 async function iaSite(request, env) {
-  let url = new URL(request.url), P = plafonds(env), { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv];
+  let url = new URL(request.url), P = plafonds(env);
+  if (url.pathname === "/api/ia/traduire") return traduire(request, env);
+  let { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv];
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json4({ disponible: !1, raison: "absente", niveau: nv });
     let c2 = await compteurs(env, h);
@@ -2879,7 +2921,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "78f71b0f1bf110f7", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "50b64b3f373a5a34", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

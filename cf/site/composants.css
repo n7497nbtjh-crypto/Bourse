@@ -1191,3 +1191,5 @@ html #app .cmu-tabs.qtabs a{padding:7px 16px;border:2px solid var(--ek-ink,#111)
 html #app .cmu-tabs.qtabs a.on{background:#FFE14D;border-bottom-width:2px;border-bottom-color:#111}
 html #app .cmu-tabs.qtabs a:hover{background:#FFF6C7}
 html #app .iahero{max-width:none}
+/* Actualité : titre traduit de l'anglais (4/11) */
+.ek .ax4-tr{display:block;font:600 11.5px Inter;color:#777;margin-top:3px}
