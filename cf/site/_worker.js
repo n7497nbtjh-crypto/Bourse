@@ -84,6 +84,12 @@ async function visitor(request, env = {}) {
   let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + today() + "|" + (env.HASH_SALT || "bilan-sel-2026")));
   return [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+async function visiteurSemaine(request, env = {}) {
+  let ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", d = /* @__PURE__ */ new Date();
+  d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7);
+  let h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|S" + d.toISOString().slice(0, 10) + "|" + (env.HASH_SALT || "bilan-sel-2026")));
+  return "s" + [...new Uint8Array(h)].slice(0, 12).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
 var sha256hex = async (s) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, "0")).join(""), cookieSession = (request) => {
   let m = (request.headers.get("cookie") || "").match(/(?:^|;\s*)bilan_s=([a-f0-9]{64})(?:;|$)/);
   return m ? m[1] : null;
@@ -841,32 +847,46 @@ ${REGLES}`, SOURCES = "Sources : termine par une ligne qui commence exactement p
 var MODELES = [
   ["@cf/qwen/qwen3-30b-a3b-fp8", 4625, 30475, "Qwen3 30B"],
   ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488, "Mistral Small 3.1"]
-], jour = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), jetons = (s) => Math.ceil(String(s).length / 3.2), nettoie = (t) => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/g, "").replace(/—/g, ",").replace(/\*\*/g, "").trim(), json4 = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } }), pret = !1;
+], jour = () => (/* @__PURE__ */ new Date()).toISOString().slice(0, 10), lundi = (t = Date.now()) => {
+  let d = new Date(t);
+  return d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7), d.toISOString().slice(0, 10);
+}, periode = (nv) => nv === "premium" ? jour() : "S" + lundi(), jetons = (s) => Math.ceil(String(s).length / 3.2), nettoie = (t) => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/g, "").replace(/—/g, ",").replace(/\*\*/g, "").trim(), json4 = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } }), pret = !1;
 async function init3(db) {
   pret || !db || (await db.prepare("CREATE TABLE IF NOT EXISTS ia_neurones (jour TEXT PRIMARY KEY, n REAL NOT NULL)").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_visiteurs (jour TEXT NOT NULL, h TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, h))").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_cache (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL, n INTEGER NOT NULL DEFAULT 0)").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_niveaux (mois TEXT NOT NULL, niveau TEXT NOT NULL, n REAL NOT NULL, q INTEGER NOT NULL, PRIMARY KEY (mois, niveau))").run(), await db.prepare("CREATE TABLE IF NOT EXISTS ia_trad (h TEXT PRIMARY KEY, fr TEXT NOT NULL, at INTEGER NOT NULL)").run(), pret = !0);
 }
 var NEURONES_GRATUITS_JOUR = 1e4, NEURONES_PAR_EURO = 99e3;
 async function niveau(request, env) {
   let p = await premiumOf(request, env).catch(() => null), c = p ? null : await sessionCompte(request, env).catch(() => null);
-  return p ? { niveau: "premium", h: "p:" + String(p.token).slice(0, 24) } : c && c.id ? { niveau: "compte", h: "c:" + c.id } : { niveau: "visiteur", h: await visitor(request, env) };
+  if (p) return { niveau: "premium", h: "p:" + String(p.token).slice(0, 24) };
+  let v = await visiteurSemaine(request, env);
+  return c && c.id ? { niveau: "compte", h: ["c:" + c.id, v] } : { niveau: "visiteur", h: v };
 }
-async function compteurs(env, h) {
+async function compteurs(env, h, per = jour()) {
   if (!env.DB) return { erreur: !0, neurones: 0, questions: 0 };
   try {
     await init3(env.DB);
-    let a = await env.DB.prepare("SELECT n FROM ia_neurones WHERE jour = ?").bind(jour()).first(), b = await env.DB.prepare("SELECT n FROM ia_visiteurs WHERE jour = ? AND h = ?").bind(jour(), h).first(), m = await env.DB.prepare("SELECT SUM(MAX(n - ?, 0)) AS p FROM ia_neurones WHERE jour LIKE ?").bind(NEURONES_GRATUITS_JOUR, jour().slice(0, 7) + "%").first();
+    let a = await env.DB.prepare("SELECT n FROM ia_neurones WHERE jour = ?").bind(jour()).first(), b = null;
+    for (let x of [].concat(h)) {
+      let r = await env.DB.prepare("SELECT n FROM ia_visiteurs WHERE jour = ? AND h = ?").bind(per, x).first();
+      r && (!b || r.n > b.n) && (b = r);
+    }
+    let m = await env.DB.prepare("SELECT SUM(MAX(n - ?, 0)) AS p FROM ia_neurones WHERE jour LIKE ?").bind(NEURONES_GRATUITS_JOUR, jour().slice(0, 7) + "%").first();
     return { neurones: a && a.n || 0, questions: b && b.n || 0, payes_mois: m && m.p || 0 };
   } catch (e) {
     return { erreur: !0, neurones: 0, questions: 0, detail: String(e && e.message || e) };
   }
 }
-async function compter(env, h, neurones) {
-  env.DB && (await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(jour(), neurones, neurones).run(), await env.DB.prepare("INSERT INTO ia_visiteurs (jour, h, n) VALUES (?, ?, 1) ON CONFLICT (jour, h) DO UPDATE SET n = n + 1").bind(jour(), h).run(), Math.random() < 0.05 && await env.DB.prepare("DELETE FROM ia_visiteurs WHERE jour < ?").bind(jour()).run());
+async function compter(env, h, neurones, per = jour()) {
+  if (env.DB) {
+    await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(jour(), neurones, neurones).run();
+    for (let x of [].concat(h)) await env.DB.prepare("INSERT INTO ia_visiteurs (jour, h, n) VALUES (?, ?, 1) ON CONFLICT (jour, h) DO UPDATE SET n = n + 1").bind(per, x).run();
+    Math.random() < 0.05 && await env.DB.prepare("DELETE FROM ia_visiteurs WHERE (jour NOT LIKE 'S%' AND jour < ?) OR (jour LIKE 'S%' AND jour < ?)").bind(jour(), "S" + lundi(Date.now() - 14 * 864e5)).run();
+  }
 }
 var plafonds = (env) => ({
   neurones: +env.IA_NEURONES_JOUR || 9e3,
   budget: Math.max(0, +env.IA_BUDGET_MOIS || 0) * NEURONES_PAR_EURO,
-  questions: { visiteur: +env.IA_QUESTIONS_JOUR || 3, compte: +env.IA_QUESTIONS_COMPTE || 10, premium: +env.IA_QUESTIONS_PREMIUM || 150 }
+  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 5, compte: +env.IA_GRATUIT_SEMAINE || 5, premium: +env.IA_PREMIUM_JOUR || 30 }
 }), siteOk = (c, P, marge) => c.neurones + marge < P.neurones || P.budget > 0 && c.payes_mois + marge < P.budget;
 async function empreinte(t) {
   let d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
@@ -927,13 +947,13 @@ async function traduire(request, env) {
 async function iaSite(request, env) {
   let url = new URL(request.url), P = plafonds(env);
   if (url.pathname === "/api/ia/traduire") return traduire(request, env);
-  let { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv];
+  let { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv], per = periode(nv);
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json4({ disponible: !1, raison: "absente", niveau: nv });
-    let c2 = await compteurs(env, h);
+    let c2 = await compteurs(env, h, per);
     if (c2.erreur) return json4({ disponible: !1, raison: "compteur", detail: c2.detail, niveau: nv });
     let epuise = nv !== "premium" && !siteOk(c2, P, 300);
-    return json4({ disponible: !epuise && c2.questions < plafond, reste_visiteur: Math.max(0, plafond - c2.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions });
+    return json4({ disponible: !epuise && c2.questions < plafond, reste_visiteur: Math.max(0, plafond - c2.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine" });
   }
   if (url.pathname !== "/api/ia/rediger") return json4({ error: "Introuvable" }, 404);
   if (request.method !== "POST") return json4({ error: "M\xE9thode non permise" }, 405);
@@ -948,14 +968,14 @@ async function iaSite(request, env) {
   if (!sys) return json4({ error: "T\xE2che inconnue" }, 400);
   let user = String(b.user || "").slice(0, 15e3), max = Math.min(Math.max(+b.max || 600, 200), 900);
   if (user.length < 3) return json4({ error: "Question vide" }, 400);
-  let c = await compteurs(env, h);
+  let c = await compteurs(env, h, per);
   if (c.erreur) return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
-  if (c.questions >= plafond) return json4({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez pos\xE9 ${plafond} questions \xE0 l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.` : `Vous avez pos\xE9 vos ${plafond} questions r\xE9dig\xE9es du jour. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain.` }, 429);
+  if (c.questions >= plafond) return json4({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez pos\xE9 ${plafond} questions \xE0 l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.` : `Vous avez pos\xE9 vos ${plafond} questions \xE0 l'IA de la semaine. Elles reviennent lundi ; avec Premium, vous en avez ${P.questions.premium} par jour. Les r\xE9ponses calcul\xE9es restent disponibles.` }, 429);
   let messages = [{ role: "system", content: sys }, { role: "user", content: user }], k = await empreinte(b.tache + "|" + max + "|" + user);
   try {
     let hit = await env.DB.prepare("SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?").bind(k, Date.now() - 864e5).first();
     if (hit)
-      return await compter(env, h, 0), await env.DB.prepare("UPDATE ia_cache SET n = n + 1 WHERE k = ?").bind(k).run(), await parNiveau(env, nv, 0), json4({ txt: hit.txt, modele: hit.modele, cache: !0 });
+      return await compter(env, h, 0, per), await env.DB.prepare("UPDATE ia_cache SET n = n + 1 WHERE k = ?").bind(k).run(), await parNiveau(env, nv, 0), json4({ txt: hit.txt, modele: hit.modele, cache: !0 });
   } catch {
   }
   for (let [model, cin, cout, nom] of MODELES) {
@@ -965,7 +985,7 @@ async function iaSite(request, env) {
         let msgs = model.includes("qwen3") ? [messages[0], { role: "user", content: user + `
 /no_think` }] : messages, out = await env.AI.run(model, { messages: msgs, max_tokens: max, temperature: 0.2 }), raw = out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content), txt = nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
         try {
-          await compter(env, h, reel);
+          await compter(env, h, reel, per);
         } catch {
           return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment (compteur en panne)." }, 503);
         }
@@ -1003,17 +1023,17 @@ function lundiDe(semaine) {
   let j4 = Date.UTC(+m[1], 0, 4), w = (new Date(j4).getUTCDay() + 6) % 7;
   return new Date(j4 - w * 864e5 + (+m[2] - 1) * 7 * 864e5).toISOString().slice(0, 10);
 }
-function variationSemaine(cs, k, lundi, auj, live, semPrec) {
-  let fin = addJ(lundi, 6), s = cs && cs.items && cs.items[k], dates = cs && cs.dates || [], pts = [], partiel = !1;
+function variationSemaine(cs, k, lundi3, auj, live, semPrec) {
+  let fin = addJ(lundi3, 6), s = cs && cs.items && cs.items[k], dates = cs && cs.dates || [], pts = [], partiel = !1;
   if (s) {
     let iRef = -1;
-    for (let i = 0; i < dates.length; i++) dates[i] < lundi && s[i] != null && (iRef = i);
+    for (let i = 0; i < dates.length; i++) dates[i] < lundi3 && s[i] != null && (iRef = i);
     let dans = [];
-    for (let i = 0; i < dates.length; i++) dates[i] >= lundi && dates[i] <= fin && s[i] != null && dans.push(i);
+    for (let i = 0; i < dates.length; i++) dates[i] >= lundi3 && dates[i] <= fin && s[i] != null && dans.push(i);
     iRef < 0 && dans.length && (iRef = dans.shift(), partiel = !0), iRef >= 0 && (pts = [[dates[iRef], s[iRef]], ...dans.map((i) => [dates[i], s[i]])]);
   }
   if (!pts.length && semPrec && num(semPrec.items && semPrec.items[k]) > 0 && (pts = [[semPrec.date || null, semPrec.items[k]]]), !pts.length) return null;
-  if (live && num(live.p) > 0 && auj && auj >= lundi && auj <= fin) {
+  if (live && num(live.p) > 0 && auj && auj >= lundi3 && auj <= fin) {
     let seance = ouvre(auj) ? auj : seancePrecedente(auj), der = pts[pts.length - 1][0];
     (!der || der < seance) && pts.push([seance, live.p]);
   }
@@ -1200,15 +1220,15 @@ function evolutionAlertes(A, prec) {
   return { alertes: alertes2, levees };
 }
 function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, semaine, opts = {}) {
-  let auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null, RG = normaliseRapport(rapport);
+  let auj = opts.auj, lundi3 = lundiDe(semaine), dimanche = addJ(lundi3, 6), prec = opts.precedent || null, RG = normaliseRapport(rapport);
   RG.favoris || (favoris = []), RG.portefeuille || (pf = null);
   let LP = lignesPf(pf).filter((l) => d.names[l.k]), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY2.test(k))), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k]).slice(0, 260), idx = {};
   for (let id of Object.keys(INDICES)) {
-    let v = variationSemaine(d.cs, "i:" + id, lundi, auj, d.px["i:" + id], d.sem);
+    let v = variationSemaine(d.cs, "i:" + id, lundi3, auj, d.px["i:" + id], d.sem);
     v && (idx[id] = { id, nom: INDICES[id], pct: v.pct, serie: v.serie, partiel: v.partiel });
   }
   let lignes = keys.map((k) => {
-    let p = d.px[k], v = variationSemaine(d.cs, k, lundi, auj, p, d.sem), ix = indiceDe(k, k.startsWith("e:") ? d.etf[k] : d.meta[k]), l = {
+    let p = d.px[k], v = variationSemaine(d.cs, k, lundi3, auj, p, d.sem), ix = indiceDe(k, k.startsWith("e:") ? d.etf[k] : d.meta[k]), l = {
       k,
       nom: d.names[k],
       type: k.startsWith("e:") ? "etf" : "action",
@@ -1237,12 +1257,12 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
         l.poids = r2(l.v / tot * 100), r != null && (l.var_eur = l.v - l.v / (1 + r / 100), varE += l.var_eur, couvert += l.v), x && (x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime });
       }
       let jours = [...new Set(lp.flatMap((l) => {
-        let v = variationSemaine(d.cs, l.k, lundi, auj, d.px[l.k], d.sem);
+        let v = variationSemaine(d.cs, l.k, lundi3, auj, d.px[l.k], d.sem);
         return v ? v.dates.filter(Boolean) : [];
       }))].sort(), serie = null;
       if (jours.length >= 2) {
         let parL = lp.map((l) => {
-          let v = variationSemaine(d.cs, l.k, lundi, auj, d.px[l.k], d.sem);
+          let v = variationSemaine(d.cs, l.k, lundi3, auj, d.px[l.k], d.sem);
           if (!v) return null;
           let m = Object.fromEntries(v.dates.map((x, i) => [x, v.serie[i]]));
           return { l, m, der: v.serie[v.serie.length - 1] };
@@ -1275,7 +1295,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       };
     }
   }
-  let ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))), off = Object.entries(d.ana || {}).filter(([, a]) => a && ids.has(a.id) && a.date >= lundi && a.date <= dimanche).map(([u, a]) => {
+  let ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))), off = Object.entries(d.ana || {}).filter(([, a]) => a && ids.has(a.id) && a.date >= lundi3 && a.date <= dimanche).map(([u, a]) => {
     let cat = categorie(a.type, a.titre), x = L["c:" + a.id], fort = x && x.variation_semaine_pct != null && Math.abs(x.variation_semaine_pct) >= 5;
     return {
       k: "c:" + a.id,
@@ -1295,7 +1315,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
     };
   }), dansSemaine = (x) => {
     let j = String(x || "").slice(0, 10);
-    return j >= lundi && j <= dimanche;
+    return j >= lundi3 && j <= dimanche;
   }, url = (u) => typeof u == "string" && /^https:\/\//.test(u) ? u : null, actuO = [], presse2 = [];
   for (let [k, j] of Object.entries(d.actu || {})) {
     if (!L[k] || !j) continue;
@@ -1372,13 +1392,13 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
   let vus = /* @__PURE__ */ new Set(), annonces = [...actuO, ...off.filter((a) => !urlsO.has(a.source)), ...presse2].sort((a, b) => b.poids - a.poids || String(b.date).localeCompare(a.date)).filter((a) => {
     let c = a.source || a.k + "|" + (a.titre || a.type) + "|" + a.date;
     return vus.has(c) ? !1 : (vus.add(c), !0);
-  }).filter((a) => RG.sujets[sujetDe(a.categorie)]).slice(0, RG.detail === "court" ? 3 : 30), debutAv = auj && auj > lundi ? auj : lundi, finAv = addJ(debutAv, 14), a_venir = (d.ev || []).filter((e) => e && ids.has(e.id) && e.date >= debutAv && e.date <= finAv).sort((a, b) => a.date.localeCompare(b.date)).map((e) => {
+  }).filter((a) => RG.sujets[sujetDe(a.categorie)]).slice(0, RG.detail === "court" ? 3 : 30), debutAv = auj && auj > lundi3 ? auj : lundi3, finAv = addJ(debutAv, 14), a_venir = (d.ev || []).filter((e) => e && ids.has(e.id) && e.date >= debutAv && e.date <= finAv).sort((a, b) => a.date.localeCompare(b.date)).map((e) => {
     let c = categorie(e.type, e.label);
     return { k: "c:" + e.id, id: e.id, nom: d.names["c:" + e.id], date: e.date, type: e.type || null, label: e.label || e.type || "", categorie: c.code, source: e.source || null, lien: "/entreprise/" + e.id + "/agenda" };
   }).filter((e) => RG.sujets[sujetDe(e.categorie)]).slice(0, RG.detail === "court" ? 3 : 12), secteurs = RG.secteurs.map((sk) => {
     let vs = [];
     for (let [k, m] of Object.entries(d.meta || {})) if (m && m.sector === sk && d.names[k]) {
-      let v = variationSemaine(d.cs, k, lundi, auj, d.px[k], d.sem);
+      let v = variationSemaine(d.cs, k, lundi3, auj, d.px[k], d.sem);
       v && vs.push({ k, nom: d.names[k], variation_semaine_pct: v.pct });
     }
     vs.sort((a, b) => b.variation_semaine_pct - a.variation_semaine_pct);
@@ -1398,7 +1418,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
     v: 2,
     semaine,
     genere: Date.now(),
-    du: lundi,
+    du: lundi3,
     au: dimanche,
     lignes,
     moyenne: mv.length ? r2(mv.reduce((a, l) => a + l.variation_semaine_pct, 0) / mv.length) : null,
@@ -1697,7 +1717,7 @@ function clesPortefeuille(pf, names) {
   };
   return walk(pf, 0), [...out];
 }
-var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), ALERTES_GRATUIT = 3, ouvreApres = (ymd, n) => {
+var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), ALERTES_GRATUIT = 0, ouvreApres = (ymd, n) => {
   let t = Date.parse(ymd + "T12:00:00Z");
   for (; n > 0; ) {
     t += JOUR;
@@ -1763,7 +1783,7 @@ async function espace(request, env) {
       await env.DB.prepare("INSERT INTO mcp_cles (cle, compte, created) VALUES (?, ?, ?) ON CONFLICT (compte) DO UPDATE SET cle = excluded.cle, created = excluded.created").bind(cle, c2.id, Date.now()).run(), r = { cle };
     }
     let p = await premiumDe(env, c2.premium, url.origin);
-    return json({ adresse: `${(env.SITE_URL || url.origin).replace(/\/+$/, "")}/mcp/${r.cle}`, premium: !!p, limite_jour: p ? null : 20 });
+    return json({ adresse: `${(env.SITE_URL || url.origin).replace(/\/+$/, "")}/mcp/${r.cle}`, premium: !!p, limite_jour: p ? null : 0 });
   }
   if (path === "/api/espace/inscription" && m === "POST") {
     let { b, err: err2 } = await lire(request);
@@ -1851,7 +1871,12 @@ async function espace(request, env) {
   }
   if (path === "/api/espace/preferences" && m === "POST") {
     let { b, err: err2 } = await lire(request);
-    return err2 || (typeof b.teaser != "boolean" ? json({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json({ ok: !0, teaser: b.teaser, mail: mailReady(env) })));
+    if (err2) return err2;
+    if ((typeof b.alertes_mail == "boolean" || typeof b.rapport_mail == "boolean") && b.teaser === void 0) {
+      let d0 = await env.DB.prepare("SELECT profil FROM donnees WHERE compte = ?").bind(c.id).first(), pr = { ...parse(d0 && d0.profil, {}) };
+      return typeof b.alertes_mail == "boolean" && (pr.alertesMail = b.alertes_mail), typeof b.rapport_mail == "boolean" && (pr.rapportMail = b.rapport_mail), d0 ? await env.DB.prepare("UPDATE donnees SET profil = ? WHERE compte = ?").bind(JSON.stringify(pr), c.id).run() : await env.DB.prepare("INSERT INTO donnees (compte, profil) VALUES (?, ?)").bind(c.id, JSON.stringify(pr)).run(), json({ ok: !0, alertes_mail: pr.alertesMail !== !1, rapport_mail: pr.rapportMail !== !1, mail: mailReady(env) });
+    }
+    return typeof b.teaser != "boolean" ? json({ error: "Pr\xE9f\xE9rence invalide." }, 400) : (await env.DB.prepare("UPDATE comptes SET teaser = ? WHERE id = ?").bind(b.teaser ? 1 : 0, c.id).run(), json({ ok: !0, teaser: b.teaser, mail: mailReady(env) }));
   }
   if (path === "/api/espace/reco" && (m === "GET" || m === "POST")) {
     let row = await env.DB.prepare("SELECT profil FROM donnees WHERE compte = ?").bind(c.id).first(), p0 = parse(row && row.profil, null), profil = p0 && typeof p0 == "object" && !Array.isArray(p0) ? p0 : {};
@@ -1894,6 +1919,7 @@ async function espace(request, env) {
   if (path === "/api/espace/bilan" && m === "GET") {
     let auj = jourParis(), cur = semaineIso(auj), semaine = url.searchParams.get("semaine") || cur, apercu = url.searchParams.get("apercu") === "1";
     if (!/^\d{4}-W\d{2}$/.test(semaine)) return json({ error: "Semaine invalide (format 2026-W44)." }, 400);
+    if (!await premiumDe(env, c.premium, url.origin)) return json({ premium_requis: !0, error: "Le rapport de la semaine fait partie de Premium." }, 403);
     let row = await env.DB.prepare("SELECT contenu, vu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, semaine).first(), b = row ? parse(row.contenu, null) : null;
     if (semaine === cur) {
       let d = await siteData2(request, env), don = await env.DB.prepare("SELECT favoris, portefeuille, profil FROM donnees WHERE compte = ?").bind(c.id).first(), prec = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(c.id, precedenteDe(cur)).first(), r = await assurerBilan(env, d, c.id, don, cur, row, prec);
@@ -1975,7 +2001,7 @@ async function tache(request, env, url) {
   if (!adminOk(request, env)) return json({ error: "Non autoris\xE9." }, 403);
   let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || quoi === "jour" || !quoi && wd === 6, cutoff = now - 6 * 36e5, parJour = (quoi === "jour" || !quoi && wd === 6) && [6, 0, 1].includes(wd), cible = parJour && wd === 1 ? precedenteDe(sem) : sem, W = modeBilan ? parJour ? "(c.last_tache < ? OR (c.last_semaine IS NOT ? AND COALESCE(json_extract(d.profil, '$.rapport.jour'), 6) = ?))" : "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? parJour ? [cutoff, cible, wd] : [cutoff, cible] : [cutoff], FROM = `FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W}`, rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.premium, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
   if (rows.length) {
-    let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre2 = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0, premOk = new Set(((await env.DB.prepare("SELECT token FROM abonnes WHERE until > ?").bind(now).all().catch(() => ({ results: [] }))).results || []).map((x) => x.token)), prochainOuvre = ouvreApres(auj, 1);
+    let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre2 = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = mailReady(env) ? await mailCapacity(env) : 0, premOk = new Set(((await env.DB.prepare("SELECT token FROM abonnes WHERE until > ?").bind(now).all().catch(() => ({ results: [] }))).results || []).map((x) => x.token)), prochainOuvre = ouvreApres(auj, 1);
     for (let r of rows) {
       let prem = !!(r.premium && premOk.has(r.premium)), keys = clesDe(r, d.names).filter((k) => d.names[k]).slice(0, prem ? 260 : ALERTES_GRATUIT), ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2)));
       if (keys.length && r.last_tache < cutoff) {
@@ -1994,13 +2020,34 @@ async function tache(request, env, url) {
           }
         }
       }
+      if (prem && cap > 0 && mailReady(env) && r.email && parse(r.profil, {}).alertesMail !== !1) {
+        let N = ((await env.DB.prepare("SELECT type, texte, lien FROM notifs WHERE compte = ? AND at >= ? AND type = 'mouvement' ORDER BY id").bind(r.id, now).all()).results || []).filter((n) => /: [−-]\d/.test(n.texte));
+        if (N.length) {
+          let chute = N.find((n) => n.type === "mouvement" && /−|-\d/.test(n.texte)), sujet = chute ? `Alerte : ${chute.texte.split(" : ")[0]} chute aujourd'hui` : N.length === 1 ? `Alerte : ${N[0].texte.split(" : ")[0]}` : `Vos ${N.length} alertes du soir`, lignes = N.slice(0, 15).map((n) => `- ${n.texte}
+  ${origin}${n.lien || "/espace/alertes"}`).join(`
+`), esc22 = (t) => String(t).replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]), html = `<div style="background:#ffffff;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111"><div style="max-width:560px;margin:0 auto;border:2px solid #111;border-radius:16px;padding:22px">
+            <p style="margin:0 0 4px;font:800 13px Helvetica,Arial;background:#FFE14D;display:inline-block;padding:3px 10px;border-radius:999px">ENKLAIR \xB7 alertes du soir</p>
+            <h1 style="font:800 22px Helvetica,Arial;margin:12px 0 14px">${esc22(sujet)}</h1>
+            ${N.slice(0, 15).map((n) => `<p style="margin:0 0 12px;font:15px/1.45 Helvetica,Arial"><span style="font-weight:800;color:${n.type === "mouvement" ? /−|-\d/.test(n.texte) ? "#C8321E" : "#0A7F4F" : "#111"}">${n.type === "mouvement" ? /−|-\d/.test(n.texte) ? "\u25BC" : "\u25B2" : "\u2022"}</span> ${esc22(n.texte)}<br><a href="${origin}${esc22(n.lien || "/espace/alertes")}" style="color:#111;font-weight:700">Voir \u2192</a></p>`).join("")}
+            <p style="margin:18px 0 0;font:12px/1.5 Helvetica,Arial;color:#555">Information factuelle, sans conseil d'investissement. Vous recevez cet e-mail parce que les alertes par e-mail sont activ\xE9es dans votre espace ENKLAIR. Pour ne plus les recevoir : ${origin}/espace/reglages</p></div></div>`;
+          try {
+            await sendMail(env, r.email, sujet, `${sujet}
+
+${lignes}
+
+Information factuelle, sans conseil d'investissement.
+Pour ne plus recevoir ces e-mails : ${origin}/espace/reglages`, html), mails2++, cap--;
+          } catch {
+          }
+        }
+      }
       let RG = rapportDe(r), sonJour = !parJour || RG.jour === wd, aRapport = keys.length || RG.secteurs.length;
-      if (modeBilan && sonJour && r.last_semaine !== cible && aRapport) {
+      if (modeBilan && prem && sonJour && r.last_semaine !== cible && aRapport) {
         let st = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, cible).first(), pr = await env.DB.prepare("SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?").bind(r.id, precedenteDe(cible)).first(), b = await assurerBilan(env, d, r.id, r, cible, st, pr);
         if (b.stocke !== !1) {
           bilans++;
           let e0 = b.c && b.c.essentiel && b.c.essentiel[0], lien2 = cible === sem ? "/espace" : "/espace?semaine=" + cible;
-          if (RG.notif && (notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est pr\xEAte. ${e0}` : "Votre semaine en 2 minutes est pr\xEAte.", lien2, cible)), r.teaser && cap > 0)
+          if (RG.notif && (notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est pr\xEAte. ${e0}` : "Votre semaine en 2 minutes est pr\xEAte.", lien2, cible)), cap > 0 && parse(r.profil, {}).rapportMail !== !1)
             try {
               await sendMail(
                 env,
@@ -2664,7 +2711,7 @@ async function ficheSociete(env, origin, ctx, B, c) {
       capitalisation_eur: v && v.capE ? Math.round(v.capE) : null,
       per: v && v.pe ? r23(v.pe) : null,
       per_median_secteur: mp ? r23(mp.m) : null,
-      per_position: v && v.pe && mp ? v.pe > mp.m * 1.3 ? "plus cher que la plupart des entreprises du secteur" : v.pe < mp.m * 0.75 ? "moins cher que la plupart des entreprises du secteur" : "dans la moyenne du secteur" : null,
+      per_position: v && v.pe && mp ? v.pe > mp.m * 1.3 ? "PER plus haut que la plupart des entreprises du secteur" : v.pe < mp.m * 0.75 ? "PER plus bas que la plupart des entreprises du secteur" : "dans la moyenne du secteur" : null,
       rendement_dividende: v && v.yld != null ? r4(v.yld) : null,
       source: P.source,
       releve: P.updated,
@@ -2843,7 +2890,7 @@ function lecon(B, { m, l }, origin, autres) {
 
 `) + pied(src), donnees: d };
 }
-var MINUTE = /* @__PURE__ */ new Map(), PAR_MINUTE = 240, PAR_JOUR = 3e4, MCP_GRATUIT_JOUR = 20;
+var MINUTE = /* @__PURE__ */ new Map(), PAR_MINUTE = 240, PAR_JOUR = 3e4;
 async function cleInfo(env, cle) {
   if (!env.DB || !/^[a-f0-9]{32}$/.test(cle || "")) return null;
   try {
@@ -2858,17 +2905,6 @@ async function cleInfo(env, cle) {
   } catch {
     return null;
   }
-}
-async function debitCle(env, info) {
-  if (info.premium) return null;
-  try {
-    let jour2 = (/* @__PURE__ */ new Date()).toISOString().slice(0, 10);
-    await env.DB.prepare("CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))").run();
-    let r = await env.DB.prepare("INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, 'mcp', 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1 RETURNING n").bind("mcpc:" + info.compte, jour2).first();
-    if (r && r.n > MCP_GRATUIT_JOUR) return `Les ${MCP_GRATUIT_JOUR} appels gratuits du jour sont utilis\xE9s pour ce compte ENKLAIR Ils reviennent demain ; avec Premium, le connecteur est sans limite.`;
-  } catch {
-  }
-  return null;
 }
 async function debit(request, env) {
   let ip = request.headers.get("cf-connecting-ip") || "local", now = Date.now(), w = MINUTE.get(ip);
@@ -2905,7 +2941,7 @@ async function traiter(msg, request, env, origin, ctx) {
   if (msg.method === "tools/call") {
     let t = TOOLS.find((x) => x.name === p.name);
     if (!t) return err(id, -32602, `Outil inconnu : ${p.name}`);
-    let lim = await debit(request, env) || (ctx && ctx.cleMcp ? await debitCle(env, ctx.cleMcp) : null);
+    let prem = !!(ctx && ctx.cleMcp && ctx.cleMcp.premium) || env.MCP_OUVERT === "1", lim = await debit(request, env) || (prem ? null : `Le connecteur ENKLAIR fait partie de Premium (39 \u20AC par an ou 4,90 \u20AC par mois) : ${origin}/premium. Une fois abonn\xE9, copiez votre adresse personnelle dans Mon espace, R\xE9glages, et remplacez avec elle l'adresse ${origin}/mcp dans votre assistant. En attendant, toutes les donn\xE9es restent consultables gratuitement sur ${origin}.`);
     if (lim) return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text: lim }], isError: !0 } };
     try {
       let r = await outil(t.name, p.arguments && typeof p.arguments == "object" ? p.arguments : {}, env, origin, ctx);
@@ -2947,7 +2983,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "ce8806998426bad9", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "52fc5f2acff4c0ec", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3025,6 +3061,47 @@ async function etfMeta(id, env, url, SITE2) {
     };
   } catch {
     return null;
+  }
+}
+
+// cf/src/quota.mjs
+var json5 = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } }), lundi2 = () => {
+  let d = /* @__PURE__ */ new Date();
+  return d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7), d.toISOString().slice(0, 10);
+}, PLAFONDS = { comparer: 5 };
+async function quota(request, env) {
+  let url = new URL(request.url), quoi = url.pathname.split("/")[3];
+  if (!PLAFONDS[quoi]) return json5({ error: "Introuvable" }, 404);
+  let plafond = +env.COMPARER_GRATUIT_SEMAINE || PLAFONDS[quoi];
+  if (await premiumOf(request, env).catch(() => null)) return json5({ ok: !0, premium: !0, reste: null, plafond: null });
+  if (!env.DB) return json5({ ok: !0, reste: plafond, plafond, erreur: "base" });
+  let ids = [];
+  if (request.method === "POST")
+    try {
+      let b = await request.json();
+      ids = [...new Set((b.ids || []).map(String).filter((x) => /^[a-z0-9-]{1,80}$/.test(x)))].sort().slice(0, 10);
+    } catch {
+    }
+  let c = await sessionCompte(request, env).catch(() => null), H = [await visiteurSemaine(request, env), ...c && c.id ? ["c:" + c.id] : []], sem = lundi2();
+  try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS quotas (semaine TEXT NOT NULL, quoi TEXT NOT NULL, h TEXT NOT NULL, cle TEXT NOT NULL, PRIMARY KEY (semaine, quoi, h, cle))").run();
+    let deja = /* @__PURE__ */ new Map();
+    for (let h of H) deja.set(h, ((await env.DB.prepare("SELECT cle FROM quotas WHERE semaine = ? AND quoi = ? AND h = ?").bind(sem, quoi, h).all()).results || []).map((r) => r.cle));
+    let n = Math.max(...H.map((h) => deja.get(h).length));
+    if (request.method !== "POST" || ids.length < 2) return json5({ ok: n < plafond, reste: Math.max(0, plafond - n), plafond });
+    let cle = ids.join(","), inclus = (k) => k.split(",").every((x) => ids.includes(x));
+    if (H.some((h) => deja.get(h).some(inclus))) {
+      for (let h of H) {
+        let old = deja.get(h).find(inclus);
+        old && old !== cle ? await env.DB.prepare("UPDATE OR IGNORE quotas SET cle = ? WHERE semaine = ? AND quoi = ? AND h = ? AND cle = ?").bind(cle, sem, quoi, h, old).run() : old || await env.DB.prepare("INSERT OR IGNORE INTO quotas VALUES (?, ?, ?, ?)").bind(sem, quoi, h, cle).run();
+      }
+      return json5({ ok: !0, reste: Math.max(0, plafond - n), plafond });
+    }
+    if (n >= plafond) return json5({ ok: !1, reste: 0, plafond });
+    for (let h of H) await env.DB.prepare("INSERT OR IGNORE INTO quotas VALUES (?, ?, ?, ?)").bind(sem, quoi, h, cle).run();
+    return Math.random() < 0.05 && await env.DB.prepare("DELETE FROM quotas WHERE semaine < ?").bind(sem).run(), json5({ ok: !0, reste: Math.max(0, plafond - n - 1), plafond });
+  } catch {
+    return json5({ ok: !0, reste: plafond, plafond, erreur: "base" });
   }
 }
 
@@ -3380,7 +3457,7 @@ function meta(path, q = null) {
     let c = BY[m[1]];
     if (!c) return null;
     let sec = SECTEURS[c.sector] || c.sector;
-    return { title: `Action ${c.name} : r\xE9sultats, dividende et dette, expliqu\xE9s \xB7 ${SITE}`, desc: `${c.name} est-elle rentable, endett\xE9e, ch\xE8re ? ${c.desc} Chiffre d'affaires, marge, r\xE9sultat, dette et dividende tir\xE9s des comptes officiels, face \xE0 la m\xE9diane du secteur ${sec.toLowerCase()}. Sans conseil.`, fiche: c, sec };
+    return { title: `Action ${c.name} : r\xE9sultats, dividende et dette, expliqu\xE9s \xB7 ${SITE}`, desc: `${c.name} est-elle rentable, endett\xE9e ? Que pense le march\xE9 ? ${c.desc} Chiffre d'affaires, marge, r\xE9sultat, dette et dividende tir\xE9s des comptes officiels, face \xE0 la m\xE9diane du secteur ${sec.toLowerCase()}. Sans conseil.`, fiche: c, sec };
   }
   if (m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/)) {
     let t = TOOLS2[m[1] || "epargne"] || TOOLS2.epargne;
@@ -3452,6 +3529,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     if (url.pathname === "/api/presse") return presse(request, index_gen_default);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (IA_RETIREE.test(url.pathname)) return iaRetiree();
+    if (url.pathname.startsWith("/api/quota/")) return quota(request, env);
     if (url.pathname.startsWith("/api/ia/")) return iaSite(request, env);
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
@@ -3544,7 +3622,7 @@ function descFiche(t, c) {
   let f = c.fin || {}, n = (c.years || []).length - 1, y = n >= 0 ? c.years[n] : null, v = (k) => Array.isArray(f[k]) ? f[k][n] : null;
   if (y == null || v("ca") == null) return t.desc;
   let ca = v("ca"), eb = v("ebit"), P = [`${t.fiche.name} en ${y} : ${fmtM(ca, c.currency)} de chiffre d'affaires`];
-  return eb != null && ca > 0 && P.push(`marge d'exploitation de ${(eb / ca * 100).toFixed(1).replace(".", ",")} %`), v("netDebt") != null && P.push(`${v("netDebt") < 0 ? "tr\xE9sorerie nette" : "dette nette"} de ${fmtM(Math.abs(v("netDebt")), c.currency)}`), `${P.join(", ")}. Rentable, endett\xE9e, ch\xE8re ? Chaque chiffre face \xE0 la m\xE9diane du secteur ${t.sec.toLowerCase()}, tir\xE9 des comptes officiels. Sans conseil.`;
+  return eb != null && ca > 0 && P.push(`marge d'exploitation de ${(eb / ca * 100).toFixed(1).replace(".", ",")} %`), v("netDebt") != null && P.push(`${v("netDebt") < 0 ? "tr\xE9sorerie nette" : "dette nette"} de ${fmtM(Math.abs(v("netDebt")), c.currency)}`), `${P.join(", ")}. Rentable, endett\xE9e, et que pense le march\xE9 ? Chaque chiffre face \xE0 la m\xE9diane du secteur ${t.sec.toLowerCase()}, tir\xE9 des comptes officiels. Sans conseil.`;
 }
 async function rendu(t, fq, env, url) {
   let corps = "";
