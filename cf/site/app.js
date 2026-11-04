@@ -2348,13 +2348,14 @@ async function espaceAlertes(el, m) {
 }
 function espaceReglages(el, m) {
   el.innerHTML = `<div class="two"><section class="panel"><div class="ph"><h2>Mot de passe</h2></div><div class="pb"><form id="mdpf" class="espform"><label>Mot de passe actuel<input type="password" name="a" required autocomplete="current-password"></label><label>Nouveau mot de passe<input type="password" name="n" required minlength="10" autocomplete="new-password"></label><button class="btn">Changer</button><p class="muted" id="mdpm" style="font-size:13.5px;margin:0"></p></form></div></section>
-    <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail ? `<label class="chk"><input type="checkbox" id="teas"${m.teaser ? " checked" : ""}> Recevoir un court e-mail quand mon bilan de la semaine est prêt (sans son contenu).</label>` : `<p class="muted" style="margin-top:0">Votre bilan de la semaine vous attend ici chaque samedi matin.</p>`}
-      ${m.mail ? (m.premium ? `<label class="chk"><input type="checkbox" id="almail"${((m.donnees || {}).profil || {}).alertesMail === false ? "" : " checked"}> Recevoir mes alertes par e-mail, le soir même (une valeur qui chute de plus de 5 %, des résultats publiés, un dividende à ne pas manquer).</label>` : `<p class="muted" style="font-size:13.5px">Avec <a class="lnk" href="/premium#alertes">Premium</a>, vos alertes arrivent aussi par e-mail : une valeur qui chute de plus de 5 %, des résultats publiés, un dividende à ne pas manquer.</p>`) : ""}
+    <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail && m.premium ? `<label class="chk"><input type="checkbox" id="rapmail"${((m.donnees || {}).profil || {}).rapportMail === false ? "" : " checked"}> Recevoir un e-mail quand mon rapport de la semaine est prêt.</label>` : ""}
+      ${m.mail ? (m.premium ? `<label class="chk"><input type="checkbox" id="almail"${((m.donnees || {}).profil || {}).alertesMail === false ? "" : " checked"}> Recevoir un e-mail le soir même quand une valeur de mon portefeuille ou de mes favoris chute de plus de 5 %.</label>` : `<p class="muted" style="font-size:13.5px">Avec <a class="lnk" href="/premium#alertes">Premium</a>, un e-mail vous prévient le soir même quand une valeur de votre portefeuille ou de vos favoris chute de plus de 5 %, et votre rapport arrive chaque semaine.</p>`) : ""}
       <p style="margin:16px 0 0"><a class="lnk" href="/espace/ia">L'IA du site</a> : réponses calculées, et réponses rédigées gratuites pour les questions libres.</p>
       <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button>${m.premium ? `<a class="btn ghost" href="/premium">Mon abonnement</a>` : ""}</div></div></section></div>
     <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte, vos favoris, votre portefeuille, vos bilans et vos alertes sont effacés définitivement. Un abonnement Premium se résilie à part, depuis la page Premium.</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
   $("#mdpf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/motdepasse", { ancien: fd.get("a"), nouveau: fd.get("n") }); $("#mdpm").textContent = r.error || "Mot de passe changé."; };
   if ($("#teas")) $("#teas").onchange = e => post2("/api/espace/preferences", { teaser: e.target.checked });
+  if ($("#rapmail")) $("#rapmail").onchange = e => post2("/api/espace/preferences", { rapport_mail: e.target.checked }).then(r => toast(r.ok ? "Réglage enregistré." : "Réglage non enregistré."));
   if ($("#almail")) $("#almail").onchange = e => post2("/api/espace/preferences", { alertes_mail: e.target.checked }).then(r => toast(r.ok ? (e.target.checked ? "Alertes par e-mail activées." : "Alertes par e-mail coupées.") : "Réglage non enregistré."));
   $("#logout").onclick = async () => { await post2("/api/espace/deconnexion"); MOI = { connecte: false }; document.documentElement.classList.remove("is-in"); espaceBadge(); go("/"); };
   $("#delf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/supprimer", { motdepasse: fd.get("p") }); if (r.error) { $("#delm").textContent = r.error; return; } MOI = { connecte: false }; espaceBadge(); app.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Votre espace a été supprimé. Les favoris enregistrés sur cet appareil restent ici tant que vous ne videz pas votre navigateur.</p></div></section>`; };
@@ -2812,7 +2813,16 @@ function route() {
 }
 // Routes ajoutées par les modules (cf/site/m/*.js) : ROUTES_EXTRA.push([/^\/chemin\/([a-z0-9-]+)$/, id => pageX(id)])
 function goR(url) { history.replaceState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); } // redirection sans entrée dans l'historique (anciennes adresses)
-function go(url) { history.pushState({}, "", url); route(); if (!location.hash) window.scrollTo(0, 0); closePanels(); }
+function go(url) { history.pushState({}, "", url); route(); if (!location.hash) { window.scrollTo(0, 0); goHaut(); } closePanels(); }
+// 4/11 : sur téléphone, la page arrivait parfois au milieu (Romain, « Voir la fiche d'Hermès ») : on remonte encore pendant la construction
+// de la page, sauf si la personne a déjà fait défiler ou si l'adresse vise un bloc (/entreprise/x/comptes, ancre).
+function goHaut() {
+  const p0 = location.pathname; if (/^\/entreprise\/[^/]+\/./.test(p0)) return;
+  let bouge = false; const stop = () => { bouge = true; }; addEventListener("touchmove", stop, { once: true, passive: true }); addEventListener("wheel", stop, { once: true, passive: true });
+  [120, 450, 1200].forEach(t => setTimeout(() => { if (!bouge && !location.hash && location.pathname === p0 && scrollY > 0) window.scrollTo(0, 0); }, t));
+  setTimeout(() => { removeEventListener("touchmove", stop); removeEventListener("wheel", stop); }, 1300);
+} // 4/11 : sur téléphone, la page arrivait parfois au milieu (Romain, « Voir la fiche d'Hermès ») : on remonte aussi une fois la page construite
+try { history.scrollRestoration = "manual"; } catch (e) { }
 document.addEventListener("click", e => {
   const a = e.target.closest("a[href]");
   if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;

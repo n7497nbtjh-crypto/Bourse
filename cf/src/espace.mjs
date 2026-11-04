@@ -338,11 +338,12 @@ export async function espace(request, env) {
 
   if (path === "/api/espace/preferences" && m === "POST") {
     const { b, err } = await lire(request); if (err) return err;
-    if (typeof b.alertes_mail === "boolean" && b.teaser === undefined) { // 4/11 : alertes par e-mail (Premium), dans donnees.profil
-      const d0 = await env.DB.prepare(`SELECT profil FROM donnees WHERE compte = ?`).bind(c.id).first(), pr = { ...parse(d0 && d0.profil, {}), alertesMail: b.alertes_mail };
+    if ((typeof b.alertes_mail === "boolean" || typeof b.rapport_mail === "boolean") && b.teaser === undefined) { // 4/11 : e-mails Premium (chute, rapport), dans donnees.profil
+      const d0 = await env.DB.prepare(`SELECT profil FROM donnees WHERE compte = ?`).bind(c.id).first(), pr = { ...parse(d0 && d0.profil, {}) };
+      if (typeof b.alertes_mail === "boolean") pr.alertesMail = b.alertes_mail; if (typeof b.rapport_mail === "boolean") pr.rapportMail = b.rapport_mail;
       if (d0) await env.DB.prepare(`UPDATE donnees SET profil = ? WHERE compte = ?`).bind(JSON.stringify(pr), c.id).run();
       else await env.DB.prepare(`INSERT INTO donnees (compte, profil) VALUES (?, ?)`).bind(c.id, JSON.stringify(pr)).run();
-      return json({ ok: true, alertes_mail: b.alertes_mail, mail: mailReady(env) });
+      return json({ ok: true, alertes_mail: pr.alertesMail !== false, rapport_mail: pr.rapportMail !== false, mail: mailReady(env) });
     }
     if (typeof b.teaser !== "boolean") return json({ error: "Préférence invalide." }, 400);
     await env.DB.prepare(`UPDATE comptes SET teaser = ? WHERE id = ?`).bind(b.teaser ? 1 : 0, c.id).run();
@@ -508,11 +509,12 @@ async function tache(request, env, url) {
             else if (p.l52 > 0 && p.chg < 0 && p.p <= p.l52 * 1.002) notifs += await notifier(env, r.id, "record", `${d.names[k]} : cours au plus bas depuis un an (${sgnP(p.chg)} aujourd'hui).`, lienDe(k), auj, "l52"); }
         }
       }
-      // 4/11 (Romain) : les alertes du soir partent aussi par e-mail (Premium), une lettre par compte, les chutes en premier.
+      // 4/11 (Romain) : e-mail Premium seulement quand une valeur suivie chute de plus de 5 % (une lettre par compte et par soir).
       // Désactivable dans Réglages (donnees.profil.alertesMail = false). Envoi seulement si un service d'e-mail est configuré.
       if (prem && cap > 0 && mailReady(env) && r.email && parse(r.profil, {}).alertesMail !== false) {
-        const N = ((await env.DB.prepare(`SELECT type, texte, lien FROM notifs WHERE compte = ? AND at >= ? AND type <> 'bilan' ORDER BY id`).bind(r.id, now).all()).results || [])
-          .sort((a, b) => (b.type === "mouvement" && /−|-\d/.test(b.texte) ? 1 : 0) - (a.type === "mouvement" && /−|-\d/.test(a.texte) ? 1 : 0));
+        // 4/11 (Romain) : un e-mail seulement pour une forte chute (le reste reste dans Mon espace et en notification)
+        const N = ((await env.DB.prepare(`SELECT type, texte, lien FROM notifs WHERE compte = ? AND at >= ? AND type = 'mouvement' ORDER BY id`).bind(r.id, now).all()).results || [])
+          .filter(n => /: [−-]\d/.test(n.texte));
         if (N.length) {
           const chute = N.find(n => n.type === "mouvement" && /−|-\d/.test(n.texte));
           const sujet = chute ? `Alerte : ${chute.texte.split(" : ")[0]} chute aujourd'hui` : N.length === 1 ? `Alerte : ${N[0].texte.split(" : ")[0]}` : `Vos ${N.length} alertes du soir`;
@@ -535,7 +537,7 @@ async function tache(request, env, url) {
           bilans++;
           const e0 = b.c && b.c.essentiel && b.c.essentiel[0], lien = cible === sem ? "/espace" : "/espace?semaine=" + cible;
           if (RG.notif) notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est prête. ${e0}` : "Votre semaine en 2 minutes est prête.", lien, cible);
-          if (r.teaser && cap > 0) { try { await sendMail(env, r.email, "Votre bilan de la semaine est prêt",
+          if (cap > 0 && parse(r.profil, {}).rapportMail !== false) { try { await sendMail(env, r.email, "Votre bilan de la semaine est prêt",
             `Bonjour,\n\nVotre bilan de la semaine est prêt sur ENKLAIR :\n${origin}/espace\n\nVous recevez ce message parce que vous l'avez demandé dans votre espace. Pour ne plus le recevoir, décochez l'option dans votre espace.\n\nbilan. Informations factuelles, sans conseil en investissement.`,
             `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px"><p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><p style="font-size:17px;margin:16px 0">Votre bilan de la semaine est prêt.</p><p><a href="${origin}/espace" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir mon bilan</a></p><p style="font-size:12px;color:#87827A;margin-top:22px">Vous recevez ce message parce que vous l'avez demandé. Pour ne plus le recevoir, décochez l'option dans votre espace.</p></div></div>`); mails++; cap--; } catch (e) { cap = 0; } }
         }

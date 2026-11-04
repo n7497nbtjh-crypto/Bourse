@@ -4169,3 +4169,6 @@ html #app #rf-agenda .ax-chip{background:#DCE3FF!important;color:#111!important;
 
 
 html #app #rf-agenda .ax-chip{font-size:12px!important}html #app #rf-agenda .src{font-size:12px!important}
+/* 4/11 : champ de recherche posé dans une boîte déjà encadrée (accueil, Demander…) : pas de second cadre ; libellés d'agenda (.ag .ev) sans cadre de carte */
+html #app .search input[type=search],html #app .search input[type=text],html #app .a4-srch input,html #app .ek-ask input[type=text],html #app .ek-ask input[type=search]{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent}
+html #app .ag .ev{border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0!important}

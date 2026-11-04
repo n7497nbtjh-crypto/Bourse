@@ -119,7 +119,7 @@ function f4Tete(s, c, x) {
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
     <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${esc(x.P.L.map(r => r.name).join(", "))})` : ""}.` : ""}</span>
-      <div class="ek-acts"><button type="button" class="ek-btn dk" data-f4-alerte="c:${esc(s.id)}">🔔 Prévenu si elle chute</button>${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
+      <div class="ek-acts">${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
     <div class="f4al" id="f4al" hidden></div>
   </section>`;
 }

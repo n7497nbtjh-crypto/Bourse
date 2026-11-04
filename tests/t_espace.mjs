@@ -121,14 +121,14 @@ ok((await premiumOf(req("GET", "/", null, { cookie: B }), env)) === null, "B n'e
 const types = sql.prepare("SELECT type FROM notifs WHERE compte = ?").all(rowA.id).map(x => x.type).sort().join(",");
 ok(types === (wd >= 1 && wd <= 5 ? "annonce,bilan,mouvement,resultats" : "annonce,bilan,resultats"), "notifications créées " + types);
 { const al = sent.find(x => /alerte/i.test(x.subject)), bi = sent.find(x => x.subject === "Votre bilan de la semaine est prêt");
-  ok(sent.length === 2 && al && al.to === "a@ex.fr" && /LVMH/.test(al.text) && al.text.includes("/espace/reglages") && /sans conseil/.test(al.text), "4/11 : alertes du soir par e-mail (Premium) " + JSON.stringify(al || sent).slice(0, 300));
+  ok(sent.length === 1 && !al, "4/11 : pas d'e-mail d'alerte pour une hausse (seulement une chute de plus de 5 %) " + JSON.stringify(sent).slice(0, 200));
   ok(bi && bi.to === "a@ex.fr" && bi.text.includes("https://t.local/espace") && !/%|LVMH/.test(bi.text + bi.html), "e-mail court du rapport, lien seulement " + JSON.stringify(bi || sent).slice(0, 300)); }
 [s, j] = await E("GET", "/api/espace/notifs", null, A); ok(s === 200 && j.notifs.length === types.split(",").length && j.nonlus === j.notifs.length && j.notifs[0].lien && j.notifs.every(n => n.lu === false), "liste des notifications");
 [s, j] = await E("GET", "/api/espace/moi", null, A); ok(j.nonlus === types.split(",").length && j.bilan && j.bilan.semaine === semaineIso(today), "non lues dans moi");
 [s] = await E("POST", "/api/espace/notifs/lu", null, A); [s, j] = await E("GET", "/api/espace/notifs", null, A); ok(j.nonlus === 0, "tout marqué lu");
 [s, j] = await E("POST", "/api/espace/tache?quoi=bilan", null, null, { "x-admin-key": "k" }); ok(j.traites === 0 && j.reste === 0, "rien à refaire " + JSON.stringify(j));
 sql.prepare("UPDATE comptes SET last_tache = 0, teaser = 0").run();
-[s, j] = await E("POST", "/api/espace/tache?quoi=alertes", null, null, { "x-admin-key": "k" }); ok(j.traites === 2 && j.notifs === 0 && sent.length === 2, "alertes sans doublon (aucun e-mail de plus) " + JSON.stringify(j));
+[s, j] = await E("POST", "/api/espace/tache?quoi=alertes", null, null, { "x-admin-key": "k" }); ok(j.traites === 2 && j.notifs === 0 && sent.length === 1, "alertes sans doublon (aucun e-mail de plus) " + JSON.stringify(j));
 // 5e passage (B2) : mesures d'administration et trace du robot
 // 5e passage (C) : essai de 14 jours (fermé par défaut, puis une seule fois par adresse) et adresse personnelle du connecteur
 [s, j] = await E("POST", "/api/espace/essai", {}, A); ok(s === 403, "essai fermé tant que ESSAI_14J n'est pas posé");

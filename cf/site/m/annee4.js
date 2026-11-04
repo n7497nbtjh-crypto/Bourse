@@ -100,7 +100,7 @@ function an4Dessiner(x) {
       <div class="an4-seq" style="--an4-cols:${cols}"><div class="an4-mt2"><b>${LAB[M][1].toUpperCase()}</b><small>par trimestre</small></div>${seq}</div>${say1}</div>
     ${part2}
     <p class="ek-tn">${amf ? "Chiffre d'affaires relevé dans les communiqués de l'entreprise déposés à l'AMF, non audité. Quand seul le semestre ou les neuf mois sont publiés, le trimestre est déduit (semestre moins 1er trimestre, neuf mois moins semestre) ; le 4e trimestre est l'année des comptes annuels moins les neuf premiers mois. Ces chiffres montrent la tendance sans remplacer le verdict" : "Comptes trimestriels déposés à la SEC, non audités : ils montrent la tendance sans remplacer le verdict"}, calculé sur l'exercice ${x.c.years[x.c.years.length - 1]}. Chaque trimestre est comparé au même trimestre de l'année précédente, pour effacer les effets de saison.${A.civil ? "" : ` Exercice clos en ${A.mois}.`}</p>
-    <div class="an4-al"><button type="button" class="ek-btn dk" data-f4-alerte="c:${esc((x.s && x.s.id) || x.c.id)}">🔔 Être prévenu du prochain trimestre</button><span>Le soir même de la publication, avec ses chiffres clés.</span></div></section>`;
+    </section>`;
 }
 
 document.addEventListener("click", e => {
