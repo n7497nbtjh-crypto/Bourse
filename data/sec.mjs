@@ -100,6 +100,9 @@ function extractNs(g, CONC, ifrs) {
       }
       for (const [end, r] of Object.entries(best)) {
         const y = fy(end); years[y] = years[y] || {};
+        // 4/11 : une foncière (Camden) publie à part une petite ligne « contrats clients » (13 M$) et ses loyers (1,6 Md$) : un chiffre d'affaires
+        // plus de dix fois plus petit qu'une autre étiquette de ventes du même exercice n'est qu'une ligne partielle
+        if (key === "ca" && years[y].ca != null && r.val / 1e6 > 10 * Math.abs(years[y].ca)) years[y].ca = null;
         if (years[y][key] == null) {
           years[y][key] = PER_SHARE.has(key) ? r.val : r.val / 1e6;
           if (key === "net") tags.net[y] = /AttributableToOwnersOfParent|AvailableToCommonStockholders/.test(c) ? "part du groupe"
@@ -110,7 +113,8 @@ function extractNs(g, CONC, ifrs) {
   }
   const last = [...ends].sort().pop(); if (last) fyEnd = last.slice(5, 10);
   for (const [y, r] of Object.entries(years)) {
-    if (r.ca == null && r.caBanqueA != null && r.caBanqueB != null) { r.ca = r.caBanqueA + r.caBanqueB; r.caBanque = true; } // revenus d'une banque
+    // revenus d'une banque ; 4/11 : aussi quand le « chiffre d'affaires » publié n'est qu'une ligne partielle (KB, Woori : moins de la moitié des intérêts et commissions)
+    if (r.caBanqueA != null && r.caBanqueB != null && (r.ca == null || r.ca < 0.5 * (r.caBanqueA + r.caBanqueB))) { r.ca = r.caBanqueA + r.caBanqueB; r.caBanque = true; }
     delete r.caBanqueA; delete r.caBanqueB;
     if (r.capex != null) r.capex = Math.abs(r.capex);
     if (r.cfo != null && r.capex != null) r.fcf = r.cfo - r.capex;
@@ -240,9 +244,11 @@ export function extractSecTrim(doc, maxQ = 8) {
    On lit donc l'instance XBRL du rapport lui-même (fichier *_htm.xml du dépôt, archives publiques EDGAR) et on ajoute
    ses chiffres à companyfacts sous la même forme ; extractSec les traite ensuite sans rien changer.
    Seuls les contextes sans dimension (le groupe entier) et les concepts de IFRS_CONCEPTS sont gardés. */
-const IFRS_UTILES = new Set(Object.values(IFRS_CONCEPTS).flat());
-export function instanceIfrs(xml, filed, form = "20-F") {
-  const ctx = {}, units = {}, out = {};
+const IFRS_UTILES = new Set(Object.values(IFRS_CONCEPTS).flat()), US_UTILES = new Set(Object.values(US_CONCEPTS).flat());
+// Faits d'une instance : { "ifrs-full": {...}, "us-gaap": {...} } (Amdocs dépose son 20-F en normes américaines). instanceIfrs garde l'ancienne forme (IFRS seules).
+export function instanceIfrs(xml, filed, form = "20-F") { return instanceFaits(xml, filed, form)["ifrs-full"]; }
+export function instanceFaits(xml, filed, form = "20-F") {
+  const ctx = {}, units = {}, res = { "ifrs-full": {}, "us-gaap": {} };
   for (const m of xml.matchAll(/<(?:xbrli:)?context\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/(?:xbrli:)?context>/g)) {
     const b = m[2]; if (/<(?:xbrli:)?(segment|scenario)\b/.test(b)) continue;
     const g = t => (b.match(new RegExp(`<(?:xbrli:)?${t}>\\s*([0-9-]{10})`)) || [])[1];
@@ -254,21 +260,23 @@ export function instanceIfrs(xml, filed, form = "20-F") {
     const L = [...m[2].matchAll(/<(?:xbrli:)?measure>([^<]+)<\/(?:xbrli:)?measure>/g)].map(x => mes(x[1]));
     units[m[1]] = /divide/.test(m[2]) && L.length === 2 ? `${L[0]}/${L[1]}` : L[0];
   }
-  for (const m of xml.matchAll(/<ifrs-full:(\w+)\b([^>]*?)>([^<]*)<\/ifrs-full:\1>/g)) {
-    if (!IFRS_UTILES.has(m[1])) continue;
+  for (const m0 of xml.matchAll(/<(ifrs-full|us-gaap):(\w+)\b([^>]*?)>([^<]*)<\/\1:\2>/g)) {
+    const out = res[m0[1]], m = [m0[0], m0[2], m0[3], m0[4]];
+    if (!(out === res["us-gaap"] ? US_UTILES : IFRS_UTILES).has(m[1])) continue;
     const a = m[2], c = ctx[(a.match(/contextRef="([^"]+)"/) || [])[1]], u = units[(a.match(/unitRef="([^"]+)"/) || [])[1]], v = Number(m[3].trim());
     if (!c || !u || !isFinite(v) || /xsi:nil="true"/.test(a)) continue;
     const L = ((out[m[1]] = out[m[1]] || { units: {} }).units[u] = out[m[1]].units[u] || []);
     if (!L.some(r => r.end === c.end && r.start === c.start)) L.push({ ...c, val: v, form, filed });
   }
-  return out;
+  return res;
 }
 // Ajoute à doc (companyfacts) les rapports annuels 20-F / 40-F récents qui y manquent. getJSON(url), getText(url) fournis par l'appelant ;
 // cache : { [numéro de dépôt]: faits extraits } pour ne télécharger chaque instance (souvent 10 Mo) qu'une fois.
 export async function completer20F(doc, cik, { getJSON, getText, cache = {}, log = () => { } }) {
-  const facts = doc && doc.facts; if (!facts || !facts["ifrs-full"]) return 0;
-  const g = facts["ifrs-full"], connues = new Set();
-  for (const c of [...IFRS_CONCEPTS.ca, ...IFRS_CONCEPTS.net]) for (const rows of Object.values((g[c] || {}).units || {})) for (const r of rows) if (/^(20-F|40-F)/.test(r.form || "")) connues.add(r.end);
+  const facts = doc && doc.facts; if (!facts || !(facts["ifrs-full"] || facts["us-gaap"])) return 0;
+  const connues = new Set();
+  for (const [ns, C] of [["ifrs-full", IFRS_CONCEPTS], ["us-gaap", US_CONCEPTS]]) { const g = facts[ns] || {};
+    for (const c of [...C.ca, ...C.net]) for (const rows of Object.values((g[c] || {}).units || {})) for (const r of rows) if (/^(20-F|40-F)/.test(r.form || "") && r.start) connues.add(r.end); }
   const sub = await getJSON(subsUrl(cik)), r = (sub && sub.filings && sub.filings.recent) || {};
   let n = 0;
   for (let i = 0, vus = 0; i < (r.form || []).length && vus < 2; i++) {
@@ -282,10 +290,11 @@ export async function completer20F(doc, cik, { getJSON, getText, cache = {}, log
       const inst = items.find(x => /_htm\.xml$/.test(x)) || items.find(x => /\.xml$/.test(x) && !/_(cal|def|lab|pre)\.xml$|FilingSummary|MetaLinks/i.test(x));
       if (!inst) { log(`20-F ${acc} : instance XBRL introuvable`); continue; }
       const xml = await getText(dir + inst); if (!xml) continue;
-      F = cache[acc] = instanceIfrs(xml, r.filingDate[i], r.form[i]);
+      F = cache[acc] = instanceFaits(xml, r.filingDate[i], r.form[i]);
     }
-    for (const [c, o] of Object.entries(F)) for (const [u, rows] of Object.entries(o.units)) {
-      const L = ((g[c] = g[c] || { units: {} }).units[u] = g[c].units[u] || []);
+    if (!F["ifrs-full"] && !F["us-gaap"]) F = { "ifrs-full": F, "us-gaap": {} }; // cache de la première version (IFRS seules)
+    for (const ns of ["ifrs-full", "us-gaap"]) for (const [c, o] of Object.entries(F[ns] || {})) for (const [u, rows] of Object.entries(o.units)) {
+      const g = facts[ns] = facts[ns] || {}, L = ((g[c] = g[c] || { units: {} }).units[u] = g[c].units[u] || []);
       for (const x of rows) L.push(x);
     }
     n++; log(`20-F ${acc} (exercice clos le ${r.reportDate[i]}) lu dans le dépôt`);

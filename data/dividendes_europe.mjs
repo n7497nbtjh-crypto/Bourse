@@ -78,7 +78,7 @@ export function extraire(texte, pub) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 export const html2txt = h => String(h).replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>/gi, " ").replace(/<\/(p|div|tr|li|h\d)>|<br\s*\/?>/gi, " . ").replace(/<[^>]+>/g, " ")
   .replace(/&nbsp;|&#160;/g, " ").replace(/&amp;/g, "&").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(+n)).replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ");
-async function texte(a) {
+export async function texte(a) {
   const get = (u, o = {}) => fetch(u, { ...o, headers: { "User-Agent": UA, ...(o.headers || {}) }, signal: AbortSignal.timeout(30000) });
   if (a.s === "oslo") {
     const id = String(a.u).match(/message\/(\d+)/)?.[1]; if (!id) return "";

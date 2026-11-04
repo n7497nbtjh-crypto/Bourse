@@ -52,6 +52,75 @@ export function extractEN(text) {
   return out;
 }
 
+/* ---------- Communiqués européens en anglais (Oslo, Nasdaq Nordic, Londres) : 4/11/2026 ----------
+   Montants écrits « EUR 1,234 million », « SEK 12.3 bn », « MEUR 1,234 », « £1.2bn », « NOK 4,567m »… : la devise est relevée,
+   puis chaque montant est récrit sous une seule forme (« ¤1,234 million ») avant le repérage des phrases. Un chiffre n'est gardé
+   que si la devise du communiqué est celle des comptes de l'entreprise (sinon la comparaison aux comptes annuels n'aurait pas de sens). */
+const DEV = { "€": "EUR", "£": "GBP", "$": "USD", EUR: "EUR", SEK: "SEK", NOK: "NOK", DKK: "DKK", GBP: "GBP", CHF: "CHF", USD: "USD", ISK: "ISK", PLN: "PLN" };
+const DEV_RE = "EUR|SEK|NOK|DKK|GBP|CHF|USD|ISK|PLN";
+export function normEU(t) {
+  const n = {}, vu = d => { d = DEV[d] || DEV[d.toUpperCase()]; if (d) n[d] = (n[d] || 0) + 1; return d; };
+  const nb = "(\\d{1,3}(?:,\\d{3})*(?:\\.\\d+)?|\\d+(?:\\.\\d+)?)", u = "(bn|billion|mn|million|m|M)\\b";
+  let x = String(t).replace(/(\d) (\d{3})\b/g, "$1,$2"); // « 12 345 » (espace des milliers)
+  x = x.replace(new RegExp(`\\b(${DEV_RE})\\s?(?:in\\s)?(million|billion|m|bn)\\s${nb}`, "g"), (m, d, uu, v) => { vu(d); return `¤${v} ${/^b/.test(uu) ? "billion" : "million"}`; }); // « EUR million 1,234 »
+  x = x.replace(new RegExp(`\\bM(${DEV_RE})\\s?${nb}`, "g"), (m, d, v) => { vu(d); return `¤${v} million`; }); // « MSEK 12,345 »
+  x = x.replace(new RegExp(`${nb}\\s?M(${DEV_RE})\\b`, "g"), (m, v, d) => { vu(d); return `¤${v} million`; }); // « 1,234 MEUR »
+  x = x.replace(new RegExp(`(${DEV_RE}|€|£|\\$)\\s?${nb}\\s?${u}`, "g"), (m, d, v, uu) => { vu(d); return `¤${v} ${/^b/i.test(uu) ? "billion" : "million"}`; });
+  x = x.replace(new RegExp(`${nb}\\s?(${DEV_RE})\\s?${u}`, "g"), (m, v, d, uu) => { vu(d); return `¤${v} ${/^b/i.test(uu) ? "billion" : "million"}`; }); // « 1,234 EUR million »
+  x = x.replace(new RegExp(`(${DEV_RE})(m|bn)\\b\\s?${nb}`, "g"), (m, d, uu, v) => { vu(d); return `¤${v} ${uu === "bn" ? "billion" : "million"}`; }); // « EURm 1,234 »
+  const dev = Object.entries(n).sort((a, b) => b[1] - a[1])[0];
+  return { t: x, dev: dev ? dev[0] : null };
+}
+const EU_AMT = /¤(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?) (billion|million)/;
+export function extractEU(text, titre = "") {
+  const { t, dev } = normEU(text), tt = t.replace(/\s+/g, " "), S = sentences(t.slice(0, 40000)), out = { dev };
+  const per = s => /\b(Q[1-4]|(first|second|third|fourth) quarter|quarter|July\s?[-–]\s?September|April\s?[-–]\s?June|October\s?[-–]\s?December|January\s?[-–]\s?March)\b/i.test(s) && !/January\s?[-–]\s?(June|September|December)|nine months|first half|half[- ]year|full[- ]year/i.test(s.slice(0, 160)) ? "trimestre"
+    : /\b(first half|half[- ]year|H1|January\s?[-–]\s?June|six months)\b/i.test(s) ? "semestre"
+    : /\b(January\s?[-–]\s?September|nine months|9M)\b/i.test(s) ? "neuf mois" : /\b(full[- ]year|January\s?[-–]\s?December|twelve months)\b/i.test(s) ? "année" : "";
+  const take = (key, re, bad) => {
+    const cands = S.filter(x => re.test(x) && EU_AMT.test(x) && !(bad && bad.test(x)));
+    const s = cands.find(x => per(x) === "trimestre") || cands[0]; if (!s) return;
+    const i = s.search(re), r = s.slice(i); let m = r.match(EU_AMT), j = m ? r.indexOf(m[0]) : -1; if (!m || j > 90) return;
+    if (/\b(by|(increase|decrease|growth|rise|decline|drop|improvement) of)\s*$/i.test(r.slice(0, j))) { // « increased by ¤65 million to ¤1,929 million » : le montant de la période est celui qui suit « to »
+      const k = r.slice(j + m[0].length).match(new RegExp("^\\s*to\\s" + EU_AMT.source)); if (!k) return;
+      j = j + m[0].length + k.index + k[0].indexOf("¤"); m = r.slice(j).match(EU_AMT); }
+    const apres = r.slice(j + m[0].length, j + m[0].length + 40), entre = r.slice(0, j);
+    if (/^\s*(higher|lower|more|less|above|below)\b/i.test(apres) || /\b(impact|items?|exceptional|one-off|charge)\b/i.test(entre)) return; // écart ou élément exceptionnel, pas le montant de la période
+    const v = parseFloat(m[1].replace(/,/g, "")) * (m[2] === "billion" ? 1e9 : 1e6);
+    let g = yoy(s); const hl = s.match(/(\d+(?:\.\d+)?)\s?(?:%|percent)\s(higher|lower)\s(than|compared)/i); if (g == null && hl) g = (hl[2].toLowerCase() === "higher" ? 1 : -1) * parseFloat(hl[1]) / 100;
+    const pr = apres.match(/^\s*\((\d{1,3}(?:,\d{3})*(?:\.\d+)?)\)/); // usage nordique : chiffre de l'an dernier entre parenthèses, « ¤4,679 million (4,101) »
+    if (g == null && pr) { const p0 = parseFloat(pr[1].replace(/,/g, "")) * (m[2] === "billion" ? 1e9 : 1e6); if (p0 > 0) g = v / p0 - 1; }
+    // période : celle de la phrase ; sinon celle du titre s'il annonce un trimestre seul (« Q3 2026 », « third quarter ») ; sinon rien (phrase de présentation de l'entreprise, ex. « revenues of SEK 90 billion »)
+    let q = per(s);
+    if (!q) { // intertitre le plus proche au-dessus de la phrase (« Third quarter 2026 », « July-September », « January-September »…)
+      const pos = tt.indexOf(s.slice(0, 50)), av = pos > 0 ? tt.slice(Math.max(0, pos - 3000), pos) : "";
+      const lastQ = Math.max(...[...av.matchAll(/\b(Q[1-4]\s?20\d\d|(first|second|third|fourth) quarter( of)?( 20\d\d)?|(July|April|October|January)\s?[-–]\s?(September|June|December|March)\s?(20\d\d)?)\b/gi)]
+        .filter(m => !/January\s?[-–]\s?(June|September|December)/i.test(m[0])).map(m => m.index), -1);
+      const last9 = Math.max(...[...av.matchAll(/\b(January\s?[-–]\s?(June|September|December)|nine months|first half|half[- ]year|full[- ]year)\b/gi)].map(m => m.index), -1);
+      if (lastQ > last9) q = "trimestre";
+      else if (/\b(Q[1-4]|(first|second|third|fourth) quarter)\b/i.test(titre) && !/January|nine months|half/i.test(titre)) q = "trimestre";
+    }
+    if (!q) return;
+    out[key] = { v, g, q, s };
+  };
+  take("ca", /\b(net sales|revenues?|turnover|total income|net revenues?|sales)\b/i, /\b(order(s| intake)|EBITA?|EBITDA|operating (profit|income|result|margin)|adjusted|underlying|comparable|organic|guidance|outlook|expects?|target)\b/i);
+  take("net", /\b(net (income|profit|result)|profit (for|after tax)|result for the period)\b/i, /\b(adjusted|underlying|comparable|EBITA?|EBITDA|per share|guidance|outlook|expects?)\b/i);
+  return out;
+}
+
+export async function analyseEu(a, texteDe) {
+  const c = BY[a.id], annual = summaryOf(a.id), cur = SUM && SUM[a.id] && SUM[a.id].currency; if (!c || !annual || !annual.ca || !cur) return null; // sans ventes annuelles, aucun garde-fou : rien n'est publié
+  const [type, explication] = TYPES_SEC.resultats;
+  const res = { id: a.id, type, explication, date: String(a.d).slice(0, 10), chiffres: [], lecture: [], extraits: [] };
+  const brut = extractEU((a.t || "") + " . " + await texteDe(a), a.t || "");
+  if (brut.dev !== cur) return { ...res, lecture: [explication] }; // devise du communiqué différente de celle des comptes : pas de comparaison possible
+  const x = plausible(brut, annual), per = q => q === "trimestre" ? " du trimestre" : q === "semestre" ? " du semestre" : q === "neuf mois" ? " des neuf premiers mois" : q === "année" ? " de l'année" : "";
+  if (x.ca) res.chiffres.push([`Ventes${per(x.ca.q)}`, money(x.ca.v, cur) + (x.ca.g != null ? ` (${pctS(x.ca.g)} sur un an)` : "")]);
+  if (x.net) res.chiffres.push([`Bénéfice net${per(x.net.q)}`, money(x.net.v, cur) + (x.net.g != null ? ` (${pctS(x.net.g)} sur un an)` : "")]);
+  res.lecture = res.chiffres.length ? lecture(c, x, annual) : [explication];
+  return res;
+}
+
 /* ---------- Communiqués français (AMF) : phrases chiffrées ---------- */
 const FR_AMT = /(\d{1,3}(?:[ .  ]\d{3})*(?:,\d+)?)\s*(milliards?|millions?|Md|M|Mds|md)\s*(?:d['’]\s?euros|€|EUR|de dollars|\$)?/i;
 const FR_UP = /(?:hausse|progression|croissance|augmentation|en progression|en hausse)\s+(?:de\s+|organique de\s+|publiée de\s+)?\+?(\d+(?:,\d+)?)\s?%/i;
@@ -79,7 +148,7 @@ export function extractFR(text) {
 export function plausible(x, annual) {
   if (!annual || !annual.ca) return x;
   const CA = Math.abs(annual.ca) * 1e6, q = o => o && o.q, ok = {};
-  const range = qq => qq === "trimestre" ? [0.12, 0.45] : qq === "semestre" ? [0.3, 0.7] : qq === "année" ? [0.7, 1.5] : [0.1, 1.5];
+  const range = qq => qq === "trimestre" ? [0.12, 0.45] : qq === "semestre" ? [0.3, 0.7] : qq === "neuf mois" ? [0.5, 1.05] : qq === "année" ? [0.7, 1.5] : [0.1, 1.5];
   for (const k of Object.keys(x)) ok[k] = x[k];
   if (x.ca) { const [a, b] = range(q(x.ca)); if (!(x.ca.v >= a * CA && x.ca.v <= b * CA)) delete ok.ca; }
   for (const k of ["net", "rop"]) if (x[k] && !(Math.abs(x[k].v) <= 0.6 * CA && Math.abs(x[k].v) >= 0.002 * CA)) delete ok[k];
@@ -256,6 +325,17 @@ async function main() {
   const amf = await amfItems(); let n = 0;
   for (const r of amf) { if (Date.now() > stop) break; const url = Object.values(r).find(v => typeof v === "string" && /^https?:\/\/.+\.pdf/i.test(v)); if (!url || keep[url]) continue; try { const a = await analyseAmf(r); if (a) { keep[url] = a; n++; } } catch (e) { console.log("AMF", e.message); } await sleep(200); }
   console.log(amf.length, "annonces AMF,", n, "analysées");
+  // 4/11 : communiqués de résultats européens en anglais (Oslo, Nasdaq Nordic, Londres), déjà collectés par data/actu.mjs
+  try {
+    const { texte } = await import("./dividendes_europe.mjs"), { readdirSync } = await import("node:fs"), eu = [];
+    for (const f of readdirSync(new URL("actu/c/", OUT))) { let j; try { j = JSON.parse(readFileSync(new URL("actu/c/" + f, OUT))); } catch (e) { continue; }
+      for (const a of j.o || []) if (["oslo", "nasdaq", "nsm"].includes(a.s) && a.c === "resultats" && a.u && !keep[a.u] && (Date.now() - new Date(a.d)) < 21 * 864e5) eu.push({ ...a, id: j.id }); }
+    eu.sort((a, b) => b.d.localeCompare(a.d)); let ne = 0, nc = 0;
+    for (const a of eu.slice(0, +(process.env.MAX_EU || 300))) { if (Date.now() > stop + 10 * 60e3) break;
+      try { const r = await analyseEu(a, texte); if (r) { keep[a.u] = r; ne++; if (r.chiffres.length) nc++; } } catch (e) { console.log("EU", a.u, e.message); }
+      await sleep(a.s === "nsm" ? 700 : 350); }
+    console.log(eu.length, "communiqués européens,", ne, "analysés,", nc, "avec chiffres");
+  } catch (e) { console.log("EU", e.message); }
   writeFileSync(file, JSON.stringify({ updated: new Date().toISOString(), items: keep }));
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error(e); process.exit(1); });
