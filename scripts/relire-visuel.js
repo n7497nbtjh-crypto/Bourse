@@ -52,7 +52,7 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
           const T = [...svg.querySelectorAll("text")].filter(t => t.textContent.trim()).map(t => ({ t, r: t.getBoundingClientRect(), s: t.textContent.trim() }));
           // formes « pleines » : barres et points (pas les zones de fond, les quadrillages, ni le fond noir de l'étiquette de médiane)
           const F = [...svg.querySelectorAll("rect, circle")].map(e => ({ e, r: e.getBoundingClientRect() })).filter(o => {
-            const f = (o.e.getAttribute("fill") || "").toLowerCase(); if (o.e.tagName === "rect" && (o.r.width > box.width * 0.3 || ["#e2f8ee", "#ffe9e3"].includes(f) && o.r.height > 40 || f === "#111")) return false;
+            const f = (o.e.getAttribute("fill") || "").toLowerCase(); if (o.e.tagName === "rect" && (o.r.width > box.width * 0.3 || ["#e2f8ee", "#ffe9e3", "#f1f1ee"].includes(f) && o.r.height > 40 || f === "#111")) return false;
             return o.r.width > 2 && o.r.height > 2; });
           for (let i = 0; i < T.length; i++) {
             const a = T[i];

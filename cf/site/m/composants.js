@@ -53,7 +53,7 @@ function ekPoints(o) {
     lignesNom = r => { const k = r.moi ? 8.4 : 7.4, mx = Math.max(6, Math.floor((L - 18) / k)), w = []; [...String(r.nom).matchAll(/(\s*)([^\s-]+-?)/g)].forEach(([, sp, m]) => { const d = w.length - 1, j = (sp ? " " : "") + m; if (d >= 0 && (w[d] + j).length <= mx) w[d] += j; else w.push(m); });
       return (w.length <= 5 ? w : [...w.slice(0, 4), w.slice(4).join(" ")]).map(t => t.length > mx ? t.slice(0, mx - 1).trim() + "…" : t); },
     rh = 34 + 15 * (Math.max(1, ...o.lignes.filter(r => r.v != null).map(r => lignesNom(r).length)) - 1),
-    hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 18, 3 * rh), mn0 = o.min || 0, x = v => L + (W - L - R) * (Math.max(mn0, Math.min(v, o.max)) - mn0) / (o.max - mn0), m = x(o.mediane), bas = !!o.basEstMieux;
+    hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 30, 3 * rh + 12), mn0 = o.min || 0, x = v => L + (W - L - R) * (Math.max(mn0, Math.min(v, o.max)) - mn0) / (o.max - mn0), m = x(o.mediane), bas = !!o.basEstMieux;
   if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
   let g = `<svg viewBox="0 0 ${W} ${T + H + 26}" role="img" aria-label="${ekEsc(o.titre)}">`;
   const neu = !!o.neutre, zB = neu ? "#F1F1EE" : bas ? "#E2F8EE" : "#FFE9E3", zH = neu ? "#F1F1EE" : bas ? "#FFE9E3" : "#E2F8EE", cB = neu ? "#555" : bas ? EK_G : EK_R, cH = neu ? "#555" : bas ? EK_R : EK_G; // neutre (4/11) : PER, aucune zone verte ou rouge
