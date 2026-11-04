@@ -1,0 +1,42 @@
+# Trimestres des sociétés françaises (4/11/2026) : chiffre d'affaires de chaque trimestre relevé dans les communiqués déposés à l'AMF
+# (data/trim_eu.mjs), pour la section « L'année en cours » des fiches. Chaque communiqué n'est lu qu'une fois (data/trim_eu_cache.json).
+name: Trimestres Europe
+on:
+  workflow_dispatch:
+    inputs:
+      depuis:
+        description: "Communiqués publiés depuis (AAAA-MM-JJ)"
+        default: "2024-01-01"
+  schedule:
+    - cron: "20 3 * * 2-6"   # chaque nuit de semaine vers 4 h 20 (heure de Paris en hiver), après les publications de la veille
+permissions:
+  contents: write
+concurrency:
+  group: trim-eu
+  cancel-in-progress: false
+jobs:
+  trim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Outil de lecture des PDF
+        run: sudo apt-get install -y -qq poppler-utils >/dev/null
+      - name: Lecture des communiqués (AMF)
+        timeout-minutes: 105
+        env:
+          CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
+        run: |
+          node tests/t_trim_eu.mjs
+          node data/trim_eu.mjs --depuis "${{ inputs.depuis || '2024-01-01' }}" --minutes 95
+      - name: Enregistrement dans le dépôt
+        if: always()
+        run: |
+          git config user.name "repere-bot"
+          git config user.email "repere-bot@users.noreply.github.com"
+          git add data/trim_eu_cache.json cf/site/data/trim
+          git diff --cached --quiet || git commit -m "Trimestres Europe du $(date +%F)"
+          for i in 1 2 3; do git pull --rebase -X theirs -q && git push && break; sleep 5; done

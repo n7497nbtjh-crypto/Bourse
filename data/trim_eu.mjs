@@ -1,0 +1,131 @@
+// Trimestres des sociétés françaises (4/11/2026) : chiffre d'affaires de chaque trimestre, relevé dans les communiqués
+// déposés à l'AMF (info-financiere.gouv.fr, Licence Ouverte Etalab), pour la section « L'année en cours » de la fiche.
+// Les sociétés européennes ne publient pas de comptes trimestriels structurés comme la SEC : on lit le communiqué (PDF),
+// on garde la phrase qui donne le chiffre d'affaires DU GROUPE et sa période (trimestre, semestre, neuf mois, année), puis :
+//   T2 = 1er semestre − T1 ; T3 = neuf mois − 1er semestre (ou T3 publié) ; T4 = année (comptes annuels de la fiche) − neuf mois.
+// Garde-fous : chaque trimestre entre 12 % et 40 % des ventes annuelles, même trimestre d'une année sur l'autre entre ×0,6 et ×1,6 ;
+// tout trimestre douteux est écarté. Seulement les exercices calés sur l'année civile, en euros. Pas de bénéfice (rarement trimestriel).
+// Sortie : cf/site/data/trim/<id>.json (même format que data/sec_trim.mjs, form "AMF", lien u vers le communiqué).
+// Cache : data/trim_eu_cache.json (chaque communiqué lu une seule fois).   node data/trim_eu.mjs [--depuis 2024-01-01] [--max N]
+import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import U from "./univers.mjs";
+import { UA } from "./fetch_data.mjs";
+import { periode } from "./actu_regles.mjs";
+
+const API = "https://www.info-financiere.gouv.fr/api/explore/v2.1/catalog/datasets/flux-amf-new-prod/records";
+const SOC = new URL("../cf/site/data/societes/", import.meta.url), OUT = new URL("../cf/site/data/trim/", import.meta.url), CACHE = new URL("trim_eu_cache.json", import.meta.url);
+const arg = (k, d) => { const i = process.argv.indexOf(k); return i > 0 ? process.argv[i + 1] : d; };
+const DEPUIS = arg("--depuis", "2024-01-01"), MAX = +arg("--max", 4000), STOP = Date.now() + (+arg("--minutes", 100)) * 60e3;
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+const RES = /chiffre d.affaires|ventes|revenus|r[ée]sultats|information financi[èe]re trimestrielle|trimestr|semestr|neuf mois|9 ?mois|\bT[1-4]\b|\bS1\b|\b9M\b|annuel/i;
+const PAS = /assembl[ée]e|droits de vote|rachat|programme|mise à disposition|document d.enregistrement|contrat de liquidit|nomination|dividende$/i;
+
+/* ---------- Lecture d'un communiqué ---------- */
+const MONTANT = /(\d{1,3}(?:[   .]\d{3})*(?:,\d+)?)\s*(milliards?|millions?|Mds?|Md|M)\s*(?:d['’]\s?euros|€|EUR|euros)/i;
+const SEGMENT = /\b(unit|SBU|business|r[ée]current|annualis|p[ôo]le|division|activit[ée]s? (?!du groupe)|branche|segment|m[ée]tier|zone|r[ée]gion|banque de|bricolage|am[ée]rique|europe|asie|afrique|chine|france|international|hors\b|dont\b|ajust[ée])/i;
+const GROUPE = /\bgroupe\b|consolid[ée]|\btotal\b/i;
+export function caPeriode(texte, titre = "") {
+  const S = texte.replace(/\s+/g, " ").slice(0, 12000).split(/(?<=[.;])\s+(?=[A-ZÀ-Ý"«(•])/).map(s => s.trim()).filter(s => s.length > 25 && s.length < 500);
+  for (const s of S.slice(0, 40)) {
+    const k = s.search(/chiffre d['’]affaires/i); if (k < 0) continue;
+    const apres = s.slice(k), m = apres.match(new RegExp(`^chiffre d['’]affaires[^.;:]{0,80}?(?:s['’]établit à|s['’]est établi à|s['’]élève à|s['’]est élevé à|atteint|ressort à|de|à)\\s+${MONTANT.source}`, "i"));
+    if (!m) continue;
+    const avant = s.slice(0, k + m[0].length), entre = m[0].slice(18, m[0].length - m[1].length - m[2].length);
+    if (SEGMENT.test(avant) && !GROUPE.test(avant)) continue; // chiffre d'une activité, pas du groupe
+    if (/\b(des|licences?|logiciels?|services?|activit|division|segment|p[ôo]le|branche|programme|produits?)\b/i.test(entre) && !GROUPE.test(entre)) continue;
+    const fen = s.slice(Math.max(0, k - 140), k + m[0].length + 90); // la période se lit autour du chiffre, pas dans toute la phrase
+    if (/objectif|perspective|sup[ée]rieur à|environ|attendu|pr[ée]vu|guidance|ajust|[ée]conomique|pro ?forma|contributif|carnet|prises? de commandes?/i.test(fen)) continue;
+    const yy = (fen.match(/\b(20\d\d)\b/g) || []).map(Number), per0 = perDe(m[0]) || perDe(s.slice(Math.max(0, k - 140), k)) || perDe(s.slice(k + m[0].length, k + m[0].length + 90));
+    if (!per0 && yy.length) continue; // « en 2025, la société a réalisé… » : présentation de la société, pas la période publiée
+    const per = per0 || perDe(titre); if (!per) continue;
+    const v = parseFloat(m[1].replace(/[   .]/g, "").replace(",", ".")) * (/^(milliard|md)/i.test(m[2]) ? 1000 : 1);
+    const reste = s.slice(k + m[0].length, k + m[0].length + 160), g = reste.match(/([+\-−])\s?(\d+(?:,\d+)?)\s?%|(hausse|progression|croissance|baisse|recul|repli)\s+(?:organique\s+)?(?:de\s+)?\+?(\d+(?:,\d+)?)\s?%/i);
+    const gv = g ? (g[1] ? (g[1] === "+" ? 1 : -1) * parseFloat(g[2].replace(",", ".")) : (/baisse|recul|repli/i.test(g[3]) ? -1 : 1) * parseFloat(g[4].replace(",", "."))) : null;
+    return { per, v: Math.round(v * 10) / 10, g: gv, cmp: g ? /comparable|organique|constant|hors effet|pcc/i.test(reste) : null, s: s.slice(0, 300) };
+  }
+  return null;
+}
+
+// Période d'une phrase ou d'un titre : le cumul (neuf mois, « au 30 septembre ») passe avant le trimestre
+export function perDe(t) {
+  const f = String(t || "");
+  if (/neuf (premiers )?mois|9 (premiers )?mois|\b9M\b|cumul|au 30 septembre|à fin septembre|fin septembre/i.test(f)) return "9M";
+  if (/premier semestre|1er semestre|\bS1\b|\bH1\b|semestriel|au 30 juin|à fin juin/i.test(f)) return "S1";
+  const p = periode(f); if (!p) return null;
+  return p.neuf ? "9M" : p.q ? "T" + p.q : p.s ? "S1" : p.a ? "A" : null;
+}
+// Année de la période : celle de la publication (exercice civil) ; l'année entière et le 4e trimestre sont publiés l'année suivante
+export const anDe = (per, d) => +String(d).slice(0, 4) - ((per === "A" || per === "T4") && +String(d).slice(5, 7) <= 6 ? 1 : 0);
+
+/* ---------- Trimestres d'une société ---------- */
+const FIN = { 1: "03-31", 2: "06-30", 3: "09-30", 4: "12-31" };
+export function trimestres(rel, annuel) { // rel : [{ per, an, v, d, u }], annuel : { 2024: ventes de l'année (M€) }
+  const par = {}; for (const r of rel.slice().sort((a, b) => a.d < b.d ? -1 : 1)) { (par[r.an] = par[r.an] || {}); if (!par[r.an][r.per]) par[r.an][r.per] = r; } // le premier communiqué qui donne le chiffre
+  const Q = [];
+  for (const an of Object.keys(par).map(Number).sort()) {
+    const P = par[an], A = annuel[an] || (P.A && P.A.v) || null, ref = A || annuel[an - 1] || null; if (!ref) continue;
+    const t = {};
+    if (P.T1) t[1] = { v: P.T1.v, r: P.T1 };
+    if (P.T2) t[2] = { v: P.T2.v, r: P.T2 }; else if (P.S1 && t[1]) t[2] = { v: P.S1.v - t[1].v, r: P.S1, deduit: 1 };
+    const s1 = P.S1 ? P.S1.v : t[1] && t[2] ? t[1].v + t[2].v : null;
+    if (P.T3) t[3] = { v: P.T3.v, r: P.T3 }; else if (P["9M"] && s1 != null) t[3] = { v: P["9M"].v - s1, r: P["9M"], deduit: 1 };
+    const n9 = P["9M"] ? P["9M"].v : t[1] && t[2] && t[3] ? t[1].v + t[2].v + t[3].v : null;
+    if (P.T4) t[4] = { v: P.T4.v, r: P.T4 }; else if (annuel[an] && n9 != null) t[4] = { v: annuel[an] - n9, r: P.A || null, deduit: 1, annuel: 1 };
+    for (const k of [1, 2, 3, 4]) { const x = t[k]; if (!x || !(x.v >= 0.12 * ref && x.v <= 0.4 * ref)) continue;
+      Q.push({ end: `${an}-${FIN[k]}`, ca: Math.round(x.v * 10) / 10, net: null, filed: x.r ? x.r.d : null, form: "AMF", u: x.r ? x.r.u : null, ...(x.deduit ? { deduit: 1 } : {}) }); }
+  }
+  // même trimestre d'une année sur l'autre : un écart extrême trahit une erreur de lecture
+  const by = Object.fromEntries(Q.map(q => [q.end, q]));
+  return Q.filter(q => { const p = by[(+q.end.slice(0, 4) - 1) + q.end.slice(4)]; return !p || (q.ca / p.ca >= 0.6 && q.ca / p.ca <= 1.6); });
+}
+
+/* ---------- Collecte ---------- */
+async function get(url) { for (let i = 1; i <= 4; i++) { try { const r = await fetch(url, { headers: { "user-agent": UA } }); if (r.ok) return r; if (r.status === 404) return null; } catch (e) { } await sleep(1500 * i); } return null; }
+async function main() {
+  const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE)) : {};
+  const sec = new Set(readdirSync(OUT).filter(f => f.endsWith(".json")).filter(f => { try { const j = JSON.parse(readFileSync(new URL(f, OUT))); return j.source && !/AMF/.test(j.source); } catch (e) { return false; } }).map(f => f.slice(0, -5)));
+  const cos = U.filter(c => /^FR/.test(c.isin || "") && !sec.has(c.id)).map(c => { try { const s = JSON.parse(readFileSync(new URL(c.id + ".json", SOC))); return s.fyEnd === "12-31" && s.currency === "EUR" && s.fin && s.fin.ca ? { ...c, s } : null; } catch (e) { return null; } }).filter(Boolean);
+  console.log(cos.length, "sociétés françaises (exercice civil, en euros)");
+  const recs = [];
+  for (let i = 0; i < cos.length; i += 40) {
+    const where = `identificationsociete_iso_cd_isi in (${cos.slice(i, i + 40).map(c => `"${c.isin}"`).join(",")}) AND uin_dat_amf >= date'${DEPUIS}'`;
+    for (let off = 0; off < 9900; off += 100) {
+      const u = new URL(API); u.searchParams.set("limit", "100"); u.searchParams.set("offset", String(off)); u.searchParams.set("order_by", "uin_dat_amf desc"); u.searchParams.set("where", where);
+      const r = await get(u.toString()); const j = r ? await r.json() : null, L = (j && j.results) || []; recs.push(...L); if (L.length < 100) break; await sleep(250);
+    }
+  }
+  const byIsin = Object.fromEntries(cos.map(c => [c.isin, c])), lus = [];
+  for (const r of recs) {
+    const url = r.url_de_recuperation || Object.values(r).find(v => typeof v === "string" && /^https?:\/\/.+\.pdf/i.test(v)), t = r.informationdeposee_inf_tit_inf || r.sous_type_d_information || "";
+    const off = [r.type_d_information, r.sous_type_d_information, t].filter(Boolean).join(" ");
+    if (!url || r.informationdeposee_inf_lng_inf === "Anglais" || !RES.test(off) || PAS.test(t) || !byIsin[r.identificationsociete_iso_cd_isi]) continue;
+    lus.push({ id: byIsin[r.identificationsociete_iso_cd_isi].id, d: String(r.uin_dat_amf).slice(0, 10), t, u: url });
+  }
+  console.log(recs.length, "publications,", lus.length, "communiqués de chiffre d'affaires ou de résultats");
+  let n = 0;
+  const L = lus.filter(x => !cache[x.u]).slice(0, MAX), f = "/tmp/trim_eu.pdf";
+  for (const x of L) {
+    if (Date.now() > STOP) break;
+    const r = await get(x.u); if (!r) continue;
+    try { writeFileSync(f, Buffer.from(await r.arrayBuffer())); const tx = execFileSync("pdftotext", ["-l", "4", f, "-"], { maxBuffer: 5e7, stdio: ["ignore", "pipe", "ignore"] }).toString();
+      const e = caPeriode(tx, x.t); cache[x.u] = e ? { ...e, an: anDe(e.per, x.d), d: x.d, id: x.id } : { x: 1, d: x.d, id: x.id }; n++; } catch (e) { cache[x.u] = { x: 1, d: x.d, id: x.id }; }
+    if (n % 50 === 0) writeFileSync(CACHE, JSON.stringify(cache)); await sleep(300);
+  }
+  writeFileSync(CACHE, JSON.stringify(cache));
+  console.log(n, "communiqués lus,", L.length - n, "restants");
+  // assemblage par société
+  const rel = {}; for (const [u, e] of Object.entries(cache)) if (!e.x) (rel[e.id] = rel[e.id] || []).push({ ...e, u });
+  let ecrits = 0; mkdirSync(OUT, { recursive: true });
+  for (const c of cos) {
+    const R = rel[c.id]; if (!R) continue;
+    const annuel = Object.fromEntries(c.s.years.map((y, i) => [y, c.s.fin.ca[i]]).filter(([, v]) => v > 0));
+    const q = trimestres(R, annuel); if (q.length < 3) continue;
+    writeFileSync(new URL(c.id + ".json", OUT), JSON.stringify({ id: c.id, updated: new Date().toISOString().slice(0, 10), source: "AMF, communiqués (info-financiere.gouv.fr)", currency: "EUR", q: q.slice(-24) }));
+    ecrits++;
+  }
+  const index = readdirSync(OUT).filter(f => f.endsWith(".json") && f !== "index.json").map(f => f.slice(0, -5));
+  writeFileSync(new URL("index.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), ids: index }));
+  console.log(ecrits, "sociétés françaises avec trimestres");
+}
+if (import.meta.url === `file://${process.argv[1]}`) main();

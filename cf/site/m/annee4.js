@@ -24,7 +24,7 @@ function an4Grille(c, j) {
 }
 
 async function f4Annee(x) {
-  const el = document.getElementById("f4-annee"); if (!el || !x || !x.c || !x.c.cik) return;
+  const el = document.getElementById("f4-annee"); if (!el || !x || !x.c || !(x.c.cik || /^FR/.test(x.s.isin || x.c.isin || ""))) return; // SEC, ou communiqués AMF (data/trim_eu.mjs)
   let j = null; try { j = await fetch(`/data/trim/${x.s.id}.json`).then(r => r.ok ? r.json() : null); } catch (e) { }
   if (!j || (j.currency && x.c.currency && j.currency !== x.c.currency) || window.F4X !== x) return;
   const A = an4Grille(x.c, j); if (!A) return;
@@ -68,7 +68,7 @@ function an4Dessiner(x) {
     if (i) { const d = ch(c.v, cards[i - 1].v, M), h = habit(c.k); notes.push({ k: c.k, d, h });
       seq += `<div class="an4-ar"><b>${AN4_FL}</b>${pill(d, M)}${h != null ? `<small>d'habitude<br><b>${sg(h, M)}</b></small>` : ""}</div>`; }
     const q = A.G[0][c.k];
-    seq += `<div class="an4-q${tops.includes(c.k) ? " top" : ""}"><div class="an4-st">T${c.k + 1} · ${AN4_QN[c.k]}<small>${esc(dt(q.filed))}</small></div><div class="an4-v">${fmt(c.v, M)}</div><div class="an4-s">${pill(ch(c.v, val(1, c.k, M), M), M, " sur un an")}</div>${tops.includes(c.k) ? `<span class="an4-tg">${tops.length > 1 ? "Le plus fort, à égalité" : `Le plus fort de ${A.civil ? A.Y : "l'exercice"}`}</span>` : ""}</div>`;
+    seq += `<div class="an4-q${tops.includes(c.k) ? " top" : ""}"><div class="an4-st">T${c.k + 1} · ${AN4_QN[c.k]}<small>${q.u ? `<a href="${esc(q.u)}" target="_blank" rel="noopener" title="Le communiqué">${esc(dt(q.filed))} ↗</a>` : esc(dt(q.filed))}${q.deduit ? " · déduit" : ""}</small></div><div class="an4-v">${fmt(c.v, M)}</div><div class="an4-s">${pill(ch(c.v, val(1, c.k, M), M), M, " sur un an")}</div>${tops.includes(c.k) ? `<span class="an4-tg">${tops.length > 1 ? "Le plus fort, à égalité" : `Le plus fort de ${A.civil ? A.Y : "l'exercice"}`}</span>` : ""}</div>`;
   });
   const TH = M === "mg" ? 1 : 3, hors = notes.filter(o => o.d != null && o.h != null).map(o => ({ ...o, e: o.d - o.h })).filter(o => Math.abs(o.e) >= TH).sort((a, b) => Math.abs(b.e) - Math.abs(a.e));
   const nm = k => `Du ${AN4_QC[k - 1]} au ${AN4_QN[k]}`, compar = notes.filter(o => o.d != null && o.h != null);
@@ -76,6 +76,8 @@ function an4Dessiner(x) {
     : `<p class="an4-say">${hors.slice(0, 2).sort((a, b) => a.k - b.k).map(o => `${nm(o.k)} : <b>${o.e > 0 ? "mieux" : "moins bien"} que d'habitude</b> (${sg(o.d, M)}, contre ${sg(o.h, M)} les années précédentes).`).join(" ")}${hors.length === 1 && compar.length > 1 ? " L'autre passage suit le rythme habituel." : ""}</p>`;
   const cols = `150px ${cards.map(() => "minmax(0,1fr)").join(" 150px ")}`;
 
+  const amf = /AMF/.test(j.source || ""), dern = A.G[0][n - 1];
+  const lien = amf ? (dern.u ? `<a class="ek-lk" href="${esc(dern.u)}" target="_blank" rel="noopener">Le dernier communiqué ↗</a>` : "") : `<a class="ek-lk" href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=${esc(String(x.c.cik))}&amp;type=10-Q" target="_blank" rel="noopener">Les rapports officiels ↗</a>`;
   // 2) l'année face aux précédentes : les mois écoulés, ou le dernier trimestre s'il raconte autre chose
   const dYtd = ch(cum(0, n, M), cum(1, n, M), M), dLast = ch(val(0, n - 1, M), val(1, n - 1, M), M);
   const auto = n > 1 && dYtd != null && dLast != null && (Math.abs(dLast - dYtd) >= (M === "mg" ? 1.5 : 4) || Math.sign(dLast) !== Math.sign(dYtd)) ? "last" : "ytd";
@@ -90,14 +92,14 @@ function an4Dessiner(x) {
       <div class="an4-why"><span class="an4-pill"><i></i>Comparaison : ${per} de chaque ${A.civil ? "année" : "exercice"}</span>${alt}</div>
       <div class="an4-box"><div class="an4-yrs"><div class="an4-mt"><span>${LAB[M][1].toUpperCase()}</span> · ${per}</div>${rows.map(r => `<div class="an4-yl${r.y === 0 ? " cur" : ""}"><b>${an(r.y)}</b><div class="an4-tr"><i style="width:${(Math.max(0, r.v) / mxv * 100).toFixed(1)}%"></i></div><span class="an4-vv">${fmt(r.v, M)}</span>${pill(ch(r.v, r.p, M), M) || "<span></span>"}</div>`).join("")}</div>
         <p class="an4-say">${say2}</p>
-        <div class="an4-row"><span class="an4-pill"><i></i>${A.civil ? A.Y : "Exercice " + A.Y} : ${A.G[0].slice(0, n).map(q => dt(q.filed)).join(", ").replace(/, ([^,]*)$/, " et $1")} · non audité${n > 1 ? "s" : ""}</span><a class="ek-lk" href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=${esc(String(x.c.cik))}&amp;type=10-Q" target="_blank" rel="noopener">Les rapports officiels ↗</a></div></div></div>`;
+        <div class="an4-row"><span class="an4-pill"><i></i>${A.civil ? A.Y : "Exercice " + A.Y} : ${A.G[0].slice(0, n).map(q => dt(q.filed)).join(", ").replace(/, ([^,]*)$/, " et $1")} · non audité${n > 1 ? "s" : ""}</span>${lien}</div></div></div>`;
   }
 
   el.innerHTML = `<section class="ek-sec an4" id="annee"><span class="ek-stk2 b">L'année en cours</span><h2>${titre}</h2>${seg}
     <div class="an4-part"><h3 class="an4-pt"><i>1</i>${n > 1 ? `Les trimestres de ${lib}, l'un après l'autre` : `Le premier trimestre de ${lib}`}</h3>
       <div class="an4-seq" style="--an4-cols:${cols}"><div class="an4-mt2"><b>${LAB[M][1].toUpperCase()}</b><small>par trimestre</small></div>${seq}</div>${say1}</div>
     ${part2}
-    <p class="ek-tn">Comptes trimestriels déposés à la SEC, non audités : ils montrent la tendance sans remplacer le verdict, calculé sur l'exercice ${x.c.years[x.c.years.length - 1]}. Chaque trimestre est comparé au même trimestre de l'année précédente, pour effacer les effets de saison.${A.civil ? "" : ` Exercice clos en ${A.mois}.`}</p></section>`;
+    <p class="ek-tn">${amf ? "Chiffre d'affaires relevé dans les communiqués de l'entreprise déposés à l'AMF, non audité. Quand seul le semestre ou les neuf mois sont publiés, le trimestre est déduit (semestre moins 1er trimestre, neuf mois moins semestre) ; le 4e trimestre est l'année des comptes annuels moins les neuf premiers mois. Ces chiffres montrent la tendance sans remplacer le verdict" : "Comptes trimestriels déposés à la SEC, non audités : ils montrent la tendance sans remplacer le verdict"}, calculé sur l'exercice ${x.c.years[x.c.years.length - 1]}. Chaque trimestre est comparé au même trimestre de l'année précédente, pour effacer les effets de saison.${A.civil ? "" : ` Exercice clos en ${A.mois}.`}</p></section>`;
 }
 
 document.addEventListener("click", e => {
