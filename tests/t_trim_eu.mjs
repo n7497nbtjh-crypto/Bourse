@@ -22,4 +22,6 @@ const R = [{ per: "T1", an: 2025, v: 100, d: "2025-04-20", u: "a" }, { per: "S1"
   { per: "T1", an: 2026, v: 104, d: "2026-04-20", u: "d" }, { per: "S1", an: 2026, v: 220, d: "2026-07-25", u: "e" }, { per: "T3", an: 2026, v: 300, d: "2026-10-20", u: "f" }];
 const Q = trimestres(R, { 2025: 450 });
 assert.deepEqual(Q.map(q => [q.end, q.ca]), [["2025-03-31", 100], ["2025-06-30", 110], ["2025-09-30", 120], ["2025-12-31", 120], ["2026-03-31", 104], ["2026-06-30", 116]], "T3 2026 à 300 écarté (hors des bornes)");
+assert.equal(trimestres([{ per: "T1", an: 2026, v: 100, d: "2026-04-20" }, { per: "T2", an: 2026, v: 60, d: "2026-07-20" }, { per: "T3", an: 2026, v: 104, d: "2026-10-20" }], { 2025: 400 }).length, 2, "trimestre loin des autres de l'année écarté");
+assert.equal(trimestres([{ per: "T1", an: 2026, v: 4100, d: "2026-04-20", u: "x" }], { 2025: 16000 }).length, 0, "montant arrondi au milliard écarté");
 console.log("t_trim_eu : OK");
