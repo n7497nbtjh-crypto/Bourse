@@ -21,35 +21,69 @@ function decChoix(sem) {
   return L[Math.floor(n / secs.length) % L.length] || null;
 }
 const decTaille = e => e >= 2e9 ? "entreprise moyenne" : "petite entreprise";
+// 4/11 (Romain : « une vraie présentation, avec une plus-value, pas sa fiche ») : un récit construit sur les comptes et les faits
+// publiés, en six parties : qui elle est, ce qu'elle fait, ses comptes racontés, face à ses rivales, ce qu'il faut surveiller, la suite.
+// Tout est calculé : aucun texte écrit à la main pour une entreprise, aucune prévision, aucun avis sur le prix.
+const decAn = (a, i) => a && a[i] != null && isFinite(a[i]) ? a[i] : null;
+function decRecit(s, c, x) {
+  const Y = c.years || [], F = c.fin || {}, n = Y.length, cur = s.currency, md = v => f4Md(v, cur), out = [], vig = [];
+  const ca = F.ca || [], net = F.net || [], ebit = F.ebit || [];
+  const i0 = ca.findIndex(v => v != null && v > 0), i1 = n - 1;
+  if (i0 >= 0 && i1 > i0 && ca[i1] > 0) {
+    const t = ca[i1] / ca[i0] - 1, ans = Y[i1] - Y[i0], cagr = Math.pow(ca[i1] / ca[i0], 1 / ans) - 1;
+    const hausses = ca.slice(i0 + 1).filter((v, k) => v != null && ca[i0 + k] != null && v > ca[i0 + k]).length;
+    out.push(`<b>Ses ventes</b> sont passées de ${md(ca[i0])} en ${Y[i0]} à ${md(ca[i1])} en ${Y[i1]}, soit ${t >= 0 ? "+" : "−"}${ekFr(Math.abs(t * 100), 0)} % en ${ans} ans (${cagr >= 0 ? "+" : "−"}${ekFr(Math.abs(cagr * 100), 1)} % par an en moyenne). Elles ont augmenté ${hausses} année${hausses > 1 ? "s" : ""} sur ${ans}.`);
+    if (t < -0.15) vig.push(`Ses ventes ont baissé de ${ekFr(Math.abs(t * 100), 0)} % depuis ${Y[i0]} : l'activité rétrécit.`);
+  }
+  const pertes = net.filter(v => v != null && v < 0).length, nl = decAn(net, i1);
+  if (nl != null) {
+    const exc = net.map((v, k) => v != null && ca[k] > 0 && v > ca[k] * 0.4 ? Y[k] : null).filter(Boolean);
+    out.push(`<b>Son résultat</b> : ${nl >= 0 ? `un bénéfice de ${md(nl)}` : `une perte de ${md(-nl)}`} en ${Y[i1]}${pertes ? `, et ${pertes} année${pertes > 1 ? "s" : ""} de perte sur les ${n} dernières` : `, et aucune perte sur les ${n} dernières années`}.${exc.length ? ` En ${exc.join(" et ")}, le bénéfice dépasse 40 % des ventes : un gain exceptionnel (vente d'une activité, par exemple), qui ne se répète pas.` : ""}`);
+    if (pertes >= 2) vig.push(`${pertes} années de perte sur ${n} : elle ne gagne pas d'argent de façon régulière.`);
+  }
+  const m0 = ca[i0] > 0 && ebit[i0] != null ? ebit[i0] / ca[i0] : null, m1 = ca[i1] > 0 && ebit[i1] != null ? ebit[i1] / ca[i1] : null;
+  if (m1 != null && !x.bk) out.push(`<b>Sa marge d'exploitation</b> (ce qu'il reste des ventes une fois l'activité payée) : ${ekFr(m1 * 100, 0)} % en ${Y[i1]}${m0 != null && i0 < i1 ? `, contre ${ekFr(m0 * 100, 0)} % en ${Y[i0]}` : ""}${x.MED.m != null ? ` ; la médiane de ${x.P.qui} est de ${ekFr(x.MED.m * 100, 0)} %` : ""}.`);
+  const nd = decAn(F.netDebt, i1), eb = decAn(ebit, i1);
+  if (nd != null) {
+    if (nd <= 0) out.push(`<b>Sa dette</b> : elle a plus de trésorerie que de dettes (${md(-nd)} d'avance).`);
+    else { const lev = eb > 0 ? nd / eb : null; out.push(`<b>Sa dette nette</b> est de ${md(nd)}${lev != null ? `, soit ${ekFr(lev, 1)} années de résultat d'exploitation` : ""}.`); if (lev == null || lev > 4) vig.push(lev == null ? "Elle a une dette nette alors que son activité ne dégage pas de résultat d'exploitation." : `Sa dette représente ${ekFr(lev, 1)} années de résultat d'exploitation : c'est beaucoup.`); }
+  }
+  const dv = decAn(F.divPaid, i1);
+  if (dv != null && dv > 0) out.push(`<b>Ses actionnaires</b> ont reçu ${md(dv)} de dividendes en ${Y[i1]}${nl > 0 ? `, soit ${ekFr(dv / nl * 100, 0)} % du bénéfice` : ", alors que l'année s'est soldée par une perte"}.`);
+  else if (!c.sourcePdf) out.push(`<b>Ses actionnaires</b> : aucun dividende versé en ${Y[i1]}. Ce que l'entreprise gagne reste dans l'entreprise.`);
+  const v = valo(s) || {};
+  if (v.capE && v.capE < 2e9) vig.push("C'est une petite entreprise en Bourse : son cours peut bouger plus fort, et ses actions s'échangent moins facilement que celles des grandes.");
+  if (cur && cur !== "EUR") vig.push(`Ses comptes sont en ${cur === "USD" ? "dollars" : cur} : pour un épargnant en euros, le taux de change joue aussi.`);
+  return { out, vig };
+}
 async function decHTML(sem) {
   const s = decChoix(sem); if (!s) return "";
   const c = FULL[s.id] || await fetch(`/data/societes/${s.id}.json`).then(r => r.ok ? r.json() : null).then(j => j ? (FULL[s.id] = j) : null).catch(() => null);
   if (!c || !c.fin) return "";
   if (typeof ficheWDLoad === "function") await ficheWDLoad(s.id).catch(() => null);
   const x = f4Ctx(s, c), v = valo(s) || {}, wd = typeof ficheWd === "function" ? ficheWd(s.id) : null, an = +TODAY.slice(0, 4);
-  const faits = [
-    wd && wd.fonde ? ["Créée en", `${wd.fonde} (${an - wd.fonde} ans)`] : null,
-    wd && wd.siege ? ["Siège", wd.siege + (wd.pays ? `, ${wd.pays}` : "")] : null,
-    wd && wd.effectif ? ["Effectifs", `${F0.format(wd.effectif[0])} personnes`] : null,
-    s.ca > 0 ? [`Ventes ${s.year}`, f4Md(s.ca, s.currency)] : null,
-    v.capE ? ["Valeur en Bourse", f4Md(v.capE / 1e6, "EUR")] : null
-  ].filter(Boolean);
-  let fil = "";
-  try { const E = [f4E1(x), f4E2(x)]; E.forEach((e, i) => { e.id = "dec" + (i + 1); e.n = i + 1; }); E[E.length - 1].suite = null; /* la question suivante mènerait à une étape absente ici */ fil = ekFil(E); } catch (e) { fil = ""; }
-  let chaine = "", verdict = "", metier = "";
-  try { verdict = f4Verdict(x); chaine = f4Chaine(x).replace(/href="#e(\d)"/g, `href="/entreprise/${s.id}#e$1"`); metier = f4MetierSec(x).replace(' id="metier"', ""); } catch (e) { }
-  const riv = x.P.mode === "rivales" ? x.P.L.slice(0, 6) : [], prochain = typeof f4Prochain === "function" ? f4Prochain(s.id) : "";
-  return `<div class="ek dec-in">
-    <div class="dec-head">${f4Logo(s, null)}<div><h3>${esc(s.name)}</h3><p>${esc(secName(s))} · ${esc(regName(s) || "")}${v.capE ? ` · ${decTaille(v.capE)}` : ""}</p></div></div>
-    <p class="dec-desc">${esc(s.desc)}</p>
-    ${faits.length ? `<div class="dec-faits">${faits.map(([k, t]) => `<div><small>${esc(k)}</small><b>${esc(t)}</b></div>`).join("")}</div>` : ""}
-    ${verdict}${chaine}
-    ${metier}
-    ${fil ? `<section class="ek-sec"><span class="ek-stk2">Ses comptes</span><h2>Ses ventes et ce qu'elle en garde, année après année.</h2>${fil}</section>` : ""}
-    ${riv.length ? `<p class="dec-riv"><b>Ses rivales sur le site :</b> ${riv.map(r => `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`).join(", ")}.</p>` : ""}
-    ${prochain ? `<p class="dec-riv"><b>À noter :</b> ${esc(prochain)}</p>` : ""}
-    <div class="dec-act"><a class="ek-btn dk" href="/entreprise/${esc(s.id)}">Toute la fiche de ${esc(s.name)} →</a>${riv.length >= 2 ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...riv.slice(0, 2).map(r => r.id)].join(","))}">La comparer à ses rivales</a>` : ""}</div>
-    <p class="dec-regle">Comment elle est choisie : ${esc(DEC_REGLE)}</p></div>`;
+  const fi = (typeof FICHES !== "undefined" && FICHES && FICHES[s.id]) || null;
+  let rang = null; try { const sec = R.companies.filter(z => z.sector === s.sector && f4Valide(z)).sort((p, q) => (q.ca || 0) - (p.ca || 0)); const k = sec.findIndex(z => z.id === s.id); if (k >= 0 && sec.length > 5) rang = [k + 1, sec.length]; } catch (e) { }
+  const qui = [`${esc(s.name)} : ${esc(String(s.desc).replace(/\.$/, "").replace(/^./, m => m.toLowerCase()))}.`,
+    wd && wd.fonde ? `Créée en ${wd.fonde}, il y a ${an - wd.fonde} ans${wd.siege ? `, elle a son siège à ${esc(wd.siege)}${wd.pays ? ` (${esc(wd.pays)})` : ""}` : ""}.` : wd && wd.siege ? `Son siège est à ${esc(wd.siege)}.` : "",
+    wd && wd.effectif && wd.effectif[0] ? `Elle emploie environ ${F0.format(wd.effectif[0])} personnes${wd.effectif[1] ? ` (chiffre de ${wd.effectif[1]})` : ""}.` : "",
+    v.capE ? `Elle vaut ${f4Md(v.capE / 1e6, "EUR")} en Bourse : c'est une ${decTaille(v.capE)}${rang ? `, ${rang[0]}${rang[0] > 1 ? "e" : "re"} sur ${rang[1]} de son secteur (${esc(secName(s).toLowerCase())}) par les ventes` : ""}.` : ""].filter(Boolean).join(" ");
+  const fait = fi ? [["Ce qu'elle fait", fi.fait], ["Comment elle gagne de l'argent", fi.argent], ["Ce dont elle dépend", fi.depend]].filter(([, t]) => t) : [];
+  const { out, vig } = decRecit(s, c, x);
+  let ventes = ""; try { ventes = f4E1(x).visuel || ""; } catch (e) { }
+  let verdict = "", chaine = ""; try { verdict = f4Verdict(x); chaine = f4Chaine(x).replace(/href="#e(\d)"/g, `href="/entreprise/${s.id}#e$1"`); } catch (e) { }
+  const riv = x.P.mode === "rivales" ? x.P.L.slice(0, 6) : [];
+  const ev = (typeof eventsOf === "function" ? eventsOf(s.id) : []).filter(e => e.date >= TODAY).slice(0, 4);
+  let k = 0; const sec = (t, h) => `<section class="dec-s"><h3><i>${++k}</i>${t}</h3>${h}</section>`;
+  return `<div class="ek dec-in dec-v2">
+    ${sec("Qui est-elle ?", `<div class="dec-qui">${f4Logo(s, null)}<p>${qui}</p></div>`)}
+    ${fait.length ? sec("Ce qu'elle fait", `<div class="dec-3">${fait.map(([t, d], j) => `<div class="c${j}"><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join("")}</div>`) : ""}
+    ${out.length ? sec("Ses comptes, racontés", `<div class="dec-cpt"><ul class="dec-l">${out.map(t => `<li>${t}</li>`).join("")}</ul>${ventes ? `<div class="dec-vis">${ventes}</div>` : ""}</div>`) : ""}
+    ${verdict || chaine ? sec("Face à ses rivales", `${verdict}${chaine}${riv.length ? `<p class="dec-riv">Comparée à : ${riv.map(r => `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`).join(", ")}.</p>` : `<p class="dec-riv">Comparée aux entreprises de son secteur.</p>`}`) : ""}
+    ${vig.length ? sec("Ce qu'il faut surveiller", `<ul class="dec-vig">${vig.map(t => `<li>${t}</li>`).join("")}</ul>`) : ""}
+    ${sec("La suite", `${ev.length ? `<ul class="dec-ev">${ev.map(e => `<li><b>${new Date(e.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</b> ${esc(e.label || e.type || "")}</li>`).join("")}</ul>` : `<p class="dec-riv">Aucune date annoncée pour le moment.</p>`}
+      <div class="dec-act"><a class="ek-btn dk" href="/entreprise/${esc(s.id)}">Toute la fiche de ${esc(s.name)} →</a>${riv.length >= 2 ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...riv.slice(0, 2).map(r => r.id)].join(","))}">La comparer à ses rivales</a>` : ""}</div>`)}
+    <p class="dec-regle">Sources : comptes annuels publiés par l'entreprise${c.sources && c.sources[0] && c.sources[0].report ? ` (<a href="${esc(c.sources[0].report)}" target="_blank" rel="noopener">rapport officiel</a>)` : ""}, Wikidata pour l'identité. Comment elle est choisie : ${esc(DEC_REGLE)}</p></div>`;
 }
 function decSemaine(t = Date.now()) { // semaine ISO, « 2026-W45 »
   const d = new Date(t); d.setUTCHours(12, 0, 0, 0); d.setUTCDate(d.getUTCDate() + 3 - (d.getUTCDay() + 6) % 7);

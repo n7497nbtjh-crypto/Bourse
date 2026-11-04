@@ -16,6 +16,7 @@ const OU4_G = [
   ["p", "Pour aller plus loin", "Trier, comparer, radiographier.", [
     ["/comparer", "comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face à la médiane du secteur."],
     ["/outils/recouvrement", "recouv", "Deux ETF se recouvrent-ils ?", "Les entreprises que deux à quatre ETF ont en commun."],
+    ["/decouverte", "listes", "La découverte de la semaine", "Chaque semaine, une entreprise moins connue racontée en détail : son histoire, ses comptes, ce qui l'attend."],
     ["/classements", "listes", "Classements", "Les entreprises qui cumulent le plus de points forts, critère par critère."],
     ["/dividendes", "div", "Calendrier des dividendes", "Les prochaines dates de détachement et de paiement."],
     ["/agenda", "agenda", "Agenda des résultats", "Les prochaines publications, jour par jour."]]]];

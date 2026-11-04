@@ -56,7 +56,8 @@ async function pageMarches4() {
     ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, (typeof frSeul !== "function" || frSeul() ? "Frais, PEA, ce qu'ils contiennent vraiment." : "Frais, performance, ce qu'ils contiennent vraiment."), "M4 18l5-6 4 3 7-9M4 4v16h16"],
     ["/actualites", "Actualité", "chaque jour", "Annonces officielles lues et chiffrées.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
     ["/agenda", "Agenda", "jour par jour", "Résultats et dividendes à venir.", "M4 5h16v15H4zM4 9h16M8 3v4M16 3v4"],
-    ["/classements", "Classements", "par critère", "Les mieux placées sur la marge, la dette, le prix.", "M4 20h16M7 20V10M12 20V4M17 20v-8"]];
+    ["/classements", "Classements", "par critère", "Les mieux placées sur la marge, la dette, le prix.", "M4 20h16M7 20V10M12 20V4M17 20v-8"],
+    ["/decouverte", "La découverte", "chaque semaine", "Une entreprise moins connue, racontée en détail.", "M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"]];
   const secteurs = mcSecteurs(G);
   app.innerHTML = `<div class="ek ek-page mc-page">
     <section class="ek-hero mc-h"><span class="mc-stk">Marchés</span><h1>${titre}</h1><p class="mc-sub">${sous}</p>

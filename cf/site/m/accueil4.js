@@ -143,10 +143,8 @@ async function pageHome() {
     <span class="a4-stk a4-pk">${esc((s => s.charAt(0).toUpperCase() + s.slice(1))(jourSeance()))} en Bourse</span>
     <h2>${esc(accMarchesTitre())}</h2>
     ${a4MarchesHTML()}
-    <p class="a4-plus"><a href="/actualites">Ce que les entreprises ont publié →</a><a href="/agenda">Les 7 prochains jours →</a><a href="/decouverte">La découverte de la semaine →</a></p>
+    <p class="a4-plus"><a href="/actualites">Ce que les entreprises ont publié →</a><a href="/agenda">Les 7 prochains jours →</a><a href="/dividendes">Les prochains dividendes →</a></p>
   </section>
-
-  <section class="a4-sec" id="acc-dec"></section>
 
   <section class="a4-end">
     <span class="a4-stk a4-ye">À vous</span>

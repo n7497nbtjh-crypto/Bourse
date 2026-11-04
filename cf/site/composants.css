@@ -1424,3 +1424,57 @@ html #app .iahero{max-width:none}
 .ek.pf4 .pf3stk{display:none}
 .ek.pf4 .pf3rb .c-w{align-items:flex-start}
 .ek.pf4 .pf4-new .pf3pru:not(:has(.pf3pv)){display:none}
+/* Portefeuille (4/11, retours de Romain) : bandeau sans vide à droite, détail d'une ligne plus net */
+.ek.pf4 .pf4-don,.ek.pf4 .pf4-chute{max-width:none}
+.ek.pf4 .pf4-dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px 24px;align-content:center}
+.ek.pf4 .pf4-dl .pf4-addb{grid-column:1/-1;justify-self:start}
+@media(max-width:700px){.ek.pf4 .pf4-dl{grid-template-columns:1fr}}
+.ek.pf4 .pf3det{padding:16px 18px 18px;background:#fff;border-top:2px dashed #ccc}
+.ek.pf4 .pf3facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;background:none;border:0;padding:0;margin:0 0 14px}
+.ek.pf4 .pf3facts>div{background:#FFF9DB;border:1.5px solid var(--ek-ink);border-radius:12px;padding:9px 12px;min-height:0}
+.ek.pf4 .pf3facts>div span{display:block;font:700 12px Inter;color:#555}.ek.pf4 .pf3facts>div b{display:block;font:800 17px Inter;margin-top:2px}.ek.pf4 .pf3facts>div small{font:500 12px Inter;color:#555}
+.ek.pf4 .pf3set{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;margin:0 0 10px}
+.ek.pf4 .pf3set select{min-height:40px}
+.ek.pf4 .pf3ops{margin-top:12px}
+.ek.pf4 .pf3ops .kick{font:800 14px Inter;background:none;border:0;box-shadow:none;padding:0;transform:none;margin:0 0 6px}
+.ek.pf4 .pf3ot{font-size:14px;border:2px solid var(--ek-ink);border-radius:14px;overflow:hidden;border-collapse:separate;border-spacing:0;width:100%}
+.ek.pf4 .pf3ot thead th{background:#F4F4F0;font:700 12px Inter;color:#444;padding:8px 10px;border-bottom:1.5px solid var(--ek-ink)}
+.ek.pf4 .pf3ot td{padding:7px 10px;border-bottom:1px solid #eee}
+.ek.pf4 .pf3ot tbody tr:last-child td{border-bottom:0}
+.ek.pf4 .pf3ot tbody tr:hover td{background:#FFFBE6}
+.ek.pf4 .pf3addop{margin-top:12px;gap:8px}
+.ek.pf4 .pf3opb{border:2px solid var(--ek-ink);border-radius:999px;background:#fff;font:800 13px Inter;padding:7px 14px;cursor:pointer}
+.ek.pf4 .pf3foot{display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid #eee}
+/* Découverte v2 : un récit en parties */
+.dec-v2 .dec-s{margin:0 0 26px}
+.dec-v2 .dec-s>h3{display:flex;align-items:center;gap:10px;font:800 24px/1.15 "Bricolage Grotesque",Inter;margin:0 0 12px}
+.dec-v2 .dec-s>h3 i{font-style:normal;flex:none;width:32px;height:32px;border-radius:50%;background:#FFE14D;border:2px solid #111;display:grid;place-items:center;font:800 15px Inter}
+.dec-v2 .dec-qui{display:flex;gap:16px;align-items:flex-start;font:500 17px/1.6 Inter}.dec-v2 .dec-qui p{margin:0;max-width:760px}
+.dec-v2 .dec-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.dec-v2 .dec-3>div{border:2px solid #111;border-radius:16px;padding:12px 14px}.dec-v2 .dec-3 .c0{background:#FFF7CC}.dec-v2 .dec-3 .c1{background:#E2F8EE}.dec-v2 .dec-3 .c2{background:#E8EEFF}
+.dec-v2 .dec-3 b{display:block;font:800 14px Inter;margin-bottom:4px}.dec-v2 .dec-3 p{margin:0;font:500 15px/1.5 Inter}
+.dec-v2 .dec-cpt{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.dec-v2 .dec-l{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.dec-v2 .dec-l li{font:500 15.5px/1.55 Inter;padding-left:14px;border-left:4px solid #FFE14D}
+.dec-v2 .dec-vig{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.dec-v2 .dec-vig li{font:500 15px/1.5 Inter;background:#FFF0EC;border:1.5px solid #111;border-radius:12px;padding:9px 12px}
+.dec-v2 .dec-vig li::before{content:"⚠ ";font-weight:800}
+.dec-v2 .dec-ev{margin:0 0 12px;padding:0;list-style:none}.dec-v2 .dec-ev li{font:500 15px Inter;padding:6px 0;border-bottom:1px solid #eee}
+@media(max-width:800px){.dec-v2 .dec-3,.dec-v2 .dec-cpt{grid-template-columns:1fr}.dec-v2 .dec-qui{flex-direction:column}}
+/* Découverte v2 : un récit en parties */
+.dec-v2 .dec-s{margin:0 0 30px}
+.dec-v2 .dec-s>h3{display:flex;align-items:center;gap:10px;font:800 24px/1.15 "Bricolage Grotesque",Inter;margin:0 0 12px}
+.dec-v2 .dec-s>h3 i{font-style:normal;flex:none;width:32px;height:32px;border-radius:50%;background:#FFE14D;border:2px solid #111;display:grid;place-items:center;font:800 15px Inter}
+.dec-v2 .dec-qui{display:flex;gap:16px;align-items:flex-start;font:500 17px/1.6 Inter}.dec-v2 .dec-qui p{margin:0;max-width:760px}
+.dec-v2 .dec-3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.dec-v2 .dec-3>div{border:2px solid #111;border-radius:16px;padding:12px 14px}.dec-v2 .dec-3 .c0{background:#FFF7CC}.dec-v2 .dec-3 .c1{background:#E2F8EE}.dec-v2 .dec-3 .c2{background:#E8EEFF}
+.dec-v2 .dec-3 b{display:block;font:800 14px Inter;margin-bottom:4px}.dec-v2 .dec-3 p{margin:0;font:500 15px/1.5 Inter}
+.dec-v2 .dec-cpt{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:18px;align-items:start}
+.dec-v2 .dec-l{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:10px}
+.dec-v2 .dec-l li{font:500 15.5px/1.55 Inter;padding-left:14px;border-left:4px solid #FFE14D}
+.dec-v2 .dec-vig{margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px}
+.dec-v2 .dec-vig li{font:500 15px/1.5 Inter;background:#FFF0EC;border:1.5px solid #111;border-radius:12px;padding:9px 12px}
+.dec-v2 .dec-vig li::before{content:"⚠ ";font-weight:800}
+.dec-v2 .dec-ev{margin:0 0 12px;padding:0;list-style:none}.dec-v2 .dec-ev li{font:500 15px Inter;padding:6px 0;border-bottom:1px solid #eee}
+@media(max-width:800px){.dec-v2 .dec-3,.dec-v2 .dec-cpt{grid-template-columns:1fr}.dec-v2 .dec-qui{flex-direction:column}}
+.ek.pf4 .pf4-dl{grid-template-columns:repeat(auto-fill,minmax(220px,300px));justify-content:start}
