@@ -21,7 +21,7 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Fabriquer les images
         run: node scripts/posts.js "$(TZ=Europe/Paris date +%F)"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: posts-${{ github.run_number }}
           path: posts/
