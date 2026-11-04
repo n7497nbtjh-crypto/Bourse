@@ -16,7 +16,7 @@ async function lireFeuille(request, env) {
   // Colonnes historiques vides ou titres absents de la feuille : on complète avec le fichier du robot (dernières valeurs connues)
   const j = await fichierRobot(request, env);
   if (j) { const HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-    for (const [k, v] of Object.entries(j.items || {})) { const it = items[k]; if (!it) { items[k] = j.updated ? { ...v, d: j.updated } : v; continue; } for (const f of HF) if (it[f] == null && v[f] != null) it[f] = v[f]; } }
+    for (const [k, v] of Object.entries(j.items || {})) { const it = items[k]; if (!it) { items[k] = j.updated && !v.vl ? { ...v, d: j.updated } : v; continue; } for (const f of HF) if (it[f] == null && v[f] != null) it[f] = v[f]; } }
   return { updated: new Date().toISOString(), source: "Google Finance, cours différés", items };
 }
 async function fichierRobot(request, env) {

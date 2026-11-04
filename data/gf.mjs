@@ -1,3 +1,4 @@
+// 4/11 : pour un ETF, le pays de l'ISIN (souvent IE ou LU) ne dit pas où il cote : Paris, puis Amsterdam, puis Bruxelles (avant : Dublin d'abord, aucun cours).
 // Liste des codes Google Finance pour la feuille « cours » (GOOGLEFINANCE). Jusqu'à trois codes candidats par titre,
 // la feuille garde le premier qui renvoie un cours. Résultat : cf/site/data/gf.csv (lu par la feuille avec IMPORTDATA).
 const EX = { NYSE: ["NYSE"], NASDAQ: ["NASDAQ"], LSE: ["LON"], OMXSTO: ["STO"], OMXCOP: ["CPH"], OMXHEX: ["HEL"], BME: ["BME"], MIL: ["BIT"], XETR: ["ETR", "FRA"],
@@ -13,7 +14,7 @@ export function candidates(tv, isin = "") {
 export function gfCsv(companies, etfs, indices) {
   const rows = [["id", "c1", "c2", "c3"]];
   for (const c of companies) rows.push(["c:" + c.id, ...candidates(c.tv, c.isin), "", "", ""].slice(0, 4));
-  for (const e of etfs) rows.push(["e:" + e.id, ...candidates(e.tv, e.isin), "", "", ""].slice(0, 4));
+  for (const e of etfs) rows.push(["e:" + e.id, ...candidates(e.tv, ""), "", "", ""].slice(0, 4));
   for (const [id, sym] of indices) rows.push(["i:" + id, sym, "", ""]);
   return rows.map(r => r.join(",")).join("\n") + "\n";
 }
@@ -26,7 +27,7 @@ export function gfParts(companies, etfs, indices, known = {}, size = GF_ROWS) {
   const row = (k, tv, isin) => [k, ...candidates(tv, isin), "", "", ""].slice(0, 4);
   // 4/11 : ETF les plus détenus d'abord (éligibles au PEA, puis par encours) : ils passent dans les premières feuilles, qui répondent
   const etfsTri = etfs.slice().sort((a, b) => (!!b.pea - !!a.pea) || ((b.encours || 0) - (a.encours || 0)));
-  const titles = [...companies.map(c => row("c:" + c.id, c.tv, c.isin)), ...etfsTri.map(e => row("e:" + e.id, e.tv, e.isin))];
+  const titles = [...companies.map(c => row("c:" + c.id, c.tv, c.isin)), ...etfsTri.map(e => row("e:" + e.id, e.tv, ""))];
   const st = {}; for (const r of titles) { const p = (r[1] || "").split(":")[0]; st[p] = st[p] || [0, 0]; st[p][0]++; if (known[r[0]]) st[p][1]++; }
   const dead = r => r.slice(1).filter(Boolean).every(c => { const s = st[c.split(":")[0]]; return s && s[0] >= 5 && s[1] === 0; });
   const all = [...indices.map(([id, sym]) => ["i:" + id, sym, "", ""]), ...titles.filter(r => known[r[0]]), ...titles.filter(r => !known[r[0]] && !dead(r) && r[0].startsWith("e:")), ...titles.filter(r => !known[r[0]] && !dead(r) && !r[0].startsWith("e:")), ...titles.filter(r => !known[r[0]] && dead(r))];

@@ -136,3 +136,16 @@ export function categorie({ classe = "", index = "", name = "" }) {
   if (/world|global/.test(t)) return "actions-monde";
   return /equity|action/.test(c) ? "actions-monde" : null;
 }
+
+// PEA d'après la composition (4/11), seulement quand l'émetteur ne l'indique pas (HSBC) : un fonds de l'Union européenne
+// en réplication physique, investi en actions, est éligible s'il détient au moins 75 % d'actions de sociétés de l'EEE.
+// Les fonds synthétiques (swap) ne se jugent pas sur leur composition : laissés « à vérifier ».
+const EEE = new Set("AT BE BG CY CZ DE DK EE ES FI FR GR HR HU IE IT LT LU LV MT NL PL PT RO SE SI SK IS LI NO".split(" "));
+const DOM_UE = /^(Irlande|France|Luxembourg|Allemagne|Pays-Bas|Autriche|Belgique|Espagne|Italie|Finlande|Suède|Danemark|Portugal)$/;
+export function peaParComposition(e, countries) {
+  if (e.pea != null || !countries || !countries.length || e.levier || !DOM_UE.test(e.domicile || "")) return null;
+  if (!/physique/i.test(e.replication || "") || !/^(actions|facteurs|theme|secteurs)/.test(e.categorie || "")) return null;
+  const tot = countries.reduce((a, c) => a + (c[1] || 0), 0); if (tot < 90) return null; // répartition incomplète
+  const part = countries.reduce((a, c) => a + (EEE.has(c[0]) ? c[1] || 0 : 0), 0) / tot * 100;
+  return { pea: part >= 75, peaSrc: "composition", peaPart: Math.round(part) };
+}

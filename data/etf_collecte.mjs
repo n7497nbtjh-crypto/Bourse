@@ -7,7 +7,7 @@
 // Format d'un fichier de composition : voir CHANTIERS.md (section ETF).
 // Règles : sources officielles des émetteurs uniquement, robots.txt respectés, une requête par seconde environ par site.
 import { existsSync, mkdirSync, readFileSync, writeFileSync, readdirSync } from "node:fs";
-import { categorie, indexLisible, indexCle, slug, pays, secteur, SECTEURS_ETF, isoDate } from "./etf_lib.mjs";
+import { categorie, indexLisible, indexCle, slug, pays, secteur, SECTEURS_ETF, isoDate, peaParComposition } from "./etf_lib.mjs";
 import * as EM from "./etf_emetteurs.mjs";
 
 const ROOT = new URL("../", import.meta.url).pathname;
@@ -171,6 +171,7 @@ for (const e of [...sel, ...CURATED.filter(c => !sel.some(s => s.id === c.id))])
 for (const e of sel) {
   const c = compo[e.id]; if (!c || !keep.has(e.id)) continue;
   e.compo = { n: c.lines || null, t10: r1(c.top.slice(0, 10).reduce((a, x) => a + (x.pct || 0), 0)), asOf: c.asOf || null, niveau: c.niveau, pays: c.countries.length, p1: c.countries[0] || null, s1: c.sectors.find(s => s[0] !== "liquidites" && s[0] !== "autre") || null };
+  const pp = peaParComposition(e, c.countries); if (pp) Object.assign(e, pp); // PEA non indiqué par l'émetteur
 }
 const resumeCur = {};
 for (const c of CURATED) { const k = compo[c.id]; if (k && keep.has(c.id)) resumeCur[c.id] = { n: k.lines || null, t10: r1(k.top.slice(0, 10).reduce((a, x) => a + (x.pct || 0), 0)), asOf: k.asOf || null, niveau: k.niveau, pays: k.countries.length, p1: k.countries[0] || null, s1: k.sectors.find(s => s[0] !== "liquidites" && s[0] !== "autre") || null }; }

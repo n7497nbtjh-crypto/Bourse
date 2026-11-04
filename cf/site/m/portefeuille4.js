@@ -97,7 +97,8 @@ function pf4Perf() {
   $$("#pf3 .pf3r").forEach(row => {
     const b = row.querySelector(".pf3rb"); if (!b || b.dataset.pf4) return; b.dataset.pf4 = "1";
     const g = b.querySelector(".c-g"), px = b.querySelector(".c-px small"), v = b.querySelector(".c-v");
-    if (px && v && /[+−-]\d/.test(px.textContent)) v.insertAdjacentHTML("beforeend", `<span class="pf4-jour ${px.className}">${esc(px.textContent.trim())} aujourd'hui</span>`);
+    if (px && v && px.classList.contains("vl")) v.insertAdjacentHTML("beforeend", `<span class="pf4-jour pf4-vl" title="${esc(px.title)}">${esc(px.textContent.trim())}</span>`);
+    else if (px && v && /[+−-]\d/.test(px.textContent)) v.insertAdjacentHTML("beforeend", `<span class="pf4-jour ${px.className}">${esc(px.textContent.trim())} aujourd'hui</span>`);
     if (g && !g.querySelector("b")) { g.classList.add("pf4-nc"); g.innerHTML = /montant/.test(g.textContent) ? `<b>?</b><small>montant seul</small>` : `<b>Pas de cours</b><small>sur le site</small>`; g.title = "Le site n'a pas de cours pour ce titre : ouvrez la ligne pour saisir le cours actuel."; }
   });
 }

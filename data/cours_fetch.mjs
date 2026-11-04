@@ -21,6 +21,14 @@ try {
       let n = 0; for (const [k, v] of Object.entries(items)) { const r = mem.items[k]; if (!r) continue; for (const f of HF) if (v[f] == null && r[f] != null) { v[f] = r[f]; n++; } }
       console.log(`::warning::Colonnes historiques vides dans la feuille : ${n} valeurs reprises du ${mem.date}`);
     }
+    // ETF sans cours dans les feuilles : valeur liquidative officielle de l'émetteur (datée, marquée vl), voir data/etf_vl.mjs
+    try {
+      const { valeursLiquidatives } = await import("./etf_vl.mjs");
+      const etfs = JSON.parse(readFileSync(new URL("etf.json", OUT))).list.filter(e => !(items["e:" + e.id] && items["e:" + e.id].p > 0));
+      const vl = await valeursLiquidatives(etfs); let n = 0;
+      for (const [k, v] of Object.entries(vl)) if (!(items[k] && items[k].p > 0)) { items[k] = v; n++; }
+      console.log(n, "ETF complétés par leur valeur liquidative officielle");
+    } catch (e) { console.log("::warning::Valeurs liquidatives non lues :", e.message); }
     writeFileSync(new URL("cours.json", OUT), JSON.stringify({ updated: today, source: "Google Finance, cours de clôture ou différés", items }));
     // Historique quotidien (un fichier par mois) pour tracer nos propres courbes au fil du temps
     const dir = new URL("../data/historique/", import.meta.url); if (!existsSync(dir)) mkdirSync(dir, { recursive: true });

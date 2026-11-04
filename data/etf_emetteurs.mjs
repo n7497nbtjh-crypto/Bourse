@@ -253,7 +253,7 @@ export async function hsbc(log, { minutes = 40 } = {}) {
       const mois = { janvier: "01", février: "02", mars: "03", avril: "04", mai: "05", juin: "06", juillet: "07", août: "08", septembre: "09", octobre: "10", novembre: "11", décembre: "12" };
       const cr = x.creation && x.creation.match(/(\d{1,2}) (\S+) (\d{4})/), creation = cr && mois[cr[2].toLowerCase()] ? `${cr[3]}-${mois[cr[2].toLowerCase()]}-${cr[1].padStart(2, "0")}` : null;
       out.push({ isin, name: /^HSBC\b/.test(x.name) ? x.name : "HSBC " + x.name, issuer: "HSBC", ter: x.ter, aumM: x.aumM, aumCur: x.aumCur, devise: x.devise, creation, domicile: x.domicile, distribution: distrib(x.distribution), replication, methode,
-        indexOfficiel: x.indexOfficiel, pea: false, classe: /bond|treasury|gilt|govern|sukuk|obligat|money market|mon[ée]taire|aggregate|credit|corporate/i.test(x.name + " " + (x.indexOfficiel || "")) ? "Fixed Income" : "Equity",
+        indexOfficiel: x.indexOfficiel, pea: null, classe: /bond|treasury|gilt|govern|sukuk|obligat|money market|mon[ée]taire|aggregate|credit|corporate/i.test(x.name + " " + (x.indexOfficiel || "")) ? "Fixed Income" : "Equity",
         listings: b2 ? [{ place: b2.place, ticker: b2.ticker, devise: x.devise }] : [], url, ref: { type: "hsbc", fiche: url } }); // la fiche officielle en français
     } catch (e) { log("hsbc " + isin + " : " + e.message); }
   }
