@@ -131,17 +131,20 @@ export function nombre(tok, allemand = false) {
   const v = Number(t); return isFinite(v) ? (neg ? -v : v) : null;
 }
 const LIB = {
-  ca: /^(total\s+)?(net\s+)?(revenues?|sales|turnover|umsatzerl[öo]se|umsatz|insurance revenue|versicherungsumsatz|gross premiums written|gebuchte bruttobeitr[äa]ge|revenue from contracts with customers|chiffre d'affaires|ricavi|ventas|omsättning|nettoomsättning|omsetning|liikevaihto|omzet|net revenues?)\b/i,
+  ca: /^(total\s+)?(net\s+)?(revenues?|sales|turnover|umsatzerl[öo]se|umsatz|insurance revenue|versicherungsumsatz|gross premiums written|gebuchte bruttobeitr[äa]ge|revenue from contracts with customers|chiffre d['’]affaires|ventes|produits des activit[ée]s ordinaires|ricavi|ventas|omsättning|nettoomsättning|omsetning|liikevaihto|omzet|net revenues?)\b/i,
   ebit: /^(operating (profit|income|result)|income from operations|profit (\(loss\) )?from operations|result from operating activities|ebit\b|betriebsergebnis|operatives ergebnis|r[ée]sultat op[ée]rationnel|rörelseresultat|driftsresultat|liikevoitto)/i,
   net: /^(net (income|profit|result|earnings)|profit (for|of) the (year|period|financial year)|consolidated net (income|profit)|group net (income|profit)|profit after tax(es)?|konzern(jahres)?(ergebnis|überschuss)|jahresüberschuss|periodenergebnis|r[ée]sultat net|årets resultat|utile netto|net income \(loss\)|profit \(loss\) for the (year|period)|profit attributable to|profit \(loss\)(?=\s*$)|profit for the year|earnings after tax(es)?|result after tax(es)?|profit after income tax(es)?|ergebnis nach steuern|konzernergebnis nach steuern|period result)(?![a-z])/i,
-  netPart: /^(shareholders of|owners of the (parent|company)|equity holders of|attributable to (shareholders|owners|equity holders)|aktionäre|anteilseigner|actionnaires|propriétaires|.{0,30}attributable to (the )?(owners|shareholders|equity holders|stockholders))/i,
+  netPart: /^[.\-–•\s]*(part du groupe|dont part du groupe|attribuable aux (actionnaires|propri[ée]taires)|shareholders of|owners of the (parent|company)|equity holders of|attributable to (shareholders|owners|equity holders)|aktionäre|anteilseigner|actionnaires|propriétaires|.{0,30}attributable to (the )?(owners|shareholders|equity holders|stockholders))/i,
   equity: /^(?!.*(and liabilities|und schulden|et passifs|and total liabilities))(total (shareholders'? )?equity( attributable to (shareholders|owners|equity holders)[^0-9]*)?|eigenkapital(\s+gesamt)?|summe eigenkapital|total des capitaux propres)/i,
   cash: /^(cash and cash equivalents|zahlungsmittel und zahlungsmitteläquivalente|trésorerie et équivalents)/i,
 };
 export function lireComptesPdf(texte) {
   const pages = String(texte).split("\f"), out = { years: {}, pages: {} };
+  const fr = /milliers d['’]euros|millions d['’]euros|chiffre d['’]affaires/i.test(texte); // 5/11 : « 233 300 » = un seul nombre dans un document français
   const allemand = (texte.match(/\d\.\d{3},\d/g) || []).length > (texte.match(/\d,\d{3}\.\d/g) || []).length && (texte.match(/\b\d{1,3}\.\d{3}\b/g) || []).length > (texte.match(/\b\d{1,3},\d{3}\b/g) || []).length;
-  const unite = p => { const lc = p.split("\n").find(l => /(millions?|mio\.?|thousands?|tsd\.?|tausend|billions?|mrd\.?)/i.test(l) && /(€|\beur\b|\busd\b|\$|\bchf\b|£|\bgbp\b|\bsek\b|\bnok\b|\bdkk\b|\bjpy\b|¥)/i.test(l) && l.trim().length < 140);
+  const unite = p => { const fr0 = p.split("\n").find(l => /\b(en |\()?(milliers|millions|milliards) d['’]euros|\b(k|m|md)€\b|\ben (k|m)€/i.test(l) && l.trim().length < 160); // 5/11 : comptes français (« En milliers d'euros »)
+    if (fr0) return { ech: /milliers|k€/i.test(fr0) ? 1e-3 : /milliards|md€/i.test(fr0) ? 1e3 : 1, dev: "EUR" };
+    const lc = p.split("\n").find(l => /(millions?|mio\.?|thousands?|tsd\.?|tausend|billions?|mrd\.?)/i.test(l) && /(€|\beur\b|\busd\b|\$|\bchf\b|£|\bgbp\b|\bsek\b|\bnok\b|\bdkk\b|\bjpy\b|¥)/i.test(l) && l.trim().length < 140);
     if (!lc) { const lm = p.slice(0, 2500).split("\n").find(l => /\b(in |en )?(millions?|mio\.?|thousands?|tsd\.?)\b/i.test(l) && l.trim().length < 140), dv = p.slice(0, 2500).match(/\((in )?(EUR|USD|CHF|GBP|SEK|NOK|DKK|JPY)\)|\b(EUR|CHF|SEK|NOK|DKK) (million|m)\b|in (EUR|CHF|USD|GBP)\b/);
       if (lm && dv) { const d = (dv[0].match(/EUR|USD|CHF|GBP|SEK|NOK|DKK|JPY/) || [])[0]; return { ech: /thousand|tsd/i.test(lm) ? 1e-3 : 1, dev: d }; } } // Adecco : « in millions » puis « (in EUR) » sur une autre ligne
     if (lc) { const ech = /thousand|tsd|tausend/i.test(lc) ? 1e-3 : /billion|mrd/i.test(lc) ? 1e3 : 1; const dev = /€|eur/i.test(lc) ? "EUR" : /chf/i.test(lc) ? "CHF" : /£|gbp/i.test(lc) ? "GBP" : /sek/i.test(lc) ? "SEK" : /nok/i.test(lc) ? "NOK" : /dkk/i.test(lc) ? "DKK" : /jpy|¥/i.test(lc) ? "JPY" : "USD"; return { ech, dev }; }
@@ -151,7 +154,7 @@ export function lireComptesPdf(texte) {
     return { ech, dev }; };
   const lignes = p => p.split("\n").map(l => { const t = l.replace(/\s+$/, ""); const lab = t.replace(/^\s+/, "").split(/\s{2,}|\s(?=\(?[−–-]?\d)/)[0].trim();
     const d0 = t.indexOf(lab) + lab.length, pos = [];
-    for (const m of t.slice(d0).matchAll(/\(?[−–-]?\d[\d,.'’\u202f\u00a0]*\d\)?|\(?[−–-]?\d\)?|(?<=\s)[−–-](?=\s|$)/g)) { const v = nombre(m[0].trim(), allemand); if (v != null) pos.push({ v, fin: d0 + m.index + m[0].length, pct: /%/.test(t.slice(d0 + m.index + m[0].length, d0 + m.index + m[0].length + 2)) }); }
+    for (const m of t.slice(d0).matchAll(fr ? /\(?[−–-]?(?<!\d)\d{1,3}(?: \d{3})+(?!\d)(?:,\d+)?\)?|\(?[−–-]?\d[\d,.'’\u202f\u00a0]*\d\)?|\(?[−–-]?\d\)?|(?<=\s)[−–-](?=\s|$)/g : /\(?[−–-]?\d[\d,.'’\u202f\u00a0]*\d\)?|\(?[−–-]?\d\)?|(?<=\s)[−–-](?=\s|$)/g)) { const v = nombre(m[0].trim(), allemand); if (v != null) pos.push({ v, fin: d0 + m.index + m[0].length, pct: /%/.test(t.slice(d0 + m.index + m[0].length, d0 + m.index + m[0].length + 2)) }); }
     return { lab, raw: t, pos, nums: pos.map(x => x.v) }; });
   const annees = p => { for (const l of p.split("\n")) { const M = [...l.matchAll(/(?<![\d.,])(20[0-3]\d)(?![\d.,])/g)], ys = M.map(m => +m[1]); if (ys.length >= 2 && Math.abs(ys[0] - ys[1]) === 1) { const r = ys.slice(); r.fins = M.map(m => m.index + 4); return r; } } return null; };
   // valeur de la ligne sous la colonne d'une année (fin du nombre alignée sur la fin de l'année de l'en-tête, à 14 caractères près) ; sinon ordre des deux derniers nombres
