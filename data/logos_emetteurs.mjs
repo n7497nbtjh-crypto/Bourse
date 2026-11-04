@@ -15,7 +15,7 @@ export const slugEm = n => n.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, 
 const DIR = "cf/site/logos/emetteurs"; mkdirSync(DIR, { recursive: true });
 const idx = existsSync(DIR + "/index.json") ? JSON.parse(readFileSync(DIR + "/index.json", "utf8")) : { l: {} };
 const get = async u => { const r = await fetch(u, { headers: { "User-Agent": UA, Accept: "*/*" }, redirect: "follow", signal: AbortSignal.timeout(20000) }); if (!r.ok) throw new Error(r.status + " " + u); return r; };
-for (const [nom, site] of Object.entries(EMETTEURS)) {
+for (const [nom, site] of Object.entries(EMETTEURS).filter(([n]) => process.argv.length < 3 || process.argv.slice(2).includes(n))) { // node data/logos_emetteurs.mjs [Nom…]
   const slug = slugEm(nom); let ok = false;
   try {
     const html = await (await get(site)).text(), base = new URL(site);

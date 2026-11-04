@@ -39,6 +39,11 @@
    "f": "l-g.png",
    "source": "https://www.lgim.com/favicon.ico",
    "maj": "2026-11-03"
+  },
+  "HSBC": {
+   "f": "hsbc.png",
+   "source": "https://www.assetmanagement.hsbc.fr/apple-touch-icon.png",
+   "maj": "2026-11-04"
   }
  }
 }
