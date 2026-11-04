@@ -54,14 +54,20 @@ Romain prend l'abonnement et saisit lui-même la clé dans GitHub (jamais par le
 
 ## 5. Plus d'entreprises et d'ETF (HSBC notamment)
 
-**ETF HSBC** : aucun n'est suivi aujourd'hui. Le site lit iShares, Amundi, Invesco et SPDR, plus quelques fonds d'autres émetteurs. Vérifié cette nuit : HSBC publie une fiche officielle en PDF par fonds, accessible par son ISIN (frais, encours, indice, date de création, politique de dividende). On peut donc faire un lecteur HSBC comme pour les autres émetteurs (`data/etf_emetteurs.mjs`, lecture du PDF avec pdftotext). Une contrainte : leur fichier robots.txt demande d'espacer fortement les visites. Le lecteur doit donc tourner lentement (quelques fiches par passage du robot, chaque semaine), et la liste des fonds viendra de leur prospectus. Coût : une session, sans frais. Même méthode pour Xtrackers, Vanguard et VanEck, dont la performance manque déjà.
+**ETF HSBC : FAIT (4/11)**, 38 ETF HSBC au catalogue (fiches officielles en français). Reste : leur performance (pas d'historique officiel lu), le logo HSBC, et Xtrackers, Vanguard, VanEck.
+
+Note d'origine : aucun n'était suivi le 4/11 au matin. Le site lit iShares, Amundi, Invesco et SPDR, plus quelques fonds d'autres émetteurs. Vérifié cette nuit : HSBC publie une fiche officielle en PDF par fonds, accessible par son ISIN (frais, encours, indice, date de création, politique de dividende). On peut donc faire un lecteur HSBC comme pour les autres émetteurs (`data/etf_emetteurs.mjs`, lecture du PDF avec pdftotext). Une contrainte : leur fichier robots.txt demande d'espacer fortement les visites. Le lecteur doit donc tourner lentement (quelques fiches par passage du robot, chaque semaine), et la liste des fonds viendra de leur prospectus. Coût : une session, sans frais. Même méthode pour Xtrackers, Vanguard et VanEck, dont la performance manque déjà.
 
 **Entreprises** : 48 des 300 plus grosses n'ont pas de comptes (surtout en Asie : Samsung, TSMC 2025, Reliance, ICBC…), et 13 ont des comptes de plus de 15 mois.
 - Pour l'Italie et la Pologne, ce n'est pas un défaut du site : filings.xbrl.org n'a pas encore les rapports 2025 d'Intesa, UniCredit, Enel ou Orlen (vérifié cette nuit).
 - **Décision proposée** : les comptes de ces entreprises ne viendront que d'une source payante de données fondamentales. EODHD Fundamentals coûte 59,99 $ par mois, avec le même problème de licence commerciale. À ne prendre que si les mesures montrent que ces fiches sont demandées.
 - En attendant, la fiche affiche honnêtement « comptes pas encore relevés ».
 
-## 6. Les actualités en direct dans la fiche
+## 6. Les actualités en direct dans la fiche : FAIT en grande partie (4/11)
+
+Fait : section « L'année en cours » de la fiche (trimestres de l'année, face aux années précédentes) pour 1 164 sociétés américaines (SEC) ; France : robot `trim-eu.yml`, 12 sociétés confirmées, 3 affichées (Bouygues, Haulotte, Assystem), le nombre montera avec les publications. Reste : le bénéfice des sociétés européennes (seulement semestriel), les autres pays d'Europe (Oslo, Nasdaq Nordic, Londres).
+
+Texte d'origine :
 
 Le site lit déjà les annonces officielles : AMF, SEC, Oslo, Nasdaq Nordic et FCA, avec leurs chiffres extraits (`data/actu_analyse.mjs`). Il lit aussi les trimestres SEC des sociétés américaines. Mais le verdict de la fiche ne s'appuie que sur les derniers comptes annuels.
 
