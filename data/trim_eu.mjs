@@ -168,14 +168,14 @@ async function main() {
   }
   console.log(recs.length, "publications,", lus.length, "communiqués de chiffre d'affaires ou de résultats");
   let n = 0, erreurs = 0;
-  const L = lus.filter(x => !cache[x.u] || !cache[x.u].v2).slice(0, MAX) // v2 : relu avec les tableaux, f = "/tmp/trim_eu.pdf";
+  const L = lus.filter(x => !cache[x.u] || !cache[x.u].v3).slice(0, MAX) // v3 : relu avec les tableaux (le passage v2 du 4/11 avait échoué), f = "/tmp/trim_eu.pdf";
   for (const x of L) {
     if (Date.now() > STOP) break;
     const r = await get(x.u); if (!r) continue;
     try { writeFileSync(f, Buffer.from(await r.arrayBuffer())); const tx = execFileSync("pdftotext", ["-l", "4", f, "-"], { maxBuffer: 5e7, stdio: ["ignore", "pipe", "ignore"] }).toString();
       const e = caPeriode(tx, x.t), tl = tableaux(execFileSync("pdftotext", ["-layout", "-l", "4", f, "-"], { maxBuffer: 5e7, stdio: ["ignore", "pipe", "ignore"] }).toString(), x.t, x.d);
       const l = [...(e ? [{ per: e.per, an: anDe(e.per, x.d), v: e.v, g: e.g, cmp: e.cmp, src: "phrase" }] : []), ...tl];
-      cache[x.u] = l.length ? { v2: 1, d: x.d, id: x.id, l } : { v2: 1, x: 1, d: x.d, id: x.id }; n++; } catch (err) { cache[x.u] = { v2: 1, x: 1, d: x.d, id: x.id }; if (++erreurs <= 3) console.log("Lecture impossible", x.u, String(err && err.message || err).slice(0, 200)); }
+      cache[x.u] = l.length ? { v3: 1, d: x.d, id: x.id, l } : { v3: 1, x: 1, d: x.d, id: x.id }; n++; } catch (err) { cache[x.u] = { v3: 1, x: 1, d: x.d, id: x.id }; if (++erreurs <= 3) console.log("Lecture impossible", x.u, String(err && err.message || err).slice(0, 200)); }
     if (n % 50 === 0) writeFileSync(CACHE, JSON.stringify(cache)); await sleep(300);
   }
   writeFileSync(CACHE, JSON.stringify(cache));
