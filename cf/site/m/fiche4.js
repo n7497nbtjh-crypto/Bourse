@@ -86,7 +86,7 @@ async function pageCompany4(id, tab) {
   if (s.missing || !c || !c.fin) { app.innerHTML = `<div class="ek ek-page">${f4Tete(s, null, null)}<p class="ek-note" style="margin-top:30px">Les comptes de ${esc(s.name)} ne sont pas encore relevés sur le site.</p></div>`; return; }
   const ctx = f4Ctx(s, c);
   let html = "";
-  try { html = f4Tete(s, c, ctx) + `<div id="f4-annee"></div>` + f4MetierSec(ctx) + f4Fil(ctx) + f4Fin(ctx); }
+  try { html = f4Tete(s, c, ctx) + f4MetierSec(ctx) + f4Fil(ctx) + `<div id="f4-annee"></div>` + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
   window.F4X = ctx; f4Ancres(ctx); f4Trim(ctx); if (typeof f4Annee === "function") f4Annee(ctx); // l'année en cours (m/annee4.js)

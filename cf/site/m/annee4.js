@@ -19,14 +19,45 @@ function an4Grille(c, j) {
   if (!cur.length) return null;
   const G = [];
   for (let n = 0; n <= 5; n++) G.push([0, 1, 2, 3].map(k => { const q = proche(plus(E, 3 * (k + 1) - 12 * n)); return q && q.ca != null ? q : null; }));
+  // 4/11 (Unum) : une année dont les quatre trimestres ne redonnent pas les comptes annuels (comptes refaits après coup,
+  // changement de norme) est écartée : sinon on compare des chiffres de deux versions différentes.
+  for (let n = 1; n < G.length; n++) {
+    const i = c.years.indexOf(Y - (n - 1)); if (i < 0 || G[n].some(q => !q)) continue;
+    const ecart = (k, an) => { if (an == null || G[n].some(q => q[k] == null)) return false; const t = G[n].reduce((a, q) => a + q[k], 0); return Math.abs(t - an) > Math.max(Math.abs(an) * 0.02, 1); };
+    if (ecart("ca", (c.fin.ca || [])[i]) || ecart("net", (c.fin.net || [])[i])) G[n] = [null, null, null, null];
+  }
   const nbr = cur.length; if (G[0].slice(0, nbr).some(x => !x)) return null;
   return { G, n: nbr, Y: Y + 1, mois: AN4_MOIS[+fe.slice(0, 2) - 1], civil: fe.slice(0, 2) === "12" || (fe.slice(0, 2) === "01" && +fe.slice(3) <= 7) }; // exercice de 52 semaines clos début janvier = année civile
+}
+
+// 4/11 (Unum : « −58,5 % » expliqué par « son capital grandit… ») : quand un seul trimestre fait plus de la moitié de la
+// variation du bénéfice sur l'année, l'étape du bénéfice le dit. Seulement si les quatre trimestres redonnent les comptes annuels.
+function an4Cause(x, j) {
+  const c = x.c, n = c.years.length, Y = c.years[n - 1], net = (c.fin || {}).net || [], a = net[n - 1], b = net[n - 2];
+  if (a == null || b == null || c.years[n - 2] !== Y - 1 || !(Math.abs(b) > 0)) return;
+  const tot = a - b; if (Math.abs(tot / b) < 0.25) return;
+  const fe = /^\d{2}-\d{2}$/.test(c.fyEnd || "") ? c.fyEnd : "12-31", J = 864e5;
+  const ex = y => { const E = new Date(`${y}-${fe}T12:00:00Z`); return (j.q || []).filter(q => q && q.end && q.net != null && new Date(q.end + "T12:00:00Z") - E <= 20 * J && E - new Date(q.end + "T12:00:00Z") < 345 * J).sort((u, v) => u.end < v.end ? -1 : 1); };
+  const A = ex(Y), B = ex(Y - 1); if (A.length !== 4 || B.length !== 4) return;
+  const som = L => L.reduce((t, q) => t + q.net, 0); if (Math.abs(som(A) - a) > Math.abs(a) * 0.02 + 1 || Math.abs(som(B) - b) > Math.abs(b) * 0.02 + 1) return;
+  const d = A.map((q, k) => q.net - B[k].net), k = d.reduce((m, v, i) => v * Math.sign(tot) > d[m] * Math.sign(tot) ? i : m, 0), part = d[k] / tot;
+  if (part < 0.5) return;
+  const M = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"], fin = A[k].end, cur = c.currency;
+  const baisse = tot < 0, cause = { titre: `Un trimestre fait l'essentiel de la ${baisse ? "baisse" : "hausse"}`,
+    texte: `Sur le trimestre clos fin ${M[+fin.slice(5, 7) - 1]} ${fin.slice(0, 4)}, son bénéfice a été de ${f4Md(A[k].net, cur)}, contre ${f4Md(B[k].net, cur)} un an plus tôt : ${part >= 0.95 ? "à lui seul, il fait tout l'écart sur l'année (les autres trimestres se compensent)" : `à lui seul, ${ekFr(part * 100, 0)} % de l'écart sur l'année`}. Les comptes trimestriels ne disent pas pourquoi ; le communiqué de résultats de ce trimestre l'explique.` };
+  const st = document.getElementById(x.bk ? "e1" : "e3"); if (!st || st.querySelector("[data-an4-cause]")) return;
+  const html = `<div class="ek-cz" data-an4-cause><b>✦</b><strong>${ekEsc(cause.titre)}</strong><p>${ekEsc(cause.texte)}</p></div>`;
+  const why = st.querySelector(".ek-why");
+  if (why) { const h = why.querySelector(".ek-wh"); h.insertAdjacentHTML("afterend", html); return; }
+  const side = st.querySelector(".ek-side"); if (!side) return;
+  side.classList.remove("ek-side-seul"); side.insertAdjacentHTML("afterbegin", `<div class="ek-why"><p class="ek-wh">Ce qui l'explique</p>${html}</div>`);
 }
 
 async function f4Annee(x) {
   const el = document.getElementById("f4-annee"); if (!el || !x || !x.c || !(x.c.cik || /^FR/.test(x.s.isin || x.c.isin || ""))) return; // SEC, ou communiqués AMF (data/trim_eu.mjs)
   let j = null; try { j = await fetch(`/data/trim/${x.s.id}.json`).then(r => r.ok ? r.json() : null); } catch (e) { }
   if (!j || (j.currency && x.c.currency && j.currency !== x.c.currency) || window.F4X !== x) return;
+  try { an4Cause(x, j); } catch (e) { }
   const A = an4Grille(x.c, j); if (!A) return;
   const avecNet = A.G[0].slice(0, A.n).every(q => q.net != null);
   const metr = x.bk ? (avecNet ? ["net"] : []) : avecNet ? ["ca", "net", "mg"] : ["ca"]; if (!metr.length) return;

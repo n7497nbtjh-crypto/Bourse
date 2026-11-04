@@ -4175,3 +4175,25 @@ html #app .ag .ev{border:0!important;border-radius:0!important;box-shadow:none!i
 /* 4/11 : logos larges (Alphabet, Amazon, Microsoft…) coupés aux bords par le cadre arrondi : marge intérieure plus grande, pas de rond */
 .lg img{inset:13%;width:74%;height:74%}
 html #app .e3-co img,html #app .e3-co .lg img{border-radius:0}
+/* 4/11 : suggestions de recherche au style du site (carte à contour noir, groupes, pastilles, surbrillance jaune) */
+html body .results{top:calc(100% + 10px);border:2px solid #111;border-radius:18px;box-shadow:5px 5px 0 #111;padding:6px;max-height:min(460px,70vh);background:#fff}
+html body .search.big .results,html body .a4 .a4-srch .results,html body #app .e3 .a4-srch .results{top:calc(100% + 12px)}
+html body .results .sr-h{font:800 11.5px Inter;letter-spacing:0;color:#111;background:#FFE14D;display:inline-block;border-radius:999px;padding:3px 10px;margin:8px 8px 4px;transform:rotate(-1.5deg)}
+html body .results a.srow{gap:12px;padding:9px 10px;border:0;border-radius:12px;margin:1px 0;color:#111}
+html body .results a.srow:hover,html body .results a.srow.sel{background:#FFF6C2}
+html body .results a.srow .lg{border:1.5px solid #111;border-radius:10px}
+html body .results .sr-n{font:700 15px Inter;color:#111}
+html body .results .sr-n mark{background:#FFE14D;color:inherit;border-radius:3px;padding:0 1px}
+html body .results .sr-m{font:500 12.5px Inter;color:#666;display:flex!important;align-items:center;gap:6px}
+html body .results .sr-p{font:800 10.5px Inter;border:1.5px solid #111;border-radius:999px;padding:0 6px;color:#111;background:#fff}
+html body .results .sr-p.sr-pea{background:#DDF5EA;border-color:#0A7F4F;color:#0A6B43}
+html body .results .sr-go{flex:none;margin-left:auto;font:800 16px Inter;color:#bbb}
+html body .results a.srow:hover .sr-go,html body .results a.srow.sel .sr-go{color:#111}
+html body .results a.iasug{background:#111;margin-top:6px;border-radius:12px}
+html body .results a.iasug .sr-n{color:#FFE14D}html body .results a.iasug .sr-m{color:#ccc}html body .results a.iasug .sr-go{color:#FFE14D}
+html body .results a.iasug:hover,html body .results a.iasug.sel{background:#222}
+html body .results .sr-ia{flex:none;width:34px;height:34px;border-radius:10px;background:#FFE14D;color:#111;display:grid;place-items:center;font:800 16px Inter}
+html body .results .none{padding:12px 14px;font:600 14px Inter;color:#666}
+html body .results .sr-m{display:block!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+html body .results .sr-p{display:inline-block;margin-right:5px;vertical-align:1px}
+html body .results a.srow .st{overflow:hidden}
