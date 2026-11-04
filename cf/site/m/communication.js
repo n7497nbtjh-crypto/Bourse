@@ -442,7 +442,7 @@ function commIdeeCarte(x, i, opts = {}) {
     ${opts.seule ? `<div class="ir-nav"><span class="light ir-sc"></span><button type="button" class="linkbtn" data-ir-next>Une autre idée reçue →</button><a class="more" href="/idees-recues">Les ${commIdees().length} idées reçues →</a></div>` : ""}
   </article>`;
 }
-function commIdeeHTML(x, i) { return commIdeeCarte(x, i); } // ancien nom, gardé pour les appels existants
+ // ancien nom, gardé pour les appels existants
 function commIrScoreHTML(L) {
   const s = commIrScore(L);
   return s.faites ? `<b>${s.faites} / ${s.n}</b> idées vues${s.rep ? ` · <b>${s.ok}</b> bonne${s.ok > 1 ? "s" : ""} intuition${s.ok > 1 ? "s" : ""} sur ${s.rep}` : ""}` : `${s.n} idées, une minute chacune`;

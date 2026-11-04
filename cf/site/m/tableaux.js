@@ -206,20 +206,6 @@ function tblxBindScroll(root) {
   });
 }
 // Tri générique : en-têtes th[data-sk] (index de colonne), cellules td[data-v] (valeur numérique ou texte)
-function tblxSortable(table) {
-  if (!table || table.dataset.sorted) return; table.dataset.sorted = 1;
-  table.querySelector("thead").addEventListener("click", e => {
-    const th = e.target.closest("th[data-sk]"); if (!th) return;
-    const col = +th.dataset.sk, dir = th.getAttribute("aria-sort") === "descending" ? 1 : -1;
-    $$("th[data-sk]", table).forEach(x => x.removeAttribute("aria-sort"));
-    th.setAttribute("aria-sort", dir > 0 ? "ascending" : "descending");
-    const tb = table.tBodies[0], rows = [...tb.rows];
-    const val = r => { const c = r.cells[col]; const v = c ? c.dataset.v : null; return v == null || v === "" ? null : isNaN(+v) ? v : +v; };
-    rows.sort((a, b) => { const x = val(a), y = val(b); if (x == null) return 1; if (y == null) return -1; return typeof x === "string" ? dir * x.localeCompare(y, "fr") : dir * (x - y); });
-    rows.forEach(r => tb.appendChild(r));
-  });
-}
-
 /* ---------- Onglet « Les chiffres en détail » ---------- */
 const TBLX_VK = "bilan.tableaux.vue";
 const tblxGetV = () => { try { return localStorage.getItem(TBLX_VK) === "tout" ? "tout" : "ess"; } catch (e) { return "ess"; } };
@@ -230,19 +216,6 @@ const tblxProv = (k, s) => typeof provBtn === "function" && s ? provBtn(k, "c:" 
 const tblxProvG = k => typeof provBtn === "function" ? provBtn(k, "") : ""; // en-tête d'un tableau de plusieurs entreprises
 function tblxLvCls(r) { return r.lv ? "tz-" + r.lv : ""; }
 
-function tblxEssHTML(s, c, P) {
-  const Y = c.years, yl = Y[lastIdx(c)], span = `${Y[0]} à ${yl}`;
-  const rows = P.ess.map(r => {
-    const ly = Y[r.li], stale = ly !== yl;
-    const one = tblxChange(r.kind, r.prev, r.last);
-    return `<tr data-k="${r.k}">
-      <th scope="row" class="l lab"><span class="nm">${def(r.term, r.short || r.label)}${tblxProv(r.k, s)}</span><p class="tbx-ph">${esc(r.phrase)}</p></th>
-      <td class="v"><span class="tbx-val ${tblxLvCls(r)}">${esc(r.full(r.last))}</span>${stale ? `<small class="light">en ${ly}</small>` : ""}${r.lv ? `<small class="tbx-lv ${tblxLvCls(r)}">${TBLX_LVTXT[r.lv]}</small>` : ""}${r.med != null ? `<small class="m-only light tbx-mm">secteur : ${esc(r.full(r.med))}</small>` : ""}</td>
-      <td class="tr"><button type="button" class="tbx-gb" data-g="${r.k}" aria-label="Voir l'évolution en graphique : ${esc(r.short || r.label)}">${tblxSpark(r.vals, { w: 76, h: 26, q: r.q, med: r.med, label: "Évolution de " + span })}</button>${tblxArrow(r.dir, r.q, one, "Sur un an")}</td>
-      <td class="md d-only">${r.med != null ? `<span class="num">${esc(r.full(r.med))}</span>${r.vm ? `<small class="tbx-vm q${r.vm.q > 0 ? "up" : r.vm.q < 0 ? "dn" : "eq"}">${esc(r.vm.pos === 0 ? "proche" : (r.vm.strong ? "nettement " : "") + (r.vm.pos > 0 ? "au-dessus" : "en dessous"))}</small>` : ""}` : `<span class="light">–</span>`}</td></tr>`;
-  }).join("");
-  return `<table class="t tbx tbx-ess"><caption class="sr">L'essentiel des comptes de ${esc(s.name)}</caption><thead><tr><th class="l" scope="col">Indicateur</th><th scope="col">Exercice ${yl}</th><th scope="col">Évolution ${esc(span)}</th><th scope="col" class="d-only">${def("mediane", "Médiane du secteur")}</th></tr></thead><tbody>${rows}</tbody></table>`;
-}
 function tblxFullHTML(s, c, P) {
   const Y = c.years, L = Y.length - 1, nc = Y.length + 3, ORD = Y.map((_, i) => i);
   ORD.reverse(); // 30/10 (Romain) : on lit de gauche à droite, l'exercice le plus récent vient en premier, juste après le nom de la ligne

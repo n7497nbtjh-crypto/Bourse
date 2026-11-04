@@ -21,4 +21,3 @@ async function pageQuestion(id) {
 }
 if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/question\/([a-z0-9-]+)$/, id => pageQuestion(id)]);
 // Pastilles « questions » en haut de /classements
-function seoLiens(el) { if (!el) return; seoQuestions().then(Q => { const l = (Q.pages || []).filter(p => p.en_ligne); el.innerHTML = l.length ? `<span class="seoq-cl">Questions :</span>${l.map(p => `<a class="chip" href="/question/${p.id}">${esc(p.q)}</a>`).join("")}` : ""; }); }

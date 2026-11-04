@@ -1184,3 +1184,10 @@ html #app .ek.ap5 .ap5-ans button{position:relative;height:100%;padding:0;border
   .ek.ap5 .ap5-tri{gap:8px}.ek.ap5 .ap5-tri>div{padding:10px 12px;flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:10px}.ek.ap5 .ap5-tri small{flex-basis:100%}.ek.ap5 .ap5-tri b{font-size:22px}
   .ek.ap5 .ap5-ans{gap:1px;height:120px}.ek.ap5 .ap5-ans small{display:none}.ek.ap5 .ap5-ret{flex-direction:column;gap:8px}
 }
+
+/* ================= Pages restées au style v3 (4/11) : Communauté (onglets en pastilles), Demander (bandeau pleine largeur) ================= */
+html #app .cmu-tabs.qtabs{gap:8px;padding:0;margin:18px 0 14px;border:0}
+html #app .cmu-tabs.qtabs a{padding:7px 16px;border:2px solid var(--ek-ink,#111);border-radius:999px;color:#111;font:700 14px Inter,sans-serif;background:#fff}
+html #app .cmu-tabs.qtabs a.on{background:#FFE14D;border-bottom-width:2px;border-bottom-color:#111}
+html #app .cmu-tabs.qtabs a:hover{background:#FFF6C7}
+html #app .iahero{max-width:none}

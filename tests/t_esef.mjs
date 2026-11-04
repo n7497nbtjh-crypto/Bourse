@@ -59,4 +59,16 @@ if (Object.keys(unzip(Buffer.from("pas un zip"))).length) { bad++; console.log("
 const { expectedYear } = await import("../data/fetch_data.mjs");
 const ey = [expectedYear("12-31", new Date("2026-03-15T00:00:00Z")), expectedYear("12-31", new Date("2026-05-15T00:00:00Z")), expectedYear("03-31", new Date("2026-10-29T00:00:00Z"))].join();
 if (ey !== "2024,2025,2026") { bad++; console.log("ÉCART exercice attendu", ey); } else console.log("ok  exercice attendu selon la date de clôture");
+{ // 4/11 : pas de mélange de devises entre rapports (Genmab : DKK jusqu'en 2022, USD ensuite)
+  const r = (cur, y, ca) => ({ currency: cur, curSure: true, fyEnd: "12-31", years: { [y]: { ca } }, tags: {}, norme: "IFRS" });
+  const m = merge([r("USD", 2023, 2390), r("USD", 2022, null), r("DKK", 2022, 14505)]);
+  if (m.years[2022] && m.years[2022].ca != null) { bad++; console.log("ÉCART devises mêlées", JSON.stringify(m.years)); } else console.log("ok  rapport dans une autre devise écarté");
+  const m2 = merge([{ ...r("EUR", 2023, 10), curSure: true }, { ...r("EUR", 2022, 9), curSure: false }]);
+  if (!m2.years[2022] || m2.years[2022].ca !== 9) { bad++; console.log("ÉCART devise incertaine écartée à tort"); } else console.log("ok  devise incertaine gardée");
+  const ra = (ys) => ({ currency: "USD", curSure: true, fyEnd: "12-31", years: ys, tags: {}, norme: "IFRS" });
+  const m3 = merge([ra({ 2024: { ca: 6317 }, 2023: { ca: 6255 } }), ra({ 2023: { ca: 12318 }, 2022: { ca: 18793 } })]); // autre périmètre : 2022 non repris
+  const m4 = merge([ra({ 2024: { ca: 110 }, 2023: { ca: 100 } }), ra({ 2023: { ca: 98 }, 2022: { ca: 90 } })]); // retraitement léger : 2022 repris
+  if (m3.years[2022] && m3.years[2022].ca != null) { bad++; console.log("ÉCART autre périmètre repris"); } else console.log("ok  rapport sur un autre périmètre écarté");
+  if (!m4.years[2022] || m4.years[2022].ca !== 90) { bad++; console.log("ÉCART retraitement léger écarté à tort"); } else console.log("ok  retraitement léger gardé");
+}
 console.log(bad ? `${bad} écart(s)` : "0 écart"); process.exit(bad ? 1 : 0);

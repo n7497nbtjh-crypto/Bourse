@@ -305,10 +305,6 @@ function recoFillCatal(root) {
    ce que chaque compte accepte, les autres sont gardées pour les tests (tests/t_reco.mjs) et ne sont plus appelées
    par la page. */
 
-function recoEtfAlt(region) { // l'ETF large le moins cher d'une zone (sert aussi à m/outils.js)
-  const cat = region === "eu" ? "actions-europe" : "actions-monde";
-  return (ETF.list || []).filter(e => e.categorie === cat && e.ter != null && !e.levier && (region !== "eu" || e.pea === true) && (e.encours || 0) >= 100).sort((a, b) => a.ter - b.ter || (b.encours || 0) - (a.encours || 0))[0] || null;
-}
 // Catégorie incohérente avec le contenu (ex. ETF MSCI EMU, zone euro, rangés dans « pays émergents » dans etf.json) : écarté
 function recoEtfSuspect(e) {
   const p1 = e && e.compo && Array.isArray(e.compo.p1) ? e.compo.p1[0] : null;
@@ -345,18 +341,6 @@ const RECO_ENV = [["pea", "un PEA"], ["cto", "un compte-titres"], ["both", "un P
 const RECO_ST = { env: "pea", type: "etf" };
 function recoBaisse(parts) { // arithmétique sur l'exemple : actions −30 %, obligations −5 %, garanti 0 %
   return (parts.etf || 0) * 0.3 + (parts.oblig || 0) * 0.05;
-}
-function recoExCarte(x) {
-  const cl = Object.keys(RECO_CLASSES).filter(k => x.parts[k]);
-  return `<article class="rc-ex"><header><h3>${esc(x.nom)}</h3><p class="rc-exb">${cl.map(k => `${x.parts[k]} % ${RECO_CLASSES[k][0].toLowerCase().replace(/,.*/, "")}`).join(" · ")}</p></header>
-    <div class="rc-bar" role="img" aria-label="${cl.map(k => `${x.parts[k]} % ${RECO_CLASSES[k][0]}`).join(", ")}">${cl.map(k => `<span style="width:${x.parts[k]}%;background:${RECO_CLASSES[k][1]}" title="${esc(RECO_CLASSES[k][0])} : ${x.parts[k]} %"></span>`).join("")}</div>
-    <dl class="rc-exd">
-      ${cl.map(k => `<div class="rc-al"><i style="background:${RECO_CLASSES[k][1]}"></i><div><b>${esc(RECO_CLASSES[k][0])}</b><span class="rc-rg">${x.parts[k]} %</span>${recoRisk(RECO_CLASSES[k][2])}<p>${esc(RECO_CLASSES[k][3])}</p><p class="rc-where">${esc(RECO.placement(RECO_ST.env, k))}</p></div></div>`).join("")}
-    </dl>
-    <p class="rc-exq"><b>À quoi cet exemple correspond</b> ${esc(x.quoi)}</p>
-    <p class="rc-exl"><b>Ses limites</b> ${esc(x.lim)}</p>
-    <p class="rc-exc">Calcul sur cet exemple : si les actions baissaient de 30 % et les obligations de 5 %, l'ensemble baisserait d'environ <b>${F0.format(Math.round(recoBaisse(x.parts)))} %</b>. C'est une multiplication, pas une prévision : la baisse réelle peut être plus forte ou plus faible.</p>
-  </article>`;
 }
 /* 31/10 (Romain) : le but de la page n'était pas clair. Elle répond maintenant à une seule question, visible d'abord :
    « quelle part en actions, et qu'est-ce que ça change ? ». Un curseur, une barre, deux grands chiffres ; les quatre exemples deviennent des réglages du curseur. */

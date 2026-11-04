@@ -78,12 +78,12 @@ main{padding:18px 0 48px;min-height:calc(100vh - 56px)}
 .tv{width:100%}
 .tv .tradingview-widget-copyright{font-size:11.5px;color:var(--light);padding:4px 16px 8px}
 .tv .tradingview-widget-copyright a{color:var(--light)}
-.tv-chart{height:340px}
-.tv-chart .tradingview-widget-container,.tv-chart .tradingview-widget-container__widget{height:100%}
-.tv-fin{height:520px}
-.tv-quotes{height:430px}
-.tv-fin .tradingview-widget-container,.tv-quotes .tradingview-widget-container{height:100%}
-.tv-fin .tradingview-widget-container__widget,.tv-quotes .tradingview-widget-container__widget{height:calc(100% - 26px)}
+
+
+
+
+
+
 
 /* Filtres en texte */
 .filters{display:flex;gap:18px;overflow-x:auto;scrollbar-width:none;padding:0 16px;border-bottom:1px solid var(--rule)}
@@ -253,7 +253,7 @@ footer a:hover{color:var(--ink)}
   .qhead{flex-direction:column;align-items:stretch;gap:8px;padding:12px}
   .qhead .px{width:auto}
   .qtabs{padding:0 12px;gap:18px}
-  .tv-chart{height:260px}
+  
   .syn dl{grid-template-columns:1fr}
   .syn dt{padding:9px 12px 0;border-bottom:0}
   .syn dd{padding:2px 12px 9px}
@@ -394,9 +394,9 @@ table.brk tr.sel td{background:#F4F7FB}
   .dleg{margin:-6px 0 16px}
   .brkbar{gap:10px}
 }
-.tv-top{height:340px;border-top:1px solid var(--soft);overflow:hidden}
-.tv-top .tradingview-widget-container{height:100%}
-.tv-top .tradingview-widget-container__widget{height:calc(100% - 26px)!important}
+
+
+
 .bref{margin:0;padding:14px 18px;font-size:15px;line-height:1.55;border-bottom:1px solid var(--soft);background:#FCFBF9}
 .feu{padding:12px 18px;border-bottom:1px solid var(--soft)}
 .feun{display:flex;gap:18px;flex-wrap:wrap;font-size:13.5px}
@@ -408,7 +408,7 @@ table.brk tr.sel td{background:#F4F7FB}
 .feub span{display:block;height:100%}
 :root{--g:#1E8A52;--n:#BDB7AC;--o:#E07B24}
 .lect .li{border-left:4px solid transparent}
-.lect .li-fort{border-left-color:var(--g)} .lect .li-moyen{border-left-color:var(--n)} .lect .li-vig{border-left-color:var(--o)} .lect .li-na{border-left-color:#C9D3E3}
+   
 .lv-fort{background:#E3F2E9;color:#0F6B3E}.lv-vig{background:#FCE9D6;color:#9A4A0B}
 .pills{display:inline-flex;gap:8px;font-size:12.5px;font-weight:600;white-space:nowrap}
 .pills > span{display:inline-flex;align-items:center;gap:4px}
@@ -433,7 +433,7 @@ a.nco:hover,a.nti:hover{text-decoration:underline}
 .nfil{margin-bottom:6px}
 aside .news .nit{padding:10px 0}
 aside .pb .news,aside #amf{padding:0 16px}
-@media (max-width:760px){.tv-top{height:280px}.bref{padding:12px 14px;font-size:14.5px}.feu{padding:12px 14px}.feun{gap:12px}aside #amf{padding:0 12px}}
+@media (max-width:760px){.bref{padding:12px 14px;font-size:14.5px}.feu{padding:12px 14px}.feun{gap:12px}aside #amf{padding:0 12px}}
 nav.main{gap:18px}
 .hero2{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:28px;align-items:center;padding:20px 0 26px}
 .hero2 h1{font-size:34px;letter-spacing:-.025em;line-height:1.12}
@@ -444,9 +444,9 @@ nav.main{gap:18px}
 .search.big .results{top:58px}
 .homegrid{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:20px;align-items:start}
 .homegrid > *{min-width:0}
-.tv-mkt{height:470px}
-.tv-mkt .tradingview-widget-container{height:100%}
-.tv-mkt .tradingview-widget-container__widget{height:calc(100% - 26px)}
+
+
+
 .dayh{display:flex;gap:12px;align-items:center}
 .dayh .nm{font-size:18px;font-weight:600}
 .dayc p{margin:10px 0 0;font-size:14px}
@@ -503,7 +503,7 @@ svg.bars{width:100%;height:auto;display:block;max-height:260px;max-width:760px;m
 @media (max-width:1040px){.hero2,.homegrid{grid-template-columns:minmax(0,1fr)}.secgrid{grid-template-columns:repeat(3,minmax(0,1fr))}.trio{grid-template-columns:minmax(0,1fr)}}
 @media (max-width:760px){
   .hero2{padding:12px 0 18px;gap:16px}.hero2 h1{font-size:25px}
-  .tv-mkt{height:420px}
+  
   .secgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
   .hbr{grid-template-columns:minmax(0,1fr) 92px;gap:4px 8px}
   .hbr .hbb{grid-column:1 / -1;grid-row:2}
@@ -880,7 +880,7 @@ a.hbr{color:inherit;text-decoration:none;border-radius:6px;position:relative;pad
 .pills{align-items:center;line-height:1}.cocard .f .pills{margin-left:auto}
 .pfhab{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.pfhab label{display:flex;flex-direction:column;gap:5px;font-size:13px;font-weight:600}
 .pfhab select,.pfhab input{height:40px;border:1px solid var(--line);border-radius:10px;padding:0 10px;font:inherit;font-weight:400;background:#fff;min-width:0;width:100%;max-width:100%}.pfhab label{min-width:0}
-@media (max-width:760px){.tile .v{font-size:22px;white-space:nowrap}#secTabs{flex-wrap:nowrap;overflow-x:auto}.pfhab{grid-template-columns:1fr 1fr}.tv-top{height:320px}}
+@media (max-width:760px){.tile .v{font-size:22px;white-space:nowrap}#secTabs{flex-wrap:nowrap;overflow-x:auto}.pfhab{grid-template-columns:1fr 1fr}}
 
 /* v11 : Académie */
 .acahero{max-width:880px;margin:8px 0 18px}.acaprog{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-top:12px}.acaprog .feub{flex:1;min-width:160px;max-width:320px;margin:0}.acaprog .btn{height:42px;display:inline-flex;align-items:center;text-decoration:none}
@@ -1182,7 +1182,7 @@ a.orcrow span.t small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-li
 
 
 
-#fgraph .tv-chart{height:320px}
+
 @media (max-width:1100px){.fcols{grid-template-columns:minmax(0,1fr) 280px}}
 @media (max-width:560px){.ftiles.n3,.ftiles.n4,.ftiles.n5{grid-template-columns:repeat(2,minmax(0,1fr))}.ftiles.n5 .ftile,.ftiles.n5 .ftile:nth-child(n+4){grid-column:auto}.ftiles.n3 .ftile:last-child,.ftiles.n5 .ftile:last-child{grid-column:span 2}}
 @media (max-width:900px){.fcols{grid-template-columns:minmax(0,1fr)}.fside{position:static}.fh-sum{grid-template-columns:1fr}}
@@ -1198,7 +1198,7 @@ a.orcrow span.t small{display:-webkit-box;-webkit-box-orient:vertical;-webkit-li
   .fbar{grid-template-columns:minmax(0,1fr) 70px 42px;grid-template-areas:"l l p" "b b a"}.fbar .l{grid-area:l}.fbar .b{grid-area:b}.fbar .p{grid-area:p}.fbar .a{grid-area:a}
   .fcmp{grid-template-columns:110px minmax(0,1fr) 62px}.ffaqask{padding:4px 16px 12px}.ffaq .accb{padding:0 16px 14px}
   .ffrise{flex-direction:column;gap:10px}.ffrise:before{left:7px;right:auto;top:6px;bottom:6px;width:2px;height:auto}.ffrise li{padding:0 0 0 24px}
-  #fgraph .tv-chart{height:300px}
+  
 }
 
 /* ==== m/comparer.js (ligne 13 avant le 31/10) ==== */

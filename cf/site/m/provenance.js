@@ -326,10 +326,6 @@ function provCalcul(key, s, c) {
     default: return "";
   }
 }
-function provBadge(s, c) { // 1/11 (Romain) : fiabilité des données de la fiche, en un mot, et le détail au toucher
-  const F = fiabilite(s, c); if (!F) return "";
-  return `<details class="fiab fiab-${F.niv}" data-fiab="${esc(s.id)}"><summary><i aria-hidden="true"></i>Données : fiabilité ${F.mot}</summary><ul>${F.L.map(([ok, t]) => `<li class="${ok ? "ok" : "ko"}">${esc(t)}</li>`).join("")}<li class="fiab-anc" hidden></li></ul></details>`;
-}
 // Le niveau dit à quel point le lecteur peut se fier aux chiffres affichés : source lue par le site, comptes récents, complets, sans saut suspect
 function fiabilite(s, c) {
   if (!c || !c.fin || s.missing) return null;

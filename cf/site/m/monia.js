@@ -16,7 +16,7 @@ function miaEtat() {
 }
 const miaConnectee = () => !MIA.coupee; // nom gardé : « une IA répond » (les autres modules l'utilisent)
 const miaNomModele = () => "l'IA d'ENKLAIR";
-function miaDeconnecter() { } // plus rien à déconnecter : gardé pour les anciens appels
+ // plus rien à déconnecter : gardé pour les anciens appels
 
 /* ---------- Appel de l'IA du site ---------- */
 const miaNettoie = t => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/, "").replace(/—/g, ",").replace(/\*\*/g, "").replace(/^#+\s*/gm, "").trim();

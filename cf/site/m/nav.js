@@ -88,10 +88,6 @@ const NAV_G = { home: "", aca: "dec", new: "dec", lex: "dec", mkt: "exp", news: 
 /* ---------- Construction ---------- */
 const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));
 const navLib = t => t === "@esp" ? `<span class="esplbl">Se connecter</span>` : navEsc(t); // « Se connecter » ou « Mon espace » selon la session (espaceBadge)
-function navMenuHTML(g) { // panneau déroulant d'une rubrique (ordinateur)
-  return `<div class="ddm">${g.items.map(([h, t, d]) => `<a href="${h}"${h === "/pea-cto" ? ' class="fr-seul"' : ""}><b>${navLib(t)}</b><span>${navEsc(d)}</span></a>`).join("")}
-    </div>`; // 30/10 (Romain) : quatre choix par rubrique, rien d'autre ; le reste est dans le plan du site en bas de page
-}
 function navBarreHTML() { // quatre portes en liens directs, l'étoile des favoris (compteur), Premium
   return NAV.map(g => `<a href="${g.porte}" data-g="${g.k}" class="navporte${g.compte ? " navesp" : ""}">${g.compte ? `Mon espace<span class="espn"></span>` : navEsc(g.label)}</a>`).join("")
     + `<a href="/favoris" data-nav="fav" class="navfav" title="Mes favoris" aria-label="Mes favoris"><span class="st">★</span><span class="favn"></span></a>`

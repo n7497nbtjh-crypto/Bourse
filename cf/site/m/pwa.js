@@ -204,7 +204,7 @@ function pageConnecteur() {
   app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › ENKLAIR dans ChatGPT ou Claude</div>
     <section class="pwa-hero"><p class="kick">Connecteur IA · gratuit · lecture seule</p>
       <h1>Utiliser ENKLAIR dans ChatGPT ou Claude</h1>
-      <p class="lead">Ajoutez ENKLAIR à votre assistant IA. Il lit alors les comptes officiels de plus de 2 400 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda. Il calcule à partir de ces données au lieu d'inventer, et il cite ses sources.</p>
+      <p class="lead">Ajoutez ENKLAIR à votre assistant IA. Il lit alors les comptes officiels de plus de 2 400 entreprises, la médiane de leur secteur${typeof frSeul === "function" && !frSeul() ? "" : ", l'éligibilité au PEA"}, les ETF et l'agenda. Il calcule à partir de ces données au lieu d'inventer, et il cite ses sources.</p>
       <div class="pwa-url"><code id="pwaurl">${esc(url)}</code><button type="button" class="btn" id="pwacopie">Copier l'adresse</button></div>
       <p class="note" style="margin:6px 0 0">Aucun compte ni clé nécessaire. Protocole ouvert MCP (Model Context Protocol), reconnu par Claude, ChatGPT et la plupart des assistants.</p></section>
 
@@ -226,8 +226,8 @@ function pageConnecteur() {
         <p style="margin:12px 0 6px">Cursor, VS Code, Windsurf et les autres clients MCP : ajoutez un serveur distant « Streamable HTTP » avec cette adresse, sans authentification.</p><code class="pwa-cmd">{ "mcpServers": { "bilan": { "url": "${esc(url)}" } } }</code></div>
     </div></section>
 
-    <section class="panel"><div class="ph"><h2>Ce que votre assistant peut faire</h2><span class="light" style="font-size:12.5px">${PWA_OUTILS.length} outils, plus search et fetch pour ChatGPT</span></div><div class="pb"><div class="pwa-tools">
-      ${PWA_OUTILS.map(([n, t, d, q]) => `<div class="pwa-tool"><h3>${t}</h3><p>${d}</p><q>${q}</q><code>${n}</code></div>`).join("")}</div></div></section>
+    <section class="panel"><div class="ph"><h2>Ce que votre assistant peut faire</h2><span class="light" style="font-size:12.5px">${PWA_OUTILS.length - (typeof frSeul === "function" && !frSeul() ? 1 : 0)} outils, plus search et fetch pour ChatGPT</span></div><div class="pb"><div class="pwa-tools">
+      ${PWA_OUTILS.filter(([n]) => n !== "eligibilite_pea" || typeof frSeul !== "function" || frSeul()).map(([n, t, d, q]) => typeof frSeul === "function" && !frSeul() ? [n, t, d.replace("Frais, indice, PEA, distribution", "Frais, indice, distribution"), q.replace(" éligibles au PEA", "")] : [n, t, d, q]).map(([n, t, d, q]) => `<div class="pwa-tool"><h3>${t}</h3><p>${d}</p><q>${q}</q><code>${n}</code></div>`).join("")}</div></div></section>
 
     <section class="panel"><div class="ph"><h2>Voir ce que reçoit l'assistant</h2></div><div class="pb">
       <p style="margin:0 0 10px">Tapez une entreprise : voici, mot pour mot, la réponse que le connecteur envoie à Claude ou à ChatGPT.</p>

@@ -514,6 +514,5 @@ const e4FrF = () => typeof frSeul === "function" ? frSeul() : true; // PEA : seu
 if (F4.on) {
   window.pageCompany = pageCompany4;
   // L'ancienne fiche a pu être lancée au chargement (fiche.js, fiche2.js) avant ce module : sa fin d'affichage ne doit plus rien écrire (lot 3 : modules retirés).
-  if (typeof tabBref === "function") tabBref = function () { };
   if (typeof R !== "undefined" && R && R.companies && /^\/entreprise\/[a-z0-9-]+/.test(location.pathname) && typeof route === "function") route();
 }

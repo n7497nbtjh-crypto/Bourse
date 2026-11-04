@@ -598,32 +598,6 @@ function analyseFaitsIA(s, c) {
   return [l("Ce qui la valorise", r.valorise.slice(0, 6)), l("Ce qui lui fait défaut", r.defaut.slice(0, 6)), l("Contexte", r.contexte.slice(0, 6)), r.manque.length ? `Données manquantes : ${r.manque.join(" ; ")}` : ""].filter(Boolean).join("\n");
 }
 // Les phrases que l'assistant local ajoute aux questions « atouts », « risques », « solide ».
-function analyseAssist(s, c, genre) {
-  let r; try { r = analyseForcesFaiblesses(s, c); } catch (e) { return []; }
-  const un = t => { const m = t.match(/^.+?[.](?=\s+[A-ZÀ-Ý]|$)/); return (m ? m[0] : t).replace(/\.$/, ""); }; // la première phrase suffit à l'oral
-  const pt = i => `${i.titre} : ${un(i.detail).charAt(0).toLowerCase() + un(i.detail).slice(1)}.`;
-  const sansDette = genre === "solide_sans_dette"; if (sansDette) genre = "solide";
-  const P = [];
-  if (genre === "forts") { const a = r.valorise.slice(0, 3); if (a.length) P.push(`Ce qui la valorise, sur plusieurs exercices : ${a.map(pt).join(" ")}`); }
-  if (genre === "risques") {
-    const d = r.defaut.filter(i => i.regle).slice(0, 3), f = r.defaut.filter(i => !i.regle).slice(0, 2);
-    if (f.length) P.push(`Dans ses comptes sur plusieurs années : ${f.map(pt).join(" ")}`);
-    if (d.length) P.push(`Risques liés à son pays, sa devise ou son secteur : ${d.map(pt).join(" ")}`);
-    const cx = r.contexte.filter(i => ["change", "devcpt", "smallcap", "cny", "hkd", "dette", "vieux"].includes(i.id)).slice(0, d.length >= 2 ? 1 : 2);
-    if (cx.length) P.push(`À connaître aussi : ${cx.map(pt).join(" ")}`);
-  }
-  if (genre === "solide") {
-    const k = new Set(["dette", "dette_tend", "fcf", "benef", "pertes", "perte", "cp_neg", "roe", "marge_neg", "div_perte", "div_couv", "div_fcf"]);
-    if (sansDette) { k.delete("dette"); k.delete("cp_neg"); }
-    const a = r.valorise.filter(i => k.has(i.id)).slice(0, 3), d = r.defaut.filter(i => k.has(i.id)).slice(0, 3);
-    if (a.length) P.push(`${sansDette ? "Sur plusieurs exercices, ce qui la rend solide" : "Ce qui la rend solide"} : ${a.map(pt).join(" ")}`);
-    if (d.length) P.push(`${sansDette ? "Sur plusieurs exercices, ce qui la fragilise" : "Ce qui la fragilise"} : ${d.map(pt).join(" ")}`);
-    if (!a.length && !d.length && !sansDette) { const g = r.defaut.filter(i => i.regle).slice(0, 2); if (g.length) P.push(`À connaître : ${g.map(pt).join(" ")}`); }
-  }
-  if ((genre === "risques" || genre === "solide") && r.manque.length && (!c || s.missing)) P.push(`Ce que le site ne sait pas encore : ${r.manque.slice(0, 3).join(" ; ").replace(/\.$/, "")}.`);
-  return P;
-}
-
 /* ---------- ficheFaits : contenu existant, plus les facteurs de l'analyse ---------- */
 function ficheFaits(s, c) {
   const f = c ? figuresOf(c) : null, r = ratios(s), m = MED[s.sector] || {}, v = valo(s), p = pxOf(s);

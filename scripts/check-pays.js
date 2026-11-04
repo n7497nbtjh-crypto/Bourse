@@ -7,7 +7,7 @@ const { ouvrir } = require("./_site"), fs = require("fs"), path = require("path"
 const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ["/", "/entreprises", "/entreprise/lvmh", "/entreprise/totalenergies", "/comparer?ids=lvmh,hermes,kering", "/comparer",
   "/etf", "/etf?pea=1", "/etf/amundi-msci-world-pea", "/etf/ishares-core-msci-world", "/marches", "/actualites", "/agenda", "/classements", "/classements?c=dividende&pea=1", "/dividendes",
   "/outils", "/outils/si-javais", "/outils/recouvrement", "/simulateurs/epargne", "/simulateurs/frais", "/repartitions", "/idees-recues", "/decouvertes",
-  "/apprendre", "/academie/placements/etf", "/lexique", "/portefeuille", "/espace", "/premium", "/methode", "/plan"];
+  "/apprendre", "/academie/placements/etf", "/lexique", "/portefeuille", "/espace", "/premium", "/methode", "/plan", "/demander", "/communaute", "/favoris", "/hier", "/connecteur", "/ia/connecter", "/rapport-exemple", "/question/plus-gros-dividendes-france"];
 const ROOT = path.join(__dirname, "..", "cf", "site");
 const VISIBLE = `() => { const out = []; const w = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
   while (w.nextNode()) { const n = w.currentNode, t = n.textContent, t2 = t.replace(/\\bPEA(?= [A-Z0-9])/g, "").replace(/équivalent du PEA/g, ""); if (!/\\bPEA\\b/.test(t2)) continue; // noms de fonds (« Amundi PEA Monde ») et « pas d'équivalent du PEA » admis

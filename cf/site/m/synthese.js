@@ -88,48 +88,8 @@ function synPoints(l, b) {
   const lecon = synLecon(lec || "mediane");
   return { pts, lecon, c, e, ann };
 }
-function synCarte(l, b) {
-  const { pts, lecon } = synPoints(l, b), v = l.variation_semaine_pct, c = l.k.startsWith("c:") ? RBY[l.k.slice(2)] : null;
-  const titre = `<a href="${synLien(l.k)}">${esc(l.nom)}</a>${v != null ? `<span class="${synCls(v)} num">${synPct(v)}</span>` : ""}${l.en_portefeuille && l.portefeuille ? `<small class="light">${nf(0).format(l.portefeuille.poids_pct)} % du portefeuille</small>` : ""}`;
-  return `<div class="syncard"><h3>${titre}</h3><ul>${pts.slice(0, 5).map(p => `<li class="${p.zone}">${esc(p.txt)}</li>`).join("")}</ul>${lecon ? `<p class="les">À lire : <a href="${lecon.href}">${esc(lecon.titre)} →</a></p>` : ""}</div>`;
-}
 // Les lignes qui méritent un commentaire : plus forts mouvements, publications, lignes lourdes du portefeuille.
-function synAInterpreter(b) {
-  const L = (b.lignes || []).slice(), score = l => Math.abs(l.variation_semaine_pct || 0) + ((b.annonces || []).some(a => a.k === l.k && a.origine === "officiel") ? 6 : 0) + (l.portefeuille ? l.portefeuille.poids_pct / 10 : 0);
-  return L.filter(l => l.variation_semaine_pct != null || (b.annonces || []).some(a => a.k === l.k)).sort((x, y) => score(y) - score(x));
-}
-
 /* ---------- Rendu ---------- */
-function synKpis(b) {
-  const L = (b.lignes || []).filter(l => l.variation_semaine_pct != null), pf = b.portefeuille, T = [];
-  if (pf && pf.var_pct != null) T.push(`<a class="synkpi" href="/portefeuille"><small>Mon portefeuille</small><b class="${synCls(pf.var_eur)}">${synEur(pf.var_eur)}</b><span>${synPct(pf.var_pct)} · ${synEur(pf.valeur_eur, false)}${pf.estime ? " (estimé)" : ""}</span>${pf.serie ? synSpark(pf.serie, 130, 26, "Valeur du portefeuille sur la semaine") : ""}</a>`);
-  else if (L.length) T.push(`<div class="synkpi"><small>Moyenne de vos valeurs</small><b class="${synCls(b.moyenne)}">${synPct(b.moyenne)}</b><span>${b.hausses || 0} en hausse · ${b.baisses || 0} en baisse</span></div>`);
-  const cac = (b.indices || []).find(i => i.id === "cac40");
-  if (cac) T.push(`<div class="synkpi"><small>CAC 40, même période</small><b class="${synCls(cac.pct)}">${synPct(cac.pct)}</b><span>${(b.indices || []).filter(i => i.id === "sp500").map(i => `S&P 500 ${synPct(i.pct)}`).join("") || "indice de la Bourse de Paris"}</span></div>`);
-  const best = L[0], worst = L.length > 1 ? L[L.length - 1] : null;
-  if (best) T.push(`<a class="synkpi" href="${synLien(best.k)}"><small>Plus forte hausse</small><b class="${synCls(best.variation_semaine_pct)}">${synPct(best.variation_semaine_pct)}</b><span>${esc(best.nom)}</span></a>`);
-  if (worst) T.push(`<a class="synkpi" href="${synLien(worst.k)}"><small>Plus forte baisse</small><b class="${synCls(worst.variation_semaine_pct)}">${synPct(worst.variation_semaine_pct)}</b><span>${esc(worst.nom)}</span></a>`);
-  return T.length ? `<div class="synkpis">${T.join("")}</div>` : "";
-}
-function synRowsHTML(b) {
-  const L = (b.lignes || []).slice().sort((x, y) => (y.variation_semaine_pct ?? -1e9) - (x.variation_semaine_pct ?? -1e9)), pf = !!b.portefeuille;
-  return `<div class="synhead syn-nosp"><span>Valeur</span><span>Sur la semaine</span><span>Face à son indice</span><span>${pf ? "En euros" : ""}</span></div><div class="synrows syn-nosp">${L.map(l => {
-    const v = l.variation_semaine_pct, sub = [l.type === "etf" ? "ETF" : (RBY[l.k.slice(2)] ? secName(RBY[l.k.slice(2)]) : ""), l.en_portefeuille && l.portefeuille ? `${nf(0).format(l.portefeuille.poids_pct)} % du portefeuille` : l.en_portefeuille ? "dans le portefeuille" : "favori"].filter(Boolean).join(" · ");
-    return `<a class="synrow" href="${synLien(l.k)}"><span class="nm">${synLogo(l.k, 30)}<span><b>${esc(l.nom)}</b><small>${esc(sub)}</small></span></span>
-      <span class="v ${v == null ? "na" : synCls(v)}">${v == null ? "–" : synPct(v)}</span>
-      <span class="vs">${l.indice && l.ecart_pts != null ? `<b class="${synCls(l.ecart_pts)}">${l.ecart_pts > 0 ? "+" : l.ecart_pts < 0 ? "−" : ""}${nf(1).format(Math.abs(l.ecart_pts))} pt${Math.abs(l.ecart_pts) >= 2 ? "s" : ""}</b> vs ${esc(l.indice.nom)}` : v == null ? "cours de la semaine manquant" : `<span class="light">pas d'indice équivalent</span>`}</span>
-      <span class="eu ${l.portefeuille && l.portefeuille.var_eur != null ? synCls(l.portefeuille.var_eur) : ""}">${l.portefeuille && l.portefeuille.var_eur != null ? synEur(l.portefeuille.var_eur) : ""}</span></a>`; }).join("")}</div>`;
-}
-function synNewsHTML(b, prem) {
-  const A = b.annonces || [], max = prem ? 30 : 6, vis = A.slice(0, max);
-  if (!A.length) return `<p class="muted" style="margin:0">Aucune annonce officielle ni article repéré cette semaine pour vos valeurs. Le site relève chaque jour les communiqués déposés à l'AMF et à la SEC.</p>`;
-  return `<div class="synnews">${vis.map(a => `<div class="synnew"><div class="h"><span class="syncat c-${esc(a.categorie || "communique")}">${esc(SYN_CAT[a.categorie] || a.categorie_label || "Communiqué")}</span><b>${esc(a.nom || "")}</b><small>${a.date ? esc(synJour(a.date)) : ""}${a.origine === "presse" ? " · presse" : " · publication officielle"}</small></div>
-      ${a.titre ? `<p class="t">${esc(a.titre)}</p>` : a.type && a.type !== SYN_CAT[a.categorie] ? `<p class="t">${esc(a.type)}</p>` : ""}${a.resume ? `<p>${esc(a.resume)}</p>` : ""}${a.change ? `<p class="ch"><b>Ce que cela change :</b> ${esc(a.change)}</p>` : ""}
-      ${(a.chiffres || []).length ? `<div class="synchif">${a.chiffres.map(c => `<span>${esc(c[0])} : <b>${esc(c[1])}</b></span>`).join("")}</div>` : ""}
-      <div class="synlinks">${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${a.origine === "presse" ? "Lire l'article" + (a.site ? " (" + esc(a.site) + ")" : "") : "Document officiel" + (a.source_nom ? " (" + esc(a.source_nom) + ")" : "")} ↗</a>` : ""}<a href="${esc(a.lien || synLien(a.k))}">${a.k.startsWith("c:") ? "Toute son actualité" : "Sa fiche"} →</a></div></div>`).join("")}</div>
-    ${A.length > max ? `<div class="synmore"><span><b>${A.length - max} autre${A.length - max > 1 ? "s" : ""} annonce${A.length - max > 1 ? "s" : ""}</b> cette semaine, classée${A.length - max > 1 ? "s" : ""} par importance.</span><a class="btn" href="/premium">Tout voir avec Premium</a></div>` : ""}
-    <p class="synfoot">Classées par importance : offre publique, résultats, chiffre d'affaires, dividende, opérations, dirigeants. Résumés tirés des documents officiels${A.some(a => a.origine === "presse") ? " ; les articles de presse sont repérés automatiquement et non vérifiés par le site" : ""}.</p>`;
-}
 function synAgendaHTML(b) {
   const pfk = new Set((b.lignes || []).filter(l => l.portefeuille).map(l => l.k));
   const E = (b.a_venir || []).slice().sort((x, y) => (pfk.has(y.k) - pfk.has(x.k)) || String(x.date).localeCompare(String(y.date)));
@@ -146,14 +106,6 @@ function synAlertesHTML(b) {
   return `<div class="syncard"><h3>Votre portefeuille</h3>${A.map(a => { const l = synLecon(a.code); return `<div class="synal ${esc(a.niveau || "")}"><div><b>${esc(a.texte)}</b>${ev(a)}<p>${esc(a.pourquoi || "")}${l ? ` <a class="lnk" href="${l.href}">${esc(l.titre)} →</a>` : ""}</p></div></div>`; }).join("")}
     ${(pf.levees || []).map(a => `<div class="synal fort"><div><b>${esc(a.texte || "Une alerte de la semaine dernière")}</b><span class="synevol ok">Levée</span><p>Ce point de la semaine dernière ne se vérifie plus.</p></div></div>`).join("")}
     <p class="synfoot">Repères de diversification généraux, calculés sur vos lignes. Ce ne sont pas des conseils personnalisés.</p></div>`;
-}
-function synHistHTML(b, prem) {
-  const H = (b.historique || []).slice(0, prem ? 12 : 2), cur = { semaine: b.semaine, v: b.portefeuille && b.portefeuille.var_pct != null ? b.portefeuille.var_pct : b.moyenne };
-  const pts = [...H.map(h => ({ semaine: h.semaine, v: h.portefeuille_pct ?? h.moyenne })).reverse(), cur].filter(x => x.v != null);
-  const mx = Math.max(1, ...pts.map(x => Math.abs(x.v)));
-  const bars = pts.length >= 2 ? `<div class="synweeks">${pts.map(x => `<a href="/espace/bilan?semaine=${esc(x.semaine)}" class="${x.semaine === b.semaine ? "on" : ""}" title="Semaine ${esc(String(x.semaine).slice(-2))} : ${synPct(x.v)}"><i class="${x.v < 0 ? "neg" : ""}" style="height:${Math.max(2, Math.abs(x.v) / mx * 32)}px"></i><small>S${esc(String(x.semaine).slice(-2))}</small></a>`).join("")}</div>` : "";
-  return `<section class="panel"><div class="ph"><h2>Semaines précédentes</h2></div><div class="pb">${bars}${H.length ? H.map(h => { const v = h.portefeuille_pct ?? h.moyenne; return `<a class="synwk" href="/espace/bilan?semaine=${esc(h.semaine)}"><span>Semaine ${esc(String(h.semaine).replace(/^\d{4}-W/, ""))}</span><b class="${synCls(v)} num">${v != null ? synPct(v) : "–"}</b></a>`; }).join("") : `<p class="muted" style="margin:0">Votre première synthèse est celle-ci. Elle est gardée chaque semaine.</p>`}
-    ${!prem && (b.historique || []).length > 2 ? `<p class="note"><a class="lnk" href="/premium">Premium</a> garde 12 semaines d'historique, toutes les annonces et l'analyse de chaque ligne.</p>` : !prem ? `<p class="note">Avec <a class="lnk" href="/premium">Premium</a> : 12 semaines d'historique, toutes les annonces et l'analyse de chaque ligne.</p>` : ""}</div></section>`;
 }
 function synTexte(b) {
   if (b.texte) return `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des seuls chiffres de cette page. Ce n'est pas un conseil.</p></div>`;
@@ -198,13 +150,6 @@ function synIcs(b, which) {
   a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1500); // lien hors de la page : le routeur ne l'intercepte pas
   toast(list.length > 1 ? `${list.length} dates ajoutées au fichier d'agenda.` : "Date ajoutée au fichier d'agenda.");
 }
-function synNotifHTML() { // lien avec le module « pwa » : bouton d'abonnement aux notifications, s'il le fournit
-  try { if (typeof pwaNotifBouton === "function") return pwaNotifBouton({ sujet: "synthese", texte: "Être prévenu chaque samedi" }) || ""; } catch (e) { }
-  // sinon : les réglages des notifications push sont en tête de l'onglet Alertes (module pwa)
-  if (typeof pwaPanneauPush === "function" && "PushManager" in window && "Notification" in window) return `<a href="/espace/alertes">Être prévenu chaque samedi</a>`;
-  return "";
-}
-
 /* ---------- Contexte : les sujets d'actualité du site qui touchent les valeurs du rapport ---------- */
 let SYN_CTX = undefined;
 async function synContexte() { if (SYN_CTX !== undefined) return SYN_CTX; try { const r = await fetch("/data/contexte.json"); SYN_CTX = r.ok ? await r.json() : null; } catch (e) { SYN_CTX = null; } return SYN_CTX; }

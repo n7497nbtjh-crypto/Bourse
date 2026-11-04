@@ -60,7 +60,7 @@ function outTailleOk(c, t) { if (!t) return true; const v = valo(c), k = v && v.
 const outN = (n, one, many) => `${n} ${n > 1 ? many : one}`;
 const outAns = n => n > 1 ? `${n} années de suite` : "sur la dernière année";
 const outE100 = v => F0.format(v * 100) + " €";
-function outCaEur(c) { return c.ca > 0 ? toEur(c.ca, c.currency) : null; } // ventes en millions d'euros
+ // ventes en millions d'euros
 function outCouv(c) { // le dividende est-il couvert par le bénéfice du dernier exercice ?
   if (!(c.divPaid > 0.5)) return null;
   if (!(c.net > 0)) return { k: "non", t: "Non couvert", d: "versé alors que l'entreprise est en perte" };
@@ -69,7 +69,6 @@ function outCouv(c) { // le dividende est-il couvert par le bénéfice du dernie
 }
 const outCouvTag = c => { const x = outCouv(c); return x ? `<span class="out-cv out-cv-${x.k}" title="${esc(x.d)}">${x.t}</span>` : ""; };
 const outPea = c => peaOk(c) ? `<span class="out-pea">PEA</span>` : "";
-function outSelect(id, opts, val, label) { return `<label class="out-sel"><span>${label}</span><select id="${id}">${opts.map(([v, t]) => `<option value="${esc(v)}"${v === val ? " selected" : ""}>${esc(t)}</option>`).join("")}</select></label>`; }
 const outSecOpts = () => [["", "Tous les secteurs"], ...Object.entries(R.sectors).sort((a, b) => a[1].localeCompare(b[1], "fr"))];
 function outQS(o) { const q = new URLSearchParams(); Object.entries(o).forEach(([k, v]) => { if (v) q.set(k, v); }); const s = q.toString(); return s ? "?" + s : ""; }
 const OUT_ICON = {

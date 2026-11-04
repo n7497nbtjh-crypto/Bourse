@@ -155,17 +155,26 @@ export function extract(doc) {
     if (r.dps == null && r.divPaid != null && r.eps && r.net) { const shares = r.net / r.eps; if (shares > 0) r.dpsEst = r.divPaid / shares; }
     for (const k of ["dNcBonds", "dNcOther", "dNcBank", "dCBonds", "dCOther", "dCBank", "capexPpe", "capexInt", "debtTotal", "debtLong", "debtShortAll", "debtShort", "debtCurLong", "debtInstrNC", "debtInstrC", "debtFinNC", "debtFinC", "debtExtSum", "daExtMax", "ebitdaExt", "ebitdaExtExt", "da", "leaseNC", "leaseC", "leaseAll"]) delete r[k];
   }
-  return { currency: currency || anyCur || "EUR", fyEnd, years, tags, norme: "IFRS", ids };
+  return { currency: currency || anyCur || "EUR", curSure: !!currency, fyEnd, years, tags, norme: "IFRS", ids };
 }
 
 // Fusionne plusieurs rapports : le plus récent l'emporte pour une même année.
 export function merge(reports) {
   const out = { currency: null, fyEnd: null, years: {}, tags: {}, norme: null };
+  const ref = reports.find(r => r.curSure); // 4/11 : un rapport publié dans une autre devise (Genmab : couronnes jusqu'en 2022, dollars ensuite) n'est pas mêlé aux autres
   for (const r of reports) { // du plus récent au plus ancien
+    if (ref && r.curSure && r.currency !== ref.currency) continue;
     out.currency = out.currency || r.currency; out.fyEnd = out.fyEnd || r.fyEnd; out.norme = out.norme || r.norme || null;
+    // 4/11 : un rapport plus ancien qui donne, pour une année déjà lue, un montant très différent (écart de plus de 25 %)
+    // est sur un autre périmètre (activité cédée, nouvelle présentation) : ses autres années ne sont pas reprises pour ce chiffre.
+    const autre = new Set();
+    for (const k of ["ca", "ebit", "net", "equity"]) for (const [y, vals] of Object.entries(r.years)) {
+      const a = out.years[y] && out.years[y][k], b = vals[k];
+      if (a != null && b != null && Math.abs(a) > 0 && Math.abs(b - a) / Math.abs(a) > 0.25) { autre.add(k); break; }
+    }
     for (const [y, vals] of Object.entries(r.years)) {
       out.years[y] = out.years[y] || {};
-      for (const [k, v] of Object.entries(vals)) if (out.years[y][k] == null) out.years[y][k] = v;
+      for (const [k, v] of Object.entries(vals)) if (out.years[y][k] == null && !autre.has(k)) out.years[y][k] = v;
     }
     for (const [t, m] of Object.entries(r.tags || {})) { out.tags[t] = out.tags[t] || {}; for (const [y, v] of Object.entries(m)) if (out.tags[t][y] == null) out.tags[t][y] = v; }
   }
