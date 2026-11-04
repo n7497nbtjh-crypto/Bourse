@@ -233,3 +233,62 @@ export function extractSecTrim(doc, maxQ = 8) {
   const ttm = full ? { fin: last4[3].end, ca: Math.round(last4.reduce((s, x) => s + x.ca, 0) * 10) / 10, net: last4.every(x => x.net != null) ? Math.round(last4.reduce((s, x) => s + x.net, 0) * 10) / 10 : null } : null;
   return { currency: cur, q, ttm };
 }
+
+/* ---------- Rapports 20-F récents absents de companyfacts (4/11/2026) ----------
+   La base companyfacts de la SEC n'intègre pas encore la taxonomie IFRS 2025 : les rapports 20-F déposés en 2026
+   (TSMC le 16/04/2026, Shinhan, Petrobras…) y manquent, alors qu'ils sont bien déposés avec leurs données XBRL.
+   On lit donc l'instance XBRL du rapport lui-même (fichier *_htm.xml du dépôt, archives publiques EDGAR) et on ajoute
+   ses chiffres à companyfacts sous la même forme ; extractSec les traite ensuite sans rien changer.
+   Seuls les contextes sans dimension (le groupe entier) et les concepts de IFRS_CONCEPTS sont gardés. */
+const IFRS_UTILES = new Set(Object.values(IFRS_CONCEPTS).flat());
+export function instanceIfrs(xml, filed, form = "20-F") {
+  const ctx = {}, units = {}, out = {};
+  for (const m of xml.matchAll(/<(?:xbrli:)?context\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/(?:xbrli:)?context>/g)) {
+    const b = m[2]; if (/<(?:xbrli:)?(segment|scenario)\b/.test(b)) continue;
+    const g = t => (b.match(new RegExp(`<(?:xbrli:)?${t}>\\s*([0-9-]{10})`)) || [])[1];
+    const inst = g("instant"), start = g("startDate"), end = g("endDate");
+    if (inst) ctx[m[1]] = { end: inst }; else if (start && end) ctx[m[1]] = { start, end };
+  }
+  const mes = s => s.trim().replace(/^.*:/, "");
+  for (const m of xml.matchAll(/<(?:xbrli:)?unit\b[^>]*\bid="([^"]+)"[^>]*>([\s\S]*?)<\/(?:xbrli:)?unit>/g)) {
+    const L = [...m[2].matchAll(/<(?:xbrli:)?measure>([^<]+)<\/(?:xbrli:)?measure>/g)].map(x => mes(x[1]));
+    units[m[1]] = /divide/.test(m[2]) && L.length === 2 ? `${L[0]}/${L[1]}` : L[0];
+  }
+  for (const m of xml.matchAll(/<ifrs-full:(\w+)\b([^>]*?)>([^<]*)<\/ifrs-full:\1>/g)) {
+    if (!IFRS_UTILES.has(m[1])) continue;
+    const a = m[2], c = ctx[(a.match(/contextRef="([^"]+)"/) || [])[1]], u = units[(a.match(/unitRef="([^"]+)"/) || [])[1]], v = Number(m[3].trim());
+    if (!c || !u || !isFinite(v) || /xsi:nil="true"/.test(a)) continue;
+    const L = ((out[m[1]] = out[m[1]] || { units: {} }).units[u] = out[m[1]].units[u] || []);
+    if (!L.some(r => r.end === c.end && r.start === c.start)) L.push({ ...c, val: v, form, filed });
+  }
+  return out;
+}
+// Ajoute à doc (companyfacts) les rapports annuels 20-F / 40-F récents qui y manquent. getJSON(url), getText(url) fournis par l'appelant ;
+// cache : { [numéro de dépôt]: faits extraits } pour ne télécharger chaque instance (souvent 10 Mo) qu'une fois.
+export async function completer20F(doc, cik, { getJSON, getText, cache = {}, log = () => { } }) {
+  const facts = doc && doc.facts; if (!facts || !facts["ifrs-full"]) return 0;
+  const g = facts["ifrs-full"], connues = new Set();
+  for (const c of [...IFRS_CONCEPTS.ca, ...IFRS_CONCEPTS.net]) for (const rows of Object.values((g[c] || {}).units || {})) for (const r of rows) if (/^(20-F|40-F)/.test(r.form || "")) connues.add(r.end);
+  const sub = await getJSON(subsUrl(cik)), r = (sub && sub.filings && sub.filings.recent) || {};
+  let n = 0;
+  for (let i = 0, vus = 0; i < (r.form || []).length && vus < 2; i++) {
+    if (!/^(20-F|40-F)$/.test(r.form[i]) || !r.isXBRL?.[i] || !r.reportDate?.[i]) continue;
+    vus++;
+    if (connues.has(r.reportDate[i])) break; // companyfacts a déjà cet exercice (et donc les précédents)
+    const acc = r.accessionNumber[i], dir = `https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${acc.replace(/-/g, "")}/`;
+    let F = cache[acc];
+    if (!F) {
+      const idx = await getJSON(dir + "index.json"), items = (idx && idx.directory && idx.directory.item || []).map(x => x.name);
+      const inst = items.find(x => /_htm\.xml$/.test(x)) || items.find(x => /\.xml$/.test(x) && !/_(cal|def|lab|pre)\.xml$|FilingSummary|MetaLinks/i.test(x));
+      if (!inst) { log(`20-F ${acc} : instance XBRL introuvable`); continue; }
+      const xml = await getText(dir + inst); if (!xml) continue;
+      F = cache[acc] = instanceIfrs(xml, r.filingDate[i], r.form[i]);
+    }
+    for (const [c, o] of Object.entries(F)) for (const [u, rows] of Object.entries(o.units)) {
+      const L = ((g[c] = g[c] || { units: {} }).units[u] = g[c].units[u] || []);
+      for (const x of rows) L.push(x);
+    }
+    n++; log(`20-F ${acc} (exercice clos le ${r.reportDate[i]}) lu dans le dépôt`);
+  }
+  return n;
+}

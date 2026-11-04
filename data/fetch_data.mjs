@@ -15,7 +15,7 @@
 import { mkdirSync, writeFileSync, readFileSync, existsSync } from "node:fs";
 import U, { SECTEURS } from "./univers.mjs";
 import { extract, merge, toSeries, extractSegments, bestSegments } from "./esef.mjs";
-import { extractSec, cikMap, factsUrl, subsUrl, recentFilings, estimatedAgenda } from "./sec.mjs";
+import { extractSec, cikMap, factsUrl, subsUrl, recentFilings, estimatedAgenda, completer20F } from "./sec.mjs";
 import { amfAnnualFilings, amfDoc } from "./amf.mjs";
 
 const OUT = new URL("../cf/site/data/", import.meta.url);
@@ -106,16 +106,26 @@ export function candidates(doc) {
 export const DIAGNOSTIC = {};
 
 let CIK = null;
+// 4/11 : rapports 20-F récents lus dans le dépôt lui-même (companyfacts n'a pas encore la taxonomie IFRS 2025) ; cache des faits extraits
+const C20_F = new URL("./sec20f_cache.json", import.meta.url);
+export const C20 = existsSync(C20_F) ? JSON.parse(readFileSync(C20_F, "utf8")) : {};
+export const sauverC20 = () => writeFileSync(C20_F, JSON.stringify(C20));
+async function getText(fetchFn, url) {
+  for (let a = 1; a <= 3; a++) { try { const r = await fetchFn(url, { headers: { "user-agent": UA } }); if (r.ok) return r.text(); if (r.status === 404) return null; } catch (e) { } await sleep(2000 * a); }
+  return null;
+}
 export async function collectSec(fetchFn, c) {
   if (!c.cik) CIK = CIK || await cikMap(getJSON, fetchFn);
   const cik = c.cik || CIK[c.sec];
   if (!cik) throw new Error("numéro SEC introuvable pour " + c.sec);
   const doc = await getJSON(fetchFn, factsUrl(cik));
   if (!doc) throw new Error("aucun compte à la SEC pour " + c.sec);
+  let lu20 = 0;
+  try { lu20 = await completer20F(doc, cik, { getJSON: u => getJSON(fetchFn, u), getText: u => getText(fetchFn, u), cache: C20, log: m => console.log(c.name, ":", m) }); } catch (e) { console.log(c.name, ": 20-F non lu,", e.message); }
   const s = toSeries(extractSec(doc));
   if (!s.years.length) throw new Error("aucun exercice annuel lisible");
   if (!nameMatches(c.legal || c.name, doc.entityName)) VERIF.push(`${c.name} : le code ${c.sec} renvoie à « ${doc.entityName} »`);
-  return { v: VERSION, devise2: true, dette3: true,
+  return { v: VERSION, devise2: true, dette3: true, sec20: true, ...(lu20 ? { sec20lu: true } : {}),
     id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, region: c.region, domain: c.domain, desc: c.desc, cik, legalName: doc.entityName || c.name,
     sector: c.sector, ...s,
     sources: [{ periodEnd: s.years[s.years.length - 1] + "", report: `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${cik}&type=10-K`, json: factsUrl(cik) }],
@@ -281,9 +291,10 @@ async function main() {
       // comptes en retard d'un exercice (rapport attendu mais absent) : nouvel essai chaque jour pour la France (rapports AMF), tous les trois jours ailleurs.
       const spread = (FRESH ? [...c.id].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) % 7, 0) * 864e5 : 0);
       const lastY = (old.years || [])[(old.years || []).length - 1];
+      const sec20 = old.cik && !old.sec20 && lastY != null && lastY < expectedYear(old.fyEnd); // 4/11 : comptes SEC en retard, relus une fois avec la lecture directe des 20-F
       const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? (old.amfTried ? 20 : 0) : 70) * 3600e3; // France : premier essai AMF immédiat
       const sansCA = !old.fin || !Array.isArray(old.fin.ca) || old.fin.ca[old.fin.ca.length - 1] == null; // chiffre d'affaires absent : relu (étiquettes élargies le 30/10 : foncières, banques, services publics)
-      if (old.v === VERSION && !deviseDouteuse && !detteDouteuse && !late && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      if (old.v === VERSION && !sec20 && !deviseDouteuse && !detteDouteuse && !late && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);
@@ -303,6 +314,7 @@ async function main() {
   await Promise.all([pool(idx.filter(([c]) => !c.sec), 3, ([c, i]) => one(c, i)), pool(idx.filter(([c]) => c.sec), 5, async ([c, i]) => { await one(c, i); await sleep(400); })]);
   const list = slots.filter(Boolean);
   DIAGNOSTIC.__verif = VERIF;
+  sauverC20();
   writeFileSync(new URL("./diagnostic.json", import.meta.url), JSON.stringify(DIAGNOSTIC, null, 1));
   writeFileSync(new URL("societes.json", OUT), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), sectors: SECTEURS, companies: list, errors, verif: VERIF }));
   console.log(`${list.filter(c => !c.missing).length} sociétés avec comptes sur ${list.length}, ${errors.length} échec(s)`);
