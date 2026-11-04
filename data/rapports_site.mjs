@@ -221,7 +221,41 @@ export function pdfTexte(buf) {
   finally { rmSync(dir, { recursive: true, force: true }); }
 }
 // Comptes d'une société à partir de son site : { comptes, url } ou null (raison dans log)
+// 5/11 : sociétés françaises (souvent sur Euronext Growth, sans dépôt ESEF) : rapports annuels en PDF déposés à l'AMF
+// (info-financiere.gouv.fr, données ouvertes), quel que soit l'intitulé du dépôt, essayés avant le site de la société.
+const AMF_API = "https://www.info-financiere.gouv.fr/api/explore/v2.1/catalog/datasets/flux-amf-new-prod/records";
+export async function amfPdfs(isin, log = () => { }) {
+  const u = new URL(AMF_API); u.searchParams.set("limit", "100"); u.searchParams.set("order_by", "uin_dat_amf desc");
+  u.searchParams.set("where", `identificationsociete_iso_cd_isi = "${isin}" AND uin_dat_amf >= date'${new Date().getUTCFullYear() - 2}-01-01'`);
+  const r = await fetch(u, { headers: { "User-Agent": UA, Accept: "application/json" }, signal: AbortSignal.timeout(60000) }); if (!r.ok) { log(`AMF : réponse ${r.status}`); return []; }
+  const L = ((await r.json()).results || []), out = [];
+  for (const x of L) {
+    const url = x.url_de_recuperation || Object.values(x).find(v => typeof v === "string" && /^https?:\/\/.+\.pdf$/i.test(v)), t = [x.sous_type_d_information, x.type_d_information, x.informationdeposee_inf_tit_inf].filter(Boolean).join(" ");
+    if (!url || !/\.pdf$/i.test(url)) continue;
+    if (!/rapports? financiers? (et d.audit )?annuels?|rapport annuel|document d.enregistrement|document de r[ée]f[ée]rence|comptes (consolid[ée]s )?annuels|annual (financial )?report|[ée]tats financiers (consolid[ée]s )?(annuels|au 3[01])/i.test(t)) continue;
+    if (/semestriel|half[- ]year|trimestr|sociaux|social|r[ée]mun[ée]ration|gouvernement|durabilit|honoraires/i.test(t)) continue;
+    out.push({ u: url, t: t.slice(0, 120), d: String(x.uin_dat_amf || "").slice(0, 10) });
+  }
+  log(`AMF : ${L.length} dépôts depuis ${new Date().getUTCFullYear() - 2}, ${out.length} rapports annuels en PDF`);
+  return out;
+}
+
 export async function comptesDuSite(c, { log = () => { }, essais = 4, navigateur = null } = {}) {
+  if (/^FR/.test(c.isin || "")) {
+    const A = await amfPdfs(c.isin, log).catch(e => { log("AMF : " + e.message); return []; });
+    for (const f of A.slice(0, 4)) {
+      try {
+        const buf = Buffer.from(await (await fetch(f.u, { headers: { "User-Agent": UA }, signal: AbortSignal.timeout(120000) })).arrayBuffer());
+        if (buf.length > 50e6 || buf.slice(0, 4).toString() !== "%PDF") { log(`  AMF ${f.t} : pas un PDF lisible`); continue; }
+        const r = lireComptesPdf(pdfTexte(buf));
+        if (!r.ok) { log(`  AMF ${f.d} ${f.t.slice(0, 60)} : compte de résultat non trouvé`); continue; }
+        const dernier = Math.max(...Object.keys(r.years).map(Number));
+        if (Date.parse(`${dernier}-${r.fyEnd || "12-31"}T00:00:00Z`) > Date.now() || dernier < new Date().getUTCFullYear() - 2) { log(`  AMF ${f.d} : exercice ${dernier} écarté`); continue; }
+        return { comptes: r, url: f.u, dernier, src: "Rapport annuel déposé à l'AMF (PDF, info-financiere.gouv.fr)" };
+      } catch (e) { log(`  AMF ${f.d} : ${e.message}`); }
+      await sleep(500);
+    }
+  }
   if (!c.domain) return null;
   const R = await trouverRapports(c.domain, { lei: c.lei || "", log, navigateur });
   const vu = new Set();
@@ -268,7 +302,7 @@ async function main() {
   const idx = JSON.parse(readFileSync(new URL("societes.json", OUT), "utf8")), parId = new Map(idx.companies.map((c, i) => [c.id, i]));
   const seuls = (arg("--ids", "") || "").split(",").filter(Boolean), minutes = +arg("--minutes", 50), stop = Date.now() + minutes * 60e3, nPar = +arg("--paralleles", 6);
   const reessai = 3 * 864e5; // rattrapage (4/11) : un échec est retenté au bout de 3 jours (à remonter à 20 jours une fois le retard rattrapé)
-  const todo = U.filter(c => c.domain && !c.sec && !c.cik && c.sector !== "finance" && !(cache[c.id] && cache[c.id].bloque) && (seuls.length ? seuls.includes(c.id) : (() => { const s = idx.companies[parId.get(c.id)]; return !s || s.missing; })())
+  const todo = U.filter(c => (c.domain || /^FR/.test(c.isin || "")) && !c.sec && !c.cik && c.sector !== "finance" && !(cache[c.id] && cache[c.id].bloque) && (seuls.length ? seuls.includes(c.id) : (() => { const s = idx.companies[parId.get(c.id)]; return !s || s.missing; })())
     && (seuls.length || !cache[c.id] || (!cache[c.id].ok && Date.now() - Date.parse(cache[c.id].d) > reessai)));
   console.log(todo.length, "sociétés à chercher sur leur site");
   let ok = 0, n = 0;
@@ -284,7 +318,7 @@ async function main() {
     if (!r) { console.log("✗", c.id, L.slice(-1)[0] || ""); return; }
     const s = toSeries({ currency: r.comptes.currency, fyEnd: r.comptes.fyEnd, years: r.comptes.years, norme: "IFRS" });
     const full = { v: VERSION, devise2: true, dette3: true, id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: c.lei || null, legalName: c.legal || c.name, sector: c.sector,
-      ...s, sourcePdf: true, sources: [{ periodEnd: `${r.dernier}-${r.comptes.fyEnd || "12-31"}`, report: r.url, json: null, source: "Rapport annuel publié sur le site de l'entreprise (PDF)" }], updated: new Date().toISOString().slice(0, 10) };
+      ...s, sourcePdf: true, sources: [{ periodEnd: `${r.dernier}-${r.comptes.fyEnd || "12-31"}`, report: r.url, json: null, source: r.src || "Rapport annuel publié sur le site de l'entreprise (PDF)" }], updated: new Date().toISOString().slice(0, 10) };
     writeFileSync(new URL(`societes/${c.id}.json`, OUT), JSON.stringify(full));
     const k = parId.get(c.id); if (k != null) idx.companies[k] = summary(full); else { parId.set(c.id, idx.companies.length); idx.companies.push(summary(full)); }
     ok++; console.log("✓", c.id, r.dernier, r.comptes.currency, "ventes", Math.round(r.comptes.years[r.dernier].ca), "net", Math.round(r.comptes.years[r.dernier].net));

@@ -11,6 +11,9 @@ on:
       tout:
         description: "Retenter aussi les échecs récents (1 = oui)"
         default: "0"
+      ids:
+        description: "Seulement ces sociétés (identifiants séparés par des virgules)"
+        default: ""
   schedule:
     - cron: "10 */6 * * *"
 permissions:
@@ -46,7 +49,7 @@ jobs:
             t=$(( total - fait < 40 ? total - fait : 40 ))
             # 4/11 soir : 2e chute de la machine sans journal (run 41899303521) : tranche coupée net si elle déborde,
             # 2 sociétés à la fois, mémoire et disque notés à chaque tranche pour connaître la cause d'un prochain échec.
-            timeout -k 60 $(( t * 60 + 300 )) node --max-old-space-size=3072 data/rapports_site.mjs --minutes $t --paralleles 2 || echo "::warning::tranche interrompue (code $?)"
+            timeout -k 60 $(( t * 60 + 300 )) node --max-old-space-size=3072 data/rapports_site.mjs --minutes $t --paralleles 2 ${{ inputs.ids && format('--ids {0}', inputs.ids) || '' }} || echo "::warning::tranche interrompue (code $?)"
             free -m | head -2; df -h . | tail -1; rm -rf /tmp/rs-* 2>/dev/null || true
             git add data/rapports_site_cache.json cf/site/data/societes cf/site/data/societes.json
             git diff --cached --quiet || git commit -q -m "Rapports annuels des sites du $(date +%F) (tranche)"
