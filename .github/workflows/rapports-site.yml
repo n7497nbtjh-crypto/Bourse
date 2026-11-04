@@ -27,14 +27,17 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Outil de lecture des PDF
-        run: sudo apt-get install -y -qq poppler-utils >/dev/null
+      - name: Outil de lecture des PDF et navigateur (pages dont les liens sont écrits par un programme)
+        run: |
+          sudo apt-get install -y -qq poppler-utils >/dev/null
+          npm install --no-save --no-audit --no-fund playwright@1 >/dev/null
+          npx playwright install --with-deps chromium >/dev/null
       - name: Recherche des rapports
         timeout-minutes: 170
         run: |
           node tests/t_rapports_site.mjs
           if [ "${{ inputs.tout }}" = "1" ]; then rm -f data/rapports_site_cache.json; fi
-          node data/rapports_site.mjs --minutes "${{ inputs.minutes || '150' }}" --paralleles 12
+          node data/rapports_site.mjs --minutes "${{ inputs.minutes || '150' }}" --paralleles 10
       - name: Enregistrement dans le dépôt
         if: always()
         run: |

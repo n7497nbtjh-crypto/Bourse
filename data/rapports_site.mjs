@@ -48,7 +48,7 @@ const liens = (html, base) => {
 const annee = s => Math.max(0, ...[...String(s).matchAll(/(?<!\d)(20[12]\d)(?!\d)/g)].map(m => +m[1]));
 
 // Cherche les paquets ESEF publiés sur le site ; renvoie [{ u, t, an, score }] du plus prometteur au moins prometteur
-export async function trouverRapports(domaine, { lei = "", maxPages = 45, log = () => { } } = {}) {
+export async function trouverRapports(domaine, { lei = "", maxPages = 45, log = () => { }, navigateur = null } = {}) {
   const base = /^https?:/.test(domaine) ? domaine : "https://www." + domaine.replace(/^www\./, "");
   let rb = { ok: () => true, sitemaps: [] };
   try { rb = robots((await get(new URL("/robots.txt", base).href)).t); } catch (e) { }
@@ -88,10 +88,10 @@ export async function trouverRapports(domaine, { lei = "", maxPages = 45, log = 
   }
   ajouter(base + "/", 1);
   for (const p of ["/investors", "/investor-relations", "/en/investors", "/de/investoren", "/en/investor-relations", "/investoren"]) ajouter(new URL(p, base).href, 0);
-  let lues = 0;
+  let lues = 0, refus = 0; const reponses = []; // pages qui ont répondu, avec leur priorité (pour l'affichage par un navigateur)
   while (aVoir.length && lues < maxPages) {
     aVoir.sort((a, b) => b[0] - a[0]); const [prio, u] = aVoir.shift();
-    let page; try { page = await get(u); lues++; } catch (e) { continue; }
+    let page; try { page = await get(u); lues++; reponses.push([prio, page.url]); } catch (e) { if (/HTTP 40[13]/.test(e.message)) refus++; continue; }
     for (const l of liens(page.t, page.url)) {
       noter(l.u, l.t);
       if (MOTS.test(l.u + " " + l.t)) { const a = annee(l.u + " " + l.t), an = new Date().getUTCFullYear(); if (a && a < an - 1) continue;
@@ -99,7 +99,20 @@ export async function trouverRapports(domaine, { lei = "", maxPages = 45, log = 
     }
     await sleep(500);
   }
-  log(`${host} : ${lues} pages lues, ${fichiers.size} fichiers ESEF, ${pdfs.size} rapports PDF candidats`);
+  // 4/11 : pages dont les liens sont écrits par un programme (rien de lisible sans navigateur) : affichage par Chromium,
+  // seulement pour un site qui a répondu normalement (un refus 401 / 403 n'est jamais contourné), robots.txt toujours respecté
+  let rendues = 0;
+  const bonsPdf = () => [...pdfs.values()].filter(f => f.score >= 30).length;
+  if (navigateur && lues > 0 && bonsPdf() === 0) {
+    const file = reponses.sort((a, b) => b[0] - a[0]).map(x => x[1]).filter((u, i, a) => a.indexOf(u) === i).slice(0, 4), vusR = new Set(file);
+    while (file.length && rendues < 8 && bonsPdf() === 0) {
+      const u = file.shift(); let L = null;
+      try { L = await navigateur(u); rendues++; } catch (e) { continue; }
+      for (const l of L) { noter(l.u, l.t);
+        if (rendues < 4 && meme(l.u) && permis(l.u) && !vusR.has(l.u) && MOTS.test(l.u + " " + l.t) && /(annual|jahres|gesch|financial[-_ ]?report|publication|bericht|rapport|results|downloads?)/i.test(l.u + " " + l.t) && !/\.(pdf|zip)(\?|$)/i.test(l.u)) { const a = annee(l.u + " " + l.t); if (!a || a >= new Date().getUTCFullYear() - 1) { vusR.add(l.u); file.unshift(l.u); } } }
+    }
+  }
+  log(`${host} : ${lues} pages lues${rendues ? `, ${rendues} affichées par le navigateur` : ""}${refus ? `, ${refus} refus` : ""}, ${fichiers.size} fichiers ESEF, ${pdfs.size} rapports PDF candidats`);
   const tri = L => L.sort((a, b) => (b.an || 9999) - (a.an || 9999) || b.score - a.score); // sans année dans le lien : celui de la page de l'exercice en cours
   return { esef: tri([...fichiers.values()]), pdf: tri([...pdfs.values()]) };
 }
@@ -118,17 +131,19 @@ export function nombre(tok, allemand = false) {
   const v = Number(t); return isFinite(v) ? (neg ? -v : v) : null;
 }
 const LIB = {
-  ca: /^(total\s+)?(net\s+)?(revenues?|sales|turnover|umsatzerl[öo]se|umsatz|revenue from contracts with customers|chiffre d'affaires|ricavi|ventas|omsättning|nettoomsättning|omsetning|liikevaihto|omzet|net revenues?)\b/i,
+  ca: /^(total\s+)?(net\s+)?(revenues?|sales|turnover|umsatzerl[öo]se|umsatz|insurance revenue|versicherungsumsatz|gross premiums written|gebuchte bruttobeitr[äa]ge|revenue from contracts with customers|chiffre d'affaires|ricavi|ventas|omsättning|nettoomsättning|omsetning|liikevaihto|omzet|net revenues?)\b/i,
   ebit: /^(operating (profit|income|result)|income from operations|profit (\(loss\) )?from operations|result from operating activities|ebit\b|betriebsergebnis|operatives ergebnis|r[ée]sultat op[ée]rationnel|rörelseresultat|driftsresultat|liikevoitto)/i,
-  net: /^(net (income|profit|result|earnings)|profit (for|of) the (year|period|financial year)|consolidated net (income|profit)|group net (income|profit)|profit after tax(es)?|konzern(jahres)?(ergebnis|überschuss)|jahresüberschuss|periodenergebnis|r[ée]sultat net|årets resultat|utile netto|net income \(loss\)|profit \(loss\) for the (year|period)|profit attributable to|profit \(loss\)(?=\s*$)|profit for the year)(?![a-z])/i,
+  net: /^(net (income|profit|result|earnings)|profit (for|of) the (year|period|financial year)|consolidated net (income|profit)|group net (income|profit)|profit after tax(es)?|konzern(jahres)?(ergebnis|überschuss)|jahresüberschuss|periodenergebnis|r[ée]sultat net|årets resultat|utile netto|net income \(loss\)|profit \(loss\) for the (year|period)|profit attributable to|profit \(loss\)(?=\s*$)|profit for the year|earnings after tax(es)?|result after tax(es)?|profit after income tax(es)?|ergebnis nach steuern|konzernergebnis nach steuern|period result)(?![a-z])/i,
   netPart: /^(shareholders of|owners of the (parent|company)|equity holders of|attributable to (shareholders|owners|equity holders)|aktionäre|anteilseigner|actionnaires|propriétaires|.{0,30}attributable to (the )?(owners|shareholders|equity holders|stockholders))/i,
-  equity: /^(total (shareholders'? )?equity( attributable to (shareholders|owners|equity holders)[^0-9]*)?|eigenkapital(\s+gesamt)?|summe eigenkapital|total des capitaux propres)/i,
+  equity: /^(?!.*(and liabilities|und schulden|et passifs|and total liabilities))(total (shareholders'? )?equity( attributable to (shareholders|owners|equity holders)[^0-9]*)?|eigenkapital(\s+gesamt)?|summe eigenkapital|total des capitaux propres)/i,
   cash: /^(cash and cash equivalents|zahlungsmittel und zahlungsmitteläquivalente|trésorerie et équivalents)/i,
 };
 export function lireComptesPdf(texte) {
   const pages = String(texte).split("\f"), out = { years: {}, pages: {} };
   const allemand = (texte.match(/\d\.\d{3},\d/g) || []).length > (texte.match(/\d,\d{3}\.\d/g) || []).length && (texte.match(/\b\d{1,3}\.\d{3}\b/g) || []).length > (texte.match(/\b\d{1,3},\d{3}\b/g) || []).length;
   const unite = p => { const lc = p.split("\n").find(l => /(millions?|mio\.?|thousands?|tsd\.?|tausend|billions?|mrd\.?)/i.test(l) && /(€|\beur\b|\busd\b|\$|\bchf\b|£|\bgbp\b|\bsek\b|\bnok\b|\bdkk\b|\bjpy\b|¥)/i.test(l) && l.trim().length < 140);
+    if (!lc) { const lm = p.slice(0, 2500).split("\n").find(l => /\b(in |en )?(millions?|mio\.?|thousands?|tsd\.?)\b/i.test(l) && l.trim().length < 140), dv = p.slice(0, 2500).match(/\((in )?(EUR|USD|CHF|GBP|SEK|NOK|DKK|JPY)\)|\b(EUR|CHF|SEK|NOK|DKK) (million|m)\b|in (EUR|CHF|USD|GBP)\b/);
+      if (lm && dv) { const d = (dv[0].match(/EUR|USD|CHF|GBP|SEK|NOK|DKK|JPY/) || [])[0]; return { ech: /thousand|tsd/i.test(lm) ? 1e-3 : 1, dev: d }; } } // Adecco : « in millions » puis « (in EUR) » sur une autre ligne
     if (lc) { const ech = /thousand|tsd|tausend/i.test(lc) ? 1e-3 : /billion|mrd/i.test(lc) ? 1e3 : 1; const dev = /€|eur/i.test(lc) ? "EUR" : /chf/i.test(lc) ? "CHF" : /£|gbp/i.test(lc) ? "GBP" : /sek/i.test(lc) ? "SEK" : /nok/i.test(lc) ? "NOK" : /dkk/i.test(lc) ? "DKK" : /jpy|¥/i.test(lc) ? "JPY" : "USD"; return { ech, dev }; }
     const m = p.match(/(in|en|In|EUR|USD|CHF|GBP|SEK|NOK|DKK|€|\$|£)[^\n]{0,30}?(millions?|mio\.?|mn|m\b|thousands?|tsd\.?|tausend|billions?|mrd\.?)/i) || p.match(/(millions?|mio\.?|thousands?|tsd\.?|tausend)\s*(of\s*)?(€|eur|euro|usd|\$|chf|£|gbp|sek|nok|dkk|jpy|¥)/i);
     if (!m) return null; const i0 = p.lastIndexOf("\n", m.index) + 1, s = p.slice(i0, p.indexOf("\n", m.index) > 0 ? p.indexOf("\n", m.index) : undefined); const ech = /thousand|tsd|tausend/i.test(s) ? 1e-3 : /billion|mrd/i.test(s) ? 1e3 : 1;
@@ -150,9 +165,12 @@ export function lireComptesPdf(texte) {
   for (let k = 0; k < pages.length; k++) { const out = { years: {} };
     const p = pages[k], u = unite(p), ys = annees(p); if (!u || !ys) continue;
     if (/(table of contents|contents|inhalt|sommaire)/i.test(p.slice(0, 600)) && (p.match(/\.{5,}/g) || []).length > 3) continue; // sommaire
-    if (!TITRE.test(p.slice(0, 1500))) continue; // 4/11 : seulement la page titrée « compte de résultat consolidé » (pas les chiffres clés, ni un tableau par activité)
+    const tete = p.slice(0, 1500), titre1 = TITRE.test(tete), titre2 = !titre1 && /(income statements?|statements? of (income|profit or loss|operations)|gewinn- und verlustrechnung)( of the [\w .&’'-]{1,40}group)?/i.test(tete)
+      && !/(statement of|der|of the) [\w .&’'-]{1,40}\b(SE|AG|plc|N\.V\.|S\.A\.|ASA|AB|Oyj|KGaA)\b(?![\w ]{0,3}group)/.test(tete) && !/(condensed|segment|quarter)/i.test(tete);
+    if (!titre1 && !titre2) continue; // 4/11 : seulement la page titrée « compte de résultat consolidé » (pas les chiffres clés, ni un tableau par activité)
     if (/\b(Q[1-4]|quarter|quartal|nine months|9M|H1|half[- ]year|halbjahr|six months|first half|9 months|trimestre|semestre)\b/i.test(p.slice(0, 1200))) continue; // compte trimestriel ou semestriel
-    const L = lignes(p + "\n" + (pages[k + 1] || "").split(/statements? of (financial position|comprehensive)|balance sheet|bilanz/i)[0]), [ca] = cherche(L, LIB.ca), [net, iNet] = cherche(L, LIB.net); // le compte de résultat continue souvent sur la page suivante
+    const L = lignes(p + "\n" + (pages[k + 1] || "").split(/statements? of (financial position|comprehensive)|balance sheet|bilanz/i)[0]), [ca] = cherche(L, /^(total |net )?(revenues?|sales( revenue)?|turnover|umsatzerl[öo]se|net sales|insurance revenue)\s*$/i)[0] ? cherche(L, /^(total |net )?(revenues?|sales( revenue)?|turnover|umsatzerl[öo]se|net sales|insurance revenue)\s*$/i) : cherche(L, LIB.ca); let [net, iNet] = cherche(L, LIB.net); // le compte de résultat continue souvent sur la page suivante
+    if (!net) [net, iNet] = cherche(L, /attributable to .{0,40}(shareholders|owners|equity holders|stockholders)|(aktionären|anteilseignern) der .{0,30}zuzurechnen/i); // RWE : « Income », puis « of which: … attributable to RWE AG shareholders »
     if (!ca || !net || ca.nums.at(-2) <= 0) continue;
     const iNew = ys[0] > ys[1] ? 0 : 1, ordre = [ys[iNew], ys[1 - iNew]];
     const put = (key, ligne, echelle = u.ech) => { if (!ligne) return; const a = sous(ligne, ys, iNew), b = sous(ligne, ys, 1 - iNew); if (a == null || b == null) return; (out.years[ordre[0]] = out.years[ordre[0]] || {})[key] = a * echelle; (out.years[ordre[1]] = out.years[ordre[1]] || {})[key] = b * echelle; };
@@ -165,7 +183,7 @@ export function lireComptesPdf(texte) {
     const fin = (p + "\n" + pages.slice(k + 1, k + 4).join("\n")).match(/(september|december|march|june)\s+(30|31),?\s+20\d\d|(30|31)\.\s?(september|dezember|märz|juni)|(31|30)\s+(décembre|septembre|mars|juin)/i);
     const MOIS = { september: "09-30", december: "12-31", dezember: "12-31", march: "03-31", märz: "03-31", june: "06-30", juni: "06-30", décembre: "12-31", septembre: "09-30", mars: "03-31", juin: "06-30" };
     out.fyEnd = fin ? MOIS[(fin[1] || fin[4] || fin[6] || "").toLowerCase()] || null : null;
-    out.score = (TITRE.test(p.slice(0, 1500)) ? 10 : 0) + (u.ech === 1 || u.ech === 1e-3 ? 3 : 0) + Math.min(10, L.filter(l => l.nums.length >= 2).length / 3) + (/(segment|division|automotive|business unit)/i.test(p.slice(0, 600)) ? -8 : 0);
+    out.score = (titre1 ? 10 : 6) + (u.ech === 1 || u.ech === 1e-3 ? 3 : 0) + Math.min(10, L.filter(l => l.nums.length >= 2).length / 3) + (/(segment|division|automotive|business unit)/i.test(p.slice(0, 600)) ? -8 : 0);
     // bilan : page suivante qui porte les capitaux propres
     for (let j = k + 1; j < Math.min(pages.length, k + 6); j++) {
       const Lb = lignes(pages[j]), ub = unite(pages[j]) || u, [eq] = cherche(Lb, LIB.equity), [cash] = cherche(Lb, LIB.cash);
@@ -203,9 +221,9 @@ export function pdfTexte(buf) {
   finally { rmSync(dir, { recursive: true, force: true }); }
 }
 // Comptes d'une société à partir de son site : { comptes, url } ou null (raison dans log)
-export async function comptesDuSite(c, { log = () => { }, essais = 4 } = {}) {
+export async function comptesDuSite(c, { log = () => { }, essais = 4, navigateur = null } = {}) {
   if (!c.domain) return null;
-  const R = await trouverRapports(c.domain, { lei: c.lei || "", log });
+  const R = await trouverRapports(c.domain, { lei: c.lei || "", log, navigateur });
   const vu = new Set();
   for (const f of R.pdf.slice(0, 12)) {
     if (vu.size >= essais) break;
@@ -224,6 +242,23 @@ export async function comptesDuSite(c, { log = () => { }, essais = 4 } = {}) {
   return null;
 }
 
+// Navigateur partagé (Playwright) : ouvre une page, attend son affichage, renvoie ses liens [{ u, t }]
+export async function ouvrirNavigateur() {
+  let pw; try { pw = await import("playwright"); } catch (e) { try { const { createRequire } = await import("node:module"); pw = createRequire(import.meta.url)("playwright"); } catch (e2) { return null; } }
+  const b = await pw.chromium.launch(), ctx = await b.newContext({ userAgent: UA, viewport: { width: 1366, height: 900 }, serviceWorkers: "block" });
+  await ctx.route(/\.(png|jpe?g|gif|webp|svg|woff2?|ttf|mp4|webm)(\?|$)/i, r => r.abort()); // pages seulement, sans images ni vidéos
+  const ouvrir = async u => {
+    const p = await ctx.newPage();
+    try {
+      const r = await p.goto(u, { waitUntil: "domcontentloaded", timeout: 30000 }); if (!r || r.status() >= 400) throw new Error("HTTP " + (r && r.status()));
+      await p.waitForLoadState("networkidle", { timeout: 12000 }).catch(() => { });
+      await p.evaluate(() => window.scrollTo(0, document.body.scrollHeight)).catch(() => { }); await p.waitForTimeout(1500);
+      return await p.evaluate(() => [...document.querySelectorAll("a[href]")].map(a => ({ u: a.href, t: (a.innerText || a.getAttribute("aria-label") || a.title || "").replace(/\s+/g, " ").trim().slice(0, 200) })));
+    } finally { await p.close().catch(() => { }); }
+  };
+  return { ouvrir, fermer: () => b.close() };
+}
+
 async function main() {
   const arg = (n, d) => { const i = process.argv.indexOf(n); return i > 0 ? process.argv[i + 1] : d; };
   const { default: U } = await import("./univers.mjs"), { toSeries } = await import("./esef.mjs"), { summary, VERSION } = await import("./fetch_data.mjs");
@@ -231,15 +266,17 @@ async function main() {
   const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, "utf8")) : {};
   const idx = JSON.parse(readFileSync(new URL("societes.json", OUT), "utf8")), parId = new Map(idx.companies.map((c, i) => [c.id, i]));
   const seuls = (arg("--ids", "") || "").split(",").filter(Boolean), minutes = +arg("--minutes", 50), stop = Date.now() + minutes * 60e3, nPar = +arg("--paralleles", 6);
-  const reessai = 20 * 864e5; // un échec est retenté au bout de 20 jours (nouveau rapport, site modifié)
+  const reessai = 3 * 864e5; // rattrapage (4/11) : un échec est retenté au bout de 3 jours (à remonter à 20 jours une fois le retard rattrapé)
   const todo = U.filter(c => c.domain && !c.sec && !c.cik && (seuls.length ? seuls.includes(c.id) : (() => { const s = idx.companies[parId.get(c.id)]; return !s || s.missing; })())
     && (seuls.length || !cache[c.id] || (!cache[c.id].ok && Date.now() - Date.parse(cache[c.id].d) > reessai)));
   console.log(todo.length, "sociétés à chercher sur leur site");
   let ok = 0, n = 0;
+  const nav = process.argv.includes("--sans-navigateur") ? null : await ouvrirNavigateur();
+  console.log(nav ? "navigateur prêt" : "sans navigateur");
   const une = async c => {
     if (Date.now() > stop) return;
     const L = []; let r = null;
-    try { r = await comptesDuSite(c, { log: m => L.push(m) }); } catch (e) { L.push("panne " + e.message); }
+    try { r = await comptesDuSite(c, { log: m => L.push(m), navigateur: nav && nav.ouvrir }); } catch (e) { L.push("panne " + e.message); }
     n++;
     cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: !!r, ...(r ? { u: r.url, an: r.dernier } : { pourquoi: L.slice(-3).join(" | ").slice(0, 300) }) };
     if (!r) { console.log("✗", c.id, L.slice(-1)[0] || ""); return; }
@@ -253,6 +290,7 @@ async function main() {
   };
   const file = todo.slice(); await Promise.all(Array.from({ length: nPar }, async () => { while (file.length && Date.now() < stop) await une(file.shift()); }));
   writeFileSync(new URL("societes.json", OUT), JSON.stringify(idx)); writeFileSync(CACHE, JSON.stringify(cache, null, 0));
+  if (nav) await nav.fermer();
   console.log(`${n} sociétés cherchées, ${ok} comptes trouvés.`);
 }
 if (process.argv[1] && import.meta.url.endsWith(process.argv[1].split("/").pop())) await main();
