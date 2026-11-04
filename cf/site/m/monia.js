@@ -86,11 +86,10 @@ function miaPied(j) {
 /** Quand l'IA ne peut pas rédiger : la réponse calculée reste, avec une ligne d'explication. */
 function miaSuite() { // la marche suivante : compte gratuit, puis Premium
   if (MIA.niveau === "premium") return "";
-  if (MIA.niveau === "compte") return ` <a href="/premium">Premium</a> n'a pas de limite.`;
-  return ` Avec un <a href="/espace">compte gratuit</a>, 10 par jour ; avec <a href="/premium">Premium</a>, sans limite.`;
+  return ` Avec <a href="/premium">Premium</a>, 30 questions par jour.`; // 4/11 : même limite avec ou sans compte
 }
 function miaInvite(txt) {
-  const why = MIA.coupee === "visiteur" ? "Vous avez posé vos questions rédigées du jour ; l'IA revient demain." + miaSuite()
+  const why = MIA.coupee === "visiteur" ? (MIA.niveau === "premium" ? "Vous avez posé vos 30 questions du jour ; elles reviennent demain." : "Vous avez posé vos 5 questions à l'IA de la semaine ; elles reviennent lundi.") + miaSuite()
     : MIA.coupee === "site" ? "L'IA du site a atteint sa part gratuite pour aujourd'hui ; elle revient demain." + (MIA.niveau === "premium" ? "" : ` <a href="/premium">Premium</a> n'a pas cette limite.`)
     : MIA.coupee === "absente" ? "L'IA du site n'est pas disponible pour le moment." : "";
   return why ? `<p class="mia-inv"><span aria-hidden="true">✦</span> ${txt ? esc(txt) + " " : ""}${why}</p>` : "";
@@ -118,8 +117,8 @@ async function miaPage(el) {
       <ol class="mia-etapes"><li><b>D'abord, le calcul.</b> Recherches par critères, comparaisons, définitions, questions courantes sur une fiche : le site calcule la réponse dans votre navigateur, sans limite.</li>
         <li><b>Ensuite, la rédaction.</b> Pour une question libre, un modèle ouvert (Qwen3 ou Mistral Small), hébergé par Cloudflare, rédige la réponse à partir des seuls chiffres et sources du site, avec des consignes strictes : pas de conseil, pas de prévision, les incertitudes dites.</li>
         <li><b>Chaque réponse rédigée est signalée</b> et cite ses sources. Vérifiez-la : une IA peut se tromper.</li></ol>
-      <p class="mia-prix" id="miareste">Pour rester gratuit, le site limite le nombre de questions rédigées par jour : 3 sans compte, 10 avec un compte gratuit, sans limite avec Premium.</p>
-      <ul class="mia-garanties"><li>Aucun compte, aucune clé à fournir.</li><li>Vos questions sont envoyées à Cloudflare, qui héberge déjà le site, pour être traitées ; elles ne servent pas à entraîner le modèle. Le site ne garde pas leur texte, seulement un compteur anonyme du jour.</li></ul>
+      <p class="mia-prix" id="miareste">L'IA du site répond à 5 questions par semaine en gratuit, avec ou sans compte, et à 30 questions par jour avec Premium.</p>
+      <ul class="mia-garanties"><li>Aucun compte, aucune clé à fournir.</li><li>Vos questions sont envoyées à Cloudflare, qui héberge déjà le site, pour être traitées ; elles ne servent pas à entraîner le modèle. Le site ne garde pas leur texte, seulement un compteur anonyme.</li></ul>
     </div></section>
     <section class="panel"><div class="ph"><h2>Vous utilisez déjà ChatGPT ou Claude ?</h2></div><div class="pb"><p style="margin-top:0">Ajoutez ENKLAIR à votre assistant : il pourra lire les données du site pour vous répondre.</p><a class="lnk" href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a></div></section></div>`;
   miaMaj();
@@ -128,7 +127,7 @@ async function miaPage(el) {
   $$("[data-miaq]", el).forEach(b => b.onclick = () => poser(b.dataset.miaq));
   const j = await miaEtat(), r = $("#miareste", el);
   if (r && j && j.plafonds) { const Q = j.plafonds, nv = { visiteur: "sans compte", compte: "avec votre compte gratuit", premium: "avec Premium" }[j.niveau] || "";
-    r.innerHTML = `Pour rester gratuit, le site limite les questions rédigées par jour : ${Q.visiteur} sans compte, ${Q.compte} avec un <a class="lnk" href="/espace">compte gratuit</a>, sans limite avec <a class="lnk" href="/premium">Premium</a> (usage raisonnable : ${Q.premium}). Vous êtes ${esc(nv)} : ${j.disponible ? `il vous en reste ${j.reste_visiteur} aujourd'hui.` : j.site_epuise ? "la part gratuite du site est épuisée pour aujourd'hui, l'IA revient demain." : "vous les avez utilisées aujourd'hui, l'IA revient demain."}`; }
+    r.innerHTML = `L'IA du site répond à ${Q.visiteur} questions par semaine en gratuit, avec ou sans compte, et à ${Q.premium} questions par jour avec <a class="lnk" href="/premium">Premium</a>. Vous êtes ${esc(nv)} : ${j.disponible ? `il vous en reste ${j.reste_visiteur} ${j.periode === "jour" ? "aujourd'hui" : "cette semaine"}.` : j.site_epuise ? "la part gratuite du site est épuisée pour aujourd'hui, l'IA revient demain." : j.periode === "jour" ? "vous les avez utilisées aujourd'hui, l'IA revient demain." : "vous les avez utilisées cette semaine, elles reviennent lundi."}`; }
 }
 ROUTES_EXTRA.push([/^\/espace\/ia$/, async () => {
   const m = typeof moi === "function" ? await moi() : { connecte: false };

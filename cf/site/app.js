@@ -1867,7 +1867,7 @@ async function pagePremium(sub) {
     ["Rapport de la semaine", "court, 2 semaines d'historique", "complet, 12 semaines"],
     ["Rapport sur mesure : secteurs suivis, lignes analysées en détail", "2 secteurs · 3 lignes", "6 secteurs · 8 lignes"],
     ["Mon portefeuille : lignes suivies", `jusqu'à ${FREE.pf}`, "✓ sans limite"],
-    ["Questions libres rédigées par l'IA du site", "3 par jour", "✓ sans limite raisonnable"],
+    ["Questions à l'IA du site", "5 par semaine", "✓ 30 par jour"],
     ["Connecteur pour Claude ou ChatGPT", "20 appels par jour", "✓ sans limite"],
     ["Comparer · recherche par critères", `${FREE.cmp} entreprises · 8 résultats`, "5 entreprises · 30 résultats"],
     ["L'Académie et la formation guidée de 6 semaines", "les essentiels", "✓ tout"],

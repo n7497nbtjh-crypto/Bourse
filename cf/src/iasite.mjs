@@ -17,6 +17,10 @@ const MODELES = [
   ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488, "Mistral Small 3.1"],
 ];
 const jour = () => new Date().toISOString().slice(0, 10); // les limites de Cloudflare repartent à 0 h UTC
+// 4/11 (décision de Romain) : gratuit = 5 questions par semaine, avec ou sans compte ; Premium = 30 par jour.
+// Compteur des gratuits sur la semaine (clé « S » + lundi, heure UTC), celui de Premium sur le jour.
+const lundi = (t = Date.now()) => { const d = new Date(t); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
+const periode = nv => nv === "premium" ? jour() : "S" + lundi();
 const jetons = s => Math.ceil(String(s).length / 3.2);
 const nettoie = t => String(t || "").replace(/<think>[\s\S]*?<\/think>/g, "").replace(/^\s*<think>[\s\S]*$/g, "").replace(/—/g, ",").replace(/\*\*/g, "").trim();
 const json = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } });
@@ -37,28 +41,29 @@ async function niveau(request, env) {
   const p = await premiumOf(request, env).catch(() => null);
   const c = p ? null : await sessionCompte(request, env).catch(() => null);
   if (p) return { niveau: "premium", h: "p:" + String(p.token).slice(0, 24) };
-  if (c && c.id) return { niveau: "compte", h: "c:" + c.id };
-  return { niveau: "visiteur", h: await visitor(request, env) };
+  const v = await visitor(request, env); // compté aussi avec un compte : se connecter ne redonne pas 5 questions
+  if (c && c.id) return { niveau: "compte", h: ["c:" + c.id, v] };
+  return { niveau: "visiteur", h: v };
 }
 // Les compteurs sont la garantie du coût nul : s'ils ne peuvent pas être lus, l'IA ne répond pas (erreur: true).
-async function compteurs(env, h) {
+async function compteurs(env, h, per = jour()) {
   if (!env.DB) return { erreur: true, neurones: 0, questions: 0 };
   try {
     await init(env.DB);
     const a = await env.DB.prepare(`SELECT n FROM ia_neurones WHERE jour = ?`).bind(jour()).first();
-    const b = await env.DB.prepare(`SELECT n FROM ia_visiteurs WHERE jour = ? AND h = ?`).bind(jour(), h).first();
+    let b = null; for (const x of [].concat(h)) { const r = await env.DB.prepare(`SELECT n FROM ia_visiteurs WHERE jour = ? AND h = ?`).bind(per, x).first(); if (r && (!b || r.n > b.n)) b = r; }
     const m = await env.DB.prepare(`SELECT SUM(MAX(n - ?, 0)) AS p FROM ia_neurones WHERE jour LIKE ?`).bind(NEURONES_GRATUITS_JOUR, jour().slice(0, 7) + "%").first();
     return { neurones: (a && a.n) || 0, questions: (b && b.n) || 0, payes_mois: (m && m.p) || 0 };
   } catch (e) { return { erreur: true, neurones: 0, questions: 0, detail: String(e && e.message || e) }; }
 }
-async function compter(env, h, neurones) {
+async function compter(env, h, neurones, per = jour()) {
   if (!env.DB) return;
   await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), neurones, neurones).run();
-  await env.DB.prepare(`INSERT INTO ia_visiteurs (jour, h, n) VALUES (?, ?, 1) ON CONFLICT (jour, h) DO UPDATE SET n = n + 1`).bind(jour(), h).run();
-  if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_visiteurs WHERE jour < ?`).bind(jour()).run();
+  for (const x of [].concat(h)) await env.DB.prepare(`INSERT INTO ia_visiteurs (jour, h, n) VALUES (?, ?, 1) ON CONFLICT (jour, h) DO UPDATE SET n = n + 1`).bind(per, x).run();
+  if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_visiteurs WHERE (jour NOT LIKE 'S%' AND jour < ?) OR (jour LIKE 'S%' AND jour < ?)`).bind(jour(), "S" + lundi(Date.now() - 14 * 864e5)).run();
 }
 const plafonds = env => ({ neurones: +env.IA_NEURONES_JOUR || 9000, budget: Math.max(0, +env.IA_BUDGET_MOIS || 0) * NEURONES_PAR_EURO,
-  questions: { visiteur: +env.IA_QUESTIONS_JOUR || 3, compte: +env.IA_QUESTIONS_COMPTE || 10, premium: +env.IA_QUESTIONS_PREMIUM || 150 } });
+  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 5, compte: +env.IA_GRATUIT_SEMAINE || 5, premium: +env.IA_PREMIUM_JOUR || 30 } }); // noms neufs : les anciennes variables (IA_QUESTIONS_JOUR…) sont ignorées
 // Le site a-t-il encore de quoi répondre à un gratuit ? Dans la part gratuite du jour, ou dans le budget du mois.
 const siteOk = (c, P, marge) => c.neurones + marge < P.neurones || (P.budget > 0 && c.payes_mois + marge < P.budget);
 
@@ -107,13 +112,13 @@ async function traduire(request, env) {
 export async function iaSite(request, env) {
   const url = new URL(request.url), P = plafonds(env);
   if (url.pathname === "/api/ia/traduire") return traduire(request, env);
-  const { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv];
+  const { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv], per = periode(nv);
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json({ disponible: false, raison: "absente", niveau: nv });
-    const c = await compteurs(env, h);
+    const c = await compteurs(env, h, per);
     if (c.erreur) return json({ disponible: false, raison: "compteur", detail: c.detail, niveau: nv });
     const epuise = nv !== "premium" && !siteOk(c, P, 300);
-    return json({ disponible: !epuise && c.questions < plafond, reste_visiteur: Math.max(0, plafond - c.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions });
+    return json({ disponible: !epuise && c.questions < plafond, reste_visiteur: Math.max(0, plafond - c.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine" });
   }
   if (url.pathname !== "/api/ia/rediger") return json({ error: "Introuvable" }, 404);
   if (request.method !== "POST") return json({ error: "Méthode non permise" }, 405);
@@ -123,15 +128,15 @@ export async function iaSite(request, env) {
   if (!sys) return json({ error: "Tâche inconnue" }, 400);
   const user = String(b.user || "").slice(0, 15000), max = Math.min(Math.max(+b.max || 600, 200), 900);
   if (user.length < 3) return json({ error: "Question vide" }, 400);
-  const c = await compteurs(env, h);
+  const c = await compteurs(env, h, per);
   if (c.erreur) return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
   if (c.questions >= plafond) return json({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez posé ${plafond} questions à l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.`
-    : `Vous avez posé vos ${plafond} questions rédigées du jour. Les réponses calculées restent disponibles, et l'IA revient demain.` }, 429);
+    : `Vous avez posé vos ${plafond} questions à l'IA de la semaine. Elles reviennent lundi ; avec Premium, vous en avez ${P.questions.premium} par jour. Les réponses calculées restent disponibles.` }, 429);
   const messages = [{ role: "system", content: sys }, { role: "user", content: user }];
   // Cache : même tâche, mêmes faits, même question → même réponse, sans coût ; la question compte quand même dans le quota du visiteur (pas de contournement)
   const k = await empreinte(b.tache + "|" + max + "|" + user);
   try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?`).bind(k, Date.now() - 864e5).first();
-    if (hit) { await compter(env, h, 0); await env.DB.prepare(`UPDATE ia_cache SET n = n + 1 WHERE k = ?`).bind(k).run(); await parNiveau(env, nv, 0); return json({ txt: hit.txt, modele: hit.modele, cache: true }); } } catch (e) { }
+    if (hit) { await compter(env, h, 0, per); await env.DB.prepare(`UPDATE ia_cache SET n = n + 1 WHERE k = ?`).bind(k).run(); await parNiveau(env, nv, 0); return json({ txt: hit.txt, modele: hit.modele, cache: true }); } } catch (e) { }
   for (const [model, cin, cout, nom] of MODELES) {
     const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
     if (nv !== "premium" && !siteOk(c, P, estime)) continue; // Premium passe toujours : son abonnement paie la réponse
@@ -141,7 +146,7 @@ export async function iaSite(request, env) {
       const raw = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
       const txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw);
       const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
-      try { await compter(env, h, reel); } catch (e) { return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur en panne)." }, 503); }
+      try { await compter(env, h, reel, per); } catch (e) { return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur en panne)." }, 503); }
       if (txt.length > 15) { try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_cache (k, txt, modele, at, n) VALUES (?, ?, ?, ?, 0)`).bind(k, txt, nom, Date.now()).run(); if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_cache WHERE at < ?`).bind(Date.now() - 2 * 864e5).run(); /* le cache ne garde rien au-delà de 48 h */ await parNiveau(env, nv, reel); } catch (e) { } return json({ txt, modele: nom }); }
     } catch (e) { /* modèle suivant */ }
   }

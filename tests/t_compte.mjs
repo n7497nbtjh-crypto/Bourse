@@ -38,7 +38,7 @@ for (const [m, u] of [["POST", "/api/assistant"], ["POST", "/api/demande"], ["GE
 {
   const W = (m, u, b) => worker.fetch(req(m, u, b), envIA, { waitUntil() { } });
   let appels = [];
-  const envIA = { ...env, IA_QUESTIONS_JOUR: "3", AI: { run: async (model, o) => { appels.push({ model, o }); return { response: "<think>x</think>Réponse de test rédigée par le modèle du site.", usage: { prompt_tokens: 1000, completion_tokens: 200 } }; } } };
+  const envIA = { ...env, IA_GRATUIT_SEMAINE: "3", AI: { run: async (model, o) => { appels.push({ model, o }); return { response: "<think>x</think>Réponse de test rédigée par le modèle du site.", usage: { prompt_tokens: 1000, completion_tokens: 200 } }; } } };
   [s, j] = await J(await worker.fetch(req("GET", "/api/ia/etat"), env, { waitUntil() { } })); ok(s === 200 && j.disponible === false, "sans liaison AI : indisponible " + JSON.stringify(j));
   [s, j] = await J(await W("GET", "/api/ia/etat")); ok(s === 200 && j.disponible === true && j.reste_visiteur === 3, "état " + JSON.stringify(j));
   [s, j] = await J(await W("POST", "/api/ia/rediger", { tache: "assistant", user: "Faits : {} Question : que fait LVMH ?" }));
@@ -48,7 +48,8 @@ for (const [m, u] of [["POST", "/api/assistant"], ["POST", "/api/demande"], ["GE
   // 5e passage (C) : la même question avec les mêmes faits est servie par le cache, sans rappeler le modèle, mais compte dans le quota du visiteur
   [s, j] = await J(await W("POST", "/api/ia/rediger", { tache: "assistant", user: "Faits : {} Question : que fait LVMH ?" })); ok(s === 200 && j.cache === true && j.txt && appels.length === 1, "réponse identique servie par le cache " + JSON.stringify(j));
   await W("POST", "/api/ia/rediger", { tache: "expliquer", user: "C'est quoi un ETF ?" });
-  [s, j] = await J(await W("POST", "/api/ia/rediger", { tache: "expliquer", user: "Encore ?" })); ok(s === 429 && j.limite === "visiteur" && appels.length === 2, "plafond par visiteur (le cache compte aussi) " + JSON.stringify(j));
+  [s, j] = await J(await W("POST", "/api/ia/rediger", { tache: "expliquer", user: "Encore ?" })); ok(s === 429 && j.limite === "visiteur" && appels.length === 2 && /semaine/.test(j.message), "plafond par visiteur et par semaine (le cache compte aussi) " + JSON.stringify(j));
+  ok(sql.prepare("SELECT COUNT(*) AS n FROM ia_visiteurs WHERE jour LIKE 'S%'").get().n >= 1, "compteur des gratuits rangé par semaine");
   sql.exec(`UPDATE ia_neurones SET n = 9000`);
   [s, j] = await J(await W("POST", "/api/ia/rediger", { tache: "expliquer", user: "Autre visiteur" }, ));
   const r2 = await worker.fetch(new Request("https://t.local/api/ia/rediger", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": "2.2.2.2" }, body: JSON.stringify({ tache: "expliquer", user: "Autre visiteur" }) }), envIA, { waitUntil() { } });
@@ -57,7 +58,7 @@ for (const [m, u] of [["POST", "/api/assistant"], ["POST", "/api/demande"], ["GE
   const rp = await worker.fetch(req("POST", "/api/ia/rediger", { tache: "expliquer", user: "Question Premium" }, { "x-bilan-token": tok }), envIA, { waitUntil() { } });
   const jp = await rp.json(); ok(rp.status === 200 && jp.txt && appels.length === 3, "Premium répond malgré le plafond du site " + JSON.stringify(jp).slice(0, 80));
   const ep = await (await worker.fetch(req("GET", "/api/ia/etat", null, { "x-bilan-token": tok }), envIA, { waitUntil() { } })).json();
-  ok(ep.niveau === "premium" && ep.plafond_visiteur === 150 && ep.reste_visiteur === 149 && ep.site_epuise === false, "état Premium " + JSON.stringify(ep));
+  ok(ep.niveau === "premium" && ep.plafond_visiteur === 30 && ep.reste_visiteur === 29 && ep.periode === "jour" && ep.site_epuise === false, "état Premium " + JSON.stringify(ep));
   // Budget mensuel : avec 1 € de budget, un gratuit repasse (99 000 neurones de marge)
   const envB = { ...envIA, IA_BUDGET_MOIS: "1" };
   const rb = await worker.fetch(new Request("https://t.local/api/ia/rediger", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": "3.3.3.3" }, body: JSON.stringify({ tache: "expliquer", user: "Avec budget" }) }), envB, { waitUntil() { } });

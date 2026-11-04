@@ -296,7 +296,7 @@
       "Les réponses calculées sont produites par le site, dans votre navigateur, sans modèle d'IA.",
       "Quand vous demandez une réponse rédigée, votre question et les chiffres du site utiles à la réponse (par exemple ceux d'une fiche, ou ceux de votre portefeuille si vous demandez son explication) sont envoyés au modèle d'IA du site, hébergé par Cloudflare (Workers AI). Ils servent uniquement à rédiger la réponse.",
       "Une réponse identique peut être resservie pendant 24 heures à quiconque pose la même question avec les mêmes chiffres : elle est gardée au plus 48 heures, sans lien avec votre identité.",
-      "Le site compte les questions posées par jour (empreinte pseudonyme, voir « Protection contre les abus ») pour appliquer les limites gratuites.",
+      "Le site compte les questions posées par semaine (par jour avec Premium) (empreinte pseudonyme, voir « Protection contre les abus ») pour appliquer les limites gratuites.",
       "Connecteur : si vous branchez Claude, ChatGPT ou un autre assistant sur ENKLAIR, c'est cet assistant qui lit les données publiques du site. Votre adresse personnelle de connecteur sert seulement à compter vos appels du jour ; le connecteur ne donne accès ni à votre compte ni à votre portefeuille."
      ]
     },
