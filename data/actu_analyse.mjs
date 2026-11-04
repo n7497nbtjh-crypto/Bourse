@@ -168,12 +168,15 @@ function lecture(c, x, annual) {
   }
   if (x.net && x.net.g != null && x.ca && x.ca.g != null) {
     if (x.net.v < 0) L.push("L'entreprise est en perte sur la période.");
+    else if (x.net.g < -0.03 && x.ca.g >= -0.03) L.push(`Le bénéfice recule (${pctS(x.net.g)}) alors que les ventes ${x.ca.g > 0.03 ? "progressent" : "tiennent"} : les coûts pèsent davantage, ou un élément exceptionnel joue.`); // 5/11 : « progresse moins vite… (−20 %) » était un contresens
+    else if (x.net.g < -0.03) L.push(`Le bénéfice recule aussi (${pctS(x.net.g)}).`);
     else if (x.net.g > x.ca.g + 0.05) L.push(`Le bénéfice progresse plus vite que les ventes (${pctS(x.net.g)}) : chaque vente rapporte davantage.`);
     else if (x.net.g < x.ca.g - 0.05) L.push(`Le bénéfice progresse moins vite que les ventes (${pctS(x.net.g)}) : les coûts pèsent davantage, ou un élément exceptionnel joue.`);
   } else if (x.net && x.net.v < 0) L.push("L'entreprise est en perte sur la période.");
+  else if (x.net && x.net.g != null) L.push(x.net.g > 0.03 ? `Le bénéfice progresse (${pctS(x.net.g)}) par rapport à la même période l'an dernier.` : x.net.g < -0.03 ? `Le bénéfice recule (${pctS(x.net.g)}) par rapport à la même période l'an dernier.` : `Le bénéfice est stable (${pctS(x.net.g)}) sur un an.`); // 5/11 : bénéfice seul publié (RaySearch) : une phrase plutôt que rien
   if (x.div && annual && annual.dps) { const d = x.div.v / annual.dps - 1; if (Math.abs(d) > 0.01 && x.div.q !== "trimestre") L.push(d > 0 ? `Le dividende annoncé est en hausse par rapport au dernier versé.` : `Le dividende annoncé est en baisse par rapport au dernier versé.`); }
   if (x.objectif) L.push(/relève|améliore|rehausse/i.test(x.objectif.s) ? "L'entreprise relève ses objectifs : elle s'attend à mieux que prévu." : /abaisse|révise à la baisse|réduit/i.test(x.objectif.s) ? "L'entreprise abaisse ses objectifs : elle s'attend à moins bien que prévu." : /confirme|maintient|réitère/i.test(x.objectif.s) ? "L'entreprise confirme ses objectifs pour l'année." : "");
-  if (x.rachat) L.push(`L'entreprise annonce des rachats d'actions (${money(x.rachat.v)}) : en annulant des actions, elle augmente la part de chaque actionnaire restant.`);
+  if (x.rachat) L.push(`L'entreprise annonce des rachats d'actions (${money(x.rachat.v)}) : si les actions rachetées sont annulées, la part de chaque actionnaire restant augmente.`);
   return L.filter(Boolean);
 }
 
