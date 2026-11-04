@@ -1478,3 +1478,26 @@ html #app .iahero{max-width:none}
 .dec-v2 .dec-ev{margin:0 0 12px;padding:0;list-style:none}.dec-v2 .dec-ev li{font:500 15px Inter;padding:6px 0;border-bottom:1px solid #eee}
 @media(max-width:800px){.dec-v2 .dec-3,.dec-v2 .dec-cpt{grid-template-columns:1fr}.dec-v2 .dec-qui{flex-direction:column}}
 .ek.pf4 .pf4-dl{grid-template-columns:repeat(auto-fill,minmax(220px,300px));justify-content:start}
+.dec-v2 .dec-id{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:0 0 14px}
+.dec-v2 .dec-id>div{background:#FFE14D;border:2px solid #111;border-radius:14px;padding:9px 12px}.dec-v2 .dec-id small{display:block;font:700 11.5px Inter;color:#333}.dec-v2 .dec-id b{font:800 17px Inter}
+.dec-v2 .dec-qui>div p{margin:0 0 8px;font:500 16.5px/1.6 Inter;max-width:780px}
+.dec-v2 .dec-liens{display:flex;gap:18px;flex-wrap:wrap}.dec-v2 .dec-liens a{font:800 14px Inter;color:#111;border-bottom:3px solid #FFE14D;text-decoration:none}
+.dec-v2 .dec-ax{display:grid;gap:10px}
+.dec-v2 .dec-prt{font:800 14px Inter;margin:14px 0 6px}
+.dec-v2 .dec-axd>span{display:block;font:800 12.5px Inter;color:#555;margin:0 0 4px;text-transform:none}.dec-v2 .dec-axd>span::first-letter{text-transform:uppercase}
+/* Portefeuille : opérations repérables, tuiles du tableau de bord (4/11) */
+.ek.pf4 .pf4-op{display:inline-flex;align-items:center;gap:4px;font:800 12.5px Inter;border-radius:999px;padding:3px 10px;border:1.5px solid var(--ek-ink)}
+.ek.pf4 .pf4-op-a{background:#DDF5EA;color:#0A6B43}.ek.pf4 .pf4-op-v{background:#FDE3DD;color:#B0281A}.ek.pf4 .pf4-op-d{background:#FFF1B8;color:#6B5200}.ek.pf4 .pf4-op-o{background:#F1F1EE}
+.ek.pf4 .pf3ot tr.pf4-tr-v td{background:#FFF8F6}.ek.pf4 .pf3ot tr.pf4-tr-d td{background:#FFFCEB}
+.ek.pf4 #pf3dash>details.pf3pl>summary{position:relative;gap:6px}
+.ek.pf4 #pf3dash>details.pf3pl:not([open])>summary{min-height:180px;padding:16px 18px 16px}
+.ek.pf4 .pf4-ti{width:42px;height:42px;border-radius:12px;border:2px solid var(--ek-ink);background:var(--pf4c,#FFE14D);display:grid;place-items:center;flex:none}
+.ek.pf4 .pf4-ti svg{width:22px;height:22px}
+.ek.pf4 #pf3dash>details.pf3pl[open] .pf4-ti{width:36px;height:36px}
+.ek.pf4 .pf4-td{font:500 13.5px/1.45 Inter;color:#444}
+.ek.pf4 #pf3dash>details.pf3pl[open] .pf4-td{display:none}
+.ek.pf4 #pf3dash>details.pf3pl:not([open]){background:linear-gradient(180deg,color-mix(in srgb,var(--pf4c,#FFE14D) 22%,#fff) 0,#fff 70%)}
+.ek.pf4 #pf3dash>details.pf3pl .pf3plk{background:var(--pf4c,#FFE14D)}
+.ek.pf4 #pf3dash>details.pf4v>summary .pf4v-b{font:800 12px Inter;background:#111;color:#fff;border-radius:999px;padding:3px 10px}
+.ek.pf4 #pf3dash>details.pf4v>summary>.pf4-ti,.ek.pf4 #pf3dash>details.pf4v>summary>.pf4-td{display:grid}.ek.pf4 #pf3dash>details.pf4v>summary>.pf4-td{display:block}
+html body .ek.pf4 #pf3dash>details.pf4v>summary>.pf4-ti{display:grid}html body .ek.pf4 #pf3dash>details.pf4v>summary>.pf4-td{display:block}

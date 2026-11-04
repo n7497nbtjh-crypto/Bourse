@@ -64,10 +64,18 @@ async function decHTML(sem) {
   const x = f4Ctx(s, c), v = valo(s) || {}, wd = typeof ficheWd === "function" ? ficheWd(s.id) : null, an = +TODAY.slice(0, 4);
   const fi = (typeof FICHES !== "undefined" && FICHES && FICHES[s.id]) || null;
   let rang = null; try { const sec = R.companies.filter(z => z.sector === s.sector && f4Valide(z)).sort((p, q) => (q.ca || 0) - (p.ca || 0)); const k = sec.findIndex(z => z.id === s.id); if (k >= 0 && sec.length > 5) rang = [k + 1, sec.length]; } catch (e) { }
+  // 4/11 (Romain : « plus de storytelling : salariés, date de création, PDG, aller dans le détail ») : faits Wikidata racontés
+  const L2 = a => a && a.length ? (a.length === 1 ? a[0] : a.slice(0, -1).join(", ") + " et " + a[a.length - 1]) : "";
   const qui = [`${esc(s.name)} : ${esc(String(s.desc).replace(/\.$/, "").replace(/^./, m => m.toLowerCase()))}.`,
-    wd && wd.fonde ? `Créée en ${wd.fonde}, il y a ${an - wd.fonde} ans${wd.siege ? `, elle a son siège à ${esc(wd.siege)}${wd.pays ? ` (${esc(wd.pays)})` : ""}` : ""}.` : wd && wd.siege ? `Son siège est à ${esc(wd.siege)}.` : "",
-    wd && wd.effectif && wd.effectif[0] ? `Elle emploie environ ${F0.format(wd.effectif[0])} personnes${wd.effectif[1] ? ` (chiffre de ${wd.effectif[1]})` : ""}.` : "",
-    v.capE ? `Elle vaut ${f4Md(v.capE / 1e6, "EUR")} en Bourse : c'est une ${decTaille(v.capE)}${rang ? `, ${rang[0]}${rang[0] > 1 ? "e" : "re"} sur ${rang[1]} de son secteur (${esc(secName(s).toLowerCase())}) par les ventes` : ""}.` : ""].filter(Boolean).join(" ");
+    wd && wd.fonde ? `L'histoire commence en ${wd.fonde}, il y a ${an - wd.fonde} ans${wd.fondateurs && wd.fondateurs.length ? `, quand ${esc(L2(wd.fondateurs.slice(0, 3)))} ${wd.fondateurs.length > 1 ? "la fondent" : "la fonde"}` : ""}.` : "",
+    wd && wd.siege ? `Son siège est à ${esc(wd.siege)}${wd.pays ? ` (${esc(wd.pays)})` : ""}.` : "",
+    wd && wd.pdg && wd.pdg.length ? `Elle est dirigée aujourd'hui par ${esc(L2(wd.pdg.slice(0, 2)))}${wd.president && wd.president.length && wd.president[0] !== wd.pdg[0] ? ` ; ${esc(L2(wd.president.slice(0, 1)))} préside son conseil` : ""}.` : wd && wd.president && wd.president.length ? `${esc(L2(wd.president.slice(0, 1)))} préside son conseil.` : "",
+    wd && wd.effectif && wd.effectif[0] ? `Environ ${F0.format(wd.effectif[0])} personnes y travaillent${wd.effectif[1] ? ` (chiffre de ${wd.effectif[1]})` : ""}${s.ca > 0 && wd.effectif[0] > 0 ? `, soit environ ${F0.format(Math.round(s.ca * 1e6 / wd.effectif[0] / 1000) * 1000)} ${F4_SYM(s.currency).trim()} de ventes par personne et par an` : ""}.` : "",
+    wd && wd.produits && wd.produits.length ? `Parmi ce qu'elle vend : ${esc(L2(wd.produits.slice(0, 4)))}.` : wd && wd.marques && wd.marques.length ? `Ses marques : ${esc(L2(wd.marques.slice(0, 4)))}.` : "",
+    wd && wd.nfiliales ? `Elle contrôle ${F0.format(wd.nfiliales)} filiale${wd.nfiliales > 1 ? "s" : ""}${wd.filiales && wd.filiales.length ? `, dont ${esc(L2(wd.filiales.slice(0, 3)))}` : ""}.` : "",
+    v.capE ? `En Bourse, elle vaut ${f4Md(v.capE / 1e6, "EUR")} : c'est une ${decTaille(v.capE)}${rang ? `, ${rang[0]}${rang[0] > 1 ? "e" : "re"} sur ${rang[1]} de son secteur (${esc(secName(s).toLowerCase())}) par les ventes` : ""}.` : ""].filter(Boolean);
+  const faitsId = [wd && wd.fonde ? ["Création", String(wd.fonde)] : null, wd && wd.pdg && wd.pdg.length ? ["Direction", wd.pdg[0]] : null, wd && wd.effectif && wd.effectif[0] ? ["Salariés", F0.format(wd.effectif[0])] : null, wd && wd.siege ? ["Siège", wd.siege] : null, v.capE ? ["Valeur en Bourse", f4Md(v.capE / 1e6, "EUR")] : null].filter(Boolean);
+  const liens = [wd && wd.site ? `<a href="${esc(wd.site)}" target="_blank" rel="noopener">Son site officiel ↗</a>` : "", wd && wd.wiki && /^fr:/.test(wd.wiki) ? `<a href="https://fr.wikipedia.org/wiki/${esc(encodeURIComponent(wd.wiki.slice(3).replace(/ /g, "_")))}" target="_blank" rel="noopener">Son histoire sur Wikipédia ↗</a>` : ""].filter(Boolean).join("");
   const fait = fi ? [["Ce qu'elle fait", fi.fait], ["Comment elle gagne de l'argent", fi.argent], ["Ce dont elle dépend", fi.depend]].filter(([, t]) => t) : [];
   const { out, vig } = decRecit(s, c, x);
   let ventes = ""; try { ventes = f4E1(x).visuel || ""; } catch (e) { }
@@ -76,10 +84,11 @@ async function decHTML(sem) {
   const ev = (typeof eventsOf === "function" ? eventsOf(s.id) : []).filter(e => e.date >= TODAY).slice(0, 4);
   let k = 0; const sec = (t, h) => `<section class="dec-s"><h3><i>${++k}</i>${t}</h3>${h}</section>`;
   return `<div class="ek dec-in dec-v2">
-    ${sec("Qui est-elle ?", `<div class="dec-qui">${f4Logo(s, null)}<p>${qui}</p></div>`)}
+    ${sec("Qui est-elle ?", `${faitsId.length ? `<div class="dec-id">${faitsId.map(([k, t]) => `<div><small>${esc(k)}</small><b>${esc(t)}</b></div>`).join("")}</div>` : ""}<div class="dec-qui">${f4Logo(s, null)}<div>${[qui.slice(0, 4), qui.slice(4)].filter(a => a.length).map(a => `<p>${a.join(" ")}</p>`).join("")}${liens ? `<p class="dec-liens">${liens}</p>` : ""}</div></div>`)}
     ${fait.length ? sec("Ce qu'elle fait", `<div class="dec-3">${fait.map(([t, d], j) => `<div class="c${j}"><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join("")}</div>`) : ""}
     ${out.length ? sec("Ses comptes, racontés", `<div class="dec-cpt"><ul class="dec-l">${out.map(t => `<li>${t}</li>`).join("")}</ul>${ventes ? `<div class="dec-vis">${ventes}</div>` : ""}</div>`) : ""}
     ${verdict || chaine ? sec("Face à ses rivales", `${verdict}${chaine}${riv.length ? `<p class="dec-riv">Comparée à : ${riv.map(r => `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`).join(", ")}.</p>` : `<p class="dec-riv">Comparée aux entreprises de son secteur.</p>`}`) : ""}
+    ${sec("Son actualité", `<div class="dec-actu" data-dec-actu="${esc(s.id)}"><p class="dec-riv">Chargement des dernières annonces…</p></div>`)}
     ${vig.length ? sec("Ce qu'il faut surveiller", `<ul class="dec-vig">${vig.map(t => `<li>${t}</li>`).join("")}</ul>`) : ""}
     ${sec("La suite", `${ev.length ? `<ul class="dec-ev">${ev.map(e => `<li><b>${new Date(e.date + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}</b> ${esc(e.label || e.type || "")}</li>`).join("")}</ul>` : `<p class="dec-riv">Aucune date annoncée pour le moment.</p>`}
       <div class="dec-act"><a class="ek-btn dk" href="/entreprise/${esc(s.id)}">Toute la fiche de ${esc(s.name)} →</a>${riv.length >= 2 ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...riv.slice(0, 2).map(r => r.id)].join(","))}">La comparer à ses rivales</a>` : ""}</div>`)}
@@ -115,11 +124,23 @@ async function pageDecouverte() {
   const sem = decSemaine(), s = decChoix(sem), h = s ? await decHTML(sem).catch(() => "") : "";
   if (location.pathname !== "/decouverte") return;
   const avant = [1, 2, 3, 4, 5, 6].map(k => decChoix(decSemaine(Date.now() - k * 7 * 864e5))).filter(Boolean);
+  setTimeout(() => decActu(), 0);
   app.innerHTML = `<div class="ek ek-page dc4"><section class="ek-hero dc4-hero"><span class="mc-stk">La découverte de la semaine</span>
       <h1 class="ag4-t">${s ? esc(s.name) + "." : "Une entreprise à connaître."}</h1>
       <p class="mc-sub">Chaque semaine, une entreprise moins connue, présentée en détail : ce qu'elle fait, ses comptes face à ses rivales, ce qui l'attend. Pour apprendre à lire une entreprise, pas pour l'acheter.</p></section>
     ${h ? `<section class="ek-sec dc4-pres">${h}</section>` : `<p class="ek-note">La découverte de la semaine n'a pas pu être préparée pour le moment.</p>`}
     ${avant.length ? `<section class="ek-sec" id="avant"><span class="ek-stk2 b">Les semaines précédentes</span><h2>Déjà présentées.</h2><div class="dc4-av">${avant.map(c => `<a href="/entreprise/${esc(c.id)}">${f4Logo(c, null, true)}<span><b>${esc(c.name)}</b><small>${esc(secName(c))} · ${esc(regName(c) || "")}</small></span></a>`).join("")}</div></section>` : ""}</div>`;
+}
+// Les annonces officielles (90 jours) et les articles de presse qui la concernent, avec leur lien
+function decActu() {
+  const el = document.querySelector("[data-dec-actu]"); if (!el || typeof actuCo !== "function") { if (el) el.innerHTML = `<p class="dec-riv">Aucune annonce repérée.</p>`; return; }
+  const id = el.dataset.decActu;
+  actuCo(id).then(j => {
+    const o = (j.o || []).slice(0, 4), pr = (j.p || []).slice(0, 4);
+    const off = o.length ? `<div class="dec-ax">${o.map(it => `<div class="dec-axd">${it.d ? `<span>${esc(new Date(String(it.d).slice(0, 10) + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }))}</span>` : ""}` + (typeof axCarte === "function" ? axCarte(it) : `<a href="${esc(it.u || it.url || "#")}" target="_blank" rel="noopener">${esc(it.t || it.title || "")}</a>`) + "</div>").join("")}</div>` : "";
+    const pre = pr.length && typeof presseHTML === "function" ? `<div class="dec-pr"><p class="dec-prt">Dans la presse</p>${presseHTML(pr, 4)}</div>` : "";
+    el.innerHTML = off || pre ? off + pre + `<p class="dec-liens"><a href="/entreprise/${esc(id)}/actualite">Toute son actualité →</a></p>` : `<p class="dec-riv">Aucune annonce officielle ni article repéré ces 90 derniers jours.</p>`;
+  }).catch(() => { el.innerHTML = `<p class="dec-riv">L'actualité n'est pas disponible pour le moment.</p>`; });
 }
 if (typeof ROUTES_EXTRA !== "undefined") {
   ROUTES_EXTRA.unshift([/^\/decouverte\/?$/, () => pageDecouverte()]);

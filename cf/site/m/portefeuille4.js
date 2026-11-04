@@ -59,6 +59,37 @@ function pf4FormCourt() {
   if (hint) pi.appendChild(hint);
   const pru = $("#pf3nprev", n); if (pru) pru.insertAdjacentElement("beforebegin", plus); else n.appendChild(plus);
 }
+/* 4/11 (Romain) : achat, vente et dividende repérables d'un coup d'œil dans les opérations d'une ligne */
+if (typeof pf3DetBind === "function") { const PF4_det0 = pf3DetBind; pf3DetBind = function () { const r = PF4_det0.apply(this, arguments); try { pf4Ops(); } catch (e) { } return r; }; }
+function pf4Ops() {
+  $$(".ek.pf4 .pf3ot tbody tr").forEach(tr => { const td = tr.children[1]; if (!td || td.dataset.pf4) return; td.dataset.pf4 = "1";
+    const t = td.textContent.trim(), k = /^Achat/.test(t) ? "a" : /^Vente/.test(t) ? "v" : /^Dividende/.test(t) ? "d" : "o";
+    td.innerHTML = `<span class="pf4-op pf4-op-${k}">${k === "a" ? "▲" : k === "v" ? "▼" : k === "d" ? "€" : "•"} ${esc(t)}</span>`; tr.classList.add("pf4-tr-" + k); });
+}
+/* 4/11 (Romain : « revois le visuel de ces encadrés et leur contenu ») : chaque tuile du tableau de bord dit ce qu'elle contient,
+   avec une icône et une couleur ; le chiffre clé reste en pastille. */
+const PF4_TUILES = {
+  "pf3-possede": ["#FFE14D", "M4 7h16v13H4zM9 7V4h6v3", "Les entreprises que vous détenez à travers vos ETF, réunies avec vos actions."],
+  "pf3-repartition": ["#BFE9FF", "M12 3v9l7 5M12 12L5 17M12 3a9 9 0 1 0 .01 0", "Pays, secteurs, devises et comptes : où est vraiment votre argent."],
+  "pf3-diversification": ["#C9F2DD", "M4 20V10M10 20V4M16 20v-7M22 20H2", "Une note sur 100 : concentration, nombre de lignes, pays, secteurs."],
+  "pf3-frais": ["#FFD7C9", "M12 3v18M17 7H9.5a3 3 0 0 0 0 6h5a3 3 0 0 1 0 6H6", "Frais des ETF et courtage chaque année, et ce qu'ils coûtent sur dix ans."],
+  "pf3-pea": ["#E5DCFF", "M5 4h14v16H5zM5 9h14M9 4v5", "La date des cinq ans de votre PEA et ce qu'il vous reste à verser."],
+  "pf3-dividendes": ["#FFE14D", "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9 10h6M9 14h6", "Ce que vos lignes devraient vous verser sur douze mois, mois par mois."],
+  "pf3-risque": ["#FFD0C4", "M12 3l9 17H3zM12 10v4M12 17h.01", "Ce qu'une baisse de 10, 20 ou 30 % coûterait, en euros."],
+  "pf3-alertes": ["#FFF1B8", "M12 4a6 6 0 0 1 6 6v4l2 3H4l2-3v-4a6 6 0 0 1 6-6zM10 20h4", "Ce qui mérite un coup d'œil : une ligne trop lourde, un compte mal choisi…"],
+  "pf3-analyse": ["#DDE6FF", "M12 3l2 5 5 2-5 2-2 5-2-5-5-2 5-2z", "Votre portefeuille résumé en quelques phrases, calculées sur vos chiffres."],
+  "pf3-dates": ["#C9F2DD", "M4 5h16v15H4zM4 9h16M8 3v4M16 3v4", "Résultats, dividendes et assemblées de vos entreprises à venir."],
+  "pf3-partage": ["#EFEFEA", "M15 5l5 5-5 5M20 10H9a5 5 0 0 0-5 5v4", "Un lien vers la répartition de votre portefeuille, sans montants ni nom."]
+};
+function pf4Tuiles() {
+  $$(".ek.pf4 #pf3dash>details.pf3pl").forEach(d => {
+    const T = PF4_TUILES[d.id], s0 = d.querySelector(":scope>summary"); if (!T || !s0 || s0.querySelector(".pf4-ti")) return;
+    d.style.setProperty("--pf4c", T[0]);
+    s0.insertAdjacentHTML("afterbegin", `<span class="pf4-ti" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="${T[1]}"/></svg></span>`);
+    const h = s0.querySelector("h2"); if (h) h.insertAdjacentHTML("afterend", `<span class="pf4-td">${esc(T[2])}</span>`);
+  });
+}
+if (typeof pf3Dash === "function") { const PF4_dash1 = pf3Dash; pf3Dash = async function () { const r = await PF4_dash1.apply(this, arguments); try { pf4Tuiles(); } catch (e) { } return r; }; }
 window.pagePortefeuille = async function () {
   const r = await PF4_page0.apply(this, arguments);
   const el = $("#pf3"); if (el) el.classList.add("ek", "ek-page", "pf4");
