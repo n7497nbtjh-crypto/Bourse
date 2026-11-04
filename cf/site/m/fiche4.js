@@ -119,7 +119,8 @@ function f4Tete(s, c, x) {
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
     <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${esc(x.P.L.map(r => r.name).join(", "))})` : ""}.` : ""}</span>
-      <div class="ek-acts">${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn dk favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
+      <div class="ek-acts"><button type="button" class="ek-btn dk" data-f4-alerte="c:${esc(s.id)}">🔔 Être prévenu</button>${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
+    <div class="f4al" id="f4al" hidden></div>
   </section>`;
 }
 
@@ -497,7 +498,25 @@ document.addEventListener("submit", e => {
   const q = (f.q.value || "").trim(); if (!q || typeof orcIaOpen !== "function") return;
   orcIaOpen(); if (typeof orcIaAsk === "function") orcIaAsk(q); f.q.value = "";
 });
+/* 4/11 (Premium) : « Être prévenu ». Ajoute la valeur aux favoris (ce que suit le robot des alertes) et dit ce qui arrivera :
+   sans espace, il faut en créer un ; sans Premium, les alertes portent sur 3 valeurs (les dernières suivies, ALERTES_GRATUIT de cf/src/espace.mjs). */
+async function f4Alerte(k, btn) {
+  const box = document.getElementById("f4al"); if (!box) return;
+  if (!isFav(k)) { const a = favs().slice(); a.unshift(k); setFavs(a); $$(`[data-fav="${k}"]`).forEach(x => { x.classList.add("on"); x.setAttribute("aria-pressed", "true"); x.textContent = favLbl(k); });
+    try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=suivre"); } catch (e) { } }
+  box.hidden = false; box.innerHTML = `<p>Un instant…</p>`;
+  const m = await moi(), nom = (RBY[k.slice(2)] || {}).name || "cette entreprise";
+  const suivies = [...new Set([...favs(), ...(typeof pf2Load === "function" ? pf2Load().l.map(l => l.k).filter(Boolean) : [])])], max = m.alertes_max || 3, rang = suivies.indexOf(k);
+  const quoi = `ses résultats publiés (avec les chiffres clés), la veille de ses rendez-vous et ses fortes variations du jour`;
+  const plus = `<p class="f4al-p">Avec <a href="/premium#alertes">Premium</a> : toutes vos valeurs, le dernier jour pour acheter et toucher un dividende annoncé, et le cours au plus haut ou au plus bas depuis un an.</p>`;
+  if (m.connecte && (m.premium || rang < max)) btn.textContent = "🔔 Vous serez prévenu";
+  if (!m.connecte) box.innerHTML = `<p><b>${esc(nom)} est dans vos favoris.</b> Pour être prévenu de ${quoi}, il faut un espace (gratuit, une adresse e-mail suffit).</p><div class="f4al-a"><a class="ek-btn dk" href="/espace">Créer mon espace</a></div>${plus}`;
+  else if (m.premium) box.innerHTML = `<p><b>C'est noté.</b> Vous serez prévenu dans Mon espace de ${quoi}, des dividendes à ne pas manquer et des plus hauts ou plus bas sur un an.</p>`;
+  else if (rang >= max) box.innerHTML = `<p><b>${esc(nom)} est dans vos favoris, mais sans alerte.</b> Sans Premium, les alertes portent sur ${max} valeurs : vous en suivez ${suivies.length}.</p><div class="f4al-a"><a class="ek-btn dk" href="/premium#alertes">Être prévenu pour les ${suivies.length} avec Premium</a></div>`;
+  else box.innerHTML = `<p><b>C'est noté.</b> Vous serez prévenu dans Mon espace de ${quoi}. Alertes utilisées : ${Math.min(suivies.length, max)} sur ${max}.</p>${plus}`;
+}
 document.addEventListener("click", e => {
+  const al = e.target.closest && e.target.closest("[data-f4-alerte]"); if (al) { f4Alerte(al.dataset.f4Alerte, al); return; }
   if (e.target.closest && e.target.closest("[data-f4-csv]")) { if (window.F4X) f4Csv(window.F4X); return; }
   const t = e.target.closest && e.target.closest("[data-f4-tv],[data-f4-ia],[data-f4-q]"); if (!t) return;
   const m = location.pathname.match(/^\/entreprise\/([^/]+)/), s = m && RBY[m[1]];

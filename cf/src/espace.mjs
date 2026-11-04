@@ -146,7 +146,7 @@ const jourSemaine = ymd => new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 dimanc
 /* ---------- Données du site (mêmes sources que les pages) ---------- */
 async function siteData(request, env) {
   const get = async p => { try { const r = await env.ASSETS.fetch(new Request(new URL(p, request.url))); return r.ok === false ? null : await r.json(); } catch (e) { return null; } };
-  const [uni, etf, ana, ag, agAuto, sem, cs, fx] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json")]);
+  const [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]);
   let px = {}; try { px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {}; } catch (e) { }
   const names = {}, meta = {}, isin = {}, etfm = {};
   (uni && uni.companies || []).forEach(c => { names["c:" + c.id] = c.name; meta["c:" + c.id] = { region: c.region, sector: c.sector }; if (c.isin) isin["c:" + c.id] = c.isin; });
@@ -154,6 +154,7 @@ async function siteData(request, env) {
   const actuCache = new Map();
   return { names, meta, isin, etf: etfm, px, fx: (fx && fx.eur) || { EUR: 1 }, cs: cs && Array.isArray(cs.dates) ? cs : null, sem: sem && sem.items ? sem : null,
     ana: (ana && ana.items) || {}, ev: [...((ag && ag.events) || []), ...((agAuto && agAuto.events) || [])],
+    div: [...((dvUs && dvUs.events) || []), ...((dvEu && dvEu.events) || [])], // 4/11 : calendriers des dividendes (Nasdaq, annonces européennes), alertes Premium
     // Articles par entreprise publiés par la collecte d'actualités (cf/site/data/actu/c/<id>.json), lus à la demande
     actuDe: async ids => { const out = {}; for (const id of ids.slice(0, 20)) { if (!actuCache.has(id)) actuCache.set(id, get("/data/actu/c/" + id + ".json"));
       const j = await actuCache.get(id); if (j && (Array.isArray(j) || Array.isArray(j.o) || Array.isArray(j.p))) out["c:" + id] = j; } return out; } };
@@ -170,6 +171,13 @@ function clesPortefeuille(pf, names) {
   walk(pf, 0); return [...out];
 }
 const clesDe = (row, names) => [...new Set([...(parse(row && row.favoris, []) || []).filter(k => typeof k === "string" && KEY.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260);
+// 4/11 (Premium) : alertes sur 3 valeurs sans Premium (favoris d'abord, dans l'ordre où ils ont été ajoutés, puis portefeuille) ; sans limite avec Premium,
+// qui ajoute deux alertes : dernier jour pour toucher un dividende, plus haut ou plus bas sur un an.
+export const ALERTES_GRATUIT = 3;
+const ouvreApres = (ymd, n) => { let t = Date.parse(ymd + "T12:00:00Z"); while (n > 0) { t += JOUR; const w = new Date(t).getUTCDay(); if (w && w < 6) n--; } return new Date(t).toISOString().slice(0, 10); };
+const ouvreAvant = (ymd, n) => { let t = Date.parse(ymd + "T12:00:00Z"); while (n > 0) { t -= JOUR; const w = new Date(t).getUTCDay(); if (w && w < 6) n--; } return new Date(t).toISOString().slice(0, 10); };
+// Dernier jour pour acheter et toucher le dividende : veille ouvrée du détachement ; deux jours de Bourse avant la date d'enregistrement (J+2, hors États-Unis).
+export const dernierJourDiv = e => /enregistrement/i.test(e.label || "") ? ouvreAvant(e.date, 2) : /d[ée]tachement/i.test(e.label || "") ? ouvreAvant(e.date, 1) : null;
 const lienDe = k => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2);
 const r2 = v => Math.round(v * 100) / 100;
 const NF = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
@@ -298,7 +306,7 @@ export async function espace(request, env) {
       env.DB.prepare(`SELECT h, expires FROM sessions WHERE h = ?`).bind(await sha256hex(cookieSession(request))).first()]);
     const p = await premiumDe(env, c.premium, url.origin);
     const dernier = await env.DB.prepare(`SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1`).bind(c.id).first();
-    const r = json({ connecte: true, email: c.email, premium: !!p, plan: p ? p.plan : null, premium_jusqu_au: p ? p.until : null,
+    const r = json({ connecte: true, email: c.email, premium: !!p, plan: p ? p.plan : null, premium_jusqu_au: p ? p.until : null, alertes_max: p ? null : ALERTES_GRATUIT,
       donnees: { favoris: parse(d && d.favoris, []) || [], portefeuille: parse(d && d.portefeuille, null), profil: parse(d && d.profil, null), maj: d ? d.updated : null },
       nonlus: (nl && nl.n) || 0, teaser: !!c.teaser, mail: mailReady(env), cree: c.created,
       bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null, robot: await robotEtat(env) });
@@ -466,13 +474,16 @@ async function tache(request, env, url) {
   const W = modeBilan ? (parJour ? `(c.last_tache < ? OR (c.last_semaine IS NOT ? AND ${JOUR_SQL} = ?))` : `(c.last_tache < ? OR c.last_semaine IS NOT ?)`) : `c.last_tache < ?`;
   const B = modeBilan ? (parJour ? [cutoff, cible, wd] : [cutoff, cible]) : [cutoff];
   const FROM = `FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W}`;
-  const rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [];
+  const rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.premium, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [];
   let notifs = 0, mails = 0, bilans = 0;
   if (rows.length) {
     const d = await siteData(request, env), demain = jourParis(now + JOUR), ouvre = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, "");
     let cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
+    const premOk = new Set(((await env.DB.prepare(`SELECT token FROM abonnes WHERE until > ?`).bind(now).all().catch(() => ({ results: [] }))).results || []).map(x => x.token));
+    const prochainOuvre = ouvreApres(auj, 1);
     for (const r of rows) {
-      const keys = clesDe(r, d.names).filter(k => d.names[k]), ids = new Set(keys.filter(k => k.startsWith("c:")).map(k => k.slice(2)));
+      const prem = !!(r.premium && premOk.has(r.premium));
+      const keys = clesDe(r, d.names).filter(k => d.names[k]).slice(0, prem ? 260 : ALERTES_GRATUIT), ids = new Set(keys.filter(k => k.startsWith("c:")).map(k => k.slice(2)));
       if (keys.length && r.last_tache < cutoff) {
         const depuis = jourParis(Math.max(r.last_tache || 0, now - 2 * JOUR));
         for (const [u, a] of Object.entries(d.ana)) if (a && ids.has(a.id) && a.date >= depuis && a.chiffres && a.chiffres.length)
@@ -481,6 +492,14 @@ async function tache(request, env, url) {
           notifs += await notifier(env, r.id, "mouvement", `${d.names[k]} : ${sgnP(p.chg)} aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualité.`, lienDe(k), auj); }
         for (const e of d.ev) if (e && ids.has(e.id) && e.date === demain)
           notifs += await notifier(env, r.id, /r[ée]sultat/i.test(e.type || e.label || "") ? "resultats" : "agenda", `${d.names["c:" + e.id]} : demain, ${e.label || e.type}.`, "/entreprise/" + e.id + "/agenda", e.date);
+        if (prem) {
+          for (const e of d.div) if (e && ids.has(e.id) && dernierJourDiv(e) === prochainOuvre) {
+            notifs += await notifier(env, r.id, "dividende", `${d.names["c:" + e.id]} : ${prochainOuvre === demain ? "demain" : "le prochain jour de Bourse"}, dernier jour pour acheter l'action et toucher le dividende annoncé. ${e.label} le ${e.date.split("-").reverse().join("/")}.`, "/entreprise/" + e.id + "/agenda", e.date, "div");
+          }
+          if (ouvre) for (const k of keys) { const p = d.px[k]; if (!p || !(p.p > 0) || p.chg == null) continue;
+            if (p.h52 > 0 && p.chg > 0 && p.p >= p.h52 * 0.998) notifs += await notifier(env, r.id, "record", `${d.names[k]} : cours au plus haut depuis un an (${sgnP(p.chg)} aujourd'hui).`, lienDe(k), auj, "h52");
+            else if (p.l52 > 0 && p.chg < 0 && p.p <= p.l52 * 1.002) notifs += await notifier(env, r.id, "record", `${d.names[k]} : cours au plus bas depuis un an (${sgnP(p.chg)} aujourd'hui).`, lienDe(k), auj, "l52"); }
+        }
       }
       const RG = rapportDe(r), sonJour = !parJour || RG.jour === wd, aRapport = keys.length || RG.secteurs.length;
       if (modeBilan && sonJour && r.last_semaine !== cible && aRapport) {

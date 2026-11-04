@@ -28,3 +28,25 @@ window.pagePortefeuille = async function () {
   const el = $("#pf3"); if (el) el.classList.add("ek", "ek-page", "pf4");
   return r;
 };
+
+/* 4/11 (Premium) : la radiographie détaillée est réservée à Premium. Sans Premium, chaque tuile garde son titre et son chiffre clé
+   (« un vrai chiffre en clair ») ; le détail de quatre tuiles est remplacé par ce qu'il contient et le lien vers Premium.
+   Le portefeuille d'exemple reste entièrement ouvert, pour montrer ce que l'on obtient. */
+const PF4_PREM = {
+  "pf3-possede": "Ce que vous possédez vraiment à travers vos ETF : les entreprises qui reviennent dans plusieurs fonds, réunies, et votre vraie part dans chacune.",
+  "pf3-repartition": "Vos expositions par pays, secteur, devise, type et compte, ligne par ligne et à travers le contenu de vos ETF.",
+  "pf3-risque": "Ce qu'une baisse de 10, 20 ou 30 % coûterait en euros, ligne par ligne, et les lignes qui pèsent le plus dans le risque.",
+  "pf3-dividendes": "Le calendrier de vos dividendes des 12 prochains mois : date, montant attendu par ligne et total par mois."
+};
+function pf4Verrou(P) {
+  if ((typeof isPrem === "function" && isPrem()) || (P && P.dem)) return;
+  for (const [id, txt] of Object.entries(PF4_PREM)) {
+    const d = document.getElementById(id); if (!d || d.dataset.pf4v) continue;
+    d.dataset.pf4v = "1"; d.classList.add("pf4v");
+    const s = d.querySelector(":scope>summary"); if (!s) continue;
+    [...d.children].forEach(c => { if (c !== s) c.remove(); });
+    s.insertAdjacentHTML("beforeend", `<span class="pf4v-b">🔒 Détail avec Premium</span>`);
+    d.insertAdjacentHTML("beforeend", `<div class="pf4v-c"><p>${esc(txt)}</p><p class="pf4v-l">Le chiffre ci-dessus est calculé sur votre portefeuille. Le détail fait partie de Premium, avec les alertes sur toutes vos valeurs et les classements complets.</p><a class="ek-btn dk" href="/premium#portefeuille">Voir Premium</a></div>`);
+  }
+}
+if (typeof pf3Dash === "function") { const PF4_dash0 = pf3Dash; pf3Dash = async function (R0, P) { const r = await PF4_dash0.apply(this, arguments); try { pf4Verrou(P); } catch (e) { } return r; }; }

@@ -1261,3 +1261,23 @@ html #app .iahero{max-width:none}
   .ek .an4 .an4-ar small br{display:none}.ek .an4 .an4-ar small b{margin-left:4px}
   .ek .an4 .an4-yl{grid-template-columns:48px 1fr 78px 72px;gap:8px}.ek .an4 .an4-box{padding:16px}.ek .an4 .an4-v{font-size:28px}
 }
+
+/* Fiche v4 : « Être prévenu » (4/11, Premium) */
+.ek .f4al{margin:14px 0 0;border:2px solid var(--ek-ink,#111);border-radius:14px;background:#fff;padding:14px 18px;max-width:760px}
+.ek .f4al p{margin:0 0 8px;font-size:15px;line-height:1.5}
+.ek .f4al p:last-child{margin-bottom:0}
+.ek .f4al .f4al-a{margin:10px 0}
+.ek .f4al .f4al-p{font-size:13.5px;color:#555}
+/* Portefeuille v4 : détail réservé à Premium (4/11) */
+.ek.pf4 #pf3dash>details.pf4v>summary .pf4v-b{font:700 12.5px Inter;background:#fff;color:var(--ek-mut);border:0;padding:0}
+.ek.pf4 .pf4v-c{padding:0 18px 18px}
+.ek.pf4 .pf4v-c p{margin:0 0 8px;font-size:15px;line-height:1.5}
+.ek.pf4 .pf4v-c .pf4v-l{font-size:13.5px;color:var(--ek-mut)}
+/* Premium : trois services (4/11) */
+.ek.pr4 .pr4-sv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.ek.pr4 .pr4-c{border:2px solid var(--ek-ink);border-radius:20px;background:#fff;padding:18px 20px;box-shadow:4px 4px 0 var(--ek-ink);scroll-margin-top:90px}
+.ek.pr4 .pr4-c>b{display:block;font:800 21px/1.2 "Bricolage Grotesque",Inter;margin:10px 0 8px}
+.ek.pr4 .pr4-c p{margin:0 0 8px;font-size:15px;line-height:1.5}
+.ek.pr4 .pr4-c:target{background:var(--ek-yl)}
+@media (max-width:820px){.ek.pr4 .pr4-sv{grid-template-columns:1fr}}
+.ek.pr4 .pr4-c>svg{width:44px;height:44px;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:12px;padding:7px;box-sizing:border-box}

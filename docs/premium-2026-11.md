@@ -1,4 +1,6 @@
-# Premium : proposition du 4/11/2026 (à valider par Romain)
+# Premium : proposition du 4/11/2026
+
+**Décision de Romain (4/11 après-midi)** : pas d'essai, pas de garantie. Premium = les nouveaux services ET les limites levées. Fait le 4/11 : alertes sur 3 valeurs sans Premium (robot `cf/src/espace.mjs`, `ALERTES_GRATUIT`), alertes Premium dividende (`dernierJourDiv`) et plus haut / plus bas sur un an, bouton « Être prévenu » sur la fiche (`f4Alerte`, fiche4.js), détail de quatre blocs du portefeuille réservé (`pf4Verrou`, portefeuille4.js ; l'exemple reste ouvert), page Premium réécrite (trois services, ancres #alertes #portefeuille #donnees, essai masqué).
 
 ## Constat
 - Premium aujourd'hui = des limites levées : portefeuille de 10 lignes, comparer 3 entreprises, 3 questions à l'IA par jour, 20 appels du connecteur, rapport de la semaine court, 5 premières places des classements floutées.
