@@ -7,7 +7,7 @@
 
 function ekEsc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]); }
 function ekMob() { return typeof innerWidth === "number" && innerWidth < 700; }
-function ekFr(x, d) { return x == null || !isFinite(x) ? "–" : Number(x).toLocaleString("fr-FR", { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }); }
+function ekFr(x, d) { if (x == null || !isFinite(x)) return "–"; const t = Number(x).toLocaleString("fr-FR", { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d }); return /^[-−]0([,.]0*)?$/.test(t) ? t.slice(1) : t; } // 4/11 : jamais « -0 »
 var EK_G = "#00A06B", EK_R = "#D92D12";
 function ekTx(x, y, t, o) { o = o || {}; return `<text x="${x}" y="${y}" font-family="Inter" font-size="${o.fs || 12}" font-weight="${o.fw || 600}" fill="${o.c || "#777"}" text-anchor="${o.a || "start"}">${t}</text>`; }
 

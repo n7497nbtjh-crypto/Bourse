@@ -6,7 +6,7 @@ root = os.path.abspath("cf/site")
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 SYN = subprocess.run(["node", "tests/synthese_maquette.mjs"], capture_output=True, text=True, check=True).stdout
 VIDE = subprocess.run(["node", "tests/synthese_maquette.mjs", "vide"], capture_output=True, text=True, check=True).stdout
-STATE = {"prem": False, "vide": False}
+STATE = {"prem": True, "vide": False}  # 4/11 : le rapport de la semaine est réservé à Premium
 COURS = {"c:lvmh": {"s": "EPA:MC", "cur": "EUR", "p": 597, "chg": -0.5, "cap": 3.0e11, "h52": 800, "l52": 520, "p1y": 690},
          "c:nvidia": {"s": "NASDAQ:NVDA", "cur": "USD", "p": 192.4, "chg": 1.8, "cap": 4.5e12, "h52": 212, "l52": 95, "p1y": 140},
          "c:totalenergies": {"s": "EPA:TTE", "cur": "EUR", "p": 55.5, "chg": 0.2, "cap": 1.2e11, "h52": 62, "l52": 50, "p1y": 58},
@@ -47,11 +47,15 @@ with sync_playwright() as pw:
         probs = {}
         W = opts["viewport"]["width"]
         # 3/11 : rapport v5 (synPageV5 de m/synthese.js) : trois chiffres, pourquoi ça a bougé, actualité, IA, favoris, agenda
-        for prem in (False, True):
+        # 4/11 : sans Premium, la carte « Premium » remplace le rapport ; avec Premium, le rapport (actualité d'abord)
+        STATE["prem"] = False
+        pg.goto("http://t.local/espace"); pg.wait_for_selector(".es4-prem", timeout=8000)
+        if "Votre semaine en 2 minutes" not in pg.inner_text("#app"): probs.setdefault("/espace gratuit", []).append("carte Premium absente")
+        for prem in (True,):
             STATE["prem"] = prem
             pg.goto("http://t.local/espace"); pg.wait_for_selector(".s5", timeout=8000); pg.wait_for_timeout(300)
             txt = pg.inner_text("#app").replace("\xa0", " ").replace("\u202f", " ")
-            for need in ("Mon portefeuille", "Mes favoris", "Pourquoi ça a bougé", "L'actualité de vos entreprises", "Vos favoris", "À venir sur deux semaines", "LVMH", "TotalEnergies"):
+            for need in ("Mon portefeuille", "Mes favoris", "Ce que vos entreprises ont publié", "Vos valeurs cette semaine", "À venir sur deux semaines", "LVMH", "TotalEnergies"):
                 if need.lower() not in txt.lower(): probs.setdefault(f"/espace prem={prem}", []).append("manque : " + need)
             if pg.locator(".s5-t").count() != 3: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s5-t').count()} chiffres en tête au lieu de 3")
             if pg.locator(".s5-r").count() != 6: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s5-r').count()} lignes « pourquoi » au lieu de 6")
@@ -59,7 +63,6 @@ with sync_playwright() as pw:
             p = pg.evaluate(CHECK, W)
             if p: probs.setdefault(f"/espace prem={prem}", []).extend(p)
             if shots: os.makedirs(shots, exist_ok=True); pg.screenshot(path=f"{shots}/{name}_espace{'_prem' if prem else ''}.png", full_page=True)
-        STATE["prem"] = False
         # Ajout à l'agenda : un fichier .ics est proposé
         with pg.expect_download() as dl: pg.locator("[data-synics]").first.click()
         d = dl.value; ics = open(d.path()).read()

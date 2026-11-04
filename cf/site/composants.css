@@ -1322,3 +1322,39 @@ html #app .iahero{max-width:none}
 .ek .mc-plus[open]>summary{background:#FFE14D}
 .ek .mc-plus>.mc-es{margin-top:8px}
 .ek .mc-plus>.mc-col{border:0;box-shadow:none;padding:0;margin:0;background:none;border-radius:0}
+/* Rapport de la semaine (4/11) : actualité en tête, publications courtes, découverte de la semaine ; page exemple */
+.s5 .s5-al{color:#222;font-size:15px;line-height:1.5}
+.s5 .s5-al b{font-weight:800}
+.s5 .s5-exp2{background:none!important;color:#111!important;border:0!important;padding:0!important;min-height:0!important;font:800 13.5px Inter;text-decoration:underline;text-decoration-color:#FFE14D;text-decoration-thickness:3px;text-underline-offset:3px;cursor:pointer}
+.s5-acs{margin-top:12px;border:2px solid #111;border-radius:16px;padding:6px 14px}
+.s5-acst{margin:8px 0 4px;font:800 12px Inter;color:#555;text-transform:none}
+.s5-ac{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid #eee;color:#111;text-decoration:none;font:500 14px/1.35 Inter}
+.s5-acst+.s5-ac{border-top:0}
+.s5-ac span{flex:1;min-width:0}.s5-ac b{font-weight:800}.s5-ac small{color:#666;white-space:nowrap}
+.s5-dec{border:2px solid #111;border-radius:20px;box-shadow:5px 5px 0 #111;padding:18px 18px 16px;background:#fff}
+.s5-dec>h2 i{background:#111!important;color:#FFE14D!important}
+.s5-dec:empty{display:none}
+.dec-in .dec-head{display:flex;gap:14px;align-items:center;margin:4px 0 10px}
+.dec-in .dec-head h3{font:800 26px/1.1 "Bricolage Grotesque",Inter;margin:0}
+.dec-in .dec-head p{margin:4px 0 0;font:600 13.5px Inter;color:#555}
+.dec-in .dec-desc{font:500 16px/1.5 Inter;margin:0 0 12px}
+.dec-in .dec-faits{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin:0 0 16px}
+.dec-in .dec-faits>div{background:#FFF7CC;border:1.5px solid #111;border-radius:12px;padding:8px 10px}
+.dec-in .dec-faits small{display:block;font:700 11.5px Inter;color:#555}.dec-in .dec-faits b{font:800 15px Inter}
+.dec-in .ek-vrd h2{font-size:clamp(22px,3vw,30px)}
+.dec-in .ek-sec{margin-top:22px}
+.dec-in .dec-riv{font:500 14.5px/1.5 Inter;margin:12px 0 0}.dec-in .dec-riv a{color:#111;font-weight:700}
+.dec-in .dec-act{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.dec-in .dec-regle{margin:14px 0 0;font:500 12.5px/1.45 Inter;color:#666}
+.ek.rx4 .rx4-plan{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:18px}
+.ek.rx4 .rx4-plan>div{background:#fff;border:2px solid #111;border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:2px}
+.ek.rx4 .rx4-plan i{font-style:normal;font:800 13px Inter;width:24px;height:24px;border-radius:50%;background:#111;color:#FFE14D;display:grid;place-items:center;margin-bottom:4px}
+.ek.rx4 .rx4-plan b{font:800 14px Inter}.ek.rx4 .rx4-plan span{font:500 12.5px/1.35 Inter;color:#444}
+.ek.rx4 .rx4-cta{margin-top:16px;display:inline-flex}
+.ek.rx4 #synex{max-width:880px;margin:24px auto 0}
+.ek.rx4 .rx4-reg{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin-bottom:16px}
+.ek.rx4 .rx4-reg>div{border:2px solid #111;border-radius:14px;padding:12px}.ek.rx4 .rx4-reg b{display:block;font:800 15px Inter;margin-bottom:4px}.ek.rx4 .rx4-reg span{font:500 13.5px/1.45 Inter;color:#333}
+@media(max-width:760px){.ek.rx4 .rx4-plan{grid-template-columns:1fr 1fr}.s5-dec{padding:14px 12px}}
+.s5-ac>:first-child{flex:none;width:26px;height:26px;margin:0}
+.dec-in .ek-chain{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.s5-dec .dec-in h2{display:block}.s5-dec .dec-in h2 em{display:inline}

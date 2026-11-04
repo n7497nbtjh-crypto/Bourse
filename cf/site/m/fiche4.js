@@ -69,6 +69,12 @@ function f4Ton(v, m, basEstMieux, ecartAbs) { // "g" mieux, "r" moins bien, "" c
 }
 
 // ——— La page ———
+// Contexte de calcul d'une fiche (rivales, repères, médianes) : aussi utilisé par la découverte de la semaine (m/decouverte.js)
+function f4Ctx(s, c) {
+  const bk = isBank(s) || !f4Valide(s), P = f4Rivales(s, bk), M = f4M(s), MED = {};
+  ["g", "ng", "m", "nm", "roe", "pay", "pe", "yld"].forEach(k => MED[k] = f4Med(P.L.map(x => f4M(x)[k]).filter(v => !(k === "pay" && v > 1.5))));
+  return { bk, s, c, P, M, MED, cur: s.currency, sym: F4_SYM(s.currency).trim(), nom: s.name, rap: ((c.sources || [])[0] || {}).report || null };
+}
 async function pageCompany4(id, tab) {
   const s = RBY[id];
   if (!s) return pageNotFound();
@@ -78,9 +84,7 @@ async function pageCompany4(id, tab) {
   const [c] = await Promise.all([load, PXP, typeof ficheWDLoad === "function" ? ficheWDLoad(id) : null, typeof loadFiches === "function" ? loadFiches() : null]);
   if (typeof ficheMemeId === "function" && !ficheMemeId(id)) return;
   if (s.missing || !c || !c.fin) { app.innerHTML = `<div class="ek ek-page">${f4Tete(s, null, null)}<p class="ek-note" style="margin-top:30px">Les comptes de ${esc(s.name)} ne sont pas encore relevés sur le site.</p></div>`; return; }
-  const bk = isBank(s) || !f4Valide(s), P = f4Rivales(s, bk), M = f4M(s), MED = {};
-  ["g", "ng", "m", "nm", "roe", "pay", "pe", "yld"].forEach(k => MED[k] = f4Med(P.L.map(x => f4M(x)[k]).filter(v => !(k === "pay" && v > 1.5))));
-  const ctx = { bk, s, c, P, M, MED, cur: s.currency, sym: F4_SYM(s.currency).trim(), nom: s.name, rap: ((c.sources || [])[0] || {}).report || null };
+  const ctx = f4Ctx(s, c);
   let html = "";
   try { html = f4Tete(s, c, ctx) + `<div id="f4-annee"></div>` + f4MetierSec(ctx) + f4Fil(ctx) + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }

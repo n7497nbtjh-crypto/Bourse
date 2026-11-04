@@ -425,12 +425,16 @@ async function pageRapportExemple() {
   if (!b) { app.innerHTML = `<section class="panel"><div class="pb">Le rapport exemple n'a pas pu être calculé pour le moment. <a class="lnk" href="/espace">Créer mon rapport</a></div></section>`; return; }
   await Promise.all([typeof PXP !== "undefined" ? PXP : null, typeof acaLoad === "function" ? acaLoad() : null, synContexte(), typeof loadFiches === "function" ? loadFiches() : null]);
   b = synNormalise(b);
-  app.innerHTML = `<div class="crumbs"><a href="/espace">Mon espace</a> › Rapport exemple</div>
-    <h1 class="pagetitle">Votre semaine</h1>
-    <p class="pagesub">Un vrai rapport, calculé aujourd'hui pour un profil d'exemple. Le vôtre suit vos titres.</p>
+  // 4/11 (Romain) : rapport exemple plus clair ; le rapport fait partie de Premium (plus de « Gratuit » ici)
+  const prem = typeof isPrem === "function" && isPrem();
+  app.innerHTML = `<div class="ek ek-page rx4"><section class="ek-hero rx4-hero"><div class="mc-crumb"><a href="/espace">Mon espace</a> › Rapport exemple</div><span class="mc-stk">Premium · exemple</span>
+      <h1 class="ag4-t">Votre semaine en 2 minutes.</h1>
+      <p class="mc-sub">Un vrai rapport, calculé aujourd'hui avec les chiffres du site pour un profil d'exemple : quatre favoris et un petit portefeuille. Le vôtre suit vos valeurs, et arrive chaque samedi.</p>
+      <div class="rx4-plan">${[["1", "Ce que vos entreprises ont publié", "les chiffres clés et ce qu'ils veulent dire"], ["2", "Vos valeurs cette semaine", "et pourquoi elles ont bougé"], ["3", "À venir", "les dates des deux prochaines semaines"], ["★", "La découverte de la semaine", "une entreprise moins connue, présentée en détail"]].map(([n, t, d]) => `<div><i>${n}</i><b>${t}</b><span>${d}</span></div>`).join("")}</div>
+      ${prem ? "" : `<a class="ek-btn dk rx4-cta" href="/premium">Recevoir le mien chaque semaine avec Premium</a>`}</section>
     <div id="synex">${synPageHTML(b, { premium: false })}</div>
-    <section class="synx"><h2>Ce que vous réglez dans le vôtre</h2><ul class="synx-l">${SYN_EX_REG.map(([t, d]) => `<li><b>${esc(t)}</b> : ${esc(d)}</li>`).join("")}</ul></section>
-    <section class="panel"><div class="pb" style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between"><span>Gratuit, sans carte bancaire : il suffit d'une adresse e-mail.</span><a class="btn" href="/espace">Créer mon rapport</a></div></section>`;
+    <section class="ek-sec"><span class="ek-stk2 b">Le vôtre</span><h2>Ce que vous réglez dans votre rapport.</h2><div class="rx4-reg">${SYN_EX_REG.map(([t, d]) => `<div><b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
+      ${prem ? `<a class="ek-btn dk" href="/espace/rapport">Régler mon rapport</a>` : `<a class="ek-btn dk" href="/premium">Recevoir mon rapport avec Premium</a>`}</section></div>`;
   synIA(b, document.getElementById("syn4-ia"), false);
   const ex = document.getElementById("synex"); if (ex) ex.onclick = e => { const i = e.target.closest("[data-synics]"); if (i) { synIcs(b, i.dataset.synics); return; } const j = e.target.closest("[data-synjump]"); if (j) { const t = document.getElementById(j.dataset.synjump); if (t) { e.preventDefault(); t.scrollIntoView({ behavior: "smooth", block: "start" }); } } };
 }
@@ -478,23 +482,27 @@ function synPageV5(b, m) {
   // 3. l'actualité de vos entreprises
   const vus = new Set(), poidsDe = k => { const l = L.find(x => x.k === k); return l && l.portefeuille ? l.portefeuille.poids_pct : 0; };
   const anns = (b.annonces || []).filter(a => a.origine !== "presse" && !ROUT.has(a.categorie) && !vus.has(a.k + a.titre) && vus.add(a.k + a.titre)).sort((x, y) => poidsDe(y.k) - poidsDe(x.k) || y.poids - x.poids).slice(0, 6);
-  const annHTML = anns.map(a => { const ch = (a.chiffres || []).slice(0, 3), i = SYN_ANN.push(a) - 1, lec = (a.lecture || []).filter(t => t && !/^(Une information publiée|La publication des ventes|Document déposé)/.test(t)).join(" ");
+  // 4/11 (Romain : « clair et compréhensible, mettre en avant les actualités ») : les annonces chiffrées ou expliquées en cartes,
+  // les simples dépôts de documents en lignes courtes ; « Expliquer » devient « En savoir plus », discret.
+  const lecDe = a => (a.lecture || []).filter(t => t && !/^(Une information publiée|La publication des ventes|Document déposé)/.test(t)).join(" ");
+  const annR = anns.filter(a => (a.chiffres || []).length || lecDe(a)), annC = anns.filter(a => !((a.chiffres || []).length || lecDe(a)));
+  const annCourt = annC.map(a => `<a class="s5-ac" href="${esc(a.source || synLien(a.k))}"${a.source ? ' target="_blank" rel="noopener"' : ""}>${synLogo(a.k, 26)}<span><b>${esc(a.nom || (synObj(a.k) || {}).name || "")}</b> ${esc(a.titre || SYN_CAT[a.categorie] || "Publication")}</span><small>${esc(jour(a.date))}</small></a>`).join("");
+  const annHTML = annR.map(a => { const ch = (a.chiffres || []).slice(0, 3), i = SYN_ANN.push(a) - 1, lec = lecDe(a);
     return `<article class="s5-a"><div class="s5-ah">${synLogo(a.k, 30)}<b>${esc(a.nom || (synObj(a.k) || {}).name || "")}</b><span class="s5-pill">${esc(SYN_CAT[a.categorie] || a.type || "Annonce")}</span><small>${esc(jour(a.date))}</small></div>
-      <p class="s5-at">${esc(a.titre || "")}</p>${ch.length ? `<div class="s5-ch">${ch.map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(String(v))}</b></span>`).join("")}</div>` : ""}${lec ? `<p class="s5-al">${esc(lec)}</p>` : ""}
-      <div class="s5-aa"><button type="button" class="s5-exp" data-syn-exp="${i}">✦ Expliquer</button>${a.source ? `<a class="lnk" href="${esc(a.source)}" target="_blank" rel="noopener">Le document (${esc(a.source_nom || "source")})</a>` : ""}</div><div class="syn4-cl"></div></article>`; }).join("");
+      <p class="s5-at">${esc(a.titre || "")}</p>${ch.length ? `<div class="s5-ch">${ch.map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(String(v))}</b></span>`).join("")}</div>` : ""}${lec ? `<p class="s5-al"><b>Ce que ça veut dire :</b> ${esc(lec)}</p>` : ""}
+      <div class="s5-aa"><button type="button" class="s5-exp s5-exp2" data-syn-exp="${i}">✦ En savoir plus</button>${a.source ? `<a class="lnk" href="${esc(a.source)}" target="_blank" rel="noopener">Le document (${esc(a.source_nom || "source")})</a>` : ""}</div><div class="syn4-cl"></div></article>`; }).join("");
   // 5. favoris
   const fl = L.filter(l => l.favori).map(l => { const nx = (b.a_venir || []).find(e => e.k === l.k);
     return `<a class="s5-f" href="${synLien(l.k)}">${synLogo(l.k, 26)}<b>${esc(l.nom)}</b><span>${l.cours != null ? `${nf(2).format(l.cours)} ${esc(l.devise === "EUR" ? "€" : l.devise || "")}` : ""}</span><b class="${synCls(l.variation_semaine_pct)}">${synPct(l.variation_semaine_pct)}</b><small>${nx ? `${esc(jour(nx.date))} : ${esc((nx.type || "").toLowerCase())}` : ""}</small></a>`; }).join("");
   return `<div class="syn4 s5">
     <header class="s5-head"><p class="syn4-mast"><b>ENKLAIR</b><span>hebdo</span><i>n° ${esc(sem)}</i></p><p class="s5-date">${b.du ? esc(synDuAu(b)) : ""}${b.en_cours === false ? " · semaine close" : " · semaine en cours, mise à jour à chaque visite"}</p>
       <div class="s5-ts">${T.join("")}</div>${verdict}</header>
-    <section class="s5-s"><h2><i>1</i>Pourquoi ça a bougé</h2><div class="s5-rs">${rows || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille.</p>`}</div></section>
-    <section class="s5-s"><h2><i>2</i>L'actualité de vos entreprises</h2>${annHTML ? `<div class="s5-as">${annHTML}</div>` : `<p class="muted">Aucune publication officielle de vos entreprises cette semaine.</p>`}</section>
+    <section class="s5-s"><h2><i>1</i>Ce que vos entreprises ont publié</h2>${annHTML || annCourt ? `${annHTML ? `<div class="s5-as">${annHTML}</div>` : ""}${annCourt ? `<div class="s5-acs"><p class="s5-acst">${annHTML ? "Autres publications" : "Publications de la semaine"}</p>${annCourt}</div>` : ""}` : `<p class="muted">Aucune publication officielle de vos entreprises cette semaine.</p>`}</section>
+    <section class="s5-s"><h2><i>2</i>Vos valeurs cette semaine</h2><div class="s5-rs">${rows || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille.</p>`}</div></section>
+    <section class="s5-s"><h2><i>3</i>À venir sur deux semaines</h2>${synAgendaHTML(b)}</section>
+    <section class="s5-s s5-dec" id="syn-dec" data-sem="${esc(String(b.semaine || ""))}"></section>
+    ${pf ? `<section class="s5-s"><h2><i>4</i>Points de vigilance du portefeuille</h2>${synAlertesHTML(b).replace("<h3>Votre portefeuille</h3>", "") || `<p class="muted">Rien à signaler.</p>`}</section>` : ""}
     <section class="s5-s" id="syn4-ia"></section>
-    ${fl ? `<section class="s5-s"><h2><i>3</i>Vos favoris</h2><div class="s5-fs">${fl}</div></section>` : ""}
-    <section class="s5-s"><h2><i>${fl ? 4 : 3}</i>À venir sur deux semaines</h2>${synAgendaHTML(b)}</section>
-    ${synApercuAlerte(b, m)}
-    ${pf ? `<section class="s5-s"><h2><i>${fl ? 5 : 4}</i>Points de vigilance du portefeuille</h2>${synAlertesHTML(b).replace("<h3>Votre portefeuille</h3>", "") || `<p class="muted">Rien à signaler.</p>`}</section>` : ""}
     <p class="synfoot">Variations entre la clôture précédant la semaine et le dernier cours connu (différé), dans la devise de cotation. Annonces : documents officiels (AMF, SEC). Information, pas conseil.</p>
   </div>`;
 }
