@@ -62,7 +62,7 @@ function pf4FormCourt() {
 /* 4/11 (Romain) : achat, vente et dividende repérables d'un coup d'œil dans les opérations d'une ligne */
 if (typeof pf3DetBind === "function") { const PF4_det0 = pf3DetBind; pf3DetBind = function () { const r = PF4_det0.apply(this, arguments); try { pf4Ops(); } catch (e) { } return r; }; }
 function pf4Ops() {
-  $$(".ek.pf4 .pf3ot tbody tr").forEach(tr => { const td = tr.children[1]; if (!td || td.dataset.pf4) return; td.dataset.pf4 = "1";
+  $$("#pf3 .pf3ot tbody tr").forEach(tr => { const td = tr.children[1]; if (!td || td.dataset.pf4) return; td.dataset.pf4 = "1";
     const t = td.textContent.trim(), k = /^Achat/.test(t) ? "a" : /^Vente/.test(t) ? "v" : /^Dividende/.test(t) ? "d" : "o";
     td.innerHTML = `<span class="pf4-op pf4-op-${k}">${k === "a" ? "▲" : k === "v" ? "▼" : k === "d" ? "€" : "•"} ${esc(t)}</span>`; tr.classList.add("pf4-tr-" + k); });
 }
@@ -90,6 +90,17 @@ function pf4Tuiles() {
   });
 }
 if (typeof pf3Dash === "function") { const PF4_dash1 = pf3Dash; pf3Dash = async function () { const r = await PF4_dash1.apply(this, arguments); try { pf4Tuiles(); } catch (e) { } return r; }; }
+/* 4/11 (Romain : « affiche toutes les performances et mets-les plus en valeur ») : la plus ou moins-value en grand sur chaque
+   carte, la variation du jour en pastille ; une ligne sans cours sur le site le dit (au lieu d'un tiret) et propose de saisir le cours. */
+if (typeof pf3List === "function") { const PF4_list0 = pf3List; pf3List = function () { const r = PF4_list0.apply(this, arguments); try { pf4Perf(); } catch (e) { } return r; }; }
+function pf4Perf() {
+  $$("#pf3 .pf3r").forEach(row => {
+    const b = row.querySelector(".pf3rb"); if (!b || b.dataset.pf4) return; b.dataset.pf4 = "1";
+    const g = b.querySelector(".c-g"), px = b.querySelector(".c-px small"), v = b.querySelector(".c-v");
+    if (px && v && /[+−-]\d/.test(px.textContent)) v.insertAdjacentHTML("beforeend", `<span class="pf4-jour ${px.className}">${esc(px.textContent.trim())} aujourd'hui</span>`);
+    if (g && !g.querySelector("b")) { g.classList.add("pf4-nc"); g.innerHTML = /montant/.test(g.textContent) ? `<b>?</b><small>montant seul</small>` : `<b>Pas de cours</b><small>sur le site</small>`; g.title = "Le site n'a pas de cours pour ce titre : ouvrez la ligne pour saisir le cours actuel."; }
+  });
+}
 window.pagePortefeuille = async function () {
   const r = await PF4_page0.apply(this, arguments);
   const el = $("#pf3"); if (el) el.classList.add("ek", "ek-page", "pf4");
