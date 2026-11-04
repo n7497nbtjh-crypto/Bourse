@@ -7,6 +7,9 @@ on:
       depuis:
         description: "Communiqués publiés depuis (AAAA-MM-JJ)"
         default: "2024-01-01"
+      max:
+        description: "Nombre de communiqués à lire au plus"
+        default: "4000"
   schedule:
     - cron: "20 3 * * 2-6"   # chaque nuit de semaine vers 4 h 20 (heure de Paris en hiver), après les publications de la veille
 permissions:
@@ -31,7 +34,7 @@ jobs:
           CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}
         run: |
           node tests/t_trim_eu.mjs
-          node data/trim_eu.mjs --depuis "${{ inputs.depuis || '2024-01-01' }}" --minutes 95
+          node data/trim_eu.mjs --depuis "${{ inputs.depuis || '2024-01-01' }}" --max "${{ inputs.max || '4000' }}" --minutes 95
       - name: Enregistrement dans le dépôt
         if: always()
         run: |
