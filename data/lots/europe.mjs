@@ -291,7 +291,7 @@ export default [
   { id: "kerry-group", name: "Kerry Group", ticker: "KRZ", isin: "IE0004906560", tv: "EURONEXT:KRZ", region: "EU", sector: "conso", domain: "kerry.com",
     desc: "Arômes et ingrédients pour l’industrie alimentaire.",
     fiche: { fait: "Fournit des arômes, des ingrédients et des solutions de goût aux fabricants d’aliments et de boissons.", argent: "La vente d’ingrédients aux industriels de l’alimentation et aux chaînes de restauration.", depend: "Les volumes des clients de l’alimentaire et le prix des matières premières agricoles." } },
-  { id: "ryanair", name: "Ryanair", ticker: "RYA", isin: "IE00BYTBXV33", tv: "EURONEXT:RYA", region: "EU", sector: "industrie", domain: "ryanair.com",
+  { id: "ryanair", sec: "RYAAY", cik: "0001038683", name: "Ryanair", ticker: "RYA", isin: "IE00BYTBXV33", tv: "EURONEXT:RYA", region: "EU", sector: "industrie", domain: "ryanair.com",
     desc: "Compagnie aérienne à bas prix.",
     fiche: { fait: "Compagnie aérienne à bas coût qui relie de nombreuses villes en Europe.", argent: "La vente de billets, plus les services payants : bagages, choix du siège, priorité.", depend: "Le prix du kérosène, le prix des billets et les livraisons d’avions de Boeing." } },
   { id: "kingspan", name: "Kingspan", ticker: "KRX", isin: "IE0004927939", tv: "EURONEXT:KRX", region: "EU", sector: "materiaux", domain: "kingspan.com",

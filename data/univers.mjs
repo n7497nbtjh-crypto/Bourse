@@ -51,7 +51,7 @@ const FRANCE = [
 // Autres pays : symbole TradingView explicite ; « sec » = code de l'action aux États-Unis (comptes lus à la SEC)
 export const AUTRES = [
   { id: "asml", name: "ASML", ticker: "ASML", isin: "NL0010273215", tv: "EURONEXT:ASML", region: "EU", sector: "tech", domain: "asml.com", desc: "Machines qui fabriquent les puces électroniques (lithographie)." },
-  { id: "sap", name: "SAP", ticker: "SAP", isin: "DE0007164600", tv: "XETR:SAP", region: "EU", sector: "tech", domain: "sap.com", desc: "Logiciels de gestion pour les entreprises." },
+  { id: "sap", sec: "SAP", cik: "0001000184", name: "SAP", ticker: "SAP", isin: "DE0007164600", tv: "XETR:SAP", region: "EU", sector: "tech", domain: "sap.com", desc: "Logiciels de gestion pour les entreprises." },
   { id: "siemens", name: "Siemens", ticker: "SIE", isin: "DE0007236101", tv: "XETR:SIE", region: "EU", sector: "industrie", domain: "siemens.com", desc: "Automatisation industrielle, infrastructures, trains." },
   { id: "allianz", name: "Allianz", ticker: "ALV", isin: "DE0008404005", tv: "XETR:ALV", region: "EU", sector: "finance", domain: "allianz.com", desc: "Assurance et gestion d'épargne." },
   { id: "deutsche-telekom", name: "Deutsche Telekom", ticker: "DTE", isin: "DE0005557508", tv: "XETR:DTE", region: "EU", sector: "telecom", domain: "telekom.com", desc: "Opérateur télécoms en Europe et aux États-Unis (T-Mobile)." },

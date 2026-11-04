@@ -371,7 +371,7 @@ export default [
   { id: "vend-marketplaces", name: "Vend Marketplaces", ticker: "VEND", isin: "NO0010736879", lei: "5967007LIEEXZXHT0O36", tv: "OSL:VEND", region: "EU", sector: "tech", domain: "vend.com",
     desc: "Petites annonces en ligne en Norvège, Suède, Danemark et Finlande.",
     fiche: { fait: "Exploite des sites de petites annonces (Finn, Blocket) dans les pays nordiques (ex-Schibsted Marketplaces).", argent: "Les annonces payantes et les services aux professionnels.", depend: "L'activité immobilière, automobile et de l'emploi." } },
-  { id: "borr-drilling", name: "Borr Drilling", ticker: "BORR", isin: "BMG1466R1732", lei: "213800J2JPCTXLHQ5R78", tv: "OSL:BORR", region: "EU", sector: "energie", domain: "borrdrilling.com",
+  { id: "borr-drilling", sec: "BORR", cik: "0001715497", name: "Borr Drilling", ticker: "BORR", isin: "BMG1466R1732", lei: "213800J2JPCTXLHQ5R78", tv: "OSL:BORR", region: "EU", sector: "energie", domain: "borrdrilling.com",
     desc: "Plateformes de forage en mer.",
     fiche: { fait: "Possède et loue des plateformes de forage en mer peu profonde aux compagnies pétrolières.", argent: "La location de ses plateformes.", depend: "Les investissements des compagnies pétrolières." } },
   { id: "cadeler", name: "Cadeler", ticker: "CADLR", isin: "DK0061412772", lei: "9845008439EUED140282", tv: "OSL:CADLR", region: "EU", sector: "industrie", domain: "cadeler.com",

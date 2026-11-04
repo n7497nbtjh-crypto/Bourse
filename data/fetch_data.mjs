@@ -118,10 +118,11 @@ export async function collectSec(fetchFn, c) {
   if (!c.cik) CIK = CIK || await cikMap(getJSON, fetchFn);
   const cik = c.cik || CIK[c.sec];
   if (!cik) throw new Error("numéro SEC introuvable pour " + c.sec);
-  const doc = await getJSON(fetchFn, factsUrl(cik));
-  if (!doc) throw new Error("aucun compte à la SEC pour " + c.sec);
+  // 4/11 : sans companyfacts (ICICI Bank), les rapports 20-F balisés sont lus directement dans le dépôt
+  const doc = (await getJSON(fetchFn, factsUrl(cik))) || { entityName: c.legal || c.name, facts: { "ifrs-full": {}, "us-gaap": {} }, vide: true };
   let lu20 = 0;
   try { lu20 = await completer20F(doc, cik, { getJSON: u => getJSON(fetchFn, u), getText: u => getText(fetchFn, u), cache: C20, log: m => console.log(c.name, ":", m) }); } catch (e) { console.log(c.name, ": 20-F non lu,", e.message); }
+  if (doc.vide) { if (!lu20) throw new Error("aucun compte à la SEC pour " + c.sec); for (const ns of ["ifrs-full", "us-gaap"]) if (!Object.keys(doc.facts[ns]).length) delete doc.facts[ns]; }
   const s = toSeries(extractSec(doc));
   if (!s.years.length) throw new Error("aucun exercice annuel lisible");
   if (!nameMatches(c.legal || c.name, doc.entityName)) VERIF.push(`${c.name} : le code ${c.sec} renvoie à « ${doc.entityName} »`);
