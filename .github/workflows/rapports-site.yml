@@ -44,7 +44,10 @@ jobs:
           total=${{ inputs.minutes || '150' }}; fait=0
           while [ $fait -lt $total ]; do
             t=$(( total - fait < 40 ? total - fait : 40 ))
-            node data/rapports_site.mjs --minutes $t --paralleles 4 || true
+            # 4/11 soir : 2e chute de la machine sans journal (run 41899303521) : tranche coupée net si elle déborde,
+            # 2 sociétés à la fois, mémoire et disque notés à chaque tranche pour connaître la cause d'un prochain échec.
+            timeout -k 60 $(( t * 60 + 300 )) node --max-old-space-size=3072 data/rapports_site.mjs --minutes $t --paralleles 2 || echo "::warning::tranche interrompue (code $?)"
+            free -m | head -2; df -h . | tail -1; rm -rf /tmp/rs-* 2>/dev/null || true
             git add data/rapports_site_cache.json cf/site/data/societes cf/site/data/societes.json
             git diff --cached --quiet || git commit -q -m "Rapports annuels des sites du $(date +%F) (tranche)"
             for i in 1 2 3; do git pull --rebase -X theirs -q && git push -q && break; sleep 5; done
