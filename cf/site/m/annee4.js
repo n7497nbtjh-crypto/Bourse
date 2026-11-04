@@ -86,7 +86,7 @@ function an4Dessiner(x) {
   let part2 = "";
   if (rows.length >= 3 && rows[0].y === 0) {
     const pos = rows.map(r => Math.max(0, r.v)), mxv = Math.max(...pos) || 1, tri = rows.slice().sort((a, b) => b.v - a.v), rang = tri.findIndex(r => r.y === 0) + 1, d = ch(rows[0].v, rows[0].p, M);
-    const say2 = `Sur ${per}, ${LAB[M][0]} ${LAB[M][2]} ${fmt(rows[0].v, M)} : ${rang === 1 ? `<b>le plus haut niveau depuis ${an(rows[rows.length - 1].y)}</b>` : `<b>${rang === 2 ? "2e" : rang + "e"} sur ${rows.length}</b>, derrière ${an(tri[0].y)} (${fmt(tri[0].v, M)})`}${d != null ? `, ${d >= 0 ? "en hausse" : "en baisse"} de ${ekFr(Math.abs(d), 1)}${M === "mg" ? (Math.abs(d) >= 2 ? " points" : " point") : " %"} sur un an` : ""}.`;
+    const say2 = `Sur ${per}, ${LAB[M][0]} ${LAB[M][2]} ${fmt(rows[0].v, M)} : ${rang === 1 ? `<b>le plus haut niveau depuis ${an(rows[rows.length - 1].y)}</b>` : `<b>${rang === 2 ? "2e" : rang + "e"} sur ${rows.length}</b>, derrière ${an(tri[0].y)} (${fmt(tri[0].v, M)})`}${d != null && Math.abs(d) < 0.05 ? ", stable sur un an" : d != null ? `, ${d >= 0 ? "en hausse" : "en baisse"} de ${ekFr(Math.abs(d), 1)}${M === "mg" ? (Math.abs(d) >= 2 ? " points" : " point") : " %"} sur un an` : ""}.`;
     const alt = n > 1 ? `<a href="#annee" class="an4-alt" data-an4-c="${mode === "ytd" ? "last" : "ytd"}">Voir plutôt ${mode === "ytd" ? `le ${AN4_QN[n - 1]} seul` : `les ${mois} premiers mois`}</a>` : "";
     part2 = `<div class="an4-part"><h3 class="an4-pt"><i>2</i>${mode === "ytd" && n > 1 ? `${A.civil ? A.Y : "L'exercice " + A.Y} jusqu'ici` : `Le ${AN4_QN[n - 1]}`}, face aux années précédentes</h3>
       <div class="an4-why"><span class="an4-pill"><i></i>Comparaison : ${per} de chaque ${A.civil ? "année" : "exercice"}</span>${alt}</div>
