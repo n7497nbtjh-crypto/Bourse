@@ -1516,3 +1516,7 @@ html body .ek.pf4 #pf3dash>details.pf4v>summary>.pf4-ti{display:grid}html body .
   .ek.pf4 .pf3rb .c-w{align-self:end}
 }
 .ek.pf4 .pf4-jour.pf4-vl{background:#FFF6C2;color:#333;font-weight:700}
+/* 4/11 : chaque chiffre des trimestres dit à quoi il se compare */
+.an4 .an4-s{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.an4 .an4-av{font:600 12.5px Inter;color:#555}.an4 .an4-av b{color:#111;font-weight:800}
+.an4 .an4-ar .an4-arl{display:block;font:800 12px Inter;color:#111;margin-bottom:2px}

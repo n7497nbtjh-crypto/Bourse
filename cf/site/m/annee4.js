@@ -97,9 +97,9 @@ function an4Dessiner(x) {
   let seq = "", notes = [];
   cards.forEach((c, i) => {
     if (i) { const d = ch(c.v, cards[i - 1].v, M), h = habit(c.k); notes.push({ k: c.k, d, h });
-      seq += `<div class="an4-ar"><b>${AN4_FL}</b>${pill(d, M)}${h != null ? `<small>d'habitude<br><b>${sg(h, M)}</b></small>` : ""}</div>`; }
+      seq += `<div class="an4-ar"><small class="an4-arl">Du T${cards[i - 1].k + 1} au T${c.k + 1}</small><b>${AN4_FL}</b>${pill(d, M)}${h != null ? `<small>d'habitude<br><b>${sg(h, M)}</b></small>` : ""}</div>`; }
     const q = A.G[0][c.k];
-    seq += `<div class="an4-q${tops.includes(c.k) ? " top" : ""}"><div class="an4-st">T${c.k + 1} · ${AN4_QN[c.k]}<small>${q.u ? `<a href="${esc(q.u)}" target="_blank" rel="noopener" title="Le communiqué">${esc(dt(q.filed))} ↗</a>` : esc(dt(q.filed))}${q.deduit ? " · déduit" : ""}</small></div><div class="an4-v">${fmt(c.v, M)}</div><div class="an4-s">${pill(ch(c.v, val(1, c.k, M), M), M, " sur un an")}</div>${tops.includes(c.k) ? `<span class="an4-tg">${tops.length > 1 ? "Le plus fort, à égalité" : `Le plus fort de ${A.civil ? A.Y : "l'exercice"}`}</span>` : ""}</div>`;
+    seq += `<div class="an4-q${tops.includes(c.k) ? " top" : ""}"><div class="an4-st">T${c.k + 1} · ${AN4_QN[c.k]}<small>${q.u ? `<a href="${esc(q.u)}" target="_blank" rel="noopener" title="Le communiqué">${esc(dt(q.filed))} ↗</a>` : esc(dt(q.filed))}${q.deduit ? " · déduit" : ""}</small></div><div class="an4-v">${fmt(c.v, M)}</div>${val(1, c.k, M) != null ? `<div class="an4-s"><span class="an4-av">${A.civil ? `T${c.k + 1} ${A.Y - 1}` : "Un an plus tôt"} : <b>${fmt(val(1, c.k, M), M)}</b></span>${pill(ch(c.v, val(1, c.k, M), M), M)}</div>` : ""}${tops.includes(c.k) ? `<span class="an4-tg">${tops.length > 1 ? "Le plus fort, à égalité" : `Le plus fort de ${A.civil ? A.Y : "l'exercice"}`}</span>` : ""}</div>`;
   });
   const TH = M === "mg" ? 1 : 3, hors = notes.filter(o => o.d != null && o.h != null).map(o => ({ ...o, e: o.d - o.h })).filter(o => Math.abs(o.e) >= TH).sort((a, b) => Math.abs(b.e) - Math.abs(a.e));
   const nm = k => `Du ${AN4_QC[k - 1]} au ${AN4_QN[k]}`, compar = notes.filter(o => o.d != null && o.h != null);
