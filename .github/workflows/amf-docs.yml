@@ -1,0 +1,37 @@
+# Outil de mise au point (5/11/2026) : télécharge les dépôts AMF d'une liste d'ISIN (liste JSON + rapports annuels PDF ou ZIP)
+# et les met à disposition en artefact, pour corriger la lecture des comptes (data/rapports_site.mjs) depuis l'environnement de Claude,
+# qui ne peut pas joindre info-financiere.gouv.fr. Ne modifie rien dans le dépôt.
+name: Documents AMF (mise au point)
+on:
+  workflow_dispatch:
+    inputs:
+      isins:
+        description: "ISIN séparés par des virgules"
+        required: true
+permissions:
+  contents: read
+jobs:
+  docs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Téléchargement
+        env:
+          ISINS: ${{ inputs.isins }}
+        run: |
+          mkdir -p amf
+          for isin in $(echo "$ISINS" | tr ',' ' '); do
+            curl -sS -G "https://www.info-financiere.gouv.fr/api/explore/v2.1/catalog/datasets/flux-amf-new-prod/records" \
+              --data-urlencode "limit=100" --data-urlencode "order_by=uin_dat_amf desc" \
+              --data-urlencode "where=identificationsociete_iso_cd_isi = \"$isin\" AND uin_dat_amf >= date'2024-01-01'" -o "amf/$isin.json"
+            node -e '
+              const j=require("./amf/'$isin'.json");const L=(j.results||[]).filter(x=>/annuel|r[ée]f[ée]rence|enregistrement/i.test([x.sous_type_d_information,x.informationdeposee_inf_tit_inf].join(" "))).slice(0,4);
+              for(const x of L) console.log(x.url_de_recuperation||"")' > "amf/$isin.urls"
+            n=0; while read -r u; do [ -z "$u" ] && continue; n=$((n+1)); ext="${u##*.}"; curl -sS -L -m 180 -A "Mozilla/5.0 (compatible; ENKLAIR-bot/1.0; +https://enklair.com/methode)" -o "amf/${isin}_$n.$ext" "$u" || true; sleep 1; done < "amf/$isin.urls"
+          done
+          ls -la amf
+      - uses: actions/upload-artifact@v4
+        with:
+          name: amf-docs
+          path: amf
+          retention-days: 3
