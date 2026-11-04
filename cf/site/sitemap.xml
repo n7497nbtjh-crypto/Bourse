@@ -6,6 +6,11 @@
   <url><loc>https://enklair.com/question/plus-grosses-entreprises-france-bourse</loc></url>
   <url><loc>https://enklair.com/question/finance-europeenne-plus-rentable</loc></url>
   <url><loc>https://enklair.com/question/tech-americaine-plus-forte-croissance</loc></url>
+  <url><loc>https://enklair.com/question/pharma-europeenne-marge</loc></url>
+  <url><loc>https://enklair.com/question/defense-europeenne-chiffres</loc></url>
+  <url><loc>https://enklair.com/question/semi-conducteurs-marge</loc></url>
+  <url><loc>https://enklair.com/question/per-le-plus-bas-france</loc></url>
+  <url><loc>https://enklair.com/question/energie-europeenne-dividende</loc></url>
   <url><loc>https://enklair.com/indice/cac40</loc></url>
   <url><loc>https://enklair.com/indice/stoxx50</loc></url>
   <url><loc>https://enklair.com/indice/dax</loc></url>
@@ -288,6 +293,7 @@
   <url><loc>https://enklair.com/etf/amundi-dow-jones-industrial-average-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-eur-cash-active-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-eur-corporate-bond-0-1y-esg-acc</loc></url>
+  <url><loc>https://enklair.com/etf/amundi-eur-corporate-bond-0-1y-esg-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-eur-corporate-bond-0-3y-esg-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-eur-corporate-bond-1-5y-esg-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-eur-corporate-bond-1-5y-esg-usd-hedged-acc</loc></url>
@@ -306,6 +312,7 @@
   <url><loc>https://enklair.com/etf/amundi-euro-aggregate-bond-esg-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-euro-government-bond-0-6-m-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-euro-government-bond-1-3y-acc</loc></url>
+  <url><loc>https://enklair.com/etf/amundi-euro-government-bond-1-3y-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-euro-government-bond-10-15y-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-euro-government-bond-15-y-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-euro-government-bond-25-y-acc</loc></url>
@@ -406,6 +413,7 @@
   <url><loc>https://enklair.com/etf/amundi-msci-europe-action-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-climate-paris-aligned-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-esg-broad-transition-acc</loc></url>
+  <url><loc>https://enklair.com/etf/amundi-msci-europe-esg-broad-transition-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-esg-selection-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-ex-emu-esg-selection-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-ex-switzerland-esg-broad-transition-acc</loc></url>
@@ -419,7 +427,6 @@
   <url><loc>https://enklair.com/etf/amundi-msci-europe-small-cap-esg-broad-transition-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-small-cap-esg-broad-transition-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-sri-climate-paris-aligned-acc</loc></url>
-  <url><loc>https://enklair.com/etf/amundi-msci-europe-sri-climate-paris-aligned-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-europe-value-factor-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-greece-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-india-swap-acc</loc></url>
@@ -460,6 +467,7 @@
   <url><loc>https://enklair.com/etf/amundi-msci-world-climate-paris-aligned-umweltzeichen</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-world-esg-broad-transition-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-world-esg-broad-transition-dist</loc></url>
+  <url><loc>https://enklair.com/etf/amundi-msci-world-esg-broad-transition-eur-hedged-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-world-esg-selection-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-world-ex-emu-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-msci-world-ex-europe-acc</loc></url>
@@ -599,7 +607,46 @@
   <url><loc>https://enklair.com/etf/amundi-usd-emerging-markets-government-bond-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-usd-fed-funds-rate-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-usd-floating-rate-corporate-bond-esg-acc</loc></url>
+  <url><loc>https://enklair.com/etf/amundi-usd-high-yield-corporate-bond-esg-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-world-equity-enhanced-active-acc</loc></url>
+  <url><loc>https://enklair.com/etf/global-sukuk</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-asia-pacific-ex-japan-screened-equity</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-developed-world-screened-equity</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-emerging-market-screened-equity</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-euro-stoxx-50</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-euro-stoxx-50-b022</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-ftse-100</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-ftse-250</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-hang-seng-tech</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-japan-screened-equity</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-japan-screened-equity-4j90</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-canada</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-china</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-china-a</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-china-pbu1</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-emerging-markets</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-emerging-markets-islamic-screened-capped</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-emerging-markets-small-cap-screened</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-emerging-markets-value-screened</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-europe</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-europe-ipb1</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-europe-islamic-screened</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-japan</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-japan-7566</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-pacific-ex-japan</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-usa-islamic-screened</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-usa-quality</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-world</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-world-climate-paris-aligned</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-world-d7h4</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-world-islamic-screened</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-world-small-cap-screened</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-msci-world-value-screened</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-multi-factor-worldwide-equity</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-nasdaq-global-semiconductor</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-s-and-p-500</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-s-and-p-500-73p7</loc></url>
+  <url><loc>https://enklair.com/etf/hsbc-usa-screened-equity</loc></url>
   <url><loc>https://enklair.com/etf/invesco-all-country-world-enhanced-equity-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-bloomberg-commodity-carbon-tilted</loc></url>
   <url><loc>https://enklair.com/etf/invesco-bloomberg-commodity-eur-hdg</loc></url>
@@ -703,7 +750,6 @@
   <url><loc>https://enklair.com/etf/invesco-s-and-p-500-scored-and-screened-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-s-and-p-500-scored-and-screened-eur-hdg-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-s-and-p-smallcap-600-acc</loc></url>
-  <url><loc>https://enklair.com/etf/invesco-solar-energy-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-stoxx-europe-600-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-stoxx-europe-600-optimised-banks-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-stoxx-europe-600-optimised-chemicals-acc</loc></url>
@@ -1223,7 +1269,6 @@
   <url><loc>https://enklair.com/etf/spdr-msci-europe-utilities</loc></url>
   <url><loc>https://enklair.com/etf/spdr-msci-europe-value</loc></url>
   <url><loc>https://enklair.com/etf/spdr-msci-japan</loc></url>
-  <url><loc>https://enklair.com/etf/spdr-msci-japan-eur-hdg</loc></url>
   <url><loc>https://enklair.com/etf/spdr-msci-usa-small-cap-value-weighted</loc></url>
   <url><loc>https://enklair.com/etf/spdr-msci-usa-value</loc></url>
   <url><loc>https://enklair.com/etf/spdr-msci-world-acc</loc></url>

@@ -1644,7 +1644,7 @@ async function siteData2(request, env) {
     } catch {
       return null;
     }
-  }, [uni, etf, ana, ag, agAuto, sem, cs, fx] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json")]), px = {};
+  }, [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]), px = {};
   try {
     px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {};
   } catch {
@@ -1667,6 +1667,8 @@ async function siteData2(request, env) {
     sem: sem && sem.items ? sem : null,
     ana: ana && ana.items || {},
     ev: [...ag && ag.events || [], ...agAuto && agAuto.events || []],
+    div: [...dvUs && dvUs.events || [], ...dvEu && dvEu.events || []],
+    // 4/11 : calendriers des dividendes (Nasdaq, annonces européennes), alertes Premium
     // Articles par entreprise publiés par la collecte d'actualités (cf/site/data/actu/c/<id>.json), lus à la demande
     actuDe: async (ids) => {
       let out = {};
@@ -1695,7 +1697,23 @@ function clesPortefeuille(pf, names) {
   };
   return walk(pf, 0), [...out];
 }
-var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", rapportDe = (row) => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
+var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260), ALERTES_GRATUIT = 3, ouvreApres = (ymd, n) => {
+  let t = Date.parse(ymd + "T12:00:00Z");
+  for (; n > 0; ) {
+    t += JOUR;
+    let w = new Date(t).getUTCDay();
+    w && w < 6 && n--;
+  }
+  return new Date(t).toISOString().slice(0, 10);
+}, ouvreAvant = (ymd, n) => {
+  let t = Date.parse(ymd + "T12:00:00Z");
+  for (; n > 0; ) {
+    t -= JOUR;
+    let w = new Date(t).getUTCDay();
+    w && w < 6 && n--;
+  }
+  return new Date(t).toISOString().slice(0, 10);
+}, dernierJourDiv = (e) => /enregistrement/i.test(e.label || "") ? ouvreAvant(e.date, 2) : /d[ée]tachement/i.test(e.label || "") ? ouvreAvant(e.date, 1) : null, lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", rapportDe = (row) => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
 function suiviDe(row, names) {
   let R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter((l) => names[l.k]), fav = R.favoris ? (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)) : [], autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
   return { favoris: [.../* @__PURE__ */ new Set([...fav, ...autres])], pf, rapport: R, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map((l) => `${l.k}:${r22(l.q)}:${Math.round(l.m)}`).sort().join(",") + "|" + rapportSignature(R) };
@@ -1802,6 +1820,7 @@ async function espace(request, env) {
       premium: !!p,
       plan: p ? p.plan : null,
       premium_jusqu_au: p ? p.until : null,
+      alertes_max: p ? null : ALERTES_GRATUIT,
       donnees: { favoris: parse(d && d.favoris, []) || [], portefeuille: parse(d && d.portefeuille, null), profil: parse(d && d.profil, null), maj: d ? d.updated : null },
       nonlus: nl && nl.n || 0,
       teaser: !!c.teaser,
@@ -1954,11 +1973,11 @@ async function mesures(request, env) {
 }
 async function tache(request, env, url) {
   if (!adminOk(request, env)) return json({ error: "Non autoris\xE9." }, 403);
-  let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || quoi === "jour" || !quoi && wd === 6, cutoff = now - 6 * 36e5, parJour = (quoi === "jour" || !quoi && wd === 6) && [6, 0, 1].includes(wd), cible = parJour && wd === 1 ? precedenteDe(sem) : sem, W = modeBilan ? parJour ? "(c.last_tache < ? OR (c.last_semaine IS NOT ? AND COALESCE(json_extract(d.profil, '$.rapport.jour'), 6) = ?))" : "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? parJour ? [cutoff, cible, wd] : [cutoff, cible] : [cutoff], FROM = `FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W}`, rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
+  let quoi = url.searchParams.get("quoi"), auj = jourParis(), wd = jourSemaine(auj), sem = semaineIso(auj), now = Date.now(), modeBilan = quoi === "bilan" || quoi === "jour" || !quoi && wd === 6, cutoff = now - 6 * 36e5, parJour = (quoi === "jour" || !quoi && wd === 6) && [6, 0, 1].includes(wd), cible = parJour && wd === 1 ? precedenteDe(sem) : sem, W = modeBilan ? parJour ? "(c.last_tache < ? OR (c.last_semaine IS NOT ? AND COALESCE(json_extract(d.profil, '$.rapport.jour'), 6) = ?))" : "(c.last_tache < ? OR c.last_semaine IS NOT ?)" : "c.last_tache < ?", B = modeBilan ? parJour ? [cutoff, cible, wd] : [cutoff, cible] : [cutoff], FROM = `FROM comptes c LEFT JOIN donnees d ON d.compte = c.id WHERE ${W}`, rows = (await env.DB.prepare(`SELECT c.id, c.email, c.teaser, c.premium, c.last_tache, c.last_semaine, d.favoris, d.portefeuille, d.profil ${FROM} ORDER BY c.id LIMIT 100`).bind(...B).all()).results || [], notifs = 0, mails2 = 0, bilans = 0;
   if (rows.length) {
-    let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre2 = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
+    let d = await siteData2(request, env), demain = jourParis(now + JOUR), ouvre2 = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, ""), cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0, premOk = new Set(((await env.DB.prepare("SELECT token FROM abonnes WHERE until > ?").bind(now).all().catch(() => ({ results: [] }))).results || []).map((x) => x.token)), prochainOuvre = ouvreApres(auj, 1);
     for (let r of rows) {
-      let keys = clesDe(r, d.names).filter((k) => d.names[k]), ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2)));
+      let prem = !!(r.premium && premOk.has(r.premium)), keys = clesDe(r, d.names).filter((k) => d.names[k]).slice(0, prem ? 260 : ALERTES_GRATUIT), ids = new Set(keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2)));
       if (keys.length && r.last_tache < cutoff) {
         let depuis = jourParis(Math.max(r.last_tache || 0, now - 2 * JOUR));
         for (let [u, a] of Object.entries(d.ana)) a && ids.has(a.id) && a.date >= depuis && a.chiffres && a.chiffres.length && (notifs += await notifier(env, r.id, "annonce", `${d.names["c:" + a.id]} : ${a.type || "nouvelle publication"}. ${a.chiffres.slice(0, 3).map((x) => x.join(" : ")).join(" ; ")}.${(a.lecture || [])[0] ? " " + a.lecture[0] : ""}`, "/entreprise/" + a.id + "/actualite", a.date, u));
@@ -1967,6 +1986,13 @@ async function tache(request, env, url) {
           p && p.chg != null && Math.abs(p.chg) >= 5 && (notifs += await notifier(env, r.id, "mouvement", `${d.names[k]} : ${sgnP3(p.chg)} aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualit\xE9.`, lienDe(k), auj));
         }
         for (let e of d.ev) e && ids.has(e.id) && e.date === demain && (notifs += await notifier(env, r.id, /r[ée]sultat/i.test(e.type || e.label || "") ? "resultats" : "agenda", `${d.names["c:" + e.id]} : demain, ${e.label || e.type}.`, "/entreprise/" + e.id + "/agenda", e.date));
+        if (prem) {
+          for (let e of d.div) e && ids.has(e.id) && dernierJourDiv(e) === prochainOuvre && (notifs += await notifier(env, r.id, "dividende", `${d.names["c:" + e.id]} : ${prochainOuvre === demain ? "demain" : "le prochain jour de Bourse"}, dernier jour pour acheter l'action et toucher le dividende annonc\xE9. ${e.label} le ${e.date.split("-").reverse().join("/")}.`, "/entreprise/" + e.id + "/agenda", e.date, "div"));
+          if (ouvre2) for (let k of keys) {
+            let p = d.px[k];
+            !p || !(p.p > 0) || p.chg == null || (p.h52 > 0 && p.chg > 0 && p.p >= p.h52 * 0.998 ? notifs += await notifier(env, r.id, "record", `${d.names[k]} : cours au plus haut depuis un an (${sgnP3(p.chg)} aujourd'hui).`, lienDe(k), auj, "h52") : p.l52 > 0 && p.chg < 0 && p.p <= p.l52 * 1.002 && (notifs += await notifier(env, r.id, "record", `${d.names[k]} : cours au plus bas depuis un an (${sgnP3(p.chg)} aujourd'hui).`, lienDe(k), auj, "l52")));
+          }
+        }
       }
       let RG = rapportDe(r), sonJour = !parJour || RG.jour === wd, aRapport = keys.length || RG.secteurs.length;
       if (modeBilan && sonJour && r.last_semaine !== cible && aRapport) {
@@ -2921,7 +2947,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "4a74812abfdfa8ac", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "ce8806998426bad9", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3190,7 +3216,27 @@ var questions_default = {
     },
     {
       id: "pharma-europeenne-marge",
-      q: "La pharmacie europ\xE9enne class\xE9e par marge"
+      q: "Quelles entreprises europ\xE9ennes de la sant\xE9 ont la meilleure marge ?",
+      titre: "La sant\xE9 europ\xE9enne class\xE9e par marge",
+      desc: "Laboratoires, biotechs et fabricants de mat\xE9riel m\xE9dical d'Europe class\xE9s par marge d'exploitation, face \xE0 la m\xE9diane du secteur, d'apr\xE8s leurs derniers comptes annuels.",
+      a: {
+        region: "EU",
+        secteur: "sante",
+        criteres: [
+          {
+            indicateur: "marge",
+            condition: "sup",
+            valeur: null
+          }
+        ],
+        tri: {
+          indicateur: "marge",
+          ordre: "desc"
+        },
+        fiable: !0
+      },
+      pourquoi: "La marge d'exploitation dit combien il reste de 100 \u20AC de ventes une fois pay\xE9s les salaires, les achats, la recherche et les frais, avant les int\xE9r\xEAts et l'imp\xF4t. Dans la sant\xE9, un m\xE9dicament prot\xE9g\xE9 par un brevet donne des marges tr\xE8s hautes ; \xE0 l'expiration du brevet, des copies moins ch\xE8res arrivent et la marge peut baisser vite. Une petite biotech peut aussi afficher une marge \xE9lev\xE9e une ann\xE9e gr\xE2ce \xE0 un paiement ponctuel d'un partenaire. Regardez la marge sur plusieurs ann\xE9es dans la fiche. Les entreprises dont le chiffre utilis\xE9 est marqu\xE9 \xAB \xE0 v\xE9rifier \xBB (saut inhabituel d'une ann\xE9e \xE0 l'autre) ne sont pas class\xE9es.",
+      en_ligne: !0
     },
     {
       id: "luxe-europeen-croissance",
@@ -3198,15 +3244,76 @@ var questions_default = {
     },
     {
       id: "defense-europeenne-chiffres",
-      q: "Les entreprises europ\xE9ennes de la d\xE9fense en chiffres"
+      q: "Quelles entreprises europ\xE9ennes de la d\xE9fense grandissent le plus vite ?",
+      titre: "La d\xE9fense europ\xE9enne class\xE9e par croissance des ventes",
+      desc: "Les entreprises europ\xE9ennes de la d\xE9fense et de l'armement class\xE9es par croissance de leur chiffre d'affaires sur un an, d'apr\xE8s leurs derniers comptes annuels.",
+      a: {
+        region: "EU",
+        mot: "defense",
+        criteres: [
+          {
+            indicateur: "croissance",
+            condition: "sup",
+            valeur: null
+          }
+        ],
+        tri: {
+          indicateur: "croissance",
+          ordre: "desc"
+        },
+        fiable: !0
+      },
+      pourquoi: "La croissance des ventes compare le chiffre d'affaires de la derni\xE8re ann\xE9e \xE0 celui de l'ann\xE9e d'avant. Plusieurs de ces groupes vendent aussi des avions civils, des moteurs ou des services : leur croissance ne vient pas que de la d\xE9fense. Une forte croissance peut venir d'un rachat d'entreprise. Elle ne dit rien du b\xE9n\xE9fice ni du prix de l'action : regardez la marge et le PER dans la fiche. La liste r\xE9unit les entreprises dont le nom ou la description parle de d\xE9fense ou d'armement. Les entreprises dont le chiffre utilis\xE9 est marqu\xE9 \xAB \xE0 v\xE9rifier \xBB (saut inhabituel d'une ann\xE9e \xE0 l'autre) ne sont pas class\xE9es.",
+      en_ligne: !0
     },
     {
       id: "semi-conducteurs-marge",
-      q: "Semi-conducteurs : qui a la meilleure marge ?"
+      q: "Semi-conducteurs : quelles entreprises ont la meilleure marge ?",
+      titre: "Les fabricants de puces class\xE9s par marge",
+      desc: "Les entreprises des semi-conducteurs (puces, machines pour les fabriquer) class\xE9es par marge d'exploitation, d'apr\xE8s leurs derniers comptes annuels.",
+      a: {
+        mot: "semi",
+        criteres: [
+          {
+            indicateur: "marge",
+            condition: "sup",
+            valeur: null
+          }
+        ],
+        tri: {
+          indicateur: "marge",
+          ordre: "desc"
+        },
+        fiable: !0
+      },
+      pourquoi: "La marge d'exploitation dit combien il reste de 100 \u20AC de ventes une fois pay\xE9s les salaires, les achats et les frais, avant les int\xE9r\xEAts et l'imp\xF4t. Les semi-conducteurs sont un m\xE9tier cyclique : quand la demande de puces est forte, les marges montent tr\xE8s haut, puis elles peuvent fondre l'ann\xE9e o\xF9 les stocks sont pleins. Une marge record dit ce qui s'est pass\xE9 la derni\xE8re ann\xE9e, pas ce qui se passera. La liste r\xE9unit les entreprises dont le nom ou la description parle de semi-conducteurs, ce qui peut inclure des m\xE9tiers voisins comme les panneaux solaires. Les entreprises dont le chiffre utilis\xE9 est marqu\xE9 \xAB \xE0 v\xE9rifier \xBB (saut inhabituel d'une ann\xE9e \xE0 l'autre) ne sont pas class\xE9es.",
+      en_ligne: !0
     },
     {
       id: "per-le-plus-bas-france",
-      q: "Les actions fran\xE7aises au PER le plus bas, et pourquoi"
+      q: "Quelles actions fran\xE7aises ont le PER le plus bas, et pourquoi ?",
+      titre: "Les entreprises fran\xE7aises class\xE9es par PER, du plus bas au plus haut",
+      desc: "Les entreprises fran\xE7aises class\xE9es par PER (prix de l'action rapport\xE9 au b\xE9n\xE9fice), avec ce qu'un PER bas veut dire et ne veut pas dire.",
+      a: {
+        region: "FR",
+        criteres: [
+          {
+            indicateur: "per",
+            condition: "sup",
+            valeur: 0
+          }
+        ],
+        tri: {
+          indicateur: "per",
+          ordre: "asc"
+        },
+        fiable: !0,
+        sauf: [
+          "immo"
+        ]
+      },
+      pourquoi: "Le PER est la valeur en Bourse divis\xE9e par le b\xE9n\xE9fice de la derni\xE8re ann\xE9e : un PER de 10 veut dire que l'entreprise est pay\xE9e 10 ann\xE9es de b\xE9n\xE9fice. Un PER tr\xE8s bas n'est pas une bonne affaire en soi. Il vient souvent d'un b\xE9n\xE9fice gonfl\xE9 une ann\xE9e (vente d'une filiale, gain exceptionnel), d'un m\xE9tier cyclique au sommet de son cycle, ou d'un march\xE9 qui doute que le b\xE9n\xE9fice dure. Les entreprises en perte n'ont pas de PER et n'apparaissent pas. Les soci\xE9t\xE9s immobili\xE8res sont \xE9cart\xE9es : leur b\xE9n\xE9fice inclut la variation de valeur de leurs immeubles. Les entreprises dont le chiffre utilis\xE9 est marqu\xE9 \xAB \xE0 v\xE9rifier \xBB (saut inhabituel d'une ann\xE9e \xE0 l'autre) ne sont pas class\xE9es.",
+      en_ligne: !0
     },
     {
       id: "entreprises-allemandes-dividende",
@@ -3218,7 +3325,32 @@ var questions_default = {
     },
     {
       id: "energie-europeenne-dividende",
-      q: "L'\xE9nergie europ\xE9enne class\xE9e par dividende"
+      q: "Quelles entreprises europ\xE9ennes de l'\xE9nergie versent le plus gros dividende ?",
+      titre: "L'\xE9nergie europ\xE9enne class\xE9e par rendement du dividende",
+      desc: "P\xE9troli\xE8res, gazi\xE8res et entreprises de services \xE0 l'\xE9nergie d'Europe class\xE9es par rendement du dividende, avec la part du b\xE9n\xE9fice vers\xE9e pour juger s'il est tenable.",
+      a: {
+        region: "EU",
+        secteur: "energie",
+        criteres: [
+          {
+            indicateur: "rendement",
+            condition: "sup",
+            valeur: 0
+          },
+          {
+            indicateur: "distribution",
+            condition: "sup",
+            valeur: null
+          }
+        ],
+        tri: {
+          indicateur: "rendement",
+          ordre: "desc"
+        },
+        fiable: !0
+      },
+      pourquoi: "Le rendement est le dernier dividende annuel divis\xE9 par le cours du jour. Dans l'\xE9nergie, le b\xE9n\xE9fice suit le prix du p\xE9trole et du gaz : une bonne ann\xE9e permet de gros dividendes, une mauvaise peut les faire baisser. Un rendement tr\xE8s \xE9lev\xE9 vient souvent d'un cours qui a baiss\xE9, ou d'un dividende exceptionnel : regardez la part du b\xE9n\xE9fice vers\xE9e. Au-del\xE0 de 100 %, l'entreprise verse plus qu'elle ne gagne, ce qui ne peut pas durer. Les entreprises dont le chiffre utilis\xE9 est marqu\xE9 \xAB \xE0 v\xE9rifier \xBB (saut inhabituel d'une ann\xE9e \xE0 l'autre) ne sont pas class\xE9es.",
+      en_ligne: !0
     },
     {
       id: "resultats-de-la-semaine",
