@@ -56,9 +56,10 @@ function ekPoints(o) {
     hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 18, 3 * rh), mn0 = o.min || 0, x = v => L + (W - L - R) * (Math.max(mn0, Math.min(v, o.max)) - mn0) / (o.max - mn0), m = x(o.mediane), bas = !!o.basEstMieux;
   if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
   let g = `<svg viewBox="0 0 ${W} ${T + H + 26}" role="img" aria-label="${ekEsc(o.titre)}">`;
-  g += `<rect x="${L}" y="${T - 6}" width="${m - L}" height="${H}" fill="${bas ? "#E2F8EE" : "#FFE9E3"}"/><rect x="${m}" y="${T - 6}" width="${W - R - m}" height="${H}" fill="${bas ? "#FFE9E3" : "#E2F8EE"}"/>`;
-  if (m - L >= 84) g += ekTx(L + 6, T + H - 12, o.motBas || (bas ? "plus bas" : "moins bien"), { fw: 800, c: bas ? EK_G : EK_R, fs: 11 });
-  if (W - R - m >= 84) g += ekTx(W - R - 6, T + H - 12, o.motHaut || (bas ? "plus haut" : "mieux"), { a: "end", fw: 800, c: bas ? EK_R : EK_G, fs: 11 });
+  const neu = !!o.neutre, zB = neu ? "#F1F1EE" : bas ? "#E2F8EE" : "#FFE9E3", zH = neu ? "#F1F1EE" : bas ? "#FFE9E3" : "#E2F8EE", cB = neu ? "#555" : bas ? EK_G : EK_R, cH = neu ? "#555" : bas ? EK_R : EK_G; // neutre (4/11) : PER, aucune zone verte ou rouge
+  g += `<rect x="${L}" y="${T - 6}" width="${m - L}" height="${H}" fill="${zB}"/><rect x="${m}" y="${T - 6}" width="${W - R - m}" height="${H}" fill="${zH}"/>`;
+  if (m - L >= 84) g += ekTx(L + 6, T + H - 12, o.motBas || (bas ? "plus bas" : "moins bien"), { fw: 800, c: cB, fs: 11 });
+  if (W - R - m >= 84) g += ekTx(W - R - 6, T + H - 12, o.motHaut || (bas ? "plus haut" : "mieux"), { a: "end", fw: 800, c: cH, fs: 11 });
   o.graduations.forEach(t => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + ekTx(x(t), T + H + 12, o.fmtAxe(t), { a: "middle" }));
   g += `<line x1="${m}" x2="${m}" y1="${T - 14}" y2="${T + H - 6}" stroke="#111" stroke-width="2" stroke-dasharray="5 4"/><rect x="${m - 52}" y="${T - 30}" width="104" height="18" rx="5" fill="#111"/>` + ekTx(m, T - 17, ekEsc(o.mediane_label), { a: "middle", c: "#fff", fw: 800, fs: 11 });
   rows.forEach((r, i) => {
@@ -67,7 +68,7 @@ function ekPoints(o) {
     const l2 = lignesNom(r), st = { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: l2.length > 1 ? (r.moi ? 13 : 12) : (r.moi ? 14 : 13) };
     l2.forEach((t, j) => g += ekTx(L - 12, cy + 4 + (j - (l2.length - 1) / 2) * 15, ekEsc(t), st));
     // Valeur hors échelle : le point est posé au bout de l'axe avec une flèche, et une note sous le graphique doit dire le vrai chiffre (r.note)
-    const hx = r.v > o.max, col = r.ton === "r" ? EK_R : r.ton === "g" ? EK_G : r.ton === "n" ? "#111" : Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R;
+    const hx = r.v > o.max, col = r.ton === "r" ? EK_R : r.ton === "g" ? EK_G : r.ton === "n" || neu ? "#111" : Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R;
     g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/>${hx ? `<path d="M${x(r.v) + 8} ${cy - 6} L${x(r.v) + 16} ${cy} L${x(r.v) + 8} ${cy + 6} Z" fill="${col}"/>` : ""}<circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"${hx ? ` data-hors="${ekEsc(r.nom)}"` : ""}/>`
       + ekTx(W - R + 20, cy + 4, ekEsc(r.texte), { fw: 800, c: col, fs: r.moi ? 14 : 13 });
   });

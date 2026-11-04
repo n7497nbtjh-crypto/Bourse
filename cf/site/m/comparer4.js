@@ -48,7 +48,7 @@ const CX_K = [
   { k: "m", n: "Marge", cle: "marge", haut: 1, f: v => cxFr(v, 0) + " €", na: "sans objet pour une banque" },
   { k: "lev", n: "Dette", cle: "dette", haut: 0, f: v => v < 0 ? "aucune" : cxAns(v), na: "sans objet pour une banque" },
   { k: "yld", n: "Dividende", cle: "rendement", haut: 1, f: v => cxFr(v, 1) + " %", na: "pas de dividende relevé" },
-  { k: "pe", n: "Prix", cle: "per", haut: 0, f: v => cxFr(v, 0) + " fois", na: "pas de sens cette année" }];
+  { k: "pe", n: "Prix", cle: "per", haut: 0, neutre: 1, f: v => cxFr(v, 0) + " fois", na: "pas de sens cette année" }];
 function cxRang(F, k) { // « g » en tête, « r » dernière, « n » entre les deux ; « na » sans valeur
   const ok = F.filter(x => x[k.k] != null), tri = ok.slice().sort((a, b) => k.haut ? b[k.k] - a[k.k] : a[k.k] - b[k.k]);
   return x => x[k.k] == null ? "na" : k.neutre || ok.length < 2 ? "n" : x === tri[0] ? "g" : x === tri[tri.length - 1] ? "r" : "n";
@@ -151,7 +151,7 @@ function cxEtapes(F, MD, T, d0) {
   const pv = F.map(x => x.pe).filter(v => v != null);
   if (pv.length) { const pn = f4Nice(Math.max(30, ...pv.map(v => Math.min(v, 100)), MD.pe || 0));
     E.push({ id: "cx-pe", sur: "Prix", concept: { cle: "per" }, titre: T.pe,
-      visuel: cxPts(F, { titre: "Années de bénéfice pour payer l'action", unite: `PER, cours du ${d0}`, basEstMieux: true, motBas: "PER plus bas", motHaut: "PER plus haut", val: x => x.pe, na: "son bénéfice est trop faible, le PER n'aurait pas de sens", txt: x => cxFr(x.pe, 0) + " fois", mediane: MD.pe || 0, mediane_label: medLab(MD.pe, v => cxFr(v, 0) + " fois"), max: pn.max, graduations: pn.ticks, fmtAxe: t => cxFr(t, 0), indice: "À gauche du pointillé (zone verte), l'action coûte moins d'années de bénéfice que la médiane du secteur.", source: { texte: `Cours du ${d0}, comptes ${F[0].s.year}` } }),
+      visuel: cxPts(F, { titre: "Années de bénéfice pour payer l'action", unite: `PER, cours du ${d0}`, basEstMieux: true, neutre: true, motBas: "PER plus bas", motHaut: "PER plus haut", val: x => x.pe, na: "son bénéfice est trop faible, le PER n'aurait pas de sens", txt: x => cxFr(x.pe, 0) + " fois", mediane: MD.pe || 0, mediane_label: medLab(MD.pe, v => cxFr(v, 0) + " fois"), max: pn.max, graduations: pn.ticks, fmtAxe: t => cxFr(t, 0), indice: "À gauche du pointillé (zone verte), l'action coûte moins d'années de bénéfice que la médiane du secteur.", source: { texte: `Cours du ${d0}, comptes ${F[0].s.year}` } }),
       droite: cxEv("Ce que le marché paie", F.map(x => x.pe == null ? { x, de: "bénéfice trop faible cette année", a: "non calculable", t: "" } : MD.pe ? { x, de: x.pe > MD.pe * 1.15 ? `${cxFr(x.pe / MD.pe, 1)} fois la médiane` : x.pe < MD.pe * 0.85 ? `${cxFr(x.pe / MD.pe, 1)} fois la médiane` : "comme la médiane", a: x.pe > MD.pe * 1.15 ? "PER plus haut" : x.pe < MD.pe * 0.85 ? "PER plus bas" : "dans la norme", t: x.pe > MD.pe * 1.15 ? "r" : x.pe < MD.pe * 0.85 ? "g" : "" } : { x, de: cxFr(x.pe, 0) + " fois son bénéfice", a: "", t: "" })),
       suite: "" }); }
   E.forEach((e, i) => { e.n = i + 1; if (i === E.length - 1) e.suite = ""; });
@@ -242,7 +242,7 @@ async function pageComparer4() {
     const score = `<div class="cx-score scroll-x"><table><thead><tr><th></th>${CX_K.map((k, i) => have.has(k.k) ? `<th><a class="cx-go" href="#cx-${k.k}" data-cx-go="cx-${k.k}"><i>${E.findIndex(e => e.id === "cx-" + k.k) + 1}</i><br>${k.n}<span>↓</span></a></th>` : "").join("")}</tr></thead>
       <tbody>${F.map(x => `<tr><th>${cxLogo(x.s)}<a href="/entreprise/${esc(x.s.id)}">${esc(x.nom)}</a></th>${CX_K.filter(k => have.has(k.k)).map(k => { const v = x[k.k], up = !k.neutre && MD[k.k] != null && v != null ? (k.haut ? v > MD[k.k] : v < MD[k.k]) : null;
         return `<td><b class="${R5[k.k](x)}">${v == null ? esc(x.bank && (k.k === "m" || k.k === "lev") ? "sans objet" : k.k === "m" && !x.valide ? "non calculable" : k.na || "–") : esc(k.f(v))}${up == null ? "" : `<span class="ar" title="${up ? "mieux" : "moins bien"} que la médiane du secteur">${up ? "▲" : "▼"}</span>`}</b></td>`; }).join("")}</tr>`).join("")}</tbody>
-      <tfoot><tr><th><span class="cx-mk">médiane</span> du secteur</th>${CX_K.filter(k => have.has(k.k)).map(k => `<td>${!k.neutre && MD[k.k] != null ? `<span class="cx-med">${esc(k.f(MD[k.k]))}</span>` : ""}</td>`).join("")}</tr></tfoot></table></div>
+      <tfoot><tr><th><span class="cx-mk">médiane</span> du secteur</th>${CX_K.filter(k => have.has(k.k)).map(k => `<td>${(!k.neutre || k.k === "pe") && MD[k.k] != null ? `<span class="cx-med">${esc(k.f(MD[k.k]))}</span>` : ""}</td>`).join("")}</tr></tfoot></table></div>
       <div class="cx-leg"><span><i class="cx-lb"></i>en tête sur ce critère</span><span><i class="cx-lw"></i>dernière ${F.length === 2 ? "des deux" : F.length === 3 ? "des trois" : "du groupe"}</span><span>▲ ▼ mieux ou moins bien que la médiane du secteur</span><span>La taille n'est pas comptée : vendre plus ne veut pas dire faire mieux. Être en tête n'est ni une recommandation ni une prédiction.</span></div>`;
     const proches = cxProches(ids), qs = cxQuestions(F);
     // Titre de la comparaison : celui de la comparaison toute prête quand les entreprises sont les mêmes, sinon le ou les secteurs

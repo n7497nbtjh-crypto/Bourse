@@ -56,11 +56,11 @@ function f4Serie(c, k, n = 4) { if (!c || !c.fin || !c.fin[k] || !c.fin[k].slice
 const f4Taux = (c, i) => { const t = c.fin.tax && c.fin.tax[i], p = c.fin.pretax && c.fin.pretax[i]; return t != null && p > 0 ? t / p : null; };
 
 // ——— Jauge courte des repères de l'en-tête ———
-function f4Jauge(v, m, basEstMieux, ecart) {
+function f4Jauge(v, m, basEstMieux, ecart, neutre) {
   if (v == null || m == null) return "";
   let d = ecart ? (v - m) / ecart : (m ? (v / m - 1) : 0); if (basEstMieux) d = -d;
   const x = 50 + Math.max(-44, Math.min(44, d * 50));
-  return `<span class="ek-mg" style="background:linear-gradient(90deg,${basEstMieux ? "#BFF0DA" : "#FFD0C4"} 0 50%,${basEstMieux ? "#FFD0C4" : "#BFF0DA"} 50%)"><b style="left:${basEstMieux ? 100 - x : x}%"></b></span>`;
+  return `<span class="ek-mg" style="background:${neutre ? "#E4E4DF" : `linear-gradient(90deg,${basEstMieux ? "#BFF0DA" : "#FFD0C4"} 0 50%,${basEstMieux ? "#FFD0C4" : "#BFF0DA"} 50%)`}"><b style="left:${basEstMieux ? 100 - x : x}%"></b></span>`;
 }
 function f4Ton(v, m, basEstMieux, ecartAbs) { // "g" mieux, "r" moins bien, "" comparable
   if (v == null || m == null) return "";
@@ -146,7 +146,7 @@ function f4Chaine(x) {
     ["Son bénéfice", M.nm != null ? ekFr(M.nm * 100, 0) + " " + sym : "–", f4Ton(M.nm, MED.nm), `${M.nm != null && M.nm < 0 ? "de perte" : "de bénéfice"} sur 100 ${sym} de ventes`, f4Jauge(M.nm, MED.nm), MED.nm != null ? `${x.P.court} : ${ekFr(MED.nm * 100, 1)} ${sym}` : ""]);
   R5.push(
     ["Son dividende", M.pay != null ? (M.pay > 1.5 ? "> 100 %" : f4Pc(M.pay, 0)) : s.divPaid || s.dps || (x.c && x.c.sourcePdf) ? "–" : "0 %", "", M.pay > 1.5 ? "le dividende dépasse le bénéfice de l'année" : s.dps ? `du bénéfice versé : ${ekFr(s.dps, s.dps >= 10 ? 0 : 2)} ${sym} par action` : "du bénéfice versé", f4Jauge(M.pay, MED.pay), MED.pay != null ? `${x.P.court} : ${f4Pc(MED.pay, 0)}` : ""],
-    ["Son prix en Bourse", M.pe != null ? ekFr(M.pe, 0) + " fois" : "–", M.pe != null ? f4Ton(M.pe, MED.pe, true) : "", M.pe != null ? "son bénéfice annuel (PER)" : "PER non significatif", f4Jauge(M.pe, MED.pe, true), MED.pe != null ? `${x.P.court} : ${ekFr(MED.pe, 0)} fois` : ""]);
+    ["Son prix en Bourse", M.pe != null ? ekFr(M.pe, 0) + " fois" : "–", "", M.pe != null ? "son bénéfice annuel (PER)" : "PER non significatif", f4Jauge(M.pe, MED.pe, true, null, true), MED.pe != null ? `${x.P.court} : ${ekFr(MED.pe, 0)} fois` : ""]);
   return `<div class="ek-chain" style="--n:${R5.length}">${R5.map((r, i) => `<a class="ek-rp" href="#e${i + 1}"><span class="ek-st"><i>${i + 1}</i>${esc(r[0])}</span><span class="ek-v ${r[2]}">${esc(r[1])}</span><span class="ek-s">${esc(r[3])}</span>${r[4]}<span class="ek-ml">${esc(r[5])}</span><span class="ek-go">Comprendre <span>↓</span></span></a>`).join("")}</div>`;
 }
 
@@ -339,7 +339,7 @@ function f4E5(x) {
   return { id: "e5", n: 5, sur: "Son prix en Bourse", titre, cmp: { texte: cmpP, ton: "n" },
     concept: pe != null ? { cle: "per", ex: ekFr(pe, 0) + " fois", calc: v && v.capE && s.net ? `${f4Md(v.capE / 1e6, "EUR")} ÷ ${f4Md(s.net, s.currency)}` : "", nom: s.name } : null,
     mots: [{ cle: "per", ex: pe != null ? ekFr(pe, 0) + " fois" : "", calc: v && v.capE && s.net ? `${f4Md(v.capE / 1e6, "EUR")} ÷ ${f4Md(s.net, s.currency)}` : "", nom: s.name }, ...(v && v.capE ? [{ cle: "capi", ex: f4Md(v.capE / 1e6, "EUR"), calc: "au cours actuel", nom: s.name }] : [])],
-    visuel: pe == null ? "" : ekPoints({ titre: "Années de bénéfice pour payer l'action", unite: `PER, cours du ${typeof PXUP === "string" && PXUP !== "none" ? new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" }) : "jour"}`, basEstMieux: true, motBas: "PER plus bas", motHaut: "PER plus haut", lignes: [...pl.map(r => r.v != null && r.v > mx.max ? { ...r, note: `coûte ${ekFr(r.v, 0)} fois son bénéfice annuel, au-delà de l'échelle du graphique.` } : r), ...P.out.map(o => ({ nom: o.nom, v: null, texte: o.raison }))], mediane: med != null ? med : 0, mediane_label: med != null ? `médiane ${ekFr(med, 0)} fois` : "", max: mx.max, graduations: mx.ticks, fmtAxe: t => ekFr(t, 0),
+    visuel: pe == null ? "" : ekPoints({ titre: "Années de bénéfice pour payer l'action", unite: `PER, cours du ${typeof PXUP === "string" && PXUP !== "none" ? new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" }) : "jour"}`, basEstMieux: true, neutre: true, motBas: "PER plus bas", motHaut: "PER plus haut", lignes: [...pl.map(r => r.v != null && r.v > mx.max ? { ...r, note: `coûte ${ekFr(r.v, 0)} fois son bénéfice annuel, au-delà de l'échelle du graphique.` } : r), ...P.out.map(o => ({ nom: o.nom, v: null, texte: o.raison }))], mediane: med != null ? med : 0, mediane_label: med != null ? `médiane ${ekFr(med, 0)} fois` : "", max: mx.max, graduations: mx.ticks, fmtAxe: t => ekFr(t, 0),
       indice: `Chaque point place une entreprise sur l'échelle du PER. À gauche du pointillé, un PER plus bas que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu : le marché doute davantage ; à droite, un PER plus haut : le marché y croit davantage.`, source: { texte: `Cours du jour, comptes ${s.year}` } }),
     explique: causes.length ? ekExplique({ causes, surveiller: pe != null && med != null && pe > med * 1.15 ? `À ${ekFr(pe, 0)} fois le bénéfice, le cours dépend des attentes : un ralentissement des ventes pèse vite sur lui.` : pe != null && med != null && pe < med * 0.85 ? "Un PER bas peut durer si les ventes ou les marges continuent de reculer." : "" }) : "" };
 }
