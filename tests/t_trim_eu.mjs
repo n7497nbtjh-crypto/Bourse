@@ -1,6 +1,6 @@
 // Test de data/trim_eu.mjs : lecture du chiffre d'affaires d'un communiqué et reconstitution des trimestres
 import assert from "node:assert/strict";
-import { caPeriode, trimestres, perDe, anDe } from "../data/trim_eu.mjs";
+import { caPeriode, trimestres, perDe, anDe, tableaux, publiable } from "../data/trim_eu.mjs";
 const t = (s, ti = "") => caPeriode(s, ti);
 let x = t("CHIFFRE D'AFFAIRES DU TROISIEME TRIMESTRE 2026. Au troisième trimestre 2026, le chiffre d’affaires s’est établi à 7 233 millions d’euros, en croissance de +4,0% en données comparables.");
 assert.equal(x.per, "T3"); assert.equal(x.v, 7233); assert.equal(x.cmp, true);
@@ -24,4 +24,14 @@ const Q = trimestres(R, { 2025: 450 });
 assert.deepEqual(Q.map(q => [q.end, q.ca]), [["2025-03-31", 100], ["2025-06-30", 110], ["2025-09-30", 120], ["2025-12-31", 120], ["2026-03-31", 104], ["2026-06-30", 116]], "T3 2026 à 300 écarté (hors des bornes)");
 assert.equal(trimestres([{ per: "T1", an: 2026, v: 100, d: "2026-04-20" }, { per: "T2", an: 2026, v: 60, d: "2026-07-20" }, { per: "T3", an: 2026, v: 104, d: "2026-10-20" }], { 2025: 400 }).length, 2, "trimestre loin des autres de l'année écarté");
 assert.equal(trimestres([{ per: "T1", an: 2026, v: 4100, d: "2026-04-20", u: "x" }], { 2025: 16000 }).length, 0, "montant arrondi au milliard écarté");
+// tableau : chaque nombre prend la période écrite au-dessus de lui ; la variation du tableau confirme le couple
+const tab = ["(en millions d'euros)", "                           T3 2026       T3 2025      Variation", "Chiffre d'affaires           7 233         6 876          +5,2 %"].join("\n");
+const tb = tableaux(tab, "Chiffre d'affaires du 3e trimestre 2026");
+assert.deepEqual(tb.map(r => [r.per, r.an, r.v, r.ok]), [["T3", 2026, 7233, 1], ["T3", 2025, 6876, 1]]);
+assert.equal(tableaux("            9M 2026     9M 2025\nChiffre d'affaires du pôle Europe     1 200     1 100").length, 0, "ligne d'une activité ignorée");
+// publication : l'année en cours confirmée, et son point de comparaison aussi
+const R2 = [{ per: "T1", an: 2025, v: 100, d: "2025-04-20", u: "a" }, { per: "T1", an: 2025, v: 100, d: "2026-04-20", u: "b" }, { per: "T1", an: 2026, v: 104, d: "2026-04-20", u: "b", ok: 1 },
+  { per: "T2", an: 2025, v: 110, d: "2025-07-20", u: "c" }, { per: "T2", an: 2025, v: 110, d: "2026-07-20", u: "d" }, { per: "T2", an: 2026, v: 115, d: "2026-07-20", u: "d", ok: 1 }];
+assert.equal(publiable(trimestres(R2, { 2025: 430 })), true);
+assert.equal(publiable(trimestres(R2.filter(r => r.u !== "b" || r.an === 2026).map(r => r.u === "a" ? r : r), { 2025: 430 })), false, "T1 2025 lu dans un seul communiqué : pas confirmé");
 console.log("t_trim_eu : OK");

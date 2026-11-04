@@ -6,6 +6,8 @@
 // Garde-fous : chaque trimestre entre 12 % et 40 % des ventes annuelles, même trimestre d'une année sur l'autre entre ×0,6 et ×1,6 ;
 // tout trimestre douteux est écarté. Seulement les exercices calés sur l'année civile, en euros. Pas de bénéfice (rarement trimestriel).
 // Sortie : cf/site/data/trim/<id>.json (même format que data/sec_trim.mjs, form "AMF", lien u vers le communiqué).
+// Tableaux (4/11, 2e version) : tableaux() rattache chaque nombre de la ligne « Chiffre d'affaires » à la période écrite au-dessus ;
+// un chiffre est confirmé quand deux communiqués donnent la même valeur ou que la variation écrite correspond (publiable()).
 // Cache : data/trim_eu_cache.json (chaque communiqué lu une seule fois).   node data/trim_eu.mjs [--depuis 2024-01-01] [--max N] [--hors-ligne]
 import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlinkSync } from "node:fs";
 import { execFileSync } from "node:child_process";
@@ -58,23 +60,73 @@ export function perDe(t) {
 // Année de la période : celle de la publication (exercice civil) ; l'année entière et le 4e trimestre sont publiés l'année suivante
 export const anDe = (per, d) => +String(d).slice(0, 4) - ((per === "A" || per === "T4") && +String(d).slice(5, 7) <= 6 ? 1 : 0);
 
+/* ---------- Lecture des tableaux (4/11, 2e version) ----------
+   La plupart des communiqués donnent le chiffre d'affaires dans un tableau : « Chiffre d'affaires   7 233   6 876   +5,2 % » sous un en-tête
+   « T3 2026   T3 2025   Variation ». pdftotext -layout garde les colonnes : chaque nombre est rattaché à l'en-tête placé au-dessus de lui.
+   Le tableau donne aussi l'année précédente (l'historique vient avec) et souvent la variation, qui sert de vérification. */
+const TOKP = /(?:\b(?:T|Q)[1-4]\b|\b[SH][12]\b|\b9 ?m(?:ois)?\b|\bneuf (?:premiers )?mois\b|\b9 premiers mois\b|\b(?:1er|premier|2e|2ème|deuxième|3e|3ème|troisième|4e|4ème|quatrième) (?:trimestre|semestre)\b|\bsemestre\b|\btrimestre\b|\b(?:30|31)[\/.](?:03|06|09|12)[\/.](?:20)?\d\d\b|\b20[12]\d\b|\b[TQSH][1-4][ \-–]?(?:20)?[2-3]\d\b|\b9M[ \-–]?(?:20)?[2-3]\d\b)/gi;
+const NUMC = /(?<![\d,.])[+\-−]?\d{1,3}(?:[ \u00a0\u202f]\d{3})*(?:,\d+)?(?![\d])(?:\s?(%|pts?|pb|bp|M€|Md€|M€|x))?/g;
+const LIGNE_CA = /^\s*(?:chiffre d['’]affaires|ventes|revenus?)(?:\s(?:consolid[ée]e?s?|du groupe|group|total|totales?|publi[ée]e?s?|nettes?|net|\(M€\)|\(en M€\)|en M€|M€|\(1\)|\(a\)|¹|\*))*\s{2,}\S/i;
+export function tableaux(tx, titre = "", d = "") {
+  const L = tx.split("\n"), out = [];
+  for (let i = 0; i < L.length; i++) {
+    const l = L[i]; if (!LIGNE_CA.test(l) || /\b(p[ôo]le|division|activit|segment|zone|r[ée]gion|organique|comparable|constant|ajust)/i.test(l.slice(0, 50))) continue;
+    const debut = l.search(/\s{2,}\S/), cel = [];
+    for (const m of l.slice(debut).matchAll(NUMC)) { const x = debut + m.index, t = m[0].trim(), pc = /%|pts?|pb|bp/.test(m[1] || "");
+      const v = parseFloat(t.replace(/[+\s\u00a0\u202f%M€dptsbx]/g, "").replace("−", "-").replace(",", "."));
+      if (!isFinite(v)) continue; cel.push({ x: x + t.length / 2, v: /Md€/.test(t) ? v * 1000 : v, pc, brut: t }); }
+    const vals = cel.filter(c => !c.pc && !/^20[12]\d$/.test(c.brut)); if (vals.length < 1) continue;
+    // unité du tableau
+    const autour = L.slice(Math.max(0, i - 14), i + 2).join(" ");
+    const mult = /en milliards|\(Md€\)|en Md€|\bMd€\b/i.test(autour) && !/en millions|M€/i.test(autour.replace(/Md€/g, "")) ? 1000 : /en milliers|\(K€\)|k€/i.test(autour) ? 0.001 : 1;
+    // en-tête : les lignes au-dessus qui portent des périodes
+    const hautes = []; for (let k = i - 1; k >= Math.max(0, i - 9); k--) { const toks = [...L[k].matchAll(TOKP)].map(m => ({ x: m.index + m[0].length / 2, t: m[0] })); if (toks.length) hautes.push(toks); if (hautes.length >= 3) break; }
+    if (!hautes.length) continue;
+    // variations du tableau : une cellule % juste après deux montants confirme le couple
+    const conf = new Set();
+    for (let k = 0; k < cel.length; k++) if (cel[k].pc) { const a = cel[k - 2], b = cel[k - 1]; if (a && b && !a.pc && !b.pc && b.v > 0 && Math.abs((a.v / b.v - 1) * 100 - cel[k].v) <= 0.6) { conf.add(a); conf.add(b); } }
+    for (const c of vals) {
+      const morceaux = hautes.map(toks => toks.filter(t => Math.abs(t.x - c.x) <= 9).sort((a, b) => Math.abs(a.x - c.x) - Math.abs(b.x - c.x))[0]).filter(Boolean).map(t => t.t);
+      if (!morceaux.length) continue;
+      const h = morceaux.reverse().join(" "), per = perDe(h.replace(/\b([TQ])([1-4])/i, "T$2").replace(/\bH1\b/i, "S1").replace(/\b(30|31)[\/.]09[\/.]\S+/, "9 mois").replace(/\b30[\/.]06[\/.]\S+/, "1er semestre").replace(/\b31[\/.]03[\/.]\S+/, "T1").replace(/\b31[\/.]12[\/.]\S+/, "exercice")) || perDe(titre);
+      const y4 = h.match(/\b(20[12]\d)\b/), y2 = h.match(/[TQSH9M][1-4M]?[ \-–]?([2-3]\d)\b/i), an = y4 ? +y4[1] : y2 ? 2000 + +y2[1] : null;
+      if (!per || !an || per === "A") continue;
+      out.push({ per, an, v: Math.round(c.v * mult * 10) / 10, ok: conf.has(c) ? 1 : 0, src: "tableau" });
+    }
+  }
+  // une même période lue deux fois dans le même communiqué : on garde la première
+  const vu = new Set(); return out.filter(r => { const k = r.an + "|" + r.per; if (vu.has(k)) return false; vu.add(k); return true; });
+}
+
 /* ---------- Trimestres d'une société ---------- */
 const FIN = { 1: "03-31", 2: "06-30", 3: "09-30", 4: "12-31" };
+// Plusieurs communiqués donnent souvent le même chiffre (celui de l'an dernier revient en comparaison) : on garde la valeur que le plus
+// de communiqués donnent (à 1 % près), sinon la plus récente ; deux communiqués d'accord = chiffre confirmé.
+export function choisir(rel) {
+  rel = rel.filter(r => !(r.v >= 1000 && r.v % 100 === 0 && r.src !== "tableau")); // « 4,1 milliards » dans une phrase : arrondi trop grossier
+  const g = {}; for (const r of rel) (g[r.an + "|" + r.per] = g[r.an + "|" + r.per] || []).push(r);
+  const P = {};
+  for (const [k, L] of Object.entries(g)) {
+    const grp = []; for (const r of L.slice().sort((a, b) => a.d < b.d ? 1 : -1)) { const c = grp.find(x => Math.abs(x.v / r.v - 1) <= 0.01); if (c) { c.docs.add(r.u); c.n++; c.ok = c.ok || r.ok; } else grp.push({ v: r.v, r, docs: new Set([r.u]), n: 1, ok: r.ok }); }
+    grp.sort((a, b) => b.docs.size - a.docs.size); const best = grp[0], doute = grp.length > 1 && grp[1].docs.size === best.docs.size && Math.abs(grp[1].v / best.v - 1) > 0.05;
+    P[k] = { ...best.r, v: best.v, conf: best.docs.size >= 2 || !!best.ok, doute };
+  }
+  return P;
+}
 export function trimestres(rel, annuel) { // rel : [{ per, an, v, d, u }], annuel : { 2024: ventes de l'année (M€) }
-  rel = rel.filter(r => !(r.v >= 1000 && r.v % 100 === 0)); // « 4,1 milliards » : arrondi à 100 M€ près, trop imprécis pour comparer ou déduire un trimestre
-  const par = {}; for (const r of rel.slice().sort((a, b) => a.d < b.d ? -1 : 1)) { (par[r.an] = par[r.an] || {}); if (!par[r.an][r.per]) par[r.an][r.per] = r; } // le premier communiqué qui donne le chiffre
-  const Q = [];
-  for (const an of Object.keys(par).map(Number).sort()) {
-    const P = par[an], A = annuel[an] || (P.A && P.A.v) || null, ref = A || annuel[an - 1] || null; if (!ref) continue;
+  const C = choisir(rel), ans = [...new Set(Object.keys(C).map(k => +k.split("|")[0]))].sort(), Q = [];
+  for (const an of ans) {
+    const P = {}; for (const per of ["T1", "T2", "T3", "T4", "S1", "9M", "A"]) if (C[an + "|" + per]) P[per] = C[an + "|" + per];
+    const A = annuel[an] || null, ref = A || annuel[an - 1] || null; if (!ref) continue;
     const t = {};
-    if (P.T1) t[1] = { v: P.T1.v, r: P.T1 };
-    if (P.T2) t[2] = { v: P.T2.v, r: P.T2 }; else if (P.S1 && t[1]) t[2] = { v: P.S1.v - t[1].v, r: P.S1, deduit: 1 };
-    const s1 = P.S1 ? P.S1.v : t[1] && t[2] ? t[1].v + t[2].v : null;
-    if (P.T3) t[3] = { v: P.T3.v, r: P.T3 }; else if (P["9M"] && s1 != null) t[3] = { v: P["9M"].v - s1, r: P["9M"], deduit: 1 };
-    const n9 = P["9M"] ? P["9M"].v : t[1] && t[2] && t[3] ? t[1].v + t[2].v + t[3].v : null;
-    if (P.T4) t[4] = { v: P.T4.v, r: P.T4 }; else if (annuel[an] && n9 != null) t[4] = { v: annuel[an] - n9, r: P.A || null, deduit: 1, annuel: 1 };
+    if (P.T1) t[1] = { v: P.T1.v, r: P.T1, conf: P.T1.conf };
+    if (P.T2) t[2] = { v: P.T2.v, r: P.T2, conf: P.T2.conf }; else if (P.S1 && t[1]) t[2] = { v: P.S1.v - t[1].v, r: P.S1, deduit: 1, conf: P.S1.conf && t[1].conf };
+    const s1 = P.S1 ? P.S1 : t[1] && t[2] ? { v: t[1].v + t[2].v, conf: t[1].conf && t[2].conf } : null;
+    if (P.T3) t[3] = { v: P.T3.v, r: P.T3, conf: P.T3.conf }; else if (P["9M"] && s1) t[3] = { v: P["9M"].v - s1.v, r: P["9M"], deduit: 1, conf: P["9M"].conf && s1.conf };
+    const n9 = P["9M"] ? P["9M"] : t[1] && t[2] && t[3] ? { v: t[1].v + t[2].v + t[3].v, conf: t[1].conf && t[2].conf && t[3].conf } : null;
+    if (P.T4) t[4] = { v: P.T4.v, r: P.T4, conf: P.T4.conf }; else if (A && n9) t[4] = { v: A - n9.v, r: null, deduit: 1, conf: n9.conf };
     for (const k of [1, 2, 3, 4]) { const x = t[k]; if (!x || !(x.v >= 0.12 * ref && x.v <= 0.4 * ref)) continue;
-      Q.push({ end: `${an}-${FIN[k]}`, ca: Math.round(x.v * 10) / 10, net: null, filed: x.r ? x.r.d : null, form: "AMF", u: x.r ? x.r.u : null, ...(x.deduit ? { deduit: 1 } : {}) }); }
+      Q.push({ end: `${an}-${FIN[k]}`, ca: Math.round(x.v * 10) / 10, net: null, filed: x.r ? x.r.d : null, form: "AMF", u: x.r ? x.r.u : null, conf: x.conf ? 1 : 0, ...(x.deduit ? { deduit: 1 } : {}) }); }
   }
   // dans une même année, un trimestre très loin des autres trahit une erreur de lecture (chiffre d'une activité, d'une autre période)
   const med = {}; for (const q of Q) (med[q.end.slice(0, 4)] = med[q.end.slice(0, 4)] || []).push(q.ca);
@@ -84,20 +136,12 @@ export function trimestres(rel, annuel) { // rel : [{ per, an, v, d, u }], annue
   const by = Object.fromEntries(Q2.map(q => [q.end, q]));
   return Q2.filter(q => { const p = by[(+q.end.slice(0, 4) - 1) + q.end.slice(4)]; return !p || (q.ca / p.ca >= 0.7 && q.ca / p.ca <= 1.4); });
 }
-
-// Contrôle croisé (4/11) : la variation annoncée dans le communiqué (« +4,0 % ») doit correspondre aux chiffres relevés pour la même
-// période un an plus tôt. Une seule contradiction et la société est écartée ; il faut au moins une confirmation pour la garder.
-export function controle(rel) {
-  rel = rel.filter(r => !(r.v >= 1000 && r.v % 100 === 0));
-  const cle = r => r.an + "|" + r.per, par = {}; for (const r of rel) if (!par[cle(r)]) par[cle(r)] = r;
-  let ok = 0, ko = 0; const conf = new Set();
-  for (const r of Object.values(par)) {
-    const p = par[(r.an - 1) + "|" + r.per]; if (!p || r.g == null) continue;
-    const ecart = Math.abs((r.v / p.v - 1) * 100 - r.g); if (ecart <= (r.cmp ? 6 : 1.5)) { ok++; conf.add(cle(r)); conf.add(cle(p)); } else ko++;
-  }
-  // l'année en cours : chaque chiffre publié doit être confirmé par sa propre variation annoncée
-  const an = Math.max(...Object.values(par).filter(r => r.per !== "A").map(r => r.an)), cours = Object.values(par).filter(r => r.an === an && r.per !== "A");
-  return { ok, ko, conf, garde: ok >= 1 && ko === 0 && cours.length > 0 && cours.every(r => conf.has(cle(r))) };
+// Publication : chaque trimestre de l'année en cours doit être confirmé (deux communiqués d'accord, ou la variation écrite dans le
+// tableau ou la phrase qui correspond), ainsi que le même trimestre de l'année précédente qui sert de comparaison.
+export function publiable(Q) {
+  if (!Q.length) return false;
+  const an = Math.max(...Q.map(q => +q.end.slice(0, 4))), cours = Q.filter(q => +q.end.slice(0, 4) === an), by = Object.fromEntries(Q.map(q => [q.end, q]));
+  return cours.every(q => q.conf && (by[(an - 1) + q.end.slice(4)] || {}).conf);
 }
 
 /* ---------- Collecte ---------- */
@@ -124,23 +168,27 @@ async function main() {
   }
   console.log(recs.length, "publications,", lus.length, "communiqués de chiffre d'affaires ou de résultats");
   let n = 0;
-  const L = lus.filter(x => !cache[x.u]).slice(0, MAX), f = "/tmp/trim_eu.pdf";
+  const L = lus.filter(x => !cache[x.u] || !cache[x.u].v2).slice(0, MAX) // v2 : relu avec les tableaux, f = "/tmp/trim_eu.pdf";
   for (const x of L) {
     if (Date.now() > STOP) break;
     const r = await get(x.u); if (!r) continue;
     try { writeFileSync(f, Buffer.from(await r.arrayBuffer())); const tx = execFileSync("pdftotext", ["-l", "4", f, "-"], { maxBuffer: 5e7, stdio: ["ignore", "pipe", "ignore"] }).toString();
-      const e = caPeriode(tx, x.t); cache[x.u] = e ? { ...e, an: anDe(e.per, x.d), d: x.d, id: x.id } : { x: 1, d: x.d, id: x.id }; n++; } catch (e) { cache[x.u] = { x: 1, d: x.d, id: x.id }; }
+      const e = caPeriode(tx, x.t), tl = tableaux(execFileSync("pdftotext", ["-layout", "-l", "4", f, "-"], { maxBuffer: 5e7, stdio: ["ignore", "pipe", "ignore"] }).toString(), x.t, x.d);
+      const l = [...(e ? [{ per: e.per, an: anDe(e.per, x.d), v: e.v, g: e.g, cmp: e.cmp, src: "phrase" }] : []), ...tl];
+      cache[x.u] = l.length ? { v2: 1, d: x.d, id: x.id, l } : { v2: 1, x: 1, d: x.d, id: x.id }; n++; } catch (e) { cache[x.u] = { v2: 1, x: 1, d: x.d, id: x.id }; }
     if (n % 50 === 0) writeFileSync(CACHE, JSON.stringify(cache)); await sleep(300);
   }
   writeFileSync(CACHE, JSON.stringify(cache));
   console.log(n, "communiqués lus,", L.length - n, "restants");
   // assemblage par société
-  const rel = {}; for (const [u, e] of Object.entries(cache)) if (!e.x) (rel[e.id] = rel[e.id] || []).push({ ...e, u });
+  // une phrase dont la variation annoncée correspond au chiffre de l'an dernier (tableau ou autre communiqué) est confirmée
+  const rel = {}; for (const [u, e] of Object.entries(cache)) if (!e.x) for (const r of (e.l || [{ ...e, src: "phrase" }])) (rel[e.id] = rel[e.id] || []).push({ ...r, d: e.d, u });
+  for (const R of Object.values(rel)) for (const r of R) if (r.g != null && !r.ok) { const p = R.find(x => x.an === r.an - 1 && x.per === r.per && Math.abs((r.v / x.v - 1) * 100 - r.g) <= (r.cmp ? 6 : 1.5)); if (p) { r.ok = 1; p.ok = 1; } }
   let ecrits = 0; mkdirSync(OUT, { recursive: true });
   for (const c of cos) {
     const R = rel[c.id]; if (!R) continue;
     const annuel = Object.fromEntries(c.s.years.map((y, i) => [y, c.s.fin.ca[i]]).filter(([, v]) => v > 0));
-    const ctl = controle(R), q = ctl.garde ? trimestres(R, annuel) : []; if (q.length < 3) { try { const f = new URL(c.id + ".json", OUT), o = existsSync(f) && JSON.parse(readFileSync(f)); if (o && /AMF/.test(o.source || "")) unlinkSync(f); } catch (e) { } continue; }
+    const q0 = trimestres(R, annuel), q = publiable(q0) ? q0 : []; if (q.length < 3) { try { const f = new URL(c.id + ".json", OUT), o = existsSync(f) && JSON.parse(readFileSync(f)); if (o && /AMF/.test(o.source || "")) unlinkSync(f); } catch (e) { } continue; }
     writeFileSync(new URL(c.id + ".json", OUT), JSON.stringify({ id: c.id, updated: new Date().toISOString().slice(0, 10), source: "AMF, communiqués (info-financiere.gouv.fr)", currency: "EUR", q: q.slice(-24) }));
     ecrits++;
   }
