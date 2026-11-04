@@ -5,7 +5,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { createServer } from "node:http";
 const { default: W } = await import("../cf/site/_worker.js");
 const root = new URL("../cf/site/", import.meta.url);
-const env = { ASSETS: { fetch: async req => {
+const env = { MCP_OUVERT: "1", ASSETS: { fetch: async req => {
   const p = new URL(req.url).pathname, f = new URL("." + (p === "/" ? "/index.html" : p), root);
   if (!existsSync(f)) return new Response("not found", { status: 404, headers: { "content-type": "text/html" } });
   return new Response(readFileSync(f), { headers: { "content-type": p.endsWith(".json") ? "application/json" : p.endsWith(".js") ? "text/javascript" : "text/html" } });
@@ -110,15 +110,19 @@ if (process.env.MCP_SDK) {
   await cl.close(); srv.close();
   console.log("SDK MCP", sv.name, sv.version, "·", tl.tools.length, "outils");
 }
-// 5e passage (C) : adresse personnelle /mcp/<clé> : 20 appels par jour pour un compte gratuit, sans limite pour Premium ; clé inconnue : 404
+// Adresse personnelle /mcp/<clé> : Premium sans limite par jour ; compte gratuit : réservé à Premium (4/11) ; clé inconnue : 404
 { const { DatabaseSync } = await import("node:sqlite"); const db = new DatabaseSync(":memory:");
   const st = (q, p = []) => ({ bind: (...a) => st(q, a), all: async () => ({ results: db.prepare(q).all(...p) }), first: async () => db.prepare(q).get(...p) ?? null, run: async () => ({ meta: { changes: Number(db.prepare(q).run(...p).changes) } }) });
   db.exec(`CREATE TABLE comptes (id TEXT PRIMARY KEY, premium TEXT); CREATE TABLE abonnes (token TEXT PRIMARY KEY, until INTEGER); CREATE TABLE mcp_cles (cle TEXT PRIMARY KEY, compte TEXT, created INTEGER);
     INSERT INTO comptes VALUES ('g', NULL), ('p', 'tok'); INSERT INTO abonnes VALUES ('tok', ${Date.now() + 864e5}); INSERT INTO mcp_cles VALUES ('${"a".repeat(32)}', 'g', 0), ('${"b".repeat(32)}', 'p', 0);`);
-  const env2 = { ...env, DB: { prepare: q => st(q) } };
+  const env2 = { ...env, MCP_OUVERT: "0", DB: { prepare: q => st(q) } };
   const at = async (cle, i) => { const r = await W.fetch(new Request(`https://t.local/mcp/${cle}`, { method: "POST", headers: { ...H, "cf-connecting-ip": "10.20.30." + (i % 200) }, body: JSON.stringify({ jsonrpc: "2.0", id: i, method: "tools/call", params: { name: "eligibilite_pea", arguments: { titre: "LVMH" } } }) }), env2); return [r.status, await r.json()]; };
-  let g = []; for (let i = 0; i < 21; i++) g.push(await at("a".repeat(32), i));
-  ok(g.slice(0, 20).every(([st, x]) => st === 200 && !x.result.isError) && g[20][1].result.isError && /20 appels gratuits/.test(g[20][1].result.content[0].text), "compte gratuit : 20 appels puis limite " + JSON.stringify(g[20][1]).slice(0, 200));
+  // 4/11 : connecteur réservé à Premium (compte gratuit et adresse publique : chaque outil renvoie l'explication ; la liste des outils reste ouverte)
+  const [sg, xg] = await at("a".repeat(32), 1); ok(sg === 200 && xg.result.isError && /fait partie de Premium/.test(xg.result.content[0].text), "compte gratuit : réservé à Premium " + JSON.stringify(xg).slice(0, 200));
+  const pub = await (await W.fetch(new Request("https://t.local/mcp", { method: "POST", headers: { ...H, "cf-connecting-ip": "10.9.9.9" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "eligibilite_pea", arguments: { titre: "LVMH" } } }) }), env2)).json();
+  ok(pub.result.isError && /Premium/.test(pub.result.content[0].text), "adresse publique sans Premium : explication");
+  const lst = await (await W.fetch(new Request("https://t.local/mcp", { method: "POST", headers: { ...H, "cf-connecting-ip": "10.9.9.8" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }) }), env2)).json();
+  ok(lst.result && lst.result.tools.length > 3, "liste des outils ouverte à tous");
   let pr = []; for (let i = 0; i < 25; i++) pr.push(await at("b".repeat(32), i)); ok(pr.every(([st, x]) => st === 200 && !x.result.isError), "Premium : sans limite par jour " + String(JSON.stringify(pr.find(([st, x]) => st !== 200 || x.result.isError))).slice(0, 300));
   const [s404] = await at("c".repeat(32), 1); ok(s404 === 404, "clé inconnue : 404"); }
 console.log(fails ? `mcp : ${fails} échec(s)` : "mcp : tout est bon"); process.exit(fails ? 1 : 0);

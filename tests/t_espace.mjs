@@ -71,7 +71,10 @@ for (const [b, m] of [[{ favoris: "c:lvmh" }, "favoris pas un tableau"], [{ favo
 [s] = await E("PUT", "/api/espace/donnees", { favoris: ["c:lvmh", "c:lvmh", "e:cw8"] }, A); ok(s === 200, "favoris enregistrés");
 [s, j] = await E("GET", "/api/espace/moi", null, A2); ok(JSON.stringify(j.donnees.favoris) === '["c:lvmh","e:cw8"]' && j.donnees.portefeuille.l.length === 2 && j.donnees.profil.risque === "prudent", "les autres champs restent " + JSON.stringify(j.donnees));
 
-// Bilan de la semaine
+// Bilan de la semaine (4/11 : réservé à Premium ; A reçoit un accès Premium le temps de cette partie)
+[s, j] = await E("GET", "/api/espace/bilan", null, A); ok(s === 403 && j.premium_requis, "bilan : réservé à Premium " + s);
+const premTmp = (tok, id) => { sql.prepare("INSERT OR IGNORE INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, 'x@ex.fr', 'unique', NULL, ?, ?, ?)").run(tok, "cs_" + tok.slice(0, 6), Date.now() + 300 * DAY, Date.now()); sql.prepare("UPDATE comptes SET premium = ? WHERE id = ?").run(tok, id); };
+premTmp("e".repeat(40), rowA.id);
 [s, j] = await E("GET", "/api/espace/bilan", null, A);
 const L = Object.fromEntries((j.lignes || []).map(l => [l.k, l]));
 ok(s === 200 && j.semaine === semaineIso(today) && j.lignes.length === 3, "bilan construit " + JSON.stringify(j).slice(0, 300));
@@ -90,10 +93,13 @@ sql.prepare("INSERT INTO bilans (compte, semaine, contenu, created) VALUES (?, '
 
 // Compte B (gratuit) : chiffres affichés, jamais de modèle appelé
 [s, j, sc] = await E("POST", "/api/espace/inscription", { email: "b@ex.fr", motdepasse: "motdepasse-de-b", favoris: ["c:totalenergies"] }); const B = cookieOf(sc);
+[s, j] = await E("GET", "/api/espace/bilan", null, B); ok(s === 403 && j.premium_requis, "compte gratuit : pas de rapport de la semaine");
+premTmp("d".repeat(40), sql.prepare("SELECT id FROM comptes WHERE email = 'b@ex.fr'").get().id);
 aiText = ""; [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(s === 200 && j.texte === null && j.lignes.length === 1 && j.moyenne === -5, "sans IA : chiffres seuls");
 const rowB = sql.prepare("SELECT * FROM comptes WHERE email = 'b@ex.fr'").get();
 [s] = await E("PUT", "/api/espace/donnees", { favoris: ["c:totalenergies", "c:lvmh"] }, B); [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(j.lignes.length === 2, "bilan refait quand la liste change");
 
+sql.prepare("UPDATE comptes SET premium = NULL").run(); sql.prepare("DELETE FROM abonnes").run(); // fin des accès Premium temporaires
 // Premium rattaché au compte
 const TOK = "abcdef0123456789abcdef0123456789abcdef01";
 sql.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, 'c@ex.fr', 'unique', NULL, 'cs_x', ?, ?)").run(TOK, Date.now() + 300 * DAY, Date.now());
@@ -111,7 +117,7 @@ ok((await premiumOf(req("GET", "/", null, { cookie: B }), env)) === null, "B n'e
 [s] = await E("POST", "/api/espace/preferences", { teaser: "oui" }, A); ok(s === 400, "préférence invalide");
 [s, j] = await E("POST", "/api/espace/preferences", { teaser: true }, A); ok(s === 200 && j.teaser === true, "e-mail de rappel demandé");
 [s] = await E("POST", "/api/espace/tache?quoi=bilan"); ok(s === 403, "tâche protégée");
-[s, j] = await E("POST", "/api/espace/tache?quoi=bilan", null, null, { "x-admin-key": "k" }); ok(s === 200 && j.traites === 2 && j.reste === 0 && j.bilans === 2, "tâche " + JSON.stringify(j));
+[s, j] = await E("POST", "/api/espace/tache?quoi=bilan", null, null, { "x-admin-key": "k" }); ok(s === 200 && j.traites === 2 && j.reste === 0 && j.bilans === 1, "tâche (rapport pour le seul compte Premium) " + JSON.stringify(j));
 const types = sql.prepare("SELECT type FROM notifs WHERE compte = ?").all(rowA.id).map(x => x.type).sort().join(",");
 ok(types === (wd >= 1 && wd <= 5 ? "annonce,bilan,mouvement,resultats" : "annonce,bilan,resultats"), "notifications créées " + types);
 ok(sent.length === 1 && sent[0].to === "a@ex.fr" && sent[0].subject === "Votre bilan de la semaine est prêt" && sent[0].text.includes("https://t.local/espace") && !/%|LVMH/.test(sent[0].text + sent[0].html), "e-mail court, lien seulement " + JSON.stringify(sent));
@@ -170,6 +176,7 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
   ok(s === 200 && j.rapport.secteurs.join() === "energie,tech" && j.limite && j.rapport.sujets.dividendes === false && j.rapport.sujets.resultats === true && j.rapport.configure, "réglages enregistrés, 2 secteurs sans Premium " + JSON.stringify(j).slice(0, 300));
   [s, j] = await E("GET", "/api/espace/moi", null, B); ok(j.donnees.profil && j.donnees.profil.rapport.jour === 0 && j.donnees.profil.rapport.detail === "court", "réglages renvoyés avec le compte");
   [s, j] = await E("POST", "/api/espace/rapport", { secteurs: ["energie", "tech", "sante"] }, A); ok(s === 200 && j.premium && j.rapport.secteurs.length === 3 && !j.limite, "Premium : 6 secteurs au plus " + JSON.stringify(j).slice(0, 200));
+  premTmp("c".repeat(40), rowB.id); // 4/11 : le rapport de la semaine est réservé à Premium ; B le devient pour la suite (réglages gardés : 2 secteurs)
   [s, j] = await E("GET", "/api/espace/bilan", null, B);
   ok(s === 200 && j.reglages && j.reglages.detail === "court" && j.indices.every(i => i.id === "cac40") && j.secteurs.length === 2 && j.secteurs[0].nom === "Énergie" && j.secteurs[0].n === 1 && j.secteurs[0].vos_lignes[0].nom === "TotalEnergies", "synthèse selon les réglages " + JSON.stringify(j.secteurs));
   ok(aiCalls === 0 && j.annonces.length <= 3 && j.a_venir.length <= 3, "rapport court : sans commentaire rédigé, 3 actualités au plus");

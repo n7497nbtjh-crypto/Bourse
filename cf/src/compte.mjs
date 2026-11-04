@@ -39,6 +39,12 @@ export async function visitor(request, env = {}) { // empreinte pseudonyme : cha
   const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|" + today() + "|" + (env.HASH_SALT || "bilan-sel-2026")));
   return [...new Uint8Array(h)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
 }
+// 4/11 : même empreinte, mais stable sur la semaine (lundi UTC) : sert aux quotas hebdomadaires (IA, comparaisons)
+export async function visiteurSemaine(request, env = {}) {
+  const ip = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "local", d = new Date(); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7);
+  const h = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(ip + "|S" + d.toISOString().slice(0, 10) + "|" + (env.HASH_SALT || "bilan-sel-2026")));
+  return "s" + [...new Uint8Array(h)].slice(0, 12).map(b => b.toString(16).padStart(2, "0")).join("");
+}
 /* ---------- Compte connecté (cookie de session bilan_s, voir espace.mjs) ---------- */
 export const sha256hex = async s => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)))].map(b => b.toString(16).padStart(2, "0")).join("");
 export const cookieSession = request => { const m = (request.headers.get("cookie") || "").match(/(?:^|;\s*)bilan_s=([a-f0-9]{64})(?:;|$)/); return m ? m[1] : null; };

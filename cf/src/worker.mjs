@@ -18,6 +18,7 @@ import { mcp } from "./mcp.mjs";
 import { tete, VERSION, SECURITE } from "./pwa.mjs";
 import { etfMeta } from "./etf_meta.mjs";
 import { iaSite } from "./iasite.mjs";
+import { quota } from "./quota.mjs";
 import QUESTIONS from "../../data/questions.json" with { type: "json" };
 
 const SITE = "ENKLAIR";
@@ -127,6 +128,7 @@ export default {
     if (url.pathname === "/api/presse") return presse(request, U);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (IA_RETIREE.test(url.pathname)) return iaRetiree();
+    if (url.pathname.startsWith("/api/quota/")) return quota(request, env); // 4/11 : 5 comparaisons par semaine en gratuit
     if (url.pathname.startsWith("/api/ia/")) return iaSite(request, env); // l'IA du site (Workers AI, gratuite, plafonnée)
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);

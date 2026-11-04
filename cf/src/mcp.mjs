@@ -439,16 +439,6 @@ async function cleInfo(env, cle) { // { compte, premium } pour une adresse perso
     return { compte: r.compte, premium: prem };
   } catch (e) { return null; }
 }
-async function debitCle(env, info) { // compteur du jour d'une adresse personnelle
-  if (info.premium) return null;
-  try {
-    const jour = new Date().toISOString().slice(0, 10);
-    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS usage (who TEXT NOT NULL, jour TEXT NOT NULL, kind TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (who, jour, kind))`).run();
-    const r = await env.DB.prepare(`INSERT INTO usage (who, jour, kind, n) VALUES (?, ?, 'mcp', 1) ON CONFLICT (who, jour, kind) DO UPDATE SET n = n + 1 RETURNING n`).bind("mcpc:" + info.compte, jour).first();
-    if (r && r.n > MCP_GRATUIT_JOUR) return `Les ${MCP_GRATUIT_JOUR} appels gratuits du jour sont utilisés pour ce compte ENKLAIR Ils reviennent demain ; avec Premium, le connecteur est sans limite.`;
-  } catch (e) { }
-  return null;
-}
 async function debit(request, env) {
   const ip = request.headers.get("cf-connecting-ip") || "local", now = Date.now(), w = MINUTE.get(ip);
   if (!w || now - w.t > 6e4) MINUTE.set(ip, { t: now, n: 1 }); else if (++w.n > PAR_MINUTE) return "Trop de requêtes en une minute. Réessayez dans un instant.";
@@ -486,7 +476,10 @@ async function traiter(msg, request, env, origin, ctx) {
   if (msg.method === "tools/call") {
     const t = TOOLS.find(x => x.name === p.name);
     if (!t) return err(id, -32602, `Outil inconnu : ${p.name}`);
-    const lim = (await debit(request, env)) || (ctx && ctx.cleMcp ? await debitCle(env, ctx.cleMcp) : null);
+    // 4/11 (décision de Romain) : le connecteur fait partie de Premium ; sans adresse personnelle Premium, chaque outil renvoie l'explication.
+    // tools/list et initialize restent ouverts (l'application se connecte et voit les outils). MCP_OUVERT=1 dans Cloudflare rouvre à tous.
+    const prem = !!(ctx && ctx.cleMcp && ctx.cleMcp.premium) || env.MCP_OUVERT === "1";
+    const lim = (await debit(request, env)) || (prem ? null : `Le connecteur ENKLAIR fait partie de Premium (39 € par an ou 4,90 € par mois) : ${origin}/premium. Une fois abonné, copiez votre adresse personnelle dans Mon espace, Réglages, et remplacez avec elle l'adresse ${origin}/mcp dans votre assistant. En attendant, toutes les données restent consultables gratuitement sur ${origin}.`);
     if (lim) return { jsonrpc: "2.0", id, result: { content: [{ type: "text", text: lim }], isError: true } };
     try {
       const r = await outil(t.name, p.arguments && typeof p.arguments === "object" ? p.arguments : {}, env, origin, ctx);

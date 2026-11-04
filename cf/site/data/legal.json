@@ -112,7 +112,7 @@
       "Abonnement mensuel : 4,90 € par mois, sans engagement.",
       "Accès 12 mois : paiement unique de 39 €, sans renouvellement automatique.",
       "Le détail de ce que comprend chaque offre est affiché sur la page Premium (enklair.com/premium) avant le paiement.",
-      "Le connecteur pour assistants IA (Claude, ChatGPT…) est limité à 20 appels par jour avec la version gratuite, sans limite avec Premium (usage raisonnable : 240 appels par minute au plus)."
+      "Version gratuite : 5 questions par semaine à l'IA du site et 5 comparaisons d'entreprises par semaine. Premium : 30 questions par jour à l'IA du site, comparaisons sans limite, connecteur pour assistants IA (Claude, ChatGPT…) avec un usage raisonnable de 240 appels par minute au plus, alertes, rapport de la semaine, analyse du portefeuille, classements et export des chiffres."
      ]
     },
     {
@@ -296,7 +296,7 @@
       "Les réponses calculées sont produites par le site, dans votre navigateur, sans modèle d'IA.",
       "Quand vous demandez une réponse rédigée, votre question et les chiffres du site utiles à la réponse (par exemple ceux d'une fiche, ou ceux de votre portefeuille si vous demandez son explication) sont envoyés au modèle d'IA du site, hébergé par Cloudflare (Workers AI). Ils servent uniquement à rédiger la réponse.",
       "Une réponse identique peut être resservie pendant 24 heures à quiconque pose la même question avec les mêmes chiffres : elle est gardée au plus 48 heures, sans lien avec votre identité.",
-      "Le site compte les questions posées par semaine (par jour avec Premium) (empreinte pseudonyme, voir « Protection contre les abus ») pour appliquer les limites gratuites.",
+      "Le site compte les questions posées par semaine (par jour avec Premium), ainsi que les comparaisons d'entreprises (empreinte pseudonyme, voir « Protection contre les abus ») pour appliquer les limites gratuites.",
       "Connecteur : si vous branchez Claude, ChatGPT ou un autre assistant sur ENKLAIR, c'est cet assistant qui lit les données publiques du site. Votre adresse personnelle de connecteur sert seulement à compter vos appels du jour ; le connecteur ne donne accès ni à votre compte ni à votre portefeuille."
      ]
     },

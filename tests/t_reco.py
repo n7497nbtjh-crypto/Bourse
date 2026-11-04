@@ -78,10 +78,10 @@ with sync_playwright() as pw:
         # 5. Ancienne adresse redirigée
         pg.goto("http://t.local/pour-moi"); pg.wait_for_timeout(1200)
         if pg.evaluate("location.pathname") != "/repartitions": fail(nom, "/pour-moi non redirigé", pg.evaluate("location.pathname"))
-        # 6. Classements : aperçu flouté sans Premium
+        # 6. Classements : réservés à Premium (4/11), carte Premium sans liste
         pg.goto("http://t.local/classements"); pg.wait_for_timeout(1500)
-        nb = pg.locator(".cl4-flou").count(); nv = pg.locator("a.cl4-r").count()  # 3/11 : classements v4 (classements4.js), 5 places floutées
-        if nb != 5 or nv < 5: fail(nom, "aperçu du classement", nb, nv)
+        nb = pg.locator(".cl4-prem2").count(); nv = pg.locator("a.cl4-r").count()  # 4/11 : classements réservés à Premium
+        if nb != 1 or nv != 0: fail(nom, "classement réservé à Premium", nb, nv)
         blur_txt = pg.evaluate("[...document.querySelectorAll('.cl4-flou')].map(e => e.textContent).join(' ')")
         top = pg.evaluate("outClRows('points', {}).slice(0, 3).map(x => x.c.name)")
         if any(n in blur_txt for n in top) or pg.evaluate("[...document.querySelectorAll('.cl4-flou a, .cl4-flou img')].length"): fail(nom, "nom d'une entreprise floutée présent dans la page")

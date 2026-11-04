@@ -213,6 +213,12 @@ function cxGalerie() {
     <div class="cx-gal" id="cx-gal">${P.map(cxCartePreset).join("")}</div></section>`;
 }
 
+// ——— Quota des gratuits (4/11) : 5 comparaisons par semaine, comptées par le serveur ; en cas de panne, la page s'ouvre ———
+async function cxQuota(ids) {
+  if (typeof isPrem === "function" && isPrem()) return { ok: true };
+  try { const r = await fetch("/api/quota/comparer", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids }) });
+    return r.ok ? await r.json() : { ok: true }; } catch (e) { return { ok: true }; }
+}
 // ——— La page ———
 async function pageComparer4() {
   setNav("ent");
@@ -221,7 +227,7 @@ async function pageComparer4() {
   app.innerHTML = `<div class="ek ek-page"><div class="empty">Chargement…</div></div>`;
   await PXP; if (typeof premStatus === "function") await premStatus().catch(() => null);
   if (location.pathname !== "/comparer" || location.search !== s0) return;
-  const CMAX = typeof isPrem === "function" && isPrem() ? 5 : (typeof FREE !== "undefined" ? FREE.cmp : 3);
+  const CMAX = 5; // 4/11 : 5 entreprises pour tous ; les gratuits ont 5 comparaisons par semaine (cxQuota)
   const raw = [...new Set((new URLSearchParams(location.search).get("ids") || "").split(",").map(x => x.trim()).filter(id => RBY[id]))];
   const ids = raw.slice(0, CMAX), cut = raw.slice(CMAX).map(id => RBY[id]);
   await Promise.all(ids.map(id => { const s = RBY[id]; if (s.missing || FULL[id]) return null; return fetch(`/data/societes/${id}.json`).then(r => r.ok ? r.json() : null).then(j => { if (j) FULL[id] = j; }).catch(() => null); }));
@@ -229,14 +235,21 @@ async function pageComparer4() {
   const F = ids.map(id => cxFig(RBY[id])), d0 = typeof PXUP === "string" && PXUP !== "none" ? new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "numeric" }) : "jour";
   setTitle(F.length >= 2 ? `${listFr(F.map(x => x.nom))} : la comparaison` : "Comparer des entreprises");
   const sug = typeof peersOf === "function" && ids.length && ids.length < CMAX ? (() => { const seen = new Set(ids), out = []; ids.forEach(id => peersOf(RBY[id], 5).list.forEach(p => { if (!seen.has(p.id) && !p.missing) { seen.add(p.id); out.push(p); } })); return out.slice(0, 5); })() : [];
-  const cutTxt = cut.length ? `<p class="cx-cut">La version gratuite compare ${CMAX} entreprises à la fois : ${esc(listFr(cut.map(c => c.name)))} ${cut.length > 1 ? "n'ont" : "n'a"} pas été ajoutée${cut.length > 1 ? "s" : ""}. <a href="/premium">Premium</a> en compare cinq.</p>` : "";
+  const cutTxt = cut.length ? `<p class="cx-cut">Une comparaison réunit ${CMAX} entreprises au plus : ${esc(listFr(cut.map(c => c.name)))} ${cut.length > 1 ? "n'ont" : "n'a"} pas été ajoutée${cut.length > 1 ? "s" : ""}.</p>` : "";
   const sugTxt = sug.length ? `<div class="cx-sugs"><span>${ids.length ? "Concurrents directs :" : "Suggestions :"}</span>${sug.map(c => `<a href="${cxUrl([...ids, c.id])}">${cxLogo(c)}+ ${esc(c.name)}</a>`).join("")}</div>` : "";
-  let html;
+  let html, Q = null;
   if (F.length < 2) {
     html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><h1>Qui fait mieux ?</h1>
       <p class="cx-lead">Choisissez deux ou trois entreprises : le site les classe sur cinq critères, à partir de leurs comptes officiels.</p>
       <div class="cx-sel${F.length ? "" : " cx-sel1"}">${F.map(x => cxCarte(x, ids)).join("")}${cxAjout(ids, CMAX)}</div>${sugTxt}${cutTxt}</section>${cxGalerie()}`;
+  } else if (!(Q = await cxQuota(ids)).ok) {
+    if (location.pathname !== "/comparer" || location.search !== s0) return;
+    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>
+      <div class="cx-sel">${F.map(x => cxCarte(x, ids)).join("")}</div>
+      <div class="cx-quota"><b>Vous avez fait vos ${Q.plafond} comparaisons de la semaine.</b><p>Elles reviennent lundi. Les comparaisons de cette semaine restent ouvertes, et les fiches de ces entreprises restent entières.</p>
+        <a class="cx-qbtn" href="/premium">Comparer sans limite avec Premium</a><a href="/comparer">Revoir mes comparaisons</a></div></section>`;
   } else {
+    if (location.pathname !== "/comparer" || location.search !== s0) return;
     const MD = cxMed(F[0].s), R5 = {}; CX_K.forEach(k => R5[k.k] = cxRang(F, k));
     const T = cxTitres(F), E = cxEtapes(F, MD, T, d0), have = new Set(E.map(e => e.id.slice(3)));
     const score = `<div class="cx-score scroll-x"><table><thead><tr><th></th>${CX_K.map((k, i) => have.has(k.k) ? `<th><a class="cx-go" href="#cx-${k.k}" data-cx-go="cx-${k.k}"><i>${E.findIndex(e => e.id === "cx-" + k.k) + 1}</i><br>${k.n}<span>↓</span></a></th>` : "").join("")}</tr></thead>
@@ -250,7 +263,7 @@ async function pageComparer4() {
     const secs = [...new Set(F.map(x => secName(x.s)))], titreC = pre ? pre.t : secs.length === 1 ? `Comparaison · ${secs[0]}` : `Comparaison · ${listFr(secs.map(t => t.toLowerCase())).replace(/^./, c => c.toUpperCase())}`;
     html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><span class="cx-titre">${esc(titreC)}</span><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>${pre && pre.d ? `<p class="cx-lead">${esc(pre.d)}</p>` : ""}
         <div class="cx-sel">${F.map(x => cxCarte(x, ids)).join("")}${cxAjout(ids, CMAX)}</div>${sugTxt}${cutTxt}
-        <div class="cx-bar"><button type="button" data-cx-share>🔗 Partager cette comparaison</button><a href="/comparer">Tout retirer</a></div></section>
+        <div class="cx-bar"><button type="button" data-cx-share>🔗 Partager cette comparaison</button><a href="/comparer">Tout retirer</a>${Q && Q.plafond && Q.reste != null ? `<span class="cx-reste">${Q.reste ? `Encore ${Q.reste} comparaison${Q.reste > 1 ? "s" : ""} cette semaine` : "Dernière comparaison de la semaine"} · <a href="/premium">sans limite avec Premium</a></span>` : ""}</div></section>
       <div class="ek-vrd"><span class="ek-stk2" style="background:#fff">Le verdict</span><h2>${cxVerdict(F, R5)}</h2></div>${score}
       <section class="ek-sec" id="cx-fil"><span class="ek-stk2">Critère par critère</span><h2>${E.length} questions, dans l'ordre.</h2>${ekFil(E.map(e => ({ id: e.id, n: e.n, sur: e.sur, titre: e.titre, concept: e.concept, visuel: e.visuel, explique: e.droite, suite: e.suite })))}</section>
       <section class="ek-sec" id="cx-tout"><span class="ek-stk2 b">Pour aller plus loin</span><h2>Tous les chiffres, côte à côte.</h2>${cxTableau(F, MD)}</section>

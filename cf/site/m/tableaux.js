@@ -488,7 +488,7 @@ function filtreHTML(a) {
 // Minuscule en tête, sauf pour un sigle (PER).
 function tbMin(t) { return /^[A-Z]{2,}\b/.test(t) ? t : t[0].toLowerCase() + t.slice(1); }
 function filtreCorps(a) {
-  const { l, tri } = runFiltre(a), lim = isPrem() ? 30 : 8, cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
+  const { l, tri } = runFiltre(a), lim = 30, /* 4/11 : liste entière pour tous (réponses calculées et pages /question) */ cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
   const desc = [a.mot && THEME_RE[a.mot] && "thème " + THEME_RE[a.mot][1], a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.filter(k => !((k.condition === "sup" || k.condition === "inf") && k.valeur == null)).map(k => k.indicateur === "per" && k.condition === "sup" && k.valeur === 0 ? "bénéficiaires" : `${tbMin(INDI[k.indicateur][0])} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? ": plus de " : ": moins de ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
   if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
   const tally = c => { const t = quick(c); return t ? t.fort - t.vig : ""; };
@@ -496,7 +496,7 @@ function filtreCorps(a) {
     <div class="tbx-legend" style="padding:0 0 8px"><span><i class="lg-up"></i>nettement mieux que la médiane du secteur</span><span><i class="lg-dn"></i>nettement moins bien</span><span class="light">Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</span></div>
     ${tblxScrollBox(`<table class="t tbx tbx-sort iat"><thead><tr><th class="l lab" scope="col" data-sk="0">Entreprise<i class="tbx-so"></i></th>${cols.map((k, i) => tblxTh(esc(INDI[k][0]) + tblxProvG(k), i + 1)).join("")}<th class="l" scope="col" data-sk="${cols.length + 1}">Repères<i class="tbx-so"></i></th></tr></thead><tbody>
     ${l.slice(0, lim).map((c, j) => `<tr class="${j % 2 ? "z" : ""}"><th scope="row" class="l lab" data-v="${esc(c.name)}"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 26)}<span><b>${esc(c.name)}</b><small class="light">${esc(regName(c))} · ${esc(secName(c))}</small></span></a></th>${cols.map(k => cellInd(c, k)).join("")}<td class="l" data-v="${tally(c)}">${(t => t ? pills(t) : "")(quick(c))}</td></tr>`).join("")}</tbody></table>`)}
-    ${l.length > lim ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">${l.length - lim} autres entreprises. ${isPrem() ? "" : `<a class="lnk" href="/premium">Premium</a> affiche jusqu'à 30 résultats.`}</p>` : ""}
+    ${l.length > lim ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">${l.length - lim} autres entreprises.</p>` : ""}
     <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">${l.length > 1 ? `<a class="more" href="/comparer?ids=${l.slice(0, 3).map(c => c.id).join(",")}">Comparer les trois premières →</a>` : ""}<button type="button" class="linkbtn" data-favall="${l.slice(0, lim).map(c => "c:" + c.id).join(",")}">☆ Tout ajouter à mes favoris</button></div>`;
 }
 // Les tableaux insérés après coup (copilote, IA) reçoivent leurs ombres de défilement

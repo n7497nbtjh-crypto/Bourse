@@ -402,6 +402,7 @@ async function pageEspace(onglet) {
   app.innerHTML = `<div class="esphead esphead2"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ` · <a class="lnk" href="/premium">passer à Premium</a>`}</p><h1 class="pagetitle" style="margin:2px 0 0">${onglet === "alertes" ? "Ce que vos valeurs ont annoncé" : onglet === "reglages" ? "Votre compte et vos réglages" : "Votre semaine"}</h1>${onglet === "reglages" ? `<p class="muted" style="margin:2px 0 0">${esc(m.email)}</p>` : ""}</div></div>
     <nav class="esptabs scroll-x">${tabs.map(([k, l]) => `<a href="${k === "favoris" ? "/favoris" : k === "portefeuille" ? "/portefeuille" : "/espace/" + k}" class="${k === onglet ? "on" : ""}">${l}</a>`).join("")}</nav><div id="espb"></div>`;
   const el = $("#espb");
+  if (!m.premium && (onglet === "bilan" || onglet === "alertes") && typeof espacePremiumSeul === "function") return espacePremiumSeul(el, onglet); // 4/11 : réservés à Premium
   if (onglet === "bilan") return espaceBilan(el, m);
   if (onglet === "alertes") return espaceAlertes(el, m);
   return espaceReglages(el, m);
@@ -412,7 +413,7 @@ async function pageEspace(onglet) {
    dans cet exemple et ce que chacun peut régler dans le sien. Rien n'est enregistré. */
 const SYN_EX_REG = [
   ["Ce qu'il suit", "Vos favoris, votre portefeuille, ou les deux. Ici : quatre favoris et un petit portefeuille."],
-  ["Les secteurs", "Jusqu'à deux secteurs suivis gratuitement (six avec Premium), avec leur médiane de la semaine. Ici : énergie et technologie."],
+  ["Les secteurs", "Jusqu'à six secteurs suivis, avec leur médiane de la semaine. Ici : énergie et technologie."],
   ["Les indices", "Les indices de référence affichés en face de vos lignes. Ici : CAC 40, Euro Stoxx 50 et S&P 500."],
   ["Les sujets", "Résultats, dividendes, actualité, leçons : vous gardez ceux qui vous intéressent."],
   ["Le jour d'envoi", "Samedi, dimanche ou lundi matin, par e-mail ou dans votre espace. Le rapport se met à jour pendant la semaine."],

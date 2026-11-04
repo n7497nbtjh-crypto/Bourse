@@ -102,7 +102,7 @@ function miaRendu(j, defaut) {
 }
 function miaEtatHTML() {
   if (!MIA.coupee) return `<span class="mia-on"><i></i>IA du site : gratuite</span> <a href="/espace/ia">En savoir plus</a>`;
-  return `<span class="mia-off"><i></i>${MIA.coupee === "absente" ? "Réponses calculées" : "Réponses calculées (limite du jour atteinte)"}</span> <a href="/espace/ia">Pourquoi ?</a>`;
+  return `<span class="mia-off"><i></i>${MIA.coupee === "absente" ? "Réponses calculées" : (MIA.coupee === "site" || MIA.niveau === "premium" ? "Réponses calculées (limite du jour atteinte)" : "Réponses calculées (questions de la semaine utilisées)")}</span> <a href="/espace/ia">Pourquoi ?</a>`;
 }
 function miaMaj() { $$("[data-mia-etat]").forEach(el => el.innerHTML = miaEtatHTML()); }
 miaEtat();

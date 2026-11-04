@@ -202,11 +202,11 @@ function pageConnecteur() {
   setTitle("Utiliser ENKLAIR dans ChatGPT ou Claude"); setNav("");
   const url = location.origin + "/mcp", dans = PWA_LS("onglet") || "claude";
   app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › ENKLAIR dans ChatGPT ou Claude</div>
-    <section class="pwa-hero"><p class="kick">Connecteur IA · gratuit · lecture seule</p>
+    <section class="pwa-hero"><p class="kick">Connecteur IA · Premium · lecture seule</p>
       <h1>Utiliser ENKLAIR dans ChatGPT ou Claude</h1>
       <p class="lead">Ajoutez ENKLAIR à votre assistant IA. Il lit alors les comptes officiels de plus de 2 400 entreprises, la médiane de leur secteur${typeof frSeul === "function" && !frSeul() ? "" : ", l'éligibilité au PEA"}, les ETF et l'agenda. Il calcule à partir de ces données au lieu d'inventer, et il cite ses sources.</p>
       <div class="pwa-url"><code id="pwaurl">${esc(url)}</code><button type="button" class="btn" id="pwacopie">Copier l'adresse</button></div>
-      <p class="note" style="margin:6px 0 0">Aucun compte ni clé nécessaire. Protocole ouvert MCP (Model Context Protocol), reconnu par Claude, ChatGPT et la plupart des assistants.</p></section>
+      <p class="note" style="margin:6px 0 0"><b>Le connecteur fait partie de Premium.</b> Abonné, utilisez votre adresse personnelle (<a class="lnk" href="/ia/connecter">la copier</a>) à la place de celle-ci. Protocole ouvert MCP (Model Context Protocol), reconnu par Claude, ChatGPT et la plupart des assistants.</p></section>
 
     <section class="panel"><div class="ph"><h2>L'ajouter en deux minutes</h2></div><div class="pb">
       <div class="pwa-tabs" role="tablist">${[["claude", "Claude"], ["chatgpt", "ChatGPT"], ["autres", "Claude Code et autres"]].map(([k, l]) => `<button type="button" role="tab" data-ong="${k}" aria-selected="${k === dans}" class="${k === dans ? "on" : ""}">${l}</button>`).join("")}</div>
@@ -259,7 +259,7 @@ function pageConnecteur() {
 if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/connecteur$/, () => pageConnecteur()]);
 
 /* ---------- /ia/connecter (5e passage, C) : brancher Claude ou ChatGPT sur ENKLAIR en trois étapes ----------
-   L'adresse personnelle (/mcp/<clé>, compte gratuit) compte 20 appels par jour ; Premium : sans limite. Les illustrations sont
+   Connecteur réservé à Premium depuis le 4/11 (adresse personnelle /mcp/<clé> d'un compte Premium ; sinon chaque outil renvoie l'explication). Les illustrations sont
    des schémas du site, pas des captures d'écran de Claude ou de ChatGPT (dont les écrans changent souvent). */
 const IAC_SCH = {
   copier: `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="38" width="150" height="40" rx="10" fill="#fff" stroke="#E2DCCF"/><text x="22" y="63" font-size="12" fill="#55524C" font-family="monospace">…/mcp/a3f9…</text><rect x="166" y="38" width="44" height="40" rx="10" fill="#111214"/><path d="M180 52h10v12h-10zM184 48h10v12" fill="none" stroke="#fff" stroke-width="1.6"/></svg>`,
@@ -278,8 +278,8 @@ async function pageIaConnecter() {
     <h1 class="pagetitle">Gardez votre IA : branchez-la sur ENKLAIR</h1>
     <p class="pagesub">Votre assistant lit alors les comptes officiels, les médianes du secteur et l'agenda d'ENKLAIR au lieu de répondre de mémoire, et cite ses sources. Lecture seule : il ne voit ni votre compte ni votre portefeuille.</p>
     <section class="panel iac-adr"><div class="pb">${adr ? `<p class="kick">Votre adresse personnelle</p><div class="pwa-url"><code id="iacurl">${esc(adr)}</code><button type="button" class="btn" id="iaccopie">Copier</button></div>
-      <p class="note" style="margin:8px 0 0">${me.premium ? "Premium : sans limite d'appels par jour." : `Compte gratuit : ${me.limite_jour} appels par jour. <a class="lnk" href="/premium">Sans limite avec Premium</a>.`} Gardez cette adresse pour vous. <button type="button" class="linkbtn" id="iacnew">En changer</button></p>`
-      : `<p class="kick">Votre adresse personnelle</p><p style="margin:4px 0 10px">Elle s'obtient avec un espace gratuit (une adresse e-mail suffit) : 20 appels par jour, sans limite avec Premium.</p><a class="btn" href="/espace">Créer mon espace gratuit</a>`}</div></section>
+      <p class="note" style="margin:8px 0 0">${me.premium ? "Premium : sans limite d'appels par jour." : `Le connecteur fait partie de Premium : sans abonnement, votre assistant reçoit seulement un message d'explication. <a class="lnk" href="/premium">Voir Premium</a>.`} Gardez cette adresse pour vous. <button type="button" class="linkbtn" id="iacnew">En changer</button></p>`
+      : `<p class="kick">Votre adresse personnelle</p><p style="margin:4px 0 10px">Elle s'obtient avec un espace, et fonctionne avec Premium.</p><a class="btn" href="/espace">Créer mon espace gratuit</a>`}</div></section>
     <div class="pwa-tabs iac-tabs" role="tablist">${[["claude", "Claude"], ["chatgpt", "ChatGPT"]].map(([k, l]) => `<button type="button" role="tab" data-iac="${k}" aria-selected="${k === dans}" class="${k === dans ? "on" : ""}">${l}</button>`).join("")}</div>
     ${Object.entries(ETAPES).map(([k, L]) => `<ol class="iac-st" data-iacp="${k}"${k === dans ? "" : " hidden"}>${L.map(([sch, t, d], i) => `<li><span class="iac-n">${i + 1}</span><div class="iac-sch">${IAC_SCH[sch]}</div><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>`).join("")}
     <p class="note">Schémas du site, pas des captures d'écran : les intitulés de Claude et de ChatGPT changent d'une version à l'autre. Claude Code, Cursor et les autres clients : <a class="lnk" href="/connecteur">instructions détaillées</a>.</p>`;

@@ -173,7 +173,7 @@ function clesPortefeuille(pf, names) {
 const clesDe = (row, names) => [...new Set([...(parse(row && row.favoris, []) || []).filter(k => typeof k === "string" && KEY.test(k)), ...clesPortefeuille(parse(row && row.portefeuille, null), names)])].slice(0, 260);
 // 4/11 (Premium) : alertes sur 3 valeurs sans Premium (favoris d'abord, dans l'ordre où ils ont été ajoutés, puis portefeuille) ; sans limite avec Premium,
 // qui ajoute deux alertes : dernier jour pour toucher un dividende, plus haut ou plus bas sur un an.
-export const ALERTES_GRATUIT = 3;
+export const ALERTES_GRATUIT = 0; // 4/11 (décision de Romain) : alertes et rapport de la semaine réservés à Premium, plus de demi-version gratuite
 const ouvreApres = (ymd, n) => { let t = Date.parse(ymd + "T12:00:00Z"); while (n > 0) { t += JOUR; const w = new Date(t).getUTCDay(); if (w && w < 6) n--; } return new Date(t).toISOString().slice(0, 10); };
 const ouvreAvant = (ymd, n) => { let t = Date.parse(ymd + "T12:00:00Z"); while (n > 0) { t -= JOUR; const w = new Date(t).getUTCDay(); if (w && w < 6) n--; } return new Date(t).toISOString().slice(0, 10); };
 // Dernier jour pour acheter et toucher le dividende : veille ouvrée du détachement ; deux jours de Bourse avant la date d'enregistrement (J+2, hors États-Unis).
@@ -247,7 +247,7 @@ export async function espace(request, env) {
     let r = await env.DB.prepare(`SELECT cle FROM mcp_cles WHERE compte = ?`).bind(c.id).first();
     if (!r || m === "POST") { const cle = alea(16); await env.DB.prepare(`INSERT INTO mcp_cles (cle, compte, created) VALUES (?, ?, ?) ON CONFLICT (compte) DO UPDATE SET cle = excluded.cle, created = excluded.created`).bind(cle, c.id, Date.now()).run(); r = { cle }; }
     const p = await premiumDe(env, c.premium, url.origin);
-    return json({ adresse: `${(env.SITE_URL || url.origin).replace(/\/+$/, "")}/mcp/${r.cle}`, premium: !!p, limite_jour: p ? null : 20 });
+    return json({ adresse: `${(env.SITE_URL || url.origin).replace(/\/+$/, "")}/mcp/${r.cle}`, premium: !!p, limite_jour: p ? null : 0 }); // 4/11 : connecteur réservé à Premium
   } // 5e passage (B2) : mesures d'administration, protégées par ADMIN_KEY
 
   if (path === "/api/espace/inscription" && m === "POST") {
@@ -391,6 +391,7 @@ export async function espace(request, env) {
   if (path === "/api/espace/bilan" && m === "GET") {
     const auj = jourParis(), cur = semaineIso(auj), semaine = url.searchParams.get("semaine") || cur, apercu = url.searchParams.get("apercu") === "1";
     if (!/^\d{4}-W\d{2}$/.test(semaine)) return json({ error: "Semaine invalide (format 2026-W44)." }, 400);
+    if (!(await premiumDe(env, c.premium, url.origin))) return json({ premium_requis: true, error: "Le rapport de la semaine fait partie de Premium." }, 403); // 4/11
     let row = await env.DB.prepare(`SELECT contenu, vu FROM bilans WHERE compte = ? AND semaine = ?`).bind(c.id, semaine).first(), b = row ? parse(row.contenu, null) : null;
     if (semaine === cur) {
       const d = await siteData(request, env), don = await env.DB.prepare(`SELECT favoris, portefeuille, profil FROM donnees WHERE compte = ?`).bind(c.id).first();
@@ -502,7 +503,7 @@ async function tache(request, env, url) {
         }
       }
       const RG = rapportDe(r), sonJour = !parJour || RG.jour === wd, aRapport = keys.length || RG.secteurs.length;
-      if (modeBilan && sonJour && r.last_semaine !== cible && aRapport) {
+      if (modeBilan && prem && sonJour && r.last_semaine !== cible && aRapport) {
         const st = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, cible).first();
         const pr = await env.DB.prepare(`SELECT contenu FROM bilans WHERE compte = ? AND semaine = ?`).bind(r.id, precedenteDe(cible)).first();
         const b = await assurerBilan(env, d, r.id, r, cible, st, pr); // les chiffres calculés (le site ne rédige plus de commentaire par IA)

@@ -29,8 +29,7 @@ window.pagePortefeuille = async function () {
   return r;
 };
 
-/* 4/11 (Premium) : la radiographie détaillée est réservée à Premium. Sans Premium, chaque tuile garde son titre et son chiffre clé
-   (« un vrai chiffre en clair ») ; le détail de quatre tuiles est remplacé par ce qu'il contient et le lien vers Premium.
+/* 4/11 (Premium) : la radiographie détaillée est réservée à Premium. Sans Premium (4/11 : plus de demi-version), chaque tuile garde son titre, sans son chiffre clé ; le détail de quatre tuiles est remplacé par ce qu'il contient et le lien vers Premium.
    Le portefeuille d'exemple reste entièrement ouvert, pour montrer ce que l'on obtient. */
 const PF4_PREM = {
   "pf3-possede": "Ce que vous possédez vraiment à travers vos ETF : les entreprises qui reviennent dans plusieurs fonds, réunies, et votre vraie part dans chacune.",
@@ -45,8 +44,8 @@ function pf4Verrou(P) {
     d.dataset.pf4v = "1"; d.classList.add("pf4v");
     const s = d.querySelector(":scope>summary"); if (!s) continue;
     [...d.children].forEach(c => { if (c !== s) c.remove(); });
-    s.insertAdjacentHTML("beforeend", `<span class="pf4v-b">🔒 Détail avec Premium</span>`);
-    d.insertAdjacentHTML("beforeend", `<div class="pf4v-c"><p>${esc(txt)}</p><p class="pf4v-l">Le chiffre ci-dessus est calculé sur votre portefeuille. Le détail fait partie de Premium, avec les alertes sur toutes vos valeurs et les classements complets.</p><a class="ek-btn dk" href="/premium#portefeuille">Voir Premium</a></div>`);
+    s.insertAdjacentHTML("beforeend", `<span class="pf4v-b">🔒 Avec Premium</span>`);
+    d.insertAdjacentHTML("beforeend", `<div class="pf4v-c"><p>${esc(txt)}</p><p class="pf4v-l">Calculé sur votre portefeuille, avec Premium, comme les alertes sur toutes vos valeurs et les classements complets.</p><a class="ek-btn dk" href="/premium#portefeuille">Voir Premium</a></div>`);
   }
 }
 if (typeof pf3Dash === "function") { const PF4_dash0 = pf3Dash; pf3Dash = async function (R0, P) { const r = await PF4_dash0.apply(this, arguments); try { pf4Verrou(P); } catch (e) { } return r; }; }

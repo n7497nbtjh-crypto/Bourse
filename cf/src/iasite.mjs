@@ -9,7 +9,7 @@
 // Les consignes sont celles du serveur (cf/src/consignes.mjs) : le navigateur choisit la tâche, pas le texte des consignes.
 // Les questions partent chez Cloudflare (sous-traitant déjà utilisé pour l'hébergement) ; Workers AI ne s'en sert pas pour entraîner ses modèles.
 import { CONSIGNES } from "./consignes.mjs";
-import { visitor, sessionCompte, premiumOf } from "./compte.mjs";
+import { visitor, visiteurSemaine, sessionCompte, premiumOf } from "./compte.mjs";
 
 // Coût en neurones par million de jetons [entrée, sortie] (tarif Cloudflare d'octobre 2026). Le moins cher d'abord.
 const MODELES = [
@@ -41,7 +41,7 @@ async function niveau(request, env) {
   const p = await premiumOf(request, env).catch(() => null);
   const c = p ? null : await sessionCompte(request, env).catch(() => null);
   if (p) return { niveau: "premium", h: "p:" + String(p.token).slice(0, 24) };
-  const v = await visitor(request, env); // compté aussi avec un compte : se connecter ne redonne pas 5 questions
+  const v = await visiteurSemaine(request, env); // stable sur la semaine ; compté aussi avec un compte : se connecter ne redonne pas 5 questions
   if (c && c.id) return { niveau: "compte", h: ["c:" + c.id, v] };
   return { niveau: "visiteur", h: v };
 }

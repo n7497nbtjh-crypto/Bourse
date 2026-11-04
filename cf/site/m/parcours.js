@@ -428,7 +428,7 @@ function parSecteursSeuls(el, b) {
     if (!nav) { const b = $("#app .panel, #app form"); if (b && !$("#parexlk")) b.insertAdjacentHTML("beforebegin", `<p id="parexlk" class="par-exlk"><a class="lnk" href="/rapport-exemple">Voir un rapport exemple avant de créer le vôtre</a></p>`); return; } // pas connecté : page de connexion
     if (!nav.querySelector('a[href="/rapport-exemple"]')) nav.insertAdjacentHTML("beforeend", `<a href="/rapport-exemple">Un rapport en exemple</a>`);
     if (!nav.querySelector('a[href="/espace/rapport"]')) { const a = nav.querySelector('a[href="/espace/bilan"], a[href="/espace"]') || nav.firstElementChild; if (a) a.insertAdjacentHTML("afterend", `<a href="/espace/rapport">Mon rapport</a>`); }
-    if (onglet === "rapport") { setTitle("Mon rapport · Mon espace"); $$("a", nav).forEach(a => a.classList.toggle("on", a.getAttribute("href") === "/espace/rapport")); parOngletRapport($("#espb"), MOI); }
+    if (onglet === "rapport") { setTitle("Mon rapport · Mon espace"); $$("a", nav).forEach(a => a.classList.toggle("on", a.getAttribute("href") === "/espace/rapport")); if (MOI && !MOI.premium && typeof espacePremiumSeul === "function") espacePremiumSeul($("#espb"), "bilan"); else parOngletRapport($("#espb"), MOI); }
   };
   const accueil0 = window.synAccueil;
   if (typeof accueil0 === "function") window.synAccueil = async function (el, m) {
