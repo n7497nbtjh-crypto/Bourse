@@ -217,7 +217,7 @@ async function permisFichier(u) { // robots.txt de l'hôte du fichier (souvent u
 }
 export function pdfTexte(buf) {
   const dir = mkdtempSync(tmpdir() + "/rs-"), f = dir + "/a.pdf";
-  try { writeFileSync(f, buf); return execFileSync("pdftotext", ["-q", "-layout", "-l", "400", f, "-"], { maxBuffer: 200e6 }).toString("utf8"); }
+  try { writeFileSync(f, buf); return execFileSync("pdftotext", ["-q", "-layout", "-l", "400", f, "-"], { maxBuffer: 120e6, timeout: 120e3 }).toString("utf8"); }
   finally { rmSync(dir, { recursive: true, force: true }); }
 }
 // Comptes d'une société à partir de son site : { comptes, url } ou null (raison dans log)
@@ -229,7 +229,7 @@ export async function comptesDuSite(c, { log = () => { }, essais = 4, navigateur
     if (vu.size >= essais) break;
     if (vu.has(f.u) || !(await permisFichier(f.u).catch(() => false))) continue; vu.add(f.u);
     try {
-      const buf = await get(f.u, { binaire: true }); if (buf.length > 80e6 || buf.slice(0, 4).toString() !== "%PDF") continue;
+      const buf = await get(f.u, { binaire: true }); if (buf.length > 50e6 || buf.slice(0, 4).toString() !== "%PDF") continue;
       const r = lireComptesPdf(pdfTexte(buf));
       if (!r.ok) { log(`  ${f.u.slice(-70)} : compte de résultat non trouvé`); continue; }
       const dernier = Math.max(...Object.keys(r.years).map(Number));
@@ -279,6 +279,7 @@ async function main() {
     try { r = await comptesDuSite(c, { log: m => L.push(m), navigateur: nav && nav.ouvrir }); } catch (e) { L.push("panne " + e.message); }
     n++;
     cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: !!r, ...(r ? { u: r.url, an: r.dernier } : { pourquoi: L.slice(-3).join(" | ").slice(0, 300) }) };
+    if (n % 5 === 0) writeFileSync(CACHE, JSON.stringify(cache)); // 4/11 : le passage du 4/11 a perdu 1 h 10 de travail (machine tombée), on enregistre souvent
     if (!r) { console.log("✗", c.id, L.slice(-1)[0] || ""); return; }
     const s = toSeries({ currency: r.comptes.currency, fyEnd: r.comptes.fyEnd, years: r.comptes.years, norme: "IFRS" });
     const full = { v: VERSION, devise2: true, dette3: true, id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: c.lei || null, legalName: c.legal || c.name, sector: c.sector,

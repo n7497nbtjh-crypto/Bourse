@@ -32,17 +32,22 @@ jobs:
           sudo apt-get install -y -qq poppler-utils >/dev/null
           npm install --no-save --no-audit --no-fund playwright@1 >/dev/null
           npx playwright install --with-deps chromium >/dev/null
-      - name: Recherche des rapports
+      - name: Recherche des rapports, par tranches de 40 minutes enregistrées une à une
         timeout-minutes: 170
         run: |
           node tests/t_rapports_site.mjs
           if [ "${{ inputs.tout }}" = "1" ]; then rm -f data/rapports_site_cache.json; fi
-          node data/rapports_site.mjs --minutes "${{ inputs.minutes || '150' }}" --paralleles 10
-      - name: Enregistrement dans le dépôt
-        if: always()
-        run: |
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
-          git add data/rapports_site_cache.json cf/site/data/societes cf/site/data/societes.json
-          git diff --cached --quiet || git commit -m "Rapports annuels des sites du $(date +%F)"
-          for i in 1 2 3; do git pull --rebase -X theirs -q && git push && break; sleep 5; done
+          # 4/11 : le passage en un seul bloc (10 en parallèle) a fait tomber la machine au bout de 1 h 10 sans rien enregistrer.
+          # Désormais 4 en parallèle et un enregistrement dans le dépôt après chaque tranche.
+          total=${{ inputs.minutes || '150' }}; fait=0
+          while [ $fait -lt $total ]; do
+            t=$(( total - fait < 40 ? total - fait : 40 ))
+            node data/rapports_site.mjs --minutes $t --paralleles 4 || true
+            git add data/rapports_site_cache.json cf/site/data/societes cf/site/data/societes.json
+            git diff --cached --quiet || git commit -q -m "Rapports annuels des sites du $(date +%F) (tranche)"
+            for i in 1 2 3; do git pull --rebase -X theirs -q && git push -q && break; sleep 5; done
+            fait=$(( fait + t ))
+            node -e 'const c=require("./data/rapports_site_cache.json");console.log(Object.values(c).filter(x=>x.ok).length,"comptes trouvés au total,",Object.keys(c).length,"sociétés cherchées")'
+          done
