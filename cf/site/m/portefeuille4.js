@@ -14,6 +14,10 @@ window.pf3Hero = function (R0, P) {
     if (h && s) {
       if (P && P.l && P.l.length && T && T.tot > 0) {
         h.textContent = nb(`${pf3Eu(T.tot)} aujourd'hui.`);
+        // 4/11 (Romain) : mettre en avant la notification quand une valeur chute
+        if (!P.dem && !$("#pf4chute")) s.insertAdjacentHTML("afterend", typeof isPrem === "function" && isPrem()
+          ? `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span>Une de vos lignes chute de plus de 5 % ? Vous recevez une notification le soir même. <a href="/espace/reglages">Notifications sur ce téléphone</a></span></p>`
+          : `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span><b>Une de vos lignes chute de plus de 5 % ?</b> Avec Premium, ENKLAIR vous envoie une notification le soir même. <a href="/premium#alertes">Être prévenu</a></span></p>`);
         s.innerHTML = `${T.gainPct == null ? "Plus-value inconnue (cours manquants)" : `<b>${pf3Sg(T.gain)}</b> (${pf3Pc(T.gainPct)}) si vous vendiez aujourd'hui`}, sur ${pf3Eu(T.cost)} investis${T.dayN ? `, ${pf3Sg(T.day)} depuis hier` : ""}. ${P.dem ? "Portefeuille d'exemple : rien n'est enregistré." : `Calculé dans ce navigateur${typeof connecte === "function" && connecte() ? " et enregistré dans votre espace" : ""}.`}`;
       } else {
         h.textContent = "Ce que vous possédez vraiment.";

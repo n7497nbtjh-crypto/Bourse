@@ -119,7 +119,7 @@ function f4Tete(s, c, x) {
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
     <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${esc(x.P.L.map(r => r.name).join(", "))})` : ""}.` : ""}</span>
-      <div class="ek-acts"><button type="button" class="ek-btn dk" data-f4-alerte="c:${esc(s.id)}">🔔 Être prévenu</button>${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
+      <div class="ek-acts"><button type="button" class="ek-btn dk" data-f4-alerte="c:${esc(s.id)}">🔔 Prévenu si elle chute</button>${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
     <div class="f4al" id="f4al" hidden></div>
   </section>`;
 }
@@ -507,10 +507,10 @@ async function f4Alerte(k, btn) {
   box.hidden = false; box.innerHTML = `<p>Un instant…</p>`;
   if (!btn.closest("#f4al") && btn.closest("#f4-annee")) box.scrollIntoView({ behavior: "smooth", block: "center" });
   const m = await moi(), nom = (RBY[k.slice(2)] || {}).name || "cette entreprise";
-  const quoi = `ses résultats publiés (avec les chiffres clés), la veille de ses rendez-vous, ses fortes variations du jour, le dernier jour pour toucher un dividende annoncé et ses plus hauts ou plus bas sur un an`;
+  const quoi = `une baisse de plus de 5 % dans la journée, ses résultats publiés (avec les chiffres clés), la veille de ses rendez-vous, ses fortes variations du jour, le dernier jour pour toucher un dividende annoncé et ses plus hauts ou plus bas sur un an`;
   // 4/11 (décision de Romain) : les alertes font partie de Premium, sans demi-version gratuite
-  if (m.premium) { btn.textContent = "🔔 Vous serez prévenu"; box.innerHTML = `<p><b>C'est noté.</b> Vous serez prévenu dans Mon espace de ${quoi}.</p>`; }
-  else box.innerHTML = `<p><b>${esc(nom)} est dans vos favoris.</b> Les alertes font partie de Premium : chaque soir de semaine, ENKLAIR vous prévient de ${quoi}.</p><div class="f4al-a"><a class="ek-btn dk" href="/premium#alertes">Être prévenu avec Premium</a></div>`;
+  if (m.premium) { btn.textContent = "🔔 Vous serez prévenu"; box.innerHTML = `<p><b>C'est noté.</b> Si ${esc(nom)} chute de plus de 5 % dans la journée, vous recevez une notification le soir même, sur votre téléphone si vous les avez activées (<a href="/espace/reglages">Réglages</a>) et dans Mon espace. Aussi : ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}.</p>`; }
+  else box.innerHTML = `<p><b>Si ${esc(nom)} chute de plus de 5 % dans la journée, ENKLAIR vous envoie une notification le soir même.</b> C'est dans Premium, avec ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}. ${esc(nom)} est déjà dans vos favoris.</p><div class="f4al-a"><a class="ek-btn dk" href="/premium#alertes">Être prévenu avec Premium</a></div>`;
 }
 document.addEventListener("click", e => {
   const al = e.target.closest && e.target.closest("[data-f4-alerte]"); if (al) { f4Alerte(al.dataset.f4Alerte, al); return; }

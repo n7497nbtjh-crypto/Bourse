@@ -1304,3 +1304,12 @@ html #app .iahero{max-width:none}
 .es4-prem .es4-ben>div{flex-direction:row}
 .es4-pact .btn{display:inline-flex;align-items:center;justify-content:center;min-height:44px;height:auto;padding:10px 20px;line-height:1.2}
 .ek.pf4 #pf3dash>details.pf4v>summary>:not(h2):not(.pf4v-b){display:none}
+/* 4/11 : notification quand une valeur chute, mise en avant (Premium, portefeuille) */
+.ek.pr4 .pr4-notif{margin:18px 0 6px;max-width:520px}
+.ek.pr4 .pr4-nk{display:inline-block;font:800 11.5px Inter;background:#111;color:#fff;border-radius:999px;padding:3px 10px;margin-bottom:8px}
+.ek.pr4 .pr4-nb{display:flex;gap:12px;align-items:flex-start;background:#fff;border:2px solid #111;border-radius:18px;box-shadow:4px 4px 0 #111;padding:12px 14px}
+.ek.pr4 .pr4-ni{flex:none;width:38px;height:38px;border-radius:10px;background:#FFE14D;border:2px solid #111;display:grid;place-items:center;font:900 18px "Bricolage Grotesque",Inter}
+.ek.pr4 .pr4-nb b{font:800 13px Inter;color:#555}.ek.pr4 .pr4-nb p{margin:2px 0 0;font:600 14.5px/1.4 Inter;color:#111}
+.ek.pr4 .pr4-nt{margin:12px 0 0;font:500 15px Inter}
+.ek.pf4 .pf4-chute{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid #111;border-radius:14px;padding:10px 14px;margin:12px 0 0;max-width:640px;font:500 14.5px/1.45 Inter}
+.ek.pf4 .pf4-chute a{font-weight:800;color:#111}
