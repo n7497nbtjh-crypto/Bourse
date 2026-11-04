@@ -38,7 +38,7 @@ const NAV = [
     ],
     aussi: [
       ["/marches", "Les marchés du jour"],
-      ["/decouvertes", "Découvertes du jour"],
+      ["/decouverte", "La découverte de la semaine"],
       ["/dividendes", "Calendrier des dividendes"],
       ["/hier", "Ce qui s'est passé hier"],
       ["/communaute", "Communauté"],

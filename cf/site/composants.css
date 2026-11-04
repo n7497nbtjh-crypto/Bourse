@@ -1358,3 +1358,19 @@ html #app .iahero{max-width:none}
 .s5-ac>:first-child{flex:none;width:26px;height:26px;margin:0}
 .dec-in .ek-chain{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
 .s5-dec .dec-in h2{display:block}.s5-dec .dec-in h2 em{display:inline}
+/* Découverte de la semaine (4/11) : carte de l'accueil et page /decouverte */
+.dec-card{max-width:880px}
+.dec-card .dec-cl{display:block;background:#fff;border:2px solid #111;border-radius:20px;box-shadow:5px 5px 0 #111;padding:20px 22px;color:#111;text-decoration:none}
+.dec-card .dec-cl:hover{transform:translate(-1px,-1px);box-shadow:6px 6px 0 #111}
+.dec-card .dec-head,.dc4 .dec-head{display:flex;gap:14px;align-items:center;margin:0 0 10px}
+.dec-card h3{font:800 26px/1.1 "Bricolage Grotesque",Inter;margin:0}.dec-card .dec-head p{margin:4px 0 0;font:600 13.5px Inter;color:#555}
+.dec-card .dec-desc{font:500 16px/1.5 Inter;margin:0 0 14px}
+.dec-card .dec-faits{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px}
+.dec-card .dec-faits>div{background:#FFF7CC;border:1.5px solid #111;border-radius:12px;padding:9px 12px}
+.dec-card .dec-faits small{display:block;font:700 11.5px Inter;color:#555}.dec-card .dec-faits b{display:block;font:800 18px Inter}.dec-card .dec-faits em{font:600 12px Inter;font-style:normal;color:#444}
+.dec-card .dec-go{display:inline-block;margin-top:14px;font:800 14.5px Inter;border-bottom:3px solid #FFE14D}
+.dc4 .dc4-pres{max-width:960px}
+.dc4 .dec-in .dec-head h3{font:800 30px/1.1 "Bricolage Grotesque",Inter;margin:0}
+.dc4 .dc4-av{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.dc4 .dc4-av a{display:flex;gap:10px;align-items:center;border:2px solid #111;border-radius:14px;padding:10px 12px;color:#111;text-decoration:none}
+.dc4 .dc4-av b{display:block;font:800 15px Inter}.dc4 .dc4-av small{font:500 12.5px Inter;color:#555}

@@ -1763,7 +1763,7 @@ const AX_WORDS = { // 5e passage (A4) : les libellés des jauges ne répètent p
   marge: ["parmi les meilleures", "au-dessus de la médiane", "dans la norme du secteur", "sous la médiane", "parmi les plus faibles"],
   solidite: ["parmi les plus solides", "plus solide que la médiane", "dans la norme du secteur", "moins solide que la médiane", "parmi les moins solides"],
   dividende: ["parmi les plus généreuses", "rendement au-dessus de la médiane", "rendement dans la norme", "rendement sous la médiane", "parmi les moins généreuses"],
-  prix: ["parmi les moins chères", "prix plus bas que la médiane", "dans la norme du secteur", "prix plus élevé que la médiane", "parmi les plus chères"],
+  prix: ["PER parmi les plus bas", "PER plus bas que la médiane", "PER dans la norme du secteur", "PER plus haut que la médiane", "PER parmi les plus hauts"],
 };
 const axBand = p => p >= 0.75 ? 0 : p >= 0.55 ? 1 : p > 0.45 ? 2 : p > 0.25 ? 3 : 4; // 0 = en tête … 4 = en queue
 const axWord = (p, k = "croissance") => (AX_WORDS[k] || AX_WORDS.croissance)[axBand(p)];
@@ -1778,7 +1778,7 @@ function rfAxes(s) { // [{ k, t (titre), d (ce qui est mesuré), r: { p, rank, n
     { k: "marge", t: bank ? "Rentabilité" : "Marge", d: bank ? "Bénéfice rapporté aux capitaux propres" : "Ce qui reste sur 100 de ventes", r: bank ? rankIn(s, c => ratios(c).roe, true, "roe") : rankIn(s, c => ratios(c).marge, true, "marge") },
     { k: "solidite", t: "Solidité", d: "Dette nette rapportée au résultat (moins, c'est mieux)", r: bank ? null : rankIn(s, c => c.netDebt != null && c.netDebt < 0 ? -1 : ratios(c).lev, false, "lev"), special: sd ? "sansdette" : null },
     { k: "dividende", t: "Dividende", d: "Rendement : dividende rapporté au cours", r: yld != null && yld >= 0.001 ? rankIn(s, c => { const x = valo(c); return x && x.yld >= 0.001 ? x.yld : null; }, true, "yld") : null, special: noDiv ? "nodiv" : null },
-    { k: "prix", t: "Prix", d: "PER : à droite, moins chère au regard du bénéfice", r: v && v.pe ? rankIn(s, c => { const x = valo(c); return x && x.pe ? x.pe : null; }, false, "pe") : null, special: v && v.peNs ? "ns" : null },
+    { k: "prix", t: "Prix", d: "PER : à droite, plus bas au regard du bénéfice", r: v && v.pe ? rankIn(s, c => { const x = valo(c); return x && x.pe ? x.pe : null; }, false, "pe") : null, special: v && v.peNs ? "ns" : null },
   ];
   return A.filter(a => a.r || a.special === "nodiv" || a.special === "ns").map(a => ({ ...a, word: a.special === "nodiv" ? "pas de dividende" : a.special === "ns" ? "n.s." : a.special === "sansdette" && a.r && a.r.p >= 0.55 ? "sans dette" : axWord(a.r.p, a.k), lv: a.r ? axLevel(a.r.p) : null }));
 }
@@ -1789,7 +1789,7 @@ function rfVerdictMots(s) { // le verdict en deux ou trois éléments, déduits 
   else { const b = band("marge"); if (b === 0) mots.push("Très rentable"); else if (b === 1) mots.push("Rentable"); else if (b === 2) mots.push("Rentabilité moyenne"); else if (b === 3) mots.push("Rentabilité sous la médiane"); else if (b === 4) mots.push("Peu rentable"); }
   if (A.solidite && A.solidite.special === "sansdette") mots.push("sans dette");
   else { const b = band("solidite"); if (b === 0 || b === 1) mots.push("peu endettée"); else if (b === 2) mots.push("dette moyenne"); else if (b === 3) mots.push("dette assez élevée"); else if (b === 4) mots.push("endettée"); }
-  { const b = band("prix"); if (b === 0 || b === 1) mots.push("bon marché"); else if (b === 2) mots.push("prix moyen"); else if (b === 3) mots.push("un peu chère"); else if (b === 4) mots.push("chère"); }
+  { const b = band("prix"); if (b === 0 || b === 1) mots.push("le marché doute"); else if (b === 2) mots.push("le marché est partagé"); else if (b === 3 || b === 4) mots.push("le marché y croit"); } // 4/11 : pas de jugement sur le prix
   if (mots.length < 2) { const b = band("croissance"); if (b === 0 || b === 1) mots.push("en croissance"); else if (b === 2) mots.push("croissance moyenne"); else if (b === 3) mots.push("croissance sous la médiane"); else if (b === 4) mots.push("croissance faible"); }
   if (!mots.length) mots.push("Dans la norme de son secteur");
   return mots.slice(0, 3).map((m, i) => i ? m.replace(/^./, x => x.toLowerCase()) : m.replace(/^./, x => x.toUpperCase())).join(", ");
@@ -1883,7 +1883,7 @@ async function pagePremium(sub) {
     </div>
     </section><section class="ek-sec"><span class="ek-stk2 b">Ce que vous obtenez</span><h2>Quatre services que le gratuit n'a pas.</h2><div class="pr4-sv">
       <div class="pr4-c" id="ia">${ic("ia")}<b>L'IA qui vous répond</b><p><b>30 questions par jour</b> à l'IA du site (5 par semaine sans Premium), tirées des comptes officiels et des médianes du secteur. Et le <b>connecteur</b> : Claude ou ChatGPT lisent ENKLAIR pour vous répondre.</p></div>
-      <div class="pr4-c" id="alertes">${ic("ag")}<b>Prévenu quand une valeur chute</b><p><b>Une baisse de plus de 5 % dans la journée : notification le soir même</b>, sur votre téléphone${OFFRES.mail ? ", par e-mail" : ""} et dans Mon espace. Et pour toutes vos valeurs : résultats publiés avec leurs chiffres clés, veille des rendez-vous, <b>dernier jour pour toucher un dividende</b>, plus haut ou plus bas sur un an. Et chaque samedi, <b>votre rapport de la semaine</b>.</p></div>
+      <div class="pr4-c" id="alertes">${ic("ag")}<b>Prévenu quand une valeur chute</b><p><b>Une baisse de plus de 5 % dans la journée : notification le soir même</b>, sur votre téléphone${OFFRES.mail ? ", par e-mail" : ""} et dans Mon espace. Et pour toutes vos valeurs : résultats publiés avec leurs chiffres clés, veille des rendez-vous, <b>dernier jour pour toucher un dividende</b>, plus haut ou plus bas sur un an. Et chaque samedi, <b>votre rapport de la semaine</b>.</p><p><a class="lnk" href="/rapport-exemple">Voir un rapport en exemple →</a></p></div>
       <div class="pr4-c" id="portefeuille">${ic("pub")}<b>Votre portefeuille radiographié</b><p>Ce que vous possédez vraiment à travers vos ETF, vos expositions par pays et par secteur, ce qu'une baisse coûterait en euros, le calendrier de vos dividendes.</p></div>
       <div class="pr4-c" id="donnees">${ic("mk")}<b>Comparer et classer sans limite</b><p>Les comparaisons d'entreprises sans compter (5 par semaine sans Premium), les cinq classements complets et l'export des chiffres de chaque fiche.</p></div>
     </div></section><section class="ek-sec"><span class="ek-stk2 b">Pourquoi ENKLAIR</span><h2>Ce que votre IA ne fait pas.</h2><div class="prem5">${ARG.map(([k, t, d, id], i) => `<details class="prem-a" id="${id}"><summary>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span><em>La preuve</em></summary><div class="prem-pv" data-pv="${i}"><p class="muted">Chargement…</p></div></details>`).join("")}</div></section>
@@ -1961,7 +1961,7 @@ function commencerTrois() { // les trois décisions avant d'investir, en cartes 
   const trois = [
     { n: "1", t: "Une réserve d'abord", v: "3 à 6 mois", u: "de dépenses, sur un livret", d: "Avant d'investir, une somme disponible à tout moment. Le livret A rapporte 1,70 % par an net, plafonné à 22 950 €.", h: "#etapes", l: "Pourquoi, et combien" },
     { n: "2", t: "Un compte adapté", v: "PEA", u: "pour les actions européennes, 5 ans sans impôt sur les gains", d: "Le compte-titres pour le reste du monde. Le choix dépend de ce que vous voulez acheter et de votre horizon.", h: "/pea-cto", l: "PEA ou compte-titres" },
-    { n: "3", t: "Une entreprise, lue", v: ex3 ? ex3.name : "Une fiche", u: "un verdict en trois mots, puis le détail", d: "Chaque fiche dit si l'entreprise gagne de l'argent, ce qu'elle doit et si son action est chère, face à son secteur.", h: ex3 ? `/entreprise/${ex3.id}` : "/entreprises", l: "Ouvrir une fiche" },
+    { n: "3", t: "Une entreprise, lue", v: ex3 ? ex3.name : "Une fiche", u: "un verdict en trois mots, puis le détail", d: "Chaque fiche dit si l'entreprise gagne de l'argent, ce qu'elle doit et ce que le marché en pense, face à son secteur.", h: ex3 ? `/entreprise/${ex3.id}` : "/entreprises", l: "Ouvrir une fiche" },
   ];
   if (typeof frSeul === "function" && !frSeul() && typeof paysGet === "function" && paysGet() === "fr") { // 3/11 : autre pays que la France, la Belgique, la Suisse ou le Luxembourg
     trois[0] = { ...trois[0], u: "de dépenses, sur un compte d'épargne", d: "Avant d'investir, une somme disponible à tout moment, sur un compte d'épargne de votre banque." };
@@ -2281,7 +2281,7 @@ function espaceConnexion() {
   app.innerHTML = `<div class="ek ek-page es4"><section class="ek-hero es4-hero"><div class="es4-l"><span class="mc-stk">Mon espace</span><h1 class="ag4-t">Vos valeurs, au même endroit.</h1>
       <p class="mc-sub">Gratuit, avec une adresse e-mail. Aucune donnée vendue ; vous pouvez supprimer votre compte à tout moment.</p>
       <div class="es4-ben">${BEN.map(([k, t, d]) => `<div>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
-      <p id="parexlk" class="es4-ex"><a href="/premium">Le rapport de la semaine et les alertes sont dans Premium →</a></p></div>
+      <p id="parexlk" class="es4-ex"><a href="/rapport-exemple">Voir un rapport de la semaine en exemple →</a></p></div>
     <div class="es4-r"><h2 id="lt">Créer mon espace</h2>
       <form id="espf" class="espform es4-form"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>
         <label class="es4-chk" id="cgu"><input type="checkbox" name="cgu" required> J'accepte les <a class="lnk" href="/cgv" target="_blank">conditions</a> et la <a class="lnk" href="/confidentialite" target="_blank">politique de confidentialité</a>.</label>

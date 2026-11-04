@@ -43,7 +43,7 @@ function a4Fiche(id) { // tout ce que montre la carte d'exemple, calculé
     tri: [
       [["croissance", "Croissance"], g == null ? "–" : (g > 0 ? "+" : g < 0 ? "−" : "") + a4Nb(Math.abs(g)) + " %", ax.croissance, gm == null ? "" : `secteur : ${gm > 0 ? "+" : gm < 0 ? "−" : ""}${a4Nb(Math.abs(gm * 100))} %`],
       [["dette", "Dette"], dette, sd, detteN],
-      [["per", "Prix"], !px ? "–" : px.p >= 0.6 ? "Bon marché" : px.p <= 0.4 ? "Chère" : "Dans la norme", px, px ? `${px.rank}e sur ${px.n}` : ""]] };
+      [["per", "Prix"], !px ? "–" : px.p >= 0.6 ? "PER bas" : px.p <= 0.4 ? "PER haut" : "Dans la norme", px, px ? `${px.rank}e sur ${px.n}` : ""]] };
 }
 const a4Def = (cle, txt, f) => typeof ekDefMot === "function" ? ekDefMot(cle, txt, f || {}) : esc(txt); // mot souligné qui ouvre la définition (même fenêtre que la fiche)
 function a4CarteHTML(id) {
@@ -143,8 +143,10 @@ async function pageHome() {
     <span class="a4-stk a4-pk">${esc((s => s.charAt(0).toUpperCase() + s.slice(1))(jourSeance()))} en Bourse</span>
     <h2>${esc(accMarchesTitre())}</h2>
     ${a4MarchesHTML()}
-    <p class="a4-plus"><a href="/actualites">Ce que les entreprises ont publié →</a><a href="/agenda">Les 7 prochains jours →</a><a href="/decouvertes">Entreprises à découvrir →</a></p>
+    <p class="a4-plus"><a href="/actualites">Ce que les entreprises ont publié →</a><a href="/agenda">Les 7 prochains jours →</a><a href="/decouverte">La découverte de la semaine →</a></p>
   </section>
+
+  <section class="a4-sec" id="acc-dec"></section>
 
   <section class="a4-end">
     <span class="a4-stk a4-ye">À vous</span>

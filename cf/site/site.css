@@ -4172,3 +4172,6 @@ html #app #rf-agenda .ax-chip{font-size:12px!important}html #app #rf-agenda .src
 /* 4/11 : champ de recherche posé dans une boîte déjà encadrée (accueil, Demander…) : pas de second cadre ; libellés d'agenda (.ag .ev) sans cadre de carte */
 html #app .search input[type=search],html #app .search input[type=text],html #app .a4-srch input,html #app .ek-ask input[type=text],html #app .ek-ask input[type=search]{border:0!important;border-radius:0!important;box-shadow:none!important;background:transparent}
 html #app .ag .ev{border:0!important;border-radius:0!important;box-shadow:none!important;background:none!important;padding:0!important;margin:0!important}
+/* 4/11 : logos larges (Alphabet, Amazon, Microsoft…) coupés aux bords par le cadre arrondi : marge intérieure plus grande, pas de rond */
+.lg img{inset:13%;width:74%;height:74%}
+html #app .e3-co img,html #app .e3-co .lg img{border-radius:0}

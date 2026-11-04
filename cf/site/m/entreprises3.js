@@ -9,7 +9,7 @@ const E3_FILTRES = [
   ["pea", "Éligibles au PEA", c => typeof peaOk === "function" && peaOk(c) === true],
   ["sansdette", "Sans dette", c => c.netDebt != null && c.netDebt < 0 && !isBank(c)],
   ["rentables", "Très rentables", c => { const a = e3Ax(c).marge; return a && a.p >= 0.8; }],
-  ["bonmarche", "Bon marché", c => { const a = e3Ax(c).prix; return a && a.p >= 0.6; }],
+  ["bonmarche", "PER plus bas", c => { const a = e3Ax(c).prix; return a && a.p >= 0.6; }],
   ["dividende", "Avec dividende", c => { try { const v = valo(c); return v && v.yld > 0.005; } catch (e) { return false; } }]];
 const E3_AXM = new Map();
 function e3Ax(c) { if (E3_AXM.has(c.id)) return E3_AXM.get(c.id); const o = {}; try { rfAxes(c).forEach(a => { o[a.k] = a.r; }); } catch (e) { } E3_AXM.set(c.id, o); return o; }

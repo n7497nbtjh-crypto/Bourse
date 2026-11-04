@@ -430,7 +430,7 @@ async function pageRapportExemple() {
   app.innerHTML = `<div class="ek ek-page rx4"><section class="ek-hero rx4-hero"><div class="mc-crumb"><a href="/espace">Mon espace</a> › Rapport exemple</div><span class="mc-stk">Premium · exemple</span>
       <h1 class="ag4-t">Votre semaine en 2 minutes.</h1>
       <p class="mc-sub">Un vrai rapport, calculé aujourd'hui avec les chiffres du site pour un profil d'exemple : quatre favoris et un petit portefeuille. Le vôtre suit vos valeurs, et arrive chaque samedi.</p>
-      <div class="rx4-plan">${[["1", "Ce que vos entreprises ont publié", "les chiffres clés et ce qu'ils veulent dire"], ["2", "Vos valeurs cette semaine", "et pourquoi elles ont bougé"], ["3", "À venir", "les dates des deux prochaines semaines"], ["★", "La découverte de la semaine", "une entreprise moins connue, présentée en détail"]].map(([n, t, d]) => `<div><i>${n}</i><b>${t}</b><span>${d}</span></div>`).join("")}</div>
+      <div class="rx4-plan">${[["1", "Ce que vos entreprises ont publié", "les chiffres clés et ce qu'ils veulent dire"], ["2", "Vos valeurs cette semaine", "et pourquoi elles ont bougé"], ["3", "À venir", "les dates des deux prochaines semaines"], ["4", "Points de vigilance", "ce que votre portefeuille concentre"]].map(([n, t, d]) => `<div><i>${n}</i><b>${t}</b><span>${d}</span></div>`).join("")}</div>
       ${prem ? "" : `<a class="ek-btn dk rx4-cta" href="/premium">Recevoir le mien chaque semaine avec Premium</a>`}</section>
     <div id="synex">${synPageHTML(b, { premium: false })}</div>
     <section class="ek-sec"><span class="ek-stk2 b">Le vôtre</span><h2>Ce que vous réglez dans votre rapport.</h2><div class="rx4-reg">${SYN_EX_REG.map(([t, d]) => `<div><b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
@@ -500,7 +500,6 @@ function synPageV5(b, m) {
     <section class="s5-s"><h2><i>1</i>Ce que vos entreprises ont publié</h2>${annHTML || annCourt ? `${annHTML ? `<div class="s5-as">${annHTML}</div>` : ""}${annCourt ? `<div class="s5-acs"><p class="s5-acst">${annHTML ? "Autres publications" : "Publications de la semaine"}</p>${annCourt}</div>` : ""}` : `<p class="muted">Aucune publication officielle de vos entreprises cette semaine.</p>`}</section>
     <section class="s5-s"><h2><i>2</i>Vos valeurs cette semaine</h2><div class="s5-rs">${rows || `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille.</p>`}</div></section>
     <section class="s5-s"><h2><i>3</i>À venir sur deux semaines</h2>${synAgendaHTML(b)}</section>
-    <section class="s5-s s5-dec" id="syn-dec" data-sem="${esc(String(b.semaine || ""))}"></section>
     ${pf ? `<section class="s5-s"><h2><i>4</i>Points de vigilance du portefeuille</h2>${synAlertesHTML(b).replace("<h3>Votre portefeuille</h3>", "") || `<p class="muted">Rien à signaler.</p>`}</section>` : ""}
     <section class="s5-s" id="syn4-ia"></section>
     <p class="synfoot">Variations entre la clôture précédant la semaine et le dernier cours connu (différé), dans la devise de cotation. Annonces : documents officiels (AMF, SEC). Information, pas conseil.</p>
