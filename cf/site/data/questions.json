@@ -185,7 +185,27 @@
 },
 {
 "id": "pharma-europeenne-marge",
-"q": "La pharmacie européenne classée par marge"
+"q": "Quelles entreprises européennes de la santé ont la meilleure marge ?",
+"titre": "La santé européenne classée par marge",
+"desc": "Laboratoires, biotechs et fabricants de matériel médical d'Europe classés par marge d'exploitation, face à la médiane du secteur, d'après leurs derniers comptes annuels.",
+"a": {
+"region": "EU",
+"secteur": "sante",
+"criteres": [
+{
+"indicateur": "marge",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "marge",
+"ordre": "desc"
+},
+"fiable": true
+},
+"pourquoi": "La marge d'exploitation dit combien il reste de 100 € de ventes une fois payés les salaires, les achats, la recherche et les frais, avant les intérêts et l'impôt. Dans la santé, un médicament protégé par un brevet donne des marges très hautes ; à l'expiration du brevet, des copies moins chères arrivent et la marge peut baisser vite. Une petite biotech peut aussi afficher une marge élevée une année grâce à un paiement ponctuel d'un partenaire. Regardez la marge sur plusieurs années dans la fiche. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées.",
+"en_ligne": true
 },
 {
 "id": "luxe-europeen-croissance",
@@ -193,15 +213,76 @@
 },
 {
 "id": "defense-europeenne-chiffres",
-"q": "Les entreprises européennes de la défense en chiffres"
+"q": "Quelles entreprises européennes de la défense grandissent le plus vite ?",
+"titre": "La défense européenne classée par croissance des ventes",
+"desc": "Les entreprises européennes de la défense et de l'armement classées par croissance de leur chiffre d'affaires sur un an, d'après leurs derniers comptes annuels.",
+"a": {
+"region": "EU",
+"mot": "defense",
+"criteres": [
+{
+"indicateur": "croissance",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "croissance",
+"ordre": "desc"
+},
+"fiable": true
+},
+"pourquoi": "La croissance des ventes compare le chiffre d'affaires de la dernière année à celui de l'année d'avant. Plusieurs de ces groupes vendent aussi des avions civils, des moteurs ou des services : leur croissance ne vient pas que de la défense. Une forte croissance peut venir d'un rachat d'entreprise. Elle ne dit rien du bénéfice ni du prix de l'action : regardez la marge et le PER dans la fiche. La liste réunit les entreprises dont le nom ou la description parle de défense ou d'armement. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées.",
+"en_ligne": true
 },
 {
 "id": "semi-conducteurs-marge",
-"q": "Semi-conducteurs : qui a la meilleure marge ?"
+"q": "Semi-conducteurs : quelles entreprises ont la meilleure marge ?",
+"titre": "Les fabricants de puces classés par marge",
+"desc": "Les entreprises des semi-conducteurs (puces, machines pour les fabriquer) classées par marge d'exploitation, d'après leurs derniers comptes annuels.",
+"a": {
+"mot": "semi",
+"criteres": [
+{
+"indicateur": "marge",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "marge",
+"ordre": "desc"
+},
+"fiable": true
+},
+"pourquoi": "La marge d'exploitation dit combien il reste de 100 € de ventes une fois payés les salaires, les achats et les frais, avant les intérêts et l'impôt. Les semi-conducteurs sont un métier cyclique : quand la demande de puces est forte, les marges montent très haut, puis elles peuvent fondre l'année où les stocks sont pleins. Une marge record dit ce qui s'est passé la dernière année, pas ce qui se passera. La liste réunit les entreprises dont le nom ou la description parle de semi-conducteurs, ce qui peut inclure des métiers voisins comme les panneaux solaires. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées.",
+"en_ligne": true
 },
 {
 "id": "per-le-plus-bas-france",
-"q": "Les actions françaises au PER le plus bas, et pourquoi"
+"q": "Quelles actions françaises ont le PER le plus bas, et pourquoi ?",
+"titre": "Les entreprises françaises classées par PER, du plus bas au plus haut",
+"desc": "Les entreprises françaises classées par PER (prix de l'action rapporté au bénéfice), avec ce qu'un PER bas veut dire et ne veut pas dire.",
+"a": {
+"region": "FR",
+"criteres": [
+{
+"indicateur": "per",
+"condition": "sup",
+"valeur": 0
+}
+],
+"tri": {
+"indicateur": "per",
+"ordre": "asc"
+},
+"fiable": true,
+"sauf": [
+"immo"
+]
+},
+"pourquoi": "Le PER est la valeur en Bourse divisée par le bénéfice de la dernière année : un PER de 10 veut dire que l'entreprise est payée 10 années de bénéfice. Un PER très bas n'est pas une bonne affaire en soi. Il vient souvent d'un bénéfice gonflé une année (vente d'une filiale, gain exceptionnel), d'un métier cyclique au sommet de son cycle, ou d'un marché qui doute que le bénéfice dure. Les entreprises en perte n'ont pas de PER et n'apparaissent pas. Les sociétés immobilières sont écartées : leur bénéfice inclut la variation de valeur de leurs immeubles. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées.",
+"en_ligne": true
 },
 {
 "id": "entreprises-allemandes-dividende",
@@ -213,7 +294,32 @@
 },
 {
 "id": "energie-europeenne-dividende",
-"q": "L'énergie européenne classée par dividende"
+"q": "Quelles entreprises européennes de l'énergie versent le plus gros dividende ?",
+"titre": "L'énergie européenne classée par rendement du dividende",
+"desc": "Pétrolières, gazières et entreprises de services à l'énergie d'Europe classées par rendement du dividende, avec la part du bénéfice versée pour juger s'il est tenable.",
+"a": {
+"region": "EU",
+"secteur": "energie",
+"criteres": [
+{
+"indicateur": "rendement",
+"condition": "sup",
+"valeur": 0
+},
+{
+"indicateur": "distribution",
+"condition": "sup",
+"valeur": null
+}
+],
+"tri": {
+"indicateur": "rendement",
+"ordre": "desc"
+},
+"fiable": true
+},
+"pourquoi": "Le rendement est le dernier dividende annuel divisé par le cours du jour. Dans l'énergie, le bénéfice suit le prix du pétrole et du gaz : une bonne année permet de gros dividendes, une mauvaise peut les faire baisser. Un rendement très élevé vient souvent d'un cours qui a baissé, ou d'un dividende exceptionnel : regardez la part du bénéfice versée. Au-delà de 100 %, l'entreprise verse plus qu'elle ne gagne, ce qui ne peut pas durer. Les entreprises dont le chiffre utilisé est marqué « à vérifier » (saut inhabituel d'une année à l'autre) ne sont pas classées.",
+"en_ligne": true
 },
 {
 "id": "resultats-de-la-semaine",

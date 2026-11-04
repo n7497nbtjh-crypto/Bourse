@@ -13,7 +13,7 @@ async function pageQuestion(id) {
   const rep = top.length ? `En tête : ${top.map(c => `<a class="lnk" href="/entreprise/${c.id}">${esc(c.name)}</a> (${I[2](I[1](c))})`).join(", ")}.${med != null && tri.indicateur !== "capitalisation" ? ` La médiane des ${l.length} entreprises classées est de ${I[2](med)}.` : ` ${l.length} entreprises remplissent ce critère.`}` : "Aucune entreprise ne remplit ce critère aujourd'hui.";
   const autres = (Q.pages || []).filter(p => p.en_ligne && p.id !== id);
   app.innerHTML = `<div class="crumbs"><a href="/classements">Classements</a> › ${esc(q.titre)}</div>
-    <h1 class="pagetitle">${esc(q.q)}</h1>
+    <h1 class="pagetitle">${esc(q.q).replace(/ ([?!:;])/g, "\u00a0$1")}</h1>
     <p class="lead seoq-rep">${rep}</p>
     <section class="panel"><div class="pb filt-w">${(filtreHTML(a), filtreCorps(a))}</div></section>
     <details class="fold seoq-f"><summary>Comment lire ce classement</summary><div class="pb"><p>${esc(q.pourquoi || "")}</p><p class="muted">Chiffres tirés des derniers comptes annuels publiés et du cours du jour, recalculés à chaque mise à jour des données. Un classement n'est pas un conseil d'achat.</p></div></details>
