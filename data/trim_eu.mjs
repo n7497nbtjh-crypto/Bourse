@@ -168,7 +168,7 @@ async function main() {
   }
   console.log(recs.length, "publications,", lus.length, "communiqués de chiffre d'affaires ou de résultats");
   let n = 0, erreurs = 0;
-  const L = lus.filter(x => !cache[x.u] || !cache[x.u].v3).slice(0, MAX) // v3 : relu avec les tableaux (le passage v2 du 4/11 avait échoué), f = "/tmp/trim_eu.pdf";
+  const L = lus.filter(x => !cache[x.u] || !cache[x.u].v3).slice(0, MAX), f = "/tmp/trim_eu.pdf"; // v3 : relu avec les tableaux (le passage v2 du 4/11 avait échoué)
   for (const x of L) {
     if (Date.now() > STOP) break;
     const r = await get(x.u); if (!r) continue;
