@@ -18,24 +18,23 @@
     {
      "h": "Éditeur du site",
      "p": [
-      "Le site [Nom de domaine] (ci-après « ENKLAIR ») est édité par [Nom Prénom], entrepreneur individuel (EI), sous le régime de la micro-entreprise.",
-      "Adresse : [Adresse].",
-      "E-mail : [E-mail de contact]. Téléphone : [Téléphone].",
-      "Immatriculation : SIREN [SIREN], SIRET [SIRET], inscrit au Registre national des entreprises (RNE).",
-      "TVA : TVA non applicable, art. 293 B du CGI."
+      "Le site enklair.com (ci-après « ENKLAIR ») est édité par un particulier, à titre non professionnel.",
+      "Conformément à l'article 1-1, II de la loi n° 2004-575 du 21 juin 2004 pour la confiance dans l'économie numérique, l'éditeur préserve son anonymat : son identité a été communiquée à l'hébergeur, qui la tient à la disposition de l'autorité judiciaire.",
+      "Contact : enklairr@gmail.com.",
+      "Si une activité commerciale est ouverte sur le site (vente d'abonnements), l'identité complète de l'éditeur, son adresse et son numéro d'immatriculation seront publiés ici avant la première vente."
      ]
     },
     {
      "h": "Directeur de la publication",
      "p": [
-      "Le directeur de la publication est [Nom Prénom], en qualité d'éditeur."
+      "Le directeur de la publication est l'éditeur du site, joignable à enklairr@gmail.com."
      ]
     },
     {
      "h": "Hébergeur",
      "p": [
-      "Le site est hébergé par Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis.",
-      "Téléphone : [Téléphone de l'hébergeur, à vérifier sur le site de Cloudflare].",
+      "Le site est hébergé par Cloudflare, Inc., 101 Townsend Street, San Francisco, CA 94107, États-Unis.",
+      "Téléphone : +1 650 319 8930.",
       "Site : https://www.cloudflare.com."
      ]
     },
@@ -66,7 +65,7 @@
     {
      "h": "Propriété intellectuelle",
      "p": [
-      "Les textes, la mise en page, le nom et le logo de bilan. sont protégés.",
+      "Les textes, la mise en page, le nom et le logo d'ENKLAIR sont protégés.",
       "Toute reproduction sans autorisation écrite est interdite, sauf courte citation avec mention de la source."
      ]
     },
@@ -74,21 +73,14 @@
      "h": "Espace communauté",
      "p": [
       "Les messages publiés dans l'espace communauté engagent leurs auteurs.",
-      "Pour signaler un contenu illicite, écrivez à [E-mail de contact] en indiquant l'adresse du message et la raison du signalement.",
+      "Pour signaler un contenu illicite, écrivez à enklairr@gmail.com en indiquant l'adresse du message et la raison du signalement.",
       "L'éditeur retire rapidement tout contenu manifestement illicite qui lui est signalé."
-     ]
-    },
-    {
-     "h": "Médiation de la consommation",
-     "p": [
-      "Médiateur : [Nom du médiateur], [Adresse postale du médiateur], [Site du médiateur].",
-      "Les conditions de recours sont détaillées dans les CGV."
      ]
     },
     {
      "h": "Contact",
      "p": [
-      "Pour toute question : [E-mail de contact]."
+      "Pour toute question : enklairr@gmail.com."
      ]
     }
    ]
@@ -97,10 +89,18 @@
    "titre": "Conditions générales de vente et d'utilisation",
    "sections": [
     {
+     "h": "Avant tout",
+     "p": [
+      "Les abonnements Premium ne sont pas encore ouverts à la vente : aucune somme ne peut être payée sur le site pour le moment.",
+      "Ces conditions seront complétées (identité et adresse du vendeur, médiateur de la consommation) avant la première vente, et la date de la nouvelle version sera indiquée ici.",
+      "L'utilisation gratuite du site reste soumise aux règles ci-dessous (espace communauté, responsabilité, données)."
+     ]
+    },
+    {
      "h": "1. Objet",
      "p": [
-      "Ces conditions s'appliquent à l'utilisation du site [Nom de domaine] et à la vente de l'offre payante de bilan.",
-      "Le vendeur est [Nom Prénom], entrepreneur individuel (EI), SIRET [SIRET], [Adresse], [E-mail de contact].",
+      "Ces conditions s'appliquent à l'utilisation du site enklair.com et à la vente de l'offre payante d'ENKLAIR",
+      "Le vendeur sera identifié ici (nom, statut, numéro d'immatriculation, adresse) avant l'ouverture de la vente. Contact : enklairr@gmail.com.",
       "Le client est une personne physique qui agit à titre personnel (consommateur).",
       "En payant, le client accepte ces conditions. Elles sont datées et la version applicable est celle en vigueur le jour de l'achat."
      ]
@@ -109,10 +109,9 @@
      "h": "2. Offres",
      "p": [
       "Version gratuite : accès limité aux contenus et outils du site, sans paiement.",
-      "Essai gratuit : quand il est proposé, 14 jours de Premium, sans carte bancaire, une fois par adresse e-mail. Il prend fin seul au bout de 14 jours, sans prélèvement ni engagement.",
       "Abonnement mensuel : 4,90 € par mois, sans engagement.",
       "Accès 12 mois : paiement unique de 39 €, sans renouvellement automatique.",
-      "Le détail de ce que comprend chaque offre est affiché sur la page [Page des offres] avant le paiement.",
+      "Le détail de ce que comprend chaque offre est affiché sur la page Premium (enklair.com/premium) avant le paiement.",
       "Le connecteur pour assistants IA (Claude, ChatGPT…) est limité à 20 appels par jour avec la version gratuite, sans limite avec Premium (usage raisonnable : 240 appels par minute au plus)."
      ]
     },
@@ -148,11 +147,11 @@
      "h": "6. Droit de rétractation",
      "p": [
       "Le client dispose de 14 jours pour se rétracter, sans donner de motif. Le délai court à partir du lendemain de la commande.",
-      "Pour se rétracter, il envoie le formulaire ci-dessous ou tout message clair à [E-mail de contact].",
+      "Pour se rétracter, il envoie le formulaire ci-dessous ou tout message clair à enklairr@gmail.com.",
       "L'éditeur rembourse au plus tard 14 jours après avoir reçu la demande, par le même moyen de paiement.",
       "Accès immédiat au service : lors de la commande, le client peut demander que l'accès commence tout de suite, avant la fin des 14 jours. S'il se rétracte ensuite, il paie seulement la part du service déjà utilisée, calculée au prorata des jours écoulés (article L. 221-25 du Code de la consommation).",
       "Exception pour le contenu numérique : pour un contenu numérique fourni immédiatement sans support matériel (par exemple un bilan ou un fichier téléchargé), le droit de rétractation ne s'applique plus si le client a donné son accord exprès pour un accès immédiat et a reconnu perdre son droit de rétractation (article L. 221-28 du Code de la consommation). Cet accord est recueilli par une case à cocher, non cochée par défaut, et confirmé par e-mail.",
-      "Formulaire type : « À l'attention de [Nom Prénom] EI, [Adresse], [E-mail de contact]. Je notifie par la présente ma rétractation du contrat portant sur [offre]. Commandé le [date]. Nom du client : [nom]. Adresse e-mail du compte : [e-mail]. Date : [date]. »"
+      "Formulaire type : « À l'attention d'ENKLAIR, enklairr@gmail.com. Je notifie par la présente ma rétractation du contrat portant sur l'offre suivante : … Commandé le : … Nom du client : … Adresse e-mail du compte : … Date : … »"
      ]
     },
     {
@@ -169,9 +168,8 @@
     {
      "h": "8. Arrêt du service",
      "p": [
-      "Si l'éditeur arrête définitivement ENKLAIR, il prévient les clients par e-mail au moins [3] mois avant.",
-      "Les abonnements mensuels prennent fin sans nouveau prélèvement.",
-      "[Option à décider : remboursement partiel de l'accès 12 mois si l'arrêt intervient moins de [X] mois après l'achat.]"
+      "Si l'éditeur arrête définitivement ENKLAIR, il prévient les clients par e-mail au moins 3 mois avant.",
+      "Les abonnements mensuels prennent fin sans nouveau prélèvement."
      ]
     },
     {
@@ -179,7 +177,7 @@
      "p": [
       "Chaque membre publie sous un pseudo et reste responsable de ses messages.",
       "Sont interdits : les propos illicites, injurieux ou haineux, le spam, la publicité, les fausses informations destinées à influencer un cours de bourse, et les sollicitations à investir.",
-      "Signalement : chaque message peut être signalé à [E-mail de contact] ou via le bouton prévu.",
+      "Signalement : chaque message peut être signalé à enklairr@gmail.com ou via le bouton prévu.",
       "L'éditeur peut retirer un message ou suspendre un accès en cas de manquement. Il en informe la personne concernée, avec le motif, sauf si la loi l'interdit.",
       "Les messages de la communauté ne sont pas des conseils en investissement."
      ]
@@ -196,8 +194,8 @@
     {
      "h": "11. Réclamations et médiation",
      "p": [
-      "En cas de problème, le client écrit d'abord à [E-mail de contact]. L'éditeur répond sous 15 jours.",
-      "Si la réclamation écrite n'aboutit pas, le client peut saisir gratuitement le médiateur de la consommation : [Nom du médiateur], [Adresse postale du médiateur], [Site du médiateur].",
+      "En cas de problème, le client écrit d'abord à enklairr@gmail.com. L'éditeur répond sous 15 jours.",
+      "Si la réclamation écrite n'aboutit pas, le client pourra saisir gratuitement le médiateur de la consommation, dont le nom et les coordonnées seront indiqués ici avant l'ouverture de la vente.",
       "Le client doit saisir le médiateur dans un délai d'un an à compter de sa réclamation écrite à l'éditeur.",
       "Le recours au médiateur n'est pas obligatoire avant d'aller devant un juge."
      ]
@@ -218,7 +216,7 @@
     {
      "h": "Version",
      "p": [
-      "CGV en vigueur au [Date de mise en ligne]."
+      "CGV en vigueur au 4 novembre 2026."
      ]
     }
    ]
@@ -229,8 +227,8 @@
     {
      "h": "Responsable du traitement",
      "p": [
-      "Le responsable du traitement est [Nom Prénom], entrepreneur individuel (EI), [Adresse].",
-      "Contact pour vos données : [E-mail de contact]."
+      "Le responsable du traitement est l'éditeur du site ENKLAIR (particulier, voir les mentions légales).",
+      "Contact pour vos données : enklairr@gmail.com. Vous recevez une réponse dans un délai d'un mois au plus."
      ]
     },
     {
@@ -246,7 +244,7 @@
       "Données : adresse e-mail, choix des alertes, date d'inscription et de confirmation.",
       "Finalité : envoyer le bilan hebdomadaire et les alertes demandées.",
       "Base légale : votre consentement. Il est confirmé par un double clic (lien envoyé par e-mail).",
-      "Durée : jusqu'à votre désinscription. Sans confirmation, l'adresse est supprimée après [7] jours. Sans ouverture ni clic pendant [3] ans, l'adresse est supprimée.",
+      "Durée : jusqu'à votre désinscription. Sans confirmation, l'adresse est supprimée après 7 jours. Sans ouverture ni clic pendant 3 ans, l'adresse est supprimée.",
       "Chaque e-mail contient un lien de désinscription.",
       "Prestataire : Brevo (Sendinblue SAS, France)."
      ]
@@ -257,17 +255,8 @@
       "Données : adresse e-mail, offre choisie, historique des paiements, identifiant client Stripe.",
       "Finalité : gérer la commande, l'accès payant, la résiliation et la facturation.",
       "Base légale : l'exécution du contrat. Pour les pièces comptables, une obligation légale.",
-      "Durée : pendant l'abonnement, puis [3] ans pour gérer les éventuelles réclamations. Les pièces comptables sont gardées 10 ans (Code de commerce).",
+      "Durée : pendant l'abonnement, puis 3 ans pour gérer les éventuelles réclamations. Les pièces comptables sont gardées 10 ans (Code de commerce).",
       "Les données de carte bancaire sont traitées par Stripe. ENKLAIR n'y a jamais accès."
-     ]
-    },
-    {
-     "h": "Essai Premium de 14 jours",
-     "p": [
-      "Données : l'adresse e-mail de votre espace et la date de l'essai.",
-      "Finalité : ouvrir l'essai et éviter qu'il soit utilisé plusieurs fois avec la même adresse.",
-      "Base légale : l'exécution du service demandé, et l'intérêt légitime de l'éditeur à éviter les abus.",
-      "Durée : 12 mois après l'essai, puis suppression automatique."
      ]
     },
     {
@@ -325,14 +314,14 @@
       "Seul l'éditeur a accès à vos données. Elles sont aussi traitées par ses prestataires, uniquement pour le service :",
       "Cloudflare, Inc. (États-Unis) : hébergement, sécurité, base de données (comptes, favoris, portefeuilles, rapports) et modèle d'IA du site (Workers AI).",
       "Sendinblue SAS, marque Brevo (France) : envoi des e-mails.",
-      "Stripe : paiement. Pour les clients européens, le prestataire contractant est [Entité Stripe, à vérifier dans votre contrat Stripe]."
+      "Stripe : paiement. Pour les clients européens, le prestataire contractant est Stripe Payments Europe, Limited (Irlande)."
      ]
     },
     {
      "h": "Transferts hors de l'Union européenne",
      "p": [
       "Cloudflare et Stripe peuvent traiter des données aux États-Unis.",
-      "Ces transferts reposent sur la décision d'adéquation de la Commission européenne du 10 juillet 2023 (Data Privacy Framework), pour les entreprises inscrites sur la liste officielle [à vérifier pour chaque prestataire].",
+      "Ces transferts reposent sur la décision d'adéquation de la Commission européenne du 10 juillet 2023 (Data Privacy Framework), pour les prestataires inscrits sur la liste officielle (dataprivacyframework.gov) et, à défaut, sur les clauses contractuelles types de la Commission européenne prévues dans leurs contrats.",
       "À défaut, ils reposent sur les clauses contractuelles types de la Commission européenne."
      ]
     },
@@ -342,7 +331,7 @@
       "Vous avez un droit d'accès, de rectification, d'effacement, de limitation, d'opposition et de portabilité.",
       "Vous pouvez retirer votre consentement à tout moment, par exemple en vous désinscrivant des e-mails.",
       "Vous pouvez définir des directives sur le sort de vos données après votre décès.",
-      "Pour exercer vos droits : [E-mail de contact]. Réponse sous un mois.",
+      "Pour exercer vos droits : enklairr@gmail.com. Réponse sous un mois.",
       "Si vous estimez que vos droits ne sont pas respectés, vous pouvez saisir la CNIL : www.cnil.fr, 3 place de Fontenoy, TSA 80715, 75334 Paris Cedex 07."
      ]
     },
@@ -367,7 +356,7 @@
     {
      "h": "Mise à jour",
      "p": [
-      "Politique en vigueur au [Date de mise en ligne]. En cas de changement important, les inscrits sont prévenus par e-mail."
+      "Politique en vigueur au 4 novembre 2026. En cas de changement important, les inscrits sont prévenus par e-mail."
      ]
     }
    ]
@@ -426,9 +415,9 @@
     {
      "h": "Liens d'intérêts",
      "p": [
-      "L'éditeur peut détenir à titre personnel des titres ou des fonds présentés sur le site.",
-      "[Indiquer ici les positions détenues sur les titres présentés, ou « Aucun lien d'intérêts à déclarer ».]",
-      "ENKLAIR ne reçoit aucune rémunération des sociétés présentées. [Modifier si des liens affiliés ou partenariats sont ajoutés.]"
+      "L'éditeur peut détenir à titre personnel des actions ou des fonds présentés sur le site, comme tout épargnant.",
+      "Les verdicts, repères et classements sont calculés automatiquement à partir des comptes publiés, selon la même méthode pour toutes les entreprises, sans choix ni intervention de l'éditeur sur une entreprise en particulier.",
+      "ENKLAIR ne reçoit aucune rémunération des sociétés ou des émetteurs de fonds présentés, et ne propose aucun lien affilié."
      ]
     },
     {

@@ -1,3 +1,18 @@
+# Vérification du 4/11/2026 (faite par Claude, sans avocat, à la demande de Romain)
+
+Ce n'est pas un avis juridique. Points vérifiés sur des sources publiques (LCEN, AMF, ESMA, règlement délégué 2016/958).
+
+**Fait le 4/11** : pages légales remplies sans crochets. Éditeur : particulier à titre non professionnel, anonyme vis-à-vis du public (article 1-1, II de la LCEN depuis la loi SREN ; identité connue de l'hébergeur Cloudflare), contact enklairr@gmail.com. CGV : bandeau « les abonnements ne sont pas encore ouverts à la vente ». Essai de 14 jours retiré des CGV et de la politique de confidentialité. Liens d'intérêts : verdicts calculés automatiquement, même méthode pour toutes les sociétés, aucune rémunération des sociétés.
+
+**Obligatoire AVANT la première vente Premium** (l'anonymat n'est possible que sans activité professionnelle) :
+1. Ajouter l'activité « vente d'abonnements numériques » à la micro-entreprise (guichet unique) ; publier nom, statut, SIREN/SIRET, adresse (une adresse de domiciliation peut remplacer l'adresse personnelle), e-mail, téléphone dans les mentions et les CGV.
+2. Adhérer à un médiateur de la consommation et l'indiquer dans les CGV.
+3. Résiliation en ligne en quelques clics (portail Stripe), case de renoncement à la rétractation pour l'accès immédiat.
+
+**Risque principal relevé : les verdicts sur le prix.** Pour l'ESMA (Q&A MAR, ESMA_QA_1740), un contenu qui comporte une appréciation de la valeur ou du prix d'un titre est une recommandation d'investissement implicite. Un verdict « chère » ou « bon marché » peut donc relever des règles des recommandations d'investissement (règlement délégué 2016/958) : identité de l'auteur affichée clairement, sources, et déclaration des conflits d'intérêts (titres détenus). C'est incompatible avec l'anonymat. Deux voies : (a) remplacer les mots d'appréciation du prix par le fait chiffré (« 35 fois son bénéfice, plus que ses rivales : 26 ») ; (b) publier l'identité de l'éditeur et ses positions. Recommandation : (a). Décision de Romain attendue.
+
+**Information ou conseil (CIF)** : le conseil en investissement est une recommandation personnalisée (selon la situation de la personne). Le site ne dit jamais « achetez / vendez » et ne propose pas de titres selon un profil : il reste de l'information générale. La radiographie du portefeuille décrit sans proposer : à garder ainsi.
+
 # Conformité de bilan. (état au 31/10/2026)
 
 Ce document sépare ce qui est **en place et vérifiable** de ce qui **demande l'avis d'un avocat ou une décision de Romain**. Il ne remplace pas un conseil juridique.
