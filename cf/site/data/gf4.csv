@@ -1,4 +1,10 @@
 id,c1,c2,c3
+e:spdr-bloomberg-u-s-treasury-bond-dist,ETR:SYBT,FRA:SYBT,
+e:spdr-bloomberg-uk-gilt-dist,ETR:SYBG,FRA:SYBG,
+e:spdr-commodity-acc,ETR:SCOM,FRA:SCOM,
+e:spdr-dow-jones-global-real-estate-acc,ETR:SPY2,FRA:SPY2,
+e:spdr-dow-jones-global-real-estate-dist,ETR:SPYJ,FRA:SPYJ,
+e:spdr-euro-stoxx-low-volatility-acc,ETR:ZPRL,FRA:ZPRL,
 e:spdr-ftse-epra-europe-ex-uk-real-estate-acc,ETR:ZPRP,FRA:ZPRP,
 e:spdr-ftse-global-convertible-bond-dist,ETR:ZPRC,FRA:ZPRC,
 e:spdr-ftse-global-convertible-bond-eur-hdg-acc,ETR:SPF1,FRA:SPF1,
