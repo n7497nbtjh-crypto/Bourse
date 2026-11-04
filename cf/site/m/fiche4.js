@@ -82,10 +82,10 @@ async function pageCompany4(id, tab) {
   ["g", "ng", "m", "nm", "roe", "pay", "pe", "yld"].forEach(k => MED[k] = f4Med(P.L.map(x => f4M(x)[k]).filter(v => !(k === "pay" && v > 1.5))));
   const ctx = { bk, s, c, P, M, MED, cur: s.currency, sym: F4_SYM(s.currency).trim(), nom: s.name, rap: ((c.sources || [])[0] || {}).report || null };
   let html = "";
-  try { html = f4Tete(s, c, ctx) + f4MetierSec(ctx) + f4Fil(ctx) + f4Fin(ctx); }
+  try { html = f4Tete(s, c, ctx) + `<div id="f4-annee"></div>` + f4MetierSec(ctx) + f4Fil(ctx) + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
-  f4Ancres(ctx); f4Trim(ctx); window.F4X = ctx;
+  window.F4X = ctx; f4Ancres(ctx); f4Trim(ctx); if (typeof f4Annee === "function") f4Annee(ctx); // l'année en cours (m/annee4.js)
   if (typeof ctxCharge === "function") ctxCharge().then(() => { if (window.F4X === ctx) f4Contexte(ctx); });
   const ANC = { "rf-resultats": "e1", "rf-rentab": "e2", "rf-dette": "e3", "rf-div": "e4", "rf-valo": "e5", "f3-metier": "metier", "tous-les-chiffres": "tout", "rf-concurrents": "tout", "concurrents": "tout" }; // anciennes ancres (liens déjà partagés)
   const h0 = location.hash.slice(1), cible = tab === "comptes" ? "tout" : (tab === "actualite" || tab === "agenda" || tab === "communaute") ? "actu" : (ANC[h0] || h0);
@@ -129,7 +129,7 @@ function f4Verdict(x) {
   const b = x.bk ? "" : s.netDebt == null ? "" : s.netDebt <= 0 ? "sans dette" : lev > 3 ? "<em>endettée</em>" : "dette modérée";
   const pr = M.pe == null ? "" : f4Ton(M.pe, MED.pe, true), c = M.pe == null ? "" : pr === "r" ? "<em>chère</em>" : pr === "g" ? "peu chère" : "prix dans la moyenne";
   const parts = [a, b, c].filter(Boolean);
-  return `<div class="ek-vrd"><span class="ek-stk2">Le verdict</span><h2>${parts.join(", ").replace(/^(<em>)?(\w)/, (m0, t, l) => (t || "") + l.toUpperCase())}.</h2></div>`;
+  return `<div class="ek-vrd"><span class="ek-stk2">Le verdict${x.c && x.c.years && x.c.years.length ? " " + x.c.years[x.c.years.length - 1] : ""}</span><h2>${parts.join(", ").replace(/^(<em>)?(\w)/, (m0, t, l) => (t || "") + l.toUpperCase())}.</h2></div>`;
 }
 
 function f4Chaine(x) {

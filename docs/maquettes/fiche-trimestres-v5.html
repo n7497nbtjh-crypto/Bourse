@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ENKLAIR · maquette fiche : les trimestres de l'année, puis face aux années précédentes (v5)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* DA de la fiche v4 : bandeau jaune, étiquettes penchées, cartes à contour noir, chiffres verts / rouges. */
+:root{--ink:#111;--y:#FFE14D;--yl:#FFF6C7;--g:#00A06B;--r:#D92D12;--gz:#E2F8EE;--rz:#FFE9E3;--mut:#666;--line:#E6E4DE}
+*{box-sizing:border-box;margin:0;padding:0}a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;text-align:left}
+body{background:#fff;color:var(--ink);font:400 16px/1.5 Inter,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+.w{max-width:1192px;margin:0 auto;padding:0 44px}
+.note{background:#F4F4F4;border-radius:14px;padding:14px 18px;font:600 14px/1.45 Inter;margin:20px auto}
+.stk{display:inline-block;font:800 14px "Bricolage Grotesque";padding:5px 12px;border-radius:10px;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transform:rotate(-2deg);background:#fff}
+.stk.b{background:#A9B6FF}.stk.y{background:var(--y)}
+.up{color:var(--g)}.dn{color:var(--r)}
+
+/* bandeau (rappel du haut de la fiche) */
+.hero{background:var(--y);margin:0 44px;border-radius:32px;padding:30px 36px}
+.hero h1{font:800 54px/1 "Bricolage Grotesque";letter-spacing:-.05em}
+.vrd{display:flex;align-items:center;gap:16px;margin-top:22px;flex-wrap:wrap}
+.vrd h2{font:800 46px/1 "Bricolage Grotesque";letter-spacing:-.05em}.vrd h2 em{font-style:normal;color:var(--r)}
+.vrd small{flex-basis:100%;font:600 13px Inter;color:#333}
+.chn{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:16px}
+.chn div{background:#fff;border:2px solid var(--ink);border-radius:20px;padding:12px 16px;font:600 12.5px Inter;color:#444}
+.chn b{display:block;font:800 28px "Bricolage Grotesque";letter-spacing:-.04em}
+
+/* section « L'année en cours » */
+.sec{padding:64px 0 0}
+.sec h2{font:800 clamp(34px,4.4vw,52px)/1.02 "Bricolage Grotesque";letter-spacing:-.05em;margin-top:14px;max-width:24ch}
+.sec h2 span{background:linear-gradient(transparent 62%,var(--y) 62%)}
+.sec .lead{font:600 16px/1.45 Inter;color:#333;margin-top:12px;max-width:66ch}
+.sec .lead b{color:var(--ink)}
+
+/* bande des neuf mois (même forme que « Son métier ») */
+.strip{display:grid;grid-template-columns:repeat(4,1fr);border:2px solid var(--ink);border-radius:18px;overflow:hidden;margin-top:26px}
+.strip>div{padding:14px 16px;border-left:2px solid var(--ink)}.strip>div:first-child{border-left:0}
+.strip small{display:block;font:600 12.5px Inter;color:#555}
+.strip b{display:block;font:800 26px/1.1 "Bricolage Grotesque";letter-spacing:-.03em;margin-top:2px}
+.strip em{display:block;font:800 13px Inter;font-style:normal}
+.strip .hl{background:var(--y)}
+.strip .hl b{font-size:22px}
+
+/* trimestres : cartes cliquables (même forme que les repères) */
+.qs{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:18px}
+.q{background:#fff;border:2px solid var(--ink);border-radius:20px;padding:14px 16px 12px;display:flex;flex-direction:column;transition:transform .12s,box-shadow .12s}
+button.q:hover{transform:translate(-2px,-2px);box-shadow:4px 4px 0 var(--ink)}
+.q.on{background:var(--yl);box-shadow:5px 5px 0 var(--ink);transform:translate(-2px,-2px)}
+.q .st{display:flex;align-items:center;gap:8px;font:800 13px Inter}
+.q .st i{display:inline-grid;place-items:center;min-width:28px;height:22px;border-radius:999px;background:var(--ink);color:#fff;font:800 11px Inter;font-style:normal;padding:0 6px}
+.q .st small{margin-left:auto;font:600 11.5px Inter;color:var(--mut)}
+.q .v{font:800 34px/1.05 "Bricolage Grotesque";letter-spacing:-.04em;margin-top:10px}
+.q .s{font:600 12.5px/1.35 Inter;color:#444}
+.q .s2{font:700 12.5px Inter;margin-top:8px}
+.q .go{margin-top:12px;border-top:2px solid var(--ink);padding-top:8px;display:flex;justify-content:space-between;font:800 13px Inter}
+.q.on .go span:last-child{transform:rotate(180deg)}
+.q.av{border-style:dashed;color:#777;background:#fff}
+.q.av .v{color:#999;font-size:24px}
+
+/* détail du trimestre choisi */
+.det{margin-top:16px;border:2px solid var(--ink);border-radius:22px;background:#fff;box-shadow:5px 5px 0 var(--ink);padding:22px 24px}
+.det .h{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.det h3{font:800 24px/1.1 "Bricolage Grotesque";letter-spacing:-.03em}
+.pill{display:inline-flex;align-items:center;gap:6px;border:1.5px solid var(--ink);border-radius:999px;padding:2px 10px;font:700 12px Inter;background:#fff}
+.pill i{width:8px;height:8px;border-radius:50%;background:#3D5BFF}
+.det .h a{margin-left:auto}
+.cmp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.c{border-radius:16px;padding:12px 14px;border:2px solid var(--ink)}
+.c.g{background:var(--gz)}.c.r{background:var(--rz)}
+.c span{font:700 12.5px Inter;color:#444}
+.c b{display:block;font:800 28px/1.05 "Bricolage Grotesque";letter-spacing:-.04em;margin-top:4px}
+.c em{display:block;font:800 13px Inter;font-style:normal;margin-top:2px}
+.c small{display:block;font:600 12px Inter;color:#555}
+.det .say{margin-top:16px;background:var(--yl);border-radius:14px;padding:12px 14px;font:600 14.5px/1.45 Inter}
+.det .say b{font-weight:800}
+.lk{font:800 14px Inter;border-bottom:3px solid var(--y);white-space:nowrap}
+.foot{margin-top:14px;font:600 13px/1.45 Inter;color:var(--mut)}
+.sep{height:2px;background:var(--ink);margin:70px 0 0;opacity:.12}
+.lbl{font:800 13px Inter;color:#666;margin:30px auto 12px}
+
+@media (max-width:820px){
+ .w{padding:0 18px}.hero{margin:0 10px;padding:22px 18px;border-radius:24px}.hero h1{font-size:40px}.vrd h2{font-size:32px}
+ .chn{grid-template-columns:1fr 1fr}.chn div:last-child{grid-column:1/-1}
+ .strip{grid-template-columns:1fr 1fr}.strip>div:nth-child(3){border-left:0}.strip>div:nth-child(n+3){border-top:2px solid var(--ink)}
+ .qs{grid-template-columns:1fr 1fr}.cmp{grid-template-columns:1fr}.det{padding:18px}.det .h a{margin-left:0}
+ .q .v{font-size:28px}
+}
+
+/* v4 : tableau trimestre × année */
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:28px}
+.tools span{font:700 13px Inter;color:#444;margin-right:4px}
+.tg{border:2px solid var(--ink);border-radius:999px;padding:7px 16px;font:800 14px Inter;background:#fff}
+.tg.on{background:var(--y);box-shadow:3px 3px 0 var(--ink)}
+.tb{margin-top:16px;border:2px solid var(--ink);border-radius:22px;overflow:hidden;background:#fff}
+.tb table{width:100%;border-collapse:collapse}
+.tb th,.tb td{padding:0;border-left:2px solid var(--ink);border-top:2px solid var(--ink)}
+.tb tr:first-child th{border-top:0}.tb th:first-child,.tb td:first-child{border-left:0}
+.tb thead th{background:#fff}
+.tb thead button{width:100%;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;font:800 15px "Bricolage Grotesque";letter-spacing:-.01em}
+.tb thead button small{font:700 11.5px Inter;color:var(--mut)}
+.tb thead button:hover{background:var(--yl)}
+.tb thead th.on button{background:var(--y)}
+.tb thead th.yr{padding:12px 14px;text-align:left;font:800 13px Inter;color:#555;width:110px}
+.tb thead th.an{padding:12px 14px;text-align:left;font:800 15px "Bricolage Grotesque";background:#F7F7F4}
+.tb tbody th{padding:12px 14px;text-align:left;font:800 20px "Bricolage Grotesque";letter-spacing:-.03em}
+.tb tbody tr.cur th,.tb tbody tr.cur td{background:var(--yl)}
+.tb tbody tr.cur th small{display:block;font:700 11px Inter;color:#555;letter-spacing:0}
+.tb td{padding:10px 14px;vertical-align:top}
+.tb td b{display:block;font:800 19px/1.1 "Bricolage Grotesque";letter-spacing:-.02em}
+.tb td em{display:inline-block;font:800 12px Inter;font-style:normal;margin-top:4px;border-radius:999px;padding:1px 7px}
+.tb td em.g{background:var(--gz);color:var(--g)}.tb td em.r{background:var(--rz);color:var(--r)}.tb td em.n{background:#F0F0F0;color:#555}
+.tb td.on{background:#FFFBE3}.tb tr.cur td.on{background:#FFEF9E}
+.tb td.av{color:#999;font:700 13px Inter;border-style:solid}
+.tb td.an{background:#F7F7F4}
+.tb tr.cur td.an{background:var(--yl)}
+.tb td small{display:block;font:600 11px Inter;color:var(--mut);margin-top:2px}
+.qd{margin-top:16px;border:2px solid var(--ink);border-radius:22px;background:#fff;box-shadow:5px 5px 0 var(--ink);padding:22px 24px}
+.qd h3{font:800 26px/1.1 "Bricolage Grotesque";letter-spacing:-.03em}
+.qd h3 span{background:linear-gradient(transparent 62%,var(--y) 62%)}
+.qd .sub{font:600 14px Inter;color:#444;margin-top:6px}
+.yrs{margin-top:16px;display:grid;gap:8px}
+.yl{display:grid;grid-template-columns:70px 1fr 110px 96px;gap:12px;align-items:center;font:600 13px Inter}
+.yl b{font:800 17px "Bricolage Grotesque"}
+.yl .tr{height:22px;border-radius:7px;background:#F0F0F0;position:relative;overflow:hidden}
+.yl .tr i{position:absolute;inset:0 auto 0 0;background:#C9C9C9;border-radius:7px}
+.yl.cur .tr i{background:var(--ink)}
+.yl.cur{background:var(--yl);border-radius:10px;padding:4px 6px;margin:0 -6px}
+.yl .vv{text-align:right;font:800 15px Inter}
+.yl em{font:800 12px Inter;font-style:normal;border-radius:999px;padding:2px 8px;justify-self:start}
+.yl em.g{background:var(--gz);color:var(--g)}.yl em.r{background:var(--rz);color:var(--r)}.yl em.n{background:#F0F0F0;color:#555}
+.qd .say{margin-top:16px;background:var(--yl);border-radius:14px;padding:12px 14px;font:600 14.5px/1.45 Inter}
+.qd .row2{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+@media (max-width:820px){.tb thead button small{display:none}.tb{overflow-x:auto}.tb table{min-width:640px}.yl{grid-template-columns:52px 1fr 84px 76px;gap:8px}.qd{padding:18px}}
+
+.seq .mt{display:flex;flex-direction:column;justify-content:center;padding-right:16px}
+.seq .mt b{font:800 22px/1.05 "Bricolage Grotesque";letter-spacing:-.03em;text-transform:uppercase;background:var(--y);border:2px solid var(--ink);border-radius:12px;padding:8px 10px;box-shadow:3px 3px 0 var(--ink);transform:rotate(-2deg);align-self:flex-start;max-width:100%}
+.seq .mt small{font:700 12px Inter;color:#555;margin-top:8px}
+.yrs .mt{font:800 14px Inter;text-transform:uppercase;letter-spacing:.02em;margin-bottom:4px}
+/* sélecteur du chiffre : trois grands onglets avec le chiffre des neuf mois */
+.segt{font:800 15px Inter;margin-top:26px}.segt span{font-weight:600;color:#555}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);gap:0;margin-top:10px;border:3px solid var(--ink);border-radius:24px;overflow:hidden;box-shadow:5px 5px 0 var(--ink);background:#fff;position:sticky;top:10px;z-index:5}
+.seg button{cursor:pointer;position:relative;padding:16px 20px;border-left:3px solid var(--ink);display:flex;flex-direction:column;gap:2px;transition:background .12s}
+.seg button:first-child{border-left:0}
+.seg button:hover{background:var(--yl)}
+.seg button u{position:absolute;right:16px;bottom:14px;text-decoration:none;font:800 13px Inter;border:2px solid var(--ink);border-radius:999px;padding:5px 12px;background:#fff;box-shadow:2px 2px 0 var(--ink)}
+.seg button:hover u{background:var(--y)}
+.seg button.on u{background:var(--ink);color:#fff;box-shadow:none}
+.seg button.on{background:var(--y)}
+.seg button>span{font:800 13px Inter;display:flex;align-items:center;gap:8px}
+.seg button span i{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink);background:#fff;flex:none}
+.seg button.on span i{background:var(--ink);box-shadow:inset 0 0 0 3px var(--y)}
+.seg button b{font:800 30px/1.05 "Bricolage Grotesque";letter-spacing:-.04em}
+.seg button em{font:800 13px Inter;font-style:normal}
+.seg button small{font:600 11.5px Inter;color:#555}
+@media (max-width:820px){.seg{border-radius:18px;top:6px}.seg button{padding:10px 10px}.seg button b{font-size:19px}.seg button small,.seg .sa{display:none}.seg button u{position:static;align-self:flex-start;margin-top:6px;font-size:11px;padding:2px 8px}.seg button em{font-size:11.5px}}
+/* v5 : 1) T1 → T2 → T3 de l'année ; 2) l'année face aux précédentes */
+.part{margin-top:34px}
+.part h3.pt{font:800 26px/1.1 "Bricolage Grotesque";letter-spacing:-.03em;display:flex;gap:12px;align-items:center}
+.part h3.pt i{display:inline-grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--ink);color:#fff;font:800 16px Inter;font-style:normal;flex:none}
+.part .sub{font:600 14.5px/1.45 Inter;color:#444;margin-top:6px;max-width:70ch}
+.seq{display:grid;grid-template-columns:var(--cols);align-items:stretch;margin-top:16px}
+.seq .ar{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:4px;padding:0 2px}
+.seq .ar b{font:800 22px Inter}
+.seq .ar em{font:800 11.5px Inter;font-style:normal;border-radius:999px;padding:1px 7px;white-space:nowrap}.seq .ar{text-align:center;padding:0 14px}.seq .ar>b{display:block;line-height:0;margin-bottom:6px}.seq .ar>em{font-size:15px!important;padding:3px 10px!important}.seq .ar .hb{font:600 13.5px/1.3 Inter;color:#555;margin-top:2px}.seq .ar .hb b{font:800 15px Inter;color:#222}
+.seq .ar em.g{background:var(--gz);color:var(--g)}.seq .ar em.r{background:var(--rz);color:var(--r)}.seq .ar em.n{background:#F0F0F0;color:#555}
+.sq{border:2px solid var(--ink);border-radius:20px;padding:14px 16px;background:#fff}
+.sq.top{background:var(--y);box-shadow:4px 4px 0 var(--ink)}
+.sq.av{border-style:dashed;color:#888}
+.sq .st{display:flex;justify-content:space-between;font:800 13px Inter}.sq .st small{font:600 11.5px Inter;color:var(--mut)}
+.sq .v{font:800 34px/1.05 "Bricolage Grotesque";letter-spacing:-.04em;margin-top:8px}
+.sq .s{font:600 12.5px Inter;color:#444;margin-top:2px}
+.sq .s em{font:800 12.5px Inter;font-style:normal;border-radius:999px;padding:1px 7px}.sq .s em.g{background:var(--gz);color:var(--g)}.sq .s em.r{background:var(--rz);color:var(--r)}.sq .s em.n{background:#F0F0F0;color:#555}
+.box2 .row2{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:14px}
+.sq .tg2{display:inline-block;margin-top:8px;font:800 11.5px Inter;border:1.5px solid var(--ink);border-radius:999px;padding:1px 8px;background:#fff}
+.say2{margin-top:14px;background:var(--yl);border-radius:14px;padding:12px 14px;font:600 14.5px/1.45 Inter}
+.say2 b{font-weight:800}
+.box2{margin-top:16px;border:2px solid var(--ink);border-radius:22px;background:#fff;box-shadow:5px 5px 0 var(--ink);padding:22px 24px}
+.why{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font:600 13px Inter;color:#444;margin-top:10px}
+.why .pill{background:var(--yl)}
+.alt{font:800 13px Inter;border-bottom:2px solid var(--y);cursor:pointer}
+@media (max-width:820px){.seq{grid-template-columns:1fr!important;gap:0}.seq .mt{padding:0 0 12px;flex-direction:row;align-items:center;gap:10px}.seq .mt small{margin-top:0}.seq .ar>b svg{width:44px;height:22px}.seq .ar .hb br{display:none}.seq .ar .hb b{margin-left:4px}.seq .ar{flex-direction:row;padding:6px 0}.seq .ar b{transform:rotate(90deg)}.box2{padding:18px}}
+</style></head><body>
+<div class="note w"><b>Maquette v5.</b> En deux temps : 1) les trimestres de 2026 entre eux (T1 → T2 → T3), 2) à part, 2026 face aux années précédentes. Pour le 2, le site choisit seul la comparaison la plus parlante : les neuf mois face aux neuf mois des autres années, ou le dernier trimestre face aux mêmes trimestres, s'il raconte autre chose. Chiffres réels de Coca-Cola (SEC, 2021 à 2026).</div>
+
+<div class="hero">
+  <h1>Coca-Cola</h1>
+  <div class="vrd"><span class="stk">Le verdict 2025</span><h2>Très rentable, dette modérée, <em>chère.</em></h2><small>Calculé sur les comptes audités de l'exercice 2025, face à ses 5 rivales.</small></div>
+</div>
+
+<section class="sec w">
+  <span class="stk b">L'année en cours</span>
+  <h2 id="titre"></h2>
+  <p class="segt">9 premiers mois de 2026, face aux 9 premiers mois de 2025 <span>· cliquez pour changer le chiffre affiché</span></p><div class="seg" id="seg" role="tablist" aria-label="Chiffre affiché"></div>
+
+  <div class="part"><h3 class="pt"><i>1</i>Les trimestres de 2026, l'un après l'autre</h3>
+    <div class="seq" id="seq"></div><p class="say2" id="say1"></p></div>
+
+  <div class="part"><h3 class="pt"><i>2</i><span id="t2"></span></h3>
+    <div class="why" id="why"></div>
+    <div class="box2"><div class="yrs" id="yrs"></div><p class="say2" id="say2"></p>
+      <div class="row2"><span class="pill"><i></i>2026 : trimestres publiés les 30 avr., 29 juil. et 28 oct. · non audités</span><a class="lk" href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0000021344&type=10-Q">Les rapports officiels ↗</a></div></div></div>
+  <p class="foot">Source : rapports trimestriels (10-Q) et annuels (10-K) déposés à la SEC. Le 4e trimestre est déduit : année entière moins les neuf premiers mois.</p>
+</section>
+<div style="height:70px"></div>
+
+<script>
+const Q = {2021:[[9020,2245],[10129,2641],[10042,2471],[9464,2417]],2022:[[10491,2781],[11325,1905],[11063,2825],[10125,2027]],
+  2023:[[10980,3107],[11972,2547],[11953,3087],[10849,1997]],2024:[[11300,3177],[12363,2411],[11854,2848],[11544,2195]],
+  2025:[[11129,3330],[12535,3810],[12455,3696],[11822,2286]],2026:[[12472,3924],[13380,4425],[13380,4009],null]};
+const Y = 2026, PUB = ["30 avr.", "29 juil.", "28 oct."], QN = ["1er trimestre", "2e trimestre", "3e trimestre", "4e trimestre"], ANS = [2026, 2025, 2024, 2023, 2022, 2021];
+const nf = (v, d = 1) => v.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const n = Q[Y].filter(Boolean).length; // trimestres publiés
+const val = (y, i, m) => { const x = Q[y] && Q[y][i]; if (!x) return null; return m === "ca" ? x[0] : m === "net" ? x[1] : x[1] / x[0] * 100; };
+const cum = (y, k, m) => { const r = Q[y].slice(0, k); if (r.some(x => !x)) return null; const ca = r.reduce((s, x) => s + x[0], 0), net = r.reduce((s, x) => s + x[1], 0); return m === "ca" ? ca : m === "net" ? net : net / ca * 100; };
+const fmt = (v, m) => m === "mg" ? nf(v) + " %" : nf(v / 1000) + " Md$";
+const ch = (a, b, m) => m === "mg" ? a - b : (a / b - 1) * 100;
+const pill = (d, m, txt = "") => Math.abs(d) < .05 ? `<em class="n">= stable${txt}</em>` : `<em class="${Math.abs(d) < (m === "mg" ? .5 : 1) ? "n" : d > 0 ? "g" : "r"}">${d >= 0 ? "▲ +" : "▼ −"}${nf(Math.abs(d))}${m === "mg" ? " pt" : " %"}${txt}</em>`;
+const LAB = { ca: ["les ventes", "Ventes"], net: ["le bénéfice", "Bénéfice net"], mg: ["la marge", "Marge nette"] };
+let M = "ca", choix = null;
+function draw() {
+  document.getElementById("seg").innerHTML = ["ca", "net", "mg"].map(m => { const v = cum(Y, n, m), d = ch(v, cum(Y - 1, n, m), m);
+    return `<button role="tab" aria-selected="${m === M}" class="${m === M ? "on" : ""}" data-m="${m}"><span><i></i>${LAB[m][1]}</span><b>${fmt(v, m)}</b><em class="${d >= 0 ? "up" : "dn"}">${d >= 0 ? "▲ +" : "▼ −"}${nf(Math.abs(d))}${m === "mg" ? " pt" : " %"}<span class="sa"> sur un an</span></em><u>${m === M ? "✓ Affiché" : "Afficher →"}</u></button>`; }).join("");
+  // 1) trimestres de l'année entre eux
+  const cards = [0, 1, 2, 3].filter(i => val(Y, i, "ca") != null).map(i => { /* le trimestre à venir n'est pas affiché */ const v = val(Y, i, M);
+    if (v == null) return `<div class="sq av"><div class="st">T${i + 1}<small>à venir</small></div><div class="v" style="font-size:22px">À venir</div><div class="s">avec les comptes annuels</div></div>`;
+    return { i, v }; });
+  const pub = cards.filter(c => typeof c !== "string"), mxv = Math.max(...pub.map(c => c.v)), tops = pub.filter(c => c.v >= mxv * 0.995).map(c => c.i); // à égalité : tous marqués
+  const habit = i => { const r = [2022, 2023, 2024, 2025].map(y => ch(val(y, i, M), val(y, i - 1, M), M)); r.sort((a, b) => a - b); return (r[1] + r[2]) / 2; }; // médiane : un trimestre exceptionnel ne fausse pas « d'habitude »
+  let h = "", notes = [];
+  cards.forEach((c, k) => {
+    if (k) { const p = cards[k - 1]; if (typeof c !== "string" && typeof p !== "string") { const d = ch(c.v, p.v, M), u = habit(k); h += `<div class="ar"><b><svg viewBox="0 0 64 32" width="64" height="32" aria-hidden="true"><path d="M3 16h50M40 4l14 12-14 12" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg></b>${pill(d, M)}<small class="hb">d'habitude<br><b>${u >= 0 ? "+" : "−"}${nf(Math.abs(u))}${M === "mg" ? " pt" : " %"}</b></small></div>`; notes.push({ k, d, u }); } else h += `<div class="ar"><b style="color:#bbb">→</b></div>`; }
+    h += typeof c === "string" ? c : `<div class="sq ${tops.includes(c.i) ? "top" : ""}"><div class="st">T${c.i + 1} · ${QN[c.i]}<small>${PUB[c.i]}</small></div><div class="v">${fmt(c.v, M)}</div><div class="s">${pill(ch(c.v, val(Y - 1, c.i, M), M), M, " sur un an")}</div>${tops.includes(c.i) ? `<span class="tg2">${tops.length > 1 ? "Le plus fort, à égalité" : "Le plus fort de 2026"}</span>` : ""}</div>`;
+  });
+  const S = document.getElementById("seq"); S.style.setProperty("--cols", `150px ${cards.map(() => "minmax(0,1fr)").join(" 150px ")}`);
+  S.innerHTML = `<div class="mt"><b>${LAB[M][1]}</b><small>par trimestre</small></div>` + h;
+  const TH = M === "mg" ? 1 : 3, hors = notes.map(x => ({ ...x, e: x.d - x.u })).filter(x => Math.abs(x.e) >= TH).sort((a, b) => Math.abs(b.e) - Math.abs(a.e)), sg = v => `${v >= 0 ? "+" : "−"}${nf(Math.abs(v))}${M === "mg" ? " pt" : " %"}`;
+  const nm = k => `du ${["1er", "2e", "3e", "4e"][k - 1]} au ${QN[k]}`;
+  document.getElementById("say1").innerHTML = !hors.length ? `Les variations d'un trimestre à l'autre <b>suivent le rythme habituel des saisons</b> : rien d'inhabituel cette année.`
+    : `${nm(hors[0].k).replace(/^d/, "D")} : <b>${hors[0].e > 0 ? "mieux" : "moins bien"} que d'habitude</b> (${sg(hors[0].d)}, contre ${sg(hors[0].u)} les années précédentes).` + (hors.length > 1 ? ` ${nm(hors[1].k).replace(/^d/, "D")} : <b>${hors[1].e > 0 ? "mieux" : "moins bien"} que d'habitude</b> (${sg(hors[1].d)}, contre ${sg(hors[1].u)}).` : notes.length > 1 ? " L'autre passage suit le rythme habituel." : "");
+  // 2) l'année face aux précédentes : le plus parlant entre les n premiers mois et le dernier trimestre
+  const dYtd = ch(cum(Y, n, M), cum(Y - 1, n, M), M), dLast = ch(val(Y, n - 1, M), val(Y - 1, n - 1, M), M);
+  const auto = Math.abs(dLast - dYtd) >= (M === "mg" ? 1.5 : 4) || Math.sign(dLast) !== Math.sign(dYtd) ? "last" : "ytd", mode = choix || auto;
+  const mois = n * 3, per = mode === "ytd" ? `les ${mois} premiers mois` : `le ${QN[n - 1]}`;
+  document.getElementById("t2").textContent = mode === "ytd" ? `${Y} jusqu'ici, face aux années précédentes` : `Le ${QN[n - 1]}, face aux années précédentes`;
+  document.getElementById("why").innerHTML = `<span class="pill"><i></i>Comparaison choisie : ${per} de chaque année</span><a class="alt" data-alt="${mode === "ytd" ? "last" : "ytd"}">Voir plutôt ${mode === "ytd" ? `le ${QN[n - 1]} seul` : `les ${mois} premiers mois`}</a>`;
+  const rows = ANS.map(y => ({ y, v: mode === "ytd" ? cum(y, n, M) : val(y, n - 1, M), p: y > 2021 ? (mode === "ytd" ? cum(y - 1, n, M) : val(y - 1, n - 1, M)) : null }));
+  const mx = Math.max(...rows.map(r => r.v)), rang = rows.slice().sort((a, b) => b.v - a.v).findIndex(r => r.y === Y) + 1, best = rows.slice().sort((a, b) => b.v - a.v)[0];
+  document.getElementById("yrs").innerHTML = `<div class="mt"><span style="background:var(--y);border:2px solid var(--ink);border-radius:8px;padding:2px 8px">${LAB[M][1]}</span> · ${per}</div>` + rows.map(r => `<div class="yl ${r.y === Y ? "cur" : ""}"><b>${r.y}</b><div class="tr"><i style="width:${(r.v / mx * 100).toFixed(1)}%"></i></div><span class="vv">${fmt(r.v, M)}</span>${r.p != null ? pill(ch(r.v, r.p, M), M) : "<span></span>"}</div>`).join("");
+  const d = ch(rows[0].v, rows[1].v, M);
+  document.getElementById("say2").innerHTML = `Sur ${per}, ${LAB[M][0]} ${M === "net" ? "atteint" : "atteignent"} ${fmt(rows[0].v, M)} : ${rang === 1 ? `<b>le plus haut niveau depuis 2021</b>` : `<b>${rang}e sur six</b>, derrière ${best.y} (${fmt(best.v, M)})`}, ${d >= 0 ? "en hausse" : "en baisse"} de ${nf(Math.abs(d))}${M === "mg" ? " point" : " %"} sur un an.`.replace("la marge atteignent", "la marge atteint").replace("les ventes atteint", "les ventes atteignent");
+  // titre de la section, toujours sur les ventes depuis janvier
+  const p9 = ch(cum(Y, n, "ca"), cum(Y - 1, n, "ca"), "ca"), pA = ch(cum(Y - 1, 4, "ca"), cum(Y - 2, 4, "ca"), "ca");
+  document.getElementById("titre").innerHTML = `${Y} : <span>${p9 > pA + 2 ? "ses ventes accélèrent" : p9 < pA - 2 ? "ses ventes ralentissent" : "ses ventes gardent leur rythme"}</span> après ${n === 3 ? "trois" : n === 2 ? "deux" : "un"} trimestre${n > 1 ? "s" : ""}.`;
+}
+document.addEventListener("click", e => { const t = e.target.closest("#seg [data-m]"), a = e.target.closest("[data-alt]");
+  if (t) { M = t.dataset.m; choix = null; draw(); }
+  if (a) { choix = a.dataset.alt; draw(); } });
+draw();
+</script>
+</body></html>
