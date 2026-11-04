@@ -273,7 +273,7 @@ async function ficheSociete(env, origin, ctx, B, c) {
     const mp = medPE(B, P)[c.sector];
     out.bourse = { cours: pxl.p, devise: pxl.cur, variation_du_jour_pct: pxl.chg ?? null, plus_haut_52_semaines: pxl.h52 ?? null, plus_bas_52_semaines: pxl.l52 ?? null, capitalisation_eur: v && v.capE ? Math.round(v.capE) : null,
       per: v && v.pe ? r2(v.pe) : null, per_median_secteur: mp ? r2(mp.m) : null,
-      per_position: v && v.pe && mp ? (v.pe > mp.m * 1.3 ? "plus cher que la plupart des entreprises du secteur" : v.pe < mp.m * 0.75 ? "moins cher que la plupart des entreprises du secteur" : "dans la moyenne du secteur") : null,
+      per_position: v && v.pe && mp ? (v.pe > mp.m * 1.3 ? "PER plus haut que la plupart des entreprises du secteur" : v.pe < mp.m * 0.75 ? "PER plus bas que la plupart des entreprises du secteur" : "dans la moyenne du secteur") : null,
       rendement_dividende: v && v.yld != null ? r4(v.yld) : null, source: P.source, releve: P.updated,
       note: "Le PER n'est ni bon ni mauvais en soi : un PER élevé traduit une croissance attendue plus forte, un PER bas une croissance attendue plus faible ou un risque perçu. Moins cher ne veut pas dire « bonne affaire »." };
   }

@@ -35,7 +35,7 @@ export function meta(path, q = null) {
     const c = BY[m[1]];
     if (!c) return null;
     const sec = SECTEURS[c.sector] || c.sector; // 5e passage (E1) : le titre répond aux questions qu'on tape vraiment
-    return { title: `Action ${c.name} : résultats, dividende et dette, expliqués · ${SITE}`, desc: `${c.name} est-elle rentable, endettée, chère ? ${c.desc} Chiffre d'affaires, marge, résultat, dette et dividende tirés des comptes officiels, face à la médiane du secteur ${sec.toLowerCase()}. Sans conseil.`, fiche: c, sec };
+    return { title: `Action ${c.name} : résultats, dividende et dette, expliqués · ${SITE}`, desc: `${c.name} est-elle rentable, endettée ? Que pense le marché ? ${c.desc} Chiffre d'affaires, marge, résultat, dette et dividende tirés des comptes officiels, face à la médiane du secteur ${sec.toLowerCase()}. Sans conseil.`, fiche: c, sec };
   }
   if ((m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/))) {
     const t = TOOLS[m[1] || "epargne"] || TOOLS.epargne;
@@ -202,7 +202,7 @@ function descFiche(t, c) {
   const ca = v("ca"), eb = v("ebit"), P = [`${t.fiche.name} en ${y} : ${fmtM(ca, c.currency)} de chiffre d'affaires`];
   if (eb != null && ca > 0) P.push(`marge d'exploitation de ${(eb / ca * 100).toFixed(1).replace(".", ",")} %`);
   if (v("netDebt") != null) P.push(`${v("netDebt") < 0 ? "trésorerie nette" : "dette nette"} de ${fmtM(Math.abs(v("netDebt")), c.currency)}`);
-  return `${P.join(", ")}. Rentable, endettée, chère ? Chaque chiffre face à la médiane du secteur ${t.sec.toLowerCase()}, tiré des comptes officiels. Sans conseil.`;
+  return `${P.join(", ")}. Rentable, endettée, et que pense le marché ? Chaque chiffre face à la médiane du secteur ${t.sec.toLowerCase()}, tiré des comptes officiels. Sans conseil.`;
 }
 
 async function rendu(t, fq, env, url) {

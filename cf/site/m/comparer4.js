@@ -69,7 +69,7 @@ function cxTitres(F) {
   const ys = has("yld"), by = best("yld", 1);
   T.yld = !ys.length ? "Pas de dividende relevé." : by.pay != null && by.pay > 100 ? `${nm(by)} verse plus qu'elle ne gagne.` : ys.length < 2 ? `${nm(by)}, seule à verser un dividende relevé.` : `${nm(by)} rapporte le plus.`;
   const ps = has("pe").sort((a, b) => b.pe - a.pe);
-  T.pe = ps.length < 2 ? "non calculable cette année." : ps[0].pe / ps[ps.length - 1].pe >= 1.4 ? `${nm(ps[0])}, la plus chère.` : "Des prix proches.";
+  T.pe = ps.length < 2 ? "non calculable cette année." : ps[0].pe / ps[ps.length - 1].pe >= 1.4 ? `${nm(ps[0])} : le marché y croit le plus.` : "Le marché les voit de la même façon.";
   // Après « Terme : », une phrase qui ne commence pas par un nom d'entreprise prend une minuscule
   const noms = F.map(x => x.nom); Object.keys(T).forEach(k => { if (!noms.some(n => T[k].startsWith(n))) T[k] = T[k][0].toLowerCase() + T[k].slice(1); });
   return T;
@@ -151,8 +151,8 @@ function cxEtapes(F, MD, T, d0) {
   const pv = F.map(x => x.pe).filter(v => v != null);
   if (pv.length) { const pn = f4Nice(Math.max(30, ...pv.map(v => Math.min(v, 100)), MD.pe || 0));
     E.push({ id: "cx-pe", sur: "Prix", concept: { cle: "per" }, titre: T.pe,
-      visuel: cxPts(F, { titre: "Années de bénéfice pour payer l'action", unite: `PER, cours du ${d0}`, basEstMieux: true, motBas: "moins chère", motHaut: "plus chère", val: x => x.pe, na: "son bénéfice est trop faible, le PER n'aurait pas de sens", txt: x => cxFr(x.pe, 0) + " fois", mediane: MD.pe || 0, mediane_label: medLab(MD.pe, v => cxFr(v, 0) + " fois"), max: pn.max, graduations: pn.ticks, fmtAxe: t => cxFr(t, 0), indice: "À gauche du pointillé (zone verte), l'action coûte moins d'années de bénéfice que la médiane du secteur.", source: { texte: `Cours du ${d0}, comptes ${F[0].s.year}` } }),
-      droite: cxEv("Ce que le marché paie", F.map(x => x.pe == null ? { x, de: "bénéfice trop faible cette année", a: "non calculable", t: "" } : MD.pe ? { x, de: x.pe > MD.pe * 1.15 ? `${cxFr(x.pe / MD.pe, 1)} fois la médiane` : x.pe < MD.pe * 0.85 ? `${cxFr(x.pe / MD.pe, 1)} fois la médiane` : "comme la médiane", a: x.pe > MD.pe * 1.15 ? "plus chère" : x.pe < MD.pe * 0.85 ? "moins chère" : "dans la norme", t: x.pe > MD.pe * 1.15 ? "r" : x.pe < MD.pe * 0.85 ? "g" : "" } : { x, de: cxFr(x.pe, 0) + " fois son bénéfice", a: "", t: "" })),
+      visuel: cxPts(F, { titre: "Années de bénéfice pour payer l'action", unite: `PER, cours du ${d0}`, basEstMieux: true, motBas: "PER plus bas", motHaut: "PER plus haut", val: x => x.pe, na: "son bénéfice est trop faible, le PER n'aurait pas de sens", txt: x => cxFr(x.pe, 0) + " fois", mediane: MD.pe || 0, mediane_label: medLab(MD.pe, v => cxFr(v, 0) + " fois"), max: pn.max, graduations: pn.ticks, fmtAxe: t => cxFr(t, 0), indice: "À gauche du pointillé (zone verte), l'action coûte moins d'années de bénéfice que la médiane du secteur.", source: { texte: `Cours du ${d0}, comptes ${F[0].s.year}` } }),
+      droite: cxEv("Ce que le marché paie", F.map(x => x.pe == null ? { x, de: "bénéfice trop faible cette année", a: "non calculable", t: "" } : MD.pe ? { x, de: x.pe > MD.pe * 1.15 ? `${cxFr(x.pe / MD.pe, 1)} fois la médiane` : x.pe < MD.pe * 0.85 ? `${cxFr(x.pe / MD.pe, 1)} fois la médiane` : "comme la médiane", a: x.pe > MD.pe * 1.15 ? "PER plus haut" : x.pe < MD.pe * 0.85 ? "PER plus bas" : "dans la norme", t: x.pe > MD.pe * 1.15 ? "r" : x.pe < MD.pe * 0.85 ? "g" : "" } : { x, de: cxFr(x.pe, 0) + " fois son bénéfice", a: "", t: "" })),
       suite: "" }); }
   E.forEach((e, i) => { e.n = i + 1; if (i === E.length - 1) e.suite = ""; });
   return E;

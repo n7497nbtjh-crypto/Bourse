@@ -79,7 +79,7 @@ const OUT_ICON = {
   info: `<svg class="oi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7.5v.5"/></svg>`,
   loupe: `<svg class="oi" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>`,
 };
-const OUT_NOADV = `<div class="out-noadv">${OUT_ICON.info}<p><b>Ce n'est pas une recommandation d'achat.</b> Ces listes trient des faits tirés des comptes publiés. Une entreprise en tête peut avoir une action chère, et les comptes passés ne disent rien de l'avenir.</p></div>`;
+const OUT_NOADV = `<div class="out-noadv">${OUT_ICON.info}<p><b>Ce n'est pas une recommandation d'achat.</b> Ces listes trient des faits tirés des comptes publiés. Une entreprise en tête peut avoir un PER élevé, et les comptes passés ne disent rien de l'avenir.</p></div>`;
 
 /* ---------- 1. Classements par points forts ---------- */
 const OUT_CL = {
@@ -402,7 +402,7 @@ function outCalcPresets() { // comparaisons recalculées à chaque visite, à pa
   add([...fr].sort((a, b) => b.v.capE - a.v.capE), "Les plus grandes françaises en Bourse", "Les trois premières capitalisations de la Bourse de Paris suivies par le site.");
   add([...L].sort((a, b) => b.v.capE - a.v.capE), "Les plus grandes du monde", "Les trois plus grandes valeurs en Bourse suivies par le site.");
   add(big.filter(x => !isBank(x.c) && x.m.marge != null).sort((a, b) => b.m.marge - a.m.marge), "Les grandes françaises les plus rentables", "Les meilleures marges d'exploitation parmi les françaises de plus de 10 Md€.");
-  add(big.filter(x => x.v.pe).sort((a, b) => a.v.pe - b.v.pe), "Les grandes françaises les moins chères", "Les plus petits rapports cours / bénéfice : souvent des secteurs dont on attend peu de croissance.");
+  add(big.filter(x => x.v.pe).sort((a, b) => a.v.pe - b.v.pe), "Les grandes françaises au PER le plus bas", "Les plus petits rapports cours / bénéfice : souvent des secteurs dont on attend peu de croissance.");
   return P;
 }
 // La galerie des comparaisons est affichée par m/comparer4.js (cxGalerie) à partir de OUT_PRESETS et outCalcPresets.

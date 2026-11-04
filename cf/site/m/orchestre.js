@@ -30,7 +30,7 @@ const ORC_IDX = {
     histoire: "Créé en 1984, sur une base de 1 000 points.",
     nuance: "Coté en livres sterling. Beaucoup de ses entreprises font l'essentiel de leurs ventes hors du Royaume-Uni." },
   nikkei: { etf: /Nikkei 225/i, pays: c => (c.isin || "").startsWith("JP"), n: 225, place: "la Bourse de Tokyo", fournisseur: "Nikkei",
-    regle: "225 grandes entreprises japonaises. Particularité : il est pondéré par le prix de l'action, pas par la taille de l'entreprise. Une action chère pèse plus, même si l'entreprise est plus petite.",
+    regle: "225 grandes entreprises japonaises. Particularité : il est pondéré par le prix de l'action, pas par la taille de l'entreprise. Une action au cours élevé pèse plus, même si l'entreprise est plus petite.",
     histoire: "Calculé depuis 1950.",
     nuance: "Coté en yens : le taux de change compte pour un épargnant en euros." },
 };

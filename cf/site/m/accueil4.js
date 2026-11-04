@@ -101,7 +101,7 @@ async function pageHome() {
     <div class="a4-l">
       <span class="a4-stk a4-wh">Sans inscription · sans publicité</span>
       <h1>Comprenez n'importe quelle action en 30&nbsp;secondes.</h1>
-      <p class="a4-sub">ENKLAIR lit les <b>comptes officiels</b> de ${F0.format(ok)} entreprises et vous dit, en clair, si elles sont rentables, endettées ou chères <b>par rapport à leurs concurrentes</b>.</p>
+      <p class="a4-sub">ENKLAIR lit les <b>comptes officiels</b> de ${F0.format(ok)} entreprises et vous dit, en clair, si elles sont rentables, endettées, et ce que le marché en pense, <b>par rapport à leurs concurrentes</b>.</p>
       <div class="search big a4-srch" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Hermès, Apple, ASML…" aria-label="Rechercher une entreprise ou un ETF" autocomplete="off"><div class="results"></div></div>
       <p class="a4-hint">Changez d'entreprise dans l'exemple pour voir le site en action.</p>
     </div>
