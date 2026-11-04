@@ -212,10 +212,14 @@ export function hsbcFiche(tx) { // texte de la fiche (pdftotext -layout), en fra
   const nom = kc > 1 ? lignes.slice(1, kc).join(" ").replace(/\s+/g, " ") : (lignes.find(l => /UCITS ETF/i.test(l)) || null); // le nom peut tenir sur deux lignes
   const tete = (tout.match(/\|\s*([A-Z0-9]{2,8} [A-Z]{2})\s*\|\s*([A-Z]{3})/) || []);
   const encours = (droite.match(/Encours du fonds\s+([A-Z]{3})\s+([\d.]+)/) || []);
-  const im = droite.match(/Indice de\s+(.+)\n\s*r[ée]f[ée]rence[ \t]*([^\n]*)/), indice = im ? (im[1] + " " + (im[2] || "")).trim() : null; // « 100% MSCI Emerging » / « Markets Net »
+  // nom de l'indice : le tableau « Nom de l'indice » de la page 2, sinon le champ « Indice de référence » de la page 1 (sur deux lignes)
+  const nomIx = (tout.match(/Nom de l[’']indice\s{2,}([^\n]+?)(?:\s{3,}|\n)/) || [])[1];
+  const im = droite.match(/Indice de\s+(.+)\n[^\n]*?r[ée]f[ée]rence[ \t]*([^\n]*)/), ix1 = im ? (im[1] + " " + (im[2] || "")).trim() : null;
+  const bon = v => v && !/informations|mesures|volatilit|\bans\b|rendement/i.test(v) ? v : null;
+  const indice = bon(nomIx) || bon(ix1);
   const repl0 = (droite.match(/M[ée]thode de r[ée]plication\s+(.+)(?:\n\s+(physique|synth[ée]tique)\b)?/) || []);
   const DEV = /^(USD|EUR|GBP|CHF|JPY|HKD|CNY|INR|AUD|CAD)$/, dev = DEV.test(tete[2] || "") ? tete[2] : g(/Devise de base de la Cat[ée]gorie[\s\S]{0,40}?\b(USD|EUR|GBP|CHF|JPY|HKD|CNY|INR)\b/);
-  const ACR = /^(HSBC|MSCI|ESG|AC|S&P|ETF|UCITS|USA|US|UK|EM|FTSE|ACWI|SRI|ICAV|PLC|II|III|500|DJ)$/;
+  const ACR = /^(HSBC|MSCI|ESG|AC|S&P|ETF|UCITS|USA|US|UK|EM|FTSE|ACWI|SRI|ICAV|PLC|II|III|500|DJ|STOXX|EMU|TOPIX|CAC|DAX|TECH)$/;
   const casse = t => String(t || "").split(" ").map(w => ACR.test(w) ? w : w === "EX" ? "ex" : /^[A-ZÀ-Ý&.\-]+$/.test(w) ? w[0] + w.slice(1).toLowerCase() : w).join(" "); // « HSBC MSCI EUROPE » → « HSBC MSCI Europe »
   return { name: nom ? casse(nom) : null, bbg: tete[1] || null, devise: dev || null,
     ter: num(g(/Montant des frais courants[¹²³]?\s+([\d,]+)\s*%/)), distribution: g(/Traitement des\s+(Distribution|Capitalisation)/i),
@@ -248,8 +252,8 @@ export async function hsbc(log, { minutes = 40 } = {}) {
       const [replication, methode] = repl(x.replication), b2 = placeDeBbg(x.bbg);
       const mois = { janvier: "01", février: "02", mars: "03", avril: "04", mai: "05", juin: "06", juillet: "07", août: "08", septembre: "09", octobre: "10", novembre: "11", décembre: "12" };
       const cr = x.creation && x.creation.match(/(\d{1,2}) (\S+) (\d{4})/), creation = cr && mois[cr[2].toLowerCase()] ? `${cr[3]}-${mois[cr[2].toLowerCase()]}-${cr[1].padStart(2, "0")}` : null;
-      out.push({ isin, name: x.name, issuer: "HSBC", ter: x.ter, aumM: x.aumM, aumCur: x.aumCur, devise: x.devise, creation, domicile: x.domicile, distribution: distrib(x.distribution), replication, methode,
-        indexOfficiel: x.indexOfficiel, pea: false, classe: /bond|treasury|obligat|money market|mon[ée]taire|aggregate/i.test(x.name + " " + (x.indexOfficiel || "")) ? "Fixed Income" : "Equity",
+      out.push({ isin, name: /^HSBC\b/.test(x.name) ? x.name : "HSBC " + x.name, issuer: "HSBC", ter: x.ter, aumM: x.aumM, aumCur: x.aumCur, devise: x.devise, creation, domicile: x.domicile, distribution: distrib(x.distribution), replication, methode,
+        indexOfficiel: x.indexOfficiel, pea: false, classe: /bond|treasury|gilt|govern|sukuk|obligat|money market|mon[ée]taire|aggregate|credit|corporate/i.test(x.name + " " + (x.indexOfficiel || "")) ? "Fixed Income" : "Equity",
         listings: b2 ? [{ place: b2.place, ticker: b2.ticker, devise: x.devise }] : [], url, ref: { type: "hsbc", fiche: url } }); // la fiche officielle en français
     } catch (e) { log("hsbc " + isin + " : " + e.message); }
   }

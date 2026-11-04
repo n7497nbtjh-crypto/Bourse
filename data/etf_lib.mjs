@@ -102,9 +102,10 @@ export function indexLisible(raw, nom = "") {
   s = s.replace(/\b\d+% hedged.*$|\b(?:eur|usd|gbp|chf)?\s*hedged.*$|\bhdg.*$|couvert.*$/i, "");
   s = s.replace(/\bMSCI Daily (?:Net |Gross )?(?:TR |Total Return )?/i, "MSCI ");
   s = s.replace(/\((?:net|gross|ntr|tr|nr|eur|usd|net return|total return|price)[^)]*\)/gi, "");
+  s = s.replace(/\bEURO STOXX\b/gi, "§ES§").replace(/\bEURO STOXX\b/gi, "§ES§"); // 4/11 : « Euro » est retiré juste après comme devise, sauf dans « Euro Stoxx »
   s = s.replace(/\b(?:net total return|total return|net return|gross total return|price return|notional net|notional|net tr|ntr|\btr\b|\bnr\b|\bgtr\b|\bnet\b|daily|index|indice|eur|euro|usd|gbp|chf|jpy)\b/gi, " ");
   s = s.replace(/\s+/g, " ").replace(/\s*-\s*$/, "").trim();
-  s = s.replace(/^NASDAQ\s*-?\s*100/i, "Nasdaq-100").replace(/^S&P 500®?/i, "S&P 500").replace(/^EURO STOXX 50/i, "Euro Stoxx 50").replace(/^STOXX Europe 600/i, "Stoxx Europe 600").replace(/^CAC 40®?/i, "CAC 40").replace(/^DAX®?/, "DAX").replace(/^Nikkei 225/i, "Nikkei 225");
+  s = s.replace(/§ES§/g, "Euro Stoxx").replace(/^NASDAQ\s*-?\s*100/i, "Nasdaq-100").replace(/^S&P 500®?/i, "S&P 500").replace(/^EURO STOXX 50/i, "Euro Stoxx 50").replace(/^STOXX Europe 600/i, "Stoxx Europe 600").replace(/^CAC 40®?/i, "CAC 40").replace(/^DAX®?/, "DAX").replace(/^Nikkei 225/i, "Nikkei 225");
   if (/^FTSE All.?World/i.test(s)) s = s.replace(/^FTSE All.?World/i, "FTSE All-World");
   if (s.length < 3) s = String(raw).trim();
   return s + hedge;
