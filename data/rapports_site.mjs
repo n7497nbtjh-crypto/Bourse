@@ -227,6 +227,7 @@ export async function comptesDuSite(c, { log = () => { }, essais = 4, navigateur
   const vu = new Set();
   for (const f of R.pdf.slice(0, 12)) {
     if (vu.size >= essais) break;
+    if (/\b(AG|SE|SA|plc|ASA)[-_ ]+(financial[-_ ]statements|jahresabschluss)|jahresabschluss|einzelabschluss|comptes[-_ ]sociaux/i.test(decodeURIComponent(f.u))) continue; // 4/11 : comptes de la seule société mère (BMW AG)
     if (vu.has(f.u) || !(await permisFichier(f.u).catch(() => false))) continue; vu.add(f.u);
     try {
       const buf = await get(f.u, { binaire: true }); if (buf.length > 50e6 || buf.slice(0, 4).toString() !== "%PDF") continue;
@@ -267,7 +268,7 @@ async function main() {
   const idx = JSON.parse(readFileSync(new URL("societes.json", OUT), "utf8")), parId = new Map(idx.companies.map((c, i) => [c.id, i]));
   const seuls = (arg("--ids", "") || "").split(",").filter(Boolean), minutes = +arg("--minutes", 50), stop = Date.now() + minutes * 60e3, nPar = +arg("--paralleles", 6);
   const reessai = 3 * 864e5; // rattrapage (4/11) : un échec est retenté au bout de 3 jours (à remonter à 20 jours une fois le retard rattrapé)
-  const todo = U.filter(c => c.domain && !c.sec && !c.cik && (seuls.length ? seuls.includes(c.id) : (() => { const s = idx.companies[parId.get(c.id)]; return !s || s.missing; })())
+  const todo = U.filter(c => c.domain && !c.sec && !c.cik && c.sector !== "finance" && !(cache[c.id] && cache[c.id].bloque) && (seuls.length ? seuls.includes(c.id) : (() => { const s = idx.companies[parId.get(c.id)]; return !s || s.missing; })())
     && (seuls.length || !cache[c.id] || (!cache[c.id].ok && Date.now() - Date.parse(cache[c.id].d) > reessai)));
   console.log(todo.length, "sociétés à chercher sur leur site");
   let ok = 0, n = 0;
