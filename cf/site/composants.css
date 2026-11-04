@@ -1313,3 +1313,12 @@ html #app .iahero{max-width:none}
 .ek.pr4 .pr4-nt{margin:12px 0 0;font:500 15px Inter}
 .ek.pf4 .pf4-chute{display:flex;gap:10px;align-items:flex-start;background:#fff;border:2px solid #111;border-radius:14px;padding:10px 14px;margin:12px 0 0;max-width:640px;font:500 14.5px/1.45 Inter}
 .ek.pf4 .pf4-chute a{font-weight:800;color:#111}
+/* Marchés : « Voir plus » sous les hausses, baisses et dates (4/11) */
+.ek .mc-plus{margin-top:6px}
+.ek .mc-plus>summary{list-style:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font:800 14px Inter;color:#111;background:#fff;border:2px solid #111;border-radius:999px;padding:8px 16px;margin:6px 0}
+.ek .mc-plus>summary::-webkit-details-marker{display:none}
+.ek .mc-plus>summary::after{content:"▾";font-size:13px}
+.ek .mc-plus[open]>summary::after{content:"▴"}
+.ek .mc-plus[open]>summary{background:#FFE14D}
+.ek .mc-plus>.mc-es{margin-top:8px}
+.ek .mc-plus>.mc-col{border:0;box-shadow:none;padding:0;margin:0;background:none;border-radius:0}

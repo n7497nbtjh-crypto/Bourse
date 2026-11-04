@@ -55,10 +55,8 @@ const NAV = [
     aussi: [
       ["/outils", "Tous les outils"],
       ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?"],
-      ["/repartitions", "Quelle part en actions ? Listes par critères"],
       ["/idees-recues", "Les idées reçues face aux chiffres"],
       ["/simulateurs/frais", "Le coût des frais"],
-      ["/simulateurs/pea-cto", "L'impôt selon le compte"],
       ["/demander", "Demander à l'IA"],
     ],
   },

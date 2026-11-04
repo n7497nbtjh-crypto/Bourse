@@ -29,17 +29,18 @@ function mcSecteurs(G) {
   return `<div class="mc-ss">${S.map(s => `<div class="mc-s"><span class="n">${esc(s.n)}</span><span class="z"><i class="${s.m >= 0 ? "g" : "r"}" style="${s.m >= 0 ? "left:50%" : "right:50%"};width:${Math.abs(s.m) / mx * 50}%"></i></span><b class="${s.m > 0 ? "g" : s.m < 0 ? "r" : ""}">${mcPc(s.m, 2)}</b><small>${s.h} sur ${s.nb} en hausse</small></div>`).join("")}</div>`;
 }
 function mcMouvements(region) {
-  const { up, dn, n } = moversData(region, 5);
+  const { up, dn, n } = moversData(region, 20); // 4/11 (Romain) : 5 visibles, les suivantes dans un pli « Voir plus »
   if (!n) return `<p class="ek-note">Les cours ne sont pas disponibles pour le moment.</p>`;
   const l = x => `<a class="mc-m" href="/entreprise/${esc(x.c.id)}">${mcLogo(x.c)}<span><b>${esc(x.c.name)}</b><small>${esc(secName(x.c))}</small></span><strong class="${x.p.chg > 0 ? "g" : "r"}">${mcPc(x.p.chg, 1)}</strong></a>`;
-  return `<div class="mc-mvs"><div><h3>▲ En hausse</h3><div class="mc-col">${up.map(l).join("") || `<p class="ek-note">Aucune hausse.</p>`}</div></div><div><h3>▼ En baisse</h3><div class="mc-col">${dn.map(l).join("") || `<p class="ek-note">Aucune baisse.</p>`}</div></div></div>`;
+  const col = (L, vide, mot) => !L.length ? `<p class="ek-note">${vide}</p>` : L.slice(0, 5).map(l).join("") + (L.length > 5 ? `<details class="mc-plus"><summary>Voir ${L.length - 5} autres ${mot}</summary><div class="mc-col">${L.slice(5).map(l).join("")}</div></details>` : "");
+  return `<div class="mc-mvs"><div><h3>▲ En hausse</h3><div class="mc-col">${col(up, "Aucune hausse.", "hausses")}</div></div><div><h3>▼ En baisse</h3><div class="mc-col">${col(dn, "Aucune baisse.", "baisses")}</div></div></div>`;
 }
 function mcAgenda() {
-  const ev = (AG.events || []).filter(e => e.date >= TODAY && RBY[e.id]).sort((a, b) => a.date.localeCompare(b.date) || ((valo(RBY[b.id]) || {}).capE || 0) - ((valo(RBY[a.id]) || {}).capE || 0)).slice(0, 6);
+  const ev = (AG.events || []).filter(e => e.date >= TODAY && RBY[e.id]).sort((a, b) => a.date.localeCompare(b.date) || ((valo(RBY[b.id]) || {}).capE || 0) - ((valo(RBY[a.id]) || {}).capE || 0)).slice(0, 30);
   if (!ev.length) return "";
   const j = d => new Date(d + "T12:00:00");
-  return `<section class="ek-sec"><span class="ek-stk2">À venir</span><h2>Les prochaines dates à suivre.</h2><div class="mc-es">${ev.map(e => { const c = RBY[e.id];
-    return `<a class="mc-e" href="/entreprise/${esc(c.id)}"><span class="d"><b>${j(e.date).getDate()}</b><small>${esc(j(e.date).toLocaleDateString("fr-FR", { month: "short" }))}</small></span>${mcLogo(c)}<span><b>${esc(c.name)}</b><small>${esc(e.label || "")}</small></span><em class="${e.type === "Dividende" ? "dv" : ""}">${esc(e.type || "Date")}</em></a>`; }).join("")}</div>
+  return `<section class="ek-sec"><span class="ek-stk2">À venir</span><h2>Les prochaines dates à suivre.</h2><div class="mc-es">${ev.map((e, i) => { const c = RBY[e.id];
+    return `${i === 6 ? `</div><details class="mc-plus"><summary>Voir ${ev.length - 6} autres dates</summary><div class="mc-es">` : ""}<a class="mc-e" href="/entreprise/${esc(c.id)}"><span class="d"><b>${j(e.date).getDate()}</b><small>${esc(j(e.date).toLocaleDateString("fr-FR", { month: "short" }))}</small></span>${mcLogo(c)}<span><b>${esc(c.name)}</b><small>${esc(e.label || "")}</small></span><em class="${e.type === "Dividende" ? "dv" : ""}">${esc(e.type || "Date")}</em></a>`; }).join("")}</div>${ev.length > 6 ? "</details>" : ""}
     <p class="mc-note"><a href="/agenda">Tout l'agenda →</a></p></section>`;
 }
 

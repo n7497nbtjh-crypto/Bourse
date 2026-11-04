@@ -11,15 +11,12 @@ const OU4_UNE = [
 const OU4_G = [
   ["b", "Pour débuter", "Avec vos chiffres, hypothèses affichées.", [
     ["/outils/si-javais", "passe", "Et si j'avais investi ?", "1 000 € placés il y a 1, 3 ou 5 ans, comparés au marché, au Livret A et à l'inflation."],
-    ["/repartitions", "repart", "Quelle part en actions ?", "Un curseur, et ce qu'une forte baisse ferait à l'ensemble."],
     ["/idees-recues", "idees", "Les idées reçues face aux chiffres", "Dix phrases qu'on entend souvent, vérifiées avec des données sourcées."],
-    ["/simulateurs/frais", "frais", "Le coût des frais", "Courtage et frais de gestion sur 10, 20 ou 30 ans, courtier par courtier."],
-    ["/simulateurs/pea-cto", "impot", "L'impôt selon le compte", "PEA ou compte-titres, avec vos montants.", "fr"]]],
+    ["/simulateurs/frais", "frais", "Le coût des frais", "Courtage et frais de gestion sur 10, 20 ou 30 ans, courtier par courtier."]]],
   ["p", "Pour aller plus loin", "Trier, comparer, radiographier.", [
     ["/comparer", "comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face à la médiane du secteur."],
     ["/outils/recouvrement", "recouv", "Deux ETF se recouvrent-ils ?", "Les entreprises que deux à quatre ETF ont en commun."],
     ["/classements", "listes", "Classements", "Les entreprises qui cumulent le plus de points forts, critère par critère."],
-    ["/repartitions#listes", "listes", "Listes par critères", "Les entreprises qui répondent aux critères que vous choisissez."],
     ["/dividendes", "div", "Calendrier des dividendes", "Les prochaines dates de détachement et de paiement."],
     ["/agenda", "agenda", "Agenda des résultats", "Les prochaines publications, jour par jour."]]]];
 const OU4_0 = window.pageOutils;

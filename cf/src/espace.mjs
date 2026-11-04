@@ -338,6 +338,12 @@ export async function espace(request, env) {
 
   if (path === "/api/espace/preferences" && m === "POST") {
     const { b, err } = await lire(request); if (err) return err;
+    if (typeof b.alertes_mail === "boolean" && b.teaser === undefined) { // 4/11 : alertes par e-mail (Premium), dans donnees.profil
+      const d0 = await env.DB.prepare(`SELECT profil FROM donnees WHERE compte = ?`).bind(c.id).first(), pr = { ...parse(d0 && d0.profil, {}), alertesMail: b.alertes_mail };
+      if (d0) await env.DB.prepare(`UPDATE donnees SET profil = ? WHERE compte = ?`).bind(JSON.stringify(pr), c.id).run();
+      else await env.DB.prepare(`INSERT INTO donnees (compte, profil) VALUES (?, ?)`).bind(c.id, JSON.stringify(pr)).run();
+      return json({ ok: true, alertes_mail: b.alertes_mail, mail: mailReady(env) });
+    }
     if (typeof b.teaser !== "boolean") return json({ error: "Préférence invalide." }, 400);
     await env.DB.prepare(`UPDATE comptes SET teaser = ? WHERE id = ?`).bind(b.teaser ? 1 : 0, c.id).run();
     return json({ ok: true, teaser: b.teaser, mail: mailReady(env) });
@@ -479,7 +485,7 @@ async function tache(request, env, url) {
   let notifs = 0, mails = 0, bilans = 0;
   if (rows.length) {
     const d = await siteData(request, env), demain = jourParis(now + JOUR), ouvre = wd >= 1 && wd <= 5, origin = (env.SITE_URL || url.origin).replace(/\/+$/, "");
-    let cap = modeBilan && mailReady(env) ? await mailCapacity(env) : 0;
+    let cap = mailReady(env) ? await mailCapacity(env) : 0; // 4/11 : aussi les soirs d'alertes (e-mail des alertes Premium)
     const premOk = new Set(((await env.DB.prepare(`SELECT token FROM abonnes WHERE until > ?`).bind(now).all().catch(() => ({ results: [] }))).results || []).map(x => x.token));
     const prochainOuvre = ouvreApres(auj, 1);
     for (const r of rows) {
@@ -500,6 +506,24 @@ async function tache(request, env, url) {
           if (ouvre) for (const k of keys) { const p = d.px[k]; if (!p || !(p.p > 0) || p.chg == null) continue;
             if (p.h52 > 0 && p.chg > 0 && p.p >= p.h52 * 0.998) notifs += await notifier(env, r.id, "record", `${d.names[k]} : cours au plus haut depuis un an (${sgnP(p.chg)} aujourd'hui).`, lienDe(k), auj, "h52");
             else if (p.l52 > 0 && p.chg < 0 && p.p <= p.l52 * 1.002) notifs += await notifier(env, r.id, "record", `${d.names[k]} : cours au plus bas depuis un an (${sgnP(p.chg)} aujourd'hui).`, lienDe(k), auj, "l52"); }
+        }
+      }
+      // 4/11 (Romain) : les alertes du soir partent aussi par e-mail (Premium), une lettre par compte, les chutes en premier.
+      // Désactivable dans Réglages (donnees.profil.alertesMail = false). Envoi seulement si un service d'e-mail est configuré.
+      if (prem && cap > 0 && mailReady(env) && r.email && parse(r.profil, {}).alertesMail !== false) {
+        const N = ((await env.DB.prepare(`SELECT type, texte, lien FROM notifs WHERE compte = ? AND at >= ? AND type <> 'bilan' ORDER BY id`).bind(r.id, now).all()).results || [])
+          .sort((a, b) => (b.type === "mouvement" && /−|-\d/.test(b.texte) ? 1 : 0) - (a.type === "mouvement" && /−|-\d/.test(a.texte) ? 1 : 0));
+        if (N.length) {
+          const chute = N.find(n => n.type === "mouvement" && /−|-\d/.test(n.texte));
+          const sujet = chute ? `Alerte : ${chute.texte.split(" : ")[0]} chute aujourd'hui` : N.length === 1 ? `Alerte : ${N[0].texte.split(" : ")[0]}` : `Vos ${N.length} alertes du soir`;
+          const lignes = N.slice(0, 15).map(n => `- ${n.texte}\n  ${origin}${n.lien || "/espace/alertes"}`).join("\n");
+          const esc2 = t => String(t).replace(/[&<>"]/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]);
+          const html = `<div style="background:#ffffff;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111"><div style="max-width:560px;margin:0 auto;border:2px solid #111;border-radius:16px;padding:22px">
+            <p style="margin:0 0 4px;font:800 13px Helvetica,Arial;background:#FFE14D;display:inline-block;padding:3px 10px;border-radius:999px">ENKLAIR · alertes du soir</p>
+            <h1 style="font:800 22px Helvetica,Arial;margin:12px 0 14px">${esc2(sujet)}</h1>
+            ${N.slice(0, 15).map(n => `<p style="margin:0 0 12px;font:15px/1.45 Helvetica,Arial"><span style="font-weight:800;color:${n.type === "mouvement" ? (/−|-\d/.test(n.texte) ? "#C8321E" : "#0A7F4F") : "#111"}">${n.type === "mouvement" ? (/−|-\d/.test(n.texte) ? "▼" : "▲") : "•"}</span> ${esc2(n.texte)}<br><a href="${origin}${esc2(n.lien || "/espace/alertes")}" style="color:#111;font-weight:700">Voir →</a></p>`).join("")}
+            <p style="margin:18px 0 0;font:12px/1.5 Helvetica,Arial;color:#555">Information factuelle, sans conseil d'investissement. Vous recevez cet e-mail parce que les alertes par e-mail sont activées dans votre espace ENKLAIR. Pour ne plus les recevoir : ${origin}/espace/reglages</p></div></div>`;
+          try { await sendMail(env, r.email, sujet, `${sujet}\n\n${lignes}\n\nInformation factuelle, sans conseil d'investissement.\nPour ne plus recevoir ces e-mails : ${origin}/espace/reglages`, html); mails++; cap--; } catch (e) { }
         }
       }
       const RG = rapportDe(r), sonJour = !parJour || RG.jour === wd, aRapport = keys.length || RG.secteurs.length;
