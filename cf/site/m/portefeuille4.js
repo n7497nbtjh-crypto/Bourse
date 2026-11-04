@@ -14,6 +14,7 @@ window.pf3Hero = function (R0, P) {
     if (h && s) {
       if (P && P.l && P.l.length && T && T.tot > 0) {
         h.textContent = nb(`${pf3Eu(T.tot)} aujourd'hui.`);
+        pf4Donut(R0, s); // 4/11 (refonte) : la répartition en anneau dans le bandeau
         // 4/11 (Romain) : mettre en avant la notification quand une valeur chute
         if (!P.dem && !$("#pf4chute")) s.insertAdjacentHTML("afterend", typeof isPrem === "function" && isPrem()
           ? `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span>Une de vos lignes chute de plus de 5 % ? Vous recevez une notification le soir même. <a href="/espace/reglages">Notifications sur ce téléphone</a></span></p>`
@@ -27,6 +28,37 @@ window.pf3Hero = function (R0, P) {
   } catch (e) { }
   return r;
 };
+/* 4/11 (Romain : « plus visuel, plus sympa, plus facile pour mettre ses lignes ») : anneau des lignes dans le bandeau,
+   bouton « Ajouter une ligne », saisie raccourcie (frais, courtier, date et PRU direct repliés), lignes en cartes (CSS .pf4). */
+function pf4Donut(R0, sub) {
+  let d = $("#pf4don");
+  if (!d) { sub.insertAdjacentHTML("afterend", `<div id="pf4don" class="pf4-don"></div>`); d = $("#pf4don"); }
+  const L = (R0.live || []).filter(r => r.valE > 0).sort((a, b) => b.valE - a.valE), tot = L.reduce((x, r) => x + r.valE, 0);
+  if (!L.length || !tot) { d.innerHTML = ""; return; }
+  const top = L.slice(0, 6), reste = L.slice(6).reduce((x, r) => x + r.valE, 0);
+  const parts = [...top.map((r, i) => ({ label: r.info.name, w: r.valE / tot, c: PF3_PAL[i % PF3_PAL.length], v: r.valE })), ...(reste > 0 ? [{ label: `${L.length - 6} autres`, w: reste / tot, c: PF3_OTHER, v: reste }] : [])];
+  d.innerHTML = `<div class="pf4-dg">${pf3Donut(parts, String(L.length), L.length > 1 ? "lignes" : "ligne")}</div>
+    <div class="pf4-dl">${parts.map(p => `<div><i style="background:${p.c}"></i><span>${esc(p.label)}</span><b>${pct(p.w, p.w < 0.1 ? 1 : 0, false)}</b></div>`).join("")}
+    <button type="button" class="ek-btn dk pf4-addb" data-pf4-add>＋ Ajouter une ligne</button></div>`;
+}
+document.addEventListener("click", e => { const b = e.target.closest && e.target.closest("[data-pf4-add]"); if (!b) return;
+  const box = $("#pf3lines"), q = $("#pfq"); if (box) box.scrollIntoView({ behavior: "smooth", block: "start" }); if (q) setTimeout(() => q.focus(), 350); });
+// Saisie raccourcie : le titre, le nombre de parts, le prix et le compte ; le reste replié (ouvert si déjà rempli)
+let PF4_PLUS = false;
+if (typeof pf3Form === "function") { const PF4_form0 = pf3Form; pf3Form = function () { const r = PF4_form0.apply(this, arguments); try { pf4FormCourt(); } catch (e) { } return r; }; }
+function pf4FormCourt() {
+  const n = $("#pf3new"); if (!n || n.dataset.pf4) return; n.dataset.pf4 = "1"; n.classList.add("pf4-new");
+  const st = $$(".pf3st", n), opt = $(".pf3opt", n), hint = $(".pf3hint", n), F = PF3S.form || {};
+  const plus = document.createElement("details"); plus.className = "pf4-plus"; plus.open = PF4_PLUS || !!(F.f || F.br || F.d || F.mode === "pru");
+  plus.innerHTML = `<summary>Frais, courtier, date d'achat, PRU de votre courtier (facultatif)</summary><div class="pf4-pi"></div>`;
+  plus.ontoggle = () => { PF4_PLUS = plus.open; };
+  const pi = plus.querySelector(".pf4-pi");
+  if (st[3]) pi.appendChild(st[3]); // frais et courtier
+  const dt = opt && $("#pf3nd", opt); if (dt) pi.appendChild(dt.closest("label"));
+  const brx = opt && $("#pf3nbr", opt); if (brx && !pi.contains(brx)) pi.appendChild(brx.closest("label"));
+  if (hint) pi.appendChild(hint);
+  const pru = $("#pf3nprev", n); if (pru) pru.insertAdjacentElement("beforebegin", plus); else n.appendChild(plus);
+}
 window.pagePortefeuille = async function () {
   const r = await PF4_page0.apply(this, arguments);
   const el = $("#pf3"); if (el) el.classList.add("ek", "ek-page", "pf4");

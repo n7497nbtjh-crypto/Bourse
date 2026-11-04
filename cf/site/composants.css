@@ -1374,3 +1374,53 @@ html #app .iahero{max-width:none}
 .dc4 .dc4-av{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
 .dc4 .dc4-av a{display:flex;gap:10px;align-items:center;border:2px solid #111;border-radius:14px;padding:10px 12px;color:#111;text-decoration:none}
 .dc4 .dc4-av b{display:block;font:800 15px Inter}.dc4 .dc4-av small{font:500 12.5px Inter;color:#555}
+/* Mon portefeuille, refonte (4/11) : anneau dans le bandeau, saisie courte, lignes en cartes */
+.ek.pf4 .pf4-don{display:flex;gap:22px;align-items:center;margin:18px 0 4px;background:#fff;border:2px solid var(--ek-ink);border-radius:20px;box-shadow:4px 4px 0 var(--ek-ink);padding:14px 18px;max-width:640px}
+.ek.pf4 .pf4-dg{flex:none;width:150px}.ek.pf4 .pf4-dg svg{width:150px;height:150px;display:block}
+.ek.pf4 .pf4-dl{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px}
+.ek.pf4 .pf4-dl>div{display:flex;align-items:center;gap:8px;font:600 14px Inter}
+.ek.pf4 .pf4-dl i{flex:none;width:12px;height:12px;border-radius:4px;border:1.5px solid var(--ek-ink)}
+.ek.pf4 .pf4-dl span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ek.pf4 .pf4-dl b{font:800 14px Inter}
+.ek.pf4 .pf4-addb{align-self:flex-start;margin-top:8px}
+.ek.pf4 .pf4-chute{margin-top:12px}
+.ek.pf4 .pf3add{background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:18px;margin:6px 18px 14px;padding:14px 16px!important}
+.ek.pf4 .pf3add .pf3al{font:800 15px Inter;margin:0 0 8px;display:block}
+.ek.pf4 .pf4-new{background:#fff;border:2px solid var(--ek-ink);border-radius:16px;padding:14px 16px;margin-top:12px}
+.ek.pf4 .pf4-new .pf3steps{display:grid;grid-template-columns:minmax(0,1.4fr) minmax(0,1fr) minmax(0,1fr);gap:12px 16px;padding:0;margin:0;list-style:none}
+.ek.pf4 .pf4-new .pf3st:first-child{grid-column:1/-1}
+.ek.pf4 .pf4-new .pf3sn2{display:none}
+.ek.pf4 .pf4-new .pf3st{display:block;margin:0}
+.ek.pf4 .pf4-new .pf3sh{font-size:12px}
+.ek.pf4 .pf4-new .pf3opt{margin-top:10px}
+.ek.pf4 .pf4-plus{margin:12px 0 4px;border-top:1.5px dashed #bbb;padding-top:10px}
+.ek.pf4 .pf4-plus>summary{cursor:pointer;font:800 13.5px Inter;list-style:none}.ek.pf4 .pf4-plus>summary::-webkit-details-marker{display:none}
+.ek.pf4 .pf4-plus>summary::before{content:"＋ "}.ek.pf4 .pf4-plus[open]>summary::before{content:"− "}
+.ek.pf4 .pf4-pi{display:grid;gap:10px;margin-top:10px}.ek.pf4 .pf4-pi .pf3st{list-style:none}.ek.pf4 .pf4-pi .pf3sn2{display:none}
+.ek.pf4 .pf4-new .pf3pru{margin-top:10px}
+.ek.pf4 .pf4-new .pf3pd{display:none}
+@media(max-width:700px){.ek.pf4 .pf4-new .pf3steps{grid-template-columns:1fr}.ek.pf4 .pf4-don{flex-direction:column;align-items:stretch}.ek.pf4 .pf4-dg{align-self:center}.ek.pf4 .pf3add{margin:6px 10px 12px}}
+/* les lignes en cartes */
+.ek.pf4 .pf3hd{display:none}
+.ek.pf4 .pf3l{display:flex;flex-direction:column;gap:10px;padding:0 18px 14px}
+.ek.pf4 .pf3r{border:2px solid var(--ek-ink);border-radius:16px;background:#fff;overflow:hidden}
+.ek.pf4 .pf3r.open{box-shadow:4px 4px 0 var(--ek-ink)}
+.ek.pf4 .pf3rb{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1.2fr) auto auto 18px;grid-template-areas:"n w v g c";gap:6px 18px;align-items:center;padding:12px 16px}
+.ek.pf4 .pf3rb .pf3n{grid-area:n}.ek.pf4 .pf3rb .c-w{grid-area:w}.ek.pf4 .pf3rb .c-v{grid-area:v}.ek.pf4 .pf3rb .c-g{grid-area:g}.ek.pf4 .pf3rb .pf3chev{grid-area:c}
+.ek.pf4 .pf3rb .c-q,.ek.pf4 .pf3rb .c-pru,.ek.pf4 .pf3rb .c-px{display:none}
+.ek.pf4 .pf3rb .pf3n b{font:800 16px Inter}
+.ek.pf4 .pf3rb .c-v{text-align:right}.ek.pf4 .pf3rb .c-v b{font:800 19px "Bricolage Grotesque",Inter}.ek.pf4 .pf3rb .c-v small{display:block;font:500 12px Inter;color:#555}
+.ek.pf4 .pf3rb .c-g{display:flex;flex-direction:column;align-items:center;min-width:88px;border-radius:12px;padding:5px 10px;background:#F2F2EE}
+.ek.pf4 .pf3rb .c-g b.up,.ek.pf4 .pf3rb .c-g small.up{color:#0A7F4F}.ek.pf4 .pf3rb .c-g b.down,.ek.pf4 .pf3rb .c-g small.down{color:#C8321E}
+.ek.pf4 .pf3rb .c-g:has(b.up){background:#DDF5EA}.ek.pf4 .pf3rb .c-g:has(b.down){background:#FDE3DD}
+.ek.pf4 .pf3rb .c-w{display:flex;flex-direction:column;gap:4px;font:700 12.5px Inter;color:#333;text-align:left}
+.ek.pf4 .pf3rb .c-w::after{content:"du portefeuille";font:500 11.5px Inter;color:#666;order:3}
+.ek.pf4 .pf3rb .pf3wb{display:block;height:10px;width:100%;border:1.5px solid var(--ek-ink);border-radius:6px;background:#fff;overflow:hidden;order:2}
+.ek.pf4 .pf3rb .pf3wb i{display:block;height:100%;background:var(--ek-y)}
+@media(max-width:700px){
+  .ek.pf4 .pf3l{padding:0 10px 12px}
+  .ek.pf4 .pf3rb{grid-template-columns:minmax(0,1fr) auto 14px;grid-template-areas:"n v c" "w g c";padding:12px}
+  .ek.pf4 .pf3rb .c-g{min-width:0;align-items:flex-end;justify-self:end}
+}
+.ek.pf4 .pf3stk{display:none}
+.ek.pf4 .pf3rb .c-w{align-items:flex-start}
+.ek.pf4 .pf4-new .pf3pru:not(:has(.pf3pv)){display:none}

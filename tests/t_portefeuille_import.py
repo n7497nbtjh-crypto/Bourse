@@ -39,30 +39,30 @@ with sync_playwright() as pw:
         open_file()
         txt = pg.inner_text("#pf3ires")
         n, c = pg.locator(".pf3ip").count(), pg.locator(".pf3ip input[data-sel]:checked").count()
-        if n != 12 or c != (12 if prem else 10): fail(nom, "positions détenues / pré-cochées", n, c)
+        if n != 12 or c != 12: fail(nom, "positions détenues / pré-cochées", n, c)
         act = pg.inner_text(".pf3ipl")
         for x in ("Orange", "Carrefour", "Renault", "Ubisoft", "Air France", "Engie"):
             if x in act: fail(nom, "position vendue affichée comme détenue :", x)
         for x in ("Amundi PEA Monde", "TotalEnergies", "LVMH", "Hermès", "Airbus", "Sanofi"):
             if x.lower() not in act.lower(): fail(nom, "position active absente :", x)
         if "Positions vendues depuis (6)" not in txt or pg.locator("[data-usold]:checked").count() != 6: fail(nom, "vendues : 6 attendues, à marquer vendues dans le portefeuille")
-        if not prem and "version gratuite suit 10 positions actives" not in txt: fail(nom, "explication de la limite absente")
+        # 4/11 : plus de limite de lignes en gratuit
         if "54 lignes lues" not in txt: fail(nom, "lignes lues", txt[:200])
         if not prem:  # les deux plus petites positions ne sont pas cochées
             off = [t.split("\n")[0] for t in pg.locator(".pf3ip:not(.on) .pf3ipn").all_inner_texts()]
-            if len(off) != 2: fail(nom, "positions non cochées", off)
+            pass  # 4/11 : plus de limite, toutes les positions sont cochées
         p = pg.evaluate(CHK, opts["viewport"]["width"])
         if p: fail(nom, "aperçu", p)
         if SHOTS: os.makedirs(SHOTS, exist_ok=True); pg.locator("#pf3impr").screenshot(path=f"{SHOTS}/{nom}_import_apercu.png")
         # 1. « Ajouter ou mettre à jour » : les six vieilles lignes sont marquées vendues, les positions actuelles importées
         pg.click("#pf3igo"); pg.wait_for_timeout(700)
         live = pg.evaluate(LIVE)
-        if len(live) != (12 if prem else 10) or any(k in live for k in ("c:orange", "c:engie")): fail(nom, "positions actives après import", live)
-        if pg.evaluate("JSON.parse(localStorage.getItem('bilan.portefeuille')).l.length") != (18 if prem else 16): fail(nom, "lignes vendues gardées avec leur historique")
+        if len(live) != 12 or any(k in live for k in ("c:orange", "c:engie")): fail(nom, "positions actives après import", live)
+        if pg.evaluate("JSON.parse(localStorage.getItem('bilan.portefeuille')).l.length") != 18: fail(nom, "lignes vendues gardées avec leur historique")
         bak = pg.evaluate("JSON.parse(localStorage.getItem('bilan.portefeuille.avant-import')||'null')")
         if not bak or len(bak["p"]["l"]) != 6: fail(nom, "sauvegarde de l'ancien portefeuille")
         if "Restaurer" not in pg.inner_text("#pf3notice"): fail(nom, "bouton de restauration absent")
-        if not prem and not pg.evaluate("pfFullQuiet(pf2Load())"): fail(nom, "10 positions actives : la limite gratuite devrait être atteinte")
+        if pg.evaluate("pfFullQuiet(pf2Load())"): fail(nom, "4/11 : aucune limite de lignes ne doit s'appliquer")
         pg.wait_for_timeout(400)
         p = pg.evaluate(CHK, opts["viewport"]["width"])
         if p: fail(nom, "après import", p)
@@ -79,7 +79,7 @@ with sync_playwright() as pw:
         if pg.locator("#pf3igo").is_disabled(): fail(nom, "bouton désactivé")
         if SHOTS and nom == "tel": pg.locator("#pf3impr").screenshot(path=f"{SHOTS}/{nom}_import_remplacer.png")
         pg.click("#pf3igo"); pg.wait_for_timeout(600)
-        if len(pg.evaluate(LIVE)) != (12 if prem else 10) or pg.evaluate("JSON.parse(localStorage.getItem('bilan.portefeuille')).l.length") != (12 if prem else 10): fail(nom, "remplacement")
+        if len(pg.evaluate(LIVE)) != 12 or pg.evaluate("JSON.parse(localStorage.getItem('bilan.portefeuille')).l.length") != 12: fail(nom, "remplacement")
         if errs: fail(nom, "erreurs JS", errs[:3])
         ctx.close()
     b.close()
