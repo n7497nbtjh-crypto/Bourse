@@ -30,7 +30,7 @@ jobs:
           ACTU_MINUTES: "30"
         run: |
           npm i --no-save --silent pdfjs-dist@4.10.38 || true
-          node data/actu.mjs || echo "::warning::Collecte de l'actualité incomplète"
+          node --max-old-space-size=6144 data/actu.mjs || echo "::warning::Collecte de l'actualité incomplète"
           node data/actu_analyse.mjs 2>&1 | grep -v "^Warning: TT" || echo "::warning::Analyse des annonces interrompue"
           node data/actu.mjs relire || true
       - name: Tests

@@ -312,6 +312,9 @@ async function gdelt() {
   const last = ETAT.gdelt ? Date.parse(ETAT.gdelt) : NOW - 12 * 3600e3;
   const start = Math.max(last + 15 * 60e3, NOW - 36 * 3600e3), files = [];
   for (let t = Math.floor(start / 9e5) * 9e5; t <= NOW - 15 * 60e3; t += 9e5) files.push(new Date(t).toISOString().replace(/[-:T]/g, "").slice(0, 12) + "00");
+  // 5/11 : après deux jours sans lecture, ~290 gros fichiers chargés d'un coup faisaient déborder la mémoire (plantage avant l'écriture du fil,
+  // actualité figée du 2 au 4/11). Au plus les 16 derniers fichiers (4 heures) par passage : la presse plus ancienne est sautée.
+  if (files.length > 16) files.splice(0, files.length - 16);
   const tmp = "/tmp/actu-gdelt"; mkdirSync(tmp, { recursive: true });
   let rows = 0, done = null, kept0 = PRESSE.length;
   for (const f of files) {
