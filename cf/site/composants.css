@@ -1281,3 +1281,5 @@ html #app .iahero{max-width:none}
 .ek.pr4 .pr4-c:target{background:var(--ek-yl)}
 @media (max-width:820px){.ek.pr4 .pr4-sv{grid-template-columns:1fr}}
 .ek.pr4 .pr4-c>svg{width:44px;height:44px;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:12px;padding:7px;box-sizing:border-box}
+.ek .an4 .an4-al{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:16px 0 0}
+.ek .an4 .an4-al span{font-size:14px;color:var(--ek-mut)}

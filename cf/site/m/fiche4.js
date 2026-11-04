@@ -457,7 +457,7 @@ function f4Tout(x) {
   const cols = [["Ventes", r => r.ca != null ? f4Md(r.ca, r.currency) : "–"], ["Croissance", r => { const m = f4M(r); return m.g != null ? f4Pc(m.g, 1, true) : "–"; }], ["Marge", r => { const m = f4M(r); return m.m != null ? f4Pc(m.m, 0) : "–"; }], ["Bénéfice net", r => r.net != null ? f4Md(r.net, r.currency) : "–"], ["PER", r => { const m = f4M(r); return m.pe != null ? ekFr(m.pe, 0) + " fois" : "–"; }], ["Rendement", r => { const m = f4M(r); return m.yld != null ? f4Pc(m.yld, 1) : "–"; }]];
   const ids = riv.map(r => r.id).filter(Boolean);
   const rivH = riv.length ? `<div class="ek-tc ek-tc-l"><h3>Face à ses rivales</h3><div class="scroll-x"><table class="ek-tt ek-tt-r"><thead><tr><th></th>${cols.map(k => `<th>${k[0]}</th>`).join("")}</tr></thead><tbody>${riv.map(r => `<tr${r.moi ? ' class="moi"' : ""}><th><span class="ek-nm">${f4Logo(r, null, 1)}${r.moi || !r.id ? esc(r.name) : `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`}</span></th>${cols.map(k => `<td>${esc(k[1](r))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${ids.length > 1 ? `<a class="ek-lk" href="/comparer?ids=${ids.slice(0, 4).map(encodeURIComponent).join(",")}">Comparer en détail ↗</a>` : ""}</div>` : "";
-  const csv = `<button type="button" class="ek-lk" data-f4-csv>Télécharger tous les chiffres (CSV)</button>`;
+  const csv = `<button type="button" class="ek-lk" data-f4-csv>Télécharger tous les chiffres (CSV)${typeof isPrem === "function" && isPrem() ? "" : " · Premium"}</button>`;
   return `<div class="ek-tg">${G.map(carte).join("")}</div>${rivH}<div id="f4-trim"></div><p class="ek-tn">Exercices clos, en ${esc(c.currency || s.currency || "")}. « Médiane secteur » : la valeur du milieu parmi les entreprises du secteur ${esc((secName(s) || "").toLowerCase())}. En vert ou rouge, la dernière année face à cette médiane. ${csv}</p>`;
 }
 async function f4Trim(x) { // « Depuis la clôture » : trimestres publiés après le dernier exercice (sociétés américaines, SEC)
@@ -505,6 +505,7 @@ async function f4Alerte(k, btn) {
   if (!isFav(k)) { const a = favs().slice(); a.unshift(k); setFavs(a); $$(`[data-fav="${k}"]`).forEach(x => { x.classList.add("on"); x.setAttribute("aria-pressed", "true"); x.textContent = favLbl(k); });
     try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=suivre"); } catch (e) { } }
   box.hidden = false; box.innerHTML = `<p>Un instant…</p>`;
+  if (!btn.closest("#f4al") && btn.closest("#f4-annee")) box.scrollIntoView({ behavior: "smooth", block: "center" });
   const m = await moi(), nom = (RBY[k.slice(2)] || {}).name || "cette entreprise";
   const suivies = [...new Set([...favs(), ...(typeof pf2Load === "function" ? pf2Load().l.map(l => l.k).filter(Boolean) : [])])], max = m.alertes_max || 3, rang = suivies.indexOf(k);
   const quoi = `ses résultats publiés (avec les chiffres clés), la veille de ses rendez-vous et ses fortes variations du jour`;
@@ -517,7 +518,9 @@ async function f4Alerte(k, btn) {
 }
 document.addEventListener("click", e => {
   const al = e.target.closest && e.target.closest("[data-f4-alerte]"); if (al) { f4Alerte(al.dataset.f4Alerte, al); return; }
-  if (e.target.closest && e.target.closest("[data-f4-csv]")) { if (window.F4X) f4Csv(window.F4X); return; }
+  if (e.target.closest && e.target.closest("[data-f4-csv]")) { // 4/11 : l'export fait partie de Premium (« Toutes les données »)
+    if (typeof isPrem === "function" && !isPrem()) { if (typeof toast === "function") toast(`L'export des chiffres fait partie de Premium. <a href="/premium#donnees">Voir Premium</a>`); return; }
+    if (window.F4X) f4Csv(window.F4X); return; }
   const t = e.target.closest && e.target.closest("[data-f4-tv],[data-f4-ia],[data-f4-q]"); if (!t) return;
   const m = location.pathname.match(/^\/entreprise\/([^/]+)/), s = m && RBY[m[1]];
   if (t.dataset.f4Tv !== undefined && s) { const box = document.getElementById("f4tv"); if (!box) return; box.hidden = !box.hidden;

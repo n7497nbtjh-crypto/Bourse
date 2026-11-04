@@ -1,5 +1,11 @@
 # Ce qu'il reste à faire (4 novembre 2026)
 
+## Mise à jour du 4/11 après-midi
+- **Premium** : fait (voir `docs/premium-2026-11.md`). Reste à Romain : liens Stripe et clés, avocat pour les conditions d'abonnement.
+- **Pages /question** : 11 en ligne (5 ajoutées). Écartées pour l'instant : luxe (le mot « luxe » ramène Aperam et Pluxee), Allemagne (aucun rendement lu), télécoms et dette (dette mal relevée pour certaines sociétés).
+- **Xtrackers** : le site ne donne ses chiffres (frais, encours, indice) qu'après une page d'accès à accepter, et son répertoire de données est interdit aux robots (robots.txt : /etfdata/). Pas collecté. **WisdomTree** refuse les robots (403). **VanEck** : site injoignable depuis l'environnement, délai de 25 s demandé entre deux pages. **Vanguard** (fr.vanguard) autorise les robots : piste la plus simple pour la suite. Logos Xtrackers, VanEck, Franklin, WisdomTree : non récupérés pour les mêmes raisons.
+
+
 Bilan de la nuit du 3 au 4 novembre, puis les six chantiers demandés par Romain, chacun avec une décision proposée, les étapes et ce que ça coûte. Les chiffres viennent des sources citées en bas ; à revérifier avant de les mettre sur le site.
 
 ## Fait cette nuit
