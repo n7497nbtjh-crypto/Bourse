@@ -43,6 +43,7 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
     for (const id of ids) {
       try { await aller(p, url(id), MODE === "comparer" ? 2600 : 1800); } catch (e) { continue; }
       if (MODE === "accueil") { await p.evaluate(id => { if (typeof a4Montrer === "function") a4Montrer(id); }, id); await p.waitForTimeout(400); }
+      await p.evaluate(() => document.querySelectorAll(".f4m-pl").forEach(e => e.classList.add("f4m-open"))); // téléphone : toutes les cartes de la fiche ouvertes pour le contrôle
       const r = await p.evaluate(() => {
         const P = [], W = document.documentElement.clientWidth;
         const inter = (a, b, m = 1) => Math.min(a.right, b.right) - Math.max(a.left, b.left) > m && Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > m;

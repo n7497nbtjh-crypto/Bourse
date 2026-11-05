@@ -93,11 +93,11 @@ async function pageCompany4(id, tab) {
   try { html = f4Tete(s, c, ctx) + f4MetierSec(ctx) + f4Fil(ctx) + `<div id="f4-annee"></div>` + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
-  window.F4X = ctx; f4Ancres(ctx); f4Trim(ctx); if (typeof f4Annee === "function") f4Annee(ctx); // l'année en cours (m/annee4.js)
-  if (typeof ctxCharge === "function") ctxCharge().then(() => { if (window.F4X === ctx) f4Contexte(ctx); });
+  window.F4X = ctx; f4Ancres(ctx); f4Trim(ctx); if (typeof f4Annee === "function") f4Annee(ctx); f4Mobile(); // l'année en cours (m/annee4.js) ; cartes fermées sur téléphone
+  if (typeof ctxCharge === "function") ctxCharge().then(() => { if (window.F4X === ctx) { f4Contexte(ctx); f4MSecteur(); } });
   const ANC = { "rf-resultats": "e1", "rf-rentab": "e2", "rf-dette": "e3", "rf-div": "e4", "rf-valo": "e5", "f3-metier": "metier", "tous-les-chiffres": "tout", "rf-concurrents": "tout", "concurrents": "tout" }; // anciennes ancres (liens déjà partagés)
   const h0 = location.hash.slice(1), cible = tab === "comptes" ? "tout" : (tab === "actualite" || tab === "agenda" || tab === "communaute") ? "actu" : (ANC[h0] || h0);
-  if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.scrollIntoView({ block: "start" }); }, 30); }
+  if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.classList.add("f4m-open"); t.scrollIntoView({ block: "start" }); }, 30); }
 }
 
 // Logo officiel (collecté par le robot logos.yml dans /logos/<id>.png) ; sinon les initiales dans le même cadre
@@ -545,3 +545,50 @@ if (F4.on) {
   // L'ancienne fiche a pu être lancée au chargement (fiche.js, fiche2.js) avant ce module : sa fin d'affichage ne doit plus rien écrire (lot 3 : modules retirés).
   if (typeof R !== "undefined" && R && R.companies && /^\/entreprise\/[a-z0-9-]+/.test(location.pathname) && typeof route === "function") route();
 }
+
+// 5/11 (maquette validée docs/maquettes/fiche-mobile-v1.html) : sur téléphone, la fiche en cartes fermées.
+// Rien n'est retiré : chaque carte montre l'essentiel (terme, chiffre, pastille) et s'ouvre au toucher. L'ordinateur ne change pas (CSS sous 760 px).
+function f4MPli(box, tete, cacher, ouvert) {
+  if (!box || !tete || box.classList.contains("f4m-pl")) return;
+  box.classList.add("f4m-pl"); if (ouvert) box.classList.add("f4m-open");
+  tete.classList.add("f4m-t"); tete.setAttribute("role", "button"); tete.setAttribute("tabindex", "0");
+  if (!tete.querySelector(".f4m-chev")) tete.insertAdjacentHTML("beforeend", `<span class="f4m-chev" aria-hidden="true">⌄</span>`);
+  cacher.forEach(e => e && e.classList.add("f4m-x"));
+}
+function f4Mobile() {
+  const pg = document.querySelector("#app .ek-page"); if (!pg || !document.getElementById("fil")) return;
+  pg.classList.add("f4m");
+  const rps = [...pg.querySelectorAll(".ek-chain .ek-rp")];
+  pg.querySelectorAll(".ek-step").forEach((st, i) => {
+    const sc = st.querySelector(".ek-sc"); if (!sc || sc.querySelector(".f4m-h")) return;
+    const hc = sc.querySelector(".ek-hc"), q = sc.querySelector(".ek-q"), rp = rps[i], cmp = sc.querySelector(".ek-cmp");
+    const terme = hc ? hc.textContent.replace(/\?$/, "").trim() : (q ? q.textContent.replace(/^\d+ · /, "") : "");
+    const v = rp && rp.querySelector(".ek-v"), sous = rp && rp.querySelector(".ek-s");
+    sc.insertAdjacentHTML("afterbegin", `<div class="f4m-h"><span class="f4m-n">${i + 1}</span><div><div class="f4m-te"><em>${esc(terme)}</em>${q ? ` · ${esc(q.textContent.replace(/^\d+ · /, ""))}` : ""}</div>${v ? `<div class="f4m-f"><span class="${v.className.replace("ek-v", "").trim()}">${esc(v.textContent)}</span>${sous ? ` <small>${esc(sous.textContent)}</small>` : ""}</div>` : ""}${cmp ? cmp.outerHTML.replace('class="ek-cmp', 'class="ek-cmp f4m-cmp') : ""}</div></div>`);
+    f4MPli(st, sc.querySelector(".f4m-h"), [...sc.children].filter(e => !e.classList.contains("f4m-h")), i === 0);
+  });
+  // Son métier : l'identité reste, activités et pays au toucher
+  const met = pg.querySelector("#metier .ek-metier");
+  if (met && met.children.length > 1) {
+    const autres = [...met.children].filter(e => !e.classList.contains("ek-facts"));
+    const f = met.querySelector(".ek-facts");
+    (f || met.firstElementChild).insertAdjacentHTML("afterend", `<div class="f4m-sous"><b>Ses activités, ses pays, comment elle gagne de l'argent</b></div>`);
+    f4MPli(met, met.querySelector(".f4m-sous"), autres, false);
+  }
+  // Tous les chiffres : une carte par tableau
+  pg.querySelectorAll("#tout .ek-tc").forEach(tc => { const h = tc.querySelector("h3"); if (h) f4MPli(tc, h, [...tc.children].filter(e => e !== h), false); });
+  f4MSecteur();
+}
+function f4MSecteur() {
+  const sx = document.querySelector(".f4m #f4sx"); if (!sx) return;
+  const h = sx.querySelector(".f4sx-t"), g = sx.querySelector(".f4sx-g"); if (!h || !g) return;
+  const n = g.children.length;
+  if (!h.querySelector(".f4m-nb")) h.insertAdjacentHTML("beforeend", `<small class="f4m-nb">${n} sujet${n > 1 ? "s" : ""} en ce moment</small>`);
+  f4MPli(sx, h, [...sx.children].filter(e => e !== h && !e.classList.contains("ek-stk2")), false);
+}
+document.addEventListener("click", ev => {
+  const t = ev.target.closest(".f4m .f4m-t"); if (t && !ev.target.closest("a,.ek-hc,[data-ek-def]")) { t.closest(".f4m-pl").classList.toggle("f4m-open"); return; }
+  const a = ev.target.closest(".f4m .ek-chain a.ek-rp"); // un repère du bandeau ouvre son étape
+  if (a) { const st = document.getElementById(a.getAttribute("href").slice(1)); if (st) st.classList.add("f4m-open"); }
+});
+document.addEventListener("keydown", ev => { const t = ev.target.closest && ev.target.closest(".f4m .f4m-t"); if (t && (ev.key === "Enter" || ev.key === " ")) { ev.preventDefault(); t.closest(".f4m-pl").classList.toggle("f4m-open"); } });

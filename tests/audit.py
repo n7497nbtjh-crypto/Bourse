@@ -114,7 +114,7 @@ with sync_playwright() as pw:
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
         pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
-        pg.locator("#e2 [data-ek-def]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(200)  # 2/11 soir : fiche v4, fenêtre de définition partagée (m/composants.js)
+        pg.evaluate("document.getElementById('e2') && document.getElementById('e2').classList.add('f4m-open')"); pg.locator("#e2 [data-ek-def]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(200)  # 2/11 soir : fiche v4, fenêtre de définition partagée (m/composants.js)  # téléphone : l'étape 2 est une carte fermée
         pg.locator("#e2 [data-ek-def]").first.click(); pg.wait_for_timeout(150)
         if not pg.evaluate("!!document.querySelector('#ek-dlg.on')"): probs["définition"] = ["la fenêtre de définition ne s'ouvre pas"]
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
