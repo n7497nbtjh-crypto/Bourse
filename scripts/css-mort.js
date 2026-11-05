@@ -7,9 +7,12 @@ const ROOT = path.join(__dirname, "..", "cf", "site"), CSS = path.join(ROOT, "si
 const args = process.argv.slice(2), ecrire = args.includes("--ecrire"), pref = args.filter(a => !a.startsWith("--"));
 if (!pref.length) { console.log("Préfixe de classe manquant (ex. acc-)."); process.exit(1); }
 // Tout le code qui peut écrire une classe : modules, app.js, index.html, worker
-const fichiers = [path.join(ROOT, "app.js"), path.join(ROOT, "index.html"), ...fs.readdirSync(path.join(ROOT, "m")).filter(f => f.endsWith(".js")).map(f => path.join(ROOT, "m", f))];
+const SRC = path.join(__dirname, "..", "cf", "src"); // 5/11 : le Worker écrit aussi des pages (questions, partage) : ses classes comptent
+const fichiers = [path.join(ROOT, "app.js"), path.join(ROOT, "index.html"), ...fs.readdirSync(ROOT).filter(f => /\.(js|html)$/.test(f) && f !== "app.js" && f !== "index.html" && !f.startsWith("_")).map(f => path.join(ROOT, f)), ...fs.readdirSync(path.join(ROOT, "m")).filter(f => f.endsWith(".js")).map(f => path.join(ROOT, "m", f)), ...fs.readdirSync(SRC).filter(f => f.endsWith(".mjs") && !f.endsWith(".gen.mjs")).map(f => path.join(SRC, f)), ...["legal.json", "questions.json"].map(f => path.join(ROOT, "data", f)).filter(f => fs.existsSync(f))];
 const code = fichiers.map(f => fs.readFileSync(f, "utf8")).join("\n");
-const vue = {}; const utilisee = c => vue[c] ?? (vue[c] = new RegExp(`(^|[^a-zA-Z0-9_-])${c.replace(/[-]/g, "\\-")}($|[^a-zA-Z0-9_-])`).test(code));
+// 5/11 : classes construites par morceaux (`lv-${x}`, "pf3-" + x) : tout nom qui commence par un de ces morceaux compte comme utilisé
+const DYN = [...new Set([...code.matchAll(/([a-zA-Z][\w-]*-)\$\{/g), ...code.matchAll(/["'`]([a-zA-Z][\w-]*-)["'`]\s*\+/g)].map(m => m[1]))];
+const vue = {}; const utilisee = c => DYN.some(d => c.startsWith(d)) || (vue[c] ?? (vue[c] = new RegExp(`(^|[^a-zA-Z0-9_-])${c.replace(/[-]/g, "\\-")}($|[^a-zA-Z0-9_-])`).test(code)));
 const css = fs.readFileSync(CSS, "utf8");
 // Découpe en règles (en suivant les accolades) ; les @media sont parcourus à l'intérieur
 let out = "", i = 0, retirees = [];
@@ -38,5 +41,5 @@ function bloc(txt) {
 }
 out = bloc(css);
 console.log(`${retirees.length} règle(s) à retirer (${(css.length - out.length) / 1000 | 0} ko sur ${css.length / 1000 | 0} ko)`);
-retirees.slice(0, 15).forEach(r => console.log("  - " + r));
+(process.argv.includes("--tout") ? retirees : retirees.slice(0, 15)).forEach(r => console.log("  - " + r));
 if (ecrire) { fs.writeFileSync(CSS, out); console.log("site.css réécrit."); }
