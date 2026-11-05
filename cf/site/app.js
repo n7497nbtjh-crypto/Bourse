@@ -1155,8 +1155,13 @@ let PX = {}, PXUP = null, FX = null;
 async function loadPrices() {
   if (PXUP) return;
   const fxP = fetch("/data/fx.json").then(r => r.json()).then(j => j.eur).catch(() => null); // 1/11 : en parallèle des cours (un aller-retour de moins)
+  // 5/11 : fichier du robot demandé en parallèle ; il complète les titres absents de la copie de la feuille ou sans prix
+  // (cours Eulerpool, valeurs liquidatives des ETF : la copie gardée par le Worker peut dater de la veille)
+  const robP = fetch("/data/cours.json").then(r => r.ok ? r.json() : null).catch(() => null);
   try { const r = await fetch("/api/cours"); if (r.ok) { const j = await r.json(); PX = j.items || {}; PXUP = j.updated; } } catch (e) { }
-  if (!PXUP) { try { const j = await (await fetch("/data/cours.json")).json(); PX = j.items || {}; PXUP = j.updated; } catch (e) { PXUP = "none"; } }
+  const rob = await robP;
+  if (rob && rob.items) { if (!PXUP) { PX = rob.items; PXUP = rob.updated; } else for (const [k, v] of Object.entries(rob.items)) { const it = PX[k]; if (!it || (!(it.p > 0) && v.p > 0) || ((v.ep || v.vl) && v.d && (!it.d || v.d > it.d))) PX[k] = v; } }
+  if (!PXUP) PXUP = "none";
   FX = await fxP;
   computePE();
 }
