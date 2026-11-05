@@ -12,6 +12,8 @@
 
 const F4 = { on: true };
 const F4_SYM = c => (typeof CUR !== "undefined" && CUR[c]) || " " + (c || "");
+// 5/11 (Romain) : montant hors euro suivi de son équivalent en euros, au taux BCE du jour (fx.json)
+function f4EnEur(m, cur) { if (!cur || cur === "EUR" || m == null || typeof toEur !== "function") return ""; const e = toEur(m, cur); return e != null && isFinite(e) ? ` (≈ ${f4Md(e, "EUR")})` : ""; }
 function f4Md(m, cur) { // montant en millions → « 16,0 Md€ » / « 852 M€ »
   if (m == null || !isFinite(m)) return "–";
   const a = Math.abs(m), s = m < 0 ? "−" : "";
@@ -78,6 +80,7 @@ function f4Ctx(s, c) {
 }
 async function pageCompany4(id, tab) {
   const s = RBY[id];
+  if (!s && window.SANS_COMPTES && SANS_COMPTES.has(id)) { history.replaceState({}, "", "/entreprises"); route(); return; } // comptes pas encore relevés : fiche non montrée (app.js)
   if (!s) return pageNotFound();
   setNav("ent"); setTitle(s.name);
   app.innerHTML = `<div class="ek ek-page"><div class="empty">Chargement de la fiche…</div></div>`;
@@ -111,6 +114,7 @@ function f4Tete(s, c, x) {
   if (p) {
     const ch = p.chg, pos = p.h52 > p.l52 && p.l52 > 0 && p.h52 / p.l52 <= 3 ? Math.max(0, Math.min(100, (p.p - p.l52) / (p.h52 - p.l52) * 100)) : null, dd = p.h52 > 0 ? p.p / p.h52 - 1 : null;
     pc = `<div class="ek-pcard"><div class="ek-p"><b>${esc(pxFmt(p.p, p.cur))}</b>${ch != null ? `<span style="color:${ch > 0 ? EK_G : ch < 0 ? EK_R : "#555"}">${ch > 0 ? "+" : ""}${ekFr(ch, 2)} % ${p.ep ? "sur la séance" : esc(typeof jourSeance === "function" ? jourSeance() : "")}</span>` : ""}</div>
+      ${p.cur && p.cur !== "EUR" && typeof toEur === "function" && isFinite(toEur(p.p, p.cur)) ? `<div class="ek-peur">soit environ <b>${esc(pxFmt(toEur(p.p, p.cur), "EUR"))}</b> par action (1 ${esc(p.cur)} = ${esc(ekFr(toEur(1, p.cur), toEur(1, p.cur) < 0.1 ? 4 : 3))} €, taux de la BCE)</div>` : ""}
       <small>${p.ep && p.d ? `Cours de clôture du ${esc(new Date(p.d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))} · <a href="https://eulerpool.com" target="_blank" rel="noopener">Data by Eulerpool</a>` : `Cours différé${typeof PXUP === "string" && PXUP !== "none" ? ", relevé le " + esc(new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : ""}`}</small>
       ${pos != null ? `<div class="ek-rg"><i style="left:${pos}%"></i><em style="left:${pos}%">aujourd'hui</em></div><div class="ek-rgl"><span>plus bas ${esc(pxFmt(p.l52, p.cur))}</span><span>plus haut ${esc(pxFmt(p.h52, p.cur))}</span></div>
       <p>Sur un an, l'action a valu entre ${esc(pxFmt(p.l52, p.cur))} et ${esc(pxFmt(p.h52, p.cur))}.${dd != null && dd < -0.03 ? ` Elle est aujourd'hui <b>${ekFr(-dd * 100, 0)} % sous son plus haut</b>.` : " Elle est proche de son plus haut."}</p>` : ""}
@@ -145,7 +149,7 @@ function f4Chaine(x) {
     ["Son bénéfice", f4Pc(M.ng, 1, true), f4Ton(M.ng, MED.ng, false, 0.02), s.net != null && s.year ? `sur un an : ${f4Md(s.net, s.currency)} en ${s.year}` : "bénéfice non publié", f4Jauge(M.ng, MED.ng, false, 0.3), MED.ng != null ? `${x.P.court} : ${f4Pc(MED.ng, 1, true)}` : ""],
     ["Sa rentabilité", M.roe != null ? ekFr(M.roe * 100, 1) + " %" : "–", f4Ton(M.roe, MED.roe), `gagnés sur 100 ${sym} de fonds propres`, f4Jauge(M.roe, MED.roe), MED.roe != null ? `${x.P.court} : ${ekFr(MED.roe * 100, 1)} %` : ""],
   ].filter(r => r[0] !== "Sa rentabilité" || M.roe != null) : [
-    ["Ses ventes", f4Pc(M.g, 1, true), f4Ton(M.g, MED.g, false, 0.02), `sur un an : ${f4Md(s.ca, s.currency)} de ventes en ${s.year}`, f4Jauge(M.g, MED.g, false, 0.2), MED.g != null ? `${x.P.court} : ${f4Pc(MED.g, 1, true)}` : ""],
+    ["Ses ventes", f4Pc(M.g, 1, true), f4Ton(M.g, MED.g, false, 0.02), `sur un an : ${f4Md(s.ca, s.currency)} de ventes en ${s.year}${f4EnEur(s.ca, s.currency)}`, f4Jauge(M.g, MED.g, false, 0.2), MED.g != null ? `${x.P.court} : ${f4Pc(MED.g, 1, true)}` : ""],
     ["Sa marge", M[k2] != null ? ekFr(M[k2] * 100, 0) + " " + sym : "–", f4Ton(M[k2], MED[k2]), M[k2] != null && M[k2] < 0 ? `perdus sur 100 ${sym} de ventes` : `gardés sur 100 ${sym} de ventes`, f4Jauge(M[k2], MED[k2]), MED[k2] != null ? `${x.P.court} : ${ekFr(MED[k2] * 100, 0)} ${sym}` : ""],
   ];
   if (!x.bk) R5.push(

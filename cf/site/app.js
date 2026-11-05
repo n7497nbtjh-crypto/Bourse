@@ -2902,7 +2902,11 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   window.AG_DIVP = Promise.all([getJSON("/data/agenda-dividendes.json", { events: [] }), getJSON("/data/agenda-dividendes-eu.json", { events: [] })]).then(D => { const off = new Set(AG.events.filter(e => e.type === "Dividende").map(e => e.id)); D.forEach(d => AG.events.push(...(d.events || []).filter(e => !off.has(e.id)))); });
   const S = Object.fromEntries((r.companies || []).map(c => [c.id, c]));
   // La liste des entreprises suivies fait foi ; les comptes collectés s'y ajoutent
-  R = { ...r, regions: uni.regions, companies: uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u })) };
+  // 5/11 (Romain : « une fiche vide fait amateur ») : une entreprise sans comptes relevés n'est pas montrée ; elle revient seule dès que
+  // ses comptes arrivent (les robots continuent de les chercher dans data/univers.mjs). Son adresse renvoie vers /entreprises.
+  const tout = uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u }));
+  window.SANS_COMPTES = new Set(tout.filter(c => c.missing || c.year == null).map(c => c.id));
+  R = { ...r, regions: uni.regions, companies: tout.filter(c => !SANS_COMPTES.has(c.id)) };
   R.companies.forEach(c => { RBY[c.id] = c; if (c.isin) ISINBY[c.isin] = c; });
   fichesMerge(); // si les textes de fiche sont déjà arrivés (accueil)
   computeMedians();

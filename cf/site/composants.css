@@ -165,7 +165,11 @@
 .ek-rgl{display:flex;justify-content:space-between;font:600 12px Inter;color:#555}
 .ek-pcard p{font:600 13.5px/1.4 Inter;margin:10px 0 0}
 .ek .ek-lk{display:inline-block;margin-top:10px;font:800 14px Inter;border-bottom:3px solid var(--ek-y)}
-.ek-tvbox{margin-top:16px;background:#fff;border:2px solid var(--ek-ink);border-radius:22px;padding:10px;min-height:360px}
+.ek-tvbox{margin-top:16px;background:#fff;border:2px solid var(--ek-ink);border-radius:22px;padding:14px 14px 10px;height:440px;display:flex;flex-direction:column}
+.ek-tvbox>*{flex:1 1 auto;min-height:0}
+@media (max-width:760px){.ek-tvbox{height:340px;padding:8px}}
+.ek-pcard .ek-peur{font-size:14px;color:#333;margin:2px 0 6px}
+.ek-pcard .ek-peur b{font-weight:700}
 .ek-vrd{display:flex;align-items:center;gap:18px;margin-top:30px;flex-wrap:wrap}
 .ek-vrd .ek-stk2{display:inline-block;font:800 14px "Bricolage Grotesque",Inter,sans-serif;padding:5px 12px;border-radius:10px;border:2px solid var(--ek-ink);box-shadow:3px 3px 0 var(--ek-ink);transform:rotate(-3deg);background:#fff}
 .ek-vrd h2{font:800 clamp(28px,3.8vw,48px)/1 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.05em;margin:0}
