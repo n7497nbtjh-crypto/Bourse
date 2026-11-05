@@ -65,10 +65,12 @@ export function convertirEP(c, { profil, inc, bs, cf, dv }, auj = new Date().toI
   // Part versée invraisemblable (plus de 150 % du bénéfice par action) : écarté.
   if (Array.isArray(dv) && dv.length) {
     const T = dv.filter(x => x && x.dividend > 0 && x.period).map(x => ({ t: Date.parse(String(x.period).slice(0, 10)), v: x.dividend }));
-    fin_.dps = per.map((p, i) => { const e = Date.parse(p); if (e + 152 * 864e5 > Date.parse(auj)) return null;
+    // Chine (actions A, 5/11) : acompte en fin d'année et solde vers juillet, d'où une fenêtre de 5 mois avant à 8 mois après la clôture
+    const chine = /^(SSE|SZSE):/.test(c.tv || ""), av = (chine ? 152 : 212) * 864e5, ap = (chine ? 244 : 152) * 864e5;
+    fin_.dps = per.map((p, i) => { const e = Date.parse(p); if (e + ap > Date.parse(auj)) return null;
       // versements trimestriels (au moins 7 en deux ans : Samsung) : les quatre détachements de l'exercice lui-même
       const trim = T.filter(x => x.t > e - 730 * 864e5 && x.t <= e).length >= 7;
-      const v = T.filter(x => trim ? x.t > e - 355 * 864e5 && x.t <= e + 10 * 864e5 : x.t > e - 212 * 864e5 && x.t <= e + 152 * 864e5).reduce((a, x) => a + x.v, 0), eps = fin_.eps[i];
+      const v = T.filter(x => trim ? x.t > e - 355 * 864e5 && x.t <= e + 10 * 864e5 : x.t > e - av && x.t <= e + ap).reduce((a, x) => a + x.v, 0), eps = fin_.eps[i];
       return eps > 0 && v / eps > 1.5 ? null : Math.round(v * 1e4) / 1e4; });
   }
   if (fin_k) for (const k of ["ca", "ebit", "cash", "debt", "netDebt", "cfo", "capex", "fcf"]) delete fin_[k];

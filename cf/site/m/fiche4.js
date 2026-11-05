@@ -38,13 +38,14 @@ function f4M(c) {
 const f4Valide = c => c && !c.missing && c.ca > 0 && (c.net == null || Math.abs(c.net) <= c.ca) && (c.ebit == null || Math.abs(c.ebit) <= c.ca);
 
 // ——— Rivales : liste du site, doublons et comptes incohérents écartés (et nommés) ———
-const f4ValideB = c => c && !c.missing && c.equity > 0 && c.net != null && isFinite(c.net);
+// Banques : fonds propres facultatifs (jamais repris des comptes Eulerpool, 5/11)
+const f4ValideB = c => c && !c.missing && !(c.equity != null && c.equity <= 0) && c.net != null && isFinite(c.net);
 function f4Rivales(s, bk) {
   const val = bk ? f4ValideB : f4Valide, cle = bk ? "net" : "ca";
   const ids = (typeof CONC !== "undefined" && CONC[s.id]) || [], out = [], L = [], vus = [[s[cle], s.name, s.equity]];
   ids.forEach(id => { const c = RBY[id]; if (!c || c.id === s.id) return;
     if (!val(c)) { out.push({ nom: c.name, raison: c.missing ? "ses comptes ne sont pas encore relevés sur le site" : "ses comptes sont incomplets sur le site" }); return; }
-    const d = vus.find(([ca, , eq]) => ca && Math.abs(c[cle] / ca - 1) < 0.002 && (!bk || (eq && c.equity && Math.abs(c.equity / eq - 1) < 0.002))); if (d) { out.push({ nom: c.name, raison: `${bk ? "même bénéfice" : "mêmes ventes"} que ${d[1]} (même groupe), comptée une seule fois` }); return; }
+    const d = vus.find(([ca, , eq]) => ca && Math.abs(c[cle] / ca - 1) < 0.002 && (!bk || !eq || !c.equity || Math.abs(c.equity / eq - 1) < 0.002)); if (d) { out.push({ nom: c.name, raison: `${bk ? "même bénéfice" : "mêmes ventes"} que ${d[1]} (même groupe), comptée une seule fois` }); return; }
     vus.push([c[cle], c.name, c.equity]); L.push(c); });
   if (L.length >= 3) return { L, out, mode: "rivales", lib: `ses ${L.length} rivales`, de: `de ses ${L.length} rivales`, qui: "ses rivales", chez: "chez ses rivales", court: "rivales" };
   const sec = R.companies.filter(c => c.id !== s.id && c.sector === s.sector && val(c) && isBank(c) === isBank(s));
