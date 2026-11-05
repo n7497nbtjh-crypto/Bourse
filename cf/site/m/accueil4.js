@@ -38,12 +38,12 @@ function a4Fiche(id) { // tout ce que montre la carte d'exemple, calculé
   let dette, detteN;
   if (nd != null && nd < 0) { dette = "Aucune"; detteN = `${big(-nd, s.currency)} de trésorerie`; }
   else { dette = !sd ? "–" : sd.p >= 0.6 ? "Faible" : sd.p > 0.4 ? "Moyenne" : "Élevée"; const mo = nd != null && eb > 0 ? nd / eb * 12 : null; detteN = mo == null ? "" : mo < 24 ? `${Math.max(1, Math.round(mo))} mois de résultat brut` : `${a4Nb(mo / 12)} ans de résultat brut`; }
-  const px = ax.prix;
+  const v0 = typeof valo === "function" ? valo(s) : null, per = v0 && v0.pe > 0 ? v0.pe : null, mper = typeof MEDPE !== "undefined" ? MEDPE[s.sector] : null; // 5/11 : le PER lui-même, en grand
   return { s, m, med, rk, main, p,
     tri: [
       [["croissance", "Croissance"], g == null ? "–" : (g > 0 ? "+" : g < 0 ? "−" : "") + a4Nb(Math.abs(g)) + " %", ax.croissance, gm == null ? "" : `secteur : ${gm > 0 ? "+" : gm < 0 ? "−" : ""}${a4Nb(Math.abs(gm * 100))} %`],
       [["dette", "Dette"], dette, sd, detteN],
-      [["per", "Prix"], !px ? "–" : px.p >= 0.6 ? "PER bas" : px.p <= 0.4 ? "PER haut" : "Dans la norme", px, px ? `${px.rank}e sur ${px.n}` : ""]] };
+      [["per", "Prix (PER)"], per ? `${a4Nb(Math.round(per))} fois` : "–", per && mper ? { p: Math.max(0.06, Math.min(0.94, 0.5 - (per / mper - 1) * 0.5)), neutre: 1 } : null, per && mper ? `secteur : ${a4Nb(Math.round(mper))} fois · ${per > mper * 1.15 ? "le marché y croit" : per < mper * 0.85 ? "le marché doute" : "le marché est partagé"}` : ""]] };
 }
 const a4Def = (cle, txt, f) => typeof ekDefMot === "function" ? ekDefMot(cle, txt, f || {}) : esc(txt); // mot souligné qui ouvre la définition (même fenêtre que la fiche)
 function a4CarteHTML(id) {
@@ -55,7 +55,7 @@ function a4CarteHTML(id) {
     <p class="a4-cap">${a4Def("marge", "Marge d'exploitation", { ex: a4Nb(Math.round(m)) + " €", nom: s.name })} : gardés sur 100 € de ventes.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
     ${main ? `<span class="a4-hand">${esc(main)}</span>` : ""}
     <div class="a4-duo"><div>${esc(s.name)}<i style="width:${(Math.max(m, 0) / maxv * 100).toFixed(0)}%;background:var(--a4y)"></i></div><div><span>${a4Def("mediane", "Médiane")} ${a4Nb(Math.round(med))} €</span><i style="width:${(Math.max(med, 0) / maxv * 100).toFixed(0)}%"></i></div></div>
-    <div class="a4-tri">${f.tri.map(([l, v, r, n]) => `<div><small>${a4Def(l[0], l[1], { nom: s.name })}</small><strong class="${a4Ton(r && r.p)}">${esc(v)}</strong>${r ? `<div class="a4-ms" title="Le trait : la médiane du secteur"><b style="left:${(r.p * 100).toFixed(0)}%"></b></div>` : ""}<em>${esc(n)}</em></div>`).join("")}</div>
+    <div class="a4-tri">${f.tri.map(([l, v, r, n]) => `<div><small>${a4Def(l[0], l[1], { nom: s.name })}</small><strong class="${r && r.neutre ? "k" : a4Ton(r && r.p)}">${esc(v)}</strong>${r ? `<div class="a4-ms${r.neutre ? " a4-ms-n" : ""}" title="Le trait : la médiane du secteur"><b style="left:${((r.neutre ? 1 - r.p : r.p) * 100).toFixed(0)}%"></b></div>` : ""}<em>${esc(n)}</em></div>`).join("")}</div>
     <a class="a4-go" href="/entreprise/${s.id}">Voir la fiche ${esc(s.name)} →</a>`;
 }
 function a4Montrer(id) {

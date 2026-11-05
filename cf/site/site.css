@@ -4197,3 +4197,8 @@ html body .results .none{padding:12px 14px;font:600 14px Inter;color:#666}
 html body .results .sr-m{display:block!important;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 html body .results .sr-p{display:inline-block;margin-right:5px;vertical-align:1px}
 html body .results a.srow .st{overflow:hidden}
+/* Accueil, carte d'exemple : PER en grand, sur une échelle neutre bleue (aucun jugement sur le prix, 5/11) */
+.a4-tri strong.k{color:#111}
+.a4-ms.a4-ms-n{background:linear-gradient(90deg,#DCE7FF,#9DB8FF)}
+.a4-ms.a4-ms-n b{background:#2F5BEA}
+.a4-tri strong{font-size:24px}

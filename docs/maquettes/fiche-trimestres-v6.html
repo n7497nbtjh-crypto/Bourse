@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ENKLAIR · maquette fiche : les derniers trimestres (v6)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* v6 (5/11) : une structure valable à toute date de l'année. On ne raisonne plus en « année en cours »
+   (1, 2 ou 3 trimestres selon le mois), mais toujours sur les QUATRE DERNIERS TRIMESTRES PUBLIÉS,
+   chacun face au même trimestre un an plus tôt. Chiffres réels d'Apple (comptes trimestriels déposés à la SEC). */
+:root{--ink:#111;--y:#FFE14D;--yl:#FFF6C7;--g:#00A06B;--r:#D92D12;--gz:#E2F8EE;--rz:#FFE9E3;--mut:#666;--gris:#D9D7D0}
+*{box-sizing:border-box;margin:0;padding:0}a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+body{background:#fff;color:var(--ink);font:400 16px/1.5 Inter,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.w{max-width:1100px;margin:0 auto;padding:40px 32px 80px}
+.note{background:#F4F4F4;border-radius:14px;padding:14px 18px;font:600 14px/1.45 Inter;margin-bottom:34px}
+.stk{display:inline-block;font:800 14px "Bricolage Grotesque";padding:5px 12px;border-radius:10px;border:2px solid var(--ink);box-shadow:3px 3px 0 var(--ink);transform:rotate(-2deg);background:var(--y)}
+h2{font:800 clamp(32px,4.2vw,48px)/1.04 "Bricolage Grotesque";letter-spacing:-.05em;margin-top:14px;max-width:22ch}
+h2 em{font-style:normal;color:var(--g)}h2 em.dn{color:var(--r)}
+.lead{font:600 16px/1.45 Inter;color:#333;margin-top:10px;max-width:64ch}
+.tabs{display:flex;gap:8px;margin-top:22px;flex-wrap:wrap}
+.tabs button{border:2px solid var(--ink);border-radius:999px;padding:8px 16px;font:700 14.5px Inter;background:#fff}
+.tabs button.on{background:var(--ink);color:#fff}
+
+/* 1. Les douze derniers mois, en grand */
+.duo{display:grid;grid-template-columns:1fr auto 1fr;gap:14px;align-items:stretch;margin-top:22px}
+.duo>div{border:2px solid var(--ink);border-radius:20px;padding:16px 20px}
+.duo .now{background:var(--y);box-shadow:4px 4px 0 var(--ink)}
+.duo small{display:block;font:700 13px Inter;color:#444}
+.duo b{display:block;font:800 40px/1.05 "Bricolage Grotesque";letter-spacing:-.04em;margin-top:4px}
+.duo i{display:block;font:600 13px Inter;font-style:normal;color:#444;margin-top:2px}
+.duo .fl .pill{font-size:22px;padding:6px 14px}
+.duo .fl{border:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:0 4px}
+.pill{display:inline-block;border:2px solid var(--ink);border-radius:999px;padding:5px 12px;font:800 18px "Bricolage Grotesque";background:var(--gz);color:var(--g)}
+.pill.dn{background:var(--rz);color:var(--r)}
+.fl span{font:600 12px Inter;color:#555;margin-top:6px}
+
+/* 2. Trimestre par trimestre, face au même trimestre un an plus tôt */
+.box{border:2px solid var(--ink);border-radius:22px;padding:20px 22px 16px;margin-top:22px}
+.box h3{font:800 22px/1.15 "Bricolage Grotesque";letter-spacing:-.03em}
+.box .sub{font:600 13.5px Inter;color:#555;margin-top:3px}
+.leg{display:flex;gap:16px;font:600 13px Inter;color:#444;margin-top:12px}
+.leg i{display:inline-block;width:14px;height:14px;border-radius:4px;border:2px solid var(--ink);vertical-align:-2px;margin-right:6px}
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:10px;align-items:end}
+.col{display:flex;flex-direction:column;align-items:center}
+.col .pill{font-size:15px;padding:3px 10px;margin-bottom:10px;white-space:nowrap}
+.bars{display:flex;gap:8px;align-items:flex-end;height:210px;padding-top:24px;width:100%;justify-content:center;border-bottom:2px solid var(--ink)}
+.bar{width:38%;max-width:62px;border:2px solid var(--ink);border-bottom:0;border-radius:8px 8px 0 0;position:relative}
+.bar.av{background:var(--gris)}.bar.ap{background:var(--y)}
+.bar span{position:absolute;bottom:100%;left:50%;transform:translateX(-50%);font:700 12.5px Inter;white-space:nowrap;margin-bottom:3px}
+.bar.av span{color:#666;font-weight:600}
+.col b{font:800 15px "Bricolage Grotesque";margin-top:8px;text-align:center}
+.col small{font:600 12px Inter;color:#666;text-align:center}
+.col.last b{background:var(--y);padding:0 8px;border-radius:6px}
+
+/* 3. Le dernier trimestre, en une phrase */
+.der{display:grid;grid-template-columns:1.3fr 1fr;gap:14px;margin-top:22px}
+.der>div{border:2px solid var(--ink);border-radius:20px;padding:16px 20px}
+.der small{display:block;font:700 13px Inter;color:#444}
+.der p{font:600 16px/1.45 Inter;margin-top:6px}
+.der .nx{background:var(--yl)}
+.der .nx b{display:block;font:800 26px/1.1 "Bricolage Grotesque";letter-spacing:-.03em;margin-top:4px}
+.src{font:500 12.5px Inter;color:#666;margin-top:16px}
+.src a{text-decoration:underline}
+details{margin-top:14px;border-top:2px solid #EEE;padding-top:10px}
+summary{font:700 14px Inter;cursor:pointer}
+table{width:100%;border-collapse:collapse;margin-top:10px;font:500 14px Inter}
+td,th{padding:7px 8px;border-bottom:1px solid #EEE;text-align:right}td:first-child,th:first-child{text-align:left}
+th{font-weight:700;color:#555;font-size:12.5px}
+@media(max-width:720px){.w{padding:24px 16px}.duo{grid-template-columns:1fr}.duo .fl{flex-direction:row;gap:10px}.cols{grid-template-columns:1fr 1fr;gap:22px 14px}.bars{height:170px}.bar span{font-size:11px}.der{grid-template-columns:1fr}}
+</style></head><body><div class="w">
+<p class="note">Maquette v6 : remplace « L'année en cours ». Cette section ne dépend plus du moment de l'année : elle montre toujours les quatre derniers trimestres publiés, chacun face au même trimestre un an plus tôt, et le total des douze derniers mois. En février comme en novembre, la même lecture. Chiffres réels d'Apple (comptes déposés à la SEC). Les onglets fonctionnent.</p>
+
+<span class="stk">Ses derniers trimestres</span>
+<h2 id="t"></h2>
+<p class="lead" id="l"></p>
+<div class="tabs" id="tabs"><button data-k="ca" class="on">Ventes</button><button data-k="net">Bénéfice net</button><button data-k="mg">Marge nette</button></div>
+
+<div class="duo" id="duo"></div>
+
+<div class="box">
+  <h3>Trimestre par trimestre</h3>
+  <p class="sub">Chaque trimestre face au même trimestre un an plus tôt : on compare des saisons identiques (Noël avec Noël).</p>
+  <div class="leg"><span><i style="background:var(--gris)"></i>Un an plus tôt</span><span><i style="background:var(--y)"></i>Ce trimestre</span></div>
+  <div class="cols" id="cols"></div>
+  <details><summary>Les chiffres, trimestre par trimestre</summary><table id="tb"></table></details>
+</div>
+
+<div class="der" id="der"></div>
+<p class="src">Comptes trimestriels déposés par Apple à la SEC (formulaires 10-Q et 10-K). Montants en dollars, équivalent en euros au taux de la BCE du jour.</p>
+</div>
+<script>
+// Apple : ventes et bénéfice net en millions de dollars, trimestres clos (fin d'exercice en septembre)
+const Q = [["2024-12-28",124300,36330],["2025-03-29",95359,24780],["2025-06-28",94036,23434],["2025-09-27",102466,27466],
+           ["2025-12-27",143756,42097],["2026-03-28",111184,29578],["2026-06-27",109417,29789],["2026-09-26",114477,30711]];
+const EUR = 0.891, publie = "3 novembre 2026", prochain = "fin janvier 2027";
+const M = ["janv.","févr.","mars","avr.","mai","juin","juil.","août","sept.","oct.","nov.","déc."];
+const nom = d => { const x = new Date(d); x.setDate(x.getDate() + 3); const fin = x.getMonth(), deb = (fin + 10) % 12; return `${M[deb]}-${M[fin]} ${x.getFullYear()}`; };
+const fr = (v, d = 1) => v.toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const md = v => v >= 1000 ? fr(v / 1000) + " Md$" : fr(v, 0) + " M$";
+const val = (q, k) => k === "ca" ? q[1] : k === "net" ? q[2] : q[2] / q[1] * 100;
+const aff = (v, k) => k === "mg" ? fr(v) + " %" : md(v);
+const ev = (a, b, k) => k === "mg" ? a - b : a / b - 1;
+const evT = (e, k) => k === "mg" ? `${e >= 0 ? "+" : "−"}${fr(Math.abs(e))} pt` : `${e >= 0 ? "+" : "−"}${fr(Math.abs(e * 100))} %`;
+const NOMS = { ca: ["ventes", "Les ventes"], net: ["bénéfice", "Le bénéfice net"], mg: ["marge", "La marge nette"] };
+function voir(k) {
+  const av = Q.slice(0, 4), ap = Q.slice(4);
+  const s = (L, k) => k === "mg" ? L.reduce((a, q) => a + q[2], 0) / L.reduce((a, q) => a + q[1], 0) * 100 : L.reduce((a, q) => a + val(q, k), 0);
+  const tAp = s(ap, k), tAv = s(av, k), e = ev(tAp, tAv, k), up = e >= 0;
+  const quoi = { ca: "les ventes d'Apple ont", net: "le bénéfice d'Apple a", mg: "la marge nette d'Apple a" }[k];
+  document.getElementById("t").innerHTML = k === "mg"
+    ? `Sur les 12 derniers mois, Apple a gardé <em class="${up ? "" : "dn"}">${fr(tAp)} %</em> de ses ventes en bénéfice.`
+    : `Sur les 12 derniers mois, ${quoi} ${up ? "progressé" : "reculé"} de <em class="${up ? "" : "dn"}">${fr(Math.abs(e * 100), 0)} %</em>.`;
+  document.getElementById("l").innerHTML = `Les quatre derniers trimestres publiés, <b>d'octobre 2025 à septembre 2026</b>, comparés aux quatre mêmes trimestres un an plus tôt.`;
+  document.getElementById("duo").innerHTML = `
+    <div class="now"><small>12 derniers mois</small><b>${aff(tAp, k)}</b><i>${k === "mg" ? "de bénéfice sur 100 $ de ventes" : "≈ " + md(tAp * EUR).replace("$", "€")}</i></div>
+    <div class="fl"><span class="pill ${up ? "" : "dn"}">${evT(e, k)}</span><span>sur un an</span></div>
+    <div><small>Les 12 mois d'avant</small><b>${aff(tAv, k)}</b><i>${k === "mg" ? "de bénéfice sur 100 $ de ventes" : "≈ " + md(tAv * EUR).replace("$", "€")}</i></div>`;
+  const vmax = Math.max(...Q.map(q => val(q, k)));
+  document.getElementById("cols").innerHTML = ap.map((q, i) => { const a = val(av[i], k), b = val(q, k), x = ev(b, a, k);
+    return `<div class="col${i === 3 ? " last" : ""}"><span class="pill ${x >= 0 ? "" : "dn"}">${evT(x, k)}</span>
+      <div class="bars"><div class="bar av" style="height:${a / vmax * 100}%"><span>${aff(a, k)}</span></div><div class="bar ap" style="height:${b / vmax * 100}%"><span>${aff(b, k)}</span></div></div>
+      <b>${nom(q[0])}</b><small>${i === 3 ? "dernier publié" : "&nbsp;"}</small></div>`; }).join("");
+  document.getElementById("tb").innerHTML = `<tr><th>Trimestre</th><th>${NOMS[k][1]}</th><th>Un an plus tôt</th><th>Évolution</th></tr>` +
+    ap.map((q, i) => `<tr><td>${nom(q[0])}</td><td>${aff(val(q, k), k)}</td><td>${aff(val(av[i], k), k)}</td><td>${evT(ev(val(q, k), val(av[i], k), k), k)}</td></tr>`).join("");
+  const xs = ap.map((q, i) => ev(val(q, k), val(av[i], k), k)), d = xs[3], p = xs[2];
+  const tend = k === "mg" ? (d > p ? "un écart qui se creuse" : "un écart qui se réduit") : (d >= 0 && p >= 0 ? (d < p ? "la hausse ralentit" : "la hausse accélère") : d < 0 && p < 0 ? (d < p ? "la baisse s'accentue" : "la baisse se réduit") : d >= 0 ? "retour à la hausse" : "passage à la baisse");
+  document.getElementById("der").innerHTML = `<div><small>Le dernier trimestre (${nom(ap[3][0])}, publié le ${publie})</small>
+    <p>${NOMS[k][1]} : <b>${aff(val(ap[3], k), k)}</b>, soit <b class="${d >= 0 ? "up" : "dn"}">${evT(d, k)}</b> sur un an. Au trimestre d'avant : ${evT(p, k)}. En clair : <b>${tend}</b>.</p></div>
+    <div class="nx"><small>Prochain trimestre attendu</small><b>${prochain}</b><small style="font-weight:600;margin-top:4px">Date annoncée par Apple dès qu'elle est connue (agenda)</small></div>`;
+  document.querySelectorAll("#tabs button").forEach(b => b.classList.toggle("on", b.dataset.k === k));
+}
+document.getElementById("tabs").onclick = e => { const b = e.target.closest("button"); if (b) voir(b.dataset.k); };
+voir("ca");
+</script></body></html>

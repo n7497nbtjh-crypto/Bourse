@@ -63,7 +63,9 @@ function f4Jauge(v, m, basEstMieux, ecart, neutre) {
   if (v == null || m == null) return "";
   let d = ecart ? (v - m) / ecart : (m ? (v / m - 1) : 0); if (basEstMieux) d = -d;
   const x = 50 + Math.max(-44, Math.min(44, d * 50));
-  return `<span class="ek-mg" style="background:${neutre ? "#E4E4DF" : `linear-gradient(90deg,${basEstMieux ? "#BFF0DA" : "#FFD0C4"} 0 50%,${basEstMieux ? "#FFD0C4" : "#BFF0DA"} 50%)`}"><b style="left:${basEstMieux ? 100 - x : x}%"></b></span>`;
+  // PER (neutre, 5/11) : pas de vert ni de rouge (aucun jugement sur le prix), mais un dégradé bleu et les deux bouts nommés
+  if (neutre) return `<span class="ek-mg ek-mg-n"><b style="left:${basEstMieux ? 100 - x : x}%"></b></span><span class="ek-mg-l"><i>PER plus bas</i><i>plus haut</i></span>`;
+  return `<span class="ek-mg" style="background:linear-gradient(90deg,${basEstMieux ? "#BFF0DA" : "#FFD0C4"} 0 50%,${basEstMieux ? "#FFD0C4" : "#BFF0DA"} 50%)"><b style="left:${basEstMieux ? 100 - x : x}%"></b></span>`;
 }
 function f4Ton(v, m, basEstMieux, ecartAbs) { // "g" mieux, "r" moins bien, "" comparable
   if (v == null || m == null) return "";
