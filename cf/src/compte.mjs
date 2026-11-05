@@ -128,7 +128,7 @@ export async function premium(request, env) {
     try { const sub = await stripe(env, `subscriptions/${p.sub_id}`);
       const r = await fetch("https://api.stripe.com/v1/billing_portal/sessions", { method: "POST", headers: { authorization: "Bearer " + env.STRIPE_SECRET, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ customer: sub.customer, return_url: url.origin + "/premium" }) });
       const j = await r.json(); if (!r.ok) throw new Error(j.error && j.error.message); return json({ url: j.url });
-    } catch (e) { return json({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 502); }
+    } catch (e) { return json({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 400); }
   }
   return json({ error: "Introuvable." }, 404);
 }

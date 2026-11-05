@@ -1851,6 +1851,7 @@ async function pagePremium(sub) {
   if (sub === "merci") return premiumMerci();
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
+  await moi().catch(() => null); // 5/11 : bouton de paiement selon que le visiteur a un espace ou non
   PREM = null; const st = await premStatus();
   try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=premium-vue"); } catch (e) { }
   const nCo = R && R.companies ? R.companies.filter(c => !c.missing).length : 0, ic = k => typeof accIc === "function" ? accIc(k) : "";
@@ -1873,7 +1874,7 @@ async function pagePremium(sub) {
     ["Classements (cinq classements, 50 places)", "–", "✓"],
     ["Fiche : télécharger tous les chiffres (CSV)", "–", "✓"],
   ];
-  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "unique" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(link)}" rel="noopener">Choisir cette formule</a>` : `<p class="prem-bientot">Ouverture prochaine</p>`}</div>`;
+  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "unique" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(MOI && MOI.connecte ? link + "?prefilled_email=" + encodeURIComponent(MOI.email || "") : "/espace?payer=" + k)}" rel="noopener">Choisir cette formule</a>${MOI && MOI.connecte ? "" : `<p class="muted" style="margin:8px 0 0;font-size:12.5px">Vous créerez d'abord votre espace (adresse et mot de passe) : l'abonnement y sera rattaché.</p>`}` : `<p class="prem-bientot">Ouverture prochaine</p>`}</div>`;
   const essai = false && OFFRES.essai && !st.premium ? `<div class="prem-essai"><button type="button" class="btn" id="essai14">Essayer 14 jours, sans carte</button><span class="muted">Un compte gratuit suffit. Rien ne se renouvelle tout seul.</span><p id="essaim" role="status" aria-live="polite"></p></div>` : "";
   const attente = OFFRES.mensuel || OFFRES.unique ? "" : `<section class="panel prem-att"><div class="pb"><h2 class="f2-h">Soyez prévenu à l'ouverture</h2><p class="muted" style="margin:6px 0 12px">Les inscrits avant l'ouverture gardent le prix bloqué à <b>39 € par an</b>. Une adresse, rien d'autre ; aucun message en dehors de l'ouverture.</p>
     <form id="attf" class="askf" novalidate><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email" required><button class="btn">Prévenez-moi</button></form><p id="attm" class="prem-attm" role="status" aria-live="polite"></p><p class="muted" id="attn" style="font-size:13px;margin:8px 0 0"></p></div></section>`;
@@ -2049,6 +2050,8 @@ function moi(force) {
     let t = ""; try { t = localStorage.getItem(TKEY) || ""; } catch (e) { }
     if (j.connecte && !j.premium && t) { const r = await post2("/api/espace/premium", { token: t }).catch(() => ({})); if (r && r.ok) { j.premium = true; j.plan = r.plan; j.premium_jusqu_au = r.premium_jusqu_au; } }
     MOIP = null; MOI = j; document.documentElement.classList.toggle("is-in", !!j.connecte);
+    const payer = location.pathname === "/espace" ? new URLSearchParams(location.search).get("payer") : null; // 5/11 : espace obligatoire avant de payer
+    if (j.connecte && (payer === "mensuel" || payer === "unique") && !window.ESP_SANS_PAYER) { const o = await fetch("/api/premium/offres").then(r => r.json()).catch(() => ({})); if (o[payer]) { location.href = o[payer] + "?prefilled_email=" + encodeURIComponent(j.email || ""); return j; } }
     if (j.connecte) { if (j.premium) { PREM = { premium: true, plan: j.plan }; document.documentElement.classList.add("is-prem"); } syncFromServer(j); }
     espaceBadge(); return j;
   });
@@ -2296,6 +2299,7 @@ function espaceConnexion() {
         <button class="btn" type="submit" id="espgo">Créer mon espace</button><p class="muted" id="espm" style="font-size:13.5px;margin:0"></p></form>
       <p class="es4-alt"><button type="button" class="linkbtn" id="swap">J'ai déjà un espace : me connecter</button> · <button type="button" class="linkbtn" id="lost">Mot de passe oublié</button></p></div></section></div>`;
   let mode = "inscription";
+  if (/[?&]payer=(mensuel|unique)/.test(location.search) && $("#espf")) $("#espf").insertAdjacentHTML("afterbegin", `<p style="margin:0 0 12px;border:2px solid #111;border-radius:12px;padding:10px 12px;background:#FFF6C7;font:600 13.5px/1.4 Inter"><b>Avant le paiement :</b> créez votre espace, ou connectez-vous. Votre abonnement Premium y sera rattaché, sur tous vos appareils.</p>`);
   const f = $("#espf"), setMode = md => { mode = md; $("#lt").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Retrouver mon accès";
     $("#espgo").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Changer mon mot de passe"; $("#cgu").hidden = md !== "inscription"; $("input[name=cgu]", f).required = md === "inscription";
     $("#swap").textContent = md === "inscription" ? "J'ai déjà un espace : me connecter" : "Créer un espace";
@@ -2306,7 +2310,7 @@ function espaceConnexion() {
   f.onsubmit = async e => { e.preventDefault(); const fd = new FormData(f), email = fd.get("email"), mdp = fd.get("mdp"); $("#espm").textContent = "Un instant…";
     const r = mode === "inscription" ? await post2("/api/espace/inscription", { email, motdepasse: mdp, favoris: favs(), portefeuille: pf2Load() }) : mode === "connexion" ? await post2("/api/espace/connexion", { email, motdepasse: mdp }) : await post2("/api/espace/secours", { email, code: fd.get("code"), nouveau: mdp });
     if (r.error) { $("#espm").textContent = r.error; return; }
-    if (r.code_secours) { app.innerHTML = `<section class="panel" style="max-width:640px;margin:20px auto"><div class="pb"><h1 class="pagetitle" style="margin-top:0">Votre espace est créé</h1><p>Gardez ce <b>code de secours</b> : il permet de changer de mot de passe si vous l'oubliez. Il ne sera plus affiché.</p><p class="code">${esc(r.code_secours)}</p><a class="btn" href="/espace">Voir mon espace</a></div></section>`; MOI = null; moi(true); return; }
+    if (r.code_secours) { app.innerHTML = `<section class="panel" style="max-width:640px;margin:20px auto"><div class="pb"><h1 class="pagetitle" style="margin-top:0">Votre espace est créé</h1><p>Gardez ce <b>code de secours</b> : il permet de changer de mot de passe si vous l'oubliez. Il ne sera plus affiché.</p><p class="code">${esc(r.code_secours)}</p><a class="btn" href="/espace${/[?&]payer=(mensuel|unique)/.test(location.search) ? "?payer=" + new URLSearchParams(location.search).get("payer") : ""}">${/[?&]payer=/.test(location.search) ? "Continuer vers le paiement" : "Voir mon espace"}</a></div></section>`; MOI = null; window.ESP_SANS_PAYER = true; moi(true).then(() => { window.ESP_SANS_PAYER = false; }); return; }
     MOI = null; await moi(true); pageEspace(); };
 }
 async function espaceBilan(el, m) {
