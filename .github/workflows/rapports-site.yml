@@ -33,7 +33,7 @@ jobs:
       - name: Outil de lecture des PDF et navigateur (pages dont les liens sont écrits par un programme)
         run: |
           sudo apt-get install -y -qq poppler-utils >/dev/null
-          npm install --no-save --no-audit --no-fund playwright@1 >/dev/null
+          npm install --no-save --no-audit --no-fund playwright@1.64 >/dev/null
           npx playwright install --with-deps chromium >/dev/null
       - name: Recherche des rapports, par tranches de 40 minutes enregistrées une à une
         timeout-minutes: 170
