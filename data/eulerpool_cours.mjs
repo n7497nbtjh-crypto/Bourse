@@ -20,7 +20,8 @@ export function depuisBougies(L, cur, actions, auj = Date.now()) {
   const C = (L || []).filter(x => x && x.close > 0 && x.timestamp).sort((a, b) => a.timestamp - b.timestamp);
   if (C.length < 30) return null;
   const der = C.at(-1); if (auj - der.timestamp > 7 * J) return null; // plus de cotation récente
-  const avant = t => { let v = null; for (const x of C) { if (x.timestamp <= t) v = x; else break; } return v && t - v.timestamp < 12 * J ? v.close : null; };
+  // cours à une date : la dernière séance avant, sinon (début de l'historique, 5 ans pile) la première séance dans les 12 jours qui suivent
+  const avant = t => { let v = null; for (const x of C) { if (x.timestamp <= t) v = x; else break; } if (v && t - v.timestamp < 12 * J) return v.close; const w = C.find(x => x.timestamp > t); return w && w.timestamp - t < 12 * J ? w.close : null; };
   const an = C.filter(x => x.timestamp > der.timestamp - 365 * J).map(x => x.close);
   const prec = C.at(-2), chg = prec ? r2((der.close / prec.close - 1) * 100) : null;
   if (chg != null && Math.abs(chg) > 40) return null; // saut d'un jour invraisemblable (cours mal raccordé)
@@ -36,12 +37,12 @@ export async function coursEulerpool(societes, log = console.log) {
   let appels = 0, ok = 0;
   for (const c of societes) {
     const place = String(c.tv || "").split(":")[0], cur = DEVISE_PLACE[place];
-    if (!c.isin || !cur || place === "LSE") continue; // Londres : cours en pence ou en livres selon les sources, écarté
+    if (!c.isin || !cur) continue; // Londres (5/11) : profil en livres = cours en pence chez Eulerpool (GSK 1 827,5 pour 18,27 £), divisés par 100
     const m = cache[c.id] || {};
     try {
       if (!m.prof || now - Date.parse(m.prof) > 30 * J) { const p = await get(`/equity/profile/${c.isin}`); appels++; Object.assign(m, { prof: new Date().toISOString().slice(0, 10), cur: p && p.currency, actions: p && p.shares }); }
       if (m.cur !== cur) { cache[c.id] = m; continue; } // devise du profil différente de la cotation : écarté (voir data/eulerpool.mjs)
-      if (!m.lu || now - m.lu > 20 * 3600e3) { const b = await get(`/equity/candles/${c.isin}?range=5y`); appels++; m.lu = now; m.item = depuisBougies(b, cur, m.actions); }
+      if (!m.lu || now - m.lu > 20 * 3600e3) { const b = await get(`/equity/candles/${c.isin}?range=5y`); appels++; m.lu = now; m.item = depuisBougies(place === "LSE" ? (b || []).map(x => ({ ...x, close: x.close / 100 })) : b, cur, m.actions); }
       cache[c.id] = m;
       if (m.item && now - Date.parse(m.item.d) < 7 * J) {
         // Capitalisation recoupée avec les comptes : nombre d'actions = bénéfice ÷ bénéfice par action. Un écart de plus de 25 %
@@ -67,7 +68,7 @@ if (process.argv[1] && /[\/\\]eulerpool_cours\.mjs$/.test(process.argv[1])) {
   for (let k = avec.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [avec[k], avec[j]] = [avec[j], avec[k]]; }
   const L = []; for (const c of avec.slice(0, n)) {
     const g = items["c:" + c.id], cur = DEVISE_PLACE[c.tv.split(":")[0]];
-    const p = await get(`/equity/profile/${c.isin}`), b = p && (mode === "devise" ? p.currency !== cur : mode === "lse" || p.currency === cur) ? await get(`/equity/candles/${c.isin}?range=5y`) : null, e = b ? depuisBougies(b, cur, p.shares) : null;
+    const p = await get(`/equity/profile/${c.isin}`), b = p && (mode === "devise" ? p.currency !== cur : p.currency === cur) ? await get(`/equity/candles/${c.isin}?range=5y`) : null, e = b ? depuisBougies(/^LSE:/.test(c.tv) ? b.map(x => ({ ...x, close: x.close / 100 })) : b, cur, p.shares) : null;
     if (!e) { console.log(c.id, "pas de cours Eulerpool", p ? p.currency : "inconnue"); continue; }
     const ec = x => g[x] && e[x] ? Math.round((e[x] / g[x] - 1) * 1000) / 10 : null;
     L.push(Math.abs(ec("p"))); console.log(c.id, cur, "Google", g.p, "Eulerpool", e.p, e.d, "écart", ec("p"), "% | 1 an", ec("p1y"), "% | haut", ec("h52"), "% | capitalisation", ec("cap"), "%");
