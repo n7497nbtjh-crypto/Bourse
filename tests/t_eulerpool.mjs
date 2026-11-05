@@ -14,11 +14,14 @@ assert.equal(r.comptes.fin.divPaid[3], 7816); assert.equal(r.comptes.fin.divPaid
 assert.equal(r.comptes.fin.equity, undefined, "fonds propres jamais repris");
 assert.equal(r.comptes.sources[0].periodEnd, "2025-12-31"); assert.equal(r.comptes.sources[0].source, "Eulerpool");
 // Refus
-assert.ok(convertirEP({ ...c, sector: "finance" }, { profil: { currency: "USD" }, inc, bs, cf }, AUJ).raison);
-const saut = inc.map((x, i) => i === 3 ? { ...x, revenue: 20000 } : x);
-assert.match(convertirEP(c, { profil: { currency: "CHF" }, inc: saut, bs, cf }, AUJ).raison, /saut/);
+const fi = convertirEP({ ...c, sector: "finance" }, { profil: { currency: "CHF" }, inc, bs, cf }, AUJ).comptes;
+assert.ok(fi && fi.fin.net && !fi.fin.ca && !fi.fin.debt, "banque : bénéfice seulement");
+const saut = inc.map((x, i) => i === 1 ? { ...x, revenue: 20000 } : x);
+assert.deepEqual(convertirEP(c, { profil: { currency: "CHF" }, inc: saut, bs, cf }, AUJ).comptes.years, [2023, 2024, 2025], "chiffre aberrant en 2022 : on garde les années propres après");
 const benef = inc.map((x, i) => i === 4 ? { ...x, netIncome: 99999 } : x);
-assert.match(convertirEP(c, { profil: { currency: "CHF" }, inc: benef, bs, cf }, AUJ).raison, /bénéfice/);
+assert.ok(convertirEP(c, { profil: { currency: "CHF" }, inc: benef, bs, cf }, AUJ).raison, "dernière année incohérente : refus");
+const benef0 = inc.map((x, i) => i === 0 ? { ...x, netIncome: 99999 } : x);
+assert.deepEqual(convertirEP(c, { profil: { currency: "CHF" }, inc: benef0, bs, cf }, AUJ).comptes.years, [2022, 2023, 2024, 2025]);
 assert.match(convertirEP(c, { profil: { currency: "CHF" }, inc, bs: bs.slice(0, 2), cf }, AUJ).raison, /clos le/);
 assert.ok(convertirEP(c, { profil: {}, inc, bs, cf }, AUJ).raison);
 assert.match(convertirEP({ ...c, tv: "HKEX:700" }, { profil: { currency: "CNY" }, inc, bs, cf }, AUJ).raison, /cotation/, "Tencent : comptes en CNY, cotation à Hong Kong");

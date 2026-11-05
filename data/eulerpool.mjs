@@ -19,26 +19,31 @@ export const SOURCE_EP = "Eulerpool";
 const DEVISE_PLACE = { TSE: "JPY", XETR: "EUR", FWB: "EUR", SIX: "CHF", NSE: "INR", BSE: "INR", HKEX: "HKD", EURONEXT: "EUR", OMXHEX: "EUR", MIL: "EUR", BME: "EUR", VIE: "EUR", ATHEX: "EUR", ASX: "AUD", KRX: "KRW", GPW: "PLN", OMXSTO: "SEK", OMXCOP: "DKK", OSL: "NOK", TWSE: "TWD", TSX: "CAD", LSE: "GBP", SZSE: "CNY", SSE: "CNY", TADAWUL: "SAR", SGX: "SGD", BMFBOVESPA: "BRL", BMV: "MXN", TASE: "ILS" };
 const r1 = v => v == null || !isFinite(v) ? null : Math.round(v * 100) / 100;
 
-// Lignes Eulerpool (montants en millions, devise de cotation du profil) → comptes au format du site, ou { raison } si refusé
+// Lignes Eulerpool (montants en millions, devise de cotation du profil) → comptes au format du site, ou { raison } si refusé.
+// 5/11 (2e version) : une année douteuse au début de la série ne fait plus écarter la société : on garde les années propres
+// les plus récentes (au moins deux). Banques et assurances : seulement bénéfice, bénéfice par action et dividendes
+// (leurs « ventes » et fonds propres chez Eulerpool sont inutilisables), et bénéfice sans saut de plus de x4 d'une année à l'autre.
 export function convertirEP(c, { profil, inc, bs, cf }, auj = new Date().toISOString().slice(0, 10)) {
   if (!profil || !profil.currency) return { raison: "profil ou devise absents" };
-  if (c.sector === "finance") return { raison: "banque ou assurance : écartée" };
+  const fin_k = c.sector === "finance";
   const place = String(c.tv || "").split(":")[0], dc = DEVISE_PLACE[place];
   if (!dc) return { raison: `place de cotation non prévue (${place || "aucune"})` };
   if (dc !== profil.currency) return { raison: `comptes en ${profil.currency}, cotation en ${dc} : écartée (montants souvent faux)` };
   const reels = new Set((bs || []).map(x => String(x.period).slice(0, 10)).filter(p => p <= auj)); // le bilan ne contient que des exercices clos
-  const L = (inc || []).filter(x => { const p = String(x.period).slice(0, 10); return p <= auj && reels.has(p) && x.revenue != null; })
-    .sort((a, b) => String(a.period).localeCompare(String(b.period))).slice(-5);
-  if (L.length < 2) return { raison: `${L.length} exercice clos seulement` };
+  let L = (inc || []).filter(x => { const p = String(x.period).slice(0, 10); return p <= auj && reels.has(p) && (fin_k ? x.netIncome != null : x.revenue != null); })
+    .sort((a, b) => String(a.period).localeCompare(String(b.period)));
+  const an = x => String(x.period).slice(0, 4);
+  const ok1 = x => fin_k ? true : x.revenue > 0 && (x.netIncome == null || Math.abs(x.netIncome) <= x.revenue) && (x.ebit == null || Math.abs(x.ebit) <= x.revenue);
+  const saut = (a, b) => fin_k ? a.netIncome > 0 && b.netIncome > 0 && (b.netIncome / a.netIncome > 4 || a.netIncome / b.netIncome > 4) : b.revenue / a.revenue > 3 || a.revenue / b.revenue > 3;
+  let debut = 0, raison = "";
+  for (let i = 0; i < L.length; i++) {
+    if (!ok1(L[i])) { debut = i + 1; raison = `année ${an(L[i])} incohérente`; }
+    else if (i > debut && saut(L[i - 1], L[i])) { debut = i; raison = `saut ${an(L[i - 1])} → ${an(L[i])}`; }
+  }
+  L = L.slice(debut).slice(-5);
+  if (L.length < 2) return { raison: L.length ? `un seul exercice cohérent (${raison})` : raison || "aucun exercice clos" };
   const fin = String(L.at(-1).period).slice(0, 10), mois = (Date.parse(auj) - Date.parse(fin)) / 2629746e3;
   if (mois > 20) return { raison: `derniers comptes clos le ${fin}` };
-  for (let i = 0; i < L.length; i++) {
-    const x = L[i];
-    if (!(x.revenue > 0)) return { raison: `ventes nulles ou négatives (${String(x.period).slice(0, 4)})` };
-    if (x.netIncome != null && Math.abs(x.netIncome) > x.revenue) return { raison: `bénéfice supérieur aux ventes (${String(x.period).slice(0, 4)})` };
-    if (x.ebit != null && Math.abs(x.ebit) > x.revenue) return { raison: `résultat supérieur aux ventes (${String(x.period).slice(0, 4)})` };
-    if (i && (x.revenue / L[i - 1].revenue > 3 || L[i - 1].revenue / x.revenue > 3)) return { raison: `saut des ventes (${String(L[i - 1].period).slice(0, 4)} → ${String(x.period).slice(0, 4)})` };
-  }
   const bsP = Object.fromEntries((bs || []).map(x => [String(x.period).slice(0, 10), x]));
   const cfP = Object.fromEntries((cf || []).map(x => [String(x.period).slice(0, 10), x]));
   const years = L.map(x => +String(x.period).slice(0, 4)), per = L.map(x => String(x.period).slice(0, 10));
@@ -54,6 +59,7 @@ export function convertirEP(c, { profil, inc, bs, cf }, auj = new Date().toISOSt
     cfo, capex, fcf: col(p => r1(cfP[p] && cfP[p].fcf)).map((v, i) => v ?? (cfo[i] != null && capex[i] != null ? r1(cfo[i] - capex[i]) : null)),
     divPaid: col(p => cfP[p] && cfP[p].cashDividendsPaid != null ? r1(Math.abs(cfP[p].cashDividendsPaid)) : null),
   };
+  if (fin_k) for (const k of ["ca", "ebit", "cash", "debt", "netDebt", "cfo", "capex", "fcf"]) delete fin_[k];
   for (const k of Object.keys(fin_)) if (fin_[k].every(v => v == null)) delete fin_[k];
   const lien = `https://eulerpool.com/stock/${encodeURIComponent(c.isin)}`;
   return { comptes: { years, currency: profil.currency, fyEnd: fin.slice(5), fin: fin_, norme: SOURCE_EP,
@@ -82,9 +88,16 @@ async function main() {
   const seuls = (arg("--ids", "") || "").split(",").filter(Boolean), MAX = +arg("--max", 400), J = 864e5, maintenant = Date.now();
   const sansComptes = c => { const s = idx.companies[parId.get(c.id)]; return !s || s.missing || !existsSync(new URL(`societes/${c.id}.json`, OUT)); };
   const estEP = c => { const f = new URL(`societes/${c.id}.json`, OUT); return existsSync(f) && JSON.parse(readFileSync(f, "utf8")).sourceEP; };
-  const todo = U.filter(c => c.isin && !c.sec && !c.cik && c.sector !== "finance" && (seuls.length ? seuls.includes(c.id)
-    : (sansComptes(c) && (!cache[c.id] || maintenant - Date.parse(cache[c.id].d) > 20 * J)) // échec : nouvel essai au bout de 20 jours
-      || (estEP(c) && maintenant - Date.parse(cache[c.id] ? cache[c.id].d : 0) > 30 * J))) // fiche Eulerpool : relue tous les 30 jours (nouvel exercice)
+  const TOUT = process.argv.includes("--tout"); // tout redemander, sans tenir compte des essais récents
+  const lireF = c => { const f = new URL(`societes/${c.id}.json`, OUT); return existsSync(f) ? JSON.parse(readFileSync(f, "utf8")) : null; };
+  // Fiche officielle en retard : dernier exercice clos depuis plus de 13 mois (un rapport plus récent existe sans doute)
+  const enRetard = c => { const j = lireF(c); if (!j || j.sourceEP || j.sourcePdf || !(j.years || []).length) return false; const s = idx.companies[parId.get(c.id)] || {};
+    const clos = s.clos || `${j.years.at(-1)}-${j.fyEnd || "12-31"}`; return maintenant - Date.parse(clos) > 13 * 30.4 * J; };
+  const recent = (c, jours) => !TOUT && cache[c.id] && maintenant - Date.parse(cache[c.id].d) < jours * J;
+  const todo = U.filter(c => c.isin && !c.sec && !c.cik && (seuls.length ? seuls.includes(c.id)
+    : (sansComptes(c) && !recent(c, 20)) // échec : nouvel essai au bout de 20 jours
+      || (estEP(c) && !recent(c, 30)) // fiche Eulerpool : relue tous les 30 jours (nouvel exercice)
+      || (enRetard(c) && !recent(c, 20)))) // fiche officielle bloquée à un ancien exercice
     .slice(0, MAX);
   console.log(todo.length, "sociétés à demander à Eulerpool");
   let ok = 0, appels = 0;
@@ -98,6 +111,14 @@ async function main() {
       if (!r.comptes) { // une fiche Eulerpool qui ne passe plus les contrôles est retirée (pas de chiffre douteux laissé en ligne)
         if (estEP(c)) { unlinkSync(new URL(`societes/${c.id}.json`, OUT)); const k = parId.get(c.id); if (k != null) idx.companies[k] = { id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true }; console.log("retirée", c.id); }
         console.log("✗", c.id, r.raison); continue; }
+      const off = lireF(c);
+      if (off && !off.sourceEP && !off.sourcePdf) { // fiche officielle en retard : Eulerpool doit aller plus loin ET redonner les chiffres officiels
+        const k = c.sector === "finance" ? "net" : "ca", E = r.comptes, com = off.years.filter(y => E.years.includes(y));
+        const ecart = com.map(y => { const o = off.fin[k] && off.fin[k][off.years.indexOf(y)], e = E.fin[k] && E.fin[k][E.years.indexOf(y)]; return o && e != null ? Math.abs(e / o - 1) : null; }).filter(v => v != null);
+        const pourquoi = E.years.at(-1) <= off.years.at(-1) ? "pas plus récent que les comptes officiels" : off.currency !== E.currency ? `devise différente (${off.currency} / ${E.currency})`
+          : !ecart.length ? "aucune année commune pour vérifier" : Math.max(...ecart) > 0.03 ? `écart de ${Math.round(Math.max(...ecart) * 100)} % avec les comptes officiels` : "";
+        if (pourquoi) { cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: false, retard: true, pourquoi }; console.log("· gardée", c.id, pourquoi); continue; }
+      }
       const full = { v: VERSION, devise2: true, dette3: true, id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: c.lei || null, legalName: c.legal || c.name, sector: c.sector,
         ...r.comptes, sourceEP: true, updated: new Date().toISOString().slice(0, 10) };
       writeFileSync(new URL(`societes/${c.id}.json`, OUT), JSON.stringify(full));

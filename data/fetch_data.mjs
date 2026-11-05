@@ -304,10 +304,12 @@ async function main() {
       const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? (old.amfTried ? 20 : 0) : 70) * 3600e3; // France : premier essai AMF immédiat
       const esefSite = ESEF_SITES[c.id] && ESEF_SITES[c.id].ny > (lastY || 0); // 5/11 : paquet ESEF plus récent trouvé sur le site : relu tout de suite
       const sansCA = !old.fin || !Array.isArray(old.fin.ca) || old.fin.ca[old.fin.ca.length - 1] == null; // chiffre d'affaires absent : relu (étiquettes élargies le 30/10 : foncières, banques, services publics)
-      if (((old.sourcePdf || old.sourceEP) && old.v === VERSION) || old.v === VERSION && !sec20 && !deviseDouteuse && !detteDouteuse && !late && !esefSite && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      if ((old.sourcePdf && old.v === VERSION) || old.v === VERSION && !sec20 && !deviseDouteuse && !detteDouteuse && !late && !esefSite && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);
+      // 5/11 : comptes repris d'Eulerpool (data/eulerpool.mjs) : remplacés par les comptes officiels seulement s'ils vont aussi loin
+      if (existsSync(file)) { const old = JSON.parse(readFileSync(file)); if (old.sourceEP && (full.years || []).at(-1) < (old.years || []).at(-1)) { slots[i] = summary(old); return; } }
       writeFileSync(file, JSON.stringify(full));
       slots[i] = summary(full);
       if (++done % 25 === 0) console.log(done, "sociétés lues");

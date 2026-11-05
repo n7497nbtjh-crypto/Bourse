@@ -7,6 +7,9 @@ on:
       ids:
         description: "Seulement ces sociétés (identifiants séparés par des virgules)"
         default: ""
+      tout:
+        description: "Tout redemander, même ce qui a été essayé récemment (1 = oui)"
+        default: "0"
       retirer:
         description: "Retirer toutes les fiches Eulerpool (1 = oui)"
         default: "0"
@@ -31,7 +34,7 @@ jobs:
           EULERPOOL_KEY: ${{ secrets.EULERPOOL_KEY }}
         run: |
           node tests/t_eulerpool.mjs
-          if [ "${{ inputs.retirer }}" = "1" ]; then node data/eulerpool.mjs --retirer; else node data/eulerpool.mjs --max 400 ${{ inputs.ids && format('--ids {0}', inputs.ids) || '' }}; fi
+          if [ "${{ inputs.retirer }}" = "1" ]; then node data/eulerpool.mjs --retirer; else node data/eulerpool.mjs --max 600 ${{ inputs.tout == '1' && '--tout' || '' }} ${{ inputs.ids && format('--ids {0}', inputs.ids) || '' }}; fi
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
           git add data/eulerpool_cache.json cf/site/data/societes cf/site/data/societes.json
