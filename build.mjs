@@ -20,7 +20,10 @@ if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "
   const known = existsSync("cf/site/data/cours.json") ? JSON.parse(readFileSync("cf/site/data/cours.json", "utf8")).items || {} : {};
   gfParts(UNI, EL, INDICES, known).forEach((g, i) => wfs("cf/site/data/" + gfName(i), g)); }
 for (const f of ["parcours", "commencer", "legal", "academie", "questions"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
-if (existsSync("data/concurrents.json")) wfs("cf/site/data/concurrents.json", readFileSync("data/concurrents.json", "utf8"));
+// 5/11 : rivales écrites à la main d'abord, complétées par les rivales trouvées automatiquement (data/rivales_auto.mjs) quand il y en a moins de 3
+if (existsSync("data/concurrents.json")) { const M = JSON.parse(readFileSync("data/concurrents.json", "utf8")), A = existsSync("data/concurrents_auto.json") ? JSON.parse(readFileSync("data/concurrents_auto.json", "utf8")) : {};
+  for (const [id, l] of Object.entries(A)) M[id] = [...new Set([...(M[id] || []), ...l])];
+  wfs("cf/site/data/concurrents.json", JSON.stringify(M)); }
 { const R = {}; for (const f of ["france", "europe", "us"]) if (existsSync(`data/repartitions/${f}.mjs`)) Object.assign(R, (await import(`./data/repartitions/${f}.mjs`)).default); wfs("cf/site/data/repartitions.json", JSON.stringify(R)); }
 { const E = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; // updated : date du dernier relevé du catalogue des émetteurs (data/etf_collecte.mjs), et non une date écrite à la main
   let maj = null; try { maj = JSON.parse(readFileSync("data/etf_catalogue.json", "utf8")).updated || null; } catch (e) { }
