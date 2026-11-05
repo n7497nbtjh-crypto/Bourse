@@ -5,6 +5,7 @@
 //   node tests/t_coherence.mjs            résumé et exemples ; code de sortie 1 si une erreur bloquante
 //   node tests/t_coherence.mjs --tout     liste complète
 import { readdirSync, readFileSync, writeFileSync } from "node:fs";
+const VERIFIES = (() => { try { return JSON.parse(readFileSync("data/sauts-verifies.json", "utf8")); } catch (e) { return {}; } })();
 
 const DIR = "cf/site/data/societes", TOUT = process.argv.includes("--tout");
 const BANQUES = new Set(["banque", "assurance", "finance", "financier", "immobilier", "immo"]); // « immo » : clé réelle du secteur dans univers-min.json (5e passage)
@@ -58,6 +59,8 @@ for (const f of files) {
     const m0 = num(fin.ebit[i - 1]) && num(fin.ca[i - 1]) && fin.ca[i - 1] > 50 ? fin.ebit[i - 1] / fin.ca[i - 1] : null, m1 = num(fin.ebit[i]) && num(fin.ca[i]) && fin.ca[i] > 50 ? fin.ebit[i] / fin.ca[i] : null;
     if (m0 != null && m1 != null && years[i] === years[i - 1] + 1 && ((m0 < 0.1 && m1 > 0.5) || (m1 < 0.1 && m0 > 0.5))) { (doute.marge = doute.marge || []).push(years[i]); note("saut-marge", id, `marge ${years[i - 1]} → ${years[i]} : ${(m0 * 100).toFixed(0)} % → ${(m1 * 100).toFixed(0)} %`); }
   }
+  const ok = VERIFIES[id] || {}; // 5/11 : sauts réels vérifiés à la main (data/sauts-verifies.json)
+  for (const k of Object.keys(doute)) { doute[k] = doute[k].filter(y => !(ok[k] || []).includes(y)); if (!doute[k].length) delete doute[k]; }
   if (Object.keys(doute).length) AVERIFIER[id] = doute;
 }
 

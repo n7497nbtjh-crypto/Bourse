@@ -1,0 +1,19 @@
+{
+  "_note": "Sauts d'une année à l'autre vérifiés comme réels : la fiche n'affiche pas « à vérifier » (tests/t_coherence.mjs). Ajouter seulement avec la raison.",
+  "carnival": { "ca": [2022], "_pourquoi": "reprise des croisières après l'arrêt de 2020-2021" },
+  "royal-caribbean": { "ca": [2022], "_pourquoi": "reprise des croisières après l'arrêt de 2020-2021" },
+  "norwegian-cruise-line": { "ca": [2022], "equity": [2022], "_pourquoi": "reprise des croisières ; fonds propres réduits par les pertes de la pandémie" },
+  "biontech": { "ca": [2023], "_pourquoi": "fin des ventes du vaccin contre le Covid" },
+  "sinovac-biotech": { "ca": [2022, 2023], "marge": [2022], "_pourquoi": "fin des ventes du vaccin contre le Covid" },
+  "micron": { "ca": [2026], "_pourquoi": "133,2 Md$ de ventes sur l'exercice 2026 (10-K), envolée des prix de la mémoire" },
+  "sandisk": { "marge": [2026], "_pourquoi": "envolée des prix de la mémoire" },
+  "zealand-pharma": { "ca": [2024, 2025], "marge": [2025], "_pourquoi": "paiement d'entrée de Roche en 2025" },
+  "gubra": { "ca": [2025], "marge": [2025], "_pourquoi": "paiement d'entrée d'AbbVie en 2025" },
+  "astera-labs": { "ca": [2024], "equity": [2024], "_pourquoi": "forte croissance et entrée en Bourse en 2024" },
+  "amer-sports": { "equity": [2024], "_pourquoi": "entrée en Bourse en 2024" },
+  "tempus-ai": { "equity": [2024, 2025], "_pourquoi": "entrée en Bourse en 2024" },
+  "rivian": { "ca": [2022], "_pourquoi": "premières livraisons fin 2021" },
+  "first-citizens-bancshares": { "ca": [2023], "_pourquoi": "rachat de Silicon Valley Bank en 2023" },
+  "nebius-group": { "ca": [2025], "_pourquoi": "croissance de l'activité d'informatique pour l'IA" },
+  "western-digital": { "ca": [2023], "_pourquoi": "comptes refaits après la séparation de Sandisk" }
+}

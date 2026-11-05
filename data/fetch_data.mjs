@@ -19,6 +19,14 @@ import { extractSec, cikMap, factsUrl, subsUrl, recentFilings, estimatedAgenda, 
 import { amfAnnualFilings, amfDoc } from "./amf.mjs";
 const ESEF_SITES = (() => { try { return JSON.parse(readFileSync(new URL("./esef_sites.json", import.meta.url), "utf8")); } catch (e) { return {}; } })(); // data/esef_sites.mjs
 
+// 5/11 : chiffres reconnus faux dans la source (unité, ligne de compte erronée) : remplacés par « non relevé » à chaque relecture
+const CORRECTIONS = (() => { try { return JSON.parse(readFileSync(new URL("./corrections.json", import.meta.url), "utf8")); } catch (e) { return {}; } })();
+export function appliquerCorrections(full) {
+  const C = full && CORRECTIONS[full.id]; if (!C || !full.fin || !full.years) return full;
+  for (const [k, ans] of Object.entries(C)) { if (k.startsWith("_") || !Array.isArray(full.fin[k])) continue; for (const y of ans) { const i = full.years.indexOf(y); if (i >= 0) full.fin[k][i] = null; } }
+  full.corrige = true; return full;
+}
+
 const OUT = new URL("../cf/site/data/", import.meta.url);
 export const UA = "Repere/0.3 site-pedagogique " + (process.env.CONTACT || "github.com/n7497nbtjh-crypto/bourse");
 const sleep = ms => process.env.NO_SLEEP ? Promise.resolve() : new Promise(r => setTimeout(r, ms));
@@ -308,6 +316,7 @@ async function main() {
     }
     try {
       const full = await collectOne(fetch, c);
+      appliquerCorrections(full); // 5/11 : chiffres faux de la source retirés (data/corrections.json)
       // 5/11 : comptes repris d'Eulerpool (data/eulerpool.mjs) : remplacés par les comptes officiels seulement s'ils vont aussi loin
       if (existsSync(file)) { const old = JSON.parse(readFileSync(file)); if (old.sourceEP && (full.years || []).at(-1) < (old.years || []).at(-1)) { slots[i] = summary(old); return; } }
       writeFileSync(file, JSON.stringify(full));

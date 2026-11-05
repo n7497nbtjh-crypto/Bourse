@@ -28,6 +28,10 @@ export function parseCours(txt) {
     if (cur === "GBX") { cur = "GBP"; k = 0.01; } // cours de Londres en pence
     const o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num(r[col("chg")]), cap: num(r[col("cap")]) };
     for (const f of ["h52", "l52", "p1y", "p3y", "p5y"]) { const x = num(r[col(f)]); o[f] = x != null ? x * k : null; }
+    // 5/11 : Londres, Google donne parfois le plus haut sur un an en pence et le cours en livres (Compass : 34,11 £ et « 2 563 ») : ramené à la même unité
+    if (o.p > 0 && cur === "GBP") for (const f of ["h52", "l52", "p1y", "p3y", "p5y"]) { const x = o[f]; if (x > 0 && x / o.p > 30) o[f] = x / 100; else if (x > 0 && o.p / x > 30) o[f] = x * 100; }
+    // fourchette sur un an qui n'encadre pas le cours du jour : fausse, retirée
+    if (o.p > 0 && o.h52 > 0 && o.l52 > 0 && (o.p > o.h52 * 1.05 || o.p < o.l52 * 0.95 || o.l52 > o.h52)) { o.h52 = null; o.l52 = null; }
     if (o.p != null) out[id] = o;
   }
   return out;

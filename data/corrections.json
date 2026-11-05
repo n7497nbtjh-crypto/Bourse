@@ -1,0 +1,11 @@
+{
+  "_note": "Chiffres faux dans la source, retirés à chaque relecture (data/fetch_data.mjs, appliquerCorrections). Format : id -> champ -> années. Vérifier avant d'ajouter : un saut réel (rachat, crise, contrat géant) n'est pas une erreur.",
+  "adyen": { "ca": [2022], "_pourquoi": "2022 : volume brut au lieu du chiffre d'affaires net (8 936 M€ contre environ 1,3 Md€)" },
+  "banco-de-chile": { "ca": [2021, 2022], "_pourquoi": "2021-2022 en milliards de pesos au lieu de millions" },
+  "general-mills": { "ca": [2022, 2023, 2024], "_pourquoi": "environ 2 Md$ relevés pour des ventes d'environ 19 à 20 Md$" },
+  "jinkosolar-holding": { "ca": [2022, 2023, 2024], "_pourquoi": "quelques centaines de millions de yuans relevés pour des ventes de dizaines de milliards" },
+  "nio": { "ca": [2021, 2022, 2023], "_pourquoi": "58 à 167 relevés pour des ventes de dizaines de milliards de yuans" },
+  "lloyds": { "ca": [2022], "_pourquoi": "chiffre d'affaires négatif" },
+  "regions-financial": { "ca": [2021], "_pourquoi": "104 M$ relevés pour une banque à plus de 6 Md$ de revenus" },
+  "old-national-bank": { "ca": [2021], "_pourquoi": "126 M$ relevés, sans rapport avec les années suivantes" }
+}
