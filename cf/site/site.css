@@ -765,7 +765,7 @@ table.pft select,table.pft input{border:1px solid var(--line);border-radius:8px;
 .nbtop{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap;margin-bottom:10px}.nbq{margin:4px 0 0;font-size:15px}.nbq a{color:var(--g);font-weight:600}
 .nbtop .btn{display:inline-flex;align-items:center;text-decoration:none;height:40px}
 .toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;pointer-events:none;background:var(--ink);color:#fff;padding:12px 18px;border-radius:12px;font-size:14px;max-width:min(92vw,520px);transition:.25s;z-index:60}
-.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}.toast a{color:#9FE3C2;font-weight:600}
+.toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}.toast a{color:#FFE14D;font-weight:600}
 .pmini{display:grid;grid-template-columns:repeat(auto-fit,minmax(78px,1fr));gap:6px 10px;margin:12px 0 4px}
 .pmini span{display:flex;flex-direction:column;gap:3px}.pmini small{font-size:11px;color:var(--light);text-transform:uppercase;letter-spacing:.04em}
 .pmini .pl,.pcmp .pl{position:relative;display:block;height:4px;border-radius:4px;background:var(--line2)}

@@ -315,8 +315,13 @@ document.addEventListener("click", e => { if (e.target.closest("[data-signaler]"
       if (typeof isFav !== "function" || !isFav(b.dataset.fav)) return;
       let t = document.querySelector(".orcfavt");
       if (!t) { t = document.createElement("div"); t.className = "orcfavt"; t.setAttribute("role", "status"); document.body.appendChild(t); }
-      t.innerHTML = `<span>Ajouté à vos favoris. Retrouvez-les avec <b>★ Favoris</b> en haut de page.</span><a href="/favoris">Voir</a>`;
-      requestAnimationFrame(() => t.classList.add("vis")); clearTimeout(tm); tm = setTimeout(() => t.classList.remove("vis"), 3800);
+      // 5/11 (Romain) : rappel du rapport du samedi, les trois premiers ajouts seulement
+      let n = 0; try { n = +localStorage.getItem("bilan.favrap") || 0; localStorage.setItem("bilan.favrap", n + 1); } catch (e) { }
+      const prem = typeof isPrem === "function" && isPrem(), rap = n >= 3 ? "" : prem
+        ? `<span class="orcfavr">★ Son actualité sera dans votre <a href="/espace">rapport du samedi</a>.</span>`
+        : `<span class="orcfavr">★ Chaque samedi, le rapport Premium résume l'actualité de vos favoris. <a href="/rapport-exemple">Voir un exemple</a></span>`;
+      t.innerHTML = `<span>Ajouté à vos favoris. Retrouvez-les avec <b>★ Favoris</b> en haut de page.${rap}</span><a href="/favoris">Voir</a>`;
+      requestAnimationFrame(() => t.classList.add("vis")); clearTimeout(tm); tm = setTimeout(() => t.classList.remove("vis"), rap ? 7000 : 3800);
     }, 0);
   });
 })();

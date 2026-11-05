@@ -1570,3 +1570,7 @@ html body .ek.pf4 #pf3dash>details.pf4v>summary>.pf4-ti{display:grid}html body .
 .s6 .s6-dt{font:800 18px "Bricolage Grotesque",Inter,sans-serif;background:#FFE14D;border:2px solid #111;border-radius:10px;text-align:center;padding:4px 0}.s6 .s6-ag b{font:700 15px Inter,sans-serif}.s6 .s6-ag em{font:700 12px Inter,sans-serif;font-style:normal;color:#555}
 @media(max-width:760px){.s6 .s6-hero{padding:20px 18px}.s6 .s6-tiles{grid-template-columns:1fr 1fr}.s6 .s6-cos,.s6 .s6-ctx,.s6 .s6-pfw{grid-template-columns:minmax(0,1fr)}.s6 .s6-co li{grid-template-columns:minmax(0,1fr);gap:6px}.s6 .s6-tg{justify-self:start}.s6 .s6-cb{grid-template-columns:minmax(0,1fr) 70px}.s6 .s6-cbz,.s6 .s6-cbv{display:none}.s6 .s6-ag>div{grid-template-columns:70px minmax(0,1fr)}.s6 .s6-ag .lg,.s6 .s6-ag em{display:none}}
 .s6 .s6-agn{display:flex;gap:16px;align-items:center;margin-top:10px;font:700 14px Inter,sans-serif}.s6 .s6-ics{border:2px solid #111;border-radius:999px;padding:7px 14px;background:#fff;font:700 14px Inter,sans-serif;cursor:pointer}.s6 .s6-agn a{color:#111}
+
+/* Message après un ajout en favori : rappel du rapport du samedi (5/11) */
+.orcfavt .orcfavr{display:block;margin-top:5px;color:#FFE14D}
+.orcfavt .orcfavr a{color:#FFE14D}

@@ -19,6 +19,11 @@ window.pf3Hero = function (R0, P) {
         if (!P.dem && !$("#pf4chute")) s.insertAdjacentHTML("afterend", typeof isPrem === "function" && isPrem()
           ? `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span>Une de vos lignes chute de plus de 5 % ? Vous recevez une notification le soir même. <a href="/espace/reglages">Notifications sur ce téléphone</a></span></p>`
           : `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span><b>Une de vos lignes chute de plus de 5 % ?</b> Avec Premium, ENKLAIR vous envoie une notification le soir même. <a href="/premium#alertes">Être prévenu</a></span></p>`);
+        // 5/11 (Romain) : rappel discret du rapport du samedi
+        const ch = $("#pf4chute");
+        if (!P.dem && ch && !$("#pf4rap")) ch.insertAdjacentHTML("afterend", typeof isPrem === "function" && isPrem()
+          ? `<p class="pf4-chute" id="pf4rap"><span aria-hidden="true">★</span> <span>Chaque samedi, votre <a href="/espace">rapport de la semaine</a> raconte ce qui s'est passé pour ces lignes et vos favoris.</span></p>`
+          : `<p class="pf4-chute" id="pf4rap"><span aria-hidden="true">★</span> <span><b>Ce qui s'est passé pour vos lignes, chaque samedi.</b> Le rapport de la semaine (Premium) le raconte en deux minutes. <a href="/rapport-exemple">Voir un exemple</a></span></p>`);
         s.innerHTML = `${T.gainPct == null ? "Plus-value inconnue (cours manquants)" : `<b>${pf3Sg(T.gain)}</b> (${pf3Pc(T.gainPct)}) si vous vendiez aujourd'hui`}, sur ${pf3Eu(T.cost)} investis${T.dayN ? `, ${pf3Sg(T.day)} depuis hier` : ""}. ${P.dem ? "Portefeuille d'exemple : rien n'est enregistré." : `Calculé dans ce navigateur${typeof connecte === "function" && connecte() ? " et enregistré dans votre espace" : ""}.`}`;
       } else {
         h.textContent = "Ce que vous possédez vraiment.";
