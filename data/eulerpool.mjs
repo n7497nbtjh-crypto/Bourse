@@ -71,6 +71,8 @@ export function convertirEP(c, { profil, inc, bs, cf, dv }, auj = new Date().toI
       // versements trimestriels (au moins 7 en deux ans : Samsung) : les quatre détachements de l'exercice lui-même
       const trim = T.filter(x => x.t > e - 730 * 864e5 && x.t <= e).length >= 7;
       const v = T.filter(x => trim ? x.t > e - 355 * 864e5 && x.t <= e + 10 * 864e5 : x.t > e - av && x.t <= e + ap).reduce((a, x) => a + x.v, 0), eps = fin_.eps[i];
+      // Aucun versement dans la fenêtre alors qu'il y en a avant et après : trou chez Eulerpool (China Merchants Bank 2024), pas « 0 »
+      if (!v && T.some(x => x.t <= e - av) && T.some(x => x.t > e + ap)) return null;
       return eps > 0 && v / eps > 1.5 ? null : Math.round(v * 1e4) / 1e4; });
   }
   if (fin_k) for (const k of ["ca", "ebit", "cash", "debt", "netDebt", "cfo", "capex", "fcf"]) delete fin_[k];
