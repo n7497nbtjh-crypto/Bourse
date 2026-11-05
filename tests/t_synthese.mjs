@@ -125,6 +125,10 @@ const req = (method, path, body, h = {}) => new Request("https://t.local" + path
 const E = async (method, path, body, cookie) => { const r = await espace(req(method, path, body, cookie ? { cookie } : {}), env); return [r.status, await r.json(), r.headers.get("set-cookie")]; };
 let [s, j, sc] = await E("POST", "/api/espace/inscription", { email: "s@ex.fr", motdepasse: "motdepasse-solide", favoris: ["c:alpha"], portefeuille: { l: [{ k: "c:alpha", q: 10, pru: 80 }] } });
 const C = sc.split(";")[0];
+// 5/11 : le rapport de la semaine est réservé à Premium (4/11) : le compte de test reçoit un abonnement
+{ const tok = "5".repeat(40), id = sql.prepare("SELECT id FROM comptes WHERE email = 's@ex.fr'").get().id;
+  sql.prepare("INSERT OR IGNORE INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, 's@ex.fr', 'unique', NULL, ?, ?, ?)").run(tok, "cs_" + tok.slice(0, 6), Date.now() + 300 * 864e5, Date.now());
+  sql.prepare("UPDATE comptes SET premium = ? WHERE id = ?").run(tok, id); }
 [s, j] = await E("GET", "/api/espace/bilan?apercu=1", null, C);
 ok(s === 200 && j.v === 2 && j.lignes[0].variation_semaine_pct === 5 && j.portefeuille.valeur_eur === 1050 && j.portefeuille.var_eur === 50 && j.essentiel.length >= 2 && j.texte === null && aiCalls === 0 && j.historique.length === 0 && j.en_cours, "aperçu : chiffres sans appel au modèle " + JSON.stringify(j).slice(0, 300));
 ok(j.annonces[0].resume === "Les ventes montent." && j.indices.find(i => i.id === "cac40").pct === 2.5 && j.lignes[0].ecart_pts === 2.5, "annonce et indice dans la réponse");
