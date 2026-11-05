@@ -168,7 +168,8 @@
 .ek-tvbox{margin-top:16px;background:#fff;border:2px solid var(--ek-ink);border-radius:22px;padding:14px 14px 10px;height:440px;display:flex;flex-direction:column}
 .ek-tvbox>*{flex:1 1 auto;min-height:0}
 @media (max-width:760px){.ek-tvbox{height:340px;padding:8px}}
-.ek-pcard .ek-peur{font-size:14px;color:#333;margin:2px 0 6px}
+.ek-pcard .ek-peur{font:600 13px Inter;color:#666;margin:2px 0 4px}
+.ek-hero .ek-fx{font:500 12px/1.45 Inter;color:#555;margin:8px 0 0;max-width:80ch}
 .ek-pcard .ek-peur b{font-weight:700}
 .ek-vrd{display:flex;align-items:center;gap:18px;margin-top:30px;flex-wrap:wrap}
 .ek-vrd .ek-stk2{display:inline-block;font:800 14px "Bricolage Grotesque",Inter,sans-serif;padding:5px 12px;border-radius:10px;border:2px solid var(--ek-ink);box-shadow:3px 3px 0 var(--ek-ink);transform:rotate(-3deg);background:#fff}
@@ -1693,3 +1694,7 @@ html #app .esphead2 .esp-abo{display:flex;gap:12px;align-items:center;flex-wrap:
 .ek.pm5 .pm5-pied{font:500 12.5px Inter;color:#666;margin-top:40px}
 @media(max-width:900px){.ek.pm5 .pm5-hero{grid-template-columns:1fr;padding:22px 18px;border-radius:26px;gap:22px}.ek.pm5 .pm5-av,.ek.pm5 .pm5-av.inv{grid-template-columns:1fr;gap:20px;margin-top:40px}.ek.pm5 .pm5-av.inv .pm5-tx{order:0}.ek.pm5 .pm5-tr,.ek.pm5 .pm5-faq{grid-template-columns:1fr}.ek.pm5 .pm5-fin{grid-template-columns:1fr;padding:24px}.ek.pm5 .pm5-vis{padding:18px;min-height:0}.ek.pm5 .pm5-sec{margin-top:50px}}
 @media(max-width:700px){.ek.pm5 .pm5-vs{min-width:0}.ek.pm5 .pm5-vs>div{grid-template-columns:repeat(5,1fr)}.ek.pm5 .pm5-vs>div>span:first-child{grid-column:1/-1;border-left:0;padding:10px 10px 4px;font-size:13.5px}.ek.pm5 .pm5-vs>div:first-child>span:first-child{display:none}.ek.pm5 .pm5-vs span{padding:6px 3px 10px;font-size:11px;overflow-wrap:anywhere}.ek.pm5 .pm5-vs span+span{border-left:0}.ek.pm5 .pm5-vs .mi{font-size:10.5px}.ek.pm5 .pm5-vs>div:first-child span{padding:8px 3px;font-size:11px}}
+
+/* 5/11 soir : le résumé des cartes de téléphone n'existe que sur téléphone (il apparaissait sur ordinateur) */
+.f4m-h,.f4m-chev,.f4m-sous,.f4m-nb{display:none}
+@media(max-width:760px){.f4m .f4m-h{display:grid}.f4m .f4m-chev{display:grid}.f4m .f4m-sous{display:block}.f4m .f4m-nb{display:block}}

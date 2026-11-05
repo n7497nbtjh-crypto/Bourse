@@ -42,6 +42,9 @@ Gratuit : fiches, actualité, agenda, outils, Apprendre, portefeuille, Comparer 
 ## Avant de pousser (compétence `bilan-mise-en-ligne`)
 `node build.mjs` puis `git checkout -q cf/site/data/gf*.csv` (ne jamais committer gf*.csv à la main) ; `node scripts/check-doublons.js`, `node scripts/check-coherence.js`, `node tests/t_coherence.mjs` ; fiche : `node scripts/relire-visuel.js 20` et `node scripts/relire-fiches.js 40` (0 problème attendu, lire le rapport) ; pages : `node scripts/relire-pages.js` ; serveur modifié : `npx esbuild cf/src/worker.mjs --bundle --format=esm --outfile=/tmp/w.js` ; puis une seule fois `timeout 590 python3 tests/audit.py` (0 problème). Captures locales : `scripts/_site.js` (`ouvrir`, `aller`). Pousser : `git pull -q --rebase --autostash origin main && git push -q origin HEAD:main`.
 
+## Devises (5/11 soir, décision de Romain)
+Sur la fiche, tout montant hors euro est converti en euros au taux BCE du jour et marqué « * » (`f4Md`, `f4Par`, `f4Cols` de fiche4.js) ; une seule note sous les repères (`.ek-fx`) ; cours de l'action dans sa devise avec « ≈ … €* » discret ; « sur 100 € » pour les rapports (sans devise). Plus jamais de « (≈ … €) » en ligne. Les tableaux de « Tous les chiffres » restent dans la devise des comptes.
+
 ## Pièges connus
 - **Ne jamais ajouter un commentaire `//` au milieu d'une ligne de code** : il a coupé du code cinq fois. Vérifier `node --check` et un vrai passage.
 - Les robots fusionnent avec `-X theirs` : ne pas corriger un cache ou l'index pendant qu'un robot tourne. `data/index_reparer.mjs` remet les sociétés qu'un robot ancien aurait effacées.

@@ -188,7 +188,7 @@ table.fin td.ref{color:var(--light)}
 .lines .x{background:none;border:0;cursor:pointer;color:var(--grey);font-size:18px;line-height:1;padding:0}
 .linkbtn{background:none;border:0;padding:2px 0;color:var(--link);cursor:pointer;font-size:13.5px}
 .linkbtn:hover{text-decoration:underline}
-.btn{display:inline-block;height:36px;padding:0 16px;border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;font-weight:500;font-size:14px}
+.btn{display:inline-flex;align-items:center;justify-content:center;text-decoration:none;height:36px;padding:0 16px;border-radius:4px;border:1px solid var(--ink);background:var(--ink);color:#fff;cursor:pointer;font-weight:500;font-size:14px}
 .figs{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--rule);border-radius:4px;margin-bottom:14px}
 .figs > div{padding:10px 12px;border-right:1px solid var(--soft)}
 .figs > div:last-child{border-right:0}

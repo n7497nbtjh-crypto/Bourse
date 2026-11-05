@@ -13,9 +13,14 @@
 const F4 = { on: true };
 const F4_SYM = c => (typeof CUR !== "undefined" && CUR[c]) || " " + (c || "");
 // 5/11 (Romain) : montant hors euro suivi de son équivalent en euros, au taux BCE du jour (fx.json)
-function f4EnEur(m, cur) { if (!cur || cur === "EUR" || m == null || typeof toEur !== "function") return ""; const e = toEur(m, cur); return e != null && isFinite(e) ? ` (≈ ${f4Md(e, "EUR")})` : ""; }
-function f4Md(m, cur) { // montant en millions → « 16,0 Md€ » / « 852 M€ »
+// 5/11 soir (Romain : plus de « (≈ … €) » partout) : tout montant hors euro est converti en euros au taux BCE du jour et marqué d'un astérisque ;
+// une seule note l'explique, sous les repères (f4NoteFx). La forme du graphique ne change pas (même taux pour toutes les années).
+function f4EnEur() { return ""; }
+const f4Par = (v, cur) => { const k = f4Kfx(cur), w = k ? v * k : v; return ekFr(w, w >= 10 ? 0 : 2) + " " + (k ? "€*" : F4_SYM(cur).trim()); }; // dividende par action
+const f4Kfx = cur => { if (!cur || cur === "EUR" || typeof toEur !== "function") return null; const k = toEur(1, cur); return k > 0 && isFinite(k) ? k : null; };
+function f4Md(m, cur) { // montant en millions → « 16,0 Md€ » / « 852 M€ » ; hors euro : « 221 Md€* »
   if (m == null || !isFinite(m)) return "–";
+  const kfx = f4Kfx(cur); if (kfx) return f4Md(m * kfx, "EUR") + "*";
   const a = Math.abs(m), s = m < 0 ? "−" : "";
   return s + (a >= 1000 ? ekFr(a / 1000, a >= 100000 ? 0 : 1) + " Md" : ekFr(a, 0) + " M") + F4_SYM(cur).trim().replace(/^(?=[A-Z])/, " ");
 }
@@ -76,7 +81,7 @@ function f4Ton(v, m, basEstMieux, ecartAbs) { // "g" mieux, "r" moins bien, "" c
 function f4Ctx(s, c) {
   const bk = isBank(s) || !f4Valide(s), P = f4Rivales(s, bk), M = f4M(s), MED = {};
   ["g", "ng", "m", "nm", "roe", "pay", "pe", "yld"].forEach(k => MED[k] = f4Med(P.L.map(x => f4M(x)[k]).filter(v => !(k === "pay" && v > 1.5))));
-  return { bk, s, c, P, M, MED, cur: s.currency, sym: F4_SYM(s.currency).trim(), nom: s.name, rap: ((c.sources || [])[0] || {}).report || null };
+  return { bk, s, c, P, M, MED, cur: s.currency, sym: "€", nom: s.name, rap: ((c.sources || [])[0] || {}).report || null };
 }
 async function pageCompany4(id, tab) {
   const s = RBY[id];
@@ -93,6 +98,8 @@ async function pageCompany4(id, tab) {
   try { html = f4Tete(s, c, ctx) + f4MetierSec(ctx) + f4Fil(ctx) + `<div id="f4-annee"></div>` + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
+  const kfx = f4Kfx(s.currency), md = app.querySelector(".ek-medl");
+  if (kfx && md) md.insertAdjacentHTML("afterend", `<p class="ek-fx">* Montants convertis en euros au taux de la BCE${window.FXDATE ? " du " + new Date(window.FXDATE + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : ""} (${kfx < 0.05 ? `1 € = ${ekFr(1 / kfx, 0)} ${esc(s.currency)}` : `1 ${esc(s.currency)} = ${ekFr(kfx, 3)} €`}). Comptes publiés en ${esc(s.currency)} : les chiffres d'origine sont dans « Tous les chiffres ».</p>`);
   window.F4X = ctx; f4Ancres(ctx); f4Trim(ctx); if (typeof f4Annee === "function") f4Annee(ctx); f4Mobile(); // l'année en cours (m/annee4.js) ; cartes fermées sur téléphone
   if (typeof ctxCharge === "function") ctxCharge().then(() => { if (window.F4X === ctx) { f4Contexte(ctx); f4MSecteur(); } });
   const ANC = { "rf-resultats": "e1", "rf-rentab": "e2", "rf-dette": "e3", "rf-div": "e4", "rf-valo": "e5", "f3-metier": "metier", "tous-les-chiffres": "tout", "rf-concurrents": "tout", "concurrents": "tout" }; // anciennes ancres (liens déjà partagés)
@@ -114,7 +121,7 @@ function f4Tete(s, c, x) {
   if (p) {
     const ch = p.chg, pos = p.h52 > p.l52 && p.l52 > 0 && p.h52 / p.l52 <= 3 ? Math.max(0, Math.min(100, (p.p - p.l52) / (p.h52 - p.l52) * 100)) : null, dd = p.h52 > 0 ? p.p / p.h52 - 1 : null;
     pc = `<div class="ek-pcard"><div class="ek-p"><b>${esc(pxFmt(p.p, p.cur))}</b>${ch != null ? `<span style="color:${ch > 0 ? EK_G : ch < 0 ? EK_R : "#555"}">${ch > 0 ? "+" : ""}${ekFr(ch, 2)} % ${p.ep ? "sur la séance" : esc(typeof jourSeance === "function" ? jourSeance() : "")}</span>` : ""}</div>
-      ${p.cur && p.cur !== "EUR" && typeof toEur === "function" && isFinite(toEur(p.p, p.cur)) ? `<div class="ek-peur">soit environ <b>${esc(pxFmt(toEur(p.p, p.cur), "EUR"))}</b> par action (1 ${esc(p.cur)} = ${esc(ekFr(toEur(1, p.cur), toEur(1, p.cur) < 0.1 ? 4 : 3))} €, taux de la BCE)</div>` : ""}
+      ${p.cur && p.cur !== "EUR" && typeof toEur === "function" && isFinite(toEur(p.p, p.cur)) ? `<div class="ek-peur">≈ ${esc(pxFmt(toEur(p.p, p.cur), "EUR"))}*</div>` : ""}
       <small>${p.ep && p.d ? `Cours de clôture du ${esc(new Date(p.d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))} · <a href="https://eulerpool.com" target="_blank" rel="noopener">Data by Eulerpool</a>` : `Cours différé${typeof PXUP === "string" && PXUP !== "none" ? ", relevé le " + esc(new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : ""}`}</small>
       ${pos != null ? `<div class="ek-rg"><i style="left:${pos}%"></i><em style="left:${pos}%">aujourd'hui</em></div><div class="ek-rgl"><span>plus bas ${esc(pxFmt(p.l52, p.cur))}</span><span>plus haut ${esc(pxFmt(p.h52, p.cur))}</span></div>
       <p>Sur un an, l'action a valu entre ${esc(pxFmt(p.l52, p.cur))} et ${esc(pxFmt(p.h52, p.cur))}.${dd != null && dd < -0.03 ? ` Elle est aujourd'hui <b>${ekFr(-dd * 100, 0)} % sous son plus haut</b>.` : " Elle est proche de son plus haut."}</p>` : ""}
@@ -155,7 +162,7 @@ function f4Chaine(x) {
   if (!x.bk) R5.push(
     ["Son bénéfice", M.nm != null ? ekFr(M.nm * 100, 0) + " " + sym : "–", f4Ton(M.nm, MED.nm), `${M.nm != null && M.nm < 0 ? "de perte" : "de bénéfice"} sur 100 ${sym} de ventes`, f4Jauge(M.nm, MED.nm), MED.nm != null ? `${x.P.court} : ${ekFr(MED.nm * 100, 1)} ${sym}` : ""]);
   R5.push(
-    ["Son dividende", M.pay != null ? (M.pay > 1.5 ? "> 100 %" : f4Pc(M.pay, 0)) : s.divPaid || s.dps || (x.c && (x.c.sourcePdf || x.c.sourceEP)) ? "–" : "0 %", "", M.pay > 1.5 ? "le dividende dépasse le bénéfice de l'année" : s.dps ? `du bénéfice versé : ${ekFr(s.dps, s.dps >= 10 ? 0 : 2)} ${sym} par action` : "du bénéfice versé", f4Jauge(M.pay, MED.pay), MED.pay != null ? `${x.P.court} : ${f4Pc(MED.pay, 0)}` : ""],
+    ["Son dividende", M.pay != null ? (M.pay > 1.5 ? "> 100 %" : f4Pc(M.pay, 0)) : s.divPaid || s.dps || (x.c && (x.c.sourcePdf || x.c.sourceEP)) ? "–" : "0 %", "", M.pay > 1.5 ? "le dividende dépasse le bénéfice de l'année" : s.dps ? `du bénéfice versé : ${f4Par(s.dps, s.currency)} par action` : "du bénéfice versé", f4Jauge(M.pay, MED.pay), MED.pay != null ? `${x.P.court} : ${f4Pc(MED.pay, 0)}` : ""],
     ["Son prix en Bourse", M.pe != null ? ekFr(M.pe, 0) + " fois" : "–", "", M.pe != null ? "son bénéfice annuel (PER)" : "PER non significatif", f4Jauge(M.pe, MED.pe, true), MED.pe != null ? `${x.P.court} : ${ekFr(MED.pe, 0)} fois` : ""]);
   return `<div class="ek-chain" style="--n:${R5.length}">${R5.map((r, i) => `<a class="ek-rp" href="#e${i + 1}"><span class="ek-st"><i>${i + 1}</i>${esc(r[0])}</span><span class="ek-v ${r[2]}">${esc(r[1])}</span><span class="ek-s">${esc(r[3])}</span>${r[4]}<span class="ek-ml">${esc(r[5])}</span><span class="ek-go">Comprendre <span>↓</span></span></a>`).join("")}</div>`;
 }
@@ -195,12 +202,13 @@ function f4E1(x) {
 }
 
 function f4Cols(x, se, titre, ligne, indice, fmtD) {
-  const cur = x.s.currency, md = Math.max(...se.v.filter(v => v != null).map(Math.abs)) >= 1000, f = v => md ? ekFr(v / 1000, fmtD != null ? fmtD : (Math.abs(v) >= 100000 ? 0 : v >= 10000 ? 1 : 2)) : ekFr(v, 0);
+  const kfx = f4Kfx(x.s.currency); if (kfx) se = { ...se, v: se.v.map(v => v == null ? null : v * kfx) };
+  const cur = kfx ? "EUR" : x.s.currency, md = Math.max(...se.v.filter(v => v != null).map(Math.abs)) >= 1000, f = v => md ? ekFr(v / 1000, fmtD != null ? fmtD : (Math.abs(v) >= 100000 ? 0 : v >= 10000 ? 1 : 2)) : ekFr(v, 0);
   // Échelle commune aux gains et aux pertes : le pas vient de l'écart total, le haut de l'axe du plus grand gain (0 s'il n'y a que des pertes)
   const vv = se.v.filter(v => v != null), hi = Math.max(0, ...vv), lo = Math.min(0, ...vv), base = f4Nice(lo < 0 ? hi - lo : hi), pas = base.ticks.length > 1 ? base.ticks[1] - base.ticks[0] : base.max;
   const top = lo < 0 ? Math.ceil(hi * 1.12 / pas) * pas : base.max, tk = []; for (let t = 0; t <= top + 1e-9; t += pas) tk.push(+t.toFixed(10));
   const nm = lo < 0 ? { max: top, ticks: tk, pas } : base;
-  return ekColonnes({ titre, unite: `en ${md ? "milliards" : "millions"} ${cur === "EUR" ? "d'€" : "de " + x.sym}`, annees: se.y, valeurs: se.v, fmt: f, max: nm.max, pas: nm.pas, graduations: nm.ticks, fmtAxe: t => md ? ekFr(t / 1000, t / 1000 < 10 && t % 1000 ? 1 : 0) : ekFr(t, 0), ligne, indice, source: f4Src(x, "Comptes officiels, exercices clos") });
+  return ekColonnes({ titre, unite: `en ${md ? "milliards" : "millions"} ${cur === "EUR" ? "d'€" + (kfx ? "*" : "") : "de " + x.sym}`, annees: se.y, valeurs: se.v, fmt: f, max: nm.max, pas: nm.pas, graduations: nm.ticks, fmtAxe: t => md ? ekFr(t / 1000, t / 1000 < 10 && t % 1000 ? 1 : 0) : ekFr(t, 0), ligne, indice, source: f4Src(x, "Comptes officiels, exercices clos") });
 }
 
 function f4MetierSec(x) { // avant les étapes : à quoi correspondent les chiffres qui suivent
@@ -299,7 +307,7 @@ function f4E3(x) {
 function f4E4(x) {
   const { s, c, M, MED, P, sym } = x, cur = s.currency, pay = M.pay, dv = f4Serie(c, "dps"), dp = f4Serie(c, "divPaid");
   const rien = !s.divPaid && !s.dps && !(c.sourcePdf || c.sourceEP), parAction = !s.divPaid && s.dps > 0; // 4/11 : comptes lus dans un PDF sans ligne de dividende : non relevé, pas « aucun dividende »
-  const titre = (c.sourcePdf || c.sourceEP) && !s.divPaid && !s.dps ? "Le dividende n'a pas encore été relevé dans son rapport annuel." : rien ? "Elle ne verse pas de dividende : elle garde tout son bénéfice." : pay > 1.5 ? "Elle verse plus que son bénéfice de l'année : le dividende puise dans ses réserves." : pay != null ? `${f4Pc(Math.min(pay, 9.99), 0)} pour les actionnaires${s.dps ? `, soit ${ekFr(s.dps, s.dps >= 10 ? 0 : 2)} ${sym} par action` : ""}.` : s.net != null && s.net <= 0 ? "Le dividende est versé malgré un bénéfice nul ou négatif." : "La part du bénéfice versée n'est pas calculable cette année.";
+  const titre = (c.sourcePdf || c.sourceEP) && !s.divPaid && !s.dps ? "Le dividende n'a pas encore été relevé dans son rapport annuel." : rien ? "Elle ne verse pas de dividende : elle garde tout son bénéfice." : pay > 1.5 ? "Elle verse plus que son bénéfice de l'année : le dividende puise dans ses réserves." : pay != null ? `${f4Pc(Math.min(pay, 9.99), 0)} pour les actionnaires${s.dps ? `, soit ${f4Par(s.dps, s.currency)} par action` : ""}.` : s.net != null && s.net <= 0 ? "Le dividende est versé malgré un bénéfice nul ou négatif." : "La part du bénéfice versée n'est pas calculable cette année.";
   const causes = [];
   if (s.fcf != null && s.divPaid) causes.push(s.fcf >= s.divPaid ? { titre: "Elle a de quoi le payer", texte: `Une fois ses investissements payés, il lui reste ${f4Md(s.fcf, cur)} d'argent frais ; le dividende en prend ${f4Md(s.divPaid, cur)}.` } : { titre: "Elle verse plus qu'elle n'encaisse", texte: `${s.fcf < 0 ? `Son activité ne couvre même pas ses investissements (il manque ${f4Md(-s.fcf, cur)})` : `Une fois ses investissements payés, il lui reste ${f4Md(s.fcf, cur)}`} ; le dividende en prend ${f4Md(s.divPaid, cur)}. Elle puise dans ses réserves ou emprunte.` });
   const cash = f4Serie(c, "netDebt"); if (!isBank(s) && cash) { const L = cash.v.map((z, i) => [cash.y[i], z]).filter(z => z[1] != null); if (L.length >= 2 && L.every(z => z[1] <= 0)) causes.push({ titre: L[L.length - 1][1] < L[0][1] ? "Elle met le reste de côté" : "Ses réserves diminuent", texte: `Son argent disponible, dettes déduites : ${f4Md(-L[0][1], cur)} fin ${L[0][0]}, ${f4Md(-L[L.length - 1][1], cur)} fin ${L[L.length - 1][0]}.` }); }
@@ -309,7 +317,7 @@ function f4E4(x) {
   const part = rien ? 0 : Math.max(0, Math.min(100, (pay != null ? pay : 1) * 100));
   return { id: "e4", n: 4, sur: "Son dividende", titre, haut: true, cmp: { texte: cmpD, ton: tonD },
     concept: !rien && pay != null && pay <= 1.5 ? { cle: "distrib", ex: f4Pc(pay, 0), calc: s.divPaid && s.net ? `${ekFr(s.divPaid, 0)} ÷ ${ekFr(s.net, 0)}` : parAction && s.eps ? `${ekFr(s.dps, 2)} ÷ ${ekFr(s.eps, 2)} par action` : "", nom: s.name } : null,
-    mots: [{ cle: "distrib", ex: pay != null && pay <= 1.5 ? f4Pc(pay, 0) : "", calc: s.divPaid && s.net ? `${ekFr(s.divPaid, 0)} ÷ ${ekFr(s.net, 0)}` : parAction && s.eps ? `${ekFr(s.dps, 2)} ÷ ${ekFr(s.eps, 2)} par action` : "", nom: s.name }, ...(s.dps ? [{ cle: "dpa", ex: `${ekFr(s.dps, 2)} ${sym}`, calc: `exercice ${s.year}`, nom: s.name }] : []), ...(M.yld != null ? [{ cle: "rendement", ex: f4Pc(M.yld, 1), calc: "au cours actuel", nom: s.name }] : [])],
+    mots: [{ cle: "distrib", ex: pay != null && pay <= 1.5 ? f4Pc(pay, 0) : "", calc: s.divPaid && s.net ? `${ekFr(s.divPaid, 0)} ÷ ${ekFr(s.net, 0)}` : parAction && s.eps ? `${ekFr(s.dps, 2)} ÷ ${ekFr(s.eps, 2)} par action` : "", nom: s.name }, ...(s.dps ? [{ cle: "dpa", ex: f4Par(s.dps, s.currency), calc: `exercice ${s.year}`, nom: s.name }] : []), ...(M.yld != null ? [{ cle: "rendement", ex: f4Pc(M.yld, 1), calc: "au cours actuel", nom: s.name }] : [])],
     visuel: (() => { // Points face à la médiane, comme pour le prix : sur 100 de bénéfice, combien sont versés
       const vp = rien ? 0 : pay != null ? pay * 100 : null; if (vp == null) return "";
       // Au-delà de 100 : elle verse plus que son bénéfice de l'année (rouge). Au-delà de 150 : point au bout de l'axe, « × 10 » et le vrai calcul en note.

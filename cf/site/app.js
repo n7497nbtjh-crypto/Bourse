@@ -1154,7 +1154,7 @@ const pctTick = v => F0.format(v * 100) + " %";
 let PX = {}, PXUP = null, FX = null;
 async function loadPrices() {
   if (PXUP) return;
-  const fxP = fetch("/data/fx.json").then(r => r.json()).then(j => j.eur).catch(() => null); // 1/11 : en parallèle des cours (un aller-retour de moins)
+  const fxP = fetch("/data/fx.json").then(r => r.json()).then(j => { window.FXDATE = j.updated; return j.eur; }).catch(() => null); // 1/11 : en parallèle des cours (un aller-retour de moins)
   // 5/11 : fichier du robot demandé en parallèle ; il complète les titres absents de la copie de la feuille ou sans prix
   // (cours Eulerpool, valeurs liquidatives des ETF : la copie gardée par le Worker peut dater de la veille)
   const robP = fetch("/data/cours.json").then(r => r.ok ? r.json() : null).catch(() => null);
