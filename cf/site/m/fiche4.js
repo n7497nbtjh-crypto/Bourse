@@ -123,8 +123,8 @@ function f4Tete(s, c, x) {
   const chips = [secName(s), [typeof regName === "function" ? regName(s) : "", s.ticker].filter(Boolean).join(" · "), !e4FrF() ? "" : pea === true ? "Éligible au PEA ✓" : pea === false ? "Hors PEA" : ""].filter(Boolean);
   return `<section class="ek-hero">
     <div class="ek-crumb"><a href="/entreprises">Entreprises</a><span>›</span>${esc(secName(s))}<span>›</span>${esc(s.name)}</div>
-    <div class="ek-top"><div><div class="ek-idt">${f4Logo(s, ini)}<h1>${esc(s.name)}</h1></div>
-      <p class="ek-desc">${esc((fi && fi.fait) || s.desc || "")}</p><div class="ek-chips">${chips.map(t => `<span class="ek-chip">${esc(t)}</span>`).join("")}</div></div>${pc}</div>
+    <div class="ek-top"><div class="ek-gauche"><div class="ek-chips">${chips.map(t => `<span class="ek-chip">${esc(t)}</span>`).join("")}</div><div class="ek-idt">${f4Logo(s, ini)}<h1>${esc(s.name)}</h1></div>
+      <p class="ek-desc">${esc((fi && fi.fait) || s.desc || "")}</p></div>${pc}</div>
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
     <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${esc(x.P.L.map(r => r.name).join(", "))})` : ""}.` : ""}</span>
