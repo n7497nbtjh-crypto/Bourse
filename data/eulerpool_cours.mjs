@@ -40,7 +40,7 @@ export async function coursEulerpool(societes, log = console.log) {
     if (!c.isin || !cur) continue; // Londres (5/11) : profil en livres = cours en pence chez Eulerpool (GSK 1 827,5 pour 18,27 £), divisés par 100
     const m = cache[c.id] || {};
     try {
-      if (!m.prof || (m.isin && m.isin !== c.isin) || now - Date.parse(m.prof) > (m.cur ? 30 : 3) * J) { const p = await get(`/equity/profile/${c.isin}`); appels++; Object.assign(m, { isin: c.isin, prof: new Date().toISOString().slice(0, 10), cur: p && p.currency, actions: p && p.shares, lu: m.isin === c.isin ? m.lu : 0 }); }
+      if (!m.prof || (m.isin ? m.isin !== c.isin : !m.cur) || now - Date.parse(m.prof) > (m.cur ? 30 : 3) * J) { const p = await get(`/equity/profile/${c.isin}`); appels++; Object.assign(m, { isin: c.isin, prof: new Date().toISOString().slice(0, 10), cur: p && p.currency, actions: p && p.shares, lu: m.isin === c.isin ? m.lu : 0 }); }
       if (m.cur !== cur) { cache[c.id] = m; continue; } // devise du profil différente de la cotation : écarté (voir data/eulerpool.mjs)
       if (!m.lu || now - m.lu > 20 * 3600e3) { const b = await get(`/equity/candles/${c.isin}?range=5y`); appels++; m.lu = now; m.item = depuisBougies(place === "LSE" ? (b || []).map(x => ({ ...x, close: x.close / 100 })) : b, cur, m.actions); }
       cache[c.id] = m;
