@@ -160,7 +160,8 @@ export default {
     const t = info || { title: `Page introuvable · ${SITE}`, desc: BASE_DESC };
     const fq = info && url.pathname.replace(/\/+$/, "").match(/^\/entreprise\/([a-z0-9-]+)$/);
     if (fq) { // questions fréquentes de la fiche (JSON-LD FAQPage), fichier fabriqué par data/faq_seo.mjs
-      try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/${fq[1]}.json`, url))); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { const ld = (await r.text()).replace(/</g, "\\u003c"); html = html.replace("</head>", `<script type="application/ld+json">${ld}</script>\n</head>`); } } catch (e) { }
+      try { let h = 0; for (const ch of fq[1]) h = (h * 31 + ch.charCodeAt(0)) >>> 0; // paquet : même calcul que faqSeau (data/faq_seo.mjs)
+        const r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/s${(h % 256).toString(16).padStart(2, "0")}.json`, url))); const q = r.ok && (r.headers.get("content-type") || "").includes("json") ? (await r.json())[fq[1]] : null; if (q) { const ld = JSON.stringify(q).replace(/</g, "\\u003c"); html = html.replace("</head>", `<script type="application/ld+json">${ld}</script>\n</head>`); } } catch (e) { }
     }
     if (fq && t.fiche) { // chiffres réels dans la description + fil d'Ariane et organisation (schema.org)
       try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/societes/${fq[1]}.json`, url))); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { t.desc = descFiche(t, await r.json()); } } catch (e) { }

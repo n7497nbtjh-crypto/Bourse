@@ -3566,9 +3566,11 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     let html = await (await env.ASSETS.fetch(new Request(new URL("/", url), request))).text(), t = info || { title: `Page introuvable \xB7 ${SITE}`, desc: BASE_DESC }, fq = info && url.pathname.replace(/\/+$/, "").match(/^\/entreprise\/([a-z0-9-]+)$/);
     if (fq)
       try {
-        let r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/${fq[1]}.json`, url)));
-        if (r.ok && (r.headers.get("content-type") || "").includes("json")) {
-          let ld = (await r.text()).replace(/</g, "\\u003c");
+        let h = 0;
+        for (let ch of fq[1]) h = h * 31 + ch.charCodeAt(0) >>> 0;
+        let r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/s${(h % 256).toString(16).padStart(2, "0")}.json`, url))), q = r.ok && (r.headers.get("content-type") || "").includes("json") ? (await r.json())[fq[1]] : null;
+        if (q) {
+          let ld = JSON.stringify(q).replace(/</g, "\\u003c");
           html = html.replace("</head>", `<script type="application/ld+json">${ld}<\/script>
 </head>`);
         }

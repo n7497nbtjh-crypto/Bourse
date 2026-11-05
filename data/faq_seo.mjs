@@ -1,5 +1,6 @@
 // Questions fréquentes de chaque fiche entreprise, au format FAQPage (schema.org), pour les moteurs de recherche.
-// Lancé par build.mjs : écrit cf/site/data/faq/<id>.json (fichiers fabriqués, non versionnés), que le Worker
+// Lancé par build.mjs : écrit cf/site/data/faq/s<xx>.json (256 paquets { id: FAQ }, fichiers fabriqués, non versionnés ; un fichier
+// par fiche dépassait la limite de 20 000 fichiers de Cloudflare Pages le 5/11), que le Worker
 // insère dans la page /entreprise/<id> sous forme de JSON-LD. Mêmes questions que l'étape « Questions » de la fiche,
 // réponses calculées avec les mêmes chiffres (comptes publiés, médiane du secteur, agenda, Wikidata). Aucun chiffre inventé.
 import { readFileSync, writeFileSync, mkdirSync, existsSync, rmSync } from "node:fs";
@@ -16,6 +17,9 @@ const median = a => { const s = a.filter(v => v != null && isFinite(v)).sort((x,
 const ratios = s => ({ g1: s.ca != null && s.caPrev > 0 ? s.ca / s.caPrev - 1 : null, marge: s.ca > 0 && s.ebit != null ? s.ebit / s.ca : null, nm: s.ca > 0 && s.net != null ? s.net / s.ca : null,
   lev: s.ebitda > 0 && s.netDebt != null ? s.netDebt / s.ebitda : null, payout: s.divPaid != null && s.net > 0 ? s.divPaid / s.net : null, roe: s.equity > 0 && s.net != null ? s.net / s.equity : null });
 
+// Paquet d'une fiche : même calcul dans cf/src/worker.mjs (faqSeau)
+export const faqSeau = id => { let h = 0; for (const ch of id) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return "s" + (h % 256).toString(16).padStart(2, "0"); };
+
 export function faqSeo(out = "cf/site/data/faq") {
   const S = J("cf/site/data/societes.json", { companies: [] }), U = J("cf/site/data/univers.json", { companies: [] });
   const WD = J("cf/site/data/wikidata.json", { items: {} }).items || {};
@@ -28,7 +32,7 @@ export function faqSeo(out = "cf/site/data/faq") {
   const MED = Object.fromEntries(Object.entries(med).map(([k, l]) => [k, { n: l.length, ...Object.fromEntries(["g1", "marge", "lev", "payout", "roe"].map(m => [m, median(l.map(x => x[m]))])) }]));
   if (existsSync(out)) rmSync(out, { recursive: true });
   mkdirSync(out, { recursive: true });
-  let n = 0;
+  let n = 0; const P = {};
   for (const u of U.companies) {
     const s = { ...(BY[u.id] || {}), ...u }, N = s.name, cur = s.currency || "EUR", r = ratios(s), md = MED[s.sector] || {}, ok = md.n >= 3, wd = WD[s.id] ? { ...WD[s.id] } : null, qa = [];
     if (wd && wd.siege && /^(siège|si[eè]ge social|headquarters)/i.test(wd.siege)) delete wd.siege;
@@ -46,8 +50,9 @@ export function faqSeo(out = "cf/site/data/faq") {
     qa.push([`Quand ${N} publie-t-elle ses prochains résultats ?`, nx ? `La prochaine publication annoncée est le ${dLabel(nx.date)} : ${nx.label.charAt(0).toLowerCase() + nx.label.slice(1)}.` : `Aucune date n'est encore annoncée. Les grandes entreprises publient leurs résultats deux à quatre fois par an.`]);
     if (wd && (wd.fonde || wd.siege || wd.effectif)) qa.push([`Depuis quand ${N} existe-t-elle, et combien de personnes y travaillent ?`, [wd.fonde ? `${N} a été créée en ${wd.fonde}.` : "", wd.siege ? `Son siège est à ${wd.siege}${wd.pays ? ` (${wd.pays})` : ""}.` : "", wd.effectif ? `Elle emploie environ ${nf(0).format(wd.effectif[0])} personnes${wd.effectif[1] ? ` (chiffre de ${wd.effectif[1]})` : ""}.` : ""].filter(Boolean).join(" ") + " Source : Wikidata."]);
     const ld = { "@context": "https://schema.org", "@type": "FAQPage", mainEntity: qa.filter(([q, a]) => q && a && a.length > 20).map(([q, a]) => ({ "@type": "Question", name: q, acceptedAnswer: { "@type": "Answer", text: a.replace(/ /g, " ") } })) };
-    if (ld.mainEntity.length >= 3) { writeFileSync(`${out}/${s.id}.json`, JSON.stringify(ld)); n++; }
+    if (ld.mainEntity.length >= 3) { (P[faqSeau(s.id)] = P[faqSeau(s.id)] || {})[s.id] = ld; n++; }
   }
+  for (const [k, v] of Object.entries(P)) writeFileSync(`${out}/${k}.json`, JSON.stringify(v));
   return n;
 }
 if (import.meta.url === `file://${process.argv[1]}`) console.log(faqSeo(), "fichiers FAQ écrits");
