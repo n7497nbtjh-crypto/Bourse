@@ -10,6 +10,9 @@ on:
       tout:
         description: "Tout redemander, même ce qui a été essayé récemment (1 = oui)"
         default: "0"
+      trim:
+        description: "Seulement les trimestres (1 = oui)"
+        default: "0"
       cours:
         description: "Seulement les cours (1 = oui)"
         default: "0"
@@ -37,10 +40,11 @@ jobs:
           EULERPOOL_KEY: ${{ secrets.EULERPOOL_KEY }}
         run: |
           node tests/t_eulerpool.mjs
-          if [ "${{ inputs.cours }}" = "1" ]; then node data/cours_fetch.mjs; git add -f data/eulerpool_cours_cache.json data/cours_ref.json data/historique cf/site/data/*.json 2>/dev/null || true;
-          elif [ "${{ inputs.retirer }}" = "1" ]; then node data/eulerpool.mjs --retirer; else node data/eulerpool.mjs --max 600 ${{ inputs.tout == '1' && '--tout' || '' }} ${{ inputs.ids && format('--ids {0}', inputs.ids) || '' }}; fi
+          if [ "${{ inputs.trim }}" = "1" ]; then node data/eulerpool.mjs --trim ${{ inputs.tout == '1' && '--tout' || '' }};
+          elif [ "${{ inputs.cours }}" = "1" ]; then node data/cours_fetch.mjs; git add -f data/eulerpool_cours_cache.json data/cours_ref.json data/historique cf/site/data/*.json 2>/dev/null || true;
+          elif [ "${{ inputs.retirer }}" = "1" ]; then node data/eulerpool.mjs --retirer; else node data/eulerpool.mjs --max 600 ${{ inputs.tout == '1' && '--tout' || '' }} ${{ inputs.ids && format('--ids {0}', inputs.ids) || '' }}; node data/eulerpool.mjs --trim; fi
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
-          git add data/eulerpool_cache.json cf/site/data/societes cf/site/data/societes.json
+          git add data/eulerpool_cache.json data/eulerpool_trim_cache.json cf/site/data/societes cf/site/data/societes.json cf/site/data/trim
           git diff --cached --quiet || git commit -q -m "Comptes Eulerpool du $(date +%F)"
           for i in 1 2 3; do git pull --rebase -X theirs -q && git push -q && break; sleep 5; done

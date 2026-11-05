@@ -107,8 +107,8 @@ function an4Dessiner(x) {
     : `<p class="an4-say">${hors.slice(0, 2).sort((a, b) => a.k - b.k).map(o => `${nm(o.k)} : <b>${o.e > 0 ? "mieux" : "moins bien"} que d'habitude</b> (${sg(o.d, M)}, contre ${sg(o.h, M)} les années précédentes).`).join(" ")}${hors.length === 1 && compar.length > 1 ? " L'autre passage suit le rythme habituel." : ""}</p>`;
   const cols = `150px ${cards.map(() => "minmax(0,1fr)").join(" 150px ")}`;
 
-  const amf = /AMF/.test(j.source || ""), dern = A.G[0][n - 1];
-  const lien = amf ? (dern.u ? `<a class="ek-lk" href="${esc(dern.u)}" target="_blank" rel="noopener">Le dernier communiqué ↗</a>` : "") : `<a class="ek-lk" href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=${esc(String(x.c.cik))}&amp;type=10-Q" target="_blank" rel="noopener">Les rapports officiels ↗</a>`;
+  const amf = /AMF/.test(j.source || ""), ep = j.fournisseur === "Eulerpool", dern = A.G[0][n - 1];
+  const lien = ep ? `<a class="ek-lk" href="https://eulerpool.com" target="_blank" rel="noopener">Data by Eulerpool ↗</a>` : amf ? (dern.u ? `<a class="ek-lk" href="${esc(dern.u)}" target="_blank" rel="noopener">Le dernier communiqué ↗</a>` : "") : `<a class="ek-lk" href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=${esc(String(x.c.cik))}&amp;type=10-Q" target="_blank" rel="noopener">Les rapports officiels ↗</a>`;
   // 2) l'année face aux précédentes : les mois écoulés, ou le dernier trimestre s'il raconte autre chose
   const dYtd = ch(cum(0, n, M), cum(1, n, M), M), dLast = ch(val(0, n - 1, M), val(1, n - 1, M), M);
   const auto = n > 1 && dYtd != null && dLast != null && (Math.abs(dLast - dYtd) >= (M === "mg" ? 1.5 : 4) || Math.sign(dLast) !== Math.sign(dYtd)) ? "last" : "ytd";
@@ -123,14 +123,14 @@ function an4Dessiner(x) {
       <div class="an4-why"><span class="an4-pill"><i></i>Comparaison : ${per} de chaque ${A.civil ? "année" : "exercice"}</span>${alt}</div>
       <div class="an4-box"><div class="an4-yrs"><div class="an4-mt"><span>${LAB[M][1].toUpperCase()}</span> · ${per}</div>${rows.map(r => `<div class="an4-yl${r.y === 0 ? " cur" : ""}"><b>${an(r.y)}</b><div class="an4-tr"><i style="width:${(Math.max(0, r.v) / mxv * 100).toFixed(1)}%"></i></div><span class="an4-vv">${fmt(r.v, M)}</span>${pill(ch(r.v, r.p, M), M) || "<span></span>"}</div>`).join("")}</div>
         <p class="an4-say">${say2}</p>
-        <div class="an4-row"><span class="an4-pill"><i></i>${A.civil ? A.Y : "Exercice " + A.Y} : ${A.G[0].slice(0, n).map(q => dt(q.filed)).join(", ").replace(/, ([^,]*)$/, " et $1")} · non audité${n > 1 ? "s" : ""}</span>${lien}</div></div></div>`;
+        <div class="an4-row"><span class="an4-pill"><i></i>${A.civil ? A.Y : "Exercice " + A.Y}${ep ? ", trimestres clos le" : ""} : ${A.G[0].slice(0, n).map(q => dt(q.filed)).join(", ").replace(/, ([^,]*)$/, " et $1")} · non audité${n > 1 ? "s" : ""}</span>${lien}</div></div></div>`;
   }
 
   el.innerHTML = `<section class="ek-sec an4" id="annee"><span class="ek-stk2 b">L'année en cours</span><h2>${titre}</h2>${seg}
     <div class="an4-part"><h3 class="an4-pt"><i>1</i>${n > 1 ? `Les trimestres de ${lib}, l'un après l'autre` : `Le premier trimestre de ${lib}`}</h3>
       <div class="an4-seq" style="--an4-cols:${cols}"><div class="an4-mt2"><b>${LAB[M][1].toUpperCase()}</b><small>par trimestre</small></div>${seq}</div>${say1}</div>
     ${part2}
-    <p class="ek-tn">${amf ? "Chiffre d'affaires relevé dans les communiqués de l'entreprise déposés à l'AMF, non audité. Quand seul le semestre ou les neuf mois sont publiés, le trimestre est déduit (semestre moins 1er trimestre, neuf mois moins semestre) ; le 4e trimestre est l'année des comptes annuels moins les neuf premiers mois. Ces chiffres montrent la tendance sans remplacer le verdict" : "Comptes trimestriels déposés à la SEC, non audités : ils montrent la tendance sans remplacer le verdict"}, calculé sur l'exercice ${x.c.years[x.c.years.length - 1]}. Chaque trimestre est comparé au même trimestre de l'année précédente, pour effacer les effets de saison.${A.civil ? "" : ` Exercice clos en ${A.mois}.`}</p>
+    <p class="ek-tn">${ep ? "Comptes trimestriels publiés par l'entreprise, fournis par Eulerpool, non audités. ENKLAIR ne les affiche que si, sur les deux derniers exercices, les quatre trimestres redonnent les comptes annuels. Dates : fin de chaque trimestre. Ces chiffres montrent la tendance sans remplacer le verdict" : amf ? "Chiffre d'affaires relevé dans les communiqués de l'entreprise déposés à l'AMF, non audité. Quand seul le semestre ou les neuf mois sont publiés, le trimestre est déduit (semestre moins 1er trimestre, neuf mois moins semestre) ; le 4e trimestre est l'année des comptes annuels moins les neuf premiers mois. Ces chiffres montrent la tendance sans remplacer le verdict" : "Comptes trimestriels déposés à la SEC, non audités : ils montrent la tendance sans remplacer le verdict"}, calculé sur l'exercice ${x.c.years[x.c.years.length - 1]}. Chaque trimestre est comparé au même trimestre de l'année précédente, pour effacer les effets de saison.${A.civil ? "" : ` Exercice clos en ${A.mois}.`}</p>
     </section>`;
 }
 

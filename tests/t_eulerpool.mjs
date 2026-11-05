@@ -1,6 +1,6 @@
 // Test de la conversion Eulerpool (data/eulerpool.mjs) sans réseau : prévisions écartées, contrôles, format du site.
 import assert from "node:assert/strict";
-import { convertirEP } from "../data/eulerpool.mjs";
+import { convertirEP, trimestresEP } from "../data/eulerpool.mjs";
 const c = { id: "nestle", isin: "CH0038863350", sector: "conso", tv: "SIX:NESN" }, AUJ = "2026-11-05";
 const inc = [2021, 2022, 2023, 2024, 2025, 2026, 2027].map((y, i) => ({ period: `${y}-12-31`, revenue: 87000 + i * 1000, ebit: 14000, netIncome: 9000, pretaxIncome: 11000, provisionforIncomeTaxes: 2000, diluted_eps: 3.5 }));
 const bs = [2021, 2022, 2023, 2024, 2025].map(y => ({ period: `${y}-12-31`, cashShortTermInvestments: 6000, shortTermDebt: 11000, longTermDebt: 46000, equity: 62000 }));
@@ -35,4 +35,11 @@ assert.equal(jp.at(-1), 2.1, "Japon : acompte de septembre + solde de mars");
 const kr = ["2024-03-28", "2024-06-27", "2024-09-26", "2024-12-26", "2025-03-28", "2025-06-27", "2025-09-26", "2025-12-26", "2026-03-27"].map((p, i) => ({ period: p, dividend: 0.1 + i / 100 }));
 const krD = convertirEP(c, { profil: { currency: "CHF" }, inc, bs, cf, dv: kr }, AUJ).comptes.fin.dps.at(-1);
 assert.equal(Math.round(krD * 100) / 100, 0.62, "trimestriel : mars à décembre 2025, pas mars 2026");
+// Trimestres : gardés si quatre trimestres redonnent les deux derniers exercices ; doublons et trous refusés
+const fiche = { years: [2024, 2025], fyEnd: "12-31", fin: { ca: [400, 440] } };
+const tq = ["2024-03-31", "2024-06-30", "2024-09-30", "2024-12-31", "2025-03-31", "2025-06-30", "2025-09-30", "2025-12-31", "2026-03-31", "2026-06-30"].map((p, i) => ({ period: p, revenue: i < 4 ? 100 : 110, netIncome: 10 }));
+const tr = trimestresEP(fiche, tq, AUJ); assert.ok(tr.q && tr.q.length === 10, tr.raison);
+assert.equal(trimestresEP(fiche, [...tq, { period: "2026-06-30", revenue: 5 }], AUJ).q.length, 9, "date en double : les deux lignes écartées");
+assert.match(trimestresEP(fiche, tq.map((x, i) => i === 5 ? { ...x, revenue: 150 } : x), AUJ).raison, /ventes annuelles/);
+assert.ok(trimestresEP(fiche, tq.filter((x, i) => i !== 8), AUJ).raison, "trimestre manquant dans l'année en cours : refus");
 console.log("t_eulerpool : OK");

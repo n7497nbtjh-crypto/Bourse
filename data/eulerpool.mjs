@@ -144,4 +144,57 @@ async function main() {
   sauver();
   console.log(`${ok} fiche(s) écrite(s) sur ${todo.length}, ${appels} appels`);
 }
-if (process.argv[1] && /[\/\\]eulerpool\.mjs$/.test(process.argv[1])) main();
+
+// ——— Trimestres (5/11) : « L'année en cours » des fiches hors SEC et hors AMF ———
+// Gardés seulement si, sur les deux derniers exercices de la fiche, quatre trimestres espacés de trois mois redonnent
+// les ventes annuelles à 2 % près (contrôle face aux comptes de la fiche, officiels ou non). Sinon : rien (pas de demi-donnée).
+// Dates en double (Microsoft, Keyence chez Eulerpool) et trimestres à zéro (LVMH) écartés.
+export function trimestresEP(fiche, rows, auj = new Date().toISOString().slice(0, 10)) {
+  if (!fiche || !fiche.years || fiche.years.length < 2 || !fiche.fin || !fiche.fin.ca) return { raison: "fiche sans ventes annuelles" };
+  const J = 864e5, d = p => Date.parse(p + "T12:00:00Z");
+  const brut = (rows || []).map(x => ({ end: String(x.period || "").slice(0, 10), ca: x.revenue, net: x.netIncome })).filter(x => x.end && x.end <= auj);
+  const nb = {}; brut.forEach(x => nb[x.end] = (nb[x.end] || 0) + 1);
+  const Q = brut.filter(x => nb[x.end] === 1 && x.ca > 0).sort((a, b) => a.end.localeCompare(b.end))
+    .map(x => ({ end: x.end, ca: Math.round(x.ca * 10) / 10, net: x.net == null ? null : Math.round(x.net * 10) / 10, filed: x.end, form: "Eulerpool" }));
+  const fe = /^\d{2}-\d{2}$/.test(fiche.fyEnd || "") ? fiche.fyEnd : "12-31";
+  for (const k of [1, 2]) { // les deux derniers exercices de la fiche
+    const i = fiche.years.length - k, Y = fiche.years[i], an = fiche.fin.ca[i], E = d(`${Y}-${fe}`);
+    const q4 = Q.filter(q => d(q.end) > E - 345 * J && d(q.end) <= E + 20 * J);
+    if (q4.length !== 4 || an == null) return { raison: `exercice ${Y} : ${q4.length} trimestres` };
+    for (let t = 1; t < 4; t++) { const g = (d(q4[t].end) - d(q4[t - 1].end)) / J; if (g < 80 || g > 100) return { raison: `exercice ${Y} : trimestres irréguliers` }; }
+    const s = q4.reduce((a, q) => a + q.ca, 0); if (Math.abs(s / an - 1) > 0.02) return { raison: `exercice ${Y} : trimestres ${Math.round(s)} pour ${Math.round(an)} de ventes annuelles` };
+  }
+  const E0 = d(`${fiche.years.at(-1)}-${fe}`), apres = Q.filter(q => d(q.end) > E0 + 20 * J);
+  for (let t = 0; t < apres.length; t++) { const prev = t ? d(apres[t - 1].end) : Math.max(...Q.filter(q => d(q.end) <= E0 + 20 * J).map(q => d(q.end))); const g = (d(apres[t].end) - prev) / J; if (g < 80 || g > 100) return { raison: "trimestre récent irrégulier" }; }
+  return { q: Q.slice(-24) };
+}
+
+async function mainTrim() {
+  const { readdirSync, mkdirSync } = await import("node:fs");
+  const { default: U } = await import("./univers.mjs"), arg = (n, dft) => { const i = process.argv.indexOf(n); return i > 0 ? process.argv[i + 1] : dft; };
+  const DIR = new URL("trim/", OUT), CT = new URL("./eulerpool_trim_cache.json", import.meta.url); mkdirSync(DIR, { recursive: true });
+  const cache = existsSync(CT) ? JSON.parse(readFileSync(CT, "utf8")) : {}, seuls = (arg("--ids", "") || "").split(",").filter(Boolean), TOUT = process.argv.includes("--tout"), now = Date.now();
+  const todo = U.filter(c => c.isin && !c.sec && !c.cik && c.sector !== "finance" && existsSync(new URL(`societes/${c.id}.json`, OUT))
+    && (seuls.length ? seuls.includes(c.id) : TOUT || !cache[c.id] || now - Date.parse(cache[c.id].d) > 6 * 864e5)
+    && (() => { const f = new URL(`${c.id}.json`, DIR); if (!existsSync(f)) return true; const s = JSON.parse(readFileSync(f, "utf8")).source || ""; return /eulerpool/i.test(s); })()) // trimestres SEC ou AMF : jamais remplacés
+    .slice(0, +arg("--max", 3000));
+  console.log(todo.length, "sociétés : trimestres demandés à Eulerpool");
+  let ok = 0, n = 0;
+  for (const c of todo) {
+    try {
+      const rows = await get(`/equity/income-statement-quarterly/${c.isin}`); n++;
+      const fiche = JSON.parse(readFileSync(new URL(`societes/${c.id}.json`, OUT), "utf8")), r = trimestresEP(fiche, rows || []), f = new URL(`${c.id}.json`, DIR);
+      cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: !!r.q, ...(r.q ? {} : { pourquoi: r.raison }) };
+      if (r.q) { writeFileSync(f, JSON.stringify({ id: c.id, updated: cache[c.id].d, source: `https://eulerpool.com/stock/${c.isin}`, fournisseur: "Eulerpool", currency: fiche.currency, q: r.q })); ok++; }
+      else if (existsSync(f)) unlinkSync(f);
+    } catch (e) { console.log("panne", c.id, e.message); if (/ 5\d\d /.test(e.message)) break; }
+    if (n % 100 === 0) { writeFileSync(CT, JSON.stringify(cache)); console.log(n, "lues,", ok, "gardées"); }
+    await new Promise(r => setTimeout(r, 200));
+  }
+  writeFileSync(CT, JSON.stringify(cache));
+  const index = readdirSync(DIR).filter(f => f.endsWith(".json") && f !== "index.json").map(f => f.slice(0, -5));
+  writeFileSync(new URL("index.json", DIR), JSON.stringify({ updated: new Date().toISOString().slice(0, 10), ids: index }));
+  const P = {}; Object.values(cache).forEach(v => { const k = v.ok ? "gardées" : String(v.pourquoi || "").replace(/\d{4}/, "AAAA").replace(/\d+ pour \d+/, "x pour y"); P[k] = (P[k] || 0) + 1; });
+  console.log(`${ok} sociétés avec leurs trimestres sur ${todo.length}`, JSON.stringify(P));
+}
+if (process.argv[1] && /[\/\\]eulerpool\.mjs$/.test(process.argv[1])) (process.argv.includes("--trim") ? mainTrim() : main());
