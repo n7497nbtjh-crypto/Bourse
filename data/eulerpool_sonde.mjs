@@ -1,5 +1,8 @@
-// Sonde ponctuelle : recherche d'une société chez Eulerpool (nom ou code de cotation). N'écrit rien.
-const KEY = process.env.EULERPOOL_KEY, B = "https://api.eulerpool.com/api/1", q = process.argv[2] || "Kirin";
-for (const p of [`/equity/search?q=${q}`, `/equity/search?query=${q}`, `/search?q=${q}`, `/equity/search/${q}`, `/equity/symbol/${q}`, `/equity/ticker/${q}`, `/equity/lookup?q=${q}`]) {
-  const r = await fetch(`${B}${p}${p.includes("?") ? "&" : "?"}token=${KEY}`); const t = await r.text(); console.log(p, r.status, t.slice(0, 400));
+// Sonde ponctuelle : ISIN des sociétés de Tokyo d'après leur code (recherche Eulerpool, ticker « code.T »). Affiche une ligne JSON.
+const KEY = process.env.EULERPOOL_KEY, B = "https://api.eulerpool.com/api/1", codes = (process.argv[2] || "").split(",").filter(Boolean), out = {};
+for (const c of codes) {
+  const r = await fetch(`${B}/equity/search?q=${c}&token=${KEY}`); const j = r.ok ? await r.json() : {};
+  const m = (j.results || []).find(x => x.ticker === c + ".T"); out[c] = m ? [m.isin, m.name] : null;
+  await new Promise(r => setTimeout(r, 250));
 }
+console.log("ISIN=" + JSON.stringify(out));
