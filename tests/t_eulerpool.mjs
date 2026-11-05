@@ -25,4 +25,11 @@ assert.deepEqual(convertirEP(c, { profil: { currency: "CHF" }, inc: benef0, bs, 
 assert.match(convertirEP(c, { profil: { currency: "CHF" }, inc, bs: bs.slice(0, 2), cf }, AUJ).raison, /clos le/);
 assert.ok(convertirEP(c, { profil: {}, inc, bs, cf }, AUJ).raison);
 assert.match(convertirEP({ ...c, tv: "HKEX:700" }, { profil: { currency: "CNY" }, inc, bs, cf }, AUJ).raison, /cotation/, "Tencent : comptes en CNY, cotation à Hong Kong");
+// Dividendes : versement d'avril 2026 rattaché à l'exercice 2025, rien d'inventé quand Eulerpool n'a aucun versement
+const dv = [{ period: "2025-04-22", dividend: 3.05 }, { period: "2026-04-20", dividend: 3.1 }];
+const avecDiv = convertirEP(c, { profil: { currency: "CHF" }, inc, bs, cf, dv }, AUJ).comptes.fin.dps;
+assert.equal(avecDiv.at(-1), 3.1); assert.equal(avecDiv.at(-2), 3.05); assert.equal(avecDiv[0], 0);
+assert.equal(convertirEP(c, { profil: { currency: "CHF" }, inc, bs, cf, dv: [] }, AUJ).comptes.fin.dps, undefined);
+const jp = convertirEP(c, { profil: { currency: "CHF" }, inc: inc.map(x => ({ ...x, period: x.period.replace("12-31", "03-31") })), bs: bs.map(x => ({ ...x, period: x.period.replace("12-31", "03-31") })), cf, dv: [{ period: "2024-09-27", dividend: 0.4 }, { period: "2025-03-28", dividend: 1.7 }, { period: "2025-09-29", dividend: 0.5 }] }, AUJ).comptes.fin.dps;
+assert.equal(jp.at(-1), 2.1, "Japon : acompte de septembre + solde de mars");
 console.log("t_eulerpool : OK");

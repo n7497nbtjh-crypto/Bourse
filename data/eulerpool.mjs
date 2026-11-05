@@ -23,7 +23,7 @@ const r1 = v => v == null || !isFinite(v) ? null : Math.round(v * 100) / 100;
 // 5/11 (2e version) : une année douteuse au début de la série ne fait plus écarter la société : on garde les années propres
 // les plus récentes (au moins deux). Banques et assurances : seulement bénéfice, bénéfice par action et dividendes
 // (leurs « ventes » et fonds propres chez Eulerpool sont inutilisables), et bénéfice sans saut de plus de x4 d'une année à l'autre.
-export function convertirEP(c, { profil, inc, bs, cf }, auj = new Date().toISOString().slice(0, 10)) {
+export function convertirEP(c, { profil, inc, bs, cf, dv }, auj = new Date().toISOString().slice(0, 10)) {
   if (!profil || !profil.currency) return { raison: "profil ou devise absents" };
   const fin_k = c.sector === "finance";
   const place = String(c.tv || "").split(":")[0], dc = DEVISE_PLACE[place];
@@ -59,6 +59,16 @@ export function convertirEP(c, { profil, inc, bs, cf }, auj = new Date().toISOSt
     cfo, capex, fcf: col(p => r1(cfP[p] && cfP[p].fcf)).map((v, i) => v ?? (cfo[i] != null && capex[i] != null ? r1(cfo[i] - capex[i]) : null)),
     divPaid: col(p => cfP[p] && cfP[p].cashDividendsPaid != null ? r1(Math.abs(cfP[p].cashDividendsPaid)) : null),
   };
+  // Dividende par action de chaque exercice (5/11) : versements dont la date de détachement tombe entre 7 mois avant et 5 mois
+  // après la clôture (Japon : acompte en septembre et solde fin mars ; Europe : versement après l'assemblée du printemps).
+  // Exercice dont la fenêtre n'est pas encore close : inconnu. Aucun versement connu chez Eulerpool : inconnu (pas « 0 »).
+  // Part versée invraisemblable (plus de 150 % du bénéfice par action) : écarté.
+  if (Array.isArray(dv) && dv.length) {
+    const T = dv.filter(x => x && x.dividend > 0 && x.period).map(x => ({ t: Date.parse(String(x.period).slice(0, 10)), v: x.dividend }));
+    fin_.dps = per.map((p, i) => { const e = Date.parse(p); if (e + 152 * 864e5 > Date.parse(auj)) return null;
+      const v = T.filter(x => x.t > e - 212 * 864e5 && x.t <= e + 152 * 864e5).reduce((a, x) => a + x.v, 0), eps = fin_.eps[i];
+      return eps > 0 && v / eps > 1.5 ? null : Math.round(v * 1e4) / 1e4; });
+  }
   if (fin_k) for (const k of ["ca", "ebit", "cash", "debt", "netDebt", "cfo", "capex", "fcf"]) delete fin_[k];
   for (const k of Object.keys(fin_)) if (fin_[k].every(v => v == null)) delete fin_[k];
   const lien = `https://eulerpool.com/stock/${encodeURIComponent(c.isin)}`;
@@ -105,8 +115,8 @@ async function main() {
     try {
       const profil = await get(`/equity/profile/${c.isin}`); appels++;
       if (!profil) { cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: false, pourquoi: "inconnue chez Eulerpool" }; console.log("✗", c.id, "inconnue"); continue; }
-      const [inc, bs, cf] = await Promise.all(["incomestatement", "balancesheet", "cashflowstatement"].map(p => get(`/equity/${p}/${c.isin}`))); appels += 3;
-      const r = convertirEP(c, { profil, inc, bs, cf });
+      const [inc, bs, cf, dv] = await Promise.all(["incomestatement", "balancesheet", "cashflowstatement", "dividends"].map(p => get(`/equity/${p}/${c.isin}`))); appels += 4;
+      const r = convertirEP(c, { profil, inc, bs, cf, dv });
       cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: !!r.comptes, ...(r.comptes ? { an: r.comptes.years.at(-1) } : { pourquoi: r.raison }) };
       if (!r.comptes) { // une fiche Eulerpool qui ne passe plus les contrôles est retirée (pas de chiffre douteux laissé en ligne)
         if (estEP(c)) { unlinkSync(new URL(`societes/${c.id}.json`, OUT)); const k = parId.get(c.id); if (k != null) idx.companies[k] = { id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true }; console.log("retirée", c.id); }
