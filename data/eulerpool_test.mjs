@@ -3,7 +3,7 @@
 import { readFileSync, existsSync } from "node:fs";
 const KEY = process.env.EULERPOOL_KEY; if (!KEY) { console.log("::error::EULERPOOL_KEY absent"); process.exit(1); }
 const B = "https://api.eulerpool.com/api/1";
-const ESSAIS = { lvmh: "FR0000121014", totalenergies: "FR0000120271", sap: "DE0007164600", "samsung-electronics": "KR7005930003", microsoft: "US5949181045", "air-liquide": "FR0000120073", "shinhan": "KR7055550008", "toyota": "JP3633400001" };
+const ESSAIS = process.env.ESSAIS ? JSON.parse(process.env.ESSAIS) : { lvmh: "FR0000121014", totalenergies: "FR0000120271", sap: "DE0007164600", "samsung-electronics": "KR7005930003", microsoft: "US5949181045", "air-liquide": "FR0000120073", "shinhan": "KR7055550008", "toyota": "JP3633400001" };
 async function get(path) {
   const u = B + path + (path.includes("?") ? "&" : "?") + "token=" + KEY;
   const r = await fetch(u, { headers: { accept: "application/json" } }); const t = await r.text();
