@@ -60,7 +60,9 @@ function ekPoints(o) {
   g += `<rect x="${L}" y="${T - 6}" width="${m - L}" height="${H}" fill="${zB}"/><rect x="${m}" y="${T - 6}" width="${W - R - m}" height="${H}" fill="${zH}"/>`;
   if (m - L >= 84) g += ekTx(L + 6, T + H - 12, o.motBas || (bas ? "plus bas" : "moins bien"), { fw: 800, c: cB, fs: 11 });
   if (W - R - m >= 84) g += ekTx(W - R - 6, T + H - 12, o.motHaut || (bas ? "plus haut" : "mieux"), { a: "end", fw: 800, c: cH, fs: 11 });
-  o.graduations.forEach(t => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + ekTx(x(t), T + H + 12, o.fmtAxe(t), { a: "middle" }));
+  // 5/11 (PDD sur téléphone : « 5 CNY / 10 CNY » superposés) : une graduation sur deux (ou trois) quand les étiquettes n'ont pas la place
+  const gl = o.graduations.map(t => String(o.fmtAxe(t))), ecartG = o.graduations.length > 1 ? Math.abs(x(o.graduations[1]) - x(o.graduations[0])) : 1e9, saut = Math.max(1, Math.ceil((Math.max(...gl.map(v => v.length)) * 6.6 + 8) / ecartG));
+  o.graduations.forEach((t, i) => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + (i % saut ? "" : ekTx(x(t), T + H + 12, gl[i], { a: "middle" })));
   g += `<line x1="${m}" x2="${m}" y1="${T - 14}" y2="${T + H - 6}" stroke="#111" stroke-width="2" stroke-dasharray="5 4"/><rect x="${m - 52}" y="${T - 30}" width="104" height="18" rx="5" fill="#111"/>` + ekTx(m, T - 17, ekEsc(o.mediane_label), { a: "middle", c: "#fff", fw: 800, fs: 11 });
   rows.forEach((r, i) => {
     const cy = T + i * rh + 10, mieux = bas ? r.v < o.mediane : r.v > o.mediane;

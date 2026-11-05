@@ -54,7 +54,7 @@ function an4Cause(x, j) {
 }
 
 async function f4Annee(x) {
-  const el = document.getElementById("f4-annee"); if (!el || !x || !x.c || !(x.c.cik || /^FR/.test(x.s.isin || x.c.isin || ""))) return; // SEC, ou communiqués AMF (data/trim_eu.mjs)
+  const el = document.getElementById("f4-annee"); if (!el || !x || !x.c) return; // SEC, communiqués AMF (data/trim_eu.mjs) ou trimestres Eulerpool contrôlés (data/eulerpool.mjs --trim)
   let j = null; try { j = await fetch(`/data/trim/${x.s.id}.json`).then(r => r.ok ? r.json() : null); } catch (e) { }
   if (!j || (j.currency && x.c.currency && j.currency !== x.c.currency) || window.F4X !== x) return;
   try { an4Cause(x, j); } catch (e) { }
@@ -82,7 +82,11 @@ function an4Dessiner(x) {
   const ca = x.c.fin && x.c.fin.ca || [], gA = ca.length > 1 && ca[ca.length - 2] > 0 ? (ca[ca.length - 1] / ca[ca.length - 2] - 1) * 100 : null;
   const gY = ch(cum(0, n, "ca"), cum(1, n, "ca"), "ca");
   const nbT = ["un trimestre", "deux trimestres", "trois trimestres"][n - 1];
-  const verbe = x.bk || gY == null ? null : gA == null ? (gY >= 0 ? "ses ventes montent" : "ses ventes baissent") : gY > gA + 2 ? "ses ventes accélèrent" : gY < gA - 2 ? "ses ventes ralentissent" : "ses ventes gardent leur rythme";
+  // 5/11 (Puma : « ses ventes accélèrent » avec −9 %) : le sens dépend du signe des deux croissances
+  const verbe = x.bk || gY == null ? null : gA == null ? (gY >= 0 ? "ses ventes montent" : "ses ventes baissent")
+    : gY >= 0 && gA >= 0 ? (gY > gA + 2 ? "ses ventes accélèrent" : gY < gA - 2 ? "ses ventes ralentissent" : "ses ventes gardent leur rythme")
+    : gY < 0 && gA < 0 ? (gY > gA + 2 ? "ses ventes baissent moins vite" : gY < gA - 2 ? "ses ventes baissent plus vite" : "ses ventes continuent de baisser")
+    : gY >= 0 ? "ses ventes repartent à la hausse" : "ses ventes se mettent à baisser";
   const titre = verbe ? `${A.civil ? A.Y : "Exercice " + A.Y} : <span>${verbe}</span> après ${nbT}.` : `${A.civil ? A.Y : "Exercice " + A.Y} : ${nbT} déjà publié${n > 1 ? "s" : ""}.`;
 
   // onglets
