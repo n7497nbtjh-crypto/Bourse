@@ -66,7 +66,9 @@ export function convertirEP(c, { profil, inc, bs, cf, dv }, auj = new Date().toI
   if (Array.isArray(dv) && dv.length) {
     const T = dv.filter(x => x && x.dividend > 0 && x.period).map(x => ({ t: Date.parse(String(x.period).slice(0, 10)), v: x.dividend }));
     fin_.dps = per.map((p, i) => { const e = Date.parse(p); if (e + 152 * 864e5 > Date.parse(auj)) return null;
-      const v = T.filter(x => x.t > e - 212 * 864e5 && x.t <= e + 152 * 864e5).reduce((a, x) => a + x.v, 0), eps = fin_.eps[i];
+      // versements trimestriels (au moins 7 en deux ans : Samsung) : les quatre détachements de l'exercice lui-même
+      const trim = T.filter(x => x.t > e - 730 * 864e5 && x.t <= e).length >= 7;
+      const v = T.filter(x => trim ? x.t > e - 355 * 864e5 && x.t <= e + 10 * 864e5 : x.t > e - 212 * 864e5 && x.t <= e + 152 * 864e5).reduce((a, x) => a + x.v, 0), eps = fin_.eps[i];
       return eps > 0 && v / eps > 1.5 ? null : Math.round(v * 1e4) / 1e4; });
   }
   if (fin_k) for (const k of ["ca", "ebit", "cash", "debt", "netDebt", "cfo", "capex", "fcf"]) delete fin_[k];

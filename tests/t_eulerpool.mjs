@@ -32,4 +32,7 @@ assert.equal(avecDiv.at(-1), 3.1); assert.equal(avecDiv.at(-2), 3.05); assert.eq
 assert.equal(convertirEP(c, { profil: { currency: "CHF" }, inc, bs, cf, dv: [] }, AUJ).comptes.fin.dps, undefined);
 const jp = convertirEP(c, { profil: { currency: "CHF" }, inc: inc.map(x => ({ ...x, period: x.period.replace("12-31", "03-31") })), bs: bs.map(x => ({ ...x, period: x.period.replace("12-31", "03-31") })), cf, dv: [{ period: "2024-09-27", dividend: 0.4 }, { period: "2025-03-28", dividend: 1.7 }, { period: "2025-09-29", dividend: 0.5 }] }, AUJ).comptes.fin.dps;
 assert.equal(jp.at(-1), 2.1, "Japon : acompte de septembre + solde de mars");
+const kr = ["2024-03-28", "2024-06-27", "2024-09-26", "2024-12-26", "2025-03-28", "2025-06-27", "2025-09-26", "2025-12-26", "2026-03-27"].map((p, i) => ({ period: p, dividend: 0.1 + i / 100 }));
+const krD = convertirEP(c, { profil: { currency: "CHF" }, inc, bs, cf, dv: kr }, AUJ).comptes.fin.dps.at(-1);
+assert.equal(Math.round(krD * 100) / 100, 0.62, "trimestriel : mars à décembre 2025, pas mars 2026");
 console.log("t_eulerpool : OK");
