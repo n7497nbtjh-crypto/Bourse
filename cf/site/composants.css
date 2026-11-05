@@ -1517,7 +1517,7 @@ html body .ek.pf4 #pf3dash>details.pf4v>summary>.pf4-ti{display:grid}html body .
 .ek .tq-der .tq-nx b{display:block;font:800 24px/1.1 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.03em;margin:4px 0}
 @media(max-width:720px){.ek .tq-duo{grid-template-columns:1fr}.ek .tq-duo .tq-fl{flex-direction:row;gap:10px}.ek .tq-cols{grid-template-columns:1fr 1fr;gap:22px 14px}.ek .tq-bars{height:170px}.ek .tq-bar span{font-size:11px}.ek .tq-der{grid-template-columns:1fr}}
 /* Fiche, en-tête (5/11, Romain) : étiquettes sous le nom, carte d'identité en trois chiffres, rien de vide face à la carte du cours */
-.ek-top{align-items:start}
+.ek-top{align-items:center}
 .ek-gauche .ek-idt{align-items:center}.ek-gauche .ek-idt h1{margin:0}
 .ek-gauche .ek-chips{margin:10px 0 0}.ek-gauche .ek-chip{font-size:13px;padding:3px 10px}
 .ek-gauche .ek-desc{margin-top:18px;max-width:34em}
