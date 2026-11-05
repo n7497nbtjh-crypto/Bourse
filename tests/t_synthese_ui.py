@@ -53,14 +53,14 @@ with sync_playwright() as pw:
         if "Votre semaine en 2 minutes" not in pg.inner_text("#app"): probs.setdefault("/espace gratuit", []).append("carte Premium absente")
         for prem in (True,):
             STATE["prem"] = prem
-            pg.goto("http://t.local/espace"); pg.wait_for_selector(".s6", timeout=8000); pg.wait_for_timeout(300)
+            pg.goto("http://t.local/espace"); pg.wait_for_selector(".s7", timeout=8000); pg.wait_for_timeout(300)
             txt = pg.inner_text("#app").replace("\xa0", " ").replace("\u202f", " ")
-            for need in ("Mon portefeuille", "Mes favoris", "Ce qui s'est passé pour vos entreprises", "Dans votre portefeuille", "Ce qui arrive pour vos valeurs", "LVMH", "TotalEnergies"):
+            for need in ("Mon portefeuille", "Mes favoris", "Ce qui s'est passé pour vos entreprises", "Dans votre portefeuille", "Vos prochaines dates", "LVMH", "TotalEnergies"):
                 if need.lower() not in txt.lower(): probs.setdefault(f"/espace prem={prem}", []).append("manque : " + need)
             # 5/11 : rapport v6 (synPageV6) : cases en tête, une carte par valeur, au moins une annonce
-            if pg.locator(".s6-tiles>div").count() < 2: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s6-tiles>div').count()} cases en tête")
-            if pg.locator(".s6-co").count() != 6: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s6-co').count()} cartes de valeurs au lieu de 6")
-            if pg.locator(".s6-co li").count() < 1: probs.setdefault(f"/espace prem={prem}", []).append("aucune annonce")
+            if pg.locator(".s7-kpis>span").count() < 2: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s7-kpis>span').count()} pastilles en tête")
+            if pg.locator(".s7-rw").count() != 6: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s7-rw').count()} cartes de valeurs au lieu de 6")
+            if pg.locator(".s7-rw li:not(.s7-vide)").count() < 1: probs.setdefault(f"/espace prem={prem}", []).append("aucune annonce")
             p = pg.evaluate(CHECK, W)
             if p: probs.setdefault(f"/espace prem={prem}", []).extend(p)
             if shots: os.makedirs(shots, exist_ok=True); pg.screenshot(path=f"{shots}/{name}_espace{'_prem' if prem else ''}.png", full_page=True)
