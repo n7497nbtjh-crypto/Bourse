@@ -6,6 +6,9 @@ on:
       essais:
         description: 'JSON {id: isin} (vide = liste par défaut)'
         required: false
+      sonde:
+        description: 'ISIN à sonder (points d accès)'
+        required: false
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -19,4 +22,4 @@ jobs:
         env:
           EULERPOOL_KEY: ${{ secrets.EULERPOOL_KEY }}
           ESSAIS: ${{ inputs.essais }}
-        run: node data/eulerpool_test.mjs
+        run: if [ -n "${{ inputs.sonde }}" ]; then node data/eulerpool_sonde.mjs ${{ inputs.sonde }}; else node data/eulerpool_test.mjs; fi
