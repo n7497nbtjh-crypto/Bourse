@@ -6,6 +6,9 @@ on:
       essais:
         description: 'JSON {id: isin} (vide = liste par défaut)'
         required: false
+      cours:
+        description: 'Comparer les cours Eulerpool et Google (nombre de sociétés)'
+        required: false
       sonde:
         description: 'ISIN à sonder (points d accès)'
         required: false
@@ -22,4 +25,4 @@ jobs:
         env:
           EULERPOOL_KEY: ${{ secrets.EULERPOOL_KEY }}
           ESSAIS: ${{ inputs.essais }}
-        run: if [ -n "${{ inputs.sonde }}" ]; then node data/eulerpool_sonde.mjs ${{ inputs.sonde }}; else node data/eulerpool_test.mjs; fi
+        run: if [ -n "${{ inputs.cours }}" ]; then node data/eulerpool_cours.mjs --verifier ${{ inputs.cours }}; elif [ -n "${{ inputs.sonde }}" ]; then node data/eulerpool_sonde.mjs ${{ inputs.sonde }}; else node data/eulerpool_test.mjs; fi

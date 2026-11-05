@@ -16,7 +16,7 @@ const OUT = new URL("../cf/site/data/", import.meta.url), CACHE = new URL("./eul
 export const SOURCE_EP = "Eulerpool";
 // Devise de cotation par place. 5/11 : quand la devise des comptes annoncée diffère de celle de la cotation, les chiffres sont
 // souvent faux (Tencent, Xiaomi, Meituan : montants en dollars de Hong Kong étiquetés en yuans ; ABB : rien ne correspond) : écartés.
-const DEVISE_PLACE = { TSE: "JPY", XETR: "EUR", FWB: "EUR", SIX: "CHF", NSE: "INR", BSE: "INR", HKEX: "HKD", EURONEXT: "EUR", OMXHEX: "EUR", MIL: "EUR", BME: "EUR", VIE: "EUR", ATHEX: "EUR", ASX: "AUD", KRX: "KRW", GPW: "PLN", OMXSTO: "SEK", OMXCOP: "DKK", OSL: "NOK", TWSE: "TWD", TSX: "CAD", LSE: "GBP", SZSE: "CNY", SSE: "CNY", TADAWUL: "SAR", SGX: "SGD", BMFBOVESPA: "BRL", BMV: "MXN", TASE: "ILS" };
+export const DEVISE_PLACE = { TSE: "JPY", XETR: "EUR", FWB: "EUR", SIX: "CHF", NSE: "INR", BSE: "INR", HKEX: "HKD", EURONEXT: "EUR", OMXHEX: "EUR", MIL: "EUR", BME: "EUR", VIE: "EUR", ATHEX: "EUR", ASX: "AUD", KRX: "KRW", GPW: "PLN", OMXSTO: "SEK", OMXCOP: "DKK", OSL: "NOK", TWSE: "TWD", TSX: "CAD", LSE: "GBP", SZSE: "CNY", SSE: "CNY", TADAWUL: "SAR", SGX: "SGD", BMFBOVESPA: "BRL", BMV: "MXN", TASE: "ILS" };
 const r1 = v => v == null || !isFinite(v) ? null : Math.round(v * 100) / 100;
 
 // Lignes Eulerpool (montants en millions, devise de cotation du profil) → comptes au format du site, ou { raison } si refusé.
