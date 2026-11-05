@@ -109,8 +109,8 @@ function f4Tete(s, c, x) {
   let pc = "";
   if (p) {
     const ch = p.chg, pos = p.h52 > p.l52 && p.l52 > 0 && p.h52 / p.l52 <= 3 ? Math.max(0, Math.min(100, (p.p - p.l52) / (p.h52 - p.l52) * 100)) : null, dd = p.h52 > 0 ? p.p / p.h52 - 1 : null;
-    pc = `<div class="ek-pcard"><div class="ek-p"><b>${esc(pxFmt(p.p, p.cur))}</b>${ch != null ? `<span style="color:${ch > 0 ? EK_G : ch < 0 ? EK_R : "#555"}">${ch > 0 ? "+" : ""}${ekFr(ch, 2)} % ${esc(typeof jourSeance === "function" ? jourSeance() : "")}</span>` : ""}</div>
-      <small>Cours différé${typeof PXUP === "string" && PXUP !== "none" ? ", relevé le " + esc(new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : ""}</small>
+    pc = `<div class="ek-pcard"><div class="ek-p"><b>${esc(pxFmt(p.p, p.cur))}</b>${ch != null ? `<span style="color:${ch > 0 ? EK_G : ch < 0 ? EK_R : "#555"}">${ch > 0 ? "+" : ""}${ekFr(ch, 2)} % ${p.ep ? "sur la séance" : esc(typeof jourSeance === "function" ? jourSeance() : "")}</span>` : ""}</div>
+      <small>${p.ep && p.d ? `Cours de clôture du ${esc(new Date(p.d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" }))} · <a href="https://eulerpool.com" target="_blank" rel="noopener">Data by Eulerpool</a>` : `Cours différé${typeof PXUP === "string" && PXUP !== "none" ? ", relevé le " + esc(new Date(PXUP).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : ""}`}</small>
       ${pos != null ? `<div class="ek-rg"><i style="left:${pos}%"></i><em style="left:${pos}%">aujourd'hui</em></div><div class="ek-rgl"><span>plus bas ${esc(pxFmt(p.l52, p.cur))}</span><span>plus haut ${esc(pxFmt(p.h52, p.cur))}</span></div>
       <p>Sur un an, l'action a valu entre ${esc(pxFmt(p.l52, p.cur))} et ${esc(pxFmt(p.h52, p.cur))}.${dd != null && dd < -0.03 ? ` Elle est aujourd'hui <b>${ekFr(-dd * 100, 0)} % sous son plus haut</b>.` : " Elle est proche de son plus haut."}</p>` : ""}
       ${s.tv ? `<button type="button" class="ek-lk" data-f4-tv>Voir le graphique du cours ↗</button>` : ""}</div>`;

@@ -29,6 +29,13 @@ try {
       for (const [k, v] of Object.entries(vl)) if (!(items[k] && items[k].p > 0)) { items[k] = v; n++; }
       console.log(n, "ETF complétés par leur valeur liquidative officielle");
     } catch (e) { console.log("::warning::Valeurs liquidatives non lues :", e.message); }
+    // 5/11 : entreprises sans cours dans les feuilles : cours de clôture repris d'Eulerpool (datés, marqués ep), voir data/eulerpool_cours.mjs
+    try {
+      const { coursEulerpool } = await import("./eulerpool_cours.mjs"), { default: U } = await import("./univers.mjs");
+      const ep = await coursEulerpool(U.filter(c => !(items["c:" + c.id] && items["c:" + c.id].p > 0))); let n = 0;
+      for (const [k, v] of Object.entries(ep)) if (!(items[k] && items[k].p > 0)) { items[k] = v; n++; }
+      console.log(n, "entreprises complétées par leur cours Eulerpool");
+    } catch (e) { console.log("::warning::Cours Eulerpool non lus :", e.message); }
     writeFileSync(new URL("cours.json", OUT), JSON.stringify({ updated: today, source: "Google Finance, cours de clôture ou différés", items }));
     // Historique quotidien (un fichier par mois) pour tracer nos propres courbes au fil du temps
     const dir = new URL("../data/historique/", import.meta.url); if (!existsSync(dir)) mkdirSync(dir, { recursive: true });

@@ -7,7 +7,7 @@ import { readFileSync, writeFileSync, existsSync } from "node:fs";
 import { DEVISE_PLACE } from "./eulerpool.mjs";
 const KEY = process.env.EULERPOOL_KEY || "", B = "https://api.eulerpool.com/api/1";
 const CACHE = new URL("./eulerpool_cours_cache.json", import.meta.url);
-const J = 864e5, r2 = v => Math.round(v * 100) / 100;
+const J = 864e5, r2 = v => Math.round(v * 100) / 100, r4 = v => v == null ? null : Math.round(v * 1e4) / 1e4;
 
 async function get(path) {
   const r = await fetch(`${B}${path}${path.includes("?") ? "&" : "?"}token=${KEY}`, { headers: { accept: "application/json" }, signal: AbortSignal.timeout(30000) });
@@ -24,8 +24,8 @@ export function depuisBougies(L, cur, actions, auj = Date.now()) {
   const an = C.filter(x => x.timestamp > der.timestamp - 365 * J).map(x => x.close);
   const prec = C.at(-2), chg = prec ? r2((der.close / prec.close - 1) * 100) : null;
   if (chg != null && Math.abs(chg) > 40) return null; // saut d'un jour invraisemblable (cours mal raccordé)
-  return { s: "EP", cur, p: der.close, chg, cap: actions > 0 ? Math.round(der.close * actions * 1e6) : null, h52: Math.max(...an), l52: Math.min(...an),
-    p1y: avant(der.timestamp - 365 * J), p3y: avant(der.timestamp - 3 * 365 * J), p5y: avant(der.timestamp - 5 * 365 * J),
+  return { s: "EP", cur, p: Math.round(der.close * 1e4) / 1e4, chg, cap: actions > 0 ? Math.round(der.close * actions * 1e6) : null, h52: r4(Math.max(...an)), l52: r4(Math.min(...an)),
+    p1y: r4(avant(der.timestamp - 365 * J)), p3y: r4(avant(der.timestamp - 3 * 365 * J)), p5y: r4(avant(der.timestamp - 5 * 365 * J)),
     d: new Date(der.timestamp).toISOString().slice(0, 10), ep: 1 };
 }
 
@@ -43,7 +43,13 @@ export async function coursEulerpool(societes, log = console.log) {
       if (m.cur !== cur) { cache[c.id] = m; continue; } // devise du profil différente de la cotation : écarté (voir data/eulerpool.mjs)
       if (!m.lu || now - m.lu > 20 * 3600e3) { const b = await get(`/equity/candles/${c.isin}?range=5y`); appels++; m.lu = now; m.item = depuisBougies(b, cur, m.actions); }
       cache[c.id] = m;
-      if (m.item && now - Date.parse(m.item.d) < 7 * J) { out["c:" + c.id] = m.item; ok++; }
+      if (m.item && now - Date.parse(m.item.d) < 7 * J) {
+        // Capitalisation recoupée avec les comptes : nombre d'actions = bénéfice ÷ bénéfice par action. Un écart de plus de 25 %
+        // (plusieurs catégories d'actions, augmentation de capital : Porsche, Ørsted) fait prendre le nombre tiré des comptes.
+        const it = { ...m.item }, f = new URL(`../cf/site/data/societes/${c.id}.json`, import.meta.url);
+        try { if (existsSync(f)) { const j = JSON.parse(readFileSync(f, "utf8")), n = (j.fin && j.fin.net || []).at(-1), e = (j.fin && j.fin.eps || []).at(-1);
+          if (j.currency === cur && n > 0 && e > 0) { const nb = n / e; if (!(m.actions > 0) || Math.abs(m.actions / nb - 1) > 0.25) it.cap = Math.round(it.p * nb * 1e6); } } } catch (e) { }
+        out["c:" + c.id] = it; ok++; }
     } catch (e) { log("cours Eulerpool", c.id, e.message); if (/ 5\d\d/.test(e.message)) break; }
     if (appels % 50 === 49) writeFileSync(CACHE, JSON.stringify(cache));
   }
