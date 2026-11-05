@@ -15,9 +15,9 @@ async function lireFeuille(request, env) {
   if (Object.keys(items).length < 50) throw new Error("feuille incomplète");
   // Colonnes historiques vides ou titres absents de la feuille : on complète avec le fichier du robot (dernières valeurs connues)
   const j = await fichierRobot(request, env);
-  // vl / ep : la date reste celle de la valeur (5/11 : cours Eulerpool)
+  // vl / ep : la date reste celle de la valeur (5/11 : cours Eulerpool) ; une ligne de la feuille sans prix laisse la place au fichier du robot
   if (j) { const HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-    for (const [k, v] of Object.entries(j.items || {})) { const it = items[k]; if (!it) { items[k] = j.updated && !v.vl && !v.ep ? { ...v, d: j.updated } : v; continue; } for (const f of HF) if (it[f] == null && v[f] != null) it[f] = v[f]; } }
+    for (const [k, v] of Object.entries(j.items || {})) { const it = items[k]; if (!it || (!(it.p > 0) && v.p > 0)) { items[k] = j.updated && !v.vl && !v.ep ? { ...v, d: j.updated } : v; continue; } for (const f of HF) if (it[f] == null && v[f] != null) it[f] = v[f]; } }
   return { updated: new Date().toISOString(), source: "Google Finance, cours différés", items };
 }
 async function fichierRobot(request, env) {
