@@ -130,7 +130,8 @@ function f4Tete(s, c, x) {
 
 function f4Verdict(x) {
   const { M, MED, s } = x, k = x.bk ? "roe" : "m", rent = f4Ton(M[k], MED[k]), lev = s.netDebt != null && s.ebit > 0 ? s.netDebt / s.ebit : null;
-  const a = rent === "g" ? "Très rentable" : rent === "r" ? "<em>Peu rentable</em>" : `Rentable comme ${x.P.qui}`;
+  const a = M[k] == null ? (s.net > 0 ? "Bénéficiaire" : s.net < 0 ? "<em>En perte</em>" : "") // 5/11 : rentabilité inconnue (fonds propres absents) : pas de comparaison inventée
+    : rent === "g" ? "Très rentable" : rent === "r" ? "<em>Peu rentable</em>" : `Rentable comme ${x.P.qui}`;
   const b = x.bk ? "" : s.netDebt == null ? "" : s.netDebt <= 0 ? "sans dette" : lev > 3 ? "<em>endettée</em>" : "dette modérée";
   const pr = M.pe == null ? "" : f4Ton(M.pe, MED.pe, true), c = M.pe == null ? "" : pr === "r" ? "le marché y croit" : pr === "g" ? "le marché doute" : "le marché est partagé"; // 4/11 : pas de jugement sur le prix (règles des recommandations d'investissement), ce que dit le PER
   const parts = [a, b, c].filter(Boolean);
@@ -142,7 +143,7 @@ function f4Chaine(x) {
   const R5 = x.bk ? [
     ["Son bénéfice", f4Pc(M.ng, 1, true), f4Ton(M.ng, MED.ng, false, 0.02), s.net != null && s.year ? `sur un an : ${f4Md(s.net, s.currency)} en ${s.year}` : "bénéfice non publié", f4Jauge(M.ng, MED.ng, false, 0.3), MED.ng != null ? `${x.P.court} : ${f4Pc(MED.ng, 1, true)}` : ""],
     ["Sa rentabilité", M.roe != null ? ekFr(M.roe * 100, 1) + " %" : "–", f4Ton(M.roe, MED.roe), `gagnés sur 100 ${sym} de fonds propres`, f4Jauge(M.roe, MED.roe), MED.roe != null ? `${x.P.court} : ${ekFr(MED.roe * 100, 1)} %` : ""],
-  ] : [
+  ].filter(r => r[0] !== "Sa rentabilité" || M.roe != null) : [
     ["Ses ventes", f4Pc(M.g, 1, true), f4Ton(M.g, MED.g, false, 0.02), `sur un an : ${f4Md(s.ca, s.currency)} de ventes en ${s.year}`, f4Jauge(M.g, MED.g, false, 0.2), MED.g != null ? `${x.P.court} : ${f4Pc(MED.g, 1, true)}` : ""],
     ["Sa marge", M[k2] != null ? ekFr(M[k2] * 100, 0) + " " + sym : "–", f4Ton(M[k2], MED[k2]), M[k2] != null && M[k2] < 0 ? `perdus sur 100 ${sym} de ventes` : `gardés sur 100 ${sym} de ventes`, f4Jauge(M[k2], MED[k2]), MED[k2] != null ? `${x.P.court} : ${ekFr(MED[k2] * 100, 0)} ${sym}` : ""],
   ];
