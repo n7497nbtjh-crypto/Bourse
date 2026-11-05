@@ -28,22 +28,23 @@ const a4Px = (p, cur) => { try { return new Intl.NumberFormat("fr-FR", { style: 
 const a4Ton = p => p == null ? "n" : p >= 0.6 ? "g" : p <= 0.4 ? "o" : "n";
 function a4Fiche(id) { // tout ce que montre la carte d'exemple, calculé
   const s = RBY[id]; if (!s || s.missing || isBank(s)) return null;
-  const r = ratios(s), mm = a4Med(s, c => ratios(c).marge); if (r.marge == null || mm == null) return null;
+  // 5/11 (Romain) : le grand chiffre n'est plus la marge d'exploitation mais le bénéfice net sur 100 € de ventes
+  const r = ratios(s), mm = a4Med(s, c => ratios(c).nm); if (r.nm == null || mm == null) return null;
   const ax = {}; rfAxes(s).forEach(a => { ax[a.k] = a.r; });
-  const rk = rankIn(s, c => ratios(c).marge, true, "marge");
-  const p = pxOf(s), m = r.marge * 100, med = mm * 100, x = med > 0 ? m / med : null;
+  const rk = rankIn(s, c => ratios(c).nm, true, "nm");
+  const p = pxOf(s), m = r.nm * 100, med = mm * 100, x = med > 0 ? m / med : null;
   const main = x == null ? "" : x >= 2 ? `${a4Nb(x)} fois la médiane !` : x >= 1.1 ? "au-dessus de la médiane" : x > 0.9 ? "autour de la médiane" : "sous la médiane";
   const g = r.g1 != null ? r.g1 * 100 : null, gm = a4Med(s, c => ratios(c).g1);
   const sd = ax.solidite, nd = s.netDebt, eb = s.ebitda;
   let dette, detteN;
   if (nd != null && nd < 0) { dette = "Aucune"; detteN = `${big(-nd, s.currency)} de trésorerie`; }
   else { dette = !sd ? "–" : sd.p >= 0.6 ? "Faible" : sd.p > 0.4 ? "Moyenne" : "Élevée"; const mo = nd != null && eb > 0 ? nd / eb * 12 : null; detteN = mo == null ? "" : mo < 24 ? `${Math.max(1, Math.round(mo))} mois de résultat brut` : `${a4Nb(mo / 12)} ans de résultat brut`; }
-  const v0 = typeof valo === "function" ? valo(s) : null, per = v0 && v0.pe > 0 ? v0.pe : null, mper = typeof MEDPE !== "undefined" ? MEDPE[s.sector] : null; // 5/11 : le PER lui-même, en grand
+  const px = ax.prix;
   return { s, m, med, rk, main, p,
     tri: [
       [["croissance", "Croissance"], g == null ? "–" : (g > 0 ? "+" : g < 0 ? "−" : "") + a4Nb(Math.abs(g)) + " %", ax.croissance, gm == null ? "" : `secteur : ${gm > 0 ? "+" : gm < 0 ? "−" : ""}${a4Nb(Math.abs(gm * 100))} %`],
       [["dette", "Dette"], dette, sd, detteN],
-      [["per", "Prix (PER)"], per ? `${a4Nb(Math.round(per))} fois` : "–", per && mper ? { p: Math.max(0.06, Math.min(0.94, 0.5 - (per / mper - 1) * 0.5)), neutre: 1 } : null, per && mper ? `secteur : ${a4Nb(Math.round(mper))} fois · ${per > mper * 1.15 ? "le marché y croit" : per < mper * 0.85 ? "le marché doute" : "le marché est partagé"}` : ""]] };
+      [["per", "Prix"], !px ? "–" : px.p >= 0.6 ? "PER bas" : px.p <= 0.4 ? "PER haut" : "Dans la norme", px, px ? `${px.rank}e sur ${px.n}` : ""]] };
 }
 const a4Def = (cle, txt, f) => typeof ekDefMot === "function" ? ekDefMot(cle, txt, f || {}) : esc(txt); // mot souligné qui ouvre la définition (même fenêtre que la fiche)
 function a4CarteHTML(id) {
@@ -52,7 +53,7 @@ function a4CarteHTML(id) {
   return `<div class="a4-hd">${logo(s, 46)}<div><strong>${esc(s.name)}</strong><small>${esc(secName(s))} · ${esc(COUNTRY[s.region] || s.region || "")}</small></div>
     ${p ? `<div class="a4-px">${a4Px(p.p, p.cur || s.currency)}<small class="${accCls(p.chg)}">${accPct(p.chg)} ${esc(jourSeance())}</small></div>` : ""}</div>
     <div class="a4-n">${a4Nb(Math.round(m))}<small>€</small></div>
-    <p class="a4-cap">${a4Def("marge", "Marge d'exploitation", { ex: a4Nb(Math.round(m)) + " €", nom: s.name })} : gardés sur 100 € de ventes.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
+    <p class="a4-cap">${a4Def("benefice", "Bénéfice net", { ex: a4Nb(Math.round(m)) + " €", nom: s.name })} : ce qu'il lui reste, tout payé, sur 100 € de ventes.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
     ${main ? `<span class="a4-hand">${esc(main)}</span>` : ""}
     <div class="a4-duo"><div>${esc(s.name)}<i style="width:${(Math.max(m, 0) / maxv * 100).toFixed(0)}%;background:var(--a4y)"></i></div><div><span>${a4Def("mediane", "Médiane")} ${a4Nb(Math.round(med))} €</span><i style="width:${(Math.max(med, 0) / maxv * 100).toFixed(0)}%"></i></div></div>
     <div class="a4-tri">${f.tri.map(([l, v, r, n]) => `<div><small>${a4Def(l[0], l[1], { nom: s.name })}</small><strong class="${r && r.neutre ? "k" : a4Ton(r && r.p)}">${esc(v)}</strong>${r ? `<div class="a4-ms${r.neutre ? " a4-ms-n" : ""}" title="Le trait : la médiane du secteur"><b style="left:${((r.neutre ? 1 - r.p : r.p) * 100).toFixed(0)}%"></b></div>` : ""}<em>${esc(n)}</em></div>`).join("")}</div>

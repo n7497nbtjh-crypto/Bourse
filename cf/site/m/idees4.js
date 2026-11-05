@@ -5,15 +5,16 @@
    Contenus et chiffres inchangés : commIdees, COMM_VERDICT, commIrPane, COMM_IR_ETAPES, commSrcHTML (m/communication.js).
    Remplace pageIdeesRecues ; la carte seule de l'accueil et d'Apprendre (commIdeeCarte) ne change pas. */
 const IR4_C = { faux: "f", pfaux: "p", partie: "v" };
+// 5/11 (Romain) : les quatre parties toutes dépliées, en cartes (plus de plis à ouvrir)
+const IR4_IC = { credible: "💬", donnees: "📊", nuance: "⚖️", exemple: "🔎" };
 function ir4Carte(x, i, L) {
   const [vt] = COMM_VERDICT[x.v] || ["", ""];
   return `<article class="ir ir4" id="${x.id}" data-ir="${x.id}">
     <div class="ir4-h"><span class="ir4-n">${String(i + 1).padStart(2, "0")}</span><p class="ir4-m">« ${esc(x.mythe.replace(/\.$/, ""))} »</p><span class="ir4-v ${IR4_C[x.v] || ""}">${esc(vt)}</span></div>
-    <p class="ir4-r">${x.rep}</p>
-    <div class="ir4-ret"><b>À retenir</b><p>${x.retenir}</p></div>
-    <div class="ir4-plis">${COMM_IR_ETAPES.map(([k, t]) => `<details class="ir4-pli"><summary>${t}</summary><div class="ir-pane">${commIrPane(x, k)}</div></details>`).join("")}</div>
+    <div class="ir4-tete"><p class="ir4-r">${x.rep}</p><div class="ir4-ret"><b>À retenir</b><p>${x.retenir}</p></div></div>
+    <div class="ir4-plis">${COMM_IR_ETAPES.map(([k, t], j) => `<section class="ir4-pli ir4-p${j}"><h4><i>${IR4_IC[k] || ""}</i>${t}</h4><div class="ir-pane">${commIrPane(x, k)}</div></section>`).join("")}</div>
     <div class="ir4-f"><div class="ir4-go">${x.liens.map(([l, h]) => `<a href="${h}">${esc(l)} →</a>`).join("")}</div><details class="ir4-src"><summary>Sources</summary>${commSrcHTML(x.src)}</details></div>
-    <nav class="ir4-nav">${i > 0 ? `<a href="#${L[i - 1].id}" data-ir4="${L[i - 1].id}">← Idée précédente</a>` : "<span></span>"}<span>${i + 1} sur ${L.length}</span>${i < L.length - 1 ? `<a href="#${L[i + 1].id}" data-ir4="${L[i + 1].id}">Idée suivante →</a>` : "<span></span>"}</nav>
+    <nav class="ir4-nav">${i > 0 ? `<a href="#${L[i - 1].id}" data-ir4="${L[i - 1].id}">← Idée précédente</a>` : ""}<span>${i + 1} sur ${L.length}</span>${i < L.length - 1 ? `<a href="#${L[i + 1].id}" data-ir4="${L[i + 1].id}">Idée suivante →</a>` : ""}</nav>
   </article>`;
 }
 function pageIdeesRecues4() {
