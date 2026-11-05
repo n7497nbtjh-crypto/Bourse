@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ENKLAIR · maquette fiche sur téléphone (v1)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* v1 (5/11) : la fiche sur téléphone passe d'environ 17 écrans à 4. Rien n'est retiré :
+   les cinq étapes, le métier, l'actualité et « Tous les chiffres » deviennent des cartes fermées
+   qui montrent l'essentiel (chiffre + pastille + jauge) et s'ouvrent au toucher.
+   Chiffres réels d'Hermès (comptes 2025). L'ordinateur ne change pas. */
+:root{--ink:#111;--y:#FFE14D;--yl:#FFF6C7;--g:#00A06B;--r:#D92D12;--gz:#E2F8EE;--rz:#FFE9E3;--mut:#666}
+*{box-sizing:border-box;margin:0;padding:0}a{color:inherit;text-decoration:none}button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+body{background:#F1F1EE;color:var(--ink);font:400 15px/1.45 Inter,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.w{max-width:1000px;margin:0 auto;padding:36px 24px 80px;display:grid;grid-template-columns:1fr 410px;gap:40px;align-items:start}
+.exp h1{font:800 40px/1.02 "Bricolage Grotesque";letter-spacing:-.05em}
+.exp p{margin-top:14px;font:500 16px/1.5 Inter;max-width:46ch}
+.cmp{margin-top:28px;display:flex;gap:26px;align-items:flex-end}
+.cmp div{text-align:center;font:700 13px Inter}
+.cmp i{display:block;width:70px;border:2px solid var(--ink);border-radius:10px;margin:0 auto 8px}
+.cmp b{display:block;font:800 26px "Bricolage Grotesque"}
+.exp ul{margin:26px 0 0 18px;font:500 15px/1.6 Inter}.exp li{margin-bottom:6px}
+.tel{width:410px;background:#fff;border:3px solid var(--ink);border-radius:38px;padding:14px;box-shadow:8px 8px 0 var(--ink);position:sticky;top:20px;max-height:calc(100vh - 40px);overflow:auto}
+.tel::-webkit-scrollbar{width:0}
+/* en-tête */
+.hero{background:var(--y);border-radius:24px;padding:16px 16px 18px}
+.fil{font:600 12px Inter;color:#555}
+.idt{display:flex;gap:12px;align-items:center;margin-top:10px}
+.lg{width:58px;height:58px;border:2px solid var(--ink);border-radius:14px;background:#fff url(../../cf/site/logos/hermes.png) center/80% no-repeat}
+.idt h2{font:800 40px/.95 "Bricolage Grotesque";letter-spacing:-.05em}
+.chips{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap}
+.chip{font:700 11.5px Inter;border:2px solid var(--ink);border-radius:999px;padding:2px 9px;background:#fff}
+.desc{font:600 14px/1.4 Inter;margin-top:10px}
+.px{margin-top:12px;background:#fff;border:2px solid var(--ink);border-radius:16px;padding:10px 12px;display:flex;align-items:center;gap:12px}
+.px b{font:800 26px "Bricolage Grotesque";letter-spacing:-.03em}
+.px .v{font:700 13px Inter;color:var(--g)}
+.px .bar{flex:1;min-width:0}
+.px .rail{height:6px;border:1.5px solid var(--ink);border-radius:9px;background:linear-gradient(90deg,var(--rz),var(--gz));position:relative}
+.px .rail i{position:absolute;left:14%;top:-5px;width:13px;height:13px;border-radius:50%;background:var(--ink)}
+.px small{display:block;font:600 10.5px Inter;color:#555;margin-top:5px}
+.stk{display:inline-block;font:800 12.5px "Bricolage Grotesque";padding:3px 10px;border-radius:9px;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);transform:rotate(-2deg);background:#fff;margin-top:16px}
+.vrd{font:800 27px/1.04 "Bricolage Grotesque";letter-spacing:-.04em;margin-top:8px}
+.rep{margin-top:12px;background:#fff;border:2px solid var(--ink);border-radius:16px;overflow:hidden}
+.rep a{display:grid;grid-template-columns:22px 1fr auto 52px;gap:8px;align-items:center;padding:9px 12px;border-top:1.5px solid #E6E6E1}
+.rep a:first-child{border-top:0}
+.n{width:20px;height:20px;border-radius:50%;background:var(--ink);color:#fff;font:800 11px Inter;display:grid;place-items:center}
+.rep span{font:700 13.5px Inter}
+.rep b{font:800 18px "Bricolage Grotesque";text-align:right}
+.g{color:var(--g)}.r{color:var(--r)}
+.mg{height:6px;border-radius:9px;background:linear-gradient(90deg,var(--rz) 50%,var(--gz) 50%);position:relative}
+.mg i{position:absolute;top:-3px;width:12px;height:12px;border-radius:50%;background:var(--ink);transform:translateX(-50%)}
+.mg::after{content:"";position:absolute;left:50%;top:-4px;width:2px;height:14px;background:var(--ink)}
+.med{font:600 11.5px/1.4 Inter;color:#444;margin-top:8px}
+.acts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:12px}
+.acts a{border:2px solid var(--ink);border-radius:12px;padding:8px 4px;text-align:center;font:700 11.5px/1.2 Inter;background:#fff}
+.acts a.ia{background:#3B5BFF;color:#fff}
+/* sections */
+.sec{margin-top:26px}
+.sec .lab{display:inline-block;font:800 12px "Bricolage Grotesque";padding:3px 9px;border-radius:8px;border:2px solid var(--ink);transform:rotate(-2deg);background:var(--y)}
+.sec h3{font:800 24px/1.05 "Bricolage Grotesque";letter-spacing:-.04em;margin:8px 0 12px}
+.cd{border:2px solid var(--ink);border-radius:16px;background:#fff;margin-bottom:9px;overflow:hidden}
+.cd>.h{display:grid;grid-template-columns:24px 1fr auto;gap:10px;align-items:center;padding:12px 12px 11px;cursor:pointer}
+.cd .t{font:700 12px Inter;color:#555}
+.cd .t em{font-style:normal;background:var(--y);padding:0 3px;color:var(--ink)}
+.cd .f{font:800 21px/1.1 "Bricolage Grotesque";letter-spacing:-.03em;margin-top:1px}
+.cd .f small{font:600 12px Inter;color:#444;letter-spacing:0}
+.pst{display:inline-block;font:700 11px Inter;border-radius:999px;padding:2px 8px;margin-top:5px;border:1.5px solid}
+.pst.g{background:var(--gz);border-color:var(--g)}.pst.r{background:var(--rz);border-color:var(--r)}
+.chev{width:26px;height:26px;border:2px solid var(--ink);border-radius:50%;display:grid;place-items:center;font:800 13px Inter;transition:transform .2s}
+.cd.open .chev{transform:rotate(180deg);background:var(--y)}
+.cd .b{display:none;border-top:1.5px dashed #CFCFC8;padding:12px}
+.cd.open .b{display:block}
+.cols{display:flex;align-items:flex-end;gap:10px;height:120px;padding:0 4px;border-bottom:2px solid var(--ink)}
+.cols div{flex:1;text-align:center;font:700 11px Inter}
+.cols i{display:block;background:#E7E5DD;border:2px solid var(--ink);border-bottom:0;border-radius:6px 6px 0 0;margin-top:3px}
+.cols div:last-child i{background:var(--y)}
+.yrs{display:flex;gap:10px;padding:4px 4px 0}.yrs span{flex:1;text-align:center;font:600 11px Inter;color:#555}
+.why{margin-top:12px;background:var(--yl);border-radius:12px;padding:10px 12px;font:500 13px/1.45 Inter}
+.why b{font-weight:800}
+.more{display:block;margin-top:10px;font:700 12.5px Inter;text-decoration:underline}
+.mini{display:flex;height:16px;border:2px solid var(--ink);border-radius:8px;overflow:hidden;margin-top:8px}
+.mini i:nth-child(1){width:44%;background:var(--ink)}.mini i:nth-child(2){width:28%;background:#F4B400}.mini i:nth-child(3){width:13%;background:#4C7BF2}.mini i:nth-child(4){width:15%;background:#E7E5DD}
+.ag{display:grid;grid-template-columns:42px 1fr;gap:10px;align-items:center;padding:9px 12px;border-top:1.5px solid #E6E6E1}
+.ag:first-child{border-top:0}
+.ag .d{border:2px solid var(--ink);border-radius:10px;background:var(--y);text-align:center;font:800 16px/1 "Bricolage Grotesque";padding:4px 0}
+.ag .d small{display:block;font:700 9.5px Inter}
+.ag p{font:700 13px/1.3 Inter}.ag p small{display:block;font:600 11.5px Inter;color:#555}
+.ask{margin-top:24px;background:#3B5BFF;color:#fff;border-radius:18px;padding:16px}
+.ask h3{font:800 22px/1.05 "Bricolage Grotesque";color:#fff;margin:0 0 10px}
+.ask a{display:block;background:#fff;color:var(--ink);border-radius:12px;padding:9px 12px;font:700 12.5px Inter;margin-top:6px}
+.note2{font:600 11px/1.4 Inter;color:#666;margin-top:14px;text-align:center}
+@media(max-width:860px){.w{grid-template-columns:1fr}.tel{position:static;max-height:none;margin:0 auto}}
+</style></head><body>
+<div class="w">
+<div class="exp">
+  <h1>La fiche sur téléphone : de 17 écrans à 4.</h1>
+  <p>On garde tout, mais on ne déroule plus tout. Chaque étape devient une carte fermée qui montre déjà l'essentiel : le chiffre, la pastille face aux rivales et la jauge. Un toucher l'ouvre sur le graphique et « Ce qui l'explique ».</p>
+  <div class="cmp">
+    <div><i style="height:220px;background:#E7E5DD"></i>Aujourd'hui<b>17 écrans</b></div>
+    <div><i style="height:52px;background:var(--y)"></i>Proposé<b>4 écrans</b></div>
+  </div>
+  <ul>
+    <li><b>En-tête</b> : cours, variation et fourchette sur une seule ligne (au lieu d'une grande carte).</li>
+    <li><b>Les 5 repères</b> : une ligne chacun (chiffre + jauge), sans sous-titre ; chaque ligne mène à son étape.</li>
+    <li><b>Les 5 étapes</b> : cartes fermées. Le graphique, les rivales nommées, « Ce qui l'explique » et le lien vers le rapport officiel restent à l'intérieur.</li>
+    <li><b>Son métier</b> : une barre des activités, le détail au toucher.</li>
+    <li><b>Actualité</b> : les 3 prochaines dates, puis « Son secteur » fermé.</li>
+    <li><b>Tous les chiffres</b> : 4 cartes fermées (résultats, bilan, argent encaissé, actionnaire).</li>
+    <li>L'ordinateur ne change pas.</li>
+  </ul>
+</div>
+
+<div class="tel">
+  <div class="hero">
+    <div class="fil">Entreprises › Consommation › Hermès</div>
+    <div class="idt"><span class="lg"></span><div><h2>Hermès</h2><div class="chips"><span class="chip">Consommation</span><span class="chip">France · RMS</span><span class="chip">PEA ✓</span></div></div></div>
+    <p class="desc">Maroquinerie (sacs Birkin, Kelly), soie, prêt-à-porter, parfums.</p>
+    <div class="px"><div><b>1 387 €</b><div class="v">+1,06 % aujourd'hui</div></div><div class="bar"><div class="rail"><i></i></div><small>Sur un an : de 1 228 € à 2 300 €</small></div></div>
+    <span class="stk">Le verdict 2025</span>
+    <p class="vrd">Très rentable, sans dette, le marché y croit.</p>
+    <div class="rep">
+      <a><span class="n">1</span><span>Ses ventes</span><b class="g">+5,5 %</b><span class="mg"><i style="left:78%"></i></span></a>
+      <a><span class="n">2</span><span>Sa marge</span><b class="g">41 €</b><span class="mg"><i style="left:94%"></i></span></a>
+      <a><span class="n">3</span><span>Son bénéfice</span><b class="g">28 €</b><span class="mg"><i style="left:92%"></i></span></a>
+      <a><span class="n">4</span><span>Son dividende</span><b>62 %</b><span class="mg"><i style="left:52%"></i></span></a>
+      <a><span class="n">5</span><span>Son prix</span><b>32 fois</b><span class="mg"><i style="left:38%"></i></span></a>
+    </div>
+    <p class="med">Point à droite = mieux que la <u>médiane</u> de ses 3 rivales (LVMH, Kering, Moncler).</p>
+    <div class="acts"><a>☆ Favori</a><a>Comparer</a><a class="ia">✦ Question</a></div>
+  </div>
+
+  <div class="sec">
+    <span class="lab">L'histoire de ses comptes</span>
+    <h3>De ses ventes au prix de l'action, en 5 étapes.</h3>
+    <div class="cd open"><div class="h"><span class="n">1</span><div><div class="t"><em>Chiffre d'affaires</em> · ses ventes en 2025</div><div class="f">16,0 Md€ <small>+5,5 % sur un an</small></div><span class="pst g">Plus de croissance que ses rivales</span></div><span class="chev">⌄</span></div>
+      <div class="b">
+        <div class="cols"><div>11,6<i style="height:58px"></i></div><div>13,4<i style="height:67px"></i></div><div>15,2<i style="height:76px"></i></div><div>16,0<i style="height:80px"></i></div></div>
+        <div class="yrs"><span>2022</span><span>2023</span><span>2024</span><span>2025</span></div>
+        <div class="why"><b>Ce qui l'explique :</b> la plus faible progression depuis 2022, mais toujours en hausse quand LVMH (−4,6 %) et Kering (−13 %) reculent.</div>
+        <a class="more">Comptes officiels, exercice clos · dans le rapport officiel ↗</a>
+      </div></div>
+    <div class="cd"><div class="h"><span class="n">2</span><div><div class="t"><em>Marge d'exploitation</em> · gardé sur 100 € de ventes</div><div class="f">41 € <small>médiane des rivales : 22 €</small></div><span class="pst g">Presque deux fois plus que ses rivales</span></div><span class="chev">⌄</span></div></div>
+    <div class="cd"><div class="h"><span class="n">3</span><div><div class="t"><em>Bénéfice net</em> · après impôt</div><div class="f">4,5 Md€ <small>−1,7 % sur un an</small></div><span class="pst g">28 € sur 100 € de ventes, le plus haut</span></div><span class="chev">⌄</span></div></div>
+    <div class="cd"><div class="h"><span class="n">4</span><div><div class="t"><em>Part du bénéfice versée</em> · aux actionnaires</div><div class="f">62 % <small>16 € par action</small></div><span class="pst g">Comme ses rivales</span></div><span class="chev">⌄</span></div></div>
+    <div class="cd"><div class="h"><span class="n">5</span><div><div class="t"><em>PER</em> · le prix face au bénéfice</div><div class="f">32 fois <small>rivales : 21 fois</small></div><span class="pst r">PER plus haut que ses rivales</span></div><span class="chev">⌄</span></div></div>
+  </div>
+
+  <div class="sec">
+    <span class="lab">Son métier</span>
+    <h3>D'où viennent ses ventes.</h3>
+    <div class="cd"><div class="h"><span class="n" style="background:var(--y);color:var(--ink)">€</span><div><div class="t">Par activité · 2025</div><div class="f" style="font-size:16px">Maroquinerie et sellerie : 44 %</div><div class="mini"><i></i><i></i><i></i><i></i></div></div><span class="chev">⌄</span></div></div>
+    <div class="cd"><div class="h"><span class="n" style="background:var(--y);color:var(--ink)">⌖</span><div><div class="t">Par zone · 2025</div><div class="f" style="font-size:16px">Asie-Pacifique : 42 %</div></div><span class="chev">⌄</span></div></div>
+  </div>
+
+  <div class="sec">
+    <span class="lab">Son actualité</span>
+    <h3>Ce qui arrive.</h3>
+    <div class="cd">
+      <div class="ag"><span class="d">12<small>févr.</small></span><p>Résultats annuels 2026<small>Dans 99 jours</small></p></div>
+      <div class="ag"><span class="d">22<small>avr.</small></span><p>Chiffre d'affaires du 1er trimestre 2027<small>Dans 168 jours</small></p></div>
+      <div class="ag"><span class="d">28<small>avr.</small></span><p>Assemblée générale 2027<small>Dans 174 jours</small></p></div>
+    </div>
+    <div class="cd"><div class="h"><span class="n" style="background:#4C7BF2">!</span><div><div class="t">Ce qui touche son secteur</div><div class="f" style="font-size:16px">3 sujets en ce moment</div><span class="pst r">Les 3 plutôt défavorables</span></div><span class="chev">⌄</span></div></div>
+  </div>
+
+  <div class="sec">
+    <span class="lab">Pour aller plus loin</span>
+    <h3>Tous les chiffres.</h3>
+    <div class="cd"><div class="h"><span class="n">≡</span><div><div class="t">Ses résultats</div><div class="f" style="font-size:16px">Ventes, marge, bénéfice, 4 ans</div></div><span class="chev">⌄</span></div></div>
+    <div class="cd"><div class="h"><span class="n">≡</span><div><div class="t">Son bilan et sa dette</div><div class="f" style="font-size:16px">Trésorerie nette : 12,2 Md€</div></div><span class="chev">⌄</span></div></div>
+    <div class="cd"><div class="h"><span class="n">≡</span><div><div class="t">L'argent réellement encaissé</div><div class="f" style="font-size:16px">Flux disponible : 4,2 Md€</div></div><span class="chev">⌄</span></div></div>
+    <div class="cd"><div class="h"><span class="n">≡</span><div><div class="t">Pour l'actionnaire</div><div class="f" style="font-size:16px">Bénéfice par action : 43,15 €</div></div><span class="chev">⌄</span></div></div>
+  </div>
+
+  <div class="ask"><h3>✦ Une question sur Hermès ?</h3><a>Pourquoi le bénéfice d'Hermès a baissé en 2025 ?</a><a>Pourquoi l'action vaut-elle 32 fois son bénéfice ?</a></div>
+  <p class="note2">Maquette · chiffres réels d'Hermès, comptes 2025 · les cartes s'ouvrent au toucher</p>
+</div>
+</div>
+<script>document.querySelectorAll(".cd>.h").forEach(h=>h.onclick=()=>h.parentNode.classList.toggle("open"))</script>
+</body></html>
