@@ -6,10 +6,11 @@ const j = async u => { let st = 0; for (let i = 0; i < 6; i++) { try { const r =
 const p = await j("https://en.wikipedia.org/w/api.php?action=parse&format=json&prop=wikitext&page=Nikkei%20225");
 const wt = p.parse.wikitext["*"]; writeFileSync(`${OUT}/nikkei.wikitext`, wt);
 // lignes du type « | [[Mazda]] || 7261 || ... » ou modèles {{TYO|7261}}
-const rows = [];
+const rows = []; let sec = "";
 for (const l of wt.split("\n")) {
-  const lien = l.match(/\[\[([^\]|#]+)(?:\|([^\]]*))?\]\]/), code = l.match(/\{\{\s*(?:TYO|TSE|tyo)\s*\|\s*(\d{4}[A-Z]?)\s*\}\}/) || l.match(/\|\|\s*(\d{4})\s*(\|\||$)/);
-  if (lien && code) rows.push({ titre: lien[1].trim(), nom: (lien[2] || lien[1]).trim(), code: code[1] });
+  const h = l.match(/^===?\s*([^=]+?)\s*===?\s*$/); if (h) sec = h[1];
+  const lien = l.match(/\[\[([^\]|#]+)(?:\|([^\]]*))?\]\]/), code = l.match(/\{\{\s*(?:TYO|TSE|tyo2?)\s*\|\s*(\d{4}[A-Z]?)\s*\}\}/) || l.match(/\|\|\s*(\d{4})\s*(\|\||$)/);
+  if (lien && code) rows.push({ titre: lien[1].trim(), nom: l.replace(/^\*\s*/, "").replace(/\(\{\{.*$/, "").replace(/\[\[(?:[^\]|]*\|)?([^\]]*)\]\]/g, "$1").trim(), code: code[1], secteur: sec });
 }
 console.log(rows.length, "lignes avec un code");
 const items = {};
