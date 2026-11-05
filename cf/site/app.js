@@ -1951,8 +1951,8 @@ async function premiumMerci() {
   app.innerHTML = `<h1 class="pagetitle">Merci</h1><section class="panel"><div class="pb" id="merci"><p class="muted">Vérification du paiement…</p></div></section>`;
   let j = {}; for (let i = 0; i < 4; i++) { try { j = await (await fetch("/api/premium/activer?session_id=" + encodeURIComponent(sid))).json(); } catch (e) { j = { error: "Vérification impossible pour le moment." }; } if (j.token || !/pas encore confirmé/.test(j.error || "")) break; await new Promise(r => setTimeout(r, 4000)); }
   if (!j.token) { $("#merci").innerHTML = `<p>${esc(j.error || "Paiement introuvable.")}</p><p class="muted">Si vous avez été débité, écrivez-nous en indiquant l'adresse utilisée pour payer : votre accès sera ouvert à la main.</p>`; return; }
-  setPremTok(j.token); await premStatus();
-  $("#merci").innerHTML = `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Toute l'Académie et toutes vos alertes sont ouvertes sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/favoris">Activer les alertes sur mes favoris →</a><a class="more" href="/entreprises">Ouvrir une fiche →</a></div>`;
+  setPremTok(j.token); await premStatus(); const mo = await moi(true).catch(() => ({})); // connecté : l'abonnement est rattaché au compte par moi()
+  $("#merci").innerHTML = (mo && mo.connecte ? `<p class="lead" style="margin-top:0"><b>Votre abonnement est rattaché à votre espace</b> (${esc(mo.email || "")}) : rapport du samedi et alertes inclus, sur tous vos appareils.</p>` : `<div class="note" style="margin:0 0 14px;border:2px solid #111;border-radius:14px;padding:12px 14px;background:#FFF6C7"><b>Dernière étape : créez votre espace.</b> Le rapport du samedi et les alertes partent de votre espace (une adresse et un mot de passe). Votre abonnement y sera rattaché automatiquement. <a class="lnk" href="/espace"><b>Créer mon espace →</b></a></div>`) + `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Toute l'Académie et toutes vos alertes sont ouvertes sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/favoris">Activer les alertes sur mes favoris →</a><a class="more" href="/entreprises">Ouvrir une fiche →</a></div>`;
 }
 
 /* ---------- Nouvel investisseur : par où commencer ---------- */
@@ -2044,7 +2044,10 @@ const BIENTOT = ` <span class="muted" title="Ouvre dès que le robot du soir aur
 function moi(force) {
   if (MOI && !force) return Promise.resolve(MOI);
   if (MOIP && !force) return MOIP;
-  return MOIP = fetch("/api/espace/moi", { credentials: "same-origin" }).then(r => r.ok ? r.json() : { connecte: false }).catch(() => ({ connecte: false })).then(j => {
+  return MOIP = fetch("/api/espace/moi", { credentials: "same-origin" }).then(r => r.ok ? r.json() : { connecte: false }).catch(() => ({ connecte: false })).then(async j => {
+    // 5/11 : un abonnement payé sur cet appareil est rattaché au compte dès la connexion (rapport, alertes et e-mails partent du compte)
+    let t = ""; try { t = localStorage.getItem(TKEY) || ""; } catch (e) { }
+    if (j.connecte && !j.premium && t) { const r = await post2("/api/espace/premium", { token: t }).catch(() => ({})); if (r && r.ok) { j.premium = true; j.plan = r.plan; j.premium_jusqu_au = r.premium_jusqu_au; } }
     MOIP = null; MOI = j; document.documentElement.classList.toggle("is-in", !!j.connecte);
     if (j.connecte) { if (j.premium) { PREM = { premium: true, plan: j.plan }; document.documentElement.classList.add("is-prem"); } syncFromServer(j); }
     espaceBadge(); return j;
