@@ -327,6 +327,8 @@ e:bnp-sp500,EPA:ESE,AMS:ESE,EBR:ESE
 e:ishares-euro-stoxx-de,ETR:EXSI,FRA:EXSI,
 e:amundi-cac40,EPA:CAC,AMS:CAC,EBR:CAC
 e:ishares-euro-stoxx-banks-30-15-de-dist,ETR:EXX1,FRA:EXX1,
+e:hsbc-euro-stoxx-50,EPA:H50A,AMS:H50A,EBR:H50A
+e:hsbc-euro-stoxx-50-b022,EPA:50E,AMS:50E,EBR:50E
 e:ishares-msci-world-swap-pea,EPA:WPEA,AMS:WPEA,EBR:WPEA
 e:ishares-msci-emu-paris-aligned-climate-acc,EPA:EMPA,AMS:EMPA,EBR:EMPA
 e:ishares-msci-emu-screened-acc,ETR:SLMA,FRA:SLMA,
@@ -646,8 +648,6 @@ e:spdr-ftse-global-convertible-bond-dist,ETR:ZPRC,FRA:ZPRC,
 e:spdr-ftse-global-convertible-bond-eur-hdg-acc,ETR:SPF1,FRA:SPF1,
 e:spdr-ftse-global-convertible-bond-usd-hdg-dist,ETR:SPF2,FRA:SPF2,
 e:ishares-short-duration-high-yield-corp-bond-dist,ETR:IS3K,FRA:IS3K,
-e:hsbc-euro-stoxx-50,EPA:H50A,AMS:H50A,EBR:H50A
-e:hsbc-euro-stoxx-50-b022,EPA:50E,AMS:50E,EBR:50E
 e:ishares-msci-usa-small-cap-ctb-enhanced-esg-acc,ETR:SXRG,FRA:SXRG,
 e:amundi-msci-all-country-world-swap-acc,EPA:ACWI,AMS:ACWI,EBR:ACWI
 e:xtrackers-eurozone-govt-bond,ETR:XGLE,FRA:XGLE,
