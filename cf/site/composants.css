@@ -1612,3 +1612,6 @@ html body .ek.pf4 #pf3dash>details.pf4v>summary>.pf4-ti{display:grid}html body .
   .f4m #tout .ek-tc.f4m-pl>h3{margin:0}
   .f4m #tout .ek-tg{gap:10px}
 }
+
+/* Mon espace : gérer ou résilier l'abonnement Premium (5/11) */
+html #app .esphead2 .esp-abo{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:12px;font-size:13.5px}
