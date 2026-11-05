@@ -98,7 +98,7 @@ export async function premium(request, env) {
       const token = newToken(), email = (s.customer_details && s.customer_details.email) || s.customer_email || null;
       await env.DB.prepare(`INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run();
       return json({ token, plan });
-    } catch (e) { return json({ error: "Vérification du paiement impossible : " + String(e.message).slice(0, 100) }, 502); }
+    } catch (e) { return json({ error: "Vérification du paiement impossible : " + String(e.message).slice(0, 100) }, 400); } // 5/11 : 400 et non 502 (Cloudflare remplaçait la réponse par sa propre page d'erreur)
   }
   if (path === "/api/premium/attente" && request.method === "POST") { // liste d'attente : une adresse, rien d'autre ; prix bloqué pour les inscrits avant l'ouverture
     const ip = request.headers.get("cf-connecting-ip") || "local";
