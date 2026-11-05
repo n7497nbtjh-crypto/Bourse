@@ -61,11 +61,13 @@ export async function coursEulerpool(societes, log = console.log) {
 if (process.argv[1] && /[\/\\]eulerpool_cours\.mjs$/.test(process.argv[1])) {
   const i = process.argv.indexOf("--verifier"), n = i > 0 ? +process.argv[i + 1] : 40;
   const { default: U } = await import("./univers.mjs"), items = JSON.parse(readFileSync(new URL("../cf/site/data/cours.json", import.meta.url))).items;
-  const avec = U.filter(c => items["c:" + c.id] && items["c:" + c.id].p > 0 && items["c:" + c.id].s !== "EP" && DEVISE_PLACE[String(c.tv || "").split(":")[0]] && !/^LSE:/.test(c.tv || ""));
+  const mode = process.argv[process.argv.indexOf("--verifier") + 2] || ""; // « lse », « devise » ou « us » : cas à valider avant de les ouvrir
+  const avec = U.filter(c => items["c:" + c.id] && items["c:" + c.id].p > 0 && items["c:" + c.id].s !== "EP" && DEVISE_PLACE[String(c.tv || "").split(":")[0]]
+    && (mode === "lse" ? /^LSE:/.test(c.tv) : mode === "us" ? /^(NYSE|NASDAQ):/.test(c.tv) : !/^LSE:/.test(c.tv || "")));
   for (let k = avec.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [avec[k], avec[j]] = [avec[j], avec[k]]; }
   const L = []; for (const c of avec.slice(0, n)) {
     const g = items["c:" + c.id], cur = DEVISE_PLACE[c.tv.split(":")[0]];
-    const p = await get(`/equity/profile/${c.isin}`), b = p && p.currency === cur ? await get(`/equity/candles/${c.isin}?range=5y`) : null, e = b ? depuisBougies(b, cur, p.shares) : null;
+    const p = await get(`/equity/profile/${c.isin}`), b = p && (mode === "devise" ? p.currency !== cur : mode === "lse" || p.currency === cur) ? await get(`/equity/candles/${c.isin}?range=5y`) : null, e = b ? depuisBougies(b, cur, p.shares) : null;
     if (!e) { console.log(c.id, "pas de cours Eulerpool", p ? p.currency : "inconnue"); continue; }
     const ec = x => g[x] && e[x] ? Math.round((e[x] / g[x] - 1) * 1000) / 10 : null;
     L.push(Math.abs(ec("p"))); console.log(c.id, cur, "Google", g.p, "Eulerpool", e.p, e.d, "écart", ec("p"), "% | 1 an", ec("p1y"), "% | haut", ec("h52"), "% | capitalisation", ec("cap"), "%");
