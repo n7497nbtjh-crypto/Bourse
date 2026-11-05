@@ -13,11 +13,8 @@ async function lireFeuille(request, env) {
     Object.assign(items, parseCours(await r.text()));
   }
   if (Object.keys(items).length < 50) throw new Error("feuille incomplète");
-  // Colonnes historiques vides ou titres absents de la feuille : on complète avec le fichier du robot (dernières valeurs connues)
-  const j = await fichierRobot(request, env);
-  // vl / ep : la date reste celle de la valeur (5/11 : cours Eulerpool) ; une ligne de la feuille sans prix laisse la place au fichier du robot
-  if (j) { const HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-    for (const [k, v] of Object.entries(j.items || {})) { const it = items[k]; if (!it || (!(it.p > 0) && v.p > 0)) { items[k] = j.updated && !v.vl && !v.ep ? { ...v, d: j.updated } : v; continue; } for (const f of HF) if (it[f] == null && v[f] != null) it[f] = v[f]; } }
+  // 5/11 : plus de fusion avec le fichier du robot ici (lire 650 ko de JSON en plus des feuilles dépassait sans doute le temps de
+  // calcul permis au Worker : la copie gardée avait 20 h). La page fait la fusion elle-même (loadPrices dans app.js).
   return { updated: new Date().toISOString(), source: "Google Finance, cours différés", items };
 }
 async function fichierRobot(request, env) {
@@ -41,4 +38,15 @@ export async function cours(request, ctx, env) {
   const frais = await rafraichir();
   if (frais) return reponse(frais, 0);
   return Response.json({ error: "Cours indisponibles pour le moment" }, { status: 503 });
+}
+
+// Cours de la feuille complétés par le fichier du robot (cours Eulerpool, valeurs liquidatives, historiques) : pour les tâches du
+// serveur (alertes, veille, connecteur MCP). Même règle que loadPrices dans app.js. Renvoie { updated, source, items }.
+export async function coursComplets(request, ctx, env) {
+  let j = {}; try { j = await (await cours(request, ctx, env)).json(); } catch (e) { }
+  const items = j.items || {}, rob = await fichierRobot(request, env);
+  if (rob && rob.items) for (const [k, v] of Object.entries(rob.items)) { const it = items[k];
+    if (!it || (!(it.p > 0) && v.p > 0) || ((v.ep || v.vl) && v.d && (!it.d || v.d > it.d))) items[k] = it || !rob.updated || v.vl || v.ep ? v : { ...v, d: rob.updated };
+    else for (const f of ["h52", "l52", "p1y", "p3y", "p5y"]) if (it[f] == null && v[f] != null) it[f] = v[f]; }
+  return { ...j, items };
 }

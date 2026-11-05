@@ -537,18 +537,6 @@ async function lireFeuille(request, env) {
     Object.assign(items, parseCours(await r.text()));
   }
   if (Object.keys(items).length < 50) throw new Error("feuille incompl\xE8te");
-  let j = await fichierRobot(request, env);
-  if (j) {
-    let HF = ["h52", "l52", "p1y", "p3y", "p5y"];
-    for (let [k, v] of Object.entries(j.items || {})) {
-      let it = items[k];
-      if (!it || !(it.p > 0) && v.p > 0) {
-        items[k] = j.updated && !v.vl && !v.ep ? { ...v, d: j.updated } : v;
-        continue;
-      }
-      for (let f of HF) it[f] == null && v[f] != null && (it[f] = v[f]);
-    }
-  }
   return { updated: (/* @__PURE__ */ new Date()).toISOString(), source: "Google Finance, cours diff\xE9r\xE9s", items };
 }
 async function fichierRobot(request, env) {
@@ -580,6 +568,20 @@ async function cours(request, ctx, env) {
     return enFond(rafraichir()), reponse2({ ...j, source: (j.source || "Google Finance") + " (copie du matin, mise \xE0 jour en cours)" }, -1);
   let frais = await rafraichir();
   return frais ? reponse2(frais, 0) : Response.json({ error: "Cours indisponibles pour le moment" }, { status: 503 });
+}
+async function coursComplets(request, ctx, env) {
+  let j = {};
+  try {
+    j = await (await cours(request, ctx, env)).json();
+  } catch {
+  }
+  let items = j.items || {}, rob = await fichierRobot(request, env);
+  if (rob && rob.items) for (let [k, v] of Object.entries(rob.items)) {
+    let it = items[k];
+    if (!it || !(it.p > 0) && v.p > 0 || (v.ep || v.vl) && v.d && (!it.d || v.d > it.d)) items[k] = it || !rob.updated || v.vl || v.ep ? v : { ...v, d: rob.updated };
+    else for (let f of ["h52", "l52", "p1y", "p3y", "p5y"]) it[f] == null && v[f] != null && (it[f] = v[f]);
+  }
+  return { ...j, items };
 }
 
 // cf/src/veille.mjs
@@ -687,7 +689,7 @@ async function siteData(request, env) {
     }
   }, [uni, etf, ana, ag, agAuto, sem] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json")]), px = {};
   try {
-    px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {};
+    px = (await coursComplets(new Request(new URL("/api/cours", request.url)), null, env)).items || {};
   } catch {
   }
   let names = {};
@@ -1666,7 +1668,7 @@ async function siteData2(request, env) {
     }
   }, [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]), px = {};
   try {
-    px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {};
+    px = (await coursComplets(new Request(new URL("/api/cours", request.url)), null, env)).items || {};
   } catch {
   }
   let names = {}, meta2 = {}, isin = {}, etfm = {};
@@ -2404,11 +2406,8 @@ function prix(env, origin, ctx) {
   let p = (async () => {
     let items = null, updated = null, source = "Google Finance, cours diff\xE9r\xE9s";
     try {
-      let r = await cours(new Request(origin + "/api/cours"), ctx);
-      if (r.ok) {
-        let j = await r.json();
-        items = j.items, updated = j.updated;
-      }
+      let j = await coursComplets(new Request(origin + "/api/cours"), ctx);
+      j.items && Object.keys(j.items).length && (items = j.items, updated = j.updated);
     } catch {
     }
     if (!items) {
@@ -2983,7 +2982,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "661612e2610cb61a", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "869f998d358cf5af", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

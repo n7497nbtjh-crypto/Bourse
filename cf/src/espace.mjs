@@ -9,7 +9,7 @@
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
 import { iaMesures } from "./iasite.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk } from "./compte.mjs";
-import { cours } from "./cours.mjs";
+import { coursComplets } from "./cours.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
 
 const SCHEMA = [
@@ -147,7 +147,7 @@ const jourSemaine = ymd => new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 dimanc
 async function siteData(request, env) {
   const get = async p => { try { const r = await env.ASSETS.fetch(new Request(new URL(p, request.url))); return r.ok === false ? null : await r.json(); } catch (e) { return null; } };
   const [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]);
-  let px = {}; try { px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {}; } catch (e) { }
+  let px = {}; try { px = (await coursComplets(new Request(new URL("/api/cours", request.url)), null, env)).items || {}; } catch (e) { }
   const names = {}, meta = {}, isin = {}, etfm = {};
   (uni && uni.companies || []).forEach(c => { names["c:" + c.id] = c.name; meta["c:" + c.id] = { region: c.region, sector: c.sector }; if (c.isin) isin["c:" + c.id] = c.isin; });
   (etf && etf.list || []).forEach(e => { names["e:" + e.id] = e.name; etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index }; });

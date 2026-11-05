@@ -6,7 +6,7 @@
 // Débit : 240 appels d'outils par minute et 30 000 par jour pour une même adresse (empreinte anonyme, voir compte.mjs).
 // Limites larges : Claude et ChatGPT appellent depuis leurs propres serveurs, partagés par tous leurs utilisateurs.
 import { visitor } from "./compte.mjs";
-import { cours } from "./cours.mjs";
+import { coursComplets } from "./cours.mjs";
 
 export const VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 const INFO = { name: "bilan", title: "ENKLAIR : la Bourse, comptes à l'appui", version: "1.0.0" };
@@ -46,7 +46,7 @@ function prix(env, origin, ctx) { // cours différés (même source que le site)
   if (PRIX && Date.now() - PRIX.at < 6e5) return PRIX.p;
   const p = (async () => {
     let items = null, updated = null, source = "Google Finance, cours différés";
-    try { const r = await cours(new Request(origin + "/api/cours"), ctx); if (r.ok) { const j = await r.json(); items = j.items; updated = j.updated; } } catch (e) { }
+    try { const j = await coursComplets(new Request(origin + "/api/cours"), ctx); if (j.items && Object.keys(j.items).length) { items = j.items; updated = j.updated; } } catch (e) { }
     if (!items) { const j = await optionnel(charger(env, origin, "/data/cours.json"), {}); items = j.items || {}; updated = j.updated || null; source = j.source || "Google Finance, cours de clôture"; }
     const fx = await optionnel(charger(env, origin, "/data/fx.json"), {});
     return { items: items || {}, updated, source, fx: fx.eur || null };

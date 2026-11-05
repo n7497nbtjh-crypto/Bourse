@@ -3,7 +3,7 @@
 //  /api/veille/envoi, /alertes : envois groupés déclenchés par le robot (remplacés par les alertes de Mon espace : .github/workflows/espace.yml) avec ADMIN_KEY
 // Le site n'appelle aucun modèle d'IA : la rédaction se fait dans le navigateur avec l'IA que le visiteur a connectée (docs/ia.md).
 import { sendMail, mailReady, mailCapacity, premiumOf, adminOk } from "./compte.mjs";
-import { cours } from "./cours.mjs";
+import { coursComplets } from "./cours.mjs";
 const SCHEMA = [`CREATE TABLE IF NOT EXISTS veille (token TEXT PRIMARY KEY, email TEXT NOT NULL, ids TEXT NOT NULL, ok INTEGER NOT NULL DEFAULT 0, at INTEGER NOT NULL)`];
 let ready = false;
 async function init(db) { if (ready) return; for (const q of SCHEMA) await db.prepare(q).run(); ready = true; }
@@ -73,7 +73,7 @@ async function mails(request, env, path) {
 async function siteData(request, env) {
   const get = async p => { try { return await (await env.ASSETS.fetch(new Request(new URL(p, request.url)))).json(); } catch (e) { return null; } };
   const [uni, etf, ana, ag, agAuto, sem] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json")]);
-  let px = {}; try { px = (await (await cours(new Request(new URL("/api/cours", request.url)), null, env)).json()).items || {}; } catch (e) { }
+  let px = {}; try { px = (await coursComplets(new Request(new URL("/api/cours", request.url)), null, env)).items || {}; } catch (e) { }
   const names = {}; (uni && uni.companies || []).forEach(c => names["c:" + c.id] = c.name); (etf && etf.list || []).forEach(e => names["e:" + e.id] = e.name);
   return { names, px, sem: (sem && sem.items) || {}, ana: (ana && ana.items) || {}, ev: [...((ag && ag.events) || []), ...((agAuto && agAuto.events) || [])] };
 }
