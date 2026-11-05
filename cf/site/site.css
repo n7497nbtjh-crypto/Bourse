@@ -4203,3 +4203,7 @@ html body .results a.srow .st{overflow:hidden}
 .a4-ms.a4-ms-n b{background:#2F5BEA}
 .a4-tri strong{font-size:24px}
 .a4-duo div{grid-template-columns:118px 1fr}
+/* Accueil, carte d'exemple (5/11) : « 16 Md€ » : unité séparée du nombre, posée sur la même ligne de base */
+.a4 .a4-n{display:flex;align-items:baseline;gap:10px}
+.a4 .a4-n small{font-size:40px!important;letter-spacing:-.02em}
+@media (max-width:760px){.a4 .a4-n small{font-size:32px!important}}

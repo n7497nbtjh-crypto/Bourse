@@ -4,34 +4,7 @@
    1) les trimestres de l'année en cours l'un après l'autre, avec ce qui se passe d'habitude à cette saison (médiane des années précédentes) ;
    2) à part, l'année face aux années précédentes : les mois écoulés, ou le dernier trimestre seul s'il raconte autre chose.
    Trois onglets : ventes, bénéfice net, marge nette. Le verdict de la fiche reste calculé sur les comptes annuels audités. */
-const AN4_FL = '<svg viewBox="0 0 64 32" width="64" height="32" aria-hidden="true"><path d="M3 16h50M40 4l14 12-14 12" fill="none" stroke="#111" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
-const AN4_QN = ["1er trimestre", "2e trimestre", "3e trimestre", "4e trimestre"], AN4_QC = ["1er", "2e", "3e", "4e"];
-const AN4_MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 
-// Grille de l'exercice en cours et des précédents : G[n][k] = { ca, net, end, filed } (n = 0 pour l'exercice en cours, k = trimestre)
-function an4Grille(c, j) {
-  const Y = c.years[c.years.length - 1], fe = /^\d{2}-\d{2}$/.test(c.fyEnd || "") ? c.fyEnd : "12-31";
-  const E = new Date(`${Y}-${fe}T12:00:00Z`), J = 864e5, Q = (j.q || []).filter(q => q && q.end);
-  const proche = (cible) => Q.find(q => Math.abs(new Date(q.end + "T12:00:00Z") - cible) <= 20 * J) || null;
-  const plus = (d, m) => { const x = new Date(d); x.setUTCMonth(x.getUTCMonth() + m); return x; };
-  const cur = Q.filter(q => new Date(q.end + "T12:00:00Z") - E > 20 * J); // 4 trimestres : l'exercice est clos, la fiche attend ses comptes annuels
-  if (!cur.length || cur.length > 3) return null;
-  if (!cur.length) return null;
-  const G = [];
-  for (let n = 0; n <= 5; n++) G.push([0, 1, 2, 3].map(k => { const q = proche(plus(E, 3 * (k + 1) - 12 * n)); return q && q.ca != null ? q : null; }));
-  // 4/11 (Unum) : une année dont les quatre trimestres ne redonnent pas les comptes annuels (comptes refaits après coup,
-  // changement de norme) est écartée : sinon on compare des chiffres de deux versions différentes.
-  for (let n = 1; n < G.length; n++) {
-    const i = c.years.indexOf(Y - (n - 1)); if (i < 0 || G[n].some(q => !q)) continue;
-    const ecart = (k, an) => { if (an == null || G[n].some(q => q[k] == null)) return false; const t = G[n].reduce((a, q) => a + q[k], 0); return Math.abs(t - an) > Math.max(Math.abs(an) * 0.02, 1); };
-    if (ecart("ca", (c.fin.ca || [])[i]) || ecart("net", (c.fin.net || [])[i])) G[n] = [null, null, null, null];
-  }
-  const nbr = cur.length; if (G[0].slice(0, nbr).some(x => !x)) return null;
-  return { G, n: nbr, Y: Y + 1, mois: AN4_MOIS[+fe.slice(0, 2) - 1], civil: fe.slice(0, 2) === "12" || (fe.slice(0, 2) === "01" && +fe.slice(3) <= 7) }; // exercice de 52 semaines clos début janvier = année civile
-}
-
-// 4/11 (Unum : « −58,5 % » expliqué par « son capital grandit… ») : quand un seul trimestre fait plus de la moitié de la
-// variation du bénéfice sur l'année, l'étape du bénéfice le dit. Seulement si les quatre trimestres redonnent les comptes annuels.
 function an4Cause(x, j) {
   const c = x.c, n = c.years.length, Y = c.years[n - 1], net = (c.fin || {}).net || [], a = net[n - 1], b = net[n - 2];
   if (a == null || b == null || c.years[n - 2] !== Y - 1 || !(Math.abs(b) > 0)) return;
@@ -53,93 +26,82 @@ function an4Cause(x, j) {
   side.classList.remove("ek-side-seul"); side.insertAdjacentHTML("afterbegin", `<div class="ek-why"><p class="ek-wh">Ce qui l'explique</p>${html}</div>`);
 }
 
+/* 5/11 (maquette validée docs/maquettes/fiche-trimestres-v6.html) : « Ses derniers trimestres ». Une structure valable à toute date :
+   toujours les QUATRE DERNIERS TRIMESTRES PUBLIÉS, chacun face au même trimestre un an plus tôt (barres grise et jaune, l'année écrite
+   sous chaque barre), et le total des douze derniers mois face aux douze mois d'avant. Onglets Ventes / Bénéfice net / Marge nette.
+   Remplace « L'année en cours » (v5, qui dépendait du nombre de trimestres écoulés). */
+const TQ_M = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
+function tqNom(end) { // mois du trimestre d'après sa date de fin (10 jours retirés : un exercice de 52 semaines finit parfois début janvier)
+  const d = new Date(end + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() - 10); const f = d.getUTCMonth(), dd = (f + 10) % 12, y = d.getUTCFullYear(); return { m: `${TQ_M[dd]}-${TQ_M[f]}`, y, yd: dd > f ? y - 1 : y, deb: dd, fin: f }; }
+function tqSerie(j) { // les 4 derniers trimestres et, pour chacun, le même trimestre un an plus tôt (à 20 jours près)
+  const J = 864e5, Q = (j.q || []).filter(q => q && q.end && q.ca != null).sort((a, b) => a.end < b.end ? -1 : 1);
+  const dedans = Q.filter((q, i) => i === Q.length - 1 || q.end !== Q[i + 1].end);
+  const ap = dedans.slice(-4); if (ap.length < 4) return null;
+  const av = ap.map(q => { const t = new Date(q.end + "T12:00:00Z") - 365.25 * J; return dedans.find(p => Math.abs(new Date(p.end + "T12:00:00Z") - t) <= 20 * J) || null; });
+  if (av.some(q => !q)) return null;
+  for (let i = 1; i < 4; i++) { const g = (new Date(ap[i].end) - new Date(ap[i - 1].end)) / J; if (g < 75 || g > 105) return null; }
+  return { ap, av };
+}
 async function f4Annee(x) {
-  const el = document.getElementById("f4-annee"); if (!el || !x || !x.c) return; // SEC, communiqués AMF (data/trim_eu.mjs) ou trimestres Eulerpool contrôlés (data/eulerpool.mjs --trim)
+  const el = document.getElementById("f4-annee"); if (!el || !x || !x.c) return; // SEC, communiqués AMF (data/trim_eu.mjs) ou trimestres Eulerpool contrôlés
   let j = null; try { j = await fetch(`/data/trim/${x.s.id}.json`).then(r => r.ok ? r.json() : null); } catch (e) { }
   if (!j || (j.currency && x.c.currency && j.currency !== x.c.currency) || window.F4X !== x) return;
   try { an4Cause(x, j); } catch (e) { }
-  const A = an4Grille(x.c, j); if (!A) return;
-  const avecNet = A.G[0].slice(0, A.n).every(q => q.net != null);
+  const T = tqSerie(j); if (!T) return;
+  const avecNet = [...T.ap, ...T.av].every(q => q.net != null);
   const metr = x.bk ? (avecNet ? ["net"] : []) : avecNet ? ["ca", "net", "mg"] : ["ca"]; if (!metr.length) return;
-  x.an4 = { A, j, M: metr[0], choix: null, metr };
+  x.an4 = { T, j, M: metr[0], metr };
   an4Dessiner(x);
 }
 
 function an4Dessiner(x) {
-  const el = document.getElementById("f4-annee"), S = x.an4, { A, j } = S, n = A.n, cur = x.c.currency || x.s.currency, M = S.M;
-  const val = (y, k, m) => { const q = A.G[y] && A.G[y][k]; if (!q) return null; return m === "ca" ? q.ca : m === "net" ? q.net : q.net != null && q.ca > 0 ? q.net / q.ca * 100 : null; };
-  const cum = (y, kk, m) => { const r = A.G[y] && A.G[y].slice(0, kk); if (!r || r.some(q => !q || (m !== "ca" && q.net == null))) return null;
-    const ca = r.reduce((s, q) => s + q.ca, 0), net = r.reduce((s, q) => s + (q.net || 0), 0); return m === "ca" ? ca : m === "net" ? net : ca > 0 ? net / ca * 100 : null; };
-  const fmt = (v, m) => v == null ? "–" : m === "mg" ? ekFr(v, 1) + " %" : f4Md(v, cur);
-  const ch = (a, b, m) => a == null || b == null ? null : m === "mg" ? a - b : b > 0 ? (a / b - 1) * 100 : null;
-  const u = m => m === "mg" ? " pt" : " %", sg = (v, m) => `${v >= 0 ? "+" : "−"}${ekFr(Math.abs(v), 1)}${u(m)}`;
-  const pill = (d, m, txt = "") => d == null ? "" : Math.abs(d) < .05 ? `<em class="n">= stable${txt}</em>` : `<em class="${Math.abs(d) < (m === "mg" ? .5 : 1) ? "n" : d > 0 ? "g" : "r"}">${d >= 0 ? "▲ +" : "▼ −"}${ekFr(Math.abs(d), 1)}${u(m)}${txt}</em>`;
-  const LAB = { ca: ["les ventes", "Ventes", "atteignent"], net: ["le bénéfice", "Bénéfice net", "atteint"], mg: ["la marge", "Marge nette", "atteint"] };
-  const an = y => A.civil ? String(A.Y - y) : `${A.Y - y}`, lib = A.civil ? `${A.Y}` : `l'exercice ${A.Y}`, mois = n * 3;
-  const dt = d => d ? new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short" }) : "";
-
-  // titre : les ventes des mois écoulés face à la croissance du dernier exercice complet (comptes annuels de la fiche)
-  const ca = x.c.fin && x.c.fin.ca || [], gA = ca.length > 1 && ca[ca.length - 2] > 0 ? (ca[ca.length - 1] / ca[ca.length - 2] - 1) * 100 : null;
-  const gY = ch(cum(0, n, "ca"), cum(1, n, "ca"), "ca");
-  const nbT = ["un trimestre", "deux trimestres", "trois trimestres"][n - 1];
-  // 5/11 (Puma : « ses ventes accélèrent » avec −9 %) : le sens dépend du signe des deux croissances
-  const verbe = x.bk || gY == null ? null : gA == null ? (gY >= 0 ? "ses ventes montent" : "ses ventes baissent")
-    : gY >= 0 && gA >= 0 ? (gY > gA + 2 ? "ses ventes accélèrent" : gY < gA - 2 ? "ses ventes ralentissent" : "ses ventes gardent leur rythme")
-    : gY < 0 && gA < 0 ? (gY > gA + 2 ? "ses ventes baissent moins vite" : gY < gA - 2 ? "ses ventes baissent plus vite" : "ses ventes continuent de baisser")
-    : gY >= 0 ? "ses ventes repartent à la hausse" : "ses ventes se mettent à baisser";
-  const titre = verbe ? `${A.civil ? A.Y : "Exercice " + A.Y} : <span>${verbe}</span> après ${nbT}.` : `${A.civil ? A.Y : "Exercice " + A.Y} : ${nbT} déjà publié${n > 1 ? "s" : ""}.`;
-
-  // onglets
-  const seg = S.metr.length > 1 ? `<p class="an4-segt">${mois} premiers mois de ${lib}, face aux ${mois} premiers mois ${A.civil ? "de " + (A.Y - 1) : "de l'exercice précédent"} <span>· cliquez pour changer le chiffre affiché</span></p>
-    <div class="an4-seg" role="tablist" aria-label="Chiffre affiché" style="--n:${S.metr.length}">${S.metr.map(m => { const v = cum(0, n, m), d = ch(v, cum(1, n, m), m);
-      return `<a href="#annee" role="tab" aria-selected="${m === M}" class="${m === M ? "sel" : ""}" data-an4-m="${m}"><span><i></i>${LAB[m][1]}</span><b>${fmt(v, m)}</b>${d != null ? `<em class="${d >= 0 ? "up" : "dn"}">${d >= 0 ? "▲ +" : "▼ −"}${ekFr(Math.abs(d), 1)}${u(m)}<span class="an4-sa"> sur un an</span></em>` : ""}<u>${m === M ? "✓ Affiché" : "Afficher →"}</u></a>`; }).join("")}</div>` : "";
-
-  // 1) les trimestres de l'année l'un après l'autre
-  const cards = [...Array(n).keys()].map(k => ({ k, v: val(0, k, M) })), mx = Math.max(...cards.map(c => c.v == null ? -Infinity : c.v));
-  const tops = n > 1 ? cards.filter(c => c.v != null && c.v >= mx - Math.abs(mx) * .005).map(c => c.k) : [];
-  const habit = k => { const r = [1, 2, 3, 4].map(y => ch(val(y, k, M), val(y, k - 1, M), M)).filter(v => v != null).sort((a, b) => a - b); if (r.length < 2) return null; const h = r.length >> 1; return r.length % 2 ? r[h] : (r[h - 1] + r[h]) / 2; };
-  let seq = "", notes = [];
-  cards.forEach((c, i) => {
-    if (i) { const d = ch(c.v, cards[i - 1].v, M), h = habit(c.k); notes.push({ k: c.k, d, h });
-      seq += `<div class="an4-ar"><small class="an4-arl">Du T${cards[i - 1].k + 1} au T${c.k + 1}</small><b>${AN4_FL}</b>${pill(d, M)}${h != null ? `<small>d'habitude<br><b>${sg(h, M)}</b></small>` : ""}</div>`; }
-    const q = A.G[0][c.k];
-    seq += `<div class="an4-q${tops.includes(c.k) ? " top" : ""}"><div class="an4-st">T${c.k + 1} · ${AN4_QN[c.k]}<small>${q.u ? `<a href="${esc(q.u)}" target="_blank" rel="noopener" title="Le communiqué">${esc(dt(q.filed))} ↗</a>` : esc(dt(q.filed))}${q.deduit ? " · déduit" : ""}</small></div><div class="an4-v">${fmt(c.v, M)}</div>${val(1, c.k, M) != null ? `<div class="an4-s"><span class="an4-av">${A.civil ? `T${c.k + 1} ${A.Y - 1}` : "Un an plus tôt"} : <b>${fmt(val(1, c.k, M), M)}</b></span>${pill(ch(c.v, val(1, c.k, M), M), M)}</div>` : ""}${tops.includes(c.k) ? `<span class="an4-tg">${tops.length > 1 ? "Le plus fort, à égalité" : `Le plus fort de ${A.civil ? A.Y : "l'exercice"}`}</span>` : ""}</div>`;
-  });
-  const TH = M === "mg" ? 1 : 3, hors = notes.filter(o => o.d != null && o.h != null).map(o => ({ ...o, e: o.d - o.h })).filter(o => Math.abs(o.e) >= TH).sort((a, b) => Math.abs(b.e) - Math.abs(a.e));
-  const nm = k => `Du ${AN4_QC[k - 1]} au ${AN4_QN[k]}`, compar = notes.filter(o => o.d != null && o.h != null);
-  const say1 = !compar.length ? "" : !hors.length ? `<p class="an4-say">Les variations d'un trimestre à l'autre <b>suivent le rythme habituel des saisons</b> : rien d'inhabituel cette année.</p>`
-    : `<p class="an4-say">${hors.slice(0, 2).sort((a, b) => a.k - b.k).map(o => `${nm(o.k)} : <b>${o.e > 0 ? "mieux" : "moins bien"} que d'habitude</b> (${sg(o.d, M)}, contre ${sg(o.h, M)} les années précédentes).`).join(" ")}${hors.length === 1 && compar.length > 1 ? " L'autre passage suit le rythme habituel." : ""}</p>`;
-  const cols = `150px ${cards.map(() => "minmax(0,1fr)").join(" 150px ")}`;
-
-  const amf = /AMF/.test(j.source || ""), ep = j.fournisseur === "Eulerpool", dern = A.G[0][n - 1];
-  const lien = ep ? `<a class="ek-lk" href="https://eulerpool.com" target="_blank" rel="noopener">Data by Eulerpool ↗</a>` : amf ? (dern.u ? `<a class="ek-lk" href="${esc(dern.u)}" target="_blank" rel="noopener">Le dernier communiqué ↗</a>` : "") : `<a class="ek-lk" href="https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&amp;CIK=${esc(String(x.c.cik))}&amp;type=10-Q" target="_blank" rel="noopener">Les rapports officiels ↗</a>`;
-  // 2) l'année face aux précédentes : les mois écoulés, ou le dernier trimestre s'il raconte autre chose
-  const dYtd = ch(cum(0, n, M), cum(1, n, M), M), dLast = ch(val(0, n - 1, M), val(1, n - 1, M), M);
-  const auto = n > 1 && dYtd != null && dLast != null && (Math.abs(dLast - dYtd) >= (M === "mg" ? 1.5 : 4) || Math.sign(dLast) !== Math.sign(dYtd)) ? "last" : "ytd";
-  const mode = n === 1 ? "ytd" : (S.choix || auto), per = n === 1 ? `le ${AN4_QN[0]}` : mode === "ytd" ? `les ${mois} premiers mois` : `le ${AN4_QN[n - 1]}`;
-  const rows = [0, 1, 2, 3, 4, 5].map(y => ({ y, v: mode === "ytd" ? cum(y, n, M) : val(y, n - 1, M), p: mode === "ytd" ? cum(y + 1, n, M) : val(y + 1, n - 1, M) })).filter(r => r.v != null);
-  let part2 = "";
-  if (rows.length >= 3 && rows[0].y === 0) {
-    const pos = rows.map(r => Math.max(0, r.v)), mxv = Math.max(...pos) || 1, tri = rows.slice().sort((a, b) => b.v - a.v), rang = tri.findIndex(r => r.y === 0) + 1, d = ch(rows[0].v, rows[0].p, M);
-    const say2 = `Sur ${per}, ${LAB[M][0]} ${LAB[M][2]} ${fmt(rows[0].v, M)} : ${rang === 1 ? `<b>le plus haut niveau depuis ${an(rows[rows.length - 1].y)}</b>` : `<b>${rang === 2 ? "2e" : rang + "e"} sur ${rows.length}</b>, derrière ${an(tri[0].y)} (${fmt(tri[0].v, M)})`}${d != null && Math.abs(d) < 0.05 ? ", stable sur un an" : d != null ? `, ${d >= 0 ? "en hausse" : "en baisse"} de ${ekFr(Math.abs(d), 1)}${M === "mg" ? (Math.abs(d) >= 2 ? " points" : " point") : " %"} sur un an` : ""}.`;
-    const alt = n > 1 ? `<a href="#annee" class="an4-alt" data-an4-c="${mode === "ytd" ? "last" : "ytd"}">Voir plutôt ${mode === "ytd" ? `le ${AN4_QN[n - 1]} seul` : `les ${mois} premiers mois`}</a>` : "";
-    part2 = `<div class="an4-part"><h3 class="an4-pt"><i>2</i>${mode === "ytd" && n > 1 ? `${A.civil ? A.Y : "L'exercice " + A.Y} jusqu'ici` : `Le ${AN4_QN[n - 1]}`}, face aux années précédentes</h3>
-      <div class="an4-why"><span class="an4-pill"><i></i>Comparaison : ${per} de chaque ${A.civil ? "année" : "exercice"}</span>${alt}</div>
-      <div class="an4-box"><div class="an4-yrs"><div class="an4-mt"><span>${LAB[M][1].toUpperCase()}</span> · ${per}</div>${rows.map(r => `<div class="an4-yl${r.y === 0 ? " cur" : ""}"><b>${an(r.y)}</b><div class="an4-tr"><i style="width:${(Math.max(0, r.v) / mxv * 100).toFixed(1)}%"></i></div><span class="an4-vv">${fmt(r.v, M)}</span>${pill(ch(r.v, r.p, M), M) || "<span></span>"}</div>`).join("")}</div>
-        <p class="an4-say">${say2}</p>
-        <div class="an4-row"><span class="an4-pill"><i></i>${A.civil ? A.Y : "Exercice " + A.Y}${ep ? ", trimestres clos le" : ""} : ${A.G[0].slice(0, n).map(q => dt(q.filed)).join(", ").replace(/, ([^,]*)$/, " et $1")} · non audité${n > 1 ? "s" : ""}</span>${lien}</div></div></div>`;
-  }
-
-  el.innerHTML = `<section class="ek-sec an4" id="annee"><span class="ek-stk2 b">L'année en cours</span><h2>${titre}</h2>${seg}
-    <div class="an4-part"><h3 class="an4-pt"><i>1</i>${n > 1 ? `Les trimestres de ${lib}, l'un après l'autre` : `Le premier trimestre de ${lib}`}</h3>
-      <div class="an4-seq" style="--an4-cols:${cols}"><div class="an4-mt2"><b>${LAB[M][1].toUpperCase()}</b><small>par trimestre</small></div>${seq}</div>${say1}</div>
-    ${part2}
-    <p class="ek-tn">${ep ? "Comptes trimestriels publiés par l'entreprise, fournis par Eulerpool, non audités. ENKLAIR ne les affiche que si, sur les deux derniers exercices, les quatre trimestres redonnent les comptes annuels. Dates : fin de chaque trimestre. Ces chiffres montrent la tendance sans remplacer le verdict" : amf ? "Chiffre d'affaires relevé dans les communiqués de l'entreprise déposés à l'AMF, non audité. Quand seul le semestre ou les neuf mois sont publiés, le trimestre est déduit (semestre moins 1er trimestre, neuf mois moins semestre) ; le 4e trimestre est l'année des comptes annuels moins les neuf premiers mois. Ces chiffres montrent la tendance sans remplacer le verdict" : "Comptes trimestriels déposés à la SEC, non audités : ils montrent la tendance sans remplacer le verdict"}, calculé sur l'exercice ${x.c.years[x.c.years.length - 1]}. Chaque trimestre est comparé au même trimestre de l'année précédente, pour effacer les effets de saison.${A.civil ? "" : ` Exercice clos en ${A.mois}.`}</p>
-    </section>`;
+  const el = document.getElementById("f4-annee"), S = x.an4, { T, j } = S, M = S.M, cur = x.c.currency || x.s.currency, nomE = x.s.name;
+  const val = (q, m) => m === "ca" ? q.ca : m === "net" ? q.net : q.ca > 0 && q.net != null ? q.net / q.ca * 100 : null;
+  const tot = (L, m) => m === "mg" ? L.reduce((a, q) => a + q.net, 0) / L.reduce((a, q) => a + q.ca, 0) * 100 : L.reduce((a, q) => a + val(q, m), 0);
+  const fmt = (v, m) => v == null || !isFinite(v) ? "–" : m === "mg" ? ekFr(v, 1) + " %" : f4Md(v, cur);
+  const ev = (a, b, m) => a == null || b == null ? null : m === "mg" ? a - b : b > 0 ? (a / b - 1) * 100 : null;
+  const evT = (e, m) => e == null ? "" : `${e >= 0 ? "+" : "−"}${ekFr(Math.abs(e), 1)}${m === "mg" ? " pt" : " %"}`;
+  const ton = e => e == null ? "" : e >= 0 ? "" : " dn";
+  const tA = tot(T.ap, M), tV = tot(T.av, M), e = ev(tA, tV, M);
+  const n0 = tqNom(T.ap[0].end), n3 = tqNom(T.ap[3].end), p0 = tqNom(T.av[0].end), p3 = tqNom(T.av[3].end);
+  const per = (a, b) => `${a.m.split("-")[0]} ${a.yd} à ${b.m.split("-")[1]} ${b.y}`;
+  const de = /^[aeiouyhéèêâîôûAEIOUYHÉÈÊÂÎÔÛ]/.test(nomE) ? `d'${nomE}` : `de ${nomE}`, quoi = { ca: `les ventes ${de} ont`, net: `le bénéfice ${de} a`, mg: "" }[M];
+  const titre = M === "mg" ? `Sur les 12 derniers mois, ${esc(nomE)} a gardé <em class="${e != null && e < 0 ? "dn" : ""}">${ekFr(tA, 1)} %</em> de ses ventes en bénéfice.`
+    : tV > 0 && Math.abs(e) < 0.5 ? `Sur les 12 derniers mois, ${esc(quoi)} <em>à peine bougé</em> (${evT(e, M)}).`
+    : tV > 0 ? `Sur les 12 derniers mois, ${esc(quoi)} ${e >= 0 ? "progressé" : "reculé"} de <em class="${e < 0 ? "dn" : ""}">${ekFr(Math.abs(e), 0)} %</em>.`
+    : `Sur les 12 derniers mois, ${esc(quoi)} atteint <em>${fmt(tA, M)}</em>.`;
+  const eur = v => M !== "mg" && cur && cur !== "EUR" && typeof f4EnEur === "function" ? f4EnEur(v, cur).replace(/^ \(|\)$/g, "") : "";
+  const LAB = { ca: "Ventes", net: "Bénéfice net", mg: "Marge nette" };
+  const tabs = S.metr.length > 1 ? `<div class="tq-tabs" role="tablist">${S.metr.map(m => `<a href="#annee" role="tab" aria-selected="${m === M}" class="${m === M ? "on" : ""}" data-an4-m="${m}">${LAB[m]}</a>`).join("")}</div>` : "";
+  const duo = `<div class="tq-duo"><div class="tq-now"><small>12 derniers mois (${per(n0, n3)})</small><b>${fmt(tA, M)}</b><i>${M === "mg" ? "de bénéfice sur 100 de ventes" : eur(tA)}</i></div>
+    <div class="tq-fl">${e != null ? `<span class="tq-pill${ton(e)}">${evT(e, M)}</span><span>sur un an</span>` : ""}</div>
+    <div><small>Les 12 mois d'avant (${per(p0, p3)})</small><b>${fmt(tV, M)}</b><i>${M === "mg" ? "de bénéfice sur 100 de ventes" : eur(tV)}</i></div></div>`;
+  const vs = [...T.ap, ...T.av].map(q => val(q, M)), vmax = Math.max(...vs.map(v => Math.abs(v || 0))) || 1, neg = vs.some(v => v < 0);
+  const h = v => v == null ? 0 : Math.max(2, Math.abs(v) / vmax * 100);
+  const cols = T.ap.map((q, i) => { const a = val(T.av[i], M), b = val(q, M), d = ev(b, a, M), nq = tqNom(q.end), np = tqNom(T.av[i].end);
+    return `<div class="tq-col${i === 3 ? " last" : ""}">${d != null ? `<span class="tq-pill sm${ton(d)}">${evT(d, M)}</span>` : `<span class="tq-pill sm vide">&nbsp;</span>`}
+      <div class="tq-bars"><div class="tq-bar av${a < 0 ? " neg" : ""}" style="height:${h(a)}%"><span>${fmt(a, M)}</span></div><div class="tq-bar ap${b < 0 ? " neg" : ""}" style="height:${h(b)}%"><span>${fmt(b, M)}</span></div></div>
+      <div class="tq-ans"><em class="av">${np.y}</em><em class="ap">${nq.y}</em></div><b>${nq.m}</b><small>${i === 3 ? "dernier publié" : "&nbsp;"}</small></div>`; }).join("");
+  const tb = `<details class="tq-det"><summary>Les chiffres, trimestre par trimestre</summary><table><tr><th>Trimestre</th><th>${LAB[M]}</th><th>Un an plus tôt</th><th>Évolution</th></tr>${T.ap.map((q, i) => { const nq = tqNom(q.end); return `<tr><td>${nq.m} ${nq.y}</td><td>${fmt(val(q, M), M)}</td><td>${fmt(val(T.av[i], M), M)}</td><td>${evT(ev(val(q, M), val(T.av[i], M), M), M)}</td></tr>`; }).join("")}</table></details>`;
+  const xs = T.ap.map((q, i) => ev(val(q, M), val(T.av[i], M), M)), d = xs[3], p = xs[2];
+  const tend = d == null || p == null ? "" : M === "mg" ? (d > p ? "l'écart avec l'an dernier s'améliore" : "l'écart avec l'an dernier se réduit")
+    : d >= 0 && p >= 0 ? (d < p - 1 ? "la hausse ralentit" : d > p + 1 ? "la hausse accélère" : "la hausse continue au même rythme")
+    : d < 0 && p < 0 ? (d < p - 1 ? "la baisse s'accentue" : d > p + 1 ? "la baisse se réduit" : "la baisse continue") : d >= 0 ? "retour à la hausse" : "passage à la baisse";
+  const dt = s => s ? new Date(s + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "";
+  const ep = j.fournisseur === "Eulerpool", amf = /AMF/.test(j.source || ""), dq = T.ap[3];
+  const auj = new Date().toISOString().slice(0, 10), nx = (typeof AG !== "undefined" && AG.events || []).filter(v => v.id === x.s.id && v.date >= auj && /résultat|resultat|chiffre|trimestr/i.test((v.type || "") + " " + (v.label || ""))).sort((a, b) => a.date < b.date ? -1 : 1)[0];
+  const der = `<div class="tq-der"><div><small>Le dernier trimestre (${n3.m} ${n3.y}${!ep && dq.filed ? `, publié le ${dt(dq.filed)}` : ""})</small>
+      <p>${LAB[M]} : <b>${fmt(val(dq, M), M)}</b>${d != null ? `, soit <b class="${d >= 0 ? "up" : "dn"}">${evT(d, M)}</b> sur un an. Au trimestre d'avant : ${evT(p, M)}.${tend ? ` En clair : <b>${tend}</b>.` : ""}` : "."}</p></div>
+    <div class="tq-nx"><small>Prochain trimestre attendu</small><b>${nx ? dt(nx.date) : "date pas encore annoncée"}</b><small>${nx ? esc(nx.label || "") : "Elle apparaîtra ici et dans l'agenda dès qu'elle sera connue."}</small></div></div>`;
+  const lien = ep ? `<a href="https://eulerpool.com" target="_blank" rel="noopener">Data by Eulerpool ↗</a>` : amf ? (dq.u ? `<a href="${esc(dq.u)}" target="_blank" rel="noopener">Le dernier communiqué ↗</a>` : "") : "";
+  const src = ep ? "Comptes trimestriels publiés par l'entreprise, fournis par Eulerpool, non audités." : amf ? "Chiffres d'affaires lus dans les communiqués déposés à l'AMF, non audités." : "Comptes trimestriels déposés à la SEC (formulaires 10-Q et 10-K), non audités.";
+  el.innerHTML = `<section class="ek-sec an4 tq" id="annee"><span class="ek-stk2 b">Ses derniers trimestres</span><h2 class="tq-t">${titre}</h2>${tabs}${duo}
+    <div class="tq-box"><h3>Chaque trimestre, face au même trimestre un an plus tôt</h3><div class="tq-cols${neg ? " tq-neg" : ""}">${cols}</div>${tb}</div>
+    ${der}<p class="ek-tn">${src}${cur && cur !== "EUR" && M !== "mg" ? " Équivalent en euros au taux de la BCE du jour." : ""} Le verdict de la fiche reste calculé sur les comptes annuels. ${lien}</p></section>`;
 }
 
 document.addEventListener("click", e => {
   const b = e.target.closest && e.target.closest("[data-an4-m],[data-an4-c]"), x = window.F4X; if (!b || !x || !x.an4) return; e.preventDefault();
-  if (b.dataset.an4M) { x.an4.M = b.dataset.an4M; x.an4.choix = null; } else x.an4.choix = b.dataset.an4C;
+  if (b.dataset.an4M) x.an4.M = b.dataset.an4M;
   an4Dessiner(x);
 });
