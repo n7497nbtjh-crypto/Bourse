@@ -125,6 +125,7 @@ import LAUTO1 from "./lots/auto1.mjs";
 import LAUTO2 from "./lots/auto2.mjs";
 import LAUTO3 from "./lots/auto3.mjs";
 import LJP from "./lots/japon.mjs";
+import LASIE from "./lots/asie.mjs";
 const seen = new Set();
-export default [...FRANCE, ...AUTRES, ...LFR, ...LEU, ...LUS, ...LMO, ...LFR2, ...LEU2, ...LUK, ...LUS2, ...LUS3, ...LUS4, ...LMO2, ...LAUTO1, ...LAUTO2, ...LAUTO3, ...LJP].filter(c => !seen.has(c.id) && seen.add(c.id));
+export default [...FRANCE, ...AUTRES, ...LFR, ...LEU, ...LUS, ...LMO, ...LFR2, ...LEU2, ...LUK, ...LUS2, ...LUS3, ...LUS4, ...LMO2, ...LAUTO1, ...LAUTO2, ...LAUTO3, ...LJP, ...LASIE].filter(c => !seen.has(c.id) && seen.add(c.id));
 export const REGIONS = { FR: "France", EU: "Europe", US: "États-Unis", MONDE: "Reste du monde" };
