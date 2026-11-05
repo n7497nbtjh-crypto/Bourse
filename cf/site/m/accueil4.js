@@ -28,12 +28,13 @@ const a4Px = (p, cur) => { try { return new Intl.NumberFormat("fr-FR", { style: 
 const a4Ton = p => p == null ? "n" : p >= 0.6 ? "g" : p <= 0.4 ? "o" : "n";
 function a4Fiche(id) { // tout ce que montre la carte d'exemple, calculé
   const s = RBY[id]; if (!s || s.missing || isBank(s)) return null;
-  // 5/11 (Romain) : le grand chiffre n'est plus la marge d'exploitation mais le bénéfice net sur 100 € de ventes
-  const r = ratios(s), mm = a4Med(s, c => ratios(c).nm); if (r.nm == null || mm == null) return null;
+  // 5/11 (Romain) : le grand chiffre est le chiffre d'affaires (en milliards d'euros), face à la médiane du secteur
+  const caE = c => c.ca > 0 && typeof toEur === "function" ? toEur(c.ca, c.currency || "EUR") : null;
+  const r = ratios(s), mm = a4Med(s, caE); if (caE(s) == null || mm == null) return null;
   const ax = {}; rfAxes(s).forEach(a => { ax[a.k] = a.r; });
-  const rk = rankIn(s, c => ratios(c).nm, true, "nm");
-  const p = pxOf(s), m = r.nm * 100, med = mm * 100, x = med > 0 ? m / med : null;
-  const main = x == null ? "" : x >= 2 ? `${a4Nb(x)} fois la médiane !` : x >= 1.1 ? "au-dessus de la médiane" : x > 0.9 ? "autour de la médiane" : "sous la médiane";
+  const rk = rankIn(s, caE, true, "caE");
+  const p = pxOf(s), m = caE(s) / 1000, med = mm / 1000, x = med > 0 ? m / med : null;
+  const main = x == null ? "" : x >= 2 ? `${a4Nb(x >= 10 ? Math.round(x) : x)} fois la médiane !` : x >= 1.1 ? "au-dessus de la médiane" : x > 0.9 ? "autour de la médiane" : "sous la médiane";
   const g = r.g1 != null ? r.g1 * 100 : null, gm = a4Med(s, c => ratios(c).g1);
   const sd = ax.solidite, nd = s.netDebt, eb = s.ebitda;
   let dette, detteN;
@@ -52,10 +53,10 @@ function a4CarteHTML(id) {
   const { s, m, med, rk, main, p } = f, maxv = Math.max(m, med, 1);
   return `<div class="a4-hd">${logo(s, 46)}<div><strong>${esc(s.name)}</strong><small>${esc(secName(s))} · ${esc(COUNTRY[s.region] || s.region || "")}</small></div>
     ${p ? `<div class="a4-px">${a4Px(p.p, p.cur || s.currency)}<small class="${accCls(p.chg)}">${accPct(p.chg)} ${esc(jourSeance())}</small></div>` : ""}</div>
-    <div class="a4-n">${a4Nb(Math.round(m))}<small>€</small></div>
-    <p class="a4-cap">${a4Def("benefice", "Bénéfice net", { ex: a4Nb(Math.round(m)) + " €", nom: s.name })} : ce qu'il lui reste, tout payé, sur 100 € de ventes.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
+    <div class="a4-n">${a4Nb(m >= 10 ? Math.round(m) : Math.round(m * 10) / 10)}<small>Md€</small></div>
+    <p class="a4-cap">${a4Def("ventes", "Chiffre d'affaires", { ex: a4Nb(Math.round(m * 10) / 10) + " Md€", nom: s.name })} : ce qu'elle a vendu en ${s.year}.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
     ${main ? `<span class="a4-hand">${esc(main)}</span>` : ""}
-    <div class="a4-duo"><div>${esc(s.name)}<i style="width:${(Math.max(m, 0) / maxv * 100).toFixed(0)}%;background:var(--a4y)"></i></div><div><span>${a4Def("mediane", "Médiane")} ${a4Nb(Math.round(med))} €</span><i style="width:${(Math.max(med, 0) / maxv * 100).toFixed(0)}%"></i></div></div>
+    <div class="a4-duo"><div>${esc(s.name)}<i style="width:${(Math.max(m, 0) / maxv * 100).toFixed(0)}%;background:var(--a4y)"></i></div><div><span>${a4Def("mediane", "Médiane")} ${a4Nb(Math.round(med * 10) / 10)}&nbsp;Md€</span><i style="width:${(Math.max(med, 0) / maxv * 100).toFixed(0)}%"></i></div></div>
     <div class="a4-tri">${f.tri.map(([l, v, r, n]) => `<div><small>${a4Def(l[0], l[1], { nom: s.name })}</small><strong class="${r && r.neutre ? "k" : a4Ton(r && r.p)}">${esc(v)}</strong>${r ? `<div class="a4-ms${r.neutre ? " a4-ms-n" : ""}" title="Le trait : la médiane du secteur"><b style="left:${((r.neutre ? 1 - r.p : r.p) * 100).toFixed(0)}%"></b></div>` : ""}<em>${esc(n)}</em></div>`).join("")}</div>
     <a class="a4-go" href="/entreprise/${s.id}">Voir la fiche ${esc(s.name)} →</a>`;
 }
