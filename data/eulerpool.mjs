@@ -14,12 +14,18 @@ import { readFileSync, writeFileSync, existsSync, unlinkSync } from "node:fs";
 const KEY = process.env.EULERPOOL_KEY || "", B = "https://api.eulerpool.com/api/1";
 const OUT = new URL("../cf/site/data/", import.meta.url), CACHE = new URL("./eulerpool_cache.json", import.meta.url);
 export const SOURCE_EP = "Eulerpool";
+// Devise de cotation par place. 5/11 : quand la devise des comptes annoncée diffère de celle de la cotation, les chiffres sont
+// souvent faux (Tencent, Xiaomi, Meituan : montants en dollars de Hong Kong étiquetés en yuans ; ABB : rien ne correspond) : écartés.
+const DEVISE_PLACE = { TSE: "JPY", XETR: "EUR", FWB: "EUR", SIX: "CHF", NSE: "INR", BSE: "INR", HKEX: "HKD", EURONEXT: "EUR", OMXHEX: "EUR", MIL: "EUR", BME: "EUR", VIE: "EUR", ATHEX: "EUR", ASX: "AUD", KRX: "KRW", GPW: "PLN", OMXSTO: "SEK", OMXCOP: "DKK", OSL: "NOK", TWSE: "TWD", TSX: "CAD", LSE: "GBP", SZSE: "CNY", SSE: "CNY", TADAWUL: "SAR", SGX: "SGD", BMFBOVESPA: "BRL", BMV: "MXN", TASE: "ILS" };
 const r1 = v => v == null || !isFinite(v) ? null : Math.round(v * 100) / 100;
 
 // Lignes Eulerpool (montants en millions, devise de cotation du profil) → comptes au format du site, ou { raison } si refusé
 export function convertirEP(c, { profil, inc, bs, cf }, auj = new Date().toISOString().slice(0, 10)) {
   if (!profil || !profil.currency) return { raison: "profil ou devise absents" };
   if (c.sector === "finance") return { raison: "banque ou assurance : écartée" };
+  const place = String(c.tv || "").split(":")[0], dc = DEVISE_PLACE[place];
+  if (!dc) return { raison: `place de cotation non prévue (${place || "aucune"})` };
+  if (dc !== profil.currency) return { raison: `comptes en ${profil.currency}, cotation en ${dc} : écartée (montants souvent faux)` };
   const reels = new Set((bs || []).map(x => String(x.period).slice(0, 10)).filter(p => p <= auj)); // le bilan ne contient que des exercices clos
   const L = (inc || []).filter(x => { const p = String(x.period).slice(0, 10); return p <= auj && reels.has(p) && x.revenue != null; })
     .sort((a, b) => String(a.period).localeCompare(String(b.period))).slice(-5);
@@ -89,7 +95,9 @@ async function main() {
       const [inc, bs, cf] = await Promise.all(["incomestatement", "balancesheet", "cashflowstatement"].map(p => get(`/equity/${p}/${c.isin}`))); appels += 3;
       const r = convertirEP(c, { profil, inc, bs, cf });
       cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: !!r.comptes, ...(r.comptes ? { an: r.comptes.years.at(-1) } : { pourquoi: r.raison }) };
-      if (!r.comptes) { console.log("✗", c.id, r.raison); continue; }
+      if (!r.comptes) { // une fiche Eulerpool qui ne passe plus les contrôles est retirée (pas de chiffre douteux laissé en ligne)
+        if (estEP(c)) { unlinkSync(new URL(`societes/${c.id}.json`, OUT)); const k = parId.get(c.id); if (k != null) idx.companies[k] = { id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true }; console.log("retirée", c.id); }
+        console.log("✗", c.id, r.raison); continue; }
       const full = { v: VERSION, devise2: true, dette3: true, id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, lei: c.lei || null, legalName: c.legal || c.name, sector: c.sector,
         ...r.comptes, sourceEP: true, updated: new Date().toISOString().slice(0, 10) };
       writeFileSync(new URL(`societes/${c.id}.json`, OUT), JSON.stringify(full));
