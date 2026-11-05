@@ -200,6 +200,7 @@ function provSrcComptes(c) { // { label, url } du document officiel
   const x = c.sources[0];
   if (c.cik) return { label: "Rapports annuels (10-K ou 20-F) déposés à la SEC américaine, lus dans ses données publiques EDGAR", url: x.report || `https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=${c.cik}&type=10-K` };
   if (x.source === "AMF") return { label: "Rapport financier annuel au format ESEF déposé auprès de l'AMF (diffusé par la DILA)", url: x.report };
+  if (x.source === "Eulerpool") return { label: "Comptes publiés par l'entreprise, repris du fournisseur de données Eulerpool (Data by Eulerpool), pas lus par le site dans le document officiel", url: "https://eulerpool.com" }; // 5/11
   if (x.source === "EODHD") return { label: "Comptes publiés par l'entreprise, repris du fournisseur de données EODHD (pas lus par le site dans le document officiel)", url: x.report }; // 5e passage (A7)
   return { label: "Rapport financier annuel au format ESEF, publié sur filings.xbrl.org", url: x.report };
 }
@@ -329,7 +330,7 @@ function provCalcul(key, s, c) {
 // Le niveau dit à quel point le lecteur peut se fier aux chiffres affichés : source lue par le site, comptes récents, complets, sans saut suspect
 function fiabilite(s, c) {
   if (!c || !c.fin || s.missing) return null;
-  const L = [], src = (c.sources || [])[0] || {}, eodhd = (c.sources || []).some(x => x.source === "EODHD") || c.norme === "EODHD";
+  const L = [], src = (c.sources || [])[0] || {}, eodhd = (c.sources || []).some(x => x.source === "EODHD" || x.source === "Eulerpool") || c.norme === "EODHD" || c.sourceEP;
   const off = !eodhd; L.push([off, off ? (c.cik ? "Comptes lus par le site dans les rapports déposés à la SEC" : "Comptes lus par le site dans le rapport annuel officiel (ESEF)") : "Comptes repris d'un fournisseur de données, pas lus dans le document officiel"]);
   const age = provComptesAge(c, s); L.push([!age.vieux, age.mois == null ? "Date de clôture inconnue" : age.vieux ? `Derniers comptes clos il y a ${age.mois} mois : des comptes plus récents existent peut-être` : `Derniers comptes clos il y a ${age.mois} mois`]);
   const n = c.years ? c.years.length - 1 : -1, CLES = isBank(s) ? ["net", "equity", "eps", "dps"] : ["ca", "ebit", "net", "equity", "cash", "debt", "cfo", "eps"];

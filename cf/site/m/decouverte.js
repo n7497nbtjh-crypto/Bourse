@@ -50,7 +50,7 @@ function decRecit(s, c, x) {
   }
   const dv = decAn(F.divPaid, i1);
   if (dv != null && dv > 0) out.push(`<b>Ses actionnaires</b> ont reçu ${md(dv)} de dividendes en ${Y[i1]}${nl > 0 ? `, soit ${ekFr(dv / nl * 100, 0)} % du bénéfice` : ", alors que l'année s'est soldée par une perte"}.`);
-  else if (!c.sourcePdf) out.push(`<b>Ses actionnaires</b> : aucun dividende versé en ${Y[i1]}. Ce que l'entreprise gagne reste dans l'entreprise.`);
+  else if (!(c.sourcePdf || c.sourceEP)) out.push(`<b>Ses actionnaires</b> : aucun dividende versé en ${Y[i1]}. Ce que l'entreprise gagne reste dans l'entreprise.`);
   const v = valo(s) || {};
   if (v.capE && v.capE < 2e9) vig.push("C'est une petite entreprise en Bourse : son cours peut bouger plus fort, et ses actions s'échangent moins facilement que celles des grandes.");
   if (cur && cur !== "EUR") vig.push(`Ses comptes sont en ${cur === "USD" ? "dollars" : cur} : pour un épargnant en euros, le taux de change joue aussi.`);

@@ -1,0 +1,39 @@
+# Comptes annuels repris d'Eulerpool (5/11/2026) pour les sociétés sans source officielle ouverte (data/eulerpool.mjs).
+# Offre gratuite (100 000 appels par mois ; environ 4 appels par société), mention « Data by Eulerpool » sur les fiches.
+name: Comptes Eulerpool
+on:
+  workflow_dispatch:
+    inputs:
+      ids:
+        description: "Seulement ces sociétés (identifiants séparés par des virgules)"
+        default: ""
+      retirer:
+        description: "Retirer toutes les fiches Eulerpool (1 = oui)"
+        default: "0"
+  schedule:
+    - cron: "37 4 * * 2"
+permissions:
+  contents: write
+concurrency:
+  group: comptes-societes
+  cancel-in-progress: false
+jobs:
+  eulerpool:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Comptes
+        env:
+          EULERPOOL_KEY: ${{ secrets.EULERPOOL_KEY }}
+        run: |
+          node tests/t_eulerpool.mjs
+          if [ "${{ inputs.retirer }}" = "1" ]; then node data/eulerpool.mjs --retirer; else node data/eulerpool.mjs --max 400 ${{ inputs.ids && format('--ids {0}', inputs.ids) || '' }}; fi
+          git config user.name "repere-bot"
+          git config user.email "repere-bot@users.noreply.github.com"
+          git add data/eulerpool_cache.json cf/site/data/societes cf/site/data/societes.json
+          git diff --cached --quiet || git commit -q -m "Comptes Eulerpool du $(date +%F)"
+          for i in 1 2 3; do git pull --rebase -X theirs -q && git push -q && break; sleep 5; done
