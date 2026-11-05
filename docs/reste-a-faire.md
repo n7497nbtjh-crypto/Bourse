@@ -18,6 +18,26 @@ Bilan de la nuit du 3 au 4 novembre, puis les six chantiers demandés par Romain
   - certains titres d'annonces officielles s'affichent en anglais dans l'Actualité (exemple : Pandox).
 - **Ménage** : le code de l'ancienne fiche et d'autres fonctions inutilisées ont été retirés (app.js passe de 426 à 374 ko), ainsi que 22 règles CSS mortes. Tous les contrôles et l'audit complet sont passés avant la mise en ligne.
 
+## Nuit du 5 novembre : fait, et ce qui reste
+
+Fait :
+- Prix des ETF : 1 103 sur 1 174 (83 la veille), valeurs liquidatives officielles d'Amundi, iShares, SPDR et Invesco (data/etf_vl.mjs).
+- ETF HSBC : éligibilité au PEA déduite de la composition (Euro STOXX 50 éligible).
+- Actualité : le robot plantait depuis le 2/11 (mémoire) ; réparé, 1 026 annonces dans le fil.
+- Annonces : contresens « le bénéfice progresse moins vite (−x %) » corrigé (163 annonces), phrase ajoutée quand seul le bénéfice est publié.
+- Comptes : lecteur de PDF au format français (Lanson-BCC, Delta Plus), robot des rapports annuels stabilisé (Scout24, Vossloh), fausses fiches retirées et bloquées (BayWa, Cembra, Pullup), nouveau robot des paquets ESEF publiés sur les sites (Elkem 2025).
+- Site : réponse « en bref » de l'IA réparée, « undefined » de la page Comparer, tests remis à jour, tout passe.
+
+Reste, côté Romain :
+- Feuilles Google 3 et 4 : elles importent la liste mais ne calculent aucun cours (formules absentes). C'est la cause des 1 006 entreprises sans cours (327 cotées à New York).
+- Calendrier des dividendes américains : il lit api.nasdaq.com, dont le robots.txt interdit tous les robots. À décider : le garder ou le remplacer.
+- Allemagne et Suisse (156 fiches sans comptes) : pas de base ouverte ; fournisseur payant ou rien.
+
+Reste, côté Claude :
+- 110 fiches européennes restées à leurs comptes 2024 (filings.xbrl.org en retard) : le robot des paquets ESEF des sites en rattrape quelques-uns à chaque passage (mardi et vendredi).
+- Xtrackers (13 ETF) et HSBC (38) sans valeur du jour ; performances des ETF SPDR et Invesco (dans la devise du fonds, à convertir).
+- Rivales choisies pour 1 158 sociétés seulement (les autres se comparent à tout leur secteur).
+
 ## 1. Réseaux sociaux (enklair_ sur X, Instagram, TikTok)
 
 **Décision proposée** : un seul format, répété chaque jour de Bourse : « un chiffre, sa médiane, la source ». Les images sont déjà fabriquées chaque jour par le robot `posts.yml` (à télécharger dans GitHub, rien n'est publié tout seul). Les 20 idées de vidéos de `docs/acquisition.md` (E3) restent la réserve.
