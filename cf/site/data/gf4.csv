@@ -1,5 +1,4 @@
 id,c1,c2,c3
-e:amundi-divdax-dist,ETR:C003,FRA:C003,
 e:amundi-label-isr-credit-acc,EPA:ISRC,AMS:ISRC,EBR:ISRC
 e:amundi-world-equity-enhanced-active-acc,ETR:EQAW,FRA:EQAW,
 e:amundi-msci-china-a-acc,EPA:CNAA,AMS:CNAA,EBR:CNAA
@@ -15,6 +14,7 @@ e:amundi-msci-china-esg-selection-extra-dist,ETR:LHKG,FRA:LHKG,
 e:invesco-all-country-world-enhanced-equity-acc,ETR:IQSW,FRA:IQSW,
 e:amundi-msci-world-sri-climate-paris-aligned-dist,ETR:WGES,FRA:WGES,
 e:spdr-msci-europe-consumer-discretionary,EPA:STR,AMS:STR,EBR:STR
+e:spdr-msci-world-utilities,EPA:WUTI,AMS:WUTI,EBR:WUTI
 e:invesco-msci-europe-ex-uk-acc,ETR:MXUK,FRA:MXUK,
 e:spdr-msci-world-communication-services,EPA:WTEL,AMS:WTEL,EBR:WTEL
 e:hsbc-ftse-250,EPA:HMCX,AMS:HMCX,EBR:HMCX
