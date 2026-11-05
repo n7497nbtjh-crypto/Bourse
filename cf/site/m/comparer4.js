@@ -217,7 +217,8 @@ function cxGalerie() {
 async function cxQuota(ids) {
   if (typeof isPrem === "function" && isPrem()) return { ok: true };
   try { const r = await fetch("/api/quota/comparer", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids }) });
-    return r.ok ? await r.json() : { ok: true }; } catch (e) { return { ok: true }; }
+    const j = r.ok ? await r.json().catch(() => null) : null; // 5/11 : seule une réponse « ok: false » explicite bloque (une réponse vide affichait « vos undefined comparaisons »)
+    return j && j.ok === false ? { ...j, plafond: j.plafond || 5 } : { ok: true, ...(j && j.reste != null ? { reste: j.reste, plafond: j.plafond || 5 } : {}) }; } catch (e) { return { ok: true }; }
 }
 // ——— La page ———
 async function pageComparer4() {

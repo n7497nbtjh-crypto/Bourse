@@ -42,7 +42,8 @@ with sync_playwright() as pw:
         pg.goto("http://t.local/classements"); pg.wait_for_timeout(1000)
         pg.click(".cl4-tabs a[data-k=dividende]"); pg.wait_for_timeout(250)
         n = pg.locator(".cl4-list a.cl4-r").count(); lock = pg.locator(".cl4-list .cl4-flou").count()
-        if (not PREM and (lock != 5 or n < 3 or pg.locator(".cl4-prem").count() != 1)) or (PREM and (lock or n < 10)): bad += 1; print(nom, "classement", n, lock)
+        # 4/11 : les classements sont réservés à Premium : sans abonnement, une carte Premium (.cl4-prem2) et aucune liste
+        if (not PREM and (n or pg.locator(".cl4-prem2").count() != 1)) or (PREM and (lock or n < 10)): bad += 1; print(nom, "classement", n, lock)
         if "c=dividende" not in pg.url: bad += 1; print(nom, "adresse", pg.url)
         # comparer v4 : comparaisons toutes prêtes et filtre par thème
         pg.goto("http://t.local/comparer"); pg.wait_for_timeout(1000)

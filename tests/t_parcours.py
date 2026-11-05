@@ -17,7 +17,7 @@ COURS = {"c:lvmh": {"s": "EPA:MC", "cur": "EUR", "p": 597, "chg": -0.5, "cap": 3
 def route(r):
     u, meth = r.request.url, r.request.method
     if "/api/espace/moi" in u:
-        return r.fulfill(json={"connecte": True, "email": "test@exemple.fr", "premium": False, "plan": None, "donnees": {"favoris": ["c:lvmh", "c:nvidia"], "portefeuille": None, "profil": {"rapport": STATE["rapport"]}}, "nonlus": 1, "teaser": False} if STATE["in"] else {"connecte": False})
+        return r.fulfill(json={"connecte": True, "email": "test@exemple.fr", "premium": STATE.get("prem", False), "plan": None, "donnees": {"favoris": ["c:lvmh", "c:nvidia"], "portefeuille": None, "profil": {"rapport": STATE["rapport"]}}, "nonlus": 1, "teaser": False} if STATE["in"] else {"connecte": False})
     if "/api/espace/rapport" in u:
         if meth == "POST":
             b = json.loads(r.request.post_data or "{}"); STATE["posts"].append(b); STATE["rapport"] = {**DEF, **b}
@@ -27,7 +27,7 @@ def route(r):
     if "/api/espace/notifs" in u: return r.fulfill(json={"nonlus": 0, "notifs": []})
     if "/api/espace" in u: return r.fulfill(json={"ok": True})
     if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": None, "unique": None, "limites": {"resume": [5, 80], "assistant": [3, 40], "veille": [1, 10], "portefeuille": [1, 10]}})
-    if "/api/premium/statut" in u: return r.fulfill(json={"premium": False})
+    if "/api/premium/statut" in u: return r.fulfill(json={"premium": STATE.get("prem", False), "plan": "mensuel" if STATE.get("prem") else None})
     if "/api/cours" in u: return r.fulfill(json={"updated": "2026-10-29T16:00:00Z", "items": COURS})
     if "/api/" in u: return r.fulfill(json={"items": []})
     if "//t.local" not in u: return r.fulfill(status=404, body="")
@@ -92,9 +92,9 @@ with sync_playwright() as pw:
         # Accueil d'un visiteur : aperçu calculé et invitation
         look("/", "accueil_visiteur", 1200)
         pb(name, pg.locator("#app a[href^='/espace'], #app a[href^='/rapport-exemple']").count() >= 1, "l'accueil mène à Mon espace ou au rapport exemple")  # 3/11 : accueil v4
-        look("/premium", "premium"); pb(name, pg.locator(".pr4 .prem-a").count() == 5 and "rapport sur mesure" in pg.inner_text(".ptab").lower(), "Premium : cinq arguments et le rapport sur mesure dans le tableau")  # 3/11 : Premium v4
-        # Mon espace : assistant au premier passage
-        STATE.update({"in": True, "syn": "complet"})
+        look("/premium", "premium"); pb(name, pg.locator(".pr4 .prem-a").count() == 5 and "rapport de la semaine" in pg.inner_text(".ptab").lower(), "Premium : cinq arguments et le rapport sur mesure dans le tableau")  # 3/11 : Premium v4
+        # Mon espace : assistant au premier passage (4/11 : le rapport sur mesure est réservé à Premium : compte Premium simulé)
+        STATE.update({"in": True, "syn": "complet", "prem": True}); pg.evaluate("localStorage.setItem('bilan.premium', 'a'.repeat(40))")
         pg.goto("http://t.local/espace"); pg.wait_for_timeout(900)
         pb(name, pg.locator("#parwf").count() == 1, "assistant affiché")
         if shots: pg.screenshot(path=f"{shots}/{name}_assistant1.png", full_page=True)

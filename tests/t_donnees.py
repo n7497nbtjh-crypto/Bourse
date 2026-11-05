@@ -94,7 +94,7 @@ with sync_playwright() as pw:
     # 6. une entreprise aux comptes anciens : ni PER ni rendement
     v = ev("(()=>{const c=RBY['honda']; if(!c)return null; const v=valo(c); return v&&{pe:v.pe,yld:v.yld,vieux:v.vieux,cap:!!v.capE,year:c.year}})()")
     print("honda :", v)
-    if v and (v["pe"] is not None or v["yld"] is not None):
+    if v and v.get("vieux") and (v["pe"] is not None or v["yld"] is not None):  # 5/11 : Honda a désormais ses comptes de mars 2026 (lus le 4/11)
         fails.append("Honda : PER ou rendement encore calculé sur des comptes anciens")
 
     # 7. indicateurs ajoutés : des valeurs, aucun NaN

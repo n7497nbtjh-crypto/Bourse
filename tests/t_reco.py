@@ -102,7 +102,7 @@ with sync_playwright() as pw:
         if d["n"] < 5 or d["sect"] != d["n"] or d["large"] or d["small"] < 1 or len(d["reg"]) < 2: fail(nom, "diversité des découvertes", d)
         if len(d["etf"]) != 2 or any(not e[0] for e in d["etf"]) or d["etf"][0][1] == d["etf"][1][1]: fail(nom, "ETF du jour", d["etf"])
         txt = pg.inner_text("#app")
-        for s in ["Activité", "Raison de la sélection", "Valorisation, catalyseurs et risques", "ETF éligibles au PEA"]:
+        for s in ["Qui est-elle", "Ce qu'elle fait", "Face à ses rivales", "Ce qu'il faut surveiller"]:  # 4/11 : /decouvertes renvoie vers la découverte de la semaine (/decouverte)
             if s.lower() not in txt.lower(): fail(nom, "découvertes : manque", s)
         # 30 jours : aucune grande capitalisation, au moins une petite chaque jour
         mois = pg.evaluate("""() => Array.from({length: 30}, (_, k) => { const d = new Date(Date.parse(TODAY + 'T12:00:00Z') + k * 864e5).toISOString().slice(0, 10), l = outDayPicks(d, 6); return [l.length, l.filter(x => x.T.t === 'large').length, l.filter(x => x.T.t !== 'mid').length, new Set(l.map(x => x.c.sector)).size]; })""")

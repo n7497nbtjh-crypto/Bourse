@@ -741,3 +741,16 @@ function chercheLecons(q, n = 3) {
   const best = sc.sort((a, b) => b.s - a.s);
   return best.slice(0, n).filter(x => x.s >= 4 && x.s >= best[0].s * 0.45);
 }
+
+// 5/11 : remise ici (supprimée d'app.js par le ménage du 4/11 alors que la réponse « en bref » de l'IA l'appelle encore)
+function enBref(s, f, items) { // une phrase qui résume, à partir des chiffres
+  const cur = f.currency, m = ratios(f), bank = isBank(s), parts = [];
+  if (f.ca != null) parts.push(`${bank ? "réalise" : "vend pour"} ${big(f.ca, cur)} par an${m.g1 != null ? ` (${m.g1 >= 0 ? "+" : "−"}${pct(Math.abs(m.g1), 0, false)} sur un an)` : ""}`);
+  if (m.marge != null && !bank && m.marge > 0) parts.push(`garde ${e100(m.marge)} sur 100 ${CURSYM} vendus`);
+  if (f.net != null) parts.push(f.net >= 0 ? `a gagné ${big(f.net, cur)}` : `a perdu ${big(-f.net, cur)}`);
+  if (!bank && f.netDebt != null) parts.push(f.netDebt < 0 ? "n'a pas de dette nette" : m.lev != null ? `a une dette équivalente à ${F1.format(m.lev)} année${m.lev >= 2 ? "s" : ""} de résultats avant investissements` : "");
+  if (m.payout != null && f.divPaid > 0.5) parts.push(`verse ${pct(m.payout, 0, false)} de son bénéfice en dividende`);
+  const p = parts.filter(Boolean);
+  if (!p.length) return "";
+  return `En ${f.year}, ${esc(s.name)} ${p.length > 1 ? p.slice(0, -1).join(", ") + " et " + p.at(-1) : p[0]}.`;
+}
