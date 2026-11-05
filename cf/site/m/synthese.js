@@ -529,7 +529,7 @@ function synPageV6(b, m) {
     const pr = a.origine === "presse", lg = pr ? lng(a.titre || "") : "fr";
     return `<li><span class="s6-tg ${cl}">${esc(lab)}</span><div><p class="s6-it"${pr && lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(a.titre || a.type || "")}</p>
       ${ch.map(([l, v]) => `<span class="s6-ch"><small>${esc(l)}</small><b>${esc(String(v))}</b></span>`).join("")}${lec ? `<p class="s6-il">${esc(lec)}</p>` : ""}
-      <p class="s6-is">${esc(jr(a.date))} · ${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(pr ? a.site || "presse" : a.source_nom || "communiqué officiel")} ↗</a>` : esc(a.source_nom || "")}${pr && lg !== "fr" ? ` · <span class="s6-tr">titre d'origine en ${SYN6_LG[lg] || "langue étrangère"}</span>` : ""}</p></div></li>`; };
+      <p class="s6-is">${esc(jr(a.date))} · ${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(pr ? a.site || "presse" : a.source_nom || "communiqué officiel")} ↗</a>` : esc(a.source_nom || "")}</p></div></li>`; };
   const carte = l => { const A = deK(l.k), v = l.variation_semaine_pct, etf = l.k.startsWith("e:"), poids = l.portefeuille && l.portefeuille.poids_pct;
     const sous = [etf ? "ETF" : "", poids != null ? `${F0.format(Math.round(poids))} % du portefeuille` : ""].filter(Boolean).join(" · ");
     return `<article class="s6-co"><header>${synLogo(l.k, 38)}<div><a href="${synLien(l.k)}"><b>${esc(l.nom)}</b></a>${sous ? `<small>${esc(sous)}</small>` : ""}</div>${v != null ? `<span class="s6-pv ${v < 0 ? "dn" : ""}">${synPct(v)}</span>` : ""}</header>
