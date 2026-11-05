@@ -543,7 +543,7 @@ async function lireFeuille(request, env) {
     for (let [k, v] of Object.entries(j.items || {})) {
       let it = items[k];
       if (!it) {
-        items[k] = j.updated ? { ...v, d: j.updated } : v;
+        items[k] = j.updated && !v.vl ? { ...v, d: j.updated } : v;
         continue;
       }
       for (let f of HF) it[f] == null && v[f] != null && (it[f] = v[f]);
@@ -2983,7 +2983,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "52fc5f2acff4c0ec", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "2a2faf59b353ba0a", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
