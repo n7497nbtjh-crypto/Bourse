@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ENKLAIR · maquette : la page Premium (v3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap">
+<style>
+/* v2 (5/11) : les avantages d'abord, montrés en vrai (aperçus), l'offre toujours à portée de main.
+   Contenu fidèle au site : rapport du samedi, alerte si une valeur chute de plus de 5 %, IA 30 questions par jour,
+   connecteur, radiographie du portefeuille, comparaisons et classements sans limite, export. Prix : 39 € par an ou 4,90 € par mois. */
+:root{--ink:#111;--y:#FFE14D;--yl:#FFF6C7;--g:#00A06B;--r:#D92D12;--gz:#E2F8EE;--rz:#FFE9E3;--bl:#3B5BFF;--mut:#666}
+*{box-sizing:border-box;margin:0;padding:0}a{color:inherit;text-decoration:none}
+body{background:#fff;color:var(--ink);font:400 16px/1.5 Inter,sans-serif;font-variant-numeric:tabular-nums;-webkit-font-smoothing:antialiased}
+.w{max-width:1240px;margin:0 auto;padding:28px 32px 90px}
+.note{background:#F4F4F4;border-radius:14px;padding:12px 16px;font:600 13.5px/1.45 Inter;margin-bottom:22px}
+.stk{display:inline-block;font:800 13px "Bricolage Grotesque";padding:4px 11px;border-radius:9px;border:2px solid var(--ink);box-shadow:2px 2px 0 var(--ink);transform:rotate(-2deg);background:#fff}
+h2{font:800 clamp(28px,3.4vw,44px)/1.03 "Bricolage Grotesque";letter-spacing:-.045em;margin:10px 0 10px}
+.lead{font:500 17px/1.5 Inter;color:#333;max-width:52ch}
+.sec{margin-top:70px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--ink);color:#fff;font:800 16px Inter;border-radius:999px;padding:14px 22px;border:2px solid var(--ink)}
+.btn.y{background:var(--y);color:var(--ink);box-shadow:4px 4px 0 var(--ink)}
+.btn.o{background:#fff;color:var(--ink)}
+/* ——— 1. bandeau : promesse + trois avantages à gauche, l'offre à droite ——— */
+.hero{background:var(--y);border-radius:32px;padding:34px 36px 36px;display:grid;grid-template-columns:1.25fr .9fr;gap:36px;align-items:start}
+.hero h1{font:800 clamp(38px,5vw,68px)/.96 "Bricolage Grotesque";letter-spacing:-.055em;margin-top:14px}
+.hero .lead{margin-top:16px;color:#222;font-weight:600}
+.b3{display:grid;gap:10px;margin-top:22px}
+.b3 div{display:grid;grid-template-columns:46px 1fr;gap:14px;align-items:center;background:#fff;border:2px solid var(--ink);border-radius:18px;padding:12px 16px}
+.b3 i{width:46px;height:46px;border-radius:13px;display:grid;place-items:center;font-style:normal;font-size:22px;border:2px solid var(--ink)}
+.b3 b{display:block;font:800 17px/1.2 "Bricolage Grotesque";letter-spacing:-.02em}.b3 span{font:500 14px/1.4 Inter;color:#444}
+.offre{background:#fff;border:3px solid var(--ink);border-radius:26px;padding:22px 22px 20px;box-shadow:8px 8px 0 var(--ink)}
+.offre h3{font:800 20px "Bricolage Grotesque";letter-spacing:-.02em}
+.pl{display:grid;gap:10px;margin-top:14px}
+.pl label{display:grid;grid-template-columns:22px 1fr auto;gap:12px;align-items:center;border:2px solid #DDD;border-radius:16px;padding:12px 14px;cursor:pointer}
+.pl label.on{border-color:var(--ink);background:var(--yl)}
+.pl .rd{width:20px;height:20px;border-radius:50%;border:2px solid var(--ink);display:grid;place-items:center}.pl .on .rd:after{content:"";width:10px;height:10px;border-radius:50%;background:var(--ink)}
+.pl b{display:block;font:800 16px Inter}.pl small{font:500 13px Inter;color:var(--mut)}
+.pl em{font-style:normal;text-align:right;font:800 22px "Bricolage Grotesque";letter-spacing:-.03em}.pl em small{display:block;font:600 12px Inter;color:var(--mut);letter-spacing:0}
+.eco{display:inline-block;background:var(--g);color:#fff;font:800 11.5px Inter;border-radius:999px;padding:2px 8px;margin-left:6px;vertical-align:2px}
+.offre .btn{width:100%;margin-top:16px}
+.gar{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px;margin-top:14px;font:600 12.5px Inter;color:#444}
+.gar span:before{content:"✓ ";color:var(--g);font-weight:800}
+.gr{font:500 12px/1.4 Inter;color:var(--mut);margin-top:12px;text-align:center}
+/* ——— 2. chaque avantage montré en vrai ——— */
+.av{display:grid;grid-template-columns:1fr 1fr;gap:46px;align-items:center;margin-top:60px}
+.av.inv .tx{order:2}
+.av .num{font:800 14px "Bricolage Grotesque";color:var(--mut)}
+.av h3{font:800 clamp(26px,3vw,38px)/1.05 "Bricolage Grotesque";letter-spacing:-.04em;margin:6px 0 12px}
+.av ul{list-style:none;margin-top:16px;display:grid;gap:10px}
+.av li{display:grid;grid-template-columns:24px 1fr;gap:10px;font:500 15.5px/1.45 Inter}
+.av li:before{content:"✓";width:22px;height:22px;border-radius:50%;background:var(--gz);color:var(--g);font:800 13px Inter;display:grid;place-items:center;margin-top:2px}
+.av .gx{display:inline-block;margin-top:16px;font:700 13px Inter;background:#F4F4F1;border-radius:999px;padding:5px 12px;color:#444}
+.vis{background:#FAF9F5;border-radius:28px;padding:30px;display:grid;place-items:center;min-height:330px}
+/* aperçu : rapport */
+.mr{width:100%;max-width:440px;background:#fff;border:2px solid var(--ink);border-radius:20px;overflow:hidden;box-shadow:6px 6px 0 var(--ink)}
+.mr-h{background:var(--y);padding:14px 16px}.mr-h small{font:700 11.5px Inter}.mr-h b{display:block;font:800 23px/1.05 "Bricolage Grotesque";letter-spacing:-.04em;margin-top:4px}
+.mr-h b em{font-style:normal;color:var(--g)}
+.mr-r{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:10px 16px;border-top:1px solid #EEE}
+.mr-r .lg{width:30px;height:30px;border:2px solid var(--ink);border-radius:8px;display:grid;place-items:center;font:800 11px Inter;background:#fff}
+.mr-r p{font:700 13px/1.3 Inter}.mr-r p small{display:block;font:500 12px Inter;color:var(--mut)}
+.pv{font:800 13px "Bricolage Grotesque";border:2px solid var(--ink);border-radius:999px;padding:1px 8px}.pv.up{background:var(--gz)}.pv.dn{background:var(--rz)}
+/* aperçu : notification */
+.tel{width:270px;background:#111;border-radius:40px;padding:12px;box-shadow:6px 6px 0 #00000022}
+.ecr{background:linear-gradient(160deg,#4A5A8C,#B89BC9);border-radius:30px;padding:46px 12px 80px;display:grid;gap:10px}
+.heure{color:#fff;text-align:center;font:700 44px/1 Inter;letter-spacing:-.02em;margin-bottom:10px}.heure small{display:block;font:600 13px Inter}
+.nt{background:#ffffffEE;border-radius:18px;padding:10px 12px;display:grid;grid-template-columns:32px 1fr;gap:10px}
+.nt i{width:32px;height:32px;border-radius:9px;background:var(--y);border:2px solid var(--ink);display:grid;place-items:center;font:800 14px Inter;font-style:normal}
+.nt b{font:700 12.5px Inter}.nt p{font:500 12.5px/1.35 Inter}.nt small{font:600 11px Inter;color:var(--mut)}
+/* aperçu : IA */
+.chat{width:100%;max-width:440px;display:grid;gap:10px}
+.q{justify-self:end;background:var(--ink);color:#fff;border-radius:18px 18px 4px 18px;padding:10px 14px;font:600 14px/1.4 Inter;max-width:85%}
+.r{background:#fff;border:2px solid var(--ink);border-radius:18px 18px 18px 4px;padding:12px 14px;font:500 14px/1.5 Inter}
+.r b{font-weight:800}.r .s{display:block;font:600 11.5px Inter;color:var(--mut);margin-top:8px}
+.cpt{justify-self:start;font:700 12px Inter;background:var(--yl);border:2px solid var(--ink);border-radius:999px;padding:3px 10px}
+/* aperçu : portefeuille */
+.mp{width:100%;max-width:440px;background:#fff;border:2px solid var(--ink);border-radius:20px;padding:18px;box-shadow:6px 6px 0 var(--ink)}
+.mp h4{font:800 16px "Bricolage Grotesque"}
+.bar{display:flex;height:22px;border:2px solid var(--ink);border-radius:8px;overflow:hidden;margin:12px 0 8px}
+.lgd{display:grid;grid-template-columns:1fr 1fr;gap:4px 14px;font:600 12.5px Inter}.lgd span:before{content:"";display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;background:var(--c)}
+.mp .k{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}.mp .k div{background:var(--yl);border-radius:12px;padding:8px 10px}.mp .k small{display:block;font:600 11.5px Inter;color:#555}.mp .k b{font:800 20px "Bricolage Grotesque"}
+/* ——— 3. gratuit / Premium ——— */
+.cmp{border:2px solid var(--ink);border-radius:24px;overflow:hidden;margin-top:18px}
+.cmp div{display:grid;grid-template-columns:1.6fr 1fr 1fr;align-items:center;border-top:1px solid #EEE}
+.cmp div:first-child{border-top:0;background:#FAF9F5;font:800 14px "Bricolage Grotesque"}
+.cmp span{padding:12px 18px;font:600 14.5px Inter}.cmp span+span{text-align:center;border-left:1px solid #EEE}
+.cmp span:last-child{background:#FFFBE3}
+.ok{color:var(--g);font-weight:800}.no{color:#BBB}
+/* ——— 4. confiance + fin ——— */
+.tr{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}
+.tr div{border:2px solid var(--ink);border-radius:18px;padding:16px}.tr b{display:block;font:800 17px "Bricolage Grotesque";margin:6px 0 4px}.tr p{font:500 13.5px/1.45 Inter;color:#444}.tr i{font-style:normal;font-size:22px}
+.fin{margin-top:70px;background:var(--ink);color:#fff;border-radius:32px;padding:36px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:center}
+.fin h2{color:#fff;margin:0}.fin p{color:#ccc;font:500 15px Inter;margin-top:8px}
+.faq{margin-top:18px;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.faq details{border:2px solid var(--ink);border-radius:16px;padding:14px 16px}.faq summary{font:700 15px Inter;cursor:pointer}.faq p{font:500 14px/1.5 Inter;color:#333;margin-top:8px}
+@media(max-width:900px){.w{padding:16px 14px 60px}.hero{grid-template-columns:1fr;padding:22px 18px;border-radius:26px}.av,.av.inv{grid-template-columns:1fr;gap:20px}.av.inv .tx{order:0}.tr,.faq{grid-template-columns:1fr 1fr}.fin{grid-template-columns:1fr}.cmp span{padding:10px 10px;font-size:13px}.vis{padding:18px;min-height:0}}
+
+/* ——— v3 : ce que vous n'aurez pas ailleurs ——— */
+.uq{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:20px}
+.uq div{border:2px solid var(--ink);border-radius:22px;padding:18px;background:#fff;box-shadow:5px 5px 0 var(--ink)}
+.uq .big{font:800 40px/1 "Bricolage Grotesque";letter-spacing:-.05em}
+.uq b{display:block;font:800 17px/1.2 "Bricolage Grotesque";margin:10px 0 6px}.uq p{font:500 14px/1.45 Inter;color:#333}
+.uq small{display:block;margin-top:10px;font:700 12px Inter;color:var(--mut)}
+.vs{border:2px solid var(--ink);border-radius:24px;overflow:hidden;margin-top:26px}
+.vs div{display:grid;grid-template-columns:1.7fr repeat(4,1fr);align-items:center;border-top:1px solid #EEE}
+.vs div:first-child{border-top:0;background:#FAF9F5;font:800 13.5px/1.2 "Bricolage Grotesque"}
+.vs span{padding:11px 14px;font:600 14px/1.35 Inter}.vs span+span{text-align:center;border-left:1px solid #EEE}
+.vs span:last-child{background:var(--yl);font-weight:800}
+.vs .ok{color:var(--g);font-weight:800}.vs .no{color:#C9C9C2;font-weight:800}.vs .mi{color:#B07A00;font-size:12.5px}
+.vsn{font:500 12px/1.4 Inter;color:var(--mut);margin-top:10px}
+@media(max-width:900px){.uq{grid-template-columns:1fr 1fr}.vs div{grid-template-columns:1.3fr repeat(4,.8fr)}.vs span{padding:9px 6px;font-size:11.5px}}
+</style></head><body><div class="w">
+<p class="note">Maquette v3 de la page Premium (v2 + « Ce que vous n'aurez pas ailleurs » juste sous le bandeau, avec la comparaison face à un courtier, un site boursier gratuit et une IA seule). Ce qui change : la promesse et les trois grands avantages dès le bandeau, l'offre toujours à droite ; puis chaque avantage montré en vrai (aperçu du rapport, de la notification, de l'IA, du portefeuille) ; un tableau gratuit / Premium net ; les garanties ; un dernier appel. Chiffres des aperçus : rapport et IA = vrais chiffres du profil d'exemple et d'Hermès ; notification et radiographie = valeurs d'illustration, à remplacer par le calcul réel du profil d'exemple à l'installation.</p>
+
+<section class="hero">
+  <div>
+    <span class="stk">Premium</span>
+    <h1>Ce que votre courtier ne vous dit pas.</h1>
+    <p class="lead">ENKLAIR lit chaque jour les documents officiels de 3 300 entreprises, les compare à leurs rivales et vous dit ce qui change pour vos placements. En français, sources à l'appui.</p>
+    <div class="b3">
+      <div><i style="background:#fff">📰</i><p><b>Chaque samedi, votre rapport</b><span>Ce qui s'est passé pour vos valeurs, en deux minutes.</span></p></div>
+      <div><i style="background:var(--rz)">🔔</i><p><b>Prévenu si une valeur chute</b><span>Plus de 5 % de baisse dans la journée : notification le soir même.</span></p></div>
+      <div><i style="background:#DCE4FF">✦</i><p><b>30 questions par jour à l'IA</b><span>Au lieu de 5 par semaine, réponses tirées des comptes officiels.</span></p></div>
+    </div>
+  </div>
+  <div class="offre">
+    <h3>Choisissez votre formule</h3>
+    <div class="pl">
+      <label class="on"><span class="rd"></span><span><b>Un an <span class="eco">−34 %</span></b><small>Un seul paiement, sans renouvellement</small></span><em>39 €<small>soit 3,25 € par mois</small></em></label>
+      <label><span class="rd"></span><span><b>Mensuel</b><small>Sans engagement</small></span><em>4,90 €<small>par mois</small></em></label>
+    </div>
+    <a class="btn y" href="#">Passer à Premium →</a>
+    <div class="gar"><span>Résiliable en deux clics</span><span>Paiement sécurisé Stripe</span><span>Sur tous vos appareils</span><span>Accès immédiat</span></div>
+    <p class="gr">Vous créez d'abord votre espace (adresse et mot de passe) : Premium y est rattaché.</p>
+  </div>
+</section>
+
+<section class="sec">
+  <span class="stk" style="background:#FFB3D1">Introuvable ailleurs</span>
+  <h2>Ce que vous n'aurez pas ailleurs.</h2>
+  <p class="lead">Un courtier vous montre des cours. Un site boursier, des articles. Une IA, ce qu'elle a en mémoire. ENKLAIR part des documents officiels et les relie à vos placements.</p>
+  <div class="uq">
+    <div><p class="big">1 300</p><b>Ce que contiennent vraiment vos ETF</b><p>Vos ETF et vos actions additionnés ligne par ligne : votre vraie part d'Apple, des États-Unis ou de la technologie.</p><small>Calculé à partir de la composition officielle de chaque fonds</small></div>
+    <div><p class="big">↗</p><b>Chaque chiffre relié à sa preuve</b><p>Pour les entreprises européennes, un clic ouvre leur rapport officiel sur le chiffre exact. L'IA cite ses sources au lieu de répondre de mémoire.</p><small>Rapports annuels déposés auprès des autorités</small></div>
+    <div><p class="big">FR</p><b>Les annonces du monde entier, en français</b><p>Résultats, rachats, dividendes publiés à Paris, New York, Oslo, Stockholm ou Londres : lus, chiffrés et traduits pour vous.</p><small>Sources : AMF, SEC, bourses nordiques, Londres</small></div>
+    <div><p class="big">3 300</p><b>Chaque entreprise face à ses vraies rivales</b><p>LVMH face à Hermès, Kering et Moncler, pas face à « la consommation » en général : la médiane des concurrents du même métier.</p><small>Entreprises suivies, avec leurs rivales</small></div>
+  </div>
+  <div class="vs">
+    <div><span>Ce que vous obtenez</span><span>Votre courtier</span><span>Un site boursier gratuit</span><span>Une IA seule</span><span>ENKLAIR Premium</span></div>
+    <div><span>Ce que vos ETF contiennent vraiment, additionné à vos actions</span><span class="no">✕</span><span class="no">✕</span><span class="mi">si vous saisissez tout</span><span class="ok">✓</span></div>
+    <div><span>Un résumé de la semaine de vos valeurs, chaque samedi</span><span class="no">✕</span><span class="no">✕</span><span class="no">✕</span><span class="ok">✓</span></div>
+    <div><span>Annonces officielles étrangères traduites et chiffrées</span><span class="no">✕</span><span class="mi">en partie</span><span class="mi">si vous lui donnez le texte</span><span class="ok">✓</span></div>
+    <div><span>Chaque entreprise comparée à ses rivales du même métier</span><span class="no">✕</span><span class="mi">en partie</span><span class="mi">de mémoire</span><span class="ok">✓</span></div>
+    <div><span>Chiffres reliés au rapport officiel</span><span class="no">✕</span><span class="no">✕</span><span class="no">✕</span><span class="ok">✓ Europe</span></div>
+    <div><span>Alerte le soir même si une valeur chute</span><span class="mi">selon le courtier</span><span class="mi">avec un compte</span><span class="no">✕</span><span class="ok">✓</span></div>
+    <div><span>Sans pousser à acheter ni à vendre</span><span class="mi">vit de vos ordres</span><span class="mi">rarement</span><span class="ok">✓</span><span class="ok">✓</span></div>
+  </div>
+  <p class="vsn">Ce qu'on trouve en général : les services varient d'un courtier ou d'un site à l'autre. Un courtier vit des ordres passés, un site gratuit de la publicité ; ENKLAIR ne vit que de ses abonnés.</p>
+</section>
+
+<section class="sec">
+  <span class="stk" style="background:#A9B6FF">Ce que vous recevez</span>
+  <h2>Quatre services, montrés en vrai.</h2>
+
+  <div class="av">
+    <div class="tx"><p class="num">1 · Le rapport de la semaine</p><h3>Le samedi, toute votre semaine en deux minutes.</h3>
+      <p class="lead">Ce que vos entreprises ont publié, ce qui a fait bouger votre portefeuille, ce qui arrive. Sans rien chercher.</p>
+      <ul><li>Résultats, rachats d'actions, accords et presse, entreprise par entreprise</li><li>Ce que chaque ligne vous a fait gagner ou perdre, en euros</li><li>Vos prochaines dates : résultats, dividendes, dernier jour pour les toucher</li></ul>
+      <a class="gx" href="#">Voir un rapport en exemple →</a></div>
+    <div class="vis"><div class="mr"><div class="mr-h"><small>ENKLAIR · semaine du 28 octobre</small><b>Votre portefeuille a gagné <em>33 €</em> cette semaine.</b></div>
+      <div class="mr-r"><span class="lg">AL</span><p>Air Liquide<small>Chiffre d'affaires : 7,3 Md€, +4,3 %</small></p><span class="pv up">+7,5 %</span></div>
+      <div class="mr-r"><span class="lg">LV</span><p>LVMH<small>Rachète ses propres actions</small></p><span class="pv up">+8,1 %</span></div>
+      <div class="mr-r"><span class="lg">SE</span><p>Schneider Electric<small>Accord avec NVIDIA et HPE</small></p><span class="pv dn">−6,0 %</span></div></div></div>
+  </div>
+
+  <div class="av inv">
+    <div class="tx"><p class="num">2 · Les alertes</p><h3>Une de vos valeurs chute ? Vous le savez le soir même.</h3>
+      <p class="lead">ENKLAIR surveille chaque soir votre portefeuille et vos favoris. Pas besoin d'ouvrir le site.</p>
+      <ul><li>Baisse de plus de 5 % dans la journée : notification sur votre téléphone</li><li>Résultats publiés, avec leurs chiffres clés</li><li>Dernier jour pour acheter et toucher un dividende</li></ul>
+      <span class="gx">Sans Premium : aucune alerte</span></div>
+    <div class="vis"><div class="tel"><div class="ecr"><p class="heure">18:45<small>jeudi 5 novembre</small></p>
+      <div class="nt"><i>E</i><div><b>ENKLAIR</b> <small>· maintenant</small><p>▼ Une de vos valeurs : −6,2 % aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualité.</p></div></div>
+      <div class="nt"><i>E</i><div><b>ENKLAIR</b> <small>· hier</small><p>Apple a publié ses résultats : ventes 114,5 Md$, +12 %.</p></div></div></div></div></div>
+  </div>
+
+  <div class="av">
+    <div class="tx"><p class="num">3 · L'IA du site</p><h3>Posez vos questions, autant que vous voulez.</h3>
+      <p class="lead">Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.</p>
+      <ul><li>30 questions par jour, au lieu de 5 par semaine</li><li>Chaque chiffre cité avec sa source</li><li>Le connecteur pour votre propre IA</li></ul>
+      <span class="gx">Sans Premium : 5 questions par semaine</span></div>
+    <div class="vis"><div class="chat"><p class="q">Pourquoi le bénéfice d'Hermès a baissé en 2025 ?</p>
+      <div class="r">Les ventes ont progressé de <b>5,5 %</b>, mais le bénéfice net recule de <b>1,7 %</b>, à 4,5 Md€ : l'impôt a pesé davantage (2,3 Md€ contre 1,8). Hermès reste la plus rentable de ses rivales : <b>28 €</b> de bénéfice sur 100 € de ventes.<span class="s">Sources : comptes 2024 et 2025 d'Hermès (ESEF)</span></div>
+      <span class="cpt">Il vous reste 29 questions aujourd'hui</span></div></div>
+  </div>
+
+  <div class="av inv">
+    <div class="tx"><p class="num">4 · Votre portefeuille radiographié</p><h3>Ce que vous possédez vraiment, à travers vos ETF.</h3>
+      <p class="lead">Un ETF Monde, c'est 1 300 entreprises. Premium les additionne avec vos actions pour vous montrer vos vraies expositions.</p>
+      <ul><li>Vos expositions par pays et par secteur</li><li>Ce qu'une forte baisse coûterait, en euros</li><li>Le calendrier de vos dividendes</li><li>Et sans limite : comparaisons, cinq classements, export des chiffres</li></ul>
+      <span class="gx">Sans Premium : la valeur et la plus-value seulement</span></div>
+    <div class="vis"><div class="mp"><h4>Où est vraiment votre argent</h4>
+      <div class="bar"><span style="width:52%;background:#3B5BFF"></span><span style="width:31%;background:#FFE14D"></span><span style="width:9%;background:#00A06B"></span><span style="width:8%;background:#DDD"></span></div>
+      <div class="lgd"><span style="--c:#3B5BFF">États-Unis 52 %</span><span style="--c:#FFE14D">France 31 %</span><span style="--c:#00A06B">Japon 9 %</span><span style="--c:#DDD">Autres 8 %</span></div>
+      <div class="k"><div><small>Si les marchés baissaient de 30 %</small><b class="dn" style="color:var(--r)">−2 900 €</b></div><div><small>Dividendes attendus sur un an</small><b>186 €</b></div></div></div></div>
+  </div>
+</section>
+
+<section class="sec">
+  <span class="stk">Gratuit ou Premium</span>
+  <h2>Toute l'information reste gratuite.</h2>
+  <p class="lead">Les fiches, les médianes, l'actualité et les outils sont gratuits, en entier. Premium ajoute le suivi et les réponses.</p>
+  <div class="cmp">
+    <div><span></span><span>Gratuit</span><span>Premium</span></div>
+    <div><span>Fiches, médianes du secteur, actualité, agenda, outils</span><span class="ok">✓</span><span class="ok">✓</span></div>
+    <div><span>Portefeuille : valeur et plus-value</span><span class="ok">✓</span><span class="ok">✓</span></div>
+    <div><span>Rapport de la semaine, chaque samedi</span><span class="no">–</span><span class="ok">✓</span></div>
+    <div><span>Alertes : chute de plus de 5 %, résultats, dividendes</span><span class="no">–</span><span class="ok">✓</span></div>
+    <div><span>Questions à l'IA du site</span><span>5 par semaine</span><span class="ok">30 par jour</span></div>
+    <div><span>Connecteur pour Claude ou ChatGPT</span><span class="no">–</span><span class="ok">✓</span></div>
+    <div><span>Radiographie du portefeuille</span><span class="no">–</span><span class="ok">✓</span></div>
+    <div><span>Comparaisons d'entreprises</span><span>5 par semaine</span><span class="ok">Sans limite</span></div>
+    <div><span>Classements complets et export des chiffres</span><span class="no">–</span><span class="ok">✓</span></div>
+  </div>
+</section>
+
+<section class="sec">
+  <span class="stk" style="background:#B8F0D4">En confiance</span>
+  <h2>Simple à prendre, simple à quitter.</h2>
+  <div class="tr">
+    <div><i>↺</i><b>Résiliable en deux clics</b><p>Depuis Mon espace. L'accès reste ouvert jusqu'à la fin du mois payé.</p></div>
+    <div><i>🔒</i><b>Paiement par Stripe</b><p>ENKLAIR ne voit jamais votre numéro de carte.</p></div>
+    <div><i>⚖</i><b>Jamais de conseil d'achat</b><p>De l'information et des explications, pas de recommandation.</p></div>
+    <div><i>◎</i><b>Sources officielles</b><p>Chaque chiffre renvoie au document de l'entreprise.</p></div>
+  </div>
+</section>
+
+<section class="fin"><div><h2>Votre premier rapport arrive samedi.</h2><p>39 € pour un an, ou 4,90 € par mois sans engagement.</p></div><a class="btn y" href="#">Passer à Premium →</a></section>
+
+<section class="sec"><span class="stk">Questions</span><h2>Questions fréquentes.</h2>
+  <div class="faq"><details open><summary>Premium donne-t-il des conseils pour acheter ?</summary><p>Non. Premium donne plus de suivi et d'explications, jamais de recommandation d'achat ou de vente.</p></details>
+  <details open><summary>Comment résilier ?</summary><p>Depuis Mon espace, « Gérer ou résilier mon abonnement ». L'accès reste ouvert jusqu'à la fin du mois payé. L'offre d'un an ne se renouvelle pas.</p></details>
+  <details><summary>Pourquoi payer si mon IA répond déjà ?</summary><p>Votre IA répond quand vous pensez à lui demander. ENKLAIR lit les publications chaque jour, compare chaque entreprise à son secteur, garde vos semaines en mémoire et vous prévient.</p></details>
+  <details><summary>J'ai déjà un code d'accès</summary><p>Collez-le dans Mon espace pour activer Premium sur ce compte.</p></details></div>
+</section>
+</div></body></html>
