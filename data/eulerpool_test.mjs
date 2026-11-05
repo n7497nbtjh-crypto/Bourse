@@ -18,13 +18,14 @@ for (const [id, isin] of Object.entries(ESSAIS)) {
   const loc = local(id);
   const [prof, inc, q, cd] = await Promise.all([get(`/equity/profile/${isin}`), get(`/equity/incomestatement/${isin}`), get(`/equity/income-statement-quarterly/${isin}`), get(`/equity/candles/${isin}?range=1y`)]); n += 4;
   console.log(`\n== ${id} (${isin})`);
+  if (inc.j && Array.isArray(inc.j)) console.log("  périodes annuelles fournies :", inc.j.length, "de", inc.j.map(x => String(x.period).slice(0, 4)).sort()[0], "à", inc.j.map(x => String(x.period).slice(0, 4)).sort().at(-1));
   if (prof.j) { const p = prof.j; console.log("  profil :", [p.name || p.companyName, p.currency || p.reportedCurrency, p.exchange || p.exchangeShortName, p.sector || p.industry].filter(Boolean).join(" · "), "champs :", Object.keys(p).slice(0, 25).join(",")); } else console.log("  profil :", prof.status, prof.raw);
-  if (inc.j && Array.isArray(inc.j)) { const L = inc.j.slice().sort((a, b) => String(b.period).localeCompare(String(a.period))).slice(0, 3);
+  if (inc.j && Array.isArray(inc.j)) { const L = inc.j.filter(x => String(x.period).slice(0, 10) <= new Date().toISOString().slice(0, 10)).sort((a, b) => String(b.period).localeCompare(String(a.period))).slice(0, 5);
     console.log("  Eulerpool annuel :", L.map(x => `${String(x.period).slice(0, 10)} ventes ${M(x.revenue)} ebit ${M(x.ebit)} net ${M(x.netIncome)} ${x.currency || ""}`).join(" | "));
     if (L[0]) console.log("  champs annuels   :", Object.keys(L[0]).join(","));
   } else console.log("  annuel :", inc.status, inc.raw);
   if (loc) console.log("  Site (officiel)  :", `${loc.year} ventes ${M(loc.ca)} M ebit ${M(loc.ebit)} M net ${M(loc.net)} M ${loc.cur}`); else console.log("  Site : pas de comptes");
-  if (q.j && Array.isArray(q.j)) { const L = q.j.slice().sort((a, b) => String(b.period || b.date).localeCompare(String(a.period || a.date))).slice(0, 4);
+  if (q.j && Array.isArray(q.j)) { const L = q.j.filter(x => String(x.period || x.date).slice(0, 10) <= new Date().toISOString().slice(0, 10)).sort((a, b) => String(b.period || b.date).localeCompare(String(a.period || a.date))).slice(0, 4);
     console.log("  Trimestres       :", L.length ? L.map(x => `${String(x.period || x.date).slice(0, 10)} ventes ${M(x.revenue)} net ${M(x.netIncome)}`).join(" | ") : "liste vide"); if (L[0]) console.log("  champs trim.     :", Object.keys(L[0]).join(",")); } else console.log("  trimestres :", q.status, q.raw);
   if (cd.j && Array.isArray(cd.j)) { const L = cd.j; console.log("  Cours 1 an       :", L.length, "points, du", d(L[0] && L[0].timestamp), "au", d(L.at(-1) && L.at(-1).timestamp), "dernier", L.at(-1) && L.at(-1).close); } else console.log("  cours :", cd.status, cd.raw);
 }
