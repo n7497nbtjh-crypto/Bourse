@@ -4,7 +4,7 @@
 // Module sans dépendance : utilisé par le Worker (espace.mjs) et par le robot des données (data/cours_fetch.mjs).
 
 const JOUR = 864e5;
-export const SYN_VERSION = 2;
+export const SYN_VERSION = 3; // 5/11 : rapport v6, nouveau profil d'exemple
 const KEY = /^[ce]:[a-z0-9-]{1,60}$/;
 const r2 = v => Math.round(v * 100) / 100;
 const num = v => typeof v === "number" && isFinite(v) ? v : (typeof v === "string" && v.trim() !== "" && isFinite(+v) ? +v : null);

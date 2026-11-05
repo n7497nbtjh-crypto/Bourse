@@ -107,6 +107,12 @@ function f4Logo(c, ini, petit) {
   if (!ini) ini = String(c.name || "").replace(/[^A-Za-zÀ-ÿ0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
   return src ? `<span class="${cl} ek-logo"><img src="${src}" alt="" loading="lazy" onerror="this.parentNode.classList.remove('ek-logo');this.parentNode.textContent='${esc(ini).replace(/'/g, "")}'"></span>` : `<span class="${cl}" aria-hidden="true">${esc(ini)}</span>`;
 }
+// 5/11 (Romain : en-tête « trop vide ») : la carte d'identité en trois chiffres sous la description
+function f4Carte(s) {
+  const v = typeof valo === "function" ? valo(s) : null, cap = v && v.capE ? v.capE / 1e6 : null, cur = s.currency;
+  const L = [["Valeur en Bourse", cap != null ? f4Md(cap, "EUR") : null, "capi"], [`Ventes ${s.year || ""}`.trim(), s.ca != null ? f4Md(s.ca, cur) : null, "ventes"], [`Bénéfice ${s.year || ""}`.trim(), s.net != null ? f4Md(s.net, cur) : null, "benefice"]].filter(z => z[1] && z[1] !== "–");
+  return L.length < 2 ? "" : `<div class="ek-id3">${L.map(([t, val, k]) => `<div><small>${typeof ekDefMot === "function" ? ekDefMot(k, t, { nom: s.name }) : esc(t)}</small><b>${esc(val)}</b></div>`).join("")}</div>`;
+}
 function f4Tete(s, c, x) {
   const p = typeof pxOf === "function" ? pxOf(s) : null, fi = (typeof FICHES !== "undefined" && FICHES && FICHES[s.id]) || null;
   const pea = typeof peaOk === "function" ? peaOk(s) : null, ini = s.name.replace(/[^A-Za-zÀ-ÿ0-9 ]/g, " ").split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
@@ -123,8 +129,8 @@ function f4Tete(s, c, x) {
   const chips = [secName(s), [typeof regName === "function" ? regName(s) : "", s.ticker].filter(Boolean).join(" · "), !e4FrF() ? "" : pea === true ? "Éligible au PEA ✓" : pea === false ? "Hors PEA" : ""].filter(Boolean);
   return `<section class="ek-hero">
     <div class="ek-crumb"><a href="/entreprises">Entreprises</a><span>›</span>${esc(secName(s))}<span>›</span>${esc(s.name)}</div>
-    <div class="ek-top"><div class="ek-gauche"><div class="ek-chips">${chips.map(t => `<span class="ek-chip">${esc(t)}</span>`).join("")}</div><div class="ek-idt">${f4Logo(s, ini)}<h1>${esc(s.name)}</h1></div>
-      <p class="ek-desc">${esc((fi && fi.fait) || s.desc || "")}</p></div>${pc}</div>
+    <div class="ek-top"><div class="ek-gauche"><div class="ek-idt">${f4Logo(s, ini)}<div><h1>${esc(s.name)}</h1><div class="ek-chips">${chips.map(t => `<span class="ek-chip">${esc(t)}</span>`).join("")}</div></div></div>
+      <p class="ek-desc">${esc((fi && fi.fait) || s.desc || "")}</p>${f4Carte(s)}</div>${pc}</div>
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
     <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${esc(x.P.L.map(r => r.name).join(", "))})` : ""}.` : ""}</span>

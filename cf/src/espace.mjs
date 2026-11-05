@@ -558,10 +558,11 @@ async function tache(request, env, url) {
 
 /* Rapport exemple, public (30/10/2026) : le vrai rapport de la semaine, calculé avec les chiffres du jour, pour un profil fictif
    (quatre favoris, un petit portefeuille, deux secteurs suivis). Rien n'est enregistré ; le résultat est gardé une heure en cache. */
-export const EXEMPLE_PROFIL = {
-  favoris: ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple"],
-  portefeuille: { l: [{ k: "e:amundi-msci-world-pea", q: 120, pru: 5.2, env: "pea" }, { k: "c:totalenergies", q: 15, pru: 58, env: "pea" }, { k: "c:air-liquide", q: 4, pru: 160, env: "pea" }] },
-  rapport: { favoris: true, portefeuille: true, secteurs: ["energie", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] },
+export const EXEMPLE_PROFIL = { // 5/11 (Romain : « plus cohérent ») : un PEA d'environ 10 000 € : un ETF monde en socle et quatre grandes françaises
+  favoris: ["c:hermes", "c:sanofi", "c:apple", "c:asml"],
+  portefeuille: { l: [{ k: "e:amundi-msci-world-pea", q: 950, pru: 5.6, env: "pea" }, { k: "c:lvmh", q: 3, pru: 520, env: "pea" }, { k: "c:air-liquide", q: 6, pru: 165, env: "pea" },
+    { k: "c:totalenergies", q: 12, pru: 58, env: "pea" }, { k: "c:schneider-electric", q: 4, pru: 210, env: "pea" }] },
+  rapport: { favoris: true, portefeuille: true, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] },
 };
 export async function rapportExemple(request, env) {
   const url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + SYN_VERSION, url.origin));

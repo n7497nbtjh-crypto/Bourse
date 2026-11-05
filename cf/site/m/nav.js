@@ -63,14 +63,14 @@ const NAV = [
   {
     k: "esp", label: "Mon espace", porte: "/espace", sous: "Ce que vous suivez", compte: true,
     items: [
-      ["/espace", "@esp", "Votre rapport de la semaine : vos valeurs, leur actualité, leurs dates"],
+      ["/espace", "@esp", "Votre espace : favoris, portefeuille, alertes"],
+      ["/rapport-exemple", "★ Le rapport de la semaine", "Chaque samedi, toute l'actualité de vos valeurs : voir un exemple"],
       ["/favoris", "Mes favoris", "Les entreprises et ETF que vous suivez"],
       ["/portefeuille", "Mon portefeuille", "Vos lignes, leurs frais, leur diversification"],
       ["/espace/alertes", "Mes alertes", "Publication, dividende, mouvement de plus de 5 %"],
     ],
     aussi: [
       ["/espace/rapport", "Régler mon rapport"],
-      ["/rapport-exemple", "Un rapport en exemple"],
       ["/espace/ia", "L'IA du site"],
       ["/espace/reglages", "Réglages"],
       ["/connecteur", "ENKLAIR dans ChatGPT ou Claude"],

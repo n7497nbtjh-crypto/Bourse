@@ -430,7 +430,7 @@ async function pageRapportExemple() {
   app.innerHTML = `<div class="ek ek-page rx4"><section class="ek-hero rx4-hero"><div class="mc-crumb"><a href="/espace">Mon espace</a> › Rapport exemple</div><span class="mc-stk">Premium · exemple</span>
       <h1 class="ag4-t">Votre semaine en 2 minutes.</h1>
       <p class="mc-sub">Un vrai rapport, calculé aujourd'hui avec les chiffres du site pour un profil d'exemple : quatre favoris et un petit portefeuille. Le vôtre suit vos valeurs, et arrive chaque samedi.</p>
-      <div class="rx4-plan">${[["1", "Ce que vos entreprises ont publié", "les chiffres clés et ce qu'ils veulent dire"], ["2", "Vos valeurs cette semaine", "et pourquoi elles ont bougé"], ["3", "À venir", "les dates des deux prochaines semaines"], ["4", "Points de vigilance", "ce que votre portefeuille concentre"]].map(([n, t, d]) => `<div><i>${n}</i><b>${t}</b><span>${d}</span></div>`).join("")}</div>
+      <div class="rx4-plan">${[["1", "Toute l'actualité de vos entreprises", "résultats, accords, rachats, presse"], ["2", "Ce qui a fait bouger le portefeuille", "ce que chaque ligne a apporté, en euros"], ["3", "Le contexte", "ce qui touche leurs secteurs"], ["4", "À venir", "les dates des deux prochaines semaines"]].map(([n, t, d]) => `<div><i>${n}</i><b>${t}</b><span>${d}</span></div>`).join("")}</div>
       ${prem ? "" : `<a class="ek-btn dk rx4-cta" href="/premium">Recevoir le mien chaque semaine avec Premium</a>`}</section>
     <div id="synex">${synPageHTML(b, { premium: false })}</div>
     <section class="ek-sec"><span class="ek-stk2 b">Le vôtre</span><h2>Ce que vous réglez dans votre rapport.</h2><div class="rx4-reg">${SYN_EX_REG.map(([t, d]) => `<div><b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
@@ -506,3 +506,70 @@ function synPageV5(b, m) {
   </div>`;
 }
 synPageHTML = synPageV5;
+
+/* ====== 5/11 (maquette validée docs/maquettes/rapport-semaine-v1.html, Romain : « bien mieux qu'avant ») : rapport v6 ======
+   Ordre : en-tête jaune (ce que le portefeuille a gagné ou perdu, quatre cases), toute l'actualité de chaque entreprise (portefeuille
+   d'abord, favoris ensuite : résultats, accords, rachats, emprunts, presse ; articles de recommandation écartés ; titres étrangers
+   traduits par axTraduire), ce que chaque ligne a apporté en euros, le contexte de leurs secteurs, ce qui arrive. Vrai rapport et exemple. */
+const SYN6_T = { resultats: ["Résultats", "t-res"], dividende: ["Dividende", "t-div"], dividendes: ["Dividende", "t-div"], rachat: ["Rachat d'actions", "t-rach"], operation: ["Accord", "t-acc"], contrat: ["Contrat", "t-acc"],
+  dirigeants: ["Direction", "t-dir"], emission: ["Emprunt", "t-obl"], capital: ["Actionnaires", "t-rach"], initie: ["Achat d'un dirigeant", "t-dir"], assemblee: ["Assemblée", "t-rach"], agenda: ["Agenda", "t-rach"], presse: ["Presse", "t-pr"] };
+const SYN6_RECO = /\b(buy|sell|kaufen|verkaufen|stuft|kursziel|price target|objectif de cours|on ach[eè]te ou on vend|upgrade|downgrade|outperform|underperform|surperform|sous-perform|better buy|set you up|should you|is it time)\b|\?$/i;
+const SYN6_LG = { en: "anglais", de: "allemand", es: "espagnol", it: "italien", nl: "néerlandais", sv: "suédois", da: "danois", no: "norvégien", pt: "portugais" };
+function synPageV6(b, m) {
+  SYN_ANN = [];
+  const pf = b.portefeuille, L = (b.lignes || []).slice(), sem = String(b.semaine || "").replace(/^\d{4}-W/, "");
+  const jr = iso => { const d = new Date(iso + "T12:00:00Z"); return `${d.getUTCDate() === 1 ? "1er" : d.getUTCDate()} ${SYN_MOIS[d.getUTCMonth()]}`; };
+  const lng = t => /[àâçéèêëîïôûùüÿœ]|\b(le|la|les|des|du|une|et|pour|avec|sur)\b/i.test(t) ? "fr" : /\b(der|die|das|und|mit|für|Aktie)\b/.test(t) ? "de" : /\b(el|los|las|con|para|y)\b/.test(t) ? "es" : /\b(il|della|per|con|e)\b/.test(t) && /zion|zza|tà\b/.test(t) ? "it" : "en";
+  const vide = a => a.origine !== "presse" && !(a.chiffres || []).length && ["communique", "autre", "capital", "agenda"].includes(a.categorie) && !/rachat/i.test(a.titre || "");
+  const ann = (b.annonces || []).filter(a => !(a.origine === "presse" && SYN6_RECO.test(a.titre || "")) && !vide(a));
+  const deK = k => ann.filter(a => a.k === k).sort((x, y) => (x.origine === "presse") - (y.origine === "presse") || String(y.date).localeCompare(x.date)).slice(0, 5);
+  const item = a => { const [lab, cl] = SYN6_T[a.categorie] || (a.origine === "presse" ? SYN6_T.presse : ["Annonce", "t-rach"]), ch = (a.chiffres || []).slice(0, 3);
+    const gen = t => /^(Une information publiée|La publication des ventes|Document déposé)/.test(t || "");
+    const lec = (a.lecture || []).filter(t => t && !gen(t)).join(" ") || (a.origine !== "presse" && !gen(a.resume) ? a.resume || "" : "");
+    const pr = a.origine === "presse", lg = pr ? lng(a.titre || "") : "fr";
+    return `<li><span class="s6-tg ${cl}">${esc(lab)}</span><div><p class="s6-it"${pr && lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(a.titre || a.type || "")}</p>
+      ${ch.map(([l, v]) => `<span class="s6-ch"><small>${esc(l)}</small><b>${esc(String(v))}</b></span>`).join("")}${lec ? `<p class="s6-il">${esc(lec)}</p>` : ""}
+      <p class="s6-is">${esc(jr(a.date))} · ${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(pr ? a.site || "presse" : a.source_nom || "communiqué officiel")} ↗</a>` : esc(a.source_nom || "")}${pr && lg !== "fr" ? ` · <span class="s6-tr">titre d'origine en ${SYN6_LG[lg] || "langue étrangère"}</span>` : ""}</p></div></li>`; };
+  const carte = l => { const A = deK(l.k), v = l.variation_semaine_pct, etf = l.k.startsWith("e:"), poids = l.portefeuille && l.portefeuille.poids_pct;
+    const sous = [etf ? "ETF" : "", poids != null ? `${F0.format(Math.round(poids))} % du portefeuille` : ""].filter(Boolean).join(" · ");
+    return `<article class="s6-co"><header>${synLogo(l.k, 38)}<div><a href="${synLien(l.k)}"><b>${esc(l.nom)}</b></a>${sous ? `<small>${esc(sous)}</small>` : ""}</div>${v != null ? `<span class="s6-pv ${v < 0 ? "dn" : ""}">${synPct(v)}</span>` : ""}</header>
+      ${A.length ? `<ul>${A.map(item).join("")}</ul>` : `<p class="s6-vide">${etf ? "Rien de publié cette semaine. Un ETF ne publie pas de résultats : son cours suit les entreprises qu'il contient." : "Rien de publié cette semaine."}</p>`}</article>`; };
+  const nbA = (k) => deK(k).length;
+  const lp = L.filter(l => l.portefeuille).sort((x, y) => nbA(y.k) - nbA(x.k) || (y.portefeuille.poids_pct || 0) - (x.portefeuille.poids_pct || 0));
+  const lf = L.filter(l => !l.portefeuille).sort((x, y) => nbA(y.k) - nbA(x.k));
+  const nb = L.reduce((t, l) => t + nbA(l.k), 0), nbRes = ann.filter(a => a.categorie === "resultats" && L.some(l => l.k === a.k)).length;
+  const avecV = L.filter(l => l.variation_semaine_pct != null), best = avecV.slice().sort((x, y) => y.variation_semaine_pct - x.variation_semaine_pct)[0], worst = avecV.slice().sort((x, y) => x.variation_semaine_pct - y.variation_semaine_pct)[0];
+  const nx = (b.a_venir || [])[0];
+  const g = pf && pf.var_eur != null ? pf.var_eur : null;
+  const titre = g != null ? `Votre portefeuille a ${g >= 0 ? "gagné" : "perdu"} ${F0.format(Math.abs(Math.round(g)))}&nbsp;€ cette semaine.` : best ? `Cette semaine, ${esc(best.nom)} a le plus bougé parmi vos valeurs.` : "Votre semaine en Bourse.";
+  const sousT = [g != null ? `${synPct(pf.var_pct)} sur ${F0.format(Math.round(pf.valeur_eur - g))} €.` : "", nb ? `${nb} nouvelle${nb > 1 ? "s" : ""} sur vos ${L.length} valeurs${nbRes ? `, dont ${nbRes} publication${nbRes > 1 ? "s" : ""} de résultats` : ""}.` : ""].filter(Boolean).join(" ");
+  const tiles = [pf && pf.valeur_eur ? `<div><small>Valeur du portefeuille</small><b>${F0.format(Math.round(pf.valeur_eur))} €</b><span>${pf.lignes || lp.length} ligne${(pf.lignes || lp.length) > 1 ? "s" : ""}</span></div>` : "",
+    best ? `<div><small>La plus forte hausse</small><b class="${synCls(best.variation_semaine_pct)}">${synPct(best.variation_semaine_pct)}</b><span>${esc(best.nom)}</span></div>` : "",
+    worst && worst !== best ? `<div><small>La plus forte baisse</small><b class="${synCls(worst.variation_semaine_pct)}">${synPct(worst.variation_semaine_pct)}</b><span>${esc(worst.nom)}</span></div>` : "",
+    nx ? `<div><small>À venir</small><b>${esc(jr(nx.date))}</b><span>${esc(nx.nom || "")} : ${esc(String(nx.label || "").toLowerCase())}</span></div>` : ""].filter(Boolean);
+  // ce que chaque ligne a apporté, en euros
+  const Lc = lp.filter(l => l.portefeuille.var_eur != null).sort((x, y) => y.portefeuille.var_eur - x.portefeuille.var_eur), mx = Math.max(1, ...Lc.map(l => Math.abs(l.portefeuille.var_eur)));
+  const contrib = Lc.map(l => { const e = l.portefeuille.var_eur; return `<div class="s6-cb"><span class="s6-cbn">${synLogo(l.k, 30)}<span>${esc(l.nom)}</span><small>${F0.format(Math.round(l.portefeuille.poids_pct || 0))} %</small></span><span class="s6-cbz"><i class="${e < 0 ? "dn" : "up"}" style="width:${(Math.abs(e) / mx * 50).toFixed(1)}%"></i></span><b class="${synCls(e)}">${synEur(e)}</b><small class="s6-cbv">${synPct(l.variation_semaine_pct)}</small></div>`; }).join("");
+  // contexte
+  const SENS = { "+": ["+", "s-p"], "-": ["−", "s-m"], "±": ["±", "s-pm"] };
+  const ctx = synSujets(b).slice(0, 3).map(({ sj, touches }) => `<div><small>${esc(sj.theme)}</small><h4>${esc(sj.titre)}</h4><p>${esc((sj.faits || []).slice(-1)[0] || "")}</p><div class="s6-qui">${touches.slice(0, 4).map(t => { const [sg, cl] = SENS[t.im.sens] || SENS["±"]; return `<span class="${cl}" title="${esc(t.im.mecanisme || "")}">${sg} ${esc(t.c.name)}</span>`; }).join("")}</div></div>`).join("");
+  // à venir
+  const ag = (b.a_venir || []).map(e => `<div><span class="s6-dt">${esc(jr(e.date))}</span>${synLogo(e.k, 34)}<b>${esc(e.nom || "")} : ${esc(String(e.label || "").replace(/^./, c => c.toLowerCase()))}</b><em>${L.find(l => l.k === e.k && l.portefeuille) ? "Portefeuille" : "Favori"}</em></div>`).join("");
+  setTimeout(() => { if (typeof axTraduire === "function") axTraduire(); }, 50);
+  return `<div class="s6">
+    <section class="s6-hero"><p class="s6-mast"><b>ENKLAIR</b><span>Votre rapport · ${b.du ? esc(synDuAu(b)) : "semaine " + esc(sem)}${b.en_cours ? " (en cours)" : ""}</span></p>
+      <h1>${titre}</h1>${sousT ? `<p class="s6-sub">${sousT}</p>` : ""}${tiles.length ? `<div class="s6-tiles">${tiles.join("")}</div>` : ""}</section>
+    <section class="s6-sec"><span class="s6-stk b">L'actualité</span><h2>Ce qui s'est passé pour vos entreprises.</h2>
+      ${lp.length ? `<p class="s6-sub2">Dans votre portefeuille</p><div class="s6-cos">${lp.map(carte).join("")}</div>` : ""}
+      ${lf.length ? `<p class="s6-sub2">Dans vos favoris</p><div class="s6-cos">${lf.map(carte).join("")}</div>` : ""}
+      ${!L.length ? `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>` : ""}</section>
+    ${contrib ? `<section class="s6-sec"><span class="s6-stk p">Votre portefeuille</span><h2>Ce qui l'a fait bouger.</h2><div class="s6-pfw"><div class="s6-pfk"><small>${g >= 0 ? "Gain" : "Perte"} de la semaine</small><b class="${synCls(g)}">${synEur(g)}</b><small>${synPct(pf.var_pct)} · valeur ${F0.format(Math.round(pf.valeur_eur))} €</small></div>
+      <div class="s6-cbs"><h3>Ce que chaque ligne a apporté, en euros</h3>${contrib}<p class="s6-ias">Gain de la ligne = nombre de parts × variation du cours sur la semaine. Une petite ligne qui monte beaucoup peut moins compter qu'une grosse ligne qui monte un peu.</p></div></div>
+      ${synAlertesHTML(b).replace("<h3>Votre portefeuille</h3>", "")}</section>` : ""}
+    ${ctx ? `<section class="s6-sec"><span class="s6-stk v">Le contexte</span><h2>Ce qui touche leurs secteurs en ce moment.</h2><div class="s6-ctx">${ctx}</div></section>` : ""}
+    <section class="s6-sec"><span class="s6-stk">À venir</span><h2>Ce qui arrive pour vos valeurs.</h2>${ag ? `<div class="s6-ag">${ag}</div><p class="s6-agn"><button type="button" class="s6-ics" data-synics="all">Tout ajouter à mon agenda (.ics)</button><a href="/agenda">Agenda complet →</a></p>` : `<p class="muted">Aucune date annoncée pour vos valeurs dans les deux prochaines semaines.</p>`}</section>
+    <section class="s5-s" id="syn4-ia"></section>
+    <p class="synfoot">Variations entre la clôture précédant la semaine et le dernier cours connu (différé), dans la devise de cotation. Annonces : documents officiels (AMF, SEC, bourses nordiques et de Londres). Presse : articles relevés par le site, titres traduits quand ils ne sont pas en français ; les articles qui disent d'acheter ou de vendre sont écartés. Information, pas conseil.</p>
+  </div>`;
+}
+synPageHTML = synPageV6;

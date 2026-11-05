@@ -1417,7 +1417,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       vos_lignes: lignes.filter((l) => d.meta[l.k] && d.meta[l.k].sector === sk).map(court2)
     };
   }), f = {
-    v: 2,
+    v: 3,
     semaine,
     genere: Date.now(),
     du: lundi3,
@@ -1742,9 +1742,9 @@ function suiviDe(row, names) {
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
-  if (!(!c || c.v !== 2 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
+  if (!(!c || c.v !== 3 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
   let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 2 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
+  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 3 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
   let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some((x) => x.n);
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
 }
@@ -2088,12 +2088,19 @@ bilan. Informations factuelles, sans conseil en investissement.`,
   return json({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
 }
 var EXEMPLE_PROFIL = {
-  favoris: ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple"],
-  portefeuille: { l: [{ k: "e:amundi-msci-world-pea", q: 120, pru: 5.2, env: "pea" }, { k: "c:totalenergies", q: 15, pru: 58, env: "pea" }, { k: "c:air-liquide", q: 4, pru: 160, env: "pea" }] },
-  rapport: { favoris: !0, portefeuille: !0, secteurs: ["energie", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] }
+  // 5/11 (Romain : « plus cohérent ») : un PEA d'environ 10 000 € : un ETF monde en socle et quatre grandes françaises
+  favoris: ["c:hermes", "c:sanofi", "c:apple", "c:asml"],
+  portefeuille: { l: [
+    { k: "e:amundi-msci-world-pea", q: 950, pru: 5.6, env: "pea" },
+    { k: "c:lvmh", q: 3, pru: 520, env: "pea" },
+    { k: "c:air-liquide", q: 6, pru: 165, env: "pea" },
+    { k: "c:totalenergies", q: 12, pru: 58, env: "pea" },
+    { k: "c:schneider-electric", q: 4, pru: 210, env: "pea" }
+  ] },
+  rapport: { favoris: !0, portefeuille: !0, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] }
 };
 async function rapportExemple(request, env) {
-  let url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + 2, url.origin)), cache = typeof caches < "u" ? caches.default : null;
+  let url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + 3, url.origin)), cache = typeof caches < "u" ? caches.default : null;
   if (cache) {
     let r = await cache.match(cle);
     if (r) return r;
@@ -2982,7 +2989,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "27bf35bf96875430", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "deca2ee52efa63ee", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
