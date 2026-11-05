@@ -135,8 +135,8 @@ async function main() {
         ...r.comptes, sourceEP: true, updated: new Date().toISOString().slice(0, 10) };
       writeFileSync(new URL(`societes/${c.id}.json`, OUT), JSON.stringify(full));
       const k = parId.get(c.id); if (k != null) idx.companies[k] = summary(full); else { parId.set(c.id, idx.companies.length); idx.companies.push(summary(full)); }
-      ok++; const n = full.fin.ca.length - 1;
-      console.log("✓", c.id, full.years.at(-1), full.currency, "ventes", Math.round(full.fin.ca[n]), "net", full.fin.net ? Math.round(full.fin.net[n]) : "–");
+      ok++; const n = full.years.length - 1, v = (a) => a && a[n] != null ? Math.round(a[n]) : "–";
+      console.log("✓", c.id, full.years.at(-1), full.currency, "ventes", v(full.fin.ca), "net", v(full.fin.net));
     } catch (e) { console.log("panne", c.id, e.message); if (/ 5\d\d /.test(e.message)) { console.log("Eulerpool en panne : arrêt"); break; } }
     if ((ok + 1) % 20 === 0) sauver();
     await new Promise(r => setTimeout(r, 300));
