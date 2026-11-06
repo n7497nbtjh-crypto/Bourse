@@ -5,7 +5,7 @@
 import { visiteurSemaine, sessionCompte, premiumOf } from "./compte.mjs";
 const json = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } });
 const lundi = () => { const d = new Date(); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
-export const PLAFONDS = { comparer: 5 };
+export const PLAFONDS = { comparer: 3 }; // 6/11 (Romain) : 3 par semaine (avant : 5)
 export async function quota(request, env) {
   const url = new URL(request.url), quoi = url.pathname.split("/")[3];
   if (!PLAFONDS[quoi]) return json({ error: "Introuvable" }, 404);

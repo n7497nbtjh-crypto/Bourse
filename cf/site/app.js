@@ -1802,7 +1802,7 @@ function rfVerdictMots(s) { // le verdict en deux ou trois éléments, déduits 
 const AX_ICON = { croissance: "M3 17l5-6 4 3 5-7 4 4", marge: "M5 19L19 5M7 9a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z", solidite: "M12 3l8 4v5c0 5-3.5 8.5-8 9-4.5-.5-8-4-8-9V7z", dividende: "M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18zM9 10h6M9 14h6M14 7c-3 0-4 2.5-4 5s1 5 4 5", prix: "M3 12l9-9h9v9l-9 9zM16 8h.01" }; // icônes SVG du site (4e passage 3.2), jamais d'émojis
 const axIcon = k => `<svg class="pa2-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${AX_ICON[k] || AX_ICON.croissance}"/></svg>`;
 /* ---------- Premium : jeton gardé sur l'appareil, quotas, incitations ---------- */
-const TKEY = "bilan.premium", FREE = { pf: Infinity, cmp: 5 }; // 4/11 : portefeuille sans limite de lignes pour tous ; comparaisons : 5 par semaine (cf/src/quota.mjs)
+const TKEY = "bilan.premium", FREE = { pf: Infinity, cmp: 3 }; // 4/11 : portefeuille sans limite de lignes pour tous ; comparaisons : 5 par semaine (cf/src/quota.mjs)
 function premTok() { try { return localStorage.getItem(TKEY) || ""; } catch (e) { return ""; } }
 function setPremTok(t) { try { t ? localStorage.setItem(TKEY, t) : localStorage.removeItem(TKEY); } catch (e) { } PREM = null; }
 let PREM = null, PREMP = null;
@@ -1865,8 +1865,9 @@ async function pagePremium(sub) {
   const rows = [ // 4/11 (décision de Romain) : une fonction est gratuite en entier ou réservée à Premium, plus de demi-version
     ["Fiches, médianes du secteur, actualité, agenda, outils, simulateurs, Apprendre", "✓ tout", "✓ tout"],
     ["Mon portefeuille : saisie, valeur, plus-value", "✓ sans limite de lignes", "✓"],
-    ["Comparer des entreprises (5 à la fois)", "5 comparaisons par semaine", "✓ sans limite"],
-    ["Questions à l'IA du site", "5 par semaine", "✓ 30 par jour"],
+    ["Fiches entreprises complètes", "5 par jour", "✓ sans limite"],
+    ["Comparer des entreprises (5 à la fois)", "3 comparaisons par semaine", "✓ sans limite"],
+    ["Questions à l'IA du site", "3 par semaine", "✓ 30 par jour"],
     ["Connecteur pour Claude ou ChatGPT", "–", "✓"],
     [`Alertes du soir : résultats publiés, veille des rendez-vous, mouvement de plus de 5 %, dernier jour pour toucher un dividende, plus haut ou plus bas sur un an${robotActif("alertes") ? "" : BIENTOT}`, "–", "✓ sur toutes vos valeurs"],
     ["Rapport de la semaine, sur mesure, 12 semaines gardées", "–", "✓"],
@@ -1888,10 +1889,10 @@ async function pagePremium(sub) {
     <div class="offers">${offer("unique", "Un an", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en ligne en deux clics.", OFFRES.mensuel)}</div>${essai}${attente}`}
     </div>
     </section><section class="ek-sec"><span class="ek-stk2 b">Ce que vous obtenez</span><h2>Quatre services que le gratuit n'a pas.</h2><div class="pr4-sv">
-      <div class="pr4-c" id="ia">${ic("ia")}<b>L'IA qui vous répond</b><p><b>30 questions par jour</b> à l'IA du site (5 par semaine sans Premium), tirées des comptes officiels et des médianes du secteur. Et le <b>connecteur</b> : Claude ou ChatGPT lisent ENKLAIR pour vous répondre.</p></div>
+      <div class="pr4-c" id="ia">${ic("ia")}<b>L'IA qui vous répond</b><p><b>30 questions par jour</b> à l'IA du site (3 par semaine sans Premium), tirées des comptes officiels et des médianes du secteur. Et le <b>connecteur</b> : Claude ou ChatGPT lisent ENKLAIR pour vous répondre.</p></div>
       <div class="pr4-c" id="alertes">${ic("ag")}<b>Prévenu quand une valeur chute</b><p><b>Une baisse de plus de 5 % dans la journée : notification le soir même</b>, sur votre téléphone${OFFRES.mail ? ", par e-mail" : ""} et dans Mon espace. Et pour toutes vos valeurs : résultats publiés avec leurs chiffres clés, veille des rendez-vous, <b>dernier jour pour toucher un dividende</b>, plus haut ou plus bas sur un an. Et chaque samedi, <b>votre rapport de la semaine</b>.</p><p><a class="lnk" href="/rapport-exemple">Voir un rapport en exemple →</a></p></div>
       <div class="pr4-c" id="portefeuille">${ic("pub")}<b>Votre portefeuille radiographié</b><p>Ce que vous possédez vraiment à travers vos ETF, vos expositions par pays et par secteur, ce qu'une baisse coûterait en euros, le calendrier de vos dividendes.</p></div>
-      <div class="pr4-c" id="donnees">${ic("mk")}<b>Comparer et classer sans limite</b><p>Les comparaisons d'entreprises sans compter (5 par semaine sans Premium), les cinq classements complets et l'export des chiffres de chaque fiche.</p></div>
+      <div class="pr4-c" id="donnees">${ic("mk")}<b>Comparer et classer sans limite</b><p>Les comparaisons d'entreprises sans compter (3 par semaine sans Premium), les cinq classements complets et l'export des chiffres de chaque fiche.</p></div>
     </div></section><section class="ek-sec"><span class="ek-stk2 b">Pourquoi ENKLAIR</span><h2>Ce que votre IA ne fait pas.</h2><div class="prem5">${ARG.map(([k, t, d, id], i) => `<details class="prem-a" id="${id}"><summary>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span><em>La preuve</em></summary><div class="prem-pv" data-pv="${i}"><p class="muted">Chargement…</p></div></details>`).join("")}</div></section>
     <section class="panel" id="tableau"><div class="ph"><h2>Gratuit pour toujours, et ce que Premium ajoute</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table>
       <p class="note" style="margin:10px 0 0">L'information n'est jamais cachée : toutes les fiches, les médianes et les outils restent gratuits, en entier.</p></div></section>
@@ -2286,7 +2287,7 @@ function espaceConnexion() {
   // 3/11 (v4) : bandeau jaune, avantages en cartes à icône, formulaire en carte blanche (mêmes identifiants : espf, lt, espgo, espm, swap, lost, cgu)
   const ic = k => typeof ou4Ic === "function" ? ou4Ic(k) : "";
   const BEN = [["listes", "Un rapport chaque semaine", "Ce que vos entreprises et ETF ont publié, leurs cours, leurs dates à venir, la répartition de votre portefeuille."],
-    ["alerte", "L'IA du site", "5 questions par semaine sur une entreprise, un ETF ou une notion, réponses tirées des chiffres du site."],
+    ["alerte", "L'IA du site", "3 questions par semaine sur une entreprise, un ETF ou une notion, réponses tirées des chiffres du site."],
     ["pf", "Partout pareil", "Vos favoris, votre portefeuille et vos achats programmés, sur votre téléphone et votre ordinateur."],
     ["agenda", "Votre agenda", "Les résultats et dividendes de vos valeurs, portefeuille d'abord."]];
   app.innerHTML = `<div class="ek ek-page es4"><section class="ek-hero es4-hero"><div class="es4-l"><span class="mc-stk">Mon espace</span><h1 class="ag4-t">Vos valeurs, au même endroit.</h1>

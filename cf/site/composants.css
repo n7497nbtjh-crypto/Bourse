@@ -1836,3 +1836,20 @@ a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 .ek .ax4-prx{padding:0 14px 12px 60px}
 .ek .ax4-prx .ax-cl{margin-top:4px}
 @media (max-width:600px){.ek .ax4-prx{padding-left:14px}}
+/* 6/11 : limite du gratuit sur la fiche (m/fiche4.js, f4QuotaNote, f4Verrou) */
+.ek .f4-qt{display:flex;flex-wrap:wrap;gap:6px 16px;align-items:center;justify-content:center;margin:14px 0 0;font:600 14px Inter;color:#444}
+.ek .f4-qt b{font-weight:800;color:#111;border:2px solid #111;border-radius:999px;padding:4px 12px;background:#fff}
+.ek .f4-qt a{color:#111;font-weight:800;text-decoration:underline;text-decoration-color:var(--ek-y,#FFE14D);text-decoration-thickness:3px;text-underline-offset:3px}
+.ek .f4-lock{max-width:760px;margin:40px auto 10px;background:#fff;border:3px solid #111;border-radius:28px;box-shadow:8px 8px 0 #111;padding:30px 34px}
+.ek .f4-lock h2{font:800 34px/1.05 'Bricolage Grotesque',sans-serif;letter-spacing:-.03em;margin:14px 0 10px}
+.ek .f4-lock>p{font:500 17px/1.45 Inter;color:#333}
+.ek .f4-lock ul{list-style:none;padding:0;margin:14px 0 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.ek .f4-lock li{font:600 15px/1.3 Inter;background:#FFF6C7;border-radius:12px;padding:10px 12px}
+.ek .f4-lock-b{display:flex;flex-wrap:wrap;gap:12px 16px;align-items:center}
+.ek .f4-lock-go{background:#111;color:#fff;font:800 17px Inter;padding:14px 22px;border-radius:999px;text-decoration:none}
+.ek .f4-lock-go small{color:#FFE14D;font-weight:800;margin-left:6px}
+.ek .f4-lock-b span{font:700 15px Inter;color:#444}
+.ek .f4-lock-n{font:500 13.5px/1.4 Inter;color:#666;margin-top:14px}
+@media (max-width:600px){.ek .f4-lock{padding:22px 20px;margin-top:28px}.ek .f4-lock h2{font-size:27px}.ek .f4-lock ul{grid-template-columns:1fr}}
+.ek .f4-lock>.ek-stk2{display:inline-block;background:#FFE14D;border:2px solid #111;border-radius:9px;padding:4px 12px;font:800 15px "Bricolage Grotesque",sans-serif;transform:rotate(-2deg)}
+@media (max-width:600px){.ek .f4-lock-go small{display:block;margin:2px 0 0}}

@@ -12,10 +12,12 @@
     ["Le résumé de la semaine de vos valeurs, chaque samedi", no, no, no, no, ok],
     ["Annonces officielles du monde entier, traduites et chiffrées", no, mi("en partie"), mi("si vous lui donnez le texte"), mi("sur chaque fiche"), '<span class="ok">✓ pour vos valeurs</span>'],
     ["Alerte le soir même si une de vos valeurs chute", mi("selon le courtier"), mi("avec un compte"), no, no, ok],
-    ["Questions à une IA qui cite les comptes officiels", no, no, mi("sans source"), mi("5 par semaine"), '<span class="ok">30 par jour</span>'],
+    ["Toutes les fiches entreprises, en entier", no, mi("en partie"), mi("de mémoire"), mi("5 par jour"), '<span class="ok">Sans limite</span>'],
+    ["Questions à une IA qui cite les comptes officiels", no, no, mi("sans source"), mi("3 par semaine"), '<span class="ok">30 par jour</span>'],
     ["Brancher Claude ou ChatGPT sur les comptes officiels", no, no, no, no, ok],
     ["Chaque entreprise face à ses vraies rivales", no, mi("en partie"), mi("de mémoire"), ok, ok],
-    ["Comparaisons et classements", no, mi("en partie"), no, mi("5 par semaine"), '<span class="ok">Sans limite</span>'],
+    ["Comparaisons et classements", no, mi("en partie"), no, mi("3 par semaine, sans classement"), '<span class="ok">Sans limite</span>'],
+    ["Son rang dans son secteur", no, mi("en partie"), no, no, ok],
     ["Sans pousser à acheter ni à vendre", mi("vit de vos ordres"), mi("rarement"), ok, ok, ok],
   ];
   const av = (num, titre, txt, pts, ailleurs, vis, inv) => `<div class="pm5-av${inv ? " inv" : ""}"><div class="pm5-tx"><p class="pm5-num">${num}</p><h3>${titre}</h3><p class="pm5-lead">${txt}</p>
@@ -56,7 +58,8 @@
     app.innerHTML = `<div class="ek ek-page pm5">
     <section class="pm5-hero"><div><span class="mc-stk">Premium</span><h1>Ce que votre courtier ne vous dit pas.</h1>
       <p class="pm5-lead">ENKLAIR lit chaque jour les documents officiels de ${F0.format(nCo)} entreprises, les compare à leurs rivales et vous dit ce qui change pour vos placements. En français, sources à l'appui.</p>
-      <div class="pm5-b3"><div><i>📰</i><p><b>Chaque samedi, votre rapport</b><span>Ce qui s'est passé pour vos valeurs, en deux minutes.</span></p></div>
+      <div class="pm5-b3"><div><i>★</i><p><b>Toutes les fiches, sans limite</b><span>Plus de 3 000 entreprises, chacune face à ses rivales.</span></p></div>
+        <div><i>📰</i><p><b>Chaque samedi, votre rapport</b><span>Ce qui s'est passé pour vos valeurs, en deux minutes.</span></p></div>
         <div><i class="r">🔔</i><p><b>Prévenu si une valeur chute</b><span>Plus de 5 % de baisse dans la journée : notification le soir même.</span></p></div>
         <div><i class="b">◎</i><p><b>Vos ETF passés aux rayons X</b><span>Ce que vous possédez vraiment, entreprise par entreprise.</span></p></div></div>
       <a class="pm5-ex" href="/rapport-exemple"><span class="pm5-ex-i">📰</span><span><b>Voir un vrai rapport de la semaine</b><small>Calculé aujourd'hui avec les chiffres du site, pour un portefeuille d'exemple</small></span><em>→</em></a></div>
@@ -66,12 +69,12 @@
       ${av("1 · Vos ETF aux rayons X", "Ce que vous possédez vraiment, à travers vos ETF.", "Un ETF Monde, c'est plus de 1 300 entreprises. Premium les additionne avec vos actions pour vous montrer vos vraies expositions.", ["Vos expositions par pays et par secteur", "Ce qu'une forte baisse coûterait, en euros", "Le calendrier de vos dividendes", "Et sans limite : comparaisons, cinq classements, export des chiffres"], "Ailleurs : vous voyez « 1 ligne : ETF Monde », sans savoir ce qu'il y a dedans.", vPf, false)}
       ${av("2 · Votre rapport du samedi", "Le samedi, toute votre semaine en deux minutes.", "Ce que vos entreprises ont publié dans le monde entier, lu dans les documents officiels et traduit en français. Ce qui a fait bouger votre portefeuille. Ce qui arrive.", ["Résultats, rachats d'actions, accords et presse, entreprise par entreprise", "Ce que chaque ligne vous a fait gagner ou perdre, en euros", "Vos prochaines dates : résultats, dividendes, dernier jour pour les toucher"], `Ailleurs : personne ne lit pour vous les annonces de Paris, New York et Oslo.</p><p style="margin:14px 0 0"><a class="pm5-btn o" style="display:inline-flex" href="/rapport-exemple">Voir le rapport d'exemple de cette semaine →</a>`, vRap, true)}
       ${av("3 · Les alertes", "Une de vos valeurs chute ? Vous le savez le soir même.", "ENKLAIR surveille chaque soir votre portefeuille et vos favoris. Pas besoin d'ouvrir le site.", ["Baisse de plus de 5 % dans la journée : notification sur votre téléphone" + (OFFRES.mail ? " et par e-mail" : ""), "Résultats publiés, avec leurs chiffres clés", "Dernier jour pour acheter et toucher un dividende"], "Ailleurs : une alerte de cours, sans vous dire pourquoi.", vTel, false)}
-      ${av("4 · L'IA qui cite ses sources", "Posez vos questions, autant que vous voulez.", "Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.", ["30 questions par jour, au lieu de 5 par semaine", "Chaque chiffre cité avec sa source", "Le connecteur pour votre propre IA"], "Ailleurs : une IA répond de mémoire, sans source ni comparaison au secteur.", vIa, true)}
+      ${av("4 · L'IA qui cite ses sources", "Posez vos questions, autant que vous voulez.", "Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.", ["30 questions par jour, au lieu de 3 par semaine", "Chaque chiffre cité avec sa source", "Le connecteur pour votre propre IA"], "Ailleurs : une IA répond de mémoire, sans source ni comparaison au secteur.", vIa, true)}
     </section>
     <section class="pm5-sec ek-sec"><span class="ek-stk2">Comparez</span><h2>Ce que vous obtenez, et où.</h2>
       <div class="pm5-vsw"><div class="pm5-vs"><div><span></span><span>Votre courtier</span><span>Un site boursier gratuit</span><span>Une IA seule</span><span>ENKLAIR gratuit</span><span>ENKLAIR Premium</span></div>
       ${VS.map(r => `<div><span>${r[0]}</span>${r.slice(1).join("")}</div>`).join("")}</div></div>
-      <p class="pm5-vsn">Ce qu'on trouve en général : les services varient d'un courtier ou d'un site à l'autre. Toutes les fiches, les médianes et les outils d'ENKLAIR restent gratuits, en entier.</p></section>
+      <p class="pm5-vsn">Ce qu'on trouve en général : les services varient d'un courtier ou d'un site à l'autre. En gratuit, ENKLAIR garde ouverts 5 fiches complètes par jour, l'en-tête et les 5 repères de toutes les fiches, l'actualité, l'agenda, les outils et Apprendre.</p></section>
     <section class="pm5-sec ek-sec"><span class="ek-stk2 b">En confiance</span><h2>Simple à prendre, simple à quitter.</h2><div class="pm5-tr">
       <div><i>↺</i><b>Résiliable en deux clics</b><p>Depuis Mon espace. L'accès reste ouvert jusqu'à la fin du mois payé.</p></div>
       <div><i>🔒</i><b>Paiement par Stripe</b><p>ENKLAIR ne voit jamais votre numéro de carte.</p></div>

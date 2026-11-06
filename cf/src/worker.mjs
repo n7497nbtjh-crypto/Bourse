@@ -128,12 +128,12 @@ export default {
     if (url.pathname === "/api/presse") return presse(request, U);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (IA_RETIREE.test(url.pathname)) return iaRetiree();
-    if (url.pathname.startsWith("/api/quota/")) return quota(request, env); // 4/11 : 5 comparaisons par semaine en gratuit
+    if (url.pathname.startsWith("/api/quota/")) return quota(request, env); // 4/11 : comparaisons limitées en gratuit (3 par semaine depuis le 6/11)
     if (url.pathname.startsWith("/api/ia/")) return iaSite(request, env); // l'IA du site (Workers AI, gratuite, plafonnée)
     if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname === "/api/compteur" && request.method === "POST") { // 5e passage (E4) : un geste du tunnel, compté par semaine, sans identifiant
-      const e = url.searchParams.get("e") || ""; if (COMPTEURS_OK.has(e) && ["suivre", "apercu-alerte", "rapport-exemple", "premium-vue"].includes(e)) { const pr = compterEvt(env, [e]); if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(pr); else await pr; }
+      const e = url.searchParams.get("e") || ""; if (COMPTEURS_OK.has(e) && ["suivre", "apercu-alerte", "rapport-exemple", "premium-vue", "fiche-verrou"].includes(e)) { const pr = compterEvt(env, [e]); if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(pr); else await pr; }
       return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
     }
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);

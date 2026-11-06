@@ -67,6 +67,7 @@ function an4Dessiner(x) {
   const per = (a, b) => `${a.m.split("-")[0]} ${a.yd} à ${b.m.split("-")[1]} ${b.y}`;
   const de = /^[aeiouyhéèêâîôûAEIOUYHÉÈÊÂÎÔÛ]/.test(nomE) ? `d'${nomE}` : `de ${nomE}`, quoi = { ca: `les ventes ${de} ont`, net: `le bénéfice ${de} a`, mg: "" }[M];
   const titre = M === "mg" ? `Sur les 12 derniers mois, ${esc(nomE)} a gardé <em class="${e != null && e < 0 ? "dn" : ""}">${ekFr(tA, 1)} %</em> de ses ventes en bénéfice.`
+    : tV > 0 && tA < 0 ? `Sur les 12 derniers mois, ${esc(quoi.replace(/ (ont|a)$/, ""))} ${M === "ca" ? "sont devenues négatives" : "est devenu une perte"} : <em class="dn">${fmt(tA, M)}</em>, contre ${fmt(tV, M)} un an plus tôt.` // 6/11 : plus de « reculé de 240 % » (Kemper)
     : tV > 0 && Math.abs(e) < 0.5 ? `Sur les 12 derniers mois, ${esc(quoi)} <em>à peine bougé</em> (${evT(e, M)}).`
     : tV > 0 ? `Sur les 12 derniers mois, ${esc(quoi)} ${e >= 0 ? "progressé" : "reculé"} de <em class="${e < 0 ? "dn" : ""}">${ekFr(Math.abs(e), 0)} %</em>.`
     : `Sur les 12 derniers mois, ${esc(quoi)} atteint <em>${fmt(tA, M)}</em>.`;

@@ -17,7 +17,7 @@ const MODELES = [
   ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488, "Mistral Small 3.1"],
 ];
 const jour = () => new Date().toISOString().slice(0, 10); // les limites de Cloudflare repartent à 0 h UTC
-// 4/11 (décision de Romain) : gratuit = 5 questions par semaine, avec ou sans compte ; Premium = 30 par jour.
+// 4/11 puis 6/11 (décisions de Romain) : gratuit = 3 questions par semaine (avant : 5), avec ou sans compte ; Premium = 30 par jour.
 // Compteur des gratuits sur la semaine (clé « S » + lundi, heure UTC), celui de Premium sur le jour.
 const lundi = (t = Date.now()) => { const d = new Date(t); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
 const periode = nv => nv === "premium" ? jour() : "S" + lundi();
@@ -63,7 +63,7 @@ async function compter(env, h, neurones, per = jour()) {
   if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_visiteurs WHERE (jour NOT LIKE 'S%' AND jour < ?) OR (jour LIKE 'S%' AND jour < ?)`).bind(jour(), "S" + lundi(Date.now() - 14 * 864e5)).run();
 }
 const plafonds = env => ({ neurones: +env.IA_NEURONES_JOUR || 9000, budget: Math.max(0, +env.IA_BUDGET_MOIS || 0) * NEURONES_PAR_EURO,
-  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 5, compte: +env.IA_GRATUIT_SEMAINE || 5, premium: +env.IA_PREMIUM_JOUR || 30 } }); // noms neufs : les anciennes variables (IA_QUESTIONS_JOUR…) sont ignorées
+  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 3, compte: +env.IA_GRATUIT_SEMAINE || 3, premium: +env.IA_PREMIUM_JOUR || 30 } }); // noms neufs : les anciennes variables (IA_QUESTIONS_JOUR…) sont ignorées
 // Le site a-t-il encore de quoi répondre à un gratuit ? Dans la part gratuite du jour, ou dans le budget du mois.
 const siteOk = (c, P, marge) => c.neurones + marge < P.neurones || (P.budget > 0 && c.payes_mois + marge < P.budget);
 

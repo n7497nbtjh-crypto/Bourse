@@ -7,5 +7,5 @@ const env = { DB };
 const r = (ids, ip = "1.1.1.1") => quota(new Request("https://t/api/quota/comparer", { method: "POST", headers: { "content-type": "application/json", "cf-connecting-ip": ip }, body: JSON.stringify({ ids }) }), env).then(x => x.json());
 const out = [];
 out.push(await r(["a", "b"]), await r(["a", "b"]), await r(["a", "b", "c"]), await r(["d", "e"]), await r(["f", "g"]), await r(["h", "i"]), await r(["j", "k"]), await r(["l", "m"]), await r(["a", "b", "c"]), await r(["l", "m"], "2.2.2.2"));
-const got = out.map(o => `${o.ok}/${o.reste}`).join(" "), exp = "true/4 true/4 true/4 true/3 true/2 true/1 true/0 false/0 true/0 true/4";
+const got = out.map(o => `${o.ok}/${o.reste}`).join(" "), exp = "true/2 true/2 true/2 true/1 true/0 false/0 false/0 false/0 true/0 true/2"; // 6/11 : 3 par semaine
 if (got !== exp) { console.error("quota : ÉCHEC", got); process.exit(1); } console.log("quota : tout est bon");

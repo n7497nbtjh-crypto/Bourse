@@ -95,7 +95,9 @@ async function pageCompany4(id, tab) {
   if (s.missing || !c || !c.fin) { app.innerHTML = `<div class="ek ek-page">${f4Tete(s, null, null)}<p class="ek-note" style="margin-top:30px">Les comptes de ${esc(s.name)} ne sont pas encore relevés sur le site.</p></div>`; return; }
   const ctx = f4Ctx(s, c);
   let html = "";
-  try { html = f4Tete(s, c, ctx) + f4MetierSec(ctx) + f4Fil(ctx) + `<div id="f4-annee"></div>` + f4Fin(ctx); }
+  const qf = f4Quota(s.id); // 6/11 (Romain) : 5 fiches complètes par jour en gratuit
+  if (qf.bloque) { app.innerHTML = `<div class="ek ek-page">${f4Tete(s, c, ctx)}${f4Verrou(s)}</div>`; window.F4X = ctx; try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=fiche-verrou"); } catch (e) { } return; }
+  try { html = f4Tete(s, c, ctx) + f4QuotaNote(qf) + f4MetierSec(ctx) + f4Fil(ctx) + `<div id="f4-annee"></div>` + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page">${html}</div>`;
   const kfx = f4Kfx(s.currency), md = app.querySelector(".ek-medl");
@@ -105,6 +107,30 @@ async function pageCompany4(id, tab) {
   const ANC = { "rf-resultats": "e1", "rf-rentab": "e2", "rf-dette": "e3", "rf-div": "e4", "rf-valo": "e5", "f3-metier": "metier", "tous-les-chiffres": "tout", "rf-concurrents": "tout", "concurrents": "tout" }; // anciennes ancres (liens déjà partagés)
   const h0 = location.hash.slice(1), cible = tab === "comptes" ? "tout" : (tab === "actualite" || tab === "agenda" || tab === "communaute") ? "actu" : (ANC[h0] || h0);
   if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.classList.add("f4m-open"); t.scrollIntoView({ block: "start" }); }, 30); }
+}
+
+/* 6/11 (décision de Romain) : en gratuit, 5 fiches complètes par jour (entreprises différentes, comptées dans ce navigateur, clé bilan.fichesJour).
+   Au-delà : l'en-tête et les 5 repères restent ouverts, la suite est réservée à Premium. Toujours ouvertes : Premium, les favoris,
+   les robots (moteurs de recherche, aperçus de liens) et une fiche déjà ouverte dans la journée. */
+const F4_LIBRES = 5;
+function f4Quota(id) {
+  const libre = { libre: true };
+  try {
+    if ((typeof isPrem === "function" && isPrem()) || navigator.webdriver || /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|lighthouse/i.test(navigator.userAgent || "") || (typeof isFav === "function" && isFav("c:" + id))) return libre;
+    const j = new Date().toLocaleDateString("sv-SE"); let q = null;
+    try { q = JSON.parse(localStorage.getItem("bilan.fichesJour") || "null"); } catch (e) { }
+    if (!q || q.d !== j || !Array.isArray(q.ids)) q = { d: j, ids: [] };
+    if (!q.ids.includes(id)) { if (q.ids.length >= F4_LIBRES) return { bloque: true }; q.ids.push(id); localStorage.setItem("bilan.fichesJour", JSON.stringify(q)); }
+    return { n: q.ids.indexOf(id) + 1 };
+  } catch (e) { return libre; }
+}
+function f4QuotaNote(qf) { return qf && qf.n ? `<p class="f4-qt"><b>Fiche gratuite ${qf.n} / ${F4_LIBRES} aujourd'hui</b><a href="/premium">Toutes les fiches avec Premium →</a></p>` : ""; }
+function f4Verrou(s) {
+  return `<section class="f4-lock"><span class="ek-stk2">★ Premium</span><h2>Vous avez ouvert vos ${F4_LIBRES} fiches gratuites du jour.</h2>
+    <p>La suite de la fiche de ${esc(s.name)} est réservée aux abonnés Premium :</p>
+    <ul><li>L'histoire de ses comptes en 4 étapes</li><li>Ses rivales, point par point</li><li>Tous ses chiffres sur 5 ans, avec la source</li><li>Son rang dans son secteur</li></ul>
+    <div class="f4-lock-b"><a class="f4-lock-go" href="/premium">Passer à Premium <small>dès 3,25 € par mois</small></a><span>ou revenez demain : ${F4_LIBRES} nouvelles fiches</span></div>
+    <p class="f4-lock-n">39 € pour un an (3,25 € par mois) ou 4,90 € par mois, sans engagement. Les entreprises que vous suivez en favori restent toujours ouvertes.</p></section>`;
 }
 
 // Logo officiel (collecté par le robot logos.yml dans /logos/<id>.png) ; sinon les initiales dans le même cadre
@@ -182,6 +208,7 @@ const f4Prochain = id => { const e = typeof eventsOf === "function" ? eventsOf(i
 function f4TitreSerie(gs, an) {
   if (!gs.length) return "";
   const [y1, g1] = gs[gs.length - 1], av = gs.slice(0, -1).map(z => z[1]), y0 = gs[0][0] - 1;
+  if (g1 <= -1) return `devenu négatif en ${y1}.`; // 6/11 : jamais « en baisse de 250 % »
   if (g1 < 0) return `en baisse de ${ekFr(-g1 * 100, 1)} % en ${y1}${av.length && av[av.length - 1] < 0 ? ", deuxième année de recul" : av.length && av.every(v => v > 0) ? `, premier recul depuis ${y0}` : ""}.`;
   const base = `en hausse de ${ekFr(g1 * 100, 1)} % en ${y1}`;
   if (av.length >= 2 && g1 < Math.min(...av)) return `${base}, sa plus faible progression depuis ${y0}.`;
@@ -194,7 +221,7 @@ function f4E1(x) {
   const gs = []; if (se) for (let i = 1; i < se.v.length; i++) if (se.v[i] != null && se.v[i - 1] > 0) gs.push([se.y[i], se.v[i] / se.v[i - 1] - 1]);
   const causes = [];
   const last = gs.length ? gs[gs.length - 1] : null, prev = gs.length > 1 ? gs[gs.length - 2] : null;
-  return { id: "e1", n: 1, sur: "Ses ventes", titre: f4TitreSerie(gs, s.year) || f4Montant(s.ca, cur, s.year), concept: s.ca != null ? { cle: "ventes", ex: f4Md(s.ca, cur), calc: `ventes ${s.year}`, nom: s.name } : null,
+  return { id: "e1", n: 1, sur: "Ses ventes", titre: (gs.length && se && gs[gs.length - 1][0] === se.y[se.y.length - 1] ? f4TitreSerie(gs, s.year) : "") || f4Montant(s.ca, cur, s.year), concept: s.ca != null ? { cle: "ventes", ex: f4Md(s.ca, cur), calc: `ventes ${s.year}`, nom: s.name } : null,
     mots: [{ cle: "ventes", ex: f4Md(s.ca, cur), calc: `ventes ${s.year}`, nom: s.name }, { cle: "croissance", ex: f4Pc(M.g, 1, true), calc: `${ekFr(s.ca, 0)} ÷ ${ekFr(s.caPrev, 0)} − 1`, nom: s.name }],
     visuel: se ? f4Cols(x, se, "Ses ventes", null, `Chaque barre donne les ventes d'un exercice ; sous l'année, la variation par rapport à l'année d'avant.${gs.length >= 2 ? ` Depuis ${se.y[0]} : ${f4Pc(se.v[se.v.length - 1] / se.v.find(v => v > 0) - 1, 0, true)}.` : ""}`) : "",
     explique: causes.length ? ekExplique({ causes, surveiller: f4Prochain(s.id) }) : "",
@@ -244,7 +271,11 @@ function f4E2(x) {
     .filter(r => r.v == null || r.v > -1000);
   const pl = rows.filter(r => r.v != null).sort((a, b) => b.v - a.v), hors = rows.filter(r => r.v == null);
   const mx = Math.max(10, ...pl.map(r => r.v)), nn = f4Nice(mx), mn = Math.min(0, ...pl.map(r => r.v));
-  const pts = P.mode === "rivales" ? [...pl.map(r => ({ ...r, v: Math.max(0, r.v) })), ...hors, ...P.out.map(o => ({ nom: o.nom, v: null, texte: o.raison }))] : pl.filter(r => r.moi).concat(hors.filter(r => r.moi));
+  // 6/11 : marges négatives placées à gauche de zéro (comme la rentabilité, f4B2) ; au-delà de -nn.max, au bord avec une flèche et le chiffre en note
+  const pasM = nn.ticks.length > 1 ? nn.ticks[1] - nn.ticks[0] : nn.max / 5, mnM = mn < 0 ? -Math.min(nn.max, Math.ceil(-mn / pasM) * pasM) : 0;
+  const gradM = []; for (let t = mnM; t <= nn.max + 1e-9; t += pasM) gradM.push(Math.round(t * 100) / 100);
+  const borneM = r => r.v < mnM ? { ...r, note: `est hors de l'échelle : ${r.texte} gardés sur 100 ${sym}.` } : r;
+  const pts = P.mode === "rivales" ? [...pl.map(borneM), ...hors, ...P.out.map(o => ({ nom: o.nom, v: null, texte: o.raison }))] : pl.filter(r => r.moi).map(borneM).concat(hors.filter(r => r.moi));
   const ratio = v != null && med > 0 ? v / med : null;
   const qui2 = P.qui, cmpM = ratio == null ? "" : ratio > 4 ? `Bien plus que ${qui2} (${ekFr(med * 100, 0)} ${sym})` : ratio >= 1.8 && ratio < 2.2 ? `Presque deux fois plus que ${qui2}` : ratio >= 1.15 ? `${ekFr(ratio, 1)} fois plus que ${qui2}` : ratio <= 0.85 ? `Moins que ${qui2} (${ekFr(med * 100, 0)} ${sym})` : `Comme ${qui2}`;
   const tonM = ratio == null ? "n" : ratio >= 1.15 ? "g" : ratio <= 0.85 || v < 0 ? "r" : "n";
@@ -266,8 +297,8 @@ function f4E2(x) {
   return { id: "e2", n: 2, sur: "Sa marge", titre, cmp: { texte: cmpM, ton: tonM },
     concept: v != null ? { cle: bank ? "benefice" : "marge", ex: f4Pc(v, 1), calc: !bank && s.ebit != null ? `${ekFr(s.ebit, 0)} ÷ ${ekFr(s.ca, 0)}` : "", nom: s.name } : null,
     mots: [{ cle: bank ? "benefice" : "marge", ex: v != null ? f4Pc(v, 1) : "", calc: !bank && s.ebit != null ? `${ekFr(s.ebit, 0)} ÷ ${ekFr(s.ca, 0)}` : "", nom: s.name }, { cle: "mediane", ex: med != null ? ekFr(med * 100, 0) + " " + sym : "", calc: `${lib} médiane ${P.de}`, nom: s.name }],
-    visuel: v != null && pl.length ? ekPoints({ titre: `Gardés sur 100 ${sym} de ventes`, unite: `${lib} ${s.year}`, lignes: pts, mediane: med != null ? med * 100 : 0, mediane_label: med != null ? `médiane ${ekFr(med * 100, 0)} ${sym}` : "", max: nn.max, graduations: nn.ticks, fmtAxe: t => ekFr(t, 0) + " " + sym,
-      indice: `Chaque point place une entreprise sur l'échelle. À droite du pointillé (zone verte), elle garde plus que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; à gauche (zone rouge), moins.${mn < 0 ? " Une marge négative est placée sur zéro." : ""}`, source: f4Src(x, `Comptes ${s.year}`) }) : "",
+    visuel: v != null && pl.length ? ekPoints({ titre: `Gardés sur 100 ${sym} de ventes`, unite: `${lib} ${s.year}`, lignes: pts, mediane: med != null ? med * 100 : 0, mediane_label: med != null ? `médiane ${ekFr(med * 100, 0)} ${sym}` : "", min: mnM, max: nn.max, graduations: gradM, fmtAxe: t => ekFr(t, 0) + " " + sym,
+      indice: `Chaque point place une entreprise sur l'échelle. À droite du pointillé (zone verte), elle garde plus que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; à gauche (zone rouge), moins.${mn < mnM ? " Une marge plus basse que l'échelle est posée au bord, avec une flèche." : ""}`, source: f4Src(x, `Comptes ${s.year}`) }) : "",
     explique: causes.length ? ekExplique({ causes, surveiller: ralentit ? "Si les ventes ralentissent encore, la marge peut baisser : une partie des coûts est fixe." : f4Prochain(s.id) }) : "",
     suite: "Et une fois l'impôt payé, que reste-t-il ?" };
 }
@@ -292,7 +323,8 @@ function f4E3(x) {
     if (ng != null) { // la cause principale, dans le sens de la variation
       const K = [["act", dE], ["imp", dT], ["fin", fin1 != null && fin0 != null ? fin1 - fin0 : null]].filter(z => z[1] != null && (ng < 0 ? z[1] < 0 : z[1] > 0)).sort((a, b) => Math.abs(b[1]) - Math.abs(a[1]))[0];
       const pq = ng < 0 ? { act: "l'activité rapporte moins", imp: "l'impôt a pris plus", fin: "les intérêts et divers pèsent plus" } : { act: "grâce à l'activité", imp: "l'impôt a pris moins", fin: "grâce aux intérêts et divers" };
-      titre = `${ng < 0 ? "en baisse" : "en hausse"} de ${ekFr(Math.abs(ng) * 100, 1)} % en ${y1}${K ? (ng < 0 || K[0] === "imp" ? ", car " : " ") + pq[K[0]] : ""}.`; }
+      // 6/11 (Stellantis : « en baisse de 508,7 % ») : un bénéfice devenu une perte se dit en montants, pas en pourcentage
+      titre = ng <= -1 ? `${f4Montant(s.net, cur, y1).replace(/\.$/, "")}, après ${f4Md(s.netPrev, cur)} de bénéfice en ${y1 - 1}${K ? ", car " + pq[K[0]] : ""}.` : `${ng < 0 ? "en baisse" : "en hausse"} de ${ekFr(Math.abs(ng) * 100, 1)} % en ${y1}${K ? (ng < 0 || K[0] === "imp" ? ", car " : " ") + pq[K[0]] : ""}.`; }
   }
   if (!bank && s.netDebt != null) causes.push(s.netDebt <= 0 ? { titre: "Plus d'argent en caisse que de dettes", texte: `Même en remboursant tous ses emprunts, il lui resterait ${f4Md(-s.netDebt, cur)} : elle ne dépend pas des banques.` }
     : { titre: s.ebit > 0 && s.netDebt / s.ebit < 2 ? "Une dette légère" : s.ebit > 0 && s.netDebt / s.ebit <= 3 ? "Une dette à surveiller" : "Une dette lourde", texte: s.ebit > 0 ? `Elle doit ${f4Md(s.netDebt, cur)} : ${s.netDebt / s.ebit < 1.5 ? (s.netDebt / s.ebit < 1 ? "moins d'une année" : "environ une année") + " de ce que rapporte son activité suffirait" : `environ ${ekFr(s.netDebt / s.ebit, 0)} années de ce que rapporte son activité suffiraient`} à la rembourser.` : `Elle doit ${f4Md(s.netDebt, cur)}, alors que son activité ne rapporte rien cette année.` });

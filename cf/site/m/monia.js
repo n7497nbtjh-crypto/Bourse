@@ -122,7 +122,7 @@ async function miaPage(el) {
       <ol class="mia-etapes"><li><b>D'abord, le calcul.</b> Recherches par critères, comparaisons, définitions, questions courantes sur une fiche : le site calcule la réponse dans votre navigateur, sans limite.</li>
         <li><b>Ensuite, la rédaction.</b> Pour une question libre, un modèle ouvert (Qwen3 ou Mistral Small), hébergé par Cloudflare, rédige la réponse à partir des seuls chiffres et sources du site, avec des consignes strictes : pas de conseil, pas de prévision, les incertitudes dites.</li>
         <li><b>Chaque réponse rédigée est signalée</b> et cite ses sources. Vérifiez-la : une IA peut se tromper.</li></ol>
-      <p class="mia-prix" id="miareste">L'IA du site répond à 5 questions par semaine en gratuit, avec ou sans compte, et à 30 questions par jour avec Premium.</p>
+      <p class="mia-prix" id="miareste">L'IA du site répond à 3 questions par semaine en gratuit, avec ou sans compte, et à 30 questions par jour avec Premium.</p>
       <ul class="mia-garanties"><li>Aucun compte, aucune clé à fournir.</li><li>Vos questions sont envoyées à Cloudflare, qui héberge déjà le site, pour être traitées ; elles ne servent pas à entraîner le modèle. Le site ne garde pas leur texte, seulement un compteur anonyme.</li></ul>
     </div></section>
     <section class="panel"><div class="ph"><h2>Vous utilisez déjà ChatGPT ou Claude ?</h2></div><div class="pb"><p style="margin-top:0">Ajoutez ENKLAIR à votre assistant : il pourra lire les données du site pour vous répondre.</p><a class="lnk" href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a></div></section></div>`;

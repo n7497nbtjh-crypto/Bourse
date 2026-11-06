@@ -431,7 +431,7 @@ async function notifier(env, compteId, type, texte, lien, jour, extra = "") {
 /* ---------- Tunnel (5e passage, E4) : des compteurs par semaine, sans cookie ni identifiant. ----------
    Le Worker compte les pages servies (visite, fiche, source : moteur ou X) ; le navigateur signale trois gestes (suivre une entreprise,
    voir l'aperçu d'une alerte Premium, ouvrir le rapport exemple) par /api/compteur ; le reste vient de la base (comptes, rapports, essais, Premium). */
-export const COMPTEURS_OK = new Set(["visite", "fiche", "src:moteur", "src:x", "src:autre", "suivre", "apercu-alerte", "rapport-exemple", "premium-vue"]);
+export const COMPTEURS_OK = new Set(["visite", "fiche", "src:moteur", "src:x", "src:autre", "suivre", "apercu-alerte", "rapport-exemple", "premium-vue", "fiche-verrou"]);
 export async function compterEvt(env, cles) {
   if (!env || !env.DB) return; const sem = semaineIso(jourParis());
   try { for (const c of cles) if (COMPTEURS_OK.has(c)) await env.DB.prepare(`INSERT INTO compteurs (semaine, cle, n) VALUES (?, ?, 1) ON CONFLICT (semaine, cle) DO UPDATE SET n = n + 1`).bind(sem, c).run(); }

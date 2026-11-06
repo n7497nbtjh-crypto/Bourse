@@ -213,7 +213,7 @@ function cxGalerie() {
     <div class="cx-gal" id="cx-gal">${P.map(cxCartePreset).join("")}</div></section>`;
 }
 
-// ——— Quota des gratuits (4/11) : 5 comparaisons par semaine, comptées par le serveur ; en cas de panne, la page s'ouvre ———
+// ——— Quota des gratuits (4/11, 3 depuis le 6/11) : comparaisons par semaine, comptées par le serveur ; en cas de panne, la page s'ouvre ———
 async function cxQuota(ids) {
   if (typeof isPrem === "function" && isPrem()) return { ok: true };
   try { const r = await fetch("/api/quota/comparer", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids }) });
@@ -228,7 +228,7 @@ async function pageComparer4() {
   app.innerHTML = `<div class="ek ek-page"><div class="empty">Chargement…</div></div>`;
   await PXP; if (typeof premStatus === "function") await premStatus().catch(() => null);
   if (location.pathname !== "/comparer" || location.search !== s0) return;
-  const CMAX = 5; // 4/11 : 5 entreprises pour tous ; les gratuits ont 5 comparaisons par semaine (cxQuota)
+  const CMAX = 5; // 4/11 : 5 entreprises pour tous ; les gratuits ont 3 comparaisons par semaine (cxQuota)
   const raw = [...new Set((new URLSearchParams(location.search).get("ids") || "").split(",").map(x => x.trim()).filter(id => RBY[id]))];
   const ids = raw.slice(0, CMAX), cut = raw.slice(CMAX).map(id => RBY[id]);
   await Promise.all(ids.map(id => { const s = RBY[id]; if (s.missing || FULL[id]) return null; return fetch(`/data/societes/${id}.json`).then(r => r.ok ? r.json() : null).then(j => { if (j) FULL[id] = j; }).catch(() => null); }));
