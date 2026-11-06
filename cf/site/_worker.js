@@ -160,7 +160,7 @@ async function premium(request, env) {
       let token = newToken(), email = s.customer_details && s.customer_details.email || s.customer_email || null;
       return await env.DB.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run(), json({ token, plan });
     } catch (e) {
-      return json({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 502);
+      return json({ error: "V\xE9rification du paiement impossible : " + String(e.message).slice(0, 100) }, 400);
     }
   }
   if (path === "/api/premium/attente" && request.method === "POST") {
@@ -211,7 +211,7 @@ bilan.`);
       if (!r.ok) throw new Error(j.error && j.error.message);
       return json({ url: j.url });
     } catch (e) {
-      return json({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 502);
+      return json({ error: "Portail indisponible : " + String(e.message).slice(0, 100) }, 400);
     }
   }
   return json({ error: "Introuvable." }, 404);
@@ -2993,7 +2993,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "53a6f5999013fa87", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "34fbd59264dce496", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
