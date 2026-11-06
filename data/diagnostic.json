@@ -238,6 +238,50 @@
     "2023-05-30 20:12:59.444884"
    ]
   ],
+  "815600354DEDBD0BA991": [
+   [
+    "2024-12-31",
+    true,
+    0,
+    "2025-09-24 22:45:19.130350"
+   ],
+   [
+    "2023-12-31",
+    true,
+    0,
+    "2024-05-01 18:32:50.672700"
+   ],
+   [
+    "2023-12-31",
+    true,
+    0,
+    "2024-05-01 18:34:47.024370"
+   ],
+   [
+    "2022-12-31",
+    true,
+    0,
+    "2023-05-30 16:31:23.460488"
+   ],
+   [
+    "2022-12-31",
+    true,
+    0,
+    "2023-05-30 16:33:16.323859"
+   ],
+   [
+    "2021-12-31",
+    true,
+    0,
+    "2023-05-30 19:06:12.295975"
+   ],
+   [
+    "2021-12-31",
+    true,
+    0,
+    "2023-05-30 19:07:30.912733"
+   ]
+  ],
   "549300L7YCATGO57ZE10": [
    [
     "2025-12-31",
@@ -288,50 +332,6 @@
     true,
     0,
     "2024-03-05 12:44:20.373846"
-   ]
-  ],
-  "815600354DEDBD0BA991": [
-   [
-    "2024-12-31",
-    true,
-    0,
-    "2025-09-24 22:45:19.130350"
-   ],
-   [
-    "2023-12-31",
-    true,
-    0,
-    "2024-05-01 18:32:50.672700"
-   ],
-   [
-    "2023-12-31",
-    true,
-    0,
-    "2024-05-01 18:34:47.024370"
-   ],
-   [
-    "2022-12-31",
-    true,
-    0,
-    "2023-05-30 16:31:23.460488"
-   ],
-   [
-    "2022-12-31",
-    true,
-    0,
-    "2023-05-30 16:33:16.323859"
-   ],
-   [
-    "2021-12-31",
-    true,
-    0,
-    "2023-05-30 19:06:12.295975"
-   ],
-   [
-    "2021-12-31",
-    true,
-    0,
-    "2023-05-30 19:07:30.912733"
    ]
   ],
   "549300GKFG0RYRRQ1414": [
@@ -1926,38 +1926,6 @@
     "2023-01-18 11:03:02.605199"
    ]
   ],
-  "213800ZJ9F2EA3Q24K05": [
-   [
-    "2026-06-30",
-    true,
-    0,
-    "2026-09-24 18:01:15.202281"
-   ],
-   [
-    "2025-06-30",
-    true,
-    0,
-    "2025-09-30 11:06:12.514614"
-   ],
-   [
-    "2024-06-30",
-    true,
-    0,
-    "2024-10-03 10:36:27.859341"
-   ],
-   [
-    "2023-06-30",
-    true,
-    0,
-    "2023-10-04 12:06:05.823982"
-   ],
-   [
-    "2022-06-30",
-    true,
-    0,
-    "2023-04-19 21:48:16.132303"
-   ]
-  ],
   "5493002DPKDEC2JN1Y86": [
    [
     "2024-12-31",
@@ -1990,6 +1958,38 @@
     true,
     0,
     "2023-04-19 17:05:06.536618"
+   ]
+  ],
+  "213800ZJ9F2EA3Q24K05": [
+   [
+    "2026-06-30",
+    true,
+    0,
+    "2026-09-24 18:01:15.202281"
+   ],
+   [
+    "2025-06-30",
+    true,
+    0,
+    "2025-09-30 11:06:12.514614"
+   ],
+   [
+    "2024-06-30",
+    true,
+    0,
+    "2024-10-03 10:36:27.859341"
+   ],
+   [
+    "2023-06-30",
+    true,
+    0,
+    "2023-10-04 12:06:05.823982"
+   ],
+   [
+    "2022-06-30",
+    true,
+    0,
+    "2023-04-19 21:48:16.132303"
    ]
   ],
   "549300BPHBCHEODTG670": [
@@ -2073,8 +2073,6 @@
    ]
   ],
   "3912005AWHKLQ1CPLV11": [],
-  "5493005UFVHY0PPNKD75": [],
-  "529900KIN5BE45V5KB18": [],
   "259400LGXW3K0GDAG361": [
    [
     "2022-12-31",
@@ -2095,6 +2093,7 @@
     "2023-01-18 11:02:27.119226"
    ]
   ],
+  "5493005UFVHY0PPNKD75": [],
   "259400YLRTOBISHBVX41": [
    [
     "2022-12-31",
@@ -2115,6 +2114,7 @@
     "2023-01-18 11:02:21.784652"
    ]
   ],
+  "529900KIN5BE45V5KB18": [],
   "529900VM3464806ERS69": [],
   "529900LIN8L1K9MLTR09": [],
   "F8SB4JFBSYQFRQEH3Z21": [
@@ -2835,6 +2835,81 @@
    "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 2440
   }
  },
+ "poste-italiane": {
+  "periods": [
+   "2024-12-31",
+   "2023-12-31",
+   "2022-12-31",
+   "2021-12-31"
+  ],
+  "concepts": {
+   "ifrs-full:NoncurrentFinancialLiabilities @ 2025-01-01T00:00:00": 8711,
+   "ifrs-full:NoncurrentFinancialLiabilities @ 2024-01-01T00:00:00": 10243,
+   "ifrs-full:OtherNoncurrentNonfinancialLiabilities @ 2025-01-01T00:00:00": 2024,
+   "ifrs-full:OtherNoncurrentNonfinancialLiabilities @ 2024-01-01T00:00:00": 2058,
+   "ifrs-full:OtherCurrentNonfinancialLiabilities @ 2025-01-01T00:00:00": 2151,
+   "ifrs-full:OtherCurrentNonfinancialLiabilities @ 2024-01-01T00:00:00": 2285,
+   "ifrs-full:CurrentFinancialLiabilities @ 2025-01-01T00:00:00": 85374,
+   "ifrs-full:CurrentFinancialLiabilities @ 2024-01-01T00:00:00": 85150,
+   "ext:RevenueFromMailParcelsAndOther @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 3843,
+   "ext:RevenueFromMailParcelsAndOther @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 3746,
+   "ext:NetRevenueFromFinancialServices @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 5521,
+   "ext:NetRevenueFromFinancialServices @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 5229,
+   "ext:RevenueFromFinancialServices @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 6127,
+   "ext:RevenueFromFinancialServices @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 5795,
+   "ext:NetRevenueFromInsuranceServices @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1640,
+   "ext:NetRevenueFromInsuranceServices @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1567,
+   "ifrs-full:RevenueFromInsuranceContractsIssuedWithoutReductionForReinsuranceHeld @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2824,
+   "ifrs-full:RevenueFromInsuranceContractsIssuedWithoutReductionForReinsuranceHeld @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 2550,
+   "ext:RevenueFromPaymentsAndMobile @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1923,
+   "ext:RevenueFromPaymentsAndMobile @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1586,
+   "ext:NetOperatingRevenue @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 12927,
+   "ext:NetOperatingRevenue @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 12128,
+   "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 855,
+   "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 811,
+   "ext:OtherNonRecurringCosts @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 57,
+   "ext:OtherNonRecurringCosts @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 0,
+   "ext:ImpairmentLossesReversalsOfImpairmentLossesOnDebtInstrumentsReceivablesAndOtherAssets @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 424,
+   "ext:ImpairmentLossesReversalsOfImpairmentLossesOnDebtInstrumentsReceivablesAndOtherAssets @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 71,
+   "ext:OtherNonrecurringCosts @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 284,
+   "ext:OtherNonrecurringCosts @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 0,
+   "ifrs-full:ProfitLossFromOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2546,
+   "ifrs-full:ProfitLossFromOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 2620,
+   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 658,
+   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 794,
+   "ifrs-full:DividendsPaid @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 576,
+   "ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParentRelatingToCurrentYear @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 307,
+   "ifrs-full:DividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 738,
+   "ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParentRelatingToCurrentYear @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 427,
+   "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 929,
+   "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 882,
+   "ifrs-full:DividendsPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
+   "ifrs-full:DividendsPaidClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -4,
+   "ifrs-full:DividendsReceivedClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
+   "ifrs-full:DividendsReceivedClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 4,
+   "ifrs-full:InterestReceivedClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 201,
+   "ifrs-full:InterestReceivedClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 168,
+   "ifrs-full:InterestPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -49,
+   "ifrs-full:InterestPaidClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -45,
+   "ifrs-full:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapital @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 3063,
+   "ifrs-full:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapital @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 3272,
+   "ifrs-full:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivables @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 186,
+   "ifrs-full:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivables @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -399,
+   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2901,
+   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1414,
+   "ifrs-full:ProceedsFromSalesOfInvestmentsAccountedForUsingEquityMethod @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
+   "ifrs-full:ProceedsFromSalesOfInvestmentsAccountedForUsingEquityMethod @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 0,
+   "ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1,
+   "ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1,
+   "ext:ProceedsFromRepaymentsOfLongTermBorrowings @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 566,
+   "ext:ProceedsFromRepaymentsOfLongTermBorrowings @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 126,
+   "ifrs-full:CashFlowsFromUsedInIncreaseDecreaseInCurrentBorrowings @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -803,
+   "ifrs-full:CashFlowsFromUsedInIncreaseDecreaseInCurrentBorrowings @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -380,
+   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1165,
+   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 883,
+   "ifrs-full:DividendsRecognisedAsDistributionsToOwnersPerShare @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0.563
+  }
+ },
  "finecobank": {
   "periods": [
    "2025-12-31",
@@ -3083,81 +3158,6 @@
    "ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 954,
    "ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 657,
    "ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 747
-  }
- },
- "poste-italiane": {
-  "periods": [
-   "2024-12-31",
-   "2023-12-31",
-   "2022-12-31",
-   "2021-12-31"
-  ],
-  "concepts": {
-   "ifrs-full:NoncurrentFinancialLiabilities @ 2025-01-01T00:00:00": 8711,
-   "ifrs-full:NoncurrentFinancialLiabilities @ 2024-01-01T00:00:00": 10243,
-   "ifrs-full:OtherNoncurrentNonfinancialLiabilities @ 2025-01-01T00:00:00": 2024,
-   "ifrs-full:OtherNoncurrentNonfinancialLiabilities @ 2024-01-01T00:00:00": 2058,
-   "ifrs-full:OtherCurrentNonfinancialLiabilities @ 2025-01-01T00:00:00": 2151,
-   "ifrs-full:OtherCurrentNonfinancialLiabilities @ 2024-01-01T00:00:00": 2285,
-   "ifrs-full:CurrentFinancialLiabilities @ 2025-01-01T00:00:00": 85374,
-   "ifrs-full:CurrentFinancialLiabilities @ 2024-01-01T00:00:00": 85150,
-   "ext:RevenueFromMailParcelsAndOther @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 3843,
-   "ext:RevenueFromMailParcelsAndOther @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 3746,
-   "ext:NetRevenueFromFinancialServices @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 5521,
-   "ext:NetRevenueFromFinancialServices @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 5229,
-   "ext:RevenueFromFinancialServices @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 6127,
-   "ext:RevenueFromFinancialServices @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 5795,
-   "ext:NetRevenueFromInsuranceServices @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1640,
-   "ext:NetRevenueFromInsuranceServices @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1567,
-   "ifrs-full:RevenueFromInsuranceContractsIssuedWithoutReductionForReinsuranceHeld @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2824,
-   "ifrs-full:RevenueFromInsuranceContractsIssuedWithoutReductionForReinsuranceHeld @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 2550,
-   "ext:RevenueFromPaymentsAndMobile @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1923,
-   "ext:RevenueFromPaymentsAndMobile @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1586,
-   "ext:NetOperatingRevenue @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 12927,
-   "ext:NetOperatingRevenue @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 12128,
-   "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 855,
-   "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 811,
-   "ext:OtherNonRecurringCosts @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 57,
-   "ext:OtherNonRecurringCosts @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 0,
-   "ext:ImpairmentLossesReversalsOfImpairmentLossesOnDebtInstrumentsReceivablesAndOtherAssets @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 424,
-   "ext:ImpairmentLossesReversalsOfImpairmentLossesOnDebtInstrumentsReceivablesAndOtherAssets @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 71,
-   "ext:OtherNonrecurringCosts @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 284,
-   "ext:OtherNonrecurringCosts @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 0,
-   "ifrs-full:ProfitLossFromOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2546,
-   "ifrs-full:ProfitLossFromOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 2620,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 658,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 794,
-   "ifrs-full:DividendsPaid @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 576,
-   "ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParentRelatingToCurrentYear @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 307,
-   "ifrs-full:DividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 738,
-   "ifrs-full:DividendsRecognisedAsDistributionsToOwnersOfParentRelatingToCurrentYear @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 427,
-   "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 929,
-   "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpenseAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 882,
-   "ifrs-full:DividendsPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
-   "ifrs-full:DividendsPaidClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -4,
-   "ifrs-full:DividendsReceivedClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
-   "ifrs-full:DividendsReceivedClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 4,
-   "ifrs-full:InterestReceivedClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 201,
-   "ifrs-full:InterestReceivedClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 168,
-   "ifrs-full:InterestPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -49,
-   "ifrs-full:InterestPaidClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -45,
-   "ifrs-full:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapital @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 3063,
-   "ifrs-full:CashFlowsFromUsedInOperationsBeforeChangesInWorkingCapital @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 3272,
-   "ifrs-full:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivables @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 186,
-   "ifrs-full:AdjustmentsForDecreaseIncreaseInOtherOperatingReceivables @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -399,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2901,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1414,
-   "ifrs-full:ProceedsFromSalesOfInvestmentsAccountedForUsingEquityMethod @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
-   "ifrs-full:ProceedsFromSalesOfInvestmentsAccountedForUsingEquityMethod @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 0,
-   "ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1,
-   "ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1,
-   "ext:ProceedsFromRepaymentsOfLongTermBorrowings @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 566,
-   "ext:ProceedsFromRepaymentsOfLongTermBorrowings @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 126,
-   "ifrs-full:CashFlowsFromUsedInIncreaseDecreaseInCurrentBorrowings @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -803,
-   "ifrs-full:CashFlowsFromUsedInIncreaseDecreaseInCurrentBorrowings @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -380,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1165,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 883,
-   "ifrs-full:DividendsRecognisedAsDistributionsToOwnersPerShare @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0.563
   }
  },
  "dnb": {
@@ -5386,6 +5386,55 @@
    "ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwners @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 132
   }
  },
+ "sydbank": {
+  "periods": [
+   "2024-12-31",
+   "2022-12-31",
+   "2021-12-31"
+  ],
+  "concepts": {
+   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 5228,
+   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 4921,
+   "ifrs-full:RevenueFromInterest @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 6891,
+   "ifrs-full:RevenueFromInterest @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 6161,
+   "ifrs-full:InterestRevenueExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 4308,
+   "ifrs-full:InterestRevenueExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 4467,
+   "ifrs-full:RevenueFromDividends @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 105,
+   "ifrs-full:RevenueFromDividends @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 20,
+   "SYD:InterestRevenueExpenseAndFeeAndCommissionIncomeExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 6803,
+   "SYD:InterestRevenueExpenseAndFeeAndCommissionIncomeExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 6672,
+   "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 145,
+   "ifrs-full:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLoss @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 139,
+   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 883,
+   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 939,
+   "ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersPerShare @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 26.88,
+   "ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersPerShare @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 30.56,
+   "SYD:LoansAndAdvancesToCustomersAtAmortisedCost @ 2025-01-01T00:00:00": 82534,
+   "SYD:LoansAndAdvancesToCustomersAtAmortisedCost @ 2024-01-01T00:00:00": 74535,
+   "SYD:FinancialLiabilitiesAtFairValueThroughProfitOrLossPooledPlans @ 2025-01-01T00:00:00": 27005,
+   "SYD:FinancialLiabilitiesAtFairValueThroughProfitOrLossPooledPlans @ 2024-01-01T00:00:00": 22903,
+   "SYD:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersRecognisedInEquity @ 2025-01-01T00:00:00": 1395,
+   "SYD:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersRecognisedInEquity @ 2024-01-01T00:00:00": 1686,
+   "ifrs-full:DividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1692,
+   "SYD:DividendsReceivedFromTreasuryShares @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 6,
+   "ifrs-full:DividendsPaid @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 965,
+   "SYD:DividendsReceivedFromTreasuryShares @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 0,
+   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 887,
+   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 528,
+   "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 111,
+   "ifrs-full:AdjustmentsForDepreciationAndAmortisationExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 101,
+   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -910,
+   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1870,
+   "ifrs-full:ProceedsFromSalesOfInterestsInAssociates @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 14,
+   "ifrs-full:ProceedsFromSalesOfInterestsInAssociates @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 3,
+   "ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 28,
+   "ifrs-full:ProceedsFromSalesOrMaturityOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 245,
+   "ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 3,
+   "ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 2,
+   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1680,
+   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 959
+  }
+ },
  "autostore": {
   "periods": [
    "2025-12-31",
@@ -6087,85 +6136,6 @@
    "ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 14
   }
  },
- "sandnes-sparebank": {
-  "periods": [
-   "2025-12-31",
-   "2024-12-31",
-   "2023-12-31",
-   "2022-12-31",
-   "2021-12-31"
-  ],
-  "concepts": {
-   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 2079,
-   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1920,
-   "ifrs-full:InterestRevenueExpense @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 784,
-   "ifrs-full:InterestRevenueExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 719,
-   "ifrs-full:RevenueFromDividends @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 83,
-   "ifrs-full:RevenueFromDividends @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 37,
-   "ifrs-full:MiscellaneousOtherOperatingIncome @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 1,
-   "ifrs-full:MiscellaneousOtherOperatingIncome @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 77,
-   "ROG:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossExcludingImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIfrs9 @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 18,
-   "ROG:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossExcludingImpairmentLossImpairmentGainAndReversalOfImpairmentLossDeterminedInAccordanceWithIfrs9 @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 18,
-   "ifrs-full:OperatingExpense @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 417,
-   "ifrs-full:OperatingExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 415,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 73,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 78,
-   "ifrs-full:LoansAndAdvancesToCustomersAtAmortisedCost @ 2026-01-01T00:00:00": 35874,
-   "ifrs-full:LoansAndAdvancesToCustomersAtAmortisedCost @ 2025-01-01T00:00:00": 32382,
-   "ifrs-full:DebtSecurities @ 2026-01-01T00:00:00": 19815,
-   "ifrs-full:DebtSecurities @ 2025-01-01T00:00:00": 17089,
-   "ifrs-full:DerivativeFinancialLiabilities @ 2026-01-01T00:00:00": 78,
-   "ifrs-full:DerivativeFinancialLiabilities @ 2025-01-01T00:00:00": 129,
-   "ifrs-full:LeaseLiabilities @ 2026-01-01T00:00:00": 51,
-   "ifrs-full:LeaseLiabilities @ 2025-01-01T00:00:00": 65,
-   "ROG:DividendEqualisationReserve @ 2026-01-01T00:00:00": 596,
-   "ROG:DividendEqualisationReserve @ 2025-01-01T00:00:00": 595,
-   "ROG:GiftAndCustomerDividendReserve @ 2026-01-01T00:00:00": 182,
-   "ROG:GiftAndCustomerDividendReserve @ 2025-01-01T00:00:00": 151,
-   "ifrs-full:DividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 158,
-   "ROG:GiftsAndCustomerDividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 86,
-   "ROG:ProfitLossAttributableToPrimaryCapitalReserveAndDividendEqualisationReserve @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 25,
-   "ROG:ProfitLossAttributableToDividends @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 218,
-   "ROG:ProfitLossAttributableToGiftsAndCustomerDividends @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 127,
-   "ifrs-full:DividendsPaid @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 218,
-   "ROG:GiftsAndCustomerDividendsPaid @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 129,
-   "ROG:ProfitLossAttributableToPrimaryCapitalReserveAndDividendEqualisationReserve @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 2,
-   "ROG:ProfitLossAttributableToDividends @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 269,
-   "ROG:ProfitLossAttributableToGiftsAndCustomerDividends @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 159,
-   "ROG:IncreaseDecreaseInRepaymentLoansOverdraftsClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": -3341,
-   "ROG:IncreaseDecreaseInRepaymentLoansOverdraftsClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -2156,
-   "ROG:InterestReceivedOnLoansAndAdvancesToCustomersClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 2145,
-   "ROG:InterestReceivedOnLoansAndAdvancesToCustomersClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1980,
-   "ROG:IncreaseDecreaseInDepositsFromCustomersClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 1536,
-   "ROG:IncreaseDecreaseInDepositsFromCustomersClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 452,
-   "ROG:InterestPaidOnDepositsFromCustomersClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 642,
-   "ROG:InterestPaidOnDepositsFromCustomersClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 586,
-   "ROG:IncreaseDecreaseInInterestBearingSecuritiesClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 1110,
-   "ROG:IncreaseDecreaseInInterestBearingSecuritiesClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -56,
-   "ROG:InterestReceivedOnSecuritiesClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 197,
-   "ROG:InterestReceivedOnSecuritiesClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 190,
-   "ROG:IncreaseDecreaseInFinancialAssetsClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 6,
-   "ROG:IncreaseDecreaseInFinancialAssetsClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -41,
-   "ROG:DecreaseIncreaseInLoansAndAdvancesToBanksAndIncreaseDecreaseInDepositsFromBanksClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 39,
-   "ROG:DecreaseIncreaseInLoansAndAdvancesToBanksAndIncreaseDecreaseInDepositsFromBanksClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -9,
-   "ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": -360,
-   "ifrs-full:OtherInflowsOutflowsOfCashClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -353,
-   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 88,
-   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 61,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": -1629,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -445,
-   "ROG:ProceedsFromSalesOrMaturityOfFinancialInstrumentsAndPurchaseOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": -53,
-   "ROG:ProceedsFromSalesOrMaturityOfFinancialInstrumentsAndPurchaseOfFinancialInstrumentsClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -166,
-   "ifrs-full:DividendsReceivedFromAssociatesClassifiedAsInvestingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 89,
-   "ifrs-full:DividendsReceivedFromAssociatesClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 43,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 218,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 158,
-   "ROG:GiftsAndCustomerDividendsPaidClassifiedAsFinancingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 129,
-   "ROG:GiftsAndCustomerDividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 86,
-   "ifrs-full:PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 20,
-   "ifrs-full:PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 19
-  }
- },
  "anima-sgr": {
   "periods": [
    "2025-12-31",
@@ -6417,6 +6387,47 @@
    "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -236
   }
  },
+ "sjf-bank": {
+  "periods": [
+   "2024-12-31"
+  ],
+  "concepts": {
+   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1036,
+   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 850,
+   "ifrs-full:InterestRevenueExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 961,
+   "ifrs-full:InterestRevenueExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 862,
+   "ifrs-full:RevenueFromDividends @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 63,
+   "ifrs-full:RevenueFromDividends @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 20,
+   "SPA:InterestRevenueExpenseAndFeeAndCommissionIncomeExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1630,
+   "SPA:InterestRevenueExpenseAndFeeAndCommissionIncomeExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1468,
+   "SPA:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 38,
+   "SPA:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 47,
+   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 192,
+   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 142,
+   "SPA:LoansAndAdvancesToCustomersAtAmortisedCost @ 2025-01-01T00:00:00": 12790,
+   "SPA:LoansAndAdvancesToCustomersAtAmortisedCost @ 2024-01-01T00:00:00": 12645,
+   "SPA:FinancialAssetsAtAmortisedCostBonds @ 2025-01-01T00:00:00": 5131,
+   "SPA:FinancialAssetsAtAmortisedCostBonds @ 2024-01-01T00:00:00": 9294,
+   "SPA:FinancialLiabilitiesAtFairValueThroughProfitOrLossPooledPlans @ 2025-01-01T00:00:00": 2325,
+   "SPA:FinancialLiabilitiesAtFairValueThroughProfitOrLossPooledPlans @ 2024-01-01T00:00:00": 2075,
+   "SPA:FinancialLiabilitiesAtAmortisedCostBonds @ 2025-01-01T00:00:00": 712,
+   "SPA:FinancialLiabilitiesAtAmortisedCostBonds @ 2024-01-01T00:00:00": 612,
+   "ifrs-full:DividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 146,
+   "ifrs-full:DividendsPaid @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 104,
+   "SPA:AdjustmentsForDepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 37,
+   "SPA:AdjustmentsForDepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 47,
+   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 73,
+   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 53,
+   "ifrs-full:CashFlowsFromUsedInOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 773,
+   "ifrs-full:CashFlowsFromUsedInOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 617,
+   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2951,
+   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1521,
+   "ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 37,
+   "ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 14,
+   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 146,
+   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 104
+  }
+ },
  "hansard-global": {
   "periods": [
    "2026-06-30",
@@ -6459,47 +6470,6 @@
    "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-07-01T00:00:00/2025-07-01T00:00:00": 6,
    "ifrs-full:PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities @ 2025-07-01T00:00:00/2026-07-01T00:00:00": 0,
    "ifrs-full:PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities @ 2024-07-01T00:00:00/2025-07-01T00:00:00": 0
-  }
- },
- "sjf-bank": {
-  "periods": [
-   "2024-12-31"
-  ],
-  "concepts": {
-   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1036,
-   "ifrs-full:InterestRevenueCalculatedUsingEffectiveInterestMethod @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 850,
-   "ifrs-full:InterestRevenueExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 961,
-   "ifrs-full:InterestRevenueExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 862,
-   "ifrs-full:RevenueFromDividends @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 63,
-   "ifrs-full:RevenueFromDividends @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 20,
-   "SPA:InterestRevenueExpenseAndFeeAndCommissionIncomeExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 1630,
-   "SPA:InterestRevenueExpenseAndFeeAndCommissionIncomeExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1468,
-   "SPA:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 38,
-   "SPA:DepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 47,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 192,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 142,
-   "SPA:LoansAndAdvancesToCustomersAtAmortisedCost @ 2025-01-01T00:00:00": 12790,
-   "SPA:LoansAndAdvancesToCustomersAtAmortisedCost @ 2024-01-01T00:00:00": 12645,
-   "SPA:FinancialAssetsAtAmortisedCostBonds @ 2025-01-01T00:00:00": 5131,
-   "SPA:FinancialAssetsAtAmortisedCostBonds @ 2024-01-01T00:00:00": 9294,
-   "SPA:FinancialLiabilitiesAtFairValueThroughProfitOrLossPooledPlans @ 2025-01-01T00:00:00": 2325,
-   "SPA:FinancialLiabilitiesAtFairValueThroughProfitOrLossPooledPlans @ 2024-01-01T00:00:00": 2075,
-   "SPA:FinancialLiabilitiesAtAmortisedCostBonds @ 2025-01-01T00:00:00": 712,
-   "SPA:FinancialLiabilitiesAtAmortisedCostBonds @ 2024-01-01T00:00:00": 612,
-   "ifrs-full:DividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 146,
-   "ifrs-full:DividendsPaid @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 104,
-   "SPA:AdjustmentsForDepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 37,
-   "SPA:AdjustmentsForDepreciationAmortisationAndImpairmentLossReversalOfImpairmentLossRecognisedInProfitOrLossIntangibleAssetsAndPropertyPlantAndEquipment @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 47,
-   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 73,
-   "ifrs-full:IncomeTaxesPaidClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 53,
-   "ifrs-full:CashFlowsFromUsedInOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 773,
-   "ifrs-full:CashFlowsFromUsedInOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 617,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2951,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1521,
-   "ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 37,
-   "ifrs-full:ProceedsFromSalesOfPropertyPlantAndEquipmentClassifiedAsInvestingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 14,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 146,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 104
   }
  },
  "bff-bank": {
@@ -7265,60 +7235,6 @@
    "ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwnersPerShare @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 0.1762,
    "ifrs-full:DividendsProposedOrDeclaredBeforeFinancialStatementsAuthorisedForIssueButNotRecognisedAsDistributionToOwners @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 88,
    "ifrs-full:DividendsRecognisedAsDistributionsToOwnersPerShare @ 2025-01-01T00:00:00/2026-01-01T00:00:00": 0.3695
-  }
- },
- "jtc": {
-  "periods": [
-   "2024-12-31",
-   "2023-12-31",
-   "2022-12-31",
-   "2021-12-31"
-  ],
-  "concepts": {
-   "ifrs-full:Revenue @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 305,
-   "ifrs-full:Revenue @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 257,
-   "jtcplc:EarningsBeforeInterestTaxesDepreciationAndAmortisation @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 49,
-   "jtcplc:EarningsBeforeInterestTaxesDepreciationAndAmortisation @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 78,
-   "jtcplc:UnderlyingEBITDA @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 102,
-   "jtcplc:UnderlyingEBITDA @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 86,
-   "jtcplc:NonUnderlyingItemsRelatingToEBITDA @ 2024-01-01T00:00:00/2025-01-01T00:00:00": -53,
-   "jtcplc:NonUnderlyingItemsRelatingToEBITDA @ 2023-01-01T00:00:00/2024-01-01T00:00:00": -8,
-   "ifrs-full:DepreciationAndAmortisationExpense @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 30,
-   "ifrs-full:DepreciationAndAmortisationExpense @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 25,
-   "ifrs-full:ProfitLossFromOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 19,
-   "ifrs-full:ProfitLossFromOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 53,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
-   "ifrs-full:IncomeTaxExpenseContinuingOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 2,
-   "ifrs-full:LongtermBorrowings @ 2025-01-01T00:00:00": 272,
-   "ifrs-full:LongtermBorrowings @ 2024-01-01T00:00:00": 221,
-   "ifrs-full:NoncurrentLeaseLiabilities @ 2025-01-01T00:00:00": 45,
-   "ifrs-full:NoncurrentLeaseLiabilities @ 2024-01-01T00:00:00": 38,
-   "ifrs-full:NoncurrentDerivativeFinancialLiabilities @ 2025-01-01T00:00:00": 0,
-   "ifrs-full:NoncurrentDerivativeFinancialLiabilities @ 2024-01-01T00:00:00": 1,
-   "ifrs-full:CurrentLeaseLiabilities @ 2025-01-01T00:00:00": 7,
-   "ifrs-full:CurrentLeaseLiabilities @ 2024-01-01T00:00:00": 6,
-   "ifrs-full:DividendsPaid @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 19,
-   "ifrs-full:DividendsPaid @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 16,
-   "ifrs-full:CashFlowsFromUsedInOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 84,
-   "ifrs-full:CashFlowsFromUsedInOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 85,
-   "ifrs-full:IncomeTaxesPaidRefundClassifiedAsOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 5,
-   "ifrs-full:IncomeTaxesPaidRefundClassifiedAsOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 3,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 79,
-   "ifrs-full:CashFlowsFromUsedInOperatingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 81,
-   "jtcplc:UnderlyingCashGeneratedFromOperations @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 99,
-   "jtcplc:UnderlyingCashGeneratedFromOperations @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 91,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 19,
-   "ifrs-full:DividendsPaidClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 16,
-   "ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 0,
-   "ifrs-full:RepaymentsOfBorrowingsClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 50,
-   "ifrs-full:ProceedsFromBorrowingsClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 49,
-   "ifrs-full:ProceedsFromBorrowingsClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 118,
-   "jtcplc:InterestPaidOnLoansAndBorrowingsClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 15,
-   "jtcplc:InterestPaidOnLoansAndBorrowingsClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 11,
-   "ifrs-full:PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 7,
-   "ifrs-full:PaymentsOfLeaseLiabilitiesClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 6,
-   "jtcplc:InterestPaidOnLeaseLiabilitiesClassifiedAsFinancingActivities @ 2024-01-01T00:00:00/2025-01-01T00:00:00": 2,
-   "jtcplc:InterestPaidOnLeaseLiabilitiesClassifiedAsFinancingActivities @ 2023-01-01T00:00:00/2024-01-01T00:00:00": 1
   }
  },
  "tritax-big-box": {
