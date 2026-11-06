@@ -62,7 +62,8 @@ function ekPoints(o) {
   if (W - R - m >= 84) g += ekTx(W - R - 6, T + H - 12, o.motHaut || (bas ? "plus haut" : "mieux"), { a: "end", fw: 800, c: cH, fs: 11 });
   // 5/11 (PDD sur téléphone : « 5 CNY / 10 CNY » superposés) : une graduation sur deux (ou trois) quand les étiquettes n'ont pas la place
   const gl = o.graduations.map(t => String(o.fmtAxe(t))), ecartG = o.graduations.length > 1 ? Math.abs(x(o.graduations[1]) - x(o.graduations[0])) : 1e9, saut = Math.max(1, Math.ceil((Math.max(...gl.map(v => v.length)) * 6.6 + 8) / ecartG));
-  o.graduations.forEach((t, i) => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + (i % saut ? "" : ekTx(x(t), T + H + 12, gl[i], { a: "middle" })));
+  const i0 = Math.max(0, o.graduations.findIndex(t => Math.abs(t) < 1e-9)); // 6/11 : une graduation sur deux en partant de zéro (0 toujours écrit)
+  o.graduations.forEach((t, i) => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + ((i - i0) % saut ? "" : ekTx(x(t), T + H + 12, gl[i], { a: "middle" })));
   g += `<line x1="${m}" x2="${m}" y1="${T - 14}" y2="${T + H - 6}" stroke="#111" stroke-width="2" stroke-dasharray="5 4"/><rect x="${m - 52}" y="${T - 30}" width="104" height="18" rx="5" fill="#111"/>` + ekTx(m, T - 17, ekEsc(o.mediane_label), { a: "middle", c: "#fff", fw: 800, fs: 11 });
   rows.forEach((r, i) => {
     const cy = T + i * rh + 10, mieux = bas ? r.v < o.mediane : r.v > o.mediane;
@@ -71,7 +72,7 @@ function ekPoints(o) {
     l2.forEach((t, j) => g += ekTx(L - 12, cy + 4 + (j - (l2.length - 1) / 2) * 15, ekEsc(t), st));
     // Valeur hors échelle : le point est posé au bout de l'axe avec une flèche, et une note sous le graphique doit dire le vrai chiffre (r.note)
     const hx = r.v > o.max, lx = r.v < mn0, col = r.ton === "r" ? EK_R : r.ton === "g" ? EK_G : r.ton === "n" || neu ? "#111" : Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R;
-    g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/>${hx ? `<path d="M${x(r.v) + 8} ${cy - 6} L${x(r.v) + 16} ${cy} L${x(r.v) + 8} ${cy + 6} Z" fill="${col}"/>` : ""}${lx ? `<path d="M${x(r.v) - 8} ${cy - 6} L${x(r.v) - 16} ${cy} L${x(r.v) - 8} ${cy + 6} Z" fill="${col}"/>` : ""}<circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"${hx ? ` data-hors="${ekEsc(r.nom)}"` : ""}/>`
+    g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/>${hx ? `<path d="M${x(r.v) + 8} ${cy - 6} L${x(r.v) + 16} ${cy} L${x(r.v) + 8} ${cy + 6} Z" fill="${col}"/>` : ""}${lx ? `<path d="M${x(r.v) + 9} ${cy - 6} L${x(r.v) + 2} ${cy} L${x(r.v) + 9} ${cy + 6} Z" fill="${col}"/>` : ""}<circle cx="${x(r.v) + (lx ? 22 : 0)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"${hx ? ` data-hors="${ekEsc(r.nom)}"` : ""}/>`
       + ekTx(W - R + 20, cy + 4, ekEsc(r.texte), { fw: 800, c: col, fs: r.moi ? 14 : 13 });
   });
   g += "</svg>" + rows.filter(r => r.note).map(r => `<p class="ek-out ek-out-h"><b>${ekEsc(r.nom)}</b> ${ekEsc(r.note)}</p>`).join("") + hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join("");

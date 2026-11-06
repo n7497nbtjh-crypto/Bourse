@@ -39,7 +39,7 @@ function cmuChiffres(room) {
   const c = RBY[room]; if (!c || c.missing) return null;
   const items = ["croissance", "marge", "dette", "per"].map(k => {
     const f = INDI[k]; let v = null; try { v = f[1](c); } catch (e) { } if (v == null || !isFinite(v)) return null;
-    const m = medInd(c.sector, k), z = f[3] == null || m == null ? "" : (f[3] ? v < m * 0.85 : v > m * 1.15) ? "up" : (f[3] ? v > m * 1.15 : v < m * 0.85) ? "dn" : "";
+    const m = medInd(c.sector, k), z = f[3] == null || m == null ? "" : (f[3] ? v < m - Math.abs(m) * 0.15 : v > m + Math.abs(m) * 0.15) ? "up" : (f[3] ? v > m + Math.abs(m) * 0.15 : v < m - Math.abs(m) * 0.15) ? "dn" : "";
     return { l: f[0], v: f[2](v), m: m != null ? f[2](m) : null, z };
   }).filter(Boolean);
   return items.length ? { k: "c", year: c.year, items, src: `Calculés par ENKLAIR sur les comptes annuels ${c.year || ""} (ESEF ou SEC) et le cours différé, médiane du secteur ${esc(secName(c).toLowerCase())}.` } : null;

@@ -66,14 +66,14 @@ const f4Taux = (c, i) => { const t = c.fin.tax && c.fin.tax[i], p = c.fin.pretax
 // ——— Jauge courte des repères de l'en-tête ———
 function f4Jauge(v, m, basEstMieux, ecart, neutre) {
   if (v == null || m == null) return "";
-  let d = ecart ? (v - m) / ecart : (m ? (v / m - 1) : 0); if (basEstMieux) d = -d;
+  let d = ecart ? (v - m) / ecart : (m ? (v - m) / Math.abs(m) : 0); // 6/11 : médiane négative (Ubisoft : -100,5 % face à -4 % était posé à droite, en vert) if (basEstMieux) d = -d;
   const x = 50 + Math.max(-44, Math.min(44, d * 50));
   return `<span class="ek-mg" style="background:linear-gradient(90deg,${basEstMieux ? "#BFF0DA" : "#FFD0C4"} 0 50%,${basEstMieux ? "#FFD0C4" : "#BFF0DA"} 50%)"><b style="left:${basEstMieux ? 100 - x : x}%"></b></span>`;
 }
 function f4Ton(v, m, basEstMieux, ecartAbs) { // "g" mieux, "r" moins bien, "" comparable
   if (v == null || m == null) return "";
-  const mieux = ecartAbs != null ? v > m + ecartAbs : v > m * 1.15, pire = ecartAbs != null ? v < m - ecartAbs : v < m * 0.85;
-  return basEstMieux ? (v < m * 0.85 ? "g" : v > m * 1.15 ? "r" : "") : mieux ? "g" : pire ? "r" : "";
+  const mieux = ecartAbs != null ? v > m + ecartAbs : v > m + Math.abs(m) * 0.15, pire = ecartAbs != null ? v < m - ecartAbs : v < m - Math.abs(m) * 0.15;
+  return basEstMieux ? (v < m - Math.abs(m) * 0.15 ? "g" : v > m + Math.abs(m) * 0.15 ? "r" : "") : mieux ? "g" : pire ? "r" : "";
 }
 
 // ——— La page ———
@@ -169,7 +169,7 @@ function f4Tete(s, c, x) {
 function f4Verdict(x) {
   const { M, MED, s } = x, k = x.bk ? "roe" : "m", rent = f4Ton(M[k], MED[k]), lev = s.netDebt != null && s.ebit > 0 ? s.netDebt / s.ebit : null;
   const a = M[k] == null ? (s.net > 0 ? "Bénéficiaire" : s.net < 0 ? "<em>En perte</em>" : "") // 5/11 : rentabilité inconnue (fonds propres absents) : pas de comparaison inventée
-    : rent === "g" ? "Très rentable" : rent === "r" ? "<em>Peu rentable</em>" : `Rentable comme ${x.P.qui}`;
+    : M[k] < 0 ? "<em>En perte</em>" : rent === "g" ? "Très rentable" : rent === "r" ? "<em>Peu rentable</em>" : `Rentable comme ${x.P.qui}`; // 6/11 : une entreprise qui perd de l'argent n'est pas « rentable comme ses rivales »
   const b = x.bk ? "" : s.netDebt == null ? "" : s.netDebt <= 0 ? "sans dette" : lev > 3 ? "<em>endettée</em>" : "dette modérée";
   const pr = M.pe == null ? "" : f4Ton(M.pe, MED.pe, true), c = M.pe == null ? "" : pr === "r" ? "le marché y croit" : pr === "g" ? "le marché doute" : "le marché est partagé"; // 4/11 : pas de jugement sur le prix (règles des recommandations d'investissement), ce que dit le PER
   const parts = [a, b, c].filter(Boolean);
@@ -178,15 +178,18 @@ function f4Verdict(x) {
 
 function f4Chaine(x) {
   const { M, MED, s, sym } = x, bank = isBank(s), k2 = bank ? "nm" : "m";
+  const ngOk = M.ng != null && s.net > 0 && s.netPrev > 0 && M.ng < 5, medNgOk = MED.ng != null && Math.abs(MED.ng) <= 1;
   const R5 = x.bk ? [
-    ["Son bénéfice", f4Pc(M.ng, 1, true), f4Ton(M.ng, MED.ng, false, 0.02), s.net != null && s.year ? `sur un an : ${f4Md(s.net, s.currency)} en ${s.year}` : "bénéfice non publié", f4Jauge(M.ng, MED.ng, false, 0.3), MED.ng != null ? `${x.P.court} : ${f4Pc(MED.ng, 1, true)}` : ""],
-    ["Sa rentabilité", M.roe != null ? ekFr(M.roe * 100, 1) + " %" : "–", f4Ton(M.roe, MED.roe), `gagnés sur 100 ${sym} de fonds propres`, f4Jauge(M.roe, MED.roe), MED.roe != null ? `${x.P.court} : ${ekFr(MED.roe * 100, 1)} %` : ""],
+    // 6/11 : une variation n'a de sens qu'entre deux bénéfices (avant : « −26 876 % » quand le bénéfice devenait une perte) ; sinon le montant
+    ngOk ? ["Son bénéfice", f4Pc(M.ng, 1, true), f4Ton(M.ng, MED.ng, false, 0.02), `sur un an : ${f4Md(s.net, s.currency)} en ${s.year}`, medNgOk ? f4Jauge(M.ng, MED.ng, false, 0.3) : "", medNgOk ? `${x.P.court} : ${f4Pc(MED.ng, 1, true)}` : ""]
+      : ["Son bénéfice", s.net != null ? f4Md(Math.abs(s.net), s.currency) : "–", s.net != null && s.net < 0 ? "r" : "", s.net == null || !s.year ? "bénéfice non publié" : `${s.net < 0 ? "de perte" : "de bénéfice"} en ${s.year}${s.netPrev != null ? `, contre ${s.netPrev < 0 ? "une perte de " + f4Md(-s.netPrev, s.currency) : f4Md(s.netPrev, s.currency) + " de bénéfice"} un an plus tôt` : ""}`, "", ""],
+    ["Sa rentabilité", M.roe != null ? (M.roe < 0 ? ekFr(-M.roe * 100, 1) + " " + sym : ekFr(M.roe * 100, 1) + " %") : "–", f4Ton(M.roe, MED.roe), M.roe != null && M.roe < 0 ? `perdus sur 100 ${sym} de fonds propres` : `gagnés sur 100 ${sym} de fonds propres`, f4Jauge(M.roe, MED.roe), MED.roe != null ? `${x.P.court} : ${ekFr(MED.roe * 100, 1)} %` : ""],
   ].filter(r => r[0] !== "Sa rentabilité" || M.roe != null) : [
     ["Ses ventes", f4Pc(M.g, 1, true), f4Ton(M.g, MED.g, false, 0.02), `sur un an : ${f4Md(s.ca, s.currency)} de ventes en ${s.year}${f4EnEur(s.ca, s.currency)}`, f4Jauge(M.g, MED.g, false, 0.2), MED.g != null ? `${x.P.court} : ${f4Pc(MED.g, 1, true)}` : ""],
-    ["Sa marge", M[k2] != null ? ekFr(M[k2] * 100, 0) + " " + sym : "–", f4Ton(M[k2], MED[k2]), M[k2] != null && M[k2] < 0 ? `perdus sur 100 ${sym} de ventes` : `gardés sur 100 ${sym} de ventes`, f4Jauge(M[k2], MED[k2]), MED[k2] != null ? `${x.P.court} : ${ekFr(MED[k2] * 100, 0)} ${sym}` : ""],
+    ["Sa marge", M[k2] != null ? ekFr(Math.abs(M[k2]) * 100, 0) + " " + sym : "–", f4Ton(M[k2], MED[k2]), M[k2] != null && M[k2] < 0 ? `perdus sur 100 ${sym} de ventes` : `gardés sur 100 ${sym} de ventes`, f4Jauge(M[k2], MED[k2]), MED[k2] != null ? `${x.P.court} : ${ekFr(MED[k2] * 100, 0)} ${sym}` : ""],
   ];
   if (!x.bk) R5.push(
-    ["Son bénéfice", M.nm != null ? ekFr(M.nm * 100, 0) + " " + sym : "–", f4Ton(M.nm, MED.nm), `${M.nm != null && M.nm < 0 ? "de perte" : "de bénéfice"} sur 100 ${sym} de ventes`, f4Jauge(M.nm, MED.nm), MED.nm != null ? `${x.P.court} : ${ekFr(MED.nm * 100, 1)} ${sym}` : ""]);
+    ["Son bénéfice", M.nm != null ? ekFr(Math.abs(M.nm) * 100, 0) + " " + sym : "–", f4Ton(M.nm, MED.nm), `${M.nm != null && M.nm < 0 ? "de perte" : "de bénéfice"} sur 100 ${sym} de ventes`, f4Jauge(M.nm, MED.nm), MED.nm != null ? `${x.P.court} : ${ekFr(MED.nm * 100, 1)} ${sym}` : ""]);
   R5.push(
     ["Son dividende", M.pay != null ? (M.pay > 1.5 ? "> 100 %" : f4Pc(M.pay, 0)) : s.divPaid || s.dps || (x.c && (x.c.sourcePdf || x.c.sourceEP)) ? "–" : "0 %", "", M.pay > 1.5 ? "le dividende dépasse le bénéfice de l'année" : s.dps ? `du bénéfice versé : ${f4Par(s.dps, s.currency)} par action` : "du bénéfice versé", f4Jauge(M.pay, MED.pay), MED.pay != null ? `${x.P.court} : ${f4Pc(MED.pay, 0)}` : ""],
     ["Son prix en Bourse", M.pe != null ? ekFr(M.pe, 0) + " fois" : "–", "", M.pe != null ? "son bénéfice annuel (PER)" : "PER non significatif", f4Jauge(M.pe, MED.pe, true), MED.pe != null ? `${x.P.court} : ${ekFr(MED.pe, 0)} fois` : ""]);
@@ -274,7 +277,7 @@ function f4E2(x) {
   // 6/11 : marges négatives placées à gauche de zéro (comme la rentabilité, f4B2) ; au-delà de -nn.max, au bord avec une flèche et le chiffre en note
   const pasM = nn.ticks.length > 1 ? nn.ticks[1] - nn.ticks[0] : nn.max / 5, mnM = mn < 0 ? -Math.min(nn.max, Math.ceil(-mn / pasM) * pasM) : 0;
   const gradM = []; for (let t = mnM; t <= nn.max + 1e-9; t += pasM) gradM.push(Math.round(t * 100) / 100);
-  const borneM = r => r.v < mnM ? { ...r, note: `est hors de l'échelle : ${r.texte} gardés sur 100 ${sym}.` } : r;
+  const borneM = r => r.v < mnM ? { ...r, note: `est hors de l'échelle : ${r.texte} sur 100 ${sym} de ventes.` } : r;
   const pts = P.mode === "rivales" ? [...pl.map(borneM), ...hors, ...P.out.map(o => ({ nom: o.nom, v: null, texte: o.raison }))] : pl.filter(r => r.moi).map(borneM).concat(hors.filter(r => r.moi));
   const ratio = v != null && med > 0 ? v / med : null;
   const qui2 = P.qui, cmpM = ratio == null ? "" : ratio > 4 ? `Bien plus que ${qui2} (${ekFr(med * 100, 0)} ${sym})` : ratio >= 1.8 && ratio < 2.2 ? `Presque deux fois plus que ${qui2}` : ratio >= 1.15 ? `${ekFr(ratio, 1)} fois plus que ${qui2}` : ratio <= 0.85 ? `Moins que ${qui2} (${ekFr(med * 100, 0)} ${sym})` : `Comme ${qui2}`;

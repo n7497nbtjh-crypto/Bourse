@@ -20,6 +20,17 @@ const fs = require("fs");
       let h = "";
       try { const x = f4Ctx(s, c); h = f4Tete(s, c, x) + f4Fil(x) + f4Fin(x); } catch (e) { out.push([id, "erreur de calcul : " + String(e).slice(0, 80)]); continue; }
       const t = txt(h), pb = [];
+      // 6/11 : repères de l'en-tête : la couleur du chiffre (mieux / moins bien) doit être du même côté que le point de la jauge
+      const dv = document.createElement("div"); dv.innerHTML = f4Tete(s, c, f4Ctx(s, c));
+      dv.querySelectorAll(".ek-rp").forEach(a => { const v = a.querySelector(".ek-v"), mg = a.querySelector(".ek-mg"), bb = mg && mg.querySelector("b"); if (!v || !bb) return;
+        const ton = v.classList.contains("g") ? "g" : v.classList.contains("r") ? "r" : "", left = parseFloat(bb.style.left), basVert = /^linear-gradient\(90deg, ?(#BFF0DA|rgb\(191, 240, 218\))/i.test(mg.style.background);
+        const cote = Math.abs(left - 50) < 3 ? "" : (left > 50) !== basVert ? "g" : "r", nom = (a.querySelector(".ek-st") || {}).textContent || "";
+        if (ton && cote && ton !== cote) pb.push(`${nom.replace(/^\d/, "")} : chiffre ${ton === "g" ? "en vert" : "en rouge"} mais point du côté ${cote === "g" ? "vert" : "rouge"} de la jauge`);
+        const val = parseFloat(v.textContent.replace(/[\u202f ]/g, "").replace(",", ".").replace("−", "-")), lib = (a.querySelector(".ek-s") || {}).textContent || "";
+        if (/PER/.test(lib) && /fois/.test(v.textContent) && (val < 1.5 || val > 300)) pb.push(`prix : PER de ${v.textContent} (à vérifier : cours ou bénéfice faux ?)`);
+        if (/rendement|versé/.test(lib) && /%/.test(v.textContent) && /rendement/.test(lib) && val > 15) pb.push(`dividende : rendement de ${v.textContent}`);
+        if (/^sur un an/.test(lib) && Math.abs(val) > 300) pb.push(`ventes : ${v.textContent} sur un an (saut à vérifier)`);
+        if (/sur 100 .* de ventes/.test(lib) && Math.abs(val) > 100) pb.push(`${nom.replace(/^\d/, "")} : ${v.textContent} ${lib} (plus de 100 sur 100)`); });
       if (/\bNaN\b|undefined|Infinity|\[object/.test(t)) pb.push("valeur impossible : " + (t.match(/.{0,40}(NaN|undefined|Infinity|\[object).{0,30}/) || [""])[0]);
       if (/gagne -|gagne −/.test(t)) pb.push("« gagne » suivi d'un chiffre négatif");
       for (const m of t.matchAll(/en (hausse|baisse) de [\d  ,]+ % en (\d{4})/g)) if (+m[2] !== +s.year && /Bénéfice net|Chiffre d'affaires|Ses ventes|Son bénéfice/.test(t.slice(Math.max(0, m.index - 80), m.index))) pb.push(`variation datée ${m[2]} alors que les derniers comptes sont de ${s.year}`);

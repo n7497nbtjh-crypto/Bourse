@@ -2159,7 +2159,7 @@ function resoudre(nom) {
 }
 function cellInd(c, k) {
   const f = INDI[k], v = f[1](c); if (v == null) return `<td class="num light">–</td>`;
-  const m = medInd(c.sector, k), good = f[3] == null || m == null ? null : (f[3] ? v < m * 0.85 : v > m * 1.15), bad = f[3] == null || m == null ? null : (f[3] ? v > m * 1.15 : v < m * 0.85);
+  const m = medInd(c.sector, k), good = f[3] == null || m == null ? null : (f[3] ? v < m - Math.abs(m) * 0.15 : v > m + Math.abs(m) * 0.15), bad = f[3] == null || m == null ? null : (f[3] ? v > m + Math.abs(m) * 0.15 : v < m - Math.abs(m) * 0.15);
   return `<td class="num"><span class="${good ? "zgood" : bad ? "zbad" : ""}">${f[2](v)}</span>${m != null ? `<small class="light">secteur ${f[2](m)}</small>` : ""}</td>`;
 }
 function filtreHTML(a) {

@@ -386,12 +386,16 @@ function ecrire() {
     let nr = 0;
     const o = dedoublonne([...S.o.values()].filter(x => Date.parse(x.d) >= minO)).sort((a, b) => b.d.localeCompare(a.d)).filter(x => !ROUTINE.has(x.c) || x.c === "agenda" || nr++ < 25).slice(0, 300);
     const p = [...S.p.values()].filter(x => Date.parse(x.d) >= minP).sort((a, b) => (a.a ? 1 : 0) - (b.a ? 1 : 0) || b.d.localeCompare(a.d)).slice(0, 40).sort((a, b) => b.d.localeCompare(a.d));
+    accorderVariations(o); // 6/11 : variations du communiqué accordées sur le rapport déposé
     const file = new URL(`c/${id}.json`, DIR);
     const txt = JSON.stringify({ id, o, p }), prev = existsSync(file) ? readFileSync(file, "utf8") : "";
     if (prev !== txt) { writeFileSync(file, txt); ecrits++; }
     all.push(...o); p.forEach(x => press.push({ ...x, id }));
   }
   all.sort((a, b) => b.d.localeCompare(a.d));
+  // 6/11 (Uber : « 512 M$ (+30 % sur un an) » dans le communiqué, « 512 M$ (−92 % sur un an) » dans le 10-Q) : même entreprise, même montant,
+  // variation différente → la variation du rapport déposé (10-Q, 10-K, 20-F, chiffres structurés) remplace celle lue dans le texte du communiqué.
+  accorderVariations(all);
   // Fichiers par jour (annonces non routinières), 90 jours
   const byDay = {};
   for (const x of all) if (!ROUTINE.has(x.c)) (byDay[day(x.d)] = byDay[day(x.d)] || []).push(x);
@@ -438,3 +442,19 @@ async function main() {
   ecrire();
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error(e); process.exit(1); });
+
+// Même entreprise, même montant affiché (« 512 M$ »), variation différente : on garde celle du rapport déposé (10-Q / 10-K / 20-F / 40-F).
+export function accorderVariations(all) {
+  const RAPPORT = /\b(10-Q|10-K|20-F|40-F)\b/, re = /^(.*?) \(([−+-]?[\d  ,]+ %) sur un an\)$/;
+  const parId = {}; for (const x of all) if (Array.isArray(x.f) && x.f.length) (parId[x.id] = parId[x.id] || []).push(x);
+  let n = 0;
+  for (const L of Object.values(parId)) {
+    const ref = new Map();
+    for (const x of L) if (RAPPORT.test(x.t || "")) for (const [k, v] of x.f) { const m = String(v).match(re); if (m) ref.set(k.split(" ")[0] + "|" + m[1], m[2]); }
+    if (!ref.size) continue;
+    for (const x of L) { if (RAPPORT.test(x.t || "")) continue;
+      x.f = x.f.map(([k, v]) => { const m = String(v).match(re), r = m && ref.get(k.split(" ")[0] + "|" + m[1]); if (r && r !== m[2]) { n++; if (Array.isArray(x.r)) x.r = x.r.filter(l => !/bénéfice|ventes/i.test(l)); return [k, `${m[1]} (${r} sur un an)`]; } return [k, v]; }); }
+  }
+  if (n) console.log("variations accordées sur le rapport déposé :", n);
+  return n;
+}

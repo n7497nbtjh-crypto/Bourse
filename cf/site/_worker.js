@@ -217,6 +217,15 @@ bilan.`);
   return json({ error: "Introuvable." }, 404);
 }
 var PROVIDERS = [
+  // 6/11 : Cloudflare Email Service (offre Workers payante : 3 000 e-mails par mois compris, puis 0,35 $ les 1 000). Lien EMAIL (send_email) s'il existe, sinon API avec CF_EMAIL_TOKEN + CF_ACCOUNT_ID.
+  ["cloudflare", (env) => env.EMAIL || env.CF_EMAIL_TOKEN && env.CF_ACCOUNT_ID, 1e3, async (env, to, subject, text, html) => {
+    let m = { to, from: { email: env.MAIL_FROM, name: "ENKLAIR" }, subject, text, ...html ? { html } : {} };
+    try {
+      return env.EMAIL ? (await env.EMAIL.send(m), { ok: !0 }) : await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/email/sending/send`, { method: "POST", headers: { authorization: "Bearer " + env.CF_EMAIL_TOKEN, "content-type": "application/json" }, body: JSON.stringify({ ...m, from: `ENKLAIR <${env.MAIL_FROM}>` }) });
+    } catch {
+      return { ok: !1 };
+    }
+  }],
   ["brevo", (env) => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "ENKLAIR" }, to: [{ email: to }], subject, textContent: text, htmlContent: html || void 0 }) })],
   ["mailjet", (env) => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "ENKLAIR" }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || void 0 }] }) })],
   ["resend", (env) => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `ENKLAIR <${env.MAIL_FROM}>`, to, subject, text, html: html || void 0 }) })]
@@ -837,6 +846,7 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annonc\xE9, avec les chiffres fournis et leur p\xE9riode, et expliquent chaque terme technique.
 - "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
+- Pour un article de presse dont seul le titre est connu : dis ce que le titre rapporte, en pr\xE9cisant que c'est un article de presse et non une annonce officielle de l'entreprise, sans rien ajouter qui n'y figure pas ; explique les termes techniques ; dans \xAB change \xBB, dis ce que cela pourrait changer si l'information se confirme.
 - Pour un dividende, ne compare jamais un versement trimestriel \xE0 un dividende annuel : compare seulement des versements de m\xEAme nature, et seulement si les deux montants sont fournis.
 - Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
 - Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
@@ -894,7 +904,7 @@ async function compter(env, h, neurones, per = jour()) {
 var plafonds = (env) => ({
   neurones: +env.IA_NEURONES_JOUR || 9e3,
   budget: Math.max(0, +env.IA_BUDGET_MOIS || 0) * NEURONES_PAR_EURO,
-  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 5, compte: +env.IA_GRATUIT_SEMAINE || 5, premium: +env.IA_PREMIUM_JOUR || 30 }
+  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 3, compte: +env.IA_GRATUIT_SEMAINE || 3, premium: +env.IA_PREMIUM_JOUR || 30 }
 }), siteOk = (c, P, marge) => c.neurones + marge < P.neurones || P.budget > 0 && c.payes_mois + marge < P.budget;
 async function empreinte(t) {
   let d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
@@ -1950,7 +1960,7 @@ async function notifier(env, compteId, type, texte, lien2, jour2, extra = "") {
   let r = await env.DB.prepare("INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)").bind(compteId, Date.now(), type, texte.slice(0, 400), lien2, [type, lien2, jour2, extra].join("|").slice(0, 500)).run();
   return r && r.meta && r.meta.changes || 0;
 }
-var COMPTEURS_OK = /* @__PURE__ */ new Set(["visite", "fiche", "src:moteur", "src:x", "src:autre", "suivre", "apercu-alerte", "rapport-exemple", "premium-vue"]);
+var COMPTEURS_OK = /* @__PURE__ */ new Set(["visite", "fiche", "src:moteur", "src:x", "src:autre", "suivre", "apercu-alerte", "rapport-exemple", "premium-vue", "fiche-verrou"]);
 async function compterEvt(env, cles) {
   if (!env || !env.DB) return;
   let sem = semaineIso(jourParis());
@@ -2995,7 +3005,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "625a0fc7338ccb2c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "0afa14c38e296412", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3080,7 +3090,7 @@ async function etfMeta(id, env, url, SITE2) {
 var json5 = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } }), lundi2 = () => {
   let d = /* @__PURE__ */ new Date();
   return d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7), d.toISOString().slice(0, 10);
-}, PLAFONDS = { comparer: 5 };
+}, PLAFONDS = { comparer: 3 };
 async function quota(request, env) {
   let url = new URL(request.url), quoi = url.pathname.split("/")[3];
   if (!PLAFONDS[quoi]) return json5({ error: "Introuvable" }, 404);
@@ -3547,7 +3557,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname === "/api/compteur" && request.method === "POST") {
       let e = url.searchParams.get("e") || "";
-      if (COMPTEURS_OK.has(e) && ["suivre", "apercu-alerte", "rapport-exemple", "premium-vue"].includes(e)) {
+      if (COMPTEURS_OK.has(e) && ["suivre", "apercu-alerte", "rapport-exemple", "premium-vue", "fiche-verrou"].includes(e)) {
         let pr = compterEvt(env, [e]);
         ctx && typeof ctx.waitUntil == "function" ? ctx.waitUntil(pr) : await pr;
       }
