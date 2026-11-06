@@ -582,12 +582,13 @@ synPageHTML = synPageV6;
 function synLangue(t) { // 5/11 : « Apple inquieta al mercado por la… » était pris pour du français (« la »)
   const s = " " + String(t || "").toLowerCase() + " ", n = re => (s.match(re) || []).length;
   if (/[\u4e00-\u9fff]/.test(s)) return "zh";
-  const fr = n(/ (le|les|des|du|une|un|et|pour|avec|sur|est|au|aux|dans|qui|de|la|son|sa|ses|en|à|ce) /g) + (/[àâçèêëîïôûœ]/.test(s) ? 2 : 0);
+  const fr = n(/ (le|les|des|du|une|un|et|pour|avec|sur|est|au|aux|dans|qui|de|la|son|sa|ses|en|à|ce) /g) + (/[àâçèêëîïôûœ]/.test(s.replace(/hermès|l'oréal|société générale|nestlé|hennes/g, "")) ? 2 : 0);
   const es = n(/ (el|los|las|del|por|para|con|y|una|que|al|sobre) /g) + (/[ñáíóú¿¡]/.test(s) ? 2 : 0);
   const de = n(/ (der|die|das|und|mit|für|aktie|von) /g) + (/[äöüß]/.test(s) ? 2 : 0);
   const it = n(/ (il|della|delle|per|con|di|che|gli) /g);
-  const best = Object.entries({ fr, es, de, it }).sort((a, b) => b[1] - a[1])[0];
-  return best[1] >= 2 ? best[0] : "en";
+  const en = n(/ (the|and|of|in|on|to|its|from|by|at|with|for|is|are|as) /g); // 6/11 : « The Birkin fund cashing in on the Hermès… » passait pour du français (accent du nom)
+  const best = Object.entries({ fr, es, de, it, en }).sort((a, b) => b[1] - a[1])[0];
+  return best[1] >= 2 && best[0] !== "en" ? best[0] : "en";
 }
 const SYN7_DOT = { "t-res": "#E0B400", "t-div": "#00A06B", "t-rach": "#8A8A80", "t-acc": "#8B5CF6", "t-dir": "#F08C2E", "t-obl": "#F08C2E", "t-pr": "#4C7BF2" };
 function s7Exp(a) { return `<button type="button" class="s7-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer avec l'IA</button><div class="syn4-cl"></div>`; } // 6/11 : l'IA explique chaque annonce (comme dans les versions précédentes)
