@@ -1,0 +1,150 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#000}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;background:#fff;font-family:Inter,sans-serif}
+.L{position:absolute;inset:0;opacity:0;will-change:transform,opacity}
+.c{position:absolute;left:0;right:0;text-align:center}
+.big{font:800 150px/0.95 "Bricolage Grotesque";letter-spacing:-6px}
+.mid{font:800 96px/1 "Bricolage Grotesque";letter-spacing:-3px}
+.sm{font:600 40px/1.3 Inter;letter-spacing:-.5px}
+.hl{display:inline-block;background:#FFE14D;color:#111;padding:0 22px 8px;border-radius:24px;border:6px solid #111;transform:rotate(-3deg)}
+.phone{position:absolute;width:660px;height:1388px;left:210px;top:270px;border-radius:96px;background:#111;padding:22px;box-shadow:0 60px 120px rgba(0,0,0,.28),0 0 0 3px #2a2a2a inset}
+.phone .scr{width:100%;height:100%;border-radius:76px;overflow:hidden;background:#fff;position:relative}
+.phone img{width:100%;display:block}
+.phone .isl{position:absolute;top:44px;left:50%;width:180px;height:52px;margin-left:-90px;border-radius:30px;background:#111;z-index:3}
+.card{position:absolute;border:6px solid #111;border-radius:44px;background:#fff;box-shadow:18px 18px 0 #111;overflow:hidden}
+.card img{display:block;width:100%}
+.bar{position:absolute;height:110px;border:6px solid #111;border-radius:60px}
+.stamp{position:absolute;white-space:nowrap;font:700 104px/1 Caveat,"Bricolage Grotesque";color:#C0262D}
+.tap{position:absolute;width:160px;height:160px;border-radius:50%;border:8px solid #FFE14D;background:rgba(255,225,77,.25)}
+.ia{position:absolute;left:90px;right:90px;top:560px;background:#fff;border:6px solid #111;border-radius:44px;box-shadow:18px 18px 0 #FFE14D;padding:60px 64px}
+.ia b{font:800 46px "Bricolage Grotesque";display:block;margin-bottom:24px}
+.ia p{font:500 50px/1.36 Inter;color:#111;min-height:340px}
+.ia small{display:block;margin-top:28px;font:500 30px Inter;color:#888}
+.wall{position:absolute;left:50%;top:50%;width:2900px;height:3000px;margin:-1500px 0 0 -1450px;display:grid;grid-template-columns:repeat(4,660px);gap:80px;justify-content:center;align-content:center}
+.wall .phone{position:relative;left:auto;top:auto;box-shadow:0 40px 80px rgba(0,0,0,.35)}
+.logo{display:inline-block;background:#fff;border:8px solid #111;border-radius:30px;padding:10px 46px 22px;font:800 150px/1 "Bricolage Grotesque";letter-spacing:-4px;box-shadow:16px 16px 0 #111}
+.cursor{display:inline-block;width:6px;height:52px;background:#111;vertical-align:-8px;margin-left:4px}
+</style></head><body><div id="s">
+
+<!-- 1. Accroche -->
+<div class="L" id="A" style="background:#0d0d0d;color:#fff">
+  <div class="c big" id="A1" style="top:700px">Une action.</div>
+  <div class="c big" id="A2" style="top:880px"><span class="hl">30 secondes.</span></div>
+</div>
+<!-- 2. Téléphone Hermès -->
+<div class="L" id="B" style="background:#F4F4F1">
+  <div class="c mid" id="B0" style="top:120px">Hermès, en clair.</div>
+  <div id="Bcam" style="position:absolute;inset:0;transform-origin:540px 960px">
+    <div class="phone" id="Bp"><div class="scr"><div class="isl"></div><img src="tel_hermes.png"></div></div>
+  </div>
+</div>
+<!-- 3. 16 Md€ et médiane -->
+<div class="L" id="C" style="background:#FFE14D">
+  <div class="c sm" style="top:470px;font-weight:700">Ses ventes en 2025</div>
+  <div class="c" id="Cn" style="top:540px;font:800 300px/1 'Bricolage Grotesque';letter-spacing:-12px">16 Md€</div>
+  <div style="position:absolute;left:110px;top:1010px;font:700 40px Inter">Hermès</div>
+  <div class="bar" id="Cb1" style="left:110px;top:1070px;width:860px;background:#111"></div>
+  <div style="position:absolute;left:110px;top:1240px;font:600 40px Inter">Médiane du secteur · 4,5 Md€</div>
+  <div class="bar" id="Cb2" style="left:110px;top:1300px;width:240px;background:#fff"></div>
+  <div class="stamp" id="Cs" style="left:380px;top:1300px;font-size:92px;transform:rotate(-6deg)">3,6 fois la médiane !</div>
+</div>
+<!-- 4. Verdict face aux rivales -->
+<div class="L" id="D" style="background:#fff">
+  <div class="c mid" id="D0" style="top:190px">Face à ses <span class="hl">rivales.</span></div>
+  <div class="card" id="Dc" style="left:60px;top:470px;width:960px"><img src="verdict.png" id="Di"></div>
+  <div id="Dm" style="position:absolute;left:66px;width:948px;background:#fff"></div>
+  <div class="c sm" id="D1" style="top:1500px;color:#555">Chaque repère placé face à la médiane<br>de LVMH, Kering et Moncler.</div>
+</div>
+<!-- 5. Rapport -->
+<div class="L" id="E" style="background:#0d0d0d;color:#fff">
+  <div class="c big" id="E1" style="top:620px">Chaque samedi,</div>
+  <div class="c big" id="E2" style="top:790px"><span class="hl">votre rapport.</span></div>
+  <div id="Ecam" style="position:absolute;inset:0;transform-origin:540px 960px">
+    <div class="card" id="Ec" style="left:40px;top:560px;width:1000px;border-color:#fff;box-shadow:18px 18px 0 #FFE14D"><img src="apple_une.png"></div>
+  </div>
+  <div class="tap" id="Et" style="left:240px;top:1090px"></div>
+</div>
+<!-- 6. IA -->
+<div class="L" id="F" style="background:#F4F4F1">
+  <div class="c mid" id="F0" style="top:250px">Une annonce ?<br>On vous l'explique.</div>
+  <div class="ia" id="Fc"><b>✦ En clair</b><p id="Ft"></p><small>Rédigé par l'IA d'ENKLAIR à partir de l'annonce officielle. La source fait foi.</small></div>
+</div>
+<!-- 7. Mur d'écrans -->
+<div class="L" id="G" style="background:#111">
+  <div id="Gw" style="position:absolute;inset:0;transform-origin:540px 960px">
+    <div class="wall" id="Gg">
+      <div class="phone"><div class="scr"><img src="tel_accueil.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_comparer.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_etf.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_rapport.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_portefeuille.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_hermes.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_rapport.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_accueil.png"></div></div>
+    </div>
+  </div>
+  <div id="Gt" style="position:absolute;left:0;right:0;bottom:0;height:820px;background:linear-gradient(transparent,rgba(0,0,0,.9) 55%)"></div>
+  <div class="c mid" id="G1" style="top:1330px;color:#fff">3 338 entreprises.</div>
+  <div class="c mid" id="G2" style="top:1450px;color:#fff">1 174 ETF.</div>
+  <div class="c mid" id="G3" style="top:1570px;color:#FFE14D">Gratuit.</div>
+</div>
+<!-- 8. Fin -->
+<div class="L" id="H" style="background:#FFE14D">
+  <div class="c" id="H1" style="top:690px"><span class="logo">ENKLAIR</span></div>
+  <div class="c mid" id="H2" style="top:960px">enklair.com</div>
+  <div class="c sm" id="H3" style="top:1110px;font-weight:600">Des faits. Jamais de conseil.</div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const k = (t, t0, d) => cl((t - t0) / d);
+const eo = x => 1 - Math.pow(1 - x, 3), eio = x => x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = x => { const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const pop = (el, t, t0, d = .35, dy = 60) => { const x = k(t, t0, d), e = back(x); el.style.opacity = cl(x * 3); el.style.transform = `translateY(${(1 - e) * dy}px) scale(${.85 + .15 * e})`; };
+const show = (id, t, a, b) => { const on = t >= a && t < b; $(id).style.opacity = on ? 1 : 0; return on; };
+// transitions « whip » : zoom + flou de quelques images entre deux scènes
+const whip = (el, t, a, b) => { const i = k(t, a, .2), o = k(t, b - .2, .2); const s = 1 + (1 - eo(i)) * .25 + eo(o) * .35, bl = (1 - i) * 18 + o * 22; el.style.transform = `scale(${s})`; el.style.filter = bl > .3 ? `blur(${bl}px)` : "none"; };
+const TXT = "Apple a vendu pour 114,5 milliards de dollars entre juillet et septembre, 12 % de plus qu'un an plus tôt. Chaque action a rapporté 2,10 $ de bénéfice.";
+window.render = t => {
+  // 1. 0 - 2.4
+  if (show("A", t, 0, 2.4)) { whip($("A"), t, -1, 2.4); pop($("A1"), t, .15); pop($("A2"), t, .9, .4, 80);
+    const z = k(t, 1.9, .5); if (z > 0) $("A").style.transform = `scale(${1 + Math.pow(z, 3) * 9})`; }
+  // 2. 2.4 - 5.4
+  if (show("B", t, 2.4, 5.4)) { whip($("B"), t, 2.4, 5.4); pop($("B0"), t, 2.55);
+    const r = eo(k(t, 2.4, .9)); $("Bp").style.transform = `perspective(2400px) translateY(${(1 - r) * 900}px) rotateX(${(1 - r) * 28}deg) rotateZ(${(1 - r) * -6}deg)`;
+    const z = eio(k(t, 3.9, .9)); $("Bcam").style.transform = `translate(${z * 40}px,${z * -560}px) scale(${1 + z * 1.15})`; $("B0").style.opacity = 1 - z; }
+  // 3. 5.4 - 8.6
+  if (show("C", t, 5.4, 8.6)) { whip($("C"), t, 5.4, 8.6); const n = eo(k(t, 5.5, .9)); $("Cn").textContent = (n < 1 ? (16 * n).toFixed(1).replace(".", ",") : "16") + " Md€";
+    $("Cn").style.transform = `scale(${1.25 - .25 * eo(k(t, 5.4, .5))})`;
+    $("Cb1").style.width = 860 * eo(k(t, 6.5, .6)) + "px"; $("Cb2").style.width = 240 * eo(k(t, 6.8, .5)) + "px";
+    const s = k(t, 7.4, .25); $("Cs").style.opacity = s; $("Cs").style.transform = `rotate(-6deg) scale(${2 - back(s)})`; }
+  // 4. 8.6 - 12.0
+  if (show("D", t, 8.6, 12.0)) { whip($("D"), t, 8.6, 12.0); pop($("D0"), t, 8.7);
+    const c = eo(k(t, 8.75, .5)); $("Dc").style.transform = `translateY(${(1 - c) * 400}px) scale(${.9 + .1 * c})`; $("Dc").style.opacity = c;
+    // lignes des 5 repères dévoilées une par beat
+    const H = $("Di").getBoundingClientRect(), img = $("Di"), ratio = img.clientHeight / 486; const top0 = 470 + 6 + 200 * ratio, rowH = 48.5 * ratio;
+    const n = Math.floor(cl((t - 9.4) / .4, 0, 5.9)); $("Dm").style.top = (top0 + n * rowH) + "px"; $("Dm").style.height = Math.max(0, (5 - n) * rowH + 6) + "px"; $("Dm").style.opacity = c >= 1 && n < 5 ? 1 : (c < 1 ? 1 : 0);
+    pop($("D1"), t, 11.2); $("D").style.transform += ` translateY(${-eio(k(t, 10.9, 1.1)) * 0}px)`; }
+  // 5. 12.0 - 16.2
+  if (show("E", t, 12.0, 16.2)) { whip($("E"), t, 12.0, 16.2); pop($("E1"), t, 12.05); pop($("E2"), t, 12.5, .4, 80);
+    const out = eo(k(t, 13.1, .35)); $("E1").style.opacity = 1 - out; $("E2").style.opacity = 1 - out;
+    const c = back(k(t, 13.3, .55)); $("Ec").style.opacity = k(t, 13.3, .2); $("Ec").style.transform = `translateX(${(1 - c) * 900}px) rotate(${(1 - c) * 8}deg)`;
+    const z = eio(k(t, 14.2, .9)); $("Ecam").style.transform = `translate(${z * 330}px,${z * 160}px) scale(${1 + z * .75})`;
+    const tp = k(t, 15.45, .5); $("Et").style.opacity = tp > 0 && tp < 1 ? 1 - tp : 0; $("Et").style.transform = `scale(${.4 + tp * 1.4})`; }
+  // 6. 16.2 - 20.0
+  if (show("F", t, 16.2, 20.0)) { whip($("F"), t, 16.2, 20.0); pop($("F0"), t, 16.3); pop($("Fc"), t, 16.6, .4, 120);
+    const n = Math.floor(TXT.length * cl((t - 17.0) / 2.2)); $("Ft").innerHTML = TXT.slice(0, n) + (n < TXT.length ? '<span class="cursor"></span>' : ""); }
+  // 7. 20.0 - 23.6
+  if (show("G", t, 20.0, 23.6)) { whip($("G"), t, 20.0, 23.6); const z = k(t, 20.0, 3.6);
+    $("Gw").style.transform = `perspective(3000px) rotateX(${28 - 8 * z}deg) rotateZ(${-14 + 4 * z}deg) scale(${1.25 - .55 * eio(z)}) translateY(${-200 + 260 * z}px)`;
+    pop($("G1"), t, 20.9); pop($("G2"), t, 21.4); pop($("G3"), t, 21.9, .35, 80); }
+  // 8. 23.6 - 27
+  if (show("H", t, 23.6, 27.5)) { whip($("H"), t, 23.6, 99); const l = back(k(t, 23.7, .5)); $("H1").style.transform = `scale(${l}) rotate(${(1 - l) * -12 - 2}deg)`; $("H1").style.opacity = k(t, 23.7, .15);
+    pop($("H2"), t, 24.3); pop($("H3"), t, 24.8); }
+};
+window.render(0);
+</script></body></html>

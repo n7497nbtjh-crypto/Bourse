@@ -4,7 +4,7 @@ const { chromium } = require("playwright"), fs = require("fs"), path = require("
 const ROOT = path.join(__dirname, "..", "cf", "site");
 async function ouvrir(opts = {}) {
   const b = await chromium.launch();
-  const ctx = await b.newContext({ viewport: opts.viewport || { width: 1280, height: 900 }, serviceWorkers: "block" });
+  const ctx = await b.newContext({ viewport: opts.viewport || { width: 1280, height: 900 }, serviceWorkers: "block", deviceScaleFactor: opts.deviceScaleFactor || 1, isMobile: !!opts.isMobile, hasTouch: !!opts.isMobile });
   const p = await ctx.newPage();
   await p.route(/.*/, r => {
     const u = r.request().url();
