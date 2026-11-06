@@ -35,18 +35,16 @@ export async function rivalesDe(d, n, lundi, auj) {
     const own = l.variation_semaine_pct, res = (n.annonces || []).some(a => a.k === l.k && a.origine !== "presse" && a.categorie === "resultats");
     out[l.k].verdict = res ? "resultats" : own == null || vs.length < 2 ? null : own - out[l.k].med > 2 ? "mieux" : own - out[l.k].med < -2 ? "moins" : "suit";
   }
-  // Nouvelles des rivales (par paquets de 20, la limite de actuDe)
-  const tous = [...new Set(Object.values(parCo).flat())];
-  const A = {};
-  for (let i = 0; i < tous.length && d.actuDe; i += 20) Object.assign(A, await d.actuDe(tous.slice(i, i + 20)).catch(() => ({})));
+  // Nouvelles des rivales : un seul fichier pour toutes les entreprises (data/actu_semaine.mjs, construit avec le site).
+  // Avant : un fichier par rivale, et Cloudflare limite les lectures par appel (le rapport perdait ensuite l'IA et la radiographie).
+  const S = (d.actuSem && d.actuSem.items) || {};
   const dans = x => { const j = String(x || "").slice(0, 10); return j >= lundi && j <= addJ(lundi, 6); };
   for (const [k, ids] of Object.entries(parCo)) {
     const off = [], pr = [];
-    for (const id of ids) { const j = A["c:" + id]; if (!j) continue;
-      for (const a of (Array.isArray(j.o) ? j.o : [])) if (a && dans(a.d) && RIV_CAT.has(a.c) && /^https:\/\//.test(a.u || ""))
-        off.push({ k: "c:" + id, nom: d.names["c:" + id], date: String(a.d).slice(0, 10), categorie: a.c, titre: a.tf || a.t || "", chiffres: Array.isArray(a.f) ? a.f.slice(0, 3) : [], source: a.u, origine: "officiel" });
-      for (const a of (Array.isArray(j.p) ? j.p : [])) if (a && dans(a.d) && FAIT.test(a.t || "") && !OPIN.test(a.t || "") && /^https:\/\//.test(a.u || ""))
-        pr.push({ k: "c:" + id, nom: d.names["c:" + id], date: String(a.d).slice(0, 10), categorie: "presse", titre: a.t, chiffres: [], source: a.u, site: a.s || null, origine: "presse" });
+    for (const id of ids) for (const a of S[id] || []) {
+      if (!a || !dans(a.d) || !/^https:\/\//.test(a.u || "")) continue;
+      if (a.p) { if (FAIT.test(a.t || "") && !OPIN.test(a.t || "")) pr.push({ k: "c:" + id, nom: d.names["c:" + id], date: a.d, categorie: "presse", titre: a.t, chiffres: [], source: a.u, site: a.s || null, origine: "presse" }); }
+      else if (RIV_CAT.has(a.c)) off.push({ k: "c:" + id, nom: d.names["c:" + id], date: a.d, categorie: a.c, titre: a.t || "", chiffres: Array.isArray(a.f) ? a.f : [], source: a.u, origine: "officiel" });
     }
     off.sort((a, b) => (b.chiffres.length - a.chiffres.length) || ((b.categorie === "resultats") - (a.categorie === "resultats")) || b.date.localeCompare(a.date));
     const vus = new Set(), choix = [];
@@ -179,11 +177,8 @@ export async function enrichir8(env, d, n, pf, semaine, auj) {
 /* ---------- Les faits donnés à l'IA pour chaque entreprise (6/11 soir : « une interprétation plus pertinente ») ---------- */
 export async function faitsEntreprise(d, n, l, A) {
   const R = (n.rivales || {})[l.k] || null;
-  let comptes = null;
-  try { const s = d.charger ? await d.charger(`/data/societes/${l.k.slice(2)}.json`) : null;
-    if (s && s.fin && Array.isArray(s.fin.ca) && s.years) { const c = s.fin.ca, i = c.length - 1;
-      comptes = { exercice: s.years[i], devise: s.currency, ventes_millions: c[i], croissance_ventes_pct: c[i - 1] > 0 ? r1((c[i] / c[i - 1] - 1) * 100) : null,
-        benefice_net_millions: s.fin.net ? s.fin.net[i] : null }; } } catch (e) { }
+  const C = d.actuSem && d.actuSem.comptes && d.actuSem.comptes[l.k.slice(2)]; // [an, devise, ventes, ventes an-1, bénéfice] (data/actu_semaine.mjs)
+  const comptes = C ? { exercice: C[0], devise: C[1], ventes_millions: C[2], croissance_ventes_pct: C[3] > 0 ? r1((C[2] / C[3] - 1) * 100) : null, benefice_net_millions: C[4] } : null;
   const monde = ((n.monde && n.monde.sujets) || []).filter(s => s.touche.some(t => t.k === l.k)).map(s => ({ sujet: s.titre, fait: s.fait }));
   return {
     entreprise: l.nom, secteur: (SECTEURS[(d.meta[l.k] || {}).sector] || null), variation_semaine_pct: l.variation_semaine_pct,

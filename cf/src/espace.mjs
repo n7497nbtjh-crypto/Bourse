@@ -147,7 +147,7 @@ const jourSemaine = ymd => new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 dimanc
 /* ---------- Données du site (mêmes sources que les pages) ---------- */
 async function siteData(request, env) {
   const get = async p => { try { const r = await env.ASSETS.fetch(new Request(new URL(p, request.url))); return r.ok === false ? null : await r.json(); } catch (e) { return null; } };
-  const [conc, monde, contexte] = await Promise.all([get("/data/concurrents.json"), get("/data/actu/monde.json"), get("/data/contexte.json")]); // 6/11 soir : rapport v8 (cf/src/rapport8.mjs)
+  const [conc, monde, contexte, actuSem] = await Promise.all([get("/data/concurrents.json"), get("/data/actu/monde.json"), get("/data/contexte.json"), get("/data/actu/semaine.json")]); // 6/11 soir : rapport v8 (cf/src/rapport8.mjs)
   const [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]);
   let px = {}; try { px = (await coursComplets(new Request(new URL("/api/cours", request.url)), null, env)).items || {}; } catch (e) { }
   const names = {}, meta = {}, isin = {}, etfm = {};
@@ -155,7 +155,7 @@ async function siteData(request, env) {
   (etf && etf.list || []).forEach(e => { names["e:" + e.id] = e.name; etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index, proxy: e.proxy || null }; });
   const parIsin = Object.fromEntries(Object.entries(isin).map(([k, v]) => [v, k])), memo = new Map(), charger = p => { if (!memo.has(p)) memo.set(p, get(p)); return memo.get(p); };
   const actuCache = new Map();
-  return { names, meta, isin, parIsin, charger, conc: conc || {}, monde, contexte, etf: etfm, px, fx: (fx && fx.eur) || { EUR: 1 }, cs: cs && Array.isArray(cs.dates) ? cs : null, sem: sem && sem.items ? sem : null,
+  return { names, meta, isin, parIsin, charger, conc: conc || {}, monde, contexte, actuSem, etf: etfm, px, fx: (fx && fx.eur) || { EUR: 1 }, cs: cs && Array.isArray(cs.dates) ? cs : null, sem: sem && sem.items ? sem : null,
     ana: (ana && ana.items) || {}, ev: [...((ag && ag.events) || []), ...((agAuto && agAuto.events) || [])],
     div: [...((dvUs && dvUs.events) || []), ...((dvEu && dvEu.events) || [])], // 4/11 : calendriers des dividendes (Nasdaq, annonces européennes), alertes Premium
     // Articles par entreprise publiés par la collecte d'actualités (cf/site/data/actu/c/<id>.json), lus à la demande
@@ -220,7 +220,7 @@ async function iaEntreprises(env, d, n, prec) {
   const par = {}; for (const a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
   // 6/11 soir : aussi les entreprises sans annonce mais qui ont bougé d'au moins 3 % (l'IA explique avec les rivales), 12 au plus
   const fort = l => l.k.startsWith("c:") && Math.abs(l.variation_semaine_pct || 0) >= 3;
-  const cles = (n.lignes || []).filter(l => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => ((par[b.k] || []).length - (par[a.k] || []).length) || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 12);
+  const cles = (n.lignes || []).filter(l => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => ((par[b.k] || []).length - (par[a.k] || []).length) || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 8); // 8 au plus (6/11 soir : limite de lectures par appel chez Cloudflare)
   for (const l of cles) {
     const faits = await faitsEntreprise(d, n, l, par[l.k] || []);
     const sig = JSON.stringify(faits);

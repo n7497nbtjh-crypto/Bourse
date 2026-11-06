@@ -183,6 +183,7 @@ export async function iaJSON(env, prefixe, sys, faits, max, valide) {
       const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
       try { await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), reel, reel).run(); } catch (e) { }
       repondu = true;
+      if (!x) break; // réponse refusée : pas de second modèle (chaque appel compte dans la limite de Cloudflare), la phrase calculée s'affiche
       if (x) {
         try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)`).bind(k, JSON.stringify(x), nom, Date.now()).run(); if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_syn WHERE at < ?`).bind(Date.now() - 10 * 864e5).run(); } catch (e) { }
         return { ...x, modele: nom };

@@ -8,9 +8,10 @@ globalThis.fetch = async () => new Response("", { status: 404 }); // aucun accè
 const stmt = (q, p = []) => ({ bind: (...a) => stmt(q, a), all: async () => ({ results: sql.prepare(q).all(...p) }), first: async () => sql.prepare(q).get(...p) ?? null, run: async () => { sql.prepare(q).run(...p); return { meta: { changes: 1 } }; } });
 const ROOT = new URL("../cf/site/", import.meta.url);
 const appels = { monde: 0, entreprise: 0 }, faitsVus = [];
+let lectures = 0; // lectures de fichiers par appel : Cloudflare en limite le nombre (50 sur l'offre gratuite) ; le 6/11 le rapport dépassait et perdait l'IA
 const env = {
   DB: { prepare: q => stmt(q), batch: async l => Promise.all(l.map(s => s.all())) },
-  ASSETS: { fetch: async req => { const p = decodeURIComponent(new URL(req.url || String(req)).pathname).replace(/^\//, ""), f = new URL(p, ROOT); return existsSync(f) ? new Response(readFileSync(f)) : new Response("", { status: 404 }); } },
+  ASSETS: { fetch: async req => { lectures++; const p = decodeURIComponent(new URL(req.url || String(req)).pathname).replace(/^\//, ""), f = new URL(p, ROOT); return existsSync(f) ? new Response(readFileSync(f)) : new Response("", { status: 404 }); } },
   AI: { run: async (model, { messages }) => {
     const sys = messages[0].content, user = messages[1].content.replace(/\n\/no_think$/, ""), f = JSON.parse(user);
     if (sys.startsWith("Tu choisis")) { appels.monde++;
@@ -30,6 +31,7 @@ let ok = 0, ko = 0; const t = (c, m) => { if (c) ok++; else { ko++; console.log(
 const r = await rapportExemple(new Request("https://enklair.com/api/rapport-exemple"), env), b = await r.json();
 if (process.env.R8_JSON) (await import("node:fs")).writeFileSync(process.env.R8_JSON, JSON.stringify(b)); // pour les captures (scripts locaux)
 t(b.v === 4, "version 4 du rapport");
+console.log("Lectures de fichiers pour un rapport :", lectures); t(lectures <= 40, `au plus 40 lectures de fichiers par rapport (${lectures})`);
 const R = b.rivales || {};
 t(R["c:asml"] && R["c:asml"].liste.length >= 3, "ASML a ses rivales");
 t(R["c:totalenergies"] && R["c:totalenergies"].liste.some(x => x.k === "c:shell"), "TotalEnergies face à Shell");
