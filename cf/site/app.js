@@ -2912,7 +2912,7 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   // 5/11 (Romain : « une fiche vide fait amateur ») : une entreprise sans comptes relevés n'est pas montrée ; elle revient seule dès que
   // ses comptes arrivent (les robots continuent de les chercher dans data/univers.mjs). Son adresse renvoie vers /entreprises.
   const tout = uni.companies.map(u => ({ ...(S[u.id] || { missing: true }), ...u }));
-  window.SANS_COMPTES = new Set(tout.filter(c => c.missing || c.year == null).map(c => c.id));
+  window.SANS_COMPTES = new Set(tout.filter(c => c.missing || c.year == null || Date.now() >= Date.UTC(c.year + 2, 6, 1)).map(c => c.id)); // 6/11 (Romain) : comptes trop anciens (exercice N encore affiché après juin N+2) masqués aussi ; ils reviennent avec leurs comptes
   R = { ...r, regions: uni.regions, companies: tout.filter(c => !SANS_COMPTES.has(c.id)) };
   R.companies.forEach(c => { RBY[c.id] = c; if (c.isin) ISINBY[c.isin] = c; });
   fichesMerge(); // si les textes de fiche sont déjà arrivés (accueil)
