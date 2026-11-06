@@ -1,0 +1,72 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#FFE14D}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;background:#FFE14D;font-family:Inter,sans-serif;color:#111}
+.hook{position:absolute;left:70px;right:70px;font:800 168px/.98 "Bricolage Grotesque";letter-spacing:-7px}
+.w{display:inline-block;transform-origin:50% 60%}
+.hl{background:#fff;border:8px solid #111;border-radius:28px;padding:0 20px 10px;box-shadow:12px 12px 0 #111;display:inline-block}
+#grp{position:absolute;inset:0;transform-origin:0 0}
+#phone{position:absolute;left:190px;top:400px;width:700px;height:1468px;border-radius:104px;background:#111;padding:20px;box-shadow:20px 20px 0 rgba(0,0,0,.16)}
+#scr{position:relative;width:660px;height:1428px;border-radius:86px;overflow:hidden;background:#fff}
+#scr img{position:absolute;left:0;top:0;width:660px;height:1428px}
+#isl{position:absolute;top:30px;left:50%;width:180px;height:52px;margin-left:-90px;border-radius:30px;background:#111;z-index:3}
+#finger{position:absolute;width:96px;height:96px;margin:-48px 0 0 -48px;border-radius:50%;background:rgba(17,17,17,.28);border:5px solid rgba(255,255,255,.95);box-shadow:0 6px 18px rgba(0,0,0,.25);z-index:4}
+#cap{position:absolute;left:0;right:0;top:150px;height:150px;overflow:hidden;text-align:center}
+#cap div{position:absolute;left:0;right:0;top:0}
+#cap span{display:inline-block;background:#111;color:#fff;font:800 70px/1.1 "Bricolage Grotesque";letter-spacing:-2px;padding:16px 42px 24px;border-radius:28px}
+.logo{display:inline-block;background:#fff;border:9px solid #111;border-radius:34px;padding:10px 50px 24px;font:800 176px/1 "Bricolage Grotesque";letter-spacing:-5px;box-shadow:16px 16px 0 #111}
+</style></head><body><div id="s">
+<div class="hook" id="H" style="top:420px"><span class="w" id="w0">Vous</span> <span class="w" id="w1">investissez</span> <span class="w" id="w2">sans</span> <span class="w" id="w3">lire</span> <span class="w" id="w4">les</span> <span class="w" id="w5"><span class="hl">comptes ?</span></span></div>
+<div class="hook" id="P" style="top:760px;text-align:center;font-size:132px;letter-spacing:-5px"><span class="w" id="p0">ENKLAIR</span><br><span class="w" id="p1">les</span> <span class="w" id="p2">lit</span> <span class="w" id="p3">pour</span> <span class="w" id="p4"><span class="hl">vous.</span></span></div>
+<div id="grp"><div id="phone"><div id="scr"><img id="im1"><img id="im0"><div id="isl"></div><div id="finger"></div></div></div></div>
+<div id="cap"></div>
+<div id="end" style="position:absolute;left:0;right:0;top:640px;text-align:center">
+  <span class="logo" id="lg">ENKLAIR</span>
+  <div id="e1" style="margin-top:70px;font:800 92px 'Bricolage Grotesque';letter-spacing:-2.5px">La Bourse, enfin claire.</div>
+  <div style="margin-top:60px"><span id="e2" style="display:inline-block;background:#111;color:#FFE14D;border-radius:999px;padding:26px 70px;font:800 74px 'Bricolage Grotesque'">enklair.com</span></div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x)), k = (t, t0, d) => cl((t - t0) / d);
+const eo = x => 1 - Math.pow(1 - x, 4), eio = x => x < .5 ? 4 * x ** 3 : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const back = (x, c1 = 1.6) => { const c3 = c1 + 1; return x >= 1 ? 1 : 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const slam = (id, t, t0, d = .24) => { const x = k(t, t0, d), e = eo(x); $(id).style.opacity = x > 0 ? 1 : 0; $(id).style.transform = `scale(${1.55 - .55 * e})`; };
+let D; const T0 = 3.0, FPS = 60, SC = 660 / 390;
+const tm = n => T0 + n / FPS;
+window.setup = d => { D = d; const m = d.marques;
+  // légendes : [heure, texte]
+  window.CAPS = [[T0, "Tapez un nom."], [tm(m.fiche), "Ses comptes, en clair."], [tm(m.verdict) - .2, "Le verdict, face à ses rivales."], [tm(m.comparer), "Comparez en un clic."], [tm(m.cmpMarge) - .2, "Qui garde le plus ?"], [tm(m.rapport), "Votre rapport, chaque samedi."]];
+  $("cap").innerHTML = CAPS.map((c, i) => `<div id="c${i}"><span>${c[1]}</span></div>`).join("");
+  // zooms : [début, fin, x, y (pixels du téléphone), zoom]
+  window.ZO = [[tm(m.tape) - .3, tm(m.fiche) - .5, 195, 330, 1.38], [tm(m.verdict) - .1, tm(m.verdict) + 2.2, 195, 250, 1.5], [tm(m.cmpVerdict) - .1, tm(m.cmpVerdict) + 1.7, 195, 230, 1.38],
+    [tm(m.cmpMarge) - .1, tm(m.cmpMarge) + 1.7, 195, 280, 1.42], [tm(m.rapHermes) - .1, tm(m.rapHermes) + 2.6, 195, 230, 1.32]];
+  window.CUTS = [m.fiche, m.comparer, m.rapport];
+  window.FIN = tm(d.n - 1); };
+window.frameAt = t => { if (!D) return 1; return Math.max(1, Math.min(D.n, Math.floor((t - T0) * FPS) + 1)); };
+window.render = (t, src0, src1, f1) => {
+  ["w0", "w1", "w2", "w3", "w4", "w5"].forEach((w, i) => slam(w, t, .05 + i * .2, i === 5 ? .32 : .22));
+  const ho = eio(k(t, 1.5, .35)); $("H").style.transform = `translateY(${-ho * 700}px)`; $("H").style.opacity = 1 - ho;
+  ["p0", "p1", "p2", "p3", "p4"].forEach((w, i) => slam(w, t, 1.7 + i * .16));
+  const po = eio(k(t, 2.75, .35)); $("P").style.transform = `translateY(${-po * 700}px)`; $("P").style.opacity = 1 - po;
+  // téléphone : monte, vit, puis redescend à la fin
+  const up = back(k(t, 2.75, .75), 1.2), down = eio(k(t, FIN + .1, .6));
+  let z = 1, fx = 540, fy = 960;
+  ZO.forEach(([a, b, x, y, zz]) => { const p = eio(k(t, a, .55)) * (1 - eio(k(t, b - .45, .55))); if (p > 0) { z = 1 + (zz - 1) * p; fx = 540; fy = 420 + y * SC; } });
+  // zoom autour du point (fx, fy), ramené vers le centre de l'écran
+  const p = (z - 1) / .5, cx = 540 + (fx - 540) * 0, tx = (540 - fx) * Math.min(1, p) * .9, ty = (960 - fy) * Math.min(1, p) * .9;
+  $("grp").style.transform = `translate(${tx}px,${(1 - up) * 1600 + down * 1700 + ty}px) translate(${fx}px,${fy}px) scale(${z}) translate(${-fx}px,${-fy}px)`;
+  $("im0").src = src0; $("im1").src = src1 || src0; const e = f1 == null ? 1 : eio(f1); $("im0").style.transform = `translateX(${(1 - e) * 660}px)`; $("im0").style.boxShadow = e < 1 ? "-30px 0 60px rgba(0,0,0,.18)" : "none"; $("im1").style.transform = `translateX(${-e * 180}px)`; $("im1").style.filter = `brightness(${1 - .25 * e})`; $("im1").style.display = f1 == null ? "none" : "block";
+  // doigt
+  const i = frameAt(t) - 1, dg = D && D.doigt[i]; if (dg && dg[0] != null && t >= T0) { $("finger").style.display = "block"; $("finger").style.left = dg[0] * SC + "px"; $("finger").style.top = dg[1] * SC + "px"; $("finger").style.opacity = dg[3]; $("finger").style.transform = `scale(${1 - .25 * dg[2]})`; } else $("finger").style.display = "none";
+  // légendes qui roulent
+  (window.CAPS || []).forEach(([a], j) => { const nx = CAPS[j + 1] ? CAPS[j + 1][0] : FIN + .1, ein = eo(k(t, a, .45)), eout = eio(k(t, nx - .32, .3)); $("c" + j).style.transform = `translateY(${(1 - ein) * 160 - eout * 160}px)`; });
+  $("cap").style.opacity = t < T0 - .1 ? 0 : 1;
+  // fin
+  const l = back(k(t, FIN + .45, .6)); $("lg").style.opacity = k(t, FIN + .45, .12); $("lg").style.transform = `scale(${.6 + .4 * l}) rotate(${-2 * l}deg)`;
+  const e1 = eo(k(t, FIN + .9, .6)); $("e1").style.opacity = e1; $("e1").style.transform = `translateY(${(1 - e1) * 60}px)`;
+  const e2 = back(k(t, FIN + 1.3, .5)); $("e2").style.opacity = k(t, FIN + 1.3, .1); $("e2").style.transform = `scale(${.6 + .4 * e2})`;
+};
+</script></body></html>
