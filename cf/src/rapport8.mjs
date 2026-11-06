@@ -11,6 +11,8 @@ import { iaJSON } from "./iasite.mjs";
 import { CONSIGNES } from "./consignes.mjs";
 
 const r1 = v => Math.round(v * 10) / 10, r0 = v => Math.round(v);
+// Suppositions retirées des textes de l'IA (6/11, premiers textes en ligne : « cela pourrait refléter une confiance accrue », « ont pu influencer le secteur »)
+const SUPPOSE = /pourrai(t|ent)|(a|ont) pu |semble|probablement|sans doute|refl[eè]te/i;
 const addJ = (ymd, n) => { const d = new Date(ymd + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
 const med = a => { const p = a.slice().sort((x, y) => x - y), m = p.length >> 1; return p.length ? (p.length % 2 ? p[m] : (p[m - 1] + p[m]) / 2) : null; };
 const fold = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
@@ -82,7 +84,8 @@ export async function mondeDe(env, d, n, lundi, auj) {
       titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter(i => Number.isInteger(i) && T[i]))].slice(0, 3),
       secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter(x => x in secteurs).slice(0, 3),
       pays: (Array.isArray(s.pays) ? s.pays : []).map(x => String(x).toUpperCase()).filter(x => /^[A-Z]{2}$/.test(x)).slice(0, 3) }))
-      .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 1);
+      .map(s => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter(ph => !SUPPOSE.test(ph)).join(" ") }))
+      .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2); // 6/11 : un sujet porté par un seul titre est écarté
     return S.length ? { sujets: S } : null;
   };
   const r = await iaJSON(env, "monde|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 900, valide).catch(() => null);
@@ -181,10 +184,10 @@ export async function faitsEntreprise(d, n, l, A) {
   const comptes = C ? { exercice: C[0], devise: C[1], ventes_millions: C[2], croissance_ventes_pct: C[3] > 0 ? r1((C[2] / C[3] - 1) * 100) : null, benefice_net_millions: C[4] } : null;
   const monde = ((n.monde && n.monde.sujets) || []).filter(s => s.touche.some(t => t.k === l.k)).map(s => ({ sujet: s.titre, fait: s.fait }));
   return {
-    entreprise: l.nom, secteur: (SECTEURS[(d.meta[l.k] || {}).sector] || null), variation_semaine_pct: l.variation_semaine_pct,
-    indice: l.indice ? { nom: l.indice.nom, variation_pct: l.indice.pct } : null,
+    entreprise: l.nom, secteur: (SECTEURS[(d.meta[l.k] || {}).sector] || null), variation_semaine_pct: l.variation_semaine_pct == null ? null : r1(l.variation_semaine_pct), // arrondi : plus de « 6,67 % »
     verdict_calcule: R ? ({ suit: "suit son secteur", mieux: "mieux que ses rivales", moins: "moins bien que ses rivales", resultats: "résultats publiés" })[R.verdict] || null : null,
-    rivales: R ? R.liste.filter(x => x.v != null).map(x => ({ nom: x.nom, variation_semaine_pct: x.v })) : [],
+    rivales: R ? R.liste.filter(x => x.v != null).map(x => ({ nom: x.nom, variation_semaine_pct: r1(x.v) })) : [],
+    mediane_des_rivales_pct: R && R.med != null ? R.med : null,
     nouvelles_des_rivales: R ? R.nouvelles.map(a => ({ entreprise: a.nom, type: a.origine === "presse" ? "titre de presse" : a.categorie, titre: a.titre, chiffres: a.chiffres })) : [],
     annonces: A.filter(a => a.origine !== "presse").map(a => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
     operations_courantes: A.filter(a => a.origine !== "presse" && (a.categorie === "rachat" || a.categorie === "capital")).length,

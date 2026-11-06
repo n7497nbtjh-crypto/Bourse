@@ -18,7 +18,7 @@ const env = {
       const i = re => f.titres.findIndex(t => re.test(t.titre));
       return { response: JSON.stringify({ sujets: [
         { titre: "Élections américaines : les valeurs de l'IA chahutées", theme: "États-Unis · Politique", fait: "Les Américains ont voté le 3 novembre. La presse relie à ce vote un recul des valeurs liées à l'intelligence artificielle.", titres: [i(/midterms sparked/), i(/AI stocks climb/)], secteurs: ["tech"], pays: ["US"] },
-        { titre: "La Banque d'Angleterre remonte son taux à 4 %", theme: "Royaume-Uni · Taux", fait: "Le 5 novembre, première hausse depuis plus de trois ans. La livre est montée à son plus haut depuis le référendum du Brexit.", titres: [i(/hiked to 4%/), i(/Pound rises/)], secteurs: [], pays: ["GB"] },
+        { titre: "La Banque d'Angleterre remonte son taux à 4 %", theme: "Royaume-Uni · Taux", fait: "Le 5 novembre, première hausse depuis plus de trois ans. La livre est montée à son plus haut depuis le référendum du Brexit. Cela pourrait refléter une confiance accrue.", titres: [i(/hiked to 4%/), i(/Pound rises/)], secteurs: [], pays: ["GB"] },
         { titre: "Sujet inventé", theme: "x", fait: "Un sujet sans titre réel doit être retiré par le serveur, même avec un texte assez long.", titres: [999], secteurs: ["tech"], pays: [] }] }), usage: { prompt_tokens: 3000, completion_tokens: 300 } }; }
     appels.entreprise++; faitsVus.push(f);
     if (f.entreprise === "TotalEnergies") return { response: JSON.stringify({ clair: "TotalEnergies a publié un communiqué. Cela pourrait influencer la structure du capital.", change: "" }) }; // creux : doit être refusé
@@ -41,6 +41,7 @@ t(Object.values(R).every(x => x.nouvelles.every(a => !/rachat|droits de vote/i.t
 console.log("Rivales :", Object.entries(R).map(([k, x]) => `${k} ${x.verdict} méd ${x.med} (${x.nouvelles.length} nouv.)`).join(" · "));
 t(b.monde && b.monde.sujets.length === 2, "monde : 2 sujets gardés, le sujet inventé retiré");
 const s0 = b.monde && b.monde.sujets[0];
+t(b.monde && b.monde.sujets.every(x => !/pourrait/.test(x.fait)), "suppositions retirées du fait (« pourrait refléter »)");
 t(s0 && s0.titres.length === 2 && s0.titres.every(x => /^https:\/\//.test(x.u)), "chaque sujet cite ses titres avec leur lien");
 t(s0 && s0.chiffres.length >= 2, "nos chiffres pour le sujet tech");
 t(s0 && s0.touche.some(x => x.k === "c:asml"), "ASML concernée par le sujet tech");

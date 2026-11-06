@@ -17,7 +17,9 @@ const TERMES = [/\brentable\b/g, /\bendettée\b/g, /\bchère\b/g, /\bbon marché
     vus++;
     if (r.tabs) err.push(`${id} : ${r.tabs} barre(s) d'onglets`);
     const t = r.txt.toLowerCase().replace(/\s+/g, " ");
-    for (const re of TERMES) { const k = (t.match(re) || []).length; if (k > 1) err.push(`${id} : « ${re.source.replace(/\\b/g, "")} » ${k} fois`); }
+    for (const re of TERMES) { let k = (t.match(re) || []).length;
+      if (re.source.includes("en perte") && /\ben perte[,.]/.test(t)) k--; // 6/11 : le verdict de l'en-tête « En perte, dette modérée. » n'est pas un doublon de « elle est en perte cette année » (dividende)
+      if (k > 1) err.push(`${id} : « ${re.source.replace(/\\b/g, "")} » ${k} fois`); }
   }
   await b.close();
   console.log(err.length ? "DOUBLONS :\n- " + err.join("\n- ") : `OK : ${vus} fiches, chaque mot de verdict une seule fois, zéro onglet`);

@@ -857,7 +857,8 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Commence par le plus utile : des r\xE9sultats publi\xE9s et leurs chiffres ; sinon la comparaison avec les rivales (cite l'\xE9cart, par exemple \xAB ses rivales ont recul\xE9 de 7 % \xE0 11 % \xBB) ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annonc\xE9 et que le mouvement est celui de son secteur ou du march\xE9.
 - "change" : 1 ou 2 phrases (40 mots au plus) sur ce qu'il faut retenir : une nouvelle importante d'une rivale, un chiffre des comptes, ou une annonce. Si rien n'est notable, mets une cha\xEEne vide.
 - Ne commente jamais les op\xE9rations courantes (rachats de ses propres actions, nombre d'actions et droits de vote) : au plus, \xAB seulement des op\xE9rations courantes \xBB.
-- Interdit : \xAB pourrait influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, \xAB il est trop t\xF4t \xBB, toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
+- Interdit : \xAB pourrait \xBB, \xAB a pu influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, \xAB il est trop t\xF4t \xBB, \xAB en ligne avec \xBB, toute supposition sur une cause et toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
+- Chiffres arrondis \xE0 une d\xE9cimale. Compare l'entreprise \xE0 ses rivales (leur m\xE9diane ou leur fourchette), pas \xE0 un indice.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas, aucune cause invent\xE9e. Un titre de presse est une information rapport\xE9e par la presse, pas un fait v\xE9rifi\xE9.
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
 ${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les 3 sujets d'actualit\xE9 g\xE9n\xE9rale (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
@@ -865,7 +866,7 @@ R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": 
 - 3 sujets au plus, du plus important au moins important. Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
 - "titre" : 10 mots au plus, factuel, en fran\xE7ais (exemple : \xAB La Banque d'Angleterre remonte son taux \xE0 4 % \xBB).
 - "theme" : 2 \xE0 4 mots, par exemple \xAB \xC9tats-Unis \xB7 Politique \xBB, \xAB Royaume-Uni \xB7 Taux d'int\xE9r\xEAt \xBB, \xAB \xC9nergie \xBB.
-- "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est pass\xE9, uniquement d'apr\xE8s les titres fournis, avec leur date. Si un titre relie le sujet aux march\xE9s, dis-le en pr\xE9cisant que c'est la presse qui fait ce lien.
+- "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est pass\xE9, uniquement d'apr\xE8s les titres fournis, avec leur date. Aucune supposition (\xAB pourrait \xBB, \xAB semble \xBB, \xAB refl\xE8te \xBB) : seulement ce que disent les titres. Si un titre relie le sujet aux march\xE9s, dis-le en pr\xE9cisant que c'est la presse qui fait ce lien.
 - "titres" : les num\xE9ros des 1 \xE0 3 titres qui portent le sujet.
 - "secteurs" : les cl\xE9s des secteurs directement concern\xE9s, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le march\xE9.
 - "pays" : codes ISO \xE0 deux lettres des pays concern\xE9s (US, GB, FR, DE, CN, JP\u2026), au plus 2.
@@ -1043,7 +1044,7 @@ async function iaSite(request, env) {
 async function syntheseEntreprise(env, faits) {
   return await iaJSON(env, "syn2", CONSIGNES.semaine_entreprise, faits, 360, (x) => x && typeof x.clair == "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
 }
-var VAGUE = /pourrait influencer|pourraient influencer|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
+var VAGUE = /pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
 async function iaJSON(env, prefixe, sys, faits, max, valide) {
   if (!env.AI || !env.DB || !sys) return null;
   let user = JSON.stringify(faits).slice(0, 14e3), k = await empreinte(prefixe + "|" + user);
@@ -1580,7 +1581,7 @@ function lectureMin(f) {
 }
 
 // cf/src/rapport8.mjs
-var r1 = (v) => Math.round(v * 10) / 10, r0 = (v) => Math.round(v), addJ2 = (ymd, n) => {
+var r1 = (v) => Math.round(v * 10) / 10, r0 = (v) => Math.round(v), SUPPOSE = /pourrai(t|ent)|(a|ont) pu |semble|probablement|sans doute|refl[eè]te/i, addJ2 = (ymd, n) => {
   let d = /* @__PURE__ */ new Date(ymd + "T12:00:00Z");
   return d.setUTCDate(d.getUTCDate() + n), d.toISOString().slice(0, 10);
 }, med = (a) => {
@@ -1647,7 +1648,7 @@ async function mondeDe(env, d, n, lundi3, auj) {
       titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter((i) => Number.isInteger(i) && T[i]))].slice(0, 3),
       secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter((x) => x in secteurs).slice(0, 3),
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
-    })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 1);
+    })).map((s) => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
     return S2.length ? { sujets: S2 } : null;
   }, r = await iaJSON(env, "monde|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 900, valide).catch(() => null);
   if (!r) return null;
@@ -1796,10 +1797,11 @@ async function faitsEntreprise(d, n, l, A) {
   return {
     entreprise: l.nom,
     secteur: SECTEURS2[(d.meta[l.k] || {}).sector] || null,
-    variation_semaine_pct: l.variation_semaine_pct,
-    indice: l.indice ? { nom: l.indice.nom, variation_pct: l.indice.pct } : null,
+    variation_semaine_pct: l.variation_semaine_pct == null ? null : r1(l.variation_semaine_pct),
+    // arrondi : plus de « 6,67 % »
     verdict_calcule: R && { suit: "suit son secteur", mieux: "mieux que ses rivales", moins: "moins bien que ses rivales", resultats: "r\xE9sultats publi\xE9s" }[R.verdict] || null,
-    rivales: R ? R.liste.filter((x) => x.v != null).map((x) => ({ nom: x.nom, variation_semaine_pct: x.v })) : [],
+    rivales: R ? R.liste.filter((x) => x.v != null).map((x) => ({ nom: x.nom, variation_semaine_pct: r1(x.v) })) : [],
+    mediane_des_rivales_pct: R && R.med != null ? R.med : null,
     nouvelles_des_rivales: R ? R.nouvelles.map((a) => ({ entreprise: a.nom, type: a.origine === "presse" ? "titre de presse" : a.categorie, titre: a.titre, chiffres: a.chiffres })) : [],
     annonces: A.filter((a) => a.origine !== "presse").map((a) => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
     operations_courantes: A.filter((a) => a.origine !== "presse" && (a.categorie === "rachat" || a.categorie === "capital")).length,

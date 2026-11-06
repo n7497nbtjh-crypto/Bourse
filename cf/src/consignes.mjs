@@ -92,7 +92,8 @@ Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Commence par le plus utile : des résultats publiés et leurs chiffres ; sinon la comparaison avec les rivales (cite l'écart, par exemple « ses rivales ont reculé de 7 % à 11 % ») ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annoncé et que le mouvement est celui de son secteur ou du marché.
 - "change" : 1 ou 2 phrases (40 mots au plus) sur ce qu'il faut retenir : une nouvelle importante d'une rivale, un chiffre des comptes, ou une annonce. Si rien n'est notable, mets une chaîne vide.
 - Ne commente jamais les opérations courantes (rachats de ses propres actions, nombre d'actions et droits de vote) : au plus, « seulement des opérations courantes ».
-- Interdit : « pourrait influencer », « je ne suis pas sûr », « il est difficile d'évaluer », « il est trop tôt », toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
+- Interdit : « pourrait », « a pu influencer », « je ne suis pas sûr », « il est difficile d'évaluer », « il est trop tôt », « en ligne avec », toute supposition sur une cause et toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
+- Chiffres arrondis à une décimale. Compare l'entreprise à ses rivales (leur médiane ou leur fourchette), pas à un indice.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas, aucune cause inventée. Un titre de presse est une information rapportée par la presse, pas un fait vérifié.
 - Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction.
 ${REGLES}`;
@@ -101,7 +102,7 @@ Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": ".
 - 3 sujets au plus, du plus important au moins important. Un sujet doit être porté par au moins deux titres différents, sauf une décision officielle (banque centrale, gouvernement).
 - "titre" : 10 mots au plus, factuel, en français (exemple : « La Banque d'Angleterre remonte son taux à 4 % »).
 - "theme" : 2 à 4 mots, par exemple « États-Unis · Politique », « Royaume-Uni · Taux d'intérêt », « Énergie ».
-- "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est passé, uniquement d'après les titres fournis, avec leur date. Si un titre relie le sujet aux marchés, dis-le en précisant que c'est la presse qui fait ce lien.
+- "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est passé, uniquement d'après les titres fournis, avec leur date. Aucune supposition (« pourrait », « semble », « reflète ») : seulement ce que disent les titres. Si un titre relie le sujet aux marchés, dis-le en précisant que c'est la presse qui fait ce lien.
 - "titres" : les numéros des 1 à 3 titres qui portent le sujet.
 - "secteurs" : les clés des secteurs directement concernés, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le marché.
 - "pays" : codes ISO à deux lettres des pays concernés (US, GB, FR, DE, CN, JP…), au plus 2.
