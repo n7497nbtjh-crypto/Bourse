@@ -196,7 +196,7 @@ async function synIA(b, el, auto) { // le commentaire de l'IA du site, une fois 
 let SYN_ANN = []; // annonces affichées, pour le bouton « Expliquer » (31/10, Romain : l'IA explique l'annonce, à la place de « Lire la publication »)
 document.addEventListener("click", async e => {
   const btn = e.target.closest("[data-syn-exp]"); if (!btn) return;
-  const a = SYN_ANN[+btn.dataset.synExp], box = btn.closest("article").querySelector(".syn4-cl"); if (!a || !box) return;
+  const a = SYN_ANN[+btn.dataset.synExp], box = (btn.closest("li, .s7-pt, .s8-it") && btn.closest("li, .s7-pt, .s8-it").querySelector(".syn4-cl")) || btn.closest("article").querySelector(".syn4-cl"); if (!a || !box) return;
   btn.disabled = true; btn.textContent = "Rédaction en cours…";
   const co = a.k && a.k.startsWith("c:") ? RBY[a.k.slice(2)] : null, f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
   let j; try { j = await iaRediger("annonce", { entreprise: a.nom || (co && co.name), secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: SYN_CAT[a.categorie] || a.type, titre_officiel: a.titre, date: a.date, chiffres: a.chiffres || [], lecture_calculee: a.lecture || [], dernier_exercice: f, lien: a.source }, { max: 420 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
@@ -590,6 +590,8 @@ function synLangue(t) { // 5/11 : « Apple inquieta al mercado por la… » éta
   return best[1] >= 2 ? best[0] : "en";
 }
 const SYN7_DOT = { "t-res": "#E0B400", "t-div": "#00A06B", "t-rach": "#8A8A80", "t-acc": "#8B5CF6", "t-dir": "#F08C2E", "t-obl": "#F08C2E", "t-pr": "#4C7BF2" };
+function s7Exp(a) { return `<button type="button" class="s7-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer avec l'IA</button><div class="syn4-cl"></div>`; } // 6/11 : l'IA explique chaque annonce (comme dans les versions précédentes)
+if (!window.LOGO_COUL) fetch("/data/logo-couleurs.json").then(r => r.json()).then(j => { window.LOGO_COUL = j; }).catch(() => { window.LOGO_COUL = {}; });
 function synPageV7(b, m) {
   SYN_ANN = [];
   const pf = b.portefeuille, L = (b.lignes || []).slice(), sem = String(b.semaine || "").replace(/^\d{4}-W/, "");
@@ -600,18 +602,24 @@ function synPageV7(b, m) {
   const gen = t => /^(Une information publiée|La publication des ventes|Document déposé)/.test(t || "");
   const src = a => a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(a.origine === "presse" ? a.site || "presse" : a.source_nom || "communiqué officiel")} ↗</a>` : esc(a.source_nom || "");
   const titreP = a => { const lg = synLangue(a.titre); return `<span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(a.titre || "")}</span>`; };
-  const item = a => { const [lab, cl] = SYN6_T[a.categorie] || ["Annonce", "t-rach"], ch = (a.chiffres || []).slice(0, 3);
-    const lec = (a.lecture || []).filter(t => t && !gen(t)).join(" ") || (!gen(a.resume) ? a.resume || "" : "");
-    return `<li><p class="s7-ty"><i style="background:${SYN7_DOT[cl] || "#8A8A80"}"></i>${esc(lab)} · ${esc(jr(a.date))}</p><p class="s7-ti">${esc(a.titre || a.type || "")}</p>
-      ${ch.length ? `<div class="s7-chs">${ch.map(([l, v]) => `<span class="s7-ch"><small>${esc(l)}</small><b>${esc(String(v))}</b></span>`).join("")}</div>` : ""}${lec ? `<p class="s7-lec">${esc(lec)}</p>` : ""}<p class="s7-src">${src(a)}</p></li>`; };
+  // 6/11 (maquette rapport-entreprises-v3, validée) : une carte par entreprise, à sa couleur (tirée de son logo), et ses nouvelles en lignes alignées
+  const TYC = { "t-res": "res", "t-div": "div", "t-rach": "rach", "t-acc": "acc", "t-dir": "dir", "t-obl": "obl", "t-pr": "pr" };
+  const ligne = a => { const pr = a.origine === "presse", rach = !pr && /^rachat d.actions$/i.test((a.titre || "").trim()), [lab, cl] = pr ? SYN6_T.presse : rach ? SYN6_T.rachat : SYN6_T[a.categorie] || ["Annonce", "t-rach"], ch = (a.chiffres || []).slice(0, 3);
+    const lec = pr ? "" : (a.lecture || []).filter(t => t && !gen(t)).join(" ") || (!gen(a.resume) ? a.resume || "" : "");
+    const tit = pr ? titreP(a) : esc(rach || (a.categorie === "rachat" && (!a.titre || a.titre === lab)) ? "Déclaration des actions rachetées par la société" : a.titre || a.type || lab);
+    const chs = ch.map(([l, v]) => { const m = String(v).match(/^(.*?)\s*\(([+−-][^)]*?)(?: sur un an)?\)$/); return `<span class="s8-ch"><small>${esc(l)}</small><b>${esc(m ? m[1] : String(v))}</b>${m ? `<em class="${/^[−-]/.test(m[2]) ? "dn" : "up"}">${esc(m[2])}</em>` : ""}</span>`; }).join("");
+    return `<div class="s8-it"><span class="s8-dt">${esc(jr(a.date))}</span><span class="s8-ty ${TYC[cl] || "rach"}"><i></i>${esc(lab)}</span><div class="s8-tx"><p class="s8-tt">${tit}</p>${chs ? `<div class="s8-chs">${chs}</div>` : ""}${lec ? `<p class="s8-lec">${esc(lec)}</p>` : ""}</div>
+      <div class="s8-ac">${a.source ? `<a class="s8-src" href="${esc(a.source)}" target="_blank" rel="noopener">${esc(pr ? String(a.site || "presse").replace(/^www\./, "") : a.source_nom || "Source")} ↗</a>` : ""}<button type="button" class="s8-ia" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button></div><div class="syn4-cl s8-exp"></div></div>`; };
+  const coul = k => { const c = k.startsWith("c:") && typeof LOGOS !== "undefined" && LOGOS[k.slice(2)] && LOGOS[k.slice(2)].f && window.LOGO_COUL ? LOGO_COUL[LOGOS[k.slice(2)].f.replace(/\.png$/, "")] : null; return c || null; };
+  const PAL = ["#3B5BFF", "#E0457B", "#00A06B", "#F08C2E", "#8B5CF6", "#0EA5B7", "#C2410C", "#4D7C0F"];
+  const teinte = k => coul(k) || PAL[[...k].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % PAL.length];
   const rangee = l => { const A = deK(l.k), off = A.filter(a => a.origine !== "presse").slice(0, 4), pr = A.filter(a => a.origine === "presse").slice(0, 3);
+    if (!off.length && !pr.length) return "";
     const v = l.variation_semaine_pct, etf = l.k.startsWith("e:"), poids = l.portefeuille && l.portefeuille.poids_pct;
     const meta = [etf ? "ETF" : "", poids != null ? `${F0.format(Math.round(poids))} % du portefeuille` : l.portefeuille ? "" : "favori"].filter(Boolean).join(" · ");
-    let corps = off.map(item).join("");
-    if (pr.length) corps += `<li class="s7-prs"><p class="s7-ty"><i style="background:${SYN7_DOT["t-pr"]}"></i>Dans la presse</p>${pr.map(a => `<p class="s7-pt">${titreP(a)}<span>${src(a)} · ${esc(jr(a.date))}</span></p>`).join("")}</li>`;
-    const calme = !off.length && !pr.length;
-    if (calme) corps = `<li class="s7-vide">${etf ? "Rien de publié cette semaine. Un ETF ne publie pas de résultats : son cours suit les entreprises qu'il contient." : "Rien de publié cette semaine."}</li>`;
-    return `<article class="s7-rw${calme ? " calme" : ""}"><div class="s7-id">${synLogo(l.k, 40)}<div><a href="${synLien(l.k)}"><b>${esc(l.nom)}</b></a>${meta ? `<small>${esc(meta)}</small>` : ""}</div>${v != null ? `<span class="s7-pv ${v < 0 ? "dn" : "up"}">${synPct(v)}</span>` : ""}</div><ul>${corps}</ul></article>`; };
+    const cnt = [off.length ? `${off.length} annonce${off.length > 1 ? "s" : ""}` : "", pr.length ? `${pr.length} article${pr.length > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
+    return `<article class="s8-co" style="--c:${teinte(l.k)}"><div class="s8-h">${synLogo(l.k, 40)}<div><a href="${synLien(l.k)}"><b>${esc(l.nom)}</b></a>${meta ? `<small>${esc(meta)}</small>` : ""}</div><span class="s8-cnt">${cnt}</span>${v != null ? `<span class="s8-pv ${v < 0 ? "dn" : "up"}">${synPct(v)}</span>` : ""}</div>${[...off, ...pr].map(ligne).join("")}</article>`; };
+  const calmes = arr => { const c = arr.filter(l => !deK(l.k).length); return c.length ? `<div class="s8-calme">Sans nouvelle cette semaine :${c.map(l => `<a href="${synLien(l.k)}">${synLogo(l.k, 24)}${esc(l.nom)}${l.variation_semaine_pct != null ? ` <em class="${l.variation_semaine_pct < 0 ? "dn" : "up"}">${synPct(l.variation_semaine_pct)}</em>` : ""}</a>`).join("")}</div>` : ""; };
   const nbA = k => deK(k).length;
   const lp = L.filter(l => l.portefeuille).sort((x, y) => nbA(y.k) - nbA(x.k) || (y.portefeuille.poids_pct || 0) - (x.portefeuille.poids_pct || 0));
   const lf = L.filter(l => !l.portefeuille).sort((x, y) => nbA(y.k) - nbA(x.k));
@@ -643,8 +651,8 @@ function synPageV7(b, m) {
       <div class="s7-hg"><div><h1>${titre}</h1>${sousT ? `<p class="s7-sub">${sousT}</p>` : ""}${kp.length ? `<div class="s7-kpis">${kp.map(k => `<span>${k}</span>`).join("")}</div>` : ""}</div>
       ${retenir ? `<div class="s7-rts"><small>À retenir</small><div class="s7-rtg">${retenir}</div></div>` : ""}</div></section>
     <section class="s7-sec"><span class="s7-stk b">L'actualité</span><h2>Ce qui s'est passé pour vos entreprises.</h2>
-      ${lp.length ? `<p class="s7-grp">Dans votre portefeuille</p>${lp.map(rangee).join("")}` : ""}
-      ${lf.length ? `<p class="s7-grp">Dans vos favoris</p>${lf.map(rangee).join("")}` : ""}
+      ${lp.length ? `<p class="s7-grp">Dans votre portefeuille</p>${lp.map(rangee).join("")}${calmes(lp)}` : ""}
+      ${lf.length ? `<p class="s7-grp">Dans vos favoris</p>${lf.map(rangee).join("")}${calmes(lf)}` : ""}
       ${!L.length ? `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>` : ""}</section>
     <section class="s7-sec s7-duo">
       ${contrib ? `<div><span class="s7-stk p">Votre portefeuille</span><h2>Ce qui l'a fait bouger.</h2><div class="s7-box"><h3>Ce que chaque ligne a apporté</h3>${contrib}<p class="s7-ias">Gain de la ligne = nombre de parts × variation du cours sur la semaine.</p>${alertes}</div></div>` : ""}
