@@ -1,8 +1,8 @@
 const { chromium } = require("playwright"), { spawn } = require("child_process"), fs = require("fs");
-const [mode, ...args] = process.argv.slice(2), FPS = 30, DUR = 27;
+const [mode, ...args] = process.argv.slice(2), FPS = +(process.env.FPS || 60), DUR = 33.5;
 (async () => {
   const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1080, height: 1920 } });
-  await p.goto("file:///tmp/v2/stage.html"); await p.waitForTimeout(2500); await p.evaluate(() => document.fonts.ready);
+  await p.goto("file:///tmp/v2/stage2.html"); await p.waitForTimeout(2500); await p.evaluate(() => window.pret);
   if (mode === "stills") { for (const t of args) { await p.evaluate(t => render(+t), t); await p.screenshot({ path: `/tmp/v2/st_${t}.jpg`, type: "jpeg", quality: 80 }); } }
   else {
     const out = "/tmp/v2/video.part.mp4";

@@ -1,0 +1,189 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&family=Caveat:wght@700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#111}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;background:#111;font-family:Inter,sans-serif;color:#111}
+.sh{position:absolute;inset:0;overflow:hidden;transform-origin:540px 700px;will-change:transform}
+.Y{background:#FFE14D}.W{background:#fff}.K{background:#111;color:#fff}
+.cam{position:absolute;inset:0;transform-origin:540px 960px;will-change:transform}
+.ln{display:block;overflow:hidden;padding-bottom:.08em}
+.ln>span{display:inline-block;will-change:transform}
+.h{position:absolute;left:80px;right:80px;font:800 96px/1 "Bricolage Grotesque";letter-spacing:-3.5px}
+.k{position:absolute;left:80px;font:700 34px Inter;letter-spacing:.06em;text-transform:uppercase}
+.tag{display:inline-block;background:#fff;border:6px solid #111;border-radius:18px;padding:4px 24px 10px;box-shadow:8px 8px 0 #111}
+.hl{background:#fff;border:6px solid #111;border-radius:22px;padding:0 18px 6px;box-shadow:8px 8px 0 #111;display:inline-block;transform:rotate(-2deg)}
+.phone{position:absolute;width:620px;height:1310px;left:230px;top:540px;border-radius:92px;background:#111;padding:20px;box-shadow:0 70px 140px rgba(0,0,0,.25)}
+.phone .scr{width:100%;height:100%;border-radius:74px;overflow:hidden;background:#fff;position:relative}
+.phone img{width:100%;display:block}
+.phone .isl{position:absolute;top:40px;left:50%;width:170px;height:50px;margin-left:-85px;border-radius:30px;background:#111;z-index:3}
+.card{position:absolute;background:#fff;border:6px solid #111;border-radius:48px;box-shadow:16px 16px 0 #111;overflow:hidden}
+.row{display:flex;align-items:center;height:118px;border-top:3px solid #eee;padding:0 44px;font:700 42px Inter}
+.row:first-child{border-top:0}
+.row b{margin-left:auto;font:800 52px "Bricolage Grotesque"}
+.up{color:#0A7F45}.dn{color:#CC2B2B}
+.fig{padding:34px 44px;border-top:3px solid #eee}.fig small{display:block;font:600 34px Inter;color:#777}.fig b{display:block;font:800 104px/1.05 "Bricolage Grotesque";letter-spacing:-3px}.fig i{font:700 38px Inter;font-style:normal}
+.btn{display:inline-block;background:#111;color:#fff;border-radius:999px;padding:22px 44px;font:700 40px Inter}
+.chart{position:absolute;left:80px;right:80px}
+.track{position:relative;height:120px;border-top:3px solid #eee}
+.track span{position:absolute;left:0;top:34px;font:700 40px Inter}
+.dot{position:absolute;width:60px;height:60px;border-radius:50%;background:#FFE14D;border:6px solid #111;margin-left:-30px}
+.val{position:absolute;right:0;top:34px;font:800 46px "Bricolage Grotesque"}
+.zone{position:absolute;top:0;bottom:0}
+.wall{position:absolute;left:50%;top:50%;width:3000px;height:3000px;margin:-1500px 0 0 -1500px;display:grid;grid-template-columns:repeat(4,640px);gap:70px;justify-content:center;align-content:center}
+.wall .phone{position:relative;left:auto;top:auto;box-shadow:0 40px 80px rgba(0,0,0,.18)}
+.bell{position:absolute;left:390px;top:560px;width:300px;height:300px;border-radius:80px;background:#fff;border:8px solid #111;box-shadow:16px 16px 0 #111;display:grid;place-items:center;font-size:170px}
+.cursor{display:inline-block;width:5px;height:50px;background:#111;vertical-align:-8px;margin-left:3px}
+</style></head><body><div id="s">
+
+<!-- 0. Ouverture -->
+<section class="sh Y" id="S0"><div class="cam" id="C0">
+  <div style="position:absolute;top:640px;left:0;right:0;text-align:center"><span class="tag" id="logo" style="font:800 170px/1 'Bricolage Grotesque';letter-spacing:-5px">ENKLAIR</span></div>
+  <div class="h" style="top:1000px;text-align:center"><span class="ln"><span id="t0a">La Bourse,</span></span><span class="ln"><span id="t0b">enfin claire.</span></span></div>
+</div></section>
+
+<!-- 1. Fiche -->
+<section class="sh W" id="S1"><div class="cam" id="C1">
+  <div class="k" style="top:150px" id="k1"><span class="ln"><span>01 · La fiche</span></span></div>
+  <div class="h" style="top:210px"><span class="ln"><span id="t1a">Chaque entreprise,</span></span><span class="ln"><span id="t1b">lue dans ses comptes.</span></span></div>
+  <div class="phone" id="P1"><div class="scr"><div class="isl"></div><img src="tel_hermes.png"></div></div>
+</div></section>
+
+<!-- 2. Rivales -->
+<section class="sh Y" id="S2"><div class="cam" id="C2">
+  <div class="k" style="top:150px"><span class="ln"><span id="k2">02 · Les rivales</span></span></div>
+  <div class="h" style="top:210px"><span class="ln"><span id="t2a">Chaque chiffre face</span></span><span class="ln"><span id="t2b">à ses rivales.</span></span></div>
+  <div class="card" id="V2" style="left:70px;top:560px;width:940px"><img src="verdict.png" style="width:100%;display:block" id="V2i"></div>
+  <div style="position:absolute;left:80px;right:80px;top:1560px;font:600 38px/1.35 Inter" id="n2">Hermès face à la médiane de LVMH, Kering et Moncler : en vert ce qui fait mieux, en rouge ce qui fait moins bien.</div>
+</div></section>
+
+<!-- 3. Comparer -->
+<section class="sh W" id="S3"><div class="cam" id="C3">
+  <div class="k" style="top:150px"><span class="ln"><span id="k3">03 · Comparer</span></span></div>
+  <div class="h" style="top:210px"><span class="ln"><span id="t3a">LVMH, Hermès</span></span><span class="ln"><span id="t3b">ou Kering ?</span></span></div>
+  <div style="position:absolute;left:80px;right:80px;top:520px;font:800 64px/1.1 'Bricolage Grotesque';letter-spacing:-1.5px" id="v3"><span class="up">Hermès</span> devant sur 3 critères sur 5.</div>
+  <div class="card" id="M3" style="left:70px;top:780px;width:940px;padding:44px 50px 30px">
+    <div style="font:800 52px 'Bricolage Grotesque'">Marge d'exploitation</div>
+    <div style="font:600 34px Inter;color:#777;margin:6px 0 30px">Gardé sur 100 € de ventes</div>
+    <div style="position:relative;height:400px;margin-top:70px" id="ch3">
+      <div style="position:absolute;left:190px;right:120px;top:0;bottom:0">
+        <div class="zone" style="left:0;width:18%;background:#FDE8E6"></div><div class="zone" style="left:18%;right:0;background:#E3F5EA"></div>
+        <div style="position:absolute;left:18%;top:-10px;bottom:0;border-left:5px dashed #111"></div>
+        <div style="position:absolute;left:18%;top:-62px;transform:translateX(-50%);background:#111;color:#fff;font:700 28px Inter;padding:4px 16px;border-radius:10px;white-space:nowrap">médiane 9 €</div>
+        <div class="dot" id="d1" style="top:40px;left:44%"></div><div class="dot" id="d2" style="top:170px;left:82%"></div><div class="dot" id="d3" style="top:300px;left:14%"></div>
+      </div>
+      <div style="position:absolute;left:0;top:48px;font:700 40px Inter">LVMH</div><div style="position:absolute;left:0;top:178px;font:700 40px Inter">Hermès</div><div style="position:absolute;left:0;top:308px;font:700 40px Inter">Kering</div>
+      <b class="up" style="position:absolute;right:0;top:44px;font:800 48px 'Bricolage Grotesque'">22 €</b><b class="up" style="position:absolute;right:0;top:174px;font:800 48px 'Bricolage Grotesque'">41 €</b><b class="dn" style="position:absolute;right:0;top:304px;font:800 48px 'Bricolage Grotesque'">7 €</b>
+    </div>
+  </div>
+  <div style="position:absolute;left:80px;right:80px;top:1460px;font:600 38px/1.35 Inter;color:#444" id="n3">Taille, croissance, marge, dette, dividende : cinq critères, tirés des comptes officiels.</div>
+</div></section>
+
+<!-- 4. Rapport -->
+<section class="sh Y" id="S4"><div class="cam" id="C4">
+  <div class="k" style="top:150px"><span class="ln"><span id="k4">04 · Le rapport · Premium</span></span></div>
+  <div class="h" style="top:210px"><span class="ln"><span id="t4a">Chaque samedi,</span></span><span class="ln"><span id="t4b">votre semaine.</span></span></div>
+  <div class="card" id="R4" style="left:70px;top:540px;width:940px">
+    <div style="padding:40px 44px 10px;display:flex;align-items:center;gap:26px"><img src="logo_apple.png" style="width:86px;height:86px;object-fit:contain;border:3px solid #ddd;border-radius:22px;padding:10px"><div><div style="font:800 64px/1 'Bricolage Grotesque'">Apple</div><div style="font:700 30px Inter;color:#E8892B;letter-spacing:.06em;margin-top:8px">LE FAIT DE LA SEMAINE · RÉSULTATS</div></div></div>
+    <div class="fig" style="margin-top:20px"><small>Ventes du trimestre</small><b id="f4a">114,5 Md$</b><i class="up">+12 % sur un an</i></div>
+    <div class="fig"><small>Bénéfice par action</small><b id="f4b">2,10 $</b><i class="up">+14 % sur un an</i></div>
+    <div style="padding:30px 44px 44px;border-top:3px solid #eee"><span class="btn" id="b4">✦ Expliquer</span></div>
+  </div>
+  <div class="card" id="I4" style="left:70px;top:1400px;width:940px;padding:40px 48px;box-shadow:16px 16px 0 #111">
+    <div style="font:800 44px 'Bricolage Grotesque';margin-bottom:16px">✦ En clair</div>
+    <p id="ia" style="font:500 42px/1.38 Inter;min-height:290px"></p>
+  </div>
+</div></section>
+
+<!-- 5. Alertes -->
+<section class="sh W" id="S5"><div class="cam" id="C5">
+  <div class="k" style="top:150px"><span class="ln"><span id="k5">05 · Les alertes · Premium</span></span></div>
+  <div class="h" style="top:210px"><span class="ln"><span id="t5a">Une valeur chute ?</span></span><span class="ln"><span id="t5b">Vous le savez.</span></span></div>
+  <div class="bell" id="bell">🔔</div>
+  <div class="card" id="A5" style="left:70px;top:1000px;width:940px;padding:44px 50px">
+    <div style="font:800 56px/1.1 'Bricolage Grotesque'">Chute de plus de 5 %</div>
+    <div style="font:500 40px/1.4 Inter;margin-top:16px;color:#333">sur une de vos valeurs : l'alerte vous attend le soir même dans votre espace.</div>
+  </div>
+</div></section>
+
+<!-- 6. Mur -->
+<section class="sh Y" id="S6"><div class="cam" id="C6">
+  <div id="W6" style="position:absolute;inset:0;transform-origin:540px 960px">
+    <div class="wall">
+      <div class="phone"><div class="scr"><img src="tel_accueil.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_comparer.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_etf.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_rapport.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_portefeuille.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_hermes.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_rapport.png"></div></div>
+      <div class="phone"><div class="scr"><img src="tel_comparer.png"></div></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:900px;background:linear-gradient(rgba(255,225,77,0),#FFE14D 55%)"></div>
+  <div class="h" style="top:1350px"><span class="ln"><span id="t6a">3 338 entreprises.</span></span><span class="ln"><span id="t6b">1 174 ETF.</span></span><span class="ln"><span id="t6c">63 comparaisons.</span></span></div>
+</div></section>
+
+<!-- 7. Fin -->
+<section class="sh K" id="S7"><div class="cam" id="C7">
+  <div style="position:absolute;top:620px;left:0;right:0;text-align:center"><span class="tag" id="logo2" style="font:800 150px/1 'Bricolage Grotesque';letter-spacing:-5px;color:#111;box-shadow:10px 10px 0 #FFE14D;border-color:#FFE14D">ENKLAIR</span></div>
+  <div style="position:absolute;top:880px;left:0;right:0;text-align:center"><span class="ln"><span id="t7a" style="font:800 80px 'Bricolage Grotesque';letter-spacing:-2px;color:#FFE14D">Premium</span></span></div>
+  <div style="position:absolute;top:1010px;left:0;right:0;text-align:center;font:600 44px Inter;color:#fff" id="t7b">Le rapport, les alertes, l'IA chaque jour.</div>
+  <div style="position:absolute;top:1170px;left:0;right:0;text-align:center"><span id="t7c" style="display:inline-block;background:#FFE14D;color:#111;border-radius:999px;padding:24px 60px;font:800 56px 'Bricolage Grotesque'">enklair.com</span></div>
+</div></section>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
+const k = (t, t0, d) => cl((t - t0) / d);
+const eo = x => 1 - Math.pow(1 - x, 4), eio = x => x < .5 ? 8 * x * x * x * x : 1 - Math.pow(-2 * x + 2, 4) / 2;
+const spring = x => x >= 1 ? 1 : 1 - Math.exp(-6 * x) * Math.cos(7 * x); // ressort doux, sans à-coup
+// Lignes de texte qui montent derrière un masque
+const rise = (id, t, t0, d = .7) => { const e = eo(k(t, t0, d)); $(id).style.transform = `translateY(${(1 - e) * 110}%)`; };
+const fade = (id, t, t0, d = .6, dy = 40) => { const e = eo(k(t, t0, d)); $(id).style.opacity = e; $(id).style.transform = `translateY(${(1 - e) * dy}px)`; };
+// Scènes : chacune glisse par-dessus la précédente (pile de cartes), la précédente recule et s'assombrit
+const S = [["S0", 0, 3.2], ["S1", 3.2, 7.6], ["S2", 7.6, 11.8], ["S3", 11.8, 16.4], ["S4", 16.4, 22.2], ["S5", 22.2, 25.6], ["S6", 25.6, 29.4], ["S7", 29.4, 33.5]];
+const TR = .8;
+const TXT = "Apple a vendu pour 114,5 milliards de dollars entre juillet et septembre, 12 % de plus qu'un an plus tôt. Chaque action a rapporté 2,10 $ de bénéfice.";
+window.render = t => {
+  S.forEach(([id, a, b], i) => { const el = $(id); const inn = i === 0 ? 1 : eio(k(t, a - TR / 2, TR)), out = i === S.length - 1 ? 0 : eio(k(t, b - TR / 2, TR));
+    const vis = t >= a - TR / 2 - .01 && t < b + TR / 2 + .01; el.style.display = vis ? "block" : "none"; if (!vis) return;
+    el.style.zIndex = i; const y = (1 - inn) * 1920 - out * 140, r = (1 - inn) * 90, sc = 1 - out * .06;
+    el.style.transform = `translateY(${y}px) scale(${sc})`; el.style.borderRadius = `${Math.max(r, out * 70)}px`; el.style.filter = "none"; el.style.boxShadow = inn < 1 ? `0 -40px 80px rgba(0,0,0,${.22 * (1 - inn) + .08})` : "none";
+    $("C" + i).style.transform = `scale(${1 + .035 * k(t, a, b - a)})`; });
+  // 0
+  { const l = spring(k(t, .2, 1.1)); $("logo").style.transform = `scale(${.6 + .4 * l}) rotate(${-3 * l}deg)`; $("logo").style.opacity = k(t, .2, .25); rise("t0a", t, 1.0); rise("t0b", t, 1.25); }
+  // 1
+  { rise("k1", t, 3.4); rise("t1a", t, 3.5); rise("t1b", t, 3.65);
+    const p = eo(k(t, 3.5, 1.2)); $("P1").style.transform = `perspective(2600px) translateY(${(1 - p) * 700}px) rotateX(${(1 - p) * 18}deg)`;
+    const z = eio(k(t, 5.4, 1.6)); $("C1").style.transform = `translate(${-z * 20}px,${-z * 980}px) scale(${1 + z * 1.05})`; }
+  // 2
+  { rise("k2", t, 7.9); rise("t2a", t, 8.0); rise("t2b", t, 8.15);
+    const c = eo(k(t, 8.3, .9)); $("V2").style.transform = `translateY(${(1 - c) * 300}px)`; $("V2").style.opacity = c;
+    const rv = eio(k(t, 8.8, 1.6)); $("V2i").style.clipPath = `inset(0 0 ${(1 - rv) * 62}% 0)`; fade("n2", t, 10.0); }
+  // 3
+  { rise("k3", t, 12.1); rise("t3a", t, 12.2); rise("t3b", t, 12.35); fade("v3", t, 12.9);
+    const c = eo(k(t, 13.2, .8)); $("M3").style.transform = `translateY(${(1 - c) * 260}px)`; $("M3").style.opacity = c;
+    [["d1", 44, 13.7], ["d2", 82, 13.9], ["d3", 14, 14.1]].forEach(([id, x, t0]) => { const e = eo(k(t, t0, 1.0)); $(id).style.left = (e * x) + "%"; $(id).style.opacity = k(t, t0, .2); });
+    fade("n3", t, 14.8); }
+  // 4
+  { rise("k4", t, 16.7); rise("t4a", t, 16.8); rise("t4b", t, 16.95);
+    const c = eo(k(t, 17.2, .9)); $("R4").style.transform = `translateY(${(1 - c) * 300 - eio(k(t, 19.15, .7)) * 50}px)`; $("R4").style.opacity = c;
+    const n = eo(k(t, 17.5, 1.2)); $("f4a").textContent = (114.5 * n).toFixed(1).replace(".", ",") + " Md$"; $("f4b").textContent = (2.10 * n).toFixed(2).replace(".", ",") + " $";
+    const pr = k(t, 19.0, .35); $("b4").style.transform = `scale(${1 - .1 * Math.sin(pr * Math.PI)})`;
+    const ia = eo(k(t, 19.3, .7)); $("I4").style.opacity = ia; $("I4").style.transform = `translateY(${(1 - ia) * 120}px)`;
+    const m = Math.floor(TXT.length * cl((t - 19.7) / 2.1)); $("ia").innerHTML = TXT.slice(0, m) + (m < TXT.length && t > 19.5 ? '<span class="cursor"></span>' : ""); }
+  // 5
+  { rise("k5", t, 22.5); rise("t5a", t, 22.6); rise("t5b", t, 22.75);
+    const b = eo(k(t, 22.9, .7)); $("bell").style.opacity = b; const sw = Math.exp(-2.2 * Math.max(0, t - 23.3)) * Math.sin((t - 23.3) * 16) * (t > 23.3 ? 14 : 0);
+    $("bell").style.transform = `translateY(${(1 - b) * 120}px) rotate(${sw}deg)`; fade("A5", t, 23.5, .7, 80); }
+  // 6
+  { const z = k(t, 25.2, 4.4); $("W6").style.transform = `perspective(3000px) rotateX(${24 - 6 * z}deg) rotateZ(${-12 + 3 * z}deg) scale(${1.15 - .35 * eio(z)}) translateY(${-260 + 200 * z}px)`;
+    rise("t6a", t, 26.2); rise("t6b", t, 26.6); rise("t6c", t, 27.0); }
+  // 7
+  { const l = spring(k(t, 29.6, 1.1)); $("logo2").style.transform = `scale(${.6 + .4 * l}) rotate(${-3 * l}deg)`; $("logo2").style.opacity = k(t, 29.6, .25);
+    rise("t7a", t, 30.2); fade("t7b", t, 30.6); const c = eo(k(t, 31.1, .7)); $("t7c").style.opacity = c; $("t7c").style.transform = `scale(${.9 + .1 * c})`; }
+};
+window.pret = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => 0))]);
+window.render(0);
+</script></body></html>
