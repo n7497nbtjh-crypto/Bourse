@@ -161,7 +161,7 @@ const e4SrcCompo = x => !x.C ? "Émetteur" : x.C.proxy ? `Fonds américain ${x.C
 function e4Perf(x) {
   const { e, pf, H } = x, q = "Qu'a-t-il rapporté ces dernières années ?";
   if (!pf) return { sur: "Sa performance", concept: { cle: "perf" }, titre: "historique non disponible.", visuel: "", q,
-    explique: `<div class="et-side"><p class="h">Pourquoi ?</p><p class="et-p">Le site relève la performance sur le site officiel de l'émetteur (Amundi et iShares pour l'instant). ${esc(e.issuer)} ne la publie pas encore sous une forme que le site peut lire pour ce fonds.${e.tv ? " Le graphique du cours, en haut de la page, montre son évolution en Bourse." : ""}</p></div>`,
+    explique: `<div class="et-side"><p class="h">Pourquoi ?</p><p class="et-p">Le site relève la performance sur le site officiel de l'émetteur (Amundi, iShares et HSBC pour l'instant). ${esc(e.issuer)} ne la publie pas encore sous une forme que le site peut lire pour ce fonds.${e.tv ? " Le graphique du cours, en haut de la page, montre son évolution en Bourse." : ""}</p></div>`,
     ch: ["Sa performance", "–", "", "historique non disponible", ""] };
   const ans = Object.keys(pf.annees || {}).sort().slice(ekMob() ? -5 : -6), vals = ans.map(a => pf.annees[a] * 100);
   const hausses = Object.values(pf.annees || {}).filter(v => v > 0).length, nA = Object.keys(pf.annees || {}).length;

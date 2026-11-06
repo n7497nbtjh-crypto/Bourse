@@ -124,19 +124,64 @@ async function ishares(liste) {
   return out;
 }
 
+// ——— HSBC (6/11) : pas de série quotidienne publique ; la fiche mensuelle officielle en français (même document que
+// data/etf_emetteurs.mjs, « Crawl-delay: 2 ») donne les performances arrêtées à la fin du mois, en devise du fonds.
+// Converties en euros avec les taux de la BCE aux mêmes dates. Pas de courbe ni de « pire baisse » (aucune série).
+const MOIS = { janvier: 0, février: 1, fevrier: 1, mars: 2, avril: 3, mai: 4, juin: 5, juillet: 6, août: 7, aout: 7, septembre: 8, octobre: 9, novembre: 10, décembre: 11, decembre: 11 };
+export function hsbcPerfTexte(tx) {
+  const d = tx.match(/donn[ée]es au (\d{1,2}) (\S+) (\d{4})/i); if (!d || MOIS[d[2].toLowerCase()] == null) return null;
+  const asOf = Date.UTC(+d[3], MOIS[d[2].toLowerCase()], +d[1]);
+  const nb = t => t === "--" ? null : +t.replace(",", ".") / 100;
+  const L = tx.split("\n"), i0 = L.findIndex(l => /^\s*Performance \(%\)/.test(l)); if (i0 < 0) return null;
+  const f = (L.slice(i0 + 1, i0 + 4).find(l => /^\s*Fonds\b/.test(l)) || "").trim().split(/\s+/).slice(1);
+  // colonnes possibles, dans cet ordre : début d'année, 1, 3, 6 mois, 1 an, 3, 5, 10 ans et lancement (annualisés) ; on garde celles que l'en-tête annonce
+  const H = L.slice(Math.max(0, i0 - 4), i0 + 1).join(" "), COL = [["ytd", /d[’']ann[ée]e/], ["m1", /1 mois/], ["m3", /3 mois/], ["m6", /6 mois/], ["a1", /\b1 an\b/], ["a3", /\b3 ans/], ["a5", /\b5 ans/], ["a10", /\b10 ans/], ["lanc", /lancement/]].filter(c => c[1].test(H)).map(c => c[0]);
+  if (f.length !== COL.length || !f.every(t => /^(--|-?\d+,\d+)$/.test(t))) return null;
+  const V = Object.fromEntries(COL.map((c, k) => [c, nb(f[k])])), { ytd = null, m1 = null, m6 = null, a1 = null, a3 = null, a5 = null, a10 = null, lanc = null } = V;
+  const annees = {}, ic = L.findIndex(l => /Performances nettes civiles/.test(l));
+  if (ic >= 0) { const ans = (L[ic].match(/\b20\d\d\b/g) || []), v = (L.slice(ic + 1, ic + 4).find(l => /^\s*Fonds\b/.test(l)) || "").trim().split(/\s+/).slice(1);
+    if (ans.length && v.length === ans.length) ans.forEach((a, k) => { const x = nb(v[k]); if (x != null && /^(-?\d+,\d+)$/.test(v[k])) annees[a] = x; }); }
+  return { asOf, ytd, m1, m6, a1, a3, a5, a10, lanc, annees };
+}
+async function hsbcPerf(liste) {
+  const out = {}, f = "/tmp/hsbc_perf.pdf";
+  for (const e of liste) {
+    const url = `https://www.assetmanagement.hsbc.fr/api/v1/download/document/${e.isin.toLowerCase()}/fr/fr/factsheet`;
+    let b; try { b = await http(url, { type: "buf", pause: 2200 }); } catch (err) { log("hsbc", e.id, err.message); continue; }
+    if (!b || b.length < 5000 || String(b.slice(0, 5)) !== "%PDF-") continue;
+    writeFileSync(f, b); let x; try { x = hsbcPerfTexte(execSync(`pdftotext -layout -l 2 ${f} -`, { maxBuffer: 5e7, stdio: ["ignore", "pipe", "ignore"] }).toString()); } catch (err) { continue; }
+    if (!x) { log("hsbc", e.id, "fiche illisible"); continue; }
+    const dev = e.devise || "EUR", F = dev === "EUR" ? null : (await fxHist())[dev];
+    if (dev !== "EUR" && !(F && F.length)) continue;
+    const taux = t => { if (!F) return 1; let k = 0; while (k + 1 < F.length && F[k + 1][0] <= t) k++; return F[k][0] <= t ? F[k][1] : null; };
+    const recul = (ans, mois = 0) => { const dd = new Date(x.asOf); return Date.UTC(dd.getUTCFullYear() - ans, dd.getUTCMonth() - mois + 1, 0); }; // fin de mois
+    const eur = (r, t0, t1) => { if (r == null) return null; const a = taux(t0), b = taux(t1); return a && b ? Math.round(((1 + r) * a / b - 1) * 10000) / 10000 : null; }; // valeur en euros = valeur / taux (devise pour 1 €)
+    const cum = (r, n) => r == null ? null : Math.pow(1 + r, n) - 1;
+    const annees = {}; for (const [a, r] of Object.entries(x.annees)) { const v = eur(r, Date.UTC(+a - 1, 11, 31), Date.UTC(+a, 11, 31)); if (v != null) annees[a] = v; }
+    const deb = e.creation ? Date.parse(e.creation + "T00:00:00Z") : null, age = deb ? (x.asOf - deb) / 31557600000 : null;
+    const perf = { m1: eur(x.m1, recul(0, 1), x.asOf), m6: eur(x.m6, recul(0, 6), x.asOf), ytd: eur(x.ytd, Date.UTC(new Date(x.asOf).getUTCFullYear() - 1, 11, 31), x.asOf),
+      a1: eur(x.a1, recul(1), x.asOf), a3: eur(cum(x.a3, 3), recul(3), x.asOf), a5: eur(cum(x.a5, 5), recul(5), x.asOf), a10: eur(cum(x.a10, 10), recul(10), x.asOf),
+      depuis: deb && age > 0 ? eur(cum(x.lanc, age), deb, x.asOf) : null, debut: e.creation || null, annees };
+    out[e.id] = { id: e.id, src: "HSBC Asset Management, fiche mensuelle officielle" + (dev !== "EUR" ? `, convertie en euros au taux de la BCE (fonds tenu en ${dev})` : ""), url, devise: "EUR", deviseFonds: dev,
+      asOf: new Date(x.asOf).toISOString().slice(0, 10), s: [], perf, mensuel: true };
+  }
+  log("hsbc : " + Object.keys(out).length + " fiches lues sur " + liste.length);
+  return out;
+}
+
 // ——— Programme ———
 if (process.argv[1] && /etf_historique\.mjs$/.test(process.argv[1])) {
   const L = JSON.parse(readFileSync(ROOT + "cf/site/data/etf.json", "utf8")).list;
   let choix = L.filter(e => e.isin && (!ids.length || ids.includes(e.id)) && (!emetteur || e.issuer === emetteur));
   const parEm = em => choix.filter(e => e.issuer === em).slice(0, max);
   if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
-  const res = { ...(await amundi(parEm("Amundi"))), ...(await ishares(parEm("iShares"))) };
+  const res = { ...(await amundi(parEm("Amundi"))), ...(await ishares(parEm("iShares"))), ...(await hsbcPerf(parEm("HSBC"))) };
   for (const [id, r] of Object.entries(res)) writeFileSync(OUT + id + ".json", JSON.stringify(r));
   // Index des performances pour les listes (fusion avec l'existant : un passage partiel ne retire rien)
   const IDX = ROOT + "cf/site/data/etf-perf.json"; let idx = { items: {} }; try { idx = JSON.parse(readFileSync(IDX, "utf8")); } catch (e) { }
   for (const [id, r] of Object.entries(res)) idx.items[id] = { a1: r.perf.a1, a3: r.perf.a3, a5: r.perf.a5, asOf: r.asOf, devise: r.devise };
   idx.updated = new Date().toISOString().slice(0, 10);
   writeFileSync(IDX, JSON.stringify(idx));
-  const tot = L.filter(e => ["Amundi", "iShares"].includes(e.issuer)).length;
+  const tot = L.filter(e => ["Amundi", "iShares", "HSBC"].includes(e.issuer)).length;
   log(`${Object.keys(res).length} séries écrites (${Object.keys(idx.items).length} dans l'index, ${tot} ETF Amundi et iShares au total)`);
 }
