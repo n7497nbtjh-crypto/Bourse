@@ -1,0 +1,301 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette rapport de la semaine v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:16px/1.5 Inter,sans-serif;-webkit-font-smoothing:antialiased}
+b,.n,.p{font-variant-numeric:tabular-nums}
+.note{max-width:1080px;margin:20px auto;background:#f4f4f4;border-radius:12px;padding:12px 18px;font-size:14px;color:#333}
+.w{max-width:1080px;margin:0 auto;padding:0 20px}
+.tag{display:inline-block;background:#FFE14D;border:1.5px solid #111;border-radius:7px;padding:2px 10px;font:700 13px Inter;transform:rotate(-2deg)}
+.tag.k{background:#111;color:#fff}.tag.r{background:#ffd6dc}.tag.b{background:#d6e6ff}.tag.v{background:#d9f5df}
+h1{font:800 50px/1 "Bricolage Grotesque";letter-spacing:-1.8px;margin:10px 0 10px}
+h2{font:800 34px/1.06 "Bricolage Grotesque";letter-spacing:-1.1px;margin:10px 0 6px}
+h3{font:800 22px/1.15 "Bricolage Grotesque";letter-spacing:-.4px;margin:0}
+.sub{color:#444;margin:0 0 20px;max-width:700px}
+section{margin:0 0 54px}
+.up{color:#0a8a3a}.dn{color:#d1242f}
+.card{border:2px solid #111;border-radius:20px;box-shadow:5px 5px 0 #111;background:#fff}
+/* EN-TÊTE */
+.band{background:#FFE14D;border-bottom:2px solid #111;padding:26px 0 34px;margin-bottom:34px}
+.band .top{display:flex;justify-content:space-between;align-items:center;font:700 13px Inter;margin-bottom:14px}
+.logo{font:800 22px "Bricolage Grotesque";letter-spacing:-.5px}
+.hgrid{display:grid;grid-template-columns:1.25fr 1fr;gap:26px;align-items:end}
+.hgrid p.l{margin:0;max-width:560px;font-size:17px}
+.pfc{padding:20px 22px}
+.pfc small{font:700 11px Inter;letter-spacing:.07em;text-transform:uppercase;color:#555}
+.pfc .big{font:800 46px/1 "Bricolage Grotesque";letter-spacing:-1.5px;margin:6px 0 2px}
+.pfc .row{display:flex;justify-content:space-between;align-items:end;gap:10px}
+.pfc .vs{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
+.chip{border:1.5px solid #111;border-radius:99px;padding:2px 11px;font:600 13px Inter;background:#fff;white-space:nowrap}
+.trois{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:22px}
+.v{background:#fff;border:2px solid #111;border-radius:14px;padding:13px 15px}
+.v small{display:block;font:700 11px Inter;text-transform:uppercase;letter-spacing:.06em;color:#555}
+.v b{font:800 24px "Bricolage Grotesque"}.v p{margin:3px 0 0;font-size:14px;color:#333}
+/* SOMMAIRE */
+.som{display:flex;gap:8px;flex-wrap:wrap;margin:-8px 0 34px}
+.som a{color:#111;text-decoration:none;border:1.5px solid #111;border-radius:10px;padding:6px 12px;font:700 13.5px Inter;background:#fff}
+.som a i{font-style:normal;background:#111;color:#fff;border-radius:5px;padding:0 6px;margin-right:6px;font-size:12px}
+/* PORTEFEUILLE */
+.pfgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.box{padding:20px 22px}
+.lab{font:700 11px Inter;text-transform:uppercase;letter-spacing:.07em;color:#555;margin:0 0 10px;display:flex;gap:6px;align-items:center}
+.lab i{font-style:normal;background:#FFE14D;border:1.2px solid #111;border-radius:5px;padding:0 5px;color:#111}
+.contrib{display:grid;grid-template-columns:150px 1fr 74px;gap:10px;align-items:center;font-size:14px;margin:7px 0}
+.contrib .tr{height:14px;background:#f1f1f1;border-radius:4px;position:relative}
+.contrib .tr .z{position:absolute;left:50%;top:-4px;bottom:-4px;width:1.5px;background:#111}
+.contrib .tr .f{position:absolute;top:0;bottom:0;border-radius:4px}
+.contrib .p{text-align:right;font-weight:800}
+.contrib small{display:block;color:#777;font-size:12px}
+.lead2{font-size:15px;margin:12px 0 0;padding:12px 14px;background:#fff8cc;border-radius:12px;border:1.5px solid #111}
+/* RADIOGRAPHIE */
+.radio{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.rx{border:2px solid #111;border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;background:#fff}
+.rx .th{font:700 11px Inter;text-transform:uppercase;letter-spacing:.06em;color:#555}
+.rx .pc{font:800 34px/1 "Bricolage Grotesque";letter-spacing:-1px}
+.rx .pc small{font:600 14px Inter;color:#444;letter-spacing:0;margin-left:4px}
+.stack{display:flex;height:12px;border-radius:99px;overflow:hidden;border:1.5px solid #111;background:#f3f3f3}
+.stack span{display:block;height:100%}
+.rx p{margin:0;font-size:13.5px;color:#333}
+.rx .sem{font-size:13px;border-top:1.5px dashed #ccc;padding-top:8px;margin-top:auto}
+.rx.hot{background:#fff1f2}
+.rxnote{font-size:12.5px;color:#666;margin-top:10px}
+/* DCA */
+.dca{display:grid;grid-template-columns:auto 1fr auto;gap:22px;align-items:center;padding:20px 22px;background:#eef6ff;margin-top:18px}
+.dca .ic{width:58px;height:58px;border:2px solid #111;border-radius:16px;background:#fff;display:grid;place-items:center;font:800 15px "Bricolage Grotesque";text-align:center;line-height:1.05}
+.dca h3{font-size:20px}.dca p{margin:4px 0 0;font-size:14.5px}
+.dca .kp{display:flex;gap:10px}
+.dca .kp div{background:#fff;border:1.5px solid #111;border-radius:12px;padding:8px 12px;text-align:center;min-width:112px}
+.dca .kp b{display:block;font:800 22px "Bricolage Grotesque"}.dca .kp small{font-size:12px;color:#555}
+/* MONDE */
+.monde{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.sujet{border:2px solid #111;border-radius:18px;overflow:hidden;display:flex;flex-direction:column;background:#fff}
+.sujet .hd{padding:14px 16px 12px;border-bottom:2px solid #111}
+.sujet .hd .th{font:700 11px Inter;text-transform:uppercase;letter-spacing:.07em}
+.sujet .hd h3{font-size:19.5px;margin-top:4px}
+.sujet .bd{padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:1}
+.fait{font-size:14.5px;margin:0}
+.chif{background:#f6f6f6;border-radius:10px;padding:10px 12px;font-size:13.5px}
+.chif div{display:flex;justify-content:space-between;padding:2px 0}
+.chif .t{font:700 11px Inter;text-transform:uppercase;letter-spacing:.06em;color:#666;display:block;margin-bottom:4px}
+.vous{border-top:1.5px dashed #bbb;padding-top:10px;font-size:14px}
+.vous b.h{display:block;font:700 12px Inter;margin-bottom:4px}
+.pill{display:inline-block;border:1.5px solid #111;border-radius:99px;padding:1px 9px;font:600 12.5px Inter;margin:2px 4px 2px 0;background:#fff}
+.src{font-size:12px;color:#666;margin-top:auto}
+/* ENTREPRISES */
+.co{margin:0 0 22px;overflow:hidden}
+.co-h{display:flex;align-items:center;gap:14px;padding:16px 20px;border-bottom:2px solid #111}
+.co-h img{width:44px;height:44px;object-fit:contain;border:1.5px solid #111;border-radius:11px;background:#fff;padding:3px}
+.co-h .nm{flex:1}.co-h .nm small{display:block;color:#555;font-size:13px}
+.co-h .pf{text-align:right}.co-h .pf b{font:800 30px "Bricolage Grotesque";display:block;line-height:1}
+.co-h .pf small{font-size:12.5px;color:#555}
+.verdict{display:inline-block;background:#111;color:#fff;border-radius:7px;padding:2px 9px;font:700 12.5px Inter;transform:rotate(-1.5deg);margin-left:8px;vertical-align:4px}
+.verdict.j{background:#FFE14D;color:#111;border:1.5px solid #111}
+.co-b{display:grid;grid-template-columns:1.2fr 1fr}
+.lec{padding:18px 20px;border-right:2px solid #111}
+.lec p{margin:0 0 10px;font-size:15px}
+.preuve{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0 10px}
+.preuve span{background:#f4f4f4;border-radius:8px;padding:4px 9px;font-size:13px}
+.ia{font-size:11.5px;color:#777;margin:0}
+.riv{padding:18px 20px;background:#fafafa}
+.bar{display:grid;grid-template-columns:112px 1fr 62px;align-items:center;gap:8px;font-size:13.5px;margin:5px 0}
+.bar .tr{height:10px;background:#eaeaea;border-radius:99px;position:relative}
+.bar .tr .z{position:absolute;left:50%;top:-3px;bottom:-3px;width:1.5px;background:#999}
+.bar .tr .f{position:absolute;top:0;bottom:0;border-radius:99px}
+.bar.moi{font-weight:800}.bar.moi .tr{outline:1.5px solid #111}
+.bar .p{text-align:right;font-weight:700;white-space:nowrap}
+.nouv{margin-top:10px;font-size:13.5px}
+.nouv div{padding:6px 0;border-top:1px solid #e6e6e6}
+.co-f{display:flex;gap:18px;flex-wrap:wrap;padding:12px 20px;border-top:2px solid #111;font-size:13.5px;align-items:center;background:#fff}
+.co-f a{color:#111;font-weight:700;text-decoration:underline;text-decoration-color:#FFE14D;text-decoration-thickness:3px;text-underline-offset:3px}
+.co-f .dt{background:#FFE14D;border:1.5px solid #111;border-radius:8px;padding:2px 8px;font-weight:700}
+.calme{border:1.5px solid #ccc;border-radius:14px;padding:10px 16px;display:flex;justify-content:space-between;gap:10px;font-size:14px}
+/* AGENDA */
+.av{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.av>div{display:flex;gap:12px;align-items:flex-start;padding:14px}
+.cal{min-width:54px;border:2px solid #111;border-radius:10px;overflow:hidden;text-align:center;background:#fff}
+.cal small{display:block;background:#d1242f;color:#fff;font:700 11px Inter;padding:2px 0}
+.cal b{display:block;font:800 24px/1.3 "Bricolage Grotesque"}
+.av p{margin:0;font-size:14px}
+.fin{text-align:center;font-size:13px;color:#666;padding:10px 0 40px}
+@media(max-width:860px){h1{font-size:36px}h2{font-size:27px}.hgrid,.pfgrid,.monde,.co-b,.av{grid-template-columns:1fr}.trois{grid-template-columns:1fr}.radio{grid-template-columns:1fr 1fr}.lec{border-right:0;border-bottom:2px solid #111}.dca{grid-template-columns:1fr}.contrib{grid-template-columns:112px 1fr 66px}.bar{grid-template-columns:96px 1fr 62px}}
+@media(max-width:480px){.radio{grid-template-columns:1fr}.dca .kp{flex-wrap:wrap}}
+</style></head><body>
+
+<div class="note"><b>Maquette du rapport de la semaine, version 6 (6/11, 20 h).</b> Vrais chiffres : portefeuille et vos lignes = calcul du vrai rapport (/rapport-exemple) ; rivales et indices = cours du site vendredi vers 20 h, base du 30/10 ; contenu de l'ETF = relevé officiel du MSCI World (SEC, formulaire N-PORT, 31/08/2026) ; titres BBC News du 3 au 6/11. L'achat programmé est fictif (25 parts le 5 du mois depuis mars), mais ses prix sont réels. Les paragraphes « La lecture d'ENKLAIR » montrent ce que l'IA devra écrire à partir de ces seuls faits.</div>
+
+<div class="band"><div class="w">
+  <div class="top"><span class="logo">ENKLAIR</span><span>Votre rapport · semaine du 2 au 6 novembre 2026</span></div>
+  <div class="hgrid">
+    <div>
+      <span class="tag k">Votre semaine en 2 minutes</span>
+      <h1>La chute de la tech américaine vous a touché par votre ETF.</h1>
+      <p class="l">Vos quatre actions européennes se sont presque compensées (−8 € à elles quatre). C'est votre ETF Monde, où les grandes valeurs américaines de l'IA pèsent lourd, qui explique 262 € sur les 269 € perdus.</p>
+    </div>
+    <div class="card pfc">
+      <small>Votre portefeuille</small>
+      <div class="row"><div><div class="big dn">−269 €</div><span class="n">−2,6 % · il vaut 10 023 €</span></div>
+      <svg width="150" height="54" viewBox="0 0 150 54" aria-hidden="true"><polyline fill="none" stroke="#d1242f" stroke-width="3" stroke-linejoin="round" points="0,8 25,8 50,5 75,2 100,8 125,30 150,52"/></svg></div>
+      <div class="vs"><span class="chip">CAC 40 <b class="up">+1,7 %</b></span><span class="chip">S&amp;P 500 <b class="dn">−2,2 %</b></span><span class="chip">Nasdaq 100 <b class="dn">−4,8 %</b></span></div>
+    </div>
+  </div>
+  <div class="trois">
+    <div class="v"><small>Ce qui a le plus pesé</small><b class="dn">ETF Monde −262 €</b><p>Il contient 1 184 € de valeurs de l'IA et du cloud.</p></div>
+    <div class="v"><small>Ce qui a le plus aidé</small><b class="up">LVMH +67 €</b><p>Tout le luxe a monté cette semaine.</p></div>
+    <div class="v"><small>La nouvelle à retenir</small><b>Apple</b><p>Résultats : ventes du trimestre +12 %, bénéfice par action +14 %.</p></div>
+  </div>
+</div></div>
+
+<div class="w">
+<nav class="som"><a href="#pf"><i>1</i>Votre portefeuille</a><a href="#monde"><i>2</i>Le monde cette semaine</a><a href="#co"><i>3</i>Vos entreprises</a><a href="#av"><i>4</i>À venir</a></nav>
+
+<!-- 1. PORTEFEUILLE -->
+<section id="pf">
+  <span class="tag">1 · Votre portefeuille</span>
+  <h2>Ce que chaque ligne vous a fait gagner ou perdre.</h2>
+  <p class="sub">En euros, sur la semaine. La ligne la plus lourde n'est pas toujours celle qu'on regarde.</p>
+  <div class="pfgrid">
+    <div class="card box">
+      <p class="lab">Gains et pertes de la semaine</p>
+      <div class="contrib"><span><b>LVMH</b><small>12 % du portefeuille</small></span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:13%;background:#0a8a3a"></span></span><span class="p up">+67 €</span></div>
+      <div class="contrib"><span><b>Air Liquide</b><small>11 %</small></span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:8%;background:#0a8a3a"></span></span><span class="p up">+44 €</span></div>
+      <div class="contrib"><span><b>Schneider Electric</b><small>9 %</small></span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:8%;background:#d1242f"></span></span><span class="p dn">−40 €</span></div>
+      <div class="contrib"><span><b>TotalEnergies</b><small>9 %</small></span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:15%;background:#d1242f"></span></span><span class="p dn">−80 €</span></div>
+      <div class="contrib"><span><b>ETF Monde</b><small>58 %</small></span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:48%;background:#d1242f"></span></span><span class="p dn">−262 €</span></div>
+      <p class="lead2"><b>À retenir.</b> Vos quatre actions ensemble : −8 €. Votre ETF seul : −262 €. Votre résultat de la semaine s'est joué sur une seule ligne.</p>
+    </div>
+    <div class="card box">
+      <p class="lab"><i>✦</i> La lecture d'ENKLAIR</p>
+      <p style="margin:0 0 10px;font-size:15px">Vous n'avez aucune action américaine en direct. Pourtant, 41 % de votre argent est placé aux États-Unis, par votre ETF Monde : c'est par lui que la baisse de Wall Street vous a atteint.</p>
+      <p style="margin:0 0 10px;font-size:15px">Votre portefeuille (−2,6 %) a fait moins bien que le CAC 40 (+1,7 %) : plus de la moitié de votre argent suit le monde entier, pas seulement la Bourse de Paris.</p>
+      <p class="ia">Rédigé par l'IA d'ENKLAIR à partir de votre portefeuille, des cours et du contenu officiel de l'ETF. Aucune prévision, aucun conseil.</p>
+    </div>
+  </div>
+
+  <div class="card dca">
+    <div class="ic" style="font-size:28px">↻</div>
+    <div><span class="tag b" style="font-size:11.5px">Votre achat programmé</span><h3 style="margin-top:6px">Votre achat du 5 novembre s'est fait après la baisse.</h3>
+      <p>Vos 25 parts d'Amundi PEA Monde ont été achetées 6,20 € l'une, contre 6,39 € une semaine plus tôt. Depuis votre premier achat programmé, en mars, la part a pris 15 % (valeur publiée par Amundi au 30/10).</p></div>
+    <div class="kp"><div><b>155 €</b><small>ce mois-ci</small></div><div><b>160 €</b><small>une semaine plus tôt</small></div></div>
+  </div>
+  <p class="rxnote">Ce bloc n'apparaît que si vous avez programmé des achats dans votre portefeuille. Il dit ce qui s'est passé, jamais s'il faut continuer.</p>
+</section>
+
+<!-- RADIOGRAPHIE -->
+<section>
+  <span class="tag r">Radiographie</span>
+  <h2>Votre argent face aux sujets de la semaine.</h2>
+  <p class="sub">Ce que vous possédez vraiment, ETF compris, rangé selon les sujets qui ont fait l'actualité. La barre montre la part de votre portefeuille.</p>
+  <div class="radio">
+    <div class="rx hot"><span class="th">IA, puces et cloud</span><div class="pc">12 %<small>1 184 €</small></div>
+      <div class="stack"><span style="width:12%;background:#d1242f"></span></div>
+      <p>Uniquement par votre ETF : Nvidia, Microsoft, Amazon, Alphabet, Broadcom, Meta, Micron.</p>
+      <p class="sem"><b class="dn">Sujet de la semaine</b> : élections américaines, Nasdaq 100 −6,4 % jeudi.</p></div>
+    <div class="rx hot"><span class="th">Pétrole et gaz</span><div class="pc">9 %<small>945 €</small></div>
+      <div class="stack"><span style="width:9%;background:#111"></span></div>
+      <p>TotalEnergies en direct, plus la part de l'énergie dans votre ETF (non comptée ici).</p>
+      <p class="sem"><b class="dn">Sujet de la semaine</b> : toutes les grandes compagnies en baisse.</p></div>
+    <div class="rx"><span class="th">États-Unis et dollar</span><div class="pc">41 %<small>4 095 €</small></div>
+      <div class="stack"><span style="width:41%;background:#2b59c3"></span></div>
+      <p>70,5 % de votre ETF. Quand le dollar baisse face à l'euro, ces placements valent moins en euros.</p>
+      <p class="sem">S&amp;P 500 −2,2 % sur la semaine.</p></div>
+    <div class="rx"><span class="th">Royaume-Uni</span><div class="pc">2 %<small>198 €</small></div>
+      <div class="stack"><span style="width:2%;background:#7a5af8"></span></div>
+      <p>3,4 % de votre ETF. Aucune action britannique en direct.</p>
+      <p class="sem"><b>Sujet de la semaine</b> : taux relevé à 4 %, livre au plus haut.</p></div>
+  </div>
+  <p class="rxnote">Contenu de l'ETF : MSCI World, relevé officiel au 31/08/2026 (SEC, formulaire N-PORT de l'ETF iShares qui suit le même indice). Les valeurs de l'IA comptées ici sont les 8 plus grosses lignes de ce type : le vrai total est un peu plus élevé.</p>
+</section>
+
+<!-- 2. MONDE -->
+<section id="monde">
+  <span class="tag b">2 · Le monde cette semaine</span>
+  <h2>Ce qui a fait bouger les marchés.</h2>
+  <p class="sub">Trois sujets, ce que nos chiffres montrent, et lesquelles de vos valeurs sont concernées.</p>
+  <div class="monde">
+    <div class="sujet"><div class="hd" style="background:#ffd6dc"><span class="th">États-Unis · Politique et technologie</span><h3>Élections de mi-mandat : les valeurs de l'IA chahutées</h3></div><div class="bd">
+      <p class="fait">Les Américains ont voté le mardi 3 novembre pour renouveler le Congrès. La presse relie à ce vote un nouveau recul des entreprises liées à l'intelligence artificielle, déjà en baisse depuis début octobre.</p>
+      <div class="chif"><span class="t">Nos chiffres</span><div><span>Nasdaq 100, jeudi 5/11 seul</span><b class="dn">−6,4 %</b></div><div><span>Nvidia, sur la semaine</span><b class="dn">−8,7 %</b></div><div><span>Lam Research</span><b class="dn">−16,7 %</b></div><div><span>Applied Materials</span><b class="dn">−14,9 %</b></div></div>
+      <div class="vous"><b class="h">Chez vous</b><span class="pill">ETF Monde · 1 184 € concernés</span><span class="pill">ASML −9,4 %</span><span class="pill">Apple −0,6 %</span></div>
+      <span class="src">Sources : BBC News, « Why the US midterms sparked an AI stock selloff » (6/11) ; cours ENKLAIR.</span></div></div>
+    <div class="sujet"><div class="hd" style="background:#e8e1ff"><span class="th">Royaume-Uni · Taux d'intérêt</span><h3>La Banque d'Angleterre remonte son taux à 4 %</h3></div><div class="bd">
+      <p class="fait">Jeudi 5 novembre, première hausse depuis plus de trois ans. La livre sterling est montée à son plus haut niveau depuis le référendum du Brexit.</p>
+      <div class="chif"><span class="t">Ce que cela change en général</span><div style="display:block">Emprunter coûte plus cher au Royaume-Uni. Une livre plus forte réduit, une fois convertis en euros, les bénéfices faits là-bas par les entreprises étrangères.</div></div>
+      <div class="vous"><b class="h">Chez vous</b><span class="pill">ETF Monde · 198 € au Royaume-Uni</span></div>
+      <span class="src">Sources : BBC News, « Interest rates hiked to 4% in first increase in over three years » et « Pound rises to its highest level since the Brexit referendum » (5/11).</span></div></div>
+    <div class="sujet"><div class="hd" style="background:#e6e6e6"><span class="th">Énergie · Moyen-Orient</span><h3>Pétrole : toutes les grandes compagnies reculent</h3></div><div class="bd">
+      <p class="fait">Les cinq grandes rivales de TotalEnergies ont toutes baissé cette semaine. Toile de fond : la guerre au Moyen-Orient, qui fait varier fortement le prix du baril depuis février.</p>
+      <div class="chif"><span class="t">Nos chiffres</span><div><span>ExxonMobil</span><b class="dn">−11,2 %</b></div><div><span>BP</span><b class="dn">−11,0 %</b></div><div><span>Chevron</span><b class="dn">−9,2 %</b></div><div><span>Shell</span><b class="dn">−7,8 %</b></div></div>
+      <div class="vous"><b class="h">Chez vous</b><span class="pill">TotalEnergies −7,8 % · −80 €</span><p style="margin:6px 0 0">Aucun article collecté n'explique la baisse du secteur : nous ne l'inventons pas.</p></div>
+      <span class="src">Sources : cours ENKLAIR ; dossier « Guerre au Moyen-Orient » d'ENKLAIR (AIE, Banque mondiale), mis à jour le 29/10.</span></div></div>
+  </div>
+</section>
+
+<!-- 3. ENTREPRISES -->
+<section id="co">
+  <span class="tag v">3 · Vos entreprises</span>
+  <h2>Pourquoi chacune a bougé.</h2>
+  <p class="sub">Chacune est comparée à ses rivales sur la même semaine : on voit tout de suite si le mouvement vient d'elle ou de tout son métier.</p>
+
+  <div class="card co">
+    <div class="co-h"><img src="https://enklair.com/logos/totalenergies.png" alt=""><div class="nm"><h3>TotalEnergies <span class="verdict">Suit son secteur</span></h3><small>9 % de votre portefeuille · −80 € cette semaine</small></div><div class="pf"><b class="dn">−7,8 %</b><small>CAC 40 +1,7 %</small></div></div>
+    <div class="co-b"><div class="lec"><p class="lab"><i>✦</i> La lecture d'ENKLAIR</p>
+      <p>Toutes les grandes compagnies pétrolières ont reculé, de 7,7 % à 11,2 %. TotalEnergies est dans le groupe qui a le moins baissé. Ses seules annonces sont des rachats de ses propres actions, une opération qu'elle publie chaque semaine.</p>
+      <p>Chez Chevron, les résultats du trimestre publiés jeudi sont en forte hausse (ventes +36 %, bénéfice ×2,8) : son action a quand même baissé de 9,2 %. Le recul vient du secteur dans son ensemble, pas des résultats.</p>
+      <div class="preuve"><span>Presse : forage au Nigeria</span><span>Presse : gaz de l'ADNOC sur 5 ans</span></div>
+      <p class="ia">Rédigé par l'IA d'ENKLAIR à partir des cours, des annonces, des comptes de la fiche et des rivales.</p></div>
+      <div class="riv"><p class="lab">Ses rivales sur la semaine</p><div class="bar"><span>ExxonMobil</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:24%;background:#d1242f"></span></span><span class="p dn">−11,2 %</span></div><div class="bar"><span>BP</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:24%;background:#d1242f"></span></span><span class="p dn">−11,0 %</span></div><div class="bar"><span>Chevron</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:20%;background:#d1242f"></span></span><span class="p dn">−9,2 %</span></div><div class="bar moi"><span>TotalEnergies</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:17%;background:#111"></span></span><span class="p dn">−7,8 %</span></div><div class="bar"><span>Shell</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:17%;background:#d1242f"></span></span><span class="p dn">−7,8 %</span></div><div class="bar"><span>Eni</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:17%;background:#d1242f"></span></span><span class="p dn">−7,7 %</span></div>
+        <div class="nouv"><p class="lab" style="margin-top:10px">Leurs nouvelles</p><div><b>Chevron</b> · résultats du trimestre : ventes 67,8 Md$ (+36 %), bénéfice 9,9 Md$ (+180 %).</div><div><b>Shell</b> vend sa part dans le gaz naturel liquéfié de North West Shelf (presse).</div></div></div></div>
+    <div class="co-f"><a href="#">3 articles de presse</a><a href="#">Voir la fiche</a><span>Opérations courantes : rachat d'actions (3/11)</span></div>
+  </div>
+
+  <div class="card co">
+    <div class="co-h"><img src="https://enklair.com/logos/lvmh.png" alt=""><div class="nm"><h3>LVMH <span class="verdict">Suit son secteur</span></h3><small>12 % de votre portefeuille · +67 € cette semaine</small></div><div class="pf"><b class="up">+5,8 %</b><small>CAC 40 +1,7 %</small></div></div>
+    <div class="co-b"><div class="lec"><p class="lab"><i>✦</i> La lecture d'ENKLAIR</p>
+      <p>Tout le luxe européen a monté, de 4,9 % à 6,2 %. LVMH est deuxième de son groupe, derrière Burberry, sans annonce importante de sa part : seulement des opérations courantes.</p>
+      <p>À noter chez Kering : Balenciaga change de directeur de la création (départ annoncé le 5/11, remplaçante nommée le 6/11).</p>
+      <div class="preuve"><span>Acompte sur dividende : 5,50 € le 3/12</span></div>
+      <p class="ia">Rédigé par l'IA d'ENKLAIR à partir des cours, des annonces, des comptes de la fiche et des rivales.</p></div>
+      <div class="riv"><p class="lab">Ses rivales sur la semaine</p><div class="bar"><span>Burberry</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:14%;background:#0a8a3a"></span></span><span class="p up">+6,2 %</span></div><div class="bar moi"><span>LVMH</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:13%;background:#111"></span></span><span class="p up">+5,8 %</span></div><div class="bar"><span>Kering</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:12%;background:#0a8a3a"></span></span><span class="p up">+5,5 %</span></div><div class="bar"><span>Hermès</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:12%;background:#0a8a3a"></span></span><span class="p up">+5,3 %</span></div><div class="bar"><span>Moncler</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:11%;background:#0a8a3a"></span></span><span class="p up">+5,2 %</span></div><div class="bar"><span>Christian Dior</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:11%;background:#0a8a3a"></span></span><span class="p up">+4,9 %</span></div>
+        <div class="nouv"><p class="lab" style="margin-top:10px">Leurs nouvelles</p><div><b>Kering</b> · Martine Rose nommée directrice de la création de Balenciaga (6/11).</div></div></div></div>
+    <div class="co-f"><a href="#">3 articles de presse</a><a href="#">Voir la fiche</a><span class="dt">30/11 · dernier jour pour avoir l'acompte</span></div>
+  </div>
+
+  <div class="card co">
+    <div class="co-h"><img src="https://enklair.com/logos/asml.png" alt=""><div class="nm"><h3>ASML <span class="verdict">Suit son secteur</span></h3><small>Dans vos favoris</small></div><div class="pf"><b class="dn">−9,4 %</b><small>Euro Stoxx 50 +0,4 %</small></div></div>
+    <div class="co-b"><div class="lec"><p class="lab"><i>✦</i> La lecture d'ENKLAIR</p>
+      <p>ASML n'a rien annoncé cette semaine. Sa baisse est celle de tout son métier : ses rivales ont reculé de 6,9 % à 16,7 %, et ASML a moins baissé que quatre d'entre elles. Le mouvement suit la chute des valeurs de l'IA autour des élections américaines.</p>
+      <p>Ses comptes n'ont pas changé : 32,7 Md€ de ventes en 2025, en hausse de 16 % sur un an.</p>
+      <p class="ia">Rédigé par l'IA d'ENKLAIR à partir des cours, des annonces, des comptes de la fiche et des rivales.</p></div>
+      <div class="riv"><p class="lab">Ses rivales sur la semaine</p><div class="bar"><span>Lam Research</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:36%;background:#d1242f"></span></span><span class="p dn">−16,7 %</span></div><div class="bar"><span>Applied Mat.</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:33%;background:#d1242f"></span></span><span class="p dn">−14,9 %</span></div><div class="bar"><span>KLA</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:29%;background:#d1242f"></span></span><span class="p dn">−13,1 %</span></div><div class="bar"><span>ASM Intl</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:24%;background:#d1242f"></span></span><span class="p dn">−10,8 %</span></div><div class="bar moi"><span>ASML</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:21%;background:#111"></span></span><span class="p dn">−9,4 %</span></div><div class="bar"><span>BE Semi.</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:15%;background:#d1242f"></span></span><span class="p dn">−6,9 %</span></div>
+        <div class="nouv"><p class="lab" style="margin-top:10px">Leurs nouvelles</p><div><b>Applied Materials</b> augmente sa participation dans BE Semiconductor (presse).</div></div></div></div>
+    <div class="co-f"><a href="#">3 articles de presse</a><a href="#">Voir la fiche</a></div>
+  </div>
+
+  <div class="card co">
+    <div class="co-h"><img src="https://enklair.com/logos/apple.png" alt=""><div class="nm"><h3>Apple <span class="verdict j">Résultats publiés</span></h3><small>Dans vos favoris · aussi 5 % de votre ETF Monde</small></div><div class="pf"><b class="dn">−0,6 %</b><small>S&amp;P 500 −2,2 %</small></div></div>
+    <div class="co-b"><div class="lec"><p class="lab"><i>✦</i> La lecture d'ENKLAIR</p>
+      <p>Apple a publié ses résultats le 2/11 : ventes du trimestre 114,5 Md$ (+12 %), bénéfice par action 2,10 $ (+14 %). Sur l'année, ventes de 478,8 Md$ (+15 %) et bénéfice de 132,2 Md$ (+18 %).</p>
+      <p>Son action a presque tenu pendant que le S&amp;P 500 perdait 2,2 % et que Dell perdait 22 %.</p>
+      <div class="preuve"><span>Ventes +12 %</span><span>Bénéfice par action +14 %</span><span>Dividende 0,27 $</span></div>
+      <p class="ia">Rédigé par l'IA d'ENKLAIR à partir des cours, des annonces, des comptes de la fiche et des rivales.</p></div>
+      <div class="riv"><p class="lab">Ses rivales sur la semaine</p><div class="bar"><span>Microsoft</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:5%;background:#0a8a3a"></span></span><span class="p up">+2,2 %</span></div><div class="bar"><span>Alphabet</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:5%;background:#0a8a3a"></span></span><span class="p up">+2,1 %</span></div><div class="bar"><span>HP</span><span class="tr"><span class="z"></span><span class="f" style="left:50%;width:1%;background:#0a8a3a"></span></span><span class="p up">+0,5 %</span></div><div class="bar"><span>Qualcomm</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:0%;background:#d1242f"></span></span><span class="p dn">−0,1 %</span></div><div class="bar moi"><span>Apple</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:1%;background:#111"></span></span><span class="p dn">−0,6 %</span></div><div class="bar"><span>Dell</span><span class="tr"><span class="z"></span><span class="f" style="right:50%;width:48%;background:#d1242f"></span></span><span class="p dn">−22,4 %</span></div>
+        <div class="nouv"><p class="lab" style="margin-top:10px">Leurs nouvelles</p><div><b>Qualcomm</b> · rapport annuel : ventes 43,1 Md$ (−2,6 %), bénéfice 13,6 Md$ (+146 %).</div><div><b>Alphabet</b> prend une participation de 548 M$ dans Qualcomm (presse).</div></div></div></div>
+    <div class="co-f"><a href="#">5 annonces et articles</a><a href="#">Voir la fiche</a></div>
+  </div>
+
+  <div class="calme"><span><b>Sans nouvelle cette semaine</b> · Air Liquide +4,1 %, Hermès +4,6 %, Sanofi +4,1 %, Schneider Electric −4,2 %</span><a href="#" style="color:#111;font-weight:700">Voir</a></div>
+</section>
+
+<!-- 4. À VENIR -->
+<section id="av">
+  <span class="tag">4 · À venir</span>
+  <h2>Les dates à noter.</h2>
+  <div class="av">
+    <div class="card"><div class="cal"><small>NOV.</small><b>30</b></div><p><b>LVMH</b><br>Dernier jour pour acheter l'action et recevoir l'acompte.</p></div>
+    <div class="card"><div class="cal"><small>DÉC.</small><b>3</b></div><p><b>LVMH</b><br>Paiement de l'acompte : 5,50 € par action, soit 16,50 € pour vos 3 actions.</p></div>
+    <div class="card"><div class="cal"><small>DÉC.</small><b>5</b></div><p><b>Votre achat programmé</b><br>25 parts d'Amundi PEA Monde.</p></div>
+  </div>
+</section>
+<p class="fin">Information, pas conseil. ENKLAIR ne dit jamais quoi acheter ou vendre. Sources sous chaque bloc.</p>
+</div>
+<div class="note"><b>Nouveautés de la v6.</b> 1) « Votre portefeuille » : gains et pertes en euros par ligne, et ce qu'il faut en retenir. 2) Bloc « Achat programmé », seulement pour ceux qui en ont un. 3) « Radiographie » : votre argent, ETF compris, rangé selon les sujets de la semaine. 4) Présentation : en-tête jaune, sommaire, cartes à ombre noire, calendrier. Le reste de la v5 est gardé (monde, rivales, lecture de l'IA nourrie par les données).</div>
+</body></html>

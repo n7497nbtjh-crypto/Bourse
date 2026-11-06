@@ -7,8 +7,8 @@
   const ancien = window.pagePremium;
   const lien = k => { const l = OFFRES && OFFRES[k]; if (!l) return null; return MOI && MOI.connecte ? l + "?prefilled_email=" + encodeURIComponent(MOI.email || "") : "/espace?payer=" + k; };
   const ok = '<span class="ok">✓</span>', no = '<span class="no">✕</span>', mi = t => `<span class="mi">${t}</span>`;
-  // 6/11 (Romain) : deux comparatifs. 1. Gratuit / Premium sur ENKLAIR. 2. ENKLAIR Premium face à la concurrence, avec les prix
-  // (relevés le 6/11/2026 : Zonebourse Premium 40 €/mois, Access 24 €/mois ; Simply Wall St Premium 10,95 $/mois ; ChatGPT Plus 22,99 €/mois TTC).
+  // 6/11 soir (Romain : « ne compare pas aux concurrents, j'ai peur que ça donne envie d'aller chez eux ») : plus aucun concurrent nommé ni sous-entendu.
+  // Un seul comparatif, Gratuit / Premium ; les points forts du site sont dits pour eux-mêmes (section « Ce qui rend ENKLAIR différent »).
   const VS1 = [
     ["Fiches entreprises complètes (3 300 entreprises face à leurs rivales)", mi("5 par jour"), '<span class="ok">Sans limite</span>'],
     ["Son rang dans son secteur, les 5 classements", no, ok],
@@ -20,15 +20,6 @@
     ["Brancher Claude ou ChatGPT sur les comptes officiels (connecteur)", no, ok],
     ["Export de vos chiffres (CSV)", no, ok],
     ["Actualité, agenda, outils, Apprendre, portefeuille", ok, ok],
-  ];
-  const VS2 = [
-    ["Prix", '<b>3,25 € par mois</b><small>39 € l\'année, ou 4,90 € par mois</small>', "40 € par mois<small>Premium ; Access 24 €, Expert 199 €</small>", "environ 10 € par mois<small>10,95 $ ; 30 fiches par mois</small>", "22,99 € par mois<small>ChatGPT Plus</small>"],
-    ["Chaque chiffre relié au document officiel de l'entreprise", ok, mi("données d'un fournisseur"), mi("données d'un fournisseur"), no],
-    ["Chaque entreprise face à la médiane de ses vraies rivales", ok, mi("en partie"), mi("en partie"), mi("de mémoire")],
-    ["Expliqué pour quelqu'un qui débute, en français", ok, no, mi("en anglais"), mi("si vous le demandez")],
-    ["Le rapport de votre semaine, vos alertes", ok, mi("newsletter, alertes de cours"), mi("alertes"), no],
-    ["Une IA qui cite ses sources, 30 questions par jour", ok, no, no, mi("sans source")],
-    ["Aucun conseil d'achat ni de vente", ok, mi("conseils et portefeuilles types"), mi("estimations de « juste valeur »"), ok],
   ];
   const av = (num, titre, txt, pts, ailleurs, vis, inv) => `<div class="pm5-av${inv ? " inv" : ""}"><div class="pm5-tx"><p class="pm5-num">${num}</p><h3>${titre}</h3><p class="pm5-lead">${txt}</p>
     <ul>${pts.map(p => `<li>${p}</li>`).join("")}</ul><p class="pm5-gx">${ailleurs}</p></div><div class="pm5-vis">${vis}</div></div>`;
@@ -74,31 +65,33 @@
         <div><i class="b">◎</i><p><b>Vos ETF passés aux rayons X</b><span>Ce que vous possédez vraiment, entreprise par entreprise.</span></p></div></div>
       <a class="pm5-ex" href="/rapport-exemple"><span class="pm5-ex-i">📰</span><span><b>Voir un vrai rapport de la semaine</b><small>Calculé aujourd'hui avec les chiffres du site, pour un portefeuille d'exemple</small></span><em>→</em></a></div>
       ${offre}</section>
-    <section class="pm5-sec ek-sec"><span class="ek-stk2 p">Seulement avec Premium</span><h2>Quatre choses que personne d'autre ne fait pour vous.</h2>
-      <p class="pm5-lead">Un courtier vous montre des cours. Un site boursier, des articles. Une IA, ce qu'elle a en mémoire. ENKLAIR part des documents officiels et les relie à <b>vos</b> placements.</p>
-      ${av("1 · Vos ETF aux rayons X", "Ce que vous possédez vraiment, à travers vos ETF.", "Un ETF Monde, c'est plus de 1 300 entreprises. Premium les additionne avec vos actions pour vous montrer vos vraies expositions.", ["Vos expositions par pays et par secteur", "Ce qu'une forte baisse coûterait, en euros", "Le calendrier de vos dividendes", "Et sans limite : comparaisons, cinq classements, export des chiffres"], "Ailleurs : vous voyez « 1 ligne : ETF Monde », sans savoir ce qu'il y a dedans.", vPf, false)}
-      ${av("2 · Votre rapport du samedi", "Le samedi, toute votre semaine en deux minutes.", "Ce que vos entreprises ont publié dans le monde entier, lu dans les documents officiels et traduit en français. Ce qui a fait bouger votre portefeuille. Ce qui arrive.", ["Résultats, rachats d'actions, accords et presse, entreprise par entreprise", "Ce que chaque ligne vous a fait gagner ou perdre, en euros", "Vos prochaines dates : résultats, dividendes, dernier jour pour les toucher"], `Ailleurs : personne ne lit pour vous les annonces de Paris, New York et Oslo.</p><p style="margin:14px 0 0"><a class="pm5-btn o" style="display:inline-flex" href="/rapport-exemple">Voir le rapport d'exemple de cette semaine →</a>`, vRap, true)}
-      ${av("3 · Les alertes", "Une de vos valeurs chute ? Vous le savez le soir même.", "ENKLAIR surveille chaque soir votre portefeuille et vos favoris. Pas besoin d'ouvrir le site.", ["Baisse de plus de 5 % dans la journée : notification sur votre téléphone" + (OFFRES.mail ? " et par e-mail" : ""), "Résultats publiés, avec leurs chiffres clés", "Dernier jour pour acheter et toucher un dividende"], "Ailleurs : une alerte de cours, sans vous dire pourquoi.", vTel, false)}
-      ${av("4 · L'IA qui cite ses sources", "Posez vos questions, autant que vous voulez.", "Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.", ["30 questions par jour, au lieu de 3 par semaine", "Chaque chiffre cité avec sa source", "Le connecteur pour votre propre IA"], "Ailleurs : une IA répond de mémoire, sans source ni comparaison au secteur.", vIa, true)}
+    <section class="pm5-sec ek-sec"><span class="ek-stk2 p">Seulement avec Premium</span><h2>Quatre choses qu'ENKLAIR fait pour vous, chaque semaine.</h2>
+      <p class="pm5-lead">ENKLAIR part des documents officiels des entreprises et les relie à <b>vos</b> placements : vos actions, vos ETF, vos favoris.</p>
+      ${av("1 · Vos ETF aux rayons X", "Ce que vous possédez vraiment, à travers vos ETF.", "Un ETF Monde, c'est plus de 1 300 entreprises. Premium les additionne avec vos actions pour vous montrer vos vraies expositions.", ["Vos expositions par pays et par secteur", "Ce qu'une forte baisse coûterait, en euros", "Le calendrier de vos dividendes", "Et sans limite : comparaisons, cinq classements, export des chiffres"], "Le plus : chaque entreprise de vos ETF est reliée à sa fiche.", vPf, false)}
+      ${av("2 · Votre rapport du samedi", "Le samedi, toute votre semaine en deux minutes.", "Ce que vos entreprises ont publié dans le monde entier, lu dans les documents officiels et traduit en français. Ce qui a fait bouger votre portefeuille. Ce qui arrive.", ["Résultats, rachats d'actions, accords et presse, entreprise par entreprise", "Ce que chaque ligne vous a fait gagner ou perdre, en euros", "Vos prochaines dates : résultats, dividendes, dernier jour pour les toucher"], `Le plus : les annonces officielles de Paris, New York, Londres, Oslo et des pays nordiques, lues pour vous et comparées aux rivales.</p><p style="margin:14px 0 0"><a class="pm5-btn o" style="display:inline-flex" href="/rapport-exemple">Voir le rapport d'exemple de cette semaine →</a>`, vRap, true)}
+      ${av("3 · Les alertes", "Une de vos valeurs chute ? Vous le savez le soir même.", "ENKLAIR surveille chaque soir votre portefeuille et vos favoris. Pas besoin d'ouvrir le site.", ["Baisse de plus de 5 % dans la journée : notification sur votre téléphone" + (OFFRES.mail ? " et par e-mail" : ""), "Résultats publiés, avec leurs chiffres clés", "Dernier jour pour acheter et toucher un dividende"], "Le plus : quand une annonce explique la baisse, l'alerte vous la montre.", vTel, false)}
+      ${av("4 · L'IA qui cite ses sources", "Posez vos questions, autant que vous voulez.", "Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.", ["30 questions par jour, au lieu de 3 par semaine", "Chaque chiffre cité avec sa source", "Le connecteur pour votre propre IA"], "Le plus : chaque réponse s'appuie sur la fiche, la médiane du secteur et les rivales.", vIa, true)}
     </section>
     <section class="pm5-sec ek-sec"><span class="ek-stk2">Gratuit ou Premium</span><h2>Ce que Premium ajoute.</h2>
       <div class="pm5-vsw"><div class="pm5-vs pm5-vs3"><div><span></span><span>ENKLAIR gratuit</span><span>ENKLAIR Premium</span></div>
       ${VS1.map(r => `<div><span>${r[0]}</span>${r.slice(1).map(c => `<span>${c}</span>`).join("")}</div>`).join("")}</div></div>
       <p class="pm5-vsn">En gratuit, l'en-tête et les 5 repères de chaque fiche restent toujours ouverts, ainsi que les entreprises que vous suivez en favori.</p></section>
-    <section class="pm5-sec ek-sec"><span class="ek-stk2">Face aux autres</span><h2>Moins cher, et pas le même travail.</h2>
-      <div class="pm5-vsw"><div class="pm5-vs pm5-vs5"><div><span></span><span>ENKLAIR Premium</span><span>Zonebourse</span><span>Simply Wall St</span><span>Une IA seule</span></div>
-      ${VS2.map(r => `<div><span>${r[0]}</span>${r.slice(1).map(c => `<span>${c}</span>`).join("")}</div>`).join("")}</div></div>
-      <p class="pm5-vsn">Prix publics relevés le 6 novembre 2026 sur les sites des éditeurs (Zonebourse : formules Access, Premium et Expert ; Simply Wall St : formule Premium en dollars ; ChatGPT Plus en euros TTC). Les services des autres sites évoluent : vérifiez chez eux avant de choisir.</p></section>
+    <section class="pm5-sec ek-sec"><span class="ek-stk2 p">Pourquoi ENKLAIR</span><h2>Ce qui rend ENKLAIR différent.</h2><div class="pm5-tr">
+      <div><i>◎</i><b>Les documents officiels</b><p>Les comptes viennent en priorité des rapports déposés par les entreprises (AMF, SEC, bourses européennes). Chaque chiffre indique sa source.</p></div>
+      <div><i>⇄</i><b>Face à ses vraies rivales</b><p>Chaque entreprise est comparée à la médiane de son secteur, avec des zones vertes et rouges lisibles d'un coup d'œil.</p></div>
+      <div><i>Aa</i><b>Pensé pour débuter</b><p>En français, chaque mot expliqué, le verdict en deux mots et le détail au clic.</p></div>
+      <div><i>✦</i><b>Une IA nourrie par le site</b><p>Elle répond avec les comptes, les rivales et les annonces de l'entreprise, pas avec des généralités.</p></div></div>
+      <p class="pm5-vsn">${F0.format(nCo)} entreprises dans le monde, mises à jour chaque jour. Premium : 3,25 € par mois avec l'offre d'un an (39 €), ou 4,90 € par mois sans engagement.</p></section>
     <section class="pm5-sec ek-sec"><span class="ek-stk2 b">En confiance</span><h2>Simple à prendre, simple à quitter.</h2><div class="pm5-tr">
       <div><i>↺</i><b>Résiliable en deux clics</b><p>Depuis Mon espace. L'accès reste ouvert jusqu'à la fin du mois payé.</p></div>
       <div><i>🔒</i><b>Paiement par Stripe</b><p>ENKLAIR ne voit jamais votre numéro de carte.</p></div>
       <div><i>⚖</i><b>Jamais de conseil d'achat</b><p>De l'information et des explications, pas de recommandation.</p></div>
-      <div><i>◎</i><b>Sources officielles</b><p>Chaque chiffre renvoie au document de l'entreprise.</p></div></div></section>
+      <div><i>⚡</i><b>Accès immédiat</b><p>Premium s'ouvre dès le paiement, sur tous vos appareils.</p></div></div></section>
     ${st.premium || !ouvert ? "" : `<section class="pm5-fin"><div><h2>Votre premier rapport arrive samedi.</h2><p>39 € pour un an, ou 4,90 € par mois sans engagement.</p></div><a class="pm5-btn y" href="/premium" id="pm5fin">Passer à Premium →</a></section>`}
     <section class="pm5-sec ek-sec"><span class="ek-stk2">Questions</span><h2>Questions fréquentes.</h2><div class="pm5-faq">
       <details open><summary>Premium donne-t-il des conseils pour acheter ?</summary><p>Non. Premium donne plus de suivi et d'explications, jamais de recommandation d'achat ou de vente. ENKLAIR n'est pas un conseiller en investissement.</p></details>
       <details open><summary>Comment résilier ?</summary><p>Depuis Mon espace, « Gérer ou résilier mon abonnement ». L'accès reste ouvert jusqu'à la fin du mois payé. L'offre d'un an ne se renouvelle pas.</p></details>
-      <details><summary>Pourquoi payer si mon IA répond déjà ?</summary><p>Votre IA répond quand vous pensez à lui demander, avec ce qu'elle a en mémoire. ENKLAIR lit les publications officielles chaque jour, compare chaque entreprise à ses rivales, garde vos semaines en mémoire et vous prévient.</p></details>
+      <details><summary>Sur quoi s'appuie l'IA d'ENKLAIR ?</summary><p>Sur les données du site : les comptes officiels de l'entreprise, la médiane de son secteur, ses rivales, ses annonces récentes et ses prochaines dates. Chaque réponse cite ses sources. ENKLAIR lit aussi les publications chaque jour, garde vos semaines en mémoire et vous prévient.</p></details>
       <details><summary>Puis-je changer d'avis ?</summary><p>Les conditions de rétractation sont détaillées dans les <a class="lnk" href="/cgv">conditions générales de vente</a>.</p></details>
       <details><summary>J'ai déjà un code d'accès</summary><p>Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur cet appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p id="codem" class="muted"></p></details>
       <details><summary>J'ai perdu mon code</summary><p>Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p id="lostm" class="muted"></p></details>

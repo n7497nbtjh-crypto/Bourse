@@ -1,0 +1,201 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette page Premium v4</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:16px/1.5 Inter,sans-serif;-webkit-font-smoothing:antialiased}
+b{font-variant-numeric:tabular-nums}
+.note{max-width:1120px;margin:20px auto;background:#f4f4f4;border-radius:12px;padding:12px 18px;font-size:14px;color:#333}
+.w{max-width:1120px;margin:0 auto;padding:0 20px}
+.tag{display:inline-block;background:#FFE14D;border:1.5px solid #111;border-radius:7px;padding:2px 10px;font:700 13px Inter;transform:rotate(-2deg)}
+.tag.k{background:#111;color:#fff}.tag.r{background:#ffd6dc}.tag.b{background:#d6e6ff}.tag.v{background:#d9f5df}
+h1{font:800 60px/.98 "Bricolage Grotesque";letter-spacing:-2.2px;margin:12px 0 14px}
+h2{font:800 40px/1.04 "Bricolage Grotesque";letter-spacing:-1.3px;margin:10px 0 8px}
+h3{font:800 22px/1.15 "Bricolage Grotesque";letter-spacing:-.4px;margin:0}
+.sub{color:#444;margin:0 0 26px;max-width:680px;font-size:17px}
+section{margin:0 0 76px}
+.up{color:#0a8a3a}.dn{color:#d1242f}
+.card{border:2px solid #111;border-radius:20px;box-shadow:5px 5px 0 #111;background:#fff}
+.btn{display:inline-flex;align-items:center;gap:8px;background:#111;color:#fff;border:2px solid #111;border-radius:12px;padding:12px 20px;font:700 15px Inter;text-decoration:none}
+.btn.y{background:#FFE14D;color:#111;box-shadow:3px 3px 0 #111}
+/* HERO */
+.band{background:#FFE14D;border-bottom:2px solid #111;padding:34px 0 46px;margin-bottom:60px;overflow:hidden}
+.hgrid{display:grid;grid-template-columns:1.1fr 1fr;gap:40px;align-items:center}
+.hero p.l{font-size:18px;max-width:520px;margin:0 0 22px}
+.ticks{display:grid;gap:8px;margin:0 0 24px;padding:0;list-style:none}
+.ticks li{display:flex;gap:10px;align-items:center;font-weight:600}
+.ticks li:before{content:"✓";width:22px;height:22px;border-radius:50%;background:#111;color:#FFE14D;display:grid;place-items:center;font-size:13px;flex:none}
+.stackv{position:relative;height:500px}
+.stackv .c{position:absolute;padding:16px 18px}
+.c1{left:0;top:0;width:70%;transform:rotate(-2deg);z-index:1}
+.c2{right:0;top:215px;width:60%;z-index:2;transform:rotate(2.5deg);background:#111;color:#fff;border-color:#111}
+.c3{left:4%;top:370px;width:58%;transform:rotate(-1deg);z-index:3}
+.mini small{font:700 11px Inter;letter-spacing:.07em;text-transform:uppercase;color:#666}
+.mini .big{font:800 40px/1 "Bricolage Grotesque";letter-spacing:-1.2px;margin:6px 0 6px}
+.mini .ln{display:flex;justify-content:space-between;font-size:14px;padding:3px 0;border-top:1px solid #eee}
+.c2 small{color:#bbb}.c2 p{margin:6px 0 0;font-size:14px}
+.c2 .nt{display:flex;gap:10px;align-items:flex-start}
+.c2 .nt i{font-style:normal;background:#FFE14D;color:#111;font:800 13px Inter;border-radius:7px;width:26px;height:26px;display:grid;place-items:center;flex:none}
+.c3 .bar{height:12px;border:1.5px solid #111;border-radius:99px;overflow:hidden;display:flex;margin:8px 0 6px}
+/* SEMAINE */
+.semaine{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:2px solid #111;border-radius:20px;overflow:hidden;box-shadow:5px 5px 0 #111}
+.jour{padding:18px;border-right:2px solid #111;display:flex;flex-direction:column;gap:10px;background:#fff}
+.jour:last-child{border-right:0;background:#FFE14D}
+.jour .j{font:800 15px "Bricolage Grotesque";display:flex;justify-content:space-between;align-items:center}
+.jour .j span{font:700 11px Inter;background:#111;color:#fff;border-radius:6px;padding:1px 7px}
+.jour h3{font-size:19px}
+.jour p{margin:0;font-size:14px;color:#333}
+.ex{background:#f4f4f4;border-radius:10px;padding:9px 11px;font-size:13px;margin-top:auto}
+.jour:last-child .ex{background:#fff;border:1.5px solid #111}
+/* BENTO */
+.bento{display:grid;grid-template-columns:repeat(6,1fr);gap:16px}
+.bx{padding:20px;display:flex;flex-direction:column;gap:10px}
+.bx .k{font:700 11px Inter;text-transform:uppercase;letter-spacing:.07em;color:#555}
+.bx p{margin:0;font-size:14.5px;color:#333}
+.s2{grid-column:span 2}.s3{grid-column:span 3}.s4{grid-column:span 4}
+.bx.dark{background:#111;color:#fff}.bx.dark p,.bx.dark .k{color:#ccc}
+.bx.yel{background:#fff8cc}
+.vis{margin-top:auto;background:#f6f6f6;border-radius:12px;padding:12px;font-size:13.5px}
+.bx.dark .vis{background:#222;color:#eee}
+.rk{display:grid;grid-template-columns:24px 1fr 60px;gap:8px;align-items:center;padding:3px 0}
+.rk i{font-style:normal;font:800 13px Inter;background:#fff;border:1.5px solid #111;border-radius:6px;text-align:center}
+.rk.me{font-weight:800}.rk.me i{background:#FFE14D}
+.q{background:#111;color:#fff;border-radius:12px 12px 4px 12px;padding:7px 11px;font-size:13px;margin-left:auto;max-width:90%}
+.a{background:#fff;border:1.5px solid #111;border-radius:12px 12px 12px 4px;padding:8px 11px;font-size:13px;margin-top:8px}
+.a small{display:block;color:#777;font-size:11px;margin-top:4px}
+.big2{font:800 44px/1 "Bricolage Grotesque";letter-spacing:-1.4px}
+/* TABLEAU */
+.tab{border:2px solid #111;border-radius:20px;overflow:hidden;box-shadow:5px 5px 0 #111}
+.tr{display:grid;grid-template-columns:1fr 170px 170px;border-top:1.5px solid #e5e5e5;align-items:center}
+.tr:first-child{border-top:0}
+.tr>span{padding:12px 16px;font-size:14.5px}
+.tr>span:nth-child(2),.tr>span:nth-child(3){text-align:center}
+.tr>span:nth-child(3){background:#fff8cc;font-weight:700;border-left:2px solid #111}
+.th{background:#111;color:#fff}.th>span{font:800 16px "Bricolage Grotesque"}.th>span:nth-child(3){background:#FFE14D;color:#111}
+.ok{display:inline-grid;place-items:center;width:24px;height:24px;border-radius:50%;background:#111;color:#FFE14D;font-size:13px}
+.no{color:#bbb}
+.lim{display:inline-block;background:#f1f1f1;border-radius:7px;padding:1px 8px;font-size:13px;font-weight:600}
+.tr.prix>span{font:800 20px "Bricolage Grotesque"}
+/* DIFFERENCE */
+.diff{background:#111;color:#fff;border-radius:24px;padding:40px 36px}
+.diff h2{color:#fff}
+.dgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;margin-top:22px}
+.dgrid div{border-top:3px solid #FFE14D;padding-top:12px}
+.dgrid b{display:block;font:800 19px "Bricolage Grotesque";margin-bottom:6px}
+.dgrid p{margin:0;color:#ccc;font-size:14.5px}
+/* PRIX */
+.prix2{display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:760px;margin:0 auto}
+.pl{padding:24px;text-align:left;position:relative}
+.pl.best{background:#FFE14D}
+.pl .badge{position:absolute;top:-14px;right:18px;background:#111;color:#fff;border-radius:8px;padding:3px 10px;font:700 12.5px Inter;transform:rotate(2deg)}
+.pl .pr{font:800 52px/1 "Bricolage Grotesque";letter-spacing:-1.6px;margin:10px 0 2px}
+.pl .pr small{font:600 16px Inter;letter-spacing:0}
+.pl p{margin:0 0 16px;color:#333}
+.gar{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.gar span{border:1.5px solid #111;border-radius:99px;padding:4px 12px;font:600 13px Inter}
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.faq details{border:2px solid #111;border-radius:14px;padding:12px 16px}
+.faq summary{font-weight:700;cursor:pointer}
+.faq p{margin:8px 0 0;font-size:14.5px;color:#333}
+@media(max-width:900px){.stackv{height:600px}.c1{width:88%}.c2{top:240px;width:80%}.c3{top:450px;width:80%}h1{font-size:40px}h2{font-size:30px}.hgrid,.prix2,.faq{grid-template-columns:1fr}.semaine{grid-template-columns:1fr}.jour{border-right:0;border-bottom:2px solid #111}.bento{grid-template-columns:1fr}.s2,.s3,.s4{grid-column:auto}.dgrid{grid-template-columns:1fr 1fr}.tr{grid-template-columns:1fr 92px 104px}.tr>span{padding:10px 10px;font-size:13.5px}.diff{padding:28px 20px}}
+@media(max-width:480px){.dgrid{grid-template-columns:1fr}.c1{width:92%}.c2{width:80%}.c3{width:84%}}
+</style></head><body>
+<div class="note"><b>Maquette de la page Premium, version 4 (6/11 soir).</b> Aucun concurrent cité. Exemples tirés de la vraie semaine du 2 au 6 novembre (rapport d'exemple, cours du site, contenu officiel du MSCI World). Le tableau Gratuit / Premium est gardé. Les boutons de paiement restent ceux d'aujourd'hui.</div>
+
+<div class="band"><div class="w hgrid">
+  <div class="hero">
+    <span class="tag k">ENKLAIR Premium</span>
+    <h1>Votre Bourse, suivie pour vous.</h1>
+    <p class="l">Chaque jour, ENKLAIR lit les annonces officielles de vos entreprises, les compare à leurs rivales et regarde ce qu'elles changent pour <b>votre</b> argent. Vous recevez l'essentiel, en français.</p>
+    <ul class="ticks"><li>Le rapport de votre semaine, chaque samedi</li><li>Une alerte le soir même si une valeur chute</li><li>Toutes les fiches, l'IA 30 questions par jour</li></ul>
+    <a class="btn" href="#prix">Passer à Premium · 3,25 € par mois</a>
+    <p style="font-size:13px;margin:10px 0 0">39 € pour un an, ou 4,90 € par mois sans engagement. Résiliable en deux clics.</p>
+  </div>
+  <div class="stackv">
+    <div class="card c c1 mini"><small>Votre rapport · semaine du 2 au 6 nov.</small><div class="big dn">−269 €</div>
+      <div class="ln"><span>ETF Monde</span><b class="dn">−262 €</b></div><div class="ln"><span>LVMH</span><b class="up">+67 €</b></div><div class="ln"><span>TotalEnergies</span><b class="dn">−80 €</b></div>
+      <p style="margin:8px 0 0;font-size:13.5px"><b>Pourquoi :</b> la chute de la tech américaine vous a touché par votre ETF.</p></div>
+    <div class="card c c2"><small>Alerte · jeudi 5 nov., 18 h 45</small><div class="nt" style="margin-top:8px"><i>E</i><p><b>ASML −6,5 % aujourd'hui.</b> Lam Research −16,4 % le même jour : c'est tout son métier qui baisse. Aucune annonce d'ASML.</p></div></div>
+    <div class="card c c3 mini"><small>Radiographie</small><p style="margin:4px 0 0;font-size:14px"><b>12 % de votre argent</b> est placé dans l'IA, uniquement par votre ETF.</p><div class="bar"><span style="width:12%;background:#d1242f"></span></div></div>
+  </div>
+</div></div>
+
+<div class="w">
+
+<section>
+  <span class="tag">Une semaine avec Premium</span>
+  <h2>Vous ne cherchez plus. On vous dit.</h2>
+  <p class="sub">Voici ce qu'un abonné a reçu cette semaine, du lundi au samedi.</p>
+  <div class="semaine">
+    <div class="jour"><div class="j">Lundi 2 <span>Résultats</span></div><h3>Apple publie ses résultats</h3><p>Lus dans le document officiel, traduits, comparés à l'an dernier.</p><div class="ex">Ventes du trimestre <b>+12 %</b>, bénéfice par action <b>+14 %</b>.</div></div>
+    <div class="jour"><div class="j">Mardi 3 <span>Le monde</span></div><h3>Élections américaines</h3><p>Le sujet est suivi et relié à vos valeurs qu'il peut toucher.</p><div class="ex">Concerné chez vous : <b>1 184 €</b> via votre ETF Monde.</div></div>
+    <div class="jour"><div class="j">Jeudi 5 <span>Alerte</span></div><h3>Une valeur chute ? Le soir même.</h3><p>Avec la raison quand on la connaît : une annonce, ou tout son secteur.</p><div class="ex">ASML <b class="dn">−6,5 %</b> dans la journée, comme tout son métier (Lam Research −16,4 %).</div></div>
+    <div class="jour"><div class="j">Samedi 7 <span>Rapport</span></div><h3>Votre semaine en 2 minutes</h3><p>Portefeuille, rivales, monde, dates à venir. Sur votre téléphone.</p><div class="ex">« La chute de la tech américaine vous a touché par votre ETF. »</div></div>
+  </div>
+  <p style="margin:18px 0 0"><a class="btn y" href="/rapport-exemple">Voir le rapport complet de cette semaine →</a></p>
+</section>
+
+<section>
+  <span class="tag v">Tout ce que Premium ouvre</span>
+  <h2>Tout le suivi, un seul abonnement.</h2>
+  <p class="sub">Chacun part des données du site : comptes officiels, cours, rivales, annonces.</p>
+  <div class="bento">
+    <div class="card bx s4 yel"><span class="k">Le rapport du samedi</span><h3>Pourquoi chaque ligne a bougé, face à ses rivales.</h3><p>On voit tout de suite si le mouvement vient de l'entreprise ou de tout son métier.</p>
+      <div class="vis"><div class="rk"><i>1</i><span>Burberry</span><b class="up">+6,2 %</b></div><div class="rk me"><i>2</i><span>LVMH · votre ligne</span><b class="up">+5,8 %</b></div><div class="rk"><i>3</i><span>Kering</span><b class="up">+5,5 %</b></div><div class="rk"><i>4</i><span>Hermès</span><b class="up">+5,3 %</b></div></div></div>
+    <div class="card bx s2 dark"><span class="k">Radiographie</span><h3>Ce que vous possédez vraiment.</h3><p>Vos ETF ouverts ligne par ligne, additionnés à vos actions.</p><div class="vis"><span class="big2" style="color:#FFE14D">41 %</span><br>de votre argent aux États-Unis, sans une seule action américaine.</div></div>
+    <div class="card bx s2"><span class="k">Alertes</span><h3>Le soir même.</h3><p>Baisse de plus de 5 %, résultats publiés, dernier jour pour toucher un dividende.</p><div class="vis">LVMH : dernier jour le <b>30/11</b> pour l'acompte de 5,50 €.</div></div>
+    <div class="card bx s2"><span class="k">L'IA du site</span><h3>30 questions par jour.</h3><p>Elle répond avec la fiche, le secteur et les rivales, sources à l'appui.</p><div class="vis"><div class="q">Pourquoi ASML a baissé cette semaine ?</div><div class="a">Toutes ses rivales ont reculé, de 6,9 % à 16,7 %. ASML n'a rien annoncé…<small>Sources : cours ENKLAIR, annonces officielles</small></div></div></div>
+    <div class="card bx s2"><span class="k">Achats programmés</span><h3>Votre DCA, suivi.</h3><p>Le prix de chaque achat, et ce que vaut la part depuis le premier.</p><div class="vis">5 nov. : 25 parts à <b>6,20 €</b>, contre 6,39 € une semaine plus tôt.</div></div>
+    <div class="card bx s3"><span class="k">Fiches sans limite</span><h3>3 300 entreprises, chacune face à son secteur.</h3><p>Rang dans le secteur, médiane des rivales, zones vertes et rouges, sur toutes les fiches.</p></div>
+    <div class="card bx s3"><span class="k">Et aussi</span><h3>Comparer, classer, exporter, brancher.</h3><p>Comparaisons sans limite, les 5 classements, export de vos chiffres, et le connecteur pour utiliser ENKLAIR dans Claude ou ChatGPT.</p></div>
+  </div>
+</section>
+
+<section>
+  <span class="tag">Gratuit ou Premium</span>
+  <h2>Ce que Premium ajoute.</h2>
+  <p class="sub">Le gratuit reste utile tous les jours. Premium fait le suivi à votre place.</p>
+  <div class="tab">
+    <div class="tr th"><span></span><span>Gratuit</span><span>Premium</span></div>
+    <div class="tr"><span>Fiches entreprises complètes</span><span><span class="lim">5 par jour</span></span><span>Sans limite</span></div>
+    <div class="tr"><span>Rang dans le secteur, les 5 classements</span><span class="no">—</span><span><span class="ok">✓</span></span></div>
+    <div class="tr"><span>Comparer jusqu'à 5 entreprises</span><span><span class="lim">3 par semaine</span></span><span>Sans limite</span></div>
+    <div class="tr"><span>Questions à l'IA du site</span><span><span class="lim">3 par semaine</span></span><span>30 par jour</span></div>
+    <div class="tr"><span>Le rapport de votre semaine, chaque samedi</span><span class="no">—</span><span><span class="ok">✓</span></span></div>
+    <div class="tr"><span>Radiographie de votre portefeuille et de vos ETF</span><span class="no">—</span><span><span class="ok">✓</span></span></div>
+    <div class="tr"><span>Alertes le soir même</span><span class="no">—</span><span><span class="ok">✓</span></span></div>
+    <div class="tr"><span>Export CSV et connecteur pour votre IA</span><span class="no">—</span><span><span class="ok">✓</span></span></div>
+    <div class="tr"><span>Actualité, agenda, outils, Apprendre, portefeuille</span><span><span class="ok">✓</span></span><span><span class="ok">✓</span></span></div>
+    <div class="tr prix"><span>Prix</span><span>0 €</span><span>3,25 €/mois</span></div>
+  </div>
+</section>
+
+<section class="diff">
+  <span class="tag">Pourquoi ENKLAIR</span>
+  <h2>Ce qui rend ENKLAIR différent.</h2>
+  <div class="dgrid">
+    <div><b>Les documents officiels</b><p>Les comptes viennent en priorité des rapports déposés par les entreprises. Chaque chiffre indique sa source.</p></div>
+    <div><b>Face aux vraies rivales</b><p>Chaque entreprise comparée à la médiane de son secteur, en vert et en rouge.</p></div>
+    <div><b>Pensé pour débuter</b><p>En français, chaque mot expliqué. Le verdict en deux mots, le détail au clic.</p></div>
+    <div><b>Jamais de conseil</b><p>Pas de « achetez », pas de « vendez ». De l'information, expliquée.</p></div>
+  </div>
+</section>
+
+<section id="prix">
+  <div style="text-align:center"><span class="tag">Votre formule</span><h2>Votre premier rapport arrive samedi.</h2></div>
+  <div class="prix2" style="margin-top:26px">
+    <div class="card pl best"><span class="badge">−34 %</span><h3>Un an</h3><div class="pr">39 €<small> une fois</small></div><p>Soit 3,25 € par mois. Ne se renouvelle pas tout seul.</p><a class="btn" href="#">Choisir un an</a></div>
+    <div class="card pl"><h3>Mensuel</h3><div class="pr">4,90 €<small> par mois</small></div><p>Sans engagement, résiliable en deux clics.</p><a class="btn" style="background:#fff;color:#111" href="#">Choisir le mensuel</a></div>
+  </div>
+  <div class="gar"><span>Paiement sécurisé Stripe</span><span>Accès immédiat</span><span>Sur tous vos appareils</span><span>Résiliable en deux clics</span></div>
+</section>
+
+<section>
+  <span class="tag">Questions</span><h2>Questions fréquentes.</h2>
+  <div class="faq">
+    <details open><summary>Premium donne-t-il des conseils pour acheter ?</summary><p>Non. Plus de suivi et d'explications, jamais de recommandation d'achat ou de vente.</p></details>
+    <details open><summary>Comment résilier ?</summary><p>Depuis Mon espace, « Gérer ou résilier mon abonnement ». L'accès reste ouvert jusqu'à la fin de la période payée.</p></details>
+    <details><summary>Sur quoi s'appuie l'IA d'ENKLAIR ?</summary><p>Sur les données du site : comptes officiels, médiane du secteur, rivales, annonces et prochaines dates. Chaque réponse cite ses sources.</p></details>
+    <details><summary>J'ai déjà un code d'accès</summary><p>(formulaire inchangé)</p></details>
+  </div>
+</section>
+</div>
+</body></html>
