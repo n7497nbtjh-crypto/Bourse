@@ -3,6 +3,7 @@
 //   STRIPE_SECRET (secret)            clé secrète Stripe, pour vérifier les paiements
 //   STRIPE_LINK_MENSUEL, STRIPE_LINK_UNIQUE (texte)   liens de paiement Stripe (Payment Links)
 //   MAIL_FROM (texte)                 adresse d'envoi sur votre domaine, ex. bilan@votre-domaine.fr
+//   EMAIL (lien send_email) ou CF_EMAIL_TOKEN (secret) + CF_ACCOUNT_ID : Cloudflare Email Service, essayé en premier
 //   BREVO_KEY, MAILJET_KEY + MAILJET_SECRET, RESEND_KEY (secrets)   un ou plusieurs services d'envoi
 //   ADMIN_KEY (secret)                clé du robot pour déclencher les envois
 //   PRIX_MENSUEL, PRIX_UNIQUE (texte)  prix affichés sur la page Premium, ex. « 4,90 € par mois »
@@ -136,6 +137,14 @@ export async function premium(request, env) {
 /* ---------- E-mails : plusieurs services gratuits utilisés à tour de rôle ---------- */
 // Brevo 300/jour, Mailjet 200/jour, Resend 100/jour : environ 600 e-mails par jour sans payer, soit plus de 4 000 bilans par semaine.
 const PROVIDERS = [
+  // 6/11 : Cloudflare Email Service (offre Workers payante : 3 000 e-mails par mois compris, puis 0,35 $ les 1 000). Lien EMAIL (send_email) s'il existe, sinon API avec CF_EMAIL_TOKEN + CF_ACCOUNT_ID.
+  ["cloudflare", env => env.EMAIL || (env.CF_EMAIL_TOKEN && env.CF_ACCOUNT_ID), 1000, async (env, to, subject, text, html) => {
+    const m = { to, from: { email: env.MAIL_FROM, name: "ENKLAIR" }, subject, text, ...(html ? { html } : {}) };
+    try {
+      if (env.EMAIL) { await env.EMAIL.send(m); return { ok: true }; }
+      return await fetch(`https://api.cloudflare.com/client/v4/accounts/${env.CF_ACCOUNT_ID}/email/sending/send`, { method: "POST", headers: { authorization: "Bearer " + env.CF_EMAIL_TOKEN, "content-type": "application/json" }, body: JSON.stringify({ ...m, from: `ENKLAIR <${env.MAIL_FROM}>` }) });
+    } catch (e) { return { ok: false }; }
+  }],
   ["brevo", env => env.BREVO_KEY, 290, async (env, to, subject, text, html) => fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: { "api-key": env.BREVO_KEY, "content-type": "application/json" }, body: JSON.stringify({ sender: { email: env.MAIL_FROM, name: "ENKLAIR" }, to: [{ email: to }], subject, textContent: text, htmlContent: html || undefined }) })],
   ["mailjet", env => env.MAILJET_KEY && env.MAILJET_SECRET, 195, async (env, to, subject, text, html) => fetch("https://api.mailjet.com/v3.1/send", { method: "POST", headers: { authorization: "Basic " + btoa(env.MAILJET_KEY + ":" + env.MAILJET_SECRET), "content-type": "application/json" }, body: JSON.stringify({ Messages: [{ From: { Email: env.MAIL_FROM, Name: "ENKLAIR" }, To: [{ Email: to }], Subject: subject, TextPart: text, HTMLPart: html || undefined }] }) })],
   ["resend", env => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `ENKLAIR <${env.MAIL_FROM}>`, to, subject, text, html: html || undefined }) })],
