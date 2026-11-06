@@ -1,5 +1,4 @@
 id,c1,c2,c3
-e:spdr-russell-2000-u-s-small-cap-eur-hdg-acc,EPA:R2EH,AMS:R2EH,EBR:R2EH
 e:ishares-global-aggregate-bond-esg-sri-dist,EPA:AGGE,AMS:AGGE,EBR:AGGE
 e:amundi-core-msci-europe-acc,EPA:CEU2,AMS:CEU2,EBR:CEU2
 e:ishares-corp-bond-1-5yr-acc,ETR:IE1A,FRA:IE1A,
@@ -471,7 +470,6 @@ e:ishares-s-and-p-500-paris-aligned-climate-acc,ETR:UQAB,FRA:UQAB,
 e:ishares-europe-defence-acc,EPA:DFEU,AMS:DFEU,EBR:DFEU
 e:ishares-stoxx-europe-600-food-and-beverage-de,ETR:EXH3,FRA:EXH3,
 e:amundi-s-and-p-world-industrials-screened-acc,EPA:INDW,AMS:INDW,EBR:INDW
-e:spdr-msci-world-financials,EPA:WFIN,AMS:WFIN,EBR:WFIN
 e:ishares-ibonds-dec-2032-term-corp-acc,ETR:IG32,FRA:IG32,
 e:ishares-ibonds-dec-2032-term-corp-dist,ETR:32XG,FRA:32XG,
 e:amundi-msci-pacific-ex-japan-dist,EPA:PAXJ,AMS:PAXJ,EBR:PAXJ
@@ -549,7 +547,6 @@ e:spdr-bloomberg-u-s-high-yield-corporate-scored-eur-hdg-acc,ETR:SPPQ,FRA:SPPQ,
 e:amundi-s-and-p-world-consumer-staples-screened-acc,EPA:COSW,AMS:COSW,EBR:COSW
 e:amundi-eur-high-yield-corporate-bond-esg-dist,EPA:YIEL,AMS:YIEL,EBR:YIEL
 e:amundi-msci-em-latin-america-acc-5297,EPA:ALAU,AMS:ALAU,EBR:ALAU
-e:spdr-msci-world-value-acc,EPA:WVAL,AMS:WVAL,EBR:WVAL
 e:invesco-euro-cash-3-months-acc,EPA:PEU,AMS:PEU,EBR:PEU
 e:amundi-us-treasury-bond-long-dated-dist,EPA:US10,AMS:US10,EBR:US10
 e:ishares-s-and-p-500-3-capped-acc,ETR:SP3C,FRA:SP3C,
@@ -565,6 +562,7 @@ e:ishares-blockchain-technology-acc,ETR:CBUT,FRA:CBUT,
 e:ishares-spain-govt-bond-dist,ETR:IS0P,FRA:IS0P,
 e:ishares-msci-south-africa-acc,ETR:IBC4,FRA:IBC4,
 e:amundi-msci-europe-small-cap-esg-broad-transition-dist,ETR:X026,FRA:X026,
+e:spdr-msci-world-industrials,EPA:WIND,AMS:WIND,EBR:WIND
 e:ishares-global-aaa-aa-govt-bond-dist,ETR:IS0Z,FRA:IS0Z,
 e:spdr-bloomberg-1-5-year-gilt-dist,ETR:SYB5,FRA:SYB5,
 e:amundi-japan-topix-acc-7781,EPA:TPXY,AMS:TPXY,EBR:TPXY
@@ -591,6 +589,7 @@ e:amundi-msci-europe-ex-emu-esg-selection-acc,EPA:CU9,AMS:CU9,EBR:CU9
 e:ishares-ibonds-dec-2032-term-corp-dist-ebv0,EPA:32ID,AMS:32ID,EBR:32ID
 e:amundi-msci-china-esg-selection-acc,EPA:CNEG,AMS:CNEG,EBR:CNEG
 e:invesco-msci-europe-universal-screened-acc,ETR:ESGE,FRA:ESGE,
+e:spdr-msci-world-materials,EPA:WMAT,AMS:WMAT,EBR:WMAT
 e:ishares-eb-rexx-government-germany-1-5-2-5yr-de-dist,ETR:EXHB,FRA:EXHB,
 e:spdr-s-and-p-emerging-markets-dividend-aristocrats-dist,ETR:SPYV,FRA:SPYV,
 e:ishares-s-and-p-500-materials-sector,ETR:2B7B,FRA:2B7B,
@@ -740,6 +739,7 @@ e:amundi-msci-china-esg-selection-extra-dist,ETR:LHKG,FRA:LHKG,
 e:invesco-all-country-world-enhanced-equity-acc,ETR:IQSW,FRA:IQSW,
 e:amundi-msci-world-sri-climate-paris-aligned-dist,ETR:WGES,FRA:WGES,
 e:spdr-msci-europe-consumer-discretionary,EPA:STR,AMS:STR,EBR:STR
+e:spdr-msci-world-utilities,EPA:WUTI,AMS:WUTI,EBR:WUTI
 e:invesco-msci-europe-ex-uk-acc,ETR:MXUK,FRA:MXUK,
 e:spdr-msci-world-communication-services,EPA:WTEL,AMS:WTEL,EBR:WTEL
 e:hsbc-ftse-250,EPA:HMCX,AMS:HMCX,EBR:HMCX
