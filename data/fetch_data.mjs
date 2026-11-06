@@ -311,8 +311,9 @@ async function main() {
       const sec20 = old.cik && !old.sec20 && lastY != null && lastY < expectedYear(old.fyEnd); // 4/11 : comptes SEC en retard, relus une fois avec la lecture directe des 20-F
       const late = !old.cik && lastY != null && lastY < expectedYear(old.fyEnd) && Date.now() - new Date(old.updated) > (/^FR/.test(c.isin || "") ? (old.amfTried ? 20 : 0) : 70) * 3600e3; // France : premier essai AMF immédiat
       const esefSite = ESEF_SITES[c.id] && ESEF_SITES[c.id].ny > (lastY || 0); // 5/11 : paquet ESEF plus récent trouvé sur le site : relu tout de suite
+      const rapportNeuf = rapportAnnuelApres(c.id, old.updated); // 6/11 : rapport annuel déposé depuis la dernière lecture (Apple, 10-K du 3/11) : relu tout de suite
       const sansCA = !old.fin || !Array.isArray(old.fin.ca) || old.fin.ca[old.fin.ca.length - 1] == null; // chiffre d'affaires absent : relu (étiquettes élargies le 30/10 : foncières, banques, services publics)
-      if ((old.sourcePdf && old.v === VERSION) || old.v === VERSION && !sec20 && !deviseDouteuse && !detteDouteuse && !late && !esefSite && !sansCA && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
+      if ((old.sourcePdf && old.v === VERSION) || old.v === VERSION && !sec20 && !deviseDouteuse && !detteDouteuse && !late && !esefSite && !sansCA && !rapportNeuf && old.updated && Date.now() - new Date(old.updated) < FRESH + spread) { const m = { ...old, region: c.region, domain: c.domain, desc: c.desc, name: c.name, sector: c.sector }; writeFileSync(file, JSON.stringify(m)); slots[i] = summary(m); return; }
     }
     try {
       const full = await collectOne(fetch, c);
@@ -343,3 +344,12 @@ async function main() {
   if (!only) await collectActuSec(fetch, U);
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error(e); process.exit(1); });
+
+// Vrai si le fil d'actualité de la société (cf/site/data/actu/c/<id>.json) montre un rapport annuel déposé après la date donnée.
+function rapportAnnuelApres(id, date) {
+  try {
+    const f = new URL(`actu/c/${id}.json`, OUT); if (!date || !existsSync(f)) return false;
+    const d = JSON.parse(readFileSync(f)), t = new Date(date).getTime();
+    return (d.o || []).some(x => x.tf === "Rapport annuel" && new Date(x.d).getTime() > t);
+  } catch (e) { return false; }
+}

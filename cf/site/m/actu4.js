@@ -85,7 +85,7 @@ function pageActus4() {
   $("#ax4sect").value = st.sect;
   let FIL = null, EXTRA = [];
   const fav = () => new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
-  const keep = id => { const c = RBY[id]; if (!c) return false; if (st.zone === "fav" && !fav().has(id)) return false; if (st.zone === "EU" && !(c.region === "EU" || c.region === "FR")) return false; if (/^(FR|US|MONDE)$/.test(st.zone) && c.region !== st.zone) return false; if (st.sect && c.sector !== st.sect) return false; if (st.qq && !norm(c.name + " " + (c.ticker || "")).includes(norm(st.qq))) return false; return true; };
+  const keep = id => { const c = RBY[id]; if (!c) return false; if (st.zone === "fav" && !fav().has(id)) return false; if (st.zone === "EU" && !(c.region === "EU" || c.region === "FR")) return false; if (/^(FR|US|MONDE)$/.test(st.zone) && c.region !== st.zone) return false; if (st.sect && c.sector !== st.sect) return false; if (st.qq && !ax4Nom(c, st.qq)) return false; return true; };
   const url = () => { const u = new URLSearchParams(); if (st.zone !== "tout") u.set("zone", st.zone); if (st.type !== "imp") u.set("type", st.type); if (st.sect) u.set("secteur", st.sect); if (st.vue !== "annonces") u.set("vue", st.vue); try { history.replaceState(history.state, "", "/actualites" + (u.toString() ? "?" + u : "")); } catch (e) { } };
   const annonces = () => [...(FIL.o || []), ...EXTRA].filter(it => keep(it.id) && actuType(it, st.type));
   const tete = () => { // la saison en une phrase, calculée sur toutes les annonces chiffrées (sans les filtres)
@@ -134,3 +134,12 @@ function pageActus4() {
 }
 
 window.pageActus = pageActus4;
+
+// Filtre par nom : début d'un mot du nom ou ticker exact ; si des noms correspondent exactement (« Meta »), on ne garde qu'eux (pas Kennametal ni Jacquet Metals).
+function ax4Nom(c, q) {
+  const w = norm(q), t = n => " " + norm(n).replace(/[^a-z0-9]+/g, " ") + " ";
+  if (!w) return true;
+  if (ax4Nom.q !== w) { ax4Nom.q = w; ax4Nom.exact = Object.values(RBY).some(x => t(x.name).includes(" " + w + " ") || norm(x.ticker || "") === w); }
+  const n = t(c.name), tk = norm(c.ticker || "") === w;
+  return ax4Nom.exact ? n.includes(" " + w + " ") || tk : n.includes(" " + w) || tk;
+}

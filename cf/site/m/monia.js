@@ -43,6 +43,10 @@ const MIA_SOURCES = {
   expliquer: ["Cours de l'Académie d'ENKLAIR"],
 };
 /** Rédaction par l'IA du site. Renvoie { txt, sources, modele } ; { invite: true, message } si l'IA n'est pas disponible ; { error } si elle échoue. */
+// Nombres à l'anglaise recopiés d'un communiqué (« 201.196 millions ») : remis à la française (« 201,2 millions »).
+function miaNombres(t) {
+  return String(t).replace(/\b(\d{1,3}(?:,\d{3})+|\d+)\.(\d+)(?=\s*(?:millions?|milliards?|Md|M|%|€|\$|dollars?|euros?)\b|\s*[%€$])/g, (m, a, b) => { const n = Number(a.replace(/,/g, "") + "." + b); return Number.isFinite(n) ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: n >= 100 ? 1 : 2 }).format(n) : m; });
+}
 async function iaRediger(tache, faits, o = {}) {
   if (MIA.coupee) return { invite: true };
   const F = { ...(faits || {}), sources: [...((faits && faits.sources) || []), ...(MIA_SOURCES[tache] || [])], date_du_jour: (faits && faits.date_du_jour) || TODAY };
@@ -52,6 +56,7 @@ async function iaRediger(tache, faits, o = {}) {
   const r = await miaAppel(tache, user, o.max || 700);
   if (r.coupee) return { invite: true, message: r.message };
   let out = { error: r.message };
+  if (r.txt) r.txt = miaNombres(r.txt);
   if (r.txt) { // la ligne « Sources : » demandée par la consigne est affichée à part, sous la réponse
     const m = tache === "annonce" ? null : r.txt.match(/\n\s*Sources?\s*:\s*([^\n]+)\s*$/i);
     out = { txt: m ? r.txt.slice(0, m.index).trim() : r.txt, sources: m ? m[1].trim() : null, modele: r.modele, ia: "connectee" };
