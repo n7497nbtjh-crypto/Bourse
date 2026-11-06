@@ -1,0 +1,102 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#FFE14D}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;background:#FFE14D;font-family:Inter,sans-serif;color:#111}
+.hook{position:absolute;left:70px;right:70px;font:800 168px/.98 "Bricolage Grotesque";letter-spacing:-7px}
+.w{display:inline-block;transform-origin:50% 60%}
+.hl{background:#fff;border:8px solid #111;border-radius:28px;padding:0 20px 10px;box-shadow:12px 12px 0 #111;display:inline-block}
+#cam{position:absolute;inset:0;transform-origin:0 0}
+#win{position:absolute;left:40px;top:640px;width:1000px;border:6px solid #111;border-radius:30px;background:#fff;box-shadow:16px 16px 0 #111;overflow:hidden}
+#bar{height:64px;background:#fff;border-bottom:3px solid #111;display:flex;align-items:center;padding:0 22px;gap:12px}
+#bar i{width:18px;height:18px;border-radius:50%;border:2.5px solid #111;display:block}
+#url{margin-left:22px;flex:1;height:40px;border-radius:12px;background:#F4F4F1;display:flex;align-items:center;padding:0 18px;font:600 22px Inter;color:#333}
+#vp{position:relative;width:988px;height:617.5px;overflow:hidden;background:#fff}
+#vp img{position:absolute;left:0;top:0;width:988px;height:617.5px}
+#cur{position:absolute;width:30px;height:44px;z-index:5;transform-origin:3px 3px}
+#rip{position:absolute;width:60px;height:60px;margin:-30px 0 0 -30px;border-radius:50%;border:4px solid #111;z-index:4;opacity:0}
+#cap{position:absolute;left:0;right:0;top:300px;height:170px;overflow:hidden;text-align:center;z-index:10}
+#cap div{position:absolute;left:0;right:0;top:10px}
+#cap span{display:inline-block;background:#111;color:#fff;font:800 76px/1.1 "Bricolage Grotesque";letter-spacing:-2px;padding:16px 44px 26px;border-radius:30px}
+#steps{position:absolute;left:0;right:0;top:1500px;display:flex;justify-content:center;gap:16px;z-index:10}
+#steps b{font:700 32px Inter;padding:12px 26px;border-radius:999px;border:4px solid #111;background:#fff;color:#111;transition:none}
+.logo{display:inline-block;background:#fff;border:9px solid #111;border-radius:34px;padding:10px 50px 24px;font:800 176px/1 "Bricolage Grotesque";letter-spacing:-5px;box-shadow:16px 16px 0 #111}
+</style></head><body><div id="s">
+<div class="hook" id="H" style="top:420px"><span class="w" id="w0">Vous</span> <span class="w" id="w1">investissez</span> <span class="w" id="w2">sans</span> <span class="w" id="w3">lire</span> <span class="w" id="w4">les</span> <span class="w" id="w5"><span class="hl">comptes ?</span></span></div>
+<div class="hook" id="P" style="top:760px;text-align:center;font-size:132px;letter-spacing:-5px"><span class="w" id="p0">ENKLAIR</span><br><span class="w" id="p1">les</span> <span class="w" id="p2">lit</span> <span class="w" id="p3">pour</span> <span class="w" id="p4"><span class="hl">vous.</span></span></div>
+<div id="cam"><div id="win"><div id="bar"><i></i><i></i><i></i><div id="url">enklair.com</div></div>
+  <div id="vp"><img id="im1"><img id="im0"><div id="rip"></div>
+    <svg id="cur" viewBox="0 0 30 44"><path d="M3 3 L3 34 L11 27 L16.5 40 L22 37.5 L16.5 25 L27 25 Z" fill="#111" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg></div></div></div>
+<div id="cap"></div>
+<div id="steps"><b id="s0">Chercher</b><b id="s1">Comprendre</b><b id="s2">Comparer</b><b id="s3">Suivre</b></div>
+<div id="end" style="position:absolute;left:0;right:0;top:640px;text-align:center;z-index:11">
+  <span class="logo" id="lg">ENKLAIR</span>
+  <div id="e1" style="margin-top:70px;font:800 92px 'Bricolage Grotesque';letter-spacing:-2.5px">La Bourse, enfin claire.</div>
+  <div style="margin-top:60px"><span id="e2" style="display:inline-block;background:#111;color:#FFE14D;border-radius:999px;padding:26px 70px;font:800 74px 'Bricolage Grotesque'">enklair.com</span></div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x)), k = (t, t0, d) => cl((t - t0) / d);
+const eo = x => 1 - Math.pow(1 - x, 4), eio = x => x < .5 ? 4 * x ** 3 : 1 - Math.pow(-2 * x + 2, 3) / 2, eio5 = x => x < .5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2;
+const back = (x, c1 = 1.5) => { const c3 = c1 + 1; return x >= 1 ? 1 : 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const slam = (id, t, t0, d = .24) => { const x = k(t, t0, d), e = eo(x); $(id).style.opacity = x > 0 ? 1 : 0; $(id).style.transform = `scale(${1.55 - .55 * e})`; };
+const T0 = 3.0, FPS = 60, S = 988 / 1280, WX = 46, WY = 640 + 6 + 64; // coin haut-gauche de la page filmée, dans l'image
+let D, MOV, CAPS, FIN, STEP;
+const tm = n => T0 + n / FPS;
+window.setup = d => { D = d; const M = d.M;
+  const R = (x, y, w, h) => ({ x, y, w, h }), W = null;
+  // mouvements de caméra : [heure, durée, cadre (pixels CSS de la page) ou null = fenêtre entière]
+  MOV = [
+    [tm(M.recherche.n) + .05, .75, R(100, 560, 640, 330)],
+    [tm(M.sugg.n) - .35, .55, W],
+    [tm(M.ficheHaut.n) + .1, .8, R(M.ficheHaut.x - 30, M.ficheHaut.y - 20, M.ficheHaut.w + 60, M.ficheHaut.h + 40)],
+    [tm(M.ficheHaut.n) + 1.45, .5, W],
+    [tm(M.verdict.n) + .05, .8, R(30, M.verdict.y - 10, 640, 330)],
+    [tm(M.verdict.n) + 1.25, 1.0, R(610, M.verdict.y - 10, 640, 330)],
+    [tm(M.verdict.n) + 2.25, .5, W],
+    [tm(M.cmpVerdict.n) + .05, .8, R(30, M.cmpVerdict.y - 30, 900, 160)],
+    [tm(M.cmpVerdict.n) + 1.5, .5, W],
+    [tm(M.cmpMarge.n) + .05, .8, R(M.cmpMarge.x - 10, M.cmpMarge.y - 10, 560, M.cmpMarge.h + 20)],
+    [tm(M.cmpMarge.n) + 1.75, .5, W],
+    [tm(M.rapHermes.n) + .05, .8, R(30, M.rapHermes.y - 10, 760, M.rapHermes.h + 20)],
+    [tm(M.rapHermes.n) + 1.3, 1.0, R(500, M.rapHermes.y - 10, 760, M.rapHermes.h + 20)],
+  ];
+  FIN = tm(d.n - 1);
+  CAPS = [[T0 + .05, "Cherchez une entreprise."], [tm(M.fiche.n), "Ses comptes, en clair."], [tm(M.verdict.n) - .25, "Face à ses rivales."], [tm(M.comparer.n), "Comparez-les."], [tm(M.cmpMarge.n) - .3, "Qui garde le plus ?"], [tm(M.rapport.n), "Votre rapport du samedi."]];
+  STEP = [[T0, 0], [tm(M.fiche.n), 1], [tm(M.comparer.n), 2], [tm(M.rapport.n), 3]];
+  $("cap").innerHTML = CAPS.map((c, i) => `<div id="c${i}"><span>${c[1]}</span></div>`).join(""); };
+// cadre -> transformation de la caméra (zoom pour remplir 1000 px de large, centré à y = 1010)
+const camOf = r => { if (!r) return { z: 1, tx: 0, ty: 0 }; const z = Math.min(2.3, 1000 / (r.w * S)); const cx = WX + (r.x + r.w / 2) * S, cy = WY + (r.y + r.h / 2) * S; return { z, tx: 540 - cx * z, ty: 1010 - cy * z }; };
+window.frameAt = t => !D ? 1 : Math.max(1, Math.min(D.n, Math.floor((t - T0) * FPS) + 1));
+window.render = (t, src0, src1, f1) => {
+  ["w0", "w1", "w2", "w3", "w4", "w5"].forEach((w, i) => slam(w, t, .05 + i * .2, i === 5 ? .32 : .22));
+  const ho = eio(k(t, 1.5, .35)); $("H").style.transform = `translateY(${-ho * 700}px)`; $("H").style.opacity = 1 - ho;
+  ["p0", "p1", "p2", "p3", "p4"].forEach((w, i) => slam(w, t, 1.7 + i * .16));
+  const po = eio(k(t, 2.75, .35)); $("P").style.transform = `translateY(${-po * 700}px)`; $("P").style.opacity = 1 - po;
+  // caméra : on part du plan large et on enchaîne les mouvements
+  let cam = camOf(null);
+  for (const [a, d, r] of MOV) { if (t < a) break; const to = camOf(r), p = eio5(k(t, a, d)); cam = { z: cam.z + (to.z - cam.z) * p, tx: cam.tx + (to.tx - cam.tx) * p, ty: cam.ty + (to.ty - cam.ty) * p }; }
+  const enter = back(k(t, 2.8, .8), 1.1), out = eio(k(t, FIN + .15, .7));
+  const zEnd = 1 - .25 * out;
+  $("cam").style.transform = `translate(${cam.tx}px,${cam.ty + (1 - enter) * 1500}px) scale(${cam.z})`;
+  $("win").style.opacity = 1 - out; $("win").style.transform = `scale(${zEnd})`;
+  // page filmée, petit fondu aux changements de page
+  $("im0").src = src0; $("im1").src = src1 || src0; $("im1").style.display = f1 == null ? "none" : "block"; $("im0").style.opacity = f1 == null ? 1 : eio(f1);
+  const i = frameAt(t) - 1, so = D.souris[i]; $("url").textContent = D.url[i] || "enklair.com";
+  if (t >= T0 && so) { $("cur").style.display = "block"; $("cur").style.left = so[0] * S + "px"; $("cur").style.top = so[1] * S + "px"; $("cur").style.transform = `scale(${1.3 - .2 * so[2]})`;
+    $("rip").style.left = so[0] * S + "px"; $("rip").style.top = so[1] * S + "px"; $("rip").style.opacity = so[2] > 0 ? .8 * so[2] : 0; $("rip").style.transform = `scale(${.6 + so[2]})`; } else $("cur").style.display = "none";
+  // légendes : chacune sort avant que la suivante entre
+  CAPS.forEach(([a], j) => { const nx = CAPS[j + 1] ? CAPS[j + 1][0] : FIN + .15, ein = eo(k(t, a, .45)), eout = eio(k(t, nx - .3, .28)); $("c" + j).style.transform = `translateY(${(1 - ein) * 180 - eout * 180}px)`; });
+  $("cap").style.opacity = t < T0 - .1 ? 0 : 1 - out;
+  // étapes
+  let st = -1; STEP.forEach(([a, j]) => { if (t >= a) st = j; });
+  const sv = eo(k(t, 3.2, .5)) * (1 - out); $("steps").style.opacity = sv; $("steps").style.transform = `translateY(${(1 - sv) * 60}px)`;
+  for (let j = 0; j < 4; j++) { const on = j === st; $("s" + j).style.background = on ? "#111" : "#fff"; $("s" + j).style.color = on ? "#FFE14D" : "#111"; }
+  // fin
+  const l = back(k(t, FIN + .55, .6)); $("lg").style.opacity = k(t, FIN + .55, .12); $("lg").style.transform = `scale(${.6 + .4 * l}) rotate(${-2 * l}deg)`;
+  const e1 = eo(k(t, FIN + 1.0, .6)); $("e1").style.opacity = e1; $("e1").style.transform = `translateY(${(1 - e1) * 60}px)`;
+  const e2 = back(k(t, FIN + 1.4, .5)); $("e2").style.opacity = k(t, FIN + 1.4, .1); $("e2").style.transform = `scale(${.6 + .4 * e2})`;
+};
+</script></body></html>
