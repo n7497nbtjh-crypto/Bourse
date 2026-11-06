@@ -4215,3 +4215,6 @@ html body .results a.srow .st{overflow:hidden}
 .a4-rapl i{font:700 11.5px Inter,sans-serif;font-style:normal;border:2px solid #111;border-radius:7px;padding:1px 6px;flex:none}.a4-rapl i.r{background:#FFF6C7}.a4-rapl i.a{background:#E8DCFF}.a4-rapl i.p{background:#DCE7FF}
 .a4-rapm em{position:absolute;top:-12px;right:16px;font:800 12px Inter,sans-serif;font-style:normal;background:#111;color:#fff;border-radius:999px;padding:3px 10px}
 @media(max-width:860px){.a4-rap{grid-template-columns:1fr}.a4-rapm{transform:none}}
+
+/* 6/11 (capture de Romain, page Entreprises) : un logo ne dépasse jamais de sa case (des règles « #app … img » lui imposaient 36 px dans une case plus petite) */
+html #app .lg>img{position:absolute;inset:13%;width:74%;height:74%;object-fit:contain;border-radius:0;max-width:none}

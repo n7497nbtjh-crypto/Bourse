@@ -223,8 +223,9 @@ function f4Metier(x) {
   if (wd && wd.siege) facts.push(["Siège", wd.siege, wd.pays || ""]);
   if (wd && wd.effectif && wd.effectif[0]) facts.push(["Salariés", ekFr(wd.effectif[0], 0), wd.effectif[1] ? "chiffre de " + wd.effectif[1] : ""]);
   try { const sec = R.companies.filter(c => c.sector === s.sector && f4Valide(c)).map(c => [c.id, typeof caEur === "function" ? caEur(c) : c.ca]).sort((p, q) => q[1] - p[1]), k = sec.findIndex(z => z[0] === s.id);
-    if (k >= 0 && sec.length > 5) facts.push(["Taille dans son secteur", `${k + 1}${k ? "e" : "re"} sur ${sec.length}`, "par les ventes", `/entreprises?secteur=${encodeURIComponent(s.sector)}`]); } catch (e) { }
-  if (facts.length) h += `<div class="ek-facts">${facts.map(f => f[3] ? `<a class="hl" href="${esc(f[3])}"><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span><em>Voir le classement →</em></a>` : `<div><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span></div>`).join("")}</div>`;
+    // 6/11 (Romain) : le rang dans le secteur est un classement, réservé à Premium
+    if (k >= 0 && sec.length > 5) facts.push(typeof isPrem === "function" && isPrem() ? ["Taille dans son secteur", `${k + 1}${k ? "e" : "re"} sur ${sec.length}`, "par les ventes", "/classements"] : ["Taille dans son secteur", "★ Premium", `son rang parmi les ${sec.length} entreprises du secteur`, "/premium", "Débloquer avec Premium →"]); } catch (e) { }
+  if (facts.length) h += `<div class="ek-facts">${facts.map(f => f[3] ? `<a class="hl" href="${esc(f[3])}"><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span><em>${esc(f[4] || "Voir le classement →")}</em></a>` : `<div><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span></div>`).join("")}</div>`;
   if (fi) h += `<div class="ek-two">${[["Comment elle gagne de l'argent", fi.argent, "#FFF6C7"], ["Ce dont elle dépend", fi.depend, "#E2F8EE"]].filter(t => t[1]).map(t => `<div style="background:${t[2]}"><small>${esc(t[0])}</small>${esc(t[1])}</div>`).join("")}</div>`;
   if (rep && (rep.activites || rep.zones)) {
     const COL = ["#FFE14D", "#FF7EB3", "#A9B6FF", "#6EE3B5", "#FFB27A", "#C8A2FF", "#E6E4DE", "#BDE0FE"];
