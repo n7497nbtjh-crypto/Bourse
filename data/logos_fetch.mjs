@@ -29,7 +29,7 @@ const idx = existsSync("cf/site/logos/index.json") ? JSON.parse(readFileSync("cf
 idx.l = idx.l || {};
 const jour = new Date().toISOString().slice(0, 10), FRAIS = 90 * 864e5;
 const aRevoir = c => { const x = idx.l[c.id]; if (!x || !x.maj) return true; const age = Date.now() - Date.parse(x.maj); // 1/11 : sans logo, on réessaie après 30 jours, et tout de suite si le passage précédent n'avait pas les essais « www. »
-  return x.f ? age >= FRAIS : !(x.absent && x.v2 && age < 30 * 864e5); };
+  return x.f ? age >= FRAIS || x.t !== 192 : !(x.absent && x.v2 && age < 30 * 864e5); };
 const FX = (() => { try { return JSON.parse(readFileSync("cf/site/data/fx.json", "utf8")).eur || {}; } catch (e) { return {}; } })();
 const capE = c => { const p = px["c:" + c.id]; return p && p.cap ? p.cap * (p.cur === "EUR" ? 1 : FX[p.cur] || 0) : 0; };
 const parCap = (a, b) => capE(b) - capE(a);
@@ -56,13 +56,21 @@ async function image(u, nav) {
   if (!/image|octet-stream|svg/.test(ct)) throw new Error("pas une image : " + ct.slice(0, 30));
   return Buffer.from(await r.arrayBuffer());
 }
-async function ecrire(c, buf) { // 64 px, fond transparent ; un logo trop petit (< 32 px) ou vide est refusé
+const TAILLE = 192; // 6/11 (Romain : logos en bonne qualité) : 192 px au lieu de 64, nets sur écran haute définition
+async function ecrire(c, buf) { // TAILLE px, fond transparent ; un logo trop petit (< 32 px) ou vide est refusé
   const img = sharp(buf, { density: 300 }), meta = await img.metadata();
   if ((meta.width || 0) < 32 && (meta.height || 0) < 32 && meta.format !== "svg") throw new Error("trop petit");
-  await img.resize(64, 64, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } }).png().toFile(`cf/site/logos/${c.id}.png`);
+  await img.resize(TAILLE, TAILLE, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } }).png().toFile(`cf/site/logos/${c.id}.png`);
 }
 const paquets = (a, n) => { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; };
 
+// 6/11 : le logo actuel, pas le premier venu (Microsoft avait son logo de 1987) : rang « préféré », sans date de fin (P582), le plus récent (P580)
+function logoActuel(cl) {
+  const L = (cl || []).filter(x => x.rank !== "deprecated" && x.mainsnak && x.mainsnak.datavalue && !(x.qualifiers && x.qualifiers.P582));
+  const debut = x => { const q = x.qualifiers && x.qualifiers.P580 && x.qualifiers.P580[0].datavalue; return q ? q.value.time : ""; };
+  L.sort((a, b) => (b.rank === "preferred") - (a.rank === "preferred") || debut(b).localeCompare(debut(a)));
+  return L.length ? L[0].mainsnak.datavalue.value : null;
+}
 // 1. Wikidata : fichier du logo (P154) pour tous les Q, par 50
 const avecQ = ordre.filter(c => wd[c.id] && wd[c.id].q);
 const fichier = {}; // id → "Nom du fichier.svg"
@@ -71,7 +79,7 @@ for (const p of paquets(avecQ, 50)) {
   const ids = p.map(c => wd[c.id].q).join("|");
   try {
     const e = await json(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${ids}&props=claims&format=json`);
-    for (const c of p) { const ent = e.entities && e.entities[wd[c.id].q], cl = ent && ent.claims && ent.claims.P154, v = cl && cl[0] && cl[0].mainsnak.datavalue && cl[0].mainsnak.datavalue.value; if (v) fichier[c.id] = v; }
+    for (const c of p) { const ent = e.entities && e.entities[wd[c.id].q], cl = ent && ent.claims && ent.claims.P154, v = logoActuel(cl); if (v) fichier[c.id] = v; }
     console.log(`Wikidata : ${p.length} entreprises lues, ${p.filter(c => fichier[c.id]).length} avec un logo déclaré`);
   } catch (e) { pannes++; wikidataOK = false; console.error("Wikidata :", String(e).slice(0, 120)); }
   await sleep(PAUSE_WM);
@@ -82,7 +90,7 @@ const fichiers = [...new Set(Object.values(fichier))];
 for (const p of paquets(fichiers, 50)) {
   const titres = p.map(f => "File:" + f.replace(/ /g, "_")).join("|");
   try {
-    const r = await json(`https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(titres)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=128&format=json`);
+    const r = await json(`https://commons.wikimedia.org/w/api.php?action=query&titles=${encodeURIComponent(titres)}&prop=imageinfo&iiprop=url|extmetadata&iiurlwidth=512&format=json`);
     const norm = {}; for (const n of (r.query && r.query.normalized) || []) norm[n.to] = n.from;
     for (const page of Object.values((r.query && r.query.pages) || {})) {
       const ii = page.imageinfo && page.imageinfo[0]; if (!ii) continue;
@@ -98,6 +106,7 @@ for (const p of paquets(fichiers, 50)) {
 async function siteOfficiel(c) {
   const dom = (c.domain || "").replace(/^https?:\/\//, "").replace(/\/.*$/, ""); if (!dom) return null;
   const bases = [`https://${dom}`, ...(dom.startsWith("www.") ? [] : [`https://www.${dom}`])]; // 1/11 : beaucoup de sites ne répondent qu'avec « www. »
+  const entete = [];
   const essais = bases.flatMap(b => [`${b}/apple-touch-icon.png`, `${b}/apple-touch-icon-precomposed.png`]);
   for (const base of bases) try { // la balise <link rel="icon"> (ou l'icône de tuile Windows) la plus grande de la page d'accueil
     const r = await fetchR(base, { headers: { "user-agent": UA_NAV, accept: "text/html,application/xhtml+xml", "accept-language": "fr,en;q=0.8" }, timeout: 20000 }, 1);
@@ -105,11 +114,17 @@ async function siteOfficiel(c) {
       const html = (await r.text()).slice(0, 300000), links = [...html.matchAll(/<link\b[^>]*>/gi)].map(m => m[0]).filter(l => /rel=["'][^"']*(apple-touch-icon|icon)[^"']*["']/i.test(l));
       const cand = links.map(l => { const href = (l.match(/href=["']([^"']+)["']/i) || [])[1], sizes = (l.match(/sizes=["'](\d+)x\d+["']/i) || [])[1], svg = /svg/i.test(l) || /\.svg(\?|$)/i.test(href || ""); return href ? { href: new URL(href, r.url).href, taille: svg ? 999 : +sizes || 0 } : null; }).filter(Boolean).sort((a, b) => b.taille - a.taille);
       for (const x of cand) if (x.taille >= 64 || x.taille === 0) essais.unshift(x.href); // la balise déclarée passe avant les noms devinés
+      for (const m of html.slice(0, 120000).matchAll(/<img\b[^>]*>/gi)) { const t = m[0]; if (!/logo/i.test(t)) continue; const src = (t.match(/\s(?:src|data-src)=["']([^"']+)["']/i) || [])[1]; if (src && !/^data:/.test(src)) entete.push(new URL(src, r.url).href); if (entete.length >= 3) break; } // 6/11 : logo de l'en-tête du site
       const tuile = (html.match(/<meta[^>]+name=["']msapplication-TileImage["'][^>]+content=["']([^"']+)["']/i) || [])[1]; if (tuile) essais.push(new URL(tuile, r.url).href);
       break;
     }
   } catch (e) { }
-  for (const u of essais) { try { const buf = await image(u, true); await ecrire(c, buf); return { maj: jour, f: `${c.id}.png`, licence: "site officiel", source: u, src: "site" }; } catch (e) { } }
+  // 6/11 : on garde la première image nette (SVG ou au moins 120 px) ; sinon la plus grande trouvée
+  let best = null;
+  for (const u of [...essais, ...entete]) { try { const buf = await image(u, true), m = await sharp(buf, { density: 300 }).metadata(), t = m.format === "svg" ? 999 : Math.min(m.width || 0, m.height || 0);
+    if (t >= 120) { await ecrire(c, buf); return { maj: jour, f: `${c.id}.png`, t: TAILLE, licence: "site officiel", source: u, src: "site" }; }
+    if (!best || t > best.t) best = { buf, u, t }; } catch (e) { } }
+  if (best && best.t >= 48) { try { await ecrire(c, best.buf); return { maj: jour, f: `${c.id}.png`, t: TAILLE, petit: true, licence: "site officiel", source: best.u, src: "site" }; } catch (e) { } }
   return null;
 }
 let n = 0, nc = 0, ns = 0;
@@ -123,9 +138,9 @@ for (const c of ordre) {
   if (i) {
     if (!OK.test(i.lic)) refus = i.lic;
     else {
-      const urls = [i.thumb, i.url, `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=128`].filter(Boolean);
-      for (const u of urls) { try { await ecrire(c, await image(u)); r = { maj: jour, f: `${c.id}.png`, licence: i.lic, auteur: i.auteur.slice(0, 120), source: `https://commons.wikimedia.org/wiki/${encodeURIComponent(i.titre)}`, src: "commons" }; break; } catch (e) { panne = /Timeout|fetch failed|ECONN/.test(String(e)); console.error(c.id, "commons :", String(e).slice(0, 90)); } }
-      await sleep(PAUSE_WM);
+      const urls = [i.thumb, i.url, `https://commons.wikimedia.org/wiki/Special:FilePath/${encodeURIComponent(f)}?width=512`].filter(Boolean);
+      for (const u of urls) { try { await ecrire(c, await image(u)); r = { maj: jour, f: `${c.id}.png`, t: TAILLE, licence: i.lic, auteur: i.auteur.slice(0, 120), source: `https://commons.wikimedia.org/wiki/${encodeURIComponent(i.titre)}`, src: "commons" }; break; } catch (e) { panne = /Timeout|fetch failed|ECONN/.test(String(e)); console.error(c.id, "commons :", String(e).slice(0, 90)); } }
+      await sleep(1500);
     }
   }
   if (!r) { try { r = await siteOfficiel(c); } catch (e) { panne = true; console.error(c.id, "site :", String(e).slice(0, 90)); } await sleep(PAUSE_SITE); }
