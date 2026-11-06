@@ -98,14 +98,16 @@ def dossier(n, k):
     return h + '</article>'
 def calme(k):
     l = L[k]; idn = k[2:].replace('amundi-msci-world-pea', 'amundi'); c = COUL.get(k[2:], '#555'); v = l['variation_semaine_pct']
-    return f'<div class="calme"><span class="lg s"><img src="{BASE}{idn}.png" alt=""></span><div><b>{e(l["nom"])}</b><small>Aucune annonce</small></div>{spark(l["serie"], c, 90, 30)}<b class="{"up" if v > 0 else "dn"}">{pct(v)}</b></div>'
+    pf = l.get('portefeuille') or {}
+    sous = (f"{pf['poids_pct']:.0f} % du portefeuille" if pf.get('poids_pct') else 'Favori') + ' · aucune annonce'
+    return f'<tr><td class="cl"><span class="lg s"><img src="{BASE}{idn}.png" alt=""></span><span><b>{e(l["nom"])}</b><small>{e(sous)}</small></span></td><td class="cs">{spark(l["serie"], c, 84, 26)}</td><td class="cp {"up" if v > 0 else "dn"}">{pct(v)}</td></tr>'
 port = sorted([k for k in L if L[k].get('en_portefeuille')], key=lambda k: -(L[k].get('portefeuille') or {}).get('poids_pct', 0))
 fav = [k for k in L if L[k].get('favori')]
 def bloc(titre_, ks, n0):
     act = [k for k in ks if A.get(k)]; q = [k for k in ks if not A.get(k)]
     o = f'<h2 class="grp">{titre_}<span>{len(act)} avec des nouvelles · {len(q)} sans</span></h2>'
     o += ''.join(dossier(n0 + i, k) for i, k in enumerate(act))
-    if q: o += '<div class="calmes"><p class="sub">Sans nouvelle cette semaine</p><div class="cg">' + ''.join(calme(k) for k in q) + '</div></div>'
+    if q: o += '<div class="calmes"><p class="sub">Sans nouvelle cette semaine</p><table class="ct">' + ''.join(calme(k) for k in q) + '</table></div>'
     return o, n0 + len(act)
 b1, n = bloc('Dans votre portefeuille', port, 1); b2, _ = bloc('Dans vos favoris', fav, n)
 CSS = open('/tmp/m4/style.css').read()
