@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><title>Maquette : limite du gratuit (6/11)</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}body{font-family:Inter,sans-serif;background:#fff;color:#111;padding:40px 0 80px}
+.w{width:1280px;margin:0 auto}.lab{font:800 14px Inter;text-transform:uppercase;letter-spacing:.08em;color:#666;margin:34px 40px 12px}
+h1.t{font:800 40px/1.05 'Bricolage Grotesque';letter-spacing:-.03em;margin:0 40px 8px}
+.img{display:block;width:1280px}
+.pill{position:absolute;right:58px;top:96px;background:#fff;border:2px solid #111;border-radius:999px;padding:6px 14px;font:800 14px Inter;box-shadow:3px 3px 0 #111}
+.rel{position:relative}
+.flou{position:relative;height:620px;overflow:hidden}.flou img{filter:blur(7px);opacity:.55}
+.lock{position:absolute;left:50%;top:60px;transform:translateX(-50%);width:760px;background:#fff;border:3px solid #111;border-radius:28px;box-shadow:8px 8px 0 #111;padding:34px 40px}
+.stk{display:inline-block;background:#FFE14D;font:800 15px 'Bricolage Grotesque';padding:5px 12px;border-radius:9px;transform:rotate(-2deg);border:2px solid #111}
+.lock h2{font:800 38px/1.05 'Bricolage Grotesque';letter-spacing:-.03em;margin:16px 0 10px}
+.lock p{font:500 18px/1.45 Inter;color:#333}
+.lock ul{list-style:none;margin:16px 0 22px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.lock li{font:600 16px/1.3 Inter;background:#FFF6C7;border-radius:12px;padding:10px 12px}
+.bt{display:flex;gap:14px;align-items:center;flex-wrap:wrap}
+.b1{background:#111;color:#fff;font:800 18px Inter;padding:15px 22px;border-radius:999px;text-decoration:none}
+.b1 small{color:#FFE14D;font-weight:800}
+.b2{font:700 16px Inter;color:#111;text-decoration:underline;text-decoration-color:#FFE14D;text-decoration-thickness:3px}
+.note{font:500 14px Inter;color:#666;margin-top:16px}
+table{border-collapse:separate;border-spacing:0;margin:0 40px;width:1200px;border:3px solid #111;border-radius:22px;overflow:hidden}
+th,td{padding:14px 18px;font:600 16px Inter;border-bottom:1px solid #e6e6e2;text-align:left}th{font:800 18px 'Bricolage Grotesque';background:#111;color:#fff}
+th.p{background:#FFE14D;color:#111}td.p{background:#FFFBE6;font-weight:800}tr:last-child td{border-bottom:0}
+.chg{display:inline-block;background:#FFE9E3;color:#B42318;font:800 12px Inter;padding:2px 8px;border-radius:999px;margin-left:8px}
+.why{margin:18px 40px 0;font:500 16px/1.5 Inter;color:#333;max-width:1100px}
+</style></head><body><div class="w">
+
+<h1 class="t">Limite du gratuit : maquette avec une vraie fiche (LVMH, 6 novembre)</h1>
+
+<p class="lab">1. Fiche ouverte en gratuit (3e fiche du jour) : tout est visible, un compteur discret</p>
+<div class="rel"><img class="img" src="img/fiche-lvmh-haut.png"><span class="pill">Fiche gratuite 3 / 5 aujourd'hui</span></div>
+
+<p class="lab">2. 6e fiche du jour : l'en-tête et les 5 repères restent ouverts, la suite est réservée</p>
+<div class="rel"><img class="img" src="img/fiche-lvmh-haut.png"><span class="pill">5 / 5 fiches gratuites utilisées</span></div>
+<div class="flou"><img class="img" src="img/fiche-lvmh-bas.png">
+  <div class="lock"><span class="stk">★ Premium</span>
+    <h2>Vous avez ouvert vos 5 fiches gratuites du jour.</h2>
+    <p>La suite de la fiche de LVMH est réservée aux abonnés Premium :</p>
+    <ul><li>L'histoire de ses comptes en 4 étapes</li><li>Ses rivales, point par point</li><li>Tous ses chiffres sur 5 ans, avec la source</li><li>Son rang dans son secteur</li></ul>
+    <div class="bt"><a class="b1" href="#">Passer à Premium <small>dès 3,25 € par mois</small></a><a class="b2" href="#">ou revenez demain : 5 nouvelles fiches</a></div>
+    <p class="note">39 € pour un an (3,25 € par mois) ou 4,90 € par mois, sans engagement. Les fiches que vous suivez en favori restent toujours ouvertes.</p>
+  </div>
+</div>
+
+<p class="lab">3. Ce qui change dans « Gratuit / Premium »</p>
+<table>
+<tr><th>Fonction</th><th>Gratuit</th><th class="p">Premium</th></tr>
+<tr><td>Fiches entreprises complètes</td><td>5 par jour <span class="chg">avant : illimité</span><br><small>en-tête et 5 repères toujours ouverts</small></td><td class="p">Illimité</td></tr>
+<tr><td>Comparer</td><td>3 par semaine <span class="chg">avant : 5</span></td><td class="p">Illimité</td></tr>
+<tr><td>IA du site</td><td>3 questions par semaine <span class="chg">avant : 5</span></td><td class="p">30 par jour</td></tr>
+<tr><td>Rang dans le secteur, classements</td><td>Non</td><td class="p">Oui</td></tr>
+<tr><td>Rapport du samedi, alertes de chute par e-mail</td><td>Non</td><td class="p">Oui</td></tr>
+<tr><td>Radiographie du portefeuille, export CSV</td><td>Non</td><td class="p">Oui</td></tr>
+<tr><td>Actualité, agenda, outils, Apprendre, portefeuille</td><td>Oui</td><td class="p">Oui</td></tr>
+</table>
+<p class="why">Pourquoi garder l'en-tête et les 5 repères ouverts : un lien partagé sur les réseaux ne tombe jamais sur une page vide, et Google continue de lire les fiches (c'est par lui que les visiteurs arrivent). Les favoris restent ouverts pour que le portefeuille et les alertes gardent leur sens.</p>
+</div></body></html>

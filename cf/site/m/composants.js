@@ -70,8 +70,8 @@ function ekPoints(o) {
     const l2 = lignesNom(r), st = { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: l2.length > 1 ? (r.moi ? 13 : 12) : (r.moi ? 14 : 13) };
     l2.forEach((t, j) => g += ekTx(L - 12, cy + 4 + (j - (l2.length - 1) / 2) * 15, ekEsc(t), st));
     // Valeur hors échelle : le point est posé au bout de l'axe avec une flèche, et une note sous le graphique doit dire le vrai chiffre (r.note)
-    const hx = r.v > o.max, col = r.ton === "r" ? EK_R : r.ton === "g" ? EK_G : r.ton === "n" || neu ? "#111" : Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R;
-    g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/>${hx ? `<path d="M${x(r.v) + 8} ${cy - 6} L${x(r.v) + 16} ${cy} L${x(r.v) + 8} ${cy + 6} Z" fill="${col}"/>` : ""}<circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"${hx ? ` data-hors="${ekEsc(r.nom)}"` : ""}/>`
+    const hx = r.v > o.max, lx = r.v < mn0, col = r.ton === "r" ? EK_R : r.ton === "g" ? EK_G : r.ton === "n" || neu ? "#111" : Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R;
+    g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/>${hx ? `<path d="M${x(r.v) + 8} ${cy - 6} L${x(r.v) + 16} ${cy} L${x(r.v) + 8} ${cy + 6} Z" fill="${col}"/>` : ""}${lx ? `<path d="M${x(r.v) - 8} ${cy - 6} L${x(r.v) - 16} ${cy} L${x(r.v) - 8} ${cy + 6} Z" fill="${col}"/>` : ""}<circle cx="${x(r.v)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"${hx ? ` data-hors="${ekEsc(r.nom)}"` : ""}/>`
       + ekTx(W - R + 20, cy + 4, ekEsc(r.texte), { fw: 800, c: col, fs: r.moi ? 14 : 13 });
   });
   g += "</svg>" + rows.filter(r => r.note).map(r => `<p class="ek-out ek-out-h"><b>${ekEsc(r.nom)}</b> ${ekEsc(r.note)}</p>`).join("") + hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join("");
