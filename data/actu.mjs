@@ -265,14 +265,26 @@ async function chiffres() {
   const ana = readJSON(new URL("actu-analyse.json", OUT), { items: {} }).items || {};
   let n2 = 0;
   for (const S of Object.values(STORE)) for (const it of S.o.values()) {
-    const a = ana[it.u]; if (!a || it.f) continue;
-    if (a.chiffres && a.chiffres.length) { it.f = a.chiffres.slice(0, 5); n2++; }
-    if (a.lecture && a.lecture.length && a.chiffres && a.chiffres.length) it.r = a.lecture.slice(0, 3);
+    const a = ana[it.u]; if (!a) continue;
+    // 6/11 : l'analyse fait foi à chaque passage (avant, une copie ancienne restait pour toujours, même après correction)
+    if (a.chiffres && a.chiffres.length) { it.f = a.chiffres.slice(0, 5); n2++; if (a.lecture && a.lecture.length) it.r = a.lecture.slice(0, 3); else delete it.r; }
+    else if (a.controle || it.s === "amf" || it.s === "sec") { delete it.f; delete it.r; }
     if (it.s === "sec" && a.titre && it.c === "resultats") it.tf = a.titre;
     if (it.s === "sec" && it.c === "autre" && /résultats/i.test(a.type || "")) { it.c = "resultats"; it.i = 3; it.tf = "Annonce de résultats"; }
     if (it.s === "sec" && it.c === "autre" && /dividende/i.test(a.type || "")) { it.c = "dividende"; it.i = 2; it.tf = "Dividende"; }
   }
   log("chiffres :", ok, "communiqués lus,", n2, "analyses AMF/SEC rattachées");
+  // Contrôle final de tous les chiffres affichés, quelle que soit leur source (même règle que data/actu_analyse.mjs)
+  const { controleChiffres } = await import("./actu_analyse.mjs"), BYID = Object.fromEntries(U.map(c => [c.id, c]));
+  let soc = {}; try { soc = Object.fromEntries(JSON.parse(readFileSync(new URL("societes.json", OUT))).companies.map(c => [c.id, c])); } catch (e) { }
+  let nr = 0;
+  for (const [id, S] of Object.entries(STORE)) { const c = soc[id]; if (!c) continue;
+    for (const it of S.o.values()) { if (!it.f || !it.f.length) continue;
+      const type = /^Comptes du trimestre/.test(it.tf || "") ? "Rapport trimestriel (10-Q)" : /^Comptes de l'exercice/.test(it.tf || "") ? "Rapport annuel" : "";
+      const w = controleChiffres({ chiffres: it.f, lecture: it.r || [], titre: it.tf || "", type }, { ca: c.ca, eps: c.eps, dps: c.dps, net: c.net }, c.currency || (BYID[id] || {}).currency || "USD");
+      if (!w.controle) continue; nr++;
+      if (w.chiffres.length) { it.f = w.chiffres; it.r = w.lecture; } else { delete it.f; delete it.r; } } }
+  log("contrôle :", nr, "annonces dont un chiffre invraisemblable a été retiré");
 }
 
 /* ---------- Presse : GDELT (GKG) et BBC News ---------- */

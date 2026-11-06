@@ -329,7 +329,39 @@ let SUM = null;
 function summaryOf(id) {
   if (!SUM) { try { SUM = Object.fromEntries(JSON.parse(readFileSync(new URL("societes.json", OUT))).companies.map(c => [c.id, c])); } catch (e) { SUM = {}; } }
   const c = SUM[id]; if (!c) return null;
-  return { g1: c.ca && c.caPrev ? c.ca / c.caPrev - 1 : null, dps: c.dps || null, ca: c.ca || null, eps: c.eps || null };
+  return { g1: c.ca && c.caPrev ? c.ca / c.caPrev - 1 : null, dps: c.dps || null, ca: c.ca || null, eps: c.eps || null, net: c.net || null };
+}
+
+/* ---------- Contrôle final (6/11) : relu à chaque passage sur TOUTES les annonces gardées, anciennes comprises ----------
+   Un chiffre affiché doit coller à la taille de l'entreprise pour la période annoncée. Sinon on le retire (sans rien inventer à la place).
+   Cas réels écartés : prévision annuelle prise pour les ventes du trimestre (Grainger 17,9 Md$, Eaton 27,4 Md$), poste comptable de banque
+   pris pour des « ventes » (Fifth Third 22 M$), « 1 M€ » de chiffre d'affaires annuel chez Guillin, augmentation de capital lue comme des ventes. */
+const lireMontant = t => { const m = String(t).replace(/[  ]/g, " ").match(/^(?:environ )?(-?[\d ]+(?:,\d+)?)\s*(Md|M)?\s*([^\s(]+)/); if (!m) return null;
+  return { v: parseFloat(m[1].replace(/ /g, "").replace(",", ".")) * (m[2] === "Md" ? 1e9 : m[2] === "M" ? 1e6 : 1), sym: m[3] }; };
+export function controleChiffres(a, annual, devise) {
+  if (!a || !a.chiffres || !a.chiffres.length || !annual || !annual.ca) return a;
+  const CA = Math.abs(annual.ca) * 1e6, sym = (CURS[devise] || " " + devise).trim(), xbrl = /\((10-Q)\)|^Rapport annuel/.test(a.type || "") && /^Comptes /.test(a.titre || "");
+  const perTitre = /du trimestre/.test(a.titre || "") ? 0.25 : /de l'exercice/.test(a.titre || "") ? 1 : null;
+  const fr = l => /trimestre/i.test(l) ? 0.25 : /semestre/i.test(l) ? 0.5 : /neuf/i.test(l) ? 0.75 : /année|exercice/i.test(l) ? 1 : perTitre;
+  const B = { 0.25: [0.12, 0.45], 0.5: [0.3, 0.7], 0.75: [0.5, 1.05], 1: [0.7, 1.6] };
+  let retire = [];
+  const garde = a.chiffres.filter(([l, t]) => {
+    if (/^Bénéfice par action/.test(l) && !xbrl) { // lu dans un communiqué : souvent un bénéfice « ajusté » ou une prévision annuelle (Taboola 60 $)
+      const v = parseFloat(String(t).replace(/[\u202f\u00a0 ]/g, "").replace(",", ".")), e = annual.eps, gm = String(t).match(/\(([+−-])\s?([\d ]+(?:,\d+)?)\s?%/), g = gm ? (gm[1] === "+" ? 1 : -1) * parseFloat(gm[2].replace(/ /g, "").replace(",", ".")) / 100 : 0;
+      const ok = e > 0 && Math.abs(v) >= 0.05 * e && Math.abs(v) <= 0.6 * e * Math.max(1, 1 + g); if (!ok) retire.push("bpa"); return ok; }
+    const vente = /^(Ventes|Chiffre d'affaires|Revenus)/i.test(l), net = /^(Bénéfice net|Résultat net)/i.test(l); if (!vente && !net) return true;
+    const x = lireMontant(t); if (!x || x.sym !== sym) return true; // autre devise : pas de comparaison possible
+    const f = fr(l), [lo, hi] = B[f] || B[0.25]; // période inconnue : un communiqué de résultats donne d'abord le trimestre
+    const gm = String(t).match(/\(([+−-])\s?([\d ]+(?:,\d+)?)\s?%/), g = gm ? (gm[1] === "+" ? 1 : -1) * parseFloat(gm[2].replace(/ /g, "").replace(",", ".")) / 100 : 0;
+    let ok;
+    if (vente) ok = x.v >= lo * CA * (xbrl ? 0.5 : 1) && (xbrl || x.v <= hi * CA * Math.max(1, 1 + g)); // comptes officiels (XBRL) : seulement le plancher, la croissance peut être réelle (Micron)
+    else ok = xbrl || Math.abs(x.v) <= Math.max(hi * CA * 0.7, Math.abs(annual.net || 0) * 1e6 * (f || 0.25) * 2.5) * Math.max(1, 1 + Math.max(0, g)); // banques : le « chiffre d'affaires » de la fiche est petit, on compare aussi au bénéfice annuel
+    if (!ok) retire.push(vente ? "ventes" : "bénéfice");
+    return ok;
+  });
+  if (!retire.length) return a;
+  const lecture = (a.lecture || []).filter(s => !(retire.includes("ventes") && /ventes/i.test(s)) && !(retire.includes("bénéfice") && /bénéfice|perte/i.test(s)));
+  return { ...a, chiffres: garde, lecture: garde.length && lecture.length ? lecture : [a.explication || "Les chiffres de ce document n'ont pas pu être lus de façon sûre : voir le document officiel."], controle: retire };
 }
 
 async function main() {
@@ -355,6 +387,8 @@ async function main() {
       await sleep(a.s === "nsm" ? 700 : 350); }
     console.log(eu.length, "communiqués européens,", ne, "analysés,", nc, "avec chiffres");
   } catch (e) { console.log("EU", e.message); }
+  let nr = 0; for (const [u, v] of Object.entries(keep)) { const c = BY[v.id], w = controleChiffres(v, summaryOf(v.id), (c && c.currency) || "USD"); if (w !== v) { keep[u] = w; nr++; } }
+  console.log(nr, "annonces dont un chiffre invraisemblable a été retiré");
   writeFileSync(file, JSON.stringify({ updated: new Date().toISOString(), items: keep }));
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error(e); process.exit(1); });
