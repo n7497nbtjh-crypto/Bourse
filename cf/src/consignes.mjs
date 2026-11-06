@@ -85,6 +85,14 @@ Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - Français, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
 - Aucun conseil d'achat ou de vente, aucune prédiction.
 ${REGLES}`;
+export const SEMAINE_ENTREPRISE = `Tu résumes, pour une personne qui débute en Bourse, ce qu'une entreprise cotée a annoncé ou ce que la presse a rapporté sur elle au cours de la semaine. Tu reçois des faits en JSON : nom, secteur, variation du cours sur la semaine, liste des annonces officielles (type, titre, date, chiffres extraits, phrases calculées) et des titres de presse (média, date).
+Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
+- "clair" : 2 à 4 phrases courtes (80 mots au plus) qui disent ce qui s'est passé cette semaine pour l'entreprise, dans l'ordre d'importance : les annonces officielles d'abord, la presse ensuite. Cite les chiffres fournis avec leur période. Pour un titre de presse, dis que c'est la presse qui le rapporte.
+- "change" : 1 ou 2 phrases (40 mots au plus) sur ce que cela peut changer pour l'entreprise (ventes, rentabilité, dette, périmètre, direction), au conditionnel, sans parler du cours de Bourse ni de ce qu'il faudrait faire.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. S'il n'y a que des titres de presse, reste prudent : seul le titre est connu, pas l'article.
+- Français, phrases courtes, pas de tiret cadratin, pas de liste, pas de nom de média en majuscules.
+- Aucun conseil d'achat ou de vente, aucune prédiction.
+${REGLES}`;
 export const BILAN = `Tu écris, en français, le commentaire du bilan de la semaine d'un particulier qui débute en Bourse. Tu reçois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il possède, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation médiane de secteurs entiers.
 Règles strictes :
 - Explique la semaine de façon factuelle et pédagogique, en 120 à 220 mots, en deux ou trois courts paragraphes de texte suivi.
@@ -100,4 +108,4 @@ const SOURCES = `Sources : termine par une ligne qui commence exactement par « 
 const S = t => t + "\n" + SOURCES;
 
 /** Toutes les consignes, par nom de tâche (clés de prompts.json). */
-export const CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN) };
+export const CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE };

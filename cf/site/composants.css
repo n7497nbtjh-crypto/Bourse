@@ -1796,7 +1796,7 @@ html #app .s7 button.s8-ia{font:700 12.5px Inter;color:#3B5BFF;background:#fff;b
 .s9-perf{display:flex;align-items:center;gap:16px}.s9-perf b{display:block;font:800 26px/1 "Bricolage Grotesque",Inter;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
 .s9-perf small{display:block;color:#777;font:500 12px Inter;text-align:right;margin-top:3px}
 .s9-dos .up{color:#0A7F45}.s9-dos .dn,.s9-ct .dn{color:#CC2B2B}.s9-ct .up{color:#0A7F45}
-.s9-vs{font:500 12.5px/1.5 Inter;color:#666;border-left:1px solid #DDD;padding-left:14px;white-space:nowrap;min-width:130px}.s9-vs b{font:700 12.5px Inter;color:#111}
+.s9-vs{display:flex;flex-direction:column;justify-content:center;gap:2px;border-left:1px solid #DDD;padding-left:14px;white-space:nowrap;min-width:130px;text-align:left}.s9-vs small{font:500 12.5px/1.3 Inter;color:#666}.s9-perf .s9-vs b{font:800 18px/1.1 "Bricolage Grotesque",Inter;text-align:left}.s9-vs b.up{color:var(--ek-g,#0F8A5F)}.s9-vs b.dn{color:var(--ek-r,#C8102E)} /* 6/11 (capture de Romain) : « +3,5 pts » n'est plus poussé à droite par la règle .s9-perf b */
 .s9-une{margin:20px 24px 8px;padding:4px 0 4px 20px;border-left:3px solid var(--c)}
 html #app .s7 .s9-k{margin:0 0 6px;font:600 12px Inter;text-transform:uppercase!important;letter-spacing:.08em;color:var(--c)}
 html #app .s7 .s9-une .s9-t{font:700 23px/1.25 "Bricolage Grotesque",Inter;letter-spacing:-.01em;margin:0 0 14px;max-width:860px}
@@ -1855,3 +1855,17 @@ a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 @media (max-width:600px){.ek .f4-lock-go small{display:block;margin:2px 0 0}}
 .ek-facts b{overflow-wrap:anywhere;hyphens:auto}.ek-facts a.hl em{max-width:100%;width:auto;display:inline-block}
 @media (max-width:420px){.ek-facts b{font-size:19px}}
+/* 6/11 : page Premium, deux comparatifs (3 et 5 colonnes) */
+.ek.pm5 .pm5-vs3{min-width:0}.ek.pm5 .pm5-vs3>div{grid-template-columns:2.4fr 1fr 1fr}
+.ek.pm5 .pm5-vs5{min-width:720px}.ek.pm5 .pm5-vs5>div{grid-template-columns:1.7fr 1.1fr 1fr 1fr 1fr}
+.ek.pm5 .pm5-vs5>div>span:nth-child(2){background:var(--pmyl);font-weight:800}.ek.pm5 .pm5-vs5 span:last-child{background:transparent;font-weight:600}
+.ek.pm5 .pm5-vs small{display:block;font:500 11.5px/1.3 Inter;color:#666;margin-top:2px}
+@media(max-width:700px){.ek.pm5 .pm5-vs3>div{grid-template-columns:1fr 1fr}.ek.pm5 .pm5-vs5{min-width:0}.ek.pm5 .pm5-vs5>div{grid-template-columns:repeat(4,1fr)}.ek.pm5 .pm5-vs3>div:first-child>span:first-child,.ek.pm5 .pm5-vs5>div:first-child>span:first-child{display:none}}
+/* 6/11 : rapport de la semaine, synthèse IA par entreprise (m/synthese.js, .s9-syn) */
+.s9-syn{margin:16px 24px 8px;padding:16px 18px 12px;background:#FFF6C7;border-radius:16px;border-left:4px solid var(--c,#111)}
+.s9-syn .s9-k{margin:0 0 6px}.s9-syn-t{font:500 15.5px/1.5 Inter;color:#111;margin:0}
+.s9-syn-c{font:500 14px/1.45 Inter;color:#333;margin:8px 0 0}.s9-syn-c b{font-weight:800;color:#111;margin-right:4px}
+.s9-syn-s{font:500 11.5px/1.4 Inter;color:#666;margin:8px 0 0}
+.s9-src{margin:0 24px 12px}.s9-src>summary{cursor:pointer;list-style:none;font:800 13.5px Inter;color:#111;padding:8px 0;text-decoration:underline;text-decoration-color:#FFE14D;text-decoration-thickness:3px;text-underline-offset:3px}
+.s9-src>summary::-webkit-details-marker{display:none}.s9-src[open]>summary{margin-bottom:6px}
+@media(max-width:760px){.s9-syn,.s9-src{margin-left:12px;margin-right:12px}}

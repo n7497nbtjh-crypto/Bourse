@@ -27,6 +27,7 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
   }
   // Mode « accueil » (node scripts/relire-visuel.js 4 accueil) : la page d'accueil, avec chacun des quatre exemples affiché
   if (MODE === "accueil") ids = ["hermes", "lvmh", "asml", "sanofi"];
+  if (MODE === "tout") ids = fs.readdirSync(dir).filter(f => f.endsWith(".json")).map(f => f.slice(0, -5)).sort(); // toutes les fiches
   // Mode « etf » (node scripts/relire-visuel.js 30 etf) : des fiches ETF fixes (avec et sans historique, obligations, or, levier) + tirage au hasard
   if (MODE === "etf") {
     const L = JSON.parse(fs.readFileSync(path.join(ROOT, "data", "etf.json"), "utf8")).list.map(e => e.id);
@@ -41,7 +42,12 @@ const FIXES = ["lvmh", "hermes", "alstom", "bnp-paribas", "totalenergies", "asml
   for (const [nomT, vp] of tailles) {
     const { b, p } = await ouvrir({ viewport: vp });
     for (const id of ids) {
-      try { await aller(p, url(id), MODE === "comparer" ? 2600 : 1800); } catch (e) { continue; }
+      if (MODE === "tout") { // 6/11 (Romain : « vérifie toutes les pages, pas un échantillon ») : la fiche est construite dans la page déjà ouverte, sans rechargement
+        if (id === ids[0]) { try { await aller(p, "/entreprise/" + id, 2500); } catch (e) { continue; } }
+        const ok = await p.evaluate(async id => { try { const s = RBY[id]; if (!s) return false; const c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()); if (!c || !c.fin) return false;
+          const x = f4Ctx(s, c); app.innerHTML = `<div class="ek ek-page">${f4Tete(s, c, x) + f4MetierSec(x) + f4Fil(x) + f4Fin(x)}</div>`; window.F4X = x; if (typeof f4Mobile === "function") f4Mobile(); return true; } catch (e) { return false; } }, id);
+        if (!ok) continue; await p.waitForTimeout(60);
+      } else try { await aller(p, url(id), MODE === "comparer" ? 2600 : 1800); } catch (e) { continue; }
       if (MODE === "accueil") { await p.evaluate(id => { if (typeof a4Montrer === "function") a4Montrer(id); }, id); await p.waitForTimeout(400); }
       await p.evaluate(() => document.querySelectorAll(".f4m-pl").forEach(e => e.classList.add("f4m-open"))); // téléphone : toutes les cartes de la fiche ouvertes pour le contrôle
       const r = await p.evaluate(() => {

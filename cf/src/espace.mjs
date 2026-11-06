@@ -7,7 +7,7 @@
 //  POST /api/espace/tache   robot quotidien (.github/workflows/espace.yml), protégé par ADMIN_KEY
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
-import { iaMesures } from "./iasite.mjs";
+import { iaMesures, syntheseEntreprise } from "./iasite.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk } from "./compte.mjs";
 import { coursComplets } from "./cours.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
@@ -203,10 +203,28 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
   const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
   n._cles = s.cles; n._final = weekend; n._sig = rapportSignature(s.rapport);
+  n.ia_entreprises = await iaEntreprises(env, n, c && c._cles === s.cles ? c.ia_entreprises : null); // 6/11 : synthèse IA par entreprise (cf/src/iasite.mjs)
   if (c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === SYN_VERSION) { n.texte = c.texte; n.lecture_min = lectureMin(n); } // ancien commentaire rédigé (avant le 29 octobre 2026) gardé tant que rien ne change
   const utile = n.lignes.some(l => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some(x => x.n);
   if (utile) await env.DB.prepare(`INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0`).bind(compteId, semaine, JSON.stringify(n), Date.now()).run();
   return { c: n, change: true, stocke: !!utile };
+}
+/* 6/11 : pour chaque entreprise du rapport qui a des annonces ou des articles cette semaine, une synthèse de l'IA du site
+   (au plus 12 entreprises, les plus riches en annonces d'abord). Les textes déjà rédigés pour les mêmes annonces sont gardés. */
+async function iaEntreprises(env, n, prec) {
+  const out = {}; if (!env.AI) return out;
+  const par = {}; for (const a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
+  const cles = Object.keys(par).sort((a, b) => par[b].length - par[a].length).slice(0, 12);
+  for (const k of cles) {
+    const l = (n.lignes || []).find(x => x.k === k), A = par[k];
+    const faits = { entreprise: l ? l.nom : k, variation_semaine_pct: l ? l.variation_semaine_pct : null,
+      annonces: A.filter(a => a.origine !== "presse").map(a => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
+      presse: A.filter(a => a.origine === "presse").map(a => ({ titre: a.titre || "", media: a.site || "", date: a.date })).slice(0, 6) };
+    const sig = JSON.stringify(faits);
+    if (prec && prec[k] && prec[k]._sig === sig) { out[k] = prec[k]; continue; }
+    try { const r = await syntheseEntreprise(env, faits); if (r) out[k] = { ...r, _sig: sig }; } catch (e) { }
+  }
+  return out;
 }
 const publicBilan = c => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_")));
 const precedenteDe = semaine => { const m = /^(\d{4})-W(\d{2})$/.exec(semaine); const l = new Date(Date.UTC(+m[1], 0, 4)); l.setUTCDate(l.getUTCDate() - ((l.getUTCDay() + 6) % 7) + (+m[2] - 1) * 7 - 7); return semaineIso(l.toISOString().slice(0, 10)); };
@@ -573,6 +591,7 @@ export async function rapportExemple(request, env) {
   const s = suiviDe(row, d.names);
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
   const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
+  n.ia_entreprises = await iaEntreprises(env, n, null);
   const corps = { ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: true, en_cours: true, historique: [] };
   const res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
   if (cache) { try { await cache.put(cle, res.clone()); } catch (e) { } }

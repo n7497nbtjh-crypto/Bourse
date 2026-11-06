@@ -1,19 +1,163 @@
 {
-  "_note": "Sauts d'une année à l'autre vérifiés comme réels : la fiche n'affiche pas « à vérifier » (tests/t_coherence.mjs). Ajouter seulement avec la raison.",
-  "carnival": { "ca": [2022], "_pourquoi": "reprise des croisières après l'arrêt de 2020-2021" },
-  "royal-caribbean": { "ca": [2022], "_pourquoi": "reprise des croisières après l'arrêt de 2020-2021" },
-  "norwegian-cruise-line": { "ca": [2022], "equity": [2022], "_pourquoi": "reprise des croisières ; fonds propres réduits par les pertes de la pandémie" },
-  "biontech": { "ca": [2023], "_pourquoi": "fin des ventes du vaccin contre le Covid" },
-  "sinovac-biotech": { "ca": [2022, 2023], "marge": [2022], "_pourquoi": "fin des ventes du vaccin contre le Covid" },
-  "micron": { "ca": [2026], "_pourquoi": "133,2 Md$ de ventes sur l'exercice 2026 (10-K), envolée des prix de la mémoire" },
-  "sandisk": { "marge": [2026], "_pourquoi": "envolée des prix de la mémoire" },
-  "zealand-pharma": { "ca": [2024, 2025], "marge": [2025], "_pourquoi": "paiement d'entrée de Roche en 2025" },
-  "gubra": { "ca": [2025], "marge": [2025], "_pourquoi": "paiement d'entrée d'AbbVie en 2025" },
-  "astera-labs": { "ca": [2024], "equity": [2024], "_pourquoi": "forte croissance et entrée en Bourse en 2024" },
-  "amer-sports": { "equity": [2024], "_pourquoi": "entrée en Bourse en 2024" },
-  "tempus-ai": { "equity": [2024, 2025], "_pourquoi": "entrée en Bourse en 2024" },
-  "rivian": { "ca": [2022], "_pourquoi": "premières livraisons fin 2021" },
-  "first-citizens-bancshares": { "ca": [2023], "_pourquoi": "rachat de Silicon Valley Bank en 2023" },
-  "nebius-group": { "ca": [2025], "_pourquoi": "croissance de l'activité d'informatique pour l'IA" },
-  "western-digital": { "ca": [2023], "_pourquoi": "comptes refaits après la séparation de Sandisk" }
+ "_note": "Sauts d'une année à l'autre vérifiés comme réels : la fiche n'affiche pas « à vérifier » (tests/t_coherence.mjs). Ajouter seulement avec la raison.",
+ "carnival": {
+  "ca": [
+   2022
+  ],
+  "_pourquoi": "reprise des croisières après l'arrêt de 2020-2021"
+ },
+ "royal-caribbean": {
+  "ca": [
+   2022
+  ],
+  "_pourquoi": "reprise des croisières après l'arrêt de 2020-2021"
+ },
+ "norwegian-cruise-line": {
+  "ca": [
+   2022
+  ],
+  "equity": [
+   2022
+  ],
+  "_pourquoi": "reprise des croisières ; fonds propres réduits par les pertes de la pandémie"
+ },
+ "biontech": {
+  "ca": [
+   2023
+  ],
+  "_pourquoi": "fin des ventes du vaccin contre le Covid"
+ },
+ "sinovac-biotech": {
+  "ca": [
+   2022,
+   2023
+  ],
+  "marge": [
+   2022
+  ],
+  "_pourquoi": "fin des ventes du vaccin contre le Covid"
+ },
+ "micron": {
+  "ca": [
+   2026
+  ],
+  "_pourquoi": "133,2 Md$ de ventes sur l'exercice 2026 (10-K), envolée des prix de la mémoire"
+ },
+ "sandisk": {
+  "marge": [
+   2026
+  ],
+  "_pourquoi": "envolée des prix de la mémoire"
+ },
+ "zealand-pharma": {
+  "ca": [
+   2025
+  ],
+  "net": [
+   2025
+  ],
+  "_pourquoi": "paiement initial de Roche (petrelintide) : chiffre d'affaires 9 215 M DKK en 2025 contre 63 en 2024 (rapport annuel 2025, vérifié le 6/11/2026)"
+ },
+ "gubra": {
+  "ca": [
+   2025
+  ],
+  "net": [
+   2025
+  ],
+  "_pourquoi": "licence ABBV-295 à AbbVie (350 M$ initiaux) : 2 636,8 M DKK en 2025 contre 265,7 (rapport annuel 2025, vérifié le 6/11/2026)"
+ },
+ "astera-labs": {
+  "ca": [
+   2024
+  ],
+  "equity": [
+   2024
+  ],
+  "_pourquoi": "forte croissance et entrée en Bourse en 2024"
+ },
+ "amer-sports": {
+  "equity": [
+   2024
+  ],
+  "_pourquoi": "entrée en Bourse en 2024"
+ },
+ "tempus-ai": {
+  "equity": [
+   2024,
+   2025
+  ],
+  "_pourquoi": "entrée en Bourse en 2024"
+ },
+ "rivian": {
+  "ca": [
+   2022
+  ],
+  "_pourquoi": "premières livraisons fin 2021"
+ },
+ "first-citizens-bancshares": {
+  "ca": [
+   2023
+  ],
+  "_pourquoi": "rachat de Silicon Valley Bank en 2023"
+ },
+ "nebius-group": {
+  "ca": [
+   2025
+  ],
+  "_pourquoi": "croissance de l'activité d'informatique pour l'IA"
+ },
+ "western-digital": {
+  "ca": [
+   2023
+  ],
+  "_pourquoi": "comptes refaits après la séparation de Sandisk"
+ },
+ "arrowhead-pharmaceuticals": {
+  "ca": [
+   2025
+  ],
+  "_pourquoi": "accords de licence Sarepta (696,8 M$), Sanofi, GSK : 829,4 M$ en 2025 contre 3,55 en 2024 (10-K, vérifié le 6/11/2026)"
+ },
+ "magnora": {
+  "ca": [
+   2025
+  ],
+  "_pourquoi": "ventes de projets : 97,7 M NOK en 2025 contre 2,3 en 2024 (rapport annuel 2025, vérifié le 6/11/2026)"
+ },
+ "ellaktor": {
+  "ca": [
+   2024,
+   2025
+  ],
+  "_pourquoi": "cessions (Helector, Aktor Concessions) et fin de la concession Attiki Odos : 89,2 M€ en 2025, −75 % (résultats annuels 2025, vérifié le 6/11/2026)"
+ },
+ "eolusvind": {
+  "ca": [
+   2024,
+   2025
+  ],
+  "_pourquoi": "ventes de projets (projet Pome aux États-Unis) : 3 911 M SEK en 2025 contre 851 en 2024 (rapport annuel 2025, vérifié le 6/11/2026)"
+ },
+ "cemat": {
+  "ca": [
+   2025
+  ],
+  "_pourquoi": "ventes de 93 appartements à Varsovie : 164,7 M DKK en 2025 contre 39,4 (rapport annuel 2025, vérifié le 6/11/2026)"
+ },
+ "white-mountains-insurance-group": {
+  "ca": [
+   2025
+  ],
+  "net": [
+   2025
+  ],
+  "_pourquoi": "plus-value de 849 M$ sur la vente de Bamboo à CVC : revenus 3 735 M$ en 2025 contre 2 240 (10-K 2025, vérifié le 6/11/2026)"
+ },
+ "cvc-capital-partners": {
+  "net": [
+   2025
+  ],
+  "_pourquoi": "première année complète de CVC Credit et CVC DIF, variation de la dette à terme : résultat statutaire 1 222 M€ en 2025 contre 308 (rapport annuel 2025, vérifié le 6/11/2026)"
+ }
 }

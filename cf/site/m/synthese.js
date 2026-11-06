@@ -636,10 +636,15 @@ function synPageV7(b, m) {
     const rang = pairs.length > 1 && v != null ? (v === Math.max(...pairs.map(x => x.variation_semaine_pct)) && v > 0 ? `Meilleure semaine ${qui}` : v === Math.min(...pairs.map(x => x.variation_semaine_pct)) && v < 0 ? `Plus forte baisse ${qui}` : "") : "";
     const nres = A.filter(a => a.categorie === "resultats").length, npr = A.filter(a => a.origine === "presse").length;
     const deck = [rang, [nres ? "résultats publiés" : "", npr ? `${npr} article${npr > 1 ? "s" : ""} de presse` : ""].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
-    const ind = l.indice && l.ecart_pts != null ? `<div class="s9-vs">${esc(l.indice.nom)} ${synPct(l.indice.pct)}<br><b>${l.ecart_pts > 0 ? "+" : "−"}${F1.format(Math.abs(l.ecart_pts))} pts</b> ${l.ecart_pts > 0 ? "de mieux" : "de moins"}</div>` : "";
+    const ind = l.indice && l.ecart_pts != null ? `<div class="s9-vs"><small>${esc(l.indice.nom)} ${synPct(l.indice.pct)}</small><b class="${l.ecart_pts > 0 ? "up" : "dn"}">${l.ecart_pts > 0 ? "+" : "−"}${F1.format(Math.abs(l.ecart_pts))} pts</b><small>${l.ecart_pts > 0 ? "de mieux que l'indice" : "de moins que l'indice"}</small></div>` : "";
     let h = `<article class="s9-dos" style="--c:${c}"><div class="s9-bd"></div><header class="s9-h"><span class="s9-n">${String(++numD).padStart(2, "0")}</span>${synLogo(l.k, 52)}
       <div class="s9-id"><a href="${synLien(l.k)}"><b>${esc(l.nom)}</b></a><small>${esc(meta)}</small>${deck ? `<p class="s9-deck">${esc(deck)}</p>` : ""}</div>
       <div class="s9-perf">${spark(l.serie, c, 140, 42)}${v != null ? `<div><b class="${v < 0 ? "dn" : "up"}">${synPct(v)}</b><small>sur la semaine</small></div>` : ""}${ind}</div></header>`;
+    // 6/11 (Romain) : synthèse de l'IA du site en tête du dossier, rédigée sur le serveur (ia_entreprises) ; les annonces et articles restent dessous, repliés, avec leurs liens
+    const ia = b.ia_entreprises && b.ia_entreprises[l.k];
+    if (ia && ia.clair) { const nA = reste.length;
+      h += `<section class="s9-syn"><p class="s9-k">✦ Sa semaine, en clair</p><p class="s9-syn-t">${esc(ia.clair)}</p>${ia.change ? `<p class="s9-syn-c"><b>Ce que cela peut changer</b> ${esc(ia.change)}</p>` : ""}<p class="s9-syn-s">Rédigé par l'IA d'ENKLAIR${ia.modele ? ` (${esc(ia.modele)})` : ""} à partir des ${nA} ${nA > 1 ? "annonces et articles" : "annonce ou article"} ci-dessous. Les sources font foi.</p></section>`;
+      h += `<details class="s9-src"><summary>Voir ${nA > 1 ? `les ${nA} annonces et articles` : "l'annonce"} en entier →</summary>`; }
     if (lead) { const pr1 = lead.origine === "presse", lec = pr1 ? "" : (lead.lecture || []).filter(t => t && !gen(t)).slice(0, 2).join(" ");
       const kick = `${lead.categorie === "resultats" ? "Le fait de la semaine" : "À lire cette semaine"} · ${pr1 ? "Presse" : (SYN6_T[lead.categorie] || ["Annonce"])[0]} · ${jr(lead.date)}`;
       const ch = chips(lead);
@@ -647,6 +652,7 @@ function synPageV7(b, m) {
         <div class="s9-act">${srcA(lead)}<button type="button" class="s9-ia" data-syn-exp="${SYN_ANN.push(lead) - 1}">✦ Expliquer</button></div><div class="syn4-cl s9-exp"></div></section>`; }
     if (autres.length) h += `<section class="s9-aussi"><p class="s9-sub">Aussi cette semaine</p>${autres.map(a => { const pr1 = a.origine === "presse", lab = pr1 ? "Presse" : (SYN6_T[a.categorie] || ["Annonce"])[0], ch = pr1 ? "" : chips(a);
       return `<div class="s9-li"><time>${esc(jr(a.date))}</time><span class="s9-ty ${pr1 ? "pr" : a.categorie === "resultats" ? "res" : "of"}">${esc(lab)}</span><div class="s9-tx"><p>${titreA(a)}</p>${ch ? `<div class="s9-figs s9-mini">${ch}</div>` : ""}</div>${srcA(a)}<button type="button" class="s9-ia s9-m" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button><div class="syn4-cl s9-exp"></div></div>`; }).join("")}</section>`;
+    if (ia && ia.clair) h += `</details>`;
     if (reg.length) h += `<p class="s9-reg">Publications réglementaires : ${reg.map(a => `${esc(/rachat/i.test(a.titre || "") || a.categorie === "rachat" ? "rachat d'actions" : (a.titre || "communiqué").replace(/^./, x => x.toLowerCase()))} (${esc(jr(a.date))})`).join(" · ")}</p>`;
     return h + `</article>`; };
   const calmes = arr => { const c = arr.filter(l => !deK(l.k).length); return c.length ? `<p class="s9-sub s9-sc">Sans nouvelle cette semaine</p><table class="s9-ct">${c.map(l => { const v = l.variation_semaine_pct, poids = l.portefeuille && l.portefeuille.poids_pct;

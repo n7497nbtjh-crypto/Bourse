@@ -37,7 +37,8 @@ function ekColonnes(o) {
     g += `<rect x="${x}" y="${neg ? y(0) : y(v)}" width="${bw}" height="${h}" rx="8" fill="${neg ? "#FFDCD3" : der ? "#FFE14D" : "#fff"}" stroke="${neg ? EK_R : "#111"}" stroke-width="2"/>`
       + `<text x="${x + bw / 2}" y="${neg ? y(v) + 18 : y(v) - 8}" text-anchor="middle" font-family="Bricolage Grotesque,Inter" font-size="${der ? 18 : 16}" font-weight="800" fill="${neg ? EK_R : "#111"}">${o.fmt(v)}</text>`;
     if (o.sansVar) return; // valeurs déjà en variation (performances annuelles) : pas de ligne « variation »
-    if (i && s[i - 1] > 0) { const c = (v / s[i - 1] - 1) * 100; g += ekTx(x + bw / 2, yb + 34, neg ? "perte" : (c > 0 ? "+" : "") + ekFr(c) + " %", { a: "middle", c: c >= 0 ? EK_G : EK_R, fw: 800 }); }
+    // 6/11 (Ericsson : « +142 040 % ») : au-delà de ×4, la variation se dit en « × N » ; depuis un chiffre quasi nul, on écrit seulement « bénéfice »
+    if (i && s[i - 1] > 0) { const c = (v / s[i - 1] - 1) * 100, r = v / s[i - 1], txt = neg ? "perte" : r >= 50 ? "bénéfice" : r >= 5 ? "× " + ekFr(r, 0) : (c > 0 ? "+" : "") + ekFr(c) + " %"; g += ekTx(x + bw / 2, yb + 34, txt, { a: "middle", c: c >= 0 ? EK_G : EK_R, fw: 800 }); }
     else if (i && s[i - 1] != null && s[i - 1] < 0) g += ekTx(x + bw / 2, yb + 34, neg ? "perte" : "bénéfice", { a: "middle", c: neg ? EK_R : EK_G, fw: 800 });
   });
   if (!o.sansVar) g += ekTx(L - 8, yb + 34, "variation", { a: "end", c: "#555", fw: 700, fs: 11 });
@@ -49,8 +50,8 @@ function ekColonnes(o) {
 // o = { titre, unite, lignes:[{ nom, v, texte, moi }], mediane, mediane_label, basEstMieux, max, graduations, fmtAxe, indice, source }
 // Une ligne sans valeur (v null) n'est pas placée : elle est listée sous l'échelle avec sa raison (texte).
 function ekPoints(o) {
-  const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 30 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 28, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), lw = Math.max(0, ...o.lignes.filter(r => r.v != null).flatMap(r => String(r.nom).split(/[\s-]+/).map(m => m.length * (r.moi ? 8.4 : 7.4)))), L = Math.round(Math.max(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18)), Math.min(W * 0.5, lw + 22))), coupe = (t, moi) => { t = String(t); const k = moi ? 9 : 7.8, mx = Math.floor((L - 18) / k); return t.length * k + 18 > L ? t.slice(0, mx - 1).trim() + "…" : t; },
-    lignesNom = r => { const k = r.moi ? 8.4 : 7.4, mx = Math.max(6, Math.floor((L - 18) / k)), w = []; [...String(r.nom).matchAll(/(\s*)([^\s-]+-?)/g)].forEach(([, sp, m]) => { const d = w.length - 1, j = (sp ? " " : "") + m; if (d >= 0 && (w[d] + j).length <= mx) w[d] += j; else w.push(m); });
+  const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 30 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 34, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), lw = Math.max(0, ...o.lignes.filter(r => r.v != null).flatMap(r => String(r.nom).split(/[\s-]+/).map(m => m.length * (r.moi ? 8.8 : 7.9)))), L = Math.round(Math.max(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18)), Math.min(W * 0.5, lw + 22))), coupe = (t, moi) => { t = String(t); const k = moi ? 9 : 7.8, mx = Math.floor((L - 18) / k); return t.length * k + 18 > L ? t.slice(0, mx - 1).trim() + "…" : t; },
+    lignesNom = r => { const k = r.moi ? 8.8 : 7.9, mx = Math.max(6, Math.floor((L - 18) / k)), w = []; [...String(r.nom).matchAll(/(\s*)([^\s-]+-?)/g)].forEach(([, sp, m]) => { const d = w.length - 1, j = (sp ? " " : "") + m; if (d >= 0 && (w[d] + j).length <= mx) w[d] += j; else w.push(m); });
       return (w.length <= 5 ? w : [...w.slice(0, 4), w.slice(4).join(" ")]).map(t => t.length > mx ? t.slice(0, mx - 1).trim() + "…" : t); },
     rh = 34 + 15 * (Math.max(1, ...o.lignes.filter(r => r.v != null).map(r => lignesNom(r).length)) - 1),
     hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 30, 3 * rh + 12), mn0 = o.min || 0, x = v => L + (W - L - R) * (Math.max(mn0, Math.min(v, o.max)) - mn0) / (o.max - mn0), m = x(o.mediane), bas = !!o.basEstMieux;
@@ -66,7 +67,7 @@ function ekPoints(o) {
   o.graduations.forEach((t, i) => g += `<line x1="${x(t)}" x2="${x(t)}" y1="${T - 6}" y2="${T + H - 6}" stroke="#fff" stroke-width="1.5"/>` + ((i - i0) % saut ? "" : ekTx(x(t), T + H + 12, gl[i], { a: "middle" })));
   g += `<line x1="${m}" x2="${m}" y1="${T - 14}" y2="${T + H - 6}" stroke="#111" stroke-width="2" stroke-dasharray="5 4"/><rect x="${m - 52}" y="${T - 30}" width="104" height="18" rx="5" fill="#111"/>` + ekTx(m, T - 17, ekEsc(o.mediane_label), { a: "middle", c: "#fff", fw: 800, fs: 11 });
   rows.forEach((r, i) => {
-    const cy = T + i * rh + 10, mieux = bas ? r.v < o.mediane : r.v > o.mediane;
+    const cy = T + i * rh + rh / 2 - 7, mieux = bas ? r.v < o.mediane : r.v > o.mediane;
     // Nom trop long : sur deux ou trois lignes plutôt que coupé (3/11) ; « … » seulement au-delà
     const l2 = lignesNom(r), st = { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: l2.length > 1 ? (r.moi ? 13 : 12) : (r.moi ? 14 : 13) };
     l2.forEach((t, j) => g += ekTx(L - 12, cy + 4 + (j - (l2.length - 1) / 2) * 15, ekEsc(t), st));

@@ -9,6 +9,7 @@ const fs = require("fs");
   const N = +process.argv[2] || 0;
   const { b, p } = await ouvrir();
   await aller(p, "/entreprises", 3000);
+  await p.evaluate(v => { window.__VERIFIES = v; }, (() => { try { return JSON.parse(fs.readFileSync("data/sauts-verifies.json", "utf8")); } catch (e) { return {}; } })());
   const res = await p.evaluate(async (N) => {
     await loadPrices(); if (typeof loadFiches === "function") await loadFiches();
     const ids = R.companies.map(c => c.id).slice(0, N || undefined), out = [];
@@ -29,7 +30,8 @@ const fs = require("fs");
         const val = parseFloat(v.textContent.replace(/[\u202f ]/g, "").replace(",", ".").replace("−", "-")), lib = (a.querySelector(".ek-s") || {}).textContent || "";
         if (/PER/.test(lib) && /fois/.test(v.textContent) && (val < 1.5 || val > 300)) pb.push(`prix : PER de ${v.textContent} (à vérifier : cours ou bénéfice faux ?)`);
         if (/rendement|versé/.test(lib) && /%/.test(v.textContent) && /rendement/.test(lib) && val > 15) pb.push(`dividende : rendement de ${v.textContent}`);
-        if (/^sur un an/.test(lib) && Math.abs(val) > 300) pb.push(`ventes : ${v.textContent} sur un an (saut à vérifier)`);
+        const okS = (window.__VERIFIES || {})[id] || {};
+        if (/^sur un an/.test(lib) && Math.abs(val) > 300 && !(okS.ca || []).includes(s.year) && !(okS.net || []).includes(s.year)) pb.push(`ventes : ${v.textContent} sur un an (saut à vérifier)`);
         if (/sur 100 .* de ventes/.test(lib) && Math.abs(val) > 100) pb.push(`${nom.replace(/^\d/, "")} : ${v.textContent} ${lib} (plus de 100 sur 100)`); });
       if (/\bNaN\b|undefined|Infinity|\[object/.test(t)) pb.push("valeur impossible : " + (t.match(/.{0,40}(NaN|undefined|Infinity|\[object).{0,30}/) || [""])[0]);
       if (/gagne -|gagne −/.test(t)) pb.push("« gagne » suivi d'un chiffre négatif");

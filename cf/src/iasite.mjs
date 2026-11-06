@@ -152,3 +152,34 @@ export async function iaSite(request, env) {
   }
   return json({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les réponses calculées restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les réponses calculées restent disponibles, et l'IA revient demain." }, 429);
 }
+
+/* 6/11 (Romain : « les articles expliqués par l'IA, entreprise par entreprise ») : synthèse de la semaine d'une entreprise pour le rapport.
+   Appelée par le serveur (cf/src/espace.mjs) quand le rapport est construit : pas de quota visiteur, mais comptée dans les neurones du jour.
+   Même entreprise, mêmes annonces → même texte, servi par la table ia_syn (gardée 10 jours) : un seul appel pour tous les abonnés qui suivent l'entreprise. */
+export async function syntheseEntreprise(env, faits) {
+  if (!env.AI || !env.DB) return null;
+  const sys = CONSIGNES.semaine_entreprise, user = JSON.stringify(faits).slice(0, 9000), max = 320;
+  const k = await empreinte("syn|" + user);
+  try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_syn (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL)`).run(); } catch (e) { return null; }
+  try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_syn WHERE k = ?`).bind(k).first(); if (hit) { const x = jsonDe(hit.txt); if (x) return { ...x, modele: hit.modele }; } } catch (e) { }
+  const P = plafonds(env), c = await compteurs(env, "syn", jour());
+  if (c.erreur) return null;
+  for (const [model, cin, cout, nom] of MODELES) {
+    const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
+    if (!siteOk(c, P, estime)) return null; // la part gratuite du jour est épuisée : le rapport garde ses phrases calculées
+    try {
+      const msgs = model.includes("qwen3") ? [{ role: "system", content: sys }, { role: "user", content: user + "\n/no_think" }] : [{ role: "system", content: sys }, { role: "user", content: user }];
+      const out = await env.AI.run(model, { messages: msgs, max_tokens: max, temperature: 0.2 });
+      const raw = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
+      const txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw), x = jsonDe(txt);
+      const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+      try { await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), reel, reel).run(); } catch (e) { }
+      if (x && x.clair && x.clair.length > 20) {
+        try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)`).bind(k, JSON.stringify({ clair: x.clair, change: x.change || "" }), nom, Date.now()).run(); if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_syn WHERE at < ?`).bind(Date.now() - 10 * 864e5).run(); } catch (e) { }
+        return { clair: x.clair, change: x.change || "", modele: nom };
+      }
+    } catch (e) { /* modèle suivant */ }
+  }
+  return null;
+}
+const jsonDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { const o = JSON.parse(t.slice(i, j + 1)); return o && typeof o.clair === "string" ? o : null; } catch (e) { return null; } };

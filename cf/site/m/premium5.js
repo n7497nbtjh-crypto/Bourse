@@ -7,18 +7,28 @@
   const ancien = window.pagePremium;
   const lien = k => { const l = OFFRES && OFFRES[k]; if (!l) return null; return MOI && MOI.connecte ? l + "?prefilled_email=" + encodeURIComponent(MOI.email || "") : "/espace?payer=" + k; };
   const ok = '<span class="ok">✓</span>', no = '<span class="no">✕</span>', mi = t => `<span class="mi">${t}</span>`;
-  const VS = [
-    ["Ce que vos ETF contiennent vraiment, ajouté à vos actions", no, no, mi("si vous saisissez tout"), no, ok],
-    ["Le résumé de la semaine de vos valeurs, chaque samedi", no, no, no, no, ok],
-    ["Annonces officielles du monde entier, traduites et chiffrées", no, mi("en partie"), mi("si vous lui donnez le texte"), mi("sur chaque fiche"), '<span class="ok">✓ pour vos valeurs</span>'],
-    ["Alerte le soir même si une de vos valeurs chute", mi("selon le courtier"), mi("avec un compte"), no, no, ok],
-    ["Toutes les fiches entreprises, en entier", no, mi("en partie"), mi("de mémoire"), mi("5 par jour"), '<span class="ok">Sans limite</span>'],
-    ["Questions à une IA qui cite les comptes officiels", no, no, mi("sans source"), mi("3 par semaine"), '<span class="ok">30 par jour</span>'],
-    ["Brancher Claude ou ChatGPT sur les comptes officiels", no, no, no, no, ok],
-    ["Chaque entreprise face à ses vraies rivales", no, mi("en partie"), mi("de mémoire"), ok, ok],
-    ["Comparaisons et classements", no, mi("en partie"), no, mi("3 par semaine, sans classement"), '<span class="ok">Sans limite</span>'],
-    ["Son rang dans son secteur", no, mi("en partie"), no, no, ok],
-    ["Sans pousser à acheter ni à vendre", mi("vit de vos ordres"), mi("rarement"), ok, ok, ok],
+  // 6/11 (Romain) : deux comparatifs. 1. Gratuit / Premium sur ENKLAIR. 2. ENKLAIR Premium face à la concurrence, avec les prix
+  // (relevés le 6/11/2026 : Zonebourse Premium 40 €/mois, Access 24 €/mois ; Simply Wall St Premium 10,95 $/mois ; ChatGPT Plus 22,99 €/mois TTC).
+  const VS1 = [
+    ["Fiches entreprises complètes (3 300 entreprises face à leurs rivales)", mi("5 par jour"), '<span class="ok">Sans limite</span>'],
+    ["Son rang dans son secteur, les 5 classements", no, ok],
+    ["Comparer jusqu'à 5 entreprises", mi("3 par semaine"), '<span class="ok">Sans limite</span>'],
+    ["Questions à l'IA du site, réponses tirées des comptes officiels", mi("3 par semaine"), '<span class="ok">30 par jour</span>'],
+    ["Le rapport de votre semaine, chaque samedi", no, ok],
+    ["Alerte le soir même si une de vos valeurs chute de plus de 5 %", no, ok],
+    ["Vos ETF aux rayons X : ce que vous possédez vraiment", no, ok],
+    ["Brancher Claude ou ChatGPT sur les comptes officiels (connecteur)", no, ok],
+    ["Export de vos chiffres (CSV)", no, ok],
+    ["Actualité, agenda, outils, Apprendre, portefeuille", ok, ok],
+  ];
+  const VS2 = [
+    ["Prix", '<b>3,25 € par mois</b><small>39 € l\'année, ou 4,90 € par mois</small>', "40 € par mois<small>Premium ; Access 24 €, Expert 199 €</small>", "environ 10 € par mois<small>10,95 $ ; 30 fiches par mois</small>", "22,99 € par mois<small>ChatGPT Plus</small>"],
+    ["Chaque chiffre relié au document officiel de l'entreprise", ok, mi("données d'un fournisseur"), mi("données d'un fournisseur"), no],
+    ["Chaque entreprise face à la médiane de ses vraies rivales", ok, mi("en partie"), mi("en partie"), mi("de mémoire")],
+    ["Expliqué pour quelqu'un qui débute, en français", ok, no, mi("en anglais"), mi("si vous le demandez")],
+    ["Le rapport de votre semaine, vos alertes", ok, mi("newsletter, alertes de cours"), mi("alertes"), no],
+    ["Une IA qui cite ses sources, 30 questions par jour", ok, no, no, mi("sans source")],
+    ["Aucun conseil d'achat ni de vente", ok, mi("conseils et portefeuilles types"), mi("estimations de « juste valeur »"), ok],
   ];
   const av = (num, titre, txt, pts, ailleurs, vis, inv) => `<div class="pm5-av${inv ? " inv" : ""}"><div class="pm5-tx"><p class="pm5-num">${num}</p><h3>${titre}</h3><p class="pm5-lead">${txt}</p>
     <ul>${pts.map(p => `<li>${p}</li>`).join("")}</ul><p class="pm5-gx">${ailleurs}</p></div><div class="pm5-vis">${vis}</div></div>`;
@@ -71,10 +81,14 @@
       ${av("3 · Les alertes", "Une de vos valeurs chute ? Vous le savez le soir même.", "ENKLAIR surveille chaque soir votre portefeuille et vos favoris. Pas besoin d'ouvrir le site.", ["Baisse de plus de 5 % dans la journée : notification sur votre téléphone" + (OFFRES.mail ? " et par e-mail" : ""), "Résultats publiés, avec leurs chiffres clés", "Dernier jour pour acheter et toucher un dividende"], "Ailleurs : une alerte de cours, sans vous dire pourquoi.", vTel, false)}
       ${av("4 · L'IA qui cite ses sources", "Posez vos questions, autant que vous voulez.", "Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.", ["30 questions par jour, au lieu de 3 par semaine", "Chaque chiffre cité avec sa source", "Le connecteur pour votre propre IA"], "Ailleurs : une IA répond de mémoire, sans source ni comparaison au secteur.", vIa, true)}
     </section>
-    <section class="pm5-sec ek-sec"><span class="ek-stk2">Comparez</span><h2>Ce que vous obtenez, et où.</h2>
-      <div class="pm5-vsw"><div class="pm5-vs"><div><span></span><span>Votre courtier</span><span>Un site boursier gratuit</span><span>Une IA seule</span><span>ENKLAIR gratuit</span><span>ENKLAIR Premium</span></div>
-      ${VS.map(r => `<div><span>${r[0]}</span>${r.slice(1).join("")}</div>`).join("")}</div></div>
-      <p class="pm5-vsn">Ce qu'on trouve en général : les services varient d'un courtier ou d'un site à l'autre. En gratuit, ENKLAIR garde ouverts 5 fiches complètes par jour, l'en-tête et les 5 repères de toutes les fiches, l'actualité, l'agenda, les outils et Apprendre.</p></section>
+    <section class="pm5-sec ek-sec"><span class="ek-stk2">Gratuit ou Premium</span><h2>Ce que Premium ajoute.</h2>
+      <div class="pm5-vsw"><div class="pm5-vs pm5-vs3"><div><span></span><span>ENKLAIR gratuit</span><span>ENKLAIR Premium</span></div>
+      ${VS1.map(r => `<div><span>${r[0]}</span>${r.slice(1).map(c => `<span>${c}</span>`).join("")}</div>`).join("")}</div></div>
+      <p class="pm5-vsn">En gratuit, l'en-tête et les 5 repères de chaque fiche restent toujours ouverts, ainsi que les entreprises que vous suivez en favori.</p></section>
+    <section class="pm5-sec ek-sec"><span class="ek-stk2">Face aux autres</span><h2>Moins cher, et pas le même travail.</h2>
+      <div class="pm5-vsw"><div class="pm5-vs pm5-vs5"><div><span></span><span>ENKLAIR Premium</span><span>Zonebourse</span><span>Simply Wall St</span><span>Une IA seule</span></div>
+      ${VS2.map(r => `<div><span>${r[0]}</span>${r.slice(1).map(c => `<span>${c}</span>`).join("")}</div>`).join("")}</div></div>
+      <p class="pm5-vsn">Prix publics relevés le 6 novembre 2026 sur les sites des éditeurs (Zonebourse : formules Access, Premium et Expert ; Simply Wall St : formule Premium en dollars ; ChatGPT Plus en euros TTC). Les services des autres sites évoluent : vérifiez chez eux avant de choisir.</p></section>
     <section class="pm5-sec ek-sec"><span class="ek-stk2 b">En confiance</span><h2>Simple à prendre, simple à quitter.</h2><div class="pm5-tr">
       <div><i>↺</i><b>Résiliable en deux clics</b><p>Depuis Mon espace. L'accès reste ouvert jusqu'à la fin du mois payé.</p></div>
       <div><i>🔒</i><b>Paiement par Stripe</b><p>ENKLAIR ne voit jamais votre numéro de carte.</p></div>
