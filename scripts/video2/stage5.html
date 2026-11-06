@@ -1,0 +1,152 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#FFE14D}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;background:#FFE14D;font-family:Inter,sans-serif;color:#111}
+.hook{position:absolute;left:70px;right:70px;font:800 168px/.98 "Bricolage Grotesque";letter-spacing:-7px}
+.w{display:inline-block;transform-origin:50% 60%}
+.hl{background:#fff;border:8px solid #111;border-radius:28px;padding:0 20px 10px;box-shadow:12px 12px 0 #111;display:inline-block}
+#card{position:absolute;background:#fff;border:7px solid #111;box-shadow:18px 18px 0 #111;overflow:hidden}
+.in{position:absolute;inset:0;padding:60px 64px;opacity:0}
+#cap{position:absolute;left:0;right:0;height:130px;overflow:hidden;text-align:center}
+#cap div{position:absolute;left:0;right:0;top:0}
+#cap span{display:inline-block;background:#111;color:#fff;font:800 74px/1.1 "Bricolage Grotesque";letter-spacing:-2px;padding:14px 40px 22px;border-radius:26px}
+.big{font:800 96px/1 "Bricolage Grotesque";letter-spacing:-3px}
+.lbl{font:600 38px Inter;color:#777}
+.chk{display:flex;align-items:center;gap:30px;font:800 74px/1 "Bricolage Grotesque";letter-spacing:-2px;margin-top:46px}
+.chk i{width:92px;height:92px;border-radius:50%;background:#0A7F45;display:grid;place-items:center;flex:none}
+.chk i svg{width:54px;height:54px}
+.row{position:absolute;left:64px;right:64px;height:130px}
+.row .nm{position:absolute;left:0;top:36px;font:700 46px Inter}
+.row .tr{position:absolute;left:220px;right:150px;top:20px;height:90px;border-radius:20px;overflow:hidden}
+.row .vl{position:absolute;right:0;top:30px;font:800 58px "Bricolage Grotesque";font-variant-numeric:tabular-nums}
+.dot{position:absolute;top:10px;width:70px;height:70px;border-radius:50%;background:#FFE14D;border:7px solid #111;margin-left:-35px}
+.bar{position:absolute;left:220px;top:22px;height:86px;border:7px solid #111;border-radius:50px;background:#FFE14D}
+.up{color:#0A7F45}.dn{color:#CC2B2B}
+.logo{display:inline-block;background:#fff;border:9px solid #111;border-radius:34px;padding:10px 50px 24px;font:800 176px/1 "Bricolage Grotesque";letter-spacing:-5px;box-shadow:16px 16px 0 #111}
+</style></head><body><div id="s">
+<div class="hook" id="H" style="top:420px"><span class="w" id="w0">Vous</span> <span class="w" id="w1">investissez</span> <span class="w" id="w2">sans</span> <span class="w" id="w3">lire</span> <span class="w" id="w4">les</span> <span class="w" id="w5"><span class="hl">comptes ?</span></span></div>
+<div class="hook" id="P" style="top:760px;text-align:center;font-size:132px;letter-spacing:-5px"><span class="w" id="p0">ENKLAIR</span><br><span class="w" id="p1">les</span> <span class="w" id="p2">lit</span> <span class="w" id="p3">pour</span> <span class="w" id="p4"><span class="hl">vous.</span></span></div>
+
+<div id="card">
+  <!-- A fiche -->
+  <div class="in" id="iA">
+    <div style="display:flex;align-items:center;gap:32px"><div style="width:150px;height:150px;border:5px solid #ddd;border-radius:36px;display:grid;place-items:center"><img src="hermes_logo.png" style="width:80%"></div>
+      <div><div class="big">Hermès</div><div class="lbl" style="margin-top:12px">Luxe · comptes 2025</div></div></div>
+    <div class="chk" id="a1"><i><svg viewBox="0 0 24 24"><path id="k1" d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/></svg></i>Très rentable</div>
+    <div class="chk" id="a2"><i><svg viewBox="0 0 24 24"><path id="k2" d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/></svg></i>Sans dette</div>
+    <div class="chk" id="a3"><i><svg viewBox="0 0 24 24"><path id="k3" d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="#fff" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1"/></svg></i>Le marché y croit</div>
+  </div>
+  <!-- B marge face aux rivales -->
+  <div class="in" id="iB">
+    <div class="big" style="font-size:80px">Marge</div><div class="lbl" style="margin-top:12px">Gardé sur 100 € de ventes</div>
+    <div style="position:absolute;left:284px;right:214px;top:300px;height:440px">
+      <div style="position:absolute;inset:0;left:0;width:18%;background:#FDE8E6;border-radius:20px 0 0 20px" id="zr"></div><div style="position:absolute;top:0;bottom:0;left:18%;right:0;background:#E3F5EA;border-radius:0 20px 20px 0" id="zg"></div>
+      <div style="position:absolute;left:18%;top:-14px;bottom:-10px;border-left:6px dashed #111" id="mdl"></div>
+      <div style="position:absolute;left:18%;top:-74px;transform:translateX(-50%);background:#111;color:#fff;font:700 32px Inter;padding:6px 18px;border-radius:12px;white-space:nowrap" id="mdt">médiane 9 €</div>
+    </div>
+    <div class="row" style="top:310px"><span class="nm">LVMH</span><div class="tr"><div class="dot" id="b1"></div></div><b class="vl up" id="v1">22 €</b></div>
+    <div class="row" style="top:450px"><span class="nm" style="font-weight:800">Hermès</span><div class="tr"><div class="dot" id="b2" style="background:#111;border-color:#111"></div></div><b class="vl up" id="v2">41 €</b></div>
+    <div class="row" style="top:590px"><span class="nm">Kering</span><div class="tr"><div class="dot" id="b3"></div></div><b class="vl dn" id="v3">7 €</b></div>
+  </div>
+  <!-- C ventes -->
+  <div class="in" id="iC">
+    <div class="big" style="font-size:80px">Ventes 2025</div><div class="lbl" style="margin-top:12px">En milliards d'euros</div>
+    <div class="row" style="top:280px"><span class="nm">LVMH</span><div class="bar" id="c1"></div><b class="vl" id="u1">80,8</b></div>
+    <div class="row" style="top:420px"><span class="nm" style="font-weight:800">Hermès</span><div class="bar" id="c2" style="background:#111"></div><b class="vl" id="u2">16,0</b></div>
+    <div class="row" style="top:560px"><span class="nm">Kering</span><div class="bar" id="c3"></div><b class="vl" id="u3">14,7</b></div>
+  </div>
+  <!-- D rapport -->
+  <div class="in" id="iD">
+    <div style="display:inline-block;background:#FFE14D;border:5px solid #111;border-radius:16px;padding:6px 20px;font:700 34px Inter">Meilleure semaine de vos favoris</div>
+    <div style="display:flex;align-items:baseline;gap:24px;margin-top:40px"><div class="big" style="font-size:88px">Hermès</div></div>
+    <div class="up" style="font:800 230px/1 'Bricolage Grotesque';letter-spacing:-9px;margin-top:20px;font-variant-numeric:tabular-nums" id="dv">+7,2 %</div>
+    <svg width="832" height="210" viewBox="0 0 832 210" style="position:absolute;left:64px;bottom:120px;overflow:visible"><defs><linearGradient id="gg" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#0A7F45" stop-opacity=".22"/><stop offset="1" stop-color="#0A7F45" stop-opacity="0"/></linearGradient></defs>
+      <path id="da" fill="url(#gg)"/><path id="dl" fill="none" stroke="#0A7F45" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/><circle id="dc" r="16" fill="#0A7F45" stroke="#fff" stroke-width="6"/></svg>
+    <div class="lbl" style="position:absolute;left:64px;bottom:50px">sur la semaine · 4,3 pts de mieux que le CAC 40</div>
+  </div>
+  <!-- E alerte -->
+  <div class="in" id="iE" style="display:flex;align-items:center;gap:44px">
+    <div id="bell" style="width:200px;height:200px;border-radius:56px;background:#111;display:grid;place-items:center;flex:none;transform-origin:50% 20%">
+      <svg width="110" height="110" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0-6 6v3.5L4.5 15.5h15L18 12.5V9a6 6 0 0 0-6-6z" fill="#FFE14D"/><circle cx="12" cy="18.5" r="2.2" fill="#FFE14D"/></svg></div>
+    <div><div class="big" style="font-size:78px">Alerte</div><div style="font:600 44px/1.3 Inter;margin-top:14px">Une de vos valeurs<br>perd plus de 5 %.</div></div>
+  </div>
+  <!-- F PER -->
+  <div class="in" id="iF">
+    <div style="font:800 190px/1 'Bricolage Grotesque';letter-spacing:-6px">PER</div>
+    <div style="font:500 50px/1.35 Inter;margin-top:26px">Combien d'années du bénéfice actuel il faudrait pour payer l'entreprise au prix de la Bourse.</div>
+    <div style="position:absolute;left:64px;right:64px;bottom:56px;padding-top:34px;border-top:5px solid #eee;display:flex;align-items:baseline"><span style="font:700 48px Inter">Hermès</span><span style="font:800 120px 'Bricolage Grotesque';margin-left:auto;letter-spacing:-3px;font-variant-numeric:tabular-nums" id="fp">34 fois</span></div>
+  </div>
+  <!-- G logo -->
+  <div class="in" id="iG" style="padding:0;display:grid;place-items:center"><div style="font:800 176px/1 'Bricolage Grotesque';letter-spacing:-5px;margin-top:-14px">ENKLAIR</div></div>
+</div>
+<div id="cap"><div id="cp0"><span>Hermès, en 3 mots.</span></div><div id="cp1"><span>Face à ses rivales.</span></div><div id="cp2"><span>Comparez en 1 clic.</span></div><div id="cp3"><span>Votre rapport, chaque samedi.</span></div><div id="cp4"><span>Prévenu au bon moment.</span></div><div id="cp5"><span>Chaque mot expliqué.</span></div></div>
+<div id="end" style="position:absolute;left:0;right:0;top:1000px;text-align:center">
+  <div id="e1" style="font:800 88px 'Bricolage Grotesque';letter-spacing:-2px">La Bourse, enfin claire.</div>
+  <div style="margin-top:50px"><span id="e2" style="display:inline-block;background:#111;color:#FFE14D;border-radius:999px;padding:24px 64px;font:800 70px 'Bricolage Grotesque'">enklair.com</span></div>
+  <div id="e3" style="margin-top:40px;font:600 46px Inter">Premium dès 4,90 € par mois</div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x)), k = (t, t0, d) => cl((t - t0) / d);
+const eo = x => 1 - Math.pow(1 - x, 4), eio = x => x < .5 ? 8 * x ** 4 : 1 - Math.pow(-2 * x + 2, 4) / 2;
+const back = (x, c1 = 1.9) => { const c3 = c1 + 1; return x >= 1 ? 1 : 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const lerp = (a, b, p) => a + (b - a) * p;
+const slam = (id, t, t0, d = .22) => { const x = k(t, t0, d), e = eo(x); $(id).style.opacity = x > 0 ? 1 : 0; $(id).style.transform = `scale(${1.6 - .6 * e})`; };
+// Plans de la carte : [x, y, largeur, hauteur, rayon], et l'heure où elle y arrive
+const G = { A: [90, 470, 900, 860, 56], B: [60, 430, 960, 900, 52], C: [60, 470, 960, 820, 52], D: [60, 400, 960, 1000, 52], E: [90, 660, 900, 420, 52], F: [60, 450, 960, 920, 52], Z: [170, 560, 740, 250, 34] };
+const PL = [["A", 2.75], ["B", 5.0], ["C", 7.1], ["D", 9.1], ["E", 11.5], ["F", 13.2], ["Z", 15.3]], M = .5; // M : durée du fondu-morphing
+const IN = { A: "iA", B: "iB", C: "iC", D: "iD", E: "iE", F: "iF", Z: "iG" };
+const fmt = (v, d) => v.toFixed(d).replace(".", ",");
+window.render = t => {
+  // accroche
+  ["w0", "w1", "w2", "w3", "w4", "w5"].forEach((w, i) => slam(w, t, .05 + i * .18, i === 5 ? .3 : .2));
+  const ho = eio(k(t, 1.35, .3)); $("H").style.transform = `translateY(${-ho * 700}px)`; $("H").style.opacity = 1 - ho;
+  ["p0", "p1", "p2", "p3", "p4"].forEach((w, i) => slam(w, t, 1.5 + i * .14));
+  const po = eio(k(t, 2.45, .35)); $("P").style.transform = `translateY(${-po * 700}px)`; $("P").style.opacity = 1 - po;
+  // carte : apparition puis passage d'un plan à l'autre
+  let cur = -1; PL.forEach(([n, a], i) => { if (t >= a - M) cur = i; });
+  const card = $("card");
+  if (cur < 0) { card.style.opacity = 0; $("cap").style.opacity = 0; } else {
+    card.style.opacity = 1;
+    const [n, a] = PL[cur], g = G[n];
+    let x, y, w, h, r;
+    if (cur === 0) { const e = back(k(t, a - M, .6), 1.4); [x, y, w, h, r] = g; y = lerp(1920, g[1], e); }
+    else { const p = eio(k(t, a - M, M)), g0 = G[PL[cur - 1][0]]; [x, y, w, h, r] = g.map((v, j) => lerp(g0[j], v, p)); }
+    Object.assign(card.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px", borderRadius: r + "px" });
+    // contenu : celui qui part s'efface tôt, celui qui arrive glisse après le morphing
+    PL.forEach(([nn, aa], i) => { const el = $(IN[nn]); const next = PL[i + 1] ? PL[i + 1][1] : 99;
+      const fi = eo(k(t, aa - (i === 0 ? .25 : .32), .35)), fo = eio(k(t, next - M, .22)); el.style.opacity = fi * (1 - fo); el.style.transform = `translateY(${(1 - fi) * 40}px)`; });
+    // légende sous la carte
+    const capY = y + h + 70; $("cap").style.top = capY + "px";
+    for (let i = 0; i < 6; i++) { const aa = PL[i][1], nx = PL[i + 1][1]; const ein = eo(k(t, aa - .05, .4)), eout = eio(k(t, nx - M, .3)); $("cp" + i).style.transform = `translateY(${(1 - ein) * 140 - eout * 140}px)`; }
+    $("cap").style.opacity = t > PL[6][1] - M ? 0 : 1;
+  }
+  // A : coches qui se dessinent
+  [["a1", "k1", 3.15], ["a2", "k2", 3.45], ["a3", "k3", 3.75]].forEach(([r, c, t0]) => { const e = back(k(t, t0, .4)); $(r).style.opacity = cl(k(t, t0, .12)); $(r).style.transform = `translateX(${(1 - e) * -60}px)`; $(c).style.strokeDashoffset = 1 - eo(k(t, t0 + .12, .35)); });
+  // B : points qui glissent jusqu'à leur valeur (échelle 0-50 €)
+  [["b1", "v1", 22, 5.25], ["b2", "v2", 41, 5.45], ["b3", "v3", 7, 5.65]].forEach(([d, v, val, t0]) => { const e = back(k(t, t0, .75), 1.2), q = eo(k(t, t0, .75)); $(d).style.left = (e * val * 2) + "%"; $(d).style.opacity = k(t, t0, .1); $(v).textContent = Math.round(val * q) + " €"; });
+  // C : barres
+  [["c1", "u1", 80.8, 7.35], ["c2", "u2", 16.0, 7.5], ["c3", "u3", 14.7, 7.65]].forEach(([b, u, val, t0]) => { const e = back(k(t, t0, .8), 1.1), q = eo(k(t, t0, .8)); $(b).style.width = Math.max(0, e * val / 80.8 * 430) + "px"; $(b).style.opacity = k(t, t0, .08); $(u).textContent = fmt(val * q, 1); });
+  // D : courbe de la semaine qui se trace et chiffre qui monte
+  { const S = [1293.5, 1320.5, 1312.5, 1372.5, 1387, 1387], lo = Math.min(...S), hi = Math.max(...S), q = eio(k(t, 9.35, 1.3));
+    const P = S.map((v, i) => [i * 832 / (S.length - 1), 190 - (v - lo) / (hi - lo) * 170]);
+    let d = `M ${P[0][0]} ${P[0][1]}`; for (let i = 1; i < P.length; i++) { const [x0, y0] = P[i - 1], [x1, y1] = P[i], m = (x0 + x1) / 2; d += ` C ${m} ${y0}, ${m} ${y1}, ${x1} ${y1}`; }
+    $("dl").setAttribute("d", d); const L = $("dl").getTotalLength(); $("dl").style.strokeDasharray = L; $("dl").style.strokeDashoffset = L * (1 - q);
+    const pt = $("dl").getPointAtLength(L * q); $("dc").setAttribute("cx", pt.x); $("dc").setAttribute("cy", pt.y); $("dc").style.opacity = q > 0 ? 1 : 0;
+    $("da").setAttribute("d", d + ` L 832 210 L 0 210 Z`); $("da").style.clipPath = `inset(0 ${(1 - q) * 100}% 0 0)`;
+    $("dv").textContent = "+" + fmt(7.2 * eo(k(t, 9.35, 1.3)), 1) + " %"; }
+  // E : la cloche sonne
+  { const s = t - 11.65, sw = s > 0 ? Math.exp(-3 * s) * Math.sin(s * 20) * 18 : 0; $("bell").style.transform = `rotate(${sw}deg) scale(${.7 + .3 * back(k(t, 11.4, .45))})`; }
+  // F
+  $("fp").textContent = Math.round(34 * eo(k(t, 13.5, .8))) + " fois";
+  // fin
+  { const e1 = eo(k(t, 15.5, .5)); $("e1").style.opacity = e1; $("e1").style.transform = `translateY(${(1 - e1) * 60}px)`;
+    const e2 = back(k(t, 15.85, .45)); $("e2").style.opacity = k(t, 15.85, .1); $("e2").style.transform = `scale(${.6 + .4 * e2})`;
+    const e3 = eo(k(t, 16.2, .5)); $("e3").style.opacity = e3; $("e3").style.transform = `translateY(${(1 - e3) * 40}px)`; }
+};
+window.pret = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => 0))]);
+window.render(0);
+</script></body></html>
