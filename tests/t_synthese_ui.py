@@ -59,9 +59,9 @@ with sync_playwright() as pw:
                 if need.lower() not in txt.lower(): probs.setdefault(f"/espace prem={prem}", []).append("manque : " + need)
             # 5/11 : rapport v6 (synPageV6) : cases en tête, une carte par valeur, au moins une annonce
             if pg.locator(".s7-kpis>span").count() < 2: probs.setdefault(f"/espace prem={prem}", []).append(f"{pg.locator('.s7-kpis>span').count()} pastilles en tête")
-            nv = pg.locator(".s8-co").count() + pg.locator(".s8-calme a").count()
+            nv = pg.locator(".s9-dos").count() + pg.locator(".s9-ct tr").count()
             if nv != 6: probs.setdefault(f"/espace prem={prem}", []).append(f"{nv} valeurs au lieu de 6")
-            if pg.locator(".s8-it").count() < 1: probs.setdefault(f"/espace prem={prem}", []).append("aucune annonce")
+            if pg.locator(".s9-une").count() + pg.locator(".s9-li").count() < 1: probs.setdefault(f"/espace prem={prem}", []).append("aucune annonce")
             p = pg.evaluate(CHECK, W)
             if p: probs.setdefault(f"/espace prem={prem}", []).extend(p)
             if shots: os.makedirs(shots, exist_ok=True); pg.screenshot(path=f"{shots}/{name}_espace{'_prem' if prem else ''}.png", full_page=True)

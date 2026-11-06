@@ -196,7 +196,7 @@ async function synIA(b, el, auto) { // le commentaire de l'IA du site, une fois 
 let SYN_ANN = []; // annonces affichées, pour le bouton « Expliquer » (31/10, Romain : l'IA explique l'annonce, à la place de « Lire la publication »)
 document.addEventListener("click", async e => {
   const btn = e.target.closest("[data-syn-exp]"); if (!btn) return;
-  const a = SYN_ANN[+btn.dataset.synExp], box = (btn.closest("li, .s7-pt, .s8-it") && btn.closest("li, .s7-pt, .s8-it").querySelector(".syn4-cl")) || btn.closest("article").querySelector(".syn4-cl"); if (!a || !box) return;
+  const a = SYN_ANN[+btn.dataset.synExp], box = (btn.closest("li, .s7-pt, .s8-it, .s9-li, .s9-une") && btn.closest("li, .s7-pt, .s8-it, .s9-li, .s9-une").querySelector(".syn4-cl")) || btn.closest("article").querySelector(".syn4-cl"); if (!a || !box) return;
   btn.disabled = true; btn.textContent = "Rédaction en cours…";
   const co = a.k && a.k.startsWith("c:") ? RBY[a.k.slice(2)] : null, f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
   let j; try { j = await iaRediger("annonce", { entreprise: a.nom || (co && co.name), secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: SYN_CAT[a.categorie] || a.type, titre_officiel: a.titre, date: a.date, chiffres: a.chiffres || [], lecture_calculee: a.lecture || [], dernier_exercice: f, lien: a.source }, { max: 420 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
@@ -613,13 +613,43 @@ function synPageV7(b, m) {
   const coul = k => { const c = k.startsWith("c:") && typeof LOGOS !== "undefined" && LOGOS[k.slice(2)] && LOGOS[k.slice(2)].f && window.LOGO_COUL ? LOGO_COUL[LOGOS[k.slice(2)].f.replace(/\.png$/, "")] : null; return c || null; };
   const PAL = ["#3B5BFF", "#E0457B", "#00A06B", "#F08C2E", "#8B5CF6", "#0EA5B7", "#C2410C", "#4D7C0F"];
   const teinte = k => coul(k) || PAL[[...k].reduce((h, ch) => (h * 31 + ch.charCodeAt(0)) >>> 0, 0) % PAL.length];
-  const rangee = l => { const A = deK(l.k), off = A.filter(a => a.origine !== "presse").slice(0, 4), pr = A.filter(a => a.origine === "presse").slice(0, 3);
-    if (!off.length && !pr.length) return "";
+  // 6/11 (maquette rapport-semaine-v4, validée) : un « dossier » par entreprise, à sa couleur : courbe de la semaine, phrase factuelle,
+  // le fait de la semaine en tête (résultats du trimestre d'abord, puis un fait sur l'entreprise), le reste en liste, le réglementaire en une ligne
+  const spark = (serie, c, w, h) => { const v = (serie || []).filter(x => x != null); if (v.length < 2) return ""; const lo = Math.min(...v), hi = Math.max(...v), r = hi - lo || 1;
+    const pts = v.map((x, i) => [i * w / (v.length - 1), h - 3 - (x - lo) / r * (h - 6)]), p = pts.map(q => q[0].toFixed(1) + "," + q[1].toFixed(1)).join(" ");
+    return `<svg class="s9-sp" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polygon points="0,${h} ${p} ${w},${h}" fill="${c}" opacity=".1"/><polyline points="${p}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${(pts.at(-1)[0] - 2).toFixed(1)}" cy="${pts.at(-1)[1].toFixed(1)}" r="3.2" fill="${c}"/></svg>`; };
+  const reglem = a => a.origine !== "presse" && (/^rachat d.actions$/i.test((a.titre || "").trim()) || a.categorie === "rachat" || a.categorie === "capital" || /droits de vote/i.test(a.titre || ""));
+  const FAIT = /\b(sign|accord|agreement|contrat|contract|acqui|rachète|lance|launch|met en service|ouvre|opens|partenariat|partnership|nomm|appoint|production|usine|plant)/i, OPIN = /\?|recommand|conseil|aktie|should you|buy|sell|could|top \d|meilleures? actions/i;
+  const chips = a => (a.chiffres || []).slice(0, 3).map(([l, v]) => { const m = String(v).match(/^(.*?)\s*\(([+−-][^)]*?)(?: sur un an)?\)$/); return `<div class="s9-fig"><small>${esc(l)}</small><b>${esc(m ? m[1] : String(v))}</b>${m ? `<em class="${/^[−-]/.test(m[2]) ? "dn" : "up"}">${esc(m[2])} sur un an</em>` : ""}</div>`; }).join("");
+  const srcA = a => a.source ? `<a class="s9-src" href="${esc(a.source)}" target="_blank" rel="noopener">${esc(a.origine === "presse" ? String(a.site || "presse").replace(/^www\./, "") : a.source_nom || "Source")} ↗</a>` : "";
+  const titreA = a => { const pr = a.origine === "presse"; if (pr) return titreP(a); const lab = (SYN6_T[a.categorie] || ["Annonce"])[0]; return esc(a.titre && a.titre !== "Résultats" ? a.titre : a.categorie === "resultats" ? ((a.chiffres || []).some(q => /trimestre/.test(q[0])) ? "Résultats du trimestre" : "Résultats publiés") : a.titre || a.type || lab); };
+  let numD = 0;
+  const rangee = (l, grp) => { const A = deK(l.k); if (!A.length) return "";
+    const reg = A.filter(reglem), reste = A.filter(a => !reglem(a)), c = teinte(l.k);
+    const res = reste.filter(a => a.categorie === "resultats" && (a.chiffres || []).length).sort((x, y) => (!(x.chiffres || []).some(q => /trimestre/.test(q[0]))) - (!(y.chiffres || []).some(q => /trimestre/.test(q[0])))); // le trimestre (la nouvelle) avant le rapport annuel
+    const offc = reste.filter(a => a.origine !== "presse" && (a.chiffres || []).length), pr = reste.filter(a => a.origine === "presse").sort((x, y) => (FAIT.test(y.titre || "") - FAIT.test(x.titre || "")) || (OPIN.test(x.titre || "") - OPIN.test(y.titre || "")));
+    const lead = res[0] || offc[0] || reste.find(a => a.origine !== "presse") || pr[0] || null, autres = reste.filter(a => a !== lead).slice(0, 5);
     const v = l.variation_semaine_pct, etf = l.k.startsWith("e:"), poids = l.portefeuille && l.portefeuille.poids_pct;
-    const meta = [etf ? "ETF" : "", poids != null ? `${F0.format(Math.round(poids))} % du portefeuille` : l.portefeuille ? "" : "favori"].filter(Boolean).join(" · ");
-    const cnt = [off.length ? `${off.length} annonce${off.length > 1 ? "s" : ""}` : "", pr.length ? `${pr.length} article${pr.length > 1 ? "s" : ""}` : ""].filter(Boolean).join(" · ");
-    return `<article class="s8-co" style="--c:${teinte(l.k)}"><div class="s8-h">${synLogo(l.k, 40)}<div><a href="${synLien(l.k)}"><b>${esc(l.nom)}</b></a>${meta ? `<small>${esc(meta)}</small>` : ""}</div><span class="s8-cnt">${cnt}</span>${v != null ? `<span class="s8-pv ${v < 0 ? "dn" : "up"}">${synPct(v)}</span>` : ""}</div>${[...off, ...pr].map(ligne).join("")}</article>`; };
-  const calmes = arr => { const c = arr.filter(l => !deK(l.k).length); return c.length ? `<div class="s8-calme">Sans nouvelle cette semaine :${c.map(l => `<a href="${synLien(l.k)}">${synLogo(l.k, 24)}${esc(l.nom)}${l.variation_semaine_pct != null ? ` <em class="${l.variation_semaine_pct < 0 ? "dn" : "up"}">${synPct(l.variation_semaine_pct)}</em>` : ""}</a>`).join("")}</div>` : ""; };
+    const meta = [etf ? "ETF" : "", poids != null ? `${F0.format(Math.round(poids))} % de votre portefeuille` : l.portefeuille ? "Dans votre portefeuille" : "Dans vos favoris"].filter(Boolean).join(" · ");
+    const pairs = grp.filter(x => x.variation_semaine_pct != null && x.k.startsWith("c:")), qui = l.portefeuille ? "de votre portefeuille" : "de vos favoris";
+    const rang = pairs.length > 1 && v != null ? (v === Math.max(...pairs.map(x => x.variation_semaine_pct)) && v > 0 ? `Meilleure semaine ${qui}` : v === Math.min(...pairs.map(x => x.variation_semaine_pct)) && v < 0 ? `Plus forte baisse ${qui}` : "") : "";
+    const nres = A.filter(a => a.categorie === "resultats").length, npr = A.filter(a => a.origine === "presse").length;
+    const deck = [rang, [nres ? "résultats publiés" : "", npr ? `${npr} article${npr > 1 ? "s" : ""} de presse` : ""].filter(Boolean).join(", ")].filter(Boolean).join(" · ");
+    const ind = l.indice && l.ecart_pts != null ? `<div class="s9-vs">${esc(l.indice.nom)} ${synPct(l.indice.pct)}<br><b>${l.ecart_pts > 0 ? "+" : "−"}${F1.format(Math.abs(l.ecart_pts))} pts</b> ${l.ecart_pts > 0 ? "de mieux" : "de moins"}</div>` : "";
+    let h = `<article class="s9-dos" style="--c:${c}"><div class="s9-bd"></div><header class="s9-h"><span class="s9-n">${String(++numD).padStart(2, "0")}</span>${synLogo(l.k, 52)}
+      <div class="s9-id"><a href="${synLien(l.k)}"><b>${esc(l.nom)}</b></a><small>${esc(meta)}</small>${deck ? `<p class="s9-deck">${esc(deck)}</p>` : ""}</div>
+      <div class="s9-perf">${spark(l.serie, c, 140, 42)}${v != null ? `<div><b class="${v < 0 ? "dn" : "up"}">${synPct(v)}</b><small>sur la semaine</small></div>` : ""}${ind}</div></header>`;
+    if (lead) { const pr1 = lead.origine === "presse", lec = pr1 ? "" : (lead.lecture || []).filter(t => t && !gen(t)).slice(0, 2).join(" ");
+      const kick = `${lead.categorie === "resultats" ? "Le fait de la semaine" : "À lire cette semaine"} · ${pr1 ? "Presse" : (SYN6_T[lead.categorie] || ["Annonce"])[0]} · ${jr(lead.date)}`;
+      const ch = chips(lead);
+      h += `<section class="s9-une"><p class="s9-k">${esc(kick)}</p><p class="s9-t" role="heading" aria-level="4">${titreA(lead)}</p>${ch ? `<div class="s9-figs">${ch}</div>` : ""}${lec ? `<p class="s9-lec">${esc(lec)}</p>` : ""}
+        <div class="s9-act">${srcA(lead)}<button type="button" class="s9-ia" data-syn-exp="${SYN_ANN.push(lead) - 1}">✦ Expliquer</button></div><div class="syn4-cl s9-exp"></div></section>`; }
+    if (autres.length) h += `<section class="s9-aussi"><p class="s9-sub">Aussi cette semaine</p>${autres.map(a => { const pr1 = a.origine === "presse", lab = pr1 ? "Presse" : (SYN6_T[a.categorie] || ["Annonce"])[0], ch = pr1 ? "" : chips(a);
+      return `<div class="s9-li"><time>${esc(jr(a.date))}</time><span class="s9-ty ${pr1 ? "pr" : a.categorie === "resultats" ? "res" : "of"}">${esc(lab)}</span><div class="s9-tx"><p>${titreA(a)}</p>${ch ? `<div class="s9-figs s9-mini">${ch}</div>` : ""}</div>${srcA(a)}<button type="button" class="s9-ia s9-m" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button><div class="syn4-cl s9-exp"></div></div>`; }).join("")}</section>`;
+    if (reg.length) h += `<p class="s9-reg">Publications réglementaires : ${reg.map(a => `${esc(/rachat/i.test(a.titre || "") || a.categorie === "rachat" ? "rachat d'actions" : (a.titre || "communiqué").replace(/^./, x => x.toLowerCase()))} (${esc(jr(a.date))})`).join(" · ")}</p>`;
+    return h + `</article>`; };
+  const calmes = arr => { const c = arr.filter(l => !deK(l.k).length); return c.length ? `<p class="s9-sub s9-sc">Sans nouvelle cette semaine</p><table class="s9-ct">${c.map(l => { const v = l.variation_semaine_pct, poids = l.portefeuille && l.portefeuille.poids_pct;
+    return `<tr><td class="s9-cl"><a href="${synLien(l.k)}">${synLogo(l.k, 34)}<span><b>${esc(l.nom)}</b><small>${esc((poids != null ? `${F0.format(Math.round(poids))} % du portefeuille` : l.portefeuille ? "Portefeuille" : "Favori") + " · aucune annonce")}</small></span></a></td><td class="s9-cs">${spark(l.serie, teinte(l.k), 84, 26)}</td><td class="s9-cp ${v < 0 ? "dn" : "up"}">${v != null ? synPct(v) : "–"}</td></tr>`; }).join("")}</table>` : ""; };
   const nbA = k => deK(k).length;
   const lp = L.filter(l => l.portefeuille).sort((x, y) => nbA(y.k) - nbA(x.k) || (y.portefeuille.poids_pct || 0) - (x.portefeuille.poids_pct || 0));
   const lf = L.filter(l => !l.portefeuille).sort((x, y) => nbA(y.k) - nbA(x.k));
@@ -651,8 +681,8 @@ function synPageV7(b, m) {
       <div class="s7-hg"><div><h1>${titre}</h1>${sousT ? `<p class="s7-sub">${sousT}</p>` : ""}${kp.length ? `<div class="s7-kpis">${kp.map(k => `<span>${k}</span>`).join("")}</div>` : ""}</div>
       ${retenir ? `<div class="s7-rts"><small>À retenir</small><div class="s7-rtg">${retenir}</div></div>` : ""}</div></section>
     <section class="s7-sec"><span class="s7-stk b">L'actualité</span><h2>Ce qui s'est passé pour vos entreprises.</h2>
-      ${lp.length ? `<p class="s7-grp">Dans votre portefeuille</p>${lp.map(rangee).join("")}${calmes(lp)}` : ""}
-      ${lf.length ? `<p class="s7-grp">Dans vos favoris</p>${lf.map(rangee).join("")}${calmes(lf)}` : ""}
+      ${lp.length ? `<p class="s7-grp">Dans votre portefeuille</p>${lp.map(l => rangee(l, lp)).join("")}${calmes(lp)}` : ""}
+      ${lf.length ? `<p class="s7-grp">Dans vos favoris</p>${lf.map(l => rangee(l, lf)).join("")}${calmes(lf)}` : ""}
       ${!L.length ? `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>` : ""}</section>
     <section class="s7-sec s7-duo">
       ${contrib ? `<div><span class="s7-stk p">Votre portefeuille</span><h2>Ce qui l'a fait bouger.</h2><div class="s7-box"><h3>Ce que chaque ligne a apporté</h3>${contrib}<p class="s7-ias">Gain de la ligne = nombre de parts × variation du cours sur la semaine.</p>${alertes}</div></div>` : ""}
