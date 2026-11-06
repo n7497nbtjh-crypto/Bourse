@@ -1,0 +1,188 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#FFE14D}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;background:#FFE14D;font-family:Inter,sans-serif;color:#111}
+#board{position:absolute;left:0;top:0;width:2600px;height:10400px;transform-origin:0 0;will-change:transform}
+#grain{position:absolute;inset:0;background-image:radial-gradient(rgba(0,0,0,.07) 2px,transparent 2.5px);background-size:44px 44px}
+svg#fil{position:absolute;left:0;top:0;overflow:visible}
+.pn{position:absolute;width:960px}
+.q{font:800 92px/1 "Bricolage Grotesque";letter-spacing:-3px;margin-bottom:46px}
+.q .ln{display:block;overflow:hidden;padding-bottom:.1em}.q .ln>span{display:inline-block}
+.n{display:inline-block;background:#111;color:#FFE14D;font:800 34px Inter;border-radius:999px;padding:8px 26px;margin-bottom:26px}
+.card{background:#fff;border:6px solid #111;border-radius:48px;box-shadow:16px 16px 0 #111;overflow:hidden;position:relative}
+.phone{position:relative;width:600px;height:1268px;margin:0 auto;border-radius:88px;background:#111;padding:20px;box-shadow:16px 16px 0 rgba(0,0,0,.18)}
+.phone .scr{width:100%;height:100%;border-radius:70px;overflow:hidden;background:#fff;position:relative}
+.phone img{width:100%;display:block}
+.phone .isl{position:absolute;top:38px;left:50%;width:160px;height:48px;margin-left:-80px;border-radius:30px;background:#111;z-index:3}
+.up{color:#0A7F45}.dn{color:#CC2B2B}
+.dot{position:absolute;width:60px;height:60px;border-radius:50%;background:#FFE14D;border:6px solid #111;margin-left:-30px}
+.lbl{position:absolute;left:0;font:700 40px Inter}
+.val{position:absolute;right:0;font:800 48px "Bricolage Grotesque"}
+.logo{display:inline-block;background:#fff;border:8px solid #111;border-radius:30px;padding:8px 44px 20px;font:800 150px/1 "Bricolage Grotesque";letter-spacing:-4px;box-shadow:14px 14px 0 #111}
+#fin{position:absolute;inset:0;pointer-events:none}
+</style></head><body><div id="s">
+<div id="board"><div id="grain"></div>
+  <svg id="fil" width="2600" height="10400"><path id="path" d="" fill="none" stroke="#111" stroke-width="10" stroke-linecap="round" stroke-dasharray="1 0"/></svg>
+
+  <!-- A : l'accroche -->
+  <div class="pn" id="A" style="left:60px;top:560px">
+    <div class="card" style="width:220px;height:220px;display:grid;place-items:center;margin-bottom:60px;border-radius:56px" id="Alg"><img src="hermes_logo.png" style="width:78%"></div>
+    <div class="q" style="font-size:118px;letter-spacing:-4px"><span class="ln"><span id="A1">On vous parle</span></span><span class="ln"><span id="A2">d'Hermès.</span></span></div>
+    <div style="font:600 50px/1.3 Inter" id="A3">Que vaut vraiment l'entreprise ?</div>
+  </div>
+
+  <!-- B : la fiche -->
+  <div class="pn" id="B" style="left:1580px;top:1820px">
+    <span class="n" id="Bn">La fiche</span>
+    <div class="q"><span class="ln"><span id="B1">Ses comptes,</span></span><span class="ln"><span id="B2">en deux mots.</span></span></div>
+    <div class="phone" id="Bp"><div class="scr"><div class="isl"></div><img src="tel_hermes.png"></div></div>
+  </div>
+
+  <!-- C : les rivales -->
+  <div class="pn" id="C" style="left:60px;top:4060px">
+    <span class="n">Les rivales</span>
+    <div class="q"><span class="ln"><span id="C1">Mieux que</span></span><span class="ln"><span id="C2">ses rivales ?</span></span></div>
+    <div class="card" id="Cc"><img src="verdict.png" style="width:100%;display:block" id="Ci"></div>
+    <div style="font:600 40px/1.35 Inter;margin-top:40px" id="C3">Chaque repère face à la médiane de LVMH, Kering et Moncler.</div>
+  </div>
+
+  <!-- D : comparer -->
+  <div class="pn" id="D" style="left:1580px;top:5740px">
+    <span class="n">Comparer</span>
+    <div class="q"><span class="ln"><span id="D1">Et face à LVMH</span></span><span class="ln"><span id="D2">et Kering ?</span></span></div>
+    <div class="card" style="padding:44px 50px 40px" id="Dc">
+      <div style="font:800 56px/1.05 'Bricolage Grotesque';letter-spacing:-1px"><span class="up">Hermès</span> devant sur 3 critères sur 5.</div>
+      <div style="font:700 40px Inter;margin:36px 0 4px">Marge d'exploitation</div>
+      <div style="font:500 32px Inter;color:#777">Gardé sur 100 € de ventes</div>
+      <div style="position:relative;height:400px;margin-top:80px">
+        <div style="position:absolute;left:190px;right:120px;top:0;bottom:0">
+          <div style="position:absolute;top:0;bottom:0;left:0;width:18%;background:#FDE8E6"></div><div style="position:absolute;top:0;bottom:0;left:18%;right:0;background:#E3F5EA"></div>
+          <div style="position:absolute;left:18%;top:-10px;bottom:0;border-left:5px dashed #111"></div>
+          <div style="position:absolute;left:18%;top:-62px;transform:translateX(-50%);background:#111;color:#fff;font:700 28px Inter;padding:4px 16px;border-radius:10px;white-space:nowrap">médiane 9 €</div>
+          <div class="dot" id="d1" style="top:40px"></div><div class="dot" id="d2" style="top:170px"></div><div class="dot" id="d3" style="top:300px"></div>
+        </div>
+        <div class="lbl" style="top:48px">LVMH</div><div class="lbl" style="top:178px">Hermès</div><div class="lbl" style="top:308px">Kering</div>
+        <b class="val up" style="top:44px">22 €</b><b class="val up" style="top:174px">41 €</b><b class="val dn" style="top:304px">7 €</b>
+      </div>
+    </div>
+  </div>
+
+  <!-- E : le lexique -->
+  <div class="pn" id="E" style="left:60px;top:7560px">
+    <span class="n">Le lexique</span>
+    <div class="q"><span class="ln"><span id="E1">Un mot vous</span></span><span class="ln"><span id="E2">échappe ?</span></span></div>
+    <div class="card" style="padding:50px 56px" id="Ec">
+      <div style="font:800 110px/1 'Bricolage Grotesque';letter-spacing:-3px">PER</div>
+      <div style="font:600 34px Inter;color:#777;margin:10px 0 30px">Price Earnings Ratio</div>
+      <div style="font:500 46px/1.35 Inter">Combien d'années du bénéfice actuel il faudrait pour payer l'entreprise au prix de la Bourse.</div>
+      <div style="margin-top:40px;padding-top:34px;border-top:4px solid #eee;display:flex;align-items:baseline;gap:24px"><span style="font:700 40px Inter">Hermès</span><span style="font:800 96px 'Bricolage Grotesque';margin-left:auto" id="Epe">34 fois</span></div>
+    </div>
+  </div>
+
+  <!-- F : le rapport -->
+  <div class="pn" id="F" style="left:1580px;top:9140px">
+    <span class="n">Le rapport · Premium</span>
+    <div class="q"><span class="ln"><span id="F1">Et chaque</span></span><span class="ln"><span id="F2">samedi ?</span></span></div>
+    <div class="card" id="Fc" style="border-radius:40px">
+      <div style="height:16px;background:#C2410C"></div>
+      <div style="display:flex;align-items:center;gap:28px;padding:40px 46px 34px;border-bottom:3px solid #eee">
+        <div style="width:120px;height:120px;border:3px solid #ddd;border-radius:28px;display:grid;place-items:center;flex:none"><img src="hermes_logo.png" style="width:80%"></div>
+        <div><div style="font:800 66px/1 'Bricolage Grotesque'">Hermès</div><div style="font:700 32px Inter;color:#C2410C;margin-top:10px">Meilleure semaine de vos favoris</div></div>
+      </div>
+      <div style="display:flex;align-items:center;padding:30px 46px;gap:30px;border-bottom:3px solid #eee">
+        <svg width="320" height="100" viewBox="0 0 320 100"><polygon id="spa" points="" fill="#C2410C" opacity=".1"/><polyline id="spl" points="" fill="none" stroke="#C2410C" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <div style="margin-left:auto;text-align:right"><div class="up" style="font:800 84px/1 'Bricolage Grotesque'" id="Fv">+7,2 %</div><div style="font:500 30px Inter;color:#777;margin-top:8px">4,3 pts de mieux que le CAC 40</div></div>
+      </div>
+      <div style="padding:34px 46px 42px"><div style="font:700 28px Inter;letter-spacing:.06em;color:#C2410C">À LIRE CETTE SEMAINE · PRESSE</div>
+        <div style="font:700 46px/1.25 'Bricolage Grotesque';margin-top:12px">Le fonds Birkin qui profite du marché de la revente de luxe Hermès</div>
+        <div style="margin-top:26px;display:flex;gap:24px;align-items:center"><span style="font:500 30px Inter;border-bottom:3px solid #ccc">livemint.com ↗</span><span style="background:#111;color:#fff;border-radius:999px;padding:14px 32px;font:700 32px Inter" id="Fb">✦ Expliquer</span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Fin : le logo par-dessus le plateau vu de loin -->
+<div id="fin">
+  <div style="position:absolute;inset:0;background:#FFE14D" id="fv"></div>
+  <div style="position:absolute;top:640px;left:0;right:0;text-align:center"><span class="logo" id="lg">ENKLAIR</span></div>
+  <div style="position:absolute;top:900px;left:0;right:0;text-align:center;font:800 76px 'Bricolage Grotesque';letter-spacing:-2px" id="f1">La Bourse, enfin claire.</div>
+  <div style="position:absolute;top:1040px;left:0;right:0;text-align:center;font:600 42px Inter" id="f2">Le rapport et les alertes avec Premium.</div>
+  <div style="position:absolute;top:1170px;left:0;right:0;text-align:center"><span style="display:inline-block;background:#111;color:#FFE14D;border-radius:999px;padding:24px 64px;font:800 60px 'Bricolage Grotesque'" id="f3">enklair.com</span></div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x)), k = (t, t0, d) => cl((t - t0) / d);
+const eo = x => 1 - Math.pow(1 - x, 4), eio = x => x < .5 ? 8 * x ** 4 : 1 - Math.pow(-2 * x + 2, 4) / 2, eio3 = x => x < .5 ? 4 * x ** 3 : 1 - Math.pow(-2 * x + 2, 3) / 2;
+const spring = x => x >= 1 ? 1 : 1 - Math.exp(-6 * x) * Math.cos(7 * x);
+const rise = (id, t, t0, d = .8) => { const e = eo(k(t, t0, d)); $(id).style.transform = `translateY(${(1 - e) * 110}%)`; };
+const fade = (id, t, t0, d = .7, dy = 50) => { const e = eo(k(t, t0, d)); $(id).style.opacity = e; $(id).style.transform = `translateY(${(1 - e) * dy}px)`; };
+// Plans fixes de la caméra (centre x, centre y, zoom) et heure d'arrivée ; entre deux plans, la caméra suit le fil
+const box = id => { const e = $(id); return { x: e.offsetLeft + e.offsetWidth / 2, y: e.offsetTop + e.offsetHeight / 2, top: e.offsetTop, h: e.offsetHeight }; };
+let SH, P, LEN, ARR;
+function prep() {
+  const A = box("A"), B = box("B"), C = box("C"), D = box("D"), E = box("E"), F = box("F");
+  // fil : du bas de chaque panneau au haut du suivant, en courbes
+  const pts = [[A.x, A.top + A.h + 40], [B.x, B.top - 60], [B.x, B.top + B.h + 40], [C.x, C.top - 60], [C.x, C.top + C.h + 40], [D.x, D.top - 60], [D.x, D.top + D.h + 40], [E.x, E.top - 60], [E.x, E.top + E.h + 40], [F.x, F.top - 60]];
+  // une courbe entre deux panneaux (le fil ne traverse jamais un panneau : « M » saute par-dessus)
+  let d = "", acc = 0; ARR = [0];
+  for (let i = 0; i < pts.length - 1; i += 2) { const [x1, y1] = pts[i], [x2, y2] = pts[i + 1], m = (y1 + y2) / 2, seg = `M ${x1} ${y1} C ${x1} ${m}, ${x2} ${m}, ${x2} ${y2}`;
+    d += seg + " "; const tmp = document.createElementNS("http://www.w3.org/2000/svg", "path"); tmp.setAttribute("d", seg); $("fil").appendChild(tmp); acc += tmp.getTotalLength(); tmp.remove(); ARR.push(acc); }
+  $("path").setAttribute("d", d); LEN = $("path").getTotalLength(); $("path").style.strokeDasharray = LEN;
+  SH = [[A, 0], [B, 0], [C, 0], [D, 0], [E, 0], [F, 0]];
+}
+// Horaire : [arrivée sur le panneau i, départ vers le suivant]
+const T = [[0, 3.6], [4.9, 9.4], [10.7, 14.4], [15.7, 19.6], [20.9, 24.2], [25.5, 29.6]];
+const Z = [1.0, .95, .95, .95, .95, .95];
+window.render = t => {
+  if (!SH) prep();
+  // caméra
+  let cx, cy, z, fil = 0;
+  const cen = i => { const b = SH[i][0]; return [b.x, b.top + Math.min(b.h, 1700) / 2 + 40]; };
+  let done = false;
+  for (let i = 0; i < T.length; i++) {
+    const [a, d] = T[i];
+    if (t < a) { // en route de i-1 vers i
+      const [a0, d0] = T[i - 1], p = eio3(k(t, d0, a - d0)), [x0, y0] = cen(i - 1), [x1, y1] = cen(i);
+      cx = x0 + (x1 - x0) * p; cy = y0 + (y1 - y0) * p; z = (Z[i - 1] + (Z[i] - Z[i - 1]) * p) * (1 - .42 * Math.sin(Math.PI * p));
+      fil = (i === 1 ? 0 : ARR[i - 1] + (ARR[i - 1] === 0 ? 0 : 0)); const startL = i === 1 ? 0 : ARR[i - 1] + (ARR[i - 1] ? (ARR[i] - ARR[i - 1]) * 0 : 0);
+      const seg0 = i === 1 ? 0 : (ARR[i - 1] + (ARR[i] - ARR[i - 1]) * 0); fil = (i === 1 ? 0 : ARR[i - 1]) + ((ARR[i]) - (i === 1 ? 0 : ARR[i - 1])) * p;
+      done = true; break; }
+    if (t <= d || i === T.length - 1) { const [x, y] = cen(i); const hold = k(t, a, (i === T.length - 1 ? 4 : d - a)); cx = x; cy = y + (i === 1 ? 0 : 0); z = Z[i] * (1 + .04 * hold); fil = ARR[i]; done = true;
+      // plan B : la caméra plonge dans le téléphone vers le verdict, puis ressort
+      if (i === 1) { const zin = eio(k(t, 6.3, 1.2)) * (1 - eio(k(t, 8.4, .9))); const B = SH[1][0]; cy = y + zin * 420; z = Z[1] * (1 + zin * .75); }
+      break; }
+  }
+  // fin : on recule pour voir tout le fil, puis le logo
+  const fz = eio(k(t, 29.6, 2.2)); if (fz > 0) { const [x, y] = cen(5); cx = x + (1300 - x) * fz; cy = y + (5200 - y) * fz; z = .95 * (1 - fz) + .17 * fz; fil = ARR[5]; }
+  $("board").style.transform = `translate(${540 - cx * z}px, ${960 - cy * z}px) scale(${z})`;
+  $("path").style.strokeDashoffset = LEN - fil;
+  // A
+  { const l = spring(k(t, .15, 1.1)); $("Alg").style.transform = `scale(${.5 + .5 * l}) rotate(${(1 - l) * -10}deg)`; $("Alg").style.opacity = k(t, .15, .2); rise("A1", t, .7); rise("A2", t, .9); fade("A3", t, 1.6); }
+  // B
+  { rise("B1", t, 4.4); rise("B2", t, 4.6); const p = eo(k(t, 4.6, 1.2)); $("Bp").style.transform = `translateY(${(1 - p) * 300}px)`; $("Bp").style.opacity = p; }
+  // C
+  { rise("C1", t, 10.2); rise("C2", t, 10.4); const c = eo(k(t, 10.6, .8)); $("Cc").style.opacity = c; $("Cc").style.transform = `translateY(${(1 - c) * 120}px)`;
+    $("Ci").style.clipPath = `inset(0 0 ${(1 - eio(k(t, 11.0, 1.8))) * 62}% 0)`; fade("C3", t, 12.6); }
+  // D
+  { rise("D1", t, 15.2); rise("D2", t, 15.4); const c = eo(k(t, 15.6, .8)); $("Dc").style.opacity = c; $("Dc").style.transform = `translateY(${(1 - c) * 120}px)`;
+    [["d1", 44, 16.4], ["d2", 82, 16.65], ["d3", 14, 16.9]].forEach(([id, x, t0]) => { const e = eio(k(t, t0, 1.1)); $(id).style.left = (e * x) + "%"; $(id).style.opacity = k(t, t0, .2); }); }
+  // E
+  { rise("E1", t, 20.4); rise("E2", t, 20.6); const c = eo(k(t, 20.8, .8)); $("Ec").style.opacity = c; $("Ec").style.transform = `translateY(${(1 - c) * 120}px)`;
+    const n = eo(k(t, 21.8, 1.0)); $("Epe").textContent = Math.round(34 * n) + " fois"; }
+  // F
+  { rise("F1", t, 25.0); rise("F2", t, 25.2); const c = eo(k(t, 25.4, .8)); $("Fc").style.opacity = c; $("Fc").style.transform = `translateY(${(1 - c) * 120}px)`;
+    const S = [1293.5, 1320.5, 1312.5, 1372.5, 1387, 1387], lo = Math.min(...S), hi = Math.max(...S), q = eio(k(t, 26.0, 1.2)), nn = 1 + Math.floor(q * (S.length - 1) * 100) / 100;
+    const pts = S.map((v, i) => [i * 320 / (S.length - 1), 92 - (v - lo) / (hi - lo) * 84]); const m = q * (S.length - 1), full = pts.slice(0, Math.floor(m) + 1);
+    if (m % 1 > 0 && Math.floor(m) + 1 < pts.length) { const a = pts[Math.floor(m)], b = pts[Math.floor(m) + 1], f = m % 1; full.push([a[0] + (b[0] - a[0]) * f, a[1] + (b[1] - a[1]) * f]); }
+    const ps = full.map(p => p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" "); $("spl").setAttribute("points", ps); $("spa").setAttribute("points", full.length > 1 ? `0,100 ${ps} ${full.at(-1)[0]},100` : "");
+    $("Fv").textContent = "+" + (7.2 * eo(k(t, 26.0, 1.2))).toFixed(1).replace(".", ",") + " %";
+    const pr = k(t, 28.2, .35); $("Fb").style.display = "inline-block"; $("Fb").style.transform = `scale(${1 - .1 * Math.sin(pr * Math.PI)})`; }
+  // fin
+  { const v = eio(k(t, 31.3, .8)); $("fv").style.opacity = v * .92; const l = spring(k(t, 31.6, 1.1)); $("lg").style.transform = `scale(${.6 + .4 * l}) rotate(${-2 * l}deg)`; $("lg").style.opacity = k(t, 31.6, .2);
+    fade("f1", t, 32.2); fade("f2", t, 32.6); fade("f3", t, 33.0); }
+};
+window.pret = Promise.all([document.fonts.ready, ...[...document.images].map(i => i.decode().catch(() => 0))]);
+window.render(0);
+</script></body></html>
