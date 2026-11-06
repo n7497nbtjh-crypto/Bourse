@@ -229,8 +229,8 @@ async function analyseSec(it) {
     if (q) {
       const per = it.form === "10-Q" ? "du trimestre" : "de l'exercice", end = (q.ca || q.net).end;
       res.titre = `Comptes ${per} clos le ${new Date(end).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`;
-      if (q.ca) res.chiffres.push(["Ventes", money(q.ca.v, q.ca.unit) + (q.ca.g != null ? ` (${pctS(q.ca.g)} sur un an)` : "")]);
-      if (q.net) res.chiffres.push(["Bénéfice net", money(q.net.v, q.net.unit) + (q.net.g != null ? ` (${pctS(q.net.g)} sur un an)` : "")]);
+      if (q.ca) res.chiffres.push([`Ventes ${per}`, money(q.ca.v, q.ca.unit) + (q.ca.g != null ? ` (${pctS(q.ca.g)} sur un an)` : "")]);
+      if (q.net) res.chiffres.push([`Bénéfice net ${per}`, money(q.net.v, q.net.unit) + (q.net.g != null ? ` (${pctS(q.net.g)} sur un an)` : "")]);
       if (q.eps) res.chiffres.push(["Bénéfice par action", NF(2).format(q.eps.v) + " " + (q.eps.unit.split("/")[0] === "USD" ? "$" : q.eps.unit.split("/")[0])]);
       res.lecture = lecture(c, { ca: q.ca, net: q.net }, annual);
     }
@@ -345,6 +345,9 @@ export function controleChiffres(a, annual, devise) {
   const fr = l => /trimestre/i.test(l) ? 0.25 : /semestre/i.test(l) ? 0.5 : /neuf/i.test(l) ? 0.75 : /année|exercice/i.test(l) ? 1 : perTitre;
   const B = { 0.25: [0.12, 0.45], 0.5: [0.3, 0.7], 0.75: [0.5, 1.05], 1: [0.7, 1.6] };
   let retire = [];
+  if (xbrl && a.chiffres.some(([l]) => l === "Ventes" || l === "Bénéfice net")) { const per = perTitre === 1 ? " de l'exercice" : " du trimestre"; // libellé sans période (avant le 6/11)
+    a = { ...a, chiffres: a.chiffres.map(([l, t]) => [l === "Ventes" || l === "Bénéfice net" ? l + per : l, t]) }; }
+  const a0 = a;
   const garde = a.chiffres.filter(([l, t]) => {
     if (/^Bénéfice par action/.test(l) && !xbrl) { // lu dans un communiqué : souvent un bénéfice « ajusté » ou une prévision annuelle (Taboola 60 $)
       const v = parseFloat(String(t).replace(/[\u202f\u00a0 ]/g, "").replace(",", ".")), e = annual.eps, gm = String(t).match(/\(([+−-])\s?([\d ]+(?:,\d+)?)\s?%/), g = gm ? (gm[1] === "+" ? 1 : -1) * parseFloat(gm[2].replace(/ /g, "").replace(",", ".")) / 100 : 0;
@@ -359,7 +362,7 @@ export function controleChiffres(a, annual, devise) {
     if (!ok) retire.push(vente ? "ventes" : "bénéfice");
     return ok;
   });
-  if (!retire.length) return a;
+  if (!retire.length) return a0;
   const lecture = (a.lecture || []).filter(s => !(retire.includes("ventes") && /ventes/i.test(s)) && !(retire.includes("bénéfice") && /bénéfice|perte/i.test(s)));
   return { ...a, chiffres: garde, lecture: garde.length && lecture.length ? lecture : [a.explication || "Les chiffres de ce document n'ont pas pu être lus de façon sûre : voir le document officiel."], controle: retire };
 }
