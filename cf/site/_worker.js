@@ -760,6 +760,7 @@ function alertes(d, ids, origin, token, last) {
 var REGLES = `R\xE8gles d'objectivit\xE9, \xE0 respecter strictement :
 - S\xE9pare les faits (les chiffres fournis) de leur interpr\xE9tation, et dis quand une interpr\xE9tation est incertaine.
 - Pr\xE9sente toujours les deux c\xF4t\xE9s : ce qui est favorable et ce qui demande de la vigilance.
+- \xC9cris les nombres \xE0 la fran\xE7aise : virgule pour les d\xE9cimales et espace pour les milliers (2,5 millions ; 12 500 \u20AC), jamais \xAB 2.5 \xBB ni \xAB 12,500 \xBB. Arrondis \xE0 une d\xE9cimale les montants en millions ou en milliards.
 - Ne donne pas plus de poids \xE0 la derni\xE8re nouvelle ou au dernier mouvement de cours qu'aux comptes de plusieurs ann\xE9es.
 - Compare \xE0 la m\xE9diane du secteur ou \xE0 des rep\xE8res chiffr\xE9s plut\xF4t que de juger dans l'absolu.
 - N'emploie aucun mot charg\xE9 ou d'emphase (\xAB p\xE9pite \xBB, \xAB incontournable \xBB, \xAB catastrophe \xBB, \xAB exceptionnel \xBB).
@@ -836,6 +837,7 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annonc\xE9, avec les chiffres fournis et leur p\xE9riode, et expliquent chaque terme technique.
 - "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
+- Pour un dividende, ne compare jamais un versement trimestriel \xE0 un dividende annuel : compare seulement des versements de m\xEAme nature, et seulement si les deux montants sont fournis.
 - Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
 - Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
 ${REGLES}`, BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation m\xE9diane de secteurs entiers.
@@ -2993,7 +2995,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "28d51be26ee6b30c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "625a0fc7338ccb2c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
