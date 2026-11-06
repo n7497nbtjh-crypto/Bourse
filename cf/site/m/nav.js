@@ -2,7 +2,7 @@
    Chargé en dernier (après monia.js), il remplit lui-même les quatre zones qui montrent le menu :
    la barre du haut (#nav), le menu du téléphone (#mpanel), le pied de page (#footnav) et le plan du site (/plan).
    Avant, le menu était écrit dans index.html puis complété par m/outils.js, m/reco.js et m/orchestre.js (26 entrées,
-   4 endroits). Ici, une seule table : NAV. Quatre entrées : Découvrir, Explorer, Analyser, Mon espace.
+   4 endroits). Ici, une seule table : NAV. Cinq entrées depuis le 6/11 : Apprendre, Marchés, Outils, Communauté, Mon espace.
    Aucune page ne disparaît : ce qui n'est pas dans les liens principaux reste dans la ligne « Aussi » de sa rubrique,
    dans le plan du site et dans le pied de page.
    Accès directs gardés dans la barre : « ✦ Demander à l'IA », « ★ Favoris » (avec son compteur) et Premium. */
@@ -41,7 +41,6 @@ const NAV = [
       ["/decouverte", "La découverte de la semaine"],
       ["/dividendes", "Calendrier des dividendes"],
       ["/hier", "Ce qui s'est passé hier"],
-      ["/communaute", "Communauté"],
     ],
   },
   {
@@ -58,6 +57,13 @@ const NAV = [
       ["/idees-recues", "Les idées reçues face aux chiffres"],
       ["/simulateurs/frais", "Le coût des frais"],
       ["/demander", "Demander à l'IA"],
+    ],
+  },
+  // 6/11 soir (Romain : « l'onglet communauté est trop caché ») : cinquième rubrique, dans la barre, le menu du téléphone et le pied de page.
+  {
+    k: "com", label: "Communauté", porte: "/communaute", sous: "Analyses, questions, listes partagées",
+    items: [
+      ["/communaute", "La communauté", "Les analyses et les questions des autres investisseurs"],
     ],
   },
   {
@@ -81,7 +87,7 @@ const NAV = [
 // Pied de page : pages institutionnelles, hors navigation principale
 const NAV_PIED = [["/methode", "Méthode et sources"], ["/mentions-legales", "Mentions légales"], ["/cgv", "CGV"], ["/confidentialite", "Confidentialité"], ["/avertissement", "Avertissement sur les risques"], ["/plan", "Plan du site"]];
 // setNav("xxx") → rubrique à souligner dans la barre (clés utilisées par les pages du site)
-const NAV_G = { home: "", aca: "dec", new: "dec", lex: "dec", mkt: "exp", news: "exp", ent: "exp", etf: "exp", com: "exp", sim: "ana", pf: "ana", fav: "esp", esp: "esp", ia: "", prem: "" };
+const NAV_G = { home: "", aca: "dec", new: "dec", lex: "dec", mkt: "exp", news: "exp", ent: "exp", etf: "exp", com: "com", sim: "ana", pf: "ana", fav: "esp", esp: "esp", ia: "", prem: "" };
 
 /* ---------- Construction ---------- */
 const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));

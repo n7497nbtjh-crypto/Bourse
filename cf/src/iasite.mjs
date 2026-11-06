@@ -157,12 +157,20 @@ export async function iaSite(request, env) {
    Appelée par le serveur (cf/src/espace.mjs) quand le rapport est construit : pas de quota visiteur, mais comptée dans les neurones du jour.
    Même entreprise, mêmes annonces → même texte, servi par la table ia_syn (gardée 10 jours) : un seul appel pour tous les abonnés qui suivent l'entreprise. */
 export async function syntheseEntreprise(env, faits) {
-  if (!env.AI || !env.DB) return null;
-  const sys = CONSIGNES.semaine_entreprise, user = JSON.stringify(faits).slice(0, 9000), max = 320;
-  const k = await empreinte("syn|" + user);
+  // 6/11 soir : textes vagues refusés (« pourrait influencer… », « je ne suis pas sûr ») ; le rapport garde alors sa phrase calculée
+  const r = await iaJSON(env, "syn2", CONSIGNES.semaine_entreprise, faits, 360, x => x && typeof x.clair === "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
+  return r;
+}
+const VAGUE = /pourrait influencer|pourraient influencer|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
+/* Appel de l'IA du site par le serveur, réponse JSON vérifiée par `valide` (qui renvoie l'objet gardé ou null).
+   Même faits, même tâche → même réponse, servie par la table ia_syn (gardée 10 jours). Compté dans les neurones du jour, jamais au-delà de la part gratuite. */
+export async function iaJSON(env, prefixe, sys, faits, max, valide) {
+  if (!env.AI || !env.DB || !sys) return null;
+  const user = JSON.stringify(faits).slice(0, 14000), k = await empreinte(prefixe + "|" + user);
   try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_syn (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL)`).run(); } catch (e) { return null; }
-  try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_syn WHERE k = ?`).bind(k).first(); if (hit) { const x = jsonDe(hit.txt); if (x) return { ...x, modele: hit.modele }; } } catch (e) { }
+  try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_syn WHERE k = ?`).bind(k).first(); if (hit) { const o = objDe(hit.txt); if (o && o._refus) return null; const x = valide(o); if (x) return { ...x, modele: hit.modele }; } } catch (e) { }
   const P = plafonds(env), c = await compteurs(env, "syn", jour());
+  let repondu = false;
   if (c.erreur) return null;
   for (const [model, cin, cout, nom] of MODELES) {
     const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
@@ -171,15 +179,19 @@ export async function syntheseEntreprise(env, faits) {
       const msgs = model.includes("qwen3") ? [{ role: "system", content: sys }, { role: "user", content: user + "\n/no_think" }] : [{ role: "system", content: sys }, { role: "user", content: user }];
       const out = await env.AI.run(model, { messages: msgs, max_tokens: max, temperature: 0.2 });
       const raw = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
-      const txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw), x = jsonDe(txt);
+      const txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw), x = valide(objDe(txt));
       const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
       try { await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), reel, reel).run(); } catch (e) { }
-      if (x && x.clair && x.clair.length > 20) {
-        try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)`).bind(k, JSON.stringify({ clair: x.clair, change: x.change || "" }), nom, Date.now()).run(); if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_syn WHERE at < ?`).bind(Date.now() - 10 * 864e5).run(); } catch (e) { }
-        return { clair: x.clair, change: x.change || "", modele: nom };
+      repondu = true;
+      if (x) {
+        try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)`).bind(k, JSON.stringify(x), nom, Date.now()).run(); if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_syn WHERE at < ?`).bind(Date.now() - 10 * 864e5).run(); } catch (e) { }
+        return { ...x, modele: nom };
       }
     } catch (e) { /* modèle suivant */ }
   }
+  // Réponse refusée (texte creux, JSON illisible) : gardée comme refus pour ne pas repayer le même appel ; la phrase calculée s'affiche
+  if (repondu) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)`).bind(k, '{"_refus":1}', null, Date.now()).run(); } catch (e) { }
   return null;
 }
+const objDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { return JSON.parse(t.slice(i, j + 1)); } catch (e) { return null; } };
 const jsonDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { const o = JSON.parse(t.slice(i, j + 1)); return o && typeof o.clair === "string" ? o : null; } catch (e) { return null; } };

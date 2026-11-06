@@ -337,7 +337,7 @@ function f4E3(x) {
     mots: [{ cle: "benefice", ex: f4Md(s.net, cur), calc: `exercice ${s.year}`, nom: s.name }, ...(t1 != null ? [{ cle: "impot", ex: f4Pc(t1, 1), calc: `${ekFr(v("tax", n), 0)} ÷ ${ekFr(v("pretax", n), 0)}`, nom: s.name }] : []), ...(!bank && s.netDebt != null ? [{ cle: s.netDebt <= 0 ? "treso" : "dette", ex: f4Md(Math.abs(s.netDebt), cur), calc: `fin ${s.year}`, nom: s.name }] : [])],
     visuel: ns ? f4Cols(x, ns, "Son bénéfice net", ligne, ligne ? `La ligne « taux d'impôt » donne la part du résultat payée en impôt chaque année.${alerte ? ` Elle monte en ${c.years[n]} (${ekFr(t1 * 100, 0)} %, contre ${ekFr(t0 * 100, 0)} %) : à elle seule, elle retire une partie du bénéfice.` : ""}` : "Chaque barre donne le bénéfice net d'un exercice.") : "",
     explique: causes.length ? ekExplique({ causes, surveiller: alerte ? "Le taux d'impôt du prochain exercice." : !bank && s.netDebt > 0 && s.ebit > 0 && s.netDebt / s.ebit > 3 ? "Le poids de la dette, au-delà de 3 années de résultat." : f4Prochain(s.id) }) : "",
-    suite: "Que fait-elle de ce bénéfice ?" };
+    suite: s.net != null && s.net < 0 ? "Que fait-elle quand elle perd de l'argent ?" : "Que fait-elle de ce bénéfice ?" }; // 6/11 soir : plus de « ce bénéfice » quand elle est en perte
 }
 
 function f4E4(x) {
@@ -438,7 +438,7 @@ function f4B2(x) {
     visuel: v != null && pl.length ? ekPoints({ titre: `Gagnés sur 100 ${sym} de fonds propres`, unite: `rentabilité des capitaux propres ${s.year}`, lignes: pts, mediane: med != null ? med * 100 : 0, mediane_label: med != null ? `médiane ${ekFr(med * 100, 1)} %` : "", min: mn, max: nn.max, graduations: grad, fmtAxe: t => ekFr(t, 0) + " %",
       indice: `Chaque point place une entreprise sur l'échelle. À droite du pointillé (zone verte), elle rapporte plus que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; à gauche (zone rouge), moins.`, source: f4Src(x, `Comptes ${s.year}`) }) : "",
     explique: causes.length ? ekExplique({ causes, surveiller: f4Prochain(s.id) }) : "",
-    suite: "Que fait-elle de ce bénéfice ?" };
+    suite: s.net != null && s.net < 0 ? "Que fait-elle quand elle perd de l'argent ?" : "Que fait-elle de ce bénéfice ?" }; // 6/11 soir : plus de « ce bénéfice » quand elle est en perte
 }
 
 // Groupe nominal accordé : « Ses ventes sont meilleures », « Sa marge et son bénéfice sont meilleurs », « Son bénéfice est moins bon »

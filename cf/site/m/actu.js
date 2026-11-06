@@ -194,7 +194,7 @@ document.addEventListener("click", async e => {
   const co = RBY[id], it = ((await actuCo(id)).o || []).find(x => x.k === k);
   if (!it) { b.remove(); box.outerHTML = `<p class="ax-why">Annonce introuvable : rechargez la page.</p>`; return; }
   const f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
-  const j = await iaRediger("annonce", { entreprise: co ? co.name : id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture_calculee: it.r || [], dernier_exercice: f, lien: it.u }, { max: 420 });
+  const j = await iaRediger("annonce", { ...(typeof iaFicheContexte === "function" && (co ? co.id : null) ? await iaFicheContexte(co ? co.id : null) : {}), entreprise: co ? co.name : id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture_calculee: it.r || [], dernier_exercice: f, lien: it.u }, { max: 420 });
   b.remove();
   const x = j.txt ? jsonFrom(j.txt) : null;
   box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA d'ENKLAIR (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>`

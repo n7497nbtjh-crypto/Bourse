@@ -315,6 +315,7 @@ function ajoutePresse({ d, t, u, site, l, src, sur = true }) {
   if (!t || !u || !d || NOW - Date.parse(d) > HISTO_P) return;
   const titre = decodeEntites(t).replace(/\s+[|–—-]\s+[^|–—-]{2,40}$/, "").replace(/\s+/g, " ").trim();
   if (titre.length < 25 || titre.length > 260) return;
+  garderMonde({ d, t: titre, u, site, l, sur }); // 6/11 : grands titres économiques et géopolitiques pour le rapport de la semaine, même sans entreprise citée
   const ids = inTitle(PI, titre); if (!ids.length) return;
   const nk = fold(titre).replace(/[^a-z0-9]/g, "").slice(0, 70); if (presseVus.has(nk) || presseVus.has(u)) return;
   presseVus.add(nk); presseVus.add(u);
@@ -365,6 +366,25 @@ async function bbc() {
   note("bbc", { nouveaux: PRESSE.length - n0 }); log("BBC", PRESSE.length - n0, "titres retenus");
 }
 
+/* ---------- Le monde de la semaine (6/11 soir, Romain : « mettre le contexte général de la semaine, géopolitique etc. ») ----------
+   Titres de médias reconnus (liste MEDIAS) en français ou en anglais, sur l'économie, les taux, le commerce, l'énergie, la politique
+   et les conflits, gardés 10 jours dans monde.json. Le rapport de la semaine (cf/src/rapport8.mjs) y choisit les sujets de la semaine.
+   Seuls le titre, le média, la date et le lien sont gardés, comme pour la presse des entreprises. */
+const MONDE_RE = /\b(central bank|banque centrale|bce|ecb|federal reserve|the fed|fed (raises|cuts|holds|chair)|bank of (england|japan|canada)|interest rates?|taux (d.interet|directeurs?)|inflation|recession|gdp|pib|tariffs?|droits? de douane|trade (war|deal|talks)|guerre commerciale|accord commercial|sanctions?|opec|oil prices?|prix du petrole|brent|crude|gas prices?|prix du gaz|elections?|midterms?|election|war|guerre|ceasefire|cessez-le-feu|iran|israel|ukraine|russia|russie|china|chine|taiwan|stocks? (fall|rise|drop|slump|rally|tumble|plunge|surge|slide|climb)|stock markets?|wall street|nasdaq|s&p 500|cac 40|selloff|sell-off|dollar|pound|sterling|currenc(y|ies)|yen|yuan|bond yields?|taux obligataires?|unemployment|chomage|jobs report|payrolls|budget|deficit|dette publique|shutdown|ai stocks?|chipmakers?|semiconductors?)\b/;
+const MONDE_F = new URL("monde.json", DIR), MONDE = new Map();
+try { for (const x of JSON.parse(readFileSync(MONDE_F, "utf8")).items || []) if (x && x.u && NOW - Date.parse(x.d) < 10 * JOUR) MONDE.set(x.u, x); } catch (e) { }
+function garderMonde({ d, t, u, site, l, sur }) {
+  if (!sur || !["fr", "en"].includes(l) || !/^https:\/\//.test(u || "") || NOW - Date.parse(d) > 10 * JOUR || MONDE.has(u)) return;
+  if (!MONDE_RE.test(fold(t))) return;
+  const nk = fold(t).replace(/[^a-z0-9]/g, "").slice(0, 70); for (const x of MONDE.values()) if (x.nk === nk) return;
+  MONDE.set(u, { d, t: t.slice(0, 220), u, s: site, l, nk });
+}
+function ecrireMonde() {
+  const items = [...MONDE.values()].filter(x => NOW - Date.parse(x.d) < 10 * JOUR).sort((a, b) => b.d.localeCompare(a.d)).slice(0, 1200);
+  writeFileSync(MONDE_F, JSON.stringify({ maj: new Date().toISOString(), n: items.length, items }));
+  log("Monde", items.length, "titres économiques et géopolitiques gardés (10 jours)");
+}
+
 /* ---------- Écriture ---------- */
 const SOURCES = [
   ["amf", "AMF", "Autorité des marchés financiers, info-financiere.gouv.fr", "https://www.info-financiere.gouv.fr", "Licence Ouverte (Etalab)", "Annonces officielles"],
@@ -412,6 +432,7 @@ function ecrire() {
   const couverture = {};
   for (const c of U) { const r = couverture[c.region] || (couverture[c.region] = { n: 0, annonces: 0, presse: 0, une: 0 }); const S = STORE[c.id]; const a = S && [...S.o.values()].some(x => Date.parse(x.d) >= minO), pr = S && [...S.p.values()].some(x => Date.parse(x.d) >= minP); r.n++; if (a) r.annonces++; if (pr) r.presse++; if (a || pr) r.une++; }
   log("couverture", JSON.stringify(couverture));
+  ecrireMonde();
   writeFileSync(new URL("fil.json", DIR), JSON.stringify({ maj: new Date().toISOString(), sources, jours, total: all.length, regions: parReg, couverture, entreprises: Object.keys(STORE).filter(id => STORE[id].o.size).length, o: filO, p: filP }));
   writeFileSync(new URL("etat.json", DIR), JSON.stringify(ETAT, null, 1));
   log(`écrit : ${ecrits} fiches modifiées, ${all.length} annonces sur 90 jours, ${filO.length} dans le fil, ${filP.length} titres de presse récents`, parSrc, parReg);

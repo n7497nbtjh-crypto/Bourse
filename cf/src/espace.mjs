@@ -8,6 +8,7 @@
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
 import { iaMesures, syntheseEntreprise } from "./iasite.mjs";
+import { enrichir8, faitsEntreprise } from "./rapport8.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk } from "./compte.mjs";
 import { coursComplets } from "./cours.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
@@ -146,13 +147,15 @@ const jourSemaine = ymd => new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 dimanc
 /* ---------- Données du site (mêmes sources que les pages) ---------- */
 async function siteData(request, env) {
   const get = async p => { try { const r = await env.ASSETS.fetch(new Request(new URL(p, request.url))); return r.ok === false ? null : await r.json(); } catch (e) { return null; } };
+  const [conc, monde, contexte] = await Promise.all([get("/data/concurrents.json"), get("/data/actu/monde.json"), get("/data/contexte.json")]); // 6/11 soir : rapport v8 (cf/src/rapport8.mjs)
   const [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]);
   let px = {}; try { px = (await coursComplets(new Request(new URL("/api/cours", request.url)), null, env)).items || {}; } catch (e) { }
   const names = {}, meta = {}, isin = {}, etfm = {};
   (uni && uni.companies || []).forEach(c => { names["c:" + c.id] = c.name; meta["c:" + c.id] = { region: c.region, sector: c.sector }; if (c.isin) isin["c:" + c.id] = c.isin; });
-  (etf && etf.list || []).forEach(e => { names["e:" + e.id] = e.name; etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index }; });
+  (etf && etf.list || []).forEach(e => { names["e:" + e.id] = e.name; etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index, proxy: e.proxy || null }; });
+  const parIsin = Object.fromEntries(Object.entries(isin).map(([k, v]) => [v, k])), memo = new Map(), charger = p => { if (!memo.has(p)) memo.set(p, get(p)); return memo.get(p); };
   const actuCache = new Map();
-  return { names, meta, isin, etf: etfm, px, fx: (fx && fx.eur) || { EUR: 1 }, cs: cs && Array.isArray(cs.dates) ? cs : null, sem: sem && sem.items ? sem : null,
+  return { names, meta, isin, parIsin, charger, conc: conc || {}, monde, contexte, etf: etfm, px, fx: (fx && fx.eur) || { EUR: 1 }, cs: cs && Array.isArray(cs.dates) ? cs : null, sem: sem && sem.items ? sem : null,
     ana: (ana && ana.items) || {}, ev: [...((ag && ag.events) || []), ...((agAuto && agAuto.events) || [])],
     div: [...((dvUs && dvUs.events) || []), ...((dvEu && dvEu.events) || [])], // 4/11 : calendriers des dividendes (Nasdaq, annonces européennes), alertes Premium
     // Articles par entreprise publiés par la collecte d'actualités (cf/site/data/actu/c/<id>.json), lus à la demande
@@ -203,7 +206,8 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
   const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
   n._cles = s.cles; n._final = weekend; n._sig = rapportSignature(s.rapport);
-  n.ia_entreprises = await iaEntreprises(env, n, c && c._cles === s.cles ? c.ia_entreprises : null); // 6/11 : synthèse IA par entreprise (cf/src/iasite.mjs)
+  await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj); // 6/11 soir : rivales, monde, radiographie, achats programmés
+  n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null); // 6/11 : synthèse IA par entreprise (cf/src/iasite.mjs)
   if (c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === SYN_VERSION) { n.texte = c.texte; n.lecture_min = lectureMin(n); } // ancien commentaire rédigé (avant le 29 octobre 2026) gardé tant que rien ne change
   const utile = n.lignes.some(l => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some(x => x.n);
   if (utile) await env.DB.prepare(`INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0`).bind(compteId, semaine, JSON.stringify(n), Date.now()).run();
@@ -211,18 +215,17 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
 }
 /* 6/11 : pour chaque entreprise du rapport qui a des annonces ou des articles cette semaine, une synthèse de l'IA du site
    (au plus 12 entreprises, les plus riches en annonces d'abord). Les textes déjà rédigés pour les mêmes annonces sont gardés. */
-async function iaEntreprises(env, n, prec) {
+async function iaEntreprises(env, d, n, prec) {
   const out = {}; if (!env.AI) return out;
   const par = {}; for (const a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
-  const cles = Object.keys(par).sort((a, b) => par[b].length - par[a].length).slice(0, 12);
-  for (const k of cles) {
-    const l = (n.lignes || []).find(x => x.k === k), A = par[k];
-    const faits = { entreprise: l ? l.nom : k, variation_semaine_pct: l ? l.variation_semaine_pct : null,
-      annonces: A.filter(a => a.origine !== "presse").map(a => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
-      presse: A.filter(a => a.origine === "presse").map(a => ({ titre: a.titre || "", media: a.site || "", date: a.date })).slice(0, 6) };
+  // 6/11 soir : aussi les entreprises sans annonce mais qui ont bougé d'au moins 3 % (l'IA explique avec les rivales), 12 au plus
+  const fort = l => l.k.startsWith("c:") && Math.abs(l.variation_semaine_pct || 0) >= 3;
+  const cles = (n.lignes || []).filter(l => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => ((par[b.k] || []).length - (par[a.k] || []).length) || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 12);
+  for (const l of cles) {
+    const faits = await faitsEntreprise(d, n, l, par[l.k] || []);
     const sig = JSON.stringify(faits);
-    if (prec && prec[k] && prec[k]._sig === sig) { out[k] = prec[k]; continue; }
-    try { const r = await syntheseEntreprise(env, faits); if (r) out[k] = { ...r, _sig: sig }; } catch (e) { }
+    if (prec && prec[l.k] && prec[l.k]._sig === sig) { out[l.k] = prec[l.k]; continue; }
+    try { const r = await syntheseEntreprise(env, faits); if (r) out[l.k] = { ...r, _sig: sig }; } catch (e) { }
   }
   return out;
 }
@@ -579,7 +582,8 @@ async function tache(request, env, url) {
 export const EXEMPLE_PROFIL = { // 5/11 (Romain : « plus cohérent ») : un PEA d'environ 10 000 € : un ETF monde en socle et quatre grandes françaises
   favoris: ["c:hermes", "c:sanofi", "c:apple", "c:asml"],
   portefeuille: { l: [{ k: "e:amundi-msci-world-pea", q: 950, pru: 5.6, env: "pea" }, { k: "c:lvmh", q: 3, pru: 520, env: "pea" }, { k: "c:air-liquide", q: 6, pru: 165, env: "pea" },
-    { k: "c:totalenergies", q: 12, pru: 58, env: "pea" }, { k: "c:schneider-electric", q: 4, pru: 210, env: "pea" }] },
+    { k: "c:totalenergies", q: 12, pru: 58, env: "pea" }, { k: "c:schneider-electric", q: 4, pru: 210, env: "pea" }],
+    cfg: { prog: [{ k: "e:amundi-msci-world-pea", jour: 5, q: 25, depuis: "2026-03-05" }] } }, // 6/11 soir : un achat programmé, pour montrer ce bloc du rapport
   rapport: { favoris: true, portefeuille: true, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] },
 };
 export async function rapportExemple(request, env) {
@@ -591,7 +595,8 @@ export async function rapportExemple(request, env) {
   const s = suiviDe(row, d.names);
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
   const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
-  n.ia_entreprises = await iaEntreprises(env, n, null);
+  await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj);
+  n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
   const corps = { ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: true, en_cours: true, historique: [] };
   const res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
   if (cache) { try { await cache.put(cle, res.clone()); } catch (e) { } }

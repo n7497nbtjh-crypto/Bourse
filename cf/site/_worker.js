@@ -847,9 +847,30 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
 - Pour un article de presse dont seul le titre est connu : dis ce que le titre rapporte, en pr\xE9cisant que c'est un article de presse et non une annonce officielle de l'entreprise, sans rien ajouter qui n'y figure pas ; explique les termes techniques ; dans \xAB change \xBB, dis ce que cela pourrait changer si l'information se confirme.
+- Tu peux aussi recevoir \xAB fiche_de_l_entreprise \xBB (ses comptes, la m\xE9diane de son secteur, ses rivales, ses prochaines dates, ce qui fait varier ses r\xE9sultats) et \xAB sa_semaine_en_bourse \xBB (variation du cours, rivales). Sers-t'en pour situer l'information : son ordre de grandeur face \xE0 ses ventes annuelles, le point de la fiche qu'elle touche (une dette d\xE9j\xE0 haute face au secteur, une marge plus basse que ses rivales\u2026), ou le fait que tout le secteur a boug\xE9. C'est ce qui rend l'explication utile : ne te contente jamais de reformuler le titre.
+- Interdit : \xAB pourrait influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, toute phrase qui ne dit rien.
 - Pour un dividende, ne compare jamais un versement trimestriel \xE0 un dividende annuel : compare seulement des versements de m\xEAme nature, et seulement si les deux montants sont fournis.
 - Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
 - Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
+${REGLES}`, SEMAINE_ENTREPRISE = `Tu expliques, pour une personne qui d\xE9bute en Bourse, pourquoi le cours d'une entreprise a boug\xE9 cette semaine et ce qu'il faut en retenir. Tu re\xE7ois des faits en JSON calcul\xE9s par le site : variation du cours sur la semaine, son indice, ses rivales et leur variation sur la m\xEAme semaine, un verdict calcul\xE9 (suit son secteur, mieux ou moins bien que ses rivales, r\xE9sultats publi\xE9s), les nouvelles des rivales, les annonces officielles de l'entreprise (chiffres extraits), ses op\xE9rations courantes, des titres de presse, ses derniers comptes annuels et les sujets du monde de la semaine qui la touchent.
+R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
+- "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Commence par le plus utile : des r\xE9sultats publi\xE9s et leurs chiffres ; sinon la comparaison avec les rivales (cite l'\xE9cart, par exemple \xAB ses rivales ont recul\xE9 de 7 % \xE0 11 % \xBB) ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annonc\xE9 et que le mouvement est celui de son secteur ou du march\xE9.
+- "change" : 1 ou 2 phrases (40 mots au plus) sur ce qu'il faut retenir : une nouvelle importante d'une rivale, un chiffre des comptes, ou une annonce. Si rien n'est notable, mets une cha\xEEne vide.
+- Ne commente jamais les op\xE9rations courantes (rachats de ses propres actions, nombre d'actions et droits de vote) : au plus, \xAB seulement des op\xE9rations courantes \xBB.
+- Interdit : \xAB pourrait influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, \xAB il est trop t\xF4t \xBB, toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas, aucune cause invent\xE9e. Un titre de presse est une information rapport\xE9e par la presse, pas un fait v\xE9rifi\xE9.
+- Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
+${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les 3 sujets d'actualit\xE9 g\xE9n\xE9rale (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
+R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [num\xE9ros], "secteurs": [cl\xE9s], "pays": [codes]}]}.
+- 3 sujets au plus, du plus important au moins important. Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
+- "titre" : 10 mots au plus, factuel, en fran\xE7ais (exemple : \xAB La Banque d'Angleterre remonte son taux \xE0 4 % \xBB).
+- "theme" : 2 \xE0 4 mots, par exemple \xAB \xC9tats-Unis \xB7 Politique \xBB, \xAB Royaume-Uni \xB7 Taux d'int\xE9r\xEAt \xBB, \xAB \xC9nergie \xBB.
+- "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est pass\xE9, uniquement d'apr\xE8s les titres fournis, avec leur date. Si un titre relie le sujet aux march\xE9s, dis-le en pr\xE9cisant que c'est la presse qui fait ce lien.
+- "titres" : les num\xE9ros des 1 \xE0 3 titres qui portent le sujet.
+- "secteurs" : les cl\xE9s des secteurs directement concern\xE9s, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le march\xE9.
+- "pays" : codes ISO \xE0 deux lettres des pays concern\xE9s (US, GB, FR, DE, CN, JP\u2026), au plus 2.
+- Ignore les faits divers, la consommation courante, le sport, les sujets d'une seule entreprise.
+- N'invente rien : aucun chiffre ni fait absent des titres. Pas de pr\xE9diction, pas de conseil. Pas de tiret cadratin.
 ${REGLES}`, BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation m\xE9diane de secteurs entiers.
 R\xE8gles strictes :
 - Explique la semaine de fa\xE7on factuelle et p\xE9dagogique, en 120 \xE0 220 mots, en deux ou trois courts paragraphes de texte suivi.
@@ -859,7 +880,7 @@ R\xE8gles strictes :
 - Aucun conseil d'achat ou de vente, aucune recommandation, aucune pr\xE9diction sur les cours.
 - Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
 ${REGLES}`, SOURCES = "Sources : termine par une ligne qui commence exactement par \xAB Sources : \xBB et reprend, en peu de mots, les sources de la liste \xAB sources \xBB des faits que tu as utilis\xE9es (par exemple \xAB comptes annuels 2024 publi\xE9s par l'entreprise (ESEF), cours du 28 octobre 2026 \xBB). N'ajoute aucune source qui n'est pas dans cette liste.", S = (t) => t + `
-` + SOURCES, CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN) };
+` + SOURCES, CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE };
 
 // cf/src/iasite.mjs
 var MODELES = [
@@ -1019,6 +1040,66 @@ async function iaSite(request, env) {
   }
   return json4({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les r\xE9ponses calcul\xE9es restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain." }, 429);
 }
+async function syntheseEntreprise(env, faits) {
+  return await iaJSON(env, "syn2", CONSIGNES.semaine_entreprise, faits, 360, (x) => x && typeof x.clair == "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
+}
+var VAGUE = /pourrait influencer|pourraient influencer|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
+async function iaJSON(env, prefixe, sys, faits, max, valide) {
+  if (!env.AI || !env.DB || !sys) return null;
+  let user = JSON.stringify(faits).slice(0, 14e3), k = await empreinte(prefixe + "|" + user);
+  try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_syn (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL)").run();
+  } catch {
+    return null;
+  }
+  try {
+    let hit = await env.DB.prepare("SELECT txt, modele FROM ia_syn WHERE k = ?").bind(k).first();
+    if (hit) {
+      let o = objDe(hit.txt);
+      if (o && o._refus) return null;
+      let x = valide(o);
+      if (x) return { ...x, modele: hit.modele };
+    }
+  } catch {
+  }
+  let P = plafonds(env), c = await compteurs(env, "syn", jour()), repondu = !1;
+  if (c.erreur) return null;
+  for (let [model, cin, cout, nom] of MODELES) {
+    let estime = (jetons(sys + user) * cin + max * cout) / 1e6;
+    if (!siteOk(c, P, estime)) return null;
+    try {
+      let msgs = model.includes("qwen3") ? [{ role: "system", content: sys }, { role: "user", content: user + `
+/no_think` }] : [{ role: "system", content: sys }, { role: "user", content: user }], out = await env.AI.run(model, { messages: msgs, max_tokens: max, temperature: 0.2 }), raw = out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content), txt = nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw), x = valide(objDe(txt)), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+      try {
+        await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(jour(), reel, reel).run();
+      } catch {
+      }
+      if (repondu = !0, x) {
+        try {
+          await env.DB.prepare("INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)").bind(k, JSON.stringify(x), nom, Date.now()).run(), Math.random() < 0.05 && await env.DB.prepare("DELETE FROM ia_syn WHERE at < ?").bind(Date.now() - 10 * 864e5).run();
+        } catch {
+        }
+        return { ...x, modele: nom };
+      }
+    } catch {
+    }
+  }
+  if (repondu) try {
+    await env.DB.prepare("INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)").bind(k, '{"_refus":1}', null, Date.now()).run();
+  } catch {
+  }
+  return null;
+}
+var objDe = (t) => {
+  if (!t) return null;
+  let i = t.indexOf("{"), j = t.lastIndexOf("}");
+  if (i < 0 || j <= i) return null;
+  try {
+    return JSON.parse(t.slice(i, j + 1));
+  } catch {
+    return null;
+  }
+};
 
 // cf/src/synthese.mjs
 var KEY2 = /^[ce]:[a-z0-9-]{1,60}$/, r2 = (v) => Math.round(v * 100) / 100, num = (v) => typeof v == "number" && isFinite(v) ? v : typeof v == "string" && v.trim() !== "" && isFinite(+v) ? +v : null, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v, d = 1) => {
@@ -1420,12 +1501,12 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       v && vs.push({ k, nom: d.names[k], variation_semaine_pct: v.pct });
     }
     vs.sort((a, b) => b.variation_semaine_pct - a.variation_semaine_pct);
-    let p = vs.map((x) => x.variation_semaine_pct), mid = p.length >> 1, med = p.length ? p.length % 2 ? p[mid] : (p[mid - 1] + p[mid]) / 2 : null;
+    let p = vs.map((x) => x.variation_semaine_pct), mid = p.length >> 1, med2 = p.length ? p.length % 2 ? p[mid] : (p[mid - 1] + p[mid]) / 2 : null;
     return {
       id: sk,
       nom: SECTEURS2[sk],
       n: vs.length,
-      mediane_pct: med != null ? r2(med) : null,
+      mediane_pct: med2 != null ? r2(med2) : null,
       hausses: p.filter((x) => x > 0).length,
       baisses: p.filter((x) => x < 0).length,
       premieres: vs.slice(0, 3),
@@ -1433,7 +1514,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       vos_lignes: lignes.filter((l) => d.meta[l.k] && d.meta[l.k].sector === sk).map(court2)
     };
   }), f = {
-    v: 3,
+    v: 4,
     semaine,
     genere: Date.now(),
     du: lundi3,
@@ -1495,6 +1576,258 @@ function essentielDe(f) {
 function lectureMin(f) {
   let mots = [...f.essentiel || [], ...f.annonces.slice(0, 8).map((a) => (a.resume || "") + " " + (a.titre || "")), ...f.a_venir.map((e) => e.label), f.texte || ""].join(" ").split(/\s+/).filter(Boolean).length + f.lignes.length * 4 + (f.portefeuille && f.portefeuille.alertes.length || 0) * 25;
   return Math.max(1, Math.min(5, Math.ceil(mots / 200)));
+}
+
+// cf/src/rapport8.mjs
+var r1 = (v) => Math.round(v * 10) / 10, r0 = (v) => Math.round(v), addJ2 = (ymd, n) => {
+  let d = /* @__PURE__ */ new Date(ymd + "T12:00:00Z");
+  return d.setUTCDate(d.getUTCDate() + n), d.toISOString().slice(0, 10);
+}, med = (a) => {
+  let p = a.slice().sort((x, y) => x - y), m = p.length >> 1;
+  return p.length ? p.length % 2 ? p[m] : (p[m - 1] + p[m]) / 2 : null;
+}, fold = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), INDICE_PAYS = { US: ["sp500", "S&P 500"], FR: ["cac40", "CAC 40"], DE: ["dax", "DAX"], GB: ["ftse100", "FTSE 100"], JP: ["nikkei", "Nikkei 225"] }, PAYS = { US: "\xC9tats-Unis", FR: "France", DE: "Allemagne", GB: "Royaume-Uni", JP: "Japon", CN: "Chine", CH: "Suisse", NL: "Pays-Bas", IT: "Italie", ES: "Espagne", CA: "Canada", TW: "Ta\xEFwan", KR: "Cor\xE9e du Sud", IN: "Inde" }, RIV_CAT = /* @__PURE__ */ new Set(["resultats", "rapport", "operation", "contrat", "dirigeants", "dividende", "opa"]), FAIT = /\b(sign|accord|agreement|contrat|contract|acqui|rach[eè]te|lance|launch|vend|sells?|stake|participation|nomm|appoint|usine|plant|merger|fusion)/i, OPIN = /\?|recommand|conseil|aktie|should you|buy|sell |kaufen|could|top \d|meilleures? actions|stock (is|to)|why .* stock/i;
+async function rivalesDe(d, n, lundi3, auj) {
+  let out = {}, lignes = (n.lignes || []).filter((l) => l.k.startsWith("c:")).slice(0, 14), parCo = {};
+  for (let l of lignes) {
+    let ids = ((d.conc || {})[l.k.slice(2)] || []).filter((id) => d.names["c:" + id]).slice(0, 5);
+    if (!ids.length) continue;
+    let liste = ids.map((id) => {
+      let k = "c:" + id, v = variationSemaine(d.cs, k, lundi3, auj, d.px[k], d.sem);
+      return { k, nom: d.names[k], v: v ? v.pct : null };
+    }), vs = liste.map((x) => x.v).filter((v) => v != null);
+    parCo[l.k] = ids, out[l.k] = { liste, med: vs.length ? r1(med(vs)) : null, min: vs.length ? Math.min(...vs) : null, max: vs.length ? Math.max(...vs) : null, nouvelles: [] };
+    let own = l.variation_semaine_pct, res = (n.annonces || []).some((a) => a.k === l.k && a.origine !== "presse" && a.categorie === "resultats");
+    out[l.k].verdict = res ? "resultats" : own == null || vs.length < 2 ? null : own - out[l.k].med > 2 ? "mieux" : own - out[l.k].med < -2 ? "moins" : "suit";
+  }
+  let tous = [...new Set(Object.values(parCo).flat())], A = {};
+  for (let i = 0; i < tous.length && d.actuDe; i += 20) Object.assign(A, await d.actuDe(tous.slice(i, i + 20)).catch(() => ({})));
+  let dans = (x) => {
+    let j = String(x || "").slice(0, 10);
+    return j >= lundi3 && j <= addJ2(lundi3, 6);
+  };
+  for (let [k, ids] of Object.entries(parCo)) {
+    let off = [], pr = [];
+    for (let id of ids) {
+      let j = A["c:" + id];
+      if (j) {
+        for (let a of Array.isArray(j.o) ? j.o : []) a && dans(a.d) && RIV_CAT.has(a.c) && /^https:\/\//.test(a.u || "") && off.push({ k: "c:" + id, nom: d.names["c:" + id], date: String(a.d).slice(0, 10), categorie: a.c, titre: a.tf || a.t || "", chiffres: Array.isArray(a.f) ? a.f.slice(0, 3) : [], source: a.u, origine: "officiel" });
+        for (let a of Array.isArray(j.p) ? j.p : []) a && dans(a.d) && FAIT.test(a.t || "") && !OPIN.test(a.t || "") && /^https:\/\//.test(a.u || "") && pr.push({ k: "c:" + id, nom: d.names["c:" + id], date: String(a.d).slice(0, 10), categorie: "presse", titre: a.t, chiffres: [], source: a.u, site: a.s || null, origine: "presse" });
+      }
+    }
+    off.sort((a, b) => b.chiffres.length - a.chiffres.length || (b.categorie === "resultats") - (a.categorie === "resultats") || b.date.localeCompare(a.date));
+    let vus = /* @__PURE__ */ new Set(), choix = [];
+    for (let a of [...off, ...pr])
+      vus.has(a.k) || choix.length >= 2 || (vus.add(a.k), choix.push(a));
+    out[k].nouvelles = choix;
+  }
+  return out;
+}
+function univers(d, lundi3, auj) {
+  let parSec = {};
+  for (let [k, m] of Object.entries(d.meta || {})) {
+    if (!m || !m.sector || !d.names[k]) continue;
+    let v = variationSemaine(d.cs, k, lundi3, auj, d.px[k], d.sem);
+    if (!v) continue;
+    let p = d.px[k], cap = p && p.cap > 0 ? p.cur === "EUR" || !p.cur ? p.cap : d.fx && d.fx[p.cur] > 0 ? p.cap * d.fx[p.cur] : 0 : 0;
+    (parSec[m.sector] = parSec[m.sector] || []).push({ k, nom: d.names[k], v: v.pct, cap, region: m.region });
+  }
+  return parSec;
+}
+async function mondeDe(env, d, n, lundi3, auj) {
+  let fin = addJ2(lundi3, 6), items = (d.monde && d.monde.items || []).filter((x) => x && x.d && x.d.slice(0, 10) >= addJ2(lundi3, -2) && x.d.slice(0, 10) <= fin && x.t && x.u);
+  if (items.length < 4) return null;
+  let T = items.sort((a, b) => b.d.localeCompare(a.d)).slice(0, 140), parSec = univers(d, lundi3, auj), secteurs = {};
+  for (let [s, L] of Object.entries(parSec)) secteurs[s] = { nom: SECTEURS2[s] || s, mediane_pct: r1(med(L.map((x) => x.v))), n: L.length };
+  let faits = {
+    semaine_du: lundi3,
+    au: fin,
+    indices: (n.indices || []).map((i) => ({ id: i.id, nom: i.nom, variation_pct: i.pct })),
+    secteurs,
+    titres: T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t }))
+  }, valide = (o) => {
+    if (!o || !Array.isArray(o.sujets)) return null;
+    let S2 = o.sujets.slice(0, 3).map((s) => ({
+      titre: String(s.titre || "").replace(/—/g, ",").slice(0, 100),
+      theme: String(s.theme || "").slice(0, 50),
+      fait: String(s.fait || "").replace(/—/g, ",").slice(0, 360),
+      titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter((i) => Number.isInteger(i) && T[i]))].slice(0, 3),
+      secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter((x) => x in secteurs).slice(0, 3),
+      pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
+    })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 1);
+    return S2.length ? { sujets: S2 } : null;
+  }, r = await iaJSON(env, "monde|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 900, valide).catch(() => null);
+  if (!r) return null;
+  let ctx = d.contexte && d.contexte.sujets || [];
+  return { sujets: r.sujets.map((s) => {
+    let chiffres = [];
+    for (let sk of s.secteurs) {
+      let L = parSec[sk] || [];
+      L.length && (chiffres.push({ lab: `${SECTEURS2[sk] || sk} : m\xE9diane de ${L.length} entreprises`, v: r1(med(L.map((x) => x.v))) }), L.filter((x) => x.cap > 0).sort((a, b) => b.cap - a.cap).slice(0, s.secteurs.length > 1 ? 2 : 3).forEach((x) => chiffres.push({ lab: x.nom, k: x.k, v: x.v })));
+    }
+    for (let p of s.pays) {
+      let ix = INDICE_PAYS[p], v = ix && variationSemaine(d.cs, "i:" + ix[0], lundi3, auj, d.px["i:" + ix[0]], d.sem);
+      v && chiffres.push({ lab: ix[1], v: v.pct });
+    }
+    let touche = (n.lignes || []).filter((l) => {
+      let m = d.meta[l.k];
+      return m && (s.secteurs.includes(m.sector) || s.pays.includes(m.region));
+    }).map((l) => ({ k: l.k, nom: l.nom, v: l.variation_semaine_pct, eur: l.portefeuille && l.portefeuille.var_eur != null ? r0(l.portefeuille.var_eur) : null })), txt = fold(s.titre + " " + s.fait), fond = ctx.find((c) => {
+      try {
+        return c.mots && new Set(txt.match(new RegExp(c.mots, "g")) || []).size >= 2;
+      } catch {
+        return !1;
+      }
+    });
+    return {
+      ...s,
+      titres: s.titres.map((i) => ({ t: T[i].t, s: T[i].s, u: T[i].u, d: T[i].d.slice(0, 10) })),
+      chiffres: chiffres.slice(0, 5),
+      touche: touche.slice(0, 6),
+      fond: fond ? { id: fond.id, titre: fond.titre, maj: fond.maj } : null
+    };
+  }), modele: r.modele || null };
+}
+async function radioDe(d, n, monde) {
+  let L = (n.lignes || []).filter((l) => l.portefeuille && l.portefeuille.valeur_eur > 0), tot = L.reduce((a, l) => a + l.portefeuille.valeur_eur, 0);
+  if (!tot) return null;
+  let parIsin = d.parIsin || {}, compo = {}, strip = (x) => fold(x).replace(/\.com\b/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\b(inc|incorporated|corp|corporation|co|company|ltd|limited|plc|sa|se|nv|ag|asa|ab|spa|the|holdings?|group|groupe|class [a-z]|cl [a-z]|adr|reg|shs|ord|common st(ock)?)\b/g, " ").replace(/\s+/g, " ").trim(), parNom = /* @__PURE__ */ new Map();
+  for (let [k, nom] of Object.entries(d.names || {})) if (k.startsWith("c:")) {
+    let t = strip(nom);
+    t && !parNom.has(t) && parNom.set(t, k);
+  }
+  let parNomDe = (nom) => {
+    let t = strip(nom);
+    if (!t) return null;
+    if (parNom.has(t)) return parNom.get(t);
+    let w = t.split(" ");
+    for (let i = w.length - 1; i >= 1; i--) {
+      let x = w.slice(0, i).join(" ");
+      if (x.length >= 4 && parNom.has(x)) return parNom.get(x);
+    }
+    return null;
+  }, coDe = (isin, nom) => parIsin[isin] || (nom ? parNomDe(nom) : null);
+  for (let l of L) if (l.k.startsWith("e:")) {
+    let px = d.etf[l.k] && d.etf[l.k].proxy;
+    if (px && d.charger) {
+      let j = await d.charger(`/data/etf/${px}.json`);
+      j && (compo[l.k] = j);
+    }
+  }
+  let seau = (lab, testCo, pays, sujet) => {
+    let eur = 0, direct = [], viaEtf = [], ex = /* @__PURE__ */ new Map();
+    for (let l of L) {
+      let v = l.portefeuille.valeur_eur;
+      if (l.k.startsWith("c:")) {
+        let m = d.meta[l.k];
+        m && testCo(m) && (eur += v, direct.push(l.nom));
+        continue;
+      }
+      let j = compo[l.k];
+      if (!j) continue;
+      let part = 0;
+      if (pays) part = ((j.countries || []).find((c) => c[0] === pays) || [0, 0])[1] / 100;
+      else {
+        let noms = {};
+        (j.top || []).forEach((h) => {
+          h.isin && (noms[h.isin] = h.name);
+        });
+        for (let [isin, w, nom] of j.isins || []) {
+          let k = coDe(isin, nom || noms[isin]), m = k && d.meta[k];
+          m && testCo(m) && (part += w / 100, ex.set(k, (ex.get(k) || 0) + w));
+        }
+      }
+      part > 0 && (eur += v * part, viaEtf.push({ nom: l.nom, eur: r0(v * part), au: j.asOf || null }));
+    }
+    let exemples = [...ex.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(([k]) => d.names[k]);
+    return eur >= 1 ? { lab, eur: r0(eur), pct: r1(eur / tot * 100), direct, via_etf: viaEtf, exemples, sujet } : null;
+  }, out = [];
+  for (let [i, s] of (monde && monde.sujets || []).entries())
+    s.secteurs.length ? out.push(seau(s.secteurs.map((x) => SECTEURS2[x] || x).join(", "), (m) => s.secteurs.includes(m.sector), null, i)) : s.pays.length && out.push(seau(PAYS[s.pays[0]] || s.pays[0], (m) => m.region === s.pays[0], s.pays[0], i));
+  out.some((x) => x && /États-Unis/.test(x.lab)) || out.push(seau("\xC9tats-Unis", (m) => m.region === "US", "US", null));
+  let etfs = Object.values(compo);
+  return { total_eur: r0(tot), seaux: out.filter(Boolean).slice(0, 4), source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map((j) => j.asOf).filter(Boolean).sort()[0] || null } : null };
+}
+function dcaDe(d, pf, lundi3, auj) {
+  let P = pf && pf.cfg && Array.isArray(pf.cfg.prog) ? pf.cfg.prog : [];
+  if (!P.length) return null;
+  let fin = addJ2(lundi3, 6), dates = d.cs && d.cs.dates || [], prixAu = (k, j) => {
+    let s = d.cs && d.cs.items && d.cs.items[k];
+    if (!s) return null;
+    let r = null;
+    for (let i = 0; i < dates.length; i++) dates[i] <= j && s[i] != null && (r = s[i]);
+    return r;
+  }, out = [];
+  for (let pr of P.slice(0, 6)) {
+    if (!pr || !d.names[pr.k] || !(+pr.q > 0) || !(pr.jour >= 1 && pr.jour <= 28)) continue;
+    let date = null;
+    for (let j = lundi3; j <= fin && j <= auj; j = addJ2(j, 1)) +j.slice(8) == +pr.jour && j >= (pr.depuis || "") && (date = j);
+    let ym = auj.slice(0, 7), nxt = (() => {
+      let y = +ym.slice(0, 4), m = +ym.slice(5), ce = `${ym}-${String(pr.jour).padStart(2, "0")}`;
+      return ce > auj ? ce : (m++, m > 12 && (m = 1, y++), `${y}-${String(m).padStart(2, "0")}-${String(pr.jour).padStart(2, "0")}`);
+    })(), line = (pf.l || []).find((l) => l.k === pr.k), ops = line && Array.isArray(line.o) ? line.o.filter((o) => Array.isArray(o) && o[1] === "a" && o[6] === "p" && o[2] > 0 && o[3] > 0) : [], qT = ops.reduce((a, o) => a + o[2], 0), pm = qT ? ops.reduce((a, o) => a + o[2] * o[3], 0) / qT : null, px = d.px[pr.k], cur = px && px.cur || null, x = { k: pr.k, nom: d.names[pr.k], q: +pr.q, jour: pr.jour, depuis: pr.depuis || null, prochain: nxt, devise: cur, cours: px && px.p > 0 ? px.p : null, n_achats: ops.length, prix_moyen: pm != null ? Math.round(pm * 100) / 100 : null };
+    if (date) {
+      let p = prixAu(pr.k, date), pa = prixAu(pr.k, addJ2(date, -7));
+      x.date = date, x.prix = p, x.prix_avant = pa, p && pa && (x.montant = Math.round(p * x.q * 100) / 100, x.montant_avant = Math.round(pa * x.q * 100) / 100);
+    }
+    out.push(x);
+  }
+  return out.length ? out : null;
+}
+async function enrichir8(env, d, n, pf, semaine, auj) {
+  let lundi3 = lundiDe(semaine);
+  try {
+    n.rivales = await rivalesDe(d, n, lundi3, auj);
+  } catch {
+    n.rivales = {};
+  }
+  try {
+    n.monde = await mondeDe(env, d, n, lundi3, auj);
+  } catch {
+    n.monde = null;
+  }
+  try {
+    n.radio = await radioDe(d, n, n.monde);
+  } catch {
+    n.radio = null;
+  }
+  try {
+    n.dca = dcaDe(d, pf, lundi3, auj);
+  } catch {
+    n.dca = null;
+  }
+  return n;
+}
+async function faitsEntreprise(d, n, l, A) {
+  let R = (n.rivales || {})[l.k] || null, comptes = null;
+  try {
+    let s = d.charger ? await d.charger(`/data/societes/${l.k.slice(2)}.json`) : null;
+    if (s && s.fin && Array.isArray(s.fin.ca) && s.years) {
+      let c = s.fin.ca, i = c.length - 1;
+      comptes = {
+        exercice: s.years[i],
+        devise: s.currency,
+        ventes_millions: c[i],
+        croissance_ventes_pct: c[i - 1] > 0 ? r1((c[i] / c[i - 1] - 1) * 100) : null,
+        benefice_net_millions: s.fin.net ? s.fin.net[i] : null
+      };
+    }
+  } catch {
+  }
+  let monde = (n.monde && n.monde.sujets || []).filter((s) => s.touche.some((t) => t.k === l.k)).map((s) => ({ sujet: s.titre, fait: s.fait }));
+  return {
+    entreprise: l.nom,
+    secteur: SECTEURS2[(d.meta[l.k] || {}).sector] || null,
+    variation_semaine_pct: l.variation_semaine_pct,
+    indice: l.indice ? { nom: l.indice.nom, variation_pct: l.indice.pct } : null,
+    verdict_calcule: R && { suit: "suit son secteur", mieux: "mieux que ses rivales", moins: "moins bien que ses rivales", resultats: "r\xE9sultats publi\xE9s" }[R.verdict] || null,
+    rivales: R ? R.liste.filter((x) => x.v != null).map((x) => ({ nom: x.nom, variation_semaine_pct: x.v })) : [],
+    nouvelles_des_rivales: R ? R.nouvelles.map((a) => ({ entreprise: a.nom, type: a.origine === "presse" ? "titre de presse" : a.categorie, titre: a.titre, chiffres: a.chiffres })) : [],
+    annonces: A.filter((a) => a.origine !== "presse").map((a) => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
+    operations_courantes: A.filter((a) => a.origine !== "presse" && (a.categorie === "rachat" || a.categorie === "capital")).length,
+    presse: A.filter((a) => a.origine === "presse").map((a) => ({ titre: a.titre || "", media: a.site || "", date: a.date })).slice(0, 5),
+    derniers_comptes_annuels: comptes,
+    sujets_du_monde_qui_la_touchent: monde
+  };
 }
 
 // cf/src/espace.mjs
@@ -1682,7 +2015,7 @@ async function siteData2(request, env) {
     } catch {
       return null;
     }
-  }, [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]), px = {};
+  }, [conc, monde, contexte] = await Promise.all([get("/data/concurrents.json"), get("/data/actu/monde.json"), get("/data/contexte.json")]), [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]), px = {};
   try {
     px = (await coursComplets(new Request(new URL("/api/cours", request.url)), null, env)).items || {};
   } catch {
@@ -1691,13 +2024,18 @@ async function siteData2(request, env) {
   (uni && uni.companies || []).forEach((c) => {
     names["c:" + c.id] = c.name, meta2["c:" + c.id] = { region: c.region, sector: c.sector }, c.isin && (isin["c:" + c.id] = c.isin);
   }), (etf && etf.list || []).forEach((e) => {
-    names["e:" + e.id] = e.name, etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index };
+    names["e:" + e.id] = e.name, etfm["e:" + e.id] = { ter: e.ter, pea: e.pea, index: e.index, proxy: e.proxy || null };
   });
-  let actuCache = /* @__PURE__ */ new Map();
+  let parIsin = Object.fromEntries(Object.entries(isin).map(([k, v]) => [v, k])), memo = /* @__PURE__ */ new Map(), charger2 = (p) => (memo.has(p) || memo.set(p, get(p)), memo.get(p)), actuCache = /* @__PURE__ */ new Map();
   return {
     names,
     meta: meta2,
     isin,
+    parIsin,
+    charger: charger2,
+    conc: conc || {},
+    monde,
+    contexte,
     etf: etfm,
     px,
     fx: fx && fx.eur || { EUR: 1 },
@@ -1758,11 +2096,31 @@ function suiviDe(row, names) {
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
-  if (!(!c || c.v !== 3 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
+  if (!(!c || c.v !== 4 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
   let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 3 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
+  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 4 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
   let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some((x) => x.n);
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
+}
+async function iaEntreprises(env, d, n, prec) {
+  let out = {};
+  if (!env.AI) return out;
+  let par = {};
+  for (let a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
+  let fort = (l) => l.k.startsWith("c:") && Math.abs(l.variation_semaine_pct || 0) >= 3, cles = (n.lignes || []).filter((l) => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => (par[b.k] || []).length - (par[a.k] || []).length || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 12);
+  for (let l of cles) {
+    let faits = await faitsEntreprise(d, n, l, par[l.k] || []), sig = JSON.stringify(faits);
+    if (prec && prec[l.k] && prec[l.k]._sig === sig) {
+      out[l.k] = prec[l.k];
+      continue;
+    }
+    try {
+      let r = await syntheseEntreprise(env, faits);
+      r && (out[l.k] = { ...r, _sig: sig });
+    } catch {
+    }
+  }
+  return out;
 }
 var publicBilan = (c) => Object.fromEntries(Object.entries(c).filter(([k]) => !k.startsWith("_"))), precedenteDe = (semaine) => {
   let m = /^(\d{4})-W(\d{2})$/.exec(semaine), l = new Date(Date.UTC(+m[1], 0, 4));
@@ -2106,22 +2464,28 @@ bilan. Informations factuelles, sans conseil en investissement.`,
 var EXEMPLE_PROFIL = {
   // 5/11 (Romain : « plus cohérent ») : un PEA d'environ 10 000 € : un ETF monde en socle et quatre grandes françaises
   favoris: ["c:hermes", "c:sanofi", "c:apple", "c:asml"],
-  portefeuille: { l: [
-    { k: "e:amundi-msci-world-pea", q: 950, pru: 5.6, env: "pea" },
-    { k: "c:lvmh", q: 3, pru: 520, env: "pea" },
-    { k: "c:air-liquide", q: 6, pru: 165, env: "pea" },
-    { k: "c:totalenergies", q: 12, pru: 58, env: "pea" },
-    { k: "c:schneider-electric", q: 4, pru: 210, env: "pea" }
-  ] },
+  portefeuille: {
+    l: [
+      { k: "e:amundi-msci-world-pea", q: 950, pru: 5.6, env: "pea" },
+      { k: "c:lvmh", q: 3, pru: 520, env: "pea" },
+      { k: "c:air-liquide", q: 6, pru: 165, env: "pea" },
+      { k: "c:totalenergies", q: 12, pru: 58, env: "pea" },
+      { k: "c:schneider-electric", q: 4, pru: 210, env: "pea" }
+    ],
+    cfg: { prog: [{ k: "e:amundi-msci-world-pea", jour: 5, q: 25, depuis: "2026-03-05" }] }
+  },
+  // 6/11 soir : un achat programmé, pour montrer ce bloc du rapport
   rapport: { favoris: !0, portefeuille: !0, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] }
 };
 async function rapportExemple(request, env) {
-  let url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + 3, url.origin)), cache = typeof caches < "u" ? caches.default : null;
+  let url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + 4, url.origin)), cache = typeof caches < "u" ? caches.default : null;
   if (cache) {
     let r = await cache.match(cle);
     if (r) return r;
   }
-  let d = await siteData2(request, env), auj = jourParis(), semaine = semaineIso(auj), row = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) }, s = suiviDe(row, d.names), actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj }), corps = { ...publicBilan(n), exemple: !0, profil: EXEMPLE_PROFIL, provisoire: !0, en_cours: !0, historique: [] }, res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  let d = await siteData2(request, env), auj = jourParis(), semaine = semaineIso(auj), row = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) }, s = suiviDe(row, d.names), actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
+  await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
+  let corps = { ...publicBilan(n), exemple: !0, profil: EXEMPLE_PROFIL, provisoire: !0, en_cours: !0, historique: [] }, res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
   if (cache)
     try {
       await cache.put(cle, res.clone());
@@ -2523,7 +2887,7 @@ var nf = (d) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maxim
   payout: "Moins de 60 % du b\xE9n\xE9fice : point fort, il reste une marge si les b\xE9n\xE9fices baissent. De 60 \xE0 90 % : dans la moyenne. Plus de 90 % : point de vigilance."
 };
 function reperes(c, MED) {
-  let m = ratios(c), med = MED[c.sector] || {}, cur = c.currency, bank = isBank(c), medOk = med.n >= 3, out = [], B = (v) => big(v, cur), S2 = CUR[cur] || cur || "\u20AC", ans = (v) => F1.format(v) + (v >= 2 ? " ans" : " an"), ligne = (cle, libelle, valeur, valeur_texte, lv, mediane, mediane_texte, regle, explication) => out.push({
+  let m = ratios(c), med2 = MED[c.sector] || {}, cur = c.currency, bank = isBank(c), medOk = med2.n >= 3, out = [], B = (v) => big(v, cur), S2 = CUR[cur] || cur || "\u20AC", ans = (v) => F1.format(v) + (v >= 2 ? " ans" : " an"), ligne = (cle, libelle, valeur, valeur_texte, lv, mediane, mediane_texte, regle, explication) => out.push({
     cle,
     libelle,
     valeur,
@@ -2541,12 +2905,12 @@ function reperes(c, MED) {
     r4(m.g1),
     pct(m.g1),
     m.g1 >= 0.05 ? "fort" : m.g1 >= 0 ? "moyen" : "vig",
-    r4(med.g1),
-    pct(med.g1),
+    r4(med2.g1),
+    pct(med2.g1),
     RULES.croissance,
     `${bank ? "Revenus pass\xE9s" : "Ventes pass\xE9es"} de ${B(c.caPrev)} \xE0 ${B(c.ca)} en un an.`
   ), m.marge != null && !bank) {
-    let mm = medOk ? med.marge : null, lv = mm != null ? m.marge >= mm + Math.max(0.03, Math.abs(mm) * 0.25) ? "fort" : m.marge <= mm - Math.max(0.03, Math.abs(mm) * 0.3) ? "vig" : "moyen" : m.marge >= 0.15 ? "fort" : m.marge >= 0.07 ? "moyen" : "vig";
+    let mm = medOk ? med2.marge : null, lv = mm != null ? m.marge >= mm + Math.max(0.03, Math.abs(mm) * 0.25) ? "fort" : m.marge <= mm - Math.max(0.03, Math.abs(mm) * 0.3) ? "vig" : "moyen" : m.marge >= 0.15 ? "fort" : m.marge >= 0.07 ? "moyen" : "vig";
     m.marge < 0 && (lv = "vig"), ligne(
       "marge",
       "Marge d'exploitation",
@@ -2561,7 +2925,7 @@ function reperes(c, MED) {
   }
   if (c.net != null) {
     let lv, t;
-    c.net < 0 ? (lv = "vig", t = `Perte de ${B(-c.net)} sur l'exercice ${c.year}.`) : c.netPrev != null && c.netPrev < 0 ? (lv = "fort", t = `B\xE9n\xE9fice de ${B(c.net)}, apr\xE8s une perte l'ann\xE9e pr\xE9c\xE9dente.`) : (lv = m.ng == null ? "moyen" : m.ng >= 0 ? "fort" : m.ng > -0.3 ? "moyen" : "vig", t = `B\xE9n\xE9fice de ${B(c.net)} sur l'exercice ${c.year}${m.ng != null ? `, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, !1)} sur un an` : ""}.`), ligne("benefice", "B\xE9n\xE9fice net", c.net, B(c.net), lv, r4(med.nm), med.nm != null ? pct(med.nm, 1, !1) + " des ventes (marge nette)" : null, RULES.net, t + (m.nm != null && c.net > 0 ? ` Marge nette : ${pct(m.nm, 1, !1)}.` : ""));
+    c.net < 0 ? (lv = "vig", t = `Perte de ${B(-c.net)} sur l'exercice ${c.year}.`) : c.netPrev != null && c.netPrev < 0 ? (lv = "fort", t = `B\xE9n\xE9fice de ${B(c.net)}, apr\xE8s une perte l'ann\xE9e pr\xE9c\xE9dente.`) : (lv = m.ng == null ? "moyen" : m.ng >= 0 ? "fort" : m.ng > -0.3 ? "moyen" : "vig", t = `B\xE9n\xE9fice de ${B(c.net)} sur l'exercice ${c.year}${m.ng != null ? `, ${m.ng >= 0 ? "en hausse" : "en baisse"} de ${pct(Math.abs(m.ng), 0, !1)} sur un an` : ""}.`), ligne("benefice", "B\xE9n\xE9fice net", c.net, B(c.net), lv, r4(med2.nm), med2.nm != null ? pct(med2.nm, 1, !1) + " des ventes (marge nette)" : null, RULES.net, t + (m.nm != null && c.net > 0 ? ` Marge nette : ${pct(m.nm, 1, !1)}.` : ""));
   }
   return m.roe != null ? ligne(
     "rentabilite",
@@ -2569,18 +2933,18 @@ function reperes(c, MED) {
     r4(m.roe),
     pct(m.roe, 1, !1),
     m.roe >= 0.15 ? "fort" : m.roe >= 0.08 ? "moyen" : "vig",
-    r4(med.roe),
-    pct(med.roe, 1, !1),
+    r4(med2.roe),
+    pct(med2.roe, 1, !1),
     RULES.roe,
     `Pour 100 ${S2} qui appartiennent aux actionnaires, l'entreprise a gagn\xE9 ${F1.format(m.roe * 100)} ${S2} en un an.`
-  ) : c.equity != null && c.equity <= 0 && ligne("rentabilite", "Rentabilit\xE9 des capitaux propres", null, "\u2013", "na", null, null, RULES.roe, "Capitaux propres n\xE9gatifs : ce ratio ne se calcule pas."), bank ? ligne("dette", "Endettement", null, "\u2013", "na", null, null, RULES.lev, "Pour une banque ou un assureur, emprunter et pr\xEAter est le m\xE9tier lui-m\xEAme : ce rep\xE8re ne s'applique pas.") : c.netDebt != null && (c.netDebt < 0 ? ligne("dette", "Endettement", r23(c.netDebt), "Pas de dette nette", "fort", r23(med.lev), med.lev != null ? ans(med.lev) + " de r\xE9sultat" : null, RULES.lev, `${B(-c.netDebt)} de tr\xE9sorerie de plus que ses dettes financi\xE8res.`) : m.lev != null ? ligne(
+  ) : c.equity != null && c.equity <= 0 && ligne("rentabilite", "Rentabilit\xE9 des capitaux propres", null, "\u2013", "na", null, null, RULES.roe, "Capitaux propres n\xE9gatifs : ce ratio ne se calcule pas."), bank ? ligne("dette", "Endettement", null, "\u2013", "na", null, null, RULES.lev, "Pour une banque ou un assureur, emprunter et pr\xEAter est le m\xE9tier lui-m\xEAme : ce rep\xE8re ne s'applique pas.") : c.netDebt != null && (c.netDebt < 0 ? ligne("dette", "Endettement", r23(c.netDebt), "Pas de dette nette", "fort", r23(med2.lev), med2.lev != null ? ans(med2.lev) + " de r\xE9sultat" : null, RULES.lev, `${B(-c.netDebt)} de tr\xE9sorerie de plus que ses dettes financi\xE8res.`) : m.lev != null ? ligne(
     "dette",
     "Endettement (dette nette / EBITDA)",
     r23(m.lev),
     ans(m.lev),
     m.lev <= 1.5 ? "fort" : m.lev <= 3 ? "moyen" : "vig",
-    r23(med.lev),
-    med.lev != null ? ans(med.lev) : null,
+    r23(med2.lev),
+    med2.lev != null ? ans(med2.lev) : null,
     RULES.lev,
     `Dette nette de ${B(c.netDebt)}, soit ${F1.format(m.lev)} ann\xE9e${m.lev >= 2 ? "s" : ""} de l'argent d\xE9gag\xE9 par l'activit\xE9 avant investissements (EBITDA).`
   ) : m.gear != null && ligne(
@@ -2589,8 +2953,8 @@ function reperes(c, MED) {
     r4(m.gear),
     pct(m.gear, 0, !1),
     m.gear <= 0.5 ? "fort" : m.gear <= 1 ? "moyen" : "vig",
-    r4(med.gear),
-    pct(med.gear, 0, !1),
+    r4(med2.gear),
+    pct(med2.gear, 0, !1),
     RULES.gear,
     `Dette nette de ${B(c.netDebt)}, soit ${pct(m.gear, 0, !1)} de ce qui appartient aux actionnaires.`
   )), !bank && c.fcf != null && ligne(
@@ -2599,21 +2963,21 @@ function reperes(c, MED) {
     c.fcf,
     B(c.fcf),
     c.fcf < 0 ? "vig" : m.conv != null && m.conv >= 0.8 ? "fort" : "moyen",
-    r4(med.conv),
-    med.conv != null ? F0.format(med.conv * 100) + ` ${S2} pour 100 ${S2} de b\xE9n\xE9fice` : null,
+    r4(med2.conv),
+    med2.conv != null ? F0.format(med2.conv * 100) + ` ${S2} pour 100 ${S2} de b\xE9n\xE9fice` : null,
     RULES.fcf,
     c.fcf >= 0 ? `Apr\xE8s ses investissements, il lui reste ${B(c.fcf)}${m.conv != null ? `, soit ${F0.format(m.conv * 100)} ${S2} pour 100 ${S2} de b\xE9n\xE9fice` : ""}.` : `Ses investissements ont co\xFBt\xE9 plus que l'argent encaiss\xE9 gr\xE2ce \xE0 l'activit\xE9 : il manque ${B(-c.fcf)}.`
-  ), c.divPaid != null && (c.divPaid < 0.5 ? ligne("dividende", "Dividende", 0, "Aucun", "na", r4(med.payout), pct(med.payout, 0, !1) + " du b\xE9n\xE9fice", RULES.payout, "Pas de dividende vers\xE9 sur l'exercice.") : c.net > 0 ? ligne(
+  ), c.divPaid != null && (c.divPaid < 0.5 ? ligne("dividende", "Dividende", 0, "Aucun", "na", r4(med2.payout), pct(med2.payout, 0, !1) + " du b\xE9n\xE9fice", RULES.payout, "Pas de dividende vers\xE9 sur l'exercice.") : c.net > 0 ? ligne(
     "dividende",
     "Part du b\xE9n\xE9fice vers\xE9e en dividende",
     r4(m.payout),
     pct(m.payout, 0, !1),
     m.payout <= 0.6 ? "fort" : m.payout <= 0.9 ? "moyen" : "vig",
-    r4(med.payout),
-    pct(med.payout, 0, !1),
+    r4(med2.payout),
+    pct(med2.payout, 0, !1),
     RULES.payout,
     `Sur 100 ${S2} de b\xE9n\xE9fice, ${F0.format(m.payout * 100)} ${S2} ont \xE9t\xE9 vers\xE9s aux actionnaires${c.dps > 0 ? ` (${F2.format(c.dps)} ${S2} par action)` : ""}.`
-  ) : ligne("dividende", "Dividende", c.divPaid, B(c.divPaid), "vig", r4(med.payout), pct(med.payout, 0, !1) + " du b\xE9n\xE9fice", RULES.payout, `${B(c.divPaid)} vers\xE9s alors que l'entreprise est en perte : le dividende est pay\xE9 avec sa tr\xE9sorerie ou sa dette.`)), out;
+  ) : ligne("dividende", "Dividende", c.divPaid, B(c.divPaid), "vig", r4(med2.payout), pct(med2.payout, 0, !1) + " du b\xE9n\xE9fice", RULES.payout, `${B(c.divPaid)} vers\xE9s alors que l'entreprise est en perte : le dividende est pay\xE9 avec sa tr\xE9sorerie ou sa dette.`)), out;
 }
 function scoreSociete(c, q, qn) {
   if (c.id === q || c.id === qn.replace(/ /g, "-")) return 100;
@@ -2714,8 +3078,8 @@ async function ficheSociete(env, origin, ctx, B, c) {
   if (c.missing)
     out.comptes = null, out.note_comptes = "Les comptes de cette entreprise ne sont pas encore lus par ENKLAIR";
   else {
-    let med = B.MED[c.sector] || {};
-    if (out.secteur_compare = { nom: B.sectors[c.sector] || c.sector, entreprises: med.n || 0, note: (med.n || 0) >= 3 ? "M\xE9dianes calcul\xE9es sur les entreprises du m\xEAme secteur suivies par ENKLAIR, toutes r\xE9gions." : "Trop peu d'entreprises du secteur pour une m\xE9diane fiable." }, out.chiffres_cles = { chiffre_affaires: c.ca, chiffre_affaires_precedent: c.caPrev, resultat_exploitation: c.ebit, benefice_net: c.net, benefice_net_precedent: c.netPrev, capitaux_propres: c.equity, dette_nette: c.netDebt, ebitda: c.ebitda, tresorerie_disponible: c.fcf, dividendes_verses: c.divPaid, dividende_par_action: c.dps, benefice_par_action: c.eps, unite: `millions de ${c.currency || "\u20AC"} (par action : ${c.currency || "\u20AC"})` }, out.reperes = reperes(c, B.MED), det && Array.isArray(det.years) && det.fin) {
+    let med2 = B.MED[c.sector] || {};
+    if (out.secteur_compare = { nom: B.sectors[c.sector] || c.sector, entreprises: med2.n || 0, note: (med2.n || 0) >= 3 ? "M\xE9dianes calcul\xE9es sur les entreprises du m\xEAme secteur suivies par ENKLAIR, toutes r\xE9gions." : "Trop peu d'entreprises du secteur pour une m\xE9diane fiable." }, out.chiffres_cles = { chiffre_affaires: c.ca, chiffre_affaires_precedent: c.caPrev, resultat_exploitation: c.ebit, benefice_net: c.net, benefice_net_precedent: c.netPrev, capitaux_propres: c.equity, dette_nette: c.netDebt, ebitda: c.ebitda, tresorerie_disponible: c.fcf, dividendes_verses: c.divPaid, dividende_par_action: c.dps, benefice_par_action: c.eps, unite: `millions de ${c.currency || "\u20AC"} (par action : ${c.currency || "\u20AC"})` }, out.reperes = reperes(c, B.MED), det && Array.isArray(det.years) && det.fin) {
       let a = (k) => det.fin[k] || [];
       out.historique = det.years.map((y, i) => ({ annee: y, chiffre_affaires: a("ca")[i] ?? null, resultat_exploitation: a("ebit")[i] ?? null, benefice_net: a("net")[i] ?? null, marge_exploitation: a("ca")[i] > 0 && a("ebit")[i] != null ? r4(a("ebit")[i] / a("ca")[i]) : null, dette_nette: a("netDebt")[i] ?? null, dividende_par_action: a("dps")[i] ?? null }));
       for (let s of (det.sources || []).slice(0, 3)) s && s.report && sources.push({ titre: `${/sec\.gov/.test(s.report) ? "Rapport annuel d\xE9pos\xE9 \xE0 la SEC (EDGAR)" : "Rapport financier annuel ESEF (filings.xbrl.org)"}${s.periodEnd ? ", exercice clos " + s.periodEnd : ""}`, url: s.report });
@@ -3005,7 +3369,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "0afa14c38e296412", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "d92dd91e35000244", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

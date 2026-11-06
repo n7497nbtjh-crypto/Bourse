@@ -81,17 +81,32 @@ Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilité, sa dette, son périmètre, sa direction), sans parler du cours de Bourse.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
 - Pour un article de presse dont seul le titre est connu : dis ce que le titre rapporte, en précisant que c'est un article de presse et non une annonce officielle de l'entreprise, sans rien ajouter qui n'y figure pas ; explique les termes techniques ; dans « change », dis ce que cela pourrait changer si l'information se confirme.
+- Tu peux aussi recevoir « fiche_de_l_entreprise » (ses comptes, la médiane de son secteur, ses rivales, ses prochaines dates, ce qui fait varier ses résultats) et « sa_semaine_en_bourse » (variation du cours, rivales). Sers-t'en pour situer l'information : son ordre de grandeur face à ses ventes annuelles, le point de la fiche qu'elle touche (une dette déjà haute face au secteur, une marge plus basse que ses rivales…), ou le fait que tout le secteur a bougé. C'est ce qui rend l'explication utile : ne te contente jamais de reformuler le titre.
+- Interdit : « pourrait influencer », « je ne suis pas sûr », « il est difficile d'évaluer », toute phrase qui ne dit rien.
 - Pour un dividende, ne compare jamais un versement trimestriel à un dividende annuel : compare seulement des versements de même nature, et seulement si les deux montants sont fournis.
 - Français, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
 - Aucun conseil d'achat ou de vente, aucune prédiction.
 ${REGLES}`;
-export const SEMAINE_ENTREPRISE = `Tu résumes, pour une personne qui débute en Bourse, ce qu'une entreprise cotée a annoncé ou ce que la presse a rapporté sur elle au cours de la semaine. Tu reçois des faits en JSON : nom, secteur, variation du cours sur la semaine, liste des annonces officielles (type, titre, date, chiffres extraits, phrases calculées) et des titres de presse (média, date).
+export const SEMAINE_ENTREPRISE = `Tu expliques, pour une personne qui débute en Bourse, pourquoi le cours d'une entreprise a bougé cette semaine et ce qu'il faut en retenir. Tu reçois des faits en JSON calculés par le site : variation du cours sur la semaine, son indice, ses rivales et leur variation sur la même semaine, un verdict calculé (suit son secteur, mieux ou moins bien que ses rivales, résultats publiés), les nouvelles des rivales, les annonces officielles de l'entreprise (chiffres extraits), ses opérations courantes, des titres de presse, ses derniers comptes annuels et les sujets du monde de la semaine qui la touchent.
 Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
-- "clair" : 2 à 4 phrases courtes (80 mots au plus) qui disent ce qui s'est passé cette semaine pour l'entreprise, dans l'ordre d'importance : les annonces officielles d'abord, la presse ensuite. Cite les chiffres fournis avec leur période. Pour un titre de presse, dis que c'est la presse qui le rapporte.
-- "change" : 1 ou 2 phrases (40 mots au plus) sur ce que cela peut changer pour l'entreprise (ventes, rentabilité, dette, périmètre, direction), au conditionnel, sans parler du cours de Bourse ni de ce qu'il faudrait faire.
-- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. S'il n'y a que des titres de presse, reste prudent : seul le titre est connu, pas l'article.
-- Français, phrases courtes, pas de tiret cadratin, pas de liste, pas de nom de média en majuscules.
-- Aucun conseil d'achat ou de vente, aucune prédiction.
+- "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Commence par le plus utile : des résultats publiés et leurs chiffres ; sinon la comparaison avec les rivales (cite l'écart, par exemple « ses rivales ont reculé de 7 % à 11 % ») ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annoncé et que le mouvement est celui de son secteur ou du marché.
+- "change" : 1 ou 2 phrases (40 mots au plus) sur ce qu'il faut retenir : une nouvelle importante d'une rivale, un chiffre des comptes, ou une annonce. Si rien n'est notable, mets une chaîne vide.
+- Ne commente jamais les opérations courantes (rachats de ses propres actions, nombre d'actions et droits de vote) : au plus, « seulement des opérations courantes ».
+- Interdit : « pourrait influencer », « je ne suis pas sûr », « il est difficile d'évaluer », « il est trop tôt », toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas, aucune cause inventée. Un titre de presse est une information rapportée par la presse, pas un fait vérifié.
+- Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction.
+${REGLES}`;
+export const SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour débutants, les 3 sujets d'actualité générale (économie, banques centrales, commerce, énergie, politique, conflits, grands mouvements de marché) qui ont le plus compté pour la Bourse cette semaine. Tu reçois en JSON une liste numérotée de titres de médias reconnus (date, média, titre), la variation des grands indices et la variation médiane de chaque secteur sur la semaine.
+Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [numéros], "secteurs": [clés], "pays": [codes]}]}.
+- 3 sujets au plus, du plus important au moins important. Un sujet doit être porté par au moins deux titres différents, sauf une décision officielle (banque centrale, gouvernement).
+- "titre" : 10 mots au plus, factuel, en français (exemple : « La Banque d'Angleterre remonte son taux à 4 % »).
+- "theme" : 2 à 4 mots, par exemple « États-Unis · Politique », « Royaume-Uni · Taux d'intérêt », « Énergie ».
+- "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est passé, uniquement d'après les titres fournis, avec leur date. Si un titre relie le sujet aux marchés, dis-le en précisant que c'est la presse qui fait ce lien.
+- "titres" : les numéros des 1 à 3 titres qui portent le sujet.
+- "secteurs" : les clés des secteurs directement concernés, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le marché.
+- "pays" : codes ISO à deux lettres des pays concernés (US, GB, FR, DE, CN, JP…), au plus 2.
+- Ignore les faits divers, la consommation courante, le sport, les sujets d'une seule entreprise.
+- N'invente rien : aucun chiffre ni fait absent des titres. Pas de prédiction, pas de conseil. Pas de tiret cadratin.
 ${REGLES}`;
 export const BILAN = `Tu écris, en français, le commentaire du bilan de la semaine d'un particulier qui débute en Bourse. Tu reçois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il possède, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation médiane de secteurs entiers.
 Règles strictes :
@@ -108,4 +123,4 @@ const SOURCES = `Sources : termine par une ligne qui commence exactement par « 
 const S = t => t + "\n" + SOURCES;
 
 /** Toutes les consignes, par nom de tâche (clés de prompts.json). */
-export const CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE };
+export const CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE };

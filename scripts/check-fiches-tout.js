@@ -37,6 +37,7 @@ const fs = require("fs");
       if (/gagne -|gagne −/.test(t)) pb.push("« gagne » suivi d'un chiffre négatif");
       for (const m of t.matchAll(/en (hausse|baisse) de [\d  ,]+ % en (\d{4})/g)) if (+m[2] !== +s.year && /Bénéfice net|Chiffre d'affaires|Ses ventes|Son bénéfice/.test(t.slice(Math.max(0, m.index - 80), m.index))) pb.push(`variation datée ${m[2]} alors que les derniers comptes sont de ${s.year}`);
       if (s.net != null && s.net < 0 && /garde tout son bénéfice/.test(t)) pb.push("« garde tout son bénéfice » alors qu'elle est en perte");
+      if (s.net != null && s.net < 0 && /(de|avec) (ce|son) bénéfice \?/.test(t)) pb.push("« Que fait-elle de ce bénéfice ? » alors qu'elle est en perte"); // 6/11 soir
       for (const m of t.matchAll(/(?<![\d,.])([−-]?\d{1,3}(?:\u202f\d{3})*(?:,\d+)?)\s?%/g)) { const v = Math.abs(+m[1].replace(/\u202f/g, "").replace(",", ".").replace("−", "-")); if (v > 5000) pb.push("pourcentage hors de toute mesure : " + m[0]); }
       const vd = t.match(/Le verdict (\d{4})/); if (vd && +vd[1] !== +s.year) pb.push(`verdict ${vd[1]} pour des comptes ${s.year}`);
       for (const m of t.matchAll(/(baisse|recul\w*) de (\d[\d\u202f]*(?:,\d+)?) %/g)) if (+m[2].replace(/\u202f/g, "").replace(",", ".") > 100) pb.push("baisse de plus de 100 % (une perte se dit autrement) : " + m[0]);

@@ -43,7 +43,7 @@ export function summarize(p) {
   const countries = {};
   for (const l of stocks) countries[l.country || "?"] = (countries[l.country || "?"] || 0) + l.pct;
   const byCountry = Object.entries(countries).sort((a, b) => b[1] - a[1]).map(([k, v]) => [k, Math.round(v * 10) / 10]);
-  return { asOf: p.asOf, lines: stocks.length, top, countries: byCountry.slice(0, 12), isins: stocks.filter(l => l.isin).map(l => [l.isin, Math.round(l.pct * 1000) / 1000]) };
+  return { asOf: p.asOf, lines: stocks.length, top, countries: byCountry.slice(0, 12), isins: stocks.filter(l => l.isin).map(l => [l.isin, Math.round(l.pct * 1000) / 1000, String(l.name || "").slice(0, 60)]) }; // 6/11 soir : le nom en 3e place (entreprises américaines sans ISIN dans le site : reconnues par leur nom)
 }
 export async function seriesOf(fetchFn) {
   const j = await get(fetchFn, "https://www.sec.gov/files/company_tickers_mf.json", "json");
