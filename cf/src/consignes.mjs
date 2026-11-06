@@ -80,6 +80,7 @@ Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annoncé, avec les chiffres fournis et leur période, et expliquent chaque terme technique.
 - "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilité, sa dette, son périmètre, sa direction), sans parler du cours de Bourse.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
+- Pour un article de presse dont seul le titre est connu : dis ce que le titre rapporte, en précisant que c'est un article de presse et non une annonce officielle de l'entreprise, sans rien ajouter qui n'y figure pas ; explique les termes techniques ; dans « change », dis ce que cela pourrait changer si l'information se confirme.
 - Pour un dividende, ne compare jamais un versement trimestriel à un dividende annuel : compare seulement des versements de même nature, et seulement si les deux montants sont fournis.
 - Français, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
 - Aucun conseil d'achat ou de vente, aucune prédiction.

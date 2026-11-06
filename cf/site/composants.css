@@ -1830,3 +1830,9 @@ html #app .s7 button.s9-ia.s9-m{background:#fff;color:#111;padding:3px 11px;font
 html #app .s7 button.s9-ia{min-height:0!important;height:auto!important;line-height:1.3!important;width:auto!important}
 a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 @media(max-width:760px){html #app .s7 button.s9-ia{padding:5px 12px!important;font-size:12.5px!important}.s9-li .s9-src{align-self:center}}
+/* 6/11 : presse avec « Expliquer » (m/actu4.js) */
+.ek .ax4-prw{border:2px solid var(--ek-ink);border-radius:16px;overflow:hidden}
+.ek .ax4-prw .ax4-pr{border:0;border-radius:0}
+.ek .ax4-prx{padding:0 14px 12px 60px}
+.ek .ax4-prx .ax-cl{margin-top:4px}
+@media (max-width:600px){.ek .ax4-prx{padding-left:14px}}

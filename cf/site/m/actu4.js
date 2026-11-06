@@ -54,9 +54,23 @@ function axFil(items) {
   for (const it of items) { const k = dayKey(it.d); if (k !== last) { out += `<h3 class="ax4-day">${esc(dayLabel(it.d))}</h3>`; last = k; } out += axCarte(it); }
   return out;
 }
+let AX4P = []; // titres de presse affichés, pour le bouton « Expliquer » (6/11, Romain)
+document.addEventListener("click", async e => {
+  const b = e.target.closest("[data-axp]"); if (!b) return; e.preventDefault();
+  const a = AX4P[+b.dataset.axp], box = b.nextElementSibling; if (!a || !box) return;
+  if (!miaConnectee()) { b.remove(); box.outerHTML = miaInvite(); return; }
+  b.disabled = true; b.textContent = "Rédaction en cours…";
+  const co = RBY[a.id], f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
+  let j; try { j = await iaRediger("annonce", { entreprise: co ? co.name : a.id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: "Article de presse (seul le titre est connu, pas le texte de l'article)", titre_officiel: a.t, media: String(a.s || "").replace(/^www\./, ""), date: String(a.d || "").slice(0, 10), chiffres: [], lecture_calculee: [], dernier_exercice: f, lien: a.u }, { max: 420 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
+  b.remove();
+  const x = j.txt ? jsonFrom(j.txt) : null;
+  box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA d'ENKLAIR (${esc(j.modele || "")}) à partir du seul titre de l'article. L'article fait foi.</small></div>`
+    : `<p class="muted">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
+});
 function axPresse(P, n) {
   if (!P.length) return `<p class="ek-note">Aucun titre de presse repéré pour ce choix.</p>`;
-  return `<div class="ax4-ps">${P.slice(0, n).map(a => { const co = RBY[a.id]; return `<a class="ax4-pr" href="${esc(a.u)}" target="_blank" rel="noopener nofollow">${co ? mcLogo(co) : ""}<span><small>${co ? `<b>${esc(co.name)}</b> · ` : ""}${esc(String(a.s || "").replace(/^www\./, ""))}${a.d ? " · " + esc(hhmm(a.d) || dShort(a.d)) : ""}</small><b>${esc(a.t)}</b></span><i>↗</i></a>`; }).join("")}</div>`;
+  AX4P = P.slice(0, n);
+  return `<div class="ax4-ps">${AX4P.map((a, i) => { const co = RBY[a.id]; return `<div class="ax4-prw"><a class="ax4-pr" href="${esc(a.u)}" target="_blank" rel="noopener nofollow">${co ? mcLogo(co) : ""}<span><small>${co ? `<b>${esc(co.name)}</b> · ` : ""}${esc(String(a.s || "").replace(/^www\./, ""))}${a.d ? " · " + esc(hhmm(a.d) || dShort(a.d)) : ""}</small><b>${esc(a.t)}</b></span><i>↗</i></a><div class="ax4-prx"><button type="button" class="ax4-ia" data-axp="${i}">✦ Expliquer</button><div></div></div></div>`; }).join("")}</div>`;
 }
 function axAvenir() {
   const ev = (AG.events || []).filter(e => e.date >= TODAY && RBY[e.id]).sort((a, b) => a.date.localeCompare(b.date) || ((valo(RBY[b.id]) || {}).capE || 0) - ((valo(RBY[a.id]) || {}).capE || 0)).slice(0, 6);
