@@ -1,0 +1,115 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+html,body{width:1080px;height:1920px;overflow:hidden;background:#FFE14D}
+#s{position:relative;width:1080px;height:1920px;overflow:hidden;background:#fff;font-family:Inter,sans-serif;color:#111}
+#view{position:absolute;left:0;top:96px;width:1080px;height:1824px;overflow:hidden;background:#fff}
+#view img.pg{position:absolute;left:0;top:0;transform-origin:0 0;display:none}
+#bar{position:absolute;left:0;top:0;width:1080px;height:96px;background:#fff;border-bottom:4px solid #111;display:flex;align-items:center;padding:0 30px;gap:14px;z-index:20}
+#bar i{width:22px;height:22px;border-radius:50%;border:3px solid #111;display:block}
+#url{margin-left:26px;flex:1;height:54px;border-radius:16px;background:#F4F4F1;display:flex;align-items:center;padding:0 24px;font:600 28px Inter;color:#333}
+#dim{position:absolute;inset:96px 0 0 0;background:#FFE14D;opacity:0;z-index:5}
+#ring{position:absolute;border:7px solid #111;border-radius:22px;z-index:4;display:none}
+#grid{position:absolute;left:0;top:96px;width:1080px;height:1824px;z-index:3;display:none;background:#FFE14D}
+#grid img{position:absolute;border:5px solid #111;border-radius:22px;box-shadow:10px 10px 0 #111;background:#fff;object-fit:cover;object-position:top}
+.cap{position:absolute;left:0;right:0;text-align:center;z-index:12}
+.cap span{display:inline-block;background:#111;color:#fff;font:800 66px/1.1 "Bricolage Grotesque";letter-spacing:-1.5px;padding:16px 40px 24px;border-radius:28px;box-shadow:0 10px 30px rgba(0,0,0,.18)}
+.rep{position:absolute;z-index:7;border:5px solid #111;border-radius:26px;overflow:hidden;box-shadow:12px 12px 0 #111;background:#fff;width:470px}
+.rep img{display:block;width:100%}
+.card{position:absolute;background:#fff;border:6px solid #111;border-radius:40px;box-shadow:14px 14px 0 #111;overflow:hidden;z-index:7}
+#cur{position:absolute;width:44px;height:64px;z-index:9;display:none}
+.logo{display:inline-block;background:#fff;border:9px solid #111;border-radius:34px;padding:10px 50px 24px;font:800 176px/1 "Bricolage Grotesque";letter-spacing:-5px;box-shadow:16px 16px 0 #111}
+.cursor{display:inline-block;width:5px;height:50px;background:#111;vertical-align:-8px;margin-left:3px}
+</style></head><body><div id="s">
+<div id="view"><img class="pg" id="pg"></div>
+<div id="grid"></div>
+<div id="ring"></div>
+<div id="dim"></div>
+<div id="bar"><i></i><i></i><i></i><div id="url">enklair.com</div></div>
+<svg id="cur" viewBox="0 0 30 44"><path d="M3 3 L3 34 L11 27 L16.5 40 L22 37.5 L16.5 25 L27 25 Z" fill="#111" stroke="#fff" stroke-width="3" stroke-linejoin="round"/></svg>
+
+<div class="cap" id="q" style="top:840px"><span style="font-size:104px;padding:22px 52px 34px;border-radius:36px;box-shadow:14px 14px 0 rgba(0,0,0,.25)">Elles tiennent<br>la route ?</span></div>
+<div class="rep" id="r0"><img src="c_rep0.png"></div><div class="rep" id="r1"><img src="c_rep1.png"></div><div class="rep" id="r2"><img src="c_rep2.png"></div><div class="rep" id="r3"><img src="c_rep3.png"></div><div class="rep" id="r4"><img src="c_rep4.png"></div>
+<div class="card" id="mg" style="left:40px;top:640px;width:1000px;padding:26px 30px 30px"><img src="c_marge2.png" style="width:100%;display:block;border-radius:16px"></div>
+<div class="card" id="rt" style="left:40px;top:760px;width:1000px;padding:24px 26px;background:#FFE14D"><img src="c_ret.png" style="width:100%;display:block"></div>
+<div class="card" id="ct" style="left:60px;top:560px;width:960px;padding:20px"><img src="c_ctr.png" style="width:100%;display:block"></div>
+<div class="card" id="ia" style="left:60px;top:700px;width:960px;padding:46px 52px"><div style="font:800 50px 'Bricolage Grotesque';margin-bottom:18px">✦ En clair</div><p id="iat" style="font:500 48px/1.38 Inter;min-height:330px"></p><div style="font:500 28px Inter;color:#888;margin-top:16px">Rédigé par l'IA d'ENKLAIR à partir de l'annonce. La source fait foi.</div></div>
+<div id="caps"></div>
+<div id="end" style="position:absolute;left:0;right:0;top:0;bottom:0;background:#FFE14D;z-index:30;opacity:0;text-align:center;padding-top:660px">
+  <span class="logo" id="lg">ENKLAIR</span>
+  <div id="e1" style="margin-top:70px;font:800 92px 'Bricolage Grotesque';letter-spacing:-2.5px">La Bourse, enfin claire.</div>
+  <div style="margin-top:60px"><span id="e2" style="display:inline-block;background:#111;color:#FFE14D;border-radius:999px;padding:26px 70px;font:800 74px 'Bricolage Grotesque'">enklair.com</span></div>
+</div>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const cl = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x)), k = (t, t0, d) => cl((t - t0) / d);
+const eo = x => 1 - Math.pow(1 - x, 4), ei = x => x * x * x, eio = x => x < .5 ? 4 * x ** 3 : 1 - Math.pow(-2 * x + 2, 3) / 2, eio5 = x => x < .5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2;
+const back = (x, c1 = 1.4) => { const c3 = c1 + 1; return x >= 1 ? 1 : 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const lerp = (a, b, p) => a + (b - a) * p;
+const B = .5, VH = 1824, NAT = 2; // pixels natifs par pixel CSS
+const HOOK = ["apple", "lvmh", "asml", "nvidia", "totalenergies", "hermes"];
+// cadrages : [x gauche, y haut, largeur] en pixels CSS de la page
+const C = { hTop: [30, 20, 1220], hVer: [30, 300, 1220], cTop: [30, 30, 1220], cVer: [30, 590, 1220], rHero: [30, 440, 1220], rUne: [30, 2520, 1220], rCtr: [30, 4250, 1220], rCtx: [30, 4930, 1220] };
+// plans : [début, image, adresse, cadrage de départ, [heure, cadrage suivant, durée]…]
+const PLANS = [
+  [4.0, "pg_hermes.jpg", "enklair.com/entreprise/hermes", "hTop", [[5.0, "hVer", .9]]],
+  [8.5, "pg_cmp.jpg", "enklair.com/comparer?ids=hermes,lvmh,kering", "cTop", [[9.3, "cVer", .8]]],
+  [12.5, "pg_rap.jpg", "enklair.com/rapport-exemple", "rHero", [[15.5, "rUne", 1.0], [19.0, "rCtr", 1.0], [20.6, "rCtx", .9]]]];
+const CAPS = [[4.2, 7.9, "Le verdict d'Hermès"], [6.2, 7.9, null], [8.7, 12.2, "Comparez-les"], [12.7, 13.9, "Gagné ou perdu, en euros"], [14.2, 15.4, "Ce qu'il faut retenir"], [15.7, 16.9, "Les annonces qui comptent"], [17.0, 18.9, "Expliquées en clair"], [19.2, 20.5, "Ce qui a fait bouger vos lignes"], [20.8, 22.0, "Le contexte de leurs secteurs"]];
+document.getElementById("caps").innerHTML = CAPS.map((c, i) => c[2] ? `<div class="cap" id="cp${i}" style="top:1640px"><span>${c[2]}</span></div>` : "").join("");
+const IA = "Apple a vendu pour 114,5 milliards de dollars entre juillet et septembre, 12 % de plus qu'un an plus tôt. Chaque action a rapporté 2,10 $ de bénéfice.";
+const CART = [{ x: 80, y: 430 }, { x: 306.8, y: 430 }, { x: 533.6, y: 430 }, { x: 760.4, y: 430 }, { x: 987.2, y: 430 }], CW = 212.8; // repères sur la page (cadrage hVer)
+const TGT = [[50, 330], [560, 330], [50, 800], [560, 800], [305, 1270]];
+const place = (src, fr) => { const [x, y, w] = fr, s = 1080 / w, el = $("pg"); if (el.getAttribute("src") !== src) el.setAttribute("src", src); el.style.display = "block"; el.style.width = (1280 * s) + "px"; el.style.transform = `translate(${-x * s}px,${-y * s}px)`; return s; };
+const mix = (a, b, p) => a.map((v, i) => lerp(v, b[i], p));
+window.render = t => {
+  let url = "enklair.com", s = 1, fr = null, src = null;
+  // ——— accroche : une fiche par temps, en plein cadre, avec une poussée
+  if (t < 3.0) { const i = Math.min(5, Math.floor(t / B)), p = 1 - eo(k(t, i * B, B)); src = `g_${HOOK[i]}.jpg`; url = "enklair.com/entreprise/" + HOOK[i]; const w = 600 - 50 * p; fr = [40 + (600 - w) / 2, 10, w]; }
+  for (const [a, im, u, f0, mv] of PLANS) if (t >= a) { src = im; url = u; fr = C[f0]; for (const [tm, f1, d] of mv) if (t >= tm) fr = mix(fr, C[f1], eio5(k(t, tm, d))); }
+  // ——— grille des six fiches (3,0 - 4,0 s)
+  const g = $("grid");
+  if (t >= 3.0 && t < 4.2) { g.style.display = "block";
+    if (!g.children.length) g.innerHTML = HOOK.map(h => `<img src="g_${h}.jpg">`).join("");
+    const gi = eio5(k(t, 3.0, .55)), go = eio5(k(t, 3.7, .5));
+    [...g.children].forEach((im, j) => { const col = j % 2, row = Math.floor(j / 2), tw = 470, th = 400, tx = 50 + col * 510, ty = 170 + row * 450;
+      let x = tx, y = ty, w = tw, h = th, o = 1;
+      if (j === 5) { x = lerp(0, tx, gi); y = lerp(-96, ty, gi); w = lerp(1080, tw, gi); h = lerp(1824, th, gi); x = lerp(x, 0, go); y = lerp(y, -96, go); w = lerp(w, 1080, go); h = lerp(h, 1824, go); }
+      else { o = gi * (1 - go); y = ty + (1 - gi) * 120; }
+      Object.assign(im.style, { left: x + "px", top: y + "px", width: w + "px", height: h + "px", opacity: o, zIndex: j === 5 ? 2 : 1, borderWidth: (5 * (1 - (j === 5 ? go : 0))) + "px" }); });
+  } else g.style.display = "none";
+  if (src) s = place(src, fr); if (!fr) fr = C.hTop;
+  $("url").textContent = url;
+  // ——— question
+  { const i = back(k(t, 3.25, .45)), o = ei(k(t, 3.85, .3)); $("q").style.opacity = k(t, 3.25, .1) * (1 - o); $("q").style.transform = `scale(${.8 + .2 * i})`; }
+  // ——— entourage du verdict et du titre de Comparer
+  const rings = [[5.9, 7.9, 80, 364.8, 1120, 48, "hVer"], [10.1, 12.2, 44, 660, 1192, 96, "cVer"]];
+  $("ring").style.display = "none";
+  for (const [a, z, x, y, w, h] of rings) if (t >= a && t < z) { const p = eo(k(t, a, .4)); Object.assign($("ring").style, { display: "block", left: ((x - fr[0]) * s - 14) + "px", top: (96 + (y - fr[1]) * s - 12) + "px", width: (w * s + 28) + "px", height: (h * s + 24) + "px", clipPath: `inset(-12px ${(1 - p) * 100}% -12px -12px)`, opacity: 1 - k(t, z - .3, .3) }); }
+  // ——— la page s'atténue sous ce qui sort
+  const dk = [[6.4, 8.2], [10.6, 12.3], [14.1, 15.45], [17.0, 18.95], [19.5, 20.55]].reduce((m, [a, z]) => Math.max(m, eio(k(t, a, .35)) * (1 - eio(k(t, z - .3, .3)))), 0); $("dim").style.opacity = .78 * dk;
+  // ——— les 5 repères sortent de la page, un tous les quarts de temps
+  for (let i = 0; i < 5; i++) { const el = $("r" + i), a = 6.5 + i * .25, p = back(k(t, a, .55), 1.15), o = ei(k(t, 8.0 + i * .03, .35));
+    const sx = (CART[i].x - fr[0]) * s, sy = 96 + (CART[i].y - fr[1]) * s, sw = CW * s, [tx, ty] = TGT[i];
+    Object.assign(el.style, { left: lerp(sx, tx, p) + "px", top: (lerp(sy, ty, p) - o * 90) + "px", width: lerp(sw, 470, p) + "px", opacity: (t >= a && t < 8.6) ? 1 - o : 0 }); }
+  // ——— graphique de marge
+  { const i = back(k(t, 10.7, .5)), o = ei(k(t, 12.0, .35)); $("mg").style.opacity = k(t, 10.7, .12) * (1 - o); $("mg").style.transform = `translateY(${(1 - i) * 140 - o * 80}px) scale(${.94 + .06 * i})`; }
+  for (const [id, a, z] of [["rt", 14.2, 15.3], ["ct", 19.6, 20.45]]) { const i = back(k(t, a, .5)), o = ei(k(t, z - .1, .3)); $(id).style.opacity = k(t, a, .12) * (1 - o); $(id).style.transform = `translateY(${(1 - i) * 140 - o * 80}px) scale(${.94 + .06 * i})`; }
+  // ——— l'IA explique
+  { const i = back(k(t, 17.2, .5)), o = ei(k(t, 18.7, .3)); $("ia").style.opacity = k(t, 17.2, .12) * (1 - o); $("ia").style.transform = `translateY(${(1 - i) * 140 - o * 80}px) scale(${.94 + .06 * i})`;
+    const n = Math.floor(IA.length * cl((t - 17.45) / 1.15)); $("iat").innerHTML = IA.slice(0, n) + (n < IA.length && t > 17.3 ? '<span class="cursor"></span>' : ""); }
+  // curseur qui clique sur « Expliquer »
+  { const on = t >= 16.2 && t < 17.3; $("cur").style.display = on ? "block" : "none"; if (on) { const bx = (175 - fr[0]) * s, by = 96 + (2931 - fr[1]) * s, q = eio(k(t, 16.2, .55)); const x = lerp(bx + 260, bx, q), y = lerp(by + 300, by, q) - Math.sin(q * Math.PI) * 40, pr = k(t, 16.85, .2);
+    $("cur").style.left = x + "px"; $("cur").style.top = y + "px"; $("cur").style.transform = `scale(${1.6 - .25 * Math.sin(pr * Math.PI)})`; } }
+  // ——— légendes
+  CAPS.forEach(([a, z, txt], j) => { if (!txt) return; const el = $("cp" + j), i = eo(k(t, a, .35)), o = ei(k(t, z - .25, .25)); el.style.opacity = (t >= a && t < z) ? i * (1 - o) : 0; el.style.transform = `translateY(${(1 - i) * 50 - o * 30}px)`; });
+  // ——— fin
+  { const f = eio(k(t, 22.2, .5)); $("end").style.opacity = f; const l = back(k(t, 22.5, .6)); $("lg").style.opacity = k(t, 22.5, .12); $("lg").style.transform = `scale(${.6 + .4 * l}) rotate(${-2 * l}deg)`;
+    const e1 = eo(k(t, 23.0, .6)); $("e1").style.opacity = e1; $("e1").style.transform = `translateY(${(1 - e1) * 60}px)`;
+    const e2 = back(k(t, 23.5, .5)); $("e2").style.opacity = k(t, 23.5, .1); $("e2").style.transform = `scale(${.6 + .4 * e2})`; }
+};
+window.pret = async () => { const L = [...HOOK.map(h => `g_${h}.jpg`), "pg_hermes.jpg", "pg_cmp.jpg", "pg_rap.jpg"]; await Promise.all(L.map(n => { const i = new Image(); i.src = n; return i.decode().catch(() => 0); })); await document.fonts.ready; await Promise.all([...document.images].map(i => i.decode().catch(() => 0))); };
+window.render(0);
+</script></body></html>

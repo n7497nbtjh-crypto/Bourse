@@ -23,3 +23,9 @@ Pourquoi : les meilleures vidéos de lancement (SaaS, fintech, 2026) commencent 
 6. **Fin (20-24 s)** : la fenêtre s'efface, le logo arrive, « La Bourse, enfin claire. », enklair.com.
 
 Son : à ajouter dans l'application, un instrumental autour de 120 BPM.
+
+## Version 2 (6/11, après retour de Romain)
+- Plus d'écran coupé en deux : la page du site occupe tout l'écran, sous une barre de navigateur, toujours en pleine largeur (aucun élément coupé sur le côté). La caméra ne fait que défiler, comme on le ferait soi-même.
+- Ce qui compte sort au centre, en grand, pendant que la page s'atténue en jaune.
+- Accroche : six fiches, une par temps, puis elles se rangent en grille autour de la question « Elles tiennent la route ? » ; la fiche Hermès grandit et ouvre la suite.
+- Le rapport montre ce que le site apporte : gain ou perte en euros, ce qu'il faut retenir, les annonces qui comptent, l'explication en clair par l'IA, ce qui a fait bouger les lignes, le contexte des secteurs.
