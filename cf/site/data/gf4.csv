@@ -36,7 +36,6 @@ e:amundi-s-and-p-500-screened-acc,EPA:S500,AMS:S500,EBR:S500
 e:ishares-msci-japan-dist,ETR:IQQJ,FRA:IQQJ,
 e:spdr-s-and-p-500-leaders-acc,ETR:SPPY,FRA:SPPY,
 e:spdr-russell-2000,ETR:R2US,FRA:R2US,
-e:spdr-russell-2000-u-s-small-cap-eur-hdg-acc,EPA:R2EH,AMS:R2EH,EBR:R2EH
 e:ishares-global-aggregate-bond-esg-sri-dist,EPA:AGGE,AMS:AGGE,EBR:AGGE
 e:amundi-core-msci-europe-acc,EPA:CEU2,AMS:CEU2,EBR:CEU2
 e:ishares-corp-bond-1-5yr-acc,ETR:IE1A,FRA:IE1A,
