@@ -23,12 +23,13 @@ const r1 = v => v == null || !isFinite(v) ? null : Math.round(v * 100) / 100;
 // 5/11 (2e version) : une année douteuse au début de la série ne fait plus écarter la société : on garde les années propres
 // les plus récentes (au moins deux). Banques et assurances : seulement bénéfice, bénéfice par action et dividendes
 // (leurs « ventes » et fonds propres chez Eulerpool sont inutilisables), et bénéfice sans saut de plus de x4 d'une année à l'autre.
-export function convertirEP(c, { profil, inc, bs, cf, dv }, auj = new Date().toISOString().slice(0, 10)) {
+export function convertirEP(c, { profil, inc, bs, cf, dv }, auj = new Date().toISOString().slice(0, 10), o = {}) {
   if (!profil || !profil.currency) return { raison: "profil ou devise absents" };
   const fin_k = c.sector === "finance";
   const place = String(c.tv || "").split(":")[0], dc = DEVISE_PLACE[place];
   if (!dc) return { raison: `place de cotation non prévue (${place || "aucune"})` };
-  if (dc !== profil.currency) return { raison: `comptes en ${profil.currency}, cotation en ${dc} : écartée (montants souvent faux)` };
+  // 6/11 : devise des comptes différente de la cotation acceptée seulement si des comptes officiels dans la même devise permettent de vérifier (o.verifiable)
+  if (dc !== profil.currency && !o.verifiable) return { raison: `comptes en ${profil.currency}, cotation en ${dc} : écartée (montants souvent faux)` };
   const reels = new Set((bs || []).map(x => String(x.period).slice(0, 10)).filter(p => p <= auj)); // le bilan ne contient que des exercices clos
   let L = (inc || []).filter(x => { const p = String(x.period).slice(0, 10); return p <= auj && reels.has(p) && (fin_k ? x.netIncome != null : x.revenue != null); })
     .sort((a, b) => String(a.period).localeCompare(String(b.period)));
@@ -122,13 +123,15 @@ async function main() {
       const profil = await get(`/equity/profile/${c.isin}`); appels++;
       if (!profil) { cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: false, pourquoi: "inconnue chez Eulerpool" }; console.log("✗", c.id, "inconnue"); continue; }
       const [inc, bs, cf, dv] = await Promise.all(["incomestatement", "balancesheet", "cashflowstatement", "dividends"].map(p => get(`/equity/${p}/${c.isin}`))); appels += 4;
-      const r = convertirEP(c, { profil, inc, bs, cf, dv });
+      const off0 = lireF(c), dc0 = DEVISE_PLACE[String(c.tv || "").split(":")[0]], autre = dc0 && profil.currency !== dc0;
+      const verifiable = autre && off0 && !off0.sourceEP && off0.currency === profil.currency && (off0.years || []).length >= 2; // ArcelorMittal, Prosus (USD), Richemont (EUR)
+      const r = convertirEP(c, { profil, inc, bs, cf, dv: autre ? null : dv }, undefined, { verifiable });
       cache[c.id] = { d: new Date().toISOString().slice(0, 10), ok: !!r.comptes, ...(r.comptes ? { an: r.comptes.years.at(-1) } : { pourquoi: r.raison }) };
       if (!r.comptes) { // une fiche Eulerpool qui ne passe plus les contrôles est retirée (pas de chiffre douteux laissé en ligne)
         if (estEP(c)) { unlinkSync(new URL(`societes/${c.id}.json`, OUT)); const k = parId.get(c.id); if (k != null) idx.companies[k] = { id: c.id, name: c.name, ticker: c.ticker, tv: c.tv, isin: c.isin, region: c.region, domain: c.domain, desc: c.desc, sector: c.sector, missing: true }; console.log("retirée", c.id); }
         console.log("✗", c.id, r.raison); continue; }
       const off = lireF(c);
-      if (off && !off.sourceEP && !off.sourcePdf) { // fiche officielle en retard : Eulerpool doit aller plus loin ET redonner les chiffres officiels
+      if (off && !off.sourceEP && (!off.sourcePdf || autre)) { // devise différente : toujours vérifiée sur les années communes // fiche officielle en retard : Eulerpool doit aller plus loin ET redonner les chiffres officiels
         const k = c.sector === "finance" ? "net" : "ca", E = r.comptes, com = off.years.filter(y => E.years.includes(y));
         const ecart = com.map(y => { const o = off.fin[k] && off.fin[k][off.years.indexOf(y)], e = E.fin[k] && E.fin[k][E.years.indexOf(y)]; return o && e != null ? Math.abs(e / o - 1) : null; }).filter(v => v != null);
         const pourquoi = E.years.at(-1) <= off.years.at(-1) ? "pas plus récent que les comptes officiels" : off.currency !== E.currency ? `devise différente (${off.currency} / ${E.currency})`
