@@ -45,10 +45,19 @@ async function main() {
   const idx = existsSync(new URL("societes.json", OUT)) ? JSON.parse(readFileSync(new URL("societes.json", OUT))).companies : [];
   const FX = { EUR: 1, USD: 0.92, GBP: 1.17, SEK: 0.087, DKK: 0.134, NOK: 0.085, CHF: 1.05, JPY: 0.0061 };
   const size = Object.fromEntries(idx.map(c => [c.id, (c.ca || 0) * (FX[c.currency] || 0)]));
-  const list = U.filter(c => !manual.has(c.id)).sort((a, b) => (size[b.id] || 0) - (size[a.id] || 0)).slice(0, +(process.env.AGENDA_MAX || 150));
+  // 7/11 nuit (Romain : « remplir les dates confirmées ») : les dates trouvées s'accumulent d'un passage à l'autre (avant, chaque passage
+  // effaçait le précédent), et on cherche d'abord les entreprises dont la date habituelle approche (45 jours), puis celles vues il y a le plus longtemps.
+  const prec = existsSync(new URL("agenda-auto.json", OUT)) ? JSON.parse(readFileSync(new URL("agenda-auto.json", OUT))) : {};
+  const garder = (prec.events || []).filter(e => e.date >= today), vus = prec.vus || {};
+  const deja = new Set(garder.map(e => e.id));
+  const hab = {}; try { for (const e of JSON.parse(readFileSync(new URL("agenda-habituel.json", OUT))).events || []) if (e.date >= today && (Date.parse(e.date) - Date.parse(today)) / 864e5 <= 45) hab[e.id] = e.date; } catch (e) { }
+  const list = U.filter(c => !manual.has(c.id) && !deja.has(c.id))
+    .sort((a, b) => ((hab[a.id] ? 0 : 1) - (hab[b.id] ? 0 : 1)) || String(vus[a.id] || "").localeCompare(String(vus[b.id] || "")) || (size[b.id] || 0) - (size[a.id] || 0))
+    .slice(0, +(process.env.AGENDA_MAX || 190));
   const events = [], stop = Date.now() + 18 * 60e3;
   for (const c of list) {
     if (Date.now() > stop) break;
+    vus[c.id] = today;
     try {
       const u = new URL("https://api.gdeltproject.org/api/v2/doc/doc");
       u.searchParams.set("query", queryFor(c.name)); u.searchParams.set("mode", "artlist"); u.searchParams.set("format", "json");
@@ -61,7 +70,8 @@ async function main() {
     } catch (e) { console.log("presse", c.name, e.message); }
     await sleep(5500); // GDELT : une requête toutes les 5 secondes
   }
-  writeFileSync(new URL("agenda-auto.json", OUT), JSON.stringify({ updated: today, source: "Presse (GDELT)", events }));
-  console.log(events.length, "dates trouvées dans l'actualité");
+  const tous = [...garder.filter(e => !events.some(x => x.id === e.id)), ...events];
+  writeFileSync(new URL("agenda-auto.json", OUT), JSON.stringify({ updated: today, source: "Presse (GDELT)", events: tous, vus }));
+  console.log(events.length, "dates trouvées dans l'actualité ce passage,", tous.length, "en tout");
 }
 if (import.meta.url === `file://${process.argv[1]}`) main().catch(e => { console.error(e); process.exit(1); });
