@@ -196,9 +196,13 @@ async function synIA(b, el, auto) { // le commentaire de l'IA du site, une fois 
 let SYN_ANN = []; // annonces affichées, pour le bouton « Expliquer » (31/10, Romain : l'IA explique l'annonce, à la place de « Lire la publication »)
 document.addEventListener("click", async e => {
   const btn = e.target.closest("[data-syn-exp]"); if (!btn) return;
-  const a = SYN_ANN[+btn.dataset.synExp], box = (btn.closest("li, .s7-pt, .s8-it, .s9-li, .s9-une") && btn.closest("li, .s7-pt, .s8-it, .s9-li, .s9-une").querySelector(".syn4-cl")) || btn.closest("article").querySelector(".syn4-cl"); if (!a || !box) return;
+  const a = SYN_ANN[+btn.dataset.synExp], box = (btn.closest("li, .s7-pt, .s8-it, .s9-li, .s9-une, .r8-li, .r8-pr") && btn.closest("li, .s7-pt, .s8-it, .s9-li, .s9-une, .r8-li, .r8-pr").querySelector(".syn4-cl")) || btn.closest("article").querySelector(".syn4-cl"); // 8/11 : chaque ligne du rapport a sa propre case (avant : toujours la première) if (!a || !box) return;
   btn.disabled = true; btn.textContent = "Rédaction en cours…";
   const co = a.k && a.k.startsWith("c:") ? RBY[a.k.slice(2)] : null, f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
+  // 8/11 (Romain : « l'explication n'a rien à voir avec l'article ») : un article de presse est expliqué à partir de son titre seul
+  if (a.origine === "presse") { let j; try { j = await iaRediger("presse", { entreprise: a.nom || (co && co.name), media: String(a.site || "").replace(/^www\./, ""), date: a.date, titre: a.titre }, { max: 260 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
+    btn.remove(); const x = j.txt && typeof jsonFrom === "function" ? jsonFrom(j.txt) : null;
+    box.innerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela touche</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA d'ENKLAIR à partir du titre de l'article. Lisez l'article pour le détail.</small></div>` : `<p class="muted">${esc(j.error || "Explication indisponible pour le moment.")}</p>`; return; }
   let j; try { j = await iaRediger("annonce", { ...(typeof iaFicheContexte === "function" && (co && co.id) ? await iaFicheContexte(co && co.id) : {}), entreprise: a.nom || (co && co.name), secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: SYN_CAT[a.categorie] || a.type, titre_officiel: a.titre, date: a.date, chiffres: a.chiffres || [], lecture_calculee: a.lecture || [], dernier_exercice: f, lien: a.source }, { max: 420 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
   btn.remove();
   const x = j.txt && typeof jsonFrom === "function" ? jsonFrom(j.txt) : null;

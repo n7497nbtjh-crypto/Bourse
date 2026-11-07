@@ -191,11 +191,7 @@ function synPageV8(b, m) {
   const X8 = b.etf8 || null;
   if (X8 && (X8.par_etf || []).length) { num++;
     const mv = r => `<div class="r8x-mv"><a href="${synLien(r.k)}">${esc(r.nom)} <small>${F1.format(r.poids)} %</small></a><span class="${r8Cls(r.ve)}">${synPct(r.ve)}</span><b class="${r8Cls(r.eur)}">${r8Eur(r.eur)}</b></div>`;
-    h += `<section id="r8-etf"><span class="r8-tag">${num} · Dans vos ETF</span><h2>Ce qui a fait bouger ${X8.par_etf.length > 1 ? "chacun de vos ETF" : "votre ETF"}.</h2>
-      <p class="r8-sub">Les entreprises qui ont le plus fait monter et baisser chaque fonds, en euros pour vous : leur poids dans le fonds × votre montant × leur variation de la semaine.</p><div class="r8x-etfs">${X8.par_etf.map(e => `<div class="r8-card r8x-etf"><h3><a href="${synLien(e.k)}">${esc(r8Maj(r8Court({ nom: e.nom, k: e.k })).replace(/^Votre ETF /, ""))}</a></h3>
-      <p class="r8x-mt">${F0.format(e.eur)} € · ${F0.format(e.n)} lignes${e.v != null ? ` · <span class="${r8Cls(e.v)}">${synPct(e.v)}</span> sur la semaine` : ""}</p>
-      ${e.baisse.length ? `<p class="r8x-h">Ont fait baisser</p>${e.baisse.map(mv).join("")}` : ""}${e.hausse.length ? `<p class="r8x-h">Ont fait monter</p>${e.hausse.map(mv).join("")}` : ""}
-      <p class="r8x-cov">Entreprises suivies par le site : ${F0.format(e.couvert_pct)} % du fonds.${e.via_indice ? ` L'émetteur ne publie pas ses positions : contenu de l'indice ${esc(e.via_indice)} (mêmes entreprises).` : ""}</p></div>`).join("")}</div>
+    h += `<section id="r8-etf"><span class="r8-tag">${num} · Dans vos ETF</span><h2>Ce qu'il y a dans vos ETF.</h2>
       ${(X8.memes_indices || []).map(m => `<p class="r8x-note">À retenir : ${m.etfs.map(e => esc(r8Court({ nom: e.nom, k: e.k }))).join(" et ")} suivent le même indice (${esc(m.index)}). Ils contiennent les mêmes entreprises : réunis, c'est comme un seul ETF de ${F0.format(m.eur)} €.</p>`).join("")}
       ${(X8.sans_compo || []).length ? `<p class="r8-faible"><b>Contenu non publié</b> : ${X8.sans_compo.map(x => `${esc(r8Court({ nom: x.nom, k: x.k }))} (${F0.format(x.eur)}&nbsp;€)`).join(", ")}. Le site ne sait pas encore ce qu'il contient.</p>` : ""}`;
     const E = X8.entreprises || [], mx = Math.max(1, ...E.map(x => x.eur)), MT = X8.metiers || [], mxm = Math.max(1, ...MT.map(x => Math.abs(x.eur)));
@@ -222,14 +218,24 @@ function synPageV8(b, m) {
   /* ---------- 3. Vos entreprises ---------- */
   num++;
   const LV = ((b.etf8 && b.etf8.vues) || []).filter(v => R[v.k]).map(v => ({ ...v, vue: true })); // 7/11 soir : les plus grosses entreprises des ETF
-  const coLignes = [...L.filter(l => l.k.startsWith("c:") && (R[l.k] || deK(l.k).length || IA[l.k])), ...LV];
+  const coLignes = [...L.filter(l => l.k.startsWith("c:") || l.k.startsWith("e:")), ...LV]; // 8/11 (Romain) : un encadré par entreprise et par ETF suivis ou en portefeuille
   const aRes = l => deK(l.k).some(a => a.origine !== "presse" && a.categorie === "resultats"); // 7/11 nuit : celles qui ont publié leurs résultats d'abord
-  const ordre = l => (aRes(l) ? 0 : 1) * 2e6 + (l.portefeuille ? 0 : 1) * 1e6 - (deK(l.k).length * 100 + Math.abs(l.variation_semaine_pct || 0));
+  const ordre = l => (aRes(l) ? 0 : 1) * 4e6 + (l.vue ? 2e6 : 0) + (l.portefeuille ? 0 : 1) * 1e6 - (deK(l.k).length * 100 + Math.abs((l.portefeuille && l.portefeuille.var_eur) || l.variation_semaine_pct || 0));
   coLignes.sort((a, c) => ordre(a) - ordre(c));
-  const avecNouv = coLignes.filter(l => l.vue || deK(l.k).some(a => !["rachat", "capital"].includes(a.categorie)) || IA[l.k] || Math.abs(l.variation_semaine_pct || 0) >= 3 || (R[l.k] && R[l.k].verdict && R[l.k].verdict !== "suit"));
-  const calmes = L.filter(l => !avecNouv.includes(l) && l.k.startsWith("c:"));
-  h += `<section id="r8-co"><span class="r8-tag v">${num} · Vos entreprises</span><h2>Pourquoi chacune a bougé.</h2><p class="r8-sub">Chacune est comparée à ses rivales sur la même semaine : on voit tout de suite si le mouvement vient d'elle ou de tout son métier.</p>`;
+  const avecNouv = coLignes;
+  const calmes = [];
+  h += `<section id="r8-co"><span class="r8-tag v">${num} · Vos valeurs</span><h2>Pourquoi chacune a bougé.</h2><p class="r8-sub">Chacune est comparée à ses rivales sur la même semaine : on voit tout de suite si le mouvement vient d'elle ou de tout son métier.</p>`;
+  const ETFX = Object.fromEntries(((b.etf8 && b.etf8.par_etf) || []).map(e => [e.k, e]));
+  const mvE = r => `<div class="r8x-mv"><a href="${synLien(r.k)}">${esc(r.nom)} <small>${F1.format(r.poids)} %</small></a><span class="${r8Cls(r.ve)}">${synPct(r.ve)}</span><b class="${r8Cls(r.eur)}">${r8Eur(r.eur)}</b></div>`;
   for (const l of avecNouv) {
+    if (l.k.startsWith("e:")) { // 8/11 : un ETF, ce qui l'a fait bouger (ses plus grosses entreprises, en euros pour vous)
+      const e = ETFX[l.k], v = l.variation_semaine_pct, ind = l.indice;
+      const meta = l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris";
+      const phrase = v == null ? "Le site n'a pas son cours de la semaine." : e && (e.baisse.length || e.hausse.length) ? `${e.n ? `Il contient ${F0.format(e.n)} entreprises. ` : ""}Celles qui ont le plus pesé, en euros pour vous :` : ind && ind.pct != null ? `Il a fait ${synPct(v)}, son indice ${esc(ind.nom)} ${synPct(ind.pct)}.` : `Il a fait ${synPct(v)} sur la semaine.`;
+      h += `<article class="r8-card r8-co"><div class="r8-coh">${synLogo(l.k, 44)}<div class="nm"><h3><a href="${synLien(l.k)}">${esc(r8Maj(r8Court(l)))}</a></h3><small>${esc(meta)}</small></div><div class="pf"><b class="${r8Cls(v)}">${v == null ? "–" : synPct(v)}</b><small>${ind && ind.pct != null ? `${esc(ind.nom)} ${synPct(ind.pct)}` : "sur la semaine"}</small></div></div>
+        <div class="r8-cob seul"><div class="r8-lec"><p class="r8-lab"><i>✦</i> Pourquoi il a bougé</p><p class="r8-ouv">${phrase}</p>${e ? `${e.baisse.length ? `<p class="r8x-h">Ont fait baisser</p>${e.baisse.map(mvE).join("")}` : ""}${e.hausse.length ? `<p class="r8x-h">Ont fait monter</p>${e.hausse.map(mvE).join("")}` : ""}<p class="r8x-cov">Entreprises suivies par le site : ${F0.format(e.couvert_pct)} % du fonds.${e.via_indice ? ` Contenu de l'indice ${esc(e.via_indice)} (l'émetteur ne publie pas ses positions).` : ""}</p>` : ""}</div></div>
+        <div class="r8-cof"><a href="${synLien(l.k)}">Voir la fiche de l'ETF</a></div></article>`;
+      continue; }
     const A = deK(l.k), R0 = R[l.k], ia = IA[l.k], [vt, vc] = (R0 && R8_VERD[R0.verdict]) || [null, ""], v = l.variation_semaine_pct;
     const meta = [l.vue ? `${F0.format(l.via_eur)} € à travers vos ETF` : l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
     // L'IA n'est montrée que pour une annonce officielle (elle explique l'annonce) ; le « pourquoi » est toujours calculé
@@ -238,7 +244,10 @@ function synPageV8(b, m) {
       + (R0 ? r8Jours(l, R0, A) : "") + r8Faits(l, R0, A)
       + (ia && ia.clair && annOff ? `<div class="r8-iac"><p class="r8-lab">Son annonce en clair</p><p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR à partir de l'annonce. La source fait foi.</p></div>` : "");
     const res = A.find(a => a.origine !== "presse" && (a.chiffres || []).length), npr = A.filter(a => a.origine === "presse").length, ncour = A.filter(a => ["rachat", "capital"].includes(a.categorie) && a.origine !== "presse").length;
-    const preuve = [npr ? `${npr} article${npr > 1 ? "s" : ""} de presse` : "", ncour ? "Opérations courantes : " + ncour : ""].filter(Boolean);
+    const preuve = [ncour ? "Opérations courantes : " + ncour : ""].filter(Boolean);
+    // 8/11 (Romain : « mettre en avant les articles qui concernent les entreprises ») : jusqu'à 3 articles visibles, chacun avec « Expliquer »
+    const PR = A.filter(a => a.origine === "presse").slice(0, 3);
+    const presse = PR.length ? `<div class="r8-presse"><p class="r8-lab">Dans la presse cette semaine</p>${PR.map(a => `<div class="r8-pr"><p><time>${esc(r8Jr(a.date))}</time> ${r8Titr(a)}</p><span class="r8-ac">${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(String(a.site || "presse").replace(/^www\./, ""))} ↗</a>` : ""}<button type="button" class="r8-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button></span><div class="syn4-cl"></div></div>`).join("")}</div>` : "";
     const bars = R0 ? [...R0.liste.map(x => ({ ...x, moi: false })), { k: l.k, nom: l.nom, v, moi: true }].filter(x => x.v != null).sort((a, c) => c.v - a.v).map(x => r8Bar(x.nom, x.v, x.moi, x.moi ? null : x.k)).join("") : "";
     const nv = R0 && R0.nouvelles.length ? `<div class="r8-nouv"><p class="r8-lab">Leurs nouvelles</p>${R0.nouvelles.map(a => { const lg = typeof synLangue === "function" ? synLangue(a.titre) : "fr";
       return `<div><b>${esc(a.nom)}</b> · ${a.origine === "presse" ? `<span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(r8Titre(a.titre))}</span> (presse)` : esc((SYN6_T[a.categorie] || ["Annonce"])[0]) + (a.chiffres && a.chiffres.length ? " : " + a.chiffres.slice(0, 2).map(([x, y]) => `${x.toLowerCase()} ${y}`).join(", ") : a.titre ? " : " + a.titre : "")}${a.source ? ` <a href="${esc(a.source)}" target="_blank" rel="noopener">↗</a>` : ""}</div>`; }).join("")}</div>` : "";
@@ -246,7 +255,7 @@ function synPageV8(b, m) {
       return `<div class="r8-li"><time>${esc(r8Jr(a.date))}</time><span class="r8-ty">${esc(lab)}</span><div><p><span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(a.titre || a.type || lab)}</span></p>${(a.chiffres || []).length ? `<p class="r8-mini">${esc(a.chiffres.slice(0, 3).map(([x, y]) => `${x} : ${y}`).join(" · "))}</p>` : ""}<div class="syn4-cl"></div></div><span class="r8-ac">${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(pr ? String(a.site || "presse").replace(/^www\./, "") : a.source_nom || "Source")} ↗</a>` : ""}<button type="button" class="r8-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button></span></div>`; }).join("")}</details>` : "";
     const dt = (b.a_venir || []).find(e => e.k === l.k);
     h += `<article class="r8-card r8-co"><div class="r8-coh">${synLogo(l.k, 44)}<div class="nm"><h3><a href="${synLien(l.k)}">${esc(l.nom)}</a>${vt ? ` <span class="r8-verd ${vc}">${vt}</span>` : ""}</h3><small>${esc(meta)}</small></div><div class="pf"><b class="${r8Cls(v)}">${synPct(v)}</b><small>${l.indice ? `${esc(l.indice.nom)} ${synPct(l.indice.pct)}` : "sur la semaine"}</small></div></div>
-      <div class="r8-cob${bars ? "" : " seul"}"><div class="r8-lec"><p class="r8-lab"><i title="Calculé par ENKLAIR : cours de clôture, annonces officielles, comptes des rivales">✦</i> Pourquoi elle a bougé</p>${lecture}${preuve.length ? `<div class="r8-preuve">${preuve.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}</div>
+      <div class="r8-cob${bars ? "" : " seul"}"><div class="r8-lec"><p class="r8-lab"><i title="Calculé par ENKLAIR : cours de clôture, annonces officielles, comptes des rivales">✦</i> Pourquoi elle a bougé</p>${lecture}${presse}${preuve.length ? `<div class="r8-preuve">${preuve.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}</div>
       ${bars ? `<div class="r8-riv"><p class="r8-lab">Ses rivales sur la semaine</p>${bars}${nv}</div>` : ""}</div>
       <div class="r8-cof">${liste}<a href="${synLien(l.k)}">Voir la fiche</a>${dt ? `<span class="r8-dt">${esc(r8Jr(dt.date))} · ${esc(String(dt.label || "").replace(/^./, c => c.toLowerCase()))}</span>` : ""}</div></article>`;
   }

@@ -57,7 +57,7 @@ window.__A = {
         let els = [...document.querySelectorAll(L.q)]; els = els.filter(e => e.getClientRects().length && e.offsetHeight > 0); if (L.txt) els = els.filter(e => new RegExp(L.txt).test(e.textContent));
         const el = els[L.n || 0]; if (!el) return null;
         document.querySelectorAll("body *").forEach(e => { const s = getComputedStyle(e).position; if ((s === "fixed" || s === "sticky") && !e.contains(el)) e.style.visibility = "hidden"; });
-        for (let a = el.parentElement; a; a = a.parentElement) { a.style.setProperty("background", "#fff", "important"); a.style.setProperty("box-shadow", "none", "important"); a.style.setProperty("border-color", "transparent", "important"); }
+        for (let a = el.parentElement; a; a = a.parentElement) { a.style.setProperty("background", L.fond || "#fff", "important"); a.style.setProperty("box-shadow", "none", "important"); a.style.setProperty("border-color", "transparent", "important"); }
         (L.cacher || []).forEach(s => el.querySelectorAll(s).forEach(x => x.style.display = "none"));
         el.scrollIntoView({ block: "start" }); window.scrollBy(0, -40); return el;
       }, L);

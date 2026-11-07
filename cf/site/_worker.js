@@ -887,6 +887,13 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - Interdit : \xAB pourrait \xBB, \xAB a pu influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, \xAB il est trop t\xF4t \xBB, \xAB en ligne avec \xBB, toute supposition et toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Un titre de presse est une information rapport\xE9e par la presse, pas un fait v\xE9rifi\xE9.
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
+${REGLES}`, PRESSE = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse de quoi parle un article de presse sur une entreprise cot\xE9e. Tu re\xE7ois en JSON : l'entreprise, le m\xE9dia, la date et le titre de l'article (parfois dans une autre langue).
+R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
+- "clair" : 1 ou 2 phrases (45 mots au plus) qui disent en fran\xE7ais simple ce que rapporte l'article, d'apr\xE8s son titre seulement, en commen\xE7ant par \xAB Selon <m\xE9dia>, \xBB. Explique un mot difficile s'il y en a un.
+- "change" : 1 phrase (30 mots au plus) qui dit ce que le sujet touche dans l'activit\xE9 de l'entreprise (un produit, une usine, un contrat, un dirigeant\u2026), ou une cha\xEEne vide si le titre ne le dit pas.
+- Parle uniquement de ce que dit le titre : aucun chiffre, aucun r\xE9sultat, aucune variation de cours qui n'y figure pas. Ne parle pas des comptes de l'entreprise.
+- Un titre de presse est une information rapport\xE9e, pas un fait v\xE9rifi\xE9 : garde \xAB selon \xBB. Les verbes au conditionnel du titre (\xAB verrait \xBB, \xAB pr\xE9parerait \xBB) restent au conditionnel.
+- Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
 ${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les 3 sujets d'actualit\xE9 g\xE9n\xE9rale (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
 R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [num\xE9ros], "secteurs": [cl\xE9s], "pays": [codes]}]}.
 - 3 sujets au plus, du plus important au moins important. Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
@@ -908,7 +915,7 @@ R\xE8gles strictes :
 - Aucun conseil d'achat ou de vente, aucune recommandation, aucune pr\xE9diction sur les cours.
 - Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
 ${REGLES}`, SOURCES = "Sources : termine par une ligne qui commence exactement par \xAB Sources : \xBB et reprend, en peu de mots, les sources de la liste \xAB sources \xBB des faits que tu as utilis\xE9es (par exemple \xAB comptes annuels 2024 publi\xE9s par l'entreprise (ESEF), cours du 28 octobre 2026 \xBB). N'ajoute aucune source qui n'est pas dans cette liste.", S = (t) => t + `
-` + SOURCES, CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE };
+` + SOURCES, CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE, presse: PRESSE };
 
 // cf/src/iasite.mjs
 var MODELES = [
@@ -3589,7 +3596,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "82383c5cd8fc2a95", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "9f6dfa224f731838", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

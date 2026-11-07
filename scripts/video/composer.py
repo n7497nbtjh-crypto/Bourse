@@ -67,7 +67,7 @@ def plan(sc):
     return blocs, pos
 
 def cadre_plan(sc, lay, t):
-    blocs, pos = lay; dur = sc["dur"]; c = Image.new("RGB", (W, H), "white")
+    blocs, pos = lay; dur = sc["dur"]; fond = tuple(sc.get("fond", (255, 255, 255))); c = Image.new("RGB", (W, H), fond)
     sortie = 1 - eio((t - dur + 0.22) / 0.22)
     for (b, m), (x, y, s) in zip(blocs, pos):
         tb = t - b.get("at", 0)
@@ -83,32 +83,47 @@ def cadre_plan(sc, lay, t):
         dy = 26 * (1 - e3(tb / 0.4))
         zone = c.crop((round(x), round(y + dy), round(x) + im.width, round(y + dy) + im.height))
         c.paste(Image.blend(zone, im, a), (round(x), round(y + dy)))
+    if sc.get("fond"):  # fond coloré : il passe au blanc à la sortie (enchaînement comme l'original)
+        c = Image.blend(c, Image.new("RGB", (W, H), "white"), 1 - sortie)
     return c
 
-def main():
-    corps = "/tmp/v5/corps.mp4"
-    ff = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
-                           "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", corps + ".tmp.mp4"], stdin=subprocess.PIPE)
-    seuls = os.environ.get("IMAGES")  # pour vérifier quelques images sans tout rendre : IMAGES="3.2,8.5"
-    T0 = 0; vus = []
-    for sc in M["scenes"]:
+def nom(texte, t, dur):
+    """Un nom d'entreprise noir sur blanc, coupe franche (début de la vidéo d'origine)."""
+    c = Image.new("RGB", (W, H), "white"); S = 209; f = ImageFont.truetype(FONT, S)
+    while f.getlength(texte) > 980: S -= 6; f = ImageFont.truetype(FONT, S)
+    ImageDraw.Draw(c).text(((W - f.getlength(texte)) / 2, 1039 - 0.94 * S), texte, font=f, fill=NOIR)
+    return c
+
+def rendre(scenes, sortie, seuls=None, T0=0):
+    ff = None if seuls else subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
+                           "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", sortie + ".tmp.mp4"], stdin=subprocess.PIPE)
+    for sc in scenes:
         lay = plan(sc) if sc["type"] == "plan" else None
-        nf = round(sc["dur"] * FPS)
-        for k in range(nf):
+        for k in range(round(sc["dur"] * FPS)):
             t = k / FPS; tg = T0 + t
-            if seuls and not any(abs(tg - float(v)) < 0.5 / FPS for v in seuls.split(",")): continue
-            fr = titre(sc["lignes"], t, sc["dur"], sc.get("premium")) if sc["type"] == "titre" else cadre_plan(sc, lay, t)
-            if seuls: fr.save(f"/tmp/v5/img_{tg:.2f}.jpg", quality=88); vus.append(tg); continue
+            if seuls is not None and not any(abs(tg - float(v)) < 0.5 / FPS for v in seuls): continue
+            fr = titre(sc["lignes"], t, sc["dur"], sc.get("premium")) if sc["type"] == "titre" else nom(sc["texte"], t, sc["dur"]) if sc["type"] == "nom" else cadre_plan(sc, lay, t)
+            if seuls is not None: fr.save(f"/tmp/v5/img_{tg:.2f}.jpg", quality=88); continue
             ff.stdin.write(fr.tobytes())
         T0 += sc["dur"]
-    ff.stdin.close(); ff.wait()
-    if seuls: print("images", vus); return
-    os.rename(corps + ".tmp.mp4", corps)
-    a, b = M["debut"], M["fin_depuis"]
-    fc = (f"[0:v]trim=0:{a},setpts=PTS-STARTPTS,fps=60[a];[1:v]setpts=PTS-STARTPTS[b];"
-          f"[0:v]trim=start={b},setpts=PTS-STARTPTS,fps=60[c];[a][b][c]concat=n=3:v=1:a=0,format=yuv420p[v]")
-    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", ORIG, "-i", corps, "-filter_complex", fc, "-map", "[v]", "-c:v", "libx264", "-preset", "veryfast",
-                    "-crf", "18", "-r", "60", "-movflags", "+faststart", OUT + ".tmp.mp4"], check=True)
-    os.rename(OUT + ".tmp.mp4", OUT); print("ok", OUT, "corps", T0, "s")
+    if ff: ff.stdin.close(); ff.wait(); os.rename(sortie + ".tmp.mp4", sortie)
+    return T0
+
+def main():
+    # Montage par parties : {"orig": [début, fin]} (extrait de la vidéo d'origine) ou {"scenes": [...]} (rendu ici)
+    parties = M.get("parties") or [{"orig": [0, M["debut"]]}, {"scenes": M["scenes"]}, {"orig": [M["fin_depuis"], None]}]
+    seuls = os.environ.get("IMAGES"); seuls = seuls.split(",") if seuls else None
+    entrees, fc, T = [], "", 0
+    for i, p in enumerate(parties):
+        if "orig" in p:
+            a, b = p["orig"]; fc += f"[0:v]trim=start={a}" + (f":end={b}" if b else "") + f",setpts=PTS-STARTPTS,fps=60[p{i}];"
+            T += (b or 24.9) - a
+        else:
+            fichier = f"/tmp/v5/partie{i}.mp4"; T = rendre(p["scenes"], fichier, seuls, T)
+            entrees.append(fichier); fc += f"[{len(entrees)}:v]setpts=PTS-STARTPTS[p{i}];"
+    if seuls: print("images", seuls); return
+    fc += "".join(f"[p{i}]" for i in range(len(parties))) + f"concat=n={len(parties)}:v=1:a=0,format=yuv420p[v]"
+    cmd = ["ffmpeg", "-v", "error", "-y", "-i", ORIG] + sum([["-i", e] for e in entrees], []) + ["-filter_complex", fc, "-map", "[v]", "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-r", "60", "-movflags", "+faststart", OUT + ".tmp.mp4"]
+    subprocess.run(cmd, check=True); os.rename(OUT + ".tmp.mp4", OUT); print("ok", OUT)
 
 main()

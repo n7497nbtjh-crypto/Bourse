@@ -6,19 +6,23 @@
    "blocs": [
     {
      "q": ".ek-idt",
-     "pad": 6
+     "pad": 6,
+     "fond": "#FFE14D"
     },
     {
-     "q": ".ek-vrd h2"
+     "q": ".ek-vrd h2",
+     "fond": "#FFE14D"
     },
     {
      "q": ".ek-chain",
      "anim": "jauges",
      "duree": 1.6,
-     "pad": 8
+     "pad": 8,
+     "fond": "#FFE14D"
     },
     {
-     "q": ".ek-medl > span"
+     "q": ".ek-medl > span",
+     "fond": "#FFE14D"
     }
    ]
   },
@@ -73,12 +77,26 @@
     },
     {
      "q": ".r8-sujet",
+     "n": 0,
+     "cacher": [
+      ".bd"
+     ],
+     "pad": 8
+    },
+    {
+     "q": ".r8-sujet",
      "n": 1,
-     "anim": "rangs",
-     "opts": {
-      "pas": 0.12
-     },
-     "duree": 1.3,
+     "cacher": [
+      ".bd"
+     ],
+     "pad": 8
+    },
+    {
+     "q": ".r8-sujet",
+     "n": 2,
+     "cacher": [
+      ".bd"
+     ],
      "pad": 8
     }
    ]
@@ -100,7 +118,8 @@
      "cacher": [
       ".r8-preuve",
       ".r8-riv",
-      ".r8-cof"
+      ".r8-cof",
+      ".r8-presse"
      ]
     }
    ]
@@ -119,7 +138,8 @@
      "cacher": [
       ".r8-preuve",
       ".r8-riv",
-      ".r8-cof"
+      ".r8-cof",
+      ".r8-presse"
      ]
     }
    ]

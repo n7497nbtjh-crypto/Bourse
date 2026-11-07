@@ -2266,3 +2266,8 @@ html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;d
 .et8-det{margin-top:12px}.et8-det summary{cursor:pointer;font:700 15px Inter;padding:4px 0}.et8-det .et8-l{grid-template-columns:18px 1fr}
 .r8-jt{font:700 12px Inter!important;text-transform:uppercase;letter-spacing:.05em;color:#555;margin:6px 0 4px!important}
 .r8-jb .m{left:calc(50% - 9px)!important;width:18px!important}
+/* 8/11 : rapport, articles de presse visibles dans chaque encadré */
+.r8-presse{margin-top:10px;border-top:1px dashed #cfcfcf;padding-top:8px}
+.r8-pr{padding:7px 0;border-bottom:1px solid #eee}.r8-pr:last-child{border-bottom:0}
+.r8-pr p{margin:0 0 4px!important;font-size:14.5px}.r8-pr time{font:700 12px Inter;color:#777;margin-right:6px}
+.r8-pr .r8-ac{display:flex;gap:10px;align-items:center;font-size:13px}.r8-pr .syn4-cl:empty{display:none}
