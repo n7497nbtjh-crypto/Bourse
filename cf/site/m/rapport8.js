@@ -34,6 +34,30 @@ function r8Lecture(l, R, A) {
   return out.join(" ");
 }
 
+
+// 7/11 soir (Romain : « l'analyse n'apporte aucune plus-value » ; « mieux présenter l'écriture dans l'encadré ») : les faits que seul le site
+// calcule, rangés en lignes courtes (étiquette, chiffre, comparaison), et une phrase d'ouverture qui dit ce qui ressort.
+function r8Faits(l, R, A) {
+  const v = l.variation_semaine_pct, res = A.find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length), L = [];
+  const ton = (x, m) => x == null || m == null ? "" : x - m > 1 ? "up" : x - m < -1 ? "dn" : "";
+  if (res) L.push(["Résultats publiés", esc(res.chiffres.slice(0, 2).map(([a, b]) => `${a} ${b}`).join(" · ")), `le ${esc(r8Jr(res.date))}`, ""]);
+  const rc = R && R.reaction; if (rc) L.push(["La Bourse le jour même", `<b class="${r8Cls(rc.v)}">${synPct(rc.v)}</b>`, rc.med != null ? `ses rivales : ${synPct(rc.med)} le même jour` : "", ton(rc.v, rc.med)]);
+  const cr = R && R.croissance; if (cr) L.push([`Ventes, exercice ${cr.exercice}`, `<b class="${r8Cls(cr.v)}">${synPct(cr.v)}</b>`, `médiane de ses rivales : ${synPct(cr.med)}`, ton(cr.v, cr.med)]);
+  const vs = R ? R.liste.filter(x => x.v != null).map(x => x.v) : [];
+  if (v != null) L.push(["Sur la semaine", `<b class="${r8Cls(v)}">${synPct(v)}</b>`, vs.length >= 2 ? `ses rivales : ${Math.min(...vs) === Math.max(...vs) ? synPct(vs[0]) : `de ${synPct(Math.min(...vs))} à ${synPct(Math.max(...vs))}`}` : "", R && R.med != null ? ton(v, R.med) : ""]);
+  return L.length ? `<div class="r8-faits">${L.map(([a, b, c, t]) => `<div class="r8-fl${t ? " " + t : ""}"><span class="k">${a}</span><span class="v">${b}</span><span class="c">${c}</span></div>`).join("")}</div>` : "";
+}
+function r8Ouverture(l, R, A) {
+  const rc = R && R.reaction, cr = R && R.croissance, v = l.variation_semaine_pct, nom = l.nom;
+  if (rc && rc.med != null && Math.abs(rc.v - rc.med) >= 1) return `Le jour de ses résultats, la Bourse a ${rc.v - rc.med > 0 ? "mieux" : "moins bien"} accueilli ${nom} que ses rivales (${synPct(rc.v)} contre ${synPct(rc.med)}).`;
+  if (rc) return `Le jour de ses résultats, ${nom} a bougé comme ses rivales (${synPct(rc.v)}) : la Bourse n'a pas fait de différence.`;
+  if (cr && Math.abs(cr.v - cr.med) >= 3) return `Ses ventes ${cr.v - cr.med > 0 ? "grandissent plus vite" : "grandissent moins vite"} que celles de ses rivales (${synPct(cr.v)} contre ${synPct(cr.med)} sur l'exercice ${cr.exercice}).`;
+  if (R && R.med != null && v != null) {
+    if (R.verdict === "suit") return `${nom} a bougé comme ses rivales (${synPct(v)}, médiane ${synPct(R.med)}) : le mouvement vient de tout son métier, pas d'elle.`;
+    if (R.verdict === "mieux") return `${nom} fait mieux que ses rivales cette semaine : ${synPct(v)} contre ${synPct(R.med)} en médiane.`;
+    if (R.verdict === "moins") return `${nom} fait moins bien que ses rivales cette semaine : ${synPct(v)} contre ${synPct(R.med)} en médiane.`; }
+  return r8Lecture(l, R, A);
+}
 function synPageV8(b, m) {
   SYN_ANN = []; SYN8_B = b;
   const L = (b.lignes || []).slice(), pf = b.portefeuille, R = b.rivales || {}, IA = b.ia_entreprises || {}, M = (b.monde && b.monde.sujets) || [];
@@ -162,10 +186,10 @@ function synPageV8(b, m) {
   for (const l of avecNouv) {
     const A = deK(l.k), R0 = R[l.k], ia = IA[l.k], [vt, vc] = (R0 && R8_VERD[R0.verdict]) || [null, ""], v = l.variation_semaine_pct;
     const meta = [l.vue ? `${F0.format(l.via_eur)} € à travers vos ETF` : l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
-    const lecture = ia && ia.clair ? `<p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR à partir des chiffres du rapport.</p>`
-      : `<p>${esc(r8Lecture(l, R0, A))}</p><p class="r8-ia">Calculé par ENKLAIR à partir des cours, des annonces et des rivales.</p>`;
+    const lecture = (ia && ia.clair ? `<p class="r8-ouv">${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}` : `<p class="r8-ouv">${esc(r8Ouverture(l, R0, A))}</p>`)
+      + r8Faits(l, R0, A) + `<p class="r8-ia">${ia && ia.clair ? "Texte rédigé par l'IA d'ENKLAIR à partir des chiffres ci-dessous." : "Calculé par ENKLAIR : cours de clôture, annonces officielles, comptes des rivales."}</p>`;
     const res = A.find(a => a.origine !== "presse" && (a.chiffres || []).length), npr = A.filter(a => a.origine === "presse").length, ncour = A.filter(a => ["rachat", "capital"].includes(a.categorie) && a.origine !== "presse").length;
-    const preuve = [...(res ? res.chiffres.slice(0, 3).map(([a, x]) => `${a} : ${x}`) : []), npr ? `${npr} article${npr > 1 ? "s" : ""} de presse` : "", ncour ? "Opérations courantes : " + ncour : ""].filter(Boolean);
+    const preuve = [npr ? `${npr} article${npr > 1 ? "s" : ""} de presse` : "", ncour ? "Opérations courantes : " + ncour : ""].filter(Boolean);
     const bars = R0 ? [...R0.liste.map(x => ({ ...x, moi: false })), { k: l.k, nom: l.nom, v, moi: true }].filter(x => x.v != null).sort((a, c) => c.v - a.v).map(x => r8Bar(x.nom, x.v, x.moi, x.moi ? null : x.k)).join("") : "";
     const nv = R0 && R0.nouvelles.length ? `<div class="r8-nouv"><p class="r8-lab">Leurs nouvelles</p>${R0.nouvelles.map(a => { const lg = typeof synLangue === "function" ? synLangue(a.titre) : "fr";
       return `<div><b>${esc(a.nom)}</b> · ${a.origine === "presse" ? `<span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(r8Titre(a.titre))}</span> (presse)` : esc((SYN6_T[a.categorie] || ["Annonce"])[0]) + (a.chiffres && a.chiffres.length ? " : " + a.chiffres.slice(0, 2).map(([x, y]) => `${x.toLowerCase()} ${y}`).join(", ") : a.titre ? " : " + a.titre : "")}${a.source ? ` <a href="${esc(a.source)}" target="_blank" rel="noopener">↗</a>` : ""}</div>`; }).join("")}</div>` : "";

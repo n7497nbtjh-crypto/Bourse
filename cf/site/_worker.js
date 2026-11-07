@@ -1627,6 +1627,21 @@ async function rivalesDe(d, n, lundi3, auj) {
     parCo[l.k] = ids, out[l.k] = { liste, med: vs.length ? r1(med(vs)) : null, min: vs.length ? Math.min(...vs) : null, max: vs.length ? Math.max(...vs) : null, nouvelles: [] };
     let own = l.variation_semaine_pct, res = (n.annonces || []).some((a) => a.k === l.k && a.origine !== "presse" && a.categorie === "resultats");
     out[l.k].verdict = res ? "resultats" : own == null || vs.length < 2 ? null : own - out[l.k].med > 2 ? "mieux" : own - out[l.k].med < -2 ? "moins" : "suit";
+    let pub = (n.annonces || []).filter((a) => a.k === l.k && a.origine !== "presse" && a.categorie === "resultats").map((a) => a.date).sort()[0], D = d.cs && d.cs.dates || [], jour2 = (k, j) => {
+      let s = d.cs && d.cs.items && d.cs.items[k];
+      if (!s || !j) return null;
+      let i = D.findIndex((x) => x >= j);
+      return i > 0 && s[i] > 0 && s[i - 1] > 0 ? { v: r1((s[i] / s[i - 1] - 1) * 100), date: D[i] } : null;
+    }, rj = pub ? jour2(l.k, pub) : null;
+    if (rj) {
+      let rv = ids.map((id) => jour2("c:" + id, pub)).filter(Boolean).map((x) => x.v);
+      out[l.k].reaction = { date: rj.date, v: rj.v, med: rv.length >= 2 ? r1(med(rv)) : null, n: rv.length };
+    }
+    let CC = d.actuSem && d.actuSem.comptes, cr = (id) => {
+      let c = CC && CC[id];
+      return c && c[2] > 0 && c[3] > 0 ? (c[2] / c[3] - 1) * 100 : null;
+    }, moi = cr(l.k.slice(2)), autres = ids.map(cr).filter((v) => v != null);
+    moi != null && autres.length >= 2 && (out[l.k].croissance = { v: r1(moi), med: r1(med(autres)), n: autres.length, exercice: CC[l.k.slice(2)][0] });
   }
   let S2 = d.actuSem && d.actuSem.items || {}, dans = (x) => {
     let j = String(x || "").slice(0, 10);
@@ -1999,6 +2014,8 @@ async function faitsEntreprise(d, n, l, A) {
     verdict_calcule: R && { suit: "suit son secteur", mieux: "mieux que ses rivales", moins: "moins bien que ses rivales", resultats: "r\xE9sultats publi\xE9s" }[R.verdict] || null,
     rivales: R ? R.liste.filter((x) => x.v != null).map((x) => ({ nom: x.nom, variation_semaine_pct: r1(x.v) })) : [],
     mediane_des_rivales_pct: R && R.med != null ? R.med : null,
+    reaction_le_jour_des_resultats: R && R.reaction ? { date: R.reaction.date, variation_pct: R.reaction.v, mediane_des_rivales_meme_jour_pct: R.reaction.med } : null,
+    croissance_des_ventes_face_aux_rivales: R && R.croissance ? { exercice: R.croissance.exercice, elle_pct: R.croissance.v, mediane_des_rivales_pct: R.croissance.med } : null,
     nouvelles_des_rivales: R ? R.nouvelles.map((a) => ({ entreprise: a.nom, type: a.origine === "presse" ? "titre de presse" : a.categorie, titre: a.titre, chiffres: a.chiffres })) : [],
     annonces: A.filter((a) => a.origine !== "presse").map((a) => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
     operations_courantes: A.filter((a) => a.origine !== "presse" && (a.categorie === "rachat" || a.categorie === "capital")).length,
@@ -3554,7 +3571,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "776b5f9b00596c73", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "5a08efd8d9672137", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

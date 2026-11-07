@@ -31,7 +31,7 @@ t(x.vues && x.vues.length >= 1 && x.vues.every(v => E.rivales[v.k]), "plus gross
 t(Array.isArray(x.a_venir) && x.a_venir.every(e => e.eur >= 50 && e.date > "2026-11-07"), "dates à venir des entreprises des ETF");
 const somme = (x.par_etf || []).flatMap(e => [...e.baisse, ...e.hausse]); t(somme.every(r => isFinite(r.eur) && Math.abs(r.eur) < 1000), "contributions plausibles");
 console.log("ETF :", JSON.stringify({ profil: x.profil, top: (x.entreprises || []).slice(0, 4).map(e => [e.nom, e.eur, e.v, e.contrib]), dollar: x.devise, frais: x.frais && x.frais.an, venir: x.a_venir, vues: (x.vues || []).map(v => v.nom) }));
-const A = await calc({ l: [{ k: "c:totalenergies", q: 40, pru: 58 }, { k: "c:apple", q: 6, pru: 200 }, { k: "c:lvmh", q: 3, pru: 520 }] });
+const A = await calc({ l: [{ k: "c:veolia", q: 25, pru: 28 }, { k: "c:totalenergies", q: 40, pru: 58 }, { k: "c:apple", q: 6, pru: 200 }, { k: "c:lvmh", q: 3, pru: 520 }] });
 if (process.env.R8_JSON) (await import("node:fs")).writeFileSync(process.env.R8_JSON + ".a.json", JSON.stringify(A));
 t(A.etf8 && A.etf8.profil === "actions" && !A.etf8.par_etf.length && !A.etf8.vues, "profil actions : pas de bloc ETF");
 t(A.etf8.devise && A.etf8.devise.us_eur > 0, "actions américaines : effet du dollar");

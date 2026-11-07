@@ -36,6 +36,16 @@ export async function rivalesDe(d, n, lundi, auj) {
     out[l.k] = { liste, med: vs.length ? r1(med(vs)) : null, min: vs.length ? Math.min(...vs) : null, max: vs.length ? Math.max(...vs) : null, nouvelles: [] };
     const own = l.variation_semaine_pct, res = (n.annonces || []).some(a => a.k === l.k && a.origine !== "presse" && a.categorie === "resultats");
     out[l.k].verdict = res ? "resultats" : own == null || vs.length < 2 ? null : own - out[l.k].med > 2 ? "mieux" : own - out[l.k].med < -2 ? "moins" : "suit";
+    // 7/11 soir (Romain : « l'analyse n'apporte aucune plus-value, que des chiffres facilement vérifiables ») : ce que seul le site peut calculer.
+    // Réaction de la Bourse le jour de la publication (clôture du jour face à la veille), face à ses rivales le même jour,
+    // et croissance des ventes du dernier exercice face à celle de ses rivales (comptes officiels, data/actu_semaine.mjs).
+    const pub = (n.annonces || []).filter(a => a.k === l.k && a.origine !== "presse" && a.categorie === "resultats").map(a => a.date).sort()[0];
+    const D = (d.cs && d.cs.dates) || [], jour = (k, j) => { const s = d.cs && d.cs.items && d.cs.items[k]; if (!s || !j) return null; const i = D.findIndex(x => x >= j); return i > 0 && s[i] > 0 && s[i - 1] > 0 ? { v: r1((s[i] / s[i - 1] - 1) * 100), date: D[i] } : null; };
+    const rj = pub ? jour(l.k, pub) : null;
+    if (rj) { const rv = ids.map(id => jour("c:" + id, pub)).filter(Boolean).map(x => x.v); out[l.k].reaction = { date: rj.date, v: rj.v, med: rv.length >= 2 ? r1(med(rv)) : null, n: rv.length }; }
+    const CC = d.actuSem && d.actuSem.comptes, cr = id => { const c = CC && CC[id]; return c && c[2] > 0 && c[3] > 0 ? (c[2] / c[3] - 1) * 100 : null; };
+    const moi = cr(l.k.slice(2)), autres = ids.map(cr).filter(v => v != null);
+    if (moi != null && autres.length >= 2) out[l.k].croissance = { v: r1(moi), med: r1(med(autres)), n: autres.length, exercice: CC[l.k.slice(2)][0] };
   }
   // Nouvelles des rivales : un seul fichier pour toutes les entreprises (data/actu_semaine.mjs, construit avec le site).
   // Avant : un fichier par rivale, et Cloudflare limite les lectures par appel (le rapport perdait ensuite l'IA et la radiographie).
@@ -292,6 +302,8 @@ export async function faitsEntreprise(d, n, l, A) {
     verdict_calcule: R ? ({ suit: "suit son secteur", mieux: "mieux que ses rivales", moins: "moins bien que ses rivales", resultats: "résultats publiés" })[R.verdict] || null : null,
     rivales: R ? R.liste.filter(x => x.v != null).map(x => ({ nom: x.nom, variation_semaine_pct: r1(x.v) })) : [],
     mediane_des_rivales_pct: R && R.med != null ? R.med : null,
+    reaction_le_jour_des_resultats: R && R.reaction ? { date: R.reaction.date, variation_pct: R.reaction.v, mediane_des_rivales_meme_jour_pct: R.reaction.med } : null,
+    croissance_des_ventes_face_aux_rivales: R && R.croissance ? { exercice: R.croissance.exercice, elle_pct: R.croissance.v, mediane_des_rivales_pct: R.croissance.med } : null,
     nouvelles_des_rivales: R ? R.nouvelles.map(a => ({ entreprise: a.nom, type: a.origine === "presse" ? "titre de presse" : a.categorie, titre: a.titre, chiffres: a.chiffres })) : [],
     annonces: A.filter(a => a.origine !== "presse").map(a => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
     operations_courantes: A.filter(a => a.origine !== "presse" && (a.categorie === "rachat" || a.categorie === "capital")).length,

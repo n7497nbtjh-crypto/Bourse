@@ -2230,3 +2230,13 @@ table.r8x-top td:first-child{white-space:normal}table.r8x-top td a{color:#111;te
 .r8x-met b{text-align:right;white-space:nowrap}
 @media(max-width:700px){.r8x-deux,.r8x-etfs{grid-template-columns:1fr}.r8x-met{grid-template-columns:100px 1fr 60px}table.r8x-top{font-size:13px}table.r8x-top th:nth-child(3),table.r8x-top td:nth-child(3){display:none}}
 html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;display:inline!important;padding:0!important}
+/* 7/11 soir : lecture d'ENKLAIR en lignes de faits (rapport de la semaine) */
+.r8-lec .r8-ouv{font:700 17px/1.4 Inter;margin:0 0 12px}
+.r8-faits{border:1.5px solid #111;border-radius:12px;overflow:hidden;margin:0 0 10px}
+.r8-fl{display:grid;grid-template-columns:150px auto 1fr;gap:12px;align-items:baseline;padding:9px 12px;border-top:1px solid #e6e6e6;font-size:14.5px}
+.r8-fl:first-child{border-top:0}
+.r8-fl .k{font:700 11.5px Inter;text-transform:uppercase;letter-spacing:.05em;color:#555}
+.r8-fl>*{min-width:0}.r8-fl .v{font-weight:800}.r8-fl .v b{font-weight:800;white-space:nowrap}
+.r8-fl .c{color:#555;font-size:13.5px}
+.r8-fl.up{background:#eefaf1}.r8-fl.dn{background:#fff1f2}
+@media(max-width:700px){.r8-fl{grid-template-columns:1fr auto}.r8-fl .c{grid-column:1/-1}}
