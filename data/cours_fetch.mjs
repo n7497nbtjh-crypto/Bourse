@@ -17,21 +17,22 @@ try {
     for (const [k, v] of Object.entries(lot)) { const a = arch[der][k]; if (!(v.p > 0) || !(a > 0)) continue; n++; if (v.p !== a && jours.slice(0, -1).some(j => arch[j][k] === v.p)) vieux++; }
     return n >= 50 && vieux / n > 0.2;
   };
-  let site = null;
+  let site = null; const controle = [];
   for (const u of COURS_CSVS) {
-    let lot = null;
+    let lot = null, etat = "à jour";
     for (let t = 0; t < 3; t++) {
       try { const r = await fetch(u + (t ? "&_=" + Date.now() : "")); lot = parseCours(await r.text()); } catch (e) { console.log("::warning::Feuille de cours non lue :", e.message); lot = null; }
       if (!lot || !perime(lot)) break;
-      console.log(`::warning::Copie ancienne servie par Google (essai ${t + 1}) : ${u.slice(-20)}`); lot = "perime"; await new Promise(r => setTimeout(r, 30000));
+      console.log(`::warning::Copie ancienne servie par Google (essai ${t + 1}) : ${u.slice(-20)}`); lot = "perime"; etat = "relue"; await new Promise(r => setTimeout(r, 30000));
     }
     if (lot === "perime") {
       try { site = site || (await (await fetch("https://enklair.com/api/cours")).json()).items; } catch (e) { site = {}; }
       const ids = new Set(Object.keys(parseCours(await (await fetch(u)).text()))), repli = Object.fromEntries(Object.entries(site || {}).filter(([k]) => ids.has(k)));
-      if (Object.keys(repli).length && !perime(repli)) { console.log(`::notice::Cours de cette feuille repris de la copie du site (${Object.keys(repli).length})`); lot = repli; }
-      else { console.log("::warning::Cours de cette feuille non écrits (copie ancienne partout)"); lot = null; }
+      if (Object.keys(repli).length && !perime(repli)) { console.log(`::notice::Cours de cette feuille repris de la copie du site (${Object.keys(repli).length})`); lot = repli; etat = "copie du site"; }
+      else { etat = "copie ancienne, non écrite"; console.log("::warning::Cours de cette feuille non écrits (copie ancienne partout)"); lot = null; }
     }
-    if (lot) Object.assign(items, lot);
+    if (lot) Object.assign(items, lot); else if (etat === "à jour") etat = "non lue";
+    controle.push({ feuille: controle.length + 1, etat, cours: lot ? Object.keys(lot).length : 0 });
   }
   console.log(Object.keys(items).length, "cours lus dans la feuille");
   if (Object.keys(items).length > 50) {
@@ -77,7 +78,7 @@ try {
       for (const [k, v] of Object.entries(ep)) if (!(items[k] && items[k].p > 0)) { items[k] = v; n++; }
       console.log(n, "entreprises complétées par leur cours Eulerpool");
     } catch (e) { console.log("::warning::Cours Eulerpool non lus :", e.message); }
-    writeFileSync(new URL("cours.json", OUT), JSON.stringify({ updated: today, source: "Google Finance, cours de clôture ou différés", items }));
+    writeFileSync(new URL("cours.json", OUT), JSON.stringify({ updated: today, source: "Google Finance, cours de clôture ou différés", controle, items }));
     // Historique quotidien (un fichier par mois) pour tracer nos propres courbes au fil du temps
     const dir = new URL("../data/historique/", import.meta.url); if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
     // 1/11/2026 : chaque copie est rangée à la date de la SÉANCE qu'elle contient (et non du jour du passage du robot).

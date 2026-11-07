@@ -81,7 +81,9 @@ try {
   let hist = 0; try { hist = readdirSync(D("etf-hist/")).filter(f => f.endsWith(".json")).length; } catch (e) { }
   const ref = J(new URL("data/cours_ref.json", ROOT)) || {}, refAge = ref.date ? Math.round((Date.now() - Date.parse(ref.date)) / 864e5) : null;
   etat.cours = { maj: c.updated, feuilles, actions: act.length, actions_sans_cours: act.filter(([, o]) => !(o && o.p > 0)).length, actions_1an: act.filter(([, o]) => o && o.p1y > 0).length,
-    etf: etf.length, etf_vl: etf.filter(([, o]) => o && o.vl).length, etf_historique: hist, memoire: ref.date || null };
+    etf: etf.length, etf_vl: etf.filter(([, o]) => o && o.vl).length, etf_historique: hist, memoire: ref.date || null, controle: c.controle || null };
+  // 7/11 : contrôle du robot des cours (copie ancienne servie par Google, voir data/cours_fetch.mjs)
+  for (const k of c.controle || []) if (!/à jour|relue/.test(k.etat)) point(/non écrite|non lue/.test(k.etat) ? "rouge" : "orange", `Cours du ${c.updated}, feuille ${k.feuille} : ${k.etat}${k.etat === "copie du site" ? " (Google a servi une copie ancienne de la feuille)" : ""}.`);
   for (const f of feuilles) { if (f.erreur) point("rouge", `Feuille Google ${f.n} illisible : ${f.erreur}`); else if (f.lignes > 50 && f.cours / f.lignes < 0.5 && f.n < 4) point("orange", `Feuille Google ${f.n} : ${f.cours} cours sur ${f.lignes} lignes (Google limite GOOGLEFINANCE ; ouvrir la feuille dans un navigateur la fait recalculer).`); }
   const f1 = feuilles[0]; if (f1 && !f1.erreur && f1.cours > 0 && f1.passes / f1.cours < 0.5) point("orange", `Cours passés (Et si j'avais investi) : seulement ${f1.passes} sur ${f1.cours} dans la feuille 1 ; le site garde les derniers connus 45 jours au plus, datés (mémoire du ${ref.date || "?"}).`);
   if (act.length && act.filter(([, o]) => o && o.p1y > 0).length / act.length < 0.6) point("orange", `Actions avec un cours d'il y a 1 an : ${act.filter(([, o]) => o && o.p1y > 0).length} sur ${act.length}.`);

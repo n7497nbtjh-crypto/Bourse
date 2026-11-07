@@ -51,10 +51,11 @@ Sur la fiche, tout montant hors euro est converti en euros au taux BCE du jour e
 - Les robots fusionnent avec `-X theirs` : ne pas corriger un cache ou l'index pendant qu'un robot tourne. `data/index_reparer.mjs` remet les sociétés qu'un robot ancien aurait effacées.
 - Limite Cloudflare Pages : 20 000 fichiers (17 128 le 5/11 ; FAQ en 256 paquets). Prochains candidats : `data/wd`, `data/actu/c`.
 - En JavaScript `null <= 0` vaut vrai.
+- **Feuilles Google** : une feuille fermée n'est recalculée qu'en partie (l'ouvrir dans un navigateur la recalcule) ; Google sert parfois une **copie ancienne** du CSV publié (7/11 : clôtures du 2/11 rangées au 6/11) : `cours_fetch.mjs` la détecte (`controle` dans cours.json, page État du site). La copie gardée par le Worker peut être partielle (sans devise ni capitalisation) : app.js complète avec le fichier du robot.
 - `cf/site/data/etf.json` est regénéré depuis `data/etf_catalogue.json`.
 - Playwright figé en 1.64 dans les robots (la 1.65 a été publiée incomplète le 5/11).
 - Wrangler 3.112.0 (la 3.114.0 publiait un Worker cassé). Clés du navigateur préfixées `bilan.` (ne pas renommer).
 - Entreprises sans comptes : masquées du site (`SANS_COMPTES`), elles reviennent seules quand leurs comptes arrivent.
 
 ## En attente de Romain
-Brevo (clé) ; un vrai paiement d'essai de bout en bout, puis remboursement ; accord écrit d'Eulerpool ; avocat (pages légales, couleurs du PER) ; remplacer le calendrier Nasdaq des dividendes ; réparer les feuilles Google 3 et 4 (aucun cours calculé) ; publier sur les réseaux (images du robot `posts.yml`).
+Brevo (clé) ; un vrai paiement d'essai de bout en bout, puis remboursement ; accord écrit d'Eulerpool ; avocat (pages légales, couleurs du PER) ; remplacer le calendrier Nasdaq des dividendes ; source de cours fiable à décider (les feuilles Google plafonnent à environ 2 200 cours et servent parfois une copie ancienne : script Google à autoriser ou flux payant) ; publier sur les réseaux (images du robot `posts.yml`).
