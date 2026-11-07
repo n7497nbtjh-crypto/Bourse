@@ -118,7 +118,7 @@ export async function iaSite(request, env) {
     const c = await compteurs(env, h, per);
     if (c.erreur) return json({ disponible: false, raison: "compteur", detail: c.detail, niveau: nv });
     const epuise = nv !== "premium" && !siteOk(c, P, 300);
-    return json({ disponible: !epuise && c.questions < plafond, reste_visiteur: Math.max(0, plafond - c.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine" });
+    return json({ disponible: !epuise && c.questions < plafond, reste_visiteur: Math.max(0, plafond - c.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine", neurones_jour: Math.round(c.neurones), plafond_neurones_jour: P.neurones }); // 7/11 nuit : consommation du jour, pour la page État du site
   }
   if (url.pathname !== "/api/ia/rediger") return json({ error: "Introuvable" }, 404);
   if (request.method !== "POST") return json({ error: "Méthode non permise" }, 405);

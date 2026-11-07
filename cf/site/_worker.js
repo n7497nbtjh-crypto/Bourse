@@ -1019,7 +1019,7 @@ async function iaSite(request, env) {
     let c2 = await compteurs(env, h, per);
     if (c2.erreur) return json4({ disponible: !1, raison: "compteur", detail: c2.detail, niveau: nv });
     let epuise = nv !== "premium" && !siteOk(c2, P, 300);
-    return json4({ disponible: !epuise && c2.questions < plafond, reste_visiteur: Math.max(0, plafond - c2.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine" });
+    return json4({ disponible: !epuise && c2.questions < plafond, reste_visiteur: Math.max(0, plafond - c2.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine", neurones_jour: Math.round(c2.neurones), plafond_neurones_jour: P.neurones });
   }
   if (url.pathname !== "/api/ia/rediger") return json4({ error: "Introuvable" }, 404);
   if (request.method !== "POST") return json4({ error: "M\xE9thode non permise" }, 405);
@@ -3575,7 +3575,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "91915aff53f0b8ea", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "aa84d6dd5e9cf0b2", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

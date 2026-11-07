@@ -61,7 +61,7 @@ const averif = J(D("a-verifier.json")); if (averif && averif.items) etat.coheren
   try { t0 = Date.now(); const r = await fetch(SITE + "/data/rapport-exemple.json"); const b = await r.json(); etat.exterieur.rapport_exemple = { ok: r.ok && !!b.lignes, duree_ms: Date.now() - t0, ia: Object.keys(b.ia_entreprises || {}).length, monde: b.monde ? b.monde.sujets.length : 0 };
     if (!b.monde) point("orange", "Rapport d'exemple : pas de sujets du monde (IA indisponible ou titres manquants)."); } catch (e) { etat.exterieur.rapport_exemple = { ok: false }; point("rouge", "Le rapport d'exemple ne répond pas."); }
   try { const r = await fetch(SITE + "/api/cours"); const j = await r.json(), it = j.items || {}; const sans = Object.values(it).filter(x => !(x && x.p > 0)).length; etat.exterieur.cours = { total: Object.keys(it).length, sans_cours: sans, maj: j.maj || j.date || null }; } catch (e) { etat.exterieur.cours = null; }
-  try { const r = await fetch(SITE + "/api/ia/etat"); const j = await r.json(); etat.services.ia = { disponible: !!j.disponible, site_epuise: !!j.site_epuise }; if (!j.disponible) point("orange", "L'IA du site ne répond pas."); } catch (e) { etat.services.ia = null; }
+  try { const r = await fetch(SITE + "/api/ia/etat"); const j = await r.json(); etat.services.ia = { disponible: !!j.disponible, site_epuise: !!j.site_epuise, neurones_jour: j.neurones_jour ?? null, plafond: j.plafond_neurones_jour ?? null }; if (!j.disponible) point("orange", "L'IA du site ne répond pas."); } catch (e) { etat.services.ia = null; }
   try { const r = await fetch(SITE + "/api/premium/offres"); const j = await r.json(); const liens = [j.mensuel, j.unique].filter(Boolean); let ok = 0;
     for (const u of liens) { try { const h = await fetch(u, { method: "HEAD", redirect: "manual" }); if (h.status < 400) ok++; } catch (e) { } }
     const merci = await fetch(SITE + "/premium/merci", { redirect: "manual" });
@@ -75,11 +75,32 @@ const averif = J(D("a-verifier.json")); if (averif && averif.items) etat.coheren
 try {
   const { COURS_CSVS, parseCours } = await import("../data/cours_config.mjs");
   const feuilles = [];
+  // 7/11 nuit : pour chaque feuille, les valeurs qu'on lui confie (gfN.csv), et le relevé horaire du script Google (onglet « releve »)
+  const confie = n => { try { return readFileSync(D(n === 1 ? "gf.csv" : `gf${n}.csv`), "utf8").trim().split("\n").slice(1).map(l => l.split(",")[0]).filter(Boolean); } catch (e) { return []; } };
   for (const [i, u] of COURS_CSVS.entries()) { try { const t = await (await fetch(u + "&t=" + Date.now())).text(), lignes = t.split("\n").length - 2, p = parseCours(t), v = Object.values(p);
-    feuilles.push({ n: i + 1, lignes, cours: v.length, passes: v.filter(o => o.p1y != null).length }); } catch (e) { feuilles.push({ n: i + 1, erreur: String(e.message || e) }); } }
+    const f = { n: i + 1, lignes, cours: v.length, passes: v.filter(o => o.p1y != null).length, confiees: confie(i + 1).length, script: null };
+    try { const h = await (await fetch(u.replace(/pub\?output=csv$/, "pubhtml"))).text(), g = (h.match(/name:\s*"releve"[^}]*?gid:\s*"(\d+)"/) || [])[1];
+      if (!g) f.script = { installe: false };
+      else { const tr = await (await fetch(u.replace(/pub\?output=csv$/, `pub?gid=${g}&single=true&output=csv&t=${Date.now()}`))).text(), m = (tr.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/) || [])[0];
+        f.script = { installe: true, quand: m || null, age_h: m ? Math.round((Date.now() - Date.parse(m)) / 36e5) : null, cours: Object.keys(parseCours(tr)).length }; } } catch (e) { }
+    feuilles.push(f); } catch (e) { feuilles.push({ n: i + 1, erreur: String(e.message || e) }); } }
   const c = J(D("cours.json")) || {}, it = c.items || {}, E = Object.entries(it), act = E.filter(([k]) => k.startsWith("c:")), etf = E.filter(([k]) => k.startsWith("e:"));
   let hist = 0; try { hist = readdirSync(D("etf-hist/")).filter(f => f.endsWith(".json")).length; } catch (e) { }
   const ref = J(new URL("data/cours_ref.json", ROOT)) || {}, refAge = ref.date ? Math.round((Date.now() - Date.parse(ref.date)) / 864e5) : null;
+  // 7/11 nuit (Romain : « que chaque entreprise ait son cours ») : chaque entreprise montrée sur le site a-t-elle un cours, et sa devise ?
+  const soc = (J(D("societes.json")) || {}).companies || [], vis = soc.filter(x => !(x.missing || x.year == null || Date.now() >= Date.UTC(x.year + 2, 6, 1)));
+  const ouF = {}; for (let n = 1; n <= COURS_CSVS.length; n++) for (const id of confie(n)) ouF[id] = n;
+  const sans = vis.filter(x => !(it["c:" + x.id] && it["c:" + x.id].p > 0)).map(x => ({ id: x.id, nom: x.name, region: x.region, feuille: ouF["c:" + x.id] || null, symbole: x.tv || x.ticker || null }));
+  const sansDev = vis.filter(x => it["c:" + x.id] && it["c:" + x.id].p > 0 && !it["c:" + x.id].cur).map(x => ({ id: x.id, nom: x.name, symbole: (it["c:" + x.id] || {}).s || null }));
+  const sansVl = (J(new URL("data/etf_sans_vl.json", ROOT)) || []);
+  const fr = n => { try { const j = J(D(n)); return j && (j.updated || j.maj || j.date) || null; } catch (e) { return null; } };
+  etat.fraicheur = { cours: c.updated || null, cours_semaine: fr("cours-semaine.json"), change_bce: fr("fx-semaine.json"), etf: fr("etf.json"), actualite: fr("actu/semaine.json"), agenda: fr("agenda-habituel-proche.json"), societes: soc.length ? fr("societes.json") : null };
+  for (const [k, d] of Object.entries(etat.fraicheur)) { if (!d) continue; const age = (Date.now() - Date.parse(String(d).length === 10 ? d + "T18:00:00Z" : d)) / 864e5; if (age > (k === "etf" ? 8 : 3)) point("orange", `Données « ${k.replace("_", " ")} » du ${String(d).slice(0, 10)} : plus mises à jour depuis ${Math.floor(age)} jours.`); }
+  etat.couverture = { visibles: vis.length, avec_cours: vis.length - sans.length, sans: sans.slice(0, 120), sans_total: sans.length, sans_devise: sansDev.slice(0, 60), sans_devise_total: sansDev.length, etf_sans_vl: (sansVl.ids || []).length };
+  if (sans.length) point(sans.length > vis.length * 0.02 ? "orange" : "gris", `${sans.length} entreprise${sans.length > 1 ? "s" : ""} montrée${sans.length > 1 ? "s" : ""} sur le site sans cours aujourd'hui (liste dans « Les cours »).`);
+  if (sansDev.length) point("orange", `${sansDev.length} cours sans devise : le site ne peut pas les convertir en euros (liste dans « Les cours »).`);
+  for (const f of feuilles) if (f.confiees && f.script && !f.script.installe) point("orange", `Feuille Google ${f.n} : aucun relevé du script trouvé (script pas encore installé, ou onglet « releve » non publié). Dans la feuille : Extensions › Apps Script › exécuter « installer ».`);
+    else if (f.confiees && f.script && f.script.age_h > 26) point("orange", `Feuille Google ${f.n} : dernier relevé du script il y a ${f.script.age_h} h.`);
   etat.cours = { maj: c.updated, feuilles, actions: act.length, actions_sans_cours: act.filter(([, o]) => !(o && o.p > 0)).length, actions_1an: act.filter(([, o]) => o && o.p1y > 0).length,
     etf: etf.length, etf_vl: etf.filter(([, o]) => o && o.vl).length, etf_historique: hist, memoire: ref.date || null, controle: c.controle || null };
   // 7/11 : contrôle du robot des cours (copie ancienne servie par Google, voir data/cours_fetch.mjs)
