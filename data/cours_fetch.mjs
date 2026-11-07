@@ -6,7 +6,33 @@ const OUT = new URL("../cf/site/data/", import.meta.url);
 const today = new Date().toISOString().slice(0, 10);
 try {
   const items = {};
-  for (const u of COURS_CSVS) { try { const r = await fetch(u); Object.assign(items, parseCours(await r.text())); } catch (e) { console.log("::warning::Feuille de cours non lue :", e.message); } }
+  // 7/11 : Google sert parfois une copie ANCIENNE de la feuille publiée (le 7/11, le S&P 500 et le Nikkei du 2/11 au chiffre près,
+  // rangés comme clôture du 6/11). Une feuille est jugée périmée quand plus de 20 % de ses cours sont identiques à ceux d'un jour
+  // déjà archivé plus ancien que le dernier, tout en différant du dernier. On relit alors (3 fois, 30 s d'écart), puis on prend
+  // la copie lue par le site (/api/cours) si elle est saine ; sinon les cours de cette feuille ne sont pas écrits (pas de faux cours du jour).
+  const arch = {}; for (let i = 0; i < 2; i++) { const d = new Date(Date.now() - i * 28 * 864e5).toISOString().slice(0, 7); try { Object.assign(arch, JSON.parse(readFileSync(new URL(`../data/historique/${d}.json`, import.meta.url)))); } catch (e) { } }
+  const jours = Object.keys(arch).sort(), der = jours[jours.length - 1];
+  const perime = lot => {
+    if (!der) return false; let n = 0, vieux = 0;
+    for (const [k, v] of Object.entries(lot)) { const a = arch[der][k]; if (!(v.p > 0) || !(a > 0)) continue; n++; if (v.p !== a && jours.slice(0, -1).some(j => arch[j][k] === v.p)) vieux++; }
+    return n >= 50 && vieux / n > 0.2;
+  };
+  let site = null;
+  for (const u of COURS_CSVS) {
+    let lot = null;
+    for (let t = 0; t < 3; t++) {
+      try { const r = await fetch(u + (t ? "&_=" + Date.now() : "")); lot = parseCours(await r.text()); } catch (e) { console.log("::warning::Feuille de cours non lue :", e.message); lot = null; }
+      if (!lot || !perime(lot)) break;
+      console.log(`::warning::Copie ancienne servie par Google (essai ${t + 1}) : ${u.slice(-20)}`); lot = "perime"; await new Promise(r => setTimeout(r, 30000));
+    }
+    if (lot === "perime") {
+      try { site = site || (await (await fetch("https://enklair.com/api/cours")).json()).items; } catch (e) { site = {}; }
+      const ids = new Set(Object.keys(parseCours(await (await fetch(u)).text()))), repli = Object.fromEntries(Object.entries(site || {}).filter(([k]) => ids.has(k)));
+      if (Object.keys(repli).length && !perime(repli)) { console.log(`::notice::Cours de cette feuille repris de la copie du site (${Object.keys(repli).length})`); lot = repli; }
+      else { console.log("::warning::Cours de cette feuille non écrits (copie ancienne partout)"); lot = null; }
+    }
+    if (lot) Object.assign(items, lot);
+  }
   console.log(Object.keys(items).length, "cours lus dans la feuille");
   if (Object.keys(items).length > 50) {
     // Les colonnes historiques de la feuille (plus haut/bas sur 52 semaines, cours il y a 1, 3 et 5 ans) tombent parfois toutes
