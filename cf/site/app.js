@@ -2250,7 +2250,7 @@ async function pageHome() {
     ${band(5, "Actualité", "Ce qui se passe dans les entreprises", ["/actualites", "Toute l'actualité"], `<div class="trio">
       <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Agenda</a></div>${agendaHTML(upcoming().slice(0, 5))}</section>
       <section class="panel"><div class="ph"><h2>Annonces des entreprises</h2><a href="/actualites">Toutes</a></div><div class="pb" id="amf"></div></section>
-      <section class="panel"><div class="ph"><h2>La communauté</h2><a href="/communaute">Participer</a></div><div class="pb" id="crec"></div></section></div>`)}
+      </div>`)}
     ${band(6, "Premium", "Aller plus loin, sans publicité", ["/premium", "Voir l'offre"], `<div class="premband"><ul>
       <li><b>Toute l'Académie</b> et la formation guidée de six semaines</li><li><b>30 résultats</b> par recherche par critères, au lieu de 8</li><li><b>Alertes chaque soir</b> dans votre espace : annonces, mouvements de plus de 5 %, résultats du lendemain</li>
       <li><b>12 semaines d'historique</b> de vos bilans, portefeuille sans limite, comparaisons à 5</li></ul><a class="btn" href="/premium">Découvrir Premium</a></div>`)}`;
@@ -2260,7 +2260,7 @@ async function pageHome() {
   bindIaBox($("#hia"));
   app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (b) go("/demander?q=" + encodeURIComponent(b.dataset.iaq)); });
   if (typeof actuBandeau === "function") actuBandeau($("#amf")); else amfBlock($("#amf"), "&suivies=1", 5);
-  fetch("/api/communaute/recent").then(r => r.json()).then(j => { $("#crec").innerHTML = (j.items || []).length ? j.items.slice(0, 3).map(m => msgHTML(m, true)).join("") : `<p class="muted" style="margin:0">Pas encore de message. <a class="lnk" href="/communaute">Lancer la discussion</a>.</p>`; }).catch(() => { $("#crec").innerHTML = `<p class="muted" style="margin:0">Bientôt disponible.</p>`; });
+  // 7/11 : bloc « La communauté » de l'ancien accueil retiré (page remplacée par /pronostics)
   moi().then(m => { const el = $("#homeesp"); if (!el) return; if (m.connecte && typeof synAccueil === "function") return synAccueil(el, m); // cf/site/m/synthese.js
     el.innerHTML = m.connecte ? `<section class="panel"><div class="pb espteaser"><div><b>Votre bilan de la semaine est prêt.</b><div class="muted">Les mouvements de vos ${favs().length} favoris, les annonces et les dates à venir, commentés par l'IA.${m.nonlus ? ` ${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""} non lue${m.nonlus > 1 ? "s" : ""}.` : ""}</div></div><a class="btn" href="/espace">Ouvrir mon bilan</a></div></section>`
       : `<section class="panel"><div class="pb espteaser"><div><b>Créez votre espace, c'est gratuit.</b><ul class="espben"><li>Chaque semaine, le bilan de vos entreprises rédigé par l'IA</li><li>Vos favoris et votre portefeuille sur tous vos appareils</li><li>Les alertes quand une de vos entreprises publie ou bouge fortement</li></ul></div><a class="btn" href="/espace">Créer mon espace</a></div></section>`; });
@@ -2800,7 +2800,7 @@ function route() {
   else if ((m = p.match(/^\/entreprise\/([a-z0-9-]+)(?:\/([a-z]+))?$/))) pageCompany(m[1], m[2]);
   else if (p === "/etf") pageEtfs();
   else if ((m = p.match(/^\/etf\/([a-z0-9-]+)$/))) pageEtf(m[1]);
-  else if (p === "/communaute") pageCommunaute();
+  else if (p === "/communaute" || p === "/pronostics") pageCommunaute();
   else if ((m = p.match(/^\/simulateurs(?:\/([a-z-]+))?$/))) pageSim(m[1]);
   else if (p === "/actualites") pageActus();
   else if (p === "/agenda") pageAgenda();

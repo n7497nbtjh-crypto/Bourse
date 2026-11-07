@@ -105,14 +105,14 @@ function sessionCompte(request, env) {
     }
   })()), SESS.get(request));
 }
-var proprietaires = (env) => String(env && env.PROPRIETAIRES || "").toLowerCase().split(/[,\s]+/).filter((e) => e.includes("@")), tokenProprietaire = (email) => sha256hex("proprietaire:" + email.toLowerCase()), abonneProprietaire = (email, token) => ({ token, email, plan: "proprietaire", sub_id: null, until: 41024448e5, created: 0 });
+var proprietaires = (env) => env && env.ADMIN_KEY ? String(env && env.PROPRIETAIRES || "").toLowerCase().split(/[,\s]+/).filter((e) => e.includes("@")) : [], tokenProprietaire = (env, email) => sha256hex("proprietaire:" + String(env && env.ADMIN_KEY || "") + ":" + email.toLowerCase()), abonneProprietaire = (email, token) => ({ token, email, plan: "proprietaire", sub_id: null, until: 41024448e5, created: 0 });
 async function premiumOf(request, env) {
   if (!env || !env.DB) return null;
   let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64), P = proprietaires(env);
   if (!t) {
     let c = await sessionCompte(request, env);
     if (t = c && c.premium || "", c && c.email && P.includes(c.email.toLowerCase())) {
-      let tp = await tokenProprietaire(c.email);
+      let tp = await tokenProprietaire(env, c.email);
       if (c.premium !== tp)
         try {
           await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(tp, c.id).run();
@@ -122,7 +122,7 @@ async function premiumOf(request, env) {
     }
   }
   if (!t) return null;
-  for (let e of P) if (t === await tokenProprietaire(e)) return abonneProprietaire(e, t);
+  for (let e of P) if (t === await tokenProprietaire(env, e)) return abonneProprietaire(e, t);
   await initCompte(env.DB);
   let a = await env.DB.prepare("SELECT * FROM abonnes WHERE token = ?").bind(t).first();
   if (!a) return null;
@@ -1643,13 +1643,9 @@ async function mondeDe(env, d, n, lundi3, auj) {
   if (items.length < 4) return null;
   let T = items.sort((a, b) => b.d.localeCompare(a.d)).slice(0, 140), parSec = univers(d, lundi3, auj), secteurs = {};
   for (let [s, L] of Object.entries(parSec)) secteurs[s] = { nom: SECTEURS2[s] || s, mediane_pct: r1(med(L.map((x) => x.v))), n: L.length };
-  let faits = {
-    semaine_du: lundi3,
-    au: fin,
-    indices: (n.indices || []).map((i) => ({ id: i.id, nom: i.nom, variation_pct: i.pct })),
-    secteurs,
-    titres: T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t }))
-  }, valide = (o) => {
+  let faits = { semaine_du: lundi3, au: fin, indices: (n.indices || []).map((i) => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] };
+  for (; T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500); ) T.pop();
+  let valide = (o) => {
     if (!o || !Array.isArray(o.sujets)) return null;
     let S2 = o.sujets.slice(0, 3).map((s) => ({
       titre: String(s.titre || "").replace(/—/g, ",").slice(0, 100),
@@ -2133,6 +2129,29 @@ async function espace(request, env) {
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
   if (path === "/api/espace/mesures" && m === "GET") return mesures(request, env);
+  if (path === "/api/espace/etat" && m === "POST") {
+    if (!adminOk(request, env)) return json({ error: "Non autoris\xE9." }, 403);
+    let { b, err: err2 } = await lire(request);
+    if (err2) return err2;
+    let jour2 = /^\d{4}-\d{2}-\d{2}$/.test(b.jour || "") ? b.jour : jourParis();
+    return await env.DB.prepare("CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)").run(), await env.DB.prepare("INSERT OR REPLACE INTO cache_json (k, v, at) VALUES (?, ?, ?)").bind("etat|" + jour2, JSON.stringify(b).slice(0, 4e5), Date.now()).run(), await env.DB.prepare("DELETE FROM cache_json WHERE k LIKE 'etat|%' AND at < ?").bind(Date.now() - 35 * JOUR).run(), json({ ok: !0, jour: jour2 });
+  }
+  if (path === "/api/espace/etat" && m === "GET") {
+    let p = await premiumOf(request, env);
+    if (!p || p.plan !== "proprietaire") return json({ error: "R\xE9serv\xE9 au propri\xE9taire du site." }, 403);
+    let rows = [];
+    try {
+      rows = (await env.DB.prepare("SELECT k, v FROM cache_json WHERE k LIKE 'etat|%' ORDER BY k DESC LIMIT 30").all()).results || [];
+    } catch {
+    }
+    return json({ items: rows.map((r) => {
+      try {
+        return JSON.parse(r.v);
+      } catch {
+        return null;
+      }
+    }).filter(Boolean) });
+  }
   if (path === "/api/espace/essai" && m === "POST") {
     if (env.ESSAI_14J !== "1") return json({ error: "L'essai gratuit n'est pas encore ouvert." }, 403);
     let c2 = await compteDe(request, env);
@@ -2469,21 +2488,36 @@ var EXEMPLE_PROFIL = {
   // 6/11 soir : un achat programmé, pour montrer ce bloc du rapport
   rapport: { favoris: !0, portefeuille: !0, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] }
 };
-async function rapportExemple(request, env) {
-  let url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + 4, url.origin)), cache = typeof caches < "u" ? caches.default : null;
-  if (cache) {
-    let r = await cache.match(cle);
-    if (r) return r;
-  }
-  let d = await siteData2(request, env), auj = jourParis(), semaine = semaineIso(auj), row = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) }, s = suiviDe(row, d.names), actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
-  await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
-  let corps = { ...publicBilan(n), exemple: !0, profil: EXEMPLE_PROFIL, provisoire: !0, en_cours: !0, historique: [] }, res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
-  if (cache)
+async function rapportExemple(request, env, ctx) {
+  let cle = "rapport-exemple|v" + 4, FRAIS = 36e5, row = null;
+  if (env.DB)
     try {
-      await cache.put(cle, res.clone());
+      await env.DB.prepare("CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)").run(), row = await env.DB.prepare("SELECT v, at FROM cache_json WHERE k = ?").bind(cle).first();
     } catch {
     }
-  return res;
+  let calculer = async () => {
+    let d = await siteData2(request, env), auj = jourParis(), semaine = semaineIso(auj), r02 = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) }, s = suiviDe(r02, d.names), actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
+    await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
+    let corps = JSON.stringify({ ...publicBilan(n), exemple: !0, profil: EXEMPLE_PROFIL, provisoire: !0, en_cours: !0, historique: [] });
+    if (env.DB)
+      try {
+        await env.DB.prepare("INSERT OR REPLACE INTO cache_json (k, v, at) VALUES (?, ?, ?)").bind(cle, corps, Date.now()).run();
+      } catch {
+      }
+    return corps;
+  }, rep2 = (v) => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
+  if (row && row.v) {
+    if (Date.now() - row.at > FRAIS && ctx && ctx.waitUntil) {
+      try {
+        await env.DB.prepare("UPDATE cache_json SET at = ? WHERE k = ? AND at = ?").bind(Date.now() - FRAIS + 12e4, cle, row.at).run();
+      } catch {
+      }
+      ctx.waitUntil(calculer().catch(() => {
+      }));
+    }
+    return rep2(row.v);
+  }
+  return rep2(await calculer());
 }
 
 // cf/src/signaler.mjs
@@ -3361,7 +3395,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "ad03293dc5d01a5f", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "0a043c6df494d4a5", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3922,7 +3956,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
-    if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env);
+    if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env, ctx);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     {

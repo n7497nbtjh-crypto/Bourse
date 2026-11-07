@@ -1870,8 +1870,6 @@ a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 .s9-src>summary::-webkit-details-marker{display:none}.s9-src[open]>summary{margin-bottom:6px}
 @media(max-width:760px){.s9-syn,.s9-src{margin-left:12px;margin-right:12px}}
 
-/* 6/11 soir : cinq rubriques (Communauté ajoutée) dans le pied de page */
-@media (min-width:601px){footer nav.navpied4{grid-template-columns:repeat(5,minmax(0,1fr))}}
 
 /* ===== Rapport de la semaine v8 (6/11 soir, maquette docs/maquettes/rapport-semaine-v6.html ; m/rapport8.js) ===== */
 .r8{font:16px/1.5 Inter,sans-serif;color:#111}
@@ -2018,3 +2016,39 @@ a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 /* 7/11 (Romain) : plus de sous-titre dans les encadrés d'outils et de pages (Outils, Apprendre, Idées reçues) ; le titre et « Ouvrir » suffisent */
 #app .ou4-c>span,#app .mc-p>span{display:none}
 .ag4-est{display:inline-block;border:1.5px solid #111;border-radius:6px;padding:0 6px;font:700 11px Inter;background:#fff;vertical-align:1px}
+
+/* ===== Mon portefeuille v5 (7/11, m/portefeuille5.js) : quatre blocs à contour noir, le reste sous « Plus » ===== */
+#app .pf5{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:22px 0}
+#app .pf5-b{border:2px solid #111;border-radius:20px;box-shadow:5px 5px 0 #111;background:#fff;padding:18px 20px;min-width:0}
+#app .pf5-b:first-child,#app .pf5-b:nth-child(4){grid-column:1 / -1}
+#app .pf5-lab{font:700 11px Inter;text-transform:uppercase;letter-spacing:.07em;color:#555;margin:0 0 6px}
+#app .pf5-b .pf5-in{border:0;box-shadow:none;background:transparent;margin:0;padding:12px 0 0;border-top:1.5px solid #eee}
+#app .pf5-b .pf5-in:first-of-type{border-top:0}
+#app .pf5-b details.pf5-in>summary{display:none}
+#app .pf5-b .pf5-ph{display:none}
+#app .pf5-b .pf5-h{font:800 19px/1.15 "Bricolage Grotesque",Inter;letter-spacing:-.4px;margin:0 0 8px}
+#app .ek.pf4 .pf5-b details.pf3pl,#app .ek.pf4 .pf5-b section.pf5-in{border:0!important;box-shadow:none!important;border-radius:0;background:transparent!important;overflow:hidden}
+#app .pf5-plus{border:1.5px dashed #999;border-radius:14px;padding:10px 16px;display:flex;gap:6px 18px;flex-wrap:wrap;align-items:center;font-size:14px;margin:0 0 20px}
+#app .pf5-plus details{border:0;box-shadow:none;background:transparent;margin:0;padding:0;flex:0 0 auto;max-width:100%;min-width:0}
+#app .pf5-plus details[open]{flex-basis:100%;width:100%;border-top:1.5px dashed #999;padding-top:10px;overflow-x:auto}
+#app .pf5-plus details[open]>*:not(summary){max-width:100%}
+#app .pf5-plus summary{font-weight:700;cursor:pointer;text-decoration:underline;text-decoration-color:#FFE14D;text-decoration-thickness:3px;text-underline-offset:3px;list-style:none;padding:0}
+#app .pf5-plus summary .pf4-ti,#app .pf5-plus summary .pf4-td,#app .pf5-plus summary .pf3bdg{display:none}
+#app .pf5-plus .pf5-lnk{border:0;background:none;font:700 14px Inter;color:#111;text-decoration:underline;text-decoration-color:#FFE14D;text-decoration-thickness:3px;text-underline-offset:3px;cursor:pointer;padding:0}
+#app #pf3dash:empty{display:none}
+@media(max-width:860px){#app .pf5{grid-template-columns:1fr}}
+
+/* ===== État du site, page privée /espace/etat (7/11, m/etat.js) ===== */
+.et8 .r8-band.et8-band{display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center;padding:22px 26px}
+.et8-feu{width:118px;height:118px;border:3px solid #111;border-radius:50%;display:grid;place-items:center;font:800 15px "Bricolage Grotesque",Inter;text-align:center;background:#d9f5df;box-shadow:4px 4px 0 #111}
+.et8-feu.orange{background:#ffe9b3}.et8-feu.rouge{background:#ffd6dc}
+.et8-pts{margin:8px 0 0;padding:0;list-style:none;font-size:14.5px}.et8-pts li{display:flex;gap:8px;align-items:center;padding:3px 0}
+.et8-g{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:14px}
+.et8-c{padding:14px 16px}.et8-c .k{font:700 11px Inter;text-transform:uppercase;letter-spacing:.07em;color:#555}
+.et8-c .v{font:800 30px/1.1 "Bricolage Grotesque",Inter;letter-spacing:-1px;margin:4px 0}.et8-c .v small{font:600 14px Inter;letter-spacing:0}
+.et8-c p{margin:4px 0 0;font-size:13.5px;color:#333}.et8 .att{color:#b36b00}
+.et8-l{display:grid;grid-template-columns:18px 1fr auto auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #eee;font-size:14px}
+.et8-l:first-of-type{border-top:0}.et8-l small{color:#666}.et8-l a{color:#111}
+.et8-p{width:12px;height:12px;border-radius:50%;border:1.5px solid #111;display:inline-block;background:#2fbf5f}
+.et8-p.o,.et8-p.orange{background:#ffb400}.et8-p.r,.et8-p.rouge{background:#ff3b5c}.et8-p.vert{background:#2fbf5f}
+@media(max-width:860px){.et8-g{grid-template-columns:1fr}.et8 .r8-band.et8-band{grid-template-columns:1fr}.et8-feu{margin:0 auto}}

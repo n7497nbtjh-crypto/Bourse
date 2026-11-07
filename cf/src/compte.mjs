@@ -63,19 +63,21 @@ export function sessionCompte(request, env) {
 // Cloudflare PROPRIETAIRES (adresses séparées par des virgules, à renseigner par Romain dans les réglages du Worker, pas une clé)
 // ont Premium sans paiement. Le jeton est calculé à partir de l'adresse et rattaché au compte à la première visite connectée
 // (rapport du samedi, alertes). Sans la variable, rien ne change.
-const proprietaires = env => String((env && env.PROPRIETAIRES) || "").toLowerCase().split(/[,\s]+/).filter(e => e.includes("@"));
-const tokenProprietaire = email => sha256hex("proprietaire:" + email.toLowerCase());
+const proprietaires = env => !(env && env.ADMIN_KEY) ? [] : String((env && env.PROPRIETAIRES) || "").toLowerCase().split(/[,\s]+/).filter(e => e.includes("@"));
+// Le jeton dépend aussi d'ADMIN_KEY (secret) : sans cela, quiconque connaît l'adresse (visible dans l'historique public du dépôt)
+// pourrait le recalculer et se donner Premium. Sans ADMIN_KEY, aucun compte propriétaire.
+const tokenProprietaire = (env, email) => sha256hex("proprietaire:" + String((env && env.ADMIN_KEY) || "") + ":" + email.toLowerCase());
 const abonneProprietaire = (email, token) => ({ token, email, plan: "proprietaire", sub_id: null, until: 4102444800000, created: 0 });
 export async function premiumOf(request, env) {
   if (!env || !env.DB) return null;
   let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
   const P = proprietaires(env);
   if (!t) { const c = await sessionCompte(request, env); t = (c && c.premium) || "";
-    if (c && c.email && P.includes(c.email.toLowerCase())) { const tp = await tokenProprietaire(c.email);
+    if (c && c.email && P.includes(c.email.toLowerCase())) { const tp = await tokenProprietaire(env, c.email);
       if (c.premium !== tp) { try { await env.DB.prepare(`UPDATE comptes SET premium = ? WHERE id = ?`).bind(tp, c.id).run(); } catch (e) { } }
       return abonneProprietaire(c.email, tp); } }
   if (!t) return null;
-  for (const e of P) if (t === await tokenProprietaire(e)) return abonneProprietaire(e, t);
+  for (const e of P) if (t === await tokenProprietaire(env, e)) return abonneProprietaire(e, t);
   await initCompte(env.DB);
   let a = await env.DB.prepare(`SELECT * FROM abonnes WHERE token = ?`).bind(t).first();
   if (!a) return null;

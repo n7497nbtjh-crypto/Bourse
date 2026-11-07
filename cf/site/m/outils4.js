@@ -18,7 +18,8 @@ const OU4_G = [
     ["/outils/recouvrement", "recouv", "Deux ETF se recouvrent-ils ?", "Les entreprises que deux à quatre ETF ont en commun."],
     ["/classements", "listes", "Classements", "Les entreprises qui cumulent le plus de points forts, critère par critère."],
     ["/dividendes", "div", "Calendrier des dividendes", "Les prochaines dates de détachement et de paiement."],
-    ["/agenda", "agenda", "Agenda des résultats", "Les prochaines publications, jour par jour."]]]];
+    ["/agenda", "agenda", "Agenda des résultats", "Les prochaines publications, jour par jour."],
+    ["/pronostics", "listes", "Pronostics de résultats", "Avant chaque publication : ventes en hausse ou en baisse ? Un exercice pour apprendre à anticiper."]]]];
 const OU4_0 = window.pageOutils;
 function pageOutils4(t) {
   if (t) return OU4_0.apply(this, arguments);

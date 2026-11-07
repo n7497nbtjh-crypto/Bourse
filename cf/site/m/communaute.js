@@ -10,7 +10,7 @@
    Les anciens messages libres (discussions, avis, idées) restent lisibles sur les fiches et dans /communaute?salon=….
    Remplace : pageCommunaute, tabCommu, chatBlock (bloc « Discussion » des fiches entreprise et ETF), qGuide.
    ===================================================================================================== */
-const CMU_TABS = [["questions", "Questions"], ["listes", "Listes de suivi"], ["pronostics", "Pronostics"]]; // 7/11 (Romain) : plus d'onglet Analyses
+const CMU_TABS = [["pronostics", "Pronostics"]]; // 7/11 (Romain) : seuls les pronostics restent, dans Outils (/pronostics) ; questions et listes ne sont plus proposées
 const CMU_HZ = { court: ["Court terme", "moins d'un an"], moyen: ["Moyen terme", "1 à 5 ans"], long: ["Long terme", "plus de 5 ans"] };
 const CMU_CLES = "bilan.listes.cles";
 const CMU_RAPPEL = "Contributions de visiteurs, non vérifiées par ENKLAIR Ce ne sont pas des conseils en investissement : vérifiez toujours sur la fiche et dans les comptes officiels.";
@@ -129,12 +129,12 @@ function cmuBindForm(root, room, done) {
 
 /* ---------- Page /communaute ---------- */
 function pageCommunaute() {
-  setTitle("Communauté"); setNav("com");
+  setTitle("Pronostics de résultats"); setNav("ana");
   const qs = new URLSearchParams(location.search), o = qs.get("onglet");
-  const tab = o === "portefeuilles" ? "listes" : CMU_TABS.some(t => t[0] === o) ? o : "questions";
+  if (location.pathname === "/communaute" && o !== "pronostics") { history.replaceState(null, "", "/pronostics"); } // anciennes adresses
+  const tab = "pronostics";
   app.innerHTML = `<div class="cmu"><header class="cmu-hero"><h1 class="pagetitle">${tab === "questions" ? "Posez votre question, d'autres y répondent." : tab === "listes" ? "Les listes de suivi des autres." : "Hausse ou baisse ? Faites votre pronostic."}</h1>
       <p class="pagesub">${tab === "questions" ? "Une entreprise, un ETF, un chiffre que vous ne comprenez pas : les autres visiteurs répondent, les réponses utiles passent devant." : tab === "listes" ? "Des listes de favoris partagées, avec les chiffres du site pour chaque ligne, copiables dans vos favoris." : "Avant chaque publication de résultats : ventes en hausse ou en baisse ? Un exercice pour apprendre à anticiper, rien à gagner."}</p></header>
-    <nav class="qtabs cmu-tabs" aria-label="Communauté">${CMU_TABS.map(([k, n]) => `<a href="/communaute?onglet=${k}" class="${k === tab ? "on" : ""}"${k === tab ? ' aria-current="page"' : ""}>${n}</a>`).join("")}</nav>
     <p class="cmu-bandeau">${CMU_RAPPEL}</p><div id="ctb"><div class="empty">Chargement…</div></div></div>`;
   ({ questions: commQuestions, listes: cmuListes, pronostics: commPronos })[tab]($("#ctb"), qs);
   if (o === "portefeuilles") setTimeout(() => { const t = $("#portefeuilles"); if (t) t.scrollIntoView({ block: "start" }); }, 400);

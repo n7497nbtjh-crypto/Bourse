@@ -250,6 +250,21 @@ export async function espace(request, env) {
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
   if (path === "/api/espace/mesures" && m === "GET") return mesures(request, env);
+  // 7/11 : état du site, calculé chaque matin par le robot (scripts/etat-site.mjs), gardé 35 jours, lu par le compte propriétaire seulement
+  if (path === "/api/espace/etat" && m === "POST") {
+    if (!adminOk(request, env)) return json({ error: "Non autorisé." }, 403);
+    const { b, err } = await lire(request); if (err) return err;
+    const jour = /^\d{4}-\d{2}-\d{2}$/.test(b.jour || "") ? b.jour : jourParis();
+    await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)`).run();
+    await env.DB.prepare(`INSERT OR REPLACE INTO cache_json (k, v, at) VALUES (?, ?, ?)`).bind("etat|" + jour, JSON.stringify(b).slice(0, 400000), Date.now()).run();
+    await env.DB.prepare(`DELETE FROM cache_json WHERE k LIKE 'etat|%' AND at < ?`).bind(Date.now() - 35 * JOUR).run();
+    return json({ ok: true, jour });
+  }
+  if (path === "/api/espace/etat" && m === "GET") {
+    const p = await premiumOf(request, env); if (!p || p.plan !== "proprietaire") return json({ error: "Réservé au propriétaire du site." }, 403);
+    let rows = []; try { rows = (await env.DB.prepare(`SELECT k, v FROM cache_json WHERE k LIKE 'etat|%' ORDER BY k DESC LIMIT 30`).all()).results || []; } catch (e) { }
+    return json({ items: rows.map(r => { try { return JSON.parse(r.v); } catch (e) { return null; } }).filter(Boolean) });
+  }
   if (path === "/api/espace/essai" && m === "POST") { // essai Premium de 14 jours, sans carte : seulement si ESSAI_14J = "1" (Romain l'ouvre), une fois par adresse
     if (env.ESSAI_14J !== "1") return json({ error: "L'essai gratuit n'est pas encore ouvert." }, 403);
     const c = await compteDe(request, env); if (!c) return json({ error: "Créez votre espace gratuit (une adresse e-mail suffit), puis lancez l'essai." }, 401);
@@ -586,19 +601,32 @@ export const EXEMPLE_PROFIL = { // 5/11 (Romain : « plus cohérent ») : un PEA
     cfg: { prog: [{ k: "e:amundi-msci-world-pea", jour: 5, q: 25, depuis: "2026-03-05" }] } }, // 6/11 soir : un achat programmé, pour montrer ce bloc du rapport
   rapport: { favoris: true, portefeuille: true, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] },
 };
-export async function rapportExemple(request, env) {
-  const url = new URL(request.url), cle = new Request(new URL("/api/rapport-exemple?v=" + SYN_VERSION, url.origin));
-  const cache = typeof caches !== "undefined" ? caches.default : null;
-  if (cache) { const r = await cache.match(cle); if (r) return r; }
-  const d = await siteData(request, env), auj = jourParis(), semaine = semaineIso(auj);
-  const row = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) };
-  const s = suiviDe(row, d.names);
-  const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
-  const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
-  await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj);
-  n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
-  const corps = { ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: true, en_cours: true, historique: [] };
-  const res = new Response(JSON.stringify(corps), { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
-  if (cache) { try { await cache.put(cle, res.clone()); } catch (e) { } }
-  return res;
+export async function rapportExemple(request, env, ctx) {
+  // 7/11 (Romain : « long chargement ») : le dernier rapport calculé est gardé en base (table cache_json) et servi tout de suite ;
+  // s'il a plus d'une heure, il est recalculé en arrière-plan (ctx.waitUntil) pour la visite suivante. Le cache de Cloudflare (1 h)
+  // ne suffisait pas : il est par centre de données et se vide, et chaque recalcul prend 20 à 40 s (lectures, 9 appels à l'IA).
+  const cle = "rapport-exemple|v" + SYN_VERSION, FRAIS = 3600e3;
+  let row = null;
+  if (env.DB) { try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)`).run(); row = await env.DB.prepare(`SELECT v, at FROM cache_json WHERE k = ?`).bind(cle).first(); } catch (e) { } }
+  const calculer = async () => {
+    const d = await siteData(request, env), auj = jourParis(), semaine = semaineIso(auj);
+    const r0 = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) };
+    const s = suiviDe(r0, d.names);
+    const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
+    const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
+    await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj);
+    n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
+    const corps = JSON.stringify({ ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: true, en_cours: true, historique: [] });
+    if (env.DB) { try { await env.DB.prepare(`INSERT OR REPLACE INTO cache_json (k, v, at) VALUES (?, ?, ?)`).bind(cle, corps, Date.now()).run(); } catch (e) { } }
+    return corps;
+  };
+  const rep = v => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
+  if (row && row.v) {
+    if (Date.now() - row.at > FRAIS && ctx && ctx.waitUntil) { // périmé : servi quand même, recalculé derrière (une seule fois par heure grâce à at)
+      try { await env.DB.prepare(`UPDATE cache_json SET at = ? WHERE k = ? AND at = ?`).bind(Date.now() - FRAIS + 120e3, cle, row.at).run(); } catch (e) { }
+      ctx.waitUntil(calculer().catch(() => { }));
+    }
+    return rep(row.v);
+  }
+  return rep(await calculer());
 }
