@@ -45,31 +45,6 @@
    ]
   },
   {
-   "id": "classement",
-   "url": "/classements?c=croissance&r=fr",
-   "blocs": [
-    {
-     "q": "#cl4t"
-    },
-    {
-     "q": "#cl4s"
-    },
-    {
-     "q": "#cl4l",
-     "anim": "rangs",
-     "opts": {
-      "enfants": ".cl4-r",
-      "max": 6,
-      "pas": 0.09
-     },
-     "lignes": ".cl4-r",
-     "max": 6,
-     "duree": 1.2,
-     "pad": 8
-    }
-   ]
-  },
-  {
    "id": "agenda",
    "url": "/agenda",
    "blocs": [
@@ -86,6 +61,25 @@
    ]
   },
   {
+   "id": "monde",
+   "url": "/rapport-exemple",
+   "blocs": [
+    {
+     "q": "#r8-monde h2"
+    },
+    {
+     "q": ".r8-sujet",
+     "n": 1,
+     "anim": "rangs",
+     "opts": {
+      "pas": 0.12
+     },
+     "duree": 1.3,
+     "pad": 8
+    }
+   ]
+  },
+  {
    "id": "pq1",
    "url": "/rapport-exemple",
    "blocs": [
@@ -94,10 +88,10 @@
     },
     {
      "q": "article.r8-co",
-     "n": 0,
+     "n": 4,
      "anim": "pourquoi",
      "dans": ".r8-lec",
-     "duree": 1.6,
+     "duree": 1.8,
      "pad": 8,
      "cacher": [
       ".r8-preuve",
@@ -112,14 +106,11 @@
    "url": "/rapport-exemple",
    "blocs": [
     {
-     "q": "#r8-co h2"
-    },
-    {
      "q": "article.r8-co",
      "n": 3,
      "anim": "pourquoi",
      "dans": ".r8-lec",
-     "duree": 1.6,
+     "duree": 1.8,
      "pad": 8,
      "cacher": [
       ".r8-preuve",

@@ -1,9 +1,9 @@
 { "debut": 10.64, "fin_depuis": 22.62, "scenes": [
   { "type": "plan", "dur": 2.8, "blocs": [ { "id": "reperes-0", "at": 0 }, { "id": "reperes-1", "at": 0.12, "gap": 36 }, { "id": "reperes-2", "at": 0.8, "gap": 24 } ] },
   { "type": "plan", "dur": 3.0, "blocs": [ { "id": "marge-0", "at": 0 }, { "id": "marge-1", "at": 0.12, "gap": 36 } ] },
-  { "type": "plan", "dur": 2.4, "blocs": [ { "id": "classement-0", "at": 0 }, { "id": "classement-1", "at": 0.06, "gap": 8 }, { "id": "classement-2", "at": 0.18, "gap": 36, "fondu_bas": 170 } ] },
   { "type": "titre", "dur": 0.9, "lignes": ["Qui publie,", "et quand."] },
   { "type": "plan", "dur": 2.4, "blocs": [ { "id": "agenda-0", "at": 0 }, { "id": "agenda-1", "at": 0.1, "gap": 36 } ] },
   { "type": "titre", "dur": 1.0, "lignes": ["Chaque samedi,", "votre rapport."], "premium": true },
-  { "type": "plan", "dur": 6.4, "blocs": [ { "id": "pq1-0", "at": 0 }, { "id": "pq1-1", "at": 0.12, "gap": 30, "fin": 3.15 }, { "id": "pq2-1", "at": 3.35, "superpose": true } ] }
+  { "type": "plan", "dur": 3.4, "blocs": [ { "id": "monde-0", "at": 0 }, { "id": "monde-1", "at": 0.12, "gap": 30 } ] },
+  { "type": "plan", "dur": 7.4, "blocs": [ { "id": "pq1-0", "at": 0 }, { "id": "pq1-1", "at": 0.12, "gap": 30, "fin": 3.7 }, { "id": "pq2-0", "at": 3.9, "superpose": true } ] }
 ] }
