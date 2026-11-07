@@ -17,7 +17,7 @@ try {
   const repo = process.env.GITHUB_REPOSITORY || "n7497nbtjh-crypto/Bourse", tok = process.env.GITHUB_TOKEN;
   const r = await fetch(`https://api.github.com/repos/${repo}/actions/runs?per_page=100`, { headers: { accept: "application/vnd.github+json", ...(tok ? { authorization: "Bearer " + tok } : {}), "user-agent": "enklair-etat" } });
   const runs = (await r.json()).workflow_runs || [], vus = new Set();
-  for (const x of runs) { if (vus.has(x.name) || x.status !== "completed") continue; vus.add(x.name);
+  for (const x of runs) { const cle = x.workflow_id || x.path || x.name; if (vus.has(cle) || x.status !== "completed") continue; vus.add(cle); // 8/11 : par robot (un passage raté au fichier illisible portait le nom du fichier et restait « en échec »)
     const age = (Date.now() - Date.parse(x.updated_at)) / 36e5, ok = x.conclusion === "success";
     etat.robots.push({ nom: x.name, ok, quand: x.updated_at, age_h: Math.round(age), lien: x.html_url });
     if (!ok) point("rouge", `Robot « ${x.name} » en échec (${x.conclusion}).`); }
