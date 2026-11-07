@@ -17,7 +17,7 @@ const SYN_LECONS = { // situation → leçon de l'Académie (module/leçon)
   baisse: ["psychologie", "aversion-pertes"], hausse: ["psychologie", "recence-troupeau"], indice: ["bourse", "indices"], per: ["valorisation", "per"],
   ligne: ["portefeuille", "concentration"], top3: ["portefeuille", "concentration"], frais: ["frais-fiscalite", "frais-courants"], pea: ["placements", "pea"], mediane: ["comptes", "mediane"],
 };
-function synPct(v, d = 1) { if (v == null || !isFinite(v)) return "–"; const r = Math.round(v * 10 ** d) / 10 ** d; return (r > 0 ? "+" : r < 0 ? "−" : "") + nf(d).format(Math.abs(r)) + " %"; }
+function synPct(v, d = 1) { if (v == null || !isFinite(v)) return "–"; const r = Math.round(v * 10 ** d) / 10 ** d; return (r > 0 ? "+" : r < 0 ? "−" : "") + nf(d).format(Math.abs(r)) + "\u00a0%"; }
 function synEur(v, sign = true) { return v == null || !isFinite(v) ? "–" : (sign ? (v > 0 ? "+" : v < 0 ? "−" : "") : "") + F0.format(Math.abs(Math.round(v))) + " €"; }
 function synInsec(t) { return esc(t).replace(/ ([%€])/g, "&nbsp;$1").replace(/(\d) (Md€|M€|pts?)/g, "$1&nbsp;$2"); } // pas de retour à la ligne avant % ou €
 function synCls(v) { const r = Math.round((v || 0) * 10) / 10; return r > 0 ? "up" : r < 0 ? "down" : "muted"; }

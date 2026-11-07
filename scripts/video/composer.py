@@ -55,10 +55,13 @@ def plan(sc):
     for b in sc["blocs"]:
         m = json.load(open(f"{CAP}/{b['id']}/meta.json")); blocs.append((b, m))
     x0 = min(m["x"] for _, m in blocs); x1 = max(m["x"] + m["w"] for _, m in blocs)
-    tot = sum(m["h"] for _, m in blocs) + sum(b.get("gap", 40) for b, _ in blocs[1:])
+    tot = sum(m["h"] for b, m in blocs if not b.get("superpose")) + sum(b.get("gap", 40) for b, _ in blocs[1:] if not b.get("superpose"))
+    hmax = max([m["h"] for b, m in blocs if b.get("superpose")] + [0]); tot += max(0, hmax - blocs[-2][1]["h"]) if hmax else 0
     s = min(1.0, 1040 / (x1 - x0), 1560 / tot)
     y = max(240, (H - tot * s) / 2 - 40); pos = []
     for k, (b, m) in enumerate(blocs):
+        if b.get("superpose"):  # même place que le bloc précédent (il le remplace à l'écran)
+            px, py, _ = pos[-1]; pos.append((W / 2 - (x1 - x0) * s / 2 + (m["x"] - x0) * s, py, s)); continue
         if k: y += b.get("gap", 40) * s
         pos.append((W / 2 - (x1 - x0) * s / 2 + (m["x"] - x0) * s, y, s)); y += m["h"] * s
     return blocs, pos
@@ -69,7 +72,7 @@ def cadre_plan(sc, lay, t):
     for (b, m), (x, y, s) in zip(blocs, pos):
         tb = t - b.get("at", 0)
         if tb < 0: continue
-        a = e3(tb / 0.3) * sortie
+        a = e3(tb / 0.3) * sortie * (1 - eio((t - b["fin"]) / 0.25) if "fin" in b else 1)
         if a <= 0: continue
         i = min(m["n"] - 1, int(round(tb * FPS)))
         im = img(b["id"], i)

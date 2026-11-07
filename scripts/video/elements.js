@@ -68,7 +68,7 @@ window.__A = {
       const pad = L.pad ?? 6, clip = { x: Math.max(0, bb.x - pad), y: Math.max(0, bb.y - pad), width: Math.min(W, bb.w + 2 * pad), height: bb.h + 2 * pad };
       const n = L.anim ? Math.round((L.duree || 1.4) * FPS) + 1 : 1;
       for (let i = 0; i < n; i++) {
-        if (L.anim) await h.evaluate((el, a) => __A[a.nom](el, a.t, a.o || {}), { nom: L.anim, t: i / FPS, o: L.opts });
+        if (L.anim) await h.evaluate((el, a) => __A[a.nom](a.sel ? el.querySelector(a.sel) : el, a.t, a.o || {}), { nom: L.anim, t: i / FPS, o: L.opts, sel: L.dans });
         await p.screenshot({ path: path.join(dir, `f${String(i).padStart(3, "0")}.jpg`), clip, type: "jpeg", quality: 92 });
       }
       fs.writeFileSync(path.join(dir, "meta.json"), JSON.stringify({ n, x: Math.round(clip.x * DPR), w: Math.round(clip.width * DPR), h: Math.round(clip.height * DPR) }));
