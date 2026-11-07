@@ -225,7 +225,7 @@ function O2_sjEtfHist(k, S, Hs, frais) {
   if (!x0) return { k, err: `pas de valeur il y a ${S.ans} an${S.ans > 1 ? "s" : ""} (série de l'émetteur depuis le ${dLabel(s[0][0])})` };
   const net = Math.max(0, S.amt - frais), parts = net / x0[1];
   const pts = champs.map(a => { const x = a === 0 ? der : at(O2_moinsAns(der[0], a)); return [-a, x ? parts * x[1] : null]; });
-  return { k, nom: O2_nomK(k), cur: "EUR", pts, div: null, parts, net, frais, depart: x0[1], base: der[0], hist: { src: Hs.src || "émetteur", asOf: der[0], debut: x0[0] } };
+  return { k, nom: O2_nomK(k), cur: "EUR", pts, div: null, parts, net, frais, depart: x0[1], base: der[0], hist: { src: Hs.src || "émetteur", asOf: der[0], debut: x0[0], sansDiv: !!Hs.sansDiv } };
 }
 function O2_sjSerie(k, S, ref, H, frais) {
   const p = PX[k], cur = O2_curK(k);

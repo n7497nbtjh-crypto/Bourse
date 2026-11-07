@@ -57,7 +57,7 @@ function e4Ctx(e, C, H, P) {
   const ctry = C ? (C.countries || []).filter(k => k[1] >= 0.5 && k[0] !== "XS" && k[0] !== "EU") : [], secs = C && !bond ? (C.sectors || []).filter(s => s[1] >= 0.5) : [];
   const hors = C && C.countries && C.countries.length ? C.countries.filter(([k]) => !ETF_EURO.has(k) && k !== "XS").reduce((a, k) => a + k[1], 0) : null;
   const items = (P && P.items) || {}, peers = ETF_peers(e), pf = H && H.perf;
-  const medA1 = (() => { const a = peers.map(p => items[p.id] && items[p.id].a1).filter(v => v != null); return a.length >= 5 ? f4Med(a) : null; })();
+  const medA1 = (() => { const a = peers.map(p => items[p.id] && !items[p.id].sansDiv && items[p.id].a1).filter(v => v != null && v !== false); return a.length >= 5 ? f4Med(a) : null; })();
   const medEnc = f4Med(peers.map(p => p.encours).filter(v => v > 0));
   const n = (C && C.lines) || (e.compo && e.compo.n) || null, pays = (C && (C.countries || []).filter(k => k[0] !== "XS" && k[0] !== "EU").length) || (e.compo && e.compo.pays) || null;
   const mot = bond ? "obligations" : e.categorie === "immobilier" ? "sociétés immobilières" : "entreprises";
@@ -167,27 +167,28 @@ function e4Perf(x) {
   const hausses = Object.values(pf.annees || {}).filter(v => v > 0).length, nA = Object.keys(pf.annees || {}).length;
   const per = [["1 an", pf.a1], ["3 ans", pf.a3], ["5 ans", pf.a5], ["10 ans", pf.a10]].filter(p => p[1] != null);
   const deb = pf.debut ? new Date(pf.debut + "T12:00:00") : null, ageA = deb ? (Date.now() - deb) / 31557600000 : null;
+  const DIVR = H.sansDiv ? "sans les dividendes versés" : "dividendes réinvestis";
   const conv = H.deviseFonds && H.deviseFonds !== "EUR" ? ` Fonds tenu en ${esc(H.deviseFonds)}, converti en euros au taux de la BCE.` : "";
   const src = { texte: `${esc(e.issuer)}, au ${new Date(H.asOf + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}`, lien: H.url, label: "fiche de l'émetteur ↗" };
   let vis;
   if (ans.length >= 2) {
     const mxv = Math.max(5, ...vals), nice = f4Nice(mxv);
-    vis = ekColonnes({ titre: "Ce qu'il a rapporté chaque année", unite: "en euros, dividendes réinvestis, après frais", annees: ans, valeurs: vals, fmt: v => (v > 0 ? "+" : "") + ekFr(v, 0) + " %", max: nice.max, graduations: nice.ticks, fmtAxe: t => ekFr(t, 0) + " %", sansVar: true,
+    vis = ekColonnes({ titre: "Ce qu'il a rapporté chaque année", unite: `en euros, ${DIVR}, après frais`, annees: ans, valeurs: vals, fmt: v => (v > 0 ? "+" : "") + ekFr(v, 0) + " %", max: nice.max, graduations: nice.ticks, fmtAxe: t => ekFr(t, 0) + " %", sansVar: true,
       indice: `Chaque colonne est la variation de la part du 1er janvier au 31 décembre. En rouge : une année de baisse.${conv} Les performances passées ne préjugent pas des performances futures.`, source: src });
   } else {
     const L = [["6 mois", pf.m6], ["Depuis janvier", pf.ytd], ["1 an", pf.a1], ["Depuis la création", pf.depuis]].filter(p => p[1] != null);
-    vis = ekBox({ titre: "Ce qu'il a rapporté", unite: "en euros, dividendes réinvestis, après frais", indice: `Fonds créé ${deb ? "le " + deb.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "récemment"} : pas encore d'année civile complète.${conv} Les performances passées ne préjugent pas des performances futures.`, source: src },
+    vis = ekBox({ titre: "Ce qu'il a rapporté", unite: `en euros, ${DIVR}, après frais`, indice: `Fonds créé ${deb ? "le " + deb.toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" }) : "récemment"} : pas encore d'année civile complète.${conv} Les performances passées ne préjugent pas des performances futures.`, source: src },
       `<div class="et-nums">${L.map(p => `<div><small>${p[0]}</small><b class="${p[1] < 0 ? "r" : ""}">${e4Pc(p[1])}</b></div>`).join("")}</div>`);
   }
   const pb = pf.pireBaisse;
   const droite = `<div class="et-side"><p class="h">Sur plusieurs années</p><div class="et-cout">${per.map(p => `<div><span><b>${p[0]}</b>${p[0] === "1 an" && x.medA1 != null ? `<small>médiane de sa catégorie : ${e4Pc(x.medA1)}</small>` : ""}</span><em class="${p[1] < 0 ? "r" : ""}">${e4Pc(p[1], 0)}</em></div>`).join("")}
     ${pb ? `<div><span><b>${ekDefMot("baisse", "Pire baisse", {})}</b><small>${ageA != null && ageA < 5 ? "depuis la création" : "sur 5 ans"}, du ${new Date(pb.de + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })} au ${new Date(pb.a + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: "numeric" })}</small></span><em class="r">${e4Pc(pb.v, 0)}</em></div>` : ""}</div>
-    <p class="et-hyp">En euros, dividendes réinvestis et frais déduits, au ${new Date(H.asOf + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}. Ce n'est pas une prévision.</p></div>`;
-  const ton = pf.a1 != null && x.medA1 != null ? (pf.a1 - x.medA1 > 0.02 ? "g" : x.medA1 - pf.a1 > 0.02 ? "r" : "") : "";
+    <p class="et-hyp">En euros, ${DIVR} et frais déduits${H.sansDiv ? " (part de distribution : les dividendes versés s'ajoutent au gain)" : ""}, au ${new Date(H.asOf + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}. Ce n'est pas une prévision.</p></div>`;
+  const ton = !H.sansDiv && pf.a1 != null && x.medA1 != null ? (pf.a1 - x.medA1 > 0.02 ? "g" : x.medA1 - pf.a1 > 0.02 ? "r" : "") : "";
   const titre = nA >= 2 ? (hausses ? `${hausses} année${hausses > 1 ? "s" : ""} de hausse sur ${nA}.` : `aucune année de hausse sur ${nA}.`) : nA === 1 ? "une seule année complète d'historique." : ageA != null && ageA < 2 ? `${ageA < 1 ? "moins d'un an" : ageA < 1.4 ? "un an" : "un an et demi"} d'historique.` : "ce qu'il a rapporté.";
   return { sur: "Sa performance", concept: { cle: "perf" }, titre, visuel: vis, explique: droite, q,
     cmp: ton ? { texte: ton === "g" ? "Plus que la médiane de sa catégorie sur un an" : "Moins que la médiane de sa catégorie sur un an", ton } : null,
-    ch: ["Sa performance", e4Pc(pf.a1 != null ? pf.a1 : pf.depuis, 1), ton, pf.a1 != null ? `sur un an, ${x.bond ? "revenus" : "dividendes"} réinvestis` : "depuis sa création", x.medA1 != null && pf.a1 != null ? `médiane : ${e4Pc(x.medA1)}` : ""] };
+    ch: ["Sa performance", e4Pc(pf.a1 != null ? pf.a1 : pf.depuis, 1), ton, pf.a1 != null ? (H.sansDiv ? "sur un an, sans les dividendes versés" : `sur un an, ${x.bond ? "revenus" : "dividendes"} réinvestis`) : "depuis sa création", x.medA1 != null && pf.a1 != null ? `médiane : ${e4Pc(x.medA1)}` : ""] };
 }
 
 function e4Frais(x) {

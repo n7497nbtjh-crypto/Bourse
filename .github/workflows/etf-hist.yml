@@ -1,6 +1,6 @@
 # Robot de l'historique des ETF (3/11/2026) : performances officielles des émetteurs (voir data/etf_historique.mjs).
 # Amundi (valeur liquidative ajustée des dividendes), iShares (performance dividendes réinvestis, convertie en euros au taux BCE)
-# et HSBC (fiche mensuelle officielle, 6/11).
+# HSBC (fiche mensuelle officielle, 6/11), SPDR et Invesco (fichiers Excel officiels de valeur liquidative, 7/11).
 # Chaque samedi, il réécrit cf/site/data/etf-hist/<id>.json et cf/site/data/etf-perf.json.
 name: Historique des ETF
 on:
@@ -23,7 +23,9 @@ jobs:
           node-version: 22
       - name: Lecteur de PDF (fiches mensuelles HSBC)
         run: command -v pdftotext >/dev/null || sudo apt-get install -y -qq poppler-utils >/dev/null || true
-      - name: Collecte (Amundi, iShares, HSBC, taux BCE)
+      - name: Lecteur Excel (fichiers officiels SPDR et Invesco)
+        run: npm i --no-save --silent xlsx@0.18.5 || echo "::warning::module xlsx indisponible : SPDR et Invesco ignorés"
+      - name: Collecte (Amundi, iShares, HSBC, SPDR, Invesco, taux BCE)
         timeout-minutes: 35
         run: node data/etf_historique.mjs
       - name: Enregistrement dans le dépôt

@@ -23,7 +23,7 @@ function elMedianes() {
   if (EL.med) return EL.med;
   const M = {}, P = (EL.perf && EL.perf.items) || {};
   for (const c of Object.keys(ECAT)) { const l = ETF.list.filter(e => e.categorie === c); if (!l.length) continue;
-    M[c] = { n: l.length, ter: f4Med(l.map(e => e.ter).filter(v => v != null)), a1: f4Med(l.map(e => P[e.id] && P[e.id].a1).filter(v => v != null)), pea: l.filter(e => e.pea === true).length }; }
+    M[c] = { n: l.length, ter: f4Med(l.map(e => e.ter).filter(v => v != null)), a1: f4Med(l.map(e => P[e.id] && !P[e.id].sansDiv ? P[e.id].a1 : null).filter(v => v != null)), pea: l.filter(e => e.pea === true).length }; }
   return EL.med = M;
 }
 // Une carte par fonds : les parts (capitalisante, distribuante) d'un même fonds, au même prix, sont regroupées
@@ -50,13 +50,13 @@ function elJauge(v, m) { if (v == null || m == null) return ""; const mx = m * 2
 function elCarte(F) {
   const e = F.e, c = elMedianes()[e.categorie] || {}, P = (EL.perf && EL.perf.items) || {}, a1 = P[e.id] && P[e.id].a1;
   const tf = e.ter == null || c.ter == null ? "" : e.ter / c.ter <= 0.8 ? "g" : e.ter / c.ter >= 1.25 ? "r" : "";
-  const ta = a1 == null || c.a1 == null ? "" : a1 - c.a1 > 0.02 ? "g" : c.a1 - a1 > 0.02 ? "r" : "", t10 = e.compo && e.compo.t10, fr = e4Fr();
+  const sd = P[e.id] && P[e.id].sansDiv, ta = a1 == null || c.a1 == null || sd ? "" : a1 - c.a1 > 0.02 ? "g" : c.a1 - a1 > 0.02 ? "r" : "", t10 = e.compo && e.compo.t10, fr = e4Fr();
   const div = F.parts.length > 1 ? `${F.parts.length} parts` : e.distribution === "distribution" ? "distribuant" : e.distribution ? "capitalisant" : "";
   const pills = [fr && e.pea === true ? ["g", "PEA ✓"] : null, e.encours ? ["", big(e.encours)] : null, div ? ["", div] : null, e.levier ? ["r", "levier ou inverse"] : null,
     t10 == null ? null : t10 > 50 ? ["r", "très concentré"] : t10 > 30 ? ["", "assez concentré"] : ["g", "très diversifié"]].filter(Boolean);
   return `<a class="el-c" href="/etf/${esc(e.id)}"><div class="el-ch">${elLogo(e)}<span><b>${esc(elBase(e.name))}</b><small>${esc([e.index, e.ticker].filter(Boolean).join(" · "))}</small></span></div>
     <div class="el-cn"><div><small>Frais par an</small><strong class="${tf}">${e.ter != null ? ekFr(e.ter, 2) + " %" : "–"}</strong>${elJauge(e.ter, c.ter)}<em>${c.ter != null ? "médiane " + ekFr(c.ter, 2) + " %" : ""}</em></div>
-      <div><small>Sur 1 an</small><strong class="${ta}">${elPc(a1)}</strong><em>${a1 == null ? (/^(Amundi|iShares)$/.test(e.issuer) ? "non publiée" : "émetteur pas encore suivi") : c.a1 != null ? "médiane " + elPc(c.a1) : ""}</em></div></div>
+      <div><small>Sur 1 an</small><strong class="${ta}">${elPc(a1)}</strong><em>${a1 == null ? (/^(Amundi|iShares|SPDR|Invesco|HSBC)$/.test(e.issuer) ? "non publiée" : "émetteur pas encore suivi") : sd ? "sans les dividendes versés" : c.a1 != null ? "médiane " + elPc(c.a1) : ""}</em></div></div>
     <div class="el-cc">${pills.map(([k, t]) => `<span class="${k}">${esc(t)}</span>`).join("")}</div></a>`;
 }
 

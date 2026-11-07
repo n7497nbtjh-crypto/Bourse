@@ -7,7 +7,11 @@
 //   - Amundi : API produits d'amundietf.fr, indicateur « countervalorisedAdjustedNAV » (valeur liquidative ajustée des dividendes) ;
 //   - iShares : API des pages produit d'ishares.com, composant « performance » (série « performanceData », dividendes réinvestis,
 //     et performances officielles du fonds et de son indice, arrêtées à la fin du mois).
-//   SPDR et Invesco : à ajouter (voir docs ; 251 ETF).
+//   - SPDR (7/11) : fichier officiel « NAV history » de ssga.com (navhist-emea-en-<ticker>.xlsx, valeur liquidative quotidienne
+//     depuis la création) ; part de distribution : valeur liquidative sans les dividendes versés (dit dans src, champ sansDiv) ;
+//   - Invesco (7/11) : fichier « End of day data » de dng-api.invesco.com (même service que la valeur du jour) : « Adjusted NAV »
+//     (dividendes réinvestis) pour la part principale, valeur liquidative pour les autres parts ; la part est reconnue à sa valeur du jour (keyStats).
+//   Ces deux sources ont besoin du module xlsx (npm i --no-save xlsx@0.18.5, comme etf.yml) ; sans lui elles sont ignorées.
 // Sorties :
 //   cf/site/data/etf-hist/<id>.json : { id, src, url, devise, asOf, s: [[AAAA-MM-JJ, valeur], …] une valeur par semaine,
 //     perf: { m1, m6, ytd, a1, a3, a5, a10, depuis, debut, annees: { 2025: x, … }, pireBaisse: { v, de, a } }, officiel?: { … } }
@@ -169,19 +173,66 @@ async function hsbcPerf(liste) {
   return out;
 }
 
+
+// ——— SPDR et Invesco (7/11) : fichiers Excel officiels ———
+let XLSX = null; try { XLSX = (await import("xlsx")).default; } catch (e) { }
+const lignesXlsx = b => { const wb = XLSX.read(b, { type: "buffer", cellDates: true }); return XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null }); };
+const MOIS_EN = { Jan: 0, Feb: 1, Mar: 2, Apr: 3, May: 4, Jun: 5, Jul: 6, Aug: 7, Sep: 8, Oct: 9, Nov: 10, Dec: 11 };
+const dateX = v => { if (v instanceof Date) { const d = new Date(v.getTime() - v.getTimezoneOffset() * 6e4 + 432e5); return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()); } /* xlsx rend parfois 23:59:59 la veille : arrondi au jour le plus proche */ const m = String(v || "").match(/^(\d{1,2})-([A-Z][a-z]{2})-(\d{4})$/); if (m && MOIS_EN[m[2]] != null) return Date.UTC(+m[3], MOIS_EN[m[2]], +m[1]); const n = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})/); return n ? Date.UTC(+n[1], +n[2] - 1, +n[3]) : null; };
+async function spdr(liste) {
+  const out = {}; if (!liste.length) return out; if (!XLSX) { log("spdr : module xlsx absent"); return out; }
+  let rows; try { rows = (await http("https://www.ssga.com/bin/v1/ssmp/fund/fundfinder?country=fr&language=fr&role=intermediary&product=etfs&ui=fund-finder", { type: "json", pause: 1500, timeout: 120e3 })).data.funds.etfs.datas; } catch (e) { log("spdr liste :", e.message); return out; }
+  const par = {}; for (const r of rows) { const docs = JSON.stringify(r.documentPdf || []), isin = (docs.match(/isin=([A-Z]{2}[A-Z0-9]{10})/) || (r.keywords || "").match(/\b([A-Z]{2}[A-Z0-9]{9}\d)\b/) || [])[1]; if (isin && r.fundTicker) par[isin] = r; }
+  for (const e of liste) {
+    const r = par[e.isin]; if (!r) { log("spdr", e.id, "absent de l'outil de recherche"); continue; }
+    // Le lien du fichier est dans les documents du fonds ; sinon le code de cotation de l'adresse de la fiche (…-spy5-gy), puis le code affiché
+    const docs = JSON.stringify(r.documentPdf || []), tk = [(docs.match(/navhist-emea-en-([a-z0-9-]+)\.xlsx/) || [])[1], (String(r.fundUri).match(/-([a-z0-9]+-[a-z]{2})$/) || [])[1], String(r.fundTicker).replace(/\^/g, "").trim().toLowerCase().replace(/\s+/g, "-")];
+    let L = null; for (const t of [...new Set(tk.filter(Boolean))]) { try { const b = await http(`https://www.ssga.com/library-content/products/fund-data/etfs/emea/navhist-emea-en-${t}.xlsx`, { type: "buf", pause: 1200, retries: 1, timeout: 60e3 }); if (b && b.length > 1000) { L = lignesXlsx(b); break; } } catch (err) { } }
+    if (!L) { log("spdr", e.id, "fichier introuvable", tk.join(" ")); continue; }
+    const isinF = (L.find(l => l && /^ISIN/i.test(String(l[0] || ""))) || [])[1]; if (isinF && isinF !== e.isin) { log("spdr", e.id, "ISIN différent", isinF); continue; }
+    const dev = String((L.find(l => l && /^NAV Currency/i.test(String(l[0] || ""))) || [])[1] || "").trim() || null, h = L.findIndex(l => l && l[0] === "Date" && l[1] === "NAV"); if (h < 0) continue;
+    const brut = L.slice(h + 1).map(l => [dateX(l && l[0]), +(l && l[1])]).filter(p => p[0] && p[1] > 0).sort((a, b) => a[0] - b[0]); // du plus ancien au plus récent (enEuros l'exige)
+    const pts = await enEuros(brut, dev); if (!pts) continue; const c = calculs(pts); if (!c) continue;
+    const dist = /\(Dist\)|distribution/i.test(r.fundName + " " + (e.distribution || ""));
+    out[e.id] = { id: e.id, src: "SPDR (ssga.com), historique officiel de la valeur liquidative" + (dist ? ", sans les dividendes versés (part de distribution)" : "") + (dev && dev !== "EUR" ? `, convertie en euros au taux de la BCE (fonds tenu en ${dev})` : ""), url: "https://www.ssga.com" + r.fundUri, devise: "EUR", deviseFonds: dev, ...(dist ? { sansDiv: true } : {}), ...c };
+  }
+  log(`spdr : ${Object.keys(out).length} séries sur ${liste.length}`);
+  return out;
+}
+async function invesco(liste) {
+  const out = {}; if (!liste.length) return out; if (!XLSX) { log("invesco : module xlsx absent"); return out; }
+  const API = "https://dng-api.invesco.com/cache/v1/accounts/fr_FR/shareclasses/";
+  for (const e of liste) {
+    const ks = await http(`${API}${e.isin}/keyStats?idType=isin&productCode=ETF&bondType=NotCallable`, { type: "json", pause: 600, retries: 1, timeout: 30e3 }).catch(() => null);
+    const nav = ks && (ks.keyStats || []).find(k => k.name === "nav"), dev = ks && ks.currency; if (!nav || !(nav.value > 0)) continue;
+    let L; try { L = lignesXlsx(await http(`${API}${e.isin}/performance?idType=isin&productCode=ETF`, { type: "buf", pause: 1200, retries: 1, timeout: 60e3 })); } catch (err) { log("invesco", e.id, err.message); continue; }
+    const h = L.findIndex(l => l && l[0] === "Date"); if (h < 1) continue;
+    const H = L[h], noms = L[h - 1], cols = []; let nom = null;
+    H.forEach((x, i) => { if (noms[i]) nom = noms[i]; if (x === "NAV") cols.push({ i, nom, adj: H[i + 1] === "Adjusted NAV" ? i + 1 : null }); });
+    const prem = L[h + 1] || [], c0 = cols.filter(c => prem[c.i] > 0).sort((a, b) => Math.abs(prem[a.i] / nav.value - 1) - Math.abs(prem[b.i] / nav.value - 1))[0];
+    if (!c0 || Math.abs(prem[c0.i] / nav.value - 1) > 0.02) { log("invesco", e.id, "part non reconnue"); continue; } // la valeur du jour doit coller (2 %)
+    const k = c0.adj != null ? c0.adj : c0.i, dist = c0.adj == null && /\bDist\b/i.test(c0.nom || "");
+    const brut = L.slice(h + 1).map(l => [dateX(l && l[0]), +(l && l[k])]).filter(p => p[0] && p[1] > 0).sort((a, b) => a[0] - b[0]); // du plus ancien au plus récent (enEuros l'exige)
+    const pts = await enEuros(brut, dev); if (!pts) continue; const c = calculs(pts); if (!c) continue;
+    out[e.id] = { id: e.id, src: "Invesco (invesco.com), historique officiel de la valeur liquidative" + (c0.adj != null ? " ajustée des dividendes" : dist ? ", sans les dividendes versés (part de distribution)" : "") + (dev && dev !== "EUR" ? `, convertie en euros au taux de la BCE (part tenue en ${dev})` : ""), url: e.url || null, devise: "EUR", deviseFonds: dev, ...(dist ? { sansDiv: true } : {}), ...c };
+  }
+  log(`invesco : ${Object.keys(out).length} séries sur ${liste.length}`);
+  return out;
+}
+
 // ——— Programme ———
 if (process.argv[1] && /etf_historique\.mjs$/.test(process.argv[1])) {
   const L = JSON.parse(readFileSync(ROOT + "cf/site/data/etf.json", "utf8")).list;
   let choix = L.filter(e => e.isin && (!ids.length || ids.includes(e.id)) && (!emetteur || e.issuer === emetteur));
   const parEm = em => choix.filter(e => e.issuer === em).slice(0, max);
   if (!existsSync(OUT)) mkdirSync(OUT, { recursive: true });
-  const res = { ...(await amundi(parEm("Amundi"))), ...(await ishares(parEm("iShares"))), ...(await hsbcPerf(parEm("HSBC"))) };
+  const res = { ...(await amundi(parEm("Amundi"))), ...(await ishares(parEm("iShares"))), ...(await hsbcPerf(parEm("HSBC"))), ...(await spdr(parEm("SPDR"))), ...(await invesco(parEm("Invesco"))) };
   for (const [id, r] of Object.entries(res)) writeFileSync(OUT + id + ".json", JSON.stringify(r));
   // Index des performances pour les listes (fusion avec l'existant : un passage partiel ne retire rien)
   const IDX = ROOT + "cf/site/data/etf-perf.json"; let idx = { items: {} }; try { idx = JSON.parse(readFileSync(IDX, "utf8")); } catch (e) { }
-  for (const [id, r] of Object.entries(res)) idx.items[id] = { a1: r.perf.a1, a3: r.perf.a3, a5: r.perf.a5, asOf: r.asOf, devise: r.devise };
+  for (const [id, r] of Object.entries(res)) idx.items[id] = { a1: r.perf.a1, a3: r.perf.a3, a5: r.perf.a5, asOf: r.asOf, devise: r.devise, ...(r.sansDiv ? { sansDiv: 1 } : {}) };
   idx.updated = new Date().toISOString().slice(0, 10);
   writeFileSync(IDX, JSON.stringify(idx));
-  const tot = L.filter(e => ["Amundi", "iShares", "HSBC"].includes(e.issuer)).length;
+  const tot = L.filter(e => ["Amundi", "iShares", "HSBC", "SPDR", "Invesco"].includes(e.issuer)).length;
   log(`${Object.keys(res).length} séries écrites (${Object.keys(idx.items).length} dans l'index, ${tot} ETF Amundi et iShares au total)`);
 }
