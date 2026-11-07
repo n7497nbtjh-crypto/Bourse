@@ -3395,7 +3395,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "0a043c6df494d4a5", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "5840a24c35b73c0f", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3884,7 +3884,7 @@ function meta(path, q = null) {
   if (p === "/portefeuille") return { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." };
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications \xB7 ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqu\xE9s simplement." };
-  if (p === "/communaute") return { title: `Communaut\xE9 \xB7 ${SITE}`, desc: "Analyses argument\xE9es des visiteurs sur les entreprises et les ETF, avec les chiffres du site, questions de d\xE9butants et listes de suivi partag\xE9es. Aucun message n'est un conseil en investissement." };
+  if (p === "/communaute" || p === "/pronostics") return { title: `Pronostics de r\xE9sultats \xB7 ${SITE}`, desc: "Avant chaque publication de r\xE9sultats : ventes en hausse ou en baisse ? Un exercice pour apprendre \xE0 anticiper, sans rien \xE0 gagner." };
   if (p === "/lexique") return { title: `Lexique \xB7 ${SITE}`, desc: "PER, rendement, marge, dette, volatilit\xE9 : chaque chiffre de la Bourse expliqu\xE9 simplement, avec ses limites." };
   if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace \xB7 ${SITE}`, desc: "Votre semaine en 2 minutes : variations, annonces et dates \xE0 venir de ce que vous suivez, vos alertes et vos listes, sur tous vos appareils." };
   if (p === "/favoris") return { title: `Mes favoris \xB7 ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres cl\xE9s, prochaines dates et presse." };
