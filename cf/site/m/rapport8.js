@@ -69,7 +69,7 @@ function r8Fort(l, R, A, pub) { // le jour où tout s'est joué, et ce qui s'est
 function r8Pourquoi(l, R, A) {
   const v = l.variation_semaine_pct, ind = l.indice, J = (R && R.jours) || [], out = [], nom = l.nom;
   const nr = R ? R.liste.filter(x => x.v != null).length : 0, med = R && R.med;
-  const res = A.find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length);
+  const res = [...A].reverse().find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length);
   const jourDe = d => J.find(j => j.date === String(d).slice(0, 10));
   if (res) {
     const [lab, val] = res.chiffres[0], g = r8Croiss(val), cr = R && R.croissance, montant = String(val).replace(/\s*\(.*$/, "");
@@ -110,7 +110,7 @@ function r8Jours(l, R, A) {
 }
 // Les chiffres qui ne sont ni dans l'en-tête ni dans les barres : ses résultats, l'accueil de la Bourse, ses ventes et sa marge face aux rivales
 function r8Faits(l, R, A) {
-  const res = A.find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length), L = [];
+  const res = [...A].reverse().find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length), L = [];
   const ton = (x, m) => x == null || m == null ? "" : x - m > 1 ? "up" : x - m < -1 ? "dn" : "";
   if (res && res.chiffres.length > 1) L.push(["Ses autres chiffres", esc(res.chiffres.slice(1, 4).map(([a, b]) => `${a} ${b}`).join(" · ")), `publiés le ${esc(r8Jr(res.date))}`, "r8-lgf"]);
   const rc = R && R.reaction; if (rc && !res) L.push(["Ce jour-là en Bourse", `<b class="${r8Cls(rc.v)}">${synPct(rc.v)}</b>`, rc.med != null ? `ses rivales : ${synPct(rc.med)}` : "", ton(rc.v, rc.med)]);
