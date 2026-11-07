@@ -1160,7 +1160,7 @@ async function loadPrices() {
   const robP = fetch("/data/cours.json").then(r => r.ok ? r.json() : null).catch(() => null);
   try { const r = await fetch("/api/cours"); if (r.ok) { const j = await r.json(); PX = j.items || {}; PXUP = j.updated; } } catch (e) { }
   const rob = await robP;
-  if (rob && rob.items) { if (!PXUP) { PX = rob.items; PXUP = rob.updated; } else for (const [k, v] of Object.entries(rob.items)) { const it = PX[k]; if (!it || (!(it.p > 0) && v.p > 0) || ((v.ep || v.vl) && v.d && (!it.d || v.d > it.d))) PX[k] = it || !rob.updated || v.vl || v.ep ? v : { ...v, d: rob.updated }; else for (const f of ["h52", "l52", "p1y", "p3y", "p5y"]) if (it[f] == null && v[f] != null) it[f] = v[f]; } }
+  if (rob && rob.items) { if (!PXUP) { PX = rob.items; PXUP = rob.updated; } else for (const [k, v] of Object.entries(rob.items)) { const it = PX[k]; if (!it || (!(it.p > 0) && v.p > 0) || ((v.ep || v.vl) && v.d && (!it.d || v.d > it.d))) PX[k] = it || !rob.updated || v.vl || v.ep ? v : { ...v, d: rob.updated }; else for (const f of ["cur", "cap", "chg", "h52", "l52", "p1y", "p3y", "p5y", "dp"]) if (it[f] == null && v[f] != null && (f !== "cur" || (it.p > 0 && v.p > 0 && Math.abs(it.p / v.p - 1) < 0.3)) && (f !== "cap" && f !== "chg" || it.cur === v.cur)) it[f] = v[f]; } } // 7/11 : la copie du Worker peut venir d'une feuille recalculée en partie (cours sans devise) : le fichier du robot complète
   if (!PXUP) PXUP = "none";
   FX = await fxP;
   computePE();

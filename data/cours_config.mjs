@@ -13,6 +13,7 @@ export const COURS_CSV_SUITE = [ // copies de la feuille : gf2.csv, gf3.csv, gf4
 ];
 export const COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
 // Lecture du CSV publié : { "c:lvmh": { s, p, chg, cur, cap, h52, l52, p1y, p3y, p5y }, … }
+const DEV_PLACE = { NASDAQ: "USD", NYSE: "USD", NYSEAMERICAN: "USD", EPA: "EUR", AMS: "EUR", EBR: "EUR", ELI: "EUR", ETR: "EUR", FRA: "EUR", BIT: "EUR", BME: "EUR", HEL: "EUR", VIE: "EUR", ISE: "EUR", SWX: "CHF", STO: "SEK", CPH: "DKK", OSL: "NOK", TYO: "JPY", HKG: "HKD", TSE: "CAD", ASX: "AUD", WSE: "PLN" };
 export function parseCours(txt) {
   const rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g;
   let row = [], m;
@@ -25,6 +26,9 @@ export function parseCours(txt) {
   for (const r of rows) {
     const id = r[col("id")]; if (!id || !r[col("sym")]) continue;
     let cur = r[col("cur")] || null, p = num(r[col("price")]), k = 1;
+    // 7/11 : une feuille recalculée en partie peut donner le cours sans sa devise (Apple sans « USD » : PER faux sur tout le site).
+    // La devise est alors déduite de la place de cotation quand elle n'a qu'une devise ; sinon (Londres…) la ligne reste sans devise.
+    if (!cur && p != null) cur = DEV_PLACE[String(r[col("sym")]).split(":")[0]] || null;
     if (cur === "GBX") { cur = "GBP"; k = 0.01; } // cours de Londres en pence
     const o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num(r[col("chg")]), cap: num(r[col("cap")]) };
     for (const f of ["h52", "l52", "p1y", "p3y", "p5y"]) { const x = num(r[col(f)]); o[f] = x != null ? x * k : null; }

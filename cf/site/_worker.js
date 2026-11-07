@@ -532,7 +532,7 @@ var COURS_CSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRQSc8wwIJdTs5y
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRss-rBkYNWtXDrNMHcDudDsxMJZ2djLCjTvt-w6bGiXqnPEbdr3sxPtcXpa9tgTDN045owZTzaxNd/pub?output=csv",
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vQwYIFEt9Ux_l7uyPut1Hv--GFFmiBgi2tgV2HN4UigVZLfGmykoaKEr-E1ZRsIO09dOpgUgZmzlrld/pub?output=csv",
   "https://docs.google.com/spreadsheets/d/e/2PACX-1vR70B8qndqju4-YPgTIzxFTB7iPMfcUtHoKz9ZWG-ekQ_yXZfTs5ZPmDa4sxIvEaSbAo5jnIhJrSQon/pub?output=csv"
-], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean);
+], COURS_CSVS = [COURS_CSV, ...COURS_CSV_SUITE].filter(Boolean), DEV_PLACE = { NASDAQ: "USD", NYSE: "USD", NYSEAMERICAN: "USD", EPA: "EUR", AMS: "EUR", EBR: "EUR", ELI: "EUR", ETR: "EUR", FRA: "EUR", BIT: "EUR", BME: "EUR", HEL: "EUR", VIE: "EUR", ISE: "EUR", SWX: "CHF", STO: "SEK", CPH: "DKK", OSL: "NOK", TYO: "JPY", HKG: "HKD", TSE: "CAD", ASX: "AUD", WSE: "PLN" };
 function parseCours(txt) {
   let rows = [], re = /("([^"]|"")*"|[^,\n\r]*)(,|\r?\n|$)/g, row = [], m;
   for (; (m = re.exec(txt)) && m[0] !== ""; ) {
@@ -547,7 +547,7 @@ function parseCours(txt) {
     let id = r[col("id")];
     if (!id || !r[col("sym")]) continue;
     let cur = r[col("cur")] || null, p = num2(r[col("price")]), k = 1;
-    cur === "GBX" && (cur = "GBP", k = 0.01);
+    !cur && p != null && (cur = DEV_PLACE[String(r[col("sym")]).split(":")[0]] || null), cur === "GBX" && (cur = "GBP", k = 0.01);
     let o = { s: r[col("sym")], cur, p: p != null ? p * k : null, chg: num2(r[col("chg")]), cap: num2(r[col("cap")]) };
     for (let f of ["h52", "l52", "p1y", "p3y", "p5y"]) {
       let x = num2(r[col(f)]);
@@ -3380,7 +3380,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "1bfa01038ff1698f", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "4f1d4f35e1eeabb4", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
