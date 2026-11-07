@@ -13,14 +13,17 @@ try {
     // en panne (limites de GOOGLEFINANCE). On garde alors la dernière valeur connue, au plus 10 jours, mémorisée dans data/cours_ref.json.
     const REF = new URL("../data/cours_ref.json", import.meta.url), HF = ["h52", "l52", "p1y", "p3y", "p5y"];
     let mem = { items: {} }; try { mem = JSON.parse(readFileSync(REF)); } catch (e) { }
-    const frais = Object.values(items).filter(v => v.p1y != null).length;
-    if (frais > Object.keys(items).length * 0.5) { // la feuille répond : on met la mémoire à jour
-      mem = { date: today, items: Object.fromEntries(Object.entries(items).map(([k, v]) => [k, Object.fromEntries(HF.filter(f => v[f] != null).map(f => [f, v[f]]))])) };
-      writeFileSync(REF, JSON.stringify(mem));
-    } else if (mem.date && (Date.parse(today) - Date.parse(mem.date)) / 864e5 <= 10) {
-      let n = 0; for (const [k, v] of Object.entries(items)) { const r = mem.items[k]; if (!r) continue; for (const f of HF) if (v[f] == null && r[f] != null) { v[f] = r[f]; n++; } }
-      console.log(`::warning::Colonnes historiques vides dans la feuille : ${n} valeurs reprises du ${mem.date}`);
+    // 7/11 : mémoire ligne par ligne (chaque titre garde la date de ses derniers cours passés) : depuis que les feuilles 2 à 4 n'ont plus
+    // de colonnes historiques (limite de GOOGLEFINANCE), seule la feuille 1 les donne ; les autres titres gardent leur dernière valeur 10 jours au plus.
+    const anc = mem.items || {}, neuf = {}; let repris = 0;
+    for (const [k, v] of Object.entries(items)) {
+      if (v.p1y != null) { neuf[k] = { ...Object.fromEntries(HF.filter(f => v[f] != null).map(f => [f, v[f]])), d: today }; continue; }
+      const r = anc[k], d = (r && r.d) || mem.date; if (!r || !d || (Date.parse(today) - Date.parse(d)) / 864e5 > 10) continue;
+      for (const f of HF) if (v[f] == null && r[f] != null) { v[f] = r[f]; repris++; }
+      neuf[k] = { ...r, d };
     }
+    writeFileSync(REF, JSON.stringify({ date: today, items: neuf }));
+    if (repris) console.log(`::notice::Cours passés : ${repris} valeurs reprises de la mémoire (10 jours au plus)`);
     // ETF sans cours dans les feuilles : valeur liquidative officielle de l'émetteur (datée, marquée vl), voir data/etf_vl.mjs
     try {
       const { valeursLiquidatives } = await import("./etf_vl.mjs");
