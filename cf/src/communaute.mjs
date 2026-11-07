@@ -189,7 +189,7 @@ export default async function communaute(request, env) {
   if (path === "/api/communaute/prono") {
     const evt = String(b.evt || ""), v = Math.sign(parseInt(b.v, 10) || 0);
     if (!/^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt)) return json({ error: "Pronostic invalide." }, 400);
-    if (evt.slice(-10) < new Date().toISOString().slice(0, 10)) return json({ error: "Les résultats sont déjà publiés." }, 400);
+    if (evt.slice(-10) <= new Date().toISOString().slice(0, 10)) return json({ error: "Les votes sont clos : on vote jusqu'à la veille de la publication." }, 400); // 7/11 : pronostic sur le cours du lendemain
     if (!v) { await db.prepare(`DELETE FROM pronos WHERE evt = ? AND who = ?`).bind(evt, me).run(); return json({ ok: true, annule: true }); } // 7/11 (Romain) : recliquer sur son vote l'annule
     await db.prepare(`INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at`).bind(evt, me, v, Date.now()).run();
     return json({ ok: true });

@@ -448,7 +448,7 @@ async function communaute(request, env) {
   }
   if (path === "/api/communaute/prono") {
     let evt = String(b.evt || ""), v = Math.sign(parseInt(b.v, 10) || 0);
-    return /^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) ? evt.slice(-10) < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? json2({ error: "Les r\xE9sultats sont d\xE9j\xE0 publi\xE9s." }, 400) : v ? (await db.prepare("INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(evt, me, v, Date.now()).run(), json2({ ok: !0 })) : (await db.prepare("DELETE FROM pronos WHERE evt = ? AND who = ?").bind(evt, me).run(), json2({ ok: !0, annule: !0 })) : json2({ error: "Pronostic invalide." }, 400);
+    return /^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) ? evt.slice(-10) <= (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? json2({ error: "Les votes sont clos : on vote jusqu'\xE0 la veille de la publication." }, 400) : v ? (await db.prepare("INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(evt, me, v, Date.now()).run(), json2({ ok: !0 })) : (await db.prepare("DELETE FROM pronos WHERE evt = ? AND who = ?").bind(evt, me).run(), json2({ ok: !0, annule: !0 })) : json2({ error: "Pronostic invalide." }, 400);
   }
   if (path === "/api/communaute/portefeuille") {
     let l = Array.isArray(b.lignes) ? b.lignes.filter((x) => Array.isArray(x) && /^[ce]:[a-z0-9-]{1,60}$/.test(x[0]) && x[1] > 0).slice(0, 40) : [];
@@ -863,15 +863,17 @@ R\xE8gles :
 - Pas de tirets cadratins, pas de listes \xE0 puces.
 ${REGLES}`, ANNONCE = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse une annonce officielle d'une entreprise cot\xE9e. Tu re\xE7ois des faits en JSON (type d'annonce, titre officiel, chiffres extraits du communiqu\xE9, phrases du communiqu\xE9, derniers comptes annuels).
 R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
-- "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annonc\xE9, avec les chiffres fournis et leur p\xE9riode, et expliquent chaque terme technique.
-- "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilit\xE9, sa dette, son p\xE9rim\xE8tre, sa direction), sans parler du cours de Bourse.
-- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
-- Pour un article de presse dont seul le titre est connu : dis ce que le titre rapporte, en pr\xE9cisant que c'est un article de presse et non une annonce officielle de l'entreprise, sans rien ajouter qui n'y figure pas ; explique les termes techniques ; dans \xAB change \xBB, dis ce que cela pourrait changer si l'information se confirme.
-- Tu peux aussi recevoir \xAB fiche_de_l_entreprise \xBB (ses comptes, la m\xE9diane de son secteur, ses rivales, ses prochaines dates, ce qui fait varier ses r\xE9sultats) et \xAB sa_semaine_en_bourse \xBB (variation du cours, rivales). Sers-t'en pour situer l'information : son ordre de grandeur face \xE0 ses ventes annuelles, le point de la fiche qu'elle touche (une dette d\xE9j\xE0 haute face au secteur, une marge plus basse que ses rivales\u2026), ou le fait que tout le secteur a boug\xE9. C'est ce qui rend l'explication utile : ne te contente jamais de reformuler le titre.
-- Interdit : \xAB pourrait influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, toute phrase qui ne dit rien.
-- Pour un dividende, ne compare jamais un versement trimestriel \xE0 un dividende annuel : compare seulement des versements de m\xEAme nature, et seulement si les deux montants sont fournis.
-- Fran\xE7ais, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
-- Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
+Le lecteur voit d\xE9j\xE0, \xE0 c\xF4t\xE9 de ton texte, la variation du cours, la barre de chaque rivale et les chiffres de l'annonce. Ton travail est de les relier, pas de les r\xE9p\xE9ter.
+- "clair" : 2 phrases, 55 mots au plus.
+  Phrase 1 : ce qui s'est pass\xE9 pour l'entreprise, en mots simples (exemple : \xAB Veolia a publi\xE9 ses ventes des neuf premiers mois : 33,3 milliards d'euros, 2,6 % de plus qu'il y a un an. \xBB). S'il n'y a ni annonce ni r\xE9sultats : \xAB Aucune annonce de Veolia cette semaine. \xBB
+  Phrase 2 : sa place face \xE0 ses rivales, avec l'\xE9cart en points (exemple : \xAB Son cours a pris 2,3 %, 1,1 point de plus que la m\xE9diane de ses rivales (+1,2 %). \xBB). Si l'\xE9cart fait moins de 2 points, dis que son cours a suivi celui de ses rivales.
+- "change" : 1 phrase, 35 mots au plus, qui apporte une information nouvelle : comparer le chiffre annonc\xE9 \xE0 la croissance de son dernier exercice complet (\xAB c'est plus lent que sur l'exercice 2025 (+5,1 %) \xBB), ou une nouvelle importante d'une rivale, ou un sujet du monde qui touche tout son secteur. Ne r\xE9p\xE8te aucun chiffre d\xE9j\xE0 \xE9crit dans "clair". Si rien de nouveau, cha\xEEne vide.
+- Jamais de lien de cause entre une annonce et le cours : pas de \xAB en raison de \xBB, \xAB gr\xE2ce \xE0 \xBB, \xAB suite \xE0 \xBB, \xAB port\xE9 par \xBB, \xAB confirmant \xBB. Dis seulement que les deux ont eu lieu la m\xEAme semaine.
+- Ne commente jamais les op\xE9rations courantes (rachats de ses propres actions, nombre d'actions et droits de vote).
+- Interdit : \xAB pourrait \xBB, \xAB a pu influencer \xBB, \xAB performances variables \xBB, \xAB des r\xE9sultats montrent \xBB, \xAB guidance \xBB, \xAB en ligne avec \xBB, \xAB il est difficile \xBB, \xAB il est trop t\xF4t \xBB, toute supposition et toute phrase qui ne dit rien. Dis \xAB objectif annonc\xE9 \xBB au lieu de \xAB guidance \xBB.
+- Chiffres arrondis \xE0 une d\xE9cimale. Compare \xE0 ses rivales (m\xE9diane ou fourchette), jamais \xE0 un indice.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Un titre de presse est rapport\xE9 par la presse, pas un fait v\xE9rifi\xE9 : \xAB selon la presse \xBB.
+- Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
 ${REGLES}`, SEMAINE_ENTREPRISE = `Tu expliques, pour une personne qui d\xE9bute en Bourse, pourquoi le cours d'une entreprise a boug\xE9 cette semaine et ce qu'il faut en retenir. Tu re\xE7ois des faits en JSON calcul\xE9s par le site : variation du cours sur la semaine, son indice, ses rivales et leur variation sur la m\xEAme semaine, un verdict calcul\xE9 (suit son secteur, mieux ou moins bien que ses rivales, r\xE9sultats publi\xE9s), les nouvelles des rivales, les annonces officielles de l'entreprise (chiffres extraits), ses op\xE9rations courantes, des titres de presse, ses derniers comptes annuels et les sujets du monde de la semaine qui la touchent.
 R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Commence par le plus utile : des r\xE9sultats publi\xE9s et leurs chiffres ; sinon la comparaison avec les rivales (cite l'\xE9cart, par exemple \xAB ses rivales ont recul\xE9 de 7 % \xE0 11 % \xBB) ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annonc\xE9 et que le mouvement est celui de son secteur ou du march\xE9.
@@ -1062,9 +1064,9 @@ async function iaSite(request, env) {
   return json4({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les r\xE9ponses calcul\xE9es restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain." }, 429);
 }
 async function syntheseEntreprise(env, faits) {
-  return await iaJSON(env, "syn2", CONSIGNES.semaine_entreprise, faits, 360, (x) => x && typeof x.clair == "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
+  return await iaJSON(env, "syn3", CONSIGNES.semaine_entreprise, faits, 360, (x) => x && typeof x.clair == "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
 }
-var VAGUE = /pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
+var VAGUE = /en raison de|gr(â|a)ce (à|a) (la|ses|son|cette) publication|performances variables|guidance|(montrent|confirm\w*) (une|sa|la)|pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
 async function iaJSON(env, prefixe, sys, faits, max, valide) {
   if (!env.AI || !env.DB || !sys) return null;
   let user = JSON.stringify(faits).slice(0, 14e3), k = await empreinte(prefixe + "|" + user);
@@ -1536,7 +1538,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       vos_lignes: lignes.filter((l) => d.meta[l.k] && d.meta[l.k].sector === sk).map(court2)
     };
   }), f = {
-    v: 4,
+    v: 5,
     semaine,
     genere: Date.now(),
     du: lundi3,
@@ -1755,8 +1757,8 @@ async function radioDe(d, n, monde) {
   for (let [i, s] of (monde && monde.sujets || []).entries())
     s.secteurs.length ? out.push(seau(s.secteurs.map((x) => SECTEURS2[x] || x).join(", "), (m) => s.secteurs.includes(m.sector), null, i)) : s.pays.length && out.push(seau(PAYS[s.pays[0]] || s.pays[0], (m) => m.region === s.pays[0], s.pays[0], i));
   out.some((x) => x && /États-Unis/.test(x.lab)) || out.push(seau("\xC9tats-Unis", (m) => m.region === "US", "US", null));
-  let etfs = Object.values(compo);
-  return { total_eur: r0(tot), seaux: out.filter(Boolean).slice(0, 4), source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map((j) => j.asOf).filter(Boolean).sort()[0] || null } : null };
+  let etfs = Object.values(compo), tous = out.filter(Boolean), forts = tous.filter((x) => x.pct >= 5), faibles = tous.filter((x) => x.pct < 5).map((x) => ({ lab: x.lab, pct: x.pct }));
+  return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map((j) => j.asOf).filter(Boolean).sort()[0] || null } : null };
 }
 function dcaDe(d, pf, lundi3, auj) {
   let P = pf && pf.cfg && Array.isArray(pf.cfg.prog) ? pf.cfg.prog : [];
@@ -2094,9 +2096,9 @@ function suiviDe(row, names) {
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
-  if (!(!c || c.v !== 4 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
+  if (!(!c || c.v !== 5 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
   let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 4 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
+  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 5 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
   let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some((x) => x.n);
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
 }
@@ -2107,7 +2109,7 @@ async function iaEntreprises(env, d, n, prec) {
   for (let a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
   let fort = (l) => l.k.startsWith("c:") && Math.abs(l.variation_semaine_pct || 0) >= 3, cles = (n.lignes || []).filter((l) => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => (par[b.k] || []).length - (par[a.k] || []).length || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 8);
   for (let l of cles) {
-    let faits = await faitsEntreprise(d, n, l, par[l.k] || []), sig = JSON.stringify(faits);
+    let faits = await faitsEntreprise(d, n, l, par[l.k] || []), sig = "r3|" + JSON.stringify(faits);
     if (prec && prec[l.k] && prec[l.k]._sig === sig) {
       out[l.k] = prec[l.k];
       continue;
@@ -3362,7 +3364,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "f94523e537aa2ee4", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "0cd47c5c1abf47a1", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

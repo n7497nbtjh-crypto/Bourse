@@ -110,6 +110,8 @@ function synPageV8(b, m) {
         return `<div class="r8-rx${s ? " hot" : ""}"><span class="th">${esc(x.lab)}</span><div class="pc">${F0.format(Math.round(x.pct))}&nbsp;%<small>${F0.format(x.eur)}&nbsp;€</small></div><div class="stack"><span style="width:${Math.min(100, x.pct).toFixed(1)}%;background:${C[i % 4]}"></span></div><p>${esc(comp)}</p>${s ? `<p class="sem"><b>Sujet de la semaine</b> : ${esc(s.titre)}</p>` : ""}</div>`; }).join("")}</div>
         <p class="r8-note">${b.radio.source ? `Contenu des ETF : ${esc(b.radio.source.nom)}${b.radio.source.au ? `, au ${esc(r8Jr(b.radio.source.au))} ${esc(b.radio.source.au.slice(0, 4))}` : ""}. ` : ""}Les entreprises des ETF que le site ne reconnaît pas ne sont pas comptées : les vrais totaux peuvent être un peu plus élevés.</p>`;
     }
+    const faibles = (b.radio && b.radio.faibles) || []; // 7/11 : moins de 5 % du portefeuille, cité en une ligne
+    if (faibles.length) h += `${radio.length ? "" : `<div class="r8-sh"><span class="r8-tag r">Radiographie</span><h3 class="r8-h3">Votre argent face aux sujets de la semaine.</h3></div>`}<p class="r8-faible"><b>${radio.length ? "Touchés de loin" : "Les sujets de la semaine touchent peu votre portefeuille"}</b> : ${faibles.map(x => `${esc(x.lab)} ${x.pct < 1 ? "moins de 1" : F0.format(Math.round(x.pct))}&nbsp;%`).join(" · ")}.</p>`;
     h += `</section>`;
   }
 
@@ -136,7 +138,7 @@ function synPageV8(b, m) {
   for (const l of avecNouv) {
     const A = deK(l.k), R0 = R[l.k], ia = IA[l.k], [vt, vc] = (R0 && R8_VERD[R0.verdict]) || [null, ""], v = l.variation_semaine_pct;
     const meta = [l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
-    const lecture = ia && ia.clair ? `<p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR${ia.modele ? ` (${esc(ia.modele)})` : ""} à partir des cours, des annonces, des comptes de la fiche et des rivales. Aucune prévision.</p>`
+    const lecture = ia && ia.clair ? `<p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}`
       : `<p>${esc(r8Lecture(l, R0, A))}</p><p class="r8-ia">Calculé par ENKLAIR à partir des cours, des annonces et des rivales.</p>`;
     const res = A.find(a => a.origine !== "presse" && (a.chiffres || []).length), npr = A.filter(a => a.origine === "presse").length, ncour = A.filter(a => ["rachat", "capital"].includes(a.categorie) && a.origine !== "presse").length;
     const preuve = [...(res ? res.chiffres.slice(0, 3).map(([a, x]) => `${a} : ${x}`) : []), npr ? `${npr} article${npr > 1 ? "s" : ""} de presse` : "", ncour ? "Opérations courantes : " + ncour : ""].filter(Boolean);
@@ -147,7 +149,7 @@ function synPageV8(b, m) {
       return `<div class="r8-li"><time>${esc(r8Jr(a.date))}</time><span class="r8-ty">${esc(lab)}</span><div><p><span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(a.titre || a.type || lab)}</span></p>${(a.chiffres || []).length ? `<p class="r8-mini">${esc(a.chiffres.slice(0, 3).map(([x, y]) => `${x} : ${y}`).join(" · "))}</p>` : ""}<div class="syn4-cl"></div></div><span class="r8-ac">${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(pr ? String(a.site || "presse").replace(/^www\./, "") : a.source_nom || "Source")} ↗</a>` : ""}<button type="button" class="r8-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button></span></div>`; }).join("")}</details>` : "";
     const dt = (b.a_venir || []).find(e => e.k === l.k);
     h += `<article class="r8-card r8-co"><div class="r8-coh">${synLogo(l.k, 44)}<div class="nm"><h3><a href="${synLien(l.k)}">${esc(l.nom)}</a>${vt ? ` <span class="r8-verd ${vc}">${vt}</span>` : ""}</h3><small>${esc(meta)}</small></div><div class="pf"><b class="${r8Cls(v)}">${synPct(v)}</b><small>${l.indice ? `${esc(l.indice.nom)} ${synPct(l.indice.pct)}` : "sur la semaine"}</small></div></div>
-      <div class="r8-cob${bars ? "" : " seul"}"><div class="r8-lec"><p class="r8-lab"><i>✦</i> La lecture d'ENKLAIR</p>${lecture}${preuve.length ? `<div class="r8-preuve">${preuve.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}</div>
+      <div class="r8-cob${bars ? "" : " seul"}"><div class="r8-lec"><p class="r8-lab"><i title="Texte rédigé automatiquement à partir des chiffres du site">✦</i> La lecture d'ENKLAIR</p>${lecture}${preuve.length ? `<div class="r8-preuve">${preuve.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}</div>
       ${bars ? `<div class="r8-riv"><p class="r8-lab">Ses rivales sur la semaine</p>${bars}${nv}</div>` : ""}</div>
       <div class="r8-cof">${liste}<a href="${synLien(l.k)}">Voir la fiche</a>${dt ? `<span class="r8-dt">${esc(r8Jr(dt.date))} · ${esc(String(dt.label || "").replace(/^./, c => c.toLowerCase()))}</span>` : ""}</div></article>`;
   }

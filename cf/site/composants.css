@@ -2094,3 +2094,5 @@ a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 .r8-hg>*,.r8-trois>*{min-width:0}.r8-row svg{max-width:45%;height:auto}@media(max-width:400px){#app .r8 h1{font-size:27px;overflow-wrap:anywhere}.r8-pfc{padding:14px}}
 .r8-li>*{min-width:0}@media(max-width:480px){.r8-li{grid-template-columns:56px 1fr}}
 @media(max-width:480px){.r8-ac{flex-wrap:wrap;white-space:normal}}
+.r8-faible{margin:12px 0 0;padding:12px 16px;border:2px dashed #bbb;border-radius:14px;font:600 14px/1.45 Inter;color:#444}.r8-faible b{color:#111}
+.pn-up{color:var(--ek-g)}.pn-dn{color:var(--ek-r)}

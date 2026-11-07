@@ -223,7 +223,7 @@ async function iaEntreprises(env, d, n, prec) {
   const cles = (n.lignes || []).filter(l => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => ((par[b.k] || []).length - (par[a.k] || []).length) || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 8); // 8 au plus (6/11 soir : limite de lectures par appel chez Cloudflare)
   for (const l of cles) {
     const faits = await faitsEntreprise(d, n, l, par[l.k] || []);
-    const sig = JSON.stringify(faits);
+    const sig = "r3|" + JSON.stringify(faits); // 7/11 : nouvelle consigne, textes réécrits
     if (prec && prec[l.k] && prec[l.k]._sig === sig) { out[l.k] = prec[l.k]; continue; }
     try { const r = await syntheseEntreprise(env, faits); if (r) out[l.k] = { ...r, _sig: sig }; } catch (e) { }
   }

@@ -133,30 +133,35 @@ function pageCommunaute() {
   if (location.pathname === "/communaute") history.replaceState(null, "", "/pronostics"); // anciennes adresses
   app.innerHTML = `<div class="ek ek-page pn"><section class="ek-hero pn-hero"><div class="mc-crumb"><a href="/outils">Outils</a> › Pronostics</div><span class="mc-stk">Sans rien à gagner</span>
       <h1 class="ag4-t">Hausse ou baisse ?</h1>
-      <p class="mc-sub">Avant chaque publication de résultats, une question : les ventes seront-elles plus hautes ou plus basses qu'à la même période l'an dernier ? Votez, puis revenez après la publication : le site affiche le chiffre réel, lu dans le communiqué.</p>
+      <p class="mc-sub">Avant chaque publication de résultats, une question : le lendemain, le cours sera-t-il plus haut ou plus bas qu'avant l'annonce ? Votez jusqu'à la veille, puis revenez : le site affiche la vraie variation.</p>
       <div class="pn-kpi" id="pnkpi"></div></section>
     <div id="pnl"><div class="empty">Chargement…</div></div>
     <p class="pn-note">Les votes sont anonymes. ${esc(CMU_RAPPEL)}</p></div>`;
-  pnPronos($("#pnl"));
+  fetch("/data/cours-semaine.json").then(r => r.ok ? r.json() : null).catch(() => null).then(j => { PN_CS = j; pnPronos($("#pnl")); });
 }
+let PN_CS = null;
+// Variation du cours : clôture du lendemain de la publication face à la clôture de la veille (Google Finance, cours-semaine.json)
+function pnVar(id, date) { const j = PN_CS, L = j && j.items && j.items["c:" + id]; if (!L) return null; const D = j.dates, i = D.findIndex(x => x >= date); if (i < 1) return null; const ap = D[i] > date ? i : i + 1; if (ap >= D.length || L[i - 1] == null || L[ap] == null) return null; return L[ap] / L[i - 1] - 1; }
+function pnReel(e) { let v = pnVar(e.id, e.date); if (v != null && Math.abs(v) < 0.0005) v = 0; return v == null ? `<span class="muted">variation pas encore connue</span>` : `cours <b class="${v >= 0 ? "pn-up" : "pn-dn"}">${sgn(v, 1)}</b>`; }
+function pnSem(id) { const L = PN_CS && PN_CS.items && PN_CS.items["c:" + id]; if (!L || L.length < 6 || !L[L.length - 6] || !L[L.length - 1]) return null; return L[L.length - 1] / L[L.length - 6] - 1; }
 function pnPronos(el) {
   const res = e => RBY[e.id] && !e.estime && /ésultat|chiffre d'affaires/i.test(e.type + " " + e.label);
   const uniq = l => { const vu = new Set(); return l.filter(e => { const k = e.id + ":" + e.date; if (vu.has(k)) return false; vu.add(k); return true; }); };
-  const list = uniq(AG.events.filter(e => res(e) && e.date >= TODAY && e.date <= addDays(TODAY, 30)).sort((a, b) => a.date.localeCompare(b.date))).slice(0, 48);
-  const past = uniq(AG.events.filter(e => res(e) && e.date < TODAY && e.date >= addDays(TODAY, -30)).sort((a, b) => b.date.localeCompare(a.date))).slice(0, 24);
+  const list = uniq(AG.events.filter(e => res(e) && e.date > TODAY && e.date <= addDays(TODAY, 30)).sort((a, b) => a.date.localeCompare(b.date))).slice(0, 48);
+  const past = uniq(AG.events.filter(e => res(e) && e.date <= TODAY && e.date >= addDays(TODAY, -14) && (pnVar(e.id, e.date) != null || e.date >= addDays(TODAY, -3))).sort((a, b) => b.date.localeCompare(a.date))).slice(0, 24);
   const ids = [...list, ...past].map(e => e.id + ":" + e.date);
   const jours = d => Math.round((new Date(d + "T00:00:00Z") - new Date(TODAY + "T00:00:00Z")) / 864e5);
-  const quand = d => { const n = jours(d); return n === 0 ? "Aujourd'hui" : n === 1 ? "Demain" : "Dans " + n + " jours"; };
+  const quand = d => { const n = jours(d); return n === 1 ? "Demain" : "Dans " + n + " jours"; };
   const groupe = d => { const n = jours(d); return n <= 7 ? "Cette semaine" : n <= 14 ? "La semaine prochaine" : "Plus tard dans le mois"; };
-  const carte = e => { const c = RBY[e.id], k = e.id + ":" + e.date, f = c.missing ? null : ratios(c), g = f && f.g1 != null ? f.g1 : null;
+  const carte = e => { const c = RBY[e.id], k = e.id + ":" + e.date, g = pnSem(e.id);
     return `<article class="pn-c" data-evt="${k}"><div class="pn-h">${logo(c, 44)}<div class="pn-n"><a href="/entreprise/${c.id}">${esc(c.name)}</a><small>${esc(dLabel(e.date))} · ${esc(e.label || "Résultats")}</small></div><span class="pn-q${jours(e.date) <= 2 ? " vite" : ""}">${quand(e.date)}</span></div>
-      ${g != null ? `<p class="pn-hist"><span class="pn-pil ${g >= 0 ? "g" : "r"}">${sgn(g, 1)}</span> ventes sur le dernier exercice complet</p>` : `<p class="pn-hist muted">Pas encore de comptes annuels lus sur le site.</p>`}
+      ${g != null ? `<p class="pn-hist"><span class="pn-pil ${g >= 0 ? "g" : "r"}">${sgn(g, 1)}</span> son cours sur une semaine</p>` : ""}
       <div class="pn-b"><button type="button" class="pn-v up" data-v="1"><span>↑</span>En hausse</button><button type="button" class="pn-v dn" data-v="-1"><span>↓</span>En baisse</button></div>
       <div class="pn-r"></div></article>`; };
   const grp = {}; list.forEach(e => (grp[groupe(e.date)] = grp[groupe(e.date)] || []).push(e));
   el.innerHTML = (list.length ? Object.entries(grp).map(([t, l]) => `<section class="ek-sec pn-sec"><h2>${t} <small>${l.length} publication${l.length > 1 ? "s" : ""}</small></h2><div class="pn-g">${l.map(carte).join("")}</div></section>`).join("")
       : `<section class="ek-sec"><div class="empty">Aucune publication de résultats annoncée dans les 30 prochains jours.</div></section>`)
-    + (past.length ? `<section class="ek-sec pn-sec"><h2>Déjà publiés <small>ces 30 derniers jours</small></h2><div class="pn-past">${past.map(e => `<div class="pn-p" data-evt="${e.id}:${e.date}" data-id="${e.id}" data-date="${e.date}">${logo(RBY[e.id], 30)}<a href="/entreprise/${e.id}/actualite">${esc(RBY[e.id].name)}</a><small>${esc(dLabel(e.date))}</small><span class="pn-reel muted">lecture du communiqué…</span><span class="pn-moi"></span></div>`).join("")}</div></section>` : "");
+    + (past.length ? `<section class="ek-sec pn-sec"><h2>Déjà publiés <small>le cours, la veille puis le lendemain</small></h2><div class="pn-past">${past.map(e => `<div class="pn-p" data-evt="${e.id}:${e.date}" data-id="${e.id}" data-date="${e.date}">${logo(RBY[e.id], 30)}<a href="/entreprise/${e.id}/actualite">${esc(RBY[e.id].name)}</a><small>${esc(dLabel(e.date))}</small><span class="pn-reel">${pnReel(e)}</span><span class="pn-moi"></span></div>`).join("")}</div></section>` : "");
   let ITEMS = {};
   const draw = () => {
     let mes = 0;
@@ -166,7 +171,7 @@ function pnPronos(el) {
       $$(".pn-v", card).forEach(b => { const on = o.moi != null && +b.dataset.v === o.moi; b.classList.toggle("on", on); b.setAttribute("aria-pressed", on ? "true" : "false"); b.title = on ? "Recliquez pour annuler votre vote" : ""; });
       $(".pn-r", card).innerHTML = n ? `<div class="pn-bar"><span class="up" style="width:${h}%"></span><span class="dn" style="width:${100 - h}%"></span></div><div class="pn-lg"><b class="up">${h} % hausse</b><span>${n} vote${n > 1 ? "s" : ""}</span><b class="dn">${100 - h} % baisse</b></div>${o.moi ? `<p class="pn-moi1">Votre vote : <b>${o.moi > 0 ? "en hausse" : "en baisse"}</b> · recliquez dessus pour l'annuler</p>` : ""}`
         : `<p class="pn-vide">Pas encore de vote : soyez le premier.</p>`; });
-    $$(".pn-p", el).forEach(d => { const o = ITEMS[d.dataset.evt]; $(".pn-moi", d).innerHTML = o && o.moi ? `<span class="pn-pil ${o.moi > 0 ? "g" : "r"}">Vous : ${o.moi > 0 ? "hausse" : "baisse"}</span>` : ""; });
+    $$(".pn-p", el).forEach(d => { const o = ITEMS[d.dataset.evt]; const r = pnVar(d.dataset.id, d.dataset.date); $(".pn-moi", d).innerHTML = o && o.moi ? (r == null ? `<span class="pn-pil">Vous : ${o.moi > 0 ? "hausse" : "baisse"}</span>` : (r > 0) === (o.moi > 0) ? `<span class="pn-pil g">✓ Vu juste</span>` : `<span class="pn-pil r">✗ Raté</span>`) : ""; });
     const k = $("#pnkpi"); if (k) k.innerHTML = `<div><b>${list.length}</b><span>publications à venir</span></div><div><b>${mes}</b><span>vote${mes > 1 ? "s" : ""} de votre part</span></div><div><b>30 j</b><span>pour voter</span></div>`;
   };
   const charger = () => ids.length ? fetch(`/api/communaute/pronos?evt=${encodeURIComponent(ids.join(","))}`).then(r => r.json()).then(j => { ITEMS = j.items || {}; draw(); }).catch(() => draw()) : draw();
@@ -178,11 +183,6 @@ function pnPronos(el) {
     $$(".pn-v", card).forEach(x => x.disabled = true);
     post("/api/communaute/prono", { evt, v: nv }).then(j => { if (j.error) { ITEMS[evt] = avant; draw(); alertMsg(b, j.error); } else charger(); })
       .catch(() => { ITEMS[evt] = avant; draw(); }).finally(() => $$(".pn-v", card).forEach(x => x.disabled = false)); };
-  if (past.length) fetch("/data/actu-analyse.json").then(r => r.json()).then(j => { const A = Object.values(j.items || {});
-    $$(".pn-p", el).forEach(d => { const a = A.filter(x => x.id === d.dataset.id && x.date >= d.dataset.date && x.chiffres && x.chiffres.length).sort((x, y) => x.date.localeCompare(y.date))[0];
-      const r = $(".pn-reel", d); r.classList.toggle("muted", !a); r.innerHTML = a ? a.chiffres.slice(0, 1).map(([l, v]) => `${esc(l)} <b>${esc(v)}</b>`).join("") : "résultat en cours de lecture"; }); }).catch(() => { });
-}
-function cmuGuide() {
   return `<section class="panel"><div class="ph"><h2>Une bonne analyse</h2></div><div class="pb cmu-guide"><ol>
     <li><b>Une thèse</b> en une phrase : ce que vous pensez avoir compris.</li><li><b>Des arguments</b> vérifiables : ventes, marge, dette, secteur.</li>
     <li><b>Les risques</b> : ce qui pourrait vous donner tort. Obligatoire.</li><li><b>Un horizon</b> : court, moyen ou long terme.</li></ol>

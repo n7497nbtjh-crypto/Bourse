@@ -145,7 +145,9 @@ export async function radioDe(d, n, monde) {
   }
   if (!out.some(x => x && /États-Unis/.test(x.lab))) out.push(seau("États-Unis", m => m.region === "US", "US", null));
   const etfs = Object.values(compo);
-  return { total_eur: r0(tot), seaux: out.filter(Boolean).slice(0, 4), source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map(j => j.asOf).filter(Boolean).sort()[0] || null } : null };
+  // 7/11 (Romain : « pas ultra pertinent ») : un sujet qui touche moins de 5 % du portefeuille n'a pas sa carte, il est seulement cité
+  const tous = out.filter(Boolean), forts = tous.filter(x => x.pct >= 5), faibles = tous.filter(x => x.pct < 5).map(x => ({ lab: x.lab, pct: x.pct }));
+  return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map(j => j.asOf).filter(Boolean).sort()[0] || null } : null };
 }
 
 /* ---------- Achats programmés ---------- */

@@ -158,10 +158,10 @@ export async function iaSite(request, env) {
    Même entreprise, mêmes annonces → même texte, servi par la table ia_syn (gardée 10 jours) : un seul appel pour tous les abonnés qui suivent l'entreprise. */
 export async function syntheseEntreprise(env, faits) {
   // 6/11 soir : textes vagues refusés (« pourrait influencer… », « je ne suis pas sûr ») ; le rapport garde alors sa phrase calculée
-  const r = await iaJSON(env, "syn2", CONSIGNES.semaine_entreprise, faits, 360, x => x && typeof x.clair === "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
+  const r = await iaJSON(env, "syn3", CONSIGNES.semaine_entreprise, faits, 360, x => x && typeof x.clair === "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
   return r;
 }
-const VAGUE = /pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
+const VAGUE = /en raison de|gr(â|a)ce (à|a) (la|ses|son|cette) publication|performances variables|guidance|(montrent|confirm\w*) (une|sa|la)|pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
 /* Appel de l'IA du site par le serveur, réponse JSON vérifiée par `valide` (qui renvoie l'objet gardé ou null).
    Même faits, même tâche → même réponse, servie par la table ia_syn (gardée 10 jours). Compté dans les neurones du jour, jamais au-delà de la part gratuite. */
 export async function iaJSON(env, prefixe, sys, faits, max, valide) {

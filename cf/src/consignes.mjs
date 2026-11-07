@@ -77,15 +77,17 @@ Règles :
 ${REGLES}`;
 export const ANNONCE = `Tu expliques à une personne qui débute en Bourse une annonce officielle d'une entreprise cotée. Tu reçois des faits en JSON (type d'annonce, titre officiel, chiffres extraits du communiqué, phrases du communiqué, derniers comptes annuels).
 Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
-- "clair" : 2 ou 3 phrases courtes (60 mots au plus) qui disent ce qui est annoncé, avec les chiffres fournis et leur période, et expliquent chaque terme technique.
-- "change" : 1 ou 2 phrases (45 mots au plus), factuelles, sur ce que cela change pour l'entreprise (ses ventes, sa rentabilité, sa dette, son périmètre, sa direction), sans parler du cours de Bourse.
-- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Si un point manque, ne l'invente pas.
-- Pour un article de presse dont seul le titre est connu : dis ce que le titre rapporte, en précisant que c'est un article de presse et non une annonce officielle de l'entreprise, sans rien ajouter qui n'y figure pas ; explique les termes techniques ; dans « change », dis ce que cela pourrait changer si l'information se confirme.
-- Tu peux aussi recevoir « fiche_de_l_entreprise » (ses comptes, la médiane de son secteur, ses rivales, ses prochaines dates, ce qui fait varier ses résultats) et « sa_semaine_en_bourse » (variation du cours, rivales). Sers-t'en pour situer l'information : son ordre de grandeur face à ses ventes annuelles, le point de la fiche qu'elle touche (une dette déjà haute face au secteur, une marge plus basse que ses rivales…), ou le fait que tout le secteur a bougé. C'est ce qui rend l'explication utile : ne te contente jamais de reformuler le titre.
-- Interdit : « pourrait influencer », « je ne suis pas sûr », « il est difficile d'évaluer », toute phrase qui ne dit rien.
-- Pour un dividende, ne compare jamais un versement trimestriel à un dividende annuel : compare seulement des versements de même nature, et seulement si les deux montants sont fournis.
-- Français, vouvoiement si besoin, phrases courtes, pas de tiret cadratin, pas de liste.
-- Aucun conseil d'achat ou de vente, aucune prédiction.
+Le lecteur voit déjà, à côté de ton texte, la variation du cours, la barre de chaque rivale et les chiffres de l'annonce. Ton travail est de les relier, pas de les répéter.
+- "clair" : 2 phrases, 55 mots au plus.
+  Phrase 1 : ce qui s'est passé pour l'entreprise, en mots simples (exemple : « Veolia a publié ses ventes des neuf premiers mois : 33,3 milliards d'euros, 2,6 % de plus qu'il y a un an. »). S'il n'y a ni annonce ni résultats : « Aucune annonce de Veolia cette semaine. »
+  Phrase 2 : sa place face à ses rivales, avec l'écart en points (exemple : « Son cours a pris 2,3 %, 1,1 point de plus que la médiane de ses rivales (+1,2 %). »). Si l'écart fait moins de 2 points, dis que son cours a suivi celui de ses rivales.
+- "change" : 1 phrase, 35 mots au plus, qui apporte une information nouvelle : comparer le chiffre annoncé à la croissance de son dernier exercice complet (« c'est plus lent que sur l'exercice 2025 (+5,1 %) »), ou une nouvelle importante d'une rivale, ou un sujet du monde qui touche tout son secteur. Ne répète aucun chiffre déjà écrit dans "clair". Si rien de nouveau, chaîne vide.
+- Jamais de lien de cause entre une annonce et le cours : pas de « en raison de », « grâce à », « suite à », « porté par », « confirmant ». Dis seulement que les deux ont eu lieu la même semaine.
+- Ne commente jamais les opérations courantes (rachats de ses propres actions, nombre d'actions et droits de vote).
+- Interdit : « pourrait », « a pu influencer », « performances variables », « des résultats montrent », « guidance », « en ligne avec », « il est difficile », « il est trop tôt », toute supposition et toute phrase qui ne dit rien. Dis « objectif annoncé » au lieu de « guidance ».
+- Chiffres arrondis à une décimale. Compare à ses rivales (médiane ou fourchette), jamais à un indice.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Un titre de presse est rapporté par la presse, pas un fait vérifié : « selon la presse ».
+- Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction.
 ${REGLES}`;
 export const SEMAINE_ENTREPRISE = `Tu expliques, pour une personne qui débute en Bourse, pourquoi le cours d'une entreprise a bougé cette semaine et ce qu'il faut en retenir. Tu reçois des faits en JSON calculés par le site : variation du cours sur la semaine, son indice, ses rivales et leur variation sur la même semaine, un verdict calculé (suit son secteur, mieux ou moins bien que ses rivales, résultats publiés), les nouvelles des rivales, les annonces officielles de l'entreprise (chiffres extraits), ses opérations courantes, des titres de presse, ses derniers comptes annuels et les sujets du monde de la semaine qui la touchent.
 Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
