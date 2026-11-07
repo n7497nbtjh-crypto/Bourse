@@ -24,7 +24,8 @@ jobs:
       - name: Lecteur de PDF (fiches mensuelles HSBC)
         run: command -v pdftotext >/dev/null || sudo apt-get install -y -qq poppler-utils >/dev/null || true
       - name: Lecteur Excel (fichiers officiels SPDR et Invesco)
-        run: npm i --no-save --silent xlsx@0.18.5 || echo "::warning::module xlsx indisponible : SPDR et Invesco ignorés"
+        run: |
+          npm i --no-save --silent xlsx@0.18.5 || echo "::warning::module xlsx indisponible, SPDR et Invesco ignorés"
       - name: Collecte (Amundi, iShares, HSBC, SPDR, Invesco, taux BCE)
         timeout-minutes: 35
         run: node data/etf_historique.mjs
