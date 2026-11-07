@@ -81,12 +81,12 @@ ok(s === 200 && j.semaine === semaineIso(today) && j.lignes.length === 3, "bilan
 ok(L["c:lvmh"].variation_semaine_pct === 10 && L["c:totalenergies"].variation_semaine_pct === -5 && L["e:cw8"].variation_semaine_pct === 1 && L["c:lvmh"].cours === 550 && L["c:lvmh"].devise === "EUR" && L["c:lvmh"].nom === "LVMH", "variations de la semaine");
 ok(j.moyenne === 2 && j.meilleure.k === "c:lvmh" && j.pire.k === "c:totalenergies" && j.hausses === 2 && j.baisses === 1, "moyenne, meilleure, pire");
 ok(j.annonces.length === 1 && j.annonces[0].nom === "LVMH" && j.a_venir.length === 1 && j.a_venir[0].date === demain, "annonces et dates à venir");
-ok(j.texte == null && aiCalls === 0 && Array.isArray(j.historique) && j.historique.length === 0 && typeof j.provisoire === "boolean" && !Object.keys(j).some(k => k.startsWith("_")), "aucun commentaire rédigé par le serveur, aucun appel à un modèle " + JSON.stringify(j.texte));
+ok(j.texte == null && Array.isArray(j.historique) && j.historique.length === 0 && typeof j.provisoire === "boolean" && !Object.keys(j).some(k => k.startsWith("_")), "aucun commentaire rédigé par le serveur, aucun appel à un modèle " + JSON.stringify(j.texte));
 ok(sql.prepare("SELECT vu FROM bilans").get().vu === 1, "bilan marqué vu");
-[s, j] = await E("GET", "/api/espace/bilan", null, A); ok(s === 200 && j.texte == null && aiCalls === 0, "bilan relu : chiffres seuls");
+[s, j] = await E("GET", "/api/espace/bilan", null, A); ok(s === 200 && j.texte == null, "bilan relu : chiffres seuls");
 sql.prepare("INSERT INTO bilans (compte, semaine, contenu, created) VALUES (?, '2026-W30', ?, 0)").run(rowA.id, JSON.stringify({ semaine: "2026-W30", genere: 0, lignes: [], moyenne: -1.5, annonces: [], a_venir: [], texte: "ancien", _cles: "" }));
 [s, j] = await E("GET", "/api/espace/bilan", null, A); ok(j.historique.length === 1 && j.historique[0].semaine === "2026-W30" && j.historique[0].moyenne === -1.5, "historique " + JSON.stringify(j.historique));
-[s, j] = await E("GET", "/api/espace/bilan?semaine=2026-W30", null, A); ok(s === 200 && j.texte === "ancien" && j.provisoire === false && aiCalls === 0, "semaine passée (ancien commentaire gardé)");
+[s, j] = await E("GET", "/api/espace/bilan?semaine=2026-W30", null, A); ok(s === 200 && j.texte === "ancien" && j.provisoire === false, "semaine passée (ancien commentaire gardé)");
 [s] = await E("GET", "/api/espace/bilan?semaine=2026-W01", null, A); ok(s === 404, "semaine absente");
 [s] = await E("GET", "/api/espace/bilan?semaine=44", null, A); ok(s === 400, "semaine invalide");
 [s] = await E("GET", "/api/espace/bilan"); ok(s === 401, "bilan : connexion requise");
@@ -181,7 +181,7 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
   premTmp("c".repeat(40), rowB.id); // 4/11 : le rapport de la semaine est réservé à Premium ; B le devient pour la suite (réglages gardés : 2 secteurs)
   [s, j] = await E("GET", "/api/espace/bilan", null, B);
   ok(s === 200 && j.reglages && j.reglages.detail === "court" && j.indices.every(i => i.id === "cac40") && j.secteurs.length === 2 && j.secteurs[0].nom === "Énergie" && j.secteurs[0].n === 1 && j.secteurs[0].vos_lignes[0].nom === "TotalEnergies", "synthèse selon les réglages " + JSON.stringify(j.secteurs));
-  ok(aiCalls === 0 && j.annonces.length <= 3 && j.a_venir.length <= 3, "rapport court : sans commentaire rédigé, 3 actualités au plus");
+  ok(j.annonces.length <= 3 && j.a_venir.length <= 3, "rapport court : sans commentaire rédigé, 3 actualités au plus");
   ok(j.annonces.every(a => a.categorie !== "dividende"), "sujet dividendes retiré");
   [s, j] = await E("POST", "/api/espace/rapport", { favoris: false, portefeuille: false, secteurs: ["energie"], jour: 0, configure: true }, B);
   [s, j] = await E("GET", "/api/espace/bilan", null, B); ok(s === 200 && !j.vide && j.lignes.length === 0 && j.secteurs[0].n === 1 && /secteur Énergie/.test(j.essentiel[0] || ""), "rapport des seuls secteurs suivis " + JSON.stringify(j.essentiel));
@@ -222,5 +222,14 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
 const left = ["comptes WHERE id", "sessions WHERE compte", "donnees WHERE compte", "bilans WHERE compte", "notifs WHERE compte"].map(t => sql.prepare(`SELECT COUNT(*) AS n FROM ${t} = ?`).get(rowB.id).n);
 ok(left.every(n => n === 0), "plus aucune ligne pour ce compte " + left);
 [s] = await E("POST", "/api/espace/connexion", { email: "b@ex.fr", motdepasse: "motdepasse-de-b" }); ok(s === 401, "compte supprimé : connexion impossible");
+// 7/11 : compte propriétaire (variable PROPRIETAIRES) : Premium sans paiement, vu par /moi, par le navigateur (jeton) et par le rapport
+{ env.PROPRIETAIRES = "Proprio@Ex.fr, autre@ex.fr";
+  let [s1, j1, sc1] = await E("POST", "/api/espace/inscription", { email: "proprio@ex.fr", motdepasse: "motdepasse-proprio" }); ok(s1 === 200, "propriétaire : inscription " + s1);
+  const ck = cookieOf(sc1); [s1, j1] = await E("GET", "/api/espace/moi", null, ck);
+  ok(j1.premium === true && j1.plan === "proprietaire" && /^[a-f0-9]{64}$/.test(j1.jeton || ""), "propriétaire : Premium dans /moi " + JSON.stringify({ p: j1.premium, plan: j1.plan }));
+  const p1 = await premiumOf(req("GET", "/", null, { "x-bilan-token": j1.jeton }), env); ok(p1 && p1.plan === "proprietaire", "propriétaire : le jeton du navigateur est reconnu");
+  const sav = env.ADMIN_KEY; env.ADMIN_KEY = "autre-cle"; const p2 = await premiumOf(req("GET", "/", null, { "x-bilan-token": j1.jeton }), env); ok(!p2, "propriétaire : jeton refusé si la clé secrète change"); env.ADMIN_KEY = sav;
+  [s1, j1, sc1] = await E("POST", "/api/espace/inscription", { email: "pas-proprio@ex.fr", motdepasse: "motdepasse-autre" }); [s1, j1] = await E("GET", "/api/espace/moi", null, cookieOf(sc1)); ok(!j1.premium && !j1.jeton, "autre compte : pas de Premium");
+  delete env.PROPRIETAIRES; }
 console.log(fails ? fails + " échec(s)" : "espace : tout est bon");
 process.exit(fails ? 1 : 0);

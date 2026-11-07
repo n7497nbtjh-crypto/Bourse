@@ -72,7 +72,7 @@
         <div><i>📰</i><p><b>Chaque samedi, votre rapport</b><span>Ce qui s'est passé pour vos valeurs, en deux minutes.</span></p></div>
         <div><i class="r">🔔</i><p><b>Prévenu si une valeur chute</b><span>Plus de 5 % de baisse dans la journée : notification le soir même.</span></p></div>
         <div><i class="b">◎</i><p><b>Vos ETF passés aux rayons X</b><span>Ce que vous possédez vraiment, entreprise par entreprise.</span></p></div></div>
-      <a class="pm5-ex" href="/rapport-exemple"><span class="pm5-ex-i">📰</span><span><b>Voir un vrai rapport de la semaine</b><small>Calculé aujourd'hui avec les chiffres du site, pour un portefeuille d'exemple</small></span><em>→</em></a></div>
+      <a class="pm5-ex" href="/rapport-exemple"><span class="pm5-ex-i">📰</span><span><b>Voir un vrai rapport de la semaine</b><small>Celui du 6 novembre, calculé avec les chiffres du site, pour un portefeuille d'exemple</small></span><em>→</em></a></div>
       ${offre}</section>
     <section class="pm5-sec ek-sec"><span class="ek-stk2 p">Seulement avec Premium</span><h2>Quatre choses que personne d'autre ne fait pour vous.</h2>
       <p class="pm5-lead">Un courtier vous montre des cours. Un site boursier, des articles. Une IA, ce qu'elle a en mémoire. ENKLAIR part des documents officiels et les relie à <b>vos</b> placements.</p>

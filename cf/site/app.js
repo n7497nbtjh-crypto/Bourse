@@ -2053,6 +2053,7 @@ function moi(force) {
     MOIP = null; MOI = j; document.documentElement.classList.toggle("is-in", !!j.connecte);
     const payer = location.pathname === "/espace" ? new URLSearchParams(location.search).get("payer") : null; // 5/11 : espace obligatoire avant de payer
     if (j.connecte && (payer === "mensuel" || payer === "unique") && !window.ESP_SANS_PAYER) { const o = await fetch("/api/premium/offres").then(r => r.json()).catch(() => ({})); if (o[payer]) { location.href = o[payer] + "?prefilled_email=" + encodeURIComponent(j.email || ""); return j; } }
+    if (j.connecte && j.jeton && j.jeton !== t) { try { localStorage.setItem(TKEY, j.jeton); } catch (e) { } } // compte propriétaire (7/11)
     if (j.connecte) { if (j.premium) { PREM = { premium: true, plan: j.plan }; document.documentElement.classList.add("is-prem"); } syncFromServer(j); }
     espaceBadge(); return j;
   });

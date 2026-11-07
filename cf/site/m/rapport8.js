@@ -69,7 +69,7 @@ function synPageV8(b, m) {
   const pfCarte = pf && g != null ? `<div class="r8-card r8-pfc"><small>Votre portefeuille</small><div class="r8-row"><div><div class="r8-big ${r8Cls(g)}">${r8Eur(g)}</div><span>${synPct(pf.var_pct)} · il vaut ${F0.format(Math.round(pf.valeur_eur))}&nbsp;€</span></div>${spark}</div><div class="r8-chips">${chips}</div></div>`
     : chips ? `<div class="r8-card r8-pfc"><small>Les indices de la semaine</small><div class="r8-chips">${chips}</div></div>` : "";
   let h = `<div class="r8"><div class="r8-band"><div class="r8-w">
-    <div class="r8-top"><span class="r8-logo">ENKLAIR</span><span>Votre rapport · ${b.du ? esc(synDuAu(b)) : ""}${b.en_cours ? " (en cours)" : ""}</span></div>
+    <div class="r8-top"><span class="r8-logo">ENKLAIR</span><span>${b.date_rapport ? "Rapport du " + esc(new Date(b.date_rapport + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : "Votre rapport · " + (b.du ? esc(synDuAu(b)) : "") + (b.en_cours ? " (en cours)" : "")}</span></div>
     <div class="r8-hg"><div><h1>${titre}</h1>${sous ? `<p class="r8-l">${sous}</p>` : ""}</div>${pfCarte}</div>
     ${cartes ? `<div class="r8-trois">${cartes}</div>` : ""}</div></div><div class="r8-w">`;
   const secs = [Lpf.length ? ["pf", "Votre portefeuille"] : null, M.length ? ["monde", "Le monde cette semaine"] : null, ["co", "Vos entreprises"], (b.a_venir || []).length || (b.dca || []).length ? ["av", "À venir"] : null].filter(Boolean);

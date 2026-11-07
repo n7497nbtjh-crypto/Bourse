@@ -68,5 +68,13 @@ for (const ip of ["12.0.0.1", "12.0.0.2", "12.0.0.3"]) await call("POST", "/api/
 [s] = await call("POST", "/api/communaute/masquer", { id: l3, type: "liste" }, "1.1.1.1", { "x-admin-key": "k" }); [s, j] = await call("GET", "/api/communaute/liste?id=" + l3); ok(s === 404, "modération d'une liste avec la clé");
 for (let i = 0; i < 3; i++) await call("POST", "/api/communaute/liste", LI, "13.0.0.1");
 [s] = await call("POST", "/api/communaute/liste", LI, "13.0.0.1"); ok(s === 429, "trois listes par jour au plus");
+{ // 7/11 : pronostic, puis annulé en recliquant (v: 0)
+  const ev = "lvmh:2099-01-28";
+  await call("POST", "/api/communaute/prono", { evt: ev, v: 1 }, "20.0.0.1"); await call("POST", "/api/communaute/prono", { evt: ev, v: -1 }, "20.0.0.2");
+  [s, j] = await call("GET", "/api/communaute/pronos?evt=" + ev, null, "20.0.0.1"); ok(j.items[ev].hausse === 1 && j.items[ev].baisse === 1 && j.items[ev].moi === 1, "pronostic enregistré " + JSON.stringify(j));
+  [s, j] = await call("POST", "/api/communaute/prono", { evt: ev, v: 0 }, "20.0.0.1"); ok(s === 200 && j.annule, "pronostic annulé");
+  [s, j] = await call("GET", "/api/communaute/pronos?evt=" + ev, null, "20.0.0.1"); ok(!j.items[ev].hausse && j.items[ev].baisse === 1 && j.items[ev].moi == null, "après annulation : vote retiré " + JSON.stringify(j));
+  [s] = await call("POST", "/api/communaute/prono", { evt: "lvmh:2020-01-28", v: 0 }, "20.0.0.1"); ok(s === 400, "publication passée : plus modifiable");
+}
 const r = await communaute(new Request("https://t.local/api/communaute"), {}); ok(r.status === 503, "sans base : message clair");
 console.log(fails ? fails + " échec(s)" : "communauté : tout est bon"); process.exit(fails ? 1 : 0);

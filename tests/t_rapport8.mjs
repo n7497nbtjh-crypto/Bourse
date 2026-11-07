@@ -2,7 +2,7 @@
 // Données réelles du dépôt (cf/site/data), base SQLite en mémoire, IA du site simulée. Usage : node tests/t_rapport8.mjs
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync, existsSync } from "node:fs";
-import { rapportExemple } from "../cf/src/espace.mjs";
+import { rapportExemple, calculerRapportExemple } from "../cf/src/espace.mjs";
 const sql = new DatabaseSync(":memory:");
 globalThis.fetch = async () => new Response("", { status: 404 }); // aucun accès réseau : cours du dépôt seulement (cours.json, cours-semaine.json)
 const stmt = (q, p = []) => ({ bind: (...a) => stmt(q, a), all: async () => ({ results: sql.prepare(q).all(...p) }), first: async () => sql.prepare(q).get(...p) ?? null, run: async () => { sql.prepare(q).run(...p); return { meta: { changes: 1 } }; } });
@@ -27,7 +27,9 @@ const env = {
   } },
 };
 let ok = 0, ko = 0; const t = (c, m) => { if (c) ok++; else { ko++; console.log("ÉCHEC :", m); } };
-const r = await rapportExemple(new Request("https://enklair.com/api/rapport-exemple"), env), b = await r.json();
+const b = await calculerRapportExemple(new Request("https://enklair.com/api/rapport-exemple"), env);
+{ const lu = lectures, f = await (await rapportExemple(new Request("https://enklair.com/api/rapport-exemple"), env)).json(); lectures = lu; // 7/11 : rapport d'exemple figé, servi tel quel
+  t(f.date_rapport === "2026-11-06" && f.lignes && f.lignes.length && f.monde && !f.en_cours, "rapport d'exemple figé : celui du 6 novembre, sans recalcul"); }
 if (process.env.R8_JSON) (await import("node:fs")).writeFileSync(process.env.R8_JSON, JSON.stringify(b)); // pour les captures (scripts locaux)
 t(b.v === 4, "version 4 du rapport");
 console.log("Lectures de fichiers pour un rapport :", lectures); t(lectures <= 40, `au plus 40 lectures de fichiers par rapport (${lectures})`);
@@ -70,7 +72,7 @@ const fA = faitsVus.find(f => f.entreprise === "ASML");
 t(fA && fA.rivales.length >= 3 && fA.derniers_comptes_annuels && fA.derniers_comptes_annuels.ventes_millions > 0, "l'IA reçoit les rivales et les comptes d'ASML");
 t(fA && fA.sujets_du_monde_qui_la_touchent.length >= 1, "l'IA reçoit le sujet du monde qui touche ASML");
 t(appels.monde === 1, "un seul appel pour le monde");
-const n0 = appels.entreprise, r2 = await (await rapportExemple(new Request("https://enklair.com/api/rapport-exemple?x=2"), env)).json();
+const n0 = appels.entreprise, r2 = await calculerRapportExemple(new Request("https://enklair.com/api/rapport-exemple?x=2"), env);
 t(appels.monde === 1 && r2.monde && r2.monde.sujets.length === 2, "monde servi par le cache au deuxième passage");
 console.log(`\n${ok} réussis, ${ko} échecs (appels IA : monde ${appels.monde}, entreprises ${appels.entreprise}, dont ${appels.entreprise - n0} au deuxième passage)`);
 process.exit(ko ? 1 : 0);

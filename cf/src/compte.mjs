@@ -68,6 +68,13 @@ const proprietaires = env => !(env && env.ADMIN_KEY) ? [] : String((env && env.P
 // pourrait le recalculer et se donner Premium. Sans ADMIN_KEY, aucun compte propriétaire.
 const tokenProprietaire = (env, email) => sha256hex("proprietaire:" + String((env && env.ADMIN_KEY) || "") + ":" + email.toLowerCase());
 const abonneProprietaire = (email, token) => ({ token, email, plan: "proprietaire", sub_id: null, until: 4102444800000, created: 0 });
+// 7/11 : aussi pour /api/espace/moi, qui lisait seulement le jeton enregistré sur le compte (le compte propriétaire n'en avait pas : pas de Premium affiché)
+export async function proprietaireDe(env, c) {
+  if (!c || !c.email || !proprietaires(env).includes(String(c.email).toLowerCase())) return null;
+  const tp = await tokenProprietaire(env, c.email);
+  if (c.premium !== tp && env.DB) { try { await env.DB.prepare(`UPDATE comptes SET premium = ? WHERE id = ?`).bind(tp, c.id).run(); } catch (e) { } }
+  return abonneProprietaire(c.email, tp);
+}
 export async function premiumOf(request, env) {
   if (!env || !env.DB) return null;
   let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);

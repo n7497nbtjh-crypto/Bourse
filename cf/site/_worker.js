@@ -106,6 +106,16 @@ function sessionCompte(request, env) {
   })()), SESS.get(request));
 }
 var proprietaires = (env) => env && env.ADMIN_KEY ? String(env && env.PROPRIETAIRES || "").toLowerCase().split(/[,\s]+/).filter((e) => e.includes("@")) : [], tokenProprietaire = (env, email) => sha256hex("proprietaire:" + String(env && env.ADMIN_KEY || "") + ":" + email.toLowerCase()), abonneProprietaire = (email, token) => ({ token, email, plan: "proprietaire", sub_id: null, until: 41024448e5, created: 0 });
+async function proprietaireDe(env, c) {
+  if (!c || !c.email || !proprietaires(env).includes(String(c.email).toLowerCase())) return null;
+  let tp = await tokenProprietaire(env, c.email);
+  if (c.premium !== tp && env.DB)
+    try {
+      await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(tp, c.id).run();
+    } catch {
+    }
+  return abonneProprietaire(c.email, tp);
+}
 async function premiumOf(request, env) {
   if (!env || !env.DB) return null;
   let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64), P = proprietaires(env);
@@ -438,7 +448,7 @@ async function communaute(request, env) {
   }
   if (path === "/api/communaute/prono") {
     let evt = String(b.evt || ""), v = Math.sign(parseInt(b.v, 10) || 0);
-    return !/^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) || !v ? json2({ error: "Pronostic invalide." }, 400) : evt.slice(-10) < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? json2({ error: "Les r\xE9sultats sont d\xE9j\xE0 publi\xE9s." }, 400) : (await db.prepare("INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(evt, me, v, Date.now()).run(), json2({ ok: !0 }));
+    return /^[a-z0-9-]{1,60}:\d{4}-\d{2}-\d{2}$/.test(evt) ? evt.slice(-10) < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) ? json2({ error: "Les r\xE9sultats sont d\xE9j\xE0 publi\xE9s." }, 400) : v ? (await db.prepare("INSERT INTO pronos (evt, who, v, at) VALUES (?, ?, ?, ?) ON CONFLICT (evt, who) DO UPDATE SET v = excluded.v, at = excluded.at").bind(evt, me, v, Date.now()).run(), json2({ ok: !0 })) : (await db.prepare("DELETE FROM pronos WHERE evt = ? AND who = ?").bind(evt, me).run(), json2({ ok: !0, annule: !0 })) : json2({ error: "Pronostic invalide." }, 400);
   }
   if (path === "/api/communaute/portefeuille") {
     let l = Array.isArray(b.lignes) ? b.lignes.filter((x) => Array.isArray(x) && /^[ce]:[a-z0-9-]{1,60}$/.test(x[0]) && x[1] > 0).slice(0, 40) : [];
@@ -2221,7 +2231,7 @@ async function espace(request, env) {
       env.DB.prepare("SELECT favoris, portefeuille, profil, updated FROM donnees WHERE compte = ?").bind(c.id).first(),
       env.DB.prepare("SELECT COUNT(*) AS n FROM notifs WHERE compte = ? AND lu = 0").bind(c.id).first(),
       env.DB.prepare("SELECT h, expires FROM sessions WHERE h = ?").bind(await sha256hex(cookieSession(request))).first()
-    ]), p = await premiumDe(env, c.premium, url.origin), dernier = await env.DB.prepare("SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1").bind(c.id).first(), r = json({
+    ]), po = await proprietaireDe(env, c), p = po || await premiumDe(env, c.premium, url.origin), dernier = await env.DB.prepare("SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1").bind(c.id).first(), r = json({
       connecte: !0,
       email: c.email,
       premium: !!p,
@@ -2234,7 +2244,8 @@ async function espace(request, env) {
       mail: mailReady(env),
       cree: c.created,
       bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null,
-      robot: await robotEtat(env)
+      robot: await robotEtat(env),
+      ...po ? { jeton: po.token } : {}
     });
     return sess && sess.expires - Date.now() < SESSION_MS - 7 * JOUR && (await env.DB.prepare("UPDATE sessions SET expires = ? WHERE h = ?").bind(Date.now() + SESSION_MS, sess.h).run(), avecCookie(r, `bilan_s=${cookieSession(request)}; ${COOKIE}; Max-Age=${SESSION_MS / 1e3}`)), r;
   }
@@ -2472,41 +2483,8 @@ bilan. Informations factuelles, sans conseil en investissement.`,
   }
   return json({ traites: rows.length, reste, notifs, bilans, mails: mails2, mode: modeBilan ? "bilan" : "alertes" });
 }
-var EXEMPLE_PROFIL = {
-  // 5/11 (Romain : « plus cohérent ») : un PEA d'environ 10 000 € : un ETF monde en socle et quatre grandes françaises
-  favoris: ["c:hermes", "c:sanofi", "c:apple", "c:asml"],
-  portefeuille: {
-    l: [
-      { k: "e:amundi-msci-world-pea", q: 950, pru: 5.6, env: "pea" },
-      { k: "c:lvmh", q: 3, pru: 520, env: "pea" },
-      { k: "c:air-liquide", q: 6, pru: 165, env: "pea" },
-      { k: "c:totalenergies", q: 12, pru: 58, env: "pea" },
-      { k: "c:schneider-electric", q: 4, pru: 210, env: "pea" }
-    ],
-    cfg: { prog: [{ k: "e:amundi-msci-world-pea", jour: 5, q: 25, depuis: "2026-03-05" }] }
-  },
-  // 6/11 soir : un achat programmé, pour montrer ce bloc du rapport
-  rapport: { favoris: !0, portefeuille: !0, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] }
-};
 async function rapportExemple(request, env, ctx) {
-  let cle = "rapport-exemple|v" + 4, row = null;
-  if (env.DB)
-    try {
-      await env.DB.prepare("CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)").run(), row = await env.DB.prepare("SELECT v, at FROM cache_json WHERE k = ?").bind(cle).first();
-    } catch {
-    }
-  let calculer = async () => {
-    let d = await siteData2(request, env), auj = jourParis(), semaine = semaineIso(auj), r02 = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) }, s = suiviDe(r02, d.names), actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
-    await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
-    let corps = JSON.stringify({ ...publicBilan(n), exemple: !0, profil: EXEMPLE_PROFIL, provisoire: !0, en_cours: !0, historique: [] });
-    if (env.DB)
-      try {
-        await env.DB.prepare("INSERT OR REPLACE INTO cache_json (k, v, at) VALUES (?, ?, ?)").bind(cle, corps, Date.now()).run();
-      } catch {
-      }
-    return corps;
-  }, rep2 = (v) => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
-  return adminOk(request, env) ? rep2(await calculer()) : row && row.v ? rep2(row.v) : rep2(await calculer());
+  return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
 }
 
 // cf/src/signaler.mjs
@@ -3384,7 +3362,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "d6e599a6766d2c05", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "f94523e537aa2ee4", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3894,7 +3872,7 @@ function meta(path, q = null) {
     return q2 ? { title: `${q2.q} \xB7 ${SITE}`, desc: q2.desc } : null;
   }
   if (p === "/x") return { title: `Page priv\xE9e \xB7 ${SITE}`, desc: "Page r\xE9serv\xE9e \xE0 l'\xE9diteur du site." };
-  if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple \xB7 ${SITE}`, desc: "Le vrai rapport hebdomadaire d'ENKLAIR, calcul\xE9 avec les chiffres de cette semaine pour un profil fictif : variations, annonces, dates \xE0 venir, et ce que vous pouvez y r\xE9gler." };
+  if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple \xB7 ${SITE}`, desc: "Le vrai rapport hebdomadaire d'ENKLAIR, celui du 6 novembre, calcul\xE9 avec les chiffres du site pour un profil fictif : variations, annonces, dates \xE0 venir, et ce que vous pouvez y r\xE9gler." };
   if (p === "/repartitions") return { title: `R\xE9partitions types et listes par crit\xE8res \xB7 ${SITE}`, desc: "Des exemples de r\xE9partition entre actions, obligations et placements sans risque de perte, expliqu\xE9s avec leurs limites, et des listes d'ETF et d'entreprises tri\xE9es sur les crit\xE8res que vous choisissez. Information p\xE9dagogique, pas un conseil." };
   if (p === "/plan") return { title: `Plan du site \xB7 ${SITE}`, desc: "Toutes les pages d'ENKLAIR, rang\xE9es en quatre rubriques : D\xE9couvrir, Explorer, Analyser et Mon espace." };
   if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre \xB7 ${SITE}`, desc: "Le chemin pour apprendre : par o\xF9 commencer, les cours de l'Acad\xE9mie (l'essentiel en 3 \xE9tapes et le cours complet), le lexique et les outils p\xE9dagogiques, gratuits." };

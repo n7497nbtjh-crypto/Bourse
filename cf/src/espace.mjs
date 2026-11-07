@@ -9,7 +9,7 @@
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
 import { iaMesures, syntheseEntreprise } from "./iasite.mjs";
 import { enrichir8, faitsEntreprise } from "./rapport8.mjs";
-import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk } from "./compte.mjs";
+import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk, proprietaireDe } from "./compte.mjs";
 import { coursComplets } from "./cours.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
 
@@ -340,12 +340,12 @@ export async function espace(request, env) {
       env.DB.prepare(`SELECT favoris, portefeuille, profil, updated FROM donnees WHERE compte = ?`).bind(c.id).first(),
       env.DB.prepare(`SELECT COUNT(*) AS n FROM notifs WHERE compte = ? AND lu = 0`).bind(c.id).first(),
       env.DB.prepare(`SELECT h, expires FROM sessions WHERE h = ?`).bind(await sha256hex(cookieSession(request))).first()]);
-    const p = await premiumDe(env, c.premium, url.origin);
+    const po = await proprietaireDe(env, c), p = po || await premiumDe(env, c.premium, url.origin);
     const dernier = await env.DB.prepare(`SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1`).bind(c.id).first();
     const r = json({ connecte: true, email: c.email, premium: !!p, plan: p ? p.plan : null, premium_jusqu_au: p ? p.until : null, alertes_max: p ? null : ALERTES_GRATUIT,
       donnees: { favoris: parse(d && d.favoris, []) || [], portefeuille: parse(d && d.portefeuille, null), profil: parse(d && d.profil, null), maj: d ? d.updated : null },
       nonlus: (nl && nl.n) || 0, teaser: !!c.teaser, mail: mailReady(env), cree: c.created,
-      bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null, robot: await robotEtat(env) });
+      bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null, robot: await robotEtat(env), ...(po ? { jeton: po.token } : {}) }); // jeton : Premium aussi dans ce navigateur (IA, quotas)
     if (sess && sess.expires - Date.now() < SESSION_MS - 7 * JOUR) { // session prolongée à chaque visite (au plus une fois par semaine)
       await env.DB.prepare(`UPDATE sessions SET expires = ? WHERE h = ?`).bind(Date.now() + SESSION_MS, sess.h).run();
       avecCookie(r, `bilan_s=${cookieSession(request)}; ${COOKIE}; Max-Age=${SESSION_MS / 1000}`);
@@ -601,27 +601,20 @@ export const EXEMPLE_PROFIL = { // 5/11 (Romain : « plus cohérent ») : un PEA
     cfg: { prog: [{ k: "e:amundi-msci-world-pea", jour: 5, q: 25, depuis: "2026-03-05" }] } }, // 6/11 soir : un achat programmé, pour montrer ce bloc du rapport
   rapport: { favoris: true, portefeuille: true, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] },
 };
+// Calcul du rapport pour le profil d'exemple : plus servi aux visiteurs, gardé pour les tests (tests/t_rapport8.mjs)
+// et pour refaire un jour le fichier figé (node, à la main).
+export async function calculerRapportExemple(request, env) {
+  const d = await siteData(request, env), auj = jourParis(), semaine = semaineIso(auj);
+  const r0 = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) };
+  const s = suiviDe(r0, d.names);
+  const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
+  const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
+  await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj);
+  n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
+  return { ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: false, en_cours: false, historique: [] };
+}
 export async function rapportExemple(request, env, ctx) {
-  // 7/11 (Romain : « long chargement ») : le rapport d'exemple est gardé en base (table cache_json) et servi tel quel en moins d'une seconde.
-  const cle = "rapport-exemple|v" + SYN_VERSION;
-  let row = null;
-  if (env.DB) { try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)`).run(); row = await env.DB.prepare(`SELECT v, at FROM cache_json WHERE k = ?`).bind(cle).first(); } catch (e) { } }
-  const calculer = async () => {
-    const d = await siteData(request, env), auj = jourParis(), semaine = semaineIso(auj);
-    const r0 = { favoris: JSON.stringify(EXEMPLE_PROFIL.favoris), portefeuille: JSON.stringify(EXEMPLE_PROFIL.portefeuille), profil: JSON.stringify({ rapport: EXEMPLE_PROFIL.rapport }) };
-    const s = suiviDe(r0, d.names);
-    const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
-    const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
-    await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj);
-    n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
-    const corps = JSON.stringify({ ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: true, en_cours: true, historique: [] });
-    if (env.DB) { try { await env.DB.prepare(`INSERT OR REPLACE INTO cache_json (k, v, at) VALUES (?, ?, ?)`).bind(cle, corps, Date.now()).run(); } catch (e) { } }
-    return corps;
-  };
-  const rep = v => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
-  // 7/11 matin (Romain : « pourquoi il devrait se recalculer, c'est un rapport d'exemple ») : jamais recalculé pour un visiteur.
-  // Il est refait une fois par jour par le robot « État du site » (clé ADMIN_KEY), et une première fois après une mise en ligne s'il n'existe pas.
-  if (adminOk(request, env)) return rep(await calculer());
-  if (row && row.v) return rep(row.v);
-  return rep(await calculer());
+  // 7/11 (Romain : « c'est un rapport d'exemple, il n'a pas de recalcul à faire ») : rapport figé, celui du 6 novembre,
+  // dans cf/site/data/rapport-exemple.json. Plus aucun calcul ni appel à l'IA ici.
+  return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
 }

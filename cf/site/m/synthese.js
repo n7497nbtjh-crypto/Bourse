@@ -422,16 +422,16 @@ const SYN_EX_REG = [
 ];
 async function pageRapportExemple() {
   setTitle("Un rapport de la semaine, en exemple"); if (typeof setNav === "function") setNav("espace");
-  app.innerHTML = `<div class="crumbs"><a href="/espace">Mon espace</a> › Rapport exemple</div><div class="empty">Calcul du rapport de cette semaine…</div>`;
-  let b = null; try { const r = await fetch("/api/rapport-exemple"); b = r.ok ? await r.json() : null; } catch (e) { }
-  if (!b) { app.innerHTML = `<section class="panel"><div class="pb">Le rapport exemple n'a pas pu être calculé pour le moment. <a class="lnk" href="/espace">Créer mon rapport</a></div></section>`; return; }
+  app.innerHTML = `<div class="crumbs"><a href="/espace">Mon espace</a> › Rapport exemple</div><div class="empty">Chargement du rapport…</div>`;
+  let b = null; try { const r = await fetch("/data/rapport-exemple.json"); b = r.ok ? await r.json() : null; } catch (e) { }
+  if (!b) { app.innerHTML = `<section class="panel"><div class="pb">Le rapport exemple n'a pas pu être chargé. <a class="lnk" href="/espace">Créer mon rapport</a></div></section>`; return; }
   await Promise.all([typeof PXP !== "undefined" ? PXP : null, typeof acaLoad === "function" ? acaLoad() : null, synContexte(), typeof loadFiches === "function" ? loadFiches() : null]);
   b = synNormalise(b);
   // 4/11 (Romain) : rapport exemple plus clair ; le rapport fait partie de Premium (plus de « Gratuit » ici)
   const prem = typeof isPrem === "function" && isPrem();
-  app.innerHTML = `<div class="ek ek-page rx4"><section class="ek-hero rx4-hero"><div class="mc-crumb"><a href="/espace">Mon espace</a> › Rapport exemple</div><span class="mc-stk">Premium · exemple</span>
+  app.innerHTML = `<div class="ek ek-page rx4"><section class="ek-hero rx4-hero"><div class="mc-crumb"><a href="/espace">Mon espace</a> › Rapport exemple</div><span class="mc-stk">Rapport du 6 novembre</span>
       <h1 class="ag4-t">Votre semaine en 2 minutes.</h1>
-      <p class="mc-sub">Un vrai rapport, calculé aujourd'hui avec les chiffres du site pour un profil d'exemple : quatre favoris et un petit portefeuille. Le vôtre suit vos valeurs, et arrive chaque samedi.</p>
+      <p class="mc-sub">Un vrai rapport, celui de la semaine du 2 au 6 novembre, calculé avec les chiffres du site pour un profil d'exemple : quatre favoris et un petit portefeuille. Le vôtre suit vos valeurs, et arrive chaque samedi.</p>
       <div class="rx4-plan">${[["1", "Toute l'actualité de vos entreprises", "résultats, accords, rachats, presse"], ["2", "Ce qui a fait bouger le portefeuille", "ce que chaque ligne a apporté, en euros"], ["3", "Le contexte", "ce qui touche leurs secteurs"], ["4", "À venir", "les dates des deux prochaines semaines"]].map(([n, t, d]) => `<div><i>${n}</i><b>${t}</b><span>${d}</span></div>`).join("")}</div>
       ${prem ? "" : `<a class="ek-btn dk rx4-cta" href="/premium">Recevoir le mien chaque semaine avec Premium</a>`}</section>
     <div id="synex">${synPageHTML(b, { premium: false })}</div>

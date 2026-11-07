@@ -2052,3 +2052,45 @@ a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 .et8-p{width:12px;height:12px;border-radius:50%;border:1.5px solid #111;display:inline-block;background:#2fbf5f}
 .et8-p.o,.et8-p.orange{background:#ffb400}.et8-p.r,.et8-p.rouge{background:#ff3b5c}.et8-p.vert{background:#2fbf5f}
 @media(max-width:860px){.et8-g{grid-template-columns:1fr}.et8 .r8-band.et8-band{grid-template-columns:1fr}.et8-feu{margin:0 auto}}
+/* 7/11 : page /pronostics (cf/site/m/communaute.js, pnPronos) */
+.pn-kpi{display:flex;flex-wrap:wrap;gap:12px;margin-top:22px}
+.pn-kpi div{background:#fff;border:2px solid var(--ek-ink);border-radius:16px;padding:10px 16px;min-width:130px}
+.pn-kpi b{display:block;font:800 30px/1 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.04em}
+.pn-kpi span{font:600 12.5px Inter;color:#444}
+.ek .pn-sec>h2 small{font:700 14px Inter;color:var(--ek-mut);letter-spacing:0;margin-left:8px}
+.pn-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px}
+.pn-c{border:2px solid var(--ek-ink);border-radius:22px;padding:16px 18px;background:#fff;display:flex;flex-direction:column;gap:10px;transition:box-shadow .15s}
+.pn-c.vote{box-shadow:5px 5px 0 var(--ek-ink)}
+.pn-h{display:flex;align-items:center;gap:12px}
+.pn-n{flex:1;min-width:0}.pn-n a{display:block;font:800 18px/1.15 "Bricolage Grotesque",Inter,sans-serif;color:var(--ek-ink);text-decoration:none;overflow-wrap:anywhere}
+.pn-n small{display:block;font:600 12px Inter;color:var(--ek-mut);margin-top:2px}
+.pn-q{font:800 12px Inter;padding:4px 9px;border:2px solid var(--ek-ink);border-radius:9px;background:var(--ek-soft);transform:rotate(-3deg);white-space:nowrap}
+.pn-q.vite{background:var(--ek-y)}
+.pn-hist{margin:0;font:600 13px Inter;color:#444}
+.pn-pil{display:inline-block;font:800 12.5px Inter;padding:2px 8px;border-radius:8px;border:1.5px solid currentColor}
+.pn-pil.g{color:var(--ek-g);background:var(--ek-gz)}.pn-pil.r{color:var(--ek-r);background:var(--ek-rz)}
+.pn-b{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#app .ek .pn-v{display:flex;align-items:center;justify-content:center;gap:8px;padding:12px 8px;border:2px solid var(--ek-ink);border-radius:14px!important;background:#fff;color:var(--ek-ink);font:800 15px Inter;cursor:pointer;transition:transform .1s,background .15s}
+#app .ek .pn-v span{font-size:20px;line-height:1}
+#app .ek .pn-v.up span{color:var(--ek-g)}#app .ek .pn-v.dn span{color:var(--ek-r)}
+#app .ek .pn-v:hover{transform:translateY(-1px)}
+#app .ek .pn-v.up.on{background:var(--ek-g);color:#fff;border-color:var(--ek-g)}#app .ek .pn-v.dn.on{background:var(--ek-r);color:#fff;border-color:var(--ek-r)}
+#app .ek .pn-v.on span{color:#fff}
+#app .ek .pn-v:disabled{opacity:.6;cursor:wait}
+.pn-bar{display:flex;height:12px;border:2px solid var(--ek-ink);border-radius:8px;overflow:hidden;background:var(--ek-soft)}
+.pn-bar .up{background:var(--ek-g)}.pn-bar .dn{background:var(--ek-r)}
+.pn-lg{display:flex;justify-content:space-between;gap:8px;font:700 12.5px Inter;margin-top:6px;color:var(--ek-mut)}
+.pn-lg .up{color:var(--ek-g)}.pn-lg .dn{color:var(--ek-r)}
+.pn-moi1{margin:6px 0 0;font:600 12.5px Inter;color:#444}
+.pn-vide{margin:0;font:600 13px Inter;color:var(--ek-mut)}
+.pn-past{border:2px solid var(--ek-ink);border-radius:22px;overflow:hidden}
+.pn-p{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 16px;border-top:1px solid var(--ek-line)}
+.pn-p:first-child{border-top:0}
+.pn-p a{font:800 15px "Bricolage Grotesque",Inter,sans-serif;color:var(--ek-ink)}
+.pn-p small{font:600 12px Inter;color:var(--ek-mut)}
+.pn-reel{flex:1;text-align:right;font:600 13px Inter;min-width:160px}
+.pn-note{font:500 12px/1.5 Inter;color:var(--ek-mut);margin:40px 0 0;max-width:80ch}
+@media (max-width:640px){.pn-kpi div{min-width:0;flex:1}.pn-reel{text-align:left;flex-basis:100%}}
+.r8-hg>*,.r8-trois>*{min-width:0}.r8-row svg{max-width:45%;height:auto}@media(max-width:400px){#app .r8 h1{font-size:27px;overflow-wrap:anywhere}.r8-pfc{padding:14px}}
+.r8-li>*{min-width:0}@media(max-width:480px){.r8-li{grid-template-columns:56px 1fr}}
+@media(max-width:480px){.r8-ac{flex-wrap:wrap;white-space:normal}}
