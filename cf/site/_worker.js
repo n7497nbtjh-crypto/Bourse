@@ -162,7 +162,7 @@ async function premium(request, env) {
   if (!env || !env.DB) return json({ error: "Indisponible pour le moment." }, 503);
   await initCompte(env.DB);
   let url = new URL(request.url), path = url.pathname;
-  if (path === "/api/premium/offres") return json({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)), essai: env.ESSAI_14J === "1" });
+  if (path === "/api/premium/offres") return json({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.EMAIL || env.CF_EMAIL_TOKEN && env.CF_ACCOUNT_ID || env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)), essai: env.ESSAI_14J === "1" });
   if (path === "/api/premium/statut") {
     let p = await premiumOf(request, env);
     return json(p ? { premium: !0, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1\u2026$2") : null } : { premium: !1 });
@@ -893,7 +893,8 @@ R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": 
 - "titre" : 10 mots au plus, factuel, en fran\xE7ais (exemple : \xAB La Banque d'Angleterre remonte son taux \xE0 4 % \xBB).
 - "theme" : 2 \xE0 4 mots, par exemple \xAB \xC9tats-Unis \xB7 Politique \xBB, \xAB Royaume-Uni \xB7 Taux d'int\xE9r\xEAt \xBB, \xAB \xC9nergie \xBB.
 - "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est pass\xE9, uniquement d'apr\xE8s les titres fournis, avec leur date. Aucune supposition (\xAB pourrait \xBB, \xAB semble \xBB, \xAB refl\xE8te \xBB) : seulement ce que disent les titres. Si un titre relie le sujet aux march\xE9s, dis-le en pr\xE9cisant que c'est la presse qui fait ce lien.
-- "titres" : les num\xE9ros des 1 \xE0 3 titres qui portent le sujet.
+- "titres" : les num\xE9ros des 1 \xE0 3 titres qui portent le sujet, et qui en parlent vraiment (un titre sur un autre sujet ne doit jamais \xEAtre cit\xE9).
+- Ne recopie jamais un titre dans "fait" (ni entre guillemets, ni \xAB selon des titres comme \xBB) : ils sont affich\xE9s en lien sous le sujet. \xC9cris en fran\xE7ais, avec tes mots.
 - "secteurs" : les cl\xE9s des secteurs directement concern\xE9s, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le march\xE9.
 - "pays" : codes ISO \xE0 deux lettres des pays concern\xE9s (US, GB, FR, DE, CN, JP\u2026), au plus 2.
 - Ignore les faits divers, la consommation courante, le sport, les sujets d'une seule entreprise.
@@ -1542,7 +1543,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       vos_lignes: lignes.filter((l) => d.meta[l.k] && d.meta[l.k].sector === sk).map(court2)
     };
   }), f = {
-    v: 6,
+    v: 7,
     semaine,
     genere: Date.now(),
     du: lundi3,
@@ -1700,7 +1701,7 @@ async function mondeDe(env, d, n, lundi3, auj) {
       titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter((i) => Number.isInteger(i) && T[i]))].slice(0, 3),
       secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter((x) => x in secteurs).slice(0, 3),
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
-    })).map((s) => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
+    })).map((s) => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
     return S2.length ? { sujets: S2 } : null;
   }, r = await iaJSON(env, "monde|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 900, valide).catch(() => null);
   if (!r) return null;
@@ -2296,9 +2297,9 @@ function suiviDe(row, names) {
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
-  if (!(!c || c.v !== 6 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
+  if (!(!c || c.v !== 7 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
   let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 6 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
+  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 7 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
   let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some((x) => x.n);
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
 }
@@ -3575,7 +3576,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "aa84d6dd5e9cf0b2", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "8a68b8a708aa3340", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

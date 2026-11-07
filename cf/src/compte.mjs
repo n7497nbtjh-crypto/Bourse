@@ -111,7 +111,7 @@ export async function premium(request, env) {
   if (!env || !env.DB) return json({ error: "Indisponible pour le moment." }, 503);
   await initCompte(env.DB);
   const url = new URL(request.url), path = url.pathname;
-  if (path === "/api/premium/offres") return json({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)), essai: env.ESSAI_14J === "1" });
+  if (path === "/api/premium/offres") return json({ mensuel: env.STRIPE_LINK_MENSUEL || null, unique: env.STRIPE_LINK_UNIQUE || null, prix_mensuel: env.PRIX_MENSUEL || null, prix_unique: env.PRIX_UNIQUE || null, mail: !!(env.MAIL_FROM && (env.EMAIL || (env.CF_EMAIL_TOKEN && env.CF_ACCOUNT_ID) || env.BREVO_KEY || env.MAILJET_KEY || env.RESEND_KEY)), essai: env.ESSAI_14J === "1" });
   if (path === "/api/premium/statut") { const p = await premiumOf(request, env); return json(p ? { premium: true, plan: p.plan, until: p.until, email: p.email ? p.email.replace(/^(.).*(@.*)$/, "$1…$2") : null } : { premium: false }); }
   if (path === "/api/premium/activer") { // retour de Stripe après paiement : ?session_id=cs_…
     if (!env.STRIPE_SECRET) return json({ error: "Le paiement n'est pas encore configuré." }, 503);

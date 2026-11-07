@@ -31,7 +31,7 @@ const b = await calculerRapportExemple(new Request("https://enklair.com/api/rapp
 { const lu = lectures, f = await (await rapportExemple(new Request("https://enklair.com/api/rapport-exemple"), env)).json(); lectures = lu; // 7/11 : rapport d'exemple figé, servi tel quel
   t(f.date_rapport === "2026-11-06" && f.lignes && f.lignes.length && f.monde && !f.en_cours, "rapport d'exemple figé : celui du 6 novembre, sans recalcul"); }
 if (process.env.R8_JSON) (await import("node:fs")).writeFileSync(process.env.R8_JSON, JSON.stringify(b)); // pour les captures (scripts locaux)
-t(b.v === 6, "version 6 du rapport");
+t(b.v === 7, "version 7 du rapport");
 console.log("Lectures de fichiers pour un rapport :", lectures); t(lectures <= 40, `au plus 40 lectures de fichiers par rapport (${lectures})`);
 const R = b.rivales || {};
 t(R["c:asml"] && R["c:asml"].liste.length >= 3, "ASML a ses rivales");

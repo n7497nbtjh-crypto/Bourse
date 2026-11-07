@@ -109,7 +109,7 @@ export async function mondeDe(env, d, n, lundi, auj) {
       titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter(i => Number.isInteger(i) && T[i]))].slice(0, 3),
       secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter(x => x in secteurs).slice(0, 3),
       pays: (Array.isArray(s.pays) ? s.pays : []).map(x => String(x).toUpperCase()).filter(x => /^[A-Z]{2}$/.test(x)).slice(0, 3) }))
-      .map(s => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter(ph => !SUPPOSE.test(ph)).join(" ") }))
+      .map(s => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter(ph => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })) // 7/11 nuit : plus de titres anglais recopiés dans le texte (ils sont en lien sous le sujet)
       .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2); // 6/11 : un sujet porté par un seul titre est écarté
     return S.length ? { sujets: S } : null;
   };

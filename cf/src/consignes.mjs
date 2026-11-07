@@ -104,7 +104,8 @@ Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": ".
 - "titre" : 10 mots au plus, factuel, en français (exemple : « La Banque d'Angleterre remonte son taux à 4 % »).
 - "theme" : 2 à 4 mots, par exemple « États-Unis · Politique », « Royaume-Uni · Taux d'intérêt », « Énergie ».
 - "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est passé, uniquement d'après les titres fournis, avec leur date. Aucune supposition (« pourrait », « semble », « reflète ») : seulement ce que disent les titres. Si un titre relie le sujet aux marchés, dis-le en précisant que c'est la presse qui fait ce lien.
-- "titres" : les numéros des 1 à 3 titres qui portent le sujet.
+- "titres" : les numéros des 1 à 3 titres qui portent le sujet, et qui en parlent vraiment (un titre sur un autre sujet ne doit jamais être cité).
+- Ne recopie jamais un titre dans "fait" (ni entre guillemets, ni « selon des titres comme ») : ils sont affichés en lien sous le sujet. Écris en français, avec tes mots.
 - "secteurs" : les clés des secteurs directement concernés, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le marché.
 - "pays" : codes ISO à deux lettres des pays concernés (US, GB, FR, DE, CN, JP…), au plus 2.
 - Ignore les faits divers, la consommation courante, le sport, les sujets d'une seule entreprise.

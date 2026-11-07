@@ -40,22 +40,64 @@ function r8Lecture(l, R, A) {
 // puis seulement des chiffres qui ne sont pas déjà dans l'en-tête ou dans les barres des rivales. Tout est calculé, sans IA.
 const R8_JS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
 function r8Jour(iso) { const d = new Date(String(iso).slice(0, 10) + "T12:00:00Z"); return R8_JS[d.getUTCDay()] + " " + r8Jr(iso); }
-function r8Pourquoi(l, R, A) {
-  const v = l.variation_semaine_pct, ind = l.indice, J = (R && R.jours) || [], out = [];
-  const dr = R && R.med != null && v != null ? v - R.med : null, di = ind && ind.pct != null && v != null ? v - ind.pct : null;
-  const nr = R ? R.liste.filter(x => x.v != null).length : 0;
-  if (dr != null && Math.abs(dr) <= 1.5) out.push(di != null && Math.abs(di) <= 1.5 && Math.abs(ind.pct) >= 1 ? `Rien de propre à ${l.nom} : tout le marché a bougé ainsi, ses ${nr} rivales aussi (${synPct(R.med)} en médiane).` : `Le mouvement vient de tout son métier : ses ${nr} rivales ont fait ${synPct(R.med)} en médiane.`);
-  else if (dr != null) out.push(`Le mouvement lui est propre : ses ${nr} rivales ont fait ${synPct(R.med)} en médiane${ind && ind.pct != null ? `, le ${ind.nom} ${synPct(ind.pct)}` : ""}.`);
-  // Le jour où tout s'est joué, et ce qui s'est passé ce jour-là (ses annonces, un article, une nouvelle d'une rivale)
+// 7/11 nuit (Romain : « quand une entreprise publie ses résultats, le client veut savoir ce que le rapport en dit » ; « rien de propre à Veolia » refusé) :
+// 1. s'il y a des résultats : ce qu'ils disent (croissance face à son dernier exercice et à ses rivales), puis l'accueil de la Bourse ce jour-là ;
+// 2. sinon : où elle se place face à ses rivales et au marché, le jour où tout s'est joué, et ce qui s'est dit ou annoncé ce jour-là (titre de presse, annonce, rivale).
+// Rend du HTML (les titres de presse gardent leur traduction automatique).
+function r8Titr(a) { const lg = typeof synLangue === "function" ? synLangue(a.titre) : "fr"; return `« <span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(r8Titre(a.titre))}</span> »`; }
+function r8Croiss(x) { const m = /\(([+−-])\s?(\d+(?:,\d+)?)\s?%/.exec(String(x || "")); return m ? (m[1] === "+" ? 1 : -1) * parseFloat(m[2].replace(",", ".")) : null; }
+function r8Fort(l, R, A, pub) { // le jour où tout s'est joué, et ce qui s'est dit ou annoncé ce jour-là
+  const v = l.variation_semaine_pct, ind = l.indice, J = (R && R.jours) || [];
   const fort = J.length ? J.reduce((m, j) => Math.abs(j.v) > Math.abs(m.v) ? j : m) : null;
-  if (fort && v != null && Math.abs(fort.v) >= 1 && Math.abs(fort.v) >= Math.abs(v) * 0.4) {
-    const ce = A.filter(a => String(a.date).slice(0, 10) === fort.date), off = ce.find(a => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie)), pr = ce.find(a => a.origine === "presse");
-    const rn = R && (R.nouvelles || []).find(a => String(a.date).slice(0, 10) === fort.date && a.origine !== "presse");
-    const cause = off ? (off.categorie === "resultats" ? "le jour de ses résultats" : `le jour de son annonce « ${r8Maj((SYN6_T[off.categorie] || ["annonce"])[0].toLowerCase())} »`)
-      : fort.riv != null && Math.abs(fort.v - fort.riv) <= 1.2 && Math.abs(fort.riv) >= 1 ? "avec tout son métier ce jour-là" : fort.ind != null && Math.abs(fort.v - fort.ind) <= 1 && Math.abs(fort.ind) >= 1 ? "avec tout le marché ce jour-là"
-      : pr ? "le jour d'un article de presse sur elle" : rn ? `le jour d'une annonce de ${rn.nom}` : "seule, sans annonce officielle ce jour-là";
-    out.push(`L'essentiel s'est joué ${r8Jour(fort.date)} : ${synPct(fort.v)}, ${cause}.`);
+  if (!(fort && v != null && Math.abs(fort.v) >= 1 && Math.abs(fort.v) >= Math.abs(v) * 0.35) || fort.date === pub) {
+    // pas de jour qui ressort : une semaine régulière ?
+    if (J.length >= 4 && (J.every(j => j.v < 0) || J.every(j => j.v > 0))) { const vs = J.map(j => j.v), lo = Math.min(...vs.map(Math.abs)), hi = Math.max(...vs.map(Math.abs));
+      return { date: null, t: `Elle a ${vs[0] > 0 ? "monté" : "baissé"} chaque jour de la semaine, de ${F1.format(lo)} à ${F1.format(hi)}\u00a0% par jour : un mouvement continu plutôt qu'une nouvelle précise.` }; }
+    return null; }
+  const ce = A.filter(a => String(a.date).slice(0, 10) === fort.date), off = ce.find(a => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie)), pr = ce.find(a => a.origine === "presse");
+  const rn = R && (R.nouvelles || []).find(a => String(a.date).slice(0, 10) === fort.date);
+  const veille = pub && J.findIndex(j => j.date === pub) - J.findIndex(j => j.date === fort.date) === 1;
+  let t = `${pub ? `Sa plus forte ${fort.v > 0 ? "hausse" : "baisse"} de la semaine, ${r8Jour(fort.date)}${veille ? ", la veille de ses résultats" : ""}` : `L'essentiel s'est joué ${r8Jour(fort.date)}`} : ${synPct(fort.v)}${fort.riv != null ? `, ses rivales ${synPct(fort.riv)}` : ""}${fort.ind != null && ind ? `, le ${esc(ind.nom)} ${synPct(fort.ind)}` : ""}.`;
+  if (off) t += ` Ce jour-là, elle a publié : ${esc(r8Maj((SYN6_T[off.categorie] || ["annonce"])[0].toLowerCase()))}${off.titre ? ` (${esc(off.titre)})` : ""}.`;
+  else if (pr) t += ` Ce jour-là, la presse titrait ${r8Titr(pr)}.`;
+  else if (rn) t += ` Ce jour-là, ${esc(rn.nom)} ${rn.origine === "presse" ? `faisait l'actualité : ${r8Titr(rn)}` : `publiait : ${rn.titre ? esc(r8Maj(rn.titre.toLowerCase())) : esc((SYN6_T[rn.categorie] || ["une annonce"])[0].toLowerCase())}`}.`;
+  else if (fort.riv != null && Math.abs(fort.v - fort.riv) <= 1.2) t += " Tout son métier a bougé ainsi ce jour-là.";
+  else if (fort.ind != null && Math.abs(fort.v - fort.ind) <= 1) t += " Tout le marché a bougé ainsi ce jour-là.";
+  else t += " Elle n'a rien publié ce jour-là, et nous n'avons trouvé aucun article.";
+  return { date: fort.date, t };
+}
+function r8Pourquoi(l, R, A) {
+  const v = l.variation_semaine_pct, ind = l.indice, J = (R && R.jours) || [], out = [], nom = l.nom;
+  const nr = R ? R.liste.filter(x => x.v != null).length : 0, med = R && R.med;
+  const res = A.find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length);
+  const jourDe = d => J.find(j => j.date === String(d).slice(0, 10));
+  if (res) {
+    const [lab, val] = res.chiffres[0], g = r8Croiss(val), cr = R && R.croissance, montant = String(val).replace(/\s*\(.*$/, "");
+    let t = `Ses résultats : ${esc(lab.toLowerCase())} de ${esc(montant)}`;
+    if (g != null) {
+      t += `, ${g >= 0 ? "en hausse" : "en baisse"} de ${F1.format(Math.abs(g))}\u00a0%`;
+      if (cr && /chiffre d'affaires|ventes|revenu/i.test(lab)) {
+        const acc = g - cr.v, annuel = /exercice/i.test(lab) && Math.abs(acc) < 1.5; t += annuel ? "" : Math.abs(acc) < 1 ? `, au même rythme que sur son exercice ${cr.exercice} (${synPct(cr.v)})` : `, ${acc > 0 ? "plus vite" : "moins vite"} que sur son exercice ${cr.exercice} (${synPct(cr.v)})`;
+        if (cr.med != null) t += `. Ses rivales grandissent ${Math.abs(cr.med - g) < 1.5 ? "au même rythme" : cr.med > g ? "plus vite" : "moins vite"} (${synPct(cr.med)} en médiane sur leur dernier exercice)`;
+      }
+    }
+    out.push(t + ".");
+    const rc = R && R.reaction;
+    if (rc) out.push(`Le jour de la publication (${r8Jour(rc.date)}), la Bourse ${rc.med == null ? `a fait ${synPct(rc.v)}` : Math.abs(rc.v - rc.med) < 1 ? `l'a accueillie comme ses rivales : ${synPct(rc.v)}, ses rivales ${synPct(rc.med)}` : `l'a ${rc.v > rc.med ? "mieux" : "moins bien"} accueillie que ses rivales : ${synPct(rc.v)} contre ${synPct(rc.med)}`}.`);
+    const f2 = r8Fort(l, R, A, rc ? rc.date : null); if (f2) out.push(f2.t);
+    if (v != null && med != null) out.push(`Sur la semaine, ${synPct(v)}${Math.abs(v - med) <= 1.5 ? `, comme ses ${nr} rivales (${synPct(med)} en médiane)` : `, ${v > med ? "mieux" : "moins bien"} que ses ${nr} rivales (${synPct(med)} en médiane)`}.`);
+    return out;
   }
+  // Sans résultats : sa place face à ses rivales et au marché
+  if (v != null && med != null) {
+    const d = v - med, mk = ind && ind.pct != null ? `, le ${esc(ind.nom)} ${synPct(ind.pct)}` : "";
+    out.push(Math.abs(d) <= 1.5 ? `${esc(nom)} a bougé avec tout son métier : ses ${nr} rivales ont fait ${synPct(med)} en médiane${mk}.` : `${esc(nom)} fait ${d > 0 ? "mieux" : "moins bien"} que ses ${nr} rivales : ${synPct(v)} contre ${synPct(med)} en médiane${mk}.`);
+  }
+  const fort = r8Fort(l, R, A, null);
+  if (fort) out.push(fort.t);
+  // Ce qu'elle a publié d'autre cette semaine (contrat, dirigeants, opération…)
+  const autres = A.filter(a => a.origine !== "presse" && !["rachat", "capital", "resultats"].includes(a.categorie) && a.titre && (!fort || String(a.date).slice(0, 10) !== fort.date)).slice(0, 2);
+  for (const a of autres) out.push(`Le ${esc(r8Jr(a.date))}, elle a publié : ${esc(r8Maj((SYN6_T[a.categorie] || ["annonce"])[0].toLowerCase()))} (${esc(a.titre)}).`);
   return out;
 }
 function r8Jours(l, R, A) {
@@ -70,9 +112,9 @@ function r8Jours(l, R, A) {
 function r8Faits(l, R, A) {
   const res = A.find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length), L = [];
   const ton = (x, m) => x == null || m == null ? "" : x - m > 1 ? "up" : x - m < -1 ? "dn" : "";
-  if (res) L.push(["Ses résultats", esc(res.chiffres.slice(0, 3).map(([a, b]) => `${a} ${b}`).join(" · ")), `publiés le ${esc(r8Jr(res.date))}`, "r8-lgf"]);
-  const rc = R && R.reaction; if (rc) L.push(["Ce jour-là en Bourse", `<b class="${r8Cls(rc.v)}">${synPct(rc.v)}</b>`, rc.med != null ? `ses rivales : ${synPct(rc.med)}` : "", ton(rc.v, rc.med)]);
-  const cr = R && R.croissance; if (cr) L.push([`Ses ventes ${cr.exercice}`, `<b class="${r8Cls(cr.v)}">${synPct(cr.v)}</b>`, `médiane des rivales : ${synPct(cr.med)}`, ton(cr.v, cr.med)]);
+  if (res && res.chiffres.length > 1) L.push(["Ses autres chiffres", esc(res.chiffres.slice(1, 4).map(([a, b]) => `${a} ${b}`).join(" · ")), `publiés le ${esc(r8Jr(res.date))}`, "r8-lgf"]);
+  const rc = R && R.reaction; if (rc && !res) L.push(["Ce jour-là en Bourse", `<b class="${r8Cls(rc.v)}">${synPct(rc.v)}</b>`, rc.med != null ? `ses rivales : ${synPct(rc.med)}` : "", ton(rc.v, rc.med)]);
+  const cr = R && R.croissance; if (cr && !res) L.push([`Ses ventes ${cr.exercice}`, `<b class="${r8Cls(cr.v)}">${synPct(cr.v)}</b>`, `médiane des rivales : ${synPct(cr.med)}`, ton(cr.v, cr.med)]);
   const mg = R && R.marge; if (mg) L.push([`Sa marge nette ${mg.exercice}`, `<b>${F1.format(mg.v)} €</b>`, `gardés sur 100 € de ventes · rivales : ${F1.format(mg.med)} €`, ton(mg.v, mg.med)]);
   return L.length ? `<div class="r8-faits">${L.map(([a, b, c, t]) => `<div class="r8-fl${t ? " " + t : ""}"><span class="k">${a}</span><span class="v">${b}</span><span class="c">${c}</span></div>`).join("")}</div>` : "";
 }
@@ -206,7 +248,7 @@ function synPageV8(b, m) {
     const meta = [l.vue ? `${F0.format(l.via_eur)} € à travers vos ETF` : l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
     // L'IA n'est montrée que pour une annonce officielle (elle explique l'annonce) ; le « pourquoi » est toujours calculé
     const annOff = A.some(a => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie)), P = R0 ? r8Pourquoi(l, R0, A) : [];
-    const lecture = (P.length ? `<p class="r8-ouv">${esc(P[0])}</p>${P.slice(1).map(t => `<p>${esc(t)}</p>`).join("")}` : `<p class="r8-ouv">${esc(r8Lecture(l, R0, A))}</p>`)
+    const lecture = (P.length ? `<p class="r8-ouv">${P[0]}</p>${P.slice(1).map(t => `<p>${t}</p>`).join("")}` : `<p class="r8-ouv">${esc(r8Lecture(l, R0, A))}</p>`)
       + (R0 ? r8Jours(l, R0, A) : "") + r8Faits(l, R0, A)
       + (ia && ia.clair && annOff ? `<div class="r8-iac"><p class="r8-lab">Son annonce en clair</p><p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR à partir de l'annonce. La source fait foi.</p></div>` : "");
     const res = A.find(a => a.origine !== "presse" && (a.chiffres || []).length), npr = A.filter(a => a.origine === "presse").length, ncour = A.filter(a => ["rachat", "capital"].includes(a.categorie) && a.origine !== "presse").length;
