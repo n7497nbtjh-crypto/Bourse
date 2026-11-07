@@ -38,7 +38,6 @@ const NAV = [
     ],
     aussi: [
       ["/marches", "Les marchés du jour"],
-      ["/decouverte", "La découverte de la semaine"],
       ["/dividendes", "Calendrier des dividendes"],
       ["/hier", "Ce qui s'est passé hier"],
     ],
@@ -61,9 +60,9 @@ const NAV = [
   },
   // 6/11 soir (Romain : « l'onglet communauté est trop caché ») : cinquième rubrique, dans la barre, le menu du téléphone et le pied de page.
   {
-    k: "com", label: "Communauté", porte: "/communaute", sous: "Analyses, questions, listes partagées",
+    k: "com", label: "Communauté", porte: "/communaute", sous: "Questions, listes de suivi, pronostics",
     items: [
-      ["/communaute", "La communauté", "Les analyses et les questions des autres investisseurs"],
+      ["/communaute", "La communauté", "Questions, listes de suivi et pronostics des visiteurs"],
     ],
   },
   {

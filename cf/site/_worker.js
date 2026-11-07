@@ -105,14 +105,24 @@ function sessionCompte(request, env) {
     }
   })()), SESS.get(request));
 }
+var proprietaires = (env) => String(env && env.PROPRIETAIRES || "").toLowerCase().split(/[,\s]+/).filter((e) => e.includes("@")), tokenProprietaire = (email) => sha256hex("proprietaire:" + email.toLowerCase()), abonneProprietaire = (email, token) => ({ token, email, plan: "proprietaire", sub_id: null, until: 41024448e5, created: 0 });
 async function premiumOf(request, env) {
   if (!env || !env.DB) return null;
-  let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64);
+  let t = (request.headers.get("x-bilan-token") || "").replace(/[^a-f0-9]/g, "").slice(0, 64), P = proprietaires(env);
   if (!t) {
     let c = await sessionCompte(request, env);
-    t = c && c.premium || "";
+    if (t = c && c.premium || "", c && c.email && P.includes(c.email.toLowerCase())) {
+      let tp = await tokenProprietaire(c.email);
+      if (c.premium !== tp)
+        try {
+          await env.DB.prepare("UPDATE comptes SET premium = ? WHERE id = ?").bind(tp, c.id).run();
+        } catch {
+        }
+      return abonneProprietaire(c.email, tp);
+    }
   }
   if (!t) return null;
+  for (let e of P) if (t === await tokenProprietaire(e)) return abonneProprietaire(e, t);
   await initCompte(env.DB);
   let a = await env.DB.prepare("SELECT * FROM abonnes WHERE token = ?").bind(t).first();
   if (!a) return null;
@@ -3351,7 +3361,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "b457fd6a78aaae6d", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "ad03293dc5d01a5f", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

@@ -13,12 +13,11 @@ const env = {
   DB: { prepare: q => stmt(q), batch: async l => Promise.all(l.map(s => s.all())) },
   ASSETS: { fetch: async req => { lectures++; const p = decodeURIComponent(new URL(req.url || String(req)).pathname).replace(/^\//, ""), f = new URL(p, ROOT); return existsSync(f) ? new Response(readFileSync(f)) : new Response("", { status: 404 }); } },
   AI: { run: async (model, { messages }) => {
-    const sys = messages[0].content, user = messages[1].content.replace(/\n\/no_think$/, ""), f = JSON.parse(user);
+    const sys = messages[0].content, user = messages[1].content.replace(/\n\/no_think$/, ""); let f; try { f = JSON.parse(user); } catch (e) { throw new Error("JSON tronqué envoyé à l'IA (" + user.length + " caractères)"); }
     if (sys.startsWith("Tu choisis")) { appels.monde++;
-      const i = re => f.titres.findIndex(t => re.test(t.titre));
       return { response: JSON.stringify({ sujets: [
-        { titre: "Élections américaines : les valeurs de l'IA chahutées", theme: "États-Unis · Politique", fait: "Les Américains ont voté le 3 novembre. La presse relie à ce vote un recul des valeurs liées à l'intelligence artificielle.", titres: [i(/midterms sparked/), i(/AI stocks climb/)], secteurs: ["tech"], pays: ["US"] },
-        { titre: "La Banque d'Angleterre remonte son taux à 4 %", theme: "Royaume-Uni · Taux", fait: "Le 5 novembre, première hausse depuis plus de trois ans. La livre est montée à son plus haut depuis le référendum du Brexit. Cela pourrait refléter une confiance accrue.", titres: [i(/hiked to 4%/), i(/Pound rises/)], secteurs: [], pays: ["GB"] },
+        { titre: "Élections américaines : les valeurs de l'IA chahutées", theme: "États-Unis · Politique", fait: "Les Américains ont voté le 3 novembre. La presse relie à ce vote un recul des valeurs liées à l'intelligence artificielle.", titres: [0, 1], secteurs: ["tech"], pays: ["US"] },
+        { titre: "La Banque d'Angleterre remonte son taux à 4 %", theme: "Royaume-Uni · Taux", fait: "Le 5 novembre, première hausse depuis plus de trois ans. La livre est montée à son plus haut depuis le référendum du Brexit. Cela pourrait refléter une confiance accrue.", titres: [2, 3], secteurs: [], pays: ["GB"] },
         { titre: "Sujet inventé", theme: "x", fait: "Un sujet sans titre réel doit être retiré par le serveur, même avec un texte assez long.", titres: [999], secteurs: ["tech"], pays: [] }] }), usage: { prompt_tokens: 3000, completion_tokens: 300 } }; }
     appels.entreprise++; faitsVus.push(f);
     if (f.entreprise === "TotalEnergies") return { response: JSON.stringify({ clair: "TotalEnergies a publié un communiqué. Cela pourrait influencer la structure du capital.", change: "" }) }; // creux : doit être refusé

@@ -1,0 +1,83 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette : page privée « État du site »</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:15px/1.5 Inter,sans-serif}
+b{font-variant-numeric:tabular-nums}.w{max-width:1080px;margin:0 auto;padding:0 20px}
+.note{max-width:1080px;margin:20px auto;background:#f4f4f4;border-radius:12px;padding:12px 18px;font-size:14px;color:#333}
+.band{background:#FFE14D;border:2px solid #111;border-radius:22px;padding:22px 26px;margin:0 0 26px;display:grid;grid-template-columns:1fr auto;gap:20px;align-items:center}
+h1{font:800 40px/1.02 "Bricolage Grotesque";letter-spacing:-1.4px;margin:6px 0 8px}
+h2{font:800 26px/1.08 "Bricolage Grotesque";letter-spacing:-.8px;margin:0 0 10px}
+.tag{display:inline-block;background:#111;color:#fff;border-radius:7px;padding:2px 10px;font:700 12.5px Inter;transform:rotate(-2deg)}
+.feu{width:118px;height:118px;border:3px solid #111;border-radius:50%;display:grid;place-items:center;font:800 15px "Bricolage Grotesque";text-align:center;background:#d9f5df;box-shadow:4px 4px 0 #111}
+.feu.o{background:#ffe9b3}.feu.r{background:#ffd6dc}
+.g{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:26px}
+.c{border:2px solid #111;border-radius:16px;padding:14px 16px;background:#fff;box-shadow:4px 4px 0 #111}
+.c .k{font:700 11px Inter;text-transform:uppercase;letter-spacing:.07em;color:#555}
+.c .v{font:800 30px/1.1 "Bricolage Grotesque";letter-spacing:-1px;margin:4px 0}
+.c p{margin:4px 0 0;font-size:13.5px;color:#333}
+.ok{color:#0a8a3a}.ko{color:#d1242f}.att{color:#b36b00}
+.ligne{display:grid;grid-template-columns:22px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-top:1px solid #eee;font-size:14px}
+.ligne:first-of-type{border-top:0}
+.p{width:12px;height:12px;border-radius:50%;border:1.5px solid #111;display:inline-block}
+.p.v{background:#2fbf5f}.p.o{background:#ffb400}.p.r{background:#ff3b5c}
+.ligne small{color:#666}
+section{margin:0 0 30px}
+.src{font-size:12.5px;color:#666}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.g,.two{grid-template-columns:1fr}.band{grid-template-columns:1fr}h1{font-size:30px}}
+</style></head><body>
+<div class="note"><b>Maquette de la page privée « État du site » (7/11).</b> Adresse prévue : <code>/espace/etat</code>, visible seulement par le compte propriétaire (variable PROPRIETAIRES). Tous les chiffres ci-dessous sont réels, relevés le 7/11 à 0 h 45 (robots GitHub, fichiers d'état, site en ligne). Un robot la recalcule chaque matin à 7 h et l'enregistre ; la page garde les 30 derniers jours.</div>
+<div class="w">
+<div class="band"><div><span class="tag">État du site · samedi 7 novembre, 7 h</span><h1>Tout a tourné cette nuit. Deux points à régler.</h1>
+  <p style="margin:0;max-width:640px">Les 7 robots ont réussi, 308 annonces lues hier, 125 résultats dont 100 avec leurs chiffres. À régler : le calendrier de presse (GDELT) ne rend plus rien depuis le 2/11, et aucun e-mail ne peut partir.</p></div>
+  <div class="feu o">2 points<br>à régler</div></div>
+
+<section><h2>Les robots</h2><div class="c">
+  <div class="ligne"><span class="p v"></span><span>Mise à jour des données (comptes, cours, index) <small>· 6/11 21 h 33</small></span><b class="ok">réussi</b></div>
+  <div class="ligne"><span class="p v"></span><span>Actualité des entreprises <small>· 6/11 22 h 22 · AMF, SEC, Nasdaq, Oslo, Nordiques, BBC</small></span><b class="ok">réussi</b></div>
+  <div class="ligne"><span class="p o"></span><span>Dates de résultats trouvées dans la presse (GDELT) <small>· 0 date depuis le 2/11 : l'API répond « trop de requêtes » (429)</small></span><b class="att">à régler</b></div>
+  <div class="ligne"><span class="p v"></span><span>Rapports annuels des sites <small>· 6/11 19 h 51</small></span><b class="ok">réussi</b></div>
+  <div class="ligne"><span class="p v"></span><span>Logos <small>· 6/11 16 h 15 · 880 entreprises sans logo avant le passage</small></span><b class="ok">réussi</b></div>
+  <div class="ligne"><span class="p v"></span><span>Mise en ligne du site <small>· 7/11 0 h 00 · 17 251 fichiers (limite 20 000)</small></span><b class="ok">réussi</b></div>
+  <div class="ligne"><span class="p v"></span><span>Rapport de la semaine (espace) <small>· 6/11 19 h 25</small></span><b class="ok">réussi</b></div>
+</div></section>
+
+<section><h2>L'actualité d'hier</h2><div class="g">
+  <div class="c"><span class="k">Annonces lues</span><div class="v">308</div><p>SEC 161 · AMF 49 · Nordiques 46 · Nasdaq 32 · Oslo 20</p></div>
+  <div class="c"><span class="k">Résultats publiés</span><div class="v">125</div><p><b class="ok">100</b> avec leurs chiffres extraits · <b class="att">25</b> sans chiffres (communiqué sans tableau)</p></div>
+  <div class="c"><span class="k">Fiches mises à jour après résultats</span><div class="v">98 <small style="font:600 14px Inter">/ 100</small></div><p>2 fiches non mises à jour : comptes en attente du dépôt officiel</p></div>
+</div>
+<div class="c"><div class="k" style="margin-bottom:6px">Résultats sans chiffres extraits, à regarder</div>
+  <div class="ligne"><span class="p o"></span><span>Humana · Résultats du 3e trimestre 2026 <small>· communiqué lu, tableau non reconnu</small></span><a href="#">voir ↗</a></div>
+  <div class="ligne"><span class="p o"></span><span>Equinor · Résultats du 3e trimestre <small>· en anglais, format PDF</small></span><a href="#">voir ↗</a></div>
+  <p class="src" style="margin:8px 0 0">Liste complète : 25 annonces. Le robot réessaie le lendemain avec le rapport déposé.</p></div></section>
+
+<section><h2>Cohérence et contresens</h2><div class="two">
+  <div class="c"><span class="k">Contrôle de toutes les fiches (phrases)</span><div class="v ok">0 problème</div><p>3 295 fiches, 41 règles · dernière règle ajoutée le 6/11 (« ce bénéfice » en perte)</p></div>
+  <div class="c"><span class="k">Relecture visuelle (ordinateur et téléphone)</span><div class="v ok">0 problème</div><p>6 590 pages vues · 136 pages du site en 3 tailles, 0 erreur JavaScript</p></div>
+  <div class="c"><span class="k">Chiffres à vérifier (sauts d'une année à l'autre)</span><div class="v att">14</div><p>Nouveaux depuis hier : 3 (Micron, Lam Research, Coinbase). Vérifiés dans les rapports : 9.</p></div>
+  <div class="c"><span class="k">Textes de l'IA refusés</span><div class="v">6 <small style="font:600 14px Inter">sur 42</small></div><p>Phrases creuses ou suppositions, remplacées par la phrase calculée</p></div>
+</div></section>
+
+<section><h2>Le site, vu de l'extérieur</h2><div class="g">
+  <div class="c"><span class="k">Pages en erreur</span><div class="v ok">0</div><p>136 pages testées à 6 h 50 (accueil, fiches, outils, Premium, espace)</p></div>
+  <div class="c"><span class="k">Cours</span><div class="v att">51</div><p>entreprises sans cours (surtout Oslo) · feuilles Google 1 à 4 : recalcul à 6 h 00 <b class="ok">ok</b></p></div>
+  <div class="c"><span class="k">IA du site</span><div class="v ok">disponible</div><p>Part gratuite du jour : 23 % utilisée hier · 0 appel refusé</p></div>
+</div></section>
+
+<section><h2>Paiement, comptes, e-mails</h2><div class="g">
+  <div class="c"><span class="k">Paiement Stripe</span><div class="v ok">ok</div><p>2 liens de paiement répondent · page /premium/merci répond · 0 paiement réel reçu · <b class="att">aucun paiement d'essai de bout en bout</b></p></div>
+  <div class="c"><span class="k">Comptes</span><div class="v">12</div><p>comptes · 3 Premium (dont le propriétaire) · 2 nouveaux cette semaine</p></div>
+  <div class="c"><span class="k">E-mails</span><div class="v ko">aucun ne part</div><p>Cloudflare Email Service : variables CF_EMAIL_TOKEN, CF_ACCOUNT_ID, MAIL_FROM absentes</p></div>
+</div></section>
+
+<section><h2>Ce qu'il reste à faire</h2><div class="c">
+  <div class="ligne"><span class="p r"></span><span>Identité du vendeur (nom, SIREN, adresse, médiateur) avant la première vente</span><small>bloquant</small></div>
+  <div class="ligne"><span class="p r"></span><span>E-mails : passer Workers en Paid, activer Email Sending, créer les 3 variables</span><small>bloquant</small></div>
+  <div class="ligne"><span class="p o"></span><span>Calendrier des dividendes US : remplacer api.nasdaq.com (robots interdits)</span><small>à faire</small></div>
+  <div class="ligne"><span class="p o"></span><span>48 sociétés aux comptes trop anciens masquées : relever à la main ou attendre</span><small>à trancher</small></div>
+</div></section>
+<p class="src">Page recalculée chaque matin à 7 h par le robot « État du site » (GitHub) et à la demande par le bouton « Recalculer ». Les chiffres des comptes et des paiements viennent du serveur (lecture seule, aucune clé manipulée).</p>
+</div>
+<div class="note"><b>Chiffres de la maquette non encore mesurés par un robot</b> (marqués ainsi pour ne pas les prendre pour acquis) : fiches mises à jour après résultats (98/100), nouveaux sauts (3), textes de l'IA refusés (6/42), part de l'IA utilisée (23 %), nombre de comptes (12, 3 Premium). Tout le reste est mesuré ce soir.</div>
+</body></html>

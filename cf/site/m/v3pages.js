@@ -3,7 +3,7 @@
    de la rubrique (Apprendre, Marchés, Outils, Mon espace), grand titre, phrase d'introduction. Le fil d'Ariane, s'il existe,
    passe dans le bandeau. Les pages qui ont déjà leur propre bandeau (accueil .a4, fiche .f3, entreprises .e3) ne sont pas touchées.
    Styles : site.css, bloc « Pages v3 ». */
-const V3_STK = { dec: ["Apprendre", "a4-bl"], exp: ["Marchés", "a4-pk"], ana: ["Outils", "a4-gr"], esp: ["Mon espace", "a4-wh"] };
+const V3_STK = { dec: ["Apprendre", "a4-bl"], exp: ["Marchés", "a4-pk"], ana: ["Outils", "a4-gr"], com: ["Communauté", "a4-ye"], esp: ["Mon espace", "a4-wh"] };
 function v3Hero() {
   const h = document.querySelector("#app h1.pagetitle");
   if (!h || h.closest(".v3-hero,.a4,.f3,.e3,.no-v3")) return;

@@ -2897,15 +2897,17 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 /* ---------- Démarrage ---------- */
 // Un fichier absent sous /data/ renvoyait la page d'accueil entière (516 ko) avec un code 200 : on refuse tout ce qui n'est pas du JSON (audit P0-3).
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok && /json/i.test(r.headers.get("content-type") || "") ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), Promise.resolve({}), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/logos/index.json", { l: {} }), getJSON("/data/a-verifier.json", { items: {} })]).then(([r, ag, uni, br, auto, etf, segfr, rep, conc, lg, av]) => {
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), getJSON("/data/agenda-habituel.json", { events: [] }), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/logos/index.json", { l: {} }), getJSON("/data/a-verifier.json", { items: {} })]).then(([r, ag, uni, br, auto, etf, hab, rep, conc, lg, av]) => {
   LOGOS = (lg && lg.l) || {};
   AVERIF = (av && av.items) || {}; // 5e passage (A8) : chiffres à vérifier (sauts d'une année à l'autre repérés par tests/t_coherence.mjs)
   REP = rep || {}; CONC = conc || {};
-  ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = segfr || {};
+  ETF = etf || { list: [] }; ETF.list.forEach(e => ETFBY[e.id] = e); SEGFR = {};
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
   // Agenda : dates officielles relevées à la main, puis dates estimées d'après l'an dernier pour les autres
   const manual = new Set((ag?.events || []).map(e => e.id));
   AG = { events: [...(ag?.events || []), ...(auto?.events || []).filter(e => !manual.has(e.id))] }; BROKERS = br;
+  // 7/11 : dates habituelles de résultats (l'an dernier + 1 an, data/agenda_habituel.mjs), marquées « à confirmer », pour les entreprises sans date officielle
+  { const off = new Set(AG.events.filter(e => e.type === "Résultats" && e.date >= TODAY).map(e => e.id)); AG.events.push(...(hab?.events || []).filter(e => !off.has(e.id))); }
   // Dividendes des entreprises américaines (calendrier Nasdaq, data/dividendes_us.mjs) : seulement celles sans calendrier officiel relevé
   window.AG_DIVP = Promise.all([getJSON("/data/agenda-dividendes.json", { events: [] }), getJSON("/data/agenda-dividendes-eu.json", { events: [] })]).then(D => { const off = new Set(AG.events.filter(e => e.type === "Dividende").map(e => e.id)); D.forEach(d => AG.events.push(...(d.events || []).filter(e => !off.has(e.id)))); });
   const S = Object.fromEntries((r.companies || []).map(c => [c.id, c]));

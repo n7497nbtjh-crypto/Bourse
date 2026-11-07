@@ -11,7 +11,7 @@ function ag4Delai(d) { const n = Math.round((Date.parse(d + "T00:00:00Z") - Date
 function ag4Carte(e) {
   const c = RBY[e.id], H = e.type === "Résultats" && typeof O2_heure === "function" ? O2_heure(e) : null, col = AG4_COUL[e.type] || "#5F5B55";
   return `<a class="ag4-c" href="/entreprise/${esc(c.id)}" style="--c:${col}" ${H ? `data-ag="${esc(e.id)}|${esc(e.date)}"` : ""}><div class="ag4-ch">${mcLogo(c)}<span><b>${esc(c.name)}</b><small>${esc(secName(c))}</small></span><em>${esc(e.type || "Date")}</em></div>
-    <p>${esc(e.label || "")}</p><div class="o2-agh ag4-h">${H ? (H.ok ? `<b>${esc(H.court)}</b>${/^\d|^vers|^au plus/.test(H.court) ? " <small>heure de Paris</small>" : ""}` : `<small>${esc(H.court)}</small>`) : ""}</div></a>`;
+    <p>${e.estime ? `<span class="ag4-est">À confirmer</span> ` : ""}${esc(e.label || "")}</p><div class="o2-agh ag4-h">${H ? (H.ok ? `<b>${esc(H.court)}</b>${/^\d|^vers|^au plus/.test(H.court) ? " <small>heure de Paris</small>" : ""}` : `<small>${esc(H.court)}</small>`) : ""}</div></a>`;
 }
 function pageAgenda4() {
   setTitle("Agenda financier"); setNav("news");
@@ -23,7 +23,7 @@ function pageAgenda4() {
   const cases = jours.map(d => { const L = semaine.filter(e => e.date === d); return `<${L.length ? `a href="#j-${d}"` : "div"} class="ag4-d${L.length ? "" : " vide"}" data-jour="${d}"><small>${esc(ag4J(d).toLocaleDateString("fr-FR", { weekday: "short" }))}</small><b>${ag4J(d).getDate()}</b><span>${L.length ? `${L.length} rendez-vous` : "rien"}</span><i>${L.slice(0, 4).map(e => mcLogo(RBY[e.id])).join("")}</i></${L.length ? "a" : "div"}>`; }).join("");
   app.innerHTML = `<div class="ek ek-page ag4-page">
     <section class="ek-hero"><span class="mc-stk">Agenda</span><h1 class="ag4-t">${semaine.length ? `${F0.format(semaine.length)} rendez-vous cette semaine.` : "Aucun rendez-vous cette semaine."}</h1>
-      <p class="mc-sub">Résultats, assemblées et dividendes des ${F0.format(nE)} entreprises dont le site suit le calendrier officiel. Ce qui a été publié est plus bas.</p>
+      <p class="mc-sub">Résultats, assemblées et dividendes des ${F0.format(nE)} entreprises suivies. Dates officielles, et dates habituelles « à confirmer » d'après l'an dernier. Ce qui a été publié est plus bas.</p>
       <div class="ag4-w">${cases}</div></section>
     <div id="ag4moi"></div>
     <section class="ek-sec" id="ag4liste"><span class="ek-stk2">À venir</span><h2 id="ag4h">Jour par jour.</h2>

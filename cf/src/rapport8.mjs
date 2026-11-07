@@ -72,11 +72,13 @@ function univers(d, lundi, auj) {
 export async function mondeDe(env, d, n, lundi, auj) {
   const fin = addJ(lundi, 6), items = ((d.monde && d.monde.items) || []).filter(x => x && x.d && x.d.slice(0, 10) >= addJ(lundi, -2) && x.d.slice(0, 10) <= fin && x.t && x.u);
   if (items.length < 4) return null;
-  const T = items.sort((a, b) => b.d.localeCompare(a.d)).slice(0, 140);
+  const T = items.sort((a, b) => b.d.localeCompare(a.d)).slice(0, 140); // du plus récent au plus ancien
   const parSec = univers(d, lundi, auj), secteurs = {};
   for (const [s, L] of Object.entries(parSec)) secteurs[s] = { nom: SECTEURS[s] || s, mediane_pct: r1(med(L.map(x => x.v))), n: L.length };
-  const faits = { semaine_du: lundi, au: fin, indices: (n.indices || []).map(i => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs,
-    titres: T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t })) };
+  // Les faits envoyés à l'IA sont coupés à 14 000 caractères par iaJSON : on retire des titres (les plus anciens) jusqu'à tenir dedans,
+  // sinon le JSON arrive tronqué (7/11 : 128 titres, réponse perdue)
+  const faits = { semaine_du: lundi, au: fin, indices: (n.indices || []).map(i => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] };
+  while (T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500)) T.pop();
   const valide = o => {
     if (!o || !Array.isArray(o.sujets)) return null;
     const S = o.sujets.slice(0, 3).map(s => ({

@@ -42,7 +42,7 @@
     await moi().catch(() => null); PREM = null; const st = await premStatus();
     try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=premium-vue"); } catch (e) { }
     const nCo = R && R.companies ? R.companies.length : 0, ouvert = !!(OFFRES.mensuel || OFFRES.unique);
-    const offre = st.premium ? `<div class="pm5-offre"><h3>Premium est actif</h3><p class="pm5-act">${st.plan === "mensuel" ? "Abonnement mensuel" : st.plan === "essai" ? "Essai gratuit" : "Accès d'un an"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}.</p>
+    const offre = st.premium ? `<div class="pm5-offre"><h3>Premium est actif</h3><p class="pm5-act">${st.plan === "mensuel" ? "Abonnement mensuel" : st.plan === "essai" ? "Essai gratuit" : st.plan === "proprietaire" ? "Compte du propriétaire" : "Accès d'un an"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}.</p>
         ${st.plan === "mensuel" ? `<a class="pm5-btn" href="/premium" id="portail">Gérer ou résilier mon abonnement</a>` : ""}<a class="pm5-btn o" href="/espace">Ouvrir mon espace</a><a class="pm5-petit" href="/premium" id="unprem">Retirer l'accès de cet appareil</a></div>`
       : ouvert ? `<div class="pm5-offre"><h3>Choisissez votre formule</h3><div class="pm5-pl" role="radiogroup">
         <div tabindex="0" class="on" data-pm5="unique" role="radio" aria-checked="true"><span class="rd"></span><span><b>Un an <span class="eco">−34 %</span></b><small>Un seul paiement, sans renouvellement</small></span><em>39 €<small>soit 3,25 € par mois</small></em></div>

@@ -10,7 +10,7 @@
    Les anciens messages libres (discussions, avis, idées) restent lisibles sur les fiches et dans /communaute?salon=….
    Remplace : pageCommunaute, tabCommu, chatBlock (bloc « Discussion » des fiches entreprise et ETF), qGuide.
    ===================================================================================================== */
-const CMU_TABS = [["analyses", "Analyses"], ["questions", "Questions"], ["listes", "Listes de suivi"], ["pronostics", "Pronostics"]];
+const CMU_TABS = [["questions", "Questions"], ["listes", "Listes de suivi"], ["pronostics", "Pronostics"]]; // 7/11 (Romain) : plus d'onglet Analyses
 const CMU_HZ = { court: ["Court terme", "moins d'un an"], moyen: ["Moyen terme", "1 à 5 ans"], long: ["Long terme", "plus de 5 ans"] };
 const CMU_CLES = "bilan.listes.cles";
 const CMU_RAPPEL = "Contributions de visiteurs, non vérifiées par ENKLAIR Ce ne sont pas des conseils en investissement : vérifiez toujours sur la fiche et dans les comptes officiels.";
@@ -131,13 +131,12 @@ function cmuBindForm(root, room, done) {
 function pageCommunaute() {
   setTitle("Communauté"); setNav("com");
   const qs = new URLSearchParams(location.search), o = qs.get("onglet");
-  const tab = o === "portefeuilles" ? "listes" : o === "discussions" ? "analyses" : CMU_TABS.some(t => t[0] === o) ? o : "analyses";
-  app.innerHTML = `<header class="cmu-hero"><h1 class="pagetitle">Communauté</h1>
-      <p class="pagesub">Des analyses argumentées sur les entreprises et les ETF du site, des questions de débutants et des listes de suivi partagées. Les chiffres cités viennent toujours du site, jamais des auteurs.</p>
-      <p class="cmu-bandeau">${CMU_RAPPEL}</p></header>
+  const tab = o === "portefeuilles" ? "listes" : CMU_TABS.some(t => t[0] === o) ? o : "questions";
+  app.innerHTML = `<div class="cmu"><header class="cmu-hero"><h1 class="pagetitle">${tab === "questions" ? "Posez votre question, d'autres y répondent." : tab === "listes" ? "Les listes de suivi des autres." : "Hausse ou baisse ? Faites votre pronostic."}</h1>
+      <p class="pagesub">${tab === "questions" ? "Une entreprise, un ETF, un chiffre que vous ne comprenez pas : les autres visiteurs répondent, les réponses utiles passent devant." : tab === "listes" ? "Des listes de favoris partagées, avec les chiffres du site pour chaque ligne, copiables dans vos favoris." : "Avant chaque publication de résultats : ventes en hausse ou en baisse ? Un exercice pour apprendre à anticiper, rien à gagner."}</p></header>
     <nav class="qtabs cmu-tabs" aria-label="Communauté">${CMU_TABS.map(([k, n]) => `<a href="/communaute?onglet=${k}" class="${k === tab ? "on" : ""}"${k === tab ? ' aria-current="page"' : ""}>${n}</a>`).join("")}</nav>
-    <div id="ctb"><div class="empty">Chargement…</div></div>`;
-  ({ analyses: cmuAnalyses, questions: commQuestions, listes: cmuListes, pronostics: commPronos })[tab]($("#ctb"), qs);
+    <p class="cmu-bandeau">${CMU_RAPPEL}</p><div id="ctb"><div class="empty">Chargement…</div></div></div>`;
+  ({ questions: commQuestions, listes: cmuListes, pronostics: commPronos })[tab]($("#ctb"), qs);
   if (o === "portefeuilles") setTimeout(() => { const t = $("#portefeuilles"); if (t) t.scrollIntoView({ block: "start" }); }, 400);
 }
 function cmuGuide() {
@@ -192,7 +191,7 @@ function cmuAnciens(el, room, n) { // anciens messages libres d'un salon : lisib
   fetch(`/api/communaute?room=${encodeURIComponent(room)}`).then(r => r.json()).then(j => {
     const L = (j.items || []).filter(m => !m.meta && m.parent == null && m.room !== "questions" && m.kind !== "question");
     if (!L.length) { el.innerHTML = ""; return; }
-    el.innerHTML = `<details class="cmu-old"><summary>Messages plus anciens (${L.length})</summary><p class="muted">Messages libres publiés avant les analyses argumentées. Ils restent lisibles ; les nouveaux échanges passent par les analyses et les questions.</p>${L.slice(0, n || 50).map(m => cmuMsgHTML(m, m.room !== room)).join("")}</details>`;
+    el.innerHTML = `<details class="cmu-old" open><summary>Messages des visiteurs (${L.length})</summary><p class="muted">Messages libres ; les nouveaux échanges passent par les analyses et les questions.</p>${L.slice(0, n || 50).map(m => cmuMsgHTML(m, m.room !== room)).join("")}</details>`;
     cmuBindVotes(el);
   }).catch(() => { el.innerHTML = ""; });
 }
@@ -291,26 +290,14 @@ function cmuListe(el, id) {
 }
 
 /* ---------- Le bloc « Discussion » des fiches (entreprise et ETF) ---------- */
-function chatBlock(el, room, { compact = false } = {}) {
+function chatBlock(el, room, { compact = false } = {}) { // 7/11 : plus d'analyses sur les fiches ; les messages des visiteurs et un lien vers les questions
   if (!el) return;
-  const nom = cmuNom(room) || roomName(room);
-  el.innerHTML = `<div class="cmu-bloc${compact ? " compact" : ""}"><p class="cmu-rappel">${CMU_RAPPEL}</p><div class="cmu-bl"><div class="empty">Chargement…</div></div>
-    <div class="cmu-blact"><button type="button" class="btn" data-cmu-ecrire>Écrire une analyse</button><a class="more" href="/communaute?onglet=questions">Poser une question →</a><a class="more" href="/communaute?onglet=analyses&salon=${esc(room)}">Toutes les analyses →</a></div>
-    <div class="cmu-blf" hidden>${cmuFormHTML(room)}</div><div class="cmu-blo"></div></div>`;
-  const list = $(".cmu-bl", el), fz = $(".cmu-blf", el);
-  $("[data-cmu-ecrire]", el).onclick = () => { fz.hidden = !fz.hidden; if (!fz.hidden) { const t = $("[name=these]", fz); if (t) t.focus(); } };
-  cmuBindForm(fz, room, () => { fz.hidden = true; load(); });
-  cmuBindVotes(el);
-  const load = () => fetch(`/api/communaute/analyses?room=${encodeURIComponent(room)}`).then(r => r.json()).then(j => {
-    const L = (j.items || []).filter(m => cmuMeta(m));
-    list.innerHTML = j.error ? `<div class="empty">${esc(j.error)}</div>` : L.length ? L.slice(0, compact ? 2 : 3).map(m => cmuAnalyseHTML(m, { court: true })).join("") + (L.length > (compact ? 2 : 3) ? `<p class="cmu-more"><a class="more" href="/communaute?onglet=analyses&salon=${esc(room)}">Les ${L.length} analyses sur ${esc(nom)} →</a></p>` : "")
-      : `<p class="cmu-vide">Pas encore d'analyse sur ${esc(nom)}. Une thèse, vos arguments, les risques et un horizon : les chiffres de la fiche s'ajoutent tout seuls.</p>`;
-  }).catch(() => { list.innerHTML = `<div class="empty">L'espace communauté n'est pas disponible pour le moment.</div>`; });
-  load();
+  el.innerHTML = `<div class="cmu-bloc${compact ? " compact" : ""}"><p class="cmu-rappel">${CMU_RAPPEL}</p><div class="cmu-blo"></div>
+    <div class="cmu-blact"><a class="btn" href="/communaute?onglet=questions">Poser une question →</a></div></div>`;
   cmuAnciens($(".cmu-blo", el), room, compact ? 5 : 20);
 }
 function tabCommu(s, c, el) {
-  el.innerHTML = `<div class="cols cmu-fiche"><div><section class="panel"><div class="ph"><h2>Analyses des visiteurs sur ${esc(s.name)}</h2></div><div class="pb" id="chat"></div></section></div>
+  el.innerHTML = `<div class="cols cmu-fiche"><div><section class="panel"><div class="ph"><h2>Les visiteurs sur ${esc(s.name)}</h2></div><div class="pb" id="chat"></div></section></div>
     <aside><section class="panel"><div class="ph"><h2>Avis des visiteurs</h2></div><div class="pb" id="avisb"></div></section></aside></div>`;
   chatBlock($("#chat", el), s.id); avisBlock($("#avisb", el), s.id, s.name);
 }

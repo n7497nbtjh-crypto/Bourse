@@ -60,6 +60,7 @@ if (existsSync("data/faq_seo.mjs")) { const { faqSeo } = await import("./data/fa
 const VERSION_SITE = await (async () => { const { createHash } = await import("node:crypto"), { readdirSync, statSync } = await import("node:fs"), h = createHash("sha256"), sauf = new Set(["cf/site/data", "cf/site/_worker.js", "cf/site/sitemap.xml", "cf/site/robots.txt"]);
   const walk = d => readdirSync(d).sort().forEach(f => { const p = d + "/" + f; if (sauf.has(p)) return; if (statSync(p).isDirectory()) walk(p); else h.update(p + "\0").update(readFileSync(p)); });
   walk("cf/site"); return h.digest("hex").slice(0, 16); })();
-execSync("node data/actu_semaine.mjs", { stdio: "inherit" }); // 6/11 soir : nouvelles de la semaine de toutes les entreprises en un fichier (rapport de la semaine)
+execSync("node data/actu_semaine.mjs", { stdio: "inherit" });
+execSync("node data/agenda_habituel.mjs", { stdio: "inherit" }); // 7/11 : dates habituelles de résultats (à confirmer), pour l'agenda // 6/11 soir : nouvelles de la semaine de toutes les entreprises en un fichier (rapport de la semaine)
 execSync(`npx --yes esbuild@0.24.0 cf/src/worker.mjs --bundle --format=esm --minify-syntax --define:BILAN_VERSION='"${VERSION_SITE}"' --outfile=cf/site/_worker.js`, { stdio: "inherit" });
 console.log(paths.length, "pages dans le sitemap");

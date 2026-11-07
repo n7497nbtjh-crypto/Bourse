@@ -136,7 +136,7 @@ function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, 
   window.pageEntreprises = function () {
     const r = e0.apply(this, arguments);
     const sub = $(".pagesub", app);
-    if (sub && !$(".ent-plus", app)) sub.insertAdjacentHTML("afterend", `<div class="ent-plus"><a href="/decouverte"><b>La découverte de la semaine</b><span>Une entreprise moins connue, présentée en détail</span></a><a href="/classements"><b>Classements</b><span>Celles qui cumulent le plus de points forts, secteur par secteur</span></a><a href="/comparer"><b>Comparer</b><span>Jusqu'à trois entreprises côte à côte, face à leur secteur</span></a></div>`);
+    // 7/11 : plus de « découverte de la semaine » (Romain)
     return r;
   };
   /* styles : voir site.css */

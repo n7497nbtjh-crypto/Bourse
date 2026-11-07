@@ -55,8 +55,7 @@ async function pageMarches4() {
   const portes = [["/entreprises", "Entreprises", `${F0.format(R.companies.length)} fiches`, "Chacune face à la médiane de son secteur.", "M4 20V9l8-5 8 5v11M9 20v-6h6v6"],
     ["/etf", "ETF", `${F0.format(ETF.list.length)} fonds`, (typeof frSeul !== "function" || frSeul() ? "Frais, PEA, ce qu'ils contiennent vraiment." : "Frais, performance, ce qu'ils contiennent vraiment."), "M4 18l5-6 4 3 7-9M4 4v16h16"],
     ["/actualites", "Actualité", "chaque jour", "Annonces officielles lues et chiffrées.", "M5 4h14v16H5zM8 9h8M8 13h8M8 17h5"],
-    ["/agenda", "Agenda", "jour par jour", "Résultats et dividendes à venir.", "M4 5h16v15H4zM4 9h16M8 3v4M16 3v4"],
-    ["/decouverte", "La découverte", "chaque semaine", "Une entreprise moins connue, racontée en détail.", "M12 3l2.6 5.6 6.1.7-4.5 4.2 1.2 6L12 16.6 6.6 19.5l1.2-6L3.3 9.3l6.1-.7z"]];
+    ["/agenda", "Agenda", "jour par jour", "Résultats et dividendes à venir.", "M4 5h16v15H4zM4 9h16M8 3v4M16 3v4"]];
   const secteurs = mcSecteurs(G);
   app.innerHTML = `<div class="ek ek-page mc-page">
     <section class="ek-hero mc-h"><span class="mc-stk">Marchés</span><h1>${titre}</h1><p class="mc-sub">${sous}</p>

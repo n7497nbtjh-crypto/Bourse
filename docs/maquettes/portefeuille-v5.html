@@ -1,0 +1,124 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette : Mon portefeuille v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:15px/1.5 Inter,sans-serif}
+b,.n{font-variant-numeric:tabular-nums}.w{max-width:1080px;margin:0 auto;padding:0 20px}
+.note{max-width:1080px;margin:20px auto;background:#f4f4f4;border-radius:12px;padding:12px 18px;font-size:14px;color:#333}
+.up{color:#0a8a3a}.dn{color:#d1242f}
+.tag{display:inline-block;background:#FFE14D;border:1.5px solid #111;border-radius:7px;padding:2px 10px;font:700 13px Inter;transform:rotate(-2deg)}
+.tag.k{background:#111;color:#fff}
+h1{font:800 50px/1 "Bricolage Grotesque";letter-spacing:-1.8px;margin:10px 0 8px}
+h2{font:800 30px/1.06 "Bricolage Grotesque";letter-spacing:-1px;margin:8px 0 6px}
+h3{font:800 19px/1.15 "Bricolage Grotesque";letter-spacing:-.4px;margin:0}
+.sub{color:#444;margin:0 0 18px;max-width:700px}
+section{margin:0 0 44px}
+.card{border:2px solid #111;border-radius:20px;box-shadow:5px 5px 0 #111;background:#fff}
+.band{background:#FFE14D;border:2px solid #111;border-radius:24px;padding:26px 28px;margin:0 0 30px}
+.hg{display:grid;grid-template-columns:1fr auto;gap:26px;align-items:center}
+.band p.l{margin:0;font-size:17px;max-width:560px}
+.anneau{width:150px;height:150px;border-radius:50%;background:conic-gradient(#2b59c3 0 58%,#111 58% 70%,#d1242f 70% 81%,#0a8a3a 81% 91%,#7a5af8 91% 100%);border:2px solid #111;display:grid;place-items:center}
+.anneau i{width:92px;height:92px;border-radius:50%;background:#FFE14D;border:2px solid #111;display:grid;place-items:center;font:800 13px/1.1 "Bricolage Grotesque";text-align:center;font-style:normal}
+.trois{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:20px}
+.v{background:#fff;border:2px solid #111;border-radius:14px;padding:13px 15px;color:#111;text-decoration:none;display:block}
+.v small{display:block;font:700 11px Inter;text-transform:uppercase;letter-spacing:.06em;color:#555}
+.v b{font:800 22px "Bricolage Grotesque"}.v p{margin:3px 0 0;font-size:14px;color:#333}
+.btn{display:inline-block;background:#111;color:#fff;border:2px solid #111;border-radius:12px;padding:10px 16px;font:700 14px Inter;text-decoration:none}
+.btn.o{background:#fff;color:#111}
+/* lignes */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th{text-align:left;font:700 11px Inter;text-transform:uppercase;letter-spacing:.06em;color:#555;padding:10px 12px;border-bottom:2px solid #111}
+td{padding:12px;border-top:1px solid #eee;vertical-align:middle}
+td.r,th.r{text-align:right}
+.co{display:flex;align-items:center;gap:10px}.co img{width:30px;height:30px;border:1px solid #ddd;border-radius:8px;object-fit:contain}
+.co small{display:block;color:#666;font-size:12px}
+.pl{font:800 16px "Bricolage Grotesque"}
+.bar{height:8px;background:#eee;border-radius:99px;overflow:hidden;width:80px;display:inline-block;vertical-align:middle;margin-right:6px}.bar i{display:block;height:100%;background:#111}
+.add{display:flex;gap:10px;padding:14px 16px;border-top:2px solid #111;align-items:center;background:#fafafa;border-radius:0 0 18px 18px}
+.add input{flex:1;border:2px solid #111;border-radius:12px;padding:10px 14px;font:15px Inter}
+/* 4 blocs */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.box{padding:20px 22px}
+.lab{font:700 11px Inter;text-transform:uppercase;letter-spacing:.07em;color:#555;margin:0 0 10px}
+.hb{display:grid;grid-template-columns:120px 1fr 54px;gap:10px;align-items:center;font-size:13.5px;margin:6px 0}
+.hb .t{height:12px;background:#eee;border-radius:4px;overflow:hidden}.hb .t i{display:block;height:100%}
+.hb b{text-align:right}
+.pt{display:grid;grid-template-columns:auto 1fr;gap:12px;padding:10px 0;border-top:1px solid #eee;font-size:14px;align-items:start}
+.pt:first-of-type{border-top:0}
+.pt i{font-style:normal;width:26px;height:26px;border-radius:8px;border:1.5px solid #111;display:grid;place-items:center;font:800 13px Inter;background:#fff8cc}
+.pt i.r{background:#ffd6dc}
+.kp{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.kp div{border:1.5px solid #111;border-radius:12px;padding:8px 12px;min-width:120px}
+.kp b{display:block;font:800 22px "Bricolage Grotesque"}.kp small{font-size:12px;color:#555}
+.cal{display:flex;gap:12px;align-items:flex-start;padding:10px 0;border-top:1px solid #eee;font-size:14px}
+.cal:first-of-type{border-top:0}
+.cd{min-width:50px;border:2px solid #111;border-radius:10px;overflow:hidden;text-align:center}
+.cd small{display:block;background:#d1242f;color:#fff;font:700 10.5px Inter;padding:1px 0}.cd b{display:block;font:800 20px/1.3 "Bricolage Grotesque"}
+.plus{border:1.5px dashed #999;border-radius:14px;padding:12px 16px;font-size:14px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.plus a{color:#111;font-weight:700}
+.ia{font-size:11.5px;color:#777;margin:8px 0 0}
+@media(max-width:860px){h1{font-size:36px}h2{font-size:25px}.hg,.g2,.trois{grid-template-columns:1fr}.anneau{margin:0 auto}table{font-size:13px}th:nth-child(3),td:nth-child(3){display:none}}
+</style></head><body>
+<div class="note"><b>Maquette « Mon portefeuille » v5 (7/11, Romain : « beaucoup d'outils, sûrement trop, présentation bof »).</b> Chiffres du profil d'exemple (cours du 6/11 au soir, contenu officiel du MSCI World). Ce qui change : les 11 tuiles du tableau de bord deviennent <b>4 blocs</b> (ce que vous possédez vraiment · points d'attention · revenus et frais · dates à venir), le reste passe sous « Plus », et la saisie d'une ligne tient en une barre. Rien n'est supprimé du calcul : tout reste accessible.</div>
+<div class="w">
+<div class="band"><div class="hg"><div><span class="tag k">Mon portefeuille</span><h1>10 033 € aujourd'hui.</h1>
+  <p class="l"><b class="dn">−259 €</b> cette semaine (−2,5 %) · <b class="up">+1 217 €</b> (+13,8 %) depuis vos achats, sur 8 816 € investis.</p></div>
+  <div class="anneau"><i>5 lignes<br>2 ETF</i></div></div>
+  <div class="trois">
+    <a class="v" href="#"><small>Cette semaine</small><b class="dn">ETF Monde −262 €</b><p>Votre résultat s'est joué sur une seule ligne. <u>Le rapport</u></p></a>
+    <a class="v" href="#"><small>Ce que vous possédez vraiment</small><b>41 % aux États-Unis</b><p>Sans une seule action américaine : par votre ETF.</p></a>
+    <a class="v" href="#"><small>Prochaine date</small><b>30 nov. · LVMH</b><p>Dernier jour pour l'acompte de 5,50 €.</p></a>
+  </div></div>
+
+<section>
+  <span class="tag">Vos lignes</span><h2>Cinq lignes, une barre pour en ajouter.</h2>
+  <div class="card"><table>
+    <tr><th>Ligne</th><th class="r">Valeur</th><th class="r">Part</th><th class="r">Plus-value</th><th class="r">Semaine</th></tr>
+    <tr><td><div class="co"><img src="https://enklair.com/logos/lvmh.png" alt=""><div>LVMH<small>3 actions · PRU 520 €</small></div></div></td><td class="r pl">1 229 €</td><td class="r"><span class="bar"><i style="width:12%"></i></span>12 %</td><td class="r dn">−331 €</td><td class="r up">+5,8 %</td></tr>
+    <tr><td><div class="co"><img src="https://enklair.com/logos/air-liquide.png" alt=""><div>Air Liquide<small>6 actions · PRU 165 €</small></div></div></td><td class="r pl">1 130 €</td><td class="r"><span class="bar"><i style="width:11%"></i></span>11 %</td><td class="r up">+140 €</td><td class="r up">+4,1 %</td></tr>
+    <tr><td><div class="co"><img src="https://enklair.com/logos/totalenergies.png" alt=""><div>TotalEnergies<small>12 actions · PRU 58 €</small></div></div></td><td class="r pl">945 €</td><td class="r"><span class="bar"><i style="width:9%"></i></span>9 %</td><td class="r up">+249 €</td><td class="r dn">−7,8 %</td></tr>
+    <tr><td><div class="co"><img src="https://enklair.com/logos/schneider-electric.png" alt=""><div>Schneider Electric<small>4 actions · PRU 210 €</small></div></div></td><td class="r pl">910 €</td><td class="r"><span class="bar"><i style="width:9%"></i></span>9 %</td><td class="r up">+70 €</td><td class="r dn">−4,2 %</td></tr>
+    <tr><td><div class="co"><img src="https://enklair.com/logos/amundi.png" alt=""><div>Amundi PEA Monde<small>ETF · 937 parts · PRU 5,40 € · achat programmé le 5</small></div></div></td><td class="r pl">5 809 €</td><td class="r"><span class="bar"><i style="width:58%"></i></span>58 %</td><td class="r up">+749 €</td><td class="r dn">−4,3 %</td></tr>
+  </table><div class="add"><input placeholder="Ajouter une action ou un ETF : tapez son nom"><a class="btn o" href="#">Importer un fichier</a></div></div>
+  <p class="ia">Plus-values calculées comme chez les courtiers : prix moyen des achats, frais inclus. Cours différés. Un clic sur une ligne : ses achats, ses ventes, sa fiche.</p>
+</section>
+
+<section>
+  <span class="tag">Quatre blocs</span><h2>Ce qu'il faut savoir de ce portefeuille.</h2>
+  <div class="g2">
+    <div class="card box"><p class="lab">1 · Ce que vous possédez vraiment, ETF ouverts</p>
+      <div class="hb"><span>États-Unis</span><span class="t"><i style="width:41%;background:#2b59c3"></i></span><b>41 %</b></div>
+      <div class="hb"><span>France</span><span class="t"><i style="width:44%;background:#111"></i></span><b>44 %</b></div>
+      <div class="hb"><span>Japon</span><span class="t"><i style="width:3%;background:#7a5af8"></i></span><b>3 %</b></div>
+      <div class="hb"><span>Royaume-Uni</span><span class="t"><i style="width:2%;background:#0a8a3a"></i></span><b>2 %</b></div>
+      <p class="lab" style="margin-top:14px">Vos plus grosses positions réelles</p>
+      <div class="hb"><span>LVMH</span><span class="t"><i style="width:12%;background:#111"></i></span><b>12 %</b></div>
+      <div class="hb"><span>Air Liquide</span><span class="t"><i style="width:11%;background:#111"></i></span><b>11 %</b></div>
+      <div class="hb"><span>Nvidia</span><span class="t"><i style="width:3%;background:#2b59c3"></i></span><b>3 %</b></div>
+      <div class="hb"><span>Apple</span><span class="t"><i style="width:3%;background:#2b59c3"></i></span><b>3 %</b></div>
+      <p class="ia">Contenu des ETF : composition officielle des indices (SEC, formulaires N-PORT). Diversification : 8 secteurs sur 11, 23 pays.</p></div>
+    <div class="card box"><p class="lab">2 · Points d'attention</p>
+      <div class="pt"><i class="r">!</i><div><b>Une ligne pèse 58 % du portefeuille.</b> Votre résultat dépend surtout de votre ETF Monde. C'est un choix possible, à faire en connaissance de cause.</div></div>
+      <div class="pt"><i>€</i><div><b>Si tout baissait de 10 %, vous perdriez 1 003 €.</b> Une baisse de 30 %, comme en 2020 : 3 010 €.</div></div>
+      <div class="pt"><i>12</i><div><b>12 % de votre argent dans l'IA et les puces</b>, uniquement par l'ETF : Nvidia, Microsoft, Amazon, Alphabet, Broadcom.</div></div>
+      <div class="pt"><i>✓</i><div><b>Frais raisonnables</b> : 0,25 % par an pour l'ETF, 0,99 € par ordre chez votre courtier.</div></div>
+      <p class="ia">Calculé par ENKLAIR sur votre portefeuille. Aucun conseil.</p></div>
+    <div class="card box"><p class="lab">3 · Vos revenus et vos frais</p>
+      <div class="kp"><div><b>128 €</b><small>dividendes attendus sur 12 mois</small></div><div><b>1,3 %</b><small>rendement sur la valeur</small></div><div><b>14,50 €</b><small>frais payés cette année</small></div></div>
+      <div class="cal"><span class="cd"><small>DÉC.</small><b>3</b></span><div><b>LVMH</b> · acompte de 5,50 € par action, 16,50 € pour vous</div></div>
+      <div class="cal"><span class="cd"><small>MAI</small><b>~</b></span><div><b>Air Liquide, TotalEnergies, Schneider</b> · dividendes annuels habituels (dates à confirmer)</div></div>
+      <p class="ia">Dividendes : montants annoncés ou, à défaut, ceux de l'an dernier (marqués). Frais : ceux saisis sur vos ordres.</p></div>
+    <div class="card box"><p class="lab">4 · Dates à venir</p>
+      <div class="cal"><span class="cd"><small>NOV.</small><b>30</b></span><div><b>LVMH</b> · dernier jour pour acheter avec droit à l'acompte</div></div>
+      <div class="cal"><span class="cd"><small>DÉC.</small><b>5</b></span><div><b>Votre achat programmé</b> · 25 parts d'Amundi PEA Monde</div></div>
+      <div class="cal"><span class="cd"><small>FÉV.</small><b>~</b></span><div><b>Résultats annuels</b> · LVMH, Air Liquide, TotalEnergies, Schneider (dates habituelles, à confirmer)</div></div>
+      <div class="cal"><span class="cd"><small>PEA</small><b>5<small style="background:none;color:#111;display:inline;font-size:10px">ans</small></b></span><div><b>Votre PEA a 2 ans et 4 mois.</b> Après 5 ans, les retraits ne le ferment plus.</div></div>
+      <p class="ia">Dates officielles et dates habituelles (marquées). Ajouter à mon agenda : .ics</p></div>
+  </div>
+</section>
+
+<section>
+  <div class="plus"><b>Plus</b><a href="#">L'analyse écrite de votre portefeuille (IA)</a><a href="#">Comparer les frais des courtiers</a><a href="#">Partager anonymement</a><a href="#">Exporter en CSV</a><a href="#">Lignes vendues (0)</a></div>
+</section>
+</div>
+<div class="note"><b>Ce qui disparaît de la vue principale :</b> l'analyse IA, le comparateur de courtiers, le partage anonyme, le calendrier PEA détaillé, les onglets de navigation. <b>Ce qui fusionne :</b> répartition + diversification + « possédez vraiment » → bloc 1 ; alertes + risque en euros → bloc 2 ; dividendes + frais → bloc 3 ; prochaines dates + achats programmés + PEA → bloc 4.</div>
+</body></html>
