@@ -1382,7 +1382,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       let varE = 0, couvert = 0;
       for (let l of lp) {
         let x = L[l.k], r = x && x.variation_semaine_pct;
-        l.poids = r2(l.v / tot * 100), r != null && (l.var_eur = l.v - l.v / (1 + r / 100), varE += l.var_eur, couvert += l.v), x && (x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime, source_valeur: l.src });
+        l.poids = r2(l.v / tot * 100), r != null && (l.var_eur = l.v - l.v / (1 + r / 100), varE += l.var_eur, couvert += l.v), x && (x.portefeuille = { valeur_eur: Math.round(l.v), q: l.q > 0 ? l.q : null, poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime, source_valeur: l.src });
       }
       let jours = [...new Set(lp.flatMap((l) => {
         let v = variationSemaine(d.cs, l.k, lundi3, auj, d.px[l.k], d.sem);
@@ -1543,7 +1543,7 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
       vos_lignes: lignes.filter((l) => d.meta[l.k] && d.meta[l.k].sector === sk).map(court2)
     };
   }), f = {
-    v: 5,
+    v: 6,
     semaine,
     genere: Date.now(),
     du: lundi3,
@@ -1765,6 +1765,168 @@ async function radioDe(d, n, monde) {
   let etfs = Object.values(compo), tous = out.filter(Boolean), forts = tous.filter((x) => x.pct >= 5), faibles = tous.filter((x) => x.pct < 5).map((x) => ({ lab: x.lab, pct: x.pct })), non_comptes = L.filter((l) => !l.k.startsWith("c:") && !compo[l.k]).map((l) => ({ k: l.k, nom: l.nom, eur: r0(l.portefeuille.valeur_eur), pct: r1(l.portefeuille.valeur_eur / tot * 100) }));
   return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, non_comptes, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map((j) => j.asOf).filter(Boolean).sort()[0] || null } : null };
 }
+var coMapper = (d) => {
+  let strip = (x) => fold(x).replace(/\.com\b/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\b(inc|incorporated|corp|corporation|co|company|ltd|limited|plc|sa|se|nv|ag|asa|ab|spa|the|holdings?|group|groupe|class [a-z]|cl [a-z]|adr|reg|shs|ord|common st(ock)?)\b/g, " ").replace(/\s+/g, " ").trim(), parNom = /* @__PURE__ */ new Map();
+  for (let [k, nom] of Object.entries(d.names || {})) if (k.startsWith("c:")) {
+    let t = strip(nom);
+    t && !parNom.has(t) && parNom.set(t, k);
+  }
+  let parNomDe = (nom) => {
+    let t = strip(nom);
+    if (!t) return null;
+    if (parNom.has(t)) return parNom.get(t);
+    let w = t.split(" ");
+    for (let i = w.length - 1; i >= 1; i--) {
+      let x = w.slice(0, i).join(" ");
+      if (x.length >= 4 && parNom.has(x)) return parNom.get(x);
+    }
+    return null;
+  };
+  return (isin, nom) => (d.parIsin || {})[isin] || (nom ? parNomDe(nom) : null);
+};
+async function compoDe(d, k) {
+  let m = d.etf[k] || {}, px = m.proxy, via = null;
+  if (!px && m.index) {
+    for (let [k2, m2] of Object.entries(d.etf)) if (m2 && m2.proxy && m2.index === m.index) {
+      px = m2.proxy, via = m.index;
+      break;
+    }
+  }
+  if (!px || !d.charger) return null;
+  let j = await d.charger(`/data/etf/${px}.json`);
+  return j && Array.isArray(j.isins) ? { j, via } : null;
+}
+var DIV_RE = /\(([\d\s.,]+)\s*(\$|€|£|NOK|SEK|DKK|CHF|CAD|AUD|JPY|GBp|HKD)\)/, DEV_SYM = { $: "USD", "\u20AC": "EUR", "\xA3": "GBP" };
+async function transparenceDe(d, n, lundi3, auj) {
+  let L = (n.lignes || []).filter((l) => l.portefeuille && l.portefeuille.valeur_eur > 0), tot = L.reduce((a, l) => a + l.portefeuille.valeur_eur, 0);
+  if (!tot) return null;
+  let etfL = L.filter((l) => l.k.startsWith("e:")), coL = L.filter((l) => l.k.startsWith("c:")), partEtf = etfL.reduce((a, l) => a + l.portefeuille.valeur_eur, 0) / tot, profil = partEtf >= 0.8 ? "etf" : partEtf <= 0.2 ? "actions" : "mixte", fxS = d.charger ? await d.charger("/data/fx-semaine.json") : null, tauxAu = (cur, j) => {
+    let s = fxS && fxS.taux && fxS.taux[cur], D = fxS && fxS.dates || [], r = null;
+    if (!s) return null;
+    for (let i = 0; i < D.length; i++) D[i] <= j && s[i] > 0 && (r = s[i]);
+    return r;
+  }, fxVar = (cur) => {
+    if (!cur || cur === "EUR") return 0;
+    let a = tauxAu(cur, addJ2(lundi3, -1)), b = tauxAu(cur, auj);
+    return a && b ? a / b - 1 : 0;
+  }, vSem = (k) => {
+    let v = variationSemaine(d.cs, k, lundi3, auj, d.px[k], d.sem);
+    if (!v) return null;
+    let cur = d.px[k] && d.px[k].cur;
+    return { v: v.pct, ve: ((1 + v.pct / 100) * (1 + fxVar(cur)) - 1) * 100 };
+  }, coDe = coMapper(d), expo = /* @__PURE__ */ new Map(), sect = {}, par_etf = [], ajoute = (k, champ, eur, contrib) => {
+    let x = expo.get(k) || { k, nom: d.names[k], direct: 0, via: 0, contrib: 0, etfs: [] };
+    return x[champ] += eur, contrib != null && (x.contrib += contrib), expo.set(k, x), x;
+  };
+  for (let l of coL) {
+    let s = vSem(l.k);
+    ajoute(l.k, "direct", l.portefeuille.valeur_eur, l.portefeuille.var_eur != null ? l.portefeuille.var_eur : null);
+  }
+  let usEur = coL.filter((l) => (d.meta[l.k] || {}).region === "US").reduce((a, l) => a + l.portefeuille.valeur_eur, 0), sansCompo = [];
+  for (let l of etfL) {
+    let val = l.portefeuille.valeur_eur, c = await compoDe(d, l.k);
+    if (!c) {
+      sansCompo.push({ k: l.k, nom: l.nom, eur: r0(val) });
+      continue;
+    }
+    let noms = {};
+    (c.j.top || []).forEach((h) => {
+      h.isin && (noms[h.isin] = h.name);
+    });
+    let couvert = 0, rows = [];
+    for (let [isin, w, nom] of c.j.isins) {
+      let k = coDe(isin, nom || noms[isin]);
+      if (!k || !(w > 0)) continue;
+      let s = vSem(k), eur = val * w / 100, contrib = s ? eur * s.ve / 100 : null, x = ajoute(k, "via", eur, contrib);
+      x.etfs.includes(l.k) || x.etfs.push(l.k), s && (couvert += w, rows.push({ k, nom: d.names[k], poids: Math.round(w * 100) / 100, v: r1(s.v), ve: r1(s.ve), eur: r1(contrib) }));
+      let sec = (d.meta[k] || {}).sector;
+      sec && contrib != null && (sect[sec] = (sect[sec] || 0) + contrib);
+    }
+    usEur += val * (((c.j.countries || []).find((x) => x[0] === "US") || [0, 0])[1] / 100), rows.sort((a, b) => a.eur - b.eur);
+    let m = d.etf[l.k] || {};
+    par_etf.push({
+      k: l.k,
+      nom: l.nom,
+      eur: r0(val),
+      v: l.variation_semaine_pct,
+      var_eur: l.portefeuille.var_eur,
+      couvert_pct: r0(couvert),
+      n: c.j.lines || c.j.isins.length,
+      index: m.index || null,
+      via_indice: c.via,
+      au: c.j.asOf || null,
+      baisse: rows.filter((r) => r.eur < 0).slice(0, 3),
+      hausse: rows.filter((r) => r.eur > 0).slice(-3).reverse(),
+      ter: m.ter != null ? m.ter : null
+    });
+  }
+  for (let l of coL) {
+    let sec = (d.meta[l.k] || {}).sector;
+    sec && l.portefeuille.var_eur != null && (sect[sec] = (sect[sec] || 0) + l.portefeuille.var_eur);
+  }
+  let ent = [...expo.values()].map((x) => {
+    let s = vSem(x.k);
+    return { k: x.k, nom: x.nom, eur: r0(x.direct + x.via), direct: r0(x.direct), via: r0(x.via), pct: r1((x.direct + x.via) / tot * 100), v: s ? r1(s.ve) : null, v_devise: s ? r1(s.v) : null, contrib: s ? r1(x.contrib) : null, etfs: x.etfs };
+  }).sort((a, b) => b.eur - a.eur), top = ent.slice(0, 10), doublons = ent.filter((x) => x.direct > 0 && x.via >= 5).slice(0, 5).map((x) => ({ k: x.k, nom: x.nom, direct: x.direct, via: x.via, eur: x.eur, pct: x.pct, etfs: x.etfs.map((k) => d.names[k]) })), parIndice = {};
+  for (let l of etfL) {
+    let ix = (d.etf[l.k] || {}).index;
+    ix && (parIndice[ix] = parIndice[ix] || []).push(l);
+  }
+  let memes = Object.entries(parIndice).filter(([, a]) => a.length > 1).map(([ix, a]) => ({ index: ix, etfs: a.map((l) => ({ k: l.k, nom: l.nom, eur: r0(l.portefeuille.valeur_eur) })), eur: r0(a.reduce((s, l) => s + l.portefeuille.valeur_eur, 0)) })), vUsd = fxVar("USD"), dev = usEur >= 50 && fxS ? {
+    us_eur: r0(usEur),
+    us_pct: r1(usEur / tot * 100),
+    usd_pct: Math.round(vUsd * 1e4) / 100,
+    effet_eur: r1(usEur * vUsd),
+    taux_debut: tauxAu("USD", addJ2(lundi3, -1)),
+    taux_fin: tauxAu("USD", auj),
+    date_debut: (fxS.dates || []).filter((j) => j <= addJ2(lundi3, -1)).pop() || null,
+    date_fin: (fxS.dates || []).filter((j) => j <= auj).pop() || null
+  } : null, frais = etfL.filter((l) => (d.etf[l.k] || {}).ter != null).map((l) => ({ k: l.k, nom: l.nom, ter: d.etf[l.k].ter, an: r1(l.portefeuille.valeur_eur * d.etf[l.k].ter / 100) })), fraisAn = frais.reduce((a, f) => a + f.an, 0), dej\u00E0 = new Set((n.a_venir || []).map((e) => e.k)), fin = addJ2(auj, 14), cibles = new Map(ent.filter((x) => x.eur >= 50 && !dej\u00E0.has(x.k)).map((x) => [x.k.slice(2), x])), hab = d.charger ? await d.charger("/data/agenda-habituel-proche.json") : null, evs = [...(d.ev || []).map((e) => ({ ...e, estime: !!e.estime })), ...(hab && hab.events || []).map((e) => ({ ...e, estime: !0 }))].filter((e) => e && cibles.has(e.id) && e.date > auj && e.date <= fin && /r[ée]sultat/i.test(e.type || e.label || "")), vusEv = /* @__PURE__ */ new Set(), a_venir = [];
+  for (let e of evs.sort((a, b) => a.estime - b.estime || a.date.localeCompare(b.date))) {
+    if (vusEv.has(e.id)) continue;
+    vusEv.add(e.id);
+    let x = cibles.get(e.id);
+    a_venir.push({ k: x.k, nom: x.nom, date: e.date, eur: x.eur, via: x.via, estime: e.estime, label: e.estime ? "R\xE9sultats, date habituelle \xE0 confirmer" : e.label || "R\xE9sultats" });
+  }
+  a_venir.sort((a, b) => a.date.localeCompare(b.date));
+  let divs = [];
+  for (let e of d.div || []) {
+    let k = "c:" + e.id, l = coL.find((x) => x.k === k);
+    if (!l || !e.date || e.date < lundi3 || e.date > addJ2(auj, 30)) continue;
+    let m = String(e.label || "").match(DIV_RE), q = l.portefeuille.q, eur = null, mt = null, cur = null;
+    if (m) {
+      mt = parseFloat(m[1].replace(/\s/g, "").replace(",", ".")), cur = DEV_SYM[m[2]] || m[2];
+      let f = cur === "EUR" ? 1 : (d.fx || {})[cur];
+      q > 0 && mt > 0 && f > 0 && (eur = r1(q * mt * f));
+    }
+    let paie = /paiement|versement|pay/i.test(e.label || ""), meme = divs.find((x) => x.k === k && x.montant === mt && Math.abs(Date.parse(x.date || x.paiement) - Date.parse(e.date)) < 40 * 864e5);
+    if (meme) {
+      paie ? meme.paiement = e.date : (meme.date = e.date, meme.passe = e.date <= auj);
+      continue;
+    }
+    divs.push({ k, nom: l.nom, date: paie ? null : e.date, paiement: paie ? e.date : null, passe: !paie && e.date <= auj, montant: mt, devise: cur, q: q || null, eur, source: e.source || null });
+  }
+  divs.sort((a, b) => String(a.date || a.paiement).localeCompare(b.date || b.paiement));
+  let SEC = Object.entries(sect).map(([s, e]) => ({ id: s, nom: SECTEURS2[s] || s, eur: r0(e) })).filter((x) => Math.abs(x.eur) >= 2).sort((a, b) => a.eur - b.eur);
+  return {
+    profil,
+    part_etf_pct: r0(partEtf * 100),
+    total_eur: r0(tot),
+    par_etf,
+    sans_compo: sansCompo,
+    entreprises: top,
+    top_eur: r0(top.reduce((a, x) => a + x.eur, 0)),
+    top_pct: r1(top.reduce((a, x) => a + x.eur, 0) / tot * 100),
+    metiers: SEC,
+    doublons,
+    memes_indices: memes,
+    devise: dev,
+    frais: frais.length ? { an: r1(fraisAn), semaine: Math.round(fraisAn / 52 * 100) / 100, lignes: frais } : null,
+    a_venir: a_venir.slice(0, 8),
+    dividendes: divs.slice(0, 8),
+    source: par_etf.length ? "Positions publi\xE9es des fonds (SEC, formulaire N-PORT)" : null
+  };
+}
 function dcaDe(d, pf, lundi3, auj) {
   let P = pf && pf.cfg && Array.isArray(pf.cfg.prog) ? pf.cfg.prog : [];
   if (!P.length) return null;
@@ -1812,6 +1974,18 @@ async function enrichir8(env, d, n, pf, semaine, auj) {
     n.dca = dcaDe(d, pf, lundi3, auj);
   } catch {
     n.dca = null;
+  }
+  try {
+    n.etf8 = await transparenceDe(d, n, lundi3, auj);
+  } catch (e) {
+    n.etf8 = null, globalThis.process && process.env.R8_DEBUG && console.log("etf8", e);
+  }
+  try {
+    if (n.etf8 && n.etf8.profil !== "actions") {
+      let deja = new Set((n.lignes || []).map((l) => l.k)), vues = n.etf8.entreprises.filter((x) => !deja.has(x.k) && x.via > 0 && x.v != null).slice(0, 3).map((x) => ({ k: x.k, nom: x.nom, variation_semaine_pct: x.v_devise != null ? x.v_devise : x.v, via_eur: x.via }));
+      vues.length && (Object.assign(n.rivales = n.rivales || {}, await rivalesDe(d, { lignes: vues, annonces: [] }, lundi3, auj)), n.etf8.vues = vues);
+    }
+  } catch {
   }
   return n;
 }
@@ -2101,9 +2275,9 @@ function suiviDe(row, names) {
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
-  if (!(!c || c.v !== 5 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
+  if (!(!c || c.v !== 6 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
   let actu = d.actuDe ? await d.actuDe(s.keys.filter((k) => k.startsWith("c:")).map((k) => k.slice(2))) : {}, n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj, precedent: precedent ? parse(precedent.contenu, null) : null });
-  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 5 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
+  n._cles = s.cles, n._final = weekend, n._sig = rapportSignature(s.rapport), await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj), n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, c && c._cles === s.cles ? c.ia_entreprises : null), c && c.texte && c._cles === s.cles && c._sig === n._sig && c.v === 6 && (n.texte = c.texte, n.lecture_min = lectureMin(n));
   let utile = n.lignes.some((l) => l.variation_semaine_pct != null) || n.annonces.length || n.a_venir.length || (n.secteurs || []).some((x) => x.n);
   return utile && await env.DB.prepare("INSERT INTO bilans (compte, semaine, contenu, created, vu) VALUES (?, ?, ?, ?, 0) ON CONFLICT (compte, semaine) DO UPDATE SET contenu = excluded.contenu, vu = 0").bind(compteId, semaine, JSON.stringify(n), Date.now()).run(), { c: n, change: !0, stocke: !!utile };
 }
@@ -3380,7 +3554,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "870051a511e1ef07", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "776b5f9b00596c73", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

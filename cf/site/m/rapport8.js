@@ -118,6 +118,26 @@ function synPageV8(b, m) {
     h += `</section>`;
   }
 
+  /* ---------- 7/11 soir : dans vos ETF, vos vraies entreprises (b.etf8, cf/src/rapport8.mjs transparenceDe) ---------- */
+  const X8 = b.etf8 || null;
+  if (X8 && (X8.par_etf || []).length) { num++;
+    const mv = r => `<div class="r8x-mv"><a href="${synLien(r.k)}">${esc(r.nom)} <small>${F1.format(r.poids)} %</small></a><span class="${r8Cls(r.ve)}">${synPct(r.ve)}</span><b class="${r8Cls(r.eur)}">${r8Eur(r.eur)}</b></div>`;
+    h += `<section id="r8-etf"><span class="r8-tag">${num} · Dans vos ETF</span><h2>Ce qui a fait bouger ${X8.par_etf.length > 1 ? "chacun de vos ETF" : "votre ETF"}.</h2>
+      <p class="r8-sub">Les entreprises qui ont le plus fait monter et baisser chaque fonds, en euros pour vous : leur poids dans le fonds × votre montant × leur variation de la semaine.</p><div class="r8x-etfs">${X8.par_etf.map(e => `<div class="r8-card r8x-etf"><h3><a href="${synLien(e.k)}">${esc(r8Maj(r8Court({ nom: e.nom, k: e.k })).replace(/^Votre ETF /, ""))}</a></h3>
+      <p class="r8x-mt">${F0.format(e.eur)} € · ${F0.format(e.n)} lignes${e.v != null ? ` · <span class="${r8Cls(e.v)}">${synPct(e.v)}</span> sur la semaine` : ""}</p>
+      ${e.baisse.length ? `<p class="r8x-h">Ont fait baisser</p>${e.baisse.map(mv).join("")}` : ""}${e.hausse.length ? `<p class="r8x-h">Ont fait monter</p>${e.hausse.map(mv).join("")}` : ""}
+      <p class="r8x-cov">Entreprises suivies par le site : ${F0.format(e.couvert_pct)} % du fonds.${e.via_indice ? ` L'émetteur ne publie pas ses positions : contenu de l'indice ${esc(e.via_indice)} (mêmes entreprises).` : ""}</p></div>`).join("")}</div>
+      ${(X8.memes_indices || []).map(m => `<p class="r8x-note">À retenir : ${m.etfs.map(e => esc(r8Court({ nom: e.nom, k: e.k }))).join(" et ")} suivent le même indice (${esc(m.index)}). Ils contiennent les mêmes entreprises : réunis, c'est comme un seul ETF de ${F0.format(m.eur)} €.</p>`).join("")}
+      ${(X8.sans_compo || []).length ? `<p class="r8-faible"><b>Contenu non publié</b> : ${X8.sans_compo.map(x => `${esc(r8Court({ nom: x.nom, k: x.k }))} (${F0.format(x.eur)}&nbsp;€)`).join(", ")}. Le site ne sait pas encore ce qu'il contient.</p>` : ""}`;
+    const E = X8.entreprises || [], mx = Math.max(1, ...E.map(x => x.eur)), MT = X8.metiers || [], mxm = Math.max(1, ...MT.map(x => Math.abs(x.eur)));
+    h += `<div class="r8-sh"><span class="r8-tag b">Vos vraies entreprises</span><h3 class="r8-h3">Les ${E.length} entreprises où est vraiment votre argent.</h3><p class="r8-sub">${X8.profil === "etf" ? "Vos ETF additionnés." : "En direct et à travers vos ETF, additionnés."} Un clic ouvre la fiche.</p></div>
+      <div class="r8x-deux"><div class="r8-card r8x-box"><table class="r8x-top"><thead><tr><th>Entreprise</th><th>Votre argent</th><th>Semaine</th><th>Pour vous</th></tr></thead><tbody>${E.map(x => `<tr><td><span class="r8x-bar" style="width:${Math.max(6, Math.round(x.eur / mx * 64))}px"></span><a href="${synLien(x.k)}">${esc(x.nom)}</a>${x.direct > 0 && x.via > 0 ? ` <small>dont ${F0.format(x.direct)} € en direct</small>` : ""}</td><td><b>${F0.format(x.eur)} €</b></td><td class="${r8Cls(x.v)}">${x.v != null ? synPct(x.v) : "–"}</td><td class="${r8Cls(x.contrib)}"><b>${x.contrib != null ? r8Eur(x.contrib) : "–"}</b></td></tr>`).join("")}</tbody></table>
+      <p class="r8x-cov">Ces ${E.length} entreprises : ${F0.format(X8.top_eur)} €, ${F0.format(Math.round(X8.top_pct))} % de votre argent.</p></div>
+      <div class="r8-card r8x-box"><p class="r8-lab">Par métier, cette semaine</p>${MT.map(x => { const w = Math.round(Math.abs(x.eur) / mxm * 46); return `<div class="r8x-met"><span>${esc(x.nom)}</span><div class="tr"><i class="z"></i><i class="f ${x.eur < 0 ? "dn" : "up"}" style="${x.eur < 0 ? `right:50%;width:${w}%` : `left:50%;width:${w}%`}"></i></div><b class="${r8Cls(x.eur)}">${r8Eur(x.eur)}</b></div>`; }).join("")}
+      ${(X8.doublons || []).length ? (() => { const DB = X8.doublons, et = [...new Set(DB.flatMap(d => d.etfs))].map(n => r8Court({ nom: n, k: "e:" })), vs = DB.map(d => d.via); return `<p class="r8x-note"><b>En double</b> : ${esc(DB.map(d => d.nom).join(", ").replace(/, ([^,]*)$/, " et $1"))} ${DB.length > 1 ? "sont" : "est"} en direct dans votre portefeuille et aussi dans ${esc(et.join(", "))} (${Math.min(...vs) === Math.max(...vs) ? F0.format(vs[0]) : `${F0.format(Math.min(...vs))} à ${F0.format(Math.max(...vs))}`} € chacune).</p>`; })() : ""}</div></div>
+      <p class="r8-note">Contenu des ETF : ${esc(X8.source || "positions publiées des fonds")}. Variations en euros, au taux de la BCE.</p></section>`;
+  }
+
   /* ---------- 2. Le monde ---------- */
   if (M.length) { num++;
     h += `<section id="r8-monde"><span class="r8-tag b">${num} · Le monde cette semaine</span><h2>Ce qui a fait bouger les marchés.</h2><p class="r8-sub">Les sujets de la semaine, ce que nos chiffres montrent, et lesquelles de vos valeurs sont concernées.</p><div class="r8-monde">${M.map((s, i) => {
@@ -132,15 +152,16 @@ function synPageV8(b, m) {
 
   /* ---------- 3. Vos entreprises ---------- */
   num++;
-  const coLignes = L.filter(l => l.k.startsWith("c:") && (R[l.k] || deK(l.k).length || IA[l.k]));
+  const LV = ((b.etf8 && b.etf8.vues) || []).filter(v => R[v.k]).map(v => ({ ...v, vue: true })); // 7/11 soir : les plus grosses entreprises des ETF
+  const coLignes = [...L.filter(l => l.k.startsWith("c:") && (R[l.k] || deK(l.k).length || IA[l.k])), ...LV];
   const ordre = l => (l.portefeuille ? 0 : 1) * 1e6 - (deK(l.k).length * 100 + Math.abs(l.variation_semaine_pct || 0));
   coLignes.sort((a, c) => ordre(a) - ordre(c));
-  const avecNouv = coLignes.filter(l => deK(l.k).some(a => !["rachat", "capital"].includes(a.categorie)) || IA[l.k] || Math.abs(l.variation_semaine_pct || 0) >= 3 || (R[l.k] && R[l.k].verdict && R[l.k].verdict !== "suit"));
+  const avecNouv = coLignes.filter(l => l.vue || deK(l.k).some(a => !["rachat", "capital"].includes(a.categorie)) || IA[l.k] || Math.abs(l.variation_semaine_pct || 0) >= 3 || (R[l.k] && R[l.k].verdict && R[l.k].verdict !== "suit"));
   const calmes = L.filter(l => !avecNouv.includes(l) && l.k.startsWith("c:"));
   h += `<section id="r8-co"><span class="r8-tag v">${num} · Vos entreprises</span><h2>Pourquoi chacune a bougé.</h2><p class="r8-sub">Chacune est comparée à ses rivales sur la même semaine : on voit tout de suite si le mouvement vient d'elle ou de tout son métier.</p>`;
   for (const l of avecNouv) {
     const A = deK(l.k), R0 = R[l.k], ia = IA[l.k], [vt, vc] = (R0 && R8_VERD[R0.verdict]) || [null, ""], v = l.variation_semaine_pct;
-    const meta = [l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
+    const meta = [l.vue ? `${F0.format(l.via_eur)} € à travers vos ETF` : l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
     const lecture = ia && ia.clair ? `<p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR à partir des chiffres du rapport.</p>`
       : `<p>${esc(r8Lecture(l, R0, A))}</p><p class="r8-ia">Calculé par ENKLAIR à partir des cours, des annonces et des rivales.</p>`;
     const res = A.find(a => a.origine !== "presse" && (a.chiffres || []).length), npr = A.filter(a => a.origine === "presse").length, ncour = A.filter(a => ["rachat", "capital"].includes(a.categorie) && a.origine !== "presse").length;
@@ -160,8 +181,20 @@ function synPageV8(b, m) {
   if (!L.length) h += `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`;
   h += `</section>`;
 
+  /* ---------- 7/11 soir : ce qui joue sans qu'on le voie (devise, frais) et vos dividendes ---------- */
+  if (X8 && (X8.devise || X8.frais || (X8.dividendes || []).length)) { num++;
+    const D = X8.devise, Fr = X8.frais, DV = X8.dividendes || [];
+    h += `<section id="r8-dev"><span class="r8-tag v">${num} · Devise, frais${DV.length ? " et dividendes" : ""}</span><h2>Ce qui joue sans que vous le voyiez.</h2><div class="r8x-deux">
+      ${D ? `<div class="r8-card r8x-box"><p class="r8-lab"><i>$</i>L'effet du dollar</p><div class="r8x-big">${F0.format(D.us_eur)} €</div><p>de votre argent est placé aux États-Unis${X8.par_etf.length ? (X8.profil === "etf" ? ", à travers vos ETF" : ", en direct et à travers vos ETF") : ""} (${F0.format(Math.round(D.us_pct))} %).</p>
+        <p>Le dollar a ${D.usd_pct >= 0 ? "pris" : "perdu"} <b>${F2.format(Math.abs(D.usd_pct))} %</b> face à l'euro cette semaine (1 € = ${String(D.taux_debut).replace(".", ",")} $ le ${esc(r8Jr(D.date_debut))}, ${String(D.taux_fin).replace(".", ",")} $ le ${esc(r8Jr(D.date_fin))}) : <b class="${r8Cls(D.effet_eur)}">${r8Eur(D.effet_eur)}</b> pour vous, quoi que fassent les actions.</p><p class="r8x-cov">Taux de référence de la BCE.</p></div>` : ""}
+      ${Fr ? `<div class="r8-card r8x-box"><p class="r8-lab"><i>%</i>Les frais de vos ETF</p><div class="r8x-big">${F0.format(Math.round(Fr.an))} € <small>par an</small></div><p>Soit ${F2.format(Fr.semaine)} € cette semaine, déjà retirés de la valeur de vos ETF.</p>${Fr.lignes.map(f => `<div class="r8x-mv"><span>${esc(f.nom)} <small>${F2.format(f.ter)} % par an</small></span><span></span><b>${F0.format(Math.round(f.an))} €</b></div>`).join("")}</div>` : ""}
+      ${DV.length ? `<div class="r8-card r8x-box"><p class="r8-lab"><i>€</i>Vos dividendes</p>${DV.map(x => `<div class="r8x-mv"><a href="${synLien(x.k)}">${esc(x.nom)} <small>${x.montant != null ? `${F2.format(x.montant)} ${esc(x.devise || "")} par action` : ""}</small></a><span>${x.date ? `${x.passe ? "détaché le" : "détachement le"} ${esc(r8Jr(x.date))}` : ""}${x.paiement ? ` · payé le ${esc(r8Jr(x.paiement))}` : ""}</span><b>${x.eur != null ? `≈ ${F2.format(x.eur)} €` : "–"}</b></div>`).join("")}<p class="r8x-cov">Pour le nombre d'actions de votre portefeuille, avant impôts, au taux de change du jour. Calendriers publiés par les places de cotation.</p></div>` : ""}
+      </div></section>`;
+  }
+
   /* ---------- 4. À venir ---------- */
   const av = [...(b.a_venir || []).slice(0, 8).map(e => ({ date: e.date, k: e.k, t: e.nom || "", p: String(e.label || "").replace(/^./, c => c.toLowerCase()) })),
+    ...((b.etf8 && b.etf8.a_venir) || []).map(e => ({ date: e.date, k: e.k, t: e.nom, p: `${e.label}${e.via ? ` · ${F0.format(e.via)} € à travers vos ETF` : ""}` })),
     ...(b.dca || []).map(x => ({ date: x.prochain, k: x.k, t: "Votre achat programmé", p: `${F0.format(x.q)} part${x.q > 1 ? "s" : ""} ${r8De(x.nom)}` }))].sort((a, c) => a.date.localeCompare(c.date));
   if (av.length) { num++;
     h += `<section id="r8-av"><span class="r8-tag">${num} · À venir</span><h2>Les dates à noter.</h2><div class="r8-av">${av.map(e => { const d = new Date(e.date + "T12:00:00Z");

@@ -20,8 +20,15 @@ try {
   let site = null; const controle = [];
   for (const u of COURS_CSVS) {
     let lot = null, etat = "à jour";
+    // 7/11 soir : relevé horaire du script Google de la feuille (onglet « releve », docs/apps-script/releve.gs), pris s'il a moins de 30 heures
+    // et plus de cours que la feuille elle-même (une feuille fermée n'est recalculée qu'en partie)
+    let rel = null;
+    try { const h = await (await fetch(u.replace(/pub\?output=csv$/, "pubhtml"))).text(), g = (h.match(/name:\s*"releve"[^}]*?gid:\s*"(\d+)"/) || [])[1];
+      if (g) { const t = await (await fetch(u.replace(/pub\?output=csv$/, `pub?gid=${g}&single=true&output=csv`))).text(), m = (t.match(/\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/) || [])[0];
+        if (m && Date.now() - Date.parse(m) < 30 * 36e5) { rel = parseCours(t); console.log(`Relevé du script (${m}) : ${Object.keys(rel).length} cours`); } } } catch (e) { }
     for (let t = 0; t < 3; t++) {
       try { const r = await fetch(u + (t ? "&_=" + Date.now() : "")); lot = parseCours(await r.text()); } catch (e) { console.log("::warning::Feuille de cours non lue :", e.message); lot = null; }
+      if (rel && !perime(rel) && (!lot || Object.keys(rel).length > Object.keys(lot).length)) { lot = { ...(lot || {}), ...rel }; etat = "relevé du script"; break; }
       if (!lot || !perime(lot)) break;
       console.log(`::warning::Copie ancienne servie par Google (essai ${t + 1}) : ${u.slice(-20)}`); lot = "perime"; etat = "relue"; await new Promise(r => setTimeout(r, 30000));
     }
@@ -66,9 +73,15 @@ try {
     // ETF sans cours dans les feuilles : valeur liquidative officielle de l'émetteur (datée, marquée vl), voir data/etf_vl.mjs
     try {
       const { valeursLiquidatives } = await import("./etf_vl.mjs");
-      const etfs = JSON.parse(readFileSync(new URL("etf.json", OUT))).list.filter(e => !(items["e:" + e.id] && items["e:" + e.id].p > 0));
+      // 7/11 soir : les ETF d'Amundi, iShares, SPDR et Invesco prennent toujours leur valeur liquidative officielle, même si la feuille a un
+      // cours : ils sortent des feuilles Google (data/gf.mjs), qui gardent leur place pour les actions. Ceux dont l'émetteur ne donne rien
+      // sont notés dans data/etf_sans_vl.json et restent dans les feuilles.
+      const VLE = ["Amundi", "iShares", "SPDR", "Invesco"], toutes = JSON.parse(readFileSync(new URL("etf.json", OUT))).list;
+      const etfs = toutes.filter(e => VLE.includes(e.issuer) || !(items["e:" + e.id] && items["e:" + e.id].p > 0));
       const vl = await valeursLiquidatives(etfs); let n = 0;
-      for (const [k, v] of Object.entries(vl)) if (!(items[k] && items[k].p > 0)) { items[k] = v; n++; }
+      for (const [k, v] of Object.entries(vl)) { const e = toutes.find(x => "e:" + x.id === k); if (!(items[k] && items[k].p > 0) || (e && VLE.includes(e.issuer))) { items[k] = v; n++; } }
+      const sans = toutes.filter(e => VLE.includes(e.issuer) && !vl["e:" + e.id]).map(e => e.id);
+      if (Object.keys(vl).length > 300) writeFileSync(new URL("../data/etf_sans_vl.json", import.meta.url), JSON.stringify({ date: today, ids: sans }));
       console.log(n, "ETF complétés par leur valeur liquidative officielle");
     } catch (e) { console.log("::warning::Valeurs liquidatives non lues :", e.message); }
     // 5/11 : entreprises sans cours dans les feuilles : cours de clôture repris d'Eulerpool (datés, marqués ep), voir data/eulerpool_cours.mjs
@@ -109,3 +122,12 @@ try {
   const fx = { EUR: 1 }; for (const l of lines) { const c = l.split(","); const v = parseFloat(c[iv]); if (v > 0) fx[c[ic]] = 1 / v; } // 1 unité de devise = x euros
   if (fx.USD) { writeFileSync(new URL("fx.json", OUT), JSON.stringify({ updated: today, source: "BCE", eur: fx })); console.log(Object.keys(fx).length, "taux BCE"); }
 } catch (e) { console.log("::warning::Taux BCE non lus :", e.message); }
+// 7/11 soir : taux des 15 derniers jours ouvrés (rapport de la semaine : effet du dollar sur la part américaine du portefeuille)
+try {
+  const DEV = ["USD", "GBP", "CHF", "JPY", "SEK", "DKK", "NOK", "CAD", "AUD", "HKD"];
+  const r = await fetch(`https://data-api.ecb.europa.eu/service/data/EXR/D.${DEV.join("+")}.EUR.SP00.A?lastNObservations=15&format=csvdata`);
+  const lines = (await r.text()).trim().split(/\r?\n/), head = lines.shift().split(","), ic = head.indexOf("CURRENCY"), it = head.indexOf("TIME_PERIOD"), iv = head.indexOf("OBS_VALUE");
+  const par = {}; for (const l of lines) { const c = l.split(","), v = parseFloat(c[iv]); if (v > 0) (par[c[ic]] = par[c[ic]] || {})[c[it]] = v; }
+  const dates = [...new Set(Object.values(par).flatMap(o => Object.keys(o)))].sort();
+  if (dates.length > 3 && par.USD) writeFileSync(new URL("fx-semaine.json", OUT), JSON.stringify({ updated: today, source: "BCE, taux de référence (unités de devise pour 1 €)", dates, taux: Object.fromEntries(Object.entries(par).map(([c, o]) => [c, dates.map(j => o[j] || null)])) }));
+} catch (e) { console.log("::warning::Taux BCE des derniers jours non lus :", e.message); }

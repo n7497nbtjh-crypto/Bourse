@@ -18,7 +18,9 @@ if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "
 { const { gfParts, gfName, INDICES } = await import("./data/gf.mjs"); const UNI = (await import("./data/univers.mjs")).default; const EL = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : [];
   // gf.csv, gf2.csv, gf3.csv… : une feuille Google par fichier (titres déjà cotés en premier), voir data/gf.mjs et data/cours_config.mjs
   const known = existsSync("cf/site/data/cours.json") ? JSON.parse(readFileSync("cf/site/data/cours.json", "utf8")).items || {} : {};
-  gfParts(UNI, EL, INDICES, known).forEach((g, i) => wfs("cf/site/data/" + gfName(i), g)); }
+  const parts = gfParts(UNI, EL, INDICES, known); parts.forEach((g, i) => wfs("cf/site/data/" + gfName(i), g));
+  // 7/11 soir : une feuille devenue inutile (les ETF sont sortis des feuilles) reçoit une liste vide au lieu de garder l'ancienne
+  for (let i = parts.length; i < 4; i++) if (existsSync("cf/site/data/" + gfName(i))) wfs("cf/site/data/" + gfName(i), "id,c1,c2,c3\n"); }
 for (const f of ["parcours", "commencer", "legal", "academie", "questions"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
 // 5/11 : rivales écrites à la main d'abord, complétées par les rivales trouvées automatiquement (data/rivales_auto.mjs) quand il y en a moins de 3
 if (existsSync("data/concurrents.json")) { const M = JSON.parse(readFileSync("data/concurrents.json", "utf8")), A = existsSync("data/concurrents_auto.json") ? JSON.parse(readFileSync("data/concurrents_auto.json", "utf8")) : {};

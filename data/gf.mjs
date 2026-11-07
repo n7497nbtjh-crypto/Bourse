@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 // 4/11 : pour un ETF, le pays de l'ISIN (souvent IE ou LU) ne dit pas où il cote : Paris, puis Amsterdam, puis Bruxelles (avant : Dublin d'abord, aucun cours).
 // Liste des codes Google Finance pour la feuille « cours » (GOOGLEFINANCE). Jusqu'à trois codes candidats par titre,
 // la feuille garde le premier qui renvoie un cours. Résultat : cf/site/data/gf.csv (lu par la feuille avec IMPORTDATA).
@@ -31,6 +32,9 @@ export function gfParts(companies, etfs, indices, known = {}, size = GF_ROWS) {
   // 6/11 : les ETF d'Amundi, iShares, SPDR et Invesco ont leur valeur liquidative officielle chaque jour (data/etf_vl.mjs) : ils passent
   // après ceux qui n'ont aucune autre source (HSBC, Xtrackers…), pour que ces derniers tombent dans les feuilles qui répondent
   const avecVl = new Set(etfs.filter(e => ["Amundi", "iShares", "SPDR", "Invesco"].includes(e.issuer)).map(e => "e:" + e.id));
+  // 7/11 soir : ces ETF sortent des feuilles (leur valeur liquidative officielle suffit, data/cours_fetch.mjs), sauf ceux que l'émetteur ne donne pas
+  let sansVl = null; try { sansVl = new Set(JSON.parse(readFileSync(new URL("./etf_sans_vl.json", import.meta.url))).ids.map(id => "e:" + id)); } catch (e) { }
+  if (sansVl) etfs = etfs.filter(e => !avecVl.has("e:" + e.id) || sansVl.has("e:" + e.id));
   const etfsTri = etfs.slice().sort((a, b) => (!!b.pea - !!a.pea) || ((b.encours || 0) - (a.encours || 0)));
   const titles = [...companies.map(c => row("c:" + c.id, c.tv, c.isin)), ...etfsTri.map(e => row("e:" + e.id, e.tv, ""))];
   const st = {}; for (const r of titles) { const p = (r[1] || "").split(":")[0]; st[p] = st[p] || [0, 0]; st[p][0]++; if (known[r[0]]) st[p][1]++; }

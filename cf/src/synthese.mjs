@@ -4,7 +4,7 @@
 // Module sans dépendance : utilisé par le Worker (espace.mjs) et par le robot des données (data/cours_fetch.mjs).
 
 const JOUR = 864e5;
-export const SYN_VERSION = 5; // 7/11 : rédaction de « La lecture d'ENKLAIR » revue, radiographie sans les sujets sous 5 % ; // 6/11 soir : rapport v8 (rivales, monde, radiographie, achats programmés) ; // 5/11 : rapport v6, nouveau profil d'exemple
+export const SYN_VERSION = 6; // 7/11 soir : rapport adapté au portefeuille (ETF, actions, mixte), devise, frais, dividendes ; // 7/11 : rédaction de « La lecture d'ENKLAIR » revue, radiographie sans les sujets sous 5 % ; // 6/11 soir : rapport v8 (rivales, monde, radiographie, achats programmés) ; // 5/11 : rapport v6, nouveau profil d'exemple
 const KEY = /^[ce]:[a-z0-9-]{1,60}$/, KEY_X = /^x:[A-Z0-9]{6,20}$/;
 const r2 = v => Math.round(v * 100) / 100;
 const num = v => typeof v === "number" && isFinite(v) ? v : (typeof v === "string" && v.trim() !== "" && isFinite(+v) ? +v : null);
@@ -256,7 +256,7 @@ export function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {
       let varE = 0, couvert = 0;
       for (const l of lp) { const x = L[l.k], r = x && x.variation_semaine_pct; l.poids = r2(l.v / tot * 100);
         if (r != null) { l.var_eur = l.v - l.v / (1 + r / 100); varE += l.var_eur; couvert += l.v; }
-        if (x) x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime, source_valeur: l.src }; }
+        if (x) x.portefeuille = { valeur_eur: Math.round(l.v), q: l.q > 0 ? l.q : null, poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime, source_valeur: l.src }; }
       // courbe de la semaine : chaque ligne suivie à quantité constante (valeur d'aujourd'hui × cours du jour / cours d'aujourd'hui)
       const jours = [...new Set(lp.flatMap(l => { const v = variationSemaine(d.cs, l.k, lundi, auj, d.px[l.k], d.sem); return v ? v.dates.filter(Boolean) : []; }))].sort();
       let serie = null;

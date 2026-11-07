@@ -152,6 +152,99 @@ export async function radioDe(d, n, monde) {
   return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, non_comptes, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map(j => j.asOf).filter(Boolean).sort()[0] || null } : null };
 }
 
+
+/* ---------- 7/11 soir : le rapport s'adapte au portefeuille (Romain : « un peu court pour une personne qui n'a que des ETF ») ----------
+   etf8 : profil (etf | actions | mixte), ce qui a fait bouger chaque ETF (entreprises du fonds × poids × montant), les entreprises où est
+   vraiment l'argent (en direct + à travers les ETF), les métiers, les doublons, l'effet des devises, les frais des ETF, les dates à venir
+   des entreprises tenues à travers les ETF et les dividendes des actions détenues. Tout est calculé : aucune IA, aucune prévision. */
+const coMapper = d => {
+  const strip = x => fold(x).replace(/\.com\b/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\b(inc|incorporated|corp|corporation|co|company|ltd|limited|plc|sa|se|nv|ag|asa|ab|spa|the|holdings?|group|groupe|class [a-z]|cl [a-z]|adr|reg|shs|ord|common st(ock)?)\b/g, " ").replace(/\s+/g, " ").trim();
+  const parNom = new Map(); for (const [k, nom] of Object.entries(d.names || {})) if (k.startsWith("c:")) { const t = strip(nom); if (t && !parNom.has(t)) parNom.set(t, k); }
+  const parNomDe = nom => { const t = strip(nom); if (!t) return null; if (parNom.has(t)) return parNom.get(t); const w = t.split(" "); for (let i = w.length - 1; i >= 1; i--) { const x = w.slice(0, i).join(" "); if (x.length >= 4 && parNom.has(x)) return parNom.get(x); } return null; };
+  return (isin, nom) => (d.parIsin || {})[isin] || (nom ? parNomDe(nom) : null);
+};
+// Contenu d'un ETF : son propre fonds témoin (N-PORT), sinon celui d'un autre ETF qui suit le même indice (dit dans « source »)
+async function compoDe(d, k) {
+  const m = d.etf[k] || {}; let px = m.proxy, via = null;
+  if (!px && m.index) for (const [k2, m2] of Object.entries(d.etf)) if (m2 && m2.proxy && m2.index === m.index) { px = m2.proxy; via = m.index; break; }
+  if (!px || !d.charger) return null;
+  const j = await d.charger(`/data/etf/${px}.json`); return j && Array.isArray(j.isins) ? { j, via } : null;
+}
+const DIV_RE = /\(([\d\s.,]+)\s*(\$|€|£|NOK|SEK|DKK|CHF|CAD|AUD|JPY|GBp|HKD)\)/;
+const DEV_SYM = { "$": "USD", "€": "EUR", "£": "GBP" };
+export async function transparenceDe(d, n, lundi, auj) {
+  const L = (n.lignes || []).filter(l => l.portefeuille && l.portefeuille.valeur_eur > 0), tot = L.reduce((a, l) => a + l.portefeuille.valeur_eur, 0);
+  if (!tot) return null;
+  const etfL = L.filter(l => l.k.startsWith("e:")), coL = L.filter(l => l.k.startsWith("c:")), partEtf = etfL.reduce((a, l) => a + l.portefeuille.valeur_eur, 0) / tot;
+  const profil = partEtf >= 0.8 ? "etf" : partEtf <= 0.2 ? "actions" : "mixte";
+  // Taux de change : dernier taux connu avant la semaine et le dernier de la semaine (BCE, data/cours_fetch.mjs → fx-semaine.json)
+  const fxS = d.charger ? await d.charger("/data/fx-semaine.json") : null;
+  const tauxAu = (cur, j) => { const s = fxS && fxS.taux && fxS.taux[cur], D = (fxS && fxS.dates) || []; let r = null; if (!s) return null; for (let i = 0; i < D.length; i++) if (D[i] <= j && s[i] > 0) r = s[i]; return r; };
+  const fxVar = cur => { if (!cur || cur === "EUR") return 0; const a = tauxAu(cur, addJ(lundi, -1)), b = tauxAu(cur, auj); return a && b ? a / b - 1 : 0; }; // + : la devise a pris de la valeur face à l'euro
+  const vSem = k => { const v = variationSemaine(d.cs, k, lundi, auj, d.px[k], d.sem); if (!v) return null; const cur = d.px[k] && d.px[k].cur; return { v: v.pct, ve: ((1 + v.pct / 100) * (1 + fxVar(cur)) - 1) * 100 }; };
+  const coDe = coMapper(d), expo = new Map(), sect = {}, par_etf = [];
+  const ajoute = (k, champ, eur, contrib) => { const x = expo.get(k) || { k, nom: d.names[k], direct: 0, via: 0, contrib: 0, etfs: [] }; x[champ] += eur; if (contrib != null) x.contrib += contrib; expo.set(k, x); return x; };
+  for (const l of coL) { const s = vSem(l.k); ajoute(l.k, "direct", l.portefeuille.valeur_eur, l.portefeuille.var_eur != null ? l.portefeuille.var_eur : null); }
+  let usEur = coL.filter(l => (d.meta[l.k] || {}).region === "US").reduce((a, l) => a + l.portefeuille.valeur_eur, 0), sansCompo = [];
+  for (const l of etfL) {
+    const val = l.portefeuille.valeur_eur, c = await compoDe(d, l.k);
+    if (!c) { sansCompo.push({ k: l.k, nom: l.nom, eur: r0(val) }); continue; }
+    const noms = {}; (c.j.top || []).forEach(h => { if (h.isin) noms[h.isin] = h.name; });
+    let couvert = 0; const rows = [];
+    for (const [isin, w, nom] of c.j.isins) {
+      const k = coDe(isin, nom || noms[isin]); if (!k || !(w > 0)) continue;
+      const s = vSem(k), eur = val * w / 100, contrib = s ? eur * s.ve / 100 : null;
+      const x = ajoute(k, "via", eur, contrib); if (!x.etfs.includes(l.k)) x.etfs.push(l.k);
+      if (s) { couvert += w; rows.push({ k, nom: d.names[k], poids: Math.round(w * 100) / 100, v: r1(s.v), ve: r1(s.ve), eur: r1(contrib) }); }
+      const sec = (d.meta[k] || {}).sector; if (sec && contrib != null) sect[sec] = (sect[sec] || 0) + contrib;
+    }
+    usEur += val * (((c.j.countries || []).find(x => x[0] === "US") || [0, 0])[1] / 100);
+    rows.sort((a, b) => a.eur - b.eur);
+    const m = d.etf[l.k] || {};
+    par_etf.push({ k: l.k, nom: l.nom, eur: r0(val), v: l.variation_semaine_pct, var_eur: l.portefeuille.var_eur, couvert_pct: r0(couvert), n: c.j.lines || c.j.isins.length, index: m.index || null, via_indice: c.via, au: c.j.asOf || null,
+      baisse: rows.filter(r => r.eur < 0).slice(0, 3), hausse: rows.filter(r => r.eur > 0).slice(-3).reverse(), ter: m.ter != null ? m.ter : null });
+  }
+  for (const l of coL) { const sec = (d.meta[l.k] || {}).sector; if (sec && l.portefeuille.var_eur != null) sect[sec] = (sect[sec] || 0) + l.portefeuille.var_eur; }
+  const ent = [...expo.values()].map(x => { const s = vSem(x.k); return { k: x.k, nom: x.nom, eur: r0(x.direct + x.via), direct: r0(x.direct), via: r0(x.via), pct: r1((x.direct + x.via) / tot * 100), v: s ? r1(s.ve) : null, v_devise: s ? r1(s.v) : null, contrib: s ? r1(x.contrib) : null, etfs: x.etfs }; })
+    .sort((a, b) => b.eur - a.eur);
+  const top = ent.slice(0, 10);
+  // Doublons : la même entreprise en direct et dans un ETF (au moins 5 € par les ETF) ; deux ETF qui suivent le même indice
+  const doublons = ent.filter(x => x.direct > 0 && x.via >= 5).slice(0, 5).map(x => ({ k: x.k, nom: x.nom, direct: x.direct, via: x.via, eur: x.eur, pct: x.pct, etfs: x.etfs.map(k => d.names[k]) }));
+  const parIndice = {}; for (const l of etfL) { const ix = (d.etf[l.k] || {}).index; if (ix) (parIndice[ix] = parIndice[ix] || []).push(l); }
+  const memes = Object.entries(parIndice).filter(([, a]) => a.length > 1).map(([ix, a]) => ({ index: ix, etfs: a.map(l => ({ k: l.k, nom: l.nom, eur: r0(l.portefeuille.valeur_eur) })), eur: r0(a.reduce((s, l) => s + l.portefeuille.valeur_eur, 0)) }));
+  // Devise : la part en dollars (actions américaines en direct et part américaine des ETF)
+  const vUsd = fxVar("USD"), dev = usEur >= 50 && fxS ? { us_eur: r0(usEur), us_pct: r1(usEur / tot * 100), usd_pct: Math.round(vUsd * 10000) / 100, effet_eur: r1(usEur * vUsd),
+    taux_debut: tauxAu("USD", addJ(lundi, -1)), taux_fin: tauxAu("USD", auj), date_debut: (fxS.dates || []).filter(j => j <= addJ(lundi, -1)).pop() || null, date_fin: (fxS.dates || []).filter(j => j <= auj).pop() || null } : null;
+  // Frais courants des ETF, en euros
+  const frais = etfL.filter(l => (d.etf[l.k] || {}).ter != null).map(l => ({ k: l.k, nom: l.nom, ter: d.etf[l.k].ter, an: r1(l.portefeuille.valeur_eur * d.etf[l.k].ter / 100) }));
+  const fraisAn = frais.reduce((a, f) => a + f.an, 0);
+  // Dates à venir des entreprises tenues à travers les ETF (au moins 50 €), 14 jours ; dates habituelles marquées « à confirmer »
+  const dejà = new Set((n.a_venir || []).map(e => e.k)), fin = addJ(auj, 14), cibles = new Map(ent.filter(x => x.eur >= 50 && !dejà.has(x.k)).map(x => [x.k.slice(2), x]));
+  const hab = d.charger ? await d.charger("/data/agenda-habituel-proche.json") : null; // copie courte (data/agenda_habituel.mjs)
+  const evs = [...(d.ev || []).map(e => ({ ...e, estime: !!e.estime })), ...((hab && hab.events) || []).map(e => ({ ...e, estime: true }))]
+    .filter(e => e && cibles.has(e.id) && e.date > auj && e.date <= fin && /r[ée]sultat/i.test(e.type || e.label || ""));
+  const vusEv = new Set(), a_venir = [];
+  for (const e of evs.sort((a, b) => a.estime - b.estime || a.date.localeCompare(b.date))) { if (vusEv.has(e.id)) continue; vusEv.add(e.id); const x = cibles.get(e.id);
+    a_venir.push({ k: x.k, nom: x.nom, date: e.date, eur: x.eur, via: x.via, estime: e.estime, label: e.estime ? "Résultats, date habituelle à confirmer" : (e.label || "Résultats") }); }
+  a_venir.sort((a, b) => a.date.localeCompare(b.date));
+  // Dividendes des actions détenues en direct : détachés cette semaine ou dans les 30 jours (calendriers du site), montant pour la quantité détenue
+  const divs = [];
+  for (const e of (d.div || [])) {
+    const k = "c:" + e.id, l = coL.find(x => x.k === k); if (!l || !e.date || e.date < lundi || e.date > addJ(auj, 30)) continue;
+    const m = String(e.label || "").match(DIV_RE), q = l.portefeuille.q;
+    let eur = null, mt = null, cur = null;
+    if (m) { mt = parseFloat(m[1].replace(/\s/g, "").replace(",", ".")); cur = DEV_SYM[m[2]] || m[2]; const f = cur === "EUR" ? 1 : (d.fx || {})[cur]; if (q > 0 && mt > 0 && f > 0) eur = r1(q * mt * f); }
+    const paie = /paiement|versement|pay/i.test(e.label || ""), meme = divs.find(x => x.k === k && x.montant === mt && Math.abs(Date.parse(x.date || x.paiement) - Date.parse(e.date)) < 40 * 864e5);
+    if (meme) { if (paie) meme.paiement = e.date; else { meme.date = e.date; meme.passe = e.date <= auj; } continue; } // détachement et paiement du même dividende : une seule ligne
+    divs.push({ k, nom: l.nom, date: paie ? null : e.date, paiement: paie ? e.date : null, passe: !paie && e.date <= auj, montant: mt, devise: cur, q: q || null, eur, source: e.source || null });
+  }
+  divs.sort((a, b) => String(a.date || a.paiement).localeCompare(b.date || b.paiement));
+  const SEC = Object.entries(sect).map(([s, e]) => ({ id: s, nom: SECTEURS[s] || s, eur: r0(e) })).filter(x => Math.abs(x.eur) >= 2).sort((a, b) => a.eur - b.eur);
+  return { profil, part_etf_pct: r0(partEtf * 100), total_eur: r0(tot), par_etf, sans_compo: sansCompo, entreprises: top, top_eur: r0(top.reduce((a, x) => a + x.eur, 0)), top_pct: r1(top.reduce((a, x) => a + x.eur, 0) / tot * 100),
+    metiers: SEC, doublons, memes_indices: memes, devise: dev, frais: frais.length ? { an: r1(fraisAn), semaine: Math.round(fraisAn / 52 * 100) / 100, lignes: frais } : null, a_venir: a_venir.slice(0, 8), dividendes: divs.slice(0, 8),
+    source: par_etf.length ? "Positions publiées des fonds (SEC, formulaire N-PORT)" : null };
+}
+
 /* ---------- Achats programmés ---------- */
 export function dcaDe(d, pf, lundi, auj) {
   const P = pf && pf.cfg && Array.isArray(pf.cfg.prog) ? pf.cfg.prog : []; if (!P.length) return null;
@@ -180,6 +273,11 @@ export async function enrichir8(env, d, n, pf, semaine, auj) {
   try { n.monde = await mondeDe(env, d, n, lundi, auj); } catch (e) { n.monde = null; }
   try { n.radio = await radioDe(d, n, n.monde); } catch (e) { n.radio = null; }
   try { n.dca = dcaDe(d, pf, lundi, auj); } catch (e) { n.dca = null; }
+  try { n.etf8 = await transparenceDe(d, n, lundi, auj); } catch (e) { n.etf8 = null; if (globalThis.process && process.env.R8_DEBUG) console.log("etf8", e); }
+  // Les plus grosses entreprises tenues à travers les ETF passent aussi face à leurs rivales (sinon un portefeuille d'ETF n'a pas cette partie)
+  try { if (n.etf8 && n.etf8.profil !== "actions") { const deja = new Set((n.lignes || []).map(l => l.k));
+    const vues = n.etf8.entreprises.filter(x => !deja.has(x.k) && x.via > 0 && x.v != null).slice(0, 3).map(x => ({ k: x.k, nom: x.nom, variation_semaine_pct: x.v_devise != null ? x.v_devise : x.v, via_eur: x.via }));
+    if (vues.length) { Object.assign(n.rivales = n.rivales || {}, await rivalesDe(d, { lignes: vues, annonces: [] }, lundi, auj)); n.etf8.vues = vues; } } } catch (e) { }
   return n;
 }
 
