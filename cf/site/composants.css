@@ -2240,3 +2240,25 @@ html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;d
 .r8-fl .c{color:#555;font-size:13.5px}
 .r8-fl.up{background:#eefaf1}.r8-fl.dn{background:#fff1f2}
 @media(max-width:700px){.r8-fl{grid-template-columns:1fr auto}.r8-fl .c{grid-column:1/-1}}
+/* 7/11 nuit : rapport, « Pourquoi elle a bougé » : la semaine jour par jour face aux rivales et à l'indice */
+.r8-jours{margin:4px 0 12px}
+.r8-jg{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.r8-jc{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px 6px;border-radius:10px;min-width:0}
+.r8-jc.res{background:#fff6c2;box-shadow:inset 0 0 0 1.5px #111}
+.r8-jb{position:relative;width:100%;height:80px;display:flex;justify-content:center;gap:3px}
+.r8-jb::after{content:"";position:absolute;left:8%;right:8%;top:50%;border-top:1px solid #cfcfcf}
+.r8-jb span{position:relative;align-self:auto;width:7px;border-radius:2px}
+.r8-jb span{position:absolute}
+.r8-jb .m{width:16px;left:calc(50% - 15px);background:#0a8a3a}.r8-jb .m.dn{background:#d1242f}
+.r8-jb .r{width:6px;left:calc(50% + 4px);background:#8a8a8a}
+.r8-jb .i{width:6px;left:calc(50% + 12px);background:#cfcfcf}
+.r8-jc b{font:800 13.5px Inter;white-space:nowrap}.r8-jc b.up{color:#0a8a3a}.r8-jc b.dn{color:#d1242f}
+.r8-jc small{font:600 11.5px Inter;color:#666}
+.r8-jc em{font:700 10.5px Inter;font-style:normal;background:#111;color:#FFE14D;border-radius:6px;padding:1px 5px;margin-top:2px}
+.r8-jl{display:flex;flex-wrap:wrap;align-items:center;gap:4px 10px;font:600 11.5px Inter;color:#555;margin:6px 0 0!important}
+.r8-jl span{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:-5px}
+.r8-jl .m{background:#0a8a3a}.r8-jl .r{background:#8a8a8a}.r8-jl .i{background:#cfcfcf}
+.r8-iac{border-left:3px solid #FFE14D;padding:2px 0 0 12px;margin-top:4px}
+.r8-iac p{font-size:14.5px}
+.r8-fl.r8-lgf{grid-template-columns:150px 1fr}.r8-fl.r8-lgf .c{grid-column:2}.r8-fl.r8-lgf .v{font-weight:700;font-size:14px}
+@media(max-width:700px){.r8-fl.r8-lgf{grid-template-columns:1fr}.r8-fl.r8-lgf .c{grid-column:1}}

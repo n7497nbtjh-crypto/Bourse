@@ -29,6 +29,10 @@ window.__A = {
       const q = __e((t - .2 - i * .12) / .6); f.style.width = (f.dataset.f * q) + "%"; b.style.opacity = __e((t - .45 - i * .12) / .3);
     });
   },
+  pourquoi(el, t) { // carte « Pourquoi elle a bougé » : les blocs arrivent un à un, les barres des jours poussent
+    [...el.children].forEach((r, i) => { const p = __e((t - i * .12) / .4); r.style.opacity = p; r.style.transform = "translateY(" + ((1 - p) * 14) + "px)"; });
+    el.querySelectorAll(".r8-jc").forEach((c, i) => c.querySelectorAll(".r8-jb span").forEach(s => { if (s.dataset.f == null) s.dataset.f = parseFloat(s.style.height); s.style.height = (s.dataset.f * __e((t - .5 - i * .1) / .45)) + "px"; }));
+  },
   courbe(el, t) {
     const pl = el.querySelector("polyline"); if (!pl) return; const L = pl.getTotalLength(); pl.style.strokeDasharray = L; pl.style.strokeDashoffset = L * (1 - __e((t - .3) / .9));
     const big = el.querySelector(".r8-big"); if (big) big.style.opacity = __e((t - .1) / .3);

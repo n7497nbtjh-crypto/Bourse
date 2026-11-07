@@ -70,7 +70,7 @@ t(!IA["c:asml"] && !faitsVus.some(f => f.entreprise === "ASML"), "7/11 soir : AS
 t(faitsVus.length <= 4, "4 textes d'IA au plus par rapport (" + faitsVus.length + ")");
 t(!IA["c:lvmh"], "réponse vide de l'IA : rien gardé (phrase calculée à la place)");
 const fA = faitsVus.find(f => f.entreprise === "Apple") || faitsVus[0];
-t(fA && fA.rivales.length >= 3 && "reaction_le_jour_des_resultats" in fA, "l'IA reçoit les rivales et la réaction le jour des résultats");
+t(fA && fA.annonces.length >= 1 && !("rivales" in fA) && JSON.stringify(fA).length < 3000, "7/11 nuit : l'IA ne reçoit que l'annonce, la presse et les comptes (" + (fA ? JSON.stringify(fA).length : 0) + " caractères)");
 t(appels.monde === 1, "un seul appel pour le monde");
 const n0 = appels.entreprise, r2 = await calculerRapportExemple(new Request("https://enklair.com/api/rapport-exemple?x=2"), env);
 t(appels.monde === 1 && r2.monde && r2.monde.sujets.length === 2, "monde servi par le cache au deuxième passage");

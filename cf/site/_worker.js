@@ -879,14 +879,13 @@ Le lecteur voit d\xE9j\xE0, \xE0 c\xF4t\xE9 de ton texte, la variation du cours,
 - Chiffres arrondis \xE0 une d\xE9cimale. Compare \xE0 ses rivales (m\xE9diane ou fourchette), jamais \xE0 un indice.
 - N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Un titre de presse est rapport\xE9 par la presse, pas un fait v\xE9rifi\xE9 : \xAB selon la presse \xBB.
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
-${REGLES}`, SEMAINE_ENTREPRISE = `Tu expliques, pour une personne qui d\xE9bute en Bourse, pourquoi le cours d'une entreprise a boug\xE9 cette semaine et ce qu'il faut en retenir. Tu re\xE7ois des faits en JSON calcul\xE9s par le site : variation du cours sur la semaine, son indice, ses rivales et leur variation sur la m\xEAme semaine, un verdict calcul\xE9 (suit son secteur, mieux ou moins bien que ses rivales, r\xE9sultats publi\xE9s), les nouvelles des rivales, les annonces officielles de l'entreprise (chiffres extraits), ses op\xE9rations courantes, des titres de presse, ses derniers comptes annuels et les sujets du monde de la semaine qui la touchent.
+${REGLES}`, SEMAINE_ENTREPRISE = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse ce qu'une entreprise a annonc\xE9 officiellement cette semaine. Tu re\xE7ois des faits en JSON : ses annonces officielles (type, titre, date, chiffres extraits), quelques titres de presse et ses derniers comptes annuels. Le mouvement du cours et la comparaison avec ses rivales sont d\xE9j\xE0 calcul\xE9s et affich\xE9s par le site : n'en parle pas.
 R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
-- "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Le lecteur voit d\xE9j\xE0 les chiffres bruts dans un tableau : ne les recopie pas, dis ce qu'ils veulent dire. Commence par le plus utile : si \xAB reaction_le_jour_des_resultats \xBB est fourni, dis comment la Bourse a accueilli ses r\xE9sultats face \xE0 ses rivales le m\xEAme jour ; si \xAB croissance_des_ventes_face_aux_rivales \xBB est fourni, dis si elle grandit plus ou moins vite que ses rivales ; sinon des r\xE9sultats publi\xE9s et leurs chiffres ; sinon la comparaison avec les rivales (cite l'\xE9cart, par exemple \xAB ses rivales ont recul\xE9 de 7 % \xE0 11 % \xBB) ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annonc\xE9 et que le mouvement est celui de son secteur ou du march\xE9.
-- "change" : 1 ou 2 phrases (40 mots au plus) sur ce qu'il faut retenir : une nouvelle importante d'une rivale, un chiffre des comptes, ou une annonce. Si rien n'est notable, mets une cha\xEEne vide.
-- Ne commente jamais les op\xE9rations courantes (rachats de ses propres actions, nombre d'actions et droits de vote) : au plus, \xAB seulement des op\xE9rations courantes \xBB.
-- Interdit : \xAB pourrait \xBB, \xAB a pu influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, \xAB il est trop t\xF4t \xBB, \xAB en ligne avec \xBB, toute supposition sur une cause et toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
-- Chiffres arrondis \xE0 une d\xE9cimale. Compare l'entreprise \xE0 ses rivales (leur m\xE9diane ou leur fourchette), pas \xE0 un indice.
-- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas, aucune cause invent\xE9e. Un titre de presse est une information rapport\xE9e par la presse, pas un fait v\xE9rifi\xE9.
+- "clair" : 2 phrases (50 mots au plus) qui disent en mots simples ce que contient l'annonce : de quoi il s'agit, et ce que veulent dire ses chiffres (par exemple une croissance plus forte ou plus faible que l'exercice pr\xE9c\xE9dent d'apr\xE8s les comptes fournis). Ne recopie pas les chiffres bruts un par un.
+- "change" : 1 phrase (30 mots au plus) sur ce que l'annonce change concr\xE8tement pour l'entreprise (une activit\xE9 vendue ou achet\xE9e, un nouveau dirigeant, un contrat, un objectif annonc\xE9). Si rien ne change, cha\xEEne vide.
+- Ne parle jamais du cours de Bourse, de l'indice ni des rivales. Ne commente pas les op\xE9rations courantes (rachats de ses propres actions, droits de vote).
+- Interdit : \xAB pourrait \xBB, \xAB a pu influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, \xAB il est trop t\xF4t \xBB, \xAB en ligne avec \xBB, toute supposition et toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
+- N'utilise que les faits fournis. Aucun chiffre qui n'y figure pas. Un titre de presse est une information rapport\xE9e par la presse, pas un fait v\xE9rifi\xE9.
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
 ${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les 3 sujets d'actualit\xE9 g\xE9n\xE9rale (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
 R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [num\xE9ros], "secteurs": [cl\xE9s], "pays": [codes]}]}.
@@ -1069,7 +1068,7 @@ async function iaSite(request, env) {
   return json4({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les r\xE9ponses calcul\xE9es restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain." }, 429);
 }
 async function syntheseEntreprise(env, faits) {
-  return await iaJSON(env, "syn3", CONSIGNES.semaine_entreprise, faits, 360, (x) => x && typeof x.clair == "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
+  return await iaJSON(env, "syn4", CONSIGNES.semaine_entreprise, faits, 220, (x) => x && typeof x.clair == "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
 }
 var VAGUE = /en raison de|gr(â|a)ce (à|a) (la|ses|son|cette) publication|performances variables|guidance|(montrent|confirm\w*) (une|sa|la)|pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
 async function iaJSON(env, prefixe, sys, faits, max, valide) {
@@ -1642,6 +1641,21 @@ async function rivalesDe(d, n, lundi3, auj) {
       return c && c[2] > 0 && c[3] > 0 ? (c[2] / c[3] - 1) * 100 : null;
     }, moi = cr(l.k.slice(2)), autres = ids.map(cr).filter((v) => v != null);
     moi != null && autres.length >= 2 && (out[l.k].croissance = { v: r1(moi), med: r1(med(autres)), n: autres.length, exercice: CC[l.k.slice(2)][0] });
+    let pas = (k, i) => {
+      let s = d.cs && d.cs.items && d.cs.items[k];
+      return s && s[i] > 0 && s[i - 1] > 0 ? (s[i] / s[i - 1] - 1) * 100 : null;
+    }, jours = D.map((j, i) => i).filter((i) => i > 0 && D[i] >= lundi3 && D[i] <= auj).map((i) => {
+      let v = pas(l.k, i);
+      if (v == null) return null;
+      let rv = ids.map((id) => pas("c:" + id, i)).filter((x) => x != null), ind = l.indice ? pas("i:" + l.indice.id, i) : null;
+      return { date: D[i], v: r1(v), ind: ind == null ? null : r1(ind), riv: rv.length >= 2 ? r1(med(rv)) : null };
+    }).filter(Boolean);
+    jours.length >= 2 && (out[l.k].jours = jours);
+    let mg = (id) => {
+      let c = CC && CC[id];
+      return c && c[2] > 0 && c[4] != null && isFinite(c[4]) ? c[4] / c[2] * 100 : null;
+    }, mm = mg(l.k.slice(2)), ma = ids.map(mg).filter((v) => v != null);
+    mm != null && ma.length >= 2 && (out[l.k].marge = { v: r1(mm), med: r1(med(ma)), n: ma.length, exercice: CC[l.k.slice(2)][0] });
   }
   let S2 = d.actuSem && d.actuSem.items || {}, dans = (x) => {
     let j = String(x || "").slice(0, 10);
@@ -2005,23 +2019,13 @@ async function enrichir8(env, d, n, pf, semaine, auj) {
   return n;
 }
 async function faitsEntreprise(d, n, l, A) {
-  let R = (n.rivales || {})[l.k] || null, C = d.actuSem && d.actuSem.comptes && d.actuSem.comptes[l.k.slice(2)], comptes = C ? { exercice: C[0], devise: C[1], ventes_millions: C[2], croissance_ventes_pct: C[3] > 0 ? r1((C[2] / C[3] - 1) * 100) : null, benefice_net_millions: C[4] } : null, monde = (n.monde && n.monde.sujets || []).filter((s) => s.touche.some((t) => t.k === l.k)).map((s) => ({ sujet: s.titre, fait: s.fait }));
+  let C = d.actuSem && d.actuSem.comptes && d.actuSem.comptes[l.k.slice(2)], comptes = C ? { exercice: C[0], devise: C[1], ventes_millions: C[2], croissance_ventes_pct: C[3] > 0 ? r1((C[2] / C[3] - 1) * 100) : null, benefice_net_millions: C[4] } : null;
   return {
     entreprise: l.nom,
     secteur: SECTEURS2[(d.meta[l.k] || {}).sector] || null,
-    variation_semaine_pct: l.variation_semaine_pct == null ? null : r1(l.variation_semaine_pct),
-    // arrondi : plus de « 6,67 % »
-    verdict_calcule: R && { suit: "suit son secteur", mieux: "mieux que ses rivales", moins: "moins bien que ses rivales", resultats: "r\xE9sultats publi\xE9s" }[R.verdict] || null,
-    rivales: R ? R.liste.filter((x) => x.v != null).map((x) => ({ nom: x.nom, variation_semaine_pct: r1(x.v) })) : [],
-    mediane_des_rivales_pct: R && R.med != null ? R.med : null,
-    reaction_le_jour_des_resultats: R && R.reaction ? { date: R.reaction.date, variation_pct: R.reaction.v, mediane_des_rivales_meme_jour_pct: R.reaction.med } : null,
-    croissance_des_ventes_face_aux_rivales: R && R.croissance ? { exercice: R.croissance.exercice, elle_pct: R.croissance.v, mediane_des_rivales_pct: R.croissance.med } : null,
-    nouvelles_des_rivales: R ? R.nouvelles.map((a) => ({ entreprise: a.nom, type: a.origine === "presse" ? "titre de presse" : a.categorie, titre: a.titre, chiffres: a.chiffres })) : [],
-    annonces: A.filter((a) => a.origine !== "presse").map((a) => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
-    operations_courantes: A.filter((a) => a.origine !== "presse" && (a.categorie === "rachat" || a.categorie === "capital")).length,
-    presse: A.filter((a) => a.origine === "presse").map((a) => ({ titre: a.titre || "", media: a.site || "", date: a.date })).slice(0, 5),
-    derniers_comptes_annuels: comptes,
-    sujets_du_monde_qui_la_touchent: monde
+    annonces: A.filter((a) => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie)).map((a) => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 4),
+    presse: A.filter((a) => a.origine === "presse").map((a) => ({ titre: a.titre || "", media: a.site || "", date: a.date })).slice(0, 3),
+    derniers_comptes_annuels: comptes
   };
 }
 
@@ -2300,12 +2304,12 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
 }
 async function iaEntreprises(env, d, n, prec) {
   let out = {};
-  if (!env.AI) return out;
+  if (!env.AI || !n._final) return out;
   let par = {};
   for (let a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
   let officiel = (k) => (par[k] || []).some((a) => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie)), cles = (n.lignes || []).filter((l) => l.k.startsWith("c:") && officiel(l.k)).sort((a, b) => (par[b.k] || []).length - (par[a.k] || []).length).slice(0, 4);
   for (let l of cles) {
-    let faits = await faitsEntreprise(d, n, l, par[l.k] || []), sig = "r4|" + (n._final ? "f|" : "") + JSON.stringify([faits.annonces, faits.reaction_le_jour_des_resultats, faits.croissance_des_ventes_face_aux_rivales]);
+    let faits = await faitsEntreprise(d, n, l, par[l.k] || []), sig = "r5|" + JSON.stringify(faits);
     if (prec && prec[l.k] && prec[l.k]._sig === sig) {
       out[l.k] = prec[l.k];
       continue;
@@ -3571,7 +3575,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "85bee1798743d858", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "89d017bb5e274b31", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

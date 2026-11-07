@@ -216,7 +216,10 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
 /* 6/11 : pour chaque entreprise du rapport qui a des annonces ou des articles cette semaine, une synthèse de l'IA du site
    (au plus 12 entreprises, les plus riches en annonces d'abord). Les textes déjà rédigés pour les mêmes annonces sont gardés. */
 async function iaEntreprises(env, d, n, prec) {
-  const out = {}; if (!env.AI) return out;
+  // 7/11 nuit (Romain : « que ça consomme le moins possible ») : l'IA n'écrit qu'une fois, pour la version définitive du week-end,
+  // avec des faits identiques pour tous les comptes : le texte d'une entreprise est écrit une seule fois par semaine et servi à tous
+  // (table ia_syn). En semaine, le « pourquoi » calculé suffit.
+  const out = {}; if (!env.AI || !n._final) return out;
   const par = {}; for (const a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
   // 7/11 soir (Romain : « le coût de l'IA est trop excessif ») : l'IA n'écrit que pour les entreprises qui ont publié quelque chose
   // d'officiel cette semaine (4 au plus) ; les autres gardent la lecture calculée (réaction, rivales, croissance). Et un texte déjà écrit
@@ -226,7 +229,7 @@ async function iaEntreprises(env, d, n, prec) {
   const cles = (n.lignes || []).filter(l => l.k.startsWith("c:") && officiel(l.k)).sort((a, b) => (par[b.k] || []).length - (par[a.k] || []).length).slice(0, 4);
   for (const l of cles) {
     const faits = await faitsEntreprise(d, n, l, par[l.k] || []);
-    const sig = "r4|" + (n._final ? "f|" : "") + JSON.stringify([faits.annonces, faits.reaction_le_jour_des_resultats, faits.croissance_des_ventes_face_aux_rivales]);
+    const sig = "r5|" + JSON.stringify(faits);
     if (prec && prec[l.k] && prec[l.k]._sig === sig) { out[l.k] = prec[l.k]; continue; }
     try { const r = await syntheseEntreprise(env, faits); if (r) out[l.k] = { ...r, _sig: sig }; } catch (e) { }
   }
@@ -618,7 +621,7 @@ export async function calculerRapportExemple(request, env) {
   const actu = d.actuDe ? await d.actuDe(s.keys.filter(k => k.startsWith("c:")).map(k => k.slice(2))) : {};
   const n = faitsSynthese({ ...d, actu }, { favoris: s.favoris, pf: s.pf, rapport: s.rapport }, semaine, { auj });
   await enrichir8(env, { ...d, actu }, n, s.pf, semaine, auj);
-  n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, n, null);
+  n.ia_entreprises = await iaEntreprises(env, { ...d, actu }, { ...n, _final: true }, null); /* exemple : traité comme la version du week-end */
   return { ...publicBilan(n), exemple: true, profil: EXEMPLE_PROFIL, provisoire: false, en_cours: false, historique: [] };
 }
 export async function rapportExemple(request, env, ctx) {

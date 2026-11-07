@@ -36,6 +36,11 @@ if (process.env.R8_JSON) (await import("node:fs")).writeFileSync(process.env.R8_
 t(A.etf8 && A.etf8.profil === "actions" && !A.etf8.par_etf.length && !A.etf8.vues, "profil actions : pas de bloc ETF");
 t(A.etf8.devise && A.etf8.devise.us_eur > 0, "actions américaines : effet du dollar");
 t(Array.isArray(A.etf8.dividendes), "dividendes calculés");
+{ const V = A.rivales["c:veolia"] || {}; // 7/11 nuit : « pourquoi elle a bougé » : la semaine jour par jour, face à son indice et à ses rivales
+  t(V.jours && V.jours.length >= 3 && V.jours.every(j => j.date >= "2026-11-02" && isFinite(j.v) && j.ind != null && j.riv != null), "Veolia : la semaine jour par jour, indice et rivales");
+  const p = V.jours ? (V.jours.reduce((m, j) => m * (1 + j.v / 100), 1) - 1) * 100 : NaN, l = A.lignes.find(x => x.k === "c:veolia");
+  t(Math.abs(p - l.variation_semaine_pct) < 0.3, "les jours refont la semaine (" + p.toFixed(2) + " / " + l.variation_semaine_pct + ")");
+  t(V.marge && isFinite(V.marge.v) && isFinite(V.marge.med), "marge nette face aux rivales"); }
 console.log("Actions :", JSON.stringify({ div: A.etf8.dividendes, dev: A.etf8.devise }));
 const M = await calc(base.portefeuille);
 if (process.env.R8_JSON) (await import("node:fs")).writeFileSync(process.env.R8_JSON + ".m.json", JSON.stringify(M));

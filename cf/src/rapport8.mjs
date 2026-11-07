@@ -46,6 +46,19 @@ export async function rivalesDe(d, n, lundi, auj) {
     const CC = d.actuSem && d.actuSem.comptes, cr = id => { const c = CC && CC[id]; return c && c[2] > 0 && c[3] > 0 ? (c[2] / c[3] - 1) * 100 : null; };
     const moi = cr(l.k.slice(2)), autres = ids.map(cr).filter(v => v != null);
     if (moi != null && autres.length >= 2) out[l.k].croissance = { v: r1(moi), med: r1(med(autres)), n: autres.length, exercice: CC[l.k.slice(2)][0] };
+    // 7/11 nuit (Romain : « mettre en avant pourquoi les entreprises ont baissé ou augmenté ») : la semaine jour par jour,
+    // face à son indice et à la médiane de ses rivales le même jour. Calculé, sans IA.
+    const pas = (k, i) => { const s = d.cs && d.cs.items && d.cs.items[k]; return s && s[i] > 0 && s[i - 1] > 0 ? (s[i] / s[i - 1] - 1) * 100 : null; };
+    const jours = D.map((j, i) => i).filter(i => i > 0 && D[i] >= lundi && D[i] <= auj).map(i => {
+      const v = pas(l.k, i); if (v == null) return null;
+      const rv = ids.map(id => pas("c:" + id, i)).filter(x => x != null), ind = l.indice ? pas("i:" + l.indice.id, i) : null;
+      return { date: D[i], v: r1(v), ind: ind == null ? null : r1(ind), riv: rv.length >= 2 ? r1(med(rv)) : null };
+    }).filter(Boolean);
+    if (jours.length >= 2) out[l.k].jours = jours;
+    // Marge nette du dernier exercice (bénéfice net gardé sur 100 € de ventes), face à ses rivales
+    const mg = id => { const c = CC && CC[id]; return c && c[2] > 0 && c[4] != null && isFinite(c[4]) ? c[4] / c[2] * 100 : null; };
+    const mm = mg(l.k.slice(2)), ma = ids.map(mg).filter(v => v != null);
+    if (mm != null && ma.length >= 2) out[l.k].marge = { v: r1(mm), med: r1(med(ma)), n: ma.length, exercice: CC[l.k.slice(2)][0] };
   }
   // Nouvelles des rivales : un seul fichier pour toutes les entreprises (data/actu_semaine.mjs, construit avec le site).
   // Avant : un fichier par rivale, et Cloudflare limite les lectures par appel (le rapport perdait ensuite l'IA et la radiographie).
@@ -291,23 +304,18 @@ export async function enrichir8(env, d, n, pf, semaine, auj) {
   return n;
 }
 
-/* ---------- Les faits donnés à l'IA pour chaque entreprise (6/11 soir : « une interprétation plus pertinente ») ---------- */
+/* ---------- Les faits donnés à l'IA pour chaque entreprise ----------
+   7/11 nuit (Romain : « que ça consomme le moins possible ») : le « pourquoi elle a bougé » (rivales, indice, jours, réaction, ventes, marge)
+   est calculé par la page sans IA. L'IA ne reçoit plus que l'annonce officielle, les titres de presse et les derniers comptes, pour dire
+   ce que l'annonce contient et ce qu'elle change : trois fois moins de texte envoyé, et des faits identiques pour tous les comptes
+   (un seul texte par entreprise et par semaine, servi par la table ia_syn). */
 export async function faitsEntreprise(d, n, l, A) {
-  const R = (n.rivales || {})[l.k] || null;
   const C = d.actuSem && d.actuSem.comptes && d.actuSem.comptes[l.k.slice(2)]; // [an, devise, ventes, ventes an-1, bénéfice] (data/actu_semaine.mjs)
   const comptes = C ? { exercice: C[0], devise: C[1], ventes_millions: C[2], croissance_ventes_pct: C[3] > 0 ? r1((C[2] / C[3] - 1) * 100) : null, benefice_net_millions: C[4] } : null;
-  const monde = ((n.monde && n.monde.sujets) || []).filter(s => s.touche.some(t => t.k === l.k)).map(s => ({ sujet: s.titre, fait: s.fait }));
   return {
-    entreprise: l.nom, secteur: (SECTEURS[(d.meta[l.k] || {}).sector] || null), variation_semaine_pct: l.variation_semaine_pct == null ? null : r1(l.variation_semaine_pct), // arrondi : plus de « 6,67 % »
-    verdict_calcule: R ? ({ suit: "suit son secteur", mieux: "mieux que ses rivales", moins: "moins bien que ses rivales", resultats: "résultats publiés" })[R.verdict] || null : null,
-    rivales: R ? R.liste.filter(x => x.v != null).map(x => ({ nom: x.nom, variation_semaine_pct: r1(x.v) })) : [],
-    mediane_des_rivales_pct: R && R.med != null ? R.med : null,
-    reaction_le_jour_des_resultats: R && R.reaction ? { date: R.reaction.date, variation_pct: R.reaction.v, mediane_des_rivales_meme_jour_pct: R.reaction.med } : null,
-    croissance_des_ventes_face_aux_rivales: R && R.croissance ? { exercice: R.croissance.exercice, elle_pct: R.croissance.v, mediane_des_rivales_pct: R.croissance.med } : null,
-    nouvelles_des_rivales: R ? R.nouvelles.map(a => ({ entreprise: a.nom, type: a.origine === "presse" ? "titre de presse" : a.categorie, titre: a.titre, chiffres: a.chiffres })) : [],
-    annonces: A.filter(a => a.origine !== "presse").map(a => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 6),
-    operations_courantes: A.filter(a => a.origine !== "presse" && (a.categorie === "rachat" || a.categorie === "capital")).length,
-    presse: A.filter(a => a.origine === "presse").map(a => ({ titre: a.titre || "", media: a.site || "", date: a.date })).slice(0, 5),
-    derniers_comptes_annuels: comptes, sujets_du_monde_qui_la_touchent: monde,
+    entreprise: l.nom, secteur: (SECTEURS[(d.meta[l.k] || {}).sector] || null),
+    annonces: A.filter(a => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie)).map(a => ({ type: a.categorie_label || a.type || "", titre: a.titre || "", date: a.date, chiffres: a.chiffres || [], lecture: a.lecture || [] })).slice(0, 4),
+    presse: A.filter(a => a.origine === "presse").map(a => ({ titre: a.titre || "", media: a.site || "", date: a.date })).slice(0, 3),
+    derniers_comptes_annuels: comptes,
   };
 }
