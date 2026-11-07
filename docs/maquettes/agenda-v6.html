@@ -58,7 +58,7 @@ const jr = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { weekday:
 const court = d => new Date(d + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "short", year: d.slice(0, 4) === "2026" ? undefined : "numeric" });
 const sem = IDX.filter(x => x[2] && x[2] >= D0 && x[2] <= D1);
 $("#ntot").textContent = sem.length; $("#nconf").textContent = sem.filter(x => x[3] === 0).length;
-const lg = x => `<span class="lg">${x[5] ? `<img src="../../cf/site/logos/${x[5]}" alt="" onerror="this.replaceWith(document.createTextNode('${x[0].split(/\\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase()}'))">` : x[0].split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase()}</span>`;
+const lg = x => `<span class="lg">${x[5] ? `<img src="https://enklair.com/logos/${x[5]}" alt="" onerror="this.replaceWith(document.createTextNode('${x[0].split(/\\s+/).map(w => w[0]).join('').slice(0, 2).toUpperCase()}'))">` : x[0].split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase()}</span>`;
 const tg = x => `<span class="tg ${x[3] ? "e" : "c"}">${x[3] ? "À confirmer" : "Annoncée"}</span>`;
 $("#fav").innerHTML = ["LVMH", "TotalEnergies", "Veolia", "Nvidia", "Apple"].map(n => IDX.find(x => x[0] === n)).filter(Boolean).map(x => { const s = x[2] && x[2] <= D1;
   return `<div class="fc${s ? " sem" : ""}${x[3] ? " est" : ""}"><div class="hd">${lg(x)}<div><small>${s ? "Cette semaine" : "Plus tard"}</small><b>${x[0]}</b></div></div><div class="dt">${x[2] ? court(x[2]) : "–"}</div>${x[2] ? `<span class="typ ${x[4]}">${x[4]}</span> ${tg(x)}` : ""}</div>`; }).join("");
