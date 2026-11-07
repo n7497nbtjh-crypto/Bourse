@@ -224,10 +224,13 @@ function synPageV8(b, m) {
   coLignes.sort((a, c) => ordre(a) - ordre(c));
   const avecNouv = coLignes;
   const calmes = [];
-  h += `<section id="r8-co"><span class="r8-tag v">${num} · Vos valeurs</span><h2>Pourquoi chacune a bougé.</h2><p class="r8-sub">Chacune est comparée à ses rivales sur la même semaine : on voit tout de suite si le mouvement vient d'elle ou de tout son métier.</p>`;
+  h += `<section id="r8-co"><span class="r8-tag v">${num} · Vos valeurs</span><h2>Pourquoi chacune a bougé.</h2><p class="r8-sub">Une tuile par valeur suivie : touchez-la pour voir ce qui l'a fait bouger, face à ses rivales, et ce qu'en dit la presse.</p>`;
   const ETFX = Object.fromEntries(((b.etf8 && b.etf8.par_etf) || []).map(e => [e.k, e]));
   const mvE = r => `<div class="r8x-mv"><a href="${synLien(r.k)}">${esc(r.nom)} <small>${F1.format(r.poids)} %</small></a><span class="${r8Cls(r.ve)}">${synPct(r.ve)}</span><b class="${r8Cls(r.eur)}">${r8Eur(r.eur)}</b></div>`;
+  const CARTES = [], TUILES = [];
   for (const l of avecNouv) {
+    let h = ""; // 8/11 : chaque encadré est rangé dans CARTES, montré au clic sur sa tuile
+    const pousse = () => { CARTES.push([l.k, h]); };
     if (l.k.startsWith("e:")) { // 8/11 : un ETF, ce qui l'a fait bouger (ses plus grosses entreprises, en euros pour vous)
       const e = ETFX[l.k], v = l.variation_semaine_pct, ind = l.indice;
       const meta = l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris";
@@ -235,7 +238,7 @@ function synPageV8(b, m) {
       h += `<article class="r8-card r8-co"><div class="r8-coh">${synLogo(l.k, 44)}<div class="nm"><h3><a href="${synLien(l.k)}">${esc(r8Maj(r8Court(l)))}</a></h3><small>${esc(meta)}</small></div><div class="pf"><b class="${r8Cls(v)}">${v == null ? "–" : synPct(v)}</b><small>${ind && ind.pct != null ? `${esc(ind.nom)} ${synPct(ind.pct)}` : "sur la semaine"}</small></div></div>
         <div class="r8-cob seul"><div class="r8-lec"><p class="r8-lab"><i>✦</i> Pourquoi il a bougé</p><p class="r8-ouv">${phrase}</p>${e ? `${e.baisse.length ? `<p class="r8x-h">Ont fait baisser</p>${e.baisse.map(mvE).join("")}` : ""}${e.hausse.length ? `<p class="r8x-h">Ont fait monter</p>${e.hausse.map(mvE).join("")}` : ""}<p class="r8x-cov">Entreprises suivies par le site : ${F0.format(e.couvert_pct)} % du fonds.${e.via_indice ? ` Contenu de l'indice ${esc(e.via_indice)} (l'émetteur ne publie pas ses positions).` : ""}</p>` : ""}</div></div>
         <div class="r8-cof"><a href="${synLien(l.k)}">Voir la fiche de l'ETF</a></div></article>`;
-      continue; }
+      pousse(); TUILES.push({ k: l.k, l, groupe: l.portefeuille ? "etf" : "fav", badge: "ETF" }); continue; }
     const A = deK(l.k), R0 = R[l.k], ia = IA[l.k], [vt, vc] = (R0 && R8_VERD[R0.verdict]) || [null, ""], v = l.variation_semaine_pct;
     const meta = [l.vue ? `${F0.format(l.via_eur)} € à travers vos ETF` : l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
     // L'IA n'est montrée que pour une annonce officielle (elle explique l'annonce) ; le « pourquoi » est toujours calculé
@@ -258,6 +261,15 @@ function synPageV8(b, m) {
       <div class="r8-cob${bars ? "" : " seul"}"><div class="r8-lec"><p class="r8-lab"><i title="Calculé par ENKLAIR : cours de clôture, annonces officielles, comptes des rivales">✦</i> Pourquoi elle a bougé</p>${lecture}${presse}${preuve.length ? `<div class="r8-preuve">${preuve.map(t => `<span>${esc(t)}</span>`).join("")}</div>` : ""}</div>
       ${bars ? `<div class="r8-riv"><p class="r8-lab">Ses rivales sur la semaine</p>${bars}${nv}</div>` : ""}</div>
       <div class="r8-cof">${liste}<a href="${synLien(l.k)}">Voir la fiche</a>${dt ? `<span class="r8-dt">${esc(r8Jr(dt.date))} · ${esc(String(dt.label || "").replace(/^./, c => c.toLowerCase()))}</span>` : ""}</div></article>`;
+    pousse(); TUILES.push({ k: l.k, l, groupe: aRes(l) ? "res" : l.vue ? "vue" : l.portefeuille ? "pf" : "fav", badge: aRes(l) ? "Résultats" : vt || "" });
+  }
+  { // 8/11 (Romain : « des petits encadrés avec le logo et le nom, rangés selon une logique, comme l'agenda ») : tuiles par groupe, le détail au clic
+    const G = [["res", "Ont publié leurs résultats"], ["pf", "Dans votre portefeuille"], ["etf", "Vos ETF"], ["fav", "Vos favoris"], ["vue", "Les plus grosses entreprises de vos ETF"]];
+    const val = t => Math.abs((t.l.portefeuille && t.l.portefeuille.var_eur) || 0) * 1000 + Math.abs(t.l.variation_semaine_pct || 0);
+    const tuile = (t, i) => { const v = t.l.variation_semaine_pct; return `<div role="button" tabindex="0" class="r8-tu${i === 0 ? " on" : ""}" data-r8t="${esc(t.k)}" aria-pressed="${i === 0}">${synLogo(t.k, 34)}<span class="n">${esc(r8Maj(r8Court(t.l)).replace(/^Votre ETF /, ""))}</span><b class="${r8Cls(v)}">${v == null ? "–" : synPct(v)}</b>${t.badge ? `<small class="${t.badge === "Résultats" ? "res" : ""}">${esc(t.badge)}</small>` : ""}</div>`; };
+    let i0 = 0; h += G.map(([g, lab]) => { const T = TUILES.filter(t => t.groupe === g).sort((a, c) => val(c) - val(a)); if (!T.length) return ""; const out = `<div class="r8-tg"><p class="r8-tgl">${lab} <span>${T.length}</span></p><div class="r8-tus">${T.map(t => tuile(t, i0++)).join("")}</div></div>`; return out; }).join("");
+    const ordreT = G.flatMap(([g]) => TUILES.filter(t => t.groupe === g).sort((a, c) => val(c) - val(a)).map(t => t.k));
+    h += `<div class="r8-cartes">${ordreT.map((k, i) => { const c = CARTES.find(x => x[0] === k); return c ? `<div data-r8c="${esc(k)}"${i ? " hidden" : ""}>${c[1]}</div>` : ""; }).join("")}</div>`;
   }
   if (calmes.length) h += `<div class="r8-calme"><b>Sans nouvelle cette semaine</b> · ${calmes.map(l => `<a href="${synLien(l.k)}">${esc(l.nom)} <span class="${r8Cls(l.variation_semaine_pct)}">${synPct(l.variation_semaine_pct)}</span></a>`).join(", ")}</div>`;
   if (!L.length) h += `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`;
@@ -303,3 +315,11 @@ async function iaFicheContexte(id) {
   if (l) out.sa_semaine_en_bourse = { variation_pct: l.variation_semaine_pct, rivales: R ? R.liste.filter(x => x.v != null).map(x => ({ nom: x.nom, variation_pct: x.v })) : [] };
   return out;
 }
+
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("[data-r8t]")) { e.preventDefault(); e.target.click(); } });
+document.addEventListener("click", e => { // 8/11 : tuiles du rapport, un encadré à la fois
+  const t = e.target.closest("[data-r8t]"); if (!t) return; const sec = t.closest("section"); if (!sec) return;
+  sec.querySelectorAll("[data-r8t]").forEach(b => { const on = b === t; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
+  sec.querySelectorAll("[data-r8c]").forEach(c => { c.hidden = c.dataset.r8c !== t.dataset.r8t; });
+  const c = sec.querySelector(`[data-r8c="${CSS.escape(t.dataset.r8t)}"]`); if (c && c.getBoundingClientRect().top > innerHeight * 0.7) c.scrollIntoView({ behavior: "smooth", block: "start" });
+});

@@ -109,9 +109,50 @@ async function traduire(request, env) {
   } catch (e) { }
   return json({ fr });
 }
+/* 8/11 (Romain : « l'IA ne peut pas se baser uniquement sur le titre, elle doit analyser l'article ») : le texte d'un article de presse,
+   lu à la demande (bouton « Expliquer »), pour que l'IA du site le résume. Garde-fous : seulement un article déjà listé par le site pour
+   cette entreprise (data/actu), robots.txt du média respecté, texte gardé 7 jours (table ia_article), 6 000 caractères au plus. */
+const UA_ART = "ENKLAIR (site d'information boursiere; +https://enklair.com)";
+function robotsOk(txt, chemin) {
+  let actif = false, dis = [], all = [], vu = false;
+  for (const l0 of String(txt || "").split("\n")) { const l = l0.replace(/#.*/, "").trim(); if (!l) continue; const m = l.match(/^([a-z-]+)\s*:\s*(.*)$/i); if (!m) continue;
+    const k = m[1].toLowerCase(), v = m[2].trim();
+    if (k === "user-agent") { if (vu) { actif = false; vu = false; } actif = actif || v === "*" || /enklair/i.test(v); continue; }
+    vu = true; if (!actif) continue;
+    if (k === "disallow" && v) dis.push(v); if (k === "allow" && v) all.push(v); }
+  const pre = r => { const re = new RegExp("^" + r.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\\\$$/, "$")); return re.test(chemin) ? r.length : -1; };
+  const d = Math.max(-1, ...dis.map(pre)), a = Math.max(-1, ...all.map(pre)); return d < 0 || a >= d;
+}
+function texteArticle(html) {
+  const h = String(html || "").replace(/<(script|style|noscript|svg|nav|footer|header|aside|form)[\s\S]*?<\/\1>/gi, " ");
+  const art = (h.match(/<article[\s\S]*?<\/article>/i) || [h])[0];
+  const ps = [...art.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)].map(m => m[1].replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&quot;/g, '"').replace(/&#0?39;|&rsquo;/g, "'").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ").trim()).filter(p => p.length > 60);
+  return ps.join("\n").slice(0, 6000);
+}
+async function article(request, env, url) {
+  const k = url.searchParams.get("k") || "", u = url.searchParams.get("u") || "";
+  if (!/^c:[a-z0-9-]+$/.test(k) || !/^https:\/\//.test(u)) return json({ error: "Article inconnu." }, 400);
+  const id = k.slice(2);
+  let connu = false;
+  try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {}; connu = [...(j.p || []), ...(j.o || [])].some(a => a && a.u === u); } catch (e) { }
+  if (!connu) try { const r = await env.ASSETS.fetch(new Request(new URL("/data/actu/semaine.json", url.origin))); const j = r.ok ? await r.json() : {}; connu = ((j.items || {})[id] || []).some(a => a && a.u === u); } catch (e) { }
+  if (!connu) return json({ error: "Cet article n'est pas dans l'actualité suivie par le site." }, 404);
+  if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_article (u TEXT PRIMARY KEY, txt TEXT, etat TEXT, at INTEGER)`).run();
+    const c = await env.DB.prepare(`SELECT txt, etat, at FROM ia_article WHERE u = ?`).bind(u).first();
+    if (c && Date.now() - c.at < 7 * 864e5) return json({ texte: c.txt || "", etat: c.etat }); } catch (e) { }
+  const cible = new URL(u); let etat = "lu", texte = "";
+  try { const rb = await fetch(cible.origin + "/robots.txt", { headers: { "user-agent": UA_ART }, signal: AbortSignal.timeout(5000) });
+    if (rb.ok && !robotsOk(await rb.text(), cible.pathname + cible.search)) etat = "interdit"; } catch (e) { }
+  if (etat === "lu") try { const r = await fetch(u, { headers: { "user-agent": UA_ART, accept: "text/html" }, redirect: "follow", signal: AbortSignal.timeout(8000) });
+    texte = r.ok ? texteArticle(await r.text()) : ""; if (texte.length < 300) etat = "illisible"; } catch (e) { etat = "illisible"; }
+  if (etat !== "lu") texte = "";
+  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_article (u, txt, etat, at) VALUES (?, ?, ?, ?)`).bind(u, texte, etat, Date.now()).run(); } catch (e) { }
+  return json({ texte, etat });
+}
 export async function iaSite(request, env) {
   const url = new URL(request.url), P = plafonds(env);
   if (url.pathname === "/api/ia/traduire") return traduire(request, env);
+  if (url.pathname === "/api/ia/article") return article(request, env, url);
   const { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv], per = periode(nv);
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json({ disponible: false, raison: "absente", niveau: nv });
