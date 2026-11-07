@@ -9,7 +9,7 @@ async function outilSiJavais4() {
   O2_css(); setTitle("Et si j'avais investi ?"); setNav("sim"); await PXP;
   const q = new URLSearchParams(location.search);
   const exk = ["c:lvmh", "c:totalenergies", "c:air-liquide", "c:apple", "c:microsoft", "c:schneider-electric", "c:loreal"].find(k => PX[k] && (PX[k].p5y > 0 || PX[k].p1y > 0)) || Object.keys(PX).find(k => k.startsWith("c:") && PX[k].p5y > 0);
-  const S = { k: q.get("k") && (PX[q.get("k")] || RBY[q.get("k").slice(2)]) ? q.get("k") : exk, cmp: q.get("vs") === "aucun" ? "" : PX[q.get("vs")] ? q.get("vs") : null, amt: +q.get("m") > 0 ? +q.get("m") : 1000,
+  const S = { k: q.get("k") && (PX[q.get("k")] || RBY[q.get("k").slice(2)] || (q.get("k").startsWith("e:") && typeof ETFBY !== "undefined" && ETFBY[q.get("k").slice(2)])) ? q.get("k") : exk, cmp: q.get("vs") === "aucun" ? "" : PX[q.get("vs")] ? q.get("vs") : null, amt: +q.get("m") > 0 ? +q.get("m") : 1000,
     ans: [1, 3, 5].includes(+q.get("ans")) ? +q.get("ans") : (PX[exk] && PX[exk].p5y > 0 ? 5 : 1), bk: BROKERS.list.some(b => b.id === q.get("bk")) ? q.get("bk") : "trade-republic" };
   const defCmp = k => { const c = k.startsWith("c:") ? RBY[k.slice(2)] : null, e = k.startsWith("e:") ? ETFBY[k.slice(2)] : null;
     return c ? (c.region === "US" ? "i:sp500" : c.region === "FR" ? "i:cac40" : ["DE", "NL", "IT", "ES", "BE", "FI", "IE", "AT", "PT"].includes((c.isin || "").slice(0, 2)) ? "i:stoxx50" : "i:sp500") : e && /CAC|France/i.test(e.index || "") ? "i:stoxx50" : "i:cac40"; };
@@ -26,7 +26,8 @@ async function outilSiJavais4() {
     <div id="sjr"></div></div>`;
   const ref = await O2_ref(), H = await O2_json("/data/historique.json");
   const marque = (id, v_) => $$(`#${id} [data-v]`).forEach(b => b.classList.toggle("on", b.dataset.v === String(v_)));
-  const run = () => {
+  const run = async () => {
+    await Promise.all([S.k, S.cmp].filter(Boolean).map(sj4Hist));
     const u = new URLSearchParams({ k: S.k, vs: S.cmp || "aucun", m: S.amt, ans: S.ans }); history.replaceState({}, "", "/outils/si-javais?" + u);
     marque("sja", S.ans); marque("sjv", S.cmp || "");
     sj4Calcul(S, ref, H);
@@ -37,16 +38,20 @@ async function outilSiJavais4() {
     if (x.parentElement.id === "sja") S.ans = +x.dataset.v; else S.cmp = x.dataset.v || ""; run(); });
   run();
 }
+// 7/11 : série officielle d'un ETF (si les feuilles Google n'ont pas ses cours passés), gardée en mémoire
+async function sj4Hist(k) { if (!k || !k.startsWith("e:") || k in O2_ETFH) return; const p = PX[k]; if (p && p.p5y > 0) return;
+  try { const r = await fetch(`/data/etf-hist/${k.slice(2)}.json`); O2_ETFH[k] = r.ok ? await r.json() : null; } catch (e) { O2_ETFH[k] = null; } }
 function sj4Calcul(S, ref, H) {
   const el = $("#sjr"), titre = $("#sjt"), sous = $("#sjs"); if (!el) return;
-  const deb = O2_moinsAns(TODAY, S.ans), b = null, frais = 0; // 7/11 (Romain) : plus de choix du courtier ici ; les frais d'achat ne sont pas comptés
+  let deb = O2_moinsAns(TODAY, S.ans); const b = null, frais = 0; // 7/11 (Romain) : plus de choix du courtier ici ; les frais d'achat ne sont pas comptés
   const A = O2_sjSerie(S.k, S, ref, H, frais), I = S.cmp && S.cmp !== S.k ? O2_sjSerie(S.cmp, S, ref, H, 0) : null;
   if (A.err) {
     titre.textContent = `${O2_nomK(S.k)} : calcul impossible.`;
     sous.textContent = `${A.err[0].toUpperCase() + A.err.slice(1)}. ${S.ans > 1 ? "Essayez une période plus courte. " : ""}Le site n'invente aucun cours : il n'affiche que ceux qu'il a relevés.`;
     el.innerHTML = ""; return;
   }
-  const xs = A.pts.map(p => p[0]), dates = xs.map(x => O2_moinsAns(TODAY, -x));
+  if (A.base) deb = O2_moinsAns(A.base, S.ans); // 7/11 : les cours passés peuvent dater de quelques jours (mémoire du robot, série hebdomadaire de l'émetteur)
+  const xs = A.pts.map(p => p[0]), dates = xs.map(x => x === 0 ? (A.finDate || TODAY) : O2_moinsAns(A.base || TODAY, -x));
   const T = ref && ref.livretA ? ref.livretA.taux : null, ipc = ref && ref.ipc ? ref.ipc.mois : null;
   const livret = T ? xs.map((x, i) => [x, O2C.livretA(S.amt, deb, dates[i], T)]) : null;
   const m0 = ipc && O2C.moisProche(ipc, deb), prix = m0 ? xs.map((x, i) => { const m1 = O2C.moisProche(ipc, dates[i]); return [x, O2C.inflation(S.amt, ipc[m0], ipc[m1])]; }) : null;
@@ -61,7 +66,7 @@ function sj4Calcul(S, ref, H) {
   const fin = s => s && s.pts ? s.pts[s.pts.length - 1][1] : null, vA = A.div ? A.div.at(-1)[1] : fin(A), vI = I && !I.err ? fin(I) : null, vL = livret ? livret.at(-1)[1] : null, vP = prix ? prix.at(-1)[1] : null;
   const pc = x => x != null ? O2_p((x / S.amt - 1) * 100, 0) : "–";
   // En-tête : le résultat
-  titre.textContent = sjNb(`${O2_e(S.amt)} dans ${A.nom} en ${O2_dCourt(deb)} : ${O2_e(vA)} aujourd'hui.`);
+  titre.textContent = sjNb(`${O2_e(S.amt)} dans ${A.nom} en ${O2_dCourt(deb)} : ${O2_e(vA)} ${A.finDate ? "au " + dLabel(A.finDate) : "aujourd'hui"}.`);
   sous.innerHTML = `Soit <b>${pc(vA)}</b>${A.div ? `, dividendes perçus et gardés de côté${RI ? ` (environ ${sjNb(O2_e(RI.at(-1)[1]))} s'ils avaient été réinvestis)` : ""}` : ""}${frais ? `, après ${eur(frais)} de frais d'achat` : ""}.${vP != null ? (vA >= vP ? " Mieux que la hausse des prix : le pouvoir d'achat a été préservé." : " Moins que la hausse des prix : ce placement a perdu du pouvoir d'achat.") : ""} Le passé ne dit rien de l'avenir.`;
   // Cartes : chaque placement face au montant de départ, la hausse des prix comme repère
   const cartes = [[A.nom + (A.div ? ", dividendes non réinvestis" : ""), vA, "a", A.div ? "dividendes gardés de côté" : ""], ...(RI ? [[A.nom + ", dividendes réinvestis", RI.at(-1)[1], "r", "estimation : chaque dividende rachète des actions"]] : []), ...(vI != null ? [[I.nom, vI, "i", "indice, sans dividendes"]] : []), ...(vL != null ? [["Livret A", vL, "l", "taux officiels successifs"]] : [])];
@@ -73,6 +78,8 @@ function sj4Calcul(S, ref, H) {
     `Montant : ${O2_e(S.amt)} placés en une seule fois le ${dLabel(deb)}, sans versement ensuite. Les versements mensuels demanderaient les cours mois par mois, que le site ne conserve pas encore.`,
     `Frais d'achat : non comptés (ils dépendent de votre courtier, souvent entre 0 et 1 % de l'achat). ${e ? `Les frais courants de l'ETF (${e.ter != null ? pct(e.ter / 100, 2, false) + " par an" : "non indiqués"}) sont déjà déduits de son cours.` : ""} Pas de frais de revente ni d'impôt : c'est la valeur avant revente.`,
     A.div ? `Dividendes : dividende par action publié dans les comptes annuels des exercices ${A.div.exos.join(", ")}, supposé versé le 1er juin de l'année suivante. « Non réinvestis » : gardés en liquidités, sans intérêt. « Réinvestis » : chaque dividende rachète des actions au cours de ce jour-là, estimé en ligne droite entre les deux cours relevés les plus proches. Ni impôt ni frais sur les dividendes. Estimation : les dates et acomptes réels varient.`
+      : A.hist && A.hist.mensuel ? `Valeurs : performance officielle sur ${S.ans} an${S.ans > 1 ? "s" : ""} au ${dLabel(A.hist.asOf)}, publiée par ${esc(String(A.hist.src).split(",")[0])} dans sa fiche mensuelle, dividendes réinvestis, en euros. Le site n'a pas encore la valeur de la part jour par jour.`
+      : A.hist ? `Valeurs : valeur liquidative officielle publiée par ${esc(String(A.hist.src).split(" (")[0])}, ajustée des dividendes (comme s'ils étaient réinvestis), en euros, une valeur par semaine, du ${dLabel(A.hist.debut)} au ${dLabel(A.hist.asOf)}.`
       : e ? (e.distribution === "distribution" ? "Dividendes : cet ETF les distribue ; ils ne sont pas comptés ici (montants versés non disponibles)." : "Dividendes : cet ETF les réinvestit ; ils sont déjà dans son cours.") : "Dividendes : non comptés (dividendes par action non disponibles ou dans une autre devise que le cours).",
     `Devise : ${A.cur && A.cur !== "EUR" ? `cours en ${esc(A.cur)}, convertis en euros au taux moyen du mois (BCE) pour le passé et au taux du jour pour aujourd'hui. La variation du ${esc(A.cur)} face à l'euro est donc comprise.` : "cours en euros."}`,
     I && !I.err ? `Indice : ${esc(I.nom)}, indice de prix (dividendes non réinvestis), sans frais : il ne s'achète pas directement.` : I && I.err ? `Indice ${esc(O2_nomK(S.cmp))} : ${esc(I.err)}.` : "",
@@ -88,7 +95,7 @@ function sj4Calcul(S, ref, H) {
     <section class="ek-sec">
       <details class="s4-pl"><summary>Le parcours, date par date</summary><div class="s4-ch" id="sjc"></div>${tblxScrollBox(`<table class="t tbx"><thead><tr><th class="l lab" scope="col">Placement</th>${dates.map(d => `<th scope="col">${O2_dCourt(d)}</th>`).join("")}<th scope="col">Évolution</th></tr></thead><tbody>${lignes}</tbody></table>`, "Faites glisser pour voir toutes les colonnes")}</details>
       <details class="s4-pl"><summary>Hypothèses du calcul</summary><ul>${hyp.map(x => `<li>${x}</li>`).join("")}</ul></details>
-      <p class="ek-note"><b>Le passé ne dit rien de l'avenir.</b> Ce n'est pas un conseil d'achat ou de vente. Cours : Google Finance (cours de clôture ou différés relevés par le site, mise à jour du ${PXUP && PXUP !== "none" ? dLabel(String(PXUP).slice(0, 10)) : "jour"}). Taux de change : ${ref && ref.fx ? O2_src("BCE, taux de référence", ref.fx.url) : "BCE"}.${prix ? ` Prix : ${O2_src(ref.ipc.source, ref.ipc.url)}.` : ""}${livret ? ` Livret A : ${O2_src("Service-public.gouv.fr", ref.livretA.url)}.` : ""} Frais : ${brokerSrc()}${A.div ? " Dividendes : comptes annuels officiels (ESEF, SEC) lus par le site." : ""}</p></section>`;
+      <p class="ek-note"><b>Le passé ne dit rien de l'avenir.</b> Ce n'est pas un conseil d'achat ou de vente. ${A.hist ? `Valeurs : valeur liquidative officielle de l'émetteur (${esc(String(A.hist.src).split(" (")[0])}), au ${dLabel(A.hist.asOf)}.` : `Cours : Google Finance (cours de clôture ou différés relevés par le site, mise à jour du ${PXUP && PXUP !== "none" ? dLabel(String(PXUP).slice(0, 10)) : "jour"}).`} Taux de change : ${ref && ref.fx ? O2_src("BCE, taux de référence", ref.fx.url) : "BCE"}.${prix ? ` Prix : ${O2_src(ref.ipc.source, ref.ipc.url)}.` : ""}${livret ? ` Livret A : ${O2_src("Service-public.gouv.fr", ref.livretA.url)}.` : ""} Frais : ${brokerSrc()}${A.div ? " Dividendes : comptes annuels officiels (ESEF, SEC) lus par le site." : ""}</p></section>`;
   const ticks = xs.map((x, i) => [x, O2_dCourt(dates[i])]), pli = $("#sjc").closest("details");
   const dessine = () => { if (pli.dataset.ok) return; pli.dataset.ok = "1"; O2_courbe($("#sjc"), { series, xTicks: ticks, yFmt: (v_, ax) => ax ? F0.format(v_) + " €" : O2_e(v_), tipX: x => dLabel(O2_moinsAns(TODAY, -x)), refY: S.amt, titre: "Valeur du placement au fil du temps" }); };
   pli.addEventListener("toggle", () => { if (pli.open) dessine(); });

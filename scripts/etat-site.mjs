@@ -69,6 +69,24 @@ const averif = J(D("a-verifier.json")); if (averif && averif.items) etat.coheren
     if (ok < liens.length) point("rouge", "Un lien de paiement Stripe ne répond plus."); if (!j.mail) point("rouge", "Aucun e-mail ne peut partir (service d'envoi non configuré)."); } catch (e) { etat.services.paiement = null; }
 }
 
+/* ---------- Cours (7/11) : feuilles Google, cours passés, ETF ---------- */
+// Découvertes du 7/11 : Google limite GOOGLEFINANCE (une feuille fermée n'est recalculée qu'en partie) ; les cours passés
+// (« Et si j'avais investi ») ne viennent plus que de la feuille 1 ; les ETF sont valorisés par la valeur liquidative de l'émetteur.
+try {
+  const { COURS_CSVS, parseCours } = await import("../data/cours_config.mjs");
+  const feuilles = [];
+  for (const [i, u] of COURS_CSVS.entries()) { try { const t = await (await fetch(u + "&t=" + Date.now())).text(), lignes = t.split("\n").length - 2, p = parseCours(t), v = Object.values(p);
+    feuilles.push({ n: i + 1, lignes, cours: v.length, passes: v.filter(o => o.p1y != null).length }); } catch (e) { feuilles.push({ n: i + 1, erreur: String(e.message || e) }); } }
+  const c = J(D("cours.json")) || {}, it = c.items || {}, E = Object.entries(it), act = E.filter(([k]) => k.startsWith("c:")), etf = E.filter(([k]) => k.startsWith("e:"));
+  let hist = 0; try { hist = readdirSync(D("etf-hist/")).filter(f => f.endsWith(".json")).length; } catch (e) { }
+  const ref = J(new URL("data/cours_ref.json", ROOT)) || {}, refAge = ref.date ? Math.round((Date.now() - Date.parse(ref.date)) / 864e5) : null;
+  etat.cours = { maj: c.updated, feuilles, actions: act.length, actions_sans_cours: act.filter(([, o]) => !(o && o.p > 0)).length, actions_1an: act.filter(([, o]) => o && o.p1y > 0).length,
+    etf: etf.length, etf_vl: etf.filter(([, o]) => o && o.vl).length, etf_historique: hist, memoire: ref.date || null };
+  for (const f of feuilles) { if (f.erreur) point("rouge", `Feuille Google ${f.n} illisible : ${f.erreur}`); else if (f.lignes > 50 && f.cours / f.lignes < 0.5 && f.n < 4) point("orange", `Feuille Google ${f.n} : ${f.cours} cours sur ${f.lignes} lignes (Google limite GOOGLEFINANCE ; ouvrir la feuille dans un navigateur la fait recalculer).`); }
+  const f1 = feuilles[0]; if (f1 && !f1.erreur && f1.cours > 0 && f1.passes / f1.cours < 0.5) point("orange", `Cours passés (Et si j'avais investi) : seulement ${f1.passes} sur ${f1.cours} dans la feuille 1 ; le site garde les derniers connus 45 jours au plus, datés (mémoire du ${ref.date || "?"}).`);
+  if (act.length && act.filter(([, o]) => o && o.p1y > 0).length / act.length < 0.6) point("orange", `Actions avec un cours d'il y a 1 an : ${act.filter(([, o]) => o && o.p1y > 0).length} sur ${act.length}.`);
+} catch (e) { etat.cours = { erreur: String(e.message || e) }; }
+
 /* ---------- Comptes, Premium, robot de l'espace (mesures d'administration, clé ADMIN_KEY) ---------- */
 if (process.env.ADMIN_KEY) { try { const r = await fetch(SITE + "/api/espace/mesures", { headers: { "x-admin-key": process.env.ADMIN_KEY } }); const m = await r.json();
   if (!m.error) etat.services.comptes = { total: m.comptes && m.comptes.total, crees_7j: m.comptes && m.comptes.crees_7j, actifs_7j: m.comptes && m.comptes.actifs_7j, premium: m.premium && m.premium.abonnes, attente: m.premium && m.premium.attente, ia: m.ia || null, robot: m.robot || null }; } catch (e) { } }

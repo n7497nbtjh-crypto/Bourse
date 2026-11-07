@@ -208,13 +208,35 @@ function O2_fx(ref, cur, iso, auj) {
 }
 function outilSiJavais() { return outilSiJavais4(); } // page construite par m/sijavais4.js (3/11/2026)
 // Série d'un titre : points aux dates relevées (il y a 5, 3, 1 an, aujourd'hui), en euros
+// 7/11 : ETF sans cours passés dans les feuilles Google : série officielle de l'émetteur (cf/site/data/etf-hist/<id>.json,
+// valeur liquidative ajustée des dividendes, en euros, une valeur par semaine ; robot etf-hist.yml), chargée par sj4Hist (sijavais4.js)
+const O2_ETFH = {};
+function O2_sjEtfHist(k, S, Hs, frais) {
+  const s = (Hs.s || []).filter(x => x && x[1] > 0), der = s[s.length - 1];
+  if (!der && Hs.perf && Hs.asOf && (!Hs.devise || Hs.devise === "EUR")) { // HSBC : seulement les performances officielles de fin de mois (fiche mensuelle)
+    const P = Hs.perf, g = { 1: P.a1, 3: P.a3, 5: P.a5 }; if (g[S.ans] == null) return { k, err: `pas de performance publiée sur ${S.ans} an${S.ans > 1 ? "s" : ""}` };
+    const net = Math.max(0, S.amt - frais), fin = net * (1 + g[S.ans]);
+    const pts = [5, 3, 1, 0].filter(a => a <= S.ans).map(a => [-a, a === S.ans ? net : a === 0 ? fin : g[a] != null ? fin / (1 + g[a]) : null]);
+    return { k, nom: O2_nomK(k), cur: "EUR", pts, div: null, parts: net, net, frais, depart: 1, base: Hs.asOf, finDate: Hs.asOf, hist: { src: Hs.src || "émetteur", asOf: Hs.asOf, debut: O2_moinsAns(Hs.asOf, S.ans), mensuel: true } };
+  }
+  if (!der || (Hs.devise && Hs.devise !== "EUR")) return null;
+  const at = d => { let b = null; for (const x of s) { if (x[0] > d) break; b = x; } return b && (Date.parse(d) - Date.parse(b[0])) / 864e5 <= 10 ? b : null; };
+  const champs = [5, 3, 1, 0].filter(a => a <= S.ans), x0 = at(O2_moinsAns(der[0], S.ans));
+  if (!x0) return { k, err: `pas de valeur il y a ${S.ans} an${S.ans > 1 ? "s" : ""} (série de l'émetteur depuis le ${dLabel(s[0][0])})` };
+  const net = Math.max(0, S.amt - frais), parts = net / x0[1];
+  const pts = champs.map(a => { const x = a === 0 ? der : at(O2_moinsAns(der[0], a)); return [-a, x ? parts * x[1] : null]; });
+  return { k, nom: O2_nomK(k), cur: "EUR", pts, div: null, parts, net, frais, depart: x0[1], base: der[0], hist: { src: Hs.src || "émetteur", asOf: der[0], debut: x0[0] } };
+}
 function O2_sjSerie(k, S, ref, H, frais) {
-  const p = PX[k], cur = O2_curK(k); if (!p || !(p.p > 0)) return { k, err: "pas de cours" };
+  const p = PX[k], cur = O2_curK(k);
   const champs = [[5, "p5y"], [3, "p3y"], [1, "p1y"], [0, "p"]].filter(([a]) => a <= S.ans), deb = O2_moinsAns(TODAY, S.ans);
+  if (k.startsWith("e:") && O2_ETFH[k] && !(p && p[champs[0][1]] > 0)) { const r = O2_sjEtfHist(k, S, O2_ETFH[k], frais); if (r) return r; }
+  if (!p || !(p.p > 0)) return { k, err: "pas de cours" };
+  const base = p.dp && p.dp < TODAY ? p.dp : TODAY; // 7/11 : cours passés repris de la mémoire du robot : ils datent du jour p.dp, pas d'aujourd'hui
   if (!(p[champs[0][1]] > 0)) return { k, err: `pas de cours il y a ${S.ans} an${S.ans > 1 ? "s" : ""}` };
-  const fx0 = O2_fx(ref, cur, deb); if (fx0 == null) return { k, err: "taux de change historique indisponible" };
+  const fx0 = O2_fx(ref, cur, O2_moinsAns(base, S.ans)); if (fx0 == null) return { k, err: "taux de change historique indisponible" };
   const net = Math.max(0, S.amt - frais), parts = net * fx0 / p[champs[0][1]];
-  const pts = champs.filter(([, f]) => p[f] > 0).map(([a, f]) => { const fx = O2_fx(ref, cur, O2_moinsAns(TODAY, a), a === 0); return [-a, fx ? parts * p[f] / fx : null]; });
+  const pts = champs.filter(([, f]) => p[f] > 0).map(([a, f]) => { const fx = O2_fx(ref, cur, a === 0 ? TODAY : O2_moinsAns(base, a), a === 0); return [-a, fx ? parts * p[f] / fx : null]; });
   // Dividendes perçus (actions) : dividende par action publié de chaque exercice, supposé versé le 1er juin de l'année suivante
   let div = null; const c = k.startsWith("c:") ? RBY[k.slice(2)] : null, h = c && H && H.h && H.h[c.id];
   if (h && h.d && h.d.some(x => x > 0) && c.currency === cur) {
@@ -223,7 +245,7 @@ function O2_sjSerie(k, S, ref, H, frais) {
     const exos = fy.filter(([y, x]) => x > 0 && `${y + 1}-06-01` > deb && `${y + 1}-06-01` <= TODAY).map(([y]) => y);
     div.exos = exos; if (!exos.length) div = null;
   }
-  return { k, nom: O2_nomK(k), cur, pts, div, parts, net, frais, depart: p[champs[0][1]] };
+  return { k, nom: O2_nomK(k), cur, pts, div, parts, net, frais, depart: p[champs[0][1]], base };
 }
 
 /* ====================================================================================
