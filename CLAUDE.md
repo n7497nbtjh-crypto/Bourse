@@ -53,6 +53,8 @@ Sur la fiche, tout montant hors euro est converti en euros au taux BCE du jour e
 - En JavaScript `null <= 0` vaut vrai.
 - **Feuilles Google** : une feuille fermée n'est recalculée qu'en partie (l'ouvrir dans un navigateur la recalcule) ; Google sert parfois une **copie ancienne** du CSV publié (7/11 : clôtures du 2/11 rangées au 6/11) : `cours_fetch.mjs` la détecte (`controle` dans cours.json, page État du site). La copie gardée par le Worker peut être partielle (sans devise ni capitalisation) : app.js complète avec le fichier du robot.
 - `cf/site/data/etf.json` est regénéré depuis `data/etf_catalogue.json`.
+- Historique des ETF (`data/etf_historique.mjs`, robot etf-hist.yml le samedi) : Amundi, iShares, SPDR et Invesco (Excel officiels, module xlsx), HSBC (fiche mensuelle) ; 1 092 ETF sur 1 174 le 7/11. Parts de distribution sans valeur ajustée : `sansDiv` (dit sur la fiche, exclues des médianes). `nettoyer()` retire les points aberrants et corrige les divisions de parts.
+- Le Cloudflare Web Analytics (s'il est activé) est bloqué par la CSP de `cf/src/pwa.mjs` : voulu, la page confidentialité promet aucune mesure d'audience tierce.
 - Playwright figé en 1.64 dans les robots (la 1.65 a été publiée incomplète le 5/11).
 - Wrangler 3.112.0 (la 3.114.0 publiait un Worker cassé). Clés du navigateur préfixées `bilan.` (ne pas renommer).
 - Entreprises sans comptes : masquées du site (`SANS_COMPTES`), elles reviennent seules quand leurs comptes arrivent.
