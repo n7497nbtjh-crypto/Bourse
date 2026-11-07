@@ -1,0 +1,13 @@
+{ "intro": { "noms": ["Nvidia.", "LVMH.", "Apple.", "Hermès.", "TotalEnergies.", "Airbus."], "duree_nom": 0.34, "question": "Qui les|[comprend] ?", "duree_question": 1.5 },
+  "entree": 0.75, "fondu": 0.15, "sortie": 0.45,
+  "segments": [
+    { "nom": "01-accueil", "titres": [[0.15, "Chaque action,|[expliquée] en clair."]] },
+    { "nom": "02-fiche", "titres": [[0.6, "Face à la [médiane]|de ses rivales."]] },
+    { "nom": "03-comparer", "titres": [[0.2, "Comparez-les|[en un clic]."]] },
+    { "nom": "04-marches", "titres": [[0.3, "Chaque semaine, l'actu|qui touche [vos placements]."]] },
+    { "nom": "05-actualites" }, { "nom": "06-espace" },
+    { "nom": "07-rapport", "titres": [[0.3, "Ce qui a fait bouger|[votre argent]."]] },
+    { "nom": "08-outils", "titres": [[0.4, "Qui publie|[cette semaine] ?"]] },
+    { "nom": "09-agenda" },
+    { "nom": "10-outils", "titres": [[0.4, "Les meilleures,|[critère par critère]."]] },
+    { "nom": "11-classements" } ] }

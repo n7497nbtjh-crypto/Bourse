@@ -5,14 +5,14 @@
 import sys, os, json, re, subprocess
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 
-W, H, FPS = 1080, 1920, 30
+W, H = 1080, 1920
 F = "/tmp/vid/fonts/"
 JAUNE, ENCRE = (255, 225, 77), (17, 17, 17)
 # Ordinateur dessiné en coordonnées « plan » (largeur 1072), puis réduit et placé à chaque image.
 LX0, LX1 = 4, 1076                  # bords de l'écran (cadre noir)
 SX0, SY0, SX1, SY1 = 14, 687, 1066, 1438   # intérieur de l'écran ; la page commence sous la barre (743)
 CY0 = 743
-K0 = 0.76                           # échelle au plan large : ordinateur de 815 px de large
+K0 = 0.82                           # échelle au plan large : ordinateur de 880 px de large
 ZMAX = 1.0 / K0 * 0.985             # au plus près, l'ordinateur touche presque les bords de l'image
 CX, CY = 540, 1065                  # centre de l'ordinateur dans le plan
 ZONE = (6, 590, W - 6, H - 40)      # l'ordinateur ne sort jamais de cette zone (le titre est au-dessus)
@@ -59,10 +59,11 @@ def placement(z, foc):
     ox = W / 2 - max(-marge, min(marge, (foc[0] - CX) * k * 0.5))
     return k, (ox, 1120)
 
-def cadre(src, c, vp, titres_seg, t, fond):
+def cadre(src, c, vp, titres_seg, t, fond, dy=0, alpha=1.0):
     z, fx, fy = c["cam"]; sc = (SX1 - SX0) / vp[0]
+    if z > 1: z = 1 + (z - 1) * (ZMAX - 1) / 0.28   # le plan zoome jusqu'à 1,28 ; ramené pour que l'ordinateur reste entier
     foc = (SX0 + fx * sc, CY0 + fy * sc)                              # point visé, en coordonnées du plan
-    k, O = placement(z, foc)
+    k, O = placement(z, foc); O = (O[0], O[1] + dy)
     P = lambda x, y: (O[0] + (x - CX) * k, O[1] + (y - CY) * k)
     R = lambda x0, y0, x1, y1: (*P(x0, y0), *P(x1, y1))
     im = fond.copy(); d = ImageDraw.Draw(im)
@@ -80,21 +81,70 @@ def cadre(src, c, vp, titres_seg, t, fond):
     if c.get("cur"):
         cx, cy = P(SX0 + c["cur"][0] * sc, CY0 + c["cur"][1] * sc)
         if x0 - 5 <= cx <= x1 and y0 - 5 <= cy <= y1: curseur(im, cx, cy, 1.0 + 0.25 * (z - 1), c.get("clic"))
+    if alpha < 1: im = Image.blend(Image.new("RGB", (W, H), "white"), im, max(0, alpha))
     for i, (t0, txt) in enumerate(titres_seg):
         t1 = titres_seg[i + 1][0] if i + 1 < len(titres_seg) else 1e9
-        if t0 <= t < t1 + 0.35: titre(im, txt, t - t0, (t - t1) if t >= t1 else None)
+        d0 = 0.3 if i else 0                                      # le titre suivant attend que le précédent soit parti
+        if t0 + d0 <= t < t1 + 0.35: titre(im, txt, t - t0 - d0, (t - t1) if t >= t1 else None)
     return im
+
+def intro(ff, I, fps):
+    """Noms d'entreprises en noir sur fond blanc, coupés vite, puis la question (comme la vidéo d'origine)."""
+    noms, dn, q, dq = I["noms"], I.get("duree_nom", 0.32), I["question"], I.get("duree_question", 1.5)
+    Fo = ImageFont.truetype(F + "brico800.ttf", 170)
+    for nom in noms:
+        for j in range(round(dn * fps)):
+            t = j / fps; im = Image.new("RGB", (W, H), "white"); d = ImageDraw.Draw(im)
+            sz = 170; f = Fo
+            while d.textlength(nom, font=f) > 960: sz -= 8; f = ImageFont.truetype(F + "brico800.ttf", sz)
+            k = 1 + 0.06 * (1 - ease(min(1, t / 0.12)))                       # léger élan à l'apparition
+            f2 = ImageFont.truetype(F + "brico800.ttf", round(sz * k)); w = d.textlength(nom, font=f2)
+            d.text((W / 2 - w / 2, 960 - f2.size * 0.62), nom, font=f2, fill=ENCRE)
+            ff.stdin.write(im.tobytes())
+    for j in range(round(dq * fps)):
+        t = j / fps; im = Image.new("RGB", (W, H), "white")
+        sortie = t - (dq - 0.35) if t > dq - 0.35 else None
+        titre_grand(im, q, t, sortie); ff.stdin.write(im.tobytes())
+
+def titre_grand(img, txt, ta, sortie=None):
+    d = ImageDraw.Draw(img); L = lignes(txt); Fo = ImageFont.truetype(F + "brico800.ttf", 138)
+    lh = round(Fo.size * 1.08); y0 = 960 - lh * len(L) / 2 - (ease(min(1, sortie / 0.35)) * 120 if sortie else 0)
+    a = ease(min(1, ta / 0.25)) * (1 - ease(min(1, sortie / 0.35)) if sortie else 1)
+    for i, segs in enumerate(L):
+        wl = sum(d.textlength(s, font=Fo) for s, _ in segs); x = W / 2 - wl / 2; y = y0 + i * lh
+        for s, hl in segs:
+            sw = d.textlength(s, font=Fo)
+            if hl:
+                kk = ease(max(0, min(1, (ta - 0.3) / 0.4))) * a; fz = Fo.size
+                if kk > 0: d.polygon([(x - 8, y + fz * .6), (x - 8 + (sw + 16) * kk, y + fz * .56), (x - 8 + (sw + 16) * kk, y + fz * 1.03), (x - 8, y + fz * 1.06)], fill=JAUNE)
+            x += sw
+        x = W / 2 - wl / 2; col = tuple(round(255 - (255 - c) * a) for c in ENCRE)
+        for s, hl in segs: d.text((x, y), s, font=Fo, fill=col); x += d.textlength(s, font=Fo)
 
 def monter(dossier, montage, sortie):
     M = json.load(open(montage)); tmp = sortie + ".tmp.mp4"; fond = Image.new("RGB", (W, H), "white")
-    ff = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS), "-i", "-",
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", tmp], stdin=subprocess.PIPE)
-    n = 0
+    fps = json.load(open(os.path.join(dossier, M["segments"][0]["nom"], "plan.json")))["fps"]
+    ff = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(fps), "-i", "-",
+        "-c:v", "libx264", "-preset", "veryfast", "-crf", "18", "-pix_fmt", "yuv420p", "-r", str(fps), tmp], stdin=subprocess.PIPE)
+    t0 = 0.0
+    if M.get("intro"): intro(ff, M["intro"], fps); t0 = len(M["intro"]["noms"]) * M["intro"].get("duree_nom", 0.32) + M["intro"].get("duree_question", 1.5)
+    # titres : chaque segment donne les siens en secondes depuis son début (négatif : avant lui) ; ils deviennent une seule ligne de temps
+    T, d = [], t0
     for seg in M["segments"]:
-        J = json.load(open(os.path.join(dossier, seg["nom"], "plan.json"))); vp = J.get("viewport", [1280, 846])
+        J = json.load(open(os.path.join(dossier, seg["nom"], "plan.json"))); seg["_n"] = len(J["cadres"]); seg["_J"] = J
+        for a, txt in seg.get("titres", []): T.append([d + a, txt])
+        d += seg["_n"] / fps
+    T.sort(key=lambda x: x[0]); n, prec = 0, None; tot = d
+    for si, seg in enumerate(M["segments"]):
+        J = seg["_J"]; vp = J.get("viewport", [1280, 846]); nf = round(M.get("fondu", 0.15) * fps)
         for i, c in enumerate(J["cadres"]):
             src = Image.open(os.path.join(dossier, seg["nom"], f"{i + 1:05d}.jpg")).convert("RGB")
-            ff.stdin.write(cadre(src, c, vp, M.get("titres", []), n / FPS, fond).tobytes()); n += 1
+            if prec is not None and i < nf: src = Image.blend(prec, src, ease((i + 1) / (nf + 1)))     # changement de page en douceur, dans l'écran
+            tg = t0 + n / fps; dy = 0; al = 1
+            if si == 0 and i / fps < M.get("entree", 0.7): dy = (1 - ease(i / fps / M.get("entree", 0.7))) * 900   # l'ordinateur monte
+            if tot - tg < M.get("sortie", 0.4): al = (tot - tg) / M.get("sortie", 0.4)                         # fondu au blanc avant la fin
+            ff.stdin.write(cadre(src, c, vp, T, tg, fond, dy, al).tobytes()); n += 1
+        prec = src
     ff.stdin.close()
     if ff.wait() == 0: os.replace(tmp, sortie)
 
