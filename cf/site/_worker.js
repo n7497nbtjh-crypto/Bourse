@@ -881,7 +881,7 @@ Le lecteur voit d\xE9j\xE0, \xE0 c\xF4t\xE9 de ton texte, la variation du cours,
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
 ${REGLES}`, SEMAINE_ENTREPRISE = `Tu expliques, pour une personne qui d\xE9bute en Bourse, pourquoi le cours d'une entreprise a boug\xE9 cette semaine et ce qu'il faut en retenir. Tu re\xE7ois des faits en JSON calcul\xE9s par le site : variation du cours sur la semaine, son indice, ses rivales et leur variation sur la m\xEAme semaine, un verdict calcul\xE9 (suit son secteur, mieux ou moins bien que ses rivales, r\xE9sultats publi\xE9s), les nouvelles des rivales, les annonces officielles de l'entreprise (chiffres extraits), ses op\xE9rations courantes, des titres de presse, ses derniers comptes annuels et les sujets du monde de la semaine qui la touchent.
 R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
-- "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Commence par le plus utile : des r\xE9sultats publi\xE9s et leurs chiffres ; sinon la comparaison avec les rivales (cite l'\xE9cart, par exemple \xAB ses rivales ont recul\xE9 de 7 % \xE0 11 % \xBB) ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annonc\xE9 et que le mouvement est celui de son secteur ou du march\xE9.
+- "clair" : 2 ou 3 phrases (70 mots au plus) qui expliquent le mouvement de la semaine. Le lecteur voit d\xE9j\xE0 les chiffres bruts dans un tableau : ne les recopie pas, dis ce qu'ils veulent dire. Commence par le plus utile : si \xAB reaction_le_jour_des_resultats \xBB est fourni, dis comment la Bourse a accueilli ses r\xE9sultats face \xE0 ses rivales le m\xEAme jour ; si \xAB croissance_des_ventes_face_aux_rivales \xBB est fourni, dis si elle grandit plus ou moins vite que ses rivales ; sinon des r\xE9sultats publi\xE9s et leurs chiffres ; sinon la comparaison avec les rivales (cite l'\xE9cart, par exemple \xAB ses rivales ont recul\xE9 de 7 % \xE0 11 % \xBB) ; sinon un sujet du monde qui touche tout son secteur. Si la cause n'est pas dans les faits, dis simplement que l'entreprise n'a rien annonc\xE9 et que le mouvement est celui de son secteur ou du march\xE9.
 - "change" : 1 ou 2 phrases (40 mots au plus) sur ce qu'il faut retenir : une nouvelle importante d'une rivale, un chiffre des comptes, ou une annonce. Si rien n'est notable, mets une cha\xEEne vide.
 - Ne commente jamais les op\xE9rations courantes (rachats de ses propres actions, nombre d'actions et droits de vote) : au plus, \xAB seulement des op\xE9rations courantes \xBB.
 - Interdit : \xAB pourrait \xBB, \xAB a pu influencer \xBB, \xAB je ne suis pas s\xFBr \xBB, \xAB il est difficile d'\xE9valuer \xBB, \xAB il est trop t\xF4t \xBB, \xAB en ligne avec \xBB, toute supposition sur une cause et toute phrase qui ne dit rien. Mieux vaut une phrase courte et vraie.
@@ -1033,7 +1033,7 @@ async function iaSite(request, env) {
   }
   let sys = CONSIGNES[b && b.tache];
   if (!sys) return json4({ error: "T\xE2che inconnue" }, 400);
-  let user = String(b.user || "").slice(0, 15e3), max = Math.min(Math.max(+b.max || 600, 200), 900);
+  let user = String(b.user || "").slice(0, 9e3), max = Math.min(Math.max(+b.max || 450, 150), 500);
   if (user.length < 3) return json4({ error: "Question vide" }, 400);
   let c = await compteurs(env, h, per);
   if (c.erreur) return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
@@ -2303,9 +2303,9 @@ async function iaEntreprises(env, d, n, prec) {
   if (!env.AI) return out;
   let par = {};
   for (let a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
-  let fort = (l) => l.k.startsWith("c:") && Math.abs(l.variation_semaine_pct || 0) >= 3, cles = (n.lignes || []).filter((l) => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => (par[b.k] || []).length - (par[a.k] || []).length || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 8);
+  let officiel = (k) => (par[k] || []).some((a) => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie)), cles = (n.lignes || []).filter((l) => l.k.startsWith("c:") && officiel(l.k)).sort((a, b) => (par[b.k] || []).length - (par[a.k] || []).length).slice(0, 4);
   for (let l of cles) {
-    let faits = await faitsEntreprise(d, n, l, par[l.k] || []), sig = "r3|" + JSON.stringify(faits);
+    let faits = await faitsEntreprise(d, n, l, par[l.k] || []), sig = "r4|" + (n._final ? "f|" : "") + JSON.stringify([faits.annonces, faits.reaction_le_jour_des_resultats, faits.croissance_des_ventes_face_aux_rivales]);
     if (prec && prec[l.k] && prec[l.k]._sig === sig) {
       out[l.k] = prec[l.k];
       continue;
@@ -3571,7 +3571,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "5a08efd8d9672137", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "85bee1798743d858", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

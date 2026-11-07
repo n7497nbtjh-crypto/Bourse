@@ -126,7 +126,7 @@ export async function iaSite(request, env) {
   let b; try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible" }, 400); }
   const sys = CONSIGNES[b && b.tache];
   if (!sys) return json({ error: "Tâche inconnue" }, 400);
-  const user = String(b.user || "").slice(0, 15000), max = Math.min(Math.max(+b.max || 600, 200), 900);
+  const user = String(b.user || "").slice(0, 9000), max = Math.min(Math.max(+b.max || 450, 150), 500); // 7/11 soir : contexte et réponse plus courts (coût de l'IA divisé par deux environ)
   if (user.length < 3) return json({ error: "Question vide" }, 400);
   const c = await compteurs(env, h, per);
   if (c.erreur) return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);

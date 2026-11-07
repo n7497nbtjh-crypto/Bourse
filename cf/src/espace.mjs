@@ -218,12 +218,15 @@ async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
 async function iaEntreprises(env, d, n, prec) {
   const out = {}; if (!env.AI) return out;
   const par = {}; for (const a of n.annonces || []) (par[a.k] = par[a.k] || []).push(a);
-  // 6/11 soir : aussi les entreprises sans annonce mais qui ont bougé d'au moins 3 % (l'IA explique avec les rivales), 12 au plus
-  const fort = l => l.k.startsWith("c:") && Math.abs(l.variation_semaine_pct || 0) >= 3;
-  const cles = (n.lignes || []).filter(l => l.k.startsWith("c:") && (par[l.k] || fort(l))).sort((a, b) => ((par[b.k] || []).length - (par[a.k] || []).length) || Math.abs(b.variation_semaine_pct || 0) - Math.abs(a.variation_semaine_pct || 0)).slice(0, 8); // 8 au plus (6/11 soir : limite de lectures par appel chez Cloudflare)
+  // 7/11 soir (Romain : « le coût de l'IA est trop excessif ») : l'IA n'écrit que pour les entreprises qui ont publié quelque chose
+  // d'officiel cette semaine (4 au plus) ; les autres gardent la lecture calculée (réaction, rivales, croissance). Et un texte déjà écrit
+  // est gardé toute la semaine tant que les annonces ne changent pas (les cours qui bougent ne relancent plus l'IA) ; la version
+  // définitive du week-end est réécrite une fois.
+  const officiel = k => (par[k] || []).some(a => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie));
+  const cles = (n.lignes || []).filter(l => l.k.startsWith("c:") && officiel(l.k)).sort((a, b) => (par[b.k] || []).length - (par[a.k] || []).length).slice(0, 4);
   for (const l of cles) {
     const faits = await faitsEntreprise(d, n, l, par[l.k] || []);
-    const sig = "r3|" + JSON.stringify(faits); // 7/11 : nouvelle consigne, textes réécrits
+    const sig = "r4|" + (n._final ? "f|" : "") + JSON.stringify([faits.annonces, faits.reaction_le_jour_des_resultats, faits.croissance_des_ventes_face_aux_rivales]);
     if (prec && prec[l.k] && prec[l.k]._sig === sig) { out[l.k] = prec[l.k]; continue; }
     try { const r = await syntheseEntreprise(env, faits); if (r) out[l.k] = { ...r, _sig: sig }; } catch (e) { }
   }

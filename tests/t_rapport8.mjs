@@ -66,11 +66,11 @@ t(Array.isArray(b.dca) && b.dca[0].q === 25 && b.dca[0].prochain > "2026-01-01",
 console.log("DCA :", JSON.stringify(b.dca));
 const IA = b.ia_entreprises || {};
 t(!IA["c:totalenergies"], "texte creux de TotalEnergies refusé");
-t(IA["c:asml"] && /rivales/.test(IA["c:asml"].clair), "ASML : texte de l'IA gardé");
+t(!IA["c:asml"] && !faitsVus.some(f => f.entreprise === "ASML"), "7/11 soir : ASML (rien d'officiel cette semaine) : pas d'appel à l'IA, lecture calculée");
+t(faitsVus.length <= 4, "4 textes d'IA au plus par rapport (" + faitsVus.length + ")");
 t(!IA["c:lvmh"], "réponse vide de l'IA : rien gardé (phrase calculée à la place)");
-const fA = faitsVus.find(f => f.entreprise === "ASML");
-t(fA && fA.rivales.length >= 3 && fA.derniers_comptes_annuels && fA.derniers_comptes_annuels.ventes_millions > 0, "l'IA reçoit les rivales et les comptes d'ASML");
-t(fA && fA.sujets_du_monde_qui_la_touchent.length >= 1, "l'IA reçoit le sujet du monde qui touche ASML");
+const fA = faitsVus.find(f => f.entreprise === "Apple") || faitsVus[0];
+t(fA && fA.rivales.length >= 3 && "reaction_le_jour_des_resultats" in fA, "l'IA reçoit les rivales et la réaction le jour des résultats");
 t(appels.monde === 1, "un seul appel pour le monde");
 const n0 = appels.entreprise, r2 = await calculerRapportExemple(new Request("https://enklair.com/api/rapport-exemple?x=2"), env);
 t(appels.monde === 1 && r2.monde && r2.monde.sujets.length === 2, "monde servi par le cache au deuxième passage");
