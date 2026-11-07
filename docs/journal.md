@@ -244,3 +244,7 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 ## 8/11 : tuiles « Pourquoi chacune a bougé » ; l'IA lit les articles
 - Rapport : une tuile par valeur suivie (logo, nom, variation, « Résultats » ou verdict), rangées par groupe comme l'agenda (ont publié leurs résultats, portefeuille, ETF, favoris, grosses entreprises des ETF) ; le détail s'ouvre au clic, un encadré à la fois (le premier ouvert).
 - « Expliquer » sur un article de presse : `/api/ia/article?k&u` (iasite.mjs) lit l'article (seulement s'il est dans l'actualité suivie par le site pour cette entreprise, robots.txt du média respecté, 6 000 caractères au plus, gardé 7 jours dans la table ia_article), puis l'IA le résume (consigne `PRESSE` : 3 phrases, « Selon <média> », jamais une phrase recopiée). Média qui interdit les robots ou article réservé aux abonnés : résumé du titre seul, et c'est dit.
+
+## 8/11 : Premium, 50 questions par jour à l'IA du site
+- Décision de Romain : 50 questions par jour en Premium (avant 30). Défaut de `IA_PREMIUM_JOUR` dans iasite.mjs et tous les textes (Premium, tarifs, CGV/mentions, Mon IA, communication). Au passage : « 5 questions par semaine » (orchestre.js) corrigé en 3.
+- Coût au pire : environ 40 unités par question, donc 2 000 par jour pour un client qui pose ses 50 questions, soit environ 0,02 $ par jour (0,6 € par mois) au-delà de la part gratuite ; Premium passe le plafond (payé par l'offre Workers).

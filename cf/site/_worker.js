@@ -961,7 +961,7 @@ async function compter(env, h, neurones, per = jour()) {
 var plafonds = (env) => ({
   neurones: +env.IA_NEURONES_JOUR || 9e3,
   budget: Math.max(0, +env.IA_BUDGET_MOIS || 0) * NEURONES_PAR_EURO,
-  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 3, compte: +env.IA_GRATUIT_SEMAINE || 3, premium: +env.IA_PREMIUM_JOUR || 30 }
+  questions: { visiteur: +env.IA_GRATUIT_SEMAINE || 3, compte: +env.IA_GRATUIT_SEMAINE || 3, premium: +env.IA_PREMIUM_JOUR || 50 }
 }), siteOk = (c, P, marge) => c.neurones + marge < P.neurones || P.budget > 0 && c.payes_mois + marge < P.budget;
 async function empreinte(t) {
   let d = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t));
@@ -3661,7 +3661,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "480c5ebab34d8928", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "ebab38749d902aca", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

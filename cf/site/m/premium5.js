@@ -13,7 +13,7 @@
     ["Fiches entreprises complètes (3 300 entreprises face à leurs rivales)", mi("5 par jour"), '<span class="ok">Sans limite</span>'],
     ["Son rang dans son secteur, les 5 classements", no, ok],
     ["Comparer jusqu'à 5 entreprises", mi("3 par semaine"), '<span class="ok">Sans limite</span>'],
-    ["Questions à l'IA du site, réponses tirées des comptes officiels", mi("3 par semaine"), '<span class="ok">30 par jour</span>'],
+    ["Questions à l'IA du site, réponses tirées des comptes officiels", mi("3 par semaine"), '<span class="ok">50 par jour</span>'],
     ["Le rapport de votre semaine, chaque samedi", no, ok],
     ["Alerte le soir même si une de vos valeurs chute de plus de 5 %", no, ok],
     ["Vos ETF aux rayons X : ce que vous possédez vraiment", no, ok],
@@ -60,7 +60,7 @@
       <div class="pm5-nt"><i>E</i><div><b>ENKLAIR</b> <small>· hier</small><p>Une de vos valeurs a publié ses résultats : ventes +12 % sur un an.</p></div></div></div></div>`;
     const vIa = `<div class="pm5-chat"><p class="q">Pourquoi le bénéfice d'Hermès a baissé en 2025 ?</p>
       <div class="r">Les ventes ont progressé de <b>5,5 %</b>, mais le bénéfice net recule de <b>1,7 %</b>, à 4,5 Md€ : l'impôt a pesé davantage (2,3 Md€ contre 1,8). Hermès reste la plus rentable de ses rivales : <b>28 €</b> de bénéfice sur 100 € de ventes.<span class="s">Sources : comptes 2024 et 2025 d'Hermès</span></div>
-      <span class="cpt">Exemple de réponse · 30 questions par jour</span></div>`;
+      <span class="cpt">Exemple de réponse · 50 questions par jour</span></div>`;
     const vPf = `<div class="pm5-mp"><h4>Où est vraiment votre argent <small>exemple</small></h4>
       <div class="bar"><span style="width:52%;background:#3B5BFF"></span><span style="width:31%;background:#FFE14D"></span><span style="width:9%;background:#00A06B"></span><span style="width:8%;background:#DDD"></span></div>
       <div class="lgd"><span style="--c:#3B5BFF">États-Unis 52 %</span><span style="--c:#FFE14D">France 31 %</span><span style="--c:#00A06B">Japon 9 %</span><span style="--c:#DDD">Autres 8 %</span></div>
@@ -79,7 +79,7 @@
       ${av("1 · Vos ETF aux rayons X", "Ce que vous possédez vraiment, à travers vos ETF.", "Un ETF Monde, c'est plus de 1 300 entreprises. Premium les additionne avec vos actions pour vous montrer vos vraies expositions.", ["Vos expositions par pays et par secteur", "Ce qu'une forte baisse coûterait, en euros", "Le calendrier de vos dividendes", "Et sans limite : comparaisons, cinq classements, export des chiffres"], "Ailleurs : vous voyez « 1 ligne : ETF Monde », sans savoir ce qu'il y a dedans.", vPf, false)}
       ${av("2 · Votre rapport du samedi", "Le samedi, toute votre semaine en deux minutes.", "Ce que vos entreprises ont publié dans le monde entier, lu dans les documents officiels et traduit en français. Ce qui a fait bouger votre portefeuille. Ce qui arrive.", ["Résultats, rachats d'actions, accords et presse, entreprise par entreprise", "Ce que chaque ligne vous a fait gagner ou perdre, en euros", "Vos prochaines dates : résultats, dividendes, dernier jour pour les toucher"], `Ailleurs : personne ne lit pour vous les annonces de Paris, New York et Oslo.</p><p style="margin:14px 0 0"><a class="pm5-btn o" style="display:inline-flex" href="/rapport-exemple">Voir le rapport d'exemple de cette semaine →</a>`, vRap, true)}
       ${av("3 · Les alertes", "Une de vos valeurs chute ? Vous le savez le soir même.", "ENKLAIR surveille chaque soir votre portefeuille et vos favoris. Pas besoin d'ouvrir le site.", ["Baisse de plus de 5 % dans la journée : un e-mail le soir même, un seul par soir", "Résultats publiés, avec leurs chiffres clés", "Dernier jour pour acheter et toucher un dividende"], "Ailleurs : une alerte de cours, sans vous dire pourquoi.", vTel, false)}
-      ${av("4 · L'IA qui cite ses sources", "Posez vos questions, autant que vous voulez.", "Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.", ["30 questions par jour, au lieu de 3 par semaine", "Chaque chiffre cité avec sa source", "Le connecteur pour votre propre IA"], "Ailleurs : une IA répond de mémoire, sans source ni comparaison au secteur.", vIa, true)}
+      ${av("4 · L'IA qui cite ses sources", "Posez vos questions, autant que vous voulez.", "Des réponses tirées des comptes officiels et comparées au secteur, avec leurs sources. Et vous pouvez brancher Claude ou ChatGPT sur ENKLAIR.", ["50 questions par jour, au lieu de 3 par semaine", "Chaque chiffre cité avec sa source", "Le connecteur pour votre propre IA"], "Ailleurs : une IA répond de mémoire, sans source ni comparaison au secteur.", vIa, true)}
     </section>
     <section class="pm5-sec ek-sec"><span class="ek-stk2">Gratuit ou Premium</span><h2>Ce que Premium ajoute.</h2>
       <div class="pm5-vsw"><div class="pm5-vs pm5-vs3"><div><span></span><span>ENKLAIR gratuit</span><span>ENKLAIR Premium</span></div>

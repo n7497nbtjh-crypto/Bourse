@@ -1867,7 +1867,7 @@ async function pagePremium(sub) {
     ["Mon portefeuille : saisie, valeur, plus-value", "✓ sans limite de lignes", "✓"],
     ["Fiches entreprises complètes", "5 par jour", "✓ sans limite"],
     ["Comparer des entreprises (5 à la fois)", "3 comparaisons par semaine", "✓ sans limite"],
-    ["Questions à l'IA du site", "3 par semaine", "✓ 30 par jour"],
+    ["Questions à l'IA du site", "3 par semaine", "✓ 50 par jour"],
     ["Connecteur pour Claude ou ChatGPT", "–", "✓"],
     [`Alertes du soir : résultats publiés, veille des rendez-vous, mouvement de plus de 5 %, dernier jour pour toucher un dividende, plus haut ou plus bas sur un an${robotActif("alertes") ? "" : BIENTOT}`, "–", "✓ sur toutes vos valeurs"],
     ["Rapport de la semaine, sur mesure, 12 semaines gardées", "–", "✓"],
@@ -1889,7 +1889,7 @@ async function pagePremium(sub) {
     <div class="offers">${offer("unique", "Un an", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en ligne en deux clics.", OFFRES.mensuel)}</div>${essai}${attente}`}
     </div>
     </section><section class="ek-sec"><span class="ek-stk2 b">Ce que vous obtenez</span><h2>Quatre services que le gratuit n'a pas.</h2><div class="pr4-sv">
-      <div class="pr4-c" id="ia">${ic("ia")}<b>L'IA qui vous répond</b><p><b>30 questions par jour</b> à l'IA du site (3 par semaine sans Premium), tirées des comptes officiels et des médianes du secteur. Et le <b>connecteur</b> : Claude ou ChatGPT lisent ENKLAIR pour vous répondre.</p></div>
+      <div class="pr4-c" id="ia">${ic("ia")}<b>L'IA qui vous répond</b><p><b>50 questions par jour</b> à l'IA du site (3 par semaine sans Premium), tirées des comptes officiels et des médianes du secteur. Et le <b>connecteur</b> : Claude ou ChatGPT lisent ENKLAIR pour vous répondre.</p></div>
       <div class="pr4-c" id="alertes">${ic("ag")}<b>Prévenu quand une valeur chute</b><p><b>Une baisse de plus de 5 % dans la journée : un e-mail le soir même</b>, un seul par soir, et dans Mon espace. Et pour toutes vos valeurs : résultats publiés avec leurs chiffres clés, veille des rendez-vous, <b>dernier jour pour toucher un dividende</b>, plus haut ou plus bas sur un an. Et chaque samedi, <b>votre rapport de la semaine</b>.</p><p><a class="lnk" href="/rapport-exemple">Voir un rapport en exemple →</a></p></div>
       <div class="pr4-c" id="portefeuille">${ic("pub")}<b>Votre portefeuille radiographié</b><p>Ce que vous possédez vraiment à travers vos ETF, vos expositions par pays et par secteur, ce qu'une baisse coûterait en euros, le calendrier de vos dividendes.</p></div>
       <div class="pr4-c" id="donnees">${ic("mk")}<b>Comparer et classer sans limite</b><p>Les comparaisons d'entreprises sans compter (3 par semaine sans Premium), les cinq classements complets et l'export des chiffres de chaque fiche.</p></div>
