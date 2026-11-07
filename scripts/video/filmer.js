@@ -9,8 +9,8 @@ const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
 const interp = (keys, t, f) => { if (t <= keys[0][0]) return f(keys[0]); for (let i = 1; i < keys.length; i++) if (t <= keys[i][0]) { const a = keys[i - 1], b = keys[i], k = ease((t - a[0]) / (b[0] - a[0])); const va = f(a), vb = f(b); return va.map((x, j) => x + (vb[j] - x) * k); } return f(keys[keys.length - 1]); };
 (async () => {
   const [planF, out] = process.argv.slice(2), plan = JSON.parse(fs.readFileSync(planF)), fps = plan.fps || 30;
-  const b = await chromium.launch(), ctx = await b.newContext({ viewport: { width: 1280, height: 846 }, deviceScaleFactor: 2, locale: "fr-FR" });
-  const p = await ctx.newPage();
+  const b = await chromium.launch(), VP = plan.viewport || [1280, 846], ctx = await b.newContext({ viewport: { width: VP[0], height: VP[1] }, deviceScaleFactor: 2, locale: "fr-FR" });
+  const p = await ctx.newPage(); let dernier = null; // dernière position du curseur (fenêtre), reprise par « suite » au segment suivant
   for (const s of plan.segments) {
     const dir = path.join(out, s.nom); fs.mkdirSync(dir, { recursive: true });
     if (s.url) { await p.goto("https://enklair.com" + s.url, { waitUntil: "load" }); }
@@ -27,21 +27,21 @@ const interp = (keys, t, f) => { if (t <= keys[0][0]) return f(keys[0]); for (le
         if (!el) return null; const r = el.getBoundingClientRect(); return [r.x + r.width / 2 + scrollX, r.y + r.height / 2 + scrollY, r.x + scrollX, r.y + scrollY, r.width, r.height]; }, a); };
     const res = async keys => { const o = []; for (const k of keys || []) { const v = { ...k }; o.push(v); } return o; };
     const SC = []; for (const [t, y, dy] of s.scroll || [[0, 0]]) { let v = y; if (typeof y === "string") { const q = await ancre(y); v = q ? q[3] - (dy || 120) : 0; } SC.push([t, v]); }
-    const CU = []; for (const [t, a, dx, dy] of s.curseur || []) { const q = await ancre(a); if (q) CU.push([t, q[0] + (dx || 0), q[1] + (dy || 0)]); }
-    const CA = []; for (const [t, z, a, dy, dx] of s.camera || [[0, 1, [640, 423]]]) { const q = typeof a === "string" ? await ancre(a) : a; CA.push([t, z, q ? q[0] + (dx || 0) : 640, q ? q[1] + (dy || 0) : 423, typeof a === "string"]); }
+    const CU = []; for (const [t, a, dx, dy] of s.curseur || []) { const q = a === "suite" ? (dernier ? [dernier[0], dernier[1] + await p.evaluate(() => scrollY)] : null) : await ancre(a); if (q) CU.push([t, q[0] + (dx || 0), q[1] + (dy || 0)]); }
+    const CA = []; for (const [t, z, a, dy, dx] of s.camera || [[0, 1, "haut"]]) { const q = a === "haut" ? null : typeof a === "string" ? await ancre(a) : a; CA.push([t, z, q ? q[0] + (dx || 0) : VP[0] / 2, q ? q[1] + (dy || 0) : VP[1] / 2, typeof a === "string" && a !== "haut"]); }
     let clic = null; if (s.clic) { const q = await ancre(s.clic[1]); clic = q ? [s.clic[0], q[0], q[1]] : null; }
     const n = Math.round(s.duree * fps), cadres = [];
     for (let i = 0; i < n; i++) {
       const t = i / fps, [y] = interp(SC, t, k => [k[1]]);
       await p.evaluate(y => window.scrollTo(0, y), Math.round(y)); const sy = await p.evaluate(() => scrollY);
       const c = CU.length ? interp(CU, t, k => [k[1], k[2]]) : null;
-      const [z, fx, fy] = interp(CA, t, k => [k[1], k[2], k[3] - (k[4] ? 0 : 0)]);
-      // la caméra vise un point de la page : converti en coordonnées de la fenêtre
-      const camPage = CA.some(k => k[4]);
-      cadres.push({ cur: c ? [c[0], c[1] - sy] : null, cam: [z, fx, camPage ? fy - sy : fy], clic: clic && t >= clic[0] && t < clic[0] + 0.5 ? (t - clic[0]) / 0.5 : null });
+      // la caméra vise un point de la page (ancre) ou de la fenêtre (« haut ») : tout est ramené aux coordonnées de la fenêtre
+      const [z, fx, fy] = interp(CA, t, k => [k[1], k[2], k[4] ? k[3] - sy : k[3]]);
+      cadres.push({ cur: c ? [c[0], c[1] - sy] : null, cam: [z, fx, fy], clic: clic && t >= clic[0] && t < clic[0] + 0.5 ? (t - clic[0]) / 0.5 : null });
+      if (c) dernier = [c[0], c[1] - sy];
       await p.screenshot({ path: path.join(dir, String(i + 1).padStart(5, "0") + ".jpg"), type: "jpeg", quality: 90 });
     }
-    fs.writeFileSync(path.join(dir, "plan.json"), JSON.stringify({ fps, cadres }));
+    fs.writeFileSync(path.join(dir, "plan.json"), JSON.stringify({ fps, viewport: VP, cadres }));
     if (clic) { await p.mouse.click(clic[1], clic[2] - (await p.evaluate(() => scrollY))); await p.waitForLoadState("load"); }
     console.log(s.nom, n, "images");
   }
