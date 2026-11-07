@@ -35,7 +35,7 @@ jobs:
           npm i --no-save --silent pdfjs-dist@4.10.38 || true
           timeout "${{ inputs.minutes }}m" node "${{ inputs.script }}" > "$SORTIE/_journal.txt" 2>&1 || echo "code de sortie $?" >> "$SORTIE/_journal.txt"
           tail -c 3000 "$SORTIE/_journal.txt"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: sonde
           path: ${{ inputs.sortie }}
