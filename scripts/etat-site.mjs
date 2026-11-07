@@ -23,7 +23,9 @@ try {
     if (!ok) point("rouge", `Robot « ${x.name} » en échec (${x.conclusion}).`); }
 } catch (e) { etat.robots_erreur = String(e.message || e); }
 // Robot des dates de presse : vide depuis quand ?
-const agAuto = J(D("agenda-auto.json")); if (agAuto && !(agAuto.events || []).length) point("orange", "Dates de résultats trouvées dans la presse (GDELT) : 0 date. L'API refuse les requêtes (429).");
+// Agenda : dates officielles + annoncées (robot de l'actualité) ; alerte si le fichier des dates annoncées n'a pas été mis à jour depuis 2 jours
+const agAuto = J(D("agenda-auto.json")); etat.agenda = { annoncees: agAuto ? (agAuto.events || []).length : null, maj: agAuto && agAuto.updated, habituelles: ((J(D("agenda-habituel.json")) || {}).events || []).length };
+if (!agAuto || !agAuto.updated || (Date.now() - Date.parse(agAuto.updated)) / 864e5 > 2) point("orange", `Dates de résultats annoncées : fichier non mis à jour depuis le ${agAuto && agAuto.updated || "?"} (robot de l'actualité).`);
 
 /* ---------- Actualité de la veille ---------- */
 {
@@ -55,7 +57,8 @@ const averif = J(D("a-verifier.json")); if (averif && averif.items) etat.coheren
   for (const p of pages) { try { const r = await fetch(SITE + p, { redirect: "manual" }); if (r.status >= 400) erreurs.push(p + " : " + r.status); } catch (e) { erreurs.push(p + " : injoignable"); } }
   etat.exterieur.pages = { testees: pages.length, erreurs, duree_ms: Date.now() - t0 };
   if (erreurs.length) point("rouge", `Pages en erreur : ${erreurs.join(", ")}.`);
-  try { t0 = Date.now(); const r = await fetch(SITE + "/api/rapport-exemple"); const b = await r.json(); etat.exterieur.rapport_exemple = { ok: r.ok && !!b.lignes, duree_ms: Date.now() - t0, ia: Object.keys(b.ia_entreprises || {}).length, monde: b.monde ? b.monde.sujets.length : 0 };
+  // Le rapport d'exemple est recalculé ici, une fois par jour (clé ADMIN_KEY) ; les visiteurs reçoivent toujours la version gardée
+  try { t0 = Date.now(); const r = await fetch(SITE + "/api/rapport-exemple", { headers: process.env.ADMIN_KEY ? { "x-admin-key": process.env.ADMIN_KEY } : {} }); const b = await r.json(); etat.exterieur.rapport_exemple = { ok: r.ok && !!b.lignes, duree_ms: Date.now() - t0, ia: Object.keys(b.ia_entreprises || {}).length, monde: b.monde ? b.monde.sujets.length : 0 };
     if (!b.monde) point("orange", "Rapport d'exemple : pas de sujets du monde (IA indisponible ou titres manquants)."); } catch (e) { etat.exterieur.rapport_exemple = { ok: false }; point("rouge", "Le rapport d'exemple ne répond pas."); }
   try { const r = await fetch(SITE + "/api/cours"); const j = await r.json(), it = j.items || {}; const sans = Object.values(it).filter(x => !(x && x.p > 0)).length; etat.exterieur.cours = { total: Object.keys(it).length, sans_cours: sans, maj: j.maj || j.date || null }; } catch (e) { etat.exterieur.cours = null; }
   try { const r = await fetch(SITE + "/api/ia/etat"); const j = await r.json(); etat.services.ia = { disponible: !!j.disponible, site_epuise: !!j.site_epuise }; if (!j.disponible) point("orange", "L'IA du site ne répond pas."); } catch (e) { etat.services.ia = null; }

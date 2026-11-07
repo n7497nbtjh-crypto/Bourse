@@ -41,7 +41,7 @@ jobs:
         run: |
           git config user.name "repere-bot"
           git config user.email "repere-bot@users.noreply.github.com"
-          git add cf/site/data/actu cf/site/data/actu-sec.json cf/site/data/actu-analyse.json
+          git add cf/site/data/actu cf/site/data/agenda-auto.json cf/site/data/actu-sec.json cf/site/data/actu-analyse.json
           git diff --cached --quiet || git commit -q -m "Actualité du $(date -u +'%F %H:%M') UTC"
           for i in 1 2 3 4 5; do git pull --rebase -X theirs -q && git push -q && break; sleep $((i * 7)); done
       - name: Publication sur Cloudflare Pages

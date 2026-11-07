@@ -71,8 +71,8 @@ jobs:
           node data/actu_analyse.mjs 2>&1 | grep -v "^Warning: TT" || echo "::warning::Analyse des annonces interrompue"
           node data/listes_noires.mjs || true
           node data/dirigeants.mjs || true
-      - name: Dates de résultats trouvées dans l'actualité
-        run: node data/agenda_presse.mjs || echo "::warning::Recherche des dates dans la presse interrompue"
+      # 7/11 : étape retirée. L'API de recherche GDELT ne répondait plus depuis GitHub (connexions coupées) et le robot réécrivait
+      # agenda-auto.json avec 0 date chaque matin. Les dates annoncées sont maintenant relevées par le robot de l'actualité (data/actu.mjs).
       - name: Dividendes annoncés des entreprises américaines (calendrier Nasdaq)
         timeout-minutes: 10
         run: node data/dividendes_us.mjs || echo "::warning::Calendrier des dividendes Nasdaq interrompu"

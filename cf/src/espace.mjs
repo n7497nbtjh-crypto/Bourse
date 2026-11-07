@@ -602,10 +602,8 @@ export const EXEMPLE_PROFIL = { // 5/11 (Romain : « plus cohérent ») : un PEA
   rapport: { favoris: true, portefeuille: true, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] },
 };
 export async function rapportExemple(request, env, ctx) {
-  // 7/11 (Romain : « long chargement ») : le dernier rapport calculé est gardé en base (table cache_json) et servi tout de suite ;
-  // s'il a plus d'une heure, il est recalculé en arrière-plan (ctx.waitUntil) pour la visite suivante. Le cache de Cloudflare (1 h)
-  // ne suffisait pas : il est par centre de données et se vide, et chaque recalcul prend 20 à 40 s (lectures, 9 appels à l'IA).
-  const cle = "rapport-exemple|v" + SYN_VERSION, FRAIS = 3600e3;
+  // 7/11 (Romain : « long chargement ») : le rapport d'exemple est gardé en base (table cache_json) et servi tel quel en moins d'une seconde.
+  const cle = "rapport-exemple|v" + SYN_VERSION;
   let row = null;
   if (env.DB) { try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)`).run(); row = await env.DB.prepare(`SELECT v, at FROM cache_json WHERE k = ?`).bind(cle).first(); } catch (e) { } }
   const calculer = async () => {
@@ -620,13 +618,10 @@ export async function rapportExemple(request, env, ctx) {
     if (env.DB) { try { await env.DB.prepare(`INSERT OR REPLACE INTO cache_json (k, v, at) VALUES (?, ?, ?)`).bind(cle, corps, Date.now()).run(); } catch (e) { } }
     return corps;
   };
-  const rep = v => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
-  if (row && row.v) {
-    if (Date.now() - row.at > FRAIS && ctx && ctx.waitUntil) { // périmé : servi quand même, recalculé derrière (une seule fois par heure grâce à at)
-      try { await env.DB.prepare(`UPDATE cache_json SET at = ? WHERE k = ? AND at = ?`).bind(Date.now() - FRAIS + 120e3, cle, row.at).run(); } catch (e) { }
-      ctx.waitUntil(calculer().catch(() => { }));
-    }
-    return rep(row.v);
-  }
+  const rep = v => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  // 7/11 matin (Romain : « pourquoi il devrait se recalculer, c'est un rapport d'exemple ») : jamais recalculé pour un visiteur.
+  // Il est refait une fois par jour par le robot « État du site » (clé ADMIN_KEY), et une première fois après une mise en ligne s'il n'existe pas.
+  if (adminOk(request, env)) return rep(await calculer());
+  if (row && row.v) return rep(row.v);
   return rep(await calculer());
 }

@@ -24,6 +24,7 @@ import { readFileSync, writeFileSync, existsSync, mkdirSync, readdirSync, unlink
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import U from "./univers.mjs";
+import { dateFromTitle } from "./agenda_presse.mjs"; // 7/11 : dates de résultats annoncées, lues dans le flux GDELT déjà chargé
 import { buildIndex, match, MARKET, pressIndex, inTitle, fold } from "./actu_match.mjs";
 import { classe, titreFr, importance, privilegiee, chiffresEN, presenter, vraisemblable, ROUTINE } from "./actu_regles.mjs";
 
@@ -339,8 +340,10 @@ async function gdelt() {
         const csv = execFileSync("unzip", ["-p", `${tmp}/g.zip`], { maxBuffer: 400 * 1024 * 1024 }).toString("utf8");
         for (const line of csv.split("\n")) {
           if (!line) continue; rows++;
-          const c = line.split("\t"), dom = String(c[3] || "").toLowerCase().replace(/^www\./, ""); if (!dom || BLOQUES.test(dom + ".")) continue; const site = media(dom) || dom, sur = site !== dom || MSET.has(dom);
+          const c = line.split("\t"), dom = String(c[3] || "").toLowerCase().replace(/^www\./, ""); if (!dom) continue;
           const tt = (c[26] || "").match(/<PAGE_TITLE>(.*?)<\/PAGE_TITLE>/); if (!tt) continue;
+          garderDateAnnoncee(tt[1], c[4], dom); // avant le filtre des agences de communiqués : c'est là que sont les « XYZ to report results on … »
+          if (BLOQUES.test(dom + ".")) continue; const site = media(dom) || dom, sur = site !== dom || MSET.has(dom);
           const lc = kind === "gkg" ? "eng" : ((c[25] || "").match(/srclc:(\w{3})/) || [])[1];
           const l = LANG[lc] || ""; if (!l) continue;
           const d = c[1] && c[1].length === 14 ? `${c[1].slice(0, 4)}-${c[1].slice(4, 6)}-${c[1].slice(6, 8)}T${c[1].slice(8, 10)}:${c[1].slice(10, 12)}:00Z` : null;
@@ -364,6 +367,32 @@ async function bbc() {
     }
   } catch (e) { log("BBC", e.message); }
   note("bbc", { nouveaux: PRESSE.length - n0 }); log("BBC", PRESSE.length - n0, "titres retenus");
+}
+
+/* ---------- Dates de résultats annoncées (7/11) ----------
+   Remplace data/agenda_presse.mjs : l'API de recherche GDELT (api.gdeltproject.org) ne répond plus depuis GitHub (connexions coupées,
+   503, 429, 11 à 15 s par requête), alors que les fichiers ouverts GDELT lus ici arrivent sans problème et contiennent aussi les communiqués
+   des agences (GlobeNewswire, PR Newswire, Business Wire) : « XYZ to Report Third Quarter Results on November 19 ». Chaque date garde
+   le lien du communiqué ou de l'article. Gardées jusqu'à leur passage dans cf/site/data/agenda-auto.json (le fichier de l'ancien robot). */
+const AGAUTO_F = new URL("../agenda-auto.json", DIR), AGAUTO = new Map();
+try { for (const e of JSON.parse(readFileSync(AGAUTO_F, "utf8")).events || []) if (e && e.id && e.date >= new Date(NOW).toISOString().slice(0, 10)) AGAUTO.set(e.id, e); } catch (e) { }
+const AGAUTO_N0 = AGAUTO.size;
+function garderDateAnnoncee(titre, u, dom) {
+  if (!/\b(result|earning|r[ée]sultat)/i.test(titre) || !/^https?:\/\//.test(u || "")) return;
+  const date = dateFromTitle(titre); if (!date) return;
+  const t = decodeEntites(titre).replace(/\s+/g, " ").trim(), ids = inTitle(PI, t); if (!ids.length) return;
+  for (const id of ids.slice(0, 1)) { // un seul nom par titre : le communiqué parle de l'entreprise qui l'émet
+    const prec = AGAUTO.get(id); if (prec && prec.date === date) continue;
+    AGAUTO.set(id, { id, date, type: "Résultats", label: "Publication des résultats (date annoncée)", source: u, presse: dom, titre: t.slice(0, 160), vu: new Date(NOW).toISOString().slice(0, 10) });
+  }
+}
+function ecrireAgendaAuto() {
+  // aussi la presse déjà gardée par entreprise (STORE : fichiers actu/c/<id>.json, plusieurs jours) et celle de ce passage
+  for (const st of Object.values(STORE)) for (const p of st.p.values()) if (p && p.t && p.u) garderDateAnnoncee(p.t, p.u, p.s || "");
+  for (const p of PRESSE) if (p && p.t && p.u) garderDateAnnoncee(p.t, p.u, p.s || "");
+  const today = new Date(NOW).toISOString().slice(0, 10), events = [...AGAUTO.values()].filter(e => e.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+  writeFileSync(AGAUTO_F, JSON.stringify({ updated: today, source: "Communiqués et presse (flux ouvert GDELT)", events }));
+  log("Agenda", events.length, "dates de résultats annoncées (" + (AGAUTO.size - AGAUTO_N0) + " nouvelles)");
 }
 
 /* ---------- Le monde de la semaine (6/11 soir, Romain : « mettre le contexte général de la semaine, géopolitique etc. ») ----------
@@ -433,6 +462,7 @@ function ecrire() {
   for (const c of U) { const r = couverture[c.region] || (couverture[c.region] = { n: 0, annonces: 0, presse: 0, une: 0 }); const S = STORE[c.id]; const a = S && [...S.o.values()].some(x => Date.parse(x.d) >= minO), pr = S && [...S.p.values()].some(x => Date.parse(x.d) >= minP); r.n++; if (a) r.annonces++; if (pr) r.presse++; if (a || pr) r.une++; }
   log("couverture", JSON.stringify(couverture));
   ecrireMonde();
+  ecrireAgendaAuto();
   writeFileSync(new URL("fil.json", DIR), JSON.stringify({ maj: new Date().toISOString(), sources, jours, total: all.length, regions: parReg, couverture, entreprises: Object.keys(STORE).filter(id => STORE[id].o.size).length, o: filO, p: filP }));
   writeFileSync(new URL("etat.json", DIR), JSON.stringify(ETAT, null, 1));
   log(`écrit : ${ecrits} fiches modifiées, ${all.length} annonces sur 90 jours, ${filO.length} dans le fil, ${filP.length} titres de presse récents`, parSrc, parReg);

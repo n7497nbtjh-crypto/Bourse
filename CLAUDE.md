@@ -57,4 +57,4 @@ Sur la fiche, tout montant hors euro est converti en euros au taux BCE du jour e
 - Entreprises sans comptes : masquées du site (`SANS_COMPTES`), elles reviennent seules quand leurs comptes arrivent.
 
 ## En attente de Romain
-Lancer une fois le robot « État du site » (Actions) ; Brevo (clé) ; un vrai paiement d'essai de bout en bout, puis remboursement ; accord écrit d'Eulerpool ; avocat (pages légales, couleurs du PER) ; remplacer le calendrier Nasdaq des dividendes ; réparer les feuilles Google 3 et 4 (aucun cours calculé) ; publier sur les réseaux (images du robot `posts.yml`).
+Brevo (clé) ; un vrai paiement d'essai de bout en bout, puis remboursement ; accord écrit d'Eulerpool ; avocat (pages légales, couleurs du PER) ; remplacer le calendrier Nasdaq des dividendes ; réparer les feuilles Google 3 et 4 (aucun cours calculé) ; publier sur les réseaux (images du robot `posts.yml`).

@@ -2489,7 +2489,7 @@ var EXEMPLE_PROFIL = {
   rapport: { favoris: !0, portefeuille: !0, secteurs: ["conso", "tech"], indices: ["cac40", "stoxx50", "sp500"], sujets: ["resultats", "dividendes", "actualite", "lecons"] }
 };
 async function rapportExemple(request, env, ctx) {
-  let cle = "rapport-exemple|v" + 4, FRAIS = 36e5, row = null;
+  let cle = "rapport-exemple|v" + 4, row = null;
   if (env.DB)
     try {
       await env.DB.prepare("CREATE TABLE IF NOT EXISTS cache_json (k TEXT PRIMARY KEY, v TEXT NOT NULL, at INTEGER NOT NULL)").run(), row = await env.DB.prepare("SELECT v, at FROM cache_json WHERE k = ?").bind(cle).first();
@@ -2505,19 +2505,8 @@ async function rapportExemple(request, env, ctx) {
       } catch {
       }
     return corps;
-  }, rep2 = (v) => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300" } });
-  if (row && row.v) {
-    if (Date.now() - row.at > FRAIS && ctx && ctx.waitUntil) {
-      try {
-        await env.DB.prepare("UPDATE cache_json SET at = ? WHERE k = ? AND at = ?").bind(Date.now() - FRAIS + 12e4, cle, row.at).run();
-      } catch {
-      }
-      ctx.waitUntil(calculer().catch(() => {
-      }));
-    }
-    return rep2(row.v);
-  }
-  return rep2(await calculer());
+  }, rep2 = (v) => new Response(v, { headers: { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=3600" } });
+  return adminOk(request, env) ? rep2(await calculer()) : row && row.v ? rep2(row.v) : rep2(await calculer());
 }
 
 // cf/src/signaler.mjs
