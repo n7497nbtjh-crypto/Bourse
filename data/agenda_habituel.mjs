@@ -51,7 +51,7 @@ if (existsSync(TRIM)) for (const f of readdirSync(TRIM)) {
 console.log(`  dont ${nTrim} d'après les dépôts officiels de l'an dernier (SEC, AMF)`);
 events.sort((a, b) => a.date.localeCompare(b.date));
 writeFileSync(OUT, JSON.stringify({ updated: today, source: "Date de l'an dernier (annonce officielle), à confirmer", events }));
-// 7/11 soir : copie courte (45 prochains jours, sans libellé) pour le rapport de la semaine : le serveur ne lit pas 1,5 Mo à chaque rapport
-writeFileSync(new URL("../cf/site/data/agenda-habituel-proche.json", import.meta.url), JSON.stringify({ updated: today, events: events.filter(e => (Date.parse(e.date) - Date.parse(today)) / JOUR <= 45).map(e => ({ id: e.id, date: e.date, type: e.type })) }));
+// 7/11 soir : copie courte (120 prochains jours (7/11 nuit : prochaines publications des entreprises suivies dans le rapport), sans libellé) pour le rapport de la semaine : le serveur ne lit pas 1,5 Mo à chaque rapport
+writeFileSync(new URL("../cf/site/data/agenda-habituel-proche.json", import.meta.url), JSON.stringify({ updated: today, events: events.filter(e => (Date.parse(e.date) - Date.parse(today)) / JOUR <= 120).map(e => ({ id: e.id, date: e.date, type: e.type })) }));
 const sem = events.filter(e => (Date.parse(e.date) - Date.parse(today)) / JOUR < 7).length;
 console.log(`agenda-habituel.json : ${events.length} dates habituelles de résultats pour ${nCo} entreprises (${sem} dans les 7 jours)`);

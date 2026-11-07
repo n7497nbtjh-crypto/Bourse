@@ -2264,3 +2264,5 @@ html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;d
 @media(max-width:700px){.r8-fl.r8-lgf{grid-template-columns:1fr}.r8-fl.r8-lgf .c{grid-column:1}}
 /* 7/11 nuit : État du site, listes repliables (entreprises sans cours, cours sans devise) */
 .et8-det{margin-top:12px}.et8-det summary{cursor:pointer;font:700 15px Inter;padding:4px 0}.et8-det .et8-l{grid-template-columns:18px 1fr}
+.r8-jt{font:700 12px Inter!important;text-transform:uppercase;letter-spacing:.05em;color:#555;margin:6px 0 4px!important}
+.r8-jb .m{left:calc(50% - 9px)!important;width:18px!important}

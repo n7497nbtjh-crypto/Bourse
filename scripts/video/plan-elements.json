@@ -1,9 +1,13 @@
 {
  "plans": [
   {
-   "id": "reperes",
+   "id": "fiche",
    "url": "/entreprise/apple",
    "blocs": [
+    {
+     "q": ".ek-idt",
+     "pad": 6
+    },
     {
      "q": ".ek-vrd h2"
     },
@@ -88,7 +92,7 @@
     },
     {
      "q": "article.r8-co",
-     "n": 4,
+     "n": 0,
      "anim": "pourquoi",
      "dans": ".r8-lec",
      "duree": 1.8,
@@ -107,7 +111,7 @@
    "blocs": [
     {
      "q": "article.r8-co",
-     "n": 3,
+     "txt": "Schneider",
      "anim": "pourquoi",
      "dans": ".r8-lec",
      "duree": 1.8,

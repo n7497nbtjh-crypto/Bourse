@@ -296,6 +296,14 @@ export async function enrichir8(env, d, n, pf, semaine, auj) {
   try { n.monde = await mondeDe(env, d, n, lundi, auj); } catch (e) { n.monde = null; }
   try { n.radio = await radioDe(d, n, n.monde); } catch (e) { n.radio = null; }
   try { n.dca = dcaDe(d, pf, lundi, auj); } catch (e) { n.dca = null; }
+  // 7/11 nuit (Romain : « les dates des prochaines annonces des entreprises suivies, même plus loin que la semaine prochaine ») :
+  // pour chaque entreprise suivie sans rendez-vous dans les deux semaines, sa prochaine publication (date annoncée, sinon date habituelle à confirmer)
+  try { const deja = new Set((n.a_venir || []).map(e => e.k)), hab = d.charger ? await d.charger("/data/agenda-habituel-proche.json") : null, plus = [];
+    for (const l of (n.lignes || []).filter(l => l.k.startsWith("c:") && !deja.has(l.k))) { const id = l.k.slice(2);
+      const e = (d.ev || []).filter(x => x && x.id === id && /sultat/i.test(x.type || "") && x.date > auj).sort((a, b) => a.date.localeCompare(b.date))[0];
+      if (e) plus.push({ k: l.k, id, nom: l.nom, date: e.date, type: "Résultats", label: e.label || "Publication des résultats", categorie: "resultats", source: e.source || null, lien: "/entreprise/" + id + "/agenda" });
+      else { const h = ((hab && hab.events) || []).find(x => x.id === id && x.date > auj); if (h) plus.push({ k: l.k, id, nom: l.nom, date: h.date, type: "Résultats", label: "Résultats, date habituelle à confirmer", categorie: "resultats", estime: true, lien: "/entreprise/" + id + "/agenda" }); } }
+    n.a_venir = [...(n.a_venir || []), ...plus].sort((a, b) => a.date.localeCompare(b.date)); } catch (e) { }
   try { n.etf8 = await transparenceDe(d, n, lundi, auj); } catch (e) { n.etf8 = null; if (globalThis.process && process.env.R8_DEBUG) console.log("etf8", e); }
   // Les plus grosses entreprises tenues à travers les ETF passent aussi face à leurs rivales (sinon un portefeuille d'ETF n'a pas cette partie)
   try { if (n.etf8 && n.etf8.profil !== "actions") { const deja = new Set((n.lignes || []).map(l => l.k));

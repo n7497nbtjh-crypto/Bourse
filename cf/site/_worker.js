@@ -2006,6 +2006,19 @@ async function enrichir8(env, d, n, pf, semaine, auj) {
     n.dca = null;
   }
   try {
+    let deja = new Set((n.a_venir || []).map((e) => e.k)), hab = d.charger ? await d.charger("/data/agenda-habituel-proche.json") : null, plus = [];
+    for (let l of (n.lignes || []).filter((l2) => l2.k.startsWith("c:") && !deja.has(l2.k))) {
+      let id = l.k.slice(2), e = (d.ev || []).filter((x) => x && x.id === id && /sultat/i.test(x.type || "") && x.date > auj).sort((a, b) => a.date.localeCompare(b.date))[0];
+      if (e) plus.push({ k: l.k, id, nom: l.nom, date: e.date, type: "R\xE9sultats", label: e.label || "Publication des r\xE9sultats", categorie: "resultats", source: e.source || null, lien: "/entreprise/" + id + "/agenda" });
+      else {
+        let h = (hab && hab.events || []).find((x) => x.id === id && x.date > auj);
+        h && plus.push({ k: l.k, id, nom: l.nom, date: h.date, type: "R\xE9sultats", label: "R\xE9sultats, date habituelle \xE0 confirmer", categorie: "resultats", estime: !0, lien: "/entreprise/" + id + "/agenda" });
+      }
+    }
+    n.a_venir = [...n.a_venir || [], ...plus].sort((a, b) => a.date.localeCompare(b.date));
+  } catch {
+  }
+  try {
     n.etf8 = await transparenceDe(d, n, lundi3, auj);
   } catch (e) {
     n.etf8 = null, globalThis.process && process.env.R8_DEBUG && console.log("etf8", e);
@@ -3576,7 +3589,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "92b20b6b7f19972c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "82383c5cd8fc2a95", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

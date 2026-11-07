@@ -72,16 +72,7 @@ function r8Pourquoi(l, R, A) {
   const res = [...A].reverse().find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length);
   const jourDe = d => J.find(j => j.date === String(d).slice(0, 10));
   if (res) {
-    const [lab, val] = res.chiffres[0], g = r8Croiss(val), cr = R && R.croissance, montant = String(val).replace(/\s*\(.*$/, "");
-    let t = `Ses résultats : ${esc(lab.toLowerCase())} de ${esc(montant)}`;
-    if (g != null) {
-      t += `, ${g >= 0 ? "en hausse" : "en baisse"} de ${F1.format(Math.abs(g))}\u00a0%`;
-      if (cr && /chiffre d'affaires|ventes|revenu/i.test(lab)) {
-        const acc = g - cr.v, annuel = /exercice/i.test(lab) && Math.abs(acc) < 1.5; t += annuel ? "" : Math.abs(acc) < 1 ? `, au même rythme que sur son exercice ${cr.exercice} (${synPct(cr.v)})` : `, ${acc > 0 ? "plus vite" : "moins vite"} que sur son exercice ${cr.exercice} (${synPct(cr.v)})`;
-        if (cr.med != null) t += `. Ses rivales grandissent ${Math.abs(cr.med - g) < 1.5 ? "au même rythme" : cr.med > g ? "plus vite" : "moins vite"} (${synPct(cr.med)} en médiane sur leur dernier exercice)`;
-      }
-    }
-    out.push(t + ".");
+    out.push(`Ses résultats, publiés le ${esc(r8Jr(res.date))} : ${res.chiffres.slice(0, 2).map(([a, b]) => `${esc(a.toLowerCase())} ${esc(String(b).replace(/ %/g, "\u00a0%"))}`).join(", ")}.`);
     const rc = R && R.reaction;
     if (rc) out.push(`Le jour de la publication (${r8Jour(rc.date)}), la Bourse ${rc.med == null ? `a fait ${synPct(rc.v)}` : Math.abs(rc.v - rc.med) < 1 ? `l'a accueillie comme ses rivales : ${synPct(rc.v)}, ses rivales ${synPct(rc.med)}` : `l'a ${rc.v > rc.med ? "mieux" : "moins bien"} accueillie que ses rivales : ${synPct(rc.v)} contre ${synPct(rc.med)}`}.`);
     const f2 = r8Fort(l, R, A, rc ? rc.date : null); if (f2) out.push(f2.t);
@@ -100,23 +91,17 @@ function r8Pourquoi(l, R, A) {
   for (const a of autres) out.push(`Le ${esc(r8Jr(a.date))}, elle a publié : ${esc(r8Maj((SYN6_T[a.categorie] || ["annonce"])[0].toLowerCase()))} (${esc(a.titre)}).`);
   return out;
 }
-function r8Jours(l, R, A) {
-  const J = (R && R.jours) || [], ind = l.indice; if (J.length < 2) return "";
+function r8Jours(l, R, A) { // 7/11 nuit (Romain : « illisible, trop de paramètres ») : seulement le cours de l'action, jour par jour
+  const J = (R && R.jours) || []; if (J.length < 2) return "";
   const res = new Set(A.filter(a => a.origine !== "presse" && a.categorie === "resultats").map(a => String(a.date).slice(0, 10)));
-  const mx = Math.max(1, ...J.map(j => Math.abs(j.v)), ...J.map(j => Math.abs(j.ind || 0)), ...J.map(j => Math.abs(j.riv || 0)));
-  const h = x => (Math.min(Math.abs(x), mx) / mx * 38).toFixed(0);
-  const col = j => `<div class="r8-jc${res.has(j.date) ? " res" : ""}"><div class="r8-jb"><span class="m ${j.v < 0 ? "dn" : "up"}" style="height:${h(j.v)}px;${j.v < 0 ? "top" : "bottom"}:50%"></span>${j.riv != null ? `<span class="r" style="height:${h(j.riv)}px;${j.riv < 0 ? "top" : "bottom"}:50%"></span>` : ""}${j.ind != null ? `<span class="i" style="height:${h(j.ind)}px;${j.ind < 0 ? "top" : "bottom"}:50%"></span>` : ""}</div><b class="${r8Cls(j.v)}">${synPct(j.v)}</b><small>${R8_JS[new Date(j.date + "T12:00:00Z").getUTCDay()]}</small>${res.has(j.date) ? `<em>Résultats</em>` : ""}</div>`;
-  return `<div class="r8-jours"><div class="r8-jg">${J.map(col).join("")}</div><p class="r8-jl"><span class="m"></span>${esc(String(l.nom).replace(/\s*\([^)]*\)\s*$/, ""))}<span class="r"></span>ses rivales${ind ? `<span class="i"></span>${esc(ind.nom)}` : ""}</p></div>`;
+  const mx = Math.max(1, ...J.map(j => Math.abs(j.v))), h = x => (Math.min(Math.abs(x), mx) / mx * 38).toFixed(0);
+  return `<div class="r8-jours"><p class="r8-jt">Son cours, jour par jour</p><div class="r8-jg">${J.map(j => `<div class="r8-jc${res.has(j.date) ? " res" : ""}"><div class="r8-jb"><span class="m ${j.v < 0 ? "dn" : "up"}" style="height:${h(j.v)}px;${j.v < 0 ? "top" : "bottom"}:50%"></span></div><b class="${r8Cls(j.v)}">${synPct(j.v)}</b><small>${R8_JS[new Date(j.date + "T12:00:00Z").getUTCDay()]}</small>${res.has(j.date) ? `<em>Résultats</em>` : ""}</div>`).join("")}</div></div>`;
 }
 // Les chiffres qui ne sont ni dans l'en-tête ni dans les barres : ses résultats, l'accueil de la Bourse, ses ventes et sa marge face aux rivales
-function r8Faits(l, R, A) {
-  const res = [...A].reverse().find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length), L = [];
-  const ton = (x, m) => x == null || m == null ? "" : x - m > 1 ? "up" : x - m < -1 ? "dn" : "";
-  if (res && res.chiffres.length > 1) L.push(["Ses autres chiffres", esc(res.chiffres.slice(1, 4).map(([a, b]) => `${a} ${b}`).join(" · ")), `publiés le ${esc(r8Jr(res.date))}`, "r8-lgf"]);
-  const rc = R && R.reaction; if (rc && !res) L.push(["Ce jour-là en Bourse", `<b class="${r8Cls(rc.v)}">${synPct(rc.v)}</b>`, rc.med != null ? `ses rivales : ${synPct(rc.med)}` : "", ton(rc.v, rc.med)]);
-  const cr = R && R.croissance; if (cr && !res) L.push([`Ses ventes ${cr.exercice}`, `<b class="${r8Cls(cr.v)}">${synPct(cr.v)}</b>`, `médiane des rivales : ${synPct(cr.med)}`, ton(cr.v, cr.med)]);
-  const mg = R && R.marge; if (mg) L.push([`Sa marge nette ${mg.exercice}`, `<b>${F1.format(mg.v)} €</b>`, `gardés sur 100 € de ventes · rivales : ${F1.format(mg.med)} €`, ton(mg.v, mg.med)]);
-  return L.length ? `<div class="r8-faits">${L.map(([a, b, c, t]) => `<div class="r8-fl${t ? " " + t : ""}"><span class="k">${a}</span><span class="v">${b}</span><span class="c">${c}</span></div>`).join("")}</div>` : "";
+function r8Faits(l, R, A) { // 7/11 nuit (Romain) : plus de chiffres de l'exercice passé ici ; seulement les chiffres publiés cette semaine, en plus des deux premiers
+  const res = [...A].reverse().find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length);
+  if (!res || res.chiffres.length < 3) return "";
+  return `<div class="r8-faits"><div class="r8-fl r8-lgf"><span class="k">Ses autres chiffres</span><span class="v">${esc(res.chiffres.slice(2, 5).map(([a, b]) => `${a} ${b}`).join(" · "))}</span><span class="c">publiés le ${esc(r8Jr(res.date))}</span></div></div>`;
 }
 function synPageV8(b, m) {
   SYN_ANN = []; SYN8_B = b;
@@ -238,7 +223,8 @@ function synPageV8(b, m) {
   num++;
   const LV = ((b.etf8 && b.etf8.vues) || []).filter(v => R[v.k]).map(v => ({ ...v, vue: true })); // 7/11 soir : les plus grosses entreprises des ETF
   const coLignes = [...L.filter(l => l.k.startsWith("c:") && (R[l.k] || deK(l.k).length || IA[l.k])), ...LV];
-  const ordre = l => (l.portefeuille ? 0 : 1) * 1e6 - (deK(l.k).length * 100 + Math.abs(l.variation_semaine_pct || 0));
+  const aRes = l => deK(l.k).some(a => a.origine !== "presse" && a.categorie === "resultats"); // 7/11 nuit : celles qui ont publié leurs résultats d'abord
+  const ordre = l => (aRes(l) ? 0 : 1) * 2e6 + (l.portefeuille ? 0 : 1) * 1e6 - (deK(l.k).length * 100 + Math.abs(l.variation_semaine_pct || 0));
   coLignes.sort((a, c) => ordre(a) - ordre(c));
   const avecNouv = coLignes.filter(l => l.vue || deK(l.k).some(a => !["rachat", "capital"].includes(a.categorie)) || IA[l.k] || Math.abs(l.variation_semaine_pct || 0) >= 3 || (R[l.k] && R[l.k].verdict && R[l.k].verdict !== "suit"));
   const calmes = L.filter(l => !avecNouv.includes(l) && l.k.startsWith("c:"));
@@ -280,7 +266,7 @@ function synPageV8(b, m) {
   }
 
   /* ---------- 4. À venir ---------- */
-  const av = [...(b.a_venir || []).slice(0, 8).map(e => ({ date: e.date, k: e.k, t: e.nom || "", p: String(e.label || "").replace(/^./, c => c.toLowerCase()) })),
+  const av = [...(b.a_venir || []).slice(0, 14).map(e => ({ date: e.date, k: e.k, t: e.nom || "", p: String(e.label || "").replace(/^./, c => c.toLowerCase()) })),
     ...((b.etf8 && b.etf8.a_venir) || []).map(e => ({ date: e.date, k: e.k, t: e.nom, p: `${e.label}${e.via ? ` · ${F0.format(e.via)} € à travers vos ETF` : ""}` })),
     ...(b.dca || []).map(x => ({ date: x.prochain, k: x.k, t: "Votre achat programmé", p: `${F0.format(x.q)} part${x.q > 1 ? "s" : ""} ${r8De(x.nom)}` }))].sort((a, c) => a.date.localeCompare(c.date));
   if (av.length) { num++;
