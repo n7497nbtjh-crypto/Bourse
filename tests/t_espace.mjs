@@ -225,6 +225,12 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
   [s, j] = await E("POST", "/api/espace/supprimer", { motdepasse: "motdepasse-de-b" }, B); ok(s === 409 && j.abonnement && /Résiliez-le/.test(j.error), "suppression refusée : abonnement mensuel actif " + s);
   globalThis.STRIPE_ANNULE = true;
   [s, j] = await E("POST", "/api/espace/supprimer", { motdepasse: "faux" }, B); ok(s === 401, "toujours le mot de passe d'abord");
+  { // abonnement payé avec la même adresse mais pas rattaché au compte : refusé aussi
+    globalThis.STRIPE_ANNULE = false; const em = sql.prepare("SELECT email FROM comptes WHERE id = ?").get(rowB.id).email;
+    sql.prepare("INSERT OR IGNORE INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, 'annuel', 'sub_456', 'cs_a', ?, ?)").run("ab".repeat(20), em.toLowerCase(), Date.now() - DAY, Date.now());
+    sql.prepare("UPDATE comptes SET premium = NULL WHERE id = ?").run(rowB.id);
+    [s, j] = await E("POST", "/api/espace/supprimer", { motdepasse: "motdepasse-de-b" }, B); ok(s === 409 && j.abonnement, "suppression refusée : abonnement annuel actif, payé avec la même adresse, même échu " + s);
+    sql.prepare("DELETE FROM abonnes WHERE sub_id = 'sub_456'").run(); }
   delete env.STRIPE_SECRET; globalThis.STRIPE_ANNULE = false; sql.prepare("UPDATE comptes SET premium = ? WHERE id = ?").run(avant, rowB.id);
 }
 [s, j, sc] = await E("POST", "/api/espace/supprimer", { motdepasse: "motdepasse-de-b" }, B); ok(s === 200 && /Max-Age=0/.test(sc), "compte supprimé");

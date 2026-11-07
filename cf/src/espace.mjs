@@ -342,7 +342,7 @@ export async function espace(request, env) {
       env.DB.prepare(`SELECT h, expires FROM sessions WHERE h = ?`).bind(await sha256hex(cookieSession(request))).first()]);
     const po = await proprietaireDe(env, c), p = po || await premiumDe(env, c.premium, url.origin);
     const dernier = await env.DB.prepare(`SELECT semaine, vu FROM bilans WHERE compte = ? ORDER BY semaine DESC LIMIT 1`).bind(c.id).first();
-    const r = json({ connecte: true, email: c.email, premium: !!p, plan: p ? p.plan : null, premium_jusqu_au: p ? p.until : null, alertes_max: p ? null : ALERTES_GRATUIT,
+    const r = json({ connecte: true, email: c.email, premium: !!p, plan: p ? p.plan : null, resiliable: !!(p && p.sub_id), premium_jusqu_au: p ? p.until : null, alertes_max: p ? null : ALERTES_GRATUIT,
       donnees: { favoris: parse(d && d.favoris, []) || [], portefeuille: parse(d && d.portefeuille, null), profil: parse(d && d.profil, null), maj: d ? d.updated : null },
       nonlus: (nl && nl.n) || 0, teaser: !!c.teaser, mail: mailReady(env), cree: c.created,
       bilan: dernier ? { semaine: dernier.semaine, vu: !!dernier.vu } : null, robot: await robotEtat(env), ...(po ? { jeton: po.token } : {}) }); // jeton : Premium aussi dans ce navigateur (IA, quotas)
@@ -417,9 +417,10 @@ export async function espace(request, env) {
     const cles = ["e:" + c.email]; if (await limite(env, cles)) return TROP();
     if (!(await verifie(String(b.motdepasse || "").slice(0, 200), c))) { await echec(env, cles); return json({ error: "Mot de passe incorrect." }, 401); }
     // 7/11 (Romain) : on ne supprime pas un espace dont l'abonnement continue de prélever ; il faut d'abord le résilier
-    if (c.premium) { const p = await env.DB.prepare(`SELECT sub_id FROM abonnes WHERE token = ?`).bind(c.premium).first().catch(() => null); // même échu : Stripe dit s'il prélève encore
-      let enCours = null; try { enCours = await abonnementEnCours(env, p); } catch (e) { return json({ error: "Impossible de vérifier votre abonnement pour le moment. Réessayez plus tard : votre espace n'a pas été supprimé.", abonnement: true }, 409); }
-      if (enCours) return json({ error: "Votre abonnement Premium mensuel est toujours actif : il continuerait d'être prélevé. Résiliez-le d'abord avec « Gérer ou résilier mon abonnement », puis supprimez votre espace.", abonnement: true }, 409); }
+    { // tout abonnement rattaché à ce compte ou payé avec son adresse, même échu : Stripe dit s'il prélève encore
+      const subs = ((await env.DB.prepare(`SELECT sub_id FROM abonnes WHERE (token = ? OR email = ?) AND sub_id IS NOT NULL`).bind(c.premium || "", String(c.email || "").toLowerCase()).all().catch(() => ({ results: [] }))).results || []);
+      let enCours = null; try { for (const p of subs) { enCours = enCours || await abonnementEnCours(env, p); } } catch (e) { return json({ error: "Impossible de vérifier votre abonnement pour le moment. Réessayez plus tard : votre espace n'a pas été supprimé.", abonnement: true }, 409); }
+      if (enCours) return json({ error: "Votre abonnement Premium est toujours actif : il continuerait d'être prélevé. Résiliez-le d'abord avec « Gérer ou résilier mon abonnement », puis supprimez votre espace.", abonnement: true }, 409); }
     for (const q of [`DELETE FROM notifs WHERE compte = ?`, `DELETE FROM bilans WHERE compte = ?`, `DELETE FROM donnees WHERE compte = ?`, `DELETE FROM sessions WHERE compte = ?`, `DELETE FROM comptes WHERE id = ?`, `DELETE FROM mcp_cles WHERE compte = ?`]) await env.DB.prepare(q).bind(c.id).run();
     return avecCookie(json({ ok: true }), EFFACE);
   }

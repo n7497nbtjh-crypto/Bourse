@@ -179,8 +179,8 @@ async function premium(request, env) {
       let plan = "unique", until = Date.now() + 368 * 864e5, sub = null;
       if (s.mode === "subscription" && s.subscription) {
         sub = typeof s.subscription == "string" ? s.subscription : s.subscription.id;
-        let so = await stripe(env, `subscriptions/${sub}`);
-        plan = "mensuel", until = so.current_period_end * 1e3 + 3 * 864e5;
+        let so = await stripe(env, `subscriptions/${sub}`), it = so.items && so.items.data && so.items.data[0];
+        plan = (it && (it.price && it.price.recurring && it.price.recurring.interval || it.plan && it.plan.interval)) === "year" ? "annuel" : "mensuel", until = so.current_period_end * 1e3 + 3 * 864e5;
       }
       let token = newToken(), email = s.customer_details && s.customer_details.email || s.customer_email || null;
       return await env.DB.prepare("INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)").bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run(), json({ token, plan });
@@ -2243,6 +2243,7 @@ async function espace(request, env) {
       email: c.email,
       premium: !!p,
       plan: p ? p.plan : null,
+      resiliable: !!(p && p.sub_id),
       premium_jusqu_au: p ? p.until : null,
       alertes_max: p ? null : ALERTES_GRATUIT,
       donnees: { favoris: parse(d && d.favoris, []) || [], portefeuille: parse(d && d.portefeuille, null), profil: parse(d && d.profil, null), maj: d ? d.updated : null },
@@ -2310,14 +2311,15 @@ async function espace(request, env) {
     if (await limite(env, cles)) return TROP();
     if (!await verifie(String(b.motdepasse || "").slice(0, 200), c))
       return await echec(env, cles), json({ error: "Mot de passe incorrect." }, 401);
-    if (c.premium) {
-      let p = await env.DB.prepare("SELECT sub_id FROM abonnes WHERE token = ?").bind(c.premium).first().catch(() => null), enCours = null;
+    {
+      let subs = (await env.DB.prepare("SELECT sub_id FROM abonnes WHERE (token = ? OR email = ?) AND sub_id IS NOT NULL").bind(c.premium || "", String(c.email || "").toLowerCase()).all().catch(() => ({ results: [] }))).results || [], enCours = null;
       try {
-        enCours = await abonnementEnCours(env, p);
+        for (let p of subs)
+          enCours = enCours || await abonnementEnCours(env, p);
       } catch {
         return json({ error: "Impossible de v\xE9rifier votre abonnement pour le moment. R\xE9essayez plus tard : votre espace n'a pas \xE9t\xE9 supprim\xE9.", abonnement: !0 }, 409);
       }
-      if (enCours) return json({ error: "Votre abonnement Premium mensuel est toujours actif : il continuerait d'\xEAtre pr\xE9lev\xE9. R\xE9siliez-le d'abord avec \xAB G\xE9rer ou r\xE9silier mon abonnement \xBB, puis supprimez votre espace.", abonnement: !0 }, 409);
+      if (enCours) return json({ error: "Votre abonnement Premium est toujours actif : il continuerait d'\xEAtre pr\xE9lev\xE9. R\xE9siliez-le d'abord avec \xAB G\xE9rer ou r\xE9silier mon abonnement \xBB, puis supprimez votre espace.", abonnement: !0 }, 409);
     }
     for (let q of ["DELETE FROM notifs WHERE compte = ?", "DELETE FROM bilans WHERE compte = ?", "DELETE FROM donnees WHERE compte = ?", "DELETE FROM sessions WHERE compte = ?", "DELETE FROM comptes WHERE id = ?", "DELETE FROM mcp_cles WHERE compte = ?"]) await env.DB.prepare(q).bind(c.id).run();
     return avecCookie(json({ ok: !0 }), EFFACE);
@@ -3378,7 +3380,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "0c2e446fb2c0f436", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "f73b321db3eea59f", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

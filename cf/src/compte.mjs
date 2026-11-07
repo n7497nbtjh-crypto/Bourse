@@ -123,7 +123,7 @@ export async function premium(request, env) {
       const s = await stripe(env, `checkout/sessions/${sid}`);
       if (!(s.status === "complete" && (s.payment_status === "paid" || s.payment_status === "no_payment_required"))) return json({ error: "Le paiement n'est pas encore confirmé. Réessayez dans une minute." }, 402);
       let plan = "unique", until = Date.now() + 368 * 864e5, sub = null; // paiement unique : 12 mois d'accès
-      if (s.mode === "subscription" && s.subscription) { sub = typeof s.subscription === "string" ? s.subscription : s.subscription.id; const so = await stripe(env, `subscriptions/${sub}`); plan = "mensuel"; until = so.current_period_end * 1000 + 3 * 864e5; }
+      if (s.mode === "subscription" && s.subscription) { sub = typeof s.subscription === "string" ? s.subscription : s.subscription.id; const so = await stripe(env, `subscriptions/${sub}`); const it = so.items && so.items.data && so.items.data[0], iv = it && ((it.price && it.price.recurring && it.price.recurring.interval) || (it.plan && it.plan.interval)); plan = iv === "year" ? "annuel" : "mensuel"; /* 7/11 : un abonnement annuel reste résiliable */ until = so.current_period_end * 1000 + 3 * 864e5; }
       const token = newToken(), email = (s.customer_details && s.customer_details.email) || s.customer_email || null;
       await env.DB.prepare(`INSERT INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, ?, ?, ?, ?, ?, ?)`).bind(token, email && email.toLowerCase(), plan, sub, sid, until, Date.now()).run();
       return json({ token, plan });

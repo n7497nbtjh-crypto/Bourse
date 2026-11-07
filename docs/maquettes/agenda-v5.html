@@ -1,0 +1,59 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette agenda v5</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:15px/1.5 Inter,sans-serif;font-variant-numeric:tabular-nums}
+.w{max-width:1120px;margin:0 auto;padding:0 20px}
+.note{max-width:1120px;margin:16px auto;background:#f4f4f4;border-radius:12px;padding:10px 18px;font-size:13.5px;color:#333}
+h2{font:800 clamp(28px,3.4vw,40px)/1 "Bricolage Grotesque",Inter;letter-spacing:-.05em;margin:0}
+.day{margin-top:34px}
+.dh{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.dh small{font:700 15px Inter;color:#666}
+.dh .cnt{margin-left:auto;font:700 13px Inter;color:#555}
+.secs{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0 14px}
+.sc{border:2px solid #111;border-radius:14px;padding:8px 12px 8px;background:#fff;cursor:pointer;font:inherit;text-align:left;min-width:118px}
+.sc b{display:block;font:800 24px/1 "Bricolage Grotesque",Inter}.sc span{font:700 12.5px Inter;color:#555}
+.sc.on{background:#FFE14D;box-shadow:3px 3px 0 #111}
+.sc.all{background:#111;color:#fff}.sc.all span{color:#ccc}.sc.all.on{background:#111;box-shadow:3px 3px 0 #FFE14D}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ev{display:flex;align-items:center;gap:10px;border:2px solid #111;border-radius:14px;padding:9px 12px;background:#fff;min-width:0;cursor:pointer}
+.ev.est{border-style:dashed;border-color:#999}
+.lg{width:34px;height:34px;flex:none;border-radius:9px;border:1.5px solid #ddd;display:grid;place-items:center;font:800 12px Inter;background:#fff}
+.ev .nm{flex:1;min-width:0}.ev .nm b{display:block;font:800 15px/1.2 "Bricolage Grotesque",Inter;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ev .nm small{font:600 12px Inter;color:#777}
+.tg{flex:none;font:800 11.5px Inter;padding:3px 8px;border-radius:7px;border:1.5px solid currentColor}
+.tg.c{color:#00804f;background:#E2F8EE}.tg.e{color:#666;background:#f2f0ea}
+.legend{display:flex;gap:16px;flex-wrap:wrap;font:600 13px Inter;color:#555;margin-top:12px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:26px;height:14px;border:2px solid #111;border-radius:5px;display:inline-block}.legend i.e{border-style:dashed;border-color:#999}
+.pop{margin-top:10px;border:2px solid #111;border-radius:14px;padding:12px 16px;background:#FFF6C7;font:600 14px Inter;display:none}
+@media(max-width:860px){.grid{grid-template-columns:1fr}.sc{min-width:0;flex:1 1 30%}}
+</style></head><body>
+<div class="note"><b>Maquette agenda v5</b> : vrais rendez-vous du site pour lundi 9 et mardi 10 novembre. Par jour : des encadrés par secteur (cliquez pour filtrer), puis une liste courte, une ligne par entreprise. La longue phrase « Rapport trimestriel ou annuel attendu (date habituelle…) » et « Heure non communiquée » disparaissent : une date à confirmer a un contour en pointillés, le détail s'affiche au clic.</div>
+<div class="w">
+<div class="legend"><span><i></i> Date annoncée par l'entreprise</span><span><i class="e"></i> Date habituelle, à confirmer</span></div>
+
+<section class="day" data-day="9"><div class="dh"><h2>Lundi 9 novembre</h2><small>dans 2 jours</small><span class="cnt">33 publications · toutes à confirmer</span></div>
+<div class="secs"></div><div class="grid"></div><div class="pop"></div></section>
+
+<section class="day" data-day="10"><div class="dh"><h2>Mardi 10 novembre</h2><small>dans 3 jours</small><span class="cnt">3 publications · 3 annoncées</span></div>
+<div class="secs"></div><div class="grid"></div><div class="pop"></div></section>
+<div style="height:60px"></div></div>
+<script>
+const D = {
+ 9: [["Banque et assurance",["Apollo Global Management","Arthur J. Gallagher","Athene Holding","BGC Partners","Commerce Bancshares","Corpay","Fidelity National Financial","Franklin Resources","Green Dot Corporation","Northwest Bank","Pagaya technologies","Popular","WesBanco"]],["Industrie",["Commercial Vehicle Group","Emerson Electric","Kirby Corporation","Plug Power","Tidewater"]],["Consommation",["Dole","Red Robin","TheRealReal","Tyson Foods","Yum China"]],["Télécoms et médias",["ATN International","Paramount Skydance","Viasat"]],["Énergie",["Calumet","Occidental Petroleum"]],["Immobilier",["Newmark Group","The Howard Hughes Corporation"]],["Services aux collectivités",["MDU Resources"]],["Santé",["Organon & Co."]],["Technologie",["SoundHound"]]].map(([s,l])=>[s,l.map(n=>[n.replace("*",""),0])]),
+ 10: [["Énergie",[["Petrobras",1,"Résultats du 3e trimestre 2026"]]],["Industrie",[["Honda",1,"Résultats du 2e trimestre (exercice clos en mars 2027)"]]],["Télécoms et médias",[["Vodafone",1,"Résultats semestriels (exercice 2027)"]]]]
+};
+document.querySelectorAll(".day").forEach(sec => {
+  const S = D[sec.dataset.day], tot = S.reduce((a, [, l]) => a + l.length, 0), secs = sec.querySelector(".secs"), grid = sec.querySelector(".grid"), pop = sec.querySelector(".pop");
+  let f = null;
+  const ini = n => n.split(/\s+/).map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  const draw = () => {
+    secs.innerHTML = `<button class="sc all${f ? "" : " on"}" data-s=""><b>${tot}</b><span>Tous les secteurs</span></button>` + S.map(([s, l]) => `<button class="sc${f === s ? " on" : ""}" data-s="${s}"><b>${l.length}</b><span>${s}</span></button>`).join("");
+    grid.innerHTML = S.filter(([s]) => !f || f === s).flatMap(([s, l]) => l.map(([n, c, lab]) => `<div class="ev${c ? "" : " est"}" data-n="${n}" data-c="${c}" data-l="${lab || ""}"><span class="lg">${ini(n)}</span><span class="nm"><b>${n}</b><small>${s} · Résultats</small></span><span class="tg ${c ? "c" : "e"}">${c ? "Annoncée" : "À confirmer"}</span></div>`)).join("");
+  };
+  secs.onclick = e => { const b = e.target.closest(".sc"); if (!b) return; f = b.dataset.s || null; pop.style.display = "none"; draw(); };
+  grid.onclick = e => { const v = e.target.closest(".ev"); if (!v) return; pop.style.display = "block";
+    pop.innerHTML = v.dataset.c === "1" ? `<b>${v.dataset.n}</b> · ${v.dataset.l}. Date annoncée par l'entreprise. <u>Voir la fiche →</u>` : `<b>${v.dataset.n}</b> · Résultats attendus. L'an dernier, le rapport a été déposé le 10 novembre 2025 (SEC) : la date de cette année n'est pas encore annoncée. <u>Voir la fiche →</u>`; };
+  draw();
+});
+</script></body></html>

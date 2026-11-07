@@ -1,0 +1,100 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette simulateur v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:15px/1.5 Inter,sans-serif;font-variant-numeric:tabular-nums}
+.w{max-width:1080px;margin:0 auto;padding:0 20px}
+.note{max-width:1080px;margin:16px auto;background:#f4f4f4;border-radius:12px;padding:10px 18px;font-size:13.5px;color:#333}
+.stk{display:inline-block;font:800 14px "Bricolage Grotesque",Inter;padding:4px 12px;border-radius:10px;border:2px solid #111;box-shadow:3px 3px 0 #111;transform:rotate(-3deg);background:#fff}
+.hero{background:#FFE14D;border-radius:30px;padding:26px 32px;margin-top:18px}
+.hero h1{font:800 clamp(30px,4.4vw,52px)/1 "Bricolage Grotesque",Inter;letter-spacing:-.05em;margin:14px 0 18px}
+.in{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.f{background:#fff;border:2px solid #111;border-radius:16px;padding:10px 14px;display:flex;flex-direction:column;gap:2px}
+.f span{font:700 12.5px Inter;color:#555}
+.f input,.f select{font:800 24px "Bricolage Grotesque",Inter;border:0;outline:0;width:100%;background:transparent;padding:0;color:#111}
+.f select{font-size:17px}
+.f input[type=month]{font-size:19px}
+.rend{grid-column:1/-1;background:#fff;border:2px solid #111;border-radius:16px;padding:12px 16px}
+.rt{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}.rt span{font:700 12.5px Inter;color:#555}.rt b{font:800 30px "Bricolage Grotesque",Inter}
+.rend input[type=range]{width:100%;accent-color:#111;margin:6px 0 4px}
+.pre{display:flex;gap:6px;flex-wrap:wrap}
+.pre button{font:800 13px Inter;padding:5px 10px;border:2px solid #111;border-radius:10px;background:#fff;cursor:pointer}
+.pre button.on{background:#111;color:#fff}
+.pre small{font:600 12px Inter;color:#666;align-self:center}
+.chips{display:flex;gap:6px}.chips button{font:800 13px Inter;padding:5px 10px;border:2px solid #111;border-radius:10px;background:#fff;cursor:pointer}.chips button.on{background:#111;color:#fff}
+.res{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;margin-top:22px}
+.box{border:2px solid #111;border-radius:22px;padding:20px 22px;background:#fff}
+.big{font:800 clamp(46px,6vw,70px)/.95 "Bricolage Grotesque",Inter;letter-spacing:-.05em}
+.lab{font:700 13px Inter;color:#666;margin:0 0 6px}
+.stack{display:flex;height:30px;border:2px solid #111;border-radius:10px;overflow:hidden;margin:12px 0 10px}.stack span{display:block;height:100%}
+.leg{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;font:600 14px Inter;align-items:center}
+.leg i{width:12px;height:12px;border:1.5px solid #111;border-radius:3px}.leg b{text-align:right}
+h2{font:800 clamp(26px,3.2vw,38px)/1 "Bricolage Grotesque",Inter;letter-spacing:-.05em;margin:44px 0 6px}
+.sub{margin:0 0 16px;color:#555;font-weight:600}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.t{border:2px solid #111;border-radius:20px;padding:16px 18px}.t.win{background:#E2F8EE;box-shadow:4px 4px 0 #111}
+.t b{display:block;font:800 30px "Bricolage Grotesque",Inter;letter-spacing:-.03em}.t small{font:600 13px Inter;color:#555}
+.vd{display:inline-block;font:800 12px Inter;padding:3px 9px;border-radius:8px;border:1.5px solid currentColor;color:#00804f;background:#E2F8EE;margin-bottom:6px}
+.warn{margin-top:12px;font:600 12.5px Inter;color:#666}
+.hint{font:600 12.5px Inter;color:#8a6a00;background:#FFF6C7;border-radius:10px;padding:8px 12px;margin-top:8px}
+@media(max-width:860px){.in{grid-template-columns:1fr 1fr}.res,.two{grid-template-columns:1fr}}
+</style></head><body>
+<div class="note"><b>Maquette simulateur v6</b> : tout se règle soi-même : la mise de départ, le versement mensuel, la date de début et la date de fin, le compte, le courtier, les frais du fonds, et surtout <b>le rendement estimé par an</b> (curseur de 0 à 12 %, avec trois repères tirés de l'histoire du MSCI World déjà utilisés par le site : 4,9 %, 7,0 %, 8,8 %). Le résultat se recalcule à chaque changement. Calcul de la maquette simplifié ; la vraie page gardera le calcul actuel du site (frais, courtage par ordre, impôt 2026).</div>
+<div class="w">
+<section class="hero"><span class="stk">Simulateur d'épargne</span>
+  <h1>Combien deviendra votre épargne ?</h1>
+  <div class="in">
+    <label class="f"><span>Je place au départ</span><input id="dep" type="number" min="0" step="100" value="1000"></label>
+    <label class="f"><span>Puis chaque mois</span><input id="mois" type="number" min="0" step="10" value="150"></label>
+    <label class="f"><span>À partir de</span><input id="d0" type="month" value="2026-11"></label>
+    <label class="f"><span>Jusqu'à</span><input id="d1" type="month" value="2046-11"></label>
+    <div class="f"><span>Compte</span><div class="chips" id="cpt"><button class="on" data-v="pea">PEA</button><button data-v="cto">Compte-titres</button></div></div>
+    <label class="f"><span>Courtier (frais par achat)</span><select id="bk"><option value="0">Trade Republic · 0 € (plan programmé)</option><option value="0.99">Bourse Direct · 0,99 €</option><option value="1.99">BoursoBank · 1,99 €</option><option value="2">Degiro · 2 €</option><option value="-1">Ma banque · 0,5 % (exemple)</option></select></label>
+    <label class="f"><span>Frais du fonds par an</span><input id="ter" type="number" min="0" max="3" step="0.01" value="0.34"></label>
+    <div class="f"><span>Durée</span><b id="dur" style="font:800 24px 'Bricolage Grotesque'">20 ans</b></div>
+    <div class="rend"><div class="rt"><span>Rendement estimé par an, avant frais</span><b id="rv">7,0 %</b></div>
+      <input type="range" id="r" min="0" max="12" step="0.1" value="7">
+      <div class="pre" id="pre"><button data-r="4.9">Prudent 4,9 %</button><button data-r="7" class="on">Central 7,0 %</button><button data-r="8.8">Favorable 8,8 %</button><small>Repères : périodes de 20 ans passées du MSCI World (1 fois sur 10 moins bien, la moitié, 1 fois sur 10 mieux)</small></div>
+      <div class="hint" id="hint" hidden></div></div>
+  </div>
+</section>
+<div class="res">
+  <div class="box"><p class="lab" id="quand">En novembre 2046, avec 7,0 % par an</p><div class="big" id="tot">–</div>
+    <p style="margin:8px 0 0;font-weight:600" id="sous">–</p>
+    <p class="warn">Une estimation, jamais une promesse : la Bourse ne monte pas chaque année du même pourcentage, et l'avenir peut faire pire que le passé.</p></div>
+  <div class="box"><p class="lab">Où part l'argent</p><b id="pos" style="font:800 20px Inter">–</b>
+    <div class="stack" id="stk"></div><div class="leg" id="leg"></div></div>
+</div>
+<h2>PEA ou compte-titres ?</h2><p class="sub">Le même plan, deux comptes.</p>
+<div class="two" id="cmp"></div>
+<div style="height:60px"></div></div>
+<script>
+const $ = s => document.querySelector(s), E = v => Math.round(v).toLocaleString("fr-FR") + " €", P = v => v.toLocaleString("fr-FR", { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + " %";
+let cpt = "pea";
+function mois(a, b) { const [y0, m0] = a.split("-").map(Number), [y1, m1] = b.split("-").map(Number); return (y1 - y0) * 12 + (m1 - m0); }
+function calc(compte) {
+  const dep = +$("#dep").value || 0, m = +$("#mois").value || 0, n = Math.max(0, mois($("#d0").value, $("#d1").value)), r = +$("#r").value / 100, ter = (+$("#ter").value || 0) / 100, bk = +$("#bk").value;
+  const fee = x => bk < 0 ? x * 0.005 : x > 0 ? bk : 0, rn = Math.pow(1 + r - ter, 1 / 12) - 1, rb = Math.pow(1 + r, 1 / 12) - 1;
+  let v = dep - fee(dep), vb = dep, verse = dep, court = fee(dep);
+  for (let i = 0; i < n; i++) { v = v * (1 + rn); vb = vb * (1 + rb); if (m > 0) { v += m - fee(m); vb += m; verse += m; court += fee(m); } }
+  const gain = Math.max(0, v - verse), taux = compte === "pea" ? (n >= 60 ? 0.186 : 0.314) : 0.314, imp = gain * taux;
+  return { n, verse, brut: vb, net: v - imp, imp, court, fonds: Math.max(0, vb - v - court), gain: v - imp - verse, taux };
+}
+function draw() {
+  const a = calc(cpt), o = calc(cpt === "pea" ? "cto" : "pea"), r = +$("#r").value, ans = a.n / 12;
+  $("#rv").textContent = P(r); $("#dur").textContent = ans >= 1 ? (Number.isInteger(ans) ? ans + " ans" : ans.toLocaleString("fr-FR", { maximumFractionDigits: 1 }) + " ans") : a.n + " mois";
+  document.querySelectorAll("#pre button").forEach(b => b.classList.toggle("on", +b.dataset.r === r));
+  const h = $("#hint"); h.hidden = r <= 10; h.textContent = "Au-dessus de 10 % par an : c'est plus que le repère favorable (8,8 %), que seule 1 période passée de 20 ans sur 10 a atteint ou dépassé. Le résultat devient très optimiste.";
+  const d1 = new Date($("#d1").value + "-01"); $("#quand").textContent = `En ${d1.toLocaleDateString("fr-FR", { month: "long", year: "numeric" })}, avec ${P(r)} par an`;
+  $("#tot").textContent = "≈ " + E(a.net); $("#sous").textContent = `pour ${E(a.verse)} versés, après frais et impôt (${cpt === "pea" ? "PEA" : "compte-titres"})`;
+  $("#pos").textContent = `Sur ${E(a.brut)} possibles, ${E(a.net)} pour vous.`;
+  const parts = [["Vos versements", a.verse, "#FFE14D"], ["Gains qui vous restent", Math.max(0, a.gain), "#00A06B"], ["Frais du fonds", -a.fonds, "#7a5af8"], ["Courtage", -a.court, "#0E7490"], ["Impôt", -a.imp, "#D92D12"]], tt = parts.reduce((s, p) => s + Math.abs(p[1]), 0) || 1;
+  $("#stk").innerHTML = parts.map(([, v, c]) => `<span style="width:${(Math.abs(v) / tt * 100).toFixed(1)}%;background:${c}"></span>`).join("");
+  $("#leg").innerHTML = parts.map(([l, v, c]) => `<i style="background:${c}"></i>${l}<b>${v < 0 ? "−" + E(-v) : E(v)}</b>`).join("");
+  const pea = cpt === "pea" ? a : o, cto = cpt === "pea" ? o : a, best = pea.net >= cto.net ? "pea" : "cto";
+  $("#cmp").innerHTML = [["pea", "PEA", pea], ["cto", "Compte-titres", cto]].map(([k, l, x]) => `<div class="t${k === best ? " win" : ""}">${k === best ? `<span class="vd">Le plus favorable ici</span>` : ""}<b>${l} · ${E(x.net)}</b><small>impôt ${E(x.imp)}, soit ${P(x.taux * 100)} des gains${k === "pea" && x.n < 60 ? " (PEA de moins de 5 ans)" : ""}</small></div>`).join("");
+}
+document.querySelectorAll("input,select").forEach(i => i.oninput = draw);
+$("#pre").onclick = e => { const b = e.target.closest("button"); if (b) { $("#r").value = b.dataset.r; draw(); } };
+$("#cpt").onclick = e => { const b = e.target.closest("button"); if (!b) return; cpt = b.dataset.v; document.querySelectorAll("#cpt button").forEach(x => x.classList.toggle("on", x === b)); draw(); };
+draw();
+</script></body></html>
