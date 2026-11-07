@@ -28,8 +28,23 @@ const T0 = Date.now(), log = (...a) => console.log(`[${Math.round((Date.now() - 
 const jour = t => new Date(t).toISOString().slice(0, 10);
 
 // ——— Calculs à partir d'une série quotidienne [[ms, valeur], …] triée ———
+// 7/11 : les séries des émetteurs ont parfois des points aberrants (Amundi Japan Topix : valeurs ×3 pendant quelques jours ;
+// Amundi Core EM : 22 milliards un jour) ou un changement d'échelle (SPDR ACWI IMI : part divisée par 25 en février 2026).
+// Un saut de plus de 60 % en un jour n'arrive pas sur un ETF : si la série revient à son niveau en moins de 60 points, ces points
+// sont retirés ; sinon c'est une division (ou un regroupement) de parts, et le passé est ramené à la nouvelle échelle.
+export function nettoyer(pts) {
+  const out = pts.slice(), saut = (a, b) => b / a > 1.6 || b / a < 0.625; let n = 0;
+  for (let i = 1; i < out.length; i++) {
+    if (!saut(out[i - 1][1], out[i][1])) continue;
+    let j = i; while (j < out.length && j - i < 60 && saut(out[i - 1][1], out[j][1])) j++;
+    if (j < out.length && j - i < 60) { out.splice(i, j - i); i--; n++; continue; }
+    const r = out[i][1] / out[i - 1][1]; for (let k = 0; k < i; k++) out[k] = [out[k][0], out[k][1] * r]; n++;
+  }
+  return { pts: out, n };
+}
 export function calculs(pts) {
   pts = pts.filter(p => p[1] > 0 && isFinite(p[1])).sort((a, b) => a[0] - b[0]);
+  const net = nettoyer(pts); pts = net.pts; if (net.n) log(`série nettoyée : ${net.n} anomalie(s)`);
   if (pts.length < 20) return null;
   const last = pts[pts.length - 1], d0 = new Date(last[0]);
   const avant = t => { let lo = 0, hi = pts.length - 1, r = null; while (lo <= hi) { const m = (lo + hi) >> 1; if (pts[m][0] <= t) { r = pts[m]; lo = m + 1; } else hi = m - 1; } return r; };

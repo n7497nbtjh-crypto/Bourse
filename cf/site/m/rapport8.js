@@ -141,7 +141,7 @@ function synPageV8(b, m) {
   for (const l of avecNouv) {
     const A = deK(l.k), R0 = R[l.k], ia = IA[l.k], [vt, vc] = (R0 && R8_VERD[R0.verdict]) || [null, ""], v = l.variation_semaine_pct;
     const meta = [l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre portefeuille${l.portefeuille.var_eur != null ? ` · ${r8Eur(l.portefeuille.var_eur)} cette semaine` : ""}` : "Dans vos favoris"].join("");
-    const lecture = ia && ia.clair ? `<p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}`
+    const lecture = ia && ia.clair ? `<p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR à partir des chiffres du rapport.</p>`
       : `<p>${esc(r8Lecture(l, R0, A))}</p><p class="r8-ia">Calculé par ENKLAIR à partir des cours, des annonces et des rivales.</p>`;
     const res = A.find(a => a.origine !== "presse" && (a.chiffres || []).length), npr = A.filter(a => a.origine === "presse").length, ncour = A.filter(a => ["rachat", "capital"].includes(a.categorie) && a.origine !== "presse").length;
     const preuve = [...(res ? res.chiffres.slice(0, 3).map(([a, x]) => `${a} : ${x}`) : []), npr ? `${npr} article${npr > 1 ? "s" : ""} de presse` : "", ncour ? "Opérations courantes : " + ncour : ""].filter(Boolean);
