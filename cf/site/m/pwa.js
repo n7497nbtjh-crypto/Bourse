@@ -167,7 +167,7 @@ async function pwaPanneauPush(el, ou) {
 
 /* Onglet « Alertes » : le bloc des notifications en tête ; « Réglages » : l'application et le connecteur IA. */
 const PWA_ALERTES = typeof espaceAlertes === "function" ? espaceAlertes : null;
-if (PWA_ALERTES) espaceAlertes = async function (el, m) { await PWA_ALERTES(el, m); if (el.isConnected) pwaPanneauPush(el, "haut"); };
+if (PWA_ALERTES) espaceAlertes = async function (el, m) { await PWA_ALERTES(el, m); }; // 7/11 (Romain) : les alertes partent par e-mail, plus de notification sur le téléphone proposée
 const PWA_REGLAGES = typeof espaceReglages === "function" ? espaceReglages : null;
 if (PWA_REGLAGES) espaceReglages = function (el, m) {
   const r = PWA_REGLAGES(el, m);
@@ -177,7 +177,7 @@ if (PWA_REGLAGES) espaceReglages = function (el, m) {
   if (del && del.onsubmit) { const o = del.onsubmit; del.onsubmit = async e => { await o.call(del, e); if (typeof MOI === "object" && MOI && MOI.connecte === false) pwaDesabonnerLocal(); }; }
   const s = document.createElement("section"); s.className = "panel"; s.id = "pwaapp";
   const inst = PWA_SEUL() || PWA_LS("installe");
-  s.innerHTML = `<div class="ph"><h2>Application et notifications</h2></div><div class="pb"><div class="pwa-acts" style="margin-bottom:10px">${inst ? `<span class="pwa-etat on"><i></i>ENKLAIR est installé</span>` : PWA_INVITE ? `<button type="button" class="btn" id="pwainst">Installer ENKLAIR sur cet appareil</button>` : ""}<a class="btn ghost" href="/espace/alertes">Régler les notifications</a><a class="btn ghost" href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a></div>
+  s.innerHTML = `<div class="ph"><h2>Application</h2></div><div class="pb"><div class="pwa-acts" style="margin-bottom:10px">${inst ? `<span class="pwa-etat on"><i></i>ENKLAIR est installé</span>` : PWA_INVITE ? `<button type="button" class="btn" id="pwainst">Installer ENKLAIR sur cet appareil</button>` : ""}<a class="btn ghost" href="/espace/alertes">Mes alertes</a><a class="btn ghost" href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a></div>
     <p class="muted" style="margin:0;font-size:13.5px">${inst ? "Ouvrez ENKLAIR depuis son icône : les pages déjà vues restent lisibles sans connexion." : PWA_IOS ? `Sur iPhone et iPad : touchez ${PWA_PARTAGE} Partager, puis « Sur l'écran d'accueil ».` : PWA_INVITE ? "L'application s'ouvre en un geste depuis votre écran d'accueil et reste lisible sans connexion." : "Dans Chrome ou Edge, le menu du navigateur propose « Installer ENKLAIR » ; sur iPhone, « Sur l'écran d'accueil » dans le menu Partager."}</p></div>`;
   const sup = del && del.closest("section");
   if (sup && sup.parentElement === el) el.insertBefore(s, sup); else el.appendChild(s);

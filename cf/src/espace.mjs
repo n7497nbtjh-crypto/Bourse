@@ -9,7 +9,7 @@
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
 import { iaMesures, syntheseEntreprise } from "./iasite.mjs";
 import { enrichir8, faitsEntreprise } from "./rapport8.mjs";
-import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk, proprietaireDe } from "./compte.mjs";
+import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk, proprietaireDe, abonnementEnCours } from "./compte.mjs";
 import { coursComplets } from "./cours.mjs";
 import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
 
@@ -191,7 +191,7 @@ const sgnP = v => (v > 0 ? "+" : v < 0 ? "−" : "") + NF(Math.abs(v)) + " %";
 // Les réglages du rapport (rapportDe) décident de ce qui entre : favoris, portefeuille, secteurs suivis.
 const rapportDe = row => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
 function suiviDe(row, names) {
-  const R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter(l => names[l.k]);
+  const R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter(l => names[l.k] || l.nm || l.k.startsWith("x:"));
   const fav = R.favoris ? (parse(row && row.favoris, []) || []).filter(k => typeof k === "string" && KEY.test(k)) : [];
   const autres = clesPortefeuille(pf, names).filter(k => !lp.some(l => l.k === k));
   const cles = [...new Set([...fav, ...autres, ...lp.map(l => l.k)])].filter(k => names[k]).slice(0, 260);
@@ -416,6 +416,10 @@ export async function espace(request, env) {
     const { b, err } = await lire(request); if (err) return err;
     const cles = ["e:" + c.email]; if (await limite(env, cles)) return TROP();
     if (!(await verifie(String(b.motdepasse || "").slice(0, 200), c))) { await echec(env, cles); return json({ error: "Mot de passe incorrect." }, 401); }
+    // 7/11 (Romain) : on ne supprime pas un espace dont l'abonnement continue de prélever ; il faut d'abord le résilier
+    if (c.premium) { const p = await env.DB.prepare(`SELECT sub_id FROM abonnes WHERE token = ?`).bind(c.premium).first().catch(() => null); // même échu : Stripe dit s'il prélève encore
+      let enCours = null; try { enCours = await abonnementEnCours(env, p); } catch (e) { return json({ error: "Impossible de vérifier votre abonnement pour le moment. Réessayez plus tard : votre espace n'a pas été supprimé.", abonnement: true }, 409); }
+      if (enCours) return json({ error: "Votre abonnement Premium mensuel est toujours actif : il continuerait d'être prélevé. Résiliez-le d'abord avec « Gérer ou résilier mon abonnement », puis supprimez votre espace.", abonnement: true }, 409); }
     for (const q of [`DELETE FROM notifs WHERE compte = ?`, `DELETE FROM bilans WHERE compte = ?`, `DELETE FROM donnees WHERE compte = ?`, `DELETE FROM sessions WHERE compte = ?`, `DELETE FROM comptes WHERE id = ?`, `DELETE FROM mcp_cles WHERE compte = ?`]) await env.DB.prepare(q).bind(c.id).run();
     return avecCookie(json({ ok: true }), EFFACE);
   }

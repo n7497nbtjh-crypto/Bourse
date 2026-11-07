@@ -20,6 +20,7 @@ const env = { DB: { prepare: q => stmt(q) }, ADMIN_KEY: "k", MAIL_FROM: "bilan@e
 globalThis.caches = { default: { match: async () => new Response(JSON.stringify({ items: { "c:lvmh": { p: 550, chg: 6, cur: "EUR" }, "c:totalenergies": { p: 57, chg: -1, cur: "EUR" }, "e:cw8": { p: 404, chg: 0.2, cur: "EUR" } } })), put: async () => { } } };
 const realFetch = globalThis.fetch;
 globalThis.fetch = async (u, o = {}) => { u = String(u);
+  if (u.includes("api.stripe.com/v1/subscriptions/")) return new Response(JSON.stringify({ status: "active", cancel_at_period_end: globalThis.STRIPE_ANNULE === true, current_period_end: 1800000000 }), { status: 200 });
   if (u.includes("brevo")) { const b = JSON.parse(o.body); sent.push({ to: b.to[0].email, subject: b.subject, text: b.textContent, html: b.htmlContent }); return new Response("{}", { status: 201 }); }
   return realFetch(u, o); };
 let fails = 0; const ok = (c, m) => { if (!c) { fails++; console.log("ÉCHEC", m); } };
@@ -218,6 +219,14 @@ const codeA2 = j.code_secours; A = cookieOf(sc);
 
 // Suppression (RGPD)
 [s] = await E("POST", "/api/espace/supprimer", { motdepasse: "faux-mot-de-passe" }, B); ok(s === 401, "suppression : mot de passe requis");
+{ // 7/11 : abonnement mensuel encore actif : suppression refusée tant qu'il n'est pas résilié
+  const tok = "f0".repeat(20); sql.prepare("INSERT OR IGNORE INTO abonnes (token, email, plan, sub_id, session, until, created) VALUES (?, 'x@ex.fr', 'mensuel', 'sub_123', 'cs_m', ?, ?)").run(tok, Date.now() + 30 * DAY, Date.now());
+  const avant = sql.prepare("SELECT premium FROM comptes WHERE id = ?").get(rowB.id).premium; sql.prepare("UPDATE comptes SET premium = ? WHERE id = ?").run(tok, rowB.id); env.STRIPE_SECRET = "rk_test";
+  [s, j] = await E("POST", "/api/espace/supprimer", { motdepasse: "motdepasse-de-b" }, B); ok(s === 409 && j.abonnement && /Résiliez-le/.test(j.error), "suppression refusée : abonnement mensuel actif " + s);
+  globalThis.STRIPE_ANNULE = true;
+  [s, j] = await E("POST", "/api/espace/supprimer", { motdepasse: "faux" }, B); ok(s === 401, "toujours le mot de passe d'abord");
+  delete env.STRIPE_SECRET; globalThis.STRIPE_ANNULE = false; sql.prepare("UPDATE comptes SET premium = ? WHERE id = ?").run(avant, rowB.id);
+}
 [s, j, sc] = await E("POST", "/api/espace/supprimer", { motdepasse: "motdepasse-de-b" }, B); ok(s === 200 && /Max-Age=0/.test(sc), "compte supprimé");
 const left = ["comptes WHERE id", "sessions WHERE compte", "donnees WHERE compte", "bilans WHERE compte", "notifs WHERE compte"].map(t => sql.prepare(`SELECT COUNT(*) AS n FROM ${t} = ?`).get(rowB.id).n);
 ok(left.every(n => n === 0), "plus aucune ligne pour ce compte " + left);

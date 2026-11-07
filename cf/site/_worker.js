@@ -152,6 +152,11 @@ async function stripe(env, path) {
   if (!r.ok) throw new Error(j.error && j.error.message || "Stripe " + r.status);
   return j;
 }
+async function abonnementEnCours(env, p) {
+  if (!p || !p.sub_id || !env.STRIPE_SECRET) return null;
+  let sub = await stripe(env, `subscriptions/${p.sub_id}`);
+  return !["active", "trialing", "past_due", "unpaid", "incomplete"].includes(sub.status) || sub.cancel_at_period_end ? null : { fin: (sub.current_period_end || 0) * 1e3 };
+}
 var newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
 async function premium(request, env) {
   if (!env || !env.DB) return json({ error: "Indisponible pour le moment." }, 503);
@@ -1126,7 +1131,7 @@ var objDe = (t) => {
 };
 
 // cf/src/synthese.mjs
-var KEY2 = /^[ce]:[a-z0-9-]{1,60}$/, r2 = (v) => Math.round(v * 100) / 100, num = (v) => typeof v == "number" && isFinite(v) ? v : typeof v == "string" && v.trim() !== "" && isFinite(+v) ? +v : null, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v, d = 1) => {
+var KEY2 = /^[ce]:[a-z0-9-]{1,60}$/, KEY_X = /^x:[A-Z0-9]{6,20}$/, r2 = (v) => Math.round(v * 100) / 100, num = (v) => typeof v == "number" && isFinite(v) ? v : typeof v == "string" && v.trim() !== "" && isFinite(+v) ? +v : null, NF2 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP2 = (v, d = 1) => {
   let r = Math.round(v * 10 ** d) / 10 ** d;
   return (r > 0 ? "+" : r < 0 ? "\u2212" : "") + NF2(Math.abs(r), d) + " %";
 }, eurS = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 0 }).format(Math.abs(Math.round(v))) + " \u20AC", MOIS = ["janvier", "f\xE9vrier", "mars", "avril", "mai", "juin", "juillet", "ao\xFBt", "septembre", "octobre", "novembre", "d\xE9cembre"], JOURS = ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"], dateLongue = (ymd) => {
@@ -1284,9 +1289,9 @@ function lignesPf(pf) {
   if (!pf || typeof pf != "object") return [];
   let out = /* @__PURE__ */ new Map(), envDef = pf.cfg && typeof pf.cfg.env == "string" ? pf.cfg.env : null;
   if (Array.isArray(pf.l)) for (let l of pf.l) {
-    if (!l || typeof l.k != "string" || !KEY2.test(l.k)) continue;
+    if (!l || typeof l.k != "string" || !(KEY2.test(l.k) || KEY_X.test(l.k))) continue;
     let o = out.get(l.k) || { k: l.k, q: 0, m: 0, cout: 0, env: [] }, q = num(l.q), m = num(l.m), pru = num(l.pru), env = typeof l.env == "string" && l.env ? l.env : envDef;
-    q > 0 ? (o.q += q, pru > 0 && (o.cout += q * pru)) : m > 0 && (o.m += m), env && !o.env.includes(env) && o.env.push(env), out.set(l.k, o);
+    num(l.px) > 0 && (o.px = num(l.px)), typeof l.nm == "string" && l.nm.trim() && (o.nm = l.nm.trim().slice(0, 80)), typeof l.cur == "string" && /^[A-Z]{3}$/.test(l.cur) && (o.cur = l.cur), q > 0 ? (o.q += q, pru > 0 && (o.cout += q * pru)) : m > 0 && (o.m += m), env && !o.env.includes(env) && o.env.push(env), out.set(l.k, o);
   }
   else if (Array.isArray(pf.ops)) for (let op of pf.ops) {
     if (!op) continue;
@@ -1327,7 +1332,7 @@ function alertesPf(lp, d) {
     }
     ok != null && (connu += l.v, ok && (elig += l.v), !ok && (l.env || []).includes("pea") && horsPea.push(l));
   }
-  if (horsPea.length && A.push({ code: "pea_hors", niveau: "vig", valeur: horsPea.length, texte: `${horsPea.map((l) => d.names[l.k]).slice(0, 3).join(", ")} ${horsPea.length > 1 ? "sont rang\xE9s" : "est rang\xE9"} dans votre PEA mais ne ${horsPea.length > 1 ? "semblent" : "semble"} pas \xE9ligible${horsPea.length > 1 ? "s" : ""}.`, pourquoi: "Un titre non \xE9ligible ne peut pas \xEAtre achet\xE9 dans un PEA. V\xE9rifiez la ligne chez votre courtier : erreur de saisie, ou titre log\xE9 sur un autre compte." }), connu > 0 && !lp.some((l) => (l.env || []).length)) {
+  if (horsPea.length && A.push({ code: "pea_hors", niveau: "vig", valeur: horsPea.length, texte: `${horsPea.map((l) => d.names[l.k] || l.nm || l.k.slice(2)).slice(0, 3).join(", ")} ${horsPea.length > 1 ? "sont rang\xE9s" : "est rang\xE9"} dans votre PEA mais ne ${horsPea.length > 1 ? "semblent" : "semble"} pas \xE9ligible${horsPea.length > 1 ? "s" : ""}.`, pourquoi: "Un titre non \xE9ligible ne peut pas \xEAtre achet\xE9 dans un PEA. V\xE9rifiez la ligne chez votre courtier : erreur de saisie, ou titre log\xE9 sur un autre compte." }), connu > 0 && !lp.some((l) => (l.env || []).length)) {
     let part = elig / connu;
     A.push({ code: "pea", niveau: part >= 0.999 ? "fort" : "info", valeur: r2(part * 100), texte: part >= 0.999 ? "Toutes vos lignes semblent \xE9ligibles au PEA." : `${P(part)} de vos lignes semblent \xE9ligibles au PEA.`, pourquoi: "Le PEA accepte les actions d'entreprises dont le si\xE8ge est dans l'Union europ\xE9enne ou l'Espace \xE9conomique europ\xE9en, et les ETF marqu\xE9s PEA. Rep\xE8re calcul\xE9 d'apr\xE8s le pays du code ISIN : v\xE9rifiez chez votre courtier." });
   }
@@ -1345,7 +1350,7 @@ function evolutionAlertes(A, prec) {
 function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, semaine, opts = {}) {
   let auj = opts.auj, lundi3 = lundiDe(semaine), dimanche = addJ(lundi3, 6), prec = opts.precedent || null, RG = normaliseRapport(rapport);
   RG.favoris || (favoris = []), RG.portefeuille || (pf = null);
-  let LP = lignesPf(pf).filter((l) => d.names[l.k]), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY2.test(k))), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k]).slice(0, 260), idx = {};
+  let LP = lignesPf(pf).filter((l) => d.names[l.k] || l.nm || l.k.startsWith("x:")), pfSet = new Set(LP.map((l) => l.k)), favSet = new Set(favoris.filter((k) => KEY2.test(k))), nomDe = (k) => d.names[k] || (LP.find((l) => l.k === k) || {}).nm || k.slice(2), keys = [.../* @__PURE__ */ new Set([...favSet, ...pfSet])].filter((k) => d.names[k] || pfSet.has(k)).slice(0, 260), idx = {};
   for (let id of Object.keys(INDICES)) {
     let v = variationSemaine(d.cs, "i:" + id, lundi3, auj, d.px["i:" + id], d.sem);
     v && (idx[id] = { id, nom: INDICES[id], pct: v.pct, serie: v.serie, partiel: v.partiel });
@@ -1353,8 +1358,8 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
   let lignes = keys.map((k) => {
     let p = d.px[k], v = variationSemaine(d.cs, k, lundi3, auj, p, d.sem), ix = indiceDe(k, k.startsWith("e:") ? d.etf[k] : d.meta[k]), l = {
       k,
-      nom: d.names[k],
-      type: k.startsWith("e:") ? "etf" : "action",
+      nom: nomDe(k),
+      type: k.startsWith("e:") ? "etf" : k.startsWith("x:") ? "titre" : "action",
       variation_semaine_pct: v ? v.pct : null,
       cours: p && p.p != null ? p.p : null,
       devise: p && p.cur || null,
@@ -1370,14 +1375,14 @@ function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, sema
   }).sort((a, b) => (b.variation_semaine_pct ?? -1e9) - (a.variation_semaine_pct ?? -1e9)), L = Object.fromEntries(lignes.map((l) => [l.k, l])), mv = lignes.filter((l) => l.variation_semaine_pct != null), court2 = (l) => l && { k: l.k, nom: l.nom, variation_semaine_pct: l.variation_semaine_pct }, portefeuille = null;
   if (LP.length) {
     let lp = LP.map((l) => {
-      let p = d.px[l.k], vEur = p && l.q > 0 ? versEur(p.p * l.q, p.cur, d.fx) : null;
-      return { ...l, v: vEur ?? (l.m || 0), estime: vEur == null };
+      let p = d.px[l.k], vEur = p && l.q > 0 ? versEur(p.p * l.q, p.cur, d.fx) : null, src = vEur != null ? "cours" : null;
+      return vEur == null && l.q > 0 && l.px > 0 && (vEur = versEur(l.px * l.q, l.cur || "EUR", d.fx), vEur != null && (src = "saisi")), vEur == null && l.q > 0 && l.cout > 0 && (vEur = versEur(l.cout, l.cur || "EUR", d.fx), vEur != null && (src = "achat")), { ...l, v: vEur ?? (l.m || 0), estime: src !== "cours", src: src || "montant" };
     }).filter((l) => l.v > 0), tot = lp.reduce((a, l) => a + l.v, 0);
     if (tot > 0) {
       let varE = 0, couvert = 0;
       for (let l of lp) {
         let x = L[l.k], r = x && x.variation_semaine_pct;
-        l.poids = r2(l.v / tot * 100), r != null && (l.var_eur = l.v - l.v / (1 + r / 100), varE += l.var_eur, couvert += l.v), x && (x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime });
+        l.poids = r2(l.v / tot * 100), r != null && (l.var_eur = l.v - l.v / (1 + r / 100), varE += l.var_eur, couvert += l.v), x && (x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime, source_valeur: l.src });
       }
       let jours = [...new Set(lp.flatMap((l) => {
         let v = variationSemaine(d.cs, l.k, lundi3, auj, d.px[l.k], d.sem);
@@ -1757,8 +1762,8 @@ async function radioDe(d, n, monde) {
   for (let [i, s] of (monde && monde.sujets || []).entries())
     s.secteurs.length ? out.push(seau(s.secteurs.map((x) => SECTEURS2[x] || x).join(", "), (m) => s.secteurs.includes(m.sector), null, i)) : s.pays.length && out.push(seau(PAYS[s.pays[0]] || s.pays[0], (m) => m.region === s.pays[0], s.pays[0], i));
   out.some((x) => x && /États-Unis/.test(x.lab)) || out.push(seau("\xC9tats-Unis", (m) => m.region === "US", "US", null));
-  let etfs = Object.values(compo), tous = out.filter(Boolean), forts = tous.filter((x) => x.pct >= 5), faibles = tous.filter((x) => x.pct < 5).map((x) => ({ lab: x.lab, pct: x.pct }));
-  return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map((j) => j.asOf).filter(Boolean).sort()[0] || null } : null };
+  let etfs = Object.values(compo), tous = out.filter(Boolean), forts = tous.filter((x) => x.pct >= 5), faibles = tous.filter((x) => x.pct < 5).map((x) => ({ lab: x.lab, pct: x.pct })), non_comptes = L.filter((l) => !l.k.startsWith("c:") && !compo[l.k]).map((l) => ({ k: l.k, nom: l.nom, eur: r0(l.portefeuille.valeur_eur), pct: r1(l.portefeuille.valeur_eur / tot * 100) }));
+  return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, non_comptes, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map((j) => j.asOf).filter(Boolean).sort()[0] || null } : null };
 }
 function dcaDe(d, pf, lundi3, auj) {
   let P = pf && pf.cfg && Array.isArray(pf.cfg.prog) ? pf.cfg.prog : [];
@@ -2091,7 +2096,7 @@ var clesDe = (row, names) => [.../* @__PURE__ */ new Set([...(parse(row && row.f
   return new Date(t).toISOString().slice(0, 10);
 }, dernierJourDiv = (e) => /enregistrement/i.test(e.label || "") ? ouvreAvant(e.date, 2) : /d[ée]tachement/i.test(e.label || "") ? ouvreAvant(e.date, 1) : null, lienDe = (k) => k.startsWith("e:") ? "/etf/" + k.slice(2) : "/entreprise/" + k.slice(2), r22 = (v) => Math.round(v * 100) / 100, NF3 = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v), sgnP3 = (v) => (v > 0 ? "+" : v < 0 ? "\u2212" : "") + NF3(Math.abs(v)) + " %", rapportDe = (row) => normaliseRapport((parse(row && row.profil, null) || {}).rapport);
 function suiviDe(row, names) {
-  let R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter((l) => names[l.k]), fav = R.favoris ? (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)) : [], autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
+  let R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter((l) => names[l.k] || l.nm || l.k.startsWith("x:")), fav = R.favoris ? (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)) : [], autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
   return { favoris: [.../* @__PURE__ */ new Set([...fav, ...autres])], pf, rapport: R, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map((l) => `${l.k}:${r22(l.q)}:${Math.round(l.m)}`).sort().join(",") + "|" + rapportSignature(R) };
 }
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
@@ -2305,6 +2310,15 @@ async function espace(request, env) {
     if (await limite(env, cles)) return TROP();
     if (!await verifie(String(b.motdepasse || "").slice(0, 200), c))
       return await echec(env, cles), json({ error: "Mot de passe incorrect." }, 401);
+    if (c.premium) {
+      let p = await env.DB.prepare("SELECT sub_id FROM abonnes WHERE token = ?").bind(c.premium).first().catch(() => null), enCours = null;
+      try {
+        enCours = await abonnementEnCours(env, p);
+      } catch {
+        return json({ error: "Impossible de v\xE9rifier votre abonnement pour le moment. R\xE9essayez plus tard : votre espace n'a pas \xE9t\xE9 supprim\xE9.", abonnement: !0 }, 409);
+      }
+      if (enCours) return json({ error: "Votre abonnement Premium mensuel est toujours actif : il continuerait d'\xEAtre pr\xE9lev\xE9. R\xE9siliez-le d'abord avec \xAB G\xE9rer ou r\xE9silier mon abonnement \xBB, puis supprimez votre espace.", abonnement: !0 }, 409);
+    }
     for (let q of ["DELETE FROM notifs WHERE compte = ?", "DELETE FROM bilans WHERE compte = ?", "DELETE FROM donnees WHERE compte = ?", "DELETE FROM sessions WHERE compte = ?", "DELETE FROM comptes WHERE id = ?", "DELETE FROM mcp_cles WHERE compte = ?"]) await env.DB.prepare(q).bind(c.id).run();
     return avecCookie(json({ ok: !0 }), EFFACE);
   }
@@ -3364,7 +3378,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "0cd47c5c1abf47a1", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "0c2e446fb2c0f436", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

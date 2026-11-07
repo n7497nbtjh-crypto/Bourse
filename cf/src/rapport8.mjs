@@ -147,7 +147,9 @@ export async function radioDe(d, n, monde) {
   const etfs = Object.values(compo);
   // 7/11 (Romain : « pas ultra pertinent ») : un sujet qui touche moins de 5 % du portefeuille n'a pas sa carte, il est seulement cité
   const tous = out.filter(Boolean), forts = tous.filter(x => x.pct >= 5), faibles = tous.filter(x => x.pct < 5).map(x => ({ lab: x.lab, pct: x.pct }));
-  return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map(j => j.asOf).filter(Boolean).sort()[0] || null } : null };
+  // 7/11 : lignes dont le site ne connaît pas le contenu (ETF sans composition, titre non suivi) : citées, jamais oubliées
+  const non_comptes = L.filter(l => !l.k.startsWith("c:") && !compo[l.k]).map(l => ({ k: l.k, nom: l.nom, eur: r0(l.portefeuille.valeur_eur), pct: r1(l.portefeuille.valeur_eur / tot * 100) }));
+  return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, non_comptes, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map(j => j.asOf).filter(Boolean).sort()[0] || null } : null };
 }
 
 /* ---------- Achats programmés ---------- */

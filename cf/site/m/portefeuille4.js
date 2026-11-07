@@ -17,8 +17,8 @@ window.pf3Hero = function (R0, P) {
         pf4Donut(R0, s); // 4/11 (refonte) : la répartition en anneau dans le bandeau
         // 4/11 (Romain) : mettre en avant la notification quand une valeur chute
         if (!P.dem && !$("#pf4chute")) s.insertAdjacentHTML("afterend", typeof isPrem === "function" && isPrem()
-          ? `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span>Une de vos lignes chute de plus de 5 % ? Vous recevez une notification le soir même. <a href="/espace/reglages">Notifications sur ce téléphone</a></span></p>`
-          : `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span><b>Une de vos lignes chute de plus de 5 % ?</b> Avec Premium, ENKLAIR vous envoie une notification le soir même. <a href="/premium#alertes">Être prévenu</a></span></p>`);
+          ? `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span>Une de vos lignes chute de plus de 5 % ? Vous recevez un e-mail le soir même. <a href="/espace/reglages">Notifications sur ce téléphone</a></span></p>`
+          : `<p class="pf4-chute" id="pf4chute"><span aria-hidden="true">🔔</span> <span><b>Une de vos lignes chute de plus de 5 % ?</b> Avec Premium, ENKLAIR vous envoie un e-mail le soir même. <a href="/premium#alertes">Être prévenu</a></span></p>`);
         // 5/11 (Romain) : rappel discret du rapport du samedi
         const ch = $("#pf4chute");
         if (!P.dem && ch && !$("#pf4rap")) ch.insertAdjacentHTML("afterend", typeof isPrem === "function" && isPrem()

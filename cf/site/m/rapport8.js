@@ -41,6 +41,7 @@ function synPageV8(b, m) {
   const ann = (b.annonces || []).filter(a => !(a.origine === "presse" && SYN6_RECO.test(a.titre || "")) && !vide(a));
   const deK = k => ann.filter(a => a.k === k).sort((x, y) => String(y.date).localeCompare(x.date));
   const g = pf && pf.var_eur != null ? pf.var_eur : null, idx = b.indices || [];
+  const SANSV = L.filter(l => l.portefeuille && l.portefeuille.var_eur == null); // 7/11 : lignes sans cours de la semaine (ETF non suivi…), jamais omises
   const Lpf = L.filter(l => l.portefeuille && l.portefeuille.var_eur != null).sort((x, y) => y.portefeuille.var_eur - x.portefeuille.var_eur);
   const avecV = L.filter(l => l.variation_semaine_pct != null);
   // Les trois cartes : ce qui a le plus pesé, le plus aidé (en euros si portefeuille), la nouvelle à retenir (des résultats chiffrés d'abord)
@@ -66,7 +67,7 @@ function synPageV8(b, m) {
   const spark = (() => { const v = (pf && pf.serie || []).filter(x => x != null); if (v.length < 2) return ""; const lo = Math.min(...v), hi = Math.max(...v), r = hi - lo || 1, w = 150, h = 54;
     return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" aria-hidden="true"><polyline fill="none" stroke="${g < 0 ? "#d1242f" : "#0a8a3a"}" stroke-width="3" stroke-linejoin="round" points="${v.map((x, i) => `${(i * w / (v.length - 1)).toFixed(1)},${(h - 3 - (x - lo) / r * (h - 6)).toFixed(1)}`).join(" ")}"/></svg>`; })();
   const chips = idx.map(i => `<span class="r8-chip">${esc(i.nom)} <b class="${r8Cls(i.pct)}">${synPct(i.pct)}</b></span>`).join("");
-  const pfCarte = pf && g != null ? `<div class="r8-card r8-pfc"><small>Votre portefeuille</small><div class="r8-row"><div><div class="r8-big ${r8Cls(g)}">${r8Eur(g)}</div><span>${synPct(pf.var_pct)} · il vaut ${F0.format(Math.round(pf.valeur_eur))}&nbsp;€</span></div>${spark}</div><div class="r8-chips">${chips}</div></div>`
+  const pfCarte = pf && g != null ? `<div class="r8-card r8-pfc"><small>Votre portefeuille</small><div class="r8-row"><div><div class="r8-big ${r8Cls(g)}">${r8Eur(g)}</div><span>${synPct(pf.var_pct)} · il vaut ${F0.format(Math.round(pf.valeur_eur))}&nbsp;€</span>${SANSV.length ? `<small class="r8-sansv">Variation calculée sans ${esc(SANSV.map(l => r8Court(l).replace(/^votre ETF /, "")).join(", "))} (${F0.format(Math.round(SANSV.reduce((a, l) => a + l.portefeuille.valeur_eur, 0)))}&nbsp;€), dont le site n'a pas le cours de la semaine.</small>` : ""}</div>${spark}</div><div class="r8-chips">${chips}</div></div>`
     : chips ? `<div class="r8-card r8-pfc"><small>Les indices de la semaine</small><div class="r8-chips">${chips}</div></div>` : "";
   let h = `<div class="r8"><div class="r8-band"><div class="r8-w">
     <div class="r8-top"><span class="r8-logo">ENKLAIR</span><span>${b.date_rapport ? "Rapport du " + esc(new Date(b.date_rapport + "T12:00:00").toLocaleDateString("fr-FR", { day: "numeric", month: "long" })) : "Votre rapport · " + (b.du ? esc(synDuAu(b)) : "") + (b.en_cours ? " (en cours)" : "")}</span></div>
@@ -90,7 +91,7 @@ function synPageV8(b, m) {
     if (pf.var_pct != null && cac) lec.push(`Votre portefeuille (${synPct(pf.var_pct)}) a fait ${pf.var_pct >= cac.pct ? "mieux" : "moins bien"} que le CAC 40 (${synPct(cac.pct)})${sp ? ` et ${pf.var_pct >= sp.pct ? "mieux" : "moins bien"} que le S&P 500 (${synPct(sp.pct)})` : ""}.`);
     const al = (pf.alertes || []).slice(0, 2).map(a => `<p class="r8-al"><b>${esc(a.texte)}</b> ${esc(a.pourquoi || "")}</p>`).join("");
     h += `<section id="r8-pf"><span class="r8-tag">${num} · Votre portefeuille</span><h2>Ce que chaque ligne vous a fait gagner ou perdre.</h2><p class="r8-sub">En euros, sur la semaine. La ligne la plus lourde n'est pas toujours celle qu'on regarde.</p>
-      <div class="r8-g2"><div class="r8-card r8-box"><p class="r8-lab">Gains et pertes de la semaine</p>${bars}${retenir}</div>
+      <div class="r8-g2"><div class="r8-card r8-box"><p class="r8-lab">Gains et pertes de la semaine</p>${bars}${SANSV.map(l => `<div class="r8-cb r8-cbx"><span><a href="${synLien(l.k)}">${esc(r8Court(l).replace(/^votre ETF /, "ETF "))}</a><small>${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % du portefeuille · ${F0.format(l.portefeuille.valeur_eur)}&nbsp;€${l.portefeuille.source_valeur === "achat" ? " au prix d'achat" : ""}</small></span><span class="r8-nc">Cours de la semaine pas suivi par le site</span></div>`).join("")}${retenir}</div>
       <div class="r8-card r8-box"><p class="r8-lab">Ce qu'il faut en retenir</p>${lec.map(t => `<p class="r8-p">${esc(t)}</p>`).join("")}${al}<p class="r8-ia">Calculé par ENKLAIR à partir de votre portefeuille, des cours et du contenu officiel de vos ETF. Aucune prévision, aucun conseil.</p></div></div>`;
     // Achats programmés
     for (const x of b.dca || []) {
@@ -111,6 +112,8 @@ function synPageV8(b, m) {
         <p class="r8-note">${b.radio.source ? `Contenu des ETF : ${esc(b.radio.source.nom)}${b.radio.source.au ? `, au ${esc(r8Jr(b.radio.source.au))} ${esc(b.radio.source.au.slice(0, 4))}` : ""}. ` : ""}Les entreprises des ETF que le site ne reconnaît pas ne sont pas comptées : les vrais totaux peuvent être un peu plus élevés.</p>`;
     }
     const faibles = (b.radio && b.radio.faibles) || []; // 7/11 : moins de 5 % du portefeuille, cité en une ligne
+    const nc = (b.radio && b.radio.non_comptes) || [];
+    if (nc.length && (radio.length || faibles.length)) h += `<p class="r8-faible"><b>Pas compté ici</b> : ${nc.map(x => `${esc(r8Court({ nom: x.nom, k: x.k || "e:" }))} (${F0.format(x.eur)}&nbsp;€, ${F0.format(Math.round(x.pct))}&nbsp;% du portefeuille)`).join(", ")}. Le site ne connaît pas encore ${nc.length > 1 ? "leur" : "son"} contenu : ${nc.length > 1 ? "ces lignes ne sont pas comptées" : "cette ligne n'est pas comptée"} dans les parts ci-dessus.</p>`;
     if (faibles.length) h += `${radio.length ? "" : `<div class="r8-sh"><span class="r8-tag r">Radiographie</span><h3 class="r8-h3">Votre argent face aux sujets de la semaine.</h3></div>`}<p class="r8-faible"><b>${radio.length ? "Touchés de loin" : "Les sujets de la semaine touchent peu votre portefeuille"}</b> : ${faibles.map(x => `${esc(x.lab)} ${x.pct < 1 ? "moins de 1" : F0.format(Math.round(x.pct))}&nbsp;%`).join(" · ")}.</p>`;
     h += `</section>`;
   }

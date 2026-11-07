@@ -21,27 +21,25 @@ async function outilSiJavais4() {
         <div class="s4-f sj-pk"><span>Action ou ETF</span><div class="sj-pkw"><input id="sjq" class="el-in" type="search" autocomplete="off" placeholder="Nom d'une action ou d'un ETF"><div class="msug" hidden></div></div></div>
         <label class="s4-f"><span>Montant placé (€)</span><input id="sjm" class="el-in" type="number" inputmode="decimal" min="10" step="100" value="${S.amt}"></label>
         <div class="s4-f"><span>Il y a</span>${seg("sja", [[5, "5 ans"], [3, "3 ans"], [1, "1 an"]])}</div>
-        <label class="s4-f"><span>Courtier (frais d'achat)</span><select id="sjbk">${brokerOptions(S.bk)}</select></label>
         <div class="s4-f sj-vs"><span>Comparer avec</span>${seg("sjv", [["i:cac40", "CAC 40"], ["i:stoxx50", "Euro Stoxx 50"], ["i:sp500", "S&P 500"], ["i:nasdaq100", "Nasdaq 100"], ["", "Aucun indice"]])}</div>
       </div></section>
     <div id="sjr"></div></div>`;
   const ref = await O2_ref(), H = await O2_json("/data/historique.json");
   const marque = (id, v_) => $$(`#${id} [data-v]`).forEach(b => b.classList.toggle("on", b.dataset.v === String(v_)));
   const run = () => {
-    const u = new URLSearchParams({ k: S.k, vs: S.cmp || "aucun", m: S.amt, ans: S.ans, bk: S.bk }); history.replaceState({}, "", "/outils/si-javais?" + u);
+    const u = new URLSearchParams({ k: S.k, vs: S.cmp || "aucun", m: S.amt, ans: S.ans }); history.replaceState({}, "", "/outils/si-javais?" + u);
     marque("sja", S.ans); marque("sjv", S.cmp || "");
     sj4Calcul(S, ref, H);
   };
   bindPicker("sjq", k => { S.k = k; S.cmp = defCmp(k); run(); }); $("#sjq").value = O2_nomK(S.k);
   let t = null; $("#sjm").oninput = () => { S.amt = Math.max(0, parseFloat(String($("#sjm").value).replace(",", ".")) || 0); clearTimeout(t); t = setTimeout(run, 200); };
-  $("#sjbk").onchange = () => { S.bk = $("#sjbk").value; run(); };
   $("#sjform").addEventListener("click", e => { const x = e.target.closest(".s4-seg [data-v]"); if (!x) return; e.preventDefault();
     if (x.parentElement.id === "sja") S.ans = +x.dataset.v; else S.cmp = x.dataset.v || ""; run(); });
   run();
 }
 function sj4Calcul(S, ref, H) {
   const el = $("#sjr"), titre = $("#sjt"), sous = $("#sjs"); if (!el) return;
-  const deb = O2_moinsAns(TODAY, S.ans), b = brokerBy(S.bk), frais = S.k.startsWith("i:") ? 0 : brokerFee(b, S.amt, { fixe: 0, pct: 0 });
+  const deb = O2_moinsAns(TODAY, S.ans), b = null, frais = 0; // 7/11 (Romain) : plus de choix du courtier ici ; les frais d'achat ne sont pas comptés
   const A = O2_sjSerie(S.k, S, ref, H, frais), I = S.cmp && S.cmp !== S.k ? O2_sjSerie(S.cmp, S, ref, H, 0) : null;
   if (A.err) {
     titre.textContent = `${O2_nomK(S.k)} : calcul impossible.`;
@@ -73,7 +71,7 @@ function sj4Calcul(S, ref, H) {
   const e = S.k.startsWith("e:") ? ETFBY[S.k.slice(2)] : null;
   const hyp = [
     `Montant : ${O2_e(S.amt)} placés en une seule fois le ${dLabel(deb)}, sans versement ensuite. Les versements mensuels demanderaient les cours mois par mois, que le site ne conserve pas encore.`,
-    `Frais d'achat : ${frais ? `${eur(frais)} (grille ${esc(b.name)}), déduits du montant placé` : "aucun"}. ${e ? `Les frais courants de l'ETF (${e.ter != null ? pct(e.ter / 100, 2, false) + " par an" : "non indiqués"}) sont déjà déduits de son cours.` : ""} Pas de frais de revente ni d'impôt : c'est la valeur avant revente.`,
+    `Frais d'achat : non comptés (ils dépendent de votre courtier, souvent entre 0 et 1 % de l'achat). ${e ? `Les frais courants de l'ETF (${e.ter != null ? pct(e.ter / 100, 2, false) + " par an" : "non indiqués"}) sont déjà déduits de son cours.` : ""} Pas de frais de revente ni d'impôt : c'est la valeur avant revente.`,
     A.div ? `Dividendes : dividende par action publié dans les comptes annuels des exercices ${A.div.exos.join(", ")}, supposé versé le 1er juin de l'année suivante. « Non réinvestis » : gardés en liquidités, sans intérêt. « Réinvestis » : chaque dividende rachète des actions au cours de ce jour-là, estimé en ligne droite entre les deux cours relevés les plus proches. Ni impôt ni frais sur les dividendes. Estimation : les dates et acomptes réels varient.`
       : e ? (e.distribution === "distribution" ? "Dividendes : cet ETF les distribue ; ils ne sont pas comptés ici (montants versés non disponibles)." : "Dividendes : cet ETF les réinvestit ; ils sont déjà dans son cours.") : "Dividendes : non comptés (dividendes par action non disponibles ou dans une autre devise que le cours).",
     `Devise : ${A.cur && A.cur !== "EUR" ? `cours en ${esc(A.cur)}, convertis en euros au taux moyen du mois (BCE) pour le passé et au taux du jour pour aujourd'hui. La variation du ${esc(A.cur)} face à l'euro est donc comprise.` : "cours en euros."}`,

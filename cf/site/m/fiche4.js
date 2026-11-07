@@ -574,8 +574,8 @@ async function f4Alerte(k, btn) {
   const m = await moi(), nom = (RBY[k.slice(2)] || {}).name || "cette entreprise";
   const quoi = `une baisse de plus de 5 % dans la journée, ses résultats publiés (avec les chiffres clés), la veille de ses rendez-vous, ses fortes variations du jour, le dernier jour pour toucher un dividende annoncé et ses plus hauts ou plus bas sur un an`;
   // 4/11 (décision de Romain) : les alertes font partie de Premium, sans demi-version gratuite
-  if (m.premium) { btn.textContent = "🔔 Vous serez prévenu"; box.innerHTML = `<p><b>C'est noté.</b> Si ${esc(nom)} chute de plus de 5 % dans la journée, vous recevez une notification le soir même, sur votre téléphone si vous les avez activées (<a href="/espace/reglages">Réglages</a>) et dans Mon espace. Aussi : ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}.</p>`; }
-  else box.innerHTML = `<p><b>Si ${esc(nom)} chute de plus de 5 % dans la journée, ENKLAIR vous envoie une notification le soir même.</b> C'est dans Premium, avec ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}. ${esc(nom)} est déjà dans vos favoris.</p><div class="f4al-a"><a class="ek-btn dk" href="/premium#alertes">Être prévenu avec Premium</a></div>`;
+  if (m.premium) { btn.textContent = "🔔 Vous serez prévenu"; box.innerHTML = `<p><b>C'est noté.</b> Si ${esc(nom)} chute de plus de 5 % dans la journée, vous recevez un e-mail le soir même (un seul par soir, désactivable dans <a href="/espace/reglages">Réglages</a>) et dans Mon espace. Aussi : ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}.</p>`; }
+  else box.innerHTML = `<p><b>Si ${esc(nom)} chute de plus de 5 % dans la journée, ENKLAIR vous envoie un e-mail le soir même.</b> C'est dans Premium, avec ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}. ${esc(nom)} est déjà dans vos favoris.</p><div class="f4al-a"><a class="ek-btn dk" href="/premium#alertes">Être prévenu avec Premium</a></div>`;
 }
 document.addEventListener("click", e => {
   const al = e.target.closest && e.target.closest("[data-f4-alerte]"); if (al) { f4Alerte(al.dataset.f4Alerte, al); return; }

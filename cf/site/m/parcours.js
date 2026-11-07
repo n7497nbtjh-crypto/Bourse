@@ -261,7 +261,7 @@ function parResume(R, n) {
     ["Repères", R.indices.length ? R.indices.map(i => PAR_INDICES[i]).join(", ") : "aucun indice"],
     ["Lecture", R.detail === "court" ? "version courte, environ 1 minute" : "version complète, avec le commentaire de l'IA"],
     ["Sujets", suj.length ? suj.join(", ") : "variations seulement"],
-    ["Réception", `${PAR_JOUR_TXT[R.jour]}${R.notif ? ", avec une notification" : ", sans notification"}`],
+    ["Réception", `${PAR_JOUR_TXT[R.jour]}${R.notif ? ", avec un e-mail" : ""}`],
   ];
 }
 function parResumeHTML(R) { return `<ul>${parResume(R).map(([k, v]) => `<li><i>✓</i><span><b>${k}</b> : ${esc(v)}</span></li>`).join("")}</ul>`; }
@@ -286,7 +286,7 @@ function parGroupe(i, R, max) {
   return `<fieldset class="par-grp"><legend>Le jour où il est prêt</legend><div class="par-opts">
       ${PAR_JOURS.map(([v, t, s]) => rad("jour", v, R.jour === v, t, s)).join("")}</div></fieldset>
     <fieldset class="par-grp"><legend>Être prévenu</legend><div class="par-opts">
-      ${chk("notif", "1", R.notif, "Une alerte quand il est prêt", "Dans vos alertes, et sur votre téléphone ou ordinateur si les notifications y sont activées.")}</div></fieldset>
+      ${chk("notif", "1", R.notif, "Une alerte quand il est prêt", "Dans vos alertes, et par e-mail.")}</div></fieldset>
     <div id="parpush"></div>`;
 }
 const PAR_TITRES = [["Que doit contenir votre rapport ?", "Choisissez ce que vous voulez suivre chaque semaine."], ["Que voulez-vous y lire ?", "La longueur et les sujets, selon le temps que vous avez."], ["Quand le recevoir ?", "Il se prépare tout seul ; vous choisissez le moment."]];
@@ -471,7 +471,7 @@ async function parAccueilVisiteur(el) {
 }
 function parPitchHTML() {
   return `<div class="par-pitch"><p class="kick" style="color:#C9C4BA;margin:0">Gratuit · avec votre espace</p><h3>Créez votre rapport sur mesure</h3>
-    <ul><li>Vos favoris, votre portefeuille et les secteurs que vous voulez suivre</li><li>Court (1 minute) ou complet, avec le commentaire de l'IA</li><li>Résultats, dividendes, actualité, leçons : vous choisissez les sujets</li><li>Prêt le samedi, le dimanche ou le lundi matin, avec une notification</li></ul>
+    <ul><li>Vos favoris, votre portefeuille et les secteurs que vous voulez suivre</li><li>Court (1 minute) ou complet, avec le commentaire de l'IA</li><li>Résultats, dividendes, actualité, leçons : vous choisissez les sujets</li><li>Prêt le samedi, le dimanche ou le lundi matin, avec un e-mail</li></ul>
     <a class="btn" href="/espace">Créer mon rapport</a><small>Trois questions pour le régler. Information factuelle, sans conseil d'investissement.</small></div>`;
 }
 (function () {

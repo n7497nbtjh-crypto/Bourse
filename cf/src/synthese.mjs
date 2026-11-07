@@ -5,7 +5,7 @@
 
 const JOUR = 864e5;
 export const SYN_VERSION = 5; // 7/11 : rédaction de « La lecture d'ENKLAIR » revue, radiographie sans les sujets sous 5 % ; // 6/11 soir : rapport v8 (rivales, monde, radiographie, achats programmés) ; // 5/11 : rapport v6, nouveau profil d'exemple
-const KEY = /^[ce]:[a-z0-9-]{1,60}$/;
+const KEY = /^[ce]:[a-z0-9-]{1,60}$/, KEY_X = /^x:[A-Z0-9]{6,20}$/;
 const r2 = v => Math.round(v * 100) / 100;
 const num = v => typeof v === "number" && isFinite(v) ? v : (typeof v === "string" && v.trim() !== "" && isFinite(+v) ? +v : null);
 const NF = (v, d = 1) => new Intl.NumberFormat("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).format(v);
@@ -169,9 +169,10 @@ export function lignesPf(pf) {
   if (!pf || typeof pf !== "object") return [];
   const out = new Map(), envDef = pf.cfg && typeof pf.cfg.env === "string" ? pf.cfg.env : null;
   if (Array.isArray(pf.l)) for (const l of pf.l) { // format 3 du module portefeuille : une ligne par titre et par compte (env : pea, cto, av)
-    if (!l || typeof l.k !== "string" || !KEY.test(l.k)) continue;
+    if (!l || typeof l.k !== "string" || !(KEY.test(l.k) || KEY_X.test(l.k))) continue; // 7/11 : aussi les titres que le site ne suit pas (x:ISIN)
     const o = out.get(l.k) || { k: l.k, q: 0, m: 0, cout: 0, env: [] };
     const q = num(l.q), m = num(l.m), pru = num(l.pru), env = typeof l.env === "string" && l.env ? l.env : envDef;
+    if (num(l.px) > 0) o.px = num(l.px); if (typeof l.nm === "string" && l.nm.trim()) o.nm = l.nm.trim().slice(0, 80); if (typeof l.cur === "string" && /^[A-Z]{3}$/.test(l.cur)) o.cur = l.cur;
     if (q > 0) { o.q += q; if (pru > 0) o.cout += q * pru; } else if (m > 0) o.m += m;
     if (env && !o.env.includes(env)) o.env.push(env);
     out.set(l.k, o);
@@ -208,7 +209,7 @@ function alertesPf(lp, d) {
     connu += l.v; if (ok) elig += l.v;
     if (!ok && (l.env || []).includes("pea")) horsPea.push(l);
   }
-  if (horsPea.length) A.push({ code: "pea_hors", niveau: "vig", valeur: horsPea.length, texte: `${horsPea.map(l => d.names[l.k]).slice(0, 3).join(", ")} ${horsPea.length > 1 ? "sont rangés" : "est rangé"} dans votre PEA mais ne ${horsPea.length > 1 ? "semblent" : "semble"} pas éligible${horsPea.length > 1 ? "s" : ""}.`, pourquoi: "Un titre non éligible ne peut pas être acheté dans un PEA. Vérifiez la ligne chez votre courtier : erreur de saisie, ou titre logé sur un autre compte." });
+  if (horsPea.length) A.push({ code: "pea_hors", niveau: "vig", valeur: horsPea.length, texte: `${horsPea.map(l => d.names[l.k] || l.nm || l.k.slice(2)).slice(0, 3).join(", ")} ${horsPea.length > 1 ? "sont rangés" : "est rangé"} dans votre PEA mais ne ${horsPea.length > 1 ? "semblent" : "semble"} pas éligible${horsPea.length > 1 ? "s" : ""}.`, pourquoi: "Un titre non éligible ne peut pas être acheté dans un PEA. Vérifiez la ligne chez votre courtier : erreur de saisie, ou titre logé sur un autre compte." });
   if (connu > 0 && !lp.some(l => (l.env || []).length)) { const part = elig / connu; // comptes non précisés : simple repère
     A.push({ code: "pea", niveau: part >= 0.999 ? "fort" : "info", valeur: r2(part * 100), texte: part >= 0.999 ? "Toutes vos lignes semblent éligibles au PEA." : `${P(part)} de vos lignes semblent éligibles au PEA.`, pourquoi: "Le PEA accepte les actions d'entreprises dont le siège est dans l'Union européenne ou l'Espace économique européen, et les ETF marqués PEA. Repère calculé d'après le pays du code ISIN : vérifiez chez votre courtier." }); }
   return A;
@@ -227,13 +228,15 @@ function evolutionAlertes(A, prec) {
 export function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {}, semaine, opts = {}) {
   const auj = opts.auj, lundi = lundiDe(semaine), dimanche = addJ(lundi, 6), prec = opts.precedent || null, RG = normaliseRapport(rapport);
   if (!RG.favoris) favoris = []; if (!RG.portefeuille) pf = null;
-  const LP = lignesPf(pf).filter(l => d.names[l.k]), pfSet = new Set(LP.map(l => l.k)), favSet = new Set(favoris.filter(k => KEY.test(k)));
-  const keys = [...new Set([...favSet, ...pfSet])].filter(k => d.names[k]).slice(0, 260);
+  // 7/11 (Romain : « tu omets mon ETF HSBC, c'est trompeur ») : une ligne que le site ne suit pas reste dans le portefeuille, sous son nom
+  const LP = lignesPf(pf).filter(l => d.names[l.k] || l.nm || l.k.startsWith("x:")), pfSet = new Set(LP.map(l => l.k)), favSet = new Set(favoris.filter(k => KEY.test(k)));
+  const nomDe = k => d.names[k] || ((LP.find(l => l.k === k) || {}).nm) || k.slice(2);
+  const keys = [...new Set([...favSet, ...pfSet])].filter(k => d.names[k] || pfSet.has(k)).slice(0, 260);
   const idx = {};
   for (const id of Object.keys(INDICES)) { const v = variationSemaine(d.cs, "i:" + id, lundi, auj, d.px["i:" + id], d.sem); if (v) idx[id] = { id, nom: INDICES[id], pct: v.pct, serie: v.serie, partiel: v.partiel }; }
   const lignes = keys.map(k => {
     const p = d.px[k], v = variationSemaine(d.cs, k, lundi, auj, p, d.sem), ix = indiceDe(k, k.startsWith("e:") ? d.etf[k] : d.meta[k]);
-    const l = { k, nom: d.names[k], type: k.startsWith("e:") ? "etf" : "action", variation_semaine_pct: v ? v.pct : null, cours: p && p.p != null ? p.p : null, devise: (p && p.cur) || null,
+    const l = { k, nom: nomDe(k), type: k.startsWith("e:") ? "etf" : k.startsWith("x:") ? "titre" : "action", variation_semaine_pct: v ? v.pct : null, cours: p && p.p != null ? p.p : null, devise: (p && p.cur) || null,
       serie: v ? v.serie : null, du: v ? v.du : null, partiel: v ? v.partiel : false, favori: favSet.has(k), en_portefeuille: pfSet.has(k), indice: null, ecart_pts: null };
     if (ix && idx[ix]) { l.indice = { id: ix, nom: INDICES[ix], pct: idx[ix].pct }; if (l.variation_semaine_pct != null) l.ecart_pts = r2(l.variation_semaine_pct - idx[ix].pct); }
     return l;
@@ -244,13 +247,16 @@ export function faitsSynthese(d, { favoris = [], pf = null, rapport = null } = {
   // Portefeuille : valeur en euros, gain ou perte de la semaine, à composition constante
   let portefeuille = null;
   if (LP.length) {
-    const lp = LP.map(l => { const p = d.px[l.k], vEur = p && l.q > 0 ? versEur(p.p * l.q, p.cur, d.fx) : null; return { ...l, v: vEur != null ? vEur : l.m || 0, estime: vEur == null }; }).filter(l => l.v > 0);
+    const lp = LP.map(l => { const p = d.px[l.k]; let vEur = p && l.q > 0 ? versEur(p.p * l.q, p.cur, d.fx) : null, src = vEur != null ? "cours" : null;
+      if (vEur == null && l.q > 0 && l.px > 0) { vEur = versEur(l.px * l.q, l.cur || "EUR", d.fx); if (vEur != null) src = "saisi"; } // prix connu du navigateur
+      if (vEur == null && l.q > 0 && l.cout > 0) { vEur = versEur(l.cout, l.cur || "EUR", d.fx); if (vEur != null) src = "achat"; } // à défaut : prix d'achat
+      return { ...l, v: vEur != null ? vEur : l.m || 0, estime: src !== "cours", src: src || "montant" }; }).filter(l => l.v > 0);
     const tot = lp.reduce((a, l) => a + l.v, 0);
     if (tot > 0) {
       let varE = 0, couvert = 0;
       for (const l of lp) { const x = L[l.k], r = x && x.variation_semaine_pct; l.poids = r2(l.v / tot * 100);
         if (r != null) { l.var_eur = l.v - l.v / (1 + r / 100); varE += l.var_eur; couvert += l.v; }
-        if (x) x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime }; }
+        if (x) x.portefeuille = { valeur_eur: Math.round(l.v), poids_pct: l.poids, var_eur: l.var_eur != null ? r2(l.var_eur) : null, estime: l.estime, source_valeur: l.src }; }
       // courbe de la semaine : chaque ligne suivie à quantité constante (valeur d'aujourd'hui × cours du jour / cours d'aujourd'hui)
       const jours = [...new Set(lp.flatMap(l => { const v = variationSemaine(d.cs, l.k, lundi, auj, d.px[l.k], d.sem); return v ? v.dates.filter(Boolean) : []; }))].sort();
       let serie = null;

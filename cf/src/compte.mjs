@@ -99,6 +99,13 @@ async function stripe(env, path) {
   const r = await fetch("https://api.stripe.com/v1/" + path, { headers: { authorization: "Bearer " + env.STRIPE_SECRET } });
   const j = await r.json(); if (!r.ok) throw new Error((j.error && j.error.message) || "Stripe " + r.status); return j;
 }
+// 7/11 (Romain) : un abonnement mensuel qui continue de prélever ? null = aucun, sinon { fin } ; lève une erreur si Stripe ne répond pas
+export async function abonnementEnCours(env, p) {
+  if (!p || !p.sub_id || !env.STRIPE_SECRET) return null;
+  const sub = await stripe(env, `subscriptions/${p.sub_id}`);
+  if (!["active", "trialing", "past_due", "unpaid", "incomplete"].includes(sub.status) || sub.cancel_at_period_end) return null;
+  return { fin: (sub.current_period_end || 0) * 1000 };
+}
 const newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "").slice(0, 8);
 export async function premium(request, env) {
   if (!env || !env.DB) return json({ error: "Indisponible pour le moment." }, 503);

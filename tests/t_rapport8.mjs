@@ -2,7 +2,7 @@
 // Données réelles du dépôt (cf/site/data), base SQLite en mémoire, IA du site simulée. Usage : node tests/t_rapport8.mjs
 import { DatabaseSync } from "node:sqlite";
 import { readFileSync, existsSync } from "node:fs";
-import { rapportExemple, calculerRapportExemple } from "../cf/src/espace.mjs";
+import { rapportExemple, calculerRapportExemple, EXEMPLE_PROFIL } from "../cf/src/espace.mjs";
 const sql = new DatabaseSync(":memory:");
 globalThis.fetch = async () => new Response("", { status: 404 }); // aucun accès réseau : cours du dépôt seulement (cours.json, cours-semaine.json)
 const stmt = (q, p = []) => ({ bind: (...a) => stmt(q, a), all: async () => ({ results: sql.prepare(q).all(...p) }), first: async () => sql.prepare(q).get(...p) ?? null, run: async () => { sql.prepare(q).run(...p); return { meta: { changes: 1 } }; } });
@@ -74,5 +74,14 @@ t(fA && fA.sujets_du_monde_qui_la_touchent.length >= 1, "l'IA reçoit le sujet d
 t(appels.monde === 1, "un seul appel pour le monde");
 const n0 = appels.entreprise, r2 = await calculerRapportExemple(new Request("https://enklair.com/api/rapport-exemple?x=2"), env);
 t(appels.monde === 1 && r2.monde && r2.monde.sujets.length === 2, "monde servi par le cache au deuxième passage");
+{ // 7/11 (Romain) : un ETF que le site ne suit pas (pas de cours, pas de composition) et un titre inconnu ne disparaissent jamais du rapport
+  EXEMPLE_PROFIL.portefeuille.l.push({ k: "e:hsbc-msci-world", q: 10, pru: 40, cur: "EUR", env: "cto" }, { k: "x:IE00TEST1234", nm: "Fonds Inconnu", q: 5, pru: 20, cur: "EUR" });
+  const h = await calculerRapportExemple(new Request("https://enklair.com/api/rapport-exemple?h=1"), env), lh = k => (h.lignes || []).find(l => l.k === k);
+  if (process.env.R8_JSON_H) (await import("node:fs")).writeFileSync(process.env.R8_JSON_H, JSON.stringify(h));
+  t(lh("e:hsbc-msci-world") && lh("e:hsbc-msci-world").portefeuille && lh("e:hsbc-msci-world").portefeuille.valeur_eur === 400 && lh("e:hsbc-msci-world").portefeuille.source_valeur === "achat", "ETF HSBC gardé, compté à son prix d'achat " + JSON.stringify(lh("e:hsbc-msci-world") || null).slice(0, 200));
+  t(lh("x:IE00TEST1234") && lh("x:IE00TEST1234").nom === "Fonds Inconnu" && lh("x:IE00TEST1234").portefeuille.valeur_eur === 100, "titre inconnu gardé sous son nom");
+  t(h.portefeuille.valeur_eur === b.portefeuille.valeur_eur + 500, "valeur totale avec ces deux lignes");
+  t(h.radio && h.radio.non_comptes.some(x => /HSBC/.test(x.nom)), "radiographie : l'ETF HSBC cité comme non compté");
+}
 console.log(`\n${ok} réussis, ${ko} échecs (appels IA : monde ${appels.monde}, entreprises ${appels.entreprise}, dont ${appels.entreprise - n0} au deuxième passage)`);
 process.exit(ko ? 1 : 0);

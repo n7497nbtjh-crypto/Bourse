@@ -2096,3 +2096,51 @@ a.s9-src{display:inline!important;width:auto!important;min-height:0!important}
 @media(max-width:480px){.r8-ac{flex-wrap:wrap;white-space:normal}}
 .r8-faible{margin:12px 0 0;padding:12px 16px;border:2px dashed #bbb;border-radius:14px;font:600 14px/1.45 Inter;color:#444}.r8-faible b{color:#111}
 .pn-up{color:var(--ek-g)}.pn-dn{color:var(--ek-r)}
+.r8-sansv{display:block;font:600 12px/1.4 Inter;color:#666;margin-top:6px}.r8-cbx .r8-nc{grid-column:2/-1;font:600 12.5px Inter;color:#777;font-style:italic}
+/* 7/11 : portefeuille v6 (cf/site/m/portefeuille6.js, maquette docs/maquettes/portefeuille-v6.html) */
+.pf6on #pf3 .v3-hero{display:grid;grid-template-columns:1.25fr 1fr;gap:28px;align-items:center}
+.pf6on #pf3 .pf6-hl{min-width:0}
+.pf6on #pf3 #pf4chute,.pf6on #pf3 #pf4rap,.pf6on #pf3 #pf3hero,.pf6on #pf3 #pf3nav,.pf6on #pf3 #pf5{display:none!important}
+.pf6on #pf3 .v3-hero h1{margin:14px 0 12px}
+.pf6-pills{display:flex;flex-wrap:wrap;gap:8px}
+.pf6-pill{font:800 14px Inter;padding:6px 12px;border-radius:999px;border:2px solid #111;background:#fff;color:#111}
+.pf6-pill.g{color:#00804f}.pf6-pill.r{color:#c4290f}
+.pf6-sm{display:block;font:600 12.5px/1.45 Inter;color:#4a4a3a;margin-top:10px}
+.pf6on #pf3 #pf4don{background:#fff;border:2px solid #111;border-radius:22px;padding:18px;box-shadow:5px 5px 0 #111;margin:0}
+.pf6-ess{margin:40px 0 34px}
+.pf6-t{font:800 clamp(28px,3.6vw,42px)/1 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.05em;margin:0 0 6px}
+.pf6-st{margin:0 0 18px;color:#555;font:600 15px Inter}
+.pf6-g{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+html body #app .pf6-ess .pf6-g button.pf6-c.pf6-c.pf6-c{border:2px solid #111;border-radius:20px!important;padding:16px 16px 14px;background:#fff;cursor:pointer;text-align:left;font:inherit;color:#111;display:flex;flex-direction:column;gap:6px;min-height:150px;position:relative;transition:transform .1s,box-shadow .1s;min-width:0}
+html body #app .pf6-ess .pf6-g button.pf6-c.pf6-c.pf6-c:hover{transform:translateY(-2px);box-shadow:4px 4px 0 #111}
+html body #app .pf6-ess .pf6-g button.pf6-c.pf6-c.pf6-c.act{box-shadow:5px 5px 0 #111;background:#FFF6C7}
+html body #app .pf6-ess .pf6-g button.pf6-c.pf6-c.pf6-c.dk{background:#111;color:#fff}html body #app .pf6-ess .pf6-g button.pf6-c.pf6-c.pf6-c.dk .pf6-lb{color:#bbb}
+html body #app .pf6-ess .pf6-g button.pf6-c.pf6-c.pf6-c.large{grid-column:1/-1;min-height:0}
+.pf6-lb{font:700 12.5px Inter;color:#666;padding-right:16px}
+.pf6-n{font:800 34px/1 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.04em;overflow-wrap:anywhere}
+.pf6-n small{font:700 15px Inter;letter-spacing:0;color:#555;margin-left:4px}
+.pf6-n.txt{font-size:24px;line-height:1.1}
+.pf6-vd{align-self:flex-start;font:800 12px Inter;padding:3px 9px;border-radius:8px;border:1.5px solid currentColor}
+.pf6-vd.g{color:#00804f;background:#E2F8EE}.pf6-vd.r{color:#c4290f;background:#FFE9E3}.pf6-vd.o{color:#8a6a00;background:#FFF6C7}.pf6-vd.n{color:#333;background:#f2f0ea}.pf6-vd.y{color:#111;background:#FFE14D;border-color:#FFE14D}
+.pf6-c small{font:600 12.5px/1.35 Inter;color:#555}.pf6-c.dk small{color:#ccc}
+.pf6-gz{height:8px;border-radius:6px;background:linear-gradient(90deg,#e9573f,#f2c14e 50%,#2bb673);position:relative;margin-top:auto}
+.pf6-gz i{position:absolute;top:-4px;width:4px;height:16px;background:#111;border-radius:2px;transform:translateX(-50%)}
+.pf6-ch{position:absolute;right:14px;top:12px;font:800 16px Inter}
+.pf6-det{grid-column:1/-1;border:2px solid #111;border-radius:20px;padding:6px 8px;background:#fff;min-width:0}
+.pf6-det>details.panel,.pf6-det>div,.pf6-det>section{border:0!important;box-shadow:none!important;margin:0!important;background:transparent}
+.pf6-det>details>summary{pointer-events:none}
+.pf6-in{padding:14px 14px 10px}
+.pf6-in h3{font:800 22px "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.03em;margin:0 0 10px}
+.pf6-in p{margin:6px 0;max-width:75ch;font:500 15px/1.5 Inter}
+.pf6-rows{display:grid;gap:10px;margin-top:10px}
+.pf6-row{display:grid;grid-template-columns:minmax(120px,220px) 1fr 90px;gap:12px;align-items:center;font:600 14px Inter}
+.pf6-row b{text-align:right}.pf6-row b.g{color:#00804f}.pf6-row b.r{color:#c4290f}
+.pf6-bar{height:12px;border:2px solid #111;border-radius:8px;overflow:hidden;background:#f2f0ea}.pf6-bar i{display:block;height:100%}
+.pf6-sub{font:600 13px Inter;color:#666}
+.pf6-src{font:600 12px/1.45 Inter!important;color:#777;margin-top:12px!important}
+.pf6-act{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin-top:12px}
+@media(max-width:860px){.pf6on #pf3 .v3-hero{grid-template-columns:1fr}.pf6-g{grid-template-columns:1fr 1fr}.pf6-n{font-size:28px}html body #app .pf6-ess .pf6-g button.pf6-c.pf6-c.pf6-c{min-height:132px}.pf6-row{grid-template-columns:110px 1fr 70px}}
+.pf6-det summary::after,.pf6-det summary::before,.pf6-det .pf5-h,.pf6-det summary .pf4-td{display:none!important}.pf6-det>details>summary{list-style:none}.pf6-det>details>summary::-webkit-details-marker{display:none}
+.pf6-det{border:0!important;padding:0!important;background:transparent!important}
+.pf6-det>.pf6-in{border:2px solid #111;border-radius:20px;background:#fff;padding:18px 20px 14px}
+html body .pf6-det>details.panel,html body .pf6-det>div,html body .pf6-det>section{border:2px solid #111!important;border-radius:20px!important;background:#fff;box-shadow:none!important;margin:0!important}
