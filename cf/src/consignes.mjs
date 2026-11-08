@@ -114,7 +114,7 @@ export const PRESSE_SEMAINE = `Tu résumes pour une personne qui débute en Bour
 Réponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."]}.
 - "clair" : 3 phrases au plus (75 mots au plus), en français simple : les deux ou trois sujets dont la presse a parlé, du plus important au moins important, avec le fait ou le chiffre clé de chacun. Rattache chaque fait à son média (« selon … »). Si deux articles se contredisent, dis-le.
 - "sujets" : 2 ou 3 mots-clés courts (2 à 4 mots chacun), par exemple « Nouveau MacBook », « Contrat à Oman ».
-- Ignore les articles qui ne parlent pas vraiment de l'entreprise (homonyme, simple citation dans une liste).
+- Ne parle que de l'entreprise demandée : un fait sur une autre entreprise n'entre que s'il la concerne directement. Ignore les articles qui ne parlent pas vraiment de l'entreprise (homonyme, simple citation dans une liste).
 - Résume avec tes propres mots : ne recopie jamais une phrase d'un article. N'utilise que ce que disent les articles : aucun chiffre ni fait absent, aucune variation de cours qui n'y figure pas. Ce qui est au conditionnel reste au conditionnel.
 - Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction, aucune supposition.
 ${REGLES}`;

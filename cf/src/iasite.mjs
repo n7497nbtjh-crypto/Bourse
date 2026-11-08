@@ -12,6 +12,8 @@ import { CONSIGNES } from "./consignes.mjs";
 import { visitor, visiteurSemaine, sessionCompte, premiumOf } from "./compte.mjs";
 
 // Coût en neurones par million de jetons [entrée, sortie] (tarif Cloudflare d'octobre 2026). Le moins cher d'abord.
+// 8/11 : la synthèse de presse (lue par beaucoup, écrite une fois par semaine et par entreprise) prend le plus grand modèle, plus fidèle en français
+const MODELES_PRESSE = [["@cf/meta/llama-3.3-70b-instruct-fp8-fast", 26668, 204805, "Llama 3.3 70B"]];
 const MODELES = [
   ["@cf/qwen/qwen3-30b-a3b-fp8", 4625, 30475, "Qwen3 30B"],
   ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488, "Mistral Small 3.1"],
@@ -174,7 +176,7 @@ async function synthesePresse(request, env, url) {
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
   const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
-    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind("v4|" + k + "|" + au).first();
+    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind("v5|" + k + "|" + au).first();
     if (c && (au < new Date().toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json(JSON.parse(c.txt)); } catch (e) { }
   let A = [];
   try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {};
@@ -183,11 +185,11 @@ async function synthesePresse(request, env, url) {
   const lus = [];
   for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1400) }); }
   const nom = url.searchParams.get("nom") || id;
-  presseFidele.raison = ""; const r = await iaJSON(env, "presse-sem4", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 330,
-    x => (x && typeof x.clair === "string" && x.clair.length > 40 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null).catch(() => null);
+  presseFidele.raison = ""; const r = await iaJSON(env, "presse-sem5", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 330,
+    x => (x && typeof x.clair === "string" && x.clair.length > 40 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1"), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null, MODELES_PRESSE).catch(() => null);
   if (!r) return json({ indisponible: true, raison: presseFidele.raison || "" });
   const out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter(x => x.texte).length, sources: A.map(a => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
-  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind("v4|" + k + "|" + au, JSON.stringify(out), Date.now()).run(); } catch (e) { }
+  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind("v5|" + k + "|" + au, JSON.stringify(out), Date.now()).run(); } catch (e) { }
   return json(out);
 }
 export async function iaSite(request, env) {
@@ -220,7 +222,7 @@ export async function iaSite(request, env) {
   const k = await empreinte(b.tache + "|" + max + "|" + user);
   try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?`).bind(k, Date.now() - 864e5).first();
     if (hit) { await compter(env, h, 0, per); await env.DB.prepare(`UPDATE ia_cache SET n = n + 1 WHERE k = ?`).bind(k).run(); await parNiveau(env, nv, 0); return json({ txt: hit.txt, modele: hit.modele, cache: true }); } } catch (e) { }
-  for (const [model, cin, cout, nom] of MODELES) {
+  for (const [model, cin, cout, nom] of modeles) {
     const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
     if (nv !== "premium" && !siteOk(c, P, estime)) continue; // Premium passe toujours : son abonnement paie la réponse
     try {
@@ -241,13 +243,13 @@ export async function iaSite(request, env) {
    Même entreprise, mêmes annonces → même texte, servi par la table ia_syn (gardée 10 jours) : un seul appel pour tous les abonnés qui suivent l'entreprise. */
 export async function syntheseEntreprise(env, faits) {
   // 6/11 soir : textes vagues refusés (« pourrait influencer… », « je ne suis pas sûr ») ; le rapport garde alors sa phrase calculée
-  const r = await iaJSON(env, "syn4", CONSIGNES.semaine_entreprise, faits, 220, x => x && typeof x.clair === "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ","), change: String(x.change || "").replace(/—/g, ",") } : null);
+  const r = await iaJSON(env, "syn4", CONSIGNES.semaine_entreprise, faits, 220, x => x && typeof x.clair === "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1"), change: String(x.change || "").replace(/—/g, ",") } : null);
   return r;
 }
 const VAGUE = /en raison de|gr(â|a)ce (à|a) (la|ses|son|cette) publication|performances variables|guidance|(montrent|confirm\w*) (une|sa|la)|pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
 /* Appel de l'IA du site par le serveur, réponse JSON vérifiée par `valide` (qui renvoie l'objet gardé ou null).
    Même faits, même tâche → même réponse, servie par la table ia_syn (gardée 10 jours). Compté dans les neurones du jour, jamais au-delà de la part gratuite. */
-export async function iaJSON(env, prefixe, sys, faits, max, valide) {
+export async function iaJSON(env, prefixe, sys, faits, max, valide, modeles = MODELES) {
   if (!env.AI || !env.DB || !sys) return null;
   const user = JSON.stringify(faits).slice(0, 14000), k = await empreinte(prefixe + "|" + user);
   try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_syn (k TEXT PRIMARY KEY, txt TEXT NOT NULL, modele TEXT, at INTEGER NOT NULL)`).run(); } catch (e) { return null; }
@@ -255,7 +257,7 @@ export async function iaJSON(env, prefixe, sys, faits, max, valide) {
   const P = plafonds(env), c = await compteurs(env, "syn", jour());
   let repondu = false;
   if (c.erreur) return null;
-  for (const [model, cin, cout, nom] of MODELES) {
+  for (const [model, cin, cout, nom] of modeles) {
     const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
     if (!siteOk(c, P, estime)) return null; // la part gratuite du jour est épuisée : le rapport garde ses phrases calculées
     try {
