@@ -50,6 +50,7 @@ window.__A = {
     await p.goto("https://enklair.com" + pl.url, { waitUntil: "load" }); await p.waitForTimeout(3500);
     for (const c of pl.clics || []) { await p.locator(c.q).nth(c.n || 0).click(); await p.waitForTimeout(1500); }
     await p.addStyleTag({ content: "*{transition:none!important;animation:none!important;caret-color:transparent!important}" });
+    if (pl.attendre) await p.waitForSelector(pl.attendre, { timeout: 60000 });
     await p.evaluate(ANIM);
     for (const [j, L] of pl.blocs.entries()) {
       const id = `${pl.id}-${j}`, dir = path.join(OUT, id); fs.mkdirSync(dir, { recursive: true });
@@ -63,6 +64,7 @@ window.__A = {
       }, L);
       if (!(await h.evaluate(e => !!e))) throw new Error("bloc introuvable : " + JSON.stringify(L));
       await p.waitForTimeout(400);
+      await h.evaluate(el => el.querySelectorAll("img[loading=lazy]").forEach(i => { i.loading = "eager"; const s = i.src; i.src = ""; i.src = s; })); // 8/11 : logos en chargement différé restés vides (Apple)
       await h.evaluate(el => Promise.race([Promise.all([...el.querySelectorAll("img")].map(i => i.complete ? 0 : new Promise(r => { i.onload = i.onerror = r; }))), new Promise(r => setTimeout(r, 6000))]));
       const bb = await h.evaluate((el, L) => { const r = el.getBoundingClientRect(); let bas = r.bottom; if (L.lignes) { const k = [...el.querySelectorAll(L.lignes)]; if (k.length > L.max) bas = k[L.max - 1].getBoundingClientRect().bottom; } return { x: r.left, y: r.top, w: r.width, h: bas - r.top }; }, L);
       const pad = L.pad ?? 6, clip = { x: Math.max(0, bb.x - pad), y: Math.max(0, bb.y - pad), width: Math.min(W, bb.w + 2 * pad), height: bb.h + 2 * pad };

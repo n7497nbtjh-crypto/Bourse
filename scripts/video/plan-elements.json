@@ -109,17 +109,26 @@
      "q": "#r8-co h2"
     },
     {
+     "q": ".r8-tg",
+     "n": 0,
+     "anim": "tuiles",
+     "dans": ".r8-tus",
+     "duree": 0.8,
+     "pad": 6
+    },
+    {
      "q": "article.r8-co",
      "n": 0,
      "anim": "pourquoi",
      "dans": ".r8-lec",
-     "duree": 1.8,
+     "duree": 1.6,
      "pad": 8,
      "cacher": [
       ".r8-preuve",
       ".r8-riv",
       ".r8-cof",
-      ".r8-presse"
+      ".r8-presse",
+      ".r8-faits"
      ]
     }
    ]
@@ -127,19 +136,20 @@
   {
    "id": "pq2",
    "url": "/rapport-exemple",
+   "attendre": ".r8-syn .r8-syn-s",
    "blocs": [
     {
-     "q": "article.r8-co",
-     "txt": "Schneider",
-     "anim": "pourquoi",
-     "dans": ".r8-lec",
-     "duree": 1.8,
+     "q": ".r8-syn",
+     "n": 0,
+     "anim": "rangs",
+     "duree": 1.6,
      "pad": 8,
+     "opts": {
+      "pas": 0.14
+     },
      "cacher": [
-      ".r8-preuve",
-      ".r8-riv",
-      ".r8-cof",
-      ".r8-presse"
+      ":scope > p:nth-child(4)",
+      ".r8-ia"
      ]
     }
    ]
