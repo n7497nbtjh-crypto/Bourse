@@ -252,3 +252,6 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 ## 8/11 nuit : synthèse de la presse dans le rapport
 - `/api/ia/presse?k=c:id&au=` (cf/src/iasite.mjs `synthesePresse`) : jusqu'à 5 articles de la semaine lus (`lireArticle`, robots.txt, cache ia_article), résumés une fois par entreprise et par semaine (table ia_presse, partagée), consigne `PRESSE_SEMAINE`. Ne compte pas dans les questions ; reste dans la part gratuite du jour.
 - rapport8.js : encadré « Ce que dit la presse cette semaine » (mots-clés + 3 phrases) au-dessus des articles quand il y en a au moins 2, chargé à l'ouverture de l'encadré (`r8SynCharger`).
+- Synthèse de la presse : Llama 3.3 70B (`MODELES_PRESSE`, environ 260 neurones, une fois par entreprise et par semaine) ; garde-fous `presseFidele` : chaque nombre et chaque pays d'une phrase doivent figurer dans l'article cité (l'IA avait écrit « en France » pour un article sur l'Espagne). Refus renvoyé dans `raison`.
+- Téléphone : design.js étirait à 44 px de haut les ronds (croix du comparateur, devenues des ovales) et les liens soulignés ; ils gardent leur taille avec une zone tactile invisible (`.ek-tz::after`). relire-pages.js ignore cette zone. Tableau du verdict du comparateur : chiffres sur une ligne.
+- Ménage : `m/decouverte.js` retiré (chargé nulle part), `__pycache__` hors du dépôt.

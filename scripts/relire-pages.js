@@ -30,6 +30,7 @@ const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ["/", "/ent
           if (e.querySelector("img, svg") || /(^|\s|-)(lg|logo|mono)(\s|-|$)/.test(e.className || "")) return; // logos : l'image dépasse du cadre arrondi exprès
           const kids = [...e.children].filter(vis);
           if (kids.some(k => /^(DIV|UL|OL|TABLE|SECTION|ARTICLE|P|H\d)$/.test(k.tagName))) return; // une boîte qui en contient d'autres : jugée par ses enfants
+          if (e.classList.contains("ek-tz") && !document.getElementById("rp-tz")) { const st = document.createElement("style"); st.id = "rp-tz"; st.textContent = ".ek-tz::after{display:none!important}"; document.head.appendChild(st); } // zone tactile invisible (design.js) : pas un débordement de texte
           const hautes = e.scrollHeight > e.clientHeight + 2 && e.clientHeight > 0, larges = e.scrollWidth > e.clientWidth + 2 && e.clientWidth > 0;
           const coupe = /hidden|clip/.test(s.overflowY + s.overflowX) || s.textOverflow === "ellipsis";
           if ((hautes || larges) && (coupe || /^(BUTTON|A)$/.test(e.tagName) && s.height !== "auto")) {

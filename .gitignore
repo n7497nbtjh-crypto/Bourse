@@ -11,3 +11,5 @@ cf/site/data/wd/
 cf/site/data/historique.json
 cf/site/data/pea.json
 posts/
+__pycache__/
+*.pyc
