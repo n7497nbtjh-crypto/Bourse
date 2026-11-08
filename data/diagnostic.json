@@ -8583,5 +8583,15 @@
   "China Everbright Bank : identifiant LEI trouvé par recherche approchée du nom (« CHINA EVERBRIGHT BANK CO., LTD. », 549300UKYQ6UFK6ZV089), l'ISIN CNE100000SL4 n'est pas dans la table de GLEIF",
   "New China Life Insurance : identifiant LEI trouvé par recherche approchée du nom (« New China Life Insurance Company Ltd. », 529900QCDGPLPB62KH67), l'ISIN CNE1000019Y0 n'est pas dans la table de GLEIF",
   "CNPC Capital : identifiant LEI trouvé par recherche approchée du nom (« CNRC Capitale Limited », 30030025YNG3SJ10O291), l'ISIN CNE000000MS3 n'est pas dans la table de GLEIF"
- ]
+ ],
+ "logos": {
+  "date": "2026-11-08",
+  "disponibles": 2478,
+  "commons": 1762,
+  "site_officiel": 716,
+  "initiale": 925,
+  "top300": 264,
+  "pannes": 0,
+  "traitees": 50
+ }
 }
