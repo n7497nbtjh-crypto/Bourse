@@ -49,4 +49,4 @@ export function gfParts(companies, etfs, indices, known = {}, size = GF_ROWS) {
 }
 // Nom du fichier de la partie i (0 : gf.csv, 1 : gf2.csv…)
 export const gfName = i => i ? "gf" + (i + 1) + ".csv" : "gf.csv";
-export const INDICES = [["cac40", "INDEXEURO:PX1"], ["sp500", "INDEXSP:.INX"], ["stoxx50", "INDEXSTOXX:SX5E"], ["nasdaq100", "INDEXNASDAQ:NDX"], ["dax", "INDEXDB:DAX"], ["ftse100", "INDEXFTSE:UKX"], ["nikkei", "INDEXNIKKEI:NI225"]];
+export const INDICES = [["cac40", "INDEXEURO:PX1"], ["sp500", "INDEXSP:.INX"], ["stoxx50", "INDEXSTOXX:SX5E"], ["stoxx600", "INDEXSTOXX:SXXP"], ["nasdaq100", "INDEXNASDAQ:NDX"], ["dax", "INDEXDB:DAX"], ["ftse100", "INDEXFTSE:UKX"], ["nikkei", "INDEXNIKKEI:NI225"]];

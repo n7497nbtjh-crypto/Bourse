@@ -68,7 +68,7 @@ export function variationSemaine(cs, k, lundi, auj, live, semPrec) {
 }
 
 /* ---------- Indices de référence ---------- */
-export const INDICES = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", sp500: "S&P 500", nasdaq100: "Nasdaq 100", dax: "DAX", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
+export const INDICES = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", sp500: "S&P 500", nasdaq100: "Nasdaq 100", dax: "DAX", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
 export function indiceDe(k, meta) {
   if (!meta) return null;
   if (k.startsWith("c:")) return { FR: "cac40", EU: "stoxx50", US: "sp500" }[meta.region] || null;

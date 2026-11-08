@@ -1350,7 +1350,7 @@ function variationSemaine(cs, k, lundi3, auj, live, semPrec) {
   let pct2 = r2((b / a - 1) * 100);
   return Math.abs(pct2) > 80 ? null : { pct: pct2, serie: pts.map((p) => p[1]), dates: pts.map((p) => p[0]), du: pts[0][0], au: pts[pts.length - 1][0], partiel };
 }
-var INDICES = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", sp500: "S&P 500", nasdaq100: "Nasdaq 100", dax: "DAX", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
+var INDICES = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", sp500: "S&P 500", nasdaq100: "Nasdaq 100", dax: "DAX", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
 function indiceDe(k, meta2) {
   if (!meta2) return null;
   if (k.startsWith("c:")) return { FR: "cac40", EU: "stoxx50", US: "sp500" }[meta2.region] || null;
@@ -3775,7 +3775,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "aec080c8c2aab8a6", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "9b4f6055f45c4133", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -3860,11 +3860,11 @@ async function etfMeta(id, env, url, SITE2) {
 var json5 = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } }), lundi2 = () => {
   let d = /* @__PURE__ */ new Date();
   return d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7), d.toISOString().slice(0, 10);
-}, PLAFONDS = { comparer: 3 };
+}, PLAFONDS = { comparer: 3, rivales: 5 };
 async function quota(request, env) {
   let url = new URL(request.url), quoi = url.pathname.split("/")[3];
   if (!PLAFONDS[quoi]) return json5({ error: "Introuvable" }, 404);
-  let plafond = +env.COMPARER_GRATUIT_SEMAINE || PLAFONDS[quoi];
+  let plafond = quoi === "comparer" && +env.COMPARER_GRATUIT_SEMAINE || PLAFONDS[quoi];
   if (await premiumOf(request, env).catch(() => null)) return json5({ ok: !0, premium: !0, reste: null, plafond: null });
   if (!env.DB) return json5({ ok: !0, reste: plafond, plafond, erreur: "base" });
   let ids = [];
@@ -4292,7 +4292,7 @@ function meta(path, q = null) {
   if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 \xE9tapes \xB7 L'Acad\xE9mie \xB7 ${SITE}`, desc: "La version courte de l'Acad\xE9mie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en le\xE7ons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse \xB7 ${SITE}`, desc: "Un parcours en trois \xE9tapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
   if (p.startsWith("/outils")) return { title: `Outils \xB7 ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'\xE9pargne et de frais." };
-  let IDXN = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
+  let IDXN = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
   {
     let mi = p.match(/^\/indice\/([a-z0-9]+)$/);
     if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir \xB7 ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqu\xE9 simplement : sa r\xE8gle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, class\xE9s par frais.` };

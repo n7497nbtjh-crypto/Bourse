@@ -46,7 +46,7 @@ const REGLES = [
       document.querySelectorAll(".ek-sec > h2").forEach(e => add("titre de section", e));
       document.querySelectorAll(".ek-step").forEach(st => {
         const k = st.id, sur = (st.querySelector(".ek-q") || {}).textContent || "", vis = st.querySelector(".ek-box");
-        const aRivales = !!(vis && vis.querySelector(".ek-cmpl, .ek-cbar em, svg rect[fill='#E2F8EE'], svg rect[fill='#FFE9E3'], svg rect[fill='#F1F1EE']"));
+        const aRivales = !!(vis && vis.querySelector(".ek-cmpl, .ek-cbar em, svg rect[fill='#E2F8EE'], svg rect[fill='#FFE9E3'], svg rect[fill='#F1F1EE']")) || !!st.querySelector('.ek-rivb'); // 8/11 : les rivales sont à un clic (« Comparer à ses rivales »)
         const h0 = st.querySelector(".ek-h"), h = h0 && h0.cloneNode(true); if (h) h.querySelectorAll(".ek-hc i").forEach(i => i.remove()); if (h) { add(`${sur} : titre`, h); if (/rivales|secteur/.test(h.textContent) && !aRivales) T.push(["!!", `${k} : titre comparé aux rivales sans rivales à l'écran : ${h.textContent}`]); if (!/[.?!]$/.test(h.textContent.trim())) T.push(["!!", `${k} : titre sans ponctuation finale : ${h.textContent}`]); }
         st.querySelectorAll(".ek-cmp").forEach(e => { add(`${sur} : pastille`, e); if (/rivales|secteur/.test(e.textContent) && !aRivales) T.push(["!!", `${k} : pastille comparée aux rivales sans rivales à l'écran : ${e.textContent}`]); });
         st.querySelectorAll(".ek-bt").forEach(e => add(`${sur} : titre du graphique`, e));

@@ -194,7 +194,7 @@ async function O2_rcCalcul(S) {
    3. Et si j'avais investi ? Une seule courbe, des séries distinctes, des hypothèses écrites
    ==================================================================================== */
 const O2_IDXCUR = { cac40: "EUR", stoxx50: "EUR", dax: "EUR", sp500: "USD", nasdaq100: "USD", ftse100: "GBP", nikkei: "JPY" };
-const O2_IDXNOM = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
+const O2_IDXNOM = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
 const O2_nomK = k => k.startsWith("i:") ? O2_IDXNOM[k.slice(2)] || k.slice(2) : keyName(k) || k;
 const O2_curK = k => { const p = PX[k]; if (p && p.cur) return p.cur; if (k.startsWith("i:")) return O2_IDXCUR[k.slice(2)] || null; if (k.startsWith("e:")) return (ETFBY[k.slice(2)] || {}).devise || null; return null; };
 const O2_moinsAns = (iso, a) => { const [y, m, d] = iso.split("-").map(Number); const dt = new Date(Date.UTC(y - a, m - 1, d)); if (dt.getUTCMonth() !== m - 1) dt.setUTCDate(0); return dt.toISOString().slice(0, 10); };

@@ -2295,3 +2295,12 @@ html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;d
 .r8-src ul{margin:4px 0 0;padding:0;list-style:none}.r8-src li{font-size:13.5px;line-height:1.45;padding:5px 0;border-top:1px solid #eee}.r8-src li time{color:#777;margin-right:4px}.r8-src li a{color:#111}.r8-med{color:#777;font-size:12.5px}
 .r8-syn p+p{margin-top:8px}
 .r8-syn .r8-sources{font-size:13.5px;color:#444;margin-top:10px;line-height:1.6}.r8-sources b{font-weight:700;color:#111}.r8-sources a{color:#111;text-decoration:underline;text-decoration-color:#E0C200;text-underline-offset:3px}
+/* 8/11 : bouton « Comparer à ses rivales » des étapes de la fiche */
+.ek-rivz{display:flex;flex-direction:column;gap:6px}
+.ek-rivb{cursor:pointer;display:flex;align-items:center;gap:14px;border:2px solid #111;border-radius:18px;background:#111;color:#fff;padding:14px 18px;box-shadow:5px 5px 0 #FFE14D;text-decoration:none;transition:transform .1s}
+.ek-rivb:hover{transform:translate(-1px,-1px)}
+.ek-rivb .ic{width:40px;height:40px;border-radius:12px;background:#FFE14D;color:#111;display:grid;place-items:center;font:800 19px Inter,sans-serif;flex:0 0 auto}
+.ek-rivb b{display:block;font:800 19px/1.1 "Bricolage Grotesque",sans-serif;letter-spacing:-.3px;color:#fff}.ek-rivb small{display:block;font-size:12.5px;color:#ddd;margin-top:2px}
+.ek-rivb.back{background:#fff;color:#111;box-shadow:5px 5px 0 #111}.ek-rivb.back b{color:#111}.ek-rivb.back .ic{background:#111;color:#fff}.ek-rivb.back small{color:#555}
+.ek-rivq{font-size:13px;color:#555;margin:0;padding-left:4px}.ek-rivq b{color:#111}.ek-rivq a{color:#111;font-weight:700}
+.ek-vue[hidden]{display:none!important}

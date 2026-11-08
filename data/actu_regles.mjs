@@ -251,7 +251,7 @@ const PERT_EXCLU = new RegExp([
   "football", "soccer", "rugby", "basket", "\\bnba\\b", "\\bnfl\\b", "formule 1", "formula 1", "grand prix", "marathon", "cyclisme", "\\bjo\\b 20", "olympi",
   "festival", "concert", "biopic", "\\bspot\\b", "horoscope", "recette", "recipe", "voucher", "coupon", "code promo", "promo code", "bon plan", "deals? of the",
   "black friday", "cyber monday", "soldes", "giveaway", "jeu-concours", "wallpaper", "unboxing", "hands-on", "\\breview\\b", "\\btest\\s?:",
-  "stocks? to buy", "shares? to buy", "should you buy", "buy now\\b", "à acheter", "faut-il acheter", "faut-il vendre", "price prediction", "price target",
+  "stocks? to buy", "shares? to buy", "i'd buy", "i would buy", "i'm (buying|not selling)", "better buy", "\\bbuy only", "should you buy", "buy now\\b", "à acheter", "faut-il acheter", "faut-il vendre", "price prediction", "price target",
   "objectif de cours", "kursziel", "stock price, news", "stock quote", "\\btranscript", "\\btop \\d+ ", "\\b\\d+ (best|top|stocks|actions|aktien)\\b",
   "\\bmillionaire", "retire (early|rich)", "passive income", "revenu passif", "dividend stocks? (to|for)", "\\bbraquage", "robbery", "\\bvol à\\b", "cambriol",
   "obituary", "nécrologie", "liquide les stocks", "prix (cassé|barré)", "meilleur prix", "all-time low", "\\$\\d+ off", "% off\\b", "€ de moins", "euros de moins",

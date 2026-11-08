@@ -5,11 +5,11 @@
 import { visiteurSemaine, sessionCompte, premiumOf } from "./compte.mjs";
 const json = (o, status = 200) => Response.json(o, { status, headers: { "cache-control": "no-store" } });
 const lundi = () => { const d = new Date(); d.setUTCDate(d.getUTCDate() - (d.getUTCDay() + 6) % 7); return d.toISOString().slice(0, 10); };
-export const PLAFONDS = { comparer: 3 }; // 6/11 (Romain) : 3 par semaine (avant : 5)
+export const PLAFONDS = { comparer: 3, rivales: 5 }; // 6/11 (Romain) : 3 comparaisons par semaine (avant : 5) ; 8/11 : 5 « Comparer à ses rivales » sur la fiche
 export async function quota(request, env) {
   const url = new URL(request.url), quoi = url.pathname.split("/")[3];
   if (!PLAFONDS[quoi]) return json({ error: "Introuvable" }, 404);
-  const plafond = +env.COMPARER_GRATUIT_SEMAINE || PLAFONDS[quoi];
+  const plafond = quoi === "comparer" ? (+env.COMPARER_GRATUIT_SEMAINE || PLAFONDS[quoi]) : PLAFONDS[quoi];
   const p = await premiumOf(request, env).catch(() => null);
   if (p) return json({ ok: true, premium: true, reste: null, plafond: null });
   if (!env.DB) return json({ ok: true, reste: plafond, plafond, erreur: "base" }); // jamais bloquer à cause d'une panne

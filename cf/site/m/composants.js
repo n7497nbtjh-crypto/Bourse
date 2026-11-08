@@ -112,13 +112,32 @@ function ekEtape(o) {
   const cmp = o.cmp && o.cmp.texte ? `<p class="ek-cmp ${o.cmp.ton || "n"}">${/^(Comme|Même)/.test(o.cmp.texte) ? "" : o.cmp.ton === "g" ? "▲ " : o.cmp.ton === "r" ? "▼ " : ""}${ekEsc(o.cmp.texte)}</p>` : "";
   const mots = (o.mots || []).filter(m => !c || m.cle !== c.cle);
   const titre = d ? o.titre : String(o.titre || "").replace(/^./, x => x.toUpperCase());
-  const cote = o.visuel && (o.explique || o.suite); // la question suivante va toujours dans la colonne de droite, sous l'explication
-  const droite = cote ? `<div class="ek-side${o.explique ? "" : " ek-side-seul"}">${o.explique || ""}${ekTransition(o.suite)}</div>` : (o.explique || "");
+  const rv = o.riv && o.riv.visuel ? o.riv : null; // 8/11 : bascule « son passé » / « ses rivales » (fiche)
+  const cote = o.visuel && (o.explique || o.suite || rv); // la question suivante va toujours dans la colonne de droite, sous l'explication
+  const bouton = rv ? `<div class="ek-rivz"><div role="button" tabindex="0" class="ek-rivb" data-ek-riv="${ekEsc(o.id)}" data-ek-co="${ekEsc(rv.k || "")}"><span class="ic">⇄</span><span><b>${ekEsc(rv.label)}</b><small>${ekEsc(rv.detail || "")}</small></span></div><p class="ek-rivq">${typeof isPrem === "function" && isPrem() ? "" : "Gratuit : 5 comparaisons par semaine."}</p></div>` : "";
+  const droite = cote ? `<div class="ek-side${o.explique || rv ? "" : " ek-side-seul"}">${bouton}${o.explique || ""}${ekTransition(o.suite)}</div>` : (o.explique || "");
+  const vis = rv ? `<div class="ek-vue" data-vue="passe">${o.visuel}</div><div class="ek-vue" data-vue="riv" hidden>${rv.visuel}</div>` : o.visuel;
   return `<div class="ek-step" id="${ekEsc(o.id)}"><div class="ek-rail"><b>${o.n}</b></div><div class="ek-sc">
   <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${tete}${ekEsc(titre)}</h3>${cmp}
   ${mots.length ? `<div class="ek-defs">${c ? "Autre mot" + (mots.length > 1 ? "s" : "") : "Les mots de l'étape"} : ${mots.map(m => ekDefBouton(m.cle, m)).join("")}</div>` : ""}
-  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${o.visuel && !cote ? " ek-row-1" : ""}">${o.visuel ? `<div class="ek-main">${o.visuel}</div>` : ""}${droite}</div>` : ""}${o.plus || ""}${cote ? "" : ekTransition(o.suite)}</div></div>`;
+  ${o.visuel || o.explique ? `<div class="ek-row${o.haut ? " ek-row-top" : ""}${o.visuel && !cote ? " ek-row-1" : ""}">${o.visuel ? `<div class="ek-main">${vis}</div>` : ""}${droite}</div>` : ""}${o.plus || ""}${cote ? "" : ekTransition(o.suite)}</div></div>`;
 }
+// 8/11 : bouton « Comparer à ses rivales » d'une étape ; sans Premium, 5 comparaisons par semaine comptées par le serveur (une étape d'une entreprise = une comparaison)
+async function ekRivClic(a) {
+  const st = a.closest(".ek-step"), vP = st && st.querySelector('.ek-vue[data-vue="passe"]'), vR = st && st.querySelector('.ek-vue[data-vue="riv"]'), q = st && st.querySelector(".ek-rivq"); if (!vP || !vR) return;
+  const versRiv = !vP.hidden;
+  if (versRiv && !(typeof isPrem === "function" && isPrem())) {
+    let j = null; try { const r = await fetch("/api/quota/rivales", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ ids: [a.dataset.ekCo, a.dataset.ekRiv] }) }); j = r.ok ? await r.json().catch(() => null) : null; } catch (e) { }
+    if (j && j.ok === false) { if (q) q.innerHTML = `<b>Vos ${j.plafond || 5} comparaisons de la semaine sont faites.</b> Elles reviennent lundi. <a href="/premium">Premium : sans limite →</a>`; return; }
+    if (q && j && j.reste != null) q.innerHTML = `Gratuit : <b>${j.reste} comparaison${j.reste > 1 ? "s" : ""}</b> restante${j.reste > 1 ? "s" : ""} cette semaine.`;
+  }
+  vP.hidden = versRiv; vR.hidden = !versRiv;
+  if (!a.dataset.l0) { a.dataset.l0 = a.querySelector("b").textContent; a.dataset.d0 = a.querySelector("small").textContent; }
+  a.classList.toggle("back", versRiv); a.querySelector(".ic").textContent = versRiv ? "↺" : "⇄";
+  a.querySelector("b").textContent = versRiv ? "Revenir à son passé" : a.dataset.l0; a.querySelector("small").textContent = versRiv ? "Ses chiffres des années précédentes" : a.dataset.d0;
+}
+document.addEventListener("click", ev => { const a = ev.target.closest && ev.target.closest(".ek-rivb"); if (!a) return; ev.preventDefault(); ekRivClic(a); });
+document.addEventListener("keydown", ev => { if (ev.key !== "Enter" && ev.key !== " ") return; const a = ev.target.closest && ev.target.closest(".ek-rivb"); if (!a) return; ev.preventDefault(); ekRivClic(a); });
 function ekFil(etapes) { return `<div class="ek ek-fil">${etapes.map(ekEtape).join("")}</div>`; }
 
 // ——— Définitions : une seule fenêtre pour tout le site ———

@@ -196,10 +196,68 @@ function f4Chaine(x) {
   return `<div class="ek-chain" style="--n:${R5.length}">${R5.map((r, i) => `<a class="ek-rp" href="#e${i + 1}"><span class="ek-st"><i>${i + 1}</i>${esc(r[0])}</span><span class="ek-v ${r[2]}">${esc(r[1])}</span><span class="ek-s">${esc(r[3])}</span>${r[4]}<span class="ek-ml">${esc(r[5])}</span><span class="ek-go">Comprendre <span>↓</span></span></a>`).join("")}</div>`;
 }
 
+// ——— 8/11 (Romain, maquette docs/maquettes/fiche-rivales-v1.html) : chaque étape s'ouvre sur le passé de l'entreprise ;
+// le bouton « Comparer à ses rivales » remplace le graphique par l'entreprise face à ses rivales pour le chiffre de l'étape.
+// Sans Premium : 5 comparaisons par semaine (serveur, /api/quota/rivales ; ekRivClic dans composants.js). ———
+function f4RivPts(x, cle, o) {
+  const { s, M, MED, P } = x;
+  const peers = P.mode === "rivales" ? P.L.map(r => ({ nom: r.name, v: f4M(r)[cle] })) : [];
+  const rows = [{ nom: s.name, v: M[cle], moi: 1 }, ...peers].filter(r => r.v != null && isFinite(r.v)).map(r => ({ ...r, v: r.v * 100 }));
+  if (!rows.some(r => r.moi) || MED[cle] == null) return "";
+  const med = MED[cle] * 100, vals = rows.map(r => r.v);
+  const lo = Math.max(o.plancher ?? -60, Math.min(0, ...vals)), hi = Math.min(o.plafond ?? 120, Math.max(10, ...vals, med));
+  const nn = f4Nice(hi - Math.min(0, lo)), pas = nn.ticks.length > 1 ? nn.ticks[1] - nn.ticks[0] : nn.max / 4;
+  const mn = lo < 0 ? -Math.ceil(-lo / pas) * pas : 0, mx = Math.ceil(hi * 1.05 / pas) * pas, grad = []; for (let t = mn; t <= mx + 1e-9; t += pas) grad.push(Math.round(t * 100) / 100);
+  const lignes = rows.sort((a, b) => b.v - a.v).map(r => ({ ...r, texte: o.fmt(r.v), ...(r.v < mn || r.v > mx ? { note: `est hors de l'échelle : ${o.fmt(r.v)}.` } : {}) }));
+  return ekPoints({ titre: o.titre, unite: o.unite, lignes, mediane: med, mediane_label: `médiane ${o.fmt(med)}`, min: mn, max: mx, graduations: grad, fmtAxe: o.axe || (t => ekFr(t, 0) + " %"),
+    ...(o.basEstMieux ? { basEstMieux: true, motBas: o.motBas, motHaut: o.motHaut } : {}),
+    indice: `Chaque point place une entreprise sur l'échelle. ${o.basEstMieux ? "À gauche du pointillé" : "À droite du pointillé (zone verte)"}, mieux que la ${P.mode === "rivales" ? "rivale" : "société"} du milieu ; de l'autre côté, moins bien.`, source: o.source || f4Src(x, "Comptes officiels, derniers exercices publiés") });
+}
+function f4ColsPct(x, titre, annees, vals, unite, fmt, indice) { // passé d'un ratio (marge, part versée…), en barres
+  const v = vals.map(z => z == null || !isFinite(z) ? null : z); if (v.filter(z => z != null).length < 2) return "";
+  const hi = Math.max(0, ...v.filter(z => z != null)), lo = Math.min(0, ...v.filter(z => z != null)), nn = f4Nice(Math.max(hi - lo, 1)), pas = nn.ticks.length > 1 ? nn.ticks[1] - nn.ticks[0] : nn.max;
+  const top = Math.ceil(hi * 1.12 / pas) * pas || pas, tk = []; for (let t = 0; t <= top + 1e-9; t += pas) tk.push(+t.toFixed(10));
+  return ekColonnes({ sansVar: true, titre, unite, annees, valeurs: v, fmt, max: top, pas, graduations: tk, fmtAxe: t => ekFr(t, 0), indice, source: f4Src(x, "Comptes officiels, exercices clos") });
+}
+function f4PerPasse(x) { // PER il y a 3 ans, il y a 1 an et aujourd'hui : cours de chaque date ÷ bénéfice par action publié à ce moment-là
+  const { s, c, M } = x, q = typeof pxOf === "function" ? pxOf(s) : null, eps = c && c.fin && c.fin.eps, Y = c && c.years;
+  if (!q || !(q.p > 0) || !(M.pe > 0) || M.peNs || !eps || !Y) return "";
+  const fe = /^\d\d-\d\d$/.test(c.fyEnd || "") ? c.fyEnd : "12-31", pub = i => Date.parse(`${Y[i]}-${fe}T00:00:00Z`) + 40 * 864e5; // publication supposée 40 jours après la clôture
+  const iNow = Y.length - 1; if (!(eps[iNow] > 0)) return "";
+  const pts = [[3, q.p3y], [1, q.p1y]].map(([a, px]) => { if (!(px > 0)) return null; const d = Date.now() - a * 365.25 * 864e5; let i = -1; for (let k = 0; k < Y.length; k++) if (pub(k) <= d) i = k;
+    return i >= 0 && eps[i] > 0 ? [a === 1 ? "il y a 1 an" : "il y a 3 ans", M.pe * (px / q.p) * (eps[iNow] / eps[i])] : null; }).filter(Boolean);
+  if (!pts.length) return "";
+  const L = [...pts, ["aujourd'hui", M.pe]]; if (L.some(z => !(z[1] > 0 && z[1] <= 100))) return ""; // un PER au-delà de 100 (bénéfice presque nul) ne se dessine pas : on garde les rivales
+  const mx = f4Nice(Math.max(...L.map(z => z[1])));
+  return ekColonnes({ sansVar: true, titre: "Son PER, à plusieurs dates", unite: "fois le bénéfice annuel", annees: L.map(z => z[0]), valeurs: L.map(z => Math.round(z[1] * 10) / 10), fmt: v => ekFr(v, 0), max: mx.max,
+    pas: mx.ticks.length > 1 ? mx.ticks[1] - mx.ticks[0] : mx.max, graduations: mx.ticks, fmtAxe: t => ekFr(t, 0),
+    indice: "Le PER de chaque date : le cours de ce jour-là divisé par le bénéfice par action du dernier exercice publié à ce moment-là. Il monte quand le cours monte plus vite que le bénéfice.",
+    source: { texte: "Cours d'il y a 3 ans, d'il y a 1 an et du jour ; bénéfice par action des comptes officiels" } });
+}
+function f4Bascule(x, E) {
+  const { s, c, P } = x, nomsR = P.mode === "rivales" ? P.L.slice(0, 3).map(r => r.name).join(", ") + (P.L.length > 3 ? "…" : "") : "", pc = v => (v > 0 ? "+" : v < 0 ? "−" : "") + ekFr(Math.abs(v), 1) + " %";
+  const btn = (quoi) => ({ label: P.mode === "rivales" ? "Comparer à ses rivales" : "Comparer à son secteur", detail: P.mode === "rivales" ? `${quoi} face à ${nomsR}` : `${quoi} face à la médiane ${P.de}`, k: s.id });
+  const ca = f4Serie(c, "ca"), eb = f4Serie(c, "ebit"), nt = f4Serie(c, "net"), dp = f4Serie(c, "divPaid");
+  for (const e of E) {
+    let passe = null, riv = null, quoi = "";
+    if (e.id === "e1") { riv = f4RivPts(x, "g", { titre: "Croissance des ventes sur un an", unite: "dernier exercice publié", fmt: pc, plancher: -40, plafond: 80 }); quoi = "Sa croissance"; }
+    else if (e.id === "e2") { riv = e.visuel; quoi = "Sa marge";
+      if (ca && eb) passe = f4ColsPct(x, `Gardés sur 100 ${x.sym} de ventes`, ca.y, ca.v.map((z, i) => z > 0 && eb.v[i] != null ? eb.v[i] / z * 100 : null), "marge d'exploitation, par exercice", v => ekFr(v, 1) + " " + x.sym, "Chaque barre : ce qu'elle a gardé sur 100 € vendus cette année-là, une fois l'activité payée."); }
+    else if (e.id === "e3") { riv = f4RivPts(x, "ng", { titre: "Croissance du bénéfice net sur un an", unite: "dernier exercice publié", fmt: pc, plancher: -60, plafond: 150 }); quoi = "Son bénéfice"; }
+    else if (e.id === "e4") { riv = e.visuel; quoi = "Son dividende";
+      if (nt && dp) passe = f4ColsPct(x, `Versés sur 100 ${x.sym} de bénéfice`, nt.y, nt.v.map((z, i) => z > 0 && dp.v[i] != null && dp.v[i] / z <= 1.5 ? dp.v[i] / z * 100 : null), "part du bénéfice versée, par exercice", v => ekFr(v, 0) + " " + x.sym, "Chaque barre : ce qu'elle a versé à ses actionnaires sur 100 € de bénéfice cette année-là." + (nt.v.some((z, i) => z > 0 && dp.v[i] / z > 1.5) ? " Une année où elle a versé plus d'une fois et demie son bénéfice n'est pas dessinée (voir « Tous les chiffres »)." : "")); }
+    else if (e.id === "e5") { riv = e.visuel; passe = f4PerPasse(x); quoi = "Son PER"; }
+    if (!riv) continue;
+    if (passe) { e.visuel = passe; e.riv = { visuel: riv, ...btn(quoi) }; }
+    else if (e.id === "e1" || e.id === "e3") { if (e.visuel) e.riv = { visuel: riv, ...btn(quoi) }; }
+  }
+}
+
 // ——— Le fil en 5 étapes ———
 function f4Fil(x) {
   const E = x.bk ? [f4B1(x), f4B2(x), f4E4(x), f4E5(x)] : [f4E1(x), f4E2(x), f4E3(x), f4E4(x), f4E5(x)];
   E.forEach((e, i) => { e.id = "e" + (i + 1); e.n = i + 1; });
+  if (!x.bk) try { f4Bascule(x, E); } catch (err) { } // 8/11 : passé de l'entreprise d'abord, « Comparer à ses rivales » au clic
   return `<section class="ek-sec" id="fil"><span class="ek-stk2">L'histoire de ses comptes</span><h2>${x.bk ? "De son bénéfice au prix de l'action" : "De ses ventes au prix de l'action"}, en ${E.length} étapes.</h2>${ekFil(E)}</section>`; }
 const f4Src = (x, t) => x.c && x.c.sourceEP ? { texte: "Comptes publiés, fournis par le spécialiste des données financières Eulerpool", lien: "https://eulerpool.com", label: "Data by Eulerpool ↗" } // 5/11 : mention exigée par Eulerpool
   : ({ texte: t || "Comptes officiels", lien: x.rap });
