@@ -289,7 +289,7 @@ function synPageV8(b, m) {
   }
 
   /* ---------- 4. À venir ---------- */
-  const av = [...(b.a_venir || []).slice(0, 14).map(e => ({ date: e.date, k: e.k, t: e.nom || "", p: String(e.label || "").replace(/^./, c => c.toLowerCase()) })),
+  const av = [...(b.a_venir || []).slice(0, 24).map(e => ({ date: e.date, k: e.k, t: e.nom || "", p: String(e.label || "").replace(/^./, c => c.toLowerCase()) })),
     ...((b.etf8 && b.etf8.a_venir) || []).map(e => ({ date: e.date, k: e.k, t: e.nom, p: `${e.label}${e.via ? ` · ${F0.format(e.via)} € à travers vos ETF` : ""}` })),
     ...(b.dca || []).map(x => ({ date: x.prochain, k: x.k, t: "Votre achat programmé", p: `${F0.format(x.q)} part${x.q > 1 ? "s" : ""} ${r8De(x.nom)}` }))].sort((a, c) => a.date.localeCompare(c.date));
   if (av.length) { num++;

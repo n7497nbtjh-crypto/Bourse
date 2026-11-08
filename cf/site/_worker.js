@@ -2194,6 +2194,13 @@ async function enrichir8(env, d, n, pf, semaine, auj) {
         h && plus.push({ k: l.k, id, nom: l.nom, date: h.date, type: "R\xE9sultats", label: "R\xE9sultats, date habituelle \xE0 confirmer", categorie: "resultats", estime: !0, lien: "/entreprise/" + id + "/agenda" });
       }
     }
+    let vus = new Set([...n.a_venir || [], ...plus].map((e) => e.k + "|" + e.date)), loin = addJ2(auj, 183);
+    for (let l of (n.lignes || []).filter((l2) => l2.k.startsWith("c:"))) {
+      let id = l.k.slice(2);
+      (d.ev || []).filter((x) => x && x.id === id && x.date > auj && x.date <= loin && !/sultat/i.test((x.type || "") + (x.label || "")) && !vus.has(l.k + "|" + x.date)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 2).forEach((x) => {
+        vus.add(l.k + "|" + x.date), plus.push({ k: l.k, id, nom: l.nom, date: x.date, type: x.type || "Annonce", label: x.label || x.type || "Annonce", categorie: /ividende/i.test(x.type || "") ? "dividendes" : "autre", source: x.source || null, lien: "/entreprise/" + id + "/agenda" });
+      });
+    }
     n.a_venir = [...n.a_venir || [], ...plus].sort((a, b) => a.date.localeCompare(b.date));
   } catch {
   }
@@ -3768,7 +3775,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "dc57f09bd8847c1e", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "aec080c8c2aab8a6", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

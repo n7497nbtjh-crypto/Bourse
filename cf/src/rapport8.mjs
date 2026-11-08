@@ -303,6 +303,12 @@ export async function enrichir8(env, d, n, pf, semaine, auj) {
       const e = (d.ev || []).filter(x => x && x.id === id && /sultat/i.test(x.type || "") && x.date > auj).sort((a, b) => a.date.localeCompare(b.date))[0];
       if (e) plus.push({ k: l.k, id, nom: l.nom, date: e.date, type: "Résultats", label: e.label || "Publication des résultats", categorie: "resultats", source: e.source || null, lien: "/entreprise/" + id + "/agenda" });
       else { const h = ((hab && hab.events) || []).find(x => x.id === id && x.date > auj); if (h) plus.push({ k: l.k, id, nom: l.nom, date: h.date, type: "Résultats", label: "Résultats, date habituelle à confirmer", categorie: "resultats", estime: true, lien: "/entreprise/" + id + "/agenda" }); } }
+    // 8/11 (Romain : « toutes les dates qui concernent le portefeuille ») : aussi dividendes et assemblées des six prochains mois, deux par entreprise au plus
+    const vus = new Set([...(n.a_venir || []), ...plus].map(e => e.k + "|" + e.date)), loin = addJ(auj, 183);
+    for (const l of (n.lignes || []).filter(l => l.k.startsWith("c:"))) { const id = l.k.slice(2);
+      (d.ev || []).filter(x => x && x.id === id && x.date > auj && x.date <= loin && !/sultat/i.test((x.type || "") + (x.label || "")) && !vus.has(l.k + "|" + x.date))
+        .sort((a, b) => a.date.localeCompare(b.date)).slice(0, 2)
+        .forEach(x => { vus.add(l.k + "|" + x.date); plus.push({ k: l.k, id, nom: l.nom, date: x.date, type: x.type || "Annonce", label: x.label || x.type || "Annonce", categorie: /ividende/i.test(x.type || "") ? "dividendes" : "autre", source: x.source || null, lien: "/entreprise/" + id + "/agenda" }); }); }
     n.a_venir = [...(n.a_venir || []), ...plus].sort((a, b) => a.date.localeCompare(b.date)); } catch (e) { }
   try { n.etf8 = await transparenceDe(d, n, lundi, auj); } catch (e) { n.etf8 = null; if (globalThis.process && process.env.R8_DEBUG) console.log("etf8", e); }
   // Les plus grosses entreprises tenues à travers les ETF passent aussi face à leurs rivales (sinon un portefeuille d'ETF n'a pas cette partie)
