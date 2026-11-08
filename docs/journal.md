@@ -290,3 +290,5 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - 8/11 après-midi : jours du rapport raccourcis (« lun. 2 »), étiquettes entières au téléphone ; vidéo v11 refaite avec le nouveau rapport (marge face aux rivales, Le monde en tuiles, Pourquoi elle a bougé et Ce que dit la presse, Apple seule).
 
 - 8/11 14h : rapport, Vos lignes en tuiles logo + nom (part du portefeuille puis favoris), une ligne à la fois avec son en-tête et ses encadrés en grand ; titres des encadrés en Bricolage surlignés ; « Pour aller plus loin » retiré, section « Sources » en fin de rapport (menu par valeur, complété par les sources de la synthèse) ; téléphone : jours en pastilles avec légende.
+
+- 8/11 14h30 : rapport, encadrés empilés (Pourquoi, Presse, Rivales) ; rivales : axe centré sur la médiane, rouge sous 0 %, vert au-dessus ; en-tête sans petits indicateurs ; barre de l entreprise en jaune ; exemple : etf8 ajouté (calculé pour la même semaine du 2 au 6/11, même portefeuille).
