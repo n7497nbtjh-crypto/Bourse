@@ -1123,7 +1123,7 @@ function presseFidele(txt, lus) {
 async function synthesePresse(request, env, url) {
   let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json4({ error: "Demande illisible." }, 400);
-  let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v6|" + k + "|" + au, samedi = Date.parse(au + "T00:00:00Z") - 864e5;
+  let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v7|" + k + "|" + au, samedi = Date.parse(au + "T00:00:00Z") - 864e5;
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
     let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind(cle).first();

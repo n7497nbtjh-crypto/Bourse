@@ -182,7 +182,7 @@ function presseFidele(txt, lus) { // garde les phrases dont chaque nombre et cha
 async function synthesePresse(request, env, url) {
   const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
-  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v6|" + k + "|" + au;
+  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v7|" + k + "|" + au;
   const samedi = Date.parse(au + "T00:00:00Z") - 864e5; // écrite le samedi (robot presse.yml) ou plus tard : gardée pour toute la semaine
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
     const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind(cle).first();
