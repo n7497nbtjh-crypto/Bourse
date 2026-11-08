@@ -33,6 +33,10 @@
     {
      "q": ".ek-step",
      "n": 1
+    },
+    {
+     "q": ".ek-rivb",
+     "n": 1
     }
    ],
    "blocs": [
@@ -76,26 +80,34 @@
      "q": "#r8-monde h2"
     },
     {
-     "q": ".r8-sujet",
+     "q": ".r9-mc",
      "n": 0,
      "cacher": [
-      ".bd"
+      ":scope > p",
+      ".r9-chez",
+      ".r9-chif",
+      ".r9-src"
      ],
      "pad": 8
     },
     {
-     "q": ".r8-sujet",
+     "q": ".r9-mc",
      "n": 1,
      "cacher": [
-      ".bd"
+      ":scope > p",
+      ".r9-chez",
+      ".r9-chif",
+      ".r9-src"
      ],
      "pad": 8
     },
     {
-     "q": ".r8-sujet",
-     "n": 2,
+     "q": ".r9-tl",
+     "n": 0,
      "cacher": [
-      ".bd"
+      ":scope > p",
+      ".cv",
+      ".r9-src"
      ],
      "pad": 8
     }
@@ -106,29 +118,22 @@
    "url": "/rapport-exemple",
    "blocs": [
     {
-     "q": "#r8-co h2"
+     "q": "#r8-l h2"
     },
     {
-     "q": ".r8-tg",
-     "n": 0,
-     "anim": "tuiles",
-     "dans": ".r8-tus",
-     "duree": 0.8,
+     "q": ".r9-row.open",
      "pad": 6
     },
     {
-     "q": "article.r8-co",
-     "n": 0,
-     "anim": "pourquoi",
-     "dans": ".r8-lec",
+     "q": ".r9-det:not([hidden]) .r9-pq",
+     "anim": "rangs",
      "duree": 1.6,
      "pad": 8,
+     "opts": {
+      "pas": 0.12
+     },
      "cacher": [
-      ".r8-preuve",
-      ".r8-riv",
-      ".r8-cof",
-      ".r8-presse",
-      ".r8-faits"
+      ".r9-kpi"
      ]
     }
    ]
@@ -136,11 +141,10 @@
   {
    "id": "pq2",
    "url": "/rapport-exemple",
-   "attendre": ".r8-syn .r8-syn-s",
+   "attendre": ".r9-pr .r8-syn-s",
    "blocs": [
     {
-     "q": ".r8-syn",
-     "n": 0,
+     "q": ".r9-det:not([hidden]) .r9-pr",
      "anim": "rangs",
      "duree": 1.6,
      "pad": 8,
@@ -148,8 +152,9 @@
       "pas": 0.14
      },
      "cacher": [
-      ":scope > p:nth-child(4)",
-      ".r8-ia"
+      "details.r9-plus",
+      ".r8-ia",
+      ".r8-syn > p:nth-child(3)"
      ]
     }
    ]
