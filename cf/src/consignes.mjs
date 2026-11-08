@@ -111,8 +111,8 @@ Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 ${REGLES}`;
 // 8/11 : ce que dit la presse d'une entreprise sur une semaine (plusieurs articles), écrit une fois et servi à tous
 export const PRESSE_SEMAINE = `Tu es journaliste financier et tu écris pour des personnes qui débutent en Bourse. Tu reçois en JSON une entreprise cotée et les articles de presse de sa semaine (numérotés ; média, date, titre et le plus souvent le texte, parfois dans une autre langue).
-Écris la synthèse de ce que la presse a dit de cette entreprise cette semaine. Réponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."], "articles": [1, 3]}.
-- "clair" : deux paragraphes courts séparés par un saut de ligne, 90 à 140 mots en tout.
+Écris la synthèse de ce que la presse a dit de cette entreprise cette semaine. Réponds uniquement par un objet JSON valide, sur une seule ligne : {"paragraphes": ["...", "..."], "sujets": ["...", "..."], "articles": [1, 3]}.
+- "paragraphes" : exactement deux paragraphes courts, 90 à 140 mots en tout.
   Premier paragraphe : le sujet principal de la semaine, raconté clairement (qui, quoi, combien, quand), avec ce que l'article dit de son importance pour l'entreprise.
   Second paragraphe : les autres sujets, du plus important au moins important, une phrase chacun. Si les articles se contredisent, dis-le.
   Rattache chaque fait à son média (« selon … », « d'après … »), en variant la tournure.

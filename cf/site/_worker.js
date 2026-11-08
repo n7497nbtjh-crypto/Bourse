@@ -897,8 +897,8 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - Ignore ce qui n'est pas l'article (publicit\xE9, abonnement, autres articles, cookies).
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
 ${REGLES}`, PRESSE_SEMAINE = `Tu es journaliste financier et tu \xE9cris pour des personnes qui d\xE9butent en Bourse. Tu re\xE7ois en JSON une entreprise cot\xE9e et les articles de presse de sa semaine (num\xE9rot\xE9s ; m\xE9dia, date, titre et le plus souvent le texte, parfois dans une autre langue).
-\xC9cris la synth\xE8se de ce que la presse a dit de cette entreprise cette semaine. R\xE9ponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."], "articles": [1, 3]}.
-- "clair" : deux paragraphes courts s\xE9par\xE9s par un saut de ligne, 90 \xE0 140 mots en tout.
+\xC9cris la synth\xE8se de ce que la presse a dit de cette entreprise cette semaine. R\xE9ponds uniquement par un objet JSON valide, sur une seule ligne : {"paragraphes": ["...", "..."], "sujets": ["...", "..."], "articles": [1, 3]}.
+- "paragraphes" : exactement deux paragraphes courts, 90 \xE0 140 mots en tout.
   Premier paragraphe : le sujet principal de la semaine, racont\xE9 clairement (qui, quoi, combien, quand), avec ce que l'article dit de son importance pour l'entreprise.
   Second paragraphe : les autres sujets, du plus important au moins important, une phrase chacun. Si les articles se contredisent, dis-le.
   Rattache chaque fait \xE0 son m\xE9dia (\xAB selon \u2026 \xBB, \xAB d'apr\xE8s \u2026 \xBB), en variant la tournure.
@@ -1140,16 +1140,17 @@ async function synthesePresse(request, env, url) {
   presseFidele.raison = "";
   let r = await iaJSON(
     env,
-    "presse-sem6",
+    "presse-sem7",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     520,
-    (x) => (x && typeof x.clair == "string" && x.clair.length > 80 || (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
+    (x) => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(String).join(`
+`)), (x && typeof x.clair == "string" && x.clair.length > 80 ? !0 : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
       clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
 `).trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter((n) => n >= 1 && n <= lus.length)
-    } : null,
+    } : null),
     MODELES_PRESSE
   ).catch(() => null);
   if (!r) return json4({ indisponible: !0, raison: presseFidele.raison || "" });
@@ -1274,10 +1275,15 @@ var objDe = (t) => {
   if (!t) return null;
   let i = t.indexOf("{"), j = t.lastIndexOf("}");
   if (i < 0 || j <= i) return null;
+  let b = t.slice(i, j + 1);
   try {
-    return JSON.parse(t.slice(i, j + 1));
+    return JSON.parse(b);
   } catch {
-    return null;
+    try {
+      return JSON.parse(b.replace(/\r?\n/g, " "));
+    } catch {
+      return null;
+    }
   }
 };
 

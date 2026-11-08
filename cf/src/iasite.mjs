@@ -187,8 +187,8 @@ async function synthesePresse(request, env, url) {
   for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) }); }
   const nom = url.searchParams.get("nom") || id;
   presseFidele.raison = "";
-  const r = await iaJSON(env, "presse-sem6", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
-    x => (x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
+  const r = await iaJSON(env, "presse-sem7", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
+    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(String).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
       clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter(n => n >= 1 && n <= lus.length) } : null, MODELES_PRESSE).catch(() => null);
@@ -285,5 +285,5 @@ export async function iaJSON(env, prefixe, sys, faits, max, valide, modeles = MO
   if (repondu) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_syn (k, txt, modele, at) VALUES (?, ?, ?, ?)`).bind(k, '{"_refus":1}', null, Date.now()).run(); } catch (e) { }
   return null;
 }
-const objDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { return JSON.parse(t.slice(i, j + 1)); } catch (e) { return null; } };
+const objDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; const b = t.slice(i, j + 1); try { return JSON.parse(b); } catch (e) { try { return JSON.parse(b.replace(/\r?\n/g, " ")); } catch (e2) { return null; } } }; // 8/11 : un saut de ligne brut dans une chaîne rendait la réponse illisible
 const jsonDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { const o = JSON.parse(t.slice(i, j + 1)); return o && typeof o.clair === "string" ? o : null; } catch (e) { return null; } };
