@@ -2477,3 +2477,4 @@ details.r9-plus summary::-webkit-details-marker{display:none}details.r9-plus sum
 .r9-eurt b{font:800 22px "Bricolage Grotesque",sans-serif;letter-spacing:-.4px}
 .r9-pr .r8-syn p{max-width:88ch}
 @media (max-width:820px){.r9-row.fixe .r9-eurt{grid-column:1/-1;order:4}.r9-eurt b{font-size:17px}}
+@media (max-width:820px){.r9-duo.seul .r9-pqg{grid-template-columns:1fr;gap:12px}}
