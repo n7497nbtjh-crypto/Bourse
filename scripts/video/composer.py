@@ -24,7 +24,7 @@ def titre(lignes, t, dur, premium):
     """Titre noir sur blanc, dernière ligne surlignée en jaune (balayage), comme l'original."""
     c = Image.new("RGB", (W, H), "white")
     S = 138; f = ImageFont.truetype(FONT, S)
-    while max(f.getlength(l) for l in lignes) > 980: S -= 4; f = ImageFont.truetype(FONT, S)
+    while max(f.getlength(l) for l in lignes) > 840: S -= 4; f = ImageFont.truetype(FONT, S)
     lh = 1.165 * S; n = len(lignes); hb = (n - 1) * lh + 0.72 * S
     top = 882 - hb / 2 - (0.16 * S) - (90 if premium else 0)
     a = eio(t / 0.18) * (1 - eio((t - dur + 0.2) / 0.2))
@@ -57,7 +57,7 @@ def plan(sc):
     x0 = min(m["x"] for _, m in blocs); x1 = max(m["x"] + m["w"] for _, m in blocs)
     tot = sum(m["h"] for b, m in blocs if not b.get("superpose")) + sum(b.get("gap", 40) for b, _ in blocs[1:] if not b.get("superpose"))
     hmax = max([m["h"] for b, m in blocs if b.get("superpose")] + [0]); tot += max(0, hmax - blocs[-2][1]["h"]) if hmax else 0
-    s = min(1.0, 1040 / (x1 - x0), 1560 / tot)
+    s = min(1.0, 860 / (x1 - x0), 1560 / tot)
     y = max(240, (H - tot * s) / 2 - 40); pos = []
     for k, (b, m) in enumerate(blocs):
         if b.get("superpose"):  # même place que le bloc précédent (il le remplace à l'écran)
@@ -90,7 +90,7 @@ def cadre_plan(sc, lay, t):
 def nom(texte, t, dur):
     """Un nom d'entreprise noir sur blanc, coupe franche (début de la vidéo d'origine)."""
     c = Image.new("RGB", (W, H), "white"); S = 209; f = ImageFont.truetype(FONT, S)
-    while f.getlength(texte) > 980: S -= 6; f = ImageFont.truetype(FONT, S)
+    while f.getlength(texte) > 780: S -= 6; f = ImageFont.truetype(FONT, S)
     ImageDraw.Draw(c).text(((W - f.getlength(texte)) / 2, 1039 - 0.94 * S), texte, font=f, fill=NOIR)
     return c
 
@@ -116,7 +116,7 @@ def main():
     entrees, fc, T = [], "", 0
     for i, p in enumerate(parties):
         if "orig" in p:
-            a, b = p["orig"]; fc += f"[0:v]trim=start={a}" + (f":end={b}" if b else "") + f",setpts=PTS-STARTPTS,fps=60[p{i}];"
+            a, b = p["orig"]; fc += f"[0:v]trim=start={a}" + (f":end={b}" if b else "") + f",setpts=PTS-STARTPTS,fps=60,scale=886:1576,pad=1080:1920:97:172:white,setsar=1[p{i}];"  # 8/11 : marges pour TikTok (écrans plus hauts que 9:16, côtés coupés)
             T += (b or 24.9) - a
         else:
             fichier = f"/tmp/v5/partie{i}.mp4"; T = rendre(p["scenes"], fichier, seuls, T)
