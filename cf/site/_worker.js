@@ -1092,13 +1092,13 @@ async function lireArticle(env, u) {
   }
   return { texte, etat };
 }
-var PAYS = { france: "\\bfran[c\xE7]|frankreich|francia", espagne: "espa|spain|spagn|spanien", italie: "ital", allemagne: "german|deutsch|alleman", "royaume-uni": "royaume|united kingdom|britain|uk\\b|regno unito", "\xE9tats-unis": "united states|u\\.s\\.|us\\b|usa|am\xE9r|americ|estados unidos|stati uniti|\xE9tats", chine: "chin|china|cina", japon: "japan|japon|giappon", inde: "india|inde", canada: "canad", australie: "austral", suisse: "suisse|switz|swiss|svizzera|schweiz", "pays-bas": "netherlands|pays-bas|dutch|nederland", belgique: "belg", br\u00E9sil: "bra[sz]il", mexique: "mexi", cor\u00E9e: "kore|cor\xE9e|corea" };
+var PAYS = { france: "\\bfran[c\xE7]|frankreich|francia", espagne: "espa|spain|spagn|spanien", italie: "ital", allemagne: "german|deutsch|alleman", "royaume-uni": "royaume|united kingdom|britain|uk\\b|regno unito", "\xE9tats-unis": "united states|u\\.s\\.|us\\b|usa|am\xE9r|americ|estados unidos|stati uniti|\xE9tats", chine: "chin|china|cina", japon: "japan|japon|giappon", inde: "india|inde", canada: "canad", australie: "austral|tasman|\\baud\\b|a\\$", suisse: "suisse|switz|swiss|svizzera|schweiz", "pays-bas": "netherlands|pays-bas|dutch|nederland", belgique: "belg", br\u00E9sil: "bra[sz]il", mexique: "mexi", cor\u00E9e: "kore|cor\xE9e|corea" };
 function presseFidele(txt, lus) {
   let tous = lus.map((a) => a.titre + " " + a.texte).join(" ");
   for (let ph of txt.split(/(?<=[.!?])\s+/)) {
     let cite = lus.filter((a) => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, ""))), src = (cite.length ? cite.map((a) => a.titre + " " + a.texte).join(" ") : tous).toLowerCase(), srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ";
     for (let n of ph.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) {
-      let d = n.replace(/[^0-9]/g, "");
+      let d = n.replace(/[^0-9]/g, "").replace(/^0+/, "").replace(/(\d)0+$/, "$1");
       if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d))
         return presseFidele.raison = "chiffre " + n, !1;
     }
@@ -1114,7 +1114,7 @@ async function synthesePresse(request, env, url) {
   let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
-    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind("v3|" + k + "|" + au).first();
+    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind("v4|" + k + "|" + au).first();
     if (c && (au < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json4(JSON.parse(c.txt));
   } catch {
   }
@@ -1134,7 +1134,7 @@ async function synthesePresse(request, env, url) {
   presseFidele.raison = "";
   let r = await iaJSON(
     env,
-    "presse-sem3",
+    "presse-sem4",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     330,
@@ -1143,7 +1143,7 @@ async function synthesePresse(request, env, url) {
   if (!r) return json4({ indisponible: !0, raison: presseFidele.raison || "" });
   let out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter((x) => x.texte).length, sources: A.map((a) => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
   if (env.DB) try {
-    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind("v3|" + k + "|" + au, JSON.stringify(out), Date.now()).run();
+    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind("v4|" + k + "|" + au, JSON.stringify(out), Date.now()).run();
   } catch {
   }
   return json4(out);
