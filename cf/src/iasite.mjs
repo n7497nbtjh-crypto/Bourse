@@ -181,16 +181,25 @@ function presseFidele(txt, lus) { // garde les phrases dont chaque nombre et cha
   return garde.join("\n");
 }
 // 8/11 : homonymes (« Nov » pris pour le mois) et conseils glissés par la presse : synthèse refusée ou phrase retirée
+// 8/11 (Romain : « un margen brut », « une marge brute ») : fautes connues du modèle corrigées à l'écriture et à la lecture du cache
+function frCorrige(t) {
+  return String(t || "")
+    .replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")
+    .replace(/\b(un|le|ce|du) marge\b/gi, (m, d) => ({ un: "une", le: "la", ce: "cette", du: "de la" })[d.toLowerCase()] + " marge")
+    .replace(/\b(marges?(?: brutes?| nettes?| opérationnelles?)?)\s+(inférieur|supérieur|élevé|faible|stable|réduit|bas|haut)(s?)\b/gi, (m, n, a, pl) => n + " " + (a === "faible" || a === "stable" ? a : a.replace(/eur$/, "eure").replace(/é$/, "ée").replace(/t$/, "te").replace(/bas$/, "basse").replace(/haut$/, "haute")) + (/s$/.test(n) ? "s" : ""))
+    .replace(/\bdes chips\b/g, "des puces").replace(/\bchips\b/g, "puces")
+    .replace(/\s+%/g, "\u00a0%");
+}
 const PRESSE_HORS = /n'(a|ont) pas été mentionn|n'est pas mentionn|ne (mentionne|parle) pas de l'entreprise|aucun (des )?article(s)? ne (parle|mentionne|concerne)/i;
 const PRESSE_CONSEIL = /conseill|recommand|à acheter|à vendre|stocks? to buy|rééquilibrer|investissements? sélectif/i;
 async function synthesePresse(request, env, url) {
   const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
   const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v8|" + k + "|" + au;
-  const samedi = Date.parse(au + "T00:00:00Z") - 864e5; // écrite le samedi (robot presse.yml) ou plus tard : gardée pour toute la semaine
+  const samedi = Date.parse(au + "T21:00:00Z") - 2 * 864e5; // écrite après la clôture de Wall Street le vendredi (robot presse.yml) ou plus tard : gardée pour la semaine
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
     const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind(cle).first();
-    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5) && !PRESSE_HORS.test(c.txt) && !PRESSE_CONSEIL.test(c.txt)) return json(JSON.parse(c.txt)); } catch (e) { }
+    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5) && !PRESSE_HORS.test(c.txt) && !PRESSE_CONSEIL.test(c.txt)) { const o = JSON.parse(c.txt); o.clair = frCorrige(o.clair); return json(o); } } catch (e) { }
   let A = [];
   try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {};
     A = (j.p || []).filter(a => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 7); } catch (e) { }
@@ -201,7 +210,7 @@ async function synthesePresse(request, env, url) {
   presseFidele.raison = "";
   const r = await iaJSON(env, "presse-sem10", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
     x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(p => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !x.aucun && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && !PRESSE_HORS.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
-      clair: x.clair.replace(/—/g, ",").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bdes chips\b/g, "des puces").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
+      clair: frCorrige(x.clair.replace(/—/g, ",")).replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter(n => n >= 1 && n <= lus.length) } : null, MODELES_PRESSE).catch(() => null);
   if (!r) return json({ indisponible: true, raison: presseFidele.raison || "" });
