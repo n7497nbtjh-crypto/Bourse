@@ -1,0 +1,227 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette rapport de la semaine v7</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:16px/1.5 Inter,sans-serif;-webkit-font-smoothing:antialiased}
+b,.n{font-variant-numeric:tabular-nums}
+.w{max-width:1120px;margin:0 auto;padding:0 24px}
+.up{color:#0a8a3a}.dn{color:#d1242f}.gr{color:#666}
+.tag{display:inline-block;background:#fff;border:2px solid #111;border-radius:8px;padding:2px 11px;font:800 13px Inter;transform:rotate(-3deg)}
+.tag.j{background:#FFE14D}.tag.r{background:#FFE0EC}.tag.b{background:#DCE3FF}.tag.g{background:#eee}
+h2{font:800 40px/1 "Bricolage Grotesque";letter-spacing:-1.4px;margin:0 0 18px}
+section{margin:0 0 64px}
+.card{border:2px solid #111;border-radius:24px;box-shadow:5px 5px 0 #111;background:#fff}
+/* 1. Bandeau */
+.band{background:#FFE14D;border-bottom:2px solid #111;padding:22px 0 40px;margin-bottom:26px}
+.band .top{display:flex;justify-content:space-between;align-items:center;margin-bottom:26px}
+.logo{font:800 24px "Bricolage Grotesque";letter-spacing:-.6px}
+.hero{display:grid;grid-template-columns:1.3fr 1fr;gap:34px;align-items:center}
+.hero .lab{font:800 13px Inter;letter-spacing:.06em;text-transform:uppercase}
+.hero .big{font:800 112px/0.95 "Bricolage Grotesque";letter-spacing:-5px;margin:6px 0 4px}
+.hero .pc{font:700 20px Inter}.hero .pc span{font-weight:500;color:#333}
+.hero .ver{font:800 28px/1.12 "Bricolage Grotesque";letter-spacing:-.6px;margin:18px 0 0;max-width:560px}
+.hero .ver em{font-style:normal;background:#fff;border:2px solid #111;border-radius:10px;padding:0 8px;display:inline-block;transform:rotate(-1.5deg)}
+.spark{padding:20px 22px}
+.spark .t{display:flex;justify-content:space-between;font:700 13px Inter;color:#444}
+.idx{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.chip{border:2px solid #111;border-radius:99px;padding:3px 12px;font:700 13.5px Inter;background:#fff;white-space:nowrap}
+.nav{display:flex;gap:8px;margin-bottom:40px}.nav a{border:2px solid #111;border-radius:99px;padding:6px 16px;font:700 14px Inter;color:#111;text-decoration:none}.nav a.on{background:#111;color:#fff}
+/* 2. Vos lignes */
+.list{overflow:hidden}
+.hd,.row{display:grid;grid-template-columns:2.1fr 2fr .8fr 2.2fr 28px;gap:18px;align-items:center;padding:14px 24px}
+.hd{font:700 12px Inter;letter-spacing:.05em;text-transform:uppercase;color:#666;padding-top:18px;padding-bottom:8px}
+.row{border-top:1.5px solid #ececec;cursor:pointer}
+.row:hover{background:#FFFBE6}
+.grp{padding:16px 24px 4px;font:800 12px Inter;letter-spacing:.06em;text-transform:uppercase;color:#111;border-top:2px solid #111;background:#fafafa}
+.nm{display:flex;align-items:center;gap:12px}.nm img{width:38px;height:38px;border-radius:10px;border:1.5px solid #e2e2e2;object-fit:contain;background:#fff;padding:3px}
+.nm b{display:block;font:800 18px/1.1 "Bricolage Grotesque";letter-spacing:-.3px}.nm small{color:#666;font-size:12.5px}
+.eur{display:grid;grid-template-columns:1fr 1fr 64px;align-items:center;gap:0}
+.eur .l,.eur .r{height:16px;position:relative}.eur .l{border-right:2px solid #111}
+.eur i{position:absolute;top:2px;height:12px;border-radius:4px}.eur .l i{right:0;background:#ef4b55}.eur .r i{left:0;background:#16a34a}
+.eur b{text-align:right;font:800 16px Inter}
+.pct{font:800 18px "Bricolage Grotesque";text-align:right}
+.vs{display:grid;grid-template-columns:1fr 132px;gap:12px;align-items:center}
+.gauge{position:relative;height:14px;border-radius:99px;border:1.5px solid #111;background:linear-gradient(90deg,#FFD9DC 50%,#D3F2DE 50%)}
+.gauge:after{content:"";position:absolute;left:50%;top:-4px;bottom:-4px;border-left:2px dashed #111}
+.gauge i{position:absolute;top:50%;width:14px;height:14px;border-radius:50%;background:#111;transform:translate(-50%,-50%);z-index:1}
+.vw{font:800 14px Inter;line-height:1.15}.vw small{display:block;font:500 12px Inter;color:#666}
+.chev{font:800 18px Inter;text-align:center}
+/* Détail ouvert */
+.open{background:#FFFBE6}
+.det{display:grid;grid-template-columns:1.05fr 1.25fr 1fr;gap:18px;padding:6px 24px 24px;background:#FFFBE6;border-top:0}
+.box{background:#fff;border:2px solid #111;border-radius:18px;padding:16px 18px}
+.box .h{font:800 12px Inter;letter-spacing:.06em;text-transform:uppercase;color:#555;margin:0 0 8px}
+.box .lead{font:800 19px/1.2 "Bricolage Grotesque";letter-spacing:-.3px;margin:0 0 10px}
+.box p{margin:0 0 8px;font-size:14.5px;line-height:1.5}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px}
+.day{text-align:center;font:700 12px Inter}.day .bx{height:84px;position:relative;margin-bottom:4px}.day .bx:before{content:"";position:absolute;left:0;right:0;top:50%;border-top:1.5px solid #111}
+.day .bx i{position:absolute;left:28%;right:28%;border-radius:4px}
+.day.res .bx{background:#FFF2B3;border-radius:8px 8px 0 0}
+.day small{display:block;font-weight:500;color:#666}
+.sj{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 10px}.sj span{background:#FFE14D;border:1.5px solid #111;border-radius:99px;padding:1px 10px;font:700 12.5px Inter}
+.src{font-size:12.5px;color:#555;margin-top:10px}.src a{color:#111;text-decoration:underline;text-decoration-color:#E0C200;text-underline-offset:3px}
+.dots{position:relative;margin-top:6px}
+.dl{display:grid;grid-template-columns:84px 1fr 62px;gap:8px;align-items:center;font-size:13px;height:28px}
+.dl .tr{position:relative;height:100%;background:linear-gradient(90deg,#FBE7E2 0,#FBE7E2 var(--m),#E4F6EC var(--m))}
+.dl .tr:after{content:"";position:absolute;left:var(--m);top:0;bottom:0;border-left:2px dashed #111}
+.dl .tr i{position:absolute;top:50%;width:13px;height:13px;border-radius:50%;background:#111;transform:translate(-50%,-50%)}
+.dl.me .tr i{width:18px;height:18px;background:#FFE14D;border:2px solid #111;z-index:1}
+.dl b{text-align:right;font-weight:800}
+.dl.me span{font-weight:800}
+.med{font:800 11.5px Inter;background:#111;color:#fff;border-radius:6px;padding:1px 7px;display:inline-block;margin:0 0 4px calc(84px + 8px)}
+/* 3. Le monde */
+.monde{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.mc{padding:20px 22px;display:flex;flex-direction:column}
+.mc h3{font:800 23px/1.12 "Bricolage Grotesque";letter-spacing:-.5px;margin:12px 0 8px}
+.mc p{margin:0 0 14px;font-size:15px;color:#222}
+.chez{margin-top:auto;border-top:2px dashed #111;padding-top:14px}
+.chez .lab{font:800 12px Inter;letter-spacing:.06em;text-transform:uppercase}
+.chez .row2{display:flex;align-items:baseline;gap:10px;margin:4px 0 8px}
+.chez .row2 b{font:800 40px/1 "Bricolage Grotesque";letter-spacing:-1.2px}
+.bar{height:12px;border:1.5px solid #111;border-radius:99px;overflow:hidden;margin-bottom:8px}.bar i{display:block;height:100%;background:#111}
+.chez small{color:#555;font-size:13px}
+.ch2{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.mc.r .tag{background:#FFE0EC}.mc.b .tag{background:#DCE3FF}.mc.g .tag{background:#eee}
+/* 4. À venir */
+.strip{display:flex;gap:14px;overflow-x:auto;padding:4px 6px 14px}
+.dt{flex:0 0 190px;padding:14px 16px}
+.cal{width:52px;border:2px solid #111;border-radius:10px;overflow:hidden;text-align:center;margin-bottom:10px}
+.cal i{display:block;background:#d1242f;color:#fff;font:800 11px Inter;font-style:normal;padding:1px 0}.cal b{display:block;font:800 22px/1.3 "Bricolage Grotesque"}
+.dt strong{display:block;font:800 16px "Bricolage Grotesque"}.dt span{font-size:13.5px;color:#333}
+.dt.est{border-style:dashed}.dt.moi{background:#FFF2B3}
+.note{max-width:1120px;margin:26px auto;background:#f4f4f4;border-radius:14px;padding:14px 20px;font-size:14px;color:#333}
+.foot{font-size:12.5px;color:#666;border-top:1.5px solid #eee;padding-top:16px}
+</style></head><body>
+
+<div class="note"><b>Maquette v7 du rapport de la semaine</b>, avec les vrais chiffres du rapport d'exemple (semaine du 2 au 6 novembre).
+Quatre blocs au lieu de six, un seul titre par bloc, aucune phrase d'explication sous les titres :
+<b>le résultat</b> (bandeau jaune), <b>vos lignes</b> (une ligne par valeur : ce qu'elle vous a fait gagner ou perdre, et face à ses rivales ; on clique pour ouvrir le pourquoi, la presse et les rivales, comme ici pour Apple),
+<b>le monde</b> (la radiographie est rangée dedans : « chez vous » sous chaque sujet) et <b>à venir</b> (toutes les dates, en bande).</div>
+
+<header class="band"><div class="w">
+  <div class="top"><span class="logo">ENKLAIR</span><span class="tag">Rapport du samedi 7 novembre</span></div>
+  <div class="hero">
+    <div>
+      <div class="lab">Votre semaine, du 2 au 6 novembre</div>
+      <div class="big dn">−259 €</div>
+      <div class="pc dn">−2,5 % <span>· votre portefeuille vaut 10 033 €</span></div>
+      <p class="ver">Votre <em>ETF Monde</em> a fait toute la baisse : −262 €. Vos quatre actions, elles, finissent à +3 €.</p>
+    </div>
+    <div class="card spark">
+      <div class="t"><span>Votre portefeuille, jour par jour</span><span class="dn">−2,5 %</span></div>
+      <svg viewBox="0 0 400 130" width="100%" height="130" aria-hidden="true">
+        <line x1="0" y1="34" x2="400" y2="34" stroke="#111" stroke-dasharray="4 5" stroke-width="1.5"/>
+        <polyline fill="none" stroke="#d1242f" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" points="6,34 70,34 135,28 200,23 265,34 330,79 394,124"/>
+        <circle cx="394" cy="124" r="6" fill="#d1242f" stroke="#111" stroke-width="2"/>
+        <text x="6" y="22" font-size="12" font-family="Inter" fill="#555">10 292 €</text>
+        <text x="300" y="116" font-size="12" font-family="Inter" font-weight="700" fill="#111">10 033 €</text>
+      </svg>
+      <div class="idx"><span class="chip">CAC 40 <span class="up">+2,1 %</span></span><span class="chip">Euro Stoxx 50 <span class="up">+0,6 %</span></span><span class="chip">S&amp;P 500 <span class="dn">−2,3 %</span></span></div>
+    </div>
+  </div>
+</div></header>
+
+<main class="w">
+<nav class="nav"><a class="on" href="#l">Vos lignes</a><a href="#m">Le monde</a><a href="#a">À venir</a></nav>
+
+<section id="l">
+  <h2>Vos lignes.</h2>
+  <div class="card list">
+    <div class="hd"><span>Valeur</span><span>Gagné ou perdu</span><span style="text-align:right">Semaine</span><span>Face à ses rivales</span><span></span></div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/amundi.png" alt=""><div><b>ETF Amundi PEA Monde</b><small>58 % de votre argent</small></div></div>
+      <div class="eur"><div class="l"><i style="width:100%"></i></div><div class="r"></div><b class="dn">−262 €</b></div><div class="pct dn">−4,3 %</div>
+      <div class="vs"><div class="vw" style="grid-column:1/3">Suit les grandes entreprises mondiales<small>Ses plus grosses lignes : Nvidia, Apple, Microsoft</small></div></div><div class="chev">›</div></div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/totalenergies.png" alt=""><div><b>TotalEnergies</b><small>10 % de votre argent</small></div></div>
+      <div class="eur"><div class="l"><i style="width:26%"></i></div><div class="r"></div><b class="dn">−68 €</b></div><div class="pct dn">−6,7 %</div>
+      <div class="vs"><div class="gauge"><i style="left:66%"></i></div><div class="vw up">Mieux que ses rivales<small>médiane −9,4 %</small></div></div><div class="chev">›</div></div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/schneider-electric.png" alt=""><div><b>Schneider Electric</b><small>9 % de votre argent</small></div></div>
+      <div class="eur"><div class="l"><i style="width:14%"></i></div><div class="r"></div><b class="dn">−35 €</b></div><div class="pct dn">−3,7 %</div>
+      <div class="vs"><div class="gauge"><i style="left:34%"></i></div><div class="vw dn">Moins bien que ses rivales<small>médiane −1,0 %</small></div></div><div class="chev">›</div></div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/air-liquide.png" alt=""><div><b>Air Liquide</b><small>11 % de votre argent</small></div></div>
+      <div class="eur"><div class="l"></div><div class="r"><i style="width:16%"></i></div><b class="up">+41 €</b></div><div class="pct up">+3,8 %</div>
+      <div class="vs"><div class="gauge"><i style="left:84%"></i></div><div class="vw up">Mieux que ses rivales<small>médiane −3,0 %</small></div></div><div class="chev">›</div></div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/lvmh.png" alt=""><div><b>LVMH</b><small>12 % de votre argent</small></div></div>
+      <div class="eur"><div class="l"></div><div class="r"><i style="width:25%"></i></div><b class="up">+65 €</b></div><div class="pct up">+5,6 %</div>
+      <div class="vs"><div class="gauge"><i style="left:52%"></i></div><div class="vw">Comme ses rivales<small>médiane +5,3 %</small></div></div><div class="chev">›</div></div>
+
+    <div class="grp">Vos favoris</div>
+    <div class="row open"><div class="nm"><img src="https://enklair.com/logos/apple.png" alt=""><div><b>Apple</b><small><span class="tag j" style="font-size:11px;padding:0 7px">Résultats publiés</span></small></div></div>
+      <div class="eur gr" style="font-size:13px">pas dans votre portefeuille</div><div class="pct dn">−0,7 %</div>
+      <div class="vs"><div class="gauge"><i style="left:43%"></i></div><div class="vw">Comme ses rivales<small>médiane +0,4 %</small></div></div><div class="chev">⌄</div></div>
+    <div class="det">
+      <div class="box"><p class="h">Pourquoi elle a bougé</p>
+        <p class="lead">Résultats le 2 nov. : ventes du trimestre 114,5 Md$ (+12 %), bénéfice par action 2,10 $ (+14 %).</p>
+        <p>Le jour même : −1,8 %, comme ses rivales (−1,6 %). Sa plus forte hausse : mercredi, +5,3 %.</p>
+        <div class="days">
+          <div class="day res"><div class="bx"><i style="top:50%;height:13px;background:#ef4b55"></i></div><span class="dn">−1,8 %</span><small>lun. · résultats</small></div>
+          <div class="day"><div class="bx"><i style="top:50%;height:14px;background:#ef4b55"></i></div><span class="dn">−1,9 %</span><small>mar.</small></div>
+          <div class="day"><div class="bx"><i style="bottom:50%;height:38px;background:#16a34a"></i></div><span class="up">+5,3 %</span><small>mer.</small></div>
+          <div class="day"><div class="bx"><i style="top:50%;height:11px;background:#ef4b55"></i></div><span class="dn">−1,5 %</span><small>jeu.</small></div>
+          <div class="day"><div class="bx"><i style="top:50%;height:4px;background:#ef4b55"></i></div><span class="dn">−0,5 %</span><small>ven.</small></div>
+        </div>
+      </div>
+      <div class="box"><p class="h">Ce que dit la presse</p>
+        <div class="sj"><span>Résultats trimestriels</span><span>Pénuries de composants</span><span>Tokenisation des actions</span></div>
+        <p>Apple a battu les prévisions des analystes avec un chiffre d'affaires de 114,5 milliards de dollars et un bénéfice de 2,10 dollars par action au troisième trimestre. Les ventes d'iPhone ont atteint 57,6 milliards de dollars. Le groupe prévoit un ralentissement de la croissance au trimestre suivant, à cause de pénuries de composants et du prix des puces de mémoire.</p>
+        <p>Apple a aussi rejoint les entreprises opposées au projet de tokenisation des actions de la société mère de la Bourse de New York.</p>
+        <div class="src"><b>Sources :</b> <a href="#">handelsblatt.com</a> · <a href="#">expansion.com</a> · <a href="#">fortune.com</a> · <a href="#">01net.com</a> · <a href="#">capital.fr</a></div>
+      </div>
+      <div class="box"><p class="h">Face à ses rivales, sur la semaine</p>
+        <span class="med">médiane +0,4 %</span>
+        <div class="dots">
+          <div class="dl" style="--m:57%"><span>Alphabet</span><div class="tr"><i style="left:79%"></i></div><b class="up">+1,8 %</b></div>
+          <div class="dl" style="--m:57%"><span>Microsoft</span><div class="tr"><i style="left:78%"></i></div><b class="up">+1,7 %</b></div>
+          <div class="dl" style="--m:57%"><span>Qualcomm</span><div class="tr"><i style="left:56%"></i></div><b class="up">+0,4 %</b></div>
+          <div class="dl me" style="--m:57%"><span>Apple</span><div class="tr"><i style="left:39%"></i></div><b class="dn">−0,7 %</b></div>
+          <div class="dl" style="--m:57%"><span>HP Inc.</span><div class="tr"><i style="left:31%"></i></div><b class="dn">−1,1 %</b></div>
+          <div class="dl" style="--m:57%"><span>Dell</span><div class="tr"><i style="left:2%"></i></div><b class="dn">−22,6 %</b></div>
+        </div>
+      </div>
+    </div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/asml.png" alt=""><div><b>ASML</b><small>dans vos favoris</small></div></div>
+      <div class="eur gr" style="font-size:13px">pas dans votre portefeuille</div><div class="pct dn">−9,1 %</div>
+      <div class="vs"><div class="gauge"><i style="left:70%"></i></div><div class="vw up">Mieux que ses rivales<small>médiane −12,7 %</small></div></div><div class="chev">›</div></div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/sanofi.png" alt=""><div><b>Sanofi</b><small>dans vos favoris</small></div></div>
+      <div class="eur gr" style="font-size:13px">pas dans votre portefeuille</div><div class="pct up">+5,0 %</div>
+      <div class="vs"><div class="gauge"><i style="left:85%"></i></div><div class="vw up">Mieux que ses rivales<small>médiane −0,5 %</small></div></div><div class="chev">›</div></div>
+    <div class="row"><div class="nm"><img src="https://enklair.com/logos/hermes.png" alt=""><div><b>Hermès</b><small>dans vos favoris</small></div></div>
+      <div class="eur gr" style="font-size:13px">pas dans votre portefeuille</div><div class="pct up">+5,3 %</div>
+      <div class="vs"><div class="gauge"><i style="left:51%"></i></div><div class="vw">Comme ses rivales<small>médiane +5,2 %</small></div></div><div class="chev">›</div></div>
+  </div>
+</section>
+
+<section id="m">
+  <h2>Le monde.</h2>
+  <div class="monde">
+    <div class="card mc b"><span class="tag">Technologie</span><h3>Les actions de l'IA chutent</h3>
+      <p>La presse relie leur recul aux élections américaines. Médiane de 429 entreprises de la technologie : −4,1 %.</p>
+      <div class="chez"><div class="lab">Chez vous</div><div class="row2"><b>12 %</b><span>de votre argent · 1 239 €</span></div><div class="bar"><i style="width:12%;background:#3D5BFF"></i></div>
+        <small>Via votre ETF Monde : Nvidia, Apple, Microsoft, Broadcom…</small><div class="ch2"><span class="chip">ASML <span class="dn">−9,1 %</span></span><span class="chip">Apple <span class="dn">−0,7 %</span></span></div></div></div>
+    <div class="card mc r"><span class="tag">Taux d'intérêt</span><h3>La Banque d'Angleterre monte son taux à 4 %</h3>
+      <p>Première hausse depuis plus de trois ans. Les banques et assurances du monde finissent la semaine à +0,3 % en médiane.</p>
+      <div class="chez"><div class="lab">Chez vous</div><div class="row2"><b>5 %</b><span>de votre argent · 512 €</span></div><div class="bar"><i style="width:5%;background:#FF7EB3"></i></div>
+        <small>Via votre ETF Monde : JPMorgan Chase, Berkshire Hathaway, HSBC…</small></div></div>
+    <div class="card mc g"><span class="tag">Change</span><h3>La livre sterling monte</h3>
+      <p>Elle atteint son plus haut niveau depuis le référendum sur le Brexit. Le FTSE 100 fait −0,5 %.</p>
+      <div class="chez"><div class="lab">Chez vous</div><div class="row2"><b>2 %</b><span>de votre argent · 198 €</span></div><div class="bar"><i style="width:2%;background:#111"></i></div>
+        <small>Entreprises britanniques, via votre ETF Monde.</small></div></div>
+  </div>
+</section>
+
+<section id="a">
+  <h2>À venir.</h2>
+  <div class="strip">
+    <div class="card dt"><div class="cal"><i>NOV</i><b>30</b></div><strong>LVMH</strong><span>Dernier jour pour avoir l'acompte sur dividende</span></div>
+    <div class="card dt"><div class="cal"><i>DÉC</i><b>3</b></div><strong>LVMH</strong><span>Paiement de l'acompte : 5,50 € par action</span></div>
+    <div class="card dt moi"><div class="cal"><i>DÉC</i><b>5</b></div><strong>Votre achat programmé</strong><span>25 parts d'Amundi PEA Monde</span></div>
+    <div class="card dt"><div class="cal"><i>DÉC</i><b>31</b></div><strong>TotalEnergies</strong><span>Détachement du 2e acompte</span></div>
+    <div class="card dt"><div class="cal"><i>JANV</i><b>28</b></div><strong>Sanofi</strong><span>Résultats annuels 2026</span></div>
+    <div class="card dt est"><div class="cal"><i>JANV</i><b>29</b></div><strong>Apple</strong><span>Résultats, date habituelle à confirmer</span></div>
+    <div class="card dt"><div class="cal"><i>FÉVR</i><b>10</b></div><strong>TotalEnergies</strong><span>Résultats annuels 2026</span></div>
+    <div class="card dt"><div class="cal"><i>FÉVR</i><b>12</b></div><strong>Hermès</strong><span>Résultats annuels 2026</span></div>
+    <div class="card dt est"><div class="cal"><i>AVR</i><b>27</b></div><strong>Air Liquide</strong><span>Résultats, date habituelle à confirmer</span></div>
+  </div>
+</section>
+
+<p class="foot">Information, pas conseil : ENKLAIR ne dit jamais quoi acheter ou vendre. Variations entre la clôture du vendredi précédent et le dernier cours connu.</p>
+</main>
+</body></html>

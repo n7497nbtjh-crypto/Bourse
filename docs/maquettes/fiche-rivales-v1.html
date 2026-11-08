@@ -1,0 +1,125 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette fiche : comparer à ses rivales</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:16px/1.5 Inter,sans-serif;-webkit-font-smoothing:antialiased}
+.w{max-width:1180px;margin:0 auto;padding:0 24px}
+.note{max-width:1180px;margin:22px auto;background:#f4f4f4;border-radius:14px;padding:14px 20px;font-size:14px;color:#333}
+.etat{font:800 12px Inter;letter-spacing:.06em;text-transform:uppercase;color:#888;margin:30px 0 8px}
+.step{display:grid;grid-template-columns:44px 1fr;gap:18px;margin-bottom:40px}
+.num{width:44px;height:44px;border-radius:50%;background:#FFE14D;border:2px solid #111;display:grid;place-items:center;font:800 20px "Bricolage Grotesque"}
+.kick{font:700 13px Inter;color:#444;margin:0 0 2px}
+h3{font:800 34px/1.08 "Bricolage Grotesque";letter-spacing:-1.1px;margin:0 0 16px;max-width:760px}
+h3 mark{background:#FFE14D;padding:0 6px;border-radius:6px}
+.grid{display:grid;grid-template-columns:minmax(0,620px) 1fr;gap:28px;align-items:start}
+.card{border:2px solid #111;border-radius:24px;box-shadow:5px 5px 0 #111;background:#fff;padding:20px 24px}
+.ct{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px}.ct b{font:800 16px Inter}.ct span{font-size:13px;color:#666}
+.bars{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;align-items:end;height:200px;border-bottom:2px solid #111;padding:0 10px}
+.bars div{text-align:center}.bars b{display:block;font:800 22px "Bricolage Grotesque";margin-bottom:6px}
+.bars i{display:block;border:2px solid #111;border-radius:12px 12px 0 0;background:#fff;border-bottom:0}.bars .on i{background:#FFE14D}
+.yrs{display:grid;grid-template-columns:repeat(4,1fr);gap:22px;padding:6px 10px 0;text-align:center;font:800 15px Inter}.yrs small{display:block;font:700 13px Inter}
+.foot{display:flex;justify-content:space-between;margin-top:14px;font-size:13px;color:#666}.foot a{color:#111;font-weight:700;text-decoration:underline;text-decoration-color:#FFE14D;text-decoration-thickness:3px}
+.side{display:flex;flex-direction:column;gap:14px}
+.btn{display:flex;align-items:center;gap:14px;border:2px solid #111;border-radius:18px;background:#111;color:#fff;padding:16px 20px;box-shadow:5px 5px 0 #FFE14D;cursor:pointer;text-align:left;font:inherit}
+.btn .ic{width:42px;height:42px;border-radius:12px;background:#FFE14D;color:#111;display:grid;place-items:center;font:800 20px Inter;flex:0 0 auto}
+.btn b{display:block;font:800 20px/1.1 "Bricolage Grotesque";letter-spacing:-.3px}.btn small{font-size:13px;color:#ddd}
+.btn.back{background:#fff;color:#111;box-shadow:5px 5px 0 #111}.btn.back .ic{background:#111;color:#fff}.btn.back small{color:#555}
+.quota{font-size:13px;color:#555;padding-left:4px}.quota b{color:#111}
+.trans{font:800 22px/1.15 "Bricolage Grotesque";display:flex;gap:10px;margin-top:8px}.trans span{background:linear-gradient(transparent 55%,#FFE14D 55%)}
+/* points face aux rivales */
+.dots{position:relative;margin:8px 0 4px}
+.med{font:800 12px Inter;background:#111;color:#fff;border-radius:6px;padding:2px 8px;position:absolute;top:-2px;transform:translateX(-50%)}
+.dl{display:grid;grid-template-columns:130px 1fr 74px;gap:12px;align-items:center;height:44px;font-size:15px}
+.dl span{text-align:right;font-weight:600}.dl.me span{font-weight:800}
+.tr{position:relative;height:100%}
+.tr:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,#FBE7E2 0,#FBE7E2 var(--m),#E4F6EC var(--m))}
+.tr:after{content:"";position:absolute;left:var(--m);top:0;bottom:0;border-left:2px dashed #111}
+.tr hr{position:absolute;top:50%;left:0;margin:0;border:0;border-top:1.5px solid #bbb}
+.tr i{position:absolute;top:50%;width:15px;height:15px;border-radius:50%;background:#111;transform:translate(-50%,-50%);z-index:1}
+.dl.me .tr i{width:22px;height:22px;background:#FFE14D;border:2px solid #111}
+.dl b{font:800 16px Inter;text-align:right}
+.up{color:#15803d}.dn{color:#c2410c}
+.ax{display:grid;grid-template-columns:130px 1fr 74px;gap:12px;font-size:13px;color:#888;margin-top:4px}.ax div{display:flex;justify-content:space-between}
+.zone{display:grid;grid-template-columns:130px 1fr 74px;gap:12px;font:800 12.5px Inter}.zone div{display:flex;justify-content:space-between}
+.inv .tr:before{background:linear-gradient(90deg,#E4F6EC 0,#E4F6EC var(--m),#FBE7E2 var(--m))}
+.ver{display:inline-flex;align-items:center;gap:6px;border:2px solid #15803d;color:#15803d;border-radius:99px;padding:2px 12px;font:800 13px Inter;margin:0 0 14px}
+.ver.r{border-color:#c2410c;color:#c2410c}
+.anc{font-size:12.5px;color:#666;margin-top:8px}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:40px}
+</style></head><body>
+<div class="note"><b>Maquette : « Comparer à ses rivales » dans chaque étape de la fiche</b> (Apple, vrais chiffres du site). À gauche, l'étape telle qu'elle s'ouvre : l'entreprise face à son propre passé.
+À droite de l'encadré, un gros bouton. Un clic remplace le graphique par la comparaison avec ses rivales pour <b>ce chiffre-là</b>, avec la médiane, la zone verte et la zone rouge ; un second clic revient au passé.
+Sans Premium : 5 comparaisons par semaine (compteur sous le bouton), comme la page Comparer. Les étapes 2, 4 et 5 (marge, dividende, PER), qui montrent aujourd'hui les rivales, s'ouvriraient elles aussi sur le passé.</div>
+
+<main class="w">
+<div class="etat">Étape 1 · à l'ouverture</div>
+<div class="step"><div class="num">1</div><div>
+  <p class="kick">1 · Ses ventes</p>
+  <h3><mark>Chiffre d'affaires</mark> : en hausse de 15,1 % en 2026, sa plus forte progression depuis 2023.</h3>
+  <div class="grid">
+    <div class="card"><div class="ct"><b>Ses ventes</b><span>en milliards d'€*</span></div>
+      <div class="bars"><div><b>343</b><i style="height:110px"></i></div><div><b>350</b><i style="height:113px"></i></div><div><b>373</b><i style="height:120px"></i></div><div class="on"><b>429</b><i style="height:138px"></i></div></div>
+      <div class="yrs"><div>2023</div><div>2024<small class="up">+2,0 %</small></div><div>2025<small class="up">+6,4 %</small></div><div>2026<small class="up">+15,1 %</small></div></div>
+      <div class="foot"><span>Comptes officiels, exercices clos</span><a href="#">dans le rapport officiel ↗</a></div></div>
+    <div class="side">
+      <button class="btn"><span class="ic">⇄</span><span><b>Comparer à ses rivales</b><small>Sa croissance face à Microsoft, Alphabet, Dell…</small></span></button>
+      <p class="quota">Gratuit : <b>4 comparaisons</b> restantes cette semaine.</p>
+      <p class="trans">↓ <span>Sur ces 429 Md€*, combien lui reste-t-il une fois l'activité payée ?</span></p>
+    </div>
+  </div>
+</div></div>
+
+<div class="etat">Étape 1 · après le clic</div>
+<div class="step"><div class="num">1</div><div>
+  <p class="kick">1 · Ses ventes</p>
+  <h3><mark>Chiffre d'affaires</mark> : en hausse de 15,1 % en 2026, sa plus forte progression depuis 2023.</h3>
+  <div class="grid">
+    <div class="card"><div class="ct"><b>Croissance des ventes sur un an</b><span>dernier exercice publié</span></div>
+      <span class="ver" style="border-color:#111;color:#111">● Comme ses rivales : médiane +15,1 %</span>
+      <div class="dots">
+        <div class="dl"><span>Dell Technologies</span><div class="tr" style="--m:84%"><hr style="width:96%"><i style="left:96%"></i></div><b class="up">+18,8 %</b></div>
+        <div class="dl"><span>Microsoft</span><div class="tr" style="--m:84%"><hr style="width:93%"><i style="left:93%"></i></div><b class="up">+17,8 %</b></div>
+        <div class="dl me"><span>Apple</span><div class="tr" style="--m:84%"><hr style="width:84%"><i style="left:84%"></i></div><b class="up">+15,1 %</b></div>
+        <div class="dl"><span>Alphabet (Google)</span><div class="tr" style="--m:84%"><hr style="width:84%"><i style="left:84%"></i></div><b class="up">+15,1 %</b></div>
+        <div class="dl"><span>HP Inc.</span><div class="tr" style="--m:84%"><hr style="width:44%"><i style="left:44%"></i></div><b class="dn">+3,2 %</b></div>
+        <div class="dl"><span>Qualcomm</span><div class="tr" style="--m:84%"><hr style="width:25%"><i style="left:25%"></i></div><b class="dn">−2,6 %</b></div>
+      </div>
+      <div class="zone"><span></span><div><span class="dn">moins bien</span><span class="up">mieux</span></div><span></span></div>
+      <div class="ax"><span></span><div style="position:relative;display:block;height:18px"><span style="position:absolute;left:0">−10 %</span><span style="position:absolute;left:33.3%;transform:translateX(-50%)">0 %</span><span style="position:absolute;right:0">+20 %</span></div><span></span></div>
+      <p class="anc">Alphabet et HP : exercice 2025, le dernier publié.</p>
+      <div class="foot"><span>Comptes officiels des six entreprises</span><a href="#">voir la comparaison complète ↗</a></div></div>
+    <div class="side">
+      <button class="btn back"><span class="ic">↺</span><span><b>Revenir à son passé</b><small>Ses ventes de 2023 à 2026</small></span></button>
+      <p class="quota">Gratuit : <b>3 comparaisons</b> restantes cette semaine.</p>
+      <p class="trans">↓ <span>Sur ces 429 Md€*, combien lui reste-t-il une fois l'activité payée ?</span></p>
+    </div>
+  </div>
+</div></div>
+
+<div class="etat">Étape 5 · à l'ouverture, puis après le clic</div>
+<div class="step"><div class="num">5</div><div>
+  <p class="kick">5 · Son prix en Bourse</p>
+  <h3><mark>PER</mark> : l'action coûte 38 fois son bénéfice annuel.</h3>
+  <div class="split">
+    <div class="card"><div class="ct"><b>Son PER, à trois dates</b><span>cours du jour / bénéfice publié alors</span></div>
+      <div class="bars" style="grid-template-columns:repeat(3,1fr)"><div><b>30</b><i style="height:118px"></i></div><div><b>36</b><i style="height:142px"></i></div><div class="on"><b>38</b><i style="height:150px"></i></div></div>
+      <div class="yrs" style="grid-template-columns:repeat(3,1fr)"><div>nov. 2023<small style="color:#666">182,89 $ / 6,16 $</small></div><div>nov. 2025<small style="color:#666">268,47 $ / 7,49 $</small></div><div>7 nov. 2026<small style="color:#666">342,37 $ / 9,01 $</small></div></div>
+      <div class="foot"><span>Cours d'il y a 3 ans, 1 an et du jour</span></div>
+      <button class="btn" style="margin-top:16px;width:100%"><span class="ic">⇄</span><span><b>Comparer à ses rivales</b><small>Son PER face à Microsoft, Alphabet, Dell…</small></span></button>
+    </div>
+    <div class="card"><div class="ct"><b>Années de bénéfice pour payer l'action</b><span>PER, cours du 7/11</span></div>
+      <span class="ver r">▲ PER plus haut que ses rivales : médiane 26 fois</span>
+      <div class="dots inv">
+        <div class="dl me"><span>Apple</span><div class="tr" style="--m:52%;--l:#E4F6EC"><hr style="width:76%"><i style="left:76%"></i></div><b class="dn">38 fois</b></div>
+        <div class="dl"><span>Dell</span><div class="tr" style="--m:52%"><hr style="width:70%"><i style="left:70%"></i></div><b class="dn">35 fois</b></div>
+        <div class="dl"><span>Microsoft</span><div class="tr" style="--m:52%"><hr style="width:58%"><i style="left:58%"></i></div><b class="dn">29 fois</b></div>
+        <div class="dl"><span>Alphabet</span><div class="tr" style="--m:52%"><hr style="width:52%"><i style="left:52%"></i></div><b>26 fois</b></div>
+        <div class="dl"><span>Qualcomm</span><div class="tr" style="--m:52%"><hr style="width:26%"><i style="left:26%"></i></div><b class="up">13 fois</b></div>
+        <div class="dl"><span>HP Inc.</span><div class="tr" style="--m:52%"><hr style="width:20%"><i style="left:20%"></i></div><b class="up">10 fois</b></div>
+      </div>
+      <div class="zone"><span></span><div><span class="up">PER plus bas</span><span class="dn">PER plus haut</span></div><span></span></div>
+      <div class="ax"><span></span><div><span>0</span><span>25</span><span>50</span></div><span></span></div>
+      <button class="btn back" style="margin-top:16px;width:100%"><span class="ic">↺</span><span><b>Revenir à son passé</b><small>Son PER il y a 3 ans et 1 an</small></span></button>
+    </div>
+  </div>
+</div></div>
+</main></body></html>
