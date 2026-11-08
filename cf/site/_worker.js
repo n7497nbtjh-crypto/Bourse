@@ -2495,6 +2495,52 @@ function suiviDe(row, names) {
   let R = rapportDe(row), pf = R.portefeuille ? parse(row && row.portefeuille, null) : null, lp = lignesPf(pf).filter((l) => names[l.k] || l.nm || l.k.startsWith("x:")), fav = R.favoris ? (parse(row && row.favoris, []) || []).filter((k) => typeof k == "string" && KEY3.test(k)) : [], autres = clesPortefeuille(pf, names).filter((k) => !lp.some((l) => l.k === k)), cles = [.../* @__PURE__ */ new Set([...fav, ...autres, ...lp.map((l) => l.k)])].filter((k) => names[k]).slice(0, 260);
   return { favoris: [.../* @__PURE__ */ new Set([...fav, ...autres])], pf, rapport: R, keys: cles, cles: [...cles].sort().join(",") + "|" + lp.map((l) => `${l.k}:${r22(l.q)}:${Math.round(l.m)}`).sort().join(",") + "|" + rapportSignature(R) };
 }
+function mailRapport(n, lien2) {
+  let E = (t) => String(t ?? "").replace(/[&<>"]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[ch]), nb = (v, d = 0) => (v < 0 ? "\u2212" : v > 0 ? "+" : "") + Math.abs(v).toLocaleString("fr-FR", { minimumFractionDigits: d, maximumFractionDigits: d }).replace(/ /g, "\xA0"), pct2 = (v) => nb(v, 1) + "\xA0%", eur = (v) => nb(Math.round(v)) + "\xA0\u20AC", eur0 = (v) => Math.round(v).toLocaleString("fr-FR").replace(/ /g, "\xA0") + "\xA0\u20AC", col = (v) => v < 0 ? "#D6243C" : v > 0 ? "#0A8A3A" : "#111111", MOIS2 = ["janvier", "f\xE9vrier", "mars", "avril", "mai", "juin", "juillet", "ao\xFBt", "septembre", "octobre", "novembre", "d\xE9cembre"], jr = (ymd) => {
+    let d = /* @__PURE__ */ new Date(ymd + "T12:00:00Z");
+    return `${d.getUTCDate() === 1 ? "1er" : d.getUTCDate()} ${MOIS2[d.getUTCMonth()]}`;
+  }, court2 = (l) => {
+    let x = String(l.nom || "").replace(/\s*\(.*\)\s*$/, "");
+    return l.type === "etf" && !/^ETF/i.test(x) ? "ETF " + x : x;
+  }, F = "Inter,Helvetica,Arial,sans-serif", B = "'Bricolage Grotesque','Arial Black',Arial,sans-serif", pf = n.portefeuille && n.portefeuille.var_eur != null ? n.portefeuille : null, L = n.lignes || [], sem = "";
+  if (n.du) {
+    let f = /* @__PURE__ */ new Date(n.du + "T12:00:00Z");
+    f.setUTCDate(f.getUTCDate() + 4);
+    let fin = f.toISOString().slice(0, 10);
+    sem = `Semaine du ${jr(n.du).replace(/ \S+$/, n.du.slice(5, 7) === fin.slice(5, 7) ? "" : " " + MOIS2[+n.du.slice(5, 7) - 1])} au ${jr(fin)}`;
+  }
+  let P = L.filter((l) => l.portefeuille && l.portefeuille.var_eur != null), V = L.filter((l) => l.variation_semaine_pct != null), enEur = P.length > 0, S2 = enEur ? [...P].sort((a, c) => c.portefeuille.var_eur - a.portefeuille.var_eur) : [...V].sort((a, c) => c.variation_semaine_pct - a.variation_semaine_pct), val = (l) => enEur ? l.portefeuille.var_eur : l.variation_semaine_pct, haut = S2.length && val(S2[0]) > 0 ? S2[0] : null, bas = S2.length && val(S2[S2.length - 1]) < 0 ? S2[S2.length - 1] : null, carte = (l, titre, fond) => l ? `<td width="50%" valign="top" style="padding:0 6px"><table role="presentation" width="100%" style="border:2px solid #111111;border-radius:14px;background:${fond}"><tr><td style="padding:12px 14px">
+    <p style="margin:0;font:700 12px ${F};color:#55524C">${titre}</p><p style="margin:4px 0 0;font:800 18px ${B};color:#111111">${E(court2(l))}</p>
+    <p style="margin:2px 0 0;font:800 16px ${F};color:${col(val(l))};white-space:nowrap">${enEur ? `${eur(val(l))} <span style="font-weight:600;font-size:14px">(${pct2(l.variation_semaine_pct)})</span>` : pct2(val(l))}</p></td></tr></table></td>` : "", cartes = haut || bas ? `<tr><td style="padding:18px 18px 4px"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr>${carte(haut, enEur ? "A le plus rapport\xE9" : "A le plus mont\xE9", "#E9F8EF")}${carte(bas, enEur ? "A le plus co\xFBt\xE9" : "A le plus baiss\xE9", "#FFF0F3")}</tr></table></td></tr>` : "", IX = (pf && pf.vs && pf.vs.length ? pf.vs : n.indices || []).filter((x) => x.pct != null).slice(0, 2), ix = IX.length ? IX.map((x, i) => `${i ? "le " : "Le "}${x.nom} ${i ? "" : "a fait "}${pct2(x.pct)}`).join(", ") + "." : "", fin0 = n.au || n.du || "", av = (n.a_venir || []).filter((e) => e.date && e.date >= fin0).sort((a, c) => a.date < c.date ? -1 : 1)[0], lab = av ? String(av.label || av.type || "").replace(/^./, (c) => c.toLowerCase()) : "", subject = pf ? `Votre semaine : ${eur(pf.var_eur)} (${pct2(pf.var_pct)})` : "Votre rapport de la semaine est pr\xEAt", pre = [haut ? `${court2(haut)} en t\xEAte` : "", bas ? `${court2(bas)} a pes\xE9` : ""].filter(Boolean).join(", "), apercu = (pre ? pre + ". " : "") + "Votre rapport est pr\xEAt.", text = `Bonjour,
+
+Votre rapport de la semaine est pr\xEAt.${pf ? `
+Votre semaine : ${eur(pf.var_eur)} (${pct2(pf.var_pct)}). Votre portefeuille vaut ${eur0(pf.valeur_eur)}.` : ""}${ix ? `
+` + ix : ""}${haut ? `
+${enEur ? "A le plus rapport\xE9" : "A le plus mont\xE9"} : ${court2(haut)}, ${enEur ? eur(val(haut)) : pct2(val(haut))}.` : ""}${bas ? `
+${enEur ? "A le plus co\xFBt\xE9" : "A le plus baiss\xE9"} : ${court2(bas)}, ${enEur ? eur(val(bas)) : pct2(val(bas))}.` : ""}${av ? `
+\xC0 noter : ${jr(av.date)}, ${av.nom} : ${lab}.` : ""}
+
+Lire mon rapport : ${lien2}
+
+Informations factuelles, sans conseil en investissement. Vous recevez cet e-mail parce que vous l'avez demand\xE9 dans votre espace ENKLAIR. Pour ne plus le recevoir : ${lien2.replace(/\/espace.*$/, "")}/espace/reglages`, html = `<div style="display:none;max-height:0;overflow:hidden;opacity:0">${E(apercu)}</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#EDEDED;padding:16px 8px 40px"><tr><td align="center">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:#ffffff;border:2px solid #111111;border-radius:22px;overflow:hidden">
+<tr><td style="background:#FFE14D;border-bottom:2px solid #111111;padding:16px 24px"><table role="presentation" width="100%"><tr>
+<td><span style="display:inline-block;background:#111111;color:#FFE14D;font:800 20px ${B};letter-spacing:-0.5px;padding:4px 10px;border-radius:8px">ENKLAIR</span></td>
+<td align="right" style="font:700 13px ${F};color:#111111">${E(sem)}</td></tr></table></td></tr>
+<tr><td style="padding:26px 24px 6px"><p style="margin:0 0 6px;font:600 14px ${F};color:#55524C">Bonjour,<br>votre rapport de la semaine est pr\xEAt.</p>
+${pf ? `<p style="margin:14px 0 0;font:800 56px/1 ${B};letter-spacing:-2px;color:${col(pf.var_eur)}">${eur(pf.var_eur)}</p>
+<p style="margin:8px 0 0;font:700 16px ${F};color:#111111"><span style="color:${col(pf.var_pct)}">${pct2(pf.var_pct)}</span> \xB7 votre portefeuille vaut ${eur0(pf.valeur_eur)}</p>` : ""}
+${ix ? `<p style="margin:6px 0 0;font:400 14px ${F};color:#55524C">${E(ix)}</p>` : ""}</td></tr>
+${cartes}
+${av ? `<tr><td style="padding:14px 24px 4px"><table role="presentation" width="100%" style="border:2px dashed #111111;border-radius:14px"><tr><td style="padding:12px 14px;font:400 14px/1.45 ${F};color:#111111">
+<span style="display:inline-block;background:#FFE14D;border:1.5px solid #111111;border-radius:7px;padding:1px 8px;font:700 12px ${F}">\xC0 noter</span><br><strong>${E(jr(av.date))}, ${E(av.nom)}</strong> : ${E(lab)}.</td></tr></table></td></tr>` : ""}
+<tr><td align="center" style="padding:24px 24px 8px"><a href="${E(lien2)}" style="display:inline-block;background:#111111;color:#ffffff;font:800 17px ${F};text-decoration:none;padding:15px 30px;border-radius:99px;border:2px solid #111111">Lire mon rapport \u2192</a>
+<p style="margin:12px 0 0;font:400 13px ${F};color:#55524C">Pourquoi chaque ligne a boug\xE9, ce qu'en dit la presse, le monde.</p></td></tr>
+<tr><td style="padding:22px 24px;border-top:1.5px solid #EEEEEE"><p style="margin:0;font:400 12px/1.5 ${F};color:#87827A">Informations factuelles, sans conseil en investissement. Vous recevez cet e-mail parce que vous l'avez demand\xE9 dans votre espace ENKLAIR. <a href="${E(lien2.replace(/\/espace.*$/, ""))}/espace/reglages" style="color:#55524C">Ne plus le recevoir</a>.</p></td></tr>
+</table></td></tr></table>`;
+  return { subject, text, html };
+}
 async function assurerBilan(env, d, compteId, row, semaine, stocke, precedent) {
   let s = suiviDe(row, d.names), auj = jourParis(), weekend = [0, 6].includes(jourSemaine(auj)) || semaine < semaineIso(auj), c = stocke ? parse(stocke.contenu, null) : null;
   if (!(!c || c.v !== 7 || c._cles !== s.cles || !c._final && (Date.now() - c.genere > 6 * 36e5 || weekend))) return { c, change: !1 };
@@ -2861,20 +2907,8 @@ Pour ne plus recevoir ces e-mails : ${origin}/espace/reglages`, html), mails2++,
           let e0 = b.c && b.c.essentiel && b.c.essentiel[0], lien2 = cible === sem ? "/espace" : "/espace?semaine=" + cible;
           if (RG.notif && (notifs += await notifier(env, r.id, "bilan", e0 ? `Votre semaine en 2 minutes est pr\xEAte. ${e0}` : "Votre semaine en 2 minutes est pr\xEAte.", lien2, cible)), cap > 0 && parse(r.profil, {}).rapportMail !== !1)
             try {
-              await sendMail(
-                env,
-                r.email,
-                "Votre bilan de la semaine est pr\xEAt",
-                `Bonjour,
-
-Votre bilan de la semaine est pr\xEAt sur ENKLAIR :
-${origin}/espace
-
-Vous recevez ce message parce que vous l'avez demand\xE9 dans votre espace. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.
-
-bilan. Informations factuelles, sans conseil en investissement.`,
-                `<div style="background:#F8F5EE;padding:24px 12px;font-family:Helvetica,Arial,sans-serif;color:#111214"><div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #E6E0D4;border-radius:14px;padding:24px"><p style="font:900 26px Georgia,serif;margin:0">bilan<span style="color:#0E6B4A">.</span></p><p style="font-size:17px;margin:16px 0">Votre bilan de la semaine est pr\xEAt.</p><p><a href="${origin}/espace" style="background:#111214;color:#fff;padding:10px 16px;border-radius:99px;text-decoration:none;font-weight:600">Voir mon bilan</a></p><p style="font-size:12px;color:#87827A;margin-top:22px">Vous recevez ce message parce que vous l'avez demand\xE9. Pour ne plus le recevoir, d\xE9cochez l'option dans votre espace.</p></div></div>`
-              ), mails2++, cap--;
+              let M = mailRapport(b.c, origin + (cible === sem ? "/espace/bilan" : "/espace/bilan?semaine=" + cible));
+              await sendMail(env, r.email, M.subject, M.text, M.html), mails2++, cap--;
             } catch {
               cap = 0;
             }
