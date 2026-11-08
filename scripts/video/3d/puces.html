@@ -1,0 +1,109 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(/site/brico800.ttf)}@font-face{font-family:I;src:url(/site/Inter-ExtraBold.otf);font-weight:800}@font-face{font-family:I;src:url(/site/Inter-Bold.otf);font-weight:700}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#fff}
+canvas{position:absolute;inset:0}
+#fond{position:absolute;inset:0;background:#fff}
+#grain{position:absolute;inset:0;opacity:.16;pointer-events:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='300' height='300'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .6 0'/></filter><rect width='300' height='300' filter='url(%23n)'/></svg>")}
+#ui{position:absolute;inset:0}
+.logo{position:absolute;left:70px;top:150px;font:800 34px B;color:#111}
+.kick{position:absolute;left:70px;top:230px;font:800 32px I;letter-spacing:.14em;color:#111;white-space:nowrap}
+.kick b{background:#111;color:#fff;padding:6px 14px;margin-right:12px}
+.big{position:absolute;left:60px;font:800 300px/0.9 B;letter-spacing:-16px;color:#111;isolation:isolate;white-space:nowrap}
+.big .hl{position:absolute;left:-14px;bottom:28px;height:42%;background:#FFE14D;z-index:-1;transform:rotate(-2deg)}
+.big.r{color:#D6243C}
+.ligne{position:absolute;left:70px;right:70px;font:800 76px/1.02 B;color:#111;letter-spacing:-2px}
+.ligne span{display:inline-block;margin-right:16px}
+.sous{position:absolute;left:70px;right:70px;top:1330px;font:800 64px/1.08 B;color:#111;letter-spacing:-1px}
+.sous span{display:inline-block;margin-right:14px;transform-origin:0 100%}
+.sous span.cle{background:#FFE14D;padding:0 8px}
+.lab{position:absolute;transform:translate(-50%,0);text-align:center;white-space:nowrap}
+.lab b{display:block;font:800 40px B;color:#111}.lab i{display:block;font-style:normal;font:800 64px B;color:#D6243C;letter-spacing:-2px}
+.ticket{position:absolute;background:#111;color:#fff;font:800 40px/1.25 I;padding:24px 30px;white-space:nowrap}
+.ticket em{font-style:normal;color:#FFE14D}
+.src{position:absolute;left:70px;right:70px;bottom:250px;font:700 22px I;color:#777}
+.noir{position:absolute;inset:0;background:#111}
+.q{position:absolute;left:60px;right:60px;top:640px;font:800 150px/0.95 B;color:#fff;letter-spacing:-6px}
+.q em{font-style:normal;color:#FFE14D}
+.rang{position:absolute;left:70px;right:70px;display:grid;grid-template-columns:330px 1fr 190px;align-items:center;gap:20px;font:800 54px B;color:#111}
+.rang .bar{height:54px;background:#eee;position:relative}.rang .bar i{position:absolute;right:0;top:0;bottom:0;background:#D6243C}
+.rang .v{text-align:right;color:#D6243C}
+#volet{position:absolute;top:0;bottom:0;width:1300px;background:#FFE14D;left:-1400px;transform:skewX(-12deg)}
+#volet2{position:absolute;top:0;bottom:0;width:1300px;background:#111;left:-1400px;transform:skewX(-12deg)}
+</style>
+<script type="importmap">{"imports":{"three":"/npm/node_modules/three/build/three.module.js","three/addons/":"/npm/node_modules/three/examples/jsm/"}}</script></head><body>
+<div id="fond"></div><div id="ui"></div><div id="grain"></div><div id="volet2"></div><div id="volet"></div>
+<script type="module">
+import * as THREE from "three"; import { RoundedBoxGeometry } from "three/addons/geometries/RoundedBoxGeometry.js"; import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+const W = 1080, H = 1920;
+const R = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true }); R.setSize(W, H); R.setPixelRatio(1); R.setClearColor(0x000000, 0);
+R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap; R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.0;
+document.getElementById("fond").after(R.domElement);
+const S = new THREE.Scene(); S.environment = new THREE.PMREMGenerator(R).fromScene(new RoomEnvironment(), .04).texture;
+const sol = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.ShadowMaterial({ opacity: .2 })); sol.rotation.x = -Math.PI / 2; sol.receiveShadow = true; S.add(sol);
+const L = new THREE.DirectionalLight(0xffffff, 2.4); L.position.set(-6, 14, 8); L.castShadow = true; L.shadow.mapSize.set(2048, 2048); L.shadow.radius = 8; Object.assign(L.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12 }); S.add(L); S.add(new THREE.AmbientLight(0xffffff, .6));
+const cam = new THREE.PerspectiveCamera(32, W / H, .1, 200);
+const MC = {}; const mat = c => MC[c] || (MC[c] = new THREE.MeshStandardMaterial({ color: c, roughness: .55, metalness: .05 }));
+const NOIR = 0x161616, JAUNE = 0xFFD93D, ROUGE = 0xD6243C, BLANC = 0xf4f4f4;
+const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), e3 = x => 1 - Math.pow(1 - cl(x), 3), eio = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = (x, s = 1.70158) => { x = cl(x); const c3 = s + 1; return 1 + c3 * Math.pow(x - 1, 3) + s * Math.pow(x - 1, 2); };
+const lerp = (a, b, p) => a + (b - a) * p, V = (x, y, z) => new THREE.Vector3(x, y, z);
+const ombre = m => { m.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); return m; };
+// ---------- objets ----------
+const puce = () => { const g = new THREE.Group(); const c = new THREE.Mesh(new RoundedBoxGeometry(3.2, .42, 3.2, 4, .08), mat(NOIR)); c.position.y = .3; g.add(c);
+  const t = new THREE.Mesh(new RoundedBoxGeometry(2.4, .06, 2.4, 2, .02), mat(0x2a2a2a)); t.position.y = .54; g.add(t);
+  for (let i = 0; i < 8; i++) for (const s of [-1, 1]) { const p1 = new THREE.Mesh(new THREE.BoxGeometry(.16, .07, .4), mat(JAUNE)); p1.position.set(-1.4 + i * .4, .12, s * 1.72); g.add(p1); const p2 = p1.clone(); p2.rotation.y = Math.PI / 2; p2.position.set(s * 1.72, .12, -1.4 + i * .4); g.add(p2); }
+  return ombre(g); };
+const P0 = puce(); S.add(P0);
+const eclats = []; for (let i = 0; i < 24; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(.14, .14, .14), mat(i % 3 ? ROUGE : NOIR)); const a = i / 24 * Math.PI * 2; m.userData = { a, v: 2 + (i % 5) * .6 }; ombre(m); S.add(m); eclats.push(m); }
+const NOMS = [["Nvidia", "−9,3 %", 9.26], ["Broadcom", "−10,4 %", 10.43], ["Micron", "−17,5 %", 17.46]];
+const cols = NOMS.map((n, i) => { const g = new THREE.Group(); const m = new THREE.Mesh(new RoundedBoxGeometry(1.5, 1, 1.5, 4, .1), mat(NOIR)); g.add(m); g.position.set((i - 1) * 2.4, 0, 0); S.add(ombre(g)); return g; });
+const blocs = []; for (let i = 0; i < 100; i++) { const m = new THREE.Mesh(new RoundedBoxGeometry(.86, .46, .86, 3, .07), mat(0xd9d9d9)); m.userData = { x: (i % 10 - 4.5), z: (Math.floor(i / 10) - 4.5) }; S.add(ombre(m)); blocs.push(m); }
+const fleche = (() => { const s = new THREE.Shape(); s.moveTo(-.35, 0); s.lineTo(.35, 0); s.lineTo(.35, 1.4); s.lineTo(.85, 1.4); s.lineTo(0, 2.4); s.lineTo(-.85, 1.4); s.lineTo(-.35, 1.4); s.closePath(); const m = new THREE.Mesh(new THREE.ExtrudeGeometry(s, { depth: .5, bevelEnabled: true, bevelThickness: .06, bevelSize: .05, bevelSegments: 3 }), mat(JAUNE)); return ombre(m); })(); S.add(fleche);
+// ---------- montage (sans voix) ----------
+const SC = [["accroche", 2.8], ["trois", 4.6], ["question", 1.6], ["etf", 3.8], ["rebond", 2.6], ["semaine", 3.6], ["fin", 2.6]];
+let acc = 0; const T0 = {}; for (const [n, d] of SC) { T0[n] = [acc, d]; acc += d; } window.DUREE = acc;
+const TXT = { accroche: "Jeudi, les puces de l'IA ont plongé.", trois: "Nvidia, Broadcom, Micron : toutes dans le rouge.", etf: "Si vous avez un ETF Monde, vous en avez.", rebond: "Vendredi, le secteur a un peu rebondi.", semaine: "Sur la semaine, la chute reste nette." };
+const CLES = /IA|plongé|rouge|ETF|Monde|rebondi|chute/;
+const proj = v => { cam.updateMatrixWorld(); const p = v.clone().project(cam); return [(p.x + 1) / 2 * W, (1 - p.y) / 2 * H]; };
+const UI = document.getElementById("ui"), VO = document.getElementById("volet"), VO2 = document.getElementById("volet2");
+const motParMot = (txt, u, t0 = .15, pas = .14) => txt.split(" ").map((w, i) => { const q = back((u - t0 - i * pas) / .3); const cle = CLES.test(w); return `<span class="${cle ? "cle" : ""}" style="opacity:${cl(q * 1.5).toFixed(2)};transform:translateY(${((1 - q) * 30).toFixed(1)}px) rotate(${((1 - q) * 6).toFixed(1)}deg)">${w}</span>`; }).join("");
+window.frame = t => {
+  const nom = SC.find(([n]) => t >= T0[n][0] && t < T0[n][0] + T0[n][1])?.[0] || "fin", [a0, d] = T0[nom], u = t - a0;
+  P0.visible = nom === "accroche"; eclats.forEach(m => m.visible = nom === "accroche"); cols.forEach(g => g.visible = nom === "trois"); blocs.forEach(m => m.visible = nom === "etf"); fleche.visible = nom === "rebond";
+  let h = `<div class="logo">ENKLAIR</div>`; const add = x => h += x;
+  const big = (txt, top, cls, t1, hl = true) => { const q = back((u - t1) / .35, 2.2); add(`<div class="big ${cls || ""}" style="top:${top}px;transform:translateY(${((1 - q) * 80).toFixed(1)}px) scale(${(.85 + .15 * q).toFixed(3)});opacity:${cl(q * 2).toFixed(2)}">${txt}${hl ? `<div class="hl" style="width:${(e3((u - t1 - .2) / .35) * 100).toFixed(1)}%"></div>` : ""}</div>`); };
+  if (nom === "accroche") { const q = e3(u / .45), imp = u > .45 ? 1 : 0;
+    P0.position.set(0, lerp(.9, 0, q), 0); P0.rotation.set(lerp(.5, .12, q), lerp(.9, .5, q), lerp(.25, -.06, q));
+    eclats.forEach((m, i) => { const w = cl((u - .45) * m.userData.v * .6); m.position.set(Math.cos(m.userData.a) * (1.7 + w * 3), .1 + Math.sin(w * 3.1) * 1.4 * (1 - w * .4), Math.sin(m.userData.a) * (1.7 + w * 3)); m.rotation.set(w * 9, w * 7, 0); m.visible = u > .45; });
+    const sh = u > .45 && u < .75 ? (1 - (u - .45) / .3) * .25 : 0; cam.position.set(Math.sin(u * 60) * sh + lerp(6, 5.2, u / d), 8 + Math.cos(u * 53) * sh, lerp(15.5, 14, u / d)); cam.lookAt(0, 1.0, 0);
+    add(`<div class="kick"><b>JEUDI 5 NOVEMBRE</b>LES PUCES DE L'IA</div>`);
+    big("−11 %", 300, "r", -1); add(`<div class="ligne" style="top:600px;opacity:${cl(.6 + e3(u / .3))}">en une journée, pour<br>tout le secteur des puces.</div>`); }
+  if (nom === "trois") { const tc = [.25, 1.55, 2.85];
+    cols.forEach((g, i) => { const avant = 3.2, apres = avant * (1 - NOMS[i][2] / 30); const q = u < tc[i] ? 0 : back((u - tc[i]) / .45), hh = u < tc[i] ? avant : lerp(avant, apres, q);
+      g.scale.set(1, hh, 1); g.position.y = hh / 2; g.children[0].material = u > tc[i] ? mat(ROUGE) : mat(NOIR); });
+    const fx = lerp(-2.4, 2.4, eio((u - .1) / 3.2)); cam.position.set(fx * .3 + .8, 5.6, 23); cam.lookAt(fx * .2, 2.3, 0);
+    add(`<div class="kick"><b>JEUDI 5 NOVEMBRE</b>EN UN JOUR</div>`);
+    cols.forEach((g, i) => { const [x, y] = proj(V(g.position.x, g.scale.y + .2, 0)); if (u > tc[i] - .05) { const q = back((u - tc[i]) / .35, 2.4); add(`<div class="lab" style="left:${x}px;top:${y - 150}px;transform:translate(-50%,0) scale(${q.toFixed(3)})"><b>${NOMS[i][0]}</b><i>${NOMS[i][1]}</i></div>`); } }); }
+  if (nom === "question") { add(`<div class="noir"></div>`); const q = back(u / .3, 2.2); add(`<div class="q" style="transform:scale(${q.toFixed(3)});transform-origin:0 50%">Vous n'en<br>avez <em>pas&nbsp;?</em></div>`); }
+  if (nom === "etf") { const nb = 8.5; blocs.forEach((m, i) => { const ys = .23 + (1 - back((u - .05 - (i % 10 + Math.floor(i / 10)) * .018) / .4)) * 7; m.position.set(m.userData.x, ys, m.userData.z); const on = i >= 61 && i <= 69 && u > 1.2 + (i - 61) * .07; m.material = on ? mat(i < 8 ? JAUNE : 0xFFEB8A) : mat(0xd9d9d9); m.material = on ? mat(i < 69 ? JAUNE : 0xFFEB8A) : mat(0xd9d9d9); m.scale.y = i === 69 && on ? .5 : 1; if (i === 69 && on) m.position.y = ys - .115; });
+    cam.position.set(lerp(-5.5, -4.5, u / d), lerp(15, 14, u / d), lerp(19, 17.5, u / d)); cam.lookAt(0, 0.2, 0);
+    add(`<div class="kick"><b>VOTRE ETF MONDE</b>CES 3 PUCES DEDANS</div>`); big("8,5 %", 300, "", .9);
+    if (u > 1.6) { const q = back((u - 1.6) / .35, 2.2); add(`<div class="ticket" style="left:70px;top:620px;transform:rotate(-3deg) scale(${q.toFixed(3)});transform-origin:0 0">Sur 1 000 € placés :<br><em>≈ 85 €</em> dans Nvidia,<br>Broadcom et Micron</div>`); } }
+  if (nom === "rebond") { const q = back((u - .2) / .5); fleche.position.set(0, lerp(-3, 0, q), -.25); fleche.rotation.y = Math.sin(u * 2) * .35; fleche.scale.setScalar(1.3);
+    cam.position.set(2.5, 4.2, 13); cam.lookAt(0, 3.2, 0);
+    add(`<div class="kick"><b>VENDREDI 6 NOVEMBRE</b>LE SECTEUR</div>`); big("+3,6 %", 300, "", .35); }
+  if (nom === "semaine") { add(`<div class="kick"><b>DU 30 OCT. AU 6 NOV.</b>SUR LA SEMAINE</div>`);
+    [["Nvidia", 8.8, "−8,8 %"], ["Broadcom", 9.9, "−9,9 %"], ["Micron", 22.0, "−22 %"]].forEach(([n, v, s], i) => { const q = e3((u - .2 - i * .35) / .6); add(`<div class="rang" style="top:${420 + i * 150}px;opacity:${cl(q * 2).toFixed(2)}"><span>${n}</span><div class="bar"><i style="width:${(v / 24 * 100 * q).toFixed(1)}%"></i></div><span class="v">${s}</span></div>`); }); }
+  if (nom === "fin") { add(`<div class="noir" style="background:#FFE14D"></div>`); const q = back(u / .4, 2);
+    add(`<div class="big" style="top:520px;left:0;right:0;text-align:center;font-size:190px;letter-spacing:-6px;transform:scale(${q.toFixed(3)})"><span style="background:#111;color:#FFE14D;padding:0 30px">ENKLAIR</span></div>`);
+    add(`<div class="ligne" style="top:820px;text-align:center;opacity:${e3((u - .4) / .3)}">Chaque samedi, ce qui a fait<br>bouger vos actions.</div><div class="ligne" style="top:1050px;text-align:center;font-size:64px;opacity:${e3((u - .8) / .3)}"><span style="background:#111;color:#fff;padding:8px 24px">enklair.com</span></div>`); }
+  if (TXT[nom]) add(`<div class="sous">${motParMot(TXT[nom], u)}</div>`);
+  add(`<div class="src">Cours de clôture au Nasdaq, 5 et 6 novembre 2026. Secteur : ETF VanEck Semiconductor (SMH). Poids : MSCI World au 31 août 2026. Information, pas un conseil.</div>`);
+  UI.innerHTML = h;
+  // volet : jaune puis noir, 0,32 s au début de chaque scène sauf la première
+  if (nom !== "accroche" && u < .34) { const p = eio(u / .34); VO.style.left = (-1400 + p * 3000) + "px"; VO2.style.left = (-1500 + eio((u - .05) / .3) * 3000) + "px"; } else { VO.style.left = VO2.style.left = "-3000px"; }
+  R.render(S, cam); return nom;
+};
+window.pret = true;
+</script></body></html>
