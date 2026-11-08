@@ -899,12 +899,13 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 ${REGLES}`, PRESSE_SEMAINE = `Tu es journaliste financier et tu \xE9cris pour des personnes qui d\xE9butent en Bourse. Tu re\xE7ois en JSON une entreprise cot\xE9e et les articles de presse de sa semaine (num\xE9rot\xE9s ; m\xE9dia, date, titre et le plus souvent le texte, parfois dans une autre langue).
 \xC9cris la synth\xE8se de ce que la presse a dit de cette entreprise cette semaine. R\xE9ponds uniquement par un objet JSON valide, sur une seule ligne : {"paragraphes": ["...", "..."], "sujets": ["...", "..."], "articles": [1, 3]}.
 - "paragraphes" : exactement deux paragraphes courts, 90 \xE0 140 mots en tout.
-  Premier paragraphe : le sujet principal de la semaine, racont\xE9 clairement (qui, quoi, combien, quand), avec ce que l'article dit de son importance pour l'entreprise.
+  Premier paragraphe : le sujet le plus important pour l'entreprise cette semaine (r\xE9sultats, chiffre d'affaires, gros contrat, rachat, d\xE9cision de justice, changement de dirigeant\u2026 pas forc\xE9ment le premier article), racont\xE9 clairement : qui, quoi, combien, quand.
   Second paragraphe : les autres sujets, du plus important au moins important, une phrase chacun. Si les articles se contredisent, dis-le.
   Rattache chaque fait \xE0 son m\xE9dia (\xAB selon \u2026 \xBB, \xAB d'apr\xE8s \u2026 \xBB), en variant la tournure.
 - "sujets" : 2 \xE0 4 mots-cl\xE9s courts (2 \xE0 4 mots chacun), par exemple \xAB Ventes du trimestre \xBB, \xAB Contrat \xE0 Oman \xBB.
 - "articles" : les num\xE9ros des articles que tu as r\xE9ellement utilis\xE9s.
 - Ne parle que de l'entreprise demand\xE9e. Ignore un article qui ne la concerne pas vraiment (homonyme, autre soci\xE9t\xE9, simple mention dans une liste) et ne le compte pas dans "articles".
+- N'ajoute aucun commentaire, jugement ou contexte absent des articles (jamais \xAB ce chiffre est important car\u2026 \xBB, \xAB malgr\xE9 un contexte incertain \xBB).
 - Explique en quelques mots un terme technique s'il est indispensable (par exemple \xAB marge \xBB, \xAB dividende \xBB).
 - N'utilise que ce que disent les articles : aucun chiffre, fait, lieu ou nom absent ; le lieu d'un fait est uniquement celui \xE9crit dans l'article (un article sur l'Espagne parle de l'Espagne, jamais de la France). Les montants gardent leur unit\xE9 et leur devise. Ce qui est au conditionnel reste au conditionnel.
 - R\xE9sume avec tes propres mots : ne recopie jamais une phrase d'un article.
@@ -1100,19 +1101,24 @@ async function lireArticle(env, u) {
 }
 var PAYS = { france: "\\bfran[c\xE7]|frankreich|francia", espagne: "espa|spain|spagn|spanien", italie: "ital", allemagne: "german|deutsch|alleman", "royaume-uni": "royaume|united kingdom|britain|uk\\b|regno unito", "\xE9tats-unis": "united states|u\\.s\\.|us\\b|usa|am\xE9r|americ|estados unidos|stati uniti|\xE9tats", chine: "chin|china|cina", japon: "japan|japon|giappon", inde: "india|inde", canada: "canad", australie: "austral|tasman|\\baud\\b|a\\$", suisse: "suisse|switz|swiss|svizzera|schweiz", "pays-bas": "netherlands|pays-bas|dutch|nederland", belgique: "belg", br\u00E9sil: "bra[sz]il", mexique: "mexi", cor\u00E9e: "kore|cor\xE9e|corea" };
 function presseFidele(txt, lus) {
-  let tous = lus.map((a) => a.titre + " " + a.texte).join(" ");
-  for (let ph of txt.split(/(?<=[.!?])\s+/)) {
-    let cite = lus.filter((a) => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, ""))), src = (cite.length ? cite.map((a) => a.titre + " " + a.texte).join(" ") : tous).toLowerCase(), srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ";
-    for (let n of ph.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) {
-      let d = n.replace(/[^0-9]/g, "").replace(/^0+/, "").replace(/(\d)0+$/, "$1");
-      if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d))
-        return presseFidele.raison = "chiffre " + n, !1;
+  let tous = lus.map((a) => a.titre + " " + a.texte).join(" "), garde = [], MOIS2 = "janvier|f\xE9vrier|mars|avril|mai|juin|juillet|ao\xFBt|septembre|octobre|novembre|d\xE9cembre";
+  for (let par of String(txt).split(`
+`)) {
+    let ok = [];
+    for (let ph of par.split(/(?<=[.!?])\s+/)) {
+      let cite = lus.filter((a) => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, ""))), src = (cite.length ? cite.map((a) => a.titre + " " + a.texte).join(" ") : tous).toLowerCase(), srcT = tous.toLowerCase(), srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ", srcD = src.replace(/[^0-9]/g, " "), bon = !0, sansDates = ph.replace(new RegExp("\\b\\d{1,2}(er)?\\s+(" + MOIS2 + ")", "gi"), "").replace(/\b20[1-3]\d\b/g, "");
+      for (let n of sansDates.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) {
+        let d = n.replace(/[^0-9]/g, "").replace(/^0+/, "").replace(/(\d)0+$/, "$1");
+        d.length >= 2 && !srcN.includes(d) && !srcD.includes(d) && (bon = !1, presseFidele.raison = "chiffre " + n);
+      }
+      let t = ph.toLowerCase();
+      for (let [p, re] of Object.entries(PAYS)) t.includes(p) && !new RegExp(re, "i").test(src) && !(cite.length === 0 && new RegExp(re, "i").test(srcT)) && (bon = !1, presseFidele.raison = "lieu " + p);
+      bon && ok.push(ph);
     }
-    let t = ph.toLowerCase();
-    for (let [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src))
-      return presseFidele.raison = "lieu " + p, !1;
+    ok.length && garde.push(ok.join(" "));
   }
-  return !0;
+  return garde.join(`
+`);
 }
 async function synthesePresse(request, env, url) {
   let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
@@ -1133,19 +1139,19 @@ async function synthesePresse(request, env, url) {
   if (A.length < 2) return json4({ vide: !0 });
   let lus = [];
   for (let a of A) {
-    let t = await lireArticle(env, a.u);
-    lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) });
+    let t2 = await lireArticle(env, a.u);
+    lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t2.texte || "").slice(0, 1500) });
   }
   let nom = url.searchParams.get("nom") || id;
   presseFidele.raison = "";
   let r = await iaJSON(
     env,
-    "presse-sem7",
+    "presse-sem8",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     520,
     (x) => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(String).join(`
-`)), (x && typeof x.clair == "string" && x.clair.length > 80 ? !0 : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
+`)), (x && typeof x.clair == "string" && x.clair.length > 80 ? !0 : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
       clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
 `).trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
@@ -1154,7 +1160,11 @@ async function synthesePresse(request, env, url) {
     MODELES_PRESSE
   ).catch(() => null);
   if (!r) return json4({ indisponible: !0, raison: presseFidele.raison || "" });
-  let pris = r.articles && r.articles.length ? [...new Set(r.articles)].sort((a, b) => a - b).map((n) => A[n - 1]) : A, out = { clair: r.clair, sujets: r.sujets, n: pris.length, sources: pris.map((a) => ({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), titre: a.t || "", u: a.u, date: String(a.d).slice(0, 10) })) };
+  let t = r.clair.toLowerCase(), nums = new Set(r.articles || []);
+  lus.forEach((a) => {
+    t.includes(String(a.media).toLowerCase()) && nums.add(a.n);
+  });
+  let pris = nums.size ? [...nums].sort((a, b) => a - b).map((n) => A[n - 1]).filter(Boolean) : A, out = { clair: r.clair, sujets: r.sujets, n: pris.length, sources: pris.map((a) => ({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), titre: a.t || "", u: a.u, date: String(a.d).slice(0, 10) })) };
   if (env.DB) try {
     await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind(cle, JSON.stringify(out), Date.now()).run();
   } catch {

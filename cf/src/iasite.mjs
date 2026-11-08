@@ -159,17 +159,25 @@ async function lireArticle(env, u) {
    à tous (table ia_presse). Ne compte pas dans les questions des visiteurs ; reste dans la part gratuite du jour (iaJSON). */
 /* Garde-fous : chaque nombre et chaque pays du résumé doit se trouver dans les articles (l'IA a écrit « en France » pour un article sur l'Espagne) */
 const PAYS = { france: "\\bfran[cç]|frankreich|francia", espagne: "espa|spain|spagn|spanien", italie: "ital", allemagne: "german|deutsch|alleman", "royaume-uni": "royaume|united kingdom|britain|uk\\b|regno unito", "états-unis": "united states|u\\.s\\.|us\\b|usa|amér|americ|estados unidos|stati uniti|états", chine: "chin|china|cina", japon: "japan|japon|giappon", inde: "india|inde", canada: "canad", australie: "austral|tasman|\\baud\\b|a\\$", suisse: "suisse|switz|swiss|svizzera|schweiz", "pays-bas": "netherlands|pays-bas|dutch|nederland", belgique: "belg", brésil: "bra[sz]il", mexique: "mexi", corée: "kore|corée|corea" };
-function presseFidele(txt, lus) { // phrase par phrase, face à l'article qu'elle cite (« selon … »), sinon face à tous
-  const tous = lus.map(a => a.titre + " " + a.texte).join(" ");
-  for (const ph of txt.split(/(?<=[.!?])\s+/)) {
-    const cite = lus.filter(a => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, "")));
-    const src = (cite.length ? cite.map(a => a.titre + " " + a.texte).join(" ") : tous).toLowerCase();
-    const srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ";
-    for (const n of ph.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) { const d = n.replace(/[^0-9]/g, "").replace(/^0+/, "").replace(/(\d)0+$/, "$1"); if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d)) { presseFidele.raison = "chiffre " + n; return false; } }
-    const t = ph.toLowerCase();
-    for (const [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src)) { presseFidele.raison = "lieu " + p; return false; }
+function presseFidele(txt, lus) { // garde les phrases dont chaque nombre et chaque pays se trouvent dans l'article cité (« selon … »), sinon dans l'un des articles
+  const tous = lus.map(a => a.titre + " " + a.texte).join(" "), garde = [];
+  const MOIS = "janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre";
+  for (const par of String(txt).split("\n")) {
+    const ok = [];
+    for (const ph of par.split(/(?<=[.!?])\s+/)) {
+      const cite = lus.filter(a => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, "")));
+      const src = (cite.length ? cite.map(a => a.titre + " " + a.texte).join(" ") : tous).toLowerCase(), srcT = tous.toLowerCase();
+      const srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ", srcD = src.replace(/[^0-9]/g, " ");
+      let bon = true;
+      const sansDates = ph.replace(new RegExp("\\b\\d{1,2}(er)?\\s+(" + MOIS + ")", "gi"), "").replace(/\b20[1-3]\d\b/g, "");
+      for (const n of sansDates.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) { const d = n.replace(/[^0-9]/g, "").replace(/^0+/, "").replace(/(\d)0+$/, "$1"); if (d.length >= 2 && !srcN.includes(d) && !srcD.includes(d)) { bon = false; presseFidele.raison = "chiffre " + n; } }
+      const t = ph.toLowerCase();
+      for (const [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src) && !(cite.length === 0 && new RegExp(re, "i").test(srcT))) { bon = false; presseFidele.raison = "lieu " + p; }
+      if (bon) ok.push(ph);
+    }
+    if (ok.length) garde.push(ok.join(" "));
   }
-  return true;
+  return garde.join("\n");
 }
 async function synthesePresse(request, env, url) {
   const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
@@ -187,13 +195,15 @@ async function synthesePresse(request, env, url) {
   for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) }); }
   const nom = url.searchParams.get("nom") || id;
   presseFidele.raison = "";
-  const r = await iaJSON(env, "presse-sem7", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
-    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(String).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
+  const r = await iaJSON(env, "presse-sem8", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
+    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(String).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
       clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter(n => n >= 1 && n <= lus.length) } : null, MODELES_PRESSE).catch(() => null);
   if (!r) return json({ indisponible: true, raison: presseFidele.raison || "" });
-  const pris = r.articles && r.articles.length ? [...new Set(r.articles)].sort((a, b) => a - b).map(n => A[n - 1]) : A;
+  const t = r.clair.toLowerCase(), nums = new Set(r.articles || []);
+  lus.forEach(a => { if (t.includes(String(a.media).toLowerCase())) nums.add(a.n); });
+  const pris = nums.size ? [...nums].sort((a, b) => a - b).map(n => A[n - 1]).filter(Boolean) : A;
   const out = { clair: r.clair, sujets: r.sujets, n: pris.length, sources: pris.map(a => ({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), titre: a.t || "", u: a.u, date: String(a.d).slice(0, 10) })) };
   if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind(cle, JSON.stringify(out), Date.now()).run(); } catch (e) { }
   return json(out);
