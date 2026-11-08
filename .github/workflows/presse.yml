@@ -1,11 +1,11 @@
 # Synthèses de presse de la semaine écrites à l'avance (8/11, Romain : « le rapport doit être disponible dès le samedi matin, voire le vendredi
-# soir », « 75 synthèses prérédigées »). Vendredi soir après la clôture de Wall Street avec la part gratuite d'IA du vendredi (40), puis samedi
-# 0 h 23 UTC avec celle du samedi (35), avant le rapport (espace.yml, 6 h 17 UTC). Sans clé : le site arrête le robot si la part du jour est épuisée.
+# soir », « 75 synthèses prérédigées »). Vendredi 23 h 19 UTC avec la part gratuite d IA du vendredi (40), puis samedi
+# 2 h 23 UTC avec celle du samedi (35), avant le rapport (espace.yml, 6 h 17 UTC). Sans clé : le site arrête le robot si la part du jour est épuisée.
 name: Synthèses de presse
 on:
   schedule:
-    - cron: "37 21 * * 5"   # vendredi 22 h 37 à Paris l'hiver, après la clôture de Wall Street
-    - cron: "23 0 * * 6"    # samedi 1 h 23 à Paris : nouvelle part gratuite du jour
+    - cron: "19 23 * * 5"   # vendredi 23 h 19 UTC (samedi 0 h 19 à Paris) : encore la part du vendredi, après la clôture de Wall Street et l actualité de 22 h 41 UTC
+    - cron: "23 2 * * 6"    # samedi 3 h 23 à Paris : nouvelle part gratuite du jour, après l'actualité de 1 h 41 UTC
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,4 +19,4 @@ jobs:
         with: { node-version: 22 }
       - run: node data/presse_chauffe.mjs
         env:
-          MAX: ${{ github.event.schedule == '23 0 * * 6' && '35' || '40' }}
+          MAX: ${{ github.event.schedule == '23 2 * * 6' && '35' || '40' }}

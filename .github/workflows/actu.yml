@@ -4,12 +4,9 @@ name: Actualité des entreprises
 on:
   workflow_dispatch: {}
   schedule:
-    - cron: "41 5 * * 1-5"    # 6 h 41 à Paris (hiver)
-    - cron: "37 9 * * 1-5"
-    - cron: "43 12 * * 1-5"
-    - cron: "39 16 * * 1-5"
-    - cron: "47 20 * * 1-5"
-    - cron: "23 9 * * 6"      # samedi matin : rattrapage
+    # 8/11 (Romain : « étoffer les actualités, plus d'articles ») : toutes les 3 heures, 7 jours sur 7. Chaque passage lit au plus les
+    # 4 dernières heures de presse (GDELT) : avec 5 passages en semaine seulement, la nuit et tout le week-end étaient perdus.
+    - cron: "41 1,4,7,10,13,16,19,22 * * *"
 permissions:
   contents: write
 concurrency:
