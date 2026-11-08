@@ -2294,3 +2294,4 @@ html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;d
 .r8-src{margin:2px 0 0}.r8-src summary{cursor:pointer;font-size:13.5px;color:#555;font-weight:600;list-style:none;padding:6px 0}.r8-src summary::-webkit-details-marker{display:none}.r8-src summary::before{content:"▸ ";}.r8-src[open] summary::before{content:"▾ "}
 .r8-src ul{margin:4px 0 0;padding:0;list-style:none}.r8-src li{font-size:13.5px;line-height:1.45;padding:5px 0;border-top:1px solid #eee}.r8-src li time{color:#777;margin-right:4px}.r8-src li a{color:#111}.r8-med{color:#777;font-size:12.5px}
 .r8-syn p+p{margin-top:8px}
+.r8-syn .r8-sources{font-size:13.5px;color:#444;margin-top:10px;line-height:1.6}.r8-sources b{font-weight:700;color:#111}.r8-sources a{color:#111;text-decoration:underline;text-decoration-color:#E0C200;text-underline-offset:3px}

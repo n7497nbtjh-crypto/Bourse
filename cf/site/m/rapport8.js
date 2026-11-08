@@ -334,10 +334,10 @@ function r8SynCharger(boite) {
     const vide = () => { el.remove(); };
     fetch(`/api/ia/presse?k=${encodeURIComponent(el.dataset.r8syn)}&au=${encodeURIComponent(el.dataset.au)}&nom=${encodeURIComponent(el.dataset.nom)}`).then(r => r.json()).then(j => {
       if (!j || !j.clair) return vide();
-      const S = j.sources || [];
-      el.innerHTML = `<p class="r8-lab">Ce que dit la presse cette semaine</p>${(j.sujets || []).length ? `<p class="r8-syn-s">${j.sujets.map(x => `<span>${esc(x)}</span>`).join("")}</p>` : ""}${String(j.clair).split(/\n+/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join("")}<p class="r8-ia">Synthèse de ${S.length} article${S.length > 1 ? "s" : ""} par l'IA d'ENKLAIR, écrite une fois pour tous les lecteurs. Les articles font foi.</p>`;
-      if (S.length) { const p = el.parentElement, d = p && p.querySelector(".r8-src"), h = `<summary>Les ${S.length} article${S.length > 1 ? "s" : ""} utilisé${S.length > 1 ? "s" : ""}</summary><ul>${S.map(a => `<li><time>${esc(r8Jr(a.date))}</time> <a href="${esc(a.u)}" target="_blank" rel="noopener">« ${esc(r8Titre(a.titre || a.media))} »</a> <span class="r8-med">${esc(a.media)}</span></li>`).join("")}</ul>`;
-        if (d) d.innerHTML = h; else el.insertAdjacentHTML("afterend", `<details class="r8-src">${h}</details>`); }
+      const S = j.sources || [], vus = new Set();
+      const src = S.filter(a => !vus.has(a.u) && vus.add(a.u)).map(a => `<a href="${esc(a.u)}" target="_blank" rel="noopener" title="${esc(r8Titre(a.titre || ""))} (${esc(r8Jr(a.date))})">${esc(a.media)}</a>`).join(" · ");
+      el.innerHTML = `<p class="r8-lab">Ce que dit la presse cette semaine</p>${(j.sujets || []).length ? `<p class="r8-syn-s">${j.sujets.map(x => `<span>${esc(x)}</span>`).join("")}</p>` : ""}${String(j.clair).split(/\n+/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join("")}${src ? `<p class="r8-sources"><b>Sources :</b> ${src}</p>` : ""}<p class="r8-ia">Synthèse écrite par l'IA d'ENKLAIR à partir de ces articles, la même pour tous les lecteurs.</p>`;
+      const p = el.parentElement, d = p && p.querySelector(".r8-src"); if (d && S.length) d.remove();
     }).catch(vide);
   }));
 }

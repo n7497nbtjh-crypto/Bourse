@@ -115,7 +115,7 @@ export const PRESSE_SEMAINE = `Tu es journaliste financier et tu écris pour des
 - "paragraphes" : exactement deux paragraphes courts, 90 à 140 mots en tout.
   Premier paragraphe : le sujet le plus important pour l'entreprise cette semaine (résultats, chiffre d'affaires, gros contrat, rachat, décision de justice, changement de dirigeant… pas forcément le premier article), raconté clairement : qui, quoi, combien, quand.
   Second paragraphe : les autres sujets, du plus important au moins important, une phrase chacun. Si les articles se contredisent, dis-le.
-  Rattache chaque fait à son média (« selon … », « d'après … »), en variant la tournure.
+  N'écris aucun nom de média ni de site dans le texte (ni « selon … », ni « d'après … ») : les sources sont affichées à part, sous la synthèse. Écris les faits directement (« Apple a annoncé… », « Les ventes ont atteint… ») ; ce qui n'est qu'une estimation ou une rumeur le reste (« devrait », « serait »).
 - "sujets" : 2 à 4 mots-clés courts (2 à 4 mots chacun), par exemple « Ventes du trimestre », « Contrat à Oman ».
 - "articles" : les numéros des articles que tu as réellement utilisés.
 - Si aucun article ne parle vraiment de l'entreprise demandée (par exemple un nom court pris pour autre chose), réponds seulement {"aucun": true}.

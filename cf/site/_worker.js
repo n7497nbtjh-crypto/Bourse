@@ -901,7 +901,7 @@ ${REGLES}`, PRESSE_SEMAINE = `Tu es journaliste financier et tu \xE9cris pour de
 - "paragraphes" : exactement deux paragraphes courts, 90 \xE0 140 mots en tout.
   Premier paragraphe : le sujet le plus important pour l'entreprise cette semaine (r\xE9sultats, chiffre d'affaires, gros contrat, rachat, d\xE9cision de justice, changement de dirigeant\u2026 pas forc\xE9ment le premier article), racont\xE9 clairement : qui, quoi, combien, quand.
   Second paragraphe : les autres sujets, du plus important au moins important, une phrase chacun. Si les articles se contredisent, dis-le.
-  Rattache chaque fait \xE0 son m\xE9dia (\xAB selon \u2026 \xBB, \xAB d'apr\xE8s \u2026 \xBB), en variant la tournure.
+  N'\xE9cris aucun nom de m\xE9dia ni de site dans le texte (ni \xAB selon \u2026 \xBB, ni \xAB d'apr\xE8s \u2026 \xBB) : les sources sont affich\xE9es \xE0 part, sous la synth\xE8se. \xC9cris les faits directement (\xAB Apple a annonc\xE9\u2026 \xBB, \xAB Les ventes ont atteint\u2026 \xBB) ; ce qui n'est qu'une estimation ou une rumeur le reste (\xAB devrait \xBB, \xAB serait \xBB).
 - "sujets" : 2 \xE0 4 mots-cl\xE9s courts (2 \xE0 4 mots chacun), par exemple \xAB Ventes du trimestre \xBB, \xAB Contrat \xE0 Oman \xBB.
 - "articles" : les num\xE9ros des articles que tu as r\xE9ellement utilis\xE9s.
 - Si aucun article ne parle vraiment de l'entreprise demand\xE9e (par exemple un nom court pris pour autre chose), r\xE9ponds seulement {"aucun": true}.
@@ -1124,6 +1124,10 @@ function presseFidele(txt, lus) {
 function frCorrige(t) {
   return String(t || "").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge").replace(/\b(un|le|ce|du) marge\b/gi, (m, d) => ({ un: "une", le: "la", ce: "cette", du: "de la" })[d.toLowerCase()] + " marge").replace(/\b(marges?(?: brutes?| nettes?| opérationnelles?)?)\s+(inférieur|supérieur|élevé|faible|stable|réduit|bas|haut)(s?)\b/gi, (m, n, a, pl) => n + " " + (a === "faible" || a === "stable" ? a : a.replace(/eur$/, "eure").replace(/é$/, "\xE9e").replace(/t$/, "te").replace(/bas$/, "basse").replace(/haut$/, "haute")) + (/s$/.test(n) ? "s" : "")).replace(/\bdes chips\b/g, "des puces").replace(/\bchips\b/g, "puces").replace(/\s+%/g, "\xA0%");
 }
+var DOM = "[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.(?:com|fr|de|es|it|net|org|ch|be|ca|uk|ru|au|in|jp|nl|info|news|co)\\b";
+function sansMedia(t) {
+  return String(t || "").replace(new RegExp("\\s*,?\\s*(?:selon|d['\u2019]apr\xE8s|comme (?:le rapporte|l'indique|indiqu\xE9 par|rapport\xE9 par))\\s+(?:le site\\s+|le m\xE9dia\\s+)?" + DOM + "(?:\\s+et\\s+" + DOM + ")*", "gi"), "").replace(new RegExp("\\b(?:De plus,\\s*)?" + DOM + "(?:\\s+et\\s+" + DOM + ")*\\s+(?:rapporte|indique|\xE9crit|souligne|pr\xE9cise|note|affirme|explique)\\s+que\\s+", "gi"), "").replace(/\b(?:selon|d['’]après)\s+(?:le même média|la même source|ce (?:média|site|journal))\s*,?\s*/gi, "").replace(/(^|[.!?]\s+|\n)\s*,\s*/g, "$1").replace(/(^|[.!?]\s+|\n)\s*,?\s*([a-zàâéèêîôûç])/g, (m, a, c) => a + c.toUpperCase()).replace(/\s+([.,;])/g, "$1").replace(/ {2,}/g, " ").trim();
+}
 var PRESSE_HORS = /n'(a|ont) pas été mentionn|n'est pas mentionn|ne (mentionne|parle) pas de l'entreprise|aucun (des )?article(s)? ne (parle|mentionne|concerne)/i, PRESSE_CONSEIL = /conseill|recommand|à acheter|à vendre|stocks? to buy|rééquilibrer|investissements? sélectif/i;
 async function synthesePresse(request, env, url) {
   let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
@@ -1134,7 +1138,7 @@ async function synthesePresse(request, env, url) {
     let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind(cle).first();
     if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5) && !PRESSE_HORS.test(c.txt) && !PRESSE_CONSEIL.test(c.txt)) {
       let o = JSON.parse(c.txt);
-      return o.clair = frCorrige(o.clair), json4(o);
+      return o.clair = sansMedia(frCorrige(o.clair)), json4(o);
     }
   } catch {
   }
@@ -1154,13 +1158,13 @@ async function synthesePresse(request, env, url) {
   presseFidele.raison = "";
   let r = await iaJSON(
     env,
-    "presse-sem10",
+    "presse-sem11",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     520,
     (x) => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map((p) => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join(`
 `)), (x && typeof x.clair == "string" && x.clair.length > 80 ? !0 : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !x.aucun && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && !PRESSE_HORS.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
-      clair: frCorrige(x.clair.replace(/—/g, ",")).replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
+      clair: sansMedia(frCorrige(x.clair.replace(/—/g, ","))).replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
 `).trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter((n) => n >= 1 && n <= lus.length)
@@ -3764,7 +3768,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "b3f9ff3e3e444c91", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "dc57f09bd8847c1e", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

@@ -1,12 +1,11 @@
-# Synthèses de presse de la semaine écrites à l'avance (8/11, Romain : « le rapport arrive le samedi, le robot doit tourner avant, à partir de la fermeture des marchés »).
-# Vendredi soir après la clôture de Wall Street (22 h à Paris l'hiver), puis samedi tôt avant le rapport (espace.yml 6 h 17 UTC), puis dimanche pour compléter.
-# Chaque jour a sa part gratuite d'IA : 30 le vendredi soir, 15 le samedi matin (le rapport en a besoin aussi), 25 le dimanche.
+# Synthèses de presse de la semaine écrites à l'avance (8/11, Romain : « le rapport doit être disponible dès le samedi matin, voire le vendredi
+# soir », « 75 synthèses prérédigées »). Vendredi soir après la clôture de Wall Street avec la part gratuite d'IA du vendredi (40), puis samedi
+# 0 h 23 UTC avec celle du samedi (35), avant le rapport (espace.yml, 6 h 17 UTC). Sans clé : le site arrête le robot si la part du jour est épuisée.
 name: Synthèses de presse
 on:
   schedule:
     - cron: "37 21 * * 5"   # vendredi 22 h 37 à Paris l'hiver, après la clôture de Wall Street
-    - cron: "11 5 * * 6"    # samedi 6 h 11 à Paris, avant le rapport
-    - cron: "13 10 * * 0"   # dimanche 11 h 13 à Paris
+    - cron: "23 0 * * 6"    # samedi 1 h 23 à Paris : nouvelle part gratuite du jour
   workflow_dispatch:
 permissions:
   contents: read
@@ -20,4 +19,4 @@ jobs:
         with: { node-version: 22 }
       - run: node data/presse_chauffe.mjs
         env:
-          MAX: ${{ github.event.schedule == '11 5 * * 6' && '15' || github.event.schedule == '13 10 * * 0' && '25' || '30' }}
+          MAX: ${{ github.event.schedule == '23 0 * * 6' && '35' || '40' }}
