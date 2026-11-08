@@ -173,12 +173,16 @@ function presseFidele(txt, lus) { // garde les phrases dont chaque nombre et cha
       for (const n of sansDates.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) { const d = n.replace(/[^0-9]/g, "").replace(/^0+/, "").replace(/(\d)0+$/, "$1"); if (d.length >= 2 && !srcN.includes(d) && !srcD.includes(d)) { bon = false; presseFidele.raison = "chiffre " + n; } }
       const t = ph.toLowerCase();
       for (const [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src) && !(cite.length === 0 && new RegExp(re, "i").test(srcT))) { bon = false; presseFidele.raison = "lieu " + p; }
+      if (PRESSE_CONSEIL.test(ph)) { bon = false; presseFidele.raison = "conseil"; }
       if (bon) ok.push(ph);
     }
     if (ok.length) garde.push(ok.join(" "));
   }
   return garde.join("\n");
 }
+// 8/11 : homonymes (« Nov » pris pour le mois) et conseils glissés par la presse : synthèse refusée ou phrase retirée
+const PRESSE_HORS = /n'(a|ont) pas été mentionn|n'est pas mentionn|ne (mentionne|parle) pas de l'entreprise|aucun (des )?article(s)? ne (parle|mentionne|concerne)/i;
+const PRESSE_CONSEIL = /conseill|recommand|à acheter|à vendre|stocks? to buy|rééquilibrer|investissements? sélectif/i;
 async function synthesePresse(request, env, url) {
   const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
@@ -186,7 +190,7 @@ async function synthesePresse(request, env, url) {
   const samedi = Date.parse(au + "T00:00:00Z") - 864e5; // écrite le samedi (robot presse.yml) ou plus tard : gardée pour toute la semaine
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
     const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind(cle).first();
-    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5)) return json(JSON.parse(c.txt)); } catch (e) { }
+    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5) && !PRESSE_HORS.test(c.txt) && !PRESSE_CONSEIL.test(c.txt)) return json(JSON.parse(c.txt)); } catch (e) { }
   let A = [];
   try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {};
     A = (j.p || []).filter(a => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 7); } catch (e) { }
@@ -195,8 +199,8 @@ async function synthesePresse(request, env, url) {
   for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) }); }
   const nom = url.searchParams.get("nom") || id;
   presseFidele.raison = "";
-  const r = await iaJSON(env, "presse-sem9", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
-    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(p => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
+  const r = await iaJSON(env, "presse-sem10", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
+    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(p => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !x.aucun && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && !PRESSE_HORS.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
       clair: x.clair.replace(/—/g, ",").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bdes chips\b/g, "des puces").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter(n => n >= 1 && n <= lus.length) } : null, MODELES_PRESSE).catch(() => null);

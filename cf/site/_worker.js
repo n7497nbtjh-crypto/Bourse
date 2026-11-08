@@ -826,7 +826,7 @@ Exemples : \xAB peu endett\xE9es \xBB \u2192 {"indicateur":"dette","condition":"
 5. R\xE9pondre \xE0 une question g\xE9n\xE9rale (d\xE9finition, fonctionnement de la Bourse, fiscalit\xE9, m\xE9thode) : {"action":"repondre","texte":"r\xE9ponse en fran\xE7ais, 60 \xE0 160 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 si utile"}
 R\xE8gles : ne recommande jamais d'acheter ou de vendre, ne pr\xE9dis jamais un cours. Si la question demande une pr\xE9vision (\xAB va-t-elle monter \xBB, \xAB quel cours dans un an \xBB, \xAB quelle action va exploser \xBB) ou un conseil sans crit\xE8re (\xAB quoi acheter \xBB, \xAB la meilleure action \xBB), r\xE9ponds avec "repondre" : explique que personne ne peut pr\xE9voir les cours et donne la m\xE9thode (\xE9pargne de pr\xE9caution, horizon d'au moins 5 ans, diversification, versements r\xE9guliers). Si la demande contient des crit\xE8res (dividende, secteur, pays, dette, prix), choisis "filtre" ou "etf" avec un titre neutre (\xAB Entreprises\u2026 \xBB et non \xAB Les meilleures actions \xBB). Si la question ne parle ni de Bourse, ni de placements, ni d'entreprises, r\xE9ponds avec "repondre" en une phrase : le site traite seulement de la Bourse et des placements. R\xE9ponds uniquement avec le JSON.
 ${REPERES}
-${REGLES}`, EXPLIQUER = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB ENKLAIR \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas ; \xE9cris plut\xF4t \xAB Je ne suis pas s\xFBr : \u2026 \xBB et indique la source officielle o\xF9 le v\xE9rifier (service-public.fr, impots.gouv.fr, AMF, Banque de France). Aucun conseil d'achat ou de vente, aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
+${REGLES}`, EXPLIQUER = `Tu expliques la Bourse en fran\xE7ais \xE0 une personne qui d\xE9bute, pour le site \xAB ENKLAIR \xBB. 80 \xE0 170 mots, vouvoiement, phrases courtes, un exemple chiffr\xE9 simple si utile. Sois exact : si tu n'es pas s\xFBr d'un point, ne l'affirme pas ; \xE9cris plut\xF4t \xAB Je ne suis pas s\xFBr : \u2026 \xBB et indique la source officielle o\xF9 le v\xE9rifier (service-public.fr, impots.gouv.fr, AMF, Banque de France). Aucun conseil d'achat ou de vente, m\xEAme rapport\xE9 d'un article (\xAB les analystes recommandent\u2026 \xBB), aucune pr\xE9diction. Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
 ${REPERES}
 ${REGLES}`, ASSISTANT = `Tu es l'assistant du site d'information boursi\xE8re \xAB ENKLAIR \xBB, pour des personnes qui d\xE9butent. Tu r\xE9ponds en fran\xE7ais \xE0 une question sur une entreprise, en t'appuyant UNIQUEMENT sur les faits fournis en JSON (comptes annuels, \xE9volution sur plusieurs ann\xE9es avec son contexte dat\xE9 et sourc\xE9, comparaison au secteur, concurrents, cours, annonces r\xE9centes, actualit\xE9 qui la concerne, agenda, fiabilit\xE9 des donn\xE9es).
 R\xE8gles :
@@ -904,6 +904,7 @@ ${REGLES}`, PRESSE_SEMAINE = `Tu es journaliste financier et tu \xE9cris pour de
   Rattache chaque fait \xE0 son m\xE9dia (\xAB selon \u2026 \xBB, \xAB d'apr\xE8s \u2026 \xBB), en variant la tournure.
 - "sujets" : 2 \xE0 4 mots-cl\xE9s courts (2 \xE0 4 mots chacun), par exemple \xAB Ventes du trimestre \xBB, \xAB Contrat \xE0 Oman \xBB.
 - "articles" : les num\xE9ros des articles que tu as r\xE9ellement utilis\xE9s.
+- Si aucun article ne parle vraiment de l'entreprise demand\xE9e (par exemple un nom court pris pour autre chose), r\xE9ponds seulement {"aucun": true}.
 - Ne parle que de l'entreprise demand\xE9e. Ignore un article qui ne la concerne pas vraiment (homonyme, autre soci\xE9t\xE9, simple mention dans une liste) et ne le compte pas dans "articles".
 - N'ajoute aucun commentaire, jugement ou contexte absent des articles (jamais \xAB ce chiffre est important car\u2026 \xBB, \xAB malgr\xE9 un contexte incertain \xBB).
 - Explique en quelques mots un terme technique s'il est indispensable (par exemple \xAB marge \xBB, \xAB dividende \xBB).
@@ -1113,13 +1114,14 @@ function presseFidele(txt, lus) {
       }
       let t = ph.toLowerCase();
       for (let [p, re] of Object.entries(PAYS)) t.includes(p) && !new RegExp(re, "i").test(src) && !(cite.length === 0 && new RegExp(re, "i").test(srcT)) && (bon = !1, presseFidele.raison = "lieu " + p);
-      bon && ok.push(ph);
+      PRESSE_CONSEIL.test(ph) && (bon = !1, presseFidele.raison = "conseil"), bon && ok.push(ph);
     }
     ok.length && garde.push(ok.join(" "));
   }
   return garde.join(`
 `);
 }
+var PRESSE_HORS = /n'(a|ont) pas été mentionn|n'est pas mentionn|ne (mentionne|parle) pas de l'entreprise|aucun (des )?article(s)? ne (parle|mentionne|concerne)/i, PRESSE_CONSEIL = /conseill|recommand|à acheter|à vendre|stocks? to buy|rééquilibrer|investissements? sélectif/i;
 async function synthesePresse(request, env, url) {
   let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json4({ error: "Demande illisible." }, 400);
@@ -1127,7 +1129,7 @@ async function synthesePresse(request, env, url) {
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
     let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind(cle).first();
-    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5)) return json4(JSON.parse(c.txt));
+    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5) && !PRESSE_HORS.test(c.txt) && !PRESSE_CONSEIL.test(c.txt)) return json4(JSON.parse(c.txt));
   } catch {
   }
   let A = [];
@@ -1146,12 +1148,12 @@ async function synthesePresse(request, env, url) {
   presseFidele.raison = "";
   let r = await iaJSON(
     env,
-    "presse-sem9",
+    "presse-sem10",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     520,
     (x) => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map((p) => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join(`
-`)), (x && typeof x.clair == "string" && x.clair.length > 80 ? !0 : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
+`)), (x && typeof x.clair == "string" && x.clair.length > 80 ? !0 : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !x.aucun && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && !PRESSE_HORS.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
       clair: x.clair.replace(/—/g, ",").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bdes chips\b/g, "des puces").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
 `).trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
