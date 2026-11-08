@@ -288,3 +288,5 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - 8/11 13 h (Romain) : « Pourquoi elle a bougé » sans phrases (ses résultats en pastilles : ventes, bénéfice par action, dividende), cases jour par jour sans rivales ni indice ; « Pourquoi » et « Ce que dit la presse » côte à côte, la presse centrée en hauteur (`.r9-duo`), rivales dessous. Constat : depuis 11 h 15, les mises en ligne réussissent mais enklair.com reste sur le déploiement de 10 h 48 (version 9b4f6055) : réglage Cloudflare à vérifier.
 
 - 8/11 après-midi : jours du rapport raccourcis (« lun. 2 »), étiquettes entières au téléphone ; vidéo v11 refaite avec le nouveau rapport (marge face aux rivales, Le monde en tuiles, Pourquoi elle a bougé et Ce que dit la presse, Apple seule).
+
+- 8/11 14h : rapport, Vos lignes en tuiles logo + nom (part du portefeuille puis favoris), une ligne à la fois avec son en-tête et ses encadrés en grand ; titres des encadrés en Bricolage surlignés ; « Pour aller plus loin » retiré, section « Sources » en fin de rapport (menu par valeur, complété par les sources de la synthèse) ; téléphone : jours en pastilles avec légende.

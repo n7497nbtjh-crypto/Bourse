@@ -137,12 +137,12 @@ function r9Pq(l, R0, A) {
   const fort = J.filter(j => j.v != null).sort((a, c) => Math.abs(c.v) - Math.abs(a.v))[0];
   const ixC = ix ? ix.nom.replace(/^Euro Stoxx 50$/, "Stoxx 50").replace(/^Nasdaq 100$/, "Nasdaq").replace(/^S&P 500$/, "S&P").replace(/^Nikkei 225$/, "Nikkei").replace(/^FTSE 100$/, "FTSE") : "";
   const tagDe = j => j.date === resJ ? ["Résultats", "res"] : choc && j === choc ? [`${ixC} ${synPct(j.ind)}`, j.ind < 0 ? "cr" : "hs"] : fort && j === fort && Math.abs(j.v) >= 2 ? ["Jour clé", "ft"] : null;
-  const jours = J.length >= 2 ? `<div class="r9-dcs">${J.map(j => { const t = tagDe(j); return `<div class="dc ${t ? t[1] : ""}"><span class="ev${t ? "" : " vide"}">${t ? esc(t[0]) : "&nbsp;"}</span><small>${esc(r8Jour(j.date).replace(/\s+\S+\.?$/, ""))}</small><b class="${r8Cls(j.v)}">${synPct(j.v)}</b></div>`; }).join("")}</div>` : "";
+  const jours = J.length >= 2 ? `<div class="r9-dcs">${J.map(j => { const t = tagDe(j); return `<div class="dc ${t ? t[1] : ""}"><span class="tg${t ? "" : " vide"}">${t ? esc(t[0]) : "&nbsp;"}</span><small>${esc(r8Jour(j.date).replace(/\s+\S+\.?$/, ""))}</small><b class="${r8Cls(j.v)}">${synPct(j.v)}</b></div>`; }).join("")}</div>${(() => { const T = J.map(tagDe).filter(Boolean); return T.length ? `<p class="r9-dleg">${T.map(t => `<span class="${t[1]}">${esc(t[0])}</span>`).join("")}</p>` : ""; })()}` : "";
   // 8/11 (Romain : « Lundi, ses résultats… » mal présenté, « pas trop d'infos ») : ses chiffres publiés en pastilles, plus de phrases
   const kpi = res ? `<div class="r9-kpi"><p class="r9-sh">Ses résultats, publiés le ${esc(r8Jr(res.date))}</p><div>${res.chiffres.slice(0, 3).map(([a, b]) => { const m = /^(.*?)\s*\((.*)\)\s*$/.exec(String(b)), v = m ? m[1] : String(b), p = m ? m[2] : "";
     return `<div class="k"><small>${esc(a)}</small><b>${esc(v)}</b>${p ? `<span class="${/^[+]/.test(p) ? "up" : /^[−-]/.test(p) ? "dn" : ""}">${esc(p.replace(/ %/g, "\u00a0%"))}</span>` : ""}</div>`; }).join("")}</div></div>` : "";
   const P0 = !J.length && !res && R0 ? r8Pourquoi(l, R0, A).slice(0, 2) : [];
-  return `<div class="r9-box r9-pq"><p class="r9-h"><i>✦</i> Pourquoi elle a bougé</p><p class="r9-lead">${lead}</p><div class="r9-pqg"><div>${trio}${P0.map(t => `<p>${t}</p>`).join("")}</div><div>${jours ? `<p class="r9-sh">Jour par jour</p>${jours}` : ""}</div></div>${kpi}</div>`;
+  return `<div class="r9-box r9-pq"><h3 class="r9-h"><span>Pourquoi elle a bougé</span></h3><p class="r9-lead">${lead}</p><div class="r9-pqg"><div>${trio}${P0.map(t => `<p>${t}</p>`).join("")}</div><div>${jours ? `<p class="r9-sh">Jour par jour</p>${jours}` : ""}</div></div>${kpi}</div>`;
 }
 // Face à ses rivales : chaque entreprise placée sur une échelle, la médiane en pointillé, zone rouge à gauche, verte à droite
 function r9Riv(l, R0) {
@@ -150,12 +150,14 @@ function r9Riv(l, R0) {
   const L = [...R0.liste.map(x => ({ ...x })), { k: l.k, nom: l.nom, v, moi: true }].filter(x => x.v != null).sort((a, c) => c.v - a.v); if (L.length < 3) return "";
   const ab = L.map(x => Math.abs(x.v)).sort((a, c) => a - c), lim = Math.max(2, ab[Math.floor(ab.length * 0.8)] || 2, Math.abs(R0.med || 0) + 1) * 1.25, X = x => 50 + Math.max(-49, Math.min(49, x / lim * 50));
   const m = X(R0.med), fmtA = Math.round(lim * 10) / 10;
-  return `<div class="r9-box r9-riv"><p class="r9-h">Face à ses rivales, sur la semaine</p><div class="r9-med" style="--m:${m.toFixed(1)}%"><span>médiane ${synPct(R0.med)}</span></div>${L.map(x => { const out = Math.abs(x.v) > lim;
+  return `<div class="r9-box r9-riv"><h3 class="r9-h"><span>Face à ses rivales</span></h3><div class="r9-med" style="--m:${m.toFixed(1)}%"><span>médiane ${synPct(R0.med)}</span></div>${L.map(x => { const out = Math.abs(x.v) > lim;
     return `<div class="r9-dl${x.moi ? " me" : ""}" style="--m:${m.toFixed(1)}%"><span>${x.moi ? esc(x.nom) : `<a href="${synLien(x.k)}">${esc(x.nom)}</a>`}</span><div class="tr"><i style="left:${X(x.v).toFixed(1)}%"${out ? ` class="out"` : ""}></i></div><b class="${r8Cls(x.v)}">${synPct(x.v)}</b></div>`; }).join("")}
     <div class="r9-ax"><span></span><div><span>${synPct(-fmtA)}</span><span>0</span><span>${synPct(fmtA)}</span></div><span></span></div>
     ${R0.nouvelles && R0.nouvelles.length ? `<div class="r9-nouv"><p class="r9-sh">Leurs nouvelles</p>${R0.nouvelles.map(a => { const lg = typeof synLangue === "function" ? synLangue(a.titre) : "fr";
       return `<div><b>${esc(a.nom)}</b> · ${a.origine === "presse" ? `<span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(r8Titre(a.titre))}</span> (presse)` : esc((SYN6_T[a.categorie] || ["Annonce"])[0]) + (a.chiffres && a.chiffres.length ? " : " + a.chiffres.slice(0, 2).map(([x, y]) => `${x.toLowerCase()} ${y}`).join(", ") : "")}${a.source ? ` <a href="${esc(a.source)}" target="_blank" rel="noopener">↗</a>` : ""}</div>`; }).join("")}</div>` : ""}</div>`;
 }
+function r9SrcLi(a) { const u = a.source || a.u, t = a.titre || a.t || a.media || "", m = a.site || a.media || a.s || "", d = a.date || a.d;
+  return `<li data-u="${esc(u)}"><a href="${esc(u)}" target="_blank" rel="noopener">${esc(r8Titre(t))}</a> <span>${esc(String(m).replace(/^www\./, ""))}${d ? ` · ${esc(r8Jr(d))}` : ""}</span></li>`; }
 function r9Plus(arts) { // « Pour aller plus loin » : les articles, en menu déroulant
   if (!arts.length) return "";
   return `<details class="r9-plus"><summary>Pour aller plus loin <span class="nb">${arts.length} article${arts.length > 1 ? "s" : ""}</span></summary><ul>${arts.map(a => `<li><a href="${esc(a.u)}" target="_blank" rel="noopener">« ${esc(r8Titre(a.t))} »</a> <span>${esc(String(a.s || "").replace(/^www\./, ""))} · ${esc(r8Jr(a.d))}</span></li>`).join("")}</ul></details>`;
@@ -191,7 +193,7 @@ function synPageV8(b, m) {
       ${spark ? `<div class="r8-card r9-spark"><div class="t"><span>Votre portefeuille, jour par jour</span><b class="${r8Cls(g)}">${synPct(pf.var_pct)}</b></div>${spark}</div>` : ""}</div>
     ${perf.length ? `<div class="r9-perf">${perf.map(([n, x, c]) => `<div class="pf ${c}"><small>${esc(n)}</small><b class="${r8Cls(x)}">${synPct(x)}</b><div class="tr2"><i class="${x < 0 ? "n" : "p"}" style="${x < 0 ? "right" : "left"}:50%;width:${(Math.abs(x) / mxp * 50).toFixed(1)}%"></i></div></div>`).join("")}</div>` : ""}
   </div></div><div class="r8-w">`;
-  const secs = [["l", "Vos lignes"], b.etf8 && (b.etf8.par_etf || []).length ? ["etf", "Dans vos ETF"] : null, M.length ? ["monde", "Le monde"] : null, ["av", "À venir"]].filter(Boolean);
+  const secs = [["l", "Vos lignes"], b.etf8 && (b.etf8.par_etf || []).length ? ["etf", "Dans vos ETF"] : null, M.length ? ["monde", "Le monde"] : null, ["av", "À venir"], ["src", "Sources"]].filter(Boolean);
   h += `<nav class="r9-nav">${secs.map(([id, t], i) => `<a href="#r8-${id}"${i ? "" : ` class="on"`}>${t}</a>`).join("")}</nav>`;
   let num = 0;
 
@@ -208,25 +210,28 @@ function synPageV8(b, m) {
     const A = deK(l.k), R0 = R[l.k], v = l.variation_semaine_pct, dt = (b.a_venir || []).find(e => e.k === l.k);
     if (l.k.startsWith("e:")) { const e = ETFX[l.k], ind = l.indice;
       const phrase = v == null ? "Le site n'a pas son cours de la semaine." : e && (e.baisse.length || e.hausse.length) ? `${e.n ? `Il contient ${F0.format(e.n)} entreprises. ` : ""}Celles qui ont le plus pesé, en euros pour vous :` : ind && ind.pct != null ? `Il a fait ${synPct(v)}, ${esc(r9Le(ind.nom))} ${synPct(ind.pct)}.` : `Il a fait ${synPct(v)} sur la semaine.`;
-      return `<div class="r9-box"><p class="r9-h"><i>✦</i> Pourquoi il a bougé</p><p class="r9-lead">${phrase}</p>${e ? `${e.baisse.length ? `<p class="r9-sh">Ont fait baisser</p>${e.baisse.map(mvE).join("")}` : ""}${e.hausse.length ? `<p class="r9-sh">Ont fait monter</p>${e.hausse.map(mvE).join("")}` : ""}` : ""}</div><div class="r9-pied"><a href="${synLien(l.k)}">Voir la fiche de l'ETF</a></div>`; }
+      return `<div class="r9-box"><h3 class="r9-h"><span>Pourquoi il a bougé</span></h3><p class="r9-lead">${phrase}</p>${e ? `${e.baisse.length ? `<p class="r9-sh">Ont fait baisser</p>${e.baisse.map(mvE).join("")}` : ""}${e.hausse.length ? `<p class="r9-sh">Ont fait monter</p>${e.hausse.map(mvE).join("")}` : ""}` : ""}</div><div class="r9-pied"><a href="${synLien(l.k)}">Voir la fiche de l'ETF</a></div>`; }
     const ia = IA[l.k], annOff = A.some(a => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie));
     const PR = A.filter(a => a.origine === "presse").slice(0, 8).map(a => ({ u: a.source, t: a.titre, s: a.site || "presse", d: a.date })).filter(a => a.u);
-    const presse = /^c:/.test(l.k) ? `<div class="r9-box r9-pr"><p class="r9-h">Ce que dit la presse</p>${SYN8_B && SYN8_B.au ? `<div class="r8-syn" data-r8syn="${esc(l.k)}" data-nom="${esc(l.nom || "")}" data-au="${esc(SYN8_B.au)}"></div>` : ""}${r9Plus(PR)}</div>` : "";
-    const iaB = ia && ia.clair && annOff ? `<div class="r9-box"><p class="r9-h">Son annonce en clair</p><p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR à partir de l'annonce. La source fait foi.</p></div>` : "";
+    const presse = /^c:/.test(l.k) && SYN8_B && SYN8_B.au ? `<div class="r9-box r9-pr"><h3 class="r9-h"><span>Ce que dit la presse</span></h3>${SYN8_B && SYN8_B.au ? `<div class="r8-syn" data-r8syn="${esc(l.k)}" data-nom="${esc(l.nom || "")}" data-au="${esc(SYN8_B.au)}"></div>` : ""}</div>` : "";
+    const iaB = ia && ia.clair && annOff ? `<div class="r9-box"><h3 class="r9-h"><span>Son annonce en clair</span></h3><p>${esc(ia.clair)}</p>${ia.change ? `<p>${esc(ia.change)}</p>` : ""}<p class="r8-ia">Rédigé par l'IA d'ENKLAIR à partir de l'annonce. La source fait foi.</p></div>` : "";
     const off = A.filter(a => a.origine !== "presse");
     const liste = off.length ? `<details class="r8-det"><summary>${off.length > 1 ? `Ses ${off.length} annonces officielles` : "Son annonce officielle"}</summary>${off.map(a => { const lab = (SYN6_T[a.categorie] || ["Annonce"])[0];
       return `<div class="r8-li"><time>${esc(r8Jr(a.date))}</time><span class="r8-ty">${esc(lab)}</span><div><p>${esc(a.titre || a.type || lab)}</p>${(a.chiffres || []).length ? `<p class="r8-mini">${esc(a.chiffres.slice(0, 3).map(([x, y]) => `${x} : ${y}`).join(" · "))}</p>` : ""}</div>${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">↗</a>` : ""}</div>`; }).join("")}</details>` : "";
     return `<div class="r9-duo${presse ? "" : " seul"}">${r9Pq(l, R0, A)}${presse}</div>${iaB}${r9Riv(l, R0)}<div class="r9-pied">${liste}<a href="${synLien(l.k)}">Voir la fiche</a>${dt ? `<span class="r8-dt">${esc(r8Jr(dt.date))} · ${esc(String(dt.label || "").replace(/^./, c => c.toLowerCase()))}</span>` : ""}</div>`;
   };
+  /* 8/11 : tuiles logo + nom (parts du portefeuille, puis favoris), une seule ligne ouverte à la fois, encadrés en grand */
+  const ordre = [...[...Lpf, ...SANSV].sort((x, y) => (y.portefeuille.poids_pct || 0) - (x.portefeuille.poids_pct || 0)), ...fav, ...LV];
   const ligne = l => { const R0 = R[l.k], v = l.variation_semaine_pct, e = l.portefeuille ? l.portefeuille.var_eur : null, vd = r9Verd(l, R0), op = l.k === ouvre;
     const meta = l.vue ? `${F0.format(l.via_eur)} € à travers vos ETF` : l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre argent` : "dans vos favoris";
     const eur = e != null ? `<div class="r9-eur"><div class="l">${e < 0 ? `<i style="width:${(Math.abs(e) / mxe * 100).toFixed(1)}%"></i>` : ""}</div><div class="r">${e > 0 ? `<i style="width:${(e / mxe * 100).toFixed(1)}%"></i>` : ""}</div><b class="${r8Cls(e)}">${r8Eur(e)}</b></div>` : `<div class="r9-eur0">${l.portefeuille ? "pas de cours cette semaine" : l.vue ? "à travers vos ETF" : "pas dans votre portefeuille"}</div>`;
     const vs = l.k.startsWith("e:") ? `<div class="r9-vs"><div class="vw" style="grid-column:1/3">ETF<small>${l.indice && l.indice.pct != null ? `${esc(l.indice.nom)} ${synPct(l.indice.pct)}` : ""}</small></div></div>` : vd ? `<div class="r9-vs">${r9Jauge(l, R0)}<div class="vw ${vd[1]}">${vd[0]}<small>médiane ${synPct(R0.med)}</small></div></div>` : `<div class="r9-vs"></div>`;
-    return `<div class="r9-row${op ? " open" : ""}" role="button" tabindex="0" aria-expanded="${op}" data-r9="${esc(l.k)}"><div class="r9-nm">${synLogo(l.k, 38)}<div><b>${esc(r8Maj(r8Court(l)).replace(/^Votre ETF /, "ETF "))}</b><small>${aRes(l) ? `<span class="r9-res">Résultats publiés</span> ` : ""}${esc(meta)}</small></div></div>${eur}<div class="r9-pct ${r8Cls(v)}">${v == null ? "–" : synPct(v)}</div>${vs}<div class="r9-chev">${op ? "⌃" : "⌄"}</div></div>
-      <div class="r9-det" data-r9d="${esc(l.k)}"${op ? "" : " hidden"}>${detail(l)}</div>`; };
+    return `<div class="r9-one" data-r9o="${esc(l.k)}"${op ? "" : " hidden"}><div class="r9-row fixe"><div class="r9-nm">${synLogo(l.k, 38)}<div><b>${esc(r8Maj(r8Court(l)).replace(/^Votre ETF /, "ETF "))}</b><small>${aRes(l) ? `<span class="r9-res">Résultats publiés</span> ` : ""}${esc(meta)}</small></div></div>${eur}<div class="r9-pct ${r8Cls(v)}">${v == null ? "–" : synPct(v)}</div>${vs}<div></div></div>
+      <div class="r9-det" data-r9d="${esc(l.k)}"${op ? "" : " hidden"}>${detail(l)}</div></div>`; };
+  const tuile = l => `<div role="button" tabindex="0" class="r9-tu${l.k === ouvre ? " on" : ""}" data-r9t="${esc(l.k)}" aria-pressed="${l.k === ouvre}">${synLogo(l.k, 40)}<span class="nm">${esc(r8Maj(r8Court(l)).replace(/^Votre ETF /, "ETF "))}</span></div>`;
   num++;
-  h += `<section id="r8-l"><h2 class="r9-h2">Vos lignes.</h2><div class="r8-card r9-list"><div class="r9-hd"><span>Valeur</span><span>${Lpf.length ? "Gagné ou perdu" : ""}</span><span style="text-align:right">Semaine</span><span>Face à ses rivales</span><span></span></div>
-    ${groupes.map(([t, G]) => `${t ? `<div class="r9-grp">${t}</div>` : ""}${G.map(ligne).join("")}`).join("")}</div>`;
+  h += `<section id="r8-l"><h2 class="r9-h2">Vos lignes.</h2><div class="r9-tus">${ordre.map(tuile).join("")}</div><div class="r8-card r9-list"><div class="r9-hd"><span>Valeur</span><span>${Lpf.length ? "Gagné ou perdu" : ""}</span><span style="text-align:right">Semaine</span><span>Face à ses rivales</span><span></span></div>
+    ${ordre.map(ligne).join("")}</div>`;
   if (!L.length) h += `<p class="muted">Ajoutez des favoris ou des lignes de portefeuille pour les suivre ici.</p>`;
   for (const x of b.dca || []) { const cur = x.devise && x.devise !== "EUR" ? x.devise : "€", mt = v => v == null ? "–" : F2.format(v) + " " + cur;
     h += `<p class="r9-dca"><span>↻</span>${x.date ? `Votre achat programmé du ${esc(r8Jr(x.date))} : ${F0.format(x.q)} part${x.q > 1 ? "s" : ""} ${esc(r8De(x.nom))}${x.prix ? ` à ${mt(x.prix)}${x.prix_avant ? ` (${mt(x.prix_avant)} une semaine plus tôt)` : ""}` : ""}.` : `Votre achat programmé : ${F0.format(x.q)} part${x.q > 1 ? "s" : ""} ${esc(r8De(x.nom))}, le ${x.jour === 1 ? "1er" : x.jour} de chaque mois.`}</p>`; }
@@ -288,14 +293,20 @@ function synPageV8(b, m) {
       ${(b.a_venir || []).length ? `<p class="r8-note"><button type="button" class="s6-ics" data-synics="all">＋ Ajouter à mon agenda (.ics)</button></p>` : ""}</section>`;
   h += `<p class="r8-fin">Information, pas conseil : ENKLAIR ne dit jamais quoi acheter ou vendre. Variations entre la clôture précédant la semaine et le dernier cours connu (différé). Annonces : documents officiels (AMF, SEC, bourses nordiques et de Londres). Presse : synthèse de l'IA d'ENKLAIR, les articles font foi.</p></div></div>`;
   setTimeout(() => { if (typeof axTraduire === "function") axTraduire(); }, 50);
+  /* 8/11 : Sources, à la toute fin : les articles de la semaine, un menu par entreprise ou ETF (complété par ceux de la synthèse) */
+  const SRC = ordre.map(l => { const vu = new Set(); return { l, P: deK(l.k).filter(a => a.origine === "presse" && a.source && !vu.has(a.source) && vu.add(a.source)) }; });
+  if (SRC.length) h += `<section id="r8-src"><h2 class="r9-h2">Sources.</h2><p class="r9-srcp">Les articles de presse de la semaine, par valeur. Les synthèses « Ce que dit la presse » sont écrites à partir d'eux.</p><div class="r9-srcs">${SRC.map(({ l, P }) => `<details class="r9-sd" data-src="${esc(l.k)}"${P.length ? "" : " hidden"}><summary>${synLogo(l.k, 28)}<b>${esc(r8Maj(r8Court(l)).replace(/^Votre ETF /, "ETF "))}</b><span class="nb">${P.length}</span></summary><ul>${P.map(r9SrcLi).join("")}</ul></details>`).join("")}</div><p class="r9-srcv"${SRC.some(z => z.P.length) ? " hidden" : ""}>Aucun article retenu cette semaine pour vos valeurs.</p></section>`;
   return h;
 }
 // Ouvrir ou fermer une ligne ; filtres du monde
 document.addEventListener("click", e => {
-  const r = e.target.closest && e.target.closest(".r9-row"); if (r && !e.target.closest("a")) { const d = r.nextElementSibling; if (!d || !d.matches(".r9-det")) return; const ouvrir = d.hidden; d.hidden = !ouvrir; r.classList.toggle("open", ouvrir); r.setAttribute("aria-expanded", String(ouvrir)); r.querySelector(".r9-chev").textContent = ouvrir ? "⌃" : "⌄"; if (ouvrir) r8SynCharger(d); return; }
+  const tu = e.target.closest && e.target.closest("[data-r9t]"); if (tu) { const sec = tu.closest("section"), k = tu.dataset.r9t;
+    sec.querySelectorAll("[data-r9t]").forEach(x => { x.classList.toggle("on", x === tu); x.setAttribute("aria-pressed", String(x === tu)); });
+    sec.querySelectorAll("[data-r9o]").forEach(x => { const o = x.dataset.r9o === k; x.hidden = !o; const d = x.querySelector(".r9-det"); if (d) d.hidden = !o; if (o && d) r8SynCharger(d); }); return; }
+  const r = e.target.closest && e.target.closest(".r9-row:not(.fixe)"); if (r && !e.target.closest("a")) { const d = r.nextElementSibling; if (!d || !d.matches(".r9-det")) return; const ouvrir = d.hidden; d.hidden = !ouvrir; r.classList.toggle("open", ouvrir); r.setAttribute("aria-expanded", String(ouvrir)); r.querySelector(".r9-chev").textContent = ouvrir ? "⌃" : "⌄"; if (ouvrir) r8SynCharger(d); return; }
   const f = e.target.closest && e.target.closest("[data-r9f]"); if (f) { e.preventDefault(); const sec = f.closest("section"), t = f.dataset.r9f; sec.querySelectorAll("[data-r9f]").forEach(a => a.classList.toggle("on", a === f)); sec.querySelectorAll("[data-th]").forEach(x => { x.hidden = !!t && !x.dataset.th.split("|").includes(t); }); }
 });
-document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches(".r9-row")) { e.preventDefault(); e.target.click(); } });
+document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches(".r9-row, .r9-tu")) { e.preventDefault(); e.target.click(); } });
 synPageHTML = synPageV8;
 
 /* 6/11 soir (Romain : « j'espère qu'elle ne formule pas une réponse générique que chacun pourrait formuler avec sa propre IA et le lien de l'article ») :
@@ -327,13 +338,16 @@ document.addEventListener("click", e => { // 8/11 : tuiles du rapport, un encadr
 function r8SynCharger(boite) {
   (boite ? [boite] : [...document.querySelectorAll("[data-r8c]:not([hidden]), .r9-det:not([hidden])")]).forEach(b => b.querySelectorAll("[data-r8syn]:not([data-fait])").forEach(el => {
     el.dataset.fait = "1"; const r9 = !!el.closest(".r9-pr"); el.innerHTML = `${r9 ? "" : `<p class="r8-lab">Ce que dit la presse cette semaine</p>`}<p class="r8-syn-att">Lecture des articles…</p>`;
-    const vide = () => { const bx = el.closest(".r9-pr"); el.remove(); if (bx && !bx.querySelector(".r9-plus")) bx.remove(); };
+    const vide = () => { const bx = el.closest(".r9-pr"); el.remove(); if (bx) { const du = bx.closest(".r9-duo"); bx.remove(); if (du) du.classList.add("seul"); } };
     fetch(`/api/ia/presse?k=${encodeURIComponent(el.dataset.r8syn)}&au=${encodeURIComponent(el.dataset.au)}&nom=${encodeURIComponent(el.dataset.nom)}`).then(r => r.json()).then(j => {
       if (!j || !j.clair) return vide();
       const S = j.sources || [];
-      el.innerHTML = `${r9 ? "" : `<p class="r8-lab">Ce que dit la presse cette semaine</p>`}${(j.sujets || []).length ? `<p class="r8-syn-s">${j.sujets.map(x => `<span>${esc(x)}</span>`).join("")}</p>` : ""}${String(j.clair).split(/\n+/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join("")}<p class="r8-ia">Synthèse écrite par l'IA d'ENKLAIR à partir de ces articles, la même pour tous les lecteurs.</p>`;
+      el.innerHTML = `${r9 ? "" : `<p class="r8-lab">Ce que dit la presse cette semaine</p>`}${(j.sujets || []).length ? `<p class="r8-syn-s">${j.sujets.map(x => `<span>${esc(x)}</span>`).join("")}</p>` : ""}${String(j.clair).split(/\n+/).filter(Boolean).map(p => `<p>${esc(p)}</p>`).join("")}<p class="r8-ia">Synthèse écrite par l'IA d'ENKLAIR à partir de ${r9 ? "plusieurs articles (liste dans Sources, en bas du rapport)" : "ces articles"}, la même pour tous les lecteurs.</p>`;
       const p = el.parentElement, d = p && p.querySelector(".r9-plus, .r8-src"), vu = new Set(), arts = S.filter(a => a.u && !vu.has(a.u) && vu.add(a.u)).map(a => ({ u: a.u, t: a.titre || a.media, s: a.media, d: a.date }));
-      if (arts.length) { if (d) d.remove(); el.insertAdjacentHTML("afterend", r9Plus(arts)); }
+      if (r9) { const sd = document.querySelector(`.r9-sd[data-src="${CSS.escape(el.dataset.r8syn)}"]`);
+        if (sd && S.length) { const ul = sd.querySelector("ul"), deja = new Set([...ul.children].map(li => li.dataset.u)); S.filter(a => a.u && !deja.has(a.u) && deja.add(a.u)).forEach(a => ul.insertAdjacentHTML("beforeend", r9SrcLi(a)));
+          sd.hidden = false; sd.querySelector(".nb").textContent = ul.children.length; const v = document.querySelector(".r9-srcv"); if (v) v.hidden = true; } }
+      else if (arts.length) { if (d) d.remove(); el.insertAdjacentHTML("afterend", r9Plus(arts)); }
     }).catch(vide);
   }));
 }
