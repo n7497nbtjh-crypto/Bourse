@@ -103,6 +103,7 @@ export const PRESSE = `Tu expliques à une personne qui débute en Bourse ce que
 Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 3 phrases au plus (70 mots au plus), en français simple, qui résument ce que rapporte l'article : le fait principal, puis le détail ou le chiffre le plus important du texte. Commence par « Selon <média>, ». Explique un mot difficile s'il y en a un. Avec le titre seul, commence par « D'après le titre de <média>, » et reste sur ce qu'il dit.
 - "change" : 1 phrase (35 mots au plus) : ce que cela touche concrètement dans l'activité de l'entreprise (un produit, une usine, un contrat, un dirigeant, ses ventes…), d'après l'article ; chaîne vide si l'article ne le dit pas.
+- Le lieu d'un fait (pays, ville) est uniquement celui écrit dans l'article : un article sur l'Espagne parle de l'Espagne, jamais de la France. Les montants gardent leur unité et leur devise d'origine.
 - Résume avec tes propres mots : ne recopie jamais une phrase de l'article, au plus quelques mots entre guillemets.
 - N'utilise que ce que disent le titre et le texte : aucun chiffre, aucun résultat, aucune variation de cours qui n'y figure pas. Ce que rapporte la presse n'est pas un fait vérifié : garde « selon ». Ce qui est au conditionnel dans l'article reste au conditionnel.
 - Ignore ce qui n'est pas l'article (publicité, abonnement, autres articles, cookies).

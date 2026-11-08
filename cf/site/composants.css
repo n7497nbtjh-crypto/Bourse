@@ -2289,3 +2289,5 @@ html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;d
 .r8-syn .r8-syn-att{color:#666;font-size:14px}
 .r8-syn-s{display:flex;flex-wrap:wrap;gap:6px}
 .r8-syn-s span{background:#FFE14D;border:1px solid #111;border-radius:999px;padding:2px 9px;font-size:12.5px;font-weight:600}
+.ek-tz::after{content:"";position:absolute;left:50%;top:50%;width:max(100%,44px);height:max(100%,44px);transform:translate(-50%,-50%)}
+#app .cx-score td b{white-space:nowrap}#app .cx-score tfoot th{border-bottom:0!important}#app .cx-score tbody th{border-bottom:0!important;border-top:1.5px solid #E6E4DE!important}

@@ -891,6 +891,7 @@ ${REGLES}`, PRESSE = `Tu expliques \xE0 une personne qui d\xE9bute en Bourse ce 
 R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - "clair" : 3 phrases au plus (70 mots au plus), en fran\xE7ais simple, qui r\xE9sument ce que rapporte l'article : le fait principal, puis le d\xE9tail ou le chiffre le plus important du texte. Commence par \xAB Selon <m\xE9dia>, \xBB. Explique un mot difficile s'il y en a un. Avec le titre seul, commence par \xAB D'apr\xE8s le titre de <m\xE9dia>, \xBB et reste sur ce qu'il dit.
 - "change" : 1 phrase (35 mots au plus) : ce que cela touche concr\xE8tement dans l'activit\xE9 de l'entreprise (un produit, une usine, un contrat, un dirigeant, ses ventes\u2026), d'apr\xE8s l'article ; cha\xEEne vide si l'article ne le dit pas.
+- Le lieu d'un fait (pays, ville) est uniquement celui \xE9crit dans l'article : un article sur l'Espagne parle de l'Espagne, jamais de la France. Les montants gardent leur unit\xE9 et leur devise d'origine.
 - R\xE9sume avec tes propres mots : ne recopie jamais une phrase de l'article, au plus quelques mots entre guillemets.
 - N'utilise que ce que disent le titre et le texte : aucun chiffre, aucun r\xE9sultat, aucune variation de cours qui n'y figure pas. Ce que rapporte la presse n'est pas un fait v\xE9rifi\xE9 : garde \xAB selon \xBB. Ce qui est au conditionnel dans l'article reste au conditionnel.
 - Ignore ce qui n'est pas l'article (publicit\xE9, abonnement, autres articles, cookies).
@@ -1091,13 +1092,27 @@ async function lireArticle(env, u) {
   }
   return { texte, etat };
 }
+var PAYS = { france: "\\bfran[c\xE7]|frankreich|francia", espagne: "espa|spain|spagn|spanien", italie: "ital", allemagne: "german|deutsch|alleman", "royaume-uni": "royaume|united kingdom|britain|uk\\b|regno unito", "\xE9tats-unis": "united states|u\\.s\\.|us\\b|usa|am\xE9r|americ|estados unidos|stati uniti|\xE9tats", chine: "chin|china|cina", japon: "japan|japon|giappon", inde: "india|inde", canada: "canad", australie: "austral", suisse: "suisse|switz|swiss|svizzera|schweiz", "pays-bas": "netherlands|pays-bas|dutch|nederland", belgique: "belg", br\u00E9sil: "bra[sz]il", mexique: "mexi", cor\u00E9e: "kore|cor\xE9e|corea" };
+function presseFidele(txt, lus) {
+  let tous = lus.map((a) => a.titre + " " + a.texte).join(" ");
+  for (let ph of txt.split(/(?<=[.!?])\s+/)) {
+    let cite = lus.filter((a) => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, ""))), src = (cite.length ? cite.map((a) => a.titre + " " + a.texte).join(" ") : tous).toLowerCase(), srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ";
+    for (let n of ph.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) {
+      let d = n.replace(/[^0-9]/g, "");
+      if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d)) return !1;
+    }
+    let t = ph.toLowerCase();
+    for (let [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src)) return !1;
+  }
+  return !0;
+}
 async function synthesePresse(request, env, url) {
   let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json4({ error: "Demande illisible." }, 400);
   let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
-    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind(k + "|" + au).first();
+    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind("v2|" + k + "|" + au).first();
     if (c && (au < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json4(JSON.parse(c.txt));
   } catch {
   }
@@ -1115,16 +1130,16 @@ async function synthesePresse(request, env, url) {
   }
   let nom = url.searchParams.get("nom") || id, r = await iaJSON(
     env,
-    "presse-sem",
+    "presse-sem2",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     330,
-    (x) => x && typeof x.clair == "string" && x.clair.length > 40 && !/pourrai(t|ent)|en raison de|je ne suis pas/i.test(x.clair) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null
+    (x) => x && typeof x.clair == "string" && x.clair.length > 40 && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null
   ).catch(() => null);
   if (!r) return json4({ indisponible: !0 });
   let out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter((x) => x.texte).length, sources: A.map((a) => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
   if (env.DB) try {
-    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind(k + "|" + au, JSON.stringify(out), Date.now()).run();
+    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind("v2|" + k + "|" + au, JSON.stringify(out), Date.now()).run();
   } catch {
   }
   return json4(out);
@@ -1734,7 +1749,7 @@ var r1 = (v) => Math.round(v * 10) / 10, r0 = (v) => Math.round(v), SUPPOSE = /p
 }, med = (a) => {
   let p = a.slice().sort((x, y) => x - y), m = p.length >> 1;
   return p.length ? p.length % 2 ? p[m] : (p[m - 1] + p[m]) / 2 : null;
-}, fold = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), INDICE_PAYS = { US: ["sp500", "S&P 500"], FR: ["cac40", "CAC 40"], DE: ["dax", "DAX"], GB: ["ftse100", "FTSE 100"], JP: ["nikkei", "Nikkei 225"] }, PAYS = { US: "\xC9tats-Unis", FR: "France", DE: "Allemagne", GB: "Royaume-Uni", JP: "Japon", CN: "Chine", CH: "Suisse", NL: "Pays-Bas", IT: "Italie", ES: "Espagne", CA: "Canada", TW: "Ta\xEFwan", KR: "Cor\xE9e du Sud", IN: "Inde" }, RIV_CAT = /* @__PURE__ */ new Set(["resultats", "rapport", "operation", "contrat", "dirigeants", "dividende", "opa"]), FAIT = /\b(sign|accord|agreement|contrat|contract|acqui|rach[eè]te|lance|launch|vend|sells?|stake|participation|nomm|appoint|usine|plant|merger|fusion)/i, OPIN = /\?|recommand|conseil|aktie|should you|buy|sell |kaufen|could|top \d|meilleures? actions|stock (is|to)|why .* stock/i;
+}, fold = (s) => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase(), INDICE_PAYS = { US: ["sp500", "S&P 500"], FR: ["cac40", "CAC 40"], DE: ["dax", "DAX"], GB: ["ftse100", "FTSE 100"], JP: ["nikkei", "Nikkei 225"] }, PAYS2 = { US: "\xC9tats-Unis", FR: "France", DE: "Allemagne", GB: "Royaume-Uni", JP: "Japon", CN: "Chine", CH: "Suisse", NL: "Pays-Bas", IT: "Italie", ES: "Espagne", CA: "Canada", TW: "Ta\xEFwan", KR: "Cor\xE9e du Sud", IN: "Inde" }, RIV_CAT = /* @__PURE__ */ new Set(["resultats", "rapport", "operation", "contrat", "dirigeants", "dividende", "opa"]), FAIT = /\b(sign|accord|agreement|contrat|contract|acqui|rach[eè]te|lance|launch|vend|sells?|stake|participation|nomm|appoint|usine|plant|merger|fusion)/i, OPIN = /\?|recommand|conseil|aktie|should you|buy|sell |kaufen|could|top \d|meilleures? actions|stock (is|to)|why .* stock/i;
 async function rivalesDe(d, n, lundi3, auj) {
   let out = {}, lignes = (n.lignes || []).filter((l) => l.k.startsWith("c:")).slice(0, 14), parCo = {};
   for (let l of lignes) {
@@ -1910,7 +1925,7 @@ async function radioDe(d, n, monde) {
     return eur >= 1 ? { lab, eur: r0(eur), pct: r1(eur / tot * 100), direct, via_etf: viaEtf, exemples, sujet } : null;
   }, out = [];
   for (let [i, s] of (monde && monde.sujets || []).entries())
-    s.secteurs.length ? out.push(seau(s.secteurs.map((x) => SECTEURS2[x] || x).join(", "), (m) => s.secteurs.includes(m.sector), null, i)) : s.pays.length && out.push(seau(PAYS[s.pays[0]] || s.pays[0], (m) => m.region === s.pays[0], s.pays[0], i));
+    s.secteurs.length ? out.push(seau(s.secteurs.map((x) => SECTEURS2[x] || x).join(", "), (m) => s.secteurs.includes(m.sector), null, i)) : s.pays.length && out.push(seau(PAYS2[s.pays[0]] || s.pays[0], (m) => m.region === s.pays[0], s.pays[0], i));
   out.some((x) => x && /États-Unis/.test(x.lab)) || out.push(seau("\xC9tats-Unis", (m) => m.region === "US", "US", null));
   let etfs = Object.values(compo), tous = out.filter(Boolean), forts = tous.filter((x) => x.pct >= 5), faibles = tous.filter((x) => x.pct < 5).map((x) => ({ lab: x.lab, pct: x.pct })), non_comptes = L.filter((l) => !l.k.startsWith("c:") && !compo[l.k]).map((l) => ({ k: l.k, nom: l.nom, eur: r0(l.portefeuille.valeur_eur), pct: r1(l.portefeuille.valeur_eur / tot * 100) }));
   return { total_eur: r0(tot), seaux: forts.slice(0, 4), faibles, non_comptes, source: etfs.length ? { nom: "Composition officielle des indices (formulaires N-PORT de la SEC)", au: etfs.map((j) => j.asOf).filter(Boolean).sort()[0] || null } : null };
@@ -3709,7 +3724,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "230deeca7eba57c8", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "94cc7e33fe9c576c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
