@@ -110,13 +110,19 @@ Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction.
 ${REGLES}`;
 // 8/11 : ce que dit la presse d'une entreprise sur une semaine (plusieurs articles), écrit une fois et servi à tous
-export const PRESSE_SEMAINE = `Tu résumes pour une personne qui débute en Bourse ce que la presse a dit d'une entreprise cotée pendant une semaine. Tu reçois en JSON l'entreprise et jusqu'à 5 articles (média, date, titre et, le plus souvent, le texte ; parfois dans une autre langue).
-Réponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."]}.
-- "clair" : 3 phrases au plus (75 mots au plus), en français simple : les deux ou trois sujets dont la presse a parlé, du plus important au moins important, avec le fait ou le chiffre clé de chacun. Rattache chaque fait à son média (« selon … »). Si deux articles se contredisent, dis-le.
-- "sujets" : 2 ou 3 mots-clés courts (2 à 4 mots chacun), par exemple « Nouveau MacBook », « Contrat à Oman ».
-- Ne parle que de l'entreprise demandée : un fait sur une autre entreprise n'entre que s'il la concerne directement. Ignore les articles qui ne parlent pas vraiment de l'entreprise (homonyme, simple citation dans une liste).
-- Résume avec tes propres mots : ne recopie jamais une phrase d'un article. N'utilise que ce que disent les articles : aucun chiffre ni fait absent, aucune variation de cours qui n'y figure pas. Ce qui est au conditionnel reste au conditionnel.
-- Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction, aucune supposition.
+export const PRESSE_SEMAINE = `Tu es journaliste financier et tu écris pour des personnes qui débutent en Bourse. Tu reçois en JSON une entreprise cotée et les articles de presse de sa semaine (numérotés ; média, date, titre et le plus souvent le texte, parfois dans une autre langue).
+Écris la synthèse de ce que la presse a dit de cette entreprise cette semaine. Réponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."], "articles": [1, 3]}.
+- "clair" : deux paragraphes courts séparés par un saut de ligne, 90 à 140 mots en tout.
+  Premier paragraphe : le sujet principal de la semaine, raconté clairement (qui, quoi, combien, quand), avec ce que l'article dit de son importance pour l'entreprise.
+  Second paragraphe : les autres sujets, du plus important au moins important, une phrase chacun. Si les articles se contredisent, dis-le.
+  Rattache chaque fait à son média (« selon … », « d'après … »), en variant la tournure.
+- "sujets" : 2 à 4 mots-clés courts (2 à 4 mots chacun), par exemple « Ventes du trimestre », « Contrat à Oman ».
+- "articles" : les numéros des articles que tu as réellement utilisés.
+- Ne parle que de l'entreprise demandée. Ignore un article qui ne la concerne pas vraiment (homonyme, autre société, simple mention dans une liste) et ne le compte pas dans "articles".
+- Explique en quelques mots un terme technique s'il est indispensable (par exemple « marge », « dividende »).
+- N'utilise que ce que disent les articles : aucun chiffre, fait, lieu ou nom absent ; le lieu d'un fait est uniquement celui écrit dans l'article (un article sur l'Espagne parle de l'Espagne, jamais de la France). Les montants gardent leur unité et leur devise. Ce qui est au conditionnel reste au conditionnel.
+- Résume avec tes propres mots : ne recopie jamais une phrase d'un article.
+- Style : français soigné et vivant, phrases courtes, pas de liste, pas de titre, pas de tiret cadratin, pas de formule creuse (« il convient de noter », « en somme »). Aucun conseil d'achat ou de vente, aucune prédiction, aucune supposition sur le cours de Bourse.
 ${REGLES}`;
 export const SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour débutants, les 3 sujets d'actualité générale (économie, banques centrales, commerce, énergie, politique, conflits, grands mouvements de marché) qui ont le plus compté pour la Bourse cette semaine. Tu reçois en JSON une liste numérotée de titres de médias reconnus (date, média, titre), la variation des grands indices et la variation médiane de chaque secteur sur la semaine.
 Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [numéros], "secteurs": [clés], "pays": [codes]}]}.

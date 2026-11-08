@@ -174,22 +174,28 @@ function presseFidele(txt, lus) { // phrase par phrase, face à l'article qu'ell
 async function synthesePresse(request, env, url) {
   const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
-  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
+  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v6|" + k + "|" + au;
+  const samedi = Date.parse(au + "T00:00:00Z") - 864e5; // écrite le samedi (robot presse.yml) ou plus tard : gardée pour toute la semaine
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
-    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind("v5|" + k + "|" + au).first();
-    if (c && (au < new Date().toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json(JSON.parse(c.txt)); } catch (e) { }
+    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind(cle).first();
+    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5)) return json(JSON.parse(c.txt)); } catch (e) { }
   let A = [];
   try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {};
-    A = (j.p || []).filter(a => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 5); } catch (e) { }
+    A = (j.p || []).filter(a => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 7); } catch (e) { }
   if (A.length < 2) return json({ vide: true });
   const lus = [];
-  for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1400) }); }
+  for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) }); }
   const nom = url.searchParams.get("nom") || id;
-  presseFidele.raison = ""; const r = await iaJSON(env, "presse-sem5", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 330,
-    x => (x && typeof x.clair === "string" && x.clair.length > 40 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1"), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null, MODELES_PRESSE).catch(() => null);
+  presseFidele.raison = "";
+  const r = await iaJSON(env, "presse-sem6", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
+    x => (x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
+      clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
+      sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
+      articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter(n => n >= 1 && n <= lus.length) } : null, MODELES_PRESSE).catch(() => null);
   if (!r) return json({ indisponible: true, raison: presseFidele.raison || "" });
-  const out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter(x => x.texte).length, sources: A.map(a => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
-  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind("v5|" + k + "|" + au, JSON.stringify(out), Date.now()).run(); } catch (e) { }
+  const pris = r.articles && r.articles.length ? [...new Set(r.articles)].sort((a, b) => a - b).map(n => A[n - 1]) : A;
+  const out = { clair: r.clair, sujets: r.sujets, n: pris.length, sources: pris.map(a => ({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), titre: a.t || "", u: a.u, date: String(a.d).slice(0, 10) })) };
+  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind(cle, JSON.stringify(out), Date.now()).run(); } catch (e) { }
   return json(out);
 }
 export async function iaSite(request, env) {

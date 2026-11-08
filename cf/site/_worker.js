@@ -896,13 +896,19 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - N'utilise que ce que disent le titre et le texte : aucun chiffre, aucun r\xE9sultat, aucune variation de cours qui n'y figure pas. Ce que rapporte la presse n'est pas un fait v\xE9rifi\xE9 : garde \xAB selon \xBB. Ce qui est au conditionnel dans l'article reste au conditionnel.
 - Ignore ce qui n'est pas l'article (publicit\xE9, abonnement, autres articles, cookies).
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
-${REGLES}`, PRESSE_SEMAINE = `Tu r\xE9sumes pour une personne qui d\xE9bute en Bourse ce que la presse a dit d'une entreprise cot\xE9e pendant une semaine. Tu re\xE7ois en JSON l'entreprise et jusqu'\xE0 5 articles (m\xE9dia, date, titre et, le plus souvent, le texte ; parfois dans une autre langue).
-R\xE9ponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."]}.
-- "clair" : 3 phrases au plus (75 mots au plus), en fran\xE7ais simple : les deux ou trois sujets dont la presse a parl\xE9, du plus important au moins important, avec le fait ou le chiffre cl\xE9 de chacun. Rattache chaque fait \xE0 son m\xE9dia (\xAB selon \u2026 \xBB). Si deux articles se contredisent, dis-le.
-- "sujets" : 2 ou 3 mots-cl\xE9s courts (2 \xE0 4 mots chacun), par exemple \xAB Nouveau MacBook \xBB, \xAB Contrat \xE0 Oman \xBB.
-- Ne parle que de l'entreprise demand\xE9e : un fait sur une autre entreprise n'entre que s'il la concerne directement. Ignore les articles qui ne parlent pas vraiment de l'entreprise (homonyme, simple citation dans une liste).
-- R\xE9sume avec tes propres mots : ne recopie jamais une phrase d'un article. N'utilise que ce que disent les articles : aucun chiffre ni fait absent, aucune variation de cours qui n'y figure pas. Ce qui est au conditionnel reste au conditionnel.
-- Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction, aucune supposition.
+${REGLES}`, PRESSE_SEMAINE = `Tu es journaliste financier et tu \xE9cris pour des personnes qui d\xE9butent en Bourse. Tu re\xE7ois en JSON une entreprise cot\xE9e et les articles de presse de sa semaine (num\xE9rot\xE9s ; m\xE9dia, date, titre et le plus souvent le texte, parfois dans une autre langue).
+\xC9cris la synth\xE8se de ce que la presse a dit de cette entreprise cette semaine. R\xE9ponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."], "articles": [1, 3]}.
+- "clair" : deux paragraphes courts s\xE9par\xE9s par un saut de ligne, 90 \xE0 140 mots en tout.
+  Premier paragraphe : le sujet principal de la semaine, racont\xE9 clairement (qui, quoi, combien, quand), avec ce que l'article dit de son importance pour l'entreprise.
+  Second paragraphe : les autres sujets, du plus important au moins important, une phrase chacun. Si les articles se contredisent, dis-le.
+  Rattache chaque fait \xE0 son m\xE9dia (\xAB selon \u2026 \xBB, \xAB d'apr\xE8s \u2026 \xBB), en variant la tournure.
+- "sujets" : 2 \xE0 4 mots-cl\xE9s courts (2 \xE0 4 mots chacun), par exemple \xAB Ventes du trimestre \xBB, \xAB Contrat \xE0 Oman \xBB.
+- "articles" : les num\xE9ros des articles que tu as r\xE9ellement utilis\xE9s.
+- Ne parle que de l'entreprise demand\xE9e. Ignore un article qui ne la concerne pas vraiment (homonyme, autre soci\xE9t\xE9, simple mention dans une liste) et ne le compte pas dans "articles".
+- Explique en quelques mots un terme technique s'il est indispensable (par exemple \xAB marge \xBB, \xAB dividende \xBB).
+- N'utilise que ce que disent les articles : aucun chiffre, fait, lieu ou nom absent ; le lieu d'un fait est uniquement celui \xE9crit dans l'article (un article sur l'Espagne parle de l'Espagne, jamais de la France). Les montants gardent leur unit\xE9 et leur devise. Ce qui est au conditionnel reste au conditionnel.
+- R\xE9sume avec tes propres mots : ne recopie jamais une phrase d'un article.
+- Style : fran\xE7ais soign\xE9 et vivant, phrases courtes, pas de liste, pas de titre, pas de tiret cadratin, pas de formule creuse (\xAB il convient de noter \xBB, \xAB en somme \xBB). Aucun conseil d'achat ou de vente, aucune pr\xE9diction, aucune supposition sur le cours de Bourse.
 ${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les 3 sujets d'actualit\xE9 g\xE9n\xE9rale (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
 R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [num\xE9ros], "secteurs": [cl\xE9s], "pays": [codes]}]}.
 - 3 sujets au plus, du plus important au moins important. Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
@@ -1111,40 +1117,45 @@ function presseFidele(txt, lus) {
 async function synthesePresse(request, env, url) {
   let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json4({ error: "Demande illisible." }, 400);
-  let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
+  let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v6|" + k + "|" + au, samedi = Date.parse(au + "T00:00:00Z") - 864e5;
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
-    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind("v5|" + k + "|" + au).first();
-    if (c && (au < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json4(JSON.parse(c.txt));
+    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind(cle).first();
+    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5)) return json4(JSON.parse(c.txt));
   } catch {
   }
   let A = [];
   try {
     let r3 = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin)));
-    A = ((r3.ok ? await r3.json() : {}).p || []).filter((a) => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 5);
+    A = ((r3.ok ? await r3.json() : {}).p || []).filter((a) => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 7);
   } catch {
   }
   if (A.length < 2) return json4({ vide: !0 });
   let lus = [];
   for (let a of A) {
     let t = await lireArticle(env, a.u);
-    lus.push({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1400) });
+    lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) });
   }
   let nom = url.searchParams.get("nom") || id;
   presseFidele.raison = "";
   let r = await iaJSON(
     env,
-    "presse-sem5",
+    "presse-sem6",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
-    330,
-    (x) => (x && typeof x.clair == "string" && x.clair.length > 40 || (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1"), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null,
+    520,
+    (x) => (x && typeof x.clair == "string" && x.clair.length > 80 || (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && presseFidele(x.clair, lus) ? {
+      clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
+`).trim(),
+      sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
+      articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter((n) => n >= 1 && n <= lus.length)
+    } : null,
     MODELES_PRESSE
   ).catch(() => null);
   if (!r) return json4({ indisponible: !0, raison: presseFidele.raison || "" });
-  let out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter((x) => x.texte).length, sources: A.map((a) => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
+  let pris = r.articles && r.articles.length ? [...new Set(r.articles)].sort((a, b) => a - b).map((n) => A[n - 1]) : A, out = { clair: r.clair, sujets: r.sujets, n: pris.length, sources: pris.map((a) => ({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), titre: a.t || "", u: a.u, date: String(a.d).slice(0, 10) })) };
   if (env.DB) try {
-    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind("v5|" + k + "|" + au, JSON.stringify(out), Date.now()).run();
+    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind(cle, JSON.stringify(out), Date.now()).run();
   } catch {
   }
   return json4(out);
@@ -3729,7 +3740,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "95e3e80c5c6c907c", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "b3f9ff3e3e444c91", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

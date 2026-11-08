@@ -1,0 +1,17 @@
+# Synthèses de presse de la semaine écrites à l'avance (8/11), le samedi et le dimanche après l'actualité du samedi matin.
+name: Synthèses de presse
+on:
+  schedule:
+    - cron: "13 10 * * 6,0"   # samedi et dimanche, 11 h 13 à Paris l'hiver
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  presse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node data/presse_chauffe.mjs

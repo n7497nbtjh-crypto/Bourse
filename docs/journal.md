@@ -255,3 +255,9 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Synthèse de la presse : Llama 3.3 70B (`MODELES_PRESSE`, environ 260 neurones, une fois par entreprise et par semaine) ; garde-fous `presseFidele` : chaque nombre et chaque pays d'une phrase doivent figurer dans l'article cité (l'IA avait écrit « en France » pour un article sur l'Espagne). Refus renvoyé dans `raison`.
 - Téléphone : design.js étirait à 44 px de haut les ronds (croix du comparateur, devenues des ovales) et les liens soulignés ; ils gardent leur taille avec une zone tactile invisible (`.ek-tz::after`). relire-pages.js ignore cette zone. Tableau du verdict du comparateur : chiffres sur une ligne.
 - Ménage : `m/decouverte.js` retiré (chargé nulle part), `__pycache__` hors du dépôt.
+
+## 8/11 matin : synthèse de presse refaite (Romain : « plus complète, bien rédigée », plus de bouton Expliquer)
+- Consigne `PRESSE_SEMAINE` réécrite : deux paragraphes (sujet principal, puis les autres), 90 à 140 mots, l'IA dit quels articles elle a utilisés (`articles`). Jusqu'à 7 articles lus (1 500 caractères chacun), Llama 3.3 70B, 520 jetons au plus.
+- Rapport : plus de bouton « Expliquer » sur les articles de presse ; sous la synthèse, menu déroulant « Les N articles utilisés » (`.r8-src`).
+- Cache `ia_presse` (clé `v6|c:id|dimanche`) : une synthèse écrite à partir du samedi est gardée toute la semaine et servie à tous.
+- Robot `presse.yml` (samedi et dimanche 10 h 13 UTC, `data/presse_chauffe.mjs`) : écrit à l'avance les synthèses des entreprises les plus citées, 25 par jour au plus, s'arrête si la part gratuite d'IA du jour est épuisée. Les autres sont écrites à la première ouverture, une seule fois.
