@@ -26,7 +26,7 @@ import { createHash } from "node:crypto";
 import U from "./univers.mjs";
 import { dateFromTitle } from "./agenda_presse.mjs"; // 7/11 : dates de résultats annoncées, lues dans le flux GDELT déjà chargé
 import { buildIndex, match, MARKET, pressIndex, inTitle, fold } from "./actu_match.mjs";
-import { classe, titreFr, importance, privilegiee, chiffresEN, presenter, vraisemblable, ROUTINE } from "./actu_regles.mjs";
+import { classe, titreFr, importance, privilegiee, chiffresEN, presenter, vraisemblable, ROUTINE, pertinent } from "./actu_regles.mjs";
 
 const OUT = new URL("../cf/site/data/", import.meta.url), DIR = new URL("actu/", OUT);
 const CONTACT = process.env.CONTACT || "contact via GitHub n7497nbtjh-crypto/Bourse";
@@ -63,7 +63,7 @@ const STORE = {}; // id -> { o: Map(k -> item), p: Map(k -> item) }
 for (const f of readdirSync(new URL("c/", DIR))) {
   const j = readJSON(new URL("c/" + f, DIR), null); if (!j || !C[j.id]) continue;
   for (const x of j.o || []) if (x.c === "autre" && x.s !== "sec") { const c = classe(x.t); if (c && c !== "autre") { x.c = c; x.i = Math.max(x.i, importance(c, x.t)); x.tf = titreFr(c, x.t); } } // règles améliorées depuis
-  STORE[j.id] = { o: new Map((j.o || []).map(x => [x.k, x])), p: new Map((j.p || []).map(x => [x.k, x])) };
+  STORE[j.id] = { o: new Map((j.o || []).map(x => [x.k, x])), p: new Map((j.p || []).filter(x => pertinent(x.t, [C[j.id].name, ...(C[j.id].alias || [])])).map(x => [x.k, x])) }; // 8/11 : titres déjà gardés relus avec le critère
 }
 const store = id => STORE[id] || (STORE[id] = { o: new Map(), p: new Map() });
 const since = (k, max) => { const t = ETAT[k] ? Date.parse(ETAT[k]) - 6 * 3600e3 : NOW - max; return Math.max(t, NOW - max); };
@@ -317,7 +317,9 @@ function ajoutePresse({ d, t, u, site, l, src, sur = true }) {
   const titre = decodeEntites(t).replace(/\s+[|–—-]\s+[^|–—-]{2,40}$/, "").replace(/\s+/g, " ").trim();
   if (titre.length < 25 || titre.length > 260) return;
   garderMonde({ d, t: titre, u, site, l, sur }); // 6/11 : grands titres économiques et géopolitiques pour le rapport de la semaine, même sans entreprise citée
-  const ids = inTitle(PI, titre); if (!ids.length) return;
+  const ids0 = inTitle(PI, titre); if (!ids0.length) return;
+  // 8/11 : un vrai critère de sélection (actu_regles.mjs, pertinent) : le titre doit parler de la vie de l'entreprise
+  const ids = ids0.filter(id => pertinent(titre, [C[id] && C[id].name, ...((C[id] && C[id].alias) || [])].filter(Boolean))); if (!ids.length) return;
   const nk = fold(titre).replace(/[^a-z0-9]/g, "").slice(0, 70); if (presseVus.has(nk) || presseVus.has(u)) return;
   presseVus.add(nk); presseVus.add(u);
   PRESSE.push({ k: key(u), d, ids, t: titre.slice(0, 220), u, s: site, l, src, ...(sur ? {} : { a: 1 }) });

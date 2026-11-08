@@ -240,3 +240,56 @@ export function vraisemblable(x, annual) {
   for (const k of ["ca", "rop", "net", "prevision"]) if (ok[k] && Math.abs(ok[k].g ?? 0) > 3) ok[k] = { ...ok[k], g: null };
   return ok;
 }
+
+/* ---------- 8/11 (Romain : « un vrai critère de sélection des articles » ; un article sur TotalEnergies qui sponsorise un tournoi de badminton
+   n'a rien à faire dans son actualité) : pertinence d'un titre de presse pour comprendre l'entreprise.
+   Un titre est gardé s'il parle de la vie de l'entreprise (résultats, ventes, contrats, rachats, dirigeants, emplois, usines, justice,
+   régulateurs, autorisations, Bourse…). Écartés sans exception : sport et sponsoring, promotions, listes « actions à acheter » et
+   prévisions de cours, retranscriptions, faits divers, pages de cours. ---------- */
+const PERT_EXCLU = new RegExp([
+  "sponsor", "partenaire officiel", "official partner", "naming", "tournoi", "tournament", "championnat", "championship", "badminton", "tennis\\b", "\\bgolf\\b",
+  "football", "soccer", "rugby", "basket", "\\bnba\\b", "\\bnfl\\b", "formule 1", "formula 1", "grand prix", "marathon", "cyclisme", "\\bjo\\b 20", "olympi",
+  "festival", "concert", "biopic", "\\bspot\\b", "horoscope", "recette", "recipe", "voucher", "coupon", "code promo", "promo code", "bon plan", "deals? of the",
+  "black friday", "cyber monday", "soldes", "giveaway", "jeu-concours", "wallpaper", "unboxing", "hands-on", "\\breview\\b", "\\btest\\s?:",
+  "stocks? to buy", "shares? to buy", "should you buy", "buy now\\b", "à acheter", "faut-il acheter", "faut-il vendre", "price prediction", "price target",
+  "objectif de cours", "kursziel", "stock price, news", "stock quote", "\\btranscript", "\\btop \\d+ ", "\\b\\d+ (best|top|stocks|actions|aktien)\\b",
+  "\\bmillionaire", "retire (early|rich)", "passive income", "revenu passif", "dividend stocks? (to|for)", "\\bbraquage", "robbery", "\\bvol à\\b", "cambriol",
+  "obituary", "nécrologie", "liquide les stocks", "prix (cassé|barré)", "meilleur prix", "all-time low", "\\$\\d+ off", "% off\\b", "€ de moins", "euros de moins",
+  "au lieu de \\d", "cookoff", "charity", "charitable", "benefit event", "fundraiser", "collecte de fonds", "bénévol", "volunteer", "scholarship", "bolsas de",
+  "bourses d'études", "octobre rose", "téléréalité", "star academy", "audience record", "\\bspoiler", "explained\\b", "cyclist", "équipe cycliste", "\\bwin!", "halloween", "gift guide", "cadeaux de noël", "grand opening", "coming to\\b", "job fair", "now hiring"
+].join("|"), "i");
+const PERT_OUI = new RegExp([
+  // français
+  "résultat", "chiffre d'affaires", "\\bventes?\\b", "bénéfice", "perte", "\\bmarge", "prévision", "objectif annuel", "rachat", "\\bopa\\b", "\\bope\\b", "acquisition", "acquiert",
+  "fusion", "cession", "cède", "vend (sa|son|ses|une|un)", "contrat", "commande", "remporte", "dividende", "\\bpdg\\b", "directeur général", "président", "démission", "nomm",
+  "licenci", "suppressions? (de|d') (postes|emplois)", "plan social", "\\busine", "investi", "autorisation", "homologation", "rappel", "amende", "procès", "plainte",
+  "enquête", "régulateur", "\\bamf\\b", "antitrust", "concurrence", "sanction", "grève", "droits de douane", "notation", "\\baction(s)?\\b", "\\bbourse", "\\bcours\\b",
+  "introduction en bourse", "obligat", "dette", "faillite", "restructur", "partenariat", "alliance", "coentreprise", "lance", "dévoile", "brevet", "trimestre", "semestre",
+  // anglais
+  "result", "earnings", "revenue", "\\bsales\\b", "profit", "\\bloss", "margin", "guidance", "outlook", "forecast", "takeover", "\\bbid\\b", "acquir", "merger", "\\bmerge",
+  "divest", "\\bsells?\\b", "\\bsale of", "contract", "\\bwins\\b", "\\border", "dividend", "buyback", "\\bceo\\b", "\\bcfo\\b", "chair", "steps down", "resign", "appoint",
+  "layoff", "job cuts", "\\bcuts?\\b.*jobs", "plant", "factory", "invest", "approval", "\\bfda\\b", "\\bema\\b", "recall", "\\bfine[ds]?\\b", "lawsuit", "\\bsues?\\b", "court",
+  "probe", "investigation", "regulator", "\\bsec\\b", "antitrust", "sanction", "strike", "tariff", "rating", "downgrade", "upgrade", "\\bshares?\\b", "\\bstock\\b",
+  "\\bipo\\b", "\\bbond", "\\bdebt", "bankrupt", "restructur", "partner", "alliance", "joint venture", "launch", "unveil", "patent", "quarter", "\\bq[1-4]\\b", "deal\\b",
+  "billion", "million", "trillion", "\\bsuit\\b", "settlement", "to pay", "cooperation", "coopération", "expan", "diversif", "shareholder", "actionnaire",
+  "explosion", "incendie", "\\bfire (at|in|following|breaks)", "\\bblast\\b", "accident", "tender offer", "notes due", "growth", "croissance", "\\$\\s?\\d", "€\\s?\\d", "£\\s?\\d",
+  "\\d+(?:[.,]\\d+)?\\s?(m|bn|md|mds|mrd)\\b",
+  // allemand, espagnol, italien, néerlandais, nordiques
+  "aktie", "umsatz", "gewinn", "verlust", "quartal", "übernahme", "prognose", "dividende", "stellenabbau", "vorstand", "auftrag", "werk\\b",
+  "ingresos", "beneficio", "resultados", "adquisici", "compra", "contrato", "despidos", "\\bbolsa\\b", "acciones", "facturaci",
+  "ricavi", "utile", "risultati", "acquisizion", "contratto", "\\bborsa\\b", "azioni", "\\bopa\\b",
+  "\\bprix\\b", "\\bprices?\\b", "tarif", "\\bbaisse", "\\bhausse", "expectations", "attentes", "erwartet", "koers", "\\bchief\\b", "\\bstake\\b", "participation",
+  "\\d+(?:\\.\\d+)?\\s?pc\\b", "affär", "\\bcuts?\\b", "\\bdrill", "forage", "signs\\b", "\\bsigne\\b",
+  "ações", "\\bqueda\\b", "\\balta de\\b", "lucro", "receita", "lanza", "crecimiento", "wachstum", "koopt", "verkoopt", "miljard", "miljoen", "\\bopas\\b",
+  "winst", "omzet", "overname", "aandeel", "aktien", "resultat", "omsättning", "vinst", "förvärv", "milliard", "miliard", "millones", "milioni", "millionen"
+].join("|"), "i");
+const plie = x => String(x || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const entites = x => String(x || "").replace(/&#x([0-9a-f]+);/gi, (m, h) => String.fromCodePoint(parseInt(h, 16))).replace(/&#(\d+);/g, (m, d) => String.fromCodePoint(+d)).replace(/&(amp|quot|nbsp);/g, m => ({ "&amp;": "&", "&quot;": '"', "&nbsp;": " " })[m]);
+// noms : noms des entreprises repérées dans le titre ; un titre qui commence par l'un d'eux en parle (sujet de la phrase) et est gardé, sauf exclusion
+export function pertinent(titre, noms = []) {
+  const t = entites(titre).replace(/^[a-z0-9.-]+\.(ca|com|net|org|fr|de)\s+[-|:]\s+/i, "").replace(/^(info|exclusif|exclusive|update|breaking)[^:.-]{0,30}[:.-]\s*/i, "");
+  if (PERT_EXCLU.test(t)) return false;
+  if ((t.match(/, /g) || []).length >= 4 || /news der woche|stocks in action|früh(mover|stück)|movers?:|market wrap|on refait la séance|actions à suivre/i.test(t)) return false; // revues de presse et listes de valeurs
+  if (PERT_OUI.test(t)) return true;
+  const d = plie(t); return noms.some(n => { const m = plie(n).replace(/\s*\(.*\)$/, "").replace(/\s+(inc|corp|plc|sa|se|ag|group|groupe|holdings?|ltd)\.?$/i, ""); return m.length >= 3 && d.startsWith(m); });
+}
