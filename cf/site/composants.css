@@ -2363,7 +2363,7 @@ html body #app .r8x-mv a,html body #app table.r8x-top a{min-height:0!important;d
 .r9-dcs .dc{border:2px solid #111;border-radius:14px;padding:7px 6px 9px;text-align:center;background:#fff;display:flex;flex-direction:column;gap:2px;min-width:0}
 .r9-dcs .dc small{font:700 11.5px Inter,sans-serif;color:#555}.r9-dcs .dc b{font:800 20px/1.1 "Bricolage Grotesque",sans-serif;letter-spacing:-.5px}
 .r9-dcs .dc p{margin:2px 0 0!important;font-size:10.5px!important;color:#666;line-height:1.35;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.r9-dcs .ev{white-space:nowrap;font:800 9.5px Inter,sans-serif;border-radius:99px;padding:1px 6px;align-self:center;min-height:15px;background:#FFE14D;border:1.5px solid #111;max-width:100%;overflow:hidden;text-overflow:ellipsis}.r9-dcs .ev.vide{visibility:hidden}
+.r9-dcs .ev{white-space:normal;font:800 9.5px/1.15 Inter,sans-serif;border-radius:9px;padding:1px 4px;align-self:center;min-height:15px;background:#FFE14D;border:1.5px solid #111;max-width:100%}.r9-dcs .ev.vide{visibility:hidden}
 .r9-dcs .dc.res{background:#FFF8D6}.r9-dcs .dc.cr{background:#FFF0F3}.r9-dcs .dc.cr .ev{background:#FFD0DA}.r9-dcs .dc.hs{background:#ECFAF1}.r9-dcs .dc.hs .ev{background:#CDF5E4}
 .r9-pr .r8-syn{background:none;border:0;padding:0;margin:0}
 details.r9-plus{margin-top:12px;border-top:1.5px solid #eee;padding-top:10px}
@@ -2418,7 +2418,7 @@ details.r9-plus summary::-webkit-details-marker{display:none}details.r9-plus sum
   .r9-row .r9-vs{grid-column:1/-1;grid-template-columns:1fr 130px;order:5}
   .r9-det{padding:4px 8px 16px}.r9-box{padding:14px 14px}.r9-pqg{grid-template-columns:1fr}.r9-trio .tb{grid-template-columns:86px 1fr 56px;font-size:13px}
   .r9-dcs{grid-template-columns:repeat(5,minmax(0,1fr));gap:4px}.r9-dcs .dc{padding:5px 2px 6px;border-radius:10px}
-  .r9-dcs .dc p{display:none}.r9-dcs .dc b{font-size:14px;letter-spacing:-.3px}.r9-dcs .dc small{font-size:9.5px}.r9-dcs .ev{font-size:8.5px;padding:0 3px;white-space:normal;line-height:1.15;min-height:0}
+  .r9-dcs .dc p{display:none}.r9-dcs .dc b{font-size:14px;letter-spacing:-.3px}.r9-dcs .dc small{font-size:9.5px}.r9-dcs .ev{font-size:8px;letter-spacing:-.2px;padding:0 2px;white-space:normal;line-height:1.15;min-height:0}
   .r9-dl,.r9-ax{grid-template-columns:96px 1fr 58px;font-size:13px}.r9-med{margin-left:calc(96px + 12px);margin-right:calc(58px + 12px)}
   .r9-une,.r9-tiles{grid-template-columns:1fr}.r9-strip{grid-template-columns:1fr 1fr;gap:10px;padding:4px 0 14px}.r9-h2,#app .r9-h2{font-size:32px!important}
 }
