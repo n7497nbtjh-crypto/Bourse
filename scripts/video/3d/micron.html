@@ -1,0 +1,171 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(/site/brico800.ttf)}@font-face{font-family:I;src:url(/site/Inter-ExtraBold.otf);font-weight:800}@font-face{font-family:I;src:url(/site/Inter-Bold.otf);font-weight:700}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#fff}
+canvas{position:absolute;inset:0}
+#ui{position:absolute;inset:0;pointer-events:none;font-family:I}
+.tag{position:absolute;left:50%;top:300px;transform:translateX(-50%) rotate(-2deg);background:#111;color:#FFE14D;font:800 34px I;letter-spacing:.06em;padding:12px 26px;border-radius:14px;white-space:nowrap}
+.titre{position:absolute;left:0;right:0;text-align:center;font:800 118px/1 B;letter-spacing:-3px;color:#111}
+.carte{position:absolute;transform:translate(-50%,-100%);background:#fff;border:5px solid #111;border-radius:22px;box-shadow:8px 8px 0 #111;padding:14px 22px;text-align:center;white-space:nowrap}
+.carte b{display:block;font:800 52px/1 B;letter-spacing:-1px}.carte small{display:block;font:800 22px I;letter-spacing:.06em;color:#55524C;margin-top:6px}
+.carte.j{background:#FFE14D}.carte.r{background:#FFD0DA}.carte.n{background:#111;color:#FFE14D}.carte.n small{color:#fff}
+.lab{position:absolute;transform:translate(-50%,0);font:700 30px I;color:#55524C;white-space:nowrap}
+#sous{position:absolute;left:90px;right:90px;top:1330px;text-align:center;font:800 70px/1.18 B;letter-spacing:-1px;color:#111}
+#sous span{display:inline-block;margin:0 6px;padding:2px 12px;border-radius:14px;text-shadow:4px 0 #fff,-4px 0 #fff,0 4px #fff,0 -4px #fff,3px 3px #fff,-3px -3px #fff,3px -3px #fff,-3px 3px #fff}
+#sous span.on{text-shadow:none}
+#sous span.on{background:#111;color:#FFE14D;transform:rotate(-2deg) scale(1.08)}
+#sous span.cle{color:#D6243C}#sous span.cle.on{color:#FFE14D}
+#sous.surjaune span{text-shadow:none}
+#volet{position:absolute;left:-400px;top:-200px;width:900px;height:2400px;background:#111;transform:rotate(12deg)}
+#volet2{position:absolute;left:-400px;top:-200px;width:600px;height:2400px;background:#FFE14D;transform:rotate(12deg)}
+.big{position:absolute;left:0;right:0;text-align:center;font:800 150px/1 B;letter-spacing:-4px}
+.note{position:absolute;left:110px;right:110px;bottom:120px;font:700 24px I;color:#888;text-align:center}
+</style>
+<script type="importmap">{"imports":{"three":"/npm/node_modules/three/build/three.module.js","three/addons/":"/npm/node_modules/three/examples/jsm/"}}</script></head><body>
+<div id="ui"></div><div id="sous"></div><div id="volet2"></div><div id="volet"></div>
+<script type="module">
+import * as THREE from "three"; import { OutlineEffect } from "three/addons/effects/OutlineEffect.js"; import { TTFLoader } from "three/addons/loaders/TTFLoader.js"; import { Font } from "three/addons/loaders/FontLoader.js"; import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+const W = 1080, H = 1920, TL = await (await fetch("/site/timeline.json")).json();
+const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); R.setSize(W, H); R.setPixelRatio(1); document.body.prepend(R.domElement);
+const FX = new OutlineEffect(R, { defaultThickness: 0.0055, defaultColor: [0.067, 0.067, 0.067] });
+const FONT = new Font(await new Promise(ok => new TTFLoader().load("/site/brico800.ttf", ok)));
+const grad = (() => { const d = new Uint8Array([90, 190, 255]); const t = new THREE.DataTexture(d, 3, 1, THREE.RedFormat); t.minFilter = t.magFilter = THREE.NearestFilter; t.needsUpdate = true; return t; })();
+const toon = (c, o = {}) => new THREE.MeshToonMaterial({ color: c, gradientMap: grad, ...o });
+const C = { j: 0xFFE14D, n: 0x1b1b1b, r: 0xD6243C, b: 0xffffff, g: 0xE6E6E6, v: 0x22b35a, rose: 0xFFD0DA };
+const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), e3 = x => 1 - Math.pow(1 - cl(x), 3), eio = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = x => { x = cl(x); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const txt = (s, size, depth, col) => { const g = new TextGeometry(s, { font: FONT, size, height: depth, curveSegments: 5, bevelEnabled: true, bevelThickness: size * .03, bevelSize: size * .02, bevelSegments: 2 }); g.center(); return new THREE.Mesh(g, toon(col)); };
+const UI = document.getElementById("ui"), SOUS = document.getElementById("sous");
+const el = (h) => { const d = document.createElement("div"); d.innerHTML = h; return d.firstElementChild; };
+// ---------- un décor par scène ----------
+function decor(fond, sol = true) {
+  const s = new THREE.Scene(); s.background = new THREE.Color(fond);
+  s.add(new THREE.HemisphereLight(0xffffff, 0xdddddd, 1.6)); const d = new THREE.DirectionalLight(0xffffff, 2.2); d.position.set(4, 8, 6); s.add(d);
+  if (sol) { const g = new THREE.GridHelper(80, 40, 0x000000, 0x000000); g.material.opacity = fond === C.j ? .12 : .07; g.material.transparent = true; s.add(g); }
+  return s;
+}
+const cam = new THREE.PerspectiveCamera(55, W / H, 0.1, 200);
+const proj = v => { const p = v.clone().project(cam); return [(p.x + 1) / 2 * W, (1 - p.y) / 2 * H]; };
+const S = {};
+/* 1. L'accroche : −17 % */
+{ const s = decor(C.j); const t = txt("−17 %", 1.12, .45, C.r); t.position.y = 2.6; s.add(t);
+  const fl = new THREE.Shape(); fl.moveTo(-.35, 0); fl.lineTo(.35, 0); fl.lineTo(.35, -1.2); fl.lineTo(.8, -1.2); fl.lineTo(0, -2.1); fl.lineTo(-.8, -1.2); fl.lineTo(-.35, -1.2); fl.closePath();
+  const fleche = new THREE.Mesh(new THREE.ExtrudeGeometry(fl, { depth: .4, bevelEnabled: false }), toon(C.n)); s.add(fleche);
+  const debris = []; for (let i = 0; i < 26; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(.18, .18, .18), toon(i % 3 ? C.r : C.n)); m.userData = { x: (Math.random() - .5) * 5.4, z: (Math.random() - .5) * 2, v: 1 + Math.random() * 2, r: Math.random() * 6 }; s.add(m); debris.push(m); }
+  S[1] = { s,
+    o: { t, fleche, debris } };
+}
+/* 2. Micron : une puce mémoire géante */
+{ const s = decor(C.b); const g = new THREE.Group(); s.add(g);
+  const corps = new THREE.Mesh(new THREE.BoxGeometry(4.6, .55, 3), toon(C.n)); corps.position.y = .55; g.add(corps);
+  for (let i = 0; i < 9; i++) for (const zz of [-1.62, 1.62]) { const p = new THREE.Mesh(new THREE.BoxGeometry(.28, .12, .5), toon(C.j)); p.position.set(-2 + i * .5, .32, zz); g.add(p); }
+  const pl = new THREE.Mesh(new THREE.BoxGeometry(4.0, .06, 2.4), toon(0x2c2c2c)); pl.position.y = .86; g.add(pl);
+  const nom = txt("MICRON", .62, .12, C.j); nom.rotation.x = -Math.PI / 2; nom.position.set(0, .95, 0); g.add(nom);
+  const cubes = []; for (let i = 0; i < 7; i++) { const m = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), toon(i % 2 ? C.j : C.b)); m.userData = { a: i / 7 * Math.PI * 2, r: 3.6 + (i % 3) * .5, h: 1.4 + (i % 4) * .45 }; s.add(m); cubes.push(m); }
+  S[2] = { s, o: { g, cubes } };
+}
+/* 3. La semaine : une marche par jour de bourse */
+const PX = [["30 oct.", 884.74], ["2 nov.", 833.59], ["3 nov.", 855.10], ["4 nov.", 795.23], ["5 nov.", 656.39], ["6 nov.", 690.00]];
+{ const s = decor(C.b); const bars = PX.map(([d, v], i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(1.15, 1, 1.15), toon(i === 4 ? C.r : i === 0 ? C.j : C.b)); m.position.set(-2.6 + i * 1.05, 0, 1.6 - i * 1.25); s.add(m); return m; });
+  S[3] = { s, o: { bars } };
+}
+/* 4. L'ETF Monde : un grand bocal plein d'entreprises */
+{ const s = decor(C.b); const g = new THREE.Group(); s.add(g);
+  const verre = new THREE.Mesh(new THREE.BoxGeometry(5.2, 5.2, 5.2), toon(0xdff1ff, { transparent: true, opacity: .1, depthWrite: false })); verre.position.y = 2.6; g.add(verre);
+  const ar = new THREE.LineSegments(new THREE.EdgesGeometry(verre.geometry), new THREE.LineBasicMaterial({ color: 0x111111 })); ar.position.copy(verre.position); g.add(ar);
+  const cols = [0xffffff, 0xe9e9e9, 0xd6e6ff, 0xd9f5df, 0xffd6dc, 0xf5e9ff], cubes = [];
+  for (let x = 0; x < 8; x++) for (let z = 0; z < 8; z++) for (let y = 0; y < 5; y++) { if ((x * 7 + z * 3 + y) % 3 === 0) continue; const m = new THREE.Mesh(new THREE.BoxGeometry(.5, .5, .5), toon(cols[(x + z * 2 + y) % cols.length])); m.position.set(-2.2 + x * .62 + (y % 2) * .1, .3 + y * .58, -2.2 + z * .62); m.rotation.y = (x * z) % 4 * .2; m.userData.y0 = m.position.y; g.add(m); cubes.push(m); }
+  const mu = new THREE.Mesh(new THREE.BoxGeometry(.7, .7, .7), toon(C.j)); mu.position.set(0, 3.2, 1.6); g.add(mu);
+  S[4] = { s, o: { g, cubes, mu } };
+}
+/* 5. 1 000 € : une pile de pièces */
+{ const s = decor(C.b); const p = []; for (let i = 0; i < 14; i++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, .26, 40), toon(i > 11 ? C.r : C.j)); m.position.set(0, .13 + i * .27, 0); s.add(m); p.push(m); }
+  const p2 = []; for (let i = 0; i < 9; i++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, .26, 40), toon(C.j)); m.position.set(-2.5 + (i % 3) * .1, .13 + i * .27, -1.6); s.add(m); p2.push(m); }
+  for (let i = 0; i < 7; i++) { const m = new THREE.Mesh(new THREE.CylinderGeometry(1.25, 1.25, .26, 40), toon(C.j)); m.position.set(2.6, .13 + i * .27, -1.8); s.add(m); }
+  S[5] = { s, o: { p } };
+}
+/* 6. Il y a un an : 238 $ ; vendredi : 690 $ */
+{ const s = decor(C.b); const a = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1, 1.8), toon(C.g)); a.position.x = -1.6; s.add(a);
+  const b = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1, 1.8), toon(C.j)); b.position.x = 1.6; s.add(b);
+  S[6] = { s, o: { a, b } };
+}
+/* 7. ENKLAIR */
+{ const s = decor(C.j, false); const g = new THREE.Group(); s.add(g);
+  const plaque = new THREE.Mesh(new THREE.BoxGeometry(5.6, 1.55, .45), toon(C.n)); g.add(plaque);
+  const nom = txt("ENKLAIR", .82, .3, C.j); nom.position.z = .42; g.add(nom);
+  S[7] = { s, o: { g } };
+}
+// ---------- textes et cartes (calque HTML) ----------
+const at = (sc) => TL.scenes[sc - 1].debut, fin = (sc) => TL.scenes[sc - 1].fin;
+const motT = (re, n = 0) => { const m = TL.mots.filter(x => re.test(x.m)); return m[n] ? m[n].a : 0; };
+const T_PLONGE = motT(/plongé/), T_22 = motT(/22/), T_1300 = motT(/1.300/), T_MU = motT(/Micron/, 2), T_1PC = motT(/^1.%/), T_260 = motT(/2,60/), T_238 = motT(/238/), T_690 = motT(/690/);
+let html = "";
+function ui(t) {
+  html = ""; const add = h => html += h;
+  const sc = TL.scenes.find(s => t >= s.debut && t < s.fin) || TL.scenes[TL.scenes.length - 1], k = sc.id, u = t - sc.debut;
+  const pop = (t0, d = .35) => back((t - t0) / d), vis = t0 => t >= t0;
+  const carte = (x, y, cls, b, s, t0) => { if (!vis(t0)) return; const p = pop(t0); add(`<div class="carte ${cls}" style="left:${x}px;top:${y}px;transform:translate(-50%,-100%) scale(${p.toFixed(3)}) rotate(${-2 + (1 - p) * 6}deg)"><b>${b}</b>${s ? `<small>${s}</small>` : ""}</div>`); };
+  if (k === 1) add(`<div class="tag">MICRON · JEUDI 5 NOVEMBRE</div>`);
+  if (k === 2) { add(`<div class="tag">LA MÉMOIRE DES PUCES D'IA</div>`); add(`<div class="titre" style="top:${430 - 30 * (1 - e3(u / .4))}px;opacity:${e3(u / .3)}">Micron</div>`); add(`<div class="lab" style="left:540px;top:560px;opacity:${e3((u - .3) / .3)}">États-Unis · coté au Nasdaq</div>`); }
+  if (k === 3) { add(`<div class="tag">LA SEMAINE DE MICRON, EN $</div>`);
+    const B = S[3].o.bars; B.forEach((m, i) => { const [x, y] = proj(new THREE.Vector3(m.position.x, -.05, m.position.z + .6)); if (u > .15 + i * .12) add(`<div class="lab" style="left:${x}px;top:${y + 14}px">${PX[i][0]}</div>`); });
+    const top = i => proj(new THREE.Vector3(B[i].position.x, B[i].scale.y + .1, B[i].position.z));
+    if (u > .9) { const [x, y] = top(0); carte(x, y - 10, "", "885 $", "30 OCT.", at(3) + .9); }
+    if (t > T_PLONGE - .1) { const [x, y] = top(4); carte(x, y - 10, "r", "−17,5 %", "EN UN JOUR", T_PLONGE - .1); }
+    if (t > T_22 - .15) { const p = back((t - T_22 + .15) / .35); add(`<div class="big" style="top:400px;color:#D6243C;transform:scale(${p})">−22 %</div><div class="lab" style="left:540px;top:565px;font:800 44px B;color:#111;opacity:${cl(p)}">sur la semaine</div>`); }
+  }
+  if (k === 4) {
+    if (t < T_1300 - .2) { add(`<div class="titre" style="top:300px;font-size:92px">Vous pensez</div><div class="titre" style="top:400px;font-size:92px">ne pas en avoir ?</div>`); }
+    const [x, y] = proj(new THREE.Vector3(0, 5.4, 2.6)); carte(x, y, "j", "ETF Monde", "", at(4) + 1.2);
+    if (t > T_1300 - .2) { carte(800, 560, "", "1 300", "ENTREPRISES", T_1300 - .2); }
+    if (t > T_MU - .1) { const m = S[4].o.mu, [x3, y3] = proj(m.position.clone().add(new THREE.Vector3(0, .5, 0))); carte(x3, y3 - 20, "n", "Micron", "≈ 1 % DU FONDS", T_MU - .1); }
+  }
+  if (k === 5) { add(`<div class="tag">POUR 1 000 € DANS UN ETF MONDE</div>`); if (t < T_260 - .15) { const [x, y] = proj(new THREE.Vector3(0, 4.1, 0)); carte(x, y, "j", "1 000 €", "PLACÉS", at(5) + .5); }
+    if (t > T_260 - .15) { const p = back((t - T_260 + .15) / .35); add(`<div class="big" style="top:430px;color:#D6243C;transform:scale(${p})">−2,60 €</div><div class="lab" style="left:540px;top:600px;font:800 44px B;color:#111;opacity:${cl(p)}">rien qu'avec Micron</div>`); } }
+  if (k === 6) { const o = S[6].o; if (t < T_690 + .6) add(`<div class="titre" style="top:330px;font-size:104px;transform:scale(${back(u / .35)})">Et pourtant…</div>`); else add(`<div class="tag">EN UN AN</div>`);
+    const tp = (m) => proj(new THREE.Vector3(m.position.x, m.scale.y + .15, 0));
+    if (u > .5) { const [x, y] = tp(o.a); carte(x, y, "", "238 $", "IL Y A UN AN", at(6) + .5); }
+    if (t > T_690 - .2) { const [x, y] = tp(o.b); carte(x, y, "j", "690 $", "VENDREDI", T_690 - .2); }
+    if (t > T_690 + .7) { const p = back((t - T_690 - .7) / .35); add(`<div class="carte n" style="left:330px;top:700px;transform:translate(-50%,-100%) scale(${p}) rotate(-3deg)"><b>× 2,9 en un an</b></div>`); } }
+  if (k === 7) { add(`<div class="titre" style="top:1020px;font-size:84px;opacity:${e3((u - .5) / .3)}">Ce que contient</div><div class="titre" style="top:1110px;font-size:84px;opacity:${e3((u - .7) / .3)}">vraiment votre ETF</div>`);
+    if (u > 1.1) { const p = back((u - 1.1) / .35); add(`<div class="carte" style="left:540px;top:1320px;transform:translate(-50%,-100%) scale(${p}) rotate(-2deg)"><b>enklair.com</b></div>`); }
+    add(`<div class="note">Information, pas un conseil en investissement. Cours de clôture au Nasdaq.</div>`); }
+  UI.innerHTML = html;
+  // sous-titres : le paquet de mots en cours, le mot dit en surbrillance
+  const cur = TL.mots.filter(m => m.a <= t + .02).pop(); let sous = "";
+  if (cur && t < cur.b + .9 && k !== 7) { const P = TL.mots.filter(m => m.p === cur.p); sous = P.map(m => `<span class="${m === cur ? "on" : ""} ${m.cle ? "cle" : ""}">${m.m}</span>`).join(""); }
+  if (k === 7 && t < (TL.lignes[7].t + TL.lignes[7].dur)) { const P = TL.mots.filter(m => m.p === (cur || {}).p); sous = ""; }
+  SOUS.innerHTML = sous; SOUS.style.top = k === 7 ? "1500px" : "1330px";
+  // volet de transition (0,28 s) au début de chaque scène sauf la première
+  const v = document.getElementById("volet"), v2 = document.getElementById("volet2");
+  if (k > 1 && u < .3) { const p = eio(u / .3); v.style.left = (-1000 + p * 2600) + "px"; v2.style.left = (-1200 + p * 2600) + "px"; } else { v.style.left = v2.style.left = "-3000px"; }
+}
+// ---------- l'image au temps t ----------
+window.frame = t => {
+  const sc = TL.scenes.find(s => t >= s.debut && t < s.fin) || TL.scenes[TL.scenes.length - 1], k = sc.id, u = t - sc.debut, d = sc.fin - sc.debut, X = S[k].o;
+  if (k === 1) { const p = back(u / .32), sh = u < .45 ? (1 - u / .45) * .16 : 0; X.t.scale.setScalar(.85 + .15 * p); X.t.rotation.y = Math.sin(u * 1.6) * .12;
+    X.fleche.scale.setScalar(.7); X.fleche.position.set(0, 1.25 - e3(u / 1.2) * .35, -1.6);
+    X.debris.forEach((m, i) => { const q = (u * m.userData.v + i * .13) % 2.4; m.position.set(m.userData.x, 5.5 - q * 3, m.userData.z); m.rotation.set(q * m.userData.r, q, 0); });
+    cam.position.set(Math.sin(u * 47) * sh, 2.6 + Math.cos(u * 41) * sh, 10.5 - e3(u / d) * 1.2); cam.lookAt(0, 1.7, 0); }
+  if (k === 2) { const a = -.7 + u / d * 1.3; cam.position.set(Math.sin(a) * 11.5, 6.4 - u * .3, Math.cos(a) * 11.5); cam.lookAt(0, .6, 0);
+    X.g.position.y = (1 - back(u / .5)) * -2; X.cubes.forEach((m, i) => { const q = m.userData.a + u * .5; m.position.set(Math.cos(q) * m.userData.r, m.userData.h + Math.sin(u * 2 + i) * .2, Math.sin(q) * m.userData.r); m.rotation.set(u + i, u * .7, 0); }); }
+  if (k === 3) { X.bars.forEach((m, i) => { const h = Math.max(.15, (PX[i][1] - 560) / 340 * 3.0) * back((u - .1 - i * .12) / .45); let hh = h;
+      if (i === 4) { const pre = Math.max(.15, (795.23 - 560) / 340 * 3.0) * back((u - .1 - i * .12) / .45); hh = t < T_PLONGE ? pre : pre + (h - pre) * back((t - T_PLONGE) / .4); }
+      m.scale.y = Math.max(.01, hh); m.position.y = m.scale.y / 2; });
+    const sh = t > T_PLONGE && t < T_PLONGE + .3 ? (1 - (t - T_PLONGE) / .3) * .12 : 0;
+    cam.position.set(4.4 - u / d * 1.2 + Math.sin(u * 50) * sh, 5.0, 11.8 - u / d * 1.2); cam.lookAt(-1.1, 1.0, -1.2); }
+  if (k === 4) { const p = e3(u / 2.6); cam.position.set(6 - p * 4 + Math.sin(u * .4) * .5, 8.5 - p * 1.6, 17 - p * 3.5); cam.lookAt(0, 3.0, 0);
+    X.cubes.forEach((m, i) => { m.position.y = m.userData.y0 + (1 - back((u - .2 - (i % 20) * .02) / .5)) * 6; });
+    const q = back((t - T_MU) / .6); X.mu.position.set(0, 3.0 + (t > T_MU ? q * 3.6 : 0), 1.6 + (t > T_MU ? q * 1.4 : 0)); X.mu.rotation.set(u * .8, u * 1.3, 0); X.mu.scale.setScalar(t > T_MU ? 1 + q * .5 : 1); }
+  if (k === 5) { X.p.forEach((m, i) => { const yy = .13 + i * .27; let y = yy + (1 - back((u - i * .05) / .4)) * 8; m.rotation.set(0, 0, 0);
+      if (i > 11 && t > T_260 - .1) { const q = (t - T_260 + .1); y = yy + q * 3.2 - q * q * 9; m.position.x = (i - 11.5) * q * 3.2; m.rotation.set(q * 4, 0, q * (i - 11.5) * 3); }
+      m.position.y = Math.max(-2, y); });
+    cam.position.set(3.2 - u * .25, 3.6 + u * .1, 12 - u * .35); cam.lookAt(0, 2.2, 0); }
+  if (k === 6) { const ha = (238.33 / 690) * 5.2 * back((u - .2) / .5), hb = 5.2 * back((t - T_690 + .2) / .6);
+    X.a.scale.y = Math.max(.01, ha); X.a.position.y = X.a.scale.y / 2; X.b.scale.y = Math.max(.01, t > T_690 - .2 ? hb : .01); X.b.position.y = X.b.scale.y / 2;
+    cam.position.set(-1.4 + u / d * 2.8, 2.6 + u / d * 1.4, 12.5 - u / d * 1.2); cam.lookAt(0, 2.6, 0); }
+  if (k === 7) { const p = back(u / .5); X.g.rotation.set((1 - p) * -1.2, Math.sin(u * 1.2) * .18, 0); X.g.scale.setScalar(.6 + .4 * p); X.g.position.y = 2.6; cam.position.set(0, 1.6, 12); cam.lookAt(0, 1.4, 0); }
+  FX.render(S[k].s, cam); ui(t); return k;
+};
+window.DUREE = TL.duree; window.pret = true;
+</script></body></html>
