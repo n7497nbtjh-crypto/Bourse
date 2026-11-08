@@ -163,9 +163,9 @@ function presseFidele(txt, lus) { // phrase par phrase, face à l'article qu'ell
     const cite = lus.filter(a => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, "")));
     const src = (cite.length ? cite.map(a => a.titre + " " + a.texte).join(" ") : tous).toLowerCase();
     const srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ";
-    for (const n of ph.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) { const d = n.replace(/[^0-9]/g, ""); if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d)) return false; }
+    for (const n of ph.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) { const d = n.replace(/[^0-9]/g, ""); if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d)) { presseFidele.raison = "chiffre " + n; return false; } }
     const t = ph.toLowerCase();
-    for (const [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src)) return false;
+    for (const [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src)) { presseFidele.raison = "lieu " + p; return false; }
   }
   return true;
 }
@@ -174,7 +174,7 @@ async function synthesePresse(request, env, url) {
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
   const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
-    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind("v2|" + k + "|" + au).first();
+    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind("v3|" + k + "|" + au).first();
     if (c && (au < new Date().toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json(JSON.parse(c.txt)); } catch (e) { }
   let A = [];
   try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {};
@@ -183,11 +183,11 @@ async function synthesePresse(request, env, url) {
   const lus = [];
   for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1400) }); }
   const nom = url.searchParams.get("nom") || id;
-  const r = await iaJSON(env, "presse-sem2", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 330,
-    x => x && typeof x.clair === "string" && x.clair.length > 40 && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null).catch(() => null);
-  if (!r) return json({ indisponible: true });
+  presseFidele.raison = ""; const r = await iaJSON(env, "presse-sem3", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 330,
+    x => (x && typeof x.clair === "string" && x.clair.length > 40 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null).catch(() => null);
+  if (!r) return json({ indisponible: true, raison: presseFidele.raison || "" });
   const out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter(x => x.texte).length, sources: A.map(a => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
-  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind("v2|" + k + "|" + au, JSON.stringify(out), Date.now()).run(); } catch (e) { }
+  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind("v3|" + k + "|" + au, JSON.stringify(out), Date.now()).run(); } catch (e) { }
   return json(out);
 }
 export async function iaSite(request, env) {

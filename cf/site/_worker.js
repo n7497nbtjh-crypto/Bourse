@@ -1099,10 +1099,12 @@ function presseFidele(txt, lus) {
     let cite = lus.filter((a) => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, ""))), src = (cite.length ? cite.map((a) => a.titre + " " + a.texte).join(" ") : tous).toLowerCase(), srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ";
     for (let n of ph.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) {
       let d = n.replace(/[^0-9]/g, "");
-      if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d)) return !1;
+      if (d.length >= 2 && !srcN.includes(d) && !src.replace(/[^0-9]/g, " ").includes(d))
+        return presseFidele.raison = "chiffre " + n, !1;
     }
     let t = ph.toLowerCase();
-    for (let [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src)) return !1;
+    for (let [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src))
+      return presseFidele.raison = "lieu " + p, !1;
   }
   return !0;
 }
@@ -1112,7 +1114,7 @@ async function synthesePresse(request, env, url) {
   let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
-    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind("v2|" + k + "|" + au).first();
+    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind("v3|" + k + "|" + au).first();
     if (c && (au < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json4(JSON.parse(c.txt));
   } catch {
   }
@@ -1128,18 +1130,20 @@ async function synthesePresse(request, env, url) {
     let t = await lireArticle(env, a.u);
     lus.push({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1400) });
   }
-  let nom = url.searchParams.get("nom") || id, r = await iaJSON(
+  let nom = url.searchParams.get("nom") || id;
+  presseFidele.raison = "";
+  let r = await iaJSON(
     env,
-    "presse-sem2",
+    "presse-sem3",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     330,
-    (x) => x && typeof x.clair == "string" && x.clair.length > 40 && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null
+    (x) => (x && typeof x.clair == "string" && x.clair.length > 40 || (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu/i.test(x.clair) && presseFidele(x.clair, lus) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null
   ).catch(() => null);
-  if (!r) return json4({ indisponible: !0 });
+  if (!r) return json4({ indisponible: !0, raison: presseFidele.raison || "" });
   let out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter((x) => x.texte).length, sources: A.map((a) => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
   if (env.DB) try {
-    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind("v2|" + k + "|" + au, JSON.stringify(out), Date.now()).run();
+    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind("v3|" + k + "|" + au, JSON.stringify(out), Date.now()).run();
   } catch {
   }
   return json4(out);
