@@ -1,0 +1,179 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(/site/brico800.ttf)}@font-face{font-family:I;src:url(/site/Inter-ExtraBold.otf);font-weight:800}@font-face{font-family:I;src:url(/site/Inter-Bold.otf);font-weight:700}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+canvas{position:absolute;inset:0}
+#ui,#fx{position:absolute;inset:0;pointer-events:none}
+.tag{position:absolute;left:50%;top:330px;transform:translateX(-50%);display:flex;gap:12px;align-items:center;background:rgba(255,225,77,.1);border:2px solid rgba(255,225,77,.75);color:#FFE14D;font:800 30px I;letter-spacing:.12em;padding:12px 26px;border-radius:999px;white-space:nowrap;box-shadow:0 0 30px rgba(255,225,77,.25)}
+.tag i{width:12px;height:12px;border-radius:50%;background:#FFE14D;box-shadow:0 0 14px #FFE14D}
+.logo{position:absolute;left:44px;top:150px;font:800 30px B;color:#FFE14D;opacity:.85}
+.titre{position:absolute;left:0;right:0;text-align:center;font:800 124px/1 B;letter-spacing:-3px;color:#fff;text-shadow:0 0 40px rgba(255,255,255,.25)}
+.big{position:absolute;left:0;right:0;text-align:center;font:800 170px/1 B;letter-spacing:-5px}
+.big.r{color:#ff4d64;text-shadow:0 0 50px rgba(255,45,72,.7)}.big.j{color:#FFE14D;text-shadow:0 0 50px rgba(255,225,77,.6)}
+.soust{position:absolute;left:0;right:0;text-align:center;font:800 46px B;color:#fff;letter-spacing:-.5px}
+.carte{position:absolute;transform-origin:50% 100%;background:rgba(12,12,12,.78);border:2px solid #FFE14D;border-radius:18px;padding:14px 24px;color:#fff;white-space:nowrap;box-shadow:0 0 40px rgba(255,225,77,.28);text-align:center}
+.carte b{display:block;font:800 56px/1 B;color:#FFE14D;letter-spacing:-1px}.carte small{display:block;font:800 22px I;letter-spacing:.1em;color:#ddd;margin-top:7px}
+.carte.r{border-color:#ff3b55;box-shadow:0 0 40px rgba(255,59,85,.4)}.carte.r b{color:#ff4d64}
+.carte.w{border-color:#fff;box-shadow:0 0 30px rgba(255,255,255,.2)}.carte.w b{color:#fff}
+.lab{position:absolute;transform:translate(-50%,0);font:700 28px I;color:#bbb;white-space:nowrap}
+#sous{position:absolute;left:70px;right:70px;top:1380px;text-align:center;font:800 78px/1.12 B;letter-spacing:-1.5px;color:#fff}
+#sous span{display:inline-block;margin:0 9px;opacity:.55;text-shadow:0 4px 18px rgba(0,0,0,.9)}
+#sous span.dit{opacity:1}#sous span.on{opacity:1;transform:scale(1.1)}
+#sous span.cle{color:#FFE14D;text-shadow:0 0 26px rgba(255,225,77,.55),0 4px 18px rgba(0,0,0,.9)}
+#flash{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,240,170,.9),rgba(255,225,77,.35) 40%,rgba(0,0,0,0) 75%);opacity:0}
+.note{position:absolute;left:110px;right:110px;bottom:110px;font:700 24px I;color:#777;text-align:center}
+</style>
+<script type="importmap">{"imports":{"three":"/npm/node_modules/three/build/three.module.js","three/addons/":"/npm/node_modules/three/examples/jsm/"}}</script></head><body>
+<div id="ui"></div><div id="sous"></div><div id="flash"></div>
+<script type="module">
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js"; import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"; import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { TTFLoader } from "three/addons/loaders/TTFLoader.js"; import { Font } from "three/addons/loaders/FontLoader.js"; import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+let _s = 7; const rnd = () => { _s |= 0; _s = _s + 0x6D2B79F5 | 0; let t = Math.imul(_s ^ _s >>> 15, 1 | _s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const W = 1080, H = 1920, TL = await (await fetch("/site/timeline.json")).json();
+const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); R.setSize(W, H); R.setPixelRatio(1); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = 1.05; document.body.prepend(R.domElement);
+const FONT = new Font(await new Promise(ok => new TTFLoader().load("/site/brico800.ttf", ok)));
+const S = new THREE.Scene(); S.background = new THREE.Color(0x050505); S.fog = new THREE.FogExp2(0x050505, .022);
+S.environment = new THREE.PMREMGenerator(R).fromScene(new RoomEnvironment(), .04).texture;
+const cam = new THREE.PerspectiveCamera(42, W / H, .1, 300);
+const comp = new EffectComposer(R); comp.addPass(new RenderPass(S, cam)); const bloom = new UnrealBloomPass(new THREE.Vector2(W / 2, H / 2), .6, .5, .86); comp.addPass(bloom); comp.addPass(new OutputPass());
+const Y = 0xFFE14D, RED = 0xff2d48;
+const glossy = (c, o = {}) => new THREE.MeshPhysicalMaterial({ color: c, metalness: .2, roughness: .25, clearcoat: 1, clearcoatRoughness: .08, ...o });
+const glow = (c, i = 2) => new THREE.MeshStandardMaterial({ color: 0x000000, emissive: c, emissiveIntensity: i });
+const gold = new THREE.MeshStandardMaterial({ color: 0xffcf4d, metalness: .85, roughness: .3, emissive: 0x4a3300, emissiveIntensity: .6 });
+const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), e3 = x => 1 - Math.pow(1 - cl(x), 3), eio = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = x => { x = cl(x); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const txt = (str, size, depth, mat) => { const g = new TextGeometry(str, { font: FONT, size, height: depth, curveSegments: 8, bevelEnabled: true, bevelThickness: size * .04, bevelSize: size * .025, bevelSegments: 4 }); g.center(); return new THREE.Mesh(g, mat); };
+// ---------- le monde commun : sol miroir, grille jaune, ville lointaine, poussière, projecteurs ----------
+const sol = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: .9, roughness: .35 })); sol.rotation.x = -Math.PI / 2; S.add(sol);
+const grille = new THREE.GridHelper(160, 80, Y, Y); grille.material.transparent = true; grille.material.opacity = .13; grille.position.y = .01; S.add(grille);
+S.add(new THREE.AmbientLight(0xffffff, .18));
+const spots = []; const spot = (x, z, c, i) => { const l = new THREE.SpotLight(c, i, 70, .55, .6, 1.6); l.position.set(x, 18, z); l.target.position.set(x * .15, 0, z * .15); S.add(l, l.target); spots.push(l);
+  const cone = new THREE.Mesh(new THREE.ConeGeometry(3.4, 18, 32, 1, true), new THREE.MeshBasicMaterial({ color: c, transparent: true, opacity: .016, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); cone.position.set(x, 9, z - 6); S.add(cone); };
+spot(-5, 2, 0xffffff, 150); spot(5, 1, Y, 120);
+const NP = 700, pos = new Float32Array(NP * 3), vel = []; for (let i = 0; i < NP; i++) { pos[i * 3] = (rnd() - .5) * 34; pos[i * 3 + 1] = rnd() * 16; pos[i * 3 + 2] = (rnd() - .5) * 34; vel.push(.1 + rnd() * .3); }
+const pg = new THREE.BufferGeometry(); pg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); const P0 = pos.slice();
+S.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: Y, size: .05, transparent: true, opacity: .75, blending: THREE.AdditiveBlending, depthWrite: false })));
+{ const fen = []; const tg = new THREE.BoxGeometry(1, 1, 1), tm = new THREE.MeshStandardMaterial({ color: 0x0d0d0d, metalness: .6, roughness: .4 });
+  const tours = new THREE.InstancedMesh(tg, tm, 90), M = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+  for (let i = 0; i < 90; i++) { const h = 2 + rnd() * 11, w = 1 + rnd() * 1.8, a = rnd() * Math.PI * 2, r = 26 + rnd() * 22, x = Math.cos(a) * r, z = Math.sin(a) * r - 4;
+    e.set(0, -a, 0); q.setFromEuler(e); M.compose(new THREE.Vector3(x, h / 2, z), q, new THREE.Vector3(w, h, w)); tours.setMatrixAt(i, M);
+    for (let k = 0; k < Math.floor(h * 1.6); k++) for (const sgn of [-1, 1]) if (rnd() < .35) { const lx = (rnd() - .5) * w * .8, ly = .5 + k * .6; const v = new THREE.Vector3(lx, ly, 0).applyEuler(e); fen.push([x + v.x - Math.cos(a) * w / 2 * 1.02, ly, z + v.z - Math.sin(a) * w / 2 * 1.02, -a + Math.PI / 2]); } }
+  S.add(tours); const fm = new THREE.InstancedMesh(new THREE.PlaneGeometry(.2, .13), new THREE.MeshBasicMaterial({ color: Y, side: THREE.DoubleSide }), fen.length);
+  fen.forEach(([x, y, z, ry], i) => { e.set(0, ry, 0); q.setFromEuler(e); M.compose(new THREE.Vector3(x, y, z), q, new THREE.Vector3(1, 1, 1)); fm.setMatrixAt(i, M); }); S.add(fm); }
+// ---------- les scènes : un groupe chacune ----------
+const G = {}; const grp = k => { const g = new THREE.Group(); g.visible = false; S.add(g); G[k] = g; return g; };
+/* 1. −17 % */
+const s1 = grp(1); const t17 = txt("−17 %", 1.0, .5, glossy(RED, { emissive: RED, emissiveIntensity: .35 })); t17.position.set(0, 3.4, 0); s1.add(t17);
+const eclats = []; for (let i = 0; i < 46; i++) { const m = new THREE.Mesh(new THREE.TetrahedronGeometry(.07 + rnd() * .14), glossy(i % 4 ? RED : 0x222222, { emissive: RED, emissiveIntensity: i % 4 ? .5 : 0 })); const a = rnd() * Math.PI * 2; m.userData = { d: new THREE.Vector3(Math.cos(a) * 1.3, (rnd() - .3) * 1.2, -Math.abs(Math.sin(a)) * .8 - .2), v: 2 + rnd() * 4, r: rnd() * 8 }; s1.add(m); eclats.push(m); }
+const C1 = [[-4, 5.2], [-2.6, 4.7], [-1.4, 4.9], [-.2, 4.2], [1.0, 1.6], [2.2, 2.0]].map(([x, y]) => new THREE.Vector3(x, y - 1.6, -2.5));
+const tube1 = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(C1, false, "catmullrom", .1), 160, .06, 12), glow(RED, 2.2)); s1.add(tube1);
+/* 2. La puce */
+const s2 = grp(2), puce = new THREE.Group(); s2.add(puce);
+{ const corps = new THREE.Mesh(new THREE.BoxGeometry(5, .5, 3.2), glossy(0x111111, { metalness: .5, roughness: .3 })); corps.position.y = .6; puce.add(corps);
+  const top = new THREE.Mesh(new THREE.BoxGeometry(4.4, .04, 2.6), glossy(0x1c1c1c)); top.position.y = .87; puce.add(top);
+  for (let i = 0; i < 10; i++) for (const z of [-1.75, 1.75]) { const p = new THREE.Mesh(new THREE.BoxGeometry(.22, .08, .45), gold); p.position.set(-2.25 + i * .5, .38, z); puce.add(p); }
+  const nom = txt("MICRON", .5, .05, glow(Y, .55)); nom.rotation.x = -Math.PI / 2; nom.position.set(0, .92, 0); puce.add(nom); }
+const pistes = []; for (let i = 0; i < 16; i++) { const a = (i / 16) * Math.PI * 2 + .1, L = 6 + rnd() * 9; const pts = [new THREE.Vector3(Math.cos(a) * 2.6, .05, Math.sin(a) * 1.8), new THREE.Vector3(Math.cos(a) * 4, .05, Math.sin(a) * 3), new THREE.Vector3(Math.cos(a) * (4 + L), .05, Math.sin(a) * 3)];
+  const g = new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, false, "catmullrom", 0), 80, .025, 6); const m = new THREE.Mesh(g, glow(Y, 1.8)); m.userData.n = g.index.count; s2.add(m); pistes.push(m); }
+/* 3. La semaine */
+const PX = [["30 oct.", 884.74], ["2 nov.", 833.59], ["3 nov.", 855.10], ["4 nov.", 795.23], ["5 nov.", 656.39], ["6 nov.", 690.00]];
+const s3 = grp(3); const barres = PX.map(([d, v], i) => { const g = new THREE.Group(); const m = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), glossy(i === 4 ? RED : 0x3a3a3a, { emissive: i === 4 ? RED : 0x000000, emissiveIntensity: .25 })); m.position.y = .5; g.add(m); const ed = new THREE.LineSegments(new THREE.EdgesGeometry(m.geometry), new THREE.LineBasicMaterial({ color: i === 4 ? RED : Y, transparent: true, opacity: .7 })); m.add(ed);
+  const cap = new THREE.Mesh(new THREE.BoxGeometry(1.04, .06, 1.04), glow(i === 4 ? RED : Y, 1.1)); cap.position.y = 1; g.add(cap); g.position.set(-2.8 + i * 1.12, 0, 1.8 - i * 1.3); s3.add(g); return g; });
+/* 4. Le bocal ETF Monde */
+const s4 = grp(4), bocal = new THREE.Group(); s4.add(bocal);
+const verre = new THREE.Mesh(new THREE.BoxGeometry(5, 5, 5), new THREE.MeshPhysicalMaterial({ color: 0xffffff, roughness: .05, transparent: true, opacity: .07, clearcoat: 1, depthWrite: false })); verre.position.y = 2.5; bocal.add(verre);
+const arete = new THREE.LineSegments(new THREE.EdgesGeometry(verre.geometry), new THREE.LineBasicMaterial({ color: Y, transparent: true, opacity: .85 })); arete.position.copy(verre.position); bocal.add(arete);
+const cubes = []; for (let x = 0; x < 8; x++) for (let z = 0; z < 8; z++) for (let y = 0; y < 6; y++) { if ((x * 7 + z * 3 + y) % 4 === 0) continue; const c = new THREE.Mesh(new THREE.BoxGeometry(.46, .46, .46), glossy([0x3a3a3a, 0x2a2a2a, 0xe8e8e8, 0x4a4a4a][(x + y + z) % 4], { emissive: Y, emissiveIntensity: rnd() < .06 ? .5 : 0 }));
+  c.position.set(-2.15 + x * .615, .3 + y * .58, -2.15 + z * .615); c.rotation.y = rnd() * .3; c.userData = { y0: c.position.y, d: rnd() * .6 + y * .08 }; bocal.add(c); cubes.push(c); }
+const mu = new THREE.Mesh(new THREE.BoxGeometry(.8, .8, .8), glossy(Y, { emissive: Y, emissiveIntensity: .45 })); bocal.add(mu);
+const halo = new THREE.Mesh(new THREE.TorusGeometry(1.0, .03, 12, 64), glow(Y, 3)); halo.rotation.x = Math.PI / 2; bocal.add(halo);
+/* 5. Les pièces */
+const s5 = grp(5), pieceG = new THREE.CylinderGeometry(1.2, 1.2, .24, 48), pieces = [];
+const goldR = new THREE.MeshStandardMaterial({ color: 0xff3b55, metalness: .8, roughness: .25, emissive: RED, emissiveIntensity: .35 });
+for (let i = 0; i < 14; i++) { const m = new THREE.Mesh(pieceG, i > 11 ? goldR : gold); m.userData.y = .12 + i * .25; s5.add(m); pieces.push(m); }
+for (const [x, z, n] of [[-2.7, -1.8, 9], [2.6, -2.2, 6], [-1.2, -4.5, 11]]) for (let i = 0; i < n; i++) { const m = new THREE.Mesh(pieceG, gold); m.position.set(x + (i % 2) * .05, .12 + i * .25, z); s5.add(m); }
+const lp = new THREE.PointLight(0xffe9a0, 60, 14); lp.position.set(2.5, 5, 4); s5.add(lp);
+const anneau = new THREE.Mesh(new THREE.TorusGeometry(1.7, .025, 8, 80), glow(Y, 2.5)); anneau.rotation.x = Math.PI / 2; anneau.position.y = .05; s5.add(anneau);
+/* 6. Un an : deux colonnes de verre qui se remplissent */
+const s6 = grp(6); const col = (x, c) => { const g = new THREE.Group(); g.position.x = x; const v = new THREE.Mesh(new THREE.BoxGeometry(1.9, 6, 1.9), new THREE.MeshPhysicalMaterial({ color: 0xffffff, transparent: true, opacity: .06, roughness: .05, depthWrite: false })); v.position.y = 3; g.add(v);
+  const a = new THREE.LineSegments(new THREE.EdgesGeometry(v.geometry), new THREE.LineBasicMaterial({ color: c, transparent: true, opacity: .6 })); a.position.y = 3; g.add(a);
+  const f = new THREE.Mesh(new THREE.BoxGeometry(1.8, 1, 1.8), glossy(c, { emissive: c, emissiveIntensity: .55, transparent: true, opacity: .9 })); g.add(f); g.userData.f = f; s6.add(g); return g; };
+const colA = col(-1.6, 0x9a9a9a), colB = col(1.6, Y);
+/* 7. ENKLAIR */
+const s7 = grp(7), marque = new THREE.Group(); s7.add(marque);
+{ const pl = new THREE.Mesh(new THREE.BoxGeometry(5.8, 1.6, .4), glossy(0x0e0e0e, { metalness: .6 })); marque.add(pl); const n = txt("ENKLAIR", .85, .3, glossy(Y, { emissive: Y, emissiveIntensity: .25 })); n.position.z = .35; marque.add(n);
+  const bord = new THREE.LineSegments(new THREE.EdgesGeometry(pl.geometry), new THREE.LineBasicMaterial({ color: Y })); marque.add(bord); }
+// ---------- temps forts (tirés de la voix) ----------
+const at = k => TL.scenes[k - 1].debut;
+const motT = (re, n = 0) => { const m = TL.mots.filter(x => re.test(x.m)); return m[n] ? m[n].a : 0; };
+const T = { plonge: motT(/plongé/), v22: motT(/22/), v1300: motT(/1.300/), mu: motT(/Micron/, 1), v1000: motT(/1.000/), v260: motT(/2,60/), v238: motT(/238/), v690: motT(/690/), etf: motT(/ETF/) };
+const proj = v => { cam.updateMatrixWorld(); const p = v.clone().project(cam); return [(p.x + 1) / 2 * W, (1 - p.y) / 2 * H]; };
+const UI = document.getElementById("ui"), SOUS = document.getElementById("sous"), FL = document.getElementById("flash");
+// ---------- une image ----------
+window.frame = t => {
+  const sc = TL.scenes.find(s => t >= s.debut && t < s.fin) || TL.scenes[TL.scenes.length - 1], k = sc.id, u = t - sc.debut, d = sc.fin - sc.debut;
+  for (const i in G) G[i].visible = +i === k;
+  for (let i = 0; i < NP; i++) { pos[i * 3 + 1] = (P0[i * 3 + 1] + t * vel[i]) % 16; } pg.attributes.position.needsUpdate = true;
+  let h = `<div class="logo">ENKLAIR</div>`; const add = x => h += x;
+  const carte = (x, y, cls, b, s, t0) => { if (t < t0) return; const p = back((t - t0) / .35); add(`<div class="carte ${cls}" style="left:${x}px;top:${y}px;transform:translate(-50%,-100%) scale(${p.toFixed(3)})"><b>${b}</b>${s ? `<small>${s}</small>` : ""}</div>`); };
+  const grand = (cls, txt2, sous, y, t0) => { if (t < t0) return; const p = back((t - t0) / .35); add(`<div class="big ${cls}" style="top:${y}px;transform:scale(${p.toFixed(3)})">${txt2}</div>`); if (sous) add(`<div class="soust" style="top:${y + 185}px;opacity:${cl((t - t0 - .1) / .25)}">${sous}</div>`); };
+  if (k === 1) { const p = back(u / .3); t17.scale.setScalar(.92 + .08 * p); t17.rotation.set(-.08, .18 + Math.sin(u * 1.4) * .1, .03);
+    eclats.forEach((m, i) => { const q = u * m.userData.v * .55 + 1.1; m.position.set(m.userData.d.x * q * 2.2, 3.4 + m.userData.d.y * q * 1.6 - u * u * .25, m.userData.d.z * q * 2); m.rotation.set(q * m.userData.r, q * 2, 0); });
+    tube1.geometry.setDrawRange(0, Math.floor(tube1.geometry.index.count * e3(u / 1.4) / 3) * 3);
+    const sh = u < .5 ? (1 - u / .5) * .2 : 0; cam.position.set(.6 + Math.sin(u * 47) * sh, 2.4 + Math.cos(u * 41) * sh, 12.6 - e3(u / d) * 2.2); cam.lookAt(0, 3.0, 0);
+    add(`<div class="tag"><i></i>MICRON · JEUDI 5 NOVEMBRE</div>`); }
+  if (k === 2) { puce.position.y = (1 - back(u / .6)) * -1.5; puce.rotation.y = -.5 + u * .12;
+    pistes.forEach((m, i) => m.geometry.setDrawRange(0, Math.floor(m.userData.n * e3((u - .25 - (i % 5) * .08) / 1.2) / 3) * 3));
+    const a = .55 + u / d * .7; cam.position.set(Math.sin(a) * 12, 7.8 - u * .35, Math.cos(a) * 12); cam.lookAt(0, .5, 0);
+    add(`<div class="tag"><i></i>LA MÉMOIRE DES PUCES D'IA</div><div class="titre" style="top:${450 - 30 * (1 - e3(u / .4))}px;opacity:${e3(u / .3)}">Micron</div><div class="lab" style="left:540px;top:590px;opacity:${e3((u - .3) / .3)}">États-Unis · coté au Nasdaq</div>`); }
+  if (k === 3) { barres.forEach((g, i) => { let hh = Math.max(.1, (PX[i][1] - 560) / 340 * 3.2); if (i === 4) { const avant = (795.23 - 560) / 340 * 3.2; hh = t < T.plonge ? avant : avant + (hh - avant) * back((t - T.plonge) / .4); }
+      const s = Math.max(.01, hh * back((u - .1 - i * .1) / .45)); g.children[0].scale.y = s; g.children[0].position.y = s / 2; g.children[1].position.y = s; });
+    const sh = t > T.plonge && t < T.plonge + .35 ? (1 - (t - T.plonge) / .35) * .15 : 0;
+    cam.position.set(3.6 - u / d * 1.2 + Math.sin(u * 50) * sh, 7.8 - u / d * .6, 18 - u / d * 1.4); cam.lookAt(-.9, 1.3, -1.4);
+    add(`<div class="tag"><i></i>LA SEMAINE DE MICRON</div>`);
+    barres.forEach((g, i) => { if (u > .25 + i * .1) { const [x, y] = proj(new THREE.Vector3(g.position.x, -.1, g.position.z + .7)); add(`<div class="lab" style="left:${x}px;top:${y}px">${PX[i][0]}</div>`); } });
+    const top = i => proj(new THREE.Vector3(barres[i].position.x, barres[i].children[1].position.y + .25, barres[i].position.z));
+    { const [x, y] = top(0); carte(x, y, "w", "885 $", "30 OCT.", at(3) + .7); }
+    if (t > T.plonge - .1) { const [x, y] = top(4); carte(x, y, "r", "−17,5 %", "EN UN JOUR", T.plonge - .1); }
+    grand("r", "−22 %", "sur la semaine", 440, T.v22 - .15); }
+  if (k === 4) { bocal.rotation.y = .45 + u * .05; cubes.forEach(c => { c.position.y = c.userData.y0 + (1 - back((u - .1 - c.userData.d) / .45)) * 7; });
+    const q = back((t - T.mu + .05) / .6), m0 = new THREE.Vector3(.6, 2.0, 1.2); mu.position.set(.6, t > T.mu - .05 ? 2.0 + q * 4.6 : 2.0, 1.2); mu.rotation.set(u * .9, u * 1.4, 0); mu.scale.setScalar(t > T.mu - .05 ? 1 + q * .4 : .6);
+    halo.position.copy(mu.position); halo.scale.setScalar(t > T.mu ? q : .001); halo.rotation.z = u;
+    const p = e3(u / 3); cam.position.set(5 - p * 2, 10 - p * 1.5, 16 - p * 2.5); cam.lookAt(0, 3.4, 0);
+    if (t < T.v1300 - .25) add(`<div class="titre" style="top:300px;font-size:96px">Vous pensez</div><div class="titre" style="top:405px;font-size:96px">ne pas en avoir ?</div>`);
+    else if (t < T.mu - .1) add(`<div class="tag"><i></i>VOTRE ETF MONDE</div>`);
+    { if (t < T.mu - .1) carte(290, 640, "", "ETF Monde", "", T.etf); }
+    carte(830, 760, "w", "1 300", "ENTREPRISES", T.v1300 - .2);
+    if (t > T.mu) { const [x, y] = proj(mu.position.clone().add(new THREE.Vector3(0, .9, 0))); carte(x, y, "", "Micron", "≈ 1 % DU FONDS", T.mu + .1); } }
+  if (k === 5) { pieces.forEach((m, i) => { let y = m.userData.y + (1 - back((u - i * .045) / .4)) * 9; m.position.set(0, y, 0); m.rotation.set(0, 0, 0);
+      if (i > 11 && t > T.v260 - .1) { const q = t - T.v260 + .1; m.position.set((i - 11.5) * q * 3.6, m.userData.y + q * 3.4 - q * q * 8, q * 1.5); m.rotation.set(q * 5, 0, q * (i - 11.5) * 4); } });
+    anneau.scale.setScalar(1 + Math.sin(u * 3) * .05); cam.position.set(4.2 - u * .25, 6.2 + u * .1, 14.5 - u * .35); cam.lookAt(0, 2.2, 0);
+    add(`<div class="tag"><i></i>POUR 1 000 € PLACÉS</div>`);
+    if (t < T.v260 - .15) { const [x, y] = proj(new THREE.Vector3(0, 4.0, 0)); carte(x, y, "", "1 000 €", "DANS UN ETF MONDE", T.v1000 - .1); }
+    grand("r", "−2,60 €", "rien qu'avec Micron", 440, T.v260 - .15); }
+  if (k === 6) { const ha = 238.33 / 690 * 5.6 * back((u - .2) / .6), hb = 5.6 * back((t - T.v690 + .2) / .7);
+    colA.userData.f.scale.y = Math.max(.01, ha); colA.userData.f.position.y = colA.userData.f.scale.y / 2; colB.userData.f.scale.y = Math.max(.01, t > T.v690 - .2 ? hb : .01); colB.userData.f.position.y = colB.userData.f.scale.y / 2;
+    cam.position.set(-1.6 + u / d * 3.2, 3 + u / d * 1.2, 13.5 - u / d * 1.4); cam.lookAt(0, 3, 0);
+    if (t < T.v690 + .7) add(`<div class="titre" style="top:330px;font-size:108px;transform:scale(${back(u / .35).toFixed(3)})">Et pourtant…</div>`); else add(`<div class="tag"><i></i>EN UN AN</div>`);
+    { const [x, y] = proj(new THREE.Vector3(-1.6, colA.userData.f.scale.y + .35, 0)); carte(x, y, "w", "238 $", "IL Y A UN AN", at(6) + .6); }
+    if (t > T.v690 - .2) { const [x, y] = proj(new THREE.Vector3(1.6, colB.userData.f.scale.y + .35, 0)); carte(x, y, "", "690 $", "VENDREDI", T.v690 - .2); }
+    grand("j", "× 2,9", "", 300, T.v690 + .7); }
+  if (k === 7) { const p = back(u / .55); marque.rotation.set((1 - p) * -1.1, Math.sin(u * 1.1) * .2, 0); marque.scale.setScalar(.5 + .5 * p); marque.position.y = 4.1; cam.position.set(0, 3.2, 13); cam.lookAt(0, 3.0, 0);
+    add(`<div class="titre" style="top:1060px;font-size:86px;opacity:${e3((u - .4) / .3)}">Ce que contient</div><div class="titre" style="top:1155px;font-size:86px;opacity:${e3((u - .6) / .3)}">vraiment votre ETF</div>`);
+    if (u > 1.0) { const q = back((u - 1.0) / .35); add(`<div class="carte" style="left:540px;top:1390px;transform:translate(-50%,-100%) scale(${q.toFixed(3)})"><b>enklair.com</b></div>`); }
+    add(`<div class="note">Information, pas un conseil en investissement. Cours de clôture au Nasdaq.</div>`); }
+  UI.innerHTML = h;
+  // sous-titres
+  const cur = TL.mots.filter(m => m.a <= t + .02).pop(); let so = "";
+  if (cur && t < cur.b + .8 && k !== 7) { const Pq = TL.mots.filter(m => m.p === cur.p); so = Pq.map(m => `<span class="${m === cur ? "on" : m.a <= t ? "dit" : ""} ${m.cle ? "cle" : ""}">${m.m}</span>`).join(" "); }
+  SOUS.innerHTML = so;
+  // éclair de transition
+  const fl = k > 1 && u < .35 ? 1 - u / .35 : 0; FL.style.opacity = fl.toFixed(3);
+  bloom.strength = .6 + fl * .8;
+  comp.render(); return k;
+};
+window.DUREE = TL.duree; window.pret = true;
+</script></body></html>
