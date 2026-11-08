@@ -121,7 +121,7 @@
      "q": "#r8-l h2"
     },
     {
-     "q": ".r9-row.open",
+     "q": ".r9-one:not([hidden]) .r9-row",
      "pad": 6
     },
     {
