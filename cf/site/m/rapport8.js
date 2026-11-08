@@ -137,16 +137,12 @@ function r9Pq(l, R0, A) {
   const fort = J.filter(j => j.v != null).sort((a, c) => Math.abs(c.v) - Math.abs(a.v))[0];
   const ixC = ix ? ix.nom.replace(/^Euro Stoxx 50$/, "Stoxx 50").replace(/^Nasdaq 100$/, "Nasdaq").replace(/^S&P 500$/, "S&P").replace(/^Nikkei 225$/, "Nikkei").replace(/^FTSE 100$/, "FTSE") : "";
   const tagDe = j => j.date === resJ ? ["Résultats", "res"] : choc && j === choc ? [`${ixC} ${synPct(j.ind)}`, j.ind < 0 ? "cr" : "hs"] : fort && j === fort && Math.abs(j.v) >= 2 ? ["Jour clé", "ft"] : null;
-  const jours = J.length >= 2 ? `<div class="r9-dcs">${J.map(j => { const t = tagDe(j); return `<div class="dc ${t ? t[1] : ""}"><span class="ev${t ? "" : " vide"}">${t ? esc(t[0]) : "&nbsp;"}</span><small>${esc(r8Jour(j.date))}</small><b class="${r8Cls(j.v)}">${synPct(j.v)}</b><p>${j.riv != null ? `rivales ${synPct(j.riv)}` : ""}${j.riv != null && j.ind != null ? "<br>" : ""}${j.ind != null ? `${esc(ixC)} ${synPct(j.ind)}` : ""}</p></div>`; }).join("")}</div>` : "";
-  // deux phrases au plus : ses résultats, puis le jour qui explique la semaine
-  const T = [];
-  if (res) { const rj = J.find(j => j.date === resJ); T.push(`${r8Maj(esc(r8Jour(res.date)))}, ses résultats : ${res.chiffres.slice(0, 2).map(([a, b]) => `${esc(a.toLowerCase())} ${esc(String(b).replace(/ %/g, "\u00a0%"))}`).join(", ")}.${rj ? ` Ce jour-là, ${synPct(rj.v)}${rj.riv != null ? ` (ses rivales ${synPct(rj.riv)})` : ""}.` : ""}`); }
-  if (choc && choc.date !== resJ && choc.v != null) { const I = esc(r9Le(ix ? ix.nom : "marché")), J0 = r8Maj(esc(r8Jour(choc.date)));
-    T.push(choc.ind < 0 ? (choc.v > choc.ind + 1 ? `${J0}, quand ${I} a perdu ${r9Abs(choc.ind)}, ${nom} ${choc.v < 0 ? `n'a cédé que ${r9Abs(choc.v)}` : `a même gagné ${r9Abs(choc.v)}`}.` : choc.v < choc.ind - 1 ? `${J0}, quand ${I} a perdu ${r9Abs(choc.ind)}, ${nom} a perdu davantage : ${r9Abs(choc.v)}.` : `${J0}, ${nom} a suivi la chute ${ix ? "d" + r9Le(ix.nom).replace(/^le /, "u ").replace(/^l'/, "e l'") : "du marché"} : ${synPct(choc.v)}.`)
-      : (choc.v < choc.ind - 1 ? `${J0}, quand ${I} a gagné ${r9Abs(choc.ind)}, ${nom} a fait moins : ${synPct(choc.v)}.` : `${J0}, ${I} a gagné ${r9Abs(choc.ind)} ; ${nom}, ${synPct(choc.v)}.`)); }
-  else if (fort && fort.date !== resJ && Math.abs(fort.v) >= 2) T.push(`${r8Maj(esc(r8Jour(fort.date)))}, ${synPct(fort.v)} : ${fort.riv != null && Math.abs(fort.v - fort.riv) < 1.5 ? `tout son secteur a bougé de même (ses rivales ${synPct(fort.riv)})` : fort.riv != null ? `un mouvement qui lui est propre (ses rivales ${synPct(fort.riv)})` : "sa plus forte variation de la semaine"}.`);
-  if (!T.length && !J.length) { const P = R0 ? r8Pourquoi(l, R0, A) : []; P.slice(0, 2).forEach(t => T.push(t)); }
-  return `<div class="r9-box r9-pq"><p class="r9-h"><i>✦</i> Pourquoi elle a bougé</p><p class="r9-lead">${lead}</p><div class="r9-pqg"><div>${trio}${T.map(t => `<p>${t}</p>`).join("")}</div><div>${jours ? `<p class="r9-sh">Jour par jour</p>${jours}` : ""}${r8Faits(l, R0, A)}</div></div></div>`;
+  const jours = J.length >= 2 ? `<div class="r9-dcs">${J.map(j => { const t = tagDe(j); return `<div class="dc ${t ? t[1] : ""}"><span class="ev${t ? "" : " vide"}">${t ? esc(t[0]) : "&nbsp;"}</span><small>${esc(r8Jour(j.date))}</small><b class="${r8Cls(j.v)}">${synPct(j.v)}</b></div>`; }).join("")}</div>` : "";
+  // 8/11 (Romain : « Lundi, ses résultats… » mal présenté, « pas trop d'infos ») : ses chiffres publiés en pastilles, plus de phrases
+  const kpi = res ? `<div class="r9-kpi"><p class="r9-sh">Ses résultats, publiés le ${esc(r8Jr(res.date))}</p><div>${res.chiffres.slice(0, 3).map(([a, b]) => { const m = /^(.*?)\s*\((.*)\)\s*$/.exec(String(b)), v = m ? m[1] : String(b), p = m ? m[2] : "";
+    return `<div class="k"><small>${esc(a)}</small><b>${esc(v)}</b>${p ? `<span class="${/^[+]/.test(p) ? "up" : /^[−-]/.test(p) ? "dn" : ""}">${esc(p.replace(/ %/g, "\u00a0%"))}</span>` : ""}</div>`; }).join("")}</div></div>` : "";
+  const P0 = !J.length && !res && R0 ? r8Pourquoi(l, R0, A).slice(0, 2) : [];
+  return `<div class="r9-box r9-pq"><p class="r9-h"><i>✦</i> Pourquoi elle a bougé</p><p class="r9-lead">${lead}</p><div class="r9-pqg"><div>${trio}${P0.map(t => `<p>${t}</p>`).join("")}</div><div>${jours ? `<p class="r9-sh">Jour par jour</p>${jours}` : ""}</div></div>${kpi}</div>`;
 }
 // Face à ses rivales : chaque entreprise placée sur une échelle, la médiane en pointillé, zone rouge à gauche, verte à droite
 function r9Riv(l, R0) {
@@ -220,7 +216,7 @@ function synPageV8(b, m) {
     const off = A.filter(a => a.origine !== "presse");
     const liste = off.length ? `<details class="r8-det"><summary>${off.length > 1 ? `Ses ${off.length} annonces officielles` : "Son annonce officielle"}</summary>${off.map(a => { const lab = (SYN6_T[a.categorie] || ["Annonce"])[0];
       return `<div class="r8-li"><time>${esc(r8Jr(a.date))}</time><span class="r8-ty">${esc(lab)}</span><div><p>${esc(a.titre || a.type || lab)}</p>${(a.chiffres || []).length ? `<p class="r8-mini">${esc(a.chiffres.slice(0, 3).map(([x, y]) => `${x} : ${y}`).join(" · "))}</p>` : ""}</div>${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">↗</a>` : ""}</div>`; }).join("")}</details>` : "";
-    return `${r9Pq(l, R0, A)}${iaB}${presse}${r9Riv(l, R0)}<div class="r9-pied">${liste}<a href="${synLien(l.k)}">Voir la fiche</a>${dt ? `<span class="r8-dt">${esc(r8Jr(dt.date))} · ${esc(String(dt.label || "").replace(/^./, c => c.toLowerCase()))}</span>` : ""}</div>`;
+    return `<div class="r9-duo${presse ? "" : " seul"}">${r9Pq(l, R0, A)}${presse}</div>${iaB}${r9Riv(l, R0)}<div class="r9-pied">${liste}<a href="${synLien(l.k)}">Voir la fiche</a>${dt ? `<span class="r8-dt">${esc(r8Jr(dt.date))} · ${esc(String(dt.label || "").replace(/^./, c => c.toLowerCase()))}</span>` : ""}</div>`;
   };
   const ligne = l => { const R0 = R[l.k], v = l.variation_semaine_pct, e = l.portefeuille ? l.portefeuille.var_eur : null, vd = r9Verd(l, R0), op = l.k === ouvre;
     const meta = l.vue ? `${F0.format(l.via_eur)} € à travers vos ETF` : l.portefeuille ? `${F0.format(Math.round(l.portefeuille.poids_pct || 0))} % de votre argent` : "dans vos favoris";

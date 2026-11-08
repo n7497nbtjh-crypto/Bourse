@@ -285,3 +285,4 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Serveur : jusqu'à 10 sujets du monde (consigne SEMAINE_MONDE, clé « monde10 »).
 - Rapport d'exemple : 6 sujets du monde ajoutés à partir de vrais titres de la semaine (liens exacts de monde.json), radiographie remise sur les nouveaux numéros. Le S&P 500 y reste à −2,3 % (chiffre figé de l'exemple).
 - Page /rapport-exemple : le plan en 4 étapes décrit la nouvelle présentation.
+- 8/11 13 h (Romain) : « Pourquoi elle a bougé » sans phrases (ses résultats en pastilles : ventes, bénéfice par action, dividende), cases jour par jour sans rivales ni indice ; « Pourquoi » et « Ce que dit la presse » côte à côte, la presse centrée en hauteur (`.r9-duo`), rivales dessous. Constat : depuis 11 h 15, les mises en ligne réussissent mais enklair.com reste sur le déploiement de 10 h 48 (version 9b4f6055) : réglage Cloudflare à vérifier.

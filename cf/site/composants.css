@@ -2422,4 +2422,16 @@ details.r9-plus summary::-webkit-details-marker{display:none}details.r9-plus sum
   .r9-dl,.r9-ax{grid-template-columns:96px 1fr 58px;font-size:13px}.r9-med{margin-left:calc(96px + 12px);margin-right:calc(58px + 12px)}
   .r9-une,.r9-tiles{grid-template-columns:1fr}.r9-strip{grid-template-columns:1fr 1fr;gap:10px;padding:4px 0 14px}.r9-h2,#app .r9-h2{font-size:32px!important}
 }
+
 .r9-pqg>div{min-width:0}
+/* 8/11 : pourquoi et presse côte à côte, la presse centrée en hauteur (pas de vide quand « Pour aller plus loin » est fermé) */
+.r9-duo{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:16px;align-items:center}
+.r9-duo.seul{grid-template-columns:1fr}
+.r9-duo .r9-pqg{grid-template-columns:1fr;gap:12px}.r9-duo.seul .r9-pqg{grid-template-columns:1fr 1.15fr;gap:26px}
+.r9-duo .r9-trio{margin-bottom:4px}
+.r9-kpi{margin-top:14px;border-top:1.5px solid #eee;padding-top:12px}
+.r9-kpi>div{display:flex;gap:10px;flex-wrap:wrap}
+.r9-kpi .k{flex:1 1 150px;background:#F7F6F2;border-radius:12px;padding:8px 12px;min-width:0}
+.r9-kpi .k small{display:block;font:600 12px Inter,sans-serif;color:#555}.r9-kpi .k b{display:block;font:800 18px/1.15 "Bricolage Grotesque",sans-serif;letter-spacing:-.4px}
+.r9-kpi .k span{font:700 12.5px Inter,sans-serif}
+@media (max-width:1100px){.r9-duo{grid-template-columns:1fr}}
