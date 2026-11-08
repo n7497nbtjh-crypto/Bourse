@@ -1123,7 +1123,7 @@ function presseFidele(txt, lus) {
 async function synthesePresse(request, env, url) {
   let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json4({ error: "Demande illisible." }, 400);
-  let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v7|" + k + "|" + au, samedi = Date.parse(au + "T00:00:00Z") - 864e5;
+  let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v8|" + k + "|" + au, samedi = Date.parse(au + "T00:00:00Z") - 864e5;
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
     let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind(cle).first();
@@ -1146,13 +1146,13 @@ async function synthesePresse(request, env, url) {
   presseFidele.raison = "";
   let r = await iaJSON(
     env,
-    "presse-sem8",
+    "presse-sem9",
     CONSIGNES.presse_semaine,
     { entreprise: nom, semaine_du: du, au, articles: lus },
     520,
-    (x) => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(String).join(`
+    (x) => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map((p) => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join(`
 `)), (x && typeof x.clair == "string" && x.clair.length > 80 ? !0 : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), !1)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
-      clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
+      clair: x.clair.replace(/—/g, ",").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bdes chips\b/g, "des puces").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, `
 `).trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter((n) => n >= 1 && n <= lus.length)

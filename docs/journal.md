@@ -259,5 +259,5 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 ## 8/11 matin : synthèse de presse refaite (Romain : « plus complète, bien rédigée », plus de bouton Expliquer)
 - Consigne `PRESSE_SEMAINE` réécrite : deux paragraphes (sujet principal, puis les autres), 90 à 140 mots, l'IA dit quels articles elle a utilisés (`articles`). Jusqu'à 7 articles lus (1 500 caractères chacun), Llama 3.3 70B, 520 jetons au plus.
 - Rapport : plus de bouton « Expliquer » sur les articles de presse ; sous la synthèse, menu déroulant « Les N articles utilisés » (`.r8-src`).
-- Cache `ia_presse` (clé `v7|c:id|dimanche`) : une synthèse écrite à partir du samedi est gardée toute la semaine et servie à tous.
+- Cache `ia_presse` (clé `v8|c:id|dimanche`) : une synthèse écrite à partir du samedi est gardée toute la semaine et servie à tous.
 - Robot `presse.yml` (samedi et dimanche 10 h 13 UTC, `data/presse_chauffe.mjs`) : écrit à l'avance les synthèses des entreprises les plus citées, 25 par jour au plus, s'arrête si la part gratuite d'IA du jour est épuisée. Les autres sont écrites à la première ouverture, une seule fois.

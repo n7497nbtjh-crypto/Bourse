@@ -182,7 +182,7 @@ function presseFidele(txt, lus) { // garde les phrases dont chaque nombre et cha
 async function synthesePresse(request, env, url) {
   const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
   if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
-  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v7|" + k + "|" + au;
+  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v8|" + k + "|" + au;
   const samedi = Date.parse(au + "T00:00:00Z") - 864e5; // écrite le samedi (robot presse.yml) ou plus tard : gardée pour toute la semaine
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
     const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind(cle).first();
@@ -195,9 +195,9 @@ async function synthesePresse(request, env, url) {
   for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) }); }
   const nom = url.searchParams.get("nom") || id;
   presseFidele.raison = "";
-  const r = await iaJSON(env, "presse-sem8", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
-    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(String).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
-      clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
+  const r = await iaJSON(env, "presse-sem9", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
+    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(p => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
+      clair: x.clair.replace(/—/g, ",").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bdes chips\b/g, "des puces").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
       sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
       articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter(n => n >= 1 && n <= lus.length) } : null, MODELES_PRESSE).catch(() => null);
   if (!r) return json({ indisponible: true, raison: presseFidele.raison || "" });
