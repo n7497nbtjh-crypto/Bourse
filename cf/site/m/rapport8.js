@@ -104,7 +104,7 @@ function r8Faits(l, R, A) { // 7/11 nuit (Romain) : plus de chiffres de l'exerci
   return `<div class="r8-faits"><div class="r8-fl r8-lgf"><span class="k">Ses autres chiffres</span><span class="v">${esc(res.chiffres.slice(2, 5).map(([a, b]) => `${a} ${b}`).join(" · "))}</span><span class="c">publiés le ${esc(r8Jr(res.date))}</span></div></div>`;
 }
 function synPageV8(b, m) {
-  SYN_ANN = []; SYN8_B = b;
+  SYN_ANN = []; SYN8_B = b; setTimeout(() => r8SynCharger(), 500);
   const L = (b.lignes || []).slice(), pf = b.portefeuille, R = b.rivales || {}, IA = b.ia_entreprises || {}, M = (b.monde && b.monde.sujets) || [];
   const vide = a => a.origine !== "presse" && !(a.chiffres || []).length && ["communique", "autre", "agenda"].includes(a.categorie) && !/rachat/i.test(a.titre || "");
   const ann = (b.annonces || []).filter(a => !(a.origine === "presse" && SYN6_RECO.test(a.titre || "")) && !vide(a));
@@ -250,7 +250,7 @@ function synPageV8(b, m) {
     const preuve = [ncour ? "Opérations courantes : " + ncour : ""].filter(Boolean);
     // 8/11 (Romain : « mettre en avant les articles qui concernent les entreprises ») : jusqu'à 3 articles visibles, chacun avec « Expliquer »
     const PR = A.filter(a => a.origine === "presse").slice(0, 3);
-    const presse = PR.length ? `<div class="r8-presse"><p class="r8-lab">Dans la presse cette semaine</p>${PR.map(a => `<div class="r8-pr"><p><time>${esc(r8Jr(a.date))}</time> ${r8Titr(a)}</p><span class="r8-ac">${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(String(a.site || "presse").replace(/^www\./, ""))} ↗</a>` : ""}<button type="button" class="r8-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button></span><div class="syn4-cl"></div></div>`).join("")}</div>` : "";
+    const presse = PR.length ? `<div class="r8-presse">${PR.length >= 2 && SYN8_B && SYN8_B.au ? `<div class="r8-syn" data-r8syn="${esc(l.k)}" data-nom="${esc(l.nom || "")}" data-au="${esc(SYN8_B.au)}"></div>` : ""}<p class="r8-lab">Dans la presse cette semaine</p>${PR.map(a => `<div class="r8-pr"><p><time>${esc(r8Jr(a.date))}</time> ${r8Titr(a)}</p><span class="r8-ac">${a.source ? `<a href="${esc(a.source)}" target="_blank" rel="noopener">${esc(String(a.site || "presse").replace(/^www\./, ""))} ↗</a>` : ""}<button type="button" class="r8-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer</button></span><div class="syn4-cl"></div></div>`).join("")}</div>` : "";
     const bars = R0 ? [...R0.liste.map(x => ({ ...x, moi: false })), { k: l.k, nom: l.nom, v, moi: true }].filter(x => x.v != null).sort((a, c) => c.v - a.v).map(x => r8Bar(x.nom, x.v, x.moi, x.moi ? null : x.k)).join("") : "";
     const nv = R0 && R0.nouvelles.length ? `<div class="r8-nouv"><p class="r8-lab">Leurs nouvelles</p>${R0.nouvelles.map(a => { const lg = typeof synLangue === "function" ? synLangue(a.titre) : "fr";
       return `<div><b>${esc(a.nom)}</b> · ${a.origine === "presse" ? `<span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(r8Titre(a.titre))}</span> (presse)` : esc((SYN6_T[a.categorie] || ["Annonce"])[0]) + (a.chiffres && a.chiffres.length ? " : " + a.chiffres.slice(0, 2).map(([x, y]) => `${x.toLowerCase()} ${y}`).join(", ") : a.titre ? " : " + a.titre : "")}${a.source ? ` <a href="${esc(a.source)}" target="_blank" rel="noopener">↗</a>` : ""}</div>`; }).join("")}</div>` : "";
@@ -321,5 +321,17 @@ document.addEventListener("click", e => { // 8/11 : tuiles du rapport, un encadr
   const t = e.target.closest("[data-r8t]"); if (!t) return; const sec = t.closest("section"); if (!sec) return;
   sec.querySelectorAll("[data-r8t]").forEach(b => { const on = b === t; b.classList.toggle("on", on); b.setAttribute("aria-pressed", String(on)); });
   sec.querySelectorAll("[data-r8c]").forEach(c => { c.hidden = c.dataset.r8c !== t.dataset.r8t; });
-  const c = sec.querySelector(`[data-r8c="${CSS.escape(t.dataset.r8t)}"]`); if (c && c.getBoundingClientRect().top > innerHeight * 0.7) c.scrollIntoView({ behavior: "smooth", block: "start" });
+  const c = sec.querySelector(`[data-r8c="${CSS.escape(t.dataset.r8t)}"]`); if (c) r8SynCharger(c);
+  if (c && c.getBoundingClientRect().top > innerHeight * 0.7) c.scrollIntoView({ behavior: "smooth", block: "start" });
 });
+
+/* 8/11 : « Ce que dit la presse cette semaine », une synthèse de plusieurs articles écrite une fois par entreprise et par semaine (/api/ia/presse) */
+function r8SynCharger(boite) {
+  (boite ? [boite] : [...document.querySelectorAll("[data-r8c]:not([hidden])")]).forEach(b => b.querySelectorAll("[data-r8syn]:not([data-fait])").forEach(el => {
+    el.dataset.fait = "1"; el.innerHTML = `<p class="r8-lab">Ce que dit la presse cette semaine</p><p class="r8-syn-att">Lecture des articles…</p>`;
+    fetch(`/api/ia/presse?k=${encodeURIComponent(el.dataset.r8syn)}&au=${encodeURIComponent(el.dataset.au)}&nom=${encodeURIComponent(el.dataset.nom)}`).then(r => r.json()).then(j => {
+      if (!j || !j.clair) { el.remove(); return; }
+      el.innerHTML = `<p class="r8-lab">Ce que dit la presse cette semaine</p>${(j.sujets || []).length ? `<p class="r8-syn-s">${j.sujets.map(x => `<span>${esc(x)}</span>`).join("")}</p>` : ""}<p>${esc(j.clair)}</p><p class="r8-ia">Résumé par l'IA d'ENKLAIR à partir de ${j.n} article${j.n > 1 ? "s" : ""}${!j.lus ? ", d'après leurs titres" : j.lus < j.n ? ` (${j.lus} lu${j.lus > 1 ? "s" : ""} en entier, les autres d'après leur titre)` : ""}. Les articles font foi.</p>`;
+    }).catch(() => el.remove());
+  }));
+}

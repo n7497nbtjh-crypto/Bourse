@@ -137,9 +137,12 @@ async function article(request, env, url) {
   try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {}; connu = [...(j.p || []), ...(j.o || [])].some(a => a && a.u === u); } catch (e) { }
   if (!connu) try { const r = await env.ASSETS.fetch(new Request(new URL("/data/actu/semaine.json", url.origin))); const j = r.ok ? await r.json() : {}; connu = ((j.items || {})[id] || []).some(a => a && a.u === u); } catch (e) { }
   if (!connu) return json({ error: "Cet article n'est pas dans l'actualité suivie par le site." }, 404);
+  return json(await lireArticle(env, u));
+}
+async function lireArticle(env, u) {
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_article (u TEXT PRIMARY KEY, txt TEXT, etat TEXT, at INTEGER)`).run();
     const c = await env.DB.prepare(`SELECT txt, etat, at FROM ia_article WHERE u = ?`).bind(u).first();
-    if (c && Date.now() - c.at < 7 * 864e5) return json({ texte: c.txt || "", etat: c.etat }); } catch (e) { }
+    if (c && Date.now() - c.at < 7 * 864e5) return { texte: c.txt || "", etat: c.etat }; } catch (e) { }
   const cible = new URL(u); let etat = "lu", texte = "";
   try { const rb = await fetch(cible.origin + "/robots.txt", { headers: { "user-agent": UA_ART }, signal: AbortSignal.timeout(5000) });
     if (rb.ok && !robotsOk(await rb.text(), cible.pathname + cible.search)) etat = "interdit"; } catch (e) { }
@@ -147,12 +150,37 @@ async function article(request, env, url) {
     texte = r.ok ? texteArticle(await r.text()) : ""; if (texte.length < 300) etat = "illisible"; } catch (e) { etat = "illisible"; }
   if (etat !== "lu") texte = "";
   if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_article (u, txt, etat, at) VALUES (?, ?, ?, ?)`).bind(u, texte, etat, Date.now()).run(); } catch (e) { }
-  return json({ texte, etat });
+  return { texte, etat };
+}
+/* 8/11 (Romain : « une synthèse des articles », « beaucoup de gens vont avoir Apple dans leur rapport ») : ce que dit la presse d'une entreprise
+   sur une semaine (au plus 5 articles lus, robots.txt respecté), résumée par l'IA du site UNE fois par entreprise et par semaine, puis servie
+   à tous (table ia_presse). Ne compte pas dans les questions des visiteurs ; reste dans la part gratuite du jour (iaJSON). */
+async function synthesePresse(request, env, url) {
+  const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
+  if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
+  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
+  if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
+    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind(k + "|" + au).first();
+    if (c && (au < new Date().toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json(JSON.parse(c.txt)); } catch (e) { }
+  let A = [];
+  try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {};
+    A = (j.p || []).filter(a => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 5); } catch (e) { }
+  if (A.length < 2) return json({ vide: true });
+  const lus = [];
+  for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1400) }); }
+  const nom = url.searchParams.get("nom") || id;
+  const r = await iaJSON(env, "presse-sem", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 330,
+    x => x && typeof x.clair === "string" && x.clair.length > 40 && !/pourrai(t|ent)|en raison de|je ne suis pas/i.test(x.clair) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null).catch(() => null);
+  if (!r) return json({ indisponible: true });
+  const out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter(x => x.texte).length, sources: A.map(a => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
+  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind(k + "|" + au, JSON.stringify(out), Date.now()).run(); } catch (e) { }
+  return json(out);
 }
 export async function iaSite(request, env) {
   const url = new URL(request.url), P = plafonds(env);
   if (url.pathname === "/api/ia/traduire") return traduire(request, env);
   if (url.pathname === "/api/ia/article") return article(request, env, url);
+  if (url.pathname === "/api/ia/presse") return synthesePresse(request, env, url);
   const { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv], per = periode(nv);
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json({ disponible: false, raison: "absente", niveau: nv });

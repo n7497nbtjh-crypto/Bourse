@@ -895,6 +895,13 @@ R\xE9ponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - N'utilise que ce que disent le titre et le texte : aucun chiffre, aucun r\xE9sultat, aucune variation de cours qui n'y figure pas. Ce que rapporte la presse n'est pas un fait v\xE9rifi\xE9 : garde \xAB selon \xBB. Ce qui est au conditionnel dans l'article reste au conditionnel.
 - Ignore ce qui n'est pas l'article (publicit\xE9, abonnement, autres articles, cookies).
 - Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction.
+${REGLES}`, PRESSE_SEMAINE = `Tu r\xE9sumes pour une personne qui d\xE9bute en Bourse ce que la presse a dit d'une entreprise cot\xE9e pendant une semaine. Tu re\xE7ois en JSON l'entreprise et jusqu'\xE0 5 articles (m\xE9dia, date, titre et, le plus souvent, le texte ; parfois dans une autre langue).
+R\xE9ponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."]}.
+- "clair" : 3 phrases au plus (75 mots au plus), en fran\xE7ais simple : les deux ou trois sujets dont la presse a parl\xE9, du plus important au moins important, avec le fait ou le chiffre cl\xE9 de chacun. Rattache chaque fait \xE0 son m\xE9dia (\xAB selon \u2026 \xBB). Si deux articles se contredisent, dis-le.
+- "sujets" : 2 ou 3 mots-cl\xE9s courts (2 \xE0 4 mots chacun), par exemple \xAB Nouveau MacBook \xBB, \xAB Contrat \xE0 Oman \xBB.
+- Ignore les articles qui ne parlent pas vraiment de l'entreprise (homonyme, simple citation dans une liste).
+- R\xE9sume avec tes propres mots : ne recopie jamais une phrase d'un article. N'utilise que ce que disent les articles : aucun chiffre ni fait absent, aucune variation de cours qui n'y figure pas. Ce qui est au conditionnel reste au conditionnel.
+- Fran\xE7ais, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune pr\xE9diction, aucune supposition.
 ${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les 3 sujets d'actualit\xE9 g\xE9n\xE9rale (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
 R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [num\xE9ros], "secteurs": [cl\xE9s], "pays": [codes]}]}.
 - 3 sujets au plus, du plus important au moins important. Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
@@ -916,7 +923,7 @@ R\xE8gles strictes :
 - Aucun conseil d'achat ou de vente, aucune recommandation, aucune pr\xE9diction sur les cours.
 - Pas de listes \xE0 puces, pas de titres, pas de tirets cadratins.
 ${REGLES}`, SOURCES = "Sources : termine par une ligne qui commence exactement par \xAB Sources : \xBB et reprend, en peu de mots, les sources de la liste \xAB sources \xBB des faits que tu as utilis\xE9es (par exemple \xAB comptes annuels 2024 publi\xE9s par l'entreprise (ESEF), cours du 28 octobre 2026 \xBB). N'ajoute aucune source qui n'est pas dans cette liste.", S = (t) => t + `
-` + SOURCES, CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE, presse: PRESSE };
+` + SOURCES, CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE, presse: PRESSE, presse_semaine: PRESSE_SEMAINE };
 
 // cf/src/iasite.mjs
 var MODELES = [
@@ -1057,11 +1064,13 @@ async function article(request, env, url) {
     connu = (((r.ok ? await r.json() : {}).items || {})[id] || []).some((a) => a && a.u === u);
   } catch {
   }
-  if (!connu) return json4({ error: "Cet article n'est pas dans l'actualit\xE9 suivie par le site." }, 404);
+  return connu ? json4(await lireArticle(env, u)) : json4({ error: "Cet article n'est pas dans l'actualit\xE9 suivie par le site." }, 404);
+}
+async function lireArticle(env, u) {
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_article (u TEXT PRIMARY KEY, txt TEXT, etat TEXT, at INTEGER)").run();
     let c = await env.DB.prepare("SELECT txt, etat, at FROM ia_article WHERE u = ?").bind(u).first();
-    if (c && Date.now() - c.at < 7 * 864e5) return json4({ texte: c.txt || "", etat: c.etat });
+    if (c && Date.now() - c.at < 7 * 864e5) return { texte: c.txt || "", etat: c.etat };
   } catch {
   }
   let cible = new URL(u), etat = "lu", texte = "";
@@ -1080,12 +1089,51 @@ async function article(request, env, url) {
     await env.DB.prepare("INSERT OR REPLACE INTO ia_article (u, txt, etat, at) VALUES (?, ?, ?, ?)").bind(u, texte, etat, Date.now()).run();
   } catch {
   }
-  return json4({ texte, etat });
+  return { texte, etat };
+}
+async function synthesePresse(request, env, url) {
+  let k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
+  if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json4({ error: "Demande illisible." }, 400);
+  let id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10);
+  if (env.DB) try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)").run();
+    let c = await env.DB.prepare("SELECT txt, at FROM ia_presse WHERE cle = ?").bind(k + "|" + au).first();
+    if (c && (au < (/* @__PURE__ */ new Date()).toISOString().slice(0, 10) || Date.now() - c.at < 12 * 36e5)) return json4(JSON.parse(c.txt));
+  } catch {
+  }
+  let A = [];
+  try {
+    let r3 = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin)));
+    A = ((r3.ok ? await r3.json() : {}).p || []).filter((a) => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 5);
+  } catch {
+  }
+  if (A.length < 2) return json4({ vide: !0 });
+  let lus = [];
+  for (let a of A) {
+    let t = await lireArticle(env, a.u);
+    lus.push({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1400) });
+  }
+  let nom = url.searchParams.get("nom") || id, r = await iaJSON(
+    env,
+    "presse-sem",
+    CONSIGNES.presse_semaine,
+    { entreprise: nom, semaine_du: du, au, articles: lus },
+    330,
+    (x) => x && typeof x.clair == "string" && x.clair.length > 40 && !/pourrai(t|ent)|en raison de|je ne suis pas/i.test(x.clair) ? { clair: x.clair.replace(/—/g, ","), sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 3) } : null
+  ).catch(() => null);
+  if (!r) return json4({ indisponible: !0 });
+  let out = { clair: r.clair, sujets: r.sujets, n: lus.length, lus: lus.filter((x) => x.texte).length, sources: A.map((a) => ({ media: a.s || "", u: a.u, date: String(a.d).slice(0, 10) })) };
+  if (env.DB) try {
+    await env.DB.prepare("INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)").bind(k + "|" + au, JSON.stringify(out), Date.now()).run();
+  } catch {
+  }
+  return json4(out);
 }
 async function iaSite(request, env) {
   let url = new URL(request.url), P = plafonds(env);
   if (url.pathname === "/api/ia/traduire") return traduire(request, env);
   if (url.pathname === "/api/ia/article") return article(request, env, url);
+  if (url.pathname === "/api/ia/presse") return synthesePresse(request, env, url);
   let { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv], per = periode(nv);
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json4({ disponible: !1, raison: "absente", niveau: nv });
@@ -3661,7 +3709,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "ebab38749d902aca", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "230deeca7eba57c8", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

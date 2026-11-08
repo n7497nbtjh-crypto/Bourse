@@ -248,3 +248,7 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 ## 8/11 : Premium, 50 questions par jour à l'IA du site
 - Décision de Romain : 50 questions par jour en Premium (avant 30). Défaut de `IA_PREMIUM_JOUR` dans iasite.mjs et tous les textes (Premium, tarifs, CGV/mentions, Mon IA, communication). Au passage : « 5 questions par semaine » (orchestre.js) corrigé en 3.
 - Coût au pire : environ 40 unités par question, donc 2 000 par jour pour un client qui pose ses 50 questions, soit environ 0,02 $ par jour (0,6 € par mois) au-delà de la part gratuite ; Premium passe le plafond (payé par l'offre Workers).
+
+## 8/11 nuit : synthèse de la presse dans le rapport
+- `/api/ia/presse?k=c:id&au=` (cf/src/iasite.mjs `synthesePresse`) : jusqu'à 5 articles de la semaine lus (`lireArticle`, robots.txt, cache ia_article), résumés une fois par entreprise et par semaine (table ia_presse, partagée), consigne `PRESSE_SEMAINE`. Ne compte pas dans les questions ; reste dans la part gratuite du jour.
+- rapport8.js : encadré « Ce que dit la presse cette semaine » (mots-clés + 3 phrases) au-dessus des articles quand il y en a au moins 2, chargé à l'ouverture de l'encadré (`r8SynCharger`).

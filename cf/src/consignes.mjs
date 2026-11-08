@@ -108,6 +108,15 @@ Réponds uniquement par un objet JSON : {"clair": "...", "change": "..."}.
 - Ignore ce qui n'est pas l'article (publicité, abonnement, autres articles, cookies).
 - Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction.
 ${REGLES}`;
+// 8/11 : ce que dit la presse d'une entreprise sur une semaine (plusieurs articles), écrit une fois et servi à tous
+export const PRESSE_SEMAINE = `Tu résumes pour une personne qui débute en Bourse ce que la presse a dit d'une entreprise cotée pendant une semaine. Tu reçois en JSON l'entreprise et jusqu'à 5 articles (média, date, titre et, le plus souvent, le texte ; parfois dans une autre langue).
+Réponds uniquement par un objet JSON : {"clair": "...", "sujets": ["...", "..."]}.
+- "clair" : 3 phrases au plus (75 mots au plus), en français simple : les deux ou trois sujets dont la presse a parlé, du plus important au moins important, avec le fait ou le chiffre clé de chacun. Rattache chaque fait à son média (« selon … »). Si deux articles se contredisent, dis-le.
+- "sujets" : 2 ou 3 mots-clés courts (2 à 4 mots chacun), par exemple « Nouveau MacBook », « Contrat à Oman ».
+- Ignore les articles qui ne parlent pas vraiment de l'entreprise (homonyme, simple citation dans une liste).
+- Résume avec tes propres mots : ne recopie jamais une phrase d'un article. N'utilise que ce que disent les articles : aucun chiffre ni fait absent, aucune variation de cours qui n'y figure pas. Ce qui est au conditionnel reste au conditionnel.
+- Français, phrases courtes, pas de tiret cadratin, pas de liste. Aucun conseil d'achat ou de vente, aucune prédiction, aucune supposition.
+${REGLES}`;
 export const SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour débutants, les 3 sujets d'actualité générale (économie, banques centrales, commerce, énergie, politique, conflits, grands mouvements de marché) qui ont le plus compté pour la Bourse cette semaine. Tu reçois en JSON une liste numérotée de titres de médias reconnus (date, média, titre), la variation des grands indices et la variation médiane de chaque secteur sur la semaine.
 Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [numéros], "secteurs": [clés], "pays": [codes]}]}.
 - 3 sujets au plus, du plus important au moins important. Un sujet doit être porté par au moins deux titres différents, sauf une décision officielle (banque centrale, gouvernement).
@@ -136,4 +145,4 @@ const SOURCES = `Sources : termine par une ligne qui commence exactement par « 
 const S = t => t + "\n" + SOURCES;
 
 /** Toutes les consignes, par nom de tâche (clés de prompts.json). */
-export const CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE, presse: PRESSE };
+export const CONSIGNES = { demande: DEMANDE, expliquer: S(EXPLIQUER), assistant: S(ASSISTANT), comparaison: S(COMPARAISON), veille: S(VEILLE), portefeuille: S(PORTEFEUILLE), annonce: ANNONCE, bilan: S(BILAN), semaine_entreprise: SEMAINE_ENTREPRISE, semaine_monde: SEMAINE_MONDE, presse: PRESSE, presse_semaine: PRESSE_SEMAINE };
