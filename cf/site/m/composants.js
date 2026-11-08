@@ -115,7 +115,7 @@ function ekEtape(o) {
   const rv = o.riv && o.riv.visuel ? o.riv : null; // 8/11 : bascule « son passé » / « ses rivales » (fiche)
   const cote = o.visuel && (o.explique || o.suite || rv); // la question suivante va toujours dans la colonne de droite, sous l'explication
   const bouton = rv ? `<div class="ek-rivz"><div role="button" tabindex="0" class="ek-rivb" data-ek-riv="${ekEsc(o.id)}" data-ek-co="${ekEsc(rv.k || "")}"><span class="ic">⇄</span><span><b>${ekEsc(rv.label)}</b><small>${ekEsc(rv.detail || "")}</small></span></div><p class="ek-rivq">${typeof isPrem === "function" && isPrem() ? "" : "Gratuit : 5 comparaisons par semaine."}</p></div>` : "";
-  const droite = cote ? `<div class="ek-side${o.explique || rv ? "" : " ek-side-seul"}">${bouton}${o.explique || ""}${ekTransition(o.suite)}</div>` : (o.explique || "");
+  const droite = cote ? `<div class="ek-side${o.explique || rv ? "" : " ek-side-seul"}">${o.explique || ""}${bouton}${ekTransition(o.suite)}</div>` : (o.explique || "");
   const vis = rv ? `<div class="ek-vue" data-vue="passe">${o.visuel}</div><div class="ek-vue" data-vue="riv" hidden>${rv.visuel}</div>` : o.visuel;
   return `<div class="ek-step" id="${ekEsc(o.id)}"><div class="ek-rail"><b>${o.n}</b></div><div class="ek-sc">
   <div class="ek-q">${o.n} · ${ekEsc(o.sur)}</div><h3 class="ek-h">${tete}${ekEsc(titre)}</h3>${cmp}

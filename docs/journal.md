@@ -276,3 +276,4 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - relire-fiches.js : une pastille « face aux rivales » est cohérente quand le bouton est là.
 - Stoxx Europe 600 ajouté aux indices relevés (gf.mjs INDEXSTOXX:SXXP) pour le rapport (premier relevé au prochain passage des feuilles).
 - Maquette rapport v8 (docs/maquettes/rapport-semaine-v8.html), à valider.
+- 8/11 midi (Romain) : sur la fiche, « Ce qui l'explique » au-dessus du bouton « Comparer à ses rivales ». Maquette rapport v9 (« Pourquoi elle a bougé » : trois barres de la semaine et cinq cases jour par jour ; « Pour aller plus loin » en menu déroulant avec le nombre d'articles).
