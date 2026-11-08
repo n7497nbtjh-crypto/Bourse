@@ -277,3 +277,11 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Stoxx Europe 600 ajouté aux indices relevés (gf.mjs INDEXSTOXX:SXXP) pour le rapport (premier relevé au prochain passage des feuilles).
 - Maquette rapport v8 (docs/maquettes/rapport-semaine-v8.html), à valider.
 - 8/11 midi (Romain) : sur la fiche, « Ce qui l'explique » au-dessus du bouton « Comparer à ses rivales ». Maquette rapport v9 (« Pourquoi elle a bougé » : trois barres de la semaine et cinq cases jour par jour ; « Pour aller plus loin » en menu déroulant avec le nombre d'articles).
+
+## 8/11 après-midi : rapport de la semaine refait (maquettes v7 à v9 validées par Romain)
+- rapport8.js `synPageV8` réécrit (fonctions `r9*`, classes `.r9-*` dans composants.css) : bandeau (euros, phrase, courbe, votre semaine face au CAC 40, à l'Euro Stoxx 50 et au S&P 500) ; « Vos lignes » (une ligne par valeur : gagné ou perdu, semaine, jauge face à la médiane des rivales ; le clic ouvre « Pourquoi elle a bougé », la presse et ses rivales) ; « Dans vos ETF » et « Devise, frais » inchangés ; le monde en tuiles (deux grands sujets, les autres en tuiles, filtres par thème ou pays, « chez vous » de la radiographie dans chaque sujet) ; à venir en grille.
+- « Pourquoi elle a bougé » (`r9Pq`) : une phrase calculée (écart avec l'indice ou les rivales), trois barres (elle, médiane des rivales, indice), cinq cases jour par jour (résultats, jour de forte baisse ou hausse de l'indice, son jour clé), deux phrases au plus (ses résultats et l'accueil du jour, le jour qui explique la semaine).
+- Face à ses rivales (`r9Riv`) : nuage de points sur toute la largeur, médiane en pointillé, zones rouge et verte. Presse : synthèse puis « Pour aller plus loin » (menu, nombre d'articles).
+- Serveur : jusqu'à 10 sujets du monde (consigne SEMAINE_MONDE, clé « monde10 »).
+- Rapport d'exemple : 6 sujets du monde ajoutés à partir de vrais titres de la semaine (liens exacts de monde.json), radiographie remise sur les nouveaux numéros. Le S&P 500 y reste à −2,3 % (chiffre figé de l'exemple).
+- Page /rapport-exemple : le plan en 4 étapes décrit la nouvelle présentation.

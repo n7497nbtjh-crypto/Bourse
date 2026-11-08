@@ -104,7 +104,7 @@ export async function mondeDe(env, d, n, lundi, auj) {
   while (T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500)) T.pop();
   const valide = o => {
     if (!o || !Array.isArray(o.sujets)) return null;
-    const S = o.sujets.slice(0, 3).map(s => ({
+    const S = o.sujets.slice(0, 10).map(s => ({ // 8/11 (Romain : « étoffer le monde ») : jusqu'à 10 sujets
       titre: String(s.titre || "").replace(/—/g, ",").slice(0, 100), theme: String(s.theme || "").slice(0, 50), fait: String(s.fait || "").replace(/—/g, ",").slice(0, 360),
       titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter(i => Number.isInteger(i) && T[i]))].slice(0, 3),
       secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter(x => x in secteurs).slice(0, 3),
@@ -113,7 +113,7 @@ export async function mondeDe(env, d, n, lundi, auj) {
       .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2); // 6/11 : un sujet porté par un seul titre est écarté
     return S.length ? { sujets: S } : null;
   };
-  const r = await iaJSON(env, "monde|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 900, valide).catch(() => null);
+  const r = await iaJSON(env, "monde10|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   // Nos chiffres pour chaque sujet : médiane du secteur, ses plus grandes entreprises, l'indice du pays ; les valeurs du lecteur concernées
   const ctx = (d.contexte && d.contexte.sujets) || [];

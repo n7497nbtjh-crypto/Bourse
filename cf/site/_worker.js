@@ -911,12 +911,12 @@ ${REGLES}`, PRESSE_SEMAINE = `Tu es journaliste financier et tu \xE9cris pour de
 - N'utilise que ce que disent les articles : aucun chiffre, fait, lieu ou nom absent ; le lieu d'un fait est uniquement celui \xE9crit dans l'article (un article sur l'Espagne parle de l'Espagne, jamais de la France). Les montants gardent leur unit\xE9 et leur devise. Ce qui est au conditionnel reste au conditionnel.
 - R\xE9sume avec tes propres mots : ne recopie jamais une phrase d'un article.
 - Style : fran\xE7ais soign\xE9 et vivant, phrases courtes, pas de liste, pas de titre, pas de tiret cadratin, pas de formule creuse (\xAB il convient de noter \xBB, \xAB en somme \xBB). Aucun conseil d'achat ou de vente, aucune pr\xE9diction, aucune supposition sur le cours de Bourse.
-${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les 3 sujets d'actualit\xE9 g\xE9n\xE9rale (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
+${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les sujets d'actualit\xE9 g\xE9n\xE9rale (jusqu'\xE0 10) (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
 R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [num\xE9ros], "secteurs": [cl\xE9s], "pays": [codes]}]}.
-- 3 sujets au plus, du plus important au moins important. Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
+- De 3 \xE0 10 sujets, du plus important au moins important (les deux premiers sont ceux qui ont le plus compt\xE9 pour les march\xE9s). Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
 - "titre" : 10 mots au plus, factuel, en fran\xE7ais (exemple : \xAB La Banque d'Angleterre remonte son taux \xE0 4 % \xBB).
 - "theme" : 2 \xE0 4 mots, par exemple \xAB \xC9tats-Unis \xB7 Politique \xBB, \xAB Royaume-Uni \xB7 Taux d'int\xE9r\xEAt \xBB, \xAB \xC9nergie \xBB.
-- "fait" : 2 phrases (45 mots au plus) qui disent ce qui s'est pass\xE9, uniquement d'apr\xE8s les titres fournis, avec leur date. Aucune supposition (\xAB pourrait \xBB, \xAB semble \xBB, \xAB refl\xE8te \xBB) : seulement ce que disent les titres. Si un titre relie le sujet aux march\xE9s, dis-le en pr\xE9cisant que c'est la presse qui fait ce lien.
+- "fait" : 1 ou 2 phrases (40 mots au plus) qui disent ce qui s'est pass\xE9, uniquement d'apr\xE8s les titres fournis, avec leur date. Aucune supposition (\xAB pourrait \xBB, \xAB semble \xBB, \xAB refl\xE8te \xBB) : seulement ce que disent les titres. Si un titre relie le sujet aux march\xE9s, dis-le en pr\xE9cisant que c'est la presse qui fait ce lien.
 - "titres" : les num\xE9ros des 1 \xE0 3 titres qui portent le sujet, et qui en parlent vraiment (un titre sur un autre sujet ne doit jamais \xEAtre cit\xE9).
 - Ne recopie jamais un titre dans "fait" (ni entre guillemets, ni \xAB selon des titres comme \xBB) : ils sont affich\xE9s en lien sous le sujet. \xC9cris en fran\xE7ais, avec tes mots.
 - "secteurs" : les cl\xE9s des secteurs directement concern\xE9s, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le march\xE9.
@@ -1873,7 +1873,8 @@ async function mondeDe(env, d, n, lundi3, auj) {
   for (; T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500); ) T.pop();
   let valide = (o) => {
     if (!o || !Array.isArray(o.sujets)) return null;
-    let S2 = o.sujets.slice(0, 3).map((s) => ({
+    let S2 = o.sujets.slice(0, 10).map((s) => ({
+      // 8/11 (Romain : « étoffer le monde ») : jusqu'à 10 sujets
       titre: String(s.titre || "").replace(/—/g, ",").slice(0, 100),
       theme: String(s.theme || "").slice(0, 50),
       fait: String(s.fait || "").replace(/—/g, ",").slice(0, 360),
@@ -1882,7 +1883,7 @@ async function mondeDe(env, d, n, lundi3, auj) {
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
     })).map((s) => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
     return S2.length ? { sujets: S2 } : null;
-  }, r = await iaJSON(env, "monde|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 900, valide).catch(() => null);
+  }, r = await iaJSON(env, "monde10|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   let ctx = d.contexte && d.contexte.sujets || [];
   return { sujets: r.sujets.map((s) => {
@@ -3775,7 +3776,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "b26cc098b4d500a7", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "9bb1dacfaa2c1ced", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
