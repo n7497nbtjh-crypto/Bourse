@@ -1,0 +1,146 @@
+<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8">
+<style>
+@font-face{font-family:B;src:url(/site/brico800.ttf)}@font-face{font-family:I;src:url(/site/Inter-ExtraBold.otf);font-weight:800}@font-face{font-family:I;src:url(/site/Inter-Bold.otf);font-weight:700}
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+canvas{position:absolute;inset:0}#ui{position:absolute;inset:0}
+.wm{position:absolute;left:44px;top:150px;font:800 30px B;color:#FFE14D;opacity:.85}
+#sous{position:absolute;left:0;right:0;top:1010px;text-align:center}
+#sous div{display:inline-block;background:rgba(10,10,10,.78);border-radius:22px;padding:14px 30px;font:800 64px/1.1 B;letter-spacing:-1px;color:#fff;max-width:860px}
+#sous span{margin:0 7px;opacity:.5}#sous span.dit{opacity:1}#sous span.on{opacity:1}#sous span.cle{color:#FFE14D}
+#panneau{position:absolute;left:0;right:0;top:1150px;height:770px;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.92) 90px,#000 100%)}
+.pill{position:absolute;left:50%;top:1200px;transform:translateX(-50%) rotate(-2deg);background:#FFE14D;color:#111;font:800 32px I;letter-spacing:.08em;padding:10px 26px;border-radius:12px;white-space:nowrap;border:3px solid #111;box-shadow:0 0 34px rgba(255,225,77,.35)}
+.h{position:absolute;left:60px;right:60px;top:1280px;text-align:center;font:800 62px/1.08 B;color:#fff;letter-spacing:-1px}
+.n{position:absolute;left:0;right:0;top:1350px;text-align:center;font:800 168px/1 B;color:#FFE14D;letter-spacing:-5px;text-shadow:0 0 50px rgba(255,225,77,.45)}
+.s{position:absolute;left:60px;right:60px;top:1520px;text-align:center;font:700 40px I;color:#fff}
+.src{position:absolute;left:80px;right:80px;top:1600px;text-align:center;font:700 22px I;color:#777}
+.chip{position:absolute;transform:translate(-50%,-100%);background:rgba(12,12,12,.85);border:2px solid #FFE14D;border-radius:14px;padding:8px 16px;white-space:nowrap;text-align:center;color:#fff;font:800 30px B}
+.chip small{display:block;font:800 30px B;color:#FFE14D}.chip.w{border-color:#fff}.chip.w small{color:#fff}
+#flash{position:absolute;inset:0;background:#FFE14D;opacity:0}
+.fin{position:absolute;left:0;right:0;text-align:center}
+</style>
+<script type="importmap">{"imports":{"three":"/npm/node_modules/three/build/three.module.js","three/addons/":"/npm/node_modules/three/examples/jsm/"}}</script></head><body>
+<div id="ui"></div><div id="flash"></div>
+<script type="module">
+import * as THREE from "three";
+import { EffectComposer } from "three/addons/postprocessing/EffectComposer.js"; import { RenderPass } from "three/addons/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/addons/postprocessing/UnrealBloomPass.js"; import { OutputPass } from "three/addons/postprocessing/OutputPass.js";
+import { RoomEnvironment } from "three/addons/environments/RoomEnvironment.js";
+import { TTFLoader } from "three/addons/loaders/TTFLoader.js"; import { Font } from "three/addons/loaders/FontLoader.js"; import { TextGeometry } from "three/addons/geometries/TextGeometry.js";
+let _s = 11; const rnd = () => { _s |= 0; _s = _s + 0x6D2B79F5 | 0; let t = Math.imul(_s ^ _s >>> 15, 1 | _s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
+const W = 1080, H = 1920, TL = await (await fetch("/site/timeline.json")).json();
+const R = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true }); R.setSize(W, H); R.setPixelRatio(1); R.toneMapping = THREE.ACESFilmicToneMapping; document.body.prepend(R.domElement);
+const FONT = new Font(await new Promise(ok => new TTFLoader().load("/site/brico800.ttf", ok)));
+const S = new THREE.Scene(); S.background = new THREE.Color(0x060606); S.fog = new THREE.FogExp2(0x060606, .03);
+S.environment = new THREE.PMREMGenerator(R).fromScene(new RoomEnvironment(), .04).texture;
+const cam = new THREE.PerspectiveCamera(40, W / H, .1, 300);
+const comp = new EffectComposer(R); comp.addPass(new RenderPass(S, cam)); const bloom = new UnrealBloomPass(new THREE.Vector2(W / 2, H / 2), .35, .4, .93); comp.addPass(bloom); comp.addPass(new OutputPass());
+const Y = 0xFFE14D;
+const cl = (x, a = 0, b = 1) => Math.max(a, Math.min(b, x)), e3 = x => 1 - Math.pow(1 - cl(x), 3), eio = x => { x = cl(x); return x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2; };
+const back = x => { x = cl(x); const c1 = 1.70158, c3 = c1 + 1; return 1 + c3 * Math.pow(x - 1, 3) + c1 * Math.pow(x - 1, 2); };
+const lerp = (a, b, p) => a + (b - a) * p, V = (x, y, z) => new THREE.Vector3(x, y, z);
+// décor sobre : sol miroir sombre, grille légère, lumières douces
+const sol = new THREE.Mesh(new THREE.PlaneGeometry(300, 300), new THREE.MeshStandardMaterial({ color: 0x0b0b0b, metalness: .85, roughness: .4 })); sol.rotation.x = -Math.PI / 2; S.add(sol);
+const grille = new THREE.GridHelper(160, 100, Y, Y); grille.material.transparent = true; grille.material.opacity = .07; grille.position.y = .005; S.add(grille);
+S.add(new THREE.AmbientLight(0xffffff, .25)); const key = new THREE.DirectionalLight(0xffffff, 1.6); key.position.set(-6, 12, 8); S.add(key); const rim = new THREE.DirectionalLight(Y, 1.2); rim.position.set(8, 5, -8); S.add(rim);
+const NP = 500, pos = new Float32Array(NP * 3); for (let i = 0; i < NP; i++) { pos[i * 3] = (rnd() - .5) * 40; pos[i * 3 + 1] = rnd() * 16; pos[i * 3 + 2] = (rnd() - .5) * 40; }
+const pg = new THREE.BufferGeometry(); pg.setAttribute("position", new THREE.BufferAttribute(pos, 3)); const P0 = pos.slice();
+S.add(new THREE.Points(pg, new THREE.PointsMaterial({ color: Y, size: .045, transparent: true, opacity: .5, blending: THREE.AdditiveBlending, depthWrite: false })));
+// ---------- les 100 cubes = 100 € ----------
+const cubeG = new THREE.BoxGeometry(.82, .82, .82); const M = new THREE.Matrix4(), Q = new THREE.Quaternion(), Eu = new THREE.Euler(), ONE = V(1, 1, 1);
+const gris = new THREE.Color(0x2b2b2b), jaune = new THREE.Color(Y), blanc = new THREE.Color(0xf2f2f2);
+const cent = new THREE.InstancedMesh(cubeG, new THREE.MeshPhysicalMaterial({ metalness: .3, roughness: .3, clearcoat: 1, clearcoatRoughness: .1 }), 100); S.add(cent);
+const cmat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: Y, emissiveIntensity: .0 });
+const ordre = [...Array(100).keys()]; // remplissage en serpentin, depuis le coin
+const grilleXY = i => { const r = Math.floor(i / 10), c = r % 2 ? 9 - (i % 10) : i % 10; return [(c - 4.5) * 1, (r - 4.5) * 1]; };
+// ---------- les 1 300 entreprises : une sphère de petits cubes ----------
+const NB = 1300, petit = new THREE.InstancedMesh(new THREE.BoxGeometry(.16, .16, .16), new THREE.MeshPhysicalMaterial({ metalness: .3, roughness: .35, clearcoat: 1 }), NB); S.add(petit);
+const sph = []; for (let i = 0; i < NB; i++) { const y = 1 - (i + .5) / NB * 2, r = Math.sqrt(1 - y * y), th = i * 2.399963; sph.push(V(Math.cos(th) * r, y, Math.sin(th) * r)); }
+const estUS = i => (i * 7919) % 1000 < 705, estFR = i => (i * 7919) % 1000 >= 980 && (i * 7919) % 1000 < 1000 && i % 1 === 0;
+// ---------- les 10 plus grosses ----------
+const TOP = [["Nvidia", 5.55], ["Apple", 5.06], ["Microsoft", 3.89], ["Alphabet", 3.84], ["Amazon", 2.74], ["Broadcom", 1.81], ["Meta", 1.37], ["Micron", 1.18], ["Tesla", 1.13], ["JPMorgan", 1.04]];
+const tours = TOP.map(([n, w], i) => { const m = new THREE.Mesh(new THREE.BoxGeometry(.8, 1, .8), new THREE.MeshPhysicalMaterial({ color: i < 3 ? Y : 0x3a3a3a, metalness: .3, roughness: .25, clearcoat: 1, emissive: i < 3 ? Y : 0x000000, emissiveIntensity: i < 3 ? .25 : 0 })); m.userData.h = w * .55; S.add(m); return m; });
+// ---------- fin ----------
+const marque = new THREE.Group(); { const pl = new THREE.Mesh(new THREE.BoxGeometry(5.8, 1.6, .4), new THREE.MeshPhysicalMaterial({ color: 0x0e0e0e, metalness: .6, roughness: .3, clearcoat: 1 })); marque.add(pl);
+  const g = new TextGeometry("ENKLAIR", { font: FONT, size: .85, height: .3, curveSegments: 8, bevelEnabled: true, bevelThickness: .03, bevelSize: .02, bevelSegments: 3 }); g.center();
+  const n = new THREE.Mesh(g, new THREE.MeshPhysicalMaterial({ color: Y, emissive: Y, emissiveIntensity: .2, clearcoat: 1 })); n.position.z = .35; marque.add(n);
+  marque.add(new THREE.LineSegments(new THREE.EdgesGeometry(pl.geometry), new THREE.LineBasicMaterial({ color: Y }))); } S.add(marque);
+// ---------- temps forts ----------
+const motT = (re, n = 0) => { const m = TL.mots.filter(x => re.test(x.m)); return m[n] ? m[n].a : 0; };
+const T = { us: motT(/États-Unis/), n1300: motT(/1.300/), p28: motT(/28/), nv: motT(/Nvidia/), ap: motT(/Apple/), ms: motT(/Microsoft/), p15: motT(/15/), fr2: motT(/^2.%/), tot: motT(/TotalEnergies/), saf: motT(/Safran/), lor: motT(/Oréal/), c100: motT(/100.€/), d70: motT(/^70$/), d2: motT(/^2,$/) };
+const proj = v => { cam.updateMatrixWorld(); const p = v.clone().project(cam); return [(p.x + 1) / 2 * W, (1 - p.y) / 2 * H]; };
+const UI = document.getElementById("ui"), FL = document.getElementById("flash");
+const plan = (u, d, coupes) => { let k = 0; for (let i = 0; i < coupes.length; i++) if (u >= coupes[i] * d) k = i + 1; const a = k ? coupes[k - 1] * d : 0, b = k < coupes.length ? coupes[k] * d : d; return [k, (u - a) / (b - a), u - a]; };
+window.frame = t => {
+  const sc = TL.scenes.find(s => t >= s.debut && t < s.fin) || TL.scenes[TL.scenes.length - 1], k = sc.id, u = t - sc.debut, d = sc.fin - sc.debut;
+  for (let i = 0; i < NP; i++) pos[i * 3 + 1] = (P0[i * 3 + 1] + t * .15) % 16; pg.attributes.position.needsUpdate = true;
+  cent.visible = [1, 2, 6].includes(k); petit.visible = [2, 3, 5].includes(k); tours.forEach(m => m.visible = [3, 4].includes(k)); marque.visible = k === 7;
+  let h = `<div class="wm">ENKLAIR</div>`; const add = x => h += x; let coupe = 0;
+  // ---- 100 cubes ----
+  if (cent.visible) { for (let i = 0; i < 100; i++) { const [x, z] = grilleXY(i); let y = .41, col = gris, s = 1;
+      if (k === 1) { y = .41 + Math.max(0, Math.sin(t * 5 - i * .35)) * .12 * (i < 70 ? 1 : 0); col = i < 70 ? jaune : gris; }
+      if (k === 2) { const p = eio((u - .1) / 1.2); col = i < 70 ? jaune : gris; s = 1 - p; y = .41 + p * 3; }
+      if (k === 6) { y = .41 + (1 - back((u - i * .004) / .45)) * 5; col = gris; if (t > T.d70 - .6 + i * .01 && i < 70) col = jaune; if (t > T.d2 - .3 && i >= 70 && i < 72) col = blanc; }
+      M.compose(V(x, y, z), Q.identity(), V(s, s, s)); cent.setMatrixAt(i, M); cent.setColorAt(i, col); }
+    cent.instanceMatrix.needsUpdate = true; cent.instanceColor.needsUpdate = true; }
+  // ---- sphère des 1 300 ----
+  if (petit.visible) { const rot = t * .25; let R0 = 3.2, cy = 4.2, ouv = 0;
+    if (k === 2) R0 = 3.2 * e3((u - .9) / 1.4);
+    if (k === 3) ouv = 0;
+    for (let i = 0; i < NB; i++) { const p = sph[i]; Eu.set(0, rot, 0); const v = p.clone().applyEuler(Eu).multiplyScalar(R0); v.y += cy;
+      let col = estUS(i) ? jaune : gris, s = 1;
+      if (k === 2 && t < T.n1300 - .2) col = gris;
+      if (k === 3) { col = gris; s = .8; }
+      if (k === 5) { col = new THREE.Color(0x2a2a2a); if (estFR(i)) { col = blanc; s = 1.6 + .3 * Math.sin(t * 6 + i); } }
+      M.compose(v, Q.identity(), V(s, s, s)); petit.setMatrixAt(i, M); petit.setColorAt(i, col); }
+    petit.instanceMatrix.needsUpdate = true; petit.instanceColor.needsUpdate = true; }
+  // ---- les 10 tours ----
+  if (k === 3 || k === 4) { tours.forEach((m, i) => { const st = (k === 3 ? T.p28 - 1.6 : -9) + i * .08, hh = m.userData.h * (k === 3 ? back((t - st) / .5) : 1); m.scale.y = Math.max(.01, hh); m.position.set((i - 4.5) * .95, hh / 2, 4.2); }); }
+  // ---- caméra : un plan par moitié de phrase ----
+  if (k === 1) { const [c, p] = plan(u, d, [.5]); coupe = c;
+    if (c === 0) { cam.position.set(lerp(-7, -5.5, p), lerp(9.5, 8.5, p), lerp(12, 10.5, p)); cam.lookAt(0, -.6, -1.2); }
+    else { cam.position.set(lerp(9.5, 8, p), lerp(4.2, 3.6, p), lerp(10, 9, p)); cam.lookAt(-.5, -.4, -1); } }
+  if (k === 2) { const [c, p] = plan(u, d, [.45]); coupe = c;
+    if (c === 0) { cam.position.set(lerp(-6, -4, p), lerp(8, 6.5, p), lerp(13, 11, p)); cam.lookAt(0, 2.8, 0); }
+    else { cam.position.set(lerp(2.2, 1.4, p), lerp(5.6, 5.0, p), lerp(6.8, 5.9, p)); cam.lookAt(0, 4.2, 0); } }
+  if (k === 3) { const [c, p] = plan(u, d, [.4]); coupe = c;
+    if (c === 0) { cam.position.set(lerp(0, 1.2, p), lerp(5.5, 5, p), lerp(19, 17.5, p)); cam.lookAt(0, .9, 3); }
+    else { cam.position.set(lerp(-9.5, -8.5, p), lerp(2.6, 3, p), lerp(13, 12.5, p)); cam.lookAt(.5, .9, 4.2); } }
+  if (k === 4) { const [c, p] = plan(u, d, [.33, .66]); coupe = c;
+    if (c === 0) { cam.position.set(-3.6 + p * .3, 4.6, 16); cam.lookAt(-3.4, 1.4, 4.2); }
+    else if (c === 1) { cam.position.set(-7.5 + p * .5, 3.2, 12.5); cam.lookAt(-2.6, 1.3, 4.2); }
+    else { cam.position.set(lerp(-1, 0, p), lerp(5, 5.5, p), lerp(20, 21, p)); cam.lookAt(-.5, .9, 3.5); } }
+  if (k === 5) { const [c, p] = plan(u, d, [.4]); coupe = c;
+    if (c === 0) { cam.position.set(lerp(5, 4, p), lerp(8, 7, p), lerp(12, 11, p)); cam.lookAt(0, 4.2, 0); }
+    else { cam.position.set(lerp(-2.4, -1.8, p), lerp(5.2, 4.8, p), lerp(5.8, 5.4, p)); cam.lookAt(0, 4.2, 0); } }
+  if (k === 6) { const [c, p] = plan(u, d, [.5]); coupe = c;
+    if (c === 0) { cam.position.set(lerp(-.5, .5, p), lerp(16, 15, p), lerp(3, 2.5, p)); cam.lookAt(0, 0, -.3); }
+    else { cam.position.set(lerp(-9, -7.5, p), lerp(3.5, 3, p), lerp(8, 7, p)); cam.lookAt(.5, .4, -.5); } }
+  if (k === 7) { const p = back(u / .55); marque.rotation.set((1 - p) * -1.1, Math.sin(u * 1.1) * .18, 0); marque.scale.setScalar(.5 + .5 * p); marque.position.set(0, 4.6, 0); cam.position.set(0, 3.4, 17); cam.lookAt(0, 3.0, 0); }
+  // ---- étiquettes dans la scène ----
+  if (k === 4) { const lab = (i, t0) => { if (t < t0) return; const m = tours[i], [x, y] = proj(V(m.position.x, m.scale.y + .35, m.position.z)), q = back((t - t0) / .3); add(`<div class="chip" style="left:${x}px;top:${y}px;transform:translate(-50%,-100%) scale(${q.toFixed(3)})">${TOP[i][0]}<small>${["5,6", "5,1", "3,9"][i]} %</small></div>`); };
+    lab(0, T.nv - .1); lab(1, T.ap - .1); lab(2, T.ms - .1); }
+  if (k === 5) { const ch = (txt, x, y, t0) => { if (t < t0) return; const q = back((t - t0) / .3); add(`<div class="chip w" style="left:${x}px;top:${y}px;transform:translate(-50%,-100%) scale(${q.toFixed(3)})">${txt}</div>`); };
+    ch("TotalEnergies", 300, 560, T.tot - .1); ch("Safran", 780, 640, T.saf - .1); ch("L'Oréal", 420, 800, T.lor - .1); }
+  // ---- bandeau d'info (format « news ») ----
+  add(`<div id="panneau"></div>`);
+  const pop = t0 => back((t - t0) / .35).toFixed(3), cnt = (a, b, t0, d2 = .9) => Math.round(lerp(a, b, e3((t - t0) / d2)));
+  const bandeau = (titre, nombre, sous, t0) => { add(`<div class="pill">⚡ ENKLAIR INFO</div><div class="h" style="opacity:${cl((t - t0) / .25)}">${titre}</div><div class="n" style="transform:scale(${pop(t0 + .1)})">${nombre}</div><div class="s" style="opacity:${cl((t - t0 - .25) / .25)}">${sous}</div>`); };
+  if (k === 1) bandeau("Votre ETF Monde", "70 %", "de votre argent aux États-Unis", -1);
+  if (k === 2) bandeau("L'indice MSCI World", `${cnt(100, 1300, sc.debut, Math.max(.8, T.n1300 - sc.debut)).toLocaleString("fr-FR")}`, "entreprises, de 23 pays", sc.debut);
+  if (k === 3) bandeau("Les 10 plus grosses", `${cnt(1, 28, sc.debut, Math.max(.8, T.p28 - sc.debut))} %`, "du fonds, à elles seules", sc.debut);
+  if (k === 4) bandeau("Nvidia, Apple, Microsoft", `${cnt(1, 15, sc.debut, Math.max(.8, T.p15 - sc.debut))} %`, "à elles trois, ou presque", sc.debut);
+  if (k === 5) bandeau("Et la France ?", "2 %", "51 entreprises sur 1 300", sc.debut);
+  if (k === 6) bandeau("Sur 100 € placés", t < T.d2 - .2 ? "70 €" : "70 € · 2 €", t < T.d2 - .2 ? "aux États-Unis" : "États-Unis · France", sc.debut);
+  if (k === 7) add(`<div class="fin" style="top:1220px;font:800 66px/1.1 B;color:#fff;opacity:${e3((u - .3) / .3)}">Ce que contient vraiment<br>votre ETF</div><div class="fin" style="top:1420px"><span style="display:inline-block;background:#FFE14D;color:#111;font:800 58px B;padding:10px 30px;border-radius:16px;border:3px solid #111;transform:scale(${back((u - .8) / .35).toFixed(3)})">enklair.com</span></div>`);
+  add(`<div class="src">MSCI World, composition au 31 août 2026 (SEC, formulaire N-PORT). Information, pas un conseil.</div>`);
+  // ---- sous-titres ----
+  const cur = TL.mots.filter(m => m.a <= t + .02).pop();
+  if (cur && t < cur.b + .7 && k !== 7) { const Pq = TL.mots.filter(m => m.p === cur.p); add(`<div id="sous"><div>${Pq.map(m => `<span class="${m === cur ? "on" : m.a <= t ? "dit" : ""} ${m.cle ? "cle" : ""}">${m.m}</span>`).join(" ")}</div></div>`); }
+  UI.innerHTML = h;
+  // flash bref à chaque changement de scène, et un clin à chaque coupe
+  window.__coupe = window.__coupe || {}; const cle = k + ":" + coupe; if (!(cle in window.__coupe)) window.__coupe[cle] = t;
+  const fl = k > 1 && u < .12 ? (1 - u / .12) * .55 : 0; FL.style.opacity = fl.toFixed(3);
+  comp.render(); return k;
+};
+window.DUREE = TL.duree; window.pret = true;
+</script></body></html>
