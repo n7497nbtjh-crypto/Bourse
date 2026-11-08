@@ -3,7 +3,8 @@
    Réservée au compte propriétaire (variable Cloudflare PROPRIETAIRES) : pour les autres, la page dit seulement qu'elle est privée. */
 function etatPage() {
   setTitle("État du site"); setNav("esp");
-  app.innerHTML = `<div class="ek ek-page r8 et8"><div class="r8-w"><p class="crumbs"><a href="/espace">Mon espace</a> › État du site</p><div id="et8"><div class="empty">Chargement…</div></div></div></div>`;
+  app.innerHTML = `<div class="ek ek-page r8 et8"><div class="r8-w"><p class="crumbs"><a href="/espace">Mon espace</a> › État du site</p><div id="et8s"></div><div id="et8"><div class="empty">Chargement…</div></div></div></div>`;
+  etatStats();
   fetch("/api/espace/etat").then(r => r.json()).then(j => {
     const el = $("#et8");
     if (j.error) { el.innerHTML = `<div class="r8-card r8-box"><h2>Page privée</h2><p>${esc(j.error)}</p></div>`; return; }
@@ -61,3 +62,29 @@ function etatHTML(e) {
     <p class="r8-fin">Relevé par le robot « État du site » chaque matin à 7 h (heure de Paris). Les chiffres des comptes et des paiements viennent du serveur, en lecture seule ; aucune clé n'est manipulée.</p>`;
 }
 ROUTES_EXTRA.push([/^\/espace\/etat$/, () => etatPage()]);
+
+/* 8/11 : fréquentation du site (GET /api/espace/stats, propriétaire) : en ce moment, aujourd'hui, 30 jours, d'où viennent les gens, pages vues */
+const ST8_NOMS = { direct: "Accès direct", tiktok: "TikTok", instagram: "Instagram", facebook: "Facebook", x: "X", youtube: "YouTube", linkedin: "LinkedIn", reddit: "Reddit", snapchat: "Snapchat", google: "Google", bing: "Bing", duckduckgo: "DuckDuckGo", qwant: "Qwant", ecosia: "Ecosia", yahoo: "Yahoo", chatgpt: "ChatGPT", perplexity: "Perplexity", claude: "Claude", "autre site": "Autre site" };
+function etatStats() {
+  const el = $("#et8s"); if (!el) return;
+  fetch("/api/espace/stats").then(r => r.json()).then(S => {
+    if (!$("#et8s")) return; if (S.error) { el.innerHTML = ""; return; }
+    const barres = (v, lab, cls = "") => { const mx = Math.max(1, ...v); return `<div class="st8-b ${cls}">${v.map((n, i) => `<i style="height:${Math.max(n ? 6 : 2, n / mx * 100).toFixed(0)}%" title="${esc(lab(i, n))}"></i>`).join("")}</div>`; };
+    const liste = (L, nom) => { const mx = Math.max(1, ...L.map(x => x[1])); return L.length ? L.map(([k, n]) => `<div class="st8-l"><span>${esc(nom(k))}</span><div><i style="width:${(n / mx * 100).toFixed(0)}%"></i></div><b>${F0.format(n)}</b></div>`).join("") : `<p class="st8-v">Rien encore.</p>`; };
+    const J = S.jours || [], j7 = J.slice(-7), som = (a, k) => a.reduce((t, x) => t + x[k], 0), A = S.aujourdhui || {};
+    const jl = i => { const d = new Date(J[i].jour + "T12:00:00Z"); return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" }); };
+    el.innerHTML = `<section class="st8"><span class="r8-tag">Fréquentation</span><h2>Qui est sur le site.</h2>
+      <div class="st8-top">
+        <div class="r8-card st8-live"><span class="k"><em class="st8-pt"></em>En ce moment</span><div class="v">${F0.format(S.direct || 0)}</div><p>${(S.direct || 0) > 1 ? "personnes sur le site" : "personne sur le site"}</p>${barres(S.courbe || [], (i, n) => `il y a ${60 - i} min : ${n}`, "live")}<p class="st8-ax"><span>il y a 1 h</span><span>maintenant</span></p></div>
+        <div class="r8-card st8-c"><span class="k">Aujourd'hui</span><div class="v">${F0.format(A.visites || 0)}</div><p>visites · ${F0.format(A.pages || 0)} pages vues</p>${barres(A.heures || [], (h, n) => `${h} h : ${n} visite${n > 1 ? "s" : ""}`)}<p class="st8-ax"><span>0 h</span><span>12 h</span><span>23 h</span></p></div>
+        <div class="r8-card st8-c"><span class="k">7 derniers jours</span><div class="v">${F0.format(som(j7, "visites"))}</div><p>visites · ${F0.format(som(j7, "pages"))} pages vues</p>${barres(J.map(x => x.visites), (i, n) => `${jl(i)} : ${n} visite${n > 1 ? "s" : ""}`)}<p class="st8-ax"><span>il y a 30 jours</span><span>aujourd'hui</span></p></div>
+      </div>
+      <div class="st8-g">
+        <div class="r8-card r8-box"><h3 class="st8-h">D'où viennent les visiteurs</h3><p class="st8-s">Aujourd'hui</p>${liste((S.sources || {}).jour || [], k => ST8_NOMS[k] || k)}<p class="st8-s">7 derniers jours</p>${liste((S.sources || {}).sept || [], k => ST8_NOMS[k] || k)}
+          <p class="st8-n">Pour reconnaître un réseau, mettez dans votre bio un lien comme <b>enklair.com/?src=tiktok</b> : les visites arrivent alors sous ce nom.</p></div>
+        <div class="r8-card r8-box"><h3 class="st8-h">Pages les plus vues</h3><p class="st8-s">7 derniers jours</p>${liste((S.pages || {}).sept || [], k => k === "/" ? "Accueil" : k)}</div>
+      </div>
+      <p class="st8-n">Compté par le site lui-même : ni cookie, ni adresse IP, ni identifiant. Les robots ne sont pas comptés. « En ce moment » : onglets ouverts et visibles dans les deux dernières minutes.</p></section>`;
+    clearTimeout(window.__st8); window.__st8 = setTimeout(() => { if (location.pathname === "/espace/etat") etatStats(); }, 30000);
+  }).catch(() => { });
+}

@@ -146,3 +146,19 @@ if (navSimAvant) window.pageSim = function (tool) {
 navRemplir();
 document.addEventListener("click", e => { if (e.target.closest(".mp-x") && typeof closePanels === "function") closePanels(); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && typeof closePanels === "function" && document.getElementById("mpanel") && document.getElementById("mpanel").classList.contains("open")) closePanels(); });
+/* 8/11 : fréquentation (page État du site). Une ligne par page vue et, onglet visible, un signal par minute.
+   Aucun cookie ni identifiant : « nouveau » dit seulement si c'est la première page de cet onglet. */
+(function () {
+  if (navigator.webdriver) return;
+  let der = "", t = null;
+  const env = o => { try { fetch("/api/espace/v", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(o), keepalive: true, credentials: "omit" }).catch(() => { }); } catch (e) { } };
+  const pv = () => { clearTimeout(t); t = setTimeout(() => {
+    const p = location.pathname; if (p === der) return; der = p;
+    let nouveau = false; try { nouveau = !sessionStorage.getItem("bilan.vu"); sessionStorage.setItem("bilan.vu", "1"); } catch (e) { }
+    const q = new URLSearchParams(location.search);
+    env({ t: "pv", p, nouveau, src: q.get("src") || q.get("utm_source") || "", ref: nouveau ? document.referrer || "" : "" });
+  }, 400); };
+  const hp = history.pushState; history.pushState = function () { const r = hp.apply(this, arguments); pv(); return r; };
+  addEventListener("popstate", pv); pv(); env({ t: "ping" });
+  setInterval(() => { if (document.visibilityState === "visible") env({ t: "ping" }); }, 60000);
+})();

@@ -294,3 +294,5 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - 8/11 14h30 : rapport, encadrés empilés (Pourquoi, Presse, Rivales) ; rivales : axe centré sur la médiane, rouge sous 0 %, vert au-dessus ; en-tête sans petits indicateurs ; barre de l entreprise en jaune ; exemple : etf8 ajouté (calculé pour la même semaine du 2 au 6/11, même portefeuille).
 
 - 8/11 15h40 : e-mail « rapport prêt » refait aux couleurs d ENKLAIR (`mailRapport` d espace.mjs, maquette email-rapport-v1.html) : objet avec le résultat, ce qui a le plus rapporté et coûté, prochaine date, bouton vers /espace/bilan. Aucun envoi de test.
+
+- 8/11 16h30 : **fréquentation** sur la page État du site (propriétaire) : en ce moment (signal par minute des onglets visibles, table `presence`), visites et pages du jour par heure, 30 jours, sources (?src=, utm_source ou site d origine), pages les plus vues (table `stats_jour`). Envoi par m/nav.js (POST /api/espace/v), lecture GET /api/espace/stats. Ni cookie ni IP ni identifiant ; robots exclus. Page confidentialité mise à jour.

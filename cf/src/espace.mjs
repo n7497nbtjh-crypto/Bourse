@@ -28,6 +28,8 @@ const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS etat (cle TEXT PRIMARY KEY, val TEXT NOT NULL)`,
   `CREATE TABLE IF NOT EXISTS essais_premium (email TEXT PRIMARY KEY, compte TEXT NOT NULL, at INTEGER NOT NULL)`, // 5e passage (C) : un essai Premium de 14 jours par adresse, sans carte
   `CREATE TABLE IF NOT EXISTS compteurs (semaine TEXT NOT NULL, cle TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (semaine, cle))`, // 5e passage (E4) : tunnel, sans traceur ni donnée personnelle
+  `CREATE TABLE IF NOT EXISTS stats_jour (jour TEXT NOT NULL, cle TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, cle))`, // 8/11 : fréquentation jour par jour, sans identifiant
+  `CREATE TABLE IF NOT EXISTS presence (minute INTEGER PRIMARY KEY, n INTEGER NOT NULL)`, // 8/11 : pages ouvertes en ce moment (un signal par minute et par onglet visible, rien d'autre)
   `CREATE TABLE IF NOT EXISTS mcp_cles (cle TEXT PRIMARY KEY, compte TEXT NOT NULL UNIQUE, created INTEGER NOT NULL)`, // 5e passage (C) : adresse personnelle du connecteur // 5e passage : dernier passage du robot (alertes, bilans), pour que le site dise « bientôt » tant qu'il n'a jamais tourné
 ];
 async function robotEtat(env) { // { alertes: "2026-10-31" | null, bilans: ... } : date (Paris) du dernier passage réel du robot, lue par le site
@@ -305,6 +307,8 @@ export async function espace(request, env) {
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
   if (path === "/api/espace/mesures" && m === "GET") return mesures(request, env);
+  if (path === "/api/espace/v" && m === "POST") return visite(request, env);
+  if (path === "/api/espace/stats" && m === "GET") { const p = await premiumOf(request, env); if (!p || p.plan !== "proprietaire") return json({ error: "Réservé au propriétaire du site." }, 403); return json(await statsSite(env)); }
   // 7/11 : état du site, calculé chaque matin par le robot (scripts/etat-site.mjs), gardé 35 jours, lu par le compte propriétaire seulement
   if (path === "/api/espace/etat" && m === "POST") {
     if (!adminOk(request, env)) return json({ error: "Non autorisé." }, 403);
@@ -524,6 +528,47 @@ async function notifier(env, compteId, type, texte, lien, jour, extra = "") {
   const r = await env.DB.prepare(`INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)`).bind(compteId, Date.now(), type, texte.slice(0, 400), lien, [type, lien, jour, extra].join("|").slice(0, 500)).run();
   return (r && r.meta && r.meta.changes) || 0;
 }
+/* ---------- 8/11 : fréquentation du site, pour la page État du site (propriétaire) ----------
+   Le navigateur envoie une ligne par page vue (type de page, source de la visite) et, tant que l'onglet est visible, un signal par minute.
+   Rien ne permet de reconnaître quelqu'un : ni adresse IP, ni cookie, ni identifiant ; seulement des totaux par jour et par minute. */
+const SOURCES = [["tiktok", /tiktok/], ["instagram", /instagram/], ["facebook", /facebook|fb\.me/], ["x", /(^|\.)x\.com$|twitter|t\.co$/], ["youtube", /youtube|youtu\.be/], ["linkedin", /linkedin|lnkd/], ["reddit", /reddit/], ["snapchat", /snapchat/],
+  ["google", /google\./], ["bing", /bing\./], ["duckduckgo", /duckduckgo/], ["qwant", /qwant/], ["ecosia", /ecosia/], ["yahoo", /yahoo\./], ["chatgpt", /chatgpt|openai/], ["perplexity", /perplexity/], ["claude", /claude\.ai/]];
+const heureParis = (t = Date.now()) => +(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "numeric", hourCycle: "h23" }).formatToParts(t).find(x => x.type === "hour") || { value: 0 }).value % 24;
+async function visite(request, env) {
+  const ua = request.headers.get("user-agent") || ""; if (/bot|crawl|spider|headless|lighthouse|preview|slurp|facebookexternalhit/i.test(ua)) return json({ ok: true });
+  const { b, err } = await lire(request); if (err) return json({ ok: false });
+  const now = Date.now(), minute = Math.floor(now / 60000);
+  try {
+    if (b.t === "ping") { await env.DB.prepare(`INSERT INTO presence (minute, n) VALUES (?, 1) ON CONFLICT (minute) DO UPDATE SET n = n + 1`).bind(minute).run(); return json({ ok: true }); }
+    if (b.t !== "pv") return json({ ok: false });
+    const jour = jourParis(now), h = heureParis(now), cles = ["pv", "h:" + h];
+    const pth = String(b.p || "/").toLowerCase().slice(0, 80); if (/^\/[a-z0-9\-\/]*$/.test(pth) && pth.split("/").length <= 4) cles.push("p:" + (pth.replace(/\/+$/, "") || "/"));
+    if (b.nouveau) { cles.push("visite", "hv:" + h);
+      let src = String(b.src || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20);
+      if (!src) { let host = ""; try { host = b.ref ? new URL(b.ref).hostname.replace(/^www\./, "") : ""; } catch (e) { } const hit = host && SOURCES.find(([, re]) => re.test(host));
+        src = !host ? "direct" : hit ? hit[0] : /enklair\.com$/.test(host) ? "direct" : "autre site"; }
+      cles.push("src:" + src); }
+    await env.DB.batch(cles.map(c => env.DB.prepare(`INSERT INTO stats_jour (jour, cle, n) VALUES (?, ?, 1) ON CONFLICT (jour, cle) DO UPDATE SET n = n + 1`).bind(jour, c)));
+    if (Math.random() < 0.01) { await env.DB.prepare(`DELETE FROM presence WHERE minute < ?`).bind(minute - 3 * 24 * 60).run(); await env.DB.prepare(`DELETE FROM stats_jour WHERE jour < ?`).bind(jourParis(now - 730 * JOUR)).run(); }
+  } catch (e) { try { await init(env.DB); } catch (x) { } }
+  return json({ ok: true });
+}
+export async function statsSite(env) {
+  const now = Date.now(), minute = Math.floor(now / 60000), auj = jourParis(now);
+  const P = ((await env.DB.prepare(`SELECT minute, n FROM presence WHERE minute > ?`).bind(minute - 24 * 60).all()).results || []);
+  const parMin = Object.fromEntries(P.map(r => [r.minute, r.n]));
+  // en ce moment : signaux des deux dernières minutes pleines (un par minute et par onglet visible)
+  const direct = Math.round(((parMin[minute - 1] || 0) + (parMin[minute - 2] || 0)) / 2) || (parMin[minute] || 0);
+  const courbe = []; for (let k = 59; k >= 0; k--) courbe.push(parMin[minute - k] || 0);
+  const debut = jourParis(now - 29 * JOUR), R = ((await env.DB.prepare(`SELECT jour, cle, n FROM stats_jour WHERE jour >= ?`).bind(debut).all()).results || []);
+  const J = {}; for (const r of R) (J[r.jour] = J[r.jour] || {})[r.cle] = r.n;
+  const jours = []; for (let k = 29; k >= 0; k--) { const j = jourParis(now - k * JOUR), o = J[j] || {}; jours.push({ jour: j, visites: o.visite || 0, pages: o.pv || 0 }); }
+  const somme = (js, pre) => { const t = {}; for (const j of js) for (const [c, n] of Object.entries(J[j] || {})) if (c.startsWith(pre)) t[c.slice(pre.length)] = (t[c.slice(pre.length)] || 0) + n; return Object.entries(t).sort((a, b) => b[1] - a[1]); };
+  const sept = jours.slice(-7).map(x => x.jour), A = J[auj] || {};
+  return { direct, courbe, aujourdhui: { visites: A.visite || 0, pages: A.pv || 0, heures: Array.from({ length: 24 }, (_, h) => A["hv:" + h] || 0) }, jours,
+    pages: { jour: somme([auj], "p:").slice(0, 12), sept: somme(sept, "p:").slice(0, 15) }, sources: { jour: somme([auj], "src:"), sept: somme(sept, "src:") } };
+}
+
 /* ---------- Tunnel (5e passage, E4) : des compteurs par semaine, sans cookie ni identifiant. ----------
    Le Worker compte les pages servies (visite, fiche, source : moteur ou X) ; le navigateur signale trois gestes (suivre une entreprise,
    voir l'aperçu d'une alerte Premium, ouvrir le rapport exemple) par /api/compteur ; le reste vient de la base (comptes, rapports, essais, Premium). */

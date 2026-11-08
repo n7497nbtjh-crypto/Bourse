@@ -2248,6 +2248,10 @@ var SCHEMA4 = [
   // 5e passage (C) : un essai Premium de 14 jours par adresse, sans carte
   "CREATE TABLE IF NOT EXISTS compteurs (semaine TEXT NOT NULL, cle TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (semaine, cle))",
   // 5e passage (E4) : tunnel, sans traceur ni donnée personnelle
+  "CREATE TABLE IF NOT EXISTS stats_jour (jour TEXT NOT NULL, cle TEXT NOT NULL, n INTEGER NOT NULL, PRIMARY KEY (jour, cle))",
+  // 8/11 : fréquentation jour par jour, sans identifiant
+  "CREATE TABLE IF NOT EXISTS presence (minute INTEGER PRIMARY KEY, n INTEGER NOT NULL)",
+  // 8/11 : pages ouvertes en ce moment (un signal par minute et par onglet visible, rien d'autre)
   "CREATE TABLE IF NOT EXISTS mcp_cles (cle TEXT PRIMARY KEY, compte TEXT NOT NULL UNIQUE, created INTEGER NOT NULL)"
   // 5e passage (C) : adresse personnelle du connecteur // 5e passage : dernier passage du robot (alertes, bilans), pour que le site dise « bientôt » tant qu'il n'a jamais tourné
 ];
@@ -2588,6 +2592,11 @@ async function espace(request, env) {
   }
   if (path === "/api/espace/tache" && m === "POST") return tache(request, env, url);
   if (path === "/api/espace/mesures" && m === "GET") return mesures(request, env);
+  if (path === "/api/espace/v" && m === "POST") return visite(request, env);
+  if (path === "/api/espace/stats" && m === "GET") {
+    let p = await premiumOf(request, env);
+    return !p || p.plan !== "proprietaire" ? json({ error: "R\xE9serv\xE9 au propri\xE9taire du site." }, 403) : json(await statsSite(env));
+  }
   if (path === "/api/espace/etat" && m === "POST") {
     if (!adminOk(request, env)) return json({ error: "Non autoris\xE9." }, 403);
     let { b, err: err2 } = await lire(request);
@@ -2799,6 +2808,83 @@ async function espace(request, env) {
 async function notifier(env, compteId, type, texte, lien2, jour2, extra = "") {
   let r = await env.DB.prepare("INSERT OR IGNORE INTO notifs (compte, at, type, texte, lien, cle) VALUES (?, ?, ?, ?, ?, ?)").bind(compteId, Date.now(), type, texte.slice(0, 400), lien2, [type, lien2, jour2, extra].join("|").slice(0, 500)).run();
   return r && r.meta && r.meta.changes || 0;
+}
+var SOURCES3 = [
+  ["tiktok", /tiktok/],
+  ["instagram", /instagram/],
+  ["facebook", /facebook|fb\.me/],
+  ["x", /(^|\.)x\.com$|twitter|t\.co$/],
+  ["youtube", /youtube|youtu\.be/],
+  ["linkedin", /linkedin|lnkd/],
+  ["reddit", /reddit/],
+  ["snapchat", /snapchat/],
+  ["google", /google\./],
+  ["bing", /bing\./],
+  ["duckduckgo", /duckduckgo/],
+  ["qwant", /qwant/],
+  ["ecosia", /ecosia/],
+  ["yahoo", /yahoo\./],
+  ["chatgpt", /chatgpt|openai/],
+  ["perplexity", /perplexity/],
+  ["claude", /claude\.ai/]
+], heureParis = (t = Date.now()) => +(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", hour: "numeric", hourCycle: "h23" }).formatToParts(t).find((x) => x.type === "hour") || { value: 0 }).value % 24;
+async function visite(request, env) {
+  let ua = request.headers.get("user-agent") || "";
+  if (/bot|crawl|spider|headless|lighthouse|preview|slurp|facebookexternalhit/i.test(ua)) return json({ ok: !0 });
+  let { b, err: err2 } = await lire(request);
+  if (err2) return json({ ok: !1 });
+  let now = Date.now(), minute = Math.floor(now / 6e4);
+  try {
+    if (b.t === "ping")
+      return await env.DB.prepare("INSERT INTO presence (minute, n) VALUES (?, 1) ON CONFLICT (minute) DO UPDATE SET n = n + 1").bind(minute).run(), json({ ok: !0 });
+    if (b.t !== "pv") return json({ ok: !1 });
+    let jour2 = jourParis(now), h = heureParis(now), cles = ["pv", "h:" + h], pth = String(b.p || "/").toLowerCase().slice(0, 80);
+    if (/^\/[a-z0-9\-\/]*$/.test(pth) && pth.split("/").length <= 4 && cles.push("p:" + (pth.replace(/\/+$/, "") || "/")), b.nouveau) {
+      cles.push("visite", "hv:" + h);
+      let src = String(b.src || "").toLowerCase().replace(/[^a-z0-9]/g, "").slice(0, 20);
+      if (!src) {
+        let host = "";
+        try {
+          host = b.ref ? new URL(b.ref).hostname.replace(/^www\./, "") : "";
+        } catch {
+        }
+        let hit = host && SOURCES3.find(([, re]) => re.test(host));
+        src = host ? hit ? hit[0] : /enklair\.com$/.test(host) ? "direct" : "autre site" : "direct";
+      }
+      cles.push("src:" + src);
+    }
+    await env.DB.batch(cles.map((c) => env.DB.prepare("INSERT INTO stats_jour (jour, cle, n) VALUES (?, ?, 1) ON CONFLICT (jour, cle) DO UPDATE SET n = n + 1").bind(jour2, c))), Math.random() < 0.01 && (await env.DB.prepare("DELETE FROM presence WHERE minute < ?").bind(minute - 3 * 24 * 60).run(), await env.DB.prepare("DELETE FROM stats_jour WHERE jour < ?").bind(jourParis(now - 730 * JOUR)).run());
+  } catch {
+    try {
+      await init4(env.DB);
+    } catch {
+    }
+  }
+  return json({ ok: !0 });
+}
+async function statsSite(env) {
+  let now = Date.now(), minute = Math.floor(now / 6e4), auj = jourParis(now), P = (await env.DB.prepare("SELECT minute, n FROM presence WHERE minute > ?").bind(minute - 24 * 60).all()).results || [], parMin = Object.fromEntries(P.map((r) => [r.minute, r.n])), direct = Math.round(((parMin[minute - 1] || 0) + (parMin[minute - 2] || 0)) / 2) || parMin[minute] || 0, courbe = [];
+  for (let k = 59; k >= 0; k--) courbe.push(parMin[minute - k] || 0);
+  let debut = jourParis(now - 29 * JOUR), R = (await env.DB.prepare("SELECT jour, cle, n FROM stats_jour WHERE jour >= ?").bind(debut).all()).results || [], J = {};
+  for (let r of R) (J[r.jour] = J[r.jour] || {})[r.cle] = r.n;
+  let jours = [];
+  for (let k = 29; k >= 0; k--) {
+    let j = jourParis(now - k * JOUR), o = J[j] || {};
+    jours.push({ jour: j, visites: o.visite || 0, pages: o.pv || 0 });
+  }
+  let somme = (js, pre) => {
+    let t = {};
+    for (let j of js) for (let [c, n] of Object.entries(J[j] || {})) c.startsWith(pre) && (t[c.slice(pre.length)] = (t[c.slice(pre.length)] || 0) + n);
+    return Object.entries(t).sort((a, b) => b[1] - a[1]);
+  }, sept = jours.slice(-7).map((x) => x.jour), A = J[auj] || {};
+  return {
+    direct,
+    courbe,
+    aujourdhui: { visites: A.visite || 0, pages: A.pv || 0, heures: Array.from({ length: 24 }, (_, h) => A["hv:" + h] || 0) },
+    jours,
+    pages: { jour: somme([auj], "p:").slice(0, 12), sept: somme(sept, "p:").slice(0, 15) },
+    sources: { jour: somme([auj], "src:"), sept: somme(sept, "src:") }
+  };
 }
 var COMPTEURS_OK = /* @__PURE__ */ new Set(["visite", "fiche", "src:moteur", "src:x", "src:autre", "suivre", "apercu-alerte", "rapport-exemple", "premium-vue", "fiche-verrou"]);
 async function compterEvt(env, cles) {
@@ -3810,7 +3896,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "a0b5094067655d4a", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "1dd506e1cb4d65fc", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
