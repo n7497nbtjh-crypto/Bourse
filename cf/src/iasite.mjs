@@ -194,7 +194,7 @@ function frCorrige(t) {
 const DOM = "[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.(?:com|fr|de|es|it|net|org|ch|be|ca|uk|ru|au|in|jp|nl|info|news|co)\\b";
 function sansMedia(t) {
   return String(t || "")
-    .replace(new RegExp("\\s*,?\\s*(?:selon|d['’]après|comme (?:le rapporte|l'indique|indiqué par|rapporté par))\\s+(?:le site\\s+|le média\\s+)?" + DOM + "(?:\\s+et\\s+" + DOM + ")*", "gi"), "")
+    .replace(new RegExp("[ \\t]*,?[ \\t]*(?:selon|d['’]après|comme (?:le rapporte|l'indique|indiqué par|rapporté par))\\s+(?:le site\\s+|le média\\s+)?" + DOM + "(?:\\s+et\\s+" + DOM + ")*", "gi"), "")
     .replace(new RegExp("\\b(?:De plus,\\s*)?" + DOM + "(?:\\s+et\\s+" + DOM + ")*\\s+(?:rapporte|indique|écrit|souligne|précise|note|affirme|explique)\\s+que\\s+", "gi"), "")
     .replace(/\b(?:selon|d['’]après)\s+(?:le même média|la même source|ce (?:média|site|journal))\s*,?\s*/gi, "")
     .replace(/(^|[.!?]\s+|\n)\s*,\s*/g, "$1")
