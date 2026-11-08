@@ -1,1 +1,207 @@
-{"parties": [{"scenes": [{"type": "nom", "texte": "Nvidia.", "dur": 0.483}, {"type": "nom", "texte": "LVMH.", "dur": 0.483}, {"type": "nom", "texte": "Hermès.", "dur": 0.483}, {"type": "nom", "texte": "TotalEnergies.", "dur": 0.483}, {"type": "nom", "texte": "Airbus.", "dur": 0.483}, {"type": "nom", "texte": "Apple.", "dur": 0.483}, {"type": "titre", "dur": 1.25, "lignes": ["Comprenez-les", "vraiment."]}]}, {"orig": [4.17, 7.07]}, {"scenes": [{"type": "plan", "dur": 3.4, "blocs": [{"id": "fiche-0", "at": 0}, {"id": "fiche-1", "at": 0.1, "gap": 30}, {"id": "fiche-2", "at": 0.25, "gap": 30}, {"id": "fiche-3", "at": 1.0, "gap": 20}], "fond": [255, 225, 77]}, {"type": "titre", "dur": 1.0, "lignes": ["Face à", "ses rivales."]}, {"type": "plan", "dur": 3.0, "blocs": [{"id": "marge-0", "at": 0}, {"id": "marge-1", "at": 0.12, "gap": 36}]}, {"type": "titre", "dur": 1.0, "lignes": ["Les résultats", "de la semaine."]}, {"type": "plan", "dur": 2.4, "blocs": [{"id": "agenda-0", "at": 0}, {"id": "agenda-1", "at": 0.1, "gap": 36}]}, {"type": "titre", "dur": 1.0, "lignes": ["Chaque samedi,", "votre rapport."], "premium": true}, {"type": "plan", "dur": 3.0, "blocs": [{"id": "monde-0", "at": 0}, {"id": "monde-1", "at": 0.15, "gap": 30}, {"id": "monde-2", "at": 0.45, "gap": 22}, {"id": "monde-3", "at": 0.75, "gap": 22}]}, {"type": "plan", "dur": 3.6, "blocs": [{"id": "pq1-0", "at": 0}, {"id": "pq1-1", "at": 0.12, "gap": 26}, {"id": "pq1-2", "at": 0.55, "gap": 26}]}, {"type": "plan", "dur": 4.4, "blocs": [{"id": "pq2-0", "at": 0}]}]}, {"orig": [22.62, null]}]}
+{
+ "parties": [
+  {
+   "scenes": [
+    {
+     "type": "nom",
+     "texte": "Nvidia.",
+     "dur": 0.483
+    },
+    {
+     "type": "nom",
+     "texte": "LVMH.",
+     "dur": 0.483
+    },
+    {
+     "type": "nom",
+     "texte": "Hermès.",
+     "dur": 0.483
+    },
+    {
+     "type": "nom",
+     "texte": "TotalEnergies.",
+     "dur": 0.483
+    },
+    {
+     "type": "nom",
+     "texte": "Airbus.",
+     "dur": 0.483
+    },
+    {
+     "type": "nom",
+     "texte": "Apple.",
+     "dur": 0.483
+    },
+    {
+     "type": "titre",
+     "dur": 1.25,
+     "lignes": [
+      "Comprenez-les",
+      "vraiment."
+     ]
+    }
+   ]
+  },
+  {
+   "orig": [
+    4.17,
+    7.07
+   ]
+  },
+  {
+   "scenes": [
+    {
+     "type": "plan",
+     "dur": 3.4,
+     "blocs": [
+      {
+       "id": "fiche-0",
+       "at": 0
+      },
+      {
+       "id": "fiche-1",
+       "at": 0.1,
+       "gap": 30
+      },
+      {
+       "id": "fiche-2",
+       "at": 0.25,
+       "gap": 30
+      },
+      {
+       "id": "fiche-3",
+       "at": 1.0,
+       "gap": 20
+      }
+     ],
+     "fond": [
+      255,
+      225,
+      77
+     ]
+    },
+    {
+     "type": "titre",
+     "dur": 1.0,
+     "lignes": [
+      "Face à",
+      "ses rivales."
+     ]
+    },
+    {
+     "type": "plan",
+     "dur": 3.0,
+     "blocs": [
+      {
+       "id": "marge-0",
+       "at": 0
+      },
+      {
+       "id": "marge-1",
+       "at": 0.12,
+       "gap": 36
+      }
+     ]
+    },
+    {
+     "type": "titre",
+     "dur": 1.0,
+     "lignes": [
+      "Les résultats",
+      "de la semaine."
+     ]
+    },
+    {
+     "type": "plan",
+     "dur": 2.4,
+     "blocs": [
+      {
+       "id": "agenda-0",
+       "at": 0
+      },
+      {
+       "id": "agenda-1",
+       "at": 0.1,
+       "gap": 36
+      }
+     ]
+    },
+    {
+     "type": "titre",
+     "dur": 1.0,
+     "lignes": [
+      "Chaque samedi,",
+      "votre rapport."
+     ],
+     "premium": true
+    },
+    {
+     "type": "plan",
+     "dur": 3.0,
+     "blocs": [
+      {
+       "id": "monde-0",
+       "at": 0
+      },
+      {
+       "id": "monde-1",
+       "at": 0.15,
+       "gap": 30
+      },
+      {
+       "id": "monde-2",
+       "at": 0.45,
+       "gap": 22
+      },
+      {
+       "id": "monde-3",
+       "at": 0.75,
+       "gap": 22
+      }
+     ]
+    },
+    {
+     "type": "plan",
+     "dur": 1.6,
+     "blocs": [
+      {
+       "id": "pq1-0",
+       "at": 0
+      },
+      {
+       "id": "pq1-1",
+       "at": 0.12,
+       "gap": 26
+      }
+     ]
+    },
+    {
+     "type": "plan",
+     "dur": 2.6,
+     "blocs": [
+      {
+       "id": "pq1-2",
+       "at": 0
+      }
+     ]
+    },
+    {
+     "type": "plan",
+     "dur": 3.8,
+     "blocs": [
+      {
+       "id": "pq2-0",
+       "at": 0
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "orig": [
+    22.62,
+    null
+   ]
+  }
+ ]
+}
