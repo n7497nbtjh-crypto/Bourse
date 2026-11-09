@@ -37,7 +37,7 @@ function elFiltrer(S) {
   let l = ETF.list.filter(e => (!S.cat || e.categorie === S.cat) && (!S.em || e.issuer === S.em) && (!S.dist || e.distribution === S.dist)
     && (!S.f.has("pea") || e.pea === true) && (!S.f.has("capi") || e.distribution === "capitalisation") && (!S.f.has("fr20") || (e.ter != null && e.ter <= 0.2 + 1e-9))
     && (S.fr == null || (e.ter != null && e.ter <= S.fr + 1e-9)) && (!S.f.has("gros") || (e.encours || 0) >= 1000) && (!S.f.has("phys") || e.replication === "physique"));
-  if (t) l = l.filter(e => e.isin === tk || e.ticker === tk || (e.cotations || []).some(c => c.ticker === tk) || t.split(/\s+/).every(w => norm(e.name + " " + (e.index || "") + " " + e.issuer + " " + (ECAT[e.categorie] || "") + " " + (e.ticker || "")).includes(w)));
+  if (t) l = l.filter(e => e.isin === tk || e.ticker === tk || (e.cotations || []).some(c => c.ticker === tk) || (() => { const h = norm(e.name + " " + (e.index || "") + " " + e.issuer + " " + (ECAT[e.categorie] || "") + " " + (e.ticker || "")), hc = h.replace(/[^a-z0-9]/g, ""); return t.split(/\s+/).every(w => h.includes(w) || (w.replace(/[^a-z0-9]/g, "").length >= 3 && hc.includes(w.replace(/[^a-z0-9]/g, "")))); })()); // 9/11 : « sp500 » trouve « S&P 500 »
   const P = (EL.perf && EL.perf.items) || {}, a1 = e => P[e.id] && P[e.id].a1 != null ? P[e.id].a1 : -9;
   const by = { taille: (a, b) => (b.encours || 0) - (a.encours || 0), frais: (a, b) => (a.ter ?? 9) - (b.ter ?? 9) || (b.encours || 0) - (a.encours || 0), perf: (a, b) => a1(b) - a1(a) || (b.encours || 0) - (a.encours || 0), nom: (a, b) => a.name.localeCompare(b.name, "fr") }[S.tri];
   return elFonds(l.sort(by));
