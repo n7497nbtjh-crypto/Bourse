@@ -196,7 +196,7 @@ function e4Frais(x) {
   const parTer = [...x.same].sort((a, b) => a.ter - b.ter), L0 = cmpSame ? [...new Set([parTer[0], parTer[parTer.length - 1], ...x.same.slice(0, 5)])] : x.cat.slice(0, 6), L = [e, ...L0].sort((a, b) => a.ter - b.ter);
   const mx = Math.max(...L.map(r => r.ter), v ? v.m : 0) * 1.15, nice = f4Nice(mx);
   const vis = ekPoints({ titre: "Frais courants par an", unite: cmpSame ? `ETF qui suivent le ${e.index}` : "ETF de la même catégorie", basEstMieux: true, motBas: "moins cher", motHaut: "plus cher",
-    lignes: L.map(r => ({ nom: e4SansIdx(r, cmpSame && e.index), v: r.ter, texte: e4P(r.ter, 2), moi: r.id === e.id })), mediane: v ? v.m : f4Med(L.map(r => r.ter)), mediane_label: `médiane ${e4P(v ? v.m : f4Med(L.map(r => r.ter)), 2)}`,
+    lignes: L.map(r => ({ nom: e4SansIdx(r, cmpSame && e.index), v: r.ter, texte: e4P(r.ter, 2), moi: r.id === e.id, href: "/etf/" + r.id })), mediane: v ? v.m : f4Med(L.map(r => r.ter)), mediane_label: `médiane ${e4P(v ? v.m : f4Med(L.map(r => r.ter)), 2)}`,
     max: nice.max, graduations: [0, nice.max / 2, nice.max], fmtAxe: t => ekFr(t, 2) + " %", indice: `À gauche du pointillé (zone verte), l'ETF coûte moins que la médiane des ${F0.format(ETF_peers(e).length)} ETF « ${esc(ECAT[e.categorie] || "de sa catégorie")} » suivis par le site.`, source: { texte: "Fiches des émetteurs" } });
   const same = x.same.filter(s => s.ter != null), bas = same.length ? same.reduce((a, b) => b.ter < a.ter ? b : a) : null, haut = same.length ? same.reduce((a, b) => b.ter > a.ter ? b : a) : null;
   const cout = t => ETF_cout(t, 20).cout, ligne = (t, s, val, cl) => `<div><span><b>${t}</b><small>${s}</small></span><em class="${cl}">${eur(val, 0)}</em></div>`;

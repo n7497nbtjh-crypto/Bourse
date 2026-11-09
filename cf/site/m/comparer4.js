@@ -87,7 +87,7 @@ function cxVerdict(F, R5) {
 // ——— En-tête ———
 function cxCarte(x, ids) {
   const s = x.s, p = typeof pxOf === "function" ? pxOf(s) : null;
-  return `<div class="cx-co"><a class="x" href="${cxUrl(ids.filter(i => i !== s.id))}" aria-label="Retirer ${esc(s.name)}">✕</a><div class="t">${cxLogo(s)}<div><b class="n">${esc(s.name)}</b><small>${esc([secName(s), regName(s)].filter(Boolean).join(" · "))}</small></div></div>
+  return `<div class="cx-co"><a class="x" href="${cxUrl(ids.filter(i => i !== s.id))}" aria-label="Retirer ${esc(s.name)}">✕</a><div class="t">${cxLogo(s)}<div><a class="n" href="/entreprise/${esc(s.id)}"><b>${esc(s.name)}</b></a><small>${esc([secName(s), regName(s)].filter(Boolean).join(" · "))}</small></div></div>
     ${p && p.p > 0 ? `<div class="px">${esc(pxFmt(p.p, p.cur))}${p.chg != null ? `<span style="color:${p.chg > 0 ? EK_G : p.chg < 0 ? EK_R : "#555"}">${p.chg > 0 ? "+" : ""}${cxFr(p.chg, 2)} %</span>` : ""}</div>` : `<div class="px cx-nopx">cours non disponible</div>`}
     <a class="go" href="/entreprise/${esc(s.id)}">Voir sa fiche →</a></div>`;
 }
@@ -184,7 +184,7 @@ function cxTableau(F, MD) {
     const b = r[3] > 0 ? Math.max(...vals) : Math.min(...vals), w = r[3] > 0 ? Math.min(...vals) : Math.max(...vals);
     return `<td class="${v === b ? "cx-b" : v === w ? "cx-w" : ""}">${v === b ? "<i>▲</i>" : v === w ? "<i>▼</i>" : ""}${txt}</td>`; };
   const devises = [...new Set(F.map(x => x.s.currency))];
-  return `<div class="ek-tc ek-tc-l"><p class="cx-sw">Faites glisser le tableau vers la gauche →</p><div class="scroll-x"><table class="ek-tt ek-tt-r cx-tt"><thead><tr><th></th>${F.map(x => `<th><span class="ek-nm">${cxLogo(x.s, "cx-lgs")}${esc(x.nom)}</span></th>`).join("")}<th>médiane secteur</th></tr></thead><tbody>${L.map(r => r.length === 1 ? `<tr class="cx-grp"><th colspan="${F.length + 2}">${esc(r[0])}</th></tr>` : `<tr><th>${esc(r[0])}</th>${F.map(x => cell(r, x)).join("")}<td class="m">${esc(fmtMed(r, r[4]))}</td></tr>`).join("")}</tbody></table></div>
+  return `<div class="ek-tc ek-tc-l"><p class="cx-sw">Faites glisser le tableau vers la gauche →</p><div class="scroll-x"><table class="ek-tt ek-tt-r cx-tt"><thead><tr><th></th>${F.map(x => `<th><span class="ek-nm">${cxLogo(x.s, "cx-lgs")}<a href="/entreprise/${esc(x.s.id)}">${esc(x.nom)}</a></span></th>`).join("")}<th>médiane secteur</th></tr></thead><tbody>${L.map(r => r.length === 1 ? `<tr class="cx-grp"><th colspan="${F.length + 2}">${esc(r[0])}</th></tr>` : `<tr><th>${esc(r[0])}</th>${F.map(x => cell(r, x)).join("")}<td class="m">${esc(fmtMed(r, r[4]))}</td></tr>`).join("")}</tbody></table></div>
     <p class="ek-tn"><span class="cx-lg2"><i class="cx-lb">▲</i>la meilleure de la ligne</span><span class="cx-lg2"><i class="cx-lw">▼</i>la moins bonne</span>Les montants (ventes, bénéfice…) ne sont pas classés : plus gros ne veut pas dire mieux. Derniers exercices clos${devises.length > 1 ? `, chacun dans sa devise (${esc(devises.join(", "))})` : `, en ${esc(devises[0] || "")}`}. <button type="button" class="ek-lk" data-cx-csv>Télécharger le tableau (CSV)</button></p></div>`;
 }
 

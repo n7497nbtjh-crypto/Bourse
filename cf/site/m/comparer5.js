@@ -80,7 +80,7 @@ function O2_rcAfficher(D) {
   const lignesN = F.map((f, i) => (comps[i] && comps[i].lines) || (E[i].compo && E[i].compo.n) || (f.isins || []).length);
   const sec1 = (F[0].sectors || [])[0] ? (F[0].sectors || [])[0][0] : "it";
   const perfDate = perf.filter(Boolean).map(x => x.asOf).sort().at(-1);
-  const face = `<div class="ce5-card"><table class="ce5-ff"><tr><th></th>${E.map((e, i) => `<th><span class="sq" style="background:${O2_RC[i]}"></span>${esc(ce5Nom(e))}</th>`).join("")}</tr>
+  const face = `<div class="ce5-card"><table class="ce5-ff"><tr><th></th>${E.map((e, i) => `<th><span class="sq" style="background:${O2_RC[i]}"></span><a href="/etf/${esc(e.id)}">${esc(ce5Nom(e))}</a></th>`).join("")}</tr>
     ${lig("Entreprises", "", lignesN, x => F0.format(x), "haut")}
     ${lig("Poids des 10 plus grosses", "plus c'est haut, plus c'est concentré", X.seuls.map(z => z.top10), x => O2_p(x, 0, false), "bas")}
     ${lig(esc(lib(sec1)), "le premier secteur", F.map(f => secW(f, sec1)), x => O2_p(x, 0, false), null)}

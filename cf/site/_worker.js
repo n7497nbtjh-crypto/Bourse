@@ -1122,7 +1122,7 @@ function presseFidele(txt, lus) {
 `);
 }
 function frCorrige(t) {
-  return String(t || "").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge").replace(/\b(un|le|ce|du) marge\b/gi, (m, d) => ({ un: "une", le: "la", ce: "cette", du: "de la" })[d.toLowerCase()] + " marge").replace(/\b(marges?(?: brutes?| nettes?| opérationnelles?)?)\s+(inférieur|supérieur|élevé|faible|stable|réduit|bas|haut)(s?)\b/gi, (m, n, a, pl) => n + " " + (a === "faible" || a === "stable" ? a : a.replace(/eur$/, "eure").replace(/é$/, "\xE9e").replace(/t$/, "te").replace(/bas$/, "basse").replace(/haut$/, "haute")) + (/s$/.test(n) ? "s" : "")).replace(/\bdes chips\b/g, "des puces").replace(/\bchips\b/g, "puces").replace(/\s+%/g, "\xA0%");
+  return String(t || "").replace(/\bspionnage\b/gi, (m) => m[0] === "S" ? "Espionnage" : "espionnage").replace(/\bspion(ne)?s?\b/gi, (m) => (m[0] === "S" ? "E" : "e") + m.toLowerCase()).replace(/\b([dDlL])[ea] (espion\w*)/g, "$1'$2").replace(/\b([qQ])ue (espion\w*)/g, "$1u'$2").replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge").replace(/\b(un|le|ce|du) marge\b/gi, (m, d) => ({ un: "une", le: "la", ce: "cette", du: "de la" })[d.toLowerCase()] + " marge").replace(/\b(marges?(?: brutes?| nettes?| opérationnelles?)?)\s+(inférieur|supérieur|élevé|faible|stable|réduit|bas|haut)(s?)\b/gi, (m, n, a, pl) => n + " " + (a === "faible" || a === "stable" ? a : a.replace(/eur$/, "eure").replace(/é$/, "\xE9e").replace(/t$/, "te").replace(/bas$/, "basse").replace(/haut$/, "haute")) + (/s$/.test(n) ? "s" : "")).replace(/\bdes chips\b/g, "des puces").replace(/\bchips\b/g, "puces").replace(/\s+%/g, "\xA0%");
 }
 var DOM = "[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.(?:com|fr|de|es|it|net|org|ch|be|ca|uk|ru|au|in|jp|nl|info|news|co)\\b";
 function sansMedia(t) {
@@ -1196,11 +1196,28 @@ async function iaSite(request, env) {
     let epuise = nv !== "premium" && !siteOk(c2, P, 300);
     return json4({ disponible: !epuise && c2.questions < plafond, reste_visiteur: Math.max(0, plafond - c2.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine", neurones_jour: Math.round(c2.neurones), plafond_neurones_jour: P.neurones });
   }
-  if (url.pathname !== "/api/ia/rediger") return json4({ error: "Introuvable" }, 404);
-  if (request.method !== "POST") return json4({ error: "M\xE9thode non permise" }, 405);
-  if (!env.AI) return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment." }, 503);
+  let sante = url.pathname === "/api/ia/sante";
+  if (sante && env.DB) try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS ia_sante (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)").run();
+    let h0 = await env.DB.prepare("SELECT txt, at FROM ia_sante WHERE k = 'dernier' AND at > ?").bind(Date.now() - 20 * 6e4).first();
+    if (h0) return json4({ ...JSON.parse(h0.txt), garde: !0 });
+  } catch {
+  }
+  let santeFin = async (o) => {
+    if (o = { ...o, at: Date.now() }, env.DB) try {
+      await env.DB.prepare("INSERT OR REPLACE INTO ia_sante (k, txt, at) VALUES ('dernier', ?, ?)").bind(JSON.stringify(o), o.at).run();
+    } catch {
+    }
+    return json4(o);
+  };
+  if (url.pathname !== "/api/ia/rediger" && !sante) return json4({ error: "Introuvable" }, 404);
+  if (request.method !== "POST" && !sante) return json4({ error: "M\xE9thode non permise" }, 405);
+  if (!env.AI) return sante ? santeFin({ ok: !1, raison: "IA non branch\xE9e sur le serveur" }) : json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment." }, 503);
   let b;
-  try {
+  if (sante) b = { tache: "expliquer", user: `Faits : {}
+
+Question : En une phrase, qu'est-ce qu'une action ?`, max: 150 };
+  else try {
     b = await request.json();
   } catch {
     return json4({ error: "Requ\xEAte illisible" }, 400);
@@ -1210,21 +1227,24 @@ async function iaSite(request, env) {
   let user = String(b.user || "").slice(0, 9e3), max = Math.min(Math.max(+b.max || 450, 150), 500);
   if (user.length < 3) return json4({ error: "Question vide" }, 400);
   let c = await compteurs(env, h, per);
-  if (c.erreur) return json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
-  if (c.questions >= plafond) return json4({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez pos\xE9 ${plafond} questions \xE0 l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.` : `Vous avez pos\xE9 vos ${plafond} questions \xE0 l'IA de la semaine. Elles reviennent lundi ; avec Premium, vous en avez ${P.questions.premium} par jour. Les r\xE9ponses calcul\xE9es restent disponibles.` }, 429);
-  let messages = [{ role: "system", content: sys }, { role: "user", content: user }], k = await empreinte(b.tache + "|" + max + "|" + user);
-  try {
+  if (c.erreur) return sante ? santeFin({ ok: !1, raison: "compteur illisible : " + (c.detail || "") }) : json4({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
+  if (!sante && c.questions >= plafond) return json4({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez pos\xE9 ${plafond} questions \xE0 l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.` : `Vous avez pos\xE9 vos ${plafond} questions \xE0 l'IA de la semaine. Elles reviennent lundi ; avec Premium, vous en avez ${P.questions.premium} par jour. Les r\xE9ponses calcul\xE9es restent disponibles.` }, 429);
+  let messages = [{ role: "system", content: sys }, { role: "user", content: user }], k = await empreinte(b.tache + "|" + max + "|" + user), t0 = Date.now(), derniere = "";
+  if (!sante) try {
     let hit = await env.DB.prepare("SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?").bind(k, Date.now() - 864e5).first();
     if (hit)
       return await compter(env, h, 0, per), await env.DB.prepare("UPDATE ia_cache SET n = n + 1 WHERE k = ?").bind(k).run(), await parNiveau(env, nv, 0), json4({ txt: hit.txt, modele: hit.modele, cache: !0 });
   } catch {
   }
-  for (let [model, cin, cout, nom] of modeles) {
+  for (let [model, cin, cout, nom] of MODELES) {
     let estime = (jetons(sys + user) * cin + max * cout) / 1e6;
-    if (!(nv !== "premium" && !siteOk(c, P, estime)))
+    if (!(nv !== "premium" && !sante && !siteOk(c, P, estime)))
       try {
         let msgs = model.includes("qwen3") ? [messages[0], { role: "user", content: user + `
 /no_think` }] : messages, out = await env.AI.run(model, { messages: msgs, max_tokens: max, temperature: 0.2 }), raw = out && (out.response || out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content), txt = nettoie(raw && typeof raw == "object" ? JSON.stringify(raw) : raw), u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+        if (sante)
+          return await env.DB.prepare("INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?").bind(jour(), reel, reel).run().catch(() => {
+          }), santeFin(txt.length > 15 ? { ok: !0, modele: nom, ms: Date.now() - t0, extrait: txt.slice(0, 90) } : { ok: !1, modele: nom, raison: "r\xE9ponse vide" });
         try {
           await compter(env, h, reel, per);
         } catch {
@@ -1237,16 +1257,17 @@ async function iaSite(request, env) {
           }
           return json4({ txt, modele: nom });
         }
-      } catch {
+      } catch (e) {
+        derniere = String(e && e.message || e).slice(0, 160);
       }
   }
-  return json4({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les r\xE9ponses calcul\xE9es restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain." }, 429);
+  return sante ? santeFin({ ok: !1, raison: derniere ? "tous les mod\xE8les ont \xE9chou\xE9 : " + derniere : "aucun mod\xE8le n'a r\xE9pondu" }) : json4({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les r\xE9ponses calcul\xE9es restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les r\xE9ponses calcul\xE9es restent disponibles, et l'IA revient demain." }, 429);
 }
 async function syntheseEntreprise(env, faits) {
   return await iaJSON(env, "syn4", CONSIGNES.semaine_entreprise, faits, 220, (x) => x && typeof x.clair == "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1"), change: String(x.change || "").replace(/—/g, ",") } : null);
 }
 var VAGUE = /en raison de|gr(â|a)ce (à|a) (la|ses|son|cette) publication|performances variables|guidance|(montrent|confirm\w*) (une|sa|la)|pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
-async function iaJSON(env, prefixe, sys, faits, max, valide, modeles2 = MODELES) {
+async function iaJSON(env, prefixe, sys, faits, max, valide, modeles = MODELES) {
   if (!env.AI || !env.DB || !sys) return null;
   let user = JSON.stringify(faits).slice(0, 14e3), k = await empreinte(prefixe + "|" + user);
   try {
@@ -1266,7 +1287,7 @@ async function iaJSON(env, prefixe, sys, faits, max, valide, modeles2 = MODELES)
   }
   let P = plafonds(env), c = await compteurs(env, "syn", jour()), repondu = !1;
   if (c.erreur) return null;
-  for (let [model, cin, cout, nom] of modeles2) {
+  for (let [model, cin, cout, nom] of modeles) {
     let estime = (jetons(sys + user) * cin + max * cout) / 1e6;
     if (!siteOk(c, P, estime)) return null;
     try {
@@ -1881,7 +1902,7 @@ async function mondeDe(env, d, n, lundi3, auj) {
       titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter((i) => Number.isInteger(i) && T[i]))].slice(0, 3),
       secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter((x) => x in secteurs).slice(0, 3),
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
-    })).map((s) => ({ ...s, titre: s.titre.replace(/^Le livre sterling/i, "La livre sterling"), fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
+    })).map((s) => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) })).map((s) => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
     return S2.length ? { sujets: S2 } : null;
   }, r = await iaJSON(env, "monde10|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
@@ -3020,6 +3041,37 @@ Pour ne plus recevoir ces e-mails : ${origin}/espace/reglages`, html), mails2++,
 async function rapportExemple(request, env, ctx) {
   return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
 }
+async function mondePublic(request, env) {
+  let auj = jourParis(), cle = "monde4|" + auj.slice(0, 10);
+  if (env.DB) try {
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)").run();
+    let h = await env.DB.prepare("SELECT txt, at FROM monde_pub WHERE k = ?").bind(cle).first();
+    if (h && Date.now() - h.at < 3 * 36e5) return json(JSON.parse(h.txt));
+  } catch {
+  }
+  let d = await siteData2(request, env), calc = async (decal) => {
+    let jour2 = decal ? addJ(auj, -((jourSemaine(auj) + 6) % 7) - 1) : auj, semaine = semaineIso(jour2), lundi3 = lundiDe(semaine), n = { indices: [], lignes: [] };
+    try {
+      n = faitsSynthese({ ...d, actu: {} }, { favoris: [], pf: null, rapport: { ...RAPPORT_DEFAUT, favoris: !1, portefeuille: !1, indices: ["cac40", "stoxx50", "sp500"] } }, semaine, { auj: jour2 }), n.lignes = [];
+    } catch {
+    }
+    let m = await mondeDe(env, d, n, lundi3, jour2).catch(() => null);
+    return !m || !(m.sujets || []).length ? null : (m.sujets.forEach((x) => {
+      x.chiffres = (x.chiffres || []).filter((c) => c.v != null && c.v !== 0);
+    }), { du: lundi3, au: addJ(lundi3, 6), jour: jour2, sujets: m.sujets, modele: m.modele || null });
+  }, out = null, cur = await calc(0);
+  if (cur && cur.sujets.length >= 6) out = { ...cur, genere: Date.now() };
+  else {
+    let prev = await calc(7);
+    cur ? out = { ...cur, genere: Date.now(), precedente: prev } : prev && (out = { ...prev, genere: Date.now(), semaine_passee: !0 });
+  }
+  if (!out) return json({ sujets: [], message: "Pas encore assez de titres cette semaine." });
+  if (env.DB) try {
+    await env.DB.prepare("INSERT OR REPLACE INTO monde_pub (k, txt, at) VALUES (?, ?, ?)").bind(cle, JSON.stringify(out), Date.now()).run();
+  } catch {
+  }
+  return json(out);
+}
 
 // cf/src/signaler.mjs
 var SCHEMA5 = [
@@ -3896,7 +3948,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "1dd506e1cb4d65fc", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "986d56e2d07a6096", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -4380,7 +4432,7 @@ function meta(path, q = null) {
   if (p === "/actualites") return { title: `Actualit\xE9 des entreprises \xB7 ${SITE}`, desc: "R\xE9sultats, dividendes, acquisitions et changements de dirigeants des entreprises suivies en France, en Europe et aux \xC9tats-Unis : annonces officielles class\xE9es, chiffr\xE9es et expliqu\xE9es, et titres de la presse." };
   if (p === "/agenda") return { title: `Agenda financier \xB7 ${SITE}`, desc: "Dates des r\xE9sultats, assembl\xE9es g\xE9n\xE9rales et dividendes des entreprises cot\xE9es, avec l'heure de publication quand la soci\xE9t\xE9 l'annonce, et les chiffres publi\xE9s ces derniers jours." };
   if (p === "/hier") return { title: `Ce qui s'est pass\xE9 hier : les r\xE9sultats publi\xE9s \xB7 ${SITE}`, desc: "Les r\xE9sultats publi\xE9s la veille par les entreprises suivies : chiffre d'affaires, r\xE9sultat, pr\xE9visions de la direction et lecture calcul\xE9e, d'apr\xE8s les communiqu\xE9s officiels." };
-  if (p === "/outils/recouvrement") return { title: `Mes ETF se recouvrent-ils ? \xB7 ${SITE}`, desc: "Positions communes et poids r\xE9ellement en double entre 2 \xE0 4 ETF, concentration du portefeuille combin\xE9, secteurs, pays et devises, d'apr\xE8s les compositions officielles." };
+  if (p === "/outils/recouvrement") return { title: `Comparer deux ETF \xB7 ${SITE}`, desc: "Deux ETF face \xE0 face : entreprises en commun, frais, performances publi\xE9es, plus grosses lignes et secteurs, d'apr\xE8s les compositions officielles." };
   if (p === "/outils/si-javais") return { title: `Et si j'avais investi ? \xB7 ${SITE}`, desc: "Ce que serait devenue une somme plac\xE9e il y a 1, 3 ou 5 ans dans une action ou un ETF, compar\xE9e \xE0 un indice, au Livret A et \xE0 la hausse des prix. Cours r\xE9els et sources affich\xE9es." };
   if (p === "/portefeuille") return { title: `Portefeuille \xB7 ${SITE}`, desc: "Suivez la performance r\xE9elle de vos placements ou entra\xEEnez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqu\xE9s \xB7 ${SITE}`, desc: "Les fonds indiciels les plus utilis\xE9s en France : ce qu'ils contiennent, leurs frais, leur \xE9ligibilit\xE9 au PEA, leur composition par pays et par entreprise." };
@@ -4458,6 +4510,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env, ctx);
+    if (url.pathname === "/api/monde") return mondePublic(request, env);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     {

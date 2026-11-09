@@ -160,7 +160,7 @@ function f4Tete(s, c, x) {
       <p class="ek-desc">${esc((fi && fi.fait) || s.desc || "")}</p></div>${pc}</div>
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
-    <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${esc(x.P.L.map(r => r.name).join(", "))})` : ""}.` : ""}</span>
+    <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${x.P.L.map(r => `<a class="ek-nl" href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`).join(", ")})` : ""}.` : ""}</span>
       <div class="ek-acts">${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
     <div class="f4al" id="f4al" hidden></div>
   </section>`;
@@ -312,7 +312,7 @@ function f4Metier(x) {
   if (wd && wd.effectif && wd.effectif[0]) facts.push(["Salariés", ekFr(wd.effectif[0], 0), wd.effectif[1] ? "chiffre de " + wd.effectif[1] : ""]);
   try { const sec = R.companies.filter(c => c.sector === s.sector && f4Valide(c)).map(c => [c.id, typeof caEur === "function" ? caEur(c) : c.ca]).sort((p, q) => q[1] - p[1]), k = sec.findIndex(z => z[0] === s.id);
     // 6/11 (Romain) : le rang dans le secteur est un classement, réservé à Premium
-    if (k >= 0 && sec.length > 5) facts.push(typeof isPrem === "function" && isPrem() ? ["Taille dans son secteur", `${k + 1}${k ? "e" : "re"} sur ${sec.length}`, "par les ventes", "/classements"] : ["Taille dans son secteur", "★ Premium", `son rang parmi les ${sec.length} entreprises du secteur`, "/premium", "Débloquer avec Premium →"]); } catch (e) { }
+    if (k >= 0 && sec.length > 5) facts.push(typeof isPrem === "function" && isPrem() ? ["Taille dans son secteur", `${k + 1}${k ? "e" : "re"} sur ${sec.length}`, "par les ventes", `/classements?c=taille&s=${encodeURIComponent(s.sector)}&e=${encodeURIComponent(s.id)}`] : ["Taille dans son secteur", "★ Premium", `son rang parmi les ${sec.length} entreprises du secteur`, "/premium", "Débloquer avec Premium →"]); } catch (e) { }
   if (facts.length) h += `<div class="ek-facts">${facts.map(f => f[3] ? `<a class="hl" href="${esc(f[3])}"><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span><em>${esc(f[4] || "Voir le classement →")}</em></a>` : `<div><small>${esc(f[0])}</small><b>${esc(f[1])}</b><span>${esc(f[2])}</span></div>`).join("")}</div>`;
   if (fi) h += `<div class="ek-two">${[["Comment elle gagne de l'argent", fi.argent, "#FFF6C7"], ["Ce dont elle dépend", fi.depend, "#E2F8EE"]].filter(t => t[1]).map(t => `<div style="background:${t[2]}"><small>${esc(t[0])}</small>${esc(t[1])}</div>`).join("")}</div>`;
   if (rep && (rep.activites || rep.zones)) {

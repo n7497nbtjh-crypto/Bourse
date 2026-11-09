@@ -49,13 +49,22 @@ function ekColonnes(o) {
 // Points sur une échelle face à la médiane : zone verte du côté « mieux », rouge de l'autre ; l'entreprise de la page en jaune.
 // o = { titre, unite, lignes:[{ nom, v, texte, moi }], mediane, mediane_label, basEstMieux, max, graduations, fmtAxe, indice, source }
 // Une ligne sans valeur (v null) n'est pas placée : elle est listée sous l'échelle avec sa raison (texte).
+// 9/11 (Romain) : chaque rivale nommée dans un graphique mène à sa fiche. r.href explicite (ETF), sinon le nom est cherché parmi les entreprises (nom unique).
+let EK_NOMS = null;
+function ekHref(r) {
+  if (!r || r.moi) return "";
+  if (r.href !== undefined) return r.href || "";
+  if (!EK_NOMS && typeof R !== "undefined" && R && R.companies) { EK_NOMS = new Map(); const dbl = new Set(); for (const c of R.companies) { const k = String(c.name || "").toLowerCase(); if (EK_NOMS.has(k)) dbl.add(k); else EK_NOMS.set(k, c.id); } dbl.forEach(k => EK_NOMS.delete(k)); }
+  const id = EK_NOMS && EK_NOMS.get(String(r.nom || "").toLowerCase()); return id ? "/entreprise/" + id : "";
+}
+function ekNomLien(r) { const h = ekHref(r); return h ? `<a class="ek-nl" href="${ekEsc(h)}"><b>${ekEsc(r.nom)}</b></a>` : `<b>${ekEsc(r.nom)}</b>`; }
 function ekPoints(o) {
   const M = ekMob(), W = M ? 380 : 560, R = Math.max(M ? 60 : 70, 30 + Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.texte || "").length * 7.6))), T = 34, lg = Math.max(0, ...o.lignes.filter(r => r.v != null).map(r => String(r.nom).length * (r.moi ? 8.2 : 7.4))), lw = Math.max(0, ...o.lignes.filter(r => r.v != null).flatMap(r => String(r.nom).split(/[\s-]+/).map(m => m.length * (r.moi ? 8.8 : 7.9)))), L = Math.round(Math.max(Math.min(W * 0.4, Math.max(M ? 88 : 110, lg + 18)), Math.min(W * 0.5, lw + 22))), coupe = (t, moi) => { t = String(t); const k = moi ? 9 : 7.8, mx = Math.floor((L - 18) / k); return t.length * k + 18 > L ? t.slice(0, mx - 1).trim() + "…" : t; },
     lignesNom = r => { const k = r.moi ? 8.8 : 7.9, mx = Math.max(6, Math.floor((L - 18) / k)), w = []; [...String(r.nom).matchAll(/(\s*)([^\s-]+-?)/g)].forEach(([, sp, m]) => { const d = w.length - 1, j = (sp ? " " : "") + m; if (d >= 0 && (w[d] + j).length <= mx) w[d] += j; else w.push(m); });
       return (w.length <= 5 ? w : [...w.slice(0, 4), w.slice(4).join(" ")]).map(t => t.length > mx ? t.slice(0, mx - 1).trim() + "…" : t); },
     rh = 34 + 15 * (Math.max(1, ...o.lignes.filter(r => r.v != null).map(r => lignesNom(r).length)) - 1),
     hors = o.lignes.filter(r => r.v == null), rows = o.lignes.filter(r => r.v != null), H = Math.max(rows.length * rh + 30, 3 * rh + 12), mn0 = o.min || 0, x = v => L + (W - L - R) * (Math.max(mn0, Math.min(v, o.max)) - mn0) / (o.max - mn0), m = x(o.mediane), bas = !!o.basEstMieux;
-  if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
+  if (!rows.length) return ekBox(o, hors.map(r => `<p class="ek-out">${ekNomLien(r)} n'est pas placée : ${ekEsc(r.texte)}.</p>`).join(""));
   let g = `<svg viewBox="0 0 ${W} ${T + H + 26}" role="img" aria-label="${ekEsc(o.titre)}">`;
   const neu = !!o.neutre, zB = neu ? "#F1F1EE" : bas ? "#E2F8EE" : "#FFE9E3", zH = neu ? "#F1F1EE" : bas ? "#FFE9E3" : "#E2F8EE", cB = neu ? "#555" : bas ? EK_G : EK_R, cH = neu ? "#555" : bas ? EK_R : EK_G; // neutre (4/11) : PER, aucune zone verte ou rouge
   g += `<rect x="${L}" y="${T - 6}" width="${m - L}" height="${H}" fill="${zB}"/><rect x="${m}" y="${T - 6}" width="${W - R - m}" height="${H}" fill="${zH}"/>`;
@@ -70,13 +79,15 @@ function ekPoints(o) {
     const cy = T + i * rh + rh / 2 - 7, mieux = bas ? r.v < o.mediane : r.v > o.mediane;
     // Nom trop long : sur deux ou trois lignes plutôt que coupé (3/11) ; « … » seulement au-delà
     const l2 = lignesNom(r), st = { a: "end", c: "#111", fw: r.moi ? 800 : 600, fs: l2.length > 1 ? (r.moi ? 13 : 12) : (r.moi ? 14 : 13) };
+    const hr = ekHref(r); if (hr) g += `<a href="${ekEsc(hr)}" class="ek-pl">`;
     l2.forEach((t, j) => g += ekTx(L - 12, cy + 4 + (j - (l2.length - 1) / 2) * 15, ekEsc(t), st));
+    if (hr) g += "</a>";
     // Valeur hors échelle : le point est posé au bout de l'axe avec une flèche, et une note sous le graphique doit dire le vrai chiffre (r.note)
     const hx = r.v > o.max, lx = r.v < mn0, col = r.ton === "r" ? EK_R : r.ton === "g" ? EK_G : r.ton === "n" || neu ? "#111" : Math.abs(r.v - o.mediane) <= Math.abs(o.mediane) * 0.05 ? "#111" : mieux ? EK_G : EK_R;
     g += `<line x1="${L}" x2="${x(r.v)}" y1="${cy}" y2="${cy}" stroke="#111" stroke-opacity=".25" stroke-width="1.5"/>${hx ? `<path d="M${x(r.v) + 8} ${cy - 6} L${x(r.v) + 16} ${cy} L${x(r.v) + 8} ${cy + 6} Z" fill="${col}"/>` : ""}${lx ? `<path d="M${x(r.v) + 9} ${cy - 6} L${x(r.v) + 2} ${cy} L${x(r.v) + 9} ${cy + 6} Z" fill="${col}"/>` : ""}<circle cx="${x(r.v) + (lx ? 22 : 0)}" cy="${cy}" r="${r.moi ? 9 : 6}" fill="${r.moi ? "#FFE14D" : "#111"}" stroke="#111" stroke-width="2"${hx ? ` data-hors="${ekEsc(r.nom)}"` : ""}/>`
       + ekTx(W - R + 20, cy + 4, ekEsc(r.texte), { fw: 800, c: col, fs: r.moi ? 14 : 13 });
   });
-  g += "</svg>" + rows.filter(r => r.note).map(r => `<p class="ek-out ek-out-h"><b>${ekEsc(r.nom)}</b> ${ekEsc(r.note)}</p>`).join("") + hors.map(r => `<p class="ek-out"><b>${ekEsc(r.nom)}</b> n'est pas placée : ${ekEsc(r.texte)}.</p>`).join("");
+  g += "</svg>" + rows.filter(r => r.note).map(r => `<p class="ek-out ek-out-h">${ekNomLien(r)} ${ekEsc(r.note)}</p>`).join("") + hors.map(r => `<p class="ek-out">${ekNomLien(r)} n'est pas placée : ${ekEsc(r.texte)}.</p>`).join("");
   return ekBox(o, g);
 }
 

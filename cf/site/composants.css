@@ -2564,3 +2564,36 @@ html #app .ek.ce5 .ce5-ex a{min-height:0!important;display:inline-block!importan
 .ek.ax4-page .ax4m-c .chez i{display:block;height:12px;border:2px solid var(--ek-ink);border-radius:999px;margin-top:6px;background:linear-gradient(90deg,#2B5C9E var(--w),#fff var(--w))}
 .ek.ax4-page .ax4m-c .chez.p{font-size:13px;font-weight:600}.ek.ax4-page .ax4m-c .chez.p b{font-weight:800}
 .ek.ax4-page .ax4m-h2{font:800 40px/1 "Bricolage Grotesque",Inter;letter-spacing:-.04em;margin:34px 0 4px}.ek.ax4-page .ax4m-sub{margin:0 0 6px;color:#555;font-weight:600}
+/* 9/11 : rivales cliquables dans les graphiques à points */
+.ek a.ek-pl text{text-decoration:underline;text-decoration-color:rgba(17,17,17,.3);text-underline-offset:3px;text-decoration-thickness:1.5px}
+.ek a.ek-pl:hover text{fill:#000;text-decoration-color:#FFE14D;text-decoration-thickness:4px}
+.ek a.ek-nl{color:inherit;text-decoration:underline;text-decoration-color:rgba(17,17,17,.3);text-underline-offset:3px}
+/* 9/11 : classements, recherche « Où se classe votre entreprise ? », sa place, ligne surlignée */
+.ek .cx-co a.n{color:inherit;text-decoration:none}.ek .cx-co a.n:hover b{text-decoration:underline}
+.ek .cx-tt th a{color:inherit;text-decoration:underline;text-decoration-color:rgba(17,17,17,.3);text-underline-offset:3px}
+.ek .cl4-q{margin:22px 0 6px;max-width:620px}
+.ek .cl4-q label{display:block;font:800 17px "Bricolage Grotesque",Inter,sans-serif;margin-bottom:8px}
+.ek .cl4-qw{position:relative}
+.ek .cl4-q input{width:100%;box-sizing:border-box;font:600 17px Inter,sans-serif;padding:15px 18px;border:3px solid #111;border-radius:16px;background:#fff;box-shadow:5px 5px 0 #111;outline:none}
+.ek .cl4-q input:focus{box-shadow:5px 5px 0 #111,0 0 0 4px #fff inset}
+.ek .cl4-qs{display:none;position:absolute;z-index:30;left:0;right:0;top:calc(100% + 10px);background:#fff;border:3px solid #111;border-radius:16px;overflow:hidden;box-shadow:6px 6px 0 #111}
+.ek .cl4-qs.on{display:block}
+html #app .ek .cl4-qs button{display:flex;align-items:center;gap:12px;width:100%;min-height:0;padding:11px 14px;border:0;border-bottom:1px solid #eee;border-radius:0;background:#fff;text-align:left;cursor:pointer;font:inherit;color:#111}
+html #app .ek .cl4-qs button:hover{background:#FFFBE6}
+.ek .cl4-qs button span{display:flex;flex-direction:column}.ek .cl4-qs button b{font:700 16px Inter}.ek .cl4-qs button small{font:500 13px Inter;color:#666}
+.ek .cl4-qs p{margin:0;padding:14px;font:600 15px Inter;color:#666}
+.ek .cl4-moi-c{border:3px solid #111;border-radius:22px;background:#fff;padding:20px;box-shadow:6px 6px 0 #FFE14D}
+.ek .cl4-moi-h{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.ek .cl4-moi-h>div{flex:1;min-width:0}.ek .cl4-moi-h small{display:block;font:600 13px Inter;color:#666}.ek .cl4-moi-h b{font:800 24px "Bricolage Grotesque",Inter,sans-serif}
+.ek .cl4-moi-h>a{font:700 15px Inter;color:#111;white-space:nowrap}
+.ek .cl4-moi-l{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:10px}
+.ek .cl4-moi-l a{display:grid;grid-template-columns:30px 1fr auto;gap:10px;align-items:center;padding:12px 14px;border:2px solid #111;border-radius:14px;color:#111;text-decoration:none;background:#fff}
+.ek .cl4-moi-l a:hover{background:#FFFBE6}.ek .cl4-moi-l a.on{background:#FFE14D}
+.ek .cl4-moi-l a.abs{border-color:#ccc;color:#777}
+.ek .cl4-moi-l i{font:800 18px Inter;font-style:normal;text-align:center}
+.ek .cl4-moi-l b{display:block;font:700 15px Inter}.ek .cl4-moi-l small{font:500 13px Inter;color:#666}
+.ek .cl4-moi-l strong{font:800 26px "Bricolage Grotesque",Inter,sans-serif}.ek .cl4-moi-l strong sup{font-size:.5em}
+.ek .cl4-r.cl4-moi{background:#FFE14D;box-shadow:inset 6px 0 0 #111}.ek a.cl4-r.cl4-moi:hover{background:#FFE14D}
+.ek .cl4-sep{padding:6px 18px;font:800 20px Inter;color:#999;border-bottom:1px solid #E6E4DE;background:#fff}
+@media(min-width:901px){.ek .cl4-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.ek .ce5-ff th a{color:inherit;text-decoration:underline;text-decoration-color:rgba(17,17,17,.3);text-underline-offset:3px}

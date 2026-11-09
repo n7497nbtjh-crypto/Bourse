@@ -2843,7 +2843,7 @@ try { history.scrollRestoration = "manual"; } catch (e) { }
 document.addEventListener("click", e => {
   const a = e.target.closest("a[href]");
   if (!a || a.target === "_blank" || e.metaKey || e.ctrlKey || e.shiftKey) return;
-  const u = new URL(a.href, location.href);
+  const u = new URL(typeof a.href === "string" ? a.href : a.getAttribute("href"), location.href); // lien dans un SVG : a.href n'est pas une chaîne
   if (u.origin !== location.origin) return;
   if (u.pathname === location.pathname && u.search === location.search && u.hash) { closePanels(); closeDef(); return; }
   e.preventDefault(); go(u.pathname + u.search + u.hash);
