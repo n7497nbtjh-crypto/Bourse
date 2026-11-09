@@ -262,7 +262,7 @@ export async function iaSite(request, env) {
   const k = await empreinte(b.tache + "|" + max + "|" + user);
   try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?`).bind(k, Date.now() - 864e5).first();
     if (hit) { await compter(env, h, 0, per); await env.DB.prepare(`UPDATE ia_cache SET n = n + 1 WHERE k = ?`).bind(k).run(); await parNiveau(env, nv, 0); return json({ txt: hit.txt, modele: hit.modele, cache: true }); } } catch (e) { }
-  for (const [model, cin, cout, nom] of modeles) {
+  for (const [model, cin, cout, nom] of MODELES) {
     const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
     if (nv !== "premium" && !siteOk(c, P, estime)) continue; // Premium passe toujours : son abonnement paie la réponse
     try {

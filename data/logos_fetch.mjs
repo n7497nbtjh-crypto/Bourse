@@ -29,14 +29,15 @@ const idx = existsSync("cf/site/logos/index.json") ? JSON.parse(readFileSync("cf
 idx.l = idx.l || {};
 const jour = new Date().toISOString().slice(0, 10), FRAIS = 90 * 864e5;
 const aRevoir = c => { const x = idx.l[c.id]; if (!x || !x.maj) return true; const age = Date.now() - Date.parse(x.maj); // 1/11 : sans logo, on réessaie après 30 jours, et tout de suite si le passage précédent n'avait pas les essais « www. »
-  return x.f ? age >= FRAIS || x.t !== 192 : !(x.absent && x.v2 && age < 30 * 864e5); };
+  return x.f ? age >= FRAIS || x.t !== 192 : !(x.absent && x.v3 && age < 30 * 864e5); }; // 9/11 : nouvelles sources (ISIN, Wikipédia fr/de, toutes licences de Commons) : les « absents » d'avant sont revus
 const FX = (() => { try { return JSON.parse(readFileSync("cf/site/data/fx.json", "utf8")).eur || {}; } catch (e) { return {}; } })();
 const capE = c => { const p = px["c:" + c.id]; return p && p.cap ? p.cap * (p.cur === "EUR" ? 1 : FX[p.cur] || 0) : 0; };
 const parCap = (a, b) => capE(b) - capE(a);
 const top300 = U.slice().sort(parCap).slice(0, TOP);
 // Ordre : le top 300 d'abord, puis le reste par capitalisation ; seulement ce qui est à revoir
-const ordre = top300.concat(U.slice().sort(parCap).slice(TOP)).filter(aRevoir).slice(0, max);
-const OK = /^(cc0|cc-by(-sa)?-[0-9.]+|cc by|pd|public domain|pd-textlogo|pd-shape|pd-ineligible)/i;
+const ordre = process.env.IDS ? U.filter(c => process.env.IDS.split(",").includes(c.id)) : top300.concat(U.slice().sort(parCap).slice(TOP)).filter(aRevoir).slice(0, max); // IDS=a,b : essai ciblé
+// 9/11 : Wikimedia Commons n'héberge que des fichiers libres (ou du domaine public) : toute licence de Commons est acceptée (Nvidia était refusé pour « Apache License 2.0 ») ; la licence et l'auteur restent dans l'index.
+const OK = /./;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 let pannes = 0;
 async function fetchR(u, o = {}, essais = 2) { // une relance après 10 s sur délai dépassé ou 429/5xx
@@ -60,7 +61,12 @@ const TAILLE = 192; // 6/11 (Romain : logos en bonne qualité) : 192 px au lieu 
 async function ecrire(c, buf) { // TAILLE px, fond transparent ; un logo trop petit (< 32 px) ou vide est refusé
   const img = sharp(buf, { density: 300 }), meta = await img.metadata();
   if ((meta.width || 0) < 32 && (meta.height || 0) < 32 && meta.format !== "svg") throw new Error("trop petit");
-  await img.resize(TAILLE, TAILLE, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } }).png().toFile(`cf/site/logos/${c.id}.png`);
+  const out = await img.resize(TAILLE, TAILLE, { fit: "contain", background: { r: 255, g: 255, b: 255, alpha: 0 } }).png().toBuffer();
+  // 9/11 : un logo blanc sur fond transparent est invisible sur le site (MediaTek) : refusé, on essaie la source suivante
+  const { data } = await sharp(out).ensureAlpha().raw().toBuffer({ resolveWithObject: true }); let vis = 0, lum = 0;
+  for (let i = 0; i < data.length; i += 4) if (data[i + 3] > 20) { vis++; lum += 0.299 * data[i] + 0.587 * data[i + 1] + 0.114 * data[i + 2]; }
+  if (vis < data.length / 4 * 0.01 || lum / vis > 235) throw new Error("logo blanc ou vide");
+  writeFileSync(`cf/site/logos/${c.id}.png`, out);
 }
 const paquets = (a, n) => { const o = []; for (let i = 0; i < a.length; i += n) o.push(a.slice(i, i + n)); return o; };
 
@@ -71,19 +77,53 @@ function logoActuel(cl) {
   L.sort((a, b) => (b.rank === "preferred") - (a.rank === "preferred") || debut(b).localeCompare(debut(a)));
   return L.length ? L[0].mainsnak.datavalue.value : null;
 }
-// 1. Wikidata : fichier du logo (P154) pour tous les Q, par 50
-const avecQ = ordre.filter(c => wd[c.id] && wd[c.id].q);
+// 0. 9/11 : entreprise sans Q connu → recherche Wikidata par son ISIN (propriété P946), une requête par entreprise
+const qDe = {}; for (const c of ordre) if (wd[c.id] && wd[c.id].q) qDe[c.id] = wd[c.id].q;
+for (const c of ordre.filter(c => !qDe[c.id] && c.isin)) {
+  try { const r = await json(`https://www.wikidata.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent("haswbstatement:P946=" + c.isin)}&srlimit=1&format=json`);
+    const t = r.query && r.query.search && r.query.search[0] && r.query.search[0].title; if (/^Q\d+$/.test(t || "")) qDe[c.id] = t; } catch (e) { pannes++; }
+  await sleep(1000);
+}
+// 0 bis. 9/11 : toujours sans Q (ISIN changé, entreprises américaines sans ISIN) → recherche par le nom parmi les sociétés cotées (P414),
+// gardée seulement si le symbole boursier déclaré sur Wikidata (qualificatif P249) est celui de l'entreprise : pas d'homonyme
+const symb = t => String(t || "").toUpperCase().replace(/[.\-\s].*$/, "");
+for (const c of ordre.filter(c => !qDe[c.id] && c.ticker && c.name)) {
+  try { const r = await json(`https://www.wikidata.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(c.name + " haswbstatement:P414")}&srlimit=5&format=json`);
+    const qs = ((r.query && r.query.search) || []).map(x => x.title).filter(t => /^Q\d+$/.test(t));
+    if (qs.length) { await sleep(800); const e = await json(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${qs.join("|")}&props=claims&format=json`);
+      for (const q of qs) { const cl = (e.entities[q] && e.entities[q].claims) || {}; const tick = [...(cl.P414 || []).flatMap(x => ((x.qualifiers && x.qualifiers.P249) || []).map(y => y.datavalue && y.datavalue.value)), ...(cl.P249 || []).map(x => x.mainsnak.datavalue && x.mainsnak.datavalue.value)];
+        if (tick.some(t => symb(t) === symb(c.ticker))) { qDe[c.id] = q; break; } } } } catch (e) { pannes++; }
+  await sleep(1000);
+}
+console.log(`Wikidata par ISIN puis par nom et symbole : ${Object.keys(qDe).length} entreprises avec un Q`);
+// 1. Wikidata : fichier du logo (P154) pour tous les Q, par 50 ; on garde aussi les articles Wikipédia fr et de (étape 1 bis)
+const avecQ = ordre.filter(c => qDe[c.id]);
+const article = {}; // id → [["fr", titre], ["de", titre]]
 const fichier = {}; // id → "Nom du fichier.svg"
 let wikidataOK = true;
 for (const p of paquets(avecQ, 50)) {
-  const ids = p.map(c => wd[c.id].q).join("|");
+  const ids = p.map(c => qDe[c.id]).join("|");
   try {
-    const e = await json(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${ids}&props=claims&format=json`);
-    for (const c of p) { const ent = e.entities && e.entities[wd[c.id].q], cl = ent && ent.claims && ent.claims.P154, v = logoActuel(cl); if (v) fichier[c.id] = v; }
+    const e = await json(`https://www.wikidata.org/w/api.php?action=wbgetentities&ids=${ids}&props=claims|sitelinks&format=json`);
+    for (const c of p) { const ent = e.entities && e.entities[qDe[c.id]], cl = ent && ent.claims && ent.claims.P154, v = logoActuel(cl); if (v) fichier[c.id] = v;
+      const sl = (ent && ent.sitelinks) || {}; article[c.id] = ["fr", "de"].filter(l => sl[l + "wiki"]).map(l => [l, sl[l + "wiki"].title]); }
     console.log(`Wikidata : ${p.length} entreprises lues, ${p.filter(c => fichier[c.id]).length} avec un logo déclaré`);
   } catch (e) { pannes++; wikidataOK = false; console.error("Wikidata :", String(e).slice(0, 120)); }
   await sleep(PAUSE_WM);
 }
+// 1 bis. 9/11 : pas de logo sur Wikidata → le champ « logo » de l'infobox des Wikipédia française puis allemande
+// (ces deux Wikipédia n'acceptent pas d'images non libres : leurs logos sont sur Commons, vérifié à l'étape 2)
+const RX_LOGO = /\|\s*logo\s*=\s*(?:\[\[\s*(?:Fichier|File|Datei|Image|Bild)\s*:\s*)?([^|\]\n{}<]+?\.(?:svg|png|jpe?g|gif))/i;
+let nWp = 0;
+for (const c of avecQ.filter(c => !fichier[c.id] && (article[c.id] || []).length)) {
+  for (const [l, titre] of article[c.id]) {
+    try { const r = await json(`https://${l}.wikipedia.org/w/api.php?action=parse&page=${encodeURIComponent(titre)}&prop=wikitext&section=0&redirects=1&format=json`);
+      const w = r.parse && r.parse.wikitext && r.parse.wikitext["*"], m = w && w.match(RX_LOGO);
+      if (m) { fichier[c.id] = m[1].trim().replace(/_/g, " "); nWp++; console.log(`${c.id} : infobox ${l} → ${fichier[c.id]}`); break; } } catch (e) { }
+    await sleep(1000);
+  }
+}
+console.log(`Wikipédia fr/de : ${nWp} logos trouvés dans les infobox`);
 // 2. Commons : licence, auteur et vignette, par 50 fichiers
 const info = {}; // fichier → { lic, auteur, thumb, url }
 const fichiers = [...new Set(Object.values(fichier))];
@@ -145,7 +185,7 @@ for (const c of ordre) {
   }
   if (!r) { try { r = await siteOfficiel(c); } catch (e) { panne = true; console.error(c.id, "site :", String(e).slice(0, 90)); } await sleep(PAUSE_SITE); }
   if (r) { idx.l[c.id] = r; n++; if (r.src === "commons") nc++; else ns++; console.log(`${c.id} : ${r.src === "commons" ? "Commons (" + r.licence + ")" : "site officiel"}`); }
-  else if (!panne && wikidataOK) { idx.l[c.id] = { maj: jour, absent: true, v2: true, ...(refus ? { licence: refus } : {}) }; console.log(`${c.id} : aucun logo utilisable${refus ? " (licence " + refus + ")" : ""}`); }
+  else if (!panne && wikidataOK) { idx.l[c.id] = { maj: jour, absent: true, v3: true, ...(refus ? { licence: refus } : {}) }; console.log(`${c.id} : aucun logo utilisable${refus ? " (licence " + refus + ")" : ""}`); }
   else { pannes++; console.log(`${c.id} : panne réseau, à réessayer`); }
 }
 idx.maj = jour;
