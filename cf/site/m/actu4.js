@@ -60,11 +60,17 @@ document.addEventListener("click", async e => {
   const a = AX4P[+b.dataset.axp], box = b.nextElementSibling; if (!a || !box) return;
   if (!miaConnectee()) { b.remove(); box.outerHTML = miaInvite(); return; }
   b.disabled = true; b.textContent = "Rédaction en cours…";
-  const co = RBY[a.id], f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
-  let j; try { j = await iaRediger("annonce", { ...(typeof iaFicheContexte === "function" && (co ? co.id : null) ? await iaFicheContexte(co ? co.id : null) : {}), entreprise: co ? co.name : a.id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: "Article de presse (seul le titre est connu, pas le texte de l'article)", titre_officiel: a.t, media: String(a.s || "").replace(/^www\./, ""), date: String(a.d || "").slice(0, 10), chiffres: [], lecture_calculee: [], dernier_exercice: f, lien: a.u }, { max: 420 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
+  // 9/11 : un article de presse est expliqué comme dans le rapport (synthese.js) : l'IA lit l'article (robots.txt respecté) avec la consigne « presse ».
+  // Avant, la consigne des annonces officielles recevait les comptes et le cours de la fiche : l'explication du titre « Huang reconnaît une liaison »
+  // parlait des ventes annuelles et disait le cours en hausse alors que le titre annonçait une baisse.
+  const co = RBY[a.id]; b.textContent = "Lecture de l'article…"; let art = { texte: "", etat: "illisible" };
+  try { if (a.id && a.u) art = await (await fetch(`/api/ia/article?k=${encodeURIComponent("c:" + a.id)}&u=${encodeURIComponent(a.u)}`)).json(); } catch (err) { }
+  b.textContent = "Rédaction en cours…";
+  let j; try { j = await iaRediger("presse", { entreprise: co ? co.name : a.id, media: String(a.s || "").replace(/^www\./, ""), date: String(a.d || "").slice(0, 10), titre: a.t, texte: art.texte || "" }, { max: 320 }); } catch (err) { j = { error: "L'IA est indisponible pour le moment." }; }
   b.remove();
   const x = j.txt ? jsonFrom(j.txt) : null;
-  box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA d'ENKLAIR (${esc(j.modele || "")}) à partir du seul titre de l'article. L'article fait foi.</small></div>`
+  const note = art.texte ? "Résumé par l'IA d'ENKLAIR à partir de l'article. L'article fait foi." : art.etat === "interdit" ? "Ce média n'autorise pas la lecture automatique de ses articles : résumé à partir du titre seulement. Ouvrez l'article pour le détail." : "L'article n'a pas pu être lu (accès réservé aux abonnés ou page illisible) : résumé à partir du titre seulement.";
+  box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela touche</b><p>${esc(x.change)}</p>` : ""}<small>${note}</small></div>`
     : `<p class="muted">${esc(j.error || "Explication indisponible pour le moment.")}</p>`;
 });
 function axPresse(P, n) {
