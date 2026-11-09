@@ -88,16 +88,16 @@ function axAvenir() {
 function pageActus4() {
   setTitle("Actualité des entreprises"); setNav("news");
   const q = new URLSearchParams(location.search), old = q.get("src");
-  const st = { zone: q.get("zone") || (old === "us" ? "US" : old === "fr" || old === "toutes" ? "FR" : "tout"), type: q.get("type") || "imp", sect: q.get("secteur") || "", vue: q.get("vue") || (old === "monde" || old === "une" ? "presse" : "annonces"), qq: "", n: 30, jours: 0 };
+  const st = { zone: q.get("zone") || (old === "us" ? "US" : old === "fr" || old === "toutes" ? "FR" : "tout"), type: q.get("type") || "imp", sect: q.get("secteur") || "", vue: q.get("vue") || (old === "monde" || old === "une" ? "presse" : "monde"), qq: "", n: 30, jours: 0, th: "" }; // 9/11 : « Le monde » (sujets du rapport de la semaine) par défaut
   if (!AX_ZONES.some(z => z[0] === st.zone)) st.zone = "tout"; if (!AX_TYPES.some(t => t[0] === st.type)) st.type = "imp";
   app.innerHTML = `<div class="ek ek-page ax4-page">
     <section class="ek-hero ax4-hero"><span class="mc-stk">Actualité</span><h1 id="ax4h">Ce que les entreprises annoncent.</h1><p class="mc-sub" id="ax4sub">Les annonces officielles des entreprises suivies, chiffrées et expliquées, et les titres de la presse.</p>
       <div class="ax4-k" id="ax4k"></div>
-      <label class="el-q"><span aria-hidden="true">🔍</span><input class="el-in" type="search" id="ax4q" placeholder="Une entreprise : LVMH, Apple, Novo Nordisk…" aria-label="Filtrer par entreprise" autocomplete="off"></label>
-      <div class="ax4-bar"><div class="ax4-vue" id="ax4vue"><button type="button" data-v="annonces">Annonces officielles</button><button type="button" data-v="presse">Dans la presse</button></div><a class="ax4-ag" href="/agenda">📅 L'agenda de la semaine →</a></div></section>
+      <label class="el-q" id="ax4ql"><span aria-hidden="true">🔍</span><input class="el-in" type="search" id="ax4q" placeholder="Une entreprise : LVMH, Apple, Novo Nordisk…" aria-label="Filtrer par entreprise" autocomplete="off"></label>
+      <div class="ax4-bar"><div class="ax4-vue" id="ax4vue"><button type="button" data-v="monde">Le monde</button><button type="button" data-v="annonces">Annonces officielles</button><button type="button" data-v="presse">Dans la presse</button></div><a class="ax4-ag" href="/agenda">📅 L'agenda de la semaine →</a></div></section>
     <div class="ax4-cols"><div>
       <div class="el-f ax4-ch" id="ax4type"><span>Type :</span>${AX_TYPES.map(([k, l]) => `<button type="button" data-t="${k}">${l}</button>`).join("")}</div>
-      <div class="el-f ax4-ch" id="ax4zone"><span>Zone :</span>${AX_ZONES.map(([k, l]) => `<button type="button" data-z="${k}">${l}</button>`).join("")}
+      <div class="el-f ax4-ch" id="ax4zone" data-zone><span>Zone :</span>${AX_ZONES.map(([k, l]) => `<button type="button" data-z="${k}">${l}</button>`).join("")}
         <select id="ax4sect" aria-label="Secteur"><option value="">Tous les secteurs</option>${Object.entries(R.sectors).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join("")}</select></div>
       <div id="ax4feed"><p class="ek-note">Chargement…</p></div><div id="ax4plus"></div></div>
       <aside class="ax4-aside">${axAvenir()}</aside></div>
@@ -106,7 +106,7 @@ function pageActus4() {
   let FIL = null, EXTRA = [];
   const fav = () => new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
   const keep = id => { const c = RBY[id]; if (!c) return false; if (st.zone === "fav" && !fav().has(id)) return false; if (st.zone === "EU" && !(c.region === "EU" || c.region === "FR")) return false; if (/^(FR|US|MONDE)$/.test(st.zone) && c.region !== st.zone) return false; if (st.sect && c.sector !== st.sect) return false; if (st.qq && !ax4Nom(c, st.qq)) return false; return true; };
-  const url = () => { const u = new URLSearchParams(); if (st.zone !== "tout") u.set("zone", st.zone); if (st.type !== "imp") u.set("type", st.type); if (st.sect) u.set("secteur", st.sect); if (st.vue !== "annonces") u.set("vue", st.vue); try { history.replaceState(history.state, "", "/actualites" + (u.toString() ? "?" + u : "")); } catch (e) { } };
+  const url = () => { const u = new URLSearchParams(); if (st.zone !== "tout") u.set("zone", st.zone); if (st.type !== "imp") u.set("type", st.type); if (st.sect) u.set("secteur", st.sect); if (st.vue !== "monde") u.set("vue", st.vue); try { history.replaceState(history.state, "", "/actualites" + (u.toString() ? "?" + u : "")); } catch (e) { } };
   const annonces = () => [...(FIL.o || []), ...EXTRA].filter(it => keep(it.id) && actuType(it, st.type));
   const tete = () => { // la saison en une phrase, calculée sur toutes les annonces chiffrées (sans les filtres)
     const L = [...(FIL.o || []), ...EXTRA].filter(it => RBY[it.id] && actuImp(it)), T = actuStats(L), pc = T.find(t => /ventes en hausse/.test(t[1])), v = pc ? parseInt(pc[0]) : null;
@@ -118,7 +118,9 @@ function pageActus4() {
     $$("#ax4vue button").forEach(b => b.classList.toggle("on", b.dataset.v === st.vue));
     $$("#ax4type button").forEach(b => b.classList.toggle("on", b.dataset.t === st.type));
     $$("#ax4zone button").forEach(b => b.classList.toggle("on", b.dataset.z === st.zone));
-    $("#ax4type").hidden = st.vue === "presse"; url(); if (!FIL) return;
+    const mo = st.vue === "monde"; $("#ax4type").hidden = st.vue === "presse" || mo; $("#ax4zone").hidden = mo; $("#ax4ql").hidden = mo; $("#ax4k").hidden = mo; url();
+    if (mo) { ax4MondeHero(); const feed = $("#ax4feed"); $("#ax4plus").innerHTML = ""; if (!AXM.data) { feed.innerHTML = `<p class="ek-note">Chargement des sujets de la semaine…</p>`; ax4MondeCharger().then(() => { if (st.vue === "monde") draw(); }); return; } feed.innerHTML = ax4Monde(AXM.data, st.th); return; }
+    if (FIL) tete(); if (!FIL) return;
     const feed = $("#ax4feed"), plus = $("#ax4plus");
     if (st.zone === "fav" && !fav().size) { feed.innerHTML = `<p class="ek-note">Vous ne suivez encore aucune entreprise. Ajoutez-en depuis leur fiche avec le bouton « Ajouter aux favoris ».</p>`; plus.innerHTML = ""; return; }
     if (st.vue === "presse") { const P = (FIL.p || []).filter(a => keep(a.id)); feed.innerHTML = axPresse(P, st.n) + `<p class="mc-note">Titres repérés dans des médias reconnus (index ouvert GDELT, BBC News). L'article se lit chez l'éditeur ; le site n'en reprend pas le texte.</p>`; plus.innerHTML = P.length > st.n ? `<button type="button" class="el-more" data-plus>Afficher plus</button>` : ""; return; }
@@ -138,6 +140,7 @@ function pageActus4() {
   page.addEventListener("click", e => {
     const b = e.target.closest("button"); if (!b) return;
     if (b.dataset.v) { st.vue = b.dataset.v; st.n = 30; draw(); }
+    else if (b.dataset.th !== undefined) { st.th = b.dataset.th; draw(); }
     else if (b.dataset.t) { st.type = b.dataset.t; st.n = 30; draw(); }
     else if (b.dataset.z) { st.zone = b.dataset.z; st.n = 30; draw(); }
     else if (b.dataset.plus !== undefined) { if (st.vue === "presse") { st.n += 30; draw(); } else plusAnnonces(); }
@@ -147,13 +150,44 @@ function pageActus4() {
   draw();
   actuFil().then(j => {
     if (!document.getElementById("ax4feed")) return;
-    FIL = j; tete(); draw();
+    FIL = j; if (st.vue !== "monde") tete(); draw();
     const S = j.sources || [];
     $("#ax4srcs").innerHTML = S.length ? `Mis à jour ${j.maj ? `le ${esc(dLabel(j.maj.slice(0, 10)))} à ${esc(hhmm(j.maj))}` : ""}. Sources : ${S.map(x => `<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.nom)}</a>`).join(", ")}. Titres et liens d'origine ; classement, chiffres et explications calculés par le site. Rien ici n'est un conseil d'investissement.` : "";
   });
 }
 
 window.pageActus = pageActus4;
+
+/* ---------- « Le monde » (9/11, maquette actualite-sujets-v2 validée) : les sujets du rapport de la semaine, pour tout le monde ----------
+   Données : /api/monde (cf/src/espace.mjs, mondePublic : mêmes sujets que le rapport, gardés 3 h). Présentation du rapport (rapport8.js, #r8-monde). */
+const AXM = { data: null, p: null };
+function ax4MondeCharger() { return AXM.p || (AXM.p = getJSON("/api/monde", { sujets: [] }).then(j => { AXM.data = j || { sujets: [] }; return AXM.data; })); }
+function ax4MondeHero() {
+  const M = AXM.data, h = $("#ax4h"), sb = $("#ax4sub"); if (!h) return;
+  h.textContent = M && M.semaine_passee ? "Ce qui a fait bouger les marchés la semaine dernière." : "Ce qui a fait bouger les marchés cette semaine.";
+  sb.textContent = M && (M.sujets || []).length ? `${F0.format(M.sujets.length)} sujets de la semaine du ${dLabel(M.du)} au ${dLabel(M.au)}, résumés en deux phrases, avec ce qu'ils ont fait aux cours.` : "Les grands sujets de la semaine, résumés, avec ce qu'ils ont fait aux cours.";
+}
+const AX4M_COUL = ["#FFB8D9", "#BFD4FF", "#BDEBD2", "#FFE14D"];
+function ax4Monde(M, th) {
+  const S0 = (M && M.sujets) || [];
+  if (!S0.length) return `<p class="ek-note">${esc((M && M.message) || "Les sujets de la semaine ne sont pas encore prêts.")}</p>`;
+  const themes = {}; S0.forEach(s => String(s.theme || "").split(/\s*·\s*/).filter(Boolean).forEach(t => themes[t] = (themes[t] || 0) + 1));
+  const filt = Object.entries(themes).sort((a, b) => b[1] - a[1]).slice(0, 8);
+  const S = th ? S0.filter(s => String(s.theme || "").split(/\s*·\s*/).includes(th)) : S0;
+  const pc = v => `<b class="${v > 0 ? "up" : v < 0 ? "dn" : ""}">${O2_p ? O2_p(v, 1) : (v > 0 ? "+" : "") + v + " %"}</b>`;
+  const lien = c => c.k && c.k.startsWith("c:") && RBY[c.k.slice(2)] ? `<a href="/entreprise/${esc(c.k.slice(2))}">${esc(c.lab)}</a>` : esc(c.lab);
+  const carte = (s, i, grand) => {
+    const ch = (s.chiffres || []).filter(c => c.v != null), co = ch.filter(c => c.k), fort = co.slice().sort((a, b) => Math.abs(b.v) - Math.abs(a.v))[0];
+    const src = (s.titres || []).map(t => `<a href="${esc(t.u)}" target="_blank" rel="noopener nofollow">${esc(String(t.s || "").replace(/^www\./, ""))}</a>, ${esc(dShort(t.d))}`).join(" · ");
+    return `<article class="ax4m-c${grand ? " g" : ""}"><span class="th" style="background:${AX4M_COUL[i % 4]}">${esc(s.theme || "")}</span><h3>${esc(s.titre)}</h3><p>${esc(s.fait)}</p>
+      ${ch.length ? `<div class="ch">${ch.map(c => `<span>${lien(c)} ${pc(c.v)}</span>`).join("")}</div>` : ""}
+      ${grand && fort && Math.abs(fort.v) >= 1 ? `<div class="big"><b class="${fort.v > 0 ? "up" : "dn"}">${O2_p(fort.v, 1)}</b><span>pour ${esc(fort.lab)}, ${fort.v < 0 ? "la plus forte baisse" : "la plus forte hausse"} des entreprises citées</span></div>` : ""}
+      ${src ? `<div class="src">${src}</div>` : ""}</article>`; };
+  return `${filt.length > 1 ? `<div class="ax4m-fil"><button type="button" data-th="" class="${th ? "" : "on"}">Tout (${S0.length})</button>${filt.map(([t, n]) => `<button type="button" data-th="${esc(t)}" class="${th === t ? "on" : ""}">${esc(t)} (${n})</button>`).join("")}</div>` : ""}
+    <div class="ax4m-g2">${S.slice(0, 2).map((s, i) => carte(s, i, true)).join("")}</div>
+    ${S.length > 2 ? `<div class="ax4m-g">${S.slice(2).map((s, i) => carte(s, i + 2, false)).join("")}</div>` : ""}
+    <p class="mc-note">Sujets choisis et résumés par l'IA d'ENKLAIR à partir des titres de médias reconnus${M.jour ? `, relevés le ${esc(dLabel(M.jour))}` : ""} ; variations de la semaine calculées par le site sur les cours de clôture. Les articles font foi. Information, pas un conseil d'investissement.</p>`;
+}
 
 // Filtre par nom : début d'un mot du nom ou ticker exact ; si des noms correspondent exactement (« Meta »), on ne garde qu'eux (pas Kennametal ni Jacquet Metals).
 function ax4Nom(c, q) {

@@ -11,7 +11,7 @@ import presse from "./presse.mjs";
 import { cours } from "./cours.mjs";
 import { veille } from "./veille.mjs";
 import { premium } from "./compte.mjs";
-import { espace, rapportExemple, compterEvt, COMPTEURS_OK } from "./espace.mjs";
+import { espace, rapportExemple, mondePublic, compterEvt, COMPTEURS_OK } from "./espace.mjs";
 import { signaler } from "./signaler.mjs";
 import { push, pousser } from "./push.mjs";
 import { mcp } from "./mcp.mjs";
@@ -47,7 +47,7 @@ export function meta(path, q = null) {
   if (p === "/actualites") return { title: `Actualité des entreprises · ${SITE}`, desc: "Résultats, dividendes, acquisitions et changements de dirigeants des entreprises suivies en France, en Europe et aux États-Unis : annonces officielles classées, chiffrées et expliquées, et titres de la presse." };
   if (p === "/agenda") return { title: `Agenda financier · ${SITE}`, desc: "Dates des résultats, assemblées générales et dividendes des entreprises cotées, avec l'heure de publication quand la société l'annonce, et les chiffres publiés ces derniers jours." };
   if (p === "/hier") return { title: `Ce qui s'est passé hier : les résultats publiés · ${SITE}`, desc: "Les résultats publiés la veille par les entreprises suivies : chiffre d'affaires, résultat, prévisions de la direction et lecture calculée, d'après les communiqués officiels." };
-  if (p === "/outils/recouvrement") return { title: `Mes ETF se recouvrent-ils ? · ${SITE}`, desc: "Positions communes et poids réellement en double entre 2 à 4 ETF, concentration du portefeuille combiné, secteurs, pays et devises, d'après les compositions officielles." };
+  if (p === "/outils/recouvrement") return { title: `Comparer deux ETF · ${SITE}`, desc: "Deux ETF face à face : entreprises en commun, frais, performances publiées, plus grosses lignes et secteurs, d'après les compositions officielles." };
   if (p === "/outils/si-javais") return { title: `Et si j'avais investi ? · ${SITE}`, desc: "Ce que serait devenue une somme placée il y a 1, 3 ou 5 ans dans une action ou un ETF, comparée à un indice, au Livret A et à la hausse des prix. Cours réels et sources affichées." };
   if (p === "/portefeuille") return { title: `Portefeuille · ${SITE}`, desc: "Suivez la performance réelle de vos placements ou entraînez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqués · ${SITE}`, desc: "Les fonds indiciels les plus utilisés en France : ce qu'ils contiennent, leurs frais, leur éligibilité au PEA, leur composition par pays et par entreprise." };
@@ -140,6 +140,7 @@ export default {
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env, ctx);
+    if (url.pathname === "/api/monde") return mondePublic(request, env);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     { const mk = url.pathname.match(/^\/mcp\/([a-f0-9]{32})\/?$/); if (mk) return mcp(request, env, ctx, mk[1]); } // adresse personnelle (5e passage, C)

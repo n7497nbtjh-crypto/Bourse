@@ -8,10 +8,10 @@
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
 import { iaMesures, syntheseEntreprise } from "./iasite.mjs";
-import { enrichir8, faitsEntreprise } from "./rapport8.mjs";
+import { enrichir8, faitsEntreprise, mondeDe } from "./rapport8.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk, proprietaireDe, abonnementEnCours } from "./compte.mjs";
 import { coursComplets } from "./cours.mjs";
-import { faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
+import { addJ as addJour, lundiDe as lundiSem, faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
 
 const SCHEMA = [
   `CREATE TABLE IF NOT EXISTS comptes (id TEXT PRIMARY KEY, email TEXT UNIQUE NOT NULL, hash TEXT NOT NULL, sel TEXT NOT NULL, created INTEGER NOT NULL, secours TEXT, premium TEXT, teaser INTEGER NOT NULL DEFAULT 0, last_tache INTEGER NOT NULL DEFAULT 0, last_semaine TEXT)`,
@@ -720,4 +720,25 @@ export async function rapportExemple(request, env, ctx) {
   // 7/11 (Romain : « c'est un rapport d'exemple, il n'a pas de recalcul à faire ») : rapport figé, celui du 6 novembre,
   // dans cf/site/data/rapport-exemple.json. Plus aucun calcul ni appel à l'IA ici.
   return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
+}
+
+/* 9/11 (Romain, maquette actualite-sujets-v2 validée) : « Le monde » du rapport de la semaine, pour tout le monde, dans l'onglet Actualité.
+   Mêmes sujets que le rapport (mondeDe de rapport8.mjs, même clé de cache de l'IA : aucun appel en plus), sans portefeuille.
+   Gardé 3 heures (table monde_pub). Lundi matin, s'il n'y a pas encore assez de titres, la semaine précédente. */
+export async function mondePublic(request, env) {
+  const auj = jourParis(), cle = "monde|" + auj.slice(0, 10);
+  if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)`).run();
+    const h = await env.DB.prepare(`SELECT txt, at FROM monde_pub WHERE k = ?`).bind(cle).first(); if (h && Date.now() - h.at < 3 * 36e5) return json(JSON.parse(h.txt)); } catch (e) { }
+  const d = await siteData(request, env);
+  let out = null;
+  for (const decal of [0, 7]) {
+    const jour = decal ? addJour(auj, -((jourSemaine(auj) + 6) % 7) - 1) : auj, semaine = semaineIso(jour), lundi = lundiSem(semaine);
+    let n = { indices: [], lignes: [] };
+    try { n = faitsSynthese({ ...d, actu: {} }, { favoris: [], pf: null, rapport: { ...RAPPORT_DEFAUT, favoris: false, portefeuille: false, indices: ["cac40", "stoxx50", "sp500"] } }, semaine, { auj: jour }); n.lignes = []; } catch (e) { }
+    const m = await mondeDe(env, d, n, lundi, jour).catch(() => null);
+    if (m && m.sujets && m.sujets.length) { out = { du: lundi, au: addJour(lundi, 6), jour, genere: Date.now(), sujets: m.sujets, modele: m.modele || null, semaine_passee: !!decal }; break; }
+  }
+  if (!out) return json({ sujets: [], message: "Pas encore assez de titres cette semaine." });
+  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO monde_pub (k, txt, at) VALUES (?, ?, ?)`).bind(cle, JSON.stringify(out), Date.now()).run(); } catch (e) { }
+  return json(out);
 }

@@ -29,7 +29,10 @@ const ETF_COMPO = {};
 async function ETF_fichier(e) { if (ETF_COMPO[e.id] === undefined) ETF_COMPO[e.id] = await getJSON(`/data/etf/${e.id}.json`, null); return ETF_COMPO[e.id]; }
 async function etfComp(e) {   // remplace celle d'index.html : composition détaillée de l'émetteur, sinon l'ancien fonds américain de référence
   if (!e) return null;
-  if (e.compo) { const f = await ETF_fichier(e); if (f && f.top) return f; }
+  if (e.compo) { const f = await ETF_fichier(e); if (f && f.top) {
+    // 9/11 : composition complète absente (ex. PANX : seules les 10 premières lignes sont publiées) → les lignes connues, marquées partielles
+    if (!(f.isins || []).length && f.top.length && f.top.every(t => t.isin)) { f.isins = f.top.map(t => [t.isin, t.pct]); f.partiel = f.top.reduce((a, t) => a + (t.pct || 0), 0); }
+    return f; } }
   if (!e.proxy) return null;
   if (ETFCOMP[e.proxy] !== undefined) return ETFCOMP[e.proxy];
   ETFCOMP[e.proxy] = await getJSON(`/data/etf/${e.proxy}.json`, null); return ETFCOMP[e.proxy];

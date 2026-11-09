@@ -52,7 +52,7 @@ const NAV = [
     ],
     aussi: [
       ["/outils", "Tous les outils"],
-      ["/outils/recouvrement", "Deux ETF se recouvrent-ils ?"],
+      ["/outils/recouvrement", "Comparer deux ETF"],
       ["/idees-recues", "Les idées reçues face aux chiffres"],
       ["/simulateurs/frais", "Le coût des frais"],
       ["/demander", "Demander à l'IA"],
