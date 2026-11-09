@@ -177,7 +177,7 @@ function ax4Monde(M, th) {
   const pc = v => `<b class="${v > 0 ? "up" : v < 0 ? "dn" : ""}">${O2_p ? O2_p(v, 1) : (v > 0 ? "+" : "") + v + " %"}</b>`;
   const lien = c => c.k && c.k.startsWith("c:") && RBY[c.k.slice(2)] ? `<a href="/entreprise/${esc(c.k.slice(2))}">${esc(c.lab)}</a>` : esc(c.lab);
   const carte = (s, i, grand) => {
-    const ch = (s.chiffres || []).filter(c => c.v != null), co = ch.filter(c => c.k), fort = co.slice().sort((a, b) => Math.abs(b.v) - Math.abs(a.v))[0];
+    const ch = (s.chiffres || []).filter(c => c.v != null && c.v !== 0), co = ch.filter(c => c.k), fort = co.slice().sort((a, b) => Math.abs(b.v) - Math.abs(a.v))[0];
     const src = (s.titres || []).map(t => `<a href="${esc(t.u)}" target="_blank" rel="noopener nofollow">${esc(String(t.s || "").replace(/^www\./, ""))}</a>, ${esc(dShort(t.d))}`).join(" · ");
     return `<article class="ax4m-c${grand ? " g" : ""}"><span class="th" style="background:${AX4M_COUL[i % 4]}">${esc(s.theme || "")}</span><h3>${esc(s.titre)}</h3><p>${esc(s.fait)}</p>
       ${ch.length ? `<div class="ch">${ch.map(c => `<span>${lien(c)} ${pc(c.v)}</span>`).join("")}</div>` : ""}
