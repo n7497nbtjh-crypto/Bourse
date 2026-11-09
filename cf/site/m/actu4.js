@@ -161,7 +161,7 @@ window.pageActus = pageActus4;
 /* ---------- « Le monde » (9/11, maquette actualite-sujets-v2 validée) : les sujets du rapport de la semaine, pour tout le monde ----------
    Données : /api/monde (cf/src/espace.mjs, mondePublic : mêmes sujets que le rapport, gardés 3 h). Présentation du rapport (rapport8.js, #r8-monde). */
 const AXM = { data: null, p: null };
-function ax4MondeCharger() { return AXM.p || (AXM.p = getJSON("/api/monde", { sujets: [] }).then(async j => { AXM.data = j || { sujets: [] }; try { await ax4ChezVous(AXM.data); } catch (e) { } return AXM.data; })); }
+function ax4MondeCharger() { return AXM.p || (AXM.p = getJSON("/api/monde", { sujets: [] }).then(async j => { AXM.data = j || { sujets: [] }; try { await ax4ChezVous(AXM.data); if (AXM.data.precedente) await ax4ChezVous(AXM.data.precedente); } catch (e) { } return AXM.data; })); }
 // « Chez vous » (comme le rapport) : la part du portefeuille du visiteur (enregistré dans son navigateur) touchée par chaque sujet,
 // par les secteurs du sujet, sinon par son pays ; actions en direct et contenu des ETF (pf3Look de m/portefeuille.js)
 async function ax4ChezVous(M) {
@@ -179,7 +179,7 @@ async function ax4ChezVous(M) {
 function ax4MondeHero() {
   const M = AXM.data, h = $("#ax4h"), sb = $("#ax4sub"); if (!h) return;
   h.textContent = M && M.semaine_passee ? "Ce qui a fait bouger les marchés la semaine dernière." : "Ce qui a fait bouger les marchés cette semaine.";
-  sb.textContent = M && (M.sujets || []).length ? `${F0.format(M.sujets.length)} sujets de la semaine du ${dLabel(M.du)} au ${dLabel(M.au)}, résumés en deux phrases, avec ce qu'ils ont fait aux cours.` : "Les grands sujets de la semaine, résumés, avec ce qu'ils ont fait aux cours.";
+  sb.textContent = M && (M.sujets || []).length ? `${F0.format(M.sujets.length)} sujet${M.sujets.length > 1 ? "s" : ""} de la semaine du ${dLabel(M.du)} au ${dLabel(M.au)}${M.precedente ? ", puis ceux de la semaine dernière" : ""}, résumés en deux phrases, avec ce qu'ils ont fait aux cours.` : "Les grands sujets de la semaine, résumés, avec ce qu'ils ont fait aux cours.";
 }
 const AX4M_COUL = ["#FFB8D9", "#BFD4FF", "#BDEBD2", "#FFE14D"];
 function ax4Monde(M, th) {
@@ -201,6 +201,7 @@ function ax4Monde(M, th) {
   return `${filt.length > 1 ? `<div class="ax4m-fil"><button type="button" data-th="" class="${th ? "" : "on"}">Tout (${S0.length})</button>${filt.map(([t, n]) => `<button type="button" data-th="${esc(t)}" class="${th === t ? "on" : ""}">${esc(t)} (${n})</button>`).join("")}</div>` : ""}
     <div class="ax4m-g2">${S.slice(0, 2).map((s, i) => carte(s, i, true)).join("")}</div>
     ${S.length > 2 ? `<div class="ax4m-g">${S.slice(2).map((s, i) => carte(s, i + 2, false)).join("")}</div>` : ""}
+    ${!th && M.precedente && (M.precedente.sujets || []).length ? `<h2 class="ax4m-h2">La semaine dernière.</h2><p class="ax4m-sub">Du ${esc(dLabel(M.precedente.du))} au ${esc(dLabel(M.precedente.au))}, avec les variations de toute la semaine.</p><div class="ax4m-g">${M.precedente.sujets.map((s, i) => carte(s, i + 1, false)).join("")}</div>` : ""}
     <p class="mc-note">Sujets choisis et résumés par l'IA d'ENKLAIR à partir des titres de médias reconnus${M.jour ? `, relevés le ${esc(dLabel(M.jour))}` : ""} ; variations de la semaine calculées par le site sur les cours de clôture. Les articles font foi. Information, pas un conseil d'investissement.</p>`;
 }
 

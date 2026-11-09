@@ -726,21 +726,26 @@ export async function rapportExemple(request, env, ctx) {
    Mêmes sujets que le rapport (mondeDe de rapport8.mjs, même clé de cache de l'IA : aucun appel en plus), sans portefeuille.
    Gardé 3 heures (table monde_pub). Lundi matin, s'il n'y a pas encore assez de titres, la semaine précédente. */
 export async function mondePublic(request, env) {
-  const auj = jourParis(), cle = "monde3|" + auj.slice(0, 10);
+  const auj = jourParis(), cle = "monde4|" + auj.slice(0, 10);
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)`).run();
     const h = await env.DB.prepare(`SELECT txt, at FROM monde_pub WHERE k = ?`).bind(cle).first(); if (h && Date.now() - h.at < 3 * 36e5) return json(JSON.parse(h.txt)); } catch (e) { }
   const d = await siteData(request, env);
-  let out = null;
-  for (const decal of [0, 7]) {
+  // 9/11 : la semaine en cours d'abord ; si elle a moins de 6 sujets (début de semaine), la semaine précédente complète en dessous
+  const calc = async decal => {
     const jour = decal ? addJour(auj, -((jourSemaine(auj) + 6) % 7) - 1) : auj, semaine = semaineIso(jour), lundi = lundiSem(semaine);
     let n = { indices: [], lignes: [] };
     try { n = faitsSynthese({ ...d, actu: {} }, { favoris: [], pf: null, rapport: { ...RAPPORT_DEFAUT, favoris: false, portefeuille: false, indices: ["cac40", "stoxx50", "sp500"] } }, semaine, { auj: jour }); n.lignes = []; } catch (e) { }
     const m = await mondeDe(env, d, n, lundi, jour).catch(() => null);
-    // 9/11 : en début de semaine, pas encore de cours de la semaine (toutes les variations à 0) : on montre la semaine précédente, complète
-    if (m && m.sujets) m.sujets.forEach(x => { x.chiffres = (x.chiffres || []).filter(c => c.v != null && c.v !== 0); });
-    if (!decal && m && m.sujets && !m.sujets.some(x => x.chiffres.length)) continue;
-    if (m && m.sujets && m.sujets.length) { out = { du: lundi, au: addJour(lundi, 6), jour, genere: Date.now(), sujets: m.sujets, modele: m.modele || null, semaine_passee: !!decal }; break; }
-  }
+    if (!m || !(m.sujets || []).length) return null;
+    m.sujets.forEach(x => { x.chiffres = (x.chiffres || []).filter(c => c.v != null && c.v !== 0); }); // début de semaine : pas encore de variation, pas de « 0 % »
+    return { du: lundi, au: addJour(lundi, 6), jour, sujets: m.sujets, modele: m.modele || null };
+  };
+  let out = null;
+  const cur = await calc(0);
+  if (cur && cur.sujets.length >= 6) out = { ...cur, genere: Date.now() };
+  else { const prev = await calc(7);
+    if (cur) out = { ...cur, genere: Date.now(), precedente: prev };
+    else if (prev) out = { ...prev, genere: Date.now(), semaine_passee: true }; }
   if (!out) return json({ sujets: [], message: "Pas encore assez de titres cette semaine." });
   if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO monde_pub (k, txt, at) VALUES (?, ?, ?)`).bind(cle, JSON.stringify(out), Date.now()).run(); } catch (e) { }
   return json(out);
