@@ -161,7 +161,21 @@ window.pageActus = pageActus4;
 /* ---------- « Le monde » (9/11, maquette actualite-sujets-v2 validée) : les sujets du rapport de la semaine, pour tout le monde ----------
    Données : /api/monde (cf/src/espace.mjs, mondePublic : mêmes sujets que le rapport, gardés 3 h). Présentation du rapport (rapport8.js, #r8-monde). */
 const AXM = { data: null, p: null };
-function ax4MondeCharger() { return AXM.p || (AXM.p = getJSON("/api/monde", { sujets: [] }).then(j => { AXM.data = j || { sujets: [] }; return AXM.data; })); }
+function ax4MondeCharger() { return AXM.p || (AXM.p = getJSON("/api/monde", { sujets: [] }).then(async j => { AXM.data = j || { sujets: [] }; try { await ax4ChezVous(AXM.data); } catch (e) { } return AXM.data; })); }
+// « Chez vous » (comme le rapport) : la part du portefeuille du visiteur (enregistré dans son navigateur) touchée par chaque sujet,
+// par les secteurs du sujet, sinon par son pays ; actions en direct et contenu des ETF (pf3Look de m/portefeuille.js)
+async function ax4ChezVous(M) {
+  if (typeof pf2Load !== "function" || typeof pf3Rows !== "function" || typeof pf3Look !== "function") return;
+  const P = pf2Load(); if (!P || !(P.l || []).length) return;
+  const { rows, T } = pf3Rows(P); if (!(T.tot > 0)) return;
+  const X = await pf3Look(rows), nomSec = k => (R.sectors && R.sectors[k]) || k;
+  (M.sujets || []).forEach(s => {
+    let w = 0, lab = "";
+    if ((s.secteurs || []).length) { w = s.secteurs.reduce((a, k) => a + (X.sect[nomSec(k)] || 0) + (nomSec(k) !== k ? X.sect[k] || 0 : 0), 0); lab = s.secteurs.map(nomSec).join(", "); }
+    else if ((s.pays || []).length) { w = X.ctry[s.pays[0]] || 0; lab = (typeof COUNTRY !== "undefined" && COUNTRY[s.pays[0]]) || s.pays[0]; }
+    if (w >= 0.01) s.chez = { pct: w * 100, eur: w * T.tot, lab };
+  });
+}
 function ax4MondeHero() {
   const M = AXM.data, h = $("#ax4h"), sb = $("#ax4sub"); if (!h) return;
   h.textContent = M && M.semaine_passee ? "Ce qui a fait bouger les marchés la semaine dernière." : "Ce qui a fait bouger les marchés cette semaine.";
@@ -182,6 +196,7 @@ function ax4Monde(M, th) {
     return `<article class="ax4m-c${grand ? " g" : ""}"><span class="th" style="background:${AX4M_COUL[i % 4]}">${esc(s.theme || "")}</span><h3>${esc(s.titre)}</h3><p>${esc(s.fait)}</p>
       ${ch.length ? `<div class="ch">${ch.map(c => `<span>${lien(c)} ${pc(c.v)}</span>`).join("")}</div>` : ""}
       ${grand && fort && Math.abs(fort.v) >= 1 ? `<div class="big"><b class="${fort.v > 0 ? "up" : "dn"}">${O2_p(fort.v, 1)}</b><span>pour ${esc(fort.lab)}, ${fort.v < 0 ? "la plus forte baisse" : "la plus forte hausse"} des entreprises citées</span></div>` : ""}
+      ${s.chez ? (grand ? `<div class="chez"><small>Chez vous</small><div><b>${O2_p(s.chez.pct, 0, false)}</b><span>de votre argent · ${F0.format(s.chez.eur)} €</span></div><i style="--w:${Math.min(100, s.chez.pct).toFixed(1)}%"></i><small class="m">Par ${esc(s.chez.lab)}, en direct et dans vos ETF.</small></div>` : `<div class="chez p"><b>Chez vous : ${O2_p(s.chez.pct, 0, false)}</b> · ${F0.format(s.chez.eur)} €</div>`) : ""}
       ${src ? `<div class="src">${src}</div>` : ""}</article>`; };
   return `${filt.length > 1 ? `<div class="ax4m-fil"><button type="button" data-th="" class="${th ? "" : "on"}">Tout (${S0.length})</button>${filt.map(([t, n]) => `<button type="button" data-th="${esc(t)}" class="${th === t ? "on" : ""}">${esc(t)} (${n})</button>`).join("")}</div>` : ""}
     <div class="ax4m-g2">${S.slice(0, 2).map((s, i) => carte(s, i, true)).join("")}</div>

@@ -2558,3 +2558,8 @@ html #app .ek.ce5 .ce5-ex a{min-height:0!important;display:inline-block!importan
 .ek.ax4-page .ax4m-c .src{margin-top:auto;padding-top:10px;font-size:12.5px;color:#666}.ek.ax4-page .ax4m-c .src a{color:#666}
 @media (max-width:900px){.ek.ax4-page .ax4m-g{grid-template-columns:1fr 1fr}}
 @media (max-width:640px){.ek.ax4-page .ax4m-g2,.ek.ax4-page .ax4m-g{grid-template-columns:1fr}.ek.ax4-page .ax4m-c.g h3{font-size:24px}}
+.ek.ax4-page .ax4m-c .chez{margin-top:12px;padding-top:10px;border-top:2px dashed var(--ek-ink)}
+.ek.ax4-page .ax4m-c .chez small{font:800 13px Inter;display:block}.ek.ax4-page .ax4m-c .chez small.m{font:600 12px Inter;color:#666;margin-top:4px}
+.ek.ax4-page .ax4m-c .chez div{display:flex;align-items:baseline;gap:8px}.ek.ax4-page .ax4m-c .chez div b{font:800 38px "Bricolage Grotesque",Inter;line-height:1.05}.ek.ax4-page .ax4m-c .chez div span{font-weight:700}
+.ek.ax4-page .ax4m-c .chez i{display:block;height:12px;border:2px solid var(--ek-ink);border-radius:999px;margin-top:6px;background:linear-gradient(90deg,#2B5C9E var(--w),#fff var(--w))}
+.ek.ax4-page .ax4m-c .chez.p{font-size:13px;font-weight:600}.ek.ax4-page .ax4m-c .chez.p b{font-weight:800}

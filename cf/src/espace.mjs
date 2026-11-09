@@ -726,7 +726,7 @@ export async function rapportExemple(request, env, ctx) {
    Mêmes sujets que le rapport (mondeDe de rapport8.mjs, même clé de cache de l'IA : aucun appel en plus), sans portefeuille.
    Gardé 3 heures (table monde_pub). Lundi matin, s'il n'y a pas encore assez de titres, la semaine précédente. */
 export async function mondePublic(request, env) {
-  const auj = jourParis(), cle = "monde2|" + auj.slice(0, 10);
+  const auj = jourParis(), cle = "monde3|" + auj.slice(0, 10);
   if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)`).run();
     const h = await env.DB.prepare(`SELECT txt, at FROM monde_pub WHERE k = ?`).bind(cle).first(); if (h && Date.now() - h.at < 3 * 36e5) return json(JSON.parse(h.txt)); } catch (e) { }
   const d = await siteData(request, env);

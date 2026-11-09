@@ -182,8 +182,10 @@ function presseFidele(txt, lus) { // garde les phrases dont chaque nombre et cha
 }
 // 8/11 : homonymes (« Nov » pris pour le mois) et conseils glissés par la presse : synthèse refusée ou phrase retirée
 // 8/11 (Romain : « un margen brut », « une marge brute ») : fautes connues du modèle corrigées à l'écriture et à la lecture du cache
-function frCorrige(t) {
+export function frCorrige(t) {
   return String(t || "")
+    .replace(/\bspionnage\b/gi, m => m[0] === "S" ? "Espionnage" : "espionnage").replace(/\bspion(ne)?s?\b/gi, m => (m[0] === "S" ? "E" : "e") + m.toLowerCase()) // 9/11 : « spionnage » (Le monde)
+    .replace(/\b([dDlL])[ea] (espion\w*)/g, "$1'$2").replace(/\b([qQ])ue (espion\w*)/g, "$1u'$2")
     .replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")
     .replace(/\b(un|le|ce|du) marge\b/gi, (m, d) => ({ un: "une", le: "la", ce: "cette", du: "de la" })[d.toLowerCase()] + " marge")
     .replace(/\b(marges?(?: brutes?| nettes?| opérationnelles?)?)\s+(inférieur|supérieur|élevé|faible|stable|réduit|bas|haut)(s?)\b/gi, (m, n, a, pl) => n + " " + (a === "faible" || a === "stable" ? a : a.replace(/eur$/, "eure").replace(/é$/, "ée").replace(/t$/, "te").replace(/bas$/, "basse").replace(/haut$/, "haute")) + (/s$/.test(n) ? "s" : ""))
