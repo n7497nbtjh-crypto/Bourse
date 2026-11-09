@@ -12,6 +12,14 @@ const auj = jourParis(Date.now()), hier = jourParis(Date.now() - 864e5);
 const etat = { jour: auj, genere: Date.now(), robots: [], actu: {}, coherence: {}, exterieur: {}, services: {}, reste: [], points: [] };
 const point = (niveau, texte) => etat.points.push({ niveau, texte });
 
+/* ---------- Logos (9/11 : 925 entreprises sans logo et un robot « au vert » qui ne traitait plus rien) ---------- */
+try { const L = (J(new URL("cf/site/logos/index.json", ROOT)) || {}).l || {}, U = (J(D("univers-min.json")) || {}).companies || [], dg = (J(new URL("data/diagnostic.json", ROOT)) || {}).logos || {};
+  const avec = U.filter(c => L[c.id] && L[c.id].f).length, sans = U.length - avec, revoir = U.filter(c => !(L[c.id] && L[c.id].f) && !(L[c.id] && L[c.id].v3)).length;
+  etat.logos = { entreprises: U.length, avec, sans, a_revoir: revoir, robot_jour: dg.date || null, robot_traitees: dg.traitees ?? null, robot_ecrits: dg.ecrits ?? null };
+  if (U.length && sans / U.length > 0.1) point("orange", `${sans} entreprises sur ${U.length} sont affichées sans logo (${Math.round(100 * sans / U.length)} %).`);
+  if (revoir > 0 && dg.traitees === 0) point("rouge", `Le robot des logos n'a traité aucune entreprise à sa dernière nuit alors que ${revoir} attendent un essai.`);
+} catch (e) { etat.logos = null; }
+
 /* ---------- Robots GitHub (dernier passage de chaque workflow) ---------- */
 try {
   const repo = process.env.GITHUB_REPOSITORY || "n7497nbtjh-crypto/Bourse", tok = process.env.GITHUB_TOKEN;
@@ -61,7 +69,13 @@ const averif = J(D("a-verifier.json")); if (averif && averif.items) etat.coheren
   try { t0 = Date.now(); const r = await fetch(SITE + "/data/rapport-exemple.json"); const b = await r.json(); etat.exterieur.rapport_exemple = { ok: r.ok && !!b.lignes, duree_ms: Date.now() - t0, ia: Object.keys(b.ia_entreprises || {}).length, monde: b.monde ? b.monde.sujets.length : 0 };
     if (!b.monde) point("orange", "Rapport d'exemple : pas de sujets du monde (IA indisponible ou titres manquants)."); } catch (e) { etat.exterieur.rapport_exemple = { ok: false }; point("rouge", "Le rapport d'exemple ne répond pas."); }
   try { const r = await fetch(SITE + "/api/cours"); const j = await r.json(), it = j.items || {}; const sans = Object.values(it).filter(x => !(x && x.p > 0)).length; etat.exterieur.cours = { total: Object.keys(it).length, sans_cours: sans, maj: j.maj || j.date || null }; } catch (e) { etat.exterieur.cours = null; }
-  try { const r = await fetch(SITE + "/api/ia/etat"); const j = await r.json(); etat.services.ia = { disponible: !!j.disponible, site_epuise: !!j.site_epuise, neurones_jour: j.neurones_jour ?? null, plafond: j.plafond_neurones_jour ?? null }; if (!j.disponible) point("orange", "L'IA du site ne répond pas."); } catch (e) { etat.services.ia = null; }
+  try { const r = await fetch(SITE + "/api/ia/etat"); const j = await r.json(); etat.services.ia = { disponible: !!j.disponible, site_epuise: !!j.site_epuise, neurones_jour: j.neurones_jour ?? null, plafond: j.plafond_neurones_jour ?? null }; } catch (e) { etat.services.ia = { disponible: false }; }
+  // 9/11 : vrai essai de l'IA par le chemin des questions des visiteurs (avant, seul le compteur était lu : la page disait « disponible » pendant une panne de deux jours)
+  try { const r = await fetch(SITE + "/api/ia/sante"), t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) { }
+    const test = j ? { ok: !!j.ok, ms: j.ms ?? null, modele: j.modele || null, raison: j.raison || null } : { ok: false, raison: `le serveur a planté (HTTP ${r.status}${/error code: (\d+)/.test(t) ? ", erreur Cloudflare " + t.match(/error code: (\d+)/)[1] : ""})` };
+    etat.services.ia = { ...(etat.services.ia || {}), test, disponible: test.ok };
+    if (!test.ok) point("rouge", `L'IA du site ne répond pas aux visiteurs : ${test.raison}.`); }
+  catch (e) { etat.services.ia = { ...(etat.services.ia || {}), test: { ok: false, raison: "injoignable" }, disponible: false }; point("rouge", "L'IA du site est injoignable."); }
   try { const r = await fetch(SITE + "/api/premium/offres"); const j = await r.json(); const liens = [j.mensuel, j.unique].filter(Boolean); let ok = 0;
     for (const u of liens) { try { const h = await fetch(u, { method: "HEAD", redirect: "manual" }); if (h.status < 400) ok++; } catch (e) { } }
     const merci = await fetch(SITE + "/premium/merci", { redirect: "manual" });

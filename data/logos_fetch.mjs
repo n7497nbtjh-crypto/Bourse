@@ -192,5 +192,5 @@ idx.maj = jour;
 writeFileSync("cf/site/logos/index.json", JSON.stringify(idx));
 const tous = Object.values(idx.l), dispo = tous.filter(x => x.f).length, commonsN = tous.filter(x => x.f && x.src !== "site").length, siteN = tous.filter(x => x.f && x.src === "site").length;
 const top300ok = top300.filter(c => idx.l[c.id] && idx.l[c.id].f).length;
-try { const d = existsSync("data/diagnostic.json") ? JSON.parse(readFileSync("data/diagnostic.json", "utf8")) : {}; d.logos = { date: jour, disponibles: dispo, commons: commonsN, site_officiel: siteN, initiale: U.length - dispo, top300: top300ok, pannes, traitees: ordre.length }; writeFileSync("data/diagnostic.json", JSON.stringify(d, null, 1)); } catch (e) { }
+try { const d = existsSync("data/diagnostic.json") ? JSON.parse(readFileSync("data/diagnostic.json", "utf8")) : {}; d.logos = { date: jour, disponibles: dispo, commons: commonsN, site_officiel: siteN, initiale: U.length - dispo, top300: top300ok, pannes, traitees: ordre.length, ecrits: n }; writeFileSync("data/diagnostic.json", JSON.stringify(d, null, 1)); } catch (e) { }
 console.log(`${n} logos écrits ce passage (${nc} Commons, ${ns} site officiel), ${pannes} pannes ; ${dispo} disponibles au total, ${top300ok} parmi les ${TOP} plus grosses capitalisations`);

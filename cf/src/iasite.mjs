@@ -245,36 +245,47 @@ export async function iaSite(request, env) {
     const epuise = nv !== "premium" && !siteOk(c, P, 300);
     return json({ disponible: !epuise && c.questions < plafond, reste_visiteur: Math.max(0, plafond - c.questions), site_epuise: epuise, plafond_visiteur: plafond, niveau: nv, plafonds: P.questions, periode: nv === "premium" ? "jour" : "semaine", neurones_jour: Math.round(c.neurones), plafond_neurones_jour: P.neurones }); // 7/11 nuit : consommation du jour, pour la page État du site
   }
-  if (url.pathname !== "/api/ia/rediger") return json({ error: "Introuvable" }, 404);
-  if (request.method !== "POST") return json({ error: "Méthode non permise" }, 405);
-  if (!env.AI) return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment." }, 503);
-  let b; try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible" }, 400); }
+  // 9/11 (Romain : la page État du site disait « disponible » alors que chaque question plantait depuis le 8/11) : vrai essai,
+  // par le même chemin que les questions des visiteurs (consignes, boucle des modèles, nettoyage), sans quota ni cache de réponses ;
+  // résultat gardé 20 minutes (table ia_sante) pour que la page et le robot du matin ne coûtent presque rien.
+  const sante = url.pathname === "/api/ia/sante";
+  if (sante && env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_sante (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)`).run();
+    const h0 = await env.DB.prepare(`SELECT txt, at FROM ia_sante WHERE k = 'dernier' AND at > ?`).bind(Date.now() - 20 * 6e4).first(); if (h0) return json({ ...JSON.parse(h0.txt), garde: true }); } catch (e) { }
+  const santeFin = async o => { o = { ...o, at: Date.now() }; if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_sante (k, txt, at) VALUES ('dernier', ?, ?)`).bind(JSON.stringify(o), o.at).run(); } catch (e) { } return json(o); };
+  if (url.pathname !== "/api/ia/rediger" && !sante) return json({ error: "Introuvable" }, 404);
+  if (request.method !== "POST" && !sante) return json({ error: "Méthode non permise" }, 405);
+  if (!env.AI) return sante ? santeFin({ ok: false, raison: "IA non branchée sur le serveur" }) : json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment." }, 503);
+  let b; if (sante) b = { tache: "expliquer", user: "Faits : {}\n\nQuestion : En une phrase, qu'est-ce qu'une action ?", max: 150 };
+  else try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible" }, 400); }
   const sys = CONSIGNES[b && b.tache];
   if (!sys) return json({ error: "Tâche inconnue" }, 400);
   const user = String(b.user || "").slice(0, 9000), max = Math.min(Math.max(+b.max || 450, 150), 500); // 7/11 soir : contexte et réponse plus courts (coût de l'IA divisé par deux environ)
   if (user.length < 3) return json({ error: "Question vide" }, 400);
   const c = await compteurs(env, h, per);
-  if (c.erreur) return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
-  if (c.questions >= plafond) return json({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez posé ${plafond} questions à l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.`
+  if (c.erreur) return sante ? santeFin({ ok: false, raison: "compteur illisible : " + (c.detail || "") }) : json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur illisible)." }, 503);
+  if (!sante && c.questions >= plafond) return json({ limite: "visiteur", niveau: nv, message: nv === "premium" ? `Vous avez posé ${plafond} questions à l'IA aujourd'hui, la limite d'usage raisonnable. Elle revient demain.`
     : `Vous avez posé vos ${plafond} questions à l'IA de la semaine. Elles reviennent lundi ; avec Premium, vous en avez ${P.questions.premium} par jour. Les réponses calculées restent disponibles.` }, 429);
   const messages = [{ role: "system", content: sys }, { role: "user", content: user }];
   // Cache : même tâche, mêmes faits, même question → même réponse, sans coût ; la question compte quand même dans le quota du visiteur (pas de contournement)
-  const k = await empreinte(b.tache + "|" + max + "|" + user);
-  try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?`).bind(k, Date.now() - 864e5).first();
+  const k = await empreinte(b.tache + "|" + max + "|" + user), t0 = Date.now(); let derniere = "";
+  if (!sante) try { const hit = await env.DB.prepare(`SELECT txt, modele FROM ia_cache WHERE k = ? AND at > ?`).bind(k, Date.now() - 864e5).first();
     if (hit) { await compter(env, h, 0, per); await env.DB.prepare(`UPDATE ia_cache SET n = n + 1 WHERE k = ?`).bind(k).run(); await parNiveau(env, nv, 0); return json({ txt: hit.txt, modele: hit.modele, cache: true }); } } catch (e) { }
   for (const [model, cin, cout, nom] of MODELES) {
     const estime = (jetons(sys + user) * cin + max * cout) / 1e6;
-    if (nv !== "premium" && !siteOk(c, P, estime)) continue; // Premium passe toujours : son abonnement paie la réponse
+    if (nv !== "premium" && !sante && !siteOk(c, P, estime)) continue; // Premium passe toujours : son abonnement paie la réponse
     try {
       const msgs = model.includes("qwen3") ? [messages[0], { role: "user", content: user + "\n/no_think" }] : messages;
       const out = await env.AI.run(model, { messages: msgs, max_tokens: max, temperature: 0.2 });
       const raw = out && (out.response || (out.choices && out.choices[0] && out.choices[0].message && out.choices[0].message.content));
       const txt = nettoie(raw && typeof raw === "object" ? JSON.stringify(raw) : raw);
       const u = out && out.usage, reel = u && u.prompt_tokens ? (u.prompt_tokens * cin + (u.completion_tokens || 0) * cout) / 1e6 : estime;
+      if (sante) { await env.DB.prepare(`INSERT INTO ia_neurones (jour, n) VALUES (?, ?) ON CONFLICT (jour) DO UPDATE SET n = n + ?`).bind(jour(), reel, reel).run().catch(() => { });
+        return santeFin(txt.length > 15 ? { ok: true, modele: nom, ms: Date.now() - t0, extrait: txt.slice(0, 90) } : { ok: false, modele: nom, raison: "réponse vide" }); }
       try { await compter(env, h, reel, per); } catch (e) { return json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment (compteur en panne)." }, 503); }
       if (txt.length > 15) { try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_cache (k, txt, modele, at, n) VALUES (?, ?, ?, ?, 0)`).bind(k, txt, nom, Date.now()).run(); if (Math.random() < 0.05) await env.DB.prepare(`DELETE FROM ia_cache WHERE at < ?`).bind(Date.now() - 2 * 864e5).run(); /* le cache ne garde rien au-delà de 48 h */ await parNiveau(env, nv, reel); } catch (e) { } return json({ txt, modele: nom }); }
-    } catch (e) { /* modèle suivant */ }
+    } catch (e) { derniere = String(e && e.message || e).slice(0, 160); /* modèle suivant */ }
   }
+  if (sante) return santeFin({ ok: false, raison: derniere ? "tous les modèles ont échoué : " + derniere : "aucun modèle n'a répondu" });
   return json({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les réponses calculées restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les réponses calculées restent disponibles, et l'IA revient demain." }, 429);
 }
 
