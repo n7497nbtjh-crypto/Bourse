@@ -8585,13 +8585,14 @@
   "CNPC Capital : identifiant LEI trouvé par recherche approchée du nom (« CNRC Capitale Limited », 30030025YNG3SJ10O291), l'ISIN CNE000000MS3 n'est pas dans la table de GLEIF"
  ],
  "logos": {
-  "date": "2026-11-09",
-  "disponibles": 2489,
-  "commons": 1769,
-  "site_officiel": 720,
-  "initiale": 914,
-  "top300": 272,
+  "date": "2026-11-10",
+  "disponibles": 3004,
+  "commons": 2113,
+  "site_officiel": 891,
+  "initiale": 399,
+  "top300": 287,
   "pannes": 0,
-  "traitees": 1
+  "traitees": 410,
+  "ecrits": 248
  }
 }
