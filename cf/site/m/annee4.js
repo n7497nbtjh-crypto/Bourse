@@ -37,6 +37,8 @@ function tqSerie(j) { // les 4 derniers trimestres et, pour chacun, le même tri
   const J = 864e5, Q = (j.q || []).filter(q => q && q.end && q.ca != null).sort((a, b) => a.end < b.end ? -1 : 1);
   const dedans = Q.filter((q, i) => i === Q.length - 1 || q.end !== Q[i + 1].end);
   const ap = dedans.slice(-4); if (ap.length < 4) return null;
+  // 10/11 : dernier trimestre de plus de 10 mois (ex. Honda, 2014) : rien plutôt qu'un ancien chiffre présenté comme récent
+  if (Date.now() - new Date(ap[3].end + "T12:00:00Z") > 300 * J) return null;
   const av = ap.map(q => { const t = new Date(q.end + "T12:00:00Z") - 365.25 * J; return dedans.find(p => Math.abs(new Date(p.end + "T12:00:00Z") - t) <= 20 * J) || null; });
   if (av.some(q => !q)) return null;
   for (let i = 1; i < 4; i++) { const g = (new Date(ap[i].end) - new Date(ap[i - 1].end)) / J; if (g < 75 || g > 105) return null; }

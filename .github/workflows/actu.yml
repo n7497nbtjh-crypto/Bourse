@@ -40,7 +40,7 @@ jobs:
           git config user.email "repere-bot@users.noreply.github.com"
           git add cf/site/data/actu cf/site/data/agenda-auto.json cf/site/data/actu-sec.json cf/site/data/actu-analyse.json
           git diff --cached --quiet || git commit -q -m "Actualité du $(date -u +'%F %H:%M') UTC"
-          for i in 1 2 3 4 5; do git pull --rebase -X theirs -q && git push -q && break; sleep $((i * 7)); done
+          for i in 1 2 3 4 5; do git pull --rebase --autostash -X theirs -q && git push -q && { ok=1; break; }; sleep $((i * 7)); done; [ -n "$ok" ] || { echo "::error::Publication refusée par git : rien n'a été mis en ligne"; exit 1; }
       - name: Publication sur Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}

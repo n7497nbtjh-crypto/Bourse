@@ -117,6 +117,11 @@ try {
     else if (f.confiees && f.script && f.script.age_h > 26) point("orange", `Feuille Google ${f.n} : dernier relevé du script il y a ${f.script.age_h} h.`);
   etat.cours = { maj: c.updated, feuilles, actions: act.length, actions_sans_cours: act.filter(([, o]) => !(o && o.p > 0)).length, actions_1an: act.filter(([, o]) => o && o.p1y > 0).length,
     etf: etf.length, etf_vl: etf.filter(([, o]) => o && o.vl).length, etf_historique: hist, memoire: ref.date || null, controle: c.controle || null };
+  // 10/11 (Romain : cours restés au 7 novembre trois jours sans alerte) : le fichier publié doit dater du dernier jour de Bourse.
+  { const jourOuvre = d => { d = new Date(d); do d.setUTCDate(d.getUTCDate() - 1); while ([0, 6].includes(d.getUTCDay())); return d.toISOString().slice(0, 10); };
+    const attendu = jourOuvre(Date.now()), maj = String(c.updated || "").slice(0, 10);
+    if (!maj) point("rouge", "Cours : le fichier publié n'a pas de date.");
+    else if (maj < attendu) point("rouge", `Cours non mis à jour depuis le ${maj} : le site affiche des cours anciens (dernier jour de Bourse attendu : ${attendu}). Voir le robot « Mise à jour des données ».`); }
   // 7/11 : contrôle du robot des cours (copie ancienne servie par Google, voir data/cours_fetch.mjs)
   for (const k of c.controle || []) if (!/à jour|relue|relevé/.test(k.etat)) point(/non écrite|non lue/.test(k.etat) ? "rouge" : "orange", `Cours du ${c.updated}, feuille ${k.feuille} : ${k.etat}${k.etat === "copie du site" ? " (Google a servi une copie ancienne de la feuille)" : ""}.`);
   for (const f of feuilles) { if (f.erreur) point("rouge", `Feuille Google ${f.n} illisible : ${f.erreur}`); else if (f.lignes > 50 && f.cours / f.lignes < 0.5 && f.n < 4) point("orange", `Feuille Google ${f.n} : ${f.cours} cours sur ${f.lignes} lignes (Google limite GOOGLEFINANCE ; ouvrir la feuille dans un navigateur la fait recalculer).`); }

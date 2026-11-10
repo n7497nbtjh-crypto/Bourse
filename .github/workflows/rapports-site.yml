@@ -53,7 +53,7 @@ jobs:
             free -m | head -2; df -h . | tail -1; rm -rf /tmp/rs-* 2>/dev/null || true
             git add data/rapports_site_cache.json cf/site/data/societes cf/site/data/societes.json
             git diff --cached --quiet || git commit -q -m "Rapports annuels des sites du $(date +%F) (tranche)"
-            for i in 1 2 3; do git pull --rebase -X theirs -q && git push -q && break; sleep 5; done
+            for i in 1 2 3; do git pull --rebase --autostash -X theirs -q && git push -q && { ok=1; break; }; sleep 5; done; [ -n "$ok" ] || { echo "::error::Publication refusée par git : rien n'a été mis en ligne"; exit 1; }
             fait=$(( fait + t ))
             node -e 'const c=require("./data/rapports_site_cache.json");console.log(Object.values(c).filter(x=>x.ok).length,"comptes trouvés au total,",Object.keys(c).length,"sociétés cherchées")'
           done

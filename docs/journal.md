@@ -313,3 +313,9 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Classements : recherche « Où se classe votre entreprise ? » ; carte « Sa place » dans chaque classement de son secteur (rang sur N, ou « pas dans ce classement »), un clic ouvre la liste. Six cartes en 3 colonnes, la taille en premier. Premium comme avant.
 - Rivales cliquables : noms des graphiques à points (`ekHref` / `ekNomLien` de composants.js, recherche par nom unique ; ETF : `href` explicite), liste des rivales sous les repères, en-têtes de Comparer (entreprises) et de Comparer deux ETF.
 - app.js : le routeur lit `getAttribute("href")` pour un lien dans un SVG (a.href n'y est pas une chaîne).
+
+## 10/11/2026 après-midi : cours bloqués au 7 novembre, trimestres SEC arrêtés depuis le 5
+- Cause des cours : le robot « Mise à jour des données » lisait bien les cours chaque matin, mais `git pull --rebase` refusait (fichiers modifiés non suivis), trois fois, puis l'étape finissait « réussie » sans rien pousser. Le site publié depuis le robot avait les cours du jour, le déploiement suivant (push sur main) remettait ceux du 7/11. Correction : `--autostash` sur les 16 robots, et l'étape échoue en rouge (« Publication refusée par git ») si rien n'a été poussé.
+- État du site : point rouge « Cours non mis à jour depuis le … » si cours.json ne date pas du dernier jour de Bourse.
+- Trimestres SEC : `sec_trim.mjs` tournait sans la variable CONTACT (étape « Construction et tests ») : la SEC refusait tout (0 fichier écrit, plus de 200 échecs par jour depuis le 5/11). CONTACT ajouté. Les sociétés qui viennent de déposer un 10-Q, 10-K, 20-F ou 40-F (actu-sec.json) sont lues en priorité, sans attendre leur jour de la semaine (359 en attente le 10/11).
+- annee4.js : « Ses derniers trimestres » masqué si le dernier trimestre a plus de 10 mois (Honda montrait 2014).
