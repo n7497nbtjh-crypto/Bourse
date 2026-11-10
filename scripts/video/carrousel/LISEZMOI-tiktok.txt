@@ -1,0 +1,18 @@
+Carrousels TikTok ENKLAIR : image 1080x1920. Modèles : tk.html (Huang), gta.html (GTA 6).
+Zones vues sur iPhone le 9/11/2026 :
+- haut 0 à ~290 px caché par la barre de recherche TikTok : visages et logo en dessous (logo à 305 px).
+- bas visible jusqu'à ~1580 px seulement (pseudo, légende, musique et points couvrent le reste).
+- colonne d'icônes à droite (x > ~930 px) entre ~1080 et 1720 px : marge droite du texte 170 px.
+- texte calé en bas : bottom 440 px (finit vers 1480 px), marge droite 190 px. 10/11 (capture de Romain) : sur une publication photo, le pseudo, la légende, la musique et les points couvrent tout le bas à partir de ~1600 px, et les icônes la droite à partir de x 930. Photo en plein écran, pas de bloc noir.
+- pas de numéro de page (TikTok affiche les points).
+
+Photos (retour de Romain, 9/11/2026 : améliorer la qualité et le choix) :
+- pas de photo agrandie au-delà de sa taille : il faut au moins 1920 px de haut après recadrage, sinon on ne la prend pas.
+- photo du sujet lui-même (la personne, le produit, le lieu de l'événement), pas une ville générique ni la même photo deux fois.
+- éviter les photos de nuit très sombres, qui deviennent noires sous le dégradé.
+- vérifier chaque photo en taille réelle avant le rendu.
+- photos de presse : kits presse officiels des entreprises quand leurs conditions l'autorisent, ou photos fournies par Romain.
+
+Sources et crédits (9/11, Romain) : une seule ligne en petit en bas à droite (bottom 18 px), pas de ligne « Sources » sous le texte. Modèle : alstom/al.html.
+Reels : TikTok agrandit la vidéo et coupe environ 100 px de chaque côté. Version reel = suffixe ",r" dans l'adresse (#4,r) :
+marges gauche 150 px, droite 240 px (icônes), crédits right 150 px, texte un peu plus petit.

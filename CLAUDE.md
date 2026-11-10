@@ -47,6 +47,7 @@ Gratuit (6/11) : 5 fiches complètes par jour (en-tête et 5 repères toujours o
 Sur la fiche, tout montant hors euro est converti en euros au taux BCE du jour et marqué « * » (`f4Md`, `f4Par`, `f4Cols` de fiche4.js) ; une seule note sous les repères (`.ek-fx`) ; cours de l'action dans sa devise avec « ≈ … €* » discret ; « sur 100 € » pour les rapports (sans devise). Plus jamais de « (≈ … €) » en ligne. Les tableaux de « Tous les chiffres » restent dans la devise des comptes.
 
 ## Pièges connus
+- **Carrousels TikTok** (`scripts/video/carrousel/LISEZMOI-tiktok.txt`) : texte au-dessus de 1 480 px (bottom 440 px, marge droite 190 px) car pseudo, légende et musique couvrent le bas dès ~1 600 px (10/11, capture de Romain) ; photos Unsplash (images.unsplash.com accessible, licence libre, crédit), pas de photo de personne réelle ; vérifier qu'un sujet n'a pas déjà été publié.
 - **Ne jamais ajouter un commentaire `//` au milieu d'une ligne de code** : il a coupé du code cinq fois. Vérifier `node --check` et un vrai passage.
 - Les robots fusionnent avec `-X theirs` : ne pas corriger un cache ou l'index pendant qu'un robot tourne. `data/index_reparer.mjs` remet les sociétés qu'un robot ancien aurait effacées.
 - Limite Cloudflare Pages : 20 000 fichiers (17 128 le 5/11 ; FAQ en 256 paquets). Prochains candidats : `data/wd`, `data/actu/c`.
