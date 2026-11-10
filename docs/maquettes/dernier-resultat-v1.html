@@ -1,0 +1,76 @@
+<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Maquette : son dernier résultat, en clair (v1)</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#fff;color:#111;font:15px/1.5 Inter,sans-serif;font-variant-numeric:tabular-nums}
+.w{max-width:1120px;margin:0 auto;padding:0 20px 60px}
+.note{max-width:1120px;margin:16px auto;background:#f4f4f4;border-radius:12px;padding:10px 18px;font-size:13.5px;color:#333}
+h1,h2,h3{font-family:"Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.035em;margin:0}
+.stk{display:inline-block;font:800 14px "Bricolage Grotesque",Inter;padding:4px 12px;border-radius:10px;border:2px solid #111;box-shadow:3px 3px 0 #111;transform:rotate(-3deg);background:#fff}
+.stk.v{background:#BDEBD2}
+/* contexte : haut de fiche, en grisé */
+.ctx{opacity:.38;pointer-events:none}
+.head{background:#FFE14D;border-radius:30px;padding:24px 28px;margin-top:18px}
+.head h1{font-size:46px;line-height:1}.head p{margin:8px 0 0;font-weight:600}
+.head .vd{font:800 34px/1.05 "Bricolage Grotesque";margin-top:16px}
+/* le nouvel encadré */
+.res{margin-top:28px;border:3px solid #111;border-radius:26px;box-shadow:7px 7px 0 #111;background:#fff;overflow:hidden}
+.res-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;padding:20px 24px 0}
+.res-top .stk{background:#FFE14D}
+.res-top small{color:#555;font-weight:600}
+.res h2{font-size:34px;line-height:1.05;padding:12px 24px 0;max-width:820px}
+.res h2 em{font-style:normal;background:linear-gradient(transparent 58%,#BDEBD2 58%)}
+.kpis{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:18px 24px}
+.kpi{border:2px solid #111;border-radius:18px;padding:12px 14px;background:#fff}
+.kpi small{display:block;font-weight:700;color:#444}
+.kpi b{display:block;font:800 34px/1.05 "Bricolage Grotesque";margin-top:4px}
+.kpi b.up{color:#17834c}.kpi b.dn{color:#c62828}
+.kpi span{display:block;font-size:13px;color:#555;margin-top:2px}
+.att{margin:0 24px;padding:10px 14px;border-radius:14px;background:#E8F6EE;font-weight:600;font-size:14.5px}
+.att b{color:#17834c}
+.trois{display:grid;grid-template-columns:repeat(3,1fr);gap:0;border-top:2px solid #111;margin-top:18px}
+.trois>div{padding:16px 20px;border-right:2px solid #111}.trois>div:last-child{border-right:0}
+.trois h3{font-size:19px;display:flex;align-items:center;gap:8px}
+.trois h3 i{font-style:normal;display:inline-grid;place-items:center;width:28px;height:28px;border-radius:50%;background:#111;color:#fff;font:800 14px Inter}
+.trois p{margin:6px 0 0;font-size:15px}
+.src{display:flex;flex-wrap:wrap;gap:6px 16px;justify-content:space-between;padding:12px 24px;background:#fafafa;border-top:2px solid #111;font-size:13px;color:#555}
+.src a{color:#111;font-weight:700}
+.after{margin-top:26px}
+.after .tq{border:2px dashed #bbb;border-radius:20px;padding:18px 22px;color:#777}
+.ann{font:700 13px Inter;color:#b00;margin:6px 0 0 4px}
+@media(max-width:720px){
+ .head h1{font-size:34px}.head .vd{font-size:26px}
+ .res h2{font-size:26px;padding:10px 18px 0}.res-top{padding:16px 18px 0}
+ .kpis{grid-template-columns:1fr;padding:14px 18px;gap:8px}
+ .kpi{display:grid;grid-template-columns:1fr auto;align-items:center}.kpi b{font-size:28px;grid-row:span 2;text-align:right}
+ .att{margin:0 18px}
+ .trois{grid-template-columns:1fr}.trois>div{border-right:0;border-bottom:2px solid #111;padding:14px 18px}.trois>div:last-child{border-bottom:0}
+ .src{padding:12px 18px}
+}
+</style></head><body>
+<div class="note"><b>Maquette v1 (10/11/2026)</b> : encadré « Son dernier résultat, en clair » sur la fiche, placé juste sous le verdict et les 5 repères. Vrais chiffres d'Airbnb (résultats du 3e trimestre 2026, publiés le 5 novembre après la clôture). Sur le site, le texte serait rédigé par l'IA du site à partir du communiqué officiel, puis contrôlé (chaque chiffre doit se retrouver dans le communiqué). Le haut de fiche est grisé : seul l'encadré est nouveau.</div>
+<div class="w">
+ <div class="ctx">
+  <div class="head"><small>Entreprises › Services aux consommateurs › Airbnb</small><h1>Airbnb</h1><p>Plateforme de location de logements entre particuliers.</p><div class="vd">Le verdict et ses 5 repères (haut de fiche actuel)</div></div>
+ </div>
+
+ <div class="res">
+  <div class="res-top"><span class="stk">Son dernier résultat</span><small>3e trimestre 2026 (juillet à septembre) · publié le jeudi 5 novembre, après la clôture</small></div>
+  <h2>Ses meilleures ventes depuis trois ans, et un objectif <em>revu à la hausse</em>.</h2>
+  <div class="kpis">
+   <div class="kpi"><small>Ses ventes</small><b class="up">+19&nbsp;%</b><span>4,87 Md$&nbsp;en trois mois</span></div>
+   <div class="kpi"><small>Son bénéfice</small><b class="up">+38&nbsp;%</b><span>1,89 Md$</span></div>
+   <div class="kpi"><small>Nuits réservées</small><b class="up">+16&nbsp;%</b><span>155 millions</span></div>
+  </div>
+  <div class="att">Les analystes attendaient 4,75 Md$&nbsp;de ventes : <b>c'est mieux que prévu</b>.</div>
+  <div class="trois">
+   <div><h3><i>1</i>Pourquoi</h3><p>Plus de réservations dans toutes ses régions. Le paiement en plusieurs fois («&nbsp;réservez maintenant, payez plus tard&nbsp;») en apporte une partie.</p></div>
+   <div><h3><i>2</i>Ce qu'elle prévoit</h3><p>Pour l'année, des ventes en hausse d'un peu moins de 20&nbsp;% (avant : au moins 15&nbsp;%). Puis 3,22 à 3,28 Md$&nbsp;d'octobre à décembre.</p></div>
+   <div><h3><i>3</i>Ce qu'elle annonce</h3><p>Jusqu'à 12 Md$&nbsp;de rachat de ses propres actions, le plus gros de son histoire.</p></div>
+  </div>
+  <div class="src"><span>En Bourse : jusqu'à <b>+12&nbsp;%</b> dans les échanges après la clôture du 5 novembre.</span><span>Source : <a href="#">communiqué officiel d'Airbnb (SEC, 8-K)</a> · résumé par l'IA du site, chiffres vérifiés</span></div>
+ </div>
+ <p class="ann">↑ nouvel encadré · apparaît le jour même du résultat, disparaît au résultat suivant</p>
+
+ <div class="after ctx"><div class="tq"><b>Ses derniers trimestres</b> (section existante, plus bas) : le même trimestre comparé à l'an dernier, graphique et tableau.</div></div>
+</div>
+</body></html>
