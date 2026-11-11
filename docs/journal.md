@@ -319,3 +319,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - État du site : point rouge « Cours non mis à jour depuis le … » si cours.json ne date pas du dernier jour de Bourse.
 - Trimestres SEC : `sec_trim.mjs` tournait sans la variable CONTACT (étape « Construction et tests ») : la SEC refusait tout (0 fichier écrit, plus de 200 échecs par jour depuis le 5/11). CONTACT ajouté. Les sociétés qui viennent de déposer un 10-Q, 10-K, 20-F ou 40-F (actu-sec.json) sont lues en priorité, sans attendre leur jour de la semaine (359 en attente le 10/11).
 - annee4.js : « Ses derniers trimestres » masqué si le dernier trimestre a plus de 10 mois (Honda montrait 2014).
+
+## 11/11 soir : être lu par Google et par les IA
+- Fiches : le texte servi sans JavaScript (robots d'indexation et d'IA) passe d'environ 1 200 à 2 400 caractères : activité, nom légal, symbole, ISIN, évolution du chiffre d'affaires et du résultat net sur 5 exercices, date de mise à jour, et les questions fréquentes en clair (mêmes réponses que le JSON-LD). `rendu()` et `ssrHisto()` de cf/src/worker.mjs. Invisible pour les visiteurs.
+- Nouveau `cf/site/llms.txt` : présentation du site pour les IA (rubriques, sources, sans conseil).
+- Vérifié : Search Console validé (enregistrement DNS), sitemap de 4 650 pages, robots.txt sans blocage des IA. À faire par Romain : rapport « Pages » de Search Console, Bing Webmaster Tools (import depuis Search Console), réglage Cloudflare « Bloquer les robots d'IA » désactivé.

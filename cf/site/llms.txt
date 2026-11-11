@@ -1,0 +1,36 @@
+# ENKLAIR
+
+> ENKLAIR (https://enklair.com) explique la Bourse aux débutants, en français, à partir des comptes officiels des entreprises. Chaque chiffre est comparé à la médiane de son secteur, avec sa source et sa date. Le site donne de l'information, jamais de conseil d'investissement ni de prédiction.
+
+Données : comptes annuels et trimestriels officiels (SEC aux États-Unis, format ESEF en Europe), cours de Bourse relevés chaque jour ouvré, documents des émetteurs d'ETF. Les fiches sont recalculées automatiquement quand de nouveaux comptes sont publiés. Une donnée ancienne ou estimée est signalée comme telle.
+
+## Entreprises
+
+- [Toutes les entreprises](https://enklair.com/entreprises) : plus de 3 300 sociétés cotées (France, Europe, États-Unis, Asie).
+- Fiche d'une entreprise : https://enklair.com/entreprise/<identifiant>, par exemple [TotalEnergies](https://enklair.com/entreprise/totalenergies) ou [Apple](https://enklair.com/entreprise/apple). Chaque fiche donne le chiffre d'affaires, la marge, le résultat net, la dette, les dividendes, la croissance et le PER, comparés à la médiane du secteur et aux entreprises rivales.
+- [Comparer deux entreprises](https://enklair.com/comparer)
+- [Classements par secteur](https://enklair.com/classements)
+- [Dividendes : qui verse quoi, et quand](https://enklair.com/dividendes)
+- [Agenda des résultats](https://enklair.com/agenda)
+
+## ETF
+
+- [Tous les ETF](https://enklair.com/etf) : plus de 1 100 fonds indiciels, avec frais, contenu, historique et éligibilité au PEA.
+
+## Marchés et actualité
+
+- [Marchés](https://enklair.com/marches) : les marchés du jour par pays et par région, les plus fortes hausses et baisses.
+- [Actualité](https://enklair.com/actualites) : les annonces officielles des entreprises, lues et chiffrées.
+
+## Apprendre
+
+- [Apprendre la Bourse](https://enklair.com/apprendre) : leçons courtes avec exemples chiffrés (action, dividende, ETF, PER, inflation, arnaques…).
+- [Lexique](https://enklair.com/lexique) : les mots de la Bourse expliqués.
+- [Idées reçues](https://enklair.com/idees-recues)
+- [Outils](https://enklair.com/outils) : simulateur d'épargne, « Et si j'avais investi ? », vérification d'une offre face aux listes noires de l'AMF, comparaison de deux ETF, portefeuille (frais, doublons, dividendes).
+
+## À propos
+
+- [Méthode et sources](https://enklair.com/methode)
+- [Formule Premium](https://enklair.com/premium)
+- [Mentions légales](https://enklair.com/mentions-legales)

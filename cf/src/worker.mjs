@@ -160,9 +160,10 @@ export default {
     let html = await page.text();
     const t = info || { title: `Page introuvable · ${SITE}`, desc: BASE_DESC };
     const fq = info && url.pathname.replace(/\/+$/, "").match(/^\/entreprise\/([a-z0-9-]+)$/);
+    let faqSsr = null;
     if (fq) { // questions fréquentes de la fiche (JSON-LD FAQPage), fichier fabriqué par data/faq_seo.mjs
       try { let h = 0; for (const ch of fq[1]) h = (h * 31 + ch.charCodeAt(0)) >>> 0; // paquet : même calcul que faqSeau (data/faq_seo.mjs)
-        const r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/s${(h % 256).toString(16).padStart(2, "0")}.json`, url))); const q = r.ok && (r.headers.get("content-type") || "").includes("json") ? (await r.json())[fq[1]] : null; if (q) { const ld = JSON.stringify(q).replace(/</g, "\\u003c"); html = html.replace("</head>", `<script type="application/ld+json">${ld}</script>\n</head>`); } } catch (e) { }
+        const r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/s${(h % 256).toString(16).padStart(2, "0")}.json`, url))); const q = r.ok && (r.headers.get("content-type") || "").includes("json") ? (await r.json())[fq[1]] : null; if (q) { faqSsr = q; const ld = JSON.stringify(q).replace(/</g, "\\u003c"); html = html.replace("</head>", `<script type="application/ld+json">${ld}</script>\n</head>`); } } catch (e) { }
     }
     if (fq && t.fiche) { // chiffres réels dans la description + fil d'Ariane et organisation (schema.org)
       try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/societes/${fq[1]}.json`, url))); if (r.ok && (r.headers.get("content-type") || "").includes("json")) { t.desc = descFiche(t, await r.json()); } } catch (e) { }
@@ -172,7 +173,7 @@ export default {
     }
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc(t.title)}</title>`)
       .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc(t.desc)}">\n<link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `\n<script type="application/ld+json">${t.ld}</script>` : ""}`);
-    html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url)}</div>`);
+    html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url, faqSsr)}</div>`);
     let image = null; // 5e passage (B1) : image de partage propre à la fiche (data/og.mjs), seulement si elle existe
     if (fq) { try { const ids = await ogIds(env, url); if (ids.has(fq[1])) image = { url: `${url.origin}/og/entreprise/${fq[1]}.png`, alt: `${t.title} : verdict et cinq jauges face à la médiane du secteur, d'après les comptes officiels.` }; } catch (e) { } }
     html = tete(html, { title: t.title, desc: t.desc, url, statut: info ? 200 : 404, image });
@@ -209,7 +210,15 @@ function descFiche(t, c) {
   return `${P.join(", ")}. Rentable, endettée, et que pense le marché ? Chaque chiffre face à la médiane du secteur ${t.sec.toLowerCase()}, tiré des comptes officiels. Sans conseil.`;
 }
 
-async function rendu(t, fq, env, url) {
+// Évolution sur plusieurs exercices (chiffre d'affaires et résultat net), pour les robots qui ne lancent pas le JavaScript
+function ssrHisto(c) {
+  const ys = c.years || [], f = c.fin || {}, ca = f.ca || [], net = f.net || [];
+  const L = ys.map((y, i) => [y, ca[i], net[i]]).filter(r => r[1] != null || r[2] != null);
+  if (L.length < 2) return "";
+  return `<h2>Évolution sur ${L.length} exercices</h2><ul>${L.map(([y, a, b]) => `<li>${esc(String(y))} : ${[a != null ? `chiffre d'affaires ${fmtM(a, c.currency)}` : null, b != null ? `résultat net ${fmtM(b, c.currency)}` : null].filter(Boolean).map(esc).join(", ")}</li>`).join("")}</ul>`;
+}
+
+async function rendu(t, fq, env, url, faq = null) {
   let corps = "";
   if (fq) {
     try {
@@ -224,10 +233,17 @@ async function rendu(t, fq, env, url) {
           if (v("netDebt") != null) L.push([v("netDebt") < 0 ? "Trésorerie nette" : "Dette nette", fmtM(Math.abs(v("netDebt")), c.currency)]);
           if (v("divPaid") != null) L.push(["Dividendes versés", fmtM(v("divPaid"), c.currency)]);
           corps = `<h2>Comptes de l'exercice ${esc(String(y))}</h2><ul>${L.map(([k, x]) => `<li>${esc(k)} : ${esc(x)}</li>`).join("")}</ul><p>Source : comptes annuels officiels (${c.cik ? "SEC" : "ESEF"}).</p>`;
+          corps += ssrHisto(c);
         }
+        const id = [c.desc ? `Activité : ${c.desc}` : null, c.legalName ? `Nom légal : ${c.legalName}` : null, c.ticker ? `Symbole : ${c.ticker}` : null, c.isin ? `ISIN : ${c.isin}` : null].filter(Boolean);
+        if (id.length) corps = `<p>${id.map(esc).join(" · ")}</p>` + corps;
+        if (c.updated) corps += `<p>Fiche mise à jour le ${esc(String(c.updated).split("-").reverse().join("/"))}.</p>`;
       }
     } catch (e) { }
   }
+  const qr = faq && Array.isArray(faq.mainEntity) ? faq.mainEntity.filter(e => e && e.name && e.acceptedAnswer && e.acceptedAnswer.text) : [];
+  if (qr.length) corps += `<h2>Questions fréquentes</h2>${qr.map(e => `<h3>${esc(e.name)}</h3><p>${esc(e.acceptedAnswer.text)}</p>`).join("")}`;
+  if (fq) corps += `<p>ENKLAIR explique la Bourse aux débutants à partir des comptes officiels des entreprises, sans conseil d'investissement.</p>`;
   return `<div class="ssr"><h1>${esc(t.title.replace(/ · .*$/, ""))}</h1><p>${esc(t.desc)}</p>${corps}<p class="ssr-js">Le site a besoin de JavaScript pour afficher l'analyse complète, les graphiques et les comparaisons. S'il ne s'affiche pas, rechargez la page.</p></div>`;
 }
 

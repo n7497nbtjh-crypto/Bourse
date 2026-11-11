@@ -1,0 +1,15 @@
+SUJETS DÉJÀ PUBLIÉS (à relire AVANT de proposer un sujet ; un même sujet, même sous un autre angle, ne se refait pas)
+- Nvidia / Jensen Huang (affaire d'espionnage, chute de l'action) : FAIT. Interdit de refaire, même « la suite ». (Romain, 10/11, l'a dit deux fois)
+- Krach du 5 novembre
+- Les puces (Intel…)
+- Micron
+- Alstom
+- Crédit Agricole
+- GTA 6 / Take-Two (résultats)
+- Honda (résultats du 10/11, préparé)
+- SoftBank (résultats du 10/11)
+- Présentation du site ENKLAIR
+- Inflation américaine d'octobre (10/11, préparé)
+- Anthropic, entrée en Bourse : PAS ENCORE publié. Images prêtes dans anthropic-bourse/, à mettre à jour avec le prix final (fixé le 18/11) avant de publier
+- Arnaque aux voix de patrons imitées par l'IA, 129 M$ (11/11, préparé)
+- Costco, dividende exceptionnel de 30 $ (11/11, préparé)

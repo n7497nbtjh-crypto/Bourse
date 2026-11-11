@@ -3948,7 +3948,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "7ff75e8dedde3997", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "61fe894996f99245", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -4529,13 +4529,14 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
       if (r.status !== 404 && !(r.headers.get("content-type") || "").includes("text/html")) return r;
       if (url.pathname.match(/\.[a-z0-9]+$/i)) return new Response("Introuvable", { status: 404 });
     }
-    let html = await (await env.ASSETS.fetch(new Request(new URL("/", url), request))).text(), t = info || { title: `Page introuvable \xB7 ${SITE}`, desc: BASE_DESC }, fq = info && url.pathname.replace(/\/+$/, "").match(/^\/entreprise\/([a-z0-9-]+)$/);
+    let html = await (await env.ASSETS.fetch(new Request(new URL("/", url), request))).text(), t = info || { title: `Page introuvable \xB7 ${SITE}`, desc: BASE_DESC }, fq = info && url.pathname.replace(/\/+$/, "").match(/^\/entreprise\/([a-z0-9-]+)$/), faqSsr = null;
     if (fq)
       try {
         let h = 0;
         for (let ch of fq[1]) h = h * 31 + ch.charCodeAt(0) >>> 0;
         let r = await env.ASSETS.fetch(new Request(new URL(`/data/faq/s${(h % 256).toString(16).padStart(2, "0")}.json`, url))), q = r.ok && (r.headers.get("content-type") || "").includes("json") ? (await r.json())[fq[1]] : null;
         if (q) {
+          faqSsr = q;
           let ld = JSON.stringify(q).replace(/</g, "\\u003c");
           html = html.replace("</head>", `<script type="application/ld+json">${ld}<\/script>
 </head>`);
@@ -4557,7 +4558,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     }
     html = html.replace(/<title>[^<]*<\/title>/, `<title>${esc3(t.title)}</title>`).replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${esc3(t.desc)}">
 <link rel="canonical" href="${url.origin}${url.pathname.replace(/\/+$/, "") || "/"}">${t.ld ? `
-<script type="application/ld+json">${t.ld}<\/script>` : ""}`), html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url)}</div>`);
+<script type="application/ld+json">${t.ld}<\/script>` : ""}`), html = html.replace('<div class="wrap" id="app"></div>', `<div class="wrap" id="app">${await rendu(t, fq, env, url, faqSsr)}</div>`);
     let image = null;
     if (fq)
       try {
@@ -4592,18 +4593,25 @@ function descFiche(t, c) {
   let ca = v("ca"), eb = v("ebit"), P = [`${t.fiche.name} en ${y} : ${fmtM(ca, c.currency)} de chiffre d'affaires`];
   return eb != null && ca > 0 && P.push(`marge d'exploitation de ${(eb / ca * 100).toFixed(1).replace(".", ",")} %`), v("netDebt") != null && P.push(`${v("netDebt") < 0 ? "tr\xE9sorerie nette" : "dette nette"} de ${fmtM(Math.abs(v("netDebt")), c.currency)}`), `${P.join(", ")}. Rentable, endett\xE9e, et que pense le march\xE9 ? Chaque chiffre face \xE0 la m\xE9diane du secteur ${t.sec.toLowerCase()}, tir\xE9 des comptes officiels. Sans conseil.`;
 }
-async function rendu(t, fq, env, url) {
+function ssrHisto(c) {
+  let ys = c.years || [], f = c.fin || {}, ca = f.ca || [], net = f.net || [], L = ys.map((y, i) => [y, ca[i], net[i]]).filter((r) => r[1] != null || r[2] != null);
+  return L.length < 2 ? "" : `<h2>\xC9volution sur ${L.length} exercices</h2><ul>${L.map(([y, a, b]) => `<li>${esc3(String(y))} : ${[a != null ? `chiffre d'affaires ${fmtM(a, c.currency)}` : null, b != null ? `r\xE9sultat net ${fmtM(b, c.currency)}` : null].filter(Boolean).map(esc3).join(", ")}</li>`).join("")}</ul>`;
+}
+async function rendu(t, fq, env, url, faq = null) {
   let corps = "";
   if (fq)
     try {
       let r = await env.ASSETS.fetch(new Request(new URL(`/data/societes/${fq[1]}.json`, url)));
       if (r.ok && (r.headers.get("content-type") || "").includes("json")) {
         let c = await r.json(), f = c.fin || {}, n = (c.years || []).length - 1, y = c.years ? c.years[n] : null, L = [], v = (k) => Array.isArray(f[k]) ? f[k][n] : null;
-        y != null && (v("ca") != null && L.push(["Chiffre d'affaires", fmtM(v("ca"), c.currency)]), v("ebit") != null && L.push(["R\xE9sultat d'exploitation", fmtM(v("ebit"), c.currency)]), v("net") != null && L.push(["R\xE9sultat net", fmtM(v("net"), c.currency)]), v("netDebt") != null && L.push([v("netDebt") < 0 ? "Tr\xE9sorerie nette" : "Dette nette", fmtM(Math.abs(v("netDebt")), c.currency)]), v("divPaid") != null && L.push(["Dividendes vers\xE9s", fmtM(v("divPaid"), c.currency)]), corps = `<h2>Comptes de l'exercice ${esc3(String(y))}</h2><ul>${L.map(([k, x]) => `<li>${esc3(k)} : ${esc3(x)}</li>`).join("")}</ul><p>Source : comptes annuels officiels (${c.cik ? "SEC" : "ESEF"}).</p>`);
+        y != null && (v("ca") != null && L.push(["Chiffre d'affaires", fmtM(v("ca"), c.currency)]), v("ebit") != null && L.push(["R\xE9sultat d'exploitation", fmtM(v("ebit"), c.currency)]), v("net") != null && L.push(["R\xE9sultat net", fmtM(v("net"), c.currency)]), v("netDebt") != null && L.push([v("netDebt") < 0 ? "Tr\xE9sorerie nette" : "Dette nette", fmtM(Math.abs(v("netDebt")), c.currency)]), v("divPaid") != null && L.push(["Dividendes vers\xE9s", fmtM(v("divPaid"), c.currency)]), corps = `<h2>Comptes de l'exercice ${esc3(String(y))}</h2><ul>${L.map(([k, x]) => `<li>${esc3(k)} : ${esc3(x)}</li>`).join("")}</ul><p>Source : comptes annuels officiels (${c.cik ? "SEC" : "ESEF"}).</p>`, corps += ssrHisto(c));
+        let id = [c.desc ? `Activit\xE9 : ${c.desc}` : null, c.legalName ? `Nom l\xE9gal : ${c.legalName}` : null, c.ticker ? `Symbole : ${c.ticker}` : null, c.isin ? `ISIN : ${c.isin}` : null].filter(Boolean);
+        id.length && (corps = `<p>${id.map(esc3).join(" \xB7 ")}</p>` + corps), c.updated && (corps += `<p>Fiche mise \xE0 jour le ${esc3(String(c.updated).split("-").reverse().join("/"))}.</p>`);
       }
     } catch {
     }
-  return `<div class="ssr"><h1>${esc3(t.title.replace(/ · .*$/, ""))}</h1><p>${esc3(t.desc)}</p>${corps}<p class="ssr-js">Le site a besoin de JavaScript pour afficher l'analyse compl\xE8te, les graphiques et les comparaisons. S'il ne s'affiche pas, rechargez la page.</p></div>`;
+  let qr = faq && Array.isArray(faq.mainEntity) ? faq.mainEntity.filter((e) => e && e.name && e.acceptedAnswer && e.acceptedAnswer.text) : [];
+  return qr.length && (corps += `<h2>Questions fr\xE9quentes</h2>${qr.map((e) => `<h3>${esc3(e.name)}</h3><p>${esc3(e.acceptedAnswer.text)}</p>`).join("")}`), fq && (corps += "<p>ENKLAIR explique la Bourse aux d\xE9butants \xE0 partir des comptes officiels des entreprises, sans conseil d'investissement.</p>"), `<div class="ssr"><h1>${esc3(t.title.replace(/ · .*$/, ""))}</h1><p>${esc3(t.desc)}</p>${corps}<p class="ssr-js">Le site a besoin de JavaScript pour afficher l'analyse compl\xE8te, les graphiques et les comparaisons. S'il ne s'affiche pas, rechargez la page.</p></div>`;
 }
 async function tacheEtPush(request, env, url) {
   let r = await espace(request, env);
