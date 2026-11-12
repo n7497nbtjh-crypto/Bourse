@@ -51,6 +51,12 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - name: Cours (feuilles Google, valeurs liquidatives, Eulerpool)
+        # 12/11 : les cours passent en premier, dans leur propre étape. Avant, ils venaient après la collecte : quand elle plantait ou dépassait son temps, les cours n'étaient pas relevés (cours figés au 10/11 pendant deux jours).
+        timeout-minutes: 20
+        continue-on-error: true
+        run: |
+          EULERPOOL_KEY="${{ secrets.EULERPOOL_KEY }}" node data/cours_fetch.mjs || echo "::error::Cours non mis à jour"
       - name: Collecte (GLEIF, filings.xbrl.org, SEC)
         # Arrêt au bout de 110 minutes sans tout perdre : les comptes déjà lus sont enregistrés plus bas, la suite au passage suivant
         timeout-minutes: 110
@@ -61,10 +67,13 @@ jobs:
           if [ -n "$CONTACT" ]; then echo "Contact SEC : renseigné"; else echo "::warning::Contact SEC absent : ajoutez la variable CONTACT (Settings > Secrets and variables > Actions > Variables)"; fi
           # Node 22 plante parfois dans undici sur de longues séries de requêtes : on relance, les sociétés déjà lues sont gardées
           for i in 1 2 3; do node data/fetch_data.mjs && break; echo "::warning::Collecte interrompue, nouvelle tentative ($i)"; done
+      - name: Composition des ETF et comptes EODHD
+        timeout-minutes: 30
+        continue-on-error: true
+        run: |
           node data/etf_fetch.mjs || echo "::warning::Composition des ETF non mise à jour"
           # Comptes manquants (Samsung, Hyundai, TCS, Aramco, ICBC, sociétés allemandes…) : EODHD, seulement si le secret EODHD_KEY existe (5e passage, A7)
           EODHD_KEY="${{ secrets.EODHD_KEY }}" node data/eodhd.mjs --max 100 || echo "::warning::Import EODHD interrompu"
-          EULERPOOL_KEY="${{ secrets.EULERPOOL_KEY }}" node data/cours_fetch.mjs || echo "::warning::Cours non mis à jour"
       - name: Construction et tests
         env:
           CONTACT: ${{ vars.CONTACT || secrets.CONTACT }}

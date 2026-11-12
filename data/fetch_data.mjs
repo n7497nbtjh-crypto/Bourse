@@ -278,7 +278,8 @@ async function collectActuSec(fetchFn, list) {
   items.sort((a, b) => String(b.date).localeCompare(String(a.date)));
   writeFileSync(new URL("actu-sec.json", OUT), JSON.stringify({ updated: new Date().toISOString(), source: "SEC EDGAR", items: items.slice(0, 600) }));
   // 10/11 : tous les rapports trimestriels et annuels (sans la limite de 600 de l'actualité), pour que data/sec_trim.mjs lise chaque nouveau trimestre
-  writeFileSync(new URL("../../data/sec_rapports.json", OUT), JSON.stringify({ updated: new Date().toISOString(), items: items.filter(f => /^(10-Q|10-K|20-F|40-F)/.test(f.form || "")).map(f => ({ id: f.id, form: f.form, date: f.date })) }));
+  // 12/11 : le chemin d'avant (cf/data/, dossier qui n'existe pas) faisait planter toute la collecte ; le fichier va dans data/, à côté de ce script
+  writeFileSync(new URL("./sec_rapports.json", import.meta.url), JSON.stringify({ updated: new Date().toISOString(), items: items.filter(f => /^(10-Q|10-K|20-F|40-F)/.test(f.form || "")).map(f => ({ id: f.id, form: f.form, date: f.date })) }));
   console.log(items.length, "dépôts SEC");
 }
 

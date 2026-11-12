@@ -341,3 +341,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Constat : le robot d'actualité est programmé 8 fois par jour, GitHub n'en lançait que 2 ou 3 (10/11 : 3 passages, 11/11 : 3).
 - `reveil.yml` passe maintenant jour et nuit (toutes les demi-heures) et relance `actu.yml` dès que son dernier passage réussi a plus de 3 h 20.
 - `cf/src/rapport8.mjs` `trancheMonde` : pour le jour en cours, la clé de l'IA des sujets « Le monde » change à 0 h, 6 h, 12 h et 18 h (heure de Paris) ; avant, les sujets n'étaient calculés qu'une fois par jour.
+
+## 12/11, 13 h : cours figés au 10/11, la cause (erreur de Claude du 10/11)
+- `data/fetch_data.mjs` écrivait `sec_rapports.json` dans `cf/data/` (dossier inexistant, chemin faux ajouté le 10/11) : la collecte plantait à la fin, recommençait trois fois, dépassait ses 110 minutes ; `cours_fetch.mjs`, placé après dans la même étape, ne tournait plus. Le robot finissait « réussi » (étape tolérée). `cours.json` est resté daté du 10/11.
+- Corrigé : chemin `data/sec_rapports.json` ; dans `donnees.yml`, les cours ont leur propre étape, en premier (20 minutes au plus), les ETF et EODHD la leur après la collecte.
+- CLAUDE.md : script Google autorisé (ne plus le demander), Cloudflare payé par Romain.
