@@ -18,7 +18,7 @@ jobs:
       - name: Préparer le navigateur
         run: |
           npm i --no-save --silent playwright@1.49.1
-          npx playwright install --with-deps chromium
+          for i in 1 2 3; do npx playwright install --with-deps chromium && exit 0; echo "::warning::Installation du navigateur : essai $i raté"; sleep 30; done; exit 1
       - name: Fabriquer les images
         run: node scripts/posts.js "$(TZ=Europe/Paris date +%F)"
       - uses: actions/upload-artifact@v4

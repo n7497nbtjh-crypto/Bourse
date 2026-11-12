@@ -26,7 +26,7 @@ jobs:
       - name: Outils (Chromium hors ligne, sharp)
         run: |
           npm i --no-save --silent sharp@0.33.5 playwright@1.49.1
-          npx playwright install --with-deps chromium
+          for i in 1 2 3; do npx playwright install --with-deps chromium && break; echo "::warning::Installation du navigateur : essai $i raté"; sleep 30; done
       - name: Cartes
         run: |
           node build.mjs

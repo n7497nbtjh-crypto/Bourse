@@ -1,0 +1,44 @@
+name: Réveil des robots
+# 12/11 : GitHub lance les robots avec des heures de retard, ou pas du tout.
+# Ce robot passe toutes les demi-heures le matin : tout robot quotidien qui n'a pas tourné aujourd'hui est relancé.
+on:
+  schedule:
+    - cron: "7,37 2-14 * * *"
+  workflow_dispatch: {}
+permissions:
+  actions: write
+  contents: read
+concurrency:
+  group: reveil
+  cancel-in-progress: false
+jobs:
+  reveil:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Relancer les robots qui n'ont pas tourné aujourd'hui
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          jour=$(date -u +%F)
+          maintenant=$(( 10#$(date -u +%H) * 60 + 10#$(date -u +%M) ))
+          sem=$(date -u +%u)
+          verifier() {
+            fichier="$1"; prevu="$2"; jours="$3"
+            case "$jours" in *"$sem"*) ;; *) echo "pas aujourd'hui : $fichier"; return 0 ;; esac
+            if [ "$maintenant" -lt $(( prevu + 40 )) ]; then echo "pas encore l'heure : $fichier"; return 0; fi
+            runs=$(gh api -X GET "repos/$REPO/actions/workflows/$fichier/runs" -f created=">=${jour}T00:00:00Z" -f per_page=30 --jq '[.workflow_runs[] | select(.event == "schedule" or .event == "workflow_dispatch")]')
+            total=$(echo "$runs" | jq 'length')
+            bons=$(echo "$runs" | jq '[.[] | select(.conclusion == null or .conclusion == "success")] | length')
+            if [ "$bons" -gt 0 ]; then echo "déjà passé : $fichier"; return 0; fi
+            if [ "$total" -ge 4 ]; then echo "::error::$fichier a échoué $total fois aujourd'hui, pas de nouvelle relance"; return 0; fi
+            gh api -X POST "repos/$REPO/actions/workflows/$fichier/dispatches" -f ref=main && echo "::notice::relancé : $fichier ($total passage raté aujourd'hui)"
+          }
+          verifier ancres.yml 70 1234567
+          verifier logos.yml 160 1234567
+          verifier trim-eu.yml 200 23456
+          verifier donnees.yml 317 1234567
+          verifier cours.yml 365 12345
+          verifier etat.yml 365 1234567
+          verifier posts.yml 377 12345

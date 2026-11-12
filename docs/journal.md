@@ -331,3 +331,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Page État (`cf/site/m/etat.js`) : `etatRobotsDirect` lit les robots en direct chez GitHub à chaque ouverture (dépôt public ; CSP `connect-src` ouverte à api.github.com dans pwa.mjs) ; un robot quotidien sans passage depuis 30 h est « en retard » ; encadré rouge quand le relevé a plus de 26 h.
 - Actualité, onglet « Le monde » : les titres envoyés à l'IA étaient les 100 plus récents (journaux indiens, géopolitique) : ni Nvidia/Huang (73 titres dans la semaine), ni l'inflation américaine. `choisirTitres` de rapport8.mjs les classe par nombre de médias différents sur le même sujet (7 titres par sujet, 10 par média au plus). Consigne `SEMAINE_MONDE` : une grande entreprise au cœur de l'actualité est un sujet à part entière (elle était exclue). Clés de cache : monde11, monde5.
 - À savoir : `tests/t_rapport8.mjs` a un échec ancien (« Apple : résultats publiés », lié à la date), présent avant ces changements.
+
+## 12/11 midi : un robot « Réveil » relance chaque matin les robots qui n'ont pas tourné
+- Constat : GitHub lance les robots programmés avec 1 à 7 heures de retard (logos prévu 2 h 40, lancé 10 h 14 le 12/11) ou pas du tout ; le robot des images a échoué le 11/11 (installation du navigateur, panne réseau d'Ubuntu).
+- `.github/workflows/reveil.yml` : passe toutes les demi-heures de 2 h à 14 h UTC ; pour ancres, logos, trim-eu, donnees, cours, etat, posts : si aucun passage réussi ou en cours aujourd'hui 40 minutes après l'heure prévue, il le relance (4 essais au plus par jour).
+- Installation du navigateur : trois essais dans posts, og, esef-sites, rapports-site (comme etat).
