@@ -9,9 +9,25 @@ function etatPage() {
     const el = $("#et8");
     if (j.error) { el.innerHTML = `<div class="r8-card r8-box"><h2>Page privée</h2><p>${esc(j.error)}</p></div>`; return; }
     if (!(j.items || []).length) { el.innerHTML = `<div class="r8-card r8-box"><h2>Pas encore de relevé</h2><p>Le robot « État du site » passe chaque matin à 7 h. Lancez-le à la main depuis GitHub (Actions › État du site) pour un premier relevé.</p></div>`; return; }
-    setTimeout(etatIADirect, 0);
+    setTimeout(etatIADirect, 0); setTimeout(etatRobotsDirect, 0);
     el.innerHTML = etatHTML(j.items[0]) + (j.items.length > 1 ? `<section><span class="r8-tag">Les jours précédents</span><h2>30 derniers relevés.</h2><div class="r8-card r8-box">${j.items.slice(1).map(e => `<div class="et8-l"><span class="et8-p ${e.feu}"></span><b>${esc(etatJour(e.jour))}</b><span>${(e.points || []).filter(p => p.niveau !== "gris").length} point(s) · ${F0.format((e.actu || {}).total || 0)} annonces · ${((e.actu || {}).resultats || {}).total || 0} résultats</span></div>`).join("")}</div></section>` : "");
   }).catch(() => { $("#et8").innerHTML = `<div class="empty">Indisponible pour le moment.</div>`; });
+}
+// 12/11 : les robots sont lus en direct chez GitHub à chaque ouverture (le relevé du matin pouvait dater de deux jours sans que la page le dise).
+// Un robot quotidien sans passage depuis plus de 30 h est signalé « en retard », même si son dernier passage avait réussi.
+const ETAT_QUOTIDIENS = ["Mise à jour des données", "État du site", "Actualité des entreprises", "espace", "Ancres de preuve", "Logos des entreprises", "Rapports annuels des sites"];
+function etatRobotsDirect() {
+  fetch("https://api.github.com/repos/n7497nbtjh-crypto/Bourse/actions/runs?per_page=100", { headers: { accept: "application/vnd.github+json" } }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => {
+    const box = $("#et8-robots"), tit = $("#et8-robots-t"); if (!box) return;
+    const vus = new Set(), L = [], cours = new Set();
+    for (const x of j.workflow_runs || []) { const cle = x.workflow_id || x.name; if (x.status !== "completed") { cours.add(cle); continue; } if (vus.has(cle) || /CodeQL/i.test(x.name)) continue; vus.add(cle);
+      const age = (Date.now() - Date.parse(x.updated_at)) / 36e5; L.push({ nom: x.name, ok: x.conclusion === "success", quand: x.updated_at, age, lien: x.html_url, retard: ETAT_QUOTIDIENS.includes(x.name) && age > 30, encours: cours.has(cle) }); }
+    if (!L.length) return;
+    const pb = L.filter(r => !r.ok || r.retard);
+    box.innerHTML = L.map(r => `<div class="et8-l"><span class="et8-p ${!r.ok ? "r" : r.retard ? "o" : "v"}"></span><span>${esc(r.nom)} <small>· ${esc(etatH(r.quand))}${r.age > 30 ? ` · il y a ${Math.round(r.age)} h` : ""}${r.encours ? " · un passage est en cours" : ""}</small></span><b class="${!r.ok ? "dn" : r.retard ? "att" : "up"}">${!r.ok ? "échec" : r.retard ? "en retard" : "réussi"}</b> <a href="${esc(r.lien)}" target="_blank" rel="noopener" aria-label="Voir le passage sur GitHub">↗</a></div>`).join("");
+    if (tit) tit.textContent = pb.length ? `${pb.length} robot${pb.length > 1 ? "s" : ""} à regarder.` : "Tous les robots ont tourné.";
+    const n = $("#et8-robots-n"); if (n) n.textContent = `Lu en direct chez GitHub à ${new Date().toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}.`;
+  }).catch(() => { const n = $("#et8-robots-n"); if (n) n.textContent = "Lecture en direct impossible : liste du dernier relevé."; });
 }
 // 9/11 : l'IA est essayée pour de vrai à chaque ouverture de la page (résultat gardé 20 min par le serveur), pas seulement par le robot du matin
 function etatIADirect() {
@@ -32,10 +48,12 @@ function etatHTML(e) {
   const src = Object.entries(A.par_source || {}).sort((a, b) => b[1] - a[1]).map(([s, n]) => `${({ sec: "SEC", amf: "AMF", nsm: "Nordiques", nasdaq: "Nasdaq", oslo: "Oslo", bbc: "BBC" })[s] || s} ${n}`).join(" · ");
   const ctrl = (lab, c) => c ? `<div class="r8-card et8-c"><span class="k">${lab}</span><div class="v ${c.ok ? "up" : "dn"}">${c.ok ? "0 problème" : "échec"}</div><p>${esc(c.out || "")}</p></div>` : "";
   const pts = P.filter(p => p.niveau !== "gris");
-  return `<div class="r8-band et8-band"><div><span class="r8-tag k">État du site · ${esc(etatJour(e.jour))}, ${esc(new Date(e.genere).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }))}</span><h1>${esc(titre)}</h1>
+  const vieuxH = Math.round((Date.now() - e.genere) / 36e5);
+  const vieux = vieuxH > 26 ? `<div class="r8-card r8-box" style="border-color:#D92D12"><h2 style="color:#D92D12">Ce relevé a ${vieuxH} heures.</h2><p>Le robot « État du site » n'a pas réussi de passage depuis le ${esc(etatH(e.genere))}. Les contrôles ci-dessous datent de ce jour-là ; seule la liste des robots est lue en direct.</p></div>` : "";
+  return vieux + `<div class="r8-band et8-band"><div><span class="r8-tag k">État du site · ${esc(etatJour(e.jour))}, ${esc(new Date(e.genere).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }))}</span><h1>${esc(titre)}</h1>
       ${pts.length ? `<ul class="et8-pts">${pts.map(p => `<li><span class="et8-p ${p.niveau === "rouge" ? "r" : "o"}"></span>${esc(p.texte)}</li>`).join("")}</ul>` : `<p class="r8-l">${(e.robots || []).length} robots, ${F0.format(A.total || 0)} annonces lues hier, ${R.total || 0} résultats dont ${R.avec_chiffres || 0} avec leurs chiffres.</p>`}</div>
       <div class="et8-feu ${e.feu}">${!nb ? "Tout<br>va bien" : `${nb} point${nb > 1 ? "s" : ""}<br>à régler`}</div></div>
-    <section><span class="r8-tag">Les robots</span><h2>Ce qui a tourné.</h2><div class="r8-card r8-box">${robots}</div></section>
+    <section><span class="r8-tag">Les robots</span><h2 id="et8-robots-t">Ce qui a tourné.</h2><p class="r8-l" id="et8-robots-n">Liste du relevé du ${esc(etatH(e.genere))}.</p><div class="r8-card r8-box" id="et8-robots">${robots}</div></section>
     <section><span class="r8-tag b">L'actualité d'hier</span><h2>Ce que le site a lu et digéré.</h2><div class="et8-g">
       <div class="r8-card et8-c"><span class="k">Annonces lues</span><div class="v">${F0.format(A.total || 0)}</div><p>${esc(src)}</p></div>
       <div class="r8-card et8-c"><span class="k">Résultats publiés</span><div class="v">${R.total || 0}</div><p><b class="up">${R.avec_chiffres || 0}</b> avec leurs chiffres extraits · <b class="${R.sans_chiffres ? "att" : ""}">${R.sans_chiffres || 0}</b> sans chiffres</p></div>

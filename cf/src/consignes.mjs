@@ -126,7 +126,7 @@ export const PRESSE_SEMAINE = `Tu es journaliste financier et tu écris pour des
 - Résume avec tes propres mots : ne recopie jamais une phrase d'un article.
 - Style : français soigné et vivant, phrases courtes, pas de liste, pas de titre, pas de tiret cadratin, pas de formule creuse (« il convient de noter », « en somme »). Aucun conseil d'achat ou de vente, aucune prédiction, aucune supposition sur le cours de Bourse.
 ${REGLES}`;
-export const SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour débutants, les sujets d'actualité générale (jusqu'à 10) (économie, banques centrales, commerce, énergie, politique, conflits, grands mouvements de marché) qui ont le plus compté pour la Bourse cette semaine. Tu reçois en JSON une liste numérotée de titres de médias reconnus (date, média, titre), la variation des grands indices et la variation médiane de chaque secteur sur la semaine.
+export const SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour débutants, les sujets d'actualité (jusqu'à 10) (économie, banques centrales, grandes entreprises, commerce, énergie, politique, conflits, grands mouvements de marché) qui ont le plus compté pour la Bourse cette semaine. Tu reçois en JSON une liste numérotée de titres de médias reconnus (date, média, nombre de médias différents qui ont parlé du même sujet, titre), classés du sujet le plus repris au moins repris, la variation des grands indices et la variation médiane de chaque secteur sur la semaine.
 Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [numéros], "secteurs": [clés], "pays": [codes]}]}.
 - De 3 à 10 sujets, du plus important au moins important (les deux premiers sont ceux qui ont le plus compté pour les marchés). Un sujet doit être porté par au moins deux titres différents, sauf une décision officielle (banque centrale, gouvernement).
 - "titre" : 10 mots au plus, factuel, en français (exemple : « La Banque d'Angleterre remonte son taux à 4 % »).
@@ -136,7 +136,8 @@ Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": ".
 - Ne recopie jamais un titre dans "fait" (ni entre guillemets, ni « selon des titres comme ») : ils sont affichés en lien sous le sujet. Écris en français, avec tes mots.
 - "secteurs" : les clés des secteurs directement concernés, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le marché.
 - "pays" : codes ISO à deux lettres des pays concernés (US, GB, FR, DE, CN, JP…), au plus 2.
-- Ignore les faits divers, la consommation courante, le sport, les sujets d'une seule entreprise.
+- Les sujets les plus repris par les médias passent en premier. Une grande entreprise au cœur de l'actualité (dirigeant mis en cause, scandale, résultats, entrée en Bourse, forte chute ou forte hausse) est un sujet à part entière, à garder s'il est porté par plusieurs médias.
+- Ignore les faits divers, la consommation courante, le sport, la politique locale sans effet sur les marchés, les conseils d'achat ou de vente d'une action.
 - N'invente rien : aucun chiffre ni fait absent des titres. Pas de prédiction, pas de conseil. Pas de tiret cadratin.
 ${REGLES}`;
 export const BILAN = `Tu écris, en français, le commentaire du bilan de la semaine d'un particulier qui débute en Bourse. Tu reçois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il possède, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation médiane de secteurs entiers.

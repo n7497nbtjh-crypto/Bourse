@@ -911,7 +911,7 @@ ${REGLES}`, PRESSE_SEMAINE = `Tu es journaliste financier et tu \xE9cris pour de
 - N'utilise que ce que disent les articles : aucun chiffre, fait, lieu ou nom absent ; le lieu d'un fait est uniquement celui \xE9crit dans l'article (un article sur l'Espagne parle de l'Espagne, jamais de la France). Les montants gardent leur unit\xE9 et leur devise. Ce qui est au conditionnel reste au conditionnel.
 - R\xE9sume avec tes propres mots : ne recopie jamais une phrase d'un article.
 - Style : fran\xE7ais soign\xE9 et vivant, phrases courtes, pas de liste, pas de titre, pas de tiret cadratin, pas de formule creuse (\xAB il convient de noter \xBB, \xAB en somme \xBB). Aucun conseil d'achat ou de vente, aucune pr\xE9diction, aucune supposition sur le cours de Bourse.
-${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les sujets d'actualit\xE9 g\xE9n\xE9rale (jusqu'\xE0 10) (\xE9conomie, banques centrales, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, titre), la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
+${REGLES}`, SEMAINE_MONDE = `Tu choisis, pour le rapport de la semaine d'un site boursier pour d\xE9butants, les sujets d'actualit\xE9 (jusqu'\xE0 10) (\xE9conomie, banques centrales, grandes entreprises, commerce, \xE9nergie, politique, conflits, grands mouvements de march\xE9) qui ont le plus compt\xE9 pour la Bourse cette semaine. Tu re\xE7ois en JSON une liste num\xE9rot\xE9e de titres de m\xE9dias reconnus (date, m\xE9dia, nombre de m\xE9dias diff\xE9rents qui ont parl\xE9 du m\xEAme sujet, titre), class\xE9s du sujet le plus repris au moins repris, la variation des grands indices et la variation m\xE9diane de chaque secteur sur la semaine.
 R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": "...", "fait": "...", "titres": [num\xE9ros], "secteurs": [cl\xE9s], "pays": [codes]}]}.
 - De 3 \xE0 10 sujets, du plus important au moins important (les deux premiers sont ceux qui ont le plus compt\xE9 pour les march\xE9s). Un sujet doit \xEAtre port\xE9 par au moins deux titres diff\xE9rents, sauf une d\xE9cision officielle (banque centrale, gouvernement).
 - "titre" : 10 mots au plus, factuel, en fran\xE7ais (exemple : \xAB La Banque d'Angleterre remonte son taux \xE0 4 % \xBB).
@@ -921,7 +921,8 @@ R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": 
 - Ne recopie jamais un titre dans "fait" (ni entre guillemets, ni \xAB selon des titres comme \xBB) : ils sont affich\xE9s en lien sous le sujet. \xC9cris en fran\xE7ais, avec tes mots.
 - "secteurs" : les cl\xE9s des secteurs directement concern\xE9s, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le march\xE9.
 - "pays" : codes ISO \xE0 deux lettres des pays concern\xE9s (US, GB, FR, DE, CN, JP\u2026), au plus 2.
-- Ignore les faits divers, la consommation courante, le sport, les sujets d'une seule entreprise.
+- Les sujets les plus repris par les m\xE9dias passent en premier. Une grande entreprise au c\u0153ur de l'actualit\xE9 (dirigeant mis en cause, scandale, r\xE9sultats, entr\xE9e en Bourse, forte chute ou forte hausse) est un sujet \xE0 part enti\xE8re, \xE0 garder s'il est port\xE9 par plusieurs m\xE9dias.
+- Ignore les faits divers, la consommation courante, le sport, la politique locale sans effet sur les march\xE9s, les conseils d'achat ou de vente d'une action.
 - N'invente rien : aucun chiffre ni fait absent des titres. Pas de pr\xE9diction, pas de conseil. Pas de tiret cadratin.
 ${REGLES}`, BILAN = `Tu \xE9cris, en fran\xE7ais, le commentaire du bilan de la semaine d'un particulier qui d\xE9bute en Bourse. Tu re\xE7ois des faits en JSON : la variation sur la semaine des entreprises et des ETF qu'il suit ou qu'il poss\xE8de, la moyenne, les annonces officielles de la semaine, les prochaines dates et, s'il en suit, la variation m\xE9diane de secteurs entiers.
 R\xE8gles strictes :
@@ -1885,13 +1886,41 @@ function univers(d, lundi3, auj) {
   }
   return parSec;
 }
+var MOTS_VIDES = new Set("avec dans pour plus sans sous vers chez entre apres avant contre depuis pendant selon comme mais donc cette leur leurs elle elles nous vous sont ete etre avoir fait faire tout tous toute toutes tres aussi alors ainsi encore deja face pres this that with from have will what when where which while their there they them than then into over after before about amid among says said say could would should more most much many some just here your ours does been being were also back make made take stock stocks share shares market markets today news live update updates week weekly daily year years month months report reports price prices high highs lows record records rise rises rose fall falls fell gain gains drop drops jump jumps surge surges slump bourse marche marches action actions hausse baisse semaine jour jours annee annees mois prix cours point points milliard milliards million millions billion billions trillion percent first last next best ahead still amid why how watch know need things three five seven top buy sell hold check latest inside outside video photos explained analysis opinion editorial election elections results result wall street talks could worth here".split(" "));
+function motsTitre(t) {
+  return [...new Set(fold(String(t || "")).split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !MOTS_VIDES.has(w) && !/^\d+$/.test(w)))];
+}
+function choisirTitres(items, max = 140) {
+  let M = items.map((x) => ({ x, w: motsTitre(x.t) })), src = /* @__PURE__ */ new Map();
+  for (let m of M) for (let w of m.w) {
+    let S2 = src.get(w);
+    S2 || src.set(w, S2 = /* @__PURE__ */ new Set()), S2.add(m.x.s);
+  }
+  let nbMedias = new Set(items.map((x) => x.s)).size || 1, poids = (w) => {
+    let n = (src.get(w) || /* @__PURE__ */ new Set()).size;
+    return n >= 3 && n <= Math.max(6, nbMedias * 0.4) ? n : 0;
+  };
+  for (let m of M) {
+    let P = m.w.map((w) => [w, poids(w)]).filter((p) => p[1]).sort((a, b) => b[1] - a[1]);
+    m.cle = P[0] ? P[0][0] : null, m.score = (P[0] ? P[0][1] : 0) + (P[1] ? P[1][1] * 0.5 : 0), m.repris = P[0] ? P[0][1] : 1;
+  }
+  M.sort((a, b) => b.score - a.score || b.x.d.localeCompare(a.x.d));
+  let parCle = {}, parMedia = {}, vus = /* @__PURE__ */ new Set(), out = [];
+  for (let m of M) {
+    if (out.length >= max) break;
+    if (!m.cle) continue;
+    let t = fold(m.x.t).slice(0, 60);
+    vus.has(t) || (parCle[m.cle] || 0) >= 7 || (parMedia[m.x.s] || 0) >= 10 || out.some((o) => o.cle === m.cle && o.x.s === m.x.s) && (parCle[m.cle] || 0) < 4 || (vus.add(t), parCle[m.cle] = (parCle[m.cle] || 0) + 1, parMedia[m.x.s] = (parMedia[m.x.s] || 0) + 1, out.push(m));
+  }
+  return out.map((m) => ({ ...m.x, repris: m.repris }));
+}
 async function mondeDe(env, d, n, lundi3, auj) {
   let fin = addJ2(lundi3, 6), items = (d.monde && d.monde.items || []).filter((x) => x && x.d && x.d.slice(0, 10) >= addJ2(lundi3, -2) && x.d.slice(0, 10) <= fin && x.t && x.u);
   if (items.length < 4) return null;
-  let T = items.sort((a, b) => b.d.localeCompare(a.d)).slice(0, 140), parSec = univers(d, lundi3, auj), secteurs = {};
+  let T = choisirTitres(items, 140), parSec = univers(d, lundi3, auj), secteurs = {};
   for (let [s, L] of Object.entries(parSec)) secteurs[s] = { nom: SECTEURS2[s] || s, mediane_pct: r1(med(L.map((x) => x.v))), n: L.length };
   let faits = { semaine_du: lundi3, au: fin, indices: (n.indices || []).map((i) => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] };
-  for (; T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500); ) T.pop();
+  for (; T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, medias_sur_ce_sujet: x.repris, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500); ) T.pop();
   let valide = (o) => {
     if (!o || !Array.isArray(o.sujets)) return null;
     let S2 = o.sujets.slice(0, 10).map((s) => ({
@@ -1904,7 +1933,7 @@ async function mondeDe(env, d, n, lundi3, auj) {
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
     })).map((s) => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) })).map((s) => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
     return S2.length ? { sujets: S2 } : null;
-  }, r = await iaJSON(env, "monde10|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  }, r = await iaJSON(env, "monde11|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   let ctx = d.contexte && d.contexte.sujets || [];
   return { sujets: r.sujets.map((s) => {
@@ -3042,7 +3071,7 @@ async function rapportExemple(request, env, ctx) {
   return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
 }
 async function mondePublic(request, env) {
-  let auj = jourParis(), cle = "monde4|" + auj.slice(0, 10);
+  let auj = jourParis(), cle = "monde5|" + auj.slice(0, 10);
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)").run();
     let h = await env.DB.prepare("SELECT txt, at FROM monde_pub WHERE k = ?").bind(cle).first();
@@ -3948,14 +3977,14 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "61fe894996f99245", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "41adc2977d46d8d3", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: https:",
-    "connect-src 'self'",
+    "connect-src 'self' https://api.github.com",
     "frame-src https://*.tradingview.com https://*.tradingview-widget.com",
     "worker-src 'self'",
     "manifest-src 'self'",

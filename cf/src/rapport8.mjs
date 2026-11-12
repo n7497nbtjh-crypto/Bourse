@@ -92,16 +92,44 @@ function univers(d, lundi, auj) {
 }
 
 /* ---------- Le monde de la semaine ---------- */
+/* 12/11 (Romain : « les actus sont trop peu pertinentes, tu n'as même pas mis l'actu de Huang ») : les titres envoyés à l'IA étaient les 100 plus récents,
+   donc surtout la presse des dernières heures (journaux indiens, géopolitique), et jamais les grands sujets de la semaine.
+   Ils sont maintenant choisis par importance : un titre compte d'autant plus que ses mots clés sont repris par beaucoup de médias différents.
+   Au plus 7 titres par sujet et 10 par média, pour garder de la variété. Renvoie les titres du plus important au moins important. */
+const MOTS_VIDES = new Set(("avec dans pour plus sans sous vers chez entre apres avant contre depuis pendant selon comme mais donc cette leur leurs elle elles nous vous sont ete etre avoir fait faire tout tous toute toutes tres aussi alors ainsi encore deja face pres " +
+  "this that with from have will what when where which while their there they them than then into over after before about amid among says said say could would should more most much many some just here your ours does been being were also back make made take " +
+  "stock stocks share shares market markets today news live update updates week weekly daily year years month months report reports price prices high highs lows record records rise rises rose fall falls fell gain gains drop drops jump jumps surge surges slump " +
+  "bourse marche marches action actions hausse baisse semaine jour jours annee annees mois prix cours point points milliard milliards million millions billion billions trillion percent first last next best ahead still amid why how " +
+  "watch know need things three five seven top buy sell hold check latest inside outside video photos explained analysis opinion editorial election elections results result wall street talks could worth here").split(" "));
+export function motsTitre(t) { return [...new Set(fold(String(t || "")).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !MOTS_VIDES.has(w) && !/^\d+$/.test(w)))]; }
+export function choisirTitres(items, max = 140) {
+  const M = items.map(x => ({ x, w: motsTitre(x.t) })), src = new Map();
+  for (const m of M) for (const w of m.w) { let S = src.get(w); if (!S) src.set(w, S = new Set()); S.add(m.x.s); }
+  const nbMedias = new Set(items.map(x => x.s)).size || 1;
+  // un mot repris par plus de 40 % des médias ne distingue plus rien ; par moins de 3 médias, ce n'est pas encore un sujet
+  const poids = w => { const n = (src.get(w) || new Set()).size; return n >= 3 && n <= Math.max(6, nbMedias * 0.4) ? n : 0; };
+  for (const m of M) { const P = m.w.map(w => [w, poids(w)]).filter(p => p[1]).sort((a, b) => b[1] - a[1]); m.cle = P[0] ? P[0][0] : null; m.score = (P[0] ? P[0][1] : 0) + (P[1] ? P[1][1] * 0.5 : 0); m.repris = P[0] ? P[0][1] : 1; }
+  M.sort((a, b) => b.score - a.score || b.x.d.localeCompare(a.x.d));
+  const parCle = {}, parMedia = {}, vus = new Set(), out = [];
+  for (const m of M) { if (out.length >= max) break; if (!m.cle) continue;
+    const t = fold(m.x.t).slice(0, 60); if (vus.has(t)) continue;
+    if ((parCle[m.cle] || 0) >= 7 || (parMedia[m.x.s] || 0) >= 10) continue;
+    // dans un même sujet, un média ne parle qu'une fois tant que d'autres médias restent à citer
+    if (out.some(o => o.cle === m.cle && o.x.s === m.x.s) && (parCle[m.cle] || 0) < 4) continue;
+    vus.add(t); parCle[m.cle] = (parCle[m.cle] || 0) + 1; parMedia[m.x.s] = (parMedia[m.x.s] || 0) + 1; out.push(m); }
+  return out.map(m => ({ ...m.x, repris: m.repris }));
+}
+
 export async function mondeDe(env, d, n, lundi, auj) {
   const fin = addJ(lundi, 6), items = ((d.monde && d.monde.items) || []).filter(x => x && x.d && x.d.slice(0, 10) >= addJ(lundi, -2) && x.d.slice(0, 10) <= fin && x.t && x.u);
   if (items.length < 4) return null;
-  const T = items.sort((a, b) => b.d.localeCompare(a.d)).slice(0, 140); // du plus récent au plus ancien
+  const T = choisirTitres(items, 140); // du plus important au moins important (12/11)
   const parSec = univers(d, lundi, auj), secteurs = {};
   for (const [s, L] of Object.entries(parSec)) secteurs[s] = { nom: SECTEURS[s] || s, mediane_pct: r1(med(L.map(x => x.v))), n: L.length };
   // Les faits envoyés à l'IA sont coupés à 14 000 caractères par iaJSON : on retire des titres (les plus anciens) jusqu'à tenir dedans,
   // sinon le JSON arrive tronqué (7/11 : 128 titres, réponse perdue)
   const faits = { semaine_du: lundi, au: fin, indices: (n.indices || []).map(i => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] };
-  while (T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500)) T.pop();
+  while (T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, medias_sur_ce_sujet: x.repris, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500)) T.pop();
   const valide = o => {
     if (!o || !Array.isArray(o.sujets)) return null;
     const S = o.sujets.slice(0, 10).map(s => ({ // 8/11 (Romain : « étoffer le monde ») : jusqu'à 10 sujets
@@ -114,7 +142,7 @@ export async function mondeDe(env, d, n, lundi, auj) {
       .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2); // 6/11 : un sujet porté par un seul titre est écarté
     return S.length ? { sujets: S } : null;
   };
-  const r = await iaJSON(env, "monde10|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  const r = await iaJSON(env, "monde11|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   // Nos chiffres pour chaque sujet : médiane du secteur, ses plus grandes entreprises, l'indice du pays ; les valeurs du lecteur concernées
   const ctx = (d.contexte && d.contexte.sujets) || [];
