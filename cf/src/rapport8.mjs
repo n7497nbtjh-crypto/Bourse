@@ -139,10 +139,11 @@ export async function mondeDe(env, d, n, lundi, auj) {
       pays: (Array.isArray(s.pays) ? s.pays : []).map(x => String(x).toUpperCase()).filter(x => /^[A-Z]{2}$/.test(x)).slice(0, 3) }))
       .map(s => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) }))
       .map(s => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter(ph => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })) // 7/11 nuit : plus de titres anglais recopiés dans le texte (ils sont en lien sous le sujet)
-      .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2); // 6/11 : un sujet porté par un seul titre est écarté
+      .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2) // 6/11 : un sujet porté par un seul titre est écarté
+      .filter(s => new Set(s.titres.map(i => T[i].s)).size >= 2 && !/\brumeurs?\b/i.test(s.fait)); // 12/11 : au moins deux médias différents, et jamais de « rumeurs »
     return S.length ? { sujets: S } : null;
   };
-  const r = await iaJSON(env, "monde11|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  const r = await iaJSON(env, "monde12|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   // Nos chiffres pour chaque sujet : médiane du secteur, ses plus grandes entreprises, l'indice du pays ; les valeurs du lecteur concernées
   const ctx = (d.contexte && d.contexte.sujets) || [];

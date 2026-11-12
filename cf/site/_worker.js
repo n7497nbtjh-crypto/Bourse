@@ -1931,9 +1931,9 @@ async function mondeDe(env, d, n, lundi3, auj) {
       titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter((i) => Number.isInteger(i) && T[i]))].slice(0, 3),
       secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter((x) => x in secteurs).slice(0, 3),
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
-    })).map((s) => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) })).map((s) => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2);
+    })).map((s) => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) })).map((s) => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2).filter((s) => new Set(s.titres.map((i) => T[i].s)).size >= 2 && !/\brumeurs?\b/i.test(s.fait));
     return S2.length ? { sujets: S2 } : null;
-  }, r = await iaJSON(env, "monde11|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  }, r = await iaJSON(env, "monde12|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   let ctx = d.contexte && d.contexte.sujets || [];
   return { sujets: r.sujets.map((s) => {
@@ -3071,7 +3071,7 @@ async function rapportExemple(request, env, ctx) {
   return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
 }
 async function mondePublic(request, env) {
-  let auj = jourParis(), cle = "monde5|" + auj.slice(0, 10);
+  let auj = jourParis(), cle = "monde6|" + auj.slice(0, 10);
   if (env.DB) try {
     await env.DB.prepare("CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)").run();
     let h = await env.DB.prepare("SELECT txt, at FROM monde_pub WHERE k = ?").bind(cle).first();
