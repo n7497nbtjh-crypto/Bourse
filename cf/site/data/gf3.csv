@@ -1,7 +1,4 @@
 id,c1,c2,c3
-c:first-industrial-realty-trust,NYSE:FR,,
-c:appian-corporation,NASDAQ:APPN,,
-c:commercial-vehicle-group,NASDAQ:CVGI,,
 c:magnite,NASDAQ:MGNI,,
 c:opko-health,NASDAQ:OPK,,
 c:nbt-bank,NASDAQ:NBTB,,
@@ -394,18 +391,14 @@ e:vanguard-sp500,EPA:VUSA,AMS:VUSA,EBR:VUSA
 e:vanguard-ftse-all-world-dist,EPA:VWRL,AMS:VWRL,EBR:VWRL
 e:vanguard-ftse-all-world-high-dividend,EPA:VHYL,AMS:VHYL,EBR:VHYL
 e:hsbc-s-and-p-500,EPA:HHH,AMS:HHH,EBR:HHH
-e:hsbc-s-and-p-500-73p7,EPA:HSPA,AMS:HSPA,EBR:HSPA
 e:vaneck-defense,ETR:DFEN,FRA:DFEN,
 e:hsbc-msci-emerging-markets,EPA:HEMA,AMS:HEMA,EBR:HEMA
 e:hsbc-ftse-100,EPA:UKX,AMS:UKX,EBR:UKX
 e:hsbc-hang-seng-tech,EPA:HSTE,AMS:HSTE,EBR:HSTE
 e:hsbc-msci-china,EPA:CNY,AMS:CNY,EBR:CNY
-e:hsbc-usa-screened-equity,EPA:HSUD,AMS:HSUD,EBR:HSUD
-e:hsbc-asia-pacific-ex-japan-screened-equity,EPA:HSXD,AMS:HSXD,EBR:HSXD
 e:hsbc-developed-world-screened-equity,EPA:HSWD,AMS:HSWD,EBR:HSWD
 e:global-sukuk,EPA:HBKS,AMS:HBKS,EBR:HBKS
 e:hsbc-msci-europe,EPA:HEU,AMS:HEU,EBR:HEU
-e:hsbc-japan-screened-equity,EPA:HSJD,AMS:HSJD,EBR:HSJD
 e:hsbc-japan-screened-equity-4j90,EPA:HSJA,AMS:HSJA,EBR:HSJA
 e:hsbc-msci-usa-quality,EPA:MUS,AMS:MUS,EBR:MUS
 e:hsbc-emerging-market-screened-equity,EPA:HSEM,AMS:HSEM,EBR:HSEM
@@ -427,6 +420,7 @@ e:hsbc-msci-world-d7h4,EPA:HMWA,AMS:HMWA,EBR:HMWA
 e:xtrackers-msci-usa,ETR:XD9U,FRA:XD9U,
 e:xtrackers-msci-em,ETR:XMME,FRA:XMME,
 e:xtrackers-sp500-equal-weight,ETR:XDEW,FRA:XDEW,
+e:hsbc-s-and-p-500-73p7,EPA:HSPA,AMS:HSPA,EBR:HSPA
 e:xtrackers-ai-big-data,ETR:XAIX,FRA:XAIX,
 e:vaneck-semiconductor,ETR:VVSM,FRA:VVSM,
 e:xtrackers-msci-japan,ETR:DBXJ,FRA:DBXJ,
@@ -441,9 +435,12 @@ e:franklin-ftse-india,ETR:FLXI,FRA:FLXI,
 e:hsbc-msci-pacific-ex-japan,EPA:MXJ,AMS:MXJ,EBR:MXJ
 e:hsbc-multi-factor-worldwide-equity,EPA:HWDA,AMS:HWDA,EBR:HWDA
 e:hsbc-msci-china-pbu1,EPA:HCHS,AMS:HCHS,EBR:HCHS
+e:hsbc-usa-screened-equity,EPA:HSUD,AMS:HSUD,EBR:HSUD
 e:xtrackers-msci-china,ETR:XCS6,FRA:XCS6,
+e:hsbc-asia-pacific-ex-japan-screened-equity,EPA:HSXD,AMS:HSXD,EBR:HSXD
 e:hsbc-msci-world-climate-paris-aligned,EPA:HPAW,AMS:HPAW,EBR:HPAW
 e:kraneshares-csi-china-internet,ETR:KWBE,FRA:KWBE,
+e:hsbc-japan-screened-equity,EPA:HSJD,AMS:HSJD,EBR:HSJD
 e:hsbc-nasdaq-global-semiconductor,EPA:HNSC,AMS:HNSC,EBR:HNSC
 e:xtrackers-harvest-csi300,ETR:RQFI,FRA:RQFI,
 e:hsbc-msci-japan-7566,EPA:MJP,AMS:MJP,EBR:MJP
@@ -451,6 +448,7 @@ e:hsbc-msci-world-value-screened,EPA:HWVS,AMS:HWVS,EBR:HWVS
 e:hsbc-msci-emerging-markets-value-screened,EPA:HEVS,AMS:HEVS,EBR:HEVS
 e:hsbc-ftse-250,EPA:HMCX,AMS:HMCX,EBR:HMCX
 e:hsbc-msci-emerging-markets-small-cap-screened,EPA:HESS,AMS:HESS,EBR:HESS
+c:hilton,NYSE:HLT,,
 c:sii,EPA:SII,AMS:SII,EBR:SII
 c:plastivaloire,EPA:PVL,AMS:PVL,EBR:PVL
 c:glanbia,ISE:GL9,AMS:GL9,EPA:GL9
@@ -461,12 +459,13 @@ c:catalana-occidente,BME:GCO,,
 c:irish-continental-group,ISE:IR5B,AMS:IR5B,EPA:IR5B
 c:kenmare-resources,ISE:KMR,AMS:KMR,EPA:KMR
 c:schroders,LON:SDR,,
+c:fresenius-se-and-co-kgaa,ETR:FRE,FRA:FRE,
 c:lenovo,HKG:992,,
 c:china-unicom,HKG:762,,
 c:geely-auto,HKG:175,,
 c:semiconductor-manufacturing-international,HKG:981,,
 c:wuling-motors,HKG:305,,
-c:b2gold,NYSE:BTG,,
+c:beazer-homes-usa,NYSE:BZH,,
 c:gmr-airports,NSE:GMRINFRA,,
 c:jtc,LON:JTC,,
 c:kerry-group,ISE:KRZ,AMS:KRZ,EPA:KRZ
@@ -489,6 +488,7 @@ c:glenveagh-properties,ISE:GVR,AMS:GVR,EPA:GVR
 c:cairn-homes,ISE:C5H,AMS:C5H,EPA:C5H
 c:ptsb,ISE:PTSB,AMS:PTSB,EPA:PTSB
 c:ires-reit,ISE:IRES,AMS:IRES,EPA:IRES
+c:b2gold,NYSE:BTG,,
 c:hlb,KRX:028300,,
 c:ecopro,KRX:086520,,
 c:ecopro-bm,KRX:247540,,
@@ -497,6 +497,8 @@ c:mahindra-and-mahindra,NSE:M-M,,
 c:ge-vernova-td-india,NSE:GVT-D,,
 c:icici-prudential-life,NSE:ICICIPRULI,,
 c:roche,SWX:ROG,,
+e:amundi-stoxx-europe-600-basic-resources-acc,EPA:BRES,AMS:BRES,EBR:BRES
+e:amundi-stoxx-europe-600-basic-resources-dist,ETR:E6BR,FRA:E6BR,
 e:invesco-physical-gold,ETR:8PSG,FRA:8PSG,
 e:invesco-physical-gold-eur-hedged-etc,ETR:8PSE,FRA:8PSE,
 e:spdr-msci-japan,EPA:JPJY,AMS:JPJY,EBR:JPJY
