@@ -336,3 +336,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Constat : GitHub lance les robots programmés avec 1 à 7 heures de retard (logos prévu 2 h 40, lancé 10 h 14 le 12/11) ou pas du tout ; le robot des images a échoué le 11/11 (installation du navigateur, panne réseau d'Ubuntu).
 - `.github/workflows/reveil.yml` : passe toutes les demi-heures de 2 h à 14 h UTC ; pour ancres, logos, trim-eu, donnees, cours, etat, posts : si aucun passage réussi ou en cours aujourd'hui 40 minutes après l'heure prévue, il le relance (4 essais au plus par jour).
 - Installation du navigateur : trois essais dans posts, og, esef-sites, rapports-site (comme etat).
+
+## 12/11 midi (suite) : l'actualité tourne enfin toutes les 3 heures, sujets refaits 4 fois par jour
+- Constat : le robot d'actualité est programmé 8 fois par jour, GitHub n'en lançait que 2 ou 3 (10/11 : 3 passages, 11/11 : 3).
+- `reveil.yml` passe maintenant jour et nuit (toutes les demi-heures) et relance `actu.yml` dès que son dernier passage réussi a plus de 3 h 20.
+- `cf/src/rapport8.mjs` `trancheMonde` : pour le jour en cours, la clé de l'IA des sujets « Le monde » change à 0 h, 6 h, 12 h et 18 h (heure de Paris) ; avant, les sujets n'étaient calculés qu'une fois par jour.

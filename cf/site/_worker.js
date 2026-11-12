@@ -1886,6 +1886,10 @@ function univers(d, lundi3, auj) {
   }
   return parSec;
 }
+function trancheMonde(jour2) {
+  let p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: !1 }).formatToParts(/* @__PURE__ */ new Date()).map((x) => [x.type, x.value]));
+  return String(jour2).slice(0, 10) !== `${p.year}-${p.month}-${p.day}` ? "" : "|t" + Math.floor(Number(p.hour) % 24 / 6);
+}
 var MOTS_VIDES = new Set("avec dans pour plus sans sous vers chez entre apres avant contre depuis pendant selon comme mais donc cette leur leurs elle elles nous vous sont ete etre avoir fait faire tout tous toute toutes tres aussi alors ainsi encore deja face pres this that with from have will what when where which while their there they them than then into over after before about amid among says said say could would should more most much many some just here your ours does been being were also back make made take stock stocks share shares market markets today news live update updates week weekly daily year years month months report reports price prices high highs lows record records rise rises rose fall falls fell gain gains drop drops jump jumps surge surges slump bourse marche marches action actions hausse baisse semaine jour jours annee annees mois prix cours point points milliard milliards million millions billion billions trillion percent first last next best ahead still amid why how watch know need things three five seven top buy sell hold check latest inside outside video photos explained analysis opinion editorial election elections results result wall street talks could worth here".split(" "));
 function motsTitre(t) {
   return [...new Set(fold(String(t || "")).split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !MOTS_VIDES.has(w) && !/^\d+$/.test(w)))];
@@ -1933,7 +1937,7 @@ async function mondeDe(env, d, n, lundi3, auj) {
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
     })).map((s) => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) })).map((s) => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2).filter((s) => new Set(s.titres.map((i) => T[i].s)).size >= 2 && !/\brumeurs?\b/i.test(s.fait));
     return S2.length ? { sujets: S2 } : null;
-  }, r = await iaJSON(env, "monde12|" + lundi3 + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  }, r = await iaJSON(env, "monde12|" + lundi3 + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   let ctx = d.contexte && d.contexte.sujets || [];
   return { sujets: r.sujets.map((s) => {
@@ -3977,7 +3981,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "41adc2977d46d8d3", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "a0113658a9afe718", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

@@ -96,6 +96,11 @@ function univers(d, lundi, auj) {
    donc surtout la presse des dernières heures (journaux indiens, géopolitique), et jamais les grands sujets de la semaine.
    Ils sont maintenant choisis par importance : un titre compte d'autant plus que ses mots clés sont repris par beaucoup de médias différents.
    Au plus 7 titres par sujet et 10 par média, pour garder de la variété. Renvoie les titres du plus important au moins important. */
+function trancheMonde(jour) {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value]));
+  if (String(jour).slice(0, 10) !== `${p.year}-${p.month}-${p.day}`) return "";
+  return "|t" + Math.floor((Number(p.hour) % 24) / 6);
+}
 const MOTS_VIDES = new Set(("avec dans pour plus sans sous vers chez entre apres avant contre depuis pendant selon comme mais donc cette leur leurs elle elles nous vous sont ete etre avoir fait faire tout tous toute toutes tres aussi alors ainsi encore deja face pres " +
   "this that with from have will what when where which while their there they them than then into over after before about amid among says said say could would should more most much many some just here your ours does been being were also back make made take " +
   "stock stocks share shares market markets today news live update updates week weekly daily year years month months report reports price prices high highs lows record records rise rises rose fall falls fell gain gains drop drops jump jumps surge surges slump " +
@@ -143,7 +148,8 @@ export async function mondeDe(env, d, n, lundi, auj) {
       .filter(s => new Set(s.titres.map(i => T[i].s)).size >= 2 && !/\brumeurs?\b/i.test(s.fait)); // 12/11 : au moins deux médias différents, et jamais de « rumeurs »
     return S.length ? { sujets: S } : null;
   };
-  const r = await iaJSON(env, "monde12|" + lundi + "|" + auj, CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  /* 12/11 midi : pour le jour en cours, les sujets sont refaits quatre fois par jour (0 h, 6 h, 12 h, 18 h à Paris) au lieu d'une : une nouvelle du soir n'attend plus le lendemain. */
+  const r = await iaJSON(env, "monde12|" + lundi + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   // Nos chiffres pour chaque sujet : médiane du secteur, ses plus grandes entreprises, l'indice du pays ; les valeurs du lecteur concernées
   const ctx = (d.contexte && d.contexte.sujets) || [];
