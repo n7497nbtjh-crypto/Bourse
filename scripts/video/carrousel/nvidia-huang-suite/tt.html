@@ -1,0 +1,38 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+@font-face{font-family:B;src:url(brico800.ttf)}@font-face{font-family:I;src:url(Inter-ExtraBold.otf)}
+*{box-sizing:border-box}html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000;font-family:I,'Noto Color Emoji';color:#fff}
+.ph{position:absolute;left:0;top:0;width:1080px;background-size:cover;background-position:center top}
+.fade{position:absolute;left:0;right:0;background:linear-gradient(180deg,rgba(0,0,0,0),#000)}
+.logo{position:absolute;left:56px;top:305px;background:#FFE14D;color:#111;font:800 30px B;padding:2px 12px;border:3px solid #111;transform:rotate(-3deg);z-index:5}
+.txt{position:absolute;left:56px;right:190px;bottom:440px;z-index:4}
+.pill{display:inline-block;background:#FFE14D;color:#111;font:800 32px B;padding:6px 18px;border:3px solid #111;transform:rotate(-3deg);margin-bottom:34px;box-shadow:5px 5px 0 #111}
+.dot{display:none}
+.lead{font:800 58px/1.1 B;letter-spacing:-1.2px}
+.lead em{font-style:normal;color:#FFE14D}
+.sub{margin-top:26px;font:700 39px/1.32 I;color:#e4e4e4}
+.card{background:rgba(18,18,20,.86);border-left:12px solid #FFE14D;border-radius:6px 24px 24px 6px;padding:40px 44px 34px}
+.card .lead{font-size:58px;color:#fff}
+.qm{display:block;font:800 130px/0.55 B;color:#FFE14D;height:60px}
+.card .src{color:#bbb}.card .src b{color:#fff}
+.big{font:800 220px/1 B;letter-spacing:-8px;color:#FFE14D;margin:-10px 0 6px}
+.name{position:absolute;background:#fff;color:#111;border:3px solid #111;font:800 28px I;padding:6px 14px;border-radius:10px;z-index:3}
+.cr{position:absolute;left:22px;right:330px;bottom:16px;font:600 15px/1.3 I;color:rgba(255,255,255,.55);z-index:6}
+.cr{top:auto!important;bottom:18px!important;left:auto!important;right:40px!important;max-width:760px;text-align:right;font:600 16px/1.3 I!important;color:rgba(255,255,255,.75)!important;text-shadow:0 1px 3px #000}
+body.reel .logo{left:150px!important}body.reel .txt{left:150px!important;right:240px!important}body.reel .cr{right:150px!important;max-width:620px}
+body.reel .lead{font-size:52px!important}body.reel .sub{font-size:35px!important}body.reel .big{font-size:190px!important}
+.lead{font-size:68px!important}.sub{font-size:44px!important}body.reel .lead{font-size:60px!important}body.reel .sub{font-size:40px!important}.txt .src{display:none}</style></head><body><div id="c"></div><script>
+// [photo, hauteur photo, début du dégradé, haut du texte, html, crédit]
+const S=[
+['n1.jpg',1920,850,1130,`<div class="pill">NVIDIA, LA SUITE</div><div class="lead">Jensen Huang pourrait être <em>écarté de Nvidia</em>.</div><div class="sub">Il l'a fondée en 1993 et la dirige depuis 33 ans. Son conseil s'est réuni mercredi soir pour décider de son sort.</div>`,'Sources : Wall Street Journal, CNBC, Reuters · Photo : Abhishek Kumar, Unsplash'],
+['n2.jpg',1920,850,1130,`<div class="pill">MERCREDI</div><div class="lead">Une <em>deuxième liaison</em> révélée.</div><div class="sub">Selon le New York Times, avec une cadre de Nvidia placée sous ses ordres. Dimanche, il avait avoué une première liaison, avec une femme soupçonnée d'espionner pour la Chine.</div>`,'Sources : New York Times, CNBC · Photo : Christian Wiediger, Unsplash'],
+['n3.jpg',1920,850,1130,`<div class="pill">LE CONSEIL</div><div class="lead">Dimanche, le conseil lui faisait <em>confiance</em>. Mercredi, il se réunit.</div><div class="sub">11 administrateurs, dont Huang. Une majorité suffit pour lui retirer son poste. Jeudi matin, aucune décision n'était annoncée.</div>`,'Sources : communiqué de Nvidia du 8/11, Reuters · Photo d\'illustration : Pavel Gromov, Unsplash'],
+['n4.jpg',1920,850,1130,`<div class="lead">L'action a perdu <em>plus de 9&nbsp;%</em> en une soirée.</div><div class="sub">Mercredi, après la clôture de Wall Street, dès que la presse a annoncé que le conseil préparait son départ.</div>`,'Source : CNBC, 11/11 · Photo d\'illustration : Maxim Hopman, Unsplash'],
+['n5.jpg',1920,850,1130,`<div class="pill">ET APRÈS&nbsp;?</div><div class="lead">Tim Cook à la tête de Nvidia&nbsp;? <em>Une idée, pas une annonce.</em></div><div class="sub">Le nom de l'ancien patron d'Apple vient d'un professeur de Yale, pas de Nvidia. Huang, 63 ans, n'a jamais désigné de successeur.</div>`,'Sources : CNBC-TV18, Fortune · Photo : siège d\'Apple, Carles Rabada, Unsplash'],
+['n6.jpg',1920,850,1130,`<div class="lead">Nvidia, <em>en&nbsp;clair</em>.</div><div class="sub">Ses ventes, sa marge, ses rivales : les chiffres de ses comptes officiels, sur enklair.com.</div>`,'Capture d\'enklair.com, fiche Nvidia · Image : Mariia Berezovsky, Unsplash',`<div style="position:absolute;z-index:5;left:50%;top:290px;width:420px;margin-left:-210px;transform:rotate(-2deg);border:6px solid #111;border-radius:34px;overflow:hidden;box-shadow:16px 16px 0 #111;background:#fff"><img src="fichecrop.png" style="display:block;width:100%"></div>`],
+
+];
+const k=+location.hash.slice(1).split(',')[0],[img,h,f,t,html,cr,extra]=S[k-1];
+const SRC=(html.match(/<div class="src">([\s\S]*?)<\/div>/)||[,''])[1].replace(/<\/?b>/g,'');
+document.getElementById('c').innerHTML=`<div id="z" style="position:absolute;inset:0;transform-origin:50% 40%"><div class="ph" style="height:1920px;background-image:url(${img})"></div>${extra&&!extra.includes('fichecrop')?extra:''}</div><div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.45) 0,rgba(0,0,0,0) 22%,rgba(0,0,0,0) 46%,rgba(0,0,0,.84) 64%,rgba(0,0,0,.84) 90%,rgba(0,0,0,.7) 100%)"></div>${extra&&extra.includes('fichecrop')?extra:''}<div class="logo">ENKLAIR</div><div class="txt">${html}</div><div class="cr">${SRC?SRC+' · ':''}${cr}</div>`;
+window.Z=v=>{document.getElementById('z').style.transform='scale('+v+')'};if(location.hash.includes(',r'))document.body.classList.add('reel');document.title='ok';
+</script></body></html>
