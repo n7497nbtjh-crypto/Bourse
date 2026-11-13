@@ -20,24 +20,24 @@ const NAV = [
   {
     k: "news", label: "Actualités", porte: "/actualites", sous: "L'actualité expliquée, les dates à venir",
     items: [
-      ["/actualites", "L'actualité", "Les sujets de la semaine et les annonces officielles, expliqués"],
-      ["/agenda", "Agenda des résultats", "Quelle entreprise publie ses comptes, et quel jour"],
-      ["/dividendes", "Dividendes", "Qui verse un dividende, quand, et combien par action"],
+      ["/actualites", "L'actualité", "Les sujets de la semaine et les annonces officielles, expliqués", "frais"],
+      ["/agenda", "Agenda des résultats", "Quelle entreprise publie ses comptes, et quel jour", "agenda"],
+      ["/dividendes", "Dividendes", "Qui verse un dividende, quand, et combien par action", "div"],
     ],
   },
   {
     k: "ent", label: "Entreprises", porte: "/entreprises", sous: "Les fiches, les classements, la comparaison",
     items: [
-      ["/entreprises", "Les entreprises", "Chaque fiche face à la médiane de son secteur"],
-      ["/classements", "Classements", "Où se situe une entreprise dans son secteur"],
-      ["/comparer", "Comparer", "Côte à côte, critère par critère, face au secteur"],
+      ["/entreprises", "Les entreprises", "Chaque fiche face à la médiane de son secteur", "pf"],
+      ["/classements", "Classements", "Où se situe une entreprise dans son secteur", "listes"],
+      ["/comparer", "Comparer", "Côte à côte, critère par critère, face au secteur", "comparer"],
     ],
   },
   {
     k: "etf", label: "ETF", porte: "/etf", sous: "Ce qu'ils contiennent, leurs frais, les comparer",
     items: [
-      ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, leur performance"],
-      ["/outils/recouvrement", "Comparer deux ETF", "Composition, frais et entreprises en commun"],
+      ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, leur performance", "repart"],
+      ["/outils/recouvrement", "Comparer deux ETF", "Composition, frais et entreprises en commun", "recouv"],
     ],
   },
   {
@@ -59,8 +59,11 @@ const NAV_G = { home: "", aca: "", new: "", lex: "", mkt: "news", news: "news", 
 
 /* ---------- Construction ---------- */
 const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));
+const navIc = k => `<i class="navic">${typeof ou4Ic === "function" ? ou4Ic(k) : ""}</i>`;
 function navBarreHTML() { // les portes en liens directs, l'étoile des favoris (compteur), Premium
-  return NAV.map(g => `<a href="${g.porte}" data-g="${g.k}" class="navporte${g.compte ? " navesp" : ""}">${g.compte ? `Mon espace<span class="espn"></span>` : navEsc(g.label)}</a>`).join("")
+  // 13/11 soir (Romain : « les sections sont trop cachées ») : chaque rubrique déroule ses pages au survol, avec une petite flèche
+  return NAV.map(g => { const a = `<a href="${g.porte}" data-g="${g.k}" class="navporte${g.compte ? " navesp" : ""}">${g.compte ? `Mon espace<span class="espn"></span>` : navEsc(g.label)}${!g.compte && g.items.length > 1 ? `<i class="navch" aria-hidden="true">▾</i>` : ""}</a>`;
+    return g.compte || g.items.length < 2 ? a : `<div class="navgrp">${a}<div class="navdd">${g.items.map(([h, t, d, ic]) => `<a href="${h}">${navIc(ic)}<span><b>${navEsc(t)}</b><small>${navEsc(d)}</small></span></a>`).join("")}</div></div>`; }).join("")
     + `<a href="/favoris" data-nav="fav" class="navfav" title="Mes favoris" aria-label="Mes favoris"><span class="st">★</span><span class="favn"></span></a>`
     + `<a href="/premium" data-nav="prem" class="navprem">Premium</a>`;
 }
@@ -94,13 +97,16 @@ function setNav(k) {
   document.querySelectorAll("#nav a.navporte").forEach(a => a.classList.toggle("on", a.dataset.g === g));
   navSous(g);
 }
-/* La petite barre de la rubrique : ses pages, celle qu'on lit en jaune. Vide (donc cachée) hors des trois rubriques. */
+/* Les pages de la rubrique, sous la barre du haut. Sur une page de la rubrique : de grandes cartes (icône, nom, explication),
+   celle qu'on lit en jaune. Sur une fiche : la version courte, en pastilles. Vide (donc cachée) hors des trois rubriques. */
 function navSous(g) {
   let el = document.getElementById("navsous");
-  if (!el) { const a = document.getElementById("app"); if (!a) return; el = document.createElement("nav"); el.id = "navsous"; el.className = "wrap navsous"; el.setAttribute("aria-label", "Pages de la rubrique"); a.parentNode.insertBefore(el, a); }
+  if (!el) { const a = document.getElementById("app"); if (!a) return; el = document.createElement("nav"); el.id = "navsous"; el.setAttribute("aria-label", "Pages de la rubrique"); a.parentNode.insertBefore(el, a); }
   const G = NAV.find(x => x.k === g && !x.compte && x.items.length > 1), p = location.pathname.replace(/\/+$/, "") || "/";
   let ici = null; if (G) for (const [h] of G.items) if (p === h) ici = h;
-  el.innerHTML = G ? G.items.map(([h, t]) => `<a href="${h}"${h === ici ? ' class="on" aria-current="page"' : ""}>${navEsc(t)}</a>`).join("") : "";
+  el.className = "wrap navsous" + (G && ici ? " navcartes n" + G.items.length : "");
+  el.innerHTML = !G ? "" : ici ? G.items.map(([h, t, d, ic]) => `<a href="${h}"${h === ici ? ' class="on" aria-current="page"' : ""}>${navIc(ic)}<span><b>${navEsc(t)}</b><small>${navEsc(d)}</small></span></a>`).join("")
+    : G.items.map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("");
   el.hidden = !G;
 }
 

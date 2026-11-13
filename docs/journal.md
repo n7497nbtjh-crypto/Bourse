@@ -451,3 +451,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Fil d'Ariane de Comparer : « Entreprises › Comparer ». Les icônes de la page de connexion (`ou4Ic`) sont passées dans `composants.js`.
 - Contrôles : audit 95 pages en trois tailles, 0 problème, 0 erreur JS ; relecture 42 pages ; relecture visuelle de 40 fiches ; tests du serveur (redirections) bons.
 
+## 13/11, 20 h 30 : les pages de chaque rubrique rendues bien visibles (Romain : « les sections sont trop cachées »)
+- Les pastilles du 19 h 30 étaient trop discrètes. Sur une page de rubrique, `navSous` affiche maintenant de grandes cartes sur toute la largeur (icône, nom, explication en une ligne ; la page lue en jaune avec une ombre) ; sur téléphone, trois cartes côte à côte avec icône et nom. Sur une fiche, la version courte en pastilles est gardée pour ne pas repousser le contenu.
+- Barre du haut (ordinateur) : une petite flèche à côté de chaque rubrique et, au survol, la liste de ses pages avec icône et explication (`.navgrp`, `.navdd`).
+- Contrôles : audit 95 pages en trois tailles, 0 problème, 0 erreur JS ; relecture 42 pages ; aucune carte ne dépasse à 320, 360 et 390 px.
+
