@@ -421,3 +421,11 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Contrôles : tous les tests de la mise en ligne bons ; essai des trois usages de l'IA avec une IA simulée (presse, annonce, traduction) ; relecture 44 pages et audit 96 pages en trois tailles, 0 problème, 0 erreur JS. Worker assemblé : 862 → 660 Ko.
 - Non fait, pour l'étape 8 : docs (`docs/ia.md`, `architecture.md`, `premium-2026-11.md`), CLAUDE.md, CSS mort, données restantes (`academie.json`, `parcours.json`…). Tables D1 `bilans`, `notifs`, `mcp_cles`, `veille` et colonnes portefeuille : plus lues, non purgées.
 
+## 13/11, 18 h : recentrage, étape 7 (robots)
+- `cours.yml` (Marketstack) supprimé avec `data/marketstack.mjs`, sa table de symboles et `cf/site/data/cours/` : le robot tournait deux fois par matin, écrivait `{"n":0,"items":{}}`, l'enregistrait (« Cours du … ») et republiait le site ; aucune page ne lisait ce fichier. Les cours du site viennent des feuilles Google (`data/cours_fetch.mjs`, dans `donnees.yml`), inchangé. Le 12/11 j'avais même ajouté un passage de rattrapage et une relance par le Réveil à ce robot inutile. Le secret `MARKETSTACK_KEY` peut être retiré par Romain.
+- `posts.yml` et `scripts/posts.js` supprimés : images du jour déposées en artefact, jamais publiées ; les carrousels se font à la demande.
+- `rapports-site.yml` : toutes les 6 heures → le mercredi. Le rattrapage est fini (dernier passage : 51 sociétés cherchées, 0 compte trouvé), chaque passage pouvait durer 2 h 30.
+- `donnees.yml` : étape `data/dirigeants.mjs` retirée (achats et ventes des dirigeants américains, fichier de 445 Ko que plus rien n'affichait) ; script et fichier supprimés.
+- `reveil.yml` : ne surveille plus `cours.yml` ni `posts.yml`. Page État : « Rapports annuels des sites » n'est plus attendu chaque jour.
+- 20 robots (16 à horaire, 4 outils à la main).
+

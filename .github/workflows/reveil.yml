@@ -40,9 +40,7 @@ jobs:
           verifier logos.yml 160 1234567
           verifier trim-eu.yml 200 23456
           verifier donnees.yml 317 1234567
-          verifier cours.yml 365 12345
           verifier etat.yml 365 1234567
-          verifier posts.yml 377 12345
           verifier etf.yml 281 1
           dernier=$(gh api -X GET "repos/$REPO/actions/workflows/actu.yml/runs" -f per_page=10 --jq '[.workflow_runs[] | select(.conclusion == null or .conclusion == "success")][0].created_at')
           age=$(( ( $(date -u +%s) - $(date -u -d "$dernier" +%s) ) / 60 ))

@@ -15,7 +15,7 @@ on:
         description: "Seulement ces sociétés (identifiants séparés par des virgules)"
         default: ""
   schedule:
-    - cron: "10 */6 * * *"
+    - cron: "10 3 * * 3"   # 13/11 (recentrage) : une fois par semaine, le mercredi (avant : toutes les 6 heures ; le rattrapage est fini, les derniers passages ne trouvaient plus rien)
 permissions:
   contents: write
 concurrency:
