@@ -105,6 +105,8 @@ export function redirectionParcours(p) {
   if (/^\/(apprendre|commencer|debuter|premiers-pas|academie|formation)(\/.*)?$/.test(p) || /^\/(pea-cto|idees-recues|livret-a-ou-bourse|pourquoi-bilan|repartitions|pour-moi)\/?$/.test(p)) return "/";
   if (/^\/simulateurs(\/.*)?$/.test(p) || /^\/outils\/(si-javais|verifier)\/?$/.test(p) || /^\/(communaute|pronostics)\/?$/.test(p)) return "/outils";
   if (/^\/hier\/?$/.test(p)) return "/actualites";
+  if (/^\/(demander|ia\/connecter)\/?$/.test(p)) return "/";
+  if (/^\/espace\/ia\/?$/.test(p)) return "/espace";
   if (p === "/pour-moi") return "/repartitions"; // « Pistes pour vous » remplacé par les répartitions types, sans personnalisation (audit P0-6)
   // Lot 2 (30/10) : quatre portes ; les anciennes pages d'entrée sont fusionnées dans /apprendre (les leçons gardent leur adresse)
   if (p === "/commencer") return "/apprendre";

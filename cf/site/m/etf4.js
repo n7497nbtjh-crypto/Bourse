@@ -268,12 +268,8 @@ function e4Memes(x) {
 
 // ——— IA, Prouvé, communauté ———
 function e4Fin(x) {
-  const { e, H } = x, vois = x.same.find(s => s.ter != null) || x.cat[0];
-  const qs = [vois ? `Quelle différence entre ${e4Court(e)} et ${e4Court(vois)} ?` : `Que contient ${e4Court(e)} ?`, x.synth ? `Que se passe-t-il si ${e.contrepartie || "la banque du swap"} fait défaut ?` : e.distribution === "distribution" ? `Quand ${e4Court(e)} verse-t-il ses dividendes ?` : `Pourquoi ${e4Court(e)} est-il capitalisant ?`];
-  return `<section class="ek-end" id="e4ia"><h2>✦ Une question sur cet ETF ?</h2><div class="ek-qs">${qs.map(q => `<button type="button" data-f4-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-      <form class="ek-ask" data-f4-ask><input type="text" name="q" maxlength="300" placeholder="Posez votre question sur ${esc(e.name)}…" aria-label="Votre question sur ${esc(e.name)}" autocomplete="off"><button type="submit">Demander</button></form>
-      <small>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</small></section>
-    <section class="ek-sec"><span class="ek-stk2" style="background:#FFE14D">Prouvé</span><h2>D'où viennent ces chiffres.</h2>
+  const { e, H } = x;
+  return `<section class="ek-sec"><span class="ek-stk2" style="background:#FFE14D">Prouvé</span><h2>D'où viennent ces chiffres.</h2>
       <div class="ek-proof"><span class="ek-stk2">Prouvé</span><p>Frais, taille et caractéristiques relevés sur <b>la fiche de l'émetteur${e.src ? ` (${esc(e.src)})` : ""}</b>. Composition : ${esc(e4SrcCompo(x))}${x.C && x.C.asOf ? `, au ${esc(dLabel(x.C.asOf))}` : ""}.${H ? ` Performance : ${esc(H.src)}.` : ""} Vérifiez-les dans le document d'informations clés (DIC) avant d'investir.</p>${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener nofollow">Ouvrir la fiche ${esc(e.issuer)} ↗</a>` : ""}</div></section>
     <section class="ek-sec" id="e4com"><span class="ek-stk2 p">Communauté</span><h2>Avis et discussion.</h2>
       <div class="et-com"><div class="ek-box"><div class="ek-bt">Avis des visiteurs<small></small></div><div id="e4avis"></div></div></div></section>`;

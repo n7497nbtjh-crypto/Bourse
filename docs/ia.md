@@ -1,5 +1,7 @@
 # L'IA de bilan.
 
+> **13/11/2026, recentrage** : l'IA ne sert plus qu'à trois choses : les sujets « Le monde » de l'actualité (serveur), le résumé de la presse d'une entreprise et l'explication (avec traduction) d'une annonce officielle. Le panneau ✦, la page « Demander », la page « L'IA du site », les questions de la fiche et du comparateur et le bilan des favoris sont supprimés. Ce qui suit décrit l'état d'avant et sera réécrit à la fin du chantier (docs/chantier-recentrage-2026-11.md).
+
 Décision du 29 octobre 2026 : simple, gratuite pour le site, utilisable par beaucoup de monde.
 
 ## En bref (pour Romain)

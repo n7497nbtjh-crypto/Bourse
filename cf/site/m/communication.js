@@ -468,11 +468,6 @@ document.addEventListener("click", e => {
 
 // Une carte seule, pour Apprendre et l'Académie : la première idée pas encore vue
 // Bloc court pour l'accueil : trois idées reçues, renvoi vers la page
-function commIdeesHTML(n = 3) {
-  const L = commIdees().filter(x => ["casino", "argent", "livret-a", "bon-moment", "experts"].includes(x.id)).slice(0, n);
-  return `<div class="cm-teaser">${L.map(x => `<a class="cm-tz" href="/idees-recues#${x.id}"><span class="kick">Vrai ou faux ?</span><b>« ${esc(x.mythe.replace(/\.$/, ""))} »</b><span>Répondez, puis découvrez ce que montrent les données.</span></a>`).join("")}</div>
-    <p class="cm-more"><a class="lnk" href="/idees-recues">Les ${commIdees().length} idées reçues, chiffres et sources à l'appui</a></p>`;
-}
 /* styles : voir site.css */
 
 /* ====================================================================================

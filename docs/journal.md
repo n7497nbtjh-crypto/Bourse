@@ -380,3 +380,11 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Supprimés aussi : `cf/site/data/listes-noires.json` (452 Ko), `hist-ref.json`, robots `data/listes_noires.mjs` et `data/outils2_hist.mjs`, robot `outils2.yml`, tests des pages supprimées (`t_parcours.py`, `t_outils2.*`, `t_provenance.py` ; `t_provenance.mjs` gardé sans sa partie « Vérifier une offre »).
 - Bilan depuis le début du chantier : code du navigateur 2,14 Mo → 1,68 Mo, 57 → 48 modules, 24 → 23 robots, 59 → 55 tests.
 - Contrôles : audit complet (104 pages en trois tailles) 0 problème, 0 erreur JS ; 3 296 fiches calculées, 0 problème ; relecture de 46 pages, 0 problème ; tests du serveur 0 écart.
+
+## 13/11, fin d'après-midi : recentrage, étape 3 (l'IA réduite à trois usages)
+- Supprimés : le panneau ✦ « Une question sur cette page » et son bouton (`orchestre.js`), la page « Demander à l'IA » (/demander), la page « L'IA du site » (/espace/ia) et son onglet, le bouton « Poser une question à l'IA » et le bloc de questions de la fiche entreprise, de la fiche ETF et du comparateur, le « Bilan de ma liste par l'IA » des favoris, la suggestion « Demander à l'IA » de la recherche (la barre dit « Une entreprise ou un ETF… »).
+- Gardés et testés avec une IA simulée : résumé d'un article de presse (`actu4.js`, consigne « presse »), explication et traduction d'une annonce officielle (`actu.js`, consigne « annonce »). Les sujets « Le monde » restent côté serveur.
+- Outil `scripts/code-mort.js` : il retire maintenant aussi les anciennes versions de fonctions remplacées par un module plus récent (29 dans `app.js` : ancienne page d'accueil, ancienne fiche, ancien portefeuille…).
+- Résultat : `ia.js` 153 Ko → 14 Ko, `app.js` 245 Ko → 137 Ko ; code du navigateur 1,68 Mo → 1,54 Mo. L'ancienne page Premium d'`app.js` ne garde que la page « Merci ».
+- Redirections : /demander et /ia/connecter vers l'accueil, /espace/ia vers /espace (navigateur et serveur).
+- Contrôles : audit complet 101 pages en trois tailles, 0 problème, 0 erreur JS (il vérifie que plus aucun point d'entrée de question n'est affiché sur la fiche) ; relecture 46 pages, 0 problème ; tests du serveur 0 écart.

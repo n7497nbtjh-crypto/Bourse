@@ -64,22 +64,6 @@ async function iaRediger(tache, faits, o = {}) {
   return out;
 }
 /** Copilote : une question libre traduite en action (filtre, comparaison, fiche, ETF) ou expliquée. */
-async function miaCopilote(q) {
-  if (MIA.coupee) return { invite: true };
-  const r = await miaAppel("demande", String(q).slice(0, 300), 500);
-  if (r.coupee) return { invite: true, message: r.message };
-  if (!r.txt) return { error: r.message };
-  const a = iaValide(jsonFrom(r.txt));
-  if (!a) return { error: "L'IA du site n'a pas su traduire cette question en recherche sur les données du site. Reformulez-la ou essayez un exemple." };
-  if (a.action === "repondre") {
-    try { await acaLoad(); } catch (e) { }
-    const h = typeof chercheLecons === "function" ? chercheLecons(q, 3) : [];
-    const x = await iaRediger("expliquer", { lecons_du_site: h.map(({ m, l }) => ({ titre: l.titre, lien: "/academie/" + m.id + "/" + l.id, resume: l.resume, a_retenir: l.a_retenir })),
-      sources: h.flatMap(({ l }) => (l.sources || []).map(s => s.label)).slice(0, 6) }, { question: q, max: 550 });
-    if (x.txt) a.texte = x.txt.slice(0, 2400);
-  }
-  return { ...a, ia: "connectee", modele: r.modele };
-}
 
 /* ---------- Petits morceaux d'interface ---------- */
 /** Pied d'une réponse rédigée. */
@@ -112,74 +96,3 @@ function miaMaj() { $$("[data-mia-etat]").forEach(el => el.innerHTML = miaEtatHT
 miaEtat();
 
 /* ---------- Page « Mon IA » (/espace/ia) : ce qu'est l'IA du site, ses limites ---------- */
-async function miaPage(el) {
-  const autonome = !el; if (autonome) { setTitle("L'IA du site"); setNav("esp"); el = app; }
-  const tete = autonome ? `<p class="kick">Mon espace</p><h1 class="pagetitle">L'IA du site</h1><p class="pagesub">Gratuite, sans compte et sans clé. Elle répond à partir des chiffres et des sources du site.</p>` : "";
-  const champ = `<form class="mia-ask" id="miaask"><input type="search" name="q" placeholder="Posez une question : « La dette de TotalEnergies est-elle un problème ? »" aria-label="Votre question" autocomplete="off" maxlength="300"><button type="submit" class="btn">Demander</button></form>
-    <div class="chips mia-ex">${["Pourquoi la marge de LVMH est-elle plus haute que celle de Kering ?", "Que pense le marché d'Apple ?", "Quelles entreprises françaises versent le plus de dividendes ?"].map(q => `<button type="button" class="chip" data-miaq="${esc(q)}">${esc(q)}</button>`).join("")}</div>`;
-  el.innerHTML = `${tete}${champ}<div class="mia-grid"><section class="panel"><div class="ph"><h2>Comment elle répond</h2><span data-mia-etat class="mia-etat"></span></div><div class="pb">
-      <ol class="mia-etapes"><li><b>D'abord, le calcul.</b> Recherches par critères, comparaisons, définitions, questions courantes sur une fiche : le site calcule la réponse dans votre navigateur, sans limite.</li>
-        <li><b>Ensuite, la rédaction.</b> Pour une question libre, un modèle ouvert (Qwen3 ou Mistral Small), hébergé par Cloudflare, rédige la réponse à partir des seuls chiffres et sources du site, avec des consignes strictes : pas de conseil, pas de prévision, les incertitudes dites.</li>
-        <li><b>Chaque réponse rédigée est signalée</b> et cite ses sources. Vérifiez-la : une IA peut se tromper.</li></ol>
-      <p class="mia-prix" id="miareste">L'IA du site répond à 3 questions par semaine en gratuit, avec ou sans compte, et à 50 questions par jour avec Premium.</p>
-      <ul class="mia-garanties"><li>Aucun compte, aucune clé à fournir.</li><li>Vos questions sont envoyées à Cloudflare, qui héberge déjà le site, pour être traitées ; elles ne servent pas à entraîner le modèle. Le site ne garde pas leur texte, seulement un compteur anonyme.</li></ul>
-    </div></section>
-    <section class="panel"><div class="ph"><h2>Vous utilisez déjà ChatGPT ou Claude ?</h2></div><div class="pb"><p style="margin-top:0">Ajoutez ENKLAIR à votre assistant : il pourra lire les données du site pour vous répondre.</p><a class="lnk" href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a></div></section></div>`;
-  miaMaj();
-  const poser = q => { if (typeof orcIaOpen !== "function") return; orcIaOpen(); orcIaAsk(q, { rediger: true }); };
-  const fm = $("#miaask", el); if (fm) fm.onsubmit = e => { e.preventDefault(); const q = fm.q.value.trim(); if (q.length >= 3) poser(q); };
-  $$("[data-miaq]", el).forEach(b => b.onclick = () => poser(b.dataset.miaq));
-  const j = await miaEtat(), r = $("#miareste", el);
-  if (r && j && j.plafonds) { const Q = j.plafonds, nv = { visiteur: "sans compte", compte: "avec votre compte gratuit", premium: "avec Premium" }[j.niveau] || "";
-    r.innerHTML = `L'IA du site répond à ${Q.visiteur} questions par semaine en gratuit, avec ou sans compte, et à ${Q.premium} questions par jour avec <a class="lnk" href="/premium">Premium</a>. Vous êtes ${esc(nv)} : ${j.disponible ? `il vous en reste ${j.reste_visiteur} ${j.periode === "jour" ? "aujourd'hui" : "cette semaine"}.` : j.site_epuise ? "la part gratuite du site est épuisée pour aujourd'hui, l'IA revient demain." : j.periode === "jour" ? "vous les avez utilisées aujourd'hui, l'IA revient demain." : "vous les avez utilisées cette semaine, elles reviennent lundi."}`; }
-}
-ROUTES_EXTRA.push([/^\/espace\/ia$/, async () => {
-  const m = typeof moi === "function" ? await moi() : { connecte: false };
-  if (!m || !m.connecte) return miaPage(null);
-  await pageEspace("reglages"); // en-tête et onglets de Mon espace
-  const nav = $(".esptabs"); if (!nav) return miaPage(null);
-  setTitle("L'IA du site · Mon espace"); $$("a", nav).forEach(a => a.classList.remove("on"));
-  const a = nav.querySelector('a[href="/espace/ia"]'); if (a) { a.classList.add("on"); nav.scrollLeft = Math.max(0, a.offsetLeft - 16); }
-  miaPage($("#espb"));
-}]);
-(() => { // onglet « Mon IA » dans Mon espace
-  const esp0 = window.pageEspace; if (typeof esp0 !== "function") return;
-  window.pageEspace = async function (onglet) {
-    await esp0(onglet);
-    const nav = $(".esptabs"); if (!nav || nav.querySelector('a[href="/espace/ia"]')) return;
-    const r = nav.querySelector('a[href="/espace/reglages"]'); const html = `<a href="/espace/ia">L'IA du site</a>`;
-    if (r) r.insertAdjacentHTML("beforebegin", html); else nav.insertAdjacentHTML("beforeend", html);
-  };
-})();
-
-/* ---------- Un seul point d'entrée : le panneau ✦, contextuel sur les listes ---------- */
-const MIA_CTX0 = window.orcIaCtx;
-if (typeof MIA_CTX0 === "function") window.orcIaCtx = function () {
-  const p = location.pathname;
-  try {
-    if (p === "/entreprises" && typeof listState !== "undefined") {
-      const sec = listState.sector !== "all" ? secName({ sector: listState.sector }) : null, reg = listState.region !== "all" ? (R.regions[listState.region] || null) : null;
-      const l = R.companies.filter(c => !c.missing && (listState.region === "all" || c.region === listState.region) && (listState.sector === "all" || c.sector === listState.sector));
-      const top = [...l].sort((a, b) => (caEur(b) || 0) - (caEur(a) || 0)).slice(0, 2);
-      const ou = [sec ? `du secteur ${sec.toLowerCase()}` : "", reg ? (/^(France|Europe)$/.test(reg) ? `en ${reg}` : reg === "États-Unis" ? "aux États-Unis" : `(${reg})`) : ""].filter(Boolean).join(" ");
-      return { type: "gen", label: ["Les entreprises", sec, reg].filter(Boolean).join(" · "),
-        qs: [`Entreprises ${ou || ""} peu endettées qui versent un dividende`.replace(/\s+/g, " "), `Entreprises ${ou || ""} les plus rentables`.replace(/\s+/g, " "), ...(top.length === 2 ? [`Compare ${top[0].name} et ${top[1].name}`] : []), "C'est quoi la marge nette ?"] };
-    }
-    if (p === "/etf") {
-      const u = new URLSearchParams(location.search), cat = u.get("cat"), pea = u.get("env") === "pea", cl = cat && typeof ECAT !== "undefined" && ECAT[cat] ? ECAT[cat] : null;
-      return { type: "gen", label: ["Les ETF", cl, pea ? "PEA" : null].filter(Boolean).join(" · "),
-        qs: [`ETF ${cl ? cl.toLowerCase() : "monde"}${typeof frSeul === "function" && !frSeul() ? "" : pea ? " éligibles au PEA" : " éligible PEA"} les moins chers`, "C'est quoi un ETF capitalisant ?", "Comment choisir un ETF ?", "Pourquoi les frais d'un ETF comptent ?"] };
-    }
-  } catch (e) { }
-  return MIA_CTX0();
-};
-document.addEventListener("click", e => { if (e.target.closest("[data-miactx]") && typeof orcIaOpen === "function") orcIaOpen(); });
-(() => {
-  const bouton = t => `<button type="button" class="mia-ctx" data-miactx><span aria-hidden="true">✦</span> ${esc(t)}</button>`;
-  const ent0 = window.pageEntreprises;
-  if (typeof ent0 === "function") window.pageEntreprises = function () { const r = ent0.apply(this, arguments); const s = $(".pagesub", app); if (s && !$("[data-miactx]", app)) s.insertAdjacentHTML("beforeend", " " + bouton("Chercher par critères avec l'IA")); return r; };
-})();
-
-/* styles : voir site.css */
-
-/* styles : voir site.css */

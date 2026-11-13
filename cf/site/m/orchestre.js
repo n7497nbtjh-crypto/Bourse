@@ -36,15 +36,6 @@ const ORC_IDX = {
 };
 const ORC_CHEV = `<svg class="orcchev" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>`;
 
-function indicesHTML() {
-  const rows = INDEX_INFO.map(([id, name, fl, what]) => ({ id, name, fl, what, p: PX["i:" + id] })).filter(r => r.p);
-  if (!rows.length) return `<div class="pb muted">Les indices ne sont pas disponibles pour le moment.</div>`;
-  const up = rows.filter(r => r.p.chg > 0).length;
-  return `<div class="idxs">${rows.map(r => { const y = r.p.p1y ? r.p.p / r.p.p1y - 1 : null;
-    return `<a class="idx idxa" href="/indice/${r.id}" title="${esc(r.what)}"><span class="flag">${FLAG[r.fl]}</span><span class="in"><b>${esc(r.name)}</b><small>${F0.format(r.p.p)} points</small></span>
-      <span class="iv"><b class="${r.p.chg > 0 ? "up" : r.p.chg < 0 ? "down" : ""}">${r.p.chg != null ? (r.p.chg > 0 ? "+" : "") + F2.format(r.p.chg) + " %" : "–"}</b><small>${y != null ? `${sgn(y, 0)} sur un an` : ""}</small></span>${ORC_CHEV}</a>`; }).join("")}</div>
-    <p class="note" style="margin:10px 0 0">${up === rows.length ? "Tous les grands indices montent aujourd'hui." : up === 0 ? "Tous les grands indices baissent aujourd'hui." : `${up} indice${up > 1 ? "s" : ""} sur ${rows.length} en hausse aujourd'hui.`} Cliquez sur un indice pour voir ce qu'il contient et les ETF qui permettent d'y investir. Variations sur la journée, cours différés.</p>`;
-}
 
 async function pageIndice(id) {
   const I = INDEX_INFO.find(x => x[0] === id), F = ORC_IDX[id];
@@ -83,14 +74,6 @@ async function pageIndice(id) {
 ROUTES_EXTRA.push([/^\/indice\/([a-z0-9]+)$/, id => pageIndice(id)]);
 
 /* ---------- Accueil : les ETF en lignes claires et cliquables ---------- */
-function erankHTML() {
-  const [k, , fn] = ERANKS.find(r => r[0] === erankK);
-  const l = ETF.list.filter(fn);
-  const rows = (k === "gros" ? l.sort((a, b) => b.encours - a.encours) : l.filter(e => e.ter != null).sort((a, b) => a.ter - b.ter)).slice(0, 8);
-  if (!rows.length) return `<div class="empty">Aucun ETF dans cette catégorie.</div>`;
-  return `<p class="muted" style="margin:0 0 8px;font-size:13px">${k === "gros" ? "Encours : l'argent placé dans le fonds par l'ensemble des épargnants." : "Frais courants prélevés chaque année : les moins chers en premier."} Cliquez sur un ETF pour voir sa composition, ses frais et son émetteur.</p>
-    <div class="orclist">${rows.map((e, i) => `<a class="orcrow" href="/etf/${e.id}"><span class="rk">${i + 1}</span>${logo({ name: e.issuer, domain: issuerDom(e) }, 28)}<span class="t"><b>${esc(e.name)}</b><small>${esc(e.index || e.issuer || "")}${e.pea && (typeof frSeul !== "function" || frSeul()) ? ` · <span class="orcpea">PEA</span>` : ""}</small></span><span class="v"><b>${k === "gros" ? big(e.encours) : pct(e.ter / 100, 2, false)}</b><small>${k === "gros" ? "encours" : "par an"}</small></span>${ORC_CHEV}</a>`).join("")}</div>`;
-}
 
 (() => {
   const css = `
@@ -118,105 +101,7 @@ a:hover>.orcchev{stroke:var(--ink)}
 })();
 
 /* ---------- Accueil : bandeau de confiance ---------- */
-function orcConfiance() {
-  const maj = PXUP && PXUP !== "none" ? (/T\d/.test(PXUP) ? new Date(PXUP).toLocaleString("fr-FR", { day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) : dLabel(String(PXUP).slice(0, 10))) : null;
-  const ico = d => `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${d}"/></svg>`;
-  const items = [
-    [ico("M6 3h9l3 3v15H6zM9 9h6M9 13h6M9 17h4"), "Comptes officiels", `Chiffres tirés des rapports annuels déposés auprès des autorités (ESEF en Europe, SEC aux États-Unis).`, "/methode"],
-    [ico("M4 12l5 5L20 6"), "Calculé, pas inventé", "L'IA traduit votre question en critères ; les chiffres sont calculés sur les données, avec leur source.", "/methode"],
-    [ico("M12 3l8 4v5c0 5-3.5 8-8 9-4.5-1-8-4-8-9V7z"), "Indépendant", "Aucune publicité, aucun produit financier vendu, aucun conseil d'achat ou de vente.", "/methode"],
-    [ico("M12 7v5l3 2M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"), "À jour", maj ? `Cours mis à jour le ${maj} · ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF suivis.` : `${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF suivis.`, "/methode"],
-  ];
-  return `<ul class="orctrust">${items.map(([i, t, d, h]) => `<li><a href="${h}"><span class="ic">${i}</span><span><b>${t}</b><small>${d}</small></span></a></li>`).join("")}</ul>`;
-}
 /* styles : voir site.css */
-
-/* ---------- L'IA sur toutes les pages : bouton et panneau contextuel (le seul point d'entrée de l'IA) ----------
-   Sur une fiche, l'IA répond sur l'entreprise : réponse calculée d'abord, puis, si le visiteur a connecté son IA
-   (m/monia.js, appel direct à l'éditeur choisi), réponse rédigée à partir des faits de la fiche. Ailleurs, c'est le copilote « Demander à ENKLAIR »
-   (critères, comparaisons, notions, leçons). En tête du panneau : « IA connectée : <modèle> » ou « Réponses calculées ». */
-const ORC_IA = { open: false };
-function orcIaCtx() {
-  const p = location.pathname, m = p.match(/^\/entreprise\/([a-z0-9-]+)/), e = p.match(/^\/etf\/([a-z0-9-]+)/), i = p.match(/^\/indice\/([a-z0-9]+)/);
-  if (m && RBY[m[1]] && !RBY[m[1]].missing) return { type: "co", s: RBY[m[1]], label: RBY[m[1]].name, qs: ASK.slice(0, 4) };
-  if (e && ETFBY[e[1]]) { const x = ETFBY[e[1]]; return { type: "etf", label: x.name, qs: [(typeof frSeul !== "function" || frSeul()) ? `${x.name} est-il éligible au PEA ?` : `Que contient ${x.name} ?`, "C'est quoi un ETF capitalisant ?", "Comment choisir un ETF ?", "ETF monde PEA pas cher"] }; }
-  if (i) { const I = INDEX_INFO.find(x => x[0] === i[1]); if (I) return { type: "gen", label: I[1], qs: [`C'est quoi le ${I[1]} ?`, `Comment investir dans le ${I[1]} ?`, "Pourquoi diversifier ?"] }; }
-  if (/^\/portefeuille/.test(p)) return { type: "gen", label: "Votre portefeuille", qs: ["Combien de lignes dans un portefeuille ?", "Les frais de courtage c'est combien ?", ((typeof frSeul !== "function" || frSeul()) ? "PEA ou compte-titres ?" : "C'est quoi un compte-titres ?"), "Que faire quand ça baisse ?"] };
-  if (/^\/academie/.test(p)) return { type: "gen", label: "L'Académie", qs: ["C'est quoi le PER ?", ((typeof frSeul !== "function" || frSeul()) ? "Comment fonctionne le PEA ?" : "C'est quoi un dividende ?"), "C'est quoi un ETF ?", "Pourquoi les intérêts composés comptent ?"] };
-  return { type: "gen", label: null, qs: ["Entreprises françaises peu endettées qui versent un dividende", "Compare LVMH et Hermès", ((typeof frSeul !== "function" || frSeul()) ? "ETF monde éligible PEA" : "ETF monde les moins chers"), "C'est quoi le PER ?"] };
-}
-function orcIaShell() {
-  if ($("#orcia")) return;
-  document.body.insertAdjacentHTML("beforeend", `<button type="button" id="orciab" class="orciab" aria-haspopup="dialog" aria-controls="orcia"><span class="st">✦</span><span class="lb">Une question sur cette page</span></button>
-    <div id="orcia" class="orcia" role="dialog" aria-modal="true" aria-labelledby="orciat" hidden><div class="orciabg" data-orcclose></div>
-      <div class="orciap"><div class="orciah"><div><p class="kick" id="orciactx"></p><h2 id="orciat">✦ L'IA d'ENKLAIR</h2><p class="orcia-etat" data-mia-etat></p></div><button type="button" class="orciax" data-orcclose aria-label="Fermer">×</button></div>
-        <div class="orciab2"><div class="chips" id="orciaq"></div><div id="orcialog" class="orcialog"></div></div>
-        <form id="orciaf" class="orciaf" autocomplete="off"><input type="text" maxlength="300" placeholder="Votre question…" aria-label="Votre question"><button class="btn" type="submit">Demander</button></form>
-        <p class="orciaft">Chiffres calculés sur les comptes officiels et les données du site, avec leur source. Information, pas conseil.</p></div></div>`);
-  $("#orciab").onclick = () => orcIaOpen();
-  $("#orcia").addEventListener("click", e => { if (e.target.closest("[data-orcclose]")) orcIaClose(); const q = e.target.closest("[data-orcq]"); if (q) orcIaAsk(q.dataset.orcq); if (e.target.closest("#orcialog a[href^='/']")) setTimeout(orcIaClose, 0); });
-  $("#orciaf").onsubmit = e => { e.preventDefault(); const i = $("#orciaf input"); orcIaAsk(i.value); i.value = ""; };
-  document.addEventListener("keydown", e => { if (e.key === "Escape" && ORC_IA.open) orcIaClose(); });
-  addEventListener("popstate", () => { if (ORC_IA.open) orcIaClose(); });
-}
-function orcIaOpen() {
-  const c = orcIaCtx(); ORC_IA.ctx = c;
-  $("#orciactx").textContent = c.label ? (c.type === "co" ? "Question sur " : "À propos de : ") + c.label : "Copilote · 2 000 entreprises et des ETF";
-  $("#orciaq").innerHTML = c.qs.map(q => `<button type="button" class="chip" data-orcq="${esc(q)}">${esc(q)}</button>`).join("");
-  if (typeof miaMaj === "function") miaMaj();
-  $("#orcia").hidden = false; ORC_IA.open = true; document.documentElement.classList.add("orcia-on");
-  setTimeout(() => $("#orciaf input").focus(), 50);
-}
-function orcIaClose() { const d = $("#orcia"); if (d) d.hidden = true; ORC_IA.open = false; document.documentElement.classList.remove("orcia-on"); const b = $("#orciab"); if (b) b.focus({ preventScroll: true }); }
-async function orcIaAsk(q, o = {}) {
-  q = String(q || "").trim(); if (q.length < 3) return;
-  const log = $("#orcialog"), c = ORC_IA.ctx || orcIaCtx();
-  const it = document.createElement("div"); it.className = "orciait"; it.innerHTML = `<p class="askq">${esc(q)}</p><div class="aska"></div>`; log.prepend(it);
-  const out = $(".aska", it);
-  if (c.type === "co") {
-    out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA lit la fiche…</div>`;
-    const s = c.s; let full = FULL[s.id];
-    if (!full) { try { full = FULL[s.id] = await (await fetch(`/data/societes/${s.id}.json`)).json(); } catch (e) { full = null; } }
-    await loadAna();
-    const rediger = async box => {
-      box.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA du site rédige à partir des données de la fiche…</div>`;
-      const faits = { ...ficheFaits(s, full), ...(typeof ficheWd === "function" ? { identite: ficheWd(s.id) } : {}) };
-      // 4e passage 2.4 : l'actualité suivie n'est jointe que si la question porte sur le cours, l'actualité, ou sur ce qui peut peser sur l'entreprise ;
-      // une question sur un indicateur (marge, dette, PER…) reçoit les comptes seuls, et la réponse ne parle pas de « mouvement de cours ».
-      const qn = typeof norm === "function" ? norm(q) : q.toLowerCase(), surCours = /\bcours\b|bourse|action (monte|baisse|chute)|actualite|nouvelle|contexte|risque|menace|peser|avenir|droits de douane|guerre|petrole/.test(qn), surIndic = /marge|rentab|dette|\bper\b|dividende|benefice|ventes|chiffre d affaires|croissance|endett|capitaux|tresorerie/.test(qn);
-      if (surIndic && !surCours) { delete faits.actualite_qui_la_concerne; delete faits.actualite_qui_la_concerne_note; delete faits.annonces_recentes; faits.consigne_question = "Question sur un indicateur des comptes : réponds avec les comptes et la comparaison au secteur seulement, sans parler du cours de Bourse ni de l'actualité."; }
-      const autres = await iaAutresEntreprises(q, s); if (autres.length) faits.autres_entreprises_citees_dans_la_question = autres; // « pourquoi la marge de LVMH est-elle plus haute que celle de Kering ? » : Kering est chargée aussi
-      box.innerHTML = miaRendu(await iaRediger("assistant", faits, { question: q, max: 600 }));
-    };
-    let loc = null; try { loc = localAssist(s, full, q); } catch (e) { }
-    if (loc && !(o.rediger && miaConnectee())) {
-      out.innerHTML = resumeHTML(loc) + `<p class="iafoot">Réponse instantanée, calculée à partir des chiffres de la fiche.</p>` + (miaConnectee() ? `<button type="button" class="fapp" data-orcred>✦ Rédiger une réponse plus complète avec l'IA</button>` : o.rediger ? miaInvite() : "");
-      const b = $("[data-orcred]", out); if (b) b.onclick = () => { b.remove(); const d = document.createElement("div"); out.appendChild(d); rediger(d); };
-      return;
-    }
-    if (miaConnectee()) return rediger(out);
-    out.innerHTML = `<p class="muted" style="margin:0 0 6px">Pas de réponse calculée pour cette question précise. Les réponses calculées couvrent l'activité, les comptes, le prix, la dette, le dividende, la croissance, la marge, les concurrentes, les risques et les dates.</p>
-      <div class="chips">${(c.qs || []).slice(0, 3).map(x => `<button type="button" class="chip" data-orcq="${esc(x)}">${esc(x)}</button>`).join("")}</div>${miaInvite()}`;
-    return;
-  }
-  const before = location.pathname + location.search;
-  await iaRun(q, out);
-  if (location.pathname + location.search !== before) orcIaClose(); // l'IA a ouvert une fiche ou une comparaison
-}
-function orcIaVisibilite() {
-  const b = $("#orciab"); if (!b) return;
-  const p = location.pathname, cache = p === "/demander" || (p === "/" && scrollY < 520);
-  b.classList.toggle("off", cache);
-  b.classList.toggle("mini", scrollY > 160 && matchMedia("(max-width:760px)").matches); // sur téléphone, le bouton devient une icône ronde en défilant pour ne rien cacher
-}
-(() => {
-  const start = () => { orcIaShell(); orcIaVisibilite(); };
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", start); else start();
-  addEventListener("scroll", orcIaVisibilite, { passive: true });
-  addEventListener("popstate", () => setTimeout(orcIaVisibilite, 0));
-  document.addEventListener("click", e => { if (e.target.closest("a[href^='/']")) setTimeout(orcIaVisibilite, 50); });
-  /* styles : voir site.css */
-})();
 
 /* ---------- Méthode et sources : la fiabilité rendue visible ---------- */
 function pageMethode() {
@@ -327,16 +212,3 @@ document.addEventListener("click", e => { if (e.target.closest("[data-signaler]"
 })();
 
 /* Entreprises citées dans une question (nom ou code) : leurs chiffres principaux sont joints aux faits, sinon l'IA ne peut pas comparer. */
-async function iaAutresEntreprises(q, s) {
-  const t = " " + String(q || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "") + " ", out = [];
-  const norm = x => String(x || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  for (const c of R.companies) {
-    if (c.id === s.id || c.missing || out.length >= 3) continue;
-    const n = norm(c.name), tk = norm(c.ticker || ""), ok = (n.length >= 4 && t.includes(" " + n + " ")) || (n.length >= 4 && t.includes(" " + n.split(" ")[0] + " ") && n.split(" ")[0].length >= 5) || (tk.length >= 3 && t.includes(" " + tk + " "));
-    if (!ok) continue;
-    let f = FULL[c.id]; if (!f) { try { f = FULL[c.id] = await (await fetch(`/data/societes/${c.id}.json`)).json(); } catch (e) { f = null; } }
-    const r = ratios(c), v = valo(c), R1 = x => x == null ? null : Math.round(x * 1000) / 10;
-    out.push({ entreprise: c.name, secteur: secName(c), exercice: c.year, devise: c.currency, ventes_millions: c.ca, benefice_net_millions: c.net, croissance_ventes_pct: R1(r.g1), marge_operationnelle_pct: R1(r.marge), marge_nette_pct: R1(r.nm), rentabilite_capitaux_propres_pct: R1(r.roe), dette_en_annees_de_resultat_avant_amortissements: r.lev == null ? null : Math.round(r.lev * 10) / 10, per: v && v.pe ? Math.round(v.pe * 10) / 10 : null, rendement_dividende_pct: v && v.yld != null ? R1(v.yld) : null, activite: c.desc });
-  }
-  return out;
-}

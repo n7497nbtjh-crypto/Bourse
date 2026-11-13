@@ -6,12 +6,12 @@ root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
 pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/mentions-legales", "/page-inconnue", "/comparer?ids=lvmh,kering,hermes,apple", "/comparer", "/favoris", "/dividendes", "/entreprise/nvidia", "/entreprise/rio-tinto", "/entreprise/air-liquide", "/entreprise/nvidia/comprendre/marge", "/comparer?ids=nvidia,amd,intel,broadcom", "/outils", "/marches", "/outils/recouvrement", "/communaute?onglet=pronostics", "/communaute?onglet=portefeuilles", "/communaute?onglet=discussions"]
-pages += ["/methode", "/demander", "/demander?q=entreprises+peu+endettees", "/espace", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement", "/connecteur"]
+pages += ["/methode", "/espace", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement", "/connecteur"]
 pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes", "/plan"]
 pages += ["/ia/connecter", "/rapport-exemple"]
 pages += ["/outils/recouvrement?a=amundi-msci-world-pea&b=ishares-core-sp500&c=amundi-nasdaq100-pea", "/outils", "/classements", "/dividendes", "/marches", "/comparer?ids=lvmh,hermes"]
 pages += ["/entreprise/alibaba", "/entreprise/klepierre", "/entreprise/totalenergies#tous-les-chiffres"]
-pages += ["/espace/rapport", "/espace/ia"]
+pages += ["/espace/rapport"]
 pages += ["/comparer?ids=bnp-paribas,societe-generale,sap", "/comparer?ids=apple,microsoft,alphabet", "/entreprise/bnp-paribas#rf-concurrents", "/entreprise/apple#rf-concurrents", "/entreprise/totalenergies#rf-concurrents", "/entreprise/siemens", "/entreprise/alibaba#rf-metier"]
 pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh#rf-sources", "/entreprise/lvmh#rf-agenda", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
@@ -124,19 +124,9 @@ with sync_playwright() as pw:
         p = pg.evaluate(CHECK, opts["viewport"]["width"])
         if p: probs["fiche + PER"] = p
         if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_fiche_per.png", full_page=True)
-        # Assistant de fiche (panneau ✦, seul point d'entrée de l'IA) : une question suggérée, une réponse calculée
-        pg.goto("http://t.local/entreprise/lvmh", timeout=90000); pg.wait_for_timeout(700)
-        if not pg.locator("#orciab").count(): pg.wait_for_timeout(3000)
-        if not pg.locator("#orciab").count(): probs["assistant"] = ["le panneau ✦ de l'IA manque"]
-        else:
-            pg.evaluate("orcIaOpen()"); pg.locator("#orciaq [data-orcq]").first.click()
-            for _ in range(16):
-                pg.wait_for_timeout(250)
-                if "luxe" in pg.inner_text("#orcialog"): break
-            if "luxe" not in pg.inner_text("#orcialog"): probs["assistant"] = ["pas de réponse affichée"]
-            p = pg.evaluate(CHECK, opts["viewport"]["width"])
-            if p: probs["panneau ✦"] = p
-            pg.evaluate("orcIaClose()")
+        # 13/11 (recentrage) : le panneau ✦ et les formulaires de question ont disparu de la fiche
+        pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(1200)
+        if pg.locator("#orciab, [data-f4-ask], [data-f4-ia]").count(): probs["IA"] = ["un point d'entrée de question à l'IA est encore affiché sur la fiche"]
         if shots and name != "petit":
             pg.screenshot(path=f"{shots}/{name}_commencer.png", full_page=True)
             for u, n in (("/premium", "premium"), ("/entreprise/lvmh", "assistant")):
@@ -151,7 +141,7 @@ with sync_playwright() as pw:
         if "LVMH" not in pg.inner_text("#app"): probs["favoris connecté"] = ["liste vide"]
         STATE["in"] = False
         if shots and name != "petit":
-            for u, n in (("/", "accueil8"), ("/demander?q=test", "demander"), ("/entreprise/lvmh", "fiche8"), ("/entreprises", "entreprises8")):
+            for u, n in (("/", "accueil8"), ("/entreprise/lvmh", "fiche8"), ("/entreprises", "entreprises8")):
                 pg.goto("http://t.local" + u); pg.wait_for_timeout(800); pg.screenshot(path=f"{shots}/{name}_{n}.png", full_page=True)
         ectx = [e for e in errs if "fonts" not in e and "404" not in e]
         print(f"== {name} : {len(pages)} pages, problèmes : {len(probs)}, erreurs JS : {len(ectx)}")

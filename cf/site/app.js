@@ -89,21 +89,6 @@ const RULES = {
 };
 let CURSYM = "€";
 const e100 = v => F1.format(v * 100).replace(/,0$/, "") + " " + CURSYM;
-function figuresOf(c) { // chiffres du dernier exercice à partir d'une fiche complète
-  CURSYM = CUR[c.currency] || c.currency || "€";
-  const L = c.years.length - 1, a = (k, i = L) => i >= 0 && c.fin[k] ? c.fin[k][i] : null;
-  const caF = a("ca", 0), ca = a("ca");
-  const ms = c.years.map((_, i) => a("ca", i) > 0 && a("ebit", i) != null ? a("ebit", i) / a("ca", i) : null);
-  const lastM = ms.slice(-3);
-  let margeTrend = null;
-  if (lastM.length === 3 && lastM.every(okn)) {
-    if (lastM[0] > lastM[1] && lastM[1] > lastM[2] && lastM[0] - lastM[2] > 0.02) margeTrend = "baisse";
-    if (lastM[0] < lastM[1] && lastM[1] < lastM[2] && lastM[2] - lastM[0] > 0.02) margeTrend = "hausse";
-  }
-  return { year: c.years[L], currency: c.currency, ca, caPrev: a("ca", L - 1), ebit: a("ebit"), net: a("net"), netPrev: a("net", L - 1), equity: a("equity"), netDebt: a("netDebt"), ebitda: a("ebitda"),
-    fcf: a("fcf"), cfo: a("cfo"), divPaid: a("divPaid"), eps: a("eps"), dps: a("dps") ?? a("dpsEst"), dpsEst: a("dps") == null && a("dpsEst") != null,
-    cagr: ca > 0 && caF > 0 && L >= 2 ? Math.pow(ca / caF, 1 / L) - 1 : null, span: L, first: c.years[0], margeTrend, marges: ms };
-}
 function lecture(co, f) {
   const m = ratios(f), med = MED[co.sector] || {}, cur = f.currency || co.currency, bank = isBank(co), out = [];
   const medOk = med.n >= 3;
@@ -271,85 +256,18 @@ document.addEventListener("click", e => {
 document.addEventListener("keydown", e => { if (e.key === "Escape") closeDef(); });
 
 /* ---------- Modules de cours TradingView (gratuits, avec mention de la source) ---------- */
-function tv(el, widget, cfg) {
-  if (!el) return;
-  el.innerHTML = `<div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div><div class="tradingview-widget-copyright">Cours fournis par TradingView</div></div>`;
-  const s = document.createElement("script");
-  s.src = `https://s3.tradingview.com/external-embedding/embed-widget-${widget}.js`;
-  s.async = true; s.type = "text/javascript";
-  // largeChartUrl : un clic sur le module reste sur le site (page /aller, qui ouvre la bonne fiche)
-  s.innerHTML = JSON.stringify({ locale: "fr", colorTheme: "light", isTransparent: true, largeChartUrl: location.origin + "/aller", ...cfg });
-  el.firstChild.appendChild(s);
-}
 
 /* ---------- Graphiques des simulateurs ---------- */
-function niceTicks(min, max, n = 4) {
-  const span = max - min || Math.abs(max) || 1, step0 = span / n, p = Math.pow(10, Math.floor(Math.log10(step0)));
-  const step = [1, 2, 2.5, 5, 10].map(k => k * p).find(s => s >= step0);
-  const a = Math.floor(min / step) * step, b = Math.ceil(max / step) * step, t = [];
-  for (let v = a; v <= b + step / 2; v += step) t.push(+v.toFixed(10));
-  return t;
-}
 /* ---------- Pièces communes ---------- */
 const app = $("#app");
 function setTitle(t) { document.title = t ? `${t} · ${SITE}` : SITE; }
-function setNav(k) { $$("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === k)); $$("#nav .dd").forEach(d => { d.classList.remove("open"); d.classList.toggle("on", d.dataset.g === (NAVG[k] || "-")); }); }
 function agendaHTML(list, showCo = true) {
   if (!list.length) return `<div class="empty">Aucune date renseignée pour l'instant.</div>`;
   return `<div class="ag">${list.map(e => { const [y, m, d] = e.date.split("-"); const c = RBY[e.id]; return `<div class="it"><div class="d"><b>${+d}</b>${MOIS[+m - 1]} ${y.slice(2)}</div><div>
     ${showCo && c ? `<a class="co" href="/entreprise/${c.id}">${esc(c.name)}</a>` : ""}<div class="ev">${esc(e.label)}</div></div></div>`; }).join("")}</div>`;
 }
 /* ---------- Actualité : publications officielles classées et expliquées ---------- */
-const NCAT = {
-  resultats: { label: "Résultats", c: "#1E6FD9", why: "L'entreprise publie ses ventes et ses bénéfices de la période. C'est en général l'annonce qui fait le plus bouger le cours." },
-  rapport: { label: "Rapport annuel", c: "#5B4FC4", why: "Le document complet de l'année : comptes, risques, rémunérations des dirigeants. C'est la source des chiffres du site." },
-  dividende: { label: "Dividende", c: "#1E8A52", why: "Montant et dates de versement du dividende. Pour le recevoir, il faut détenir l'action la veille de la date de détachement." },
-  assemblee: { label: "Assemblée générale", c: "#8A6D1E", why: "Réunion annuelle des actionnaires : ils votent les comptes, le dividende et la nomination des administrateurs. Chaque actionnaire peut voter." },
-  operation: { label: "Opération", c: "#C2410C", why: "Achat ou vente d'une activité, levée d'argent ou emprunt. Peut changer la taille, la dette ou le nombre d'actions de l'entreprise." },
-  dirigeants: { label: "Direction", c: "#7C3A8F", why: "Changement à la tête de l'entreprise ou au conseil d'administration." },
-  incident: { label: "Incident", c: "#B42318", why: "La société signale un incident important, par exemple une attaque informatique." },
-  rachat: { label: "Rachat d'actions", c: "#8A857D", routine: true, why: "L'entreprise rachète ses propres actions. Moins d'actions en circulation : chaque action restante représente une part un peu plus grande des bénéfices. La déclaration est obligatoire et répétée chaque semaine : rarement une nouvelle en soi." },
-  capital: { label: "Nombre d'actions", c: "#8A857D", routine: true, why: "Publication mensuelle obligatoire du nombre d'actions et de droits de vote. Rarement importante." },
-  autre: { label: "Communiqué", c: "#5F5B55", why: "Communiqué officiel de la société." },
-};
-const normt = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-function amfCat(i) {
-  const t = normt(i.type + " " + i.title);
-  if (/droits de vote|nombre total d.actions|nombre d.actions composant|total voting rights|total number of shares/.test(t)) return "capital";
-  if (/rachat|actions propres|contrat de liquidite|buyback|own shares|bilan semestriel du contrat/.test(t)) return "rachat";
-  if (/rapport financier annuel|document d.enregistrement universel|rapport annuel|annual financial report|universal registration/.test(t)) return "rapport";
-  if (/dividende|coupon|acompte sur dividende/.test(t)) return "dividende";
-  if (/assemblee|general meeting|modalites de mise a disposition/.test(t)) return "assemblee";
-  if (/resultat|chiffre d.affaires|information financiere (trimestrielle|semestrielle|annuelle)|rapport financier semestriel|trimestre|semestre|results|half-year|quarter|ventes/.test(t)) return "resultats";
-  if (/acquisition|cession|acquiert|rachete|fusion|offre publique|emprunt obligataire|emission|augmentation de capital|obligations|placement/.test(t)) return "operation";
-  if (/dirigeant|nomination|directeur general|conseil d.administration|gouvernance|president/.test(t)) return "dirigeants";
-  return "autre";
-}
-const SECKIND = { resultats: "resultats", "rapport-annuel": "rapport", "rapport-trimestriel": "resultats", dirigeants: "dirigeants", accord: "operation", acquisition: "operation", assemblee: "assemblee", incident: "incident", communique: "autre", autre: "autre" };
-const SECTITLE = { "8-K": "Communiqué officiel (formulaire 8-K)", "10-K": "Rapport annuel (formulaire 10-K)", "10-Q": "Rapport trimestriel (formulaire 10-Q)", "20-F": "Rapport annuel (formulaire 20-F)", "40-F": "Rapport annuel (formulaire 40-F)", "6-K": "Communiqué (formulaire 6-K)", "DEF 14A": "Convocation à l'assemblée générale (DEF 14A)" };
-function secTitle(f) {
-  if (f.form === "8-K" && f.kind === "resultats") return "Communiqué de résultats (formulaire 8-K)";
-  if (f.form === "8-K" && f.kind === "dirigeants") return "Changement de dirigeant ou d'administrateur (8-K)";
-  if (f.form === "8-K" && (f.kind === "accord" || f.kind === "acquisition")) return "Accord ou opération importante (8-K)";
-  if (f.form === "8-K" && f.kind === "assemblee") return "Résultat des votes de l'assemblée générale (8-K)";
-  return SECTITLE[f.form] || f.form;
-}
 // Publications de l'AMF (France), dédoublonnées FR/EN, au format commun
-async function loadAmf(params, limit) {
-  const r = await fetch(`/api/amf?limit=${Math.min(100, limit)}${params}`);
-  if (!r.ok) throw new Error("amf");
-  const j = await r.json(), seen = new Map();
-  for (const i of (j.items || []).filter(i => i.title)) {
-    const k = (i.isin || i.company) + "|" + String(i.date).slice(0, 16), prev = seen.get(k);
-    if (!prev || (prev.lang === "Anglais" && i.lang !== "Anglais")) seen.set(k, i);
-  }
-  return [...seen.values()].map(i => { const c = i.isin ? R.companies.find(x => x.isin === i.isin) : null; return { date: i.date, co: c, coName: i.company, cat: amfCat(i), title: i.title, url: i.url, src: "AMF" }; });
-}
-let SECN = null;
-async function loadSec(id) {
-  SECN = SECN || await getJSON("/data/actu-sec.json", { items: [] });
-  return SECN.items.filter(f => !id || f.id === id).map(f => ({ date: f.date, co: RBY[f.id], cat: SECKIND[f.kind] || "autre", title: secTitle(f), url: f.url, src: "SEC" }));
-}
 const DAYKEY_F = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit" }), DAYKEY_M = new Map(); // 1/11 : un seul formateur (en créer un par appel coûtait 0,6 s à l'accueil)
 const dayKey = iso => { let k = DAYKEY_M.get(iso); if (k === undefined) { const d = new Date(iso); k = isNaN(d) ? "" : DAYKEY_F.format(d); DAYKEY_M.set(iso, k); } return k; };
 function dayLabel(iso) {
@@ -361,42 +279,7 @@ function dayLabel(iso) {
 const hhmm = iso => { const d = new Date(iso); return isNaN(d) || !/T\d/.test(iso) ? "" : new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit" }).format(d); };
 let ANA = null, ANAP = null;
 const loadAna = () => ANAP || (ANAP = fetch("/data/actu-analyse.json").then(r => r.json()).then(j => { ANA = j.items || {}; }).catch(() => { ANA = {}; }));
-function anaHTML(i, C) { // l'annonce lue et résumée par le site, le document en source
-  const a = ANA && i.url ? ANA[i.url] : null, src = i.url ? `<a class="nsrc" href="${esc(i.url)}" target="_blank" rel="noopener">Document source${/sec\.gov/.test(i.url) ? " (SEC, en anglais)" : " (PDF)"}</a>` : "";
-  if (!a || (!a.chiffres?.length && !a.extraits?.length)) return `<span class="nti">${esc(a && a.titre || i.title)}</span><p class="nexp">${esc(a ? a.explication : C.why)}</p>${C.routine ? "" : iaBtn(i.url)}${src}`;
-  return `<span class="nti">${esc(a.titre || i.title)}</span>
-    ${a.chiffres?.length ? `<div class="nfig">${a.chiffres.map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(v)}</b></span>`).join("")}</div>` : ""}
-    ${a.lecture?.length ? `<ul class="nlec">${a.lecture.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
-    ${a.extraits?.length ? `<details class="nwhy"><summary>Ce que dit le communiqué</summary>${a.extraits.map(x => `<blockquote>${esc(x)}</blockquote>`).join("")}</details>` : ""}
-    <p class="nexp">${esc(a.explication || C.why)}</p>${iaBtn(i.url)}${src}`;
-}
-const iaBtn = u => ""; // ancien « résumé détaillé » rédigé par le serveur, retiré : chiffres et extraits restent affichés
-function newsHTML(items, { showCo = true, max = 40 } = {}) {
-  if (!items.length) return `<div class="empty">Aucune publication pour ce choix.</div>`;
-  let out = "", last = "";
-  for (const i of items.slice(0, max)) {
-    const dk = dayKey(i.date);
-    if (dk !== last) { out += `<div class="nday">${esc(dayLabel(i.date))}</div>`; last = dk; }
-    const C = NCAT[i.cat];
-    out += `<div class="nit">${showCo ? (i.co ? `<a href="/entreprise/${i.co.id}" class="nlogo">${logo(i.co, 36)}</a>` : `<span class="nlogo">${logo({ name: i.coName || "?" }, 36)}</span>`) : ""}
-      <div class="nbody"><div class="nmeta">${showCo ? (i.co ? `<a class="nco" href="/entreprise/${i.co.id}">${esc(i.co.name)}</a>` : `<span class="nco">${esc(i.coName || "")}</span>`) : ""}<span class="ncat" style="--c:${C.c}">${C.label}</span><span class="light">${hhmm(i.date)}</span></div>
-        ${anaHTML(i, C)}</div></div>`;
-  }
-  return `<div class="news">${out}</div>`;
-}
-const NFILTERS = [["imp", "L'essentiel"], ["resultats", "Résultats"], ["dividende", "Dividendes"], ["assemblee", "Assemblées"], ["operation", "Opérations"], ["tout", "Tout"]];
-const nfilter = (items, f) => items.filter(i => f === "tout" ? true : f === "imp" ? !NCAT[i.cat].routine : i.cat === f);
 // Bloc réutilisable : charge, filtre, affiche
-function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, max = 40, showCo = true, filters = true, f = "imp" } = {}) {
-  target.innerHTML = `${filters ? `<div class="chips nfil">${NFILTERS.map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>` : ""}<div class="nlist"><div class="empty">Chargement…</div></div>`;
-  const list = $(".nlist", target);
-  Promise.all([src === "US" ? loadSec(id) : loadAmf(params, limit), loadAna()]).then(([items]) => {
-    const draw = () => { list.innerHTML = newsHTML(nfilter(items, f), { showCo, max }); };
-    draw();
-    if (filters) $(".nfil", target).onclick = e => { const b = e.target.closest("button"); if (!b) return; f = b.dataset.f; $$(".nfil button", target).forEach(x => x.classList.toggle("on", x === b)); draw(); };
-  }).catch(() => { list.innerHTML = `<div class="empty">${src === "US" ? "Les publications de la SEC ne sont pas disponibles pour le moment." : "Le flux de l'AMF n'est pas disponible pour le moment."}</div>`; });
-}
-function amfBlock(target, params, limit) { newsBlock(target, { params, max: limit, filters: false }); }
 /* ---------- Logos et cartes d'entreprise ---------- */
 const initials = n => n.replace(/[^A-Za-zÀ-ÿ' -]/g, "").split(/[\s-]+/).filter(Boolean).slice(0, 2).map(w => w[0]).join("").toUpperCase();
 let AVERIF = {}; // id → { ca: [années], marge: [années], equity: [années] } : chiffres à vérifier (5e passage, A8)
@@ -454,18 +337,6 @@ const ISINBY = {};
 // pageEtf : m/etf4.js (fiche ETF v4, 3/11/2026)
 
 /* ---------- Presse (GDELT) : articles récents, lien vers l'éditeur ---------- */
-const LANGF = { French: "FR", English: "EN" };
-function presseHTML(items, max) {
-  if (!items.length) return `<div class="muted" style="font-size:13.5px">Aucun article récent trouvé.</div>`;
-  return `<div class="press">${items.slice(0, max).map(a => `<a class="pa" href="${esc(a.url)}" target="_blank" rel="noopener nofollow"><span class="pt">${esc(a.title)}</span><span class="pm">${esc(a.site)}${LANGF[a.lang] ? ` · ${LANGF[a.lang]}` : ""} · ${a.date ? dShort(a.date) : ""}</span></a>`).join("")}</div>`;
-}
-function presseBlock(el, { id = null, sujet = null, max = 8 } = {}) {
-  if (!el) return;
-  el.innerHTML = `<div class="muted" style="font-size:13px">Chargement…</div>`;
-  fetch(`/api/presse?${id ? "id=" + encodeURIComponent(id) : "sujet=" + sujet}`).then(r => r.json()).then(j => {
-    el.innerHTML = j.error && !(j.items || []).length ? `<div class="muted" style="font-size:13.5px">${esc(j.error)}</div>` : presseHTML(j.items || [], max) + `<p class="note" style="margin-top:6px">Articles de presse repérés par GDELT. Le site ne les a pas vérifiés.</p>`;
-  }).catch(() => { el.innerHTML = `<div class="muted" style="font-size:13.5px">La presse n'est pas disponible pour le moment.</div>`; });
-}
 
 /* ---------- Avis des visiteurs sur une entreprise ou un ETF ---------- */
 function avisBlock(el, room, name, { compact = false } = {}) {
@@ -493,89 +364,13 @@ const roomHref = r => r === "general" ? "/communaute" : r.startsWith("etf-") ? `
 // pageActus : m/actu4.js
 
 /* ---------- Graphique de cours : jour, semaine, mois, 3 mois, an, 5 ans, tout ---------- */
-function tvChart(el, symbol, name) {
-  tv(el, "symbol-overview", { symbols: [[name, symbol + "|1D"]], chartOnly: false, width: "100%", height: "100%", autosize: true, showVolume: false, hideDateRanges: false, scalePosition: "right", scaleMode: "Normal", fontFamily: "Inter, sans-serif", fontSize: "11", noTimeScale: false, valuesTracking: "1", changeMode: "price-and-percent", chartType: "area", lineColor: "#2B4C7E", topColor: "rgba(43,76,126,0.10)", bottomColor: "rgba(43,76,126,0)", lineWidth: 2, dateRanges: ["1d|1", "5d|5", "1m|30", "3m|60", "12m|1D", "60m|1W", "all|1M"], defaultRange: "12m" });
-}
 
 /* ---------- Accueil ---------- */
-const RANKS = [
-  ["marge", "Marge d'exploitation la plus élevée", "Part des ventes qui reste une fois payés salaires, achats et frais. Hors banques et foncières (leurs comptes incluent la variation de valeur des immeubles)", c => !isBank(c) && c.sector !== "immo" && ratios(c).marge < 1 ? ratios(c).marge : null, v => pct(v, 1, false), "marge"],
-  ["g1", "Ventes en plus forte hausse", "Hausse des ventes sur le dernier exercice", c => ratios(c).g1, v => pct(v), "croissance"],
-  ["roe", "Meilleure rentabilité des capitaux propres", "Bénéfice annuel pour 100 € appartenant aux actionnaires", c => ratios(c).roe, v => pct(v, 1, false), "roe"],
-  ["cash", "Plus de trésorerie que de dettes", "Trésorerie nette rapportée aux ventes", c => !isBank(c) && c.netDebt < 0 && c.ca > 0 ? -c.netDebt / c.ca : null, v => pct(v, 0, false) + " des ventes", "dette"],
-  ["payout", "Dividendes les mieux couverts", "Part du bénéfice versée, entre 20 et 60 %", c => { const p = ratios(c).payout; return p >= 0.2 && p <= 0.6 && c.net > 0 ? 1 - p : null; }, v => pct(1 - v, 0, false) + " versés", "dividende"],
-];
-let rankState = { k: "marge", region: "all" };
-const ERANKS = [
-  ["monde", "Monde : les moins chers", e => e.categorie === "actions-monde"],
-  ["usa", "États-Unis : les moins chers", e => e.categorie === "actions-usa"],
-  ["europe", "Europe et France : les moins chers", e => e.categorie === "actions-europe" || e.categorie === "actions-france"],
-  ["pea", "Éligibles au PEA : les moins chers", e => e.pea],
-  ["gros", "Les plus gros fonds", e => e.encours > 0],
-];
-let erankK = "monde";
-function erankHTML() {
-  const [k, , fn] = ERANKS.find(r => r[0] === erankK);
-  const l = ETF.list.filter(fn);
-  const rows = k === "gros" ? l.sort((a, b) => b.encours - a.encours).slice(0, 10).map(e => ({ label: e.name, v: e.encours, href: `/etf/${e.id}`, lg: logo({ name: e.issuer, domain: issuerDom(e) }, 22) }))
-    : l.sort((a, b) => a.ter - b.ter).slice(0, 10).map(e => ({ label: e.name, v: e.ter / 100, href: `/etf/${e.id}`, lg: logo({ name: e.issuer, domain: issuerDom(e) }, 22) }));
-  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${k === "gros" ? "Encours : l'argent placé dans le fonds par l'ensemble des épargnants." : "Frais courants prélevés chaque année. Les plus bas en premier : une barre courte, c'est moins de frais."}</p>${rows.length ? hbars(rows, k === "gros" ? (v => big(v)) : (v => pct(v, 2, false) + " par an")) : `<div class="empty">Aucun ETF.</div>`}`;
-}
-function rankHTML() {
-  const [, , sub, fn, fmt, ct] = RANKS.find(r => r[0] === rankState.k);
-  const rows = R.companies.filter(c => !c.missing && (rankState.region === "all" || c.region === rankState.region) && (c.ca == null || caEur(c) > 500)).map(c => ({ c, v: fn(c) })).filter(x => okn(x.v)).sort((a, b) => b.v - a.v).slice(0, 10);
-  return `<p class="muted" style="margin:0 0 10px;font-size:13px">${sub}. Entreprises de plus de 500 millions de ventes.</p>${rows.length ? hbars(rows.map(x => ({ label: x.c.name, v: x.v, href: `/entreprise/${x.c.id}`, lg: logo(x.c, 22) })), fmt) : `<div class="empty">Pas assez de données.</div>`}`;
-}
-function dayPick() { const l = R.companies.filter(c => !c.missing && c.fiche && c.ca > 2000); if (!l.length) return null; const d = Math.floor(Date.now() / 864e5); return l[(d * 7919) % l.length]; }
 /* ---------- Liste des entreprises ---------- */
 // Taille approximative en euros, seulement pour trier (taux arrondis)
 const FXE = { EUR: 1, USD: 0.92, GBP: 1.17, SEK: 0.087, DKK: 0.134, NOK: 0.085, CHF: 1.05, JPY: 0.0061, PLN: 0.23, CAD: 0.67, INR: 0.011, BRL: 0.17, TWD: 0.029, CNY: 0.13, HKD: 0.12, AUD: 0.6, MXN: 0.05, KRW: 0.00068 };
 const caEur = c => c.ca > 0 ? c.ca * (FXE[c.currency] ?? 0) : 0;
 let listState = { region: "all", sector: "all", view: "cartes", sort: "name", dir: 1 };
-function pageEntreprises() {
-  setTitle("Les entreprises"); setNav("ent");
-  const qs = new URLSearchParams(location.search); if (qs.get("secteur")) listState.sector = qs.get("secteur"); if (qs.get("region")) listState.region = qs.get("region");
-  const sectors = [...new Set(R.companies.map(c => c.sector))].sort((a, b) => secName({ sector: a }).localeCompare(secName({ sector: b }), "fr"));
-  const n = r => R.companies.filter(c => c.region === r).length;
-  app.innerHTML = `<h1 class="pagetitle">Les entreprises</h1><p class="pagesub">${R.companies.length} grandes entreprises de France, d'Europe et des États-Unis. Les points de couleur résument ce que disent leurs comptes.</p>
-    <section class="panel">
-      <div class="filters" id="regTabs"><button data-r="all">Toutes</button>${Object.entries(R.regions).map(([k, l]) => `<button data-r="${k}">${esc(l)} <span class="light">${n(k)}</span></button>`).join("")}</div>
-      <div class="ph" style="padding-top:0;padding-bottom:0;border-bottom:0">
-      <div class="filters" id="secTabs" style="border:0;padding:0;flex:1"><button data-s="all">Tous les secteurs</button>${sectors.map(s => `<button data-s="${s}">${esc(secName({ sector: s }))}</button>`).join("")}</div>
-      <div class="viewsw d-only" id="vsw"><button data-v="cartes">Cartes</button><button data-v="tableau">Tableau</button></div></div></section>
-    <div class="field" style="max-width:360px;margin:0 0 14px"><input id="eq" type="search" placeholder="Filtrer : nom, code, pays…" aria-label="Filtrer les entreprises"></div>
-    ${LEGEND}<div id="elist"></div>`;
-  const render = () => {
-    $$("#regTabs button").forEach(b => b.classList.toggle("on", b.dataset.r === listState.region));
-    $$("#secTabs button").forEach(b => b.classList.toggle("on", b.dataset.s === listState.sector));
-    $$("#vsw button").forEach(b => b.classList.toggle("on", b.dataset.v === listState.view));
-    const q = norm(($("#eq") || {}).value || "").trim();
-    const list = R.companies.filter(c => (listState.region === "all" || c.region === listState.region) && (listState.sector === "all" || c.sector === listState.sector) && (!q || norm(c.name + " " + c.ticker + " " + (c.desc || "")).includes(q)));
-    if (!list.length) { $("#elist").innerHTML = `<section class="panel"><div class="empty">Aucune entreprise pour ce choix.</div></section>`; return; }
-    const view = innerWidth <= 760 ? "cartes" : listState.view;
-    if (view === "cartes") {
-      const sorted = [...list].sort((a, b) => (!!a.missing - !!b.missing) || (caEur(b) - caEur(a)) || a.name.localeCompare(b.name, "fr"));
-      const base = innerWidth <= 760 ? 20 : 60, shown = sorted.slice(0, listState.max || base); // lot C : 20 cartes sur téléphone, puis « Voir plus »
-      $("#elist").innerHTML = `<p class="muted" style="margin:0 0 10px;font-size:13px">${F0.format(list.length)} entreprise${list.length > 1 ? "s" : ""}, des plus grosses aux plus petites.</p><div class="cards">${shown.map(coCard).join("")}</div>${sorted.length > shown.length ? `<div style="text-align:center;margin:-12px 0 28px"><button class="btn" id="emore" type="button">Voir ${Math.min(base, sorted.length - shown.length)} de plus</button></div>` : ""}`;
-      const mb = $("#emore"); if (mb) mb.onclick = () => { listState.max = (listState.max || base) + base; render(); };
-      return;
-    }
-    const k = listState.sort, dir = listState.dir, rows = list.map(c => ({ c, m: ratios(c), t: quick(c) }));
-    const val = (r, k) => k === "ca" || k === "net" ? r.c[k] : k === "vig" ? (r.t ? r.t.fort - r.t.vig : null) : r.m[k];
-    rows.sort((a, b) => k === "name" ? dir * a.c.name.localeCompare(b.c.name, "fr") : dir * ((val(a, k) ?? -1e15) - (val(b, k) ?? -1e15)));
-    const th = (key, label) => `<th class="sort" data-k="${key}">${label}${key === k ? (dir > 0 ? " ↑" : " ↓") : ""}</th>`;
-    $("#elist").innerHTML = `<section class="panel"><div class="scroll-x"><table class="t click"><thead><tr>${th("name", "Entreprise")}${th("ca", "Ventes")}${th("g1", "Croissance")}${th("marge", "Marge")}${th("net", "Bénéfice")}${th("vig", "Repères")}<th>Exercice</th></tr></thead><tbody>
-      ${rows.map(({ c, m, t }) => `<tr data-id="${c.id}"><td><div class="cell-co">${logo(c, 32)}<div><div class="nm">${esc(c.name)}</div><div class="sub">${esc(regName(c))} · ${esc(secName(c))}</div></div></div></td>
-      ${c.missing ? `<td colspan="6" class="light">${missingTxt(c)}</td>` : `<td class="num">${big(c.ca, c.currency)}</td><td class="num">${pct(m.g1)}</td><td class="num">${isBank(c) ? "–" : pct(m.marge, 1, false)}</td><td class="num">${big(c.net, c.currency)}</td><td>${pills(t)}</td><td class="num">${c.year ?? "–"}</td>`}</tr>`).join("")}</tbody></table></div>
-      <div class="src">Chiffres du dernier rapport annuel publié, dans la devise de l'entreprise. Cliquez sur un en-tête pour trier, sur une ligne pour ouvrir la fiche.</div></section>`;
-    $("#elist thead").onclick = e => { const t = e.target.closest("th.sort"); if (!t) return; if (listState.sort === t.dataset.k) listState.dir *= -1; else { listState.sort = t.dataset.k; listState.dir = t.dataset.k === "name" ? 1 : -1; } render(); };
-  };
-  let qt = null; $("#eq").oninput = () => { clearTimeout(qt); qt = setTimeout(render, 200); };
-  $("#regTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.region = b.dataset.r; listState.max = 60; render(); } };
-  $("#secTabs").onclick = e => { const b = e.target.closest("button"); if (b) { listState.sector = b.dataset.s; listState.max = 60; render(); } };
-  $("#vsw").onclick = e => { const b = e.target.closest("button"); if (b) { listState.view = b.dataset.v; render(); } };
-  render();
-}
 document.addEventListener("click", e => {
   if (e.target.closest("a,button,.def,input,select")) return;
   const tr = e.target.closest("tr[data-id],tr[data-href]");
@@ -706,37 +501,6 @@ function niceTicks(min, max, n = 4) {
 const INK = "#111214", SAND = "#B9AE97", GREENC = "#0E6B4A", ORANGEC = "#D94F2B", GRIDC = "#ECE6DA", AXC = "#8A857D";
 
 /* Colonnes par année : une ou deux séries, axe gradué, repère facultatif (médiane du secteur), infobulle par année */
-function colChart({ labels, series, fmt, tickFmt = null, ref = null, refLabel = "", h = 170, note = "" }) {
-  // On retire les années de début vides pour toutes les séries
-  let k = 0; while (k < labels.length - 1 && series.every(s => !okn(s.values[k]))) k++;
-  labels = labels.slice(k); series = series.map(s => ({ ...s, values: s.values.slice(k).map(v => okn(v) ? v : null) }));
-  const all = series.flatMap(s => s.values).filter(v => v != null).concat(ref != null ? [ref] : []);
-  if (!all.length) return `<p class="muted" style="margin:0">Pas de chiffres publiés pour ce graphique.</p>`;
-  const ticks = niceTicks(Math.min(0, ...all), Math.max(0, ...all)), tmin = ticks[0], tmax = ticks.at(-1);
-  const W = chartW(), H = h, pl = W < 420 ? 46 : 54, pr = 12, pt = 14, pb = 28, n = labels.length, band = (W - pl - pr) / n;
-  const Y = v => pt + (H - pt - pb) * (tmax - v) / (tmax - tmin || 1), X = i => pl + band * (i + .5);
-  const ns = series.length, bw = Math.min(ns > 1 ? 14 : 20, band * 0.5 / ns), gap = 2, tf = tickFmt || fmt;
-  let g = ticks.map(t => `<line x1="${pl}" x2="${W - pr}" y1="${Y(t)}" y2="${Y(t)}" stroke="${t === 0 ? "#CFC6B4" : GRIDC}" stroke-width="1"/><text x="${pl - 8}" y="${Y(t) + 4}" text-anchor="end" font-size="11" fill="${AXC}">${esc(tf(t))}</text>`).join("");
-  let bars = "", hits = "";
-  labels.forEach((lab, i) => {
-    const x0 = X(i) - (ns * bw + (ns - 1) * gap) / 2;
-    series.forEach((s, j) => {
-      const v = s.values[i]; if (v == null) { if (ns === 1) bars += `<text x="${X(i)}" y="${Y(0) - 6}" text-anchor="middle" font-size="11" fill="${AXC}">non publié</text>`; return; }
-      const x = x0 + j * (bw + gap), y0 = Y(Math.max(0, v)), y1 = Y(Math.min(0, v)), hh = Math.max(1.5, y1 - y0), r = Math.min(4, bw / 2, hh);
-      const col = v < 0 ? ORANGEC : (s.color || INK);
-      // extrémité arrondie côté valeur, carrée côté zéro
-      bars += v >= 0 ? `<path d="M${x},${y1} V${y0 + r} Q${x},${y0} ${x + r},${y0} H${x + bw - r} Q${x + bw},${y0} ${x + bw},${y0 + r} V${y1} Z" fill="${col}"/>`
-        : `<path d="M${x},${y0} V${y1 - r} Q${x},${y1} ${x + r},${y1} H${x + bw - r} Q${x + bw},${y1} ${x + bw},${y1 - r} V${y0} Z" fill="${col}"/>`;
-    });
-    if (i === n - 1 && ns === 1) { const v = series[0].values[i]; if (v != null) bars += `<text x="${X(i)}" y="${v >= 0 ? Y(v) - 7 : Y(v) + 15}" text-anchor="middle" font-size="12.5" font-weight="600" fill="${INK}">${esc(fmt(v))}</text>`; }
-    g += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle" font-size="12" fill="#55524C">${esc(lab)}</text>`;
-    const tip = { h: String(lab), r: series.map(s => [s.name, s.values[i] == null ? "non publié" : fmt(s.values[i]), s.color || INK]).concat(ref != null ? [[refLabel, fmt(ref), SAND]] : []) };
-    hits += `<rect x="${pl + band * i}" y="${pt}" width="${band}" height="${H - pt - pb}" fill="transparent" tabindex="0" ${tipAttr(tip)}/>`;
-  });
-  const refl = ref != null ? `<line x1="${pl}" x2="${W - pr}" y1="${Y(ref)}" y2="${Y(ref)}" stroke="${SAND}" stroke-width="2"/>` : "";
-  const leg = ns > 1 || ref != null ? `<div class="lg2">${series.map(s => `<span><i style="background:${s.color || INK}"></i>${esc(s.name)}</span>`).join("")}${ref != null ? `<span><i class="ln" style="background:${SAND}"></i>${esc(refLabel)} : ${esc(fmt(ref))}</span>` : ""}</div>` : "";
-  return `<div class="chart2">${leg}<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(s => s.name).join(", "))}">${g}${refl}${bars}${hits}</svg>${note ? `<p class="note">${note}</p>` : ""}</div>`;
-}
 /* Courbes (pourcentages au fil des années, comparaison à une référence) */
 // Ancienne fonction gardée pour les appels existants : redirige vers le nouveau graphique
 const compact = cur => v => { const a = Math.abs(v), s = CUR[cur] || cur || "", d1 = x => F1.format(x).replace(/,0$/, ""); return a >= 1000 ? d1(v / 1000) + " Md" + (s ? " " + s : "") : F0.format(v) + " M" + (s ? " " + s : ""); };
@@ -784,10 +548,6 @@ function valo(c) { // capitalisation, PER, rendement, à partir du cours et des 
 const NS_PE = "Bénéfice trop faible cette année pour comparer le prix (PER non significatif)", NS_PAYOUT = "Le dividende versé dépasse le bénéfice de l'année : il est pris sur la trésorerie ou les réserves", NS_CROIS = "Base de comparaison trop faible pour une variation significative";
 const nsPayout = x => x != null && x > 1.5, nsCrois = x => x != null && Math.abs(x) > 2; // part du bénéfice versée > 150 %, variation > ±200 %
 let MEDPE = {};
-function computePE() {
-  const by = {}; R.companies.forEach(c => { if (c.missing) return; const v = valo(c); if (v && v.pe) (by[c.sector] = by[c.sector] || []).push(v.pe); });
-  MEDPE = Object.fromEntries(Object.entries(by).map(([k, l]) => [k, l.length >= 5 ? median(l) : null]));
-}
 const pxFmt = (v, cur) => v == null ? "–" : nf(v >= 1000 ? 0 : 2).format(v) + " " + (CUR[cur] || cur || "");
 const capFmt = v => v == null ? "–" : v >= 1e12 ? F1.format(v / 1e12) + " 000 Md€".replace(" 000 Md€", " billions d'€") : v >= 1e9 ? F1.format(v / 1e9) + " Md€" : F0.format(v / 1e6) + " M€";
 
@@ -829,10 +589,7 @@ const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDa
 
 /* ---------- Portefeuille : la radiographie de ce que vous possédez vraiment ---------- */
 const PF2 = "bilan.portefeuille";
-function pf2Load() { try { const x = JSON.parse(localStorage.getItem(PF2) || "null"); if (x && Array.isArray(x.l)) return x; } catch (e) { } return { l: [] }; }
-function pf2Save(p) { try { localStorage.setItem(PF2, JSON.stringify(p)); } catch (e) { } if (typeof pushDonnees === "function") pushDonnees(); }
 const ETFCOMP = {};
-async function etfComp(e) { if (!e || !e.proxy) return null; if (ETFCOMP[e.proxy] !== undefined) return ETFCOMP[e.proxy]; try { ETFCOMP[e.proxy] = await (await fetch(`/data/etf/${e.proxy}.json`)).json(); } catch (x) { ETFCOMP[e.proxy] = null; } return ETFCOMP[e.proxy]; }
 const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Inc|Corp|Corporation|Ltd|Plc|Sa|Se|Nv|Ag|Co)\b\.?/gi, m => m.toUpperCase() === "SA" || m.toUpperCase() === "SE" ? m.toUpperCase() : m);
 
 /* ---------- Outils ---------- */
@@ -893,34 +650,12 @@ const INDEX_INFO = [
   ["ftse100", "FTSE 100", "GB", "Les 100 plus grandes entreprises cotées à Londres."],
   ["nikkei", "Nikkei 225", "JP", "Les 225 grandes entreprises japonaises de référence."],
 ];
-function indicesHTML() {
-  const rows = INDEX_INFO.map(([id, name, fl, what]) => ({ id, name, fl, what, p: PX["i:" + id] })).filter(r => r.p);
-  if (!rows.length) return `<div class="pb muted">Les indices ne sont pas disponibles pour le moment.</div>`;
-  const up = rows.filter(r => r.p.chg > 0).length;
-  return `<div class="idxs">${rows.map(r => { const y = r.p.p1y ? r.p.p / r.p.p1y - 1 : null;
-    return `<div class="idx" ${tipAttr({ h: r.name, r: [["Ce que c'est", r.what, ""]] })} tabindex="0"><span class="flag">${FLAG[r.fl]}</span><span class="in"><b>${esc(r.name)}</b><small>${F0.format(r.p.p)} points</small></span>
-      <span class="iv"><b class="${r.p.chg > 0 ? "up" : r.p.chg < 0 ? "down" : ""}">${r.p.chg != null ? (r.p.chg > 0 ? "+" : "") + F2.format(r.p.chg) + " %" : "–"}</b><small>${y != null ? `${sgn(y, 0)} sur un an` : ""}</small></span></div>`; }).join("")}</div>
-    <p class="note" style="margin:10px 0 0">${up === rows.length ? "Tous les grands indices montent aujourd'hui." : up === 0 ? "Tous les grands indices baissent aujourd'hui." : `${up} indice${up > 1 ? "s" : ""} sur ${rows.length} en hausse aujourd'hui.`} Un indice résume la tendance d'un marché : quand le CAC 40 gagne 1 %, ses 40 entreprises ont pris en moyenne 1 %, pondérée par leur taille. Variations sur la journée, cours différés.</p>`;
-}
 
 /* ---------- Plus forts mouvements du jour ---------- */
-let moverRegion = "all";
 function moversData(region = "all", n = 8) {
   const l = R.companies.map(c => ({ c, p: pxOf(c), v: valo(c) })).filter(x => x.p && x.p.chg != null && x.v && x.v.capE > 2e9 && (region === "all" || x.c.region === region));
   const up = l.filter(x => x.p.chg > 0).sort((a, b) => b.p.chg - a.p.chg).slice(0, n), dn = l.filter(x => x.p.chg < 0).sort((a, b) => a.p.chg - b.p.chg).slice(0, n);
   return { up, dn, n: l.length };
-}
-function moverRow(x) {
-  const ev = eventsOf(x.c.id).find(e => e.date <= TODAY && e.date >= addDays(TODAY, -2)), big = Math.abs(x.p.chg) >= 5;
-  const an = ANA ? Object.values(ANA).filter(a => a.id === x.c.id && a.date >= addDays(TODAY, -3)).sort((a, b) => b.date.localeCompare(a.date))[0] : null;
-  const why = an ? `${an.type}${an.chiffres && an.chiffres[0] ? ` : ${an.chiffres[0][0].toLowerCase()} ${an.chiffres[0][1]}` : ""}` : ev ? `${ev.label} (${dLabel(ev.date)})` : big ? "Pas d'annonce officielle repérée : voir la presse" : secName(x.c);
-  return `<a class="mv" href="/entreprise/${x.c.id}/actualite">${logo(x.c, 28)}<span class="mn"><b>${esc(x.c.name)}</b><small>${esc(why)}</small></span><span class="mc ${x.p.chg > 0 ? "up" : "down"}">${x.p.chg > 0 ? "+" : ""}${F1.format(x.p.chg)} %</span></a>`;
-}
-function moversHTML(region = moverRegion) {
-  const { up, dn, n } = moversData(region);
-  if (!n) return `<div class="pb muted">Les cours ne sont pas disponibles pour le moment.</div>`;
-  return `<div class="mvs"><div><p class="kick">Les plus fortes hausses</p>${up.map(moverRow).join("") || `<p class="muted">Aucune hausse.</p>`}</div><div><p class="kick">Les plus fortes baisses</p>${dn.map(moverRow).join("") || `<p class="muted">Aucune baisse.</p>`}</div></div>
-    <div class="synth" style="margin-top:12px"><p><b>Comment lire ces mouvements ?</b> Pour une grande entreprise, une variation de plus de 5 % en une journée est importante : elle suit presque toujours une annonce (résultats, prévisions, rachat, changement de dirigeant) ou une nouvelle sur son secteur. Ouvrez la ligne pour voir l'actualité. Un mouvement d'une journée ne dit rien de la solidité de l'entreprise : ses comptes, eux, ne changent qu'à chaque publication.</p></div>`;
 }
 // pageMarches : m/marches4.js (Marchés v4, 3/11/2026)
 
@@ -933,131 +668,7 @@ function resumeHTML(txt) {
   return parts.map(p => /^(« ?)?(Ce qui est annoncé|Ce que ça veut dire|À surveiller|En résumé|Ce qui a bougé|Ce qui a été annoncé|À venir|Ce que l'analyse remarque|Points d'attention)( ?»)?\s*:?$/i.test(p.replace(/[*#]/g, "")) ? `<p class="kick" style="margin:10px 0 2px">${esc(p.replace(/[*#«»:]/g, "").trim())}</p>` : `<p style="margin:0 0 6px">${esc(p.replace(/[*#]/g, "")).replace(/\[\[([^\]|]+)\|(\/[^\]]+)\]\]/g, (m0, t, h) => `<a class="lnk" href="${h}">${t}</a>`)}</p>`).join(""); // [[texte|/lien]] : lien interne dans une réponse calculée
 }
 /* ---------- Favoris : présentation soignée et bilan rédigé de la liste ---------- */
-function listeFaits(cos) { // les faits transmis à l'IA : rien d'autre que les données du site
-  return { date: TODAY, lignes: cos.slice(0, 20).map(c => { const p = pxOf(c), a = Object.values(ANA || {}).filter(x => x.id === c.id && x.date >= addDays(TODAY, -10)).slice(0, 2);
-    return { nom: c.name, secteur: secName(c), variation_jour_pct: p ? p.chg : null, variation_1an_pct: p && p.p1y ? Math.round((p.p / p.p1y - 1) * 1000) / 10 : null,
-      position_sur_un_an: p && p.h52 > p.l52 ? Math.round((p.p - p.l52) / (p.h52 - p.l52) * 100) + " % entre le plus bas et le plus haut" : null,
-      annonces: a.map(x => ({ date: x.date, type: x.type, titre: x.titre || "", chiffres: x.chiffres, lecture: x.lecture })),
-      prochaines_dates: eventsOf(c.id).filter(e => e.date >= TODAY).slice(0, 2).map(e => ({ date: e.date, quoi: e.label })) }; }) };
-}
-async function veilleBilan(cos) {
-  const el = $("#vbil"); if (!el) return;
-  await loadAna();
-  const loc = listeLocale(cos);
-  el.innerHTML = loc ? `<div class="iares">${resumeHTML(loc)}<p class="iafoot" id="vbilf">${miaConnectee() ? "L'IA du site rédige une lecture plus détaillée…" : "Résumé automatique de vos chiffres."}</p></div>` : `<p class="muted">Rédaction du bilan de votre liste…</p>`;
-  const j = await iaRediger("veille", listeFaits(cos));
-  if (j.txt) el.innerHTML = `<div class="iares">${resumeHTML(j.txt)}${miaPied(j)}</div>`;
-  else if (loc) $("#vbilf").outerHTML = j.invite ? miaInvite("Résumé automatique de vos chiffres.") : `<p class="iafoot">Résumé automatique de vos chiffres. ${esc(j.error || "")}</p>`;
-  else el.innerHTML = miaRendu(j, "Les chiffres de votre liste sont affichés ci-dessus.");
-}
 /* ---------- Portefeuille : quantités, prix de revient, plus-values et garde-fous ---------- */
-const lineValue = l => { const p = PX[l.k]; if (p && l.q > 0) return toEur(p.p * l.q, p.cur); return l.m || 0; };
-const lineCost = l => { const p = PX[l.k]; if (p && l.q > 0 && l.pru > 0) return toEur(l.pru * l.q, p.cur); return l.m || null; };
-async function pagePortefeuille() {
-  setTitle("Mon portefeuille"); setNav("pf");
-  await PXP;
-  const P = pf2Load();
-  P.l.forEach(l => { if (l.mode === "qte" && l.q && l.pru == null) l.pru = 0; if (l.mode === "eur" && PX[l.k] && !l.q && l.m) { l.q = 0; } });
-  app.innerHTML = `<h1 class="pagetitle">Mon portefeuille</h1><p class="pagesub">Indiquez vos actions et vos ETF, le nombre de titres et votre prix de revient (le prix moyen auquel vous les avez achetés, frais compris). Le site calcule votre plus ou moins-value, montre ce que vous possédez vraiment une fois les ETF « ouverts », et signale ce qui mérite votre attention. Tout reste dans ce navigateur.</p>
-    <section class="panel"><div class="ph"><h2>Vos lignes</h2></div><div class="pb">
-      <div class="field" style="position:relative;max-width:460px"><label for="pfq">Ajouter une action ou un ETF</label><input id="pfq" type="search" autocomplete="off" placeholder="LVMH, MSCI World, Apple…"><div class="msug" id="pfs" hidden></div></div>
-      <div id="pflines"></div></div>
-      <div class="src">Le prix de revient se trouve dans l'application de votre courtier (souvent appelé « PRU » ou « prix moyen »). Sans cours disponible, saisissez simplement le montant investi.</div></section>
-    <div id="pfrx"></div>`;
-  const q = $("#pfq"), box = $("#pfs");
-  q.oninput = () => { const t = norm(q.value.trim()); if (t.length < 2) { box.hidden = true; return; }
-    const hits = [...ETF.list.filter(e => norm(e.name + " " + e.index + " " + (e.ticker || "")).includes(t)).map(e => ["e:" + e.id, e.name, "ETF · " + e.index]), ...R.companies.filter(c => norm(c.name + " " + c.ticker).includes(t)).map(c => ["c:" + c.id, c.name, secName(c)])].slice(0, 8);
-    box.innerHTML = hits.map(([k, n, s]) => `<button type="button" data-k="${k}">${esc(n)} <small>${esc(s)}</small></button>`).join("") || `<div class="light" style="padding:8px 10px">Rien trouvé</div>`; box.hidden = false;
-    $$("button", box).forEach(b => b.onclick = () => { const p = PX[b.dataset.k]; if (!P.l.some(l => l.k === b.dataset.k) && !pfFull(P)) P.l.push(p ? { k: b.dataset.k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k: b.dataset.k, m: 1000 }); pf2Save(P); q.value = ""; box.hidden = true; drawLines(); }); };
-  const drawLines = () => {
-    $("#pflines").innerHTML = P.l.length ? `<div class="scroll-x"><table class="t pft"><thead><tr><th class="l">Ligne</th><th>Nombre</th><th>Prix de revient</th><th>Cours</th><th>Valeur</th><th>Plus ou moins-value</th><th></th></tr></thead><tbody>${P.l.map((l, i) => { const p = PX[l.k], val = lineValue(l), cost = lineCost(l), g = cost ? val - cost : null;
-      return `<tr data-i="${i}"><td class="l"><a class="cell-co" href="${keyHref(l.k)}">${keyLogo(l.k, 26)}<span class="nm">${esc(keyName(l.k) || l.k)}</span></a></td>
-        ${p ? `<td><input data-f="q" type="number" min="0" step="any" value="${l.q || 0}" style="width:80px;text-align:right"></td><td><input data-f="pru" type="number" min="0" step="any" value="${l.pru || 0}" style="width:96px;text-align:right"> <small class="light">${esc(CUR[p.cur] || p.cur)}</small></td><td class="num">${pxFmt(p.p, p.cur)}</td>`
-          : `<td colspan="2"><input data-f="m" type="number" min="0" step="any" value="${l.m || 0}" style="width:110px;text-align:right"> <small class="light">€ investis</small></td><td class="num light">–</td>`}
-        <td class="num">${F0.format(val || 0)} €</td><td class="num ${g == null ? "" : g >= 0 ? "up" : "down"}">${g == null ? "–" : `${g >= 0 ? "+" : "−"}${F0.format(Math.abs(g))} € (${sgn(g / cost, 1)})`}</td><td><button type="button" class="linkbtn" data-x="${i}">Retirer</button></td></tr>`; }).join("")}</tbody></table></div>`
-      : `<p class="muted" style="margin:12px 0 0">Aucune ligne pour l'instant. ${favs().length ? `<button type="button" class="linkbtn" id="fromfav">Reprendre mes favoris</button>` : ""}</p>`;
-    const ff = $("#fromfav"); if (ff) ff.onclick = () => { favs().forEach(k => { if (!P.l.some(l => l.k === k) && !pfFull(P)) { const p = PX[k]; P.l.push(p ? { k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k, m: 1000 }); } }); pf2Save(P); drawLines(); };
-    $$("#pflines tr[data-i]").forEach(tr => { const l = P.l[+tr.dataset.i]; $$("[data-f]", tr).forEach(inp => inp.onchange = () => { l[inp.dataset.f] = parseFloat(inp.value) || 0; pf2Save(P); drawLines(); }); });
-    $$("[data-x]", $("#pflines")).forEach(b => b.onclick = () => { P.l.splice(+b.dataset.x, 1); pf2Save(P); drawLines(); });
-    radiographie(P);
-  };
-  drawLines();
-}
-function gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps, extra = []) { // ce qui mérite l'attention, avec la raison
-  const W = [], pctS2 = v => F0.format(v * 100) + " %";
-  const big = lines.slice().sort((a, b) => b.v - a.v);
-  if (big[0] && big[0].v / tot > 0.25 && big[0].k.startsWith("c:")) W.push(["vig", `Une seule action pèse ${pctS2(big[0].v / tot)} du portefeuille (${esc(keyName(big[0].k))}).`, "Si elle chute de 30 %, c'est près de " + pctS2(big[0].v / tot * 0.3) + " de votre portefeuille qui disparaît. Beaucoup d'investisseurs limitent une action seule à 5 ou 10 %."]);
-  const top3 = big.slice(0, 3).reduce((a, l) => a + l.v, 0) / tot;
-  if (lines.length >= 4 && top3 > 0.7 && big.slice(0, 3).some(l => l.k.startsWith("c:"))) W.push(["vig", `Trois lignes concentrent ${pctS2(top3)} de votre argent.`, "Votre résultat dépendra surtout d'elles. C'est un choix possible, mais il faut le faire en connaissance de cause."]);
-  const s1 = Object.entries(sect).filter(([k]) => !k.startsWith("ETF")).sort((a, b) => b[1] - a[1])[0];
-  if (s1 && s1[1] > 0.4) W.push(["vig", `Le secteur ${esc(s1[0].toLowerCase())} représente ${pctS2(s1[1])} du portefeuille en actions directes.`, "Les entreprises d'un même secteur montent et baissent souvent ensemble (même conjoncture, mêmes prix des matières premières, mêmes règles)."]);
-  const c1 = Object.entries(ctry).sort((a, b) => b[1] - a[1])[0];
-  if (c1 && c1[1] > 0.65) W.push(["moyen", `${pctS2(c1[1])} de votre argent est placé dans un seul pays (${esc(COUNTRY[c1[0]] || c1[0])}).`, c1[0] === "US" ? "C'est fréquent avec un ETF Monde, car les États-Unis pèsent environ 70 % des indices mondiaux. Vous êtes aussi exposé au dollar : s'il baisse face à l'euro, votre portefeuille baisse." : "Une crise propre à ce pays toucherait tout le portefeuille."]);
-  const directs = lines.filter(l => l.k.startsWith("c:")).length;
-  if (directs >= 1 && directs < 5 && !lines.some(l => l.k.startsWith("e:"))) W.push(["vig", `Seulement ${directs} action${directs > 1 ? "s" : ""} et aucun ETF.`, "Avec peu de lignes, une mauvaise nouvelle sur une seule entreprise pèse lourd. Un ETF permet de détenir des centaines d'entreprises en une seule ligne."]);
-  if (etfV && fees / etfV > 0.004) W.push(["moyen", `Vos ETF coûtent en moyenne ${pct(fees / etfV, 2, false)} par an.`, "Sur 20 ans, 0,3 point de frais en plus peut coûter environ 6 % du capital final. Des ETF équivalents existent souvent à 0,10-0,20 %."]);
-  overlaps.forEach(([a, b, ov]) => W.push(["moyen", `${esc(a)} et ${esc(b)} se recouvrent à ${F0.format(ov)} %.`, "Ils contiennent en bonne partie les mêmes entreprises : les deux réunis diversifient moins qu'il n'y paraît."]));
-  lines.filter(l => l.k.startsWith("c:")).forEach(l => { const c = RBY[l.k.slice(2)], t = c && quick(c); if (t && t.vig >= 3) W.push(["moyen", `${esc(c.name)} cumule ${t.vig} points de vigilance dans ses comptes.`, "Ce n'est pas une raison de vendre, mais une raison de lire sa fiche et de suivre ses prochains résultats."]); });
-  lines.forEach(l => { const cost = lineCost(l); if (cost && l.v / cost - 1 < -0.3) W.push(["moyen", `${esc(keyName(l.k))} est en baisse de ${F0.format((1 - l.v / cost) * 100)} % par rapport à votre prix de revient.`, "Une forte baisse est le moment de vérifier si les comptes de l'entreprise ont changé, ou seulement son cours."]); });
-  W.push(...extra);
-  if (!W.length) W.push(["fort", "Rien de particulier à signaler.", "Pas de ligne trop lourde, pas de secteur dominant, des frais raisonnables. Cela ne dit rien des performances futures."]);
-  return `<section class="panel"><div class="ph"><h2>Ce que l'analyse remarque</h2></div><div class="pb">${W.map(([lv, t, why]) => `<div class="gf"><span class="dot dot-${lv}"></span><div><b>${t}</b><p>${why}</p></div></div>`).join("")}
-    <p class="note">Repères de diversification généraux, calculés sur vos lignes. Ce ne sont pas des conseils personnalisés : votre situation, votre horizon et votre tolérance au risque comptent.</p></div></section>`;
-}
-async function radiographie(P) {
-  const el = $("#pfrx"); if (!el) return;
-  const lines = P.l.map(l => ({ ...l, v: lineValue(l) })).filter(l => l.v > 0), tot = lines.reduce((a, l) => a + l.v, 0);
-  if (!tot) { el.innerHTML = ""; return; }
-  const cost = lines.reduce((a, l) => a + (lineCost(l) || l.v), 0), gain = tot - cost;
-  const expo = {}, ctry = {}, sect = {}, comps = []; let fees = 0, divs = 0, etfV = 0, pea = 0, uncovered = 0;
-  for (const l of lines) {
-    const w = l.v / tot;
-    if (l.k.startsWith("c:")) { const c = RBY[l.k.slice(2)]; if (!c) continue;
-      expo[c.isin || c.id] = { name: c.name, href: "/entreprise/" + c.id, w: (expo[c.isin || c.id]?.w || 0) + w };
-      const cc = (c.isin || "").slice(0, 2) || (c.region === "US" ? "US" : "FR"); ctry[cc] = (ctry[cc] || 0) + w; sect[secName(c)] = (sect[secName(c)] || 0) + w;
-      const v = valo(c); if (v && v.yld) divs += l.v * v.yld; if (peaOk(c)) pea += l.v;
-    } else { const e = ETFBY[l.k.slice(2)]; if (!e) continue; etfV += l.v; fees += l.v * (e.ter || 0) / 100; if (e.pea) pea += l.v;
-      const comp = await etfComp(e);
-      if (comp) { comps.push([e.name, comp]); let covered = 0;
-        (comp.top || []).forEach(h => { const co = h.isin ? ISINBY[h.isin] : null, key = h.isin || h.name; covered += h.pct / 100; expo[key] = { name: co ? co.name : titleCase(h.name), href: co ? "/entreprise/" + co.id : null, w: (expo[key]?.w || 0) + w * h.pct / 100 }; });
-        uncovered += w * Math.max(0, 1 - covered);
-        (comp.countries || []).forEach(([k, p]) => { ctry[k] = (ctry[k] || 0) + w * p / 100; });
-      } else uncovered += w;
-      sect["ETF " + (ECAT[e.categorie] || "")] = (sect["ETF " + (ECAT[e.categorie] || "")] || 0) + w;
-    }
-  }
-  const overlaps = []; for (let i = 0; i < comps.length; i++) for (let j = i + 1; j < comps.length; j++) { const ma = new Map(comps[i][1].isins || []), mb = new Map(comps[j][1].isins || []); let ov = 0; for (const [k, w] of ma) if (mb.has(k)) ov += Math.min(w, mb.get(k)); if (ov > 50) overlaps.push([comps[i][0], comps[j][0], ov]); }
-  const top = Object.values(expo).sort((a, b) => b.w - a.w).slice(0, 15), cs = Object.entries(ctry).sort((a, b) => b[1] - a[1]).slice(0, 10), biggest = lines.slice().sort((a, b) => b.v - a.v)[0];
-  const cos = lines.filter(l => l.k.startsWith("c:")).map(l => RBY[l.k.slice(2)]).filter(Boolean);
-  const up = AG.events.filter(e => e.date >= TODAY && cos.some(c => c.id === e.id)).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 8);
-  const habHTML = await pfHabitudes(P), prof = await profilInvestisseur();
-  el.innerHTML = `<section class="panel"><div class="ph"><h2>Votre portefeuille en un coup d'œil</h2></div>
-    <div class="tiles">
-      <div class="tile"><span class="kick">Valeur actuelle</span><span class="v">${F0.format(tot)} €</span><small>${lines.length} ligne${lines.length > 1 ? "s" : ""}, aux cours du jour</small></div>
-      <div class="tile"><span class="kick">Plus ou moins-value</span><span class="v ${gain >= 0 ? "up" : "down"}">${gain >= 0 ? "+" : "−"}${F0.format(Math.abs(gain))} €</span><small>${sgn(gain / cost, 1)} par rapport à ce que vous avez investi (${F0.format(cost)} €), avant impôts</small></div>
-      <div class="tile"><span class="kick">Frais des ETF</span><span class="v">${F0.format(fees)} € / an</span><small>${etfV ? `soit ${pct(fees / etfV, 2, false)} par an` : "aucun ETF"}</small></div>
-      <div class="tile"><span class="kick">Dividendes</span><span class="v">≈ ${F0.format(divs)} € / an</span><small>actions en direct, avant impôts</small></div>
-      <div class="tile"><span class="kick">Éligible au PEA</span><span class="v">${F0.format(pea / tot * 100)} %</span><small>de la valeur</small></div>
-    </div></section>
-    ${habHTML}
-    ${gardeFous(lines, tot, ctry, sect, top, fees, etfV, overlaps, pfAnalyseHabitudes(P, lines, tot, prof))}
-    <section class="panel"><div class="ph"><h2>Le commentaire de l'IA</h2><button type="button" class="btn" id="pfia">Analyser mon portefeuille</button></div><div class="pb" id="pfiab"><p class="muted" style="margin:0">Un commentaire rédigé à partir de vos lignes, de leurs poids et des remarques ci-dessus : ce qui ressort, ce qui est déséquilibré, ce qu'il faut suivre. Rien n'est conservé.</p></div></section>
-    <div class="two"><section class="panel"><div class="ph"><h2>Ce que vous possédez vraiment</h2></div><div class="pb">${hbars(top.map(x => ({ label: x.name, v: x.w, href: x.href })), v => pct(v, 1, false))}<p class="note">Les ETF sont « ouverts » : leurs principales lignes sont réparties selon leur poids${uncovered > 0.05 ? ` ; ${F0.format(uncovered * 100)} % correspond aux autres lignes, plus petites, des ETF` : ""}.</p></div></section>
-      <section class="panel"><div class="ph"><h2>Par pays</h2></div><div class="pb">${hbars(cs.map(([k, w]) => ({ label: COUNTRY[k] || k, v: w })), v => pct(v, 0, false))}</div></section></div>
-    <div class="two"><section class="panel"><div class="ph"><h2>Prochaines dates de vos entreprises</h2></div>${up.length ? agendaHTML(up, true) : `<div class="pb muted">Aucune date annoncée pour vos actions en direct.</div>`}</section>
-      <section class="panel"><div class="ph"><h2>Partager anonymement</h2></div><div class="pb" style="font-size:14px;line-height:1.55"><p style="margin-top:0">Ajoutez la composition de votre portefeuille (les lignes et leur poids, jamais les montants) au <a class="lnk" href="/communaute?onglet=portefeuilles">classement des visiteurs</a>.</p><button type="button" class="btn" id="pfsh">Partager anonymement</button> <button type="button" class="linkbtn" id="pfun">Retirer mon partage</button> <span class="muted" id="pfsm" style="font-size:12.5px"></span></div></section></div>`;
-  $("#pfsh").onclick = () => post("/api/communaute/portefeuille", { lignes: lines.map(l => [l.k, l.v / tot]) }).then(j => { $("#pfsm").textContent = j.error || "Partagé, merci."; }).catch(() => { $("#pfsm").textContent = "Indisponible pour le moment."; });
-  $("#pfun").onclick = () => post("/api/communaute/portefeuille", { retirer: true }).then(() => { $("#pfsm").textContent = "Partage retiré."; });
-  $$("[data-c]", el).forEach(inp => inp.onchange = () => { P.cfg = { ...(P.cfg || {}), [inp.dataset.c]: inp.value }; pf2Save(P); radiographie(P); });
-  $("#pfia").onclick = async () => {
-    $("#pfiab").innerHTML = `<p class="muted">Analyse en cours…</p>`;
-    const faits = { type: "portefeuille", valeur_eur: Math.round(tot), plus_value_pct: Math.round(gain / cost * 1000) / 10, lignes: lines.map(l => ({ nom: keyName(l.k), type: l.k.startsWith("e:") ? "ETF" : "action", poids_pct: Math.round(l.v / tot * 1000) / 10, plus_value_pct: lineCost(l) ? Math.round((l.v / lineCost(l) - 1) * 1000) / 10 : null })),
-      pays: cs.slice(0, 5).map(([k, w]) => [COUNTRY[k] || k, Math.round(w * 1000) / 10]), premieres_expositions: top.slice(0, 6).map(x => [x.name, Math.round(x.w * 1000) / 10]), frais_etf_eur_an: Math.round(fees), remarques: $$(".gf b", el).map(b => b.textContent),
-      habitudes: P.cfg ? { courtier: (BROKERS.list.find(b => b.id === P.cfg.courtier) || {}).name || null, compte: P.cfg.env || null, versement_mensuel_eur: +P.cfg.mensuel || null, achats_par_mois: +P.cfg.ordres || null } : null, profil_questionnaire: prof ? prof.titre : null };
-    const j = await iaRediger("portefeuille", faits);
-    $("#pfiab").innerHTML = j.txt ? `<div class="iares">${resumeHTML(j.txt)}${miaPied(j)}</div>` : miaRendu(j, "L'analyse calculée ci-dessus reste complète.");
-  };
-}
 
 
 /* ---------- Profil en 5 axes : où se situe l'entreprise dans son secteur (sans verdict) ---------- */
@@ -1123,7 +734,6 @@ function premStatus() {
 const isPrem = () => !!(PREM && PREM.premium);
 function iaFetch(url, opts = {}) { const t = premTok(); return fetch(url, { ...opts, headers: { ...(opts.headers || {}), ...(t ? { "x-bilan-token": t } : {}) } }); }
 function toast(html) { let t = $("#toast"); if (!t) { t = document.createElement("div"); t.id = "toast"; t.className = "toast"; document.body.appendChild(t); } t.innerHTML = html; t.classList.add("on"); clearTimeout(t._h); t._h = setTimeout(() => t.classList.remove("on"), 6000); }
-function pfFull(P) { if (isPrem() || P.l.length < FREE.pf) return false; toast(`La version gratuite suit jusqu'à ${FREE.pf} lignes. <a href="/premium">Premium</a> les suit sans limite.`); return true; }
 premStatus();
 
 /* ---------- Score visuel : le profil en 5 axes, en version compacte (cartes, comparaisons) ---------- */
@@ -1134,127 +744,11 @@ function profilMini(s) {
 }
 /* ---------- Assistant de fiche : questions sur l'entreprise, réponses tirées des données du site ---------- */
 const R1 = x => x == null || !isFinite(x) ? null : Math.round(x * 1000) / 10;
-function ficheFaits(s, c) {
-  const f = c ? figuresOf(c) : null, r = ratios(s), m = MED[s.sector] || {}, v = valo(s), p = pxOf(s);
-  return {
-    entreprise: s.name, secteur: secName(s), pays: regName(s), activite: s.fiche ? s.fiche.fait : s.desc, comment_elle_gagne_de_l_argent: s.fiche && s.fiche.argent, ce_qui_fait_varier_ses_resultats: s.fiche && s.fiche.depend,
-    compte_possible: peaOk(s) == null ? null : peaOk(s) ? "PEA ou compte-titres" : "compte-titres seulement",
-    comptes: f && { exercice: f.year, devise: s.currency, ventes_millions: s.ca, ventes_annee_precedente_millions: s.caPrev, benefice_net_millions: s.net, croissance_ventes_pct: R1(r.g1), marge_operationnelle_pct: R1(r.marge), marge_nette_pct: R1(r.nm), rentabilite_capitaux_propres_pct: R1(r.roe), dette_nette_en_annees_de_resultat_avant_amortissements: r.lev == null ? null : Math.round(r.lev * 10) / 10, tresorerie_superieure_a_la_dette: s.netDebt != null && s.netDebt < 0, part_du_benefice_versee_en_dividende_pct: R1(r.payout) },
-    mediane_du_secteur: { entreprises: m.n, croissance_ventes_pct: R1(m.g1), marge_operationnelle_pct: R1(m.marge), rentabilite_pct: R1(m.roe), dette_en_annees_de_resultat_avant_amortissements: m.lev == null ? null : Math.round(m.lev * 10) / 10, distribution_pct: R1(m.payout), per: MEDPE[s.sector] ? Math.round(MEDPE[s.sector]) : null },
-    jugement_du_site_critere_par_critere: f ? lecture(s, f).map(i => `${i.q} ${String(i.value || "").replace(/<[^>]+>/g, "")} (${i.lv === "fort" ? "point fort" : i.lv === "vig" ? "point de vigilance" : "dans la moyenne"})`) : [],
-    profil_dans_le_secteur: profilAxes(s).map(([t, x, w]) => `${t} : ${x.rank}e sur ${x.n}, ${w}`),
-    action: p && { cours: p.p, devise: p.cur, variation_jour_pct: p.chg, variation_1an_pct: p.p1y ? R1(p.p / p.p1y - 1) : null, plus_haut_1an: p.h52, plus_bas_1an: p.l52, per: v && v.pe ? Math.round(v.pe * 10) / 10 : null, rendement_dividende_pct: v ? R1(v.yld) : null, capitalisation_milliards_eur: v && v.capE ? Math.round(v.capE / 1e8) / 10 : null },
-    concurrents: peersOf(s, 4).list.map(x => { const rr = ratios(x), vv = valo(x); return { nom: x.name, croissance_ventes_pct: R1(rr.g1), marge_pct: R1(rr.marge), per: vv && vv.pe ? Math.round(vv.pe) : null }; }),
-    annonces_recentes: Object.values(ANA || {}).filter(x => x.id === s.id).sort((a, b) => b.date.localeCompare(a.date)).slice(0, 3).map(x => ({ date: x.date, type: x.type, chiffres: x.chiffres, lecture: x.lecture })),
-    prochaines_dates: eventsOf(s.id).filter(e => e.date >= TODAY).slice(0, 3).map(e => ({ date: e.date, quoi: e.label })),
-    date_du_jour: TODAY,
-  };
-}
-const ASK = ["Comment gagne-t-elle de l'argent ?", "Que retenir de ses derniers comptes ?", "Que dit son PER face à ses concurrentes ?", "Sa dette est-elle un problème ?", "Son dividende est-il solide ?", "Quels sont ses points de vigilance ?"];
 /* ---------- Page Premium ---------- */
 let OFFRES = null;
-async function pagePremium(sub) {
-  // 5e passage (C) : « Votre IA répond. ENKLAIR surveille. » Cinq arguments, chacun avec sa preuve tirée des données du site, puis les prix.
+async function pagePremium(sub) { // 13/11 : seule la page « Merci » reste ici ; la page Premium est dans m/premium5.js
   setTitle(sub === "merci" ? "Merci" : "Premium"); setNav("prem");
   if (sub === "merci") return premiumMerci();
-  app.innerHTML = `<div class="empty">Chargement…</div>`;
-  if (!OFFRES) { try { OFFRES = await (await fetch("/api/premium/offres")).json(); } catch (e) { OFFRES = {}; } }
-  await moi().catch(() => null); // 5/11 : bouton de paiement selon que le visiteur a un espace ou non
-  PREM = null; const st = await premStatus();
-  try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=premium-vue"); } catch (e) { }
-  const nCo = R && R.companies ? R.companies.filter(c => !c.missing).length : 0, ic = k => typeof accIc === "function" ? accIc(k) : "";
-  const ARG = [
-    ["ag", "Surveillé pendant votre sommeil", "Votre IA ne surveille rien. ENKLAIR lit les publications officielles cinq fois par jour ouvré et vous prévient.", "prem-p1"],
-    ["mk", "Chaque chiffre est prouvé", "Une IA cite de mémoire ; ici, chaque chiffre renvoie au document officiel.", "prem-p2"],
-    ["pub", `La médiane de ${F0.format(nCo)} entreprises`, "Comparer à tout un secteur demande les comptes de tout le secteur : le site les a.", "prem-p3"],
-    ["cal", "ENKLAIR se souvient", "12 semaines d'historique : ce qui a changé depuis la semaine dernière, sans rien noter.", "prem-p4"],
-    ["ia", "Gardez votre IA", "Avec Premium, branchez Claude ou ChatGPT sur ENKLAIR : votre IA lit les comptes officiels.", "prem-p5"],
-  ];
-  const rows = [ // 4/11 (décision de Romain) : une fonction est gratuite en entier ou réservée à Premium, plus de demi-version
-    ["Fiches, médianes du secteur, actualité, agenda, outils, simulateurs, Apprendre", "✓ tout", "✓ tout"],
-    ["Mon portefeuille : saisie, valeur, plus-value", "✓ sans limite de lignes", "✓"],
-    ["Fiches entreprises complètes", "5 par jour", "✓ sans limite"],
-    ["Comparer des entreprises (5 à la fois)", "3 comparaisons par semaine", "✓ sans limite"],
-    ["Questions à l'IA du site", "3 par semaine", "✓ 50 par jour"],
-    ["Connecteur pour Claude ou ChatGPT", "–", "✓"],
-    [`Alertes du soir : résultats publiés, veille des rendez-vous, mouvement de plus de 5 %, dernier jour pour toucher un dividende, plus haut ou plus bas sur un an${robotActif("alertes") ? "" : BIENTOT}`, "–", "✓ sur toutes vos valeurs"],
-    ["Rapport de la semaine, sur mesure, 12 semaines gardées", "–", "✓"],
-    ["Mon portefeuille radiographié : ce que vous possédez vraiment par vos ETF, pays et secteurs, risque en euros, calendrier des dividendes", "–", "✓"],
-    ["Classements (cinq classements, 50 places)", "–", "✓"],
-    ["Fiche : télécharger tous les chiffres (CSV)", "–", "✓"],
-  ];
-  const offer = (k, titre, prix, detail, link) => `<div class="offer${k === "unique" ? " main" : ""}"><p class="kick">${titre}</p><p class="price">${esc(prix)}</p><p class="muted" style="margin:0 0 14px">${detail}</p>${link ? `<a class="btn" href="${esc(MOI && MOI.connecte ? link + "?prefilled_email=" + encodeURIComponent(MOI.email || "") : "/espace?payer=" + k)}" rel="noopener">Choisir cette formule</a>${MOI && MOI.connecte ? "" : `<p class="muted" style="margin:8px 0 0;font-size:12.5px">Vous créerez d'abord votre espace (adresse et mot de passe) : l'abonnement y sera rattaché.</p>`}` : `<p class="prem-bientot">Ouverture prochaine</p>`}</div>`;
-  const essai = false && OFFRES.essai && !st.premium ? `<div class="prem-essai"><button type="button" class="btn" id="essai14">Essayer 14 jours, sans carte</button><span class="muted">Un compte gratuit suffit. Rien ne se renouvelle tout seul.</span><p id="essaim" role="status" aria-live="polite"></p></div>` : "";
-  const attente = OFFRES.mensuel || OFFRES.unique ? "" : `<section class="panel prem-att"><div class="pb"><h2 class="f2-h">Soyez prévenu à l'ouverture</h2><p class="muted" style="margin:6px 0 12px">Les inscrits avant l'ouverture gardent le prix bloqué à <b>39 € par an</b>. Une adresse, rien d'autre ; aucun message en dehors de l'ouverture.</p>
-    <form id="attf" class="askf" novalidate><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email" required><button class="btn">Prévenez-moi</button></form><p id="attm" class="prem-attm" role="status" aria-live="polite"></p><p class="muted" id="attn" style="font-size:13px;margin:8px 0 0"></p></div></section>`;
-  app.innerHTML = `<div class="ek ek-page pr4"><section class="ek-hero"><span class="mc-stk">Premium</span><h1 class="ag4-t">ENKLAIR suit vos placements à votre place.</h1>
-    <p class="mc-sub">Le gratuit vous aide à comprendre une entreprise. Premium vous répond, surveille vos valeurs chaque soir et radiographie tout votre portefeuille.</p>
-    <div class="pr4-notif" aria-label="Exemple d'e-mail"><span class="pr4-nk">Exemple d'e-mail</span><div class="pr4-nb"><span class="pr4-ni">E</span><div><b>ENKLAIR · ce soir</b><p>▼ Une de vos valeurs : −6,2 % aujourd'hui. Un mouvement de cette taille suit souvent une annonce : regardez son actualité.</p></div></div><p class="pr4-nt"><b>Une de vos valeurs chute de plus de 5 % ?</b> Vous le savez le soir même, sur votre téléphone${OFFRES.mail ? " et par e-mail" : ""}.</p></div>
-    <div class="pr4-offre">
-    ${st.premium ? `<section class="panel"><div class="pb premok"><b>Premium est actif sur cet appareil.</b> <span class="muted">${st.plan === "mensuel" ? "Abonnement mensuel" : st.plan === "essai" ? "Essai gratuit" : "Paiement unique"}${st.until && st.until < 4e12 ? `, jusqu'au ${new Date(st.until).toLocaleDateString("fr-FR")}` : ""}${st.email ? ` · ${esc(st.email)}` : ""}</span>
-      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:10px">${(st.plan === "mensuel" || st.plan === "annuel") ? `<button class="btn" id="portail">Gérer ou résilier mon abonnement</button>` : ""}<button class="linkbtn" id="unprem">Retirer l'accès de cet appareil</button></div></div></section>` : `
-    <p class="prem-ancre"><b>39 € par an, soit 3,25 € par mois.</b> <span class="muted">Ou 4,90 € par mois, sans engagement.</span></p>
-    <div class="offers">${offer("unique", "Un an", OFFRES.prix_unique || "39 € pour un an", "Un seul paiement, douze mois d'accès, sans renouvellement automatique.", OFFRES.unique)}${offer("mensuel", "Mensuel", OFFRES.prix_mensuel || "4,90 € par mois", "Sans engagement, résiliable en ligne en deux clics.", OFFRES.mensuel)}</div>${essai}${attente}`}
-    </div>
-    </section><section class="ek-sec"><span class="ek-stk2 b">Ce que vous obtenez</span><h2>Quatre services que le gratuit n'a pas.</h2><div class="pr4-sv">
-      <div class="pr4-c" id="ia">${ic("ia")}<b>L'IA qui vous répond</b><p><b>50 questions par jour</b> à l'IA du site (3 par semaine sans Premium), tirées des comptes officiels et des médianes du secteur. Et le <b>connecteur</b> : Claude ou ChatGPT lisent ENKLAIR pour vous répondre.</p></div>
-      <div class="pr4-c" id="alertes">${ic("ag")}<b>Prévenu quand une valeur chute</b><p><b>Une baisse de plus de 5 % dans la journée : un e-mail le soir même</b>, un seul par soir, et dans Mon espace. Et pour toutes vos valeurs : résultats publiés avec leurs chiffres clés, veille des rendez-vous, <b>dernier jour pour toucher un dividende</b>, plus haut ou plus bas sur un an. Et chaque samedi, <b>votre rapport de la semaine</b>.</p><p><a class="lnk" href="/rapport-exemple">Voir un rapport en exemple →</a></p></div>
-      <div class="pr4-c" id="portefeuille">${ic("pub")}<b>Votre portefeuille radiographié</b><p>Ce que vous possédez vraiment à travers vos ETF, vos expositions par pays et par secteur, ce qu'une baisse coûterait en euros, le calendrier de vos dividendes.</p></div>
-      <div class="pr4-c" id="donnees">${ic("mk")}<b>Comparer et classer sans limite</b><p>Les comparaisons d'entreprises sans compter (3 par semaine sans Premium), les cinq classements complets et l'export des chiffres de chaque fiche.</p></div>
-    </div></section><section class="ek-sec"><span class="ek-stk2 b">Pourquoi ENKLAIR</span><h2>Ce que votre IA ne fait pas.</h2><div class="prem5">${ARG.map(([k, t, d, id], i) => `<details class="prem-a" id="${id}"><summary>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span><em>La preuve</em></summary><div class="prem-pv" data-pv="${i}"><p class="muted">Chargement…</p></div></details>`).join("")}</div></section>
-    <section class="panel" id="tableau"><div class="ph"><h2>Gratuit pour toujours, et ce que Premium ajoute</h2></div><div class="pb scroll-x" style="overflow-x:auto"><table class="t ptab"><thead><tr><th></th><th>Gratuit</th><th>Premium</th></tr></thead><tbody>${rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td><td><b>${r[2]}</b></td></tr>`).join("")}</tbody></table>
-      <p class="note" style="margin:10px 0 0">L'information n'est jamais cachée : toutes les fiches, les médianes et les outils restent gratuits, en entier.</p></div></section>
-    <div class="two"><section class="panel"><div class="ph"><h2>J'ai déjà un code d'accès</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Le code s'affiche après le paiement. Collez-le ici pour activer Premium sur un autre appareil.</p><form id="codef" class="askf"><input type="text" placeholder="Votre code" aria-label="Code d'accès" autocomplete="off"><button class="btn">Activer</button></form><p id="codem" class="muted" style="font-size:13px"></p></div></section>
-      <section class="panel"><div class="ph"><h2>Code perdu ?</h2></div><div class="pb"><p class="muted" style="margin-top:0;font-size:14px">Indiquez l'adresse utilisée pour payer : si un accès actif y correspond, le code vous est renvoyé.</p><form id="lostf" class="askf"><input type="email" placeholder="vous@exemple.fr" aria-label="Adresse e-mail" autocomplete="email"><button class="btn">Recevoir mon code</button></form><p id="lostm" class="muted" style="font-size:13px"></p></div></section></div>
-    <section class="panel"><div class="ph"><h2>Questions fréquentes</h2></div><div class="pb">
-      ${acc("Premium donne-t-il des conseils pour acheter ?", "<p>Non. Premium donne plus de suivi et d'explications, jamais de recommandation d'achat ou de vente. ENKLAIR n'est pas un conseiller en investissement.</p>")}
-      ${acc("Pourquoi payer si mon IA répond déjà ?", "<p>Votre IA répond quand vous pensez à lui demander, avec ce qu'elle a en mémoire. ENKLAIR lit les publications officielles chaque jour, compare chaque entreprise aux comptes de tout son secteur, garde vos semaines en mémoire et vous prévient. Et vous pouvez brancher votre IA sur ENKLAIR</p>")}
-      ${acc("Comment résilier ?", "<p>L'abonnement mensuel se résilie en ligne à tout moment depuis cette page (« Gérer ou résilier mon abonnement »), aussi simplement qu'il se souscrit. L'accès reste ouvert jusqu'à la fin du mois payé. Le paiement d'un an ne se renouvelle pas.</p>")}
-      ${acc("Le paiement est-il sûr ?", "<p>Le paiement passe par Stripe, un prestataire de paiement agréé. ENKLAIR ne voit jamais votre numéro de carte.</p>")}
-      ${acc("Puis-je changer d'avis ?", `<p>Les conditions de rétractation sont détaillées dans les <a class="lnk" href="/cgv">conditions générales de vente</a>.</p>`)}
-    </div></section>
-    <p class="note">Paiement sécurisé par Stripe. <a class="lnk" href="/cgv">Conditions générales de vente</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/avertissement">Avertissement sur les risques</a></p></div>`;
-  premPreuves();
-  const E14 = $("#essai14"); if (E14) E14.onclick = async () => { E14.disabled = true; const m = $("#essaim");
-    try { const r = await fetch("/api/espace/essai", { method: "POST", credentials: "same-origin" }), j = await r.json().catch(() => ({}));
-      if (r.status === 401) { location.href = "/espace?essai=1"; return; }
-      if (r.ok && j.ok) { MOI = null; await moi(true); toast("Premium est ouvert pour 14 jours."); pagePremium(); return; }
-      m.textContent = j.error || "L'essai n'a pas pu démarrer."; } catch (e) { m.textContent = "Le site est injoignable : réessayez."; }
-    E14.disabled = false; };
-  const P = $("#portail"); if (P) P.onclick = async () => { P.disabled = true; try { const j = await (await iaFetch("/api/premium/portail")).json(); if (j.url) location.href = j.url; else { toast(esc(j.error || "Portail indisponible.")); P.disabled = false; } } catch (e) { P.disabled = false; } };
-  const U = $("#unprem"); if (U) U.onclick = () => { setPremTok(""); document.documentElement.classList.remove("is-prem"); pagePremium(); };
-  const AF = $("#attf"), AM = $("#attm"); if (AF) { // liste d'attente : succès, erreur, format vérifié avant l'envoi
-    AF.onsubmit = async e => { e.preventDefault(); const em = AF.querySelector("input").value.trim(), bt = AF.querySelector("button");
-      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(em)) { AM.className = "prem-attm ko"; AM.textContent = "Cette adresse ne semble pas valide : vérifiez-la."; return; }
-      bt.disabled = true; AM.className = "prem-attm"; AM.textContent = "Envoi…";
-      try { const r = await fetch("/api/premium/attente", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: em }) }); const j = await r.json().catch(() => ({}));
-        if (r.ok && j.ok) { AM.className = "prem-attm ok"; AM.textContent = "C'est noté. Vous serez prévenu à l'ouverture, au prix bloqué."; AF.reset(); }
-        else { AM.className = "prem-attm ko"; AM.textContent = j.error || "Le site n'a pas pu enregistrer votre adresse. Réessayez dans un moment."; } }
-      catch (x) { AM.className = "prem-attm ko"; AM.textContent = "Le site est injoignable : vérifiez votre connexion et réessayez."; }
-      bt.disabled = false; };
-    fetch("/api/premium/attente").then(r => r.json()).then(j => { if (j && j.n >= 100) $("#attn").textContent = `${F0.format(j.n)} personnes déjà inscrites.`; }).catch(() => { });
-  }
-  $("#codef").onsubmit = async e => { e.preventDefault(); const v = $("#codef input").value.trim().replace(/[^a-f0-9]/gi, "").toLowerCase(); if (v.length < 20) { $("#codem").textContent = "Ce code ne semble pas complet."; return; }
-    setPremTok(v); const s = await premStatus(); if (s.premium) { toast("Premium est activé sur cet appareil."); pagePremium(); } else { setPremTok(""); $("#codem").textContent = "Ce code n'est pas reconnu ou l'accès a expiré."; } };
-  $("#lostf").onsubmit = async e => { e.preventDefault(); const v = $("#lostf input").value.trim(); if (!/@/.test(v)) return; try { const j = await (await fetch("/api/premium/retrouver", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email: v }) })).json(); $("#lostm").textContent = j.error || "Si un accès actif correspond à cette adresse, le code vient de vous être envoyé."; } catch (x) { $("#lostm").textContent = "Le site est injoignable : réessayez."; } };
-}
-async function premPreuves() { // les cinq preuves, calculées avec les données du site (aucun exemple inventé)
-  const box = i => document.querySelector(`.prem-pv[data-pv="${i}"]`); if (!box(0)) return;
-  // 1. les 10 dernières publications de résultats déposées à la SEC, avec l'heure (Paris)
-  try { const j = await getJSON("/data/actu-sec.json", { items: [] }); const L = (j.items || []).filter(x => /resultats|rapport-trimestriel/.test(x.kind) && RBY[x.id]).slice(0, 10);
-    const h = d => new Date(d).toLocaleString("fr-FR", { timeZone: "Europe/Paris", weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).replace(":", " h ");
-    if (box(0)) box(0).innerHTML = L.length ? `<ol class="prem-pub">${L.map(x => `<li><a href="/entreprise/${x.id}">${logo(RBY[x.id], 22)}<b>${esc(RBY[x.id].name)}</b></a><span>${esc(x.form)}</span><time>${esc(h(x.date))}</time></li>`).join("")}</ol><p class="note">Les 10 dernières publications de résultats lues par le site (dépôts officiels à la SEC, heure de Paris). Le robot du site les lit cinq fois par jour ouvré (le dernier passage à 21 h 47, heure de Paris) : une publication de la journée arrive le soir même, une publication américaine de la nuit au passage du matin.</p>` : `<p class="muted">Aucune publication récente.</p>`; } catch (e) { }
-  // 2. une vraie question, sa réponse calculée et sa source
-  try { const id = RBY.kering ? "kering" : "lvmh", s = RBY[id], c = FULL[id] || (FULL[id] = await (await fetch(`/data/societes/${id}.json`)).json()), q = `Pourquoi la marge de ${s.name} baisse ?`;
-    const t = typeof localAssist === "function" ? localAssist(s, c, q) : null, src = typeof provSrcComptes === "function" ? provSrcComptes(c) : null;
-    if (box(1)) box(1).innerHTML = t ? `<p class="prem-q">« ${esc(q)} »</p><div class="prem-r">${t.split("\n").map(x => `<p>${esc(x)}</p>`).join("")}</div>${src ? `<p class="note">Source : <a class="lnk" href="${esc(src.url)}" target="_blank" rel="noopener">${esc(src.label)}</a>. Réponse calculée à l'instant par le site, sans modèle d'IA.</p>` : ""}` : `<p class="muted">Réponse indisponible pour le moment.</p>`; } catch (e) { }
-  // 3. la médiane d'un secteur entier
-  try { const s = RBY.lvmh, md = s && MED[s.sector]; const m = s && typeof ratios === "function" ? ratios(s).marge : null;
-    if (box(2) && md && m != null) box(2).innerHTML = `<p class="prem-big"><b>${pct(m, 0, false)}</b> de marge pour ${esc(s.name)}, contre <b>${pct(md.marge, 1, false)}</b> pour la médiane des ${F0.format(md.n)} entreprises du secteur ${esc(secName(s).toLowerCase())} suivies par le site.</p><p class="note">Pour donner ce repère, il faut les comptes de tout le secteur : le site lit ceux de ${F0.format(R.companies.filter(c => !c.missing).length)} entreprises (ESEF et SEC).</p>`; } catch (e) { }
-  // 4. la mémoire : le rapport de la semaine et sa comparaison
-  if (box(3)) box(3).innerHTML = `<p>Chaque lundi, votre rapport compare la semaine à la précédente : publications, dividendes annoncés, alertes nouvelles, évolution de votre portefeuille. Premium garde 12 semaines.</p><p><a class="lnk" href="/rapport-exemple">Voir un vrai rapport, calculé aujourd'hui →</a></p>`;
-  // 5. le connecteur
-  if (box(4)) box(4).innerHTML = `<p>Votre assistant lit alors les comptes officiels et les médianes d'ENKLAIR au lieu de répondre de mémoire, et cite ses sources. Inclus dans Premium, avec votre adresse personnelle.</p><p><a class="lnk" href="/ia/connecter">Le brancher en trois étapes →</a></p>`;
 }
 async function premiumMerci() {
   const sid = new URLSearchParams(location.search).get("session_id") || "";
@@ -1286,8 +780,6 @@ async function pageLegal(p) {
 
 /* ---------- Compte : session par cookie, synchronisation des favoris et du portefeuille ---------- */
 let MOI = null, MOIP = null;
-function robotActif(k) { return !!(MOI && MOI.robot && MOI.robot[k]); } // 5e passage (A0) : vrai seulement si le robot des alertes (k = "alertes") ou des rapports (k = "bilans") a déjà tourné pour de vrai ; sinon le site dit « bientôt »
-const BIENTOT = ` <span class="muted" title="Ouvre dès que le robot du soir aura tourné une première fois">(bientôt)</span>`;
 function moi(force) {
   if (MOI && !force) return Promise.resolve(MOI);
   if (MOIP && !force) return MOIP;
@@ -1331,7 +823,6 @@ function espaceBadge() {
 moi();
 
 /* ---------- Menu en rubriques ---------- */
-const NAVG = { home: "", aca: "deb", new: "deb", lex: "deb", mkt: "mkt", news: "mkt", ent: "ent", etf: "ent", sim: "out", com: "out", fav: "esp", pf: "esp", esp: "esp", ia: "ia", prem: "prem" };
 document.addEventListener("click", e => {
   const b = e.target.closest(".dd > button");
   $$(".dd.open").forEach(d => { if (!b || d !== b.parentElement) d.classList.remove("open"); });
@@ -1345,8 +836,6 @@ document.addEventListener("keydown", e => { if (e.key === "Escape") $$(".dd.open
 /* ---------- Le PER expliqué avec les chiffres de l'entreprise ---------- */
 
 /* ---------- Copilote : « Demander à ENKLAIR » ---------- */
-const iaEx = () => IA_EX.map(x => typeof frSeul === "function" && !frSeul() ? x.replace(/ éligibles au PEA/, "") : x); // 3/11 : PEA seulement en France
-const IA_EX = ["Entreprises françaises peu endettées qui versent un bon dividende", "Les entreprises tech européennes les plus rentables", "Compare LVMH, Hermès et Kering", "C'est quoi un ETF capitalisant ?", "ETF monde éligibles au PEA les moins chers", "Actions américaines moins chères que leur secteur"];
 const INDI = {
   croissance: ["Croissance des ventes", c => { const x = ratios(c).g1; return x == null ? null : x * 100; }, x => pct(x / 100), false],
   marge: ["Marge d'exploitation", c => isBank(c) ? null : (x => x == null ? null : x * 100)(ratios(c).marge), x => pct(x / 100, 1, false), false],
@@ -1361,7 +850,6 @@ const INDI = {
   taille: ["Ventes annuelles", c => c.ca > 0 ? caEur(c) / 1000 : null, x => F1.format(x) + " Md€", null],
 };
 const MEDI = {};
-function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing).map(INDI[k][1])); return MEDI[key]; }
 // Thèmes repérés dans la question : filtre sur le nom et la description des entreprises, le nom et l'indice des ETF.
 const THEME_RE = { defense: [/d[ée]fense|armement|militaire|munitions|defense/i, "défense"], semi: [/semi.?conduct|puces|semiconductor/i, "semi-conducteurs"], eau: [/\beau\b|water/i, "eau"],
   ia: [/intelligence artificielle|artificial intelligence|big data|\bIA\b/, "intelligence artificielle"], robot: [/robot|automation|automatisation/i, "robotique"], cyber: [/cyber/i, "cybersécurité"],
@@ -1380,137 +868,13 @@ function runFiltre(a) {
   const f = INDI[t.indicateur] ? INDI[t.indicateur][1] : INDI.capitalisation[1];
   return { l: l.map(c => ({ c, v: f(c) })).sort((x, y) => (y.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1) - (x.v ?? -1e9) * (t.ordre === "asc" ? -1 : 1)).map(x => x.c), tri: t };
 }
-function resoudre(nom) {
-  const q = norm(nom); if (!q) return null;
-  return R.companies.find(c => norm(c.name) === q) || R.companies.find(c => norm(c.name).startsWith(q)) || R.companies.find(c => norm(c.name).includes(q)) || R.companies.find(c => norm(c.ticker) === q)
-    || (ETF.list.find(e => norm(e.name).includes(q)) && { etf: ETF.list.find(e => norm(e.name).includes(q)) });
-}
-function cellInd(c, k) {
-  const f = INDI[k], v = f[1](c); if (v == null) return `<td class="num light">–</td>`;
-  const m = medInd(c.sector, k), good = f[3] == null || m == null ? null : (f[3] ? v < m - Math.abs(m) * 0.15 : v > m + Math.abs(m) * 0.15), bad = f[3] == null || m == null ? null : (f[3] ? v > m + Math.abs(m) * 0.15 : v < m - Math.abs(m) * 0.15);
-  return `<td class="num"><span class="${good ? "zgood" : bad ? "zbad" : ""}">${f[2](v)}</span>${m != null ? `<small class="light">secteur ${f[2](m)}</small>` : ""}</td>`;
-}
-function filtreHTML(a) {
-  const { l, tri } = runFiltre(a), lim = 30, /* 4/11 : liste entière pour tous (réponses calculées et pages /question) */ cols = [...new Set([...a.criteres.map(k => k.indicateur), tri.indicateur, "per"])].filter(k => INDI[k]).slice(0, 4);
-  const desc = [a.mot && THEME_RE[a.mot] && "thème " + THEME_RE[a.mot][1], a.secteur && R.sectors[a.secteur], a.region && R.regions[a.region], a.pays && (COUNTRY[a.pays] || a.pays), a.pea && "éligibles au PEA", ...a.criteres.map(k => `${INDI[k.indicateur][0].toLowerCase()} ${k.condition === "sup_mediane" ? "au-dessus de la médiane du secteur" : k.condition === "inf_mediane" ? "sous la médiane du secteur" : (k.condition === "sup" ? "supérieure à " : "inférieure à ") + (k.valeur != null ? INDI[k.indicateur][2](k.valeur) : "")}`)].filter(Boolean);
-  if (!l.length) return `<p class="lead">Aucune entreprise ne remplit tous ces critères (${esc(desc.join(", "))}). Essayez avec un critère de moins.</p>`;
-  return `<p class="lead" style="margin:0 0 6px"><b>${l.length} entreprise${l.length > 1 ? "s" : ""}</b> remplissent ces critères${desc.length ? ` : ${esc(desc.join(", "))}` : ""}. Classées par ${esc(INDI[tri.indicateur][0].toLowerCase())}.</p>
-    <p class="note" style="margin:0 0 10px">Vert : nettement mieux que la médiane de son secteur. Orange : nettement moins bien. Une liste de critères n'est pas une sélection d'achat : ouvrez chaque fiche.</p>
-    <div class="scroll-x"><table class="t iat"><thead><tr><th class="l">Entreprise</th>${cols.map(k => `<th>${esc(INDI[k][0])}</th>`).join("")}<th class="l">Comptes</th></tr></thead><tbody>
-    ${l.slice(0, lim).map(c => `<tr><td class="l"><a class="cell-co" href="/entreprise/${c.id}">${logo(c, 26)}<span><b>${esc(c.name)}</b><small class="light">${esc(regName(c))} · ${esc(secName(c))}</small></span></a></td>${cols.map(k => cellInd(c, k)).join("")}<td class="l">${(t => t ? pills(t) : "")(quick(c))}</td></tr>`).join("")}</tbody></table></div>
-    ${l.length > lim ? `<p class="muted" style="font-size:13.5px;margin:10px 0 0">${l.length - lim} autres entreprises.</p>` : ""}
-    <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:12px">${l.length > 1 ? `<a class="more" href="/comparer?ids=${l.slice(0, 3).map(c => c.id).join(",")}">Comparer les trois premières →</a>` : ""}<button type="button" class="linkbtn" data-favall="${l.slice(0, lim).map(c => "c:" + c.id).join(",")}">☆ Tout ajouter à mes favoris</button></div>`;
-}
-function etfIAHTML(a) {
-  let l0 = ETF.list.filter(e => (!a.categorie || e.categorie === a.categorie) && (!a.pea || e.pea) && e.ter != null);
-  if (a.mot && THEME_RE[a.mot]) { const l2 = l0.filter(e => THEME_RE[a.mot][0].test(e.name + " " + (e.index || ""))); if (l2.length) l0 = l2; else a.mot = null; }
-  const l = l0.sort((x, y) => x.ter - y.ter).slice(0, 20);
-  if (!l.length) return `<p class="lead">Aucun ETF du site ne correspond.</p>`;
-  const m = median(l.map(e => e.ter));
-  return `<p class="lead" style="margin:0 0 10px"><b>${l.length} ETF</b>${a.mot && THEME_RE[a.mot] ? ` sur le thème « ${esc(THEME_RE[a.mot][1])} »` : a.categorie ? ` de la catégorie « ${esc(ECAT[a.categorie] || a.categorie)} »` : ""}${a.pea ? ", éligibles au PEA" : ""}, du moins cher au plus cher.</p>
-    <div class="hb">${l.map(e => `<a class="hbr" href="/etf/${e.id}"><span class="hbl">${logo({ name: e.issuer, domain: issuerDom(e) }, 22)}${esc(e.name)}</span><span class="hbb"><span style="width:${Math.max(4, e.ter / Math.max(...l.map(x => x.ter)) * 100)}%;background:${e.ter <= m * 0.8 ? "var(--g)" : e.ter >= m * 1.25 ? "var(--o)" : ""}"></span></span><span class="hbv num">${pct(e.ter / 100, 2, false)}${e.pea ? " · PEA" : ""}</span></a>`).join("")}</div>
-    <p class="note">Frais courants annuels. Vert : parmi les moins chers de la liste. Les frais ne sont pas le seul critère : regardez l'indice suivi sur chaque fiche.</p>`;
-}
-async function iaRun(q, out) {
-  out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA analyse votre question…</div>`;
-  await Promise.all([premStatus(), PXP, loadAna()]); // les cours servent au PER, au rendement et aux médianes
-  let a = localCopilot(q);
-  let hitsL = [];
-  if (!a) { await acaLoad(); hitsL = chercheLecons(q);
-    const ouverte = /pourquoi|comment|c.?est quoi|qu.?est|explique|difference|faut.?il|doit.?on|risque|definition|signifie|fonctionne|marche|vaut.?il|interet|quel|quelle|combien|est.?ce|peut.?on|^(le|la|les|un|une) /i.test(norm(q));
-    if (hitsL.length && (ouverte || hitsL[0].s >= 8)) a = { action: "lecons", hits: hitsL, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()) }; }
-  if (!a) a = await miaCopilote(q); // IA connectée par le visiteur (m/monia.js), sinon { invite: true }
-  if (a.error || a.invite) { await acaLoad(); const h = chercheLecons(q); if (h.length) a = { action: "lecons", hits: h, local: true, titre: q.trim().replace(/^./, x => x.toUpperCase()), invite: a.invite };
-    else { out.innerHTML = a.invite ? `<p class="lead" style="margin:0 0 6px">Les réponses calculées du site ne couvrent pas encore cette question.</p><p class="muted" style="margin:0">Essayez une recherche par critères (secteur, pays, dette, dividende, prix), une comparaison (« Compare LVMH et Hermès ») ou une notion (« C'est quoi le PER ? »).</p>${miaInvite()}` : `<p class="muted" style="margin:6px 0">${esc(a.error)}</p>`; return; } }
-  if (a.action === "fiche") { const x = a.id ? RBY[a.id] : resoudre(a.nom); if (x) return go(x.etf ? "/etf/" + x.etf.id : "/entreprise/" + x.id); out.innerHTML = `<p class="lead">Je ne trouve pas « ${esc(a.nom)} » parmi les ${R.companies.length} entreprises du site.</p>`; return; }
-  if (a.action === "comparer") { const ids = (a.ids ? a.ids.map(id => RBY[id]) : a.noms.map(resoudre)).filter(x => x && !x.etf).map(c => c.id); if (ids.length) return go("/comparer?ids=" + [...new Set(ids)].join(",")); out.innerHTML = `<p class="lead">Je ne trouve pas ces entreprises sur le site.</p>`; return; }
-  if (a.action === "repondre" && !hitsL.length) { await acaLoad(); hitsL = chercheLecons(q); }
-  if (a.lien && !hitsL.some(h => "/academie/" + h.m.id + "/" + h.l.id === a.lien[0])) { const [mid, lid] = a.lien[0].split("/").slice(2); const m = ACA && ACA.modules.find(x => x.id === mid), l = m && m.lecons.find(x => x.id === lid); if (l) hitsL = [{ m, l }, ...hitsL]; }
-  const titre = a.titre || q;
-  out.innerHTML = `<div class="iares2"><p class="kick" style="margin:0 0 4px">${a.action === "repondre" ? "Réponse" : "Résultat"}</p>${a.action === "repondre" && !a.local ? "" : `<h2 class="iah">${esc(titre)}</h2>`}
-    ${a.action === "filtre" ? filtreHTML(a) : a.action === "etf" ? etfIAHTML(a) : a.action === "lecons" ? `<p class="lead" style="margin:0 0 10px">Les leçons de l'Académie qui répondent à votre question :</p>` + leconsHTML(a.hits) : resumeHTML(a.texte) + (a.action === "repondre" && hitsL.length ? `<div class="iaplus"><p class="kick">Pour aller plus loin dans l'Académie</p>${hitsL.slice(0, 2).map(({ m, l }) => `<a class="hbr" href="/academie/${m.id}/${l.id}"><b>${esc(l.titre)}</b><span>${esc(m.titre)}</span></a>`).join("")}</div>` : "")}
-    <p class="iafoot">${a.action === "lecons" ? "Réponse tirée des cours de l'Académie, rédigés et vérifiés à partir de sources officielles." : a.ia === "connectee" ? `Réponse rédigée par l'IA d'ENKLAIR (${esc(a.modele || "modèle choisi")}), à partir des données du site. À vérifier ; ce n'est pas un conseil.` : a.local ? "Réponse instantanée : votre question a été comprise et calculée directement sur les données du site." : a.action === "repondre" ? "Réponse rédigée par une IA : à vérifier, ce n'est pas un conseil." : "L'IA a traduit votre question en critères ; les chiffres viennent des comptes publiés, calculés par le site."}</p>${a.invite ? miaInvite() : ""}</div>`;
-}
 document.addEventListener("click", e => { const b = e.target.closest("[data-favall]"); if (!b) return; const add = b.dataset.favall.split(",").filter(Boolean); setFavs([...new Set([...favs(), ...add])]); b.textContent = "★ Ajoutées à vos favoris"; b.disabled = true; });
-function iaBox(id, big = false) {
-  return `<form class="iabox2${big ? " big" : ""}" id="${id}" autocomplete="off"><span class="iaspark" aria-hidden="true">✦</span><input type="text" maxlength="300" placeholder="Demandez à ENKLAIR : « entreprises françaises peu endettées avec un dividende »" aria-label="Posez votre question à l'IA"><button class="btn" type="submit">Demander</button></form>`;
-}
-function bindIaBox(form, out) { form.onsubmit = e => { e.preventDefault(); const q = $("input", form).value.trim(); if (q.length < 4) return; if (out) { history.replaceState({}, "", "/demander?q=" + encodeURIComponent(q)); iaRun(q, out); } else go("/demander?q=" + encodeURIComponent(q)); }; }
-function pageDemander() {
-  setTitle("Demander à l'IA"); setNav("ia");
-  const q = new URLSearchParams(location.search).get("q") || "";
-  app.innerHTML = `<div class="iahero"><p class="kick">Intelligence artificielle</p><h1 class="pagetitle">Demandez à ENKLAIR</h1><p class="pagesub">Décrivez ce que vous cherchez, avec vos mots. L'IA le traduit en critères et le site les applique aux comptes de ${F0.format(R.companies.length)} entreprises et ${ETF.list.length} ETF. Elle explique aussi les notions de Bourse.</p>
-    ${iaBox("iaf", true)}<div class="chips iaex">${iaEx().map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div><p class="mia-etat" data-mia-etat>${miaEtatHTML()}</p></div>
-    <section class="panel"><div class="pb" id="iaout"><p class="muted" style="margin:0">Essayez un exemple ci-dessus. Les questions courantes (recherches par secteur, pays, dette, dividende, prix, comparaisons, définitions) obtiennent une réponse instantanée et sans limite. Les questions libres reçoivent une réponse rédigée par <a class="lnk" href="/espace/ia">l'IA du site</a>, gratuite.</p></div></section>`;
-  const f = $("#iaf"), out = $("#iaout"); bindIaBox(f, out);
-  app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (!b) return; $("input", f).value = b.dataset.iaq; f.requestSubmit(); });
-  if (q) { $("input", f).value = q; iaRun(q, out); }
-}
 
 /* ---------- Accueil en bandeaux ---------- */
 const band = (n, kick, title, link, body) => `<section class="band"><div class="bandh"><span class="bandn">${n}</span><div><p class="kick">${kick}</p><h2>${title}</h2></div>${link ? `<a class="more" href="${link[0]}">${link[1]} →</a>` : ""}</div>${body}</section>`;
-function orcConfiance() { return ""; } // remplacée par cf/site/m/orchestre.js
-async function pageHome() {
-  setTitle(""); setNav("home");
-  await Promise.all([PXP, loadAna()]);
-  const day = dayPick(), secs = Object.entries(R.sectors).map(([k, name]) => ({ k, name, n: R.companies.filter(c => c.sector === k).length, m: MED[k] })).filter(x => x.n).sort((a, b) => b.n - a.n);
-  app.innerHTML = `
-    <section class="hero3"><p class="kick">${F0.format(R.companies.length)} entreprises · ${ETF.list.length} ETF · comptes officiels</p>
-      <h1>La Bourse, comptes à l'appui.<br><em>Posez votre question.</em></h1>
-      ${iaBox("hia", true)}
-      <div class="chips iaex">${iaEx().slice(0, 4).map(x => `<button type="button" class="chip" data-iaq="${esc(x)}">${esc(x)}</button>`).join("")}</div>
-      <p class="herosub">Ou cherchez directement une entreprise ou un ETF dans la barre en haut de la page.</p>${orcConfiance()}</section>
-    ${band(1, "Aujourd'hui", "Les marchés du jour", ["/marches", "Tous les marchés"], `<div class="homegrid"><section class="panel"><div class="ph"><h2>Les grands indices</h2></div><div class="pb">${indicesHTML()}</div></section><section class="panel"><div class="ph"><h2>Plus fortes hausses et baisses</h2></div><div class="pb">${moversHTML("all")}</div></section></div>`)}
-    ${band(2, "Mon espace", "Votre semaine en 2 minutes", ["/espace", "Mon espace"], `<div id="homeesp"></div>`)}
-    ${band(3, "Débuter", "Vous ne savez pas par où commencer ?", ["/apprendre", "Le guide du nouvel investisseur"], `<div class="nb3 nb4">
-      <a href="/apprendre"><b>1. Trouver son profil</b><span>Sept étapes dans l'ordre et cinq questions pour savoir quel type d'investisseur vous êtes.</span></a>
-      <a href="/apprendre#academie"><b>2. Suivre les cours</b><span>L'Académie : l'argent, la Bourse, les placements, les frais et les pièges, avec des quiz.</span></a>
-      <a href="/entreprise/lvmh"><b>3. Lire une vraie fiche</b><span>Exemple avec LVMH : ses chiffres comparés à la médiane de son secteur.</span></a>
-      <a href="/pea-cto"><b>4. Choisir son compte</b><span>PEA, compte-titres ou assurance-vie : ce qui reste après impôts.</span></a></div>${typeof commComparaisonHTML === "function" ? `<section class="panel homecomm"><div class="ph"><h2>Livret A, inflation ou actions : ce que deviennent vos versements</h2><a href="/livret-a-ou-bourse">Le comparateur complet</a></div><div class="pb">${commComparaisonHTML({ compact: true })}</div></section>` : ""}${typeof commIdeesHTML === "function" ? `<div class="homecomm"><div class="bandsub" style="display:flex;justify-content:space-between;align-items:baseline;margin:6px 0 10px"><h3 style="margin:0;font:600 18px var(--serif)">Trois idées reçues, démontées</h3><a class="lnk" href="/idees-recues">Les 12 idées reçues</a></div>${commIdeesHTML(3)}</div>` : ""}`)}
-    ${band(4, "Explorer", "Les entreprises et les ETF", ["/entreprises", "Toutes les entreprises"], `
-      <section class="panel"><div class="ph"><h2>Classements des entreprises</h2><div class="chips" id="rreg">${[["all", "Monde"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"]].map(([k, l]) => `<button type="button" data-r="${k}" class="${k === rankState.region ? "on" : ""}">${l}</button>`).join("")}</div></div>
-        <div class="filters" id="rk">${RANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === rankState.k ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="rkb">${rankHTML()}</div></section>
-      <div class="homegrid"><section class="panel"><div class="ph"><h2>Les ETF en classement</h2><a href="/etf">Tous les ETF</a></div>
-        <div class="filters" id="erk">${ERANKS.map(r => `<button data-k="${r[0]}" class="${r[0] === erankK ? "on" : ""}">${r[1]}</button>`).join("")}</div><div class="pb" id="erkb">${erankHTML()}</div></section>
-        ${day ? `<section class="panel dayc"><div class="ph"><h2>L'entreprise du jour</h2></div><div class="pb"><a class="dayh" href="/entreprise/${day.id}">${logo(day, 48)}<div><div class="nm">${esc(day.name)}</div><div class="light">${esc(regName(day))} · ${esc(secName(day))}</div></div></a><p>${esc(day.fiche.fait)}</p>${profilMini(day)}${feu(quick(day))}<a class="more" href="/entreprise/${day.id}">Lire la fiche →</a></div></section>` : ""}</div>
-      ${typeof outilsDecouverteHTML === "function" ? outilsDecouverteHTML(3) : ""}
-      <div class="secgrid">${secs.map(x => `<a class="sectile" href="/entreprises?secteur=${x.k}"><b>${esc(x.name)}</b><span>${x.n} entreprises</span>${x.m && x.m.marge != null ? `<span class="light">Marge médiane ${pct(x.m.marge, 1, false)}</span>` : ""}</a>`).join("")}</div>`)}
-    ${band(5, "Actualité", "Ce qui se passe dans les entreprises", ["/actualites", "Toute l'actualité"], `<div class="trio">
-      <section class="panel"><div class="ph"><h2>À venir</h2><a href="/agenda">Agenda</a></div>${agendaHTML(upcoming().slice(0, 5))}</section>
-      <section class="panel"><div class="ph"><h2>Annonces des entreprises</h2><a href="/actualites">Toutes</a></div><div class="pb" id="amf"></div></section>
-      </div>`)}
-    ${band(6, "Premium", "Aller plus loin, sans publicité", ["/premium", "Voir l'offre"], `<div class="premband"><ul>
-      <li><b>Toute l'Académie</b> et la formation guidée de six semaines</li><li><b>30 résultats</b> par recherche par critères, au lieu de 8</li><li><b>Alertes chaque soir</b> dans votre espace : annonces, mouvements de plus de 5 %, résultats du lendemain</li>
-      <li><b>12 semaines d'historique</b> de vos bilans, portefeuille sans limite, comparaisons à 5</li></ul><a class="btn" href="/premium">Découvrir Premium</a></div>`)}`;
-  $("#rk").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.k = b.dataset.k; $$("#rk button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
-  $("#erk").onclick = e => { const b = e.target.closest("button"); if (!b) return; erankK = b.dataset.k; $$("#erk button").forEach(x => x.classList.toggle("on", x === b)); $("#erkb").innerHTML = erankHTML(); };
-  $("#rreg").onclick = e => { const b = e.target.closest("button"); if (!b) return; rankState.region = b.dataset.r; $$("#rreg button").forEach(x => x.classList.toggle("on", x === b)); $("#rkb").innerHTML = rankHTML(); };
-  bindIaBox($("#hia"));
-  app.addEventListener("click", e => { const b = e.target.closest("[data-iaq]"); if (b) go("/demander?q=" + encodeURIComponent(b.dataset.iaq)); });
-  if (typeof actuBandeau === "function") actuBandeau($("#amf")); else amfBlock($("#amf"), "&suivies=1", 5);
-  // 7/11 : bloc « La communauté » de l'ancien accueil retiré (page remplacée par /pronostics)
-  moi().then(m => { const el = $("#homeesp"); if (!el) return; if (m.connecte && typeof synAccueil === "function") return synAccueil(el, m); // cf/site/m/synthese.js
-    el.innerHTML = m.connecte ? `<section class="panel"><div class="pb espteaser"><div><b>Votre bilan de la semaine est prêt.</b><div class="muted">Les mouvements de vos ${favs().length} favoris, les annonces et les dates à venir, commentés par l'IA.${m.nonlus ? ` ${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""} non lue${m.nonlus > 1 ? "s" : ""}.` : ""}</div></div><a class="btn" href="/espace">Ouvrir mon bilan</a></div></section>`
-      : `<section class="panel"><div class="pb espteaser"><div><b>Créez votre espace, c'est gratuit.</b><ul class="espben"><li>Chaque semaine, le bilan de vos entreprises rédigé par l'IA</li><li>Vos favoris et votre portefeuille sur tous vos appareils</li><li>Les alertes quand une de vos entreprises publie ou bouge fortement</li></ul></div><a class="btn" href="/espace">Créer mon espace</a></div></section>`; });
-}
 
 /* ---------- Mon espace : connexion, bilan de la semaine, alertes, réglages ---------- */
 const post2 = (u, b, m = "POST") => fetch(u, { method: m, credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(b || {}) }).then(async r => ({ status: r.status, ...(await r.json().catch(() => ({}))) }));
-async function pageEspace(onglet) {
-  setTitle("Mon espace"); setNav("esp");
-  app.innerHTML = `<div class="empty">Chargement…</div>`;
-  const m = await moi(true);
-  if (!m.connecte) return espaceConnexion();
-  onglet = onglet || "bilan";
-  const tabs = [["bilan", "Bilan de la semaine"], ["alertes", `Alertes${m.nonlus ? ` <span class="espn2">${m.nonlus}</span>` : ""}`], ["favoris", "Mes favoris"], ["portefeuille", "Mon portefeuille"], ["reglages", "Réglages"]];
-  app.innerHTML = `<div class="esphead"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ""}</p><h1 class="pagetitle" style="margin:2px 0 0">Bonjour</h1><p class="muted" style="margin:2px 0 0">${esc(m.email)}</p></div>${m.premium ? "" : `<a class="btn ghost" href="/premium">Passer à Premium</a>`}</div>
-    <nav class="esptabs scroll-x">${tabs.map(([k, l]) => `<a href="${k === "favoris" ? "/favoris" : k === "portefeuille" ? "/portefeuille" : "/espace/" + k}" class="${k === onglet ? "on" : ""}">${l}</a>`).join("")}</nav><div id="espb"></div>`;
-  const el = $("#espb");
-  if (!m.premium && (onglet === "bilan" || onglet === "alertes")) return espacePremiumSeul(el, onglet); // 4/11 : rapport et alertes réservés à Premium
-  if (onglet === "bilan") return espaceBilan(el, m);
-  if (onglet === "alertes") return espaceAlertes(el, m);
-  return espaceReglages(el, m);
-}
 function espaceConnexion() {
   // 3/11 (v4) : bandeau jaune, avantages en cartes à icône, formulaire en carte blanche (mêmes identifiants : espf, lt, espgo, espm, swap, lost, cgu)
   const ic = k => typeof ou4Ic === "function" ? ou4Ic(k) : "";
@@ -1541,28 +905,6 @@ function espaceConnexion() {
     if (r.error) { $("#espm").textContent = r.error; return; }
     if (r.code_secours) { app.innerHTML = `<section class="panel" style="max-width:640px;margin:20px auto"><div class="pb"><h1 class="pagetitle" style="margin-top:0">Votre espace est créé</h1><p>Gardez ce <b>code de secours</b> : il permet de changer de mot de passe si vous l'oubliez. Il ne sera plus affiché.</p><p class="code">${esc(r.code_secours)}</p><a class="btn" href="/espace${/[?&]payer=(mensuel|unique)/.test(location.search) ? "?payer=" + new URLSearchParams(location.search).get("payer") : ""}">${/[?&]payer=/.test(location.search) ? "Continuer vers le paiement" : "Voir mon espace"}</a></div></section>`; MOI = null; window.ESP_SANS_PAYER = true; moi(true).then(() => { window.ESP_SANS_PAYER = false; }); return; }
     MOI = null; await moi(true); pageEspace(); };
-}
-async function espaceBilan(el, m) {
-  el.innerHTML = `<div class="empty">Préparation de votre bilan…</div>`;
-  const sem = new URLSearchParams(location.search).get("semaine") || "";
-  const b = await fetch("/api/espace/bilan" + (sem ? "?semaine=" + encodeURIComponent(sem) : ""), { credentials: "same-origin" }).then(r => r.json()).catch(() => ({ error: "Bilan indisponible." }));
-  if (b.error) { el.innerHTML = `<section class="panel"><div class="pb">${esc(b.error)}</div></section>`; return; }
-  const L = (b.lignes || []).filter(x => x.variation_semaine_pct != null).sort((x, y) => y.variation_semaine_pct - x.variation_semaine_pct), sansCours = (b.lignes || []).filter(x => x.variation_semaine_pct == null);
-  const mx = Math.max(1, ...L.map(x => Math.abs(x.variation_semaine_pct)));
-  const hist = (b.historique || []).slice(0, isPrem() ? 12 : 2);
-  if (b.vide || !(b.lignes || []).length) { el.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Votre bilan se construit à partir de vos favoris et de votre portefeuille.</p><p>Ajoutez des entreprises ou des ETF avec le bouton « ☆ Ajouter aux favoris » de leur fiche, ou <a class="lnk" href="/demander">demandez à l'IA</a> de vous en trouver.</p><a class="btn" href="/entreprises">Parcourir les entreprises</a></div></section>`; return; }
-  el.innerHTML = `<div class="cols"><div>
-    <section class="panel"><div class="ph"><h2>Semaine ${esc(String(b.semaine || "").replace(/^\d{4}-W/, ""))}</h2><span class="light" style="font-size:12.5px">${b.genere ? "préparé le " + new Date(b.genere).toLocaleDateString("fr-FR") : ""}</span></div>
-      <div class="pb"><div class="bigstat"><span class="${b.moyenne >= 0 ? "up" : "down"}">${b.moyenne != null ? pct(b.moyenne / 100) : "–"}</span><small>évolution moyenne de vos lignes sur la semaine</small></div>
-      ${b.texte ? `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des chiffres ci-dessous. Ce n'est pas un conseil.</p></div>` : bilanLocal(b) ? `<div class="iares">${resumeHTML(bilanLocal(b))}<p class="iafoot">Résumé automatique de vos chiffres. Le commentaire de l'IA s'ajoutera à votre prochaine visite.</p></div>` : ""}</div></section>
-    <section class="panel"><div class="ph"><h2>Ce qui a bougé</h2></div><div class="pb"><div class="hb">${L.map(x => `<a class="hbr" href="${x.k.startsWith("c:") ? "/entreprise/" : "/etf/"}${x.k.slice(2)}"><span class="hbl">${esc(x.nom)}</span><span class="hbb ctr"><span style="width:${Math.abs(x.variation_semaine_pct) / mx * 50}%;${x.variation_semaine_pct < 0 ? "right:50%;background:var(--o)" : "left:50%;background:var(--g)"}"></span></span><span class="hbv num ${x.variation_semaine_pct >= 0 ? "up" : "down"}">${pct(x.variation_semaine_pct / 100)}</span></a>`).join("")}</div>
-      ${sansCours.length ? `<p class="note">Sans cours de la semaine dernière : ${sansCours.map(x => esc(x.nom)).join(", ")}.</p>` : ""}</div></section>
-    ${(b.annonces || []).length ? `<section class="panel"><div class="ph"><h2>Ce qui a été annoncé</h2></div><div class="pb">${b.annonces.map(a => `<div class="espann"><p><b>${esc(a.nom || keyName("c:" + a.id) || "")}</b> <span class="light">· ${esc(a.date ? dLabel(a.date) : "")} · ${esc(a.type || "")}</span></p>${(a.chiffres || []).length ? `<p>${a.chiffres.map(c => `${esc(c[0])} : <b>${esc(c[1])}</b>`).join(" · ")}</p>` : ""}${(a.lecture || []).length ? `<p class="muted">${esc(a.lecture.join(" "))}</p>` : ""}</div>`).join("")}</div></section>` : ""}
-    </div><aside>
-      <section class="panel"><div class="ph"><h2>À venir</h2></div><div class="pb">${(b.a_venir || []).length ? b.a_venir.map(e => `<p class="espev"><b>${esc(e.date ? dLabel(e.date) : "")}</b><span>${esc(e.nom || keyName("c:" + e.id) || "")} : ${esc(e.label || e.quoi || "")}</span></p>`).join("") : `<p class="muted" style="margin:0">Aucune date annoncée dans les deux prochaines semaines.</p>`}</div></section>
-      <section class="panel"><div class="ph"><h2>Semaines précédentes</h2></div><div class="pb">${hist.length ? hist.map(h => `<a class="espweek" href="/espace/bilan?semaine=${esc(h.semaine)}"><span>Semaine ${esc(String(h.semaine).replace(/^\d{4}-W/, ""))}</span><b class="${h.moyenne >= 0 ? "up" : "down"}">${h.moyenne != null ? pct(h.moyenne / 100) : "–"}</b></a>`).join("") : `<p class="muted" style="margin:0">Votre premier bilan est celui-ci.</p>`}${!isPrem() && (b.historique || []).length > 2 ? `<p class="note"><a class="lnk" href="/premium">Premium</a> garde 12 semaines d'historique.</p>` : ""}</div></section>
-      <section class="panel"><div class="pb"><b>Votre liste</b><p class="muted" style="font-size:13.5px">${favs().length} favoris, ${pf2Load().l.length} lignes de portefeuille. Le bilan se met à jour chaque samedi.</p><a class="more" href="/favoris">Gérer mes favoris →</a></div></section>
-    </aside></div>`;
 }
 // 4/11 (décision de Romain) : le rapport de la semaine et les alertes font partie de Premium, sans demi-version gratuite
 function espacePremiumSeul(el, onglet) {
@@ -1612,7 +954,7 @@ async function pageFavoris() {
   app.innerHTML = `<div class="empty">Chargement…</div>`;
   await Promise.all([PXP, loadAna()]);
   const keys = favs(), cos = keys.filter(k => k.startsWith("c:")).map(k => RBY[k.slice(2)]).filter(Boolean), etfs = keys.filter(k => k.startsWith("e:")).map(k => ETFBY[k.slice(2)]).filter(Boolean);
-  if (!cos.length && !etfs.length) { app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Vous ne suivez encore aucune entreprise.</p><p>Sur chaque fiche, le bouton « ☆ Ajouter aux favoris » l'ajoute ici. Vous pouvez aussi <a class="lnk" href="/demander">demander à l'IA</a> : « entreprises européennes rentables et peu endettées ».</p><a class="btn" href="/entreprises">Parcourir les entreprises</a></div></section>`; return; }
+  if (!cos.length && !etfs.length) { app.innerHTML = `<h1 class="pagetitle">Mes favoris</h1><section class="panel"><div class="pb"><p class="lead" style="margin-top:0">Vous ne suivez encore aucune entreprise.</p><p>Sur chaque fiche, le bouton « ☆ Ajouter aux favoris » l'ajoute ici.</p><a class="btn" href="/entreprises">Parcourir les entreprises</a></div></section>`; return; }
   const withP = cos.map(c => ({ c, p: pxOf(c) })), chgs = withP.filter(x => x.p && x.p.chg != null).map(x => x.p.chg), avg = chgs.length ? chgs.reduce((a, b) => a + b, 0) / chgs.length : null;
   const up = cos.flatMap(c => eventsOf(c.id).filter(e => e.date >= TODAY).map(e => ({ ...e, c }))).sort((a, b) => a.date.localeCompare(b.date));
   const ups = withP.filter(x => x.p && x.p.chg > 0).length, downs = withP.filter(x => x.p && x.p.chg < 0).length;
@@ -1634,7 +976,7 @@ async function pageFavoris() {
   app.innerHTML = `<div class="favhead"><div><p class="kick">Mon espace</p><h1 class="pagetitle" style="margin:2px 0 4px">Mes favoris</h1>
       <p class="muted" style="margin:0">${cos.length} entreprise${cos.length > 1 ? "s" : ""} et ${etfs.length} ETF suivis${connecte() ? ", enregistrés dans votre espace" : `, enregistrés sur cet appareil. <a class="lnk" href="/espace">Créez votre espace</a> pour les retrouver partout et recevoir votre bilan de la semaine`}.</p></div>
       ${avg != null ? `<div class="favday"><small>Aujourd'hui, en moyenne</small><b class="${avg >= 0 ? "up" : "down"}">${(avg > 0 ? "+" : "") + F2.format(avg)} %</b><small>${ups} en hausse · ${downs} en baisse</small></div>` : ""}</div>
-    <div class="favact"><button type="button" class="btn" id="vgo">✦ Bilan de ma liste par l'IA</button><a class="btn ghost" href="/espace">Mon bilan de la semaine</a>${cos.length > 1 ? `<a class="btn ghost" href="/comparer?ids=${cos.slice(0, isPrem() ? 5 : 3).map(c => c.id).join(",")}">Les comparer</a>` : ""}</div>
+    <div class="favact"><a class="btn ghost" href="/espace">Mon bilan de la semaine</a>${cos.length > 1 ? `<a class="btn ghost" href="/comparer?ids=${cos.slice(0, isPrem() ? 5 : 3).map(c => c.id).join(",")}">Les comparer</a>` : ""}</div>
     <div id="vbil"></div>
     <section class="panel"><div class="filters" id="ftab">${cos.length ? `<button data-t="actions" class="${favTab === "actions" ? "on" : ""}">Actions <span class="light">${cos.length}</span></button>` : ""}${etfs.length ? `<button data-t="etf" class="${favTab === "etf" ? "on" : ""}">ETF <span class="light">${etfs.length}</span></button>` : ""}</div>
       <div class="flist">${favTab === "actions" ? cos.map(row).join("") : etfs.map(erow).join("")}</div>
@@ -1642,7 +984,6 @@ async function pageFavoris() {
     <div class="two"><section class="panel"><div class="ph"><h2>Leurs prochaines dates</h2><a href="/dividendes">Dividendes</a></div>${up.length ? agendaHTML(up.slice(0, 8), true) : `<div class="pb muted">Aucune date annoncée.</div>`}</section>
       <section class="panel"><div class="ph"><h2>Dans la presse</h2></div><div id="fpz">${cos.slice(0, 3).map((c, i) => `<div class="pb"><div class="cap">${esc(c.name)}</div><div id="fp${i}"></div></div>`).join("")}</div><div class="src">Articles repérés par GDELT, non vérifiés par le site.</div></section></div>`;
   $("#ftab").onclick = e => { const b = e.target.closest("button"); if (!b) return; favTab = b.dataset.t; pageFavoris(); };
-  $("#vgo").onclick = () => veilleBilan(cos);
   cos.slice(0, 3).forEach((c, i) => presseBlock($("#fp" + i), { id: c.id, max: 2 }));
 }
 
@@ -1659,41 +1000,12 @@ const has = (q, re) => re.test(q);
 /* Le moteur local (localCopilot, localAssist, termeDe, chercheLecons…) est dans /ia.js. */
 
 /* ---------- Textes de secours, toujours disponibles ---------- */
-function bilanLocal(b) {
-  const L = (b.lignes || []).filter(x => x.variation_semaine_pct != null); if (!L.length && !(b.annonces || []).length) return "";
-  const P = [];
-  if (L.length) { const up = L.filter(x => x.variation_semaine_pct > 0).length, best = L[0], worst = L[L.length - 1];
-    P.push(`Ce qui a bougé\nSur la semaine, vos lignes ont évolué de ${pct((b.moyenne || 0) / 100)} en moyenne : ${up} en hausse, ${L.length - up} en baisse. La plus forte hausse : ${best.nom} (${pct(best.variation_semaine_pct / 100)}). ${L.length > 1 ? `La plus forte baisse : ${worst.nom} (${pct(worst.variation_semaine_pct / 100)}).` : ""}${L.some(x => Math.abs(x.variation_semaine_pct) >= 8) ? " Une variation de plus de 8 % en une semaine est importante pour une grande entreprise : regardez son actualité." : ""}`); }
-  if ((b.annonces || []).length) P.push(`Ce qui a été annoncé\n${b.annonces.slice(0, 3).map(a => `${a.nom} a publié ${String(a.type || "une annonce").toLowerCase()}${(a.chiffres || []).length ? ` : ${a.chiffres.slice(0, 2).map(c => c.join(" ")).join(", ")}` : ""}.`).join(" ")}`);
-  if ((b.a_venir || []).length) P.push(`À venir\n${b.a_venir.slice(0, 3).map(e => `${dLabel(e.date)} : ${e.nom}, ${e.label || ""}`).join(" ; ")}.`);
-  return P.join("\n");
-}
-function listeLocale(cos) {
-  const l = cos.map(c => ({ c, p: pxOf(c) })).filter(x => x.p && x.p.chg != null).sort((a, b) => b.p.chg - a.p.chg); if (!l.length) return "";
-  const avg = l.reduce((a, x) => a + x.p.chg, 0) / l.length, up = cos.flatMap(c => eventsOf(c.id).filter(e => e.date >= TODAY && e.date <= addDays(TODAY, 14)).map(e => ({ ...e, c }))).sort((a, b) => a.date.localeCompare(b.date));
-  const ann = Object.values(ANA || {}).filter(a => cos.some(c => c.id === a.id) && a.date >= addDays(TODAY, -7) && a.chiffres && a.chiffres.length);
-  return [`Ce qui a bougé\nAujourd'hui, vos entreprises évoluent de ${(avg > 0 ? "+" : "") + F2.format(avg)} % en moyenne. En tête : ${l[0].c.name} (${(l[0].p.chg > 0 ? "+" : "") + F2.format(l[0].p.chg)} %)${l.length > 1 ? `, en dernier : ${l.at(-1).c.name} (${(l.at(-1).p.chg > 0 ? "+" : "") + F2.format(l.at(-1).p.chg)} %)` : ""}.`,
-    ann.length ? `Ce qui a été annoncé\n${ann.slice(0, 3).map(a => `${RBY[a.id].name} (${dLabel(a.date)}) : ${a.chiffres.slice(0, 2).map(x => x.join(" : ")).join(", ")}.`).join(" ")}` : "",
-    up.length ? `À venir\n${up.slice(0, 4).map(e => `${dLabel(e.date)} : ${e.c.name}, ${e.label}`).join(" ; ")}.` : ""].filter(Boolean).join("\n");
-}
 
 /* ====================================================================================================
    v10 : graphiques tactiles, portefeuille analysé avec les habitudes et le profil, page Méthode.
    ==================================================================================================== */
 
 /* Validation d'une action du copilote proposée par l'IA connectée (m/monia.js) : seules les actions et les champs connus passent */
-function iaValide(a) {
-  if (!a || typeof a !== "object") return null;
-  const IND = Object.keys(INDI), clean = s => String(s || "").replace(/\s+/g, " ").trim();
-  if (a.action === "filtre") return { action: "filtre", titre: clean(a.titre).slice(0, 120), secteur: R.sectors[a.secteur] ? a.secteur : null, region: ["FR", "EU", "US", "MONDE"].includes(a.region) ? a.region : null, pea: a.pea === true,
-    criteres: (Array.isArray(a.criteres) ? a.criteres : []).filter(c => c && IND.includes(c.indicateur) && ["sup_mediane", "inf_mediane", "sup", "inf"].includes(c.condition)).slice(0, 5).map(c => ({ indicateur: c.indicateur, condition: c.condition, valeur: typeof c.valeur === "number" ? c.valeur : null })),
-    tri: a.tri && IND.includes(a.tri.indicateur) ? { indicateur: a.tri.indicateur, ordre: a.tri.ordre === "asc" ? "asc" : "desc" } : null, limite: 12 };
-  if (a.action === "comparer" && Array.isArray(a.noms)) return { action: "comparer", noms: a.noms.map(clean).filter(Boolean).slice(0, 5) };
-  if (a.action === "fiche" && a.nom) return { action: "fiche", nom: clean(a.nom) };
-  if (a.action === "etf") return { action: "etf", titre: clean(a.titre), categorie: /^[a-z-]{3,30}$/.test(a.categorie || "") ? a.categorie : null, pea: a.pea === true };
-  if (a.action === "repondre" && clean(a.texte).length > 30) return { action: "repondre", texte: String(a.texte) };
-  return null;
-}
 const jsonFrom = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { return JSON.parse(t.slice(i, j + 1)); } catch (e) { return null; } };
 /* ---------- Graphiques : taille réelle de l'écran et infobulles au doigt ---------- */
 const chartW = () => Math.max(300, Math.min(640, (window.innerWidth || 640) - 44));
@@ -1722,72 +1034,15 @@ async function profilInvestisseur() {
 }
 
 /* ---------- Portefeuille : vos habitudes (courtier, enveloppe, versements) et le profil ---------- */
-async function pfHabitudes(P) {
-  if (!BROKERS.list.length) { try { BROKERS = await (await fetch("/data/courtiers.json")).json(); } catch (e) { } }
-  const c = P.cfg || {};
-  return `<section class="panel"><div class="ph"><h2>Vos habitudes d'achat</h2><span class="light" style="font-size:12.5px">pour calculer ce que vous coûtent vraiment vos achats</span></div><div class="pb pfhab">
-    <label>Votre courtier<select data-c="courtier"><option value="">Choisir…</option>${BROKERS.list.filter(b => !b.custom).map(b => `<option value="${b.id}" ${b.id === c.courtier ? "selected" : ""}>${esc(b.name)}</option>`).join("")}</select></label>
-    <label>Votre compte<select data-c="env"><option value="">Choisir…</option>${[["pea", "PEA"], ["cto", "Compte-titres"], ["av", "Assurance-vie"], ["mix", "Plusieurs comptes"]].map(([k, l]) => `<option value="${k}" ${k === c.env ? "selected" : ""}>${l}</option>`).join("")}</select></label>
-    <label>Versement par mois<input data-c="mensuel" type="number" min="0" step="10" value="${c.mensuel || ""}" placeholder="100"></label>
-    <label>Achats par mois<input data-c="ordres" type="number" min="1" step="1" value="${c.ordres || ""}" placeholder="1"></label></div></section>`;
-}
-function pfAnalyseHabitudes(P, lines, tot, prof) {
-  const c = P.cfg || {}, W = [], equity = lines.filter(l => !(l.k.startsWith("e:") && ["obligations", "monetaire"].includes((ETFBY[l.k.slice(2)] || {}).categorie))).reduce((a, l) => a + l.v, 0) / tot;
-  const b = c.courtier && BROKERS.list.find(x => x.id === c.courtier), m = +c.mensuel || 0, n = Math.max(1, +c.ordres || 1);
-  if (b && m > 0) {
-    const amt = m / n, fee = brokerFee(b, amt), r = fee / amt, an = fee * n * 12;
-    const best = BROKERS.list.filter(x => !x.custom && (c.env !== "pea" || x.pea)).map(x => ({ x, f: brokerFee(x, amt) })).sort((a, z) => a.f - z.f)[0];
-    if (r > 0.01) W.push(["vig", `Chaque achat de ${F0.format(amt)} € vous coûte ${eur(fee, 2)} chez ${esc(b.name)}, soit ${pct(r, 1, false)} du montant (${F0.format(an)} € par an).`, `Les frais fixes pèsent lourd sur les petits achats : à ${pct(r, 1, false)}, il faut que votre placement monte d'autant avant d'être rentable. Regrouper vos achats (par exemple un tous les deux mois) ou passer par un plan d'investissement programmé sans frais réduit ce coût.${best && best.x.id !== b.id && best.f < fee ? ` Pour un achat de ${F0.format(amt)} €, ${esc(best.x.name)} facture ${eur(best.f, 2)} (grille relevée le ${dLabel(BROKERS.updated || TODAY)}).` : ""}`]);
-    else if (r > 0.004) W.push(["moyen", `Vos frais de courtage représentent ${pct(r, 2, false)} de chaque achat (${F0.format(an)} € par an).`, "C'est acceptable. Au-delà de 1 %, les frais commencent à peser nettement sur le rendement."]);
-    else W.push(["fort", `Vos frais de courtage sont faibles : ${pct(r, 2, false)} de chaque achat.`, "Les frais par ordre ne grignotent presque pas vos versements."]);
-    const ter = lines.filter(l => l.k.startsWith("e:")).reduce((a, l) => a + l.v * ((ETFBY[l.k.slice(2)] || {}).ter || 0) / 100, 0);
-    const coutAn = an + ter, base = Calc.compound({ initial: tot, monthly: m, years: 20, rate: 0.06 }).final, net = Calc.compound({ initial: tot, monthly: m, years: 20, rate: 0.06, fee: Math.min(0.05, coutAn / Math.max(tot, 1)) }).final;
-    if (tot > 0) W.push(["moyen", `Tous frais compris (courtage et frais des ETF), vous payez environ ${F0.format(coutAn)} € par an, soit ${pct(coutAn / tot, 2, false)} de votre portefeuille.`, `Exemple illustratif : avec ${F0.format(m)} € par mois pendant 20 ans et un rendement hypothétique de 6 % par an avant frais, cet écart de frais représenterait environ ${F0.format(Math.max(0, base - net))} € à l'arrivée. Ce rendement n'est pas une prévision.`]);
-  } else W.push(["moyen", "Indiquez votre courtier et votre versement mensuel ci-dessus.", "L'analyse calculera alors ce que vous coûte chaque achat, et ce que représentent vos frais sur 20 ans."]);
-  if (c.env === "pea") { const hors = lines.filter(l => l.k.startsWith("c:") ? peaOk(RBY[l.k.slice(2)] || {}) === false : (ETFBY[l.k.slice(2)] || {}).pea === false); if (hors.length) W.push(["vig", `${hors.length} ligne${hors.length > 1 ? "s ne sont" : " n'est"} pas éligible${hors.length > 1 ? "s" : ""} au PEA : ${hors.slice(0, 4).map(l => esc(keyName(l.k))).join(", ")}.`, "Un PEA n'accepte que les actions européennes et les ETF éligibles. Ces lignes doivent être dans un compte-titres, ou remplacées par un ETF éligible au PEA qui suit le même marché."]); }
-  if (c.env === "cto") { const peaW = lines.filter(l => l.k.startsWith("c:") ? peaOk(RBY[l.k.slice(2)] || {}) : (ETFBY[l.k.slice(2)] || {}).pea).reduce((a, l) => a + l.v, 0) / tot; if (peaW > 0.4) W.push(["moyen", `${F0.format(peaW * 100)} % de vos lignes pourraient être détenues dans un PEA.`, "En 2026, les gains d'un PEA de plus de 5 ans sont imposés à 18,6 % (prélèvements sociaux seuls), contre 31,4 % dans un compte-titres. Les versements d'un PEA sont plafonnés à 150 000 €."]);
-    const dist = lines.filter(l => l.k.startsWith("e:") && /dist/i.test((ETFBY[l.k.slice(2)] || {}).distribution || "")); if (dist.length) W.push(["moyen", `${dist.length} ETF distribuant${dist.length > 1 ? "s" : ""} dans un compte-titres.`, "Chaque dividende versé est imposé l'année où vous le recevez. Un ETF capitalisant réinvestit les dividendes et ne crée pas d'impôt tant que vous ne vendez pas."]); }
-  if (prof) {
-    const a = prof.ans;
-    if (a.horizon === 0 && equity > 0.5) W.push(["vig", `Vous avez indiqué avoir besoin de cet argent dans moins de 5 ans, et ${F0.format(equity * 100)} % du portefeuille est en actions.`, "Sur moins de 5 ans, une baisse de 30 % ou plus est possible sans laisser le temps de remonter. C'est la règle la plus importante du guide « Par où commencer »."]);
-    if (a.precaution === 0) W.push(["vig", "Vous avez indiqué ne pas avoir encore d'épargne de précaution.", "Sans réserve sur un livret, un imprévu peut obliger à vendre au pire moment. La pratique courante est de garder 3 à 6 mois de dépenses disponibles avant d'investir en Bourse."]);
-    if (a.baisse === 0 && equity > 0.6) W.push(["moyen", `Vous avez indiqué que vous vendriez après une baisse de 30 %, avec ${F0.format(equity * 100)} % en actions.`, "Vendre après une forte baisse transforme une perte temporaire en perte définitive. Une part d'actions plus faible rend les baisses plus supportables."]);
-    if (a.choisir === 0 && lines.filter(l => l.k.startsWith("c:")).length >= 5) W.push(["moyen", "Vous préférez une solution simple, et vous détenez plusieurs actions en direct.", "Suivre plusieurs entreprises demande du temps : lire leurs résultats deux à quatre fois par an. Un ETF large fait ce travail de diversification pour vous."]);
-  } else W.push(["moyen", "L'analyse ne connaît pas encore votre profil.", `Répondez aux <a class="lnk" href="/apprendre#profil">5 questions du questionnaire</a> : l'analyse tiendra compte de votre horizon, de votre épargne de précaution et de votre réaction aux baisses.`]);
-  return W;
-}
 
 /* ---------- Méthode, sources et IA ---------- */
-function pageMethode() {
-  setTitle("Méthode, sources et IA"); setNav("new");
-  app.innerHTML = `<div class="legal"><p class="kick">Transparence</p><h1 class="pagetitle">Méthode, sources et intelligence artificielle</h1><p class="pagesub">Comment le site calcule ses chiffres, d'où ils viennent, et comment l'IA est encadrée pour rester factuelle.</p>
-    <section class="panel"><div class="pb">
-      <h2>D'où viennent les chiffres</h2>
-      <p>Les comptes des entreprises viennent des documents officiels : les rapports annuels au format européen ESEF (filings.xbrl.org) et les dépôts auprès de la SEC américaine (EDGAR). Les annonces françaises viennent de l'AMF (info-financiere.gouv.fr). Les cours sont différés (Google Finance) et les taux de change sont ceux de la Banque centrale européenne. Les listes de sites non autorisés viennent de l'AMF, via data.gouv.fr.</p>
-      <h2>Comment les chiffres sont jugés</h2>
-      <p>Chaque chiffre est comparé à la médiane des entreprises du même secteur suivies par le site : la moitié fait mieux, l'autre moins bien. Vert signifie nettement mieux que la médiane, orange nettement moins bien, gris dans la moyenne. Un point orange n'est pas une mauvaise nouvelle en soi : c'est ce qu'il faut surveiller.</p>
-      <h2>Ce que fait l'intelligence artificielle</h2>
-      <p>Les questions courantes (recherches par critères, comparaisons, définitions, questions sur une fiche) sont comprises et calculées directement par le site, sans modèle d'IA : la réponse est donc exacte par construction et sans limite. Pour les questions libres, l'IA du site reçoit uniquement les chiffres du site et des consignes strictes.</p>
-      <h2>Les règles données à l'IA contre les biais</h2>
-      <p>Séparer les faits de leur interprétation. Toujours présenter ce qui est favorable et ce qui demande de la vigilance. Ne pas donner plus de poids à la dernière nouvelle qu'aux comptes de plusieurs années. Comparer à la médiane du secteur plutôt que juger dans l'absolu. Aucun mot d'emphase. Aucune prédiction de cours, aucune recommandation d'acheter, de vendre ou de conserver un titre. Dire quand une information manque. Ne citer que les chiffres fournis.</p>
-      <h2>Ce que le site ne fait pas</h2>
-      <p>Il ne publie pas d'objectifs de cours ni de recommandations d'analystes : ces travaux sont payants, leur reprise est soumise à licence, et ils ne tiennent pas compte de votre situation. Il ne connaît pas votre patrimoine ni vos revenus : ses repères sont généraux. Pour un conseil adapté à votre situation, adressez-vous à un conseiller en investissements financiers (CIF) enregistré à l'ORIAS.</p>
-      <h2>Les limites à connaître</h2>
-      <p>Les comptes ont souvent plusieurs mois de retard sur l'activité réelle. Un ratio d'une seule année peut être faussé par un élément exceptionnel. Les cours sont différés. L'IA peut se tromper : vérifiez toujours un chiffre important dans le document source, dont le lien est donné.</p>
-    </div></section>
-    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/apprendre#academie">L'Académie</a></p></div>`;
-}
 
 /* ====================================================================================================
    v11 : l'Académie (cours de culture financière, quiz, progression) et la formation guidée Premium
    ==================================================================================================== */
 let ACA = null, ACAP = null;
 const acaLoad = () => ACA ? Promise.resolve(ACA) : (ACAP = ACAP || fetch("/data/academie.json").then(r => r.json()).then(j => ACA = j).catch(() => null));
-const acaLocked = l => l.premium && !isPrem();
 
-function leconsHTML(hits) {
-  return `<div class="acahits">${hits.map(({ m, l }, i) => `<div class="acahit${i ? "" : " top"}"><p class="kick">${esc(m.titre)}</p><h3><a href="/academie/${m.id}/${l.id}">${esc(l.titre)}</a></h3><p>${esc(l.resume)}</p>${i === 0 && !acaLocked(l) && (l.a_retenir || []).length ? `<ul>${l.a_retenir.map(x => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}<a class="more" href="/academie/${m.id}/${l.id}">Lire la leçon${acaLocked(l) ? " (Premium)" : ""} →</a></div>`).join("")}</div>`;
-}
 
 /* ====================================================================================================
    v12 : l'Académie devient interactive : leçons en cartes à dévoiler, chiffres mis en valeur,
@@ -1807,7 +1062,9 @@ const PAGES_PARTIES = [
   [/^\/simulateurs(\/.*)?$/, "/outils"],
   [/^\/outils\/(si-javais|verifier)$/, "/outils"],
   [/^\/(communaute|pronostics)$/, "/outils"],
-  [/^\/hier$/, "/actualites"]];
+  [/^\/hier$/, "/actualites"],
+  [/^\/(demander|ia\/connecter)$/, "/"],
+  [/^\/espace\/ia$/, "/espace"]];
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -1837,7 +1094,6 @@ function route() {
   else if (p === "/marches") pageMarches();
   else if ((m = p.match(/^\/outils(?:\/([a-z-]+))?$/))) pageOutils(m[1]);
   else if (LEGAL_PAGES[p]) pageLegal(p);
-  else if (p === "/demander") pageDemander();
   else if (p === "/methode") pageMethode();
   else if ((m = p.match(/^\/espace(?:\/(bilan|alertes|reglages))?$/))) pageEspace(m[1]);
   else if ((m = p.match(/^\/premium(?:\/(merci))?$/))) pagePremium(m[1]);
@@ -1887,7 +1143,6 @@ function bindSearch(root) {
     sel = -1;
     const hl = t => { const s0 = String(t || ""), k = norm(s0).indexOf(q); return k < 0 || norm(s0).length !== s0.length ? esc(s0) : esc(s0.slice(0, k)) + "<mark>" + esc(s0.slice(k, k + q.length)) + "</mark>" + esc(s0.slice(k + q.length)); };
     res.innerHTML = cos.length || etfs.length ? (cos.length ? `<div class="sr-h">Entreprises</div>` : "") + cos.map(c => `<a href="/entreprise/${c.id}" class="srow">${logo(c, 34)}<span class="st"><span class="sr-n">${hl(c.name)}</span><span class="sr-m">${esc(c.ticker)} · ${esc(regName(c))} · ${esc(secName(c))}</span></span><span class="sr-go">→</span></a>`).join("") + (etfs.length ? `<div class="sr-h">ETF</div>` : "") + etfs.map(e => `<a href="/etf/${e.id}" class="srow">${logo({ name: e.issuer, domain: issuerDom(e) }, 34)}<span class="st"><span class="sr-n">${hl(e.name)}</span><span class="sr-m"><b class="sr-p">ETF</b>${e.pea ? `<b class="sr-p sr-pea fr-seul">PEA</b>` : ""}${esc(e.ticker || "")}${e.index ? " · " + esc(e.index) : ""}</span></span><span class="sr-go">→</span></a>`).join("") : `<div class="none">Aucun résultat.</div>`;
-    if (inp.value.trim().length >= 3) res.insertAdjacentHTML(cos.length || etfs.length ? "beforeend" : "afterbegin", `<a class="iasug srow" href="/demander?q=${encodeURIComponent(inp.value.trim())}"><span class="sr-ia">✦</span><span class="st"><span class="sr-n">Demander à l'IA : « ${esc(inp.value.trim().slice(0, 60))} »</span><span class="sr-m">recherche par critères, explications</span></span><span class="sr-go">→</span></a>`);
     $(".none", res) && $(".none", res).remove();
     res.classList.add("open");
   };
@@ -1895,7 +1150,7 @@ function bindSearch(root) {
   inp.addEventListener("keydown", e => {
     const items = $$("a", res);
     if (e.key === "ArrowDown" || e.key === "ArrowUp") { e.preventDefault(); sel = Math.max(0, Math.min(items.length - 1, sel + (e.key === "ArrowDown" ? 1 : -1))); items.forEach((a, i) => a.classList.toggle("sel", i === sel)); }
-    else if (e.key === "Enter" && items.length) { e.preventDefault(); const q = inp.value.trim(), ia = sel < 0 && (q.split(/\s+/).length >= 3 || /\?$/.test(q)); const a = ia ? $(".iasug", res) : items[Math.max(0, sel)]; inp.value = ""; const u = new URL(a.href); go(u.pathname + u.search); inp.blur(); }
+    else if (e.key === "Enter" && items.length) { e.preventDefault(); const a = items[Math.max(0, sel)]; inp.value = ""; const u = new URL(a.href); go(u.pathname + u.search); inp.blur(); }
     else if (e.key === "Escape") { res.classList.remove("open"); inp.blur(); }
   });
   res.addEventListener("click", () => { inp.value = ""; });

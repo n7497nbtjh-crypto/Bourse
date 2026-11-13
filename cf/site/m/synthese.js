@@ -366,22 +366,6 @@ async function espaceBilan(el, m) {
 }
 
 /* ---------- Accueil d'un membre connecté (appelée par pageHome) ---------- */
-async function synAccueil(el, m) {
-  el.innerHTML = `<section class="panel"><div class="pb"><p class="muted" style="margin:0">Préparation de votre semaine…</p></div></section>`;
-  const b = await synCharger("?apercu=1");
-  if (!el.isConnected) return;
-  if (b.error || b.vide || !(b.lignes || []).length) {
-    el.innerHTML = `<section class="panel"><div class="pb espteaser"><div><b>Votre semaine en 2 minutes vous attend dans votre espace.</b><div class="muted">Ajoutez des entreprises ou des ETF à vos favoris : chaque semaine, leurs variations, leurs annonces et les dates à venir, résumées pour vous.${m.nonlus ? ` ${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""} non lue${m.nonlus > 1 ? "s" : ""}.` : ""}</div></div><a class="btn" href="/espace">Ouvrir mon espace</a></div></section>`; return;
-  }
-  const L = (b.lignes || []).filter(l => l.variation_semaine_pct != null), pf = b.portefeuille, best = L[0], worst = L.length > 1 ? L[L.length - 1] : null, ess = synEssentiel(b);
-  const kp = [pf && pf.var_pct != null ? `<a class="synkpi" href="/portefeuille"><small>Mon portefeuille</small><b class="${synCls(pf.var_eur)}">${synEur(pf.var_eur)}</b><span>${synPct(pf.var_pct)} sur la semaine</span></a>` : L.length ? `<div class="synkpi"><small>Moyenne de vos valeurs</small><b class="${synCls(b.moyenne)}">${synPct(b.moyenne)}</b><span>${b.hausses || 0} en hausse · ${b.baisses || 0} en baisse</span></div>` : "",
-    best ? `<a class="synkpi" href="${synLien(best.k)}"><small>Plus forte hausse</small><b class="${synCls(best.variation_semaine_pct)}">${synPct(best.variation_semaine_pct)}</b><span>${esc(best.nom)}</span></a>` : "",
-    worst ? `<a class="synkpi" href="${synLien(worst.k)}"><small>Plus forte baisse</small><b class="${synCls(worst.variation_semaine_pct)}">${synPct(worst.variation_semaine_pct)}</b><span>${esc(worst.nom)}</span></a>` : ""].filter(Boolean);
-  el.innerHTML = `<section class="panel"><div class="pb synhome"><div><p class="kick">Votre semaine en 2 minutes · semaine ${esc(String(b.semaine || "").replace(/^\d{4}-W/, ""))}</p>
-      ${ess.length ? `<ol class="synk" style="margin-top:8px">${ess.map(p => `<li>${synInsec(p)}</li>`).join("")}</ol>` : ""}
-      <div class="synnav" style="border:0;padding-top:4px"><a class="pri" href="/espace">Lire ma semaine (${b.lecture_min || 2} min)</a>${(b.annonces || []).length ? `<a href="/espace#synact">${b.annonces.length} actualité${b.annonces.length > 1 ? "s" : ""}</a>` : ""}${(b.a_venir || []).length ? `<a href="/espace#synav">${b.a_venir.length} date${b.a_venir.length > 1 ? "s" : ""} à venir</a>` : ""}${m.nonlus ? `<a href="/espace/alertes">${m.nonlus} alerte${m.nonlus > 1 ? "s" : ""}</a>` : ""}</div></div>
-      ${kp.length ? `<div class="kp">${kp.join("")}</div>` : ""}</div></section>`;
-}
 
 
 /* ---------- Mon espace : même page, onglet renommé « Ma semaine » ---------- */

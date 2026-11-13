@@ -291,15 +291,6 @@ function outEtfCard(e) {
 }
 function outDateFr(iso, opt) { return new Date(iso + "T12:00:00Z").toLocaleDateString("fr-FR", opt || { weekday: "long", day: "numeric", month: "long" }); }
 // Pour l'accueil : 3 entreprises du jour (l'orchestrateur place ce bloc). Rien ne bloque : les comptes de l'exercice suffisent.
-function outilsDecouverteHTML(n = 3) {
-  if (!R) return "";
-  const l = outDayPicks(TODAY, 6).slice(0, n); if (!l.length) return "";
-  if (!OUT_H) outHist().then(() => { outStats(); const l2 = outDayPicks(TODAY, 6).slice(0, n); $$(".out-home[data-d='" + TODAY + "']").forEach(el => { el.querySelector(".out-dg").innerHTML = l2.map(x => outDecCard(x, false)).join(""); }); });
-  else outStats();
-  outCSS(); if (typeof recoCSS === "function") recoCSS();
-  return `<section class="panel out-home" data-d="${TODAY}"><div class="ph"><h2>À découvrir aujourd'hui</h2><a href="/decouvertes">Toutes les découvertes</a></div><div class="pb" style="padding-top:6px">
-    <p class="muted out-hs">Des petites et moyennes entreprises, d'Europe et d'ailleurs, dont les comptes ressortent sur nos critères. Une nouvelle sélection chaque jour, sans conseil d'achat.</p><div class="out-dg">${l.map(x => outDecCard(x, false)).join("")}</div></div></section>`;
-}
 async function pageDecouvertes() {
   setTitle("Découvertes du jour"); setNav("ent");
   if (!R) return;

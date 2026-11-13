@@ -161,7 +161,7 @@ function f4Tete(s, c, x) {
     <div id="f4tv" hidden></div>
     ${x ? f4Verdict(x) + f4Chaine(x) : ""}
     <div class="ek-medl"><span>${x ? `Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} <b>${esc(x.P.de)}</b>${x.P.mode === "rivales" ? ` (${x.P.L.map(r => `<a class="ek-nl" href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`).join(", ")})` : ""}.` : ""}</span>
-      <div class="ek-acts">${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
+      <div class="ek-acts">${typeof favBtn === "function" ? favBtn("c:" + s.id).replace('class="favbtn', 'class="ek-btn favbtn') : ""}${x && x.P.mode === "rivales" ? `<a class="ek-btn" href="/comparer?ids=${esc([s.id, ...x.P.L.slice(0, 2).map(r => r.id)].join(","))}">Comparer à ses rivales</a>` : ""}</div></div>
     <div class="f4al" id="f4al" hidden></div>
   </section>`;
 }
@@ -554,15 +554,11 @@ function f4Fin(x) {
   const secteur = `<div id="f4sx" hidden></div>`; // rempli par f4Contexte une fois contexte.json chargé
   const fb = typeof fiabilite === "function" ? fiabilite(s, c) : null;
   const tout = f4Tout(x);
-  const qs = [s.net != null && s.netPrev > 0 ? `Comment le bénéfice de ${s.name} a-t-il évolué sur l'exercice ${s.year} ?` : `Que fait ${s.name} ?`, x.M.pe != null ? `Pourquoi l'action ${s.name} vaut-elle ${ekFr(x.M.pe, 0)} fois son bénéfice ?` : `Comment ${s.name} gagne-t-elle de l'argent ?`, `Quels sont les principaux risques pour ${s.name} ?`];
   return `<section class="ek-sec" id="actu"><span class="ek-stk2 p">Son actualité</span><h2>Ce qui vient de tomber, ce qui arrive.</h2>${ag}${secteur}
       <p class="ek-note">Tout ce qui est au-dessus porte sur l'exercice ${esc(s.year)}${c.sourceEP ? ", clos" : ", audité et déposé"}. Une publication plus récente n'est reprise qu'une fois relevée.</p>
       ${c.sourceEP ? `<div class="ek-proof"><span class="ek-stk2">Source</span><p>Les chiffres de cette page sont ceux des <b>comptes annuels publiés par ${esc(s.name)}</b>, exercice ${esc(s.year)} compris, fournis par le spécialiste des données financières Eulerpool et contrôlés par ENKLAIR (années complètes, cohérence d'une année à l'autre).</p><a href="https://eulerpool.com" target="_blank" rel="noopener">Data by Eulerpool ↗</a></div>` : x.rap ? `<div class="ek-proof"><span class="ek-stk2">Prouvé</span><p>Les chiffres de cette page viennent du <b>rapport annuel ${esc(s.year)} de ${esc(s.name)}</b>${fb ? `. Fiabilité des données : ${esc(fb.mot)}` : ""}.</p><a href="${esc(x.rap)}" target="_blank" rel="noopener">Ouvrir le rapport ↗</a></div>` : ""}</section>
     <section class="ek-sec" id="tout"><span class="ek-stk2 b">Pour aller plus loin</span><h2>Tous les chiffres, en détail.</h2>
-      ${tout}</section>
-    <section class="ek-end"><h2>✦ Une question sur ${esc(s.name)} ?</h2><div class="ek-qs">${qs.slice(0, 2).map(q => `<button type="button" data-f4-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-      <form class="ek-ask" data-f4-ask><input type="text" name="q" maxlength="300" placeholder="Posez votre question sur ${esc(s.name)}…" aria-label="Votre question sur ${esc(s.name)}" autocomplete="off"><button type="submit">Demander</button></form>
-      <small>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</small></section>`;
+      ${tout}</section>`;
 }
 // « Tous les chiffres » : quatre cartes (résultats, bilan, argent encaissé, actionnaire), puis face aux rivales et depuis la clôture.
 // Chaque ligne : le mot (cliquable s'il a une définition), quatre années, la dernière en jaune, la variation sur un an en couleur, la médiane du secteur.
@@ -615,11 +611,6 @@ document.addEventListener("click", e => { // repères de l'en-tête : aller à l
   const bar = document.querySelector(".bar, header"), off = (bar && getComputedStyle(bar).position === "sticky" ? bar.getBoundingClientRect().height : 0) + 16;
   scrollTo({ top: t.getBoundingClientRect().top + scrollY - off, behavior: "smooth" });
 }, true);
-document.addEventListener("submit", e => {
-  const f = e.target.closest && e.target.closest("[data-f4-ask]"); if (!f) return; e.preventDefault();
-  const q = (f.q.value || "").trim(); if (!q || typeof orcIaOpen !== "function") return;
-  orcIaOpen(); if (typeof orcIaAsk === "function") orcIaAsk(q); f.q.value = "";
-});
 /* 4/11 (Premium) : « Être prévenu ». Ajoute la valeur aux favoris (ce que suit le robot des alertes) et dit ce qui arrivera :
    sans Premium, la valeur est ajoutée aux favoris et le bloc dit que les alertes font partie de Premium. */
 async function f4Alerte(k, btn) {
@@ -639,14 +630,11 @@ document.addEventListener("click", e => {
   if (e.target.closest && e.target.closest("[data-f4-csv]")) { // 4/11 : l'export fait partie de Premium (« Toutes les données »)
     if (typeof isPrem === "function" && !isPrem()) { if (typeof toast === "function") toast(`L'export des chiffres fait partie de Premium. <a href="/premium#donnees">Voir Premium</a>`); return; }
     if (window.F4X) f4Csv(window.F4X); return; }
-  const t = e.target.closest && e.target.closest("[data-f4-tv],[data-f4-ia],[data-f4-q]"); if (!t) return;
+  const t = e.target.closest && e.target.closest("[data-f4-tv]"); if (!t) return;
   const m = location.pathname.match(/^\/entreprise\/([^/]+)/), s = m && RBY[m[1]];
   if (t.dataset.f4Tv !== undefined && s) { const box = document.getElementById("f4tv"); if (!box) return; box.hidden = !box.hidden;
     if (!box.hidden && !box.dataset.on && typeof tvChart === "function") { box.dataset.on = "1"; box.className = "ek-tvbox"; tvChart(box, s.tv, s.name); }
     t.textContent = box.hidden ? "Voir le graphique du cours ↗" : "Masquer le graphique"; return; }
-  if (typeof orcIaOpen !== "function") return;
-  orcIaOpen();
-  if (t.dataset.f4Q && typeof orcIaAsk === "function") orcIaAsk(t.dataset.f4Q);
 });
 
 const e4FrF = () => typeof frSeul === "function" ? frSeul() : true; // PEA : seulement pour un visiteur en France (m/pays.js)

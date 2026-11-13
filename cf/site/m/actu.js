@@ -21,7 +21,6 @@ const ACTU_CAT = {
 };
 const ACTU_SRC = { amf: "AMF", sec: "SEC", nasdaq: "Nasdaq Nordic", oslo: "Oslo Børs", nsm: "FCA (NSM)" };
 const ACTU_LANG = { en: "en anglais", sv: "en suédois", fi: "en finnois", da: "en danois", no: "en norvégien", de: "en allemand", es: "en espagnol", it: "en italien", nl: "en néerlandais", is: "en islandais" };
-const ACTU_TYPES = [["imp", "L'essentiel"], ["resultats", "Résultats"], ["dividende", "Dividendes"], ["operation", "Acquisitions, OPA"], ["dirigeants", "Direction"], ["assemblee", "Assemblées"], ["emission", "Émissions"], ["tout", "Tout"]];
 const ACTU_MEM = {};
 /* styles : voir site.css */
 
@@ -41,32 +40,6 @@ function actuCo(id) { return actuGet(`/data/actu/c/${encodeURIComponent(id)}.jso
 const actuJour = d => actuGet(`/data/actu/j/${d}.json`).then(j => (j && j.o) || []);
 
 /* ---------- Rendu d'une annonce ---------- */
-function actuSrcLink(it) {
-  const s = ACTU_SRC[it.s] || "source officielle", lg = it.l && it.l !== "fr" && ACTU_LANG[it.l] ? `, ${ACTU_LANG[it.l]}` : "", pdf = /\.pdf($|\?)/i.test(it.u) ? ", PDF" : "";
-  return `<a class="lnk ax-src" href="${esc(it.u)}" target="_blank" rel="noopener">Lire l'annonce (${esc(s)}${lg}${pdf})</a>`;
-}
-function actuItemHTML(it, { showCo = true, detail = true } = {}) {
-  const C = ACTU_CAT[it.c] || ACTU_CAT.autre, co = RBY[it.id];
-  const figs = it.f && it.f.length ? `<div class="ax-fig">${it.f.slice(0, detail ? 5 : 3).map(([l, v]) => `<span><small>${esc(l)}</small><b>${esc(v)}</b></span>`).join("")}</div>` : "";
-  let clair = "";
-  const clairTag = typeof matchMedia === "function" && matchMedia("(max-width:760px)").matches; // lot C : « En clair » replié sur téléphone
-  if (detail && it.x && it.x.c) clair = `<${clairTag ? "details" : "div"} class="ax-cl" style="--c:${C.c}"><${clairTag ? "summary" : "b"}><b>En clair</b></${clairTag ? "summary" : "b"}><p>${esc(it.x.c)}</p>${it.x.ch ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(it.x.ch)}</p>` : ""}<small>Rédigé par une IA à partir de l'annonce et des chiffres ci-dessus. La source fait foi.</small></${clairTag ? "details" : "div"}>`;
-  else if (detail && it.r && it.r.length) clair = `<${clairTag ? "details" : "div"} class="ax-cl" style="--c:${C.c}"><${clairTag ? "summary" : "b"}><b>En clair</b></${clairTag ? "summary" : "b"}><ul>${it.r.map(x => `<li>${esc(x)}</li>`).join("")}</ul><small>Calculé par le site à partir des chiffres de l'annonce.</small></${clairTag ? "details" : "div"}>`;
-  const gen = !it.tf || /^(Communiqué|Information importante)$/.test(it.tf), main = gen && it.t ? it.t : (it.tf || C.l), sub = !gen && it.t && it.t !== it.tf ? it.t : "";
-  return `<div class="ax-it">${showCo ? (co ? `<a href="/entreprise/${co.id}?etape=change" title="La fiche : ce qui change, ses chiffres" class="nlogo" aria-hidden="true" tabindex="-1">${logo(co, 36)}</a>` : "") : ""}
-    <div class="ax-b"><div class="ax-m">${showCo && co ? `<a class="nco" href="/entreprise/${co.id}?etape=change" title="La fiche : ce qui change, ses chiffres">${esc(co.name)}</a>` : ""}<span class="ax-chip" style="--c:${C.c}" title="${esc(C.why)}">${C.l}</span>${it.p ? `<span class="ax-imp" title="Information privilégiée : un fait susceptible d'influencer le cours, que l'entreprise doit publier sans délai">Info. privilégiée</span>` : ""}<span>${hhmm(it.d) || dShort(it.d)}</span></div>
-      <span class="ax-tf">${esc(main)}</span>${sub ? `<span class="ax-t">${esc(sub)}</span>` : ""}
-      ${figs}${clair}${detail && !(it.x && it.x.c) && it.i >= 2 && !C.routine ? `<button type="button" class="iabtn" data-clair="${esc(it.id)}|${esc(it.k)}">✦ Expliquer en clair</button><div class="iabox"></div>` : ""}${actuSrcLink(it)}</div></div>`;
-}
-function actuListHTML(items, opts = {}) {
-  if (!items.length) return `<div class="ax-empty">${opts.vide || "Aucune annonce pour ce choix."}</div>`;
-  let out = "", last = "";
-  for (const it of items) {
-    if (opts.days !== false) { const dk = dayKey(it.d); if (dk !== last) { out += `<div class="ax-day">${esc(dayLabel(it.d))}</div>`; last = dk; } }
-    out += actuItemHTML(it, opts);
-  }
-  return `<div class="ax-list">${out}</div>`;
-}
 // L'essentiel (30/10) : jamais un dépôt sans contenu (« FORM 6-K », communiqué sans chiffres ni lecture), ni les votes d'assemblée
 const actuVide = it => /^FORM \d|^6-K$|^8-K$/i.test(String(it.t || "").trim()) || ((it.c === "communique" || it.c === "autre") && !(it.f || []).length && !(it.r || []).length && !(it.x && it.x.c) && (!it.t || /^(Communiqué|Information importante|FORM)/i.test(it.t)));
 const actuImp = it => !(ACTU_CAT[it.c] || {}).routine && it.i >= 1 && !actuVide(it) && it.c !== "assemblee";
@@ -94,35 +67,11 @@ function presseBlock(el, { id = null, sujet = null, max = 8 } = {}) {
 }
 
 /* ---------- Bloc d'annonces réutilisable (compatible avec les appels existants) ---------- */
-function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, max = 40, showCo = true, filters = true, f = "imp" } = {}) {
-  if (!target) return;
-  if (!id) { const m = String(params).match(/isin=([A-Z0-9]{12})/); if (m) { const c = R.companies.find(x => x.isin === m[1]); if (c) id = c.id; } }
-  target.innerHTML = `${filters ? `<div class="chips nfil">${ACTU_TYPES.map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>` : ""}<div class="nlist"><div class="ax-empty">Chargement…</div></div>`;
-  const list = $(".nlist", target);
-  const p = id ? actuCo(id).then(j => j.o || []) : actuFil().then(j => (j.o || []).filter(it => { const c = RBY[it.id]; if (!c) return false; return /suivies|^$/.test(params) && src !== "US" ? c.region === "FR" || !params : src === "US" ? c.region === "US" : true; }));
-  p.then(items => {
-    const draw = () => { const L = items.filter(it => actuType(it, f)); list.innerHTML = actuListHTML((L.length || f !== "imp" ? L : items).slice(0, max), { showCo, detail: !!filters, vide: "Aucune annonce officielle repérée ces 90 derniers jours dans les sources suivies." }); };
-    draw();
-    if (filters) $(".nfil", target).onclick = e => { const b = e.target.closest("button"); if (!b) return; f = b.dataset.f; $$(".nfil button", target).forEach(x => x.classList.toggle("on", x === b)); draw(); };
-  }).catch(() => { list.innerHTML = `<div class="ax-empty">Les annonces ne sont pas disponibles pour le moment.</div>`; });
-}
-function amfBlock(target, params, limit) { newsBlock(target, { params: "", max: limit || 5, filters: false }); }
 
 /* ---------- Fiche entreprise : bloc court (colonne latérale) et onglet détaillé ---------- */
 // Aucune annonce collectée : dernières publications officielles connues (comptes annuels) et lien vers l'entreprise
 
 /* ---------- Accueil : « Ce qui se passe dans les entreprises » ---------- */
-function actuBandeau(el) {
-  if (!el) return; el.dataset.ok = "1";
-  actuFil().then(j => {
-    const fav = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
-    const o = (j.o || []).filter(it => it.i >= 3 && RBY[it.id]);
-    const mine = o.filter(it => fav.has(it.id)), L = (mine.length >= 3 ? mine : o).slice(0, 5);
-    const p = (j.p || []).filter(a => RBY[a.id] && (fav.size ? fav.has(a.id) : true)).slice(0, 5);
-    el.innerHTML = `<div class="ax-band"><section class="panel"><div class="ph"><h2>${mine.length >= 3 ? "Annonces de vos favoris" : "Dernières annonces importantes"}</h2><a href="/actualites">Toutes</a></div><div class="pb">${actuListHTML(L, { detail: false, days: false, vide: "Aucune annonce importante ces derniers jours." })}</div></section>
-      <section class="panel"><div class="ph"><h2>Dans la presse</h2><a href="/actualites?vue=presse">Toute la presse</a></div><div class="pb">${presseHTML(p.length ? p : (j.p || []).slice(0, 5), 5)}</div></section></div>`;
-  });
-}
 
 /* ---------- Page /actualites ---------- */
 function actuStats(L) { // « Les chiffres à retenir », calculés sur les annonces affichées

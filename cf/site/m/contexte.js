@@ -38,7 +38,6 @@ const CTX_RE = {
 const CTX_DEP = { douane: /douane|tarif/, chine: /chine|chinois|asie/, export: /restrictions? d.?export|controles? (des |a l.)?export/ };
 const CTX_EURO = new Set(["FR", "DE", "NL", "BE", "LU", "IT", "ES", "PT", "IE", "AT", "FI", "GR", "SK", "SI", "EE", "LV", "LT", "MT", "CY", "HR", "MC"]);
 const CTX_EUROPE = new Set(["GB", "CH", "NO", "SE", "DK", "PL", "CZ", "HU", "RO", "BG", "IS", "LI"]);
-const ctxDe = n => (/^[AEIOUYÉÈÊÂÎÔH]/i.test(n) ? "d'" : "de ") + n;
 const ctxPour = (im, nom) => `Pour les ${im.qui.charAt(0).toLowerCase() + im.qui.slice(1)}, comme ${nom}`;
 const ctxDepuis = d => /-01-01$/.test(d) ? `depuis ${d.slice(0, 4)}` : `depuis le ${dLabel(d).replace(/^1 /, "1er ")}`;
 const CTX_CYCL = new Set(["petrole", "auto", "aerien", "semi", "chimie", "mine"]);
@@ -404,75 +403,6 @@ function ctxFiabilite(s, c) {
   if (typeof pxOf === "function" && !pxOf(s)) out.push("Cours de l'action indisponible : prix, PER et rendement ne se calculent pas.");
   if (CTX_D) out.push(`Actualité : sujets vérifiés à la main le ${dLabel(CTX_D.maj)} ; les effets décrits sont des mécanismes possibles, pas des mesures.`);
   return out;
-}
-const CTX_QACTU = /actualite|\bactus?\b|guerre|moyen orient|proche orient|\biran\b|israel|ormuz|petrole|baril|\bbrent\b|\bgaz\b|\bbce\b|taux d interet|taux directeur|hausse des taux|douanes?|tarifs?|\btreve\b|\bchine\b|chinois|terres rares|geopoliti|contexte|conjoncture|inflation|budget|\boat\b|licences?|exportations?|regulat|reglementation/;
-function ctxRepActu(s, c, q) {
-  const l = contexteSujets(s, c); if (!CTX_D) return null;
-  const nom = s.name, vise = l.filter(({ sj }) => (sj.mots && new RegExp(sj.mots).test(q)) || norm(sj.theme).split(/[^a-z]+/).some(w => w.length >= 5 && q.includes(" " + w + " ")));
-  const theme = /guerre|moyen orient|proche orient|iran|israel|ormuz|petrole|baril|brent|gaz|douane|tarif|treve|chine|chinois|terres rares|bce|taux|budget|oat|licence|export|regul|reglement/.test(q);
-  const pick = vise.length ? vise : theme ? [] : l;
-  const P = [];
-  if (pick.length) {
-    P.push(`Ce que le site suit dans l'actualité pour ${nom} (vérifié le ${dLabel(CTX_D.maj)}) :`);
-    pick.slice(0, 3).forEach(({ sj, im }) => P.push(`${sj.titre}. ${sj.faits[0]} ${ctxPour(im, nom)} : ${im.mecanisme.charAt(0).toLowerCase() + im.mecanisme.slice(1)}`));
-    P.push(`Je ne suis pas sûr de l'ampleur de ces effets : le site ne mesure pas leur part dans les résultats ${ctxDe(nom)}. À vérifier : ses prochains résultats et ce qu'elle en dit dans ses communiqués (onglet « Actualités »).`);
-  } else if (theme) {
-    const autre = CTX_D.sujets.filter(sj => (!sj.fin || sj.fin >= TODAY) && sj.mots && new RegExp(sj.mots).test(q))[0];
-    P.push(`Ce que je ne sais pas : le site ne relie pas ${nom} à ce sujet d'actualité${autre ? ` (« ${autre.titre} »)` : ""}. Son secteur, son pays et son métier ne font pas partie des entreprises qu'il identifie comme exposées.`);
-    if (l.length) P.push(`Les sujets d'actualité qui la concernent selon le site : ${l.slice(0, 3).map(x => x.sj.titre).join(" ; ")}.`);
-    P.push(`À vérifier : son rapport annuel décrit ses risques principaux, souvent dans une partie « facteurs de risque ».`);
-  } else return null;
-  return P.join("\n");
-}
-function ctxDoutes(s, c, q, it, t) {
-  const P = [], nom = s.name, has = re => re.test(t || "");
-  if ((!c || s.missing) && !has(/pas encore lu|n'a pas encore|pas encore les comptes/)) P.push(`Je ne suis pas sûr : le site n'a pas encore lu les comptes de ${nom}. À vérifier : son dernier rapport annuel, sur son site.`);
-  if (c && c.years && c.years.length) {
-    const L = c.years.length - 1, fy = /^\d\d-\d\d$/.test(c.fyEnd || "") ? c.fyEnd : "12-31", fin = `${c.years[L]}-${fy}`;
-    if ((new Date(TODAY) - new Date(fin)) / (30.44 * 864e5) > 16 && ["croissance", "marge", "dette", "dividende", "resume", "forts", "risques", "prix"].includes(it)) P.push(`Je ne suis pas sûr que ces chiffres soient encore à jour : ils viennent de l'exercice clos le ${dLabel(fin)}. Un exercice plus récent existe sans doute : regardez « Ses derniers chiffres et ses prochaines dates ».`);
-    const f = typeof figuresOf === "function" ? figuresOf(c) : null;
-    if (it === "dividende" && f && f.dpsEst && s.divPaid > 0.5) P.push("Je ne suis pas sûr du montant exact par action : le site l'estime à partir des dividendes versés et du nombre d'actions. Le communiqué de l'entreprise donne le chiffre officiel.");
-  }
-  const md = (typeof MED !== "undefined" && MED[s.sector]) || {};
-  if (md.n != null && md.n >= 3 && md.n < 5 && /mediane/i.test(norm(t || ""))) P.push(`Repère fragile : la médiane de son secteur ne porte que sur ${md.n} entreprises.`);
-  return P;
-}
-if (typeof window.localAssist === "function") {
-  const CTX_la0 = window.localAssist;
-  window.localAssist = function (s, c, raw) {
-    let t = CTX_la0(s, c, raw);
-    try {
-      if (!s) return t;
-      if (!CTX_D) ctxCharge();
-      const q0 = typeof IA_txt === "function" ? IA_txt(raw) : " " + norm(raw) + " ", q = typeof IA_corrige === "function" ? IA_corrige(q0) : q0, it = typeof IA_intent === "function" ? IA_intent(q) : null;
-      const actuQ = CTX_QACTU.test(q0) && !["defin", "prediction", "conseil", "pea", "identite", "dates"].includes(it);
-      if (actuQ && CTX_D && (!t || !/(dividende|dette|marge|per\b)/.test(q))) {
-        const a = ctxRepActu(s, c, q0);
-        if (a) t = t && !["cours", "risques"].includes(it) ? a : (t ? t + "\n" + a : a);
-      } else if (CTX_D && t && (it === "cours" && /pourquoi|baisse|chute|monte|hausse|perdu/.test(q) && !/marge|rentab|dette|\bper\b|dividende|benefice|ventes|chiffre d affaires|croissance|endett/.test(q) || it === "risques")) { // 4e passage 2.4 : jamais sur une question d'indicateur
-        const l = contexteSujets(s, c).filter(x => x.im.sens !== "+").slice(0, 2);
-        if (l.length) t += `\nDans l'actualité suivie par le site : ${l.map(({ sj, im }) => `${sj.titre} (${(m => m.charAt(0).toLowerCase() + m.slice(1))(im.mecanisme.split(/(?<=[.])\s/)[0].replace(/\.$/, ""))})`).join(" ; ")}.\nJe ne suis pas sûr que cela explique ${it === "cours" ? "ce mouvement de cours" : "ses résultats"} : le site ne le mesure pas.`;
-      } else if (CTX_D && t && it === "croissance" && c) {
-        const ser = ctxSerie(s, c);
-        if (ser && ser.k === "ca" && ser.ys.length >= 3) { const R = ctxPhases(ser), P = ctxProfil(s, c), ev = [...new Set(R.phases.flatMap(p => ctxEvts(P, c, p).map(e => e.titre)))].slice(0, 2); t += `\nSur plusieurs années : ${ctxTendance(s, ser, R)}${ev.length ? ` Contexte connu : ${ev.join(" ; ")}.` : ""}`; }
-      }
-      if (t) { const d = ctxDoutes(s, c, q, it, t); if (d.length) t += "\n" + d.join("\n"); }
-      if (t) t = t.replace(/ ?[—–] ?/g, ", ").replace(/!/g, ".");
-    } catch (e) { console.warn("contexte : assistant", e); }
-    return t;
-  };
-}
-// Copilote : les montants et taux réglementés changent chaque année, on le dit et on indique la source officielle.
-if (typeof window.localCopilot === "function") {
-  const CTX_lc0 = window.localCopilot;
-  window.localCopilot = function (raw) {
-    const a = CTX_lc0(raw);
-    try {
-      if (a && a.action === "repondre" && a.texte && /\d/.test(a.texte) && /plafond|prelevements|flat tax|impot|fiscal|livret|\bpea\b|assurance.vie|abattement|retenue a la source/.test(norm(a.texte + " " + (a.titre || ""))) && !/A verifier/.test(norm(a.texte)))
-        a.texte += "\nÀ vérifier : ces montants et taux sont ceux de 2026 et peuvent changer chaque année. Service-public.fr et impots.gouv.fr font foi.";
-    } catch (e) { }
-    return a;
-  };
 }
 // Les phrases de doute ressortent visuellement dans les réponses de l'IA (locales ou serveur)
 const CTX_DOUTE = /^(Je ne suis pas s[uû]r|Ce que je ne sais pas|À vérifier|Repère fragile)/;

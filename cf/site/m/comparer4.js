@@ -258,7 +258,7 @@ async function pageComparer4() {
         return `<td><b class="${R5[k.k](x)}">${v == null ? esc(x.bank && (k.k === "m" || k.k === "lev") ? "sans objet" : k.k === "m" && !x.valide ? "non calculable" : k.na || "–") : esc(k.f(v))}${up == null ? "" : `<span class="ar" title="${up ? "mieux" : "moins bien"} que la médiane du secteur">${up ? "▲" : "▼"}</span>`}</b></td>`; }).join("")}</tr>`).join("")}</tbody>
       <tfoot><tr><th><span class="cx-mk">médiane</span> du secteur</th>${CX_K.filter(k => have.has(k.k)).map(k => `<td>${(!k.neutre || k.k === "pe") && MD[k.k] != null ? `<span class="cx-med">${esc(k.f(MD[k.k]))}</span>` : ""}</td>`).join("")}</tr></tfoot></table></div>
       <div class="cx-leg"><span><i class="cx-lb"></i>en tête sur ce critère</span><span><i class="cx-lw"></i>dernière ${F.length === 2 ? "des deux" : F.length === 3 ? "des trois" : "du groupe"}</span><span>▲ ▼ mieux ou moins bien que la médiane du secteur</span><span>La taille n'est pas comptée : vendre plus ne veut pas dire faire mieux. Être en tête n'est ni une recommandation ni une prédiction.</span></div>`;
-    const proches = cxProches(ids), qs = cxQuestions(F);
+    const proches = cxProches(ids);
     // Titre de la comparaison : celui de la comparaison toute prête quand les entreprises sont les mêmes, sinon le ou les secteurs
     const cle = l => l.slice().sort().join(","), pre = cxPresets().find(p => cle(p.ids.filter(id => RBY[id])) === cle(ids));
     const secs = [...new Set(F.map(x => secName(x.s)))], titreC = pre ? pre.t : secs.length === 1 ? `Comparaison · ${secs[0]}` : `Comparaison · ${listFr(secs.map(t => t.toLowerCase())).replace(/^./, c => c.toUpperCase())}`;
@@ -268,9 +268,6 @@ async function pageComparer4() {
       <div class="ek-vrd"><span class="ek-stk2" style="background:#fff">Le verdict</span><h2>${cxVerdict(F, R5)}</h2></div>${score}
       <section class="ek-sec" id="cx-fil"><span class="ek-stk2">Critère par critère</span><h2>${E.length} questions, dans l'ordre.</h2>${ekFil(E.map(e => ({ id: e.id, n: e.n, sur: e.sur, titre: e.titre, concept: e.concept, visuel: e.visuel, explique: e.droite, suite: e.suite })))}</section>
       <section class="ek-sec" id="cx-tout"><span class="ek-stk2 b">Pour aller plus loin</span><h2>Tous les chiffres, côte à côte.</h2>${cxTableau(F, MD)}</section>
-      <section class="ek-end"><h2>✦ Une question sur ${F.length === 2 ? "ces deux" : F.length === 3 ? "ces trois" : "ces"} entreprises ?</h2><div class="ek-qs">${qs.map(q => `<button type="button" data-cx-q="${esc(q)}">${esc(q)}</button>`).join("")}</div>
-        <form class="ek-ask" data-cx-ask><input type="text" name="q" maxlength="300" placeholder="Posez votre question sur ${esc(listFr(F.map(x => x.nom)))}…" aria-label="Votre question" autocomplete="off"><button type="submit">Demander</button></form>
-        <small>L'IA du site répond avec les chiffres de cette page. Information factuelle, sans conseil.</small></section>
       <section class="ek-sec" id="cx-sources"><span class="ek-stk2" style="background:var(--ek-y)">Prouvé</span><h2>D'où viennent ces chiffres.</h2>${cxSources(F, MD, d0)}</section>
       ${proches.length ? `<section class="ek-sec" id="cx-proches"><span class="ek-stk2 p">Dans le même esprit</span><h2>D'autres comparaisons proches.</h2><div class="cx-gal">${proches.map(cxCartePreset).join("")}</div></section>` : ""}`;
     window.CXF = F; window.CXMD = MD;
@@ -279,14 +276,6 @@ async function pageComparer4() {
   CX.ids = ids; CX.CMAX = CMAX;
   cxRecherche(ids, CMAX);
   if (CX.focus) { CX.focus = false; const q = document.getElementById("cxq"); if (q) q.focus({ preventScroll: true }); }
-}
-function cxQuestions(F) {
-  const ms = F.filter(x => x.m != null).sort((a, b) => b.m - a.m), dn = F.find(x => x.net.length >= 2 && cxLast(x.net) != null && x.net[x.net.length - 2] > 0 && cxLast(x.net) < x.net[x.net.length - 2] * 0.7);
-  const q = [];
-  if (ms.length >= 2) q.push(`Pourquoi ${ms[0].nom} garde-t-elle plus sur ses ventes que ${ms[ms.length - 1].nom} ?`);
-  if (dn) q.push(`Qu'est-ce qui a fait baisser le bénéfice de ${dn.nom} ?`);
-  q.push(`Qu'est-ce qui distingue le métier de ${listFr(F.slice(0, 3).map(x => x.nom))} ?`);
-  return q.slice(0, 2);
 }
 
 // ——— Recherche dans le champ « Ajouter » ———
@@ -334,12 +323,6 @@ document.addEventListener("click", e => {
   if (e.target.closest("[data-cx-share]")) { e.preventDefault(); cxPartager(); return; }
   if (e.target.closest("[data-cx-csv]")) { e.preventDefault(); cxCsv(); return; }
   const th = e.target.closest("[data-cx-th]"); if (th) { document.querySelectorAll("[data-cx-th]").forEach(b => b.classList.toggle("on", b === th)); document.querySelectorAll("#cx-gal .cx-pc").forEach(a => a.hidden = !!th.dataset.cxTh && a.dataset.th !== th.dataset.cxTh); return; }
-  const q = e.target.closest("[data-cx-q]"); if (q && typeof orcIaOpen === "function") { orcIaOpen(); if (typeof orcIaAsk === "function") orcIaAsk(q.dataset.cxQ); }
-});
-document.addEventListener("submit", e => {
-  const f = e.target.closest && e.target.closest("[data-cx-ask]"); if (!f) return; e.preventDefault();
-  const q = (f.q.value || "").trim(); if (!q || typeof orcIaOpen !== "function") return;
-  orcIaOpen(); if (typeof orcIaAsk === "function") orcIaAsk(q + ` (comparaison : ${listFr((CX.ids || []).map(id => RBY[id] && RBY[id].name).filter(Boolean))})`); f.q.value = "";
 });
 
 // Branchement : remplace l'ancienne page (m/comparer.js, comparer3.js et les retouches de design.js / outils.js)
