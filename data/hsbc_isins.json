@@ -2714,5 +2714,9 @@
  "LU1529681758": {
   "etf": false,
   "nom": "HSBC GIF Global Government Bond"
+ },
+ "IE000P2V15V8": {
+  "etf": true,
+  "nom": "HSBC World UCITS ETF"
  }
 }
