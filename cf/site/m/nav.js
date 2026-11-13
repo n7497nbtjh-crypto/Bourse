@@ -1,5 +1,5 @@
 /* Module « nav » d'ENKLAIR : la navigation du site, définie une seule fois.
-   Chargé en dernier (après monia.js), il remplit lui-même les quatre zones qui montrent le menu :
+   Chargé après monia.js, il remplit lui-même les zones qui montrent le menu (et la barre de la rubrique, navSous) :
    la barre du haut (#nav), le menu du téléphone (#mpanel), le pied de page (#footnav) et le plan du site (/plan).
    Avant, le menu était écrit dans index.html puis complété par m/outils.js, m/reco.js et m/orchestre.js (26 entrées,
    4 endroits). Ici, une seule table : NAV. Quatre entrées : Apprendre, Marchés, Outils, Mon espace (Communauté retirée le 7/11).
@@ -14,39 +14,30 @@
 /* Lot 2 (30/10, prompt de refonte) : quatre portes, chacune une seule page d'entrée. La barre et le menu du téléphone ne montrent
    que ces quatre liens (plus Premium) ; chaque porte range ses pages. « items » et « aussi » ne servent plus qu'au plan du site (/plan)
    et à la rubrique soulignée. Aucune page n'est accessible par deux entrées. */
-/* 13/11 (recentrage, docs/chantier-recentrage-2026-11.md) : quatre entrées directes et Mon espace.
-   Tous les outils sont dans « Outils » et nulle part ailleurs ; plus de rubrique « Apprendre ». */
+/* 13/11 soir (Romain) : plus de rubrique « Outils ». Trois rubriques et Mon espace ; chaque outil est rangé dans la rubrique
+   dont il parle et apparaît dans la petite barre de la rubrique (navSous), sous la barre du haut. Le lexique est en pied de page. */
 const NAV = [
   {
-    k: "news", label: "Actualités", porte: "/actualites", sous: "L'actualité de la Bourse, expliquée",
+    k: "news", label: "Actualités", porte: "/actualites", sous: "L'actualité expliquée, les dates à venir",
     items: [
       ["/actualites", "L'actualité", "Les sujets de la semaine et les annonces officielles, expliqués"],
+      ["/agenda", "Agenda des résultats", "Quelle entreprise publie ses comptes, et quel jour"],
+      ["/dividendes", "Dividendes", "Qui verse un dividende, quand, et combien par action"],
     ],
   },
   {
-    k: "ent", label: "Entreprises", porte: "/entreprises", sous: "Chaque fiche face à la médiane de son secteur",
+    k: "ent", label: "Entreprises", porte: "/entreprises", sous: "Les fiches, les classements, la comparaison",
     items: [
       ["/entreprises", "Les entreprises", "Chaque fiche face à la médiane de son secteur"],
+      ["/classements", "Classements", "Où se situe une entreprise dans son secteur"],
+      ["/comparer", "Comparer", "Côte à côte, critère par critère, face au secteur"],
     ],
   },
   {
-    k: "etf", label: "ETF", porte: "/etf", sous: "Ce qu'ils contiennent, leurs frais",
+    k: "etf", label: "ETF", porte: "/etf", sous: "Ce qu'ils contiennent, leurs frais, les comparer",
     items: [
       ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, leur performance"],
-    ],
-  },
-  {
-    k: "ana", label: "Outils", porte: "/outils", sous: "Classer, comparer, savoir quand ça tombe",
-    items: [
-      ["/classements", "Classements", "Où se situe une entreprise dans son secteur"],
-      ["/comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face au secteur"],
       ["/outils/recouvrement", "Comparer deux ETF", "Composition, frais et entreprises en commun"],
-      ["/agenda", "Agenda des résultats", "Quelle entreprise publie ses comptes, et quel jour"],
-      ["/dividendes", "Calendrier des dividendes", "Qui verse un dividende, quand, et combien par action"],
-      ["/lexique", "Lexique", "Chaque mot de la Bourse expliqué simplement"],
-    ],
-    aussi: [
-      ["/outils", "Tous les outils"],
     ],
   },
   {
@@ -62,9 +53,9 @@ const NAV = [
   },
 ];
 // Pied de page : pages institutionnelles, hors navigation principale
-const NAV_PIED = [["/methode", "Méthode et sources"], ["/mentions-legales", "Mentions légales"], ["/cgv", "CGV"], ["/confidentialite", "Confidentialité"], ["/avertissement", "Avertissement sur les risques"], ["/plan", "Plan du site"]];
+const NAV_PIED = [["/lexique", "Lexique"], ["/methode", "Méthode et sources"], ["/mentions-legales", "Mentions légales"], ["/cgv", "CGV"], ["/confidentialite", "Confidentialité"], ["/avertissement", "Avertissement sur les risques"], ["/plan", "Plan du site"]];
 // setNav("xxx") → rubrique à souligner dans la barre (clés utilisées par les pages du site)
-const NAV_G = { home: "", aca: "", new: "", lex: "ana", mkt: "news", news: "news", ent: "ent", etf: "etf", com: "ana", pronostics: "ana", sim: "ana", pf: "esp", fav: "esp", esp: "esp", ia: "", prem: "" };
+const NAV_G = { home: "", aca: "", new: "", lex: "", mkt: "news", news: "news", ent: "ent", etf: "etf", sim: "", pf: "esp", fav: "esp", esp: "esp", ia: "", prem: "" };
 
 /* ---------- Construction ---------- */
 const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));
@@ -74,8 +65,8 @@ function navBarreHTML() { // les portes en liens directs, l'étoile des favoris 
     + `<a href="/premium" data-nav="prem" class="navprem">Premium</a>`;
 }
 function navPanneauHTML() { // menu du téléphone : les quatre portes, Premium (la recherche a son bouton « Chercher » dans la barre)
-  return `<div class="mp-h"><span class="mp-t">Menu</span><button type="button" class="mp-x" aria-label="Fermer le menu">✕</button></div>` + NAV.map(g => `<a href="${g.porte}" class="mporte"><b>${g.compte ? `Mon espace <span class="espn"></span>` : navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>`).join("")
-    + `<a href="/premium" class="mporte mprem"><b>Premium</b><span>Toutes les fiches et tous les outils, sans limite</span></a>`;
+  return `<div class="mp-h"><span class="mp-t">Menu</span><button type="button" class="mp-x" aria-label="Fermer le menu">✕</button></div>` + NAV.map(g => `<a href="${g.porte}" class="mporte"><b>${g.compte ? `Mon espace <span class="espn"></span>` : navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>${!g.compte && g.items.length > 1 ? `<div class="msous">${g.items.slice(1).map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("")}</div>` : ""}`).join("")
+    + `<a href="/premium" class="mporte mprem"><b>Premium</b><span>Toutes les fiches, les classements et les comparaisons, sans limite</span></a>`;
 }
 function navPiedHTML() { // pied de page : les quatre portes, puis Méthode et sources et les pages légales
   return `<nav class="navpied navpied4 navpied5" aria-label="Rubriques">${NAV.map(g => `<a href="${g.porte}"><b>${navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>`).join("")}</nav>
@@ -101,6 +92,16 @@ function setNav(k) {
   document.querySelectorAll("#nav a").forEach(a => a.classList.toggle("on", a.dataset.nav === k));
   document.querySelectorAll("#nav .dd").forEach(d => { d.classList.remove("open"); d.classList.toggle("on", d.dataset.g === g); });
   document.querySelectorAll("#nav a.navporte").forEach(a => a.classList.toggle("on", a.dataset.g === g));
+  navSous(g);
+}
+/* La petite barre de la rubrique : ses pages, celle qu'on lit en jaune. Vide (donc cachée) hors des trois rubriques. */
+function navSous(g) {
+  let el = document.getElementById("navsous");
+  if (!el) { const a = document.getElementById("app"); if (!a) return; el = document.createElement("nav"); el.id = "navsous"; el.className = "wrap navsous"; el.setAttribute("aria-label", "Pages de la rubrique"); a.parentNode.insertBefore(el, a); }
+  const G = NAV.find(x => x.k === g && !x.compte && x.items.length > 1), p = location.pathname.replace(/\/+$/, "") || "/";
+  let ici = null; if (G) for (const [h] of G.items) if (p === h) ici = h;
+  el.innerHTML = G ? G.items.map(([h, t]) => `<a href="${h}"${h === ici ? ' class="on" aria-current="page"' : ""}>${navEsc(t)}</a>`).join("") : "";
+  el.hidden = !G;
 }
 
 /* ---------- Plan du site : /plan ---------- */

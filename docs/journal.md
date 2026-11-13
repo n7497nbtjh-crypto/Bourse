@@ -443,3 +443,11 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Bilan du chantier, du matin au soir du 13/11 : code du navigateur 2,14 Mo → 1,03 Mo (57 → 41 modules), CSS 549 → 280 Ko, serveur environ 418 → 155 Ko (20 → 14 fichiers), robots 24 → 20, tests 59 → 39 fichiers.
 - Reste hors chantier : sources d'actualité françaises et européennes, cinq capitalisations fausses, horloge extérieure pour les robots, purge des anciennes tables en base.
 
+## 13/11, 19 h 30 : plus de rubrique « Outils » (demande de Romain)
+- Menu : Actualités · Entreprises · ETF · Mon espace · Premium. Page /outils et module `outils4.js` supprimés ; /outils, les anciens simulateurs et les pronostics renvoient à l'accueil (navigateur et serveur, 301).
+- Rangement : agenda des résultats et dividendes dans Actualités ; classements et comparer dans Entreprises ; comparer deux ETF dans ETF ; lexique en pied de page.
+- Nouvelle barre de la rubrique (`navSous` de `nav.js`, style `.navsous` de `composants.css`) : des pastilles sous la barre du haut, celle de la page lue en jaune ; présente aussi sur les fiches d'entreprise et d'ETF ; absente de l'accueil, du lexique, de Mon espace et de Premium. Menu du téléphone : les pages de chaque rubrique en pastilles sous son nom.
+- Premier essai : sur les petits écrans la barre défilait et l'audit signalait 78 débordements ; les pastilles passent maintenant à la ligne (vérifié à 320, 360 et 390 px).
+- Fil d'Ariane de Comparer : « Entreprises › Comparer ». Les icônes de la page de connexion (`ou4Ic`) sont passées dans `composants.js`.
+- Contrôles : audit 95 pages en trois tailles, 0 problème, 0 erreur JS ; relecture 42 pages ; relecture visuelle de 40 fiches ; tests du serveur (redirections) bons.
+

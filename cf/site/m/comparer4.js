@@ -240,12 +240,12 @@ async function pageComparer4() {
   const sugTxt = sug.length ? `<div class="cx-sugs"><span>${ids.length ? "Concurrents directs :" : "Suggestions :"}</span>${sug.map(c => `<a href="${cxUrl([...ids, c.id])}">${cxLogo(c)}+ ${esc(c.name)}</a>`).join("")}</div>` : "";
   let html, Q = null;
   if (F.length < 2) {
-    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><h1>Qui fait mieux ?</h1>
+    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/entreprises">Entreprises</a> › Comparer</div><h1>Qui fait mieux ?</h1>
       <p class="cx-lead">Choisissez deux ou trois entreprises : le site les classe sur cinq critères, à partir de leurs comptes officiels.</p>
       <div class="cx-sel${F.length ? "" : " cx-sel1"}">${F.map(x => cxCarte(x, ids)).join("")}${cxAjout(ids, CMAX)}</div>${sugTxt}${cutTxt}</section>${cxGalerie()}`;
   } else if (!(Q = await cxQuota(ids)).ok) {
     if (location.pathname !== "/comparer" || location.search !== s0) return;
-    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>
+    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/entreprises">Entreprises</a> › Comparer</div><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>
       <div class="cx-sel">${F.map(x => cxCarte(x, ids)).join("")}</div>
       <div class="cx-quota"><b>Vous avez fait vos ${Q.plafond} comparaisons de la semaine.</b><p>Elles reviennent lundi. Les comparaisons de cette semaine restent ouvertes, et les fiches de ces entreprises restent entières.</p>
         <a class="cx-qbtn" href="/premium">Comparer sans limite avec Premium</a><a href="/comparer">Revoir mes comparaisons</a></div></section>`;
@@ -262,7 +262,7 @@ async function pageComparer4() {
     // Titre de la comparaison : celui de la comparaison toute prête quand les entreprises sont les mêmes, sinon le ou les secteurs
     const cle = l => l.slice().sort().join(","), pre = cxPresets().find(p => cle(p.ids.filter(id => RBY[id])) === cle(ids));
     const secs = [...new Set(F.map(x => secName(x.s)))], titreC = pre ? pre.t : secs.length === 1 ? `Comparaison · ${secs[0]}` : `Comparaison · ${listFr(secs.map(t => t.toLowerCase())).replace(/^./, c => c.toUpperCase())}`;
-    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/outils">Outils</a> › Comparer</div><span class="cx-titre">${esc(titreC)}</span><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>${pre && pre.d ? `<p class="cx-lead">${esc(pre.d)}</p>` : ""}
+    html = `<section class="ek-hero cx-hero"><div class="cx-crumb"><a href="/entreprises">Entreprises</a> › Comparer</div><span class="cx-titre">${esc(titreC)}</span><h1>${esc(listFr(F.map(x => x.nom)).replace(/ et ([^ ]+)$/, " ou $1"))} ?</h1>${pre && pre.d ? `<p class="cx-lead">${esc(pre.d)}</p>` : ""}
         <div class="cx-sel">${F.map(x => cxCarte(x, ids)).join("")}${cxAjout(ids, CMAX)}</div>${sugTxt}${cutTxt}
         <div class="cx-bar"><button type="button" data-cx-share>🔗 Partager cette comparaison</button><a href="/comparer">Tout retirer</a>${Q && Q.plafond && Q.reste != null ? `<span class="cx-reste">${Q.reste ? `Encore ${Q.reste} comparaison${Q.reste > 1 ? "s" : ""} cette semaine` : "Dernière comparaison de la semaine"} · <a href="/premium">sans limite avec Premium</a></span>` : ""}</div></section>
       <div class="ek-vrd"><span class="ek-stk2" style="background:#fff">Le verdict</span><h2>${cxVerdict(F, R5)}</h2></div>${score}

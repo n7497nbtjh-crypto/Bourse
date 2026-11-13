@@ -547,11 +547,11 @@ const post = (path, body) => fetch(path, { method: "POST", headers: { "content-t
 const ETFCOMP = {};
 const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Inc|Corp|Corporation|Ltd|Plc|Sa|Se|Nv|Ag|Co)\b\.?/gi, m => m.toUpperCase() === "SA" || m.toUpperCase() === "SE" ? m.toUpperCase() : m);
 
-/* ---------- Outils : la page est dans m/outils4.js ; ici, seulement le relais vers « Comparer deux ETF » ---------- */
+/* ---------- /outils/recouvrement : « Comparer deux ETF » (la page Outils n'existe plus depuis le 13/11) ---------- */
 function pageOutils(t) {
   setNav("sim");
   if (t === "recouvrement") return outilRecouvrement();
-  goR("/outils");
+  goR("/");
 }
 function bindPicker(id, onPick, etfOnly = false) {
   const q = $("#" + id), box = q.nextElementSibling;
@@ -962,9 +962,9 @@ const ROUTES_EXTRA = [];
 const PAGES_PARTIES = [
   [/^\/(apprendre|commencer|debuter|premiers-pas|academie|formation)(\/.*)?$/, "/"],
   [/^\/(pea-cto|idees-recues|livret-a-ou-bourse|pourquoi-bilan|repartitions|pour-moi)$/, "/"],
-  [/^\/simulateurs(\/.*)?$/, "/outils"],
-  [/^\/outils\/(si-javais|verifier)$/, "/outils"],
-  [/^\/(communaute|pronostics)$/, "/outils"],
+  [/^\/simulateurs(\/.*)?$/, "/"],
+  [/^\/outils(\/(si-javais|verifier))?$/, "/"],
+  [/^\/(communaute|pronostics)$/, "/"],
   [/^\/hier$/, "/actualites"],
   [/^\/(demander|ia\/connecter)$/, "/"],
   [/^\/(portefeuille|rapport-exemple|connecteur)$/, "/"],

@@ -53,7 +53,6 @@ export function meta(path, q = null) {
   if ((m = p.match(/^\/question\/([a-z0-9-]+)$/))) { const q = QUESTIONS.pages.find(x => x.id === m[1] && x.en_ligne); return q ? { title: `${q.q} · ${SITE}`, desc: q.desc } : null; }
   if (p === "/x") return { title: `Page privée · ${SITE}`, desc: "Page réservée à l'éditeur du site." };
   if (p === "/plan") return { title: `Plan du site · ${SITE}`, desc: "Toutes les pages d'ENKLAIR, rangées en quatre rubriques : Découvrir, Explorer, Analyser et Mon espace." };
-  if (p.startsWith("/outils")) return { title: `Outils · ${SITE}`, desc: "Classements, comparaison d'entreprises, comparaison de deux ETF, agenda des résultats, calendrier des dividendes et lexique." };
   const IDXN = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
   { const mi = p.match(/^\/indice\/([a-z0-9]+)$/); if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir · ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqué simplement : sa règle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, classés par frais.` }; }
   if (p === "/marches") return { title: `Les marchés aujourd'hui · ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliquées." };
@@ -73,7 +72,7 @@ export function redirectionParcours(p) {
   const ma = /^\/entreprise\/([a-z0-9-]+)\/?$/.exec(p || ""); if (ma && ALIAS_ENTREPRISES[ma[1]]) return "/entreprise/" + ALIAS_ENTREPRISES[ma[1]];
   /* 13/11 (recentrage) : pages supprimées, même table que PAGES_PARTIES de cf/site/app.js */
   if (/^\/(apprendre|commencer|debuter|premiers-pas|academie|formation)(\/.*)?$/.test(p) || /^\/(pea-cto|idees-recues|livret-a-ou-bourse|pourquoi-bilan|repartitions|pour-moi)\/?$/.test(p)) return "/";
-  if (/^\/simulateurs(\/.*)?$/.test(p) || /^\/outils\/(si-javais|verifier)\/?$/.test(p) || /^\/(communaute|pronostics)\/?$/.test(p)) return "/outils";
+  if (/^\/simulateurs(\/.*)?$/.test(p) || /^\/outils(\/(si-javais|verifier))?\/?$/.test(p) || /^\/(communaute|pronostics)\/?$/.test(p)) return "/";
   if (/^\/hier\/?$/.test(p)) return "/actualites";
   if (/^\/(demander|ia\/connecter)\/?$/.test(p)) return "/";
   if (/^\/(portefeuille|rapport-exemple|connecteur)\/?$/.test(p)) return "/";

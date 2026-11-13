@@ -3,7 +3,7 @@ const { ouvrir, aller } = require("./_site.js"), fs = require("fs");
 const dir = process.argv[2]; fs.mkdirSync(dir, { recursive: true });
 const monde = (fs.existsSync("/tmp/monde.json") ? fs.readFileSync("/tmp/monde.json", "utf8") : JSON.stringify({ sujets: [] })) /* copie de /api/monde, facultative */;
 const PAGES = ["/", "/entreprises", "/entreprises?secteur=tech", "/entreprise/lvmh", "/entreprise/bnp-paribas", "/entreprise/apple", "/entreprise/nvidia", "/entreprise/totalenergies", "/comparer?ids=lvmh,hermes,kering", "/comparer", "/etf", "/etf/amundi-msci-world-pea",
-  "/marches", "/actualites", "/actualites?vue=presse", "/actualites?vue=annonces", "/agenda", "/classements", "/classements?c=dividende", "/dividendes", "/outils", "/outils/recouvrement", "/outils/recouvrement?a=amundi-msci-world-pea&b=amundi-pea-s-p-500",
+  "/marches", "/actualites", "/actualites?vue=presse", "/actualites?vue=annonces", "/agenda", "/classements", "/classements?c=dividende", "/dividendes", "/outils/recouvrement", "/outils/recouvrement?a=amundi-msci-world-pea&b=amundi-pea-s-p-500",
   "/lexique", "/espace", "/premium", "/premium/merci?session_id=x", "/methode", "/plan", "/favoris", "/indice/cac40", "/decouvertes", "/mentions-legales", "/cgv", "/confidentialite", "/avertissement", "/page-inconnue", "/espace/etat"];
 const ETATS = [["", null, { unique: "https://buy.stripe.com/x", prix_unique: "19 € pour un an" }], ["in", { connecte: true, email: "exemple@exemple.fr", premium: true, plan: "unique", premium_jusqu_au: 1800000000000, donnees: { favoris: ["c:lvmh", "c:apple", "e:amundi-msci-world-pea"] } }, { unique: "https://buy.stripe.com/x", prix_unique: "39 €" }]];
 (async () => {
