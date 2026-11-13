@@ -70,7 +70,7 @@ function pageEtfs4() {
       <p class="el-sub">Frais, contenu et performance relevés chez les émetteurs.${fr ? ` ${F0.format(nPea)} sont éligibles au PEA.` : ""}</p>
       <label class="el-q"><span aria-hidden="true">🔍</span><input class="el-in" type="search" id="elq" placeholder="MSCI World, CW8, IE00B4L5Y983…" aria-label="Chercher un ETF" value="${esc(S.q)}" autocomplete="off"></label>
       <div class="el-f" id="elf">Filtrer : ${EL_FILTRES.filter(([k]) => fr || k !== "pea").map(([k, t]) => `<button type="button" data-f="${k}" aria-pressed="false">${t}</button>`).join("")}</div>
-      <div class="el-learn"><a href="/academie/placements/etf"><b>Comprendre un ETF</b><span>Trois minutes : ce que c'est, ce que ça coûte.</span></a>${fr ? `<a href="/pea-cto"><b>ETF et PEA</b><span>Ce qu'un PEA peut contenir, et pourquoi le « swap ».</span></a>` : ""}<a href="/outils/recouvrement"><b>Deux ETF se recouvrent-ils ?</b><span>Les entreprises en double, en un calcul.</span></a></div>
+      <div class="el-learn"><a href="/outils/recouvrement"><b>Comparer deux ETF</b><span>Ce qu'ils ont en commun, leurs frais, les entreprises en double.</span></a><a href="/lexique"><b>Lexique</b><span>ETF, frais, réplication : chaque mot expliqué.</span></a></div>
     </section>
     <div id="elintro"></div>
     <section class="ek-sec" id="elliste"><span class="ek-stk2">Tous les ETF</span><h2 id="elh">Chaque ligne, face à sa famille.</h2>

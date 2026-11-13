@@ -470,7 +470,7 @@ document.addEventListener("click", e => {
     card.outerHTML = commIdeeCarte(n, L.indexOf(n), { seule: true }); commIrMajScore();
   }
 });
-function pageIdeesRecues() { return pageIdeesRecues4(); } // page construite par m/idees4.js (3/11/2026)
+
 // Une carte seule, pour Apprendre et l'Académie : la première idée pas encore vue
 function commIdeeSeuleHTML() {
   const L = commIdees(), s = commIrEtat(), x = L.find(y => !s[y.id]) || L[0];

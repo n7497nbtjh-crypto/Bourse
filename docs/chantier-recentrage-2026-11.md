@@ -14,7 +14,7 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 - **Mon espace** : compte, favoris, réglages, abonnement.
 
 ## Ce qui est supprimé du code
-- Réponses de Romain du 13/11 : aucun abonné payant ; tout supprimer (portefeuille, rapport, alertes, connecteur, export) ; Idées reçues supprimée ; PEA ou compte-titres supprimée ; « Les marchés du jour » et « Pourquoi ENKLAIR » : il ne voit pas de quelles pages il s'agit, les lui montrer avant de décider.
+- Réponses de Romain du 13/11 : aucun abonné payant ; tout supprimer (portefeuille, rapport, alertes, connecteur, export) ; Idées reçues supprimée ; PEA ou compte-titres supprimée ; « Pourquoi ENKLAIR » supprimée ; **« Les marchés du jour » gardée** (Romain, 13/11 : « justement la première fait le cœur de ce sur quoi on va se concentrer »).
 - Apprendre (`apprendre4.js`, `apprendre5.js`, `parcours.js`), PEA ou compte-titres (`pays.js` : garder seulement ce dont les fiches ont besoin).
 - Outils : simulateur d'épargne, coût des frais, Et si j'avais investi, Vérifier une offre, répartition (`simulateur4.js`, `sijavais4.js`, `verifier4.js`, `repart4.js`, `outils.js`, `outils2.js`, `outils2_calc.js` : garder les calculs utilisés par Comparer deux ETF).
 - Pronostics et communauté (`communaute.js`, `cf/src/communaute.mjs`), « Ce qui s'est passé hier ».
@@ -61,7 +61,7 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 |---|---|---|---|
 | 0 | fait | 13/11 | fb7f6ff4 ; départ : 57 modules (2,14 Mo avec app.js), CSS 548 Ko, serveur 21 fichiers (908 Ko), 24 robots, 59 tests, 36 routes |
 | 1 | fait (menu et page Outils ; liens vers les outils ailleurs : retirés au fil des étapes 2 à 5) | 13/11 | voir journal |
-| 2 | à faire | | |
+| 2 | en cours : 2a fait (redirections, 9 modules de pages supprimés, tests adaptés) ; 2b à faire (code de base de ces pages dans app.js, parcours des leçons dans la recherche, outils.js, outils2.js, reco.js, communication.js, provenance.js, pays.js, données et CSS associés) | 13/11 | voir journal |
 | 3 | à faire | | |
 | 4 | à faire | | |
 | 5 | à faire | | |

@@ -39,7 +39,7 @@ function pageLexique4() {
       <form class="vf-f lx4-f" role="search" onsubmit="return false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
         <input id="lx4q" class="el-in" type="search" autocomplete="off" placeholder="Chercher un mot : PER, dividende, ETF…" aria-label="Chercher une notion"></form>
       <div class="lx4-pills">${ESS.map((k, i) => `<a href="#${k}"><i>${i + 1}</i>${esc(ALL[k].name)}</a>`).join("")}</div>
-      <a class="ou4-deb lx4-guide fr-seul" href="/pea-cto"><b>Avant d'acheter une action : dans quel compte ?</b><span>PEA, compte-titres, assurance-vie : ce qu'on peut y mettre et l'impôt sur les gains.</span><em>Lire le guide →</em></a></section>
+      </section>
     <section class="ek-sec" id="lx4-ess"><span class="ek-stk2 b">Les dix essentielles</span><h2>Dans l'ordre conseillé.</h2>
       <div class="lx4-g">${ESS.map((k, i) => lx4Carte(k, ALL[k], i + 1)).join("")}</div></section>
     ${rest.map(([cl, g, l]) => `<section class="ek-sec lx4-grp"><span class="ek-stk2 ${cl}">${esc(g)}</span><h2>${F0.format(l.length)} notions.</h2><div class="lx4-g lx4-g2">${l.map(([k, t]) => lx4Carte(k, t)).join("")}</div></section>`).join("")}

@@ -2787,10 +2787,21 @@ function acaLecon(m, l) {
 }
 
 const ROUTES_EXTRA = [];
+/* 13/11 (recentrage, docs/chantier-recentrage-2026-11.md) : pages supprimées, renvoyées vers la page la plus proche.
+   La même table est dans cf/src/worker.mjs (redirection 301 côté serveur). */
+const PAGES_PARTIES = [
+  [/^\/(apprendre|commencer|debuter|premiers-pas|academie|formation)(\/.*)?$/, "/"],
+  [/^\/(pea-cto|idees-recues|livret-a-ou-bourse|pourquoi-bilan|repartitions|pour-moi)$/, "/"],
+  [/^\/simulateurs(\/.*)?$/, "/outils"],
+  [/^\/outils\/(si-javais|verifier)$/, "/outils"],
+  [/^\/(communaute|pronostics)$/, "/outils"],
+  [/^\/hier$/, "/actualites"]];
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
   let m;
+  const parti = PAGES_PARTIES.find(([re]) => re.test(p));
+  if (parti) { history.replaceState({}, "", parti[1]); return route(); }
   if (p === "/aller") { // clic sur un module de cours : on ouvre la fiche de l'entreprise ou de l'ETF
     const sym = (new URLSearchParams(location.search).get("tvwidgetsymbol") || "").toUpperCase();
     const c = R.companies.find(x => (x.tv || "").toUpperCase() === sym) || R.companies.find(x => sym.endsWith(":" + (x.ticker || "").toUpperCase()));

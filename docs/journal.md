@@ -365,3 +365,11 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - À 13 h 35, le robot des ETF lancé à la main (pour l'alerte « données ETF de 8 jours ») a fait une collecte partielle : 200 ETF au lieu de 1 148. Son contrôle n'exigeait que 150 ETF : il a remplacé le catalogue, et la mise en ligne suivante n'a plus montré que 226 ETF.
 - Corrigé : écriture du robot annulée (`git revert ce050390`), catalogue revenu à 1 148 ETF ; `etf.yml` refuse désormais un catalogue qui perd plus de 5 % de ses ETF.
 - À retenir : ne jamais lancer un robot qui écrit des données sans avoir lu ses garde-fous ; regarder le nombre d'éléments avant et après.
+
+## 13/11 après-midi : recentrage, étape 2a (pages simples supprimées)
+- Pages supprimées : Apprendre et toutes les leçons (/apprendre, /academie, /debuter, /commencer, /formation), PEA ou compte-titres, Idées reçues, Livret A ou Bourse, Pourquoi ENKLAIR, répartitions, simulateurs, Et si j'avais investi, Vérifier une offre, pronostics et communauté, « Ce qui s'est passé hier ». « Les marchés du jour » est gardée (décision de Romain).
+- Redirections : table `PAGES_PARTIES` dans `cf/site/app.js` (navigateur) et mêmes règles dans `redirectionParcours` de `cf/src/worker.mjs` (301) : leçons et pages d'apprentissage vers l'accueil, outils supprimés vers /outils, /hier vers /actualites.
+- Modules supprimés : `apprendre4.js`, `apprendre5.js`, `parcours.js`, `simulateur4.js`, `sijavais4.js`, `verifier4.js`, `repart4.js`, `idees4.js`, `communaute.js` (169 Ko). Leurs enveloppes dans outils2.js, provenance.js, reco.js, communication.js, nav.js sont retirées.
+- Liens corrigés : liste des ETF (encadrés « Comprendre »), lexique (encadré PEA), liens sans JavaScript d'index.html.
+- Tests : `tests/t_worker.mjs` vérifie les 15 nouvelles redirections ; `tests/audit.py` et `scripts/relire-pages.js` ne visitent plus les pages supprimées (46 pages relues, 0 problème).
+- Reste pour 2b : le code de base de ces pages (app.js, outils.js, outils2.js, reco.js, communication.js, provenance.js, pays.js), les leçons proposées par la recherche, les données et le CSS associés.

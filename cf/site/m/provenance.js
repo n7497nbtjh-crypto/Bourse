@@ -514,5 +514,5 @@ function provLnCherche(q, IDX) {
   return hits.length ? { issue: "trouve", hits: hits.map(h => h.x) } : { issue: "aucun", hits: [] };
 }
 const provLnCat = c => String(c || "").split("|").map(x => x.replace(/^Biens_divers\//, "Biens divers : ").replace(/_/g, " ").replace("Usurpation AMF", "Usurpation de l'identité de l'AMF")).join(", ");
-function outilVerifier() { return outilVerifier4(); } // page construite par m/verifier4.js (3/11/2026)
+
 /* styles : voir site.css */

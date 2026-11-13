@@ -9,8 +9,8 @@
 // Usage : node scripts/relire-pages.js ; rapport dans /tmp/relecture-pages.txt ; code de sortie 1 s'il reste un problème.
 const { ouvrir, aller } = require("./_site"), fs = require("fs");
 const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ["/", "/entreprises", "/entreprise/lvmh", "/entreprise/bnp-paribas", "/comparer?ids=lvmh,hermes,kering", "/comparer", "/etf", "/etf/amundi-msci-world-pea", "/marches", "/actualites", "/actualites?vue=presse",
-  "/agenda", "/classements", "/classements?c=dividende", "/dividendes", "/outils", "/outils/si-javais", "/outils/recouvrement", "/outils/verifier", "/simulateurs/epargne", "/simulateurs/frais", "/repartitions", "/idees-recues",
-  "/apprendre", "/academie/placements/etf", "/lexique", "/pea-cto", "/portefeuille", "/espace", "/premium", "/methode", "/plan"];
+  "/agenda", "/classements", "/classements?c=dividende", "/dividendes", "/outils", "/outils/recouvrement", 
+  "/lexique", "/portefeuille", "/espace", "/premium", "/methode", "/plan"];
 (async () => {
   const { b, p } = await ouvrir(), out = [], errs = [];
   p.on("pageerror", e => errs.push(e.message));

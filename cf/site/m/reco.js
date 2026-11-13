@@ -477,7 +477,7 @@ function recoListeHTML() {
 const RECO_LEGAL = `<div class="rc-legal"><b>Information factuelle à but pédagogique, pas un conseil en investissement.</b> Cette page ne tient pas compte de votre situation et ne désigne aucune répartition ni aucun titre comme adapté à qui que ce soit : elle montre des exemples et des listes triées sur des critères que vous choisissez. ENKLAIR n'est pas conseiller en investissements financiers (CIF). Pour un conseil adapté à votre situation, adressez-vous à un CIF immatriculé à l'<a href="https://www.orias.fr" target="_blank" rel="noopener">ORIAS</a>. Investir en Bourse comporte un risque de perte en capital.</div>`;
 
 /* ---------- La page ---------- */
-function pageRepartitions() { return pageRepartitions4(); } // page construite par m/repart4.js (3/11/2026)
+
 function recoLier() {
   const maj = () => { const l = $("#rc-l"); if (l) l.innerHTML = recoListeHTML(); };
   const f = $("#rc-f");

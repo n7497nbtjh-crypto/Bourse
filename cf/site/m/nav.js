@@ -116,15 +116,6 @@ function pagePlan() {
 }
 if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/plan$/, () => pagePlan()]);
 
-/* ---------- Ancienne adresse /simulateurs/passe ----------
-   Elle affichait le simulateur d'épargne sans le dire (audit P2-6). Le worker la redirige en 301 ;
-   ici, l'enveloppe sert aux liens internes et au retour en arrière. pageSim vient de m/outils2.js (chargé avant). */
-const navSimAvant = typeof pageSim === "function" ? pageSim : null;
-if (navSimAvant) window.pageSim = function (tool) {
-  if (tool === "passe") { history.replaceState({}, "", "/outils/si-javais"); return route(); }
-  return navSimAvant(tool);
-};
-
 /* ---------- Style ---------- */
 /* styles : voir site.css */
 navRemplir();

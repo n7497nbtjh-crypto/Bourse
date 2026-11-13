@@ -206,7 +206,7 @@ function O2_fx(ref, cur, iso, auj) {
   const m = ref && ref.fx && ref.fx.mois, k = m && O2C.moisProche(m, iso);
   return k && m[k][cur] ? m[k][cur] : null;
 }
-function outilSiJavais() { return outilSiJavais4(); } // page construite par m/sijavais4.js (3/11/2026)
+
 // Série d'un titre : points aux dates relevées (il y a 5, 3, 1 an, aujourd'hui), en euros
 // 7/11 : ETF sans cours passés dans les feuilles Google : série officielle de l'émetteur (cf/site/data/etf-hist/<id>.json,
 // valeur liquidative ajustée des dividendes, en euros, une valeur par semaine ; robot etf-hist.yml), chargée par sj4Hist (sijavais4.js)
@@ -256,7 +256,7 @@ function O2_terMedian() {
   const l = ETF.list.filter(e => e.categorie === "actions-monde" && e.pea && e.ter > 0).map(e => e.ter);
   return l.length >= 3 ? { v: median(l), n: l.length } : { v: 0.2, n: 0 };
 }
-function pageSim(tool) { return pageSim4(tool); } // page construite par m/simulateur4.js (3/11/2026)
+
 // Paramètres de O2C.simule pour un courtier donné
 function O2_simParams(S, b, rendement, env) {
   const ordre = (m, type) => type === "versement" && S.plan && b.plan != null && S.ord === 12 ? b.plan : brokerFee(b, m, S.perso);
