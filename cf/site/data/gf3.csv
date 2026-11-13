@@ -506,6 +506,7 @@ e:spdr-bloomberg-1-3-month-t-bill-mxn-hdg-acc,ETR:ZPRM,FRA:ZPRM,
 e:invesco-physical-silver-etc,ETR:8PSB,FRA:8PSB,
 e:invesco-physical-gold-ii-etc,ETR:G2LD,FRA:G2LD,
 e:amundi-eur-cash-active-acc,ETR:CMMF,FRA:CMMF,
+e:amundi-msci-indonesia-acc,EPA:INDO,AMS:INDO,EBR:INDO
 e:invesco-physical-platinum-etc,ETR:8PSA,FRA:8PSA,
 c:equinor,OSL:EQNR,,
 c:dnb,OSL:DNB,,
