@@ -917,7 +917,7 @@ html #app .ek.ap5 .ap5-ans button{position:relative;height:100%;padding:0;border
   .ek.ap5 .ap5-prog{top:56px}.ek.ap5 .ap5-prog a span{display:none}.ek.ap5 .ap5-prog a{flex:1 0 auto;justify-content:center;padding:4px}
   .ek.ap5 .ap5-box{padding:16px}.ek.ap5 .ap5-sl{grid-template-columns:1fr auto}.ek.ap5 .ap5-sl input{grid-column:1/-1;grid-row:2}
   .ek.ap5 .ap5-mois{gap:5px}.ek.ap5 .ap5-mois span{height:48px;padding:4px 6px;min-width:0}.ek.ap5 .ap5-mois small{font-size:11px}.ek.ap5 .ap5-mois em{display:none}
-  .ek.ap5 .ap5-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px;margin-right:-16px}.ek.ap5 .ap5-chips button{flex:none}
+  .ek.ap5 .ap5-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}.ek.ap5 .ap5-chips button{flex:none}
   .ek.ap5 .ap5-tri{gap:8px}.ek.ap5 .ap5-tri>div{padding:10px 12px;flex-direction:row;flex-wrap:wrap;align-items:baseline;column-gap:10px}.ek.ap5 .ap5-tri small{flex-basis:100%}.ek.ap5 .ap5-tri b{font-size:22px}
   .ek.ap5 .ap5-ans{gap:1px;height:120px}.ek.ap5 .ap5-ans small{display:none}.ek.ap5 .ap5-ret{flex-direction:column;gap:8px}
 }
@@ -1454,3 +1454,42 @@ html #app .ek .cl4-qs button:hover{background:#FFFBE6}
 #nav .navdd span{display:flex;flex-direction:column}
 #nav .navdd b{font:800 14.5px/1.2 Inter,sans-serif}
 #nav .navdd small{font:500 12.5px/1.3 Inter,sans-serif;color:#555;margin-top:1px}
+
+/* barre de la rubrique posée sous le bandeau jaune (13/11 soir) */
+.navsous.apres{padding:0;margin:16px 0 8px}
+.navsous.apres.navcartes{padding:0;margin:18px 0 10px}
+/* ==== m/agenda5.js : agenda refait (13/11 soir) ==== */
+.ag6-k3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin:14px 0 18px;max-width:900px}
+.ag6-k3 a{display:flex;flex-direction:column;gap:2px;background:#fff;border:2px solid #111;border-radius:16px;padding:12px 14px;color:#111;text-decoration:none;box-shadow:3px 3px 0 #111}
+.ag6-k3 a:first-child{background:#111;color:#fff}
+.ag6-k3 b{font:800 34px/1 "Bricolage Grotesque",Inter,sans-serif}
+.ag6-k3 span{font:600 13px/1.3 Inter,sans-serif}
+.ag6-pub{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(340px,100%),1fr));gap:10px}
+.ag6-pc{display:flex;align-items:center;gap:12px;border:2px solid #111;border-radius:16px;padding:11px 14px;background:#fff;color:#111;text-decoration:none}
+.ag6-pc:hover{box-shadow:3px 3px 0 #111}
+.ag6-pn{display:flex;flex-direction:column;min-width:0;flex:1}
+.ag6-pn b{font:800 15px/1.2 Inter,sans-serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ag6-pn small{font:600 12px Inter,sans-serif;color:#666}
+.ag6-pf{display:flex;flex-direction:column;align-items:flex-end;text-align:right;max-width:55%;flex:none}
+.ag6-pf small{font:600 11px/1.2 Inter,sans-serif;color:#666}
+.ag6-pf b{font:800 15px/1.2 Inter,sans-serif;color:#0A7B4F;white-space:nowrap}
+.ag6-pf b.nb{font-size:13px;color:#111}
+.ag6-plus{grid-column:1/-1;font:800 14px Inter,sans-serif;color:#111;margin-top:4px}
+.ag6-sec{display:flex;flex-wrap:wrap;gap:6px;margin:6px 0 12px}
+html body #app .ag5 button.ag6-s.ag6-s{display:inline-flex;align-items:center;gap:6px;font:700 13px Inter,sans-serif;border:1.5px solid #111;border-radius:999px!important;background:#fff;color:#111;padding:5px 11px;cursor:pointer}
+html body #app .ag5 button.ag6-s.ag6-s i{width:10px;height:10px;border-radius:50%;background:var(--c,#ddd);border:1px solid #111}
+html body #app .ag5 button.ag6-s.ag6-s b{font-weight:800;color:#555}
+html body #app .ag5 button.ag6-s.ag6-s.act{background:#111;color:#fff}
+html body #app .ag5 button.ag6-s.ag6-s.act b{color:#FFE14D}
+.ag6-days{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+html body #app .ag5 button.ag6-d.ag6-d{display:flex;flex-direction:column;align-items:flex-start;gap:1px;min-width:92px;border:2px solid #111;border-radius:14px!important;background:#fff;color:#111;padding:8px 12px;cursor:pointer;text-align:left}
+html body #app .ag5 button.ag6-d.ag6-d span{font:700 13px Inter,sans-serif}
+html body #app .ag5 button.ag6-d.ag6-d b{font:800 22px/1.05 "Bricolage Grotesque",Inter,sans-serif}
+html body #app .ag5 button.ag6-d.ag6-d.act{background:#FFE14D;box-shadow:3px 3px 0 #111}
+html body #app .ag5 button.ag6-d.ag6-d.tout{border-style:dashed}
+.ag6-days + #ag5l .ag5-j h3{display:none}
+.ag6-days + #ag5l .ag5-j + .ag5-j h3,.ag6-days + #ag5l .ag5-j:has(+ .ag5-j) h3{display:block}
+#ag6av .ag5-per{margin-top:10px}
+.ek-stk2.g{background:#BDEBD2}
+@media (max-width:640px){.ag6-pub{grid-template-columns:minmax(0,1fr)}.ag6-pc{min-width:0}.ag6-pf b{white-space:normal;font-size:14px}.ag6-pf{max-width:48%;flex:0 1 auto}.ag6-sec{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}html body #app .ag5 button.ag6-s.ag6-s{flex:none}.ag6-days{flex-wrap:nowrap;overflow-x:auto;padding:2px 4px 6px 2px}html body #app .ag5 button.ag6-d.ag6-d{flex:none}.ag6-k3{grid-template-columns:1fr;gap:8px}.ag6-k3 a{flex-direction:row;align-items:center;gap:12px;padding:10px 12px}.ag6-k3 b{font-size:28px;min-width:54px}
+  html body #app .ag5 button.ag6-d.ag6-d{min-width:0;padding:6px 10px}html body #app .ag5 button.ag6-d.ag6-d b{font-size:18px}.ag6-pf{max-width:42%}}

@@ -461,3 +461,9 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Correction (`composants.css`, `nav.js`) : une seule liste à la fois (celle survolée), fermeture dès qu'on a choisi une page, ouverture au clavier seulement (`:focus-visible`).
 - Rejoué dans un navigateur : survol, clic sur une page de la liste, survol d'une autre rubrique, souris ailleurs, clavier : jamais plus d'une liste ouverte. Relecture 42 pages, 0 problème.
 
+## 13/11, 21 h : cartes de rubrique sous le bandeau jaune, agenda refait (Romain : « trop collé, à mettre en dessous de l'encadré jaune » ; « l'agenda des résultats est à refaire, les résultats publiés sont tout en bas, cachés »)
+- `nav.js` : la barre de la rubrique (`navsous`) est posée juste après le bandeau jaune de la page (`navSousPlacer`, qui suit les pages dessinées en deux temps), avec de l'espace au-dessus et au-dessous. Vérifié sur les neuf pages de rubrique et les deux fiches.
+- `agenda5.js` refait : bandeau avec trois chiffres (résultats publiés ces 7 derniers jours, publications attendues aujourd'hui, 7 prochains jours dont les dates annoncées) ; « Déjà publiés » juste dessous, tiré du fil des annonces officielles (128 entreprises le 13/11, une carte par entreprise avec son premier chiffre, 8 affichées et un lien vers le fil filtré) au lieu des 3 seules retrouvées avant, en bas de page ; vos favoris ; « À venir » jour par jour (un onglet par jour, « Tous les jours », secteurs en pastilles, 30 jours sur demande) au lieu d'une liste de 3 500 px. La page passe de 5 700 à 2 750 px sur ordinateur.
+- Téléphone : secteurs et jours en bandes qui défilent (`scroll-x`), cartes des résultats sur une colonne.
+- Contrôles : audit 95 pages en trois tailles, relecture 42 pages, 30 fiches en deux tailles : 0 problème.
+

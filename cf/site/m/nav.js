@@ -101,13 +101,23 @@ function setNav(k) {
    celle qu'on lit en jaune. Sur une fiche : la version courte, en pastilles. Vide (donc cachée) hors des trois rubriques. */
 function navSous(g) {
   let el = document.getElementById("navsous");
-  if (!el) { const a = document.getElementById("app"); if (!a) return; el = document.createElement("nav"); el.id = "navsous"; el.setAttribute("aria-label", "Pages de la rubrique"); a.parentNode.insertBefore(el, a); }
+  if (!el) { el = document.createElement("nav"); el.id = "navsous"; el.setAttribute("aria-label", "Pages de la rubrique"); NAV_SOUS.el = el; }
   const G = NAV.find(x => x.k === g && !x.compte && x.items.length > 1), p = location.pathname.replace(/\/+$/, "") || "/";
   let ici = null; if (G) for (const [h] of G.items) if (p === h) ici = h;
   el.className = "wrap navsous" + (G && ici ? " navcartes n" + G.items.length : "");
   el.innerHTML = !G ? "" : ici ? G.items.map(([h, t, d, ic]) => `<a href="${h}"${h === ici ? ' class="on" aria-current="page"' : ""}>${navIc(ic)}<span><b>${navEsc(t)}</b><small>${navEsc(d)}</small></span></a>`).join("")
     : G.items.map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("");
-  el.hidden = !G;
+  el.hidden = !G; navSousPlacer();
+}
+/* 13/11 soir (Romain : « trop collé, à mettre en dessous de l'encadré jaune ») : la barre est posée juste après le bandeau jaune
+   de la page, dès qu'il est affiché (les pages se dessinent après setNav, parfois en deux temps). Sans bandeau : avant la page. */
+const NAV_SOUS = { el: null, obs: null };
+function navSousPlacer() {
+  const el = NAV_SOUS.el || document.getElementById("navsous"), app = document.getElementById("app"); if (!el || !app) return;
+  const hero = app.querySelector(".ek-hero, .e3-hero, .f4-hero, .ek-page > section:first-child");
+  if (hero && hero.parentNode) { if (hero.nextElementSibling !== el) hero.after(el); el.classList.add("apres"); el.classList.remove("wrap"); }
+  else { if (el.parentNode !== app.parentNode || el.nextElementSibling !== app) app.parentNode.insertBefore(el, app); el.classList.remove("apres"); el.classList.add("wrap"); }
+  if (!NAV_SOUS.obs) { let t = 0; NAV_SOUS.obs = new MutationObserver(() => { cancelAnimationFrame(t); t = requestAnimationFrame(navSousPlacer); }); NAV_SOUS.obs.observe(app, { childList: true, subtree: true }); }
 }
 
 /* ---------- Plan du site : /plan ---------- */
