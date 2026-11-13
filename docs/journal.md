@@ -456,3 +456,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Barre du haut (ordinateur) : une petite flèche à côté de chaque rubrique et, au survol, la liste de ses pages avec icône et explication (`.navgrp`, `.navdd`).
 - Contrôles : audit 95 pages en trois tailles, 0 problème, 0 erreur JS ; relecture 42 pages ; aucune carte ne dépasse à 320, 360 et 390 px.
 
+## 13/11, 20 h 40 : deux listes de rubrique ouvertes l'une sur l'autre (capture de Romain)
+- Cause : la liste d'une rubrique restait ouverte tant qu'un de ses liens gardait le focus (après un clic, le site change de page sans recharger), et celle de la rubrique survolée s'ouvrait par-dessus.
+- Correction (`composants.css`, `nav.js`) : une seule liste à la fois (celle survolée), fermeture dès qu'on a choisi une page, ouverture au clavier seulement (`:focus-visible`).
+- Rejoué dans un navigateur : survol, clic sur une page de la liste, survol d'une autre rubrique, souris ailleurs, clavier : jamais plus d'une liste ouverte. Relecture 42 pages, 0 problème.
+

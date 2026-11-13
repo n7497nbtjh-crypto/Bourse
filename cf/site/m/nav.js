@@ -126,6 +126,10 @@ if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/plan$/, () => pa
 /* styles : voir site.css */
 navRemplir();
 document.addEventListener("click", e => { if (e.target.closest(".mp-x") && typeof closePanels === "function") closePanels(); });
+/* Liste d'une rubrique : une seule ouverte à la fois, et elle se referme dès qu'on a choisi une page (13/11, capture de Romain : deux listes l'une sur l'autre) */
+document.addEventListener("click", e => { const g = e.target.closest && e.target.closest("#nav .navgrp"); if (!g) return; g.classList.add("ferme"); if (document.activeElement && document.activeElement.blur) document.activeElement.blur(); });
+document.addEventListener("mouseover", e => { const g = e.target.closest && e.target.closest("#nav .navgrp"); document.querySelectorAll("#nav .navgrp.ferme").forEach(x => { if (x !== g) x.classList.remove("ferme"); }); });
+document.addEventListener("mouseout", e => { const g = e.target.closest && e.target.closest("#nav .navgrp.ferme"); if (g && !(e.relatedTarget && g.contains(e.relatedTarget))) g.classList.remove("ferme"); });
 document.addEventListener("keydown", e => { if (e.key === "Escape" && typeof closePanels === "function" && document.getElementById("mpanel") && document.getElementById("mpanel").classList.contains("open")) closePanels(); });
 /* 8/11 : fréquentation (page État du site). Une ligne par page vue et, onglet visible, un signal par minute.
    Aucun cookie ni identifiant : « nouveau » dit seulement si c'est la première page de cet onglet. */
