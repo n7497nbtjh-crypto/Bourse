@@ -67,10 +67,6 @@ async function iaRediger(tache, faits, o = {}) {
 
 /* ---------- Petits morceaux d'interface ---------- */
 /** Pied d'une réponse rédigée. */
-function miaPied(j) {
-  if (j && j.ia === "connectee") return `${j.sources ? `<p class="mia-src"><b>Sources</b> ${esc(j.sources)}</p>` : ""}<p class="iafoot">Rédigé par l'IA d'ENKLAIR (${esc(j.modele || "modèle ouvert")}, hébergé par Cloudflare) à partir des seules données du site. À vérifier ; ce n'est pas un conseil.</p>`;
-  return "";
-}
 /** Quand l'IA ne peut pas rédiger : la réponse calculée reste, avec une ligne d'explication. */
 function miaSuite() { // la marche suivante : compte gratuit, puis Premium
   if (MIA.niveau === "premium") return "";
@@ -83,14 +79,9 @@ function miaInvite(txt) {
   return why ? `<p class="mia-inv"><span aria-hidden="true">✦</span> ${txt ? esc(txt) + " " : ""}${why}</p>` : "";
 }
 /** Le bloc à afficher après une demande de rédaction : texte, explication ou erreur. */
-function miaRendu(j, defaut) {
-  if (j && j.txt) return resumeHTML(j.txt) + miaPied(j);
-  if (!j || j.invite) return miaInvite(defaut);
-  return `<p class="muted" style="margin:6px 0">${esc(j.error || "Réponse indisponible.")}</p>`;
-}
 function miaEtatHTML() {
-  if (!MIA.coupee) return `<span class="mia-on"><i></i>IA du site : gratuite</span> <a href="/espace/ia">En savoir plus</a>`;
-  return `<span class="mia-off"><i></i>${MIA.coupee === "absente" ? "Réponses calculées" : (MIA.coupee === "site" || MIA.niveau === "premium" ? "Réponses calculées (limite du jour atteinte)" : "Réponses calculées (questions de la semaine utilisées)")}</span> <a href="/espace/ia">Pourquoi ?</a>`;
+  if (!MIA.coupee) return `<span class="mia-on"><i></i>IA du site : gratuite</span>`;
+  return `<span class="mia-off"><i></i>${MIA.coupee === "absente" ? "Réponses calculées" : (MIA.coupee === "site" || MIA.niveau === "premium" ? "Réponses calculées (limite du jour atteinte)" : "Réponses calculées (questions de la semaine utilisées)")}</span>`;
 }
 function miaMaj() { $$("[data-mia-etat]").forEach(el => el.innerHTML = miaEtatHTML()); }
 miaEtat();

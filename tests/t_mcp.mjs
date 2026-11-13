@@ -91,9 +91,9 @@ x = await call("fetch", { id: "etf:amundi-msci-world-pea" }); ok(!x.isError && J
 let lim = null; for (let i = 0; i < 241; i++) { const [, jj] = await rpc({ jsonrpc: "2.0", id: 100 + i, method: "tools/call", params: { name: "rechercher_entreprise", arguments: { requete: "air" } } }, { "cf-connecting-ip": "8.8.8.8" }); if (jj.result.isError) lim = jj; }
 ok(lim && /Trop de requêtes/.test(lim.result.content[0].text), "241e appel de la minute refusé");
 
-// Page /connecteur servie avec son titre
-const pg = await W.fetch(new Request("https://t.local/connecteur"), env, {}); const ht = await pg.text();
-ok(pg.status === 200 && /<title>Utiliser ENKLAIR dans ChatGPT ou Claude/.test(ht) && /rel="manifest"/.test(ht) && /og:image/.test(ht) && pg.headers.get("x-bilan-version"), "page /connecteur");
+// 13/11 (recentrage) : la page /connecteur est supprimée, son adresse renvoie à l'accueil
+const pg = await W.fetch(new Request("https://t.local/connecteur"), env, {});
+ok(pg.status === 301 && /t\.local\/$/.test(pg.headers.get("location") || ""), "page /connecteur redirigée");
 
 // Client MCP officiel (facultatif)
 if (process.env.MCP_SDK) {

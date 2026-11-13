@@ -576,8 +576,7 @@ function f4Tout(x) {
   const cols = [["Ventes", r => r.ca != null ? f4Md(r.ca, r.currency) : "–"], ["Croissance", r => { const m = f4M(r); return m.g != null ? f4Pc(m.g, 1, true) : "–"; }], ["Marge", r => { const m = f4M(r); return m.m != null ? f4Pc(m.m, 0) : "–"; }], ["Bénéfice net", r => r.net != null ? f4Md(r.net, r.currency) : "–"], ["PER", r => { const m = f4M(r); return m.pe != null ? ekFr(m.pe, 0) + " fois" : "–"; }], ["Rendement", r => { const m = f4M(r); return m.yld != null ? f4Pc(m.yld, 1) : "–"; }]];
   const ids = riv.map(r => r.id).filter(Boolean);
   const rivH = riv.length ? `<div class="ek-tc ek-tc-l"><h3>Face à ses rivales</h3><div class="scroll-x"><table class="ek-tt ek-tt-r"><thead><tr><th></th>${cols.map(k => `<th>${k[0]}</th>`).join("")}</tr></thead><tbody>${riv.map(r => `<tr${r.moi ? ' class="moi"' : ""}><th><span class="ek-nm">${f4Logo(r, null, 1)}${r.moi || !r.id ? esc(r.name) : `<a href="/entreprise/${esc(r.id)}">${esc(r.name)}</a>`}</span></th>${cols.map(k => `<td>${esc(k[1](r))}</td>`).join("")}</tr>`).join("")}</tbody></table></div>${ids.length > 1 ? `<a class="ek-lk" href="/comparer?ids=${ids.slice(0, 4).map(encodeURIComponent).join(",")}">Comparer en détail ↗</a>` : ""}</div>` : "";
-  const csv = `<button type="button" class="ek-lk" data-f4-csv>Télécharger tous les chiffres (CSV)${typeof isPrem === "function" && isPrem() ? "" : " · Premium"}</button>`;
-  return `<div class="ek-tg">${G.map(carte).join("")}</div>${rivH}<div id="f4-trim"></div><p class="ek-tn">Exercices clos, en ${esc(c.currency || s.currency || "")}. « Médiane secteur » : la valeur du milieu parmi les entreprises du secteur ${esc((secName(s) || "").toLowerCase())}. En vert ou rouge, la dernière année face à cette médiane. ${csv}</p>`;
+  return `<div class="ek-tg">${G.map(carte).join("")}</div>${rivH}<div id="f4-trim"></div><p class="ek-tn">Exercices clos, en ${esc(c.currency || s.currency || "")}. « Médiane secteur » : la valeur du milieu parmi les entreprises du secteur ${esc((secName(s) || "").toLowerCase())}. En vert ou rouge, la dernière année face à cette médiane. </p>`;
 }
 async function f4Trim(x) { // « Depuis la clôture » : trimestres publiés après le dernier exercice (sociétés américaines, SEC)
   const el = document.getElementById("f4-trim"); if (!el) return;
@@ -589,12 +588,7 @@ async function f4Trim(x) { // « Depuis la clôture » : trimestres publiés apr
     el.innerHTML = `<div class="ek-tc ek-tc-l"><h3>Ses quatre derniers trimestres</h3><div class="scroll-x"><table class="ek-tt"><thead><tr><th>Trimestre clos fin</th>${Q.map((q, i) => `<th${i === Q.length - 1 ? ' class="d"' : ""}>${esc(d(q.end))}</th>`).join("")}</tr></thead><tbody><tr><th>Ventes</th>${Q.map((q, i) => `<td${i === Q.length - 1 ? ' class="d"' : ""}>${esc(m(q.ca))}</td>`).join("")}</tr><tr><th>Bénéfice net</th>${Q.map((q, i) => `<td${i === Q.length - 1 ? ' class="d"' : ""}>${esc(m(q.net))}</td>`).join("")}</tr></tbody></table></div><p class="ek-tn">Comptes trimestriels déposés à la SEC (non audités pour les trimestres 10-Q). <a href="${esc(j.source || "#")}" target="_blank" rel="noopener">Source ↗</a></p></div>`;
   } catch (e) { }
 }
-function f4Csv(x) {
-  let R; try { R = tblxRows(x.s, x.c); } catch (e) { return; }
-  const Y = x.c.years, q = v => `"${String(v).replace(/"/g, '""')}"`;
-  const lines = [["Indicateur", "Unité", ...Y].map(q).join(";"), ...R.rows.map(r => [r.label, r.unit || "", ...r.vals.map(v => v == null ? "" : r.cell(v))].map(q).join(";"))];
-  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" })); a.download = `${x.s.id}-chiffres.csv`; document.body.appendChild(a); a.click(); a.remove();
-}
+
 
 // Liens « dans le rapport officiel » : ouverts sur la ligne exacte du chiffre quand l'ancre existe (data/ancres.mjs)
 function f4Ancres(x) {
@@ -611,25 +605,7 @@ document.addEventListener("click", e => { // repères de l'en-tête : aller à l
   const bar = document.querySelector(".bar, header"), off = (bar && getComputedStyle(bar).position === "sticky" ? bar.getBoundingClientRect().height : 0) + 16;
   scrollTo({ top: t.getBoundingClientRect().top + scrollY - off, behavior: "smooth" });
 }, true);
-/* 4/11 (Premium) : « Être prévenu ». Ajoute la valeur aux favoris (ce que suit le robot des alertes) et dit ce qui arrivera :
-   sans Premium, la valeur est ajoutée aux favoris et le bloc dit que les alertes font partie de Premium. */
-async function f4Alerte(k, btn) {
-  const box = document.getElementById("f4al"); if (!box) return;
-  if (!isFav(k)) { const a = favs().slice(); a.unshift(k); setFavs(a); $$(`[data-fav="${k}"]`).forEach(x => { x.classList.add("on"); x.setAttribute("aria-pressed", "true"); x.textContent = favLbl(k); });
-    try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=suivre"); } catch (e) { } }
-  box.hidden = false; box.innerHTML = `<p>Un instant…</p>`;
-  if (!btn.closest("#f4al") && btn.closest("#f4-annee")) box.scrollIntoView({ behavior: "smooth", block: "center" });
-  const m = await moi(), nom = (RBY[k.slice(2)] || {}).name || "cette entreprise";
-  const quoi = `une baisse de plus de 5 % dans la journée, ses résultats publiés (avec les chiffres clés), la veille de ses rendez-vous, ses fortes variations du jour, le dernier jour pour toucher un dividende annoncé et ses plus hauts ou plus bas sur un an`;
-  // 4/11 (décision de Romain) : les alertes font partie de Premium, sans demi-version gratuite
-  if (m.premium) { btn.textContent = "🔔 Vous serez prévenu"; box.innerHTML = `<p><b>C'est noté.</b> Si ${esc(nom)} chute de plus de 5 % dans la journée, vous recevez un e-mail le soir même (un seul par soir, désactivable dans <a href="/espace/reglages">Réglages</a>) et dans Mon espace. Aussi : ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}.</p>`; }
-  else box.innerHTML = `<p><b>Si ${esc(nom)} chute de plus de 5 % dans la journée, ENKLAIR vous envoie un e-mail le soir même.</b> C'est dans Premium, avec ${quoi.replace(/^une baisse de plus de 5 % dans la journée, /, "")}. ${esc(nom)} est déjà dans vos favoris.</p><div class="f4al-a"><a class="ek-btn dk" href="/premium#alertes">Être prévenu avec Premium</a></div>`;
-}
 document.addEventListener("click", e => {
-  const al = e.target.closest && e.target.closest("[data-f4-alerte]"); if (al) { f4Alerte(al.dataset.f4Alerte, al); return; }
-  if (e.target.closest && e.target.closest("[data-f4-csv]")) { // 4/11 : l'export fait partie de Premium (« Toutes les données »)
-    if (typeof isPrem === "function" && !isPrem()) { if (typeof toast === "function") toast(`L'export des chiffres fait partie de Premium. <a href="/premium#donnees">Voir Premium</a>`); return; }
-    if (window.F4X) f4Csv(window.F4X); return; }
   const t = e.target.closest && e.target.closest("[data-f4-tv]"); if (!t) return;
   const m = location.pathname.match(/^\/entreprise\/([^/]+)/), s = m && RBY[m[1]];
   if (t.dataset.f4Tv !== undefined && s) { const box = document.getElementById("f4tv"); if (!box) return; box.hidden = !box.hidden;

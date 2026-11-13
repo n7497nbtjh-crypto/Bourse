@@ -58,7 +58,7 @@ async function pageIndice(id) {
         <div><span class="kick">Règle de calcul</span><p>${esc(F.regle)}</p></div>
         <div><span class="kick">Depuis</span><p>${esc(F.histoire)}</p></div>
         <div class="orcwarn"><span class="kick">À savoir</span><p>${esc(F.nuance)}</p></div>
-        <p class="note" style="margin:0">Un indice ne s'achète pas directement : on passe par un fonds qui le reproduit, en général un ETF. <a class="lnk" href="/academie/bourse/indices">La leçon sur les indices</a></p></div></section>
+        <p class="note" style="margin:0">Un indice ne s'achète pas directement : on passe par un fonds qui le reproduit, en général un ETF.</p></div></section>
       <section class="panel"><div class="ph"><h2>Les plus grandes entreprises de ce marché sur ENKLAIR</h2></div><div class="pb">
         ${cos.length ? `<div class="orclist">${cos.map(({ c, v }) => `<a class="orcrow" href="/entreprise/${c.id}">${logo(c, 30)}<span class="t"><b>${esc(c.name)}</b><small>${esc(secName(c))}</small></span><span class="v"><b>${big(v.capE / 1e6)}</b><small>en Bourse</small></span>${ORC_CHEV}</a>`).join("")}</div>
           <p class="note" style="margin:10px 0 0">Classées par valeur en Bourse parmi les entreprises suivies par le site. Ce n'est pas la composition officielle de l'indice, publiée par ${esc(F.fournisseur)}.</p>` : `<p class="muted" style="margin:0">Le site ne suit pas encore d'entreprises de ce marché.</p>`}</div></section>
@@ -67,8 +67,6 @@ async function pageIndice(id) {
         ${etfs.length ? `<p class="muted" style="margin:0 0 10px;font-size:13.5px">${etfs.length} ETF du site reproduisent cet indice, du moins cher au plus cher. Les frais courants sont prélevés chaque année dans le fonds.</p><div class="orclist">${etfs.slice(0, 8).map(etfRow).join("")}</div>`
           : proches.length ? `<p class="muted" style="margin:0 0 10px;font-size:13.5px">Aucun ETF du site ne reproduit exactement cet indice. Voici des ETF sur la même zone, du moins cher au plus cher.</p><div class="orclist">${proches.map(etfRow).join("")}</div>` : `<p class="muted" style="margin:0">Aucun ETF du site ne suit encore cet indice.</p>`}
         <p class="note" style="margin:10px 0 0">Comparez aussi l'indice suivi, la taille du fonds et vos frais de courtage. Ce n'est pas une recommandation. <a class="lnk" href="/etf">Tous les ETF</a></p></div></section>
-      <section class="panel orcidxia"><div class="ph"><h2>✦ Questions à l'IA</h2></div><div class="pb"><div class="chips">${qs.map(q => `<a class="chip" href="/demander?q=${encodeURIComponent(q)}">${esc(q)}</a>`).join("")}</div>
-        <p class="note" style="margin:10px 0 0">Réponses calculées à partir des données du site et des leçons de l'Académie.</p></div></section>
     </div></div>`;
 }
 ROUTES_EXTRA.push([/^\/indice\/([a-z0-9]+)$/, id => pageIndice(id)]);
@@ -152,7 +150,7 @@ function pageMethode() {
         <li>Les cours sont différés.</li><li>L'IA peut se tromper : vérifiez un chiffre important dans le document source, dont le lien est donné.</li></ul></div></section>
     </div>
     <section class="panel mtderr"><div class="pb"><div><h2 style="margin:0 0 4px">Vous voyez une erreur ?</h2><p class="muted" style="margin:0">Un chiffre faux, une explication trompeuse, un lien cassé : dites-le nous, chaque signalement est relu.</p></div><button type="button" class="btn" data-signaler>Signaler une erreur</button></div></section>
-    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/mentions-legales">Mentions légales</a> · <a class="lnk" href="/apprendre#academie">L'Académie</a></p></div>`;
+    <p class="note"><a class="lnk" href="/avertissement">Avertissement sur les risques</a> · <a class="lnk" href="/confidentialite">Confidentialité</a> · <a class="lnk" href="/mentions-legales">Mentions légales</a></p></div>`;
 }
 
 /* ---------- Signaler une erreur (pied de page et page Méthode) ---------- */
@@ -200,11 +198,7 @@ document.addEventListener("click", e => { if (e.target.closest("[data-signaler]"
       if (typeof isFav !== "function" || !isFav(b.dataset.fav)) return;
       let t = document.querySelector(".orcfavt");
       if (!t) { t = document.createElement("div"); t.className = "orcfavt"; t.setAttribute("role", "status"); document.body.appendChild(t); }
-      // 5/11 (Romain) : rappel du rapport du samedi, les trois premiers ajouts seulement
-      let n = 0; try { n = +localStorage.getItem("bilan.favrap") || 0; localStorage.setItem("bilan.favrap", n + 1); } catch (e) { }
-      const prem = typeof isPrem === "function" && isPrem(), rap = n >= 3 ? "" : prem
-        ? `<span class="orcfavr">★ Son actualité sera dans votre <a href="/espace">rapport du samedi</a>.</span>`
-        : `<span class="orcfavr">★ Chaque samedi, le rapport Premium résume l'actualité de vos favoris. <a href="/rapport-exemple">Voir un exemple</a></span>`;
+      const rap = "";
       t.innerHTML = `<span>Ajouté à vos favoris. Retrouvez-les avec <b>★ Favoris</b> en haut de page.${rap}</span><a href="/favoris">Voir</a>`;
       requestAnimationFrame(() => t.classList.add("vis")); clearTimeout(tm); tm = setTimeout(() => t.classList.remove("vis"), rap ? 7000 : 3800);
     }, 0);

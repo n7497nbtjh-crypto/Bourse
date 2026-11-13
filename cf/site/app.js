@@ -310,19 +310,9 @@ function coCard(c) {
 const LEGEND = `<div class="dleg"><span class="f"><i></i>Points forts</span><span class="m"><i></i>Dans la moyenne</span><span class="v"><i></i>Points de vigilance</span><span class="light">Nombre de repères de chaque couleur dans les comptes de l'entreprise.</span></div>`;
 
 /* ---------- Petits graphiques (SVG et barres HTML) ---------- */
-const PAL = ["#111214", "#0E6B4A", "#D94F2B", "#8FB51E", "#C2410C", "#0E7490", "#8A6D1E", "#B42318", "#5B4FC4", "#5F5B55"];
 // Barres verticales par année, avec ligne de repère facultative (médiane du secteur)
 // Barres horizontales : une ligne par élément (classements, comparaisons, répartitions)
-function hbars(rows, fmt, { pctOfMax = true } = {}) {
-  const max = Math.max(...rows.map(r => Math.abs(r.v)).filter(okn), 1e-9);
-  return `<div class="hb">${rows.map(r => `<${r.href ? `a href="${r.href}"` : "div"} class="hbr${r.hl ? " hl" : ""}"><span class="hbl">${r.lg || ""}${esc(r.label)}</span><span class="hbb"><span style="width:${Math.max(1.5, Math.abs(r.v) / max * 100)}%;${r.c ? `background:${r.c}` : r.v < 0 ? "background:var(--o)" : ""}"></span></span><span class="hbv num">${esc(fmt(r.v))}</span></${r.href ? "a" : "div"}>`).join("")}</div>`;
-}
 // Barre empilée à 100 % avec légende (répartition du chiffre d'affaires)
-function stack(parts, fmt) {
-  const tot = parts.reduce((a, p) => a + p.v, 0) || 1;
-  return `<div class="stk">${parts.map((p, i) => `<span style="width:${p.v / tot * 100}%;background:${PAL[i % PAL.length]}" title="${esc(p.label)}"></span>`).join("")}</div>
-    <div class="stkl">${parts.map((p, i) => `<span><i style="background:${PAL[i % PAL.length]}"></i>${esc(p.label)} <b>${pct(p.v / tot, 0, false)}</b>${fmt ? ` <span class="light">${esc(fmt(p.v))}</span>` : ""}</span>`).join("")}</div>`;
-}
 
 /* ---------- « Comprendre » : une explication détaillée par idée, avec les chiffres de l'entreprise ---------- */
 let SEGFR = {}, REP = {};
@@ -410,17 +400,9 @@ const EXFMT = { g1: v => pct(v), marge: v => pct(v, 1, false), nm: v => pct(v, 1
 
 /* ---------- Courtiers ---------- */
 let BROKERS = { list: [], sources: [] };
-function brokerFee(b, amount, perso) { // même calcul que data/courtiers.mjs
-  if (!b || !(amount > 0)) return 0;
-  if (b.custom) return Math.max(0, (perso?.fixe || 0) + amount * (perso?.pct || 0) / 100);
-  const p = b.grille.find(g => g[0] == null || amount <= g[0]) || b.grille[b.grille.length - 1];
-  return Math.round(Math.max(b.min || 0, p[1] + amount * p[2] / 100) * 100) / 100;
-}
-const brokerSrc = () => `Grilles relevées le ${dLabel(BROKERS.updated || TODAY)} (offre de base, actions françaises). Sources : ${BROKERS.sources.map(s => `<a class="lnk" href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.label)}</a>`).join(", ")}. Vérifiez la grille sur le site du courtier : elle peut changer.`;
 
 /* ---------- Simulateurs ---------- */
 const v = id => { const x = parseFloat(String($("#" + id).value).replace(",", ".")); return isFinite(x) ? x : 0; };
-function figs(items) { return `<div class="figs">${items.map(([k, val, s, c]) => `<div><div class="k">${k}</div><div class="v num ${c || ""}">${val}</div>${s ? `<div class="s">${s}</div>` : ""}</div>`).join("")}</div>`; }
 const chips = (id, list, cur) => `<div class="chips" id="${id}">${list.map(([v, l]) => `<button type="button" data-v="${v}" class="${String(v) === String(cur) ? "on" : ""}">${l}</button>`).join("")}</div>`;
 
 
@@ -580,37 +562,16 @@ function icsFile(events, name) {
    Communauté, Portefeuille et Outils : nouvelle version
    ===================================================================== */
 const keyName = k => k.startsWith("c:") ? (RBY[k.slice(2)] || {}).name : (ETFBY[k.slice(2)] || {}).name;
-const keyHref = k => k.startsWith("c:") ? `/entreprise/${k.slice(2)}` : `/etf/${k.slice(2)}`;
-const keyLogo = (k, s = 28) => k.startsWith("c:") ? logo(RBY[k.slice(2)] || { name: "?" }, s) : logo({ name: (ETFBY[k.slice(2)] || {}).issuer || "E", domain: ETFBY[k.slice(2)] ? issuerDom(ETFBY[k.slice(2)]) : "" }, s);
 const post = (path, body) => fetch(path, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body) }).then(r => r.json());
 
-/* ---------- Communauté : questions-réponses, pronostics, portefeuille des visiteurs, discussions ---------- */
-const addDays = (iso, n) => { const d = new Date(iso + "T00:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-
-/* ---------- Portefeuille : la radiographie de ce que vous possédez vraiment ---------- */
-const PF2 = "bilan.portefeuille";
 const ETFCOMP = {};
 const titleCase = s => String(s).toLowerCase().replace(/(^|[\s.-])([a-zà-ÿ])/g, (m, a, b) => a + b.toUpperCase()).replace(/\b(Inc|Corp|Corporation|Ltd|Plc|Sa|Se|Nv|Ag|Co)\b\.?/gi, m => m.toUpperCase() === "SA" || m.toUpperCase() === "SE" ? m.toUpperCase() : m);
 
-/* ---------- Outils ---------- */
-const OUTILS = [
-  ["/portefeuille", "Radiographie de portefeuille", "Ce que vous possédez vraiment une fois vos ETF ouverts : entreprises, pays, frais, dividendes."],
-  ["/apprendre", "Par où commencer ?", "Sept étapes dans l'ordre et un questionnaire de cinq questions pour trouver votre profil d'investisseur."],
-  ["/comparer", "Comparer des entreprises", "Plusieurs entreprises côte à côte, avec une synthèse en phrases et leur place dans le secteur."],
-  ["/outils/si-javais", "Et si j'avais investi ?", "Une somme placée il y a 1, 3 ou 5 ans dans une action ou un ETF, comparée à un indice, au Livret A et à la hausse des prix, sur une seule courbe."],
-  ["/outils/recouvrement", "Mes ETF se recouvrent-ils ?", "2 à 4 ETF : positions communes, poids réellement en double, concentration, secteurs, pays et devises du portefeuille combiné."],
-  ["/outils/verifier", "Vérifier un site ou une offre", "Le nom d'un site, d'une appli ou d'un « conseiller » comparé aux listes noires de l'AMF, mises à jour chaque jour."],
-  ["/simulateurs", "Simulateur d'épargne", "Versements mensuels, frais réels de votre courtier et du fonds, impôt PEA ou compte-titres, trois scénarios tirés de l'histoire."],
-  ["/simulateurs/frais", "Le même plan chez chaque courtier", "Ce que coûtent le courtage et les frais du fonds sur toute la durée, courtier par courtier."],
-  ["/dividendes", "Calendrier des dividendes", "Les prochaines dates de détachement et de paiement, à ajouter à votre agenda."],
-  ["/debuter", "Premiers pas, avec quiz", "Trois étapes pour comprendre les actions, lire une entreprise et juger son prix."],
-];
+/* ---------- Outils : la page est dans m/outils4.js ; ici, seulement le relais vers « Comparer deux ETF » ---------- */
 function pageOutils(t) {
   setNav("sim");
   if (t === "recouvrement") return outilRecouvrement();
-  setTitle("Outils");
-  app.innerHTML = `<h1 class="pagetitle">Outils</h1><p class="pagesub">Des calculs et des comparaisons pour décider en connaissance de cause. Les hypothèses sont toujours affichées.</p>
-    <div class="cards">${OUTILS.map(([h, t, d], i) => `<a class="cocard tool" href="${h}"><div class="top"><span class="tnum">${String(i + 1).padStart(2, "0")}</span><div><div class="nm">${t}</div></div></div><div class="d">${d}</div></a>`).join("")}</div>`;
+  goR("/outils");
 }
 function bindPicker(id, onPick, etfOnly = false) {
   const q = $("#" + id), box = q.nextElementSibling;
@@ -693,7 +654,6 @@ const AX_WORDS = { // 5e passage (A4) : les libellés des jauges ne répètent p
 };
 const axBand = p => p >= 0.75 ? 0 : p >= 0.55 ? 1 : p > 0.45 ? 2 : p > 0.25 ? 3 : 4; // 0 = en tête … 4 = en queue
 const axWord = (p, k = "croissance") => (AX_WORDS[k] || AX_WORDS.croissance)[axBand(p)];
-const axCol = p => p >= 0.55 ? "var(--g)" : p > 0.45 ? "var(--n)" : "var(--o)";
 const axLevel = p => p >= 0.55 ? "fort" : p <= 0.25 ? "vig" : "moyen";
 function rfAxes(s) { // [{ k, t (titre), d (ce qui est mesuré), r: { p, rank, n } | null, special }] ; les axes sans rang sont omis, sauf « Pas de dividende »
   if (!s || s.missing) return [];
@@ -738,10 +698,6 @@ premStatus();
 
 /* ---------- Score visuel : le profil en 5 axes, en version compacte (cartes, comparaisons) ---------- */
 function profilAxes(s) { return rfAxes(s).filter(a => a.r).map(a => [a.t, a.r, a.word, a.k]); } // forme compacte, gardée pour les appels existants
-function profilMini(s) {
-  const ax = profilAxes(s); if (ax.length < 3) return "";
-  return `<div class="pmini" aria-label="Profil dans son secteur">${ax.map(a => { const [t, r] = a; return `<span ${tipAttr({ h: t, r: [["Place dans le secteur", `${r.rank}e sur ${r.n}`, ""]], n: (a[2] || axWord(r.p)) + ". Le trait du milieu est la médiane." })} tabindex="0"><small>${t}</small><i class="pl"><i class="pm"></i><i class="pd" style="left:${r.p * 100}%;background:${axCol(r.p)}"></i></i></span>`; }).join("")}</div>`;
-}
 /* ---------- Assistant de fiche : questions sur l'entreprise, réponses tirées des données du site ---------- */
 const R1 = x => x == null || !isFinite(x) ? null : Math.round(x * 1000) / 10;
 /* ---------- Page Premium ---------- */
@@ -756,7 +712,7 @@ async function premiumMerci() {
   let j = {}; for (let i = 0; i < 4; i++) { try { j = await (await fetch("/api/premium/activer?session_id=" + encodeURIComponent(sid))).json(); } catch (e) { j = { error: "Vérification impossible pour le moment." }; } if (j.token || !/pas encore confirmé/.test(j.error || "")) break; await new Promise(r => setTimeout(r, 4000)); }
   if (!j.token) { $("#merci").innerHTML = `<p>${esc(j.error || "Paiement introuvable.")}</p><p class="muted">Si vous avez été débité, écrivez-nous en indiquant l'adresse utilisée pour payer : votre accès sera ouvert à la main.</p>`; return; }
   setPremTok(j.token); await premStatus(); const mo = await moi(true).catch(() => ({})); // connecté : l'abonnement est rattaché au compte par moi()
-  $("#merci").innerHTML = (mo && mo.connecte ? `<p class="lead" style="margin-top:0"><b>Votre abonnement est rattaché à votre espace</b> (${esc(mo.email || "")}) : rapport du samedi et alertes inclus, sur tous vos appareils.</p>` : `<div class="note" style="margin:0 0 14px;border:2px solid #111;border-radius:14px;padding:12px 14px;background:#FFF6C7"><b>Dernière étape : créez votre espace.</b> Le rapport du samedi et les alertes partent de votre espace (une adresse et un mot de passe). Votre abonnement y sera rattaché automatiquement. <a class="lnk" href="/espace"><b>Créer mon espace →</b></a></div>`) + `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Toute l'Académie et toutes vos alertes sont ouvertes sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/favoris">Activer les alertes sur mes favoris →</a><a class="more" href="/entreprises">Ouvrir une fiche →</a></div>`;
+  $("#merci").innerHTML = (mo && mo.connecte ? `<p class="lead" style="margin-top:0"><b>Votre abonnement est rattaché à votre espace</b> (${esc(mo.email || "")}), sur tous vos appareils.</p>` : `<div class="note" style="margin:0 0 14px;border:2px solid #111;border-radius:14px;padding:12px 14px;background:#FFF6C7"><b>Dernière étape : créez votre espace.</b> Avec un espace (une adresse et un mot de passe), Premium vous suit sur tous vos appareils. Votre abonnement y sera rattaché automatiquement. <a class="lnk" href="/espace"><b>Créer mon espace →</b></a></div>`) + `<p class="lead" style="margin-top:0"><b>Premium est actif.</b> Toutes les fiches, les classements et les comparaisons sont ouverts sur cet appareil.</p><p>Votre code d'accès, à garder pour activer Premium sur un autre appareil :</p><p class="code">${esc(j.token)}</p><p class="muted" style="font-size:13.5px">Il vous sera aussi renvoyé sur demande, à l'adresse utilisée pour payer, depuis la page Premium.</p><div style="display:flex;gap:16px;flex-wrap:wrap"><a class="more" href="/entreprises">Ouvrir une fiche →</a><a class="more" href="/classements">Voir les classements →</a></div>`;
 }
 
 /* ---------- Nouvel investisseur : par où commencer ---------- */
@@ -784,18 +740,22 @@ function moi(force) {
   if (MOI && !force) return Promise.resolve(MOI);
   if (MOIP && !force) return MOIP;
   return MOIP = fetch("/api/espace/moi", { credentials: "same-origin" }).then(r => r.ok ? r.json() : { connecte: false }).catch(() => ({ connecte: false })).then(async j => {
-    // 5/11 : un abonnement payé sur cet appareil est rattaché au compte dès la connexion (rapport, alertes et e-mails partent du compte)
+    // 5/11 : un abonnement payé sur cet appareil est rattaché au compte dès la connexion
     let t = ""; try { t = localStorage.getItem(TKEY) || ""; } catch (e) { }
     if (j.connecte && !j.premium && t) { const r = await post2("/api/espace/premium", { token: t }).catch(() => ({})); if (r && r.ok) { j.premium = true; j.plan = r.plan; j.premium_jusqu_au = r.premium_jusqu_au; } }
     MOIP = null; MOI = j; document.documentElement.classList.toggle("is-in", !!j.connecte);
     const payer = location.pathname === "/espace" ? new URLSearchParams(location.search).get("payer") : null; // 5/11 : espace obligatoire avant de payer
-    if (j.connecte && (payer === "mensuel" || payer === "unique") && !window.ESP_SANS_PAYER) { const o = await fetch("/api/premium/offres").then(r => r.json()).catch(() => ({})); if (o[payer]) { location.href = o[payer] + "?prefilled_email=" + encodeURIComponent(j.email || ""); return j; } }
+    if (j.connecte && payer === "unique" && !window.ESP_SANS_PAYER) { const o = await fetch("/api/premium/offres").then(r => r.json()).catch(() => ({})); if (premOuvert(o)) { location.href = o[payer] + "?prefilled_email=" + encodeURIComponent(j.email || ""); return j; } }
     if (j.connecte && j.jeton && j.jeton !== t) { try { localStorage.setItem(TKEY, j.jeton); } catch (e) { } } // compte propriétaire (7/11)
     if (j.connecte) { if (j.premium) { PREM = { premium: true, plan: j.plan }; document.documentElement.classList.add("is-prem"); } syncFromServer(j); }
     espaceBadge(); return j;
   });
 }
 const connecte = () => !!(MOI && MOI.connecte);
+/* 13/11 (Romain) : une seule formule, 19 € par an. Le bouton de paiement n'est ouvert que si le lien de paiement déclaré par le
+   serveur est bien à ce prix (variable PRIX_UNIQUE du Worker, qui doit commencer par « 19 ») : jamais 19 € affichés et 39 € prélevés. */
+const PREM_PRIX = 19;
+const premOuvert = o => !!(o && o.unique && new RegExp("^" + PREM_PRIX + "\\b").test(String(o.prix_unique || "").trim()));
 let SYNCING = false;
 function syncFromServer(j) {
   const d = j.donnees || {}; SYNCING = true;
@@ -803,17 +763,15 @@ function syncFromServer(j) {
     const local = favs(), srv = Array.isArray(d.favoris) ? d.favoris : [];
     const union = [...new Set([...srv, ...local])];
     setFavs(union);
-    const P = pf2Load();
-    if (d.portefeuille && Array.isArray(d.portefeuille.l) && (d.portefeuille.l.length || !P.l.length)) pf2Save(d.portefeuille);
     SYNCING = false;
-    if (union.length !== srv.length || (!d.portefeuille && P.l.length)) pushDonnees();
+    if (union.length !== srv.length) pushDonnees();
   } finally { SYNCING = false; }
 }
 let pushT = null;
 function pushDonnees() {
   if (!connecte() || SYNCING) return;
   clearTimeout(pushT);
-  pushT = setTimeout(() => fetch("/api/espace/donnees", { method: "PUT", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ favoris: favs(), portefeuille: pf2Load() }) }).catch(() => { }), 800);
+  pushT = setTimeout(() => fetch("/api/espace/donnees", { method: "PUT", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ favoris: favs() }) }).catch(() => { }), 800);
 }
 function espaceBadge() {
   const n = MOI && MOI.connecte ? MOI.nonlus || 0 : 0;
@@ -873,26 +831,25 @@ document.addEventListener("click", e => { const b = e.target.closest("[data-fava
 /* ---------- Accueil en bandeaux ---------- */
 const band = (n, kick, title, link, body) => `<section class="band"><div class="bandh"><span class="bandn">${n}</span><div><p class="kick">${kick}</p><h2>${title}</h2></div>${link ? `<a class="more" href="${link[0]}">${link[1]} →</a>` : ""}</div>${body}</section>`;
 
-/* ---------- Mon espace : connexion, bilan de la semaine, alertes, réglages ---------- */
+/* ---------- Mon espace : connexion, compte ---------- */
 const post2 = (u, b, m = "POST") => fetch(u, { method: m, credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify(b || {}) }).then(async r => ({ status: r.status, ...(await r.json().catch(() => ({}))) }));
 function espaceConnexion() {
   // 3/11 (v4) : bandeau jaune, avantages en cartes à icône, formulaire en carte blanche (mêmes identifiants : espf, lt, espgo, espm, swap, lost, cgu)
   const ic = k => typeof ou4Ic === "function" ? ou4Ic(k) : "";
-  const BEN = [["listes", "Un rapport chaque semaine", "Ce que vos entreprises et ETF ont publié, leurs cours, leurs dates à venir, la répartition de votre portefeuille."],
-    ["alerte", "L'IA du site", "3 questions par semaine sur une entreprise, un ETF ou une notion, réponses tirées des chiffres du site."],
-    ["pf", "Partout pareil", "Vos favoris, votre portefeuille et vos achats programmés, sur votre téléphone et votre ordinateur."],
-    ["agenda", "Votre agenda", "Les résultats et dividendes de vos valeurs, portefeuille d'abord."]];
+  const BEN = [["listes", "Vos favoris", "Les entreprises et les ETF que vous suivez, retrouvés en un clic."],
+    ["pf", "Partout pareil", "Vos favoris sur votre téléphone et votre ordinateur."],
+    ["agenda", "Votre agenda", "Les prochaines dates de résultats de vos favoris."]];
   app.innerHTML = `<div class="ek ek-page es4"><section class="ek-hero es4-hero"><div class="es4-l"><span class="mc-stk">Mon espace</span><h1 class="ag4-t">Vos valeurs, au même endroit.</h1>
       <p class="mc-sub">Gratuit, avec une adresse e-mail. Aucune donnée vendue ; vous pouvez supprimer votre compte à tout moment.</p>
       <div class="es4-ben">${BEN.map(([k, t, d]) => `<div>${ic(k)}<b>${esc(t)}</b><span>${esc(d)}</span></div>`).join("")}</div>
-      <p id="parexlk" class="es4-ex"><a href="/rapport-exemple">Voir un rapport de la semaine en exemple →</a></p></div>
+</div>
     <div class="es4-r"><h2 id="lt">Créer mon espace</h2>
       <form id="espf" class="espform es4-form"><label>Adresse e-mail<input type="email" name="email" required autocomplete="email"></label><label>Mot de passe <small class="light">(10 caractères minimum)</small><input type="password" name="mdp" required minlength="10" autocomplete="new-password"></label>
         <label class="es4-chk" id="cgu"><input type="checkbox" name="cgu" required> J'accepte les <a class="lnk" href="/cgv" target="_blank">conditions</a> et la <a class="lnk" href="/confidentialite" target="_blank">politique de confidentialité</a>.</label>
         <button class="btn" type="submit" id="espgo">Créer mon espace</button><p class="muted" id="espm" style="font-size:13.5px;margin:0"></p></form>
       <p class="es4-alt"><button type="button" class="linkbtn" id="swap">J'ai déjà un espace : me connecter</button> · <button type="button" class="linkbtn" id="lost">Mot de passe oublié</button></p></div></section></div>`;
   let mode = "inscription";
-  if (/[?&]payer=(mensuel|unique)/.test(location.search) && $("#espf")) $("#espf").insertAdjacentHTML("afterbegin", `<p style="margin:0 0 12px;border:2px solid #111;border-radius:12px;padding:10px 12px;background:#FFF6C7;font:600 13.5px/1.4 Inter"><b>Avant le paiement :</b> créez votre espace, ou connectez-vous. Votre abonnement Premium y sera rattaché, sur tous vos appareils.</p>`);
+  if (/[?&]payer=unique/.test(location.search) && $("#espf")) $("#espf").insertAdjacentHTML("afterbegin", `<p style="margin:0 0 12px;border:2px solid #111;border-radius:12px;padding:10px 12px;background:#FFF6C7;font:600 13.5px/1.4 Inter"><b>Avant le paiement :</b> créez votre espace, ou connectez-vous. Votre abonnement Premium y sera rattaché, sur tous vos appareils.</p>`);
   const f = $("#espf"), setMode = md => { mode = md; $("#lt").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Retrouver mon accès";
     $("#espgo").textContent = md === "inscription" ? "Créer mon espace" : md === "connexion" ? "Me connecter" : "Changer mon mot de passe"; $("#cgu").hidden = md !== "inscription"; $("input[name=cgu]", f).required = md === "inscription";
     $("#swap").textContent = md === "inscription" ? "J'ai déjà un espace : me connecter" : "Créer un espace";
@@ -901,47 +858,28 @@ function espaceConnexion() {
   $("#swap").onclick = () => setMode(mode === "inscription" ? "connexion" : "inscription");
   $("#lost").onclick = () => setMode("secours");
   f.onsubmit = async e => { e.preventDefault(); const fd = new FormData(f), email = fd.get("email"), mdp = fd.get("mdp"); $("#espm").textContent = "Un instant…";
-    const r = mode === "inscription" ? await post2("/api/espace/inscription", { email, motdepasse: mdp, favoris: favs(), portefeuille: pf2Load() }) : mode === "connexion" ? await post2("/api/espace/connexion", { email, motdepasse: mdp }) : await post2("/api/espace/secours", { email, code: fd.get("code"), nouveau: mdp });
+    const r = mode === "inscription" ? await post2("/api/espace/inscription", { email, motdepasse: mdp, favoris: favs() }) : mode === "connexion" ? await post2("/api/espace/connexion", { email, motdepasse: mdp }) : await post2("/api/espace/secours", { email, code: fd.get("code"), nouveau: mdp });
     if (r.error) { $("#espm").textContent = r.error; return; }
-    if (r.code_secours) { app.innerHTML = `<section class="panel" style="max-width:640px;margin:20px auto"><div class="pb"><h1 class="pagetitle" style="margin-top:0">Votre espace est créé</h1><p>Gardez ce <b>code de secours</b> : il permet de changer de mot de passe si vous l'oubliez. Il ne sera plus affiché.</p><p class="code">${esc(r.code_secours)}</p><a class="btn" href="/espace${/[?&]payer=(mensuel|unique)/.test(location.search) ? "?payer=" + new URLSearchParams(location.search).get("payer") : ""}">${/[?&]payer=/.test(location.search) ? "Continuer vers le paiement" : "Voir mon espace"}</a></div></section>`; MOI = null; window.ESP_SANS_PAYER = true; moi(true).then(() => { window.ESP_SANS_PAYER = false; }); return; }
+    if (r.code_secours) { app.innerHTML = `<section class="panel" style="max-width:640px;margin:20px auto"><div class="pb"><h1 class="pagetitle" style="margin-top:0">Votre espace est créé</h1><p>Gardez ce <b>code de secours</b> : il permet de changer de mot de passe si vous l'oubliez. Il ne sera plus affiché.</p><p class="code">${esc(r.code_secours)}</p><a class="btn" href="/espace${/[?&]payer=unique/.test(location.search) ? "?payer=" + new URLSearchParams(location.search).get("payer") : ""}">${/[?&]payer=/.test(location.search) ? "Continuer vers le paiement" : "Voir mon espace"}</a></div></section>`; MOI = null; window.ESP_SANS_PAYER = true; moi(true).then(() => { window.ESP_SANS_PAYER = false; }); return; }
     MOI = null; await moi(true); pageEspace(); };
 }
-// 4/11 (décision de Romain) : le rapport de la semaine et les alertes font partie de Premium, sans demi-version gratuite
-function espacePremiumSeul(el, onglet) {
-  const ic = k => typeof ou4Ic === "function" ? ou4Ic(k) : "";
-  const R0 = onglet === "bilan"
-    ? ["Votre semaine en 2 minutes.", "Chaque samedi, ce que vos entreprises et ETF ont publié, leurs cours face à leur secteur, les dates qui arrivent et ce qui a changé depuis la semaine dernière. Douze semaines gardées.", [["listes", "Vos valeurs, et seulement elles"], ["agenda", "Les dates de la semaine suivante"], ["alerte", "Ce qui a changé depuis la semaine dernière"]], "/rapport-exemple", "Voir un rapport exemple"]
-    : ["ENKLAIR surveille vos valeurs à votre place.", "Chaque soir de semaine, le site lit les publications officielles et vous prévient : résultats, mouvement de plus de 5 %, dernier jour pour toucher un dividende, plus haut ou plus bas sur un an.", [["listes", "Résultats publiés, chiffres à l'appui"], ["agenda", "Dernier jour pour toucher le dividende"], ["alerte", "Mouvement de plus de 5 %"]], "/premium#alertes", "Voir les alertes en détail"];
-  el.innerHTML = `<section class="ek es4-prem"><span class="mc-stk">Premium</span><h2>${R0[0]}</h2><p>${R0[1]}</p>
-    <div class="es4-ben">${R0[2].map(([k, t]) => `<div>${ic(k)}<b>${esc(t)}</b></div>`).join("")}</div>
-    <div class="es4-pact"><a class="btn" href="/premium">Passer à Premium · 39 € par an</a><a class="lnk" href="${R0[3]}">${R0[4]} →</a></div></section>`;
-}
-async function espaceAlertes(el, m) {
-  const j = await fetch("/api/espace/notifs", { credentials: "same-origin" }).then(r => r.json()).catch(() => ({ items: [] }));
-  const items = j.notifs || j.items || [];
-  fetch("/api/espace/notifs/lu", { method: "POST", credentials: "same-origin" }).then(() => { if (MOI) MOI.nonlus = 0; espaceBadge(); });
-  const ico = { annonce: "📄", mouvement: "↕", resultats: "📅", agenda: "📅", bilan: "✦", dividende: "€", record: "▲" };
-  // 4/11 (Premium) : sans Premium, les alertes portent sur 3 valeurs (favoris d'abord, puis portefeuille), comme le robot (ALERTES_GRATUIT de cf/src/espace.mjs).
-  const suivies = [...new Set([...favs(), ...pf2Load().l.map(l => l.k).filter(Boolean)])], max = m.alertes_max || 3;
-  const nomDe = k => { const c = k.startsWith("c:") && R && R.companies.find(x => x.id === k.slice(2)); const e = !c && k.startsWith("e:") && typeof ETF !== "undefined" && ETF.list && ETF.list.find(x => x.id === k.slice(2)); return (c || e || {}).name || null; };
-  const lim = !m.premium && suivies.length > max ? `<div class="pb upsell2"><b>Vos alertes portent sur ${max} valeurs sur ${suivies.length}</b> : ${esc(suivies.slice(0, max).map(nomDe).filter(Boolean).join(", "))}. <a class="btn" href="/premium#alertes">Suivre les ${suivies.length} avec Premium</a></div>` : "";
-  el.innerHTML = `<section class="panel"><div class="ph"><h2>Vos alertes</h2><span class="light" style="font-size:12.5px">mises à jour chaque soir de semaine</span></div>
-    ${lim}${items.length ? items.map(n => `<a class="notif${n.lu ? "" : " new"}" href="${esc(n.lien || "/espace")}"><span class="ni">${ico[n.type] || "•"}</span><span><b>${esc(n.texte)}</b><small class="light">${new Date(n.at).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}</small></span></a>`).join("") : `<div class="pb muted">Aucune alerte pour l'instant. Vous serez prévenu ici quand une de vos entreprises publiera ses comptes ou bougera de plus de 5 % en une séance.</div>`}
-    ${!m.premium ? `<div class="pb muted" style="font-size:13.5px">Avec Premium, deux alertes de plus : le dernier jour pour acheter et toucher un dividende annoncé, et le cours au plus haut ou au plus bas depuis un an. <a class="lnk" href="/premium#alertes">Voir Premium</a></div>` : ""}</section>`;
+async function pageEspace() {
+  setTitle("Mon espace"); setNav("esp");
+  app.innerHTML = `<div class="empty">Chargement…</div>`;
+  const m = await moi(true);
+  if (!m.connecte) return espaceConnexion();
+  app.innerHTML = `<div class="esphead esphead2"><div><p class="kick">Mon espace${m.premium ? " · Premium" : ` · <a class="lnk" href="/premium">passer à Premium</a>`}</p><h1 class="pagetitle" style="margin:2px 0 0">Votre compte</h1><p class="muted" style="margin:2px 0 0">${esc(m.email)}</p></div></div>
+    <nav class="esptabs scroll-x"><a href="/espace" class="on">Mon compte</a><a href="/favoris">Mes favoris</a></nav><div id="espb"></div>`;
+  espaceReglages($("#espb"), m);
 }
 function espaceReglages(el, m) {
   el.innerHTML = `<div class="two"><section class="panel"><div class="ph"><h2>Mot de passe</h2></div><div class="pb"><form id="mdpf" class="espform"><label>Mot de passe actuel<input type="password" name="a" required autocomplete="current-password"></label><label>Nouveau mot de passe<input type="password" name="n" required minlength="10" autocomplete="new-password"></label><button class="btn">Changer</button><p class="muted" id="mdpm" style="font-size:13.5px;margin:0"></p></form></div></section>
-    <section class="panel"><div class="ph"><h2>Préférences</h2></div><div class="pb">${m.mail && m.premium ? `<label class="chk"><input type="checkbox" id="rapmail"${((m.donnees || {}).profil || {}).rapportMail === false ? "" : " checked"}> Recevoir un e-mail quand mon rapport de la semaine est prêt.</label>` : ""}
-      ${m.mail ? (m.premium ? `<label class="chk"><input type="checkbox" id="almail"${((m.donnees || {}).profil || {}).alertesMail === false ? "" : " checked"}> Recevoir un e-mail le soir même quand une valeur de mon portefeuille ou de mes favoris chute de plus de 5 %.</label>` : `<p class="muted" style="font-size:13.5px">Avec <a class="lnk" href="/premium#alertes">Premium</a>, un e-mail vous prévient le soir même quand une valeur de votre portefeuille ou de vos favoris chute de plus de 5 %, et votre rapport arrive chaque semaine.</p>`) : ""}
-      <p style="margin:16px 0 0"><a class="lnk" href="/espace/ia">L'IA du site</a> : réponses calculées, et réponses rédigées gratuites pour les questions libres.</p>
-      <div style="margin-top:16px;display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button></div></div></section></div>
-    ${m.premium ? `<section class="panel" id="abo"><div class="ph"><h2>Mon abonnement</h2></div><div class="pb"><p style="margin-top:0">${m.plan === "proprietaire" ? "Compte du propriétaire : Premium sans abonnement." : m.plan === "annuel" ? `Premium annuel, renouvelé chaque année jusqu'à sa résiliation${m.premium_jusqu_au ? ` (payé jusqu'au ${esc(dLabel(new Date(m.premium_jusqu_au).toISOString()))})` : ""}.` : m.plan === "mensuel" ? `Premium mensuel (4,90 € par mois)${m.premium_jusqu_au ? `, payé jusqu'au ${esc(dLabel(new Date(m.premium_jusqu_au).toISOString()))}` : ""}. Il se renouvelle chaque mois jusqu'à sa résiliation.` : `Premium pour un an (39 €, payé une fois, sans renouvellement)${m.premium_jusqu_au ? ` : jusqu'au ${esc(dLabel(new Date(m.premium_jusqu_au).toISOString()))}` : ""}.`}</p>
+    <section class="panel"><div class="ph"><h2>Session</h2></div><div class="pb"><p class="muted" style="margin-top:0">Vos favoris sont enregistrés dans votre espace et retrouvés sur tous vos appareils.</p>
+      <div style="display:flex;gap:14px;flex-wrap:wrap"><button class="btn ghost" id="logout">Me déconnecter</button></div></div></section></div>
+    ${m.premium ? `<section class="panel" id="abo"><div class="ph"><h2>Mon abonnement</h2></div><div class="pb"><p style="margin-top:0">${m.plan === "proprietaire" ? "Compte du propriétaire : Premium sans abonnement." : m.plan === "annuel" ? `Premium annuel, renouvelé chaque année jusqu'à sa résiliation${m.premium_jusqu_au ? ` (payé jusqu'au ${esc(dLabel(new Date(m.premium_jusqu_au).toISOString()))})` : ""}.` : m.plan === "mensuel" ? `Premium mensuel${m.premium_jusqu_au ? `, payé jusqu'au ${esc(dLabel(new Date(m.premium_jusqu_au).toISOString()))}` : ""}. Il se renouvelle chaque mois jusqu'à sa résiliation.` : `Premium pour un an (payé une fois, sans renouvellement)${m.premium_jusqu_au ? ` : jusqu'au ${esc(dLabel(new Date(m.premium_jusqu_au).toISOString()))}` : ""}.`}</p>
       ${m.resiliable || m.plan === "mensuel" || m.plan === "annuel" ? `<button class="btn" id="portail2">Gérer ou résilier mon abonnement</button><p class="muted" style="font-size:13px;margin:8px 0 0">La résiliation prend effet à la fin de la période déjà payée : Premium reste ouvert jusque-là, plus rien n'est prélevé ensuite.</p><p id="portm" class="muted"></p>` : ""}</div></section>` : ""}
-    <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte, vos favoris, votre portefeuille, vos bilans et vos alertes sont effacés définitivement. ${m.resiliable || m.plan === "mensuel" || m.plan === "annuel" ? "<b>Résiliez d'abord votre abonnement</b> (encadré « Mon abonnement ») : sinon il continuerait d'être prélevé. La suppression est refusée tant qu'il est actif." : m.plan === "unique" ? "Votre Premium payé pour un an est rattaché à ce compte : il serait perdu, sans remboursement automatique." : ""}</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
+    <section class="panel"><div class="ph"><h2>Supprimer mon espace</h2></div><div class="pb"><p class="muted" style="margin-top:0">Votre compte et vos favoris sont effacés définitivement. ${m.resiliable || m.plan === "mensuel" || m.plan === "annuel" ? "<b>Résiliez d'abord votre abonnement</b> (encadré « Mon abonnement ») : sinon il continuerait d'être prélevé. La suppression est refusée tant qu'il est actif." : m.plan === "unique" ? "Votre Premium payé pour un an est rattaché à ce compte : il serait perdu, sans remboursement automatique." : ""}</p><form id="delf" class="espform" style="max-width:420px"><label>Mot de passe<input type="password" name="p" required autocomplete="current-password"></label><button class="btn danger">Supprimer définitivement</button><p class="muted" id="delm" style="font-size:13.5px;margin:0"></p></form></div></section>`;
   $("#mdpf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/motdepasse", { ancien: fd.get("a"), nouveau: fd.get("n") }); $("#mdpm").textContent = r.error || "Mot de passe changé."; };
-  if ($("#teas")) $("#teas").onchange = e => post2("/api/espace/preferences", { teaser: e.target.checked });
-  if ($("#rapmail")) $("#rapmail").onchange = e => post2("/api/espace/preferences", { rapport_mail: e.target.checked }).then(r => toast(r.ok ? "Réglage enregistré." : "Réglage non enregistré."));
-  if ($("#almail")) $("#almail").onchange = e => post2("/api/espace/preferences", { alertes_mail: e.target.checked }).then(r => toast(r.ok ? (e.target.checked ? "Alertes par e-mail activées." : "Alertes par e-mail coupées.") : "Réglage non enregistré."));
   $("#logout").onclick = async () => { await post2("/api/espace/deconnexion"); MOI = { connecte: false }; document.documentElement.classList.remove("is-in"); espaceBadge(); go("/"); };
   if ($("#portail2")) $("#portail2").onclick = async () => { const P = $("#portail2"); P.disabled = true; try { const j = await (await iaFetch("/api/premium/portail")).json(); if (j.url) { location.href = j.url; return; } $("#portm").textContent = j.error || "Portail indisponible."; } catch (e) { $("#portm").textContent = "Portail indisponible pour le moment."; } P.disabled = false; };
   $("#delf").onsubmit = async e => { e.preventDefault(); const fd = new FormData(e.target); const r = await post2("/api/espace/supprimer", { motdepasse: fd.get("p") }); if (r.error) { $("#delm").textContent = r.error; return; } MOI = { connecte: false }; espaceBadge(); app.innerHTML = `<section class="panel"><div class="pb"><p class="lead" style="margin:0">Votre espace a été supprimé. Les favoris enregistrés sur cet appareil restent ici tant que vous ne videz pas votre navigateur.</p></div></section>`; };
@@ -994,7 +932,6 @@ document.addEventListener("click", e => { if (e.target.closest(".favx") && locat
    avec les données du site : réponse instantanée, aucun appel au modèle, aucun quota. Le modèle ne sert qu'aux
    questions vraiment libres.
    ==================================================================================================== */
-const strip = h => String(h || "").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/\s+/g, " ").trim();
 const has = (q, re) => re.test(q);
 
 /* Le moteur local (localCopilot, localAssist, termeDe, chercheLecons…) est dans /ia.js. */
@@ -1020,18 +957,6 @@ document.addEventListener("pointermove", e => { if (e.pointerType !== "mouse" &&
 window.addEventListener("scroll", () => { if (CTIP.style.display === "block" && tipOn) { CTIP.style.display = "none"; tipOn.classList.remove("on"); tipOn = null; } }, { passive: true });
 
 /* ---------- Profil du questionnaire, utilisé par les analyses ---------- */
-let COMMP = null;
-async function profilInvestisseur() {
-  let ans = null; try { ans = JSON.parse(localStorage.getItem("bilan.profil") || "null"); } catch (e) { }
-  if ((!ans || !Object.keys(ans).length) && MOI && MOI.donnees && MOI.donnees.profil) ans = MOI.donnees.profil;
-  if (!ans || Object.keys(ans).length < 5) return null;
-  if (!COMMP) COMMP = await fetch("/data/commencer.json").then(r => r.json()).catch(() => null);
-  if (!COMMP) return null;
-  const sc = Object.fromEntries(COMMP.profils.map(p => [p.id, 0]));
-  COMMP.questions.forEach(q => { const o = q.options[ans[q.id]]; if (o) Object.entries(o.points).forEach(([k, v]) => sc[k] = (sc[k] || 0) + v); });
-  const order = COMMP.profils.map(p => p.id), best = order.reduce((a, b) => sc[b] > sc[a] ? b : a, order[0]);
-  return { id: best, titre: COMMP.profils.find(p => p.id === best).titre, ans };
-}
 
 /* ---------- Portefeuille : vos habitudes (courtier, enveloppe, versements) et le profil ---------- */
 
@@ -1041,7 +966,6 @@ async function profilInvestisseur() {
    v11 : l'Académie (cours de culture financière, quiz, progression) et la formation guidée Premium
    ==================================================================================================== */
 let ACA = null, ACAP = null;
-const acaLoad = () => ACA ? Promise.resolve(ACA) : (ACAP = ACAP || fetch("/data/academie.json").then(r => r.json()).then(j => ACA = j).catch(() => null));
 
 
 /* ====================================================================================================
@@ -1064,7 +988,8 @@ const PAGES_PARTIES = [
   [/^\/(communaute|pronostics)$/, "/outils"],
   [/^\/hier$/, "/actualites"],
   [/^\/(demander|ia\/connecter)$/, "/"],
-  [/^\/espace\/ia$/, "/espace"]];
+  [/^\/(portefeuille|rapport-exemple|connecteur)$/, "/"],
+  [/^\/espace\/(ia|bilan|alertes|rapport)$/, "/espace"]];
 function route() {
   closeDef();
   const p = location.pathname.replace(/\/+$/, "") || "/";
@@ -1086,7 +1011,6 @@ function route() {
   else if ((m = p.match(/^\/etf\/([a-z0-9-]+)$/))) pageEtf(m[1]);
   else if (p === "/actualites") pageActus();
   else if (p === "/agenda") pageAgenda();
-  else if (p === "/portefeuille") pagePortefeuille();
   else if (p === "/lexique") pageLexique();
   else if (p === "/favoris") pageFavoris();
   else if (p === "/comparer") pageComparer();
@@ -1095,7 +1019,7 @@ function route() {
   else if ((m = p.match(/^\/outils(?:\/([a-z-]+))?$/))) pageOutils(m[1]);
   else if (LEGAL_PAGES[p]) pageLegal(p);
   else if (p === "/methode") pageMethode();
-  else if ((m = p.match(/^\/espace(?:\/(bilan|alertes|reglages))?$/))) pageEspace(m[1]);
+  else if ((m = p.match(/^\/espace(?:\/(reglages))?$/))) pageEspace(m[1]);
   else if ((m = p.match(/^\/premium(?:\/(merci))?$/))) pagePremium(m[1]);
   else if (ROUTES_EXTRA.some(([re, fn]) => { const mm = p.match(re); if (mm) fn(...mm.slice(1)); return !!mm; })) { }
   else pageNotFound();

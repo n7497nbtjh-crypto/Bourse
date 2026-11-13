@@ -81,7 +81,7 @@ function pwaPeutInviter() {
   try { if (sessionStorage.getItem("bilan.pwa.vue")) return; } catch (e) { }
   if (!(PWA_INVITE || (PWA_IOS && /Safari\//.test(navigator.userAgent) && !/CriOS|FxiOS|EdgiOS/.test(navigator.userAgent)))) return;
   if ((+PWA_LS("visites") || 0) < 2 && PWA_PAGES < 3) return; // pas à la première page d'une première visite
-  if (/^\/(espace|premium|connecteur)/.test(location.pathname) && location.pathname !== "/espace/reglages") return;
+  if (/^\/(espace|premium)/.test(location.pathname)) return;
   try { sessionStorage.setItem("bilan.pwa.vue", "1"); } catch (e) { }
   const t = PWA_INVITE ? `<b>Installez ENKLAIR sur cet appareil</b><span>Ouverture en un geste, lecture hors ligne et alertes sur vos entreprises.</span>`
     : `<b>Ajoutez ENKLAIR à votre écran d'accueil</b><span>Touchez ${PWA_PARTAGE} Partager, puis « Sur l'écran d'accueil ».</span>`;
@@ -112,9 +112,7 @@ async function pwaDesabonnerLocal() {
   try { const s = await pwaAbonnementLocal(); if (!s) return; await post2("/api/push/desabonnement", { endpoint: s.endpoint }).catch(() => { }); await s.unsubscribe(); } catch (e) { }
 }
 
-/* Onglet « Alertes » : le bloc des notifications en tête ; « Réglages » : l'application et le connecteur IA. */
-const PWA_ALERTES = typeof espaceAlertes === "function" ? espaceAlertes : null;
-if (PWA_ALERTES) espaceAlertes = async function (el, m) { await PWA_ALERTES(el, m); }; // 7/11 (Romain) : les alertes partent par e-mail, plus de notification sur le téléphone proposée
+/* Mon espace : à la déconnexion, plus de notifications de ce compte sur cet appareil. */
 const PWA_REGLAGES = typeof espaceReglages === "function" ? espaceReglages : null;
 if (PWA_REGLAGES) espaceReglages = function (el, m) {
   const r = PWA_REGLAGES(el, m);
@@ -124,7 +122,7 @@ if (PWA_REGLAGES) espaceReglages = function (el, m) {
   if (del && del.onsubmit) { const o = del.onsubmit; del.onsubmit = async e => { await o.call(del, e); if (typeof MOI === "object" && MOI && MOI.connecte === false) pwaDesabonnerLocal(); }; }
   const s = document.createElement("section"); s.className = "panel"; s.id = "pwaapp";
   const inst = PWA_SEUL() || PWA_LS("installe");
-  s.innerHTML = `<div class="ph"><h2>Application</h2></div><div class="pb"><div class="pwa-acts" style="margin-bottom:10px">${inst ? `<span class="pwa-etat on"><i></i>ENKLAIR est installé</span>` : PWA_INVITE ? `<button type="button" class="btn" id="pwainst">Installer ENKLAIR sur cet appareil</button>` : ""}<a class="btn ghost" href="/espace/alertes">Mes alertes</a><a class="btn ghost" href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a></div>
+  s.innerHTML = `<div class="ph"><h2>Application</h2></div><div class="pb"><div class="pwa-acts" style="margin-bottom:10px">${inst ? `<span class="pwa-etat on"><i></i>ENKLAIR est installé</span>` : PWA_INVITE ? `<button type="button" class="btn" id="pwainst">Installer ENKLAIR sur cet appareil</button>` : ""}</div>
     <p class="muted" style="margin:0;font-size:13.5px">${inst ? "Ouvrez ENKLAIR depuis son icône : les pages déjà vues restent lisibles sans connexion." : PWA_IOS ? `Sur iPhone et iPad : touchez ${PWA_PARTAGE} Partager, puis « Sur l'écran d'accueil ».` : PWA_INVITE ? "L'application s'ouvre en un geste depuis votre écran d'accueil et reste lisible sans connexion." : "Dans Chrome ou Edge, le menu du navigateur propose « Installer ENKLAIR » ; sur iPhone, « Sur l'écran d'accueil » dans le menu Partager."}</p></div>`;
   const sup = del && del.closest("section");
   if (sup && sup.parentElement === el) el.insertBefore(s, sup); else el.appendChild(s);
@@ -132,106 +130,8 @@ if (PWA_REGLAGES) espaceReglages = function (el, m) {
   return r;
 };
 
-/* ---------- Pied de page : liens ---------- */
-(() => { const f = document.querySelector("footer .f > div:last-child"); if (f && !f.querySelector('a[href="/connecteur"]')) f.insertAdjacentHTML("beforeend", `<a href="/connecteur">Utiliser ENKLAIR dans ChatGPT ou Claude</a>`); })();
-
 /* ---------- Page /connecteur : ENKLAIR dans Claude, ChatGPT et les autres assistants ---------- */
-const PWA_OUTILS = [
-  ["fiche_entreprise", "Lire les comptes d'une entreprise", "Les chiffres clés des derniers comptes officiels, la médiane du secteur et le repère vert, gris ou orange de chacun.", "Que disent les derniers comptes de Schneider Electric ?"],
-  ["comparer_entreprises", "Comparer", "Jusqu'à six entreprises côte à côte, sur les mêmes chiffres et avec leur place dans le secteur.", "Compare la marge et la dette de LVMH, Hermès et Kering."],
-  ["eligibilite_pea", "Vérifier l'éligibilité au PEA", "Pour une action ou un ETF, avec la règle qui s'applique et sa source.", "Puis-je mettre ASML dans mon PEA ?"],
-  ["etf", "Choisir parmi les ETF", "Frais, indice, PEA, distribution, et la composition quand elle est publiée.", "Quels ETF MSCI World éligibles au PEA coûtent le moins cher ?"],
-  ["calendrier", "Suivre l'agenda", "Résultats, dividendes et assemblées à venir, avec la source de chaque date.", "Quelles entreprises publient leurs résultats cette semaine ?"],
-  ["lecon", "Apprendre", "La leçon de l'Académie qui répond à la question, avec un exemple chiffré.", "Explique-moi les intérêts composés avec un exemple."],
-  ["rechercher_entreprise", "Trouver une entreprise", "Par son nom, son ticker, son ISIN ou un mot de son activité.", "Trouve les entreprises françaises de la défense."],
-];
-function pageConnecteur() {
-  setTitle("Utiliser ENKLAIR dans ChatGPT ou Claude"); setNav("");
-  const url = location.origin + "/mcp", dans = PWA_LS("onglet") || "claude";
-  app.innerHTML = `<div class="crumbs"><a href="/">Accueil</a> › ENKLAIR dans ChatGPT ou Claude</div>
-    <section class="pwa-hero"><p class="kick">Connecteur IA · Premium · lecture seule</p>
-      <h1>Utiliser ENKLAIR dans ChatGPT ou Claude</h1>
-      <p class="lead">Ajoutez ENKLAIR à votre assistant IA. Il lit alors les comptes officiels de plus de 2 400 entreprises, la médiane de leur secteur${typeof frSeul === "function" && !frSeul() ? "" : ", l'éligibilité au PEA"}, les ETF et l'agenda. Il calcule à partir de ces données au lieu d'inventer, et il cite ses sources.</p>
-      <div class="pwa-url"><code id="pwaurl">${esc(url)}</code><button type="button" class="btn" id="pwacopie">Copier l'adresse</button></div>
-      <p class="note" style="margin:6px 0 0"><b>Le connecteur fait partie de Premium.</b> Abonné, utilisez votre adresse personnelle (<a class="lnk" href="/ia/connecter">la copier</a>) à la place de celle-ci. Protocole ouvert MCP (Model Context Protocol), reconnu par Claude, ChatGPT et la plupart des assistants.</p></section>
-
-    <section class="panel"><div class="ph"><h2>L'ajouter en deux minutes</h2></div><div class="pb">
-      <div class="pwa-tabs" role="tablist">${[["claude", "Claude"], ["chatgpt", "ChatGPT"], ["autres", "Claude Code et autres"]].map(([k, l]) => `<button type="button" role="tab" data-ong="${k}" aria-selected="${k === dans}" class="${k === dans ? "on" : ""}">${l}</button>`).join("")}</div>
-      <div data-pan="claude"${dans === "claude" ? "" : " hidden"}><ol class="pwa-steps">
-        <li>Sur claude.ai ou dans l'application Claude pour ordinateur, ouvrez <b>Personnaliser</b>, puis <b>Connecteurs</b>.</li>
-        <li>Cliquez sur <b>+</b>, puis <b>Ajouter un connecteur personnalisé</b>.</li>
-        <li>Nom : <b>ENKLAIR</b> · Adresse : <code>${esc(url)}</code>. Pas d'authentification à configurer.</li>
-        <li>Dans une conversation, cliquez sur <b>+</b> en bas à gauche, puis <b>Connecteurs</b>, et activez ENKLAIR</li></ol>
-        <p class="note">Disponible avec les offres Free (un connecteur personnalisé), Pro, Max, Team et Enterprise. Sur Team et Enterprise, un propriétaire de l'organisation l'ajoute d'abord dans les paramètres de l'organisation. Les intitulés peuvent changer : <a class="lnk" href="https://support.claude.com/en/articles/11175166-getting-started-with-custom-connectors-using-remote-mcp" target="_blank" rel="noopener">aide de Claude</a>.</p></div>
-      <div data-pan="chatgpt"${dans === "chatgpt" ? "" : " hidden"}><ol class="pwa-steps">
-        <li>Dans ChatGPT sur le web, ouvrez <b>Paramètres</b>, puis <b>Applications et connecteurs</b>.</li>
-        <li>Dans <b>Paramètres avancés</b>, activez le <b>mode développeur</b>.</li>
-        <li>Cliquez sur <b>Créer</b> : nom <b>ENKLAIR</b>, adresse <code>${esc(url)}</code>, authentification <b>aucune</b>.</li>
-        <li>Dans une conversation, choisissez ENKLAIR dans le menu des outils, puis posez votre question.</li></ol>
-        <p class="note">Disponible avec les offres Plus, Pro, Business, Enterprise et Edu. Sans le mode développeur, ChatGPT peut utiliser ENKLAIR comme source de recherche approfondie (outils search et fetch). Les intitulés peuvent changer d'une version à l'autre.</p></div>
-      <div data-pan="autres"${dans === "autres" ? "" : " hidden"}><p style="margin:0 0 6px">Claude Code, en une commande :</p><code class="pwa-cmd">claude mcp add --transport http bilan ${esc(url)}</code>
-        <p style="margin:12px 0 6px">Cursor, VS Code, Windsurf et les autres clients MCP : ajoutez un serveur distant « Streamable HTTP » avec cette adresse, sans authentification.</p><code class="pwa-cmd">{ "mcpServers": { "bilan": { "url": "${esc(url)}" } } }</code></div>
-    </div></section>
-
-    <section class="panel"><div class="ph"><h2>Ce que votre assistant peut faire</h2><span class="light" style="font-size:12.5px">${PWA_OUTILS.length - (typeof frSeul === "function" && !frSeul() ? 1 : 0)} outils, plus search et fetch pour ChatGPT</span></div><div class="pb"><div class="pwa-tools">
-      ${PWA_OUTILS.filter(([n]) => n !== "eligibilite_pea" || typeof frSeul !== "function" || frSeul()).map(([n, t, d, q]) => typeof frSeul === "function" && !frSeul() ? [n, t, d.replace("Frais, indice, PEA, distribution", "Frais, indice, distribution"), q.replace(" éligibles au PEA", "")] : [n, t, d, q]).map(([n, t, d, q]) => `<div class="pwa-tool"><h3>${t}</h3><p>${d}</p><q>${q}</q><code>${n}</code></div>`).join("")}</div></div></section>
-
-    <section class="panel"><div class="ph"><h2>Voir ce que reçoit l'assistant</h2></div><div class="pb">
-      <p style="margin:0 0 10px">Tapez une entreprise : voici, mot pour mot, la réponse que le connecteur envoie à Claude ou à ChatGPT.</p>
-      <form class="pwa-try" id="pwatry"><input id="pwaq" value="Air Liquide" aria-label="Entreprise" autocomplete="off"><button class="btn">Interroger le connecteur</button></form>
-      <pre class="pwa-out" id="pwaout" hidden></pre></div></section>
-
-    <section class="panel"><div class="ph"><h2>Les garde-fous</h2></div><div class="pb"><div class="pwa-garde">
-      <div><b>Information, pas conseil</b><span>Chaque réponse rappelle qu'il s'agit d'information. Les repères vert, gris et orange décrivent les comptes passés selon des <a class="lnk" href="/methode">seuils publiés</a>, pas l'intérêt d'acheter.</span></div>
-      <div><b>Des sources à chaque réponse</b><span>Rapports annuels officiels (ESEF, SEC), calendriers des entreprises, et le lien vers la page ENKLAIR pour vérifier.</span></div>
-      <div><b>Lecture seule, sans données personnelles</b><span>Pas de compte, pas d'écriture. L'adresse IP ne sert, sous forme d'empreinte anonyme renouvelée chaque jour, qu'à limiter le débit.</span></div></div>
-      <p class="note">L'assistant reste responsable de ce qu'il écrit : vérifiez les chiffres importants sur la fiche ENKLAIR dont il donne le lien.</p></div></section>
-
-    <section class="panel"><details class="acc"><summary class="ph" style="cursor:pointer"><h2>Détails techniques</h2></summary><div class="pb" style="font-size:14px;line-height:1.55">
-      <p style="margin-top:0">Serveur MCP distant, transport <b>Streamable HTTP</b> (JSON-RPC 2.0 en POST sur <code>/mcp</code>), sans session ni authentification. Versions du protocole : 2025-11-25, 2025-06-18, 2025-03-26 et 2024-11-05. Méthodes : initialize, ping, tools/list, tools/call. Chaque outil renvoie un texte lisible et des données structurées (structuredContent).</p>
-      <p>Données : les mêmes fichiers que le site, mis à jour chaque jour par les robots de collecte. Débit : 240 appels par minute et 30 000 par jour pour une même adresse. Accès depuis un navigateur autorisé (CORS).</p>
-      <code class="pwa-cmd">curl -s ${esc(url)} -H 'content-type: application/json' -H 'accept: application/json, text/event-stream' \\
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"eligibilite_pea","arguments":{"titre":"ASML"}}}'</code></div></details></section>`;
-  $$("[data-ong]").forEach(b => b.onclick = () => { PWA_SET("onglet", b.dataset.ong); $$("[data-ong]").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-selected", x === b); }); $$("[data-pan]").forEach(p => p.hidden = p.dataset.pan !== b.dataset.ong); });
-  $("#pwacopie").onclick = async () => { try { await navigator.clipboard.writeText(url); toast("Adresse copiée : collez-la dans les réglages de votre assistant."); } catch (e) { const r = document.createRange(); r.selectNodeContents($("#pwaurl")); const s = getSelection(); s.removeAllRanges(); s.addRange(r); toast("Adresse sélectionnée : copiez-la avec Ctrl+C."); } };
-  $("#pwatry").onsubmit = async e => {
-    e.preventDefault(); const q = $("#pwaq").value.trim(), out = $("#pwaout"); if (!q) return;
-    out.hidden = false; out.textContent = "Interrogation du connecteur…";
-    try {
-      const r = await fetch("/mcp", { method: "POST", headers: { "content-type": "application/json", accept: "application/json, text/event-stream" }, body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "fiche_entreprise", arguments: { entreprise: q } } }) });
-      const j = await r.json(); out.textContent = j.result ? j.result.content.map(c => c.text).join("\n") : (j.error && j.error.message) || "Réponse inattendue.";
-    } catch (x) { out.textContent = "Le connecteur ne répond pas pour le moment. Réessayez dans un instant."; }
-  };
-}
-if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/connecteur$/, () => pageConnecteur()]);
 
 /* ---------- /ia/connecter (5e passage, C) : brancher Claude ou ChatGPT sur ENKLAIR en trois étapes ----------
    Connecteur réservé à Premium depuis le 4/11 (adresse personnelle /mcp/<clé> d'un compte Premium ; sinon chaque outil renvoie l'explication). Les illustrations sont
    des schémas du site, pas des captures d'écran de Claude ou de ChatGPT (dont les écrans changent souvent). */
-const IAC_SCH = {
-  copier: `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="38" width="150" height="40" rx="10" fill="#fff" stroke="#E2DCCF"/><text x="22" y="63" font-size="12" fill="#55524C" font-family="monospace">…/mcp/a3f9…</text><rect x="166" y="38" width="44" height="40" rx="10" fill="#111214"/><path d="M180 52h10v12h-10zM184 48h10v12" fill="none" stroke="#fff" stroke-width="1.6"/></svg>`,
-  ajouter: `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="10" width="200" height="100" rx="12" fill="#fff" stroke="#E2DCCF"/><text x="24" y="34" font-size="12" font-weight="700" fill="#111214" font-family="sans-serif">Connecteurs</text><rect x="24" y="46" width="172" height="22" rx="6" fill="#F1ECE1"/><text x="32" y="61" font-size="11" fill="#55524C" font-family="sans-serif">Nom : ENKLAIR</text><rect x="24" y="74" width="172" height="22" rx="6" fill="#F1ECE1"/><text x="32" y="89" font-size="11" fill="#55524C" font-family="sans-serif">Adresse : collée</text><circle cx="190" cy="30" r="9" fill="#C6F432"/><path d="M186 30h8M190 26v8" stroke="#111214" stroke-width="1.6"/></svg>`,
-  demander: `<svg viewBox="0 0 220 120" aria-hidden="true"><rect x="10" y="10" width="200" height="100" rx="12" fill="#fff" stroke="#E2DCCF"/><rect x="24" y="22" width="130" height="24" rx="12" fill="#F1ECE1"/><text x="34" y="38" font-size="10.5" fill="#111214" font-family="sans-serif">Marge LVMH ou Hermès ?</text><rect x="64" y="54" width="132" height="42" rx="10" fill="#E6F3EB"/><text x="74" y="72" font-size="10" fill="#0E6B4A" font-family="sans-serif">Hermès 41 %, LVMH 22 %</text><text x="74" y="87" font-size="9" fill="#55524C" font-family="sans-serif">source : comptes 2025</text></svg>`,
-};
-async function pageIaConnecter() {
-  setTitle("Brancher votre IA sur ENKLAIR"); setNav("");
-  app.innerHTML = `<div class="empty">Chargement…</div>`;
-  let me = null; try { const r = await fetch("/api/espace/mcp", { credentials: "same-origin" }); if (r.ok) me = await r.json(); } catch (e) { }
-  const dans = PWA_LS("onglet") === "chatgpt" ? "chatgpt" : "claude";
-  const adr = me && me.adresse;
-  const ETAPES = { claude: [["copier", "Copiez votre adresse", "Votre adresse personnelle de connecteur, ci-dessus."], ["ajouter", "Ajoutez ENKLAIR dans Claude", "Personnaliser, puis Connecteurs, puis + et « Ajouter un connecteur personnalisé ». Nom : ENKLAIR ; adresse : la vôtre ; pas d'authentification."], ["demander", "Posez votre question", "Dans une conversation : +, Connecteurs, activez ENKLAIR Puis demandez, par exemple, « compare la marge de LVMH et d'Hermès »."]],
-    chatgpt: [["copier", "Copiez votre adresse", "Votre adresse personnelle de connecteur, ci-dessus."], ["ajouter", "Créez le connecteur dans ChatGPT", "Paramètres, Applications et connecteurs, Paramètres avancés : activez le mode développeur, puis « Créer ». Nom : ENKLAIR ; adresse : la vôtre ; authentification : aucune."], ["demander", "Posez votre question", "Dans une conversation, choisissez ENKLAIR dans le menu des outils, puis posez votre question."]] };
-  app.innerHTML = `<div class="crumbs"><a href="/premium">Premium</a> › Brancher votre IA</div>
-    <h1 class="pagetitle">Gardez votre IA : branchez-la sur ENKLAIR</h1>
-    <p class="pagesub">Votre assistant lit alors les comptes officiels, les médianes du secteur et l'agenda d'ENKLAIR au lieu de répondre de mémoire, et cite ses sources. Lecture seule : il ne voit ni votre compte ni votre portefeuille.</p>
-    <section class="panel iac-adr"><div class="pb">${adr ? `<p class="kick">Votre adresse personnelle</p><div class="pwa-url"><code id="iacurl">${esc(adr)}</code><button type="button" class="btn" id="iaccopie">Copier</button></div>
-      <p class="note" style="margin:8px 0 0">${me.premium ? "Premium : sans limite d'appels par jour." : `Le connecteur fait partie de Premium : sans abonnement, votre assistant reçoit seulement un message d'explication. <a class="lnk" href="/premium">Voir Premium</a>.`} Gardez cette adresse pour vous. <button type="button" class="linkbtn" id="iacnew">En changer</button></p>`
-      : `<p class="kick">Votre adresse personnelle</p><p style="margin:4px 0 10px">Elle s'obtient avec un espace, et fonctionne avec Premium.</p><a class="btn" href="/espace">Créer mon espace gratuit</a>`}</div></section>
-    <div class="pwa-tabs iac-tabs" role="tablist">${[["claude", "Claude"], ["chatgpt", "ChatGPT"]].map(([k, l]) => `<button type="button" role="tab" data-iac="${k}" aria-selected="${k === dans}" class="${k === dans ? "on" : ""}">${l}</button>`).join("")}</div>
-    ${Object.entries(ETAPES).map(([k, L]) => `<ol class="iac-st" data-iacp="${k}"${k === dans ? "" : " hidden"}>${L.map(([sch, t, d], i) => `<li><span class="iac-n">${i + 1}</span><div class="iac-sch">${IAC_SCH[sch]}</div><b>${esc(t)}</b><p>${esc(d)}</p></li>`).join("")}</ol>`).join("")}
-    <p class="note">Schémas du site, pas des captures d'écran : les intitulés de Claude et de ChatGPT changent d'une version à l'autre. Claude Code, Cursor et les autres clients : <a class="lnk" href="/connecteur">instructions détaillées</a>.</p>`;
-  $$("[data-iac]").forEach(b => b.onclick = () => { $$("[data-iac]").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-selected", x === b); }); $$("[data-iacp]").forEach(o => o.hidden = o.dataset.iacp !== b.dataset.iac); try { localStorage.setItem("bilan.pwa.onglet", b.dataset.iac); } catch (e) { } });
-  const cp = $("#iaccopie"); if (cp) cp.onclick = () => { try { navigator.clipboard.writeText($("#iacurl").textContent); toast("Adresse copiée."); } catch (e) { } };
-  const nw = $("#iacnew"); if (nw) nw.onclick = async () => { if (!confirm("Changer d'adresse ? L'ancienne cessera de fonctionner dans votre assistant.")) return; try { await fetch("/api/espace/mcp", { method: "POST", credentials: "same-origin" }); } catch (e) { } pageIaConnecter(); };
-}
-if (typeof ROUTES_EXTRA !== "undefined") ROUTES_EXTRA.push([/^\/ia\/connecter$/, () => pageIaConnecter()]);

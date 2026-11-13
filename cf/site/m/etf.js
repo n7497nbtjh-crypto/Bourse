@@ -76,11 +76,5 @@ function ETF_voisins(e) {
   const cat = ETF.list.filter(x => x.id !== e.id && !same.includes(x) && x.categorie === e.categorie && x.ter != null && !x.levier && (e.pea !== true || x.pea === true)).sort((a, b) => (b.encours || 0) - (a.encours || 0));
   return { same, cat };
 }
-function ETF_ajoutPf(e) {
-  if (typeof pf2Load !== "function" || typeof pf2Save !== "function") { go("/portefeuille"); return; }
-  const P = pf2Load(), k = "e:" + e.id;
-  if (!P.l.some(l => l.k === k)) { if (typeof pfFull === "function" && pfFull(P)) { toast(`Votre portefeuille est plein. <a href="/portefeuille">Le voir</a>`); return; } const p = typeof PX === "object" && PX[k]; P.l.push(p ? { k, q: 10, pru: Math.round(p.p * 100) / 100 } : { k, m: 1000 }); pf2Save(P); }
-  toast(`${esc(e.name)} est dans votre portefeuille. <a href="/portefeuille">Ajuster le montant</a>`);
-}
 /* styles : voir site.css */
 /* Fiche d'un ETF : m/etf4.js (3/11/2026). */

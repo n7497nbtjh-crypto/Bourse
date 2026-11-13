@@ -10,7 +10,7 @@
 const { ouvrir, aller } = require("./_site"), fs = require("fs");
 const PAGES = process.argv.slice(2).length ? process.argv.slice(2) : ["/", "/entreprises", "/entreprise/lvmh", "/entreprise/bnp-paribas", "/comparer?ids=lvmh,hermes,kering", "/comparer", "/etf", "/etf/amundi-msci-world-pea", "/marches", "/actualites", "/actualites?vue=presse",
   "/agenda", "/classements", "/classements?c=dividende", "/dividendes", "/outils", "/outils/recouvrement", 
-  "/lexique", "/portefeuille", "/espace", "/premium", "/methode", "/plan"];
+  "/lexique", "/espace", "/premium", "/methode", "/plan"];
 (async () => {
   const { b, p } = await ouvrir(), out = [], errs = [];
   p.on("pageerror", e => errs.push(e.message));

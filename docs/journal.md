@@ -395,3 +395,17 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Doublons de sujets : deux sujets sont le même s'ils partagent un lien, deux mots, ou un nom propre (Nvidia, Ukraine). Avant, un seul mot courant en commun (« publie », « annonce ») suffisait à en confondre deux.
 - `tests/t_monde.mjs` (8 vérifications) ajouté aux tests de la mise en ligne.
 - Tests hors mise en ligne en échec, sans lien avec ce changement et sur des fonctions qui partent à l'étape 5 : `t_compte.mjs` (budget de l'IA), `t_espace.mjs` (e-mail du rapport), `t_rapport8.mjs` (un cas dépendant de la date).
+
+## 13/11, soir : recentrage, étape 5 côté navigateur (portefeuille, rapport, alertes, connecteur, export) et formule unique
+- Décision de Romain (16 h 36) : plus de formule mensuelle, une seule formule à 19 € par an.
+- Page Premium réécrite (`m/premium5.js`, 20 Ko → 11 Ko) : trois avantages (toutes les fiches, classements et rang dans le secteur, comparaisons sans limite), un tableau Gratuit / Premium de cinq lignes, plus de comparatif avec d'autres services.
+- Sécurité du prix : `premOuvert` (app.js) n'ouvre le bouton de paiement que si le serveur déclare un prix qui commence par « 19 » (variable `PRIX_UNIQUE` du Worker). Tant que le lien Stripe est celui à 39 €, la page affiche « 19 € par an, bientôt ouvert » et un formulaire « Prévenez-moi » : jamais 19 € affichés et 39 € prélevés. `/api/premium/offres` ne renvoie plus de lien mensuel.
+- Supprimés : `m/portefeuille.js`, `portefeuille4/5/6.js`, `m/rapport8.js`, `m/synthese.js`, `m/communication.js` (idées reçues, pages déjà supprimées), `data/rapport-exemple.json`, robot `.github/workflows/espace.yml` (alertes du soir et e-mail « rapport prêt » : 22 robots).
+- Déplacés avant suppression : le contexte d'une annonce officielle pour l'IA (`actuFicheContexte` dans `actu.js`), le rapprochement d'une ligne d'ETF avec une entreprise du site (`e4ParNom` dans `etf4.js`).
+- Retirés des pages gardées : « + Mon portefeuille » (fiche ETF), « Chez vous » (Le monde), blocs portefeuille et rapport de l'accueil, rappel du rapport à l'ajout d'un favori, export CSV de la fiche, questions à l'IA de la page d'un indice, liens vers l'Académie. L'export CSV du comparateur reste (il n'a jamais été réservé à Premium).
+- Mon espace : une seule page (compte, mot de passe, application, suppression) et un lien vers les favoris ; les favoris restent synchronisés, le portefeuille ne l'est plus.
+- Redirections (navigateur et serveur, 301) : /portefeuille, /rapport-exemple, /connecteur vers l'accueil ; /espace/bilan, /espace/alertes, /espace/rapport vers /espace. Plan du site nettoyé (4 552 adresses, plus aucune page supprimée).
+- Nouvel outil de contrôle (`scripts/noms-non-declares.js`) : cherche les noms utilisés mais définis nulle part après une suppression (0 trouvé).
+- Contrôles : audit 96 pages en trois tailles, 0 problème, 0 erreur JS (il vérifie maintenant la formule unique à 19 €) ; relecture 44 pages, 0 problème ; 3 296 fiches calculées, 0 problème ; tests de la mise en ligne tous bons. `relire-visuel.js 0 tout` est gardé pour l'étape 9.
+- Code du navigateur : 1,54 Mo → 1,04 Mo, 48 → 41 modules.
+- À faire par Romain : créer dans Stripe un lien de paiement unique à 19 € (un seul paiement, pas d'abonnement), puis changer dans les variables du Worker `STRIPE_LINK_UNIQUE` (le nouveau lien) et `PRIX_UNIQUE` (« 19 € pour un an ») ; CGV à mettre à jour (prix, plus de mensuel).

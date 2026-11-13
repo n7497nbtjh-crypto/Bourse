@@ -30,12 +30,12 @@ function pageAgenda5() {
     <section class="ek-sec" id="ag4pub"><h2>Les résultats publiés ces sept derniers jours.</h2><div id="ag4r"><p class="ek-note">Recherche des communiqués…</p></div></section>
     <p class="mc-note">Dates relevées sur les calendriers financiers officiels. « À confirmer » : date habituelle d'après l'an dernier, tant que l'entreprise n'a pas annoncé la sienne. Une date peut changer : la société fait foi.</p></div>`;
   // Vos valeurs
-  const pf = new Set((typeof pf2Load === "function" ? pf2Load().l || [] : []).map(l => l.k).filter(k => k && k.startsWith("c:")).map(k => k.slice(2)));
+  const pf = new Set();
   const fv = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
   const ids = [...new Set([...fv, ...pf])].filter(id => RBY[id]);
   if (ids.length) {
     const L = ids.map(id => ({ id, e: NX.get(id) || null })).sort((a, b) => (a.e ? a.e.date : "9").localeCompare(b.e ? b.e.date : "9")).slice(0, 16);
-    $("#ag5moi").innerHTML = `<section class="ek-sec"><h2>Les prochaines dates de vos favoris et de votre portefeuille.</h2><div class="ag5-fav">${L.map(({ id, e }) => { const c = RBY[id], s = e && dans(e) < 7;
+    $("#ag5moi").innerHTML = `<section class="ek-sec"><h2>Les prochaines dates de vos favoris.</h2><div class="ag5-fav">${L.map(({ id, e }) => { const c = RBY[id], s = e && dans(e) < 7;
       return `<a class="ag5-fc${s ? " sem" : ""}${e && e.estime ? " e" : ""}" href="/entreprise/${esc(id)}"><span class="ag5-fh">${mcLogo(c)}<span><small>${e ? (s ? "Cette semaine" : "Plus tard") : "Pas de date"}</small><b>${esc(c.name)}</b></span></span>
         <span class="ag5-fd">${e ? esc(ag5Court(e.date)) : "–"}</span>${e ? `<span class="ag5-fl">${esc(ag5Lab(e))}</span><span class="ag5-tags">${ag5Tags(e)}</span>` : `<span class="ag5-fl">Aucune date connue pour le moment.</span>`}</a>`; }).join("")}</div></section>`;
   }

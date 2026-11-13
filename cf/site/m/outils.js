@@ -398,10 +398,6 @@ function outCalcPresets() { // comparaisons recalculées à chaque visite, à pa
 /* ---------- Routes, menu, styles ---------- */
 ROUTES_EXTRA.push([/^\/classements$/, () => { outCSS(); pageClassements(); }]);
 ROUTES_EXTRA.push([/^\/decouvertes$/, () => { outCSS(); pageDecouvertes(); }]);
-(function outMenu() { // liens ajoutés au menu sans retoucher index.html
-  // le menu (barre, téléphone, pied de page) est construit par m/nav.js
-  if (typeof OUTILS !== "undefined" && Array.isArray(OUTILS) && !OUTILS.some(o => o[0] === "/classements")) OUTILS.push(["/classements", "Classements des entreprises", "Celles qui cumulent le plus de points forts, restent en tête de leur secteur ou relèvent leur dividende."], ["/decouvertes", "Découvertes du jour", "Chaque jour, six entreprises moins connues dont les comptes ressortent."]);
-})();
 let OUT_CSS = false;
 function outCSS() {
   if (OUT_CSS) return; OUT_CSS = true;

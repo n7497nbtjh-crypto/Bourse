@@ -60,7 +60,7 @@ const averif = J(D("a-verifier.json")); if (averif && averif.items) etat.coheren
 
 /* ---------- Le site vu de l'extérieur ---------- */
 {
-  const pages = ["/", "/entreprise/lvmh", "/entreprise/apple", "/etf/amundi-msci-world-pea", "/agenda", "/actualites", "/outils", "/premium", "/espace", "/rapport-exemple", "/portefeuille", "/apprendre"];
+  const pages = ["/", "/entreprise/lvmh", "/entreprise/apple", "/etf/amundi-msci-world-pea", "/agenda", "/actualites", "/outils", "/premium", "/espace", "/classements", "/comparer"];
   const erreurs = []; let t0 = Date.now();
   for (const p of pages) { try { const r = await fetch(SITE + p, { redirect: "manual" }); if (r.status >= 400) erreurs.push(p + " : " + r.status); } catch (e) { erreurs.push(p + " : injoignable"); } }
   etat.exterieur.pages = { testees: pages.length, erreurs, duree_ms: Date.now() - t0 };

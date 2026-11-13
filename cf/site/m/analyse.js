@@ -591,12 +591,6 @@ function analyseCSS() {
 /* =====================================================================
    Pour l'IA : faits compacts (assistant de fiche, IA connectée du visiteur via iaRediger)
    ===================================================================== */
-function analyseFaitsIA(s, c) {
-  if (!s) return "";
-  let r; try { r = analyseForcesFaiblesses(s, c); } catch (e) { return ""; }
-  const l = (t, a) => a.length ? `${t} : ${a.map(i => `${i.titre} (${i.detail.replace(/\s+/g, " ").slice(0, 260)}${i.source ? ` Source : ${i.source}` : ""})`).join(" ; ")}` : "";
-  return [l("Ce qui la valorise", r.valorise.slice(0, 6)), l("Ce qui lui fait défaut", r.defaut.slice(0, 6)), l("Contexte", r.contexte.slice(0, 6)), r.manque.length ? `Données manquantes : ${r.manque.join(" ; ")}` : ""].filter(Boolean).join("\n");
-}
 // Les phrases que l'assistant local ajoute aux questions « atouts », « risques », « solide ».
 /* ---------- ficheFaits : contenu existant, plus les facteurs de l'analyse ---------- */
 function ficheFaits(s, c) {

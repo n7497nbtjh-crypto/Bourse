@@ -15,7 +15,7 @@ function etatPage() {
 }
 // 12/11 : les robots sont lus en direct chez GitHub à chaque ouverture (le relevé du matin pouvait dater de deux jours sans que la page le dise).
 // Un robot quotidien sans passage depuis plus de 30 h est signalé « en retard », même si son dernier passage avait réussi.
-const ETAT_QUOTIDIENS = ["Mise à jour des données", "État du site", "Actualité des entreprises", "espace", "Ancres de preuve", "Logos des entreprises", "Rapports annuels des sites"];
+const ETAT_QUOTIDIENS = ["Mise à jour des données", "État du site", "Actualité des entreprises", "Ancres de preuve", "Logos des entreprises", "Rapports annuels des sites"];
 function etatRobotsDirect() {
   fetch("https://api.github.com/repos/n7497nbtjh-crypto/Bourse/actions/runs?per_page=100", { headers: { accept: "application/vnd.github+json" } }).then(r => r.ok ? r.json() : Promise.reject(r.status)).then(j => {
     const box = $("#et8-robots"), tit = $("#et8-robots-t"); if (!box) return;

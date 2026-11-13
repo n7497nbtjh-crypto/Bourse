@@ -50,7 +50,6 @@ export function meta(path, q = null) {
   if (p === "/hier") return { title: `Ce qui s'est passé hier : les résultats publiés · ${SITE}`, desc: "Les résultats publiés la veille par les entreprises suivies : chiffre d'affaires, résultat, prévisions de la direction et lecture calculée, d'après les communiqués officiels." };
   if (p === "/outils/recouvrement") return { title: `Comparer deux ETF · ${SITE}`, desc: "Deux ETF face à face : entreprises en commun, frais, performances publiées, plus grosses lignes et secteurs, d'après les compositions officielles." };
   if (p === "/outils/si-javais") return { title: `Et si j'avais investi ? · ${SITE}`, desc: "Ce que serait devenue une somme placée il y a 1, 3 ou 5 ans dans une action ou un ETF, comparée à un indice, au Livret A et à la hausse des prix. Cours réels et sources affichées." };
-  if (p === "/portefeuille") return { title: `Portefeuille · ${SITE}`, desc: "Suivez la performance réelle de vos placements ou entraînez-vous avec un portefeuille virtuel." };
   if (p === "/etf") return { title: `Les ETF expliqués · ${SITE}`, desc: "Les fonds indiciels les plus utilisés en France : ce qu'ils contiennent, leurs frais, leur éligibilité au PEA, leur composition par pays et par entreprise." };
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications · ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqués simplement." };
   if (p === "/communaute" || p === "/pronostics") return { title: `Pronostics de résultats · ${SITE}`, desc: "Avant chaque publication de résultats : ventes en hausse ou en baisse ? Un exercice pour apprendre à anticiper, sans rien à gagner." }; // 7/11 : seuls les pronostics restent
@@ -69,13 +68,12 @@ export function meta(path, q = null) {
   if (p === "/decouvertes") return { title: `Découvertes du jour · ${SITE}`, desc: "Chaque jour, des petites et moyennes entreprises d'Europe et du monde, et des ETF éligibles au PEA : activité, chiffres, valorisation, catalyseurs et risques, sources à l'appui. Sans conseil d'achat." };
   if ((m = p.match(/^\/question\/([a-z0-9-]+)$/))) { const q = QUESTIONS.pages.find(x => x.id === m[1] && x.en_ligne); return q ? { title: `${q.q} · ${SITE}`, desc: q.desc } : null; }
   if (p === "/x") return { title: `Page privée · ${SITE}`, desc: "Page réservée à l'éditeur du site." };
-  if (p === "/rapport-exemple") return { title: `Un rapport de la semaine, en exemple · ${SITE}`, desc: "Le vrai rapport hebdomadaire d'ENKLAIR, celui du 6 novembre, calculé avec les chiffres du site pour un profil fictif : variations, annonces, dates à venir, et ce que vous pouvez y régler." };
   if (p === "/repartitions") return { title: `Répartitions types et listes par critères · ${SITE}`, desc: "Des exemples de répartition entre actions, obligations et placements sans risque de perte, expliqués avec leurs limites, et des listes d'ETF et d'entreprises triées sur les critères que vous choisissez. Information pédagogique, pas un conseil." };
   if (p === "/plan") return { title: `Plan du site · ${SITE}`, desc: "Toutes les pages d'ENKLAIR, rangées en quatre rubriques : Découvrir, Explorer, Analyser et Mon espace." };
   if (p === "/apprendre") return { title: `Apprendre la Bourse, dans l'ordre · ${SITE}`, desc: "Le chemin pour apprendre : par où commencer, les cours de l'Académie (l'essentiel en 3 étapes et le cours complet), le lexique et les outils pédagogiques, gratuits." };
   if (p.startsWith("/academie/express")) return { title: `L'essentiel en 3 étapes · L'Académie · ${SITE}`, desc: "La version courte de l'Académie : comprendre une action, lire les comptes d'une entreprise et juger son prix, en leçons de trois minutes avec quiz." };
   if (p.startsWith("/debuter")) return { title: `Premiers pas en Bourse · ${SITE}`, desc: "Un parcours en trois étapes pour comprendre les actions, lire les comptes d'une entreprise et juger son prix, avec des quiz." };
-  if (p.startsWith("/outils")) return { title: `Outils · ${SITE}`, desc: "Radiographie de portefeuille, comparaison d'entreprises, recouvrement de deux ETF, simulateurs d'épargne et de frais." };
+  if (p.startsWith("/outils")) return { title: `Outils · ${SITE}`, desc: "Classements, comparaison d'entreprises, comparaison de deux ETF, agenda des résultats, calendrier des dividendes et lexique." };
   const IDXN = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
   { const mi = p.match(/^\/indice\/([a-z0-9]+)$/); if (mi && IDXN[mi[1]]) return { title: `${IDXN[mi[1]]} : ce qu'il contient et comment y investir · ${SITE}`, desc: `Le ${IDXN[mi[1]]} expliqué simplement : sa règle de calcul, ses plus grandes entreprises, et les ETF qui le reproduisent, classés par frais.` }; }
   if (p === "/marches") return { title: `Les marchés aujourd'hui · ${SITE}`, desc: "Les grands indices et les plus fortes hausses et baisses du jour, expliquées." };
@@ -85,12 +83,11 @@ export function meta(path, q = null) {
   if (p === "/methode") return { title: `Méthode, sources et IA · ${SITE}`, desc: "D'où viennent les chiffres du site, comment ils sont jugés par rapport à la médiane du secteur, et les règles données à l'IA pour rester factuelle et sans biais." };
   if (p.startsWith("/academie")) return { title: `L'Académie : cours de culture financière · ${SITE}`, desc: "Des cours gratuits pour comprendre l'argent, la Bourse et les placements en France : épargne, PEA, ETF, comptes des entreprises, frais, fiscalité, pièges. Avec quiz et exemples chiffrés." };
   if (p === "/demander") return { title: `Demandez à ENKLAIR : la recherche d'entreprises par l'IA · ${SITE}`, desc: "Décrivez ce que vous cherchez avec vos mots : l'IA le traduit en critères et les applique aux comptes de plus de 1 000 entreprises et 97 ETF. Sans conseil en investissement." };
-  if (p.startsWith("/espace")) return { title: `Mon espace · ${SITE}`, desc: "Le bilan de la semaine de vos entreprises, commenté par l'IA, vos alertes, vos favoris et votre portefeuille sur tous vos appareils." };
+  if (p.startsWith("/espace")) return { title: `Mon espace · ${SITE}`, desc: "Votre compte ENKLAIR : vos favoris retrouvés sur tous vos appareils." };
   if (p === "/commencer") return { title: `Par où commencer en Bourse : le guide du nouvel investisseur · ${SITE}`, desc: "Épargne de précaution, horizon, choix du compte, diversification, frais, pièges à éviter : sept étapes dans l'ordre et un questionnaire pour trouver votre profil. Sans conseil personnalisé." };
-  if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Plus de questions à l'assistant IA, de résumés détaillés et de bilans rédigés, des alertes par e-mail sur vos entreprises. Le site reste gratuit pour l'essentiel." };
+  if (p === "/premium" || p === "/premium/merci") return { title: `Premium · ${SITE}`, desc: "Toutes les fiches entreprises sans limite, les classements et les comparaisons, pour 19 € par an. Le site reste gratuit pour l'essentiel." };
   if (p === "/espace/ia") return { title: `Mon IA · ${SITE}`, desc: "Les réponses calculées du site, gratuites et sans limite, et l'IA du site pour les questions libres : gratuite, sans compte ni clé." };
   if (p === "/ia/connecter") return { title: `Brancher Claude ou ChatGPT sur ENKLAIR · ${SITE}`, desc: "Trois étapes pour que votre assistant IA lise les comptes officiels et les médianes d'ENKLAIR au lieu de répondre de mémoire. Adresse personnelle : 20 appels par jour gratuits, sans limite avec Premium." };
-  if (p === "/connecteur") return { title: `Utiliser ENKLAIR dans ChatGPT ou Claude · ${SITE}`, desc: "Ajoutez ENKLAIR à Claude ou à ChatGPT : l'assistant lit les comptes officiels de plus de 1 000 entreprises, la médiane de leur secteur, l'éligibilité au PEA, les ETF et l'agenda, sources à l'appui. Gratuit, en lecture seule, sans conseil." };
   if (p === "/mentions-legales") return { title: `Mentions légales · ${SITE}`, desc: BASE_DESC };
   if (p === "/cgv") return { title: `Conditions générales de vente · ${SITE}`, desc: BASE_DESC };
   if (p === "/confidentialite") return { title: `Politique de confidentialité · ${SITE}`, desc: BASE_DESC };
@@ -107,7 +104,8 @@ export function redirectionParcours(p) {
   if (/^\/simulateurs(\/.*)?$/.test(p) || /^\/outils\/(si-javais|verifier)\/?$/.test(p) || /^\/(communaute|pronostics)\/?$/.test(p)) return "/outils";
   if (/^\/hier\/?$/.test(p)) return "/actualites";
   if (/^\/(demander|ia\/connecter)\/?$/.test(p)) return "/";
-  if (/^\/espace\/ia\/?$/.test(p)) return "/espace";
+  if (/^\/(portefeuille|rapport-exemple|connecteur)\/?$/.test(p)) return "/";
+  if (/^\/espace\/(ia|bilan|alertes|rapport)\/?$/.test(p)) return "/espace";
   if (p === "/pour-moi") return "/repartitions"; // « Pistes pour vous » remplacé par les répartitions types, sans personnalisation (audit P0-6)
   // Lot 2 (30/10) : quatre portes ; les anciennes pages d'entrée sont fusionnées dans /apprendre (les leçons gardent leur adresse)
   if (p === "/commencer") return "/apprendre";

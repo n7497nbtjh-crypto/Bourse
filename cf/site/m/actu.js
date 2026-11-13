@@ -88,6 +88,16 @@ function actuStats(L) { // « Les chiffres à retenir », calculés sur les anno
 // pageActus : m/actu4.js (Actualité v4, 3/11/2026)
 
 // « Expliquer en clair » : rédigé par l'IA connectée du visiteur (m/monia.js) à partir des faits de l'annonce ; sinon, les phrases calculées restent affichées.
+/* Ce que l'IA reçoit avec une annonce officielle : les faits de la fiche de l'entreprise (comptes, repères, rivales). */
+async function actuFicheContexte(id) {
+  const s = typeof RBY !== "undefined" ? RBY[id] : null; if (!s) return {};
+  let full = typeof FULL !== "undefined" ? FULL[id] : null;
+  if (!full) { try { full = await (await fetch(`/data/societes/${id}.json`)).json(); if (typeof FULL !== "undefined") FULL[id] = full; } catch (e) { full = null; } }
+  try { if (typeof loadAna === "function") await loadAna(); } catch (e) { }
+  const out = {};
+  try { if (typeof ficheFaits === "function") { const f = ficheFaits(s, full); delete f.donnees_manquantes; out.fiche_de_l_entreprise = f; } } catch (e) { }
+  return out;
+}
 document.addEventListener("click", async e => {
   const b = e.target.closest("[data-clair]"); if (!b) return; e.preventDefault();
   const [id, k] = b.dataset.clair.split("|"), box = b.nextElementSibling;
@@ -96,7 +106,7 @@ document.addEventListener("click", async e => {
   const co = RBY[id], it = ((await actuCo(id)).o || []).find(x => x.k === k);
   if (!it) { b.remove(); box.outerHTML = `<p class="ax-why">Annonce introuvable : rechargez la page.</p>`; return; }
   const f = co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null;
-  const j = await iaRediger("annonce", { ...(typeof iaFicheContexte === "function" && (co ? co.id : null) ? await iaFicheContexte(co ? co.id : null) : {}), entreprise: co ? co.name : id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture_calculee: it.r || [], dernier_exercice: f, lien: it.u }, { max: 420 });
+  const j = await iaRediger("annonce", { ...(co ? await actuFicheContexte(co.id) : {}), entreprise: co ? co.name : id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: it.tf, titre_officiel: it.t, date: String(it.d).slice(0, 10), chiffres: it.f || [], lecture_calculee: it.r || [], dernier_exercice: f, lien: it.u }, { max: 420 });
   b.remove();
   const x = j.txt ? jsonFrom(j.txt) : null;
   box.outerHTML = x && x.clair ? `<div class="ax-cl"><b>En clair</b><p>${esc(x.clair)}</p>${x.change ? `<b>Ce que cela change pour l'entreprise</b><p>${esc(x.change)}</p>` : ""}<small>Rédigé par l'IA d'ENKLAIR (${esc(j.modele)}) à partir de l'annonce. La source fait foi.</small></div>`

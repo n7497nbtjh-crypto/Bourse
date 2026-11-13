@@ -123,23 +123,6 @@ async function pageHome() {
   </section>
 
   <section class="a4-sec">
-    <span class="a4-stk a4-bl">Vous investissez déjà&nbsp;?</span>
-    <div class="a4-pf"><div><h3>Voyez ce que votre portefeuille contient vraiment.</h3>
-      <ul><li>Les secteurs et les pays derrière vos actions et vos ETF</li><li>Vos entreprises face à leur secteur</li><li>Chaque semaine, ce qui a bougé et pourquoi</li></ul>
-      <a class="a4-bt" href="/portefeuille">Radiographier mon portefeuille →</a></div>
-      <div><div class="a4-pfb"><i style="width:38%;background:var(--a4y)">Tech 38 %</i><i style="width:27%;background:#FF9EC6">Luxe 27 %</i><i style="width:20%;background:#7FE0B9">Santé 20 %</i><i style="width:15%"></i></div><p>Exemple fictif de répartition par secteur</p></div></div>
-  </section>
-
-  <section class="a4-sec" id="acc-rapport">
-    <span class="a4-stk a4-pk">Chaque samedi</span>
-    <div class="a4-rap"><div><h3>Votre rapport de la semaine, en deux minutes.</h3>
-      <ul><li>Toute l'actualité de vos entreprises : résultats, accords, rachats, presse</li><li>Ce que chaque ligne de votre portefeuille a rapporté, en euros</li><li>Ce qui touche leurs secteurs, et ce qui arrive la semaine suivante</li></ul>
-      <div class="a4-rapb"><a class="a4-bt" href="/rapport-exemple">Voir un rapport exemple →</a><a class="a4-rapp" href="/premium">Le recevoir avec Premium</a></div></div>
-      <a class="a4-rapm" href="/rapport-exemple" aria-label="Voir le rapport exemple"><small>ENKLAIR · votre rapport</small><b>Votre portefeuille a gagné 33&nbsp;€ cette semaine.</b>
-        <span class="a4-rapl"><i class="r">Résultats</i>Sanofi : chiffre d'affaires +14 %</span><span class="a4-rapl"><i class="a">Accord</i>TotalEnergies signe avec Jiangsu Guoxin</span><span class="a4-rapl"><i class="p">Presse</i>Air Liquide se rapproche de ses records</span><em>Exemple</em></a></div>
-  </section>
-
-  <section class="a4-sec">
     <span class="a4-stk a4-gr">Pourquoi ENKLAIR</span>
     <h2>Ce qui fait la différence.</h2>
     <div class="a4-why"><div class="y"><b>Comparé</b><p>Un chiffre seul ne dit rien. Ici, chacun est placé face à la médiane du secteur.</p></div><div class="p"><b>Prouvé</b><p>Les chiffres viennent des rapports déposés par les entreprises, et vous pouvez les vérifier.</p></div><div class="b"><b>Expliqué</b><p>Chaque notion a sa définition en une phrase. Pas besoin d'être expert.</p></div><div class="g"><b>Neutre</b><p>Aucun conseil d'acheter ou de vendre, aucune publicité, aucun courtier derrière.</p></div></div>
@@ -156,7 +139,6 @@ async function pageHome() {
     <span class="a4-stk a4-ye">À vous</span>
     <h2>Et votre entreprise préférée, elle garde combien&nbsp;?</h2>
     <div class="search big a4-srch a4-srch2" data-search><svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input type="search" placeholder="Hermès, LVMH, Apple…" aria-label="Rechercher une entreprise" autocomplete="off"><div class="results"></div></div>
-    <p class="a4-endl">ou <a href="/espace">${membre ? "ouvrez votre rapport de la semaine" : "recevez le rapport de la semaine sur vos favoris"}</a></p>
   </section>
   </div>`;
   const tabs = $("#a4-tabs"); if (tabs) tabs.onclick = ev => { const b = ev.target.closest("button"); if (b) a4Montrer(b.dataset.id); };

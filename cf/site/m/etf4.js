@@ -89,7 +89,7 @@ function e4Tete(x) {
     <div id="e4tv" hidden></div>
     ${e4Verdict(x)}${e4Chaine(x)}
     <div class="ek-medl"><span>Chaque repère est placé face à la ${ekDefMot("mediane", "médiane", {})} des ETF de sa catégorie.</span>
-      <div class="ek-acts">${typeof favBtn === "function" ? favBtn("e:" + e.id).replace('class="favbtn', 'class="ek-btn dk favbtn') : ""}<button type="button" class="ek-btn" data-e4-pf>+ Mon portefeuille</button><button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
+      <div class="ek-acts">${typeof favBtn === "function" ? favBtn("e:" + e.id).replace('class="favbtn', 'class="ek-btn dk favbtn') : ""}<button type="button" class="ek-btn bl" data-f4-ia>✦ Poser une question à l'IA</button></div></div>
   </section>`;
 }
 
@@ -155,7 +155,17 @@ function e4Etapes(x) {
   return x.E = E;
 }
 // Ligne d'un ETF → fiche entreprise du site : par l'ISIN, sinon par le nom (sociétés américaines sans ISIN dans les données)
-const e4Societe = t => (t.isin && ISINBY[t.isin]) || (t.name && typeof pf3ByName === "function" ? pf3ByName(t.name) : null);
+/* Une ligne d'ETF retrouvée parmi les entreprises du site, par son nom nettoyé (venu de m/portefeuille.js, supprimé le 13/11). */
+const e4Strip = s => norm(String(s || "")).replace(/\.com\b/g, "").replace(/[^a-z0-9 ]+/g, " ").replace(/\b(inc|incorporated|corp|corporation|co|company|ltd|limited|plc|sa|se|nv|ag|asa|ab|spa|the|holdings?|group|groupe|class [a-z]|cl [a-z]|adr|reg|shs|ord|common st(ock)?)\b/g, " ").replace(/\s+/g, " ").trim();
+let E4_NAMES = null;
+function e4ParNom(name) {
+  if (!E4_NAMES) { E4_NAMES = new Map(); R.companies.forEach(c => { const s = e4Strip(c.name); if (s && !E4_NAMES.has(s)) E4_NAMES.set(s, c); }); }
+  const s = e4Strip(name); if (!s) return null;
+  if (E4_NAMES.has(s)) return E4_NAMES.get(s);
+  const w = s.split(" "); for (let n = w.length - 1; n >= 1; n--) { const t = w.slice(0, n).join(" "); if (t.length >= 4 && E4_NAMES.has(t)) return E4_NAMES.get(t); }
+  return null;
+}
+const e4Societe = t => (t.isin && ISINBY[t.isin]) || (t.name ? e4ParNom(t.name) : null);
 const e4SrcCompo = x => !x.C ? "Émetteur" : x.C.proxy ? `Fonds américain ${x.C.proxy} (SEC), même indice` : (x.C.source && x.C.source.nom) || "Émetteur";
 
 function e4Perf(x) {
@@ -277,10 +287,9 @@ function e4Fin(x) {
 
 // ——— Actions de l'en-tête ———
 document.addEventListener("click", ev => {
-  const t = ev.target.closest && ev.target.closest("[data-e4-copy],[data-e4-tv],[data-e4-pf]"); if (!t) return;
+  const t = ev.target.closest && ev.target.closest("[data-e4-copy],[data-e4-tv]"); if (!t) return;
   const m = location.pathname.match(/^\/etf\/([^/]+)/), e = m && ETFBY[m[1]]; if (!e) return;
   if (t.dataset.e4Copy) { try { navigator.clipboard.writeText(e.isin).then(() => toast("ISIN copié : " + esc(e.isin)), () => toast("ISIN : " + esc(e.isin))); } catch (x) { toast("ISIN : " + esc(e.isin)); } return; }
-  if (t.dataset.e4Pf !== undefined) { ETF_ajoutPf(e); return; }
   const box = document.getElementById("e4tv"); if (!box) return; box.hidden = !box.hidden;
   if (!box.hidden && !box.dataset.on && typeof tvChart === "function") { box.dataset.on = "1"; box.className = "ek-tvbox"; tvChart(box, e.tv, e.name); }
   t.textContent = box.hidden ? "Voir le graphique du cours ↗" : "Masquer le graphique";

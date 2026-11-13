@@ -5,13 +5,11 @@ from playwright.sync_api import sync_playwright
 root = os.path.abspath("cf/site")
 FONT = os.environ.get("FONT_DIR")  # facultatif : polices locales pour les captures (Google Fonts bloqué en test)
 shots = sys.argv[sys.argv.index("--shots") + 1] if "--shots" in sys.argv else None
-pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/portefeuille", "/mentions-legales", "/page-inconnue", "/comparer?ids=lvmh,kering,hermes,apple", "/comparer", "/favoris", "/dividendes", "/entreprise/nvidia", "/entreprise/rio-tinto", "/entreprise/air-liquide", "/entreprise/nvidia/comprendre/marge", "/comparer?ids=nvidia,amd,intel,broadcom", "/outils", "/marches", "/outils/recouvrement", "/communaute?onglet=pronostics", "/communaute?onglet=portefeuilles", "/communaute?onglet=discussions"]
-pages += ["/methode", "/espace", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement", "/connecteur"]
+pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?src=toutes", "/agenda", "/lexique", "/mentions-legales", "/page-inconnue", "/comparer?ids=lvmh,kering,hermes,apple", "/comparer", "/favoris", "/dividendes", "/entreprise/nvidia", "/entreprise/rio-tinto", "/entreprise/air-liquide", "/entreprise/nvidia/comprendre/marge", "/comparer?ids=nvidia,amd,intel,broadcom", "/outils", "/marches", "/outils/recouvrement", "/communaute?onglet=pronostics", "/communaute?onglet=portefeuilles", "/communaute?onglet=discussions"]
+pages += ["/methode", "/espace", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement"]
 pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes", "/plan"]
-pages += ["/ia/connecter", "/rapport-exemple"]
 pages += ["/outils/recouvrement?a=amundi-msci-world-pea&b=ishares-core-sp500&c=amundi-nasdaq100-pea", "/outils", "/classements", "/dividendes", "/marches", "/comparer?ids=lvmh,hermes"]
 pages += ["/entreprise/alibaba", "/entreprise/klepierre", "/entreprise/totalenergies#tous-les-chiffres"]
-pages += ["/espace/rapport"]
 pages += ["/comparer?ids=bnp-paribas,societe-generale,sap", "/comparer?ids=apple,microsoft,alphabet", "/entreprise/bnp-paribas#rf-concurrents", "/entreprise/apple#rf-concurrents", "/entreprise/totalenergies#rf-concurrents", "/entreprise/siemens", "/entreprise/alibaba#rf-metier"]
 pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh#rf-sources", "/entreprise/lvmh#rf-agenda", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
@@ -38,10 +36,10 @@ def route(r):
     if "/api/espace/bilan" in u: return r.fulfill(json={"semaine": "2026-W44", "genere": 1761650000000, "lignes": [{"k": "c:lvmh", "nom": "LVMH", "variation_semaine_pct": 3.2, "cours": 612.4, "devise": "EUR"}, {"k": "c:nvidia", "nom": "Nvidia", "variation_semaine_pct": -4.1, "cours": 186.2, "devise": "USD"}], "moyenne": -0.45, "annonces": [{"id": "lvmh", "nom": "LVMH", "date": "2026-10-27", "type": "Résultats", "chiffres": [["Ventes", "18,3 Md€"]], "lecture": ["Les ventes reculent de 2 %."]}], "a_venir": [{"id": "nvidia", "nom": "Nvidia", "date": "2026-11-19", "label": "Résultats du trimestre"}], "texte": "Ce qui a bougé\nLVMH progresse de 3,2 % sur la semaine.", "historique": [{"semaine": "2026-W43", "moyenne": 1.2}]})
     if "/api/espace/notifs" in u: return r.fulfill(json={"nonlus": 1, "notifs": [{"id": 1, "at": 1761650000000, "type": "mouvement", "texte": "Nvidia : −5,2 % aujourd'hui", "lien": "/entreprise/nvidia", "lu": 0}]})
     if "/api/espace" in u: return r.fulfill(json={"ok": True})
-    if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": "https://buy.stripe.com/test_m", "unique": None})
+    if "/api/premium/offres" in u: return r.fulfill(json={"mensuel": None, "unique": "https://buy.stripe.com/test_u", "prix_unique": "19 € pour un an"})
     if any(h in u for h in ("openrouter.ai", "api.openai.com", "api.anthropic.com", "generativelanguage.googleapis.com", "api.mistral.ai")): return r.fulfill(status=503, json={"error": "hors ligne (audit)"})  # « Connecter mon IA » : jamais de vrai appel pendant l'audit
     if "/api/premium/statut" in u: return r.fulfill(json={"premium": False})
-    if "/api/premium/activer" in u: return r.fulfill(json={"token": "a" * 40, "plan": "mensuel"})
+    if "/api/premium/activer" in u: return r.fulfill(json={"token": "a" * 40, "plan": "unique"})
     if "/api/ia/etat" in u: return r.fulfill(json={"disponible": True, "reste_visiteur": 3, "plafond_visiteur": 3, "site_epuise": False, "niveau": "visiteur", "plafonds": {"visiteur": 3, "compte": 10, "premium": 150}})  # l'IA du site (cf/src/iasite.mjs), simulée
     if "/api/ia/rediger" in u: return r.fulfill(json={"txt": "Réponse de test rédigée par l'IA du site, appuyée sur les données de la page.", "modele": "Qwen3 30B"})
     if "/api/veille" in u:
@@ -97,19 +95,6 @@ with sync_playwright() as pw:
             if shots and name != "petit" and path in ("/", "/entreprises", "/entreprise/lvmh", "/lexique", "/etf/amundi-msci-world-pea", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/communaute"):
                 os.makedirs(shots, exist_ok=True)
                 pg.screenshot(path=f"{shots}/{name}{(path.replace('/', '_').replace('?', '_') if path != '/' else '_accueil')}.png", full_page=True)
-        # Portefeuille : ajout d'une opération
-        # Portefeuille : ajout d'une action et d'un ETF, radiographie
-        pg.goto("http://t.local/portefeuille"); pg.wait_for_timeout(400)
-        for q, n, pru in (("LVMH", "5", "600"), ("MSCI World", "12", "85,40")):
-            pg.fill("#pfq", q); pg.wait_for_timeout(150); pg.click("#pfs [role=option]"); pg.wait_for_timeout(200)
-            pg.fill("#pf3nq", n); pg.fill("#pf3np", pru); pg.click("#pf3nok"); pg.wait_for_timeout(500)
-        pg.wait_for_timeout(500)
-        if "€" not in pg.inner_text("#pf3 h1") or "depuis vos achats" not in pg.inner_text("#pf3 .v3-hero").lower() or "diversification" not in pg.inner_text("#pf6").lower(): probs["/portefeuille (tableau de bord)"] = ["le tableau de bord ne s'affiche pas"]
-        pg.locator(".pf3rb").first.click(); pg.wait_for_timeout(300)
-        if not pg.locator(".pf3det:not([hidden])").count(): probs["/portefeuille (détail)"] = ["le détail d'une ligne ne s'ouvre pas"]
-        p = pg.evaluate(CHECK, opts["viewport"]["width"])
-        if p: probs["/portefeuille rempli"] = p
-        if shots and name != "petit": pg.screenshot(path=f"{shots}/{name}_portefeuille_rempli.png", full_page=True)
         # Définition : ouverture de la bulle
         pg.goto("http://t.local/entreprise/lvmh"); pg.wait_for_timeout(600)
         pg.evaluate("document.getElementById('e2') && document.getElementById('e2').classList.add('f4m-open')"); pg.locator("#e2 [data-ek-def]").first.scroll_into_view_if_needed(); pg.wait_for_timeout(200)  # 2/11 soir : fiche v4, fenêtre de définition partagée (m/composants.js)  # téléphone : l'étape 2 est une carte fermée
@@ -131,9 +116,14 @@ with sync_playwright() as pw:
             pg.screenshot(path=f"{shots}/{name}_commencer.png", full_page=True)
             for u, n in (("/premium", "premium"), ("/entreprise/lvmh", "assistant")):
                 pg.goto("http://t.local" + u); pg.wait_for_timeout(700); pg.screenshot(path=f"{shots}/{name}_{n}.png", full_page=True)
-        # Mon espace connecté : bilan, alertes, réglages
+        # Mon espace connecté : compte, favoris
+        # 13/11 (recentrage) : une seule formule Premium, 19 € par an, et plus aucun lien vers les pages supprimées
+        pg.goto("http://t.local/premium"); pg.wait_for_timeout(900)
+        tp = pg.inner_text("#app")
+        if "19 €" not in tp or "mensuel" in tp.lower() or "4,90" in tp or "39 €" in tp: probs["/premium (formule)"] = ["la page Premium n'affiche pas la formule unique à 19 € par an"]
+        if pg.locator("#app a[href='/portefeuille'], #app a[href='/rapport-exemple'], #app a[href='/connecteur']").count(): probs["/premium (liens)"] = ["lien vers une page supprimée"]
         STATE["in"] = True
-        for u in ("/espace", "/espace/alertes", "/espace/reglages", "/", "/favoris"):
+        for u in ("/espace", "/espace/reglages", "/", "/favoris"):
             pg.goto("http://t.local" + u); pg.wait_for_timeout(500)
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p: probs[u + " (connecté)"] = p

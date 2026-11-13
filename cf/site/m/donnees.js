@@ -37,11 +37,6 @@ function donRetenue(c) { return !!c && !c.missing && !donVieux(c); }
 // (dividendes versés ÷ nombre d'actions). Les fiches détaillées gardent les deux séries (dps, dpsEst).
 // Avant le 29/10/2026 rien ne distinguait les deux dans les listes : 637 entreprises affichaient
 // une estimation présentée comme publiée.
-function donDps(c) {
-  if (!c) return { v: null, estime: false };
-  const v = c.dps != null ? c.dps : c.dpsEst != null ? c.dpsEst : null;
-  return { v, estime: v != null && (c.dpsE === 1 || c.dpsE === true || (c.dps == null && c.dpsEst != null)) };
-}
 // Suffixe à ajouter à un libellé de dividende dans une liste ou une comparaison
 
 /* ---------- 3. Taux de change : ceux de la BCE, pas des taux écrits en dur (P1-9) ---------- */

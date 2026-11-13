@@ -52,9 +52,9 @@ function pageAgenda4() {
   });
   rendre(); ag4Moi(); ag4Publies();
 }
-// Vos valeurs : portefeuille puis favoris, prochaine date de chacune
+// Vos favoris : prochaine date de chacun
 function ag4Moi() {
-  const pf = new Set((typeof pf2Load === "function" ? pf2Load().l || [] : []).map(l => l.k).filter(k => k && k.startsWith("c:")).map(k => k.slice(2)));
+  const pf = new Set();
   const fv = new Set(favs().filter(k => k.startsWith("c:")).map(k => k.slice(2)));
   const ids = [...pf, ...[...fv].filter(id => !pf.has(id))].filter(id => RBY[id]); if (!ids.length) return;
   const L = ids.map(id => ({ id, e: upcoming().find(e => e.id === id) })).sort((a, b) => (a.e ? a.e.date : "9").localeCompare(b.e ? b.e.date : "9")).slice(0, 12);
