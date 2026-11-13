@@ -8226,5 +8226,16 @@
   "China Southern Airlines : identifiant LEI trouvé par recherche approchée du nom (« CHINA SOUTHERN AIRLINES CO. LTD. », 894500P5CLVHU699BM18), l'ISIN CNE000001FG0 n'est pas dans la table de GLEIF",
   "TCL Technology : identifiant LEI trouvé par recherche approchée du nom (« TCL Technology Capital Limited », 2549004564BZEAL33Q65), l'ISIN CNE000001GL8 n'est pas dans la table de GLEIF",
   "CNPC Capital : identifiant LEI trouvé par recherche approchée du nom (« CNRC Capitale Limited », 30030025YNG3SJ10O291), l'ISIN CNE000000MS3 n'est pas dans la table de GLEIF"
- ]
+ ],
+ "logos": {
+  "date": "2026-11-13",
+  "disponibles": 3004,
+  "commons": 2113,
+  "site_officiel": 891,
+  "initiale": 399,
+  "top300": 281,
+  "pannes": 0,
+  "traitees": 0,
+  "ecrits": 0
+ }
 }
