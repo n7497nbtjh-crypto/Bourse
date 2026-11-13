@@ -44,7 +44,6 @@ async function pageEtf4(id) {
   try { html = e4Tete(x) + e4Fil(x) + e4Memes(x) + e4Fin(x); }
   catch (err) { console.error("etf v4", err); html = e4Tete(x) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
   app.innerHTML = `<div class="ek ek-page" data-e4="${esc(id)}">${html}</div>`;
-  try { avisBlock($("#e4avis"), "etf-" + e.id, e.name); } catch (err) { }
   window.E4X = x;
   const h0 = location.hash.slice(1), ANC = { ebuy: "t1", ecomp: "t1", efrais: "frais", erisques: "fonct", equestions: "e4ia" };
   const t = document.getElementById(ANC[h0] || h0); if (t) setTimeout(() => t.scrollIntoView({ block: "start" }), 30);
@@ -280,9 +279,7 @@ function e4Memes(x) {
 function e4Fin(x) {
   const { e, H } = x;
   return `<section class="ek-sec"><span class="ek-stk2" style="background:#FFE14D">Prouvé</span><h2>D'où viennent ces chiffres.</h2>
-      <div class="ek-proof"><span class="ek-stk2">Prouvé</span><p>Frais, taille et caractéristiques relevés sur <b>la fiche de l'émetteur${e.src ? ` (${esc(e.src)})` : ""}</b>. Composition : ${esc(e4SrcCompo(x))}${x.C && x.C.asOf ? `, au ${esc(dLabel(x.C.asOf))}` : ""}.${H ? ` Performance : ${esc(H.src)}.` : ""} Vérifiez-les dans le document d'informations clés (DIC) avant d'investir.</p>${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener nofollow">Ouvrir la fiche ${esc(e.issuer)} ↗</a>` : ""}</div></section>
-    <section class="ek-sec" id="e4com"><span class="ek-stk2 p">Communauté</span><h2>Avis et discussion.</h2>
-      <div class="et-com"><div class="ek-box"><div class="ek-bt">Avis des visiteurs<small></small></div><div id="e4avis"></div></div></div></section>`;
+      <div class="ek-proof"><span class="ek-stk2">Prouvé</span><p>Frais, taille et caractéristiques relevés sur <b>la fiche de l'émetteur${e.src ? ` (${esc(e.src)})` : ""}</b>. Composition : ${esc(e4SrcCompo(x))}${x.C && x.C.asOf ? `, au ${esc(dLabel(x.C.asOf))}` : ""}.${H ? ` Performance : ${esc(H.src)}.` : ""} Vérifiez-les dans le document d'informations clés (DIC) avant d'investir.</p>${e.url ? `<a href="${esc(e.url)}" target="_blank" rel="noopener nofollow">Ouvrir la fiche ${esc(e.issuer)} ↗</a>` : ""}</div></section>`;
 }
 
 // ——— Actions de l'en-tête ———

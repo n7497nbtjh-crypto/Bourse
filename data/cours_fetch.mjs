@@ -1,7 +1,7 @@
 // Le bot garde chaque jour une copie des cours (secours si la feuille ne répond pas) et les taux de change de la BCE.
 import { writeFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { COURS_CSVS, parseCours } from "./cours_config.mjs";
-import { clotures, seancePrecedente } from "../cf/src/synthese.mjs";
+import { clotures, seancePrecedente } from "../cf/src/semaine.mjs";
 const OUT = new URL("../cf/site/data/", import.meta.url);
 const today = new Date().toISOString().slice(0, 10);
 try {

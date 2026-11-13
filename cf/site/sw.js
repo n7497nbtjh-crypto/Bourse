@@ -1,4 +1,4 @@
-/* Service worker de bilan. : application installable, rapide et lisible hors ligne, notifications push.
+/* Service worker de bilan. : application installable, rapide et lisible hors ligne.
    Règles de cache (prudentes) :
    - Pages (navigations) : toujours le réseau d'abord, le HTML est revalidé à chaque visite. La dernière page reçue est gardée
      comme « coquille » pour l'ouverture hors ligne ; sans elle, une page hors ligne propre.
@@ -134,38 +134,6 @@ button{font:inherit;font-weight:600;background:#111214;color:#fff;border:0;borde
     { status: 503, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } });
 }
 
-/* ---------- Notifications push ---------- */
-self.addEventListener("push", e => {
-  let d = {};
-  try { d = e.data ? e.data.json() : {}; } catch (x) { d = { b: e.data ? e.data.text() : "" }; }
-  const url = typeof d.u === "string" && d.u.startsWith("/") ? d.u : "/espace/alertes";
-  e.waitUntil(self.registration.showNotification(d.t || "ENKLAIR", {
-    body: d.b || "Du nouveau sur vos entreprises.", icon: "/icons/icon-192.png", badge: "/icons/badge-96.png", lang: "fr", dir: "ltr",
-    tag: d.tag || undefined, renotify: !!d.tag, timestamp: d.ts || Date.now(), data: { url } }));
-});
-self.addEventListener("notificationclick", e => {
-  e.notification.close();
-  const url = new URL((e.notification.data && e.notification.data.url) || "/espace/alertes", self.location.origin).href;
-  e.waitUntil((async () => {
-    const fen = await self.clients.matchAll({ type: "window", includeUncontrolled: true });
-    for (const c of fen) if (new URL(c.url).origin === self.location.origin) {
-      try { await c.focus(); } catch (x) { }
-      try { c.postMessage({ type: "bilan-aller", url }); return; } catch (x) { }
-    }
-    await self.clients.openWindow(url);
-  })());
-});
-self.addEventListener("pushsubscriptionchange", e => { // le navigateur a renouvelé l'abonnement : on prévient le site
-  e.waitUntil((async () => {
-    const ancien = e.oldSubscription ? e.oldSubscription.endpoint : null;
-    let sub = e.newSubscription;
-    if (!sub) {
-      const k = await fetch("/api/push/cle").then(r => r.json()).then(j => j.cle).catch(() => null);
-      if (!k) return;
-      const raw = Uint8Array.from(atob(k.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((k.length + 3) % 4)), c => c.charCodeAt(0));
-      sub = await self.registration.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: raw });
-    }
-    await fetch("/api/push/abonnement", { method: "POST", credentials: "same-origin", headers: { "content-type": "application/json" }, body: JSON.stringify({ abonnement: sub.toJSON(), ancien }) });
-  })().catch(() => { }));
-});
+/* 13/11 (recentrage) : plus de notifications. Un ancien abonnement de cet appareil est simplement résilié. */
+self.addEventListener("activate", e => { e.waitUntil((async () => { try { const s = await self.registration.pushManager.getSubscription(); if (s) await s.unsubscribe(); } catch (x) { } })()); });
 self.addEventListener("message", e => { if (e.data && e.data.type === "bilan-version-sw") e.source && e.source.postMessage({ type: "bilan-version-sw", version: SW_VERSION }); });

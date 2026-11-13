@@ -1,5 +1,4 @@
 export const JOUR = 864e5;
-export const r2 = v => Math.round(v * 100) / 100;
 export const num = v => typeof v === "number" && isFinite(v) ? v : (typeof v === "string" && v.trim() !== "" && isFinite(+v) ? +v : null);
 export const addJ = (ymd, n) => new Date(Date.parse(ymd + "T12:00:00Z") + n * JOUR).toISOString().slice(0, 10);
 export const jsem = ymd => new Date(ymd + "T12:00:00Z").getUTCDay();
@@ -35,3 +34,18 @@ export function variationSemaine(cs, k, lundi, auj, live, semPrec) {
 export const INDICES = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", sp500: "S&P 500", nasdaq100: "Nasdaq 100", dax: "DAX", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
 export const SECTEURS = { conso: "Consommation", industrie: "Industrie", energie: "Énergie", sante: "Santé", tech: "Technologie", finance: "Banque et assurance",
   telecom: "Télécoms et médias", materiaux: "Matériaux", services: "Services aux collectivités", immo: "Immobilier" };
+export const r2 = v => Math.round(v * 100) / 100;
+
+export function clotures(hist, n = 15) {
+  const parSeance = {};
+  // Depuis le 1/11/2026, chaque copie est rangée à la date de la séance qu'elle contient (data/cours_fetch.mjs) ; une date de week-end éventuelle compte pour le vendredi
+  for (const d of Object.keys(hist || {}).sort()) if (/^\d{4}-\d{2}-\d{2}$/.test(d)) parSeance[ouvre(d) ? d : seancePrecedente(d)] = hist[d];
+  const dates = Object.keys(parSeance).sort().slice(-n), keys = new Set();
+  dates.forEach(d => Object.keys(parSeance[d] || {}).forEach(k => keys.add(k)));
+  const items = {};
+  for (const k of keys) {
+    const s = dates.map(d => { const v = (parSeance[d] || {})[k]; return typeof v === "number" && isFinite(v) && v > 0 ? Math.round(v * 1e4) / 1e4 : null; });
+    if (s.some(v => v != null)) items[k] = s;
+  }
+  return { dates, items };
+}

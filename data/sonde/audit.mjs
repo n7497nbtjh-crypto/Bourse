@@ -7,7 +7,7 @@ const OUT = process.env.SORTIE || "data/sonde/out/audit";
 mkdirSync(OUT, { recursive: true });
 const CHEMINS = ["/", "/entreprise/lvmh", "/etf/amundi-msci-world-pea", "/page-qui-n-existe-pas", "/debuter", "/m/accueil.js", "/ia.js", "/sw.js",
   "/data/societes.json", "/data/univers.json", "/data/etf.json", "/data/segments-fr.json", "/data/inexistant.json", "/data/societes/lvmh.json",
-  "/sitemap.xml", "/robots.txt", "/api/cours", "/api/presse?q=lvmh", "/api/amf", "/api/nimporte", "/mcp"];
+  "/sitemap.xml", "/robots.txt", "/api/cours", "/api/presse?q=lvmh", "/api/nimporte"];
 const pause = ms => new Promise(r => setTimeout(r, ms));
 const res = {};
 for (const p of CHEMINS) {

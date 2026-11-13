@@ -409,3 +409,15 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Contrôles : audit 96 pages en trois tailles, 0 problème, 0 erreur JS (il vérifie maintenant la formule unique à 19 €) ; relecture 44 pages, 0 problème ; 3 296 fiches calculées, 0 problème ; tests de la mise en ligne tous bons. `relire-visuel.js 0 tout` est gardé pour l'étape 9.
 - Code du navigateur : 1,54 Mo → 1,04 Mo, 48 → 41 modules.
 - À faire par Romain : créer dans Stripe un lien de paiement unique à 19 € (un seul paiement, pas d'abonnement), puis changer dans les variables du Worker `STRIPE_LINK_UNIQUE` (le nouveau lien) et `PRIX_UNIQUE` (« 19 € pour un an ») ; CGV à mettre à jour (prix, plus de mensuel).
+
+## 13/11, soir : recentrage, fin de l'étape 5 et étape 6 (serveur)
+- Supprimés côté serveur : `rapport8.mjs`, `synthese.mjs`, `mcp.mjs` (connecteur), `push.mjs` (notifications), `communaute.mjs`, `veille.mjs` (ancien bilan par e-mail), `amf.mjs`, `demo-index.mjs`. 21 → 14 fichiers (hors liste des entreprises).
+- `espace.mjs` : 75 → 35 Ko. Il garde le compte (inscription, connexion, secours, mot de passe, suppression, Premium rattaché), les favoris, les mesures, l'état du site et `siteData` (pour « Le monde »). `/api/espace/moi` ne renvoie plus ni portefeuille, ni compteur d'alertes, ni rapport.
+- Consignes de l'IA (`consignes.mjs`) : seules restent `annonce`, `presse` et `semaine_monde`, vérifiées identiques à avant au caractère près ; `/api/ia/rediger` refuse toute autre tâche. `prompts.json` n'est plus fabriqué.
+- Robot des cours : `clotures` déplacé de `synthese.mjs` vers `semaine.mjs` et import de `data/cours_fetch.mjs` corrigé ; résultat comparé avant et après sur le vrai historique (9 séances, 4 490 valeurs, identique).
+- Navigateur : sondage « Avis des visiteurs » de la fiche ETF retiré (il appelait la communauté) ; notifications retirées de `sw.js` et `pwa.js` (un ancien abonnement de l'appareil est résilié à l'activation).
+- Outils : `scripts/code-mort-serveur.js` (déclarations et imports inutiles des modules du serveur), `scripts/noms-non-declares.js`. Erreur de l'outil rattrapée par le contrôle des noms non déclarés : l'option `--tuer` retirait un nom dans tous les fichiers (`r2` de `semaine.mjs`, `sgnP` de `veille.mjs`) ; elle vise maintenant un fichier précis.
+- Tests : supprimés avec leurs fonctions (communauté, push, connecteur, rapport, synthèse, portefeuille, AMF) ; `t_compte.mjs` (paiement, IA, liste d'attente) et `t_espace.mjs` (comptes) remis d'aplomb et ajoutés aux tests de la mise en ligne avec `t_quota.mjs`. 59 → 44 fichiers de tests.
+- Contrôles : tous les tests de la mise en ligne bons ; essai des trois usages de l'IA avec une IA simulée (presse, annonce, traduction) ; relecture 44 pages et audit 96 pages en trois tailles, 0 problème, 0 erreur JS. Worker assemblé : 862 → 660 Ko.
+- Non fait, pour l'étape 8 : docs (`docs/ia.md`, `architecture.md`, `premium-2026-11.md`), CLAUDE.md, CSS mort, données restantes (`academie.json`, `parcours.json`…). Tables D1 `bilans`, `notifs`, `mcp_cles`, `veille` et colonnes portefeuille : plus lues, non purgées.
+

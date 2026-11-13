@@ -329,26 +329,8 @@ const ISINBY = {};
 /* ---------- Presse (GDELT) : articles récents, lien vers l'éditeur ---------- */
 
 /* ---------- Avis des visiteurs sur une entreprise ou un ETF ---------- */
-function avisBlock(el, room, name, { compact = false } = {}) {
-  if (!el) return;
-  const KEY = "repere.avis." + room; let mine = null; try { mine = localStorage.getItem(KEY); } catch (e) { }
-  const draw = d => {
-    const tot = (d.confiant || 0) + (d.neutre || 0) + (d.prudent || 0);
-    const bar = tot ? `<div class="feub av"><span class="f" style="width:${d.confiant / tot * 100}%"></span><span class="m" style="width:${d.neutre / tot * 100}%"></span><span class="v" style="width:${d.prudent / tot * 100}%"></span></div>
-      <div class="avl"><span class="f"><i></i>${d.confiant} plutôt confiant${d.confiant > 1 ? "s" : ""}</span><span class="m"><i></i>${d.neutre} neutre${d.neutre > 1 ? "s" : ""}</span><span class="v"><i></i>${d.prudent} plutôt prudent${d.prudent > 1 ? "s" : ""}</span></div>` : `<p class="muted" style="margin:0 0 8px;font-size:13.5px">Pas encore d'avis ce mois-ci.</p>`;
-    el.innerHTML = `<p style="margin:0 0 10px">Et vous, comment voyez-vous ${esc(name)} ?</p>
-      <div class="chips avb">${[["1", "Plutôt confiant"], ["0", "Neutre"], ["-1", "Plutôt prudent"]].map(([v, l]) => `<button type="button" data-v="${v}" class="${mine === v ? "on" : ""}">${l}</button>`).join("")}</div>
-      <div style="margin-top:12px">${bar}</div>
-      <p class="note">Avis des visiteurs sur 30 jours. Ce n'est pas un conseil et ce n'est pas représentatif.${compact ? ` <a class="lnk" href="${roomHref(room)}${room.startsWith("etf-") ? "" : ""}">Lire la discussion</a>` : ""}</p>`;
-    $(".avb", el).onclick = e => { const b = e.target.closest("button"); if (!b) return; mine = b.dataset.v; try { localStorage.setItem(KEY, mine); } catch (er) { }
-      fetch("/api/communaute/avis", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ room, v: +mine }) }).then(() => load()).catch(() => { }); };
-  };
-  const load = () => fetch(`/api/communaute/avis?room=${encodeURIComponent(room)}`).then(r => r.json()).then(d => d.error ? (el.innerHTML = `<div class="muted" style="font-size:13.5px">${esc(d.error)}</div>`) : draw(d)).catch(() => { el.innerHTML = `<div class="muted" style="font-size:13.5px">Indisponible pour le moment.</div>`; });
-  load();
-}
 
 /* ---------- Communauté : mentions cliquables d'entreprises et d'ETF ---------- */
-const roomHref = r => r === "general" ? "/communaute" : r.startsWith("etf-") ? `/etf/${r.slice(4)}` : `/entreprise/${r}/communaute`;
 // [[c:lvmh]] -> lien vers la fiche ; [[e:id]] -> lien vers l'ETF
 // Suggestions pendant la frappe : les derniers mots tapés sont comparés aux noms d'entreprises et d'ETF
 // pageActus : m/actu4.js

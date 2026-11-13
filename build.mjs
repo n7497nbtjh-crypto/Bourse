@@ -46,10 +46,6 @@ writeFileSync("cf/site/sitemap.xml", `<?xml version="1.0" encoding="UTF-8"?>\n<u
 writeFileSync("cf/site/robots.txt", `User-agent: *\nDisallow: /api/\nDisallow: /x\nSitemap: ${ORIGIN}/sitemap.xml\n`);
 { const { default: U, SECTEURS } = await import("./data/univers.mjs");
   wfs("cf/src/index.gen.mjs", "// Fichier fabriqué par build.mjs : la liste minimale des entreprises pour le Worker.\nexport const SECTEURS = " + JSON.stringify(SECTEURS) + ";\nexport default " + JSON.stringify(U.map(({ id, name, sector, desc, region, isin }) => ({ id, name, sector, desc, region, isin }))) + ";\n"); }
-{ // consignes envoyées par le navigateur à l'IA que le visiteur a connectée (cf/src/consignes.mjs, cf/site/m/monia.js)
-  const { CONSIGNES } = await import("./cf/src/consignes.mjs");
-  wfs("cf/site/data/prompts.json", JSON.stringify(CONSIGNES));
-}
 { const { pea } = await import("./data/pea.mjs"); console.log(pea(), "entreprises au siège à vérifier pour le PEA (pea.json)"); }
 { const { historique } = await import("./data/outils_historique.mjs"); console.log(historique(), "entreprises dans historique.json (classements, dividendes)"); }
 if (existsSync("cf/site/data/wikidata.json")) { // faits Wikidata découpés par entreprise : une fiche ne charge que les siens

@@ -9,11 +9,8 @@
 // Les consignes sont celles du serveur (cf/src/consignes.mjs) : le navigateur choisit la tâche, pas le texte des consignes.
 // Les questions partent chez Cloudflare (sous-traitant déjà utilisé pour l'hébergement) ; Workers AI ne s'en sert pas pour entraîner ses modèles.
 import { CONSIGNES } from "./consignes.mjs";
-import { visitor, visiteurSemaine, sessionCompte, premiumOf } from "./compte.mjs";
+import { visiteurSemaine, sessionCompte, premiumOf } from "./compte.mjs";
 
-// Coût en neurones par million de jetons [entrée, sortie] (tarif Cloudflare d'octobre 2026). Le moins cher d'abord.
-// 8/11 : la synthèse de presse (lue par beaucoup, écrite une fois par semaine et par entreprise) prend le plus grand modèle, plus fidèle en français
-const MODELES_PRESSE = [["@cf/meta/llama-3.3-70b-instruct-fp8-fast", 26668, 204805, "Llama 3.3 70B"]];
 const MODELES = [
   ["@cf/qwen/qwen3-30b-a3b-fp8", 4625, 30475, "Qwen3 30B"],
   ["@cf/mistralai/mistral-small-3.1-24b-instruct", 31876, 50488, "Mistral Small 3.1"],
@@ -154,32 +151,6 @@ async function lireArticle(env, u) {
   if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_article (u, txt, etat, at) VALUES (?, ?, ?, ?)`).bind(u, texte, etat, Date.now()).run(); } catch (e) { }
   return { texte, etat };
 }
-/* 8/11 (Romain : « une synthèse des articles », « beaucoup de gens vont avoir Apple dans leur rapport ») : ce que dit la presse d'une entreprise
-   sur une semaine (au plus 5 articles lus, robots.txt respecté), résumée par l'IA du site UNE fois par entreprise et par semaine, puis servie
-   à tous (table ia_presse). Ne compte pas dans les questions des visiteurs ; reste dans la part gratuite du jour (iaJSON). */
-/* Garde-fous : chaque nombre et chaque pays du résumé doit se trouver dans les articles (l'IA a écrit « en France » pour un article sur l'Espagne) */
-const PAYS = { france: "\\bfran[cç]|frankreich|francia", espagne: "espa|spain|spagn|spanien", italie: "ital", allemagne: "german|deutsch|alleman", "royaume-uni": "royaume|united kingdom|britain|uk\\b|regno unito", "états-unis": "united states|u\\.s\\.|us\\b|usa|amér|americ|estados unidos|stati uniti|états", chine: "chin|china|cina", japon: "japan|japon|giappon", inde: "india|inde", canada: "canad", australie: "austral|tasman|\\baud\\b|a\\$", suisse: "suisse|switz|swiss|svizzera|schweiz", "pays-bas": "netherlands|pays-bas|dutch|nederland", belgique: "belg", brésil: "bra[sz]il", mexique: "mexi", corée: "kore|corée|corea" };
-function presseFidele(txt, lus) { // garde les phrases dont chaque nombre et chaque pays se trouvent dans l'article cité (« selon … »), sinon dans l'un des articles
-  const tous = lus.map(a => a.titre + " " + a.texte).join(" "), garde = [];
-  const MOIS = "janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre";
-  for (const par of String(txt).split("\n")) {
-    const ok = [];
-    for (const ph of par.split(/(?<=[.!?])\s+/)) {
-      const cite = lus.filter(a => a.media && ph.toLowerCase().includes(String(a.media).toLowerCase().replace(/^www\./, "")));
-      const src = (cite.length ? cite.map(a => a.titre + " " + a.texte).join(" ") : tous).toLowerCase(), srcT = tous.toLowerCase();
-      const srcN = " " + src.replace(/(\d)[\s.,'\u202f\u00a0](?=\d)/g, "$1") + " ", srcD = src.replace(/[^0-9]/g, " ");
-      let bon = true;
-      const sansDates = ph.replace(new RegExp("\\b\\d{1,2}(er)?\\s+(" + MOIS + ")", "gi"), "").replace(/\b20[1-3]\d\b/g, "");
-      for (const n of sansDates.match(/\d[\d\s.,\u202f\u00a0]*\d|\d/g) || []) { const d = n.replace(/[^0-9]/g, "").replace(/^0+/, "").replace(/(\d)0+$/, "$1"); if (d.length >= 2 && !srcN.includes(d) && !srcD.includes(d)) { bon = false; presseFidele.raison = "chiffre " + n; } }
-      const t = ph.toLowerCase();
-      for (const [p, re] of Object.entries(PAYS)) if (t.includes(p) && !new RegExp(re, "i").test(src) && !(cite.length === 0 && new RegExp(re, "i").test(srcT))) { bon = false; presseFidele.raison = "lieu " + p; }
-      if (PRESSE_CONSEIL.test(ph)) { bon = false; presseFidele.raison = "conseil"; }
-      if (bon) ok.push(ph);
-    }
-    if (ok.length) garde.push(ok.join(" "));
-  }
-  return garde.join("\n");
-}
 // 8/11 : homonymes (« Nov » pris pour le mois) et conseils glissés par la presse : synthèse refusée ou phrase retirée
 // 8/11 (Romain : « un margen brut », « une marge brute ») : fautes connues du modèle corrigées à l'écriture et à la lecture du cache
 export function frCorrige(t) {
@@ -192,53 +163,10 @@ export function frCorrige(t) {
     .replace(/\bdes chips\b/g, "des puces").replace(/\bchips\b/g, "puces")
     .replace(/\s+%/g, "\u00a0%");
 }
-// 8/11 (Romain : « la synthèse sans citer les sources, mises à part ») : tournures « selon tel site » retirées si le modèle en laisse
-const DOM = "[a-z0-9-]+(?:\\.[a-z0-9-]+)*\\.(?:com|fr|de|es|it|net|org|ch|be|ca|uk|ru|au|in|jp|nl|info|news|co)\\b";
-function sansMedia(t) {
-  return String(t || "")
-    .replace(new RegExp("[ \\t]*,?[ \\t]*(?:selon|d['’]après|comme (?:le rapporte|l'indique|indiqué par|rapporté par))\\s+(?:le site\\s+|le média\\s+)?" + DOM + "(?:\\s+et\\s+" + DOM + ")*", "gi"), "")
-    .replace(new RegExp("\\b(?:De plus,\\s*)?" + DOM + "(?:\\s+et\\s+" + DOM + ")*\\s+(?:rapporte|indique|écrit|souligne|précise|note|affirme|explique)\\s+que\\s+", "gi"), "")
-    .replace(/\b(?:selon|d['’]après)\s+(?:le même média|la même source|ce (?:média|site|journal))\s*,?\s*/gi, "")
-    .replace(/(^|[.!?]\s+|\n)\s*,\s*/g, "$1")
-    .replace(/(^|[.!?]\s+|\n)\s*,?\s*([a-zàâéèêîôûç])/g, (m, a, c) => a + c.toUpperCase())
-    .replace(/\s+([.,;])/g, "$1").replace(/ {2,}/g, " ").trim();
-}
-const PRESSE_HORS = /n'(a|ont) pas été mentionn|n'est pas mentionn|ne (mentionne|parle) pas de l'entreprise|aucun (des )?article(s)? ne (parle|mentionne|concerne)/i;
-const PRESSE_CONSEIL = /conseill|recommand|à acheter|à vendre|stocks? to buy|rééquilibrer|investissements? sélectif/i;
-async function synthesePresse(request, env, url) {
-  const k = url.searchParams.get("k") || "", au = url.searchParams.get("au") || "";
-  if (!/^c:[a-z0-9-]+$/.test(k) || !/^\d{4}-\d{2}-\d{2}$/.test(au)) return json({ error: "Demande illisible." }, 400);
-  const id = k.slice(2), du = new Date(Date.parse(au + "T00:00:00Z") - 6 * 864e5).toISOString().slice(0, 10), cle = "v8|" + k + "|" + au;
-  const samedi = Date.parse(au + "T21:00:00Z") - 2 * 864e5; // écrite après la clôture de Wall Street le vendredi (robot presse.yml) ou plus tard : gardée pour la semaine
-  if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS ia_presse (cle TEXT PRIMARY KEY, txt TEXT, at INTEGER)`).run();
-    const c = await env.DB.prepare(`SELECT txt, at FROM ia_presse WHERE cle = ?`).bind(cle).first();
-    if (c && (c.at >= samedi || Date.now() - c.at < 12 * 36e5) && !PRESSE_HORS.test(c.txt) && !PRESSE_CONSEIL.test(c.txt)) { const o = JSON.parse(c.txt); o.clair = sansMedia(frCorrige(o.clair)); return json(o); } } catch (e) { }
-  let A = [];
-  try { const r = await env.ASSETS.fetch(new Request(new URL(`/data/actu/c/${id}.json`, url.origin))); const j = r.ok ? await r.json() : {};
-    A = (j.p || []).filter(a => a && a.u && /^https:\/\//.test(a.u) && String(a.d || "").slice(0, 10) >= du && String(a.d || "").slice(0, 10) <= au).slice(0, 7); } catch (e) { }
-  if (A.length < 2) return json({ vide: true });
-  const lus = [];
-  for (const a of A) { const t = await lireArticle(env, a.u); lus.push({ n: lus.length + 1, media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), date: String(a.d).slice(0, 10), titre: a.t || "", texte: (t.texte || "").slice(0, 1500) }); }
-  const nom = url.searchParams.get("nom") || id;
-  presseFidele.raison = "";
-  const r = await iaJSON(env, "presse-sem11", CONSIGNES.presse_semaine, { entreprise: nom, semaine_du: du, au, articles: lus }, 520,
-    x => (x && Array.isArray(x.paragraphes) && (x.clair = x.paragraphes.map(p => String(p).replace(/\bmargen brut[oa]?\b/gi, "marge brute").replace(/\bmargen\b/gi, "marge")).join("\n")), x && typeof x.clair === "string" && x.clair.length > 80 ? true : (presseFidele.raison = "forme " + JSON.stringify(x).slice(0, 120), false)) && !x.aucun && !/je ne suis pas|en tant qu|ce que je ne sais pas/i.test(x.clair) && !PRESSE_HORS.test(x.clair) && (x.clair = presseFidele(x.clair, lus)).length > 80 ? {
-      clair: sansMedia(frCorrige(x.clair.replace(/—/g, ","))).replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1").replace(/\n{2,}/g, "\n").trim(),
-      sujets: (Array.isArray(x.sujets) ? x.sujets : []).map(String).slice(0, 4),
-      articles: (Array.isArray(x.articles) ? x.articles : []).map(Number).filter(n => n >= 1 && n <= lus.length) } : null, MODELES_PRESSE).catch(() => null);
-  if (!r) return json({ indisponible: true, raison: presseFidele.raison || "" });
-  const t = r.clair.toLowerCase(), nums = new Set(r.articles || []);
-  lus.forEach(a => { if (t.includes(String(a.media).toLowerCase())) nums.add(a.n); });
-  const pris = nums.size ? [...nums].sort((a, b) => a - b).map(n => A[n - 1]).filter(Boolean) : A;
-  const out = { clair: r.clair, sujets: r.sujets, n: pris.length, sources: pris.map(a => ({ media: a.s || new URL(a.u).hostname.replace(/^www\./, ""), titre: a.t || "", u: a.u, date: String(a.d).slice(0, 10) })) };
-  if (env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO ia_presse (cle, txt, at) VALUES (?, ?, ?)`).bind(cle, JSON.stringify(out), Date.now()).run(); } catch (e) { }
-  return json(out);
-}
 export async function iaSite(request, env) {
   const url = new URL(request.url), P = plafonds(env);
   if (url.pathname === "/api/ia/traduire") return traduire(request, env);
   if (url.pathname === "/api/ia/article") return article(request, env, url);
-  if (url.pathname === "/api/ia/presse") return synthesePresse(request, env, url);
   const { niveau: nv, h } = await niveau(request, env), plafond = P.questions[nv], per = periode(nv);
   if (url.pathname === "/api/ia/etat") {
     if (!env.AI) return json({ disponible: false, raison: "absente", niveau: nv });
@@ -291,15 +219,6 @@ export async function iaSite(request, env) {
   return json({ limite: "site", niveau: nv, message: P.budget > 0 ? "L'IA du site a atteint son budget du mois pour les visiteurs gratuits. Les réponses calculées restent disponibles ; Premium n'a pas cette limite." : "L'IA du site a atteint sa part gratuite pour aujourd'hui. Les réponses calculées restent disponibles, et l'IA revient demain." }, 429);
 }
 
-/* 6/11 (Romain : « les articles expliqués par l'IA, entreprise par entreprise ») : synthèse de la semaine d'une entreprise pour le rapport.
-   Appelée par le serveur (cf/src/espace.mjs) quand le rapport est construit : pas de quota visiteur, mais comptée dans les neurones du jour.
-   Même entreprise, mêmes annonces → même texte, servi par la table ia_syn (gardée 10 jours) : un seul appel pour tous les abonnés qui suivent l'entreprise. */
-export async function syntheseEntreprise(env, faits) {
-  // 6/11 soir : textes vagues refusés (« pourrait influencer… », « je ne suis pas sûr ») ; le rapport garde alors sa phrase calculée
-  const r = await iaJSON(env, "syn4", CONSIGNES.semaine_entreprise, faits, 220, x => x && typeof x.clair === "string" && x.clair.length > 20 && !VAGUE.test(x.clair + " " + (x.change || "")) ? { clair: x.clair.replace(/—/g, ",").replace(/[*_]{1,2}([^*_]+)[*_]{1,2}/g, "$1"), change: String(x.change || "").replace(/—/g, ",") } : null);
-  return r;
-}
-const VAGUE = /en raison de|gr(â|a)ce (à|a) (la|ses|son|cette) publication|performances variables|guidance|(montrent|confirm\w*) (une|sa|la)|pourrai(t|ent) (influencer|refl(é|e)ter|avoir des cons(é|e)quences)|(a|ont) pu influencer|en ligne avec (la tendance|le s&p|le cac|l.indice)|je ne suis pas s[uû]r|difficile d.(é|e)valuer|trop t(ô|o)t pour|il est difficile|impact (r(é|e)el|exact)|sans donn(é|e)es (significatives|chiffr)|n.indique pas de chiffres/i;
 /* Appel de l'IA du site par le serveur, réponse JSON vérifiée par `valide` (qui renvoie l'objet gardé ou null).
    Même faits, même tâche → même réponse, servie par la table ia_syn (gardée 10 jours). Compté dans les neurones du jour, jamais au-delà de la part gratuite. */
 export async function iaJSON(env, prefixe, sys, faits, max, valide, modeles = MODELES) {
@@ -333,4 +252,3 @@ export async function iaJSON(env, prefixe, sys, faits, max, valide, modeles = MO
   return null;
 }
 const objDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; const b = t.slice(i, j + 1); try { return JSON.parse(b); } catch (e) { try { return JSON.parse(b.replace(/\r?\n/g, " ")); } catch (e2) { return null; } } }; // 8/11 : un saut de ligne brut dans une chaîne rendait la réponse illisible
-const jsonDe = t => { if (!t) return null; const i = t.indexOf("{"), j = t.lastIndexOf("}"); if (i < 0 || j <= i) return null; try { const o = JSON.parse(t.slice(i, j + 1)); return o && typeof o.clair === "string" ? o : null; } catch (e) { return null; } };

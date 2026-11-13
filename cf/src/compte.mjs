@@ -178,11 +178,6 @@ const PROVIDERS = [
   ["resend", env => env.RESEND_KEY, 95, async (env, to, subject, text, html) => fetch("https://api.resend.com/emails", { method: "POST", headers: { authorization: "Bearer " + env.RESEND_KEY, "content-type": "application/json" }, body: JSON.stringify({ from: `ENKLAIR <${env.MAIL_FROM}>`, to, subject, text, html: html || undefined }) })],
 ];
 export const mailReady = env => !!(env.MAIL_FROM && PROVIDERS.some(([, on]) => on(env)));
-export async function mailCapacity(env) {
-  await initCompte(env.DB); let left = 0;
-  for (const [name, on, max] of PROVIDERS) { if (!on(env)) continue; const r = await env.DB.prepare(`SELECT n FROM mail_compte WHERE fournisseur = ? AND jour = ?`).bind(name, today()).first(); left += Math.max(0, max - (r ? r.n : 0)); }
-  return left;
-}
 export async function sendMail(env, to, subject, text, html = "") {
   if (!mailReady(env)) throw new Error("envoi non configuré");
   await initCompte(env.DB);

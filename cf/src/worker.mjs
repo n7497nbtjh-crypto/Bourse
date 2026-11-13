@@ -5,17 +5,12 @@
 // par Romain dans Cloudflare > Variables et secrets, jamais dans le code.
 import U, { SECTEURS } from "./index.gen.mjs";
 const INDEX = U.map(c => ({ id: c.id, name: c.name, sector: SECTEURS[c.sector], desc: c.desc || "" })); // fiches non incluses
-import amf from "./amf.mjs";
-import communaute from "./communaute.mjs";
 import presse from "./presse.mjs";
 import { cours } from "./cours.mjs";
-import { veille } from "./veille.mjs";
 import { premium } from "./compte.mjs";
-import { espace, rapportExemple, compterEvt, COMPTEURS_OK } from "./espace.mjs";
+import { espace, compterEvt, COMPTEURS_OK } from "./espace.mjs";
 import { mondePublic } from "./monde.mjs";
 import { signaler } from "./signaler.mjs";
-import { push, pousser } from "./push.mjs";
-import { mcp } from "./mcp.mjs";
 import { tete, VERSION, SECURITE } from "./pwa.mjs";
 import { etfMeta } from "./etf_meta.mjs";
 import { iaSite } from "./iasite.mjs";
@@ -52,7 +47,6 @@ export function meta(path, q = null) {
   if (p === "/outils/si-javais") return { title: `Et si j'avais investi ? · ${SITE}`, desc: "Ce que serait devenue une somme placée il y a 1, 3 ou 5 ans dans une action ou un ETF, comparée à un indice, au Livret A et à la hausse des prix. Cours réels et sources affichées." };
   if (p === "/etf") return { title: `Les ETF expliqués · ${SITE}`, desc: "Les fonds indiciels les plus utilisés en France : ce qu'ils contiennent, leurs frais, leur éligibilité au PEA, leur composition par pays et par entreprise." };
   if (/^\/etf\/[a-z0-9-]+$/.test(p)) return { title: `ETF : composition, frais et explications · ${SITE}`, desc: "Ce que contient ce fonds indiciel, ses frais, sa composition par pays et ses principales lignes, expliqués simplement." };
-  if (p === "/communaute" || p === "/pronostics") return { title: `Pronostics de résultats · ${SITE}`, desc: "Avant chaque publication de résultats : ventes en hausse ou en baisse ? Un exercice pour apprendre à anticiper, sans rien à gagner." }; // 7/11 : seuls les pronostics restent
   if (p === "/lexique") return { title: `Lexique · ${SITE}`, desc: "PER, rendement, marge, dette, volatilité : chaque chiffre de la Bourse expliqué simplement, avec ses limites." };
   if (p === "/espace" || p.startsWith("/espace/")) return { title: `Mon espace · ${SITE}`, desc: "Votre semaine en 2 minutes : variations, annonces et dates à venir de ce que vous suivez, vos alertes et vos listes, sur tous vos appareils." };
   if (p === "/favoris") return { title: `Mes favoris · ${SITE}`, desc: "Les entreprises et ETF que vous suivez : chiffres clés, prochaines dates et presse." };
@@ -122,31 +116,23 @@ export const iaRetiree = () => Response.json({ error: "Cette adresse n'est plus 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
-    // 2/11 : le site s'appelle enklair.com ; l'ancienne adresse renvoie les pages vers le nouveau domaine (l'API, le connecteur MCP
-    // et les fichiers de données restent servis tels quels pour ne rien casser chez ceux qui les utilisent déjà)
+    // 2/11 : le site s'appelle enklair.com ; l'ancienne adresse renvoie les pages vers le nouveau domaine (l'API
+    // et les fichiers de données restent servis tels quels)
     if ((url.hostname === "repere-bourse.pages.dev" || url.hostname === "www.enklair.com") && request.method === "GET" && !/^\/(api|mcp|data|og|icons|logos)\b/.test(url.pathname) && !/\.(js|css|json|png|jpg|svg|webmanifest|txt|xml)$/i.test(url.pathname))
       return Response.redirect("https://enklair.com" + url.pathname + url.search, 301);
-    if (url.pathname === "/api/amf") return amf(request, U.filter(c => c.region === "FR").map(c => c.isin));
-    if (url.pathname.startsWith("/api/communaute")) return communaute(request, env);
     if (url.pathname === "/api/presse") return presse(request, U);
     if (url.pathname === "/api/cours") return cours(request, ctx, env);
     if (IA_RETIREE.test(url.pathname)) return iaRetiree();
     if (url.pathname.startsWith("/api/quota/")) return quota(request, env); // 4/11 : comparaisons limitées en gratuit (3 par semaine depuis le 6/11)
     if (url.pathname.startsWith("/api/ia/")) return iaSite(request, env); // l'IA du site (Workers AI, gratuite, plafonnée)
-    if (url.pathname.startsWith("/api/veille")) return veille(request, env);
     if (url.pathname === "/api/signaler") return signaler(request, env);
     if (url.pathname === "/api/compteur" && request.method === "POST") { // 5e passage (E4) : un geste du tunnel, compté par semaine, sans identifiant
-      const e = url.searchParams.get("e") || ""; if (COMPTEURS_OK.has(e) && ["suivre", "apercu-alerte", "rapport-exemple", "premium-vue", "fiche-verrou"].includes(e)) { const pr = compterEvt(env, [e]); if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(pr); else await pr; }
+      const e = url.searchParams.get("e") || ""; if (COMPTEURS_OK.has(e) && ["suivre", "premium-vue", "fiche-verrou"].includes(e)) { const pr = compterEvt(env, [e]); if (ctx && typeof ctx.waitUntil === "function") ctx.waitUntil(pr); else await pr; }
       return new Response(null, { status: 204, headers: { "cache-control": "no-store" } });
     }
     if (url.pathname.startsWith("/api/premium")) return premium(request, env);
-    if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
-    if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env, ctx);
     if (url.pathname === "/api/monde") return mondePublic(request, env, ctx);
-    if (url.pathname.startsWith("/api/push/")) return push(request, env);
-    if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
-    { const mk = url.pathname.match(/^\/mcp\/([a-f0-9]{32})\/?$/); if (mk) return mcp(request, env, ctx, mk[1]); } // adresse personnelle (5e passage, C)
     if (url.pathname.startsWith("/api/")) return Response.json({ error: "Introuvable" }, { status: 404 });
     const redir = redirectionParcours(url.pathname.replace(/\/+$/, ""));
     if (redir) { const [rp, rh] = redir.split("#"); return Response.redirect(url.origin + rp + url.search + (rh ? "#" + rh : ""), 301); }
@@ -250,14 +236,3 @@ async function rendu(t, fq, env, url, faq = null) {
   return `<div class="ssr"><h1>${esc(t.title.replace(/ · .*$/, ""))}</h1><p>${esc(t.desc)}</p>${corps}<p class="ssr-js">Le site a besoin de JavaScript pour afficher l'analyse complète, les graphiques et les comparaisons. S'il ne s'affiche pas, rechargez la page.</p></div>`;
 }
 
-// Tâche du soir (.github/workflows/espace.yml) : alertes et bilans de l'espace, puis notifications push des appareils abonnés.
-// Les envois partent dans un appel où l'espace n'a plus de compte à traiter (limite de sous-requêtes par appel) ;
-// tant qu'il en reste, « reste » vaut au moins 1 et le robot rappelle la tâche.
-async function tacheEtPush(request, env, url) {
-  const r = await espace(request, env);
-  if (r.status !== 200) return r;
-  const j = await r.json();
-  let p;
-  try { p = await pousser(env, { origin: url.origin, budget: j.traites ? 0 : 30 }); } catch (e) { p = { erreur: String(e && e.message || e) }; }
-  return Response.json({ ...j, push: p, reste: (j.reste || 0) + (p && p.reste ? 1 : 0) }, { headers: { "cache-control": "no-store" } });
-}

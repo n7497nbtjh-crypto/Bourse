@@ -9,7 +9,6 @@ const PWA_SET = (k, v) => { try { v == null ? localStorage.removeItem("bilan.pwa
 const PWA_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 const PWA_SEUL = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
 const PWA_SW_OK = "serviceWorker" in navigator && window.isSecureContext;
-const PWA_PUSH_OK = PWA_SW_OK && "PushManager" in window && "Notification" in window;
 const PWA_PARTAGE = `<svg class="pwa-ico" viewBox="0 0 24 24" aria-label="Partager" role="img"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11H6.5A1.5 1.5 0 0 0 5 12.5v7A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5H16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
 let PWA_INVITE = null; // événement beforeinstallprompt mis de côté (Chrome, Edge, Samsung Internet)
 
@@ -100,26 +99,11 @@ addEventListener("popstate", () => { PWA_PAGES++; setTimeout(pwaPeutInviter, 800
 document.addEventListener("click", e => { const a = e.target.closest && e.target.closest("a[href^='/']"); if (a) { PWA_PAGES++; setTimeout(pwaPeutInviter, 1200); } });
 setTimeout(pwaPeutInviter, 20000);
 
-/* ---------- Notifications push : « Mon espace » ---------- */
-async function pwaRegistration() {
-  if (!PWA_PUSH_OK) return null;
-  let reg = await navigator.serviceWorker.getRegistration("/");
-  if (!reg) { try { reg = await navigator.serviceWorker.register("/sw.js", { scope: "/" }); } catch (e) { return null; } }
-  return navigator.serviceWorker.ready;
-}
-async function pwaAbonnementLocal() { const reg = await pwaRegistration(); return reg ? reg.pushManager.getSubscription() : null; }
-async function pwaDesabonnerLocal() {
-  try { const s = await pwaAbonnementLocal(); if (!s) return; await post2("/api/push/desabonnement", { endpoint: s.endpoint }).catch(() => { }); await s.unsubscribe(); } catch (e) { }
-}
-
-/* Mon espace : à la déconnexion, plus de notifications de ce compte sur cet appareil. */
+/* Mon espace : le bloc « Application » (installer ENKLAIR). */
 const PWA_REGLAGES = typeof espaceReglages === "function" ? espaceReglages : null;
 if (PWA_REGLAGES) espaceReglages = function (el, m) {
   const r = PWA_REGLAGES(el, m);
-  const lo = document.getElementById("logout");
-  if (lo && lo.onclick) { const o = lo.onclick; lo.onclick = async e => { await pwaDesabonnerLocal(); return o.call(lo, e); }; } // se déconnecter : plus de notifications de ce compte ici
   const del = document.getElementById("delf");
-  if (del && del.onsubmit) { const o = del.onsubmit; del.onsubmit = async e => { await o.call(del, e); if (typeof MOI === "object" && MOI && MOI.connecte === false) pwaDesabonnerLocal(); }; }
   const s = document.createElement("section"); s.className = "panel"; s.id = "pwaapp";
   const inst = PWA_SEUL() || PWA_LS("installe");
   s.innerHTML = `<div class="ph"><h2>Application</h2></div><div class="pb"><div class="pwa-acts" style="margin-bottom:10px">${inst ? `<span class="pwa-etat on"><i></i>ENKLAIR est installé</span>` : PWA_INVITE ? `<button type="button" class="btn" id="pwainst">Installer ENKLAIR sur cet appareil</button>` : ""}</div>
