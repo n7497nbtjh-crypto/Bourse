@@ -351,3 +351,6 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Cause : depuis le 12/11 les sujets étaient recalculés par l'IA à la visite (le visiteur attendait la réponse), et chaque recalcul remplaçait les sujets précédents : 5 sujets la veille, 3 le 13/11.
 - `cf/src/espace.mjs` `mondePublic` : les sujets de la semaine sont gardés en base (clé `monde7|lundi`) et servis tout de suite ; au-delà de 2 heures, recalcul en arrière-plan (`ctx.waitUntil`) ; `mondeFusion` ajoute les nouveaux sujets aux anciens de la semaine (10 au plus, sans doublon : même lien ou même nom propre) ; première lecture : reprise des sujets des jours précédents.
 - `cf/src/rapport8.mjs` : nouvelle demande à l'IA toutes les 3 heures.
+
+## 13/11 : données ETF « plus à jour depuis 8 jours » (page État)
+- Le robot `etf.yml` ne tournait qu'une fois par mois (le 3) alors que la page État alerte au bout de 8 jours : alerte permanente dès le 12 de chaque mois. Il passe chaque lundi (4 h 41 UTC) et le robot Réveil le relance le lundi s'il n'a pas tourné.
