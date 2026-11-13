@@ -467,3 +467,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Téléphone : secteurs et jours en bandes qui défilent (`scroll-x`), cartes des résultats sur une colonne.
 - Contrôles : audit 95 pages en trois tailles, relecture 42 pages, 30 fiches en deux tailles : 0 problème.
 
+## 14/11, 0 h 40 : page État remise d'aplomb après le recentrage
+- Le relevé du 13/11 au soir était rouge pour deux raisons fausses, dues au recentrage : « Le rapport d'exemple ne répond pas » (le rapport est supprimé) et « L'IA du site ne répond pas » (l'essai de santé `/api/ia/sante` demandait la tâche `expliquer`, supprimée le 13/11 : réponse « Tâche inconnue »). Les trois vrais usages de l'IA n'étaient pas touchés (« Le monde » affichait 6 sujets).
+- `iasite.mjs` : l'essai de santé utilise la tâche `presse`. `etat-site.mjs` et `etat.js` : la carte « Rapport d'exemple » devient « Le monde » (nombre de sujets de la semaine) ; la carte « Paiement Stripe » dit « fermé » tant que le serveur ne déclare pas 19 € par an, avec un point orange qui l'explique.
+- ETF : données du 4/11 parce que la collecte du 13/11 (partielle) a été annulée ; robot relancé, protégé contre une perte de plus de 5 % des ETF.
+

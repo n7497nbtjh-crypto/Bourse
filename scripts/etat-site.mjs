@@ -66,20 +66,16 @@ const averif = J(D("a-verifier.json")); if (averif && averif.items) etat.coheren
   etat.exterieur.pages = { testees: pages.length, erreurs, duree_ms: Date.now() - t0 };
   if (erreurs.length) point("rouge", `Pages en erreur : ${erreurs.join(", ")}.`);
   // Le rapport d'exemple est recalculé ici, une fois par jour (clé ADMIN_KEY) ; les visiteurs reçoivent toujours la version gardée
-  try { t0 = Date.now(); const r = await fetch(SITE + "/data/rapport-exemple.json"); const b = await r.json(); etat.exterieur.rapport_exemple = { ok: r.ok && !!b.lignes, duree_ms: Date.now() - t0, ia: Object.keys(b.ia_entreprises || {}).length, monde: b.monde ? b.monde.sujets.length : 0 };
-    if (!b.monde) point("orange", "Rapport d'exemple : pas de sujets du monde (IA indisponible ou titres manquants)."); } catch (e) { etat.exterieur.rapport_exemple = { ok: false }; point("rouge", "Le rapport d'exemple ne répond pas."); }
-  try { const r = await fetch(SITE + "/api/cours"); const j = await r.json(), it = j.items || {}; const sans = Object.values(it).filter(x => !(x && x.p > 0)).length; etat.exterieur.cours = { total: Object.keys(it).length, sans_cours: sans, maj: j.maj || j.date || null }; } catch (e) { etat.exterieur.cours = null; }
-  try { const r = await fetch(SITE + "/api/ia/etat"); const j = await r.json(); etat.services.ia = { disponible: !!j.disponible, site_epuise: !!j.site_epuise, neurones_jour: j.neurones_jour ?? null, plafond: j.plafond_neurones_jour ?? null }; } catch (e) { etat.services.ia = { disponible: false }; }
-  // 9/11 : vrai essai de l'IA par le chemin des questions des visiteurs (avant, seul le compteur était lu : la page disait « disponible » pendant une panne de deux jours)
-  try { const r = await fetch(SITE + "/api/ia/sante"), t = await r.text(); let j = null; try { j = JSON.parse(t); } catch (e) { }
-    const test = j ? { ok: !!j.ok, ms: j.ms ?? null, modele: j.modele || null, raison: j.raison || null } : { ok: false, raison: `le serveur a planté (HTTP ${r.status}${/error code: (\d+)/.test(t) ? ", erreur Cloudflare " + t.match(/error code: (\d+)/)[1] : ""})` };
-    etat.services.ia = { ...(etat.services.ia || {}), test, disponible: test.ok };
-    if (!test.ok) point("rouge", `L'IA du site ne répond pas aux visiteurs : ${test.raison}.`); }
-  catch (e) { etat.services.ia = { ...(etat.services.ia || {}), test: { ok: false, raison: "injoignable" }, disponible: false }; point("rouge", "L'IA du site est injoignable."); }
+  // 14/11 : le rapport d'exemple est supprimé (recentrage du 13/11). À la place : « Le monde » (sujets de la semaine, IA du site).
+  try { t0 = Date.now(); const r = await fetch(SITE + "/api/monde"); const b = await r.json(), n = (b.sujets || []).length; etat.exterieur.monde = { ok: r.ok && n > 0, duree_ms: Date.now() - t0, sujets: n, semaine: b.semaine || null };
+    if (!n) point("orange", "« Le monde » n'affiche aucun sujet cette semaine (IA indisponible ou titres manquants)."); } catch (e) { etat.exterieur.monde = { ok: false }; point("rouge", "« Le monde » (sujets de la semaine) ne répond pas."); }
   try { const r = await fetch(SITE + "/api/premium/offres"); const j = await r.json(); const liens = [j.mensuel, j.unique].filter(Boolean); let ok = 0;
     for (const u of liens) { try { const h = await fetch(u, { method: "HEAD", redirect: "manual" }); if (h.status < 400) ok++; } catch (e) { } }
     const merci = await fetch(SITE + "/premium/merci", { redirect: "manual" });
-    etat.services.paiement = { liens: liens.length, liens_ok: ok, merci_ok: merci.status < 400, mail: !!j.mail };
+    // 14/11 : une seule formule (19 € par an) ; le bouton reste fermé tant que le serveur ne déclare pas ce prix
+    const ouvert = !!(j.unique && /^19\b/.test(String(j.prix_unique || "").trim()));
+    etat.services.paiement = { liens: liens.length, liens_ok: ok, merci_ok: merci.status < 400, mail: !!j.mail, prix: j.prix_unique || null, ouvert };
+    if (!ouvert) point("orange", `Paiement fermé : le serveur déclare « ${j.prix_unique || "aucun prix"} » au lieu de 19 € par an (lien Stripe et variables du Worker à changer).`);
     if (ok < liens.length) point("rouge", "Un lien de paiement Stripe ne répond plus."); if (!j.mail) point("rouge", "Aucun e-mail ne peut partir (service d'envoi non configuré)."); } catch (e) { etat.services.paiement = null; }
 }
 

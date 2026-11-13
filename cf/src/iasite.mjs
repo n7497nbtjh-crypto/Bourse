@@ -185,7 +185,7 @@ export async function iaSite(request, env) {
   if (url.pathname !== "/api/ia/rediger" && !sante) return json({ error: "Introuvable" }, 404);
   if (request.method !== "POST" && !sante) return json({ error: "Méthode non permise" }, 405);
   if (!env.AI) return sante ? santeFin({ ok: false, raison: "IA non branchée sur le serveur" }) : json({ indisponible: true, message: "L'IA du site n'est pas disponible pour le moment." }, 503);
-  let b; if (sante) b = { tache: "expliquer", user: "Faits : {}\n\nQuestion : En une phrase, qu'est-ce qu'une action ?", max: 150 };
+  let b; if (sante) b = { tache: "presse", user: "Titre : Une entreprise publie ses ventes du trimestre, en hausse de 5 %.\nSource : essai de santé du site.", max: 150 }; // 14/11 : « expliquer » n'existe plus depuis le recentrage
   else try { b = await request.json(); } catch (e) { return json({ error: "Requête illisible" }, 400); }
   const sys = CONSIGNES[b && b.tache];
   if (!sys) return json({ error: "Tâche inconnue" }, 400);
