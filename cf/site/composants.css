@@ -692,6 +692,14 @@ html #app .ek.ek-page .cl4-page .ax4-ch button.on{background:var(--ek-y);color:v
 /* ——— Outils v4 (m/outils4.js) ——— */
 .ek .ou4-une{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:22px}
 .ek .ou4-g{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(260px,100%),1fr));gap:12px}
+/* 13/11 (recentrage) : page Outils à six cartes, trois par ligne ; pastille Premium */
+.ek .ou4-g3{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.ek .ou4-o{position:relative;min-height:190px;padding:20px}
+.ek .ou4-o b{font:800 23px/1.08 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.04em;margin-top:6px}
+.ek .ou4-o em{margin-top:auto}
+.ek .ou4-pr{position:absolute;top:16px;right:16px;font:800 12px Inter,sans-serif;font-style:normal;background:#111;color:#FFE14D;border-radius:999px;padding:3px 10px}
+@media (max-width:900px){.ek .ou4-g3{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:560px){.ek .ou4-g3{grid-template-columns:1fr}.ek .ou4-o{min-height:0}}
 .ek .ou4-c{display:flex;flex-direction:column;gap:6px;background:#fff;border:2px solid var(--ek-ink);border-radius:18px;padding:16px;color:var(--ek-ink);text-decoration:none;box-shadow:3px 3px 0 var(--ek-ink);transition:transform .12s}
 .ek .ou4-c:hover{transform:translate(-2px,-2px);box-shadow:5px 5px 0 var(--ek-ink)}
 .ek .ou4-c svg{width:38px;height:38px;background:var(--ek-y);border:2px solid var(--ek-ink);border-radius:11px;padding:6px;box-sizing:border-box;margin-bottom:4px}
@@ -2597,3 +2605,7 @@ html #app .ek .cl4-qs button:hover{background:#FFFBE6}
 .ek .cl4-sep{padding:6px 18px;font:800 20px Inter;color:#999;border-bottom:1px solid #E6E4DE;background:#fff}
 @media(min-width:901px){.ek .cl4-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}}
 .ek .ce5-ff th a{color:inherit;text-decoration:underline;text-decoration-color:rgba(17,17,17,.3);text-underline-offset:3px}
+/* 13/11 (recentrage) : sur la page Outils à six cartes, la ligne d'explication reste visible et le nom est plus grand */
+#app .ou4-c.ou4-o>span{display:block;font:600 14.5px/1.4 Inter,sans-serif;color:#444;flex:0 0 auto}
+#app .ou4-c.ou4-o b{font:800 23px/1.08 "Bricolage Grotesque",Inter,sans-serif;letter-spacing:-.04em;margin-top:6px}
+#app .ou4-c.ou4-o em{margin-top:auto}

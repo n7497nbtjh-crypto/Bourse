@@ -354,3 +354,9 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 
 ## 13/11 : données ETF « plus à jour depuis 8 jours » (page État)
 - Le robot `etf.yml` ne tournait qu'une fois par mois (le 3) alors que la page État alerte au bout de 8 jours : alerte permanente dès le 12 de chaque mois. Il passe chaque lundi (4 h 41 UTC) et le robot Réveil le relance le lundi s'il n'a pas tourné.
+
+## 13/11 après-midi : recentrage, étape 1 (menu et onglet Outils)
+- Décision de Romain : site recentré (fiches, classements, comparatifs, actualité expliquée, agenda), IA réduite à trois usages, suppression massive de code. Feuille de route : `docs/chantier-recentrage-2026-11.md`.
+- `cf/site/m/nav.js` : menu Actualités, Entreprises, ETF, Outils, Mon espace (plus de rubrique Apprendre) ; pied de page à cinq colonnes (`.navpied5`).
+- `cf/site/m/outils4.js` : page Outils à six cartes (Classements, Comparer des entreprises, Comparer deux ETF, Agenda des résultats, Calendrier des dividendes, Lexique), d'après `docs/maquettes/menu-outils-v1.html` ; l'explication de chaque carte est de nouveau visible sur cette page seulement (`.ou4-o`).
+- Contrôles : relire-pages 64 pages, 0 problème ; aucune page supprimée à cette étape.

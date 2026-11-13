@@ -14,65 +14,49 @@
 /* Lot 2 (30/10, prompt de refonte) : quatre portes, chacune une seule page d'entrée. La barre et le menu du téléphone ne montrent
    que ces quatre liens (plus Premium) ; chaque porte range ses pages. « items » et « aussi » ne servent plus qu'au plan du site (/plan)
    et à la rubrique soulignée. Aucune page n'est accessible par deux entrées. */
+/* 13/11 (recentrage, docs/chantier-recentrage-2026-11.md) : quatre entrées directes et Mon espace.
+   Tous les outils sont dans « Outils » et nulle part ailleurs ; plus de rubrique « Apprendre ». */
 const NAV = [
   {
-    k: "dec", label: "Apprendre", porte: "/apprendre", sous: "La Bourse en 7 idées, le lexique",
+    k: "news", label: "Actualités", porte: "/actualites", sous: "L'actualité de la Bourse, expliquée",
     items: [
-      ["/apprendre", "La Bourse en 7 idées", "Un quart d'heure, avec de vraies entreprises"],
-      ["/lexique", "Le lexique", "Chaque chiffre de la Bourse expliqué"],
-      ["/pea-cto", "PEA ou compte-titres", "Ce qu'on peut y mettre, et l'impôt en 2026"],
-    ],
-    aussi: [
-      ["/methode", "Méthode et sources"],
-      ["/pourquoi-bilan", "Pourquoi ENKLAIR"],
+      ["/actualites", "L'actualité", "Les sujets de la semaine et les annonces officielles, expliqués"],
     ],
   },
   {
-    k: "exp", label: "Marchés", porte: "/marches", sous: "Entreprises, ETF, actualité, agenda",
+    k: "ent", label: "Entreprises", porte: "/entreprises", sous: "Chaque fiche face à la médiane de son secteur",
     items: [
-      ["/entreprises", "Les entreprises", "2 852 fiches, chacune face à la médiane de son secteur"],
+      ["/entreprises", "Les entreprises", "Chaque fiche face à la médiane de son secteur"],
+    ],
+  },
+  {
+    k: "etf", label: "ETF", porte: "/etf", sous: "Ce qu'ils contiennent, leurs frais",
+    items: [
       ["/etf", "Les ETF", "Ce qu'ils contiennent, leurs frais, leur performance"],
-      ["/actualites", "L'actualité", "Annonces officielles lues, chiffrées et expliquées"],
-      ["/agenda", "L'agenda", "Résultats et dividendes à venir, jour par jour"],
-      ["/classements", "Classements", "Les mieux placées, critère par critère"],
-    ],
-    aussi: [
-      ["/marches", "Les marchés du jour"],
-      ["/dividendes", "Calendrier des dividendes"],
-      ["/hier", "Ce qui s'est passé hier"],
     ],
   },
   {
-    k: "ana", label: "Outils", porte: "/outils", sous: "Simuler, comparer, vérifier",
+    k: "ana", label: "Outils", porte: "/outils", sous: "Classer, comparer, savoir quand ça tombe",
     items: [
+      ["/classements", "Classements", "Où se situe une entreprise dans son secteur"],
       ["/comparer", "Comparer des entreprises", "Côte à côte, critère par critère, face au secteur"],
-      ["/simulateurs/epargne", "Simulateur d'épargne", "Ce que devient une somme placée chaque mois"],
-      ["/outils/si-javais", "Et si j'avais investi ?", "1 000 € placés il y a 1, 3 ou 5 ans"],
-      ["/outils/verifier", "Vérifier une offre", "Un site ou un conseiller face aux listes noires de l'AMF"],
+      ["/outils/recouvrement", "Comparer deux ETF", "Composition, frais et entreprises en commun"],
+      ["/agenda", "Agenda des résultats", "Quelle entreprise publie ses comptes, et quel jour"],
+      ["/dividendes", "Calendrier des dividendes", "Qui verse un dividende, quand, et combien par action"],
+      ["/lexique", "Lexique", "Chaque mot de la Bourse expliqué simplement"],
     ],
     aussi: [
       ["/outils", "Tous les outils"],
-      ["/outils/recouvrement", "Comparer deux ETF"],
-      ["/idees-recues", "Les idées reçues face aux chiffres"],
-      ["/simulateurs/frais", "Le coût des frais"],
-      ["/demander", "Demander à l'IA"],
     ],
   },
-  // 7/11 (Romain) : la Communauté est retirée du menu ; seuls les pronostics restent, dans Outils (/pronostics).
   {
     k: "esp", label: "Mon espace", porte: "/espace", sous: "Ce que vous suivez", compte: true,
     items: [
-      ["/espace", "@esp", "Votre espace : favoris, portefeuille, alertes"],
-      ["/rapport-exemple", "★ Le rapport de la semaine", "Chaque samedi, toute l'actualité de vos valeurs : voir un exemple"],
+      ["/espace", "@esp", "Votre espace : compte, favoris, abonnement"],
       ["/favoris", "Mes favoris", "Les entreprises et ETF que vous suivez"],
-      ["/portefeuille", "Mon portefeuille", "Vos lignes, leurs frais, leur diversification"],
-      ["/espace/alertes", "Mes alertes", "Publication, dividende, mouvement de plus de 5 %"],
     ],
     aussi: [
-      ["/espace/rapport", "Régler mon rapport"],
-      ["/espace/ia", "L'IA du site"],
       ["/espace/reglages", "Réglages"],
-      ["/connecteur", "ENKLAIR dans ChatGPT ou Claude"],
       ["/premium", "Premium"],
     ],
   },
@@ -80,22 +64,22 @@ const NAV = [
 // Pied de page : pages institutionnelles, hors navigation principale
 const NAV_PIED = [["/methode", "Méthode et sources"], ["/mentions-legales", "Mentions légales"], ["/cgv", "CGV"], ["/confidentialite", "Confidentialité"], ["/avertissement", "Avertissement sur les risques"], ["/plan", "Plan du site"]];
 // setNav("xxx") → rubrique à souligner dans la barre (clés utilisées par les pages du site)
-const NAV_G = { home: "", aca: "dec", new: "dec", lex: "dec", mkt: "exp", news: "exp", ent: "exp", etf: "exp", com: "ana", pronostics: "ana", sim: "ana", pf: "ana", fav: "esp", esp: "esp", ia: "", prem: "" };
+const NAV_G = { home: "", aca: "", new: "", lex: "ana", mkt: "news", news: "news", ent: "ent", etf: "etf", com: "ana", pronostics: "ana", sim: "ana", pf: "esp", fav: "esp", esp: "esp", ia: "", prem: "" };
 
 /* ---------- Construction ---------- */
 const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));
 const navLib = t => t === "@esp" ? `<span class="esplbl">Se connecter</span>` : navEsc(t); // « Se connecter » ou « Mon espace » selon la session (espaceBadge)
-function navBarreHTML() { // quatre portes en liens directs, l'étoile des favoris (compteur), Premium
+function navBarreHTML() { // les portes en liens directs, l'étoile des favoris (compteur), Premium
   return NAV.map(g => `<a href="${g.porte}" data-g="${g.k}" class="navporte${g.compte ? " navesp" : ""}">${g.compte ? `Mon espace<span class="espn"></span>` : navEsc(g.label)}</a>`).join("")
     + `<a href="/favoris" data-nav="fav" class="navfav" title="Mes favoris" aria-label="Mes favoris"><span class="st">★</span><span class="favn"></span></a>`
     + `<a href="/premium" data-nav="prem" class="navprem">Premium</a>`;
 }
 function navPanneauHTML() { // menu du téléphone : les quatre portes, Premium (la recherche a son bouton « Chercher » dans la barre)
   return `<div class="mp-h"><span class="mp-t">Menu</span><button type="button" class="mp-x" aria-label="Fermer le menu">✕</button></div>` + NAV.map(g => `<a href="${g.porte}" class="mporte"><b>${g.compte ? `Mon espace <span class="espn"></span>` : navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>`).join("")
-    + `<a href="/premium" class="mporte mprem"><b>Premium</b><span>Le rapport complet, toutes les alertes, sans limite</span></a>`;
+    + `<a href="/premium" class="mporte mprem"><b>Premium</b><span>Toutes les fiches et tous les outils, sans limite</span></a>`;
 }
 function navPiedHTML() { // pied de page : les quatre portes, puis Méthode et sources et les pages légales
-  return `<nav class="navpied navpied4" aria-label="Rubriques">${NAV.map(g => `<a href="${g.porte}"><b>${navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>`).join("")}</nav>
+  return `<nav class="navpied navpied4 navpied5" aria-label="Rubriques">${NAV.map(g => `<a href="${g.porte}"><b>${navEsc(g.label)}</b><span>${navEsc(g.sous)}</span></a>`).join("")}</nav>
     <div class="navlg">${NAV_PIED.map(([h, t]) => `<a href="${h}">${navEsc(t)}</a>`).join("")}</div>`;
 }
 function navRemplir() {
@@ -124,7 +108,7 @@ function setNav(k) {
 function pagePlan() {
   setTitle("Plan du site"); setNav("");
   app.innerHTML = `<div class="legal"><p class="kick">Toutes les pages</p><h1 class="pagetitle">Plan du site</h1>
-    <p class="pagesub">Les quatre rubriques du site et toutes leurs pages. Les fiches d'entreprises et d'ETF s'ouvrent depuis la recherche, en haut de chaque page.</p>
+    <p class="pagesub">Les rubriques du site et toutes leurs pages. Les fiches d'entreprises et d'ETF s'ouvrent depuis la recherche, en haut de chaque page.</p>
     ${NAV.map(g => `<section class="panel"><div class="ph"><h2>${navEsc(g.label)}</h2><span class="light" style="font-size:12.5px">${navEsc(g.sous)}</span></div><div class="pb"><div class="navplan">
       ${g.items.map(([h, t, d]) => `<a href="${h}"${h === "/pea-cto" ? ' class="fr-seul"' : ""}><b>${navEsc(t === "@esp" ? "Mon espace" : t)}</b><small>${navEsc(d)}</small></a>`).join("")}
       ${(g.aussi || []).map(([h, t]) => `<a href="${h}"><b>${navEsc(t)}</b></a>`).join("")}</div></div></section>`).join("")}

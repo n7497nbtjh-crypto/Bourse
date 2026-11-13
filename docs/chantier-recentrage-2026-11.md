@@ -8,12 +8,13 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 
 ## Ce qui reste
 - **Menu** : Actualités · Entreprises · ETF · Outils. À droite : Mon espace, Premium. Plus de rubrique « Apprendre ».
-- **Outils, seul endroit où ils apparaissent** (rien dans l'agenda, l'accueil ou ailleurs) : Classements, Comparer des entreprises, Comparer deux ETF, Agenda des résultats, Calendrier des dividendes, Lexique. Idées reçues : question posée à Romain.
+- **Outils, seul endroit où ils apparaissent** (rien dans l'agenda, l'accueil ou ailleurs) : Classements, Comparer des entreprises, Comparer deux ETF, Agenda des résultats, Calendrier des dividendes, Lexique. Idées reçues : supprimée (réponse de Romain, 13/11).
 - **Fiches** entreprises et ETF (le lexique sert toujours aux définitions au clic).
 - **IA, trois usages seulement** : 1) sujets « Le monde » de l'actualité (serveur, toutes les 3 heures) ; 2) résumé de la presse d'une entreprise dans le fil d'actualité ; 3) explication d'une annonce officielle.
 - **Mon espace** : compte, favoris, réglages, abonnement.
 
 ## Ce qui est supprimé du code
+- Réponses de Romain du 13/11 : aucun abonné payant ; tout supprimer (portefeuille, rapport, alertes, connecteur, export) ; Idées reçues supprimée ; PEA ou compte-titres supprimée ; « Les marchés du jour » et « Pourquoi ENKLAIR » : il ne voit pas de quelles pages il s'agit, les lui montrer avant de décider.
 - Apprendre (`apprendre4.js`, `apprendre5.js`, `parcours.js`), PEA ou compte-titres (`pays.js` : garder seulement ce dont les fiches ont besoin).
 - Outils : simulateur d'épargne, coût des frais, Et si j'avais investi, Vérifier une offre, répartition (`simulateur4.js`, `sijavais4.js`, `verifier4.js`, `repart4.js`, `outils.js`, `outils2.js`, `outils2_calc.js` : garder les calculs utilisés par Comparer deux ETF).
 - Pronostics et communauté (`communaute.js`, `cf/src/communaute.mjs`), « Ce qui s'est passé hier ».
@@ -39,7 +40,7 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 6. Ne jamais dire « terminé » sans l'avoir testé en ligne après le déploiement.
 
 ## Étapes
-0. **Filet de sécurité** : étiquette git `avant-recentrage-2026-11-13` ; relevé de départ (lignes de code, nombre de pages, de robots, poids du site) pour mesurer le résultat.
+0. **Filet de sécurité** : point de retour = commit `fb7f6ff4` (l'étiquette git `avant-recentrage-2026-11-13` existe en local seulement, l'envoi d'étiquettes est refusé) ; relevé de départ (lignes de code, nombre de pages, de robots, poids du site) pour mesurer le résultat.
 1. **Menu et onglet Outils** (visible, sans suppression) : `nav.js`, nouvelle page Outils d'après la maquette, liens vers les outils retirés de l'accueil, de l'agenda et des fiches.
 2. **Pages simples supprimées** : Apprendre, PEA ou compte-titres, simulateurs, Et si j'avais investi, Vérifier une offre, répartition, pronostics, « hier ». Redirections en place.
 3. **IA réduite à trois usages** : panneau ✦, questions de la fiche et du comparateur, veille. `consignes.mjs` et `docs/ia.md` nettoyés.
@@ -58,8 +59,8 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 ## Suivi
 | Étape | État | Date | Commit |
 |---|---|---|---|
-| 0 | à faire | | |
-| 1 | à faire | | |
+| 0 | fait | 13/11 | fb7f6ff4 ; départ : 57 modules (2,14 Mo avec app.js), CSS 548 Ko, serveur 21 fichiers (908 Ko), 24 robots, 59 tests, 36 routes |
+| 1 | fait (menu et page Outils ; liens vers les outils ailleurs : retirés au fil des étapes 2 à 5) | 13/11 | voir journal |
 | 2 | à faire | | |
 | 3 | à faire | | |
 | 4 | à faire | | |
