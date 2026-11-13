@@ -99,7 +99,7 @@ function univers(d, lundi, auj) {
 function trancheMonde(jour) {
   const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value]));
   if (String(jour).slice(0, 10) !== `${p.year}-${p.month}-${p.day}`) return "";
-  return "|t" + Math.floor((Number(p.hour) % 24) / 6);
+  return "|h" + Math.floor((Number(p.hour) % 24) / 3);
 }
 const MOTS_VIDES = new Set(("avec dans pour plus sans sous vers chez entre apres avant contre depuis pendant selon comme mais donc cette leur leurs elle elles nous vous sont ete etre avoir fait faire tout tous toute toutes tres aussi alors ainsi encore deja face pres " +
   "this that with from have will what when where which while their there they them than then into over after before about amid among says said say could would should more most much many some just here your ours does been being were also back make made take " +
@@ -148,7 +148,7 @@ export async function mondeDe(env, d, n, lundi, auj) {
       .filter(s => new Set(s.titres.map(i => T[i].s)).size >= 2 && !/\brumeurs?\b/i.test(s.fait)); // 12/11 : au moins deux médias différents, et jamais de « rumeurs »
     return S.length ? { sujets: S } : null;
   };
-  /* 12/11 midi : pour le jour en cours, les sujets sont refaits quatre fois par jour (0 h, 6 h, 12 h, 18 h à Paris) au lieu d'une : une nouvelle du soir n'attend plus le lendemain. */
+  /* 12/11 midi : pour le jour en cours, les sujets sont refaits toutes les 3 heures (13/11 ; quatre fois par jour le 12/11) au lieu d'une : une nouvelle du soir n'attend plus le lendemain. */
   const r = await iaJSON(env, "monde12|" + lundi + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   // Nos chiffres pour chaque sujet : médiane du secteur, ses plus grandes entreprises, l'indice du pays ; les valeurs du lecteur concernées

@@ -346,3 +346,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - `data/fetch_data.mjs` écrivait `sec_rapports.json` dans `cf/data/` (dossier inexistant, chemin faux ajouté le 10/11) : la collecte plantait à la fin, recommençait trois fois, dépassait ses 110 minutes ; `cours_fetch.mjs`, placé après dans la même étape, ne tournait plus. Le robot finissait « réussi » (étape tolérée). `cours.json` est resté daté du 10/11.
 - Corrigé : chemin `data/sec_rapports.json` ; dans `donnees.yml`, les cours ont leur propre étape, en premier (20 minutes au plus), les ETF et EODHD la leur après la collecte.
 - CLAUDE.md : script Google autorisé (ne plus le demander), Cloudflare payé par Romain.
+
+## 13/11 midi : actualité « Le monde », 10 secondes d'attente et 3 sujets (Romain : « inacceptable »)
+- Cause : depuis le 12/11 les sujets étaient recalculés par l'IA à la visite (le visiteur attendait la réponse), et chaque recalcul remplaçait les sujets précédents : 5 sujets la veille, 3 le 13/11.
+- `cf/src/espace.mjs` `mondePublic` : les sujets de la semaine sont gardés en base (clé `monde7|lundi`) et servis tout de suite ; au-delà de 2 heures, recalcul en arrière-plan (`ctx.waitUntil`) ; `mondeFusion` ajoute les nouveaux sujets aux anciens de la semaine (10 au plus, sans doublon : même lien ou même nom propre) ; première lecture : reprise des sujets des jours précédents.
+- `cf/src/rapport8.mjs` : nouvelle demande à l'IA toutes les 3 heures.

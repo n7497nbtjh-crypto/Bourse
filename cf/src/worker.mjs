@@ -140,7 +140,7 @@ export default {
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env, ctx);
-    if (url.pathname === "/api/monde") return mondePublic(request, env);
+    if (url.pathname === "/api/monde") return mondePublic(request, env, ctx);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     { const mk = url.pathname.match(/^\/mcp\/([a-f0-9]{32})\/?$/); if (mk) return mcp(request, env, ctx, mk[1]); } // adresse personnelle (5e passage, C)
