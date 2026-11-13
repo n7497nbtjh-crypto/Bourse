@@ -1888,7 +1888,7 @@ function univers(d, lundi3, auj) {
 }
 function trancheMonde(jour2) {
   let p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: !1 }).formatToParts(/* @__PURE__ */ new Date()).map((x) => [x.type, x.value]));
-  return String(jour2).slice(0, 10) !== `${p.year}-${p.month}-${p.day}` ? "" : "|t" + Math.floor(Number(p.hour) % 24 / 6);
+  return String(jour2).slice(0, 10) !== `${p.year}-${p.month}-${p.day}` ? "" : "|h" + Math.floor(Number(p.hour) % 24 / 3);
 }
 var MOTS_VIDES = new Set("avec dans pour plus sans sous vers chez entre apres avant contre depuis pendant selon comme mais donc cette leur leurs elle elles nous vous sont ete etre avoir fait faire tout tous toute toutes tres aussi alors ainsi encore deja face pres this that with from have will what when where which while their there they them than then into over after before about amid among says said say could would should more most much many some just here your ours does been being were also back make made take stock stocks share shares market markets today news live update updates week weekly daily year years month months report reports price prices high highs lows record records rise rises rose fall falls fell gain gains drop drops jump jumps surge surges slump bourse marche marches action actions hausse baisse semaine jour jours annee annees mois prix cours point points milliard milliards million millions billion billions trillion percent first last next best ahead still amid why how watch know need things three five seven top buy sell hold check latest inside outside video photos explained analysis opinion editorial election elections results result wall street talks could worth here".split(" "));
 function motsTitre(t) {
@@ -3074,14 +3074,20 @@ Pour ne plus recevoir ces e-mails : ${origin}/espace/reglages`, html), mails2++,
 async function rapportExemple(request, env, ctx) {
   return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
 }
-async function mondePublic(request, env) {
-  let auj = jourParis(), cle = "monde6|" + auj.slice(0, 10);
-  if (env.DB) try {
-    await env.DB.prepare("CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)").run();
-    let h = await env.DB.prepare("SELECT txt, at FROM monde_pub WHERE k = ?").bind(cle).first();
-    if (h && Date.now() - h.at < 3 * 36e5) return json(JSON.parse(h.txt));
-  } catch {
-  }
+var mondeMots = (t) => new Set(String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 3)), MONDE_BANALS = new Set("inflation marche marches bourse bourses hausse baisse crise guerre banque banques centrale economie economique croissance risques risque seuil critique nouvelles depart resultats action actions petrole semaine mondiale mondial europe europeenne chute record prix ventes tensions accord".split(" "));
+function mondeMeme(a, b) {
+  let ua = new Set((a.titres || []).map((x) => x.u));
+  if ((b.titres || []).some((x) => ua.has(x.u))) return !0;
+  let ma = mondeMots(a.titre), mb = mondeMots(b.titre), n = 0, propre = 0;
+  for (let w of ma) mb.has(w) && (n++, w.length >= 5 && !MONDE_BANALS.has(w) && propre++);
+  return n >= 2 || propre >= 1;
+}
+function mondeFusion(neufs, anciens) {
+  let out = [];
+  for (let x of [...neufs || [], ...anciens || []]) x && !out.some((y) => mondeMeme(x, y)) && out.push(x);
+  return out.slice(0, 10);
+}
+async function mondeCalcul(request, env, auj, ancien) {
   let d = await siteData2(request, env), calc = async (decal) => {
     let jour2 = decal ? addJ(auj, -((jourSemaine(auj) + 6) % 7) - 1) : auj, semaine = semaineIso(jour2), lundi3 = lundiDe(semaine), n = { indices: [], lignes: [] };
     try {
@@ -3092,18 +3098,53 @@ async function mondePublic(request, env) {
     return !m || !(m.sujets || []).length ? null : (m.sujets.forEach((x) => {
       x.chiffres = (x.chiffres || []).filter((c) => c.v != null && c.v !== 0);
     }), { du: lundi3, au: addJ(lundi3, 6), jour: jour2, sujets: m.sujets, modele: m.modele || null });
-  }, out = null, cur = await calc(0);
-  if (cur && cur.sujets.length >= 6) out = { ...cur, genere: Date.now() };
-  else {
-    let prev = await calc(7);
-    cur ? out = { ...cur, genere: Date.now(), precedente: prev } : prev && (out = { ...prev, genere: Date.now(), semaine_passee: !0 });
-  }
-  if (!out) return json({ sujets: [], message: "Pas encore assez de titres cette semaine." });
+  }, cur = await calc(0);
+  if (ancien && !ancien.semaine_passee && cur && ancien.du === cur.du && (cur.sujets = mondeFusion(cur.sujets, ancien.sujets)), !cur && ancien) return null;
+  if (cur && cur.sujets.length >= 6) return { ...cur, genere: Date.now() };
+  let prev = ancien && ancien.precedente ? ancien.precedente : await calc(7);
+  return cur ? { ...cur, genere: Date.now(), precedente: prev } : prev ? { ...prev, genere: Date.now(), semaine_passee: !0 } : null;
+}
+async function mondePublic(request, env, ctx) {
+  let auj = jourParis(), cle = "monde7|" + lundiDe(semaineIso(auj)), garde = null, age = 1 / 0;
   if (env.DB) try {
-    await env.DB.prepare("INSERT OR REPLACE INTO monde_pub (k, txt, at) VALUES (?, ?, ?)").bind(cle, JSON.stringify(out), Date.now()).run();
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)").run();
+    let h = await env.DB.prepare("SELECT txt, at FROM monde_pub WHERE k = ?").bind(cle).first();
+    h && (garde = JSON.parse(h.txt), age = Date.now() - h.at);
   } catch {
   }
-  return json(out);
+  if (!garde && env.DB) try {
+    let lundi3 = lundiDe(semaineIso(auj)), R = await env.DB.prepare("SELECT k, txt FROM monde_pub WHERE k LIKE 'monde6|%' AND k >= ? ORDER BY at DESC LIMIT 7").bind("monde6|" + lundi3).all(), S2 = [];
+    for (let r of R.results || []) {
+      let o = JSON.parse(r.txt);
+      o && o.du === lundi3 && !o.semaine_passee && (S2 = mondeFusion(S2, o.sujets));
+    }
+    S2.length && (garde = { du: lundi3, au: addJ(lundi3, 6), jour: auj, sujets: S2, modele: null, reprise: !0 });
+  } catch {
+  }
+  let refaire = async () => {
+    let out2 = await mondeCalcul(request, env, auj, garde).catch(() => null);
+    if (out2 && env.DB) try {
+      await env.DB.prepare("INSERT OR REPLACE INTO monde_pub (k, txt, at) VALUES (?, ?, ?)").bind(cle, JSON.stringify(out2), Date.now()).run();
+    } catch {
+    }
+    return out2;
+  };
+  if (garde && garde.reprise) {
+    let out2 = await refaire();
+    return json(out2 || garde);
+  }
+  if (garde && (garde.sujets || []).length) {
+    if (age > 2 * 36e5) {
+      if (env.DB) try {
+        await env.DB.prepare("UPDATE monde_pub SET at = ? WHERE k = ?").bind(Date.now() - 2 * 36e5 + 5 * 6e4, cle).run();
+      } catch {
+      }
+      ctx && ctx.waitUntil && ctx.waitUntil(refaire());
+    }
+    return json(garde);
+  }
+  let out = await refaire();
+  return out ? json(out) : json({ sujets: [], message: "Pas encore assez de titres cette semaine." });
 }
 
 // cf/src/signaler.mjs
@@ -3981,7 +4022,7 @@ async function mcp(request, env, ctx, cle = null) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "a0113658a9afe718", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "205b9e59fea80d5d", esc2 = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",
@@ -4507,11 +4548,11 @@ function meta(path, q = null) {
 }
 var ALIAS_ENTREPRISES = { samsung: "samsung-electronics", hyundai: "hyundai-motor", aramco: "saudi-aramco", "saudi-aramco": null, tata: "tcs", "tata-consultancy": "tcs", lg: "lg-electronics", "taiwan-semiconductor": "tsmc", google: "alphabet", facebook: "meta", "louis-vuitton": "lvmh", total: "totalenergies", "air-liquide": null, novo: "novo-nordisk" };
 function redirectionParcours(p) {
-  let m = /^\/debuter\/(.+)$/.exec(p || "");
-  if (m) return "/academie/express/" + m[1];
   let ma = /^\/entreprise\/([a-z0-9-]+)\/?$/.exec(p || "");
   if (ma && ALIAS_ENTREPRISES[ma[1]]) return "/entreprise/" + ALIAS_ENTREPRISES[ma[1]];
-  if (p === "/simulateurs/passe") return "/outils/si-javais";
+  if (/^\/(apprendre|commencer|debuter|premiers-pas|academie|formation)(\/.*)?$/.test(p) || /^\/(pea-cto|idees-recues|livret-a-ou-bourse|pourquoi-bilan|repartitions|pour-moi)\/?$/.test(p)) return "/";
+  if (/^\/simulateurs(\/.*)?$/.test(p) || /^\/outils\/(si-javais|verifier)\/?$/.test(p) || /^\/(communaute|pronostics)\/?$/.test(p)) return "/outils";
+  if (/^\/hier\/?$/.test(p)) return "/actualites";
   if (p === "/pour-moi") return "/repartitions";
   if (p === "/commencer") return "/apprendre";
   let mf = /^(\/entreprise\/[a-z0-9-]+)\/(comptes|actualite|agenda|communaute|comprendre\/[a-z0-9-]+)\/?$/.exec(p);
@@ -4543,7 +4584,7 @@ var IA_RETIREE = /^\/api\/(assistant|demande|resume|actu\/clair)\/?$/, iaRetiree
     if (url.pathname === "/api/espace/tache") return tacheEtPush(request, env, url);
     if (url.pathname.startsWith("/api/espace")) return espace(request, env);
     if (url.pathname === "/api/rapport-exemple") return rapportExemple(request, env, ctx);
-    if (url.pathname === "/api/monde") return mondePublic(request, env);
+    if (url.pathname === "/api/monde") return mondePublic(request, env, ctx);
     if (url.pathname.startsWith("/api/push/")) return push(request, env);
     if (url.pathname === "/mcp" || url.pathname === "/mcp/") return mcp(request, env, ctx);
     {
