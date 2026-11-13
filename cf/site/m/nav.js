@@ -68,7 +68,6 @@ const NAV_G = { home: "", aca: "", new: "", lex: "ana", mkt: "news", news: "news
 
 /* ---------- Construction ---------- */
 const navEsc = s => (typeof esc === "function" ? esc(s) : String(s));
-const navLib = t => t === "@esp" ? `<span class="esplbl">Se connecter</span>` : navEsc(t); // « Se connecter » ou « Mon espace » selon la session (espaceBadge)
 function navBarreHTML() { // les portes en liens directs, l'étoile des favoris (compteur), Premium
   return NAV.map(g => `<a href="${g.porte}" data-g="${g.k}" class="navporte${g.compte ? " navesp" : ""}">${g.compte ? `Mon espace<span class="espn"></span>` : navEsc(g.label)}</a>`).join("")
     + `<a href="/favoris" data-nav="fav" class="navfav" title="Mes favoris" aria-label="Mes favoris"><span class="st">★</span><span class="favn"></span></a>`

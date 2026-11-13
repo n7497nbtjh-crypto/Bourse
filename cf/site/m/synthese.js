@@ -32,12 +32,6 @@ function synLien(k) { return (k.startsWith("e:") ? "/etf/" : "/entreprise/") + k
 function synObj(k) { return k.startsWith("c:") ? RBY[k.slice(2)] : ETFBY[k.slice(2)]; }
 function synLogo(k, s = 32) { const o = synObj(k); if (!o) return ""; return k.startsWith("c:") ? logo(o, s) : logo({ name: o.issuer || o.name, domain: typeof issuerDom === "function" ? issuerDom(o) : null }, s); }
 // Mini-graphique de la semaine : la ligne pointillée est le cours de départ.
-function synSpark(serie, w = 88, h = 26, label = "") {
-  const s = (serie || []).filter(v => v != null && isFinite(v)); if (s.length < 2) return `<svg width="${w}" height="${h}" aria-hidden="true"></svg>`;
-  const mn = Math.min(...s), mx = Math.max(...s), r = mx - mn || 1, X = i => 2 + i * (w - 6) / (s.length - 1), Y = v => 3 + (h - 6) * (1 - (v - mn) / r);
-  const col = s[s.length - 1] >= s[0] ? "var(--up)" : "var(--down)", pts = s.map((v, i) => `${X(i).toFixed(1)},${Y(v).toFixed(1)}`).join(" ");
-  return `<svg width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="${esc(label || "Évolution sur la semaine")}"><line x1="2" x2="${w - 2}" y1="${Y(s[0]).toFixed(1)}" y2="${Y(s[0]).toFixed(1)}" stroke="var(--light)" stroke-width="1" stroke-dasharray="2 3"/><polyline points="${pts}" fill="none" stroke="${col}" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/><circle cx="${X(s.length - 1).toFixed(1)}" cy="${Y(s[s.length - 1]).toFixed(1)}" r="2.6" fill="${col}"/></svg>`;
-}
 function synLecon(code) {
   const x = SYN_LECONS[code]; if (!x || typeof ACA === "undefined" || !ACA) return null;
   const m = ACA.modules.find(m => m.id === x[0]), l = m && m.lecons.find(l => l.id === x[1]);
@@ -107,17 +101,8 @@ function synAlertesHTML(b) {
     ${(pf.levees || []).map(a => `<div class="synal fort"><div><b>${esc(a.texte || "Une alerte de la semaine dernière")}</b><span class="synevol ok">Levée</span><p>Ce point de la semaine dernière ne se vérifie plus.</p></div></div>`).join("")}
     <p class="synfoot">Repères de diversification généraux, calculés sur vos lignes. Ce ne sont pas des conseils personnalisés.</p></div>`;
 }
-function synTexte(b) {
-  if (b.texte) return `<div class="iares">${resumeHTML(b.texte)}<p class="iafoot">Commentaire rédigé par une IA à partir des seuls chiffres de cette page. Ce n'est pas un conseil.</p></div>`;
-  const t = typeof bilanLocal === "function" ? bilanLocal(b) : "";
-  return `<div class="iares" id="syniab">${t ? `${resumeHTML(t)}<p class="iafoot">Résumé calculé à partir de vos chiffres.</p>` : ""}${synIaBouton(b)}</div>`;
-}
 /* Commentaire de la semaine : rédigé à la demande par l'IA connectée du visiteur (m/monia.js), à partir des faits de la synthèse. */
 let SYN_IA_B = null;
-function synIaBouton(b) {
-  SYN_IA_B = b;
-  return miaConnectee() ? `<button type="button" class="fapp" data-syn-ia>✦ Commenter ma semaine avec l'IA</button>` : miaInvite();
-}
 function synIaFaits(c) { // mêmes faits que l'ancien commentaire du serveur : tous calculés par le site
   const L = c.lignes || [];
   return { semaine: c.semaine, periode: c.partiel && c.depuis ? "depuis le " + c.depuis : "semaine complète", moyenne_semaine_pct: c.moyenne, nombre_de_lignes: L.length, hausses: c.hausses, baisses: c.baisses,
@@ -525,7 +510,6 @@ synPageHTML = synPageV5;
 const SYN6_T = { resultats: ["Résultats", "t-res"], dividende: ["Dividende", "t-div"], dividendes: ["Dividende", "t-div"], rachat: ["Rachat d'actions", "t-rach"], operation: ["Accord", "t-acc"], contrat: ["Contrat", "t-acc"],
   dirigeants: ["Direction", "t-dir"], emission: ["Emprunt", "t-obl"], capital: ["Actionnaires", "t-rach"], initie: ["Achat d'un dirigeant", "t-dir"], assemblee: ["Assemblée", "t-rach"], agenda: ["Agenda", "t-rach"], presse: ["Presse", "t-pr"] };
 const SYN6_RECO = /\b(buy|sell|kaufen|verkaufen|stuft|kursziel|price target|objectif de cours|on ach[eè]te ou on vend|upgrade|downgrade|outperform|underperform|surperform|sous-perform|better buy|set you up|should you|is it time)\b|\?$/i;
-const SYN6_LG = { zh: "chinois", en: "anglais", de: "allemand", es: "espagnol", it: "italien", nl: "néerlandais", sv: "suédois", da: "danois", no: "norvégien", pt: "portugais" };
 function synPageV6(b, m) {
   SYN_ANN = [];
   const pf = b.portefeuille, L = (b.lignes || []).slice(), sem = String(b.semaine || "").replace(/^\d{4}-W/, "");
@@ -599,8 +583,6 @@ function synLangue(t) { // 5/11 : « Apple inquieta al mercado por la… » éta
   const best = Object.entries({ fr, es, de, it, en }).sort((a, b) => b[1] - a[1])[0];
   return best[1] >= 2 && best[0] !== "en" ? best[0] : "en";
 }
-const SYN7_DOT = { "t-res": "#E0B400", "t-div": "#00A06B", "t-rach": "#8A8A80", "t-acc": "#8B5CF6", "t-dir": "#F08C2E", "t-obl": "#F08C2E", "t-pr": "#4C7BF2" };
-function s7Exp(a) { return `<button type="button" class="s7-exp" data-syn-exp="${SYN_ANN.push(a) - 1}">✦ Expliquer avec l'IA</button><div class="syn4-cl"></div>`; } // 6/11 : l'IA explique chaque annonce (comme dans les versions précédentes)
 if (!window.LOGO_COUL) fetch("/data/logo-couleurs.json").then(r => r.json()).then(j => { window.LOGO_COUL = j; }).catch(() => { window.LOGO_COUL = {}; });
 function synPageV7(b, m) {
   SYN_ANN = [];

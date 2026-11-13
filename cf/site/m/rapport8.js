@@ -4,9 +4,6 @@
    Ordre : en-tête jaune (le chiffre de la semaine, trois cartes) · 1. Votre portefeuille (gains et pertes par ligne, achat programmé, radiographie)
    · 2. Le monde cette semaine · 3. Vos entreprises face à leurs rivales · 4. À venir. Tout texte non signé « IA » est calculé ici. */
 let SYN8_B = null;
-const R8_VERD = { suit: ["Suit son secteur", ""], mieux: ["Mieux que ses rivales", "j"], moins: ["Moins bien que ses rivales", "r"], resultats: ["Résultats publiés", "j"] };
-const R8_COUL = ["#ffd6dc", "#e8e1ff", "#e6e6e6"];
-function r8Num(v, d = 1) { return v == null || !isFinite(v) ? "–" : (d ? F1 : F0).format(Math.abs(v)); }
 function r8Eur(v) { return v == null || !isFinite(v) ? "–" : (v > 0 ? "+" : v < 0 ? "−" : "") + F0.format(Math.abs(Math.round(v))) + " €"; }
 function r8Jr(iso) { const d = new Date(String(iso).slice(0, 10) + "T12:00:00Z"); return `${d.getUTCDate() === 1 ? "1er" : d.getUTCDate()} ${SYN_MOIS[d.getUTCMonth()]}`; }
 function r8Court(l) { const n = String(l.nom || "").replace(/\s*\([^)]*\)\s*$/, ""); return l.k && l.k.startsWith("e:") ? "votre ETF " + n : n; } // « Amundi PEA Monde (MSCI World) » → « votre ETF Amundi PEA Monde »
@@ -14,25 +11,7 @@ function r8Maj(t) { return String(t).replace(/^./, c => c.toUpperCase()); }
 function r8Titre(t) { return String(t || "").replace(/^[A-Za-z0-9.-]+\.(ca|com|net|org|co\.uk|fr|de)\s+[-|:]\s+/i, ""); } // « Baystreet.ca - Shell sells… » → « Shell sells… »
 function r8De(n) { n = String(n || "").replace(/\s*\([^)]*\)\s*$/, ""); return /^[aeiouyhàâéèêîôû]/i.test(n) ? "d'" + n : "de " + n; }
 function r8Cls(v) { return v > 0.05 ? "up" : v < -0.05 ? "dn" : ""; }
-function r8Bar(nom, v, moi, k) {
-  if (v == null) return "";
-  const w = Math.min(Math.abs(v) / 22 * 48, 48), c = moi ? "#111" : v < 0 ? "#d1242f" : "#0a8a3a";
-  return `<div class="r8-bar${moi ? " moi" : ""}">${k ? `<a href="${synLien(k)}">${esc(nom)}</a>` : `<span>${esc(nom)}</span>`}<span class="tr"><span class="z"></span><span class="f" style="${v < 0 ? "right" : "left"}:50%;width:${w.toFixed(0)}%;background:${c}"></span></span><span class="p ${r8Cls(v)}">${synPct(v)}</span></div>`;
-}
 // Phrase calculée quand l'IA n'a rien rédigé (ou que son texte a été refusé) : seulement des faits du rapport
-function r8Lecture(l, R, A) {
-  const v = l.variation_semaine_pct, res = A.find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length);
-  const vs = R ? R.liste.filter(x => x.v != null) : [], off = A.filter(a => a.origine !== "presse"), courant = off.length && off.every(a => ["rachat", "capital"].includes(a.categorie));
-  const out = [];
-  if (res) out.push(`${l.nom} a publié ses résultats : ${res.chiffres.slice(0, 2).map(([a, b]) => `${a.toLowerCase()} ${b}`).join(", ")}.`);
-  if (vs.length >= 2 && v != null) {
-    const lo = Math.min(...vs.map(x => x.v)), hi = Math.max(...vs.map(x => x.v)), meil = vs.filter(x => x.v < v).length;
-    const four = lo === hi ? `${synPct(lo)}` : `de ${synPct(lo)} à ${synPct(hi)}`;
-    out.push(`Sur la semaine, ${l.nom} fait ${synPct(v)} ; ses rivales ont fait ${four}.` + (R.verdict === "suit" ? " Le mouvement est celui de tout son métier." : R.verdict === "mieux" ? (meil === vs.length ? ` Elle fait mieux que ses ${vs.length} rivales.` : ` Elle fait mieux que ${meil} de ses ${vs.length} rivales.`) : R.verdict === "moins" ? (meil === 0 ? ` Elle fait moins bien que ses ${vs.length} rivales.` : ` Elle fait moins bien que ${vs.length - meil} de ses ${vs.length} rivales.`) : ""));
-  }
-  if (!res && !A.some(a => a.origine !== "presse" && !["rachat", "capital"].includes(a.categorie))) out.push(courant ? "Elle n'a publié que des opérations courantes (rachats de ses propres actions, nombre d'actions)." : "Elle n'a rien annoncé d'officiel cette semaine.");
-  return out.join(" ");
-}
 
 
 // 7/11 nuit (Romain : « mettre en avant pourquoi les entreprises ont baissé ou augmenté », « beaucoup de répétitions dans le cadre ») :
@@ -45,7 +24,6 @@ function r8Jour(iso) { const d = new Date(String(iso).slice(0, 10) + "T12:00:00Z
 // 2. sinon : où elle se place face à ses rivales et au marché, le jour où tout s'est joué, et ce qui s'est dit ou annoncé ce jour-là (titre de presse, annonce, rivale).
 // Rend du HTML (les titres de presse gardent leur traduction automatique).
 function r8Titr(a) { const lg = typeof synLangue === "function" ? synLangue(a.titre) : "fr"; return `« <span${lg !== "fr" ? ` data-tr="${lg}"` : ""}>${esc(r8Titre(a.titre))}</span> »`; }
-function r8Croiss(x) { const m = /\(([+−-])\s?(\d+(?:,\d+)?)\s?%/.exec(String(x || "")); return m ? (m[1] === "+" ? 1 : -1) * parseFloat(m[2].replace(",", ".")) : null; }
 function r8Fort(l, R, A, pub) { // le jour où tout s'est joué, et ce qui s'est dit ou annoncé ce jour-là
   const v = l.variation_semaine_pct, ind = l.indice, J = (R && R.jours) || [];
   const fort = J.length ? J.reduce((m, j) => Math.abs(j.v) > Math.abs(m.v) ? j : m) : null;
@@ -91,29 +69,16 @@ function r8Pourquoi(l, R, A) {
   for (const a of autres) out.push(`Le ${esc(r8Jr(a.date))}, elle a publié : ${esc(r8Maj((SYN6_T[a.categorie] || ["annonce"])[0].toLowerCase()))} (${esc(a.titre)}).`);
   return out;
 }
-function r8Jours(l, R, A) { // 7/11 nuit (Romain : « illisible, trop de paramètres ») : seulement le cours de l'action, jour par jour
-  const J = (R && R.jours) || []; if (J.length < 2) return "";
-  const res = new Set(A.filter(a => a.origine !== "presse" && a.categorie === "resultats").map(a => String(a.date).slice(0, 10)));
-  const mx = Math.max(1, ...J.map(j => Math.abs(j.v))), h = x => (Math.min(Math.abs(x), mx) / mx * 38).toFixed(0);
-  return `<div class="r8-jours"><p class="r8-jt">Son cours, jour par jour</p><div class="r8-jg">${J.map(j => `<div class="r8-jc${res.has(j.date) ? " res" : ""}"><div class="r8-jb"><span class="m ${j.v < 0 ? "dn" : "up"}" style="height:${h(j.v)}px;${j.v < 0 ? "top" : "bottom"}:50%"></span></div><b class="${r8Cls(j.v)}">${synPct(j.v)}</b><small>${R8_JS[new Date(j.date + "T12:00:00Z").getUTCDay()]}</small>${res.has(j.date) ? `<em>Résultats</em>` : ""}</div>`).join("")}</div></div>`;
-}
 // Les chiffres qui ne sont ni dans l'en-tête ni dans les barres : ses résultats, l'accueil de la Bourse, ses ventes et sa marge face aux rivales
-function r8Faits(l, R, A) { // 7/11 nuit (Romain) : plus de chiffres de l'exercice passé ici ; seulement les chiffres publiés cette semaine, en plus des deux premiers
-  const res = [...A].reverse().find(a => a.origine !== "presse" && a.categorie === "resultats" && (a.chiffres || []).length);
-  if (!res || res.chiffres.length < 3) return "";
-  return `<div class="r8-faits"><div class="r8-fl r8-lgf"><span class="k">Ses autres chiffres</span><span class="v">${esc(res.chiffres.slice(2, 5).map(([a, b]) => `${a} ${b}`).join(" · "))}</span><span class="c">publiés le ${esc(r8Jr(res.date))}</span></div></div>`;
-}
 /* ===== 8/11 après-midi (Romain, maquettes docs/maquettes/rapport-semaine-v7 à v9) : nouvelle présentation du rapport =====
    Le résultat (bandeau jaune : euros, phrase, courbe, votre semaine face aux indices) ; « Vos lignes » (une ligne par valeur : gagné ou perdu,
    semaine, jauge face à la médiane de ses rivales ; le clic ouvre pourquoi elle a bougé, la presse et ses rivales) ; le monde en tuiles
    (la radiographie « chez vous » rangée dans chaque sujet, filtres par thème et pays) ; à venir en bande. */
-const r9Abs = x => F1.format(Math.abs(x)) + "\u00a0%"; // « a perdu 4,4 % » : sans signe
 const r9Le = n => /^[AEIOUÉ]/i.test(String(n)) ? "l'" + n : "le " + n;
 function r9Verd(l, R0) {
   const v = l.variation_semaine_pct, med = R0 && R0.med; if (v == null || med == null) return null;
   const d = v - med; return d > 1.5 ? ["Mieux que ses rivales", "up"] : d < -1.5 ? ["Moins bien que ses rivales", "dn"] : ["Comme ses rivales", ""];
 }
-function r9Jauge(l, R0) { const v = l.variation_semaine_pct, med = R0 && R0.med; if (v == null || med == null) return ""; const p = 50 + Math.max(-46, Math.min(46, (v - med) / 6 * 46)); return `<div class="r9-gauge"><i style="left:${p.toFixed(1)}%"></i></div>`; }
 // « Pourquoi elle a bougé » : la phrase qui dit l'essentiel, la semaine en trois barres, cinq cases jour par jour, deux phrases au plus
 function r9Pq(l, R0, A) {
   const v = l.variation_semaine_pct, ix = l.indice && l.indice.pct != null ? l.indice : null, med = R0 ? R0.med : null, J = (R0 && R0.jours) || [], nom = esc(r8Maj(r8Court(l)));

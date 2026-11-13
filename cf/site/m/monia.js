@@ -15,7 +15,6 @@ function miaEtat() {
     .then(j => { if (j) MIA.niveau = j.niveau || "visiteur"; if (j && !j.disponible) MIA.coupee = j.site_epuise ? "site" : j.raison === "absente" ? "absente" : "visiteur"; miaMaj(); return j; });
 }
 const miaConnectee = () => !MIA.coupee; // nom gardé : « une IA répond » (les autres modules l'utilisent)
-const miaNomModele = () => "l'IA d'ENKLAIR";
  // plus rien à déconnecter : gardé pour les anciens appels
 
 /* ---------- Appel de l'IA du site ---------- */

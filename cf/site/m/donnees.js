@@ -43,7 +43,6 @@ function donDps(c) {
   return { v, estime: v != null && (c.dpsE === 1 || c.dpsE === true || (c.dps == null && c.dpsEst != null)) };
 }
 // Suffixe à ajouter à un libellé de dividende dans une liste ou une comparaison
-function donDpsNote(c) { return donDps(c).estime ? " (estimé)" : ""; }
 
 /* ---------- 3. Taux de change : ceux de la BCE, pas des taux écrits en dur (P1-9) ---------- */
 // FXE est le jeu de taux fixes de index.html (USD 0,92, GBP 1,17…), utilisé par caEur() pour classer
@@ -95,16 +94,6 @@ function donCroissance(s) { return s ? donVar(s.ca, s.caPrev, s.year, s.yearPrev
 // entreprises les comptent dans leur propre dette nette ; les dépôts américains ne retiennent pas les
 // mêmes étiquettes. La collecte fournit maintenant « leases » et « netDebtBaux », et, dans les fiches
 // détaillées, « tags.debt » dit exercice par exercice ce qui entre dans le chiffre.
-function donDette(c) {
-  if (!c) return { v: null, baux: null, leases: null, def: null, norme: null };
-  return {
-    v: c.netDebt != null ? c.netDebt : null,
-    baux: c.netDebtBaux != null ? c.netDebtBaux : null,
-    leases: c.leases != null ? c.leases : null,
-    def: c.tagDette || (c.netDebtBaux != null ? "emprunts publiés, moins la trésorerie ; dettes locatives connues et fournies à part" : null),
-    norme: c.norme || null,
-  };
-}
 
 /* ---------- 6. Indicateurs à partir des comptes ---------- */
 function ratios(s) { // s : chiffres du dernier exercice
@@ -128,28 +117,7 @@ function ratios(s) { // s : chiffres du dernier exercice
 /* ---------- 7. Effectif et exercices d'une médiane (P1-10) ---------- */
 // MED[secteur].n existe déjà (provenance.js) ; on ajoute combien d'entreprises ont été écartées
 // pour comptes anciens et quels exercices sont réellement couverts.
-const DON_MEDINFO = {};
-function donMed(secteur) {
-  if (DON_MEDINFO[secteur]) return DON_MEDINFO[secteur];
-  let n = 0, nPerime = 0; const ans = [];
-  for (const c of (typeof R !== "undefined" && R && R.companies) || []) {
-    if (c.missing || c.sector !== secteur) continue;
-    if (donVieux(c)) { nPerime++; continue; }
-    n++; if (c.year != null) ans.push(c.year);
-  }
-  ans.sort();
-  return DON_MEDINFO[secteur] = { n, nPerime, annees: ans.length ? [ans[0], ans[ans.length - 1]] : null };
-}
 // Médiane d'un indicateur dans un secteur, au besoin limitée à une région
-function donMedInd(sector, k, region) {
-  if (!region) return medInd(sector, k);
-  const key = sector + "|" + k + "|" + region;
-  if (MEDI[key] === undefined) {
-    const l = (R.companies || []).filter(c => c.sector === sector && donRetenue(c) && (c.region === region || (region === "EU" && c.region === "FR")));
-    MEDI[key] = l.length >= 3 ? median(l.map(INDI[k][1])) : null;
-  }
-  return MEDI[key];
-}
 
 /* ---------- 8. Indicateurs calculables en plus (P2-1) ---------- */
 // Cours ÷ valeur comptable : valeur en Bourse du jour ÷ capitaux propres de clôture.

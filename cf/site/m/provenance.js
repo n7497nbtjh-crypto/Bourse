@@ -118,7 +118,6 @@ try {
 } catch (e) { }
 
 /* ---------- 3. Dates et fraîcheur ---------- */
-const PROV_MOIS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 function provJoursOuvres(iso, today = TODAY) { // jours de semaine écoulés depuis une date (jours fériés non comptés à part)
   if (!iso) return null;
   const a = new Date(String(iso).slice(0, 10) + "T12:00:00Z"), b = new Date(String(today).slice(0, 10) + "T12:00:00Z");
@@ -145,10 +144,6 @@ function provClos(c, s) {
   return null;
 }
 function provComptesAge(c, s) { const d = provClos(c, s); const m = provMoisDepuis(d); return { clos: d, mois: m, vieux: m != null && m > 15 }; }
-function provComptesVieux(c, s) { // bandeau pour la fiche : comptes de plus de 15 mois
-  const a = provComptesAge(c, s); if (!a.vieux) return "";
-  return `<p class="prov-old" role="note"><b>Comptes anciens.</b> Le dernier exercice lu par le site a été clos le ${dLabel(a.clos)}, il y a ${provDuree(a.mois)}. Les chiffres ci-dessous ne décrivent pas la situation actuelle : des comptes plus récents ont peut-être été publiés depuis, vérifiez auprès de l'entreprise.</p>`;
-}
 const provDuree = m => m < 24 ? `${m} mois` : `plus de ${Math.floor(m / 12)} ans`;
 // Cours : date du relevé et fraîcheur. PXUP vaut une date (fichier quotidien du site) ou un horodatage (cours lus par le serveur).
 // p.d : date du fichier de secours quand le titre manquait dans la feuille de cours (ajoutée par le serveur).
@@ -443,76 +438,13 @@ function computeMedians() {
 function medInd(sector, k) { const key = sector + "|" + k; if (MEDI[key] === undefined) MEDI[key] = median(R.companies.filter(c => c.sector === sector && !c.missing && !provComptesPerimes(c)).map(INDI[k][1])); return MEDI[key]; }
 
 /* ---------- 6. Cours : fraîcheur affichée honnêtement ---------- */
-function priceHead(c, isEtf = false) {
-  const p = isEtf ? pxEtf(c) : pxOf(c);
-  if (!p) return `<div class="pxhead"><span class="d">${PXUP && PXUP !== "none" ? "Cours non disponible pour ce titre" : "Chargement du cours…"}</span></div>`;
-  const k = provCours(p), ch = p.chg;
-  const quand = k.vieux ? `Cours du ${dLabel(k.d)} : pas de nouveau relevé depuis ${k.jo} jours ouvrés` : k.live ? `Cours différé${k.heure ? ` · relevé à ${k.heure}` : ""}` : k.d ? `Dernier cours relevé le ${dLabel(k.d)}` : "Cours différé";
-  const jour = k.vieux ? "lors de la dernière séance relevée" : (k.live || k.d === TODAY) && jourSeance() === "aujourd'hui" ? "aujourd'hui" : jourSeance() !== "aujourd'hui" ? jourSeance() : "lors de la dernière séance"; // 1/11 : le week-end, « vendredi »
-  return `<div class="pxhead"><span class="kick">Cours${provBtn("cours", (isEtf ? "e:" : "c:") + c.id, "Cours de l'action")}</span><span class="p">${pxFmt(p.p, p.cur)}</span>${p.cur && p.cur !== "EUR" && isFinite(toEur(p.p, p.cur)) ? `<span class="pxeur">soit ${pxFmt(toEur(p.p, p.cur), "EUR")}</span>` : ""}${ch != null ? `<span class="${ch > 0 ? "up" : ch < 0 ? "down" : "muted"}" style="font-weight:600">${ch > 0 ? "+" : ""}${F2.format(ch)} % ${jour}</span>` : ""}<span class="d${k.vieux ? " prov-stale" : ""}">${quand} · ${esc(p.s)}</span></div>`;
-}
 
 /* ---------- 7. Valorisation : PER, valeur d'entreprise ÷ EBITDA, rendement du flux de trésorerie disponible ---------- */
-function prixHTML(s, c) {
-  const f = figuresOf(c), v = valo(s), idxId = s.region === "US" || s.region === "MONDE" ? "sp500" : "cac40", idx = PX["i:" + idxId], idxName = idxId === "sp500" ? "S&P 500" : "CAC 40";
-  if (!v) return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2></div><div class="pb muted">${PXUP && PXUP !== "none" ? "Le cours de cette action n'est pas disponible dans notre source pour le moment." : "Chargement du cours…"}</div></section>`;
-  const p = v.p, mp = MEDPE[s.sector], ids = "c:" + s.id, k = provCours(p);
-  const perf = (a, b) => a && b ? a / b - 1 : null;
-  const prow = [["1 an", "p1y"], ["3 ans", "p3y"], ["5 ans", "p5y"]].map(([l, kk]) => [l, perf(p.p, p[kk]), idx ? perf(idx.p, idx[kk]) : null]).filter(r => r[1] != null);
-  const pos = p.h52 && p.l52 && p.h52 > p.l52 ? Math.min(1, Math.max(0, (p.p - p.l52) / (p.h52 - p.l52))) : null;
-  const peTxt = v.pe ? `L'action coûte <b>${F0.format(v.pe)} fois</b> le bénéfice de la dernière année${mp ? `, contre ${F0.format(mp)} fois pour la médiane de son secteur` : ""}. ${mp ? (v.pe > mp * 1.3 ? "Le marché la paie plus cher que ses concurrentes : il attend plus de croissance, ou il est optimiste." : v.pe < mp * 0.75 ? "Le marché la paie moins cher que ses concurrentes : il attend moins de croissance, ou il est prudent." : "C'est dans la moyenne de son secteur.") : ""}` : v.vieux ? "Le dernier exercice lu par le site est trop ancien : le PER et le rendement ne sont pas calculés, car le cours d'aujourd'hui serait rapporté à un bénéfice périmé." : f.net != null && f.net <= 0 ? "L'entreprise a perdu de l'argent sur le dernier exercice : le PER (prix ÷ bénéfice) ne se calcule pas." : "";
-  const ev = provEvEbitda(s), mev = medInd(s.sector, "ev_ebitda"), fy = provRdtFcf(s);
-  const kick = (t, key) => `<span class="kick">${t}${provBtn(key, ids)}</span>`;
-  return `<section class="panel" id="prix"><div class="ph"><h2>Le prix de l'action</h2><span class="light" style="font-size:12.5px">${k.vieux ? `Cours du ${dLabel(k.d)}` : "Cours différé"} · ${esc(p.s)}</span></div>
-    <div class="pb" style="padding-top:2px"><p class="lead" style="margin:0">${peTxt}</p>${k.vieux ? `<p class="prov-old" style="margin:10px 0 0">Cours ancien : pas de nouveau relevé depuis ${k.jo} jours ouvrés. Les ratios ci-dessous reposent sur ce cours.</p>` : ""}</div>
-    <div class="tiles">
-      <div class="tile"><span class="kick">Cours</span><span class="v">${pxFmt(p.p, p.cur)}</span><small>${p.chg != null ? `${p.chg > 0 ? "+" : ""}${F2.format(p.chg)} % ${jourSeance()}` : "dernier cours connu"}</small></div>
-      <div class="tile">${kick("Valeur en Bourse", "cap")}<span class="v">${capFmt(v.capE)}</span><small>prix de toutes ses actions (capitalisation)</small></div>
-      <div class="tile">${kick("PER", "per")}<span class="v">${v.pe ? F0.format(v.pe) : "–"}</span><small>${v.pe ? `ans de bénéfice pour payer ce prix${mp ? ` · secteur : ${F0.format(mp)}` : ""}` : v.vieux ? "non calculé : comptes trop anciens" : "non calculable (perte ou donnée manquante)"}</small></div>
-      ${ev != null ? `<div class="tile">${kick("Valeur d'entreprise ÷ EBITDA", "evebitda")}<span class="v">${ev > 100 || ev < 0 ? "n.s." : F1.format(ev)}</span><small>${ev > 100 || ev < 0 ? "multiple non significatif (EBITDA trop faible ou négatif)" : "fois, dettes comprises"}${mev != null ? ` · secteur : ${F1.format(mev)}` : ""}</small></div>` : ""}
-      ${fy != null ? `<div class="tile">${kick("Rendement de l'argent disponible", "rdtfcf")}<span class="v">${pct(fy, 1, false)}</span><small>flux de trésorerie disponible ÷ valeur en Bourse</small></div>` : ""}
-      <div class="tile"><span class="kick">Rendement</span><span class="v">${v.yld != null ? pct(v.yld, 1, false) : "–"}</span><small>${v.yld != null ? "dividende annuel ÷ valeur en Bourse" : v.vieux ? "non calculé : comptes trop anciens" : "pas de dividende"}</small></div>
-    </div>
-    ${perExplique(s)}
-    <div class="pb">
-      ${pos != null ? `<p class="kick" style="margin-top:4px">Sur un an : du plus bas au plus haut</p><div class="range"><i style="left:${pos * 100}%"></i></div><div class="range-l"><span>${pxFmt(p.l52, p.cur)}</span><span>${pos > 0.85 ? "proche de son plus haut de l'année" : pos < 0.15 ? "proche de son plus bas de l'année" : `à ${F0.format(pos * 100)} % entre le plus bas et le plus haut`}</span><span>${pxFmt(p.h52, p.cur)}</span></div>` : ""}
-      ${prow.length ? `<p class="kick" style="margin-top:18px">Évolution du cours, comparée au ${idxName}${provBtn("var1an", ids)}</p>
-        <div class="scroll-x"><table class="t"><thead><tr><th class="l">Sur</th><th>${esc(s.name)}</th>${idx ? `<th>${idxName}</th>` : ""}</tr></thead><tbody>${prow.map(([l, a, b]) => `<tr><td class="l">${l}</td><td class="num ${a >= 0 ? "up" : "down"}">${sgn(a, 0)}</td>${idx ? `<td class="num">${b != null ? sgn(b, 0) : "–"}</td>` : ""}</tr>`).join("")}</tbody></table></div>
-        <p class="note">Évolution du prix seul, dividendes non compris. ${prow.at(-1)[2] != null ? (prow.at(-1)[1] > prow.at(-1)[2] ? `Sur ${prow.at(-1)[0]}, l'action a fait mieux que le ${idxName}.` : `Sur ${prow.at(-1)[0]}, l'action a fait moins bien que le ${idxName}.`) : ""} Le passé ne dit rien de l'avenir.</p>` : ""}
-    </div>
-    <div class="src">PER, valeur d'entreprise ÷ EBITDA et rendements calculés par le site avec les derniers comptes annuels publiés (exercice ${f.year}) et la valeur en Bourse ${k.vieux ? `du ${dLabel(k.d)}` : "actuelle"}, convertie en euros aux taux de la BCE. Cours : Google Finance, différés. Touchez « i » pour la formule et les dates.</div></section>`;
-}
 
 /* ---------- 8. ETF : retiré le 3/11/2026 (fiche ETF v4, m/etf4.js : sources dans chaque graphique et dans « Prouvé ») ---------- */
 
 /* ---------- 9. « Vérifier une offre » : trois issues distinctes, jamais de « feu vert » ---------- */
 // Mots trop courants pour identifier un acteur : une recherche faite seulement de ces mots est jugée insuffisante.
-const PROV_LN_GENERIQUES = new Set(["invest", "investir", "investissement", "investissements", "investment", "investments", "trading", "trade", "trader", "crypto", "cryptos", "bitcoin", "btc", "bourse", "finance", "finances", "financier", "financiere",
-  "capital", "capitaux", "gestion", "conseil", "conseils", "patrimoine", "placement", "placements", "forex", "banque", "bank", "epargne", "wealth", "asset", "assets", "fund", "funds", "fonds", "profit", "profits", "gain", "gains", "rendement",
-  "global", "international", "group", "groupe", "france", "europe", "paris", "partners", "consulting", "market", "markets", "marche", "com", "fr", "net", "org", "www", "http", "https", "sas", "sarl", "ltd", "limited", "inc", "sa",
-  "or", "gold", "vin", "vins", "diamant", "diamants", "immobilier", "options", "binaires", "broker", "courtier", "plateforme", "app", "application", "conseiller", "amf", "contact", "info", "service", "services", "securities", "capital-invest"]);
-const PROV_LN_MAX = 40; // au-delà, la saisie est trop générale pour être utile
-function provLnNorm(q) {
-  let t = norm(String(q || "").trim()).replace(/^[a-z]+:\/\//, "").replace(/^www\./, "");
-  const at = t.lastIndexOf("@"); const mail = at > 0 ? t.slice(at + 1) : null;
-  t = t.replace(/[/?#].*$/, "").replace(/\s+/g, " ").trim();
-  return { t, domaine: mail ? mail.replace(/[/?#].*$/, "") : /^[a-z0-9.-]+\.[a-z]{2,}$/.test(t) ? t : null };
-}
-function provLnIndex(items) { // nom normalisé et domaine de chaque entrée (le nom contient souvent le site ou l'adresse e-mail)
-  return items.map(x => { const n = norm(x.n || ""), s = norm(x.s || ""), apres = n.includes("@") ? n.slice(n.lastIndexOf("@") + 1) : n;
-    const dom = (apres.match(/([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})(?![a-z0-9-])/) || [])[1] || null;
-    return { x, n, s, dom: dom ? dom.replace(/^www\./, "") : null }; });
-}
 // Résultat : { issue: "trouve" | "insuffisant" | "aucun", hits, raison }
-function provLnCherche(q, IDX) {
-  const { t, domaine } = provLnNorm(q);
-  const mots = t.split(/[\s.\-_@]+/).filter(Boolean);
-  if (t.length < 4) return { issue: "insuffisant", hits: [], raison: "court" };
-  if (!domaine && mots.every(m => PROV_LN_GENERIQUES.has(m) || m.length < 3)) return { issue: "insuffisant", hits: [], raison: "generique" };
-  const hits = IDX.filter(i => i.n.includes(t) || (i.s && i.s.includes(t)) || (domaine && i.dom && (domaine === i.dom || domaine.endsWith("." + i.dom))));
-  if (hits.length > PROV_LN_MAX && !domaine) return { issue: "insuffisant", hits: [], raison: "trop", n: hits.length };
-  return hits.length ? { issue: "trouve", hits: hits.map(h => h.x) } : { issue: "aucun", hits: [] };
-}
-const provLnCat = c => String(c || "").split("|").map(x => x.replace(/^Biens_divers\//, "Biens divers : ").replace(/_/g, " ").replace("Usurpation AMF", "Usurpation de l'identité de l'AMF")).join(", ");
 
 /* styles : voir site.css */

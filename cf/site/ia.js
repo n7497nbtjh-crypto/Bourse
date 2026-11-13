@@ -149,7 +149,6 @@ function IA_trouve(q, raw) { // → { cos, etfs, reste } ; reste : la question s
   const etfs = []; for (const [s, e] of Object.entries(X.etk)) if (w.includes(s)) { etfs.push(e); w = w.replace(s, " "); }
   return { cos, etfs, reste: w, via: ok.map(h => h.a.k) };
 }
-function trouveEntreprises(q) { if (!R) return []; return IA_trouve(IA_txt(q), q).cos; }
 
 /* ---------- 3. Les notions : définitions exactes (repères 2026 pour la France) ---------- */
 const IA_TERMES = [

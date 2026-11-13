@@ -373,3 +373,10 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Liens corrigés : liste des ETF (encadrés « Comprendre »), lexique (encadré PEA), liens sans JavaScript d'index.html.
 - Tests : `tests/t_worker.mjs` vérifie les 15 nouvelles redirections ; `tests/audit.py` et `scripts/relire-pages.js` ne visitent plus les pages supprimées (46 pages relues, 0 problème).
 - Reste pour 2b : le code de base de ces pages (app.js, outils.js, outils2.js, reco.js, communication.js, provenance.js, pays.js), les leçons proposées par la recherche, les données et le CSS associés.
+
+## 13/11 après-midi : recentrage, étape 2b (code de base des pages supprimées)
+- Points d'entrée coupés : branches du routeur (communauté, simulateurs, PEA ou compte-titres, débuter, commencer, académie, formation), sous-pages d'Outils (si-javais, verifier), routes des modules (idées reçues, Livret A ou Bourse, Pourquoi ENKLAIR, hier, répartitions), branchements de `pays.js` sur les pages d'apprentissage.
+- Nouvel outil `scripts/code-mort.js` (analyse avec acorn, prudent) : 271 fonctions et constantes mortes retirées, 269 Ko, dont 139 Ko dans `app.js`, 26 Ko dans `outils2.js`, 23 Ko dans `tableaux.js`, 17 Ko dans `reco.js`, 16 Ko dans `pays.js` et `communication.js`. Une partie était déjà morte avant le chantier (152 Ko).
+- Supprimés aussi : `cf/site/data/listes-noires.json` (452 Ko), `hist-ref.json`, robots `data/listes_noires.mjs` et `data/outils2_hist.mjs`, robot `outils2.yml`, tests des pages supprimées (`t_parcours.py`, `t_outils2.*`, `t_provenance.py` ; `t_provenance.mjs` gardé sans sa partie « Vérifier une offre »).
+- Bilan depuis le début du chantier : code du navigateur 2,14 Mo → 1,68 Mo, 57 → 48 modules, 24 → 23 robots, 59 → 55 tests.
+- Contrôles : audit complet (104 pages en trois tailles) 0 problème, 0 erreur JS ; 3 296 fiches calculées, 0 problème ; relecture de 46 pages, 0 problème ; tests du serveur 0 écart.

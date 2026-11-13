@@ -12,14 +12,7 @@
 /* ====================================================================================
    1. Outils communs
    ==================================================================================== */
-const O2_C = { ink: "#141414", bleu: "#2B5C9E", vert: "#0E8A5F", orange: "#D94F2B", gris: "#A39C8E", sable: "#C9C3B8" };
-const O2_DATA = {};
-async function O2_json(u) { if (!(u in O2_DATA)) O2_DATA[u] = getJSON(u, null); return O2_DATA[u]; }
-const O2_ref = () => O2_json("/data/hist-ref.json");
-const O2_e = (v, d = 0) => v == null || !isFinite(v) ? "–" : (v < 0 ? "−" : "") + nf(d).format(Math.abs(v)) + " €";
 const O2_p = (v, d = 1, s = true) => v == null || !isFinite(v) ? "–" : (s && v > 0 ? "+" : v < 0 ? "−" : "") + nf(d).format(Math.abs(v)) + " %";
-const O2_MOIS = ["janv.", "févr.", "mars", "avr.", "mai", "juin", "juil.", "août", "sept.", "oct.", "nov.", "déc."];
-const O2_moisL = ym => { const [y, m] = ym.split("-"); return MOISL[+m - 1] + " " + y; };
 const O2_src = (label, url) => url ? `<a class="lnk" href="${esc(url)}"${url.startsWith("/") ? "" : ` target="_blank" rel="noopener"`}>${esc(label)}</a>` : esc(label);
 
 // Heure d'une source (date, "HH:MM", fuseau IANA) -> instant UTC, puis affichage à l'heure de Paris
@@ -40,51 +33,6 @@ const O2_hLoc = (hm, tz) => hm.replace(":", " h ") + " " + (O2_TZN[tz] || tz);
 
 /* Courbe à axe de temps : séries [{ nom, couleur, tirets, pts: [[x, y]] }], x en nombre (années, mois…).
    Infobulle au survol (ou au toucher) qui donne toutes les séries au même x ; légende cliquable pour masquer une série. */
-function O2_courbe(el, o) {
-  if (!el) return;
-  const cache = new Set(o.cache || []);
-  const dessine = () => {
-    const W = Math.max(280, el.clientWidth || 600), H = o.h || (W < 500 ? 240 : 300), m = { l: W < 500 ? 48 : 62, r: 14, t: 14, b: 30 };
-    const vis = o.series.filter(s => !cache.has(s.nom) && s.pts.length);
-    const xs = o.series.flatMap(s => s.pts.map(p => p[0])), ys = vis.flatMap(s => s.pts.map(p => p[1])).filter(v => v != null && isFinite(v));
-    if (!xs.length) { el.innerHTML = ""; return; }
-    let x0 = Math.min(...xs), x1 = Math.max(...xs); if (x1 === x0) x1 = x0 + 1;
-    let y0 = o.zero ? Math.min(0, ...ys) : Math.min(...ys), y1 = Math.max(...ys, y0 + 1);
-    const pad = (y1 - y0) * 0.08; y1 += pad; if (!o.zero) y0 = Math.max(o.plancher ?? -Infinity, y0 - pad);
-    const st = (() => { const r = (y1 - y0) / 4, p = Math.pow(10, Math.floor(Math.log10(r))), n = r / p; return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * p; })();
-    y0 = Math.floor(y0 / st) * st; y1 = Math.ceil(y1 / st) * st;
-    const yl = []; for (let v = y0; v <= y1 + st / 2; v += st) yl.push(o.yFmt ? o.yFmt(v, true) : F0.format(v));
-    m.l = Math.max(36, Math.ceil(Math.max(...yl.map(t => String(t).length)) * 6.8) + 14);
-    const X = x => m.l + (x - x0) / (x1 - x0) * (W - m.l - m.r), Y = y => m.t + (1 - (y - y0) / (y1 - y0)) * (H - m.t - m.b);
-    let g = "";
-    for (let v = y0; v <= y1 + st / 2; v += st) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(v)}" y2="${Y(v)}" stroke="#EFEAE0"/><text x="${m.l - 8}" y="${Y(v) + 4}" text-anchor="end" class="o2-ax">${esc(o.yFmt ? o.yFmt(v, true) : F0.format(v))}</text>`;
-    const ticks = o.xTicks || [...new Set(xs)].map(x => [x, String(x)]);
-    // Étiquettes de l'axe : on garde la dernière, et on saute celles qui chevaucheraient la précédente
-    const larg = l => String(l).length * 6.8 + 10, tk = [];
-    for (let i = ticks.length - 1; i >= 0; i--) { const t = ticks[i]; if (!tk.length || X(tk[0][0]) - X(t[0]) >= (larg(tk[0][1]) + larg(t[1])) / 2) tk.unshift(t); }
-    tk.forEach(([x, l], i) => g += `<text x="${X(x)}" y="${H - 8}" text-anchor="${i === 0 && X(x) < m.l + 30 ? "start" : i === tk.length - 1 && X(x) > W - 40 ? "end" : "middle"}" class="o2-ax">${esc(l)}</text>`);
-    if (o.refY != null && o.refY >= y0 && o.refY <= y1) g += `<line x1="${m.l}" x2="${W - m.r}" y1="${Y(o.refY)}" y2="${Y(o.refY)}" stroke="#A39C8E" stroke-dasharray="2 3"/>`;
-    const lignes = vis.map(s => { const pts = s.pts.filter(p => p[1] != null && isFinite(p[1])); if (!pts.length) return "";
-      return `<path d="${pts.map((p, i) => (i ? "L" : "M") + X(p[0]).toFixed(1) + " " + Y(p[1]).toFixed(1)).join("")}" fill="none" stroke="${s.couleur}" stroke-width="${s.epais || 2}" ${s.tirets ? `stroke-dasharray="5 4"` : ""} stroke-linejoin="round" stroke-linecap="round"/>`
-        + (s.points ? pts.map(p => `<circle cx="${X(p[0])}" cy="${Y(p[1])}" r="4" fill="${s.couleur}" stroke="#fff" stroke-width="2"/>`).join("") : ""); }).join("");
-    el.innerHTML = `<div class="o2-cw"><svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="${esc(o.titre || "Courbe")}">${g}${lignes}<line class="o2-cx" x1="0" x2="0" y1="${m.t}" y2="${H - m.b}" stroke="#141414" stroke-width="1" opacity="0"/><g class="o2-dots"></g><rect x="${m.l}" y="0" width="${W - m.l - m.r}" height="${H}" fill="transparent" class="o2-hit"/></svg><div class="o2-tip" hidden></div></div>
-      <div class="o2-leg">${o.series.map(s => `<button type="button" data-n="${esc(s.nom)}" class="${cache.has(s.nom) ? "off" : ""}" aria-pressed="${!cache.has(s.nom)}"><i style="${s.tirets ? `background:repeating-linear-gradient(90deg,${s.couleur} 0 5px,transparent 5px 8px)` : `background:${s.couleur}`}"></i>${esc(s.nom)}</button>`).join("")}</div>`;
-    const svg = $("svg", el), tip = $(".o2-tip", el), cx = $(".o2-cx", el), dots = $(".o2-dots", el), ux = [...new Set(xs)].sort((a, b) => a - b);
-    const montre = ev => { const r = svg.getBoundingClientRect(), px = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left, sx = px * W / r.width;
-      const x = ux.reduce((a, b) => Math.abs(X(b) - sx) < Math.abs(X(a) - sx) ? b : a, ux[0]);
-      const rows = vis.map(s => [s, (s.pts.find(p => p[0] === x) || [])[1]]).filter(([, v]) => v != null && isFinite(v));
-      cx.setAttribute("x1", X(x)); cx.setAttribute("x2", X(x)); cx.setAttribute("opacity", ".25");
-      dots.innerHTML = rows.map(([s, v]) => `<circle cx="${X(x)}" cy="${Y(v)}" r="4.5" fill="${s.couleur}" stroke="#fff" stroke-width="2"/>`).join("");
-      tip.innerHTML = `<b>${esc(o.tipX ? o.tipX(x) : String(x))}</b>${rows.map(([s, v]) => `<span><i style="background:${s.couleur}"></i>${esc(s.nom)} <em>${esc(o.yFmt ? o.yFmt(v) : F0.format(v))}</em></span>`).join("")}`;
-      tip.hidden = !rows.length; const tw = tip.offsetWidth, lx = X(x) * r.width / W; tip.style.left = Math.max(0, Math.min(r.width - tw, lx - tw / 2)) + "px"; };
-    const cache_ = () => { tip.hidden = true; cx.setAttribute("opacity", "0"); dots.innerHTML = ""; };
-    svg.addEventListener("pointermove", montre); svg.addEventListener("pointerdown", montre); svg.addEventListener("pointerleave", cache_);
-    $$(".o2-leg button", el).forEach(b => b.onclick = () => { const n = b.dataset.n; cache.has(n) ? cache.delete(n) : cache.add(n); if (cache.size >= o.series.length) cache.delete(n); dessine(); });
-  };
-  dessine();
-  if (el._o2ro) el._o2ro.disconnect();
-  if (window.ResizeObserver) { let w = el.clientWidth; el._o2ro = new ResizeObserver(() => { if (Math.abs(el.clientWidth - w) > 20) { w = el.clientWidth; dessine(); } }); el._o2ro.observe(el); }
-}
 
 /* Petites barres horizontales comparées (une ligne = un libellé, plusieurs valeurs) */
 function O2_barres(rows, noms, couleurs, fmt = v => O2_p(v, 1, false)) { // 31/10 (Romain) : une colonne par fonds, barre courte et chiffre côte à côte, au lieu de barres empilées illisibles
@@ -193,80 +141,21 @@ async function O2_rcCalcul(S) {
 /* ====================================================================================
    3. Et si j'avais investi ? Une seule courbe, des séries distinctes, des hypothèses écrites
    ==================================================================================== */
-const O2_IDXCUR = { cac40: "EUR", stoxx50: "EUR", dax: "EUR", sp500: "USD", nasdaq100: "USD", ftse100: "GBP", nikkei: "JPY" };
-const O2_IDXNOM = { cac40: "CAC 40", stoxx50: "Euro Stoxx 50", stoxx600: "Stoxx Europe 600", dax: "DAX", sp500: "S&P 500", nasdaq100: "Nasdaq 100", ftse100: "FTSE 100", nikkei: "Nikkei 225" };
-const O2_nomK = k => k.startsWith("i:") ? O2_IDXNOM[k.slice(2)] || k.slice(2) : keyName(k) || k;
-const O2_curK = k => { const p = PX[k]; if (p && p.cur) return p.cur; if (k.startsWith("i:")) return O2_IDXCUR[k.slice(2)] || null; if (k.startsWith("e:")) return (ETFBY[k.slice(2)] || {}).devise || null; return null; };
-const O2_moinsAns = (iso, a) => { const [y, m, d] = iso.split("-").map(Number); const dt = new Date(Date.UTC(y - a, m - 1, d)); if (dt.getUTCMonth() !== m - 1) dt.setUTCDate(0); return dt.toISOString().slice(0, 10); };
-const O2_dCourt = iso => { const [y, m] = iso.split("-"); return O2_MOIS[+m - 1] + " " + y; };
 // Unités de devise pour 1 € : moyenne mensuelle BCE pour le passé, taux BCE du jour pour aujourd'hui
-function O2_fx(ref, cur, iso, auj) {
-  if (!cur || cur === "EUR") return 1;
-  if (auj && typeof FX !== "undefined" && FX && FX[cur]) return 1 / FX[cur];
-  const m = ref && ref.fx && ref.fx.mois, k = m && O2C.moisProche(m, iso);
-  return k && m[k][cur] ? m[k][cur] : null;
-}
 
 // Série d'un titre : points aux dates relevées (il y a 5, 3, 1 an, aujourd'hui), en euros
 // 7/11 : ETF sans cours passés dans les feuilles Google : série officielle de l'émetteur (cf/site/data/etf-hist/<id>.json,
 // valeur liquidative ajustée des dividendes, en euros, une valeur par semaine ; robot etf-hist.yml), chargée par sj4Hist (sijavais4.js)
-const O2_ETFH = {};
-function O2_sjEtfHist(k, S, Hs, frais) {
-  const s = (Hs.s || []).filter(x => x && x[1] > 0), der = s[s.length - 1];
-  if (!der && Hs.perf && Hs.asOf && (!Hs.devise || Hs.devise === "EUR")) { // HSBC : seulement les performances officielles de fin de mois (fiche mensuelle)
-    const P = Hs.perf, g = { 1: P.a1, 3: P.a3, 5: P.a5 }; if (g[S.ans] == null) return { k, err: `pas de performance publiée sur ${S.ans} an${S.ans > 1 ? "s" : ""}` };
-    const net = Math.max(0, S.amt - frais), fin = net * (1 + g[S.ans]);
-    const pts = [5, 3, 1, 0].filter(a => a <= S.ans).map(a => [-a, a === S.ans ? net : a === 0 ? fin : g[a] != null ? fin / (1 + g[a]) : null]);
-    return { k, nom: O2_nomK(k), cur: "EUR", pts, div: null, parts: net, net, frais, depart: 1, base: Hs.asOf, finDate: Hs.asOf, hist: { src: Hs.src || "émetteur", asOf: Hs.asOf, debut: O2_moinsAns(Hs.asOf, S.ans), mensuel: true } };
-  }
-  if (!der || (Hs.devise && Hs.devise !== "EUR")) return null;
-  const at = d => { let b = null; for (const x of s) { if (x[0] > d) break; b = x; } return b && (Date.parse(d) - Date.parse(b[0])) / 864e5 <= 10 ? b : null; };
-  const champs = [5, 3, 1, 0].filter(a => a <= S.ans), x0 = at(O2_moinsAns(der[0], S.ans));
-  if (!x0) return { k, err: `pas de valeur il y a ${S.ans} an${S.ans > 1 ? "s" : ""} (série de l'émetteur depuis le ${dLabel(s[0][0])})` };
-  const net = Math.max(0, S.amt - frais), parts = net / x0[1];
-  const pts = champs.map(a => { const x = a === 0 ? der : at(O2_moinsAns(der[0], a)); return [-a, x ? parts * x[1] : null]; });
-  return { k, nom: O2_nomK(k), cur: "EUR", pts, div: null, parts, net, frais, depart: x0[1], base: der[0], hist: { src: Hs.src || "émetteur", asOf: der[0], debut: x0[0], sansDiv: !!Hs.sansDiv } };
-}
-function O2_sjSerie(k, S, ref, H, frais) {
-  const p = PX[k], cur = O2_curK(k);
-  const champs = [[5, "p5y"], [3, "p3y"], [1, "p1y"], [0, "p"]].filter(([a]) => a <= S.ans), deb = O2_moinsAns(TODAY, S.ans);
-  if (k.startsWith("e:") && O2_ETFH[k] && !(p && p[champs[0][1]] > 0)) { const r = O2_sjEtfHist(k, S, O2_ETFH[k], frais); if (r) return r; }
-  if (!p || !(p.p > 0)) return { k, err: "pas de cours" };
-  const base = p.dp && p.dp < TODAY ? p.dp : TODAY; // 7/11 : cours passés repris de la mémoire du robot : ils datent du jour p.dp, pas d'aujourd'hui
-  if (!(p[champs[0][1]] > 0)) return { k, err: `pas de cours il y a ${S.ans} an${S.ans > 1 ? "s" : ""}` };
-  const fx0 = O2_fx(ref, cur, O2_moinsAns(base, S.ans)); if (fx0 == null) return { k, err: "taux de change historique indisponible" };
-  const net = Math.max(0, S.amt - frais), parts = net * fx0 / p[champs[0][1]];
-  const pts = champs.filter(([, f]) => p[f] > 0).map(([a, f]) => { const fx = O2_fx(ref, cur, a === 0 ? TODAY : O2_moinsAns(base, a), a === 0); return [-a, fx ? parts * p[f] / fx : null]; });
-  // Dividendes perçus (actions) : dividende par action publié de chaque exercice, supposé versé le 1er juin de l'année suivante
-  let div = null; const c = k.startsWith("c:") ? RBY[k.slice(2)] : null, h = c && H && H.h && H.h[c.id];
-  if (h && h.d && h.d.some(x => x > 0) && c.currency === cur) {
-    const fy = h.d.map((x, i) => [h.y + i, x]), cumul = iso => fy.filter(([y, x]) => x > 0 && `${y + 1}-06-01` > deb && `${y + 1}-06-01` <= iso).reduce((s, [, x]) => s + x, 0);
-    div = pts.map(([x, val]) => { const iso = O2_moinsAns(TODAY, -x), fx = O2_fx(ref, cur, iso, x === 0); return [x, val != null && fx ? val + parts * cumul(iso) / fx : null]; });
-    const exos = fy.filter(([y, x]) => x > 0 && `${y + 1}-06-01` > deb && `${y + 1}-06-01` <= TODAY).map(([y]) => y);
-    div.exos = exos; if (!exos.length) div = null;
-  }
-  return { k, nom: O2_nomK(k), cur, pts, div, parts, net, frais, depart: p[champs[0][1]], base };
-}
 
 /* ====================================================================================
    4. Simulateur d'épargne : versements, frais détaillés et modifiables, fiscalité 2026, trois scénarios historiques
    ==================================================================================== */
-const O2_BCE2 = ["Banque centrale européenne, objectif d'inflation de 2 % à moyen terme", "https://www.ecb.europa.eu/mopo/strategy/pricestab/html/index.fr.html"];
-function O2_terMedian() {
-  const l = ETF.list.filter(e => e.categorie === "actions-monde" && e.pea && e.ter > 0).map(e => e.ter);
-  return l.length >= 3 ? { v: median(l), n: l.length } : { v: 0.2, n: 0 };
-}
 
 // Paramètres de O2C.simule pour un courtier donné
-function O2_simParams(S, b, rendement, env) {
-  const ordre = (m, type) => type === "versement" && S.plan && b.plan != null && S.ord === 12 ? b.plan : brokerFee(b, m, S.perso);
-  return { initial: S.ini, mensuel: S.men, annees: S.ans, rendement, ter: S.ter / 100, fraisOrdre: ordre, ordresParAn: S.ord, change: S.chg / 100, enveloppe: env || S.env, taux: RATES, inflation: S.reel ? S.infl / 100 : 0, vente: S.vente };
-}
 
 /* ====================================================================================
    5. Agenda : heure vérifiée ou « non communiquée », type, attentes, chiffres publiés
    ==================================================================================== */
-const O2_JOURS = ["dim.", "lun.", "mar.", "mer.", "jeu.", "ven.", "sam."];
 const O2_US = tz => /^America\/(New_York|Chicago)/.test(tz || "");
 // Heure d'un événement d'agenda : seulement ce que la source officielle donne (champ h, voir data/agenda/heures.mjs)
 function O2_heure(e) {
@@ -286,103 +175,7 @@ function O2_heure(e) {
 /* ====================================================================================
    6. Ce qui s'est passé hier : résultats publiés la veille, à partir des communiqués officiels collectés
    ==================================================================================== */
-const O2_H = { max: 20 };
-const O2_jourIso = (iso, n) => new Date(Date.parse(iso + "T12:00:00Z") + n * 864e5).toISOString().slice(0, 10);
-function O2_veille(iso) { let d = O2_jourIso(iso, -1); while ([0, 6].includes(new Date(d + "T12:00:00Z").getUTCDay())) d = O2_jourIso(d, -1); return d; }
-const O2_jourL = iso => { const d = new Date(iso + "T12:00:00Z"); return ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][d.getUTCDay()] + " " + dLabel(iso); };
 // Variation entre parenthèses dans un chiffre extrait : « 5,1 Md€ (+18 %) » -> 18
-const O2_var = s => { const m = String(s).replace(/[  ]/g, " ").match(/\(\s*([+−-])\s?([\d ]+(?:,\d+)?)\s?%/); return m ? (m[1] === "+" ? 1 : -1) * parseFloat(m[2].replace(/ /g, "").replace(",", ".")) : null; };
-const O2_RE = { ca: /ventes|chiffre d.affaires|revenus?\b|produit net bancaire|primes|revenue/i, res: /résultat|bénéfice|perte|ebitda|ebit\b|marge opérationnelle/i, prev: /objectif|prévision|perspective|guidance|outlook|confirme|relève|abaisse|rehausse|réitère|attend|expects?|forecast|reaffirm|raise|lower/i };
 // Lecture d'une publication : chiffres classés, points positifs / négatifs / risques, prévisions et commentaires
-function O2_lecture(g, ana) {
-  const f = g.f, ca = f.filter(([l]) => O2_RE.ca.test(l) && !O2_RE.res.test(l)), res = f.filter(([l]) => O2_RE.res.test(l)), aut = f.filter(x => !ca.includes(x) && !res.includes(x));
-  const pos = [], neg = [], risq = [], vars = [];
-  for (const [l, val] of f) { const x = O2_var(val); if (x == null) continue; vars.push(x); 
-    if (x > 1) pos.push(`${l.replace(/ du trimestre| du semestre/i, "")} en hausse (${O2_p(x, Math.abs(x) < 10 ? 1 : 0)})`); else if (x < -1) neg.push(`${l.replace(/ du trimestre| du semestre/i, "")} en baisse (${O2_p(x, Math.abs(x) < 10 ? 1 : 0)})`); }
-  for (const [l, val] of res) if (/^[−-]/.test(String(val).trim()) || /perte/i.test(l)) risq.push(`${l} négatif : l'entreprise perd de l'argent sur la période`);
-  const lec = [...(g.r || []), ...((ana && ana.lecture) || [])].filter(x => !/^Le communiqué publié|rapport détaillé suit/i.test(x));
-  for (const s of new Set(lec)) { if (/coûts pèsent|ralentit|recule|dégrad/i.test(s)) risq.push(s.replace(/\.$/, "")); else if (/accélère|chaque vente rapporte davantage|confirme ses objectifs|relève/i.test(s)) pos.push(s.replace(/\.$/, "")); else if (/abaisse/i.test(s)) neg.push(s.replace(/\.$/, "")); }
-  const prev = [...new Set([...lec.filter(s => O2_RE.prev.test(s)), ...((ana && ana.extraits) || []).filter(s => O2_RE.prev.test(s))])].slice(0, 3);
-  const extraits = ((ana && ana.extraits) || []).filter(s => !prev.includes(s)).slice(0, 2);
-  const nv = vars.length, nP = vars.filter(x => x > 1).length, nN = vars.filter(x => x < -1).length;
-  const bilan = nv < 2 ? null : nP >= 2 && !nN && !risq.length ? "Plutôt positifs" : nN >= 2 && !nP ? "Plutôt négatifs" : "Contrastés";
-  const manque = [!ca.length && "chiffre d'affaires", !res.length && "résultat (opérationnel ou net)"].filter(Boolean);
-  return { ca, res, aut, pos: [...new Set(pos)], neg: [...new Set(neg)], risq: [...new Set(risq)], prev, extraits, bilan, nv, manque, vca: ca.map(([, x]) => O2_var(x)).find(x => x != null) };
-}
-async function pageHier() {
-  O2_css(); setNav("news");
-  const q = new URLSearchParams(location.search), auj = O2_jourParis(new Date());
-  const d = /^\d{4}-\d{2}-\d{2}$/.test(q.get("d") || "") && q.get("d") < auj ? q.get("d") : O2_veille(auj);
-  setTitle(d === O2_veille(auj) ? "Ce qui s'est passé hier" : "Résultats publiés le " + dLabel(d));
-  const prec = O2_veille(d), suiv = (() => { let x = O2_jourIso(d, 1); while ([0, 6].includes(new Date(x + "T12:00:00Z").getUTCDay())) x = O2_jourIso(x, 1); return x < auj ? x : null; })();
-  app.innerHTML = `<div class="crumbs"><a href="/actualites">Actualités</a> › Ce qui s'est passé hier</div><h1 class="pagetitle">Ce qui s'est passé hier</h1>
-    <p class="pagesub">Les résultats publiés ${d === O2_veille(auj) ? "lors de la dernière séance" : "ce jour-là"} par les entreprises suivies : les chiffres du communiqué officiel, ce que la direction annonce pour la suite, et une lecture calculée, sans conclure sur un seul chiffre.</p>
-    <div class="o2-hnav"><a class="pill" href="/hier?d=${prec}">← ${esc(O2_jourL(prec))}</a><b>${esc(O2_jourL(d).replace(/^./, c => c.toUpperCase()))}</b>${suiv ? `<a class="pill" href="/hier?d=${suiv}">${esc(O2_jourL(suiv))} →</a>` : "<span></span>"}</div>
-    <div id="o2h"><section class="panel"><div class="pb muted">Lecture des communiqués…</div></section></div>`;
-  const fichiers = await Promise.all([O2_jourIso(d, -1), d, O2_jourIso(d, 1)].map(x => O2_json(`/data/actu/j/${x}.json`)));
-  if (!$("#o2h")) return;
-  const vus = new Set(), items = fichiers.flatMap(j => (j && j.o) || []).filter(x => x.c === "resultats" && RBY[x.id] && O2_jourParis(new Date(x.d)) === d && !vus.has(x.k) && vus.add(x.k));
-  const G = {}; for (const x of items) { const g = G[x.id] = G[x.id] || { id: x.id, docs: [] }; g.docs.push(x); }
-  const groupes = Object.values(G).map(g => { g.docs.sort((a, b) => (b.f || []).length - (a.f || []).length || (b.i || 0) - (a.i || 0)); const m = g.docs[0], vusL = new Set(), f = [];
-    g.docs.forEach(x => (x.f || []).forEach(([l, v_]) => { if (!vusL.has(l)) { vusL.add(l); f.push([l, v_]); } }));
-    return { ...g, main: m, f, r: [...new Set(g.docs.flatMap(x => x.r || []))], t: Math.min(...g.docs.map(x => Date.parse(x.d))), co: RBY[g.id] }; })
-    .sort((a, b) => caEur(b.co) - caEur(a.co));
-  if (!groupes.length) { $("#o2h").innerHTML = `<section class="panel"><div class="pb"><div class="empty">Aucune publication de résultats repérée ce jour-là dans les sources officielles suivies (AMF, SEC, Nasdaq Nordic, Oslo Børs, FCA).</div><p class="o2-note">Les prochaines dates sont dans l'<a class="lnk" href="/agenda">agenda</a>.</p></div></section>`; return; }
-  const S = { zone: "tout", q: "", max: O2_H.max };
-  const ana = O2_json("/data/actu-analyse.json");
-  const dessine = async () => {
-    const A = ((await ana) || {}).items || {};
-    const L = groupes.map(g => ({ g, l: O2_lecture(g, g.docs.map(x => A[x.u]).find(Boolean)) }));
-    O2_H.groupes = Object.fromEntries(L.map(({ g, l }) => [g.id, { ...g, l }]));
-    const zones = { tout: () => true, FR: g => g.co.region === "FR", EU: g => g.co.region === "EU", US: g => g.co.region === "US", MONDE: g => g.co.region === "MONDE" };
-    const liste = L.filter(({ g }) => zones[S.zone](g) && (!S.q || norm(g.co.name).includes(norm(S.q))));
-    const avecV = L.filter(x => x.l.vca != null), up = avecV.filter(x => x.l.vca > 1).length, dn = avecV.filter(x => x.l.vca < -1).length;
-    const nb = z => L.filter(({ g }) => zones[z](g)).length;
-    $("#o2h").innerHTML = `<section class="panel"><div class="pb"><div class="o2-verdict"><p class="kick">En bref</p><p><b>${F0.format(groupes.length)} entreprise${groupes.length > 1 ? "s" : ""}</b> suivie${groupes.length > 1 ? "s" : ""} ${groupes.length > 1 ? "ont" : "a"} publié des résultats (${["FR", "EU", "US", "MONDE"].map(z => [z, nb(z)]).filter(([, n]) => n).map(([z, n]) => `${n} ${{ FR: "en France", EU: "ailleurs en Europe", US: "aux États-Unis", MONDE: "dans le reste du monde" }[z]}`).join(", ")}).${avecV.length ? ` Parmi les ${F0.format(avecV.length)} qui donnent l'évolution de leurs ventes sur un an, ${F0.format(up)} sont en hausse et ${F0.format(dn)} en baisse.` : ""}</p>
-        <p class="o2-note">Chiffres extraits automatiquement des communiqués officiels : vérifiez-les dans le communiqué (lien sur chaque fiche). Attentes des analystes : aucune estimation n'est affichée, faute de source de consensus fiable et autorisée.</p></div>
-      <div class="tbx-bar" style="padding:4px 0 0"><div class="o2-seg" id="o2hz">${[["tout", "Toutes"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"], ["MONDE", "Autres"]].filter(([z]) => z === "tout" || nb(z)).map(([z, l]) => `<button type="button" data-v="${z}" class="${S.zone === z ? "on" : ""}">${l} <span class="light">${nb(z)}</span></button>`).join("")}</div>
-        <div class="field" style="margin:0;min-width:200px"><input id="o2hq" type="search" placeholder="Chercher une entreprise" aria-label="Chercher une entreprise" value="${esc(S.q)}"></div></div></div></section>
-      <div id="o2hl">${liste.slice(0, S.max).map(O2_hCarte).join("") || `<section class="panel"><div class="pb muted">Aucune entreprise ne correspond.</div></section>`}</div>
-      ${liste.length > S.max ? `<div style="text-align:center;margin:14px 0"><button class="btn" type="button" id="o2hm">Voir ${Math.min(20, liste.length - S.max)} de plus (${F0.format(liste.length - S.max)} restantes)</button></div>` : ""}
-      <div class="src">Sources : annonces réglementées déposées à l'AMF (Info-financière, DILA), à la SEC (8-K, 10-Q, 6-K), sur Nasdaq Nordic, Oslo Børs et au registre britannique (FCA), collectées par le site. Heures de publication : heure du dépôt, à l'heure de Paris. Classement : par taille de l'entreprise (chiffre d'affaires annuel).</div>`;
-    $("#o2hz").onclick = e => { const b = e.target.closest("button"); if (b) { S.zone = b.dataset.v; S.max = O2_H.max; dessine(); } };
-    const qi = $("#o2hq"); let t = null; qi.oninput = () => { clearTimeout(t); t = setTimeout(() => { S.q = qi.value.trim(); S.max = O2_H.max; dessine().then(() => { const n = $("#o2hq"); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }); }, 250); };
-    const m = $("#o2hm"); if (m) m.onclick = () => { S.max += 20; dessine(); };
-    $$("#o2hl [data-ia]").forEach(b => b.onclick = () => O2_hIA(b));
-    if (location.hash && !S.scrolled) { S.scrolled = true; const c = document.getElementById(location.hash.slice(1)); if (c) c.scrollIntoView({ block: "start" }); }
-  };
-  await dessine();
-}
-function O2_hCarte({ g, l }) {
-  const co = g.co, m = g.main, dt = new Date(g.t), chif = (titre, rows) => rows.length ? `<div><p class="kick" style="margin:0 0 4px">${titre}</p>${rows.map(([a, b]) => `<div class="o2-hf"><span>${esc(a)}</span><b>${esc(b)}</b></div>`).join("")}</div>` : "";
-  const pts = (t, arr, cls) => arr.length ? `<div class="o2-hp ${cls}"><b>${t}</b><ul>${arr.slice(0, 4).map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>` : "";
-  return `<section class="panel o2-hc" id="h-${g.id}"><div class="pb">
-    <div class="o2-hh"><a class="cell-co" href="/entreprise/${g.id}/actualite">${logo(co, 34)}<span><b>${esc(co.name)}</b><span class="sub" style="display:block">${esc(regName(co))} · ${esc(secName(co))}</span></span></a>
-      <div class="o2-hm"><span>${esc(m.tf || "Résultats")}</span><small>publié à ${O2_hParis(dt)} (heure de Paris)</small></div></div>
-    <div class="o2-hg">${chif("Chiffre d'affaires", l.ca)}${chif("Résultat", l.res)}${chif("Autres indicateurs", l.aut)}</div>
-    ${l.manque.length ? `<p class="o2-note">Non extrait automatiquement : ${l.manque.join(" et ")}. Il figure peut-être dans le communiqué.</p>` : ""}
-    <p class="o2-note"><span class="o2-tag mu">Attentes des analystes</span> Pas d'estimation disponible : impossible de dire si ces chiffres sont meilleurs ou moins bons que prévu.</p>
-    ${l.prev.length ? `<div class="o2-hq"><b>Prévisions et commentaires de la direction</b>${l.prev.map(s => `<blockquote>${esc(s)}</blockquote>`).join("")}</div>` : `<p class="o2-note">Aucune prévision ni commentaire de la direction n'a été extrait automatiquement de ce communiqué.</p>`}
-    ${l.extraits.length ? `<details class="o2-det"><summary>Autres passages du communiqué</summary>${l.extraits.map(s => `<blockquote class="o2-bq">${esc(s)}</blockquote>`).join("")}</details>` : ""}
-    <div class="o2-hs"><p class="kick" style="margin:0 0 6px">Synthèse calculée${l.bilan ? ` : <b>${l.bilan.toLowerCase()}</b>` : ""}</p>
-      ${l.bilan ? `<div class="o2-hpg">${pts("Points positifs", l.pos, "p")}${pts("Points négatifs", l.neg, "n")}${pts("Risques à surveiller", l.risq, "r")}</div>` : `<p class="o2-note" style="margin:0">Trop peu de chiffres comparables (${l.nv} évolution${l.nv > 1 ? "s" : ""} sur un an) pour une synthèse : un seul indicateur ne suffit pas à juger une publication.${l.risq.length ? " À surveiller : " + esc(l.risq.join(" ; ")) + "." : ""}</p>`}</div>
-    <div class="o2-ha"><a class="lnk" href="${esc(m.u)}" target="_blank" rel="noopener">Lire le communiqué officiel</a>${g.docs.length > 1 ? `<span class="light">${g.docs.length} documents publiés</span>` : ""}${(m.i || 0) >= 2 ? `<button type="button" class="btn" data-ia="${esc(g.id)}|${esc(m.k)}">✦ Synthèse approfondie par l'IA</button>` : ""}</div>
-    <div class="o2-hia" hidden></div></div></section>`;
-}
 // Synthèse approfondie : rédigée par l'IA connectée du visiteur (m/monia.js, tâche « annonce »), à partir des seuls faits du communiqué
-async function O2_hIA(b) {
-  const [id, k] = b.dataset.ia.split("|"), out = b.closest(".pb").querySelector(".o2-hia"), g = O2_H.groupes && O2_H.groupes[id];
-  out.hidden = false;
-  if (typeof iaRediger !== "function" || (typeof miaConnectee === "function" && !miaConnectee())) { b.remove(); out.innerHTML = typeof miaInvite === "function" ? miaInvite("Les chiffres et la lecture ci-dessus sont calculés sans IA.") : `<p class="muted">IA indisponible.</p>`; return; }
-  b.disabled = true; out.innerHTML = `<div class="iathink"><span></span><span></span><span></span> L'IA lit les faits extraits du communiqué…</div>`;
-  const co = RBY[id], m = g ? g.main : null;
-  const faits = { entreprise: co ? co.name : id, secteur: co ? secName(co) : null, activite: co && co.fiche ? co.fiche.fait : co ? co.desc : null, type: m ? m.tf : "Résultats", titre_officiel: m ? m.t : null, date: m ? String(m.d).slice(0, 10) : null,
-    chiffres: g ? g.f : [], lecture_calculee: g ? g.r : [], prevision_et_commentaires: g && g.l ? g.l.prev : [], extraits: g && g.l ? g.l.extraits : [], attentes_des_analystes: "non disponibles", dernier_exercice: co && co.ca != null ? { ventes_millions: co.ca, devise: co.currency } : null, lien: m ? m.u : null };
-  let j; try { j = await iaRediger("annonce", faits, { max: 420 }); } catch (e) { j = { error: "L'IA est indisponible pour le moment." }; }
-  b.remove();
-  const x = j && j.txt ? (typeof jsonFrom === "function" ? jsonFrom(j.txt) : null) : null;
-  out.innerHTML = x && x.clair ? `<p><b>En clair :</b> ${esc(x.clair)}</p>${x.change ? `<p><b>Ce que cela change :</b> ${esc(x.change)}</p>` : ""}<p class="o2-note">Rédigé par l'IA d'ENKLAIR (${esc(j.modele || "modèle choisi")}) à partir des seuls faits extraits du communiqué. Le communiqué fait foi ; ce n'est pas un conseil.</p>`
-    : typeof miaRendu === "function" ? miaRendu(j) : `<p class="muted">${esc((j && j.error) || "Synthèse indisponible.")}</p>`;
-}
-ROUTES_EXTRA.push([/^\/hier$/, () => pageHier()]);
 /* styles : voir site.css */

@@ -3,7 +3,7 @@
 // 1. Ratios ajoutés (ROCE avant impôt, valeur d'entreprise ÷ EBITDA, rendement du flux de trésorerie disponible) recalculés
 //    à la main à partir des comptes publiés (fichiers cf/site/data/societes/<id>.json) pour LVMH, Apple et Sanofi.
 // 2. Cohérence des chiffres dérivés par la collecte : dette nette = dette − trésorerie, flux disponible ≤ flux d'exploitation.
-// 3. Dates : jours ouvrés, ancienneté des comptes. 4. « Vérifier une offre » : les trois issues sur la vraie liste de l'AMF.
+// 3. Dates : jours ouvrés, ancienneté des comptes.
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 const D = p => JSON.parse(readFileSync(new URL("../cf/site/data/" + p, import.meta.url), "utf8"));
@@ -11,7 +11,7 @@ let ok = 0, ko = 0;
 const t = (c, m) => { if (c) ok++; else { ko++; console.log("ÉCHEC", m); } };
 const near = (a, b, m, tol = 1e-9) => t(a != null && b != null && Math.abs(a - b) <= tol * Math.max(1, Math.abs(b)), `${m} : ${a} au lieu de ${b}`);
 
-const S = D("societes.json"), C = D("cours.json"), FX = D("fx.json").eur, LN = D("listes-noires.json");
+const S = D("societes.json"), C = D("cours.json"), FX = D("fx.json").eur;
 const RBY = Object.fromEntries(S.companies.map(c => [c.id, c]));
 const noop = () => { };
 const ctx = {
@@ -78,15 +78,5 @@ t(P.provComptesAge({ sources: [{ periodEnd: "2025-03-31" }], years: [2024] }).vi
 t(P.provComptesAge({ sources: [{ periodEnd: "2025-12-31" }], years: [2025] }).vieux === false, "comptes clos il y a 10 mois : récents");
 t(P.provClos({ sources: [{ periodEnd: "2025" }], years: [2025], fyEnd: "09-27" }) === "2025-09-27", "date de clôture SEC : année + jour de clôture");
 
-// 4. « Vérifier une offre »
-const IDX = P.provLnIndex(LN.items);
-const dom = IDX.find(i => i.dom && !i.n.includes("@") && i.n.length > 8);
-t(P.provLnCherche(dom.n, IDX).issue === "trouve", `nom exact trouvé (${dom.n})`);
-t(P.provLnCherche("https://www." + dom.dom + "/connexion?x=1", IDX).issue === "trouve", "adresse complète du site trouvée");
-const mail = IDX.find(i => i.n.includes("@") && i.dom);
-t(P.provLnCherche("jean.dupont@" + mail.dom, IDX).issue === "trouve", `adresse e-mail du même domaine trouvée (${mail.dom})`);
-for (const q of ["ab", "inv", "crypto", "Trading", "invest gestion", "forex"]) t(P.provLnCherche(q, IDX).issue === "insuffisant", `recherche insuffisante : « ${q} »`);
-t(P.provLnCherche("zzqx-societe-inexistante.fr", IDX).issue === "aucun", "aucune correspondance");
-t(P.provLnCherche("Usurpation", IDX).issue !== "trouve" || P.provLnCherche("Usurpation", IDX).hits.every(h => /usurpation/i.test(h.n + h.s)), "la catégorie n'est plus prise pour un nom");
 console.log(`${ok} vérifications, ${ko} échec(s)`);
 process.exit(ko ? 1 : 0);

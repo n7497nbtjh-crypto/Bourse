@@ -599,7 +599,6 @@ function f4Csv(x) {
   const lines = [["Indicateur", "Unité", ...Y].map(q).join(";"), ...R.rows.map(r => [r.label, r.unit || "", ...r.vals.map(v => v == null ? "" : r.cell(v))].map(q).join(";"))];
   const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob(["\ufeff" + lines.join("\n")], { type: "text/csv;charset=utf-8" })); a.download = `${x.s.id}-chiffres.csv`; document.body.appendChild(a); a.click(); a.remove();
 }
-const F4_LIB = { ca: "Ventes (chiffre d'affaires)", ebit: "Résultat d'exploitation", pretax: "Résultat avant impôt", tax: "Impôt sur les résultats", net: "Bénéfice net", eps: "Bénéfice par action", equity: "Capitaux propres", cash: "Trésorerie", debt: "Emprunts", netDebt: "Dette nette (négatif : trésorerie)", leases: "Dettes de loyers", cfo: "Liquidités tirées de l'activité", capex: "Investissements", fcf: "Flux de trésorerie disponible", divPaid: "Dividendes versés", dps: "Dividende par action" };
 
 // Liens « dans le rapport officiel » : ouverts sur la ligne exacte du chiffre quand l'ancre existe (data/ancres.mjs)
 function f4Ancres(x) {

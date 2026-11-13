@@ -22,7 +22,6 @@ const ACTU_CAT = {
 const ACTU_SRC = { amf: "AMF", sec: "SEC", nasdaq: "Nasdaq Nordic", oslo: "Oslo Børs", nsm: "FCA (NSM)" };
 const ACTU_LANG = { en: "en anglais", sv: "en suédois", fi: "en finnois", da: "en danois", no: "en norvégien", de: "en allemand", es: "en espagnol", it: "en italien", nl: "en néerlandais", is: "en islandais" };
 const ACTU_TYPES = [["imp", "L'essentiel"], ["resultats", "Résultats"], ["dividende", "Dividendes"], ["operation", "Acquisitions, OPA"], ["dirigeants", "Direction"], ["assemblee", "Assemblées"], ["emission", "Émissions"], ["tout", "Tout"]];
-const ACTU_ZONES = [["tout", "Toutes les zones"], ["fav", "Mes favoris"], ["FR", "France"], ["EU", "Europe"], ["US", "États-Unis"], ["MONDE", "Reste du monde"]];
 const ACTU_MEM = {};
 /* styles : voir site.css */
 
@@ -110,55 +109,9 @@ function newsBlock(target, { src = "FR", params = "", id = null, limit = 100, ma
 function amfBlock(target, params, limit) { newsBlock(target, { params: "", max: limit || 5, filters: false }); }
 
 /* ---------- Fiche entreprise : bloc court (colonne latérale) et onglet détaillé ---------- */
-function actuFicheCourt(el, s, { max = 4 } = {}) {
-  if (!el || !s) return;
-  el.innerHTML = `<div class="ax-side"><div class="ax-empty" style="padding:6px 0">Chargement…</div></div>`;
-  actuCo(s.id).then(j => {
-    const o = (j.o || []).filter(actuImp).slice(0, max), p = (j.p || []).slice(0, 3);
-    el.innerHTML = `<div class="ax-side">${o.length ? `<div class="ax-cap">Annonces officielles</div>${actuListHTML(o, { showCo: false, detail: false, days: false })}` : ""}
-      ${p.length ? `<div class="ax-cap" style="margin-top:8px">Dans la presse</div>${presseHTML(p, 3)}` : ""}
-      ${!o.length && !p.length ? `<div class="ax-empty" style="padding:6px 0">Pas d'annonce ni d'article repéré ces dernières semaines.${eventsOf(s.id).some(e => e.date >= TODAY) ? " Les prochaines dates sont dans l'agenda." : ""}</div>` : ""}
-      ${el.closest("#actus") ? "" : `<a class="more" href="/entreprise/${s.id}/actualite">Toutes les actualités →</a>`}</div>`;
-  });
-}
-function actuFicheDetail(el, s) {
-  if (!el || !s) return;
-  el.innerHTML = `<section class="panel"><div class="ph"><h2>Annonces officielles</h2><span class="light" id="ax-n" style="font-size:12.5px"></span></div><div class="pb" id="ax-o"><div class="ax-empty">Chargement…</div></div><div class="src" id="ax-os"></div></section>
-    <section class="panel"><div class="ph"><h2>Dans la presse</h2><span class="light" style="font-size:12.5px">30 derniers jours</span></div><div class="pb" id="ax-p"></div></section>`;
-  actuCo(s.id).then(j => {
-    const o = j.o || [], srcs = [...new Set(o.map(x => ACTU_SRC[x.s]).filter(Boolean))];
-    $("#ax-n").textContent = o.length ? `${o.length} sur 90 jours` : "";
-    $("#ax-os").innerHTML = srcs.length ? `Source : ${esc(srcs.join(", "))}. Titres et chiffres d'origine, classement et lecture par le site.` : "";
-    const box = $("#ax-o");
-    if (!o.length) { actuSecours(box, s); }
-    else {
-      let f = o.some(actuImp) ? "imp" : "tout", n = 15;
-      const draw = () => { const L = o.filter(it => actuType(it, f)); box.innerHTML = `<div class="chips nfil scroll-x" style="flex-wrap:nowrap">${ACTU_TYPES.filter(([k]) => k === "imp" || k === "tout" || o.some(it => actuType(it, k))).map(([k, l]) => `<button type="button" data-f="${k}" class="${k === f ? "on" : ""}">${l}</button>`).join("")}</div>
-        ${actuListHTML(L.slice(0, n), { showCo: false, vide: "Aucune annonce de ce type ces 90 derniers jours." })}${L.length > n ? `<button type="button" class="btn ghost ax-more" data-more>Afficher plus (${L.length - n})</button>` : ""}`; };
-      draw();
-      box.onclick = e => { const b = e.target.closest(".nfil button"); if (b) { f = b.dataset.f; n = 15; draw(); return; } if (e.target.closest("[data-more]")) { n += 20; draw(); } };
-    }
-    const p = j.p || [];
-    if (p.length) $("#ax-p").innerHTML = presseHTML(p, 20) + ACTU_PNOTE; else presseBlock($("#ax-p"), { id: s.id, max: 15 });
-  });
-}
 // Aucune annonce collectée : dernières publications officielles connues (comptes annuels) et lien vers l'entreprise
-function actuSecours(box, s) {
-  const lien = typeof officielLink === "function" ? officielLink(s) : null;
-  box.innerHTML = `<div class="ax-empty">Aucune annonce repérée ces 90 derniers jours dans les sources suivies (AMF, SEC, Nasdaq Nordic, Oslo Børs, FCA).</div>`;
-  if (s.region === "FR" && typeof loadAmf === "function") loadAmf("&isin=" + s.isin, 30).then(L => { if (L.length) box.innerHTML = newsHTML(L, { showCo: false, max: 15 }); }).catch(() => { });
-  actuGet(`/data/societes/${s.id}.json`).then(c => {
-    const src = c && (c.sources || []).slice(-3).reverse();
-    const lignes = (src || []).filter(x => x.report || x.json).map(x => `<li>Comptes annuels de l'exercice clos le ${esc((d => /^\d{4}-\d{2}-\d{2}$/.test(d) ? dLabel(d) : d || "?")(String(x.periodEnd || "").slice(0, 10)))} : <a class="lnk" href="${esc(x.report || x.json)}" target="_blank" rel="noopener">document officiel</a></li>`);
-    if (lignes.length || lien) box.insertAdjacentHTML("beforeend", `<div style="margin-top:6px"><div class="ax-cap" style="font-size:12px;font-weight:600;color:var(--grey);text-transform:uppercase;letter-spacing:.04em">Dernières publications officielles connues</div><ul style="margin:6px 0 0;padding-left:18px;font-size:13.5px">${lignes.join("")}${lien ? `<li>Communiqués de l'entreprise : <a class="lnk" href="${esc(lien)}" target="_blank" rel="noopener">site officiel</a></li>` : ""}</ul></div>`);
-  });
-}
 
 /* ---------- Accueil : « Ce qui se passe dans les entreprises » ---------- */
-function actuBandeauHTML() {
-  setTimeout(() => $$("[data-actu-band]").forEach(el => { if (!el.dataset.ok) actuBandeau(el); }), 0);
-  return `<div data-actu-band><div class="ax-empty">Chargement…</div></div>`;
-}
 function actuBandeau(el) {
   if (!el) return; el.dataset.ok = "1";
   actuFil().then(j => {

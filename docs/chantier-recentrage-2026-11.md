@@ -31,6 +31,9 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 - **Abonnés payants** : s'il y en a, ne rien retirer de ce qu'ils ont payé sans que Romain les ait prévenus. Les pages légales (CGV) décrivent le contenu du Premium : à mettre à jour par Romain.
 - **Robots** : ils fusionnent avec `-X theirs`. Ne pas supprimer un fichier de données pendant qu'un robot tourne ; arrêter le robot d'abord.
 
+## Outil : le code mort
+`node scripts/code-mort.js` liste les fonctions et constantes que plus rien n'appelle (`--noms` pour le détail, `--supprimer` pour les retirer). Il est prudent : un nom est gardé dès que le mot apparaît quelque part dans du code vivant, même dans une chaîne. Méthode : couper d'abord les points d'entrée d'une page (routeur, `ROUTES_EXTRA`, liens), puis lancer l'outil jusqu'à zéro, puis `node --check`, build, relecture et audit.
+
 ## Méthode (à chaque étape)
 1. Une étape = un sujet = un commit, pour pouvoir revenir sur une seule étape.
 2. Avant de supprimer : lister ce qui appelle le code (grep), supprimer, `node --check`, `node build.mjs` puis `git checkout -q cf/site/data/gf*.csv`.
@@ -61,7 +64,7 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 |---|---|---|---|
 | 0 | fait | 13/11 | fb7f6ff4 ; départ : 57 modules (2,14 Mo avec app.js), CSS 548 Ko, serveur 21 fichiers (908 Ko), 24 robots, 59 tests, 36 routes |
 | 1 | fait (menu et page Outils ; liens vers les outils ailleurs : retirés au fil des étapes 2 à 5) | 13/11 | voir journal |
-| 2 | en cours : 2a fait (redirections, 9 modules de pages supprimés, tests adaptés) ; 2b à faire (code de base de ces pages dans app.js, parcours des leçons dans la recherche, outils.js, outils2.js, reco.js, communication.js, provenance.js, pays.js, données et CSS associés) | 13/11 | voir journal |
+| 2 | fait : pages supprimées, redirections, code de base retiré par l'outil `scripts/code-mort.js` (271 déclarations, 269 Ko), données et robot des outils supprimés. Restent liés aux étapes 3 et 5 : leçons citées par `ia.js`, `mcp.mjs` et le rendu serveur (`academie.json`, `commencer.json`, `parcours.json`) | 13/11 | voir journal |
 | 3 | à faire | | |
 | 4 | à faire | | |
 | 5 | à faire | | |

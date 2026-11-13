@@ -10,7 +10,6 @@ const PWA_IOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platf
 const PWA_SEUL = () => (window.matchMedia && matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
 const PWA_SW_OK = "serviceWorker" in navigator && window.isSecureContext;
 const PWA_PUSH_OK = PWA_SW_OK && "PushManager" in window && "Notification" in window;
-const PWA_CHOIX = [["annonces", "Résultats, annonces et assemblées", "La veille d'une publication de résultats et le soir d'une annonce officielle."], ["dividendes", "Dividendes", "La veille du détachement d'un dividende."], ["mouvements", "Mouvement de plus de 5 %", "Le soir où une de vos entreprises a bougé de plus de 5 % en une séance."], ["bilan", "Bilan de la semaine", "Le samedi matin, quand votre bilan est prêt."]];
 const PWA_PARTAGE = `<svg class="pwa-ico" viewBox="0 0 24 24" aria-label="Partager" role="img"><path d="M12 3v12M7.5 7.5 12 3l4.5 4.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 11H6.5A1.5 1.5 0 0 0 5 12.5v7A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-7a1.5 1.5 0 0 0-1.5-1.5H16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`;
 let PWA_INVITE = null; // événement beforeinstallprompt mis de côté (Chrome, Edge, Samsung Internet)
 
@@ -102,7 +101,6 @@ document.addEventListener("click", e => { const a = e.target.closest && e.target
 setTimeout(pwaPeutInviter, 20000);
 
 /* ---------- Notifications push : « Mon espace » ---------- */
-const pwaCle = s => Uint8Array.from(atob(s.replace(/-/g, "+").replace(/_/g, "/") + "===".slice((s.length + 3) % 4)), c => c.charCodeAt(0));
 async function pwaRegistration() {
   if (!PWA_PUSH_OK) return null;
   let reg = await navigator.serviceWorker.getRegistration("/");
@@ -112,57 +110,6 @@ async function pwaRegistration() {
 async function pwaAbonnementLocal() { const reg = await pwaRegistration(); return reg ? reg.pushManager.getSubscription() : null; }
 async function pwaDesabonnerLocal() {
   try { const s = await pwaAbonnementLocal(); if (!s) return; await post2("/api/push/desabonnement", { endpoint: s.endpoint }).catch(() => { }); await s.unsubscribe(); } catch (e) { }
-}
-function pwaChoixHTML(ch) {
-  return `<div class="pwa-ch">${PWA_CHOIX.map(([k, l, d]) => `<label><input type="checkbox" data-pc="${k}"${ch[k] !== false ? " checked" : ""}><span><b>${l}</b><small>${d}</small></span></label>`).join("")}</div>`;
-}
-const pwaLireChoix = el => Object.fromEntries([...el.querySelectorAll("[data-pc]")].map(i => [i.dataset.pc, i.checked]));
-async function pwaPanneauPush(el, ou) {
-  const box = document.createElement("section"); box.className = "panel pwa-push"; box.id = "pwapush";
-  const old = document.getElementById("pwapush"); if (old) old.remove();
-  if (ou === "haut") el.prepend(box); else el.appendChild(box);
-  const tete = (etat, on) => `<div class="ph"><h2>Notifications sur cet appareil</h2><span class="pwa-etat${on ? " on" : ""}"><i></i>${etat}</span></div>`;
-  if (!PWA_PUSH_OK) {
-    box.innerHTML = tete("Indisponibles") + `<div class="pb"><p class="muted" style="margin:0">${PWA_IOS && !PWA_SEUL()
-      ? `Sur iPhone et iPad, les notifications fonctionnent une fois ENKLAIR ajouté à l'écran d'accueil (iOS 16.4 ou plus récent) : touchez ${PWA_PARTAGE} Partager, puis « Sur l'écran d'accueil », et ouvrez ENKLAIR depuis son icône.`
-      : "Ce navigateur ne permet pas de recevoir des notifications de sites. Vos alertes restent consultables ici, chaque soir de semaine."}</p></div>`;
-    return;
-  }
-  box.innerHTML = tete("Vérification…") + `<div class="pb"><p class="muted" style="margin:0">Un instant…</p></div>`;
-  const sub = await pwaAbonnementLocal().catch(() => null);
-  const etat = sub ? await post2("/api/push/etat", { endpoint: sub.endpoint }).catch(() => ({})) : { abonne: false, choix: {} };
-  const ch = etat.choix || {};
-  if (Notification.permission === "denied") {
-    box.innerHTML = tete("Bloquées") + `<div class="pb"><p class="muted" style="margin:0">Les notifications sont bloquées pour ce site dans les réglages de votre navigateur. Autorisez-les dans les paramètres du site (icône à gauche de l'adresse), puis revenez sur cette page.</p></div>`;
-    return;
-  }
-  if (sub && etat.abonne) {
-    box.innerHTML = tete("Activées", true) + `<div class="pb"><p class="muted" style="margin:0">Une notification le soir après la clôture, seulement pour ce que vous cochez. Cliquez dessus pour ouvrir la page concernée.</p>${pwaChoixHTML(ch)}
-      <div class="pwa-acts"><button type="button" class="btn ghost" id="pwaessai">Envoyer une notification d'essai</button><button type="button" class="btn ghost" id="pwadesac">Désactiver sur cet appareil</button><span class="pwa-msg" id="pwamsg" role="status"></span></div></div>`;
-    const msg = t => { const m = box.querySelector("#pwamsg"); if (m) m.textContent = t; };
-    box.querySelectorAll("[data-pc]").forEach(i => i.onchange = async () => { const r = await post2("/api/push/abonnement", { abonnement: sub.toJSON(), choix: pwaLireChoix(box) }); msg(r.ok ? "Choix enregistrés." : r.error || "Enregistrement impossible."); });
-    box.querySelector("#pwaessai").onclick = async e => { e.target.disabled = true; msg("Envoi…"); const r = await post2("/api/push/essai", { endpoint: sub.endpoint }); msg(r.ok ? "Envoyée : elle arrive dans quelques secondes." : r.error || "Envoi impossible."); setTimeout(() => { e.target.disabled = false; }, 4000); };
-    box.querySelector("#pwadesac").onclick = async () => { await pwaDesabonnerLocal(); pwaPanneauPush(el, ou); };
-    return;
-  }
-  box.innerHTML = tete(etat.autre_compte ? "Liées à un autre compte" : "Désactivées") + `<div class="pb"><p style="margin:0">Recevez vos alertes ici, sans ouvrir le site : une notification le soir après la clôture, seulement pour ce que vous choisissez.${etat.autre_compte ? " Cet appareil reçoit aujourd'hui les alertes d'un autre compte : les activer ici les rattache au vôtre." : ""}</p>${pwaChoixHTML(ch)}
-    <div class="pwa-acts"><button type="button" class="btn" id="pwaon">Activer les notifications</button><span class="pwa-msg" id="pwamsg" role="status">Votre navigateur vous demandera l'autorisation.</span></div></div>`;
-  box.querySelector("#pwaon").onclick = async e => {
-    const b = e.target, msg = t => { box.querySelector("#pwamsg").textContent = t; };
-    b.disabled = true; msg("Activation…");
-    try {
-      const p = await Notification.requestPermission();
-      if (p !== "granted") { msg(p === "denied" ? "Vous avez refusé les notifications. Vous pourrez changer d'avis dans les réglages du navigateur." : "Autorisation non donnée."); b.disabled = false; return; }
-      const reg = await pwaRegistration(), { cle } = await fetch("/api/push/cle").then(r => r.json());
-      let s = await reg.pushManager.getSubscription();
-      if (s && s.options && s.options.applicationServerKey && new Uint8Array(s.options.applicationServerKey).join() !== pwaCle(cle).join()) { await s.unsubscribe(); s = null; }
-      if (!s) s = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: pwaCle(cle) });
-      const r = await post2("/api/push/abonnement", { abonnement: s.toJSON(), choix: pwaLireChoix(box) });
-      if (!r.ok) { msg(r.error || "Activation impossible pour le moment."); b.disabled = false; return; }
-      toast("Notifications activées sur cet appareil.");
-      pwaPanneauPush(el, ou);
-    } catch (x) { msg("Activation impossible sur ce navigateur. Réessayez plus tard."); b.disabled = false; }
-  };
 }
 
 /* Onglet « Alertes » : le bloc des notifications en tête ; « Réglages » : l'application et le connecteur IA. */

@@ -7,7 +7,6 @@
 // Le terme exact en surbrillance, cliquable vers sa définition (comme les titres d'étapes des fiches)
 const dv4Hc = (cle, t) => `<span class="ek-hc" role="button" tabindex="0" data-ek-def="${cle}">${t}<i>?</i></span>`;
 const DV4_REG = [["", "Toutes"], ["fr", "France"], ["eu", "Europe"], ["us", "États-Unis"], ["monde", "Reste du monde"]];
-const DV4_COUL = { det: "#1E8A52", pay: "#1E6FD9", rec: "#8A6D1E", autre: "#5F5B55" };
 // Veille ouvrée (samedi et dimanche sautés) : pour toucher le dividende, il faut détenir l'action à la clôture de ce jour
 function dv4Veille(d) { const t = new Date(d + "T12:00:00Z"); do { t.setUTCDate(t.getUTCDate() - 1); } while (t.getUTCDay() === 0 || t.getUTCDay() === 6); return t.toISOString().slice(0, 10); }
 // Un dividende = la date pour acheter (détachement, ou enregistrement aux États-Unis) et la date de versement qui suit

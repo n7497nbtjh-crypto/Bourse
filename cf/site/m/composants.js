@@ -93,13 +93,6 @@ function ekPoints(o) {
 
 // Partage « sur 100 € » : une seule barre en deux blocs dont la largeur suit la part, la comparaison aux rivales en une ligne.
 // o = { titre, unite, verse (0-100), verseTexte, garde (0-100), gardeTexte, comparaison (HTML court), indice, source }
-function ekPartage(o) {
-  // Barre sur 100 : la part versée colorée (ton g / r), la médiane en trait sur la barre, les deux montants dessous.
-  const v = Math.max(0, Math.min(100, o.verse)), g = Math.max(0, 100 - v), m = o.mediane != null ? Math.max(0, Math.min(100, o.mediane)) : null;
-  const al = m == null ? "" : m < 32 ? " d" : m > 68 ? " f" : "";
-  return ekBox(o, `<div class="ek-cbar${m != null ? " ek-cbar-m" : ""}"><i class="${o.ton === "r" ? "r" : o.ton === "n" ? "n" : "g"}" style="width:${v}%"></i>${m != null ? `<em class="${al.trim()}" style="left:${m}%"><span>${ekEsc(o.medianeLabel || "médiane")}</span></em>` : ""}</div>
-<div class="ek-cleg">${v > 0 ? `<div class="v ${o.ton === "r" ? "r" : o.ton === "n" ? "n" : "g"}"><b>${ekEsc(o.verseValeur)}</b><span>${ekEsc(o.verseTexte)}</span></div>` : ""}${g > 0 ? `<div><b>${ekEsc(o.gardeValeur)}</b><span>${ekEsc(o.gardeTexte)}</span></div>` : ""}</div>${o.comparaison ? `<p class="ek-cmpl">${o.comparaison}</p>` : ""}`);
-}
 
 // « Ce qui l'explique » : des causes numérotées, chacune avec sa preuve, puis « À surveiller ».
 // o = { causes:[{ titre, texte, lien:{ href, label } }], surveiller }
@@ -108,7 +101,6 @@ function ekExplique(o) {
 }
 
 // Carte « en savoir plus » mise en avant (repliée). Un lien vers #id l'ouvre et la montre.
-function ekPlus(o) { return `<details class="ek-more" id="${ekEsc(o.id)}"><summary><span class="ek-ic">${ekEsc(o.icone || "+")}</span><span class="ek-tt">${ekEsc(o.titre)}</span><span class="ek-op"></span></summary><div class="ek-in scroll-x">${o.html}</div></details>`; }
 // Petit tableau année par année pour les cartes : lignes = [[libellé, [valeurs déjà formatées]]].
 function ekTableau(annees, lignes) { return `<table class="ek-tbl"><tr><th></th>${annees.map(a => `<th>${a}</th>`).join("")}</tr>${lignes.map(([l, v]) => v == null ? `<tr class="ek-grp"><th colspan="${annees.length + 1}">${ekEsc(l)}</th></tr>` : `<tr><td>${ekEsc(l)}</td>${v.map(x => `<td>${ekEsc(x)}</td>`).join("")}</tr>`).join("")}</table>`; }
 

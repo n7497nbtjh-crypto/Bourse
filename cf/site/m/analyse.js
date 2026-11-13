@@ -625,9 +625,6 @@ function ficheFaits(s, c) {
 /* ---------- Branchement dans la fiche ----------
    ficheAnalyse(s, c) est l'emplacement réservé à ce module par le module « fiche » (étape « L'essentiel à retenir »).
    Pour une entreprise sans comptes, la fiche n'a pas d'étape « L'essentiel » : le bloc complet s'ajoute à l'étape « Son métier ». */
-function ficheAnalyse(s, c) {
-  try { return analyseHTML(s, c, "inner"); } catch (e) { return ""; }
-}
 function analyseSansComptes() {
   const m = location.pathname.match(/^\/entreprise\/([^/]+)\/?$/); if (!m || typeof RBY === "undefined") return;
   const s = RBY[decodeURIComponent(m[1])]; if (!s || !s.missing) return;

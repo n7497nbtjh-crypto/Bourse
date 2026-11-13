@@ -67,8 +67,6 @@ function outCouv(c) { // le dividende est-il couvert par le bénéfice du dernie
   const p = c.divPaid / c.net;
   return p <= 0.9 ? { k: "oui", t: "Couvert", d: `${F0.format(p * 100)} % du bénéfice versé` } : p <= 1.05 ? { k: "juste", t: "Tout juste", d: `${F0.format(p * 100)} % du bénéfice versé` } : { k: "non", t: "Non couvert", d: `${F0.format(p * 100)} % du bénéfice versé` };
 }
-const outCouvTag = c => { const x = outCouv(c); return x ? `<span class="out-cv out-cv-${x.k}" title="${esc(x.d)}">${x.t}</span>` : ""; };
-const outPea = c => peaOk(c) ? `<span class="out-pea">PEA</span>` : "";
 const outSecOpts = () => [["", "Tous les secteurs"], ...Object.entries(R.sectors).sort((a, b) => a[1].localeCompare(b[1], "fr"))];
 function outQS(o) { const q = new URLSearchParams(); Object.entries(o).forEach(([k, v]) => { if (v) q.set(k, v); }); const s = q.toString(); return s ? "?" + s : ""; }
 const OUT_ICON = {
@@ -139,7 +137,6 @@ function outClScore(k, x) { // le score seul, sans rien qui permette de reconna�
 
 /* ---------- 2. Dividendes ---------- */
 function outDivKind(e) { const l = e.label || ""; return /enregistrement/i.test(l) ? "rec" : /paiement|versement|mise en paiement/i.test(l) ? "pay" : /détach|dernier jour|ex-div/i.test(l) ? "det" : "autre"; }
-const OUT_DK = { det: ["Détachement", "Pour recevoir ce dividende, il faut détenir l'action la veille au soir de cette date (ou à la date indiquée)."], pay: ["Paiement", "Le jour où l'argent arrive sur le compte des actionnaires."], rec: ["Enregistrement", "Il faut être inscrit comme actionnaire à cette date. En pratique, acheter au moins un jour de Bourse avant aux États-Unis, deux en Europe."], autre: ["Dividende", ""] };
 function outDivAmt(e) { const m = (e.label || "").match(/\(([\d\s,.]+)\s*(€|\$|£|CHF|kr|NOK|SEK|DKK|pence)\)/); return m ? m[1].trim() + " " + m[2] : ""; }
 function outDivEvents(f) {
   return AG.events.filter(e => e.date >= TODAY && RBY[e.id] && /ividende|acompte|détachement|solde/i.test(e.type + " " + e.label))

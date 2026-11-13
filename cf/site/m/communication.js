@@ -264,11 +264,6 @@ function commStats() { // calculé sur les comptes chargés par le site
   const ok = (R && R.companies || []).filter(c => !c.missing && c.net != null && c.ca > 0);
   return { n: ok.length, benef: ok.filter(c => c.net > 0).length, div: ok.filter(c => c.divPaid > 0 || c.dps > 0).length, tot: (R && R.companies || []).length };
 }
-let COMM_LN = null; // nombre d'entrées de la liste noire AMF, chargé à la demande
-function commListeNoire() {
-  if (COMM_LN) return Promise.resolve(COMM_LN);
-  return fetch("/data/listes-noires.json").then(r => r.ok ? r.json() : null).then(j => COMM_LN = j && j.items ? { n: j.items.length, maj: j.updated } : null).catch(() => null);
-}
 const COMM_VERDICT = { faux: ["Faux", "cm-v-faux"], pfaux: ["Plutôt faux", "cm-v-pfaux"], partie: ["Vrai en partie", "cm-v-partie"] };
 // Exemple concret tiré des comptes chargés par le site (aucun chiffre écrit à la main)
 function commExempleComptes() {
@@ -472,10 +467,6 @@ document.addEventListener("click", e => {
 });
 
 // Une carte seule, pour Apprendre et l'Académie : la première idée pas encore vue
-function commIdeeSeuleHTML() {
-  const L = commIdees(), s = commIrEtat(), x = L.find(y => !s[y.id]) || L[0];
-  return commIdeeCarte(x, L.indexOf(x), { seule: true }).replace('<span class="light ir-sc"></span>', `<span class="light ir-sc">${commIrScoreHTML(L)}</span>`);
-}
 // Bloc court pour l'accueil : trois idées reçues, renvoi vers la page
 function commIdeesHTML(n = 3) {
   const L = commIdees().filter(x => ["casino", "argent", "livret-a", "bon-moment", "experts"].includes(x.id)).slice(0, n);
@@ -487,40 +478,10 @@ function commIdeesHTML(n = 3) {
 /* ====================================================================================
    5. Page « Livret A ou Bourse »
    ==================================================================================== */
-function pageLivretBourse() {
-  setTitle("Livret A ou Bourse : 100 € par mois sur 10, 20 ou 30 ans"); setNav("sim");
-  const rows = []; for (let y = COMM_FIN; y >= COMM_DEB; y--) rows.push(`<tr><td>${y}</td><td class="r">${commP(COMM_LA[y], 2)}</td><td class="r">${commP((COMM_IPC[y] / COMM_IPC[y - 1] - 1) * 100, 1, true)}</td><td class="r ${COMM_MW[y] < 0 ? "down" : ""}">${commP(COMM_MW[y], 1, true)}${y < COMM_MW_OFF ? "<sup>*</sup>" : ""}</td></tr>`);
-  const r10 = commSimule(COMM_FIN - 9, COMM_FIN, 100).fin, r30 = commSimule(COMM_FIN - 29, COMM_FIN, 100);
-  app.innerHTML = `<div class="cm-page">
-    <header class="cm-hero"><p class="kick">Comparateur historique</p><h1 class="pagetitle">Livret A ou Bourse : ce qu'auraient donné 100 € par mois</h1>
-      <p class="pagesub">Le même effort d'épargne, placé sur un Livret A ou sur les actions du monde entier, comparé à la hausse des prix. Avec les vrais chiffres des années passées, les bonnes comme les mauvaises.</p></header>
-    <section class="panel"><div class="pb">${commComparaisonHTML({ ans: 20 })}</div></section>
-    <div class="cm-cols">
-      <section class="panel"><div class="ph"><h2>Ce que montre la comparaison</h2></div><div class="pb"><ul class="cm-faits">
-        <li>Sur 10 ans (2016 à 2025), 12 000 € versés deviennent environ ${commE(r10.la)} sur un Livret A et ${commE(r10.act)} en actions monde.</li>
-        <li>Le Livret A a parfois rapporté moins que la hausse des prix : en 2022, il a rapporté 1,38 % pendant que les prix montaient de 5,9 % sur l'année.</li>
-        <li>Sur longue période, les actions ont nettement creusé l'écart, en traversant des années très difficiles : ${commP(COMM_MW[2002], 1, true)} en 2002, ${commP(COMM_MW[2008], 1, true)} en 2008.</li>
-      </ul></div></section>
-      <section class="panel"><div class="ph"><h2>Ce qu'elle ne montre pas</h2></div><div class="pb"><ul class="cm-faits">
-        <li>Le Livret A est garanti et disponible à tout moment. Les actions ne le sont pas : il faut pouvoir attendre plusieurs années.</li>
-        <li>Ce calcul ignore les frais (courtage, frais courants d'un ETF) et les impôts sur les gains. Le Livret A n'est pas imposé ; un PEA de plus de 5 ans l'est peu.</li>
-        <li>Le résultat dépend beaucoup de la date de départ. Essayez de commencer en 2000 : la décennie suivante a été mauvaise pour les actions.</li>
-      </ul></div></section>
-    </div>
-    <section class="panel"><div class="ph"><h2>Les chiffres utilisés, année par année</h2></div><div class="pb">
-      <p class="note" style="margin-top:0">Chaque ligne est un chiffre publié par une source officielle ou reconnue. Vous pouvez refaire le calcul.</p>
-      <div class="scroll-x"><table class="t cm-tab"><thead><tr><th>Année</th><th class="r">Livret A (taux moyen)</th><th class="r">Hausse des prix (déc. à déc.)</th><th class="r">Actions monde en €</th></tr></thead><tbody>${rows.join("")}</tbody></table></div>
-      <p class="note">* Années ${COMM_DEB} à ${COMM_MW_OFF - 1} : performance MSCI World en dollars (dividendes bruts) convertie en euros par ENKLAIR au taux de change de fin d'année. À partir de ${COMM_MW_OFF} : chiffres officiels MSCI en euros, dividendes nets.</p>
-    </div><div class="src">${commSrcHTML(["msciEur", "msciUsd", "wikiMsci", "bce", "fredDem", "livretHist", "livret", "livretAout", "ipc", "ipcSept"])}</div></section>
-    <section class="panel cm-end"><div class="pb"><h2>Avant de vous lancer</h2><p>Gardez d'abord une épargne de précaution sur un livret. N'investissez en actions que l'argent dont vous n'aurez pas besoin avant plusieurs années. Ce comparateur est pédagogique : ce n'est pas un conseil d'investissement.</p>
-      <div class="cm-go"><a class="chip" href="/idees-recues">Les idées reçues sur la Bourse</a><a class="chip" href="/academie/bases/epargne-precaution">L'épargne de précaution</a><a class="chip" href="/academie/bases/interets-composes">Les intérêts composés</a><a class="chip fr-seul" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/epargne">Simulateur d'épargne</a></div></div></section>
-  </div>`;
-}
 
 /* ====================================================================================
    6. Page « Pourquoi ENKLAIR »
    ==================================================================================== */
-const COMM_DEMO_IDS = ["totalenergies", "lvmh", "airbus", "loreal", "apple", "nvidia"];
 function commDemoFiche(id) {
   const s = RBY[id]; if (!s || s.missing) return `<p class="muted">Les comptes de cette entreprise ne sont pas disponibles.</p>`;
   const ks = ["marge", "rentabilite", "dette", "croissance"].filter(k => INDI[k] && INDI[k][1](s) != null).slice(0, 3);
@@ -536,86 +497,16 @@ function commDemoFiche(id) {
     <p class="cm-vnote">Comptes ${s.year || ""} déposés auprès des autorités. Vert : nettement mieux que la médiane du secteur ; orange : nettement moins bien ; gris : proche.</p>
     <a class="lnk" href="/entreprise/${s.id}">Voir la fiche complète de ${esc(s.name)}</a>`;
 }
-function commDemoCalcul() { // une vraie question, calculée à l'instant sur les comptes
-  const fr = R.companies.filter(c => !c.missing && c.region === "FR" && c.netDebt != null && c.ca > 0);
-  const cash = fr.filter(c => c.netDebt < 0), div = cash.filter(c => c.divPaid > 0 || c.dps > 0);
-  return { n: fr.length, cash: cash.length, div: div.length, ex: div.slice().sort((a, b) => (b.ca || 0) - (a.ca || 0)).slice(0, 4).map(c => c.name) };
-}
-function pagePourquoiBilan() {
-  setTitle("Ce que ENKLAIR fait que les autres ne font pas"); setNav("new");
-  const S = commStats(), etf = (ETF && ETF.list || []).length, peaN = R.companies.filter(c => peaOk(c)).length, brok = (typeof BROKERS !== "undefined" && BROKERS && BROKERS.list || []).length, D = commDemoCalcul();
-  const A = (n, t, txt, preuve) => `<article class="cm-av panel"><div class="pb"><span class="cm-n">${n}</span><h3>${t}</h3><p>${txt}</p>${preuve ? `<div class="cm-pv"><p class="kick">La preuve</p>${preuve}</div>` : ""}</div></article>`;
-  const Y = `<span class="cm-y">✓</span>`, N = `<span class="cm-x">✗</span>`, P = `<span class="cm-p">~</span>`, U = `<span class="cm-u">–</span>`;
-  // 6/11 soir (Romain) : plus aucun concurrent nommé ; comparaison avec des types de services, en termes généraux.
-  const T = [
-    ["Comptes officiels expliqués en français, avec la médiane du secteur", [Y, "verdict vert ou rouge"], [N, "données brutes"], [P, "données et synthèse, souvent payantes"], [N, ""]],
-    ["Réponses sur une entreprise, calculées sur ses comptes", [Y, "illimitées et gratuites ; IA du site : 3 questions par semaine, 50 par jour avec Premium"], [P, "selon le site"], [P, "souvent dans l'offre payante"], [P, "selon l'application"]],
-    ["PEA, frais de courtage, fiscalité française", [Y, ""], [P, ""], [P, ""], [P, ""]],
-    ["Pédagogie structurée", [Y, "Académie : leçons sourcées"], [P, "articles"], [N, ""], [P, "articles"]],
-    ["Radiographie du portefeuille et des ETF", [Y, "avec Premium"], [N, ""], [P, ""], [Y, "souvent payante"]],
-    ["Sans publicité", [Y, ""], [N, "souvent financé par la publicité"], [P, ""], [U, ""]],
-    ["Cours en temps réel", [N, "différés"], [P, ""], [Y, ""], [U, ""]],
-    ["Consensus des analystes", [N, "choix : proche du conseil"], [P, ""], [Y, ""], [U, ""]],
-    ["Prix", ["", "gratuit pour l'essentiel ; Premium 4,90 € par mois ou 39 € par an"], ["", "gratuit"], ["", "abonnement mensuel"], ["", "gratuit ou abonnement"]],
-  ];
-  const cols = ["ENKLAIR", "Un site boursier gratuit", "Un site d'analyse payant", "Une application de suivi de patrimoine"];
-  const opts = COMM_DEMO_IDS.filter(id => RBY[id] && !RBY[id].missing);
-  app.innerHTML = `<div class="cm-page">
-    <header class="cm-hero cm-hero-b"><p class="kick">Pourquoi ENKLAIR</p><h1 class="pagetitle">Ce que ENKLAIR fait que les autres ne font pas</h1>
-      <p class="pagesub">Un site pour comprendre la Bourse à partir des comptes officiels, en français, avec une IA qui calcule au lieu d'inventer. Sans publicité, sans produit à vendre, sans conseil.</p>
-      <div class="cm-stats"><div><b>${F0.format(S.tot)}</b><span>entreprises suivies</span></div><div><b>${F0.format(etf)}</b><span>ETF analysés</span></div><div><b class="cm-nl">55</b><span>leçons sourcées</span></div><div><b>0</b><span>publicité</span></div></div></header>
-    <div class="cm-avs">
-      ${A("01", "Les comptes officiels, expliqués avec la médiane du secteur", "Chaque chiffre vient des rapports annuels déposés auprès des autorités (ESEF en Europe, SEC aux États-Unis). Il est comparé à la médiane des entreprises du même secteur : vous voyez tout de suite ce qui est un point fort et ce qu'il faut surveiller.",
-        `<div class="cm-demo"><div class="cm-seg cm-seg-co" role="group" aria-label="Choisir une entreprise">${opts.map((id, i) => `<button type="button" data-cm-co="${id}" class="${i === 0 ? "on" : ""}" aria-pressed="${i === 0}">${esc(RBY[id].name)}</button>`).join("")}</div><div id="cmdemo">${opts.length ? commDemoFiche(opts[0]) : ""}</div></div>`)}
-      ${A("02", "Une IA qui calcule et cite ses sources", "Les questions courantes sont comprises et calculées par le site lui-même, sur les comptes de sa base : la réponse est exacte par construction. Pour les questions libres, l'IA du site ne reçoit que les chiffres du site, leurs sources et des règles strictes : aucune prédiction de cours, aucune recommandation.",
-        `<div class="cm-calc"><p class="cm-q">« Quelles entreprises françaises ont plus de trésorerie que de dettes et versent un dividende ? »</p><p class="cm-a">Réponse calculée à l'instant : <b>${D.div}</b> sur les ${D.n} entreprises françaises dont le site a les comptes${D.ex.length ? `, par exemple ${D.ex.map(esc).join(", ")}` : ""}.</p><small>Source : derniers rapports annuels ESEF. Calcul fait dans votre navigateur, sans modèle d'IA.</small>
-        <div class="cm-go"><a class="chip" href="/demander?q=${encodeURIComponent("entreprises françaises sans dette qui versent un dividende")}">Poser cette question</a><a class="chip" href="/demander?q=${encodeURIComponent("Compare LVMH, Hermès et Kering")}">Comparer LVMH, Hermès et Kering</a><a class="chip" href="/methode">Comment l'IA est encadrée</a></div></div>`)}
-      ${A("03", "Illimitée et gratuite pour l'essentiel", "Comme les calculs se font en grande partie dans votre navigateur, ils ne coûtent presque rien au site : ils restent gratuits et sans quota. Ailleurs, l'IA est souvent payante ou plafonnée.",
-        `<div class="cm-quota"><div class="cm-me2"><b>Questions calculées</b><span>sur les comptes, dans votre navigateur</span><em class="up">illimité, gratuit</em></div><div><b>IA du site, gratuit</b><span>questions libres, réponses rédigées</span><em>3 par semaine</em></div><div><b>IA du site, Premium</b><span>les mêmes réponses, plus souvent</span><em>50 par jour</em></div></div>`)}
-      ${A("04", "Une IA sur le site, gratuite", "Pour les questions libres, l'IA du site rédige une réponse appuyée sur les chiffres et les sources du site, sans clé : 3 questions par semaine en gratuit, 50 par jour avec Premium. Vous utilisez déjà ChatGPT ou Claude ? Le connecteur ENKLAIR s'y ajoute en une minute.", "")}
-      ${A("05", "Pensé pour un épargnant français", "L'éligibilité au PEA sur chaque fiche, les frais de courtage rapportés au montant de votre ordre, la comparaison PEA ou compte-titres, la fiscalité à 31,4 % ou 18,6 % : des sujets rarement traités ailleurs.",
-        `<div class="cm-mini3"><div><b>${F0.format(peaN)}</b><span>entreprises signalées éligibles au PEA</span></div>${brok ? `<div><b>${brok}</b><span>courtiers comparés sur leurs frais</span></div>` : ""}<div><b>2</b><span>simulateurs : frais et PEA ou compte-titres</span></div></div><div class="cm-go"><a class="chip fr-seul" href="/pea-cto">PEA ou compte-titres</a><a class="chip" href="/simulateurs/frais">Frais de courtage</a></div>`)}
-      ${A("06", "La liste noire de l'AMF, vérifiable en un clic", "Avant de confier de l'argent à un site inconnu, collez son adresse : le site la compare aux listes noires et mises en garde publiées par l'AMF.",
-        `<div class="cm-mini3"><div><b class="cm-ln">…</b><span>sites et entités de la liste noire AMF</span></div><div><b>16 %</b><span>des Français estiment avoir été victimes d'une arnaque (AMF, mai 2026)</span></div></div><div class="cm-go"><a class="chip" href="/outils/verifier">Vérifier un site</a></div>`)}
-      ${A("07", "Une Académie reliée aux vraies données", "55 leçons sourcées et 63 questions de quiz, de l'épargne de précaution à la lecture d'un bilan. Chaque notion renvoie vers une vraie entreprise : la leçon sur le PER mène au PER de TotalEnergies, calculé avec les derniers comptes.",
-        `<div class="cm-go"><a class="chip" href="/apprendre#academie">Ouvrir l'Académie</a><a class="chip" href="/academie/valorisation/per">Leçon : le PER</a><a class="chip" href="/entreprise/totalenergies">Le PER de TotalEnergies</a><a class="chip" href="/idees-recues">Les idées reçues</a></div>`)}
-      ${A("08", "Sans publicité, sans produit à vendre, sans conseil", "ENKLAIR ne touche aucune commission de courtier, n'affiche aucune publicité et ne vend aucun placement. Il explique ; il ne dit jamais quoi acheter ou vendre. Beaucoup de sites gratuits vivent de la publicité.", "")}
-    </div>
-    <section class="panel"><div class="ph"><h2>Le tableau comparatif honnête</h2></div><div class="pb">
-      <p class="note" style="margin-top:0">Comparaison générale avec ce que proposent le plus souvent ces types de services ; chacun est différent. ✓ oui · ~ partiel · ✗ non · – variable. Les cases où ENKLAIR fait moins bien sont laissées telles quelles.</p>
-      <div class="scroll-x"><table class="t cm-cmp"><thead><tr><th></th>${cols.map((c, i) => `<th class="${i ? "" : "cm-me"}">${esc(c)}</th>`).join("")}</tr></thead>
-      <tbody>${T.map(([l, ...cs]) => `<tr><th scope="row">${esc(l)}</th>${cs.map(([m, t], i) => `<td class="${i ? "" : "cm-me"}">${m}${t ? `<small>${esc(t)}</small>` : ""}</td>`).join("")}</tr>`).join("")}</tbody></table></div>
-    </div></section>
-    <section class="panel"><div class="ph"><h2>Ce que ENKLAIR ne fait pas (encore)</h2></div><div class="pb"><ul class="cm-faits">
-      <li><b>Pas de cours en temps réel.</b> Les cours sont différés : le site sert à comprendre, pas à passer des ordres à la seconde.</li>
-      <li><b>Pas de consensus d'analystes ni d'objectif de cours.</b> Ces travaux sont payants et proches du conseil : le site préfère les comptes.</li>
-      <li><b>Pas de synchronisation avec votre courtier.</b> Vous saisissez votre portefeuille vous-même ; il reste dans votre navigateur ou votre espace.</li>
-      <li><b>Pas de conseil personnalisé.</b> Pour cela, adressez-vous à un conseiller en investissements financiers enregistré à l'ORIAS.</li>
-    </ul></div></section>
-    <section class="panel cm-end"><div class="pb"><h2>Commencez par une question</h2><p>Le plus simple pour juger : posez une vraie question, ouvrez une fiche, ou faites le parcours du débutant.</p>
-      <div class="cm-go"><a class="btn cm-btn" href="/demander">Demander à l'IA</a><a class="chip" href="/apprendre">Par où commencer</a><a class="chip" href="/entreprises">Les entreprises</a><a class="chip" href="/methode">Méthode et sources</a></div></div></section>
-  </div>`;
-  commListeNoire().then(x => { $$(".cm-ln").forEach(el => el.textContent = x ? F0.format(x.n) : "plus de 3 000"); });
-  if (typeof acaLoad === "function") acaLoad().then(a => { const el = $(".cm-nl"); if (a && el) el.textContent = a.modules.reduce((n, m) => n + m.lecons.length, 0); });
-}
 document.addEventListener("click", e => {
   const b = e.target.closest("[data-cm-co]"); if (!b) return;
   $$("[data-cm-co]").forEach(x => { x.classList.toggle("on", x === b); x.setAttribute("aria-pressed", x === b); });
   const d = $("#cmdemo"); if (d) d.innerHTML = commDemoFiche(b.dataset.cmCo);
 });
 // Bloc court pour l'accueil : les avantages en quatre cartes
-function commPourquoiHTML() {
-  const S = commStats();
-  const it = [["Comptes officiels", `${F0.format(S.tot)} entreprises, chaque chiffre comparé à la médiane de son secteur.`], ["IA qui calcule", "Les réponses sont calculées sur les comptes, avec leur source. Gratuit et illimité."], ["Pensé pour la France", "PEA, frais de courtage, fiscalité, liste noire de l'AMF."], ["Indépendant", "Aucune publicité, aucun produit vendu, aucun conseil d'achat."]];
-  return `<div class="cm-teaser">${it.map(([t, d]) => `<a class="cm-tz" href="/pourquoi-bilan"><b>${t}</b><span>${d}</span></a>`).join("")}</div><p class="cm-more"><a class="lnk" href="/pourquoi-bilan">Ce que ENKLAIR fait que les autres ne font pas</a></p>`;
-}
 
 /* ====================================================================================
    7. Routes et styles
    ==================================================================================== */
-ROUTES_EXTRA.push([/^\/idees-recues$/, () => pageIdeesRecues()]);
-ROUTES_EXTRA.push([/^\/livret-a-ou-bourse$/, () => pageLivretBourse()]);
-ROUTES_EXTRA.push([/^\/pourquoi-bilan$/, () => pagePourquoiBilan()]);
 
 /* styles : voir site.css */
 

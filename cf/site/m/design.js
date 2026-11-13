@@ -115,7 +115,6 @@ function tv(el) { if (el) el.innerHTML = ""; }
 
 /* 30/10 (demande de Romain) : plus de mini-courbes dans les tableaux de chiffres ; la colonne garde la variation sur un an.
    Le graphique complet reste au-dessus du tableau de chaque thème. */
-function tblxSpark() { return ""; }
 /* styles : voir site.css */
 /* styles : voir site.css */
 /* Accueil (30/10) : sous-titres en police de texte, sans capitales espacées */
@@ -124,7 +123,6 @@ function tblxSpark() { return ""; }
    la police de texte pour tout le reste, sous-titres compris ; la chasse fixe uniquement pour les chiffres. */
 /* styles : voir site.css */
 /* styles : voir site.css */
-function synSpark() { return ""; } // 30/10 (Romain) : plus de petites courbes, nulle part
 /* 30/10 (Romain, DESIGN.md) : plus aucune capitale espacée nulle part ; les petites étiquettes en Plex Sans, pas en chasse fixe */
 /* styles : voir site.css */
 /* Par où commencer : trois écrans visuels (30/10) */

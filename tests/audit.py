@@ -9,10 +9,9 @@ pages = ["/", "/entreprises", "/actualites", "/actualites?src=us", "/actualites?
 pages += ["/methode", "/demander", "/demander?q=entreprises+peu+endettees", "/espace", "/premium", "/premium/merci?session_id=cs_test", "/cgv", "/confidentialite", "/avertissement", "/connecteur"]
 pages += ["/classements", "/classements?c=dividende&r=fr", "/classements?c=tete", "/decouvertes", "/plan"]
 pages += ["/ia/connecter", "/rapport-exemple"]
-pages += ["/outils/recouvrement?a=amundi-msci-world-pea&b=ishares-core-sp500&c=amundi-nasdaq100-pea", "/outils/si-javais?k=c:apple&ans=3"]
+pages += ["/outils/recouvrement?a=amundi-msci-world-pea&b=ishares-core-sp500&c=amundi-nasdaq100-pea", "/outils", "/classements", "/dividendes", "/marches", "/comparer?ids=lvmh,hermes"]
 pages += ["/entreprise/alibaba", "/entreprise/klepierre", "/entreprise/totalenergies#tous-les-chiffres"]
-pages += ["/idees-recues#livret-a"]
-pages += ["/apprendre#outils", "/espace/rapport", "/espace/ia"]
+pages += ["/espace/rapport", "/espace/ia"]
 pages += ["/comparer?ids=bnp-paribas,societe-generale,sap", "/comparer?ids=apple,microsoft,alphabet", "/entreprise/bnp-paribas#rf-concurrents", "/entreprise/apple#rf-concurrents", "/entreprise/totalenergies#rf-concurrents", "/entreprise/siemens", "/entreprise/alibaba#rf-metier"]
 pages += ["/etf", "/etf/amundi-msci-world-pea", "/etf/ishares-core-sp500", "/entreprise/lvmh/comprendre/argent", "/entreprise/lvmh/comprendre/marge", "/entreprise/lvmh/comprendre/varier", "/entreprise/lvmh/comprendre/prix", "/entreprise/totalenergies/comprendre/dette", "/entreprise/lvmh#rf-sources", "/entreprise/lvmh#rf-agenda", "/actualites?src=monde", "/entreprise/bnp-paribas/comprendre/roe"]
 pages += [f"/entreprise/{i}{t}" for i in ("lvmh", "hermes", "totalenergies", "bnp-paribas", "apple", "unibail-rodamco-westfield", "siemens", "asml") for t in ("", "/comptes", "/actualite", "/agenda")]
@@ -138,13 +137,6 @@ with sync_playwright() as pw:
             p = pg.evaluate(CHECK, opts["viewport"]["width"])
             if p: probs["panneau ✦"] = p
             pg.evaluate("orcIaClose()")
-        # Apprendre : les choix recalculent les exemples
-        pg.goto("http://t.local/apprendre"); pg.wait_for_timeout(900)  # 4/11 : Apprendre v5, sept idées à manipuler (le questionnaire de profil n'y est plus)
-        for k in ("act", "lire", "prix"): pg.click(f"[data-ap5-chips={k}] button[data-id=lvmh]")
-        pg.fill("#ap5f", "0.5"); pg.dispatch_event("#ap5f", "input"); pg.click("#ap5ans button[data-y='2000']"); pg.wait_for_timeout(200)
-        if "LVMH" not in pg.inner_text("#ap5prix") or "2000" not in pg.inner_text("#ap5tps") or "0,50" not in pg.inner_text("#ap5frais"): probs["Apprendre"] = ["les choix ne recalculent pas"]
-        p = pg.evaluate(CHECK, opts["viewport"]["width"])
-        if p: probs["/apprendre rempli"] = p
         if shots and name != "petit":
             pg.screenshot(path=f"{shots}/{name}_commencer.png", full_page=True)
             for u, n in (("/premium", "premium"), ("/entreprise/lvmh", "assistant")):
