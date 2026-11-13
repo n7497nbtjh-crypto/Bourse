@@ -30,7 +30,10 @@ jobs:
           node tests/t_etf.mjs
       - name: Contrôle
         run: |
-          node -e 'const c=require("./data/etf_catalogue.json"); if (c.list.length < 150) { console.log("catalogue trop court :", c.list.length); process.exit(1); } console.log(c.list.length, "ETF au catalogue")'
+          # 13/11 : une collecte partielle (200 ETF au lieu de 1 148) avait remplacé le catalogue et retiré 948 ETF du site.
+          # Le catalogue ne peut plus perdre plus de 5 % de ses ETF d'un passage à l'autre : sinon le robot s'arrête sans rien écrire.
+          git show HEAD:data/etf_catalogue.json > /tmp/catalogue_avant.json
+          node -e 'const c=require("./data/etf_catalogue.json"), a=require("/tmp/catalogue_avant.json"), n=c.list.length, n0=a.list.length; if (n < 150 || n < n0 * 0.95) { console.log("::error::catalogue des ETF refusé : " + n + " ETF contre " + n0 + " avant (collecte incomplète)"); process.exit(1); } console.log(n, "ETF au catalogue (" + n0 + " avant)")'
           node build.mjs
       - name: Enregistrement des données dans le dépôt
         run: |

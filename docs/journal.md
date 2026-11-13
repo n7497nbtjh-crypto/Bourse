@@ -360,3 +360,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - `cf/site/m/nav.js` : menu Actualités, Entreprises, ETF, Outils, Mon espace (plus de rubrique Apprendre) ; pied de page à cinq colonnes (`.navpied5`).
 - `cf/site/m/outils4.js` : page Outils à six cartes (Classements, Comparer des entreprises, Comparer deux ETF, Agenda des résultats, Calendrier des dividendes, Lexique), d'après `docs/maquettes/menu-outils-v1.html` ; l'explication de chaque carte est de nouveau visible sur cette page seulement (`.ou4-o`).
 - Contrôles : relire-pages 64 pages, 0 problème ; aucune page supprimée à cette étape.
+
+## 13/11, 13 h 45 : 948 ETF retirés du site pendant une heure (erreur de Claude)
+- À 13 h 35, le robot des ETF lancé à la main (pour l'alerte « données ETF de 8 jours ») a fait une collecte partielle : 200 ETF au lieu de 1 148. Son contrôle n'exigeait que 150 ETF : il a remplacé le catalogue, et la mise en ligne suivante n'a plus montré que 226 ETF.
+- Corrigé : écriture du robot annulée (`git revert ce050390`), catalogue revenu à 1 148 ETF ; `etf.yml` refuse désormais un catalogue qui perd plus de 5 % de ses ETF.
+- À retenir : ne jamais lancer un robot qui écrit des données sans avoir lu ses garde-fous ; regarder le nombre d'éléments avant et après.
