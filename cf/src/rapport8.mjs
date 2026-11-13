@@ -9,14 +9,11 @@
 import { variationSemaine, lundiDe, SECTEURS } from "./synthese.mjs";
 import { iaJSON, frCorrige } from "./iasite.mjs";
 import { CONSIGNES } from "./consignes.mjs";
+import { fold, mondeDe, r0, r1, med, univers, addJ } from "./monde.mjs";
+export { motsTitre, choisirTitres, mondeDe } from "./monde.mjs";
 
-const r1 = v => Math.round(v * 10) / 10, r0 = v => Math.round(v);
+
 // Suppositions retirées des textes de l'IA (6/11, premiers textes en ligne : « cela pourrait refléter une confiance accrue », « ont pu influencer le secteur »)
-const SUPPOSE = /pourrai(t|ent)|(a|ont) pu |semble|probablement|sans doute|refl[eè]te/i;
-const addJ = (ymd, n) => { const d = new Date(ymd + "T12:00:00Z"); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
-const med = a => { const p = a.slice().sort((x, y) => x - y), m = p.length >> 1; return p.length ? (p.length % 2 ? p[m] : (p[m - 1] + p[m]) / 2) : null; };
-const fold = s => String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
-const INDICE_PAYS = { US: ["sp500", "S&P 500"], FR: ["cac40", "CAC 40"], DE: ["dax", "DAX"], GB: ["ftse100", "FTSE 100"], JP: ["nikkei", "Nikkei 225"] };
 const PAYS = { US: "États-Unis", FR: "France", DE: "Allemagne", GB: "Royaume-Uni", JP: "Japon", CN: "Chine", CH: "Suisse", NL: "Pays-Bas", IT: "Italie", ES: "Espagne", CA: "Canada", TW: "Taïwan", KR: "Corée du Sud", IN: "Inde" };
 // Nouvelles des rivales retenues : ce qui change l'entreprise, pas ses opérations courantes (rachats d'actions, droits de vote)
 const RIV_CAT = new Set(["resultats", "rapport", "operation", "contrat", "dirigeants", "dividende", "opa"]);
@@ -80,96 +77,13 @@ export async function rivalesDe(d, n, lundi, auj) {
 }
 
 /* ---------- Variations de tout l'univers (secteurs, grandes entreprises) ---------- */
-function univers(d, lundi, auj) {
-  const parSec = {};
-  for (const [k, m] of Object.entries(d.meta || {})) {
-    if (!m || !m.sector || !d.names[k]) continue;
-    const v = variationSemaine(d.cs, k, lundi, auj, d.px[k], d.sem); if (!v) continue;
-    const p = d.px[k], cap = p && p.cap > 0 ? (p.cur === "EUR" || !p.cur ? p.cap : d.fx && d.fx[p.cur] > 0 ? p.cap * d.fx[p.cur] : 0) : 0; // capitalisation en euros, pour classer les plus grandes
-    (parSec[m.sector] = parSec[m.sector] || []).push({ k, nom: d.names[k], v: v.pct, cap, region: m.region });
-  }
-  return parSec;
-}
 
 /* ---------- Le monde de la semaine ---------- */
 /* 12/11 (Romain : « les actus sont trop peu pertinentes, tu n'as même pas mis l'actu de Huang ») : les titres envoyés à l'IA étaient les 100 plus récents,
    donc surtout la presse des dernières heures (journaux indiens, géopolitique), et jamais les grands sujets de la semaine.
    Ils sont maintenant choisis par importance : un titre compte d'autant plus que ses mots clés sont repris par beaucoup de médias différents.
    Au plus 7 titres par sujet et 10 par média, pour garder de la variété. Renvoie les titres du plus important au moins important. */
-function trancheMonde(jour) {
-  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Paris", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", hour12: false }).formatToParts(new Date()).map(x => [x.type, x.value]));
-  if (String(jour).slice(0, 10) !== `${p.year}-${p.month}-${p.day}`) return "";
-  return "|h" + Math.floor((Number(p.hour) % 24) / 3);
-}
-const MOTS_VIDES = new Set(("avec dans pour plus sans sous vers chez entre apres avant contre depuis pendant selon comme mais donc cette leur leurs elle elles nous vous sont ete etre avoir fait faire tout tous toute toutes tres aussi alors ainsi encore deja face pres " +
-  "this that with from have will what when where which while their there they them than then into over after before about amid among says said say could would should more most much many some just here your ours does been being were also back make made take " +
-  "stock stocks share shares market markets today news live update updates week weekly daily year years month months report reports price prices high highs lows record records rise rises rose fall falls fell gain gains drop drops jump jumps surge surges slump " +
-  "bourse marche marches action actions hausse baisse semaine jour jours annee annees mois prix cours point points milliard milliards million millions billion billions trillion percent first last next best ahead still amid why how " +
-  "watch know need things three five seven top buy sell hold check latest inside outside video photos explained analysis opinion editorial election elections results result wall street talks could worth here").split(" "));
-export function motsTitre(t) { return [...new Set(fold(String(t || "")).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !MOTS_VIDES.has(w) && !/^\d+$/.test(w)))]; }
-export function choisirTitres(items, max = 140) {
-  const M = items.map(x => ({ x, w: motsTitre(x.t) })), src = new Map();
-  for (const m of M) for (const w of m.w) { let S = src.get(w); if (!S) src.set(w, S = new Set()); S.add(m.x.s); }
-  const nbMedias = new Set(items.map(x => x.s)).size || 1;
-  // un mot repris par plus de 40 % des médias ne distingue plus rien ; par moins de 3 médias, ce n'est pas encore un sujet
-  const poids = w => { const n = (src.get(w) || new Set()).size; return n >= 3 && n <= Math.max(6, nbMedias * 0.4) ? n : 0; };
-  for (const m of M) { const P = m.w.map(w => [w, poids(w)]).filter(p => p[1]).sort((a, b) => b[1] - a[1]); m.cle = P[0] ? P[0][0] : null; m.score = (P[0] ? P[0][1] : 0) + (P[1] ? P[1][1] * 0.5 : 0); m.repris = P[0] ? P[0][1] : 1; }
-  M.sort((a, b) => b.score - a.score || b.x.d.localeCompare(a.x.d));
-  const parCle = {}, parMedia = {}, vus = new Set(), out = [];
-  for (const m of M) { if (out.length >= max) break; if (!m.cle) continue;
-    const t = fold(m.x.t).slice(0, 60); if (vus.has(t)) continue;
-    if ((parCle[m.cle] || 0) >= 7 || (parMedia[m.x.s] || 0) >= 10) continue;
-    // dans un même sujet, un média ne parle qu'une fois tant que d'autres médias restent à citer
-    if (out.some(o => o.cle === m.cle && o.x.s === m.x.s) && (parCle[m.cle] || 0) < 4) continue;
-    vus.add(t); parCle[m.cle] = (parCle[m.cle] || 0) + 1; parMedia[m.x.s] = (parMedia[m.x.s] || 0) + 1; out.push(m); }
-  return out.map(m => ({ ...m.x, repris: m.repris }));
-}
 
-export async function mondeDe(env, d, n, lundi, auj) {
-  const fin = addJ(lundi, 6), items = ((d.monde && d.monde.items) || []).filter(x => x && x.d && x.d.slice(0, 10) >= addJ(lundi, -2) && x.d.slice(0, 10) <= fin && x.t && x.u);
-  if (items.length < 4) return null;
-  const T = choisirTitres(items, 140); // du plus important au moins important (12/11)
-  const parSec = univers(d, lundi, auj), secteurs = {};
-  for (const [s, L] of Object.entries(parSec)) secteurs[s] = { nom: SECTEURS[s] || s, mediane_pct: r1(med(L.map(x => x.v))), n: L.length };
-  // Les faits envoyés à l'IA sont coupés à 14 000 caractères par iaJSON : on retire des titres (les plus anciens) jusqu'à tenir dedans,
-  // sinon le JSON arrive tronqué (7/11 : 128 titres, réponse perdue)
-  const faits = { semaine_du: lundi, au: fin, indices: (n.indices || []).map(i => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] };
-  while (T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, medias_sur_ce_sujet: x.repris, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500)) T.pop();
-  const valide = o => {
-    if (!o || !Array.isArray(o.sujets)) return null;
-    const S = o.sujets.slice(0, 10).map(s => ({ // 8/11 (Romain : « étoffer le monde ») : jusqu'à 10 sujets
-      titre: String(s.titre || "").replace(/—/g, ",").slice(0, 100), theme: String(s.theme || "").slice(0, 50), fait: String(s.fait || "").replace(/—/g, ",").slice(0, 360),
-      titres: [...new Set((Array.isArray(s.titres) ? s.titres : []).map(Number).filter(i => Number.isInteger(i) && T[i]))].slice(0, 3),
-      secteurs: (Array.isArray(s.secteurs) ? s.secteurs : []).filter(x => x in secteurs).slice(0, 3),
-      pays: (Array.isArray(s.pays) ? s.pays : []).map(x => String(x).toUpperCase()).filter(x => /^[A-Z]{2}$/.test(x)).slice(0, 3) }))
-      .map(s => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) }))
-      .map(s => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter(ph => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })) // 7/11 nuit : plus de titres anglais recopiés dans le texte (ils sont en lien sous le sujet)
-      .filter(s => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2) // 6/11 : un sujet porté par un seul titre est écarté
-      .filter(s => new Set(s.titres.map(i => T[i].s)).size >= 2 && !/\brumeurs?\b/i.test(s.fait)); // 12/11 : au moins deux médias différents, et jamais de « rumeurs »
-    return S.length ? { sujets: S } : null;
-  };
-  /* 12/11 midi : pour le jour en cours, les sujets sont refaits toutes les 3 heures (13/11 ; quatre fois par jour le 12/11) au lieu d'une : une nouvelle du soir n'attend plus le lendemain. */
-  const r = await iaJSON(env, "monde12|" + lundi + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
-  if (!r) return null;
-  // Nos chiffres pour chaque sujet : médiane du secteur, ses plus grandes entreprises, l'indice du pays ; les valeurs du lecteur concernées
-  const ctx = (d.contexte && d.contexte.sujets) || [];
-  const sujets = r.sujets.map(s => {
-    const chiffres = [];
-    for (const sk of s.secteurs) { const L = parSec[sk] || []; if (!L.length) continue;
-      chiffres.push({ lab: `${SECTEURS[sk] || sk} : médiane de ${L.length} entreprises`, v: r1(med(L.map(x => x.v))) });
-      L.filter(x => x.cap > 0).sort((a, b) => b.cap - a.cap).slice(0, s.secteurs.length > 1 ? 2 : 3).forEach(x => chiffres.push({ lab: x.nom, k: x.k, v: x.v })); } // sans capitalisation connue : la médiane seule
-    for (const p of s.pays) { const ix = INDICE_PAYS[p], v = ix && variationSemaine(d.cs, "i:" + ix[0], lundi, auj, d.px["i:" + ix[0]], d.sem); if (v) chiffres.push({ lab: ix[1], v: v.pct }); }
-    const touche = (n.lignes || []).filter(l => { const m = d.meta[l.k]; return m && (s.secteurs.includes(m.sector) || s.pays.includes(m.region)); })
-      .map(l => ({ k: l.k, nom: l.nom, v: l.variation_semaine_pct, eur: l.portefeuille && l.portefeuille.var_eur != null ? r0(l.portefeuille.var_eur) : null }));
-    // dossier de fond du site (contexte.json) : au moins deux termes différents de son dossier dans le titre et le fait du sujet
-    // (les mots des dossiers sont larges : « taux » seul rattachait la Banque d'Angleterre au dossier de la BCE)
-    const txt = fold(s.titre + " " + s.fait);
-    const fond = ctx.find(c => { try { return c.mots && new Set((txt.match(new RegExp(c.mots, "g")) || [])).size >= 2; } catch (e) { return false; } });
-    return { ...s, titres: s.titres.map(i => ({ t: T[i].t, s: T[i].s, u: T[i].u, d: T[i].d.slice(0, 10) })), chiffres: chiffres.slice(0, 5), touche: touche.slice(0, 6),
-      fond: fond ? { id: fond.id, titre: fond.titre, maj: fond.maj } : null };
-  });
-  return { sujets, modele: r.modele || null };
-}
 
 /* ---------- Radiographie : l'argent du lecteur, ETF ouverts, face aux sujets de la semaine ---------- */
 export async function radioDe(d, n, monde) {

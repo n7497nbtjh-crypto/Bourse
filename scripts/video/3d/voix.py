@@ -1,17 +1,17 @@
-import subprocess, numpy as np, json, sys
-from faster_whisper import WhisperModel
-D="/tmp/v3d/voix"; L=[l for l in open(f"{D}/lignes.txt").read().split("\n") if l.strip()]
-todo=[int(x) for x in sys.argv[1:]] or list(range(1,len(L)+1))
-m=WhisperModel('small',device='cpu',compute_type='int8')
-try: out={o['i']:o for o in json.load(open(f"{D}/mots.json"))}
-except: out={}
-for i in todo:
-    l=L[i-1]
-    subprocess.run(['python3','-m','piper','-m','/tmp/tts/fr_FR-siwis-medium.onnx','--length-scale','0.84','--sentence-silence','0.12','--noise-scale','0.75','--noise-w','0.9','-f',f'{D}/r{i}.wav'],input=l.encode(),capture_output=True)
-    subprocess.run(['ffmpeg','-nostdin','-v','error','-y','-i',f'{D}/r{i}.wav','-af','silenceremove=start_periods=1:start_threshold=-45dB:stop_periods=-1:stop_duration=0.18:stop_threshold=-45dB,highpass=f=90,equalizer=f=220:t=q:w=1:g=-2,equalizer=f=3200:t=q:w=1.2:g=4,equalizer=f=9000:t=q:w=1:g=2,acompressor=threshold=-20dB:ratio=3.5:attack=4:release=60:makeup=4,aecho=0.8:0.5:22:0.08','-ar','48000',f'{D}/l{i}.wav'])
-    raw=subprocess.run(['ffmpeg','-nostdin','-v','error','-i',f'{D}/l{i}.wav','-ar','16000','-ac','1','-f','f32le','-'],capture_output=True).stdout
-    seg,_=m.transcribe(np.frombuffer(raw,dtype=np.float32),language='fr',word_timestamps=True)
-    W=[(w.word.strip(),round(w.start,2),round(w.end,2)) for s in seg for w in s.words]
-    d=float(subprocess.run(['ffprobe','-v','error','-show_entries','format=duration','-of','csv=p=0',f'{D}/l{i}.wav'],capture_output=True,text=True).stdout)
-    out[i]={'i':i,'dur':d,'mots':W}; print(i,round(d,2),' '.join(w[0] for w in W))
-json.dump([out[k] for k in sorted(out)],open(f"{D}/mots.json","w"),ensure_ascii=False)
+import ssl,asyncio,os,json,edge_tts,edge_tts.communicate as c
+c._SSL_CTX=ssl.create_default_context(cafile=os.path.expanduser('~/.ccr/ca-bundle.crt'))
+L=["Jeudi, deux mille trois cents milliards de dollars ont disparu en une seule séance.",
+"La veille pourtant, Wall Street faisait la fête : les démocrates venaient de gagner le Congrès, et le Dow Jones prenait 3 %.",
+"Mais jeudi, tout s'inverse. Le Nasdaq plonge de 5,5 %.",
+"Les puces de l'IA sont en première ligne : Nvidia, moins 9 %. Broadcom, moins 10 %. Micron, moins 17 %.",
+"Pourquoi ? Les investisseurs craignent que le nouveau Congrès freine les data centers.",
+"Les résultats de Qualcomm ont déçu.","Et après une année folle, beaucoup ont vendu.",
+"Prochain test : le 17 novembre, avec les résultats de Nvidia."]
+async def m():
+    co=edge_tts.Communicate(" ".join(L),"fr-FR-RemyMultilingualNeural",rate="+6%",boundary="WordBoundary")
+    w=[];f=open("voix.mp3","wb")
+    async for ch in co.stream():
+        if ch["type"]=="audio": f.write(ch["data"])
+        elif ch["type"]=="WordBoundary": w.append([ch["offset"]/1e7,(ch["offset"]+ch["duration"])/1e7,ch["text"]])
+    json.dump(w,open("w.json","w"),ensure_ascii=False)
+asyncio.run(m())

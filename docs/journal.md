@@ -388,3 +388,10 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Résultat : `ia.js` 153 Ko → 14 Ko, `app.js` 245 Ko → 137 Ko ; code du navigateur 1,68 Mo → 1,54 Mo. L'ancienne page Premium d'`app.js` ne garde que la page « Merci ».
 - Redirections : /demander et /ia/connecter vers l'accueil, /espace/ia vers /espace (navigateur et serveur).
 - Contrôles : audit complet 101 pages en trois tailles, 0 problème, 0 erreur JS (il vérifie que plus aucun point d'entrée de question n'est affiché sur la fiche) ; relecture 46 pages, 0 problème ; tests du serveur 0 écart.
+
+## 13/11, 17 h : recentrage, étape 4 (l'actualité détachée du rapport)
+- `cf/src/monde.mjs` (nouveau) : `choisirTitres`, `mondeDe` (appel à l'IA), `mondeFusion`, `mondePublic` (/api/monde). Il ne dépend plus du rapport : la variation des trois grands indices est calculée sur place (avant : par `faitsSynthese`).
+- `cf/src/semaine.mjs` (nouveau) : `lundiDe`, `variationSemaine`, `addJ`, `SECTEURS`, `INDICES` et leurs aides, sortis de `synthese.mjs`. Outil `scripts/extraire-module.js` (déplace des déclarations et leurs dépendances d'un module à un autre).
+- Doublons de sujets : deux sujets sont le même s'ils partagent un lien, deux mots, ou un nom propre (Nvidia, Ukraine). Avant, un seul mot courant en commun (« publie », « annonce ») suffisait à en confondre deux.
+- `tests/t_monde.mjs` (8 vérifications) ajouté aux tests de la mise en ligne.
+- Tests hors mise en ligne en échec, sans lien avec ce changement et sur des fonctions qui partent à l'étape 5 : `t_compte.mjs` (budget de l'IA), `t_espace.mjs` (e-mail du rapport), `t_rapport8.mjs` (un cas dépendant de la date).

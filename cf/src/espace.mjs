@@ -8,7 +8,7 @@
 // Sécurité : mots de passe dérivés par PBKDF2-SHA256 (100 000 tours, sel aléatoire), session dans un cookie HttpOnly
 // dont seule l'empreinte SHA-256 est gardée en base, essais limités par adresse et par empreinte d'IP.
 import { iaMesures, syntheseEntreprise } from "./iasite.mjs";
-import { enrichir8, faitsEntreprise, mondeDe } from "./rapport8.mjs";
+import { enrichir8, faitsEntreprise } from "./rapport8.mjs";
 import { json, initCompte, premiumOf, visitor, sessionCompte, sha256hex, cookieSession, mailReady, mailCapacity, sendMail, adminOk, proprietaireDe, abonnementEnCours } from "./compte.mjs";
 import { coursComplets } from "./cours.mjs";
 import { addJ as addJour, lundiDe as lundiSem, faitsSynthese, resumeCourt, lignesPf, lectureMin, SYN_VERSION, normaliseRapport, validerRapport, rapportSignature, RAPPORT_DEFAUT, RAPPORT_MAX_SECTEURS, SECTEURS } from "./synthese.mjs";
@@ -144,10 +144,10 @@ export function semaineIso(ymd) {
   const y = d.getUTCFullYear(), w = 1 + Math.floor((d - Date.UTC(y, 0, 1)) / (7 * JOUR));
   return `${y}-W${String(w).padStart(2, "0")}`;
 }
-const jourSemaine = ymd => new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 dimanche … 6 samedi
+export const jourSemaine = ymd => new Date(ymd + "T12:00:00Z").getUTCDay(); // 0 dimanche … 6 samedi
 
 /* ---------- Données du site (mêmes sources que les pages) ---------- */
-async function siteData(request, env) {
+export async function siteData(request, env) {
   const get = async p => { try { const r = await env.ASSETS.fetch(new Request(new URL(p, request.url))); return r.ok === false ? null : await r.json(); } catch (e) { return null; } };
   const [conc, monde, contexte, actuSem] = await Promise.all([get("/data/concurrents.json"), get("/data/actu/monde.json"), get("/data/contexte.json"), get("/data/actu/semaine.json")]); // 6/11 soir : rapport v8 (cf/src/rapport8.mjs)
   const [uni, etf, ana, ag, agAuto, sem, cs, fx, dvUs, dvEu] = await Promise.all([get("/data/univers.json"), get("/data/etf.json"), get("/data/actu-analyse.json"), get("/data/agenda.json"), get("/data/agenda-auto.json"), get("/data/semaine.json"), get("/data/cours-semaine.json"), get("/data/fx.json"), get("/data/agenda-dividendes.json"), get("/data/agenda-dividendes-eu.json")]);
@@ -720,74 +720,4 @@ export async function rapportExemple(request, env, ctx) {
   // 7/11 (Romain : « c'est un rapport d'exemple, il n'a pas de recalcul à faire ») : rapport figé, celui du 6 novembre,
   // dans cf/site/data/rapport-exemple.json. Plus aucun calcul ni appel à l'IA ici.
   return env.ASSETS.fetch(new Request(new URL("/data/rapport-exemple.json", request.url)));
-}
-
-/* 9/11 (Romain, maquette actualite-sujets-v2 validée) : « Le monde » du rapport de la semaine, pour tout le monde, dans l'onglet Actualité.
-   Mêmes sujets que le rapport (mondeDe de rapport8.mjs, même clé de cache de l'IA : aucun appel en plus), sans portefeuille.
-   Gardé 3 heures (table monde_pub). Lundi matin, s'il n'y a pas encore assez de titres, la semaine précédente. */
-/* 13/11 (Romain : 10 secondes d'attente, 3 sujets) : le visiteur n'attend plus jamais l'IA.
-   Les sujets de la semaine sont gardés en base et servis tout de suite ; au-delà de 2 heures ils sont refaits en arrière-plan.
-   Les nouveaux sujets s'ajoutent aux anciens de la semaine (10 au plus, les plus récents d'abord) : une mise à jour ne peut plus en retirer. */
-const mondeMots = t => new Set(String(t || "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().split(/[^a-z0-9]+/).filter(w => w.length > 3));
-const MONDE_BANALS = new Set("inflation marche marches bourse bourses hausse baisse crise guerre banque banques centrale economie economique croissance risques risque seuil critique nouvelles depart resultats action actions petrole semaine mondiale mondial europe europeenne chute record prix ventes tensions accord".split(" "));
-function mondeMeme(a, b) {
-  const ua = new Set((a.titres || []).map(x => x.u)); if ((b.titres || []).some(x => ua.has(x.u))) return true;
-  const ma = mondeMots(a.titre), mb = mondeMots(b.titre); let n = 0, propre = 0;
-  for (const w of ma) if (mb.has(w)) { n++; if (w.length >= 5 && !MONDE_BANALS.has(w)) propre++; }
-  return n >= 2 || propre >= 1;
-}
-function mondeFusion(neufs, anciens) {
-  const out = [];
-  for (const x of [...(neufs || []), ...(anciens || [])]) if (x && !out.some(y => mondeMeme(x, y))) out.push(x);
-  return out.slice(0, 10);
-}
-async function mondeCalcul(request, env, auj, ancien) {
-  const d = await siteData(request, env);
-  const calc = async decal => {
-    const jour = decal ? addJour(auj, -((jourSemaine(auj) + 6) % 7) - 1) : auj, semaine = semaineIso(jour), lundi = lundiSem(semaine);
-    let n = { indices: [], lignes: [] };
-    try { n = faitsSynthese({ ...d, actu: {} }, { favoris: [], pf: null, rapport: { ...RAPPORT_DEFAUT, favoris: false, portefeuille: false, indices: ["cac40", "stoxx50", "sp500"] } }, semaine, { auj: jour }); n.lignes = []; } catch (e) { }
-    const m = await mondeDe(env, d, n, lundi, jour).catch(() => null);
-    if (!m || !(m.sujets || []).length) return null;
-    m.sujets.forEach(x => { x.chiffres = (x.chiffres || []).filter(c => c.v != null && c.v !== 0); });
-    return { du: lundi, au: addJour(lundi, 6), jour, sujets: m.sujets, modele: m.modele || null };
-  };
-  const cur = await calc(0);
-  if (ancien && !ancien.semaine_passee && cur && ancien.du === cur.du) cur.sujets = mondeFusion(cur.sujets, ancien.sujets);
-  if (!cur && ancien) return null;
-  if (cur && cur.sujets.length >= 6) return { ...cur, genere: Date.now() };
-  const prev = ancien && ancien.precedente ? ancien.precedente : await calc(7);
-  if (cur) return { ...cur, genere: Date.now(), precedente: prev };
-  if (prev) return { ...prev, genere: Date.now(), semaine_passee: true };
-  return null;
-}
-export async function mondePublic(request, env, ctx) {
-  const auj = jourParis(), cle = "monde7|" + lundiSem(semaineIso(auj));
-  let garde = null, age = Infinity;
-  if (env.DB) try { await env.DB.prepare(`CREATE TABLE IF NOT EXISTS monde_pub (k TEXT PRIMARY KEY, txt TEXT NOT NULL, at INTEGER NOT NULL)`).run();
-    const h = await env.DB.prepare(`SELECT txt, at FROM monde_pub WHERE k = ?`).bind(cle).first(); if (h) { garde = JSON.parse(h.txt); age = Date.now() - h.at; } } catch (e) { }
-  /* première lecture de la semaine avec la nouvelle clé : on reprend les sujets gardés jour par jour par l'ancienne (monde6|jour) */
-  if (!garde && env.DB) try {
-    const lundi = lundiSem(semaineIso(auj));
-    const R = await env.DB.prepare(`SELECT k, txt FROM monde_pub WHERE k LIKE 'monde6|%' AND k >= ? ORDER BY at DESC LIMIT 7`).bind("monde6|" + lundi).all();
-    let S = [];
-    for (const r of (R.results || [])) { const o = JSON.parse(r.txt); if (o && o.du === lundi && !o.semaine_passee) S = mondeFusion(S, o.sujets); }
-    if (S.length) garde = { du: lundi, au: addJour(lundi, 6), jour: auj, sujets: S, modele: null, reprise: true };
-  } catch (e) { }
-  const refaire = async () => {
-    const out = await mondeCalcul(request, env, auj, garde).catch(() => null);
-    if (out && env.DB) try { await env.DB.prepare(`INSERT OR REPLACE INTO monde_pub (k, txt, at) VALUES (?, ?, ?)`).bind(cle, JSON.stringify(out), Date.now()).run(); } catch (e) { }
-    return out;
-  };
-  if (garde && garde.reprise) { const out = await refaire(); return json(out || garde); }
-  if (garde && (garde.sujets || []).length) {
-    if (age > 2 * 36e5) {
-      if (env.DB) try { await env.DB.prepare(`UPDATE monde_pub SET at = ? WHERE k = ?`).bind(Date.now() - 2 * 36e5 + 5 * 6e4, cle).run(); } catch (e) { }
-      if (ctx && ctx.waitUntil) ctx.waitUntil(refaire());
-    }
-    return json(garde);
-  }
-  const out = await refaire();
-  if (!out) return json({ sujets: [], message: "Pas encore assez de titres cette semaine." });
-  return json(out);
 }

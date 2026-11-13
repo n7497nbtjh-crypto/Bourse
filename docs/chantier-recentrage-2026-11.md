@@ -66,7 +66,7 @@ Le site se recentre sur : présentation et ergonomie, fiches, classements, compa
 | 1 | fait (menu et page Outils ; liens vers les outils ailleurs : retirés au fil des étapes 2 à 5) | 13/11 | voir journal |
 | 2 | fait : pages supprimées, redirections, code de base retiré par l'outil `scripts/code-mort.js` (271 déclarations, 269 Ko), données et robot des outils supprimés. Restent liés aux étapes 3 et 5 : leçons citées par `ia.js`, `mcp.mjs` et le rendu serveur (`academie.json`, `commencer.json`, `parcours.json`) | 13/11 | voir journal |
 | 3 | fait côté navigateur : panneau ✦, page « Demander », page « L'IA du site », questions de la fiche, de la fiche ETF et du comparateur, bilan des favoris, suggestion de la recherche. `ia.js` passe de 153 à 14 Ko. Reste pour l'étape 6 : consignes et routes du serveur devenues inutiles. À déplacer à l'étape 5 : `iaFicheContexte` (rapport8.js) sert à l'explication des annonces. Quatrième usage découvert : la traduction des annonces étrangères (`/api/ia/traduire`), gardée avec l'explication des annonces | 13/11 | voir journal |
-| 4 | à faire | | |
+| 4 | fait : `cf/src/monde.mjs` (choix des titres, IA, fusion des sujets, `/api/monde`) et `cf/src/semaine.mjs` (calendrier et variation de la semaine), tous deux indépendants du rapport ; `tests/t_monde.mjs` ajouté à la mise en ligne. `rapport8.mjs` et `synthese.mjs` les importent en attendant leur suppression (étape 5) | 13/11 | voir journal |
 | 5 | à faire | | |
 | 6 | à faire | | |
 | 7 | à faire | | |
