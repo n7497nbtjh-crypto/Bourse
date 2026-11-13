@@ -28,7 +28,6 @@ await check("/entreprise/totalenergies", 200, "TotalEnergies");
 await check("/actualites", 200, "Actualité");
 await check("/entreprise/inconnue", 404, "introuvable");
 await check("/lexique", 200, "Lexique");
-await check("/data/courtiers.json", 200);
 await check("/entreprise/apple", 200, "Apple");
 await check("/calc.js", 200);
 await check("/nimporte.png", 404);

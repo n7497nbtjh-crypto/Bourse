@@ -11,7 +11,7 @@ description: Ajouter ou modifier une page, une section ou une fonction du site b
 - Pour remplacer une fonction : la redéclarer avec `function nom() {}` dans un module. Avant, trouver TOUTES ses définitions :
   `grep -n "function NOM\|NOM = " cf/site/index.html cf/site/m/*.js` et modifier la dernière chargée.
 - Jamais `const` / `let` pour un nom déjà déclaré ailleurs (SyntaxError : tout le module tombe). Préfixer les nouvelles constantes par le nom du module.
-- CSS : **dans `cf/site/site.css`** (feuille unique depuis le 31/10/2026, 5e passage A2), dans la section du module concerné (en-têtes `/* ==== m/<module>.js ==== */`), en respectant l'ordre : une règle placée plus bas l'emporte. Ne plus injecter de `<style>` depuis un module (6 petits blocs paresseux subsistent : outils, reco, contexte, analyse, portefeuille, outils2).
+- CSS : le nouveau dans `cf/site/composants.css` (classes `ek-` et préfixes de page) ; l'ancien dans `cf/site/site.css`, dans la section du module concerné (en-têtes `/* ==== m/<module>.js ==== */`), en respectant l'ordre : une règle placée plus bas l'emporte. Ne plus injecter de `<style>` depuis un module (6 petits blocs paresseux subsistent : outils, reco, contexte, analyse, portefeuille, outils2).
 
 ## Nouvelle page
 1. `ROUTES_EXTRA.push([/^\/ma-page$/, () => pageMaPage()]);` (les groupes capturés passent en arguments).
@@ -19,8 +19,8 @@ description: Ajouter ou modifier une page, une section ou une fonction du site b
 3. Ajouter la route à la liste de `tests/audit.py`.
 
 ## IA
-Le site n'appelle aucun modèle côté serveur. Réponse calculée d'abord ; rédaction seulement via l'IA connectée du visiteur :
-`iaRediger(tâche, faits, { question })` ou `miaCopilote(q)` (module `monia.js`). Point d'entrée unique : le panneau ✦ (`orcIaOpen`).
+Trois usages seulement (décision de Romain du 13/11) : sujets « Le monde », résumé d'un article de presse, explication d'une annonce officielle.
+Le navigateur appelle `iaRediger(tâche, faits)` (module `monia.js`), avec la tâche `presse` ou `annonce` ; le serveur (`cf/src/iasite.mjs`) refuse toute autre tâche. Ne pas ajouter de nouvel usage de l'IA sans demande de Romain.
 
 ## Règles de contenu
 - Français, vouvoiement, phrases courtes, pas de tiret cadratin, pas de jargon sans explication.

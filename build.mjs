@@ -21,7 +21,7 @@ if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "
   const parts = gfParts(UNI, EL, INDICES, known); parts.forEach((g, i) => wfs("cf/site/data/" + gfName(i), g));
   // 7/11 soir : une feuille devenue inutile (les ETF sont sortis des feuilles) reçoit une liste vide au lieu de garder l'ancienne
   for (let i = parts.length; i < 4; i++) if (existsSync("cf/site/data/" + gfName(i))) wfs("cf/site/data/" + gfName(i), "id,c1,c2,c3\n"); }
-for (const f of ["parcours", "commencer", "legal", "academie", "questions"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
+for (const f of ["legal", "questions"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
 // 5/11 : rivales écrites à la main d'abord, complétées par les rivales trouvées automatiquement (data/rivales_auto.mjs) quand il y en a moins de 3
 if (existsSync("data/concurrents.json")) { const M = JSON.parse(readFileSync("data/concurrents.json", "utf8")), A = existsSync("data/concurrents_auto.json") ? JSON.parse(readFileSync("data/concurrents_auto.json", "utf8")) : {};
   for (const [id, l] of Object.entries(A)) M[id] = [...new Set([...(M[id] || []), ...l])];
@@ -30,12 +30,11 @@ if (existsSync("data/concurrents.json")) { const M = JSON.parse(readFileSync("da
 { const E = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : []; // updated : date du dernier relevé du catalogue des émetteurs (data/etf_collecte.mjs), et non une date écrite à la main
   let maj = null; try { maj = JSON.parse(readFileSync("data/etf_catalogue.json", "utf8")).updated || null; } catch (e) { }
   wfs("cf/site/data/etf.json", JSON.stringify({ updated: maj, list: E })); }
-{ const { default: U, REGIONS } = await import("./data/univers.mjs"); const { default: F } = await import("./data/fiches.mjs"); const { default: C, SOURCES_COURTIERS } = await import("./data/courtiers.mjs");
+{ const { default: U, REGIONS } = await import("./data/univers.mjs"); const { default: F } = await import("./data/fiches.mjs");
   writeFileSync("cf/site/data/univers.json", JSON.stringify({ regions: REGIONS, companies: U.map(({ id, name, ticker, domain, desc, sector, isin, tv, region, fiche, sec }) => ({ id, name, ticker, domain, desc, sector, isin, tv, region, sec, fiche: F[id] || fiche || null })) }));
   // Le navigateur démarre avec la version sans les textes de fiche (moitié du poids) ; ils arrivent à part, à la première fiche ouverte (loadFiches, index.html)
   writeFileSync("cf/site/data/univers-min.json", JSON.stringify({ regions: REGIONS, companies: U.map(({ id, name, ticker, domain, desc, sector, isin, tv, region, sec }) => ({ id, name, ticker, domain, desc, sector, isin, tv, region, sec })) }));
   writeFileSync("cf/site/data/fiches.json", JSON.stringify(Object.fromEntries(U.map(({ id, fiche }) => [id, F[id] || fiche || null]).filter(x => x[1]))));
-  writeFileSync("cf/site/data/courtiers.json", JSON.stringify({ updated: "2026-10-28", sources: SOURCES_COURTIERS, list: C.map(c => ({ ...c, grille: c.grille.map(g => [g[0] === Infinity ? null : g[0], g[1], g[2]]) })) }));
   const miss = U.filter(c => !F[c.id] && !c.fiche).map(c => c.id); if (miss.length) { console.log("fiches manquantes :", miss.join(", ")); process.exit(1); } }
 const { default: INDEX } = await import("./data/univers.mjs");
 // 5/11 : entreprises sans comptes relevés absentes du plan du site (la page ne les montre pas non plus, voir app.js)

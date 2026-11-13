@@ -1,5 +1,24 @@
 # Premium : proposition du 4/11/2026
 
+## État au 13 novembre 2026 (après le recentrage)
+
+**Une seule formule : 19 € par an, en un seul paiement, sans renouvellement.** Plus de formule mensuelle (décision de Romain du 13/11).
+
+| | Gratuit | Premium |
+|---|---|---|
+| Fiches entreprises complètes | 5 par jour | sans limite |
+| Rang dans le secteur, classements | non | oui |
+| Comparer jusqu'à 5 entreprises | 3 par semaine | sans limite |
+| Actualité expliquée, ETF, agenda, dividendes, lexique | oui | oui |
+
+La navigation reste gratuite. Le rapport de la semaine, les alertes, la radiographie du portefeuille, le connecteur et l'export ont été supprimés.
+
+Le bouton de paiement n'est ouvert que si le serveur déclare le prix affiché (`PRIX_UNIQUE` commence par « 19 ») : tant que le lien Stripe est l'ancien, la page affiche « bientôt ouvert » et un formulaire d'attente. À faire par Romain : lien de paiement Stripe à 19 € (paiement unique), variables `STRIPE_LINK_UNIQUE` et `PRIX_UNIQUE` du Worker, CGV, identité du vendeur.
+
+---
+
+> **Ce qui suit date d'avant le recentrage du 13/11 et n'est gardé que pour l'histoire : plusieurs fonctions décrites n'existent plus.**
+
 **Décision de Romain (4/11 après-midi)** : pas d'essai, pas de garantie. Premium = les nouveaux services ET les limites levées. Fait le 4/11 : alertes sur 3 valeurs sans Premium (robot `cf/src/espace.mjs`, `ALERTES_GRATUIT`), alertes Premium dividende (`dernierJourDiv`) et plus haut / plus bas sur un an, bouton « Être prévenu » sur la fiche (`f4Alerte`, fiche4.js), détail de quatre blocs du portefeuille réservé (`pf4Verrou`, portefeuille4.js ; l'exemple reste ouvert), page Premium réécrite (trois services, ancres #alertes #portefeuille #donnees, essai masqué).
 
 ## Constat

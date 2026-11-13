@@ -3,7 +3,6 @@
 import { readFileSync } from "node:fs";
 import vm from "node:vm";
 import { divergences } from "../data/pea.mjs";
-import { validerReco } from "../cf/src/espace.mjs";
 const ctx = { module: { exports: null }, console };
 vm.createContext(ctx);
 vm.runInContext(readFileSync("cf/site/m/reco.js", "utf8"), ctx, { filename: "reco.js" });
@@ -104,14 +103,6 @@ ok(!sel.some(x => x.id === "c:a") && sel[0].id === "c:b", "« inadaptée » : re
 const Mlast = RECO.modele([{ id: "c:a", v: "inadapte", at: 1 }, { id: "c:a", v: "ok", at: 2, tags: [] }]);
 ok(!Mlast.excl.has("c:a"), "le dernier avis sur une piste remplace le précédent");
 ok(RECO.choisir(C, { n: 5, riskMax: 4, held: new Set(["c:a"]) }).every(x => x.id !== "c:a"), "une ligne déjà détenue n'est pas proposée");
-
-// --- 6. Enregistrement côté serveur (validation)
-const v = validerReco({ reponses: { horizon: 2, perte: 9 } });
-ok(v.error && /perte/.test(v.error), "réponse hors bornes refusée");
-const v2 = validerReco({ reponses: { horizon: 2, enveloppe: 4, inconnu: 3 }, retours: [{ id: "c:a", v: "risque", kind: "ent", tags: ["<b>x</b>"], risk: 4, at: 5 }, { id: "c:b", v: "pirate" }, "x"] });
-ok(!v2.error && v2.reponses.horizon === 2 && v2.reponses.enveloppe === 4 && !("inconnu" in v2.reponses), "réponses connues seulement");
-ok(v2.retours.length === 2 && v2.retours[0].tags[0] === "bx/b" && v2.retours[1].v === null, "retours nettoyés " + JSON.stringify(v2.retours));
-ok(validerReco({ reponses: {} }).retours === undefined, "sans retours : la liste enregistrée n'est pas écrasée");
 
 console.log(`${n - fails}/${n} vérifications réussies`);
 process.exit(fails ? 1 : 0);

@@ -1,5 +1,29 @@
 # Architecture et coûts de bilan.
 
+## État au 13 novembre 2026 (après le recentrage)
+
+**Le site.** Quatre rubriques : Actualités, Entreprises, ETF, Outils (classements, comparer des entreprises, comparer deux ETF, agenda des résultats, calendrier des dividendes, lexique), plus Mon espace (compte et favoris) et Premium (une formule, 19 € par an).
+
+| Brique | Rôle |
+|---|---|
+| Cloudflare Pages | Héberge les pages et les fichiers de données. |
+| Worker Cloudflare (`cf/src/`, 14 fichiers, 155 Ko) | Comptes, Premium, titres des pages pour Google, redirections, cours, « Le monde », les trois usages de l'IA. |
+| D1 | Comptes, favoris, abonnements, compteurs, état du site. Les anciennes tables du rapport, des alertes et du connecteur ne sont plus lues. |
+| Workers AI | Sujets de la semaine, résumé d'un article de presse, explication d'une annonce officielle. Rien d'autre. |
+| GitHub Actions (20 robots) | Collecte des données officielles, tests, mise en ligne. |
+
+**Navigateur.** `cf/site/app.js` et 41 modules dans `cf/site/m/` (1,03 Mo, contre 2,14 Mo avant le recentrage), deux feuilles de style (280 Ko, contre 549 Ko).
+
+**Robots.** Chaque jour : `donnees.yml` (comptes, cours, index), `actu.yml`, `logos.yml`, `ancres.yml`, `etat.yml`, `reveil.yml` (relance les robots en retard). Chaque semaine : `etf.yml`, `etf-hist.yml`, `eulerpool.yml`, `rapports-site.yml`, `og.yml`, `trim-eu.yml`, `esef-sites.yml`. Chaque mois : `facteurs.yml`, `wikidata.yml`. Mise en ligne : `site.yml`. Outils lancés à la main : `sonde.yml`, `diag.yml`, `amf-docs.yml`, `eulerpool-test.yml`.
+
+**Avant chaque mise en ligne**, `site.yml` construit le site et lance les tests des calculs, du serveur, des comptes, du paiement, des quotas, des signalements et de l'actualité.
+
+**Coûts.** Romain paie une capacité augmentée chez Cloudflare (dit le 12/11) : ne pas parler de « part gratuite » sans vérifier.
+
+---
+
+> **Ce qui suit date d'avant le recentrage du 13/11 et n'est gardé que pour l'histoire : plusieurs fonctions décrites n'existent plus.**
+
 Mise à jour du 29 octobre 2026 (IA simplifiée). La partie 1 se lit sans connaissances techniques. La partie 2 sert à la personne qui maintient le site.
 
 ## Partie 1. L'essentiel

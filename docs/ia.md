@@ -1,5 +1,19 @@
 # L'IA de bilan.
 
+## État au 13 novembre 2026 (après le recentrage)
+
+L'IA du site (Cloudflare Workers AI, sans clé ni compte d'IA) n'a plus que **trois usages**, décidés par Romain :
+
+1. **Les sujets de la semaine** de l'onglet « Le monde » : `cf/src/monde.mjs`, consigne `semaine_monde`, servis par `/api/monde` (réponse immédiate depuis la base, recalcul en arrière-plan, jusqu'à 10 sujets accumulés sur la semaine).
+2. **Le résumé d'un article de presse** dans le fil d'actualité : `cf/site/m/actu4.js`, lecture de l'article par `/api/ia/article` (robots.txt respecté), consigne `presse`.
+3. **L'explication d'une annonce officielle** : `cf/site/m/actu.js`, consigne `annonce`, avec les faits de la fiche de l'entreprise ; `/api/ia/traduire` pour une annonce en langue étrangère.
+
+Tout le reste a été supprimé le 13/11 : panneau de questions, page « Demander », questions sur la fiche, la fiche ETF et le comparateur, bilan des favoris, rapport de la semaine, connecteur pour Claude et ChatGPT. Le serveur (`cf/src/iasite.mjs`) refuse toute autre tâche que `presse` et `annonce`. Les consignes sont dans `cf/src/consignes.mjs` ; elles se terminent par les règles d'objectivité (`regles.mjs`). Ne pas ajouter d'usage sans demande de Romain.
+
+---
+
+> **Ce qui suit date d'avant le recentrage du 13/11 et n'est gardé que pour l'histoire : plusieurs fonctions décrites n'existent plus.**
+
 > **13/11/2026, recentrage** : l'IA ne sert plus qu'à trois choses : les sujets « Le monde » de l'actualité (serveur), le résumé de la presse d'une entreprise et l'explication (avec traduction) d'une annonce officielle. Le panneau ✦, la page « Demander », la page « L'IA du site », les questions de la fiche et du comparateur et le bilan des favoris sont supprimés. Ce qui suit décrit l'état d'avant et sera réécrit à la fin du chantier (docs/chantier-recentrage-2026-11.md).
 
 Décision du 29 octobre 2026 : simple, gratuite pour le site, utilisable par beaucoup de monde.

@@ -29,14 +29,6 @@ async function xMessages() {
       accroche: q.q, conclusion: `Puis ${t3.slice(1).map(c => c.name).join(" et ")}.`,
       texte: `${q.q}\nEn tête : ${t3.map(c => `${c.name} (${I[2](I[1](c))})`).join(", ")}.${med != null && tri.indicateur !== "capitalisation" ? ` Médiane : ${I[2](med)}.` : ""}\nLe classement complet, avec les sources :` });
   }
-  // 3. Une leçon de l'Académie
-  try {
-    const A = await fetch("/data/academie.json").then(r => r.json()), L = [];
-    (A.modules || []).forEach(mo => (mo.lecons || []).filter(x => !x.premium && x.resume).forEach(x => L.push({ mo, x })));
-    if (L.length) { const { mo, x } = L[j % L.length];
-      M.push({ type: "lecon", lien: xUtm(`/academie/${mo.id}/${x.id}`, "lecon"), kick: "L'Académie · " + mo.titre, chiffre: `${x.duree_min || 3} min`, libelle: x.titre, repere: "gratuit, sans compte", v: null, med: null,
-        accroche: x.titre, conclusion: x.resume, texte: `${x.titre}\n${x.resume}\n${x.duree_min || 3} minutes, gratuit :` }); }
-  } catch (e) { }
   return M.map(m => ({ ...m, post: xCoupe(m.texte, m.lien) }));
 }
 

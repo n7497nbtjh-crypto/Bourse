@@ -380,8 +380,6 @@ const WITH = { // à lire avec
 const EXM = { croissance: "g1", marge: "marge", net: "nm", roe: "roe", lev: "lev", gear: "gear", fcf: "conv", payout: "payout" };
 const EXFMT = { g1: v => pct(v), marge: v => pct(v, 1, false), nm: v => pct(v, 1, false) + " de marge nette", roe: v => pct(v, 1, false), lev: v => F1.format(v) + " an" + (v >= 2 ? "s" : ""), gear: v => pct(v, 0, false), conv: v => F0.format(v * 100) + " € pour 100 € de bénéfice", payout: v => pct(v, 0, false) };
 
-/* ---------- Courtiers ---------- */
-let BROKERS = { list: [], sources: [] };
 
 /* ---------- Simulateurs ---------- */
 const v = id => { const x = parseFloat(String($("#" + id).value).replace(",", ".")); return isFinite(x) ? x : 0; };
@@ -947,7 +945,6 @@ window.addEventListener("scroll", () => { if (CTIP.style.display === "block" && 
 /* ====================================================================================================
    v11 : l'Académie (cours de culture financière, quiz, progression) et la formation guidée Premium
    ==================================================================================================== */
-let ACA = null, ACAP = null;
 
 
 /* ====================================================================================================
@@ -1080,7 +1077,7 @@ document.addEventListener("pointerdown", e => { if (!e.target.closest("[data-sea
 /* ---------- Démarrage ---------- */
 // Un fichier absent sous /data/ renvoyait la page d'accueil entière (516 ko) avec un code 200 : on refuse tout ce qui n'est pas du JSON (audit P0-3).
 const getJSON = (u, fallback) => fetch(u).then(r => r.ok && /json/i.test(r.headers.get("content-type") || "") ? r.json() : fallback).catch(() => fallback);
-Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/courtiers.json", { list: [], sources: [] }), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), getJSON("/data/agenda-habituel.json", { events: [] }), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/logos/index.json", { l: {} }), getJSON("/data/a-verifier.json", { items: {} })]).then(([r, ag, uni, br, auto, etf, hab, rep, conc, lg, av]) => {
+Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", { events: [] }), getJSON("/data/univers-min.json", null), getJSON("/data/agenda-auto.json", { events: [] }), getJSON("/data/etf.json", { list: [] }), getJSON("/data/agenda-habituel.json", { events: [] }), getJSON("/data/repartitions.json", {}), getJSON("/data/concurrents.json", {}), getJSON("/logos/index.json", { l: {} }), getJSON("/data/a-verifier.json", { items: {} })]).then(([r, ag, uni, auto, etf, hab, rep, conc, lg, av]) => {
   LOGOS = (lg && lg.l) || {};
   AVERIF = (av && av.items) || {}; // 5e passage (A8) : chiffres à vérifier (sauts d'une année à l'autre repérés par tests/t_coherence.mjs)
   REP = rep || {}; CONC = conc || {};
@@ -1088,7 +1085,7 @@ Promise.all([getJSON("/data/societes.json", null), getJSON("/data/agenda.json", 
   if (!r || !uni) { app.innerHTML = `<div class="empty">Les données n'ont pas pu être chargées.</div>`; return; }
   // Agenda : dates officielles relevées à la main, puis dates estimées d'après l'an dernier pour les autres
   const manual = new Set((ag?.events || []).map(e => e.id));
-  AG = { events: [...(ag?.events || []), ...(auto?.events || []).filter(e => !manual.has(e.id))] }; BROKERS = br;
+  AG = { events: [...(ag?.events || []), ...(auto?.events || []).filter(e => !manual.has(e.id))] };
   // 7/11 : dates habituelles de résultats (l'an dernier + 1 an, data/agenda_habituel.mjs), marquées « à confirmer », pour les entreprises sans date officielle
   { const off = new Set(AG.events.filter(e => e.type === "Résultats" && e.date >= TODAY).map(e => e.id)); AG.events.push(...(hab?.events || []).filter(e => !off.has(e.id))); }
   // Dividendes des entreprises américaines (calendrier Nasdaq, data/dividendes_us.mjs) : seulement celles sans calendrier officiel relevé

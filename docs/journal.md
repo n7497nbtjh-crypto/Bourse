@@ -429,3 +429,17 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - `reveil.yml` : ne surveille plus `cours.yml` ni `posts.yml`. Page État : « Rapports annuels des sites » n'est plus attendu chaque jour.
 - 20 robots (16 à horaire, 4 outils à la main).
 
+## 13/11, soir : recentrage, étape 8 (CSS, données, tests, documents)
+- CSS : nouvel outil `scripts/css-mort-tout.js` (un sélecteur est retiré si une de ses classes ou un de ses identifiants n'apparaît nulle part dans le code, ni comme mot, ni derrière un préfixe complété par le code). `site.css` 265 → 130 Ko, `composants.css` 271 → 143 Ko.
+- Contrôle du CSS : `scripts/captures-toutes.js` prend 102 captures (38 pages en deux tailles, états connecté et Premium, recherche, définition, menu) et `scripts/captures-comparer.js` les compare point par point. Deux passages sans rien changer : 1 capture diffère de 4 points (page État, bruit). Après le nettoyage : une vraie différence trouvée sur Comparer (classes `tg` et `tr`, fabriquées lettre par lettre), règle de l'outil corrigée, puis plus aucune différence hors la page État (29 points). Vérifié aussi sur 97 fiches d'entreprises et d'ETF : aucune classe affichée n'a été retirée.
+- Restes de l'Académie : un visiteur belge, suisse ou luxembourgeois chargeait encore le fichier des leçons (251 Ko) pour rien ; `pays.js` nettoyé. `courtiers.json` n'est plus chargé à chaque ouverture du site. Page privée /x : le message « leçon de l'Académie » est retiré, le reste est gardé.
+- Serveur : 27 lignes de titres et de redirections de pages supprimées retirées de `worker.mjs` ; le titre de Mon espace était encore l'ancien (« Votre semaine en 2 minutes »), corrigé.
+- Données supprimées : `data/academie*.json`, `commencer.json`, `parcours.json`, `data/courtiers.mjs`, `cf/site/data/academie-pays.json`, `logo-couleurs.json` (lu par rien).
+- Tests : `t_ia.py`, `t_monia.py`, `t_reco.py`, `t_pwa.py` supprimés ; `t_reco.mjs` gardé pour la règle PEA (51 vérifications).
+- CLAUDE.md : carte du site, formules et liste « En attente de Romain » réécrites. Docs : un état daté du 13/11 en tête de `architecture.md`, `ia.md`, `premium-2026-11.md`, l'ancien texte marqué comme historique.
+
+## 13/11, 19 h : recentrage, étape 9 (relecture complète) : chantier terminé
+- `node scripts/relire-visuel.js 0 tout` : 6 592 pages vues (toutes les fiches, grand écran et téléphone), 0 problème. `check-fiches-tout` : 3 296 fiches, 0 problème. `relire-fiches 40` : 0 faute. Audit : 96 pages en trois tailles, 0 problème, 0 erreur JS. Relecture des pages : 44, 0 problème.
+- Bilan du chantier, du matin au soir du 13/11 : code du navigateur 2,14 Mo → 1,03 Mo (57 → 41 modules), CSS 549 → 280 Ko, serveur environ 418 → 155 Ko (20 → 14 fichiers), robots 24 → 20, tests 59 → 39 fichiers.
+- Reste hors chantier : sources d'actualité françaises et européennes, cinq capitalisations fausses, horloge extérieure pour les robots, purge des anciennes tables en base.
+
