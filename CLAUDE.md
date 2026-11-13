@@ -4,6 +4,7 @@ Site d'information boursière pour débutants : factuel, sans conseil d'investis
 **https://enklair.com** (ancienne adresse repere-bourse.pages.dev redirigée ; réseaux : enklair_). Cloudflare Pages + Worker + D1, déployé par GitHub Actions (dépôt `n7497nbtjh-crypto/Bourse`).
 Propriétaire : Romain. Répondre en français, simplement, sans jargon technique inutile.
 **Détail de chaque changement, par date : `docs/journal.md`** (chercher avec `grep -n`, ne pas tout lire).
+**Chantier en cours depuis le 13/11 : recentrage du site (moins de pages, moins de robots, IA réduite à trois usages). Lire `docs/chantier-recentrage-2026-11.md` avant tout travail sur le site et tenir son tableau de suivi à jour.**
 
 ## Façon de travailler (règles de Romain)
 - **Économiser les crédits** : pas d'agents sauf demande explicite ; un sujet à la fois, le plus visible d'abord ; dire le coût avant une tâche longue ; lectures ciblées (`grep -n`, `sed -n`), jamais `site.css`, `composants.css` ni `app.js` en entier ; peu de captures.
