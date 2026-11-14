@@ -65,11 +65,14 @@ if (process.argv[1] && /[\/\\]eulerpool_cours\.mjs$/.test(process.argv[1])) {
   const mode = process.argv[process.argv.indexOf("--verifier") + 2] || ""; // « lse », « devise » ou « us » : cas à valider avant de les ouvrir
   const avec = U.filter(c => items["c:" + c.id] && items["c:" + c.id].p > 0 && items["c:" + c.id].s !== "EP" && DEVISE_PLACE[String(c.tv || "").split(":")[0]]
     && (mode === "lse" ? /^LSE:/.test(c.tv) : mode === "us" ? /^(NYSE|NASDAQ):/.test(c.tv) : !/^LSE:/.test(c.tv || "")));
+  // 14/11 : mode « devise » sur toutes les sociétés dont le cache dit que la devise du profil diffère de la cotation (avant : tirage au hasard, 2 trouvées)
+  if (mode === "devise") { const ca = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, "utf8")) : {}; for (let k = avec.length - 1; k >= 0; k--) { const m = ca[avec[k].id]; if (!(m && m.cur && m.cur !== DEVISE_PLACE[avec[k].tv.split(":")[0]])) avec.splice(k, 1); } console.log(avec.length, "sociétés cotées dans une autre devise que leur profil"); }
   for (let k = avec.length - 1; k > 0; k--) { const j = Math.floor(Math.random() * (k + 1)); [avec[k], avec[j]] = [avec[j], avec[k]]; }
   const L = []; for (const c of avec.slice(0, n)) {
     const g = items["c:" + c.id], cur = DEVISE_PLACE[c.tv.split(":")[0]];
     const p = await get(`/equity/profile/${c.isin}`), b = p && (mode === "devise" ? p.currency !== cur : p.currency === cur) ? await get(`/equity/candles/${c.isin}?range=5y`) : null, e = b ? depuisBougies(/^LSE:/.test(c.tv) ? b.map(x => ({ ...x, close: x.close / 100 })) : b, cur, p.shares) : null;
     if (!e) { console.log(c.id, "pas de cours Eulerpool", p ? p.currency : "inconnue"); continue; }
+    if (mode === "devise") { const fx = JSON.parse(readFileSync(new URL("../cf/site/data/fx.json", import.meta.url))).eur, k = (fx[p.currency] || NaN) / (fx[cur] || NaN); for (const x of ["p", "h52", "p1y", "cap"]) if (e[x]) e[x] = e[x] * k; e.p = Math.round(e.p * 1e4) / 1e4; console.log("  converti de", p.currency, "en", cur, "au taux du jour"); }
     const ec = x => g[x] && e[x] ? Math.round((e[x] / g[x] - 1) * 1000) / 10 : null;
     L.push(Math.abs(ec("p"))); console.log(c.id, cur, "Google", g.p, "Eulerpool", e.p, e.d, "écart", ec("p"), "% | 1 an", ec("p1y"), "% | haut", ec("h52"), "% | capitalisation", ec("cap"), "%");
   }
