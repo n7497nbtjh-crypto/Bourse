@@ -19,6 +19,13 @@ jobs:
       - name: Mise en ligne
         working-directory: cf/horloge
         env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # Deux secrets créés et collés par Romain dans GitHub (jamais lus ni affichés ici) : CLOUDFLARE_WORKERS_TOKEN (jeton Cloudflare
+          # « Modifier Cloudflare Workers » : celui du site n'a pas le droit de créer un Worker) et HORLOGE_GITHUB (jeton GitHub limité au
+          # dépôt, droit Actions, transmis au Worker comme secret GH_TOKEN pour qu'il puisse lancer les robots)
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_WORKERS_TOKEN || secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID || secrets.CLOUDFLARE_ACCOUNT_ID }}
-        run: npx --yes wrangler@3.112.0 deploy
+          HORLOGE_GITHUB: ${{ secrets.HORLOGE_GITHUB }}
+        run: |
+          npx --yes wrangler@3.112.0 deploy
+          if [ -n "$HORLOGE_GITHUB" ]; then printf %s "$HORLOGE_GITHUB" | npx --yes wrangler@3.112.0 secret put GH_TOKEN; else echo "::warning::Secret HORLOGE_GITHUB absent : l'horloge est en ligne mais ne lance aucun robot"; fi
+
