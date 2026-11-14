@@ -29,6 +29,7 @@ jobs:
           node --no-warnings tests/t_quota.mjs
           node --no-warnings tests/t_signaler.mjs
           node --no-warnings tests/t_monde.mjs
+          node --no-warnings tests/t_horloge.mjs
       - name: Publication sur Cloudflare Pages
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
