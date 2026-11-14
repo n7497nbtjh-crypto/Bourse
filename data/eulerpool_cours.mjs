@@ -63,6 +63,11 @@ if (process.argv[1] && /[\/\\]eulerpool_cours\.mjs$/.test(process.argv[1])) {
   const i = process.argv.indexOf("--verifier"), n = i > 0 ? +process.argv[i + 1] : 40;
   const { default: U } = await import("./univers.mjs"), items = JSON.parse(readFileSync(new URL("../cf/site/data/cours.json", import.meta.url))).items;
   const mode = process.argv[process.argv.indexOf("--verifier") + 2] || ""; // « lse », « devise » ou « us » : cas à valider avant de les ouvrir
+  if (mode === "manquants") { // 14/11 : cours Eulerpool convertis des sociétés sans cours dont le profil est dans une autre devise (rien n'est écrit)
+    const ca = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, "utf8")) : {}, fx = JSON.parse(readFileSync(new URL("../cf/site/data/fx.json", import.meta.url))).eur;
+    for (const c of U.filter(c => !(items["c:" + c.id] && items["c:" + c.id].p > 0))) { const cur = DEVISE_PLACE[String(c.tv || "").split(":")[0]], m = ca[c.id]; if (!cur || !m || !m.cur || m.cur === cur) continue;
+      const e = depuisBougies(await get(`/equity/candles/${c.isin}?range=5y`), m.cur, 0); console.log(c.id, c.tv, e ? `brut ${e.p} ${m.cur} du ${e.d}, converti ${Math.round(e.p * fx[m.cur] / fx[cur] * 100) / 100} ${cur}` : "rien"); }
+  } else {
   const avec = U.filter(c => items["c:" + c.id] && items["c:" + c.id].p > 0 && items["c:" + c.id].s !== "EP" && DEVISE_PLACE[String(c.tv || "").split(":")[0]]
     && (mode === "lse" ? /^LSE:/.test(c.tv) : mode === "us" ? /^(NYSE|NASDAQ):/.test(c.tv) : !/^LSE:/.test(c.tv || "")));
   // 14/11 : mode « devise » sur toutes les sociétés dont le cache dit que la devise du profil diffère de la cotation (avant : tirage au hasard, 2 trouvées)
@@ -77,4 +82,5 @@ if (process.argv[1] && /[\/\\]eulerpool_cours\.mjs$/.test(process.argv[1])) {
     L.push(Math.abs(ec("p"))); console.log(c.id, cur, "Google", g.p, "Eulerpool", e.p, e.d, "écart", ec("p"), "% | 1 an", ec("p1y"), "% | haut", ec("h52"), "% | capitalisation", ec("cap"), "%");
   }
   L.sort((a, b) => a - b); console.log(`\n${L.length} comparés ; écart médian ${L[L.length >> 1]} %, ${L.filter(x => x > 3).length} au-delà de 3 %`);
+  }
 }
