@@ -491,3 +491,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - Le relevé disait « ETF du 4/11 » alors que le site sert le catalogue du 14/11 : il lisait `cf/site/data/etf.json` du dépôt, qui n'est refait qu'au déploiement. Il prend maintenant la plus récente des dates de ce fichier et de `data/etf_catalogue.json`.
 - « Le monde » recalculé à 9 h 20 : 8 sujets, Nvidia, Ukraine, inflation en Europe, budget français 2027 en tête, l'Inde en dernier.
 
+
+## 14/11 : ordre des feuilles Google (cours gratuits, point 2 accepté par Romain)
+- Google ne rend qu'environ 2 900 cours par jour pour tout le compte. L'ordre des listes gf*.csv (data/gf.mjs, `gfParts`) suit désormais l'importance : indices, puis les 211 entreprises françaises de la plus grosse à la plus petite, puis les ETF sans autre source, puis les autres entreprises par taille ; bourses que GOOGLEFINANCE ne lit pas en dernier.
+- Taille (`poids` dans build.mjs) : le plus grand de la capitalisation en euros, 1,5 × chiffre d'affaires, 1,5 × capitaux propres, 15 × résultat net (la capitalisation Google manque ou est fausse pour certains titres, les banques n'ont pas de chiffre d'affaires).
+- Effet sur les 2 900 premières lignes : françaises 205 → 211 sur 211 ; plus de 10 Md€ 1 176 → 1 200. Fresenius (rang 2 985 → 909), Hilton (2 974 → 1 241), Schroders (2 984 → 1 750), Fifth Third rentrent ; sortent 114 petites valeurs nordiques ou italiennes. Equinor reste en fin (Oslo non lu par Google).

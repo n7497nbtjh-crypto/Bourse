@@ -18,7 +18,13 @@ if (existsSync("data/segments-fr.json")) copyFileSync("data/segments-fr.json", "
 { const { gfParts, gfName, INDICES } = await import("./data/gf.mjs"); const UNI = (await import("./data/univers.mjs")).default; const EL = existsSync("data/etf.mjs") ? (await import("./data/etf.mjs")).default : [];
   // gf.csv, gf2.csv, gf3.csv… : une feuille Google par fichier (titres déjà cotés en premier), voir data/gf.mjs et data/cours_config.mjs
   const known = existsSync("cf/site/data/cours.json") ? JSON.parse(readFileSync("cf/site/data/cours.json", "utf8")).items || {} : {};
-  const parts = gfParts(UNI, EL, INDICES, known); parts.forEach((g, i) => wfs("cf/site/data/" + gfName(i), g));
+  // 14/11 : taille de chaque entreprise pour l'ordre des feuilles (capitalisation en euros, sinon chiffre d'affaires, en euros aussi)
+  const FXE = (() => { try { return JSON.parse(readFileSync("cf/site/data/fx.json", "utf8")).eur || {}; } catch (e) { return {}; } })(), enE = (v, cur) => v * (FXE[String(cur || "EUR").toUpperCase().replace("GBX", "GBP")] || (cur === "GBX" ? 0.0117 : 1)) / (cur === "GBX" ? 100 : 1);
+  const SOC = existsSync("cf/site/data/societes.json") ? Object.fromEntries(((j => j.companies || j)(JSON.parse(readFileSync("cf/site/data/societes.json", "utf8")))).map(c => [c.id, c])) : {};
+  // La capitalisation de Google est parfois absente ou fausse (Corée), et les banques n'ont pas de chiffre d'affaires : on garde le plus grand des repères
+  const poids = id => { const k = known["c:" + id], c = SOC[id] || {}, m = v => v > 0 ? enE(v * 1e6, c.currency) : 0;
+    return Math.max(k && k.cap > 0 ? enE(k.cap, k.cur) : 0, m(c.ca) * 1.5, m(c.equity) * 1.5, m(c.net) * 15); };
+  const parts = gfParts(UNI, EL, INDICES, known, undefined, poids); parts.forEach((g, i) => wfs("cf/site/data/" + gfName(i), g));
   // 7/11 soir : une feuille devenue inutile (les ETF sont sortis des feuilles) reçoit une liste vide au lieu de garder l'ancienne
   for (let i = parts.length; i < 4; i++) if (existsSync("cf/site/data/" + gfName(i))) wfs("cf/site/data/" + gfName(i), "id,c1,c2,c3\n"); }
 for (const f of ["legal", "questions"]) if (existsSync(`data/${f}.json`)) wfs(`cf/site/data/${f}.json`, readFileSync(`data/${f}.json`, "utf8"));
