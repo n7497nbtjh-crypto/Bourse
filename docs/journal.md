@@ -472,3 +472,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - `iasite.mjs` : l'essai de santé utilise la tâche `presse`. `etat-site.mjs` et `etat.js` : la carte « Rapport d'exemple » devient « Le monde » (nombre de sujets de la semaine) ; la carte « Paiement Stripe » dit « fermé » tant que le serveur ne déclare pas 19 € par an, avec un point orange qui l'explique.
 - ETF : données du 4/11 parce que la collecte du 13/11 (partielle) a été annulée ; robot relancé, protégé contre une perte de plus de 5 % des ETF.
 
+## 14/11, 1 h 15 : 5 fiches gratuites par semaine (Romain), agenda non coupé
+- `fiche4.js` (`f4Quota`) : 5 fiches complètes par semaine, du lundi au dimanche, au lieu de 5 par jour (même clé `bilan.fichesJour`, le champ `d` porte le lundi ; un ancien compteur du jour repart à zéro). Message de blocage : « vos 5 fiches gratuites de la semaine », « revenez lundi », et le prix à jour (19 € pour un an ; il affichait encore 39 € et 4,90 € par mois). Testé : 5 fiches ouvertes, la 6e bloquée, nouvelle semaine remise à zéro.
+- Textes : page Premium (« 5 par semaine »), CGV (offre à 19 € pour un an, plus d'abonnement mensuel, contenu gratuit et Premium d'après le recentrage ; les clauses sur l'abonnement mensuel restent, à revoir par Romain et un avocat), CLAUDE.md, `docs/premium-2026-11.md`.
+- Agenda (capture « coupé ») : la classe `scroll-x` rendait les bandes des jours et des secteurs défilantes aussi sur ordinateur, ce qui rognait l'ombre de la pastille choisie. Sur ordinateur, elles passent à la ligne ; sur téléphone, elles défilent avec de la place pour l'ombre.
+

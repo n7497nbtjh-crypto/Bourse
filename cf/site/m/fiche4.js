@@ -95,7 +95,7 @@ async function pageCompany4(id, tab) {
   if (s.missing || !c || !c.fin) { app.innerHTML = `<div class="ek ek-page">${f4Tete(s, null, null)}<p class="ek-note" style="margin-top:30px">Les comptes de ${esc(s.name)} ne sont pas encore relevés sur le site.</p></div>`; return; }
   const ctx = f4Ctx(s, c);
   let html = "";
-  const qf = f4Quota(s.id); // 6/11 (Romain) : 5 fiches complètes par jour en gratuit
+  const qf = f4Quota(s.id); // 14/11 (Romain) : 5 fiches complètes par semaine en gratuit (5 par jour avant)
   if (qf.bloque) { app.innerHTML = `<div class="ek ek-page">${f4Tete(s, c, ctx)}${f4Verrou(s)}</div>`; window.F4X = ctx; try { navigator.sendBeacon && navigator.sendBeacon("/api/compteur?e=fiche-verrou"); } catch (e) { } return; }
   try { html = f4Tete(s, c, ctx) + f4QuotaNote(qf) + f4MetierSec(ctx) + f4Fil(ctx) + `<div id="f4-annee"></div>` + f4Fin(ctx); }
   catch (e) { console.error("fiche v4", e); html = f4Tete(s, c, ctx) + `<p class="ek-note">Une partie de la fiche n'a pas pu s'afficher.</p>`; }
@@ -109,28 +109,29 @@ async function pageCompany4(id, tab) {
   if (cible) { const t = document.getElementById(cible); if (t) setTimeout(() => { if (t.tagName === "DETAILS") t.open = true; t.classList.add("f4m-open"); t.scrollIntoView({ block: "start" }); }, 30); }
 }
 
-/* 6/11 (décision de Romain) : en gratuit, 5 fiches complètes par jour (entreprises différentes, comptées dans ce navigateur, clé bilan.fichesJour).
+/* 14/11 (décision de Romain) : en gratuit, 5 fiches complètes par semaine, du lundi au dimanche (entreprises différentes, comptées
+   dans ce navigateur, clé bilan.fichesJour gardée pour ne rien casser, champ d = lundi de la semaine). 5 par jour du 6/11 au 13/11.
    Au-delà : l'en-tête et les 5 repères restent ouverts, la suite est réservée à Premium. Toujours ouvertes : Premium, les favoris,
-   les robots (moteurs de recherche, aperçus de liens) et une fiche déjà ouverte dans la journée. */
+   les robots (moteurs de recherche, aperçus de liens) et une fiche déjà ouverte dans la semaine. */
 const F4_LIBRES = 5;
 function f4Quota(id) {
   const libre = { libre: true };
   try {
     if ((typeof isPrem === "function" && isPrem()) || navigator.webdriver || /bot|crawl|spider|slurp|preview|facebookexternalhit|embedly|lighthouse/i.test(navigator.userAgent || "") || (typeof isFav === "function" && isFav("c:" + id))) return libre;
-    const j = new Date().toLocaleDateString("sv-SE"); let q = null;
+    const t = new Date(), j = new Date(t.getFullYear(), t.getMonth(), t.getDate() - ((t.getDay() + 6) % 7)).toLocaleDateString("sv-SE"); let q = null; // lundi de la semaine
     try { q = JSON.parse(localStorage.getItem("bilan.fichesJour") || "null"); } catch (e) { }
     if (!q || q.d !== j || !Array.isArray(q.ids)) q = { d: j, ids: [] };
     if (!q.ids.includes(id)) { if (q.ids.length >= F4_LIBRES) return { bloque: true }; q.ids.push(id); localStorage.setItem("bilan.fichesJour", JSON.stringify(q)); }
     return { n: q.ids.indexOf(id) + 1 };
   } catch (e) { return libre; }
 }
-function f4QuotaNote(qf) { return qf && qf.n ? `<p class="f4-qt"><b>Fiche gratuite ${qf.n} / ${F4_LIBRES} aujourd'hui</b><a href="/premium">Toutes les fiches avec Premium →</a></p>` : ""; }
+function f4QuotaNote(qf) { return qf && qf.n ? `<p class="f4-qt"><b>Fiche gratuite ${qf.n} / ${F4_LIBRES} cette semaine</b><a href="/premium">Toutes les fiches avec Premium →</a></p>` : ""; }
 function f4Verrou(s) {
-  return `<section class="f4-lock"><span class="ek-stk2">★ Premium</span><h2>Vous avez ouvert vos ${F4_LIBRES} fiches gratuites du jour.</h2>
+  return `<section class="f4-lock"><span class="ek-stk2">★ Premium</span><h2>Vous avez ouvert vos ${F4_LIBRES} fiches gratuites de la semaine.</h2>
     <p>La suite de la fiche de ${esc(s.name)} est réservée aux abonnés Premium :</p>
     <ul><li>L'histoire de ses comptes en 4 étapes</li><li>Ses rivales, point par point</li><li>Tous ses chiffres sur 5 ans, avec la source</li><li>Son rang dans son secteur</li></ul>
-    <div class="f4-lock-b"><a class="f4-lock-go" href="/premium">Passer à Premium <small>dès 3,25 € par mois</small></a><span>ou revenez demain : ${F4_LIBRES} nouvelles fiches</span></div>
-    <p class="f4-lock-n">39 € pour un an (3,25 € par mois) ou 4,90 € par mois, sans engagement. Les entreprises que vous suivez en favori restent toujours ouvertes.</p></section>`;
+    <div class="f4-lock-b"><a class="f4-lock-go" href="/premium">Passer à Premium <small>19 € pour un an</small></a><span>ou revenez lundi : ${F4_LIBRES} nouvelles fiches</span></div>
+    <p class="f4-lock-n">19 € pour un an, en un seul paiement, rien à résilier. Les entreprises que vous suivez en favori restent toujours ouvertes.</p></section>`;
 }
 
 // Logo officiel (collecté par le robot logos.yml dans /logos/<id>.png) ; sinon les initiales dans le même cadre

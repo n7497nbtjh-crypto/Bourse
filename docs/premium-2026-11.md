@@ -6,7 +6,7 @@
 
 | | Gratuit | Premium |
 |---|---|---|
-| Fiches entreprises complètes | 5 par jour | sans limite |
+| Fiches entreprises complètes | 5 par semaine (14/11) | sans limite |
 | Rang dans le secteur, classements | non | oui |
 | Comparer jusqu'à 5 entreprises | 3 par semaine | sans limite |
 | Actualité expliquée, ETF, agenda, dividendes, lexique | oui | oui |

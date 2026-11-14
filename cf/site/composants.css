@@ -1493,3 +1493,9 @@ html body #app .ag5 button.ag6-d.ag6-d.tout{border-style:dashed}
 .ek-stk2.g{background:#BDEBD2}
 @media (max-width:640px){.ag6-pub{grid-template-columns:minmax(0,1fr)}.ag6-pc{min-width:0}.ag6-pf b{white-space:normal;font-size:14px}.ag6-pf{max-width:48%;flex:0 1 auto}.ag6-sec{flex-wrap:nowrap;overflow-x:auto;padding-bottom:4px}html body #app .ag5 button.ag6-s.ag6-s{flex:none}.ag6-days{flex-wrap:nowrap;overflow-x:auto;padding:2px 4px 6px 2px}html body #app .ag5 button.ag6-d.ag6-d{flex:none}.ag6-k3{grid-template-columns:1fr;gap:8px}.ag6-k3 a{flex-direction:row;align-items:center;gap:12px;padding:10px 12px}.ag6-k3 b{font-size:28px;min-width:54px}
   html body #app .ag5 button.ag6-d.ag6-d{min-width:0;padding:6px 10px}html body #app .ag5 button.ag6-d.ag6-d b{font-size:18px}.ag6-pf{max-width:42%}}
+
+/* 14/11 (capture de Romain : « coupé ») : la classe scroll-x rendait les bandes de l'agenda défilantes partout et rognait l'ombre
+   de la pastille choisie. Sur ordinateur, elles passent à la ligne ; sur téléphone, elles défilent avec de la place pour l'ombre. */
+@media (min-width:641px){#app .ag5 .ag6-sec.scroll-x,#app .ag5 .ag6-days.scroll-x{overflow:visible}}
+#app .ag5 .ag6-days{padding:2px 6px 8px 2px}
+#app .ag5 .ag6-sec{padding:2px 4px 4px 2px}

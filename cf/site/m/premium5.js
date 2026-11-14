@@ -8,7 +8,7 @@
   const lien = () => MOI && MOI.connecte ? OFFRES.unique + "?prefilled_email=" + encodeURIComponent(MOI.email || "") : "/espace?payer=unique";
   const ok = '<span class="ok">✓</span>', no = '<span class="no">✕</span>', mi = t => `<span class="mi">${t}</span>`;
   const VS1 = [
-    ["Fiches entreprises complètes, chacune face à ses rivales", mi("5 par jour"), '<span class="ok">Sans limite</span>'],
+    ["Fiches entreprises complètes, chacune face à ses rivales", mi("5 par semaine"), '<span class="ok">Sans limite</span>'],
     ["Son rang dans son secteur", no, ok],
     ["Les classements", no, ok],
     ["Comparer jusqu'à 5 entreprises", mi("3 par semaine"), '<span class="ok">Sans limite</span>'],
