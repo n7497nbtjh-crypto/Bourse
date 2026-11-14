@@ -38,7 +38,8 @@ Réponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": ".
 - Ne recopie jamais un titre dans "fait" (ni entre guillemets, ni « selon des titres comme ») : ils sont affichés en lien sous le sujet. Écris en français, avec tes mots.
 - "secteurs" : les clés des secteurs directement concernés, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le marché.
 - "pays" : codes ISO à deux lettres des pays concernés (US, GB, FR, DE, CN, JP…), au plus 2.
-- Les sujets les plus repris par les médias passent en premier. Une grande entreprise au cœur de l'actualité (dirigeant mis en cause, scandale, résultats, entrée en Bourse, forte chute ou forte hausse) est un sujet à part entière, à garder s'il est porté par plusieurs médias.
+- Le site s'adresse à des lecteurs français et européens. Classe les sujets d'abord par le nombre de régions du monde qui en parlent ("regions_sur_ce_sujet"), puis par le nombre de médias. Un sujet qui ne concerne qu'un pays hors d'Europe et des États-Unis (Inde, Canada, Australie…) ne passe dans les trois premiers que si des médias d'au moins deux régions en parlent. À importance égale, un sujet qui touche la France ou l'Europe passe avant.
+- Les sujets les plus repris par les médias passent ensuite en premier. Une grande entreprise au cœur de l'actualité (dirigeant mis en cause, scandale, résultats, entrée en Bourse, forte chute ou forte hausse) est un sujet à part entière, à garder s'il est porté par plusieurs médias.
 - Ignore les faits divers, la consommation courante, le sport, la politique locale sans effet sur les marchés, les conseils d'achat ou de vente d'une action.
 - N'invente rien : aucun chiffre ni fait absent des titres. Pas de prédiction, pas de conseil. Pas de tiret cadratin.
 ${REGLES}`;

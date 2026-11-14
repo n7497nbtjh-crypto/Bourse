@@ -34,22 +34,36 @@ export const MOTS_VIDES = new Set(("avec dans pour plus sans sous vers chez entr
   "bourse marche marches action actions hausse baisse semaine jour jours annee annees mois prix cours point points milliard milliards million millions billion billions trillion percent first last next best ahead still amid why how " +
   "watch know need things three five seven top buy sell hold check latest inside outside video photos explained analysis opinion editorial election elections results result wall street talks could worth here").split(" "));
 export function motsTitre(t) { return [...new Set(fold(String(t || "")).split(/[^a-z0-9]+/).filter(w => w.length >= 4 && !MOTS_VIDES.has(w) && !/^\d+$/.test(w)))]; }
+/* 14/11 (Romain : « il faut que l'actualité soit mieux traitée ») : le site s'adresse à des lecteurs français et européens.
+   Avant, un sujet comptait par le nombre de médias qui le reprenaient : quatre journaux indiens qui se reprennent entre eux
+   suffisaient à mettre l'inflation indienne en tête. Maintenant, chaque média a une région (France, Europe, États-Unis,
+   Royaume-Uni, Asie et autres) ; un sujet compte surtout par le nombre de régions qui en parlent, la France et l'Europe pèsent
+   un peu plus, chaque région est plafonnée dans la liste envoyée à l'IA, et les sites de conseils boursiers sont écartés. */
+const ZONE_FR = /\.(fr|be|ch)$|^(france24\.com|rfi\.fr|euronews\.com|20minutes\.fr|boursier\.com|journaldunet\.com|lerevenu\.com|connaissancedesenergies\.org)$/;
+const ZONE_EU = /\.(de|at|es|it|nl|se|dk|no|fi|ie|eu|pt|pl)$|^(dw\.com|ft\.com|politico\.eu|euronews\.com|reuters\.com|economist\.com|hellenicshippingnews\.com|lloydslist\.com|splash247\.com|tradewindsnews\.com|seatrade-maritime\.com|expansion\.com|elpais\.com|elmundo\.es|abc\.es|lavanguardia\.com|eleconomista\.es|elconfidencial\.com|corriere\.it|repubblica\.it|lastampa\.it|ansa\.it|faz\.net|irishtimes\.com|independent\.ie|rte\.ie|businesspost\.ie|handelsblatt\.com|cincodias\.elpais\.com|ilsole24ore\.com|milanofinanza\.it)$/;
+const ZONE_UK = /\.co\.uk$|^(bbc\.com|news\.sky\.com|sky\.com|cityam\.com|theguardian\.com|independent\.co\.uk|telegraph\.co\.uk|thetimes\.co\.uk)$/;
+const ZONE_AS = /\.(in|jp|cn|kr|sg|hk|au|ph|ca)$|indiatimes\.com$|^(livemint\.com|moneycontrol\.com|business-standard\.com|thehindubusinessline\.com|scmp\.com|straitstimes\.com|caixinglobal\.com|koreaherald\.com|rappler\.com|theglobeandmail\.com|financialpost\.com|bnnbloomberg\.ca|aljazeera\.com|afr\.com|smh\.com\.au|asia\.nikkei\.com)$/;
+export const zoneMedia = s => { s = String(s || "").toLowerCase().replace(/^www\./, ""); return ZONE_FR.test(s) ? "FR" : ZONE_UK.test(s) ? "UK" : ZONE_EU.test(s) ? "EU" : ZONE_AS.test(s) ? "AS" : "US"; };
+const ZONE_POIDS = { FR: 1.3, EU: 1.2, UK: 1, US: 1, AS: 0.7 };
+const ZONE_MAX = { FR: 50, EU: 40, UK: 30, US: 45, AS: 15 }; // titres au plus par région dans les 140 envoyés à l'IA
+const CONSEILS = /^(fool\.com|investopedia\.com|thestreet\.com|kitco\.com|proactiveinvestors\.co\.uk|finanzen\.net|boerse-online\.de|moneyvox\.fr|mieuxvivre-votreargent\.fr)$/; // conseils et cours, pas des sujets d'actualité
 export function choisirTitres(items, max = 140) {
-  const M = items.map(x => ({ x, w: motsTitre(x.t) })), src = new Map();
-  for (const m of M) for (const w of m.w) { let S = src.get(w); if (!S) src.set(w, S = new Set()); S.add(m.x.s); }
+  items = items.filter(x => !CONSEILS.test(String(x.s || "").replace(/^www\./, "")));
+  const M = items.map(x => ({ x, w: motsTitre(x.t), z: zoneMedia(x.s) })), src = new Map(), zon = new Map();
+  for (const m of M) for (const w of m.w) { let S = src.get(w), Z = zon.get(w); if (!S) src.set(w, S = new Set()); if (!Z) zon.set(w, Z = new Set()); S.add(m.x.s); Z.add(m.z); }
   const nbMedias = new Set(items.map(x => x.s)).size || 1;
   // un mot repris par plus de 40 % des médias ne distingue plus rien ; par moins de 3 médias, ce n'est pas encore un sujet
-  const poids = w => { const n = (src.get(w) || new Set()).size; return n >= 3 && n <= Math.max(6, nbMedias * 0.4) ? n : 0; };
-  for (const m of M) { const P = m.w.map(w => [w, poids(w)]).filter(p => p[1]).sort((a, b) => b[1] - a[1]); m.cle = P[0] ? P[0][0] : null; m.score = (P[0] ? P[0][1] : 0) + (P[1] ? P[1][1] * 0.5 : 0); m.repris = P[0] ? P[0][1] : 1; }
+  const poids = w => { const n = (src.get(w) || new Set()).size; if (n < 3 || n > Math.max(6, nbMedias * 0.4)) return 0; const Z = zon.get(w); return n * (0.4 + 0.3 * Z.size) * Math.max(...[...Z].map(z => ZONE_POIDS[z])); };
+  for (const m of M) { const P = m.w.map(w => [w, poids(w)]).filter(p => p[1]).sort((a, b) => b[1] - a[1]); m.cle = P[0] ? P[0][0] : null; m.score = ((P[0] ? P[0][1] : 0) + (P[1] ? P[1][1] * 0.5 : 0)) * ZONE_POIDS[m.z]; m.repris = P[0] ? src.get(P[0][0]).size : 1; m.regions = P[0] ? zon.get(P[0][0]).size : 1; }
   M.sort((a, b) => b.score - a.score || b.x.d.localeCompare(a.x.d));
-  const parCle = {}, parMedia = {}, vus = new Set(), out = [];
+  const parCle = {}, parMedia = {}, parZone = {}, vus = new Set(), out = [];
   for (const m of M) { if (out.length >= max) break; if (!m.cle) continue;
     const t = fold(m.x.t).slice(0, 60); if (vus.has(t)) continue;
-    if ((parCle[m.cle] || 0) >= 7 || (parMedia[m.x.s] || 0) >= 10) continue;
+    if ((parCle[m.cle] || 0) >= 7 || (parMedia[m.x.s] || 0) >= 10 || (parZone[m.z] || 0) >= ZONE_MAX[m.z]) continue;
     // dans un même sujet, un média ne parle qu'une fois tant que d'autres médias restent à citer
     if (out.some(o => o.cle === m.cle && o.x.s === m.x.s) && (parCle[m.cle] || 0) < 4) continue;
-    vus.add(t); parCle[m.cle] = (parCle[m.cle] || 0) + 1; parMedia[m.x.s] = (parMedia[m.x.s] || 0) + 1; out.push(m); }
-  return out.map(m => ({ ...m.x, repris: m.repris }));
+    vus.add(t); parCle[m.cle] = (parCle[m.cle] || 0) + 1; parMedia[m.x.s] = (parMedia[m.x.s] || 0) + 1; parZone[m.z] = (parZone[m.z] || 0) + 1; out.push(m); }
+  return out.map(m => ({ ...m.x, repris: m.repris, regions: m.regions, zone: m.z }));
 }
 export async function mondeDe(env, d, n, lundi, auj) {
   const fin = addJ(lundi, 6), items = ((d.monde && d.monde.items) || []).filter(x => x && x.d && x.d.slice(0, 10) >= addJ(lundi, -2) && x.d.slice(0, 10) <= fin && x.t && x.u);
@@ -60,7 +74,8 @@ export async function mondeDe(env, d, n, lundi, auj) {
   // Les faits envoyés à l'IA sont coupés à 14 000 caractères par iaJSON : on retire des titres (les plus anciens) jusqu'à tenir dedans,
   // sinon le JSON arrive tronqué (7/11 : 128 titres, réponse perdue)
   const faits = { semaine_du: lundi, au: fin, indices: (n.indices || []).map(i => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] };
-  while (T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, medias_sur_ce_sujet: x.repris, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500)) T.pop();
+  const ZN = { FR: "France", EU: "Europe", UK: "Royaume-Uni", US: "États-Unis", AS: "Asie et autres" };
+  while (T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, region_du_media: ZN[x.zone] || "", medias_sur_ce_sujet: x.repris, regions_sur_ce_sujet: x.regions, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500)) T.pop();
   const valide = o => {
     if (!o || !Array.isArray(o.sujets)) return null;
     const S = o.sujets.slice(0, 10).map(s => ({ // 8/11 (Romain : « étoffer le monde ») : jusqu'à 10 sujets
@@ -75,7 +90,7 @@ export async function mondeDe(env, d, n, lundi, auj) {
     return S.length ? { sujets: S } : null;
   };
   /* 12/11 midi : pour le jour en cours, les sujets sont refaits toutes les 3 heures (13/11 ; quatre fois par jour le 12/11) au lieu d'une : une nouvelle du soir n'attend plus le lendemain. */
-  const r = await iaJSON(env, "monde12|" + lundi + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  const r = await iaJSON(env, "monde14|" + lundi + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   // Nos chiffres pour chaque sujet : médiane du secteur, ses plus grandes entreprises, l'indice du pays ; les valeurs du lecteur concernées
   const ctx = (d.contexte && d.contexte.sujets) || [];
