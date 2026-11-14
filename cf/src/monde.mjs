@@ -39,7 +39,7 @@ export function motsTitre(t) { return [...new Set(fold(String(t || "")).split(/[
    suffisaient à mettre l'inflation indienne en tête. Maintenant, chaque média a une région (France, Europe, États-Unis,
    Royaume-Uni, Asie et autres) ; un sujet compte surtout par le nombre de régions qui en parlent, la France et l'Europe pèsent
    un peu plus, chaque région est plafonnée dans la liste envoyée à l'IA, et les sites de conseils boursiers sont écartés. */
-const ZONE_FR = /\.(fr|be|ch)$|^(france24\.com|rfi\.fr|euronews\.com|20minutes\.fr|boursier\.com|journaldunet\.com|lerevenu\.com|connaissancedesenergies\.org)$/;
+const ZONE_FR = /\.(fr|be|ch)$|^(france24\.com|euronews\.com|bfmtv\.com|boursier\.com|journaldunet\.com|lerevenu\.com|connaissancedesenergies\.org|lesnumeriques\.com|01net\.com|numerama\.com|journalauto\.com)$/;
 const ZONE_EU = /\.(de|at|es|it|nl|se|dk|no|fi|ie|eu|pt|pl)$|^(dw\.com|ft\.com|politico\.eu|euronews\.com|reuters\.com|economist\.com|hellenicshippingnews\.com|lloydslist\.com|splash247\.com|tradewindsnews\.com|seatrade-maritime\.com|expansion\.com|elpais\.com|elmundo\.es|abc\.es|lavanguardia\.com|eleconomista\.es|elconfidencial\.com|corriere\.it|repubblica\.it|lastampa\.it|ansa\.it|faz\.net|irishtimes\.com|independent\.ie|rte\.ie|businesspost\.ie|handelsblatt\.com|cincodias\.elpais\.com|ilsole24ore\.com|milanofinanza\.it)$/;
 const ZONE_UK = /\.co\.uk$|^(bbc\.com|news\.sky\.com|sky\.com|cityam\.com|theguardian\.com|independent\.co\.uk|telegraph\.co\.uk|thetimes\.co\.uk)$/;
 const ZONE_AS = /\.(in|jp|cn|kr|sg|hk|au|ph|ca)$|indiatimes\.com$|^(livemint\.com|moneycontrol\.com|business-standard\.com|thehindubusinessline\.com|scmp\.com|straitstimes\.com|caixinglobal\.com|koreaherald\.com|rappler\.com|theglobeandmail\.com|financialpost\.com|bnnbloomberg\.ca|aljazeera\.com|afr\.com|smh\.com\.au|asia\.nikkei\.com)$/;
@@ -127,10 +127,19 @@ function mondeMeme(a, b) {
   const na = mondeNoms(a.titre), nb = mondeNoms(b.titre); for (const w of na) if (nb.has(w)) return true;
   return false;
 }
+/* 14/11 : un sujet dont tous les titres cités viennent de médias « Asie et autres » (un seul pays lointain, repris par sa presse
+   nationale) n'est plus montré, même s'il avait été choisi plus tôt dans la semaine (les sujets s'accumulent). Les sujets repris
+   dans plusieurs régions passent devant, l'ordre de l'IA départageant les autres. */
+export const mondeRegions = x => new Set((x.titres || []).map(t => zoneMedia(t.s))).size;
+export const mondeLointain = x => (x.titres || []).length > 0 && (x.titres || []).every(t => zoneMedia(t.s) === "AS");
+// Pays qui pèsent pour un lecteur européen : l'Europe, les États-Unis, la Chine, le Japon, et les pays dont dépendent l'énergie
+// et les grands conflits suivis par les marchés. Un sujet qui ne parle que d'autres pays (Inde, Canada, Australie…) passe après.
+const PAYS_PROCHES = new Set("FR DE IT ES NL BE LU CH AT PT IE GB SE DK NO FI PL GR CZ HU RO EU US CN JP TW KR RU UA IL IR SA AE QA".split(" "));
+export const mondeProche = x => !(x.pays || []).length || (x.pays || []).some(p => PAYS_PROCHES.has(p));
 export function mondeFusion(neufs, anciens) {
   const out = [];
-  for (const x of [...(neufs || []), ...(anciens || [])]) if (x && !out.some(y => mondeMeme(x, y))) out.push(x);
-  return out.slice(0, 10);
+  for (const x of [...(neufs || []), ...(anciens || [])]) if (x && !mondeLointain(x) && !out.some(y => mondeMeme(x, y))) out.push(x);
+  return out.map((x, i) => [x, i]).sort((a, b) => mondeProche(b[0]) - mondeProche(a[0]) || a[1] - b[1]).map(p => p[0]).slice(0, 10);
 }
 async function mondeCalcul(request, env, auj, ancien) {
   const d = await siteData(request, env);
@@ -144,7 +153,7 @@ async function mondeCalcul(request, env, auj, ancien) {
     return { du: lundi, au: addJour(lundi, 6), jour, sujets: m.sujets, modele: m.modele || null };
   };
   const cur = await calc(0);
-  if (ancien && !ancien.semaine_passee && cur && ancien.du === cur.du) cur.sujets = mondeFusion(cur.sujets, ancien.sujets);
+  if (cur) cur.sujets = ancien && !ancien.semaine_passee && ancien.du === cur.du ? mondeFusion(cur.sujets, ancien.sujets) : mondeFusion(cur.sujets, []);
   if (!cur && ancien) return null;
   if (cur && cur.sujets.length >= 6) return { ...cur, genere: Date.now() };
   const prev = ancien && ancien.precedente ? ancien.precedente : await calc(7);
