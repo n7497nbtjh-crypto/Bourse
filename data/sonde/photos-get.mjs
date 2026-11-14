@@ -1,0 +1,6 @@
+// Sonde : télécharge des photos originales de Wikimedia Commons (liste en dur, User-Agent honnête, une à la fois)
+import { writeFileSync, mkdirSync } from "node:fs";
+const OUT = process.env.SORTIE || "out"; mkdirSync(OUT, { recursive: true });
+const UA = "enklair-site/1.0 (https://enklair.com; contact via GitHub n7497nbtjh-crypto/Bourse)";
+const L = [["6", "https://upload.wikimedia.org/wikipedia/commons/5/51/Palais_Brongniart_%40_Paris_%2823486072393%29.jpg"], ["4", "https://upload.wikimedia.org/wikipedia/commons/1/12/Paris_Palais_Brongniart_d%C3%A9tail_2012.jpg"], ["43", "https://upload.wikimedia.org/wikipedia/commons/6/67/La_D%C3%A9fense_skyline_from_Eiffel_Tower.jpg"], ["57", "https://upload.wikimedia.org/wikipedia/commons/7/7a/Voreppe_-_Prix_station-service_TotalEnergies_%28juin_2025%29.jpg"], ["5", "https://upload.wikimedia.org/wikipedia/commons/c/c3/Palais_Brongniart%2C_Paris_004.jpg"], ["10", "https://upload.wikimedia.org/wikipedia/commons/7/73/Palais_Brongniart_Facade.jpg"]];
+for (const [n, u] of L) { const r = await fetch(u, { headers: { "user-agent": UA } }); const b = Buffer.from(await r.arrayBuffer()); writeFileSync(`${OUT}/o${n}.jpg`, b); console.log(n, r.status, b.length); await new Promise(r => setTimeout(r, 1500)); }
