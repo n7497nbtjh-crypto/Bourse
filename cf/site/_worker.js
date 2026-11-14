@@ -411,7 +411,8 @@ R\xE9ponds uniquement par un objet JSON : {"sujets": [{"titre": "...", "theme": 
 - Ne recopie jamais un titre dans "fait" (ni entre guillemets, ni \xAB selon des titres comme \xBB) : ils sont affich\xE9s en lien sous le sujet. \xC9cris en fran\xE7ais, avec tes mots.
 - "secteurs" : les cl\xE9s des secteurs directement concern\xE9s, parmi celles fournies (au plus 2), ou [] si le sujet touche tout le march\xE9.
 - "pays" : codes ISO \xE0 deux lettres des pays concern\xE9s (US, GB, FR, DE, CN, JP\u2026), au plus 2.
-- Les sujets les plus repris par les m\xE9dias passent en premier. Une grande entreprise au c\u0153ur de l'actualit\xE9 (dirigeant mis en cause, scandale, r\xE9sultats, entr\xE9e en Bourse, forte chute ou forte hausse) est un sujet \xE0 part enti\xE8re, \xE0 garder s'il est port\xE9 par plusieurs m\xE9dias.
+- Le site s'adresse \xE0 des lecteurs fran\xE7ais et europ\xE9ens. Classe les sujets d'abord par le nombre de r\xE9gions du monde qui en parlent ("regions_sur_ce_sujet"), puis par le nombre de m\xE9dias. Un sujet qui ne concerne qu'un pays hors d'Europe et des \xC9tats-Unis (Inde, Canada, Australie\u2026) ne passe dans les trois premiers que si des m\xE9dias d'au moins deux r\xE9gions en parlent. \xC0 importance \xE9gale, un sujet qui touche la France ou l'Europe passe avant.
+- Les sujets les plus repris par les m\xE9dias passent ensuite en premier. Une grande entreprise au c\u0153ur de l'actualit\xE9 (dirigeant mis en cause, scandale, r\xE9sultats, entr\xE9e en Bourse, forte chute ou forte hausse) est un sujet \xE0 part enti\xE8re, \xE0 garder s'il est port\xE9 par plusieurs m\xE9dias.
 - Ignore les faits divers, la consommation courante, le sport, la politique locale sans effet sur les march\xE9s, les conseils d'achat ou de vente d'une action.
 - N'invente rien : aucun chiffre ni fait absent des titres. Pas de pr\xE9diction, pas de conseil. Pas de tiret cadratin.
 ${REGLES}`, CONSIGNES = { annonce: ANNONCE, presse: PRESSE, semaine_monde: SEMAINE_MONDE };
@@ -615,9 +616,8 @@ async function iaSite(request, env) {
   if (request.method !== "POST" && !sante) return json2({ error: "M\xE9thode non permise" }, 405);
   if (!env.AI) return sante ? santeFin({ ok: !1, raison: "IA non branch\xE9e sur le serveur" }) : json2({ indisponible: !0, message: "L'IA du site n'est pas disponible pour le moment." }, 503);
   let b;
-  if (sante) b = { tache: "expliquer", user: `Faits : {}
-
-Question : En une phrase, qu'est-ce qu'une action ?`, max: 150 };
+  if (sante) b = { tache: "presse", user: `Titre : Une entreprise publie ses ventes du trimestre, en hausse de 5 %.
+Source : essai de sant\xE9 du site.`, max: 150 };
   else try {
     b = await request.json();
   } catch {
@@ -1290,37 +1290,41 @@ var MOTS_VIDES = new Set("avec dans pour plus sans sous vers chez entre apres av
 function motsTitre(t) {
   return [...new Set(fold(String(t || "")).split(/[^a-z0-9]+/).filter((w) => w.length >= 4 && !MOTS_VIDES.has(w) && !/^\d+$/.test(w)))];
 }
+var ZONE_FR = /\.(fr|be|ch)$|^(france24\.com|euronews\.com|bfmtv\.com|boursier\.com|journaldunet\.com|lerevenu\.com|connaissancedesenergies\.org|lesnumeriques\.com|01net\.com|numerama\.com|journalauto\.com)$/, ZONE_EU = /\.(de|at|es|it|nl|se|dk|no|fi|ie|eu|pt|pl)$|^(dw\.com|ft\.com|politico\.eu|euronews\.com|reuters\.com|economist\.com|hellenicshippingnews\.com|lloydslist\.com|splash247\.com|tradewindsnews\.com|seatrade-maritime\.com|expansion\.com|elpais\.com|elmundo\.es|abc\.es|lavanguardia\.com|eleconomista\.es|elconfidencial\.com|corriere\.it|repubblica\.it|lastampa\.it|ansa\.it|faz\.net|irishtimes\.com|independent\.ie|rte\.ie|businesspost\.ie|handelsblatt\.com|cincodias\.elpais\.com|ilsole24ore\.com|milanofinanza\.it)$/, ZONE_UK = /\.co\.uk$|^(bbc\.com|news\.sky\.com|sky\.com|cityam\.com|theguardian\.com|independent\.co\.uk|telegraph\.co\.uk|thetimes\.co\.uk)$/, ZONE_AS = /\.(in|jp|cn|kr|sg|hk|au|ph|ca)$|indiatimes\.com$|^(livemint\.com|moneycontrol\.com|business-standard\.com|thehindubusinessline\.com|scmp\.com|straitstimes\.com|caixinglobal\.com|koreaherald\.com|rappler\.com|theglobeandmail\.com|financialpost\.com|bnnbloomberg\.ca|aljazeera\.com|afr\.com|smh\.com\.au|asia\.nikkei\.com)$/, zoneMedia = (s) => (s = String(s || "").toLowerCase().replace(/^www\./, ""), ZONE_FR.test(s) ? "FR" : ZONE_UK.test(s) ? "UK" : ZONE_EU.test(s) ? "EU" : ZONE_AS.test(s) ? "AS" : "US"), ZONE_POIDS = { FR: 1.3, EU: 1.2, UK: 1, US: 1, AS: 0.7 }, ZONE_MAX = { FR: 50, EU: 40, UK: 30, US: 45, AS: 15 }, CONSEILS = /^(fool\.com|investopedia\.com|thestreet\.com|kitco\.com|proactiveinvestors\.co\.uk|finanzen\.net|boerse-online\.de|moneyvox\.fr|mieuxvivre-votreargent\.fr)$/;
 function choisirTitres(items, max = 140) {
-  let M = items.map((x) => ({ x, w: motsTitre(x.t) })), src = /* @__PURE__ */ new Map();
+  items = items.filter((x) => !CONSEILS.test(String(x.s || "").replace(/^www\./, "")));
+  let M = items.map((x) => ({ x, w: motsTitre(x.t), z: zoneMedia(x.s) })), src = /* @__PURE__ */ new Map(), zon = /* @__PURE__ */ new Map();
   for (let m of M) for (let w of m.w) {
-    let S = src.get(w);
-    S || src.set(w, S = /* @__PURE__ */ new Set()), S.add(m.x.s);
+    let S = src.get(w), Z = zon.get(w);
+    S || src.set(w, S = /* @__PURE__ */ new Set()), Z || zon.set(w, Z = /* @__PURE__ */ new Set()), S.add(m.x.s), Z.add(m.z);
   }
   let nbMedias = new Set(items.map((x) => x.s)).size || 1, poids = (w) => {
     let n = (src.get(w) || /* @__PURE__ */ new Set()).size;
-    return n >= 3 && n <= Math.max(6, nbMedias * 0.4) ? n : 0;
+    if (n < 3 || n > Math.max(6, nbMedias * 0.4)) return 0;
+    let Z = zon.get(w);
+    return n * (0.4 + 0.3 * Z.size) * Math.max(...[...Z].map((z) => ZONE_POIDS[z]));
   };
   for (let m of M) {
     let P = m.w.map((w) => [w, poids(w)]).filter((p) => p[1]).sort((a, b) => b[1] - a[1]);
-    m.cle = P[0] ? P[0][0] : null, m.score = (P[0] ? P[0][1] : 0) + (P[1] ? P[1][1] * 0.5 : 0), m.repris = P[0] ? P[0][1] : 1;
+    m.cle = P[0] ? P[0][0] : null, m.score = ((P[0] ? P[0][1] : 0) + (P[1] ? P[1][1] * 0.5 : 0)) * ZONE_POIDS[m.z], m.repris = P[0] ? src.get(P[0][0]).size : 1, m.regions = P[0] ? zon.get(P[0][0]).size : 1;
   }
   M.sort((a, b) => b.score - a.score || b.x.d.localeCompare(a.x.d));
-  let parCle = {}, parMedia = {}, vus = /* @__PURE__ */ new Set(), out = [];
+  let parCle = {}, parMedia = {}, parZone = {}, vus = /* @__PURE__ */ new Set(), out = [];
   for (let m of M) {
     if (out.length >= max) break;
     if (!m.cle) continue;
     let t = fold(m.x.t).slice(0, 60);
-    vus.has(t) || (parCle[m.cle] || 0) >= 7 || (parMedia[m.x.s] || 0) >= 10 || out.some((o) => o.cle === m.cle && o.x.s === m.x.s) && (parCle[m.cle] || 0) < 4 || (vus.add(t), parCle[m.cle] = (parCle[m.cle] || 0) + 1, parMedia[m.x.s] = (parMedia[m.x.s] || 0) + 1, out.push(m));
+    vus.has(t) || (parCle[m.cle] || 0) >= 7 || (parMedia[m.x.s] || 0) >= 10 || (parZone[m.z] || 0) >= ZONE_MAX[m.z] || out.some((o) => o.cle === m.cle && o.x.s === m.x.s) && (parCle[m.cle] || 0) < 4 || (vus.add(t), parCle[m.cle] = (parCle[m.cle] || 0) + 1, parMedia[m.x.s] = (parMedia[m.x.s] || 0) + 1, parZone[m.z] = (parZone[m.z] || 0) + 1, out.push(m));
   }
-  return out.map((m) => ({ ...m.x, repris: m.repris }));
+  return out.map((m) => ({ ...m.x, repris: m.repris, regions: m.regions, zone: m.z }));
 }
 async function mondeDe(env, d, n, lundi3, auj) {
   let fin = addJ2(lundi3, 6), items = (d.monde && d.monde.items || []).filter((x) => x && x.d && x.d.slice(0, 10) >= addJ2(lundi3, -2) && x.d.slice(0, 10) <= fin && x.t && x.u);
   if (items.length < 4) return null;
   let T = choisirTitres(items, 140), parSec = univers(d, lundi3, auj), secteurs = {};
   for (let [s, L] of Object.entries(parSec)) secteurs[s] = { nom: SECTEURS2[s] || s, mediane_pct: r1(med(L.map((x) => x.v))), n: L.length };
-  let faits = { semaine_du: lundi3, au: fin, indices: (n.indices || []).map((i) => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] };
-  for (; T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, medias_sur_ce_sujet: x.repris, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500); ) T.pop();
+  let faits = { semaine_du: lundi3, au: fin, indices: (n.indices || []).map((i) => ({ id: i.id, nom: i.nom, variation_pct: i.pct })), secteurs, titres: [] }, ZN = { FR: "France", EU: "Europe", UK: "Royaume-Uni", US: "\xC9tats-Unis", AS: "Asie et autres" };
+  for (; T.length && (faits.titres = T.map((x, i) => ({ i, date: x.d.slice(0, 10), media: x.s, region_du_media: ZN[x.zone] || "", medias_sur_ce_sujet: x.repris, regions_sur_ce_sujet: x.regions, titre: x.t.slice(0, 120) })), JSON.stringify(faits).length > 13500); ) T.pop();
   let valide = (o) => {
     if (!o || !Array.isArray(o.sujets)) return null;
     let S = o.sujets.slice(0, 10).map((s) => ({
@@ -1333,7 +1337,7 @@ async function mondeDe(env, d, n, lundi3, auj) {
       pays: (Array.isArray(s.pays) ? s.pays : []).map((x) => String(x).toUpperCase()).filter((x) => /^[A-Z]{2}$/.test(x)).slice(0, 3)
     })).map((s) => ({ ...s, titre: frCorrige(s.titre.replace(/^Le livre sterling/i, "La livre sterling")), fait: frCorrige(s.fait) })).map((s) => ({ ...s, fait: s.fait.split(/(?<=\.)\s+/).filter((ph) => !SUPPOSE.test(ph) && !/[«"“]|selon des titres|des titres comme/i.test(ph)).join(" ") })).filter((s) => s.titre.length > 8 && s.fait.length > 30 && s.titres.length >= 2).filter((s) => new Set(s.titres.map((i) => T[i].s)).size >= 2 && !/\brumeurs?\b/i.test(s.fait));
     return S.length ? { sujets: S } : null;
-  }, r = await iaJSON(env, "monde12|" + lundi3 + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
+  }, r = await iaJSON(env, "monde14|" + lundi3 + "|" + auj + trancheMonde(auj), CONSIGNES.semaine_monde, faits, 1900, valide).catch(() => null);
   if (!r) return null;
   let ctx = d.contexte && d.contexte.sujets || [];
   return { sujets: r.sujets.map((s) => {
@@ -1376,10 +1380,11 @@ function mondeMeme(a, b) {
   for (let w of na) if (nb.has(w)) return !0;
   return !1;
 }
+var mondeLointain = (x) => (x.titres || []).length > 0 && (x.titres || []).every((t) => zoneMedia(t.s) === "AS"), PAYS_PROCHES = new Set("FR DE IT ES NL BE LU CH AT PT IE GB SE DK NO FI PL GR CZ HU RO EU US CN JP TW KR RU UA IL IR SA AE QA".split(" ")), mondeProche = (x) => !(x.pays || []).length || (x.pays || []).some((p) => PAYS_PROCHES.has(p));
 function mondeFusion(neufs, anciens) {
   let out = [];
-  for (let x of [...neufs || [], ...anciens || []]) x && !out.some((y) => mondeMeme(x, y)) && out.push(x);
-  return out.slice(0, 10);
+  for (let x of [...neufs || [], ...anciens || []]) x && !mondeLointain(x) && !out.some((y) => mondeMeme(x, y)) && out.push(x);
+  return out.map((x, i) => [x, i]).sort((a, b) => mondeProche(b[0]) - mondeProche(a[0]) || a[1] - b[1]).map((p) => p[0]).slice(0, 10);
 }
 async function mondeCalcul(request, env, auj, ancien) {
   let d = await siteData(request, env), calc = async (decal) => {
@@ -1391,7 +1396,7 @@ async function mondeCalcul(request, env, auj, ancien) {
       x.chiffres = (x.chiffres || []).filter((c) => c.v != null && c.v !== 0);
     }), { du: lundi3, au: addJ(lundi3, 6), jour: jour2, sujets: m.sujets, modele: m.modele || null });
   }, cur = await calc(0);
-  if (ancien && !ancien.semaine_passee && cur && ancien.du === cur.du && (cur.sujets = mondeFusion(cur.sujets, ancien.sujets)), !cur && ancien) return null;
+  if (cur && (cur.sujets = ancien && !ancien.semaine_passee && ancien.du === cur.du ? mondeFusion(cur.sujets, ancien.sujets) : mondeFusion(cur.sujets, [])), !cur && ancien) return null;
   if (cur && cur.sujets.length >= 6) return { ...cur, genere: Date.now() };
   let prev = ancien && ancien.precedente ? ancien.precedente : await calc(7);
   return cur ? { ...cur, genere: Date.now(), precedente: prev } : prev ? { ...prev, genere: Date.now(), semaine_passee: !0 } : null;
@@ -1477,7 +1482,7 @@ async function signaler(request, env) {
 }
 
 // cf/src/pwa.mjs
-var VERSION = "bb990050ca95084c", esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
+var VERSION = "ef83393187ee9b1c", esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]), DONNEES = ["societes", "univers-min", "agenda", "agenda-auto", "etf", "courtiers", "repartitions", "concurrents"], SECURITE = {
   "content-security-policy": [
     "default-src 'self'",
     "script-src 'self' 'unsafe-inline' https://s3.tradingview.com",

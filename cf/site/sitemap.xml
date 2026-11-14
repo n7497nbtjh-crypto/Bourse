@@ -172,6 +172,7 @@
   <url><loc>https://enklair.com/etf/amundi-core-msci-usa-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-core-msci-usa-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-core-msci-usa-swap-acc</loc></url>
+  <url><loc>https://enklair.com/etf/amundi-core-msci-world-2-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-core-msci-world-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-core-msci-world-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-core-msci-world-swap-dist</loc></url>
@@ -252,6 +253,7 @@
   <url><loc>https://enklair.com/etf/amundi-global-corporate-bond-usd-hedged-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-global-equity-quality-income-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-global-ex-us-government-bond-acc</loc></url>
+  <url><loc>https://enklair.com/etf/amundi-global-gender-equality-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-global-hydrogen-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-global-luxury-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-global-memory-chips-acc</loc></url>
@@ -498,7 +500,6 @@
   <url><loc>https://enklair.com/etf/amundi-us-treasury-bond-3-7y-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-us-treasury-bond-3-7y-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-us-treasury-bond-7-10y-acc</loc></url>
-  <url><loc>https://enklair.com/etf/amundi-us-treasury-bond-7-10y-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-us-treasury-bond-7-10y-eur-hedged-acc</loc></url>
   <url><loc>https://enklair.com/etf/amundi-us-treasury-bond-long-dated-dist</loc></url>
   <url><loc>https://enklair.com/etf/amundi-usd-corporate-bond-esg-acc</loc></url>
@@ -650,6 +651,7 @@
   <url><loc>https://enklair.com/etf/invesco-s-and-p-500-scored-and-screened-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-s-and-p-500-scored-and-screened-eur-hdg-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-s-and-p-smallcap-600-acc</loc></url>
+  <url><loc>https://enklair.com/etf/invesco-solar-energy-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-stoxx-europe-600-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-stoxx-europe-600-optimised-banks-acc</loc></url>
   <url><loc>https://enklair.com/etf/invesco-stoxx-europe-600-optimised-chemicals-acc</loc></url>
@@ -749,13 +751,13 @@
   <url><loc>https://enklair.com/etf/ishares-dow-jones-u-s-select-dividend-de</loc></url>
   <url><loc>https://enklair.com/etf/ishares-eb-rexx-government-germany-0-1yr-de-dist</loc></url>
   <url><loc>https://enklair.com/etf/ishares-eb-rexx-government-germany-1-5-2-5yr-de-dist</loc></url>
-  <url><loc>https://enklair.com/etf/ishares-eb-rexx-government-germany-10-5-yr-de</loc></url>
   <url><loc>https://enklair.com/etf/ishares-eb-rexx-government-germany-2-5-5-5yr-de</loc></url>
   <url><loc>https://enklair.com/etf/ishares-eb-rexx-government-germany-5-5-10-5yr-de</loc></url>
   <url><loc>https://enklair.com/etf/ishares-eb-rexx-government-germany-de</loc></url>
   <url><loc>https://enklair.com/etf/ishares-edge-msci-em-minimum-volatility-acc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-edge-msci-em-value-factor-acc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-edge-msci-europe-minimum-volatility-acc</loc></url>
+  <url><loc>https://enklair.com/etf/ishares-edge-msci-europe-minimum-volatility-advanced-acc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-edge-msci-europe-momentum-factor-acc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-edge-msci-europe-quality-factor-acc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-edge-msci-europe-value-factor-acc</loc></url>
@@ -1008,6 +1010,7 @@
   <url><loc>https://enklair.com/etf/ishares-nikkei-225-de</loc></url>
   <url><loc>https://enklair.com/etf/ishares-oil-and-gas-exploration-and-production-acc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-omx-stockholm-capped</loc></url>
+  <url><loc>https://enklair.com/etf/ishares-overnight-rate-swap-acc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-pfandbriefe-de</loc></url>
   <url><loc>https://enklair.com/etf/ishares-physical-silver-etc</loc></url>
   <url><loc>https://enklair.com/etf/ishares-quantum-computing-acc</loc></url>
