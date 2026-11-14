@@ -486,3 +486,8 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 - La collecte n'était pas partielle : les cinq émetteurs répondent (2 103 parts lues cette nuit), mais seules 200 passaient le tri. Le 9/11 (commit af925de4), un commentaire `//` avait été ajouté au milieu de la ligne qui décrit chaque ETF dans `data/etf_collecte.mjs` (`normalise`) : la fin de la ligne (réplication, méthode, devise, encours, date de création) était devenue un commentaire. Sans encours, seuls les ETF éligibles au PEA passaient le seuil de 50 M€. Le piège est noté dans CLAUDE.md ; la protection ajoutée le 13/11 a bien refusé le catalogue cette nuit.
 - Correction : commentaire remis sur sa propre ligne, et la capitalisation ou distribution est aussi lue quand le nom officiel finit par « (Acc) » ou « (Dist) ». Vérifié sur un exemple (encours, devise, création, réplication de nouveau lus). Robot relancé.
 
+## 14/11, 9 h 50 : robots de la nuit sautés par GitHub, relevé ETF de la page État
+- GitHub n'a lancé ni les logos (3 h 40), ni les données (6 h 17 et 8 h 47), ni le relevé de la page État (7 h 05 et 9 h 35), ni le robot de réveil depuis 3 h 40. Relancés à la main : logos (réussi), données (étape des cours réussie avec le calcul déplacé dans `semaine.mjs`), relevé de la page État.
+- Le relevé disait « ETF du 4/11 » alors que le site sert le catalogue du 14/11 : il lisait `cf/site/data/etf.json` du dépôt, qui n'est refait qu'au déploiement. Il prend maintenant la plus récente des dates de ce fichier et de `data/etf_catalogue.json`.
+- « Le monde » recalculé à 9 h 20 : 8 sujets, Nvidia, Ukraine, inflation en Europe, budget français 2027 en tête, l'Inde en dernier.
+
