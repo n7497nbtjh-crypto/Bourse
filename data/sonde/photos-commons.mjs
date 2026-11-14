@@ -1,6 +1,6 @@
 // Sonde : photos sous licence libre sur Wikimedia Commons (API officielle, User-Agent honnête), pour les carrousels
 import { writeFileSync, mkdirSync } from "node:fs";
-const OUT = process.argv[2] || "out"; mkdirSync(OUT, { recursive: true });
+const OUT = process.env.SORTIE || process.argv[2] || "out"; mkdirSync(OUT, { recursive: true });
 const UA = "enklair-site/1.0 (https://enklair.com; contact via GitHub n7497nbtjh-crypto/Bourse)";
 const Q = (process.env.REQUETES || "Palais Brongniart|Place de la Bourse Paris|Euronext Paris|La Défense Paris skyline|TotalEnergies station-service|Kering siège|stock ticker board").split("|");
 const res = [];
