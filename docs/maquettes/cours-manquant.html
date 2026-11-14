@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maquette : fiche sans cours du jour</title>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;800&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#111;--j:#FFE14D;--g:#1f9d55;--r:#d64545;--o:#e08a00}
+*{box-sizing:border-box}body{margin:0;font:15px/1.45 Inter,sans-serif;color:var(--ink);background:#fff}
+.band{background:var(--j);border-bottom:3px solid var(--ink);padding:18px 28px}
+.band h1{font:800 26px "Bricolage Grotesque",sans-serif;margin:0;letter-spacing:-.03em}.band p{margin:4px 0 0}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 20px;display:grid;grid-template-columns:1fr 1fr;gap:34px}
+@media(max-width:860px){.wrap{grid-template-columns:1fr}}@media(max-width:560px){.reps{grid-template-columns:1fr}.rep .v{font-size:24px}.rep.off .v{font-size:17px}.wrap{padding:20px 14px}}
+.cas>h2{font:800 20px "Bricolage Grotesque",sans-serif;margin:0 0 4px}.cas>.q{color:#555;margin:0 0 14px;font-size:14px}
+.tag{display:inline-block;background:var(--j);border:2px solid var(--ink);border-radius:8px;padding:2px 9px;font:700 12px Inter;transform:rotate(-2deg);margin-bottom:8px}
+.ent{display:flex;align-items:center;gap:12px;margin-bottom:12px}.ent .lg{width:44px;height:44px;border:3px solid var(--ink);border-radius:12px;display:grid;place-items:center;font:800 16px "Bricolage Grotesque"}
+.ent b{font:800 24px "Bricolage Grotesque",sans-serif;letter-spacing:-.03em}.ent small{display:block;color:#555}
+.pcard{border:3px solid var(--ink);border-radius:24px;padding:18px 22px;box-shadow:6px 6px 0 var(--ink);margin-bottom:22px}
+.p{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.p b{font:800 40px "Bricolage Grotesque",sans-serif;letter-spacing:-.05em}
+.peur{color:#555;font-size:14px}
+.date{display:inline-flex;align-items:center;gap:7px;margin:8px 0 4px;padding:5px 10px;border:2px solid var(--ink);border-radius:999px;background:#fff4d6;font:700 13px Inter}
+.date i{width:9px;height:9px;border-radius:50%;background:var(--o)}
+.pcard small{color:#555;display:block}
+.live{margin-top:14px;border-top:2px dashed #bbb;padding-top:12px}
+.live .t{font:700 13px Inter;margin-bottom:6px;display:flex;justify-content:space-between}
+.tvbox{min-height:96px;border:2px solid #e3e3e3;border-radius:14px;overflow:hidden}
+.reps{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.rep{border:3px solid var(--ink);border-radius:18px;padding:12px 14px;background:#fff}
+.rep .k{font:700 12px Inter;text-transform:uppercase;letter-spacing:.04em;color:#444}
+.rep .v{font:800 28px "Bricolage Grotesque",sans-serif;letter-spacing:-.04em;margin:2px 0}
+.rep .s{font-size:12.5px;color:#555}
+.rep.off{background:#f6f6f6;border-style:dashed}.rep.off .v{font-size:19px;color:#333;letter-spacing:-.01em}
+.pastille{display:inline-block;font:700 11px Inter;border-radius:999px;padding:2px 8px;border:2px solid var(--ink);background:#fff4d6;margin-top:6px}
+.note{margin-top:14px;font-size:13px;color:#444;border-left:4px solid var(--j);padding-left:10px}
+.avant{margin-top:26px;font-size:13px;color:#666}.avant div{border:2px dashed #bbb;border-radius:14px;padding:10px 14px;margin-top:6px;background:#fafafa}
+</style></head><body>
+<div class="band"><h1>Maquette : une fiche quand le cours du jour manque</h1><p>Deux cas réels, chiffres du 14/11. 54 entreprises sur 3 403 n'ont pas de cours aujourd'hui (surtout Oslo, Hong Kong, Athènes).</p></div>
+<div class="wrap">
+
+<section class="cas">
+  <span class="tag">Cas 1</span><h2>Un ancien cours existe</h2><p class="q">Exemple : Hilton, dernier cours reçu le 6 novembre. Les repères sont calculés sur ce cours, et la date le dit partout.</p>
+  <div class="ent"><span class="lg">HL</span><div><b>Hilton</b><small>NYSE · HLT · Hôtellerie</small></div></div>
+  <div class="pcard">
+    <div class="p"><b>370,38 $</b></div><div class="peur">≈ 335,12 €*</div>
+    <div class="date"><i></i>Dernier cours connu : 6 novembre (il y a 8 jours)</div>
+    <small>Le cours du jour ne nous est pas parvenu. Le cours en direct est juste en dessous.</small>
+    <div class="live"><div class="t"><span>Cours en direct</span><span style="font-weight:400;color:#777">TradingView</span></div>
+      <div class="tvbox"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+      <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"BATS:HLT","width":"100%","isTransparent":true,"colorTheme":"light","locale":"fr"}</script></div></div></div>
+  </div>
+  <div class="reps">
+    <div class="rep"><div class="k">PER</div><div class="v">59,9</div><div class="s">ans de bénéfice</div><span class="pastille">cours du 6/11</span></div>
+    <div class="rep"><div class="k">Rendement</div><div class="v">0,16 %</div><div class="s">dividende / cours</div><span class="pastille">cours du 6/11</span></div>
+    <div class="rep"><div class="k">Capitalisation</div><div class="v">79,0 Md€*</div><div class="s">valeur en Bourse</div><span class="pastille">cours du 6/11</span></div>
+  </div>
+  <p class="note">Calculs : 370,38 $ ÷ 6,18 $ de bénéfice par action (2025) ; 0,60 $ de dividende ÷ 370,38 $ ; 235,8 millions d'actions × 370,38 $. Au-delà de 30 jours sans cours, ces trois repères passent au cas 2.</p>
+  <div class="avant">Aujourd'hui sur le site :<div>Cours non disponible pour ce titre. PER, rendement et capitalisation : vides.</div></div>
+</section>
+
+<section class="cas">
+  <span class="tag">Cas 2</span><h2>Aucun cours reçu</h2><p class="q">Exemple : Equinor (Bourse d'Oslo, que Google ne lit pas). Le cours s'affiche en direct ; les repères liés au cours ne sont pas inventés, on donne de quoi les comprendre.</p>
+  <div class="ent"><span class="lg">EQ</span><div><b>Equinor</b><small>Oslo · EQNR · Énergie</small></div></div>
+  <div class="pcard">
+    <div class="live" style="margin-top:0;border-top:0;padding-top:0"><div class="t"><span>Cours en direct</span><span style="font-weight:400;color:#777">TradingView</span></div>
+      <div class="tvbox"><div class="tradingview-widget-container"><div class="tradingview-widget-container__widget"></div>
+      <script src="https://s3.tradingview.com/external-embedding/embed-widget-single-quote.js" async>{"symbol":"OSL:EQNR","width":"100%","isTransparent":true,"colorTheme":"light","locale":"fr"}</script></div></div></div>
+    <small style="margin-top:8px">Nous ne recevons pas chaque jour les cours de la Bourse d'Oslo : le cours ci-dessus vient directement de TradingView.</small>
+  </div>
+  <div class="reps">
+    <div class="rep off"><div class="k">PER</div><div class="v">Bénéfice par action : 18,55 NOK*</div><div class="s">PER = cours affiché ÷ 18,55</div></div>
+    <div class="rep off"><div class="k">Rendement</div><div class="v">Dividende : 14,15 NOK*</div><div class="s">Rendement = 14,15 ÷ cours</div></div>
+    <div class="rep off"><div class="k">Capitalisation</div><div class="v">2 601 millions d'actions</div><div class="s">× le cours affiché</div></div>
+  </div>
+  <p class="note">* Comptes publiés en dollars (2025 : 1,94 $ de bénéfice et 1,48 $ de dividende par action), convertis en couronnes au taux BCE du jour pour se lire avec le cours d'Oslo. Les deux autres repères (marge, dette) ne dépendent pas du cours et restent affichés.</p>
+  <div class="avant">Aujourd'hui sur le site :<div>Cours non disponible pour ce titre. PER, rendement et capitalisation : vides.</div></div>
+</section>
+
+</div></body></html>

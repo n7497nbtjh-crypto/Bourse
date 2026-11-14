@@ -47,7 +47,8 @@ export function gfParts(companies, etfs, indices, known = {}, size = GF_ROWS, po
   const P = id => (typeof poids === "function" ? poids(id) : 0) || 0;
   const comp = titles.filter(r => r[0].startsWith("c:") && !dead(r)), isinDe = Object.fromEntries(companies.map(c => ["c:" + c.id, c.isin || ""]));
   const parTaille = (a, b) => P(b[0].slice(2)) - P(a[0].slice(2)) || (known[b[0]] ? 1 : 0) - (known[a[0]] ? 1 : 0);
-  const fr = comp.filter(r => isinDe[r[0]].startsWith("FR")).sort(parTaille), autres = comp.filter(r => !isinDe[r[0]].startsWith("FR")).sort(parTaille);
+  // Les entreprises qui ont déjà leur cours de clôture par Eulerpool (ep) passent après celles qui n'ont que la feuille
+  const fr = comp.filter(r => isinDe[r[0]].startsWith("FR")).sort(parTaille), autres = comp.filter(r => !isinDe[r[0]].startsWith("FR")).sort((a, b) => ep.has(a[0]) - ep.has(b[0]) || parTaille(a, b));
   const etfsUtiles = titles.filter(r => r[0].startsWith("e:") && !dead(r) && !avecVl.has(r[0]));
   const vus = new Set(), all = [...indices.map(([id, sym]) => ["i:" + id, sym, "", ""]), ...fr, ...etfsUtiles, ...autres, ...titles].filter(r => !vus.has(r[0]) && vus.add(r[0]));
   // 7/11 (Romain : ETF HSBC sans cours dans son rapport) : les ETF sans aucune autre source (HSBC, Xtrackers, Vanguard : 72) passent de nouveau avant les actions sans cours, pour tomber dans gf2 qui répond
