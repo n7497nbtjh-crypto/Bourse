@@ -34,15 +34,22 @@ export function depuisBougies(L, cur, actions, auj = Date.now()) {
 export async function coursEulerpool(societes, log = console.log) {
   if (!KEY) { log("EULERPOOL_KEY absent : cours Eulerpool non demandés"); return {}; }
   const cache = existsSync(CACHE) ? JSON.parse(readFileSync(CACHE, "utf8")) : {}, out = {}, now = Date.now();
-  let appels = 0, ok = 0;
+  let appels = 0, ok = 0; const FX = (() => { try { return JSON.parse(readFileSync(new URL("../cf/site/data/fx.json", import.meta.url))).eur || {}; } catch (e) { return {}; } })();
   for (const c of societes) {
     const place = String(c.tv || "").split(":")[0], cur = DEVISE_PLACE[place];
     if (!c.isin || !cur) continue; // Londres (5/11) : profil en livres = cours en pence chez Eulerpool (GSK 1 827,5 pour 18,27 £), divisés par 100
     const m = cache[c.id] || {};
     try {
       if (!m.prof || (m.isin ? m.isin !== c.isin : !m.cur) || now - Date.parse(m.prof) > (m.cur ? 30 : 3) * J) { const p = await get(`/equity/profile/${c.isin}`); appels++; Object.assign(m, { isin: c.isin, prof: new Date().toISOString().slice(0, 10), cur: p && p.currency, actions: p && p.shares, lu: m.isin === c.isin ? m.lu : 0 }); }
-      if (m.cur !== cur) { cache[c.id] = m; continue; } // devise du profil différente de la cotation : écarté (voir data/eulerpool.mjs)
-      if (!m.lu || now - m.lu > 20 * 3600e3) { const b = await get(`/equity/candles/${c.isin}?range=5y`); appels++; m.lu = now; m.item = depuisBougies(place === "LSE" ? (b || []).map(x => ({ ...x, close: x.close / 100 })) : b, cur, m.actions); }
+      // 14/11 (Romain : « le dernier cours connu doit être celui du jour ») : quand le profil est dans une autre devise que la cotation
+      // (Equinor : dollars, Oslo en couronnes), les bougies sont dans la devise du profil. Elles sont converties au taux BCE du jour :
+      // vérifié le 14/11 sur 10 valeurs d'Oslo et de Dublin (écart de 0,1 à 0,8 % avec le cours affiché par TradingView) et 40 valeurs
+      // ayant un cours Google (écart médian 0,5 %). Hong Kong écarté (jusqu'à 18 % d'écart). Plus haut, plus bas et cours passés retirés
+      // (convertis au taux du jour, ils seraient faux) ; la fiche dit que le cours est converti (champ conv).
+      const conv = m.cur !== cur ? (place !== "HKEX" && FX[m.cur] > 0 && FX[cur] > 0 ? FX[m.cur] / FX[cur] : 0) : 1;
+      if (!conv) { cache[c.id] = m; continue; } // devise du profil différente de la cotation et pas de conversion sûre : écarté
+      if (!m.lu || now - m.lu > 20 * 3600e3 || (conv !== 1) !== !!(m.item && m.item.conv)) { const b = await get(`/equity/candles/${c.isin}?range=5y`); appels++; m.lu = now; m.item = depuisBougies(place === "LSE" ? (b || []).map(x => ({ ...x, close: x.close / 100 })) : b, cur, m.actions);
+        if (m.item && conv !== 1) { const p = Math.round(m.item.p * conv * 1e4) / 1e4; m.item = { ...m.item, p, cap: m.actions > 0 ? Math.round(p * m.actions * 1e6) : null, h52: null, l52: null, p1y: null, p3y: null, p5y: null, conv: m.cur }; } }
       cache[c.id] = m;
       if (m.item && now - Date.parse(m.item.d) < 7 * J) {
         // Capitalisation recoupée avec les comptes : nombre d'actions = bénéfice ÷ bénéfice par action. Un écart de plus de 25 %
