@@ -2,10 +2,10 @@
 import { writeFileSync, mkdirSync } from "node:fs";
 const OUT = process.env.SORTIE || process.argv[2] || "out"; mkdirSync(OUT, { recursive: true });
 const UA = "enklair-site/1.0 (https://enklair.com; contact via GitHub n7497nbtjh-crypto/Bourse)";
-const Q = (process.env.REQUETES || "Palais Brongniart|Place de la Bourse Paris|Euronext Paris|La Défense Paris skyline|TotalEnergies station-service|Kering siège|stock ticker board").split("|");
+const Q = (process.env.REQUETES || "Nvidia headquarters Santa Clara|European Central Bank Frankfurt building|Nasdaq MarketSite Times Square|Walmart Supercenter store|Alibaba Hangzhou campus|stock market screen").split("|");
 const res = [];
 for (const q of Q) {
-  const u = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q + " filetype:bitmap")}&gsrnamespace=6&gsrlimit=15&prop=imageinfo&iiprop=url|size|extmetadata&iiurlwidth=1600&iiextmetadatafilter=LicenseShortName|Artist|DateTimeOriginal&format=json`;
+  const u = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${encodeURIComponent(q + " filetype:bitmap")}&gsrnamespace=6&gsrlimit=12&prop=imageinfo&iiprop=url|size|extmetadata&iiurlwidth=3200&iiextmetadatafilter=LicenseShortName|Artist|DateTimeOriginal&format=json`;
   const d = await (await fetch(u, { headers: { "user-agent": UA } })).json();
   for (const p of Object.values(d.query?.pages || {})) {
     const ii = p.imageinfo[0], m = ii.extmetadata || {}, lic = m.LicenseShortName?.value || "";
