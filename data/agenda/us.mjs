@@ -9,6 +9,9 @@ export default [
   // Amazon
   { id: "amazon", date: "2026-10-29", type: "Résultats", label: "Résultats du 3e trimestre 2026", source: "https://ir.aboutamazon.com/news-release/news-release-details/2026/Amazon-com-to-Webcast-Third-Quarter-2026-Financial-Results-Conference-Call/default.aspx" },
 
+  // Nvidia (15/11 : date publiée par l'entreprise, exercice 2027 clos le 25 octobre 2026 pour le 3e trimestre)
+  { id: "nvidia", date: "2026-11-17", type: "Résultats", label: "Résultats du 3e trimestre de l'exercice 2027 (après la clôture de Wall Street)", source: "https://nvidianews.nvidia.com/news/nvidia-sets-conference-call-for-third-quarter-financial-results-6928873" },
+
   // Walmart (dividende annuel versé en 4 fois, calendrier publié en février 2026)
   { id: "walmart", date: "2026-12-11", type: "Dividende", label: `${D} (0,2475 $)`, source: "https://corporate.walmart.com/news/2026/02/19/walmart-raises-annual-dividend-to-0-99-per-share-marking-53rd-consecutive-year-of-dividend-increases" },
   { id: "walmart", date: "2027-01-04", type: "Dividende", label: `${P} (0,2475 $)`, source: "https://corporate.walmart.com/news/2026/02/19/walmart-raises-annual-dividend-to-0-99-per-share-marking-53rd-consecutive-year-of-dividend-increases" },
