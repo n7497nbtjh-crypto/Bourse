@@ -47,7 +47,7 @@ function a4CarteHTML(id) {
   const f = a4Fiche(id); if (!f) return `<p class="rf-no">Exemple indisponible.</p>`;
   const { s, m, med, rk, main, p } = f, maxv = Math.max(m, med, 1);
   return `<div class="a4-hd">${logo(s, 46)}<div><strong>${esc(s.name)}</strong><small>${esc(secName(s))} · ${esc(COUNTRY[s.region] || s.region || "")}</small></div>
-    ${p ? `<div class="a4-px">${a4Px(p.p, p.cur || s.currency)}<small class="${accCls(p.chg)}">${accPct(p.chg)} ${esc(jourSeance())}</small></div>` : ""}</div>
+    ${p ? `<div class="a4-px">${a4Px(p.p, p.cur || s.currency)}<small class="${accCls(p.chg)}">${accPct(p.chg)} ${esc(jourSeance(p.s))}</small></div>` : ""}</div>
     <div class="a4-n">${a4Nb(m >= 10 ? Math.round(m) : Math.round(m * 10) / 10)}<small>Md€</small></div>
     <p class="a4-cap">${a4Def("ventes", "Chiffre d'affaires", { ex: a4Nb(Math.round(m * 10) / 10) + " Md€", nom: s.name })} : ce qu'elle a vendu en ${s.year}.${rk ? ` ${rk.rank}<sup>e</sup> sur ${rk.n} entreprises du secteur ${esc(secName(s).toLowerCase())}.` : ""}</p>
     ${main ? `<span class="a4-hand">${esc(main)}</span>` : ""}

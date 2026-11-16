@@ -18,7 +18,7 @@ function mcIndices() { return INDEX_INFO.map(([k, n, fl, quoi]) => ({ k, n, fl, 
 function mcCarteIdx(x) {
   const p = x.p, pos = p.h52 > p.l52 && p.l52 > 0 ? Math.max(0, Math.min(100, (p.p - p.l52) / (p.h52 - p.l52) * 100)) : null, a1 = p.p1y ? (p.p / p.p1y - 1) * 100 : null, a5 = p.p5y ? (p.p / p.p5y - 1) * 100 : null;
   return `<div class="mc-i"><div class="mc-ih">${mcDrap(x.k)}<b>${esc(x.n)}</b><span>${esc(MC_PAYS[x.fl] || "")}</span></div>
-    <strong class="${p.chg > 0 ? "g" : p.chg < 0 ? "r" : ""}">${mcPc(p.chg, 2)}</strong><small>${F0.format(p.p)} points · ${esc(typeof jourSeance === "function" ? jourSeance() : "aujourd'hui")}</small>
+    <strong class="${p.chg > 0 ? "g" : p.chg < 0 ? "r" : ""}">${mcPc(p.chg, 2)}</strong><small>${F0.format(p.p)} points · ${esc(typeof jourSeance === "function" ? jourSeance(p.s) : "aujourd'hui")}</small>
     ${pos != null ? `<div class="mc-rg" title="Entre le plus bas (${F0.format(p.l52)}) et le plus haut (${F0.format(p.h52)}) des douze derniers mois"><i style="left:${pos}%"></i></div><div class="mc-rgl"><span>plus bas 1 an</span><span>plus haut</span></div>` : ""}
     <dl>${a1 != null ? `<dt>Sur 1 an</dt><dd class="${a1 >= 0 ? "g" : "r"}">${mcPc(a1, 0)}</dd>` : ""}${a5 != null ? `<dt>Sur 5 ans</dt><dd class="${a5 >= 0 ? "g" : "r"}">${mcPc(a5, 0)}</dd>` : ""}</dl><p>${esc(x.quoi)}</p></div>`;
 }

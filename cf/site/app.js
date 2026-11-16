@@ -10,9 +10,11 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 const TODAY = new Date().toISOString().slice(0, 10);
 // 1/11/2026 : quand la Bourse est fermée (week-end, avant 9 h), la variation affichée est celle de la dernière séance : on la nomme
 // (« vendredi ») au lieu d'écrire « aujourd'hui ». Jours fériés non gérés.
-function jourSeance() {
-  try { const P = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })), d = P.getDay(), h = P.getHours();
-    if (d >= 1 && d <= 5 && h >= 9) return "aujourd'hui";
+// 16/11 : sym = symbole du cours (« NASDAQ:META ») ; Wall Street n'ouvre qu'à 15 h 30 (heure de Paris) : avant, la variation est celle de la veille
+function jourSeance(sym) {
+  try { const P = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })), d = P.getDay(), h = P.getHours() + P.getMinutes() / 60;
+    const us = /^(NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|BATS|AMEX|OTC|INDEXSP|INDEXDJX|INDEXNASDAQ|INDEXCBOE)/i.test(String(sym || ""));
+    if (d >= 1 && d <= 5 && h >= (us ? 15.5 : 9)) return "aujourd'hui";
     const s = new Date(P); do { s.setDate(s.getDate() - 1); } while (s.getDay() === 0 || s.getDay() === 6);
     const veille = new Date(P); veille.setDate(veille.getDate() - 1);
     return s.toDateString() === veille.toDateString() ? "hier" : ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][s.getDay()];
