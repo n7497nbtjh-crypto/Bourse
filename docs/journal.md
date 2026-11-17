@@ -510,3 +510,4 @@ Propriétaire : Romain. Répondre en français, simplement, sans jargon techniqu
 
 ## 16/11 : « aujourd'hui » à côté d'une variation de la veille (actions américaines)
 - Lundi matin, la fiche Meta affichait « +2,90 % aujourd'hui » : c'était la séance de vendredi, Wall Street n'ouvrant qu'à 15 h 30 (heure de Paris). `jourSeance(sym)` (app.js) attend maintenant l'ouverture américaine pour les symboles NASDAQ, NYSE, BATS… et les indices américains ; avant, elle dit « vendredi » ou « hier ». Appelée avec le symbole dans fiche4, accueil4 (cartes), orchestre (/indice) et marches4. Testé en local : Meta « vendredi », LVMH « aujourd'hui », S&P 500 « vendredi ».
+- 17/11 (suite) : si le relevé des cours (`PXUP`) date d'un jour précédent (copie du serveur pas encore rafraîchie), `jourSeance` dit « hier » ou le jour de la séance, jamais « aujourd'hui ». Vu sur la fiche Nvidia à 19 h 40 : « −4,49 % aujourd'hui » avec « relevé le 16 novembre ».

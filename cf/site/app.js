@@ -14,6 +14,9 @@ const TODAY = new Date().toISOString().slice(0, 10);
 function jourSeance(sym) {
   try { const P = new Date(new Date().toLocaleString("en-US", { timeZone: "Europe/Paris" })), d = P.getDay(), h = P.getHours() + P.getMinutes() / 60;
     const us = /^(NASDAQ|NYSE|NYSEARCA|NYSEAMERICAN|BATS|AMEX|OTC|INDEXSP|INDEXDJX|INDEXNASDAQ|INDEXCBOE)/i.test(String(sym || ""));
+    // 17/11 : un relevé daté d'un jour précédent (copie gardée par le serveur pas encore rafraîchie) ne dit jamais « aujourd'hui »
+    const rel = typeof PXUP === "string" && /^\d{4}-\d\d-\d\d/.test(PXUP) ? new Date(new Date(PXUP.length > 10 ? PXUP : PXUP + "T12:00:00").toLocaleString("en-US", { timeZone: "Europe/Paris" })) : null;
+    if (rel && rel.toDateString() !== P.toDateString() && rel < P) { const veille = new Date(P); veille.setDate(veille.getDate() - 1); return rel.toDateString() === veille.toDateString() ? "hier" : ["dimanche", "lundi", "mardi", "mercredi", "jeudi", "vendredi", "samedi"][rel.getDay()]; }
     if (d >= 1 && d <= 5 && h >= (us ? 15.5 : 9)) return "aujourd'hui";
     const s = new Date(P); do { s.setDate(s.getDate() - 1); } while (s.getDay() === 0 || s.getDay() === 6);
     const veille = new Date(P); veille.setDate(veille.getDate() - 1);
