@@ -270,7 +270,6 @@ c:pharmamar,BME:PHM,,
 c:ponsse,HEL:PON1V,,
 c:irish-continental-group,ISE:IR5B,AMS:IR5B,EPA:IR5B
 c:citi-trends,NASDAQ:CTRN,,
-c:kenmare-resources,ISE:KMR,AMS:KMR,EPA:KMR
 c:boozt,STO:BOOZT,,
 c:mips,STO:MIPS,,
 c:group-mildef,STO:MILDEF,,
@@ -478,6 +477,7 @@ c:mahindra-and-mahindra,NSE:M-M,,
 c:ryanair,ISE:RYA,AMS:RYA,EPA:RYA
 c:aib-group,ISE:A5G,AMS:A5G,EPA:A5G
 c:ck-hutchison-holdings,HKG:1,,
+c:kenmare-resources,ISE:KMR,AMS:KMR,EPA:KMR
 c:cathay-pacific,HKG:293,,
 c:kerry-group,ISE:KRZ,AMS:KRZ,EPA:KRZ
 c:bank-of-ireland,ISE:BIRG,AMS:BIRG,EPA:BIRG
